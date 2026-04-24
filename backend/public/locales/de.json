@@ -1,0 +1,7 @@
+{
+  "chat": {
+    "price_policy": "Preise kann ich in diesem Chat nicht mitteilen. Unsere aktuellen Preise finden Sie auf unserer Website. Möchten Sie, dass ich Sie zur Terminbuchung weiterleite?",
+    "appointment_with_url": "Natürlich! Hier ist unser Buchungsformular: {url}",
+    "appointment_without_url": "Natürlich! Sie können über unser Online-Buchungsformular auf der Website einen Termin vereinbaren."
+  }
+}

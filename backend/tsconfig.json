@@ -1,0 +1,51 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2023"
+    ],
+    // ✅ Backend (Node) için
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    },
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    // ✅ Build’i toparlamak için (aşağıdaki madde 2)
+    "strict": true,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "sourceMap": false,
+    "noEmitOnError": true,
+    "verbatimModuleSyntax": true,
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "ignoreDeprecations": "5.0"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "../frontend/src/components/admin/bookings/_components/slotPlan.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/modules/frontend/**",
+    "src/modules/cart/**",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__/**"
+  ]
+}

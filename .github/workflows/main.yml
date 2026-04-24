@@ -1,0 +1,136 @@
+name: Konigsmassage Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # ----------------------------
+      # Backend (Bun / TS)
+      # ----------------------------
+      - name: Build backend (bun)
+        working-directory: backend
+        run: |
+          rm -rf dist .tsbuildinfo || true
+          bun install --frozen-lockfile || bun install
+          bun run build
+
+      # ----------------------------
+      # SSH key setup (tek seferde, retry ile paylaşılır)
+      # ----------------------------
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -T 10 -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Deploy backend to VPS (rsync with retry)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
+          for i in 1 2 3; do
+            rsync -avz --delete \
+              --exclude=node_modules --exclude=.git --exclude=.env --exclude=.DS_Store \
+              -e "ssh $SSH_OPTS" \
+              backend/ "${VPS_USER}@${VPS_HOST}:/var/www/konigsmassage/backend" \
+              && break
+            echo "⚠ Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+
+      # ----------------------------
+      # Frontend (Next.js) — Bun only
+      # ----------------------------
+      - name: Build frontend (bun)
+        working-directory: frontend
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun run build
+
+      - name: Deploy frontend to VPS (rsync with retry)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
+          for i in 1 2 3; do
+            rsync -avz --delete \
+              --exclude=node_modules --exclude=.git --exclude=.env --exclude=.DS_Store \
+              -e "ssh $SSH_OPTS" \
+              frontend/ "${VPS_USER}@${VPS_HOST}:/var/www/konigsmassage/frontend" \
+              && break
+            echo "⚠ Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+
+      # ----------------------------
+      # Admin Panel (Next.js) — Bun only
+      # ----------------------------
+      - name: Build admin_panel (bun)
+        working-directory: admin_panel
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun run build
+
+      - name: Deploy admin_panel to VPS (rsync with retry)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
+          for i in 1 2 3; do
+            rsync -avz --delete \
+              --exclude=node_modules --exclude=.git --exclude=.env --exclude=.DS_Store \
+              -e "ssh $SSH_OPTS" \
+              admin_panel/ "${VPS_USER}@${VPS_HOST}:/var/www/konigsmassage/admin_panel" \
+              && break
+            echo "⚠ Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+
+      # ----------------------------
+      # PM2 reload (backend + frontend + admin_panel) + bind check
+      # ----------------------------
+      - name: Reload PM2 (backend + frontend + admin_panel)
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          timeout: 60s
+          command_timeout: 120s
+          script: |
+            set -e
+
+            cd /var/www/konigsmassage/backend
+            pm2 reload konigsmassage-backend || pm2 start ecosystem.config.cjs --only konigsmassage-backend
+
+            cd /var/www/konigsmassage/frontend
+            pm2 reload konigsmassage-frontend || pm2 start ecosystem.config.cjs --only konigsmassage-frontend
+
+            cd /var/www/konigsmassage/admin_panel
+            pm2 reload konigsmassage-admin-panel || pm2 start ecosystem.config.cjs --only konigsmassage-admin-panel
+
+            pm2 save
+
+            ss -ltnp | grep -E "127\.0\.0\.1:(3055|3056)|:(3055|3056)" || true

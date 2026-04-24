@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "additionalDirectories": [
+      "/tmp"
+    ],
+    "allow": [
+      "Bash(ssh guezelwebdesign \"ls /etc/nginx/sites-enabled/ | grep -i koenigs\")"
+    ]
+  }
+}

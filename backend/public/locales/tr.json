@@ -1,0 +1,7 @@
+{
+  "chat": {
+    "price_policy": "Fiyat bilgisini bu kanaldan paylaşamıyorum. Güncel fiyatlarımızı web sitemizden görebilirsiniz. İsterseniz sizi randevu sayfasına yönlendirebilirim, ister misiniz?",
+    "appointment_with_url": "Tabii! Randevu sayfası: {url}",
+    "appointment_without_url": "Tabii! Web sitemizdeki randevu sayfasından online randevu alabilirsiniz."
+  }
+}

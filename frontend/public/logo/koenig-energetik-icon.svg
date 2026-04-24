@@ -1,0 +1,41 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bgGradient">
+      <stop offset="0%" style="stop-color:#FFF5F3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFE8E3;stop-opacity:1" />
+    </radialGradient>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8A598;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C77665;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="256" height="256" rx="48" fill="url(#bgGradient)"/>
+  
+  <!-- Symbol centered -->
+  <g transform="translate(128, 128)">
+    <!-- Outer glow circle -->
+    <circle cx="0" cy="0" r="90" fill="none" stroke="#E8A598" stroke-width="8" opacity="0.2"/>
+    
+    <!-- Main circle -->
+    <circle cx="0" cy="0" r="80" fill="none" stroke="url(#iconGrad)" stroke-width="3"/>
+    
+    <!-- Flower of Life (7 circles) -->
+    <g stroke="#D88D7E" stroke-width="2" fill="none">
+      <circle cx="0" cy="0" r="28"/>
+      <circle cx="24" cy="0" r="28"/>
+      <circle cx="-24" cy="0" r="28"/>
+      <circle cx="12" cy="20.8" r="28"/>
+      <circle cx="-12" cy="20.8" r="28"/>
+      <circle cx="12" cy="-20.8" r="28"/>
+      <circle cx="-12" cy="-20.8" r="28"/>
+    </g>
+    
+    <!-- Hands silhouette -->
+    <g fill="#F4BDB3" opacity="0.8">
+      <path d="M -55 45 Q -48 38 -42 42 L -38 50 Q -45 55 -52 52 Z"/>
+      <path d="M 55 45 Q 48 38 42 42 L 38 50 Q 45 55 52 52 Z"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="16" height="16" rx="3" fill="#FFF5F3"/>
+  
+  <!-- Super simplified: Just 3 circles -->
+  <g transform="translate(8, 8)" stroke="#D88D7E" stroke-width="1.2" fill="none">
+    <circle cx="0" cy="0" r="6"/>
+    <circle cx="0" cy="0" r="3"/>
+    <circle cx="3" cy="0" r="3"/>
+    <circle cx="-3" cy="0" r="3"/>
+  </g>
+</svg>

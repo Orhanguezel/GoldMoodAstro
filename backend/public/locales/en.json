@@ -1,0 +1,7 @@
+{
+  "chat": {
+    "price_policy": "I cannot share pricing on this channel. You can find our current prices on our website. Would you like me to redirect you to our booking page?",
+    "appointment_with_url": "Sure! Here is our booking page: {url}",
+    "appointment_without_url": "Sure! You can book an appointment through our website's booking page."
+  }
+}

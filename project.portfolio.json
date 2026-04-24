@@ -1,0 +1,55 @@
+{
+  "title": "Konig Massage",
+  "slug": "konig-massage",
+  "summary": "Multi-language massage and wellness booking platform with customer site, admin panel and Fastify backend.",
+  "category": "BOOKING PLATFORM",
+  "services": [
+    "Frontend Development",
+    "Backend Development",
+    "Admin Panel",
+    "Architecture & Optimization"
+  ],
+  "techs": [
+    "Next.js",
+    "React",
+    "TypeScript",
+    "Tailwind CSS",
+    "Fastify",
+    "Drizzle ORM",
+    "MySQL",
+    "Bun",
+    "Zod",
+    "Cloudinary",
+    "Nodemailer",
+    "JWT",
+    "React Query",
+    "Zustand"
+  ],
+  "features": [
+    "Online booking system",
+    "Admin management",
+    "Multi-language support",
+    "SEO optimization",
+    "Cloudinary media management"
+  ],
+  "designHighlights": [
+    "Service and booking focused UX",
+    "Headless architecture",
+    "Operational admin tooling"
+  ],
+  "featured": true,
+  "displayOrder": 3,
+  "clientName": "Own Project",
+  "status": "live",
+  "startDate": "2025-01-01",
+  "completeDate": null,
+  "completionTimeLabel": "Ongoing",
+  "repoUrl": null,
+  "websiteUrl": "https://energetische-massage-bonn.de",
+  "demoUrl": null,
+  "featuredImage": "/assets/imgs/work/projects/konigsmassage.png",
+  "featuredImageAlt": "Konig Massage cover image",
+  "resumeTitle": "Konig Massage",
+  "resumeSubtitle": "Booking Platform",
+  "excludeFromPortfolio": false
+}
