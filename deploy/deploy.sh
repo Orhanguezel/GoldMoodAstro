@@ -95,15 +95,16 @@ BASH
     ok "DB seed tamam"
   fi
 
-  say "PM2 reload — backend"
+  say "PM2 (re)start — backend"
   remote_sh <<'BASH'
 set -euo pipefail
 cd /var/www/goldmoodastro
-pm2 reload goldmoodastro-backend 2>/dev/null \
-  || pm2 start ecosystem.config.cjs --only goldmoodastro-backend
+# Eski entry'yi sil, ecosystem'dan temiz başlat (interpreter değişikliği vs. için)
+pm2 delete goldmoodastro-backend 2>/dev/null || true
+pm2 start ecosystem.config.cjs --only goldmoodastro-backend --update-env
 pm2 save
-sleep 2
-ss -ltnp | grep ':8094' || { echo "❌ Backend port 8094 açık değil"; pm2 logs goldmoodastro-backend --lines 30 --nostream; exit 1; }
+sleep 3
+ss -ltnp | grep ':8094' || { echo "❌ Backend port 8094 açık değil"; pm2 logs goldmoodastro-backend --lines 40 --nostream; exit 1; }
 echo "  → port 8094 OK"
 BASH
   ok "Backend çalışıyor"
@@ -132,15 +133,15 @@ NODE_ENV=production /usr/local/bin/bun run build
 BASH
   ok "Admin build tamam"
 
-  say "PM2 reload — admin"
+  say "PM2 (re)start — admin"
   remote_sh <<'BASH'
 set -euo pipefail
 cd /var/www/goldmoodastro
-pm2 reload goldmoodastro-admin 2>/dev/null \
-  || pm2 start ecosystem.config.cjs --only goldmoodastro-admin
+pm2 delete goldmoodastro-admin 2>/dev/null || true
+pm2 start ecosystem.config.cjs --only goldmoodastro-admin --update-env
 pm2 save
-sleep 2
-ss -ltnp | grep ':3094' || { echo "❌ Admin port 3094 açık değil"; pm2 logs goldmoodastro-admin --lines 30 --nostream; exit 1; }
+sleep 3
+ss -ltnp | grep ':3094' || { echo "❌ Admin port 3094 açık değil"; pm2 logs goldmoodastro-admin --lines 40 --nostream; exit 1; }
 echo "  → port 3094 OK"
 BASH
   ok "Admin çalışıyor"
@@ -166,21 +167,15 @@ NODE_ENV=production /usr/local/bin/bun run build
 BASH
   ok "Frontend build tamam"
 
-  # ecosystem.config.cjs'de frontend tanımlı değilse onu da ekleyelim
+  say "PM2 (re)start — frontend"
   remote_sh <<'BASH'
 set -euo pipefail
 cd /var/www/goldmoodastro
-if ! pm2 describe goldmoodastro-frontend >/dev/null 2>&1; then
-  pm2 start frontend/node_modules/next/dist/bin/next \
-    --name goldmoodastro-frontend \
-    --cwd /var/www/goldmoodastro/frontend \
-    -- start -p 3095
-else
-  pm2 reload goldmoodastro-frontend
-fi
+pm2 delete goldmoodastro-frontend 2>/dev/null || true
+pm2 start ecosystem.config.cjs --only goldmoodastro-frontend --update-env
 pm2 save
-sleep 2
-ss -ltnp | grep ':3095' || { echo "❌ Frontend port 3095 açık değil"; pm2 logs goldmoodastro-frontend --lines 30 --nostream; exit 1; }
+sleep 3
+ss -ltnp | grep ':3095' || { echo "❌ Frontend port 3095 açık değil"; pm2 logs goldmoodastro-frontend --lines 40 --nostream; exit 1; }
 echo "  → port 3095 OK"
 BASH
   ok "Frontend çalışıyor"

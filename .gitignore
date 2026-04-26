@@ -73,6 +73,11 @@ web_modules/
 # Local secrets vault (not committed)
 .secrets/
 
+# Müşteri sunum demoları (VPS'te /1, /2 olarak servis edilir, repo'ya konmaz)
+/index.html
+/mobile-app.html
+/previews/
+
 # User uploads (runtime data — provisioned on VPS)
 uploads/
 backend/uploads/

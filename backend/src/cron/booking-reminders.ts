@@ -133,12 +133,5 @@ export function registerBookingReminderCron() {
       console.error('booking_reminder_sweep_failed', error);
     });
   };
-
-  const bunCron = (globalThis as unknown as { Bun?: { cron?: Function } }).Bun?.cron;
-  if (typeof bunCron === 'function') {
-    bunCron('booking-reminders', '*/5 * * * *', run);
-    return;
-  }
-
   setInterval(run, 5 * 60 * 1000);
 }

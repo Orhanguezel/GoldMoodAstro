@@ -20,7 +20,21 @@
       "Bash(pkill -f \"next build\")",
       "Bash(git check-ignore *)",
       "Bash(awk '{print $1}')",
-      "Bash(grep -E \"\\(\\\\.env$|\\\\.secrets/|credentials\\)\")"
+      "Bash(grep -E \"\\(\\\\.env$|\\\\.secrets/|credentials\\)\")",
+      "Bash(git fetch *)",
+      "Bash(git rev-list *)",
+      "Bash(./deploy/provision-vps.sh)",
+      "Bash(tee /tmp/goldmood-provision.log)",
+      "Bash(ssh -o ConnectTimeout=10 goldmoodastro 'echo \"still-alive\"; ufw status verbose 2>&1 | head -20; echo \"---\"; which nginx mysql bun pm2 2>&1')",
+      "Bash(curl -sS -o /dev/null -w \"  HTTP/HTTPS goldmoodastro.com → %{http_code} \\(redirect: %{redirect_url}\\)\\\\n\" -L --max-time 10 http://goldmoodastro.com)",
+      "Bash(curl -sSk -o /dev/null -w \"  HTTPS goldmoodastro.com    → %{http_code}\\\\n\" --max-time 10 https://goldmoodastro.com)",
+      "Bash(curl -sSk -o /dev/null -w \"  HTTPS admin.goldmoodastro  → %{http_code}\\\\n\" --max-time 10 https://admin.goldmoodastro.com)",
+      "Bash(curl -sSk -o /dev/null -w \"  301 test \\(.com.tr → .com\\)  → %{http_code} %{redirect_url}\\\\n\" --max-time 10 https://goldmoodastro.com.tr)",
+      "Bash(ssh goldmoodastro 'echo \"→ nginx:\";   systemctl is-active nginx; *)",
+      "Bash(set -e)",
+      "Bash(ssh goldmoodastro *)",
+      "Bash(scp -i ~/.ssh/goldmoodastro_root_ed25519 previews/1.html previews/2.html goldmoodastro:/var/www/goldmoodastro/previews/)",
+      "Bash(scp -i ~/.ssh/goldmoodastro_root_ed25519 nginx/goldmoodastro.conf goldmoodastro:/var/www/goldmoodastro/nginx/goldmoodastro.conf)"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [
