@@ -129,7 +129,26 @@ index.ts
 
 ### Faz 4
 
-- CI/CD, Nginx ve PM2 deploy akisi
+- Nginx + PM2 deploy akisi (tamamlandi)
+- VPS provisioning + manuel deploy script'leri (`deploy/`)
+
+## Deploy
+
+Production: <https://goldmoodastro.com> (admin: <https://admin.goldmoodastro.com>)
+
+Deploy manuel — GitHub Actions kullanilmiyor. Scripts: `deploy/`
+
+| Komut | Aciklama |
+|-------|----------|
+| `./deploy/provision-vps.sh` | Bir kerelik VPS kurulumu (idempotent) |
+| `./deploy/deploy.sh [backend\|admin\|frontend\|all] [--seed\|--fresh-seed]` | Build + pm2 reload |
+| `./deploy/sync-env.sh` | `backend/.env` (VPS) yenile (3rd-party credentials degisiminde) |
+| `./deploy/setup-backup.sh [--run-now]` | DB backup cron (gunluk 03:00 UTC, 7 gun retention) |
+| `./deploy/logs.sh [backend\|admin\|frontend\|nginx\|backup\|sshd] [-n N] [-f]` | Log shortcut |
+
+Detayli rehber: [doc/deploy-notes.md](doc/deploy-notes.md)
+
+Credentials: `.secrets/credentials.env` (gitignore'lu, master vault).
 
 ## Lisans
 
