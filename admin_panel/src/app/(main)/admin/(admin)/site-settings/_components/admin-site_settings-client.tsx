@@ -40,8 +40,9 @@ import { BrandMediaTab } from '../tabs/brand-media-tab';
 import { ApiSettingsTab } from '../tabs/api-settings-tab';
 import { LocalesSettingsTab } from '../tabs/locales-settings-tab';
 import { BrandingSettingsTab } from '../tabs/branding-settings-tab';
-import { PaymentAgoraTab } from '../tabs/payment-agora-tab';
 import { DesignTokensTab } from '../tabs/design-tokens-tab';
+import { CustomCssTab } from '../tabs/custom-css-tab';
+import { LiveKitTab } from '../tabs/livekit-tab';
 
 import type { SiteSetting } from '@/integrations/shared';
 import {
@@ -65,7 +66,8 @@ type SettingsTab =
   | 'locales'
   | 'branding'
   | 'design_tokens'
-  | 'payment_agora';
+  | 'custom_css'
+  | 'livekit';
 
 type LocaleOption = { value: string; label: string; isDefault?: boolean; isActive?: boolean };
 
@@ -243,7 +245,7 @@ export default function AdminSiteSettingsClient() {
   };
 
   const localeReady = Boolean(locale && locale.trim());
-  const isGlobalTab = tab === 'global_list' || tab === 'smtp' || tab === 'brand_media' || tab === 'locales' || tab === 'branding' || tab === 'design_tokens' || tab === 'payment_agora';
+  const isGlobalTab = tab === 'global_list' || tab === 'smtp' || tab === 'brand_media' || tab === 'locales' || tab === 'branding' || tab === 'design_tokens' || tab === 'custom_css' || tab === 'livekit';
 
   return (
     <div className="w-full max-w-full space-y-6 overflow-x-hidden px-2 pb-6 md:px-0 md:pb-0">
@@ -366,7 +368,8 @@ export default function AdminSiteSettingsClient() {
                 {tab === 'locales' ? t('admin.siteSettings.locales.title') : null}
                 {tab === 'branding' ? t('admin.siteSettings.branding.title') : null}
                 {tab === 'design_tokens' ? 'Design Tokens — Renk, font ve radius ayarları' : null}
-                {tab === 'payment_agora' ? 'Ödeme & Agora ayarları' : null}
+                {tab === 'custom_css' ? 'Özel CSS — Stil müdahaleleri' : null}
+                {tab === 'livekit' ? 'LiveKit — Görüşme altyapısı' : null}
               </CardDescription>
             </div>
 
@@ -417,11 +420,14 @@ export default function AdminSiteSettingsClient() {
                   <TabsTrigger value="branding" className="whitespace-nowrap">
                     {t('admin.siteSettings.tabs.branding')}
                   </TabsTrigger>
-                  <TabsTrigger value="payment_agora" className="whitespace-nowrap">
-                    Ödeme & Agora
-                  </TabsTrigger>
                   <TabsTrigger value="design_tokens" className="whitespace-nowrap">
                     Design Tokens
+                  </TabsTrigger>
+                  <TabsTrigger value="custom_css" className="whitespace-nowrap">
+                    Custom CSS
+                  </TabsTrigger>
+                  <TabsTrigger value="livekit" className="whitespace-nowrap">
+                    LiveKit
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -464,10 +470,6 @@ export default function AdminSiteSettingsClient() {
 
               <TabsContent value="branding" className="mt-4">
                 <BrandingSettingsTab />
-              </TabsContent>
-
-              <TabsContent value="payment_agora" className="mt-4">
-                <PaymentAgoraTab />
               </TabsContent>
 
               <TabsContent value="design_tokens" className="mt-4">

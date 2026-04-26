@@ -91,8 +91,9 @@ export const env = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? '',
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? '',
 
-  AGORA_APP_ID: process.env.AGORA_APP_ID ?? '',
-  AGORA_APP_CERTIFICATE: process.env.AGORA_APP_CERTIFICATE ?? '',
+  LIVEKIT_URL: process.env.LIVEKIT_URL ?? '',
+  LIVEKIT_API_KEY: process.env.LIVEKIT_API_KEY ?? '',
+  LIVEKIT_API_SECRET: process.env.LIVEKIT_API_SECRET ?? '',
 
   FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ?? '',
   FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL ?? '',

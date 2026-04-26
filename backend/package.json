@@ -13,7 +13,6 @@
     "db:seed:only": "bun src/db/index.ts"
   },
   "dependencies": {
-    "@goldmood/shared-backend": "workspace:*",
     "@fastify/cookie": "^11",
     "@fastify/cors": "^11",
     "@fastify/jwt": "^10",
@@ -22,8 +21,8 @@
     "@fastify/static": "^8.3.0",
     "@fastify/swagger": "^9",
     "@fastify/swagger-ui": "^5",
+    "@goldmood/shared-backend": "workspace:*",
     "argon2": "^0.44.0",
-    "agora-token": "^2.0.5",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.8.0",
     "dotenv": "^16.6.1",
@@ -34,8 +33,10 @@
     "geoip-lite": "^1.4.10",
     "google-auth-library": "^10.4.1",
     "iyzipay": "^2.0.65",
+    "livekit-server-sdk": "^2.15.1",
     "mysql2": "^3.15.3",
     "nodemailer": "^7.0.11",
+    "openai": "^6.34.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

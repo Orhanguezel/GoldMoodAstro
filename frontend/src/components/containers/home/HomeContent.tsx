@@ -3,6 +3,7 @@
 import React, { lazy, Suspense } from 'react';
 import Hero from '@/layout/banner/Hero';
 
+const DailyHoroscopeSection = lazy(() => import('./DailyHoroscopeSection'));
 const FeaturedConsultantsSection = lazy(() => import('./FeaturedConsultantsSection'));
 const ExpertiseCategoriesSection = lazy(() => import('./ExpertiseCategoriesSection'));
 const HomeIntroSection = lazy(() => import('./HomeIntroSection'));
@@ -17,6 +18,7 @@ export default function HomeContent({ locale }: Props) {
     <main className="flex flex-col w-full">
       <Hero locale={locale} />
       <Suspense fallback={null}>
+        <DailyHoroscopeSection />
         <FeaturedConsultantsSection locale={locale} />
         <ExpertiseCategoriesSection locale={locale} />
         <div id="how-it-works">

@@ -7,7 +7,7 @@ import { fetchSetting } from '@/i18n/server';
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#7B5EA7',
+  themeColor: '#C9A961',
 };
 
 function extractUrl(val: unknown): string {

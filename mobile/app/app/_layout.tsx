@@ -7,15 +7,26 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
 import { useFonts } from 'expo-font';
 import {
+  Cinzel_400Regular,
+  Cinzel_500Medium,
+  Cinzel_700Bold,
+} from '@expo-google-fonts/cinzel';
+import {
   Fraunces_400Regular,
   Fraunces_500Medium,
   Fraunces_700Bold,
+  Fraunces_400Regular_Italic,
 } from '@expo-google-fonts/fraunces';
-import { InterTight_400Regular, InterTight_500Medium, InterTight_700Bold } from '@expo-google-fonts/inter-tight';
 import { JetBrainsMono_400Regular, JetBrainsMono_500Medium } from '@expo-google-fonts/jetbrains-mono';
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_700Bold,
+} from '@expo-google-fonts/manrope';
 
 import { initI18n } from '@/lib/i18n';
 import { registerPushToken } from '@/lib/notifications';
+import { statusBar } from '@/theme/tokens';
 
 initI18n();
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -25,14 +36,18 @@ export default function RootLayout() {
   const lastNotification = Notifications.useLastNotificationResponse();
 
   const [fontsReady] = useFonts({
+    Cinzel_400Regular,
+    Cinzel_500Medium,
+    Cinzel_700Bold,
     Fraunces_400Regular,
     Fraunces_500Medium,
     Fraunces_700Bold,
-    InterTight_400Regular,
-    InterTight_500Medium,
-    InterTight_700Bold,
+    Fraunces_400Regular_Italic,
     JetBrainsMono_400Regular,
     JetBrainsMono_500Medium,
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_700Bold,
   });
   const [ready, setReady] = useState(false);
 
@@ -58,7 +73,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar style="light" />
+        <StatusBar style={statusBar.default} />
         <Stack screenOptions={{ headerShown: false }}>
           {/* Ana navigasyon */}
           <Stack.Screen name="(tabs)" />

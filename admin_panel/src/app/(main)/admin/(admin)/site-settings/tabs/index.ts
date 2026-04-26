@@ -6,5 +6,5 @@ export * from './smtp-settings-tab';
 export * from './cloudinary-settings-tab';
 export * from './api-settings-tab';
 export * from './brand-media-tab';
-export * from './payment-agora-tab';
 export * from './design-tokens-tab';
+export * from './livekit-tab';

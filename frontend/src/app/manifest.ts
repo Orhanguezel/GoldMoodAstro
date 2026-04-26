@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Astroloji, tarot ve yaşam koçluğu için uzman danışmanlarla bağlantı platformu.',
     start_url: '/tr',
     display: 'standalone',
-    background_color: '#0D0B1E',
-    theme_color: '#7B5EA7',
+    background_color: '#FAF6EF',
+    theme_color: '#C9A961',
     icons: [
       {
         src: '/favicon.svg',

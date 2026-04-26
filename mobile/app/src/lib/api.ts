@@ -9,7 +9,8 @@ import type {
   Consultant, ConsultantSlot,
   Booking, BookingCreateInput,
   Order, OrderCreateResponse, IyzipayInitResponse,
-  AgoraTokenResponse,
+  LiveKitTokenResponse,
+  BirthChart, BirthChartCreateInput, GeocodeResult, DailyReadingResponse,
   MeResponse,
   LoginInput, LoginResponse,
   RegisterInput, RegisterResponse,
@@ -143,15 +144,57 @@ export const ordersApi = {
 };
 
 // -------------------------------------------------------------------
-// Agora (Sesli Görüşme)
+// LiveKit (Sesli/Görüntülü Görüşme)
 // -------------------------------------------------------------------
 
-export const agoraApi = {
-  getToken: (bookingId: string) =>
-    post<AgoraTokenResponse>('/agora/token', { booking_id: bookingId }),
+export const livekitApi = {
+  getToken: async (bookingId: string): Promise<LiveKitTokenResponse> => {
+    const res = await post<{ data: LiveKitTokenResponse }>('/livekit/token', { booking_id: bookingId });
+    return res.data;
+  },
 
   endSession: (bookingId: string) =>
-    post<void>('/agora/session/end', { booking_id: bookingId }),
+    post<void>('/livekit/session/end', { booking_id: bookingId }),
+};
+
+// -------------------------------------------------------------------
+// Astrology / Birth Charts
+// -------------------------------------------------------------------
+
+export const birthChartsApi = {
+  list: async (): Promise<BirthChart[]> => {
+    const res = await get<{ data: BirthChart[] }>('/birth-charts');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  create: async (data: BirthChartCreateInput): Promise<BirthChart> => {
+    const res = await post<{ data: BirthChart }>('/birth-charts', data);
+    return res.data;
+  },
+
+  get: async (id: string): Promise<BirthChart> => {
+    const res = await get<{ data: BirthChart }>(`/birth-charts/${id}`);
+    return res.data;
+  },
+
+  transit: async (id: string) => {
+    const res = await post<{ data: unknown }>(`/birth-charts/${id}/transit`, {});
+    return res.data;
+  },
+};
+
+export const geocodeApi = {
+  search: async (q: string): Promise<GeocodeResult> => {
+    const res = await get<{ data: GeocodeResult }>('/geocode', { q });
+    return res.data;
+  },
+};
+
+export const readingsApi = {
+  daily: async (chartId: string): Promise<DailyReadingResponse> => {
+    const res = await post<{ data: DailyReadingResponse }>('/readings/daily', { chart_id: chartId });
+    return res.data;
+  },
 };
 
 // -------------------------------------------------------------------
@@ -182,4 +225,14 @@ export const chatApi = {
 
   postMessage: (threadId: string, message: string) =>
     post<{ id: string }>(`/chat/threads/${threadId}/messages`, { message }),
+};
+// -------------------------------------------------------------------
+// Horoscopes
+// -------------------------------------------------------------------
+
+export const horoscopesApi = {
+  getToday: async (params: { sign: string; date?: string }): Promise<any> => {
+    const res = await get<{ data: any }>('/horoscopes/today', params);
+    return res.data;
+  },
 };

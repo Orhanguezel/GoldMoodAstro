@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { Cormorant_Garamond, Outfit } from 'next/font/google';
+import { Cinzel, Fraunces, Manrope } from 'next/font/google';
 
 import { Providers } from '../providers';
 import ClientLayout from '../ClientLayout';
@@ -9,20 +9,29 @@ import { buildMetadataFromSeo, fetchSeoObject } from '@/seo/server';
 import JsonLd from '@/seo/JsonLd';
 import { graph, org, website } from '@/seo/jsonld';
 
-const outfit = Outfit({
+// 2026-04-27 vizyon revize: Cinzel (display) + Fraunces (editorial body) + Manrope (UI sans)
+const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
-  weight: ['300', '400', '500', '600'],
+  weight: ['300', '400', '500', '600', '700'],
   fallback: ['system-ui', '-apple-system', 'sans-serif'],
 });
 
-const cormorant = Cormorant_Garamond({
+const fraunces = Fraunces({
   subsets: ['latin'],
   variable: '--font-serif',
   display: 'swap',
   weight: ['300', '400', '500', '600', '700'],
   style: ['normal', 'italic'],
+  fallback: ['Georgia', 'serif'],
+});
+
+const cinzel = Cinzel({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
   fallback: ['Georgia', 'serif'],
 });
 
@@ -64,7 +73,7 @@ export default async function RootLayout({
 
   return (
     <ThemeProvider>
-      <div className={`font-sans antialiased text-text-primary bg-bg-primary ${outfit.variable} ${cormorant.variable}`}>
+      <div className={`font-sans antialiased text-text-primary bg-bg-primary ${manrope.variable} ${fraunces.variable} ${cinzel.variable}`}>
         <JsonLd data={jsonLdData} id="site-graph" />
         <Providers>
           <Suspense fallback={null}>

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { consultantsApi } from '@/lib/api';
 import { ConsultantCard } from '@/components/ConsultantCard';
+import DailyHoroscopeCard from '@/components/DailyHoroscopeCard';
 import type { Consultant } from '@/types';
 
 const CATEGORIES = [
@@ -114,6 +115,9 @@ export default function HomeScreen() {
               onPress={() => router.push(`/consultant/${item.id}`)} 
             />
           )}
+          ListHeaderComponent={
+            <DailyHoroscopeCard />
+          }
           contentContainerStyle={styles.list}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.amethyst} />

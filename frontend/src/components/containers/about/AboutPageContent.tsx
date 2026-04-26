@@ -49,7 +49,7 @@ const AboutPageContent: React.FC = () => {
   );
 
   const headerSubtitlePrefix = useMemo(
-    () => String(readUi('ui_about_subprefix', 'Energetische Massage') || '').trim() || 'Energetische Massage',
+    () => String(readUi('ui_about_subprefix', 'Spiritüel Rehberlik') || '').trim() || 'Spiritüel Rehberlik',
     [readUi],
   );
 

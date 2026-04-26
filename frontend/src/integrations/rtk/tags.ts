@@ -70,6 +70,7 @@ export const metahubTags = [
   'Consultants',
   'Consultant',
   'ConsultantSlots',
+  'BirthCharts',
 ] as const;
 
 export type MetahubTag = (typeof metahubTags)[number];

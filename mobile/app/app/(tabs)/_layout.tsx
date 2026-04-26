@@ -25,6 +25,8 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="index"    options={{ title: t('tabs.home') }} />
+      <Tabs.Screen name="birth-chart" options={{ title: 'Harita' }} />
+      <Tabs.Screen name="today" options={{ title: 'Bugün' }} />
       <Tabs.Screen name="bookings" options={{ title: t('tabs.bookings') }} />
       <Tabs.Screen name="favorites" options={{ title: t('tabs.favorites') }} />
       <Tabs.Screen name="settings" options={{ title: t('tabs.settings') }} />

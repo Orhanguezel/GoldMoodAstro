@@ -40,3 +40,18 @@ export async function fetchDesignTokens(): Promise<DesignTokens> {
     return DEFAULT_TOKENS;
   }
 }
+
+export async function fetchCustomCss(): Promise<string> {
+  try {
+    const response = await fetch(`${API_BASE}/site_settings/custom_css`, {
+      next: { revalidate: 300 },
+    });
+
+    if (!response.ok) return '';
+
+    const data = await response.json();
+    return typeof data?.value === 'string' ? data.value : '';
+  } catch {
+    return '';
+  }
+}

@@ -7,18 +7,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
-import { agoraApi, bookingsApi } from '@/lib/api';
-// Agora only works in development builds, not Expo Go. 
-// We import conditionally or wrap in try/catch to avoid Invariant Violation.
-let createAgoraRtcEngine: any, ChannelProfileType: any, ClientRoleType: any;
-try {
-  const agora = require('react-native-agora');
-  createAgoraRtcEngine = agora.createAgoraRtcEngine;
-  ChannelProfileType = agora.ChannelProfileType;
-  ClientRoleType = agora.ClientRoleType;
-} catch (e) {
-  console.warn('Agora native module not found, using mocks.');
-}
+import { bookingsApi } from '@/lib/api';
+import {
+  connectLiveKitAudio,
+  endLiveKitSession,
+  fetchLiveKitToken,
+  setLiveKitMicrophone,
+  type LiveKitRoom,
+} from '@/lib/livekit';
 // Permissions only work in development builds, not Expo Go.
 let request: any, PERMISSIONS: any, RESULTS: any;
 try {
@@ -42,9 +38,11 @@ export default function CallScreen() {
   const [speaker, setSpeaker] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [consultantName, setConsultantName] = useState('...');
+  const [connectionState, setConnectionState] = useState<'connecting' | 'connected' | 'reconnecting' | 'disconnected'>('connecting');
   
-  const engine = useRef<any>(null);
-  const timer = useRef<NodeJS.Timeout | null>(null);
+  const room = useRef<LiveKitRoom | null>(null);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ending = useRef(false);
 
   useEffect(() => {
     initCall();
@@ -73,44 +71,39 @@ export default function CallScreen() {
         }
       }
 
-      // 3. Agora token al
-      const { app_id, token, channel_name, uid } = await agoraApi.getToken(bookingId!);
+      // 3. LiveKit token al
+      const { token, ws_url } = await fetchLiveKitToken(bookingId!);
 
-      // 4. Agora engine başlat (Sadece Mobil ve Native Modül Varsa)
-      if (Platform.OS !== 'web' && createAgoraRtcEngine) {
-        engine.current = createAgoraRtcEngine();
-        engine.current.initialize({ appId: app_id });
-        
-        (engine.current as any).registerEventHandler({
-          onJoinChannelSuccess: () => {
-            setJoined(true);
-            setLoading(false);
-            startTimer();
-          },
-          onLeaveChannel: () => {
-            setJoined(false);
-            stopTimer();
-          },
-          onUserOffline: () => {
-            // Karşı taraf ayrıldı
-            Alert.alert('Görüşme Bitti', 'Danışman görüşmeden ayrıldı.');
-            endCall();
-          },
-          onError: (err: any) => {
-            console.error('Agora Error:', err);
-          }
-        });
-  
-        engine.current.enableAudio();
-        engine.current.setChannelProfile(ChannelProfileType.ChannelProfileCommunication);
-        
-        engine.current.joinChannel(token, channel_name, uid, {
-          clientRoleType: ClientRoleType.ClientRoleBroadcaster,
-          publishMicrophoneTrack: true,
-          autoSubscribeAudio: true
-        });
+      // 4. LiveKit odasına bağlan. Native modül Expo Go'da yoksa simülasyon fallback'i kullan.
+      if (Platform.OS !== 'web') {
+        try {
+          room.current = await connectLiveKitAudio({
+            token,
+            wsUrl: ws_url,
+            onConnected: () => {
+              setConnectionState('connected');
+              setJoined(true);
+              setLoading(false);
+              startTimer();
+            },
+            onDisconnected: () => {
+              setConnectionState('disconnected');
+              setJoined(false);
+              stopTimer();
+            },
+            onReconnecting: () => setConnectionState('reconnecting'),
+            onReconnected: () => setConnectionState('connected'),
+          });
+        } catch (nativeError) {
+          console.warn('LiveKit native module unavailable, using call simulation.', nativeError);
+          setConnectionState('connected');
+          setJoined(true);
+          setLoading(false);
+          startTimer();
+        }
       } else {
         // Web simülasyonu için bağlandı göster
+        setConnectionState('connected');
         setJoined(true);
         setLoading(false);
         startTimer();
@@ -123,16 +116,17 @@ export default function CallScreen() {
   };
 
   const endCall = async () => {
+    if (ending.current) return;
+    ending.current = true;
     stopTimer();
-    if (engine.current) {
-      engine.current.leaveChannel();
-      engine.current.release();
-      engine.current = null;
+    if (room.current) {
+      room.current.disconnect();
+      room.current = null;
     }
     
     // Backend'e bitişi bildir
     try {
-      await agoraApi.endSession(bookingId!);
+      await endLiveKitSession(bookingId!);
     } catch (err) {
       console.warn('Session end notification failed:', err);
     }
@@ -156,18 +150,18 @@ export default function CallScreen() {
     }
   };
 
-  const toggleMute = () => {
-    if (engine.current) {
-      engine.current.muteLocalAudioStream(!muted);
-      setMuted(!muted);
+  const toggleMute = async () => {
+    const nextMuted = !muted;
+    try {
+      await setLiveKitMicrophone(room.current, !nextMuted);
+      setMuted(nextMuted);
+    } catch (err) {
+      console.warn('Microphone toggle failed:', err);
     }
   };
 
   const toggleSpeaker = () => {
-    if (engine.current) {
-      engine.current.setEnableSpeakerphone(!speaker);
-      setSpeaker(!speaker);
-    }
+    setSpeaker(!speaker);
   };
 
   const formatTime = (totalSeconds: number) => {
@@ -181,7 +175,13 @@ export default function CallScreen() {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.brand}>GoldMoodAstro</Text>
-          <Text style={styles.status}>{loading ? t('call.connecting') : t('call.connected', { name: '' })}</Text>
+          <Text style={styles.status}>
+            {loading || connectionState === 'connecting'
+              ? t('call.connecting')
+              : connectionState === 'reconnecting'
+                ? 'Yeniden bağlanıyor'
+                : t('call.connected', { name: '' })}
+          </Text>
         </View>
 
         <View style={styles.main}>

@@ -7,6 +7,8 @@ import { authApi } from './api';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -33,7 +35,7 @@ export async function registerPushToken(): Promise<string | null> {
       name: 'Varsayılan',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#7B5EA7',
+      lightColor: '#C9A961',
     });
   }
 

@@ -146,6 +146,7 @@ const tr = {
   },
   tabs: {
     home: 'Danışmanlar',
+    astrology: 'Gökyüzü',
     bookings: 'Randevularım',
     favorites: 'Favoriler',
     settings: 'Ayarlar',
@@ -308,6 +309,7 @@ const en: typeof tr = {
   },
   tabs: {
     home: 'Consultants',
+    astrology: 'Sky',
     bookings: 'My Bookings',
     favorites: 'Favorites',
     settings: 'Settings',

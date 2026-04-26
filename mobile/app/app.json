@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0D0B1E"
+      "backgroundColor": "#2A2620"
     },
     "ios": {
       "bundleIdentifier": "com.goldmoodastro.app",
@@ -25,7 +25,7 @@
       "package": "com.goldmoodastro.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#7B5EA7"
+        "backgroundColor": "#C9A961"
       },
       "permissions": [
         "android.permission.RECORD_AUDIO",
@@ -45,7 +45,7 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#7B5EA7",
+          "color": "#C9A961",
           "sounds": [
             "./assets/sounds/call-incoming.mp3"
           ]

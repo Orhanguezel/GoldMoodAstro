@@ -5,7 +5,27 @@ export interface DesignTokenColors {
   brand_secondary: string;
   brand_secondary_dim: string;
   brand_secondary_light: string;
-  brand_accent: string;
+  brand_accent: string;        // plum (mystical accent — yeni: #3D2E47)
+  gold_50?: string;
+  gold_100?: string;
+  gold_200?: string;
+  gold_300?: string;
+  gold_400?: string;
+  gold_500?: string;
+  gold_600?: string;
+  gold_700?: string;
+  gold_800?: string;
+  gold_900?: string;
+  sand_50?: string;
+  sand_100?: string;
+  sand_200?: string;
+  sand_300?: string;
+  sand_400?: string;
+  sand_500?: string;
+  sand_600?: string;
+  sand_700?: string;
+  sand_800?: string;
+  sand_900?: string;
   bg_base: string;
   bg_deep: string;
   bg_surface: string;
@@ -20,12 +40,21 @@ export interface DesignTokenColors {
   warning: string;
   error: string;
   info: string;
+  // Dark theme variantları (opsiyonel — yoksa CSS [data-theme="dark"] bloğu fallback'e düşer)
+  bg_base_dark?: string;
+  bg_deep_dark?: string;
+  bg_surface_dark?: string;
+  bg_surface_high_dark?: string;
+  text_primary_dark?: string;
+  text_secondary_dark?: string;
+  text_muted_dark?: string;
 }
 
 export interface DesignTokenTypography {
-  font_display: string;
-  font_sans: string;
-  font_mono: string;
+  font_display: string;        // Cinzel (branded headers)
+  font_serif: string;          // Fraunces (editorial body) — yeni
+  font_sans: string;           // Manrope (UI sans)
+  font_mono: string;           // JetBrains Mono
   base_size: string;
 }
 
@@ -52,6 +81,7 @@ export interface DesignTokenBranding {
   logo_url: string;
   favicon_url: string;
   theme_color: string;
+  theme_color_dark?: string;   // PWA / meta — dark mode için ayrı (yeni)
   og_image_url: string;
 }
 

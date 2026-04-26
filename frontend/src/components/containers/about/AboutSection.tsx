@@ -36,7 +36,8 @@ const AboutSection: React.FC<{ locale?: string }> = ({ locale: explicitLocale })
 
   const firstTitle = useMemo(() => {
     const t = safeStr(first?.title);
-    return t || safeStr(ui('ui_about_fallback_title', 'Energetische Massage')) || 'Energetische Massage';
+    if (t) return t;
+    return t || safeStr(ui('ui_about_fallback_title', 'Spiritüel Yolculuk')) || 'Spiritüel Yolculuk';
   }, [first?.title, ui]);
 
   const firstSummaryRaw = useMemo(() => {

@@ -5,26 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import HeaderOffcanvas from './HeaderOffcanvas';
-import { SiteLogo } from '@/layout/SiteLogo';
-
 import { useListMenuItemsQuery, useGetSiteSettingByKeyQuery } from '@/integrations/rtk/hooks';
 import type { PublicMenuItemDto } from '@/integrations/shared';
-
 import { localizePath } from '@/integrations/shared';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { useAuthStore } from '@/features/auth/auth.store';
-import { useTheme } from '@/components/system/ThemeProvider';
 import { IconUser } from '@/components/ui/icons';
-
-type SimpleBrand = {
-  name: string;
-  email?: string;
-  phone?: string;
-  website?: string;
-  socials?: Record<string, string>;
-};
-
-type Props = { brand?: SimpleBrand; locale?: string };
 
 type MenuItemWithChildren = PublicMenuItemDto & {
   children?: MenuItemWithChildren[];
@@ -33,246 +19,154 @@ type MenuItemWithChildren = PublicMenuItemDto & {
 const isExternalHref = (href: string) =>
   /^https?:\/\//i.test(href) || /^mailto:/i.test(href) || /^tel:/i.test(href) || /^#/i.test(href);
 
-const HeaderClient: React.FC<Props> = ({ brand, locale: localeProp }) => {
+type HeaderClientBrand = {
+  name: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  socials?: Record<string, string>;
+};
+
+const HeaderClient: React.FC<{ brand?: HeaderClientBrand; locale?: string }> = ({ brand, locale: localeProp }) => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
-  const { theme, toggleTheme } = useTheme();
-
-  useEffect(() => { setMounted(true); }, []);
 
   const locale = useLocaleShort(localeProp);
   const { ui } = useUiSection('ui_header', locale);
 
   const { data: contactInfoSetting } = useGetSiteSettingByKeyQuery({ key: 'contact_info', locale });
-  const { data: socialsSetting } = useGetSiteSettingByKeyQuery({ key: 'socials', locale });
   const { data: companyBrandSetting } = useGetSiteSettingByKeyQuery({ key: 'company_brand', locale });
 
-  const brandFromSettings = useMemo(() => {
+  const resolvedBrand = useMemo(() => {
     const contact = (contactInfoSetting?.value ?? {}) as any;
-    const socials = (socialsSetting?.value ?? {}) as Record<string, string>;
     const brandVal = (companyBrandSetting?.value ?? {}) as any;
-    const name = (brandVal?.name as string) || (contact?.companyName as string) || 'GoldMoodAstro';
-    const website = (brandVal?.website as string) || (contact?.website as string) || '';
-    const phones = Array.isArray(contact?.phones) ? contact.phones : [];
-    const phone = (phones[0] as string | undefined) || (contact?.whatsappNumber as string | undefined) || (brandVal?.phone as string | undefined) || '';
-    const email = (contact?.email as string) || (brandVal?.email as string) || '';
-    const mergedSocials: Record<string, string> = { ...(brandVal?.socials as Record<string, string> | undefined), ...(socials ?? {}) };
-    const logo = (brandVal?.logo || (Array.isArray(brandVal?.images) ? brandVal.images[0] : null) || {}) as { url?: string; width?: number; height?: number };
-    return { name, website, phone, email, socials: mergedSocials, logo };
-  }, [contactInfoSetting?.value, socialsSetting?.value, companyBrandSetting?.value]);
+    const name = brand?.name || (brandVal?.name as string) || (contact?.companyName as string) || 'GoldMoodAstro';
+    return { name };
+  }, [brand?.name, contactInfoSetting?.value, companyBrandSetting?.value]);
 
-  const resolvedBrand = useMemo(() => ({
-    ...brandFromSettings,
-    ...(brand ?? {}),
-    socials: { ...(brandFromSettings.socials ?? {}), ...(brand?.socials ?? {}) },
-  }), [brandFromSettings, brand]);
-
-  const { data: menuData, isLoading: isMenuLoading } = useListMenuItemsQuery({
+  const { data: menuData } = useListMenuItemsQuery({
     location: 'header', is_active: true, locale, nested: true,
   });
 
   const headerMenuItems: MenuItemWithChildren[] = useMemo(() => {
     const raw = menuData as any;
     const list: MenuItemWithChildren[] = Array.isArray(raw) ? raw : Array.isArray(raw?.items) ? raw.items : [];
-    const sortRecursive = (items: MenuItemWithChildren[]): MenuItemWithChildren[] =>
-      items.slice().sort((a, b) => ((a as any)?.order_num ?? 0) - ((b as any)?.order_num ?? 0))
-        .map((it) => ({ ...it, children: it.children ? sortRecursive(it.children as MenuItemWithChildren[]) : undefined }));
-    return sortRecursive(list);
+    return list.slice().sort((a, b) => ((a as any)?.order_num ?? 0) - ((b as any)?.order_num ?? 0));
   }, [menuData]);
 
-  // Scroll detection
   useEffect(() => {
-    let raf = 0;
-    const onScroll = () => {
-      if (raf) cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 60);
-      });
-    };
-    onScroll();
+    const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => { if (raf) cancelAnimationFrame(raf); window.removeEventListener('scroll', onScroll); };
-  }, [pathname]);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   const homeHref = localizePath(locale, '/');
   const consultantsHref = localizePath(locale, '/consultants');
 
-  const linkClass = `relative text-[0.82rem] font-normal tracking-[0.12em] uppercase text-text-secondary hover:text-brand-primary transition-colors
-    after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-px after:bg-brand-primary after:transition-all after:duration-400 hover:after:w-full`;
-
   return (
     <Fragment>
       <HeaderOffcanvas open={open} onClose={() => setOpen(false)} brand={resolvedBrand} locale={locale} />
 
-      <header>
+      <header className="relative z-[1000]">
         <nav
-          id="header-sticky"
-          className={`fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between transition-all duration-500
+          className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-all duration-500 px-6 lg:px-12
             ${scrolled
-              ? 'py-3 bg-bg-primary/92 backdrop-blur-[20px] backdrop-saturate-[1.4] border-b border-border-light'
-              : 'py-5 bg-transparent'
+              ? 'py-4 bg-[var(--gm-bg)]/92 backdrop-blur-[12px] border-b border-[var(--gm-border-soft)] shadow-sm'
+              : 'py-6 lg:py-8 bg-transparent'
             }`}
-          style={{ paddingLeft: '4%', paddingRight: '4%' }}
         >
-          {/* Brand */}
-          <Link href={homeHref} className="flex items-center gap-3 no-underline">
-            <SiteLogo
-              variant="light"
-              alt={resolvedBrand.name}
-              wrapperClassName="w-10! h-10! max-w-10!"
-              className="w-10! h-10! max-w-10! rounded-full object-cover border border-brand-primary/60 transition-transform duration-300 hover:scale-[1.08]"
-            />
-            <span className="font-serif text-[0.7rem] sm:text-[1.1rem] lg:text-[1.35rem] font-normal tracking-[0.1em] sm:tracking-[0.15em] text-brand-primary uppercase">
-              {resolvedBrand.name}
+          {/* Brand Logo (Branded Text) */}
+          <Link href={homeHref} className="flex flex-col items-center no-underline group">
+            <span className="font-display font-semibold text-[16px] lg:text-[18px] tracking-[0.18em] text-[var(--gm-gold)] transition-colors group-hover:text-[var(--gm-gold-light)]">
+              GOLD MOOD
+            </span>
+            <span className="font-display text-[9px] lg:text-[10px] tracking-[0.32em] text-[var(--gm-gold-deep)] mt-0.5">
+              ASTROLOGY
             </span>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <ul className="hidden lg:flex gap-10 list-none m-0 p-0 items-center">
-            {headerMenuItems.map((item) => {
-              const rawUrl = (item.url || (item as any).href || '#') as string;
-              const label = (item.title || rawUrl) as string;
-              const external = isExternalHref(rawUrl);
-              const href = external ? rawUrl : localizePath(locale, rawUrl);
+          {/* Desktop Nav */}
+          <div className="hidden lg:flex items-center gap-12">
+            <ul className="flex gap-10 list-none m-0 p-0 items-center">
+              {headerMenuItems.map((item) => {
+                const rawUrl = (item.url || '#') as string;
+                const label = item.title || 'Link';
+                const href = isExternalHref(rawUrl) ? rawUrl : localizePath(locale, rawUrl);
 
-              return (
-                <li key={String(item.id ?? rawUrl)}>
-                  {external ? (
-                    <a href={href} target={/^https?:\/\//i.test(rawUrl) ? '_blank' : undefined}
-                       rel={/^https?:\/\//i.test(rawUrl) ? 'noopener noreferrer' : undefined}
-                       className={linkClass}>
+                return (
+                  <li key={item.id}>
+                    <Link href={href} className="font-serif text-[13px] font-normal tracking-[0.05em] text-[var(--gm-text)] hover:text-[var(--gm-gold-deep)] transition-colors relative group">
                       {label}
-                    </a>
-                  ) : (
-                    <Link href={href} className={linkClass}>
-                      {label}
+                      <span className="absolute bottom-[-4px] left-0 w-0 h-[1px] bg-[var(--gm-gold)] transition-all duration-300 group-hover:w-full" />
                     </Link>
-                  )}
-                </li>
-              );
-            })}
+                  </li>
+                );
+              })}
+            </ul>
 
-            {/* CTA Button */}
-            <li>
-              <Link
-                href={consultantsHref}
-                className="py-2.5 px-7 bg-transparent border border-brand-primary text-brand-primary text-[0.75rem] tracking-[0.15em] uppercase transition-all duration-400 hover:bg-brand-primary hover:text-bg-primary no-underline"
-              >
-                {ui('ui_header_cta', locale === 'en' ? 'Find Consultant' : 'Danışman Bul')}
+            <div className="flex items-center gap-6">
+              <Link href={consultantsHref} className="btn-premium py-2.5 px-6 text-[12px]">
+                {ui('ui_header_cta', 'DANIŞMAN BUL')}
               </Link>
-            </li>
 
-            {/* Theme Toggle */}
-            {mounted && (
-              <li>
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="w-9 h-9 flex items-center justify-center rounded-full border border-border-light text-text-muted hover:text-brand-primary hover:border-brand-primary transition-all"
-                  aria-label="Toggle theme"
-                >
-                  {theme === 'dark' ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
-                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
-                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                    </svg>
-                  )}
-                </button>
-              </li>
-            )}
-          </ul>
-
-          {/* Right: Profile + Hamburger */}
-          <div className="flex items-center gap-4">
-            {mounted && isAuthenticated && (
-              <Link
-                href={localizePath(locale, '/profile')}
-                aria-label="Profile"
-                className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-brand-light transition-colors"
+              {/* Hamburger Toggle */}
+              <button
+                type="button"
+                className="flex flex-col gap-1.5 cursor-pointer group"
+                onClick={() => setOpen(true)}
               >
-                <IconUser className="w-5 h-5 text-text-secondary" />
+                <span className="w-6 h-[1px] bg-[var(--gm-gold)] transition-all group-hover:w-8" />
+                <span className="w-8 h-[1px] bg-[var(--gm-gold)]" />
+                <span className="w-6 h-[1px] bg-[var(--gm-gold)] ml-auto transition-all group-hover:w-8" />
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Right */}
+          <div className="flex lg:hidden items-center gap-4">
+            {isAuthenticated && (
+              <Link href={localizePath(locale, '/profile')} className="p-2 text-[var(--gm-text)]">
+                <IconUser className="w-5 h-5" />
               </Link>
             )}
-
-            {/* Desktop hamburger (offcanvas) */}
             <button
               type="button"
-              className="hidden lg:flex flex-col gap-[5px] bg-transparent border-none cursor-pointer p-1"
-              aria-label={ui('ui_header_open_menu', 'Open Menu')}
-              onClick={() => setOpen(true)}
-            >
-              <span className="w-[26px] h-[1.5px] bg-brand-primary transition-all" />
-              <span className="w-[18px] ml-auto h-[1.5px] bg-brand-primary transition-all" />
-              <span className="w-[26px] h-[1.5px] bg-brand-primary transition-all" />
-            </button>
-
-            {/* Mobile hamburger */}
-            <button
-              type="button"
-              className={`lg:hidden flex flex-col gap-[5px] bg-transparent border-none cursor-pointer p-1 transition-all ${mobileOpen ? 'rotate-90' : ''}`}
-              aria-label={ui('ui_header_open_sidebar', 'Open Sidebar')}
-              aria-expanded={mobileOpen}
+              className="flex flex-col gap-1.5"
               onClick={() => setMobileOpen(!mobileOpen)}
             >
-              <span className={`w-[26px] h-[1.5px] bg-brand-primary transition-all ${mobileOpen ? 'rotate-45 translate-y-[6.5px]' : ''}`} />
-              <span className={`w-[26px] h-[1.5px] bg-brand-primary transition-all ${mobileOpen ? 'opacity-0' : ''}`} />
-              <span className={`w-[26px] h-[1.5px] bg-brand-primary transition-all ${mobileOpen ? '-rotate-45 -translate-y-[6.5px]' : ''}`} />
+              <span className={`w-6 h-[1px] bg-[var(--gm-gold)] transition-all ${mobileOpen ? 'rotate-45 translate-y-[7.5px]' : ''}`} />
+              <span className={`w-6 h-[1px] bg-[var(--gm-gold)] ${mobileOpen ? 'opacity-0' : ''}`} />
+              <span className={`w-6 h-[1px] bg-[var(--gm-gold)] transition-all ${mobileOpen ? '-rotate-45 -translate-y-[7.5px]' : ''}`} />
             </button>
           </div>
         </nav>
 
         {/* Mobile Menu Dropdown */}
         <div
-          className={`fixed top-0 left-0 right-0 z-[999] bg-bg-primary/97 backdrop-blur-[20px] border-b border-border-light transition-all duration-300 lg:hidden
-            ${mobileOpen ? 'translate-y-[72px] opacity-100 visible' : '-translate-y-full opacity-0 invisible'}`}
+          className={`fixed inset-0 z-[40] bg-[var(--gm-bg)]/98 backdrop-blur-xl transition-all duration-500 lg:hidden flex flex-col justify-center items-center px-12 text-center
+            ${mobileOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
         >
-          <div className="flex flex-col gap-3 p-6">
-            {headerMenuItems.map((item) => {
-              const rawUrl = (item.url || (item as any).href || '#') as string;
-              const label = (item.title || rawUrl) as string;
-              const external = isExternalHref(rawUrl);
-              const href = external ? rawUrl : localizePath(locale, rawUrl);
-
-              return external ? (
-                <a key={String(item.id ?? rawUrl)} href={href}
-                   className="text-text-secondary hover:text-brand-primary text-sm uppercase tracking-[0.12em] py-2 transition-colors"
-                   onClick={() => setMobileOpen(false)}>
-                  {label}
-                </a>
-              ) : (
-                <Link key={String(item.id ?? rawUrl)} href={href}
-                      className="text-text-secondary hover:text-brand-primary text-sm uppercase tracking-[0.12em] py-2 transition-colors"
-                      onClick={() => setMobileOpen(false)}>
-                  {label}
+          <ul className="flex flex-col gap-8 list-none m-0 p-0 mb-12">
+            {headerMenuItems.map((item) => (
+              <li key={item.id}>
+                <Link 
+                  href={isExternalHref(item.url!) ? item.url! : localizePath(locale, item.url!)}
+                  className="font-display text-2xl tracking-widest text-[var(--gm-gold)]"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {item.title}
                 </Link>
-              );
-            })}
-            <Link
-              href={consultantsHref}
-              className="mt-2 py-3 text-center bg-brand-primary text-bg-primary text-sm uppercase tracking-[0.15em] font-medium transition-colors hover:bg-brand-hover"
-              onClick={() => setMobileOpen(false)}
-            >
-              {ui('ui_header_cta', locale === 'en' ? 'Find Consultant' : 'Danışman Bul')}
-            </Link>
-            {mounted && (
-              <button type="button" onClick={toggleTheme}
-                className="mt-1 py-2 text-text-muted text-sm flex items-center justify-center gap-2">
-                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-              </button>
-            )}
-          </div>
+              </li>
+            ))}
+          </ul>
+          <Link href={consultantsHref} className="btn-premium w-full max-w-xs text-center" onClick={() => setMobileOpen(false)}>
+            {ui('ui_header_cta', 'DANIŞMAN BUL')}
+          </Link>
         </div>
       </header>
     </Fragment>

@@ -3,9 +3,7 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 
-import { SiteLogo } from '@/layout/SiteLogo';
 import SocialLinks from '@/components/common/public/SocialLinks';
-
 import {
   useGetSiteSettingByKeyQuery,
   useListFooterSectionsQuery,
@@ -19,9 +17,7 @@ import { localizePath } from '@/integrations/shared';
 const isExternalHref = (href: string) =>
   /^https?:\/\//i.test(href) || /^mailto:/i.test(href) || /^tel:/i.test(href) || /^#/i.test(href);
 
-type FooterProps = { locale?: string };
-
-const Footer: React.FC<FooterProps> = ({ locale: localeProp }) => {
+const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
   const fallbackLocale = useLocaleShort();
   const locale = localeProp || fallbackLocale;
   const { ui } = useUiSection('ui_footer', locale);
@@ -30,18 +26,13 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp }) => {
   const { data: companyBrandSetting } = useGetSiteSettingByKeyQuery({ key: 'company_brand', locale });
   const { data: socialsSetting } = useGetSiteSettingByKeyQuery({ key: 'socials', locale });
 
-  const { brandName, phone, email, addrLines, socials } = useMemo(() => {
+  const { brandName, socials } = useMemo(() => {
     const contact = (contactInfoSetting?.value ?? {}) as any;
     const brandVal = (companyBrandSetting?.value ?? {}) as any;
     const socialsVal = (socialsSetting?.value ?? {}) as Record<string, string>;
     const name = (brandVal.name as string) || (contact.companyName as string) || 'GoldMoodAstro';
-    const phoneVal = (brandVal.phone as string | undefined) || (Array.isArray(contact.phones) ? (contact.phones[0] as string | undefined) : undefined) || '';
-    const emailVal = (brandVal.email as string | undefined) || (contact.email as string | undefined) || '';
     const mergedSocials: Record<string, string> = { ...(brandVal.socials as Record<string, string> | undefined), ...socialsVal };
-    const addrLinesComputed: string[] = [];
-    if (contact.address) addrLinesComputed.push(String(contact.address));
-    if (contact.addressSecondary) addrLinesComputed.push(String(contact.addressSecondary));
-    return { brandName: name, phone: (phoneVal || '').trim(), email: (emailVal || '').trim(), addrLines: addrLinesComputed, socials: mergedSocials };
+    return { brandName: name, socials: mergedSocials };
   }, [contactInfoSetting?.value, companyBrandSetting?.value, socialsSetting?.value]);
 
   const { data: footerSections } = useListFooterSectionsQuery({ is_active: true, order: 'display_order.asc', locale });
@@ -61,101 +52,64 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp }) => {
       arr.push(item);
       m.set(sid, arr);
     }
-    for (const [sid, arr] of m) {
-      arr.sort((a: any, b: any) => (a.order_num ?? 0) - (b.order_num ?? 0));
-      m.set(sid, arr);
-    }
     return m;
   }, [footerMenuItems]);
 
   const homeHref = localizePath(locale, '/');
 
-  const renderSectionColumn = (sec: FooterSectionDto | undefined) => {
-    if (!sec) return null;
-    const items = itemsBySectionId.get(sec.id) ?? [];
-    return (
-      <div>
-        <h3 className="text-[0.72rem] tracking-[0.15em] uppercase text-brand-primary mb-4">
-          {sec.title || sec.slug || 'Links'}
-        </h3>
-        <ul className="list-none p-0 m-0">
-          {items.map((item) => {
-            const rawUrl = (item.url || (item as any).href || '#') as string;
-            const label = item.title || rawUrl;
-            const external = isExternalHref(rawUrl);
-            const href = external ? rawUrl : localizePath(locale, rawUrl);
+  return (
+    <footer className="py-24 lg:py-32 bg-[var(--gm-bg)] border-t border-[var(--gm-border-soft)]">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
+          {/* Brand Info */}
+          <div className="flex flex-col items-start text-center md:text-left">
+            <Link href={homeHref} className="flex flex-col items-start no-underline mb-8 group">
+              <span className="font-display font-semibold text-2xl tracking-[0.18em] text-[var(--gm-gold)] group-hover:text-[var(--gm-gold-light)] transition-colors">
+                GOLD MOOD
+              </span>
+              <span className="font-display text-[10px] tracking-[0.32em] text-[var(--gm-gold-deep)] mt-1">
+                ASTROLOGY
+              </span>
+            </Link>
+            <p className="text-[var(--gm-text-dim)] font-light text-[15px] leading-relaxed mb-8 max-w-[260px]">
+              {ui('ui_footer_tagline', 'Doğum haritanızdan beslenen kişisel rehberlik ve modern astroloji deneyimi.')}
+            </p>
+            <SocialLinks socials={socials} size="sm" />
+          </div>
+
+          {/* Columns */}
+          {sections.map((sec) => {
+            const items = itemsBySectionId.get(sec.id) ?? [];
             return (
-              <li key={item.id} className="mb-2">
-                {external ? (
-                  <a href={href} target={/^https?:\/\//i.test(rawUrl) ? '_blank' : undefined}
-                     rel={/^https?:\/\//i.test(rawUrl) ? 'noopener noreferrer' : undefined}
-                     className="text-text-muted no-underline text-[0.85rem] hover:text-brand-primary transition-colors">
-                    {label}
-                  </a>
-                ) : (
-                  <Link href={href} className="text-text-muted no-underline text-[0.85rem] hover:text-brand-primary transition-colors">
-                    {label}
-                  </Link>
-                )}
-              </li>
+              <div key={sec.id}>
+                <h4 className="font-display text-[11px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-8">
+                  {sec.title}
+                </h4>
+                <ul className="list-none p-0 m-0 space-y-4">
+                  {items.map((item) => (
+                    <li key={item.id}>
+                      <Link 
+                        href={isExternalHref(item.url!) ? item.url! : localizePath(locale, item.url!)}
+                        className="text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] transition-colors font-serif italic text-[16px]"
+                      >
+                        {item.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             );
           })}
-        </ul>
-      </div>
-    );
-  };
-
-  return (
-    <footer className="border-t border-border-light" style={{ padding: '3.5rem 4% 2rem' }}>
-      <div className="max-w-[1300px] mx-auto">
-        {/* Top */}
-        <div className="flex justify-between items-start flex-wrap gap-8 mb-12">
-          {/* Brand */}
-          <div className="max-w-[320px]">
-            <Link href={homeHref} aria-label={brandName} className="no-underline inline-block mb-3">
-              <SiteLogo
-                variant="light"
-                alt={brandName || 'Logo'}
-                priority={false}
-                wrapperClassName="w-28! h-28! max-w-28!"
-                className="w-28! h-28! max-w-28! rounded-full object-cover border-[1.5px] border-brand-primary"
-              />
-            </Link>
-            <div className="font-serif text-[1.1rem] tracking-[0.15em] text-brand-primary uppercase mb-3">
-              {brandName}
-            </div>
-            <p className="text-text-muted text-[0.85rem] max-w-[300px] leading-[1.6]">
-              {ui('ui_footer_tagline',
-                locale === 'de' ? 'Ihre Plattform fuer Astrologie, Tarot und spirituelles Coaching.'
-                : locale === 'tr' ? 'Astroloji, tarot ve ruhsal koçluk platformu.'
-                : 'Your platform for astrology, tarot and spiritual coaching.'
-              )}
-            </p>
-          </div>
-
-          {/* Link Columns */}
-          <div className="flex gap-12 flex-wrap">
-            {sections.slice(0, 3).map((sec) => (
-              <React.Fragment key={sec.id}>
-                {renderSectionColumn(sec)}
-              </React.Fragment>
-            ))}
-          </div>
         </div>
 
-        {/* Bottom */}
-        <div className="flex justify-between items-center flex-wrap gap-4 pt-8 border-t border-border-light text-[0.75rem] text-text-muted tracking-[0.05em]">
-          <span>
-            &copy; {new Date().getFullYear()} {brandName}. {ui('ui_footer_copyright_suffix', locale === 'tr' ? 'Tum haklar saklidir.' : 'All rights reserved.')}
-          </span>
-          <span>
-            {locale === 'de' ? 'Gestaltung' : locale === 'tr' ? 'Tasarim' : 'Design'}:{' '}
-            <a href="https://guezelwebdesign.com" target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:text-brand-hover transition-colors">
-              guezelwebdesign.com
+        <div className="pt-12 border-t border-[var(--gm-border-soft)] flex flex-col md:flex-row justify-between items-center gap-8 text-[11px] tracking-[0.1em] text-[var(--gm-muted)] uppercase">
+          <p>
+            &copy; {new Date().getFullYear()} GOLD MOOD ASTROLOGY. {ui('ui_footer_rights', 'TÜM HAKLARI SAKLIDIR.')}
+          </p>
+          <div className="flex gap-6">
+            <a href="https://guezelwebdesign.com" target="_blank" rel="noopener" className="hover:text-[var(--gm-gold)] transition-colors">
+              DESIGNED BY GUEZELEWEB
             </a>
-          </span>
-          <div className="flex gap-4">
-            <SocialLinks socials={socials} size="sm" />
           </div>
         </div>
       </div>

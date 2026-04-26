@@ -26,8 +26,8 @@ const FaqsPageContent: React.FC = () => {
   const t = useCallback((key: string, fallback: string) => ui(key, fallback), [ui]);
 
   // UI Strings
-  const kickerPrefix = safeStr(t('ui_faqs_kicker_prefix', 'GoldMoods Massage'));
-  const kickerLabel = safeStr(t('ui_faqs_kicker_label', 'Frequently Asked Questions'));
+  const kickerPrefix = safeStr(t('ui_faqs_kicker_prefix', 'GoldMoodAstro'));
+  const kickerLabel = safeStr(t('ui_faqs_kicker_label', 'Sıkça Sorulan Sorular'));
 
   const titlePrefix = safeStr(t('ui_faqs_page_title_prefix', 'Common'));
   const titleMark = safeStr(t('ui_faqs_page_title_mark', 'Questions'));
@@ -35,7 +35,7 @@ const FaqsPageContent: React.FC = () => {
   const intro = safeStr(
     t(
       'ui_faqs_intro',
-      'Find answers to common questions about GoldMoods Massage sessions, booking, and general practices.',
+      'GoldMoodAstro danışmanlık seansları, randevu süreci ve genel işleyiş hakkında merak ettiğiniz cevapları bulun.',
     ),
   );
 
