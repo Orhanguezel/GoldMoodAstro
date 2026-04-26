@@ -26,7 +26,8 @@ export function getPublicApiBase(): string {
   const base = raw.replace(/\/+$/, '');
 
   // RTK calls usually go to "/api/...". Tolerate env that points to domain root.
-  if (base && !/\/api$/i.test(base)) return `${base}/api`;
+  // base zaten /api veya /api/v1 ile bitiyorsa double-append yapma.
+  if (base && !/\/api(\/v\d+)?$/i.test(base)) return `${base}/api`;
 
   return base;
 }

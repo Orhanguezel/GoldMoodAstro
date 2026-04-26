@@ -7,12 +7,10 @@ function trimSlash(x: string) {
 /**
  * Server-side API base resolver.
  *
- * Accepts either:
- * - "http://127.0.0.1:8086/api"
- * - "http://127.0.0.1:8086"        (will append "/api")
- *
- * Uses the same envs as the client-side base resolution to avoid
- * SSR (metadata) reading a different backend than the UI.
+ * Accepts:
+ * - "http://127.0.0.1:8094/api"
+ * - "http://127.0.0.1:8094/api/v1"  (versiyonlu prefix de geçerli)
+ * - "http://127.0.0.1:8094"         (will append "/api")
  */
 export function getServerApiBase(): string {
   const raw =
@@ -23,6 +21,7 @@ export function getServerApiBase(): string {
   const base = trimSlash(raw);
   if (!base) return '';
 
-  if (!/\/api$/i.test(base)) return `${base}/api`;
+  // base zaten /api veya /api/v1 ile bitiyorsa double-append yapma
+  if (!/\/api(\/v\d+)?$/i.test(base)) return `${base}/api`;
   return base;
 }

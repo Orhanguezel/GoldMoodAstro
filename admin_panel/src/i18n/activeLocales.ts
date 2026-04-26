@@ -18,10 +18,8 @@ function getApiBase(): string {
 
   const base = raw.replace(/\/+$/, '');
 
-  // ✅ Senin projede RTK çağrıları /api/... gidiyor.
-  // Env yanlışlıkla https://www.guezelwebdesign.de verildiyse burada /api ekleyerek tolere ediyoruz.
-  // Env zaten .../api ise aynen kalır.
-  if (base && !/\/api$/i.test(base)) return `${base}/api`;
+  // RTK çağrıları /api/... gidiyor. Env domain-root ise /api ekle, /api veya /api/v1 ile bitiyorsa olduğu gibi bırak.
+  if (base && !/\/api(\/v\d+)?$/i.test(base)) return `${base}/api`;
 
   return base;
 }
