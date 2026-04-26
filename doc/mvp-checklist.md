@@ -539,3 +539,764 @@ Her görev sonrası: `doc/mvp-checklist.md`'yi güncelle.
 
 T5-11 tamamlandıktan sonra T5-12 listesini çalıştır.  
 Screenshot'lar: `docs/screenshots/frontend/` altına kaydet.
+
+---
+
+# FAZ 6+ — Vizyon Revizyonu (2026-04-27) 🆕
+
+> Müşteri kararıyla projenin yönü güncellendi. Üç ana değişiklik:
+> 1. **Agora → LiveKit** (audio + video tek SDK, vendor lock-in düşük)
+> 2. **Yeni marka teması:** Gold (#C9A961) + Cream (#FAF6EF) + Ink (#2A2620) + Plum aksan (#3D2E47)
+>    — eski Amethyst+Midnight palette tamamen değişiyor
+> 3. **Yeni modüller:** doğum haritası, günlük yorum, abonelik, kredi, banner reklam, kampanya
+> 4. **Hibrit AI+İnsan model:** AI ön-yorum + insan astrolog eskalasyonu
+> 5. **Video görüşme altyapı** — şu an audio-only, FAZ 11'de video açılacak
+>
+> Referans dosyalar:
+> - `doc/goldmoodastro-altyapi-raporu.md` — LiveKit kararı, mimari, faz planı
+> - `doc/goldmoodastro-rakip-analizi.md` — Faladdin/MsAstro/Falsepeti/Advicemy şikayet analizi, F1-F12 differentiator listesi
+> - `doc/globals.css` — yeni tema CSS tokens (cream/gold/ink)
+> - `index.html`, `mobile-app.html` — UI tasarım önizlemeleri
+> - `.secrets/credentials.env` — LIVEKIT_* keys (kullanıcı ekledi)
+
+---
+
+## FAZ 6 — Yeni Tema (Cream / Gold / Ink)
+
+> Hedef: Backend design_tokens + frontend globals.css + admin panel editör + mobile theme
+> tamamen yeni palete geçer. Eski Amethyst+Midnight palette artıkları temizlenir.
+
+### T6-1 — Backend: Design Token Yeni Default Değerleri (Codex)
+
+**Dosya:** `backend/src/db/sql/010_site_settings.sql`
+
+- [ ] `design_tokens` INSERT'inde `colors`, `typography`, `radius`, `shadows`, `branding`
+      bloklarını yeni paletle güncelle:
+  - `brand_primary: "#C9A961"` (warm editorial gold)
+  - `brand_primary_dark: "#A8884A"`, `brand_primary_light: "#D4BB7A"`
+  - `bg_base: "#FAF6EF"` (ivory base — light theme default)
+  - `bg_deep: "#F2EBDD"`, `bg_surface: "#FFFFFF"`, `bg_surface_high: "#F7F1E4"`
+  - `text_primary: "#2A2620"` (warm ink), `text_secondary: "#4A4238"`, `text_muted: "#8A8276"`
+  - `accent_plum: "#3D2E47"` (mystical accent — yeni alan, types.ts'e ekle)
+  - `font_display: "Cinzel"`, `font_serif: "Fraunces"`, `font_sans: "Manrope"`
+  - Dark theme variant'ları (`#2A2620` bg, `#FAF6EF` text)
+- [ ] `bun run db:seed:nodrop` ile test → `/api/v1/site_settings/design_tokens` 200 + yeni JSON
+- [ ] Yeni alanlar için TypeScript interface'i güncelle: `frontend/src/lib/tokens/types.ts`,
+      `mobile/app/src/theme/tokens.ts`
+
+**Acceptance:** `curl http://localhost:8094/api/v1/site_settings/design_tokens` JSON'unda
+`brand_primary === "#C9A961"`, `accent_plum` alanı mevcut.
+
+### T6-2 — Frontend: globals.css Migration (Codex)
+
+**Dosya:** `frontend/src/app/globals.css` ← `doc/globals.css`'i baz al
+
+- [ ] `doc/globals.css`'i `frontend/src/app/globals.css` olarak kopyala
+- [ ] `@theme` bloğunda `var(--gm-*)` referansları korunmuş, fallback'ler yeni paletle
+- [ ] Eski Amethyst-Midnight CSS class'larını grep'le: `bg-purple-*`, `text-purple-*`,
+      `from-amethyst`, vs. — bul ve `gold/sand/plum` muadilleriyle değiştir
+- [ ] `body { font-family: var(--font-serif) }` → Fraunces (editorial body)
+- [ ] `h1-h6 { font-family: var(--font-display) }` → Cinzel
+- [ ] Yeni utility class'lar: `.btn-premium`, `.btn-outline-premium`, `.section-label`
+- [ ] Animation class'lar: `.reveal`, `.hero-fade-up`, `.dot-pulse`, `.twinkle`, `.rotate-slow`
+- [ ] Light theme default — `[data-theme="dark"]` opsiyonel (drama section için)
+- [ ] Font yükleme: `app/[locale]/layout.tsx`'te `next/font` ile Cinzel + Fraunces + Manrope
+
+**Acceptance:** `bun run dev` → `/tr` açıldığında body Fraunces, h1 Cinzel, primary gold (#C9A961)
+
+### T6-3 — Frontend: Eski Amethyst Komponenti Cleanup (Codex)
+
+- [ ] Hero, Feedback, FeaturedConsultantsSection, ExpertiseCategoriesSection,
+      HomeIntroSection, HomeCTABanner — tek tek geç, eski purple/amethyst inline color
+      kullanan satırları yeni token'lara map et
+- [ ] `Card`, `Button`, `Badge` gibi shared-ui bileşenleri — gold/ink variant'larını ekle
+- [ ] Test sayfası: `/tr/styleguide` ekle (geçici) → tüm tema token'larını gör
+
+**Acceptance:** Hiç hardcoded `#7B5EA7` veya `#0D0B1E` kalmadı (grep doğrulaması).
+
+### T6-4 — Admin Panel: Design Token Editör Yeni Şema (Codex)
+
+**Dosya:** `admin_panel/src/app/(main)/admin/(admin)/site-settings/tabs/design-tokens-tab.tsx`
+
+- [ ] Yeni renk grupları: gold spektrumu (50-900), sand spektrumu, plum, semantic light/dark
+- [ ] `accent_plum` alanı için yeni input
+- [ ] Typography: `font_display`, `font_serif`, `font_sans` — dropdown (Cinzel, Fraunces, Manrope, Inter, ...)
+- [ ] PreviewCard yeni paletle — section-label, btn-premium, btn-outline-premium örneği
+
+**Acceptance:** Token editörünü aç → gold rengini değiştir → kaydet → frontend yenile (5dk) → değişti.
+
+### T6-5 — Mobile: Theme Tokens Güncelleme (Codex)
+
+**Dosya:** `mobile/app/src/theme/tokens.ts`, `mobile/app/src/theme/index.ts`
+
+- [ ] Tokens.ts → yeni gold/cream/ink palette (light + dark variants)
+- [ ] `mobile-app.html`'deki phone-screen renklerine eşle (deep #2A2620, gold #C9A961, sand #FAF6EF)
+- [ ] Status bar style: dark content on light bg (default), light content on dark bg
+- [ ] Linear gradients: hero için gold→deep ink
+
+**Acceptance:** Expo dev'de welcome screen + home screen önizlemedeki renklerle tutarlı.
+
+---
+
+## FAZ 7 — Agora → LiveKit Migration
+
+> Hedef: voice_sessions modülünü tamamen LiveKit'e taşı. Audio şu an, video FAZ 11'de açılacak
+> (aynı altyapı, sadece track ekleme).
+
+### T7-1 — Backend: livekit-server-sdk Entegrasyonu (Codex)
+
+- [ ] `backend/package.json` ve `packages/shared-backend/package.json` →
+      `livekit-server-sdk` (latest) ekle, `agora-token` paketini kaldır
+- [ ] `.env.example` ve `backend/.env`:
+  - Sil: `AGORA_APP_ID`, `AGORA_APP_CERTIFICATE`
+  - Ekle: `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL=wss://...`
+- [ ] `.secrets/credentials.env` (master vault) — kullanıcı zaten LIVEKIT_* ekledi, güncel kalsın
+- [ ] `./deploy/sync-env.sh` ile VPS'e yansıt
+
+### T7-2 — Backend: live_sessions Modülü (Codex)
+
+> `voice_sessions` tablosunu `live_sessions`'a rename et + alanlar genişlet.
+
+**Migration SQL:** `backend/src/db/sql/070_live_sessions_schema.sql` (070 voice_sessions yerine)
+- [ ] Tablo: `live_sessions`
+  - id (CHAR 36 UUID), booking_id, room_name, host_token, guest_token,
+        media_type ENUM('audio','video') DEFAULT 'audio',
+        started_at, ended_at, duration_seconds,
+        recording_url (nullable), recording_started_at,
+        status ENUM('pending','active','ended','timed_out','cancelled'),
+        created_at, updated_at
+  - INDEX (booking_id), INDEX (status)
+- [ ] Eski `voice_sessions` SQL ile uyumluluk: rename mi yoksa fresh mi?
+      — repo henüz prod data'sı yok, fresh seed daha temiz.
+- [ ] Seed: 2 örnek live_session kaydı (status='ended')
+
+**Modül:** `backend/src/modules/livekit/` (eski `agora/` yerine)
+- [ ] `router.ts`:
+  - `POST /api/v1/livekit/token` — auth gerekli, body: `{ booking_id }`,
+    response: `{ token, room, ws_url, expires_at }`
+  - `POST /api/v1/livekit/webhooks` — LiveKit webhook (room_started, room_finished,
+    participant_joined, participant_left)
+  - Webhook authentication: LiveKit signing key
+- [ ] `controller.ts`: token üretimi, kanal isimlendirme `goldmood-{booking_id}`,
+  identity = `{user_id}|{role}`, ttl = 1h, grants = roomJoin + canPublish + canSubscribe
+- [ ] Webhook handler: `room_finished` → `live_sessions.ended_at` doldur, kredi düşür,
+      booking.status = 'completed' yap
+- [ ] `tests/livekit.test.ts` — token üretim doğrulaması, webhook signature
+
+### T7-3 — Backend: Eski Agora Modülünü Sil (Codex)
+
+- [ ] `backend/src/modules/agora/` → sil
+- [ ] `backend/src/routes/goldmood.ts` → registerAgora çağrısını `registerLiveKit` ile değiştir
+- [ ] `backend/src/db/sql/070_voice_sessions_schema.sql` → `070_live_sessions_schema.sql`
+      adıyla yeniden yaz (data type değişikliği)
+
+### T7-4 — Mobile: react-native-livekit Entegrasyonu (Codex)
+
+- [ ] `mobile/app/package.json`:
+  - Sil: `react-native-agora`
+  - Ekle: `@livekit/react-native`, `@livekit/react-native-webrtc`, `livekit-client`
+- [ ] `app.json` → iOS/Android permissions kontrol et (mic, camera için zaten var)
+- [ ] `mobile/app/src/lib/livekit.ts` — token fetch helper (`POST /api/v1/livekit/token`)
+- [ ] `mobile/app/app/call/[bookingId].tsx` — LiveKit Room bileşeni:
+  - useRoom hook, audio publish, participant gallery
+  - Microphone toggle, hangup
+  - Connection state UI (connecting/connected/reconnecting/disconnected)
+  - Auto-disconnect timer (max session duration)
+
+### T7-5 — Frontend: Web Görüşme Sayfası (Opsiyonel — Codex)
+
+> Mobil-öncelikli ama web'den de katılım için:
+- [ ] `frontend/src/app/[locale]/booking/[id]/call/page.tsx` — `livekit-client` ile
+      audio-only katılım. Sadece kullanıcı tarafı (astrolog mobile'dan).
+
+### T7-6 — Admin Panel: LiveKit Ayarları (Codex)
+
+- [ ] `admin_panel/src/app/.../site-settings/tabs/livekit-tab.tsx` — read-only:
+  - LIVEKIT_URL, LIVEKIT_API_KEY (mask), webhook signing key durumu
+  - Aktif oda sayısı (LiveKit API'den çek)
+
+**Acceptance:** Test booking → mobil app'ten tokendetail al → LiveKit kanalına bağlan → ses
+karşılıklı geçiyor → görüşme sonu webhook tetikleniyor → live_sessions.ended_at doldu →
+booking.status='completed'.
+
+---
+
+## FAZ 8 — Astroloji Motoru & Doğum Haritası
+
+> Hedef: Mobile/Web'de "Doğum Haritası" özelliği. Swiss Ephemeris bazlı saf astronomik
+> hesaplama (gezegen pozisyonları, ev sistemleri, açılar).
+
+### T8-1 — Backend: Astroloji Motoru (Codex)
+
+- [ ] Paket seçimi: `sweph` veya `swisseph-wasm` (Node-uyumlu)
+- [ ] `packages/shared-backend/modules/astrology/` modülü:
+  - `compute.ts` — natal chart hesabı (DOB, TOB, POB → planets, houses, aspects JSON)
+  - `transit.ts` — günlük transit (kullanıcının haritasına bugünün gezegenleri)
+  - `synastry.ts` — iki harita karşılaştırma (sinastri uyum)
+  - Ephemeris dosyaları: `assets/ephe/` (Swiss Ephemeris data files, ~50MB)
+
+### T8-2 — Backend: birth_charts Tablosu + API (Codex)
+
+**SQL:** `backend/src/db/sql/035_birth_charts_schema.sql`
+- [ ] Tablo: `birth_charts`
+  - id, user_id (FK), name (kullanıcı kendisi mi yoksa eşi/çocuğu mu),
+    dob DATE, tob TIME, pob_lat DECIMAL(9,6), pob_lng DECIMAL(9,6),
+    pob_label VARCHAR(255), tz_offset SMALLINT,
+    chart_data JSON (computed natal chart),
+    created_at, updated_at
+  - UNIQUE INDEX (user_id, name)
+- [ ] Endpoints:
+  - `POST /api/v1/birth-charts` — yeni harita oluştur (compute.ts ile JSON üret, kaydet)
+  - `GET /api/v1/birth-charts` — kullanıcının haritaları (max 5 ücretsiz, abonelikle ek)
+  - `GET /api/v1/birth-charts/:id` — tek harita
+  - `DELETE /api/v1/birth-charts/:id`
+- [ ] `POST /api/v1/birth-charts/:id/transit` — bugünün transitleri (cache 1 saat)
+- [ ] `POST /api/v1/birth-charts/synastry` — iki chart_id karşılaştır
+
+### T8-3 — Backend: Reverse Geocode (Codex)
+
+> Doğum yeri (POB) text input → lat/lng dönüşümü için.
+- [ ] Backend proxy endpoint: `GET /api/v1/geocode?q=Istanbul`
+- [ ] Servis: OpenStreetMap Nominatim (ücretsiz, rate-limited) veya
+      Google Geocoding API (paid). Default: Nominatim.
+- [ ] Cache: redis yok → DB cache tablosu `geocode_cache` (q, lat, lng, label, ttl)
+
+### T8-4 — Mobile: Birth Chart Ekranı (Codex)
+
+> `mobile-app.html` → SCREEN 3: BIRTH CHART tasarımı baz alınır.
+- [ ] `mobile/app/app/(tabs)/birth-chart.tsx`:
+  - Natal Chart Wheel SVG (12 ev, dış burç ringi, gezegen sembolleri, açı çizgileri)
+  - Gezegen yerleşimleri listesi (Sun in Aries, Moon in Cancer, vs.)
+  - Onboarding ilk açılışta DOB/TOB/POB toplama formu
+- [ ] `react-native-svg` zaten yüklü, chart wheel için kullan
+
+### T8-5 — Frontend: Doğum Haritası Sayfası (Codex)
+
+- [ ] `frontend/src/app/[locale]/birth-chart/page.tsx`:
+  - SEO: "Doğum Haritası Hesaplama — GoldMoodAstro"
+  - Form: DOB picker, TOB picker, POB autocomplete (geocode)
+  - "Hesapla" → SSR/CSR chart wheel SVG + yorumlar
+- [ ] Public erişim (kayıt gerekmeden) — email yakalama trick: "Yorumu görüntülemek için kayıt ol"
+
+**Acceptance:** Mobile'da DOB/TOB/POB gir → harita çiziliyor, gezegenler listede.
+Web'de aynı form → SEO-friendly URL → hesaplanmış harita görünüyor.
+
+---
+
+## FAZ 9 — Günlük Yorum & AI İçerik Motoru (Anti-Copy-Paste)
+
+> Hedef: Kullanıcıya günlük yorum üret. Aynı kullanıcıya 30 gün içinde benzer cümle
+> dönmesin (rakip analizi F4 differentiator).
+
+### T9-1 — Backend: AI Yorum Üretimi (Codex)
+
+- [ ] Modül: `packages/shared-backend/modules/readings/`
+- [ ] LLM provider entegrasyonu: Anthropic Claude API veya OpenAI GPT
+  - `.env`: `ANTHROPIC_API_KEY` veya `OPENAI_API_KEY`
+- [ ] `controller.ts`:
+  - `generateDailyReading(userId, chartId)` — kullanıcının haritasını + bugünün transitlerini
+    + son 30 gün okumalarını LLM'e ver, yeni yorum üret
+- [ ] `daily_readings` tablosu:
+  - id, user_id, chart_id, reading_date, content TEXT, embedding JSON,
+    transits_snapshot JSON, model_used VARCHAR
+  - UNIQUE (user_id, reading_date)
+
+### T9-2 — Backend: Embedding & Anti-Copy-Paste Filtresi (Codex)
+
+- [ ] OpenAI text-embedding-3-small veya Anthropic embeddings (eğer yoksa Voyage AI)
+- [ ] Yeni yorum üretimi sonrası: `embedding` üret, son 30 gün okumalarla
+      cosine similarity hesapla
+- [ ] Threshold > 0.85 ise → tekrar üret (max 3 deneme)
+- [ ] Üretim sonrası safety classifier (zarar verici içerik filtresi):
+  - "ölüm", "ağır hastalık", "ayrılık kesin", "ihanet" gibi temalarda LLM moderasyon
+  - Rakip analizi F5 — "Bilgilendirici ama umut veren" tone guardrail
+
+### T9-3 — Mobile: Daily Reading Ekranı (Codex)
+
+- [ ] `mobile/app/app/(tabs)/today.tsx` — `mobile-app.html` SCREEN 4 baz al
+  - Hero card: "Bugünün Yorumu"
+  - Transit özeti (gün, ay, yıl)
+  - Detaylı yorum (LLM üretimi)
+  - "Astrologa Sor" CTA → astrolog connect
+
+### T9-4 — Frontend: Günlük Yorum Sayfası (Codex)
+
+- [ ] `frontend/src/app/[locale]/daily/page.tsx`:
+  - Login gerekli
+  - Kullanıcının default haritasını seç → bugünün yorumu
+
+### T9-5 — Cron: Günlük Yorum Üretimi (Codex)
+
+- [ ] `backend/src/cron/daily-readings.ts`:
+  - Her gün 06:00 UTC: aktif aboneliği olan kullanıcılar için
+    next-day reading üret (push notification ile uyandır)
+  - Mevcut `booking-reminders.ts` paterni (setInterval ile 5dk poll)
+
+**Acceptance:** Mobile/web'de bugünün yorumu görünüyor, içerik geçen haftakiyle bambaşka,
+zarar verici dil yok.
+
+---
+
+## FAZ 10 — Abonelik & Kredi Sistemi (Anti-Dark-Pattern)
+
+> Hedef: Hibrit model — abonelik (AI özellikleri) + kredi (astrolog 1:1 görüşme).
+> Anti-dark-pattern: 1-tıkla iptal, free trial kart bilgisi olmadan, şeffaf yenileme.
+
+### T10-1 — Backend: subscriptions Tablosu + API (Codex)
+
+**SQL:** `backend/src/db/sql/065_subscriptions_schema.sql`
+- [ ] Tablo: `subscriptions`
+  - id, user_id, plan_id (free/monthly/yearly), provider ENUM('iyzipay','apple_iap','google_iap'),
+    provider_subscription_id VARCHAR, status ENUM('active','cancelled','expired','grace_period'),
+    started_at, ends_at, cancelled_at, cancellation_reason VARCHAR,
+    auto_renew BOOLEAN, price_minor INT, currency CHAR(3)
+- [ ] `subscription_plans` tablosu:
+  - id, code, name_tr, name_en, price_minor, currency, period ENUM('monthly','yearly'),
+    features JSON, is_active
+  - Seed: free, monthly (₺149), yearly (₺1.499 — 16% indirim)
+
+**Endpoints:**
+- [ ] `GET /api/v1/subscriptions/plans` — public, plans listesi
+- [ ] `GET /api/v1/subscriptions/me` — auth, kullanıcının aktif aboneliği
+- [ ] `POST /api/v1/subscriptions/start` — Iyzipay subscription form üret
+- [ ] `POST /api/v1/subscriptions/cancel` — **1-tıkla iptal**, no friction, body opsiyonel
+      `{ reason?: string }`. status='cancelled', auto_renew=false. Mevcut süre dolana kadar
+      kullanım devam eder (grace period).
+- [ ] `POST /api/v1/subscriptions/webhook` — Iyzipay subscription webhook handler
+
+### T10-2 — Backend: credits Tablosu + API (Codex)
+
+**SQL:** `backend/src/db/sql/082_credits_schema.sql`
+- [ ] Tablo: `user_credits`
+  - id, user_id, balance INT, currency CHAR(3) DEFAULT 'TRY-CREDIT',
+    updated_at
+  - 1 row per user (UNIQUE user_id)
+- [ ] Tablo: `credit_transactions`
+  - id, user_id, type ENUM('purchase','consumption','refund','bonus'),
+    amount INT (negatif=tüketim), balance_after INT,
+    reference_type VARCHAR (booking, package, manual),
+    reference_id, description, created_at
+- [ ] Tablo: `credit_packages`
+  - id, code, name_tr, price_minor, credits INT, bonus_credits INT, is_active
+  - Seed: 200₺/2.000kr, 500₺/5.000kr+250bonus, 950₺/10.000kr+1.000bonus (Falsepeti modeli)
+- [ ] Endpoints:
+  - `GET /api/v1/credits/me` — bakiye + son 20 işlem
+  - `GET /api/v1/credits/packages`
+  - `POST /api/v1/credits/purchase` — Iyzipay one-time + add credit on webhook
+
+### T10-3 — Backend: Görüşme → Kredi Tüketimi (Codex)
+
+- [ ] LiveKit webhook `room_finished` → live_sessions.duration_seconds hesapla
+- [ ] consultant fiyat × dakika → kredi düş (`credit_transactions` 'consumption' kaydı)
+- [ ] Yetersiz kredi durumu (görüşme sırasında bitti): graceful disconnect + uyarı
+      → 5 dakika önceden frontend'e push
+
+### T10-4 — Mobile: Subscription / Credits Ekranı (Codex)
+
+> `mobile-app.html` SCREEN 6: PROFILE / SUB tasarımı.
+
+- [ ] `mobile/app/app/(tabs)/profile.tsx`:
+  - **Anti-dark-pattern subscription card** — her zaman görünür, "Aboneliği Yönet" butonu
+  - "İptal et" tek tıkla, geri çevirme ekranı yok (şeffaf)
+  - Kredi bakiyesi kartı, "Kredi Yükle" CTA
+- [ ] `mobile/app/app/profile/subscription.tsx` — abonelik detay
+- [ ] `mobile/app/app/profile/credits.tsx` — kredi geçmişi + paket alış
+
+### T10-5 — Frontend: Pricing Sayfası (Codex)
+
+- [ ] `frontend/src/app/[locale]/pricing/page.tsx`:
+  - 3 plan kartı (free, monthly, yearly), karşılaştırma tablosu
+  - **Şeffaf footer:** "İptal etmek üye olmaktan kolay", "İade politikası", "KVKK"
+- [ ] Pricing copy `index.html` (transparency section) baz alınır
+
+### T10-6 — Mobile: Apple/Google IAP Entegrasyonu (Codex)
+
+- [ ] `expo-in-app-purchases` veya `react-native-iap` kur
+- [ ] iOS App Store Connect'te subscription products tanımla
+      (`com.goldmoodastro.app.monthly`, `.yearly`)
+- [ ] Android Play Console'da subscription products
+- [ ] `mobile/app/src/lib/iap.ts` — purchase flow + receipt verification (backend)
+- [ ] Backend: `POST /api/v1/subscriptions/verify-receipt` — Apple/Google receipt validation
+
+### T10-7 — Admin: Subscription Yönetimi (Codex)
+
+- [ ] `admin_panel/.../subscriptions/` — liste, durum filtresi, refund işlemi
+- [ ] `admin_panel/.../subscription-plans/` — plan CRUD (Codex)
+
+**Acceptance:** Mobile'dan abone ol → Iyzipay/IAP üzerinden öde → ay sonu yenilenir →
+profile ekranından "İptal" tıklayınca tek tıkla iptal → grace period sonu erişim kapanır.
+
+---
+
+## FAZ 11 — Video Görüşme Açma (Hazırlık → Aktivasyon)
+
+> Şu an audio-only. LiveKit zaten video destekliyor; sadece track ekleme + UI işi.
+> Müşteri kararıyla ileride aç.
+
+### T11-1 — Backend: media_type Toggle (Codex)
+
+- [ ] `live_sessions.media_type ENUM('audio','video')` zaten T7-2'de var
+- [ ] `consultants` tablosuna `supports_video BOOLEAN DEFAULT 0` ekle
+- [ ] Pricing differentiation: video premium (örn. ₺350/15dk vs ₺250/15dk audio)
+- [ ] Site-settings flag: `feature_video_enabled` (admin'den toggle)
+
+### T11-2 — Mobile: Video UI (Codex)
+
+- [ ] Call screen'e video preview/feed component ekle (zaten LiveKit Room bileşeni var)
+- [ ] Track publish: `LocalParticipant.setCameraEnabled(true)`
+- [ ] Camera switch (front/back), mute toggle, video toggle
+
+### T11-3 — Frontend: Video Premium Pricing (Codex)
+
+- [ ] Pricing sayfasında "Sesli vs Görüntülü" karşılaştırma kartı
+
+### T11-4 — Self-Host LiveKit (Faz 3 — İleride)
+
+- [ ] Hetzner Frankfurt'ta self-host LiveKit kurulumu (audio-video bant genişliği maliyeti)
+- [ ] Trafik kademeli geçiş (DNS, env_var)
+
+**Bu faz şu an dondurulmuş, FAZ 6-10 tamam olunca açılır.**
+
+---
+
+## FAZ 12 — Banner Reklam Yönetimi 🆕
+
+> Müşteri kararıyla yeni modül. Admin panelden banner yönetimi, frontend/mobile'da gösterim.
+
+### T12-1 — Backend: banners Modülü (Codex)
+
+**SQL:** `backend/src/db/sql/160_banners_schema.sql`
+- [ ] Tablo: `banners`
+  - id, code, title_tr, title_en, subtitle_tr, subtitle_en,
+    image_url, image_url_mobile, link_url,
+    placement ENUM('home_hero','home_sidebar','home_footer','consultant_list',
+                   'mobile_welcome','mobile_home','mobile_call_end'),
+    locale CHAR(2) | '*',
+    starts_at DATETIME, ends_at DATETIME,
+    target_segment VARCHAR (free|paid|all),
+    priority INT DEFAULT 0,
+    is_active BOOLEAN,
+    click_count INT DEFAULT 0, view_count INT DEFAULT 0,
+    created_at, updated_at
+  - INDEX (placement, is_active, starts_at, ends_at)
+- [ ] Endpoints:
+  - `GET /api/v1/banners?placement=home_hero&locale=tr` — public, aktif + tarihinde olanlar
+  - `POST /api/v1/banners/:id/click` — view/click counter
+  - `GET /api/v1/admin/banners` — admin liste
+  - `POST/PUT/DELETE /api/v1/admin/banners/:id` — CRUD
+- [ ] Image upload: storage/cloudinary entegrasyonu (mevcut storage modülü)
+
+### T12-2 — Admin: Banner CRUD Sayfası (Codex)
+
+- [ ] `admin_panel/src/app/.../banners/`:
+  - Liste: thumbnail, placement, locale, schedule, durum
+  - Form: image upload (mobile + desktop ayrı), tarih aralığı, target segment
+  - Önizleme: placement'a göre gerçek görünüm
+
+### T12-3 — Frontend: Banner Slot'ları (Codex)
+
+- [ ] `frontend/src/components/banner/Banner.tsx` — placement prop
+- [ ] Anasayfa hero altı, consultant listesinde sidebar, blog footer
+- [ ] Click tracking → `POST /banners/:id/click`
+
+### T12-4 — Mobile: Banner Slider (Codex)
+
+- [ ] `mobile/app/src/components/Banner.tsx` — placement prop
+- [ ] Welcome screen üstü, home screen üstü, call-end screen
+- [ ] Auto-rotate (3 banner varsa 5sn'de geç)
+
+**Acceptance:** Admin'den banner ekle → frontend/mobile'da görünür → tıklayınca link açılır
++ click_count artar.
+
+---
+
+## FAZ 13 — Kampanya Yönetimi 🆕
+
+> Banner ile bağlantılı ama daha geniş: indirim kuponları, promo kodlar, hedefli kampanyalar.
+
+### T13-1 — Backend: campaigns Modülü (Codex)
+
+**SQL:** `backend/src/db/sql/170_campaigns_schema.sql`
+- [ ] Tablo: `campaigns`
+  - id, code (uppercase, unique), name_tr, name_en, description_tr, description_en,
+    type ENUM('discount_percentage','discount_fixed','bonus_credits','free_trial_days'),
+    value DECIMAL(10,2), max_uses INT, used_count INT,
+    starts_at, ends_at,
+    target_audience JSON (rules: new_user, has_subscription, etc.),
+    applies_to ENUM('subscription','credit_package','consultant_booking','all'),
+    is_active, created_at, updated_at
+- [ ] Tablo: `campaign_redemptions`
+  - id, campaign_id, user_id, order_id (nullable), redeemed_at, value_applied
+- [ ] Endpoints:
+  - `POST /api/v1/campaigns/redeem` — kupon kodu kullan (auth + apply rules)
+  - `GET /api/v1/campaigns/active` — public, kullanıcının uygun kampanyaları (banner ile cross)
+  - `GET/POST/PUT/DELETE /api/v1/admin/campaigns` — CRUD
+
+### T13-2 — Admin: Campaign CRUD (Codex)
+
+- [ ] `admin_panel/.../campaigns/`:
+  - Liste, kod arama, kullanım istatistiği
+  - Form: tip, değer, tarih, target audience JSON editor
+  - Banner ile cross-link (kampanya banner placement)
+
+### T13-3 — Frontend/Mobile: Promo Code Input (Codex)
+
+- [ ] Pricing sayfasında "Kupon kodun var mı?" — input → apply → indirim göster
+- [ ] Booking checkout'ta da aynı input
+- [ ] Mobile: profile → "Kuponlarım" — kullanılan ve geçerli olanlar
+
+**Acceptance:** Admin yeni kampanya yarat (kod: `WELCOME20`, %20 indirim) → kullanıcı
+checkout'ta kodu gir → indirim uygulansın → `campaign_redemptions` kayıt oluştu.
+
+---
+
+## FAZ 14 — Hibrit Model: AI Ön-Yorum + İnsan Astrolog Eskalasyon
+
+> Rakip analizi F7. AI yorum altına: "Bu konuyu astrologa danış (15dk = X kredi)" CTA.
+
+### T14-1 — Frontend/Mobile: Reading'in Altında Eskalasyon CTA (Codex)
+
+- [ ] Daily reading sonrası "Astrologa Sor" CTA → `/consultants?topic=daily_reading_X`
+- [ ] Mobile: same flow
+- [ ] Backend: `daily_readings` ile booking arasında nedensellik kaydı (analytics)
+
+### T14-2 — Mobile: Astrolog Connect Ekranı (Codex)
+
+> `mobile-app.html` SCREEN 5 baz alınır.
+- [ ] `mobile/app/app/(tabs)/connect.tsx`:
+  - "Şu An Çevrimiçi" filter (consultants.is_online live)
+  - Speciality filter, language filter, rating filter
+  - Anlık görüşme isteği akışı (15dk SLA timer)
+
+### T14-3 — Backend: 15dk SLA Timer + Otomatik İade (Codex)
+
+- [ ] Booking oluşurken cron timer: 15 dk içinde live_session başlamadıysa
+      → booking.status='timed_out' → kredi iade
+- [ ] Cron: `backend/src/cron/booking-sla.ts` (mevcut booking-reminders paterni)
+
+**Acceptance:** Daily reading → "Astrologa Sor" → online astrolog seç → kredi düş +
+booking oluştur → astrolog 15dk içinde katılmazsa otomatik iade.
+
+---
+
+## FAZ 15 — Web Frontend: Yeni Tema İmplementasyonu
+
+> `index.html` baz alınarak Next.js sayfalarına dönüştürülecek.
+
+### T15-1 — Hero Bölümü (Codex)
+
+- [ ] `frontend/src/components/containers/home/HeroNew.tsx`:
+  - GOLD MOOD logo (Cinzel display font, gold #C9A961)
+  - Headline (italic em → gold)
+  - Decorative orbits (rotate-slow animation), twinkle stars
+  - CTA: "Bekleme Listesine Katıl" + "Daha Fazla Bilgi"
+  - Scroll indicator (dot-pulse)
+
+### T15-2 — Promises Bölümü (3 Söz) (Codex)
+
+- [ ] `frontend/src/components/containers/home/PromisesSection.tsx`:
+  - 3 promise kartı (numerated 01/02/03):
+    1. "İptal etmek üye olmaktan kolay"
+    2. "Her yorum size özel"
+    3. "Telefon numaranız bizde yok"
+  - Reveal animations (delay 1/2/3)
+
+### T15-3 — Features Bölümü (Codex)
+
+- [ ] `frontend/src/components/containers/home/FeaturesNew.tsx`:
+  - 3 feature card: doğum haritası, günlük yorum, sinastri
+  - "Soft optical size" italic emphasis (Fraunces SOFT 100)
+
+### T15-4 — Hybrid Bölümü (AI + İnsan) (Codex)
+
+- [ ] `frontend/src/components/containers/home/HybridSection.tsx`:
+  - 2 kolonlu split: YAPAY ZEKA | İNSAN ASTROLOG
+  - "Tamamlayıcı, alternatif değil" mesajı
+  - Dark theme (drama section — `[data-theme="dark"]` wrapper)
+
+### T15-5 — Transparency / Pricing Bölümü (Codex)
+
+- [ ] `frontend/src/components/containers/home/TransparencySection.tsx`:
+  - 3 sütunlu pricing tablosu (free / monthly / credit)
+  - "Şeffaf — saklamıyoruz" çağrışımı
+  - "İade var mı?" soru-cevap modülü
+
+### T15-6 — Trust / KVKK Bölümü (Codex)
+
+- [ ] `frontend/src/components/containers/home/TrustSection.tsx`:
+  - 4 trust signal: KVKK, sildiğin silinir, telefon yok, kart bilgisi yok
+
+### T15-7 — Waitlist / Newsletter Bölümü (Codex)
+
+- [ ] `frontend/src/components/containers/home/WaitlistSection.tsx`:
+  - Email input + "Bekleme Listesi"
+  - Backend: `POST /api/v1/newsletter/subscribe` (mevcut newsletter modülü)
+
+### T15-8 — Anasayfa Kompozisyonu (Codex)
+
+- [ ] `frontend/src/app/[locale]/page.tsx` → yeni bileşenleri sırayla render et:
+      Hero → Promises → Features → Hybrid → Transparency → Trust → Waitlist
+- [ ] Eski Hero, FeaturedConsultantsSection, ExpertiseCategoriesSection, HomeIntroSection
+      bileşenlerini referans olarak tut, "/explore" sayfasına taşı (consultants browse)
+
+---
+
+## FAZ 16 — Mobile: Yeni Ekranlar (Yeni Tema)
+
+> `mobile-app.html` 6 ekran baz alınır.
+
+### T16-1 — Welcome / Onboarding Screen (Codex)
+
+- [ ] `mobile/app/app/(onboarding)/welcome.tsx`:
+  - Decorative orbits + twinkle stars (RN reanimated)
+  - Tagline (Cinzel italic)
+  - "Başla" CTA → `/(onboarding)/birthdata` (DOB/TOB/POB form)
+
+### T16-2 — Birthdata Form (Codex)
+
+- [ ] `mobile/app/app/(onboarding)/birthdata.tsx`:
+  - DateTimePicker (DOB + TOB)
+  - POB autocomplete (geocode endpoint)
+  - "Haritamı Hesapla" → `/api/v1/birth-charts` POST → `(tabs)/today`'a yönlendir
+
+### T16-3 — Home / Today Screen (Codex)
+
+- [ ] `mobile/app/app/(tabs)/today.tsx`:
+  - "Günaydın, [İsim]" greeting (Cinzel)
+  - Bugünün geçişleri (transit list)
+  - Hızlı erişim grid (Birth Chart, Daily Reading, Astrolog, Profile)
+
+### T16-4 — Birth Chart Screen (T8-4'te tanımlı)
+
+### T16-5 — Daily Reading Screen (T9-3'te tanımlı)
+
+### T16-6 — Astrolog Connect Screen (T14-2'de tanımlı)
+
+### T16-7 — Profile / Subscription Screen (T10-4'te tanımlı)
+
+### T16-8 — Tab Bar Navigasyon (Codex)
+
+- [ ] `mobile/app/app/(tabs)/_layout.tsx`:
+  - 5 tab: Today, Birth Chart, Connect, Daily, Profile
+  - Custom icons (Lucide), gold active color, sand inactive
+
+---
+
+## Modül Bazlı Bakış — Eksik / Genişlenecek
+
+| Modül | Mevcut | Eklenecek/Değişecek |
+|-------|--------|---------------------|
+| `auth` | ✅ | Telefon zorunlu değil opsiyonel; magic link akışı |
+| `users` | ✅ | DOB/TOB/POB alanları (default chart için) |
+| `consultants` | ✅ | `supports_video`, `is_online_now`, `languages[]`, `expertise_tags[]` |
+| `bookings` | ✅ | `media_type`, `applied_campaign_id` FK, `sla_deadline` |
+| `voice_sessions` | ✅ | → `live_sessions` rename + LiveKit alanları (T7-2) |
+| `availability` | ✅ | — |
+| `orders` / `payments` | ✅ | Iyzipay subscription + IAP receipt validation |
+| `wallet` (consultant) | ✅ | — |
+| `reviews` | ✅ | "Doğrulanmış görüşme" rozeti (rakip F8) |
+| `chat` | ✅ | — |
+| `notifications` | ✅ | Daily reading push, SLA timeout push |
+| `support` | ✅ | 24h SLA dashboard (rakip F2) |
+| `announcements` | ✅ | — |
+| `site_settings` | ✅ | Yeni token şeması (FAZ 6), feature flags (video_enabled) |
+| `audit` | ✅ | — |
+| `email_templates` | ✅ | Daily reading, abonelik yenileme/iptal şablonları |
+| `storage` | ✅ | Banner image upload kanalı |
+| **livekit** | ❌ → **YENİ** | T7-2 (eski agora yerine) |
+| **astrology** | ❌ → **YENİ** | T8-1 (Swiss Ephemeris) |
+| **birth_charts** | ❌ → **YENİ** | T8-2 |
+| **readings** | ❌ → **YENİ** | T9-1 (LLM yorum üretimi + embedding) |
+| **subscriptions** | ❌ → **YENİ** | T10-1 |
+| **credits** | ❌ → **YENİ** | T10-2 |
+| **banners** | ❌ → **YENİ** | T12-1 |
+| **campaigns** | ❌ → **YENİ** | T13-1 |
+| **geocode** | ❌ → **YENİ** | T8-3 |
+
+---
+
+## Yeni Bağımlılıklar
+
+| Paket | Yer | Amaç |
+|-------|-----|------|
+| `livekit-server-sdk` | backend, shared-backend | Token üretimi, webhook handler |
+| `@livekit/react-native`, `@livekit/react-native-webrtc`, `livekit-client` | mobile | RN client + media |
+| `livekit-client` | frontend (opsiyonel) | Web tarafı katılım |
+| `sweph` veya `swisseph-wasm` | shared-backend | Swiss Ephemeris (natal, transit, sinastri) |
+| `@anthropic-ai/sdk` veya `openai` | shared-backend | Yorum üretimi |
+| Embedding API (OpenAI/Voyage) | shared-backend | Anti-copy-paste similarity |
+| `react-native-iap` veya `expo-in-app-purchases` | mobile | Apple/Google IAP |
+| Iyzipay Subscription API | shared-backend | Türkiye web abonelik |
+
+Silinecek:
+- `agora-token` (backend), `react-native-agora` (mobile)
+
+---
+
+## Yeni Environment Değişkenleri
+
+```
+# LiveKit
+LIVEKIT_API_KEY=...
+LIVEKIT_API_SECRET=...
+LIVEKIT_URL=wss://goldmoodastro-j03iq312.livekit.cloud
+
+# AI
+ANTHROPIC_API_KEY=...      # veya OPENAI_API_KEY
+EMBEDDING_PROVIDER=openai  # openai | voyage
+EMBEDDING_API_KEY=...
+
+# Geocoding
+GEOCODE_PROVIDER=nominatim  # nominatim | google
+GEOCODE_API_KEY=            # Nominatim için boş
+
+# Subscription
+IYZIPAY_SUBSCRIPTION_ENABLED=true
+
+# Feature flags
+FEATURE_VIDEO_CALL=false    # FAZ 11'de true
+FEATURE_BIRTH_CHART=true
+FEATURE_DAILY_READING=true
+```
+
+Silinecek:
+- `AGORA_APP_ID`, `AGORA_APP_CERTIFICATE`
+
+---
+
+## Yeni Faz Sırası — Tavsiye
+
+```
+FAZ 6 (Tema)         → blokerli değil, hemen başlayabilir
+FAZ 7 (LiveKit)      → blokerli değil, hemen başlayabilir
+   ↓
+FAZ 8 (Doğum Hrt)    → bağımsız
+FAZ 9 (Daily Reading)→ FAZ 8'e bağımlı (chart_id gerekli)
+   ↓
+FAZ 10 (Sub+Credit)  → bağımsız ama IAP test için EAS Build hazır olmalı
+FAZ 12 (Banner)      → bağımsız, hızlı
+FAZ 13 (Kampanya)    → FAZ 10'a bağımlı (subscription/credit'e indirim uygulamak için)
+   ↓
+FAZ 14 (Hibrit)      → FAZ 9 + FAZ 7'ye bağımlı
+FAZ 15 (Web Tema)    → FAZ 6'ya bağımlı
+FAZ 16 (Mobile Tema) → FAZ 6 + FAZ 8 + FAZ 9'a bağımlı
+   ↓
+FAZ 11 (Video)       → en son, FAZ 7+10 stable olunca
+```
+
+---
+
+## Önemli Mimari Kararlar (2026-04-27)
+
+1. **Light theme default** — eski Midnight default'tan çıkıldı; cream/ivory base hâkim,
+   dark theme dramatic section'lar için opsiyonel (`[data-theme="dark"]`).
+2. **Astroloji motoru self-contained** — Swiss Ephemeris yerel, 3rd-party API bağımlılığı yok.
+3. **AI yorumlar embed edilip saklanır** — anti-copy-paste için cosine similarity.
+4. **Token üretimi backend'de** — LiveKit token server kullanılmaz (kontrol bizde).
+5. **Abonelik mobil → IAP zorunlu** (Apple/Google policy), web → Iyzipay subscription.
+6. **Banner + Kampanya ayrı modüller** — banner = görsel, kampanya = indirim/promo logic.
+7. **Video şu an kapalı** — feature flag ile aktive edilebilir, altyapı zaten LiveKit'te hazır.
+
+---
+
+*FAZ 6+ vizyonu — sürekli güncellenecek.*

@@ -1,0 +1,357 @@
+@import 'tailwindcss';
+
+@theme {
+  /* ============================================================
+     GOLD MOOD ASTRO — Theme Tokens
+     ------------------------------------------------------------
+     Variable names are preserved from the previous theme.
+     Color values are updated to the editorial cream + gold + ink
+     brand identity. Default theme is LIGHT (matches brand).
+     [data-theme="dark"] is the dramatic ink + gold alternative.
+
+     Override via --gm-* runtime variables when needed.
+     ============================================================ */
+
+  /* ─── GOLD PALETTE (warm editorial gold, not Vegas gold) ─── */
+  --color-gold-50:  #FAF6EF;
+  --color-gold-100: #F2EBDD;
+  --color-gold-200: #E5D0A0;
+  --color-gold-300: var(--gm-gold-light, #D4BB7A);
+  --color-gold-400: var(--gm-gold, #C9A961);          /* PRIMARY GOLD */
+  --color-gold-500: var(--gm-gold-dim, #B89651);
+  --color-gold-600: var(--gm-gold-deep, #A8884A);     /* deep gold */
+  --color-gold-700: #8C7038;
+  --color-gold-800: #6E5829;
+  --color-gold-900: #4D3D1A;
+
+  /* ─── SAND / INK NEUTRAL PALETTE ─── */
+  --color-sand-50:  #FAF6EF;   /* ivory base */
+  --color-sand-100: #F2EBDD;   /* ivory deep */
+  --color-sand-200: #E5DCC8;
+  --color-sand-300: #C9BFA8;
+  --color-sand-400: #A09888;
+  --color-sand-500: #8A8276;   /* ink muted */
+  --color-sand-600: #6B6358;
+  --color-sand-700: #4A4238;   /* ink soft */
+  --color-sand-800: #2A2620;   /* ink — primary dark text */
+  --color-sand-900: #1A1715;   /* deepest ink */
+
+  /* ─── DARK PALETTE (used by dark theme + dramatic sections) ─── */
+  --color-deep:       var(--gm-bg, #2A2620);          /* warm ink, not pure black */
+  --color-dark:       var(--gm-bg-deep, #1A1715);
+  --color-card:       var(--gm-surface, #3D362D);
+  --color-card-hover: var(--gm-surface-high, #4A4238);
+
+  /* ─── PLUM ACCENT (mystical depth) ─── */
+  --color-plum:      #3D2E47;
+  --color-plum-soft: #5D4A66;
+
+  /* ─── SEMANTIC TOKENS (LIGHT THEME — DEFAULT) ─── */
+  --color-bg-primary:      var(--gm-bg, #FAF6EF);
+  --color-bg-secondary:    var(--gm-bg-deep, #F2EBDD);
+  --color-bg-card:         var(--gm-surface, #FFFFFF);
+  --color-bg-card-hover:   var(--gm-surface-high, #F7F1E4);
+  --color-bg-accent:       color-mix(in srgb, var(--gm-primary, #C9A961) 8%, transparent);
+  --color-bg-dark:         var(--color-deep);
+
+  --color-text-primary:    var(--gm-text, #2A2620);
+  --color-text-secondary:  var(--gm-text-dim, #4A4238);
+  --color-text-muted:      var(--gm-muted, #8A8276);
+  --color-text-on-dark:    #FAF6EF;
+
+  --color-brand-primary:   var(--gm-primary, #C9A961);        /* gold is the brand */
+  --color-brand-hover:     var(--gm-primary-hover, #A8884A);
+  --color-brand-dark:      var(--gm-primary-dark, #8C7038);
+  --color-brand-light:     color-mix(in srgb, var(--gm-primary, #C9A961) 14%, transparent);
+
+  --color-primary:         var(--color-brand-primary);
+  --color-primary-hover:   var(--color-brand-hover);
+
+  --color-accent-gold:      var(--gm-gold, #C9A961);
+  --color-accent-spiritual: var(--gm-accent, #3D2E47);        /* plum for mystical accent */
+
+  --color-border-light:  var(--gm-border-soft, rgba(168, 136, 74, 0.15));
+  --color-border-medium: var(--gm-border, rgba(168, 136, 74, 0.25));
+  --color-border-hover:  color-mix(in srgb, var(--gm-primary, #C9A961) 40%, transparent);
+
+  /* ─── TYPOGRAPHY ─── */
+  --font-sans:    var(--gm-font-sans, 'Manrope', system-ui, -apple-system, sans-serif);
+  --font-serif:   var(--gm-font-serif, 'Fraunces', Georgia, serif);
+  --font-display: var(--gm-font-display, 'Cinzel', 'Trajan Pro', Georgia, serif);
+}
+
+/* ─── SHADOWS (LIGHT — softer, warm) ─── */
+:root {
+  --shadow-soft:   var(--gm-shadow-soft,   0 2px 20px rgba(45, 37, 32, 0.06));
+  --shadow-medium: var(--gm-shadow-card,   0 8px 40px rgba(45, 37, 32, 0.10));
+  --shadow-glow:   var(--gm-shadow-glow,   0 0 60px rgba(201, 169, 97, 0.18));
+  --shadow-gold:   var(--gm-shadow-gold,   0 0 30px rgba(201, 169, 97, 0.22));
+}
+
+/* ============================================================
+   DARK THEME — Activated via [data-theme="dark"]
+   The dramatic ink + gold variant (matches the "hybrid model"
+   section on the landing page).
+   ============================================================ */
+[data-theme="dark"] {
+  --color-bg-primary:      #2A2620;
+  --color-bg-secondary:    #1A1715;
+  --color-bg-card:         #3D362D;
+  --color-bg-card-hover:   #4A4238;
+  --color-bg-accent:       rgba(201, 169, 97, 0.10);
+  --color-bg-dark:         #1A1715;
+
+  --color-text-primary:    #FAF6EF;
+  --color-text-secondary:  #E5DCC8;
+  --color-text-muted:      #A09888;
+  --color-text-on-dark:    #FAF6EF;
+
+  --color-brand-primary:   #C9A961;
+  --color-brand-hover:     #E5D0A0;   /* lighter on dark for contrast */
+  --color-brand-dark:      #A8884A;
+  --color-brand-light:     rgba(201, 169, 97, 0.15);
+
+  --color-primary:         #C9A961;
+  --color-primary-hover:   #E5D0A0;
+
+  --color-border-light:    rgba(201, 169, 97, 0.10);
+  --color-border-medium:   rgba(201, 169, 97, 0.20);
+  --color-border-hover:    rgba(201, 169, 97, 0.40);
+
+  --shadow-soft:           0 2px 20px rgba(0, 0, 0, 0.40);
+  --shadow-medium:         0 8px 40px rgba(0, 0, 0, 0.55);
+  --shadow-glow:           0 0 60px rgba(201, 169, 97, 0.15);
+  --shadow-gold:           0 0 30px rgba(201, 169, 97, 0.25);
+}
+
+/* ============================================================
+   BACKWARDS COMPATIBILITY — [data-theme="light"]
+   Kept as an explicit alias for the default light theme, in
+   case existing code forces light mode somewhere.
+   ============================================================ */
+[data-theme="light"] {
+  --color-bg-primary:      #FAF6EF;
+  --color-bg-secondary:    #F2EBDD;
+  --color-bg-card:         #FFFFFF;
+  --color-bg-card-hover:   #F7F1E4;
+  --color-bg-accent:       rgba(201, 169, 97, 0.08);
+  --color-bg-dark:         #2A2620;
+
+  --color-text-primary:    #2A2620;
+  --color-text-secondary:  #4A4238;
+  --color-text-muted:      #8A8276;
+  --color-text-on-dark:    #FAF6EF;
+
+  --color-brand-primary:   #C9A961;
+  --color-brand-hover:     #A8884A;
+  --color-brand-dark:      #8C7038;
+  --color-brand-light:     rgba(201, 169, 97, 0.14);
+
+  --color-primary:         #C9A961;
+  --color-primary-hover:   #A8884A;
+
+  --color-border-light:    rgba(168, 136, 74, 0.15);
+  --color-border-medium:   rgba(168, 136, 74, 0.25);
+  --color-border-hover:    rgba(168, 136, 74, 0.40);
+
+  --shadow-soft:           0 2px 20px rgba(45, 37, 32, 0.06);
+  --shadow-medium:         0 8px 40px rgba(45, 37, 32, 0.10);
+  --shadow-glow:           0 0 60px rgba(201, 169, 97, 0.18);
+  --shadow-gold:           0 0 30px rgba(201, 169, 97, 0.22);
+}
+
+@layer base {
+  html {
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gold-600) var(--color-bg-secondary);
+  }
+
+  body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-family: var(--font-serif);   /* editorial body — Fraunces */
+    font-weight: 400;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    position: relative;
+    width: 100%;
+  }
+
+  ::selection {
+    background: var(--color-gold-400);
+    color: #2A2620;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);   /* Cinzel for branded headers */
+    color: var(--color-text-primary);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+  }
+
+  /* Editorial italic emphasis — gold accent, soft optical size */
+  h1 em, h2 em, h3 em {
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: var(--color-gold-600);
+    font-weight: 400;
+    font-variation-settings: "SOFT" 100;
+  }
+
+  p, .prose, .prose p, .prose li {
+    color: var(--color-text-secondary);
+    font-family: var(--font-serif);
+  }
+
+  main li {
+    color: var(--color-text-secondary);
+  }
+
+  a {
+    color: var(--color-brand-primary);
+    transition: color 0.3s ease;
+  }
+  a:hover {
+    color: var(--color-brand-hover);
+  }
+}
+
+@layer utilities {
+  .shadow-soft   { box-shadow: var(--shadow-soft); }
+  .shadow-medium { box-shadow: var(--shadow-medium); }
+  .shadow-glow   { box-shadow: var(--shadow-glow); }
+  .shadow-gold   { box-shadow: var(--shadow-gold); }
+
+  /* ─── PREMIUM COMPONENTS ─── */
+
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--color-gold-600);
+    margin-bottom: 1.5rem;
+  }
+  .section-label::before {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: var(--color-gold-400);
+  }
+
+  .btn-premium {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 1rem 2.6rem;
+    background: var(--color-sand-800);          /* ink button — premium feel */
+    color: var(--color-sand-50);
+    text-decoration: none;
+    font-family: var(--font-serif);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-premium:hover {
+    background: var(--color-gold-400);
+    color: var(--color-sand-800);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-gold);
+  }
+
+  .btn-outline-premium {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 1rem 2.6rem;
+    background: transparent;
+    border: 1px solid var(--color-border-medium);
+    color: var(--color-text-primary);
+    text-decoration: none;
+    font-family: var(--font-serif);
+    font-size: 0.78rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .btn-outline-premium:hover {
+    border-color: var(--color-gold-400);
+    color: var(--color-gold-600);
+    background: var(--color-bg-accent);
+  }
+
+  /* ─── SCROLL REVEAL ─── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+
+  /* ─── HERO ANIMATIONS ─── */
+  @keyframes heroFadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero-fade-up    { opacity: 0; animation: heroFadeUp 1s ease forwards; }
+  .hero-fade-up-1  { animation-delay: 0.5s; }
+  .hero-fade-up-2  { animation-delay: 0.7s; }
+  .hero-fade-up-3  { animation-delay: 0.9s; }
+  .hero-fade-up-4  { animation-delay: 1.1s; }
+
+  @keyframes dotPulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.8); }
+    50%      { opacity: 1;   transform: scale(1.2); }
+  }
+  .dot-pulse { animation: dotPulse 2s ease-in-out infinite; }
+
+  @keyframes scrollLine {
+    0%, 100% { transform: scaleY(1);   opacity: 0.5; }
+    50%      { transform: scaleY(0.5); opacity: 1; }
+  }
+
+  /* ─── SUBTLE TWINKLE (used in mystical hero sections) ─── */
+  @keyframes twinkle {
+    0%, 100% { opacity: 0;   transform: scale(0.5); }
+    50%      { opacity: 0.7; transform: scale(1); }
+  }
+  .twinkle { animation: twinkle 4s ease-in-out infinite; }
+
+  /* ─── SLOW ROTATE (used for orbital decorative SVGs) ─── */
+  @keyframes rotateSlow {
+    to { transform: rotate(360deg); }
+  }
+  .rotate-slow         { animation: rotateSlow 80s linear infinite; }
+  .rotate-slow-reverse { animation: rotateSlow 120s linear infinite reverse; }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1rem;
+  max-width: 1300px;
+}
