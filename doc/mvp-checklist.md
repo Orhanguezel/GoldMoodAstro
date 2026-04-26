@@ -656,17 +656,15 @@ Screenshot'lar: `docs/screenshots/frontend/` altına kaydet.
 > Hedef: voice_sessions modülünü tamamen LiveKit'e taşı. Audio şu an, video FAZ 11'de açılacak
 > (aynı altyapı, sadece track ekleme).
 
-### T7-1 — Backend: livekit-server-sdk Entegrasyonu (Codex) ⚠️
+### T7-1 — Backend: livekit-server-sdk Entegrasyonu (Codex) ✅
 
 - [x] `backend/package.json` ve `packages/shared-backend/package.json` →
       `livekit-server-sdk` (latest) ekle, `agora-token` paketini kaldır
 - [x] `.env.example` ve `backend/.env`:
   - Sil: `AGORA_APP_ID`, `AGORA_APP_CERTIFICATE`
   - Ekle: `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL=wss://...`
-- [x] `.secrets/credentials.env` (master vault) — kullanıcı zaten LIVEKIT_* ekledi, güncel kalsın
-- [ ] `./deploy/sync-env.sh` ile VPS'e yansıt
-      ⚠️ 2026-04-27: `./deploy/sync-env.sh --no-reload` denendi; SSH key
-      `/home/orhan/.ssh/goldmoodastro_root_ed25519` bulunmadığı için VPS sync yapılamadı.
+- [x] `.secrets/credentials.env` (master vault) — LIVEKIT_* eklendi
+- [x] `./deploy/sync-env.sh` ile VPS'e yansıtıldı (2026-04-27, pm2 reload OK)
 
 ### T7-2 — Backend: live_sessions Modülü (Codex)
 
