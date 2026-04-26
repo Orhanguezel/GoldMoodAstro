@@ -11,7 +11,7 @@ Odak alanlari: astroloji ve mood danismanligi.
 |--------|-------|
 | Backend | Fastify 5, Drizzle ORM, MySQL, Bun, Zod |
 | Admin Panel | Next.js 16, React 19, Tailwind v4, React Query, Zustand, Radix UI |
-| Mobile | Flutter, Riverpod, Dio, Agora SDK, Firebase FCM |
+| Mobile | Expo (React Native 0.81), TypeScript, expo-router, Zustand, React Query, react-native-agora, expo-notifications |
 
 ## Monorepo Yapisi
 

@@ -63,8 +63,7 @@
       },
       "eas": {
         "projectId": ""
-      },
-      "apiUrl": "http://172.20.10.6:8094/api/v1"
+      }
     },
     "runtimeVersion": {
       "policy": "appVersion"
