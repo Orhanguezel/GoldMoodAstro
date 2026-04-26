@@ -1,27 +1,28 @@
 export const ROUTES = {
   home: '/',
-  about: '/uber-mich',
-  treatments: {
-    index: '/behandlungen',
-    detail: (slug: string) => `/behandlungen/${slug}`,
+  about: '/about',
+  consultants: {
+    index: '/consultants',
+    detail: (id: string) => `/consultants/${id}`,
   },
-  benefits: '/vorteile',
-  pricing: '/preise',
   blog: {
     index: '/blog',
     detail: (slug: string) => `/blog/${slug}`,
   },
-  contact: '/kontakt',
   booking: {
-    start: '/buchen',
-    appointment: '/buchen/termin',
-    confirmation: '/buchen/bestatigung',
+    start: '/booking',
+    payment: '/booking/payment',
   },
+  profile: {
+    index: '/profile',
+    bookings: '/profile/bookings',
+  },
+  contact: '/contact',
+  faqs: '/faqs',
   legal: {
-    imprint: '/impressum',
-    privacy: '/datenschutz',
-    cookie: '/cookie-richtlinie',
-    terms: '/agb',
+    terms: '/terms',
+    privacy: '/privacy-policy',
+    cookie: '/cookie-policy',
+    kvkk: '/kvkk',
   },
 } as const;
-

@@ -8,7 +8,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme="light"
-      className="konigsmassage-toaster"
+      className="goldmoodastro-toaster"
       {...props}
     />
   );

@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/containers/about/AboutPageContent.tsx
-// konigsmassage – About Page Content (SINGLE PAGE) (I18N + SAFE)
+// goldmoodastro – About Page Content (SINGLE PAGE) (I18N + SAFE)
 // =============================================================
 
 'use client';

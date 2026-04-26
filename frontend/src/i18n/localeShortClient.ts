@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/i18n/localeShortClient.ts
-// konigsmassage – Locale normalize helper (CLIENT SAFE, NO HOOKS)
+// goldmoodastro – Locale normalize helper (CLIENT SAFE, NO HOOKS)
 // - NO toShortLocale
 // - Uses normLocaleTag
 // =============================================================
@@ -13,6 +13,6 @@ export function localeShortClient(v: unknown): string {
   return normLocaleTag(raw) || '';
 }
 
-export function localeShortClientOr(v: unknown, fallback = 'de'): string {
+export function localeShortClientOr(v: unknown, fallback = 'tr'): string {
   return localeShortClient(v) || fallback;
 }

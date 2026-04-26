@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/types/dashboard.types.ts
-// konigsmassage – Admin Dashboard Types
+// goldmoodastro – Admin Dashboard Types
 // =============================================================
 
 /**

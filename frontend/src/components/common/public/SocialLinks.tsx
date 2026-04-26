@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/common/SocialLinks.tsx
-// konigsmassage – Social Icons (shared)
+// goldmoodastro – Social Icons (shared)
 // =============================================================
 'use client';
 
@@ -67,13 +67,13 @@ export const SocialLinks: React.FC<SocialLinksProps> = ({
 
   const sizeClass =
     size === 'sm'
-      ? 'konigsmassage-social--sm'
+      ? 'goldmoodastro-social--sm'
       : size === 'lg'
-      ? 'konigsmassage-social--lg'
-      : 'konigsmassage-social--md';
+      ? 'goldmoodastro-social--lg'
+      : 'goldmoodastro-social--md';
 
   return (
-    <ul className={`konigsmassage-social ${sizeClass} ${className ?? ''}`}>
+    <ul className={`goldmoodastro-social ${sizeClass} ${className ?? ''}`}>
       {items.map(({ key, label, url, Icon }) => (
         <li key={key} className={itemClassName}>
           <Link
@@ -83,16 +83,16 @@ export const SocialLinks: React.FC<SocialLinksProps> = ({
             aria-label={label}
             title={label}
             onClick={onClickItem}
-            className="konigsmassage-social__a"
+            className="goldmoodastro-social__a"
           >
-            <Icon className={`konigsmassage-social__icon ${iconClassName ?? ''}`} />
-            {withLabels ? <span className="konigsmassage-social__label">{label}</span> : null}
+            <Icon className={`goldmoodastro-social__icon ${iconClassName ?? ''}`} />
+            {withLabels ? <span className="goldmoodastro-social__label">{label}</span> : null}
           </Link>
         </li>
       ))}
 
       <style jsx>{`
-        .konigsmassage-social {
+        .goldmoodastro-social {
           list-style: none;
           margin: 0;
           padding: 0;
@@ -102,7 +102,7 @@ export const SocialLinks: React.FC<SocialLinksProps> = ({
           flex-wrap: wrap;
         }
 
-        .konigsmassage-social__a {
+        .goldmoodastro-social__a {
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -111,38 +111,38 @@ export const SocialLinks: React.FC<SocialLinksProps> = ({
           transition: transform 140ms ease, opacity 140ms ease;
           opacity: 0.92;
         }
-        .konigsmassage-social__a:hover {
+        .goldmoodastro-social__a:hover {
           opacity: 1;
           transform: translateY(-1px);
         }
 
-        .konigsmassage-social--sm .konigsmassage-social__a {
+        .goldmoodastro-social--sm .goldmoodastro-social__a {
           width: 34px;
           height: 34px;
         }
-        .konigsmassage-social--md .konigsmassage-social__a {
+        .goldmoodastro-social--md .goldmoodastro-social__a {
           width: 40px;
           height: 40px;
         }
-        .konigsmassage-social--lg .konigsmassage-social__a {
+        .goldmoodastro-social--lg .goldmoodastro-social__a {
           width: 46px;
           height: 46px;
         }
 
-        .konigsmassage-social__icon {
+        .goldmoodastro-social__icon {
           width: 16px;
           height: 16px;
         }
-        .konigsmassage-social--sm .konigsmassage-social__icon {
+        .goldmoodastro-social--sm .goldmoodastro-social__icon {
           width: 14px;
           height: 14px;
         }
-        .konigsmassage-social--lg .konigsmassage-social__icon {
+        .goldmoodastro-social--lg .goldmoodastro-social__icon {
           width: 18px;
           height: 18px;
         }
 
-        .konigsmassage-social__label {
+        .goldmoodastro-social__label {
           margin-left: 8px;
           font-size: 13px;
           line-height: 1;

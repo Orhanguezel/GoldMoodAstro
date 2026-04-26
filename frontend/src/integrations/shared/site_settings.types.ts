@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/types/site_settings.types.ts
-// konigsmassage – minimal site_settings tipleri (single source of truth)
+// goldmoodastro – minimal site_settings tipleri (single source of truth)
 // =============================================================
 
 export type ValueType = 'string' | 'number' | 'boolean' | 'json';
@@ -18,7 +18,7 @@ export type SettingValue =
   | null;
 
 /**
- * konigsmassage: site_settings tablosu için kanonik satır tipi
+ * goldmoodastro: site_settings tablosu için kanonik satır tipi
  */
 export type SiteSettingRow = {
   id?: string;

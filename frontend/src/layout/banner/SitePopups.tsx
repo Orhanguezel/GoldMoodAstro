@@ -302,10 +302,10 @@ export default function SitePopups() {
   const canRenderOnPage = React.useMemo(() => {
     return (
       cleanPath === '/' ||
-      cleanPath === '/appointment' ||
-      cleanPath === '/buchen/termin' ||
-      cleanPath === '/services' ||
-      cleanPath.startsWith('/services/')
+      cleanPath === '/consultants' ||
+      cleanPath.startsWith('/consultants/') ||
+      cleanPath === '/booking' ||
+      cleanPath.startsWith('/booking/')
     );
   }, [cleanPath]);
 

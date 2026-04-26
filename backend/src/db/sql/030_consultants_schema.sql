@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS consultants (
+  id CHAR(36) PRIMARY KEY,
+  user_id CHAR(36) NOT NULL UNIQUE,
+  bio TEXT,
+  expertise JSON,
+  languages JSON,
+  session_price DECIMAL(10,2) NOT NULL,
+  session_duration INT NOT NULL DEFAULT 30,
+  currency CHAR(3) DEFAULT 'TRY',
+  approval_status ENUM('pending','approved','rejected') DEFAULT 'pending',
+  rejection_reason TEXT,
+  is_available TINYINT DEFAULT 1,
+  rating_avg DECIMAL(3,2) DEFAULT 0.00,
+  rating_count INT DEFAULT 0,
+  total_sessions INT DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY consultants_approval_idx (approval_status),
+  CONSTRAINT fk_consultants_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

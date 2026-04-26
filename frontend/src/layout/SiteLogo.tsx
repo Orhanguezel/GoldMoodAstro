@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/layout/SiteLogo.tsx
-// konigsmassage – Dynamic Site Logo (GLOBAL '*')
+// goldmoodastro – Dynamic Site Logo (GLOBAL '*')
 // - site_logo (primary) / site_logo_dark (secondary) / site_logo_light
 // - SVG: plain <img> (no Next.js Image optimization)
 // - Raster: Next.js <Image>
@@ -91,7 +91,7 @@ function cx(...parts: Array<string | undefined | null | false>) {
 export const SiteLogo: React.FC<SiteLogoProps> = ({
   variant = 'default',
   overrideSrc,
-  alt = 'konigsmassage',
+  alt = 'goldmoodastro',
   className,
   wrapperClassName,
   priority = true,

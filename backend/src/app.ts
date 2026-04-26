@@ -2,10 +2,12 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import cookie from '@fastify/cookie';
 import multipart from '@fastify/multipart';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 import authPlugin from './plugins/authPlugin';
 import mysqlPlugin from '@/plugins/mysql';
 import staticUploads from './plugins/staticUploads';
-import { localeMiddleware } from '@vps/shared-backend/middleware/locale';
+import { localeMiddleware } from '@goldmood/shared-backend/middleware/locale';
 
 import type { FastifyInstance } from 'fastify';
 import { env } from '@/core/env';
@@ -21,6 +23,24 @@ export async function createApp() {
   const app = buildFastify({
     logger: env.NODE_ENV !== 'production',
   }) as FastifyInstance;
+
+  if (env.NODE_ENV !== 'production') {
+    await app.register(swagger, {
+      openapi: {
+        info: {
+          title: `${env.APP_NAME} API`,
+          version: '0.1.0',
+          description: 'Danisman randevu platformu API',
+        },
+        components: {
+          securitySchemes: {
+            bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+          },
+        },
+      },
+    });
+    await app.register(swaggerUi, { routePrefix: '/docs' });
+  }
 
   await app.register(cors, {
     origin: parseCorsOrigins(env.CORS_ORIGIN as any),
@@ -71,7 +91,7 @@ export async function createApp() {
 
   await app.register(staticUploads);
 
-  // All routes: shared (@vps/shared-backend) + project-specific
+  // All routes: shared (@goldmood/shared-backend) + project-specific
   await registerAllRoutes(app);
 
   registerErrorHandlers(app);

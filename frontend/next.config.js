@@ -44,9 +44,9 @@ const nextConfig = {
       { protocol: 'http', hostname: 'localhost', pathname: '/**' },
       { protocol: 'http', hostname: '127.0.0.1', pathname: '/**' },
 
-      { protocol: 'https', hostname: 'konigsmassage.com', pathname: '/**' },
-      { protocol: 'https', hostname: 'www.konigsmassage.com', pathname: '/**' },
-      { protocol: 'https', hostname: 'cdn.konigsmassage.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'goldmoodastro.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'www.goldmoodastro.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'cdn.goldmoodastro.com', pathname: '/**' },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
@@ -56,38 +56,17 @@ const nextConfig = {
 
   async redirects() {
     return [
-      // www → non-www (canonical: koenigsmassage.com)
+      // www → non-www
       {
         source: '/:path*',
-        has: [{ type: 'host', value: 'www.koenigsmassage.com' }],
-        destination: 'https://koenigsmassage.com/:path*',
+        has: [{ type: 'host', value: 'www.goldmoodastro.com' }],
+        destination: 'https://goldmoodastro.com/:path*',
         permanent: true,
       },
-      // .de → .com redirects
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'konigsmassage.de' }],
-        destination: 'https://koenigsmassage.com/:path*',
-        permanent: true,
-      },
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'www.konigsmassage.de' }],
-        destination: 'https://koenigsmassage.com/:path*',
-        permanent: true,
-      },
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'koenigsmassage.de' }],
-        destination: 'https://koenigsmassage.com/:path*',
-        permanent: true,
-      },
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'www.koenigsmassage.de' }],
-        destination: 'https://koenigsmassage.com/:path*',
-        permanent: true,
-      },
+      // Silinen konigsmassage sayfaları → goldmoodastro karşılıkları
+      { source: '/:locale/gutschein', destination: '/:locale', permanent: true },
+      { source: '/:locale/services', destination: '/:locale/consultants', permanent: true },
+      { source: '/:locale/appointment', destination: '/:locale/consultants', permanent: true },
     ];
   },
 };

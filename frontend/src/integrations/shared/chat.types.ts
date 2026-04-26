@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/types/chat.types.ts
-// konigsmassage — Chat module frontend types
+// goldmoodastro — Chat module frontend types
 // Backend: src/modules/chat/*
 // =============================================================
 

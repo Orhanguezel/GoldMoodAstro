@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/rtk/endpoints/mail.endpoints.ts
-// konigsmassage – Mail RTK Query Endpoints
+// goldmoodastro – Mail RTK Query Endpoints
 //  - POST /mail/test
 //  - POST /mail/send
 //  - POST /mail/order-created

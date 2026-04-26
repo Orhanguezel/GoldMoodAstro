@@ -1,9 +1,9 @@
-// /var/www/konigsmassage/frontend/ecosystem.config.cjs
+// /var/www/goldmoodastro/frontend/ecosystem.config.cjs
 module.exports = {
   apps: [
     {
-      name: 'konigsmassage-frontend',
-      cwd: '/var/www/konigsmassage/frontend',
+      name: 'goldmoodastro-frontend',
+      cwd: '/var/www/goldmoodastro/frontend',
       script: '/usr/bin/env',
       args: 'bash ./scripts/pm2-start-frontend.sh',
 
@@ -24,14 +24,14 @@ module.exports = {
 
       env: {
         NODE_ENV: 'production',
-        PORT: '3055',
+        PORT: '3095',
         HOST: '127.0.0.1',
         HOSTNAME: '127.0.0.1',
         NEXT_TELEMETRY_DISABLED: '1',
       },
 
-      out_file: '/home/orhan/.pm2/logs/konigsmassage-frontend.out.log',
-      error_file: '/home/orhan/.pm2/logs/konigsmassage-frontend.err.log',
+      out_file: '/home/orhan/.pm2/logs/goldmoodastro-frontend.out.log',
+      error_file: '/home/orhan/.pm2/logs/goldmoodastro-frontend.err.log',
       combine_logs: true,
       time: true,
     },

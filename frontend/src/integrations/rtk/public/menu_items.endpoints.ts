@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/rtk/endpoints/menu_items.endpoints.ts
-// konigsmassage – Public Menu Items RTK endpoints
+// goldmoodastro – Public Menu Items RTK endpoints
 // =============================================================
 
 import { baseApi } from '@/integrations/rtk/baseApi';

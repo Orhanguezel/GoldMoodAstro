@@ -9,7 +9,7 @@ import {
   normPath,
 } from '@/integrations/shared';
 
-const DEFAULT_LOCALE = (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'de').trim().toLowerCase();
+const DEFAULT_LOCALE = (process.env.NEXT_PUBLIC_DEFAULT_LOCALE || 'tr').trim().toLowerCase();
 
 function toLocaleShort(l: any): string {
   return normLocaleShort(l, DEFAULT_LOCALE);

@@ -1,0 +1,50 @@
+CREATE TABLE IF NOT EXISTS resources (
+  id CHAR(36) PRIMARY KEY,
+  type VARCHAR(32) NOT NULL DEFAULT 'consultant',
+  title VARCHAR(255) NOT NULL,
+  capacity INT NOT NULL DEFAULT 1,
+  external_ref_id CHAR(36),
+  is_active TINYINT NOT NULL DEFAULT 1,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  KEY resources_extref_idx (external_ref_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS resource_working_hours (
+  id CHAR(36) PRIMARY KEY,
+  resource_id CHAR(36) NOT NULL,
+  dow TINYINT UNSIGNED NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  slot_minutes INT NOT NULL DEFAULT 30,
+  break_minutes INT NOT NULL DEFAULT 0,
+  capacity INT NOT NULL DEFAULT 1,
+  is_active TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  UNIQUE KEY ux_rwh_unique (resource_id, dow, start_time, end_time),
+  CONSTRAINT fk_rwh_resource FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS resource_slots (
+  id CHAR(36) PRIMARY KEY,
+  resource_id CHAR(36) NOT NULL,
+  slot_date DATE NOT NULL,
+  slot_time TIME NOT NULL,
+  capacity INT NOT NULL DEFAULT 1,
+  is_active TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  UNIQUE KEY ux_resource_slots_unique (resource_id, slot_date, slot_time),
+  CONSTRAINT fk_slots_resource FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS slot_reservations (
+  id CHAR(36) PRIMARY KEY,
+  slot_id CHAR(36) NOT NULL,
+  reserved_count INT NOT NULL DEFAULT 0,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  UNIQUE KEY ux_slot_res_unique (slot_id),
+  CONSTRAINT fk_slot_res_slot FOREIGN KEY (slot_id) REFERENCES resource_slots(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

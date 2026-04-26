@@ -1,90 +1,86 @@
-name: Konigsmassage Deploy
+name: GoldMoodAstro Deploy
 
 on:
   push:
     branches: [main]
 
 jobs:
-  deploy:
+  # ─── Backend ─────────────────────────────────────────────────────
+  deploy-backend:
+    name: Backend — build & deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      # ----------------------------
-      # Backend (Bun / TS)
-      # ----------------------------
-      - name: Build backend (bun)
+      - name: Install & build backend
         working-directory: backend
         run: |
           rm -rf dist .tsbuildinfo || true
           bun install --frozen-lockfile || bun install
           bun run build
 
-      # ----------------------------
-      # SSH key setup (tek seferde, retry ile paylaşılır)
-      # ----------------------------
-      - name: Setup SSH key
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -T 10 -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Deploy backend to VPS (rsync with retry)
+      - name: Sync backend → VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
-          SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
+          SSH_OPTS="-o ConnectTimeout=30 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
           for i in 1 2 3; do
             rsync -avz --delete \
-              --exclude=node_modules --exclude=.git --exclude=.env --exclude=.DS_Store \
+              --exclude=node_modules --exclude=.git --exclude=.env \
+              --exclude=uploads --exclude=.DS_Store \
               -e "ssh $SSH_OPTS" \
-              backend/ "${VPS_USER}@${VPS_HOST}:/var/www/konigsmassage/backend" \
+              backend/ "${VPS_USER}@${VPS_HOST}:/var/www/goldmoodastro/backend" \
               && break
             echo "⚠ Attempt $i failed, retrying in 10s..."
             sleep 10
           done
 
-      # ----------------------------
-      # Frontend (Next.js) — Bun only
-      # ----------------------------
-      - name: Build frontend (bun)
-        working-directory: frontend
-        env:
-          NEXT_TELEMETRY_DISABLED: "1"
-        run: |
-          bun install --frozen-lockfile || bun install
-          bun run build
+      - name: PM2 reload — backend
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          timeout: 60s
+          command_timeout: 90s
+          script: |
+            set -e
+            cd /var/www/goldmoodastro/backend
+            bun install --frozen-lockfile || bun install
+            pm2 reload goldmoodastro-backend \
+              || pm2 start ecosystem.config.cjs --only goldmoodastro-backend
+            pm2 save
+            # Bind kontrolü (port 8094)
+            ss -ltnp | grep ':8094' || (echo "Port 8094 açık değil!" && exit 1)
 
-      - name: Deploy frontend to VPS (rsync with retry)
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-        run: |
-          SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
-          for i in 1 2 3; do
-            rsync -avz --delete \
-              --exclude=node_modules --exclude=.git --exclude=.env --exclude=.DS_Store \
-              -e "ssh $SSH_OPTS" \
-              frontend/ "${VPS_USER}@${VPS_HOST}:/var/www/konigsmassage/frontend" \
-              && break
-            echo "⚠ Attempt $i failed, retrying in 10s..."
-            sleep 10
-          done
+  # ─── Admin Panel ─────────────────────────────────────────────────
+  deploy-admin:
+    name: Admin Panel — build & deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
 
-      # ----------------------------
-      # Admin Panel (Next.js) — Bun only
-      # ----------------------------
-      - name: Build admin_panel (bun)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install & build admin_panel
         working-directory: admin_panel
         env:
           NEXT_TELEMETRY_DISABLED: "1"
@@ -92,45 +88,105 @@ jobs:
           bun install --frozen-lockfile || bun install
           bun run build
 
-      - name: Deploy admin_panel to VPS (rsync with retry)
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -T 10 -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Sync admin_panel → VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
-          SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
+          SSH_OPTS="-o ConnectTimeout=30 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
           for i in 1 2 3; do
             rsync -avz --delete \
-              --exclude=node_modules --exclude=.git --exclude=.env --exclude=.DS_Store \
+              --exclude=node_modules --exclude=.git --exclude=.env \
+              --exclude=.DS_Store \
               -e "ssh $SSH_OPTS" \
-              admin_panel/ "${VPS_USER}@${VPS_HOST}:/var/www/konigsmassage/admin_panel" \
+              admin_panel/ "${VPS_USER}@${VPS_HOST}:/var/www/goldmoodastro/admin_panel" \
               && break
             echo "⚠ Attempt $i failed, retrying in 10s..."
             sleep 10
           done
 
-      # ----------------------------
-      # PM2 reload (backend + frontend + admin_panel) + bind check
-      # ----------------------------
-      - name: Reload PM2 (backend + frontend + admin_panel)
+      - name: PM2 reload — admin panel
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           timeout: 60s
-          command_timeout: 120s
+          command_timeout: 90s
           script: |
             set -e
-
-            cd /var/www/konigsmassage/backend
-            pm2 reload konigsmassage-backend || pm2 start ecosystem.config.cjs --only konigsmassage-backend
-
-            cd /var/www/konigsmassage/frontend
-            pm2 reload konigsmassage-frontend || pm2 start ecosystem.config.cjs --only konigsmassage-frontend
-
-            cd /var/www/konigsmassage/admin_panel
-            pm2 reload konigsmassage-admin-panel || pm2 start ecosystem.config.cjs --only konigsmassage-admin-panel
-
+            cd /var/www/goldmoodastro/admin_panel
+            bun install --frozen-lockfile || bun install
+            pm2 reload goldmoodastro-admin \
+              || pm2 start ecosystem.config.cjs --only goldmoodastro-admin
             pm2 save
+            ss -ltnp | grep ':3094' || (echo "Port 3094 açık değil!" && exit 1)
 
-            ss -ltnp | grep -E "127\.0\.0\.1:(3055|3056)|:(3055|3056)" || true
+  # ─── Frontend ────────────────────────────────────────────────────
+  deploy-frontend:
+    name: Frontend — build & deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install & build frontend
+        working-directory: frontend
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun run build
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -T 10 -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Sync frontend → VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          SSH_OPTS="-o ConnectTimeout=30 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
+          for i in 1 2 3; do
+            rsync -avz --delete \
+              --exclude=node_modules --exclude=.git --exclude=.env \
+              --exclude=.DS_Store \
+              -e "ssh $SSH_OPTS" \
+              frontend/ "${VPS_USER}@${VPS_HOST}:/var/www/goldmoodastro/frontend" \
+              && break
+            echo "⚠ Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+
+      - name: PM2 reload — frontend
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          timeout: 60s
+          command_timeout: 90s
+          script: |
+            set -e
+            cd /var/www/goldmoodastro/frontend
+            bun install --frozen-lockfile || bun install
+            pm2 reload goldmoodastro-frontend \
+              || pm2 start ecosystem.config.cjs --only goldmoodastro-frontend
+            pm2 save
+            ss -ltnp | grep ':3095' || (echo "Port 3095 açık değil!" && exit 1)

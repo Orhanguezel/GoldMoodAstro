@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/layout/banner/CookieConsentBanner.tsx
-// konigsmassage – Cookie Consent Banner (DB-driven + localized) + Analytics Consent bridge
+// goldmoodastro – Cookie Consent Banner (DB-driven + localized) + Analytics Consent bridge
 // - Reads site_settings key: cookie_consent (localized: tr/en/de)
 // - Persists consent to cookie + localStorage (versioned key)
 // - Calls window.__setAnalyticsConsent(boolean) OR queues until analytics-consent-init loads
@@ -73,7 +73,7 @@ function safeJsonParse<T = any>(raw: string | null): T | null {
 
 function makeKeys(version: number) {
   const v = Number.isFinite(version) && version > 0 ? version : 1;
-  const base = `konigsmassage_cookie_consent_v${v}`;
+  const base = `goldmoodastro_cookie_consent_v${v}`;
   return {
     cookieKey: base,
     lsKey: base,

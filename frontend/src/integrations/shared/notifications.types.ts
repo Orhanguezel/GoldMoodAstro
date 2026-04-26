@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/types/notifications.types.ts
-// konigsmassage – Notifications types (frontend DTO / payloads)
+// goldmoodastro – Notifications types (frontend DTO / payloads)
 // =============================================================
 
 import { safeStr, toBool } from '@/integrations/shared';

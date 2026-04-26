@@ -47,7 +47,7 @@ function readLocaleFromQuery(): string {
 }
 
 function computeActiveLocales(meta: any[] | undefined): string[] {
-  const fb = normLocaleTag(FALLBACK_LOCALE) || 'de';
+  const fb = normLocaleTag(FALLBACK_LOCALE) || 'tr';
   const normalized = normalizeLocales(meta);
   return normalized.length ? normalized : [fb];
 }
@@ -114,7 +114,6 @@ export function useResolvedLocale(explicitLocale?: string | null): string {
     const firstActive = normLocaleTag(activeLocales[0]);
     if (firstActive) return firstActive;
 
-    // 7) fallback
-    return normLocaleTag(FALLBACK_LOCALE) || 'de';
+    return normLocaleTag(FALLBACK_LOCALE) || 'tr';
   }, [routeLocale, pathname, explicitLocale, appLocalesMeta, defaultLocaleMeta]);
 }

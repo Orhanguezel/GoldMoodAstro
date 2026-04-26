@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/rtk/endpoints/site_settings.endpoints.ts
-// konigsmassage – Public Site Settings RTK (aligned with BE routes) [FINAL]
+// goldmoodastro – Public Site Settings RTK (aligned with BE routes) [FINAL]
 //   - GET /site_settings
 //   - GET /site_settings/:key
 //   - GET /site_settings/app-locales

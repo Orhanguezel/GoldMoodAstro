@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/features/analytics/GAViewPages.tsx
-// konigsmassage – Page view tracking (Pages Router) respecting consent
+// goldmoodastro – Page view tracking (Pages Router) respecting consent
 // - If GTM present: push a custom dataLayer event (no dependency on window.gtag)
 // - If only GA4 gtag present: send gtag('event','page_view', ...)
 // =============================================================
@@ -75,7 +75,7 @@ export default function GAViewPages() {
         if (hasGtm) {
           window.dataLayer = window.dataLayer || [];
           window.dataLayer.push({
-            event: 'konigsmassage_page_view',
+            event: 'goldmoodastro_page_view',
             ...payload,
           });
         }

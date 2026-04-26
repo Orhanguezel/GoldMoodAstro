@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/types/custom_pages.types.ts
-// konigsmassage – Custom Pages (Sayfalar) RTK Tipleri (FINAL)
+// goldmoodastro – Custom Pages (Sayfalar) RTK Tipleri (FINAL)
 // Backend: src/modules/customPages/*
 // - ✅ category_id / sub_category_id REMOVED (and related names/slugs)
 // =============================================================

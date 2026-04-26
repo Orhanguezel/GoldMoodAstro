@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/seo/serverMetadata.ts
-// konigsmassage – Server Metadata Builder (DB-driven locales/default)
+// goldmoodastro – Server Metadata Builder (DB-driven locales/default)
 //   - Active locales: site_settings.app_locales (DB)
 //   - Default locale: getDefaultLocale() (DB)
 //   - Canonical + hreflang SSR tek kaynak (alternates)
@@ -172,7 +172,7 @@ export async function buildMetadataFromSeo(
   const locale = normLocaleShort(args.locale, FALLBACK_LOCALE);
 
   // Defaults (DB-driven)
-  const siteName = asStr(seo.site_name) || 'Energetische Massage';
+  const siteName = asStr(seo.site_name) || 'GoldMoodAstro';
   const titleDefault = asStr(seo.title_default) || siteName;
   const titleTemplate = asStr(seo.title_template) || `%s | ${siteName}`;
   const rawDescription =
@@ -184,10 +184,10 @@ export async function buildMetadataFromSeo(
   const description =
     rawDescription ||
     (locale === 'de'
-      ? "Energetische Massage in Bonn von Anastasia K\u00f6nig \u2014 achtsame Ber\u00fchrung, tiefe Entspannung und K\u00f6rperwahrnehmung. Termine nach Vereinbarung. Jetzt buchen!"
+      ? "GoldMoodAstro — Entdecken Sie sich selbst durch Astrologie, Tarot und spirituelles Coaching. Jetzt Sitzung buchen."
       : locale === 'tr'
-        ? "Bonn'da Anastasia K\u00f6nig ile enerjetik masaj seanslar\u0131: bilin\u00e7li dokunu\u015f, derin gev\u015feme ve beden fark\u0131ndal\u0131\u011f\u0131. Randevu ile. Hemen rezervasyon yap\u0131n!"
-        : "Energetic massage in Bonn by Anastasia K\u00f6nig: mindful touch, deep relaxation and body awareness. By appointment only. Book your session now!");
+        ? "GoldMoodAstro — Astroloji, tarot ve ruhsal koçluk için uzman danışmanlarla bağlantı kurun. Seansınızı hemen başlatın."
+        : "GoldMoodAstro — Connect with expert consultants for astrology, tarot, and spiritual coaching. Start your session now.");
 
   // Open Graph
   const og = asObj(seo.open_graph) || {};

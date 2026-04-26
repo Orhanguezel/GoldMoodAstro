@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/seo/SiteIconsHead.tsx
-// konigsmassage – Site Icons Head (PURE)
+// goldmoodastro – Site Icons Head (PURE)
 // - NO hooks / NO data fetch (Layout fetches and passes URLs)
 // =============================================================
 

@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/layout/banner/CookieSettingsModal.tsx
-// konigsmassage – Cookie Settings Modal (DB/UI localized) + final consent state
+// goldmoodastro – Cookie Settings Modal (DB/UI localized) + final consent state
 // - Necessary always on
 // - Analytics switch toggles analytics consent
 // =============================================================

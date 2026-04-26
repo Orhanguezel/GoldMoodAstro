@@ -7,12 +7,10 @@ import 'server-only';
 import { cache } from 'react';
 
 import type {
-  ServiceDto,
-  ApiServicePublic,
   CustomPageDto,
   ApiCustomPage,
 } from '@/integrations/shared';
-import { normalizeArrayResponse, normalizeService, mapApiCustomPageToDto } from '@/integrations/shared';
+import { mapApiCustomPageToDto } from '@/integrations/shared';
 import { getDefaultLocale } from '@/i18n/server';
 import { getServerApiBase } from '@/i18n/apiBase.server';
 import { normLocaleShort } from '@/integrations/shared';
@@ -36,47 +34,6 @@ async function fetchApiJson<T>(path: string, opts?: { revalidate?: number }): Pr
     return null;
   }
 }
-
-export const fetchServicePublicBySlug = cache(
-  async (args: { slug: string; locale: string }): Promise<ServiceDto | null> => {
-    const slug = String(args.slug || '').trim();
-    if (!slug) return null;
-
-    const defaultLocale = await getDefaultLocale();
-    const locale = normLocaleShort(args.locale, defaultLocale);
-
-    const qs = new URLSearchParams({
-      locale,
-      default_locale: defaultLocale,
-    });
-
-    const raw = await fetchApiJson<ApiServicePublic>(
-      `/services/by-slug/${encodeURIComponent(slug)}?${qs.toString()}`,
-      { revalidate: 300 },
-    );
-
-    return raw ? normalizeService(raw) : null;
-  },
-);
-
-export const fetchPrimaryServicePublic = cache(
-  async (args: { locale: string }): Promise<ServiceDto | null> => {
-    const defaultLocale = await getDefaultLocale();
-    const locale = normLocaleShort(args.locale, defaultLocale);
-
-    const qs = new URLSearchParams({
-      locale,
-      default_locale: defaultLocale,
-      limit: '1',
-      order: 'display_order.asc',
-    });
-
-    const raw = await fetchApiJson<unknown>(`/services?${qs.toString()}`, { revalidate: 300 });
-    const first = normalizeArrayResponse<ApiServicePublic>(raw)[0];
-
-    return first ? normalizeService(first) : null;
-  },
-);
 
 export const fetchCustomPagePublicBySlug = cache(
   async (args: { slug: string; locale: string }): Promise<CustomPageDto | null> => {

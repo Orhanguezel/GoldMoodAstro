@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/rtk/types.ts
-// konigsmassage — Barrel exports for all shared DTO/types
+// goldmoodastro — Barrel exports for all shared DTO/types
 // - Single import point: import type { ... } from '@/integrations/rtk/types'
 // =============================================================
 
@@ -58,9 +58,7 @@ export * from './errors';
 export * from './localeDisplay';
 export * from './popups.types';
 export * from './wallet.types';
-export * from './gutschein.types';
 export * from './orders.types';
-export * from './booking-payment.types';
 
 // =============================================================
 // END FILE

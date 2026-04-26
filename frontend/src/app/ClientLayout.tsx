@@ -24,7 +24,7 @@ export default function ClientLayout({
   locale?: string;
 }) {
   // Keep layout light: Header already fetches dynamic brand/settings on its own.
-  const brand = useMemo(() => ({ name: 'Energetische Massage' }), []);
+  const brand = useMemo(() => ({ name: 'GoldMoodAstro' }), []);
   
   const pathname = usePathname();
   const searchParams = useSearchParams();

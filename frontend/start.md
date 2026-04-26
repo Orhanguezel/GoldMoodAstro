@@ -9,11 +9,11 @@ bun run build
 bun run dev
 
 
-export NEXT_PUBLIC_API_URL=http://localhost:8086/api
-export NEXT_PUBLIC_SITE_URL=https://www.konigsmassage.de
+export NEXT_PUBLIC_API_URL=http://localhost:8094/api
+export NEXT_PUBLIC_SITE_URL=https://www.goldmoodastro.com
 export TEST_LOCALE=tr
 export TEST_LOCALES_CSV=tr,en,de
-export CANONICAL_HOST=konigsmassage.de
+export CANONICAL_HOST=goldmoodastro.com
 
 bun run test:e2e
 

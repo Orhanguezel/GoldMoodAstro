@@ -76,7 +76,7 @@ function shouldRun(file: string, flags: Flags) {
 
 /** admin değişkenlerini ENV'den oku + bcrypt üret */
 function getAdminVars() {
-  const email = (process.env.ADMIN_EMAIL || 'orhanguzell@gmail.com').trim();
+  const email = (process.env.ADMIN_EMAIL || 'admin@example.com').trim();
   const id = (process.env.ADMIN_ID || '4f618a8d-6fdb-498c-898a-395d368b2193').trim();
   const plainPassword = process.env.ADMIN_PASSWORD || 'admin123';
   const passwordHash = bcrypt.hashSync(plainPassword, 12);

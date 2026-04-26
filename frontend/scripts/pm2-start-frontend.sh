@@ -2,7 +2,7 @@
 set -euo pipefail
 
 MANIFEST=".next/prerender-manifest.json"
-PORT="${PORT:-3055}"
+PORT="${PORT:-3095}"
 HOST="${HOST:-127.0.0.1}"
 
 if [[ ! -f "$MANIFEST" ]]; then

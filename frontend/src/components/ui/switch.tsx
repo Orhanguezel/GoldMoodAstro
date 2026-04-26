@@ -27,7 +27,7 @@ const Switch = React.forwardRef<
         onCheckedChange?.(v as any);
       }}
       className={cn(
-        "konigsmassage-switch d-inline-flex align-items-center position-relative rounded-pill",
+        "goldmoodastro-switch d-inline-flex align-items-center position-relative rounded-pill",
         "border border-secondary bg-light",
         className,
       )}
@@ -41,7 +41,7 @@ const Switch = React.forwardRef<
       }}
     >
       <SwitchPrimitives.Thumb
-        className="konigsmassage-switch-thumb bg-bg-card rounded-circle shadow-sm"
+        className="goldmoodastro-switch-thumb bg-bg-card rounded-circle shadow-sm"
         style={{
           width: 18,
           height: 18,

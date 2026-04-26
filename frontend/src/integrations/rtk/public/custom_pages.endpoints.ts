@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/rtk/endpoints/custom_pages.endpoints.ts
-// konigsmassage – Custom Pages Public RTK Endpoints (FINAL)
+// goldmoodastro – Custom Pages Public RTK Endpoints (FINAL)
 // Backend: src/modules/customPages/router.ts
 // =============================================================
 

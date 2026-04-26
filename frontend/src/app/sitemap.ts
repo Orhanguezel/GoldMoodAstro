@@ -99,10 +99,9 @@ function buildAlternates(baseUrl: string, locales: string[], pathname: string, d
 const STATIC_PATHS = [
   '/',
   '/about',
-  '/services',
+  '/consultants',
   '/blog',
   '/contact',
-  '/appointment',
   '/faqs',
   '/terms',
   '/privacy-policy',
@@ -118,10 +117,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const defaultLocale = normLocaleShort(await getDefaultLocale());
 
   // Dynamic slugs — parallel fetch
-  const [servicesByLocale, blogByLocale] = await Promise.all([
-    Promise.all(
-      activeLocales.map(async (l) => [l, await fetchSlugsByLocale('services', l, defaultLocale)] as const),
-    ),
+  const [, blogByLocale] = await Promise.all([
+    Promise.resolve([]),
     Promise.all(
       activeLocales.map(
         async (l) =>
@@ -169,7 +166,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  pushDynamic(buildSlugMap(servicesByLocale), '/services');
   pushDynamic(buildSlugMap(blogByLocale), '/blog');
 
   return entries;

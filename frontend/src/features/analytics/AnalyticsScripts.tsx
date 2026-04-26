@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/features/analytics/AnalyticsScripts.tsx
-// konigsmassage – GTM preferred, optional GA4 gtag.js (consent-mode)
+// goldmoodastro – GTM preferred, optional GA4 gtag.js (consent-mode)
 // - Pages Router: DO NOT use beforeInteractive outside pages/_document
 // - Consent Mode init via afterInteractive, with queued consent updates
 // - If GTM exists => loads GTM (page_view will be pushed to dataLayer by GAViewPages)
@@ -126,7 +126,7 @@ export default function AnalyticsScripts() {
               });
 
               // Notify GTM (or any listener)
-              window.dataLayer.push({ event: 'konigsmassage_consent_update', analytics_storage: v });
+              window.dataLayer.push({ event: 'goldmoodastro_consent_update', analytics_storage: v });
             } catch (e) {}
           };
 

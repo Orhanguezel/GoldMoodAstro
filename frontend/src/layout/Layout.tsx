@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/layout/Layout.tsx
-// konigsmassage – Public Layout (CENTRAL SEO / SINGLE SOURCE) [FINAL / PERF]
+// goldmoodastro – Public Layout (CENTRAL SEO / SINGLE SOURCE) [FINAL / PERF]
 // - ✅ ui_common KALDIRILDI (site_settings.site_meta_default kullanılır)
 // - ✅ Default meta/title/desc: site_meta_default (locale -> '*' fallback)
 // - ✅ Logo: site_logo(*) dinamik + preload
@@ -89,7 +89,7 @@ function cleanString(v: unknown): string {
 
 function getSafeLocale(lc: unknown): string {
   const v = cleanString(lc);
-  const fb = cleanString(FALLBACK_LOCALE) || 'de';
+  const fb = cleanString(FALLBACK_LOCALE) || 'tr';
   return v || fb;
 }
 
@@ -391,13 +391,13 @@ export default function Layout({
   // ------------------------------------------------------------
 
   const finalTitle = useMemo(() => {
-    const hardFb = 'Energetische Massage – Energetische Massage in Bonn';
+    const hardFb = 'GoldMoodAstro – Ruhsal Danışmanlık ve Astroloji Platformu';
     return cleanString(effectiveTitleProp) || seoTitleDefault || metaDefault.title || hardFb;
   }, [effectiveTitleProp, seoTitleDefault, metaDefault.title]);
 
   const finalDescription = useMemo(() => {
     const hardFb =
-      'Energetische Massage in Bonn – achtsame Berührung, klare Grenzen und tiefe Entspannung. Termine nach Vereinbarung.';
+      'GoldMoodAstro — Ruhsal danışmanlık, astroloji ve mood coaching ile kendinizi keşfedin. Güvenilir danışmanlarla seanslarınızı hemen başlatın.';
     return cleanString(effectiveDescProp) || seoDescription || metaDefault.description || hardFb;
   }, [effectiveDescProp, seoDescription, metaDefault.description]);
 
@@ -443,7 +443,7 @@ export default function Layout({
     const socialsVal = (pickSetting(localeMap, globalMap, 'socials') ?? {}) as any;
 
     const name =
-      cleanString(brandVal?.name) || cleanString(contact?.companyName) || 'konigsmassage';
+      cleanString(brandVal?.name) || cleanString(contact?.companyName) || 'goldmoodastro';
 
     const website =
       cleanString(brandVal?.website) || cleanString(contact?.website) || siteUrlBase();
@@ -502,7 +502,7 @@ export default function Layout({
       title: finalTitle,
       description: finalDescription,
       image: resolvedOgImage ? toAbsoluteMaybe(resolvedOgImage) : undefined,
-      siteName: seoSiteName || effectiveBrand.name || 'konigsmassage',
+      siteName: seoSiteName || effectiveBrand.name || 'goldmoodastro',
       noindex: !!effectiveNoindexProp,
       twitterCard: twCard,
       twitterSite: twSite || undefined,
@@ -537,14 +537,14 @@ export default function Layout({
     return graph([
       org({
         id: orgId,
-        name: effectiveBrand.name || 'konigsmassage',
+        name: effectiveBrand.name || 'goldmoodastro',
         url: cleanString(effectiveBrand.website) || base,
         logo: siteLogoUrl || undefined,
         sameAs,
       }),
       website({
         id: websiteId,
-        name: effectiveBrand.name || 'konigsmassage',
+        name: effectiveBrand.name || 'goldmoodastro',
         url: base,
         publisherId: orgId,
       }),

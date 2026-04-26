@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/types/audit.types.ts
-// konigsmassage – Audit Types (Frontend DTO + Query Params)
+// goldmoodastro – Audit Types (Frontend DTO + Query Params)
 // =============================================================
 
 import { BoolLike } from '@/integrations/shared';

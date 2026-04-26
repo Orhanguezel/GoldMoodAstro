@@ -1,0 +1,44 @@
+<svg width="400" height="500" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Subtle gradient for symbol -->
+    <linearGradient id="symbolGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E8A598;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D88D7E;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Flower of Life + Hands Symbol (simplified for illustration) -->
+  <g id="symbol" transform="translate(200, 140)">
+    <!-- Outer circle -->
+    <circle cx="0" cy="0" r="80" fill="none" stroke="url(#symbolGradient)" stroke-width="2"/>
+    
+    <!-- Flower of Life pattern (simplified - 7 circles) -->
+    <circle cx="0" cy="0" r="25" fill="none" stroke="#D88D7E" stroke-width="1.5"/>
+    <circle cx="22" cy="0" r="25" fill="none" stroke="#D88D7E" stroke-width="1.5"/>
+    <circle cx="-22" cy="0" r="25" fill="none" stroke="#D88D7E" stroke-width="1.5"/>
+    <circle cx="11" cy="19" r="25" fill="none" stroke="#D88D7E" stroke-width="1.5"/>
+    <circle cx="-11" cy="19" r="25" fill="none" stroke="#D88D7E" stroke-width="1.5"/>
+    <circle cx="11" cy="-19" r="25" fill="none" stroke="#D88D7E" stroke-width="1.5"/>
+    <circle cx="-11" cy="-19" r="25" fill="none" stroke="#D88D7E" stroke-width="1.5"/>
+    
+    <!-- Hands silhouette (abstract representation) -->
+    <path d="M -60 50 Q -50 40 -40 50 L -30 60 L -50 70 Z" fill="#F4BDB3" opacity="0.7"/>
+    <path d="M 60 50 Q 50 40 40 50 L 30 60 L 50 70 Z" fill="#F4BDB3" opacity="0.7"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="200" y="320" font-family="Inter, sans-serif" font-size="32" font-weight="700" 
+        text-anchor="middle" letter-spacing="4.8" fill="#2D2520">
+    KÖNIG ENERGETIK
+  </text>
+  
+  <text x="200" y="355" font-family="Crimson Pro, serif" font-size="20" font-weight="300" 
+        text-anchor="middle" letter-spacing="1" fill="#4A4139">
+    Anastasia König
+  </text>
+  
+  <text x="200" y="385" font-family="Inter, sans-serif" font-size="14" font-weight="400" 
+        text-anchor="middle" letter-spacing="0.3" fill="#C9BFB3">
+    Heilende Berührung mit Herz
+  </text>
+</svg>

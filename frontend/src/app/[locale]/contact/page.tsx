@@ -32,7 +32,7 @@ export default function ContactRoutePage() {
     const key = 'ui_contact_meta_title';
     const v = safeStr(ui(key, ''));
     if (isValidUiText(v, key)) return v;
-    return `${bannerTitle || fbTitle} | Energetische Massage`;
+    return `${bannerTitle || fbTitle} | GoldMoodAstro`;
   }, [ui, bannerTitle, fbTitle]);
 
   const seoDescription = useMemo(() => {
@@ -41,10 +41,10 @@ export default function ContactRoutePage() {
     if (isValidUiText(v, key)) return v;
 
     if (locale === 'tr')
-      return 'Energetische Massage ile iletişime geçin: Bonn’da enerjetik masaj seansları için randevu ve sorular.';
+      return 'GoldMoodAstro ile iletişime geçin: danışmanlık seansları ve sorularınız için bize ulaşın.';
     if (locale === 'de')
-      return 'Kontaktieren Sie Energetische Massage: Terminanfragen und Fragen zu energetischen Massage-Sitzungen in Bonn.';
-    return 'Contact Energetische Massage: appointment requests and questions for energetic massage sessions in Bonn.';
+      return 'Kontaktieren Sie GoldMoodAstro: Anfragen und Fragen zu unseren Beratungsangeboten.';
+    return 'Contact GoldMoodAstro: reach us with questions about our consultation services.';
   }, [ui, locale]);
 
   return (

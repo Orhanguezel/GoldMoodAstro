@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/common/RichContentEditor.tsx
-// konigsmassage – Zengin HTML Editörü + Canlı Önizleme (depsiz)
+// goldmoodastro – Zengin HTML Editörü + Canlı Önizleme (depsiz)
 //  - contentEditable tabanlı WYSIWYG
 //  - Tablo ve Resim ekleme butonları
 //  - Kaynak (HTML) sekmesi

@@ -14,11 +14,7 @@ import { useListSiteSettingsQuery } from '@/integrations/rtk/hooks';
 export const UI_FALLBACK_EN = {
   ui_header_nav_home: 'Home',
   ui_header_nav_about: 'About Us',
-  ui_header_nav_services: 'Services',
-  ui_header_nav_product: 'Products',
-  ui_header_nav_sparepart: 'Spare Parts',
-  ui_header_nav_references: 'References',
-  ui_header_nav_library: 'Library',
+  ui_header_nav_consultants: 'Consultants',
   ui_header_nav_blog: 'Blog',
   ui_header_nav_contact: 'Contact',
   ui_home_hero_title: 'Welcome to Our Website',

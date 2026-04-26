@@ -68,6 +68,7 @@ const Register: React.FC = () => {
         password,
         full_name: fullName.trim() || undefined,
         phone: phone.trim() || undefined,
+        rules_accepted: true as const,
         options: {
           data: {
             full_name: fullName.trim() || undefined,
@@ -185,7 +186,7 @@ const Register: React.FC = () => {
                 id="reg-email"
                 type="email"
                 className="w-full px-4 py-3 border border-border-light rounded-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 transition-all bg-bg-card placeholder:text-text-muted text-text-primary"
-                placeholder={ui('register_email_placeholder', 'example@konigsmassage.com')}
+                placeholder={ui('register_email_placeholder', 'example@goldmoodastro.com')}
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

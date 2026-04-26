@@ -1,11 +1,31 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(ssh guezelwebdesign \"ls /etc/nginx/sites-enabled/ | grep -i koenigs\")",
+      "Bash(xargs sed *)",
+      "Bash(grep \"portfolio\" echo \"---\" ls /home/orhan/Documents/Projeler/goldmoodastro/backend/src/modules/)",
+      "Bash(xargs ls *)",
+      "Bash(sed -n '6,20p' /home/orhan/Documents/Projeler/goldmoodastro/mobile/app/src/lib/i18n.ts)",
+      "Bash(sed -n '168,182p' /home/orhan/Documents/Projeler/goldmoodastro/mobile/app/src/lib/i18n.ts)",
+      "Bash(npx expo *)",
+      "Bash(npx expo-doctor *)",
+      "Read(//home/orhan/**)",
+      "Bash(rsync -av --exclude=node_modules --exclude=.next --exclude=tsconfig.tsbuildinfo --exclude=.env --exclude=.env.local /home/orhan/Documents/Projeler/vps-guezel/konigsmassage/frontend/ /home/orhan/Documents/Projeler/goldmoodastro/frontend/)",
+      "Bash(sed -i 's/return normLocaleTag\\(active\\\\[0\\\\]\\) || normLocaleTag\\(defaultLocale\\) || \"de\"/return normLocaleTag\\(active[0]\\) || normLocaleTag\\(defaultLocale\\) || \"tr\"/' /home/orhan/Documents/Projeler/goldmoodastro/frontend/src/i18n/routing.ts)",
+      "Bash(sed -i 's/fallback = '\\\\''de'\\\\''/fallback = '\\\\''tr'\\\\''/' /home/orhan/Documents/Projeler/goldmoodastro/frontend/src/i18n/localeShortClient.ts)",
+      "Bash(bun install *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3095)",
+      "Bash(kill %1)",
+      "Bash(python3 -c ' *)",
+      "Bash(pkill -f \"next build\")",
+      "Bash(git check-ignore *)",
+      "Bash(awk '{print $1}')",
+      "Bash(grep -E \"\\(\\\\.env$|\\\\.secrets/|credentials\\)\")"
+    ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [
-      "/tmp"
-    ],
-    "allow": [
-      "Bash(ssh guezelwebdesign \"ls /etc/nginx/sites-enabled/ | grep -i koenigs\")"
+      "/tmp",
+      "/home/orhan/Documents/Projeler/goldmoodastro/frontend/src/app/[locale]/booking-payment"
     ]
   }
 }

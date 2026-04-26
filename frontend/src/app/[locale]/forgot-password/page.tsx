@@ -121,7 +121,7 @@ export default function ForgotPasswordPage() {
                 id="reset-email"
                 type="email"
                 className="w-full px-4 py-3 border border-border-light rounded-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 transition-all bg-bg-card placeholder:text-text-muted text-text-primary"
-                placeholder={ui('login_email_placeholder', 'example@konigsmassage.com')}
+                placeholder={ui('login_email_placeholder', 'example@goldmoodastro.com')}
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

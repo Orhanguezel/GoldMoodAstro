@@ -20,37 +20,36 @@ type HeroSlide = {
   buttonLink?: string;
 };
 
-const FALLBACK_HERO_IMAGE =
-  'https://res.cloudinary.com/dbozv7wqd/image/upload/v1748866951/uploads/anastasia/gallery/21-1748866946899-726331234.webp';
+const FALLBACK_HERO_IMAGE = '/img/hero-bg.png';
 
 const FALLBACKS: Record<string, { title: string; desc: string; cta: string; ctaSecondary: string; badge: string }> = {
   de: {
-    title: 'Entspannung, die zu Ihnen nach Hause kommt',
-    desc: 'Professionelle energetische Massage in Ihrer vertrauten Umgebung — achtsame Berührung, tiefe Ruhe und spürbares Wohlbefinden.',
-    cta: 'Termin Buchen',
+    title: 'Ihr Weg zur inneren Klarheit',
+    desc: 'Verbinden Sie sich mit erfahrenen Astrologen, Tarot-Lesern und Life-Coaches — für tiefe Einblicke und persönliche Führung.',
+    cta: 'Berater Entdecken',
     ctaSecondary: 'Mehr Erfahren',
-    badge: 'Hausbesuch in Bonn & Umgebung',
+    badge: 'Astroloji · Tarot · Numeroloji',
   },
   en: {
-    title: 'Relaxation that comes to your home',
-    desc: 'Professional energetic massage in your familiar environment — mindful touch, deep calm and tangible well-being.',
-    cta: 'Book Appointment',
+    title: 'Find clarity through the cosmos',
+    desc: 'Connect with expert astrologers, tarot readers, and life coaches for deep insights and personal guidance.',
+    cta: 'Find a Consultant',
     ctaSecondary: 'Learn More',
-    badge: 'Home Visit in Bonn & Surroundings',
+    badge: 'Astrology · Tarot · Numerology',
   },
   tr: {
-    title: 'Evinize gelen rahatlama',
-    desc: 'Kendi evinizde profesyonel enerjetik masaj — bilinçli dokunuş, derin huzur ve hissedilir bir iyilik hali.',
-    cta: 'Randevu Al',
+    title: 'Evreni okuyun, hayatı anlayın',
+    desc: 'Uzman astrologlar, tarot okuyucuları ve yaşam koçlarıyla bağlantı kurun — derin içgörüler ve kişisel rehberlik için.',
+    cta: 'Danışman Bul',
     ctaSecondary: 'Daha Fazla',
-    badge: 'Bonn ve Çevresinde Ev Ziyareti',
+    badge: 'Astroloji · Tarot · Numeroloji',
   },
 };
 
 const Hero: React.FC<{ locale?: string }> = ({ locale: explicitLocale }) => {
   const locale = useResolvedLocale(explicitLocale);
   const { ui } = useUiSection('ui_hero', locale);
-  const fb = FALLBACKS[locale || 'de'] || FALLBACKS.de;
+  const fb = FALLBACKS[locale || 'tr'] || FALLBACKS.de;
 
   const { data: sliderList, isLoading: slidersLoading } = useListSlidersQuery({
     locale, limit: 6, sort: 'display_order', order: 'asc',
@@ -91,12 +90,12 @@ const Hero: React.FC<{ locale?: string }> = ({ locale: explicitLocale }) => {
   const ctaSecondary = ui('ui_hero_cta_secondary', fb.ctaSecondary);
   const badgeText = ui('ui_hero_badge', fb.badge);
 
-  const rawLink = current?.buttonLink || '/appointment';
+  const rawLink = current?.buttonLink || '/consultants';
   const ctaHref = localizePath(locale, rawLink.startsWith('/') ? rawLink : `/${rawLink}`);
-  const secondaryHref = localizePath(locale, '/services');
+  const secondaryHref = localizePath(locale, '/about');
 
-  const heroSrc = (current?.src || FALLBACK_HERO_IMAGE) as string;
-  const heroAlt = current?.alt || 'Energetische Massage';
+  const heroSrc = current?.src || FALLBACK_HERO_IMAGE;
+  const heroAlt = current?.alt || 'GoldMoodAstro';
 
   return (
     <section

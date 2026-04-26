@@ -9,6 +9,6 @@ export default fp(async (app: FastifyInstance) => {
 
   app.register(fastifyStatic, {
     root: uploadsDir,
-    prefix: '/uploads/', // https://www.konigsmassage.com/uploads/...
+    prefix: '/uploads/',
   });
 });

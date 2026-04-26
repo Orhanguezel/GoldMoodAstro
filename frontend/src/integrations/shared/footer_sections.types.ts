@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/types/footer_sections.types.ts
-// konigsmassage – Footer Sections DTO & Payload Types
+// goldmoodastro – Footer Sections DTO & Payload Types
 // =============================================================
 
 import { BoolLike, safeStr, toBool } from '@/integrations/shared';

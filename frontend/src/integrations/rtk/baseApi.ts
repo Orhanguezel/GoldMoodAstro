@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/rtk/baseApi.ts
-// konigsmassage Next.js + Fastify backend (8086 /api) için RTK base
+// goldmoodastro Next.js + Fastify backend (8086 /api) için RTK base
 // FIXES:
 //  - Cookie auth için credentials include
 //  - Stale Bearer header 401 üretiyorsa path bazlı bypass
@@ -38,12 +38,12 @@ function guessDevBackend(): string {
       const loc = window.location;
       const host = loc.hostname || 'localhost';
       const proto = loc.protocol || 'http:';
-      return `${proto}//${host}:8093/api`;
+      return `${proto}//${host}:8094/api`;
     }
   } catch {
     /* noop */
   }
-  return 'https://www.energetische-massage-bonn.de/api';
+  return 'https://www.goldmoodastro.com/api';
 }
 
 const BASE_URL = trimSlash(
@@ -112,7 +112,7 @@ type RBQ = BaseQueryFn<
   FetchBaseQueryMeta
 >;
 
-const DEFAULT_LOCALE = (process.env.NEXT_PUBLIC_DEFAULT_LOCALE as string | undefined) || 'de';
+const DEFAULT_LOCALE = (process.env.NEXT_PUBLIC_DEFAULT_LOCALE as string | undefined) || 'tr';
 
 /**
  * Bu path’lerde Authorization header’ı eklemek çoğu cookie-auth backend’de sorun çıkarır.
@@ -310,7 +310,7 @@ const baseQueryWithReauth: RBQ = async (args, api, extra) => {
 };
 
 export const baseApi = createApi({
-  reducerPath: 'metahubApi',
+  reducerPath: 'goldmoodApi',
   baseQuery: baseQueryWithReauth,
   endpoints: () => ({}),
   tagTypes: metahubTags,

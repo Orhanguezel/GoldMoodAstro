@@ -7,7 +7,7 @@ import { fetchSetting } from '@/i18n/server';
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0C0B09',
+  themeColor: '#7B5EA7',
 };
 
 function extractUrl(val: unknown): string {
@@ -23,7 +23,7 @@ function extractUrl(val: unknown): string {
   return '';
 }
 
-const SUPPORTED_LOCALES = ['de', 'en', 'tr'];
+const SUPPORTED_LOCALES = ['tr', 'en', 'de'];
 
 /** Extract locale from the request URL pathname (e.g. /en/about → "en") */
 async function resolveHtmlLang(): Promise<string> {
@@ -31,7 +31,7 @@ async function resolveHtmlLang(): Promise<string> {
   const pathname = h.get('x-next-url') || h.get('x-invoke-path') || '';
   const seg = pathname.split('/').filter(Boolean)[0] || '';
   if (SUPPORTED_LOCALES.includes(seg)) return seg;
-  return 'de';
+  return 'tr';
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -42,10 +42,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const gscCode = String(gscVerification?.value || '').trim();
 
   const metadata: Metadata = {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://energetische-massage-bonn.de'),
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com'),
     title: {
-      default: 'Energetische Massage Bonn',
-      template: '%s | Energetische Massage Bonn',
+      default: 'GoldMoodAstro — Astroloji & Ruhsal Danışmanlık',
+      template: '%s | GoldMoodAstro',
     },
     manifest: '/manifest.webmanifest',
     icons: {
@@ -69,7 +69,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={lang} data-theme="dark" suppressHydrationWarning>
       <head>
-        <meta name="description" content="Energetische Massage in Bonn von Anastasia König — achtsame Berührung, tiefe Entspannung und Körperwahrnehmung. Termine nach Vereinbarung. Jetzt buchen!" />
+        <meta name="description" content="GoldMoodAstro — Astroloji, tarot, numeroloji ve ruhsal koçluk için uzman danışmanlarla bağlantı platformu." />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />

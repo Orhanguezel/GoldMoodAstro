@@ -5,11 +5,11 @@
   --color-gold-50: #FAF6EE;
   --color-gold-100: #F2EAD5;
   --color-gold-200: #DFC9A0;
-  --color-gold-300: #D4B87E;
-  --color-gold-400: #C9A96E;
-  --color-gold-500: #B8944F;
-  --color-gold-600: #A88B4A;
-  --color-gold-700: #8A7039;
+  --color-gold-300: var(--gm-gold-light, #F0CF6B);
+  --color-gold-400: var(--gm-gold, #D4AF37);
+  --color-gold-500: var(--gm-gold-dim, #B8962E);
+  --color-gold-600: var(--gm-gold-dim, #B8962E);
+  --color-gold-700: var(--gm-primary-dark, #5C4480);
   --color-gold-800: #6B5628;
   --color-gold-900: #4D3D1A;
 
@@ -26,50 +26,50 @@
   --color-sand-900: #1A1512;
 
   /* ─── DARK PALETTE ─── */
-  --color-deep: #0C0B09;
-  --color-dark: #141210;
-  --color-card: #1A1815;
-  --color-card-hover: #211F1A;
+  --color-deep: var(--gm-bg, #0D0B1E);
+  --color-dark: var(--gm-bg-deep, #1A1630);
+  --color-card: var(--gm-surface, #241E3D);
+  --color-card-hover: var(--gm-surface-high, #2E2850);
 
   /* ─── SEMANTIC TOKENS (Dark Theme Default) ─── */
-  --color-bg-primary: var(--color-deep);
-  --color-bg-secondary: var(--color-dark);
-  --color-bg-card: var(--color-card);
-  --color-bg-card-hover: var(--color-card-hover);
-  --color-bg-accent: rgba(201, 169, 110, 0.05);
-  --color-bg-dark: var(--color-deep);
+  --color-bg-primary: var(--gm-bg, var(--color-deep));
+  --color-bg-secondary: var(--gm-bg-deep, var(--color-dark));
+  --color-bg-card: var(--gm-surface, var(--color-card));
+  --color-bg-card-hover: var(--gm-surface-high, var(--color-card-hover));
+  --color-bg-accent: color-mix(in srgb, var(--gm-primary, #7B5EA7) 10%, transparent);
+  --color-bg-dark: var(--gm-bg, var(--color-deep));
 
-  --color-text-primary: var(--color-sand-50);
-  --color-text-secondary: var(--color-sand-300);
-  --color-text-muted: var(--color-sand-400);
-  --color-text-on-dark: var(--color-sand-50);
+  --color-text-primary: var(--gm-text, #F0E6FF);
+  --color-text-secondary: var(--gm-text-dim, #C9B8E8);
+  --color-text-muted: var(--gm-muted, #7A6DA0);
+  --color-text-on-dark: var(--gm-text, #F0E6FF);
 
-  --color-brand-primary: var(--color-gold-400);
-  --color-brand-hover: var(--color-gold-500);
-  --color-brand-dark: var(--color-gold-700);
-  --color-brand-light: rgba(201, 169, 110, 0.08);
+  --color-brand-primary: var(--gm-primary, #7B5EA7);
+  --color-brand-hover: var(--gm-primary-light, #9B7EC8);
+  --color-brand-dark: var(--gm-primary-dark, #5C4480);
+  --color-brand-light: color-mix(in srgb, var(--gm-primary, #7B5EA7) 12%, transparent);
 
   --color-primary: var(--color-brand-primary);
   --color-primary-hover: var(--color-brand-hover);
 
-  --color-accent-gold: var(--color-gold-400);
-  --color-accent-spiritual: var(--color-gold-200);
+  --color-accent-gold: var(--gm-gold, var(--color-gold-400));
+  --color-accent-spiritual: var(--gm-accent, #5A4E87);
 
-  --color-border-light: rgba(201, 169, 110, 0.12);
-  --color-border-medium: rgba(201, 169, 110, 0.2);
-  --color-border-hover: rgba(201, 169, 110, 0.3);
+  --color-border-light: var(--gm-border-soft, rgba(201, 184, 232, 0.07));
+  --color-border-medium: var(--gm-border, rgba(201, 184, 232, 0.14));
+  --color-border-hover: color-mix(in srgb, var(--gm-primary, #7B5EA7) 35%, transparent);
 
   /* ─── TYPOGRAPHY ─── */
-  --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: var(--gm-font-sans, 'Outfit', system-ui, -apple-system, sans-serif);
+  --font-serif: var(--gm-font-display, 'Cormorant Garamond', Georgia, serif);
 }
 
 /* ─── SHADOWS ─── */
 :root {
-  --shadow-soft: 0 2px 20px rgba(0, 0, 0, 0.3);
-  --shadow-medium: 0 8px 40px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 60px rgba(201, 169, 110, 0.08);
-  --shadow-gold: 0 0 30px rgba(201, 169, 110, 0.15);
+  --shadow-soft: var(--gm-shadow-soft, 0 2px 20px rgba(0, 0, 0, 0.3));
+  --shadow-medium: var(--gm-shadow-card, 0 8px 40px rgba(0, 0, 0, 0.4));
+  --shadow-glow: var(--gm-shadow-glow, 0 0 60px rgba(123, 94, 167, 0.18));
+  --shadow-gold: var(--gm-shadow-gold, 0 0 30px rgba(212, 175, 55, 0.2));
 }
 
 /* ─── LIGHT THEME ─── */

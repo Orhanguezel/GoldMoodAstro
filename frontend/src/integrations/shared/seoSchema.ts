@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/shared/seoSchema.ts
-// konigsmassage – SEO Schema (STRICT) + DB-backed Defaults
+// goldmoodastro – SEO Schema (STRICT) + DB-backed Defaults
 // SINGLE SOURCE OF TRUTH: open_graph.images[]
 // =============================================================
 
@@ -87,11 +87,11 @@ export const DEFAULT_OG_IMAGE = '/img/og-default.jpg';
  * Asıl değerler site_settings.seo / site_settings.site_seo içinden gelir.
  */
 export const DEFAULT_SEO_GLOBAL: SeoObject = {
-  site_name: 'Energetische Massage',
-  title_default: 'Energetische Massage – Energetische Massage in Bonn',
-  title_template: '%s – Energetische Massage',
+  site_name: 'GoldMoodAstro',
+  title_default: 'GoldMoodAstro – Ruhsal Danışmanlık ve Astroloji Platformu',
+  title_template: '%s – GoldMoodAstro',
   description:
-    'Energetische Massage in Bonn – achtsame Berührung, klare Grenzen und tiefe Entspannung. Termine nach Vereinbarung.',
+    'GoldMoodAstro ile ruhsal yolculuğunuzda rehberlik alın. Astroloji, tarot ve mood coaching seansları için uzman danışmanlarla buluşun.',
   open_graph: {
     type: 'website',
     images: [DEFAULT_OG_IMAGE],
@@ -114,25 +114,25 @@ export const DEFAULT_SEO_GLOBAL: SeoObject = {
  */
 export const DEFAULT_SITE_META_DEFAULT_BY_LOCALE: Record<string, SiteMetaDefaultObject> = {
   tr: {
-    title: 'Energetische Massage – Bonn’da Enerjetik Masaj',
+    title: 'GoldMoodAstro – Ruhsal Danışmanlık ve Astroloji Platformu',
     description:
-      'Bonn’da enerjetik masaj: bilinçli dokunuş, net sınırlar ve derin gevşeme. Seanslar ön görüşme ile, randevuya göre.',
+      'Astroloji, tarot ve mood coaching ile kendinizi keşfedin. Güvenilir danışmanlarla sesli seanslarınızı hemen başlatın.',
     keywords:
-      'koenig energetik, enerjetik masaj, bonn, anastasia könig, rahatlama, beden farkındalığı, thai yoga, aroma, ayak refleks, randevu',
+      'goldmoodastro, astroloji, tarot, numeroloji, mood coaching, kariyer danışmanlığı, ilişki danışmanlığı, ruhsal rehberlik, online seans',
   },
   en: {
-    title: 'Energetische Massage – Energetic Massage in Bonn',
+    title: 'GoldMoodAstro – Spiritual Guidance and Astrology Platform',
     description:
-      'Energetic massage sessions in Bonn with mindful touch, clear boundaries, and deep relaxation. Appointments by arrangement.',
+      'Explore yourself with astrology, tarot, and mood coaching. Start your voice sessions with trusted consultants now.',
     keywords:
-      'koenig energetik, energetic massage, bonn, anastasia könig, relaxation, body awareness, thai yoga massage, aroma energy, foot reflex, appointment',
+      'goldmoodastro, astrology, tarot, numerology, mood coaching, career guidance, relationship counseling, spiritual guidance, online session',
   },
   de: {
-    title: 'Energetische Massage – Energetische Massage in Bonn',
+    title: 'GoldMoodAstro – Spirituelle Beratung und Astrologie-Plattform',
     description:
-      'Energetische Massage in Bonn – achtsame Berührung, klare Grenzen und tiefe Entspannung. Termine nach Vereinbarung.',
+      'Entdecken Sie sich selbst mit Astrologie, Tarot und Mood Coaching. Starten Sie jetzt Ihre Sitzungen mit vertrauenswürdigen Beratern.',
     keywords:
-      'Energetische Massage, energetische massage, bonn, anastasia könig, entspannung, körperwahrnehmung, thai yoga massage, aroma-energie, fußreflex, termin',
+      'goldmoodastro, astrologie, tarot, numerologie, mood coaching, berufsberatung, beziehungsberatung, spirituelle führung, online-sitzung',
   },
 };
 

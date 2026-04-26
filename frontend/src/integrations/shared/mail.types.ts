@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/types/mail.types.ts
-// konigsmassage – Mail DTO & Payload Tipleri
+// goldmoodastro – Mail DTO & Payload Tipleri
 // =============================================================
 
 /**

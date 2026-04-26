@@ -16,7 +16,6 @@ export type UiSectionKey =
   | 'ui_header'
   | 'ui_home'
   | 'ui_footer'
-  | 'ui_services'
   | 'ui_banner'
   | 'ui_hero'
   | 'ui_contact'
@@ -55,7 +54,6 @@ export type UiSectionKey =
   | 'ui_terms'
   | 'ui_common'
   | 'ui_solutions'
-  | 'ui_appointment'
   | 'ui_chat';
 
 /**
@@ -67,11 +65,8 @@ const SECTION_KEYS: Record<UiSectionKey, readonly string[]> = {
   ui_header: [
     'ui_header_nav_home',
     'ui_header_nav_about',
-    'ui_header_nav_services',
-    'ui_header_nav_product',
-    'ui_header_nav_sparepart',
-    'ui_header_nav_references',
-    'ui_header_nav_library',
+    'ui_header_nav_consultants',
+    'ui_header_nav_blog',
     'ui_header_nav_news',
     'ui_header_nav_contact',
     'ui_header_cta',
@@ -123,20 +118,6 @@ const SECTION_KEYS: Record<UiSectionKey, readonly string[]> = {
     'ui_footer_email_aria',
     'ui_footer_copyright_prefix',
     'ui_footer_copyright_suffix',
-  ],
-
-  ui_services: [
-    'ui_services_subprefix',
-    'ui_services_sublabel',
-    'ui_services_page_title',
-    'ui_services_page_description',
-    'ui_services_meta_title',
-    'ui_services_meta_description',
-    'ui_services_og_image',
-    'ui_services_title',
-    'ui_services_placeholder_title',
-    'ui_services_placeholder_summary',
-    'ui_services_details_aria',
   ],
 
   ui_banner: ['ui_breadcrumb_home'],
@@ -414,14 +395,6 @@ const SECTION_KEYS: Record<UiSectionKey, readonly string[]> = {
     'ui_solutions_page_title',
     'ui_solutions_meta_title',
     'ui_solutions_meta_description',
-  ],
-  ui_appointment: [
-    'ui_appointment_page_title',
-    'ui_appointment_meta_title',
-    'ui_appointment_meta_description',
-    'ui_appointment_og_image',
-    'ui_appointment_home_visit_title',
-    'ui_appointment_home_visit_text',
   ],
   ui_chat: [
     'ui_chat_title',

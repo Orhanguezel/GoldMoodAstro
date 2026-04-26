@@ -34,7 +34,7 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp }) => {
     const contact = (contactInfoSetting?.value ?? {}) as any;
     const brandVal = (companyBrandSetting?.value ?? {}) as any;
     const socialsVal = (socialsSetting?.value ?? {}) as Record<string, string>;
-    const name = (brandVal.name as string) || (contact.companyName as string) || 'Energetische Massage';
+    const name = (brandVal.name as string) || (contact.companyName as string) || 'GoldMoodAstro';
     const phoneVal = (brandVal.phone as string | undefined) || (Array.isArray(contact.phones) ? (contact.phones[0] as string | undefined) : undefined) || '';
     const emailVal = (brandVal.email as string | undefined) || (contact.email as string | undefined) || '';
     const mergedSocials: Record<string, string> = { ...(brandVal.socials as Record<string, string> | undefined), ...socialsVal };
@@ -126,9 +126,9 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp }) => {
             </div>
             <p className="text-text-muted text-[0.85rem] max-w-[300px] leading-[1.6]">
               {ui('ui_footer_tagline',
-                locale === 'de' ? 'Professionelle energetische Massage — mobil, persoenlich und direkt bei Ihnen zu Hause.'
-                : locale === 'tr' ? 'Profesyonel enerjetik masaj — mobil, kisisel ve dogrudan evinizde.'
-                : 'Professional energetic massage — mobile, personal and directly at your home.'
+                locale === 'de' ? 'Ihre Plattform fuer Astrologie, Tarot und spirituelles Coaching.'
+                : locale === 'tr' ? 'Astroloji, tarot ve ruhsal koçluk platformu.'
+                : 'Your platform for astrology, tarot and spiritual coaching.'
               )}
             </p>
           </div>
@@ -146,7 +146,7 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp }) => {
         {/* Bottom */}
         <div className="flex justify-between items-center flex-wrap gap-4 pt-8 border-t border-border-light text-[0.75rem] text-text-muted tracking-[0.05em]">
           <span>
-            &copy; {new Date().getFullYear()} {brandName}. {ui('ui_footer_copyright_suffix', 'Alle Rechte vorbehalten.')}
+            &copy; {new Date().getFullYear()} {brandName}. {ui('ui_footer_copyright_suffix', locale === 'tr' ? 'Tum haklar saklidir.' : 'All rights reserved.')}
           </span>
           <span>
             {locale === 'de' ? 'Gestaltung' : locale === 'tr' ? 'Tasarim' : 'Design'}:{' '}

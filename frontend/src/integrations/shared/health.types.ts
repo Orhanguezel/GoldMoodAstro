@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/shared/health.types.ts
-// konigsmassage — Health check types
+// goldmoodastro — Health check types
 // =============================================================
 
 export type HealthStatus =

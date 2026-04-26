@@ -4,23 +4,15 @@ import React from 'react';
 import { useLocaleShort, useUiSection } from '@/i18n';
 
 const STEPS: Record<string, Array<{ title: string; desc: string }>> = {
-  de: [
-    { title: 'Termin wahlen', desc: 'Wahlen Sie online oder telefonisch Ihren Wunschtermin aus.' },
-    { title: 'Wir kommen zu Ihnen', desc: 'Unsere Therapeutin kommt mit allem Equipment direkt zu Ihnen nach Hause.' },
-    { title: 'Massage geniessen', desc: 'Lehnen Sie sich zuruck und geniessen Sie Ihre professionelle energetische Massage.' },
-    { title: 'Nachspuren', desc: 'Nehmen Sie sich Zeit zum Ankommen. Einfache Hinweise fur danach unterstutzen die Wirkung.' },
+  tr: [
+    { title: 'Danışman Seç', desc: 'Uzmanlık alanı, dil ve puanına göre size en uygun danışmanı inceleyin.' },
+    { title: 'Randevu Al', desc: 'Müsait slotlardan tarih ve saat seçin, güvenli ödeme ile onaylayın.' },
+    { title: 'Görüşmeyi Başlat', desc: 'Uygulama içi güvenli sesli görüşme ile danışmanınızla bağlanın.' },
   ],
   en: [
-    { title: 'Choose appointment', desc: 'Select your preferred appointment online or by phone.' },
-    { title: 'We come to you', desc: 'Our therapist comes to your home with all equipment.' },
-    { title: 'Enjoy massage', desc: 'Sit back and enjoy your professional energetic massage.' },
-    { title: 'Aftercare', desc: 'Take time to settle. Simple aftercare suggestions support the effect.' },
-  ],
-  tr: [
-    { title: 'Randevu secin', desc: 'Online veya telefonla istediginiz randevuyu secin.' },
-    { title: 'Size geliyoruz', desc: 'Terapistimiz tum ekipmanla evinize gelir.' },
-    { title: 'Masajin tadini cikarin', desc: 'Arkaniza yaslanin ve profesyonel enerjetik masajinizin tadini cikarin.' },
-    { title: 'Sonrasi', desc: 'Yerlesmeye zaman ayirin. Basit oneriler etkiyi destekler.' },
+    { title: 'Choose a Consultant', desc: 'Browse experts by specialty, language and rating to find your perfect match.' },
+    { title: 'Book a Session', desc: 'Pick an available time slot and complete secure payment instantly.' },
+    { title: 'Start Your Session', desc: 'Connect with your consultant via secure in-app voice call.' },
   ],
 };
 
@@ -28,27 +20,24 @@ export default function HomeIntroSection({ locale: explicitLocale }: { locale?: 
   const locale = useLocaleShort(explicitLocale);
   const { ui } = useUiSection('ui_home_intro' as any, locale as any);
 
-  const steps = STEPS[locale || 'de'] || STEPS.de;
+  const steps = STEPS[locale || 'tr'] || STEPS.tr;
 
   const sectionTitle = ui('ui_home_intro_title',
-    locale === 'de' ? 'Massage buchen in 4 Schritten'
-    : locale === 'tr' ? '4 adimda masaj randevusu'
-    : 'Book massage in 4 steps'
+    locale === 'tr' ? '3 adımda danışmanlık seansı' : 'Book a session in 3 steps'
   );
 
   const sectionDesc = ui('ui_home_intro_desc',
-    locale === 'de' ? 'Kein Anfahrtsweg, kein Stress — wir bringen die Entspannung direkt zu Ihnen.'
-    : locale === 'tr' ? 'Yol yok, stres yok — rahatlamayi dogrudan size getiriyoruz.'
-    : 'No travel, no stress — we bring relaxation directly to you.'
+    locale === 'tr'
+      ? 'Astroloji, tarot, kariyer ve daha fazlası — uzman danışmanlarla kolayca buluşun.'
+      : 'Astrology, tarot, career and more — connect with expert consultants with ease.'
   );
 
   return (
     <section className="py-28 lg:py-36" style={{ padding: '7rem 4%' }}>
       <div className="max-w-[1100px] mx-auto">
-        {/* Header */}
         <div className="text-center max-w-[600px] mx-auto mb-16 reveal">
           <span className="section-label">
-            {ui('ui_home_intro_label', locale === 'de' ? 'So einfach gehts' : locale === 'tr' ? 'Nasil calisir' : 'How it works')}
+            {ui('ui_home_intro_label', locale === 'tr' ? 'Nasıl çalışır' : 'How it works')}
           </span>
           <h2 className="font-serif text-[clamp(2rem,4vw,3.4rem)] font-light leading-[1.2] mb-5">
             {sectionTitle}
@@ -58,18 +47,14 @@ export default function HomeIntroSection({ locale: explicitLocale }: { locale?: 
           </p>
         </div>
 
-        {/* Steps */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 relative">
-          {/* Connecting line (desktop only) */}
-          <div className="hidden lg:block absolute top-8 left-[12%] right-[12%] h-px bg-gradient-to-r from-transparent via-brand-primary to-transparent opacity-25" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 relative">
+          <div className="hidden sm:block absolute top-8 left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-brand-primary to-transparent opacity-25" />
 
           {steps.map((step, i) => (
-            <div key={i} className={`text-center px-4 relative reveal reveal-delay-${i + 1}`}>
-              {/* Step number */}
+            <div key={i} className={`text-center px-6 relative reveal reveal-delay-${i + 1}`}>
               <div className="w-16 h-16 border border-brand-primary rounded-full flex items-center justify-center mx-auto mb-6 font-serif text-[1.3rem] text-brand-primary bg-bg-primary relative z-[1] transition-all duration-400 hover:bg-brand-primary hover:text-bg-primary hover:shadow-gold">
                 {String(i + 1).padStart(2, '0')}
               </div>
-
               <h3 className="font-serif text-[1.2rem] font-normal mb-2.5">
                 {ui(`ui_home_intro_step${i + 1}_title`, step.title)}
               </h3>

@@ -31,6 +31,7 @@ const STORAGE_DRIVER = (RAW_STORAGE_DRIVER === 'local' ? 'local' : 'cloudinary')
 export const env = {
   NODE_ENV: process.env.NODE_ENV ?? 'development',
   PORT: toInt(process.env.PORT, 8083),
+  APP_NAME: process.env.APP_NAME || 'Platform',
 
   // Storage driver (fallback). Asıl driver site_settings.storage_driver ile gelebilir.
   STORAGE_DRIVER,
@@ -90,28 +91,18 @@ export const env = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? '',
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? '',
 
-  PUBLIC_URL: process.env.PUBLIC_URL || 'https://www.konigsmassage.com',
+  AGORA_APP_ID: process.env.AGORA_APP_ID ?? '',
+  AGORA_APP_CERTIFICATE: process.env.AGORA_APP_CERTIFICATE ?? '',
+
+  FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID ?? '',
+  FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL ?? '',
+  FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ?? '',
+
+  PUBLIC_URL: process.env.PUBLIC_URL || 'http://localhost:8094',
   FRONTEND_URL: FRONTEND_URL,
 
   PUBLIC_API_BASE: process.env.PUBLIC_API_BASE || '',
   CDN_PUBLIC_BASE: process.env.CDN_PUBLIC_BASE || '',
-
-  // PayPal
-  PAYPAL_MODE: process.env.PAYPAL_MODE || 'sandbox',
-  PAYPAL_BASE_URL: process.env.PAYPAL_BASE_URL || 'https://api-m.sandbox.paypal.com',
-  PAYPAL_CLIENT_ID: process.env.PAYPAL_CLIENT_ID || '',
-  PAYPAL_CLIENT_SECRET: process.env.PAYPAL_CLIENT_SECRET || '',
-  PAYPAL_WEBHOOK_ID: process.env.PAYPAL_WEBHOOK_ID || '',
-
-  // Bank transfer
-  BANK_TRANSFER_ENABLED: toBool(process.env.BANK_TRANSFER_ENABLED, true),
-  BANK_ACCOUNT_NAME: process.env.BANK_ACCOUNT_NAME || '',
-  BANK_IBAN: process.env.BANK_IBAN || '',
-  BANK_NAME: process.env.BANK_NAME || '',
-  BANK_BRANCH: process.env.BANK_BRANCH || '',
-  BANK_SWIFT: process.env.BANK_SWIFT || '',
-
-
 
   // ✅ SMTP / Mail (sadece fallback; asıl değerler site_settings.smtp_* ile gelebilir)
   SMTP_HOST: process.env.SMTP_HOST || '',

@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/rtk/endpoints/footer_sections.endpoints.ts
-// konigsmassage – Public Footer Sections RTK endpoints
+// goldmoodastro – Public Footer Sections RTK endpoints
 // =============================================================
 
 import { baseApi } from '@/integrations/rtk/baseApi';

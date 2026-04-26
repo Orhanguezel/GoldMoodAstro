@@ -30,7 +30,6 @@ import { localizePath } from '@/integrations/shared';
 import ImageLightboxModal, {
   type LightboxImage,
 } from '@/components/common/public/ImageLightboxModal';
-import OtherServicesSidebar from '@/components/containers/services/OtherServicesSidebar';
 import ReviewForm from '@/components/common/public/ReviewForm';
 import ReviewList from '@/components/common/public/ReviewList';
 import ContactCtaCard from '@/components/common/public/ContactCtaCard';
@@ -331,8 +330,6 @@ export default function BlogDetails() {
             {/* SIDEBAR (LEFT) */}
             <div className="lg:col-span-4 order-2 lg:order-1">
               <div className="sticky top-24 space-y-8">
-                <OtherServicesSidebar />
-
                 {otherBlogs.length > 0 && (
                   <div className="bg-bg-secondary p-6 shadow-soft border border-border-light">
                     <h3 className="text-xl font-light font-serif text-text-primary mb-6 border-b border-border-light pb-2">

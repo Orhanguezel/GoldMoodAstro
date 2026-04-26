@@ -1,172 +1,136 @@
-# Konigsmassage
+# GoldMoodAstro
 
-Cok dilli masaj & wellness randevu platformu. Musteri web sitesi, yonetim paneli ve backend API'den olusan full-stack uygulama.
+Danisman ve kullanici eslestirme platformu.
+Kullanici danisman secer, randevu olusturur, odeme yapar ve uygulama ici sesli gorusme gerceklestirir.
+
+Odak alanlari: astroloji ve mood danismanligi.
 
 ## Teknoloji
 
 | Katman | Stack |
 |--------|-------|
-| **Frontend** | Next.js 16, React 19, Tailwind CSS 4, Radix UI, Redux Toolkit, Framer Motion |
-| **Backend** | Fastify 5, Drizzle ORM, MySQL, Bun, Zod, Cloudinary, Nodemailer |
-| **Admin Panel** | Next.js 16, React 19, Tailwind CSS 4, Radix UI, React Query, Zustand, React Hook Form |
+| Backend | Fastify 5, Drizzle ORM, MySQL, Bun, Zod |
+| Admin Panel | Next.js 16, React 19, Tailwind v4, React Query, Zustand, Radix UI |
+| Mobile | Flutter, Riverpod, Dio, Agora SDK, Firebase FCM |
 
-## Proje Yapisi
-
-```
-konigsmassage/
-├── frontend/          # Musteri web sitesi (Next.js App Router)
-├── backend/           # REST API (Fastify + Drizzle ORM)
-├── admin_panel/       # Yonetim paneli (Next.js App Router)
-└── .github/workflows/ # CI/CD (GitHub Actions)
-```
-
-## Ozellikler
-
-### Musteri Web Sitesi
-- Anasayfa, hakkimizda, hizmetler, blog, SSS, iletisim sayfalari
-- Online randevu sistemi (tarih, saat, hizmet secimi)
-- Uye girisi / kayit (JWT + Google OAuth)
-- Cok dilli destek (TR, EN, DE) — URL tabanli (`/[locale]/...`)
-- SEO optimizasyonu (sitemap, robots.txt, hreflang, canonical URL)
-- Yasal sayfalar (KVKK, gizlilik politikasi, cerez politikasi, kullanim sartlari)
-
-### Backend API (27 Modul)
-- **Randevu Sistemi:** Kaynak yonetimi, calisma saatleri, slot planlama, kapasite kontrolu
-- **Icerik Yonetimi:** Hizmetler, blog, SSS, slider, ozel sayfalar, menu, footer
-- **Kullanici:** Kimlik dogrulama, profiller, roller, denetim kayitlari
-- **Iletisim:** Iletisim formu, bulten, destek talepleri, sohbet, bildirimler
-- **E-posta:** Sablon yonetimi, otomatik bildirimler (Nodemailer)
-- **Sistem:** Dashboard istatistikleri, veritabani iceri/disari aktarimi, dosya depolama
-
-### Yonetim Paneli (31+ Modul)
-- Dashboard & raporlar (Recharts grafikleri)
-- Randevu yonetimi (durum takibi, e-posta bildirimleri)
-- Hizmet, SSS, blog, slider CRUD islemleri (i18n destekli)
-- Musavir/oda kaynak yonetimi & musaitlik takvimi
-- Kullanici & rol yonetimi
-- Dosya yonetimi (Cloudinary)
-- Site ayarlari & dil yonetimi
-- Surukleme-birakma siralama (dnd-kit)
-- Veritabani yedekleme/geri yukleme
-
-## Cok Dilli Mimari
-
-Veritabani odakli i18n deseni:
+## Monorepo Yapisi
 
 ```
-services (ana tablo)          services_i18n (ceviri tablosu)
-├── id                        ├── id
-├── is_active                 ├── service_id → services.id
-├── display_order             ├── locale (tr, en, de)
-└── created_at                ├── title, slug, description
-                              └── meta_title, meta_description
+goldmoodastro/
+├── backend/
+├── packages/
+│   ├── core/               # @goldmood/core
+│   ├── shared-backend/     # @goldmood/shared-backend
+│   ├── shared-types/       # @goldmood/shared-types
+│   ├── shared-config/      # @goldmood/shared-config
+│   └── shared-ui/          # @goldmood/shared-ui
+├── admin_panel/            # Faz 2
+└── mobile/                 # Faz 3
 ```
 
-- **Backend:** Locale cozmesi: `?locale=` > `x-locale` header > `Accept-Language` > varsayilan
-- **Frontend:** URL oneki (`/tr/`, `/en/`, `/de/`)
-- **Admin:** Tum icerikler locale bazli CRUD
+Not: Bu projede eski musteri web sitesi (`frontend/`) bulunmaz.
 
-## Kurulum
+## Paket Dokumani
+
+- Paket genel bakis: [packages/README.md](packages/README.md)
+- Paket kullanim rehberi: [packages/KULLANIM.md](packages/KULLANIM.md)
+
+## Hizli Baslangic
 
 ### Gereksinimler
 
-- [Bun](https://bun.sh) >= 1.0
-- [Node.js](https://nodejs.org) >= 18.17
+- Bun
 - MySQL 8
 
-### Backend
+### Root komutlari
 
 ```bash
-cd backend
-cp .env.example .env   # Ortam degiskenlerini duzenle
+cd /home/orhan/Documents/Projeler/goldmoodastro
 bun install
-bun run db:seed        # Veritabanini olustur & seed et
-bun run dev            # http://localhost:8093
+bun run dev:backend
 ```
 
-**Ortam Degiskenleri:**
-
-| Degisken | Aciklama |
-|----------|----------|
-| `DATABASE_URL` | MySQL baglanti dizesi |
-| `JWT_SECRET` | JWT imza anahtari |
-| `CORS_ORIGIN` | Izin verilen originler (virgul ile ayrilmis) |
-| `CLOUDINARY_*` | Cloudinary API bilgileri |
-| `SMTP_*` | E-posta sunucusu ayarlari |
-| `GOOGLE_*` | Google OAuth bilgileri |
-| `STORAGE_DRIVER` | `cloudinary` veya `local` |
-
-### Frontend
+Sik kullanilan komutlar:
 
 ```bash
-cd frontend
-bun install
-bun run dev            # http://localhost:3000
+bun run dev:backend
+bun run dev:admin
+bun run build:backend
+bun run build:admin
+bun run db:seed
+bun run typecheck
 ```
 
-### Admin Panel
+## Backend Ortam Degiskenleri
 
-```bash
-cd admin_panel
-bun install
-bun run dev            # http://localhost:3000
+`backend/.env` dosyasi AGENTS.md ile uyumlu olmali. Temel alanlar:
+
+- `PORT=8094`
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+- `JWT_SECRET`, `COOKIE_SECRET`
+- `AGORA_APP_ID`, `AGORA_APP_CERTIFICATE`
+- `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`
+- `IYZIPAY_API_KEY`, `IYZIPAY_SECRET_KEY`, `IYZIPAY_BASE_URL`
+- `CORS_ORIGIN`, `PUBLIC_URL`
+
+## Backend Mimari Kurallari
+
+- Shared moduller: `packages/shared-backend/modules/`
+- Proje-ozel moduller: `backend/src/modules/`
+- Shared route kaydi: `backend/src/routes/shared.ts`
+- Proje-ozel route kaydi: `backend/src/routes/goldmood.ts`
+
+Proje-ozel moduller (Faz 1):
+
+- `consultants`
+- `agora`
+- `firebase`
+
+Modul dosya pattern'i:
+
+```text
+schema.ts
+router.ts
+admin.routes.ts
+controller.ts
+repository.ts
+validation.ts
+index.ts
 ```
 
-## Komutlar
+## Veritabani Kurali (Kritik)
 
-| Komut | Frontend | Backend | Admin Panel |
-|-------|----------|---------|-------------|
-| Gelistirme | `bun run dev` | `bun run dev` | `bun run dev` |
-| Build | `bun run build` | `bun run build` | `bun run build` |
-| Baslat | `bun run start` | `bun run start` | `bun run start` |
-| Lint | `bun run lint` | — | `bun run lint` |
-| Tip kontrolu | `bun run typecheck` | — | — |
-| E2E test | `bun run test:e2e` | — | — |
-| Format | — | — | `bun run format` |
-| DB Seed | — | `bun run db:seed` | — |
+- `ALTER TABLE` kullanma
+- Semayi `backend/src/db/sql/` altindaki seed SQL dosyalari ile yonet
+- Degisiklikten sonra `bun run db:seed` calistir
+- Yeni modullerde id tipi `CHAR(36)` UUID pattern'i kullan
 
+## Yol Haritasi
 
+### Faz 0
 
-## Production Deployment
+- Eski kalintilarin temizligi
+- SQL seed dosyalarinin GoldMoodAstro'ya gore yeniden yazimi
+- `backend/.env.example` guncellemesi
 
-GitHub Actions ile `main` branch'e push yapildiginda otomatik deploy edilir.
+### Faz 1
 
-| Servis | Port | PM2 Adi |
-|--------|------|---------|
-| Backend | 8093 | `konigsmassage-backend` |
-| Frontend | 3055 | `konigsmassage-frontend` |
-| Admin Panel | 3056 | `konigsmassage-admin-panel` |
+- `consultants` modulu
+- `agora` modulu (token ve session yonetimi)
+- `firebase` modulu (FCM token ve push)
 
-**Akis:** Push to `main` → Bun install → Build → rsync to VPS → PM2 reload
+### Faz 2
 
-## API Endpoint Yapisi
+- `admin_panel/` olusturma ve dashboard/yonetim sayfalari
 
-```
-# Public (Musteri)
-GET    /services                 # Hizmet listesi
-GET    /services/by-slug/:slug   # Hizmet detayi
-GET    /faqs                     # SSS listesi
-POST   /bookings                 # Randevu olustur
-POST   /contact                  # Iletisim formu
-POST   /newsletter               # Bulten aboneligi
-GET    /slider                   # Slider verileri
-GET    /site-settings            # Site ayarlari
-POST   /auth/login               # Giris
-POST   /auth/register            # Kayit
+### Faz 3
 
-# Admin (Yonetim)
-/admin/services/*                # Hizmet CRUD
-/admin/bookings/*                # Randevu yonetimi
-/admin/availability/*            # Musaitlik yonetimi
-/admin/resources/*               # Kaynak yonetimi
-/admin/faqs/*                    # SSS CRUD
-/admin/site-settings/*           # Site ayarlari
-/admin/storage/*                 # Dosya yonetimi
-/admin/dashboard/*               # Dashboard istatistikleri
-/admin/db/*                      # Veritabani islemleri
-...
-```
+- `mobile/` Flutter uygulama iskeleti ve temel ekranlar
+
+### Faz 4
+
+- CI/CD, Nginx ve PM2 deploy akisi
 
 ## Lisans
 
-[MIT](LICENSE) — Orhan Guzel
+[MIT](LICENSE) - Orhan Guzel

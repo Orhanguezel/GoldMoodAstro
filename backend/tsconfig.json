@@ -36,8 +36,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.d.ts",
-    "../frontend/src/components/admin/bookings/_components/slotPlan.ts"
+    "src/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",

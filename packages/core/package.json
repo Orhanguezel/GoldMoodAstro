@@ -1,0 +1,18 @@
+{
+  "name": "@goldmood/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
+    "./services": "./src/services/index.ts",
+    "./endpoints": "./src/endpoints/api-endpoints.ts",
+    "./i18n": "./src/i18n/index.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  }
+}

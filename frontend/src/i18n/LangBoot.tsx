@@ -32,7 +32,7 @@ export default function LangBoot() {
 
   const activeLocales = useMemo(
     () => {
-      const fb = normLocaleTag(FALLBACK_LOCALE) || 'de';
+      const fb = normLocaleTag(FALLBACK_LOCALE) || 'tr';
       const arr = normalizeLocales(appLocalesMeta as any);
       return arr.length ? arr : [fb];
     },
@@ -40,7 +40,7 @@ export default function LangBoot() {
   );
 
   const runtimeDefault = useMemo(() => {
-    const fb = normLocaleTag(FALLBACK_LOCALE) || 'de';
+    const fb = normLocaleTag(FALLBACK_LOCALE) || 'tr';
     const resolved = resolveDefaultLocale(defaultLocaleMeta as any, appLocalesMeta as any);
     return normLocaleTag(resolved) || normLocaleTag(activeLocales[0]) || fb;
   }, [defaultLocaleMeta, appLocalesMeta, activeLocales]);

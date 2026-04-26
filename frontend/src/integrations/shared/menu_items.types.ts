@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/types/menu_items.types.ts
-// konigsmassage – Menu Items shared types (Admin + Public)
+// goldmoodastro – Menu Items shared types (Admin + Public)
 // =============================================================
 import { BoolLike } from '@/integrations/shared';
 

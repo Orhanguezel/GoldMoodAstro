@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/containers/faqs/FaqsPageContent.tsx
-// Königs Massage – Full FAQs Page Content [FINAL]
+// GoldMoods Massage – Full FAQs Page Content [FINAL]
 // - Tailwind v4 Semantic Tokens
 // - Standard Accordion
 // =============================================================
@@ -26,7 +26,7 @@ const FaqsPageContent: React.FC = () => {
   const t = useCallback((key: string, fallback: string) => ui(key, fallback), [ui]);
 
   // UI Strings
-  const kickerPrefix = safeStr(t('ui_faqs_kicker_prefix', 'Königs Massage'));
+  const kickerPrefix = safeStr(t('ui_faqs_kicker_prefix', 'GoldMoods Massage'));
   const kickerLabel = safeStr(t('ui_faqs_kicker_label', 'Frequently Asked Questions'));
 
   const titlePrefix = safeStr(t('ui_faqs_page_title_prefix', 'Common'));
@@ -35,7 +35,7 @@ const FaqsPageContent: React.FC = () => {
   const intro = safeStr(
     t(
       'ui_faqs_intro',
-      'Find answers to common questions about Königs Massage sessions, booking, and general practices.',
+      'Find answers to common questions about GoldMoods Massage sessions, booking, and general practices.',
     ),
   );
 

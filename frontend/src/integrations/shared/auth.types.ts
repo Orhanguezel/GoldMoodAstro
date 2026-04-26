@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/shared/auth.types.ts
-// konigsmassage — Auth module frontend types
+// goldmoodastro — Auth module frontend types
 // Backend: src/modules/auth/*
 // =============================================================
 
@@ -21,6 +21,7 @@ export type SignUpBody = {
   password: string;
   full_name?: string;
   phone?: string;
+  rules_accepted: true;
   options?: {
     emailRedirectTo?: string;
     data?: {

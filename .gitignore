@@ -70,6 +70,54 @@ web_modules/
 .env.*
 !.env.example
 
+# Local secrets vault (not committed)
+.secrets/
+
+# User uploads (runtime data — provisioned on VPS)
+uploads/
+backend/uploads/
+**/uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE/editor cruft
+*.swp
+*.swo
+*~
+
+# Flutter / mobile build outputs
+mobile/build/
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/.pub-cache/
+mobile/.pub/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/key.properties
+mobile/**/*.jks
+mobile/**/*.keystore
+
+# Bun binary lockfile (we use text bun.lock)
+bun.lockb
+
+# PM2 runtime logs
+.pm2/
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache

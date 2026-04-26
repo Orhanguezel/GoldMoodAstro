@@ -8,7 +8,6 @@ export * from './public/auth.endpoints';
 
 // Public
 export * from './public/reviews.public.endpoints';
-export * from './public/services.public.endpoints';
 export * from './public/storage_public.endpoints';
 
 
@@ -34,7 +33,7 @@ export * from './public/resources.endpoints';
 export * from './public/chat.endpoints';
 export * from './public/popups.endpoints';
 export * from './public/wallet.endpoints';
-export * from './public/gutschein.endpoints';
 export * from './public/orders.endpoints';
-export * from './public/booking-payment.endpoints';
+export * from './public/consultants.public.endpoints';
+export * from './public/newsletter_public.endpoints';
 export * from './admin/chat_admin.endpoints';

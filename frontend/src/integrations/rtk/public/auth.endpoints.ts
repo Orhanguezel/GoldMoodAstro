@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/rtk/endpoints/auth.endpoints.ts
-// konigsmassage public auth RTK endpoints (Next.js uyumlu)
+// goldmoodastro public auth RTK endpoints (Next.js uyumlu)
 // =============================================================
 
 import { baseApi } from '@/integrations/rtk/baseApi';

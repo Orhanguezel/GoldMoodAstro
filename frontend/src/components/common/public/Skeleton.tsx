@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/common/public/Skeleton.tsx
-// konigsmassage – Blog Detail Skeleton (NO inline styles)
+// goldmoodastro – Blog Detail Skeleton (NO inline styles)
 // Used by pages/blog/[slug].tsx while slug/data loads
 // =============================================================
 

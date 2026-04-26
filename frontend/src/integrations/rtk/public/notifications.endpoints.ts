@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/rtk/endpoints/notifications.endpoints.ts
-// konigsmassage – Notifications RTK Query endpoints
+// goldmoodastro – Notifications RTK Query endpoints
 // =============================================================
 
 import { baseApi } from '@/integrations/rtk/baseApi';

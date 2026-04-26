@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/types/slider.types.ts
-// konigsmassage – Slider tipleri + normalizer'lar
+// goldmoodastro – Slider tipleri + normalizer'lar
 // Parent + i18n (slider + slider_i18n) backend ile uyumlu
 // =============================================================
 

@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/common/SocialShare.tsx
-// konigsmassage – Reusable Social Share + optional Social Profiles
+// goldmoodastro – Reusable Social Share + optional Social Profiles
 // - Uses SCSS: .touch__social
 // - Share URL: prefers public_base_url (site_settings) + router.asPath, fallback window.location.href
 // - Optional company socials: site_settings.socials (localized) with EN fallback

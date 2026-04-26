@@ -1,236 +1,152 @@
-# CLAUDE.md — Konigsmassage
+# CLAUDE.md — GoldMoodAstro
 
 ## Proje Özeti
-Çok dilli masaj & wellness randevu platformu. 3 bileşen: müşteri web sitesi, yönetim paneli, backend API.
 
-**Domain:** konigsmassage.de / konigsmassage.com
+Danışman & kullanıcı eşleştirme platformu. Kullanıcı danışman seçiyor → randevu alıyor → ödeme yapıyor → uygulama içi sesli görüşme yapıyor. Astroloji / mood danışmanlığı odaklı.
+
+**Müşteri:** Murat Kısıkçılar  
+**Bütçe:** 30.000 TL | **Süre:** 30 gün | **Başlangıç:** 2026-04-24  
 **Lisans:** MIT — Orhan Güzel
 
 ## Mimari
 
 | Bileşen | Stack | Port (prod) | PM2 Adı |
 |---------|-------|-------------|---------|
-| **Frontend** | Next.js 16, React 19, Tailwind v4, Radix UI, Redux Toolkit (RTK Query) | 3055 | konigsmassage-frontend |
-| **Backend** | Fastify 5, Drizzle ORM, MySQL, Bun runtime, Zod | 8093 | konigsmassage-backend |
-| **Admin Panel** | Next.js 16, React 19, Tailwind v4, Radix UI, React Query, Zustand, Biome | 3056 | konigsmassage-admin-panel |
+| **Backend** | Fastify 5, Drizzle ORM, MySQL, Bun, Zod | 8094 | goldmoodastro-backend |
+| **Admin Panel** | Next.js 16, React 19, Tailwind v4, Radix UI, React Query, Zustand | 3094 | goldmoodastro-admin |
+| **Mobile** | Flutter, Dart, Riverpod, Agora SDK, Firebase FCM | — | iOS + Android |
+
+**Entegrasyonlar:** Agora SDK (sesli görüşme), Firebase FCM (push), Iyzipay (ödeme)
+
+## Monorepo Yapısı
+
+```
+goldmoodastro/                        ← bun workspaces root
+├── packages/
+│   ├── shared-backend/               ← @goldmood/shared-backend (24 modül)
+│   ├── shared-ui/                    ← @goldmood/shared-ui
+│   ├── shared-types/                 ← @goldmood/shared-types
+│   ├── shared-config/                ← @goldmood/shared-config
+│   └── core/                         ← @goldmood/core
+├── backend/                          ← Fastify API
+├── admin_panel/                      ← Next.js admin (Faz 2'de oluşturulacak)
+└── mobile/                           ← Flutter (Faz 3'te oluşturulacak)
+```
 
 ## Komutlar
 
 ```bash
-# Frontend
-cd frontend && bun install && bun run dev      # Dev
-bun run build && bun run start                 # Prod
-bun run typecheck                              # TS kontrolü
-bun run lint                                   # ESLint
-bun run test:e2e                               # Playwright E2E
+# Root
+bun run dev:backend
+bun run dev:admin
+bun run db:seed
 
 # Backend
-cd backend && bun install && bun run dev       # Dev (hot reload)
-bun run build && bun run start                 # Prod (Node)
-bun run db:seed                                # DB sıfırla + seed
-bun run db:seed --no-drop                      # Seed (DROP yok)
-bun run db:seed --only=40,50                   # Sadece belirli dosyalar
+cd backend && bun run dev
+bun run db:seed           # DB sıfırla + seed
+bun run db:seed:nodrop    # Seed (DROP yok)
+bun run typecheck
 
 # Admin Panel
-cd admin_panel && bun install && bun run dev   # Dev
-bun run build && bun run start                 # Prod
-bun run check:fix                              # Biome lint+format
+cd admin_panel && bun run dev
 ```
 
-## Portfolio Metadata Rule
+## Ajan Görev Dağılımı
 
-- Bu proje kokunde `project.portfolio.json` dosyasi zorunludur.
-- Yeni moduller, stack degisiklikleri, repo/live URL veya proje ozeti degisirse once bu dosya guncellenir.
-- `/home/orhan/Documents/Projeler` altinda portfolio seedleri bu dosyadan uretildigi icin metadata guncellenmeden is tamamlanmis sayilmaz.
+| Ajan | Sorumluluk |
+|------|-----------|
+| **Claude Code** | Mimari, DB şema tasarımı, API kontratları, kod review |
+| **Codex** | Backend modülleri, SQL seed'ler, admin panel sayfaları, cron |
+| **Antigravity** | Admin panel UI doğrulama (Faz 2 sonrası) |
+| **Copilot** | Autocomplete, boilerplate, Flutter tamamlama |
 
-## Proje Yapısı
+- `AGENTS.md` → Codex okur (tüm görev listesi, schema tanımları)
+- `CLAUDE.md` → Claude Code okur (bu dosya)
+- `doc/mvp-checklist.md` → Tüm plan ve checklist
 
+## Backend Modülleri
+
+### packages/shared-backend — paylaşılan 24 modül
+`auth`, `profiles`, `availability`, `bookings`, `chat`, `contact`, `dashboard`, `db_admin`, `emailTemplates`, `health`, `mail`, `notifications`, `orders`, `resources`, `review`, `_shared`, `siteSettings`, `storage`, `support`, `telegram`, `userRoles`, `wallet`, `announcements`, `audit`
+
+### backend/src/modules — proje-özel (Faz 1'de yazılacak)
+- `consultants` — profil, uzmanlık, onay
+- `agora` — Agora token, voice_sessions
+- `firebase` — FCM push
+
+### Route kayıt
+- Shared modüller: `backend/src/routes/shared.ts`
+- Proje-özel: `backend/src/routes/goldmood.ts`
+
+## Veritabanı
+
+### DB Şema Kuralı — KESİN
+**`ALTER TABLE` YASAK.** Değişiklik: seed dosyasını düzenle → `bun run db:seed`
+
+### Kritik Tablolar
 ```
-konigsmassage/
-├── frontend/
-│   └── src/
-│       ├── app/                    # Next.js App Router
-│       │   ├── [locale]/           # Dil prefix'li sayfalar (de, tr, en)
-│       │   │   ├── about/
-│       │   │   ├── appointment/    # Randevu sayfası
-│       │   │   ├── blog/[slug]/
-│       │   │   ├── contact/
-│       │   │   ├── faqs/
-│       │   │   ├── services/[slug]/
-│       │   │   └── ... (kvkk, terms, privacy, legal-notice, login, register)
-│       │   ├── layout.tsx          # Root layout
-│       │   ├── page.tsx            # Anasayfa (default locale)
-│       │   ├── providers.tsx       # StoreProvider + Toaster
-│       │   └── ClientLayout.tsx    # Header + Footer + Analytics
-│       ├── components/containers/  # Sayfa bileşenleri
-│       ├── integrations/rtk/       # RTK Query (baseApi, endpoints, hooks, tags)
-│       ├── i18n/                   # Dinamik locale yönetimi (DB-driven)
-│       ├── layout/                 # Header, Footer, Banner, Cookie
-│       ├── seo/                    # Server-side SEO (metadata, sitemap, hreflang)
-│       ├── store/                  # Redux store (reducer: gwdApi)
-│       └── features/              # Analytics, SEO helpers
-│
-├── backend/
-│   └── src/
-│       ├── app.ts                  # Fastify app setup + tüm route registrations
-│       ├── index.ts                # Entry point (Bun/Node)
-│       ├── core/                   # env.ts, error.ts
-│       ├── plugins/                # authPlugin, mysql, staticUploads
-│       ├── common/middleware/      # locale middleware
-│       ├── db/
-│       │   ├── index.ts            # Seeder (DROP/CREATE + SQL files)
-│       │   └── sql/                # 68 numaralı SQL dosyası (001-201)
-│       └── modules/                # 28 modül (aşağıda)
-│
-├── admin_panel/
-│   └── src/
-│       ├── app/(main)/admin/(admin)/  # Tüm admin route'ları
-│       ├── integrations/              # baseApi, endpoints, hooks
-│       ├── stores/                    # Zustand stores
-│       └── components/               # Shared UI
-│
-└── .github/workflows/main.yml    # CI/CD: push main → build → rsync VPS → PM2 reload
+users              ← Tüm roller: user/consultant/admin + fcm_token
+consultants        ← Danışman profili, uzmanlık, fiyat, onay (YENİ)
+voice_sessions     ← Agora kanal + token + süre (YENİ)
+bookings           ← Randevular (consultant_id FK)
+availability       ← Danışman çalışma saatleri
+orders             ← Ödeme kayıtları (Iyzipay)
+payments           ← Ödeme işlemleri
+wallet             ← Danışman kazanç ledger
+reviews            ← Danışman değerlendirmeleri
 ```
 
-## Backend Modülleri (28)
-
-Her modül: `router.ts` (public) + `admin.routes.ts` (admin)
-
-| Modül | Public Route | Admin Route | Açıklama |
-|-------|-------------|-------------|----------|
-| auth | /auth/* | /admin/auth/* | JWT + Google OAuth, token refresh |
-| siteSettings | /site_settings/* | /admin/site-settings/* | Key-value config (locale bazlı) |
-| services | /services/* | /admin/services/* | Hizmetler + galeri (i18n) |
-| bookings | POST /bookings | /admin/bookings/* | Randevu sistemi |
-| availability | /availability/* | /admin/availability/* | Çalışma saatleri, slot planlama |
-| resources | — | /admin/resources/* | Oda/terapist kaynakları |
-| faqs | /faqs/* | /admin/faqs/* | SSS (i18n) |
-| slider | /sliders/* | /admin/slider/* | Anasayfa slider (i18n) |
-| customPages | /custom_pages/* | /admin/custom-pages/* | Dinamik sayfalar (i18n) |
-| contact | /contact/* | /admin/contact/* | İletişim formu |
-| newsletter | /newsletter/* | /admin/newsletter/* | Bülten aboneliği |
-| review | /reviews/* | /admin/reviews/* | Müşteri değerlendirmeleri |
-| menuItems | /menu_items/* | /admin/menu-items/* | Navigasyon menüleri |
-| footerSections | /footer_sections/* | /admin/footer-sections/* | Footer içerikleri |
-| email-templates | — | /admin/email-templates/* | E-posta şablonları |
-| mail | /mail/* | — | E-posta gönderimi (Nodemailer) |
-| storage | /storage/* | /admin/storage/* | Dosya yönetimi (Cloudinary/local) |
-| notifications | /notifications/* | — | Bildirimler |
-| support | — | /admin/support/* | Destek talepleri |
-| chat | /chat/* | /admin/chat/* | Gerçek zamanlı sohbet |
-| profiles | /profiles/* | — | Kullanıcı profilleri |
-| userRoles | /user-roles/* | — | Rol yönetimi |
-| audit | — | /admin/audit/* | Denetim kayıtları |
-| dashboard | — | /admin/dashboard/* | İstatistikler |
-| db_admin | — | /admin/db/* | DB import/export |
-
-Tüm route'lar `/api` prefix'i altında: `/api/services`, `/api/admin/services/*`
-
-## Veritabanı Mimarisi
-
-### i18n Pattern (Parent + i18n Child)
-```sql
--- Ana tablo (locale-bağımsız)
-services (id, is_active, display_order, created_at, updated_at)
-
--- Çeviri tablosu
-services_i18n (id, service_id FK, locale, title, slug, description, meta_title, meta_description)
-  UNIQUE(service_id, locale)
-  UNIQUE(locale, slug)
+### Seed Dosya Sıralaması (goldmoodastro için yeniden yazılacak)
 ```
-
-Bu pattern: services, faqs, slider, customPages, menuItems, footerSections, email-templates
-
-### Site Settings (Key-Value)
-```sql
-site_settings (key, locale, value JSON)
-  UNIQUE(key, locale)
+001-003: Auth + roller
+010:     Site settings
+020:     Audit
+030-031: Consultants
+040-041: Availability
+050-051: Bookings
+060-061: Orders
+070:     Voice sessions
+080:     Wallet
+090-130: Chat, notifications, support, reviews, announcements
+140-150: Storage, email templates
 ```
-- locale='*' → global default
-- UI string'leri: `ui_header`, `ui_hero`, `ui_footer`, `ui_services` vb. JSON blokları
-
-### Seeder Dosyaları
-`backend/src/db/sql/` altında numaralı SQL dosyaları:
-- 001-005: Auth & roller
-- 030: Audit
-- 040-049: Site settings (meta, UI sections)
-- 050-052: Custom pages
-- 060-063: Reviews
-- 070-071: Services
-- 110-117: Availability & resources
-- 120-121: Bookings
-
-## Çok Dilli (i18n) Mimari
-
-- **Diller:** de (varsayılan), tr, en — DB'den dinamik yönetim
-- **Frontend URL:** `/[locale]/...` (App Router dynamic segment)
-- **Backend Locale Çözme:** `?locale=` > `x-locale` header > `Accept-Language` > DB default
-- **UI String'leri:** site_settings tablosundan RTK Query ile çekilir
-- **SEO:** Server component'lerde `generateMetadata()` ile hreflang, canonical, OG tags
-
-### Önemli i18n Dosyaları
-- `frontend/src/i18n/locale.ts` — `useResolvedLocale()` hook (RTK Query ile deduplicate)
-- `frontend/src/i18n/uiDb.ts` — `useUiSection()` hook (section bazlı UI string'leri)
-- `frontend/src/i18n/server.ts` — Server-side locale çözme (`fetchSetting`, `getDefaultLocale`)
-- `frontend/src/i18n/config.ts` — `FALLBACK_LOCALE = 'de'`
-
-## RTK Query Yapısı
-
-### Frontend
-- **Base URL:** `NEXT_PUBLIC_API_URL` env'den, yoksa `/api` (reverse proxy)
-- **Reducer Path:** `gwdApi`
-- **Auth:** Cookie-based JWT + Bearer token, auto-refresh on 401
-- **Deduplication:** `refetchOnMountOrArgChange: false`, `keepUnusedDataFor: 300-600`
-- **Endpoint dosyaları:** `frontend/src/integrations/rtk/public/` + `hooks.ts` barrel export
-
-### Admin Panel
-- Aynı pattern, ayrı baseApi instance
-- `admin_panel/src/integrations/endpoints/{admin,public}/`
-
-## Deploy (CI/CD)
-
-```yaml
-# .github/workflows/main.yml
-trigger: push to main
-steps:
-  1. bun install + bun run build (backend)
-  2. rsync → /var/www/konigsmassage/backend (exclude: node_modules, .env, .git)
-  3. bun install + bun run build (frontend)
-  4. rsync → /var/www/konigsmassage/frontend
-  5. pm2 reload konigsmassage-backend + konigsmassage-frontend
-```
-
-**Not:** `.env` dosyaları gitignore'da — VPS'te manual oluşturulur, rsync exclude ile korunur.
 
 ## Ortam Değişkenleri
 
 ### Backend (.env)
 ```
-PORT=8093
-DB_HOST, DB_PORT=3306, DB_USER, DB_PASSWORD, DB_NAME
+PORT=8094
+DB_HOST, DB_PORT=3306, DB_USER, DB_PASSWORD, DB_NAME=goldmoodastro
 JWT_SECRET, COOKIE_SECRET
 STORAGE_DRIVER=cloudinary|local
 CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 SMTP_HOST, SMTP_PORT=465, SMTP_USER, SMTP_PASS, MAIL_FROM
 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-FRONTEND_URL, CORS_ORIGIN, PUBLIC_URL
+AGORA_APP_ID, AGORA_APP_CERTIFICATE
+FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY
+IYZIPAY_API_KEY, IYZIPAY_SECRET_KEY, IYZIPAY_BASE_URL
+CORS_ORIGIN, PUBLIC_URL
 ```
 
-### Frontend (.env)
+### Admin Panel (.env)
 ```
-NEXT_PUBLIC_API_URL=http://localhost:8093/api
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_DEFAULT_LOCALE=de
-NEXT_PUBLIC_GTM_*=...
-NEXT_PUBLIC_GA_ID=...
-NEXT_PUBLIC_RECAPTCHA_SITE_KEY=...
+NEXT_PUBLIC_API_URL=http://localhost:8094/api
+NEXT_PUBLIC_SITE_URL=http://localhost:3094
 ```
 
-## Bilinen Sorunlar & Çözümler
+## Deploy
 
-### 429 Rate Limit (ÇÖZÜLDÜ)
-**Sorun:** `useResolvedLocale()` her component instance'ında raw `fetch()` ile `app-locales` ve `default-locale` çağırıyordu → 20+ duplicate istek → 429.
-**Çözüm:** Raw fetch yerine RTK Query hook'ları (`useGetAppLocalesPublicQuery`, `useGetDefaultLocalePublicQuery`) kullanıldı. Tüm component'ler aynı cache'i paylaşır.
+```yaml
+trigger: push to main
+jobs:
+  backend:  bun build → rsync VPS → pm2 reload goldmoodastro-backend
+  admin:    bun build → rsync VPS → pm2 reload goldmoodastro-admin
+```
 
-### NEXT_PUBLIC_* Build Time
-`NEXT_PUBLIC_*` değişkenleri Next.js'te build time'da bake edilir. GitHub Actions'ta `.env` olmadığı için client bundle'da `BASE_URL = '/api'` olarak kalır. Bu yüzden prod'da Nginx reverse proxy `/api` → `localhost:8093/api` gereklidir.
+## Bekleyen Temizlikler (Codex T0)
+
+Proje konigsmassage'den kopyalandı. Codex'in T0 görevi:
+- `frontend/` sil
+- `packages/shared-backend/modules/_shared/` içi temizle
+- `backend/src/db/sql/` 87 dosyayı sil + yeniden yaz
+- `backend/.env.example` oluştur

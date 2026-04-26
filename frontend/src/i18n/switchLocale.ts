@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/i18n/switchLocale.ts
-// konigsmassage – Locale switcher (URL-prefix based) (DYNAMIC)
+// goldmoodastro – Locale switcher (URL-prefix based) (DYNAMIC)
 //  - ALWAYS "/{locale}/..." (matches app router: src/app/[locale]/...)
 //  - activeLocales verilirse strip işlemi strict olur
 // =============================================================

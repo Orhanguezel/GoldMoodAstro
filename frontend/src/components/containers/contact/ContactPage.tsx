@@ -44,13 +44,13 @@ export default function ContactPage() {
 
   const t = useMemo(
     () => ({
-      subprefix: safeStr(ui('ui_contact_subprefix', 'Energetische Massage')),
+      subprefix: safeStr(ui('ui_contact_subprefix', 'GoldMoodAstro')),
       sublabel: safeStr(ui('ui_contact_sublabel', 'Contact')),
       titleLeft: safeStr(ui('ui_contact_title_left', 'Contact')),
       tagline: safeStr(
         ui(
           'ui_contact_tagline',
-          'For questions and appointment requests, send a message. Sessions are arranged after a short pre-chat and consent.',
+          'For questions and session booking requests, send a message. Our team will get back to you shortly.',
         ),
       ),
 

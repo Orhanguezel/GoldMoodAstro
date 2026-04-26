@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/rtk/types/services.types.ts
-// konigsmassage – Services (Hizmetler) RTK Tipleri (NO CATEGORY)
+// goldmoodastro – Services (Hizmetler) RTK Tipleri (NO CATEGORY)
 // Backend: src/modules/services/*
 // =============================================================
 

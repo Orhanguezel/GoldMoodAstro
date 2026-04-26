@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/common/ClientOnly.tsx
-// konigsmassage – Client-only render helper (prevents hydration mismatch)
+// goldmoodastro – Client-only render helper (prevents hydration mismatch)
 // =============================================================
 
 import React from 'react';

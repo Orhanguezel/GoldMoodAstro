@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/features/analytics/useAnalyticsSettings.ts
-// konigsmassage – Analytics settings from DB (locale + fallback)
+// goldmoodastro – Analytics settings from DB (locale + fallback)
 // - Locale source: useLocaleShort() (dynamic, validated by provider)
 // - DB values override env (optional fallback)
 // =============================================================

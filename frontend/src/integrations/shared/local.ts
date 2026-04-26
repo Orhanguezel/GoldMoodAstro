@@ -3,7 +3,7 @@
 // Shared Localization Utilities
 // =============================================================
 
-export const FALLBACK_LOCALE = 'de'; // Default fallback if config missing
+export const FALLBACK_LOCALE = 'tr'; // Default fallback if config missing
 
 /** RTL set sabit olabilir (bu bir “dil listesi yönetimi” değil, yazım yönü bilgisidir) */
 export const KNOWN_RTL = new Set([
@@ -357,7 +357,7 @@ export function absUrlJoin(baseUrl: string, pathOrUrl: string): string {
   return `${base}${p}`;
 }
 
-/** Site'nin temel URL'si (örn: https://www.koenigsmassage.com) */
+/** Site'nin temel URL'si (örn: https://www.goldmoodastro.com) */
 export function siteUrlBase(): string {
   const envUrl = stripTrailingSlash(String(process.env.NEXT_PUBLIC_SITE_URL || '').trim());
   if (envUrl) return normalizeLocalhostOrigin(envUrl);

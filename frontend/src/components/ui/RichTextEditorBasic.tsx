@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/ui/RichTextEditorBasic.tsx
-// konigsmassage – Basit Rich Text Editor (HTML tabanlı + toolbar)
+// goldmoodastro – Basit Rich Text Editor (HTML tabanlı + toolbar)
 // =============================================================
 
 import React, { useEffect, useRef } from 'react';

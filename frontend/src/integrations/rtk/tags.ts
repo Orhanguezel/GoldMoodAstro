@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/integrations/rtk/tags.ts
-// RTK Query cache/tag listesi (konigsmassage modülleri)
+// RTK Query cache/tag listesi (goldmoodastro modülleri)
 // =============================================================
 
 export const metahubTags = [
@@ -67,6 +67,9 @@ export const metahubTags = [
   'ChatThreads',
   'ChatMessages',
   'ChatKnowledge',
+  'Consultants',
+  'Consultant',
+  'ConsultantSlots',
 ] as const;
 
 export type MetahubTag = (typeof metahubTags)[number];

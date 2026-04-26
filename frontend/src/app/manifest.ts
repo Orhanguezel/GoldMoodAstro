@@ -2,13 +2,13 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Konigsmassage',
-    short_name: 'Konig',
-    description: 'Energetische Entspannungsmassage ve randevu deneyimi.',
-    start_url: '/de',
+    name: 'GoldMoodAstro',
+    short_name: 'GoldMood',
+    description: 'Astroloji, tarot ve yaşam koçluğu için uzman danışmanlarla bağlantı platformu.',
+    start_url: '/tr',
     display: 'standalone',
-    background_color: '#f6f1e8',
-    theme_color: '#8b6b3f',
+    background_color: '#0D0B1E',
+    theme_color: '#7B5EA7',
     icons: [
       {
         src: '/favicon.svg',

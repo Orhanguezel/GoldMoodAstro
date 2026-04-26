@@ -55,7 +55,7 @@ const HeaderClient: React.FC<Props> = ({ brand, locale: localeProp }) => {
     const contact = (contactInfoSetting?.value ?? {}) as any;
     const socials = (socialsSetting?.value ?? {}) as Record<string, string>;
     const brandVal = (companyBrandSetting?.value ?? {}) as any;
-    const name = (brandVal?.name as string) || (contact?.companyName as string) || 'Energetische Massage';
+    const name = (brandVal?.name as string) || (contact?.companyName as string) || 'GoldMoodAstro';
     const website = (brandVal?.website as string) || (contact?.website as string) || '';
     const phones = Array.isArray(contact?.phones) ? contact.phones : [];
     const phone = (phones[0] as string | undefined) || (contact?.whatsappNumber as string | undefined) || (brandVal?.phone as string | undefined) || '';
@@ -102,7 +102,7 @@ const HeaderClient: React.FC<Props> = ({ brand, locale: localeProp }) => {
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   const homeHref = localizePath(locale, '/');
-  const appointmentHref = localizePath(locale, '/appointment');
+  const consultantsHref = localizePath(locale, '/consultants');
 
   const linkClass = `relative text-[0.82rem] font-normal tracking-[0.12em] uppercase text-text-secondary hover:text-brand-primary transition-colors
     after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-px after:bg-brand-primary after:transition-all after:duration-400 hover:after:w-full`;
@@ -162,10 +162,10 @@ const HeaderClient: React.FC<Props> = ({ brand, locale: localeProp }) => {
             {/* CTA Button */}
             <li>
               <Link
-                href={appointmentHref}
+                href={consultantsHref}
                 className="py-2.5 px-7 bg-transparent border border-brand-primary text-brand-primary text-[0.75rem] tracking-[0.15em] uppercase transition-all duration-400 hover:bg-brand-primary hover:text-bg-primary no-underline"
               >
-                {ui('ui_header_cta', 'Termin Buchen')}
+                {ui('ui_header_cta', locale === 'en' ? 'Find Consultant' : 'Danışman Bul')}
               </Link>
             </li>
 
@@ -260,11 +260,11 @@ const HeaderClient: React.FC<Props> = ({ brand, locale: localeProp }) => {
               );
             })}
             <Link
-              href={appointmentHref}
+              href={consultantsHref}
               className="mt-2 py-3 text-center bg-brand-primary text-bg-primary text-sm uppercase tracking-[0.15em] font-medium transition-colors hover:bg-brand-hover"
               onClick={() => setMobileOpen(false)}
             >
-              {ui('ui_header_cta', 'Termin Buchen')}
+              {ui('ui_header_cta', locale === 'en' ? 'Find Consultant' : 'Danışman Bul')}
             </Link>
             {mounted && (
               <button type="button" onClick={toggleTheme}

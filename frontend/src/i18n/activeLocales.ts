@@ -17,7 +17,7 @@ type AppLocaleMeta = {
 };
 
 function computeLocales(meta: AppLocaleMeta[] | null | undefined): string[] {
-  const fb = normLocaleTag(FALLBACK_LOCALE) || 'de';
+  const fb = normLocaleTag(FALLBACK_LOCALE) || 'tr';
   const normalized = normalizeLocales(meta);
   return normalized.length ? normalized : [fb];
 }

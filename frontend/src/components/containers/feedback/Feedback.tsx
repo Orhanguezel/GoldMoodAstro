@@ -18,7 +18,7 @@ type FeedbackSlide = {
 };
 
 const TARGET_TYPE = 'testimonial';
-const TARGET_ID = 'energetische-massage';
+const TARGET_ID = 'goldmoodastro';
 
 const Feedback: React.FC<{ locale?: string }> = ({ locale: explicitLocale }) => {
   const locale = useResolvedLocale(explicitLocale);
@@ -132,7 +132,7 @@ const Feedback: React.FC<{ locale?: string }> = ({ locale: explicitLocale }) => 
                   </div>
                   <div>
                     <div className="text-[0.85rem] font-normal text-text-primary">{slide.name}</div>
-                    <div className="text-[0.72rem] text-text-muted tracking-[0.05em]">Bonn</div>
+                    <div className="text-[0.72rem] text-text-muted tracking-[0.05em]">GoldMoodAstro</div>
                   </div>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/ui/actions.tsx
-// konigsmassage – Satır İşlem Butonları (Düzenle / Sil)
+// goldmoodastro – Satır İşlem Butonları (Düzenle / Sil)
 // =============================================================
 
 'use client';

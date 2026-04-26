@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/i18n/locationEvents.ts  (FINAL)
-// konigsmassage – SPA navigation detector (no next/router)
+// goldmoodastro – SPA navigation detector (no next/router)
 // FIX: dispatchLocationChange is async to avoid React insertion effect warnings
 // =============================================================
 'use client';

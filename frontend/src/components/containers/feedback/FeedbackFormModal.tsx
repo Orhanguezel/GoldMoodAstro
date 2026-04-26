@@ -31,7 +31,7 @@ type Props = {
 };
 
 const TARGET_TYPE = 'testimonial';
-const TARGET_ID = 'konigsmassage';
+const TARGET_ID = 'goldmoodastro';
 
 const MODAL_TITLE_ID = 'feedback-modal-title';
 const MODAL_DESC_ID = 'feedback-modal-desc';

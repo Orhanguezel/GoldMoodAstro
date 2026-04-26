@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/public/ContactCtaCard.tsx
-// konigsmassage – Reusable Contact CTA Card (I18N + settings-driven)
+// goldmoodastro – Reusable Contact CTA Card (I18N + settings-driven)
 // - Matches InfoContactCard visual frame/spacing (sidebar__contact pattern)
 // - Reads phone/whatsapp from site_settings
 // - Provides tel / wa links + /contact navigation

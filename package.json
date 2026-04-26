@@ -1,0 +1,22 @@
+{
+  "name": "goldmoodastro",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GoldMoodAstro — Danışman eşleştirme & sesli görüşme platformu",
+  "workspaces": [
+    "packages/*",
+    "backend",
+    "admin_panel",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "bun run --cwd backend dev",
+    "dev:admin": "bun run --cwd admin_panel dev",
+    "dev:frontend": "bun run --cwd frontend dev",
+    "build:backend": "bun run --cwd backend build",
+    "build:admin": "bun run --cwd admin_panel build",
+    "build:frontend": "bun run --cwd frontend build",
+    "db:seed": "bun run --cwd backend db:seed",
+    "typecheck": "bun run --cwd backend typecheck && bun run --cwd admin_panel typecheck"
+  }
+}

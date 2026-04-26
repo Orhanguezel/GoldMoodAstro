@@ -23,6 +23,13 @@ export const ordersPublicApi = baseApi.injectEndpoints({
       query: () => ({ url: `${BASE}/gateways`, method: 'GET' }),
     }),
 
+    createForBooking: build.mutation<
+      { success: boolean; order_id: string; order_number: string },
+      { booking_id: string; payment_gateway_slug: string }
+    >({
+      query: (body) => ({ url: BASE, method: 'POST', body }),
+    }),
+
     initIyzicoPayment: build.mutation<
       { success: boolean; checkout_url: string; token: string },
       { orderId: string; locale?: string }
@@ -41,5 +48,6 @@ export const {
   useListMyOrdersQuery,
   useGetMyOrderQuery,
   useListPaymentGatewaysQuery,
+  useCreateForBookingMutation,
   useInitIyzicoPaymentMutation,
 } = ordersPublicApi;

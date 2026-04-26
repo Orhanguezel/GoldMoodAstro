@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/core/i18n.ts
-// konigsmassage – Dynamic i18n core (LOCALES runtime from site_settings)
+// Dynamic i18n core (LOCALES runtime from site_settings)
 //  - app_locales locale='*' priority
 //  - supports object[] [{code,label,is_active,is_default}, ...]
 //  - supports string[] and CSV and JSON string
@@ -10,7 +10,7 @@
 // =============================================================
 
 import { db } from '@/db/client';
-import { siteSettings } from '@vps/shared-backend/modules/siteSettings/schema';
+import { siteSettings } from '@goldmood/shared-backend/modules/siteSettings/schema';
 import { and, eq } from 'drizzle-orm';
 
 export const APP_LOCALES_SETTING_KEY = 'app_locales';
