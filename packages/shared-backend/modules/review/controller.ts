@@ -6,6 +6,7 @@ import {
   ReviewListParamsSchema,
   ReviewCreateSchema,
   IdParamSchema,
+  ConsultantReplySchema,
   // ReviewReactionSchema  // ❌ artık kullanmıyoruz
 } from "./validation";
 
@@ -14,6 +15,7 @@ import {
   repoGetReviewPublic,
   repoCreateReviewPublic,
   repoAddReactionPublic,
+  repoConsultantReply,
 } from "./repository";
 import { DEFAULT_LOCALE, type Locale } from '../../core/i18n';
 
@@ -64,8 +66,6 @@ export async function addReviewReactionPublic(req: FastifyRequest) {
   const { id } = IdParamSchema.parse(req.params);
 
   // Şimdilik body'deki type'ı (like/dislike) kullanmıyoruz.
-  // Eğer ileride ihtiyacın olursa burada ReviewReactionSchema.parse ile
-  // parse edip repoAddReactionPublic'e type geçirirsin.
 
   const locale: Locale =
     ((req as any).locale as Locale | undefined) ?? DEFAULT_LOCALE;
@@ -76,4 +76,27 @@ export async function addReviewReactionPublic(req: FastifyRequest) {
     locale,
     DEFAULT_LOCALE,
   );
+}
+
+/**
+ * T17-2 — Astrolog kendi review'ına cevap.
+ * Auth gerekli. review.target_id === current_user.consultant_id eşleşmesi
+ * repository tarafında yapılır.
+ */
+export async function consultantReplyPublic(req: FastifyRequest) {
+  const { id } = IdParamSchema.parse(req.params);
+  const body = ConsultantReplySchema.parse((req as any).body);
+
+  const user = (req as any).user as { id?: string; sub?: string } | undefined;
+  const userId = user?.id ?? user?.sub;
+  if (!userId) {
+    return { error: { message: 'unauthorized' } };
+  }
+
+  const locale: Locale =
+    (body.locale as Locale) ??
+    ((req as any).locale as Locale | undefined) ??
+    DEFAULT_LOCALE;
+
+  return await repoConsultantReply(req.server, id, userId, body.consultant_reply, locale);
 }

@@ -223,17 +223,13 @@ export async function repoCreateReviewPublic(
 
   const isActive = body.is_active ?? true;
 
-  // FAZ 17 / T17-3 — İçerik moderasyonu:
-  //   Title + comment metnini birleştirip kontrol et.
-  //   Temiz ise auto-approve (is_approved=1).
-  //   Suspicious veya body.is_approved açıkça false ise admin queue'ya (=0).
+  // FAZ 17 / T17-3 — İçerik moderasyonu (auto-approve / flag)
   const fullText = [body.title ?? '', body.comment ?? ''].filter(Boolean).join('\n');
   const moderation = checkContent(fullText, 'review');
   const explicitOverride = typeof body.is_approved === 'boolean' ? body.is_approved : null;
   const isApproved = explicitOverride !== null ? explicitOverride : moderation.safe;
 
   if (!moderation.safe) {
-    // Audit log için server-side console (admin dashboard'da gelecek genişletme)
     console.warn('review_moderation_flag', {
       target_id: body.target_id,
       flags: moderation.flags,
@@ -241,8 +237,21 @@ export async function repoCreateReviewPublic(
     });
   }
 
-  const displayOrder = body.display_order ?? 0;
+  // T17-1 — Doğrulanmış görüşme rozeti
+  // Eğer booking_id verilmişse ve booking tamamlanmışsa user_id eşleşmesi ile is_verified=1
+  let isVerified = 0;
+  if (body.booking_id && body.user_id) {
+    const [bookingRow] = (await mysql.query(
+      'SELECT id, user_id, status FROM bookings WHERE id = ? LIMIT 1',
+      [body.booking_id],
+    )) as [Array<{ id: string; user_id: string; status: string }>, unknown];
+    const booking = Array.isArray(bookingRow) ? bookingRow[0] : null;
+    if (booking && booking.user_id === body.user_id && booking.status === 'completed') {
+      isVerified = 1;
+    }
+  }
 
+  const displayOrder = body.display_order ?? 0;
   const id = randomUUID();
 
   await mysql.query(
@@ -252,6 +261,8 @@ export async function repoCreateReviewPublic(
         id,
         target_type,
         target_id,
+        user_id,
+        booking_id,
         name,
         email,
         rating,
@@ -262,6 +273,7 @@ export async function repoCreateReviewPublic(
         profile_href,
         is_active,
         is_approved,
+        is_verified,
         display_order,
         likes_count,
         dislikes_count,
@@ -271,12 +283,14 @@ export async function repoCreateReviewPublic(
         updated_at
       )
     VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, ?, NOW(3), NOW(3))
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, ?, NOW(3), NOW(3))
     `,
     [
       id,
       body.target_type,
       body.target_id,
+      body.user_id ?? null,
+      body.booking_id ?? null,
       body.name,
       body.email,
       body.rating,
@@ -287,6 +301,7 @@ export async function repoCreateReviewPublic(
       body.profile_href ?? null,
       isActive ? 1 : 0,
       isApproved ? 1 : 0,
+      isVerified,
       displayOrder,
       locale, // submitted_locale
     ],
@@ -311,7 +326,60 @@ export async function repoCreateReviewPublic(
   return created;
 }
 
+/**
+ * T17-2 — Astrolog kendi review'ına cevap.
+ * - Review target_type='consultant' olmalı.
+ * - consultants.user_id === current_user_id eşleşmesi.
+ * - review_i18n.consultant_reply UPSERT (locale bazlı).
+ */
+export async function repoConsultantReply(
+  app: FastifyInstance,
+  reviewId: string,
+  userId: string,
+  reply: string,
+  locale: string,
+): Promise<{ data?: { review_id: string; locale: string }; error?: { message: string } }> {
+  const mysql = (app as any).mysql;
 
+  // 1. Review'ı al
+  const [reviewRows] = (await mysql.query(
+    'SELECT id, target_type, target_id FROM reviews WHERE id = ? LIMIT 1',
+    [reviewId],
+  )) as [Array<{ id: string; target_type: string; target_id: string }>, unknown];
+  const review = Array.isArray(reviewRows) ? reviewRows[0] : null;
+  if (!review) return { error: { message: 'review_not_found' } };
+  if (review.target_type !== 'consultant') {
+    return { error: { message: 'consultant_reply_only_allowed_on_consultant_reviews' } };
+  }
+
+  // 2. Consultant'ın user_id'si current user mu?
+  const [consultantRows] = (await mysql.query(
+    'SELECT user_id FROM consultants WHERE id = ? LIMIT 1',
+    [review.target_id],
+  )) as [Array<{ user_id: string }>, unknown];
+  const consultant = Array.isArray(consultantRows) ? consultantRows[0] : null;
+  if (!consultant) return { error: { message: 'consultant_not_found' } };
+  if (consultant.user_id !== userId) {
+    return { error: { message: 'forbidden_not_review_target' } };
+  }
+
+  // 3. review_i18n.consultant_reply UPSERT
+  await mysql.query(
+    `
+    INSERT INTO review_i18n
+      (id, review_id, locale, comment, consultant_reply, consultant_replied_at, created_at, updated_at)
+    VALUES
+      (UUID(), ?, ?, '', ?, NOW(3), NOW(3), NOW(3))
+    ON DUPLICATE KEY UPDATE
+      consultant_reply = VALUES(consultant_reply),
+      consultant_replied_at = NOW(3),
+      updated_at = NOW(3)
+    `,
+    [reviewId, locale, reply],
+  );
+
+  return { data: { review_id: reviewId, locale } };
+}
 
 /**
  * Basit reaction: like/helpful sayacını artır

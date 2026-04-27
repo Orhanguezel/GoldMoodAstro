@@ -7,7 +7,9 @@ import {
   getReviewPublic,
   createReviewPublic,
   addReviewReactionPublic,
+  consultantReplyPublic,
 } from "./controller";
+import { requireAuth } from "../../middleware/auth";
 
 const BASE = "/reviews";
 
@@ -21,5 +23,12 @@ export async function registerReviews(app: FastifyInstance) {
     `${BASE}/:id/reactions`,
     { config: { public: true } },
     addReviewReactionPublic,
+  );
+
+  // T17-2: Astrolog kendi review'ına cevap (auth + target_id eşleşmesi)
+  app.patch(
+    `${BASE}/:id/consultant-reply`,
+    { preHandler: [requireAuth] },
+    consultantReplyPublic,
   );
 }

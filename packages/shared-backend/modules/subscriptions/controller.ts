@@ -3,11 +3,22 @@
 
 import { randomUUID } from 'crypto';
 import type { RouteHandler } from 'fastify';
-import { and, desc, eq, or } from 'drizzle-orm';
+import { and, desc, eq, like, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { orders, paymentGateways, payments } from '../orders/schema';
 import { IyzicoService, resolveIyzicoLocale } from '../orders/iyzico.service';
 import { subscriptionPlans, subscriptions } from './schema';
+import { users } from '../auth/schema';
+
+type AdminSubscriptionStatus =
+  | 'pending'
+  | 'active'
+  | 'cancelled'
+  | 'expired'
+  | 'grace_period'
+  | 'past_due';
+
+type SubscriptionPlanPeriod = 'monthly' | 'yearly' | 'lifetime';
 
 function getUser(req: { user?: unknown }) {
   const u = req.user as Record<string, unknown> | undefined;
@@ -26,6 +37,139 @@ function resolveGatewaySlug(input: unknown) {
 function resolveLocale(req: { query?: unknown; locale?: string }): string {
   const q = ((req.query as Record<string, string> | undefined)?.locale ?? '').trim().toLowerCase();
   return q || (req.locale ?? '').trim().toLowerCase() || 'tr';
+}
+
+const ADMIN_SUBSCRIPTION_STATUS = new Set<AdminSubscriptionStatus>([
+  'pending',
+  'active',
+  'cancelled',
+  'expired',
+  'grace_period',
+  'past_due',
+]);
+
+const ADMIN_PLAN_PERIOD = new Set<SubscriptionPlanPeriod>(['monthly', 'yearly', 'lifetime']);
+
+function asString(value: unknown) {
+  return String(value ?? '').trim();
+}
+
+function asBool(value: unknown): boolean {
+  if (value === true || value === 1) return true;
+  if (typeof value === 'string') {
+    const v = value.trim().toLowerCase();
+    return v === '1' || v === 'true' || v === 'yes' || v === 'on';
+  }
+  return false;
+}
+
+function asPositiveInt(value: unknown, fallback = 0, min = 0) {
+  const n = Number(asString(value));
+  if (!Number.isFinite(n)) return fallback;
+  const i = Math.trunc(n);
+  return i < min ? min : i;
+}
+
+function toAdminSubscriptionStatus(v: unknown): AdminSubscriptionStatus | '' {
+  const s = asString(v);
+  return ADMIN_SUBSCRIPTION_STATUS.has(s as AdminSubscriptionStatus)
+    ? (s as AdminSubscriptionStatus)
+    : '';
+}
+
+function normalizePlanPeriod(v: unknown): SubscriptionPlanPeriod | '' {
+  const s = asString(v);
+  return ADMIN_PLAN_PERIOD.has(s as SubscriptionPlanPeriod) ? (s as SubscriptionPlanPeriod) : '';
+}
+
+function parseFeatures(value: unknown): string[] | null {
+  if (value == null) return null;
+  if (Array.isArray(value)) return value.map(String).map((v) => v.trim()).filter(Boolean);
+
+  if (typeof value === 'string') {
+    const raw = value.trim();
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map(String).map((v) => v.trim()).filter(Boolean);
+      }
+    } catch {
+      return raw
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean);
+    }
+  }
+
+  return null;
+}
+
+function toAdminWhereClause(
+  query: Record<string, unknown>,
+): SQL<unknown> | undefined {
+  const where: SQL[] = [];
+
+  const status = toAdminSubscriptionStatus(query.status);
+  if (status) where.push(eq(subscriptions.status, status));
+
+  const userId = asString(query.user_id);
+  if (userId) where.push(eq(subscriptions.user_id, userId));
+
+  const planId = asString(query.plan_id);
+  if (planId) where.push(eq(subscriptions.plan_id, planId));
+
+  const provider = asString(query.provider);
+  if (provider) where.push(eq(subscriptions.provider, provider as never));
+
+  const q = asString(query.q);
+  if (q) {
+    const wildcard = `%${q}%`;
+    where.push(
+      or(
+        like(subscriptions.id, wildcard),
+        like(subscriptions.provider_subscription_id, wildcard),
+        like(users.email, wildcard),
+        like(users.full_name, wildcard),
+        like(subscriptionPlans.code, wildcard),
+        like(subscriptionPlans.name_tr, wildcard),
+        like(subscriptionPlans.name_en, wildcard),
+      ) as SQL,
+    );
+  }
+
+  if (where.length === 0) return undefined;
+  return where.length === 1 ? where[0] : and(...where);
+}
+
+function toPlanWhereClause(query: Record<string, unknown>): SQL<unknown> | undefined {
+  const where: SQL[] = [];
+
+  const isActiveRaw = query.is_active;
+  if (isActiveRaw !== undefined) {
+    const isActive = asBool(isActiveRaw);
+    if (String(isActiveRaw).trim().length > 0) where.push(eq(subscriptionPlans.is_active, isActive ? 1 : 0));
+  }
+
+  const isLif = asString(query.period);
+  if (isLif) where.push(eq(subscriptionPlans.period, isLif as never));
+
+  const q = asString(query.q);
+  if (q) {
+    const wildcard = `%${q}%`;
+    where.push(
+      or(
+        like(subscriptionPlans.code, wildcard),
+        like(subscriptionPlans.name_tr, wildcard),
+        like(subscriptionPlans.name_en, wildcard),
+        like(subscriptionPlans.description_tr, wildcard),
+        like(subscriptionPlans.description_en, wildcard),
+      ) as SQL,
+    );
+  }
+
+  if (where.length === 0) return undefined;
+  return where.length === 1 ? where[0] : and(...where);
 }
 
 function parseJSONNotes<T>(value: string | null | undefined): T | null {
@@ -672,4 +816,331 @@ export const verifyReceipt: RouteHandler = async (req, reply) => {
       subscription: created,
     },
   });
+};
+
+/** ===== ADMIN ===== */
+
+/**
+ * GET /admin/subscriptions
+ * Query: status | q | user_id | plan_id | provider | limit | offset
+ */
+export const listSubscriptionsAdmin: RouteHandler = async (req, reply) => {
+  const q = (req.query as Record<string, unknown>) ?? {};
+  const limit = asPositiveInt(q.limit, 50, 1);
+  const offset = asPositiveInt(q.offset, 0, 0);
+
+  const predicate = toAdminWhereClause(q);
+  const base = db
+    .select({
+      id: subscriptions.id,
+      user_id: subscriptions.user_id,
+      plan_id: subscriptions.plan_id,
+      provider: subscriptions.provider,
+      provider_subscription_id: subscriptions.provider_subscription_id,
+      provider_customer_id: subscriptions.provider_customer_id,
+      status: subscriptions.status,
+      started_at: subscriptions.started_at,
+      ends_at: subscriptions.ends_at,
+      trial_ends_at: subscriptions.trial_ends_at,
+      cancelled_at: subscriptions.cancelled_at,
+      cancellation_reason: subscriptions.cancellation_reason,
+      auto_renew: subscriptions.auto_renew,
+      price_minor: subscriptions.price_minor,
+      currency: subscriptions.currency,
+      created_at: subscriptions.created_at,
+      updated_at: subscriptions.updated_at,
+      user_email: users.email,
+      user_full_name: users.full_name,
+      user_phone: users.phone,
+      plan_code: subscriptionPlans.code,
+      plan_name_tr: subscriptionPlans.name_tr,
+      plan_name_en: subscriptionPlans.name_en,
+    })
+    .from(subscriptions)
+    .leftJoin(users, eq(users.id, subscriptions.user_id))
+    .leftJoin(subscriptionPlans, eq(subscriptionPlans.id, subscriptions.plan_id));
+
+  const rows = await (predicate ? base.where(predicate) : base)
+    .orderBy(desc(subscriptions.created_at))
+    .limit(limit)
+    .offset(offset);
+
+  const countQuery = db
+    .select({ total: sql<number>`COUNT(*)` })
+    .from(subscriptions)
+    .leftJoin(users, eq(users.id, subscriptions.user_id))
+    .leftJoin(subscriptionPlans, eq(subscriptionPlans.id, subscriptions.plan_id));
+
+  const countRows = await (predicate ? countQuery.where(predicate) : countQuery);
+  const total = Number((countRows[0] as { total: number } | undefined)?.total ?? rows.length);
+
+  return reply.send({
+    data: rows,
+    limit,
+    offset,
+    total,
+  });
+};
+
+/**
+ * GET /admin/subscriptions/:id
+ */
+export const getSubscriptionAdmin: RouteHandler<{ Params: { id: string } }> = async (req, reply) => {
+  const id = asString(req.params?.id);
+  if (!id) return reply.code(400).send({ error: { message: 'invalid_id' } });
+
+  const [row] = await db
+    .select({
+      id: subscriptions.id,
+      user_id: subscriptions.user_id,
+      plan_id: subscriptions.plan_id,
+      provider: subscriptions.provider,
+      provider_subscription_id: subscriptions.provider_subscription_id,
+      provider_customer_id: subscriptions.provider_customer_id,
+      status: subscriptions.status,
+      started_at: subscriptions.started_at,
+      ends_at: subscriptions.ends_at,
+      trial_ends_at: subscriptions.trial_ends_at,
+      cancelled_at: subscriptions.cancelled_at,
+      cancellation_reason: subscriptions.cancellation_reason,
+      auto_renew: subscriptions.auto_renew,
+      price_minor: subscriptions.price_minor,
+      currency: subscriptions.currency,
+      created_at: subscriptions.created_at,
+      updated_at: subscriptions.updated_at,
+      user_email: users.email,
+      user_full_name: users.full_name,
+      user_phone: users.phone,
+      plan_code: subscriptionPlans.code,
+      plan_name_tr: subscriptionPlans.name_tr,
+      plan_name_en: subscriptionPlans.name_en,
+      plan_description_tr: subscriptionPlans.description_tr,
+      plan_description_en: subscriptionPlans.description_en,
+    })
+    .from(subscriptions)
+    .leftJoin(users, eq(users.id, subscriptions.user_id))
+    .leftJoin(subscriptionPlans, eq(subscriptionPlans.id, subscriptions.plan_id))
+    .where(eq(subscriptions.id, id))
+    .limit(1);
+
+  if (!row) {
+    return reply.code(404).send({ error: { message: 'subscription_not_found' } });
+  }
+
+  return reply.send({ data: row });
+};
+
+/**
+ * POST /admin/subscriptions/:id/refund
+ */
+export const refundSubscriptionAdmin: RouteHandler<{ Params: { id: string } }> = async (req, reply) => {
+  const id = asString(req.params?.id);
+  if (!id) return reply.code(400).send({ error: { message: 'invalid_id' } });
+
+  const body = (req.body as { reason?: string; ended_at?: string | null }) ?? {};
+  const now = new Date();
+  const reason = asString(body.reason) || 'admin_refund_or_cancel';
+
+  const [row] = await db.select().from(subscriptions).where(eq(subscriptions.id, id)).limit(1);
+  if (!row) return reply.code(404).send({ error: { message: 'subscription_not_found' } });
+
+  if (row.status === 'cancelled') {
+    return reply.send({
+      data: {
+        subscription: row,
+        message: 'already_cancelled',
+      },
+    });
+  }
+
+  const endsAt = asString(body.ended_at);
+  const endDate = endsAt ? new Date(endsAt) : now;
+
+  await db
+    .update(subscriptions)
+    .set({
+      status: 'cancelled',
+      auto_renew: 0,
+      cancelled_at: now,
+      cancellation_reason: reason,
+      ends_at: Number.isNaN(endDate.getTime()) ? now : endDate,
+    })
+    .where(eq(subscriptions.id, id));
+
+  const [updated] = await db.select().from(subscriptions).where(eq(subscriptions.id, id)).limit(1);
+  return reply.send({ data: updated, refunded: true });
+};
+
+/** GET /admin/subscription-plans */
+export const listSubscriptionPlansAdmin: RouteHandler = async (req, reply) => {
+  const q = (req.query as Record<string, unknown>) ?? {};
+  const limit = asPositiveInt(q.limit, 200, 1);
+  const offset = asPositiveInt(q.offset, 0, 0);
+
+  const where = toPlanWhereClause(q);
+  const base = db
+    .select()
+    .from(subscriptionPlans)
+    .orderBy(subscriptionPlans.display_order, desc(subscriptionPlans.created_at));
+
+  const rows = await (where ? base.where(where) : base).limit(limit).offset(offset);
+
+  const countRows = await (where
+    ? db.select({ total: sql<number>`COUNT(*)` }).from(subscriptionPlans).where(where)
+    : db.select({ total: sql<number>`COUNT(*)` }).from(subscriptionPlans));
+
+  return reply.send({
+    data: rows,
+    limit,
+    offset,
+    total: Number((countRows[0] as { total: number }).total),
+  });
+};
+
+/** GET /admin/subscription-plans/:id */
+export const getSubscriptionPlanAdmin: RouteHandler<{ Params: { id: string } }> = async (req, reply) => {
+  const id = asString(req.params?.id);
+  if (!id) return reply.code(400).send({ error: { message: 'invalid_id' } });
+
+  const [row] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id)).limit(1);
+  if (!row) return reply.code(404).send({ error: { message: 'subscription_plan_not_found' } });
+
+  return reply.send({ data: row });
+};
+
+/** POST /admin/subscription-plans */
+export const createSubscriptionPlanAdmin: RouteHandler = async (req, reply) => {
+  const body = (req.body as Record<string, unknown>) ?? {};
+  const code = asString(body.code);
+  const nameTr = asString(body.name_tr);
+  const nameEn = asString(body.name_en);
+  if (!code || !nameTr || !nameEn) {
+    return reply.code(400).send({ error: { message: 'required_fields_missing' } });
+  }
+
+  const period = normalizePlanPeriod(body.period);
+  if (!period) {
+    return reply.code(400).send({ error: { message: 'invalid_period' } });
+  }
+
+  const [exists] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.code, code)).limit(1);
+  if (exists) {
+    return reply.code(409).send({ error: { message: 'subscription_plan_code_conflict' } });
+  }
+
+  const features = parseFeatures((body as { features?: unknown }).features);
+  const id = randomUUID();
+  const currency = asString(body.currency) || 'TRY';
+  const priceMinor = asPositiveInt(body.price_minor, 0, 0);
+  const trialDays = asPositiveInt(body.trial_days, 0, 0);
+  const displayOrder = asPositiveInt(body.display_order, 0, 0);
+  const isActive = asBool(body.is_active);
+
+  await db.insert(subscriptionPlans).values({
+    id,
+    code,
+    name_tr: nameTr,
+    name_en: nameEn,
+    description_tr: asString((body as { description_tr?: unknown }).description_tr) || null,
+    description_en: asString((body as { description_en?: unknown }).description_en) || null,
+    price_minor: priceMinor,
+    currency,
+    period,
+    trial_days: trialDays,
+    features: features as unknown as never,
+    is_active: isActive ? 1 : 0,
+    display_order: displayOrder,
+  } as never);
+
+  const [created] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id)).limit(1);
+  return reply.send({ data: created });
+};
+
+/** PATCH /admin/subscription-plans/:id */
+export const updateSubscriptionPlanAdmin: RouteHandler<{ Params: { id: string } }> = async (req, reply) => {
+  const id = asString(req.params?.id);
+  if (!id) return reply.code(400).send({ error: { message: 'invalid_id' } });
+
+  const body = (req.body as Record<string, unknown>) ?? {};
+  const patch: Record<string, unknown> = {};
+
+  if (body.code !== undefined) {
+    const code = asString(body.code);
+    if (!code) return reply.code(400).send({ error: { message: 'code_required' } });
+
+    const [conflict] = await db
+      .select()
+      .from(subscriptionPlans)
+      .where(eq(subscriptionPlans.code, code))
+      .limit(1);
+    if (conflict && conflict.id !== id) {
+      return reply.code(409).send({ error: { message: 'subscription_plan_code_conflict' } });
+    }
+    patch.code = code;
+  }
+
+  if (body.name_tr !== undefined) {
+    const v = asString(body.name_tr);
+    if (!v) return reply.code(400).send({ error: { message: 'name_tr_required' } });
+    patch.name_tr = v;
+  }
+
+  if (body.name_en !== undefined) {
+    const v = asString(body.name_en);
+    if (!v) return reply.code(400).send({ error: { message: 'name_en_required' } });
+    patch.name_en = v;
+  }
+
+  if (body.description_tr !== undefined) patch.description_tr = asString(body.description_tr) || null;
+  if (body.description_en !== undefined) patch.description_en = asString(body.description_en) || null;
+
+  if (body.price_minor !== undefined) patch.price_minor = asPositiveInt(body.price_minor, 0, 0);
+  if (body.currency !== undefined) patch.currency = asString(body.currency) || 'TRY';
+
+  if (body.period !== undefined) {
+    const period = normalizePlanPeriod(body.period);
+    if (!period) return reply.code(400).send({ error: { message: 'invalid_period' } });
+    patch.period = period;
+  }
+
+  if (body.trial_days !== undefined) patch.trial_days = asPositiveInt(body.trial_days, 0, 0);
+  if (body.features !== undefined) patch.features = parseFeatures(body.features) as unknown as never;
+
+  if (body.is_active !== undefined) patch.is_active = asBool(body.is_active) ? 1 : 0;
+  if (body.display_order !== undefined) patch.display_order = asPositiveInt(body.display_order, 0, 0);
+
+  if (Object.keys(patch).length === 0) {
+    return reply.code(400).send({ error: { message: 'nothing_to_update' } });
+  }
+
+  const [existing] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id)).limit(1);
+  if (!existing) return reply.code(404).send({ error: { message: 'subscription_plan_not_found' } });
+
+  await db.update(subscriptionPlans).set(patch as never).where(eq(subscriptionPlans.id, id));
+  const [updated] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id)).limit(1);
+
+  return reply.send({ data: updated });
+};
+
+/** DELETE /admin/subscription-plans/:id */
+export const deleteSubscriptionPlanAdmin: RouteHandler<{ Params: { id: string } }> = async (req, reply) => {
+  const id = asString(req.params?.id);
+  if (!id) return reply.code(400).send({ error: { message: 'invalid_id' } });
+
+  const [existing] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id)).limit(1);
+  if (!existing) return reply.code(404).send({ error: { message: 'subscription_plan_not_found' } });
+
+  const countRows = await db
+    .select({ total: sql<number>`COUNT(*)` })
+    .from(subscriptions)
+    .where(eq(subscriptions.plan_id, id));
+
+  if (Number(countRows[0]?.total ?? 0) > 0) {
+    return reply
+      .code(409)
+      .send({ error: { message: 'subscription_plan_in_use', active_users: countRows[0]?.total } });
+  }
+
+  await db.delete(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+  return reply.send({ data: { id, deleted: true } });
 };

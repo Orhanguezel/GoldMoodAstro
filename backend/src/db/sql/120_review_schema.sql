@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   profile_href VARCHAR(500),
   is_active TINYINT NOT NULL DEFAULT 1,
   is_approved TINYINT NOT NULL DEFAULT 0,
+  is_verified TINYINT NOT NULL DEFAULT 0,           -- T17-1: booking tamamlanmış kullanıcı (F8)
   display_order INT NOT NULL DEFAULT 0,
   likes_count INT NOT NULL DEFAULT 0,
   dislikes_count INT NOT NULL DEFAULT 0,
@@ -36,6 +37,8 @@ CREATE TABLE IF NOT EXISTS review_i18n (
   title VARCHAR(255),
   comment TEXT NOT NULL,
   admin_reply TEXT,
+  consultant_reply TEXT,                                  -- T17-2: astrolog kendi review'ına cevap
+  consultant_replied_at DATETIME(3),
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   UNIQUE KEY review_i18n_review_locale_uq (review_id, locale),

@@ -93,6 +93,18 @@ export const ReviewCreateSchema = z.object({
   is_active: z.boolean().optional(),
   is_approved: z.boolean().optional(),
   display_order: z.number().int().min(0).optional(),
+
+  // T17-1 — Doğrulanmış görüşme rozeti için: booking_id verilirse repository
+  // booking.user_id + booking.status='completed' kontrolü yapar, is_verified=1.
+  // Auth'lu request'te user_id req.user'dan alınır.
+  booking_id: z.string().trim().min(1).max(36).optional(),
+  user_id: z.string().trim().min(1).max(36).optional(),
+});
+
+// T17-2 — Astrolog kendi review'ına cevap (consultant_reply)
+export const ConsultantReplySchema = z.object({
+  consultant_reply: z.string().trim().min(1).max(5000),
+  locale: LOCALE_ENUM.optional(),
 });
 
 // -------------------------------------------------------------
@@ -117,4 +129,5 @@ export type ReviewListParams = z.infer<typeof ReviewListParamsSchema>;
 export type ReviewCreateInput = z.infer<typeof ReviewCreateSchema>;
 export type ReviewUpdateInput = z.infer<typeof ReviewUpdateSchema>;
 export type ReviewReactionInput = z.infer<typeof ReviewReactionSchema>;
+export type ConsultantReplyInput = z.infer<typeof ConsultantReplySchema>;
 export type IdParam = z.infer<typeof IdParamSchema>;

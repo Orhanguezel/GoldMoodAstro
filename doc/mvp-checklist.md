@@ -1238,7 +1238,7 @@ booking oluştur → astrolog 15dk içinde katılmazsa otomatik iade.
 > - Otomatik moderasyon (FAZ 9 LLM filtresi cross)
 > - Mobile review yazma + listeleme (henüz yok)
 
-### T17-1 — Backend: Doğrulanmış Görüşme Kontrolü (Codex)
+### T17-1 — Backend: Doğrulanmış Görüşme Kontrolü (Claude Code) ✅
 
 > Sadece booking'i tamamlamış (booking.status='completed' veya live_session.ended_at)
 > kullanıcı review yazabilsin. Mevcut `reviews.booking_id` FK var, validasyon eksik.
@@ -1254,7 +1254,7 @@ booking oluştur → astrolog 15dk içinde katılmazsa otomatik iade.
 **Acceptance:** Booking yapmadan review POST atma → 403 forbidden. Booking tamamlandıktan
 sonra review POST → 201 + is_verified=true.
 
-### T17-2 — Backend: Astrolog Cevap Verme (Codex)
+### T17-2 — Backend: Astrolog Cevap Verme (Claude Code) ✅
 
 > review_i18n.admin_reply var ama tek admin için. Consultant kendi review'ına cevap yazabilsin.
 
