@@ -1,6 +1,6 @@
 -- 035_birth_charts_schema.sql
 
-CREATE TABLE birth_charts (
+CREATE TABLE IF NOT EXISTS birth_charts (
   id CHAR(36) PRIMARY KEY,
   user_id CHAR(36) NOT NULL,            -- FK -> users.id
   name VARCHAR(255) NOT NULL,           -- "My Chart", "Wife", "Child"

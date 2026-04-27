@@ -21,6 +21,8 @@ import { registerChat } from '@goldmood/shared-backend/modules/chat/router';
 import { registerOrders } from '@goldmood/shared-backend/modules/orders/router';
 import { registerWallet } from '@goldmood/shared-backend/modules/wallet/router';
 import { registerAnnouncements } from '@goldmood/shared-backend/modules/announcements/router';
+import { registerSubscriptions } from '@goldmood/shared-backend/modules/subscriptions/router';
+import { registerCredits } from '@goldmood/shared-backend/modules/credits/router';
 
 // Admin routers
 import { registerUserAdmin } from '@goldmood/shared-backend/modules/auth/admin.routes';
@@ -62,6 +64,8 @@ export async function registerSharedPublic(api: FastifyInstance) {
   await registerOrders(api);
   await registerWallet(api);
   await registerAnnouncements(api);
+  await registerSubscriptions(api);
+  await registerCredits(api);
 }
 
 export async function registerSharedAdmin(adminApi: FastifyInstance) {

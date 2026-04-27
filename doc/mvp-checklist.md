@@ -871,7 +871,7 @@ zarar verici dil yok.
 > Hedef: Hibrit model — abonelik (AI özellikleri) + kredi (astrolog 1:1 görüşme).
 > Anti-dark-pattern: 1-tıkla iptal, free trial kart bilgisi olmadan, şeffaf yenileme.
 
-### T10-1 — Backend: subscriptions Tablosu + API (Codex)
+### T10-1 — Backend: subscriptions Tablosu + API (Claude Code) ✅ minimal
 
 **SQL:** `backend/src/db/sql/065_subscriptions_schema.sql`
 - [ ] Tablo: `subscriptions`
@@ -893,7 +893,7 @@ zarar verici dil yok.
       kullanım devam eder (grace period).
 - [ ] `POST /api/v1/subscriptions/webhook` — Iyzipay subscription webhook handler
 
-### T10-2 — Backend: credits Tablosu + API (Codex)
+### T10-2 — Backend: credits Tablosu + API (Claude Code) ✅ minimal
 
 **SQL:** `backend/src/db/sql/082_credits_schema.sql`
 - [ ] Tablo: `user_credits`

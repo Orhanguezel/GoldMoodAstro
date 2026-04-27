@@ -1,6 +1,6 @@
 -- 037_daily_horoscopes_schema.sql
 
-CREATE TABLE daily_horoscopes (
+CREATE TABLE IF NOT EXISTS daily_horoscopes (
   id CHAR(36) PRIMARY KEY,
   date DATE NOT NULL,                   -- Interpretation date
   sign ENUM('aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces') NOT NULL,
