@@ -73,6 +73,8 @@ const ReviewList: React.FC<ReviewListProps> = ({
 
   const helpfulLabel = ui('ui_feedback_list_helpful', 'Helpful');
   const likedLabel = ui('ui_feedback_list_liked', 'Thanks');
+  const verifiedLabel = ui('ui_feedback_list_verified', 'Doğrulanmış görüşme');
+  const consultantReplyLabel = ui('ui_feedback_list_consultant_reply', 'Astrolog cevabı');
 
   const errorText = ui(
     'ui_feedback_list_error',
@@ -177,6 +179,28 @@ const ReviewList: React.FC<ReviewListProps> = ({
               <div className="reviewCard__top">
                 <div className="reviewCard__who">
                   <strong className="reviewCard__name">{r.name}</strong>
+                  {/* T17-1: Doğrulanmış görüşme rozeti (F8 differentiator) */}
+                  {Number((r as any).is_verified) === 1 && (
+                    <span
+                      className="reviewCard__verifiedBadge"
+                      title={verifiedLabel}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        marginLeft: '8px',
+                        padding: '2px 8px',
+                        fontSize: '0.72rem',
+                        fontWeight: 500,
+                        color: 'var(--color-success, #4CAF6E)',
+                        background: 'rgba(76, 175, 110, 0.10)',
+                        borderRadius: 'var(--gm-radius-pill, 999px)',
+                        border: '1px solid rgba(76, 175, 110, 0.25)',
+                      }}
+                    >
+                      ✓ {verifiedLabel}
+                    </span>
+                  )}
                   {variant === 'reviews' && (
                     <div className="reviewCard__rating">
                       <span className="reviewCard__stars" aria-hidden="true">
@@ -199,6 +223,36 @@ const ReviewList: React.FC<ReviewListProps> = ({
               </div>
 
               {r.comment ? <p className="reviewCard__text">{r.comment}</p> : null}
+
+              {/* T17-2: Astrolog cevabı (consultant_reply) */}
+              {(r as any).consultant_reply ? (
+                <div
+                  className="reviewCard__consultantReply"
+                  style={{
+                    marginTop: '12px',
+                    padding: '12px 16px',
+                    borderLeft: '3px solid var(--gm-primary, #C9A961)',
+                    background: 'var(--gm-bg-deep, rgba(201, 169, 97, 0.05))',
+                    borderRadius: '0 var(--gm-radius-sm, 8px) var(--gm-radius-sm, 8px) 0',
+                  }}
+                >
+                  <strong
+                    style={{
+                      display: 'block',
+                      fontSize: '0.78rem',
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      color: 'var(--gm-primary, #C9A961)',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    ↳ {consultantReplyLabel}
+                  </strong>
+                  <p style={{ margin: 0, fontStyle: 'italic', fontSize: '0.92rem' }}>
+                    {(r as any).consultant_reply}
+                  </p>
+                </div>
+              ) : null}
 
               <div className="reviewCard__actions">
                 <button

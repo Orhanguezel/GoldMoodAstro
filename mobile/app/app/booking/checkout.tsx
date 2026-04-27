@@ -1,15 +1,30 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { 
-  View, Text, StyleSheet, Pressable, 
-  ActivityIndicator, Alert, ScrollView, Platform 
+  View, 
+  Text, 
+  StyleSheet, 
+  Pressable, 
+  ActivityIndicator, 
+  Alert, 
+  ScrollView, 
+  Platform 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
-import { bookingsApi, ordersApi } from '@/lib/api';
+import { 
+  ChevronLeft, 
+  CreditCard, 
+  Calendar, 
+  Clock, 
+  User, 
+  ShieldCheck,
+  Info 
+} from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
-import { tr, enUS } from 'date-fns/locale';
+import { tr } from 'date-fns/locale';
+
+import { colors, spacing, font, radius } from '@/theme/tokens';
+import { bookingsApi, ordersApi } from '@/lib/api';
 
 export default function BookingCheckoutScreen() {
   const params = useLocalSearchParams<{
@@ -23,14 +38,12 @@ export default function BookingCheckoutScreen() {
     name: string;
   }>();
   
-  const { t, i18n } = useTranslation();
-  const dateLocale = i18n.language === 'tr' ? tr : enUS;
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
     setLoading(true);
     try {
-      // 1. Randevu oluştur
+      // 1. Create Booking
       const booking = await bookingsApi.create({
         consultant_id: params.consultantId!,
         resource_id: params.resourceId!,
@@ -40,116 +53,315 @@ export default function BookingCheckoutScreen() {
         session_price: params.price!,
       });
 
-      // 2. Sipariş oluştur
+      // 2. Create Order
       const orderResult = await ordersApi.createForBooking(booking.id);
 
-      // 3. Iyzipay ödeme oturumu başlat
+      // 3. Init Iyzipay
       const iyziResult = await ordersApi.initIyzipay(orderResult.order_id);
 
-      // 4. Ödeme ekranına (WebView) yönlendir
+      // 4. Redirect to Payment (WebView)
       router.push({
-        pathname: '/booking/payment',
+        pathname: '/booking/payment' as any,
         params: {
           orderId: orderResult.order_id,
           url: iyziResult.checkout_url,
         }
       });
     } catch (err: any) {
-      Alert.alert(t('common.error'), err.message || t('booking.createError', 'Randevu oluşturulamadı. Lütfen tekrar deneyin.'));
+      Alert.alert('Hata', err.message || 'Randevu oluşturulamadı. Lütfen tekrar deneyin.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>{t('booking.title')}</Text>
+          <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+            <ChevronLeft size={24} color={colors.text} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Randevu Onayı</Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Randevu Özeti</Text>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           
-          <View style={styles.row}>
-            <Text style={styles.label}>Danışman</Text>
-            <Text style={styles.value}>{params.name}</Text>
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryTitle}>SEANS ÖZETİ</Text>
+            
+            <View style={styles.infoRow}>
+              <View style={styles.iconBox}>
+                <User size={18} color={colors.gold} />
+              </View>
+              <View style={styles.infoTextCol}>
+                <Text style={styles.infoLabel}>Danışman</Text>
+                <Text style={styles.infoValue}>{params.name}</Text>
+              </View>
+            </View>
+
+            <View style={styles.infoRow}>
+              <View style={styles.iconBox}>
+                <Calendar size={18} color={colors.gold} />
+              </View>
+              <View style={styles.infoTextCol}>
+                <Text style={styles.infoLabel}>Tarih</Text>
+                <Text style={styles.infoValue}>
+                  {format(parseISO(params.date!), 'd MMMM yyyy', { locale: tr })}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.infoRow}>
+              <View style={styles.iconBox}>
+                <Clock size={18} color={colors.gold} />
+              </View>
+              <View style={styles.infoTextCol}>
+                <Text style={styles.infoLabel}>Saat & Süre</Text>
+                <Text style={styles.infoValue}>
+                  {params.time} · {params.duration} dakika
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Ödenecek Tutar</Text>
+              <Text style={styles.totalValue}>₺{Math.round(Number(params.price))}</Text>
+            </View>
           </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Tarih</Text>
-            <Text style={styles.value}>
-              {format(parseISO(params.date!), 'd MMMM yyyy', { locale: dateLocale })}
+          {/* Security & Trust Box */}
+          <View style={styles.trustBox}>
+            <View style={styles.trustHeader}>
+              <ShieldCheck size={16} color={colors.success} />
+              <Text style={styles.trustTitle}>Güvenli Ödeme</Text>
+            </View>
+            <Text style={styles.trustText}>
+              Ödemeniz Iyzipay üzerinden 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz asla sistemimizde saklanmaz.
             </Text>
           </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Saat</Text>
-            <Text style={styles.value}>{params.time}</Text>
+          {/* Info Box */}
+          <View style={styles.infoSection}>
+            <View style={styles.infoSectionHeader}>
+              <Info size={16} color={colors.goldDim} />
+              <Text style={styles.infoSectionTitle}>ÖNEMLİ BİLGİ</Text>
+            </View>
+            <Text style={styles.infoSectionText}>
+              Randevunuzu seans saatinden 24 saat öncesine kadar ücretsiz iptal edebilir ve tutarın tamamını iade alabilirsiniz.
+            </Text>
           </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Süre</Text>
-            <Text style={styles.value}>{params.duration} dakika</Text>
-          </View>
+        </ScrollView>
 
-          <View style={styles.divider} />
-
-          <View style={styles.row}>
-            <Text style={styles.totalLabel}>{t('booking.total')}</Text>
-            <Text style={styles.totalValue}>₺{Math.round(Number(params.price))}</Text>
-          </View>
+        {/* Footer Action */}
+        <View style={styles.footer}>
+          <Pressable 
+            style={[styles.payBtn, loading && styles.payBtnDisabled]}
+            onPress={handleCheckout}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.bgDeep} />
+            ) : (
+              <>
+                <CreditCard size={20} color={colors.bgDeep} />
+                <Text style={styles.payBtnText}>Ödeme Adımına Geç</Text>
+              </>
+            )}
+          </Pressable>
         </View>
 
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            Ödeme işleminiz Iyzipay güvencesiyle gerçekleştirilecektir. 
-            Randevu saatinizden 24 saat öncesine kadar ücretsiz iptal edebilirsiniz.
-          </Text>
-        </View>
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <Pressable 
-          style={[styles.payBtn, loading && styles.payBtnDisabled]}
-          onPress={handleCheckout}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.stardust} />
-          ) : (
-            <Text style={styles.payBtnText}>{t('booking.proceedToPayment')}</Text>
-          )}
-        </Pressable>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.midnight },
-  scroll: { padding: spacing.lg },
-  header: { marginBottom: spacing.lg },
-  title: { fontSize: 24, fontFamily: font.display, color: colors.stardust },
-  summaryCard: { 
-    backgroundColor: colors.surface, 
-    borderRadius: radius.sm, 
-    padding: spacing.lg,
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+  safe: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  headerBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.line,
-    ...shadows.card
   },
-  summaryTitle: { fontSize: 18, fontFamily: font.display, color: colors.stardust, marginBottom: spacing.lg },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.md },
-  label: { fontSize: 14, color: colors.muted, fontFamily: font.sans },
-  value: { fontSize: 14, color: colors.stardust, fontFamily: font.sansBold },
-  divider: { height: 1, backgroundColor: colors.line, marginVertical: spacing.md },
-  totalLabel: { fontSize: 16, color: colors.stardust, fontFamily: font.sansBold },
-  totalValue: { fontSize: 20, color: colors.gold, fontFamily: font.sansBold },
-  infoBox: { marginTop: spacing.xl, padding: spacing.md, backgroundColor: colors.deep, borderRadius: radius.xs, borderLeftWidth: 4, borderLeftColor: colors.amethyst },
-  infoText: { fontSize: 12, color: colors.stardustDim, lineHeight: 18, fontFamily: font.sans },
-  footer: { padding: spacing.lg, borderTopWidth: 1, borderColor: colors.line, paddingBottom: Platform.OS === 'ios' ? 34 : spacing.lg },
-  payBtn: { backgroundColor: colors.amethyst, paddingVertical: spacing.md, borderRadius: radius.pill, alignItems: 'center', ...shadows.soft },
-  payBtnDisabled: { opacity: 0.7 },
-  payBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 16 },
+  headerTitle: {
+    fontFamily: font.display,
+    fontSize: 16,
+    color: colors.text,
+  },
+  scrollContent: {
+    padding: spacing.lg,
+    paddingBottom: 120,
+  },
+
+  // Summary Card
+  summaryCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.line,
+    marginBottom: spacing.xl,
+  },
+  summaryTitle: {
+    fontFamily: font.sansBold,
+    fontSize: 11,
+    color: colors.gold,
+    letterSpacing: 2,
+    marginBottom: spacing.xl,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: spacing.lg,
+  },
+  iconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.inkDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.lineSoft,
+  },
+  infoTextCol: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontFamily: font.sans,
+    fontSize: 11,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+  },
+  infoValue: {
+    fontFamily: font.display,
+    fontSize: 16,
+    color: colors.text,
+    marginTop: 2,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.lineSoft,
+    marginVertical: spacing.md,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  totalLabel: {
+    fontFamily: font.sansBold,
+    fontSize: 14,
+    color: colors.text,
+  },
+  totalValue: {
+    fontFamily: font.display,
+    fontSize: 24,
+    color: colors.gold,
+  },
+
+  // Trust Box
+  trustBox: {
+    backgroundColor: 'rgba(76, 175, 110, 0.05)',
+    borderRadius: radius.md,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 110, 0.15)',
+    marginBottom: spacing.xl,
+  },
+  trustHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  trustTitle: {
+    fontFamily: font.sansBold,
+    fontSize: 13,
+    color: colors.success,
+  },
+  trustText: {
+    fontFamily: font.sans,
+    fontSize: 12,
+    color: colors.textDim,
+    lineHeight: 18,
+  },
+
+  // Info Section
+  infoSection: {
+    paddingHorizontal: 4,
+  },
+  infoSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  infoSectionTitle: {
+    fontFamily: font.sansBold,
+    fontSize: 11,
+    color: colors.goldDeep,
+    letterSpacing: 2,
+  },
+  infoSectionText: {
+    fontFamily: font.sans,
+    fontSize: 13,
+    color: colors.textMuted,
+    lineHeight: 20,
+  },
+
+  // Footer
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.bgDeep,
+    padding: spacing.lg,
+    paddingBottom: Platform.OS === 'ios' ? 40 : spacing.lg,
+    borderTopWidth: 1,
+    borderColor: colors.line,
+  },
+  payBtn: {
+    backgroundColor: colors.gold,
+    flexDirection: 'row',
+    height: 56,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  payBtnDisabled: {
+    opacity: 0.6,
+  },
+  payBtnText: {
+    fontFamily: font.sansBold,
+    fontSize: 16,
+    color: colors.bgDeep,
+  },
 });

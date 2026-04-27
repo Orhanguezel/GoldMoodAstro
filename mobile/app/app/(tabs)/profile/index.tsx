@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,54 +8,38 @@ import {
   ScrollView,
   RefreshControl,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
-import { router } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
+import { useFocusEffect, router } from 'expo-router';
+import { 
+  User, 
+  Settings, 
+  CreditCard, 
+  Crown, 
+  Wallet, 
+  LogOut, 
+  ChevronRight,
+  ShieldCheck,
+  AlertTriangle,
+} from 'lucide-react-native';
+
+import { colors, spacing, font, radius } from '@/theme/tokens';
 import { useAuth } from '@/hooks/useAuth';
 import { subscriptionsApi, creditsApi } from '@/lib/api';
 import type { CreditMe, Subscription } from '@/types';
 
-const PROFILE_SUBSCRIPTION_PATH = '/profile/subscription' as unknown as Parameters<typeof router.push>[0];
-const PROFILE_CREDITS_PATH = '/profile/credits' as unknown as Parameters<typeof router.push>[0];
-
-type TicketLike = {
-  label: string;
-  value: string;
-  muted?: boolean;
-};
-
-function formatDate(value?: string | null): string {
-  if (!value) return '-';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return '-';
-  return parsed.toLocaleDateString(undefined, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function isActive(status?: string | null): boolean {
-  return status === 'active' || status === 'grace_period';
-}
+const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
-  const { t } = useTranslation();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, logout, loading: authLoading } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [credits, setCredits] = useState<CreditMe | null>(null);
   const [loading, setLoading] = useState(false);
-  const [cancelLoading, setCancelLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!isAuthenticated) return;
-    setLoading(true);
     try {
       const [subscriptionData, creditsData] = await Promise.all([
         subscriptionsApi.me(),
@@ -65,8 +49,6 @@ export default function ProfileScreen() {
       setCredits(creditsData);
     } catch (err) {
       console.error('Profile data fetch failed:', err);
-      setSubscription(null);
-      setCredits(null);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -77,282 +59,370 @@ export default function ProfileScreen() {
     useCallback(() => {
       if (authLoading) return;
       if (!isAuthenticated) {
-        router.replace('/auth/login');
+        router.replace('/auth/login' as any);
         return;
       }
       loadData();
     }, [authLoading, isAuthenticated, loadData]),
   );
 
-  useEffect(() => {
-    if (!authLoading && isAuthenticated === false) {
-      router.replace('/auth/login');
-    }
-  }, [authLoading, isAuthenticated]);
-
-  const handleRefresh = useCallback(() => {
+  const onRefresh = () => {
     setRefreshing(true);
     loadData();
-  }, [loadData]);
+  };
 
-  const handleCancelSubscription = async () => {
-    if (!subscription) return;
-    setCancelLoading(true);
-    try {
-      const response = await subscriptionsApi.cancel();
-      const next = response.data;
-      setSubscription(next ?? null);
-      Alert.alert(
-        t('profile.subscriptionCanceledTitle', 'Abonelik iptal edildi'),
-        t('profile.subscriptionCanceledBody', 'İptal talebiniz işlendi, dönüm süresi bitene kadar erişiminiz devam eder.'),
-      );
-      await loadData();
-    } catch (err: any) {
-      Alert.alert(t('common.error'), err?.message || t('profile.subscriptionCancelError', 'İptal yapılamadı'));
-    } finally {
-      setCancelLoading(false);
-    }
+  const handleLogout = () => {
+    Alert.alert(
+      'Oturumu Kapat',
+      'Çıkış yapmak istediğinize emin misiniz?',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'Çıkış Yap', style: 'destructive', onPress: () => logout() },
+      ]
+    );
   };
 
   if (authLoading || (loading && !refreshing)) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.amethyst} />
+        <ActivityIndicator size="large" color={colors.gold} />
       </View>
     );
   }
 
-  const status = subscription?.status || 'inactive';
-  const creditLabel = credits ? `${credits.balance} ${credits.currency}` : '-';
-
-  const subscriptionStatusLabel = (() => {
-    if (!subscription) {
-      return t('profile.subscriptionStatusInactive', 'YOK');
-    }
-    if (isActive(status)) return t('profile.subscriptionStatusActive', 'Aktif');
-    if (status === 'pending') return t('profile.subscriptionStatusPending', 'Hazırlanıyor');
-    if (status === 'cancelled') return t('profile.subscriptionStatusCancelled', 'İptal Edildi');
-    if (status === 'expired') return t('profile.subscriptionStatusExpired', 'Süresi Doldu');
-    return t('profile.subscriptionStatusUnknown', 'Durum Belirsiz');
-  })();
-
-  const subscriptionBadges: TicketLike[] = [
-    { label: t('profile.subscriptionLabel'), value: subscription?.plan_id ? t('profile.subscriptionActivePlan', 'Aktif Plan') : t('profile.subscriptionNoPlan', 'Abonelik Yok') },
-    { label: t('profile.subscriptionExpiresLabel', 'Bitiş'), value: formatDate(subscription?.ends_at) },
-    { label: t('profile.subscriptionStatusLabel', 'Durum'), value: subscriptionStatusLabel, muted: !isActive(status) },
-  ];
+  const hasActiveSub = subscription?.status === 'active' || subscription?.status === 'grace_period';
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView
-        style={styles.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.gold} />}
-      >
-        <Text style={styles.title}>{t('profile.title')}</Text>
-
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user?.full_name?.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) || '?'}
-            </Text>
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.name}>{user?.full_name || t('profile.noName', 'Misafir')}</Text>
-            <Text style={styles.email}>{user?.email || ''}</Text>
-          </View>
-        </View>
-
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{t('profile.subscriptionCardTitle', 'Abonelik')}</Text>
-            <Text style={styles.cardPrice}>{status === 'active' ? t('profile.subscriptionActive', 'Aktif') : t('profile.subscriptionInactive', 'Pasif')}</Text>
-          </View>
-
-          {subscriptionBadges.map((row) => (
-            <View key={row.label} style={styles.badgeRow}>
-              <Text style={styles.badgeLabel}>{row.label}</Text>
-              <Text style={[styles.badgeValue, row.muted ? styles.muted : undefined]}>{row.value}</Text>
-            </View>
-          ))}
-
-          <View style={styles.actions}>
-            <Pressable style={styles.primaryButton} onPress={() => router.push(PROFILE_SUBSCRIPTION_PATH)}>
-              <Text style={styles.primaryButtonText}>{t('profile.subscriptionManage', 'Aboneliği Yönet')}</Text>
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Profil</Text>
+            <Pressable 
+              style={styles.settingsBtn}
+              onPress={() => router.push('/settings' as any)}
+            >
+              <Settings size={22} color={colors.textDim} />
             </Pressable>
-            {isActive(status) ? (
-              <Pressable
-                style={[styles.dangerButton, cancelLoading ? styles.disabledButton : undefined]}
-                onPress={handleCancelSubscription}
-                disabled={cancelLoading}
-              >
-                {cancelLoading ? (
-                  <ActivityIndicator color={colors.stardust} />
-                ) : (
-                  <Text style={styles.dangerButtonText}>{t('profile.subscriptionCancel', 'İptal Et')}</Text>
-                )}
-              </Pressable>
-            ) : null}
-          </View>
-        </View>
-
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{t('profile.creditsTitle', 'Kredi')}</Text>
-            <Text style={styles.cardPrice}>{creditLabel}</Text>
           </View>
 
-          <Text style={styles.cardDesc}>
-            {t('profile.creditsDescription', 'Seans almak için kredinizi bu ekrandan takip edebilirsiniz.')}
-          </Text>
+          {/* User Profile Card */}
+          <View style={styles.profileHero}>
+            <View style={styles.avatarWrap}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarInitial}>
+                  {user?.full_name?.[0] || 'U'}
+                </Text>
+              </View>
+              {hasActiveSub && (
+                <View style={styles.crownBadge}>
+                  <Crown size={12} color={colors.bgDeep} />
+                </View>
+              )}
+            </View>
+            <View style={styles.userInfo}>
+              <View style={styles.nameRow}>
+                <Text style={styles.userName}>{user?.full_name || 'Kullanıcı'}</Text>
+                <ShieldCheck size={16} color={colors.gold} />
+              </View>
+              <Text style={styles.userEmail}>{user?.email}</Text>
+            </View>
+          </View>
 
-          <Pressable style={styles.primaryButton} onPress={() => router.push(PROFILE_CREDITS_PATH)}>
-            <Text style={styles.primaryButtonText}>{t('profile.creditsTopUp', 'Kredi Yükle')}</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          {/* Wallet / Subscription Summary Row */}
+          <View style={styles.summaryRow}>
+            <Pressable 
+              style={styles.summaryCard}
+              onPress={() => router.push('/profile/credits' as any)}
+            >
+              <View style={styles.summaryIconWrap}>
+                <Wallet size={18} color={colors.gold} />
+              </View>
+              <View>
+                <Text style={styles.summaryLabel}>KREDİ</Text>
+                <Text style={styles.summaryValue}>{credits?.balance || 0}</Text>
+              </View>
+            </Pressable>
+            
+            <Pressable 
+              style={styles.summaryCard}
+              onPress={() => router.push('/profile/subscription' as any)}
+            >
+              <View style={[styles.summaryIconWrap, hasActiveSub && { backgroundColor: colors.gold }]}>
+                <Crown size={18} color={hasActiveSub ? colors.bgDeep : colors.goldDim} />
+              </View>
+              <View>
+                <Text style={styles.summaryLabel}>ABONELİK</Text>
+                <Text style={[styles.summaryValue, hasActiveSub && { color: colors.gold }]}>
+                  {hasActiveSub ? 'Premium' : 'Standart'}
+                </Text>
+              </View>
+            </Pressable>
+          </View>
+
+          {/* Menu Sections */}
+          <View style={styles.menuGroup}>
+            <Text style={styles.menuGroupTitle}>HESAP</Text>
+            
+            <Pressable style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <User size={20} color={colors.goldDim} />
+                <Text style={styles.menuItemText}>Bilgilerimi Düzenle</Text>
+              </View>
+              <ChevronRight size={18} color={colors.line} />
+            </Pressable>
+
+            <Pressable 
+              style={styles.menuItem}
+              onPress={() => router.push('/profile/subscription' as any)}
+            >
+              <View style={styles.menuItemLeft}>
+                <CreditCard size={20} color={colors.goldDim} />
+                <Text style={styles.menuItemText}>Ödeme Yöntemleri</Text>
+              </View>
+              <ChevronRight size={18} color={colors.line} />
+            </Pressable>
+          </View>
+
+          <View style={styles.menuGroup}>
+            <Text style={styles.menuGroupTitle}>UYGULAMA</Text>
+            
+            <Pressable 
+              style={styles.menuItem}
+              onPress={() => router.push('/settings' as any)}
+            >
+              <View style={styles.menuItemLeft}>
+                <Settings size={20} color={colors.goldDim} />
+                <Text style={styles.menuItemText}>Ayarlar</Text>
+              </View>
+              <ChevronRight size={18} color={colors.line} />
+            </Pressable>
+
+            <Pressable 
+              style={styles.menuItem}
+              onPress={() => router.push('/profile/privacy' as any)}
+            >
+              <View style={styles.menuItemLeft}>
+                <AlertTriangle size={20} color={colors.danger} />
+                <Text style={[styles.menuItemText, { color: colors.danger }]}>Tehlikeli Bölge</Text>
+              </View>
+              <ChevronRight size={18} color={colors.line} />
+            </Pressable>
+
+            <Pressable style={styles.menuItem} onPress={handleLogout}>
+              <View style={styles.menuItemLeft}>
+                <LogOut size={20} color={colors.danger} />
+                <Text style={[styles.menuItemText, { color: colors.danger }]}>Çıkış Yap</Text>
+              </View>
+            </Pressable>
+          </View>
+
+          {/* Footer Info */}
+          <View style={styles.footer}>
+            <Text style={styles.versionText}>GoldMoodAstro v1.0.0</Text>
+            <Text style={styles.copyrightText}>© 2026 Tüm Hakları Saklıdır.</Text>
+          </View>
+
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: {
+  container: {
     flex: 1,
-    backgroundColor: colors.midnight,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: colors.bg,
   },
   safe: {
     flex: 1,
-    backgroundColor: colors.midnight,
   },
-  scroll: {
-    padding: spacing.lg,
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.bg,
+  },
+  scrollContent: {
+    paddingBottom: spacing['3xl'],
+  },
+
+  // Header
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
   },
   title: {
-    color: colors.stardust,
     fontFamily: font.display,
-    fontSize: 30,
-    marginBottom: spacing.lg,
+    fontSize: 26,
+    color: colors.text,
   },
-  profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    padding: spacing.md,
-    borderRadius: radius.sm,
-    marginBottom: spacing.lg,
+  settingsBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.line,
-    ...shadows.card,
+  },
+
+  // Profile Hero
+  profileHero: {
+    alignItems: 'center',
+    marginBottom: spacing['2xl'],
+    paddingHorizontal: spacing.lg,
+  },
+  avatarWrap: {
+    position: 'relative',
+    marginBottom: spacing.md,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.amethyst,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: colors.inkDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.gold,
+  },
+  avatarInitial: {
+    fontFamily: font.display,
+    fontSize: 36,
+    color: colors.gold,
+  },
+  crownBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: colors.gold,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: colors.bg,
+  },
+  userInfo: {
+    alignItems: 'center',
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  userName: {
+    fontFamily: font.display,
+    fontSize: 22,
+    color: colors.text,
+  },
+  userEmail: {
+    fontFamily: font.sans,
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+
+  // Summary Row
+  summaryRow: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    gap: 12,
+    marginBottom: spacing['3xl'],
+  },
+  summaryCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.line,
+    gap: 12,
+  },
+  summaryIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.inkDeep,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: {
-    color: colors.stardust,
+  summaryLabel: {
     fontFamily: font.sansBold,
-    fontSize: 18,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 1,
   },
-  profileInfo: { flex: 1, gap: 4 },
-  name: {
-    color: colors.stardust,
+  summaryValue: {
     fontFamily: font.display,
-    fontSize: 20,
+    fontSize: 18,
+    color: colors.text,
+    marginTop: 2,
   },
-  email: {
-    color: colors.muted,
-    fontFamily: font.sans,
-    fontSize: 13,
+
+  // Menu Groups
+  menuGroup: {
+    marginBottom: spacing['2xl'],
+    paddingHorizontal: spacing.lg,
   },
-  card: {
-    padding: spacing.lg,
-    borderRadius: radius.sm,
+  menuGroupTitle: {
+    fontFamily: font.sansBold,
+    fontSize: 11,
+    color: colors.goldDeep,
+    letterSpacing: 2,
+    marginBottom: spacing.md,
+    marginLeft: 4,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: radius.md,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: colors.lineSoft,
-    marginBottom: spacing.lg,
-    gap: spacing.sm,
-    ...shadows.soft,
   },
-  cardHeader: {
+  menuItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xs,
+    gap: 14,
   },
-  cardTitle: {
-    color: colors.stardust,
-    fontFamily: font.sansBold,
-    fontSize: 18,
-  },
-  cardPrice: {
-    color: colors.amethyst,
+  menuItemText: {
     fontFamily: font.sansMedium,
-    fontSize: 16,
+    fontSize: 15,
+    color: colors.text,
   },
-  cardDesc: {
-    color: colors.muted,
-    fontFamily: font.sans,
-    fontSize: 13,
-    marginBottom: spacing.xs,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+
+  // Footer
+  footer: {
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line,
-    paddingVertical: spacing.xs,
+    marginTop: spacing.xl,
+    paddingBottom: spacing.xl,
   },
-  badgeLabel: {
-    color: colors.muted,
-    fontFamily: font.sans,
-    fontSize: 13,
-  },
-  badgeValue: {
-    color: colors.stardust,
+  versionText: {
     fontFamily: font.sansMedium,
-    fontSize: 13,
+    fontSize: 12,
+    color: colors.textMuted,
   },
-  muted: {
-    color: colors.mutedSoft,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.md,
-  },
-  primaryButton: {
-    flex: 1,
-    backgroundColor: colors.amethyst,
-    borderRadius: radius.pill,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: colors.stardust,
-    fontFamily: font.sansBold,
-    fontSize: 14,
-  },
-  dangerButton: {
-    flex: 1,
-    backgroundColor: colors.danger,
-    borderRadius: radius.pill,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  dangerButtonText: {
-    color: colors.stardust,
-    fontFamily: font.sansBold,
-    fontSize: 14,
-  },
-  disabledButton: {
-    opacity: 0.6,
+  copyrightText: {
+    fontFamily: font.sans,
+    fontSize: 10,
+    color: colors.textMuted,
+    marginTop: 4,
   },
 });

@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { ArrowLeft, MapPin, Calendar, Clock } from 'lucide-react-native';
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { storage } from '@/lib/storage';
-import { api } from '@/lib/api';
+import { birthChartsApi } from '@/lib/api';
 
 export default function BirthdataScreen() {
   const [date, setDate] = useState('');
@@ -32,7 +32,7 @@ export default function BirthdataScreen() {
       
       // Mark onboarded and go to today tab
       await storage.markOnboarded();
-      router.replace('/(tabs)/today');
+      router.replace('/today' as any);
       
     } catch (err: any) {
       setError(err.message || 'Bir hata oluştu');

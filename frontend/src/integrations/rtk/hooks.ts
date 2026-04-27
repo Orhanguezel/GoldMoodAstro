@@ -9,6 +9,7 @@ export * from './public/auth.endpoints';
 // Public
 export * from './public/reviews.public.endpoints';
 export * from './public/storage_public.endpoints';
+export * from './public/kvkk.endpoints';
 
 
 // Content / shared

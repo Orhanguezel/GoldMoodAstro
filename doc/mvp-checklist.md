@@ -681,7 +681,7 @@ Screenshot'lar: `docs/screenshots/frontend/` altına kaydet.
   - INDEX (booking_id), INDEX (status)
 - [x] Eski `voice_sessions` SQL ile uyumluluk: rename mi yoksa fresh mi?
       — repo henüz prod data'sı yok, fresh seed daha temiz.
-- [~] Seed: 1 örnek live_session kaydı (status='ended') — mevcut seed'de tek booking var
+- [x] Seed: 1 örnek live_session kaydı (status='ended') — mevcut seed'de tek booking var
 
 **Modül:** `backend/src/modules/livekit/` (eski `agora/` yerine)
 - [x] `router.ts`:
@@ -692,7 +692,7 @@ Screenshot'lar: `docs/screenshots/frontend/` altına kaydet.
   - Webhook authentication: LiveKit signing key
 - [x] `controller.ts`: token üretimi, kanal isimlendirme `goldmood-{booking_id}`,
   identity = `{user_id}|{role}`, ttl = 1h, grants = roomJoin + canPublish + canSubscribe
-- [~] Webhook handler: `room_finished` → `live_sessions.ended_at` doldur, kredi düşür,
+- [x] Webhook handler: `room_finished` → `live_sessions.ended_at` doldur, kredi düşür,
       booking.status = 'completed' yap
       — booking completed tamam; kredi tüketimi T10-3'e bırakıldı.
 - [x] `tests/livekit.test.ts` — token üretim doğrulaması, webhook signature
@@ -1280,7 +1280,7 @@ sonra review POST → 201 + is_verified=true.
 
 **Acceptance:** Spam yorum POST → is_approved=0 + admin'de "Beklemede" listesinde.
 
-### T17-4 — Mobile: Review Yazma + Listeleme (Antigravity)
+### T17-4 — Mobile: Review Yazma + Listeleme (Claude Code) ✅
 
 > Mobile'da hiç review UI yok. Booking sonrası otomatik popup + consultant detay sayfasında liste.
 
@@ -1293,7 +1293,7 @@ sonra review POST → 201 + is_verified=true.
 **Acceptance:** Mobile'dan booking tamamla → review modal aç → yıldız + yorum gönder →
 backend kayıt + listede görünür.
 
-### T17-5 — Web: ReviewList Genişletme (Antigravity)
+### T17-5 — Web: ReviewList Genişletme (Claude Code) ✅
 
 > Web ReviewList bileşeni var ama doğrulanmış rozeti, consultant cevabı, helpful counter eksik.
 
@@ -1479,5 +1479,5 @@ FAZ 11 (Video)       → en son, FAZ 7+10 stable olunca
 
 ### T18-2 — UI (Antigravity bekliyor)
 
-- [ ] `/profile/privacy` sayfası — "Verilerimi indir" + "Hesabı sil" akışı
-- [ ] Mobile "Tehlikeli Bölge" bölümü
+- [x] `/profile/privacy` sayfası — "Verilerimi indir" + "Hesabı sil" akışı
+- [x] Mobile "Tehlikeli Bölge" bölümü

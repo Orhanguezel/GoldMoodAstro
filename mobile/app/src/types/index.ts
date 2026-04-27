@@ -29,6 +29,16 @@ export interface MeResponse {
   user: User;
 }
 
+export interface KvkkAccountDeletionStatus {
+  id: string;
+  status: 'pending' | 'cancelled' | 'completed';
+  requested_at: string | null;
+  scheduled_for: string | null;
+  completed_at: string | null;
+  reason: string | null;
+  cooling_off_days?: number;
+}
+
 export interface User {
   id: string;
   email: string;

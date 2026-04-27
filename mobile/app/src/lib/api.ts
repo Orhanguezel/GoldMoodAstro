@@ -9,6 +9,7 @@ import type {
   Consultant, ConsultantSlot,
   Booking, BookingCreateInput,
   Subscription, SubscriptionPlan, CreditMe, CreditPackage,
+  KvkkAccountDeletionStatus,
   Order, OrderCreateResponse, IyzipayInitResponse,
   LiveKitTokenResponse,
   BirthChart, BirthChartCreateInput, GeocodeResult, DailyReadingResponse,
@@ -71,6 +72,7 @@ async function request<T>(
 const get  = <T>(path: string, params?: Record<string, string | number>) => request<T>('GET', path, undefined, params);
 const post = <T>(path: string, body: unknown) => request<T>('POST', path, body);
 const patch = <T>(path: string, body: unknown) => request<T>('PATCH', path, body);
+const del = <T>(path: string) => request<T>('DELETE', path);
 
 // -------------------------------------------------------------------
 // Auth
@@ -297,6 +299,29 @@ export const chatApi = {
   postMessage: (threadId: string, message: string) =>
     post<{ id: string }>(`/chat/threads/${threadId}/messages`, { message }),
 };
+
+// -------------------------------------------------------------------
+// KVKK (Data export + account deletion)
+// -------------------------------------------------------------------
+
+export const kvkkApi = {
+  exportMyData: async (): Promise<Record<string, unknown>> => {
+    const res = await get<Record<string, unknown>>('/me/export');
+    return res;
+  },
+
+  getDeletionStatus: async (): Promise<KvkkAccountDeletionStatus | null> => {
+    const res = await get<{ data: KvkkAccountDeletionStatus | null }>('/me/delete-account');
+    return res.data;
+  },
+
+  requestDeletion: async (reason?: string): Promise<{ data: KvkkAccountDeletionStatus & { message?: string; cooling_off_days?: number } }> =>
+    post('/me/delete-account', reason?.trim() ? { reason: reason.trim() } : {}),
+
+  cancelDeletion: async (): Promise<{ data: { id: string; status: 'cancelled' } }> =>
+    del<{ data: { id: string; status: 'cancelled' } }>('/me/delete-account'),
+};
+
 // -------------------------------------------------------------------
 // Horoscopes
 // -------------------------------------------------------------------

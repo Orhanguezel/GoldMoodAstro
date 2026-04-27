@@ -7,7 +7,7 @@ import { colors, spacing, font, radius } from '@/theme/tokens';
 const { width, height } = Dimensions.get('window');
 
 // Star Component
-const Star = ({ delay, top, left, size = 2 }: { delay: number; top: string; left: string; size?: number }) => {
+const Star = ({ delay, top, left, size = 2 }: { delay: number; top: any; left: any; size?: number }) => {
   const opacity = useRef(new Animated.Value(0.2)).current;
 
   useEffect(() => {
@@ -123,7 +123,7 @@ export default function WelcomeScreen() {
 
           <View style={styles.footer}>
             <Pressable
-              onPress={() => router.push('/onboarding/birthdata')}
+              onPress={() => router.push('/onboarding/birthdata' as any)}
               style={({ pressed }) => [
                 styles.button,
                 pressed && styles.buttonPressed,

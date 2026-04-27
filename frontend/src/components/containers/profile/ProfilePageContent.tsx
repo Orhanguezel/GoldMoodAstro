@@ -596,7 +596,14 @@ export default function ProfilePageContent() {
                 </div>
               ) : null}
 
-              <div className="mt-8">
+              <div className="mt-8 space-y-3">
+                <Link
+                  href={localizePath(locale, '/profile/privacy')}
+                  className="inline-flex text-sm text-amber-600 hover:text-amber-700"
+                >
+                  KVKK: Verilerimi İndir / Hesabı Sil
+                </Link>
+
                 <Link href={localizePath(locale, '/logout')} className="text-sm text-text-secondary hover:text-brand-primary">
                   Çıkış yap
                 </Link>

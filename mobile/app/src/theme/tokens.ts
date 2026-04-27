@@ -67,6 +67,14 @@ export const colors = {
   danger:       PALETTE.danger,
   warning:      PALETTE.warning,
   info:         PALETTE.info,
+  
+  // Palette access
+  sand:         PALETTE.sand,
+  cream:        PALETTE.cream,
+  ink:          PALETTE.ink,
+  inkDeep:      PALETTE.inkDeep,
+  inkSoft:      PALETTE.inkSoft,
+  inkSofter:    PALETTE.inkSofter,
 
   // Lines (gold transparency üzerinde dark)
   line:         'rgba(201, 169, 97, 0.20)',
@@ -141,6 +149,8 @@ export const spacing = {
   lg: 24,
   xl: 32,
   xxl: 48,
+  '2xl': 64,
+  '3xl': 80,
 };
 
 // ── Tipografi ──────────────────────────────────────────────────
