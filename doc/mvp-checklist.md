@@ -1451,3 +1451,33 @@ FAZ 11 (Video)       → en son, FAZ 7+10 stable olunca
 ---
 
 *FAZ 6+ vizyonu — sürekli güncellenecek.*
+
+---
+
+## FAZ 18 — KVKK / GDPR Uyumu (F9 Differentiator) ✅
+
+> Rakip analizi F9: "Veri taşınabilirliği & gerçek hesap silme"
+> "Sildiğin gerçekten silinir" — pazarlama düsturu.
+
+### T18-1 — Backend: account_deletion_requests + KVKK endpoints (Claude Code) ✅
+
+**SQL:** `200_account_deletion_requests_schema.sql`
+- [x] Tablo: account_deletion_requests (user_id, scheduled_for, status: pending/cancelled/completed)
+- [x] FK CASCADE on users delete
+
+**Modül:** `packages/shared-backend/modules/kvkk/`
+
+**Endpoints (auth, /me altında):**
+- [x] `GET  /me/export` — Tüm verisini JSON olarak indir (Content-Disposition: attachment)
+- [x] `GET  /me/delete-account` — Pending talebi gör
+- [x] `POST /me/delete-account` — Talep yarat (7 gün cooling-off)
+- [x] `DELETE /me/delete-account` — Pending talebi iptal
+
+**Cron:** `backend/src/cron/account-deletion.ts`
+- [x] 6 saatte bir scan: status='pending' AND scheduled_for <= NOW
+- [x] User CASCADE delete (FK'ler tüm bağlı veriyi temizler)
+
+### T18-2 — UI (Antigravity bekliyor)
+
+- [ ] `/profile/privacy` sayfası — "Verilerimi indir" + "Hesabı sil" akışı
+- [ ] Mobile "Tehlikeli Bölge" bölümü

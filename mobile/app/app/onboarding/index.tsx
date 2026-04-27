@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   // Header
   header: {
     alignItems: 'center',
-    marginTop: spacing.2xl,
+    marginTop: spacing['2xl'],
   },
   eyebrow: {
     fontFamily: font.display,

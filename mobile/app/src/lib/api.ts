@@ -176,7 +176,15 @@ export const subscriptionsApi = {
     transaction_id?: string;
     purchase_token?: string;
     product_id?: string;
-  }) => post('/subscriptions/verify-receipt', payload),
+  }) => post<{
+    data: {
+      platform: string;
+      valid: boolean;
+      subscription?: Subscription | null;
+      transaction_id?: string;
+      message?: string;
+    };
+  }>('/subscriptions/verify-receipt', payload),
 
   cancel: (reason?: string) =>
     post<{ data: Subscription }>('/subscriptions/cancel', { ...(reason ? { reason } : {}) }),

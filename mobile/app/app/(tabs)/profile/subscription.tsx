@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Alert,
   Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
@@ -16,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
 import { useAuth } from '@/hooks/useAuth';
 import { subscriptionsApi } from '@/lib/api';
+import { getIapProvider, purchaseSubscriptionPlan } from '@/lib/iap';
 import type { Subscription, SubscriptionPlan } from '@/types';
 
 function formatCurrencyMinor(value: number | string, currency = 'TRY'): string {
@@ -96,6 +98,52 @@ export default function SubscriptionScreen() {
   const startPlan = async (planId: string) => {
     setActionPlanId(planId);
     try {
+      const plan = plans.find((item) => item.id === planId);
+      if (!plan) {
+        throw new Error('Plan bulunamadı.');
+      }
+
+      if (plan.price_minor <= 0) {
+        const freeResult = await subscriptionsApi.start(planId, 'iyzipay');
+        const data = (freeResult as { data: Record<string, unknown> }).data || freeResult;
+        await load();
+        if (data && data.paid !== true) {
+          Alert.alert(
+            t('profile.subscriptionStartedTitle', 'Abonelik aktif'),
+            t('profile.subscriptionStartedMessage', 'Aboneliğiniz başarıyla aktif edildi.'),
+          );
+        }
+        return;
+      }
+
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        const provider = getIapProvider();
+        if (!provider) {
+          throw new Error('Bu cihaz için IAP desteklenmiyor.');
+        }
+
+        const purchase = await purchaseSubscriptionPlan(plan);
+        const verify = await subscriptionsApi.verifyReceipt({
+          plan_id: plan.id,
+          platform: provider,
+          receipt: purchase.receipt,
+          transaction_id: purchase.transactionId,
+          purchase_token: purchase.purchaseToken,
+          product_id: purchase.productId,
+        });
+
+        if (!verify?.data?.valid) {
+          throw new Error(verify?.data?.message || 'Ödeme doğrulanamadı.');
+        }
+
+        await load();
+        Alert.alert(
+          t('profile.subscriptionStartedTitle', 'Abonelik aktif'),
+          t('profile.subscriptionStartedMessage', 'Aboneliğiniz başarıyla aktif edildi.'),
+        );
+        return;
+      }
+
       const result = await subscriptionsApi.start(planId, 'iyzipay');
       const data = (result as { data: Record<string, unknown> }).data || result;
       const checkout = typeof data?.checkout_url === 'string' ? data.checkout_url : '';

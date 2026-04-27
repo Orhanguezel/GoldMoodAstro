@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   backButton: {
     padding: 8,
@@ -181,11 +181,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textDim,
     lineHeight: 24,
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   form: {
     gap: spacing.xl,
-    marginBottom: spacing.3xl,
+    marginBottom: spacing['3xl'],
   },
   inputGroup: {
     gap: 8,

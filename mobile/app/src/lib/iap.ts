@@ -1,10 +1,6 @@
 import { Platform } from 'react-native';
-import {
-  IAPErrorCode,
-  IAPResponseCode,
-  InAppPurchaseState,
-  InAppPurchases,
-} from 'expo-in-app-purchases';
+import * as InAppPurchases from 'expo-in-app-purchases';
+import { IAPErrorCode, IAPResponseCode, InAppPurchaseState } from 'expo-in-app-purchases';
 import type { InAppPurchase } from 'expo-in-app-purchases';
 import type { SubscriptionPlan } from '@/types';
 
@@ -56,15 +52,10 @@ function resolveProductId(plan: SubscriptionPlan): string {
 
 async function queryProductOrFail(productId: string): Promise<void> {
   const response = await InAppPurchases.getProductsAsync([productId]);
-
-  if (response.responseCode !== IAPResponseCode.OK) {
-    throw buildNotAvailableError();
-  }
+  if (response.responseCode !== IAPResponseCode.OK) throw buildNotAvailableError();
 
   const hasResult = Array.isArray(response.results) && response.results.length > 0;
-  if (!hasResult) {
-    throw new Error(`Abonelik ürünü bulunamadı: ${productId}`);
-  }
+  if (!hasResult) throw new Error(`Abonelik ürünü bulunamadı: ${productId}`);
 }
 
 export interface IapPurchaseResult {
@@ -74,6 +65,16 @@ export interface IapPurchaseResult {
   transactionId: string;
   receipt: string;
   purchaseToken?: string;
+}
+
+function readTransactionId(purchase: InAppPurchase): string {
+  return String(
+    purchase.orderId || purchase.originalOrderId || purchase.transactionReceipt || purchase.purchaseToken || '',
+  );
+}
+
+function readReceipt(purchase: InAppPurchase): string {
+  return String(purchase.transactionReceipt || purchase.purchaseToken || '').trim();
 }
 
 export async function purchaseSubscriptionPlan(plan: SubscriptionPlan): Promise<IapPurchaseResult> {
@@ -87,8 +88,9 @@ export async function purchaseSubscriptionPlan(plan: SubscriptionPlan): Promise<
     throw new Error('Bu plan için IAP ürünü tanımlı değil.');
   }
 
-  const connect = await InAppPurchases.connectAsync();
-  if (connect.responseCode !== IAPResponseCode.OK) {
+  try {
+    await InAppPurchases.connectAsync();
+  } catch {
     throw buildPlatformError();
   }
 
@@ -109,8 +111,9 @@ export async function purchaseSubscriptionPlan(plan: SubscriptionPlan): Promise<
       reject(buildTimeoutError());
     }, 120000);
 
-    InAppPurchases.setPurchaseListener((result) => {
+    InAppPurchases.setPurchaseListener(async (result) => {
       if (settled) return;
+
       if (result.responseCode === IAPResponseCode.USER_CANCELED) {
         finalize();
         reject(new Error('Ödeme iptal edildi.'));
@@ -125,10 +128,9 @@ export async function purchaseSubscriptionPlan(plan: SubscriptionPlan): Promise<
 
       if (result.responseCode !== IAPResponseCode.OK) {
         if (result.responseCode === IAPResponseCode.ERROR) {
-          const code = result.errorCode;
-          const fallback = code === IAPErrorCode.ITEM_ALREADY_OWNED
-            ? 'Bu abonelik zaten hesabınızda aktif.'
-            : 'Ödeme işlemi sırasında hata oluştu.';
+          const code = result.errorCode as number | undefined;
+          const fallback =
+            code === IAPErrorCode.ITEM_ALREADY_OWNED ? 'Bu abonelik zaten hesabınızda aktif.' : 'Ödeme işlemi sırasında hata oluştu.';
           finalize();
           reject(new Error(fallback));
           return;
@@ -140,15 +142,10 @@ export async function purchaseSubscriptionPlan(plan: SubscriptionPlan): Promise<
       }
 
       const purchases = (result.results ?? []) as Array<InAppPurchase>;
-      const matching = purchases.find((purchase) => purchase.productId === productId);
-      if (!matching) {
-        return;
-      }
+      const matching = purchases.find((purchase) => purchase.productId === productId && !purchase.acknowledged) ?? purchases.find((purchase) => purchase.productId === productId);
+      if (!matching) return;
 
-      if (
-        matching.purchaseState !== InAppPurchaseState.PURCHASED &&
-        matching.purchaseState !== InAppPurchaseState.RESTORED
-      ) {
+      if (matching.purchaseState !== InAppPurchaseState.PURCHASED && matching.purchaseState !== InAppPurchaseState.RESTORED) {
         if (matching.purchaseState === InAppPurchaseState.FAILED) {
           finalize();
           reject(new Error('Ödeme başarısız oldu.'));
@@ -156,26 +153,34 @@ export async function purchaseSubscriptionPlan(plan: SubscriptionPlan): Promise<
         return;
       }
 
-      (async () => {
-        try {
-          if (!matching.acknowledged) {
-            await InAppPurchases.finishTransactionAsync(matching, false);
-          }
+      try {
+        const transactionId = readTransactionId(matching);
+        const receipt = readReceipt(matching);
+        const purchaseToken = matching.purchaseToken;
 
+        if (!transactionId && !receipt) {
           finalize();
-          resolve({
-            provider,
-            planCode: plan.code,
-            productId: matching.productId,
-            transactionId: matching.orderId,
-            purchaseToken: matching.purchaseToken,
-            receipt: matching.transactionReceipt || matching.purchaseToken || '',
-          });
-        } catch (err) {
-          finalize();
-          reject(err instanceof Error ? err : new Error('İşlem tamamlanamadı.'));
+          reject(new Error('Geçersiz ödeme yanıtı.'));
+          return;
         }
-      })();
+
+        if (!matching.acknowledged) {
+          await InAppPurchases.finishTransactionAsync(matching, false);
+        }
+
+        finalize();
+        resolve({
+          provider,
+          planCode: plan.code,
+          productId: matching.productId,
+          transactionId,
+          purchaseToken,
+          receipt,
+        });
+      } catch (err) {
+        finalize();
+        reject(err instanceof Error ? err : new Error('İşlem tamamlanamadı.'));
+      }
     });
 
     InAppPurchases.purchaseItemAsync(productId).catch((err: unknown) => {

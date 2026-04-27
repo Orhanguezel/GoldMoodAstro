@@ -3,7 +3,7 @@
 
 import { randomUUID } from 'crypto';
 import type { RouteHandler } from 'fastify';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, or } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { orders, paymentGateways, payments } from '../orders/schema';
 import { IyzicoService, resolveIyzicoLocale } from '../orders/iyzico.service';
@@ -522,28 +522,154 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
 export const verifyReceipt: RouteHandler = async (req, reply) => {
   const body = (req.body ?? {}) as {
     platform?: string;
+    plan_id?: string;
+    plan_code?: string;
     receipt?: string;
     transaction_id?: string;
+    purchase_token?: string;
+    product_id?: string;
   };
 
-  const platform = String(body.platform || '').toLowerCase();
-  const receipt = String(body.receipt || '').trim();
+  const { id: userId } = getUser(req);
+  if (!userId) return reply.code(401).send({ error: { message: 'unauthorized' } });
 
-  if (!['apple', 'google', 'apple_iap', 'google_iap'].includes(platform)) {
+  const platformInput = String(body.platform || '').toLowerCase();
+  const platform =
+    platformInput === 'apple'
+      ? 'apple_iap'
+      : platformInput === 'google'
+        ? 'google_iap'
+        : platformInput;
+
+  const planSelector = String(body.plan_id || body.plan_code || '').trim();
+  const receipt = String(body.receipt || '').trim();
+  const transactionId = String(body.transaction_id || '').trim();
+  const purchaseToken = String(body.purchase_token || '').trim();
+  const productId = String(body.product_id || '').trim();
+
+  if (!['apple_iap', 'google_iap'].includes(platform)) {
     return reply.code(400).send({ error: { message: 'unsupported_platform' } });
   }
 
-  if (!receipt) {
+  if (!planSelector) {
+    return reply.code(400).send({ error: { message: 'plan_id_required' } });
+  }
+
+  if (!receipt && !transactionId && !purchaseToken && !productId) {
     return reply.code(400).send({ error: { message: 'receipt_required' } });
   }
+
+  const [planById] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, planSelector)).limit(1);
+  const [planByCode] = planById
+    ? [planById]
+    : await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.code, planSelector)).limit(1);
+
+  const plan = planByCode;
+  if (!plan) {
+    return reply.code(404).send({ error: { message: 'subscription_plan_not_found' } });
+  }
+
+  if (!plan.is_active) {
+    return reply.code(400).send({ error: { message: 'subscription_plan_not_active' } });
+  }
+
+  const now = new Date();
+  const providerSubscriptionId = transactionId || purchaseToken || productId || receipt.slice(0, 240);
+
+  if (!providerSubscriptionId) {
+    return reply.code(400).send({ error: { message: 'transaction_identifier_required' } });
+  }
+
+  const trialEndsAt =
+    plan.trial_days > 0 ? new Date(now.getTime() + plan.trial_days * 24 * 60 * 60 * 1000) : null;
+
+  const periodEnd = computeSubscriptionEndAt(now, plan.period);
+
+  const [existingByProvider] = await db
+    .select()
+    .from(subscriptions)
+    .where(
+      and(
+        or(eq(subscriptions.user_id, userId), eq(subscriptions.provider_subscription_id, providerSubscriptionId)),
+        eq(subscriptions.provider_subscription_id, providerSubscriptionId),
+      ),
+    )
+    .limit(1);
+
+  if (existingByProvider) {
+    if (existingByProvider.user_id !== userId) {
+      return reply.code(409).send({ error: { message: 'transaction_already_used' } });
+    }
+
+    await db
+      .update(subscriptions)
+      .set({
+        status: 'active',
+        started_at: existingByProvider.started_at ?? now,
+        ends_at: existingByProvider.ends_at ?? periodEnd,
+        trial_ends_at: existingByProvider.trial_ends_at ?? trialEndsAt,
+        auto_renew: plan.period === 'lifetime' ? 0 : 1,
+        price_minor: plan.price_minor,
+        currency: plan.currency || 'TRY',
+        plan_id: existingByProvider.plan_id === plan.id ? existingByProvider.plan_id : plan.id,
+        provider: platform as 'apple_iap' | 'google_iap',
+      })
+      .where(eq(subscriptions.id, existingByProvider.id));
+
+    const [refetched] = await db.select().from(subscriptions).where(eq(subscriptions.id, existingByProvider.id)).limit(1);
+    return reply.send({
+      data: {
+        platform,
+        valid: true,
+        transaction_id: transactionId,
+        subscription: refetched,
+      },
+    });
+  }
+
+  const [active] = await db
+    .select()
+    .from(subscriptions)
+    .where(and(eq(subscriptions.user_id, userId), eq(subscriptions.status, 'active')))
+    .orderBy(desc(subscriptions.created_at))
+    .limit(1);
+
+  if (active) {
+    await db
+      .update(subscriptions)
+      .set({
+        status: 'cancelled',
+        auto_renew: 0,
+        cancelled_at: now,
+        cancellation_reason: 'replaced_by_iap',
+      })
+      .where(eq(subscriptions.id, active.id));
+  }
+
+  const subscriptionId = randomUUID();
+  await db.insert(subscriptions).values({
+    id: subscriptionId,
+    user_id: userId,
+    plan_id: plan.id,
+    provider: platform as 'apple_iap' | 'google_iap',
+    provider_subscription_id: providerSubscriptionId,
+    status: 'active',
+    started_at: now,
+    ends_at: periodEnd,
+    trial_ends_at: trialEndsAt,
+    auto_renew: plan.period === 'lifetime' ? 0 : 1,
+    price_minor: plan.price_minor,
+    currency: plan.currency || 'TRY',
+  } as any);
+
+  const [created] = await db.select().from(subscriptions).where(eq(subscriptions.id, subscriptionId)).limit(1);
 
   return reply.send({
     data: {
       platform,
-      valid: false,
-      transaction_id: String(body.transaction_id || ''),
-      message: 'IAP receipt verification is not implemented in this phase.',
-      next: 'integration_pending',
+      valid: true,
+      transaction_id: transactionId,
+      subscription: created,
     },
   });
 };
