@@ -14,7 +14,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
-import { ArrowLeft, AlertTriangle, ArrowRight, Download, Trash2 } from 'lucide-react-native';
+import { ChevronLeft, Download, Trash2, AlertTriangle, ShieldCheck, History } from 'lucide-react-native';
+
 import { useAuth } from '@/hooks/useAuth';
 import { kvkkApi } from '@/lib/api';
 import { colors, font, radius, spacing } from '@/theme/tokens';
@@ -33,16 +34,6 @@ function formatDate(value?: string | null) {
   });
 }
 
-function previewSnippet(jsonText: string) {
-  const maxLength = 1600;
-  if (jsonText.length <= maxLength) return jsonText;
-  return `${jsonText.slice(0, maxLength)}\n\n...verinin tamamı paylaşım ekranından gönderilmektedir`;
-}
-
-function isPendingDeletion(status: KvkkAccountDeletionStatus | null): status is KvkkAccountDeletionStatus {
-  return status?.status === 'pending';
-}
-
 export default function PrivacyScreen() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [status, setStatus] = useState<KvkkAccountDeletionStatus | null>(null);
@@ -51,7 +42,6 @@ export default function PrivacyScreen() {
   const [isRequesting, setIsRequesting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [exportText, setExportText] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
   const loadDeletionStatus = useCallback(async () => {
@@ -90,37 +80,32 @@ export default function PrivacyScreen() {
       setIsExporting(true);
       const payload = await kvkkApi.exportMyData();
       const jsonText = JSON.stringify(payload, null, 2);
-      setExportText(jsonText);
-      try {
-        await Share.share({
-          message: `GoldMoodAstro veri dışa aktarma (${new Date().toLocaleString('tr-TR')})\n\n${jsonText}`,
-        });
-      } catch {
-        Alert.alert('İndirme hazır', 'Verileriniz çekildi. Paylaşım özelliği desteklenmiyor ise ekrandaki önizlemeyi kontrol edin.');
-      }
-      Alert.alert('İndir', 'Veri paketiniz hazır ve paylaşım için gönderildi.');
-    } catch (err: unknown) {
-      console.error('KVKK export failed:', err);
-      Alert.alert('Hata', (err as Error).message || 'Veri indirilemedi.');
+      
+      await Share.share({
+        message: `GoldMoodAstro Veri İndirme (${new Date().toLocaleString('tr-TR')})\n\n${jsonText}`,
+      });
+      
+      Alert.alert('Başarılı', 'Veri paketiniz dışa aktarıldı.');
+    } catch (err: any) {
+      Alert.alert('Hata', err.message || 'Veri indirilemedi.');
     } finally {
       setIsExporting(false);
     }
   };
 
   const onRequestDeletion = async () => {
-    if (isPendingDeletion(status)) {
+    if (status?.status === 'pending') {
       Alert.alert('Talep aktif', 'Zaten beklemede bir hesap silme talebiniz var.');
       return;
     }
-    if (isRequesting) return;
-
+    
     Alert.alert(
-      'Hesabı sil',
-      'Hesabınızı 7 gün sonra kalıcı silmek üzere işleme alalım mı?',
+      'Hesabı Sil',
+      'Hesabınızı 7 gün sonra kalıcı silmek üzere işleme alalım mı? Bu süre içinde vazgeçebilirsiniz.',
       [
         { text: 'Vazgeç', style: 'cancel' },
         {
-          text: 'Evet, başlat',
+          text: 'Talebi Başlat',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -128,10 +113,9 @@ export default function PrivacyScreen() {
               const { data } = await kvkkApi.requestDeletion(deletionReason);
               setStatus(data);
               setDeletionReason('');
-              Alert.alert('Talep oluşturuldu', 'Hesabınız 7 gün içinde silinecek. Bu süre içinde iptal edebilirsiniz.');
-            } catch (err: unknown) {
-              console.error('KVKK request deletion failed:', err);
-              Alert.alert('Hata', (err as Error).message || 'Talep oluşturulamadı.');
+              Alert.alert('Talep Alındı', 'Hesabınız 7 gün içinde kalıcı olarak silinecek.');
+            } catch (err: any) {
+              Alert.alert('Hata', err.message || 'Talep oluşturulamadı.');
             } finally {
               setIsRequesting(false);
             }
@@ -142,28 +126,22 @@ export default function PrivacyScreen() {
   };
 
   const onCancelDeletion = async () => {
-    if (!isPendingDeletion(status)) {
-      Alert.alert('Bilgi', 'Bekleyen bir hesap silme talebi yok.');
-      return;
-    }
-
     Alert.alert(
-      'Talebi iptal et',
-      'Hesap silme talebini iptal etmek istediğine emin misin?',
+      'Talebi İptal Et',
+      'Hesap silme talebini iptal etmek istediğinize emin misiniz?',
       [
         { text: 'Vazgeç', style: 'cancel' },
         {
-          text: 'İptal Et',
-          style: 'destructive',
+          text: 'Vazgeç ve İptal Et',
+          style: 'default',
           onPress: async () => {
             try {
               setIsCancelling(true);
               await kvkkApi.cancelDeletion();
               await loadDeletionStatus();
-              Alert.alert('İptal edildi', 'Hesap silme talebin başarıyla iptal edildi.');
-            } catch (err: unknown) {
-              console.error('KVKK cancel deletion failed:', err);
-              Alert.alert('Hata', (err as Error).message || 'Talep iptal edilemedi.');
+              Alert.alert('İptal Edildi', 'Hesap silme talebiniz durduruldu.');
+            } catch (err: any) {
+              Alert.alert('Hata', err.message || 'Talep iptal edilemedi.');
             } finally {
               setIsCancelling(false);
             }
@@ -173,12 +151,10 @@ export default function PrivacyScreen() {
     );
   };
 
-  const pendingDate = status ? formatDate(status.scheduled_for) : '-';
-
   if (authLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.gold} />
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
       </View>
     );
   }
@@ -186,113 +162,107 @@ export default function PrivacyScreen() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safe} edges={['top']}>
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+            <ChevronLeft size={24} color={colors.text} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Gizlilik & Veri</Text>
+          <View style={{ width: 40 }} />
+        </View>
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
         >
-          <View style={styles.header}>
-            <Pressable style={styles.backButton} onPress={() => router.back()}>
-              <ArrowLeft size={18} color={colors.text} />
-              <Text style={styles.backText}>Geri Dön</Text>
-            </Pressable>
-            <Text style={styles.title}>Tehlikeli Bölge</Text>
+          
+          <View style={styles.introArea}>
+            <ShieldCheck size={40} color={colors.gold} />
+            <Text style={styles.introTitle}>Veri Haklarınız</Text>
+            <Text style={styles.introSubtitle}>
+              KVKK kapsamında verilerinizi yönetebilir, indirebilir veya hesabınızın silinmesini talep edebilirsiniz.
+            </Text>
           </View>
-          <Text style={styles.subtitle}>
-            KVKK kapsamında veri taşınabilirliği ve hesap silme akışı.
-          </Text>
 
+          {/* Export Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Download size={18} color={colors.gold} />
+              <Download size={20} color={colors.gold} />
               <Text style={styles.sectionTitle}>Verilerimi İndir</Text>
             </View>
             <Text style={styles.sectionText}>
-              Hesabına ait veriler JSON olarak hazırlandıktan sonra paylaşım paneli ile dışarı aktarılır.
+              Hesabınıza ait tüm verileri (profil, randevular, haritalar) JSON formatında dışa aktarabilirsiniz.
             </Text>
             <Pressable
-              style={[styles.primaryButton, isExporting && styles.disabled]}
+              style={[styles.exportBtn, isExporting && styles.btnDisabled]}
               onPress={onExport}
               disabled={isExporting}
             >
-              {isExporting ? <ActivityIndicator size="small" color={colors.bg} /> : <Text style={styles.primaryButtonText}>Verilerimi İndir</Text>}
+              {isExporting ? <ActivityIndicator size="small" color={colors.bgDeep} /> : <Text style={styles.exportBtnText}>Veri Paketini Hazırla</Text>}
             </Pressable>
-            {exportText ? (
-              <View style={styles.previewCard}>
-                <Text style={styles.sectionSubTitle}>İndirilen veri önizlemesi</Text>
-                <View style={styles.previewWrapper}>
-                  <Text style={styles.previewText}>{previewSnippet(exportText)}</Text>
-                </View>
-              </View>
-            ) : null}
-            <Text style={styles.infoText}>Uzun dosyalarda paylaşıma geçerken kısa süren yükleme olabilir.</Text>
           </View>
 
-          <View style={[styles.section, styles.dangerSection]}>
+          {/* Deletion Section */}
+          <View style={[styles.section, styles.dangerBorder]}>
             <View style={styles.sectionHeader}>
-              <AlertTriangle size={18} color={colors.danger} />
-              <Text style={[styles.sectionTitle, { color: colors.danger }]}>Hesabı Sil</Text>
+              <AlertTriangle size={20} color={colors.danger} />
+              <Text style={[styles.sectionTitle, { color: colors.danger }]}>Hesabı Kalıcı Olarak Sil</Text>
             </View>
-            <Text style={styles.sectionText}>
-              Talebin onaylanırsa hesabın 7 gün sonra kalıcı olarak silinir.
-            </Text>
-
-            {statusLoading ? (
-              <ActivityIndicator size="small" color={colors.danger} style={styles.loader} />
-            ) : isPendingDeletion(status) ? (
-              <>
-                <View style={styles.dangerInfo}>
-                  <Text style={styles.infoText}>Durum: <Text style={{ color: colors.text, fontFamily: font.sansMedium }}>beklemede</Text></Text>
-                  <Text style={styles.infoText}>Planlanan silme: <Text style={styles.infoValue}>{pendingDate}</Text></Text>
-                  <Text style={styles.infoText}>Soğuma süresi: <Text style={styles.infoValue}>7 gün</Text></Text>
-                  {status.reason ? <Text style={styles.infoText}>Sebep: <Text style={styles.infoValue}>{status.reason}</Text></Text> : null}
+            
+            {status?.status === 'pending' ? (
+              <View style={styles.pendingArea}>
+                <View style={styles.pendingHeader}>
+                  <History size={16} color={colors.warning} />
+                  <Text style={styles.pendingTitle}>Silme Talebi Beklemede</Text>
                 </View>
+                <Text style={styles.pendingText}>
+                  Hesabınız <Text style={styles.bold}>{formatDate(status.scheduled_for)}</Text> tarihinde kalıcı olarak silinecektir.
+                </Text>
                 <Pressable
-                  style={[styles.dangerButton, isCancelling && styles.disabled]}
+                  style={styles.cancelBtn}
                   onPress={onCancelDeletion}
                   disabled={isCancelling}
                 >
-                  {isCancelling ? (
-                    <ActivityIndicator size="small" color={colors.bg} />
-                  ) : (
-                    <>
-                      <Trash2 size={16} color={colors.bg} />
-                      <Text style={styles.dangerButtonText}>Hesap Silme Talebini İptal Et</Text>
-                      <ArrowRight size={16} color={colors.bg} />
-                    </>
-                  )}
+                  {isCancelling ? <ActivityIndicator size="small" color={colors.text} /> : <Text style={styles.cancelBtnText}>Talebi İptal Et</Text>}
                 </Pressable>
-              </>
+              </View>
             ) : (
               <>
+                <Text style={styles.sectionText}>
+                  Hesabınızı sildiğinizde tüm geçmişiniz, kredileriniz ve verileriniz kalıcı olarak yok edilir. Bu işlem geri alınamaz.
+                </Text>
                 <TextInput
                   value={deletionReason}
                   onChangeText={setDeletionReason}
-                  placeholder="Silme nedeni (opsiyonel)"
+                  placeholder="Silme nedeni (isteğe bağlı)"
                   placeholderTextColor={colors.textMuted}
                   style={styles.reasonInput}
                   multiline
-                  textAlignVertical="top"
-                  maxLength={500}
+                  maxLength={200}
                 />
-                <Text style={styles.charCount}>{deletionReason.length}/500</Text>
                 <Pressable
-                  style={[styles.dangerButton, isRequesting && styles.disabled]}
+                  style={[styles.deleteBtn, isRequesting && styles.btnDisabled]}
                   onPress={onRequestDeletion}
                   disabled={isRequesting}
                 >
-                  {isRequesting ? (
-                    <ActivityIndicator size="small" color={colors.bg} />
-                  ) : (
+                  {isRequesting ? <ActivityIndicator size="small" color={colors.text} /> : (
                     <>
-                      <AlertTriangle size={16} color={colors.bg} />
-                      <Text style={styles.dangerButtonText}>Hesap Silme Talebi Oluştur</Text>
-                      <ArrowRight size={16} color={colors.bg} />
+                      <Trash2 size={18} color={colors.text} />
+                      <Text style={styles.deleteBtnText}>Hesabımı Silmeyi Talep Et</Text>
                     </>
                   )}
                 </Pressable>
               </>
             )}
           </View>
+
+          <View style={styles.footerInfo}>
+            <Text style={styles.footerText}>
+              Sorularınız için <Text style={styles.goldLink}>destek@goldmoodastro.com</Text> adresinden bize ulaşabilirsiniz.
+            </Text>
+          </View>
+
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -307,173 +277,182 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
-  centered: {
+  loaderContainer: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: colors.bg,
-  },
-  scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing['3xl'],
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
-    gap: 12,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.line,
+  headerBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 6,
-    paddingHorizontal: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
-  backText: {
+  headerTitle: {
+    fontFamily: font.display,
+    fontSize: 18,
     color: colors.text,
-    fontFamily: font.sansMedium,
-    fontSize: 13,
   },
-  title: {
-    fontFamily: font.displayMedium,
-    color: colors.text,
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: 40,
+  },
+  introArea: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    gap: 12,
+  },
+  introTitle: {
+    fontFamily: font.display,
     fontSize: 24,
+    color: colors.text,
   },
-  subtitle: {
-    color: colors.textMuted,
+  introSubtitle: {
     fontFamily: font.sans,
-    marginBottom: spacing['2xl'],
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 20,
+    paddingHorizontal: 20,
   },
-
   section: {
-    borderRadius: radius.lg,
     backgroundColor: colors.surface,
-    padding: spacing.lg,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
     borderWidth: 1,
     borderColor: colors.line,
     marginBottom: spacing.xl,
   },
-  dangerSection: {
-    borderColor: 'rgba(229, 91, 77, 0.35)',
+  dangerBorder: {
+    borderColor: 'rgba(229, 91, 77, 0.3)',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 8,
+    gap: 12,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontFamily: font.sansMedium,
+    fontFamily: font.display,
+    fontSize: 16,
     color: colors.text,
-    fontSize: 17,
-  },
-  sectionSubTitle: {
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-    color: colors.textMuted,
-    fontFamily: font.sansMedium,
-    fontSize: 13,
   },
   sectionText: {
-    color: colors.textMuted,
     fontFamily: font.sans,
-    marginBottom: spacing.md,
-    lineHeight: 20,
-  },
-  primaryButton: {
-    height: 48,
-    borderRadius: radius.md,
-    backgroundColor: colors.gold,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: colors.bg,
-    fontFamily: font.sansMedium,
     fontSize: 14,
+    color: colors.textDim,
+    lineHeight: 20,
+    marginBottom: 20,
   },
-  dangerButton: {
-    marginTop: spacing.md,
-    height: 48,
-    borderRadius: radius.md,
-    backgroundColor: colors.danger,
-    justifyContent: 'space-between',
+  exportBtn: {
+    backgroundColor: colors.gold,
+    height: 52,
+    borderRadius: radius.pill,
     alignItems: 'center',
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
+    justifyContent: 'center',
   },
-  dangerButtonText: {
-    color: colors.bg,
-    flex: 1,
-    marginHorizontal: 10,
-    fontFamily: font.sansMedium,
+  exportBtnText: {
+    fontFamily: font.sansBold,
+    fontSize: 15,
+    color: colors.bgDeep,
   },
-  disabled: {
+  btnDisabled: {
     opacity: 0.6,
   },
-  loader: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  dangerInfo: {
-    gap: 6,
-    backgroundColor: colors.bg,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(229, 91, 77, 0.20)',
-    padding: spacing.md,
-  },
-  infoText: {
-    color: colors.textMuted,
-    fontFamily: font.sans,
-    marginBottom: 6,
-  },
-  infoValue: {
-    color: colors.text,
-    fontFamily: font.sansMedium,
-  },
   reasonInput: {
-    minHeight: 110,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.line,
     backgroundColor: colors.bg,
-    padding: spacing.md,
+    borderRadius: radius.md,
+    padding: 16,
     color: colors.text,
     fontFamily: font.sans,
     fontSize: 14,
-    lineHeight: 20,
-  },
-  charCount: {
-    marginTop: spacing.xs,
-    fontFamily: font.sans,
-    color: colors.textMuted,
-    fontSize: 11,
-    textAlign: 'right',
-  },
-  previewCard: {
-    marginTop: spacing.md,
-    gap: spacing.sm,
-  },
-  previewWrapper: {
-    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: colors.bg,
-    padding: spacing.md,
-    maxHeight: 220,
+    minHeight: 80,
+    marginBottom: 16,
   },
-  previewText: {
-    color: colors.textMuted,
-    fontFamily: font.mono,
-    fontSize: 11,
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    height: 52,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.danger,
+  },
+  deleteBtnText: {
+    fontFamily: font.sansBold,
+    fontSize: 14,
+    color: colors.danger,
+  },
+  pendingArea: {
+    backgroundColor: 'rgba(240, 160, 48, 0.05)',
+    borderRadius: radius.md,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(240, 160, 48, 0.2)',
+  },
+  pendingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  pendingTitle: {
+    fontFamily: font.sansBold,
+    fontSize: 14,
+    color: colors.warning,
+  },
+  pendingText: {
+    fontFamily: font.sans,
+    fontSize: 13,
+    color: colors.textDim,
     lineHeight: 18,
+    marginBottom: 16,
+  },
+  bold: {
+    fontFamily: font.sansBold,
+    color: colors.text,
+  },
+  cancelBtn: {
+    backgroundColor: colors.surface,
+    height: 44,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  cancelBtnText: {
+    fontFamily: font.sansBold,
+    fontSize: 14,
+    color: colors.text,
+  },
+  footerInfo: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  footerText: {
+    fontFamily: font.sans,
+    fontSize: 12,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+  goldLink: {
+    color: colors.gold,
+    fontFamily: font.sansBold,
   },
 });
-

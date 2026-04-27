@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -6,22 +6,28 @@ import {
   ScrollView, 
   Pressable, 
   Dimensions, 
-  Platform 
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
-  Calendar as CalendarIcon, 
   Smile, 
-  Meh, 
-  Frown, 
   Heart, 
-  CloudRain,
+  Meh, 
+  CloudRain, 
+  Frown,
+  Sparkles,
+  ArrowRight,
   ChevronLeft,
-  ChevronRight 
+  ChevronRight,
+  MessageSquare
 } from 'lucide-react-native';
+import { router } from 'expo-router';
 
 import { colors, font, radius, spacing } from '@/theme/tokens';
+import { readingsApi } from '@/lib/api';
+import { useFocusEffect } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
@@ -34,73 +40,110 @@ const MOODS = [
 ];
 
 export default function DailyReadingScreen() {
+  const [reading, setReading] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-  
-  // Fake calendar dates for the week
   const weekDates = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - 3 + i);
     return d;
   });
 
+  const loadReading = useCallback(async () => {
+    setLoading(true);
+    try {
+      // In real app, date param would be used
+      const data = await readingsApi.daily();
+      setReading(data);
+    } catch (err) {
+      console.error('Reading load error:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadReading();
+    }, [loadReading])
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadReading();
+  };
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safe} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
+        >
           
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Günlük Yorum</Text>
-            <View style={styles.calendarControl}>
-              <Pressable style={styles.calNavBtn}>
-                <ChevronLeft size={16} color={colors.textDim} />
-              </Pressable>
-              <Text style={styles.monthText}>Nisan 2026</Text>
-              <Pressable style={styles.calNavBtn}>
-                <ChevronRight size={16} color={colors.textDim} />
-              </Pressable>
+            <View>
+              <Text style={styles.headerKicker}>GÜNLÜK REHBER</Text>
+              <Text style={styles.headerTitle}>Gök Günlüğü</Text>
+            </View>
+            <View style={styles.calendarNav}>
+              <Pressable style={styles.navBtn}><ChevronLeft size={20} color={colors.gold} /></Pressable>
+              <Text style={styles.monthText}>NİSAN</Text>
+              <Pressable style={styles.navBtn}><ChevronRight size={20} color={colors.gold} /></Pressable>
             </View>
           </View>
 
-          {/* Week Calendar */}
-          <View style={styles.weekCalendar}>
-            {weekDates.map((date, i) => {
-              const isToday = date.toDateString() === new Date().toDateString();
-              const isSelected = date.toDateString() === currentDate.toDateString();
+          {/* Date Picker */}
+          <View style={styles.weekContainer}>
+            {weekDates.map((d, i) => {
+              const isSelected = d.toDateString() === currentDate.toDateString();
+              const isToday = d.toDateString() === new Date().toDateString();
               return (
                 <Pressable 
                   key={i} 
-                  onPress={() => setCurrentDate(date)}
-                  style={[styles.dayItem, isSelected && styles.dayItemActive]}
+                  onPress={() => setCurrentDate(d)}
+                  style={[styles.dayBox, isSelected && styles.dayBoxSelected]}
                 >
-                  <Text style={[styles.dayName, isSelected && styles.dayNameActive]}>{days[i]}</Text>
-                  <View style={[styles.dayCircle, isSelected && styles.dayCircleActive, isToday && !isSelected && styles.dayCircleToday]}>
-                    <Text style={[styles.dayNumber, isSelected && styles.dayNumberActive]}>{date.getDate()}</Text>
+                  <Text style={[styles.dayName, isSelected && styles.dayNameSelected]}>{days[d.getDay() === 0 ? 6 : d.getDay() - 1]}</Text>
+                  <View style={[styles.dayCircle, isSelected && styles.dayCircleSelected, isToday && !isSelected && styles.dayCircleToday]}>
+                    <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>{d.getDate()}</Text>
                   </View>
                 </Pressable>
               );
             })}
           </View>
 
-          {/* Reading Content */}
-          <View style={styles.readingSection}>
+          {/* Main Content */}
+          <View style={styles.contentCard}>
             <View style={styles.readingHeader}>
-              <View style={styles.line} />
-              <Text style={styles.readingKicker}>GÜNÜN ENERJİSİ</Text>
-              <View style={styles.line} />
+              <Sparkles size={20} color={colors.gold} />
+              <Text style={styles.readingKicker}>YILDIZLARIN MESAJI</Text>
+              <Sparkles size={20} color={colors.gold} />
             </View>
 
             <Text style={styles.readingTitle}>
-              İçsel dengeni bulmak için{'\n'}sessizliğe odaklan.
+              {reading?.title || 'İçsel dengeni bulmak için sessizliğe odaklan.'}
             </Text>
 
-            <Text style={styles.readingBody}>
-              Bugün Ay'ın Boğa burcundaki seyri, seni daha köklü ve güvenli hissetmeye davet ediyor. Maddi konular veya ev hayatınla ilgili yarım kalmış işleri tamamlamak için mükemmel bir zaman. {'\n\n'}
-              Venüs'ün uyumlu açısı, ikili ilişkilerde beklediğin o yumuşak geçişi sağlayabilir. Ancak Merkür'ün konumu, imza gerektiren işlerde iki kez kontrol etmen gerektiğini hatırlatıyor.
-            </Text>
+            <View style={styles.readingBodyWrapper}>
+              <Text style={styles.readingBody}>
+                {reading?.content || 'Bugün Ay\'ın Boğa burcundaki seyri, seni daha köklü ve güvenli hissetmeye davet ediyor. Maddi konular veya ev hayatınla ilgili yarım kalmış işleri tamamlamak için mükemmel bir zaman.\n\nVenüs\'ün uyumlu açısı, ikili ilişkilerde beklediğin o yumuşak geçişi sağlayabilir. Ancak Merkür\'ün konumu, imza gerektiren işlerde iki kez kontrol etmen gerektiğini hatırlatıyor.'}
+              </Text>
+            </View>
 
             <View style={styles.quoteBox}>
               <Text style={styles.quoteText}>
@@ -109,38 +152,39 @@ export default function DailyReadingScreen() {
             </View>
           </View>
 
-          {/* Emotional Check-in */}
-          <View style={styles.moodSection}>
-            <LinearGradient
-              colors={[colors.surface, colors.bgDeep]}
-              style={styles.moodCard}
-            >
+          {/* Mood Check-in */}
+          <View style={styles.section}>
+            <LinearGradient colors={[colors.surface, colors.inkDeep]} style={styles.moodCard}>
               <Text style={styles.moodTitle}>Bugün nasıl hissediyorsun?</Text>
-              <Text style={styles.moodSubtitle}>Duygularını takip etmek, haritandaki döngüleri anlamana yardımcı olur.</Text>
-              
-              <View style={styles.moodList}>
-                {MOODS.map(mood => (
+              <View style={styles.moodRow}>
+                {MOODS.map(m => (
                   <Pressable 
-                    key={mood.id}
-                    onPress={() => setSelectedMood(mood.id)}
-                    style={[styles.moodItem, selectedMood === mood.id && styles.moodItemActive]}
+                    key={m.id} 
+                    onPress={() => setSelectedMood(m.id)}
+                    style={styles.moodItem}
                   >
-                    <View style={[styles.moodIconCircle, selectedMood === mood.id && styles.moodIconCircleActive]}>
-                      <mood.icon size={24} color={selectedMood === mood.id ? colors.bgDeep : colors.goldDim} />
+                    <View style={[styles.moodCircle, selectedMood === m.id && styles.moodCircleSelected]}>
+                      <m.icon size={24} color={selectedMood === m.id ? colors.bgDeep : colors.goldDim} />
                     </View>
-                    <Text style={[styles.moodLabel, selectedMood === mood.id && styles.moodLabelActive]}>
-                      {mood.label}
-                    </Text>
+                    <Text style={[styles.moodLabel, selectedMood === m.id && styles.moodLabelSelected]}>{m.label}</Text>
                   </Pressable>
                 ))}
               </View>
-
-              {selectedMood && (
-                <Pressable style={styles.moodSaveBtn}>
-                  <Text style={styles.moodSaveBtnText}>Günlüğüme Kaydet</Text>
-                </Pressable>
-              )}
             </LinearGradient>
+          </View>
+
+          {/* CTA Section */}
+          <View style={styles.ctaArea}>
+            <Pressable style={styles.askBtn} onPress={() => router.push('/(tabs)/connect' as any)}>
+              <View style={styles.askBtnContent}>
+                <MessageSquare size={20} color={colors.bgDeep} />
+                <View>
+                  <Text style={styles.askBtnTitle}>Detaylı Yorum İster Misin?</Text>
+                  <Text style={styles.askBtnSub}>Bu haritayı bir astrologla değerlendir.</Text>
+                </View>
+              </View>
+              <ArrowRight size={20} color={colors.bgDeep} />
+            </Pressable>
           </View>
 
         </ScrollView>
@@ -157,56 +201,70 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
-  scrollContent: {
-    paddingBottom: spacing['3xl'],
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.bg,
   },
-
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  
   // Header
   header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
+    alignItems: 'flex-end',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.lg,
   },
-  title: {
+  headerKicker: {
+    fontFamily: font.sansBold,
+    fontSize: 10,
+    color: colors.gold,
+    letterSpacing: 2,
+    marginBottom: 4,
+  },
+  headerTitle: {
     fontFamily: font.display,
-    fontSize: 24,
+    fontSize: 28,
     color: colors.text,
   },
-  calendarControl: {
+  calendarNav: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     backgroundColor: colors.surface,
-    borderRadius: radius.pill,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    gap: 12,
-  },
-  calNavBtn: {
-    padding: 2,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
   monthText: {
     fontFamily: font.sansBold,
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textDim,
+    letterSpacing: 1,
+  },
+  navBtn: {
+    padding: 2,
   },
 
-  // Week Calendar
-  weekCalendar: {
+  // Week Picker
+  weekContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     marginBottom: spacing['2xl'],
   },
-  dayItem: {
+  dayBox: {
     alignItems: 'center',
     width: (width - 48) / 7,
   },
-  dayItemActive: {
-    // ...
-  },
+  dayBoxSelected: {},
   dayName: {
     fontFamily: font.sansMedium,
     fontSize: 10,
@@ -214,53 +272,52 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textTransform: 'uppercase',
   },
-  dayNameActive: {
+  dayNameSelected: {
     color: colors.gold,
     fontFamily: font.sansBold,
   },
   dayCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
   },
-  dayCircleActive: {
+  dayCircleSelected: {
     backgroundColor: colors.gold,
     borderColor: colors.gold,
   },
   dayCircleToday: {
     borderColor: colors.goldDim,
-    borderWidth: 1,
   },
   dayNumber: {
     fontFamily: font.sansBold,
     fontSize: 14,
     color: colors.textDim,
   },
-  dayNumberActive: {
+  dayNumberSelected: {
     color: colors.bgDeep,
   },
 
-  // Reading Section
-  readingSection: {
-    paddingHorizontal: spacing.xl,
-    marginBottom: spacing['3xl'],
+  // Content Card
+  contentCard: {
+    marginHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.line,
+    marginBottom: spacing.xl,
   },
   readingHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
-    marginBottom: spacing.xl,
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.line,
+    gap: 12,
+    marginBottom: 20,
   },
   readingKicker: {
     fontFamily: font.sansBold,
@@ -273,8 +330,11 @@ const styles = StyleSheet.create({
     fontSize: 26,
     color: colors.text,
     textAlign: 'center',
-    lineHeight: 36,
-    marginBottom: spacing.xl,
+    lineHeight: 34,
+    marginBottom: 24,
+  },
+  readingBodyWrapper: {
+    // ...
   },
   readingBody: {
     fontFamily: font.serif,
@@ -283,21 +343,23 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   quoteBox: {
-    marginTop: spacing['2xl'],
-    paddingLeft: spacing.lg,
-    borderLeftWidth: 2,
-    borderLeftColor: colors.goldDim,
+    marginTop: 32,
+    paddingHorizontal: 20,
+    borderLeftWidth: 1,
+    borderLeftColor: colors.gold,
   },
   quoteText: {
-    fontFamily: font.serifItalic,
+    fontFamily: font.serif,
+    fontStyle: 'italic',
     fontSize: 18,
     color: colors.gold,
-    fontStyle: 'italic',
+    lineHeight: 26,
   },
 
   // Mood Section
-  moodSection: {
+  section: {
     paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
   },
   moodCard: {
     padding: spacing.xl,
@@ -307,20 +369,12 @@ const styles = StyleSheet.create({
   },
   moodTitle: {
     fontFamily: font.display,
-    fontSize: 20,
+    fontSize: 18,
     color: colors.text,
     textAlign: 'center',
+    marginBottom: 20,
   },
-  moodSubtitle: {
-    fontFamily: font.sans,
-    fontSize: 13,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: spacing['2xl'],
-    lineHeight: 18,
-  },
-  moodList: {
+  moodRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
@@ -328,20 +382,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  moodItemActive: {
-    // ...
-  },
-  moodIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  moodCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: colors.inkDeep,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.line,
   },
-  moodIconCircleActive: {
+  moodCircleSelected: {
     backgroundColor: colors.gold,
     borderColor: colors.gold,
   },
@@ -350,20 +401,37 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textMuted,
   },
-  moodLabelActive: {
+  moodLabelSelected: {
+    fontFamily: font.sansBold,
     color: colors.gold,
-    fontFamily: font.sansBold,
   },
-  moodSaveBtn: {
-    marginTop: spacing['2xl'],
+
+  // CTA Area
+  ctaArea: {
+    paddingHorizontal: spacing.lg,
+  },
+  askBtn: {
     backgroundColor: colors.gold,
-    paddingVertical: 14,
-    borderRadius: radius.pill,
+    padding: 16,
+    borderRadius: radius.lg,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  moodSaveBtnText: {
+  askBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  askBtnTitle: {
     fontFamily: font.sansBold,
-    fontSize: 14,
+    fontSize: 15,
     color: colors.bgDeep,
+  },
+  askBtnSub: {
+    fontFamily: font.sans,
+    fontSize: 12,
+    color: colors.bgDeep,
+    opacity: 0.8,
   },
 });

@@ -1,8 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  Pressable, 
+  StyleSheet, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView, 
+  ActivityIndicator,
+  Alert
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, MapPin, Calendar, Clock } from 'lucide-react-native';
+import { ChevronLeft, MapPin, Calendar, Clock, Sparkles } from 'lucide-react-native';
+
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { storage } from '@/lib/storage';
 import { birthChartsApi } from '@/lib/api';
@@ -13,246 +25,239 @@ export default function BirthdataScreen() {
   const [city, setCity] = useState('');
   
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleCalculate = async () => {
     if (!date || !time || !city) {
-      setError('Lütfen tüm alanları doldurun.');
+      Alert.alert('Eksik Bilgi', 'Lütfen tüm alanları doldurun.');
       return;
     }
 
     try {
       setLoading(true);
-      setError('');
       
-      // Simulate API call to /api/v1/birth-charts
-      // In a real app, we would use the api.post('/birth-charts')
+      // In a real app, we would send this to backend
+      // await birthChartsApi.create({ ... })
       
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Mark onboarded and go to today tab
       await storage.markOnboarded();
       router.replace('/today' as any);
       
     } catch (err: any) {
-      setError(err.message || 'Bir hata oluştu');
+      Alert.alert('Hata', err.message || 'Harita hesaplanırken bir sorun oluştu.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.scroll}>
-          
-          {/* Header */}
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backButton}>
-              <ArrowLeft color={colors.textDim} size={24} />
-            </Pressable>
-            <Text style={styles.eyebrow}>DOĞUM HARİTASI</Text>
-          </View>
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <ChevronLeft size={24} color={colors.text} />
+          </Pressable>
+        </View>
 
-          <Text style={styles.title}>
-            Yıldızların konumunu{'\n'}hesaplayalım.
-          </Text>
-          <Text style={styles.subtitle}>
-            Sıfırdan sizin için özel bir gökyüzü haritası oluşturmamız için doğum bilgilerinize ihtiyacımız var.
-          </Text>
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          {/* Form */}
-          <View style={styles.form}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+          style={{ flex: 1 }}
+        >
+          <ScrollView contentContainerStyle={styles.scroll}>
             
-            {/* Date Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Doğum Tarihi</Text>
-              <View style={styles.inputContainer}>
-                <Calendar color={colors.gold} size={20} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="GG / AA / YYYY"
-                  placeholderTextColor={colors.textMuted}
-                  value={date}
-                  onChangeText={setDate}
-                  keyboardType="number-pad"
-                />
-              </View>
+            <View style={styles.titleArea}>
+              <Text style={styles.kicker}>ADIM 1 / 2</Text>
+              <Text style={styles.title}>Kaderinizin haritasını{'\n'}çizelim.</Text>
+              <Text style={styles.subtitle}>
+                Doğduğunuz andaki gökyüzü konumlarını hesaplamak için kesin bilgilerinize ihtiyacımız var.
+              </Text>
             </View>
 
-            {/* Time Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Doğum Saati</Text>
-              <View style={styles.inputContainer}>
-                <Clock color={colors.gold} size={20} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="SS : DD (Örn: 14:30)"
-                  placeholderTextColor={colors.textMuted}
-                  value={time}
-                  onChangeText={setTime}
-                  keyboardType="numbers-and-punctuation"
-                />
+            <View style={styles.form}>
+              
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>DOĞUM TARİHİ</Text>
+                <View style={styles.inputContainer}>
+                  <Calendar size={20} color={colors.goldDim} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="GG / AA / YYYY"
+                    placeholderTextColor={colors.textMuted}
+                    value={date}
+                    onChangeText={setDate}
+                    keyboardType="number-pad"
+                  />
+                </View>
               </View>
-              <Text style={styles.hint}>Tam saati bilmiyorsanız yaklaşık bir saat girin.</Text>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>DOĞUM SAATİ</Text>
+                <View style={styles.inputContainer}>
+                  <Clock size={20} color={colors.goldDim} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="SS : DD (Örn: 14:30)"
+                    placeholderTextColor={colors.textMuted}
+                    value={time}
+                    onChangeText={setTime}
+                    keyboardType="numbers-and-punctuation"
+                  />
+                </View>
+                <Text style={styles.hint}>Tam saati bilmiyorsanız yaklaşık bir değer girin.</Text>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>DOĞUM YERİ</Text>
+                <View style={styles.inputContainer}>
+                  <MapPin size={20} color={colors.goldDim} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Şehir ve Ülke"
+                    placeholderTextColor={colors.textMuted}
+                    value={city}
+                    onChangeText={setCity}
+                  />
+                </View>
+              </View>
+
             </View>
 
-            {/* Location Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Doğum Yeri</Text>
-              <View style={styles.inputContainer}>
-                <MapPin color={colors.gold} size={20} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Şehir adı yazın..."
-                  placeholderTextColor={colors.textMuted}
-                  value={city}
-                  onChangeText={setCity}
-                />
-              </View>
+            <View style={styles.footer}>
+              <Pressable 
+                style={[styles.calculateBtn, loading && styles.btnDisabled]} 
+                onPress={handleCalculate}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color={colors.bgDeep} />
+                ) : (
+                  <>
+                    <Text style={styles.calculateBtnText}>Haritamı Hesapla</Text>
+                    <Sparkles size={18} color={colors.bgDeep} />
+                  </>
+                )}
+              </Pressable>
             </View>
 
-          </View>
-
-          {/* CTA */}
-          <View style={styles.footer}>
-            <Pressable 
-              onPress={handleCalculate} 
-              disabled={loading}
-              style={({ pressed }) => [
-                styles.button,
-                pressed && styles.buttonPressed,
-                loading && styles.buttonDisabled
-              ]}
-            >
-              {loading ? (
-                <ActivityIndicator color={colors.bg} />
-              ) : (
-                <Text style={styles.buttonText}>Haritamı Hesapla</Text>
-              )}
-            </Pressable>
-          </View>
-
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  container: {
     flex: 1,
     backgroundColor: colors.bg,
   },
-  scroll: {
-    flexGrow: 1,
-    padding: spacing.xl,
+  safe: {
+    flex: 1,
   },
   header: {
-    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  scroll: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: 40,
+  },
+  titleArea: {
     marginBottom: spacing['2xl'],
   },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  eyebrow: {
-    fontFamily: font.display,
-    fontSize: 12,
+  kicker: {
+    fontFamily: font.sansBold,
+    fontSize: 10,
     color: colors.goldDeep,
-    letterSpacing: 4,
-    marginLeft: spacing.lg,
+    letterSpacing: 2,
+    marginBottom: 8,
   },
   title: {
-    fontFamily: font.serif,
+    fontFamily: font.display,
     fontSize: 32,
     color: colors.text,
     lineHeight: 40,
-    marginBottom: spacing.md,
+    marginBottom: 12,
   },
   subtitle: {
     fontFamily: font.sans,
-    fontSize: 16,
+    fontSize: 15,
     color: colors.textDim,
-    lineHeight: 24,
-    marginBottom: spacing['2xl'],
+    lineHeight: 22,
   },
   form: {
     gap: spacing.xl,
-    marginBottom: spacing['3xl'],
+    marginBottom: 40,
   },
   inputGroup: {
     gap: 8,
   },
   label: {
-    fontFamily: font.display,
-    fontSize: 11,
+    fontFamily: font.sansBold,
+    fontSize: 10,
     color: colors.gold,
     letterSpacing: 2,
-    textTransform: 'uppercase',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     height: 56,
-    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+    gap: 12,
   },
   input: {
     flex: 1,
     fontFamily: font.sans,
     fontSize: 16,
     color: colors.text,
-    height: '100%',
   },
   hint: {
     fontFamily: font.sans,
     fontSize: 12,
     color: colors.textMuted,
     fontStyle: 'italic',
-  },
-  errorText: {
-    color: colors.danger,
-    fontFamily: font.sans,
-    fontSize: 14,
-    marginBottom: spacing.lg,
+    marginTop: 4,
   },
   footer: {
     marginTop: 'auto',
   },
-  button: {
-    backgroundColor: colors.text,
+  calculateBtn: {
+    backgroundColor: colors.gold,
     height: 56,
     borderRadius: radius.pill,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
     shadowColor: colors.gold,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
   },
-  buttonPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
+  btnDisabled: {
+    opacity: 0.6,
   },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
+  calculateBtnText: {
     fontFamily: font.sansBold,
     fontSize: 16,
-    color: colors.bg,
-    letterSpacing: 1,
+    color: colors.bgDeep,
   },
 });

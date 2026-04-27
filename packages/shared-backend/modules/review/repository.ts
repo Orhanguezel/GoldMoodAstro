@@ -17,6 +17,7 @@ function mapRowCore(
   comment: string | null,
   title: string | null,
   adminReply: string | null,
+  consultantReply: string | null,
   localeResolved: string | null,
 ): ReviewView {
   return {
@@ -37,12 +38,14 @@ function mapRowCore(
     likes_count: Number(r.likes_count ?? 0),
     dislikes_count: Number(r.dislikes_count ?? 0),
     helpful_count: Number(r.helpful_count ?? 0),
+    is_verified: Number(r.is_verified ?? 0) === 1,
     submitted_locale: r.submitted_locale,
     created_at: r.created_at,
     updated_at: r.updated_at,
     comment,
     title,
     admin_reply: adminReply,
+    consultant_reply: consultantReply,
     locale_resolved: localeResolved,
   };
 }
@@ -66,6 +69,7 @@ type Translation = {
   comment: string;
   title?: string | null;
   admin_reply?: string | null;
+  consultant_reply?: string | null;
 };
 
 /** İstenen locale yoksa → defaultLocale → yoksa ilk çeviri */
@@ -77,10 +81,17 @@ function pickTranslation(
   comment: string | null;
   title: string | null;
   admin_reply: string | null;
+  consultant_reply: string | null;
   locale_resolved: string | null;
 } {
   if (!translations.length) {
-    return { comment: null, title: null, admin_reply: null, locale_resolved: null };
+    return {
+      comment: null,
+      title: null,
+      admin_reply: null,
+      consultant_reply: null,
+      locale_resolved: null,
+    };
   }
   const exact = translations.find((t) => t.locale === locale);
   if (exact)
@@ -88,6 +99,7 @@ function pickTranslation(
       comment: exact.comment,
       title: exact.title ?? null,
       admin_reply: exact.admin_reply ?? null,
+      consultant_reply: exact.consultant_reply ?? null,
       locale_resolved: exact.locale,
     };
 
@@ -97,6 +109,7 @@ function pickTranslation(
       comment: def.comment,
       title: def.title ?? null,
       admin_reply: def.admin_reply ?? null,
+      consultant_reply: def.consultant_reply ?? null,
       locale_resolved: def.locale,
     };
 
@@ -105,8 +118,40 @@ function pickTranslation(
     comment: first.comment,
     title: first.title ?? null,
     admin_reply: first.admin_reply ?? null,
+    consultant_reply: first.consultant_reply ?? null,
     locale_resolved: first.locale,
   };
+}
+
+async function verifyBookingCompletedForReview(
+  mysql: any,
+  bookingId: string,
+  userId: string,
+): Promise<void> {
+  const [bookingRows] = (await mysql.query(
+    "SELECT id, user_id, status FROM bookings WHERE id = ? LIMIT 1",
+    [bookingId],
+  )) as [Array<{ id: string; user_id: string; status: string }>, unknown];
+
+  const booking = Array.isArray(bookingRows) ? bookingRows[0] : null;
+  if (!booking || booking.user_id !== userId) {
+    const err: any = new Error("booking_not_found");
+    err.statusCode = 403;
+    throw err;
+  }
+
+  if (booking.status === "completed") return;
+
+  const [sessionRows] = (await mysql.query(
+    "SELECT 1 FROM live_sessions WHERE booking_id = ? AND ended_at IS NOT NULL LIMIT 1",
+    [bookingId],
+  )) as [Array<{ "1": number }>, unknown];
+
+  if (Array.isArray(sessionRows) && sessionRows.length > 0) return;
+
+  const err: any = new Error("booking_not_completed_for_review");
+  err.statusCode = 403;
+  throw err;
 }
 
 /* -------------------------------------------------------------
@@ -124,7 +169,7 @@ async function fetchTranslationsForReviews(
   const placeholders = ids.map(() => "?").join(", ");
   const [rows] = await mysql.query(
     `
-    SELECT review_id, locale, title, comment, admin_reply
+    SELECT review_id, locale, title, comment, admin_reply, consultant_reply
     FROM review_i18n
     WHERE review_id IN (${placeholders})
     `,
@@ -138,6 +183,7 @@ async function fetchTranslationsForReviews(
       locale: r.locale,
       title: r.title ?? null,
       admin_reply: r.admin_reply ?? null,
+      consultant_reply: r.consultant_reply ?? null,
       comment: r.comment,
     });
   }
@@ -190,7 +236,7 @@ export async function repoGetReviewPublic(
 
   const [trs] = await mysql.query(
     `
-    SELECT review_id, locale, title, comment, admin_reply
+    SELECT review_id, locale, title, comment, admin_reply, consultant_reply
     FROM review_i18n
     WHERE review_id = ?
     `,
@@ -201,16 +247,17 @@ export async function repoGetReviewPublic(
     locale: t.locale,
     title: t.title ?? null,
     admin_reply: t.admin_reply ?? null,
+    consultant_reply: t.consultant_reply ?? null,
     comment: t.comment,
   }));
 
-  const { comment, title, admin_reply, locale_resolved } = pickTranslation(
+  const { comment, title, admin_reply, consultant_reply, locale_resolved } = pickTranslation(
     translations,
     locale,
     defaultLocale,
   );
 
-  return mapRowCore(row, comment, title, admin_reply, locale_resolved);
+  return mapRowCore(row, comment, title, admin_reply, consultant_reply, locale_resolved);
 }
 
 
@@ -218,8 +265,10 @@ export async function repoCreateReviewPublic(
   app: FastifyInstance,
   body: ReviewCreateInput,
   locale: string,
+  options?: { enforceConsultantReviewGuard?: boolean },
 ): Promise<ReviewView> {
   const mysql = (app as any).mysql;
+  const enforceReviewGuard = options?.enforceConsultantReviewGuard ?? true;
 
   const isActive = body.is_active ?? true;
 
@@ -237,17 +286,39 @@ export async function repoCreateReviewPublic(
     });
   }
 
+  // T17-1 — Doğrulanmış görüşme rozeti (sadece consultant + booking flow)
+  // Sadece booking sahibi ve tamamlanmış/bitmiş seanslı bookinglerde allowed.
+  if (enforceReviewGuard && body.target_type === 'consultant') {
+    if (!body.booking_id) {
+      const err: any = new Error('booking_id_required');
+      err.statusCode = 400;
+      throw err;
+    }
+    if (!body.user_id) {
+      const err: any = new Error('unauthorized');
+      err.statusCode = 401;
+      throw err;
+    }
+    await verifyBookingCompletedForReview(mysql, body.booking_id, body.user_id);
+  }
+
   // T17-1 — Doğrulanmış görüşme rozeti
-  // Eğer booking_id verilmişse ve booking tamamlanmışsa user_id eşleşmesi ile is_verified=1
+  // booking tamamlandıysa is_verified=1
   let isVerified = 0;
-  if (body.booking_id && body.user_id) {
+  if (body.booking_id && body.user_id && enforceReviewGuard && body.target_type === 'consultant') {
     const [bookingRow] = (await mysql.query(
-      'SELECT id, user_id, status FROM bookings WHERE id = ? LIMIT 1',
+      'SELECT status FROM bookings WHERE id = ? LIMIT 1',
       [body.booking_id],
-    )) as [Array<{ id: string; user_id: string; status: string }>, unknown];
+    )) as [Array<{ status: string }>, unknown];
     const booking = Array.isArray(bookingRow) ? bookingRow[0] : null;
-    if (booking && booking.user_id === body.user_id && booking.status === 'completed') {
+    if (booking && booking.status === 'completed') {
       isVerified = 1;
+    } else if (booking) {
+      const [sessionRows] = (await mysql.query(
+        "SELECT 1 FROM live_sessions WHERE booking_id = ? AND ended_at IS NOT NULL LIMIT 1",
+        [body.booking_id],
+      )) as [Array<{ "1": number }>, unknown];
+      if (Array.isArray(sessionRows) && sessionRows.length > 0) isVerified = 1;
     }
   }
 

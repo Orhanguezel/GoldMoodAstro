@@ -8,6 +8,7 @@ import Constants from 'expo-constants';
 import type {
   Consultant, ConsultantSlot,
   Booking, BookingCreateInput,
+  Review,
   Subscription, SubscriptionPlan, CreditMe, CreditPackage,
   KvkkAccountDeletionStatus,
   Order, OrderCreateResponse, IyzipayInitResponse,
@@ -73,6 +74,19 @@ const get  = <T>(path: string, params?: Record<string, string | number>) => requ
 const post = <T>(path: string, body: unknown) => request<T>('POST', path, body);
 const patch = <T>(path: string, body: unknown) => request<T>('PATCH', path, body);
 const del = <T>(path: string) => request<T>('DELETE', path);
+
+function normalizeListResponse<T>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+
+  const res = value as { items?: unknown; data?: unknown };
+  const candidate = (res?.data as unknown) ?? res?.items;
+  const nested = candidate as { items?: unknown } | null | undefined;
+  const fallback = (nested && Array.isArray(nested.items)) ? nested.items : null;
+  if (Array.isArray(candidate)) return candidate as T[];
+  if (Array.isArray(fallback)) return fallback as T[];
+
+  return [];
+}
 
 // -------------------------------------------------------------------
 // Auth
@@ -275,8 +289,10 @@ export const readingsApi = {
 // -------------------------------------------------------------------
 
 export const reviewsApi = {
-  forConsultant: (consultantId: string) =>
-    get<{ items: { id: string; rating: number; comment: string; created_at: string }[] }>('/reviews', { target_type: 'consultant', target_id: consultantId }),
+  forConsultant: async (consultantId: string): Promise<Review[]> => {
+    const res = await get<unknown>('/reviews', { target_type: 'consultant', target_id: consultantId, approved: true, active: true });
+    return normalizeListResponse<Review>(res);
+  },
 
   create: (data: { booking_id: string; target_id: string; rating: number; comment?: string }) =>
     post<void>('/reviews', data),
@@ -298,6 +314,21 @@ export const chatApi = {
 
   postMessage: (threadId: string, message: string) =>
     post<{ id: string }>(`/chat/threads/${threadId}/messages`, { message }),
+};
+
+// -------------------------------------------------------------------
+// Notifications
+// -------------------------------------------------------------------
+
+export const notificationsApi = {
+  list: () =>
+    get<{ items: any[] }>('/notifications/me'),
+
+  markAsRead: (id: string) =>
+    patch<void>(`/notifications/${id}/read`, {}),
+
+  markAllAsRead: () =>
+    post<void>('/notifications/read-all', {}),
 };
 
 // -------------------------------------------------------------------

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,65 +9,37 @@ import {
   RefreshControl,
   Alert,
   Linking,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
+import { ChevronLeft, Wallet, Gift, ArrowUpRight, ArrowDownLeft, Zap } from 'lucide-react-native';
+
+import { colors, spacing, font, radius } from '@/theme/tokens';
 import { useAuth } from '@/hooks/useAuth';
 import { creditsApi } from '@/lib/api';
 import type { CreditMe, CreditPackage, CreditTransaction } from '@/types';
 
+const { width } = Dimensions.get('window');
+
 function formatMoneyMinor(value: number, currency: string): string {
   const amount = Number(value);
   if (!Number.isFinite(amount)) return `0 ${currency}`;
-  return `${(amount / 100).toFixed(2)} ${currency}`;
-}
-
-function formatDate(value?: string | null): string {
-  if (!value) return '-';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return '-';
-  return parsed.toLocaleDateString(undefined, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function txTypeLabel(type: CreditTransaction['type'], t: (key: string, fallback: string) => string): string {
-  switch (type) {
-    case 'purchase':
-      return t('profile.creditTxPurchase', 'Kredi Yükleme');
-    case 'consumption':
-      return t('profile.creditTxConsumption', 'Kredi Tüketimi');
-    case 'refund':
-      return t('profile.creditTxRefund', 'İade');
-    case 'bonus':
-      return t('profile.creditTxBonus', 'Bonus');
-    case 'adjustment':
-      return t('profile.creditTxAdjustment', 'Düzeltme');
-    default:
-      return t('profile.creditTxOther', 'Diğer');
-  }
+  return `${(amount / 100).toFixed(0)} ${currency}`;
 }
 
 export default function CreditsScreen() {
-  const { t } = useTranslation();
   const { isAuthenticated, loading: authLoading } = useAuth();
 
   const [creditMe, setCreditMe] = useState<CreditMe | null>(null);
   const [packages, setPackages] = useState<CreditPackage[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [purchasingPackageId, setPurchasingPackageId] = useState<string | null>(null);
+  const [purchasingId, setPurchasingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!isAuthenticated) return;
     setLoading(true);
-
     try {
       const [me, pkgList] = await Promise.all([
         creditsApi.me(),
@@ -76,327 +48,381 @@ export default function CreditsScreen() {
       setCreditMe(me);
       setPackages(pkgList);
     } catch (err: any) {
-      console.error('Failed to load credit data:', err);
-      Alert.alert(t('common.error'), err?.message || t('profile.creditLoadError', 'Veriler yüklenemedi.'));
+      console.error('Credits load error:', err);
       setCreditMe(null);
       setPackages([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [isAuthenticated, t]);
+  }, [isAuthenticated]);
 
   useFocusEffect(
     useCallback(() => {
       if (authLoading) return;
       if (!isAuthenticated) {
-        router.replace('/auth/login');
+        router.replace('/auth/login' as any);
         return;
       }
       load();
     }, [authLoading, isAuthenticated, load]),
   );
 
-  useEffect(() => {
-    if (!authLoading && isAuthenticated === false) {
-      router.replace('/auth/login');
-    }
-  }, [authLoading, isAuthenticated]);
-
-  const onRefresh = useCallback(() => {
+  const onRefresh = () => {
     setRefreshing(true);
     load();
-  }, [load]);
-
-  const transactionItems = useMemo<CreditTransaction[]>(() => creditMe?.recent_transactions ?? [], [creditMe]);
+  };
 
   const onPurchase = async (pkg: CreditPackage) => {
-    setPurchasingPackageId(pkg.id);
+    setPurchasingId(pkg.id);
     try {
       const result = await creditsApi.purchase(pkg.id, 'iyzipay');
-      const data = (result as { data: Record<string, unknown> }).data || result;
-      const checkout = typeof data?.checkout_url === 'string' ? data.checkout_url : '';
+      const data = (result as any).data || result;
+      const checkout = data?.checkout_url;
 
       if (checkout) {
         await Linking.openURL(checkout);
-        return;
+      } else {
+        await load();
+        Alert.alert('İşlem Başlatıldı', 'Ödeme akışını tamamlamak için yönlendirileceksiniz.');
       }
-
-      await load();
-      Alert.alert(
-        t('profile.creditPurchaseInitiatedTitle', 'İşlem başlatıldı'),
-        t('profile.creditPurchaseInitiatedMessage', 'Kredi paketi oluşturuldu, ödeme akışını tamamlayın.'),
-      );
     } catch (err: any) {
-      Alert.alert(t('common.error'), err?.message || t('profile.creditPurchaseError', 'Kredi paketi açılamadı.'));
+      Alert.alert('Hata', err.message || 'Kredi paketi alınamadı.');
     } finally {
-      setPurchasingPackageId(null);
+      setPurchasingId(null);
     }
   };
 
+  const transactions = creditMe?.recent_transactions || [];
+
   if (authLoading || (loading && !refreshing)) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.amethyst} />
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView
-        style={styles.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.amethyst} />}
-      >
-        <Text style={styles.title}>{t('profile.creditsTitle')}</Text>
-        <Text style={styles.subtitle}>{t('profile.creditsDescription')}</Text>
-
-        <View style={styles.balanceCard}>
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t('profile.creditsBalance')}</Text>
-            <Text style={styles.rowValue}>
-              {creditMe ? `${creditMe.balance} ${creditMe.currency}` : '-'}
-            </Text>
-          </View>
-          <View style={styles.divider} />
-          <Pressable style={styles.primaryButton} onPress={() => router.push('/bookings')}>
-            <Text style={styles.primaryButtonText}>{t('profile.goToBookings', 'Randevularıma Git')}</Text>
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+            <ChevronLeft size={24} color={colors.text} />
           </Pressable>
+          <Text style={styles.headerTitle}>Kredi & Cüzdan</Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        <Text style={styles.sectionTitle}>{t('profile.creditsPackagesTitle')}</Text>
-        {packages.length > 0 ? (
-          packages.map((pkg) => (
-            <View key={pkg.id} style={styles.packageCard}>
-              <View style={styles.row}>
-                <Text style={styles.packageName}>{pkg.name_tr}</Text>
-                <Text style={styles.packagePrice}>
-                  {formatMoneyMinor(pkg.price_minor, pkg.currency)}
-                </Text>
-              </View>
-              <Text style={styles.packageDescription}>
-                {pkg.description_tr || `${pkg.credits} kredi + ${pkg.bonus_credits} bonus`}
-              </Text>
-              <View style={styles.packageMetaRow}>
-                <Text style={styles.packageMeta}>
-                  {t('profile.creditsTotal', { count: pkg.credits + (pkg.bonus_credits || 0) })}
-                </Text>
-                <Text style={styles.packageMeta}>
-                  {pkg.bonus_credits > 0 ? t('profile.creditsBonus', { count: pkg.bonus_credits }) : ''}
-                </Text>
-              </View>
-              <Pressable
-                style={styles.packageButton}
-                onPress={() => onPurchase(pkg)}
-                disabled={purchasingPackageId === pkg.id}
-              >
-                {purchasingPackageId === pkg.id ? (
-                  <ActivityIndicator color={colors.stardust} />
-                ) : (
-                  <Text style={styles.packageButtonText}>{t('profile.creditsBuyNow')}</Text>
-                )}
-              </Pressable>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
+        >
+          
+          {/* Balance Card */}
+          <View style={styles.balanceCard}>
+            <View style={styles.balanceHeader}>
+              <Wallet size={20} color={colors.gold} />
+              <Text style={styles.balanceLabel}>MEVCUT BAKİYE</Text>
             </View>
-          ))
-        ) : (
-          <Text style={styles.emptyText}>{t('profile.creditsNoPackages')}</Text>
-        )}
+            <Text style={styles.balanceValue}>
+              {creditMe?.balance || 0} <Text style={styles.currency}>KREDİ</Text>
+            </Text>
+            <View style={styles.balanceFooter}>
+              <Zap size={14} color={colors.success} />
+              <Text style={styles.balanceInfo}>Anında kullanılabilir bakiyeniz.</Text>
+            </View>
+          </View>
 
-        <Text style={styles.sectionTitle}>{t('profile.creditsTransactions')}</Text>
-        {transactionItems.length > 0 ? (
-          transactionItems.map((tx) => (
-            <View key={tx.id} style={styles.transactionCard}>
-              <View style={styles.transactionRow}>
-                <Text style={styles.transactionType}>{txTypeLabel(tx.type, t)}</Text>
-                <Text style={[styles.transactionAmount, tx.amount < 0 ? styles.debit : styles.credit]}>
-                  {tx.amount > 0 ? `+${tx.amount}` : `${tx.amount}`} {t('profile.creditsUnit')}
-                </Text>
-              </View>
-              <Text style={styles.transactionDescription}>{tx.description || tx.type}</Text>
-              <View style={styles.transactionMeta}>
-                <Text style={styles.transactionDate}>{formatDate(tx.created_at)}</Text>
-                <Text style={styles.transactionBalance}>{t('profile.creditsBalanceAfter', { count: tx.balance_after })}</Text>
-              </View>
+          {/* Packages Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>KREDİ YÜKLE</Text>
             </View>
-          ))
-        ) : (
-          <Text style={styles.emptyText}>{t('profile.creditsNoTransactions')}</Text>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pkgScroll}>
+              <View style={styles.pkgContainer}>
+                {packages.map((pkg) => (
+                  <View key={pkg.id} style={styles.pkgCard}>
+                    <View style={styles.pkgTop}>
+                      <Text style={styles.pkgCredits}>{pkg.credits}</Text>
+                      <Text style={styles.pkgCreditsLabel}>KREDİ</Text>
+                    </View>
+                    {pkg.bonus_credits > 0 && (
+                      <View style={styles.bonusBadge}>
+                        <Gift size={10} color={colors.bgDeep} />
+                        <Text style={styles.bonusText}>+{pkg.bonus_credits} BONUS</Text>
+                      </View>
+                    )}
+                    <Text style={styles.pkgPrice}>{formatMoneyMinor(pkg.price_minor, pkg.currency)}</Text>
+                    <Pressable
+                      style={[styles.buyBtn, purchasingId === pkg.id && styles.btnDisabled]}
+                      onPress={() => onPurchase(pkg)}
+                      disabled={purchasingId === pkg.id}
+                    >
+                      {purchasingId === pkg.id ? <ActivityIndicator size="small" color={colors.bgDeep} /> : <Text style={styles.buyBtnText}>Satın Al</Text>}
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+
+          {/* Transactions Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>SON İŞLEMLER</Text>
+            </View>
+            {transactions.length > 0 ? (
+              transactions.map((tx) => (
+                <View key={tx.id} style={styles.txItem}>
+                  <View style={styles.txIcon}>
+                    {tx.amount > 0 ? <ArrowDownLeft size={16} color={colors.success} /> : <ArrowUpRight size={16} color={colors.danger} />}
+                  </View>
+                  <View style={styles.txBody}>
+                    <Text style={styles.txTitle}>{tx.description || (tx.amount > 0 ? 'Kredi Yükleme' : 'Kredi Harcaması')}</Text>
+                    <Text style={styles.txDate}>{new Date(tx.created_at).toLocaleDateString('tr-TR')}</Text>
+                  </View>
+                  <Text style={[styles.txAmount, tx.amount > 0 ? styles.txPlus : styles.txMinus]}>
+                    {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyText}>Henüz bir işlem bulunmuyor.</Text>
+              </View>
+            )}
+          </View>
+
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
   safe: {
     flex: 1,
-    backgroundColor: colors.midnight,
   },
-  scroll: {
-    padding: spacing.lg,
-  },
-  centered: {
+  loaderContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.bg,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  headerBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.midnight,
-  },
-  title: {
-    color: colors.stardust,
-    fontFamily: font.display,
-    fontSize: 28,
-    marginBottom: 4,
-  },
-  subtitle: {
-    color: colors.muted,
-    marginBottom: spacing.lg,
-    fontFamily: font.sans,
-    fontSize: 13,
-  },
-  sectionTitle: {
-    color: colors.gold,
-    fontFamily: font.sansBold,
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-    fontSize: 12,
-  },
-  balanceCard: {
-    padding: spacing.lg,
-    borderRadius: radius.sm,
-    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.line,
-    gap: spacing.sm,
-    ...shadows.soft,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  headerTitle: {
+    fontFamily: font.display,
+    fontSize: 18,
+    color: colors.text,
   },
-  rowLabel: {
-    color: colors.muted,
-    fontFamily: font.sans,
-    fontSize: 14,
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: 40,
   },
-  rowValue: {
-    color: colors.stardust,
-    fontFamily: font.sansBold,
-    fontSize: 16,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.lineSoft,
-    marginVertical: spacing.sm,
-  },
-  primaryButton: {
-    borderRadius: radius.pill,
-    backgroundColor: colors.plumSoft,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: colors.stardust,
-    fontFamily: font.sansBold,
-    fontSize: 13,
-  },
-  packageCard: {
-    borderRadius: radius.sm,
+
+  // Balance Card
+  balanceCard: {
+    backgroundColor: colors.inkDeep,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    marginVertical: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.lineSoft,
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
+    borderColor: colors.gold,
+  },
+  balanceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  balanceLabel: {
+    fontFamily: font.sansBold,
+    fontSize: 11,
+    color: colors.gold,
+    letterSpacing: 2,
+  },
+  balanceValue: {
+    fontFamily: font.display,
+    fontSize: 40,
+    color: colors.text,
+  },
+  currency: {
+    fontSize: 16,
+    color: colors.goldDim,
+  },
+  balanceFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+  },
+  balanceInfo: {
+    fontFamily: font.sans,
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+
+  // Sections
+  section: {
+    marginBottom: spacing['2xl'],
+  },
+  sectionHeader: {
     marginBottom: spacing.md,
-    gap: spacing.sm,
+    paddingHorizontal: 4,
   },
-  packageName: {
-    color: colors.stardust,
+  sectionTitle: {
+    fontFamily: font.sansBold,
+    fontSize: 11,
+    color: colors.goldDeep,
+    letterSpacing: 2,
+  },
+
+  // Packages
+  pkgScroll: {
+    marginHorizontal: -spacing.lg,
+  },
+  pkgContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    gap: 12,
+  },
+  pkgCard: {
+    width: 140,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.line,
+    alignItems: 'center',
+  },
+  pkgTop: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+    marginBottom: 8,
+  },
+  pkgCredits: {
+    fontFamily: font.display,
+    fontSize: 24,
+    color: colors.text,
+  },
+  pkgCreditsLabel: {
+    fontFamily: font.sansBold,
+    fontSize: 10,
+    color: colors.gold,
+  },
+  bonusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.gold,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginBottom: 12,
+  },
+  bonusText: {
+    fontFamily: font.sansBold,
+    fontSize: 9,
+    color: colors.bgDeep,
+  },
+  pkgPrice: {
+    fontFamily: font.sansBold,
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 16,
+  },
+  buyBtn: {
+    backgroundColor: colors.gold,
+    width: '100%',
+    height: 36,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnDisabled: {
+    opacity: 0.6,
+  },
+  buyBtnText: {
+    fontFamily: font.sansBold,
+    fontSize: 12,
+    color: colors.bgDeep,
+  },
+
+  // Transactions
+  txItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lineSoft,
+    gap: 12,
+  },
+  txIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  txBody: {
+    flex: 1,
+    gap: 2,
+  },
+  txTitle: {
+    fontFamily: font.sansMedium,
+    fontSize: 14,
+    color: colors.text,
+  },
+  txDate: {
+    fontFamily: font.mono,
+    fontSize: 10,
+    color: colors.textMuted,
+  },
+  txAmount: {
     fontFamily: font.sansBold,
     fontSize: 16,
   },
-  packagePrice: {
-    color: colors.gold,
-    fontFamily: font.sansMedium,
-    fontSize: 14,
-  },
-  packageDescription: {
-    color: colors.muted,
-    fontFamily: font.sans,
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  packageMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  packageMeta: {
-    color: colors.mutedSoft,
-    fontFamily: font.sans,
-    fontSize: 12,
-  },
-  packageButton: {
-    marginTop: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: colors.amethyst,
-    paddingVertical: 11,
+  txPlus: { color: colors.success },
+  txMinus: { color: colors.danger },
+
+  emptyBox: {
+    padding: 24,
     alignItems: 'center',
-  },
-  packageButtonText: {
-    color: colors.stardust,
-    fontFamily: font.sansBold,
-    fontSize: 14,
-  },
-  transactionCard: {
-    padding: spacing.md,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.lineSoft,
     backgroundColor: colors.surface,
-    marginBottom: spacing.sm,
-    gap: spacing.xs,
-    ...shadows.soft,
-  },
-  transactionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  transactionType: {
-    color: colors.stardust,
-    fontFamily: font.sansMedium,
-    fontSize: 14,
-  },
-  transactionAmount: {
-    fontFamily: font.sansBold,
-    fontSize: 14,
-  },
-  credit: { color: colors.success },
-  debit: { color: colors.danger },
-  transactionDescription: {
-    color: colors.muted,
-    fontFamily: font.sans,
-    fontSize: 12,
-  },
-  transactionMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  transactionDate: {
-    color: colors.mutedSoft,
-    fontFamily: font.sans,
-    fontSize: 11,
-  },
-  transactionBalance: {
-    color: colors.gold,
-    fontFamily: font.sansMedium,
-    fontSize: 11,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
   emptyText: {
-    color: colors.muted,
     fontFamily: font.sans,
     fontSize: 13,
-    paddingVertical: spacing.md,
+    color: colors.textMuted,
   },
 });

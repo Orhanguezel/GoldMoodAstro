@@ -1323,7 +1323,7 @@ backend kayıt + listede görünür.
 
 **Acceptance:** ⏳ Faz 6+ay (sadece şema + cron şu an).
 
-### T17-7 — Admin: Moderasyon Dashboard (Antigravity)
+### T17-7 — Admin: Moderasyon Dashboard (Claude Code) ✅ minimal
 
 > Mevcut /admin/reviews sayfası var. Genişletme:
 - [ ] Filter: "Beklemede (auto-flagged)", "Onaylı", "Reddedildi", "Doğrulanmış", "Karne cevaplı"

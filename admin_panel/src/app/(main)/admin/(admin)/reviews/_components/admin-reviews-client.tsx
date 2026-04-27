@@ -516,6 +516,16 @@ export default function AdminReviewsClient() {
                             <XCircle className="size-4 text-muted-foreground" />
                           )}
                         </Button>
+                        {/* T17-1: Doğrulanmış görüşme rozeti */}
+                        {Number((item as { is_verified?: number | boolean }).is_verified) === 1 && (
+                          <Badge
+                            variant="outline"
+                            className="ml-1 border-green-600/40 text-green-700 bg-green-50 text-[10px] py-0 px-1.5"
+                            title="Doğrulanmış görüşme — kullanıcı booking'i tamamlamış"
+                          >
+                            ✓
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell className="text-center">
                         <Switch

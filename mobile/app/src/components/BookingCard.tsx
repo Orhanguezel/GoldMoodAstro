@@ -1,9 +1,20 @@
+import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
-import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
-import type { Booking } from '@/types';
-import { useTranslation } from 'react-i18next';
+import { 
+  Calendar, 
+  Clock, 
+  ChevronRight, 
+  Video, 
+  PhoneCall, 
+  CheckCircle2, 
+  Clock3, 
+  AlertCircle 
+} from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
-import { tr, enUS } from 'date-fns/locale';
+import { tr } from 'date-fns/locale';
+
+import { colors, spacing, font, radius } from '@/theme/tokens';
+import type { Booking } from '@/types';
 
 interface Props {
   booking: Booking;
@@ -12,62 +23,73 @@ interface Props {
 }
 
 export function BookingCard({ booking, onPress, onJoinCall }: Props) {
-  const { t, i18n } = useTranslation();
-  const dateLocale = i18n.language === 'tr' ? tr : enUS;
-
-  const statusColors = {
-    pending_payment: colors.gold,
-    booked: colors.gold,
-    confirmed: colors.success,
-    completed: colors.muted,
-    cancelled: colors.danger,
-    no_show: colors.danger,
+  
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return { color: colors.success, label: 'ONAYLANDI', icon: CheckCircle2 };
+      case 'booked':
+        return { color: colors.gold, label: 'BEKLİYOR', icon: Clock3 };
+      case 'pending_payment':
+        return { color: colors.warning, label: 'ÖDEME BEKLİYOR', icon: AlertCircle };
+      case 'completed':
+        return { color: colors.textMuted, label: 'TAMAMLANDI', icon: CheckCircle2 };
+      case 'cancelled':
+      case 'no_show':
+        return { color: colors.danger, label: 'İPTAL EDİLDİ', icon: AlertCircle };
+      default:
+        return { color: colors.textMuted, label: status.toUpperCase(), icon: Clock3 };
+    }
   };
 
-  const isUpcoming = ['booked', 'confirmed', 'pending_payment'].includes(booking.status);
-  const isJoinable = booking.status === 'confirmed'; // Basitleştirilmiş kural
+  const config = getStatusConfig(booking.status);
+  const StatusIcon = config.icon;
+  const isJoinable = booking.status === 'confirmed';
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
-      <View style={styles.header}>
-        <View style={styles.consultantRow}>
+      <View style={styles.cardHeader}>
+        <View style={styles.consultantArea}>
           {booking.consultant?.avatar_url ? (
             <Image source={{ uri: booking.consultant.avatar_url }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarInitials}>
-                {booking.consultant?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?'}
-              </Text>
+              <Text style={styles.avatarInitials}>{booking.consultant?.full_name?.[0]}</Text>
             </View>
           )}
-          <View style={styles.info}>
-            <Text style={styles.name}>{booking.consultant?.full_name}</Text>
-            <Text style={styles.date}>
-              {format(parseISO(booking.appointment_date), 'd MMMM yyyy', { locale: dateLocale })}
-              {' • '}
-              {booking.appointment_time?.substring(0, 5)}
-            </Text>
+          <View style={styles.consultantInfo}>
+            <Text style={styles.consultantName}>{booking.consultant?.full_name}</Text>
+            <View style={styles.dateTimeRow}>
+              <Calendar size={12} color={colors.textMuted} />
+              <Text style={styles.dateTimeText}>
+                {format(parseISO(booking.appointment_date), 'd MMMM yyyy', { locale: tr })}
+              </Text>
+              <Clock size={12} color={colors.textMuted} />
+              <Text style={styles.dateTimeText}>{booking.appointment_time?.substring(0, 5)}</Text>
+            </View>
           </View>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: statusColors[booking.status] + '20' }]}>
-          <Text style={[styles.statusText, { color: statusColors[booking.status] }]}>
-            {t(`booking.status.${booking.status}`)}
-          </Text>
-        </View>
+        <ChevronRight size={20} color={colors.line} />
       </View>
 
       <View style={styles.divider} />
 
-      <View style={styles.footer}>
-        <View style={styles.priceContainer}>
-          <Text style={styles.priceLabel}>{t('booking.price')}</Text>
-          <Text style={styles.price}>₺{Math.round(Number(booking.session_price))}</Text>
+      <View style={styles.cardFooter}>
+        <View style={styles.statusWrap}>
+          <StatusIcon size={14} color={config.color} />
+          <Text style={[styles.statusLabel, { color: config.color }]}>{config.label}</Text>
         </View>
-        
-        {isJoinable && onJoinCall && (
+
+        {isJoinable && onJoinCall ? (
           <Pressable style={styles.joinBtn} onPress={onJoinCall}>
-            <Text style={styles.joinBtnText}>{t('bookings.joinCall')}</Text>
+            <PhoneCall size={14} color={colors.bgDeep} />
+            <Text style={styles.joinBtnText}>Görüşmeye Katıl</Text>
           </Pressable>
+        ) : (
+          <View style={styles.priceWrap}>
+            <Text style={styles.priceLabel}>Ücret:</Text>
+            <Text style={styles.priceVal}>₺{Math.round(Number(booking.session_price))}</Text>
+          </View>
         )}
       </View>
     </Pressable>
@@ -77,28 +99,109 @@ export function BookingCard({ booking, onPress, onJoinCall }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    padding: spacing.md,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
     marginBottom: spacing.md,
-    ...shadows.card,
     borderWidth: 1,
     borderColor: colors.line,
   },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  consultantRow: { flexDirection: 'row', gap: spacing.sm, flex: 1 },
-  avatar: { width: 44, height: 44, borderRadius: 22 },
-  avatarPlaceholder: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.amethyst, alignItems: 'center', justifyContent: 'center' },
-  avatarInitials: { color: colors.stardust, fontSize: 16, fontFamily: font.sansBold },
-  info: { flex: 1, gap: 2 },
-  name: { fontSize: 16, fontFamily: font.display, color: colors.stardust },
-  date: { fontSize: 12, color: colors.muted, fontFamily: font.sans },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  statusText: { fontSize: 10, fontFamily: font.sansBold, textTransform: 'uppercase' },
-  divider: { height: 1, backgroundColor: colors.line, marginVertical: spacing.md },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  priceContainer: { gap: 2 },
-  priceLabel: { fontSize: 10, color: colors.muted, fontFamily: font.sans },
-  price: { fontSize: 16, fontFamily: font.sansBold, color: colors.stardust },
-  joinBtn: { backgroundColor: colors.amethyst, paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: radius.pill },
-  joinBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 13 },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  consultantArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  avatarPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.inkDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  avatarInitials: {
+    fontFamily: font.display,
+    fontSize: 20,
+    color: colors.gold,
+  },
+  consultantInfo: {
+    gap: 4,
+  },
+  consultantName: {
+    fontFamily: font.display,
+    fontSize: 16,
+    color: colors.text,
+  },
+  dateTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dateTimeText: {
+    fontFamily: font.sans,
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.lineSoft,
+    marginVertical: spacing.md,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusLabel: {
+    fontFamily: font.sansBold,
+    fontSize: 10,
+    letterSpacing: 1,
+  },
+  priceWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  priceLabel: {
+    fontFamily: font.sans,
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  priceVal: {
+    fontFamily: font.sansBold,
+    fontSize: 14,
+    color: colors.gold,
+  },
+  joinBtn: {
+    backgroundColor: colors.gold,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+  },
+  joinBtnText: {
+    fontFamily: font.sansBold,
+    fontSize: 12,
+    color: colors.bgDeep,
+  },
 });

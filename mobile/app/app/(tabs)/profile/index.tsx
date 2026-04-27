@@ -22,6 +22,8 @@ import {
   ChevronRight,
   ShieldCheck,
   AlertTriangle,
+  CalendarDays,
+  Bell,
 } from 'lucide-react-native';
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
@@ -168,6 +170,28 @@ export default function ProfileScreen() {
           <View style={styles.menuGroup}>
             <Text style={styles.menuGroupTitle}>HESAP</Text>
             
+            <Pressable 
+              style={styles.menuItem}
+              onPress={() => router.push('/(tabs)/bookings' as any)}
+            >
+              <View style={styles.menuItemLeft}>
+                <CalendarDays size={20} color={colors.goldDim} />
+                <Text style={styles.menuItemText}>Randevularım</Text>
+              </View>
+              <ChevronRight size={18} color={colors.line} />
+            </Pressable>
+
+            <Pressable 
+              style={styles.menuItem}
+              onPress={() => router.push('/notifications' as any)}
+            >
+              <View style={styles.menuItemLeft}>
+                <Bell size={20} color={colors.goldDim} />
+                <Text style={styles.menuItemText}>Bildirimler</Text>
+              </View>
+              <ChevronRight size={18} color={colors.line} />
+            </Pressable>
+
             <Pressable style={styles.menuItem}>
               <View style={styles.menuItemLeft}>
                 <User size={20} color={colors.goldDim} />

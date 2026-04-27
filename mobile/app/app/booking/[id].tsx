@@ -128,13 +128,31 @@ export default function BookingDetailScreen() {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+        <View style={styles.footer}>
         {isJoinable && (
           <Pressable 
             style={styles.joinBtn} 
             onPress={() => router.push(`/call/${booking.id}`)}
           >
             <Text style={styles.joinBtnText}>{t('bookings.joinCall')}</Text>
+          </Pressable>
+        )}
+
+        {!isJoinable && booking.status === 'completed' && (
+          <Pressable
+            style={styles.reviewBtn}
+            onPress={() =>
+              router.push({
+                pathname: '/booking/[id]/review' as any,
+                params: {
+                  id: booking.id,
+                  consultant_id: booking.consultant_id,
+                  consultant_name: booking.consultant?.full_name,
+                },
+              })
+            }
+          >
+            <Text style={styles.reviewBtnText}>Değerlendir</Text>
           </Pressable>
         )}
         
@@ -193,4 +211,6 @@ const styles = StyleSheet.create({
   joinBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 16 },
   cancelBtn: { paddingVertical: spacing.md, borderRadius: radius.pill, alignItems: 'center', borderWidth: 1, borderColor: colors.danger + '40' },
   cancelBtnText: { color: colors.danger, fontFamily: font.sansBold, fontSize: 14 },
+  reviewBtn: { marginTop: spacing.sm, paddingVertical: spacing.md, borderRadius: radius.pill, alignItems: 'center', backgroundColor: colors.amethyst, ...shadows.soft },
+  reviewBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 14 },
 });

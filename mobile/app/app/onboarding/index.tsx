@@ -4,25 +4,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors, spacing, font, radius } from '@/theme/tokens';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 // Star Component
 const Star = ({ delay, top, left, size = 2 }: { delay: number; top: any; left: any; size?: number }) => {
-  const opacity = useRef(new Animated.Value(0.2)).current;
+  const opacity = useRef(new Animated.Value(0.1)).current;
 
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
-          toValue: 0.8,
-          duration: 1000 + Math.random() * 1000,
+          toValue: 0.7,
+          duration: 1500 + Math.random() * 1000,
           easing: Easing.inOut(Easing.ease),
           delay,
           useNativeDriver: true,
         }),
         Animated.timing(opacity, {
-          toValue: 0.2,
-          duration: 1000 + Math.random() * 1000,
+          toValue: 0.1,
+          duration: 1500 + Math.random() * 1000,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
@@ -49,31 +49,29 @@ const Star = ({ delay, top, left, size = 2 }: { delay: number; top: any; left: a
 export default function WelcomeScreen() {
   const rotation = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const slideAnim = useRef(new Animated.Value(40)).current;
 
   useEffect(() => {
-    // Background rotation
     Animated.loop(
       Animated.timing(rotation, {
         toValue: 1,
-        duration: 40000,
+        duration: 60000,
         easing: Easing.linear,
         useNativeDriver: true,
       })
     ).start();
 
-    // Fade and slide content
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
-        delay: 500,
+        duration: 1200,
+        delay: 400,
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 1000,
-        delay: 500,
+        duration: 1200,
+        delay: 400,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
@@ -89,36 +87,37 @@ export default function WelcomeScreen() {
     <View style={styles.container}>
       {/* Cosmos Background */}
       <View style={StyleSheet.absoluteFill}>
-        {/* Decorative Orbits */}
         <Animated.View style={[styles.orbitContainer, { transform: [{ rotate: spin }] }]}>
           <View style={styles.orbit1} />
           <View style={styles.orbit2} />
           <View style={styles.orbitPlanet1} />
-          <View style={styles.orbitPlanet2} />
         </Animated.View>
 
-        {/* Twinkle Stars */}
-        <Star delay={0} top="15%" left="20%" size={2} />
-        <Star delay={500} top="25%" left="75%" size={3} />
-        <Star delay={1200} top="40%" left="10%" size={1.5} />
-        <Star delay={200} top="60%" left="85%" size={2} />
-        <Star delay={800} top="75%" left="30%" size={2.5} />
-        <Star delay={1500} top="85%" left="60%" size={1.5} />
+        <Star delay={0} top="12%" left="15%" size={2} />
+        <Star delay={600} top="22%" left="80%" size={3} />
+        <Star delay={1300} top="45%" left="8%" size={1.5} />
+        <Star delay={300} top="65%" left="88%" size={2} />
+        <Star delay={900} top="78%" left="25%" size={2.5} />
+        <Star delay={1600} top="90%" left="65%" size={1.5} />
       </View>
 
       <SafeAreaView style={styles.safe}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
           <View style={styles.header}>
-            <Text style={styles.eyebrow}>GOLD MOOD</Text>
-            <Text style={styles.subEyebrow}>ASTRO</Text>
+            <View style={styles.logoBorder}>
+              <Text style={styles.logoG}>G</Text>
+            </View>
+            <Text style={styles.brandName}>GOLD MOOD</Text>
+            <Text style={styles.brandSub}>ASTROLOGY</Text>
           </View>
 
           <View style={styles.centerText}>
             <Text style={styles.tagline}>
-              Yıldızlarla tanışan{'\n'}
-              <Text style={styles.taglineItalic}>modern</Text> astroloji{'\n'}
-              deneyimi.
+              Ruhunuzun derinliklerini{'\n'}
+              <Text style={styles.taglineHighlight}>yıldızların</Text> ışığında{'\n'}
+              keşfedin.
             </Text>
+            <View style={styles.taglineDivider} />
           </View>
 
           <View style={styles.footer}>
@@ -129,8 +128,11 @@ export default function WelcomeScreen() {
                 pressed && styles.buttonPressed,
               ]}
             >
-              <Text style={styles.buttonText}>Başla</Text>
+              <Text style={styles.buttonText}>Yolculuğa Başla</Text>
             </Pressable>
+            <Text style={styles.loginHint}>
+              Zaten hesabınız var mı? <Text style={styles.loginLink} onPress={() => router.push('/auth/login' as any)}>Giriş Yap</Text>
+            </Text>
           </View>
         </Animated.View>
       </SafeAreaView>
@@ -148,27 +150,43 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: spacing.xl,
+    paddingHorizontal: spacing.xl,
     justifyContent: 'space-between',
   },
   
   // Header
   header: {
     alignItems: 'center',
-    marginTop: spacing['2xl'],
+    marginTop: spacing.xl,
   },
-  eyebrow: {
+  logoBorder: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 1,
+    borderColor: colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  logoG: {
     fontFamily: font.display,
-    fontSize: 28,
+    fontSize: 32,
     color: colors.gold,
-    letterSpacing: 4,
-    marginBottom: 4,
+    marginTop: -4,
   },
-  subEyebrow: {
+  brandName: {
     fontFamily: font.display,
-    fontSize: 12,
+    fontSize: 24,
+    color: colors.text,
+    letterSpacing: 4,
+  },
+  brandSub: {
+    fontFamily: font.sansBold,
+    fontSize: 10,
     color: colors.goldDeep,
-    letterSpacing: 8,
+    letterSpacing: 6,
+    marginTop: 4,
   },
 
   // Center Text
@@ -176,32 +194,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tagline: {
-    fontFamily: font.serif,
+    fontFamily: font.display,
     fontSize: 32,
     color: colors.text,
     textAlign: 'center',
-    lineHeight: 44,
+    lineHeight: 42,
   },
-  taglineItalic: {
-    fontFamily: font.serif, // Add italic if you have font.serifItalic
-    fontStyle: 'italic',
+  taglineHighlight: {
     color: colors.gold,
+    fontFamily: font.display, // or italic if available
+  },
+  taglineDivider: {
+    width: 40,
+    height: 1,
+    backgroundColor: colors.gold,
+    marginTop: 24,
+    opacity: 0.5,
   },
 
   // Footer
   footer: {
     marginBottom: spacing.xl,
+    gap: 20,
   },
   button: {
-    backgroundColor: colors.text,
+    backgroundColor: colors.gold,
     paddingVertical: 18,
     borderRadius: radius.pill,
     alignItems: 'center',
-    shadowColor: colors.gold,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 4,
   },
   buttonPressed: {
     opacity: 0.9,
@@ -210,8 +230,18 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: font.sansBold,
     fontSize: 16,
-    color: colors.bg,
+    color: colors.bgDeep,
     letterSpacing: 1,
+  },
+  loginHint: {
+    fontFamily: font.sans,
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+  loginLink: {
+    color: colors.gold,
+    fontFamily: font.sansBold,
   },
 
   // Background Elements
@@ -222,10 +252,10 @@ const styles = StyleSheet.create({
   },
   orbitContainer: {
     position: 'absolute',
-    top: -width * 0.2,
-    left: -width * 0.2,
-    width: width * 1.4,
-    height: width * 1.4,
+    top: -width * 0.4,
+    left: -width * 0.4,
+    width: width * 1.8,
+    height: width * 1.8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -237,33 +267,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gold,
     borderStyle: 'dashed',
-    opacity: 0.2,
+    opacity: 0.1,
   },
   orbit2: {
     position: 'absolute',
-    width: '75%',
-    height: '75%',
+    width: '65%',
+    height: '65%',
     borderRadius: 9999,
     borderWidth: 1,
     borderColor: colors.gold,
-    opacity: 0.15,
+    opacity: 0.08,
   },
   orbitPlanet1: {
     position: 'absolute',
-    top: '12%',
-    right: '25%',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.gold,
-  },
-  orbitPlanet2: {
-    position: 'absolute',
-    bottom: '25%',
-    left: '12%',
+    top: '15%',
+    right: '30%',
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.goldDeep,
+    backgroundColor: colors.gold,
+    opacity: 0.6,
   },
 });

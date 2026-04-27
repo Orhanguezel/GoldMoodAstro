@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -8,14 +8,28 @@ import {
   Text,
   View,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useTranslation } from 'react-i18next';
 import { VideoView } from '@livekit/react-native';
 import type { VideoTrack } from 'livekit-client';
 import { Track } from 'livekit-client';
-import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
+import { 
+  Mic, 
+  MicOff, 
+  Video, 
+  VideoOff, 
+  PhoneOff, 
+  Volume2, 
+  VolumeX, 
+  SwitchCamera,
+  Clock,
+  Star 
+} from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+
+import { colors, spacing, font, radius, gradients } from '@/theme/tokens';
 import { bookingsApi } from '@/lib/api';
 import {
   connectLiveKitAudio,
@@ -27,6 +41,8 @@ import {
   type LiveKitRoom,
 } from '@/lib/livekit';
 import type { Booking } from '@/types';
+
+const { width } = Dimensions.get('window');
 
 const formatDuration = (seconds: number) => {
   const min = Math.floor(seconds / 60);
@@ -40,7 +56,6 @@ export default function CallScreen() {
     () => (Array.isArray(rawBookingId) ? rawBookingId[0] : rawBookingId),
     [rawBookingId],
   );
-  const { t } = useTranslation();
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,21 +83,13 @@ export default function CallScreen() {
   const refreshTrackState = (room: LiveKitRoom | null) => {
     if (!room) return;
 
-    const getVideoTrack = (participant: unknown): VideoTrack | null => {
-      const p = participant as {
-        getTrackPublication?: (source: Track.Source) => { track?: unknown } | undefined;
-      };
-      return (p?.getTrackPublication?.(Track.Source.Camera)?.track ?? null) as VideoTrack | null;
+    const getVideoTrack = (participant: any): VideoTrack | null => {
+      return (participant?.getTrackPublication?.(Track.Source.Camera)?.track ?? null) as VideoTrack | null;
     };
 
     setLocalVideoTrack(getVideoTrack(room.localParticipant));
 
-    const remote = Array.from(room.remoteParticipants?.values?.() ?? [])[0] as
-      | {
-          name?: string;
-          identity?: string;
-        }
-      | undefined;
+    const remote = Array.from(room.remoteParticipants?.values?.() ?? [])[0];
     setRemoteVideoTrack(getVideoTrack(remote));
   };
 
@@ -191,7 +198,7 @@ export default function CallScreen() {
       } catch (err: unknown) {
         if (cancelled) return;
         console.error('Call setup failed:', err);
-        setErrorMessage(t('call.connectError', 'Bağlantı sağlanamadı.'));
+        setErrorMessage('Bağlantı sağlanamadı.');
         setLoading(false);
         setConnecting(false);
       }
@@ -203,9 +210,9 @@ export default function CallScreen() {
       cancelled = true;
       cleanup();
     };
-  }, [bookingId, t]);
+  }, [bookingId]);
 
-    const handleHangup = async () => {
+  const handleHangup = async () => {
     const id = bookingId;
     await cleanup();
     if (id) {
@@ -215,11 +222,11 @@ export default function CallScreen() {
         console.warn('Session end call failed:', err);
       }
       router.replace({
-        pathname: '/call/rate',
+        pathname: '/call/rate' as any,
         params: { bookingId: id },
       });
     } else {
-      router.replace('/(tabs)/bookings');
+      router.replace('/bookings' as any);
     }
   };
 
@@ -233,7 +240,6 @@ export default function CallScreen() {
       setIsMuted(nextValue);
     } catch (err) {
       console.warn('Microphone toggle failed:', err);
-      Alert.alert(t('common.error'), t('call.microphoneToggleError', 'Mikrofon ayarı güncellenemedi.'));
     }
   };
 
@@ -248,7 +254,6 @@ export default function CallScreen() {
       setCameraEnabled(nextValue);
     } catch (err) {
       console.warn('Camera toggle failed:', err);
-      Alert.alert(t('common.error'), t('call.videoToggleError', 'Kamera ayarı güncellenemedi.'));
     }
   };
 
@@ -263,332 +268,371 @@ export default function CallScreen() {
       setFrontCamera(nextValue);
     } catch (err) {
       console.warn('Camera switch failed:', err);
-      Alert.alert(t('common.error'), t('call.switchCameraError', 'Kamera değiştirilemedi.'));
     }
-  };
-
-  const toggleSpeaker = () => {
-    setSpeakerOn((prev) => !prev);
   };
 
   if (loading || !bookingId) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" color={colors.amethyst} />
-          <Text style={styles.loadingText}>{t('call.connecting')}</Text>
-        </View>
-      </SafeAreaView>
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
+        <Text style={styles.loaderText}>Bağlantı Hazırlanıyor...</Text>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title} numberOfLines={1}>
-            {t('call.connected', { name: remoteName })}
-          </Text>
-          <Text style={styles.timer}>{formatDuration(durationSeconds)}</Text>
-        </View>
-
-        {connecting ? (
-          <View style={styles.statusCard}>
-            <ActivityIndicator color={colors.amethyst} />
-            <Text style={styles.statusText}>{t('call.connecting')}</Text>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={gradients.darkSurface}
+        style={styles.fullBg}
+      >
+        <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+          
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <Text style={styles.remoteName}>{remoteName}</Text>
+              <View style={styles.statusRow}>
+                <View style={[styles.statusDot, connected ? styles.online : styles.offline]} />
+                <Text style={styles.statusLabel}>{connected ? 'Canlı Görüşme' : 'Bağlanıyor...'}</Text>
+              </View>
+            </View>
+            <View style={styles.timerBox}>
+              <Clock size={14} color={colors.gold} />
+              <Text style={styles.timerText}>{formatDuration(durationSeconds)}</Text>
+            </View>
           </View>
-        ) : (
-          !connected && (
-            <View style={styles.statusCard}>
-              <Text style={styles.statusText}>{errorMessage || t('call.endedTitle', 'Çağrı sonlandı.')}</Text>
-              <Text style={styles.statusSubText}>
-                {booking?.consultant?.full_name
-                  ? t('call.endedBody', { duration: formatDuration(durationSeconds) })
-                  : t('call.endedBody', { duration: formatDuration(durationSeconds) })}
-              </Text>
-            </View>
-          )
-        )}
 
-        <View style={styles.stage}>
-          {isVideoCall ? (
-            <View style={styles.videoContainer}>
-              {remoteVideoTrack ? (
-                  <VideoView style={styles.remoteVideo} videoTrack={remoteVideoTrack || undefined} />
-              ) : (
-                <View style={styles.placeholder}>
-                  {booking?.consultant?.avatar_url ? (
-                    <Image
-                      source={{ uri: booking.consultant.avatar_url }}
-                      style={styles.avatar}
+          {/* Center Stage */}
+          <View style={styles.stage}>
+            {isVideoCall ? (
+              <View style={styles.videoGrid}>
+                {remoteVideoTrack ? (
+                  <VideoView style={styles.remoteVideo} videoTrack={remoteVideoTrack as any} />
+                ) : (
+                  <View style={styles.placeholder}>
+                    <ActivityIndicator color={colors.gold} />
+                    <Text style={styles.placeholderText}>Görüntü bekleniyor...</Text>
+                  </View>
+                )}
+
+                {localVideoTrack && (
+                  <View style={styles.localPreviewWrap}>
+                    <VideoView 
+                      style={styles.localVideo} 
+                      videoTrack={localVideoTrack as any} 
+                      mirror={frontCamera}
                     />
-                  ) : (
-                    <Text style={styles.placeholderInitial}>
-                      {remoteName?.[0]?.toUpperCase() || 'S'}
-                    </Text>
-                  )}
-                  <Text style={styles.placeholderText}>
-                    {t('call.waitRemote', 'Danışman katılıyor...')}
-                  </Text>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View style={styles.audioStage}>
+                <View style={styles.avatarGlowWrap}>
+                  <View style={styles.avatarBorder}>
+                    {booking?.consultant?.avatar_url ? (
+                      <Image source={{ uri: booking.consultant.avatar_url }} style={styles.avatarLarge} />
+                    ) : (
+                      <View style={styles.avatarLargePlaceholder}>
+                        <Text style={styles.avatarInitialLarge}>{remoteName?.[0]}</Text>
+                      </View>
+                    )}
+                  </View>
+                  {connected && <View style={styles.pulseRing} />}
                 </View>
+                <Text style={styles.audioStatus}>
+                  {connected ? 'Sesli görüşme aktif' : 'Bağlantı kuruluyor...'}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Controls */}
+          <View style={styles.controls}>
+            <View style={styles.controlRow}>
+              
+              <Pressable 
+                onPress={handleToggleMute}
+                style={[styles.controlBtn, isMuted && styles.controlBtnActive]}
+              >
+                {isMuted ? <MicOff size={24} color={colors.text} /> : <Mic size={24} color={colors.text} />}
+              </Pressable>
+
+              {isVideoCall && (
+                <>
+                  <Pressable 
+                    onPress={handleToggleCamera}
+                    style={[styles.controlBtn, !cameraEnabled && styles.controlBtnActive]}
+                  >
+                    {!cameraEnabled ? <VideoOff size={24} color={colors.text} /> : <Video size={24} color={colors.text} />}
+                  </Pressable>
+                  <Pressable 
+                    onPress={handleSwitchCamera}
+                    disabled={!cameraEnabled}
+                    style={[styles.controlBtn, !cameraEnabled && styles.controlBtnDisabled]}
+                  >
+                    <SwitchCamera size={24} color={colors.text} />
+                  </Pressable>
+                </>
               )}
 
-              {localVideoTrack ? (
-                <View style={styles.localPreview}>
-                  <VideoView style={styles.localVideo} videoTrack={localVideoTrack || undefined} mirror />
-                </View>
-              ) : null}
+              <Pressable 
+                onPress={() => setSpeakerOn(!speakerOn)}
+                style={[styles.controlBtn, !speakerOn && styles.controlBtnActive]}
+              >
+                {speakerOn ? <Volume2 size={24} color={colors.text} /> : <VolumeX size={24} color={colors.text} />}
+              </Pressable>
+
             </View>
-          ) : (
-            <View style={styles.audioContainer}>
-              {booking?.consultant?.avatar_url ? (
-                <Image source={{ uri: booking.consultant.avatar_url }} style={styles.avatarLarge} />
-              ) : (
-                <View style={styles.avatarLargeFallback}>
-                  <Text style={styles.avatarText}>
-                    {remoteName?.[0]?.toUpperCase() || 'S'}
-                  </Text>
-                </View>
-              )}
+
+            <Pressable 
+              onPress={handleHangup}
+              style={styles.hangupBtn}
+            >
+              <PhoneOff size={28} color={colors.bgDeep} />
+            </Pressable>
+          </View>
+
+          {errorMessage && (
+            <View style={styles.errorBanner}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
           )}
-        </View>
 
-        <View style={styles.controls}>
-          <Pressable
-            style={[styles.iconButton, isMuted && styles.iconButtonActive]}
-            onPress={handleToggleMute}
-          >
-            <Text style={[styles.iconText, isMuted && styles.iconTextActive]}>{t('call.mute')}</Text>
-          </Pressable>
-
-          {Platform.OS === 'android' ? (
-            <Pressable
-              style={[styles.iconButton, speakerOn && styles.iconButtonActive]}
-              onPress={toggleSpeaker}
-            >
-              <Text style={[styles.iconText, speakerOn && styles.iconTextActive]}>{t('call.speaker')}</Text>
-            </Pressable>
-          ) : null}
-
-          {isVideoCall ? (
-            <>
-              <Pressable
-                style={[styles.iconButton, !cameraEnabled && styles.iconButtonActive]}
-                onPress={handleToggleCamera}
-              >
-                <Text style={[styles.iconText, !cameraEnabled && styles.iconTextActive]}>
-                  {cameraEnabled ? t('call.videoOn') : t('call.videoOff')}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={styles.iconButton}
-                onPress={handleSwitchCamera}
-                disabled={!cameraEnabled}
-              >
-                <Text style={styles.iconText}>
-                  {frontCamera ? t('call.cameraFront') : t('call.cameraBack')}
-                </Text>
-              </Pressable>
-            </>
-          ) : null}
-
-          <Pressable style={[styles.hangupButton]} onPress={handleHangup}>
-            <Text style={styles.hangupText}>{t('call.hangup')}</Text>
-          </Pressable>
-        </View>
-
-        {!connected ? (
-          <Pressable style={styles.rateButton} onPress={handleHangup}>
-            <Text style={styles.rateText}>{t('call.rateBtn', 'Değerlendir')}</Text>
-          </Pressable>
-        ) : null}
-
-        {errorMessage && (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          </View>
-        )}
-      </View>
-    </SafeAreaView>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.midnight },
-  container: { flex: 1, padding: spacing.lg, gap: spacing.lg },
+  container: {
+    flex: 1,
+    backgroundColor: colors.bgDeep,
+  },
+  fullBg: {
+    flex: 1,
+  },
+  safe: {
+    flex: 1,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.bgDeep,
+  },
+  loaderText: {
+    fontFamily: font.sans,
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 16,
+  },
+
+  // Header
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
-  title: {
+  headerLeft: {
     flex: 1,
-    fontSize: 18,
-    color: colors.stardust,
+  },
+  remoteName: {
     fontFamily: font.display,
-    marginRight: spacing.md,
+    fontSize: 20,
+    color: colors.text,
   },
-  timer: {
-    color: colors.gold,
-    fontFamily: font.sansMedium,
-    fontSize: 14,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  loadingText: { color: colors.stardustDim, fontFamily: font.sans },
-  statusCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: spacing.md,
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  statusText: {
-    color: colors.stardust,
-    fontFamily: font.sansBold,
-    textAlign: 'center',
-  },
-  statusSubText: {
-    color: colors.muted,
-    fontFamily: font.sans,
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  stage: {
-    flex: 1,
-    minHeight: 280,
-  },
-  videoContainer: {
-    position: 'relative',
-    flex: 1,
-    borderRadius: radius.md,
-    overflow: 'hidden',
-    backgroundColor: colors.surface,
-  },
-  remoteVideo: {
-    width: '100%',
-    height: '100%',
-  },
-  localPreview: {
-    position: 'absolute',
-    right: spacing.sm,
-    bottom: spacing.sm,
-    width: 140,
-    height: 180,
-    borderRadius: radius.sm,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.gold,
-  },
-  localVideo: { width: '100%', height: '100%' },
-  audioContainer: {
-    flex: 1,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholder: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceHigh,
-    gap: spacing.md,
-  },
-  placeholderText: {
-    color: colors.stardustDim,
-    fontFamily: font.sans,
-  },
-  avatar: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    backgroundColor: colors.surface,
-  },
-  avatarLarge: {
-    width: 132,
-    height: 132,
-    borderRadius: 66,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  avatarLargeFallback: {
-    width: 132,
-    height: 132,
-    borderRadius: 66,
-    backgroundColor: colors.amethyst,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  avatarText: { color: colors.stardust, fontSize: 40, fontFamily: font.sansBold },
-  placeholderInitial: { color: colors.stardust, fontSize: 40, fontFamily: font.sansBold },
-  controls: {
+  statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  online: { backgroundColor: colors.success },
+  offline: { backgroundColor: colors.warning },
+  statusLabel: {
+    fontFamily: font.sansBold,
+    fontSize: 10,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  timerBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+  },
+  timerText: {
+    fontFamily: font.mono,
+    fontSize: 14,
+    color: colors.gold,
+  },
+
+  // Stage
+  stage: {
+    flex: 1,
+    padding: spacing.lg,
+  },
+  videoGrid: {
+    flex: 1,
+    borderRadius: radius.xl,
+    overflow: 'hidden',
+    backgroundColor: colors.inkDeep,
+    position: 'relative',
+  },
+  remoteVideo: {
+    flex: 1,
+  },
+  localPreviewWrap: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 100,
+    height: 150,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: colors.gold,
+    backgroundColor: colors.bgDeep,
+  },
+  localVideo: {
+    flex: 1,
+  },
+  placeholder: {
+    flex: 1,
     justifyContent: 'center',
-    gap: spacing.md,
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 16,
   },
-  iconButton: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-  },
-  iconButtonActive: {
-    backgroundColor: colors.amethyst,
-  },
-  iconText: {
-    color: colors.stardust,
+  placeholderText: {
     fontFamily: font.sans,
-    fontSize: 12,
+    fontSize: 14,
+    color: colors.textMuted,
   },
-  iconTextActive: { color: colors.stardust },
-  hangupButton: {
-    backgroundColor: colors.danger,
-    borderRadius: radius.pill,
-    paddingVertical: 10,
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.xs,
+
+  audioStage: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  hangupText: {
-    color: colors.stardust,
+  avatarGlowWrap: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarBorder: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    padding: 4,
+    backgroundColor: colors.gold,
+    zIndex: 2,
+  },
+  avatarLarge: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 76,
+  },
+  avatarLargePlaceholder: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 76,
+    backgroundColor: colors.bgDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitialLarge: {
+    fontFamily: font.display,
+    fontSize: 60,
+    color: colors.gold,
+  },
+  pulseRing: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 2,
+    borderColor: colors.gold,
+    opacity: 0.2,
+    zIndex: 1,
+  },
+  audioStatus: {
     fontFamily: font.sansBold,
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 40,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
   },
-  rateButton: {
-    marginTop: spacing.sm,
-    backgroundColor: colors.amethyst,
-    alignSelf: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.pill,
-    ...shadows.soft,
+
+  // Controls
+  controls: {
+    padding: spacing.xl,
+    paddingBottom: spacing['2xl'],
+    alignItems: 'center',
+    gap: spacing.xl,
   },
-  rateText: {
-    color: colors.stardust,
-    fontFamily: font.sansBold,
+  controlRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
   },
-  errorBanner: {
-    marginTop: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.sm,
-    backgroundColor: 'rgba(229, 91, 77, 0.18)',
+  controlBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(229, 91, 77, 0.35)',
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  controlBtnActive: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderColor: colors.gold,
+  },
+  controlBtnDisabled: {
+    opacity: 0.3,
+  },
+  hangupBtn: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.danger,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+
+  errorBanner: {
+    position: 'absolute',
+    bottom: 120,
+    left: spacing.lg,
+    right: spacing.lg,
+    backgroundColor: 'rgba(229, 91, 77, 0.9)',
+    padding: 12,
+    borderRadius: radius.md,
+    alignItems: 'center',
   },
   errorText: {
-    color: colors.danger,
-    fontFamily: font.sans,
+    fontFamily: font.sansBold,
     fontSize: 13,
+    color: colors.text,
   },
 });

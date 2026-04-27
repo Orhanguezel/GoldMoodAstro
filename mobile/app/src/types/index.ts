@@ -352,14 +352,18 @@ export interface DailyReadingResponse {
 
 export interface Review {
   id: string;
-  target_type: string;
+  target_type: 'consultant' | string;
   target_id: string;
   user_id: string;
   booking_id?: string;
   rating: number;
-  comment?: string;
-  is_approved: boolean;
-  submitted_locale: string;
+  comment?: string | null;
+  name?: string | null;
+  admin_reply?: string | null;
+  consultant_reply?: string | null;
+  is_verified?: boolean | number;
+  is_approved?: boolean;
+  submitted_locale?: string;
   created_at: string;
 }
 

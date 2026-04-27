@@ -21,7 +21,7 @@ export default function Index() {
   if (!target) {
     return (
       <View style={styles.wrap}>
-        <ActivityIndicator color={colors.amethyst} />
+        <ActivityIndicator color={colors.gold} />
       </View>
     );
   }
@@ -29,5 +29,5 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: colors.midnight, alignItems: 'center', justifyContent: 'center' },
+  wrap: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
 });

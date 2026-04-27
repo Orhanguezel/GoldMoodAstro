@@ -117,6 +117,12 @@ export default function RootLayout() {
             name="call/rate"
             options={{ presentation: 'modal' }}
           />
+
+          {/* Seans sonrası değerlendirme */}
+          <Stack.Screen
+            name="booking/[id]/review"
+            options={{ presentation: 'modal' }}
+          />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

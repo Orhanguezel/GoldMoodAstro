@@ -65,7 +65,8 @@ export const ReviewCreateSchema = z.object({
     .string()
     .trim()
     .min(1, "target_type gereklidir")
-    .max(50, "target_type en fazla 50 karakter olabilir"),
+    .max(50, "target_type en fazla 50 karakter olabilir")
+    .default("consultant"),
   target_id: z
     .string()
     .trim()
@@ -75,8 +76,8 @@ export const ReviewCreateSchema = z.object({
   // Yorumun gönderildiği dil (opsiyonel, yoksa server req.locale kullanır)
   locale: LOCALE_ENUM.optional(),
 
-  name: z.string().trim().min(2).max(255),
-  email: z.string().trim().email().max(255),
+  name: z.string().trim().min(2).max(255).optional(),
+  email: z.string().trim().email().max(255).optional(),
   rating: z.number().int().min(1).max(5),
 
   // Yorum metni i18n tabloda; API aynı kalıyor
