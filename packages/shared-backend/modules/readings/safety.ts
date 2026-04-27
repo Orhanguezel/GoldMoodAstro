@@ -1,17 +1,10 @@
-const BLOCKED_PATTERNS = [
-  /öl(ü|u)m/i,
-  /ağır hastalık/i,
-  /agir hastalik/i,
-  /ayrılık kesin/i,
-  /ayrilik kesin/i,
-  /ihanet/i,
-  /kesinlikle/i,
-  /kaçınılmaz/i,
-  /kacinilmaz/i,
-];
+// FAZ 9 / FAZ 17 entegrasyonu — reading-specific safety check
+// Ortak moderation _shared/contentModeration'dan reuse.
 
-export function isUnsafeReading(content: string) {
-  return BLOCKED_PATTERNS.some((p) => p.test(content));
+import { checkContent } from '../_shared/contentModeration';
+
+export function isUnsafeReading(content: string): boolean {
+  return !checkContent(content, 'reading').safe;
 }
 
 export function safeFallbackReading(signLabel: string) {

@@ -169,6 +169,15 @@ export const subscriptionsApi = {
     };
   }> => post('/subscriptions/start', { plan_id: planId, payment_gateway_slug: paymentGatewaySlug }),
 
+  verifyReceipt: (payload: {
+    plan_id?: string;
+    platform: 'apple' | 'google' | 'apple_iap' | 'google_iap';
+    receipt: string;
+    transaction_id?: string;
+    purchase_token?: string;
+    product_id?: string;
+  }) => post('/subscriptions/verify-receipt', payload),
+
   cancel: (reason?: string) =>
     post<{ data: Subscription }>('/subscriptions/cancel', { ...(reason ? { reason } : {}) }),
 };

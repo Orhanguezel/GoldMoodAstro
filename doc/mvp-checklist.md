@@ -1269,7 +1269,7 @@ sonra review POST → 201 + is_verified=true.
 **Acceptance:** Consultant kendi review'ına PATCH consultant-reply atar, başkasının review'ına
 402/403. Frontend cevabı listede görür.
 
-### T17-3 — Backend: Otomatik Moderasyon Filtresi (Codex)
+### T17-3 — Backend: Otomatik Moderasyon Filtresi (Claude Code) ✅
 
 > FAZ 9 (readings) LLM altyapısı tekrar kullanılır. Review POST'ta safety classifier.
 

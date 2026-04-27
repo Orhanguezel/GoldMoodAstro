@@ -9,6 +9,7 @@ import type {
   ReviewUpdateInput,
 } from "./validation";
 import type { ReviewView } from "./schema";
+import { checkContent } from "../_shared/contentModeration";
 
 /** MySQL tinyint(1) -> boolean, number coercion + i18n alanları ekle */
 function mapRowCore(
@@ -221,8 +222,25 @@ export async function repoCreateReviewPublic(
   const mysql = (app as any).mysql;
 
   const isActive = body.is_active ?? true;
-  // Public gönderimler default onaysız
-  const isApproved = body.is_approved ?? false;
+
+  // FAZ 17 / T17-3 — İçerik moderasyonu:
+  //   Title + comment metnini birleştirip kontrol et.
+  //   Temiz ise auto-approve (is_approved=1).
+  //   Suspicious veya body.is_approved açıkça false ise admin queue'ya (=0).
+  const fullText = [body.title ?? '', body.comment ?? ''].filter(Boolean).join('\n');
+  const moderation = checkContent(fullText, 'review');
+  const explicitOverride = typeof body.is_approved === 'boolean' ? body.is_approved : null;
+  const isApproved = explicitOverride !== null ? explicitOverride : moderation.safe;
+
+  if (!moderation.safe) {
+    // Audit log için server-side console (admin dashboard'da gelecek genişletme)
+    console.warn('review_moderation_flag', {
+      target_id: body.target_id,
+      flags: moderation.flags,
+      patterns: moderation.matched_patterns,
+    });
+  }
+
   const displayOrder = body.display_order ?? 0;
 
   const id = randomUUID();
