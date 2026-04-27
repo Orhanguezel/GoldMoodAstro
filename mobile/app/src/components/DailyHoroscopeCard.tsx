@@ -1,22 +1,23 @@
-// mobile/app/src/components/DailyHoroscopeCard.tsx
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Dimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors, font } from '@/theme/tokens';
+import { colors, font, radius, spacing } from '@/theme/tokens';
 import { horoscopesApi } from '@/lib/api';
+import { Sparkles, Star, Heart } from 'lucide-react-native';
+
+const { width } = Dimensions.get('window');
 
 const SIGNS = [
-  { key: 'aries', label: '♈︎' }, { key: 'taurus', label: '♉︎' }, 
-  { key: 'gemini', label: '♊︎' }, { key: 'cancer', label: '♋︎' },
-  { key: 'leo', label: '♌︎' }, { key: 'virgo', label: '♍︎' }, 
-  { key: 'libra', label: '♎︎' }, { key: 'scorpio', label: '♏︎' },
-  { key: 'sagittarius', label: '♐︎' }, { key: 'capricorn', label: '♑︎' }, 
-  { key: 'aquarius', label: '♒︎' }, { key: 'pisces', label: '♓︎' },
+  { key: 'aries', label: '♈︎', name: 'Koç' }, { key: 'taurus', label: '♉︎', name: 'Boğa' }, 
+  { key: 'gemini', label: '♊︎', name: 'İkizler' }, { key: 'cancer', label: '♋︎', name: 'Yengeç' },
+  { key: 'leo', label: '♌︎', name: 'Aslan' }, { key: 'virgo', label: '♍︎', name: 'Başak' }, 
+  { key: 'libra', label: '♎︎', name: 'Terazi' }, { key: 'scorpio', label: '♏︎', name: 'Akrep' },
+  { key: 'sagittarius', label: '♐︎', name: 'Yay' }, { key: 'capricorn', label: '♑︎', name: 'Oğlak' }, 
+  { key: 'aquarius', label: '♒︎', name: 'Kova' }, { key: 'pisces', label: '♓︎', name: 'Balık' },
 ];
 
 export default function DailyHoroscopeCard() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const [selectedSign, setSelectedSign] = useState('aries');
   const [loading, setLoading] = useState(false);
   const [horoscope, setHoroscope] = useState<any>(null);
@@ -31,59 +32,77 @@ export default function DailyHoroscopeCard() {
       const res = await horoscopesApi.getToday({ sign: selectedSign });
       setHoroscope(res);
     } catch (e) {
-      console.error(e);
+      console.error('Horoscope load error:', e);
     } finally {
       setLoading(false);
     }
   }
 
+  const selectedSignData = SIGNS.find(s => s.key === selectedSign);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionLabel}>GÜNLÜK GÖKYÜZÜ</Text>
+      <Text style={styles.sectionTitle}>GÜNLÜK BURÇ YORUMLARI</Text>
       
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.signList}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        style={styles.signList}
+        contentContainerStyle={styles.signListContent}
+      >
         {SIGNS.map((s) => (
-          <TouchableOpacity 
+          <Pressable 
             key={s.key} 
             style={[styles.signBtn, selectedSign === s.key && styles.signBtnActive]}
             onPress={() => setSelectedSign(s.key)}
           >
             <Text style={[styles.signIcon, selectedSign === s.key && styles.signIconActive]}>{s.label}</Text>
-          </TouchableOpacity>
+            <Text style={[styles.signName, selectedSign === s.key && styles.signNameActive]}>{s.name}</Text>
+          </Pressable>
         ))}
       </ScrollView>
 
       <View style={styles.card}>
         {loading ? (
-          <ActivityIndicator color={colors.gold} style={{ padding: 40 }} />
+          <ActivityIndicator color={colors.gold} style={{ padding: 60 }} />
         ) : horoscope ? (
           <View>
             <View style={styles.cardHeader}>
-              <Text style={styles.signTitle}>{selectedSign.toUpperCase()}</Text>
-              <Text style={styles.date}>{new Date(horoscope.date).toLocaleDateString()}</Text>
+              <View style={styles.signMeta}>
+                <Text style={styles.signTitle}>{selectedSignData?.name.toUpperCase()}</Text>
+                <Text style={styles.date}>{new Date(horoscope.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}</Text>
+              </View>
+              <View style={styles.moodBadge}>
+                <Sparkles size={12} color={colors.gold} />
+                <Text style={styles.moodText}>{horoscope.mood_score}/10 Enerji</Text>
+              </View>
             </View>
             
             <Text style={styles.content}>
               {i18n.language === 'tr' ? horoscope.content_tr : (horoscope.content_en || horoscope.content_tr)}
             </Text>
 
-            <View style={styles.footer}>
-              <View style={styles.stat}>
-                <Text style={styles.statLabel}>MOD</Text>
-                <Text style={styles.statVal}>{horoscope.mood_score}/10</Text>
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <Star size={14} color={colors.goldDim} />
+                <View>
+                  <Text style={styles.statLabel}>ŞANSLI SAYI</Text>
+                  <Text style={styles.statVal}>{horoscope.lucky_number}</Text>
+                </View>
               </View>
-              <View style={styles.stat}>
-                <Text style={styles.statLabel}>ŞANS</Text>
-                <Text style={styles.statVal}>#{horoscope.lucky_number}</Text>
-              </View>
-              <View style={styles.stat}>
-                <Text style={styles.statLabel}>RENK</Text>
-                <Text style={styles.statVal}>{horoscope.lucky_color}</Text>
+              <View style={styles.statItem}>
+                <Heart size={14} color={colors.goldDim} />
+                <View>
+                  <Text style={styles.statLabel}>ŞANSLI RENK</Text>
+                  <Text style={styles.statVal}>{horoscope.lucky_color}</Text>
+                </View>
               </View>
             </View>
           </View>
         ) : (
-          <Text style={styles.error}>Yorum yüklenemedi.</Text>
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>Yorum şu an ulaşılamıyor.</Text>
+          </View>
         )}
       </View>
     </View>
@@ -91,21 +110,140 @@ export default function DailyHoroscopeCard() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingVertical: 20 },
-  sectionLabel: { fontFamily: font.sansBold, fontSize: 10, letterSpacing: 2, color: colors.gold, marginBottom: 12, paddingHorizontal: 20 },
-  signList: { paddingHorizontal: 15, marginBottom: 15 },
-  signBtn: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, borderWidth: 1, borderColor: colors.line },
-  signBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
-  signIcon: { fontSize: 20, color: colors.muted },
-  signIconActive: { color: colors.bg },
-  card: { backgroundColor: colors.surface, marginHorizontal: 20, padding: 20, borderRadius: 12, borderWidth: 1, borderColor: colors.line, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 5 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.line, paddingBottom: 8 },
-  signTitle: { fontFamily: font.serifBold, fontSize: 18, color: colors.gold },
-  date: { fontFamily: font.sans, fontSize: 10, color: colors.muted },
-  content: { fontFamily: font.serif, fontSize: 15, color: colors.text, lineHeight: 22, fontStyle: 'italic' },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, paddingTop: 15, borderTopWidth: 1, borderTopColor: colors.line },
-  stat: { alignItems: 'flex-start' },
-  statLabel: { fontFamily: font.sansBold, fontSize: 8, color: colors.muted, marginBottom: 4 },
-  statVal: { fontFamily: font.sansMedium, fontSize: 12, color: colors.text },
-  error: { textAlign: 'center', color: colors.muted, padding: 20 }
+  container: { 
+    marginVertical: spacing.lg 
+  },
+  sectionTitle: { 
+    fontFamily: font.sansBold, 
+    fontSize: 10, 
+    color: colors.goldDeep, 
+    letterSpacing: 2, 
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.lg 
+  },
+  signList: { 
+    marginBottom: spacing.xl 
+  },
+  signListContent: {
+    paddingHorizontal: spacing.lg,
+    gap: 12,
+  },
+  signBtn: { 
+    width: 64, 
+    height: 80, 
+    borderRadius: radius.lg, 
+    backgroundColor: colors.surface, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    borderWidth: 1, 
+    borderColor: colors.line,
+    gap: 4,
+  },
+  signBtnActive: { 
+    backgroundColor: colors.inkDeep, 
+    borderColor: colors.gold 
+  },
+  signIcon: { 
+    fontSize: 24, 
+    color: colors.textMuted 
+  },
+  signIconActive: { 
+    color: colors.gold 
+  },
+  signName: {
+    fontFamily: font.sans,
+    fontSize: 10,
+    color: colors.textMuted,
+  },
+  signNameActive: {
+    fontFamily: font.sansBold,
+    color: colors.gold,
+  },
+  card: { 
+    backgroundColor: colors.surface, 
+    marginHorizontal: spacing.lg, 
+    padding: spacing.xl, 
+    borderRadius: radius.xl, 
+    borderWidth: 1, 
+    borderColor: colors.line,
+  },
+  cardHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'flex-start', 
+    marginBottom: 20,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lineSoft,
+  },
+  signMeta: {
+    gap: 2,
+  },
+  signTitle: { 
+    fontFamily: font.display, 
+    fontSize: 18, 
+    color: colors.text 
+  },
+  date: { 
+    fontFamily: font.sans, 
+    fontSize: 11, 
+    color: colors.textMuted 
+  },
+  moodBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.inkDeep,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.xs,
+    borderWidth: 1,
+    borderColor: colors.goldDim,
+  },
+  moodText: {
+    fontFamily: font.sansBold,
+    fontSize: 10,
+    color: colors.gold,
+  },
+  content: { 
+    fontFamily: font.serif, 
+    fontSize: 16, 
+    color: colors.textDim, 
+    lineHeight: 24, 
+    fontStyle: 'italic' 
+  },
+  statsGrid: { 
+    flexDirection: 'row', 
+    gap: 24,
+    marginTop: 24, 
+    paddingTop: 20, 
+    borderTopWidth: 1, 
+    borderTopColor: colors.lineSoft 
+  },
+  statItem: { 
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  statLabel: { 
+    fontFamily: font.sansBold, 
+    fontSize: 8, 
+    color: colors.textMuted, 
+    letterSpacing: 1 
+  },
+  statVal: { 
+    fontFamily: font.sansBold, 
+    fontSize: 12, 
+    color: colors.text,
+    marginTop: 2,
+  },
+  errorBox: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  errorText: {
+    fontFamily: font.sans,
+    fontSize: 14,
+    color: colors.textMuted,
+  },
 });

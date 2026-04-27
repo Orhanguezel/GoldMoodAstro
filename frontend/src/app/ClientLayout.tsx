@@ -13,7 +13,6 @@ import PwaRegistration from '../components/system/PwaRegistration';
 import { resetLayoutSeo } from '../seo';
 
 const SitePopups = lazy(() => import('../layout/banner/SitePopups'));
-const SupportBotWidget = lazy(() => import('../components/containers/chat/SupportBotWidget'));
 
 
 export default function ClientLayout({
@@ -41,33 +40,62 @@ export default function ClientLayout({
     }
   }, [locale]);
 
-  // Global scroll reveal observer for all pages
+  // Global scroll reveal observer.
+  // Hydration-safe: Önce body'ye `scroll-reveal-ready` class eklenir
+  // (CSS `.reveal` opacity/transform geçişini bu noktadan sonra aktive eder).
+  // Sonra observer kurulur ve `.visible` class eklenmesi başlar — hydration
+  // çoktan tamamlanmış olduğu için SSR/CSR class mismatch oluşmaz.
   useEffect(() => {
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add('visible');
-            io.unobserve(e.target);
-          }
-        });
-      },
-      { threshold: 0.08, rootMargin: '0px 0px -20px 0px' },
-    );
+    let io: IntersectionObserver | null = null;
+    let mo: MutationObserver | null = null;
+    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+    let raf1 = 0;
+    let raf2 = 0;
+    let cancelled = false;
 
-    const scan = () => {
-      document.querySelectorAll('.reveal:not(.visible)').forEach((el) => io.observe(el));
+    const init = () => {
+      if (cancelled) return;
+      // 1) Reveal CSS'i aktive et (hydration tamamlandı)
+      document.body.classList.add('scroll-reveal-ready');
+
+      // 2) Observer kur
+      io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add('visible');
+              io?.unobserve(e.target);
+            }
+          });
+        },
+        { threshold: 0.08, rootMargin: '0px 0px -20px 0px' },
+      );
+
+      const scan = () => {
+        document.querySelectorAll('.reveal:not(.visible)').forEach((el) => io!.observe(el));
+      };
+
+      scan();
+      mo = new MutationObserver(() => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(scan, 100);
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
     };
 
-    scan();
-    let debounceTimer: ReturnType<typeof setTimeout>;
-    const mo = new MutationObserver(() => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(scan, 100);
+    // Çift rAF: hydration commit + ilk paint sonrasına garantili erteleme
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(init);
     });
-    mo.observe(document.body, { childList: true, subtree: true });
 
-    return () => { io.disconnect(); mo.disconnect(); clearTimeout(debounceTimer); };
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      io?.disconnect();
+      mo?.disconnect();
+      clearTimeout(debounceTimer);
+    };
   }, [pathname]);
 
   return (
@@ -87,9 +115,6 @@ export default function ClientLayout({
       <CookieConsentBanner />
       <Suspense fallback={null}>
         <SitePopups />
-      </Suspense>
-      <Suspense fallback={null}>
-        <SupportBotWidget />
       </Suspense>
     </Fragment>
   );

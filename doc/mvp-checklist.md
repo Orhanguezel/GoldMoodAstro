@@ -1245,11 +1245,11 @@ booking oluştur → astrolog 15dk içinde katılmazsa otomatik iade.
 
 **Dosya:** `packages/shared-backend/modules/review/controller.ts`
 
-- [ ] `POST /reviews` validation: `booking_id` zorunlu (consultant target_type için),
+- [x] `POST /reviews` validation: `booking_id` zorunlu (consultant target_type için),
       booking.user_id === current_user.id, booking.status='completed'
-- [ ] `reviews.is_verified BOOLEAN` ekle (booking_id var ve completed ise true)
-- [ ] Admin'den manuel review girişinde `is_verified=false` olabilir (eski yorumlar)
-- [ ] Frontend rozetinde "✓ Doğrulanmış görüşme" badge'i
+- [x] `reviews.is_verified BOOLEAN` ekle (booking_id var ve completed ise true)
+- [x] Admin'den manuel review girişinde `is_verified=false` olabilir (eski yorumlar)
+- [x] Frontend rozetinde "✓ Doğrulanmış görüşme" badge'i
 
 **Acceptance:** Booking yapmadan review POST atma → 403 forbidden. Booking tamamlandıktan
 sonra review POST → 201 + is_verified=true.
@@ -1260,11 +1260,11 @@ sonra review POST → 201 + is_verified=true.
 
 **Dosya:** `120_review_schema.sql` + `review/router.ts`
 
-- [ ] Migration: `review_i18n.consultant_reply TEXT NULL`,
+- [x] Migration: `review_i18n.consultant_reply TEXT NULL`,
       `review_i18n.consultant_replied_at DATETIME NULL` ekle
-- [ ] `PATCH /reviews/:id/consultant-reply` — auth: review.target_id === current_consultant.id
+- [x] `PATCH /reviews/:id/consultant-reply` — auth: review.target_id === current_consultant.id
       (consultant kendi review'ına cevap)
-- [ ] Frontend ReviewList: cevap varsa "Astrolog cevabı" alt bölümü göster
+- [x] Frontend ReviewList: cevap varsa "Astrolog cevabı" alt bölümü göster
 
 **Acceptance:** Consultant kendi review'ına PATCH consultant-reply atar, başkasının review'ına
 402/403. Frontend cevabı listede görür.
@@ -1273,10 +1273,10 @@ sonra review POST → 201 + is_verified=true.
 
 > FAZ 9 (readings) LLM altyapısı tekrar kullanılır. Review POST'ta safety classifier.
 
-- [ ] `POST /reviews` middleware: yorum metnini LLM'e ver, küfür/zarar verici/spam tespit
-- [ ] Tespit edilen review → `is_approved=0` + admin notif kuyruğa
-- [ ] Temiz review → otomatik `is_approved=1`
-- [ ] Admin manuel override edilebilir
+- [x] `POST /reviews` middleware: yorum metnini LLM'e ver, küfür/zarar verici/spam tespit
+- [x] Tespit edilen review → `is_approved=0` + admin notif kuyruğa
+- [x] Temiz review → otomatik `is_approved=1`
+- [x] Admin manuel override edilebilir
 
 **Acceptance:** Spam yorum POST → is_approved=0 + admin'de "Beklemede" listesinde.
 
@@ -1297,13 +1297,13 @@ backend kayıt + listede görünür.
 
 > Web ReviewList bileşeni var ama doğrulanmış rozeti, consultant cevabı, helpful counter eksik.
 
-- [ ] `frontend/src/components/common/public/ReviewList.tsx`:
+- [x] `frontend/src/components/common/public/ReviewList.tsx`:
   - "✓ Doğrulanmış görüşme" badge (is_verified=true ise)
   - Consultant cevap bloğu (varsa, sağ alt expand)
   - "Yardımcı oldu" counter + tıklayınca `POST /reviews/:id/helpful` (mevcut helpful_count alanı)
   - Sıralama: helpful_count desc, sonra created_at desc
-- [ ] `frontend/src/components/containers/consultant/ConsultantDetail.tsx` →
-      sayfanın altında ReviewList yerleşimi (zaten var, kontrol)
+- [x] `frontend/src/components/containers/consultant/ConsultantDetail.tsx` →
+      sayfanın altında ReviewList yerleşimi
 
 ### T17-6 — Backend: Astrolog Karnesi Hazırlığı (Claude Code) ✅
 

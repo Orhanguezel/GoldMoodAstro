@@ -2,14 +2,14 @@
 // FILE: src/components/common/ReviewList.tsx
 // Ortak yorum listesi (public) + reaction/like butonu
 // i18n: site_settings.ui_feedback (list_* ve reaction_* key'leri)
-// - ✅ Bootstrap/inline style yok
-// - ✅ review.scss class'ları kullanılır
+// Tailwind v4 + GoldMood tema değişkenleri (--gm-*).
 // =============================================================
 
 'use client';
 
 import React, { useMemo, useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Star, ThumbsUp, ShieldCheck, CornerDownRight } from 'lucide-react';
 
 import {
   useListReviewsPublicQuery,
@@ -39,9 +39,33 @@ function clampRating(v: number) {
   return Math.max(0, Math.min(5, n));
 }
 
-function starsArray(rating: number) {
+function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
   const full = Math.round(clampRating(rating));
-  return Array.from({ length: 5 }).map((_, idx) => idx < full);
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-label={`rating ${rating} of 5`}>
+      {Array.from({ length: 5 }).map((_, idx) => (
+        <Star
+          key={idx}
+          size={size}
+          className={
+            idx < full
+              ? 'fill-(--gm-gold) text-(--gm-gold)'
+              : 'text-(--gm-border)'
+          }
+          strokeWidth={1.5}
+        />
+      ))}
+    </span>
+  );
+}
+
+function initialsOf(name: string) {
+  return (name || '?')
+    .split(/\s+/)
+    .map((w) => w[0] || '')
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 const ReviewList: React.FC<ReviewListProps> = ({
@@ -55,32 +79,32 @@ const ReviewList: React.FC<ReviewListProps> = ({
   variant = 'reviews',
 }) => {
   const resolvedLocale = useResolvedLocale();
-  const locale = (localeProp || resolvedLocale || 'de').split('-')[0];
+  const locale = (localeProp || resolvedLocale || 'tr').split('-')[0];
 
   const { ui } = useUiSection('ui_feedback', locale as any);
 
   const title = useMemo(() => {
     const t = String(titleOverride || '').trim();
-    return t || ui('ui_feedback_list_title', 'Customer Reviews');
+    return t || ui('ui_feedback_list_title', 'Değerlendirmeler');
   }, [titleOverride, ui]);
 
   const noReviewsText = useMemo(() => {
     const t = String(emptyTextOverride || '').trim();
-    return t || ui('ui_feedback_list_no_reviews', 'There are no reviews for this item yet.');
+    return t || ui('ui_feedback_list_no_reviews', 'Henüz bu danışman için yorum bulunmuyor.');
   }, [emptyTextOverride, ui]);
-  const avgRatingLabel = ui('ui_feedback_list_avg_rating', 'Average Rating');
-  const reviewsSuffix = ui('ui_feedback_list_reviews_suffix', 'reviews');
+  const avgRatingLabel = ui('ui_feedback_list_avg_rating', 'Ortalama puan');
+  const reviewsSuffix = ui('ui_feedback_list_reviews_suffix', 'yorum');
 
-  const helpfulLabel = ui('ui_feedback_list_helpful', 'Helpful');
-  const likedLabel = ui('ui_feedback_list_liked', 'Thanks');
+  const helpfulLabel = ui('ui_feedback_list_helpful', 'Faydalı');
+  const likedLabel = ui('ui_feedback_list_liked', 'Teşekkürler');
   const verifiedLabel = ui('ui_feedback_list_verified', 'Doğrulanmış görüşme');
   const consultantReplyLabel = ui('ui_feedback_list_consultant_reply', 'Astrolog cevabı');
 
   const errorText = ui(
     'ui_feedback_list_error',
-    'An error occurred while processing your request.',
+    'İşlem sırasında bir hata oluştu.',
   );
-  const loadingText = ui('ui_feedback_list_loading', 'Loading reviews...');
+  const loadingText = ui('ui_feedback_list_loading', 'Yorumlar yükleniyor...');
 
   const { data, isLoading, isError } = useListReviewsPublicQuery({
     target_type: targetType,
@@ -88,7 +112,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
     locale,
     approved: true,
     active: true,
-    orderBy: 'created_at',
+    orderBy: 'helpful_count',
     order: 'desc',
     limit: 100,
   } as any);
@@ -132,146 +156,144 @@ const ReviewList: React.FC<ReviewListProps> = ({
   };
 
   return (
-    <section className={['reviewList', className].filter(Boolean).join(' ')}>
+    <section className={['mt-12', className].filter(Boolean).join(' ')}>
       {showHeader && (
-        <header className="reviewList__head">
-          <h3 className="reviewList__title">{title}</h3>
-
-          {variant === 'reviews' && stats.count > 0 && (
-            <div className="reviewList__stats">
-              <div className="reviewList__avg">
-                <strong>
-                  {avgRatingLabel}: {stats.avg.toFixed(1)}/5
-                </strong>
-              </div>
-
-              <div className="reviewList__meta">
-                <span
-                  className="reviewList__stars"
-                  aria-label={`rating ${stats.avg.toFixed(1)} of 5`}
-                >
-                  {starsArray(stats.avg).map((on, idx) => (
-                    <span key={idx} className={on ? 'is-on' : ''} aria-hidden="true">
-                      ★
-                    </span>
-                  ))}
-                </span>
-                <span className="reviewList__count">
-                  {stats.count} {reviewsSuffix}
-                </span>
-              </div>
+        <header className="mb-8 pb-6 border-b border-(--gm-border-soft)">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold-deep) uppercase">
+                {avgRatingLabel}
+              </span>
+              <h3 className="font-serif text-2xl md:text-3xl font-light text-(--gm-text) mt-1">
+                {title}
+              </h3>
             </div>
-          )}
+
+            {variant === 'reviews' && stats.count > 0 && (
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <div className="font-serif font-light text-3xl text-(--gm-text) leading-none">
+                    {stats.avg.toFixed(1)}
+                    <span className="text-base text-(--gm-muted) ml-1">/ 5</span>
+                  </div>
+                  <div className="mt-1.5 flex items-center gap-2 justify-end">
+                    <Stars rating={stats.avg} />
+                    <span className="text-xs text-(--gm-muted)">
+                      ({stats.count} {reviewsSuffix})
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </header>
       )}
 
-      {isLoading && <p className="reviewList__state">{loadingText}</p>}
-      {isError && <p className="reviewList__state reviewList__state--error">{errorText}</p>}
+      {isLoading && (
+        <p className="text-sm text-(--gm-muted) py-8 text-center">{loadingText}</p>
+      )}
+      {isError && (
+        <p className="text-sm text-red-500 py-8 text-center">{errorText}</p>
+      )}
 
       {!isLoading && !isError && reviews.length === 0 && (
-        <p className="reviewList__state reviewList__state--empty">{noReviewsText}</p>
+        <p className="text-sm italic text-(--gm-muted) py-12 text-center border border-dashed border-(--gm-border-soft) rounded-sm">
+          {noReviewsText}
+        </p>
       )}
 
       {!isLoading && !isError && reviews.length > 0 && (
-        <div className="reviewList__items">
-          {reviews.map((r) => (
-            <article key={r.id} className="reviewCard">
-              <div className="reviewCard__top">
-                <div className="reviewCard__who">
-                  <strong className="reviewCard__name">{r.name}</strong>
-                  {/* T17-1: Doğrulanmış görüşme rozeti (F8 differentiator) */}
-                  {Number((r as any).is_verified) === 1 && (
-                    <span
-                      className="reviewCard__verifiedBadge"
-                      title={verifiedLabel}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        marginLeft: '8px',
-                        padding: '2px 8px',
-                        fontSize: '0.72rem',
-                        fontWeight: 500,
-                        color: 'var(--color-success, #4CAF6E)',
-                        background: 'rgba(76, 175, 110, 0.10)',
-                        borderRadius: 'var(--gm-radius-pill, 999px)',
-                        border: '1px solid rgba(76, 175, 110, 0.25)',
-                      }}
-                    >
-                      ✓ {verifiedLabel}
-                    </span>
-                  )}
-                  {variant === 'reviews' && (
-                    <div className="reviewCard__rating">
-                      <span className="reviewCard__stars" aria-hidden="true">
-                        {starsArray(Number(r.rating)).map((on, idx) => (
-                          <span key={idx} className={on ? 'is-on' : ''}>
-                            ★
-                          </span>
-                        ))}
-                      </span>
-                      <span className="reviewCard__score">
-                        {clampRating(Number(r.rating)).toFixed(1)}/5
-                      </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {reviews.map((r) => {
+            const isVerified = Number((r as any).is_verified) === 1;
+            const consultantReply = (r as any).consultant_reply as string | undefined;
+            const helpfulCount = Number((r as any).helpful_count ?? 0);
+
+            return (
+              <article
+                key={r.id}
+                className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-sm p-6 transition-all duration-300 hover:border-(--gm-gold)/40 hover:shadow-card"
+              >
+                <header className="flex items-start gap-4 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 border border-(--gm-gold)/30 flex items-center justify-center text-(--gm-gold-deep) font-display text-sm shrink-0">
+                    {initialsOf(r.name || '')}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <strong className="font-serif text-base text-(--gm-text) font-medium">
+                        {r.name}
+                      </strong>
+                      {isVerified && (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] tracking-wider uppercase"
+                          style={{
+                            color: 'var(--color-success, #4CAF6E)',
+                            background: 'rgba(76, 175, 110, 0.10)',
+                            border: '1px solid rgba(76, 175, 110, 0.25)',
+                          }}
+                          title={verifiedLabel}
+                        >
+                          <ShieldCheck size={11} />
+                          {verifiedLabel}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                <time className="reviewCard__date" dateTime={String((r as any).created_at || '')}>
-                  {formatDate((r as any).created_at)}
-                </time>
-              </div>
+                    {variant === 'reviews' && (
+                      <div className="mt-1 flex items-center gap-2">
+                        <Stars rating={Number(r.rating)} size={12} />
+                        <span className="text-xs text-(--gm-muted)">
+                          {clampRating(Number(r.rating)).toFixed(1)}/5
+                        </span>
+                        <span className="text-xs text-(--gm-muted)">·</span>
+                        <time
+                          className="text-xs text-(--gm-muted)"
+                          dateTime={String((r as any).created_at || '')}
+                        >
+                          {formatDate((r as any).created_at)}
+                        </time>
+                      </div>
+                    )}
+                  </div>
+                </header>
 
-              {r.comment ? <p className="reviewCard__text">{r.comment}</p> : null}
-
-              {/* T17-2: Astrolog cevabı (consultant_reply) */}
-              {(r as any).consultant_reply ? (
-                <div
-                  className="reviewCard__consultantReply"
-                  style={{
-                    marginTop: '12px',
-                    padding: '12px 16px',
-                    borderLeft: '3px solid var(--gm-primary, #C9A961)',
-                    background: 'var(--gm-bg-deep, rgba(201, 169, 97, 0.05))',
-                    borderRadius: '0 var(--gm-radius-sm, 8px) var(--gm-radius-sm, 8px) 0',
-                  }}
-                >
-                  <strong
-                    style={{
-                      display: 'block',
-                      fontSize: '0.78rem',
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      color: 'var(--gm-primary, #C9A961)',
-                      marginBottom: '4px',
-                    }}
-                  >
-                    ↳ {consultantReplyLabel}
-                  </strong>
-                  <p style={{ margin: 0, fontStyle: 'italic', fontSize: '0.92rem' }}>
-                    {(r as any).consultant_reply}
+                {r.comment && (
+                  <p className="font-serif italic text-sm leading-relaxed text-(--gm-text-dim)">
+                    &ldquo;{r.comment}&rdquo;
                   </p>
-                </div>
-              ) : null}
+                )}
 
-              <div className="reviewCard__actions">
-                <button
-                  type="button"
-                  className="reviewCard__btn"
-                  disabled={isReacting && reactionReviewId === r.id}
-                  onClick={() => handleLike(r)}
-                >
-                  <span className="reviewCard__btnIcon" aria-hidden="true">
-                    👍
-                  </span>
-                  <span className="reviewCard__btnText">
-                    {helpfulLabel}{' '}
-                    <span className="reviewCard__btnCount">({(r as any).helpful_count ?? 0})</span>
-                  </span>
-                </button>
-              </div>
-            </article>
-          ))}
+                {consultantReply && (
+                  <div
+                    className="mt-4 pl-4 border-l-2 border-(--gm-gold) bg-(--gm-gold)/5 py-3 px-4 rounded-r-sm"
+                  >
+                    <div className="flex items-center gap-1.5 mb-1 font-display text-[10px] tracking-[0.18em] text-(--gm-gold-deep) uppercase">
+                      <CornerDownRight size={11} />
+                      {consultantReplyLabel}
+                    </div>
+                    <p className="m-0 italic text-sm text-(--gm-text-dim) leading-relaxed">
+                      {consultantReply}
+                    </p>
+                  </div>
+                )}
+
+                <footer className="mt-5 pt-4 border-t border-(--gm-border-soft) flex items-center justify-end">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 text-xs font-medium text-(--gm-text-dim) hover:text-(--gm-gold-deep) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isReacting && reactionReviewId === r.id}
+                    onClick={() => handleLike(r)}
+                  >
+                    <ThumbsUp size={14} />
+                    <span>
+                      {helpfulLabel} <span className="text-(--gm-muted)">({helpfulCount})</span>
+                    </span>
+                  </button>
+                </footer>
+              </article>
+            );
+          })}
         </div>
       )}
     </section>

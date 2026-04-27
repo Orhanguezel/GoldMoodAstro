@@ -3,8 +3,8 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { RefreshCcw } from 'lucide-react';
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { RefreshCcw, TrendingUp, Users, Calendar, Wallet, ArrowRight, Activity, ShieldCheck } from 'lucide-react';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,47 +20,22 @@ import { useAdminSettings } from './admin-settings-provider';
 
 const ROUTE_MAP: Record<string, string> = {
   site_settings: '/admin/site-settings',
-  custom_pages: '/admin/custompage',
-  services: '/admin/services',
-  faqs: '/admin/faqs',
-  menu_items: '/admin/menuitem',
-  footer_sections: '/admin/footer-sections',
-  newsletter: '/admin/newsletter',
-  contacts: '/admin/contacts',
-  reviews: '/admin/reviews',
   bookings: '/admin/bookings',
   users: '/admin/users',
-  email_templates: '/admin/email-templates',
-  notifications: '/admin/notifications',
-  storage: '/admin/storage',
-  db: '/admin/db',
-  audit: '/admin/audit',
-  availability: '/admin/availability',
   consultants: '/admin/consultants',
   support: '/admin/support',
   announcements: '/admin/announcements',
 };
 
 const KPI_CHART_CONFIG = {
-  revenue_total: { label: 'Revenue', color: 'var(--chart-1)' },
+  revenue_total: { label: 'Gelir', color: '#C9A961' },
 } satisfies ChartConfig;
 
 const SERVICE_CHART_CONFIG = {
-  bookings_total: { label: 'Bookings', color: 'var(--chart-2)' },
+  bookings_total: { label: 'Randevu', color: '#7B5EA7' },
 } satisfies ChartConfig;
 
 const RANGES: DashboardRangeKey[] = ['7d', '30d', '90d'];
-
-function getErrMessage(err: unknown): string {
-  const anyErr = err as any;
-  const m1 = anyErr?.data?.error?.message;
-  if (typeof m1 === 'string' && m1.trim()) return m1;
-  const m2 = anyErr?.data?.message;
-  if (typeof m2 === 'string' && m2.trim()) return m2;
-  const m3 = anyErr?.error;
-  if (typeof m3 === 'string' && m3.trim()) return m3;
-  return '';
-}
 
 function formatMoney(v: number): string {
   return new Intl.NumberFormat('tr-TR', {
@@ -72,10 +47,9 @@ function formatMoney(v: number): string {
 
 function labelForBucket(v: string): string {
   if (!v) return '—';
-  if (v.includes('-W')) return v;
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return v;
-  return d.toLocaleDateString('de-DE', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' });
 }
 
 export default function AdminDashboardClient() {
@@ -88,228 +62,196 @@ export default function AdminDashboardClient() {
   const [range, setRange] = React.useState<DashboardRangeKey>('30d');
   const q = useGetDashboardSummaryAdminQuery({ range });
 
-  React.useEffect(() => {
-    if (!q.isError) return;
-    toast.error(getErrMessage(q.error) || copy.common?.states?.error || t('admin.common.error'));
-  }, [q.isError, q.error, copy.common?.states?.error, t]);
-
   const analytics = q.data;
-  const nav = copy.nav?.items ?? ({} as Record<string, string>);
 
   const kpis = React.useMemo(() => {
     const totals = analytics?.totals;
     if (!totals) return [];
     return [
-      { key: 'users_total', label: t('admin.dashboard.analytics.kpis.users'), value: String(totals.users_total) },
-      { key: 'consultants_active', label: t('admin.dashboard.analytics.kpis.consultants'), value: String(totals.consultants_active) },
-      { key: 'today_bookings', label: t('admin.dashboard.analytics.kpis.todayBookings'), value: String(totals.today_bookings) },
-      { key: 'revenue_total', label: t('admin.dashboard.analytics.kpis.revenue'), value: formatMoney(totals.revenue_total) },
+      { key: 'revenue_total', label: 'Toplam Ciro', value: formatMoney(totals.revenue_total), icon: Wallet, color: '#C9A961' },
+      { key: 'today_bookings', label: 'Bugünkü Randevular', value: String(totals.today_bookings), icon: Calendar, color: '#7B5EA7' },
+      { key: 'consultants_active', label: 'Aktif Danışmanlar', value: String(totals.consultants_active), icon: ShieldCheck, color: '#4CAF6E' },
+      { key: 'users_total', label: 'Toplam Üye', value: String(totals.users_total), icon: Users, color: '#5B9BD5' },
     ];
-  }, [analytics?.totals, t]);
-
-  const moduleItems = React.useMemo(() => {
-    const totals = analytics?.totals;
-    if (!totals) return [];
-    const pairs: Array<[string, number]> = [
-      ['services', totals.services_total],
-      ['bookings', totals.bookings_total],
-      ['consultants', totals.consultants_active],
-      ['availability', totals.availability_total],
-      ['contacts', totals.contact_messages_total],
-      ['audit', totals.audit_logs_total],
-      ['storage', totals.storage_assets_total],
-      ['users', totals.users_total],
-      ['support', totals.support_tickets_total || 0],
-      ['announcements', totals.announcements_total || 0],
-    ];
-    return pairs.map(([key, count]) => ({
-      key,
-      count,
-      href: ROUTE_MAP[key] ?? null,
-      label:
-        (nav as Record<string, string>)[key] ||
-        page[`label_${key}`] ||
-        page[key] ||
-        t(`admin.dashboard.items.${key}` as any) ||
-        key,
-    }));
-  }, [analytics?.totals, nav, page, t]);
+  }, [analytics?.totals]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-lg font-semibold">
-            {dashboardMeta?.title || page?.title || t('admin.dashboard.title')}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t('admin.dashboard.analytics.subtitle')}
+    <div className="space-y-8 pb-12">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <span className="w-8 h-px bg-[#C9A961]" />
+            <span className="text-[#C9A961] font-bold text-[10px] tracking-[0.2em] uppercase">Genel Bakış</span>
+          </div>
+          <h1 className="font-serif text-4xl text-foreground leading-tight">Yönetim Paneli</h1>
+          <p className="text-muted-foreground text-sm mt-2 font-serif italic">
+            Platform performansını ve büyüme verilerini anlık takip edin.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-full border border-border/50">
           {RANGES.map((key) => (
-            <Button
+            <button
               key={key}
-              type="button"
-              variant={range === key ? 'default' : 'outline'}
-              size="sm"
               onClick={() => setRange(key)}
+              className={`px-6 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all ${
+                range === key ? 'bg-[#C9A961] text-[#1A1715]' : 'text-muted-foreground hover:text-foreground'
+              }`}
             >
-              {t(`admin.dashboard.analytics.ranges.${key}` as any)}
-            </Button>
+              {key === '7d' ? 'Haftalık' : key === '30d' ? 'Aylık' : '3 Aylık'}
+            </button>
           ))}
-          <Button type="button" variant="outline" size="sm" onClick={() => q.refetch()} disabled={q.isFetching}>
-            <RefreshCcw className={`mr-2 size-4${q.isFetching ? ' animate-spin' : ''}`} />
-            {copy.common?.actions?.refresh || t('admin.common.refresh')}
-          </Button>
+          <div className="w-px h-4 bg-border mx-2" />
+          <button 
+            onClick={() => q.refetch()} 
+            disabled={q.isFetching}
+            className="p-2 hover:bg-muted rounded-full transition-colors"
+          >
+            <RefreshCcw className={`size-4 ${q.isFetching ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </div>
 
-      {q.isLoading && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="gap-2 pb-2">
-                <Skeleton className="h-4 w-24" />
+      {/* KPI Cards */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {q.isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-[24px]" />
+          ))
+        ) : (
+          kpis.map((item) => (
+            <Card key={item.key} className="bg-card border-border/40 rounded-[24px] overflow-hidden relative group hover:border-[#C9A961]/30 transition-all duration-500">
+              <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
+                <item.icon size={64} />
+              </div>
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                    <item.icon size={16} style={{ color: item.color }} />
+                  </div>
+                  <CardTitle className="text-[10px] font-bold text-muted-foreground tracking-[0.1em] uppercase">{item.label}</CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-16" />
+                <div className="text-3xl font-serif text-foreground">{item.value}</div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
 
-      {!q.isLoading && analytics && (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {kpis.map((item) => (
-              <Card key={item.key}>
-                <CardHeader className="gap-2 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">{item.label}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-semibold tabular-nums">{item.value}</div>
-                </CardContent>
-              </Card>
+      {/* Charts Section */}
+      <div className="grid gap-8 xl:grid-cols-2">
+        <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
+          <CardHeader className="p-8 pb-4">
+            <div className="flex items-center gap-3 mb-2">
+              <TrendingUp className="w-4 h-4 text-[#C9A961]" />
+              <CardTitle className="font-serif text-2xl">Gelir Grafiği</CardTitle>
+            </div>
+            <CardDescription className="font-serif italic opacity-70">Seçili dönemdeki toplam ciro değişimi.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 pt-4">
+            {q.isLoading ? (
+              <Skeleton className="h-72 w-full rounded-2xl" />
+            ) : analytics?.revenueTrend.length ? (
+              <ChartContainer config={KPI_CHART_CONFIG} className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={analytics.revenueTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#C9A961" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#C9A961" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickFormatter={labelForBucket} tick={{ fontSize: 10, fill: '#666' }} />
+                    <YAxis tickLine={false} axisLine={false} tickFormatter={(v) => `₺${v}`} tick={{ fontSize: 10, fill: '#666' }} />
+                    <ChartTooltip 
+                      content={<ChartTooltipContent 
+                        labelFormatter={(l) => labelForBucket(String(l))} 
+                        formatter={(v) => formatMoney(Number(v))} 
+                      />} 
+                    />
+                    <Area type="monotone" dataKey="revenue_total" stroke="#C9A961" strokeWidth={3} fill="url(#colorRev)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            ) : (
+              <div className="h-72 flex items-center justify-center text-sm text-muted-foreground font-serif italic">Veri bulunamadı.</div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
+          <CardHeader className="p-8 pb-4">
+            <div className="flex items-center gap-3 mb-2">
+              <Activity className="w-4 h-4 text-[#7B5EA7]" />
+              <CardTitle className="font-serif text-2xl">Randevu Dağılımı</CardTitle>
+            </div>
+            <CardDescription className="font-serif italic opacity-70">Hizmet bazlı randevu sayıları.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 pt-4">
+            {q.isLoading ? (
+              <Skeleton className="h-72 w-full rounded-2xl" />
+            ) : analytics?.services.length ? (
+              <ChartContainer config={SERVICE_CHART_CONFIG} className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.services}>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="service_name" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#666' }} />
+                    <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#666' }} />
+                    <ChartTooltip content={<ChartTooltipContent labelFormatter={(l) => String(l)} />} />
+                    <Bar dataKey="bookings_total" fill="#7B5EA7" radius={[4, 4, 0, 0]} barSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            ) : (
+              <div className="h-72 flex items-center justify-center text-sm text-muted-foreground font-serif italic">Veri bulunamadı.</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bottom Modules Section */}
+      <div className="grid gap-8 xl:grid-cols-2">
+        <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
+          <CardHeader className="p-8 pb-4">
+            <CardTitle className="font-serif text-2xl">Hızlı İşlemler</CardTitle>
+            <CardDescription className="font-serif italic opacity-70">Modüllere hızlı erişim.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 pt-4 grid grid-cols-2 gap-4">
+            {Object.entries(ROUTE_MAP).map(([key, href]) => (
+              <Link key={key} href={href} className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/40 hover:border-[#C9A961]/30 hover:bg-muted/40 transition-all group">
+                <span className="text-[10px] font-bold tracking-widest uppercase opacity-70 group-hover:opacity-100">{key.replace('_', ' ')}</span>
+                <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all" />
+              </Link>
             ))}
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="grid gap-4 xl:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('admin.dashboard.analytics.revenueChart.title')}</CardTitle>
-                <CardDescription>{t('admin.dashboard.analytics.revenueChart.description')}</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-2">
-                {analytics.revenueTrend.length ? (
-                  <ChartContainer config={KPI_CHART_CONFIG} className="aspect-auto h-72 w-full">
-                    <AreaChart data={analytics.revenueTrend}>
-                      <CartesianGrid vertical={false} />
-                      <XAxis dataKey="bucket" tickLine={false} axisLine={false} minTickGap={24} tickFormatter={labelForBucket} />
-                      <YAxis tickLine={false} axisLine={false} tickFormatter={(v) => `${v}`} />
-                      <ChartTooltip
-                        cursor={false}
-                        content={
-                          <ChartTooltipContent
-                            labelFormatter={(label) => labelForBucket(String(label))}
-                            formatter={(value) => formatMoney(Number(value ?? 0))}
-                          />
-                        }
-                      />
-                      <Area dataKey="revenue_total" type="monotone" stroke="var(--color-revenue_total)" fill="var(--color-revenue_total)" fillOpacity={0.22} />
-                    </AreaChart>
-                  </ChartContainer>
-                ) : (
-                  <div className="text-sm text-muted-foreground">{t('admin.dashboard.analytics.states.empty')}</div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('admin.dashboard.analytics.servicesChart.title')}</CardTitle>
-                <CardDescription>{t('admin.dashboard.analytics.servicesChart.description')}</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-2">
-                {analytics.services.length ? (
-                  <ChartContainer config={SERVICE_CHART_CONFIG} className="aspect-auto h-72 w-full">
-                    <BarChart data={analytics.services}>
-                      <CartesianGrid vertical={false} />
-                      <XAxis
-                        dataKey="service_name"
-                        tickLine={false}
-                        axisLine={false}
-                        interval={0}
-                        angle={analytics.services.length > 3 ? -12 : 0}
-                        textAnchor={analytics.services.length > 3 ? 'end' : 'middle'}
-                        height={50}
-                      />
-                      <YAxis tickLine={false} axisLine={false} allowDecimals={false} />
-                      <ChartTooltip
-                        cursor={false}
-                        content={<ChartTooltipContent labelFormatter={(label) => String(label)} formatter={(value) => `${Number(value ?? 0)}`} />}
-                      />
-                      <Bar dataKey="bookings_total" fill="var(--color-bookings_total)" radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                  </ChartContainer>
-                ) : (
-                  <div className="text-sm text-muted-foreground">{t('admin.dashboard.analytics.states.empty')}</div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid gap-4 xl:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('admin.dashboard.analytics.servicesTable.title')}</CardTitle>
-                <CardDescription>{t('admin.dashboard.analytics.servicesTable.description')}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {analytics.services.length ? analytics.services.map((svc) => (
-                  <div key={svc.service_id} className="flex items-center justify-between rounded-md border p-3">
-                    <div>
-                      <div className="font-medium">{svc.service_name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {t('admin.dashboard.analytics.servicesTable.bookings', { count: String(svc.bookings_total) })}
-                      </div>
-                    </div>
-                    <div className="text-sm font-medium">{formatMoney(svc.revenue_total)}</div>
+        <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
+          <CardHeader className="p-8 pb-4">
+            <CardTitle className="font-serif text-2xl">Performans Özeti</CardTitle>
+            <CardDescription className="font-serif italic opacity-70">Hizmet bazlı ciro verileri.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 pt-4 space-y-4">
+            {analytics?.services.length ? analytics.services.map((svc) => (
+              <div key={svc.service_id} className="flex items-center justify-between p-4 rounded-2xl border border-border/30 bg-muted/10">
+                <div>
+                  <div className="font-serif text-lg">{svc.service_name}</div>
+                  <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                    {svc.bookings_total} Randevu
                   </div>
-                )) : (
-                  <div className="text-sm text-muted-foreground">{t('admin.dashboard.analytics.states.empty')}</div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('admin.dashboard.analytics.modules.title')}</CardTitle>
-                <CardDescription>{t('admin.dashboard.analytics.modules.description')}</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-2">
-                {moduleItems.map((item) => {
-                  const body = (
-                    <div className="rounded-md border p-3 transition-colors hover:border-primary/50">
-                      <div className="text-sm text-muted-foreground">{item.label}</div>
-                      <div className="mt-1 text-xl font-semibold tabular-nums">{item.count}</div>
-                    </div>
-                  );
-                  return item.href ? (
-                    <Link key={item.key} href={item.href} prefetch={false}>
-                      {body}
-                    </Link>
-                  ) : (
-                    <div key={item.key}>{body}</div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          </div>
-        </>
-      )}
+                </div>
+                <div className="text-xl font-serif text-[#C9A961]">{formatMoney(svc.revenue_total)}</div>
+              </div>
+            )) : (
+              <div className="text-sm text-muted-foreground font-serif italic text-center py-8">Yeterli veri yok.</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

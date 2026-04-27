@@ -1,13 +1,7 @@
 'use client';
 
-// =============================================================
-// FILE: src/app/(main)/admin/(admin)/reviews/admin-reviews-client.tsx
-// FINAL — Admin Reviews List (App Router + shadcn)
-// ✅ FULLY FIXED - Type safety issues resolved
-// ✅ FIXED - resolveAdminApiLocale usage corrected
-// =============================================================
-
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -16,25 +10,24 @@ import {
   Search,
   Trash2,
   Pencil,
-  Loader2,
   Star,
   CheckCircle2,
   XCircle,
+  Activity,
+  MessageSquare,
+  ShieldCheck,
+  Calendar
 } from 'lucide-react';
 
 import { useAdminLocales } from '@/app/(main)/admin/_components/common/useAdminLocales';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
-import { resolveAdminApiLocale } from '@/i18n/adminLocale';
-import { localeShortClient, localeShortClientOr } from '@/i18n/localeShortClient';
-
 import { cn } from '@/lib/utils';
-import { usePreferencesStore } from '@/stores/preferences/preferences-provider';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import {
   AdminLocaleSelect,
@@ -75,46 +68,8 @@ import {
   useUpdateReviewAdminMutation,
   useDeleteReviewAdminMutation,
 } from '@/integrations/hooks';
-
-type ApprovedFilter = 'all' | 'approved' | 'unapproved';
-type ActiveFilter = 'all' | 'active' | 'inactive';
-
-type Filters = {
-  search: string;
-  approvedFilter: ApprovedFilter;
-  activeFilter: ActiveFilter;
-  minRating: string;
-  maxRating: string;
-  locale: string;
-};
-
-function fmtDate(val: string | null | undefined, locale?: string) {
-  if (!val) return '-';
-  try {
-    const d = new Date(val);
-    if (Number.isNaN(d.getTime())) return String(val);
-    return d.toLocaleString(locale || undefined, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return String(val);
-  }
-}
-
-function truncate(text: string | null | undefined, max = 60) {
-  const t = text || '';
-  if (t.length <= max) return t || '-';
-  return t.slice(0, max - 1) + '…';
-}
-
-function getErrMsg(e: unknown, fallback: string): string {
-  const anyErr = e as any;
-  return anyErr?.data?.error?.message || anyErr?.data?.message || anyErr?.message || fallback;
-}
+import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
 
 function RatingStars({ rating }: { rating: number }) {
   const stars = Math.max(0, Math.min(5, Math.round(rating || 0)));
@@ -125,7 +80,7 @@ function RatingStars({ rating }: { rating: number }) {
           key={i}
           className={cn(
             'size-3.5',
-            i < stars ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground',
+            i < stars ? 'fill-[#C9A961] text-[#C9A961]' : 'text-muted-foreground opacity-20',
           )}
         />
       ))}
@@ -137,17 +92,9 @@ export default function AdminReviewsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useAdminT('admin.reviews');
-  const adminUiLocale = usePreferencesStore((s) => s.adminLocale);
 
-  // Locale management
-  const {
-    localeOptions,
-    defaultLocaleFromDb,
-    coerceLocale,
-    loading: localesLoading,
-  } = useAdminLocales();
+  const { localeOptions, defaultLocaleFromDb, coerceLocale, loading: localesLoading } = useAdminLocales();
 
-  // ✅ FIX: Ensure localeOptions has correct type
   const safeLocaleOptions: AdminLocaleOption[] = React.useMemo(() => {
     if (!Array.isArray(localeOptions)) return [];
     return localeOptions.map((opt) => ({
@@ -156,549 +103,294 @@ export default function AdminReviewsClient() {
     }));
   }, [localeOptions]);
 
-  const urlLocale = localeShortClient(searchParams.get('locale') || '');
-  const initialLocale =
-    urlLocale ||
-    defaultLocaleFromDb ||
-    localeShortClientOr(typeof window !== 'undefined' ? navigator.language : 'de');
-
-  const [filters, setFilters] = React.useState<Filters>({
+  const [filters, setFilters] = React.useState({
     search: '',
     approvedFilter: 'all',
     activeFilter: 'all',
     minRating: '',
     maxRating: '',
-    locale: initialLocale,
+    locale: 'tr',
   });
 
-  // Update URL when locale changes
-  React.useEffect(() => {
-    const next = localeShortClient(filters.locale);
-    if (!next) return;
-    const cur = localeShortClient(searchParams.get('locale') || '');
-    if (cur === next) return;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('locale', next);
-    router.replace(`?${params.toString()}`, { scroll: false });
-  }, [filters.locale, router, searchParams]);
+  const queryParams = React.useMemo((): AdminReviewListQueryParams => ({
+    search: filters.search || undefined,
+    approved: filters.approvedFilter === 'approved' ? true : filters.approvedFilter === 'unapproved' ? false : undefined,
+    active: filters.activeFilter === 'active' ? true : filters.activeFilter === 'inactive' ? false : undefined,
+    minRating: filters.minRating ? Number(filters.minRating) : undefined,
+    maxRating: filters.maxRating ? Number(filters.maxRating) : undefined,
+    locale: filters.locale,
+    orderBy: 'created_at',
+    order: 'desc',
+  }), [filters]);
 
-  // Build query params
-  const queryParams = React.useMemo((): AdminReviewListQueryParams => {
-    // ✅ FIXED: Correct usage of resolveAdminApiLocale with all parameters
-    const apiLocale =
-      localeShortClient(filters.locale) ||
-      resolveAdminApiLocale(localeOptions, defaultLocaleFromDb, 'de');
-
-    return {
-      search: filters.search || undefined,
-      approved:
-        filters.approvedFilter === 'approved'
-          ? true
-          : filters.approvedFilter === 'unapproved'
-            ? false
-            : undefined,
-      active:
-        filters.activeFilter === 'active'
-          ? true
-          : filters.activeFilter === 'inactive'
-            ? false
-            : undefined,
-      minRating: filters.minRating ? Number(filters.minRating) : undefined,
-      maxRating: filters.maxRating ? Number(filters.maxRating) : undefined,
-      locale: apiLocale,
-      orderBy: 'created_at',
-      order: 'desc',
-    };
-  }, [filters, localeOptions, defaultLocaleFromDb]);
-
-  // RTK Query
   const { data: result, isLoading, isFetching, refetch } = useListReviewsAdminQuery(queryParams);
-
   const [updateReview] = useUpdateReviewAdminMutation();
   const [deleteReview] = useDeleteReviewAdminMutation();
 
   const items = result?.items || [];
   const total = result?.total || 0;
 
-  // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<AdminReviewDto | null>(null);
 
-  const handleSearch = (value: string) => {
-    setFilters((prev) => ({ ...prev, search: value }));
-  };
-
-  const handleApprovedFilterChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, approvedFilter: value as ApprovedFilter }));
-  };
-
-  const handleActiveFilterChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, activeFilter: value as ActiveFilter }));
-  };
-
-  const handleLocaleChange = (locale: string) => {
-    const coerced = coerceLocale(locale, defaultLocaleFromDb);
-    setFilters((prev) => ({ ...prev, locale: coerced }));
-  };
-
   const handleToggleActive = async (item: AdminReviewDto) => {
     try {
-      await updateReview({
-        id: item.id,
-        patch: { is_active: !item.is_active },
-      }).unwrap();
-      toast.success(item.is_active ? t('messages.deactivated') : t('messages.activated'));
+      await updateReview({ id: item.id, patch: { is_active: !item.is_active } }).unwrap();
+      toast.success(item.is_active ? 'Görünmez yapıldı' : 'Yayınlandı');
       refetch();
-    } catch (err) {
-      toast.error(getErrMsg(err, t('messages.genericError')));
+    } catch {
+      toast.error('Hata oluştu');
     }
   };
 
   const handleToggleApproved = async (item: AdminReviewDto) => {
     try {
-      await updateReview({
-        id: item.id,
-        patch: { is_approved: !item.is_approved },
-      }).unwrap();
-      toast.success(item.is_approved ? t('messages.approvalRemoved') : t('messages.approved'));
+      await updateReview({ id: item.id, patch: { is_approved: !item.is_approved } }).unwrap();
+      toast.success(item.is_approved ? 'Onay kaldırıldı' : 'Onaylandı');
       refetch();
-    } catch (err) {
-      toast.error(getErrMsg(err, t('messages.genericError')));
-    }
-  };
-
-  const handleEdit = (item: AdminReviewDto) => {
-    router.push(`/admin/reviews/${item.id}`);
-  };
-
-  const handleDeleteClick = (item: AdminReviewDto) => {
-    setItemToDelete(item);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!itemToDelete) return;
-
-    try {
-      await deleteReview({ id: itemToDelete.id }).unwrap();
-      toast.success(t('messages.deleted'));
-      setDeleteDialogOpen(false);
-      setItemToDelete(null);
-      refetch();
-    } catch (err) {
-      toast.error(getErrMsg(err, t('messages.genericError')));
+    } catch {
+      toast.error('Hata oluştu');
     }
   };
 
   const busy = isLoading || isFetching;
 
   return (
-    <>
-      <div className="space-y-6">
-        {/* Header */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-1.5">
-                <CardTitle>{t('header.title')}</CardTitle>
-                <CardDescription>{t('header.description')}</CardDescription>
-              </div>
-              <Button
-                onClick={() => router.push('/admin/reviews/new')}
-                disabled={busy}
-                className="gap-2"
-              >
-                <Plus className="size-4" />
-                {t('actions.create')}
-              </Button>
-            </div>
-          </CardHeader>
+    <div className="space-y-8 pb-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <span className="w-8 h-px bg-[#C9A961]" />
+            <span className="text-[#C9A961] font-bold text-[10px] tracking-[0.2em] uppercase">Müşteri Deneyimi</span>
+          </div>
+          <h1 className="font-serif text-4xl text-foreground">Değerlendirmeler</h1>
+          <p className="text-muted-foreground text-sm mt-2 font-serif italic">
+            Danışman yorumlarını ve puanlarını moderatör gözüyle inceleyin.
+          </p>
+        </div>
 
-          <CardContent className="space-y-4">
-            {/* Filters */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {/* Search */}
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="search" className="text-sm">
-                  {t('filters.searchLabel')}
-                </Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder={t('filters.searchPlaceholder')}
-                    value={filters.search}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    disabled={busy}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-
-              {/* Approved Filter */}
-              <div className="space-y-2">
-                <Label htmlFor="approvedFilter" className="text-sm">
-                  {t('filters.approvedLabel')}
-                </Label>
-                <Select
-                  value={filters.approvedFilter}
-                  onValueChange={handleApprovedFilterChange}
-                  disabled={busy}
-                >
-                  <SelectTrigger id="approvedFilter">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('filters.options.all')}</SelectItem>
-                    <SelectItem value="approved">{t('filters.options.approved')}</SelectItem>
-                    <SelectItem value="unapproved">{t('filters.options.unapproved')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Active Filter */}
-              <div className="space-y-2">
-                <Label htmlFor="activeFilter" className="text-sm">
-                  {t('filters.activeLabel')}
-                </Label>
-                <Select
-                  value={filters.activeFilter}
-                  onValueChange={handleActiveFilterChange}
-                  disabled={busy}
-                >
-                  <SelectTrigger id="activeFilter">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('filters.options.all')}</SelectItem>
-                    <SelectItem value="active">{t('filters.options.active')}</SelectItem>
-                    <SelectItem value="inactive">{t('filters.options.inactive')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Rating & Locale Row */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {/* Min Rating */}
-              <div className="space-y-2">
-                <Label htmlFor="minRating" className="text-sm">
-                  {t('filters.minRatingLabel')}
-                </Label>
-                <Input
-                  id="minRating"
-                  type="number"
-                  min={0}
-                  max={5}
-                  value={filters.minRating}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, minRating: e.target.value }))}
-                  placeholder={t('filters.minRatingPlaceholder')}
-                  disabled={busy}
-                />
-              </div>
-
-              {/* Max Rating */}
-              <div className="space-y-2">
-                <Label htmlFor="maxRating" className="text-sm">
-                  {t('filters.maxRatingLabel')}
-                </Label>
-                <Input
-                  id="maxRating"
-                  type="number"
-                  min={0}
-                  max={5}
-                  value={filters.maxRating}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, maxRating: e.target.value }))}
-                  placeholder={t('filters.maxRatingPlaceholder')}
-                  disabled={busy}
-                />
-              </div>
-
-              {/* Locale - ✅ FIXED: Using safeLocaleOptions */}
-              <div>
-                <AdminLocaleSelect
-                  value={filters.locale}
-                  onChange={handleLocaleChange}
-                  options={safeLocaleOptions}
-                  loading={localesLoading}
-                  disabled={busy}
-                  label={t('filters.localeLabel')}
-                />
-              </div>
-
-              {/* Refresh */}
-              <div className="flex items-end">
-                <Button
-                  variant="outline"
-                  onClick={() => refetch()}
-                  disabled={busy}
-                  className="w-full gap-2"
-                >
-                  <RefreshCcw className={cn('size-4', isFetching && 'animate-spin')} />
-                  {t('admin.common.refresh')}
-                </Button>
-              </div>
-            </div>
-
-            {/* Info */}
-            <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-              <span>{t('summary.total', { total })}</span>
-              {isFetching && (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="size-4 animate-spin" />
-                  <span>{t('admin.common.loading')}</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Table (Desktop) - Same as before */}
-        <Card className="hidden xl:block">
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('table.columns.nameEmail')}</TableHead>
-                  <TableHead className="w-32">{t('table.columns.rating')}</TableHead>
-                  <TableHead>{t('table.columns.comment')}</TableHead>
-                  <TableHead className="w-24 text-center">{t('table.columns.approved')}</TableHead>
-                  <TableHead className="w-24 text-center">{t('table.columns.active')}</TableHead>
-                  <TableHead className="w-32">{t('table.columns.locale')}</TableHead>
-                  <TableHead className="w-44">{t('table.columns.date')}</TableHead>
-                  <TableHead className="w-44 text-right">{t('admin.common.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Loader2 className="size-5 animate-spin" />
-                        <span>{t('admin.common.loading')}</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : items.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center">
-                      {t('table.empty')}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  items.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-medium">{item.name || '-'}</div>
-                          <div className="text-xs text-muted-foreground">{item.email || '-'}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <RatingStars rating={item.rating} />
-                          <span className="text-xs text-muted-foreground">({item.rating})</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">{truncate(item.comment, 50)}</div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => handleToggleApproved(item)}
-                          disabled={busy}
-                        >
-                          {item.is_approved ? (
-                            <CheckCircle2 className="size-4 text-green-600" />
-                          ) : (
-                            <XCircle className="size-4 text-muted-foreground" />
-                          )}
-                        </Button>
-                        {/* T17-1: Doğrulanmış görüşme rozeti */}
-                        {Number((item as { is_verified?: number | boolean }).is_verified) === 1 && (
-                          <Badge
-                            variant="outline"
-                            className="ml-1 border-green-600/40 text-green-700 bg-green-50 text-[10px] py-0 px-1.5"
-                            title="Doğrulanmış görüşme — kullanıcı booking'i tamamlamış"
-                          >
-                            ✓
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Switch
-                          checked={item.is_active}
-                          onCheckedChange={() => handleToggleActive(item)}
-                          disabled={busy}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {item.locale_resolved || item.submitted_locale ? (
-                          <Badge variant="outline">
-                            {item.locale_resolved || item.submitted_locale}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        <div>{fmtDate(item.created_at, adminUiLocale)}</div>
-                        <div className="text-[10px]">
-                          {t('table.updatedAt')}: {fmtDate(item.updated_at, adminUiLocale)}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(item)}
-                            disabled={busy}
-                            className="gap-2"
-                          >
-                            <Pencil className="size-3.5" />
-                            {t('admin.common.edit')}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteClick(item)}
-                            disabled={busy}
-                            className="gap-2"
-                          >
-                            <Trash2 className="size-3.5" />
-                            {t('admin.common.delete')}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Cards (Mobile) - Same as before */}
-        <div className="space-y-4 xl:hidden">
-          {isLoading ? (
-            <Card>
-              <CardContent className="flex items-center justify-center py-12">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="size-5 animate-spin" />
-                  <span>{t('admin.common.loading')}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ) : items.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                {t('table.empty')}
-              </CardContent>
-            </Card>
-          ) : (
-            items.map((item) => (
-              <Card key={item.id}>
-                <CardContent className="space-y-4 pt-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <h3 className="font-semibold">{item.name || '-'}</h3>
-                      <p className="text-xs text-muted-foreground">{item.email || '-'}</p>
-                      <div className="flex items-center gap-2">
-                        <RatingStars rating={item.rating} />
-                        <span className="text-xs text-muted-foreground">({item.rating})</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      {item.locale_resolved || item.submitted_locale ? (
-                        <Badge variant="outline">
-                          {item.locale_resolved || item.submitted_locale}
-                        </Badge>
-                      ) : null}
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => handleToggleApproved(item)}
-                          disabled={busy}
-                          title={item.is_approved ? t('labels.approved') : t('labels.unapproved')}
-                        >
-                          {item.is_approved ? (
-                            <CheckCircle2 className="size-4 text-green-600" />
-                          ) : (
-                            <XCircle className="size-4 text-muted-foreground" />
-                          )}
-                        </Button>
-                        <Switch
-                          checked={item.is_active}
-                          onCheckedChange={() => handleToggleActive(item)}
-                          disabled={busy}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">{t('labels.comment')}</Label>
-                    <p className="text-sm">{truncate(item.comment, 120)}</p>
-                  </div>
-                  <div className="space-y-1 text-xs text-muted-foreground">
-                    <div>
-                      {t('labels.createdAt')}: {fmtDate(item.created_at, adminUiLocale)}
-                    </div>
-                    <div>
-                      {t('labels.updatedAt')}: {fmtDate(item.updated_at, adminUiLocale)}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(item)}
-                      disabled={busy}
-                      className="flex-1 gap-2"
-                    >
-                      <Pencil className="size-3.5" />
-                      {t('admin.common.edit')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteClick(item)}
-                      disabled={busy}
-                      className="flex-1 gap-2"
-                    >
-                      <Trash2 className="size-3.5" />
-                      {t('admin.common.delete')}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+        <div className="flex gap-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => refetch()} 
+            disabled={busy}
+            className="rounded-full border-border/40 px-6 h-11"
+          >
+            <RefreshCcw className={`mr-2 size-4 ${busy ? 'animate-spin' : ''}`} />
+            Yenile
+          </Button>
+          <Button size="sm" asChild className="bg-[#C9A961] text-[#1A1715] hover:bg-[#C9A961]/90 rounded-full px-8 font-bold tracking-widest uppercase">
+            <Link href="/admin/reviews/new">
+              <Plus className="mr-2 size-4" />
+              MANUEL YORUM
+            </Link>
+          </Button>
         </div>
       </div>
 
+      {/* Filters Card */}
+      <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
+        <CardContent className="p-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 items-end">
+          <div className="space-y-3 md:col-span-2">
+            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1">Yorum Ara</label>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                placeholder="İsim veya yorum içeriği..."
+                className="pl-12 bg-muted/20 border-border/40 rounded-2xl h-12"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 block text-center">Durum</label>
+            <Select value={filters.approvedFilter} onValueChange={v => setFilters(prev => ({ ...prev, approvedFilter: v }))}>
+              <SelectTrigger className="bg-muted/20 border-border/40 rounded-2xl h-12 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border/40 rounded-2xl">
+                <SelectItem value="all">Tüm Durumlar</SelectItem>
+                <SelectItem value="approved">Onaylı</SelectItem>
+                <SelectItem value="unapproved">Bekleyen</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 block text-center">Puan</label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min={1}
+                max={5}
+                value={filters.minRating}
+                onChange={e => setFilters(prev => ({ ...prev, minRating: e.target.value }))}
+                placeholder="Min"
+                className="bg-muted/20 border-border/40 rounded-2xl h-12 text-center"
+              />
+              <span className="opacity-30">/</span>
+              <Input
+                type="number"
+                min={1}
+                max={5}
+                value={filters.maxRating}
+                onChange={e => setFilters(prev => ({ ...prev, maxRating: e.target.value }))}
+                placeholder="Max"
+                className="bg-muted/20 border-border/40 rounded-2xl h-12 text-center"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 block text-center">Dil</label>
+            <Select value={filters.locale} onValueChange={v => setFilters(prev => ({ ...prev, locale: v }))}>
+              <SelectTrigger className="bg-muted/20 border-border/40 rounded-2xl h-12 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border/40 rounded-2xl">
+                {safeLocaleOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Table Card */}
+      <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow className="border-border/30 hover:bg-transparent">
+                <TableHead className="py-6 px-8 text-[10px] font-bold uppercase tracking-widest text-center w-24">Onay</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest">Kullanıcı</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-center">Puan</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest">Yorum</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-center">Tarih</TableHead>
+                <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest">İşlemler</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading && items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-20 text-center font-serif italic text-muted-foreground">Yükleniyor...</TableCell>
+                </TableRow>
+              ) : items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-20 text-center font-serif italic text-muted-foreground opacity-30">
+                    Henüz yorum bulunmuyor.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                items.map((item) => (
+                  <TableRow key={item.id} className="border-border/20 hover:bg-muted/10 transition-colors">
+                    <TableCell className="py-6 px-8 text-center">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full"
+                        onClick={() => handleToggleApproved(item)}
+                        disabled={busy}
+                      >
+                        {item.is_approved ? (
+                          <CheckCircle2 className="size-6 text-[#4CAF6E]" />
+                        ) : (
+                          <XCircle className="size-6 text-muted-foreground opacity-30" />
+                        )}
+                      </Button>
+                    </TableCell>
+                    <TableCell className="py-6">
+                      <div className="flex flex-col">
+                        <span className="font-serif text-lg text-foreground">{item.name || 'İsimsiz'}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono opacity-50">{item.email || 'E-posta yok'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-6 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <RatingStars rating={item.rating} />
+                        <span className="font-mono text-[10px] text-[#C9A961]">{item.rating.toFixed(1)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-6">
+                      <div className="flex items-start gap-2">
+                        <MessageSquare size={14} className="mt-1 text-[#C9A961] shrink-0" />
+                        <p className="text-sm font-serif italic text-foreground/80 leading-relaxed max-w-md line-clamp-2">
+                          "{item.comment}"
+                        </p>
+                      </div>
+                      {Number((item as any).is_verified) === 1 && (
+                        <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#4CAF6E]/10 border border-[#4CAF6E]/20 text-[#4CAF6E] text-[9px] font-bold tracking-widest uppercase">
+                          <ShieldCheck size={10} /> Doğrulanmış Görüşme
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-6 text-center">
+                      <div className="text-[10px] text-muted-foreground font-mono flex items-center justify-center gap-2">
+                        <Calendar size={12} className="text-[#C9A961]" />
+                        {item.created_at ? format(new Date(item.created_at), 'dd.MM.yyyy', { locale: tr }) : '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-6 px-8 text-right">
+                      <div className="flex justify-end gap-3">
+                        <Switch
+                          checked={item.is_active}
+                          onCheckedChange={() => handleToggleActive(item)}
+                          disabled={busy}
+                          className="data-[state=checked]:bg-[#C9A961]"
+                        />
+                        <Button asChild variant="ghost" size="icon" className="rounded-full hover:bg-[#C9A961]/10 hover:text-[#C9A961]">
+                          <Link href={`/admin/reviews/${item.id}`}>
+                            <Pencil className="size-4" />
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-full hover:bg-[#E55B4D]/10 hover:text-[#E55B4D]"
+                          onClick={() => { setItemToDelete(item); setDeleteDialogOpen(true); }}
+                          disabled={busy}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
       {/* Delete Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-card border-border/40 rounded-[32px] p-8">
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteDialog.description', {
-                name: itemToDelete?.name || t('deleteDialog.fallbackName'),
-              })}
+            <AlertDialogTitle className="font-serif text-3xl">Yorumu Sil?</AlertDialogTitle>
+            <AlertDialogDescription className="font-serif italic text-lg pt-2">
+              "{itemToDelete?.name}" tarafından yapılan bu yorum kalıcı olarak silinecektir.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('admin.common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>
-              {t('admin.common.delete')}
+          <AlertDialogFooter className="gap-3 mt-6">
+            <AlertDialogCancel className="rounded-full px-8">İptal</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={async () => {
+                if (itemToDelete) {
+                  await deleteReview({ id: itemToDelete.id }).unwrap();
+                  toast.success('Yorum silindi.');
+                  refetch();
+                }
+              }}
+              className="bg-[#E55B4D] text-white hover:bg-[#E55B4D]/90 rounded-full px-8 font-bold tracking-widest uppercase"
+            >
+              SİL
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

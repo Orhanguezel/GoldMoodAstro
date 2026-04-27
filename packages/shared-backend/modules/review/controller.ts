@@ -1,7 +1,7 @@
 // =============================================================
 // FILE: src/modules/review/controller.ts (PUBLIC)
 // =============================================================
-import type { FastifyRequest } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
 import {
   ReviewListParamsSchema,
   ReviewCreateSchema,
@@ -49,16 +49,43 @@ export async function getReviewPublic(req: FastifyRequest) {
   );
 }
 
-/** Public form submit */
-export async function createReviewPublic(req: FastifyRequest) {
-  const body = ReviewCreateSchema.parse((req as any).body);
+/** POST /reviews
+ * - consultant hedefinde authentication zorunlu
+ * - consultant için body.user_id sunucuda req.user.id ile override edilir
+ * - consultant için booking doğrulaması repository'de yapılır
+ */
+export async function createReviewPublic(req: FastifyRequest, reply: FastifyReply) {
+  const parsedBody = ReviewCreateSchema.parse((req as any).body);
 
   const locale: Locale =
-    (body.locale as Locale) ??
+    (parsedBody.locale as Locale) ??
     ((req as any).locale as Locale | undefined) ??
     DEFAULT_LOCALE;
 
-  return await repoCreateReviewPublic(req.server, body, locale);
+  const targetType = parsedBody.target_type || "consultant";
+  const authUser = (req as any).user as { id?: string; sub?: string } | undefined;
+  const authUserId = authUser?.id ?? authUser?.sub;
+
+  if (targetType === "consultant" && !authUserId) {
+    const err: any = new Error("unauthorized");
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const body =
+    targetType === "consultant"
+      ? ({ ...parsedBody, user_id: authUserId } as typeof parsedBody)
+      : parsedBody;
+
+  const created = await repoCreateReviewPublic(
+    req.server,
+    body,
+    locale,
+    { enforceConsultantReviewGuard: targetType === "consultant" },
+  );
+
+  reply.code(201);
+  return created;
 }
 
 /** Public reaction (like/helpful) */
@@ -90,7 +117,9 @@ export async function consultantReplyPublic(req: FastifyRequest) {
   const user = (req as any).user as { id?: string; sub?: string } | undefined;
   const userId = user?.id ?? user?.sub;
   if (!userId) {
-    return { error: { message: 'unauthorized' } };
+    const err: any = new Error("unauthorized");
+    err.statusCode = 401;
+    throw err;
   }
 
   const locale: Locale =

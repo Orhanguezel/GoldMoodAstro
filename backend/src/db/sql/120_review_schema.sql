@@ -46,38 +46,5 @@ CREATE TABLE IF NOT EXISTS review_i18n (
   CONSTRAINT fk_review_i18n_review FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO reviews (
-  id, target_type, target_id, user_id, name, email, booking_id, rating,
-  is_active, is_approved, display_order, submitted_locale
-) VALUES (
-  '60000000-0000-4000-8000-000000000001',
-  'consultant',
-  '20000000-0000-4000-8000-000000000001',
-  '10000000-0000-4000-8000-000000000010',
-  'Test User',
-  'user@example.test',
-  '40000000-0000-4000-8000-000000000001',
-  5,
-  1,
-  0,
-  10,
-  'tr'
-) ON DUPLICATE KEY UPDATE
-  rating = VALUES(rating),
-  is_active = VALUES(is_active),
-  is_approved = VALUES(is_approved),
-  display_order = VALUES(display_order);
-
-INSERT INTO review_i18n (
-  id, review_id, locale, title, comment, admin_reply
-) VALUES (
-  '61000000-0000-4000-8000-000000000001',
-  '60000000-0000-4000-8000-000000000001',
-  'tr',
-  'Memnun kaldim',
-  'Gorusme net, zamaninda ve faydaliydi.',
-  NULL
-) ON DUPLICATE KEY UPDATE
-  title = VALUES(title),
-  comment = VALUES(comment),
-  admin_reply = VALUES(admin_reply);
+-- Seed yorumları 121_reviews_seed.sql'de (foreign key bağımlılıklarını
+-- consultants seed'inden sonra çözmek için ayrı dosya).

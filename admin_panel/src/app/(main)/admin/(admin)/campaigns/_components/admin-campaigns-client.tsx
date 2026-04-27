@@ -22,7 +22,7 @@ import {
 } from '@/integrations/hooks';
 
 export default function AdminCampaignsClient() {
-  const query = useListCampaignsAdminQuery();
+  const query = useListCampaignsAdminQuery(undefined);
   const [update] = useUpdateCampaignAdminMutation();
   const [remove] = useDeleteCampaignAdminMutation();
 

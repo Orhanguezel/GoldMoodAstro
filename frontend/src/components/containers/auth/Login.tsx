@@ -18,6 +18,7 @@ import {
 } from '@/integrations/rtk/hooks';
 import { tokenStore } from '@/integrations/rtk/token';
 import { normalizeError } from '@/integrations/shared';
+import { useSearchParams } from 'next/navigation';
 
 // i18n
 import { useLocaleShort, useUiSection } from '@/i18n';
@@ -30,7 +31,15 @@ function trimSlash(x: string) {
 const Login: React.FC = () => {
   const router = useRouter();
   const locale = useLocaleShort();
+  const searchParams = useSearchParams();
   const { ui } = useUiSection('ui_auth', locale as any);
+
+  // Login sonrası dönüş URL'i: ?next=/tr/booking?... → kullanıcı orijinal sayfasına döner
+  const nextHref = useMemo(() => {
+    const raw = searchParams.get('next') || '';
+    if (raw && raw.startsWith('/')) return raw;
+    return localizePath(locale, '/dashboard');
+  }, [searchParams, locale]);
 
   const registerHref = useMemo(() => localizePath(locale, '/register'), [locale]);
   const forgotPasswordHref = useMemo(() => localizePath(locale, '/forgot-password'), [locale]);
@@ -56,7 +65,7 @@ const Login: React.FC = () => {
 
     if (!email.trim() || !password) {
       setFormError(
-        ui('login_error_required', 'Email and password are required.'),
+        ui('login_error_required', 'E-posta ve şifre zorunludur.'),
       );
       return;
     }
@@ -88,7 +97,7 @@ const Login: React.FC = () => {
         }
       }
 
-      router.push(localizePath(locale, '/'));
+      router.push(nextHref);
     } catch {
       // Error is handled via loginState.error
     }
@@ -105,7 +114,7 @@ const Login: React.FC = () => {
       }
     } catch (err) {
       const n = normalizeError(err as any);
-      const defMsg = ui('login_error_google_generic', 'An error occurred while starting Google login.');
+      const defMsg = ui('login_error_google_generic', 'Google girişi başlatılırken bir hata oluştu.');
       setFormError(n.message || defMsg);
     }
   };
@@ -125,15 +134,15 @@ const Login: React.FC = () => {
           
           <div className="text-center mb-8">
             <h3 className="text-3xl font-serif font-light text-text-primary mb-3">
-              {ui('login_title', 'Sign In')}
+              {ui('login_title', 'Giriş Yap')}
             </h3>
             <p className="text-text-secondary leading-relaxed">
-              {ui('login_lead', 'Sign in to your account or create a new one.')}{' '}
+              {ui('login_lead', 'Hesabınıza giriş yapın veya yeni bir hesap oluşturun.')}{' '}
               <Link
                 href={registerHref}
                 className="text-brand-primary font-bold hover:text-brand-hover transition-colors"
               >
-                {ui('login_register_link', 'Create an account')}
+                {ui('login_register_link', 'Hesap oluştur')}
               </Link>
               .
             </p>
@@ -153,13 +162,13 @@ const Login: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="login-email" className="block text-sm font-bold text-text-primary mb-2 uppercase tracking-wide">
-                {ui('login_email_label', 'Email')}
+                {ui('login_email_label', 'E-posta')}
               </label>
               <input
                 id="login-email"
                 type="email"
                 className="w-full px-4 py-3 border border-border-light rounded-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 transition-all bg-bg-card placeholder:text-text-muted text-text-primary"
-                placeholder={ui('login_email_placeholder', 'example@goldmoodastro.com')}
+                placeholder={ui('login_email_placeholder', 'ornek@goldmoodastro.com')}
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -170,13 +179,13 @@ const Login: React.FC = () => {
 
             <div>
               <label htmlFor="login-password" className="block text-sm font-bold text-text-primary mb-2 uppercase tracking-wide">
-                {ui('login_password_label', 'Password')}
+                {ui('login_password_label', 'Şifre')}
               </label>
               <input
                 id="login-password"
                 type="password"
                 className="w-full px-4 py-3 border border-border-light rounded-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 transition-all bg-bg-card placeholder:text-text-muted text-text-primary"
-                placeholder={ui('login_password_placeholder', 'Your password')}
+                placeholder={ui('login_password_placeholder', 'Şifreniz')}
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -197,14 +206,14 @@ const Login: React.FC = () => {
                   className="ml-2 block text-sm text-text-secondary cursor-pointer select-none"
                   htmlFor="remember-me"
                 >
-                  {ui('login_remember_me', 'Remember me')}
+                  {ui('login_remember_me', 'Beni hatırla')}
                 </label>
               </div>
               <Link
                 href={forgotPasswordHref}
                 className="text-sm text-brand-primary hover:text-brand-hover hover:underline transition-all"
               >
-                {ui('login_forgot_password', 'Forgot password?')}
+                {ui('login_forgot_password', 'Şifremi unuttum?')}
               </Link>
             </div>
 
@@ -214,8 +223,8 @@ const Login: React.FC = () => {
               disabled={isLoading}
             >
               {loginState.isLoading
-                ? ui('login_loading', 'Signing in...')
-                : ui('login_submit', 'Sign In')}
+                ? ui('login_loading', 'Giriş yapılıyor...')
+                : ui('login_submit', 'Giriş Yap')}
             </button>
           </form>
 
@@ -225,7 +234,7 @@ const Login: React.FC = () => {
             </div>
             <div className="relative">
               <span className="px-3 bg-bg-card text-text-muted text-sm uppercase tracking-wider font-medium">
-                {ui('login_or', 'or')}
+                {ui('login_or', 'veya')}
               </span>
             </div>
           </div>
@@ -237,14 +246,14 @@ const Login: React.FC = () => {
             disabled={isLoading}
           >
             {googleState.isLoading ? (
-              <span className="text-sm">{ui('login_google_loading', 'Redirecting to Google...')}</span>
+              <span className="text-sm">{ui('login_google_loading', 'Google ile yönlendiriliyor...')}</span>
             ) : (
               <>
                 <svg className="w-5 h-5 text-text-secondary group-hover:text-brand-primary transition-colors" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
                 </svg>
                 <span className="text-sm">
-                  {ui('login_google_button', 'Continue with Google')}
+                  {ui('login_google_button', 'Google ile devam et')}
                 </span>
               </>
             )}
@@ -252,12 +261,12 @@ const Login: React.FC = () => {
 
           <div className="mt-8 text-center">
              <p className="text-sm text-text-secondary">
-               {ui('login_no_account', "Don't have an account?")}{' '}
+               {ui('login_no_account', 'Hesabınız yok mu?')}{' '}
                <Link
                  href={registerHref}
                  className="text-brand-primary font-bold hover:text-brand-hover hover:underline transition-all"
                >
-                 {ui('login_register_cta', 'Sign up here')}
+                 {ui('login_register_cta', 'Buradan kayıt olun')}
                </Link>
              </p>
           </div>

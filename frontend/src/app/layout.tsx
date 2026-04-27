@@ -67,7 +67,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const lang = await resolveHtmlLang();
   return (
-    <html lang={lang} data-theme="dark" suppressHydrationWarning>
+    <html lang={lang} data-theme="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <meta name="description" content="GoldMoodAstro — Astroloji, tarot, numeroloji ve ruhsal koçluk için uzman danışmanlarla bağlantı platformu." />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />

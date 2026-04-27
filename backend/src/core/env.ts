@@ -63,7 +63,8 @@ export const env = {
     host: process.env.DB_HOST || '127.0.0.1',
     port: toInt(process.env.DB_PORT, 3306),
     user: process.env.DB_USER || 'app',
-    password: process.env.DB_PASSWORD || 'app',
+    // DB_PASSWORD boş string ise (ör. local root) olduğu gibi korunmalı.
+    password: process.env.DB_PASSWORD ?? 'app',
     name: process.env.DB_NAME || 'app',
   },
 

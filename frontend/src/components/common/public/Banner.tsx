@@ -34,28 +34,40 @@ export default function Banner({ placement, className, count = 1 }: BannerProps)
         const cta = getMultiLang({ tr: banner.cta_label_tr || '', en: banner.cta_label_en || '' }, locale as string);
 
         const content = (
-          <div 
+          <div
             key={banner.id}
-            className="group relative overflow-hidden rounded-xl border border-gm-border-soft bg-gm-surface shadow-gm-shadow-soft transition-all hover:shadow-gm-shadow-card"
+            className="group relative overflow-hidden rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) shadow-sm transition-all hover:shadow-md"
             onClick={() => trackClick(banner.id)}
           >
-            <div className="aspect-[21/9] w-full sm:aspect-[3/1]">
-              <img 
-                src={banner.image_url} 
-                alt={title || banner.code} 
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            <div className="relative aspect-21/9 w-full sm:aspect-3/1">
+              <img
+                src={banner.image_url}
+                alt={title || banner.code}
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-gm-bg/80 via-transparent to-transparent" />
+              {/* Soldan sağa kararma — metin okunabilirliği için */}
+              <div className="absolute inset-0 bg-linear-to-r from-(--gm-bg)/85 via-(--gm-bg)/45 to-transparent" />
             </div>
-            
-            {(title || subtitle) && (
-              <div className="absolute bottom-0 left-0 p-4 sm:p-6">
-                {title && <h3 className="font-display text-xl text-gm-text sm:text-2xl">{title}</h3>}
-                {subtitle && <p className="mt-1 text-sm text-gm-text-dim sm:text-base">{subtitle}</p>}
+
+            {(title || subtitle || (cta && banner.link_url)) && (
+              <div className="absolute inset-y-0 left-0 flex max-w-[60%] flex-col justify-center p-6 sm:p-10">
+                {title && (
+                  <h3 className="font-display text-2xl leading-tight text-(--gm-text) sm:text-3xl">
+                    {title}
+                  </h3>
+                )}
+                {subtitle && (
+                  <p className="mt-2 font-serif italic text-sm text-(--gm-text-dim) sm:text-base">
+                    {subtitle}
+                  </p>
+                )}
                 {cta && banner.link_url && (
-                  <div className="mt-3 inline-flex items-center rounded-full bg-gm-primary px-4 py-1.5 text-sm font-medium text-white shadow-gm-shadow-glow hover:bg-gm-primary-dark transition-colors">
+                  <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border border-(--gm-gold) bg-(--gm-gold) px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-(--gm-bg-deep) transition-colors group-hover:bg-(--gm-gold-deep) group-hover:text-white">
                     {cta}
-                  </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </span>
                 )}
               </div>
             )}

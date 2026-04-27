@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { and, asc, desc, eq, gte, lte, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, lte, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { users } from '@goldmood/shared-backend/modules/auth/schema';
 import { resources } from '@goldmood/shared-backend/modules/resources/schema';
@@ -18,9 +18,11 @@ function withUserSelect() {
   return {
     id: consultants.id,
     user_id: consultants.user_id,
+    slug: consultants.slug,
     full_name: users.full_name,
     email: users.email,
     phone: users.phone,
+    avatar_url: users.avatar_url,
     bio: consultants.bio,
     expertise: consultants.expertise,
     languages: consultants.languages,
@@ -75,7 +77,14 @@ export async function listConsultantsAdmin(filters: AdminListConsultantsQuery) {
     : query.orderBy(desc(consultants.created_at));
 }
 
-export async function getConsultantById(id: string) {
+// UUID v4 formatı: 8-4-4-4-12 hex blokları. Slug'lar bu kalıba uymaz.
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+export async function getConsultantById(idOrSlug: string) {
+  const where = UUID_RE.test(idOrSlug)
+    ? or(eq(consultants.id, idOrSlug), eq(consultants.slug, idOrSlug))
+    : eq(consultants.slug, idOrSlug);
+
   const [row] = await db
     .select({
       ...withUserSelect(),
@@ -85,7 +94,7 @@ export async function getConsultantById(id: string) {
     .from(consultants)
     .innerJoin(users, eq(users.id, consultants.user_id))
     .leftJoin(resources, eq(resources.external_ref_id, consultants.id))
-    .where(eq(consultants.id, id))
+    .where(where)
     .limit(1);
 
   return row ?? null;

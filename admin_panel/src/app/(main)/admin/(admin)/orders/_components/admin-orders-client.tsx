@@ -2,14 +2,13 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Eye, RefreshCcw, Search } from 'lucide-react';
+import { Eye, RefreshCcw, Search, CreditCard, Receipt, Calendar, User } from 'lucide-react';
 
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -28,49 +27,20 @@ import {
 
 import type { OrderStatus, PaymentStatus } from '@/integrations/shared';
 import { useListOrdersAdminQuery } from '@/integrations/hooks';
+import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
 
 function fmtMoney(v: string | number, currency: string) {
   const n = Number(v);
   if (!Number.isFinite(n)) return `${v} ${currency}`;
-  try {
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: currency || 'EUR',
-      minimumFractionDigits: 2,
-    }).format(n);
-  } catch {
-    return `${n.toFixed(2)} ${currency}`;
-  }
-}
-
-function fmtDate(v: string | null | undefined) {
-  if (!v) return '-';
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return String(v);
-  return d.toLocaleString('de-DE');
+  return new Intl.NumberFormat('tr-TR', {
+    style: 'currency',
+    currency: currency || 'TRY',
+  }).format(n);
 }
 
 const ORDER_STATUSES: OrderStatus[] = ['pending', 'processing', 'completed', 'cancelled', 'refunded'];
 const PAYMENT_STATUSES: PaymentStatus[] = ['unpaid', 'paid', 'failed', 'refunded'];
-
-function statusVariant(s: OrderStatus) {
-  switch (s) {
-    case 'completed': return 'secondary' as const;
-    case 'cancelled':
-    case 'refunded': return 'destructive' as const;
-    case 'processing': return 'default' as const;
-    default: return 'outline' as const;
-  }
-}
-
-function paymentVariant(s: PaymentStatus) {
-  switch (s) {
-    case 'paid': return 'secondary' as const;
-    case 'failed': return 'destructive' as const;
-    case 'refunded': return 'default' as const;
-    default: return 'outline' as const;
-  }
-}
 
 export default function AdminOrdersClient() {
   const t = useAdminT('admin.orders');
@@ -101,175 +71,200 @@ export default function AdminOrdersClient() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-lg font-semibold">{t('title', {}, 'Siparisler')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t('description', {}, 'Siparis yonetimi ve odeme takibi')}
-        </p>
+    <div className="space-y-8 pb-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <span className="w-8 h-px bg-[#C9A961]" />
+            <span className="text-[#C9A961] font-bold text-[10px] tracking-[0.2em] uppercase">Finansal Kayıtlar</span>
+          </div>
+          <h1 className="font-serif text-4xl text-foreground">Siparişler</h1>
+          <p className="text-muted-foreground text-sm mt-2 font-serif italic">
+            Tüm ödemeleri, iadeleri ve işlem durumlarını buradan takip edin.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Toplam İşlem</p>
+            <p className="font-serif text-2xl text-[#C9A961]">{total}</p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => q.refetch()} 
+            disabled={q.isFetching}
+            className="rounded-full border-border/40 px-6 h-11"
+          >
+            <RefreshCcw className={`mr-2 size-4 ${q.isFetching ? 'animate-spin' : ''}`} />
+            Yenile
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            {t('list.title', {}, 'Siparis Listesi')}
-            {total > 0 && (
-              <Badge variant="outline" className="ml-2">
-                {total}
-              </Badge>
-            )}
-          </CardTitle>
-          <CardDescription>
-            {t('list.desc', {}, 'Tum siparisler ve odeme durumlari')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-4">
-            <div className="space-y-2">
-              <Label>{t('filters.status', {}, 'Durum')}</Label>
-              <Select
-                value={status}
-                onValueChange={(v) => {
-                  setStatus(v as OrderStatus | 'all');
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('filters.all', {}, 'Tumu')}</SelectItem>
-                  {ORDER_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t('filters.paymentStatus', {}, 'Odeme Durumu')}</Label>
-              <Select
-                value={paymentStatus}
-                onValueChange={(v) => {
-                  setPaymentStatus(v as PaymentStatus | 'all');
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('filters.all', {}, 'Tumu')}</SelectItem>
-                  {PAYMENT_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>{t('filters.search', {}, 'Ara')}</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder={t('filters.searchPh', {}, 'Siparis no veya e-posta')}
-                  onKeyDown={(e) => e.key === 'Enter' && doSearch()}
-                />
-                <Button variant="outline" onClick={doSearch}>
-                  <Search className="mr-2 size-4" />
-                  {t('actions.search', {}, 'Ara')}
-                </Button>
-              </div>
+      {/* Filters Card */}
+      <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
+        <CardContent className="p-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-end">
+          <div className="space-y-3 md:col-span-2">
+            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1">İşlem No / E-posta</label>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && doSearch()}
+                placeholder="Sipariş no veya e-posta..."
+                className="pl-12 bg-muted/20 border-border/40 rounded-2xl h-12"
+              />
             </div>
           </div>
 
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={q.isFetching}
-              onClick={() => q.refetch()}
-            >
-              <RefreshCcw className="mr-2 size-4" />
-              {t('actions.refresh', {}, 'Yenile')}
-            </Button>
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 text-center block">Sipariş Durumu</label>
+            <Select value={status} onValueChange={(v) => { setStatus(v as any); setPage(1); }}>
+              <SelectTrigger className="bg-muted/20 border-border/40 rounded-2xl h-12 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border/40 rounded-2xl">
+                <SelectItem value="all">Tümü</SelectItem>
+                {ORDER_STATUSES.map(s => <SelectItem key={s} value={s}>{s.toUpperCase()}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 text-center block">Ödeme Durumu</label>
+            <Select value={paymentStatus} onValueChange={(v) => { setPaymentStatus(v as any); setPage(1); }}>
+              <SelectTrigger className="bg-muted/20 border-border/40 rounded-2xl h-12 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border/40 rounded-2xl">
+                <SelectItem value="all">Tümü</SelectItem>
+                {PAYMENT_STATUSES.map(s => <SelectItem key={s} value={s}>{s.toUpperCase()}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Table Card */}
+      <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow className="border-border/30 hover:bg-transparent">
+                <TableHead className="py-6 px-8 text-[10px] font-bold uppercase tracking-widest">Sipariş No</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest">Müşteri Bilgisi</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-center">Tutar</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-center">Durum</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-center">Ödeme</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-center">Tarih</TableHead>
+                <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest">Detay</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {q.isFetching && orders.length === 0 ? (
                 <TableRow>
-                  <TableHead>{t('table.orderNumber', {}, 'Siparis No')}</TableHead>
-                  <TableHead>{t('table.customer', {}, 'Musteri')}</TableHead>
-                  <TableHead>{t('table.total', {}, 'Toplam')}</TableHead>
-                  <TableHead>{t('table.status', {}, 'Durum')}</TableHead>
-                  <TableHead>{t('table.payment', {}, 'Odeme')}</TableHead>
-                  <TableHead>{t('table.date', {}, 'Tarih')}</TableHead>
-                  <TableHead className="text-right">{t('table.actions', {}, 'Islemler')}</TableHead>
+                  <TableCell colSpan={7} className="py-20 text-center font-serif italic text-muted-foreground">Yükleniyor...</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {!q.isFetching && orders.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                      {t('list.empty', {}, 'Siparis bulunamadi')}
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-
-                {orders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-mono text-sm">{order.order_number}</TableCell>
-                    <TableCell>
-                      <div className="space-y-0.5">
-                        <p className="font-medium">{order.user_name || '-'}</p>
-                        <p className="text-xs text-muted-foreground">{order.user_email || order.user_id}</p>
+              ) : orders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-20 text-center font-serif italic text-muted-foreground opacity-30">
+                    Sipariş kaydı bulunmuyor.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                orders.map((order) => (
+                  <TableRow key={order.id} className="border-border/20 hover:bg-muted/10 transition-colors">
+                    <TableCell className="py-6 px-8">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[#C9A961]/10 flex items-center justify-center text-[#C9A961]">
+                          <Receipt size={14} />
+                        </div>
+                        <span className="font-mono text-xs tracking-tighter text-[#C9A961]">{order.order_number}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{fmtMoney(order.total_amount, order.currency)}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(order.status)}>{order.status}</Badge>
+                    <TableCell className="py-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-muted border border-border/50 flex items-center justify-center text-muted-foreground">
+                          <User size={14} />
+                        </div>
+                        <div>
+                          <div className="font-serif text-base text-foreground">{order.user_name || '-'}</div>
+                          <div className="text-[10px] text-muted-foreground font-mono opacity-50">{order.user_email}</div>
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={paymentVariant(order.payment_status)}>{order.payment_status}</Badge>
+                    <TableCell className="py-6 text-center">
+                      <span className="font-serif text-lg text-foreground">{fmtMoney(order.total_amount, order.currency)}</span>
                     </TableCell>
-                    <TableCell className="text-sm">{fmtDate(order.created_at)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" variant="outline" asChild>
+                    <TableCell className="py-6 text-center">
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
+                        order.status === 'completed' ? 'bg-[#4CAF6E]/10 text-[#4CAF6E]' :
+                        order.status === 'cancelled' || order.status === 'refunded' ? 'bg-[#E55B4D]/10 text-[#E55B4D]' :
+                        'bg-[#F0A030]/10 text-[#F0A030]'
+                      }`}>
+                        {order.status.toUpperCase()}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-6 text-center">
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${
+                        order.payment_status === 'paid' ? 'border-[#4CAF6E]/30 text-[#4CAF6E]' :
+                        order.payment_status === 'failed' ? 'border-[#E55B4D]/30 text-[#E55B4D]' :
+                        'border-border/50 text-muted-foreground'
+                      }`}>
+                        {order.payment_status.toUpperCase()}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-6 text-center">
+                      <div className="text-[10px] text-muted-foreground font-mono flex items-center justify-center gap-2">
+                        <Calendar size={12} className="text-[#C9A961]" />
+                        {order.created_at ? format(new Date(order.created_at), 'dd.MM.yyyy HH:mm') : '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-6 px-8 text-right">
+                      <Button asChild variant="ghost" size="icon" className="rounded-full hover:bg-[#C9A961]/10 hover:text-[#C9A961]">
                         <Link href={`/admin/orders/${order.id}`}>
-                          <Eye className="mr-2 size-4" />
-                          {t('actions.detail', {}, 'Detay')}
+                          <Eye className="size-4" />
                         </Link>
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!hasPrev || q.isFetching}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              {t('actions.prev', {}, 'Onceki')}
-            </Button>
-            <Badge variant="outline">{t('labels.page', { page }, `Sayfa ${page}`)}</Badge>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!hasNext || q.isFetching}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {t('actions.next', {}, 'Sonraki')}
-            </Button>
-          </div>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between px-8">
+        <div className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
+          Sayfa {page} • Toplam {total} İşlem
+        </div>
+
+        <div className="flex gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={!hasPrev || q.isFetching}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            className="rounded-full px-6 hover:bg-[#C9A961]/10 hover:text-[#C9A961]"
+          >
+            Önceki
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={!hasNext || q.isFetching}
+            onClick={() => setPage(p => p + 1)}
+            className="rounded-full px-6 hover:bg-[#C9A961]/10 hover:text-[#C9A961]"
+          >
+            Sonraki
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

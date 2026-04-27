@@ -8,7 +8,6 @@ import {
   ScrollView,
   RefreshControl,
   Alert,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
@@ -24,14 +23,13 @@ import {
   AlertTriangle,
   CalendarDays,
   Bell,
+  MessageSquare
 } from 'lucide-react-native';
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { useAuth } from '@/hooks/useAuth';
 import { subscriptionsApi, creditsApi } from '@/lib/api';
 import type { CreditMe, Subscription } from '@/types';
-
-const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const { user, isAuthenticated, logout, loading: authLoading } = useAuth();
@@ -50,7 +48,7 @@ export default function ProfileScreen() {
       setSubscription(subscriptionData);
       setCredits(creditsData);
     } catch (err) {
-      console.error('Profile data fetch failed:', err);
+      console.error('Profile data error:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -67,11 +65,6 @@ export default function ProfileScreen() {
       loadData();
     }, [authLoading, isAuthenticated, loadData]),
   );
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadData();
-  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -99,156 +92,116 @@ export default function ProfileScreen() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} tintColor={colors.gold} />}
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Profil</Text>
-            <Pressable 
-              style={styles.settingsBtn}
-              onPress={() => router.push('/settings' as any)}
-            >
-              <Settings size={22} color={colors.textDim} />
+            <View>
+              <Text style={styles.headerKicker}>ÜYE PANELİ</Text>
+              <Text style={styles.headerTitle}>Profilim</Text>
+            </View>
+            <Pressable style={styles.iconBtn} onPress={() => router.push('/settings' as any)}>
+              <Settings size={22} color={colors.text} />
             </Pressable>
           </View>
 
-          {/* User Profile Card */}
-          <View style={styles.profileHero}>
+          {/* User Profile */}
+          <View style={styles.hero}>
             <View style={styles.avatarWrap}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarInitial}>
-                  {user?.full_name?.[0] || 'U'}
-                </Text>
+                <Text style={styles.avatarInitial}>{user?.full_name?.[0] || 'U'}</Text>
               </View>
-              {hasActiveSub && (
-                <View style={styles.crownBadge}>
-                  <Crown size={12} color={colors.bgDeep} />
-                </View>
-              )}
+              {hasActiveSub && <View style={styles.premiumBadge}><Crown size={12} color={colors.bgDeep} /></View>}
             </View>
-            <View style={styles.userInfo}>
+            <View style={styles.heroInfo}>
               <View style={styles.nameRow}>
                 <Text style={styles.userName}>{user?.full_name || 'Kullanıcı'}</Text>
-                <ShieldCheck size={16} color={colors.gold} />
+                <ShieldCheck size={18} color={colors.gold} />
               </View>
               <Text style={styles.userEmail}>{user?.email}</Text>
             </View>
           </View>
 
-          {/* Wallet / Subscription Summary Row */}
+          {/* Summary Stats */}
           <View style={styles.summaryRow}>
-            <Pressable 
-              style={styles.summaryCard}
-              onPress={() => router.push('/profile/credits' as any)}
-            >
-              <View style={styles.summaryIconWrap}>
-                <Wallet size={18} color={colors.gold} />
-              </View>
+            <Pressable style={styles.summaryCard} onPress={() => router.push('/profile/credits' as any)}>
+              <View style={styles.summaryIcon}><Wallet size={20} color={colors.gold} /></View>
               <View>
-                <Text style={styles.summaryLabel}>KREDİ</Text>
+                <Text style={styles.summaryLabel}>KREDİ BAKİYESİ</Text>
                 <Text style={styles.summaryValue}>{credits?.balance || 0}</Text>
               </View>
             </Pressable>
-            
-            <Pressable 
-              style={styles.summaryCard}
-              onPress={() => router.push('/profile/subscription' as any)}
-            >
-              <View style={[styles.summaryIconWrap, hasActiveSub && { backgroundColor: colors.gold }]}>
-                <Crown size={18} color={hasActiveSub ? colors.bgDeep : colors.goldDim} />
+            <Pressable style={styles.summaryCard} onPress={() => router.push('/profile/subscription' as any)}>
+              <View style={[styles.summaryIcon, hasActiveSub && { backgroundColor: colors.gold }]}>
+                <Crown size={20} color={hasActiveSub ? colors.bgDeep : colors.goldDim} />
               </View>
               <View>
-                <Text style={styles.summaryLabel}>ABONELİK</Text>
-                <Text style={[styles.summaryValue, hasActiveSub && { color: colors.gold }]}>
-                  {hasActiveSub ? 'Premium' : 'Standart'}
-                </Text>
+                <Text style={styles.summaryLabel}>ÜYELİK TİPİ</Text>
+                <Text style={[styles.summaryValue, hasActiveSub && { color: colors.gold }]}>{hasActiveSub ? 'Premium' : 'Standart'}</Text>
               </View>
             </Pressable>
           </View>
 
           {/* Menu Sections */}
-          <View style={styles.menuGroup}>
-            <Text style={styles.menuGroupTitle}>HESAP</Text>
+          <View style={styles.group}>
+            <Text style={styles.groupTitle}>HESAP YÖNETİMİ</Text>
             
-            <Pressable 
-              style={styles.menuItem}
-              onPress={() => router.push('/(tabs)/bookings' as any)}
-            >
-              <View style={styles.menuItemLeft}>
+            <Pressable style={styles.menuItem} onPress={() => router.push('/(tabs)/bookings' as any)}>
+              <View style={styles.menuLeft}>
                 <CalendarDays size={20} color={colors.goldDim} />
-                <Text style={styles.menuItemText}>Randevularım</Text>
+                <Text style={styles.menuText}>Randevularım</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
 
-            <Pressable 
-              style={styles.menuItem}
-              onPress={() => router.push('/notifications' as any)}
-            >
-              <View style={styles.menuItemLeft}>
+            <Pressable style={styles.menuItem} onPress={() => router.push('/notifications' as any)}>
+              <View style={styles.menuLeft}>
                 <Bell size={20} color={colors.goldDim} />
-                <Text style={styles.menuItemText}>Bildirimler</Text>
+                <Text style={styles.menuText}>Bildirimler</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
 
             <Pressable style={styles.menuItem}>
-              <View style={styles.menuItemLeft}>
+              <View style={styles.menuLeft}>
                 <User size={20} color={colors.goldDim} />
-                <Text style={styles.menuItemText}>Bilgilerimi Düzenle</Text>
-              </View>
-              <ChevronRight size={18} color={colors.line} />
-            </Pressable>
-
-            <Pressable 
-              style={styles.menuItem}
-              onPress={() => router.push('/profile/subscription' as any)}
-            >
-              <View style={styles.menuItemLeft}>
-                <CreditCard size={20} color={colors.goldDim} />
-                <Text style={styles.menuItemText}>Ödeme Yöntemleri</Text>
+                <Text style={styles.menuText}>Profil Bilgileri</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
           </View>
 
-          <View style={styles.menuGroup}>
-            <Text style={styles.menuGroupTitle}>UYGULAMA</Text>
+          <View style={styles.group}>
+            <Text style={styles.groupTitle}>DESTEK & GÜVENLİK</Text>
             
-            <Pressable 
-              style={styles.menuItem}
-              onPress={() => router.push('/settings' as any)}
-            >
-              <View style={styles.menuItemLeft}>
-                <Settings size={20} color={colors.goldDim} />
-                <Text style={styles.menuItemText}>Ayarlar</Text>
+            <Pressable style={styles.menuItem}>
+              <View style={styles.menuLeft}>
+                <MessageSquare size={20} color={colors.goldDim} />
+                <Text style={styles.menuText}>Yardım & Destek</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
 
-            <Pressable 
-              style={styles.menuItem}
-              onPress={() => router.push('/profile/privacy' as any)}
-            >
-              <View style={styles.menuItemLeft}>
+            <Pressable style={styles.menuItem} onPress={() => router.push('/profile/privacy' as any)}>
+              <View style={styles.menuLeft}>
                 <AlertTriangle size={20} color={colors.danger} />
-                <Text style={[styles.menuItemText, { color: colors.danger }]}>Tehlikeli Bölge</Text>
+                <Text style={[styles.menuText, { color: colors.danger }]}>Gizlilik ve Veri</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
 
             <Pressable style={styles.menuItem} onPress={handleLogout}>
-              <View style={styles.menuItemLeft}>
+              <View style={styles.menuLeft}>
                 <LogOut size={20} color={colors.danger} />
-                <Text style={[styles.menuItemText, { color: colors.danger }]}>Çıkış Yap</Text>
+                <Text style={[styles.menuText, { color: colors.danger }]}>Oturumu Kapat</Text>
               </View>
             </Pressable>
           </View>
 
-          {/* Footer Info */}
+          {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.versionText}>GoldMoodAstro v1.0.0</Text>
-            <Text style={styles.copyrightText}>© 2026 Tüm Hakları Saklıdır.</Text>
+            <Text style={styles.footerVersion}>GoldMoodAstro v1.0.0</Text>
+            <Text style={styles.footerCopy}>© 2026 Ruhsal Danışmanlık Platformu</Text>
           </View>
 
         </ScrollView>
@@ -258,195 +211,50 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  safe: {
-    flex: 1,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.bg,
-  },
-  scrollContent: {
-    paddingBottom: spacing['3xl'],
-  },
-
-  // Header
+  container: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
+  scrollContent: { paddingBottom: 40 },
   header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     marginBottom: spacing.xl,
   },
-  title: {
-    fontFamily: font.display,
-    fontSize: 26,
-    color: colors.text,
-  },
-  settingsBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  headerKicker: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, letterSpacing: 2, marginBottom: 4 },
+  headerTitle: { fontFamily: font.display, fontSize: 28, color: colors.text },
+  iconBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.line,
-  },
-
-  // Profile Hero
-  profileHero: {
-    alignItems: 'center',
-    marginBottom: spacing['2xl'],
-    paddingHorizontal: spacing.lg,
-  },
-  avatarWrap: {
-    position: 'relative',
-    marginBottom: spacing.md,
-  },
-  avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: colors.inkDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.gold,
-  },
-  avatarInitial: {
-    fontFamily: font.display,
-    fontSize: 36,
-    color: colors.gold,
-  },
-  crownBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: colors.gold,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: colors.bg,
-  },
-  userInfo: {
-    alignItems: 'center',
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  userName: {
-    fontFamily: font.display,
-    fontSize: 22,
-    color: colors.text,
-  },
-  userEmail: {
-    fontFamily: font.sans,
-    fontSize: 14,
-    color: colors.textMuted,
-    marginTop: 4,
-  },
-
-  // Summary Row
-  summaryRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    gap: 12,
-    marginBottom: spacing['3xl'],
-  },
-  summaryCard: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
-    gap: 12,
-  },
-  summaryIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.inkDeep,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  summaryLabel: {
-    fontFamily: font.sansBold,
-    fontSize: 10,
-    color: colors.textMuted,
-    letterSpacing: 1,
-  },
-  summaryValue: {
-    fontFamily: font.display,
-    fontSize: 18,
-    color: colors.text,
-    marginTop: 2,
-  },
-
-  // Menu Groups
-  menuGroup: {
-    marginBottom: spacing['2xl'],
-    paddingHorizontal: spacing.lg,
-  },
-  menuGroupTitle: {
-    fontFamily: font.sansBold,
-    fontSize: 11,
-    color: colors.goldDeep,
-    letterSpacing: 2,
-    marginBottom: spacing.md,
-    marginLeft: 4,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: radius.md,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: colors.lineSoft,
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  menuItemText: {
-    fontFamily: font.sansMedium,
-    fontSize: 15,
-    color: colors.text,
-  },
-
-  // Footer
-  footer: {
-    alignItems: 'center',
-    marginTop: spacing.xl,
-    paddingBottom: spacing.xl,
-  },
-  versionText: {
-    fontFamily: font.sansMedium,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  copyrightText: {
-    fontFamily: font.sans,
-    fontSize: 10,
-    color: colors.textMuted,
-    marginTop: 4,
-  },
+  hero: { alignItems: 'center', marginBottom: spacing['2xl'], paddingHorizontal: spacing.lg },
+  avatarWrap: { position: 'relative', marginBottom: 16 },
+  avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: colors.inkDeep, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.gold },
+  avatarInitial: { fontFamily: font.display, fontSize: 36, color: colors.gold },
+  premiumBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: colors.gold, width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.bg },
+  heroInfo: { alignItems: 'center' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  userName: { fontFamily: font.display, fontSize: 24, color: colors.text },
+  userEmail: { fontFamily: font.sans, fontSize: 14, color: colors.textMuted, marginTop: 4 },
+  summaryRow: { flexDirection: 'row', paddingHorizontal: spacing.lg, gap: 12, marginBottom: spacing['3xl'] },
+  summaryCard: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, padding: 16, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.line, gap: 12 },
+  summaryIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.inkDeep, alignItems: 'center', justifyContent: 'center' },
+  summaryLabel: { fontFamily: font.sansBold, fontSize: 9, color: colors.textMuted, letterSpacing: 1 },
+  summaryValue: { fontFamily: font.display, fontSize: 18, color: colors.text, marginTop: 2 },
+  group: { marginBottom: spacing['2xl'], paddingHorizontal: spacing.lg },
+  groupTitle: { fontFamily: font.sansBold, fontSize: 11, color: colors.goldDeep, letterSpacing: 2, marginBottom: 12, marginLeft: 4 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface, padding: 18, borderRadius: radius.lg, marginBottom: 10, borderWidth: 1, borderColor: colors.lineSoft },
+  menuLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  menuText: { fontFamily: font.sansMedium, fontSize: 15, color: colors.text },
+  footer: { alignItems: 'center', marginTop: 20, paddingBottom: 40 },
+  footerVersion: { fontFamily: font.sansMedium, fontSize: 12, color: colors.textMuted },
+  footerCopy: { fontFamily: font.sans, fontSize: 10, color: colors.textMuted, marginTop: 4 },
 });

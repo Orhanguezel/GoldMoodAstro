@@ -16,8 +16,8 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal">
-          {/* Free Card */}
-          <div className="bg-[var(--gm-bg)] border border-[var(--gm-border-soft)] p-12 relative transition-all duration-400 hover:-translate-y-1 hover:shadow-card group">
+          {/* Free Card — tema-aware surface */}
+          <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-sm p-12 relative transition-all duration-400 hover:-translate-y-1 hover:shadow-card hover:border-(--gm-gold)/40 group">
             <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-[var(--gm-gold)] text-[var(--gm-gold-deep)] rounded-full">
               {isTr ? 'Ücretsiz' : 'Free'}
             </div>
@@ -46,21 +46,32 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
             </Link>
           </div>
 
-          {/* Premium Card */}
-          <div className="bg-[var(--gm-text)] text-[var(--gm-bg)] border border-[var(--gm-text)] p-12 relative transition-all duration-400 hover:-translate-y-1 hover:shadow-glow group">
-            <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-[var(--gm-gold)] text-[var(--gm-gold)] bg-[var(--gm-gold)]/10 rounded-full">
+          {/* Premium Card — her temada sabit koyu accent.
+              Sabit ink bg + cream text + altın detay → her iki temada
+              dramatik kontrast. Tailwind v4 `var()/opacity` çekincesinden
+              kaçınmak için sabit hex değerleri kullanılıyor. */}
+          <div
+            className="rounded-sm p-12 relative transition-all duration-400 hover:-translate-y-1 hover:shadow-glow group border border-[#A8884A]/40"
+            style={{
+              backgroundColor: '#1A1715',
+              color: '#FAF6EF',
+              backgroundImage:
+                'radial-gradient(120% 80% at 100% 0%, rgba(201,169,97,0.10), transparent 60%)',
+            }}
+          >
+            <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-[var(--gm-gold)] text-[var(--gm-gold)] bg-[var(--gm-gold)]/15 rounded-full">
               {isTr ? 'Önerilen' : 'Recommended'}
             </div>
             <div className="font-display text-[14px] tracking-[0.32em] text-[var(--gm-gold)] uppercase mb-6">
               {isTr ? 'Premium' : 'Premium'}
             </div>
-            <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-[var(--gm-bg)]">
-              <sup className="text-2xl font-normal text-[var(--gm-gold-deep)] mr-1 -top-7 relative">₺</sup>149<small className="text-base text-[var(--gm-bg)]/60 font-normal tracking-wide ml-1">{isTr ? '/ ay' : '/ mo'}</small>
+            <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight" style={{ color: '#FAF6EF' }}>
+              <sup className="text-2xl font-normal text-[var(--gm-gold)] mr-1 -top-7 relative">₺</sup>149<small className="text-base font-normal tracking-wide ml-1" style={{ color: 'rgba(250,246,239,0.65)' }}>{isTr ? '/ ay' : '/ mo'}</small>
             </div>
-            <p className="italic text-[var(--gm-bg)]/80 mb-8 text-base leading-relaxed">
+            <p className="italic mb-8 text-base leading-relaxed" style={{ color: 'rgba(250,246,239,0.85)' }}>
               {isTr ? 'Sınırsız derinlik, gizli sürpriz yok.' : 'Limitless depth, no hidden surprises.'}
             </p>
-            <ul className="space-y-4 mb-10 text-[var(--gm-bg)]/90">
+            <ul className="space-y-4 mb-10" style={{ color: '#FAF6EF' }}>
               <li className="flex items-center gap-3">
                 <span className="text-[var(--gm-gold)]">✦</span> {isTr ? 'Detaylı doğum haritası analizi' : 'Detailed birth chart analysis'}
               </li>

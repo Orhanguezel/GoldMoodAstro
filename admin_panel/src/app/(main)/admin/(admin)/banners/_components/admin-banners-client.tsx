@@ -22,7 +22,7 @@ import {
 } from '@/integrations/hooks';
 
 export default function AdminBannersClient() {
-  const query = useListBannersAdminQuery();
+  const query = useListBannersAdminQuery(undefined);
   const [update] = useUpdateBannerAdminMutation();
   const [remove] = useDeleteBannerAdminMutation();
 

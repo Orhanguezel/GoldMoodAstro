@@ -49,15 +49,15 @@ const Register: React.FC = () => {
     setFormError(null);
 
     if (!email.trim() || !password) {
-      setFormError(ui('register_error_required', 'Email and password are required.'));
+      setFormError(ui('register_error_required', 'E-posta ve şifre zorunludur.'));
       return;
     }
     if (password.length < 6) {
-      setFormError(ui('register_error_password_length', 'Password must be at least 6 characters.'));
+      setFormError(ui('register_error_password_length', 'Şifre en az 6 karakter olmalıdır.'));
       return;
     }
     if (password !== passwordAgain) {
-      setFormError(ui('register_error_password_mismatch', 'Passwords do not match.'));
+      setFormError(ui('register_error_password_mismatch', 'Şifreler eşleşmiyor.'));
       return;
     }
 
@@ -101,7 +101,7 @@ const Register: React.FC = () => {
       const n = normalizeError(err as any);
       setFormError(
         n.message ||
-        ui('register_error_google_generic', 'An error occurred while starting Google signup.')
+        ui('register_error_google_generic', 'Google ile kayıt başlatılırken bir hata oluştu.')
       );
     }
   };
@@ -121,15 +121,15 @@ const Register: React.FC = () => {
           
           <div className="text-center mb-8">
             <h3 className="text-3xl font-serif font-light text-text-primary mb-3">
-              {ui('register_title', 'Sign Up')}
+              {ui('register_title', 'Kayıt Ol')}
             </h3>
             <p className="text-text-secondary leading-relaxed">
-              {ui('register_lead_has_account', 'Already have an account?')}{' '}
+              {ui('register_lead_has_account', 'Zaten hesabınız var mı?')}{' '}
               <Link
                 href={loginHref}
                 className="text-brand-primary font-bold hover:text-brand-hover transition-colors"
               >
-                {ui('register_login_link', 'Sign in')}
+                {ui('register_login_link', 'Giriş yap')}
               </Link>
               .
             </p>
@@ -149,13 +149,13 @@ const Register: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="reg-fullname" className="block text-sm font-bold text-text-primary mb-1 uppercase tracking-wide">
-                {ui('register_fullname_label', 'Full Name')}
+                {ui('register_fullname_label', 'Ad Soyad')}
               </label>
               <input
                 id="reg-fullname"
                 type="text"
                 className="w-full px-4 py-3 border border-border-light rounded-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 transition-all bg-bg-card placeholder:text-text-muted text-text-primary"
-                placeholder={ui('register_fullname_placeholder', 'Your full name')}
+                placeholder={ui('register_fullname_placeholder', 'Adınız ve soyadınız')}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 disabled={isLoading}
@@ -164,7 +164,7 @@ const Register: React.FC = () => {
 
             <div>
               <label htmlFor="reg-phone" className="block text-sm font-bold text-text-primary mb-1 uppercase tracking-wide">
-                {ui('register_phone_label', 'Phone')}
+                {ui('register_phone_label', 'Telefon')}
               </label>
               <input
                 id="reg-phone"
@@ -179,13 +179,13 @@ const Register: React.FC = () => {
 
             <div>
               <label htmlFor="reg-email" className="block text-sm font-bold text-text-primary mb-1 uppercase tracking-wide">
-                {ui('register_email_label', 'Email')}
+                {ui('register_email_label', 'E-posta')}
               </label>
               <input
                 id="reg-email"
                 type="email"
                 className="w-full px-4 py-3 border border-border-light rounded-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 transition-all bg-bg-card placeholder:text-text-muted text-text-primary"
-                placeholder={ui('register_email_placeholder', 'example@goldmoodastro.com')}
+                placeholder={ui('register_email_placeholder', 'ornek@goldmoodastro.com')}
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -197,13 +197,13 @@ const Register: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="reg-password" className="block text-sm font-bold text-text-primary mb-1 uppercase tracking-wide">
-                  {ui('register_password_label', 'Password')}
+                  {ui('register_password_label', 'Şifre')}
                 </label>
                 <input
                   id="reg-password"
                   type="password"
                   className="w-full px-4 py-3 border border-border-light rounded-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 transition-all bg-bg-card placeholder:text-text-muted text-text-primary"
-                  placeholder={ui('register_password_placeholder', 'Password')}
+                  placeholder={ui('register_password_placeholder', 'Şifre')}
                   autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -214,13 +214,13 @@ const Register: React.FC = () => {
 
               <div>
                 <label htmlFor="reg-password-again" className="block text-sm font-bold text-text-primary mb-1 uppercase tracking-wide">
-                  {ui('register_password_again_label', 'Again')}
+                  {ui('register_password_again_label', 'Tekrar')}
                 </label>
                 <input
                   id="reg-password-again"
                   type="password"
                   className="w-full px-4 py-3 border border-border-light rounded-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 transition-all bg-bg-card placeholder:text-text-muted text-text-primary"
-                  placeholder={ui('register_password_again_placeholder', 'Repeat')}
+                  placeholder={ui('register_password_again_placeholder', 'Şifreyi tekrar girin')}
                   autoComplete="new-password"
                   value={passwordAgain}
                   onChange={(e) => setPasswordAgain(e.target.value)}
@@ -237,8 +237,8 @@ const Register: React.FC = () => {
                 disabled={isLoading}
               >
                 {signupState.isLoading
-                  ? ui('register_loading', 'Creating account...')
-                  : ui('register_submit', 'Sign Up')}
+                  ? ui('register_loading', 'Hesap oluşturuluyor...')
+                  : ui('register_submit', 'Kayıt Ol')}
               </button>
             </div>
           </form>
@@ -249,7 +249,7 @@ const Register: React.FC = () => {
             </div>
             <div className="relative">
               <span className="px-3 bg-bg-card text-text-muted text-sm uppercase tracking-wider font-medium">
-                {ui('register_or', 'or')}
+                {ui('register_or', 'veya')}
               </span>
             </div>
           </div>
@@ -261,12 +261,12 @@ const Register: React.FC = () => {
             disabled={isLoading}
           >
             {googleState.isLoading ? (
-              <span className="text-sm">{ui('register_google_loading', 'Redirecting to Google...')}</span>
+              <span className="text-sm">{ui('register_google_loading', 'Google ile yönlendiriliyor...')}</span>
             ) : (
               <>
                  <svg className="w-5 h-5 text-text-secondary group-hover:text-brand-primary transition-colors" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/></svg>
                 <span className="text-sm">
-                  {ui('register_google_button', 'Continue with Google')}
+                  {ui('register_google_button', 'Google ile devam et')}
                 </span>
               </>
             )}

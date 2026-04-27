@@ -18,7 +18,8 @@ import {
   Clock, 
   User, 
   ShieldCheck,
-  Info 
+  Info,
+  Sparkles
 } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -90,14 +91,17 @@ export default function BookingCheckoutScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           
           <View style={styles.summaryCard}>
-            <Text style={styles.summaryTitle}>SEANS ÖZETİ</Text>
+            <View style={styles.summaryHeader}>
+              <Sparkles size={18} color={colors.gold} />
+              <Text style={styles.summaryTitle}>SEANS ÖZETİ</Text>
+            </View>
             
             <View style={styles.infoRow}>
               <View style={styles.iconBox}>
                 <User size={18} color={colors.gold} />
               </View>
               <View style={styles.infoTextCol}>
-                <Text style={styles.infoLabel}>Danışman</Text>
+                <Text style={styles.infoLabel}>DANIŞMAN</Text>
                 <Text style={styles.infoValue}>{params.name}</Text>
               </View>
             </View>
@@ -107,7 +111,7 @@ export default function BookingCheckoutScreen() {
                 <Calendar size={18} color={colors.gold} />
               </View>
               <View style={styles.infoTextCol}>
-                <Text style={styles.infoLabel}>Tarih</Text>
+                <Text style={styles.infoLabel}>TARİH</Text>
                 <Text style={styles.infoValue}>
                   {format(parseISO(params.date!), 'd MMMM yyyy', { locale: tr })}
                 </Text>
@@ -119,7 +123,7 @@ export default function BookingCheckoutScreen() {
                 <Clock size={18} color={colors.gold} />
               </View>
               <View style={styles.infoTextCol}>
-                <Text style={styles.infoLabel}>Saat & Süre</Text>
+                <Text style={styles.infoLabel}>SAAT & SÜRE</Text>
                 <Text style={styles.infoValue}>
                   {params.time} · {params.duration} dakika
                 </Text>
@@ -134,31 +138,31 @@ export default function BookingCheckoutScreen() {
             </View>
           </View>
 
-          {/* Security & Trust Box */}
+          {/* Trust Box */}
           <View style={styles.trustBox}>
             <View style={styles.trustHeader}>
-              <ShieldCheck size={16} color={colors.success} />
-              <Text style={styles.trustTitle}>Güvenli Ödeme</Text>
+              <ShieldCheck size={18} color={colors.success} />
+              <Text style={styles.trustTitle}>Güvenli Ödeme Sistemi</Text>
             </View>
             <Text style={styles.trustText}>
-              Ödemeniz Iyzipay üzerinden 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz asla sistemimizde saklanmaz.
+              Ödemeniz Iyzipay güvencesiyle 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz hiçbir şekilde kaydedilmez.
             </Text>
           </View>
 
-          {/* Info Box */}
-          <View style={styles.infoSection}>
-            <View style={styles.infoSectionHeader}>
-              <Info size={16} color={colors.goldDim} />
-              <Text style={styles.infoSectionTitle}>ÖNEMLİ BİLGİ</Text>
+          {/* Policy Box */}
+          <View style={styles.policyBox}>
+            <View style={styles.policyHeader}>
+              <Info size={16} color={colors.goldDeep} />
+              <Text style={styles.policyTitle}>İPTAL POLİTİKASI</Text>
             </View>
-            <Text style={styles.infoSectionText}>
-              Randevunuzu seans saatinden 24 saat öncesine kadar ücretsiz iptal edebilir ve tutarın tamamını iade alabilirsiniz.
+            <Text style={styles.policyText}>
+              Randevunuzu seans saatinden 24 saat öncesine kadar iptal ederek iade alabilirsiniz. Geç kalan seanslar için iade yapılmamaktadır.
             </Text>
           </View>
 
         </ScrollView>
 
-        {/* Footer Action */}
+        {/* Footer */}
         <View style={styles.footer}>
           <Pressable 
             style={[styles.payBtn, loading && styles.payBtnDisabled]}
@@ -170,7 +174,7 @@ export default function BookingCheckoutScreen() {
             ) : (
               <>
                 <CreditCard size={20} color={colors.bgDeep} />
-                <Text style={styles.payBtnText}>Ödeme Adımına Geç</Text>
+                <Text style={styles.payBtnText}>Ödemeyi Tamamla</Text>
               </>
             )}
           </Pressable>
@@ -182,186 +186,34 @@ export default function BookingCheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  safe: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  headerTitle: {
-    fontFamily: font.display,
-    fontSize: 16,
-    color: colors.text,
-  },
-  scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: 120,
-  },
-
-  // Summary Card
-  summaryCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.line,
-    marginBottom: spacing.xl,
-  },
-  summaryTitle: {
-    fontFamily: font.sansBold,
-    fontSize: 11,
-    color: colors.gold,
-    letterSpacing: 2,
-    marginBottom: spacing.xl,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    marginBottom: spacing.lg,
-  },
-  iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.inkDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.lineSoft,
-  },
-  infoTextCol: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontFamily: font.sans,
-    fontSize: 11,
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-  },
-  infoValue: {
-    fontFamily: font.display,
-    fontSize: 16,
-    color: colors.text,
-    marginTop: 2,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.lineSoft,
-    marginVertical: spacing.md,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  totalLabel: {
-    fontFamily: font.sansBold,
-    fontSize: 14,
-    color: colors.text,
-  },
-  totalValue: {
-    fontFamily: font.display,
-    fontSize: 24,
-    color: colors.gold,
-  },
-
-  // Trust Box
-  trustBox: {
-    backgroundColor: 'rgba(76, 175, 110, 0.05)',
-    borderRadius: radius.md,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(76, 175, 110, 0.15)',
-    marginBottom: spacing.xl,
-  },
-  trustHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
-  },
-  trustTitle: {
-    fontFamily: font.sansBold,
-    fontSize: 13,
-    color: colors.success,
-  },
-  trustText: {
-    fontFamily: font.sans,
-    fontSize: 12,
-    color: colors.textDim,
-    lineHeight: 18,
-  },
-
-  // Info Section
-  infoSection: {
-    paddingHorizontal: 4,
-  },
-  infoSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  infoSectionTitle: {
-    fontFamily: font.sansBold,
-    fontSize: 11,
-    color: colors.goldDeep,
-    letterSpacing: 2,
-  },
-  infoSectionText: {
-    fontFamily: font.sans,
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 20,
-  },
-
-  // Footer
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.bgDeep,
-    padding: spacing.lg,
-    paddingBottom: Platform.OS === 'ios' ? 40 : spacing.lg,
-    borderTopWidth: 1,
-    borderColor: colors.line,
-  },
-  payBtn: {
-    backgroundColor: colors.gold,
-    flexDirection: 'row',
-    height: 56,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  payBtnDisabled: {
-    opacity: 0.6,
-  },
-  payBtnText: {
-    fontFamily: font.sansBold,
-    fontSize: 16,
-    color: colors.bgDeep,
-  },
+  container: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  headerBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
+  headerTitle: { fontFamily: font.display, fontSize: 16, color: colors.text },
+  scrollContent: { padding: spacing.lg, paddingBottom: 120 },
+  summaryCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 24, borderWidth: 1, borderColor: colors.line, marginBottom: 20 },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 24 },
+  summaryTitle: { fontFamily: font.sansBold, fontSize: 11, color: colors.gold, letterSpacing: 2 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 20 },
+  iconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.inkDeep, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.lineSoft },
+  infoTextCol: { flex: 1 },
+  infoLabel: { fontFamily: font.sansBold, fontSize: 10, color: colors.textMuted, letterSpacing: 1 },
+  infoValue: { fontFamily: font.display, fontSize: 18, color: colors.text, marginTop: 4 },
+  divider: { height: 1, backgroundColor: colors.lineSoft, marginVertical: 20 },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  totalLabel: { fontFamily: font.sansBold, fontSize: 15, color: colors.text },
+  totalValue: { fontFamily: font.display, fontSize: 26, color: colors.gold },
+  trustBox: { backgroundColor: 'rgba(76, 175, 110, 0.05)', borderRadius: radius.lg, padding: 16, borderWidth: 1, borderColor: 'rgba(76, 175, 110, 0.15)', marginBottom: 20 },
+  trustHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  trustTitle: { fontFamily: font.sansBold, fontSize: 14, color: colors.success },
+  trustText: { fontFamily: font.sans, fontSize: 12, color: colors.textDim, lineHeight: 18 },
+  policyBox: { paddingHorizontal: 4 },
+  policyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  policyTitle: { fontFamily: font.sansBold, fontSize: 11, color: colors.goldDeep, letterSpacing: 1.5 },
+  policyText: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted, lineHeight: 20 },
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.bgDeep, padding: spacing.lg, paddingBottom: Platform.OS === 'ios' ? 40 : spacing.lg, borderTopWidth: 1, borderColor: colors.line },
+  payBtn: { backgroundColor: colors.gold, flexDirection: 'row', height: 60, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  payBtnDisabled: { opacity: 0.6 },
+  payBtnText: { fontFamily: font.sansBold, fontSize: 16, color: colors.bgDeep },
 });

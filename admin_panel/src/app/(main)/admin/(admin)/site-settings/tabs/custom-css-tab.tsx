@@ -17,7 +17,7 @@ export function CustomCssTab() {
 
   React.useEffect(() => {
     if (settingRow?.value !== undefined) {
-      setCssValue(settingRow.value);
+      setCssValue(typeof settingRow.value === 'string' ? settingRow.value : '');
     }
   }, [settingRow?.value]);
 

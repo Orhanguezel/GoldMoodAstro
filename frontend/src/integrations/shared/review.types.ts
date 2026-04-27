@@ -15,6 +15,9 @@ export type ReviewDto = {
   email: string;
   rating: number;
 
+  booking_id?: string | null;
+  user_id?: string | null;
+
   is_active: boolean;
   is_approved: boolean;
   display_order: number;
@@ -33,7 +36,9 @@ export type ReviewDto = {
   title: string | null;
   comment: string | null;
   admin_reply: string | null;
+  consultant_reply: string | null;
   locale_resolved: string | null;
+  is_verified: boolean | number | null;
 
   /**
    * Geriye dönük uyumluluk (bazı eski FE kodları review.locale bekliyor olabilir).
@@ -50,7 +55,7 @@ export type ReviewListQueryParams = {
   maxRating?: number;
   limit?: number;
   offset?: number;
-  orderBy?: 'created_at' | 'updated_at' | 'display_order' | 'rating' | 'name';
+  orderBy?: 'created_at' | 'updated_at' | 'display_order' | 'rating' | 'name' | 'helpful_count';
   order?: 'asc' | 'desc';
 
   // Listeleme locale override
@@ -74,7 +79,11 @@ export type ReviewCreatePayload = {
 
   is_active?: boolean;
   is_approved?: boolean;
+  is_verified?: boolean;
   display_order?: number;
+
+  booking_id?: string;
+  user_id?: string;
 };
 
 export type ReviewUpdatePayload = Partial<ReviewCreatePayload>;

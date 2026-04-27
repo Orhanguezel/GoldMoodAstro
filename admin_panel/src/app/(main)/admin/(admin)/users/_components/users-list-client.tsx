@@ -1,16 +1,9 @@
 'use client';
 
-// =============================================================
-// FILE: src/app/(main)/admin/users/_components/users-list-client.tsx
-// FINAL — Admin Users List (users_admin.endpoints uyumlu)
-// - route: /admin/users
-// - roles: admin | consultant | user
-// =============================================================
-
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, Filter, RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, RefreshCcw, ChevronLeft, ChevronRight, User, ShieldCheck, Mail, Phone, MoreHorizontal, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -25,8 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -60,7 +52,6 @@ function pickQuery(sp: URLSearchParams): AdminUsersListParams {
   const is_active = boolParam(sp.get('is_active'));
   const limit = safeInt(sp.get('limit'), 20) || 20;
   const offset = safeInt(sp.get('offset'), 0);
-
   const sort = (sp.get('sort') ?? undefined) as AdminUsersListParams['sort'] | undefined;
   const order = (sp.get('order') ?? undefined) as AdminUsersListParams['order'] | undefined;
 
@@ -92,270 +83,212 @@ export default function UsersListClient() {
   const sp = useSearchParams();
   const t = useAdminT('admin.users');
 
-  function roleLabel(r: UserRoleName) {
-    if (r === 'admin') return t('roles.admin');
-    if (r === 'consultant') return t('roles.consultant');
-    return t('roles.user');
-  }
-
-  function statusBadge(u: AdminUserView) {
-    if (!u.is_active) return <Badge variant="destructive">{t('list.table.statusInactive')}</Badge>;
-    return <Badge variant="secondary">{t('list.table.statusActive')}</Badge>;
-  }
-
-  function displayName(u: Pick<AdminUserView, 'full_name'>) {
-    const n = String(u.full_name ?? '').trim();
-    return n || t('list.table.unknownUser');
-  }
-
   const params = React.useMemo(() => pickQuery(sp), [sp]);
   const usersQ = useListUsersAdminQuery(params);
 
-  // UI state (controlled) – URL ile senkron
   const [q, setQ] = React.useState(params.q ?? '');
-  const [role, setRole] = React.useState<UserRoleName | 'all'>((params.role as any) ?? 'all');
-  const [onlyActive, setOnlyActive] = React.useState<boolean | 'all'>(
-    typeof params.is_active === 'boolean' ? (params.is_active ? true : false) : 'all',
-  );
-
-  React.useEffect(() => {
-    setQ(params.q ?? '');
-    setRole((params.role as any) ?? 'all');
-    setOnlyActive(
-      typeof params.is_active === 'boolean' ? (params.is_active ? true : false) : 'all',
-    );
-  }, [params.q, params.role, params.is_active]);
 
   function apply(next: Partial<AdminUsersListParams>) {
-    const merged: AdminUsersListParams = {
-      ...params,
-      ...next,
-      offset: next.offset != null ? next.offset : 0,
-    };
-
+    const merged: AdminUsersListParams = { ...params, ...next, offset: next.offset != null ? next.offset : 0 };
     if (!merged.q) delete (merged as any).q;
     if (!merged.role) delete (merged as any).role;
     if (typeof merged.is_active !== 'boolean') delete (merged as any).is_active;
-
     const qs = toSearchParams(merged);
     router.push(qs ? `/admin/users?${qs}` : `/admin/users`);
   }
 
-  function onSearchSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    apply({ q: q.trim() || undefined });
-  }
-
   const limit = params.limit ?? 20;
   const offset = params.offset ?? 0;
-
   const canPrev = offset > 0;
   const canNext = (usersQ.data?.length ?? 0) >= limit;
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-lg font-semibold">{t('list.title')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t('list.description')}
-        </p>
+    <div className="space-y-8 pb-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <span className="w-8 h-px bg-[#C9A961]" />
+            <span className="text-[#C9A961] font-bold text-[10px] tracking-[0.2em] uppercase">Üyelik Sistemi</span>
+          </div>
+          <h1 className="font-serif text-4xl text-foreground">Kullanıcılar</h1>
+          <p className="text-muted-foreground text-sm mt-2 font-serif italic">
+            Tüm danışan, danışman ve admin hesaplarını buradan yönetin.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => usersQ.refetch()} 
+            disabled={usersQ.isFetching}
+            className="rounded-full border-border/40 px-6 h-11"
+          >
+            <RefreshCcw className={`mr-2 size-4 ${usersQ.isFetching ? 'animate-spin' : ''}`} />
+            Yenile
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader className="gap-2">
-          <CardTitle className="text-base">{t('list.filters.title')}</CardTitle>
-          <CardDescription>{t('list.filters.description')}</CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          <form onSubmit={onSearchSubmit} className="flex flex-col gap-3 lg:flex-row lg:items-end">
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="q">{t('list.filters.searchLabel')}</Label>
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="q"
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder={t('list.filters.searchPlaceholder')}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-
-            <div className="w-full space-y-2 lg:w-56">
-              <Label>{t('list.filters.roleLabel')}</Label>
-              <Select
-                value={role}
-                onValueChange={(v) => {
-                  const vv = v as UserRoleName | 'all';
-                  setRole(vv);
-                  apply({ role: vv === 'all' ? undefined : (vv as UserRoleName) });
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('list.filters.rolePlaceholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('roles.all')}</SelectItem>
-                  <SelectItem value="admin">{t('roles.admin')}</SelectItem>
-                  <SelectItem value="consultant">{t('roles.consultant')}</SelectItem>
-                  <SelectItem value="user">{t('roles.user')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Filter className="size-4 text-muted-foreground" />
-              <Label className="text-sm">{t('list.filters.onlyActive')}</Label>
-              <Switch
-                checked={onlyActive === true}
-                onCheckedChange={(v) => {
-                  const next = v ? true : 'all';
-                  setOnlyActive(next);
-                  apply({ is_active: v ? true : undefined });
-                }}
+      {/* Filters Card */}
+      <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
+        <CardContent className="p-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-end">
+          <div className="space-y-3 md:col-span-2">
+            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1">Hesap Ara</label>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && apply({ q: q.trim() || undefined })}
+                placeholder="İsim, e-posta veya telefon..."
+                className="pl-12 bg-muted/20 border-border/40 rounded-2xl h-12"
               />
             </div>
+          </div>
 
-            <div className="flex gap-2">
-              <Button type="submit" disabled={usersQ.isFetching}>
-                {t('list.filters.searchButton')}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setQ('');
-                  setRole('all');
-                  setOnlyActive('all');
-                  router.push('/admin/users');
-                }}
-                disabled={usersQ.isFetching}
-              >
-                {t('list.filters.resetButton')}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => usersQ.refetch()}
-                disabled={usersQ.isFetching}
-                title={t('list.filters.refreshButton')}
-              >
-                <RefreshCcw className="size-4" />
-              </Button>
-            </div>
-          </form>
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 text-center block">Rol</label>
+            <Select
+              value={params.role || 'all'}
+              onValueChange={(v) => apply({ role: v === 'all' ? undefined : (v as UserRoleName) })}
+            >
+              <SelectTrigger className="bg-muted/20 border-border/40 rounded-2xl h-12 focus:ring-0">
+                <SelectValue placeholder="Rol Seçin" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border/40 rounded-2xl">
+                <SelectItem value="all">Tüm Roller</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="consultant">Danışman</SelectItem>
+                <SelectItem value="user">Kullanıcı</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-center gap-4 h-12 px-6 bg-muted/10 rounded-2xl border border-border/30">
+            <label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Sadece Aktif</label>
+            <Switch
+              checked={params.is_active === true}
+              onCheckedChange={(v) => apply({ is_active: v ? true : undefined })}
+              className="data-[state=checked]:bg-[#C9A961]"
+            />
+          </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t('list.table.title')}</CardTitle>
-          <CardDescription>
-            {usersQ.isFetching
-              ? t('list.table.loading')
-              : t('list.table.totalRecords', { count: usersQ.data?.length ?? 0 })}
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {usersQ.isError ? (
-            <div className="rounded-md border p-4 text-sm">
-              {t('list.table.loadError')}{' '}
-              <Button
-                variant="link"
-                className="px-1"
-                onClick={() => {
-                  toast.error(t('list.table.loadError'));
-                  usersQ.refetch();
-                }}
-              >
-                {t('list.table.retryButton')}
-              </Button>
-            </div>
-          ) : null}
-
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
+      {/* Table Card */}
+      <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow className="border-border/30 hover:bg-transparent">
+                <TableHead className="py-6 px-8 text-[10px] font-bold uppercase tracking-widest">Kullanıcı</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest">İletişim</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-center">Durum</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-center">E-posta</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-center">Rol</TableHead>
+                <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest">İşlemler</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {usersQ.isLoading ? (
                 <TableRow>
-                  <TableHead>{t('list.table.fullName')}</TableHead>
-                  <TableHead>{t('list.table.email')}</TableHead>
-                  <TableHead>{t('list.table.phone')}</TableHead>
-                  <TableHead>{t('list.table.status')}</TableHead>
-                  <TableHead>E-posta</TableHead>
-                  <TableHead>{t('list.table.role')}</TableHead>
-                  <TableHead className="text-right">{t('list.table.actions')}</TableHead>
+                  <TableCell colSpan={6} className="py-20 text-center font-serif italic text-muted-foreground">Yükleniyor...</TableCell>
                 </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {(usersQ.data ?? []).map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell className="font-medium">{displayName(u)}</TableCell>
-                    <TableCell>{u.email ?? '—'}</TableCell>
-                    <TableCell>{u.phone ?? '—'}</TableCell>
-                    <TableCell>{statusBadge(u)}</TableCell>
-                    <TableCell>
-                      <Badge variant={u.email_verified ? 'default' : 'outline'} className={u.email_verified ? '' : 'text-muted-foreground'}>
-                        {u.email_verified ? 'Doğrulanmış' : 'Bekliyor'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={u.roles.includes('admin') ? 'default' : 'secondary'}>
-                        {roleLabel(u.roles[0] ?? 'user')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button asChild variant="outline" size="sm">
-                        <Link prefetch={false} href={`/admin/users/${encodeURIComponent(u.id)}`}>
-                          {t('list.table.viewButton')}
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-
-                {!usersQ.isFetching && (usersQ.data?.length ?? 0) === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                      {t('list.table.noRecords')}
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-muted-foreground">
-              {t('list.pagination.offset', { offset })} • {t('list.pagination.limit', { limit })}
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!canPrev || usersQ.isFetching}
-                onClick={() => apply({ offset: Math.max(0, offset - limit) })}
-              >
-                <ChevronLeft className="mr-1 size-4" />
-                {t('list.pagination.previous')}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!canNext || usersQ.isFetching}
-                onClick={() => apply({ offset: offset + limit })}
-              >
-                {t('list.pagination.next')}
-                <ChevronRight className="ml-1 size-4" />
-              </Button>
-            </div>
-          </div>
+              ) : (usersQ.data ?? []).map((u) => (
+                <TableRow key={u.id} className="border-border/20 hover:bg-muted/10 transition-colors">
+                  <TableCell className="py-6 px-8">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center text-[#C9A961] font-serif">
+                        {u.full_name?.[0] || 'U'}
+                      </div>
+                      <div>
+                        <div className="font-serif text-lg text-foreground flex items-center gap-2">
+                          {u.full_name || 'İsimsiz Kullanıcı'}
+                          {u.roles.includes('admin') && <ShieldCheck className="w-4 h-4 text-[#C9A961]" />}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground font-mono opacity-50 uppercase tracking-tighter">ID: {u.id.slice(0, 8)}</div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-6">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Mail size={12} className="text-[#C9A961]" />
+                        {u.email}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Phone size={12} className="text-[#C9A961]" />
+                        {u.phone || 'Telefon Yok'}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-6 text-center">
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
+                      u.is_active ? 'bg-[#4CAF6E]/10 text-[#4CAF6E]' : 'bg-[#E55B4D]/10 text-[#E55B4D]'
+                    }`}>
+                      <div className={`w-1 h-1 rounded-full ${u.is_active ? 'bg-[#4CAF6E]' : 'bg-[#E55B4D]'}`} />
+                      {u.is_active ? 'AKTİF' : 'PASİF'}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-6 text-center">
+                    <Badge variant={u.email_verified ? 'outline' : 'secondary'} className={u.email_verified ? 'border-[#C9A961] text-[#C9A961] text-[9px]' : 'text-muted-foreground text-[9px] opacity-40'}>
+                      {u.email_verified ? 'DOĞRULANDI' : 'BEKLİYOR'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="py-6 text-center">
+                    <span className={`text-[9px] font-bold tracking-widest uppercase px-3 py-1 rounded border ${
+                      u.roles.includes('admin') ? 'border-[#C9A961]/30 text-[#C9A961]' :
+                      u.roles.includes('consultant') ? 'border-[#7B5EA7]/30 text-[#7B5EA7]' :
+                      'border-border/50 text-muted-foreground'
+                    }`}>
+                      {u.roles[0] === 'admin' ? 'ADMİN' : u.roles[0] === 'consultant' ? 'DANIŞMAN' : 'KULLANICI'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="py-6 px-8 text-right">
+                    <Button asChild variant="ghost" size="icon" className="rounded-full hover:bg-[#C9A961]/10 hover:text-[#C9A961]">
+                      <Link prefetch={false} href={`/admin/users/${encodeURIComponent(u.id)}`}>
+                        <Eye className="size-4" />
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between px-8">
+        <div className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
+          Sayfa Başı: {limit} • Toplam {usersQ.data?.length ?? 0} Kayıt
+        </div>
+
+        <div className="flex gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={!canPrev || usersQ.isFetching}
+            onClick={() => apply({ offset: Math.max(0, offset - limit) })}
+            className="rounded-full px-6 hover:bg-[#C9A961]/10 hover:text-[#C9A961]"
+          >
+            <ChevronLeft className="mr-2 size-4" />
+            Önceki
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={!canNext || usersQ.isFetching}
+            onClick={() => apply({ offset: offset + limit })}
+            className="rounded-full px-6 hover:bg-[#C9A961]/10 hover:text-[#C9A961]"
+          >
+            Sonraki
+            <ChevronRight className="ml-2 size-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

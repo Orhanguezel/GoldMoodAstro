@@ -9,9 +9,9 @@ export interface AppLocaleMeta {
 }
 
 export const DEFAULT_APP_LOCALES: AppLocaleMeta[] = [
-  { code: 'de', label: 'Deutsch', is_default: true, is_active: true },
+  { code: 'tr', label: 'Türkçe', is_default: true, is_active: true },
   { code: 'en', label: 'English', is_default: false, is_active: true },
-  { code: 'tr', label: 'Türkçe', is_default: false, is_active: true },
+  { code: 'de', label: 'Deutsch', is_default: false, is_active: true },
 ];
 
 /** Immutable default listesinin deep clone'u */

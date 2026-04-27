@@ -197,3 +197,7 @@ vite.config.ts.timestamp-*
 # Syncthing temp files
 .syncthing.*.tmp
 **/.syncthing.*.tmp
+
+# Claude Code dahili (settings.json takipte; lock + local override değil)
+.claude/scheduled_tasks.lock
+.claude/settings.local.json

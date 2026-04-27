@@ -1,6 +1,7 @@
 import {
   mysqlTable,
   char,
+  varchar,
   text,
   json,
   decimal,
@@ -20,6 +21,7 @@ export const consultants = mysqlTable(
   {
     id: char('id', { length: 36 }).primaryKey().notNull(),
     user_id: char('user_id', { length: 36 }).notNull(),
+    slug: varchar('slug', { length: 100 }),
     bio: text('bio'),
     expertise: json('expertise').$type<string[]>(),
     languages: json('languages').$type<string[]>(),
@@ -43,6 +45,7 @@ export const consultants = mysqlTable(
   },
   (t) => [
     uniqueIndex('consultants_user_id_unique').on(t.user_id),
+    uniqueIndex('consultants_slug_unique').on(t.slug),
     index('consultants_approval_idx').on(t.approval_status),
     index('consultants_available_idx').on(t.is_available),
     foreignKey({

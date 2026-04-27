@@ -8,8 +8,10 @@ import { baseApi } from '@/integrations/rtk/baseApi';
 export interface ConsultantPublic {
   id: string;
   user_id: string;
+  slug?: string | null;
   full_name?: string;
   email?: string;
+  avatar_url?: string;
   bio?: string;
   expertise: string[];
   languages: string[];

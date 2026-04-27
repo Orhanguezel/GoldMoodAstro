@@ -53,6 +53,58 @@ export type ModerationResult = {
   matched_patterns?: string[];      // hangi regex eşleşti (debug için)
 };
 
+type OpenAIModerationResponse = {
+  results?: Array<{
+    flagged?: boolean;
+    categories?: Record<string, boolean>;
+    category_scores?: Record<string, number>;
+  }>;
+};
+
+function toFlagsFromOpenAICategories(categories?: Record<string, boolean>) {
+  if (!categories) return [];
+  return Object.entries(categories)
+    .filter(([, v]) => v)
+    .map(([k]) => `openai:${k}`);
+}
+
+async function openAIModeration(content: string): Promise<ModerationResult> {
+  const apiKey = String(process.env.OPENAI_API_KEY || '').trim();
+  if (!apiKey) {
+    return { safe: true, flags: [] };
+  }
+
+  const response = await fetch('https://api.openai.com/v1/moderations', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      input: content,
+    }),
+  });
+
+  if (!response.ok) {
+    // Network / API hatası: güvenli tarafta kal, offline kurallar geçerli
+    return { safe: true, flags: [] };
+  }
+
+  const payload = (await response.json()) as OpenAIModerationResponse;
+  const first = payload?.results?.[0];
+  if (!first) {
+    return { safe: true, flags: [] };
+  }
+
+  const categoryFlags = toFlagsFromOpenAICategories(first.categories);
+  const flagged = Boolean(first.flagged) || categoryFlags.length > 0;
+  return {
+    safe: !flagged,
+    flags: categoryFlags,
+    matched_patterns: first.category_scores ? Object.keys(first.category_scores).filter((k) => first.category_scores![k] > 0.45) : categoryFlags,
+  };
+}
+
 export function checkContent(
   content: string,
   context: ModerationContext = 'review',
@@ -98,6 +150,31 @@ export function checkContent(
     flags: [...new Set(flags)],
     matched_patterns: matched.length > 0 ? matched : undefined,
   };
+}
+
+export async function checkContentAsync(
+  content: string,
+  context: ModerationContext = 'review',
+): Promise<ModerationResult> {
+  const syncResult = checkContent(content, context);
+  if (!syncResult.safe) return syncResult;
+
+  if (context !== 'review' || !String(content || '').trim()) return syncResult;
+
+  try {
+    const remoteResult = await openAIModeration(content);
+    if (!remoteResult.safe) {
+      return {
+        safe: false,
+        flags: [...new Set([...syncResult.flags, ...remoteResult.flags])],
+        matched_patterns: [...new Set([...(syncResult.matched_patterns ?? []), ...(remoteResult.matched_patterns ?? [])])],
+      };
+    }
+  } catch {
+    return syncResult;
+  }
+
+  return syncResult;
 }
 
 // Backward-compat: mevcut readings/safety isUnsafeReading

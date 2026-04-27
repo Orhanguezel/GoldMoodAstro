@@ -310,13 +310,20 @@
     background: var(--color-bg-accent);
   }
 
-  /* ─── SCROLL REVEAL ─── */
+  /* ─── SCROLL REVEAL ───
+     Hydration-safe: `.reveal` SSR'da görünür kalır. `body.scroll-reveal-ready`
+     hydration tamamlanınca eklenir; sadece o noktadan sonra fade/translate
+     başlar. Bu, server HTML'deki class listesinin client hydrate sırasında
+     mutate edilmesini engeller (no .visible toggle race). */
   .reveal {
+    transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  body.scroll-reveal-ready .reveal:not(.visible) {
     opacity: 0;
     transform: translateY(40px);
-    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .reveal.visible {
+  body.scroll-reveal-ready .reveal.visible {
     opacity: 1;
     transform: translateY(0);
   }

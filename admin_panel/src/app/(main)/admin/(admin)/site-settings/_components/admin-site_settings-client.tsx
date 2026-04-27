@@ -1,22 +1,13 @@
 'use client';
 
-// =============================================================
-// FILE: src/app/(main)/admin/(admin)/site-settings/admin-site_settings-client.tsx
-// FINAL — Admin Site Settings Client (shadcn/ui theme, UsersListClient layout)
-// - NO bootstrap classes
-// - Tabs + Filters card + Content card
-// - list/global_list use SiteSettingsList (shadcn)
-// =============================================================
-
 import * as React from 'react';
 import { toast } from 'sonner';
-import { Search, RefreshCcw } from 'lucide-react';
+import { Search, RefreshCcw, Settings, Globe, ShieldCheck, Palette, Code, Mail, Sliders, Database, Activity } from 'lucide-react';
 import { useAdminTranslations } from '@/i18n';
 import { usePreferencesStore } from '@/stores/preferences/preferences-provider';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -52,8 +43,6 @@ import {
   useDeleteSiteSettingAdminMutation,
 } from '@/integrations/hooks';
 
-/* ----------------------------- helpers ----------------------------- */
-
 type SettingsTab =
   | 'list'
   | 'global_list'
@@ -75,96 +64,25 @@ function safeStr(v: unknown) {
   return v === null || v === undefined ? '' : String(v);
 }
 
-function getErrMessage(err: unknown, fallback: string): string {
-  const anyErr = err as any;
-  const m1 = anyErr?.data?.error?.message;
-  if (typeof m1 === 'string' && m1.trim()) return m1;
-  const m1b = anyErr?.data?.error;
-  if (typeof m1b === 'string' && m1b.trim()) return m1b;
-  const m2 = anyErr?.data?.message;
-  if (typeof m2 === 'string' && m2.trim()) return m2;
-  const m3 = anyErr?.error;
-  if (typeof m3 === 'string' && m3.trim()) return m3;
-  return fallback;
-}
-
-function buildLocalesOptions(appLocales: any[] | undefined, defaultLocale: any): LocaleOption[] {
-  const items = Array.isArray(appLocales) ? appLocales : [];
-  const def = typeof defaultLocale === 'string' ? defaultLocale : safeStr(defaultLocale);
-
-  const sorted = [...items].sort((a, b) => {
-    const aa = a?.is_active === false ? 1 : 0;
-    const bb = b?.is_active === false ? 1 : 0;
-    if (aa !== bb) return aa - bb;
-    return String(a?.code || '').localeCompare(String(b?.code || ''));
-  });
-
-  const mapped: LocaleOption[] = sorted
-    .filter((x) => x?.code)
-    .map((x) => {
-      const code = String(x.code);
-      const labelBase = x.label ? `${x.label} (${code})` : code;
-      return {
-        value: code,
-        label: labelBase,
-        isDefault: x.is_default === true,
-        isActive: x.is_active !== false,
-      };
-    });
-
-  if (!mapped.length) {
-    return [
-      { value: def || 'de', label: def || 'de', isDefault: true, isActive: true },
-      { value: 'en', label: 'English (en)', isDefault: false, isActive: true },
-      { value: 'tr', label: 'Türkçe (tr)', isDefault: false, isActive: true },
-    ];
-  }
-  return mapped;
-}
-
-function pickInitialLocale(appLocales: any[] | undefined, defaultLocale: any): string {
-  const items = Array.isArray(appLocales) ? appLocales : [];
-  const def =
-    typeof defaultLocale === 'string' ? defaultLocale.trim() : safeStr(defaultLocale).trim();
-
-  if (def) return def;
-
-  const firstActive = items.find((x) => x?.is_active !== false && x?.code)?.code;
-  return firstActive ? String(firstActive) : 'de';
-}
-
-function editHref(key: string, locale: string) {
-  return `/admin/site-settings/${encodeURIComponent(key)}?locale=${encodeURIComponent(locale)}`;
-}
-
-/* ----------------------------- list panels ----------------------------- */
-
 function ListPanel({
   locale,
   search,
   onDeleteRow,
 }: {
-  locale: string; // selected locale OR '*'
+  locale: string;
   search: string;
   onDeleteRow: (row: SiteSetting) => void;
 }) {
-  const qArgs = React.useMemo(() => {
-    const q = search.trim() || undefined;
-    return {
-      locale,
-      q,
-      sort: 'key' as const,
-      order: 'asc' as const,
-      limit: 200,
-      offset: 0,
-    };
-  }, [locale, search]);
+  const qArgs = React.useMemo(() => ({
+    locale,
+    q: search.trim() || undefined,
+    sort: 'key' as const,
+    order: 'asc' as const,
+    limit: 200,
+    offset: 0,
+  }), [locale, search]);
 
-  const listQ = useListSiteSettingsAdminQuery(qArgs, {
-    skip: !locale,
-    refetchOnMountOrArgChange: true,
-  });
-
+  const listQ = useListSiteSettingsAdminQuery(qArgs, { skip: !locale, refetchOnMountOrArgChange: true });
   const loading = listQ.isLoading || listQ.isFetching;
 
   return (
@@ -173,321 +91,177 @@ function ListPanel({
       loading={loading}
       selectedLocale={locale}
       onDelete={onDeleteRow}
-      getEditHref={(s) => editHref(String(s.key || ''), locale)}
+      getEditHref={(s) => `/admin/site-settings/${encodeURIComponent(String(s.key || ''))}?locale=${encodeURIComponent(locale)}`}
     />
   );
 }
-
-/* ----------------------------- main component ----------------------------- */
 
 export default function AdminSiteSettingsClient() {
   const localesQ = useGetAppLocalesAdminQuery();
   const defaultLocaleQ = useGetDefaultLocaleAdminQuery();
 
-  const localeOptions: LocaleOption[] = React.useMemo(
-    () => buildLocalesOptions(localesQ.data as any, defaultLocaleQ.data as any),
-    [localesQ.data, defaultLocaleQ.data],
-  );
-
-  const initialLocale = React.useMemo(
-    () => pickInitialLocale(localesQ.data as any, defaultLocaleQ.data as any),
-    [localesQ.data, defaultLocaleQ.data],
-  );
-
-  const [tab, setTab] = React.useState<SettingsTab>('general');
+  const [tab, setTab] = React.useState<SettingsTab>('design_tokens');
   const [search, setSearch] = React.useState('');
-  const [locale, setLocale] = React.useState<string>('');
-  const [localeTouched, setLocaleTouched] = React.useState<boolean>(false);
+  const [locale, setLocale] = React.useState<string>('tr');
 
   const [deleteSetting, { isLoading: isDeleting }] = useDeleteSiteSettingAdminMutation();
-
   const adminLocale = usePreferencesStore((s) => s.adminLocale);
   const t = useAdminTranslations(adminLocale || undefined);
 
-  React.useEffect(() => {
-    if (!locale || !localeTouched) setLocale(initialLocale);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialLocale]);
+  const disabled = localesQ.isFetching || defaultLocaleQ.isFetching || isDeleting;
 
-  const headerLoading =
-    localesQ.isFetching ||
-    defaultLocaleQ.isFetching ||
-    localesQ.isLoading ||
-    defaultLocaleQ.isLoading;
-
-  const disabled = headerLoading || isDeleting;
-
-  const onRefresh = async () => {
-    try {
-      await Promise.all([localesQ.refetch(), defaultLocaleQ.refetch()]);
-      toast.success(t('admin.siteSettings.filters.refreshed'));
-    } catch (err) {
-      toast.error(getErrMessage(err, t('admin.siteSettings.messages.error')));
-    }
-  };
+  const localeOptions = React.useMemo(() => {
+    const items = Array.isArray(localesQ.data) ? localesQ.data : [];
+    return items.map((x: any) => ({
+      value: String(x.code),
+      label: x.label ? `${x.label} (${x.code})` : x.code,
+      isDefault: x.is_default === true,
+      isActive: x.is_active !== false,
+    }));
+  }, [localesQ.data]);
 
   const handleDeleteRow = async (row: SiteSetting) => {
     const key = String(row?.key || '').trim();
-    const rowLocale = row?.locale ? String(row.locale) : undefined;
     if (!key) return;
-
-    const ok = window.confirm(
-      t('admin.siteSettings.list.deleteConfirm', { key, locale: rowLocale || locale || '—' }),
-    );
-    if (!ok) return;
-
+    if (!window.confirm(`${key} ayarını silmek istediğinize emin misiniz?`)) return;
     try {
-      await deleteSetting({ key, locale: rowLocale ?? undefined }).unwrap();
-      toast.success(t('admin.siteSettings.messages.deleted'));
-    } catch (err) {
-      toast.error(getErrMessage(err, t('admin.siteSettings.messages.error')));
+      await deleteSetting({ key, locale: row.locale ?? undefined }).unwrap();
+      toast.success('Ayar silindi.');
+    } catch {
+      toast.error('Hata oluştu.');
     }
   };
 
-  const localeReady = Boolean(locale && locale.trim());
-  const isGlobalTab = tab === 'global_list' || tab === 'smtp' || tab === 'brand_media' || tab === 'locales' || tab === 'branding' || tab === 'design_tokens' || tab === 'custom_css' || tab === 'livekit';
+  const isGlobalTab = ['global_list', 'smtp', 'brand_media', 'locales', 'branding', 'design_tokens', 'custom_css', 'livekit'].includes(tab);
+
+  const menuItems = [
+    { value: 'design_tokens', label: 'Tasarım Tokenları', icon: Palette },
+    { value: 'branding', label: 'Marka & Kimlik', icon: ShieldCheck },
+    { value: 'general', label: 'Genel Ayarlar', icon: Settings },
+    { value: 'seo', label: 'SEO & Meta', icon: Globe },
+    { value: 'api', label: 'API & Entegrasyon', icon: Sliders },
+    { value: 'smtp', label: 'E-posta (SMTP)', icon: Mail },
+    { value: 'livekit', label: 'Görüntülü Altyapı', icon: Activity },
+    { value: 'custom_css', label: 'Özel CSS', icon: Code },
+    { value: 'list', label: 'Tüm Kayıtlar', icon: Database },
+  ];
 
   return (
-    <div className="w-full max-w-full space-y-6 overflow-x-hidden px-2 pb-6 md:px-0 md:pb-0">
-      {/* PAGE HEAD (UsersListClient style) */}
-      <div className="space-y-1">
-        <h1 className="text-lg font-semibold">{t('admin.siteSettings.title')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t('admin.siteSettings.description')}
-        </p>
+    <div className="space-y-8 pb-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <span className="w-8 h-px bg-[#C9A961]" />
+            <span className="text-[#C9A961] font-bold text-[10px] tracking-[0.2em] uppercase">Sistem Yapılandırması</span>
+          </div>
+          <h1 className="font-serif text-4xl text-foreground">Site Ayarları</h1>
+          <p className="text-muted-foreground text-sm mt-2 font-serif italic">
+            Platform kimliğini, teknik altyapıyı ve kozmik görünümü buradan yönetin.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="w-full md:w-64 space-y-2">
+            <label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase ml-1">Dil Seçimi</label>
+            <Select value={locale} onValueChange={setLocale} disabled={disabled || isGlobalTab}>
+              <SelectTrigger className="bg-muted/20 border-border/40 rounded-2xl h-11 focus:ring-0 focus:border-[#C9A961]/50">
+                <SelectValue placeholder="Dil Seçin" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border/40 rounded-2xl">
+                {localeOptions.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
-      {/* FILTERS (UsersListClient style) */}
-      <Card>
-        <CardHeader className="gap-2">
-          <CardTitle className="text-base">{t('admin.siteSettings.filters.title')}</CardTitle>
-          <CardDescription>{t('admin.siteSettings.filters.description')}</CardDescription>
-        </CardHeader>
+      <div className="grid lg:grid-cols-[280px_1fr] gap-12 items-start">
+        {/* Navigation Sidebar */}
+        <aside className="space-y-6">
+          <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden p-6">
+            <nav className="space-y-1">
+              {menuItems.map((item) => (
+                <button
+                  key={item.value}
+                  onClick={() => setTab(item.value as SettingsTab)}
+                  className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl transition-all ${
+                    tab === item.value 
+                      ? 'bg-[#C9A961] text-[#1A1715]' 
+                      : 'text-muted-foreground hover:bg-muted/20'
+                  }`}
+                >
+                  <item.icon size={18} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
+                </button>
+              ))}
+            </nav>
+          </Card>
 
-        <CardContent className="space-y-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-            <div className="w-full flex-1 space-y-2">
-              <Label htmlFor="q">{t('admin.siteSettings.filters.search')}</Label>
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="q"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder={t('admin.siteSettings.filters.searchPlaceholder')}
-                  className="w-full pl-9"
-                  disabled={disabled}
-                />
+          <Card className="bg-[#C9A961]/5 border border-[#C9A961]/20 rounded-[32px] p-8 text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-[#C9A961]/10 flex items-center justify-center mx-auto text-[#C9A961]">
+              <Database size={20} />
+            </div>
+            <h4 className="font-serif text-lg text-foreground">Global Ayarlar</h4>
+            <p className="text-[10px] text-muted-foreground leading-relaxed uppercase tracking-wider">
+              Bazı ayarlar tüm diller için ortaktır ve "Global" olarak işaretlenmiştir.
+            </p>
+          </Card>
+        </aside>
+
+        {/* Content Area */}
+        <Card className="bg-card border-border/40 rounded-[40px] overflow-hidden min-h-[700px] relative">
+          <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none">
+            <Settings className="w-64 h-64" />
+          </div>
+          
+          <CardHeader className="p-10 border-b border-border/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="font-serif text-3xl">
+                  {menuItems.find(m => m.value === tab)?.label}
+                </CardTitle>
+                <CardDescription className="font-serif italic text-lg opacity-70 pt-2">
+                  Yapılandırma detaylarını güncelleyin.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                {isGlobalTab && <Badge className="bg-[#C9A961] text-[#1A1715] hover:bg-[#C9A961]">GLOBAL</Badge>}
+                {!isGlobalTab && <Badge variant="outline" className="border-[#C9A961] text-[#C9A961] uppercase tracking-widest">{locale}</Badge>}
               </div>
             </div>
+          </CardHeader>
 
-            <div className="w-full space-y-2 lg:w-56">
-              <Label>{t('admin.siteSettings.filters.language')}</Label>
-              <Select
-                value={localeReady ? locale : ''}
-                onValueChange={(v) => {
-                  setLocaleTouched(true);
-                  setLocale(v);
-                }}
-                disabled={disabled || isGlobalTab}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue
-                    placeholder={
-                      isGlobalTab
-                        ? t('admin.siteSettings.filters.globalPlaceholder')
-                        : t('admin.siteSettings.filters.selectLanguage')
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {(localeOptions ?? []).map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                      {o.isDefault ? ` • ${t('admin.siteSettings.filters.defaultSuffix')}` : ''}
-                      {o.isActive === false ? ` • ${t('admin.siteSettings.filters.inactiveSuffix')}` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {isGlobalTab ? (
-                <div className="text-xs text-muted-foreground">
-                  {t('admin.siteSettings.filters.languageDisabledNote')}
+          <CardContent className="p-10">
+            <div className="relative z-10">
+              {tab === 'design_tokens' && <DesignTokensTab />}
+              {tab === 'branding' && <BrandingSettingsTab />}
+              {tab === 'general' && <GeneralSettingsTab locale={locale} />}
+              {tab === 'seo' && <SeoSettingsTab locale={locale} />}
+              {tab === 'api' && <ApiSettingsTab locale={locale} />}
+              {tab === 'smtp' && <SmtpSettingsTab locale={locale} />}
+              {tab === 'livekit' && <LiveKitTab />}
+              {tab === 'custom_css' && <CustomCssTab />}
+              {tab === 'list' && (
+                <div className="space-y-6">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Ayar anahtarı ara..." 
+                      value={search} 
+                      onChange={e => setSearch(e.target.value)} 
+                      className="pl-12 bg-muted/20 border-border/40 rounded-2xl h-12"
+                    />
+                  </div>
+                  <ListPanel locale={locale} search={search} onDeleteRow={handleDeleteRow} />
                 </div>
-              ) : null}
+              )}
             </div>
-
-            <div className="flex w-full gap-2 lg:w-auto">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={onRefresh}
-                disabled={disabled}
-                title={t('admin.siteSettings.filters.refreshButton')}
-                className="flex-1 lg:flex-initial"
-              >
-                <RefreshCcw className="size-4" />
-                <span className="ml-2 lg:hidden">{t('admin.siteSettings.filters.refreshButton')}</span>
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setSearch('');
-                  if (!isGlobalTab) {
-                    setLocaleTouched(false);
-                    setLocale(initialLocale);
-                  }
-                }}
-                disabled={disabled}
-                className="flex-1 lg:flex-initial"
-              >
-                {t('admin.siteSettings.filters.resetButton')}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* CONTENT */}
-      <Card>
-        <CardHeader className="gap-2">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              <CardTitle className="text-base">{t('admin.siteSettings.management.title')}</CardTitle>
-              <CardDescription>
-                {tab === 'list' ? t('admin.siteSettings.management.localeRecords') : null}
-                {tab === 'global_list' ? t('admin.siteSettings.management.globalRecords') : null}
-                {tab === 'general' ? t('admin.siteSettings.general.title') : null}
-                {tab === 'seo' ? t('admin.siteSettings.tabs.seo') : null}
-                {tab === 'smtp' ? t('admin.siteSettings.tabs.smtp') : null}
-                {tab === 'cloudinary' ? t('admin.siteSettings.cloudinary.title') : null}
-                {tab === 'brand_media' ? t('admin.siteSettings.brandMedia.title') : null}
-                {tab === 'api' ? t('admin.siteSettings.api.title') : null}
-                {tab === 'locales' ? t('admin.siteSettings.locales.title') : null}
-                {tab === 'branding' ? t('admin.siteSettings.branding.title') : null}
-                {tab === 'design_tokens' ? 'Design Tokens — Renk, font ve radius ayarları' : null}
-                {tab === 'custom_css' ? 'Özel CSS — Stil müdahaleleri' : null}
-                {tab === 'livekit' ? 'LiveKit — Görüşme altyapısı' : null}
-              </CardDescription>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {isGlobalTab ? <Badge variant="secondary">{t('admin.siteSettings.badges.global')}</Badge> : null}
-              {!isGlobalTab && localeReady ? <Badge variant="secondary">{locale}</Badge> : null}
-              {disabled ? <Badge variant="outline">{t('admin.siteSettings.messages.loading')}</Badge> : null}
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {!localeReady ? (
-            <div className="rounded-md border p-4 text-sm text-muted-foreground">
-              {t('admin.siteSettings.management.loadingMeta')}
-            </div>
-          ) : (
-            <Tabs value={tab} onValueChange={(v) => setTab(v as SettingsTab)}>
-              <div className="-mx-2 overflow-x-auto px-2 md:mx-0 md:overflow-x-visible md:px-0">
-                <TabsList className="inline-flex min-w-full flex-nowrap justify-start md:flex-wrap">
-                  <TabsTrigger value="list" className="whitespace-nowrap">
-                    {t('admin.siteSettings.tabs.list')}
-                  </TabsTrigger>
-                  <TabsTrigger value="global_list" className="whitespace-nowrap">
-                    {t('admin.siteSettings.tabs.globalList')}
-                  </TabsTrigger>
-                  <TabsTrigger value="general" className="whitespace-nowrap">
-                    {t('admin.siteSettings.tabs.general')}
-                  </TabsTrigger>
-                  <TabsTrigger value="seo" className="whitespace-nowrap">
-                    {t('admin.siteSettings.tabs.seo')}
-                  </TabsTrigger>
-                  <TabsTrigger value="smtp" className="whitespace-nowrap">
-                    {t('admin.siteSettings.tabs.smtp')}
-                  </TabsTrigger>
-                  <TabsTrigger value="cloudinary" className="whitespace-nowrap">
-                    {t('admin.siteSettings.tabs.cloudinary')}
-                  </TabsTrigger>
-                  <TabsTrigger value="brand_media" className="whitespace-nowrap">
-                    {t('admin.siteSettings.tabs.brandMedia')}
-                  </TabsTrigger>
-                  <TabsTrigger value="api" className="whitespace-nowrap">
-                    {t('admin.siteSettings.tabs.api')}
-                  </TabsTrigger>
-                  <TabsTrigger value="locales" className="whitespace-nowrap">
-                    {t('admin.siteSettings.tabs.locales')}
-                  </TabsTrigger>
-                  <TabsTrigger value="branding" className="whitespace-nowrap">
-                    {t('admin.siteSettings.tabs.branding')}
-                  </TabsTrigger>
-                  <TabsTrigger value="design_tokens" className="whitespace-nowrap">
-                    Design Tokens
-                  </TabsTrigger>
-                  <TabsTrigger value="custom_css" className="whitespace-nowrap">
-                    Custom CSS
-                  </TabsTrigger>
-                  <TabsTrigger value="livekit" className="whitespace-nowrap">
-                    LiveKit
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="list" className="mt-4">
-                <ListPanel locale={locale} search={search} onDeleteRow={handleDeleteRow} />
-              </TabsContent>
-
-              <TabsContent value="global_list" className="mt-4">
-                <ListPanel locale="*" search={search} onDeleteRow={handleDeleteRow} />
-              </TabsContent>
-
-              <TabsContent value="general" className="mt-4">
-                <GeneralSettingsTab locale={locale} />
-              </TabsContent>
-
-              <TabsContent value="seo" className="mt-4">
-                <SeoSettingsTab locale={locale} />
-              </TabsContent>
-
-              <TabsContent value="smtp" className="mt-4">
-                <SmtpSettingsTab locale={locale} />
-              </TabsContent>
-
-              <TabsContent value="cloudinary" className="mt-4">
-                <CloudinarySettingsTab locale={locale} />
-              </TabsContent>
-
-              <TabsContent value="brand_media" className="mt-4">
-                <BrandMediaTab />
-              </TabsContent>
-
-              <TabsContent value="api" className="mt-4">
-                <ApiSettingsTab locale={locale} />
-              </TabsContent>
-
-              <TabsContent value="locales" className="mt-4">
-                <LocalesSettingsTab />
-              </TabsContent>
-
-              <TabsContent value="branding" className="mt-4">
-                <BrandingSettingsTab />
-              </TabsContent>
-
-              <TabsContent value="design_tokens" className="mt-4">
-                <DesignTokensTab />
-              </TabsContent>
-
-              <TabsContent value="custom_css" className="mt-4">
-                <CustomCssTab />
-              </TabsContent>
-
-              <TabsContent value="livekit" className="mt-4">
-                <LiveKitTab />
-              </TabsContent>
-
-            </Tabs>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

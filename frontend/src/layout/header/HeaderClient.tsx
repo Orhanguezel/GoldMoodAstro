@@ -11,6 +11,19 @@ import { localizePath } from '@/integrations/shared';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { IconUser } from '@/components/ui/icons';
+import ThemeToggle from '@/components/system/ThemeToggle';
+
+// Menu API boş gelirse gösterilecek varsayılan linkler.
+// API'den gelen menü her zaman önceliklidir.
+const FALLBACK_MENU: Array<{ id: string; url: string; label: Record<string, string> }> = [
+  { id: 'fallback-home',        url: '/',            label: { tr: 'Ana Sayfa',   en: 'Home',         de: 'Startseite' } },
+  { id: 'fallback-consultants', url: '/consultants', label: { tr: 'Danışmanlar', en: 'Consultants',  de: 'Berater' } },
+  { id: 'fallback-daily',       url: '/daily',       label: { tr: 'Günlük Yorum',en: 'Daily',        de: 'Täglich' } },
+  { id: 'fallback-birth-chart', url: '/birth-chart', label: { tr: 'Doğum Haritası', en: 'Birth Chart', de: 'Geburtschart' } },
+  { id: 'fallback-blog',        url: '/blog',        label: { tr: 'Blog',        en: 'Blog',         de: 'Blog' } },
+  { id: 'fallback-about',       url: '/about',       label: { tr: 'Hakkımızda',  en: 'About',        de: 'Über uns' } },
+  { id: 'fallback-contact',     url: '/contact',     label: { tr: 'İletişim',    en: 'Contact',      de: 'Kontakt' } },
+];
 
 type MenuItemWithChildren = PublicMenuItemDto & {
   children?: MenuItemWithChildren[];
@@ -54,8 +67,16 @@ const HeaderClient: React.FC<{ brand?: HeaderClientBrand; locale?: string }> = (
   const headerMenuItems: MenuItemWithChildren[] = useMemo(() => {
     const raw = menuData as any;
     const list: MenuItemWithChildren[] = Array.isArray(raw) ? raw : Array.isArray(raw?.items) ? raw.items : [];
-    return list.slice().sort((a, b) => ((a as any)?.order_num ?? 0) - ((b as any)?.order_num ?? 0));
-  }, [menuData]);
+    if (list.length > 0) {
+      return list.slice().sort((a, b) => ((a as any)?.order_num ?? 0) - ((b as any)?.order_num ?? 0));
+    }
+    // API'de menü tanımlı değilse — varsayılan linkleri locale'e göre üret
+    return FALLBACK_MENU.map((m) => ({
+      id: m.id,
+      url: m.url,
+      title: m.label[locale] || m.label.tr,
+    } as MenuItemWithChildren));
+  }, [menuData, locale]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -110,6 +131,17 @@ const HeaderClient: React.FC<{ brand?: HeaderClientBrand; locale?: string }> = (
             </ul>
 
             <div className="flex items-center gap-6">
+              <ThemeToggle />
+              {isAuthenticated && (
+                <Link
+                  href={localizePath(locale, '/dashboard')}
+                  className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.18em] uppercase text-[var(--gm-text)] hover:text-[var(--gm-gold-deep)] transition-colors"
+                  title={locale === 'tr' ? 'Panelim' : 'Dashboard'}
+                >
+                  <IconUser className="w-4 h-4" />
+                  {locale === 'tr' ? 'Panel' : 'Dashboard'}
+                </Link>
+              )}
               <Link href={consultantsHref} className="btn-premium py-2.5 px-6 text-[12px]">
                 {ui('ui_header_cta', 'DANIŞMAN BUL')}
               </Link>
@@ -128,7 +160,8 @@ const HeaderClient: React.FC<{ brand?: HeaderClientBrand; locale?: string }> = (
           </div>
 
           {/* Mobile Right */}
-          <div className="flex lg:hidden items-center gap-4">
+          <div className="flex lg:hidden items-center gap-3">
+            <ThemeToggle />
             {isAuthenticated && (
               <Link href={localizePath(locale, '/profile')} className="p-2 text-[var(--gm-text)]">
                 <IconUser className="w-5 h-5" />

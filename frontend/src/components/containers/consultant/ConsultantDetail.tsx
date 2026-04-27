@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Award, CheckCircle, Clock, Globe, Star } from 'lucide-react';
+import { ArrowLeft, Award, CheckCircle, Clock, Globe, Star, ShieldCheck, Sparkles, Calendar } from 'lucide-react';
 
 import {
   useGetConsultantQuery,
   type ConsultantSlotPublic,
 } from '@/integrations/rtk/public/consultants.public.endpoints';
+import ReviewList from '@/components/common/public/ReviewList';
 import SlotPicker from './SlotPicker';
 
 const EXPERTISE_LABELS: Record<string, string> = {
@@ -35,18 +36,21 @@ export default function ConsultantDetail({ id, locale }: Props) {
 
   if (isFetching) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-10 h-10 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[var(--gm-bg)]">
+        <div className="w-12 h-12 border-2 border-[var(--gm-gold)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (isError || !consultant) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-text-muted">{locale === 'tr' ? 'Danışman bulunamadı.' : 'Consultant not found.'}</p>
-        <Link href={`/${locale}/consultants`} className="text-brand-primary text-sm hover:underline">
-          {locale === 'tr' ? 'Danışmanlara dön' : 'Back to consultants'}
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-[var(--gm-bg)]">
+        <div className="w-20 h-20 rounded-full bg-[var(--gm-surface)] flex items-center justify-center border border-[var(--gm-border-soft)]">
+          <span className="text-3xl text-[var(--gm-gold)] opacity-30">!</span>
+        </div>
+        <h2 className="font-serif text-3xl text-[var(--gm-text)]">Danışman Bulunamadı</h2>
+        <Link href={`/${locale}/consultants`} className="btn-premium py-3 px-8">
+          Tüm Danışmanlar
         </Link>
       </div>
     );
@@ -72,118 +76,166 @@ export default function ConsultantDetail({ id, locale }: Props) {
   };
 
   return (
-    <main className="min-h-screen py-24 bg-[var(--gm-bg)]" style={{ padding: '6rem 4%' }}>
-      <div className="max-w-[1000px] mx-auto">
+    <main className="min-h-screen bg-[var(--gm-bg)] pb-24 pt-32">
+      <div className="mx-auto max-w-7xl px-6">
+        
         <Link
           href={`/${locale}/consultants`}
-          className="inline-flex items-center gap-1.5 text-[var(--gm-muted)] text-[11px] tracking-[0.2em] uppercase mb-12 hover:text-[var(--gm-gold)] transition-colors"
+          className="inline-flex items-center gap-2 text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] transition-colors text-sm font-bold uppercase tracking-widest mb-12"
         >
-          <ArrowLeft size={14} />
-          {locale === 'tr' ? 'Danışmanlara Dön' : 'Back to Consultants'}
+          <ArrowLeft className="w-4 h-4" /> Tüm Danışmanlar
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-12 items-start">
-          <div className="space-y-12">
-            {/* Header Card */}
-            <div className="reveal">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-8">
-                <div className="w-28 h-28 rounded-full border border-[var(--gm-gold)] p-1 bg-[var(--gm-bg)]">
-                  <div className="w-full h-full rounded-full bg-[var(--gm-gold)]/10 flex items-center justify-center text-[var(--gm-gold)] font-display text-3xl">
-                    {initials}
-                  </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16 items-start">
+          
+          {/* Main Content */}
+          <div className="space-y-16">
+            
+            {/* Profile Header */}
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-10">
+              <div className="relative">
+                <div className="w-40 h-40 rounded-full border-2 border-[var(--gm-gold)] p-1.5 bg-[var(--gm-bg)]">
+                  {consultant.avatar_url ? (
+                    <img src={consultant.avatar_url} alt={consultant.full_name} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-[var(--gm-bg-deep)] flex items-center justify-center text-[var(--gm-gold)] font-serif text-5xl">
+                      {initials}
+                    </div>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
-                    <h1 className="font-display text-3xl tracking-tight text-[var(--gm-text)] uppercase">{consultant.full_name}</h1>
-                    <CheckCircle size={20} className="text-[var(--gm-gold)]" />
+                {consultant.is_available && (
+                  <div className="absolute bottom-4 right-4 w-6 h-6 bg-[var(--gm-success)] border-4 border-[var(--gm-bg)] rounded-full" />
+                )}
+              </div>
+              
+              <div className="flex-1 text-center md:text-left pb-4">
+                <div className="flex items-center justify-center md:justify-start gap-4 mb-4">
+                  <h1 className="font-serif text-[clamp(2.5rem,5vw,4rem)] leading-tight text-[var(--gm-text)]">{consultant.full_name}</h1>
+                  <ShieldCheck className="w-8 h-8 text-[var(--gm-gold)]" />
+                </div>
+                
+                <div className="flex flex-wrap justify-center md:justify-start items-center gap-8">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-5 h-5 text-[var(--gm-gold)] fill-[var(--gm-gold)]" />
+                    <span className="text-[var(--gm-text)] font-bold text-xl">{rating.toFixed(1)}</span>
+                    <span className="text-[var(--gm-text-dim)] text-sm">({consultant.rating_count} Yorum)</span>
                   </div>
-                  <div className="flex flex-wrap justify-center sm:justify-start items-center gap-6 text-[11px] tracking-[0.1em] text-[var(--gm-text-dim)] uppercase">
-                    <span className="flex items-center gap-1.5">
-                      <Star size={13} className="text-[var(--gm-gold)] fill-[var(--gm-gold)]" />
-                      <span className="text-[var(--gm-text)] font-semibold">{rating.toFixed(1)}</span>
-                      <span>({consultant.rating_count} {locale === 'tr' ? 'Yorum' : 'Reviews'})</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Award size={13} className="text-[var(--gm-gold)]" />
-                      {consultant.total_sessions} {locale === 'tr' ? 'Seans' : 'Sessions'}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock size={13} className="text-[var(--gm-gold)]" />
-                      {consultant.session_duration} DK
-                    </span>
+                  <div className="flex items-center gap-2 text-[var(--gm-text-dim)] text-sm">
+                    <Award className="w-5 h-5 text-[var(--gm-gold)]" />
+                    <span className="font-bold">{consultant.total_sessions}</span>
+                    <span>Seans</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[var(--gm-text-dim)] text-sm">
+                    <Clock className="w-5 h-5 text-[var(--gm-gold)]" />
+                    <span className="font-bold">{consultant.session_duration}</span>
+                    <span>Dakika</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Bio */}
-            {consultant.bio && (
-              <div className="reveal reveal-delay-1">
-                <h2 className="font-display text-[10px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-6">{locale === 'tr' ? 'Hakkında' : 'About'}</h2>
-                <p className="text-[var(--gm-text-dim)] font-serif italic text-lg leading-relaxed">{consultant.bio}</p>
+            {/* About */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-[var(--gm-gold)]" />
+                <h2 className="font-serif text-2xl text-[var(--gm-text)]">Ruhsal Yolculuk & Deneyim</h2>
               </div>
-            )}
+              <p className="text-[var(--gm-text-dim)] font-serif italic text-[1.35rem] leading-relaxed opacity-90 first-letter:text-5xl first-letter:float-left first-letter:mr-3 first-letter:font-serif first-letter:text-[var(--gm-gold)]">
+                {consultant.bio || 'Bu danışman henüz bir açıklama eklememiş.'}
+              </p>
+            </div>
 
-            {/* Expertise & Languages */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 reveal reveal-delay-2">
-              <div>
-                <h2 className="font-display text-[10px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-6">{locale === 'tr' ? 'Uzmanlık' : 'Expertise'}</h2>
-                <div className="flex flex-wrap gap-2">
+            {/* Skills & Lang */}
+            <div className="grid md:grid-cols-2 gap-12">
+              <div className="bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)] rounded-3xl p-8">
+                <h3 className="text-[10px] font-bold text-[var(--gm-gold-dim)] tracking-[0.2em] uppercase mb-6">Uzmanlık Alanları</h3>
+                <div className="flex flex-wrap gap-3">
                   {(consultant.expertise || []).map((exp) => (
-                    <span key={exp} className="px-4 py-2 rounded-full text-[10px] tracking-widest uppercase border border-[var(--gm-gold)]/30 text-[var(--gm-gold-deep)] bg-[var(--gm-gold)]/5">
+                    <span key={exp} className="px-5 py-2.5 rounded-full text-[11px] font-bold tracking-widest uppercase border border-[var(--gm-gold)]/30 text-[var(--gm-gold)] bg-[var(--gm-gold)]/5">
                       {EXPERTISE_LABELS[exp] || exp}
                     </span>
                   ))}
                 </div>
               </div>
-              <div>
-                <h2 className="font-display text-[10px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-6">{locale === 'tr' ? 'Diller' : 'Languages'}</h2>
-                <div className="flex flex-wrap gap-2">
+              <div className="bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)] rounded-3xl p-8">
+                <h3 className="text-[10px] font-bold text-[var(--gm-gold-dim)] tracking-[0.2em] uppercase mb-6">Danışmanlık Dilleri</h3>
+                <div className="flex flex-wrap gap-3">
                   {(consultant.languages || []).map((lang) => (
-                    <span key={lang} className="flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-widest uppercase border border-[var(--gm-border-soft)] text-[var(--gm-text-dim)]">
-                      <Globe size={11} className="text-[var(--gm-gold)]" />
+                    <span key={lang} className="flex items-center gap-3 px-5 py-2.5 rounded-full text-[11px] font-bold tracking-widest uppercase border border-[var(--gm-border-soft)] text-[var(--gm-text-dim)] bg-[var(--gm-surface)]">
+                      <Globe className="w-4 h-4 text-[var(--gm-gold)]" />
                       {LANG_LABELS[lang] || lang.toUpperCase()}
                     </span>
                   ))}
                 </div>
               </div>
             </div>
+
           </div>
 
-          {/* Booking Card */}
-          <div className="lg:sticky lg:top-32 reveal reveal-delay-3">
-            <div className="bg-[var(--gm-bg)] border border-[var(--gm-gold)]/20 p-8 shadow-card relative">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-[var(--gm-gold)]" />
+          {/* Sticky Sidebar */}
+          <div className="lg:sticky lg:top-32 w-full">
+            <div className="bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-[40px] p-10 shadow-[0_0_80px_rgba(201,169,97,0.05)] relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[var(--gm-gold)] to-[var(--gm-gold-dim)]" />
               
-              <div className="flex items-baseline justify-between mb-8 pb-6 border-b border-[var(--gm-border-soft)]">
+              <div className="flex items-end justify-between mb-10 pb-8 border-b border-[var(--gm-border-soft)]">
                 <div>
-                  <span className="font-serif text-3xl text-[var(--gm-gold)]">₺{price}</span>
-                  <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase ml-2">/ {consultant.session_duration} DK</span>
+                  <p className="text-[var(--gm-gold-dim)] text-[10px] font-bold tracking-[0.2em] uppercase mb-2">Seans Ücreti</p>
+                  <span className="font-serif text-5xl text-[var(--gm-gold)]">₺{price}</span>
+                </div>
+                <div className="text-right">
+                  <span className="block text-[var(--gm-text)] font-serif text-lg italic opacity-70">{consultant.session_duration} Dakika</span>
                 </div>
               </div>
 
-              <h3 className="font-display text-[10px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-6">
-                {locale === 'tr' ? 'Tarih & Saat Seç' : 'Select Date & Time'}
-              </h3>
-              
-              <SlotPicker consultantId={id} locale={locale} onSelect={setSelectedSlot} selectedSlotId={selectedSlot?.id} />
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <Calendar className="w-4 h-4 text-[var(--gm-gold)]" />
+                  <h3 className="text-[10px] font-bold text-[var(--gm-gold-dim)] tracking-[0.2em] uppercase">
+                    Saat & Slot Seçimi
+                  </h3>
+                </div>
+                
+                <div className="min-h-[200px]">
+                  <SlotPicker consultantId={id} locale={locale} onSelect={setSelectedSlot} selectedSlotId={selectedSlot?.id} />
+                </div>
 
-              <button
-                onClick={handleBook}
-                disabled={!selectedSlot}
-                className="btn-premium w-full justify-center mt-8 py-4"
-              >
-                {selectedSlot
-                  ? `${locale === 'tr' ? 'Randevu Al' : 'Book Session'}`
-                  : locale === 'tr' ? 'Saat Seçin' : 'Select a Time'}
-              </button>
-              
-              <p className="text-center text-[9px] tracking-[0.1em] text-[var(--gm-muted)] uppercase mt-6">
-                {locale === 'tr' ? 'İncelemeden sonra ödemeye geçeceksiniz' : 'You will proceed to payment after review'}
-              </p>
+                <button
+                  onClick={handleBook}
+                  disabled={!selectedSlot}
+                  className="w-full group relative py-5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] font-bold text-base tracking-widest uppercase overflow-hidden hover:shadow-[0_0_50px_rgba(201,169,97,0.2)] transition-all disabled:opacity-50"
+                >
+                  <span className="relative z-10">
+                    {selectedSlot ? 'RANDEVU AL' : 'SAAT SEÇİN'}
+                  </span>
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                </button>
+                
+                <p className="text-center text-[10px] font-medium tracking-[0.1em] text-[var(--gm-muted)] uppercase italic">
+                  * Ödeme bir sonraki adımda Iyzipay üzerinden alınacaktır.
+                </p>
+              </div>
             </div>
+
+            {/* Trust Info */}
+            <div className="mt-8 flex flex-col items-center gap-4 px-6">
+              <div className="flex items-center gap-3 text-[10px] font-bold text-[var(--gm-gold-dim)] tracking-[0.2em] uppercase">
+                <ShieldCheck className="w-4 h-4 text-[var(--gm-success)]" />
+                <span>Onaylı Uzman Profil</span>
+              </div>
+            </div>
+
           </div>
+
         </div>
+
+        <section className="mt-16 max-w-4xl">
+          <ReviewList
+            targetType="consultant"
+            targetId={consultant.id}
+            locale={locale}
+            titleOverride="Değerlendirmeler"
+          />
+        </section>
       </div>
     </main>
   );

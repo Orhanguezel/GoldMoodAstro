@@ -9,7 +9,11 @@ import type {
   ReviewUpdateInput,
 } from "./validation";
 import type { ReviewView } from "./schema";
-import { checkContent } from "../_shared/contentModeration";
+import { checkContentAsync } from "../_shared/contentModeration";
+
+type AdminNotificationTargetRow = {
+  user_id: string;
+};
 
 /** MySQL tinyint(1) -> boolean, number coercion + i18n alanları ekle */
 function mapRowCore(
@@ -58,6 +62,7 @@ function safeOrderBy(col?: string) {
     case "display_order":
     case "rating":
     case "name":
+    case "helpful_count":
       return col;
     default:
       return "display_order";
@@ -154,6 +159,52 @@ async function verifyBookingCompletedForReview(
   throw err;
 }
 
+async function enqueueReviewModerationNotification(
+  mysql: any,
+  params: { reviewId: string; flags: string[]; targetId: string },
+) {
+  const [adminRows] = await mysql.query(
+    `
+    SELECT DISTINCT ur.user_id
+    FROM user_roles ur
+    JOIN users u ON u.id = ur.user_id
+    WHERE ur.role = 'admin' AND u.is_active = 1
+    `,
+  ) as [AdminNotificationTargetRow[], unknown];
+
+  const adminIds = (adminRows ?? []).map((r) => String(r.user_id)).filter(Boolean);
+  if (!adminIds.length) return;
+
+  const title = 'Yeni yorum otomatik modere edildi';
+  const message = [
+    `Yorum ID: ${params.reviewId}`,
+    `Hedef danışman: ${params.targetId}`,
+    `Açılan flagler: ${params.flags.join(', ') || 'genel'}`,
+    'Durum: onay bekliyor',
+  ].join(' | ');
+
+  const now = new Date();
+  const uniqAdminIds = [...new Set(adminIds)];
+
+  for (const adminId of uniqAdminIds) {
+    await mysql.query(
+      `
+      INSERT INTO notifications
+        (id, user_id, title, message, type, is_read, created_at)
+      VALUES
+        (UUID(), ?, ?, ?, ?, 0, ?)
+      `,
+      [
+        adminId,
+        title,
+        message,
+        'review_auto_flagged',
+        now,
+      ],
+    ).catch(() => {});
+  }
+}
+
 /* -------------------------------------------------------------
    Yardımcı: verilen review id'leri için tüm çevirileri çek
    ------------------------------------------------------------- */
@@ -217,6 +268,7 @@ export async function repoGetReviewPublic(
       r.profile_href,
       r.is_active,
       r.is_approved,
+      r.is_verified,
       r.display_order,
       r.likes_count,
       r.dislikes_count,
@@ -265,17 +317,22 @@ export async function repoCreateReviewPublic(
   app: FastifyInstance,
   body: ReviewCreateInput,
   locale: string,
-  options?: { enforceConsultantReviewGuard?: boolean },
+  options?: { enforceConsultantReviewGuard?: boolean; allowApprovalOverride?: boolean },
 ): Promise<ReviewView> {
   const mysql = (app as any).mysql;
   const enforceReviewGuard = options?.enforceConsultantReviewGuard ?? true;
+  const needsConsultantGuard =
+    enforceReviewGuard && body.target_type === 'consultant';
 
   const isActive = body.is_active ?? true;
 
   // FAZ 17 / T17-3 — İçerik moderasyonu (auto-approve / flag)
   const fullText = [body.title ?? '', body.comment ?? ''].filter(Boolean).join('\n');
-  const moderation = checkContent(fullText, 'review');
-  const explicitOverride = typeof body.is_approved === 'boolean' ? body.is_approved : null;
+  const moderation = await checkContentAsync(fullText, 'review');
+  const explicitOverride =
+    options?.allowApprovalOverride === true && typeof body.is_approved === 'boolean'
+      ? body.is_approved
+      : null;
   const isApproved = explicitOverride !== null ? explicitOverride : moderation.safe;
 
   if (!moderation.safe) {
@@ -288,10 +345,11 @@ export async function repoCreateReviewPublic(
 
   // T17-1 — Doğrulanmış görüşme rozeti (sadece consultant + booking flow)
   // Sadece booking sahibi ve tamamlanmış/bitmiş seanslı bookinglerde allowed.
-  if (enforceReviewGuard && body.target_type === 'consultant') {
+  let isVerified = 0;
+  if (needsConsultantGuard) {
     if (!body.booking_id) {
       const err: any = new Error('booking_id_required');
-      err.statusCode = 400;
+      err.statusCode = 403;
       throw err;
     }
     if (!body.user_id) {
@@ -300,26 +358,7 @@ export async function repoCreateReviewPublic(
       throw err;
     }
     await verifyBookingCompletedForReview(mysql, body.booking_id, body.user_id);
-  }
-
-  // T17-1 — Doğrulanmış görüşme rozeti
-  // booking tamamlandıysa is_verified=1
-  let isVerified = 0;
-  if (body.booking_id && body.user_id && enforceReviewGuard && body.target_type === 'consultant') {
-    const [bookingRow] = (await mysql.query(
-      'SELECT status FROM bookings WHERE id = ? LIMIT 1',
-      [body.booking_id],
-    )) as [Array<{ status: string }>, unknown];
-    const booking = Array.isArray(bookingRow) ? bookingRow[0] : null;
-    if (booking && booking.status === 'completed') {
-      isVerified = 1;
-    } else if (booking) {
-      const [sessionRows] = (await mysql.query(
-        "SELECT 1 FROM live_sessions WHERE booking_id = ? AND ended_at IS NOT NULL LIMIT 1",
-        [body.booking_id],
-      )) as [Array<{ "1": number }>, unknown];
-      if (Array.isArray(sessionRows) && sessionRows.length > 0) isVerified = 1;
-    }
+    isVerified = 1;
   }
 
   const displayOrder = body.display_order ?? 0;
@@ -394,6 +433,14 @@ export async function repoCreateReviewPublic(
 
   const created = await repoGetReviewPublic(app, id, locale, locale);
   if (!created) throw new Error("Review insert ok, but fetch failed.");
+
+  if (!isApproved) {
+    await enqueueReviewModerationNotification(mysql, {
+      reviewId: id,
+      flags: moderation.flags,
+      targetId: body.target_id,
+    });
+  }
 
   // T17-6 — Astrolog karnesi follow-up kaydı (6 ay sonra "gerçekleşti mi?" sorusu)
   // Sadece consultant review'larında ve doğrulanmış (booking ile bağlı) olanlarda
@@ -557,6 +604,10 @@ export async function repoListReviewsAdmin(
 
   const orderCol = safeOrderBy(q.orderBy);
   const orderDir = q.order?.toUpperCase() === "DESC" ? "DESC" : "ASC";
+  const orderClause =
+    orderCol === "helpful_count"
+      ? "r.helpful_count DESC, r.created_at DESC"
+      : `r.${orderCol} ${orderDir}`;
 
   const sqlStr = `
     SELECT
@@ -574,12 +625,13 @@ export async function repoListReviewsAdmin(
       r.helpful_count,
       r.is_active,
       r.is_approved,
+      r.is_verified,
       r.display_order,
       r.created_at,
       r.updated_at
     FROM reviews r
     ${where.length ? "WHERE " + where.join(" AND ") : ""}
-    ORDER BY r.${orderCol} ${orderDir}
+    ORDER BY ${orderClause}
     LIMIT ? OFFSET ?
   `;
   args.push(q.limit ?? 100, q.offset ?? 0);
@@ -593,12 +645,19 @@ export async function repoListReviewsAdmin(
 
   return list.map((r) => {
     const translations = translationsMap.get(r.id) ?? [];
-    const { comment, title, admin_reply, locale_resolved } = pickTranslation(
+    const { comment, title, admin_reply, consultant_reply, locale_resolved } = pickTranslation(
       translations,
       locale,
       defaultLocale,
     );
-    return mapRowCore(r, comment, title, admin_reply, locale_resolved);
+    return mapRowCore(
+      r,
+      comment,
+      title,
+      admin_reply,
+      consultant_reply,
+      locale_resolved,
+    );
   });
 }
 
@@ -617,7 +676,10 @@ export async function repoCreateReviewAdmin(
   locale: string,
 ): Promise<ReviewView> {
   // Admin create de public create ile aynı; sadece locale'i admin belirler
-  return repoCreateReviewPublic(app, body, locale);
+  return repoCreateReviewPublic(app, body, locale, {
+    enforceConsultantReviewGuard: false,
+    allowApprovalOverride: true,
+  });
 }
 
 export async function repoUpdateReviewAdmin(
@@ -822,6 +884,10 @@ export async function repoListReviewsPublic(
 
   const orderCol = safeOrderBy(q.orderBy);
   const orderDir = q.order?.toUpperCase() === "DESC" ? "DESC" : "ASC";
+  const orderClause =
+    orderCol === "helpful_count"
+      ? "r.helpful_count DESC, r.created_at DESC"
+      : `r.${orderCol} ${orderDir}`;
 
   const sqlStr = `
     SELECT
@@ -838,6 +904,7 @@ export async function repoListReviewsPublic(
       r.profile_href,
       r.is_active,
       r.is_approved,
+      r.is_verified,
       r.display_order,
       r.likes_count,
       r.dislikes_count,
@@ -847,7 +914,7 @@ export async function repoListReviewsPublic(
       r.updated_at
     FROM reviews r
     ${where.length ? "WHERE " + where.join(" AND ") : ""}
-    ORDER BY r.${orderCol} ${orderDir}
+    ORDER BY ${orderClause}
     LIMIT ? OFFSET ?
   `;
   args.push(q.limit ?? 100, q.offset ?? 0);
@@ -861,11 +928,18 @@ export async function repoListReviewsPublic(
 
   return list.map((r) => {
     const translations = translationsMap.get(r.id) ?? [];
-    const { comment, title, admin_reply, locale_resolved } = pickTranslation(
+    const { comment, title, admin_reply, consultant_reply, locale_resolved } = pickTranslation(
       translations,
       locale,
       defaultLocale,
     );
-    return mapRowCore(r, comment, title, admin_reply, locale_resolved);
+    return mapRowCore(
+      r,
+      comment,
+      title,
+      admin_reply,
+      consultant_reply,
+      locale_resolved,
+    );
   });
 }

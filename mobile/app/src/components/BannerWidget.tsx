@@ -7,12 +7,13 @@ import {
   Image, 
   Dimensions, 
   Linking,
-  ActivityIndicator
 } from 'react-native';
-import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
+import { colors, spacing, font, radius } from '@/theme/tokens';
 import { bannersApi } from '@/lib/api';
 import { Banner, BannerPlacement } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronRight } from 'lucide-react-native';
 
 interface Props {
   placement: BannerPlacement;
@@ -58,7 +59,6 @@ export function BannerWidget({ placement, style }: Props) {
 
   if (loading || banners.length === 0) return null;
 
-  // For now, just show the first one in the list for a widget
   const banner = banners[0];
   const locale = i18n.language;
   const title = locale === 'tr' ? (banner.title_tr || banner.code) : (banner.title_en || banner.code);
@@ -70,7 +70,7 @@ export function BannerWidget({ placement, style }: Props) {
     <Pressable 
       style={({ pressed }) => [
         styles.container, 
-        { opacity: pressed ? 0.9 : 1 },
+        { transform: [{ scale: pressed ? 0.98 : 1 }] },
         style
       ]}
       onPress={() => handlePress(banner)}
@@ -80,32 +80,39 @@ export function BannerWidget({ placement, style }: Props) {
         style={styles.image} 
         resizeMode="cover"
       />
-      <View style={styles.overlay}>
+      <LinearGradient
+        colors={['transparent', 'rgba(26, 23, 21, 0.95)']}
+        style={styles.overlay}
+      >
         <View style={styles.content}>
-          {title && <Text style={styles.title} numberOfLines={2}>{title}</Text>}
-          {subtitle && <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>}
+          <View style={styles.textColumn}>
+            {title && <Text style={styles.title} numberOfLines={2}>{title}</Text>}
+            {subtitle && <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>}
+          </View>
           
           {cta && (
             <View style={styles.ctaButton}>
               <Text style={styles.ctaText}>{cta}</Text>
+              <ChevronRight size={14} color={colors.bgDeep} />
             </View>
           )}
         </View>
-      </View>
+      </LinearGradient>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    width: width - (spacing.md * 2),
+    width: width - (spacing.lg * 2),
     alignSelf: 'center',
-    aspectRatio: 2.5, // Slimmer for mobile
-    borderRadius: radius.md,
+    height: 140,
+    borderRadius: radius.xl,
     overflow: 'hidden',
-    backgroundColor: colors.bgDeep,
-    ...shadows.card,
-    marginVertical: spacing.sm,
+    backgroundColor: colors.inkDeep,
+    marginVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.line,
   },
   image: {
     width: '100%',
@@ -113,39 +120,41 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'flex-end',
-    padding: spacing.md,
+    padding: 20,
   },
   content: {
-    gap: 2,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  textColumn: {
+    flex: 1,
   },
   title: {
     color: colors.text,
-    fontSize: 18,
-    fontFamily: font.displayBold,
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    fontSize: 20,
+    fontFamily: font.display,
+    marginBottom: 2,
   },
   subtitle: {
-    color: colors.textDim,
+    color: colors.goldDim,
     fontSize: 12,
-    fontFamily: font.sans,
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    fontFamily: font.sansMedium,
+    letterSpacing: 0.5,
   },
   ctaButton: {
-    marginTop: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     backgroundColor: colors.gold,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: radius.pill,
-    alignSelf: 'flex-start',
   },
   ctaText: {
-    color: colors.bg,
+    color: colors.bgDeep,
     fontSize: 12,
     fontFamily: font.sansBold,
   },

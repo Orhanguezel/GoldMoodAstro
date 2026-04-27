@@ -37,7 +37,7 @@ export const ReviewListParamsSchema = z
     limit: z.coerce.number().int().min(1).max(500).default(100),
     offset: z.coerce.number().int().min(0).default(0),
     orderBy: z
-      .enum(["created_at", "updated_at", "display_order", "rating", "name"])
+      .enum(["created_at", "updated_at", "display_order", "rating", "name", "helpful_count"])
       .default("display_order"),
     order: z.enum(["asc", "desc"]).default("asc"),
 

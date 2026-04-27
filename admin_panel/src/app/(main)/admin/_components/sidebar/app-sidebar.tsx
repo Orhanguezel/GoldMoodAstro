@@ -1,22 +1,14 @@
 'use client';
 
-// =============================================================
-// FILE: src/app/(main)/admin/_components/sidebar/app-sidebar.tsx
-// FINAL — RTK/Redux uyumlu (zustand yok)
-// - NavMain: NavGroup[] alır (senin nav-main.tsx böyle)
-// =============================================================
-
 import Link from 'next/link';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, Sparkles } from 'lucide-react';
+import { useMemo } from 'react';
 
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from '@/components/ui/sidebar';
 
 import { buildAdminSidebarItems } from '@/navigation/sidebar/sidebar-items';
@@ -26,7 +18,6 @@ import { useAdminUiCopy } from '@/app/(main)/admin/_components/common/useAdminUi
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import type { TranslateFn } from '@/i18n';
 
-import { useMemo } from 'react';
 import { NavMain } from './nav-main';
 import { NavUser } from './nav-user';
 import { useAdminSettings } from '../admin-settings-provider';
@@ -61,12 +52,8 @@ export function AppSidebar({
 }) {
   const { copy } = useAdminUiCopy();
   const t = useAdminT();
-  const label = (copy.app_name || appName || '').trim();
-
-  // Admin settings override for page titles
   const { pageMeta } = useAdminSettings();
 
-  // ✅ Get real user data
   const { data: statusData } = useStatusQuery();
   const { data: profileData } = useGetMyProfileQuery();
 
@@ -83,18 +70,13 @@ export function AppSidebar({
   }, [statusData, profileData, me]);
 
   const wrappedT: TranslateFn = (key, params, fallback) => {
-    // Check pageMeta override for sidebar items: admin.dashboard.items.{key}
     if (typeof key === 'string' && key.startsWith('admin.dashboard.items.')) {
       const itemKey = key.replace('admin.dashboard.items.', '');
-      // Check if pageMeta has this key and a title
-      if (pageMeta?.[itemKey]?.title) {
-        return pageMeta[itemKey].title;
-      }
+      if (pageMeta?.[itemKey]?.title) return pageMeta[itemKey].title;
     }
     return t(key, params, fallback);
   };
 
-  // ✅ admin ise tüm menu, değilse sadece dashboard
   const groupsForMe: NavGroup[] = hasRole(currentUser as any, 'admin')
     ? buildAdminSidebarItems(copy.nav, wrappedT)
     : [
@@ -103,7 +85,7 @@ export function AppSidebar({
           label: '',
           items: [
             {
-              title: copy.nav?.items?.dashboard || '',
+              title: 'Panel',
               url: '/admin/dashboard',
               icon: LayoutDashboard,
             },
@@ -112,25 +94,28 @@ export function AppSidebar({
       ];
 
   return (
-    <Sidebar {...props} variant={variant} collapsible={collapsible}>
-      <SidebarHeader>
-        <Link prefetch={false} href="/admin/dashboard" className="flex items-center gap-3 px-3 py-4 hover:bg-sidebar-accent/50 transition-colors">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <LayoutDashboard className="size-5" />
+    <Sidebar {...props} variant={variant} collapsible={collapsible} className="bg-[#1A1715] border-r border-[#C9A961]/10">
+      <SidebarHeader className="p-0">
+        <Link 
+          prefetch={false} 
+          href="/admin/dashboard" 
+          className="flex items-center gap-4 px-8 py-10 border-b border-[#C9A961]/5 hover:bg-[#C9A961]/5 transition-all group"
+        >
+          <div className="flex aspect-square size-10 items-center justify-center rounded-2xl bg-[#C9A961] text-[#1A1715] shadow-[0_0_20px_rgba(201,169,97,0.3)] group-hover:scale-105 transition-transform">
+            <Sparkles className="size-6" />
           </div>
           <div className="flex flex-col gap-0.5 leading-none">
-            <span className="font-bold text-lg tracking-tight">KÖNİG</span>
-            <span className="text-[10px] font-medium tracking-widest text-muted-foreground uppercase">Management</span>
+            <span className="font-serif font-bold text-xl tracking-tight text-foreground">GOLDMOOD</span>
+            <span className="text-[9px] font-bold tracking-[0.3em] text-[#C9A961] uppercase opacity-70">Astro Admin</span>
           </div>
         </Link>
       </SidebarHeader>
 
-      <SidebarContent>
-        {/* ✅ NavMain NavGroup[] bekliyor */}
+      <SidebarContent className="px-4 py-8">
         <NavMain items={groupsForMe} showQuickCreate={false} />
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="p-6 border-t border-[#C9A961]/5">
         <NavUser user={{ name: currentUser.name, email: currentUser.email, avatar: currentUser.avatar }} />
       </SidebarFooter>
     </Sidebar>

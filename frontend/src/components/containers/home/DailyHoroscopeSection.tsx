@@ -1,24 +1,23 @@
-// frontend/src/components/containers/home/DailyHoroscopeSection.tsx
-
 'use client';
 
 import React, { useState } from 'react';
 import { useGetDailyHoroscopeQuery } from '@/integrations/rtk/public/horoscopes.endpoints';
 import { useLocaleShort } from '@/i18n';
+import { Sparkles, Star, Zap, Info } from 'lucide-react';
 
 const SIGNS = [
-  { key: 'aries', label: 'Koç', en: 'Aries' },
-  { key: 'taurus', label: 'Boğa', en: 'Taurus' },
-  { key: 'gemini', label: 'İkizler', en: 'Gemini' },
-  { key: 'cancer', label: 'Yengeç', en: 'Cancer' },
-  { key: 'leo', label: 'Aslan', en: 'Leo' },
-  { key: 'virgo', label: 'Başak', en: 'Virgo' },
-  { key: 'libra', label: 'Terazi', en: 'Libra' },
-  { key: 'scorpio', label: 'Akrep', en: 'Scorpio' },
-  { key: 'sagittarius', label: 'Yay', en: 'Sagittarius' },
-  { key: 'capricorn', label: 'Oğlak', en: 'Capricorn' },
-  { key: 'aquarius', label: 'Kova', en: 'Aquarius' },
-  { key: 'pisces', label: 'Balık', en: 'Pisces' },
+  { key: 'aries', label: 'Koç', symbol: '♈' },
+  { key: 'taurus', label: 'Boğa', symbol: '♉' },
+  { key: 'gemini', label: 'İkizler', symbol: '♊' },
+  { key: 'cancer', label: 'Yengeç', symbol: '♋' },
+  { key: 'leo', label: 'Aslan', symbol: '♌' },
+  { key: 'virgo', label: 'Başak', symbol: '♍' },
+  { key: 'libra', label: 'Terazi', symbol: '♎' },
+  { key: 'scorpio', label: 'Akrep', symbol: '♏' },
+  { key: 'sagittarius', label: 'Yay', symbol: '♐' },
+  { key: 'capricorn', label: 'Oğlak', symbol: '♑' },
+  { key: 'aquarius', label: 'Kova', symbol: '♒' },
+  { key: 'pisces', label: 'Balık', symbol: '♓' },
 ];
 
 export default function DailyHoroscopeSection() {
@@ -29,89 +28,121 @@ export default function DailyHoroscopeSection() {
   const currentSign = SIGNS.find(s => s.key === selectedSign);
 
   return (
-    <section className="py-24 lg:py-32 bg-[var(--gm-bg-deep)]">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col lg:flex-row gap-16 items-center">
+    <section className="py-24 lg:py-40 bg-[var(--gm-bg)] overflow-hidden relative">
+      {/* Decorative Elements */}
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-[var(--gm-gold)] opacity-[0.03] blur-[120px] rounded-full" />
+      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[var(--gm-gold)] opacity-[0.03] blur-[120px] rounded-full" />
+
+      <div className="max-w-7xl mx-auto px-6 relative">
+        <div className="flex flex-col lg:flex-row gap-20 items-start">
           
-          {/* Left: Sign Selector */}
-          <div className="w-full lg:w-1/2 reveal" suppressHydrationWarning>
-            <span className="font-display text-[11px] tracking-[0.42em] text-[var(--gm-gold-deep)] uppercase mb-6 block">
-              GÜNLÜK KOZMİK HAVA
-            </span>
-            <h2 className="font-serif text-[clamp(2rem,4vw,3.5rem)] font-light leading-tight text-[var(--gm-text)] mb-12">
-              Yıldızlar Bugün <em>Sizin İçin</em> Ne Söylüyor?
+          {/* Left: Content & Sign Grid */}
+          <div className="w-full lg:w-5/12">
+            <div className="flex items-center gap-3 mb-8">
+              <span className="w-8 h-px bg-[var(--gm-gold)]" />
+              <span className="text-[var(--gm-gold)] font-bold text-xs uppercase tracking-[0.2em]">Gökyüzü Hareketleri</span>
+            </div>
+            
+            <h2 className="font-serif text-[clamp(2.5rem,5vw,4rem)] leading-[1.1] text-[var(--gm-text)] mb-8">
+              Yıldızlar bugün <br /><em>sizin için</em> ne söylüyor?
             </h2>
             
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            <p className="text-[var(--gm-text-dim)] text-lg mb-12 max-w-md font-serif italic">
+              Burcunuzun günlük enerjisini ve kozmik uyarılarını keşfedin.
+            </p>
+
+            <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-3">
               {SIGNS.map((sign) => (
                 <button
                   key={sign.key}
                   onClick={() => setSelectedSign(sign.key)}
-                  className={`py-4 px-2 rounded-sm border transition-all duration-500 text-center ${
+                  className={`group relative aspect-square rounded-2xl flex flex-col items-center justify-center transition-all duration-500 border ${
                     selectedSign === sign.key 
-                    ? 'border-[var(--gm-gold)] bg-[var(--gm-gold)] text-[var(--gm-bg)] shadow-glow' 
-                    : 'border-[var(--gm-border-soft)] bg-[var(--gm-bg)] text-[var(--gm-text-dim)] hover:border-[var(--gm-gold)]'
+                    ? 'bg-[var(--gm-gold)] border-[var(--gm-gold)] text-[var(--gm-bg-deep)] scale-105 shadow-[0_0_40px_rgba(201,169,97,0.3)]' 
+                    : 'bg-[var(--gm-surface)] border-[var(--gm-border-soft)] text-[var(--gm-text-dim)] hover:border-[var(--gm-gold)] hover:text-[var(--gm-gold)]'
                   }`}
                 >
-                  <span className="block font-display text-[10px] tracking-widest uppercase">
-                    {locale === 'tr' ? sign.label : sign.en}
-                  </span>
+                  <span className="text-2xl mb-1 font-serif">{sign.symbol}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{sign.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Right: Interpretation Card */}
-          <div className="w-full lg:w-1/2 reveal" style={{ transitionDelay: '200ms' }} suppressHydrationWarning>
-            <div className="bg-[var(--gm-bg)] p-10 lg:p-14 border border-[var(--gm-border-soft)] shadow-card relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-5 font-display text-9xl pointer-events-none group-hover:scale-110 transition-transform duration-1000">
-                {currentSign?.key.charAt(0).toUpperCase()}
-              </div>
+          <div className="w-full lg:w-7/12">
+            <div className="relative group">
+              {/* Outer Glow */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-[var(--gm-gold)] to-[var(--gm-gold-dim)] rounded-[40px] opacity-20 blur group-hover:opacity-30 transition duration-1000" />
               
-              {isFetching ? (
-                <div className="py-20 text-center animate-pulse">
-                   <div className="w-12 h-12 border-2 border-[var(--gm-gold)] border-t-transparent rounded-full mx-auto mb-4 animate-spin" />
-                   <p className="font-display text-[10px] tracking-widest text-[var(--gm-muted)] uppercase">Gökyüzü Okunuyor...</p>
+              <div className="relative bg-[var(--gm-surface)] rounded-[32px] border border-[var(--gm-border-soft)] p-8 md:p-16 overflow-hidden">
+                {/* Sign Watermark */}
+                <div className="absolute -top-10 -right-10 text-[20rem] font-serif text-[var(--gm-gold)] opacity-[0.03] select-none pointer-events-none group-hover:scale-110 transition-transform duration-[2000ms]">
+                  {currentSign?.symbol}
                 </div>
-              ) : horoscope ? (
-                <div>
-                   <div className="flex justify-between items-center mb-8 border-b border-[var(--gm-border-soft)] pb-6">
-                      <h3 className="font-serif text-3xl text-[var(--gm-gold)] italic">
-                        {locale === 'tr' ? currentSign?.label : currentSign?.en}
-                      </h3>
-                      <span className="font-display text-[10px] tracking-widest text-[var(--gm-muted)] uppercase">
-                        {new Date(horoscope.date).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long' })}
-                      </span>
-                   </div>
-                   
-                   <p className="text-[var(--gm-text)] font-serif text-lg leading-relaxed mb-10 italic">
-                     {locale === 'tr' ? horoscope.contentTr : horoscope.contentEn || horoscope.contentTr}
-                   </p>
 
-                   <div className="grid grid-cols-3 gap-8 pt-8 border-t border-[var(--gm-border-soft)]">
-                      <div>
-                        <span className="block font-display text-[9px] tracking-[0.2em] text-[var(--gm-muted)] uppercase mb-2">MOD</span>
-                        <div className="flex gap-1">
-                           {[...Array(5)].map((_, i) => (
-                             <div key={i} className={`h-1 flex-1 rounded-full ${i < (horoscope.moodScore / 2) ? 'bg-[var(--gm-gold)]' : 'bg-[var(--gm-border-soft)]'}`} />
-                           ))}
+                {isFetching ? (
+                  <div className="py-24 text-center">
+                    <div className="w-12 h-12 border-2 border-[var(--gm-gold)] border-t-transparent rounded-full mx-auto mb-6 animate-spin" />
+                    <p className="font-serif text-[var(--gm-text-dim)] italic tracking-widest">Gezegenler diziliyor...</p>
+                  </div>
+                ) : horoscope ? (
+                  <div className="relative z-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 pb-8 border-b border-[var(--gm-border-soft)]">
+                      <div className="flex items-center gap-6">
+                        <span className="w-20 h-20 rounded-full bg-[var(--gm-bg-deep)] flex items-center justify-center text-5xl text-[var(--gm-gold)] border border-[var(--gm-gold)]/20">
+                          {currentSign?.symbol}
+                        </span>
+                        <div>
+                          <h3 className="font-serif text-4xl text-[var(--gm-text)]">{currentSign?.label}</h3>
+                          <p className="text-[var(--gm-gold-dim)] text-xs font-bold tracking-[0.2em] uppercase mt-1">Bugünün Yorumu</p>
                         </div>
                       </div>
-                      <div>
-                        <span className="block font-display text-[9px] tracking-[0.2em] text-[var(--gm-muted)] uppercase mb-1">ŞANSLI SAYI</span>
-                        <span className="font-serif text-xl text-[var(--gm-text)]">{horoscope.luckyNumber}</span>
+                      <div className="flex items-center gap-2 text-[var(--gm-text-dim)] font-serif italic text-sm">
+                        <Calendar className="w-4 h-4 text-[var(--gm-gold)]" />
+                        {new Date(horoscope.date).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </div>
+                    </div>
+
+                    <p className="text-[var(--gm-text)] font-serif text-[1.35rem] leading-[1.8] mb-12 italic opacity-90 first-letter:text-5xl first-letter:float-left first-letter:mr-3 first-letter:font-serif first-letter:text-[var(--gm-gold)]">
+                      {locale === 'tr' ? horoscope.contentTr : horoscope.contentEn || horoscope.contentTr}
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 rounded-2xl bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)]">
                       <div>
-                        <span className="block font-display text-[9px] tracking-[0.2em] text-[var(--gm-muted)] uppercase mb-1">RENK</span>
-                        <span className="font-serif text-sm text-[var(--gm-text)] italic">{horoscope.luckyColor}</span>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Zap className="w-3 h-3 text-[var(--gm-gold)]" />
+                          <span className="font-bold text-[10px] tracking-widest text-[var(--gm-gold)] uppercase">Ruh Hali</span>
+                        </div>
+                        <div className="flex gap-1.5">
+                          {[...Array(5)].map((_, i) => (
+                            <div key={i} className={`h-1.5 flex-1 rounded-full ${i < (horoscope.moodScore / 2) ? 'bg-[var(--gm-gold)]' : 'bg-[var(--gm-surface-high)]'}`} />
+                          ))}
+                        </div>
                       </div>
-                   </div>
-                </div>
-              ) : (
-                <div className="py-20 text-center">
-                   <p className="text-[var(--gm-text-dim)] font-light italic">Yorum yüklenemedi.</p>
-                </div>
-              )}
+                      <div className="md:border-l border-[var(--gm-border-soft)] md:pl-8">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Star className="w-3 h-3 text-[var(--gm-gold)]" />
+                          <span className="font-bold text-[10px] tracking-widest text-[var(--gm-gold)] uppercase">Şanslı Sayı</span>
+                        </div>
+                        <span className="font-serif text-2xl text-[var(--gm-text)]">{horoscope.luckyNumber}</span>
+                      </div>
+                      <div className="md:border-l border-[var(--gm-border-soft)] md:pl-8">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkles className="w-3 h-3 text-[var(--gm-gold)]" />
+                          <span className="font-bold text-[10px] tracking-widest text-[var(--gm-gold)] uppercase">Uğurlu Renk</span>
+                        </div>
+                        <span className="font-serif text-lg text-[var(--gm-text)] italic capitalize">{horoscope.luckyColor}</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-24 text-center">
+                    <Info className="w-12 h-12 text-[var(--gm-text-dim)] opacity-20 mx-auto mb-4" />
+                    <p className="text-[var(--gm-text-dim)] font-light italic">Kozmik veriler şu an erişilemez durumda.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -120,3 +151,5 @@ export default function DailyHoroscopeSection() {
     </section>
   );
 }
+
+import { Calendar } from 'lucide-react';

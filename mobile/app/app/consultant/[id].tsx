@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, Text, StyleSheet, ScrollView, Image, 
   ActivityIndicator, Pressable, Dimensions, Platform 
@@ -6,13 +6,22 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
+import { colors, spacing, font, radius } from '@/theme/tokens';
 import { consultantsApi, chatApi, reviewsApi } from '@/lib/api';
-import type { Consultant, ConsultantSlot } from '@/types';
-import type { Review } from '@/types';
+import type { Consultant, ConsultantSlot, Review } from '@/types';
 import { format, addDays, isSameDay } from 'date-fns';
 import { tr, enUS } from 'date-fns/locale';
 import ReviewList from '@/components/ReviewList';
+import { 
+  ChevronLeft, 
+  MessageSquare, 
+  Star, 
+  ShieldCheck, 
+  Clock, 
+  Globe,
+  Calendar,
+  Zap
+} from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -30,15 +39,12 @@ export default function ConsultantDetailScreen() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
 
-  // Next 7 days for the date picker
   const dates = Array.from({ length: 7 }).map((_, i) => addDays(new Date(), i));
 
   useEffect(() => {
     if (!id) return;
-
     setLoading(true);
     setReviewsLoading(true);
-
     Promise.all([
       consultantsApi.get(id),
       reviewsApi.forConsultant(id),
@@ -47,9 +53,7 @@ export default function ConsultantDetailScreen() {
         setConsultant(consultantData);
         setReviews(reviewData);
       })
-      .catch((err) => {
-        console.error('Failed to load consultant detail:', err);
-      })
+      .catch(console.error)
       .finally(() => {
         setLoading(false);
         setReviewsLoading(false);
@@ -61,7 +65,7 @@ export default function ConsultantDetailScreen() {
       setSlotsLoading(true);
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
       consultantsApi.slots(id, dateStr)
-        .then(slots => setSlots(slots))
+        .then(setSlots)
         .catch(console.error)
         .finally(() => setSlotsLoading(false));
     }
@@ -69,7 +73,6 @@ export default function ConsultantDetailScreen() {
 
   const handleBooking = () => {
     if (!consultant || !selectedSlot) return;
-    
     router.push({
       pathname: '/booking/checkout',
       params: {
@@ -87,72 +90,88 @@ export default function ConsultantDetailScreen() {
 
   if (loading || !consultant) {
     return (
-      <View style={[styles.safe, styles.center]}>
-        <ActivityIndicator color={colors.amethyst} size="large" />
+      <View style={styles.centerLoader}>
+        <ActivityIndicator color={colors.gold} size="large" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Profile Header */}
-        <View style={styles.header}>
-          <View style={styles.profileRow}>
-            {consultant.avatar_url ? (
-              <Image source={{ uri: consultant.avatar_url }} style={styles.avatar} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarInitials}>
-                  {consultant.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                </Text>
+        
+        {/* Header Hero */}
+        <View style={styles.hero}>
+          <View style={styles.heroOverlay} />
+          {consultant.avatar_url && (
+            <Image source={{ uri: consultant.avatar_url }} style={styles.heroBg} blurRadius={10} />
+          )}
+          
+          <SafeAreaView edges={['top']}>
+            <View style={styles.topNav}>
+              <Pressable style={styles.backBtn} onPress={() => router.back()}>
+                <ChevronLeft size={24} color={colors.text} />
+              </Pressable>
+              <Pressable 
+                style={styles.chatBtn} 
+                onPress={async () => {
+                  const { id: tid } = await chatApi.createThread(consultant.id);
+                  router.push(`/chat/${tid}`);
+                }}
+              >
+                <MessageSquare size={22} color={colors.text} />
+              </Pressable>
+            </View>
+
+            <View style={styles.profileArea}>
+              <View style={styles.avatarContainer}>
+                {consultant.avatar_url ? (
+                  <Image source={{ uri: consultant.avatar_url }} style={styles.avatar} />
+                ) : (
+                  <View style={styles.avatarFallback}><Text style={styles.avatarInitial}>{consultant.full_name?.[0]}</Text></View>
+                )}
+                {consultant.is_available && <View style={styles.onlineDot} />}
               </View>
-            )}
-            <View style={styles.profileInfo}>
+
               <View style={styles.nameRow}>
                 <Text style={styles.name}>{consultant.full_name}</Text>
-                <Pressable 
-                  style={styles.messageIconBtn} 
-                  onPress={async () => {
-                    try {
-                      const { id: threadId } = await chatApi.createThread(consultant.id);
-                      router.push(`/chat/${threadId}`);
-                    } catch (err) {
-                      console.error('Failed to open chat:', err);
-                    }
-                  }}
-                >
-                  <Text style={styles.messageIcon}>💬</Text>
-                </Pressable>
+                <ShieldCheck size={18} color={colors.gold} />
               </View>
-              <View style={styles.expertiseRow}>
-                {consultant.expertise?.map((exp, i) => (
-                  <Text key={i} style={styles.expertiseTag}>{t(`home.expertise.${exp}`, exp)}</Text>
-                ))}
-              </View>
-              <View style={styles.ratingRow}>
-                <Text style={styles.star}>⭐</Text>
-                <Text style={styles.ratingText}>{consultant.rating_avg}</Text>
-                <Text style={styles.ratingCount}>({consultant.rating_count} {t('consultant.reviews')})</Text>
+              
+              <Text style={styles.expertise}>{consultant.expertise.join(' · ')}</Text>
+
+              <View style={styles.metrics}>
+                <View style={styles.metric}>
+                  <Star size={14} color={colors.gold} fill={colors.gold} />
+                  <Text style={styles.metricVal}>{consultant.rating_avg}</Text>
+                </View>
+                <View style={styles.metricDivider} />
+                <View style={styles.metric}>
+                  <Clock size={14} color={colors.textMuted} />
+                  <Text style={styles.metricVal}>{consultant.session_duration} dk</Text>
+                </View>
+                <View style={styles.metricDivider} />
+                <View style={styles.metric}>
+                  <Globe size={14} color={colors.textMuted} />
+                  <Text style={styles.metricVal}>{consultant.languages.map(l => l.toUpperCase()).join('/')}</Text>
+                </View>
               </View>
             </View>
+          </SafeAreaView>
+        </View>
+
+        {/* About */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Hakkında</Text>
+          <Text style={styles.bio}>{consultant.bio || 'Bu danışman henüz bir açıklama eklememiş.'}</Text>
+        </View>
+
+        {/* Date Selection */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Calendar size={18} color={colors.gold} />
+            <Text style={styles.sectionTitle}>Randevu Tarihi</Text>
           </View>
-        </View>
-
-        {/* Bio */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('consultant.about')}</Text>
-          <Text style={styles.bio}>{consultant.bio || 'Henüz bir biyografi eklenmemiş.'}</Text>
-        </View>
-
-        {/* Date Selector */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('consultant.reviews')}</Text>
-          <ReviewList reviews={reviews} loading={reviewsLoading} />
-        </View>
-
-        <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('booking.selectDate')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesScroll}>
             {dates.map((date, i) => {
               const active = isSameDay(date, selectedDate);
@@ -160,30 +179,28 @@ export default function ConsultantDetailScreen() {
                 <Pressable 
                   key={i} 
                   style={[styles.dateBtn, active && styles.dateBtnActive]}
-                  onPress={() => {
-                    setSelectedDate(date);
-                    setSelectedSlot(null);
-                  }}
+                  onPress={() => { setSelectedDate(date); setSelectedSlot(null); }}
                 >
-                  <Text style={[styles.dateDay, active && styles.dateTextActive]}>
-                    {format(date, 'EEE', { locale: dateLocale })}
-                  </Text>
-                  <Text style={[styles.dateNum, active && styles.dateTextActive]}>
-                    {format(date, 'd')}
-                  </Text>
+                  <Text style={[styles.dateDay, active && styles.dateTextActive]}>{format(date, 'EEE', { locale: dateLocale })}</Text>
+                  <Text style={[styles.dateNum, active && styles.dateTextActive]}>{format(date, 'd')}</Text>
                 </Pressable>
               );
             })}
           </ScrollView>
         </View>
 
-        {/* Slots */}
+        {/* Slots Selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('booking.selectSlot')}</Text>
+          <View style={styles.sectionHeader}>
+            <Clock size={18} color={colors.gold} />
+            <Text style={styles.sectionTitle}>Müsait Saatler</Text>
+          </View>
           {slotsLoading ? (
-            <ActivityIndicator color={colors.amethyst} style={{ marginVertical: spacing.lg }} />
+            <ActivityIndicator color={colors.gold} style={{ marginVertical: 20 }} />
           ) : slots.length === 0 ? (
-            <Text style={styles.emptyText}>{t('booking.noSlots')}</Text>
+            <View style={styles.emptySlots}>
+              <Text style={styles.emptySlotsText}>Bu tarih için müsait randevu bulunmuyor.</Text>
+            </View>
           ) : (
             <View style={styles.slotsGrid}>
               {slots.map(slot => {
@@ -192,19 +209,11 @@ export default function ConsultantDetailScreen() {
                 return (
                   <Pressable 
                     key={slot.id}
-                    style={[
-                      styles.slotBtn, 
-                      active && styles.slotBtnActive,
-                      isFull && styles.slotBtnDisabled
-                    ]}
+                    style={[styles.slotBtn, active && styles.slotBtnActive, isFull && styles.slotBtnFull]}
                     onPress={() => !isFull && setSelectedSlot(slot)}
                     disabled={isFull}
                   >
-                    <Text style={[
-                      styles.slotText, 
-                      active && styles.slotTextActive,
-                      isFull && styles.slotTextDisabled
-                    ]}>
+                    <Text style={[styles.slotText, active && styles.slotTextActive, isFull && styles.slotTextFull]}>
                       {slot.slot_time.substring(0, 5)}
                     </Text>
                   </Pressable>
@@ -213,63 +222,82 @@ export default function ConsultantDetailScreen() {
             </View>
           )}
         </View>
+
+        {/* Reviews */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Değerlendirmeler</Text>
+          <ReviewList reviews={reviews} loading={reviewsLoading} />
+        </View>
+
       </ScrollView>
 
-      {/* Footer / CTA */}
+      {/* Floating Footer */}
       <View style={styles.footer}>
-        <View style={styles.priceInfo}>
-          <Text style={styles.priceLabel}>{t('booking.total')}</Text>
-          <Text style={styles.priceValue}>₺{Math.round(Number(consultant.session_price))}</Text>
+        <View style={styles.footerPrice}>
+          <Text style={styles.footerPriceLabel}>Seans Ücreti</Text>
+          <Text style={styles.footerPriceVal}>₺{Math.round(Number(consultant.session_price))}</Text>
         </View>
         <Pressable 
           style={[styles.bookBtn, !selectedSlot && styles.bookBtnDisabled]}
           onPress={handleBooking}
           disabled={!selectedSlot}
         >
-          <Text style={styles.bookBtnText}>{t('consultant.bookNow')}</Text>
+          <Zap size={18} color={colors.bgDeep} />
+          <Text style={styles.bookBtnText}>Randevu Al</Text>
         </Pressable>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.midnight },
-  center: { alignItems: 'center', justifyContent: 'center' },
-  scroll: { paddingBottom: 100 },
-  header: { padding: spacing.lg, backgroundColor: colors.surface, borderBottomWidth: 1, borderColor: colors.line },
-  profileRow: { flexDirection: 'row', gap: spacing.md },
-  avatar: { width: 80, height: 80, borderRadius: 40 },
-  avatarPlaceholder: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.amethyst, alignItems: 'center', justifyContent: 'center' },
-  avatarInitials: { color: colors.stardust, fontSize: 24, fontFamily: font.sansBold },
-  profileInfo: { flex: 1, gap: 4 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
-  messageIconBtn: { padding: 4, backgroundColor: colors.surfaceHigh, borderRadius: 12, width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  messageIcon: { fontSize: 16 },
-  name: { fontSize: 24, fontFamily: font.display, color: colors.stardust, flexShrink: 1 },
-  expertiseRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  expertiseTag: { fontSize: 10, color: colors.amethystLight, backgroundColor: colors.surfaceHigh, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  star: { fontSize: 14 },
-  ratingText: { fontSize: 14, fontFamily: font.sansBold, color: colors.gold },
-  ratingCount: { fontSize: 12, color: colors.muted, fontFamily: font.sans },
+  container: { flex: 1, backgroundColor: colors.bg },
+  centerLoader: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
+  scroll: { paddingBottom: 120 },
+  
+  // Hero
+  hero: { backgroundColor: colors.inkDeep, overflow: 'hidden', paddingBottom: 30 },
+  heroBg: { ...StyleSheet.absoluteFillObject, opacity: 0.3 },
+  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(26, 23, 21, 0.6)' },
+  topNav: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  chatBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  profileArea: { alignItems: 'center', marginTop: 10 },
+  avatarContainer: { position: 'relative', marginBottom: 16 },
+  avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: colors.gold },
+  avatarFallback: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.goldDim, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.gold },
+  avatarInitial: { fontFamily: font.display, fontSize: 40, color: colors.bgDeep },
+  onlineDot: { position: 'absolute', bottom: 4, right: 4, width: 18, height: 18, borderRadius: 9, backgroundColor: colors.success, borderWidth: 3, borderColor: colors.inkDeep },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  name: { fontFamily: font.display, fontSize: 26, color: colors.text },
+  expertise: { fontFamily: font.sansMedium, fontSize: 14, color: colors.goldDim, marginTop: 4 },
+  metrics: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 20 },
+  metric: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  metricVal: { fontFamily: font.sansBold, fontSize: 13, color: colors.text },
+  metricDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.2)' },
+
+  // Sections
   section: { padding: spacing.lg, borderBottomWidth: 1, borderColor: colors.lineSoft },
-  sectionTitle: { fontSize: 16, fontFamily: font.sansBold, color: colors.stardust, marginBottom: spacing.md },
-  bio: { fontSize: 14, color: colors.stardustDim, lineHeight: 22, fontFamily: font.sans },
-  datesScroll: { gap: spacing.sm },
-  dateBtn: { width: 60, height: 70, borderRadius: radius.sm, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
-  dateBtnActive: { backgroundColor: colors.amethyst, borderColor: colors.amethyst },
-  dateDay: { fontSize: 12, color: colors.muted, fontFamily: font.sansMedium, textTransform: 'uppercase' },
-  dateNum: { fontSize: 18, color: colors.stardust, fontFamily: font.sansBold },
-  dateTextActive: { color: colors.stardust },
-  slotsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  slotBtn: { width: (width - spacing.lg * 2 - spacing.sm * 3) / 4, height: 40, borderRadius: radius.xs, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
-  slotBtnActive: { backgroundColor: colors.amethyst, borderColor: colors.amethyst },
-  slotBtnDisabled: { opacity: 0.3, backgroundColor: colors.deep },
-  slotText: { color: colors.stardust, fontSize: 14, fontFamily: font.sansMedium },
-  slotTextActive: { color: colors.stardust },
-  slotTextDisabled: { color: colors.muted },
-  emptyText: { color: colors.muted, fontFamily: font.sans, textAlign: 'center', paddingVertical: spacing.lg },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
+  sectionTitle: { fontFamily: font.sansBold, fontSize: 15, color: colors.text, marginBottom: 12 },
+  bio: { fontFamily: font.sans, fontSize: 14, color: colors.textDim, lineHeight: 22 },
+  datesScroll: { gap: 10 },
+  dateBtn: { width: 64, height: 74, borderRadius: radius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
+  dateBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
+  dateDay: { fontFamily: font.sansMedium, fontSize: 11, color: colors.textMuted, textTransform: 'uppercase' },
+  dateNum: { fontFamily: font.sansBold, fontSize: 18, color: colors.text, marginTop: 2 },
+  dateTextActive: { color: colors.bgDeep },
+  slotsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  slotBtn: { width: (width - 40 - 30) / 4, height: 44, borderRadius: radius.md, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
+  slotBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
+  slotBtnFull: { opacity: 0.2 },
+  slotText: { fontFamily: font.sansBold, fontSize: 14, color: colors.text },
+  slotTextActive: { color: colors.bgDeep },
+  slotTextFull: { color: colors.textMuted },
+  emptySlots: { paddingVertical: 20, alignItems: 'center' },
+  emptySlotsText: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted },
+
+  // Footer
   footer: { 
     position: 'absolute', bottom: 0, left: 0, right: 0, 
     backgroundColor: colors.surface, padding: spacing.lg, 
@@ -277,10 +305,18 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, borderColor: colors.line,
     paddingBottom: Platform.OS === 'ios' ? 34 : spacing.lg
   },
-  priceInfo: { gap: 2 },
-  priceLabel: { fontSize: 12, color: colors.muted, fontFamily: font.sans },
-  priceValue: { fontSize: 20, fontFamily: font.sansBold, color: colors.gold },
-  bookBtn: { backgroundColor: colors.amethyst, paddingHorizontal: spacing.xl, paddingVertical: spacing.md, borderRadius: radius.pill, ...shadows.soft },
+  footerPrice: { gap: 2 },
+  footerPriceLabel: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted },
+  footerPriceVal: { fontFamily: font.display, fontSize: 24, color: colors.gold },
+  bookBtn: { 
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.gold, 
+    paddingHorizontal: 24, 
+    paddingVertical: 14, 
+    borderRadius: radius.pill,
+  },
   bookBtnDisabled: { opacity: 0.5 },
-  bookBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 16 },
+  bookBtnText: { fontFamily: font.sansBold, fontSize: 16, color: colors.bgDeep },
 });

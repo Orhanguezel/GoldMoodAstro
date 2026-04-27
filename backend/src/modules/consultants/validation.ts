@@ -23,8 +23,9 @@ export const adminListConsultantsQuerySchema = z.object({
   approval_status: z.enum(['pending', 'approved', 'rejected']).optional(),
 });
 
+// :id parametresi UUID ya da slug olabilir (slug: a-z0-9-, max 100 karakter).
 export const consultantIdParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1).max(100).regex(/^[A-Za-z0-9-]+$/, 'invalid_id_or_slug'),
 });
 
 export const consultantSlotsQuerySchema = z.object({

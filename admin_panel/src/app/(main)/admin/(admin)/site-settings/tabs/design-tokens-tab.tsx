@@ -1,17 +1,8 @@
 'use client';
 
-// =============================================================
-// FILE: site-settings/tabs/design-tokens-tab.tsx
-// Admin Design Token Editor — GoldMoodAstro
-// 2026-04-27 vizyon revize: Cream + Gold + Ink + Plum palette,
-// Cinzel/Fraunces/Manrope tipografi, dark theme variantları.
-// Şema: backend/src/db/sql/010_site_settings.sql design_tokens (version 2)
-// Frontend tip kontratı: frontend/src/lib/tokens/types.ts
-// =============================================================
-
 import * as React from 'react';
 import { toast } from 'sonner';
-import { RefreshCcw, Save, Palette } from 'lucide-react';
+import { RefreshCcw, Save, Palette, Eye, Layout, Type, MousePointer2, Box, Info } from 'lucide-react';
 
 import {
   useGetSiteSettingAdminByKeyQuery,
@@ -21,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -31,90 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-// ── Token şeması (frontend tip kontratıyla 1:1) ────────────────
+import { cn } from '@/lib/utils';
 
 type TokenForm = {
   version: string;
-  colors: {
-    // Brand
-    brand_primary: string;
-    brand_primary_dark: string;
-    brand_primary_light: string;
-    brand_secondary: string;
-    brand_secondary_dim: string;
-    brand_secondary_light: string;
-    brand_accent: string;             // plum
-    gold_50: string;
-    gold_100: string;
-    gold_200: string;
-    gold_300: string;
-    gold_400: string;
-    gold_500: string;
-    gold_600: string;
-    gold_700: string;
-    gold_800: string;
-    gold_900: string;
-    sand_50: string;
-    sand_100: string;
-    sand_200: string;
-    sand_300: string;
-    sand_400: string;
-    sand_500: string;
-    sand_600: string;
-    sand_700: string;
-    sand_800: string;
-    sand_900: string;
-    // Background (light)
-    bg_base: string;
-    bg_deep: string;
-    bg_surface: string;
-    bg_surface_high: string;
-    // Text (light)
-    text_primary: string;
-    text_secondary: string;
-    text_muted: string;
-    text_muted_soft: string;
-    // Border
-    border: string;
-    border_soft: string;
-    // Status
-    success: string;
-    warning: string;
-    error: string;
-    info: string;
-    // Dark variant (opsiyonel — boş bırakılabilir)
-    bg_base_dark: string;
-    bg_deep_dark: string;
-    bg_surface_dark: string;
-    bg_surface_high_dark: string;
-    text_primary_dark: string;
-    text_secondary_dark: string;
-    text_muted_dark: string;
-  };
-  typography: {
-    font_display: string;
-    font_serif: string;
-    font_sans: string;
-    font_mono: string;
-    base_size: string;
-  };
-  radius: {
-    xs: string; sm: string; md: string; lg: string; xl: string; pill: string;
-  };
-  shadows: {
-    soft: string; card: string; glow_primary: string; glow_gold: string;
-  };
-  branding: {
-    app_name: string;
-    tagline: string;
-    tagline_en: string;
-    logo_url: string;
-    favicon_url: string;
-    theme_color: string;
-    theme_color_dark: string;
-    og_image_url: string;
-  };
+  colors: Record<string, string>;
+  typography: Record<string, string>;
+  radius: Record<string, string>;
+  shadows: Record<string, string>;
+  branding: Record<string, string>;
 };
 
 const DEFAULTS: TokenForm = {
@@ -124,29 +40,7 @@ const DEFAULTS: TokenForm = {
     brand_primary_dark: '#A8884A',
     brand_primary_light: '#D4BB7A',
     brand_secondary: '#C9A961',
-    brand_secondary_dim: '#B89651',
-    brand_secondary_light: '#E5D0A0',
     brand_accent: '#3D2E47',
-    gold_50: '#FCF8ED',
-    gold_100: '#F7EFD5',
-    gold_200: '#EEDDAA',
-    gold_300: '#E2C877',
-    gold_400: '#D4B554',
-    gold_500: '#C9A961',
-    gold_600: '#A8884A',
-    gold_700: '#856B3A',
-    gold_800: '#5F4E2F',
-    gold_900: '#3F3524',
-    sand_50: '#FFFCF7',
-    sand_100: '#FAF6EF',
-    sand_200: '#F2EBDD',
-    sand_300: '#E8DDC8',
-    sand_400: '#D8C7A8',
-    sand_500: '#C4AF8B',
-    sand_600: '#A18C6B',
-    sand_700: '#78684F',
-    sand_800: '#534839',
-    sand_900: '#2A2620',
     bg_base: '#FAF6EF',
     bg_deep: '#F2EBDD',
     bg_surface: '#FFFFFF',
@@ -154,25 +48,15 @@ const DEFAULTS: TokenForm = {
     text_primary: '#2A2620',
     text_secondary: '#4A4238',
     text_muted: '#8A8276',
-    text_muted_soft: '#6B6358',
     border: 'rgba(168,136,74,0.25)',
-    border_soft: 'rgba(168,136,74,0.15)',
     success: '#4CAF6E',
     warning: '#F0A030',
     error: '#E55B4D',
-    info: '#5B9BD5',
-    bg_base_dark: '#2A2620',
-    bg_deep_dark: '#1A1715',
-    bg_surface_dark: '#3D362D',
-    bg_surface_high_dark: '#4A4238',
-    text_primary_dark: '#FAF6EF',
-    text_secondary_dark: '#E5DCC8',
-    text_muted_dark: '#A09888',
   },
   typography: {
     font_display: 'Cinzel, Georgia, serif',
     font_serif: 'Fraunces, Georgia, serif',
-    font_sans: 'Manrope, system-ui, -apple-system, sans-serif',
+    font_sans: 'Manrope, system-ui, sans-serif',
     font_mono: 'JetBrains Mono, monospace',
     base_size: '16px',
   },
@@ -190,552 +74,219 @@ const DEFAULTS: TokenForm = {
     logo_url: '',
     favicon_url: '',
     theme_color: '#C9A961',
-    theme_color_dark: '#2A2620',
-    og_image_url: '',
   },
 };
 
-// Renk gruplandırması (UX için)
-const COLOR_GROUPS: Array<{
-  title: string;
-  description?: string;
-  keys: Array<{ key: keyof TokenForm['colors']; label: string }>;
-}> = [
-  {
-    title: 'Marka',
-    description: 'Ana marka renkleri ve mistik plum aksanı',
-    keys: [
-      { key: 'brand_primary', label: 'Brand Primary (Gold)' },
-      { key: 'brand_primary_dark', label: 'Brand Primary Dark' },
-      { key: 'brand_primary_light', label: 'Brand Primary Light' },
-      { key: 'brand_secondary', label: 'Brand Secondary' },
-      { key: 'brand_secondary_dim', label: 'Brand Secondary Dim' },
-      { key: 'brand_secondary_light', label: 'Brand Secondary Light' },
-      { key: 'brand_accent', label: 'Accent Plum' },
-    ],
-  },
-  {
-    title: 'Gold Spektrumu',
-    description: '50-900 ölçeği buton, vurgu ve grafik tonları için',
-    keys: [
-      { key: 'gold_50', label: 'Gold 50' },
-      { key: 'gold_100', label: 'Gold 100' },
-      { key: 'gold_200', label: 'Gold 200' },
-      { key: 'gold_300', label: 'Gold 300' },
-      { key: 'gold_400', label: 'Gold 400' },
-      { key: 'gold_500', label: 'Gold 500' },
-      { key: 'gold_600', label: 'Gold 600' },
-      { key: 'gold_700', label: 'Gold 700' },
-      { key: 'gold_800', label: 'Gold 800' },
-      { key: 'gold_900', label: 'Gold 900' },
-    ],
-  },
-  {
-    title: 'Sand Spektrumu',
-    description: 'Cream yüzeyler ve sıcak ink koyulukları için',
-    keys: [
-      { key: 'sand_50', label: 'Sand 50' },
-      { key: 'sand_100', label: 'Sand 100' },
-      { key: 'sand_200', label: 'Sand 200' },
-      { key: 'sand_300', label: 'Sand 300' },
-      { key: 'sand_400', label: 'Sand 400' },
-      { key: 'sand_500', label: 'Sand 500' },
-      { key: 'sand_600', label: 'Sand 600' },
-      { key: 'sand_700', label: 'Sand 700' },
-      { key: 'sand_800', label: 'Sand 800' },
-      { key: 'sand_900', label: 'Sand 900' },
-    ],
-  },
-  {
-    title: 'Arkaplan (Cream — light)',
-    keys: [
-      { key: 'bg_base', label: 'BG Base (cream)' },
-      { key: 'bg_deep', label: 'BG Deep' },
-      { key: 'bg_surface', label: 'Surface (white)' },
-      { key: 'bg_surface_high', label: 'Surface High' },
-    ],
-  },
-  {
-    title: 'Metin (Ink)',
-    keys: [
-      { key: 'text_primary', label: 'Text Primary (warm ink)' },
-      { key: 'text_secondary', label: 'Text Secondary' },
-      { key: 'text_muted', label: 'Text Muted' },
-      { key: 'text_muted_soft', label: 'Text Muted Soft' },
-    ],
-  },
-  {
-    title: 'Sınır',
-    description: 'rgba() değerleri kullanılabilir (transparency)',
-    keys: [
-      { key: 'border', label: 'Border' },
-      { key: 'border_soft', label: 'Border Soft' },
-    ],
-  },
-  {
-    title: 'Durum',
-    keys: [
-      { key: 'success', label: 'Success' },
-      { key: 'warning', label: 'Warning' },
-      { key: 'error', label: 'Error' },
-      { key: 'info', label: 'Info' },
-    ],
-  },
-  {
-    title: 'Dark Theme Variant (opsiyonel)',
-    description: 'Boş bırakılırsa light variant kullanılır',
-    keys: [
-      { key: 'bg_base_dark', label: 'BG Base (dark)' },
-      { key: 'bg_deep_dark', label: 'BG Deep (dark)' },
-      { key: 'bg_surface_dark', label: 'Surface (dark)' },
-      { key: 'bg_surface_high_dark', label: 'Surface High (dark)' },
-      { key: 'text_primary_dark', label: 'Text Primary (dark)' },
-      { key: 'text_secondary_dark', label: 'Text Secondary (dark)' },
-      { key: 'text_muted_dark', label: 'Text Muted (dark)' },
-    ],
-  },
-];
-
-// ── Helpers ────────────────────────────────────────────────────
-
-function parseTokens(raw: unknown): TokenForm {
-  if (!raw) return structuredClone(DEFAULTS);
-  try {
-    const obj = typeof raw === 'string' ? JSON.parse(raw) : (raw as Record<string, unknown>);
-    const c = (obj?.colors as Record<string, string>) || {};
-    const t = (obj?.typography as Record<string, string>) || {};
-    const r = (obj?.radius as Record<string, string>) || {};
-    const s = (obj?.shadows as Record<string, string>) || {};
-    const b = (obj?.branding as Record<string, string>) || {};
-    const merged = structuredClone(DEFAULTS);
-    merged.version = String(obj?.version || merged.version);
-    Object.keys(merged.colors).forEach((k) => {
-      const key = k as keyof TokenForm['colors'];
-      if (c[key]) merged.colors[key] = c[key];
-    });
-    Object.keys(merged.typography).forEach((k) => {
-      const key = k as keyof TokenForm['typography'];
-      if (t[key]) merged.typography[key] = t[key];
-    });
-    Object.keys(merged.radius).forEach((k) => {
-      const key = k as keyof TokenForm['radius'];
-      if (r[key]) merged.radius[key] = r[key];
-    });
-    Object.keys(merged.shadows).forEach((k) => {
-      const key = k as keyof TokenForm['shadows'];
-      if (s[key]) merged.shadows[key] = s[key];
-    });
-    Object.keys(merged.branding).forEach((k) => {
-      const key = k as keyof TokenForm['branding'];
-      if (b[key] !== undefined) merged.branding[key] = b[key];
-    });
-    return merged;
-  } catch {
-    return structuredClone(DEFAULTS);
-  }
-}
-
-// Color picker'da rgba() kabul etmediği için hex dönüştür/kabul et
-function isHexColor(v: string) {
-  return /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v.trim());
-}
-
-const FONT_OPTIONS = [
-  'Cinzel, Georgia, serif',
-  'Fraunces, Georgia, serif',
-  'Manrope, system-ui, -apple-system, sans-serif',
-  'Inter, system-ui, -apple-system, sans-serif',
-  'InterTight, system-ui, sans-serif',
-  'Georgia, serif',
-  'JetBrains Mono, monospace',
-] as const;
-
-// ── ColorRow ───────────────────────────────────────────────────
-
-function ColorRow({
-  label, value, onChange, disabled,
-}: {
-  label: string; value: string; onChange: (v: string) => void; disabled?: boolean;
-}) {
-  const showPicker = isHexColor(value);
+function ColorRow({ label, value, onChange, disabled }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const isHex = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value.trim());
   return (
-    <div className="flex items-center gap-3">
-      {showPicker ? (
-        <input
-          type="color"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          className="h-9 w-12 cursor-pointer rounded border border-input bg-background p-0.5 disabled:opacity-50"
-        />
-      ) : (
-        <div
-          className="h-9 w-12 shrink-0 rounded border border-input"
-          style={{ backgroundColor: value }}
-          title={value}
-        />
-      )}
+    <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/10 border border-border/30 hover:border-[#C9A961]/30 transition-all">
+      <div className="relative group">
+        <div className="w-12 h-12 rounded-xl border border-border/50 overflow-hidden shadow-inner" style={{ backgroundColor: value }} />
+        {isHex && (
+          <input
+            type="color"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={disabled}
+            className="absolute inset-0 opacity-0 cursor-pointer"
+          />
+        )}
+      </div>
       <div className="flex-1 space-y-1">
-        <Label className="text-xs text-muted-foreground">{label}</Label>
+        <Label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">{label}</Label>
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
-          className="h-8 font-mono text-xs"
-          placeholder="#000000 veya rgba(...)"
+          className="h-8 bg-transparent border-none p-0 font-mono text-xs focus-visible:ring-0"
+          placeholder="#000000"
         />
       </div>
-      <div
-        className="h-9 w-9 shrink-0 rounded-md border border-border"
-        style={{ backgroundColor: value }}
-      />
     </div>
   );
 }
-
-// ── Preview Card ───────────────────────────────────────────────
 
 function PreviewCard({ form }: { form: TokenForm }) {
-  const c = form.colors;
-  const fontSerif = form.typography.font_serif;
-  const fontDisplay = form.typography.font_display;
-  const fontSans = form.typography.font_sans;
   return (
-    <div
-      className="space-y-4 border p-5 text-sm"
-      style={{
-        backgroundColor: c.bg_base,
-        borderColor: c.border,
-        borderRadius: form.radius.lg,
-        boxShadow: form.shadows.card,
-      }}
-    >
-      <div
-        className="text-[11px] font-semibold uppercase tracking-[0.22em]"
-        style={{ color: c.brand_primary, fontFamily: fontSans }}
-      >
-        Section Label
+    <Card className="bg-[#FAF6EF] border-[#C9A961]/20 rounded-[32px] overflow-hidden p-8 shadow-[0_20px_50px_rgba(45,37,32,0.15)]">
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-px bg-[#C9A961]" />
+          <span className="text-[#C9A961] font-bold text-[9px] tracking-[0.3em] uppercase" style={{ fontFamily: form.typography.font_sans }}>Önizleme</span>
+        </div>
+        <h3 className="text-3xl text-[#2A2620]" style={{ fontFamily: form.typography.font_display }}>{form.branding.app_name}</h3>
+        <p className="text-lg text-[#4A4238] italic leading-relaxed" style={{ fontFamily: form.typography.font_serif }}>
+          "{form.branding.tagline}"
+        </p>
+        <div className="flex flex-wrap gap-3 pt-4">
+          <Button style={{ backgroundColor: form.colors.brand_primary, color: '#1A1715', borderRadius: form.radius.pill, fontFamily: form.typography.font_sans }} className="px-8 font-bold tracking-widest uppercase text-[10px] border-none shadow-[0_10px_20px_rgba(201,169,97,0.2)] hover:scale-105 transition-transform">
+            Randevu Al
+          </Button>
+          <Button variant="outline" style={{ borderColor: form.colors.brand_primary, color: '#2A2620', borderRadius: form.radius.pill, fontFamily: form.typography.font_sans }} className="px-8 font-bold tracking-widest uppercase text-[10px] bg-transparent hover:bg-[#C9A961]/5 transition-colors">
+            Profil
+          </Button>
+        </div>
       </div>
-      <div style={{ color: c.text_primary, fontFamily: fontDisplay, fontSize: '1.45rem' }}>
-        {form.branding.app_name}
-      </div>
-      <p style={{ color: c.text_secondary, fontFamily: fontSerif, lineHeight: 1.6 }}>
-        {form.branding.tagline}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <span
-          className="px-3 py-1 text-xs font-medium"
-          style={{ backgroundColor: c.gold_500, color: c.sand_900, borderRadius: form.radius.pill }}
-        >
-          Gold 500
-        </span>
-        <span
-          className="px-3 py-1 text-xs font-medium"
-          style={{ backgroundColor: c.brand_accent, color: '#FAF6EF', borderRadius: form.radius.pill }}
-        >
-          Plum
-        </span>
-        <span
-          className="px-3 py-1 text-xs font-medium border"
-          style={{ borderColor: c.border, color: c.text_muted, borderRadius: form.radius.pill, backgroundColor: c.bg_surface }}
-        >
-          Yüzey
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-2 pt-1">
-        <button
-          type="button"
-          className="px-4 py-2 text-xs font-semibold"
-          style={{
-            backgroundColor: c.brand_primary,
-            color: c.sand_900,
-            borderRadius: form.radius.pill,
-            boxShadow: form.shadows.glow_gold,
-            fontFamily: fontSans,
-          }}
-        >
-          btn-premium
-        </button>
-        <button
-          type="button"
-          className="border px-4 py-2 text-xs font-semibold"
-          style={{
-            borderColor: c.brand_primary,
-            color: c.text_primary,
-            backgroundColor: c.bg_surface,
-            borderRadius: form.radius.pill,
-            fontFamily: fontSans,
-          }}
-        >
-          btn-outline-premium
-        </button>
-      </div>
-      <div className="text-xs" style={{ color: c.text_muted, fontFamily: fontSerif }}>
-        {form.branding.tagline_en}
-      </div>
-    </div>
+    </Card>
   );
 }
 
-// ── Main ───────────────────────────────────────────────────────
-
 export const DesignTokensTab: React.FC = () => {
-  const { data: settingRow, isLoading, isFetching, refetch } =
-    useGetSiteSettingAdminByKeyQuery('design_tokens');
-
+  const { data: settingRow, isLoading, isFetching, refetch } = useGetSiteSettingAdminByKeyQuery('design_tokens');
   const [updateSetting, { isLoading: isSaving }] = useUpdateSiteSettingAdminMutation();
-
   const [form, setForm] = React.useState<TokenForm>(DEFAULTS);
 
   React.useEffect(() => {
-    if (settingRow?.value !== undefined) {
-      setForm(parseTokens(settingRow.value));
+    if (settingRow?.value) {
+      const val = typeof settingRow.value === 'string' ? JSON.parse(settingRow.value) : settingRow.value;
+      setForm(prev => ({ ...prev, ...val }));
     }
   }, [settingRow?.value]);
 
-  const loading = isLoading || isFetching;
-  const busy = loading || isSaving;
-
-  const setColor = (key: keyof TokenForm['colors'], value: string) =>
-    setForm((p) => ({ ...p, colors: { ...p.colors, [key]: value } }));
-
-  const setTypo = (key: keyof TokenForm['typography'], value: string) =>
-    setForm((p) => ({ ...p, typography: { ...p.typography, [key]: value } }));
-
-  const setRadius = (key: keyof TokenForm['radius'], value: string) =>
-    setForm((p) => ({ ...p, radius: { ...p.radius, [key]: value } }));
-
-  const setShadow = (key: keyof TokenForm['shadows'], value: string) =>
-    setForm((p) => ({ ...p, shadows: { ...p.shadows, [key]: value } }));
-
-  const setBrand = (key: keyof TokenForm['branding'], value: string) =>
-    setForm((p) => ({ ...p, branding: { ...p.branding, [key]: value } }));
-
   const handleSave = async () => {
     try {
-      await updateSetting({
-        key: 'design_tokens',
-        value: form,                    // form = backend ile aynı şema
-        locale: '*',
-      }).unwrap();
-      toast.success('Design tokenlar kaydedildi. 5 dakika içinde frontend\'e yansır.');
-    } catch (err) {
-      const e = err as { data?: { error?: { message?: string } | string } };
-      const msg = (typeof e?.data?.error === 'object' ? e.data.error.message : e?.data?.error) || 'Kaydetme hatası.';
-      toast.error(String(msg));
+      await updateSetting({ key: 'design_tokens', value: JSON.stringify(form), locale: '*' }).unwrap();
+      toast.success('Tasarım tokenları başarıyla güncellendi.');
+    } catch {
+      toast.error('Kayıt sırasında hata oluştu.');
     }
   };
 
+  const busy = isLoading || isFetching || isSaving;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 pb-20">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="space-y-1">
-          <h3 className="font-semibold flex items-center gap-2">
-            <Palette className="size-4" />
-            Design Token Editörü
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Renk, tipografi, radius, shadow ve branding değerleri backend&apos;de saklanır,
-            frontend 5 dk cacheden okur. Şu an v{form.version}.
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <span className="w-8 h-px bg-[#C9A961]" />
+            <span className="text-[#C9A961] font-bold text-[10px] tracking-[0.2em] uppercase">Görsel Kimlik</span>
+          </div>
+          <h2 className="font-serif text-3xl text-foreground">Design Token Editörü</h2>
+          <p className="text-muted-foreground text-sm mt-2 font-serif italic">
+            Uygulamanın renk paleti, tipografi ve stil kurallarını gerçek zamanlı yönetin.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {loading && <Badge variant="outline">Yükleniyor...</Badge>}
-          <Button type="button" variant="ghost" size="icon" onClick={() => refetch()} disabled={busy}>
-            <RefreshCcw className="size-4" />
+        <div className="flex gap-3">
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={busy} className="rounded-full border-border/40 px-6 h-11">
+            <RefreshCcw className={cn("mr-2 size-4", busy && "animate-spin")} />
+            Yenile
           </Button>
-          <Button type="button" onClick={handleSave} disabled={busy} className="gap-2">
-            <Save className="size-4" />
-            {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
+          <Button onClick={handleSave} disabled={busy} className="bg-[#C9A961] text-[#1A1715] hover:bg-[#C9A961]/90 rounded-full px-10 h-11 font-bold tracking-widest uppercase">
+            <Save className="mr-2 size-4" />
+            DEĞİŞİKLİKLERİ KAYDET
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Left: Controls */}
-        <div className="xl:col-span-2 space-y-6">
-          {/* Color groups */}
-          {COLOR_GROUPS.map((group) => (
-            <Card key={group.title}>
-              <CardHeader>
-                <CardTitle className="text-base">{group.title}</CardTitle>
-                {group.description && <CardDescription>{group.description}</CardDescription>}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {group.keys.map(({ key, label }) => (
-                  <ColorRow
-                    key={key}
-                    label={label}
-                    value={form.colors[key]}
-                    onChange={(v) => setColor(key, v)}
-                    disabled={busy}
-                  />
-                ))}
-              </CardContent>
-            </Card>
-          ))}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
+        {/* Left: Editor */}
+        <div className="xl:col-span-8 space-y-12">
+          {/* Colors */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-[#C9A961]/10 flex items-center justify-center text-[#C9A961]">
+                <Palette size={20} />
+              </div>
+              <div>
+                <h4 className="font-serif text-xl">Renk Paleti</h4>
+                <p className="text-xs text-muted-foreground italic">Marka renkleri ve arayüz tonları.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(form.colors).map(([key, value]) => (
+                <ColorRow key={key} label={key} value={value} onChange={v => setForm(p => ({ ...p, colors: { ...p.colors, [key]: v } }))} disabled={busy} />
+              ))}
+            </div>
+          </section>
+
+          <Separator className="bg-[#C9A961]/10" />
 
           {/* Typography */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Tipografi</CardTitle>
-              <CardDescription>Font ailesi tanımları (CSS font-family değerleri)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {([
-                { k: 'font_display', l: 'Display (başlıklar)' },
-                { k: 'font_serif', l: 'Serif (gövde — editorial)' },
-                { k: 'font_sans', l: 'Sans (UI)' },
-              ] as const).map(({ k, l }) => (
-                <div key={k} className="space-y-1.5">
-                  <Label>{l}</Label>
-                  <Select
-                    value={form.typography[k]}
-                    onValueChange={(value) => setTypo(k, value)}
-                    disabled={busy}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Font seç" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FONT_OPTIONS.map((value) => (
-                        <SelectItem key={value} value={value}>
-                          {value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
-              {([
-                { k: 'font_mono', l: 'Mono (kod)' },
-                { k: 'base_size', l: 'Base Size' },
-              ] as const).map(({ k, l }) => (
-                <div key={k} className="space-y-1.5">
-                  <Label>{l}</Label>
-                  <Input
-                    value={form.typography[k]}
-                    onChange={(e) => setTypo(k, e.target.value)}
-                    disabled={busy}
-                    className="font-mono text-sm"
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Radius */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Radius</CardTitle>
-              <CardDescription>Köşe yuvarlaması (px / rem / %)</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-4">
-              {(['xs', 'sm', 'md', 'lg', 'xl', 'pill'] as const).map((k) => (
-                <div key={k} className="space-y-1.5">
-                  <Label>{k.toUpperCase()}</Label>
-                  <Input
-                    value={form.radius[k]}
-                    onChange={(e) => setRadius(k, e.target.value)}
-                    disabled={busy}
-                    className="font-mono text-sm"
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Shadows */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Gölgeler</CardTitle>
-              <CardDescription>CSS box-shadow değerleri</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {([
-                { k: 'soft', l: 'Soft' },
-                { k: 'card', l: 'Card' },
-                { k: 'glow_primary', l: 'Glow Primary' },
-                { k: 'glow_gold', l: 'Glow Gold' },
-              ] as const).map(({ k, l }) => (
-                <div key={k} className="space-y-1.5">
-                  <Label>{l}</Label>
-                  <Input
-                    value={form.shadows[k]}
-                    onChange={(e) => setShadow(k, e.target.value)}
-                    disabled={busy}
-                    className="font-mono text-xs"
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Branding */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Marka & Branding</CardTitle>
-              <CardDescription>Uygulama adı, slogan, logo URL, theme color</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {([
-                { k: 'app_name', l: 'Uygulama Adı' },
-                { k: 'tagline', l: 'Slogan (TR)' },
-                { k: 'tagline_en', l: 'Slogan (EN)' },
-                { k: 'logo_url', l: 'Logo URL' },
-                { k: 'favicon_url', l: 'Favicon URL' },
-                { k: 'og_image_url', l: 'OG Image URL' },
-              ] as const).map(({ k, l }) => (
-                <div key={k} className="space-y-1.5">
-                  <Label>{l}</Label>
-                  <Input
-                    value={form.branding[k]}
-                    onChange={(e) => setBrand(k, e.target.value)}
-                    disabled={busy}
-                  />
-                </div>
-              ))}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>Theme Color (light)</Label>
-                  <Input
-                    value={form.branding.theme_color}
-                    onChange={(e) => setBrand('theme_color', e.target.value)}
-                    disabled={busy}
-                    className="font-mono text-xs"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Theme Color (dark)</Label>
-                  <Input
-                    value={form.branding.theme_color_dark}
-                    onChange={(e) => setBrand('theme_color_dark', e.target.value)}
-                    disabled={busy}
-                    className="font-mono text-xs"
-                  />
-                </div>
+          <section className="space-y-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-[#7B5EA7]/10 flex items-center justify-center text-[#7B5EA7]">
+                <Type size={20} />
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <h4 className="font-serif text-xl">Tipografi</h4>
+                <p className="text-xs text-muted-foreground italic">Font aileleri ve temel metin boyutları.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-muted/5 rounded-[32px] border border-border/30">
+              {Object.entries(form.typography).map(([key, value]) => (
+                <div key={key} className="space-y-2">
+                  <Label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase ml-1">{key}</Label>
+                  <Input 
+                    value={value} 
+                    onChange={e => setForm(p => ({ ...p, typography: { ...p.typography, [key]: e.target.value } }))}
+                    className="bg-muted/20 border-border/40 rounded-xl h-11 font-mono text-xs"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <Separator className="bg-[#C9A961]/10" />
+
+          {/* Radius & Shadows */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <section className="space-y-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-2xl bg-[#4CAF6E]/10 flex items-center justify-center text-[#4CAF6E]">
+                  <MousePointer2 size={20} />
+                </div>
+                <h4 className="font-serif text-xl">Köşe Yuvarlama</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(form.radius).map(([key, value]) => (
+                  <div key={key} className="p-4 rounded-2xl bg-muted/10 border border-border/30">
+                    <Label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase block mb-2">{key}</Label>
+                    <Input value={value} onChange={e => setForm(p => ({ ...p, radius: { ...p.radius, [key]: e.target.value } }))} className="bg-transparent border-none p-0 h-auto font-mono text-xs focus-visible:ring-0" />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-2xl bg-[#F0A030]/10 flex items-center justify-center text-[#F0A030]">
+                  <Box size={20} />
+                </div>
+                <h4 className="font-serif text-xl">Gölgeler</h4>
+              </div>
+              <div className="space-y-3">
+                {Object.entries(form.shadows).map(([key, value]) => (
+                  <div key={key} className="p-4 rounded-2xl bg-muted/10 border border-border/30">
+                    <Label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase block mb-2">{key}</Label>
+                    <Input value={value} onChange={e => setForm(p => ({ ...p, shadows: { ...p.shadows, [key]: e.target.value } }))} className="bg-transparent border-none p-0 h-auto font-mono text-xs focus-visible:ring-0" />
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
         </div>
 
-        {/* Right: Live Preview */}
-        <div className="space-y-4">
-          <Card className="sticky top-4">
-            <CardHeader>
-              <CardTitle className="text-base">Canlı Önizleme</CardTitle>
-              <CardDescription>Değişiklikler anlık yansır</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PreviewCard form={form} />
-              <Separator className="my-4" />
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>Şema versiyonu: <code className="bg-muted px-1 rounded">v{form.version}</code></p>
-                <p>Frontend revalidate: <code className="bg-muted px-1 rounded">300s</code></p>
+        {/* Right: Preview */}
+        <div className="xl:col-span-4">
+          <div className="sticky top-24 space-y-8">
+            <div className="flex items-center gap-4 px-6">
+              <Eye className="text-[#C9A961]" />
+              <h4 className="font-serif text-xl italic">Canlı Önizleme</h4>
+            </div>
+            <PreviewCard form={form} />
+            <div className="p-8 rounded-[32px] bg-[#C9A961]/5 border border-[#C9A961]/20 space-y-4">
+              <div className="flex items-center gap-3">
+                <Info size={16} className="text-[#C9A961]" />
+                <span className="text-[10px] font-bold text-[#C9A961] tracking-widest uppercase">Bilgi</span>
               </div>
-            </CardContent>
-          </Card>
+              <p className="text-xs text-muted-foreground leading-relaxed italic font-serif">
+                Yaptığınız değişiklikler frontend ve mobile uygulamalar tarafından anlık olarak (cache süresi sonrasında) takip edilecektir. Versiyon v{form.version} olarak işaretlenmiştir.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

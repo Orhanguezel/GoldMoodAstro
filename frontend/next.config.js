@@ -54,6 +54,16 @@ const nextConfig = {
     minimumCacheTTL: 31536000,
   },
 
+  // Backend uploads klasörünü frontend domain'i üzerinden serve et.
+  // Dev: localhost:3000/uploads/x.png → localhost:8094/uploads/x.png
+  // Prod'da Nginx aynı yönlendirmeyi /uploads location bloğuyla yapar.
+  async rewrites() {
+    const backendUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api/v1').replace(/\/api\/v1\/?$/, '');
+    return [
+      { source: '/uploads/:path*', destination: `${backendUrl}/uploads/:path*` },
+    ];
+  },
+
   async redirects() {
     return [
       // www → non-www

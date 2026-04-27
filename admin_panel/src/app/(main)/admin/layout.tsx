@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/app/(main)/admin/layout.tsx
-// FINAL — Admin Layout (NO SSR fetch) — Auth gate via RTK client guard
+// FINAL — GoldMoodAstro Rebranded Admin Layout
 // =============================================================
 
 import type { ReactNode } from 'react';
@@ -23,13 +23,11 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
   return (
     <AdminAuthGate>
       <AdminSettingsProvider>
-        {/* Gate inside; when ok, render layout */}
-        <SidebarProvider defaultOpen>
+        <SidebarProvider defaultOpen className="bg-[#1A1715]">
           <AppSidebar
-            // variant/collapsible artık redux DOM-preferences ile client'ta yönetilecek
-            // Sidebar komponentin prop zorunluluğu varsa default ver:
             variant="inset"
             collapsible="icon"
+            className="border-r border-[#C9A961]/10"
             me={{
               id: 'me',
               name: 'Admin',
@@ -42,39 +40,44 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
 
           <SidebarInset
             className={cn(
-              'flex flex-col',
+              'flex flex-col bg-[#1A1715]',
               '[html[data-content-layout=centered]_&]:mx-auto! [html[data-content-layout=centered]_&]:max-w-screen-2xl!',
               'max-[113rem]:peer-data-[variant=inset]:mr-2! min-[101rem]:peer-data-[variant=inset]:peer-data-[state=collapsed]:peer-data-[state=collapsed]:mr-auto!',
             )}
           >
             <header
               className={cn(
-                'flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12',
-                '[html[data-navbar-style=sticky]_&]:sticky [html[data-navbar-style=sticky]_&]:top-0 [html[data-navbar-style=sticky]_&]:z-50 [html[data-navbar-style=sticky]_&]:overflow-hidden [html[data-navbar-style=sticky]_&]:rounded-t-[inherit] [html[data-navbar-style=sticky]_&]:bg-background/50 [html[data-navbar-style=sticky]_&]:backdrop-blur-md',
+                'flex h-16 shrink-0 items-center gap-2 border-b border-[#C9A961]/10 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-16',
+                'bg-[#1A1715]/80 backdrop-blur-xl sticky top-0 z-50',
               )}
             >
-              <div className="flex w-full items-center justify-between px-4 lg:px-6">
+              <div className="flex w-full items-center justify-between px-4 lg:px-8">
                 <div className="flex items-center gap-1 lg:gap-2">
-                  <SidebarTrigger className="-ml-1" />
+                  <SidebarTrigger className="-ml-1 text-[#C9A961] hover:bg-[#C9A961]/10" />
                   <Separator
                     orientation="vertical"
-                    className="mx-2 data-[orientation=vertical]:h-4"
+                    className="mx-3 h-6 bg-[#C9A961]/20"
                   />
-                  <h2 className="text-sm font-semibold tracking-tight hidden sm:block">KÖNİG Energetik</h2>
+                  <div className="flex flex-col">
+                    <h2 className="text-sm font-serif font-bold tracking-tight text-foreground hidden sm:block">GOLDMOOD</h2>
+                    <span className="text-[8px] font-bold tracking-[0.3em] text-[#C9A961] uppercase hidden sm:block">Astro Management</span>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                   <LayoutControls />
                   <ThemeSwitcher />
-                  {/* AccountSwitcher me bilgisini AdminAuthGate hydrate edecek; burada placeholder */}
+                  <Separator orientation="vertical" className="h-6 bg-[#C9A961]/20" />
                   <AccountSwitcher me={{ id: 'me', email: 'admin', role: 'admin' }} />
                 </div>
               </div>
             </header>
 
             <div className="flex flex-1 flex-col overflow-hidden">
-              <div className="flex-1 min-w-0 overflow-auto p-4 md:p-6">
-                {children}
+              <div className="flex-1 min-w-0 overflow-auto p-6 md:p-10 lg:p-12">
+                <div className="mx-auto max-w-screen-2xl">
+                  {children}
+                </div>
               </div>
               <AdminFooter />
             </div>
