@@ -323,6 +323,31 @@ export async function repoCreateReviewPublic(
 
   const created = await repoGetReviewPublic(app, id, locale, locale);
   if (!created) throw new Error("Review insert ok, but fetch failed.");
+
+  // T17-6 — Astrolog karnesi follow-up kaydı (6 ay sonra "gerçekleşti mi?" sorusu)
+  // Sadece consultant review'larında ve doğrulanmış (booking ile bağlı) olanlarda
+  if (body.target_type === 'consultant' && body.user_id && isVerified === 1) {
+    try {
+      const followUpAt = new Date();
+      followUpAt.setMonth(followUpAt.getMonth() + 6);
+      await mysql.query(
+        `
+        INSERT INTO review_outcomes
+          (id, review_id, user_id, consultant_id, follow_up_at, created_at, updated_at)
+        VALUES
+          (UUID(), ?, ?, ?, ?, NOW(3), NOW(3))
+        ON DUPLICATE KEY UPDATE
+          follow_up_at = VALUES(follow_up_at),
+          updated_at = NOW(3)
+        `,
+        [id, body.user_id, body.target_id, followUpAt],
+      );
+    } catch (err) {
+      console.warn('review_outcome_insert_failed', { review_id: id, error: err });
+      // Silent fail — review create yine başarılı sayılır
+    }
+  }
+
   return created;
 }
 

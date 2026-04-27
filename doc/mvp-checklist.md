@@ -930,7 +930,7 @@ zarar verici dil yok.
   - `GET /api/v1/credits/packages`
   - `POST /api/v1/credits/purchase` — Iyzipay one-time + add credit on webhook
 
-### T10-3 — Backend: Görüşme → Kredi Tüketimi (Codex)
+### T10-3 — Backend: Görüşme → Kredi Tüketimi (Claude Code+Codex) ✅
 
 - [x] LiveKit webhook `room_finished` → `live_sessions.duration_seconds` hesapla
 - [x] consultant fiyat × dakika → kredi düş (`credit_transactions` 'consumption' kaydı)
