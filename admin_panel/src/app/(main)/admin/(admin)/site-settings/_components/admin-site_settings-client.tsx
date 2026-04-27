@@ -476,6 +476,14 @@ export default function AdminSiteSettingsClient() {
                 <DesignTokensTab />
               </TabsContent>
 
+              <TabsContent value="custom_css" className="mt-4">
+                <CustomCssTab />
+              </TabsContent>
+
+              <TabsContent value="livekit" className="mt-4">
+                <LiveKitTab />
+              </TabsContent>
+
             </Tabs>
           )}
         </CardContent>

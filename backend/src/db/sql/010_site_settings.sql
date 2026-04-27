@@ -28,6 +28,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('01000000-0000-4000-8000-000000000011', 'session.max_duration',   '*', '120'),
 -- Feature flags (FAZ 11 video toggle, FAZ 8 birth chart, FAZ 9 daily reading)
 ('01000000-0000-4000-8000-000000000013', 'feature.video_call',     '*', '0'),
+('01000000-0000-4000-8000-000000000016', 'feature_video_enabled',  '*', '0'),
 ('01000000-0000-4000-8000-000000000014', 'feature.birth_chart',    '*', '1'),
 ('01000000-0000-4000-8000-000000000015', 'feature.daily_reading',  '*', '1'),
 -- Design tokens (public, consumed by frontend + admin panel + mobile)

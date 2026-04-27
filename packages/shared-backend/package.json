@@ -52,6 +52,8 @@
     "./modules/resources/*": "./modules/resources/*.ts",
     "./modules/review": "./modules/review/index.ts",
     "./modules/review/*": "./modules/review/*.ts",
+    "./modules/reviewOutcomes": "./modules/reviewOutcomes/index.ts",
+    "./modules/reviewOutcomes/*": "./modules/reviewOutcomes/*.ts",
     "./modules/readings": "./modules/readings/index.ts",
     "./modules/readings/*": "./modules/readings/*.ts",
     "./modules/siteSettings": "./modules/siteSettings/index.ts",

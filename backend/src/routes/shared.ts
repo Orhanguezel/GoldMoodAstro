@@ -25,6 +25,7 @@ import { registerSubscriptions } from '@goldmood/shared-backend/modules/subscrip
 import { registerCredits } from '@goldmood/shared-backend/modules/credits/router';
 import { registerBanners, registerBannersAdmin } from '@goldmood/shared-backend/modules/banners/router';
 import { registerCampaigns, registerCampaignsAdmin } from '@goldmood/shared-backend/modules/campaigns/router';
+import { registerReviewOutcomes } from '@goldmood/shared-backend/modules/reviewOutcomes/router';
 
 // Admin routers
 import { registerUserAdmin } from '@goldmood/shared-backend/modules/auth/admin.routes';
@@ -70,6 +71,7 @@ export async function registerSharedPublic(api: FastifyInstance) {
   await registerCredits(api);
   await registerBanners(api);
   await registerCampaigns(api);
+  await registerReviewOutcomes(api);
 }
 
 export async function registerSharedAdmin(adminApi: FastifyInstance) {

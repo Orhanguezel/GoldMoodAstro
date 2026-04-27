@@ -5,6 +5,7 @@ import { registerBookingReminderCron } from '@/cron/booking-reminders';
 import { registerBookingSlaCron } from '@/cron/booking-sla';
 import { registerDailyReadingsCron } from '@/cron/daily-readings';
 import { registerHoroscopeCron } from '@/cron/horoscope-job';
+import { registerReviewFollowupCron } from '@/cron/review-followup';
 
 async function main() {
   const app: any = await createApp();
@@ -19,6 +20,7 @@ async function main() {
     registerBookingSlaCron();
     registerDailyReadingsCron();
     registerHoroscopeCron();
+    registerReviewFollowupCron();
   }
 
   console.log(`API listening ${host}:${env.PORT}`);

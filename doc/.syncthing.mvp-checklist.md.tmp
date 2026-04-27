@@ -967,7 +967,7 @@ profile ekranından "İptal" tıklayınca tek tıkla iptal → grace period sonu
 - [ ] `live_sessions.media_type ENUM('audio','video')` zaten T7-2'de var
 - [x] `consultants` tablosuna `supports_video BOOLEAN DEFAULT 0` ekle
 - [ ] Pricing differentiation: video premium (örn. ₺350/15dk vs ₺250/15dk audio)
-- [ ] Site-settings flag: `feature_video_enabled` (admin'den toggle)
+- [x] Site-settings flag: `feature_video_enabled` (admin'den toggle)
 
 ### T11-2 — Mobile: Video UI (Codex)
 
@@ -1288,7 +1288,7 @@ backend kayıt + listede görünür.
 - [ ] `frontend/src/components/containers/consultant/ConsultantDetail.tsx` →
       sayfanın altında ReviewList yerleşimi (zaten var, kontrol)
 
-### T17-6 — Backend: Astrolog Karnesi Hazırlığı (Claude Code) ✅
+### T17-6 — Backend: Astrolog Karnesi Hazırlığı (Claude Code)
 
 > F10 — eski yorumların gerçekleşip gerçekleşmediği takibi. MVP için sadece şema, UI Faz 6+ay'da.
 
