@@ -193,3 +193,7 @@ vite.config.ts.timestamp-*
 
 # Sync conflict artifacts
 *.sync-conflict-*
+
+# Syncthing temp files
+.syncthing.*.tmp
+**/.syncthing.*.tmp
