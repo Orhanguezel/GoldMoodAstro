@@ -26,7 +26,6 @@ const Register: React.FC = () => {
   const { ui } = useUiSection('ui_auth', locale as any);
 
   const loginHref = useMemo(() => localizePath(locale, '/login'), [locale]);
-  const homeHref = useMemo(() => localizePath(locale, '/'), [locale]);
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');

@@ -71,6 +71,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
     router.push(`/${locale}/booking?${q.toString()}`);
   };
 
+  return (
     <main className="min-h-screen py-24 bg-[var(--gm-bg)]" style={{ padding: '6rem 4%' }}>
       <div className="max-w-[1000px] mx-auto">
         <Link

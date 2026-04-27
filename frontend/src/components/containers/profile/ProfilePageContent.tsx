@@ -18,7 +18,7 @@ import {
   useSendEmailVerificationMutation,
   useListMyOrdersQuery,
 } from '@/integrations/rtk/hooks';
-import type { OrderStatus, OrderPaymentStatus } from '@/integrations/shared';
+
 
 type TabKey = 'profile' | 'password' | 'wallet' | 'orders';
 

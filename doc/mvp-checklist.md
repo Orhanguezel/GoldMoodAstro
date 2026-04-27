@@ -783,6 +783,23 @@ booking.status='completed'.
 - [x] Cache: redis yok → DB cache tablosu `geocode_cache` (q, lat, lng, label, ttl)
   — 2026-04-27: `geocode` modülü ve `036_geocode_cache_schema.sql` eklendi; backend `typecheck` geçti.
 
+### T8.5 — Backend: IANA Timezone + nullable tob (Claude Code) ✅
+
+> Astroloji motorunda DST-safe timezone handling + saat bilinmiyorsa noon fallback.
+> Mevcut compute.ts'in 1985-2007 arası Türkiye DST geçişlerinde 1 saat hata yaptığı
+> doğrulandı (test: 1993-03-14 — DST yokken offset=+180 sapma).
+
+- [x] luxon paketi shared-backend/package.json'a eklendi
+- [x] `astrology/types.ts`: BirthChartInput `tzIana?`, `tobKnown?`, `time?` opsiyonel
+- [x] `astrology/compute.ts` parseDateTime: luxon DateTime.fromObject(iana) → DST-safe
+      UTC çevirimi; `tobKnown=false` → 12:00 noon fallback
+- [x] `birthCharts/validation.ts`: `tob` optional, `tob_known` boolean, `tz_iana` optional;
+      refine: `tob_known=true` ise tob zorunlu
+- [x] `birthCharts/repository.ts`: input → toAstrologyInput helper, DB'ye 12:00:00 fallback
+- [x] Controller: ZodError → 400 (validation hatası net cevap)
+- [x] **Backward-compat**: tz_offset legacy alan kalır, tz_iana yoksa kullanılır
+- [x] Canlı test: 5 senaryo — IANA, no-tob, legacy, validation, invalid IANA — hepsi geçti
+
 ### T8-4 — Mobile: Birth Chart Ekranı (Codex) ✅
 
 > `mobile-app.html` → SCREEN 3: BIRTH CHART tasarımı baz alınır.
@@ -924,19 +941,19 @@ zarar verici dil yok.
 
 > `mobile-app.html` SCREEN 6: PROFILE / SUB tasarımı.
 
-- [ ] `mobile/app/app/(tabs)/profile.tsx`:
+- [x] `mobile/app/app/(tabs)/profile.tsx`:
   - **Anti-dark-pattern subscription card** — her zaman görünür, "Aboneliği Yönet" butonu
   - "İptal et" tek tıkla, geri çevirme ekranı yok (şeffaf)
   - Kredi bakiyesi kartı, "Kredi Yükle" CTA
-- [ ] `mobile/app/app/profile/subscription.tsx` — abonelik detay
-- [ ] `mobile/app/app/profile/credits.tsx` — kredi geçmişi + paket alış
+- [x] `mobile/app/app/profile/subscription.tsx` — abonelik detay
+- [x] `mobile/app/app/profile/credits.tsx` — kredi geçmişi + paket alış
 
 ### T10-5 — Frontend: Pricing Sayfası (Codex)
 
-- [ ] `frontend/src/app/[locale]/pricing/page.tsx`:
+- [x] `frontend/src/app/[locale]/pricing/page.tsx`:
   - 3 plan kartı (free, monthly, yearly), karşılaştırma tablosu
   - **Şeffaf footer:** "İptal etmek üye olmaktan kolay", "İade politikası", "KVKK"
-- [ ] Pricing copy `index.html` (transparency section) baz alınır
+- [x] Pricing copy `index.html` (transparency section) baz alınır
 
 ### T10-6 — Mobile: Apple/Google IAP Entegrasyonu (Codex)
 

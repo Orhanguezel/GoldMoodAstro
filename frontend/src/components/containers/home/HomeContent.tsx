@@ -1,43 +1,47 @@
 'use client';
 
 import React, { lazy, Suspense } from 'react';
-import Hero from '@/layout/banner/Hero';
+import HeroNew from './HeroNew';
 import Banner from '@/components/common/public/Banner';
 
-const DailyHoroscopeSection = lazy(() => import('./DailyHoroscopeSection'));
-const FeaturedConsultantsSection = lazy(() => import('./FeaturedConsultantsSection'));
-const ExpertiseCategoriesSection = lazy(() => import('./ExpertiseCategoriesSection'));
-const HomeIntroSection = lazy(() => import('./HomeIntroSection'));
 const PromisesSection = lazy(() => import('./PromisesSection'));
+const FeaturesNew = lazy(() => import('./FeaturesNew'));
 const HybridModelSection = lazy(() => import('./HybridModelSection'));
-const HomeCTABanner = lazy(() => import('./HomeCTABanner'));
-const BlogHomeSection = lazy(() => import('@/components/containers/blog/BlogHomeSection'));
-const Feedback = lazy(() => import('@/components/containers/feedback/Feedback'));
+const TransparencySection = lazy(() => import('./TransparencySection'));
+const TrustSection = lazy(() => import('./TrustSection'));
+const WaitlistSection = lazy(() => import('./WaitlistSection'));
 
 type Props = { locale?: string };
 
 export default function HomeContent({ locale }: Props) {
   return (
-    <main className="flex flex-col w-full">
-      <Hero locale={locale} />
+    <main className="flex flex-col w-full bg-[var(--gm-bg)]">
+      {/* 1. Hero */}
+      <HeroNew locale={locale} />
       
       {/* Dynamic Banner Slot */}
       <section className="container mx-auto px-4 -mt-10 mb-12 relative z-20">
         <Banner placement="home_hero" count={1} />
       </section>
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="h-screen bg-[var(--gm-bg)]" />}>
+        {/* 2. Promises */}
         <PromisesSection locale={locale} />
-        <DailyHoroscopeSection />
-        <FeaturedConsultantsSection locale={locale} />
-        <ExpertiseCategoriesSection locale={locale} />
-        <div id="how-it-works">
-          <HomeIntroSection locale={locale} />
-        </div>
-        <Feedback locale={locale} />
-        <BlogHomeSection locale={locale} />
+        
+        {/* 3. Features */}
+        <FeaturesNew locale={locale} />
+        
+        {/* 4. Hybrid Model */}
         <HybridModelSection locale={locale} />
-        <HomeCTABanner locale={locale} />
+        
+        {/* 5. Transparency / Pricing */}
+        <TransparencySection locale={locale} />
+        
+        {/* 6. Trust / Privacy */}
+        <TrustSection locale={locale} />
+        
+        {/* 7. Waitlist */}
+        <WaitlistSection locale={locale} />
       </Suspense>
     </main>
   );

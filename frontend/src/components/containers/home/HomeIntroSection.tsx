@@ -22,9 +22,7 @@ export default function HomeIntroSection({ locale: explicitLocale }: { locale?: 
 
   const steps = STEPS[locale || 'tr'] || STEPS.tr;
 
-  const sectionTitle = ui('ui_home_intro_title',
-    locale === 'tr' ? 'Gold Mood <em>Değerleri</em>' : 'Gold Mood <em>Values</em>'
-  );
+
 
   return (
     <section className="py-28 lg:py-40 bg-[var(--gm-bg)] border-t border-[var(--gm-border-soft)]">

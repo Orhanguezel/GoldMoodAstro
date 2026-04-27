@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useUiSection, useResolvedLocale } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
@@ -9,7 +9,6 @@ const Hero: React.FC<{ locale?: string }> = ({ locale: explicitLocale }) => {
   const locale = useResolvedLocale(explicitLocale);
   const { ui } = useUiSection('ui_hero', locale);
 
-  const heroTitle = ui('ui_hero_title', 'Evreni okuyun, hayatı anlayın');
   const heroSub = ui('ui_hero_subtitle', 'ASTROLOJİ • TAROT • ŞİFA');
   const heroHeadline = ui('ui_hero_headline', 'Yıldızlarla Tanışan <em>Modern</em> Astroloji Deneyimi');
   const heroTagline = ui('ui_hero_tagline', 'Doğum haritanızdan beslenen kişisel rehberlik. Telefon numarası istemeyen kayıt, şeffaf abonelik ve gerçek uzmanlara bağlanma seçeneği.');

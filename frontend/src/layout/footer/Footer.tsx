@@ -22,18 +22,16 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
   const locale = localeProp || fallbackLocale;
   const { ui } = useUiSection('ui_footer', locale);
 
-  const { data: contactInfoSetting } = useGetSiteSettingByKeyQuery({ key: 'contact_info', locale });
+
   const { data: companyBrandSetting } = useGetSiteSettingByKeyQuery({ key: 'company_brand', locale });
   const { data: socialsSetting } = useGetSiteSettingByKeyQuery({ key: 'socials', locale });
 
-  const { brandName, socials } = useMemo(() => {
-    const contact = (contactInfoSetting?.value ?? {}) as any;
+  const { socials } = useMemo(() => {
     const brandVal = (companyBrandSetting?.value ?? {}) as any;
     const socialsVal = (socialsSetting?.value ?? {}) as Record<string, string>;
-    const name = (brandVal.name as string) || (contact.companyName as string) || 'GoldMoodAstro';
     const mergedSocials: Record<string, string> = { ...(brandVal.socials as Record<string, string> | undefined), ...socialsVal };
-    return { brandName: name, socials: mergedSocials };
-  }, [contactInfoSetting?.value, companyBrandSetting?.value, socialsSetting?.value]);
+    return { socials: mergedSocials };
+  }, [companyBrandSetting?.value, socialsSetting?.value]);
 
   const { data: footerSections } = useListFooterSectionsQuery({ is_active: true, order: 'display_order.asc', locale });
   const sections: FooterSectionDto[] = useMemo(() => {

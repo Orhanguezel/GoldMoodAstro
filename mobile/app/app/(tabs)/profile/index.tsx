@@ -18,6 +18,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { subscriptionsApi, creditsApi } from '@/lib/api';
 import type { CreditMe, Subscription } from '@/types';
 
+const PROFILE_SUBSCRIPTION_PATH = '/profile/subscription' as unknown as Parameters<typeof router.push>[0];
+const PROFILE_CREDITS_PATH = '/profile/credits' as unknown as Parameters<typeof router.push>[0];
+
 type TicketLike = {
   label: string;
   value: string;
@@ -173,7 +176,7 @@ export default function ProfileScreen() {
           ))}
 
           <View style={styles.actions}>
-            <Pressable style={styles.primaryButton} onPress={() => router.push('/profile/subscription')}>
+            <Pressable style={styles.primaryButton} onPress={() => router.push(PROFILE_SUBSCRIPTION_PATH)}>
               <Text style={styles.primaryButtonText}>{t('profile.subscriptionManage', 'Aboneliği Yönet')}</Text>
             </Pressable>
             {isActive(status) ? (
@@ -202,7 +205,7 @@ export default function ProfileScreen() {
             {t('profile.creditsDescription', 'Seans almak için kredinizi bu ekrandan takip edebilirsiniz.')}
           </Text>
 
-          <Pressable style={styles.primaryButton} onPress={() => router.push('/profile/credits')}>
+          <Pressable style={styles.primaryButton} onPress={() => router.push(PROFILE_CREDITS_PATH)}>
             <Text style={styles.primaryButtonText}>{t('profile.creditsTopUp', 'Kredi Yükle')}</Text>
           </Pressable>
         </View>

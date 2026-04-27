@@ -121,6 +121,28 @@ function isPremiumPlan(plan: SubscriptionPlanPublicUi | null): boolean {
   return !!plan && plan.code !== 'free';
 }
 
+const REQUIRED_PLAN_CODES: SubscriptionPlanPublicUi['code'][] = ['free', 'monthly', 'yearly'];
+
+function normalizePlanSet(plans?: SubscriptionPlanPublicUi[] | null): SubscriptionPlanPublicUi[] {
+  const merged = new Map<string, SubscriptionPlanPublicUi>();
+
+  for (const fallbackPlan of FALLBACK_PLANS) {
+    merged.set(fallbackPlan.code, { ...fallbackPlan });
+  }
+
+  if (Array.isArray(plans)) {
+    for (const plan of plans) {
+      if (!plan?.code) continue;
+      merged.set(plan.code, {
+        ...merged.get(plan.code),
+        ...plan,
+      } as SubscriptionPlanPublicUi);
+    }
+  }
+
+  return REQUIRED_PLAN_CODES.map((code) => merged.get(code) ?? FALLBACK_PLANS[0]!);
+}
+
 function toMoney(valueMinor: number, currency: string, locale: Locale) {
   const value = valueMinor / 100;
   if (!Number.isFinite(value)) return `${valueMinor} ${currency}`;
@@ -146,10 +168,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
   });
 
   const sortedPlans = useMemo(() => {
-    const source =
-      !plans || !Array.isArray(plans) || plans.length === 0
-        ? FALLBACK_PLANS
-        : plans.map((p) => ({ ...p, display_order: Number(p.display_order || 0) }));
+    const source = normalizePlanSet(plans);
     return [...source].sort((a, b) => a.display_order - b.display_order);
   }, [plans]);
 
@@ -173,8 +192,11 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
           'Hedefimiz, danışmanlık deneyimini şeffaf fiyatlandırma ile sunmak. Ücretsiz ve abonelik planları ile premium özelliklere erişim sağlar.',
         footerInfo:
           'İptal etmek, üye olmaktan her zaman daha kolaydır. KVKK ve iade politikamızla güvenle başlayın.',
-        transparencyTitle: 'Şeffaflık',
-        transparencySubtitle: 'Ödeme ve iptal kuralları açıkça görünür.',
+        transparencyTitle: 'Şeffaf Fiyatlandırma',
+        transparencySubtitle: 'Şeffaflık ve iptal koşulları net biçimde belirtilmiştir.',
+        policyTitle: 'Şeffaflık',
+        policyBody:
+          'Şeffaf fiyat, saklı koşul yok. İptal etmek, üye olmaktan her zaman daha kolaydır.',
         cancel: 'İptal Etmek Üye Olmaktan Kolaydır',
         cancellationPolicy: 'İptal Politikası',
         kvkk: 'KVKK',
@@ -193,9 +215,12 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         subtitle: 'Clear comparison for voice vs video consultations',
         lead: 'Transparent pricing for every stage. Start free, then upgrade when you need premium consultation features.',
         footerInfo:
-          'You can cancel any time; cancellation is intentionally easy. Continue with full policy transparency.',
-        transparencyTitle: 'Transparency',
-        transparencySubtitle: 'Payment and cancellation terms are visible.',
+          'You can cancel anytime — cancellation is intentionally simple and clear.',
+        transparencyTitle: 'Transparent Pricing',
+        transparencySubtitle: 'Pricing and cancellation terms are clearly published.',
+        policyTitle: 'Transparency',
+        policyBody:
+          'Clear pricing. No hidden conditions. Cancellation is easy and refund conditions are explained.',
         cancel: 'Cancel Is Easier Than Joining',
         cancellationPolicy: 'Cancellation Policy',
         kvkk: 'Privacy',
@@ -510,9 +535,11 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
               <h4 className="font-serif text-xl text-[var(--gm-gold)]">
                 {copy.transparencyTitle}
               </h4>
-              <p className="mt-2 text-sm text-[var(--gm-text-dim)] max-w-2xl">{copy.transparencySubtitle}</p>
+              <p className="mt-2 text-sm text-[var(--gm-text-dim)] max-w-2xl">
+                {copy.policyBody || copy.transparencySubtitle}
+              </p>
             </div>
-            <Link href={localizePath(locale, '/support')} className="btn-outline-premium">
+            <Link href={localizePath(locale, '/terms')} className="btn-outline-premium">
               <CreditCard size={16} />
               <span>{locale === 'tr' ? 'Şeffaf Kural Kitabı' : 'See policy details'}</span>
             </Link>
@@ -521,10 +548,10 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
             <a href={localizePath(locale, '/terms')} className="hover:text-[var(--gm-gold)] transition-colors">
               {copy.cancellationPolicy}
             </a>
-            <a href={localizePath(locale, '/privacy-policy')} className="hover:text-[var(--gm-gold)] transition-colors">
+            <a href={localizePath(locale, '/kvkk')} className="hover:text-[var(--gm-gold)] transition-colors">
               {copy.kvkk}
             </a>
-            <a href={localizePath(locale, '/faqs')} className="hover:text-[var(--gm-gold)] transition-colors">
+            <a href={localizePath(locale, '/legal-notice')} className="hover:text-[var(--gm-gold)] transition-colors">
               {copy.returnPolicy}
             </a>
           </div>

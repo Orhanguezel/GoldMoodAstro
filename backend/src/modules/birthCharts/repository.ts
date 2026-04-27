@@ -22,6 +22,30 @@ export async function getBirthChart(userId: string, id: string) {
   return row ?? null;
 }
 
+/** FAZ 8.5 — input → astrology engine input (IANA tz + tob_known fallback). */
+function toAstrologyInput(input: CreateBirthChartInput) {
+  const tobKnown = input.tob_known !== false;
+  const rawTob = tobKnown && input.tob ? input.tob : '12:00:00';
+  const time = rawTob.length === 5 ? `${rawTob}:00` : rawTob;
+  return {
+    date: input.dob,
+    time,
+    tobKnown,
+    latitude: input.pob_lat,
+    longitude: input.pob_lng,
+    tzIana: input.tz_iana,
+    timezoneOffsetMinutes: input.tz_offset ?? 0,
+    houseSystem: 'equal' as const,
+  };
+}
+
+/** Saat bilinmiyorsa DB'ye 12:00:00 yazılır; chart_data.input.tobKnown=false flag taşır. */
+function tobForDb(input: CreateBirthChartInput): string {
+  const tobKnown = input.tob_known !== false;
+  if (!tobKnown || !input.tob) return '12:00:00';
+  return input.tob.length === 5 ? `${input.tob}:00` : input.tob;
+}
+
 export async function createBirthChart(userId: string, input: CreateBirthChartInput) {
   const rows = await listBirthCharts(userId);
   if (rows.length >= 5) {
@@ -30,14 +54,7 @@ export async function createBirthChart(userId: string, input: CreateBirthChartIn
     throw error;
   }
 
-  const chart = await computeNatalChart({
-    date: input.dob,
-    time: input.tob.length === 5 ? `${input.tob}:00` : input.tob,
-    latitude: input.pob_lat,
-    longitude: input.pob_lng,
-    timezoneOffsetMinutes: input.tz_offset,
-    houseSystem: 'equal',
-  });
+  const chart = await computeNatalChart(toAstrologyInput(input));
 
   const id = randomUUID();
   await db.insert(birthCharts).values({
@@ -45,11 +62,11 @@ export async function createBirthChart(userId: string, input: CreateBirthChartIn
     user_id: userId,
     name: input.name,
     dob: input.dob as never,
-    tob: input.tob as never,
+    tob: tobForDb(input) as never,
     pob_lat: String(input.pob_lat),
     pob_lng: String(input.pob_lng),
     pob_label: input.pob_label,
-    tz_offset: input.tz_offset,
+    tz_offset: input.tz_offset ?? 0,
     chart_data: chart,
   });
 
@@ -57,24 +74,17 @@ export async function createBirthChart(userId: string, input: CreateBirthChartIn
 }
 
 export async function previewBirthChart(input: CreateBirthChartInput) {
-  const chart = await computeNatalChart({
-    date: input.dob,
-    time: input.tob.length === 5 ? `${input.tob}:00` : input.tob,
-    latitude: input.pob_lat,
-    longitude: input.pob_lng,
-    timezoneOffsetMinutes: input.tz_offset,
-    houseSystem: 'equal',
-  });
+  const chart = await computeNatalChart(toAstrologyInput(input));
 
   return {
     id: 'preview',
     name: input.name,
     dob: input.dob,
-    tob: input.tob,
+    tob: tobForDb(input),
     pob_lat: String(input.pob_lat),
     pob_lng: String(input.pob_lng),
     pob_label: input.pob_label,
-    tz_offset: input.tz_offset,
+    tz_offset: input.tz_offset ?? 0,
     chart_data: chart,
   };
 }

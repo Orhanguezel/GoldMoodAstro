@@ -11,16 +11,9 @@ import { isValidUiText, localizePath } from '@/integrations/shared';
 
 const SUMMARY_LEN = 320;
 
-const STAT_FALLBACKS: Record<string, { s1: string; l1: string; s2: string; l2: string; s3: string; l3: string }> = {
-  de: { s1: '50+', l1: 'Experten', s2: '6', l2: 'Kategorien', s3: '∞', l3: 'Individuelle Sitzungen' },
-  en: { s1: '50+', l1: 'Experts', s2: '6', l2: 'Categories', s3: '∞', l3: 'Individual Sessions' },
-  tr: { s1: '50+', l1: 'Uzman Danışman', s2: '6', l2: 'Uzmanlık Alanı', s3: '∞', l3: 'Bireysel Seans' },
-};
-
 const AboutSection: React.FC<{ locale?: string }> = ({ locale: explicitLocale }) => {
   const locale = useLocaleShort(explicitLocale);
   const { ui } = useUiSection('ui_about', locale as any);
-  const sf = STAT_FALLBACKS[locale || 'tr'] || STAT_FALLBACKS.de;
 
   const { data, isLoading } = useListCustomPagesPublicQuery({
     module_key: 'about', locale, limit: 10, sort: 'created_at', orderDir: 'asc',

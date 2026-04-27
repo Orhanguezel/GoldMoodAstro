@@ -1,4 +1,5 @@
 import SwissEph from 'swisseph-wasm';
+import { DateTime } from 'luxon';
 import type {
   AspectType,
   BirthChartInput,
@@ -79,10 +80,60 @@ function signFor(longitude: number) {
   };
 }
 
+/**
+ * Doğum tarihi/saati + zaman dilimi → UTC Julian Day için (year, month, day, hour decimal).
+ * Öncelik:
+ *   1. tzIana (IANA string, DST-safe) — luxon DateTime.fromObject
+ *   2. timezoneOffsetMinutes (legacy, sabit offset)
+ *   3. UTC (offset 0)
+ *
+ * Saat bilinmiyorsa (tobKnown === false) → 12:00 (yerel öğle) kullanılır.
+ * chart_data tarafında bu durum için `tob_unknown` flag çağıran fonksiyonda set edilir.
+ */
 function parseDateTime(input: BirthChartInput) {
   const [year, month, day] = input.date.split('-').map(Number);
-  const [hour = 0, minute = 0, second = 0] = input.time.split(':').map(Number);
-  const utcMinutes = hour * 60 + minute + second / 60 - input.timezoneOffsetMinutes;
+
+  // tobKnown=false ise noon (12:00) fallback. tobKnown undefined ise time'a güven.
+  const tobKnown = input.tobKnown !== false;
+  const timeStr = tobKnown && input.time ? input.time : '12:00:00';
+  const [hour = 0, minute = 0, second = 0] = timeStr.split(':').map(Number);
+
+  // Timezone resolution
+  const iana = input.tzIana?.trim();
+  if (iana) {
+    // luxon: yerel saatten UTC'ye DST-safe çevir
+    const local = DateTime.fromObject(
+      { year, month, day, hour, minute, second },
+      { zone: iana },
+    );
+    if (!local.isValid) {
+      throw new Error(`invalid_iana_timezone: ${iana} (${local.invalidReason})`);
+    }
+    const utc = local.toUTC();
+    return {
+      year: utc.year,
+      month: utc.month,
+      day: utc.day,
+      hourDecimal: utc.hour + utc.minute / 60 + utc.second / 3600,
+    };
+  }
+
+  // Legacy: offset minutes
+  const offsetMin = input.timezoneOffsetMinutes ?? 0;
+  const utcMinutes = hour * 60 + minute + second / 60 - offsetMin;
+  // Güne taşma kontrolü (basit — UTC'de farklı bir gün olabilir)
+  const totalDayMinutes = utcMinutes;
+  if (totalDayMinutes < 0 || totalDayMinutes >= 24 * 60) {
+    // Tarihi günlük sapma ile düzelt
+    const adjustedDate = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+    adjustedDate.setUTCMinutes(adjustedDate.getUTCMinutes() - offsetMin);
+    return {
+      year: adjustedDate.getUTCFullYear(),
+      month: adjustedDate.getUTCMonth() + 1,
+      day: adjustedDate.getUTCDate(),
+      hourDecimal: adjustedDate.getUTCHours() + adjustedDate.getUTCMinutes() / 60 + adjustedDate.getUTCSeconds() / 3600,
+    };
+  }
   return { year, month, day, hourDecimal: utcMinutes / 60 };
 }
 

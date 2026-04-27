@@ -58,12 +58,17 @@ export type ChartAspect = {
 };
 
 export type BirthChartInput = {
-  date: string;
-  time: string;
+  date: string;                       // 'YYYY-MM-DD'
+  time?: string;                      // 'HH:MM[:SS]' — opsiyonel; bilinmiyorsa null/undefined
+  tobKnown?: boolean;                 // false → noon (12:00) fallback + chart_data.tob_unknown=true
   latitude: number;
   longitude: number;
-  timezoneOffsetMinutes: number;
-  houseSystem?: 'equal';
+  /** Tercih edilen: IANA timezone string (DST-safe). Örn: 'Europe/Istanbul' */
+  tzIana?: string;
+  /** Legacy fallback: sabit dakika offset (DST yok). tzIana varsa görmezden gelinir. */
+  timezoneOffsetMinutes?: number;
+  /** House system seçimi (FAZ 8.5'te placidus/koch eklenebilir). Default: equal */
+  houseSystem?: 'equal' | 'placidus' | 'koch' | 'whole_sign' | 'campanus' | 'porphyry';
 };
 
 export type NatalChart = {

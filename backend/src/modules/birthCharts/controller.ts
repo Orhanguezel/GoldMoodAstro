@@ -16,6 +16,8 @@ function userIdFromRequest(req: Parameters<RouteHandler>[0]) {
 }
 
 function statusFromError(error: unknown) {
+  // Zod validation hataları → 400
+  if (error instanceof Error && error.name === 'ZodError') return 400;
   return Number((error as { statusCode?: number })?.statusCode ?? 500);
 }
 
