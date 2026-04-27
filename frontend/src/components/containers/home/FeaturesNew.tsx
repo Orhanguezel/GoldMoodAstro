@@ -90,24 +90,24 @@ export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
             </div>
             <div className="flex justify-center md:justify-end">
               <svg viewBox="0 0 300 300" fill="none" className="w-full max-w-[400px]">
-                <circle cx="150" cy="150" r="130" stroke="#C9A961" strokeWidth="1"/>
-                <circle cx="150" cy="150" r="100" stroke="#C9A961" strokeWidth="0.5" opacity="0.6"/>
-                <circle cx="150" cy="150" r="60" stroke="#C9A961" strokeWidth="0.5" opacity="0.4"/>
-                <line x1="20" y1="150" x2="280" y2="150" stroke="#C9A961" strokeWidth="0.5" opacity="0.5"/>
-                <line x1="150" y1="20" x2="150" y2="280" stroke="#C9A961" strokeWidth="0.5" opacity="0.5"/>
-                <line x1="62" y1="62" x2="238" y2="238" stroke="#C9A961" strokeWidth="0.5" opacity="0.3"/>
-                <line x1="238" y1="62" x2="62" y2="238" stroke="#C9A961" strokeWidth="0.5" opacity="0.3"/>
-                <g stroke="#A8884A" strokeWidth="1">
+                <circle cx="150" cy="150" r="130" stroke="var(--gm-gold)" strokeWidth="1"/>
+                <circle cx="150" cy="150" r="100" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.6"/>
+                <circle cx="150" cy="150" r="60" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.4"/>
+                <line x1="20" y1="150" x2="280" y2="150" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.5"/>
+                <line x1="150" y1="20" x2="150" y2="280" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.5"/>
+                <line x1="62" y1="62" x2="238" y2="238" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.3"/>
+                <line x1="238" y1="62" x2="62" y2="238" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.3"/>
+                <g stroke="var(--gm-gold-deep)" strokeWidth="1">
                   <line x1="150" y1="20" x2="150" y2="35"/>
                   <line x1="150" y1="265" x2="150" y2="280"/>
                   <line x1="20" y1="150" x2="35" y2="150"/>
                   <line x1="265" y1="150" x2="280" y2="150"/>
                 </g>
-                <circle cx="220" cy="80" r="5" fill="#C9A961"/>
-                <circle cx="80" cy="180" r="4" fill="#A8884A"/>
-                <circle cx="200" cy="220" r="6" fill="#C9A961"/>
-                <circle cx="100" cy="100" r="3" fill="#C9A961"/>
-                <text x="150" y="155" textAnchor="middle" fontFamily="Cinzel" fontSize="14" fill="#A8884A" letterSpacing="2">☿</text>
+                <circle cx="220" cy="80" r="5" fill="var(--gm-gold)"/>
+                <circle cx="80" cy="180" r="4" fill="var(--gm-gold-deep)"/>
+                <circle cx="200" cy="220" r="6" fill="var(--gm-gold)"/>
+                <circle cx="100" cy="100" r="3" fill="var(--gm-gold)"/>
+                <text x="150" y="155" textAnchor="middle" fontFamily="Cinzel" fontSize="14" fill="var(--gm-gold-deep)" letterSpacing="2">☿</text>
               </svg>
             </div>
           </div>
@@ -133,10 +133,10 @@ export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
             </div>
             <div className="flex justify-center md:justify-start md:order-1">
               <svg viewBox="0 0 300 300" fill="none" className="w-full max-w-[400px]">
-                <circle cx="150" cy="150" r="50" fill="#C9A961" opacity="0.15"/>
-                <circle cx="150" cy="150" r="35" fill="#C9A961" opacity="0.3"/>
-                <circle cx="150" cy="150" r="20" fill="#C9A961"/>
-                <g stroke="#C9A961" strokeWidth="1.5" strokeLinecap="round">
+                <circle cx="150" cy="150" r="50" fill="var(--gm-gold)" opacity="0.15"/>
+                <circle cx="150" cy="150" r="35" fill="var(--gm-gold)" opacity="0.3"/>
+                <circle cx="150" cy="150" r="20" fill="var(--gm-gold)"/>
+                <g stroke="var(--gm-gold)" strokeWidth="1.5" strokeLinecap="round">
                   <line x1="150" y1="60" x2="150" y2="80"/>
                   <line x1="150" y1="220" x2="150" y2="240"/>
                   <line x1="60" y1="150" x2="80" y2="150"/>
@@ -146,7 +146,7 @@ export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
                   <line x1="214" y1="86" x2="200" y2="100"/>
                   <line x1="100" y1="200" x2="86" y2="214"/>
                 </g>
-                <text x="150" y="156" textAnchor="middle" fontFamily="Cinzel" fontSize="16" fill="#FAF6EF">☉</text>
+                <text x="150" y="156" textAnchor="middle" fontFamily="Cinzel" fontSize="16" fill="var(--color-text-on-dark)">☉</text>
               </svg>
             </div>
           </div>
@@ -172,15 +172,15 @@ export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
             </div>
             <div className="flex justify-center md:justify-end">
               <svg viewBox="0 0 300 300" fill="none" className="w-full max-w-[400px]">
-                <circle cx="120" cy="150" r="70" stroke="#C9A961" strokeWidth="1"/>
-                <circle cx="180" cy="150" r="70" stroke="#A8884A" strokeWidth="1"/>
-                <circle cx="120" cy="150" r="50" stroke="#C9A961" strokeWidth="0.5" opacity="0.4"/>
-                <circle cx="180" cy="150" r="50" stroke="#A8884A" strokeWidth="0.5" opacity="0.4"/>
-                <circle cx="150" cy="150" r="6" fill="#C9A961"/>
-                <circle cx="120" cy="80" r="4" fill="#C9A961"/>
-                <circle cx="180" cy="220" r="4" fill="#A8884A"/>
-                <circle cx="60" cy="150" r="3" fill="#C9A961" opacity="0.7"/>
-                <circle cx="240" cy="150" r="3" fill="#A8884A" opacity="0.7"/>
+                <circle cx="120" cy="150" r="70" stroke="var(--gm-gold)" strokeWidth="1"/>
+                <circle cx="180" cy="150" r="70" stroke="var(--gm-gold-deep)" strokeWidth="1"/>
+                <circle cx="120" cy="150" r="50" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.4"/>
+                <circle cx="180" cy="150" r="50" stroke="var(--gm-gold-deep)" strokeWidth="0.5" opacity="0.4"/>
+                <circle cx="150" cy="150" r="6" fill="var(--gm-gold)"/>
+                <circle cx="120" cy="80" r="4" fill="var(--gm-gold)"/>
+                <circle cx="180" cy="220" r="4" fill="var(--gm-gold-deep)"/>
+                <circle cx="60" cy="150" r="3" fill="var(--gm-gold)" opacity="0.7"/>
+                <circle cx="240" cy="150" r="3" fill="var(--gm-gold-deep)" opacity="0.7"/>
               </svg>
             </div>
           </div>

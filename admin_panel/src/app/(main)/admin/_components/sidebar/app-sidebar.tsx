@@ -94,28 +94,28 @@ export function AppSidebar({
       ];
 
   return (
-    <Sidebar {...props} variant={variant} collapsible={collapsible} className="bg-[#1A1715] border-r border-[#C9A961]/10">
+    <Sidebar {...props} variant={variant} collapsible={collapsible} className="bg-sidebar border-r border-sidebar-border">
       <SidebarHeader className="p-0">
-        <Link 
-          prefetch={false} 
-          href="/admin/dashboard" 
-          className="flex items-center gap-4 px-8 py-10 border-b border-[#C9A961]/5 hover:bg-[#C9A961]/5 transition-all group"
+        <Link
+          prefetch={false}
+          href="/admin/dashboard"
+          className="flex items-center gap-4 px-7 py-8 border-b border-sidebar-border/70 hover:bg-brand-gold-soft transition-colors group"
         >
-          <div className="flex aspect-square size-10 items-center justify-center rounded-2xl bg-[#C9A961] text-[#1A1715] shadow-[0_0_20px_rgba(201,169,97,0.3)] group-hover:scale-105 transition-transform">
-            <Sparkles className="size-6" />
+          <div className="flex aspect-square size-10 items-center justify-center rounded-2xl bg-brand-gold text-brand-ink shadow-[0_8px_24px_-8px_rgba(201,169,97,0.45)] ring-1 ring-brand-gold/30 group-hover:scale-105 transition-transform">
+            <Sparkles className="size-5" />
           </div>
           <div className="flex flex-col gap-0.5 leading-none">
-            <span className="font-serif font-bold text-xl tracking-tight text-foreground">GOLDMOOD</span>
-            <span className="text-[9px] font-bold tracking-[0.3em] text-[#C9A961] uppercase opacity-70">Astro Admin</span>
+            <span className="font-serif font-bold text-xl tracking-tight text-sidebar-foreground">GOLDMOOD</span>
+            <span className="text-[9px] font-bold tracking-[0.3em] text-brand-gold uppercase opacity-80">Astro Admin</span>
           </div>
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="px-4 py-8">
+      <SidebarContent className="px-3 py-6">
         <NavMain items={groupsForMe} showQuickCreate={false} />
       </SidebarContent>
 
-      <SidebarFooter className="p-6 border-t border-[#C9A961]/5">
+      <SidebarFooter className="p-5 border-t border-sidebar-border/70">
         <NavUser user={{ name: currentUser.name, email: currentUser.email, avatar: currentUser.avatar }} />
       </SidebarFooter>
     </Sidebar>

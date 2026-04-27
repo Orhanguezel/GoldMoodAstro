@@ -24,6 +24,7 @@ import {
   Receipt,
   Send,
   Settings,
+  Trash2,
   Star,
   Users,
   type LucideIcon,
@@ -78,7 +79,8 @@ export type AdminNavItemKey =
   | 'payment_settings'
   | 'announcements'
   | 'subscriptions'
-  | 'subscription_plans';
+  | 'subscription_plans'
+  | 'cache';
 
 export type AdminNavGroupKey = 'general' | 'content' | 'marketing' | 'communication' | 'system';
 
@@ -126,6 +128,7 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
     key: 'system',
     items: [
       { key: 'site_settings', url: '/admin/site-settings', icon: Settings },
+      { key: 'cache', url: '/admin/cache', icon: Trash2 },
       { key: 'availability', url: '/admin/availability', icon: Clock },
       { key: 'wallet', url: '/admin/wallet', icon: Receipt },
       { key: 'payment_settings', url: '/admin/payment-settings', icon: CreditCard },
@@ -165,6 +168,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   announcements: 'Announcements',
   subscriptions: 'Subscriptions',
   subscription_plans: 'Subscription Plans',
+  cache: 'Cache Yönetimi',
 };
 
 export function buildAdminSidebarItems(

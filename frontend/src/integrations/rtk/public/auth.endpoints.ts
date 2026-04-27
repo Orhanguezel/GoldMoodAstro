@@ -107,6 +107,24 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
 
+    /** POST /auth/social-login (Google ID token VEYA Facebook access_token) */
+    socialLogin: b.mutation<
+      TokenResp & { user?: any },
+      {
+        type: 'google' | 'facebook';
+        access_token?: string;
+        id_token?: string;
+        email?: string;
+      }
+    >({
+      query: (body): FetchArgs => ({
+        url: `${BASE}/social-login`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Auth', 'User'],
+    }),
+
     /** PUT /auth/user  (şu an sadece email + password) */
     updateUser: b.mutation<UserResp, UpdateUserBody>({
       query: (body): FetchArgs => ({
@@ -167,6 +185,7 @@ export const {
   useLogoutMutation,
   useSignInWithGoogleMutation,
   useGoogleStartMutation,
+  useSocialLoginMutation,
   useUpdateUserMutation,
   useRequestPasswordResetMutation,
   useConfirmPasswordResetMutation,

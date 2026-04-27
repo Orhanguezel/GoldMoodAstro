@@ -42,6 +42,8 @@
     "./modules/health/*": "./modules/health/*.ts",
     "./modules/kvkk": "./modules/kvkk/index.ts",
     "./modules/kvkk/*": "./modules/kvkk/*.ts",
+    "./modules/llm": "./modules/llm/index.ts",
+    "./modules/llm/*": "./modules/llm/*.ts",
     "./modules/mail": "./modules/mail/index.ts",
     "./modules/mail/*": "./modules/mail/*.ts",
     "./modules/notifications": "./modules/notifications/index.ts",

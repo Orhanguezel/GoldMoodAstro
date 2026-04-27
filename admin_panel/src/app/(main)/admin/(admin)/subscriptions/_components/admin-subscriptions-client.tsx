@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
+import type { TranslateFn } from '@/i18n';
 import {
   useListSubscriptionsAdminQuery,
   useRefundSubscriptionAdminMutation,
@@ -48,7 +50,12 @@ function resolveUser(item: { user_full_name: string | null; user_email: string |
   return item.user_full_name || item.user_email || item.user_id;
 }
 
+function statusLabel(t: TranslateFn, status: StatusFilter) {
+  return status === 'all' ? t('statuses.all') : t(`statuses.${status}` as string);
+}
+
 export default function AdminSubscriptionsClient() {
+  const t = useAdminT('admin.subscriptions');
   const [status, setStatus] = React.useState<StatusFilter>('all');
   const [searchInput, setSearchInput] = React.useState('');
   const [search, setSearch] = React.useState('');
@@ -70,13 +77,13 @@ export default function AdminSubscriptionsClient() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   async function doRefund(id: string) {
-    const reason = window.prompt('Refund reason');
+    const reason = window.prompt(t('actions.refundReasonPrompt'));
     if (reason === null) return;
     try {
       await refund({ id, body: { reason: reason.trim() } }).unwrap();
-      toast.success('Subscription refunded/closed.');
+      toast.success(t('toasts.refundSuccess'));
     } catch {
-      toast.error('Could not refund subscription.');
+      toast.error(t('toasts.refundFailed'));
     }
   }
 
@@ -89,26 +96,26 @@ export default function AdminSubscriptionsClient() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg font-semibold">Subscriptions</h1>
-          <p className="text-sm text-muted-foreground">List and refund active subscriptions.</p>
+          <h1 className="text-lg font-semibold">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('description')}</p>
         </div>
         <Button type="button" variant="outline" size="sm" onClick={() => list.refetch()} disabled={list.isFetching}>
           <RefreshCcw className={`mr-2 size-4 ${list.isFetching ? 'animate-spin' : ''}`} />
-          Refresh
+          {t('actions.refresh')}
         </Button>
       </div>
 
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center justify-between">
-            <span>Subscription List</span>
+            <span>{t('listTitle')}</span>
             <Badge variant="outline">{total}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 md:grid-cols-3">
             <div className="space-y-2">
-              <Label>Durum</Label>
+              <Label>{t('filters.status')}</Label>
               <Select
                 value={status}
                 onValueChange={(value) => {
@@ -122,24 +129,24 @@ export default function AdminSubscriptionsClient() {
                 <SelectContent>
                   {STATUSES.map((s) => (
                     <SelectItem key={s} value={s}>
-                      {s}
+                      {statusLabel(t, s)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label>Search</Label>
+              <Label>{t('filters.search')}</Label>
               <div className="flex gap-2">
                 <Input
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && doSearch()}
-                  placeholder="Email, plan code, status, subscription id"
+                  placeholder={t('filters.searchPlaceholder')}
                 />
                 <Button variant="outline" onClick={doSearch}>
                   <Search className="mr-2 size-4" />
-                  Search
+                  {t('actions.search')}
                 </Button>
               </div>
             </div>
@@ -149,21 +156,21 @@ export default function AdminSubscriptionsClient() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Provider</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Started</TableHead>
-                  <TableHead>Ends</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('table.user')}</TableHead>
+                  <TableHead>{t('table.plan')}</TableHead>
+                  <TableHead>{t('table.status')}</TableHead>
+                  <TableHead>{t('table.provider')}</TableHead>
+                  <TableHead>{t('table.price')}</TableHead>
+                  <TableHead>{t('table.started')}</TableHead>
+                  <TableHead>{t('table.ends')}</TableHead>
+                  <TableHead className="text-right">{t('table.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {!list.isLoading && rows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                      No subscriptions found.
+                      {t('table.noRecords')}
                     </TableCell>
                   </TableRow>
                 ) : null}
@@ -176,7 +183,7 @@ export default function AdminSubscriptionsClient() {
                     </TableCell>
                     <TableCell>{resolvePlanName(item)}</TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant(item.status)}>{item.status}</Badge>
+                      <Badge variant={statusVariant(item.status)}>{statusLabel(t, item.status)}</Badge>
                     </TableCell>
                     <TableCell className="font-mono text-sm">{item.provider}</TableCell>
                     <TableCell>{moneyFromMinor(item.price_minor, item.currency)}</TableCell>
@@ -190,7 +197,7 @@ export default function AdminSubscriptionsClient() {
                         disabled={refundState.isLoading || item.status === 'cancelled'}
                       >
                         <Undo2 className="mr-2 size-4" />
-                        Refund
+                        {t('actions.refund')}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -200,13 +207,15 @@ export default function AdminSubscriptionsClient() {
           </div>
 
           <div className="flex items-center justify-between gap-2">
-            <div className="text-sm text-muted-foreground">Page {page} / {totalPages}</div>
+            <div className="text-sm text-muted-foreground">
+              {t('pagination.page', { page, totalPages })}
+            </div>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" disabled={page <= 1 || list.isLoading} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                Prev
+                {t('pagination.prev')}
               </Button>
               <Button size="sm" variant="outline" disabled={page >= totalPages || list.isLoading} onClick={() => setPage((p) => p + 1)}>
-                Next
+                {t('pagination.next')}
               </Button>
             </div>
           </div>
@@ -215,4 +224,3 @@ export default function AdminSubscriptionsClient() {
     </div>
   );
 }
-

@@ -81,6 +81,14 @@
   --color-logo-bg-dark: var(--logo-bg-dark);
   --color-logo-bg-black: var(--logo-bg-black);
   --color-logo-gold: var(--logo-gold);
+
+  /* GoldMood brand */
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-gold-strong: var(--brand-gold-strong);
+  --color-brand-gold-soft: var(--brand-gold-soft);
+  --color-brand-gold-border: var(--brand-gold-border);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-cream: var(--brand-cream);
 }
 
 /* Default theme styles (used when no data-theme-preset is set or when 'default' is selected).
@@ -111,14 +119,23 @@ These serve as the fallback; there is no separate default.css file. */
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.546 0.245 262.881);
-  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Sidebar — GoldMood luxury cream in light */
+  --sidebar: oklch(0.965 0.012 82);
+  --sidebar-foreground: oklch(0.22 0.012 50);
+  --sidebar-primary: oklch(0.68 0.10 78);
+  --sidebar-primary-foreground: oklch(0.16 0.008 50);
+  --sidebar-accent: oklch(0.93 0.018 80);
+  --sidebar-accent-foreground: oklch(0.22 0.012 50);
+  --sidebar-border: oklch(0.85 0.025 82 / 0.55);
+  --sidebar-ring: oklch(0.68 0.10 78);
+
+  /* GoldMood brand tokens (mode-aware) */
+  --brand-gold: #B89651;
+  --brand-gold-strong: #A8884A;
+  --brand-gold-soft: rgba(184, 150, 81, 0.08);
+  --brand-gold-border: rgba(184, 150, 81, 0.22);
+  --brand-ink: #1A1715;
+  --brand-cream: #FAF6EF;
 
   /* fonts */
   --font-sans: var(--font-inter);
@@ -150,14 +167,21 @@ These serve as the fallback; there is no separate default.css file. */
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.623 0.214 259.815);
-  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.439 0 0);
+  /* Sidebar — GoldMood deep warm ink in dark */
+  --sidebar: oklch(0.16 0.008 50);
+  --sidebar-foreground: oklch(0.95 0.012 78);
+  --sidebar-primary: oklch(0.78 0.10 78);
+  --sidebar-primary-foreground: oklch(0.14 0.008 50);
+  --sidebar-accent: oklch(0.22 0.012 50);
+  --sidebar-accent-foreground: oklch(0.95 0.012 78);
+  --sidebar-border: oklch(0.78 0.10 78 / 0.12);
+  --sidebar-ring: oklch(0.78 0.10 78);
+
+  /* GoldMood brand tokens (dark variants) */
+  --brand-gold: #D4BB7A;
+  --brand-gold-strong: #C9A961;
+  --brand-gold-soft: rgba(212, 187, 122, 0.08);
+  --brand-gold-border: rgba(212, 187, 122, 0.16);
 }
 
 @layer base {

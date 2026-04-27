@@ -9,6 +9,7 @@ import {
   previewBirthChart,
 } from './repository';
 import { createBirthChartSchema, synastrySchema } from './validation';
+import { generateNatalReading } from './readings';
 
 function userIdFromRequest(req: Parameters<RouteHandler>[0]) {
   const user = req.user as { sub?: string; id?: string } | undefined;
@@ -75,6 +76,27 @@ export const birthChartTransitHandler: RouteHandler = async (req, reply) => {
   const transit = await getBirthChartTransit(userId, id);
   if (!transit) return reply.code(404).send({ error: { message: 'birth_chart_not_found' } });
   return { data: transit };
+};
+
+export const birthChartReadingHandler: RouteHandler = async (req, reply) => {
+  const userId = userIdFromRequest(req);
+  if (!userId) return reply.code(401).send({ error: { message: 'no_user' } });
+  const id = String((req.params as { id?: string }).id ?? '');
+  const row = await getBirthChart(userId, id);
+  if (!row) return reply.code(404).send({ error: { message: 'birth_chart_not_found' } });
+
+  try {
+    const result = await generateNatalReading({
+      chart: (row as any).chart_data,
+      name: (row as any).name || 'Yolcu',
+      locale: (req.query as any)?.locale,
+    });
+    return { data: result };
+  } catch (error) {
+    return reply.code(statusFromError(error)).send({
+      error: { message: error instanceof Error ? error.message : 'reading_failed' },
+    });
+  }
 };
 
 export const birthChartSynastryHandler: RouteHandler = async (req, reply) => {

@@ -11,10 +11,10 @@ import { useRouter } from 'next/navigation';
 
 import {
   useSignupMutation,
-  useOauthStartMutation,
 } from '@/integrations/rtk/hooks';
 import { tokenStore } from '@/integrations/rtk/token';
 import { normalizeError } from '@/integrations/shared';
+import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 
 // i18n
 import { useLocaleShort, useUiSection } from '@/i18n';
@@ -35,9 +35,8 @@ const Register: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
 
   const [signup, signupState] = useSignupMutation();
-  const [googleStart, googleState] = useOauthStartMutation();
 
-  const isLoading = signupState.isLoading || googleState.isLoading;
+  const isLoading = signupState.isLoading;
 
   const apiErrorMessage = useMemo(() => {
     if (!signupState.error) return null;
@@ -85,24 +84,6 @@ const Register: React.FC = () => {
       );
     } catch {
       // Error handled by signupState
-    }
-  };
-
-  const handleGoogleRegister = async () => {
-    if (typeof window === 'undefined') return;
-    setFormError(null);
-    try {
-      const currentUrl = window.location.origin || '';
-      const resp = await googleStart({ redirectTo: currentUrl }).unwrap();
-      if (resp.url) {
-        window.location.href = resp.url;
-      }
-    } catch (err) {
-      const n = normalizeError(err as any);
-      setFormError(
-        n.message ||
-        ui('register_error_google_generic', 'Google ile kayıt başlatılırken bir hata oluştu.')
-      );
     }
   };
 
@@ -254,23 +235,7 @@ const Register: React.FC = () => {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="w-full border border-border-light bg-bg-card text-text-primary font-bold py-3 px-4 rounded-sm hover:bg-bg-card hover:border-border-medium transition-all flex justify-center items-center gap-3 group"
-            onClick={handleGoogleRegister}
-            disabled={isLoading}
-          >
-            {googleState.isLoading ? (
-              <span className="text-sm">{ui('register_google_loading', 'Google ile yönlendiriliyor...')}</span>
-            ) : (
-              <>
-                 <svg className="w-5 h-5 text-text-secondary group-hover:text-brand-primary transition-colors" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/></svg>
-                <span className="text-sm">
-                  {ui('register_google_button', 'Google ile devam et')}
-                </span>
-              </>
-            )}
-          </button>
+          <SocialLoginButtons layout="row" />
         </div>
       </div>
     </section>

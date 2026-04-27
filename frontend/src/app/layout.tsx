@@ -4,11 +4,23 @@ import type { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import { fetchSetting } from '@/i18n/server';
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: '#C9A961',
-};
+export async function generateViewport(): Promise<Viewport> {
+  let themeColor = '#C9A961';
+  try {
+    const row = await fetchSetting('design_tokens', '*', { revalidate: 300 });
+    const raw = row?.value;
+    const obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    themeColor =
+      obj?.branding?.theme_color || obj?.colors?.brand_primary || themeColor;
+  } catch {
+    // fallback to brand default
+  }
+  return {
+    width: 'device-width',
+    initialScale: 1,
+    themeColor,
+  };
+}
 
 function extractUrl(val: unknown): string {
   if (!val) return '';

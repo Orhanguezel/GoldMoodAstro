@@ -1481,3 +1481,508 @@ FAZ 11 (Video)       → en son, FAZ 7+10 stable olunca
 
 - [x] `/profile/privacy` sayfası — "Verilerimi indir" + "Hesabı sil" akışı
 - [x] Mobile "Tehlikeli Bölge" bölümü
+
+---
+
+## FAZ 19 — Hibrit İçerik Motoru (LLM + Astrolog KB) 🆕
+
+> Stratejik temel: Faladdin "kopya yorum" ve Co-Star "halüsinasyon" tuzaklarına karşı
+> **astrolog onaylı altın metinler + LLM kişiselleştirme** kombinasyonu (F4 differentiator).
+> 5 sonraki özellik (FAZ 21-26) bu altyapı üzerinde çalışır.
+
+### T19-1 — Faz 1: DB Schema (Claude Code) ✅
+
+- [x] `096_llm_prompts_schema.sql` — admin'den düzenlenebilir prompt template'leri
+  (key, locale, provider, model, temperature, max_tokens, system_prompt,
+  user_template, safety_check, similarity_threshold, max_attempts)
+- [x] `097_astrology_kb_schema.sql` — astrolog onaylı altın metinler
+  (kind: planet_sign | planet_house | sign_house | aspect | sign | house | planet
+  | transit | synastry | misc; key1/key2/key3, locale, title, content,
+  short_summary, tone, embedding, source, author, reviewed_by/at)
+- [x] Seed: 3 prompt template (natal_overview, daily_reading, natal_planet_sign)
+- [x] Seed: 18 KB satırı (12 Güneş+burç + 5 açı + 1 ev — astrolog tamamlayacak)
+
+### T19-2 — Faz 2: Backend Service (Claude Code) ✅
+
+- [x] `packages/shared-backend/modules/llm/` paylaşılan modül:
+  - [x] `provider.ts` — Anthropic + OpenAI dispatch (`chat({provider, model, system, user})`)
+  - [x] `prompts.ts` — Mustache renderer + `generate({promptKey, vars, recentTexts})`
+        orchestrator: DB'den prompt yükle → render → LLM → safety check → similarity reroll
+  - [x] `kb.ts` — `fetchKbForChart({chart, locale})` chart'tan ilgili KB'leri çeker,
+        `formatKbExcerpts()` LLM prompt için formatlar
+  - [x] `schema.ts` — Drizzle table objects (llm_prompts + astrology_kb)
+- [x] `backend/src/modules/birthCharts/readings.ts` — `generateNatalReading()`
+- [x] Endpoint: `POST /api/v1/birth-charts/:id/reading` (auth gerektirir)
+- [x] package.json export: `@goldmood/shared-backend/modules/llm`
+
+### T19-3 — Faz 3: Admin Panel (Claude Code + Antigravity)
+
+- [ ] `/admin/llm-prompts` — list + edit:
+  - System prompt + user template büyük textarea (Mustache placeholder helper)
+  - Provider/model dropdown, temperature slider, max_tokens
+  - Safety check toggle, similarity threshold, max_attempts
+  - "Test Et" butonu (örnek vars ile prompt çalıştır, sonucu göster)
+  - History/audit log (kim ne zaman düzenledi)
+- [ ] `/admin/astrology-kb` — list + filter (kind, key1, locale) + edit:
+  - Kombinasyon seçici (kind → key1 dropdown → key2 dropdown context-aware)
+  - Markdown editor (content alanı)
+  - Tone dropdown (warm/professional/poetic/direct)
+  - Source/author atıf alanları
+  - Bulk import (CSV/JSON upload) sayfası
+- [ ] Backend admin routes: `*/admin/llm_prompts`, `*/admin/astrology_kb` CRUD
+- [ ] RBAC: sadece admin role düzenleyebilir; reviewer role onaylayabilir
+
+### T19-4 — Faz 4: İçerik Import (opsiyonel, sonra)
+
+- [ ] Admin "Import Wizard" sayfası
+- [ ] Wikipedia TR astroloji makalelerinden seed batch (CC BY-SA + atıf)
+- [ ] Public domain klasik (Alan Leo 1900s) modernizasyon yardımcısı
+- [ ] DeepL / Anthropic translation pipeline (EN → TR)
+- [ ] Astrolog onay kuyruğu (status: pending → approved/rejected)
+
+### T19-5 — Embedding-tabanlı anti-copy-paste (V1.1)
+
+- [ ] OpenAI text-embedding-3-small ile embedding hesapla
+- [ ] `astrology_kb.embedding` + `daily_readings.embedding` doldur
+- [ ] N-gram jaccard yerine cosine sim (mevcut yer tutucu placeholder)
+- [ ] Per-user son 30 yorum window, threshold konfigüre (`llm_prompts.similarity_threshold`)
+
+**Acceptance:** Kullanıcı `/birth-chart` aç → harita kaydet → "Yorumumu Üret" → admin'in
+düzenlediği prompt çalıştırılır → KB'den ilgili 10-15 metin çekilir → LLM kişiselleştirir →
+sayfada gösterilir. Aynı kullanıcı 2. kez tetiklerse benzer ifadeler tekrar etmez.
+
+---
+
+## FAZ 20 — Burçlar (Zodiac Sign Hub) 🆕
+
+> **Stratejik konum:** Burç giriş kapımız, harita asıl ürün. SEO ile yüksek
+> hacimli burç aramalarından gelen kullanıcıyı doğum haritası premium ürününe
+> taşırız. Burcu inkar etmeyiz, derinleştiririz: "Sadece Güneş burcun değilsin,
+> içinde 10 gezegen var" mesajı her sayfada.
+>
+> **Hibrit motorun ilk büyük müşterisi** — `astrology_kb` `kind=sign` ve
+> `kind=sign_section` satırlarını kullanır.
+
+### Marka kuralları (NE YAPMA listesi — kalite filtresi)
+
+> Bu kurallar pazarlama brief'ine de yazılır; içerik üretimi sırasında astrolog
+> ekibi ve LLM prompt template'leri için kırmızı çizgi.
+
+- ❌ Sığ burç memesi ("Boğalar pizza yerken bunu yapar 😂")
+- ❌ Komik burç sıralaması ("12 burç kavga ettiğinde…")
+- ❌ Tabloid tıklama tuzağı ("Crush'ın seni gerçekten seviyor mu?")
+- ❌ Stereotipleştirme ("Boğa burcusun, ev hanımı olmak için yaratılmışsın")
+- ❌ Korkutucu içerik ("Akrep burcuyla evlenme, ihanet eder")
+- ❌ Burcu tek doğru cevap olarak sunmak
+
+### URL şeması (tüm burç içerikleri için)
+
+> Slug'lar TR — SEO için kritik. Her sayfada `<link rel="alternate" hreflang="...">`
+> ile EN/DE varyantları (lazy: ay 6+).
+
+```
+/burclar                           — 12 burç hub
+/burclar/koc                       — derin profil (Faz 1)
+/burclar/koc/bugun                 — bugünün yorumu (cron'dan)
+/burclar/koc/haftalik              — haftalık yorum
+/burclar/koc/aylik                 — aylık yorum
+/burclar/koc/ask                   — aşk profili (alt sayfa)
+/burclar/koc/kariyer               — kariyer profili
+/burclar/koc/saglik                — sağlık profili
+/burclar/koc/uyumluluk             — 11 burç ile uyum tabbed
+/burclar/koc-akrep-uyumu           — TEK kombinasyon SEO sayfası (144 toplam)
+/yukselen-burc-hesaplayici         — viral SEO motoru
+/big-three                         — Güneş+Ay+Yükselen profil oluştur
+/burclar/transit/mart-2026         — aylık geçiş raporu
+```
+
+### T20-1 — Backend: KB seed + daily/weekly/monthly cron + endpoints
+
+- [ ] `astrology_kb` `kind=sign` 12 satır — derin profil (400-600 kelime/burç)
+  - Element + modalite + yönetici + karşıt + içsel çatışma + aşk dili + kariyer yolu
+- [ ] `astrology_kb` `kind=sign_section` 60 satır — alt-konu derin yazısı
+  - 12 burç × 5 alt-konu (kişilik / aşk / kariyer / sağlık / uyumluluk)
+- [ ] `daily_horoscopes` tablosu zaten var (`037_daily_horoscopes_schema.sql`)
+  - Genişlet: `period ENUM('daily','weekly','monthly','transit')`
+  - Tekil index: (sign, locale, period, period_start_date)
+- [ ] Cron: `backend/src/cron/horoscope-generator.ts`
+  - Her gece 02:00 → 12 burç × daily TR (locale fallback EN sonra)
+  - Pazartesi 02:00 → 12 burç × weekly
+  - Ayın 1'i 02:00 → 12 burç × monthly
+  - LLM prompt key: `horoscope_daily_general` (free), `horoscope_daily_personal` (premium chart bağlamı)
+- [ ] Endpoint: `GET /api/v1/horoscopes/:sign?period=daily|weekly|monthly&locale=tr`
+- [ ] LLM prompt template'leri (admin panelden düzenlenebilir, FAZ 19 altyapısı):
+  - `horoscope_daily_general` — anonim, free user
+  - `horoscope_daily_personal` — chart_id ile, premium
+
+### T20-2 — Frontend: 12 burç profil sayfası (derin, editorial, SEO)
+
+- [ ] `/tr/burclar` hub — 12 kart grid:
+  - Sembol (Cinzel) + element ikonu + tarih aralığı + 1 cümle özet
+  - Hover'da yönetici gezegen + modalite görünür
+- [ ] `/tr/burclar/[sign]` derin profil:
+  - Hero: büyük sembol + element + tarih + yönetici + modalite + karşıt burç
+  - **"Burcun İçsel Anatomisi"** — derin yazı (400-600 kelime)
+  - **"Aşk Dili"**, **"Kariyer Yolu"**, **"İçsel Çatışma"** alt başlıkları
+  - **"Bugünkü yorumum"** widget — daily_horoscopes API
+  - **CTA blok**: "Sen sadece [Sign] değilsin — Ay'ın hangi burçta? Doğum haritanı ücretsiz çıkar →"
+  - SEO: meta + Schema.org Article + canonical + hreflang
+  - Server-rendered (Next.js generateMetadata + dynamic params)
+- [ ] Alt sayfalar (`/burclar/[sign]/ask`, `/kariyer`, `/saglik`):
+  - `astrology_kb kind=sign_section` çek + LLM ile zenginleştir
+  - Her biri 800-1200 kelime SEO derin yazısı
+
+### T20-3 — Yükselen burç hesaplayıcı (En yüksek ROI sayfa)
+
+> "Yükselen burç hesaplama" araması Türkiye'de aylık ~100K. Hiçbir rakip premium
+> kalitede yapmıyor. **Bu tek sayfa müşteri kazanma motorunun %30'u.**
+
+- [ ] `/tr/yukselen-burc-hesaplayici` sayfa
+  - Form: doğum tarihi + saat + yer (Google Places autocomplete — zaten kurulu)
+  - Submit → Swiss Ephemeris ile yükselen + Güneş + Ay hesapla (auth ZORUNLU DEĞİL)
+  - Sonuç: 3 burç görsel kartı + her biri için 100-150 kelime mini yorum
+  - **Free hook**: "Diğer 7 gezegenin için tam haritan ücretsiz" → kayıt CTA
+- [ ] Endpoint: `POST /api/v1/birth-charts/preview-rising` (auth opsiyonel)
+- [ ] SEO: bu sayfa için canonical + zengin schema (HowTo + FAQ)
+
+### T20-4 — Big 3 Profil + Sosyal Medya Paylaşımı
+
+- [ ] `/tr/big-three` — Güneş + Ay + Yükselen üçlüsü oluşturucu
+  - Form (kayıtlı kullanıcılar için harita kullanır, misafir için hızlı form)
+  - Sonuç: 3 burç sembolü editorial kartta
+- [ ] **Paylaşım görseli** (1080×1350 IG story):
+  - Altın çerçeve, krem zemin, Cinzel başlık
+  - Üç sembol yan yana + her biri için 1 cümle
+  - Alt köşede goldmoodastro.com logo
+  - `ShareBirthChart` bileşeninin Big-3 varyantı (kod paylaşımı)
+- [ ] OG meta + Twitter card (paylaşılan link Goldmood'a geri linklenmeli)
+
+### T20-5 — Aylık geçiş yorumları (Recurring SEO içerik)
+
+- [ ] Cron: ayın 25'inde gelecek ay için 12 burç geçiş yorumu üret
+- [ ] Endpoint: `GET /api/v1/horoscopes/transit?month=2026-05`
+- [ ] Sayfa: `/tr/burclar/transit/[yyyy-mm]` — aylık geçiş raporu
+  - Hero: o ayın major geçişleri özeti (Mars Aslan'a girdi, Yeni Ay Boğa, vb.)
+  - 12 burç için ayrı kart (her birinde 80-120 kelime özet + detay link)
+- [ ] Push notification + email kampanya (premium kullanıcı opt-in)
+
+### T20-6 — Burç uyumu (Compatibility) — VIRAL hook
+
+> Pop kültür özelliği. **Sığ tarafa kaymadan** premium kalitede yap. 144 statik
+> sayfa **yazmıyoruz** (kopya yorum tuzağı). LLM ile dinamik üretim, embedding
+> tabanlı anti-copy-paste.
+
+- [ ] `/tr/burclar/[a]-[b]-uyumu` dinamik route (144 kombinasyon)
+  - Server-side: ilk istekde LLM üret → DB cache (`compatibility_readings` tablosu)
+  - Sonraki istekler cache'den → SEO için hızlı + tutarlı
+- [ ] Cache invalidation: ayda bir LLM rerun (admin tetikler)
+- [ ] **Görsel paylaşım kartı**: "Boğa × Akrep — Tutku ve Dönüşüm" editorial başlık
+- [ ] CTA blok: "Gerçek uyum sinastri raporundan çıkar — sinastri raporu için →"
+  (FAZ 25'e link)
+- [ ] LLM prompt key: `compatibility_signs` (admin'den düzenlenebilir)
+
+### T20-7 — Mobile: Burçlar tab
+
+- [ ] `mobile/app/app/(tabs)/zodiac.tsx` — 12 burç scroll
+- [ ] Yükselen hesaplayıcı mobile-first form
+- [ ] Big 3 paylaşım — native share sheet (IG Stories direkt)
+
+### T20-8 — SEO yapılandırması
+
+- [ ] `frontend/src/app/sitemap.xml` route — burç sayfalarını dahil et
+- [ ] Burç sayfaları için `revalidate: 86400` (günlük ISR)
+- [ ] Internal linking: ana sayfa → burçlar hub; burç sayfası → uyumluluk;
+      uyumluluk → sinastri; her sayfadan harita CTA
+- [ ] Schema.org: Article (profil sayfaları), FAQPage (uyum sayfaları), HowTo
+      (yükselen hesaplayıcı)
+- [ ] OG image her sayfa için (Cloudinary template ya da Next.js OG image generation)
+- [ ] hreflang her burç sayfası için tr/en/de
+
+### T20-9 — Faz 1 / Faz 2 / Faz 3 ayırımı (sıra)
+
+**Faz 1 (MVP, ay 0-3):**
+- [ ] T20-1 backend KB seed + günlük cron + endpoint (~3 gün)
+- [ ] T20-2 12 burç profil sayfası (~4 gün)
+- [ ] T20-3 Yükselen hesaplayıcı (~2 gün — en yüksek SEO ROI'sı)
+- [ ] T20-4 Big 3 + sosyal paylaşım (~2 gün)
+
+**Faz 2 (ay 3-6):**
+- [ ] T20-5 Aylık geçiş yorumları
+- [ ] T20-6 Burç uyumu dinamik üretim
+- [ ] Sembol setleri ve görsel zenginleştirme
+- [ ] Push notification kampanyaları
+
+**Faz 3 (ay 6+):**
+- [ ] Burcunu öğren interaktif quiz
+- [ ] Ünlüler ve burçları (içerik pazarlama)
+- [ ] Burç-bazlı meditasyon / affirmasyon ses içerikleri
+- [ ] App-içi burca göre vurgu rengi (opsiyonel — marka tutarlılığı için tartışılabilir)
+
+**Acceptance (Faz 1):**
+- `/tr/burclar/akrep` → SEO-optimize derin profil + bugünün yorumu + Big-3 CTA
+- `/tr/yukselen-burc-hesaplayici` → form → sonuç → kayıt CTA
+- 12 burç × günlük cron her sabah 02:00 → daily_horoscopes dolar
+- Google'da "akrep burcu özellikleri" araması ilk 3'te (3-6 ayda)
+
+---
+
+## FAZ 21 — Tarot (78 kart, 3 açılım) 🆕
+
+> Hibrit yaklaşım: kart anlamları statik (KB) + kullanıcı haritası ile bağlam (LLM).
+
+### T21-1 — Backend
+
+- [ ] SQL: `180_tarot_schema.sql`
+  - `tarot_cards`: 78 kart (id, slug, name_tr, arcana: major|minor, suit, number,
+    upright_meaning, reversed_meaning, image_url, keywords JSON)
+  - `tarot_readings`: kullanıcı çekimi (id, user_id, spread_type:
+    one_card|three_card_general|three_card_decision|celtic_cross,
+    cards JSON, question, interpretation, embedding, created_at)
+- [ ] Seed: 78 kart (78 görsel + TR anlamlar — astrolog yazacak / Wikipedia + DeepL)
+- [ ] `astrology_kb` `kind=tarot_card` satırları (kart × pozisyon yorumu için)
+- [ ] LLM prompt template: `tarot_reading` (admin panelden düzenlenebilir)
+- [ ] Module: `packages/shared-backend/modules/tarot/`
+  - `POST /tarot/draw` — açılım tipi + soru → kart seç → yorum üret
+  - `GET /tarot/me` — geçmiş çekimler
+
+### T21-2 — Frontend: `/tarot`
+
+- [ ] Açılım seçici → soru girişi (opsiyonel) → karıştırma animasyonu →
+      kullanıcı 1/3/10 kart seçer → kartlar açılır animasyon → yorum
+- [ ] Sosyal paylaşım (görsel: kartlar + kısa özet)
+
+### T21-3 — Mobile
+
+- [ ] Native swipe ile kart seçim, haptic feedback
+
+---
+
+## FAZ 22 — Kahve Falı (3 fotoğraf + Vision API) 🆕
+
+> En zorlayıcı: AI Vision sembol çıkarma. Anthropic Claude veya GPT-4 Vision API.
+
+### T22-1 — Backend
+
+- [ ] SQL: `181_coffee_readings_schema.sql`
+  - `coffee_symbols` sözlüğü (slug, name_tr, meaning, category JSON)
+  - `coffee_readings` (user_id, image_paths JSON, detected_symbols JSON,
+    interpretation, embedding)
+- [ ] Seed: 50+ klasik sembol (kuş, yol, kalp, yüzük, ay, dağ vb.)
+- [ ] Module: `packages/shared-backend/modules/coffee/`
+  - Image upload → storage_assets
+  - `POST /coffee/read` → 3 image_id → Vision API → sembol çıkar →
+    KB'den anlam → harita ile harmanla → yorum üret
+- [ ] LLM prompt: `coffee_interpretation`
+
+### T22-2 — Frontend / Mobile
+
+- [ ] `/kahve-fali` → "Fincanı çevir, 5dk bekle" rehber → kamera 3 foto
+- [ ] Mobile: native camera, otomatik kırp + kontrast
+- [ ] Loading: mistik animasyon (8-15sn Vision API süresi)
+
+---
+
+## FAZ 23 — Rüya Yorumu 🆕
+
+### T23-1 — Backend
+
+- [ ] SQL: `182_dream_interpretations_schema.sql`
+  - `dream_symbols` sözlüğü
+  - `dream_interpretations` (user_id, dream_text, symbols JSON,
+    interpretation, embedding)
+- [ ] Module: `packages/shared-backend/modules/dreams/`
+  - LLM 3 katman: sembol çıkar → KB'den geleneksel anlam → harita (özellikle Ay)
+    + transit ile harmanla → yorum
+- [ ] LLM prompt: `dream_interpretation`
+
+### T23-2 — Frontend / Mobile
+
+- [ ] `/ruya` — açık textarea, kullanıcı rüyasını yazar
+- [ ] Sembol görsel listesi + yorum metni
+- [ ] "Bugün 1 tarot kartı çek, bağlantı görelim" cross-promotion
+
+---
+
+## FAZ 24 — Yıldızname (Ebced) 🆕
+
+> Sıfır LLM maliyet — sayı hesaplama + statik yorum tablosu.
+> + Goldmood farkı: doğum haritası ile birleşik yorum (LLM hibrit).
+
+### T24-1 — Backend
+
+- [ ] SQL: `183_yildizname_schema.sql`
+  - `yildizname_results` (12-32 sonuç metni, kategoriye göre)
+  - `yildizname_readings` (user_id, name, mother_name, birth_date, computed_number,
+    result_text)
+- [ ] Module: `packages/shared-backend/modules/yildizname/`
+  - Ebced hesaplayıcı (utils/ebced.ts) — TR isim → harf değerleri → toplam
+  - `POST /yildizname/read` → ad + anne adı + DOB → sayı → sonuç metni
+- [ ] LLM hibrit: sonuç metni + harita uyumu kısa cümlesi (300 kelime ekle)
+
+### T24-2 — Frontend / Mobile
+
+- [ ] 4 ekran: ad → anne adı → DOB → mistik animasyon → sonuç + paylaşım
+
+---
+
+## FAZ 25 — Sinastri (3 mod) 🆕
+
+### T25-1 — Backend (Yol 2 — Manuel önce)
+
+- [ ] SQL: `184_synastry_schema.sql`
+  - `synastry_reports` (mode: invite|manual|quick, partner_user_id,
+    partner_data JSONB, result, created_at)
+  - Manuel modda partner verisi geçici — rapor üretildikten sonra KVKK için silinebilir
+- [ ] Module: `packages/shared-backend/modules/synastry/`
+  - Aspect compute (10×10 = 100 olası ilişki, orb<8°, en güçlü 10-15)
+  - `astrology_kb` `kind=synastry` (synastri açıları için altın metinler)
+  - `POST /synastry/manual` — kendi chart + partner manuel data → rapor
+  - `POST /synastry/invite` — partner_user_id ile davet
+  - `POST /synastry/quick` — sadece 2 burç → ücretsiz uyum yorumu
+- [ ] LLM prompt: `synastry_report` (5 bölüm: genel uyum / çekim / sınamalar /
+      uzun vade / tavsiye)
+
+### T25-2 — Frontend / Mobile
+
+- [ ] `/sinastri` — mod seçimi → akış
+- [ ] Manuel akışta KVKK uyarı: "Bu bilgi sadece bu rapor için kullanılır, saklanmaz"
+- [ ] Davet modeli: invite link / QR code
+- [ ] Hızlı uyum: 2 burç slider — viral paylaşım kartı
+
+### T25-3 — Pricing
+
+- [ ] Davet → Premium dahil
+- [ ] Manuel → 250 kredi
+- [ ] Hızlı → ücretsiz freemium
+
+---
+
+## FAZ 26 — Sosyal Paylaşım (Cross-cutting) 🆕
+
+> "Co-Star viralliği" — paylaşılabilir görsel = pazarlamasız organik büyüme.
+
+### T26-1 — Doğum Haritası ✅
+
+- [x] `frontend/src/components/common/ShareBirthChart.tsx`
+- [x] html-to-image PNG (1080×1350 IG-friendly)
+- [x] Web Share API (mobil native share sheet — Instagram Stories dahil)
+- [x] Twitter / Facebook / WhatsApp intent URLs
+- [x] Görsel: Güneş + Ay + Yükselen üçlüsü + branding
+- [x] CSP `data:` + `blob:` connect-src (html-to-image fix)
+
+### T26-2 — Diğer özelliklerde paylaşım
+
+- [ ] Tarot: çekilen kartlar görseli + kısa yorum özeti
+- [ ] Kahve falı: bulunan semboller + 1 cümle özet
+- [ ] Yıldızname: sonuç sayısı + 1 cümle özet
+- [ ] Sinastri: uyum yüzdesi + 5 bölüm başlığı
+- [ ] Burç sayfaları: bugünün yorumu görsel kartı
+
+### T26-3 — Genel paylaşım altyapısı
+
+- [ ] `ShareCard` component (shared-ui'de) — variant prop ile özelleşir
+- [ ] OG meta + Twitter card her özellik sayfası için (server-rendered)
+- [ ] UTM parametreleri (paylaşılan link kaynağı analytics'te görünsün)
+
+---
+
+## FAZ 27 — Bu Seansta Yapılan (Konsolide) 🆕 ✅
+
+> 2026-04-27 single-session deploy çalışmaları — ileride çakışma olmasın diye listelendi.
+
+### Slug routing ve detay sayfaları
+
+- [x] `consultants.slug` kolonu (`030_consultants_schema.sql`)
+- [x] Slug seed: `zeynep-yildiz`, `omer-toprak`, `selin-ay`
+- [x] Backend `getConsultantById()` UUID veya slug kabul eder (regex fallback)
+- [x] Frontend `ConsultantCard` link slug kullanıyor
+- [x] `consultantIdParamsSchema` validator slug regex'e gevşetildi
+
+### Avatar + storage
+
+- [x] `141_storage_seed.sql` — 3 consultant placeholder PNG storage_assets'e
+- [x] `users.avatar_url` storage_assets.public_url üzerinden bağlandı
+- [x] Public consultant API'da `avatar_url` projeksiyonu eklendi
+- [x] Frontend `ConsultantPublic` tipi + `ConsultantCard` avatar render
+- [x] Booking sayfasında `useGetConsultantPublicQuery` ile avatar gösterimi
+
+### Yorumlar (reviews)
+
+- [x] `121_reviews_seed.sql` — 9 onaylı yorum + TR i18n
+- [x] `ReviewList.tsx` GoldMood teması ile yeniden yazıldı (kart + yıldız + badge)
+- [x] `120_review_schema.sql` bozuk FK'li placeholder kaldırıldı
+
+### Auth + Dashboard merge
+
+- [x] `useAuthStore` `isLoading` + `isReady` ekleyerek loading/redirect race fix
+- [x] `/profile` artık `/dashboard?tab=profile`'a server-side redirect
+- [x] `/dashboard` 4 sekmeli unified hub: Genel Bakış / Profil / Randevular / Güvenlik
+- [x] Avatar upload (storage_assets) + Google Places city autocomplete
+- [x] Login `?next=...` query desteği
+- [x] Header'da authenticated kullanıcı için "PANEL" linki
+
+### Sosyal Login (OAuth)
+
+- [x] Google OAuth — `@react-oauth/google` ile implicit flow
+- [x] Facebook SDK dinamik load + `FB.login()` popup
+- [x] Backend `/auth/social-login` endpoint'i (Google id_token + Facebook access_token)
+- [x] GoldMoodAstro kendi Google Client ID (`440069309865-...`)
+- [x] Frontend `useSocialLoginMutation` hook
+- [x] CSP'ye `accounts.google.com`, `connect.facebook.net`, `graph.facebook.com` eklendi
+
+### Banner modülü genişletildi
+
+- [x] Placement enum: home_mid_1/2/3, consultant_detail_top/bottom, dashboard_top,
+      blog_sidebar, blog_inline (12 yeni placement)
+- [x] Banner component: `variant: hero | slim | card`, dismissable, "reklam" rozeti
+- [x] HomeContent: 3 slim mid banner slot'u (Promises↔Features, Hybrid↔Pricing, Trust↔Waitlist)
+- [x] Slim SVG'ler: birth_chart, premium, first_session
+- [x] 4 örnek banner seed'i
+
+### Booking + ödeme
+
+- [x] Booking page auth guard + login next-redirect
+- [x] `appointment_date` ISO → YYYY-MM-DD kırp (400 fix)
+- [x] `customer_note` → `customer_message` rename
+- [x] Iyzipay slug `iyzipay` → `iyzico` (controller hizalaması)
+- [x] Backend `.env`'de hem `IYZIPAY_*` hem `IYZICO_*` (geriye dönük + yeni)
+
+### Tema & i18n düzeltmeleri
+
+- [x] Hydration race: `body.scroll-reveal-ready` class ile defer
+- [x] ThemeToggle hydration mismatch fix (mounted check)
+- [x] HybridModelSection ve TransparencySection dark/light tema-aware
+- [x] Banner overlay renkleri tema-aware
+- [x] `proxy.ts` (eski middleware.ts) Next.js 16 uyumlu rename
+- [x] Default locale `tr` (eski `de` yerine)
+- [x] `015_ui_contact_seed.sql` + `016_ui_auth_seed.sql` (TR/EN/DE üç locale)
+- [x] Login + Register + Contact + Dashboard hard fallback'leri Türkçeleştirildi
+
+### Doğum haritası kalıcılığı + paylaşım
+
+- [x] Authenticated kullanıcı için `useCreateBirthChartMutation` ile DB'ye otomatik kayıt
+- [x] Sayfa açılışında `useListMyBirthChartsQuery` ile son haritayı yükle
+- [x] Birden fazla harita için sidebar'da "Diğer haritalarım" listesi
+- [x] Silme akışı (DELETE endpoint mevcut)
+- [x] `ShareBirthChart` bileşeni (Web Share API + PNG + intent URL'ler)
+
+### Kişisel kullanıcılar
+
+- [x] `oorhanguzel@gmail.com` (user) + `orhanguzell@gmail.com` (admin) seed (admin123)
+
+### Deploy
+
+- [x] Manual VPS deploy (rsync + bun install + db:seed + pm2 restart)
+- [x] Production hosting canlıda: https://goldmoodastro.com
+- [x] Iyzipay test anahtarları VPS .env'de
+- [x] Google Maps API key (kamanilan'dan ödünç) frontend env'de
+- [x] CSP nginx /etc/nginx/snippets/security-headers.conf — Maps + iyzipay + OAuth + Wikipedia logos
+- [x] Frontend rewrite `/uploads/:path*` → backend (next.config.js)
+
+### Sırada (yarım kalanlar)
+
+- [ ] Anthropic API key VPS .env'e konacak (`ANTHROPIC_API_KEY=sk-ant-...`)
+- [ ] FAZ 19-T19-3 admin panel sayfaları
+- [ ] Backend cron `o.amount_minor` hatası (booking-sla.ts) — pre-existing bug
+- [ ] GitHub Actions secrets (`VPS_HOST`, `VPS_USER`, `VPS_KEY`) — otomatik deploy için
+- [ ] Facebook Developers Console'a `goldmoodastro.com` redirect URI ekle

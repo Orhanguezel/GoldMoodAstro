@@ -25,7 +25,7 @@ export default function ErrorPage({
     <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
       <div className="max-w-2xl w-full animate-fade-in-up">
         <div className="flex justify-center mb-8">
-          <div className="p-6 bg-rose-50 text-brand-primary rounded-3xl shadow-soft animate-scale-in">
+          <div className="p-6 bg-error/10 text-error rounded-3xl shadow-soft animate-scale-in">
             <AlertCircle className="w-20 h-20" />
           </div>
         </div>
@@ -41,7 +41,7 @@ export default function ErrorPage({
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-delay-500">
           <button
             onClick={() => reset()}
-            className="flex items-center gap-2 px-8 py-4 bg-brand-primary text-white rounded-full font-semibold shadow-medium hover:bg-brand-hover transition-all transform "
+            className="flex items-center gap-2 px-8 py-4 bg-brand-primary text-text-on-dark rounded-full font-semibold shadow-medium hover:bg-brand-hover transition-all transform "
           >
             <RefreshCcw className="w-5 h-5" />
             {ui('ui_500_try_again', 'Try Again')}
@@ -57,7 +57,7 @@ export default function ErrorPage({
         </div>
 
         {process.env.NODE_ENV === 'development' && (
-          <div className="mt-12 p-6 bg-charcoal text-sand-50 rounded-2xl text-left overflow-auto max-h-48 text-sm font-mono animate-fade-in-delay-700">
+          <div className="mt-12 p-6 bg-sand-900 text-text-on-dark rounded-2xl text-left overflow-auto max-h-48 text-sm font-mono animate-fade-in-delay-700">
             <p className="font-bold mb-2">Error Detail (Dev Only):</p>
             <p>{error.message}</p>
             {error.digest && <p className="mt-2 text-sand-400">Digest: {error.digest}</p>}
@@ -66,7 +66,7 @@ export default function ErrorPage({
       </div>
 
       {/* Decorative Aura */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-96 bg-rose-200/5 rounded-full blur-[120px] -z-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-96 bg-error/5 rounded-full blur-[120px] -z-10" />
 
       <style jsx>{`
         @keyframes fade-in-up {

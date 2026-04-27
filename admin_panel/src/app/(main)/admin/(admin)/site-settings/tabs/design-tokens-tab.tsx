@@ -33,6 +33,14 @@ type TokenForm = {
   branding: Record<string, string>;
 };
 
+type ThemePreset = {
+  id: string;
+  label: string;
+  description: string;
+  preview: { primary: string; bg: string; text: string; accent: string };
+  tokens: TokenForm;
+};
+
 const DEFAULTS: TokenForm = {
   version: '2',
   colors: {
@@ -132,6 +140,152 @@ function PreviewCard({ form }: { form: TokenForm }) {
   );
 }
 
+function ThemePresetsSection({
+  busy,
+  onApplied,
+}: {
+  busy: boolean;
+  onApplied: (tokens: TokenForm) => void;
+}) {
+  const { data: presetsRow, isLoading: lp } = useGetSiteSettingAdminByKeyQuery('theme_presets');
+  const { data: activeRow, isLoading: la, refetch: refetchActive } =
+    useGetSiteSettingAdminByKeyQuery('active_theme_preset');
+  const [updateSetting] = useUpdateSiteSettingAdminMutation();
+  const [applyingId, setApplyingId] = React.useState<string | null>(null);
+
+  const presets = React.useMemo<ThemePreset[]>(() => {
+    if (!presetsRow?.value) return [];
+    try {
+      const raw =
+        typeof presetsRow.value === 'string' ? JSON.parse(presetsRow.value) : presetsRow.value;
+      return Array.isArray(raw) ? (raw as ThemePreset[]) : [];
+    } catch {
+      return [];
+    }
+  }, [presetsRow?.value]);
+
+  const activeId = typeof activeRow?.value === 'string' ? activeRow.value.trim() : '';
+  const activeLabel = presets.find((p) => p.id === activeId)?.label;
+
+  const apply = async (preset: ThemePreset) => {
+    setApplyingId(preset.id);
+    try {
+      await updateSetting({ key: 'active_theme_preset', value: preset.id, locale: '*' }).unwrap();
+      await updateSetting({
+        key: 'design_tokens',
+        value: JSON.stringify(preset.tokens),
+        locale: '*',
+      }).unwrap();
+      onApplied(preset.tokens);
+      await refetchActive();
+
+      // Auto-purge frontend cache so theme change is visible immediately.
+      // Best-effort: don't fail the apply if revalidation errors out.
+      let revalidated = false;
+      try {
+        const res = await fetch('/api/revalidate-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ all: true }),
+        });
+        revalidated = res.ok;
+      } catch {
+        revalidated = false;
+      }
+
+      toast.success(
+        revalidated
+          ? `"${preset.label}" teması uygulandı ve frontend cache temizlendi.`
+          : `"${preset.label}" teması uygulandı (cache 5 dk içinde otomatik yenilenecek).`,
+      );
+    } catch {
+      toast.error('Tema uygulanırken hata oluştu.');
+    } finally {
+      setApplyingId(null);
+    }
+  };
+
+  if (lp || la) return null;
+  if (presets.length === 0) return null;
+
+  return (
+    <section className="space-y-6">
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-2xl bg-[#C9A961]/10 flex items-center justify-center text-[#C9A961]">
+          <Layout size={20} />
+        </div>
+        <div>
+          <h4 className="font-serif text-xl">Tema Şablonları</h4>
+          <p className="text-xs text-muted-foreground italic">
+            Hazır tema paletlerinden birini uygulayın. Aktif şablon:{' '}
+            <span className="font-semibold text-foreground not-italic">{activeLabel || '—'}</span>
+          </p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        {presets.map((p) => {
+          const isActive = p.id === activeId;
+          const isLoading = applyingId === p.id;
+          return (
+            <Card
+              key={p.id}
+              className={cn(
+                'group relative overflow-hidden rounded-3xl p-0 transition-all border',
+                isActive
+                  ? 'border-[#C9A961] shadow-[0_0_0_4px_rgba(201,169,97,0.12)]'
+                  : 'border-border/40 hover:border-[#C9A961]/40',
+              )}
+            >
+              <div className="h-28 relative" style={{ backgroundColor: p.preview.bg }}>
+                <div className="absolute inset-0 flex items-center justify-center gap-2">
+                  <div
+                    className="w-12 h-12 rounded-full shadow-sm"
+                    style={{ backgroundColor: p.preview.primary }}
+                  />
+                  <div
+                    className="w-9 h-9 rounded-full shadow-sm"
+                    style={{ backgroundColor: p.preview.accent }}
+                  />
+                  <div
+                    className="w-7 h-7 rounded-full shadow-sm"
+                    style={{ backgroundColor: p.preview.text }}
+                  />
+                </div>
+                {isActive && (
+                  <Badge className="absolute top-3 right-3 bg-[#C9A961] text-[#1A1715] hover:bg-[#C9A961] text-[10px] tracking-widest uppercase">
+                    Aktif
+                  </Badge>
+                )}
+              </div>
+              <CardContent className="p-5 space-y-3">
+                <div>
+                  <div className="font-serif text-base">{p.label}</div>
+                  <div className="text-[11px] text-muted-foreground leading-relaxed mt-1">
+                    {p.description}
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant={isActive ? 'outline' : 'default'}
+                  disabled={busy || isLoading || isActive}
+                  onClick={() => apply(p)}
+                  className={cn(
+                    'w-full rounded-full text-[10px] font-bold tracking-widest uppercase h-9',
+                    !isActive && 'bg-[#C9A961] text-[#1A1715] hover:bg-[#C9A961]/90',
+                  )}
+                >
+                  {isLoading ? 'Uygulanıyor...' : isActive ? 'Şu an aktif' : 'Bu Temayı Uygula'}
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+      <Separator className="bg-[#C9A961]/10 mt-2" />
+    </section>
+  );
+}
+
 export const DesignTokensTab: React.FC = () => {
   const { data: settingRow, isLoading, isFetching, refetch } = useGetSiteSettingAdminByKeyQuery('design_tokens');
   const [updateSetting, { isLoading: isSaving }] = useUpdateSiteSettingAdminMutation();
@@ -180,6 +334,11 @@ export const DesignTokensTab: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      <ThemePresetsSection
+        busy={busy}
+        onApplied={(tokens) => setForm((prev) => ({ ...prev, ...tokens }))}
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
         {/* Left: Editor */}

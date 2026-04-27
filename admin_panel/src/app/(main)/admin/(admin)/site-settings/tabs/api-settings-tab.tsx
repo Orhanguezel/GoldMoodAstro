@@ -37,8 +37,9 @@ const API_KEYS = [
   'gtm_container_id',
   'ga4_measurement_id',
   'cookie_consent',
-  'agora_app_id',
-  'agora_app_certificate',
+  'livekit_url',
+  'livekit_api_key',
+  'livekit_api_secret',
   'firebase_project_id',
   'firebase_client_email',
   'firebase_private_key',
@@ -56,8 +57,9 @@ const EMPTY_FORM: ApiForm = {
   gtm_container_id: '',
   ga4_measurement_id: '',
   cookie_consent: '',
-  agora_app_id: '',
-  agora_app_certificate: '',
+  livekit_url: '',
+  livekit_api_key: '',
+  livekit_api_secret: '',
   firebase_project_id: '',
   firebase_client_email: '',
   firebase_private_key: '',
@@ -221,28 +223,42 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
           </div>
         </div>
 
-        {/* Agora Section */}
+        {/* LiveKit Section */}
         <div className="space-y-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Agora (Sesli Görüşme)</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">LiveKit (Sesli / Görüntülü Görüşme)</h3>
+          <p className="text-xs text-muted-foreground">
+            Sunucu tarafı .env dosyasından okunur — bu alanlar referans amaçlı kayıt
+            tutar, backend ayarını .env'den alır.
+          </p>
           <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="agora_app_id">{t('admin.siteSettings.api.agoraAppId', {}, 'Agora App ID')}</Label>
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="livekit_url">{t('admin.siteSettings.api.livekitUrl', {}, 'LiveKit URL')}</Label>
               <Input
-                id="agora_app_id"
-                value={form.agora_app_id}
-                onChange={(e) => handleChange('agora_app_id', e.target.value)}
-                placeholder="Agora App ID"
+                id="livekit_url"
+                value={form.livekit_url}
+                onChange={(e) => handleChange('livekit_url', e.target.value)}
+                placeholder="wss://your-project.livekit.cloud"
                 disabled={busy}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="agora_app_certificate">{t('admin.siteSettings.api.agoraAppCertificate', {}, 'Agora App Certificate')}</Label>
+              <Label htmlFor="livekit_api_key">{t('admin.siteSettings.api.livekitApiKey', {}, 'LiveKit API Key')}</Label>
               <Input
-                id="agora_app_certificate"
+                id="livekit_api_key"
+                value={form.livekit_api_key}
+                onChange={(e) => handleChange('livekit_api_key', e.target.value)}
+                placeholder="API Key"
+                disabled={busy}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="livekit_api_secret">{t('admin.siteSettings.api.livekitApiSecret', {}, 'LiveKit API Secret')}</Label>
+              <Input
+                id="livekit_api_secret"
                 type="password"
-                value={form.agora_app_certificate}
-                onChange={(e) => handleChange('agora_app_certificate', e.target.value)}
-                placeholder="Agora App Certificate"
+                value={form.livekit_api_secret}
+                onChange={(e) => handleChange('livekit_api_secret', e.target.value)}
+                placeholder="API Secret"
                 disabled={busy}
               />
             </div>
@@ -252,6 +268,10 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
         {/* Firebase Section */}
         <div className="space-y-4">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Firebase (Push Bildirim)</h3>
+          <p className="text-xs text-muted-foreground">
+            Service account credentials .env dosyasından okunur. Bu alanlar referans
+            içindir — gerçek değerler sunucudaki .env içinde tutulur.
+          </p>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="firebase_project_id">{t('admin.siteSettings.api.firebaseProjectId', {}, 'Firebase Project ID')}</Label>

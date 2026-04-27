@@ -119,7 +119,7 @@ export default function CheckoutPage() {
             <p className="mb-4 text-text-muted">{t.loginRequired}</p>
             <Link
               href={localizePath(locale, '/login')}
-              className="inline-block rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-white hover:bg-brand-hover transition-colors"
+              className="inline-block rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-text-on-dark hover:bg-brand-hover transition-colors"
             >
               {t.login}
             </Link>
@@ -149,7 +149,7 @@ export default function CheckoutPage() {
             <p className="mb-4 text-text-muted">{t.notFound}</p>
             <Link
               href={localizePath(locale, '/')}
-              className="inline-block rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-white hover:bg-brand-hover transition-colors"
+              className="inline-block rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-text-on-dark hover:bg-brand-hover transition-colors"
             >
               {t.backHome}
             </Link>
@@ -179,7 +179,7 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-text-muted">{t.paymentStatus}</span>
-                <span className={isPaid ? 'text-green-600 font-medium' : ''}>{order.payment_status}</span>
+                <span className={isPaid ? 'text-success font-medium' : ''}>{order.payment_status}</span>
               </div>
               <div className="flex justify-between text-lg font-bold">
                 <span>{t.total}</span>
@@ -209,13 +209,13 @@ export default function CheckoutPage() {
 
             {/* Pay Button or Already Paid */}
             {isPaid ? (
-              <div className="rounded-lg bg-green-50 border border-green-200 p-4 text-center text-green-800 font-medium">
+              <div className="rounded-lg bg-success/10 border border-success/30 p-4 text-center text-success font-medium">
                 {t.alreadyPaid}
               </div>
             ) : (
               <div className="space-y-3">
                 {payState === 'error' && (
-                  <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-center text-red-700 text-sm">
+                  <div className="rounded-lg bg-error/5 border border-error/30 p-3 text-center text-error text-sm">
                     {errorMsg}
                   </div>
                 )}
@@ -228,7 +228,7 @@ export default function CheckoutPage() {
                 ) : (
                   <button
                     onClick={handlePay}
-                    className="w-full rounded-lg bg-brand-primary px-6 py-3 text-center font-semibold text-white hover:bg-brand-hover transition-colors"
+                    className="w-full rounded-lg bg-brand-primary px-6 py-3 text-center font-semibold text-text-on-dark hover:bg-brand-hover transition-colors"
                   >
                     {t.payNow}
                   </button>

@@ -101,7 +101,7 @@ export default function VerifyEmailPage() {
                       setMessage(msg);
                     }
                   }}
-                  className="inline-flex w-full items-center justify-center bg-brand-primary text-white font-bold py-3 px-6 rounded-sm hover:bg-brand-hover transition-all disabled:opacity-70"
+                  className="inline-flex w-full items-center justify-center bg-brand-primary text-text-on-dark font-bold py-3 px-6 rounded-sm hover:bg-brand-hover transition-all disabled:opacity-70"
                 >
                   {sendState.isLoading ? '...' : resendLabel}
                 </button>
@@ -127,8 +127,8 @@ export default function VerifyEmailPage() {
             </>
           ) : status === 'success' ? (
             <>
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-16 h-16 bg-success/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -148,15 +148,15 @@ export default function VerifyEmailPage() {
               </p>
               <Link
                 href={localizePath(locale, '/profile')}
-                className="inline-block bg-brand-primary text-white font-bold py-3 px-6 rounded-sm hover:bg-brand-hover transition-all"
+                className="inline-block bg-brand-primary text-text-on-dark font-bold py-3 px-6 rounded-sm hover:bg-brand-hover transition-all"
               >
                 {locale === 'de' ? 'Zum Profil' : locale === 'tr' ? 'Profile Git' : 'Go to Profile'}
               </Link>
             </>
           ) : status === 'no_token' ? (
             <>
-              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-16 h-16 bg-warning/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -176,15 +176,15 @@ export default function VerifyEmailPage() {
               </p>
               <Link
                 href={localizePath(locale, '/register')}
-                className="inline-block bg-brand-primary text-white font-bold py-3 px-6 rounded-sm hover:bg-brand-hover transition-all"
+                className="inline-block bg-brand-primary text-text-on-dark font-bold py-3 px-6 rounded-sm hover:bg-brand-hover transition-all"
               >
                 {locale === 'de' ? 'Zur Registrierung' : locale === 'tr' ? 'Kayıta Dön' : 'Back to Register'}
               </Link>
             </>
           ) : (
             <>
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-16 h-16 bg-error/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
@@ -205,7 +205,7 @@ export default function VerifyEmailPage() {
               </p>
               <Link
                 href={localizePath(locale, '/profile')}
-                className="inline-block bg-brand-primary text-white font-bold py-3 px-6 rounded-sm hover:bg-brand-hover transition-all"
+                className="inline-block bg-brand-primary text-text-on-dark font-bold py-3 px-6 rounded-sm hover:bg-brand-hover transition-all"
               >
                 {locale === 'de' ? 'Zum Profil' : locale === 'tr' ? 'Profile Git' : 'Go to Profile'}
               </Link>

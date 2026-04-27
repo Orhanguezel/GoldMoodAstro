@@ -18,28 +18,43 @@ export default function HomeContent({ locale }: Props) {
     <main className="flex flex-col w-full bg-[var(--gm-bg)]">
       {/* 1. Hero */}
       <HeroNew locale={locale} />
-      
-      {/* Dynamic Banner Slot */}
+
+      {/* Hero altı banner — büyük (full width hero) */}
       <section className="container mx-auto px-4 -mt-10 mb-12 relative z-20">
-        <Banner placement="home_hero" count={1} />
+        <Banner placement="home_hero" variant="hero" count={1} />
       </section>
 
       <Suspense fallback={<div className="h-screen bg-[var(--gm-bg)]" />}>
         {/* 2. Promises */}
         <PromisesSection locale={locale} />
-        
+
+        {/* Mid 1 — slim reklam alanı (Promises ↔ Features arası) */}
+        <section className="container mx-auto px-4 py-6">
+          <Banner placement="home_mid_1" variant="slim" count={1} dismissable />
+        </section>
+
         {/* 3. Features */}
         <FeaturesNew locale={locale} />
-        
+
         {/* 4. Hybrid Model */}
         <HybridModelSection locale={locale} />
-        
+
+        {/* Mid 2 — slim reklam alanı (Hybrid ↔ Transparency arası) */}
+        <section className="container mx-auto px-4 py-6">
+          <Banner placement="home_mid_2" variant="slim" count={1} dismissable />
+        </section>
+
         {/* 5. Transparency / Pricing */}
         <TransparencySection locale={locale} />
-        
+
         {/* 6. Trust / Privacy */}
         <TrustSection locale={locale} />
-        
+
+        {/* Mid 3 — son slim reklam (Trust ↔ Waitlist arası) */}
+        <section className="container mx-auto px-4 py-6">
+          <Banner placement="home_mid_3" variant="slim" count={1} dismissable />
+        </section>
+
         {/* 7. Waitlist */}
         <WaitlistSection locale={locale} />
       </Suspense>

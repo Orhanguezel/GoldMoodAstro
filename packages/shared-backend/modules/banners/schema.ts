@@ -30,6 +30,9 @@ export const banners = mysqlTable(
     cta_label_en: varchar("cta_label_en", { length: 100 }),
     placement: mysqlEnum("placement", [
       "home_hero", "home_sidebar", "home_footer", "consultant_list",
+      "home_mid_1", "home_mid_2", "home_mid_3",
+      "consultant_detail_top", "consultant_detail_bottom",
+      "dashboard_top", "blog_sidebar", "blog_inline",
       "mobile_welcome", "mobile_home", "mobile_call_end", "admin_dashboard",
     ]).notNull(),
     locale: char("locale", { length: 8 }).notNull().default("*"),

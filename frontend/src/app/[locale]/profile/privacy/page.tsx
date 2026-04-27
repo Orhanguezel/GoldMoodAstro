@@ -124,13 +124,13 @@ export default function ProfilePrivacyPage() {
           <button
             onClick={onExportData}
             disabled={exportState.isLoading}
-            className="rounded bg-brand-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="rounded bg-brand-primary px-4 py-2 text-sm font-semibold text-text-on-dark disabled:opacity-60"
           >
             {exportState.isLoading ? 'Hazırlanıyor...' : 'Verilerimi İndir'}
           </button>
         </section>
 
-        <section className="mt-8 rounded-xl border border-red-200/60 bg-red-50 p-5 md:p-6 shadow-sm space-y-4">
+        <section className="mt-8 rounded-xl border border-error/30 bg-error/5 p-5 md:p-6 shadow-sm space-y-4">
           <h2 className="text-xl font-semibold text-text">Hesabımı Sil</h2>
           <p className="text-sm text-text-muted">
             Hesap silme talebini onayladığınızda 7 gün içinde kalıcı silme gerçekleştirilecektir.
@@ -140,8 +140,8 @@ export default function ProfilePrivacyPage() {
           {statusLoading ? (
             <p className="text-sm text-text-muted">Durum kontrol ediliyor...</p>
           ) : pending ? (
-            <div className="rounded bg-white border border-red-200 p-4 space-y-2">
-              <p className="text-sm text-red-900">
+            <div className="rounded bg-bg-card border border-error/30 p-4 space-y-2">
+              <p className="text-sm text-error">
                 <strong>Aktif hesap silme talebi</strong> bulundu.
               </p>
               <p className="text-sm text-text-muted">
@@ -168,7 +168,7 @@ export default function ProfilePrivacyPage() {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={4}
-                  className="w-full rounded border border-red-300 bg-white px-3 py-2 text-sm text-text"
+                  className="w-full rounded border border-error/40 bg-bg-card px-3 py-2 text-sm text-text"
                   placeholder="Örn: Hizmetten memnun kalmadım, hesabımı kapatmak istiyorum..."
                   maxLength={500}
                 />
@@ -178,7 +178,7 @@ export default function ProfilePrivacyPage() {
               <button
                 type="submit"
                 disabled={requestState.isLoading}
-                className="rounded bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                className="rounded bg-error px-4 py-2 text-sm font-semibold text-text-on-dark disabled:opacity-60"
               >
                 {requestState.isLoading ? 'İşleniyor...' : 'Hesabı Silme Talebi Oluştur'}
               </button>

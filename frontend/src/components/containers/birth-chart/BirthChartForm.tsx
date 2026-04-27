@@ -1,12 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePreviewBirthChartMutation } from '@/integrations/rtk/public/birth_charts.endpoints';
+import {
+  usePreviewBirthChartMutation,
+  useCreateBirthChartMutation,
+} from '@/integrations/rtk/public/birth_charts.endpoints';
 import { useLazySearchGeocodeQuery } from '@/integrations/rtk/public/geocode.endpoints';
+import { useAuthStore } from '@/features/auth/auth.store';
 import type { BirthChart, BirthChartCreateInput, GeocodeResult } from '@/types/common';
 
 export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthChart) => void }) {
-  const [previewChart, { isLoading }] = usePreviewBirthChartMutation();
+  const [previewChart, { isLoading: previewing }] = usePreviewBirthChartMutation();
+  const [createChart, { isLoading: saving }] = useCreateBirthChartMutation();
+  const { isAuthenticated } = useAuthStore();
+  const isLoading = previewing || saving;
   const [triggerGeocode, { data: geoResult, isFetching: isGeoLoading }] = useLazySearchGeocodeQuery();
   const [selectedPlace, setSelectedPlace] = useState<GeocodeResult | null>(null);
   const [geoQuery, setGeoQuery] = useState('');
@@ -33,15 +40,26 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
       return;
     }
 
+    const payload = {
+      ...formData,
+      pob_lat: selectedPlace.lat,
+      pob_lng: selectedPlace.lng,
+      pob_label: selectedPlace.label,
+    };
+
     try {
-      const res = await previewChart({
-        ...formData,
-        pob_lat: selectedPlace.lat,
-        pob_lng: selectedPlace.lng,
-        pob_label: selectedPlace.label,
-      }).unwrap();
+      // Login kullanıcı için DB'ye kaydet (kalıcı), yoksa sadece preview
+      const res = isAuthenticated
+        ? await createChart(payload).unwrap()
+        : await previewChart(payload).unwrap();
       onSuccess(res);
-    } catch {
+    } catch (err: any) {
+      // Kayıt sırasında çakışma (aynı isimli harita) → preview'a düş
+      const code = err?.data?.error?.message || '';
+      if (isAuthenticated && /duplicate|exists|unique/i.test(code)) {
+        setError('Bu isimde bir haritan zaten var. Farklı bir isim dene.');
+        return;
+      }
       setError('Harita hesaplanamadı. Bilgileri kontrol edip tekrar deneyin.');
     }
   };
@@ -150,8 +168,19 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
       {error && <p className="text-sm text-[var(--gm-error)]">{error}</p>}
 
       <button type="submit" disabled={isLoading} className="btn-premium w-full py-4 text-sm tracking-[0.2em] disabled:opacity-60">
-        {isLoading ? 'Hesaplanıyor...' : 'Haritayı Hesapla'}
+        {saving
+          ? 'Kaydediliyor...'
+          : previewing
+          ? 'Hesaplanıyor...'
+          : isAuthenticated
+          ? 'Haritayı Hesapla ve Kaydet'
+          : 'Haritayı Hesapla'}
       </button>
+      {!isAuthenticated && (
+        <p className="text-center text-[11px] text-(--gm-muted)">
+          Giriş yaparsan haritan profilinde kaydedilir, tekrar doldurmana gerek kalmaz.
+        </p>
+      )}
     </form>
   );
 }

@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { requireAuth } from '@goldmood/shared-backend/middleware/auth';
 import {
+  birthChartReadingHandler,
   birthChartSynastryHandler,
   birthChartTransitHandler,
   createBirthChartHandler,
@@ -19,4 +20,5 @@ export async function registerBirthCharts(app: FastifyInstance) {
   app.get(`${BASE}/:id`, { preHandler: [requireAuth] }, getBirthChartHandler);
   app.delete(`${BASE}/:id`, { preHandler: [requireAuth] }, deleteBirthChartHandler);
   app.post(`${BASE}/:id/transit`, { preHandler: [requireAuth] }, birthChartTransitHandler);
+  app.post(`${BASE}/:id/reading`, { preHandler: [requireAuth] }, birthChartReadingHandler);
 }

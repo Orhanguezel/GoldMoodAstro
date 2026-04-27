@@ -46,17 +46,14 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
             </Link>
           </div>
 
-          {/* Premium Card — her temada sabit koyu accent.
-              Sabit ink bg + cream text + altın detay → her iki temada
-              dramatik kontrast. Tailwind v4 `var()/opacity` çekincesinden
-              kaçınmak için sabit hex değerleri kullanılıyor. */}
+          {/* Premium Card — her temada sabit koyu accent (sand-900 = #1A1715),
+              theme-değişmez bir kontrast bloğu olarak çalışır. Açık veya koyu
+              preset farketmeksizin daima dramatic dark accent görünür. */}
           <div
-            className="rounded-sm p-12 relative transition-all duration-400 hover:-translate-y-1 hover:shadow-glow group border border-[#A8884A]/40"
+            className="rounded-sm p-12 relative transition-all duration-400 hover:-translate-y-1 hover:shadow-glow group border border-gold-600/40 bg-sand-900 text-text-on-dark"
             style={{
-              backgroundColor: '#1A1715',
-              color: '#FAF6EF',
               backgroundImage:
-                'radial-gradient(120% 80% at 100% 0%, rgba(201,169,97,0.10), transparent 60%)',
+                'radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--color-gold-400) 10%, transparent), transparent 60%)',
             }}
           >
             <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-[var(--gm-gold)] text-[var(--gm-gold)] bg-[var(--gm-gold)]/15 rounded-full">
@@ -65,13 +62,13 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
             <div className="font-display text-[14px] tracking-[0.32em] text-[var(--gm-gold)] uppercase mb-6">
               {isTr ? 'Premium' : 'Premium'}
             </div>
-            <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight" style={{ color: '#FAF6EF' }}>
-              <sup className="text-2xl font-normal text-[var(--gm-gold)] mr-1 -top-7 relative">₺</sup>149<small className="text-base font-normal tracking-wide ml-1" style={{ color: 'rgba(250,246,239,0.65)' }}>{isTr ? '/ ay' : '/ mo'}</small>
+            <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-text-on-dark">
+              <sup className="text-2xl font-normal text-[var(--gm-gold)] mr-1 -top-7 relative">₺</sup>149<small className="text-base font-normal tracking-wide ml-1 text-text-on-dark/65">{isTr ? '/ ay' : '/ mo'}</small>
             </div>
-            <p className="italic mb-8 text-base leading-relaxed" style={{ color: 'rgba(250,246,239,0.85)' }}>
+            <p className="italic mb-8 text-base leading-relaxed text-text-on-dark/85">
               {isTr ? 'Sınırsız derinlik, gizli sürpriz yok.' : 'Limitless depth, no hidden surprises.'}
             </p>
-            <ul className="space-y-4 mb-10" style={{ color: '#FAF6EF' }}>
+            <ul className="space-y-4 mb-10 text-text-on-dark">
               <li className="flex items-center gap-3">
                 <span className="text-[var(--gm-gold)]">✦</span> {isTr ? 'Detaylı doğum haritası analizi' : 'Detailed birth chart analysis'}
               </li>

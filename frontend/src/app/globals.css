@@ -74,6 +74,12 @@
   --color-border-medium: var(--gm-border, rgba(168, 136, 74, 0.25));
   --color-border-hover:  color-mix(in srgb, var(--gm-primary, #C9A961) 40%, transparent);
 
+  /* ─── STATUS COLORS (mode-aware via --gm-* runtime) ─── */
+  --color-success: var(--gm-success, #4CAF6E);
+  --color-warning: var(--gm-warning, #F0A030);
+  --color-error:   var(--gm-error,   #E55B4D);
+  --color-info:    var(--gm-info,    #5B9BD5);
+
   /* ─── TYPOGRAPHY ─── */
   --font-sans:    var(--gm-font-sans, 'Manrope', system-ui, -apple-system, sans-serif);
   --font-serif:   var(--gm-font-serif, 'Fraunces', Georgia, serif);

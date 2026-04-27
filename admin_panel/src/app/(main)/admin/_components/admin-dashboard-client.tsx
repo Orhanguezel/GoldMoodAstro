@@ -81,8 +81,8 @@ export default function AdminDashboardClient() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <span className="w-8 h-px bg-[#C9A961]" />
-            <span className="text-[#C9A961] font-bold text-[10px] tracking-[0.2em] uppercase">Genel Bakış</span>
+            <span className="w-8 h-px bg-brand-gold" />
+            <span className="text-brand-gold font-bold text-[10px] tracking-[0.2em] uppercase">Genel Bakış</span>
           </div>
           <h1 className="font-serif text-4xl text-foreground leading-tight">Yönetim Paneli</h1>
           <p className="text-muted-foreground text-sm mt-2 font-serif italic">
@@ -96,7 +96,7 @@ export default function AdminDashboardClient() {
               key={key}
               onClick={() => setRange(key)}
               className={`px-6 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all ${
-                range === key ? 'bg-[#C9A961] text-[#1A1715]' : 'text-muted-foreground hover:text-foreground'
+                range === key ? 'bg-brand-gold text-brand-ink' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {key === '7d' ? 'Haftalık' : key === '30d' ? 'Aylık' : '3 Aylık'}
@@ -121,7 +121,7 @@ export default function AdminDashboardClient() {
           ))
         ) : (
           kpis.map((item) => (
-            <Card key={item.key} className="bg-card border-border/40 rounded-[24px] overflow-hidden relative group hover:border-[#C9A961]/30 transition-all duration-500">
+            <Card key={item.key} className="bg-card border-border/40 rounded-[24px] overflow-hidden relative group hover:border-brand-gold/30 transition-all duration-500">
               <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
                 <item.icon size={64} />
               </div>
@@ -146,7 +146,7 @@ export default function AdminDashboardClient() {
         <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
           <CardHeader className="p-8 pb-4">
             <div className="flex items-center gap-3 mb-2">
-              <TrendingUp className="w-4 h-4 text-[#C9A961]" />
+              <TrendingUp className="w-4 h-4 text-brand-gold" />
               <CardTitle className="font-serif text-2xl">Gelir Grafiği</CardTitle>
             </div>
             <CardDescription className="font-serif italic opacity-70">Seçili dönemdeki toplam ciro değişimi.</CardDescription>
@@ -164,7 +164,7 @@ export default function AdminDashboardClient() {
                         <stop offset="95%" stopColor="#C9A961" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickFormatter={labelForBucket} tick={{ fontSize: 10, fill: '#666' }} />
                     <YAxis tickLine={false} axisLine={false} tickFormatter={(v) => `₺${v}`} tick={{ fontSize: 10, fill: '#666' }} />
                     <ChartTooltip 
@@ -198,7 +198,7 @@ export default function AdminDashboardClient() {
               <ChartContainer config={SERVICE_CHART_CONFIG} className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={analytics.services}>
-                    <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="service_name" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#666' }} />
                     <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#666' }} />
                     <ChartTooltip content={<ChartTooltipContent labelFormatter={(l) => String(l)} />} />
@@ -222,7 +222,7 @@ export default function AdminDashboardClient() {
           </CardHeader>
           <CardContent className="p-8 pt-4 grid grid-cols-2 gap-4">
             {Object.entries(ROUTE_MAP).map(([key, href]) => (
-              <Link key={key} href={href} className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/40 hover:border-[#C9A961]/30 hover:bg-muted/40 transition-all group">
+              <Link key={key} href={href} className="flex items-center justify-between p-4 rounded-2xl bg-muted/20 border border-border/40 hover:border-brand-gold/30 hover:bg-muted/40 transition-all group">
                 <span className="text-[10px] font-bold tracking-widest uppercase opacity-70 group-hover:opacity-100">{key.replace('_', ' ')}</span>
                 <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all" />
               </Link>
@@ -244,7 +244,7 @@ export default function AdminDashboardClient() {
                     {svc.bookings_total} Randevu
                   </div>
                 </div>
-                <div className="text-xl font-serif text-[#C9A961]">{formatMoney(svc.revenue_total)}</div>
+                <div className="text-xl font-serif text-brand-gold">{formatMoney(svc.revenue_total)}</div>
               </div>
             )) : (
               <div className="text-sm text-muted-foreground font-serif italic text-center py-8">Yeterli veri yok.</div>

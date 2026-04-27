@@ -35,7 +35,7 @@ function OrderCard({ order, locale }: { order: OrderView; locale: string }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className="font-mono text-xs text-text-muted">#{order.order_number}</span>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${isPaid ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${isPaid ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
             {payLabel}
           </span>
           <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-bg-surface text-text-muted">
@@ -54,7 +54,7 @@ function OrderCard({ order, locale }: { order: OrderView; locale: string }) {
       {!isPaid && (
         <Link
           href={localizePath(locale, `/checkout/${order.id}`)}
-          className="flex items-center gap-1 px-4 py-2 rounded-full bg-brand-primary text-white text-xs font-medium hover:opacity-90 transition-opacity flex-shrink-0"
+          className="flex items-center gap-1 px-4 py-2 rounded-full bg-brand-primary text-text-on-dark text-xs font-medium hover:opacity-90 transition-opacity flex-shrink-0"
         >
           {locale === 'tr' ? 'Öde' : 'Pay'}
           <ChevronRight size={13} />
@@ -104,7 +104,7 @@ export default function ProfileBookingsPage() {
           <p className="text-text-muted mb-6">{copy.loginRequired}</p>
           <Link
             href={localizePath(locale, '/login')}
-            className="inline-block px-6 py-3 rounded-full bg-brand-primary text-white font-medium hover:opacity-90 transition-opacity"
+            className="inline-block px-6 py-3 rounded-full bg-brand-primary text-text-on-dark font-medium hover:opacity-90 transition-opacity"
           >
             {copy.login}
           </Link>
@@ -137,7 +137,7 @@ export default function ProfileBookingsPage() {
             <p className="text-text-muted mb-6">{copy.empty}</p>
             <Link
               href={localizePath(locale, '/consultants')}
-              className="inline-block px-6 py-3 rounded-full bg-brand-primary text-white font-medium hover:opacity-90 transition-opacity"
+              className="inline-block px-6 py-3 rounded-full bg-brand-primary text-text-on-dark font-medium hover:opacity-90 transition-opacity"
             >
               {copy.cta}
             </Link>

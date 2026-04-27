@@ -1,11 +1,18 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import BirthChartForm from '@/components/containers/birth-chart/BirthChartForm';
 import type { BirthChart, NatalChart, PlanetKey, PlanetPlacement } from '@/types/common';
-import { Compass, Sparkles, ChevronLeft, Calendar, MapPin, Clock } from 'lucide-react';
+import { Compass, Sparkles, ChevronLeft, Calendar, MapPin, Clock, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { toast } from 'sonner';
+import {
+  useListMyBirthChartsQuery,
+  useDeleteBirthChartMutation,
+} from '@/integrations/rtk/public/birth_charts.endpoints';
+import { useAuthStore } from '@/features/auth/auth.store';
+import ShareBirthChart from '@/components/common/ShareBirthChart';
 
 const PLANET_ORDER: PlanetKey[] = [
   'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
@@ -103,7 +110,35 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
 export default function BirthChartPageClient() {
   const params = useParams<{ locale?: string }>();
   const locale = params?.locale || 'tr';
+  const { isAuthenticated } = useAuthStore();
   const [chart, setChart] = useState<BirthChart | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  // Login kullanıcı için kayıtlı haritaları çek
+  const { data: savedCharts } = useListMyBirthChartsQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  const [deleteChart] = useDeleteBirthChartMutation();
+
+  // İlk yüklenmede en son kaydedilmiş haritayı otomatik göster
+  useEffect(() => {
+    if (!chart && !showForm && savedCharts && savedCharts.length > 0) {
+      setChart(savedCharts[0]);
+    }
+  }, [savedCharts, chart, showForm]);
+
+  async function handleDelete() {
+    if (!chart) return;
+    if (!confirm('Bu haritayı silmek istediğine emin misin?')) return;
+    try {
+      await deleteChart(chart.id).unwrap();
+      toast.success('Harita silindi');
+      setChart(null);
+      setShowForm(true);
+    } catch {
+      toast.error('Silinemedi.');
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[var(--gm-bg)] px-4 pb-24 pt-32">
@@ -124,7 +159,7 @@ export default function BirthChartPageClient() {
               </p>
             </div>
             <div className="max-w-3xl mx-auto">
-              <BirthChartForm onSuccess={setChart} />
+              <BirthChartForm onSuccess={(c) => { setChart(c); setShowForm(false); }} />
             </div>
           </>
         ) : (
@@ -152,15 +187,46 @@ export default function BirthChartPageClient() {
                   </div>
                 </div>
 
-                <div className="mt-12 pt-8 border-t border-[var(--gm-border-soft)]">
+                <div className="mt-12 pt-8 border-t border-[var(--gm-border-soft)] space-y-4">
+                  <ShareBirthChart chart={chart} />
                   <button
                     type="button"
-                    onClick={() => setChart(null)}
+                    onClick={() => { setChart(null); setShowForm(true); }}
                     className="flex items-center gap-3 text-[var(--gm-gold)] font-bold text-xs uppercase tracking-widest hover:translate-x-2 transition-transform"
                   >
-                    <ChevronLeft className="w-4 h-4" /> Yeni Analiz Yap
+                    <ChevronLeft className="w-4 h-4" /> Yeni Harita Oluştur
                   </button>
+                  {isAuthenticated && (savedCharts?.some((c) => c.id === chart.id) ?? false) && (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className="flex items-center gap-3 text-(--gm-text-dim) hover:text-(--gm-error) text-[10px] uppercase tracking-widest transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3" /> Bu haritayı sil
+                    </button>
+                  )}
                 </div>
+
+                {/* Birden fazla kayıtlı harita varsa hızlı seçim */}
+                {isAuthenticated && savedCharts && savedCharts.length > 1 && (
+                  <div className="mt-6 pt-6 border-t border-(--gm-border-soft)">
+                    <p className="font-display text-[9px] tracking-[0.3em] uppercase text-(--gm-gold-deep) mb-3">
+                      Diğer haritalarım
+                    </p>
+                    <div className="space-y-1.5">
+                      {savedCharts.filter((c) => c.id !== chart.id).map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => setChart(c)}
+                          className="block w-full text-left text-sm text-(--gm-text-dim) hover:text-(--gm-gold) transition-colors"
+                        >
+                          → {c.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="p-10 rounded-3xl bg-[var(--gm-surface-high)] border border-[var(--gm-border-soft)]">

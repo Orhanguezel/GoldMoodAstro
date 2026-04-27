@@ -325,6 +325,43 @@
         "mustAcceptTerms": "Devam etmek için şartları kabul etmelisiniz."
       }
     },
+    "consultants": {
+      "title": "Danışmanlar",
+      "title_singular": "Danışman",
+      "labels": {
+        "bio": "Biyografi",
+        "expertise": "Uzmanlık",
+        "languages": "Diller",
+        "session": "Seans"
+      },
+      "status": {
+        "approved": "Onaylandı",
+        "rejected": "Reddedildi",
+        "pending": "Bekliyor"
+      },
+      "actions": {
+        "approve": "Onayla",
+        "approve_success": "Danışman onaylandı.",
+        "approve_failed": "Danışman onaylanamadı.",
+        "reject": "Reddet",
+        "reject_success": "Danışman reddedildi.",
+        "reject_failed": "Danışman reddedilemedi.",
+        "rejection_reason_prompt": "Reddetme nedeni"
+      },
+      "expertise": {
+        "astrology": "Astroloji",
+        "birth_chart": "Doğum Haritası",
+        "relationship": "İlişki",
+        "mood": "Ruh Hali",
+        "career": "Kariyer",
+        "numerology": "Numeroloji",
+        "tarot": "Tarot"
+      },
+      "languages": {
+        "tr": "Türkçe",
+        "en": "İngilizce"
+      }
+    },
     "common": {
       "save": "Kaydet",
       "saving": "Kaydediliyor...",
@@ -841,6 +878,7 @@
         }
       },
       "items": {
+        "consultants": "Danışmanlar",
         "db": "Veritabanı",
         "audit": "Denetim Kayıtları",
         "availability": "Rezervasyon Saatleri",
@@ -856,6 +894,7 @@
         "footer_sections": "Footer",
         "custom_pages": "Özel Sayfalar",
         "site_settings": "Site Ayarları",
+        "cache": "Cache Yönetimi",
         "email_templates": "E-posta Şablonları",
         "services": "Hizmetler",
         "faqs": "S.S.S.",
@@ -866,6 +905,10 @@
         "chat": "Chat & AI",
         "dashboard": "Özet",
         "orders": "Siparisler",
+        "announcements": "Duyurular",
+        "support": "Destek",
+        "subscriptions": "Abonelikler",
+        "subscription_plans": "Abonelik Planları",
         "wallet": "Cüzdan",
         "gutschein": "Hediye Kartları",
         "payment_settings": "Ödeme Ayarları",
@@ -1883,6 +1926,51 @@
           "failed": "Test e-postası gönderilemedi.",
           "invalidEmail": "Lütfen geçerli bir e-posta adresi girin."
         }
+      }
+    },
+    "subscriptions": {
+      "title": "Abonelikler",
+      "description": "Abonelikleri listeleyin ve iade/iptal edin.",
+      "listTitle": "Abonelik Listesi",
+      "actions": {
+        "refresh": "Yenile",
+        "search": "Ara",
+        "refund": "İade / Kapat",
+        "refundReasonPrompt": "İade nedeni"
+      },
+      "toasts": {
+        "refundSuccess": "Abonelik iade/kapandı.",
+        "refundFailed": "Abonelik iade edilemedi."
+      },
+      "filters": {
+        "status": "Durum",
+        "search": "Arama",
+        "searchPlaceholder": "E-posta, plan kodu, durum veya abonelik ID"
+      },
+      "table": {
+        "user": "Kullanıcı",
+        "plan": "Plan",
+        "status": "Durum",
+        "provider": "Sağlayıcı",
+        "price": "Tutar",
+        "started": "Başlangıç",
+        "ends": "Bitiş",
+        "actions": "İşlemler",
+        "noRecords": "Abonelik bulunamadı."
+      },
+      "pagination": {
+        "page": "Sayfa {page} / {totalPages}",
+        "prev": "Önceki",
+        "next": "Sonraki"
+      },
+      "statuses": {
+        "all": "Tümü",
+        "pending": "Bekliyor",
+        "active": "Aktif",
+        "cancelled": "İptal Edildi",
+        "expired": "Süresi Doldu",
+        "grace_period": "Geçiş Süresi",
+        "past_due": "Gecikmiş"
       }
     },
     "notifications": {

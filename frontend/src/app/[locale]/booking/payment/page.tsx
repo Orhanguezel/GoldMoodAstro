@@ -42,25 +42,25 @@ export default function BookingPaymentCallbackPage() {
       <div className="w-full max-w-[440px] text-center">
         {isSuccess ? (
           <>
-            <CheckCircle2 size={64} className="mx-auto mb-6 text-green-500" strokeWidth={1.5} />
+            <CheckCircle2 size={64} className="mx-auto mb-6 text-success" strokeWidth={1.5} />
             <h1 className="font-serif text-3xl text-text mb-3">{copy.successTitle}</h1>
             <p className="text-text-muted text-sm leading-relaxed mb-8">{copy.successDesc}</p>
             <Link
               href={localizePath(locale, '/profile/bookings')}
-              className="inline-block w-full py-3.5 rounded-full bg-brand-primary text-white font-medium text-base text-center hover:opacity-90 transition-opacity"
+              className="inline-block w-full py-3.5 rounded-full bg-brand-primary text-text-on-dark font-medium text-base text-center hover:opacity-90 transition-opacity"
             >
               {copy.myBookings}
             </Link>
           </>
         ) : (
           <>
-            <XCircle size={64} className="mx-auto mb-6 text-red-500" strokeWidth={1.5} />
+            <XCircle size={64} className="mx-auto mb-6 text-error" strokeWidth={1.5} />
             <h1 className="font-serif text-3xl text-text mb-3">{copy.failTitle}</h1>
             <p className="text-text-muted text-sm leading-relaxed mb-8">{copy.failDesc}</p>
             <div className="flex flex-col gap-3">
               <Link
                 href={localizePath(locale, '/consultants')}
-                className="inline-block w-full py-3.5 rounded-full bg-brand-primary text-white font-medium text-base text-center hover:opacity-90 transition-opacity"
+                className="inline-block w-full py-3.5 rounded-full bg-brand-primary text-text-on-dark font-medium text-base text-center hover:opacity-90 transition-opacity"
               >
                 {copy.tryAgain}
               </Link>

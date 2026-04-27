@@ -201,3 +201,8 @@ vite.config.ts.timestamp-*
 # Claude Code dahili (settings.json takipte; lock + local override değil)
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
+
+# Firebase service account credentials (NEVER commit)
+*-firebase-adminsdk-*.json
+google-services.json
+GoogleService-Info.plist

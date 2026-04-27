@@ -97,6 +97,43 @@
         "mustAcceptTerms": "You must accept the terms to continue."
       }
     },
+    "consultants": {
+      "title": "Consultants",
+      "title_singular": "Consultant",
+      "labels": {
+        "bio": "Bio",
+        "expertise": "Expertise",
+        "languages": "Languages",
+        "session": "Session"
+      },
+      "status": {
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "pending": "Pending"
+      },
+      "actions": {
+        "approve": "Approve",
+        "approve_success": "Consultant approved.",
+        "approve_failed": "Could not approve consultant.",
+        "reject": "Reject",
+        "reject_success": "Consultant rejected.",
+        "reject_failed": "Could not reject consultant.",
+        "rejection_reason_prompt": "Rejection reason"
+      },
+      "expertise": {
+        "astrology": "Astrology",
+        "birth_chart": "Birth Chart",
+        "relationship": "Relationship",
+        "mood": "Mood",
+        "career": "Career",
+        "numerology": "Numerology",
+        "tarot": "Tarot"
+      },
+      "languages": {
+        "tr": "Turkish",
+        "en": "English"
+      }
+    },
     "common": {
       "save": "Save",
       "saving": "Saving...",
@@ -1224,6 +1261,7 @@
         }
       },
       "items": {
+        "consultants": "Consultants",
         "db": "Database",
         "audit": "Audit Logs",
         "availability": "Availability",
@@ -1239,6 +1277,7 @@
         "footer_sections": "Footer Sections",
         "custom_pages": "Custom Pages",
         "site_settings": "Site Settings",
+        "cache": "Cache Management",
         "email_templates": "Email Templates",
         "services": "Services",
         "faqs": "FAQs",
@@ -1249,6 +1288,10 @@
         "chat": "Chat & AI",
         "dashboard": "Overview",
         "orders": "Orders",
+        "announcements": "Announcements",
+        "support": "Support",
+        "subscriptions": "Subscriptions",
+        "subscription_plans": "Subscription Plans",
         "wallet": "Wallet",
         "gutschein": "Gift Cards",
         "payment_settings": "Payment Settings",
@@ -1533,6 +1576,51 @@
           "bootstrapError": "UI bootstrap failed.",
           "bootstrapErrorGeneric": "Error during UI bootstrap."
         }
+      }
+    },
+    "subscriptions": {
+      "title": "Subscriptions",
+      "description": "List and refund subscriptions.",
+      "listTitle": "Subscription List",
+      "actions": {
+        "refresh": "Refresh",
+        "search": "Search",
+        "refund": "Refund",
+        "refundReasonPrompt": "Refund reason"
+      },
+      "toasts": {
+        "refundSuccess": "Subscription refunded/closed.",
+        "refundFailed": "Could not refund subscription."
+      },
+      "filters": {
+        "status": "Status",
+        "search": "Search",
+        "searchPlaceholder": "Email, plan code, status, subscription id"
+      },
+      "table": {
+        "user": "User",
+        "plan": "Plan",
+        "status": "Status",
+        "provider": "Provider",
+        "price": "Price",
+        "started": "Started",
+        "ends": "Ends",
+        "actions": "Actions",
+        "noRecords": "No subscriptions found."
+      },
+      "pagination": {
+        "page": "Page {page} / {totalPages}",
+        "prev": "Prev",
+        "next": "Next"
+      },
+      "statuses": {
+        "all": "All",
+        "pending": "Pending",
+        "active": "Active",
+        "cancelled": "Cancelled",
+        "expired": "Expired",
+        "grace_period": "Grace Period",
+        "past_due": "Past Due"
       }
     },
     "notifications": {
