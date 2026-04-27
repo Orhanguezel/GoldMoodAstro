@@ -174,6 +174,7 @@ async function getBookingForParticipant(bookingId: string, userId: string) {
       status: bookings.status,
       media_type: bookings.media_type,
       consultant_user_id: consultants.user_id,
+      consultant_supports_video: consultants.supports_video,
     })
     .from(bookings)
     .innerJoin(consultants, eq(consultants.id, bookings.consultant_id))
@@ -187,6 +188,40 @@ async function getBookingForParticipant(bookingId: string, userId: string) {
   if (row.consultant_user_id === userId) participant = 'consultant';
 
   return participant ? { booking: row, participant } : null;
+}
+
+/**
+ * T11-1 — Video feature flag check
+ * media_type='video' ise:
+ *   - feature.video_call site_setting=1 olmalı (global flag)
+ *   - consultants.supports_video=1 olmalı (consultant tarafı)
+ * Aksi halde 403.
+ */
+async function assertVideoCallAllowed(args: {
+  mediaType: 'audio' | 'video';
+  consultantSupportsVideo: number | null | undefined;
+}) {
+  if (args.mediaType !== 'video') return;
+
+  // site_settings.feature.video_call
+  const flagRows = await db.execute(sql`
+    SELECT value FROM site_settings WHERE \`key\` = 'feature.video_call' LIMIT 1
+  `);
+  const arr = Array.isArray((flagRows as unknown as unknown[])?.[0]) ? (flagRows as unknown as unknown[][])[0] : flagRows;
+  const row = (Array.isArray(arr) ? arr[0] : null) as { value?: string | number } | null;
+  const flagOn = String(row?.value ?? '0') === '1';
+
+  if (!flagOn) {
+    const error = new Error('video_call_feature_disabled');
+    (error as Error & { statusCode?: number }).statusCode = 403;
+    throw error;
+  }
+
+  if (!args.consultantSupportsVideo || Number(args.consultantSupportsVideo) === 0) {
+    const error = new Error('consultant_does_not_support_video');
+    (error as Error & { statusCode?: number }).statusCode = 403;
+    throw error;
+  }
 }
 
 export async function issueLiveKitToken(bookingId: string, userId: string) {
@@ -204,6 +239,12 @@ export async function issueLiveKitToken(bookingId: string, userId: string) {
   }
 
   assertBookingWindow(access.booking);
+
+  // T11-1 — Video feature flag check
+  await assertVideoCallAllowed({
+    mediaType: access.booking.media_type === 'video' ? 'video' : 'audio',
+    consultantSupportsVideo: access.booking.consultant_supports_video,
+  });
 
   const roomName = makeRoomName(bookingId);
   const identity = `${userId}|${access.participant === 'consultant' ? 'host' : 'guest'}`;

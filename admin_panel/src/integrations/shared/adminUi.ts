@@ -95,6 +95,8 @@ const emptyNav: AdminNavCopy = {
     orders: '',
     payment_settings: '',
     announcements: '',
+    subscriptions: '',
+    subscription_plans: '',
   },
 };
 
@@ -132,6 +134,8 @@ export function normalizeAdminUiCopy(raw: unknown): AdminUiCopy {
     orders: uiText(itemsRaw.orders),
     payment_settings: uiText(itemsRaw.payment_settings),
     announcements: uiText(itemsRaw.announcements),
+    subscriptions: uiText(itemsRaw.subscriptions),
+    subscription_plans: uiText(itemsRaw.subscription_plans),
   };
 
   const commonRaw = parseJsonObject(o.common);

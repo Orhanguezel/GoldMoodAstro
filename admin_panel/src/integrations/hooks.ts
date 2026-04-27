@@ -68,6 +68,7 @@ export * from '@/integrations/endpoints/admin/chat_admin.endpoints';
 
 // Orders / Payments
 export * from '@/integrations/endpoints/admin/orders_admin.endpoints';
+export * from '@/integrations/endpoints/admin/subscriptions_admin.endpoints';
 
 // Support
 export * from '@/integrations/endpoints/admin/support_admin.endpoints';

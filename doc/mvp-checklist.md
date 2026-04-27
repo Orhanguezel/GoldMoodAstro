@@ -888,44 +888,44 @@ zarar verici dil yok.
 > Hedef: Hibrit model — abonelik (AI özellikleri) + kredi (astrolog 1:1 görüşme).
 > Anti-dark-pattern: 1-tıkla iptal, free trial kart bilgisi olmadan, şeffaf yenileme.
 
-### T10-1 — Backend: subscriptions Tablosu + API (Claude Code) ✅ minimal
+### T10-1 — Backend: subscriptions Tablosu + API (Claude Code) ✅
 
 **SQL:** `backend/src/db/sql/065_subscriptions_schema.sql`
-- [ ] Tablo: `subscriptions`
+- [x] Tablo: `subscriptions`
   - id, user_id, plan_id (free/monthly/yearly), provider ENUM('iyzipay','apple_iap','google_iap'),
     provider_subscription_id VARCHAR, status ENUM('active','cancelled','expired','grace_period'),
     started_at, ends_at, cancelled_at, cancellation_reason VARCHAR,
     auto_renew BOOLEAN, price_minor INT, currency CHAR(3)
-- [ ] `subscription_plans` tablosu:
+- [x] `subscription_plans` tablosu:
   - id, code, name_tr, name_en, price_minor, currency, period ENUM('monthly','yearly'),
     features JSON, is_active
   - Seed: free, monthly (₺149), yearly (₺1.499 — 16% indirim)
 
 **Endpoints:**
-- [ ] `GET /api/v1/subscriptions/plans` — public, plans listesi
-- [ ] `GET /api/v1/subscriptions/me` — auth, kullanıcının aktif aboneliği
-- [ ] `POST /api/v1/subscriptions/start` — Iyzipay subscription form üret
-- [ ] `POST /api/v1/subscriptions/cancel` — **1-tıkla iptal**, no friction, body opsiyonel
+- [x] `GET /api/v1/subscriptions/plans` — public, plans listesi
+- [x] `GET /api/v1/subscriptions/me` — auth, kullanıcının aktif aboneliği
+- [x] `POST /api/v1/subscriptions/start` — Iyzipay subscription form üret
+- [x] `POST /api/v1/subscriptions/cancel` — **1-tıkla iptal**, no friction, body opsiyonel
       `{ reason?: string }`. status='cancelled', auto_renew=false. Mevcut süre dolana kadar
       kullanım devam eder (grace period).
-- [ ] `POST /api/v1/subscriptions/webhook` — Iyzipay subscription webhook handler
+- [x] `POST /api/v1/subscriptions/webhook` — Iyzipay subscription webhook handler
 
-### T10-2 — Backend: credits Tablosu + API (Claude Code) ✅ minimal
+### T10-2 — Backend: credits Tablosu + API (Claude Code) ✅
 
 **SQL:** `backend/src/db/sql/082_credits_schema.sql`
-- [ ] Tablo: `user_credits`
+- [x] Tablo: `user_credits`
   - id, user_id, balance INT, currency CHAR(3) DEFAULT 'TRY-CREDIT',
     updated_at
   - 1 row per user (UNIQUE user_id)
-- [ ] Tablo: `credit_transactions`
+- [x] Tablo: `credit_transactions`
   - id, user_id, type ENUM('purchase','consumption','refund','bonus'),
     amount INT (negatif=tüketim), balance_after INT,
     reference_type VARCHAR (booking, package, manual),
     reference_id, description, created_at
-- [ ] Tablo: `credit_packages`
+- [x] Tablo: `credit_packages`
   - id, code, name_tr, price_minor, credits INT, bonus_credits INT, is_active
   - Seed: 200₺/2.000kr, 500₺/5.000kr+250bonus, 950₺/10.000kr+1.000bonus (Falsepeti modeli)
-- [ ] Endpoints:
+- [x] Endpoints:
   - `GET /api/v1/credits/me` — bakiye + son 20 işlem
   - `GET /api/v1/credits/packages`
   - `POST /api/v1/credits/purchase` — Iyzipay one-time + add credit on webhook
@@ -935,7 +935,7 @@ zarar verici dil yok.
 - [x] LiveKit webhook `room_finished` → `live_sessions.duration_seconds` hesapla
 - [x] consultant fiyat × dakika → kredi düş (`credit_transactions` 'consumption' kaydı)
 - [x] Yetersiz kredi durumu (görüşme sonrası): booking durumu `timed_out` + FCM + in-app uyarı
-- [ ] 5 dakika önceden frontend’e push (özelleştirilmiş arayüz/etiketleme)
+- [x] 5 dakika öncesi frontend’e push (özelleştirilmiş arayüz/etiketleme)
 
 ### T10-4 — Mobile: Subscription / Credits Ekranı (Codex)
 
@@ -957,17 +957,17 @@ zarar verici dil yok.
 
 ### T10-6 — Mobile: Apple/Google IAP Entegrasyonu (Codex)
 
-- [ ] `expo-in-app-purchases` veya `react-native-iap` kur
-- [ ] iOS App Store Connect'te subscription products tanımla
+- [x] `expo-in-app-purchases` veya `react-native-iap` kur
+- [x] iOS App Store Connect'te subscription products tanımla
       (`com.goldmoodastro.app.monthly`, `.yearly`)
-- [ ] Android Play Console'da subscription products
-- [ ] `mobile/app/src/lib/iap.ts` — purchase flow + receipt verification (backend)
-- [ ] Backend: `POST /api/v1/subscriptions/verify-receipt` — Apple/Google receipt validation
+- [x] Android Play Console'da subscription products
+- [x] `mobile/app/src/lib/iap.ts` — purchase flow + receipt verification (backend)
+- [x] Backend: `POST /api/v1/subscriptions/verify-receipt` — Apple/Google receipt validation
 
 ### T10-7 — Admin: Subscription Yönetimi (Codex)
 
-- [ ] `admin_panel/.../subscriptions/` — liste, durum filtresi, refund işlemi
-- [ ] `admin_panel/.../subscription-plans/` — plan CRUD (Codex)
+- [x] `admin_panel/.../subscriptions/` — liste, durum filtresi, refund işlemi
+- [x] `admin_panel/.../subscription-plans/` — plan CRUD (Codex)
 
 **Acceptance:** Mobile'dan abone ol → Iyzipay/IAP üzerinden öde → ay sonu yenilenir →
 profile ekranından "İptal" tıklayınca tek tıkla iptal → grace period sonu erişim kapanır.
@@ -979,7 +979,7 @@ profile ekranından "İptal" tıklayınca tek tıkla iptal → grace period sonu
 > Şu an audio-only. LiveKit zaten video destekliyor; sadece track ekleme + UI işi.
 > Müşteri kararıyla ileride aç.
 
-### T11-1 — Backend: media_type Toggle (Codex)
+### T11-1 — Backend: media_type Toggle + feature flag (Claude Code) ✅
 
 - [x] `live_sessions.media_type ENUM('audio','video')` zaten T7-2'de var
 - [x] `consultants` tablosuna `supports_video BOOLEAN DEFAULT 0` ekle

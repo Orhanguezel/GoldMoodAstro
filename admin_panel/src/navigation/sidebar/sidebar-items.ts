@@ -76,7 +76,9 @@ export type AdminNavItemKey =
   | 'wallet'
   | 'orders'
   | 'payment_settings'
-  | 'announcements';
+  | 'announcements'
+  | 'subscriptions'
+  | 'subscription_plans';
 
 export type AdminNavGroupKey = 'general' | 'content' | 'marketing' | 'communication' | 'system';
 
@@ -103,6 +105,8 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'users', url: '/admin/users', icon: Users },
       { key: 'bookings', url: '/admin/bookings', icon: Calendar },
       { key: 'orders', url: '/admin/orders', icon: Package },
+      { key: 'subscriptions', url: '/admin/subscriptions', icon: CreditCard },
+      { key: 'subscription_plans', url: '/admin/subscription-plans', icon: Receipt },
     ],
   },
   {
@@ -159,6 +163,8 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   wallet: 'Wallet',
   payment_settings: 'Payment Settings',
   announcements: 'Announcements',
+  subscriptions: 'Subscriptions',
+  subscription_plans: 'Subscription Plans',
 };
 
 export function buildAdminSidebarItems(

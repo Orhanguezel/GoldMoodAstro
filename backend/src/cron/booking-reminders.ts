@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { sendPushNotification } from '@/modules/firebase/service';
 
-type ReminderKind = '24h' | '2h' | '15m';
+type ReminderKind = '24h' | '2h' | '15m' | '5m';
 
 type ReminderRow = {
   id: string;
@@ -17,7 +17,7 @@ type ReminderRow = {
 
 const REMINDERS: Array<{
   kind: ReminderKind;
-  flag: 'reminder_24h_sent' | 'reminder_2h_sent' | 'reminder_15m_sent';
+  flag?: 'reminder_24h_sent' | 'reminder_2h_sent' | 'reminder_15m_sent';
   minMinutes: number;
   maxMinutes: number;
   title: string;
@@ -47,9 +47,40 @@ const REMINDERS: Array<{
     title: 'Gorusmeniz 15 dakika sonra basliyor',
     body: 'Sesli gorusmeniz yaklasiyor.',
   },
+  {
+    kind: '5m',
+    minMinutes: 4,
+    maxMinutes: 6,
+    title: '5 dakika içinde görüşme başlıyor',
+    body: 'Katılmak için hazır olun, görüşmeniz 5 dakika içinde başlıyor.',
+  },
 ];
 
+const inProcessReminderCache = new Map<string, number>();
+const FIVE_MIN_MEMORY_TTL_MS = 15 * 60 * 1000;
+
+function makeReminderCacheKey(kind: ReminderKind, bookingId: string) {
+  return `${kind}:${bookingId}`;
+}
+
+function shouldSkipUntrackedReminder(kind: ReminderKind, bookingId: string) {
+  if (!kind || kind !== '5m') return false;
+
+  const key = makeReminderCacheKey(kind, bookingId);
+  const last = inProcessReminderCache.get(key) ?? 0;
+  const now = Date.now();
+  if (!last) return false;
+  return now - last < FIVE_MIN_MEMORY_TTL_MS;
+}
+
+function trackUntrackedReminder(kind: ReminderKind, bookingId: string) {
+  if (kind !== '5m') return;
+  inProcessReminderCache.set(makeReminderCacheKey(kind, bookingId), Date.now());
+}
+
 async function listReminderRows(reminder: (typeof REMINDERS)[number]) {
+  const flagClause = reminder.flag ? sql.raw(`AND b.${reminder.flag} = 0`) : sql.raw('');
+
   const rows = await db.execute(sql`
     SELECT
       b.id,
@@ -65,7 +96,7 @@ async function listReminderRows(reminder: (typeof REMINDERS)[number]) {
     INNER JOIN consultants c ON c.id = b.consultant_id
     INNER JOIN users cu ON cu.id = c.user_id
     WHERE b.status IN ('booked', 'confirmed')
-      AND b.${sql.raw(reminder.flag)} = 0
+      ${flagClause}
       AND TIMESTAMPDIFF(
         MINUTE,
         NOW(),
@@ -77,7 +108,7 @@ async function listReminderRows(reminder: (typeof REMINDERS)[number]) {
   return Array.isArray(resultRows) ? (resultRows as ReminderRow[]) : [];
 }
 
-async function markReminderSent(bookingId: string, flag: (typeof REMINDERS)[number]['flag']) {
+async function markReminderSent(bookingId: string, flag: string) {
   await db.execute(sql`
     UPDATE bookings
     SET ${sql.raw(flag)} = 1, updated_at = NOW(3)
@@ -86,6 +117,7 @@ async function markReminderSent(bookingId: string, flag: (typeof REMINDERS)[numb
 }
 
 async function sendReminder(row: ReminderRow, reminder: (typeof REMINDERS)[number]) {
+  if (shouldSkipUntrackedReminder(reminder.kind, row.id)) return;
   if (!row.id) return;
 
   const data = {
@@ -107,7 +139,12 @@ async function sendReminder(row: ReminderRow, reminder: (typeof REMINDERS)[numbe
     });
   }
 
-  await markReminderSent(row.id, reminder.flag);
+  if (reminder.flag) {
+    await markReminderSent(row.id, reminder.flag);
+    return;
+  }
+
+  trackUntrackedReminder(reminder.kind, row.id);
 }
 
 export async function runBookingReminderSweep() {

@@ -53,6 +53,7 @@ export * from '@/integrations/shared/users/admin_users.types';
 export * from '@/integrations/shared/audit.types';
 export * from '@/integrations/shared/availability.types';
 export * from '@/integrations/shared/resources.types';
+export * from '@/integrations/shared/subscriptions';
 export * from '@/integrations/shared/telegram';
 export * from '@/integrations/shared/telegram_inbound';
 export * from '@/integrations/shared/telegram_webhook';
