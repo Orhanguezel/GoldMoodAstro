@@ -16,6 +16,8 @@
     "./modules/astrology/*": "./modules/astrology/*.ts",
     "./modules/audit": "./modules/audit/index.ts",
     "./modules/audit/*": "./modules/audit/*.ts",
+    "./modules/banners": "./modules/banners/index.ts",
+    "./modules/banners/*": "./modules/banners/*.ts",
     "./modules/auth": "./modules/auth/index.ts",
     "./modules/auth/*": "./modules/auth/*.ts",
     "./modules/availability": "./modules/availability/index.ts",

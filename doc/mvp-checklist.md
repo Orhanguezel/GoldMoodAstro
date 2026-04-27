@@ -992,7 +992,7 @@ profile ekranından "İptal" tıklayınca tek tıkla iptal → grace period sonu
 
 > Müşteri kararıyla yeni modül. Admin panelden banner yönetimi, frontend/mobile'da gösterim.
 
-### T12-1 — Backend: banners Modülü (Codex)
+### T12-1 — Backend: banners Modülü (Claude Code) ✅
 
 **SQL:** `backend/src/db/sql/160_banners_schema.sql`
 - [ ] Tablo: `banners`
