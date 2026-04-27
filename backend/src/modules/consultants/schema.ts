@@ -25,6 +25,7 @@ export const consultants = mysqlTable(
     languages: json('languages').$type<string[]>(),
     session_price: decimal('session_price', { precision: 10, scale: 2 }).notNull(),
     session_duration: int('session_duration').notNull().default(30),
+    supports_video: tinyint('supports_video').default(0),
     currency: char('currency', { length: 3 }).default('TRY'),
     approval_status: mysqlEnum('approval_status', ['pending', 'approved', 'rejected']).default(
       'pending',

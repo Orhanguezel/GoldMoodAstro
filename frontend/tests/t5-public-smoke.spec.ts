@@ -92,9 +92,12 @@ test.describe('T5 public smoke', () => {
       await page.waitForTimeout(500);
     }
 
-    await expect(page.getByLabel('Min. Fiyat')).toBeVisible();
-    await page.getByLabel('Min. Fiyat').selectOption('500');
-    await expect(page.getByLabel('Min. Fiyat')).toHaveValue('500');
+    await expect(page.getByRole('combobox', { name: 'Min. Fiyat (₺)' })).toBeVisible();
+    await page.getByRole('combobox', { name: 'Min. Fiyat (₺)' }).selectOption('500');
+    await expect(page.getByRole('combobox', { name: 'Min. Fiyat (₺)' })).toHaveValue('500');
+
+    await expect(page.getByRole('combobox', { name: 'Min. Puan' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Maks. Fiyat (₺)' })).toBeVisible();
 
     await gotoHealthy(page, `/tr/consultants/${CONSULTANT_ID}`);
     await expect(page.getByRole('heading', { name: /Tarih & Saat Sec|Tarih & Saat Seç/i })).toBeVisible();
@@ -108,6 +111,32 @@ test.describe('T5 public smoke', () => {
     } else {
       await expect(page.getByText(/musait slot yok|müsait slot yok|No available slots/i)).toBeVisible();
     }
+
+    await expect(page.getByRole('button', { name: /Randevu Al|Book/i })).toBeVisible();
+  });
+
+  test('checkout summary page and validation surface is available', async ({ page }) => {
+    await gotoHealthy(page, `/tr/booking?${bookingQuery.toString()}`);
+    await expect(
+      page.getByRole('heading', { name: /Randevu Özeti|Booking Summary/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /Güvenli Ödemeye Geç|Proceed to Payment/i }),
+    ).toBeVisible();
+    await expect(page.getByLabelText('Not (opsiyonel)')).toBeVisible();
+  });
+
+  test('auth forms surface validation feedback', async ({ page }) => {
+    await gotoHealthy(page, '/tr/login');
+    await expect(page.locator('#login-email')).toHaveAttribute('required');
+    await expect(page.locator('#login-password')).toHaveAttribute('required');
+
+    await gotoHealthy(page, '/tr/register');
+    await page.fill('#reg-email', 'demo@example.com');
+    await page.fill('#reg-password', '123456');
+    await page.fill('#reg-password-again', '654321');
+    await page.getByRole('button', { name: /sign up|kayıt|register/i }).click();
+    await expect(page.getByRole('alert')).toBeVisible();
   });
 
   test('admin design token editor renders', async ({ page }) => {
@@ -115,7 +144,9 @@ test.describe('T5 public smoke', () => {
     await gotoHealthy(page, `${ADMIN_BASE_URL}/admin/site-settings`);
 
     await page.getByRole('tab', { name: 'Design Tokens' }).click();
-    await expect(page.getByRole('heading', { name: /Design Token Editoru/i })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /Design Token Editörü|Design Token Editor/i }),
+    ).toBeVisible();
     await expect(page.locator('input[type="color"]').first()).toBeVisible();
   });
 });

@@ -8,6 +8,7 @@
     "start": "node --experimental-specifier-resolution=node dist/index.js",
     "start:bun": "bun dist/index.js",
     "typecheck": "bun x tsc --noEmit",
+    "test": "bun test",
     "db:seed": "bun src/db/index.ts",
     "db:seed:nodrop": "bun src/db/index.ts --no-drop",
     "db:seed:only": "bun src/db/index.ts"

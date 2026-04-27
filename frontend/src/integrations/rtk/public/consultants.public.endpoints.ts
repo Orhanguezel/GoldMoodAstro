@@ -15,6 +15,7 @@ export interface ConsultantPublic {
   languages: string[];
   session_price: string;
   session_duration: number;
+  supports_video: number;
   currency: string;
   approval_status: 'pending' | 'approved' | 'rejected';
   is_available: number;

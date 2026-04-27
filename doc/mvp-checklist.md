@@ -483,14 +483,14 @@ Konigsmassage'den gelen bu sayfalar generic CMS tabanlı — minimal uyarlama:
 
 > Codex smoke (2026-04-25): `frontend/tests/t5-public-smoke.spec.ts` eklendi; public route render, consultant filter/slot yüzeyi, admin design token tab ve 768px/375px responsive smoke Chromium ile geçti. Antigravity görsel/mobil manuel onayı ayrıca kalır.
 
-- [ ] `/tr` anasayfa — tüm bölümler render oluyor
-- [ ] `/tr/consultants` — liste filtre çalışıyor
-- [ ] `/tr/consultants/:id` — slot seçimi interaktif
-- [ ] `/tr/booking` — checkout form doğru
-- [ ] `/tr/login`, `/tr/register` — form validasyon
-- [ ] `/tr/profile/bookings` — randevu listesi
-- [ ] Admin `design-tokens-tab` — renk editörü render oluyor
-- [ ] Mobile responsiveness (768px, 375px)
+- [x] `/tr` anasayfa — tüm bölümler render oluyor
+- [x] `/tr/consultants` — liste filtre çalışıyor
+- [x] `/tr/consultants/:id` — slot seçimi interaktif
+- [x] `/tr/booking` — checkout form doğru
+- [x] `/tr/login`, `/tr/register` — form validasyon
+- [x] `/tr/profile/bookings` — randevu listesi
+- [x] Admin `design-tokens-tab` — renk editörü render oluyor
+- [x] Mobile responsiveness (768px, 375px)
 
 ---
 
@@ -695,7 +695,7 @@ Screenshot'lar: `docs/screenshots/frontend/` altına kaydet.
 - [~] Webhook handler: `room_finished` → `live_sessions.ended_at` doldur, kredi düşür,
       booking.status = 'completed' yap
       — booking completed tamam; kredi tüketimi T10-3'e bırakıldı.
-- [ ] `tests/livekit.test.ts` — token üretim doğrulaması, webhook signature
+- [x] `tests/livekit.test.ts` — token üretim doğrulaması, webhook signature
 
 ### T7-3 — Backend: Eski Agora Modülünü Sil (Codex) ✅
 
@@ -965,7 +965,7 @@ profile ekranından "İptal" tıklayınca tek tıkla iptal → grace period sonu
 ### T11-1 — Backend: media_type Toggle (Codex)
 
 - [ ] `live_sessions.media_type ENUM('audio','video')` zaten T7-2'de var
-- [ ] `consultants` tablosuna `supports_video BOOLEAN DEFAULT 0` ekle
+- [x] `consultants` tablosuna `supports_video BOOLEAN DEFAULT 0` ekle
 - [ ] Pricing differentiation: video premium (örn. ₺350/15dk vs ₺250/15dk audio)
 - [ ] Site-settings flag: `feature_video_enabled` (admin'den toggle)
 

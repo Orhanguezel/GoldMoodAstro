@@ -18,6 +18,8 @@
     "./modules/audit/*": "./modules/audit/*.ts",
     "./modules/banners": "./modules/banners/index.ts",
     "./modules/banners/*": "./modules/banners/*.ts",
+    "./modules/campaigns": "./modules/campaigns/index.ts",
+    "./modules/campaigns/*": "./modules/campaigns/*.ts",
     "./modules/auth": "./modules/auth/index.ts",
     "./modules/auth/*": "./modules/auth/*.ts",
     "./modules/availability": "./modules/availability/index.ts",
