@@ -19,7 +19,8 @@ Ancak bu kütüphane **çift lisans modelinde** dağıtılmaktadır:
 GoldMoodAstro **kapalı kaynak ticari ürün** olduğundan, profesyonel lisansa geçilmesi yasal ve operasyonel olarak **zorunludur**. Bu rapor durumu detaylandırır ve karar için bilgi sunar.
 
 > **Karar gereken nokta:** ~30.000 ₺ tek seferlik lisans satın alımı (proje bütçesinin %3'ü).
-> Karar verilmeden ürün canlı (production) yayına çıkarılamaz.
+> Karar gelene kadar **proje açık kaynak GPL-3.0** lisansı altında geliştirilmeye devam edilebilir;
+> lisans satın alındığında kapalı kaynağa geçilir.
 
 \newpage
 
@@ -184,7 +185,35 @@ Lisans onaylandıktan sonra teknik tarafta yapılacak işler:
 
 \newpage
 
-# 8. Sonuç ve Karar İhtiyacı
+# 8. Geçici Çözüm — Karar Gelene Kadar
+
+Müşteri kararı için zaman tanımak amacıyla **geçici olarak proje GPL-3.0 lisansı altında açık kaynak yayınlanmıştır**. GitHub repository (https://github.com/Orhanguezel/GoldMoodAstro) public olarak erişilebilir.
+
+## Bu Geçici Çözümün Anlamı
+
+| Konu | Durum |
+|------|-------|
+| **Yasal uyumluluk** | ✓ GPL-3.0 viral şartı sağlanmış (kütüphane + kullanan kod aynı lisans) |
+| **Geliştirme akışı** | ✓ Etkilenmez — kod aynen çalışır, deploy'lar devam eder |
+| **Production yayını** | ✓ Yapılabilir (karar gelene kadar GPL altında çalışır) |
+| **Müşteri zaman kazanımı** | ✓ Lisans kararı için 1-2 hafta rahat süre |
+| **Rakip kopyalama riski** | ⚠️ Düşük — kodun değeri marka, içerik, kullanıcı deneyimindedir; teknik kod kopyalansa bile pazarda fark yaratmaz |
+| **Yatırımcı/satış** | ⚠️ Uzun vadeli — lansman öncesi kapalı kaynağa geçiş planlı |
+
+## Lansman Öncesi Geçiş
+
+Müşteri Profesyonel Lisansı satın aldığında yapılacaklar (~1 gün ek iş):
+
+1. `swisseph-wasm` paketi → resmi `swisseph` paketine değiştirilir
+2. Astrodienst lisans key'i `backend/.env`'e eklenir
+3. `LICENSE` dosyası proprietary/All Rights Reserved'e çevrilir
+4. GitHub repository **private** yapılır
+5. README'den GPL referansları kaldırılır
+6. Production deploy: yeni paket + lisans aktif
+
+\newpage
+
+# 9. Sonuç ve Karar İhtiyacı
 
 ## Özet
 
@@ -194,7 +223,7 @@ GoldMoodAstro'nun **astroloji hesaplama altyapısı** Swiss Ephemeris'tir. Bu te
 
 > **Astrodienst'e tek seferlik 750 CHF (~30.000 ₺) ödeyerek profesyonel lisans satın almak.**
 
-Bu adım atılmadan önce GoldMoodAstro **production'a (canlı yayına) çıkamaz**.
+Bu adıma kadar proje **GPL-3.0 altında açık kaynak** olarak geliştirilmeye devam edilecek (madde 8'de detay). Lisans satın alındığında kapalı kaynağa hızlı geçiş yapılır (~1 günlük iş).
 
 ## Karar İhtiyacı
 
@@ -207,12 +236,13 @@ Bu adım atılmadan önce GoldMoodAstro **production'a (canlı yayına) çıkama
 
 ## Alternatif Onaylanmazsa
 
-Müşteri lisans satın almayı tercih etmezse iki seçenek kalır:
+Müşteri lisans satın almayı tercih etmezse üç seçenek kalır:
 
-1. **B (MIT alternatif)** — kapsam daraltılır, ürün rekabette geri kalır (~5-7 gün ek iş)
-2. **Pivot** — astroloji yerine "mood/coaching" odaklı içerik tabanlı modele geçiş (büyük ürün stratejisi değişikliği)
+1. **GPL-3.0 ile devam (mevcut durum)** — proje açık kaynak kalır, kod rakipler tarafından kopyalanabilir, yatırımcı süreçlerinde olumsuz etki yapar
+2. **B (MIT alternatif)** — kapsam daraltılır, ürün rekabette geri kalır (~5-7 gün ek iş)
+3. **Pivot** — astroloji yerine "mood/coaching" odaklı içerik tabanlı modele geçiş (büyük ürün stratejisi değişikliği)
 
-İki seçenek de **ürün vizyonunu zayıflatır**. Önerimiz **A — Profesyonel Lisans Satın Alımı**.
+İlk iki seçenek de **ürün vizyonunu zayıflatır**. Önerimiz **A — Profesyonel Lisans Satın Alımı**.
 
 ---
 

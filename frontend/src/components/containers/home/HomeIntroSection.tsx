@@ -5,14 +5,14 @@ import { useLocaleShort, useUiSection } from '@/i18n';
 
 const STEPS: Record<string, Array<{ title: string; desc: string; target: string }>> = {
   tr: [
-    { title: 'Şeffaf ve Adil', desc: 'Gizli ücretler veya sürpriz abonelikler yok. Sadece aldığınız hizmet kadar ödersiniz.', target: 'GÜVENİLİR ALTYAPI' },
-    { title: 'Gerçek Uzmanlar', desc: 'Yapay zeka robotları değil, alanında uzmanlaşmış gerçek astrologlar ve danışmanlarla çalışırsınız.', target: 'NİTELİKLİ KADRO' },
-    { title: 'Tam Gizlilik', desc: 'Telefon numaranız istenmez, tüm görüşmeler uçtan uca şifrelenmiş altyapı üzerinden gerçekleşir.', target: 'MAKSİMUM GİZLİLİK' },
+    { title: 'Danışman Seç', desc: 'Uzmanlık alanlarına, puanlarına ve gerçek kullanıcı yorumlarına göre size en uygun danışmanı bulun.', target: 'ADIM 01' },
+    { title: 'Randevu Al', desc: 'Danışmanın takviminden size uygun müsait bir slot seçin ve ödemenizi güvenle tamamlayın.', target: 'ADIM 02' },
+    { title: 'Görüşmeyi Başlat', desc: 'Randevu saati geldiğinde uygulama üzerinden sesli görüşmenizi anında başlatın.', target: 'ADIM 03' },
   ],
   en: [
-    { title: 'Transparent & Fair', desc: 'No hidden fees or surprise subscriptions. You only pay for the service you receive.', target: 'SECURE INFRASTRUCTURE' },
-    { title: 'Real Experts', desc: 'You work with real, verified astrologers and consultants, not AI bots.', target: 'QUALIFIED STAFF' },
-    { title: 'Complete Privacy', desc: 'Your phone number is never required. All sessions are conducted via encrypted channels.', target: 'MAXIMUM PRIVACY' },
+    { title: 'Choose Consultant', desc: 'Find the best consultant for you based on expertise, ratings, and authentic user reviews.', target: 'STEP 01' },
+    { title: 'Book Appointment', desc: 'Select a convenient slot from the consultant\'s calendar and complete your payment securely.', target: 'STEP 02' },
+    { title: 'Start Session', desc: 'When the appointment time arrives, start your voice session instantly through the app.', target: 'STEP 03' },
   ],
 };
 
@@ -31,11 +31,11 @@ export default function HomeIntroSection({ locale: explicitLocale }: { locale?: 
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-20 lg:mb-28 reveal">
           <span className="font-display text-[11px] tracking-[0.42em] text-[var(--gm-gold-deep)] uppercase mb-6 block">
-            {ui('ui_home_intro_label', 'NEDEN BİZ?')}
+            {ui('ui_home_intro_label', locale === 'tr' ? 'NASIL ÇALIŞIR?' : 'HOW IT WORKS?')}
           </span>
           <h2 
             className="font-serif text-[clamp(2.2rem,4vw,3.8rem)] font-light leading-[1.15] text-[var(--gm-text)]"
-            dangerouslySetInnerHTML={{ __html: sectionTitle }}
+            dangerouslySetInnerHTML={{ __html: ui('ui_home_intro_title', locale === 'tr' ? '3 Adımda <em>Danışmanlık</em>' : '3 Steps to <em>Consultation</em>') }}
           />
         </div>
 

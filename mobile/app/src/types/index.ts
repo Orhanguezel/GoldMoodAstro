@@ -93,6 +93,7 @@ export interface Booking {
   appointment_time?: string;    // "HH:mm"
   session_duration: number;
   session_price: string;
+  media_type?: 'audio' | 'video';
   status: BookingStatus;
   customer_note?: string;
   created_at: string;
@@ -108,6 +109,83 @@ export interface BookingCreateInput {
   session_duration: number;
   session_price: string;
   customer_message?: string;
+}
+
+// ─── Subscription ───────────────────────────────────────────────
+
+export type SubscriptionProvider = 'iyzipay' | 'apple_iap' | 'google_iap' | 'manual';
+export type SubscriptionStatus = 'pending' | 'active' | 'cancelled' | 'expired' | 'grace_period' | 'past_due';
+
+export interface SubscriptionPlan {
+  id: string;
+  code: string;
+  name_tr: string;
+  name_en: string;
+  description_tr?: string | null;
+  description_en?: string | null;
+  price_minor: number;
+  currency: string;
+  period: 'monthly' | 'yearly' | 'lifetime';
+  trial_days: number;
+  features: unknown;
+  is_active: number;
+  display_order: number;
+}
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  provider: SubscriptionProvider;
+  provider_subscription_id: string | null;
+  status: SubscriptionStatus;
+  started_at: string | null;
+  ends_at: string | null;
+  trial_ends_at: string | null;
+  cancelled_at: string | null;
+  cancellation_reason: string | null;
+  auto_renew: number;
+  price_minor: number;
+  currency: string;
+  created_at?: string;
+  updated_at?: string;
+  plan?: SubscriptionPlan;
+}
+
+export interface CreditPackage {
+  id: string;
+  code: string;
+  name_tr: string;
+  name_en: string;
+  description_tr?: string | null;
+  description_en?: string | null;
+  price_minor: number;
+  currency: string;
+  credits: number;
+  bonus_credits: number;
+  is_active: number;
+  is_featured: number;
+  display_order: number;
+}
+
+export type CreditTransactionType = 'purchase' | 'consumption' | 'refund' | 'bonus' | 'adjustment';
+
+export interface CreditTransaction {
+  id: string;
+  type: CreditTransactionType;
+  amount: number;
+  balance_after: number;
+  reference_type: string | null;
+  reference_id: string | null;
+  order_id: string | null;
+  description: string | null;
+  created_at: string;
+}
+
+export interface CreditMe {
+  balance: number;
+  currency: string;
+  recent_transactions: CreditTransaction[];
 }
 
 // ─── Order / Payment ───────────────────────────────────────────────
@@ -273,4 +351,32 @@ export interface Review {
   is_approved: boolean;
   submitted_locale: string;
   created_at: string;
+}
+
+// ─── Banner ────────────────────────────────────────────────────────
+
+export type BannerPlacement =
+  | 'home_hero'
+  | 'home_sidebar'
+  | 'home_footer'
+  | 'consultant_list'
+  | 'mobile_welcome'
+  | 'mobile_home'
+  | 'mobile_call_end';
+
+export interface Banner {
+  id: string;
+  code: string;
+  title_tr?: string | null;
+  title_en?: string | null;
+  subtitle_tr?: string | null;
+  subtitle_en?: string | null;
+  image_url: string;
+  image_url_mobile?: string | null;
+  link_url?: string | null;
+  cta_label_tr?: string | null;
+  cta_label_en?: string | null;
+  placement: BannerPlacement;
+  locale: string;
+  priority: number;
 }

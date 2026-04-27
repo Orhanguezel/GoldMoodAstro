@@ -152,4 +152,10 @@ Credentials: `.secrets/credentials.env` (gitignore'lu, master vault).
 
 ## Lisans
 
-[MIT](LICENSE) - Orhan Guzel
+[**GPL-3.0-or-later**](LICENSE) — Orhan Güzel · 2026
+
+> **Neden GPL?** Astroloji hesaplama altyapısında [Swiss Ephemeris](https://www.astro.com/swisseph/swephinfo_e.htm)
+> bağımlılığı (`swisseph-wasm`) GPL-3.0 lisanslı olduğu için, viral şart gereği ana
+> proje de GPL-3.0 altında dağıtılmaktadır. Bu **geçici çözümdür** — proje sahibi
+> Astrodienst Professional License (~750 CHF) satın aldığında lisans tescilli/kapalı
+> kaynağa dönüştürülecek. Detay: [doc/raporlar/swiss-ephemeris-lisans-raporu.md](doc/raporlar/swiss-ephemeris-lisans-raporu.md).

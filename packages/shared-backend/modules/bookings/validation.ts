@@ -50,6 +50,7 @@ const phoneSchema = z
   .min(7)
   .max(32)
   .transform((v) => safeTrim(v));
+const mediaTypeSchema = z.enum(['audio', 'video']).default('audio');
 
 /** PUBLIC create: always reserves slot (status=pending_payment)
  *  Mobile auth'lu kullanıcılar için consultant_id + session bilgisi zorunlu.
@@ -65,8 +66,9 @@ export const publicCreateBookingSchema = z.object({
 
   // GoldMoodAstro required fields
   consultant_id: uuid36Schema,
-  session_price: z.string().trim().min(1).max(12),
+  session_price: z.string().trim().min(1).max(12).optional(),
   session_duration: z.coerce.number().int().min(15).max(480).optional(),
+  media_type: mediaTypeSchema,
 
   appointment_date: dateYmdSchema,
   appointment_time: timeHmSchema,
@@ -90,6 +92,8 @@ export const adminCreateBookingSchema = publicCreateBookingSchema.extend({
   name: nonEmptyTrimmed(2, 120),
   email: emailSchema,
   phone: phoneSchema,
+  session_price: z.string().trim().min(1).max(12),
+  media_type: mediaTypeSchema.optional(),
 
   // GoldMoodAstro: consultant optional for admin (can fill manually)
   consultant_id: uuid36Schema.optional(),

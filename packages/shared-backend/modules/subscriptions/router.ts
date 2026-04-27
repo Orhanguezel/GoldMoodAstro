@@ -12,8 +12,9 @@ export async function registerSubscriptions(app: FastifyInstance) {
   // Auth
   app.get(`${BASE}/me`, { preHandler: [requireAuth] }, controller.getMySubscription);
   app.post(`${BASE}/cancel`, { preHandler: [requireAuth] }, controller.cancelMySubscription);
+  app.post(`${BASE}/start`, { preHandler: [requireAuth] }, controller.startSubscription);
+  app.post(`${BASE}/webhook`, controller.subscriptionWebhook);
+  app.post(`${BASE}/verify-receipt`, { preHandler: [requireAuth] }, controller.verifyReceipt);
 
-  // TODO (Codex): POST /subscriptions/start (Iyzipay subscription form)
-  // TODO (Codex): POST /subscriptions/webhook/iyzipay
-  // TODO (Codex): POST /subscriptions/verify-receipt (Apple/Google IAP)
+  // Note: subscription webhook does not require auth because Iyzipay uses server-to-server callbacks.
 }

@@ -213,3 +213,29 @@ export interface DailyReadingResponse {
   reused: boolean;
   similarity_max: number;
 }
+
+export type BannerPlacement =
+  | 'home_hero'
+  | 'home_sidebar'
+  | 'home_footer'
+  | 'consultant_list'
+  | 'mobile_welcome'
+  | 'mobile_home'
+  | 'mobile_call_end';
+
+export interface Banner {
+  id: string;
+  code: string;
+  title_tr?: string | null;
+  title_en?: string | null;
+  subtitle_tr?: string | null;
+  subtitle_en?: string | null;
+  image_url: string;
+  image_url_mobile?: string | null;
+  link_url?: string | null;
+  cta_label_tr?: string | null;
+  cta_label_en?: string | null;
+  placement: BannerPlacement;
+  locale: string;
+  priority: number;
+}

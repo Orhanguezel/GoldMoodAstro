@@ -71,72 +71,76 @@ export default function ConsultantDetail({ id, locale }: Props) {
     router.push(`/${locale}/booking?${q.toString()}`);
   };
 
-  return (
-    <main className="min-h-screen py-20" style={{ padding: '5rem 4%' }}>
-      <div className="max-w-[900px] mx-auto">
+    <main className="min-h-screen py-24 bg-[var(--gm-bg)]" style={{ padding: '6rem 4%' }}>
+      <div className="max-w-[1000px] mx-auto">
         <Link
           href={`/${locale}/consultants`}
-          className="inline-flex items-center gap-1.5 text-text-muted text-sm mb-8 hover:text-text transition-colors"
+          className="inline-flex items-center gap-1.5 text-[var(--gm-muted)] text-[11px] tracking-[0.2em] uppercase mb-12 hover:text-[var(--gm-gold)] transition-colors"
         >
           <ArrowLeft size={14} />
-          {locale === 'tr' ? 'Danışmanlara dön' : 'Back to consultants'}
+          {locale === 'tr' ? 'Danışmanlara Dön' : 'Back to Consultants'}
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-bg-card border border-border rounded-2xl p-6">
-              <div className="flex items-start gap-5">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-brand-primary to-accent flex items-center justify-center text-text font-serif text-2xl flex-shrink-0">
-                  {initials}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h1 className="font-serif text-2xl text-text">{consultant.full_name}</h1>
-                    <CheckCircle size={18} className="text-brand-primary" />
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-12 items-start">
+          <div className="space-y-12">
+            {/* Header Card */}
+            <div className="reveal">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-8">
+                <div className="w-28 h-28 rounded-full border border-[var(--gm-gold)] p-1 bg-[var(--gm-bg)]">
+                  <div className="w-full h-full rounded-full bg-[var(--gm-gold)]/10 flex items-center justify-center text-[var(--gm-gold)] font-display text-3xl">
+                    {initials}
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-text-muted">
-                    <span className="flex items-center gap-1">
-                      <Star size={13} className="text-brand-secondary fill-brand-secondary" />
-                      <span className="text-brand-secondary font-medium">{rating.toFixed(1)}</span>
-                      <span>({consultant.rating_count})</span>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-center sm:justify-start gap-3 mb-3">
+                    <h1 className="font-display text-3xl tracking-tight text-[var(--gm-text)] uppercase">{consultant.full_name}</h1>
+                    <CheckCircle size={20} className="text-[var(--gm-gold)]" />
+                  </div>
+                  <div className="flex flex-wrap justify-center sm:justify-start items-center gap-6 text-[11px] tracking-[0.1em] text-[var(--gm-text-dim)] uppercase">
+                    <span className="flex items-center gap-1.5">
+                      <Star size={13} className="text-[var(--gm-gold)] fill-[var(--gm-gold)]" />
+                      <span className="text-[var(--gm-text)] font-semibold">{rating.toFixed(1)}</span>
+                      <span>({consultant.rating_count} {locale === 'tr' ? 'Yorum' : 'Reviews'})</span>
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Award size={13} />
-                      {consultant.total_sessions} {locale === 'tr' ? 'seans' : 'sessions'}
+                    <span className="flex items-center gap-1.5">
+                      <Award size={13} className="text-[var(--gm-gold)]" />
+                      {consultant.total_sessions} {locale === 'tr' ? 'Seans' : 'Sessions'}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={13} />
-                      {consultant.session_duration} dk
+                    <span className="flex items-center gap-1.5">
+                      <Clock size={13} className="text-[var(--gm-gold)]" />
+                      {consultant.session_duration} DK
                     </span>
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* Bio */}
             {consultant.bio && (
-              <div className="bg-bg-card border border-border rounded-2xl p-6">
-                <h2 className="font-serif text-lg text-text mb-3">{locale === 'tr' ? 'Hakkında' : 'About'}</h2>
-                <p className="text-text-muted text-sm leading-relaxed">{consultant.bio}</p>
+              <div className="reveal reveal-delay-1">
+                <h2 className="font-display text-[10px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-6">{locale === 'tr' ? 'Hakkında' : 'About'}</h2>
+                <p className="text-[var(--gm-text-dim)] font-serif italic text-lg leading-relaxed">{consultant.bio}</p>
               </div>
             )}
 
-            <div className="bg-bg-card border border-border rounded-2xl p-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+            {/* Expertise & Languages */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 reveal reveal-delay-2">
               <div>
-                <h2 className="font-serif text-base text-text mb-3">{locale === 'tr' ? 'Uzmanlık' : 'Expertise'}</h2>
+                <h2 className="font-display text-[10px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-6">{locale === 'tr' ? 'Uzmanlık' : 'Expertise'}</h2>
                 <div className="flex flex-wrap gap-2">
                   {(consultant.expertise || []).map((exp) => (
-                    <span key={exp} className="px-3 py-1 rounded-full text-xs border border-brand-primary/30 text-brand-primary-light bg-brand-primary/5">
+                    <span key={exp} className="px-4 py-2 rounded-full text-[10px] tracking-widest uppercase border border-[var(--gm-gold)]/30 text-[var(--gm-gold-deep)] bg-[var(--gm-gold)]/5">
                       {EXPERTISE_LABELS[exp] || exp}
                     </span>
                   ))}
                 </div>
               </div>
               <div>
-                <h2 className="font-serif text-base text-text mb-3">{locale === 'tr' ? 'Diller' : 'Languages'}</h2>
+                <h2 className="font-display text-[10px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-6">{locale === 'tr' ? 'Diller' : 'Languages'}</h2>
                 <div className="flex flex-wrap gap-2">
                   {(consultant.languages || []).map((lang) => (
-                    <span key={lang} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs border border-border text-text-muted">
-                      <Globe size={11} />
+                    <span key={lang} className="flex items-center gap-2 px-4 py-2 rounded-full text-[10px] tracking-widest uppercase border border-[var(--gm-border-soft)] text-[var(--gm-text-dim)]">
+                      <Globe size={11} className="text-[var(--gm-gold)]" />
                       {LANG_LABELS[lang] || lang.toUpperCase()}
                     </span>
                   ))}
@@ -145,32 +149,37 @@ export default function ConsultantDetail({ id, locale }: Props) {
             </div>
           </div>
 
-          <div className="lg:col-span-1">
-            <div className="bg-bg-card border border-border rounded-2xl p-5 sticky top-24">
-              <div className="flex items-baseline justify-between mb-5 pb-4 border-b border-border">
+          {/* Booking Card */}
+          <div className="lg:sticky lg:top-32 reveal reveal-delay-3">
+            <div className="bg-[var(--gm-bg)] border border-[var(--gm-gold)]/20 p-8 shadow-card relative">
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-[var(--gm-gold)]" />
+              
+              <div className="flex items-baseline justify-between mb-8 pb-6 border-b border-[var(--gm-border-soft)]">
                 <div>
-                  <span className="font-serif text-2xl text-brand-secondary">₺{price}</span>
-                  <span className="text-text-muted text-xs ml-1">/ {consultant.session_duration} dk</span>
+                  <span className="font-serif text-3xl text-[var(--gm-gold)]">₺{price}</span>
+                  <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase ml-2">/ {consultant.session_duration} DK</span>
                 </div>
-                <span className="text-xs text-success bg-success/10 px-2.5 py-1 rounded-full">
-                  {consultant.currency}
-                </span>
               </div>
 
-              <h3 className="font-serif text-base text-text mb-4">
+              <h3 className="font-display text-[10px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-6">
                 {locale === 'tr' ? 'Tarih & Saat Seç' : 'Select Date & Time'}
               </h3>
+              
               <SlotPicker consultantId={id} locale={locale} onSelect={setSelectedSlot} selectedSlotId={selectedSlot?.id} />
 
               <button
                 onClick={handleBook}
                 disabled={!selectedSlot}
-                className="mt-5 w-full py-3 rounded-full bg-brand-primary text-text font-medium text-sm transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed shadow-glow"
+                className="btn-premium w-full justify-center mt-8 py-4"
               >
                 {selectedSlot
-                  ? `${locale === 'tr' ? 'Randevu Al' : 'Book'} - ${selectedSlot.slot_time.slice(0, 5)}`
+                  ? `${locale === 'tr' ? 'Randevu Al' : 'Book Session'}`
                   : locale === 'tr' ? 'Saat Seçin' : 'Select a Time'}
               </button>
+              
+              <p className="text-center text-[9px] tracking-[0.1em] text-[var(--gm-muted)] uppercase mt-6">
+                {locale === 'tr' ? 'İncelemeden sonra ödemeye geçeceksiniz' : 'You will proceed to payment after review'}
+              </p>
             </div>
           </div>
         </div>

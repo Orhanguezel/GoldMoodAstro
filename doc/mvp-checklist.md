@@ -915,10 +915,10 @@ zarar verici dil yok.
 
 ### T10-3 — Backend: Görüşme → Kredi Tüketimi (Codex)
 
-- [ ] LiveKit webhook `room_finished` → live_sessions.duration_seconds hesapla
-- [ ] consultant fiyat × dakika → kredi düş (`credit_transactions` 'consumption' kaydı)
-- [ ] Yetersiz kredi durumu (görüşme sırasında bitti): graceful disconnect + uyarı
-      → 5 dakika önceden frontend'e push
+- [x] LiveKit webhook `room_finished` → `live_sessions.duration_seconds` hesapla
+- [x] consultant fiyat × dakika → kredi düş (`credit_transactions` 'consumption' kaydı)
+- [x] Yetersiz kredi durumu (görüşme sonrası): booking durumu `timed_out` + FCM + in-app uyarı
+- [ ] 5 dakika önceden frontend’e push (özelleştirilmiş arayüz/etiketleme)
 
 ### T10-4 — Mobile: Subscription / Credits Ekranı (Codex)
 
@@ -964,20 +964,20 @@ profile ekranından "İptal" tıklayınca tek tıkla iptal → grace period sonu
 
 ### T11-1 — Backend: media_type Toggle (Codex)
 
-- [ ] `live_sessions.media_type ENUM('audio','video')` zaten T7-2'de var
+- [x] `live_sessions.media_type ENUM('audio','video')` zaten T7-2'de var
 - [x] `consultants` tablosuna `supports_video BOOLEAN DEFAULT 0` ekle
-- [ ] Pricing differentiation: video premium (örn. ₺350/15dk vs ₺250/15dk audio)
-- [ ] Site-settings flag: `feature_video_enabled` (admin'den toggle)
+- [x] Pricing differentiation: video premium (örn. ₺350/15dk vs ₺250/15dk audio)
+- [x] Site-settings flag: `feature_video_enabled` (admin'den toggle)
 
 ### T11-2 — Mobile: Video UI (Codex)
 
-- [ ] Call screen'e video preview/feed component ekle (zaten LiveKit Room bileşeni var)
-- [ ] Track publish: `LocalParticipant.setCameraEnabled(true)`
-- [ ] Camera switch (front/back), mute toggle, video toggle
+- [x] Call screen'e video preview/feed component ekle (zaten LiveKit Room bileşeni var)
+- [x] Track publish: `LocalParticipant.setCameraEnabled(true)`
+- [x] Camera switch (front/back), mute toggle, video toggle
 
 ### T11-3 — Frontend: Video Premium Pricing (Codex)
 
-- [ ] Pricing sayfasında "Sesli vs Görüntülü" karşılaştırma kartı
+- [x] Pricing sayfasında "Sesli vs Görüntülü" karşılaştırma kartı
 
 ### T11-4 — Self-Host LiveKit (Faz 3 — İleride)
 

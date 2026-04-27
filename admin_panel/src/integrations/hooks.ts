@@ -74,3 +74,9 @@ export * from '@/integrations/endpoints/admin/support_admin.endpoints';
 
 // Announcements
 export * from '@/integrations/endpoints/admin/announcements_admin.endpoints';
+
+// Banners
+export * from '@/integrations/endpoints/admin/banners_admin.endpoints';
+
+// Campaigns
+export * from '@/integrations/endpoints/admin/campaigns_admin.endpoints';

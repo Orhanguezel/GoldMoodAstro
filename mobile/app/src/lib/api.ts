@@ -8,6 +8,7 @@ import Constants from 'expo-constants';
 import type {
   Consultant, ConsultantSlot,
   Booking, BookingCreateInput,
+  Subscription, SubscriptionPlan, CreditMe, CreditPackage,
   Order, OrderCreateResponse, IyzipayInitResponse,
   LiveKitTokenResponse,
   BirthChart, BirthChartCreateInput, GeocodeResult, DailyReadingResponse,
@@ -144,6 +145,59 @@ export const ordersApi = {
 };
 
 // -------------------------------------------------------------------
+// Subscription / Credits
+// -------------------------------------------------------------------
+
+export const subscriptionsApi = {
+  plans: async (): Promise<SubscriptionPlan[]> => {
+    const res = await get<{ data: SubscriptionPlan[] }>('/subscriptions/plans');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  me: async (): Promise<Subscription | null> => {
+    const res = await get<{ data: Subscription | null }>('/subscriptions/me');
+    return res.data;
+  },
+
+  start: (planId: string, paymentGatewaySlug = 'iyzipay'): Promise<{
+    data: {
+      order_id?: string;
+      plan_id?: string;
+      checkout_url?: string;
+      token?: string;
+      paid?: boolean;
+    };
+  }> => post('/subscriptions/start', { plan_id: planId, payment_gateway_slug: paymentGatewaySlug }),
+
+  cancel: (reason?: string) =>
+    post<{ data: Subscription }>('/subscriptions/cancel', { ...(reason ? { reason } : {}) }),
+};
+
+export const creditsApi = {
+  me: async (): Promise<CreditMe | null> => {
+    const res = await get<{ data: CreditMe }>('/credits/me');
+    return res?.data ?? null;
+  },
+
+  packages: async (): Promise<CreditPackage[]> => {
+    const res = await get<{ data: CreditPackage[] }>('/credits/packages');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  purchase: (packageId: string, paymentGatewaySlug = 'iyzipay'): Promise<{
+    data: {
+      order_id?: string;
+      package_id?: string;
+      checkout_url?: string;
+      token?: string;
+      free?: boolean;
+      credits_added?: number;
+      balance?: number;
+    };
+  }> => post('/credits/purchase', { package_id: packageId, payment_gateway_slug: paymentGatewaySlug }),
+};
+
+// -------------------------------------------------------------------
 // LiveKit (Sesli/Görüntülü Görüşme)
 // -------------------------------------------------------------------
 
@@ -235,4 +289,18 @@ export const horoscopesApi = {
     const res = await get<{ data: any }>('/horoscopes/today', params);
     return res.data;
   },
+};
+
+// -------------------------------------------------------------------
+// Banners
+// -------------------------------------------------------------------
+
+export const bannersApi = {
+  list: async (params: { placement: string; locale?: string }): Promise<any[]> => {
+    const res = await get<{ data: any[] }>('/banners', params);
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  trackClick: (id: string) =>
+    post<void>(`/banners/${id}/click`, {}),
 };

@@ -6,6 +6,7 @@ import { Users } from 'lucide-react';
 import { useListConsultantsQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
 import ConsultantCard from './ConsultantCard';
 import ConsultantFilters, { type FilterState } from './ConsultantFilters';
+import Banner from '@/components/common/public/Banner';
 
 type Props = {
   locale: string;
@@ -34,6 +35,8 @@ export default function ConsultantList({ locale, initialExpertise = '' }: Props)
   return (
     <>
       <ConsultantFilters filters={filters} onChange={setFilters} />
+
+      <Banner placement="consultant_list" className="mb-8" />
 
       {isError ? (
         <div className="text-center py-20 text-text-muted">

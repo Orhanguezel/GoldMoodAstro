@@ -11,7 +11,8 @@ export async function registerCredits(app: FastifyInstance) {
 
   // Auth
   app.get(`${BASE}/me`, { preHandler: [requireAuth] }, controller.getMyCredits);
+  app.post(`${BASE}/purchase`, { preHandler: [requireAuth] }, controller.purchaseCredits);
+  app.post(`${BASE}/webhook`, controller.creditWebhook);
 
-  // TODO (Codex): POST /credits/purchase (Iyzipay order yarat → bonus credit ekle)
-  // TODO (Codex): consumption helper — live_session.ended → kredi düş
+  // Note: /credits/webhook is a server-to-server callback endpoint.
 }

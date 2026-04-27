@@ -40,6 +40,7 @@ export type BookingMerged = {
 
   status: BookingStatus | string;
   is_read: 0 | 1;
+  media_type: 'audio' | 'video';
 
   admin_note: string | null;
   decided_at: any;

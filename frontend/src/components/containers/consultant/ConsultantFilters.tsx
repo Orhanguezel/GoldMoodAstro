@@ -35,17 +35,17 @@ export default function ConsultantFilters({ filters, onChange }: Props) {
   );
 
   return (
-    <div className="mb-8">
+    <div className="mb-12">
       {/* Expertise quick-filter row */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-3 flex-wrap">
         {EXPERTISE_OPTIONS.map((opt) => (
           <button
             key={opt.value}
             onClick={() => set({ expertise: opt.value })}
-            className={`px-4 py-1.5 rounded-full text-sm transition-all border ${
+            className={`px-5 py-2 rounded-full text-[10px] tracking-widest uppercase transition-all border ${
               filters.expertise === opt.value
-                ? 'bg-brand-primary border-brand-primary text-text'
-                : 'border-border text-text-muted hover:border-brand-primary/50 hover:text-text'
+                ? 'bg-[var(--gm-gold)] border-[var(--gm-gold)] text-[var(--gm-bg)] shadow-gold'
+                : 'border-[var(--gm-border-soft)] text-[var(--gm-muted)] hover:border-[var(--gm-gold)] hover:text-[var(--gm-gold)]'
             }`}
           >
             {opt.label}
@@ -54,23 +54,26 @@ export default function ConsultantFilters({ filters, onChange }: Props) {
 
         <button
           onClick={() => setOpen((v) => !v)}
-          className="ml-auto flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-border text-text-muted hover:border-brand-primary/50 text-sm transition-all"
+          className={`ml-auto flex items-center gap-2 px-5 py-2 rounded-full border transition-all text-[10px] tracking-widest uppercase ${
+            open 
+              ? 'bg-[var(--gm-bg-deep)] border-[var(--gm-gold)] text-[var(--gm-gold)]' 
+              : 'border-[var(--gm-border-soft)] text-[var(--gm-muted)] hover:border-[var(--gm-gold)]'
+          }`}
         >
           <SlidersHorizontal size={14} />
-          Filtrele
+          {open ? 'FİLTRELERİ KAPAT' : 'FİLTRELE'}
         </button>
       </div>
 
-      {/* Advanced filters panel */}
       {open && (
-        <div className="mt-4 p-4 bg-bg-card border border-border rounded-xl grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="mt-6 p-8 bg-[var(--gm-bg)] border border-[var(--gm-gold)]/20 shadow-card grid grid-cols-1 gap-8 sm:grid-cols-3 reveal">
           <div>
-            <label htmlFor="consultant-filter-min-price" className="block text-xs text-text-muted mb-1">Min. Fiyat (₺)</label>
+            <label htmlFor="consultant-filter-min-price" className="block text-[10px] tracking-widest uppercase text-[var(--gm-muted)] mb-3">Min. Fiyat (₺)</label>
             <select
               id="consultant-filter-min-price"
               value={filters.minPrice}
               onChange={(e) => set({ minPrice: Number(e.target.value) })}
-              className="w-full bg-bg-surface border border-border rounded-lg px-3 py-2 text-sm text-text"
+              className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-sm px-4 py-3 text-sm text-[var(--gm-text)] focus:outline-none focus:border-[var(--gm-gold)]"
             >
               {[0, 250, 500, 1000, 2000].map((v) => (
                 <option key={v} value={v}>
@@ -80,12 +83,12 @@ export default function ConsultantFilters({ filters, onChange }: Props) {
             </select>
           </div>
           <div>
-            <label htmlFor="consultant-filter-min-rating" className="block text-xs text-text-muted mb-1">Min. Puan</label>
+            <label htmlFor="consultant-filter-min-rating" className="block text-[10px] tracking-widest uppercase text-[var(--gm-muted)] mb-3">Min. Puan</label>
             <select
               id="consultant-filter-min-rating"
               value={filters.minRating}
               onChange={(e) => set({ minRating: Number(e.target.value) })}
-              className="w-full bg-bg-surface border border-border rounded-lg px-3 py-2 text-sm text-text"
+              className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-sm px-4 py-3 text-sm text-[var(--gm-text)] focus:outline-none focus:border-[var(--gm-gold)]"
             >
               {[0, 3, 3.5, 4, 4.5].map((v) => (
                 <option key={v} value={v}>
@@ -95,12 +98,12 @@ export default function ConsultantFilters({ filters, onChange }: Props) {
             </select>
           </div>
           <div>
-            <label htmlFor="consultant-filter-max-price" className="block text-xs text-text-muted mb-1">Maks. Fiyat (₺)</label>
+            <label htmlFor="consultant-filter-max-price" className="block text-[10px] tracking-widest uppercase text-[var(--gm-muted)] mb-3">Maks. Fiyat (₺)</label>
             <select
               id="consultant-filter-max-price"
               value={filters.maxPrice}
               onChange={(e) => set({ maxPrice: Number(e.target.value) })}
-              className="w-full bg-bg-surface border border-border rounded-lg px-3 py-2 text-sm text-text"
+              className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-sm px-4 py-3 text-sm text-[var(--gm-text)] focus:outline-none focus:border-[var(--gm-gold)]"
             >
               {[0, 500, 1000, 2000, 5000].map((v) => (
                 <option key={v} value={v}>

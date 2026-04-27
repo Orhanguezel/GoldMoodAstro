@@ -5,7 +5,7 @@
 // =============================================================
 
 import {
-  mysqlTable, char, varchar, text, tinyint, datetime, index, foreignKey,
+  mysqlTable, char, varchar, text, tinyint, datetime, index, foreignKey, mysqlEnum,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 import { users } from '@goldmood/shared-backend/modules/auth/schema';
@@ -41,6 +41,7 @@ export const bookings = mysqlTable(
     // Oturum bilgisi (danışman profil ayarlarından kopyalanır)
     session_duration: tinyint('session_duration').notNull().default(30), // dakika
     session_price: varchar('session_price', { length: 12 }).notNull(),   // snapshot
+    media_type: mysqlEnum('media_type', ['audio', 'video']).default('audio'),
 
     // Randevu durumu
     // pending_payment → booked → confirmed → completed | cancelled | no_show

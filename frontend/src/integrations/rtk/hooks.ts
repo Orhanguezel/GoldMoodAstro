@@ -39,4 +39,5 @@ export * from './public/birth_charts.endpoints';
 export * from './public/geocode.endpoints';
 export * from './public/readings.endpoints';
 export * from './public/newsletter_public.endpoints';
+export * from './public/subscriptions.endpoints';
 export * from './admin/chat_admin.endpoints';

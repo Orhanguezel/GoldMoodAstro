@@ -2,12 +2,136 @@ import { randomUUID } from 'crypto';
 import { and, eq, sql } from 'drizzle-orm';
 import type { WebhookEvent } from 'livekit-server-sdk';
 import { db } from '@/db/client';
+import { users } from '@goldmood/shared-backend/modules/auth/schema';
 import { bookings } from '@goldmood/shared-backend/modules/bookings/schema';
+import { userCredits, creditTransactions } from '@goldmood/shared-backend/modules/credits/schema';
+import { createUserNotification } from '@goldmood/shared-backend/modules/notifications/service';
 import { consultants } from '@/modules/consultants/schema';
+import { sendPushNotification } from '@/modules/firebase/service';
 import { liveSessions } from './schema';
 import { buildLiveKitToken, getLiveKitUrl, makeRoomName } from './service';
 
 type ParticipantKind = 'user' | 'consultant';
+function toSafeNumber(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function calcCreditCost(args: { sessionPrice: string | null; durationSeconds: number | null }) {
+  const sessionPrice = toSafeNumber(args.sessionPrice);
+  const durationSeconds = Number(args.durationSeconds ?? 0);
+
+  if (sessionPrice <= 0 || durationSeconds <= 0) return 0;
+
+  const durationMinutes = Math.ceil(durationSeconds / 60);
+  const rawCost = sessionPrice * durationMinutes;
+  return Math.max(0, Math.ceil(rawCost));
+}
+
+async function getBookingBillingContext(bookingId: string) {
+  const [row] = await db
+    .select({
+      booking_id: bookings.id,
+      user_id: bookings.user_id,
+      booking_status: bookings.status,
+      session_price: bookings.session_price,
+      fcm_token: users.fcm_token,
+    })
+    .from(bookings)
+    .innerJoin(users, eq(users.id, bookings.user_id))
+    .where(eq(bookings.id, bookingId))
+    .limit(1);
+
+  return row ?? null;
+}
+
+async function settleBookingCredits(args: {
+  bookingId: string;
+  sessionPrice: string | null;
+  durationSeconds: number | null;
+}) {
+  const durationSeconds = args.durationSeconds == null ? 0 : Number(args.durationSeconds);
+  const amount = calcCreditCost({
+    sessionPrice: args.sessionPrice,
+    durationSeconds,
+  });
+
+  const context = await getBookingBillingContext(args.bookingId);
+  if (!context) return { status: 'no_charge' as const, amount: 0, available_balance: 0 };
+
+  if (amount <= 0) {
+    return { status: 'no_charge' as const, amount: 0, available_balance: 0 };
+  }
+
+  return await db.transaction(async (tx) => {
+    const [alreadyConsumed] = await tx
+      .select({ id: creditTransactions.id })
+      .from(creditTransactions)
+      .where(
+        and(
+          eq(creditTransactions.reference_type, 'booking'),
+          eq(creditTransactions.reference_id, args.bookingId),
+          eq(creditTransactions.type, 'consumption'),
+        ),
+      )
+      .limit(1);
+
+    if (alreadyConsumed) {
+      return { status: 'already_consumed' as const };
+    }
+
+    let [wallet] = await tx
+      .select()
+      .from(userCredits)
+      .where(eq(userCredits.user_id, context.user_id))
+      .limit(1);
+
+    if (!wallet) {
+      const walletId = randomUUID();
+      await tx.insert(userCredits).values({
+        id: walletId,
+        user_id: context.user_id,
+        balance: 0,
+      } as any);
+      [wallet] = await tx
+        .select()
+        .from(userCredits)
+        .where(eq(userCredits.id, walletId))
+        .limit(1);
+    }
+
+    const currentBalance = toSafeNumber(wallet?.balance);
+    if (currentBalance < amount) {
+      return {
+        status: 'insufficient' as const,
+        amount,
+        available_balance: currentBalance,
+      };
+    }
+
+    const balanceAfter = currentBalance - amount;
+    await tx.update(userCredits).set({ balance: balanceAfter, updated_at: new Date() }).where(eq(userCredits.id, wallet.id));
+
+    await tx.insert(creditTransactions).values({
+      id: randomUUID(),
+      user_id: context.user_id,
+      type: 'consumption',
+      amount: -amount,
+      balance_after: balanceAfter,
+      reference_type: 'booking',
+      reference_id: args.bookingId,
+      order_id: null,
+      description: `Live görüşme ${durationSeconds} sn`,
+    } as any);
+
+    return {
+      status: 'consumed' as const,
+      amount,
+      available_balance: currentBalance,
+      balance_after: balanceAfter,
+    };
+  });
+}
 
 function parseAppointment(date: string, time?: string | null) {
   const safeTime = time?.trim() || '00:00';
@@ -48,6 +172,7 @@ async function getBookingForParticipant(bookingId: string, userId: string) {
       appointment_time: bookings.appointment_time,
       session_duration: bookings.session_duration,
       status: bookings.status,
+      media_type: bookings.media_type,
       consultant_user_id: consultants.user_id,
     })
     .from(bookings)
@@ -92,6 +217,7 @@ export async function issueLiveKitToken(bookingId: string, userId: string) {
   const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
   const tokenPatch =
     access.participant === 'consultant' ? { host_token: token } : { guest_token: token };
+  const mediaType = access.booking.media_type === 'video' ? 'video' : 'audio';
 
   await db
     .insert(liveSessions)
@@ -99,7 +225,7 @@ export async function issueLiveKitToken(bookingId: string, userId: string) {
       id: randomUUID(),
       booking_id: bookingId,
       room_name: roomName,
-      media_type: 'audio',
+      media_type: mediaType,
       status: 'active',
       started_at: new Date(),
       ...tokenPatch,
@@ -167,6 +293,11 @@ export async function handleLiveKitWebhook(event: WebhookEvent) {
   }
 
   if (event.event === 'room_finished') {
+    const booking = await getBookingBillingContext(bookingId);
+    if (!booking) {
+      return { ignored: true, event: event.event, booking_id: bookingId };
+    }
+
     await db
       .update(liveSessions)
       .set({
@@ -179,7 +310,51 @@ export async function handleLiveKitWebhook(event: WebhookEvent) {
       } as any)
       .where(eq(liveSessions.booking_id, bookingId));
 
-    await db.update(bookings).set({ status: 'completed' } as any).where(eq(bookings.id, bookingId));
+    const [session] = await db
+      .select({
+        duration_seconds: liveSessions.duration_seconds,
+      })
+      .from(liveSessions)
+      .where(eq(liveSessions.booking_id, bookingId))
+      .limit(1);
+
+    const settlement = await settleBookingCredits({
+      bookingId,
+      sessionPrice: booking.session_price,
+      durationSeconds: (session?.duration_seconds as number | null) ?? null,
+    });
+
+    const nextBookingStatus =
+      booking.booking_status === 'completed' ||
+      booking.booking_status === 'cancelled' ||
+      booking.booking_status === 'timed_out' ||
+      booking.booking_status === 'no_show'
+        ? booking.booking_status
+        : settlement.status === 'insufficient'
+          ? 'timed_out'
+          : 'completed';
+    await db.update(bookings).set({ status: nextBookingStatus } as any).where(eq(bookings.id, bookingId));
+
+    if (settlement.status === 'insufficient') {
+      const title = 'Görüşme Bitişi';
+      const message =
+        'Kredi bakiyeniz görüşme süresini karşılamaya yetmedi. Kredi yükleyerek tekrar deneyebilirsiniz.';
+      const payload = { type: 'booking_credit_insufficient', booking_id: bookingId };
+      void createUserNotification({
+        userId: booking.user_id,
+        title,
+        message,
+        type: 'system',
+      }).catch(() => undefined);
+      if (booking.fcm_token) {
+        void sendPushNotification({
+          token: booking.fcm_token,
+          title,
+          body: message,
+          data: payload,
+        }).catch(() => undefined);
+      }
+    }
   }
 
   return { ok: true, event: event.event, booking_id: bookingId };

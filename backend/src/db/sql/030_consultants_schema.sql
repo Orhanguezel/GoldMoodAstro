@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS consultants (
   session_price DECIMAL(10,2) NOT NULL,
   session_duration INT NOT NULL DEFAULT 30,
   supports_video TINYINT DEFAULT 0,
+  video_session_price DECIMAL(10,2),
   currency CHAR(3) DEFAULT 'TRY',
   approval_status ENUM('pending','approved','rejected') DEFAULT 'pending',
   rejection_reason TEXT,

@@ -7,6 +7,8 @@ import { tr as dateFnsTr } from 'date-fns/locale';
 import { ShieldCheck, Clock, Calendar, User } from 'lucide-react';
 import { useCreateBookingPublicMutation } from '@/integrations/rtk/public/bookings_public.endpoints';
 import { useCreateForBookingMutation, useInitIyzicoPaymentMutation } from '@/integrations/rtk/public/orders.endpoints';
+import { useRedeemCampaignMutation } from '@/integrations/rtk/public/campaigns.endpoints';
+import { Tag, Check, X } from 'lucide-react';
 
 export default function BookingPage() {
   const params = useParams();
@@ -30,8 +32,44 @@ export default function BookingPage() {
   const [createBooking] = useCreateBookingPublicMutation();
   const [createOrder] = useCreateForBookingMutation();
   const [initIyzico] = useInitIyzicoPaymentMutation();
+  const [redeemCampaign] = useRedeemCampaignMutation();
+
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCampaign, setAppliedCampaign] = useState<any>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
 
   const dateLocale = locale === 'tr' ? dateFnsTr : undefined;
+  
+  const originalPrice = Number(price);
+  let finalPrice = originalPrice;
+  let discountAmount = 0;
+
+  if (appliedCampaign) {
+    if (appliedCampaign.type === 'discount_percentage') {
+      discountAmount = (originalPrice * Number(appliedCampaign.value)) / 100;
+    } else if (appliedCampaign.type === 'discount_fixed') {
+      discountAmount = Number(appliedCampaign.value);
+    }
+    finalPrice = Math.max(0, originalPrice - discountAmount);
+  }
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await redeemCampaign({ 
+        code: couponCode, 
+        applies_to: 'consultant_booking' 
+      }).unwrap();
+      setAppliedCampaign(res.campaign);
+    } catch (err: any) {
+      setCouponError(locale === 'tr' ? 'Geçersiz kupon kodu.' : 'Invalid coupon code.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
   const formattedDate = date
     ? format(parseISO(date), 'd MMMM yyyy', { locale: dateLocale })
     : '—';
@@ -109,12 +147,68 @@ export default function BookingPage() {
             </div>
           </div>
 
-          <div className="border-t border-border pt-4 flex items-center justify-between">
-            <span className="text-text-muted text-sm">{locale === 'tr' ? 'Toplam' : 'Total'}</span>
-            <span className="font-serif text-2xl text-brand-secondary">
-              ₺{Math.round(Number(price))}
-            </span>
+          <div className="border-t border-border pt-4 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-text-muted">{locale === 'tr' ? 'Seans Ücreti' : 'Session Price'}</span>
+              <span className="text-text">₺{Math.round(originalPrice)}</span>
+            </div>
+            
+            {appliedCampaign && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-success flex items-center gap-1">
+                  <Tag size={12} />
+                  {locale === 'tr' ? 'İndirim' : 'Discount'} ({appliedCampaign.code})
+                </span>
+                <span className="text-success">-₺{Math.round(discountAmount)}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-2 border-t border-border/50">
+              <span className="text-text-muted text-sm">{locale === 'tr' ? 'Toplam' : 'Total'}</span>
+              <span className="font-serif text-2xl text-brand-secondary">
+                ₺{Math.round(finalPrice)}
+              </span>
+            </div>
           </div>
+        </div>
+
+        {/* Coupon Code */}
+        <div className="mb-5">
+          <label className="block text-xs text-text-muted mb-1.5">
+            {locale === 'tr' ? 'Kupon Kodu' : 'Coupon Code'}
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              disabled={!!appliedCampaign || couponLoading}
+              placeholder={locale === 'tr' ? 'Kupon kodunu girin...' : 'Enter coupon code...'}
+              className="w-full bg-bg-surface border border-border rounded-xl px-4 py-3 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-brand-primary/50 transition-colors uppercase font-mono"
+            />
+            {!appliedCampaign ? (
+              <button
+                onClick={handleApplyCoupon}
+                disabled={!couponCode || couponLoading}
+                className="absolute right-2 top-2 bottom-2 px-4 rounded-lg bg-brand-primary/10 text-brand-primary text-xs font-bold hover:bg-brand-primary/20 transition-colors disabled:opacity-50"
+              >
+                {couponLoading ? '...' : (locale === 'tr' ? 'UYGULA' : 'APPLY')}
+              </button>
+            ) : (
+              <div className="absolute right-3 top-3 text-success">
+                <Check size={20} />
+              </div>
+            )}
+          </div>
+          {couponError && <p className="text-[10px] text-error mt-1 ml-1">{couponError}</p>}
+          {appliedCampaign && (
+            <button 
+              onClick={() => { setAppliedCampaign(null); setCouponCode(''); }}
+              className="text-[10px] text-text-muted mt-1 ml-1 hover:text-error flex items-center gap-1"
+            >
+              <X size={10} /> {locale === 'tr' ? 'Kuponu Kaldır' : 'Remove Coupon'}
+            </button>
+          )}
         </div>
 
         {/* Note */}

@@ -3,10 +3,24 @@ import { livekitApi } from './api';
 type LiveKitRoom = {
   connect: (url: string, token: string) => Promise<void>;
   disconnect: () => void;
+  remoteParticipants?: {
+    values?: () => IterableIterator<unknown>;
+    get?: (identity: string) => unknown;
+    size?: number;
+  };
   localParticipant?: {
     setMicrophoneEnabled?: (enabled: boolean) => Promise<void>;
+    setCameraEnabled?: (enabled: boolean, options?: unknown) => Promise<unknown>;
+    getTrackPublication?: (source: string) => {
+      track?: {
+        setDeviceId?: (deviceId: string) => Promise<boolean>;
+      };
+    };
   };
   on?: (event: string, handler: (...args: unknown[]) => void) => void;
+  participants?: {
+    values?: () => IterableIterator<unknown>;
+  };
 };
 
 let globalsRegistered = false;
@@ -56,6 +70,22 @@ export async function connectLiveKitAudio(params: {
 
 export async function setLiveKitMicrophone(room: LiveKitRoom | null, enabled: boolean) {
   await room?.localParticipant?.setMicrophoneEnabled?.(enabled);
+}
+
+export async function setLiveKitCamera(
+  room: LiveKitRoom | null,
+  enabled: boolean,
+  options?: unknown,
+) {
+  await room?.localParticipant?.setCameraEnabled?.(enabled, options);
+}
+
+export async function switchLiveKitCamera(room: LiveKitRoom | null, useFrontCamera: boolean) {
+  const facingMode = useFrontCamera ? 'user' : 'environment';
+  await room?.localParticipant?.setCameraEnabled?.(false);
+  await room?.localParticipant?.setCameraEnabled?.(true, {
+    facingMode,
+  } as { facingMode: string });
 }
 
 export async function endLiveKitSession(bookingId: string) {

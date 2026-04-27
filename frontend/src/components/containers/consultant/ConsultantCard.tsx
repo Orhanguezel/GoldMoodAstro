@@ -33,37 +33,41 @@ export default function ConsultantCard({ consultant, locale }: Props) {
   return (
     <Link
       href={`/${locale}/consultants/${consultant.id}`}
-      className="group block bg-bg-card border border-border rounded-2xl p-6 hover:border-brand-primary/40 hover:shadow-glow transition-all duration-300"
+      className="group block bg-[var(--gm-bg)] border border-[var(--gm-border-soft)] p-7 hover:border-[var(--gm-gold)]/50 hover:shadow-glow transition-all duration-500 reveal"
     >
       {/* Avatar */}
-      <div className="flex items-start gap-4 mb-4">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-brand-primary to-accent flex items-center justify-center text-text font-serif text-lg flex-shrink-0">
-          {initials}
+      <div className="flex items-center gap-5 mb-6">
+        <div className="w-16 h-16 rounded-full border border-[var(--gm-gold)] p-0.5">
+          <div className="w-full h-full rounded-full bg-[var(--gm-gold)]/10 flex items-center justify-center text-[var(--gm-gold)] font-display text-xl">
+            {initials}
+          </div>
         </div>
         <div className="min-w-0">
-          <h3 className="font-serif text-text text-lg leading-snug truncate group-hover:text-brand-primary transition-colors">
+          <h3 className="font-display text-[15px] tracking-wide text-[var(--gm-text)] leading-tight truncate uppercase group-hover:text-[var(--gm-gold)] transition-colors">
             {consultant.full_name || '—'}
           </h3>
           {/* Rating */}
-          <div className="flex items-center gap-1 mt-1">
-            <Star size={13} className="text-brand-secondary fill-brand-secondary" />
-            <span className="text-brand-secondary text-sm font-medium">{rating.toFixed(1)}</span>
-            <span className="text-text-muted text-xs">({consultant.rating_count})</span>
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <Star size={11} className="text-[var(--gm-gold)] fill-[var(--gm-gold)]" />
+            <span className="text-[var(--gm-text)] text-xs font-semibold">{rating.toFixed(1)}</span>
+            <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase">({consultant.rating_count})</span>
           </div>
         </div>
       </div>
 
       {/* Bio */}
       {consultant.bio && (
-        <p className="text-text-muted text-sm leading-relaxed mb-4 line-clamp-2">{consultant.bio}</p>
+        <p className="text-[var(--gm-text-dim)] font-serif italic text-[15px] leading-relaxed mb-6 line-clamp-2">
+          &ldquo;{consultant.bio}&rdquo;
+        </p>
       )}
 
       {/* Expertise chips */}
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {(consultant.expertise || []).slice(0, 3).map((exp) => (
+      <div className="flex flex-wrap gap-2 mb-6">
+        {(consultant.expertise || []).slice(0, 2).map((exp) => (
           <span
             key={exp}
-            className="px-2.5 py-0.5 rounded-full text-xs border border-brand-primary/30 text-brand-primary-light bg-brand-primary/5"
+            className="px-3 py-1 rounded-full text-[9px] tracking-widest uppercase border border-[var(--gm-gold)]/30 text-[var(--gm-gold-deep)] bg-[var(--gm-gold)]/5"
           >
             {EXPERTISE_LABELS[exp] || exp}
           </span>
@@ -71,19 +75,20 @@ export default function ConsultantCard({ consultant, locale }: Props) {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-3 border-t border-border">
-        <div className="flex items-center gap-1 text-text-muted text-xs">
-          <Clock size={12} />
-          <span>{consultant.session_duration} dk</span>
+      <div className="flex items-center justify-between pt-5 border-t border-[var(--gm-border-soft)]">
+        <div className="flex items-center gap-3 text-[var(--gm-muted)] text-[10px] tracking-widest uppercase">
+          <span className="flex items-center gap-1.5">
+            <Clock size={11} />
+            {consultant.session_duration} DK
+          </span>
           {consultant.languages?.length > 0 && (
-            <>
-              <span className="mx-1">·</span>
-              <Globe size={12} />
-              <span>{consultant.languages.join(', ').toUpperCase()}</span>
-            </>
+            <span className="flex items-center gap-1.5">
+              <Globe size={11} />
+              {consultant.languages[0].toUpperCase()}
+            </span>
           )}
         </div>
-        <div className="text-brand-secondary font-serif text-lg">
+        <div className="text-[var(--gm-gold)] font-serif text-xl">
           ₺{price}
         </div>
       </div>

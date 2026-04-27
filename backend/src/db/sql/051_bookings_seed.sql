@@ -1,6 +1,6 @@
 INSERT INTO bookings (
   id, user_id, name, email, phone, locale, consultant_id, resource_id, slot_id,
-  appointment_date, appointment_time, session_duration, session_price, status,
+  appointment_date, appointment_time, session_duration, session_price, media_type, status,
   customer_note, customer_message
 ) VALUES (
   '40000000-0000-4000-8000-000000000001',
@@ -16,6 +16,7 @@ INSERT INTO bookings (
   '10:00',
   30,
   '850.00',
+  'audio',
   'confirmed',
   'Dogum haritasi uzerinden genel yorum istiyorum.',
   'Dogum haritasi uzerinden genel yorum istiyorum.'

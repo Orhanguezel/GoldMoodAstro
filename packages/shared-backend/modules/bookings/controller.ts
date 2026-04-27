@@ -26,11 +26,81 @@ import { db } from '../../db/client';
 import { siteSettings } from '@goldmood/shared-backend/modules/siteSettings/schema';
 import { users } from '@goldmood/shared-backend/modules/auth/schema';
 import { bookings as bookingsTable } from './schema';
+import { consultants } from '../consultants/schema';
+import { normalizeSettingBool, getGlobalSettingValue } from '../siteSettings/helpers';
 import { getDefaultLocale } from '../_shared';
 
 const safeText = (v: unknown) => String(v ?? '').trim();
 const now = () => new Date();
 const FALLBACK_SITE_NAME = process.env.APP_NAME || 'Platform';
+const VIDEO_PRICE_FALLBACK_RATE = 1.4;
+
+function parseMoney(v: unknown): number {
+  const n = Number(safeText(v));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function toMoneyString(v: unknown): string {
+  return parseMoney(v).toFixed(2);
+}
+
+function resolveRequestedMediaType(input: unknown): 'audio' | 'video' {
+  const mediaType = safeText(input);
+  return mediaType === 'video' ? 'video' : 'audio';
+}
+
+async function resolveMediaAllowedForConsultant(args: { consultantId: string; mediaType: 'audio' | 'video' }) {
+  const { consultantId, mediaType } = args;
+
+  const [consultant] = await db
+    .select({
+      session_price: consultants.session_price,
+      video_session_price: consultants.video_session_price,
+      supports_video: consultants.supports_video,
+    })
+    .from(consultants)
+    .where(eq(consultants.id, consultantId))
+    .limit(1);
+
+  if (!consultant) {
+    const error = new Error('consultant_not_found');
+    (error as Error & { statusCode?: number }).statusCode = 404;
+    throw error;
+  }
+
+  const audioPrice = parseMoney(consultant.session_price);
+  const videoPrice = parseMoney(consultant.video_session_price);
+
+  if (mediaType === 'audio') {
+    return {
+      mediaType,
+      resolvedPrice: toMoneyString(audioPrice),
+      audioPrice,
+      videoPrice,
+    };
+  }
+
+  const featureEnabled = normalizeSettingBool(await getGlobalSettingValue('feature_video_enabled'));
+  if (!featureEnabled) {
+    const error = new Error('video_feature_disabled');
+    (error as Error & { statusCode?: number }).statusCode = 403;
+    throw error;
+  }
+
+  if (Number(consultant.supports_video) !== 1) {
+    const error = new Error('video_not_supported');
+    (error as Error & { statusCode?: number }).statusCode = 403;
+    throw error;
+  }
+
+  const finalVideoPrice = videoPrice > 0 ? videoPrice : audioPrice * VIDEO_PRICE_FALLBACK_RATE;
+  return {
+    mediaType,
+    resolvedPrice: toMoneyString(finalVideoPrice),
+    audioPrice,
+    videoPrice,
+  };
+}
 
 
 async function getSettingValue(key: string): Promise<string | null> {
@@ -124,6 +194,12 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
       }
     }
 
+    const mediaType = resolveRequestedMediaType(input.media_type);
+    const { resolvedPrice } = await resolveMediaAllowedForConsultant({
+      consultantId: safeText(input.consultant_id),
+      mediaType,
+    });
+
     const created = await createBookingPublic({
       booking: {
         id,
@@ -143,7 +219,8 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
         appointment_date: safeText(input.appointment_date),
         appointment_time: safeText(input.appointment_time),
 
-        session_price: safeText(input.session_price),
+        session_price: resolvedPrice,
+        media_type: mediaType,
         session_duration: input.session_duration ?? 30,
 
         status: 'pending_payment',
@@ -307,6 +384,15 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
   } catch (e: any) {
     if (e?.name === 'ZodError') {
       return reply.code(400).send({ error: { message: 'validation_error', details: e.issues } });
+    }
+    if (String(e?.message || '').includes('consultant_not_found')) {
+      return reply.code(404).send({ error: { message: 'consultant_not_found' } });
+    }
+    if (String(e?.message || '').includes('video_not_supported')) {
+      return reply.code(403).send({ error: { message: 'consultant_does_not_support_video' } });
+    }
+    if (String(e?.message || '').includes('video_feature_disabled')) {
+      return reply.code(403).send({ error: { message: 'video_feature_disabled' } });
     }
     if (String(e?.code || e?.message) === 'slot_not_available') {
       return reply.code(409).send({ error: { message: 'slot_not_available' } });

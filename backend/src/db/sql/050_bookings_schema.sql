@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   appointment_time VARCHAR(5),
   session_duration TINYINT NOT NULL DEFAULT 30,
   session_price VARCHAR(12) NOT NULL,
+  media_type ENUM('audio','video') DEFAULT 'audio',
   status VARCHAR(24) NOT NULL DEFAULT 'pending_payment',
   is_read TINYINT UNSIGNED NOT NULL DEFAULT 0,
   customer_note TEXT,

@@ -6,7 +6,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const locales = ['tr', 'en'];
-  const pages = ['', '/consultants', '/birth-chart', '/about', '/faqs', '/contact', '/blog'];
+  const pages = ['', '/consultants', '/pricing', '/birth-chart', '/about', '/faqs', '/contact', '/blog'];
   
   const staticRoutes = locales.flatMap(locale => 
     pages.map(page => ({
