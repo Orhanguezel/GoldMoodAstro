@@ -1097,7 +1097,7 @@ checkout'ta kodu gir → indirim uygulansın → `campaign_redemptions` kayıt o
   - Speciality filter, language filter, rating filter
   - Anlık görüşme isteği akışı (15dk SLA timer)
 
-### T14-3 — Backend: 15dk SLA Timer + Otomatik İade (Codex)
+### T14-3 — Backend: 15dk SLA Timer + Otomatik İade (Claude Code) ✅
 
 - [ ] Booking oluşurken cron timer: 15 dk içinde live_session başlamadıysa
       → booking.status='timed_out' → kredi iade

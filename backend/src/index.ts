@@ -2,6 +2,7 @@
 import { createApp } from './app';
 import { env } from '@/core/env';
 import { registerBookingReminderCron } from '@/cron/booking-reminders';
+import { registerBookingSlaCron } from '@/cron/booking-sla';
 import { registerDailyReadingsCron } from '@/cron/daily-readings';
 import { registerHoroscopeCron } from '@/cron/horoscope-job';
 
@@ -15,6 +16,7 @@ async function main() {
 
   if (process.env.DISABLE_CRON !== '1') {
     registerBookingReminderCron();
+    registerBookingSlaCron();
     registerDailyReadingsCron();
     registerHoroscopeCron();
   }
