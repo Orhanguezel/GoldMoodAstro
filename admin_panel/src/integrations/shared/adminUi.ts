@@ -98,6 +98,11 @@ const emptyNav: AdminNavCopy = {
     subscriptions: '',
     subscription_plans: '',
     cache: '',
+    llm_prompts: '',
+    astrology_kb: '',
+    banners: '',
+    campaigns: '',
+    navigation: '',
   },
 };
 
@@ -138,6 +143,11 @@ export function normalizeAdminUiCopy(raw: unknown): AdminUiCopy {
     subscriptions: uiText(itemsRaw.subscriptions),
     subscription_plans: uiText(itemsRaw.subscription_plans),
     cache: uiText(itemsRaw.cache),
+    llm_prompts: uiText(itemsRaw.llm_prompts),
+    astrology_kb: uiText(itemsRaw.astrology_kb),
+    banners: uiText(itemsRaw.banners),
+    campaigns: uiText(itemsRaw.campaigns),
+    navigation: uiText(itemsRaw.navigation),
   };
 
   const commonRaw = parseJsonObject(o.common);

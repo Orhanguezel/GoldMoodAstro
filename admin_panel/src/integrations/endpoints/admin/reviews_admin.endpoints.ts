@@ -68,6 +68,18 @@ export const reviewsAdminApi = baseApi.injectEndpoints({
         method: 'DELETE',
       }),
     }),
+
+    // -------- BULK MODERATE (T17-7) --------
+    bulkModerateReviewsAdmin: build.mutation<
+      { ok: boolean; updated: number },
+      { ids: string[]; approved: boolean }
+    >({
+      query: (body) => ({
+        url: `/admin/reviews/bulk-moderate`,
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -78,4 +90,5 @@ export const {
   useCreateReviewAdminMutation,
   useUpdateReviewAdminMutation,
   useDeleteReviewAdminMutation,
+  useBulkModerateReviewsAdminMutation,
 } = reviewsAdminApi;

@@ -43,6 +43,7 @@ function mapRowCore(
     dislikes_count: Number(r.dislikes_count ?? 0),
     helpful_count: Number(r.helpful_count ?? 0),
     is_verified: Number(r.is_verified ?? 0) === 1,
+    moderation_flags: parseModerationFlags(r.moderation_flags),
     submitted_locale: r.submitted_locale,
     created_at: r.created_at,
     updated_at: r.updated_at,
@@ -52,6 +53,21 @@ function mapRowCore(
     consultant_reply: consultantReply,
     locale_resolved: localeResolved,
   };
+}
+
+/** moderation_flags TEXT (JSON) → object | null. Veritabanında bozuk ise null. */
+function parseModerationFlags(raw: any): Record<string, unknown> | null {
+  if (raw === null || raw === undefined || raw === '') return null;
+  if (typeof raw === 'object') return raw as Record<string, unknown>;
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 
@@ -269,6 +285,7 @@ export async function repoGetReviewPublic(
       r.is_active,
       r.is_approved,
       r.is_verified,
+      r.moderation_flags,
       r.display_order,
       r.likes_count,
       r.dislikes_count,
@@ -364,6 +381,17 @@ export async function repoCreateReviewPublic(
   const displayOrder = body.display_order ?? 0;
   const id = randomUUID();
 
+  // T17-3/T17-7 — Moderation raporunu DB'ye yaz (sadece flag varsa, temiz ise NULL)
+  const moderationFlagsJson = !moderation.safe
+    ? JSON.stringify({
+        safe: false,
+        flags: moderation.flags ?? [],
+        matched_patterns: moderation.matched_patterns ?? [],
+        source: 'auto',
+        checked_at: new Date().toISOString(),
+      })
+    : null;
+
   await mysql.query(
     `
     INSERT INTO reviews
@@ -384,6 +412,7 @@ export async function repoCreateReviewPublic(
         is_active,
         is_approved,
         is_verified,
+        moderation_flags,
         display_order,
         likes_count,
         dislikes_count,
@@ -393,7 +422,7 @@ export async function repoCreateReviewPublic(
         updated_at
       )
     VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, ?, NOW(3), NOW(3))
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, ?, NOW(3), NOW(3))
     `,
     [
       id,
@@ -412,6 +441,7 @@ export async function repoCreateReviewPublic(
       isActive ? 1 : 0,
       isApproved ? 1 : 0,
       isVerified,
+      moderationFlagsJson,
       displayOrder,
       locale, // submitted_locale
     ],
@@ -585,6 +615,28 @@ export async function repoListReviewsAdmin(
     where.push("r.is_active = ?");
     args.push(q.active ? 1 : 0);
   }
+  if (typeof (q as any).verified === "boolean") {
+    where.push("r.is_verified = ?");
+    args.push((q as any).verified ? 1 : 0);
+  }
+  if (typeof (q as any).auto_flagged === "boolean") {
+    if ((q as any).auto_flagged) {
+      where.push("(r.moderation_flags IS NOT NULL AND r.is_approved = 0)");
+    } else {
+      where.push("(r.moderation_flags IS NULL OR r.is_approved = 1)");
+    }
+  }
+  if (typeof (q as any).has_outcome === "boolean") {
+    if ((q as any).has_outcome) {
+      where.push(
+        "EXISTS (SELECT 1 FROM review_outcomes ro WHERE ro.review_id = r.id AND ro.user_response IS NOT NULL)",
+      );
+    } else {
+      where.push(
+        "NOT EXISTS (SELECT 1 FROM review_outcomes ro WHERE ro.review_id = r.id AND ro.user_response IS NOT NULL)",
+      );
+    }
+  }
   if (typeof q.minRating === "number") {
     where.push("r.rating >= ?");
     args.push(q.minRating);
@@ -626,6 +678,7 @@ export async function repoListReviewsAdmin(
       r.is_active,
       r.is_approved,
       r.is_verified,
+      r.moderation_flags,
       r.display_order,
       r.created_at,
       r.updated_at
@@ -824,6 +877,27 @@ export async function repoDeleteReviewAdmin(
     [id],
   );
   return ((res as any)?.affectedRows ?? 0) > 0;
+}
+
+// T17-7 — Toplu onay/red. ids array'inde bulunan tüm review'ların
+// is_approved (ve is_active) alanını set eder.
+export async function repoBulkModerateReviewsAdmin(
+  app: FastifyInstance,
+  ids: string[],
+  approved: boolean,
+): Promise<{ updated: number }> {
+  const mysql = (app as any).mysql;
+  if (!ids.length) return { updated: 0 };
+
+  const placeholders = ids.map(() => "?").join(",");
+  // Onay = is_approved=1 + is_active=1 (yayında). Red = is_approved=0 + is_active=0.
+  const [res] = await mysql.query(
+    `UPDATE reviews
+     SET is_approved = ?, is_active = ?, updated_at = NOW(3)
+     WHERE id IN (${placeholders})`,
+    [approved ? 1 : 0, approved ? 1 : 0, ...ids],
+  );
+  return { updated: Number((res as any)?.affectedRows ?? 0) };
 }
 
 /* ---------------- PUBLIC LIST (FE) ---------------- */

@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Award, CheckCircle, Clock, Globe, Star, ShieldCheck, Sparkles, Calendar } from 'lucide-react';
 
 import {
   useGetConsultantQuery,
   type ConsultantSlotPublic,
 } from '@/integrations/rtk/public/consultants.public.endpoints';
+import { useGetConsultantOutcomeScoreQuery } from '@/integrations/rtk/hooks';
 import ReviewList from '@/components/common/public/ReviewList';
 import SlotPicker from './SlotPicker';
 
@@ -31,7 +32,9 @@ type Props = {
 
 export default function ConsultantDetail({ id, locale }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: consultant, isFetching, isError } = useGetConsultantQuery(id, { skip: !id });
+  const { data: karne } = useGetConsultantOutcomeScoreQuery(id, { skip: !id });
   const [selectedSlot, setSelectedSlot] = useState<ConsultantSlotPublic | null>(null);
 
   if (isFetching) {
@@ -72,6 +75,8 @@ export default function ConsultantDetail({ id, locale }: Props) {
       duration: String(consultant.session_duration),
       name: consultant.full_name || '',
     });
+    const topic = searchParams.get('topic');
+    if (topic) q.set('topic', topic);
     router.push(`/${locale}/booking?${q.toString()}`);
   };
 
@@ -130,6 +135,24 @@ export default function ConsultantDetail({ id, locale }: Props) {
                     <span className="font-bold">{consultant.session_duration}</span>
                     <span>Dakika</span>
                   </div>
+                  {karne && karne.total_answered > 0 && typeof karne.score === 'number' && (
+                    <div
+                      className="flex items-center gap-2 text-[var(--gm-text-dim)] text-sm"
+                      title={`Karne: ${karne.happened} gerçekleşti · ${karne.partially} kısmen · ${karne.did_not_happen} olmadı`}
+                    >
+                      <ShieldCheck
+                        className={`w-5 h-5 ${
+                          karne.score >= 70
+                            ? 'text-emerald-500'
+                            : karne.score >= 40
+                            ? 'text-amber-500'
+                            : 'text-rose-500'
+                        }`}
+                      />
+                      <span className="font-bold">%{karne.score}</span>
+                      <span>Karne ({karne.total_answered} takip)</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -211,7 +234,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                 </button>
                 
                 <p className="text-center text-[10px] font-medium tracking-[0.1em] text-[var(--gm-muted)] uppercase italic">
-                  * Ödeme bir sonraki adımda Iyzipay üzerinden alınacaktır.
+                  * Ödeme bir sonraki adımda Iyzico üzerinden alınacaktır.
                 </p>
               </div>
             </div>

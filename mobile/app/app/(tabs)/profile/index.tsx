@@ -28,25 +28,28 @@ import {
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { useAuth } from '@/hooks/useAuth';
-import { subscriptionsApi, creditsApi } from '@/lib/api';
-import type { CreditMe, Subscription } from '@/types';
+import { subscriptionsApi, creditsApi, campaignsApi } from '@/lib/api';
+import type { Campaign, CreditMe, Subscription } from '@/types';
 
 export default function ProfileScreen() {
   const { user, isAuthenticated, logout, loading: authLoading } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [credits, setCredits] = useState<CreditMe | null>(null);
+  const [campaigns, setCampaigns] = useState<{ active: Campaign[]; redeemed: any[] }>({ active: [], redeemed: [] });
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
-      const [subscriptionData, creditsData] = await Promise.all([
+      const [subscriptionData, creditsData, campaignsData] = await Promise.all([
         subscriptionsApi.me(),
         creditsApi.me(),
+        campaignsApi.mine(),
       ]);
       setSubscription(subscriptionData);
       setCredits(creditsData);
+      setCampaigns(campaignsData);
     } catch (err) {
       console.error('Profile data error:', err);
     } finally {
@@ -172,6 +175,32 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.group}>
+            <Text style={styles.groupTitle}>KUPONLARIM</Text>
+            <View style={styles.couponPanel}>
+              <View style={styles.couponHeader}>
+                <Text style={styles.couponCount}>{campaigns.active.length}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.couponTitle}>Geçerli Kampanyalar</Text>
+                  <Text style={styles.couponSubtitle}>
+                    Kullanılmış kupon: {campaigns.redeemed.length}
+                  </Text>
+                </View>
+              </View>
+              {campaigns.active.slice(0, 3).map((campaign) => (
+                <View key={campaign.id} style={styles.couponItem}>
+                  <Text style={styles.couponCode}>{campaign.code}</Text>
+                  <Text style={styles.couponMeta}>
+                    {campaign.type === 'discount_percentage' ? `%${Number(campaign.value)}` : `${campaign.value}`} indirim
+                  </Text>
+                </View>
+              ))}
+              {campaigns.active.length === 0 && (
+                <Text style={styles.couponEmpty}>Şu anda hesabınıza uygun aktif kupon yok.</Text>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.group}>
             <Text style={styles.groupTitle}>DESTEK & GÜVENLİK</Text>
             
             <Pressable style={styles.menuItem}>
@@ -254,6 +283,15 @@ const styles = StyleSheet.create({
   menuItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.surface, padding: 18, borderRadius: radius.lg, marginBottom: 10, borderWidth: 1, borderColor: colors.lineSoft },
   menuLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   menuText: { fontFamily: font.sansMedium, fontSize: 15, color: colors.text },
+  couponPanel: { backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft, padding: 18 },
+  couponHeader: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 14 },
+  couponCount: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.gold, color: colors.bgDeep, textAlign: 'center', lineHeight: 44, fontFamily: font.display, fontSize: 22 },
+  couponTitle: { fontFamily: font.sansBold, fontSize: 15, color: colors.text },
+  couponSubtitle: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted, marginTop: 3 },
+  couponItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.lineSoft, paddingTop: 12, marginTop: 12 },
+  couponCode: { fontFamily: font.sansBold, fontSize: 13, color: colors.gold, letterSpacing: 1 },
+  couponMeta: { fontFamily: font.sansMedium, fontSize: 12, color: colors.textMuted },
+  couponEmpty: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted, lineHeight: 20 },
   footer: { alignItems: 'center', marginTop: 20, paddingBottom: 40 },
   footerVersion: { fontFamily: font.sansMedium, fontSize: 12, color: colors.textMuted },
   footerCopy: { fontFamily: font.sans, fontSize: 10, color: colors.textMuted, marginTop: 4 },

@@ -19,25 +19,123 @@ import { useLocaleShort } from "@/i18n/useLocaleShort";
 import { useUiSection } from "@/i18n/uiDb";
 import { useCreateContactPublicMutation, useGetSiteSettingByKeyQuery } from "@/integrations/rtk/hooks";
 
-/* ─── Theme tokens (dark+gold premium) ────────── */
+/* ─── Theme tokens — design-token tabanli, dark/light otomatik ────────── */
+// CSS var'lar globals.css + tokensToCSS uretir; [data-theme="dark"] override eder.
 const C = {
-  rose900: "#C9A96E",
-  rose800: "#B8944F",
-  rose700: "#DFC9A0",
-  rose600: "#A88B4A",
-  rose200: "rgba(201,169,110,0.2)",
-  rose100: "#F5F0E8",
-  rose50: "rgba(201,169,110,0.05)",
-  sand900: "#F5F0E8",
-  sand800: "#A09888",
-  sand600: "#6B6358",
-  sand300: "rgba(201,169,110,0.12)",
-  sand200: "rgba(201,169,110,0.08)",
-  sand100: "#1A1815",
-  sand50: "#141210",
-  white: "#0C0B09",
-  charcoal: "#0C0B09",
+  // brand (light/dark'ta ayni — gold)
+  rose900: "var(--gm-primary)",                                              // brand primary
+  rose800: "var(--gm-primary-dark)",                                         // brand primary dark
+  rose700: "var(--gm-primary-light)",                                        // brand primary light
+  rose600: "var(--gm-gold-deep)",                                            // gold deep aksent
+  rose200: "color-mix(in srgb, var(--gm-primary) 28%, transparent)",         // soft border (gold)
+  rose100: "var(--gm-gold-100)",                                             // gold tint (light arka)
+  rose50:  "color-mix(in srgb, var(--gm-primary) 8%, transparent)",          // very soft gold
+  // surface / text — dark/light otomatik
+  sand900: "var(--gm-text)",                                                 // birincil text
+  sand800: "var(--gm-text-dim)",                                             // ikincil text
+  sand600: "var(--gm-muted)",                                                // muted text
+  sand300: "var(--gm-border)",                                               // standart kenarlik
+  sand200: "var(--gm-border-soft)",                                          // yumusak kenarlik
+  sand100: "var(--gm-surface-high)",                                         // panel ust yuzey
+  sand50:  "var(--gm-bg-deep)",                                              // panel derin yuzey
+  white:   "var(--gm-surface)",                                              // ana panel zemin (light: beyaz, dark: koyu)
+  charcoal: "var(--gm-sand-900)",                                            // koyu kontrast (admin gradient)
+  primaryFg: "#FFFFFF",                                                      // gold zemin uzerine sabit kontrast
 } as const;
+
+/* ─── Locale fallbacks (DB ui_chat.* yoksa devreye girer) ────────── */
+const CHAT_FALLBACKS: Record<string, Record<string, string>> = {
+  tr: {
+    ui_chat_title: "Destek",
+    ui_chat_subtitle: "Yapay zeka destekli yardım",
+    ui_chat_placeholder: "Mesajınızı yazın...",
+    ui_chat_send: "Gönder",
+    ui_chat_loading: "Hazırlanıyor...",
+    ui_chat_empty: "Merhaba, size nasıl yardımcı olabilirim?",
+    ui_chat_ai_mode: "Yapay zeka aktif",
+    ui_chat_admin_mode: "Canlı destek istendi",
+    ui_chat_admin_inbox: "Canlı destek gelen kutusu",
+    ui_chat_no_admin_threads: "Henüz canlı destek talebi yok.",
+    ui_chat_thread_label: "Talep",
+    ui_chat_queue_pending: "Atanmamış",
+    ui_chat_queue_mine: "Bana atananlar",
+    ui_chat_queue_all: "Tümü",
+    ui_chat_unread_label: "yeni mesaj",
+    ui_chat_connect_admin: "Canlı destek ile görüş",
+    ui_chat_connecting: "Bağlanıyor...",
+    ui_chat_login_button: "Giriş yap",
+    ui_chat_guest_intro: "Giriş yapmadan da mesaj bırakabilirsiniz. Doğrudan sohbet için giriş yapın.",
+    ui_chat_guest_name: "Adınız",
+    ui_chat_guest_email: "E-posta adresiniz",
+    ui_chat_guest_phone: "Telefon numaranız",
+    ui_chat_guest_message: "Konunuz nedir?",
+    ui_chat_guest_submit: "Mesajı gönder",
+    ui_chat_guest_sending: "Gönderiliyor...",
+    ui_chat_guest_wait: "Lütfen daha sonra tekrar deneyin",
+    ui_chat_guest_success: "Teşekkürler. Mesajınız iletildi, en kısa sürede dönüş yapacağız.",
+    ui_chat_guest_error: "Gönderilemedi. Lütfen tekrar deneyin veya iletişim sayfasını kullanın.",
+  },
+  en: {
+    ui_chat_title: "Support",
+    ui_chat_subtitle: "AI-powered help",
+    ui_chat_placeholder: "Type your message...",
+    ui_chat_send: "Send",
+    ui_chat_loading: "Preparing...",
+    ui_chat_empty: "Hello, how can I help you?",
+    ui_chat_ai_mode: "AI active",
+    ui_chat_admin_mode: "Live support requested",
+    ui_chat_admin_inbox: "Live support inbox",
+    ui_chat_no_admin_threads: "No live support requests yet.",
+    ui_chat_thread_label: "Request",
+    ui_chat_queue_pending: "Unassigned",
+    ui_chat_queue_mine: "Assigned to me",
+    ui_chat_queue_all: "All",
+    ui_chat_unread_label: "new messages",
+    ui_chat_connect_admin: "Connect with live support",
+    ui_chat_connecting: "Connecting...",
+    ui_chat_login_button: "Sign in",
+    ui_chat_guest_intro: "You can leave a message without logging in. Sign in for direct chat.",
+    ui_chat_guest_name: "Your name",
+    ui_chat_guest_email: "Your email",
+    ui_chat_guest_phone: "Phone number",
+    ui_chat_guest_message: "What is it about?",
+    ui_chat_guest_submit: "Send message",
+    ui_chat_guest_sending: "Sending...",
+    ui_chat_guest_wait: "Please try again later",
+    ui_chat_guest_success: "Thanks. Your message has been sent, we will get back to you soon.",
+    ui_chat_guest_error: "Send failed. Please try again or use the contact page.",
+  },
+  de: {
+    ui_chat_title: "Support",
+    ui_chat_subtitle: "KI-Support",
+    ui_chat_placeholder: "Nachricht eingeben...",
+    ui_chat_send: "Senden",
+    ui_chat_loading: "Wird vorbereitet...",
+    ui_chat_empty: "Hallo, wie kann ich Ihnen helfen?",
+    ui_chat_ai_mode: "KI aktiv",
+    ui_chat_admin_mode: "Live-Support angefordert",
+    ui_chat_admin_inbox: "Live-Support Posteingang",
+    ui_chat_no_admin_threads: "Noch keine Live-Support-Anfragen.",
+    ui_chat_thread_label: "Anfrage",
+    ui_chat_queue_pending: "Nicht zugewiesen",
+    ui_chat_queue_mine: "Mir zugewiesen",
+    ui_chat_queue_all: "Alle",
+    ui_chat_unread_label: "neue Nachrichten",
+    ui_chat_connect_admin: "Mit Live-Support verbinden",
+    ui_chat_connecting: "Verbinde...",
+    ui_chat_login_button: "Anmelden",
+    ui_chat_guest_intro: "Ohne Login können Sie eine Nachricht hinterlassen. Für den direkten Chat melden Sie sich bitte an.",
+    ui_chat_guest_name: "Ihr Name",
+    ui_chat_guest_email: "Ihre E-Mail",
+    ui_chat_guest_phone: "Telefonnummer",
+    ui_chat_guest_message: "Worum geht es?",
+    ui_chat_guest_submit: "Nachricht senden",
+    ui_chat_guest_sending: "Wird gesendet...",
+    ui_chat_guest_wait: "Bitte später erneut versuchen",
+    ui_chat_guest_success: "Danke. Ihre Nachricht wurde gesendet. Wir melden uns so bald wie möglich.",
+    ui_chat_guest_error: "Senden fehlgeschlagen. Bitte versuchen Sie es erneut oder nutzen Sie die Kontaktseite.",
+  },
+};
 
 const SUPPORT_CONTEXT_ID_FALLBACK = "11111111-1111-1111-1111-111111111111";
 const AI_ASSISTANT_USER_ID = "00000000-0000-0000-0000-00000000a11f";
@@ -116,18 +214,35 @@ function guestLeadCooldownKey(): string {
 }
 
 export default function SupportBotWidget() {
+  // Hidration safety — client-only render. SSR'da default state ile çakışan
+  // inline style'lar (border-radius 50% vs 14, longhand vs shorthand) hidration
+  // mismatch üretiyor; mount sonrasına ertele.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const widgetSetting = useGetSiteSettingByKeyQuery({ key: "chat_widget_enabled" });
-  const widgetEnabled = widgetSetting.data?.value !== false && widgetSetting.data?.value !== "false";
+  const widgetEnabled = useMemo(() => {
+    const v = widgetSetting.data?.value;
+    if (v === undefined || v === null) return true;
+    if (v === false || v === 0) return false;
+    if (typeof v === "string") {
+      const s = v.trim().toLowerCase();
+      if (s === "" || s === "false" || s === "0" || s === "no" || s === "off") return false;
+    }
+    return true;
+  }, [widgetSetting.data?.value]);
 
   const locale = useLocaleShort();
   const welcomeSetting = useGetSiteSettingByKeyQuery({ key: "chat_ai_welcome_message", locale });
   const { ui } = useUiSection("ui_chat", locale);
   const t = useCallback(
-    (key: string, fallback: string) => {
-      const v = ui(key, fallback);
-      return v && v !== key ? v : fallback;
+    (key: string, hardFallback: string) => {
+      const v = ui(key, "");
+      if (v && v !== key) return v;
+      const dict = CHAT_FALLBACKS[locale] || CHAT_FALLBACKS.tr;
+      return dict[key] ?? hardFallback;
     },
-    [ui],
+    [ui, locale],
   );
 
   const { isAuthenticated, user } = useAuthStore();
@@ -424,6 +539,7 @@ export default function SupportBotWidget() {
   const btnSize = isMobile ? 56 : 62;
 
   if (!widgetEnabled) return null;
+  if (!mounted) return null; // SSR'da render etme — hidration mismatch'i önle
 
   return (
     <>
@@ -442,7 +558,7 @@ export default function SupportBotWidget() {
           border: `2px solid ${C.rose200}`,
           zIndex: 9999,
           background: open ? headerGradient : C.white,
-          color: open ? C.white : C.rose900,
+          color: open ? C.primaryFg : C.rose900,
           boxShadow: `0 8px 28px rgba(0,0,0,0.4), 0 0 20px rgba(201,169,110,0.1)`,
           display: "grid",
           placeItems: "center",
@@ -489,7 +605,7 @@ export default function SupportBotWidget() {
           }}
         >
           {/* ─── Header ──────────────────────────────── */}
-          <div style={{ background: headerGradient, color: C.white, padding: isAdmin ? "12px 14px" : "14px 16px" }}>
+          <div style={{ background: headerGradient, color: C.primaryFg, padding: isAdmin ? "12px 14px" : "14px 16px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 {isAdmin ? (
@@ -536,7 +652,7 @@ export default function SupportBotWidget() {
                         height: 24,
                         borderRadius: "50%",
                         background: "rgba(255,255,255,0.24)",
-                        color: C.white,
+                        color: C.primaryFg,
                         display: "grid",
                         placeItems: "center",
                         fontSize: 10,
@@ -628,7 +744,7 @@ export default function SupportBotWidget() {
                   disabled={guestLeadDisabled}
                   style={{
                     background: C.rose900,
-                    color: C.white,
+                    color: C.primaryFg,
                     padding: "10px 16px",
                     borderRadius: 10,
                     fontWeight: 600,
@@ -678,7 +794,7 @@ export default function SupportBotWidget() {
                         style={{
                           border: `1px solid ${C.sand300}`,
                           background: queueFilter === f ? C.rose900 : C.white,
-                          color: queueFilter === f ? C.white : C.sand800,
+                          color: queueFilter === f ? C.primaryFg : C.sand800,
                           borderRadius: 999,
                           fontSize: 11,
                           padding: "4px 10px",
@@ -769,7 +885,7 @@ export default function SupportBotWidget() {
                     const isMine = m.sender_user_id === user?.id;
                     const isAi = m.sender_user_id === AI_ASSISTANT_USER_ID;
                     const bubbleBg = isMine ? C.rose900 : isAi ? C.rose50 : C.sand200;
-                    const bubbleFg = isMine ? C.white : C.sand900;
+                    const bubbleFg = isMine ? C.primaryFg : C.sand900;
                     const bubbleBorder = isMine ? "none" : `1px solid ${isAi ? C.rose200 : C.sand300}`;
                     return (
                       <div
@@ -838,7 +954,7 @@ export default function SupportBotWidget() {
                               height: 28,
                               borderRadius: "50%",
                               background: C.rose800,
-                              color: C.white,
+                              color: C.primaryFg,
                               display: "grid",
                               placeItems: "center",
                               fontSize: 10,
@@ -924,7 +1040,7 @@ export default function SupportBotWidget() {
                       padding: "0 14px",
                       minWidth: 46,
                       background: C.rose900,
-                      color: C.white,
+                      color: C.primaryFg,
                       opacity: canSend ? 1 : 0.5,
                       cursor: canSend ? "pointer" : "default",
                     }}

@@ -1,154 +1,195 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { 
   Megaphone, Plus, RefreshCcw, 
-  Trash2, Pencil, Users, User, Star, Calendar, Activity
+  Trash2, Pencil, Users, User, Star, Calendar, Activity,
+  ChevronRight,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+
 import {
   useListAnnouncementsAdminQuery,
   useUpdateAnnouncementAdminMutation,
   useDeleteAnnouncementAdminMutation,
 } from '@/integrations/hooks';
-import Link from 'next/link';
 
 export default function AdminAnnouncementsClient() {
+  const t = useAdminT('admin.announcements');
   const query = useListAnnouncementsAdminQuery();
-  const [update] = useUpdateAnnouncementAdminMutation();
-  const [remove] = useDeleteAnnouncementAdminMutation();
+  const [update, updateState] = useUpdateAnnouncementAdminMutation();
+  const [remove, removeState] = useDeleteAnnouncementAdminMutation();
 
   const handleToggleActive = async (id: string, current: boolean) => {
     try {
       await update({ id, patch: { is_active: !current } }).unwrap();
-      toast.success('Durum güncellendi.');
+      toast.success(t('messages.statusUpdated'));
     } catch {
-      toast.error('Hata oluştu.');
+      toast.error(t('messages.error'));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bu duyuruyu silmek istediğinize emin misiniz?')) return;
+    if (!confirm(t('messages.deleteConfirm'))) return;
     try {
       await remove(id).unwrap();
-      toast.success('Duyuru silindi.');
+      toast.success(t('messages.deleted'));
     } catch {
-      toast.error('Hata oluştu.');
+      toast.error(t('messages.error'));
     }
   };
 
+  const busy = query.isFetching || updateState.isLoading || removeState.isLoading;
+
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <span className="w-8 h-px bg-[#C9A961]" />
-            <span className="text-[#C9A961] font-bold text-[10px] tracking-[0.2em] uppercase">Sistem İletişimi</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-px bg-gm-gold" />
+            <span className="text-gm-gold font-bold text-[10px] tracking-[0.2em] uppercase">
+              {t('header.badge')}
+            </span>
           </div>
-          <h1 className="font-serif text-4xl text-foreground">Duyurular</h1>
-          <p className="text-muted-foreground text-sm mt-2 font-serif italic">
-            Uygulama genelindeki duyuruları ve bildirimleri buradan yönetin.
+          <h1 className="font-serif text-4xl text-gm-text">{t('header.title')}</h1>
+          <p className="text-gm-muted text-sm font-serif italic opacity-70">
+            {t('header.description')}
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-4">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => query.refetch()} 
-            disabled={query.isFetching}
-            className="rounded-full border-border/40 px-6"
+            disabled={busy}
+            className="rounded-full border-gm-border-soft bg-gm-surface/50 px-8 h-12 text-[10px] font-bold tracking-widest uppercase transition-all hover:bg-gm-primary/5 shadow-lg backdrop-blur-sm"
           >
-            <RefreshCcw className={`mr-2 size-4 ${query.isFetching ? 'animate-spin' : ''}`} />
-            Yenile
+            <RefreshCcw className={cn("mr-2 size-4", query.isFetching && "animate-spin")} />
+            {t('admin.common.refresh', null, 'Yenile')}
           </Button>
-          <Button size="sm" asChild className="bg-[#C9A961] text-[#1A1715] hover:bg-[#C9A961]/90 rounded-full px-8 font-bold tracking-widest uppercase">
+          <Button size="sm" asChild className="bg-gm-gold text-gm-bg hover:bg-gm-gold-dim rounded-full px-10 h-12 font-bold tracking-widest uppercase text-[10px] shadow-lg shadow-gm-gold/20 transition-all active:scale-95">
             <Link href="/admin/announcements/new">
               <Plus className="mr-2 size-4" />
-              YENİ DUYURU
+              {t('actions.create')}
             </Link>
           </Button>
         </div>
       </div>
 
       {/* Table Card */}
-      <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
+      <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-muted/30">
-              <TableRow className="border-border/30 hover:bg-transparent">
-                <TableHead className="py-6 px-8 text-[10px] font-bold uppercase tracking-widest w-24 text-center">Aktif</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest">Hedef Kitle</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest">Başlık & İçerik</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest">Yayın Tarihi</TableHead>
-                <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest">İşlemler</TableHead>
+            <TableHeader className="bg-gm-surface/40">
+              <TableRow className="border-gm-border-soft hover:bg-transparent">
+                <TableHead className="py-6 px-8 text-[10px] font-bold uppercase tracking-widest text-center text-gm-muted w-32">{t('table.active')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.audience')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.titleContent')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.dateRange')}</TableHead>
+                <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {query.isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-20 text-center font-serif italic text-muted-foreground">Yükleniyor...</TableCell>
-                </TableRow>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i} className="border-gm-border-soft">
+                    <TableCell className="py-6 px-8 text-center"><Skeleton className="h-6 w-10 mx-auto rounded-full bg-gm-surface/20" /></TableCell>
+                    <TableCell className="py-6"><Skeleton className="h-8 w-24 rounded-full bg-gm-surface/20" /></TableCell>
+                    <TableCell className="py-6"><Skeleton className="h-10 w-64 bg-gm-surface/20" /></TableCell>
+                    <TableCell className="py-6"><Skeleton className="h-6 w-40 bg-gm-surface/20" /></TableCell>
+                    <TableCell className="py-6 px-8"><Skeleton className="h-10 w-24 ml-auto bg-gm-surface/20 rounded-full" /></TableCell>
+                  </TableRow>
+                ))
               ) : query.data?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-20 text-center font-serif italic text-muted-foreground">
-                    <Megaphone className="w-12 h-12 mx-auto mb-4 opacity-10" />
-                    Henüz duyuru bulunmuyor.
+                  <TableCell colSpan={5} className="py-32 text-center">
+                    <div className="flex flex-col items-center gap-6 opacity-30 animate-pulse">
+                      <Megaphone className="w-20 h-20 text-gm-gold/50" />
+                      <span className="font-serif italic text-xl text-gm-muted">{t('table.empty')}</span>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
                 query.data?.map((item) => (
-                  <TableRow key={item.id} className="border-border/20 hover:bg-muted/10 transition-colors">
+                  <TableRow key={item.id} className="border-gm-border-soft hover:bg-gm-primary/[0.03] transition-colors group">
                     <TableCell className="py-6 px-8 text-center">
-                      <Switch 
-                        checked={item.is_active} 
-                        onCheckedChange={() => handleToggleActive(item.id, item.is_active)}
-                        className="data-[state=checked]:bg-[#C9A961]"
-                      />
-                    </TableCell>
-                    <TableCell className="py-6">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${
-                        item.audience === 'all' ? 'border-[#C9A961]/30 bg-[#C9A961]/5 text-[#C9A961]' :
-                        item.audience === 'users' ? 'border-[#7B5EA7]/30 bg-[#7B5EA7]/5 text-[#7B5EA7]' :
-                        'border-[#4CAF6E]/30 bg-[#4CAF6E]/5 text-[#4CAF6E]'
-                      }`}>
-                        {item.audience === 'all' && <Users className="size-3" />}
-                        {item.audience === 'users' && <User className="size-3" />}
-                        {item.audience === 'consultants' && <Star className="size-3" />}
-                        {item.audience === 'all' ? 'HERKES' : item.audience === 'users' ? 'DANIŞANLAR' : 'DANIŞMANLAR'}
+                      <div className="flex flex-col items-center gap-2">
+                        <Switch 
+                          checked={item.is_active} 
+                          onCheckedChange={() => handleToggleActive(item.id, item.is_active)}
+                          className="data-[state=checked]:bg-gm-gold"
+                          disabled={busy}
+                        />
+                        <span className="text-[8px] font-bold tracking-widest uppercase opacity-40">
+                          {item.is_active ? 'ON' : 'OFF'}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell className="py-6">
-                      <div className="font-serif text-lg text-foreground mb-1">{item.title}</div>
-                      <div className="max-w-xs truncate text-xs text-muted-foreground italic font-serif opacity-70">{item.body}</div>
+                      <div className={cn(
+                        "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] border transition-all shadow-sm",
+                        item.audience === 'all' ? "bg-gm-gold/5 border-gm-gold/20 text-gm-gold" :
+                        item.audience === 'users' ? "bg-gm-primary/5 border-gm-primary/20 text-gm-primary" :
+                        "bg-gm-success/5 border-gm-success/20 text-gm-success"
+                      )}>
+                        {item.audience === 'all' && <Users className="size-3.5" />}
+                        {item.audience === 'users' && <User className="size-3.5" />}
+                        {item.audience === 'consultants' && <Star className="size-3.5" />}
+                        {t(`audience.${item.audience}`)}
+                      </div>
                     </TableCell>
                     <TableCell className="py-6">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-                        <Calendar className="w-3 h-3 text-[#C9A961]" />
-                        {item.starts_at ? format(new Date(item.starts_at), 'dd MMM yyyy', { locale: tr }) : '-'}
-                        <span className="opacity-30">→</span>
-                        {item.ends_at ? format(new Date(item.ends_at), 'dd MMM yyyy', { locale: tr }) : '-'}
+                      <div className="max-w-md font-serif text-xl text-gm-text group-hover:text-gm-primary transition-colors duration-500">
+                        {item.title}
+                      </div>
+                      <div className="max-w-md text-sm text-gm-muted font-serif italic opacity-60 leading-relaxed mt-1 truncate">
+                        {item.body}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-6">
+                      <div className="flex items-center gap-3 text-[10px] text-gm-muted font-mono opacity-80">
+                        <div className="flex items-center gap-1.5">
+                          <Eye className="size-3 text-gm-gold/60" />
+                          {item.starts_at ? format(new Date(item.starts_at), 'dd MMM yyyy', { locale: tr }) : '-'}
+                        </div>
+                        <ChevronRight className="size-3 opacity-20" />
+                        <div className="flex items-center gap-1.5">
+                          <EyeOff className="size-3 text-gm-error/60" />
+                          {item.ends_at ? format(new Date(item.ends_at), 'dd MMM yyyy', { locale: tr }) : '-'}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-6 px-8 text-right">
-                      <div className="flex justify-end gap-3">
-                        <Button asChild size="icon" variant="ghost" className="rounded-full hover:bg-[#C9A961]/10 hover:text-[#C9A961]">
+                      <div className="flex justify-end gap-3 opacity-20 group-hover:opacity-100 transition-all duration-300">
+                        <Button asChild size="sm" variant="ghost" className="rounded-full hover:bg-gm-gold/10 hover:text-gm-gold px-8 h-10 text-[10px] font-bold tracking-widest uppercase">
                           <Link href={`/admin/announcements/${item.id}`}>
-                            <Pencil className="size-4" />
+                            <Pencil className="mr-2 size-4" />
+                            {t('admin.common.edit', null, 'Düzenle')}
                           </Link>
                         </Button>
-                        <Button size="icon" variant="ghost" className="rounded-full hover:bg-[#E55B4D]/10 hover:text-[#E55B4D]" onClick={() => handleDelete(item.id)}>
+                        <button 
+                          className="p-2.5 rounded-full hover:bg-gm-error/10 text-gm-error/40 hover:text-gm-error transition-all border border-transparent hover:border-gm-error/20 shadow-sm"
+                          onClick={() => handleDelete(item.id)}
+                          disabled={busy}
+                        >
                           <Trash2 className="size-4" />
-                        </Button>
+                        </button>
                       </div>
                     </TableCell>
                   </TableRow>

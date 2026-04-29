@@ -12,21 +12,19 @@ Expo (React Native) uygulamasını iOS + Android için üretim build'lerine çı
 | Plugins | expo-router, expo-localization, expo-notifications, expo-secure-store | ✅ |
 | EAS profilleri | development / preview / production | ✅ |
 | `EXPO_PUBLIC_API_URL` | env-driven (eas.json'da production: `https://goldmoodastro.com/api/v1`) | ✅ |
-| `extra.eas.projectId` | **boş** | ⏳ ilk `eas init` ile dolar |
+| `extra.eas.projectId` | `032fb190-c872-43e4-a3e7-28335af94a6f` | ✅ |
 | `updates.url` | **boş** | ⏳ OTA istemiyorsan boş bırak |
 | Apple Developer Account | gerekli (iOS submit için) | ⏳ |
 | Google Play Console | gerekli (Android submit için) | ⏳ |
-| Firebase iOS plist + Android google-services.json | FCM için | ⏳ |
+| Firebase Android google-services.json | FCM için | ✅ |
+| Firebase iOS GoogleService-Info.plist | FCM için | ⏳ |
 | APNs sertifikası | iOS push için | ⏳ |
 
 ## 1. Lokal Hazırlık (bir kerelik)
 
 ```bash
-# EAS CLI
-npm install -g eas-cli
-
 # Expo hesabı (yoksa expo.dev'de oluştur)
-eas login
+bunx eas login
 
 # Mobile dizinine geç
 cd mobile/app
@@ -43,10 +41,10 @@ bun install
 
 ```bash
 cd mobile/app
-eas init
+bunx eas init
 ```
 
-Bu komut Expo cloud'da yeni bir proje açar, `app.json` içindeki `extra.eas.projectId` alanını doldurur. Ardından bu değişikliği commit'leyin.
+Bu repo zaten Expo cloud projesine bağlı. Yeni bir Expo projesine taşınırsa bu komut `app.json` içindeki `extra.eas.projectId` alanını yeniler; ardından bu değişikliği commit'leyin.
 
 ## 3. Lokal Geliştirme
 
@@ -86,8 +84,8 @@ Build EAS Cloud'da ~10-20 dk sürer. Bittikten sonra link gelir, APK/IPA indiril
 
 ```bash
 cd mobile/app
-eas build --platform android --profile production
-eas build --platform ios --profile production
+bunx eas build --platform android --profile production
+bunx eas build --platform ios --profile production
 
 # Submit (App Store / Play Store)
 bun run submit:android
@@ -121,13 +119,13 @@ Firebase Console'da yeni proje oluştur, sonra:
 ./deploy/sync-env.sh
 ```
 
-## 7. Agora SDK (sesli görüşme)
+## 7. LiveKit SDK (sesli görüşme)
 
-`react-native-agora` zaten `package.json`'da. Çalışması için:
-1. Agora.io'da hesap aç, projende `App ID` + `App Certificate` al
-2. `.secrets/credentials.env`: `AGORA_APP_ID`, `AGORA_APP_CERTIFICATE` doldur
+`@livekit/react-native`, `@livekit/react-native-webrtc` ve `livekit-client` `package.json` içinde. Çalışması için:
+1. LiveKit Cloud'da proje oluştur, `API Key`, `API Secret` ve WebSocket URL al
+2. `.secrets/credentials.env`: `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_WS_URL` doldur
 3. `./deploy/sync-env.sh` ile VPS'e gönder
-4. Backend `/api/v1/agora/token` endpoint'i kanal token üretir, mobile bunu kullanıp kanaldan bağlanır
+4. Backend `/api/v1/livekit/token` endpoint'i oda tokenı üretir, mobile bunu kullanıp odaya bağlanır
 
 ## Sık Karşılaşılan Sorunlar
 

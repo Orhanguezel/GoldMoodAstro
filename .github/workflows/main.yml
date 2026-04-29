@@ -146,6 +146,10 @@ jobs:
         working-directory: frontend
         env:
           NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          NEXT_PUBLIC_FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID }}
+          NEXT_PUBLIC_APPLE_CLIENT_ID: ${{ secrets.APPLE_CLIENT_ID }}
+          NEXT_PUBLIC_APPLE_REDIRECT_URI: https://goldmoodastro.com/auth/apple/callback
         run: |
           bun install --frozen-lockfile || bun install
           bun run build

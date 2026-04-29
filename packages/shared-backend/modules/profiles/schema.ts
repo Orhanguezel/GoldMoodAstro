@@ -5,6 +5,7 @@ import {
   text,
   datetime,
   foreignKey,
+  int,
 } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 import { users } from '../auth';
@@ -25,6 +26,11 @@ export const profiles = mysqlTable(
     city: varchar('city', { length: 128 }),
     country: varchar('country', { length: 128 }),
     postal_code: varchar('postal_code', { length: 32 }),
+    fcm_token: text('fcm_token'),
+
+    push_notifications: int('push_notifications').default(1).notNull(),
+    email_notifications: int('email_notifications').default(1).notNull(),
+    sms_notifications: int('sms_notifications').default(0).notNull(),
 
     created_at: datetime('created_at', { fsp: 3 })
       .notNull()

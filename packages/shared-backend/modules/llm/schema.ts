@@ -13,7 +13,7 @@ export const llmPrompts = mysqlTable(
     id: char('id', { length: 36 }).primaryKey().notNull(),
     key: varchar('key', { length: 80 }).notNull(),
     locale: varchar('locale', { length: 8 }).notNull().default('tr'),
-    provider: mysqlEnum('provider', ['openai', 'anthropic', 'azure', 'local']).notNull().default('anthropic'),
+    provider: mysqlEnum('provider', ['openai', 'anthropic', 'groq', 'azure', 'local']).notNull().default('anthropic'),
     model: varchar('model', { length: 120 }).notNull().default('claude-haiku-4-5'),
     temperature: decimal('temperature', { precision: 3, scale: 2 }).notNull().default('0.80'),
     max_tokens: int('max_tokens').notNull().default(800),

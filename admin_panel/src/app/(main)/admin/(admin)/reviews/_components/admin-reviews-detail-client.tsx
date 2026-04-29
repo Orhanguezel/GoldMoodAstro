@@ -1,15 +1,25 @@
 'use client';
 
-// =============================================================
-// FILE: src/app/(main)/admin/(admin)/reviews/[id]/admin-reviews-detail-client.tsx
-// FINAL — Admin Review Create/Edit Form (App Router + shadcn)
-// ✅ FULLY FIXED - All type safety issues resolved
-// =============================================================
-
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, Trash2, Loader2, Star } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  XCircle,
+  Save, 
+  Trash2, 
+  Loader2, 
+  Star, 
+  User, 
+  MessageSquare, 
+  ShieldCheck, 
+  Calendar, 
+  Type,
+  Activity,
+  History,
+  Layout
+} from 'lucide-react';
 
 import { useAdminLocales } from '@/app/(main)/admin/_components/common/useAdminLocales';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
@@ -22,9 +32,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import {
   AdminLocaleSelect,
   type AdminLocaleOption,
@@ -40,6 +51,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import type { AdminReviewCreatePayload } from '@/integrations/shared';
 import {
@@ -50,15 +62,12 @@ import {
 } from '@/integrations/hooks';
 
 type FormData = {
-  // Required
   target_type: string;
   target_id: string;
   name: string;
   email: string;
   rating: number;
   comment: string;
-
-  // Optional
   title: string;
   role: string;
   company: string;
@@ -66,8 +75,6 @@ type FormData = {
   logo_url: string;
   profile_href: string;
   admin_reply: string;
-
-  // Metadata
   is_active: boolean;
   is_approved: boolean;
   display_order: number;
@@ -98,17 +105,19 @@ function RatingInput({
           type="button"
           onClick={() => onChange(i + 1)}
           disabled={disabled}
-          className="transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50"
+          className="transition-all hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Star
             className={cn(
-              'size-6',
-              i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground',
+              'size-8 transition-all duration-300',
+              i < rating ? 'fill-gm-gold text-gm-gold drop-shadow-[0_0_12px_rgba(212,175,55,0.4)] scale-110' : 'text-gm-muted opacity-20',
             )}
           />
         </button>
       ))}
-      <span className="ml-2 text-sm text-muted-foreground">({rating}/5)</span>
+      <span className="ml-4 text-sm font-mono text-gm-gold font-bold tracking-widest bg-gm-gold/10 px-4 py-1.5 rounded-full border border-gm-gold/20 animate-in zoom-in duration-500">
+        {rating} / 5
+      </span>
     </div>
   );
 }
@@ -118,7 +127,6 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
   const isNew = id === 'new';
   const t = useAdminT('admin.reviews');
 
-  // Locale management
   const {
     localeOptions,
     defaultLocaleFromDb,
@@ -126,7 +134,6 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
     loading: localesLoading,
   } = useAdminLocales();
 
-  // ✅ FIX: Ensure localeOptions has correct type
   const safeLocaleOptions: AdminLocaleOption[] = React.useMemo(() => {
     if (!Array.isArray(localeOptions)) return [];
     return localeOptions.map((opt) => ({
@@ -135,7 +142,6 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
     }));
   }, [localeOptions]);
 
-  // RTK Query - only fetch if editing
   const {
     data: existingItem,
     isLoading: loadingItem,
@@ -146,16 +152,14 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
   const [updateReview, { isLoading: isUpdating }] = useUpdateReviewAdminMutation();
   const [deleteReview, { isLoading: isDeleting }] = useDeleteReviewAdminMutation();
 
-  // ✅ FIX: Initial locale with proper fallback
   const initialLocale = React.useMemo(() => {
     return (
       defaultLocaleFromDb ||
-      localeShortClientOr(typeof window !== 'undefined' ? navigator.language : 'de') ||
-      'de'
+      localeShortClientOr(typeof window !== 'undefined' ? navigator.language : 'tr') ||
+      'tr'
     );
   }, [defaultLocaleFromDb]);
 
-  // Form state
   const [formData, setFormData] = React.useState<FormData>({
     target_type: 'testimonial',
     target_id: '11111111-1111-1111-1111-111111111111',
@@ -176,10 +180,8 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
     locale: initialLocale,
   });
 
-  // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 
-  // Load existing data
   React.useEffect(() => {
     if (!isNew && existingItem) {
       setFormData({
@@ -204,7 +206,6 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
     }
   }, [existingItem, isNew, initialLocale]);
 
-  // Update default locale if needed
   React.useEffect(() => {
     if (isNew && defaultLocaleFromDb && !formData.locale) {
       setFormData((prev) => ({ ...prev, locale: defaultLocaleFromDb }));
@@ -216,40 +217,10 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
-    if (!formData.target_type.trim()) {
-      toast.error(t('form.validation.targetTypeRequired'));
-      return;
-    }
+    if (!formData.name.trim()) { toast.error(t('messages.error')); return; }
+    if (!formData.comment.trim()) { toast.error(t('messages.error')); return; }
 
-    if (!formData.target_id.trim()) {
-      toast.error(t('form.validation.targetIdRequired'));
-      return;
-    }
-
-    if (!formData.name.trim()) {
-      toast.error(t('form.validation.nameRequired'));
-      return;
-    }
-
-    if (!formData.email.trim()) {
-      toast.error(t('form.validation.emailRequired'));
-      return;
-    }
-
-    if (!formData.comment.trim()) {
-      toast.error(t('form.validation.commentRequired'));
-      return;
-    }
-
-    if (formData.rating < 0 || formData.rating > 5) {
-      toast.error(t('form.validation.ratingRange'));
-      return;
-    }
-
-    // ✅ FIXED: Correct usage of resolveAdminApiLocale
-    const apiLocale =
-      formData.locale || resolveAdminApiLocale(localeOptions, defaultLocaleFromDb, 'de');
+    const apiLocale = formData.locale || resolveAdminApiLocale(localeOptions, defaultLocaleFromDb, 'tr');
 
     try {
       if (isNew) {
@@ -305,13 +276,10 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
     }
   };
 
-  const handleDeleteClick = () => {
-    setDeleteDialogOpen(true);
-  };
+  const handleDeleteClick = () => setDeleteDialogOpen(true);
 
   const handleDeleteConfirm = async () => {
     if (isNew) return;
-
     try {
       await deleteReview({ id }).unwrap();
       toast.success(t('messages.deleted'));
@@ -328,461 +296,340 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
 
   if (loadError) {
     return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <div className="text-destructive">
-              {t('messages.loadError')}: {getErrMsg(loadError, t('messages.genericError'))}
+      <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+        <CardContent className="py-24 text-center">
+          <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
+            <div className="size-20 rounded-full bg-gm-error/10 flex items-center justify-center text-gm-error border border-gm-error/20 shadow-inner">
+              <Activity size={40} />
             </div>
-            <Button
-              variant="outline"
-              onClick={() => router.push('/admin/reviews')}
-              className="mt-4 gap-2"
-            >
-              <ArrowLeft className="size-4" />
-              {t('actions.backToList')}
+            <div className="space-y-2">
+              <h2 className="font-serif text-3xl text-gm-text">{t('messages.error')}</h2>
+              <p className="text-gm-muted font-serif italic text-lg">{getErrMsg(loadError, "Veri yüklenemedi")}</p>
+            </div>
+            <Button variant="outline" onClick={() => router.push('/admin/reviews')} className="rounded-full px-10 h-12 border-gm-border-soft hover:bg-gm-surface font-bold tracking-widest uppercase text-[10px]">
+              <ArrowLeft className="mr-2 size-4" /> {t('actions.backToList')}
             </Button>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (!isNew && loadingItem) {
+  if (loadingItem && !isNew) {
     return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <div className="flex items-center gap-2">
-              <Loader2 className="size-5 animate-spin" />
-              <span>{t('admin.common.loading')}</span>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="space-y-10 animate-in fade-in duration-500">
+        <Skeleton className="h-24 w-full rounded-[24px] bg-gm-surface/20" />
+        <div className="grid gap-8 lg:grid-cols-3">
+          <Skeleton className="lg:col-span-2 h-[600px] rounded-[32px] bg-gm-surface/20" />
+          <Skeleton className="h-[600px] rounded-[32px] bg-gm-surface/20" />
+        </div>
       </div>
     );
   }
 
   return (
     <>
-      <form onSubmit={handleSave} className="space-y-6">
-        {/* Header */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-1.5">
-                <CardTitle>{isNew ? t('form.titles.create') : t('form.titles.edit')}</CardTitle>
-                <CardDescription>
-                  {isNew ? t('form.descriptions.create') : t('form.descriptions.edit')}
-                </CardDescription>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push('/admin/reviews')}
-                disabled={busy}
-                className="gap-2"
+      <form onSubmit={handleSave} className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                asChild
+                className="rounded-full -ml-3 hover:bg-gm-surface group transition-all"
               >
-                <ArrowLeft className="size-4" />
-                {t('admin.common.back')}
+                <Link href="/admin/reviews">
+                  <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
+                </Link>
               </Button>
+              <span className="w-8 h-px bg-gm-gold" />
+              <span className="text-gm-gold font-bold text-[10px] tracking-[0.2em] uppercase">
+                {t('header.badge')}
+              </span>
             </div>
-          </CardHeader>
-        </Card>
+            <h1 className="font-serif text-4xl text-gm-text">
+              {isNew ? t('form.createTitle') : t('form.editTitle')}
+            </h1>
+            <p className="text-gm-muted text-sm font-serif italic opacity-70">
+              {isNew ? t('form.createDescription') : t('form.editDescription')}
+            </p>
+          </div>
 
-        {/* Section 1: Metadata */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('form.sections.meta')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-4">
-              {/* Locale - ✅ FIXED: Using safeLocaleOptions */}
-              <div>
-                <AdminLocaleSelect
-                  value={formData.locale}
-                  onChange={handleLocaleChange}
-                  options={safeLocaleOptions}
-                  loading={localesLoading}
-                  disabled={busy}
-                  label={t('form.fields.locale')}
-                />
-              </div>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/admin/reviews')}
+              disabled={busy}
+              className="rounded-full border-gm-border-soft px-8 h-12 hover:bg-gm-surface transition-all text-[10px] font-bold tracking-widest uppercase"
+            >
+              <XCircle className="mr-2 size-4" /> {t('admin.common.cancel', null, 'İptal')}
+            </Button>
+            <Button
+              type="submit"
+              disabled={busy}
+              className="bg-gm-gold text-gm-bg hover:bg-gm-gold-dim rounded-full px-12 h-12 font-bold tracking-widest uppercase text-[10px] shadow-lg shadow-gm-gold/20 transition-all active:scale-95"
+            >
+              {busy ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Save className="mr-2 size-4" />}
+              {t('admin.common.save', null, 'Kaydet')}
+            </Button>
+          </div>
+        </div>
 
-              {/* Display Order */}
-              <div className="space-y-2">
-                <Label htmlFor="display_order" className="text-sm">
-                  {t('form.fields.displayOrder')}
-                </Label>
-                <Input
-                  id="display_order"
-                  type="number"
-                  value={formData.display_order}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      display_order: Number(e.target.value) || 0,
-                    }))
-                  }
-                  disabled={busy}
-                  min={0}
-                />
-              </div>
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Main Content (Left) */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* User Info */}
+            <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+              <CardHeader className="border-b border-gm-border-soft bg-gm-surface/40 p-8">
+                <CardTitle className="font-serif text-2xl flex items-center gap-3 text-gm-text">
+                  <User className="size-6 text-gm-gold" /> {t('form.userInfo')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 space-y-8">
+                <div className="grid gap-8 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('form.userName')}</Label>
+                    <Input
+                      value={formData.name}
+                      onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
+                      placeholder="Ad Soyad"
+                      className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 text-sm transition-all"
+                      disabled={busy}
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('form.email')}</Label>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
+                      placeholder="email@example.com"
+                      className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 text-sm transition-all"
+                      disabled={busy}
+                    />
+                  </div>
+                </div>
 
-              {/* Approved */}
-              <div className="space-y-2">
-                <Label htmlFor="is_approved" className="text-sm">
-                  {t('form.fields.approved')}
-                </Label>
-                <div className="flex items-center gap-3 rounded-md border px-3 py-2">
-                  <Switch
-                    id="is_approved"
-                    checked={formData.is_approved}
-                    onCheckedChange={(checked) =>
-                      setFormData((prev) => ({ ...prev, is_approved: checked }))
-                    }
+                <Separator className="bg-gm-border-soft" />
+
+                <div className="space-y-6 pt-2">
+                  <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1 block">{t('form.rating')}</Label>
+                  <RatingInput
+                    value={formData.rating}
+                    onChange={(val) => setFormData(p => ({ ...p, rating: val }))}
                     disabled={busy}
                   />
-                  <Label htmlFor="is_approved" className="cursor-pointer text-sm">
-                    {formData.is_approved ? (
-                      <Badge variant="default">{t('labels.approved')}</Badge>
-                    ) : (
-                      <Badge variant="secondary">{t('labels.unapproved')}</Badge>
-                    )}
-                  </Label>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* Active */}
-              <div className="space-y-2">
-                <Label htmlFor="is_active" className="text-sm">
-                  {t('form.fields.active')}
-                </Label>
-                <div className="flex items-center gap-3 rounded-md border px-3 py-2">
-                  <Switch
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) =>
-                      setFormData((prev) => ({ ...prev, is_active: checked }))
-                    }
+            {/* Comment Section */}
+            <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+              <CardHeader className="border-b border-gm-border-soft bg-gm-surface/40 p-8">
+                <CardTitle className="font-serif text-2xl flex items-center gap-3 text-gm-text">
+                  <MessageSquare className="size-6 text-gm-gold" /> {t('form.commentContent')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 space-y-8">
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('form.commentTitle')}</Label>
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => setFormData(p => ({ ...p, title: e.target.value }))}
+                    placeholder="Kısa bir özet..."
+                    className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 text-sm transition-all"
                     disabled={busy}
                   />
-                  <Label htmlFor="is_active" className="cursor-pointer text-sm">
-                    {formData.is_active ? (
-                      <Badge variant="default">{t('labels.active')}</Badge>
-                    ) : (
-                      <Badge variant="secondary">{t('labels.inactive')}</Badge>
-                    )}
-                  </Label>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('form.commentText')}</Label>
+                  <Textarea
+                    value={formData.comment}
+                    onChange={(e) => setFormData(p => ({ ...p, comment: e.target.value }))}
+                    placeholder="Danışan neler yazdı?"
+                    className="bg-gm-surface/40 border-gm-border-soft rounded-3xl min-h-[200px] p-6 focus:ring-gm-gold/50 font-serif italic text-xl leading-relaxed text-gm-text/90 shadow-inner"
+                    disabled={busy}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Section 2: Customer Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('form.sections.customer')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {/* Target Type */}
-              <div className="space-y-2">
-                <Label htmlFor="target_type" className="text-sm">
-                  {t('form.fields.targetType')} <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="target_type"
-                  value={formData.target_type}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, target_type: e.target.value }))
-                  }
-                  placeholder={t('form.placeholders.targetType')}
-                  disabled={busy}
-                  required
-                />
-              </div>
+            {/* Admin Reply */}
+            {!isNew && (
+              <Card className="bg-gm-bg-deep/30 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl border-l-4 border-l-gm-gold">
+                <CardHeader className="border-b border-gm-border-soft bg-gm-surface/40 p-8">
+                  <CardTitle className="font-serif text-2xl flex items-center gap-3 text-gm-text">
+                    <ShieldCheck className="size-6 text-gm-gold" /> {t('form.adminReply')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <Textarea
+                    value={formData.admin_reply}
+                    onChange={(e) => setFormData(p => ({ ...p, admin_reply: e.target.value }))}
+                    placeholder="Danışana yanıt verin..."
+                    className="bg-gm-surface/40 border-gm-border-soft rounded-3xl min-h-[140px] p-6 focus:ring-gm-gold/50 font-serif italic text-lg text-gm-text/80 shadow-inner"
+                    disabled={busy}
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-              {/* Target ID */}
-              <div className="space-y-2">
-                <Label htmlFor="target_id" className="text-sm">
-                  {t('form.fields.targetId')} <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="target_id"
-                  value={formData.target_id}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, target_id: e.target.value }))}
-                  placeholder={t('form.placeholders.targetId')}
-                  disabled={busy}
-                  required
-                />
-              </div>
-            </div>
+          {/* Sidebar Settings (Right) */}
+          <div className="space-y-8">
+            <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl sticky top-24">
+              <CardHeader className="border-b border-gm-border-soft bg-gm-surface/40 p-8">
+                <CardTitle className="font-serif text-2xl text-gm-text flex items-center gap-3">
+                  <Layout className="size-5 text-gm-gold" /> {t('form.settings')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 space-y-10">
+                {/* Status Toggles */}
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between group">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-bold tracking-widest uppercase text-gm-text">{t('form.activeStatus')}</Label>
+                      <p className="text-[10px] text-gm-muted uppercase tracking-[0.15em] font-bold opacity-60">{t('form.activeStatusDesc')}</p>
+                    </div>
+                    <Switch
+                      checked={formData.is_active}
+                      onCheckedChange={(v) => setFormData(p => ({ ...p, is_active: v }))}
+                      className="data-[state=checked]:bg-gm-primary"
+                    />
+                  </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              {/* Name */}
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm">
-                  {t('form.fields.name')} <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder={t('form.placeholders.name')}
-                  disabled={busy}
-                  required
-                />
-              </div>
+                  <div className="flex items-center justify-between group">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-bold tracking-widest uppercase text-gm-text">{t('form.approvedStatus')}</Label>
+                      <p className="text-[10px] text-gm-muted uppercase tracking-[0.15em] font-bold opacity-60">{t('form.approvedStatusDesc')}</p>
+                    </div>
+                    <Switch
+                      checked={formData.is_approved}
+                      onCheckedChange={(v) => setFormData(p => ({ ...p, is_approved: v }))}
+                      className="data-[state=checked]:bg-gm-success"
+                    />
+                  </div>
+                </div>
 
-              {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm">
-                  {t('form.fields.email')} <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                  placeholder={t('form.placeholders.email')}
-                  disabled={busy}
-                  required
-                />
-              </div>
-            </div>
+                <Separator className="bg-gm-border-soft" />
 
-            {/* Rating */}
-            <div className="space-y-2">
-              <Label htmlFor="rating" className="text-sm">
-                {t('form.fields.rating')} <span className="text-destructive">*</span>
-              </Label>
-              <RatingInput
-                value={formData.rating}
-                onChange={(value) => setFormData((prev) => ({ ...prev, rating: value }))}
-                disabled={busy}
-              />
-            </div>
-          </CardContent>
-        </Card>
+                {/* Meta Fields */}
+                <div className="space-y-8">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1 block">{t('form.localeLabel')}</Label>
+                    <AdminLocaleSelect
+                      value={formData.locale}
+                      onChange={handleLocaleChange}
+                      options={safeLocaleOptions}
+                      loading={localesLoading}
+                      disabled={busy}
+                      className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 text-sm focus:ring-gm-gold/50 transition-all"
+                    />
+                  </div>
 
-        {/* Section 3: Review Content */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('form.sections.content')}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Title */}
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-sm">
-                {t('form.fields.title')}
-              </Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                placeholder={t('form.placeholders.title')}
-                disabled={busy}
-              />
-            </div>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1 block">{t('form.displayOrder')}</Label>
+                    <Input
+                      type="number"
+                      value={formData.display_order}
+                      onChange={(e) => setFormData(p => ({ ...p, display_order: Number(e.target.value) }))}
+                      className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 text-center font-mono focus:ring-gm-gold/50"
+                      disabled={busy}
+                    />
+                  </div>
+                </div>
 
-            {/* Comment */}
-            <div className="space-y-2">
-              <Label htmlFor="comment" className="text-sm">
-                {t('form.fields.comment')} <span className="text-destructive">*</span>
-              </Label>
-              <Textarea
-                id="comment"
-                value={formData.comment}
-                onChange={(e) => setFormData((prev) => ({ ...prev, comment: e.target.value }))}
-                placeholder={t('form.placeholders.comment')}
-                disabled={busy}
-                rows={5}
-                required
-              />
-            </div>
-          </CardContent>
-        </Card>
+                <Separator className="bg-gm-border-soft" />
 
-        {/* Section 4: Testimonial Extras */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('form.sections.extras')}</CardTitle>
-            <CardDescription>{t('form.sections.extrasDescription')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {/* Role */}
-              <div className="space-y-2">
-                <Label htmlFor="role" className="text-sm">
-                  {t('form.fields.role')}
-                </Label>
-                <Input
-                  id="role"
-                  value={formData.role}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
-                  placeholder={t('form.placeholders.role')}
-                  disabled={busy}
-                />
-              </div>
+                {/* Target Meta */}
+                <div className="space-y-8">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1 flex items-center gap-2">
+                      <Type size={12} className="text-gm-gold opacity-50" /> {t('form.targetType')}
+                    </Label>
+                    <Input
+                      value={formData.target_type}
+                      onChange={(e) => setFormData(p => ({ ...p, target_type: e.target.value }))}
+                      className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-10 text-[10px] font-mono tracking-widest uppercase px-4"
+                      disabled={busy}
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1 flex items-center gap-2">
+                      <Calendar size={12} className="text-gm-gold opacity-50" /> {t('form.targetId')}
+                    </Label>
+                    <Input
+                      value={formData.target_id}
+                      onChange={(e) => setFormData(p => ({ ...p, target_id: e.target.value }))}
+                      className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-10 text-[10px] font-mono tracking-tighter px-4 truncate"
+                      disabled={busy}
+                    />
+                  </div>
+                </div>
 
-              {/* Company */}
-              <div className="space-y-2">
-                <Label htmlFor="company" className="text-sm">
-                  {t('form.fields.company')}
-                </Label>
-                <Input
-                  id="company"
-                  value={formData.company}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, company: e.target.value }))}
-                  placeholder={t('form.placeholders.company')}
-                  disabled={busy}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              {/* Avatar URL */}
-              <div className="space-y-2">
-                <Label htmlFor="avatar_url" className="text-sm">
-                  {t('form.fields.avatarUrl')}
-                </Label>
-                <Input
-                  id="avatar_url"
-                  value={formData.avatar_url}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, avatar_url: e.target.value }))}
-                  placeholder="/assets/imgs/avatar.png"
-                  disabled={busy}
-                />
-              </div>
-
-              {/* Logo URL */}
-              <div className="space-y-2">
-                <Label htmlFor="logo_url" className="text-sm">
-                  {t('form.fields.logoUrl')}
-                </Label>
-                <Input
-                  id="logo_url"
-                  value={formData.logo_url}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, logo_url: e.target.value }))}
-                  placeholder="/assets/imgs/logo.png"
-                  disabled={busy}
-                />
-              </div>
-            </div>
-
-            {/* Profile Href */}
-            <div className="space-y-2">
-              <Label htmlFor="profile_href" className="text-sm">
-                {t('form.fields.profileHref')}
-              </Label>
-              <Input
-                id="profile_href"
-                value={formData.profile_href}
-                onChange={(e) => setFormData((prev) => ({ ...prev, profile_href: e.target.value }))}
-                placeholder="https://linkedin.com/in/..."
-                disabled={busy}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Section 5: Admin Reply */}
-        {!isNew && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t('form.sections.adminReply')}</CardTitle>
-              <CardDescription>{t('form.sections.adminReplyDescription')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="admin_reply" className="text-sm">
-                  {t('form.fields.adminReply')}
-                </Label>
-                <Textarea
-                  id="admin_reply"
-                  value={formData.admin_reply}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, admin_reply: e.target.value }))
-                  }
-                  placeholder={t('form.placeholders.adminReply')}
-                  disabled={busy}
-                  rows={4}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Actions */}
-        <Card>
-          <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:justify-between">
-            <div>
-              {!isNew && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDeleteClick}
-                  disabled={busy}
-                  className="gap-2"
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      {t('actions.deleting')}
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="size-4" />
-                      {t('admin.common.delete')}
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push('/admin/reviews')}
-                disabled={busy}
-              >
-                {t('admin.common.cancel')}
-              </Button>
-              <Button type="submit" disabled={busy} className="gap-2">
-                {isCreating || isUpdating ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    {t('admin.common.saving')}
-                  </>
-                ) : (
-                  <>
-                    <Save className="size-4" />
-                    {t('admin.common.save')}
-                  </>
+                {/* Danger Zone */}
+                {!isNew && (
+                  <div className="pt-6">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={handleDeleteClick}
+                      disabled={busy}
+                      className="w-full rounded-2xl h-12 text-gm-error hover:bg-gm-error/10 hover:text-gm-error transition-all font-bold tracking-widest uppercase text-[10px] border border-gm-error/20"
+                    >
+                      {isDeleting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Trash2 className="mr-2 size-4" />}
+                      {t('form.deleteRecord')}
+                    </Button>
+                  </div>
                 )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+
+            {/* Audit Log Card */}
+            {!isNew && (
+              <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+                <CardHeader className="border-b border-gm-border-soft bg-gm-surface/40 p-8">
+                  <CardTitle className="font-serif text-xl flex items-center gap-3 text-gm-text opacity-70">
+                    <History className="size-5 text-gm-gold" /> {t('admin.common.history', null, 'Geçmiş')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 space-y-4">
+                  <div className="flex justify-between items-center py-2 border-b border-gm-border-soft">
+                    <span className="text-[10px] font-bold text-gm-muted tracking-[0.1em] uppercase">{t('admin.common.createdAt', null, 'Kayıt')}</span>
+                    <span className="font-mono text-[11px] text-gm-muted opacity-70">24.04.2024</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-[10px] font-bold text-gm-muted tracking-[0.1em] uppercase">{t('admin.common.updatedAt', null, 'Güncelleme')}</span>
+                    <span className="font-mono text-[11px] text-gm-muted opacity-70">Aralık 2024</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </form>
 
       {/* Delete Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-gm-bg-deep border-gm-border-soft rounded-[40px] p-12 backdrop-blur-2xl shadow-2xl animate-in zoom-in-95 duration-300">
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteDialog.description', {
-                name: formData.name || t('deleteDialog.fallbackName'),
-              })}
+            <AlertDialogTitle className="font-serif text-3xl text-gm-text">{t('dialogs.delete.title')}</AlertDialogTitle>
+            <AlertDialogDescription className="font-serif italic text-lg pt-6 text-gm-muted leading-relaxed">
+              {t('dialogs.delete.description', { name: formData.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('admin.common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>
-              {t('admin.common.delete')}
+          <AlertDialogFooter className="gap-6 mt-12">
+            <AlertDialogCancel className="rounded-full px-12 h-14 border-gm-border-soft text-[10px] font-bold tracking-widest uppercase hover:bg-gm-surface transition-all">
+              {t('dialogs.delete.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-gm-error text-white hover:bg-gm-error/90 rounded-full px-14 h-14 font-bold tracking-widest uppercase text-[10px] shadow-lg shadow-gm-error/20 transition-all active:scale-95"
+            >
+              {t('dialogs.delete.action')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

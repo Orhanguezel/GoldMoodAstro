@@ -864,7 +864,8 @@
         "wallet": "Wallet",
         "gutschein": "Gutscheine",
         "payment_settings": "Zahlungen",
-        "popups": "Popups"
+        "popups": "Popups",
+        "navigation": "Menü & Footer"
       },
       "stats": {
         "deliveredOrders": "Gelieferte Bestellungen",
@@ -2090,8 +2091,64 @@
         "list": "Liste (Sprache)",
         "globalList": "Liste (Global *)",
         "locales": "Sprachen",
-        "branding": "Branding",
-        "payment": "Zahlungen"
+        "branding": "Markenbildung",
+        "payment": "Zahlung"
+      },
+      "general": {
+        "title": "Allgemeine Einstellungen",
+        "description": "Branding, Kontaktinformationen und Social-Media-Links.",
+        "keyLabels": {
+          "contact_info": "Kontaktinformationen",
+          "socials": "Soziale Medien",
+          "businessHours": "Öffnungszeiten",
+          "company_profile": "Unternehmensprofil",
+          "ui_header": "Header-Navigation"
+        },
+        "keyDescriptions": {
+          "contact_info": "Telefon, E-Mail, WhatsApp und Adressdaten.",
+          "socials": "Instagram, Facebook, X und andere soziale Netzwerke.",
+          "businessHours": "Wöchentliche Betriebs- und Terminstunden.",
+          "company_profile": "Unternehmensname, Slogan und Zusammenfassung.",
+          "ui_header": "Menübezeichnungen und CTA-Button im Header."
+        }
+      },
+      "seo": {
+        "inline": {
+          "title": "SEO-Einstellungen",
+          "description": "Seitenbasierte Titel, Beschreibungen und Social-Media-Vorschauen.",
+          "saved": "SEO-Einstellungen gespeichert.",
+          "saveError": "Fehler beim Speichern.",
+          "dirty": "Nicht gespeichert",
+          "save": "Speichern",
+          "saveAll": "Alle speichern",
+          "loading": "Laden...",
+          "expandAll": "Alle ausklappen",
+          "collapseAll": "Alle einklappen",
+          "fieldTitle": "Titel (Meta-Titel)",
+          "fieldDescription": "Beschreibung (Meta-Beschreibung)",
+          "placeholderTitle": "GoldMoodAstro — ...",
+          "placeholderDescription": "Kurze Zusammenfassung der Seite — ideal 140-160 Zeichen.",
+          "ogImage": "OG-Bild (1200×630)",
+          "noindex": "Diese Seite vor Suchmaschinen verbergen (noindex)",
+          "googlePreview": "Google-Vorschau",
+          "socialPreview": "Social-Media-Vorschau",
+          "siteName": "GoldMoodAstro",
+          "noDescription": "Noch keine Beschreibung eingegeben.",
+          "noOgImage": "OG-Bild noch nicht hochgeladen"
+        },
+        "pageLabels": {
+          "home": "Startseite",
+          "birth-chart": "Geburtshoroskop",
+          "consultants": "Berater",
+          "consultant-detail": "Berater-Details",
+          "pricing": "Preise",
+          "daily": "Tageshoroskop",
+          "blog": "Blog",
+          "blog-post": "Blog-Beitrag",
+          "about": "Über uns",
+          "contact": "Kontakt",
+          "faqs": "FAQs"
+        }
       },
       "payment": {
         "title": "Zahlungseinstellungen",
@@ -2275,9 +2332,24 @@
         "overrideCreated": "{locale} Override für \"{key}\" erstellt (GLOBAL kopiert).",
         "defaultsRestored": "Standardwerte für \"{key}\" ({locale}) wiederhergestellt.",
         "missingGlobalError": "GLOBAL (*) Datensatz nicht gefunden. Sie müssen zuerst einen globalen Wert erstellen.",
-        "globalBootstrapSuccess": "Fehlende GLOBAL (*) Allgemein/UI Datensätze erstellt.",
+        "globalBootstrapSuccess": "Fehlende Schlüssel mit leeren Standardwerten erstellt.",
         "loadingNote": "Globale + Locale Datensätze werden abgerufen.",
-        "deleteTooltip": "Tipp: \"Löschen*\" löscht GLOBAL (*) Datensatz. \"Löschen\" löscht ausgewählten Locale Override."
+        "deleteTooltip": "Tipp: \"Löschen*\" löscht GLOBAL (*) Datensatz. \"Löschen\" löscht ausgewählten Locale Override.",
+        "recordCount": "{count} Einträge",
+        "keyLabels": {
+          "contact_info": "Kontaktinformationen",
+          "socials": "Soziale Medien",
+          "businessHours": "Öffnungszeiten",
+          "company_profile": "Firmenprofil",
+          "ui_header": "Header / Menü"
+        },
+        "keyDescriptions": {
+          "contact_info": "Telefon, E-Mail, Adresse, WhatsApp.",
+          "socials": "Instagram, Facebook, LinkedIn, YouTube, X.",
+          "businessHours": "Wöchentliche Öffnungszeiten.",
+          "company_profile": "Firmenname, Slogan, Über uns Text.",
+          "ui_header": "Top-Menü-Beschriftungen und CTA-Schaltfläche."
+        }
       },
       "cloudinary": {
         "title": "Cloudinary / Storage Einstellungen",
@@ -2454,6 +2526,43 @@
           "source": "Quelle",
           "effective": "Effektiv (Zusammenfassung)",
           "actions": "Aktionen"
+        },
+        "inline": {
+          "title": "SEO-Einstellungen",
+          "description": "Pro-Seite Titel, Beschreibung, OG-Bild und Indexierungseinstellungen.",
+          "save": "Speichern",
+          "saveAll": "Alle speichern",
+          "saved": "SEO-Einstellungen gespeichert.",
+          "saveError": "Speichern fehlgeschlagen.",
+          "loading": "Lädt...",
+          "dirty": "Nicht gespeichert",
+          "expandAll": "Alle ausklappen",
+          "collapseAll": "Alle einklappen",
+          "fieldTitle": "Titel",
+          "fieldDescription": "Beschreibung",
+          "ogImage": "OG-Bild (1200×630)",
+          "noindex": "Diese Seite vor Suchmaschinen verbergen (noindex)",
+          "googlePreview": "Google-Vorschau",
+          "socialPreview": "Social Media Vorschau",
+          "siteName": "GoldMoodAstro",
+          "noDescription": "Noch keine Beschreibung.",
+          "noOgImage": "Noch kein OG-Bild",
+          "placeholderTitle": "GoldMoodAstro — Moderne Astrologie",
+          "placeholderDescription": "Kurze Zusammenfassung der Seite — ideal 140-160 Zeichen.",
+          "charCount": "{count} / 160"
+        },
+        "pageLabels": {
+          "home": "Startseite",
+          "birth-chart": "Geburtshoroskop",
+          "consultants": "Berater",
+          "consultant-detail": "Berater Detail",
+          "pricing": "Preise",
+          "daily": "Tageshoroskop",
+          "blog": "Blog",
+          "blog-post": "Blog-Beitrag",
+          "about": "Über uns",
+          "contact": "Kontakt",
+          "faqs": "FAQs"
         }
       },
       "structured": {

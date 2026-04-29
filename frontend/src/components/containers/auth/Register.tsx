@@ -32,6 +32,7 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordAgain, setPasswordAgain] = useState('');
+  const [rulesAccepted, setRulesAccepted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const [signup, signupState] = useSignupMutation();
@@ -59,6 +60,10 @@ const Register: React.FC = () => {
       setFormError(ui('register_error_password_mismatch', 'Şifreler eşleşmiyor.'));
       return;
     }
+    if (!rulesAccepted) {
+      setFormError(ui('register_error_rules_required', 'Kullanım koşullarını ve KVKK metnini kabul etmelisiniz.'));
+      return;
+    }
 
     try {
       const payload = {
@@ -66,7 +71,7 @@ const Register: React.FC = () => {
         password,
         full_name: fullName.trim() || undefined,
         phone: phone.trim() || undefined,
-        rules_accepted: true as const,
+        rules_accepted: true,
         options: {
           data: {
             full_name: fullName.trim() || undefined,
@@ -209,6 +214,21 @@ const Register: React.FC = () => {
                   required
                 />
               </div>
+            </div>
+
+            <div className="flex items-start gap-3 pt-2">
+              <input
+                id="reg-rules"
+                type="checkbox"
+                className="mt-1 w-4 h-4 rounded border-border-light text-brand-primary focus:ring-brand-primary/20"
+                checked={rulesAccepted}
+                onChange={(e) => setRulesAccepted(e.target.checked)}
+                required
+              />
+              <label htmlFor="reg-rules" className="text-sm text-text-secondary leading-snug">
+                <Link href={localizePath(locale, '/terms')} target="_blank" className="text-brand-primary hover:underline">Kullanım Koşullarını</Link> ve{' '}
+                <Link href={localizePath(locale, '/kvkk')} target="_blank" className="text-brand-primary hover:underline">KVKK Aydınlatma Metnini</Link> okudum, kabul ediyorum.
+              </label>
             </div>
 
             <div className="pt-6">

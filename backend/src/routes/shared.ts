@@ -27,6 +27,8 @@ import { registerCredits } from '@goldmood/shared-backend/modules/credits/router
 import { registerBanners, registerBannersAdmin } from '@goldmood/shared-backend/modules/banners/router';
 import { registerCampaigns, registerCampaignsAdmin } from '@goldmood/shared-backend/modules/campaigns/router';
 import { registerReviewOutcomes } from '@goldmood/shared-backend/modules/reviewOutcomes/router';
+import { registerNavigation, registerNavigationAdmin } from '@goldmood/shared-backend/modules/navigation/router';
+import { registerCustomPages, registerCustomPagesAdmin } from '@goldmood/shared-backend/modules/customPages/router';
 import { registerKvkk } from '@goldmood/shared-backend/modules/kvkk/router';
 
 // Admin routers
@@ -47,6 +49,9 @@ import { registerDashboardAdmin } from '@goldmood/shared-backend/modules/dashboa
 import { registerDbAdmin } from '@goldmood/shared-backend/modules/db_admin/admin.routes';
 import { registerAnnouncementsAdmin } from '@goldmood/shared-backend/modules/announcements/admin.routes';
 import { registerOrdersAdmin } from '@goldmood/shared-backend/modules/orders/router';
+import { registerLlmPromptsAdmin } from '@goldmood/shared-backend/modules/llmPrompts';
+import { registerAstrologyKbAdmin } from '@goldmood/shared-backend/modules/astrologyKb';
+import { registerLlmAdmin } from '@goldmood/shared-backend/modules/llm/admin.routes';
 
 export async function registerSharedPublic(api: FastifyInstance) {
   await registerAuth(api);
@@ -74,6 +79,8 @@ export async function registerSharedPublic(api: FastifyInstance) {
   await registerBanners(api);
   await registerCampaigns(api);
   await registerReviewOutcomes(api);
+  await registerNavigation(api);
+  await registerCustomPages(api);
   await registerKvkk(api);
 }
 
@@ -99,6 +106,11 @@ export async function registerSharedAdmin(adminApi: FastifyInstance) {
     registerBannersAdmin,
     registerCampaignsAdmin,
     registerSubscriptionsAdmin,
+    registerLlmPromptsAdmin,
+    registerAstrologyKbAdmin,
+    registerLlmAdmin,
+    registerNavigationAdmin,
+    registerCustomPagesAdmin,
   ]) {
     await adminApi.register(reg);
   }

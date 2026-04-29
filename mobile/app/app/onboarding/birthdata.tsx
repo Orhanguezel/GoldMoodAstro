@@ -17,12 +17,13 @@ import { ChevronLeft, MapPin, Calendar, Clock, Sparkles } from 'lucide-react-nat
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { storage } from '@/lib/storage';
-import { birthChartsApi } from '@/lib/api';
+import { birthChartsApi, geocodeApi } from '@/lib/api';
 
 export default function BirthdataScreen() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [city, setCity] = useState('');
+  const [place, setPlace] = useState<{ lat: number; lng: number; label: string } | null>(null);
   
   const [loading, setLoading] = useState(false);
 
@@ -34,19 +35,36 @@ export default function BirthdataScreen() {
 
     try {
       setLoading(true);
-      
-      // In a real app, we would send this to backend
-      // await birthChartsApi.create({ ... })
-      
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
+      const resolvedPlace = place?.label === city ? place : await geocodeApi.search(city);
+      await birthChartsApi.create({
+        name: 'Ana Haritam',
+        dob: normalizeDate(date),
+        tob: normalizeTime(time),
+        pob_lat: resolvedPlace.lat,
+        pob_lng: resolvedPlace.lng,
+        pob_label: resolvedPlace.label,
+        tz_offset: 180,
+      });
+
       await storage.markOnboarded();
-      router.replace('/today' as any);
+      router.replace('/(tabs)/today' as any);
       
     } catch (err: any) {
       Alert.alert('Hata', err.message || 'Harita hesaplanırken bir sorun oluştu.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resolvePlace = async () => {
+    if (!city.trim()) return;
+    try {
+      const result = await geocodeApi.search(city.trim());
+      setPlace({ lat: result.lat, lng: result.lng, label: result.label });
+      setCity(result.label);
+    } catch {
+      setPlace(null);
     }
   };
 
@@ -82,7 +100,7 @@ export default function BirthdataScreen() {
                   <Calendar size={20} color={colors.goldDim} />
                   <TextInput
                     style={styles.input}
-                    placeholder="GG / AA / YYYY"
+                    placeholder="YYYY-AA-GG"
                     placeholderTextColor={colors.textMuted}
                     value={date}
                     onChangeText={setDate}
@@ -116,9 +134,14 @@ export default function BirthdataScreen() {
                     placeholder="Şehir ve Ülke"
                     placeholderTextColor={colors.textMuted}
                     value={city}
-                    onChangeText={setCity}
+                    onChangeText={(value) => {
+                      setCity(value);
+                      setPlace(null);
+                    }}
+                    onBlur={resolvePlace}
                   />
                 </View>
+                {place && <Text style={styles.hint}>Konum bulundu: {place.label}</Text>}
               </View>
 
             </View>
@@ -261,3 +284,18 @@ const styles = StyleSheet.create({
     color: colors.bgDeep,
   },
 });
+
+function normalizeDate(value: string) {
+  const trimmed = value.trim();
+  const match = trimmed.match(/^(\d{2})[./\-\s](\d{2})[./\-\s](\d{4})$/);
+  if (match) return `${match[3]}-${match[2]}-${match[1]}`;
+  return trimmed;
+}
+
+function normalizeTime(value: string) {
+  const trimmed = value.trim();
+  if (/^\d{2}:\d{2}$/.test(trimmed)) return trimmed;
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length === 4) return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+  return trimmed;
+}

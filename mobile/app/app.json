@@ -16,6 +16,7 @@
     "ios": {
       "bundleIdentifier": "com.goldmoodastro.app",
       "supportsTablet": false,
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Danışmanınızla sesli görüşme yapabilmek için mikrofon erişimi gereklidir.",
         "NSCameraUsageDescription": "Profil fotoğrafı yüklemek için kamera erişimi gereklidir."
@@ -23,6 +24,7 @@
     },
     "android": {
       "package": "com.goldmoodastro.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#C9A961"
@@ -45,14 +47,12 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#C9A961",
-          "sounds": [
-            "./assets/sounds/call-incoming.mp3"
-          ]
+          "color": "#C9A961"
         }
       ],
       "expo-localization",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true
@@ -62,7 +62,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": ""
+        "projectId": "032fb190-c872-43e4-a3e7-28335af94a6f"
       }
     },
     "runtimeVersion": {
@@ -70,6 +70,7 @@
     },
     "updates": {
       "url": ""
-    }
+    },
+    "owner": "orhanguezel"
   }
 }

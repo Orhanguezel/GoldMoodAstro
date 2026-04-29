@@ -222,6 +222,8 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
         session_price: resolvedPrice,
         media_type: mediaType,
         session_duration: input.session_duration ?? 30,
+        source_type: input.source_type ?? null,
+        source_id: input.source_id ?? null,
 
         status: 'pending_payment',
         is_read: 0,

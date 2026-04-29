@@ -11,12 +11,12 @@ import { DEFAULT_BRANDING, type AdminBrandingConfig } from '@/config/app-config'
  */
 function getServerApiUrl(): string {
   const panel = (process.env.PANEL_API_URL || '').trim().replace(/\/+$/, '');
-  if (panel) return `${panel}/api/v1`;
+  if (panel) return `${panel}/api`;
 
   const pub = (process.env.NEXT_PUBLIC_API_URL || '').trim().replace(/\/+$/, '');
   if (pub) return pub;
 
-  return 'http://localhost:8094/api/v1';
+  return 'http://localhost:8094/api';
 }
 
 /**

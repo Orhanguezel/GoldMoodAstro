@@ -22,6 +22,9 @@ export function buildProfilePatch(input: ProfileUpsertInput): Partial<ProfileIns
   if (input.city !== undefined) set.city = input.city;
   if (input.country !== undefined) set.country = input.country;
   if (input.postal_code !== undefined) set.postal_code = input.postal_code;
+  if (input.fcm_token !== undefined) set.fcm_token = input.fcm_token;
+  if (input.push_notifications !== undefined) set.push_notifications = input.push_notifications ? 1 : 0;
+  if (input.email_notifications !== undefined) set.email_notifications = input.email_notifications ? 1 : 0;
 
   return set;
 }

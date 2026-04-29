@@ -8,8 +8,11 @@
 import {
   BarChart,
   Bell,
+  BookOpen,
   Bot,
   Calendar,
+  Image as ImageIcon,
+  Tag,
   Clock,
   CreditCard,
   Database,
@@ -27,6 +30,7 @@ import {
   Trash2,
   Star,
   Users,
+  Menu as MenuIcon,
   type LucideIcon,
 } from 'lucide-react';
 import type { TranslateFn } from '@/i18n';
@@ -80,7 +84,12 @@ export type AdminNavItemKey =
   | 'announcements'
   | 'subscriptions'
   | 'subscription_plans'
-  | 'cache';
+  | 'cache'
+  | 'llm_prompts'
+  | 'astrology_kb'
+  | 'banners'
+  | 'campaigns'
+  | 'navigation';
 
 export type AdminNavGroupKey = 'general' | 'content' | 'marketing' | 'communication' | 'system';
 
@@ -125,9 +134,18 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
   },
   {
     id: 3,
+    key: 'marketing',
+    items: [
+      { key: 'banners', url: '/admin/banners', icon: ImageIcon },
+      { key: 'campaigns', url: '/admin/campaigns', icon: Tag },
+    ],
+  },
+  {
+    id: 4,
     key: 'system',
     items: [
       { key: 'site_settings', url: '/admin/site-settings', icon: Settings },
+      { key: 'navigation', url: '/admin/navigation', icon: MenuIcon },
       { key: 'cache', url: '/admin/cache', icon: Trash2 },
       { key: 'availability', url: '/admin/availability', icon: Clock },
       { key: 'wallet', url: '/admin/wallet', icon: Receipt },
@@ -136,6 +154,8 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'storage', url: '/admin/storage', icon: HardDrive },
       { key: 'db', url: '/admin/db', icon: Database },
       { key: 'audit', url: '/admin/audit', icon: FileSearch },
+      { key: 'llm_prompts', url: '/admin/llm-prompts', icon: Bot },
+      { key: 'astrology_kb', url: '/admin/astrology-kb', icon: BookOpen },
     ],
   },
 ];
@@ -169,6 +189,11 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   subscriptions: 'Subscriptions',
   subscription_plans: 'Subscription Plans',
   cache: 'Cache Yönetimi',
+  llm_prompts: 'LLM Prompts',
+  astrology_kb: 'Astroloji KB',
+  banners: 'Banners',
+  campaigns: 'Kampanyalar',
+  navigation: 'Menü & Footer',
 };
 
 export function buildAdminSidebarItems(

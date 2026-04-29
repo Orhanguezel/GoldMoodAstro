@@ -12,10 +12,13 @@ import type {
   UpdateNotificationBody,
   MarkAllReadBody,
   OkResp,
+  PushCampaignSendResult,
+  PushCampaignView,
 } from '@/integrations/shared';
 import {
   normalizeNotification,
   normalizeNotificationsList,
+  normalizePushCampaignsList,
   toNotificationsListQuery,
   toCreateNotificationBody,
   toUpdateNotificationBody,
@@ -128,6 +131,21 @@ export const notificationsApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+
+    /** GET /admin/push/campaigns */
+    listPushCampaigns: b.query<PushCampaignView[], void>({
+      query: () => ({ url: '/admin/push/campaigns', method: 'GET' }),
+      transformResponse: (res: unknown): PushCampaignView[] => normalizePushCampaignsList(res),
+      keepUnusedDataFor: 60,
+    }),
+
+    /** POST /admin/push/campaigns/:slug/send */
+    sendPushCampaign: b.mutation<PushCampaignSendResult, string>({
+      query: (slug) => ({
+        url: `/admin/push/campaigns/${encodeURIComponent(slug)}/send`,
+        method: 'POST',
+      }),
+    }),
   }),
   overrideExisting: true,
 });
@@ -140,6 +158,8 @@ export const {
   useMarkAllReadMutation,
   useDeleteNotificationMutation,
   useSendManualPushMutation,
+  useListPushCampaignsQuery,
+  useSendPushCampaignMutation,
 } = notificationsApi;
 
 // Legacy/admin-panel aliases

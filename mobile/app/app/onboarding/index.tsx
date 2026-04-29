@@ -3,6 +3,7 @@ import { View, Text, Pressable, StyleSheet, Dimensions, Animated, Easing } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors, spacing, font, radius } from '@/theme/tokens';
+import { BannerSlider } from '@/components/BannerSlider';
 
 const { width } = Dimensions.get('window');
 
@@ -111,6 +112,8 @@ export default function WelcomeScreen() {
             <Text style={styles.brandSub}>ASTROLOGY</Text>
           </View>
 
+          <BannerSlider placement="mobile_welcome" style={styles.welcomeBanner} />
+
           <View style={styles.centerText}>
             <Text style={styles.tagline}>
               Ruhunuzun derinliklerini{'\n'}
@@ -158,6 +161,9 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginTop: spacing.xl,
+  },
+  welcomeBanner: {
+    marginVertical: spacing.md,
   },
   logoBorder: {
     width: 64,

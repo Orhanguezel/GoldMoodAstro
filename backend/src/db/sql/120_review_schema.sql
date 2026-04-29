@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   is_active TINYINT NOT NULL DEFAULT 1,
   is_approved TINYINT NOT NULL DEFAULT 0,
   is_verified TINYINT NOT NULL DEFAULT 0,           -- T17-1: booking tamamlanmış kullanıcı (F8)
+  moderation_flags TEXT,                            -- T17-3/T17-7: auto-mod sonucu (JSON: { flags, matched_patterns, source }) — null=temiz
   display_order INT NOT NULL DEFAULT 0,
   likes_count INT NOT NULL DEFAULT 0,
   dislikes_count INT NOT NULL DEFAULT 0,
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   KEY reviews_user_idx (user_id),
   KEY reviews_booking_idx (booking_id),
   KEY reviews_approved_idx (is_approved),
+  KEY reviews_verified_idx (is_verified, is_approved),
   CONSTRAINT fk_reviews_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT fk_reviews_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

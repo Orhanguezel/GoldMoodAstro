@@ -89,6 +89,15 @@
   --color-brand-gold-border: var(--brand-gold-border);
   --color-brand-ink: var(--brand-ink);
   --color-brand-cream: var(--brand-cream);
+
+  /* Aliases for cleaner code */
+  --color-gm-primary: var(--brand-gold);
+  --color-gm-primary-dark: var(--brand-gold-strong);
+  --color-gm-surface: var(--brand-cream);
+  --color-gm-text: var(--brand-ink);
+  --color-gm-text-dim: oklch(0.45 0.012 50);
+  --color-gm-border-soft: var(--brand-gold-border);
+  --shadow-glow-primary: 0 0 20px rgba(184, 150, 81, 0.2);
 }
 
 /* Default theme styles (used when no data-theme-preset is set or when 'default' is selected).

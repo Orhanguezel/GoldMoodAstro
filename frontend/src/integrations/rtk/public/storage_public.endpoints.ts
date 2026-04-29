@@ -92,4 +92,8 @@ export const storagePublicApi = baseApi.injectEndpoints({
   overrideExisting: true,
 });
 
-export const { useUploadToBucketMutation, useSignMultipartMutation } = storagePublicApi;
+export const {
+  useUploadToBucketMutation,
+  useUploadToBucketMutation: useUploadFileMutation,
+  useSignMultipartMutation,
+} = storagePublicApi;

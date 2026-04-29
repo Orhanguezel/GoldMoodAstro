@@ -1,5 +1,5 @@
 -- Payment gateway placeholder — slug 'iyzico' (initIyzico controller'ı arıyor).
--- API anahtarları VPS .env üzerinden gelir (IYZICO_API_KEY, IYZICO_SECRET_KEY).
+-- API anahtarları VPS .env üzerinden gelir (IYZIPAY_API_KEY, IYZIPAY_SECRET_KEY).
 -- Admin panelinden DB config'e de yazılabilir; controller önce DB'ye sonra env'e bakar.
 INSERT INTO payment_gateways (id, name, slug, is_active, is_test_mode, config)
 VALUES (

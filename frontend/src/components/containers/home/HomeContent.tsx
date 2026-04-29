@@ -10,6 +10,7 @@ const HybridModelSection = lazy(() => import('./HybridModelSection'));
 const TransparencySection = lazy(() => import('./TransparencySection'));
 const TrustSection = lazy(() => import('./TrustSection'));
 const WaitlistSection = lazy(() => import('./WaitlistSection'));
+const ZodiacGridSection = lazy(() => import('./ZodiacGridSection'));
 
 type Props = { locale?: string };
 
@@ -23,6 +24,10 @@ export default function HomeContent({ locale }: Props) {
       <section className="container mx-auto px-4 -mt-10 mb-12 relative z-20">
         <Banner placement="home_hero" variant="hero" count={1} />
       </section>
+
+      <Suspense fallback={null}>
+        <ZodiacGridSection />
+      </Suspense>
 
       <Suspense fallback={<div className="h-screen bg-[var(--gm-bg)]" />}>
         {/* 2. Promises */}

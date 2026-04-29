@@ -11,6 +11,9 @@ export type Profile = {
   city: string | null;
   country: string | null;
   postal_code: string | null;
+  push_notifications: number | boolean | null;
+  email_notifications: number | boolean | null;
+  sms_notifications: number | boolean | null;
   wallet_balance: number;
   created_at: string;
   updated_at: string;
@@ -27,10 +30,12 @@ export type ProfileUpsertInput = Partial<
     | 'city'
     | 'country'
     | 'postal_code'
+    | 'push_notifications'
+    | 'email_notifications'
+    | 'sms_notifications'
   >
 >;
 
 export type ProfileUpsertRequest = {
   profile: ProfileUpsertInput;
 };
-

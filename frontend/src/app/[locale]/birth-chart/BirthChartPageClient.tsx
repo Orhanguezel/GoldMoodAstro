@@ -12,7 +12,7 @@ import {
   useDeleteBirthChartMutation,
 } from '@/integrations/rtk/public/birth_charts.endpoints';
 import { useAuthStore } from '@/features/auth/auth.store';
-import ShareBirthChart from '@/components/common/ShareBirthChart';
+import ShareCard from '@/components/common/ShareCard';
 
 const PLANET_ORDER: PlanetKey[] = [
   'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
@@ -188,7 +188,16 @@ export default function BirthChartPageClient() {
                 </div>
 
                 <div className="mt-12 pt-8 border-t border-[var(--gm-border-soft)] space-y-4">
-                  <ShareBirthChart chart={chart} />
+                  <ShareCard 
+                    title="Doğum Haritamı Paylaş"
+                    shareText={`GoldMoodAstro'da doğum haritamı çıkardım ✨\n☀️ Güneş: ${SIGN_LABELS[chart.chart_data.planets.sun?.sign || ''] || chart.chart_data.planets.sun?.sign}  •  🌙 Ay: ${SIGN_LABELS[chart.chart_data.planets.moon?.sign || ''] || chart.chart_data.planets.moon?.sign}  •  ↑ Yükselen: ${SIGN_LABELS[chart.chart_data.ascendant?.sign || ''] || chart.chart_data.ascendant?.sign}\nSeninkini de keşfet:`}
+                    variant="birth-chart"
+                    data={{
+                      sun: SIGN_LABELS[chart.chart_data.planets.sun?.sign || ''] || chart.chart_data.planets.sun?.sign,
+                      moon: SIGN_LABELS[chart.chart_data.planets.moon?.sign || ''] || chart.chart_data.planets.moon?.sign,
+                      rising: SIGN_LABELS[chart.chart_data.ascendant?.sign || ''] || chart.chart_data.ascendant?.sign
+                    }}
+                  />
                   <button
                     type="button"
                     onClick={() => { setChart(null); setShowForm(true); }}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "311649541943",
+    "project_id": "goldmoodastro",
+    "storage_bucket": "goldmoodastro.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:311649541943:android:161533b130f6791c4b04b2",
+        "android_client_info": {
+          "package_name": "com.goldmoodastro.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxTXlLqlwgpH2iHSI_yHYHRYUmAgLx-K4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

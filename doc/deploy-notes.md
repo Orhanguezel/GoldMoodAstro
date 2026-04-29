@@ -2,6 +2,8 @@
 
 Production deploy süreci, scripts, troubleshooting.
 
+Manuel release doğrulamaları için ayrıca bak: [`doc/manual-release-checklist.md`](./manual-release-checklist.md).
+
 ## VPS
 
 | Parametre | Değer |

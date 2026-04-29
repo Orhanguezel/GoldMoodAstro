@@ -26,7 +26,7 @@ import {
 import { router } from 'expo-router';
 
 import { colors, font, radius, spacing } from '@/theme/tokens';
-import { readingsApi } from '@/lib/api';
+import { birthChartsApi, readingsApi } from '@/lib/api';
 import { useFocusEffect } from 'expo-router';
 
 const { width } = Dimensions.get('window');
@@ -56,9 +56,11 @@ export default function DailyReadingScreen() {
   const loadReading = useCallback(async () => {
     setLoading(true);
     try {
-      // In real app, date param would be used
-      const data = await readingsApi.daily();
-      setReading(data);
+      const charts = await birthChartsApi.list();
+      if (charts[0]) {
+        const data = await readingsApi.daily(charts[0].id);
+        setReading(data);
+      }
     } catch (err) {
       console.error('Reading load error:', err);
     } finally {
@@ -175,7 +177,13 @@ export default function DailyReadingScreen() {
 
           {/* CTA Section */}
           <View style={styles.ctaArea}>
-            <Pressable style={styles.askBtn} onPress={() => router.push('/(tabs)/connect' as any)}>
+            <Pressable
+              style={styles.askBtn}
+              onPress={() => router.push({
+                pathname: '/(tabs)/connect',
+                params: reading?.id ? { topic: `daily_reading_${reading.id}` } : undefined,
+              } as any)}
+            >
               <View style={styles.askBtnContent}>
                 <MessageSquare size={20} color={colors.bgDeep} />
                 <View>

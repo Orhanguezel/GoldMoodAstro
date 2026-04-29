@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Bell, Send, Users, User, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Bell, Megaphone, Send, User, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,16 +11,31 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useSendManualPushMutation } from '@/integrations/hooks';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  useListPushCampaignsQuery,
+  useSendManualPushMutation,
+  useSendPushCampaignMutation,
+} from '@/integrations/hooks';
 
 export default function SendPushNotificationPage() {
   const router = useRouter();
   const [sendPush, { isLoading }] = useSendManualPushMutation();
+  const { data: campaigns = [], isLoading: campaignsLoading } = useListPushCampaignsQuery();
+  const [sendCampaign, { isLoading: isSendingCampaign }] = useSendPushCampaignMutation();
 
   const [title, setTitle] = React.useState('');
   const [body, setBody] = React.useState('');
   const [target, setTarget] = React.useState<'all' | 'specific'>('all');
   const [userId, setUserId] = React.useState('');
+  const [selectedCampaignSlug, setSelectedCampaignSlug] = React.useState('');
+  const selectedCampaign = campaigns.find((campaign) => campaign.slug === selectedCampaignSlug);
+
+  React.useEffect(() => {
+    if (!selectedCampaignSlug && campaigns.length > 0) {
+      setSelectedCampaignSlug(campaigns[0].slug);
+    }
+  }, [campaigns, selectedCampaignSlug]);
 
   const handleSend = async () => {
     if (!title.trim() || !body.trim()) {
@@ -51,6 +66,22 @@ export default function SendPushNotificationPage() {
     }
   };
 
+  const handleSendCampaign = async () => {
+    if (!selectedCampaignSlug) {
+      toast.error('Please select a campaign.');
+      return;
+    }
+
+    try {
+      const res = await sendCampaign(selectedCampaignSlug).unwrap();
+      toast.success(
+        `${res.sent_count}/${res.target_count} campaign notifications sent. Failed: ${res.failed_count}.`,
+      );
+    } catch (err: any) {
+      toast.error(err?.data?.error?.message || 'Failed to send campaign.');
+    }
+  };
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
@@ -62,6 +93,66 @@ export default function SendPushNotificationPage() {
           <p className="text-sm text-muted-foreground">Send real-time mobile notifications to your users.</p>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Megaphone className="size-4" />
+            Push Campaign
+          </CardTitle>
+          <CardDescription>Send a preconfigured campaign to its saved audience segment.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="campaign">Campaign</Label>
+            <Select
+              value={selectedCampaignSlug}
+              onValueChange={setSelectedCampaignSlug}
+              disabled={campaignsLoading || campaigns.length === 0}
+            >
+              <SelectTrigger id="campaign">
+                <SelectValue placeholder={campaignsLoading ? 'Loading campaigns...' : 'Select campaign'} />
+              </SelectTrigger>
+              <SelectContent>
+                {campaigns.map((campaign) => (
+                  <SelectItem key={campaign.slug} value={campaign.slug} disabled={!campaign.is_active}>
+                    {campaign.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedCampaign ? (
+            <div className="rounded-md border bg-muted/20 p-4 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{selectedCampaign.title}</span>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                  {selectedCampaign.target_segment}
+                </span>
+                {selectedCampaign.deep_link ? (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                    {selectedCampaign.deep_link}
+                  </span>
+                ) : null}
+              </div>
+              <p className="mt-2 text-muted-foreground">{selectedCampaign.body}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No active push campaigns found.</p>
+          )}
+        </CardContent>
+        <CardFooter className="justify-end border-t pt-6">
+          <Button
+            onClick={handleSendCampaign}
+            disabled={!selectedCampaignSlug || isSendingCampaign}
+            className="bg-amethyst hover:bg-amethyst/90"
+          >
+            <Send className="mr-2 size-4" />
+            {isSendingCampaign ? 'Sending...' : 'Send Campaign'}
+          </Button>
+        </CardFooter>
+      </Card>
 
       <Card>
         <CardHeader>

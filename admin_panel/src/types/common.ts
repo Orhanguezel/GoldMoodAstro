@@ -105,3 +105,23 @@ export function getMultiLang(
 
   return obj.tr || obj.en || Object.values(obj)[0] || '—';
 }
+
+export interface LlmPrompt {
+  id: string;
+  key: string;
+  locale: string;
+  provider: string;
+  model: string;
+  temperature: number;
+  max_tokens: number;
+  system_prompt: string;
+  user_template: string;
+  safety_check: boolean;
+  similarity_threshold: number;
+  max_attempts: number;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+

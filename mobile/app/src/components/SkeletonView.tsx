@@ -30,9 +30,10 @@ export default function SkeletonView({
     startAnimation();
   }, []);
 
+  const sweepWidth = typeof width === 'number' ? width : 360;
   const translateX = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [-width as any, width as any], // Approximated
+    outputRange: [-sweepWidth, sweepWidth],
   });
 
   return (

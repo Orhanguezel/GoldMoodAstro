@@ -2,10 +2,25 @@
 
 import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, RotateCcw, Save } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  RotateCcw, 
+  Save, 
+  Receipt, 
+  User, 
+  Calendar, 
+  CreditCard, 
+  Activity, 
+  FileText, 
+  AlertCircle,
+  CheckCircle2,
+  Package,
+  History
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +41,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import type { OrderStatus, PaymentStatus } from '@/integrations/shared';
 import { useGetOrderAdminQuery, useUpdateOrderAdminMutation, useRefundOrderAdminMutation } from '@/integrations/hooks';
@@ -33,22 +50,18 @@ import { useGetOrderAdminQuery, useUpdateOrderAdminMutation, useRefundOrderAdmin
 function fmtMoney(v: string | number, currency: string) {
   const n = Number(v);
   if (!Number.isFinite(n)) return `${v} ${currency}`;
-  try {
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: currency || 'EUR',
-      minimumFractionDigits: 2,
-    }).format(n);
-  } catch {
-    return `${n.toFixed(2)} ${currency}`;
-  }
+  return new Intl.NumberFormat('tr-TR', {
+    style: 'currency',
+    currency: currency || 'TRY',
+    minimumFractionDigits: 2,
+  }).format(n);
 }
 
 function fmtDate(v: string | null | undefined) {
   if (!v) return '-';
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return String(v);
-  return d.toLocaleString('de-DE');
+  return d.toLocaleString('tr-TR');
 }
 
 function errMsg(err: unknown, fallback: string) {
@@ -65,7 +78,7 @@ export default function AdminOrderDetailClient() {
   const router = useRouter();
   const orderId = params.id as string;
 
-  const { data: order, isLoading, isError } = useGetOrderAdminQuery({ id: orderId }, { skip: !orderId });
+  const { data: order, isLoading, isError, refetch } = useGetOrderAdminQuery({ id: orderId }, { skip: !orderId });
   const [updateOrder, updateState] = useUpdateOrderAdminMutation();
   const [refundOrder, refundState] = useRefundOrderAdminMutation();
 
@@ -91,254 +104,298 @@ export default function AdminOrderDetailClient() {
     if (editNote !== (order.order_notes ?? '')) body.admin_note = editNote || null;
 
     if (Object.keys(body).length === 0) {
-      toast.info(t('messages.noChanges', {}, 'Degisiklik yok'));
+      toast.info(t('messages.noChanges'));
       return;
     }
 
     try {
       await updateOrder({ id: orderId, body: body as any }).unwrap();
-      toast.success(t('messages.updated', {}, 'Siparis guncellendi'));
+      toast.success(t('messages.updated'));
       setDirty(false);
+      refetch();
     } catch (e) {
-      toast.error(errMsg(e, t('messages.updateFailed', {}, 'Guncelleme basarisiz')));
+      toast.error(errMsg(e, t('messages.updateFailed')));
     }
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20 text-muted-foreground">
-        {t('detail.loading', {}, 'Yukleniyor...')}
+      <div className="space-y-10 animate-in fade-in duration-500">
+        <Skeleton className="h-20 w-full rounded-[24px] bg-gm-surface/20" />
+        <div className="grid gap-8 lg:grid-cols-2">
+          <Skeleton className="h-64 rounded-[32px] bg-gm-surface/20" />
+          <Skeleton className="h-64 rounded-[32px] bg-gm-surface/20" />
+        </div>
       </div>
     );
   }
 
   if (isError || !order) {
     return (
-      <div className="space-y-4 py-10 text-center">
-        <p className="text-muted-foreground">{t('detail.notFound', {}, 'Siparis bulunamadi')}</p>
-        <Button variant="outline" onClick={() => router.push('/admin/orders')}>
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <Button variant="ghost" onClick={() => router.push('/admin/orders')} className="rounded-full hover:bg-gm-surface transition-all">
           <ArrowLeft className="mr-2 size-4" />
-          {t('actions.back', {}, 'Geri')}
+          {t('admin.common.back', null, 'Geri')}
         </Button>
+        <Card className="bg-gm-error/5 border-gm-error/20 rounded-[32px] p-12 text-center">
+          <AlertCircle className="size-12 text-gm-error mx-auto mb-4 opacity-50" />
+          <h2 className="font-serif text-2xl text-gm-error mb-2">{t('detail.notFound')}</h2>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => router.push('/admin/orders')}>
-          <ArrowLeft className="mr-2 size-4" />
-          {t('actions.back', {}, 'Geri')}
-        </Button>
-        <div>
-          <h1 className="text-lg font-semibold">
-            {t('detail.title', {}, 'Siparis Detayi')} — {order.order_number}
-          </h1>
-          <p className="text-sm text-muted-foreground">
+    <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => router.push('/admin/orders')} 
+              className="rounded-full -ml-3 hover:bg-gm-surface group transition-all"
+            >
+              <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
+            </Button>
+            <span className="w-8 h-px bg-gm-gold" />
+            <span className="text-gm-gold font-bold text-[10px] tracking-[0.2em] uppercase">
+              {t('detail.title')}
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <h1 className="font-serif text-4xl text-gm-text">
+              {order.order_number}
+            </h1>
+            <Badge className={cn(
+              "rounded-full px-4 py-1 text-[10px] font-bold tracking-widest uppercase border",
+              order.status === 'completed' ? "bg-gm-success/10 text-gm-success border-gm-success/20" : "bg-gm-warning/10 text-gm-warning border-gm-warning/20"
+            )}>
+              {order.status.toUpperCase()}
+            </Badge>
+          </div>
+          <p className="text-gm-muted text-sm font-serif italic opacity-70">
             {order.user_name || order.user_email || order.user_id}
           </p>
         </div>
+
+        <div className="flex items-center gap-3">
+          {order.payment_status === 'paid' && order.status !== 'refunded' && (
+            <Button
+              variant="outline"
+              disabled={refundState.isLoading}
+              onClick={async () => {
+                const reason = window.prompt(t('detail.refundReason')) || undefined;
+                try {
+                  await refundOrder({ id: orderId, body: reason ? { reason } : {} }).unwrap();
+                  toast.success(t('messages.refunded'));
+                  refetch();
+                } catch (e) {
+                  toast.error(errMsg(e, t('messages.refundFailed')));
+                }
+              }}
+              className="rounded-full border-gm-error/20 text-gm-error hover:bg-gm-error hover:text-white px-8 h-12 font-bold tracking-widest uppercase text-[10px] transition-all"
+            >
+              <RotateCcw className="mr-2 size-4" />
+              {t('admin.common.refund', null, 'İade Et')}
+            </Button>
+          )}
+          <Button 
+            onClick={onSave} 
+            disabled={!dirty || updateState.isLoading}
+            className="rounded-full bg-gm-gold text-gm-bg hover:bg-gm-gold-dim px-10 h-12 font-bold tracking-widest uppercase text-[10px] shadow-lg shadow-gm-gold/20 transition-all active:scale-95"
+          >
+            <Save className="mr-2 size-4" />
+            {updateState.isLoading ? t('admin.common.saving') : t('admin.common.save')}
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Order Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('detail.info', {}, 'Siparis Bilgileri')}</CardTitle>
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* Order Details Info */}
+        <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+          <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">
+            <CardTitle className="font-serif text-2xl flex items-center gap-3">
+              <Receipt className="h-5 w-5 text-gm-gold" /> {t('detail.info')}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t('detail.orderNumber', {}, 'Siparis No')}</span>
-              <span className="font-mono">{order.order_number}</span>
+          <CardContent className="p-8 space-y-4">
+            <div className="flex justify-between items-center py-2 border-b border-gm-border-soft">
+              <span className="text-[10px] font-bold text-gm-muted tracking-[0.1em] uppercase">{t('detail.orderNumber')}</span>
+              <span className="font-mono text-gm-gold font-bold">{order.order_number}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t('detail.total', {}, 'Toplam')}</span>
-              <span className="font-semibold">{fmtMoney(order.total_amount, order.currency)}</span>
+            <div className="flex justify-between items-center py-2 border-b border-gm-border-soft">
+              <span className="text-[10px] font-bold text-gm-muted tracking-[0.1em] uppercase">{t('detail.total')}</span>
+              <span className="font-serif text-xl text-gm-text font-bold">{fmtMoney(order.total_amount, order.currency)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t('detail.txId', {}, 'Transaction ID')}</span>
-              <span className="font-mono text-xs">{order.transaction_id || '-'}</span>
+            <div className="flex justify-between items-center py-2 border-b border-gm-border-soft">
+              <span className="text-[10px] font-bold text-gm-muted tracking-[0.1em] uppercase">{t('detail.txId')}</span>
+              <span className="font-mono text-xs text-gm-muted truncate max-w-[200px]">{order.transaction_id || '-'}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t('detail.createdAt', {}, 'Olusturulma')}</span>
-              <span>{fmtDate(order.created_at)}</span>
+            <div className="flex justify-between items-center py-2 border-b border-gm-border-soft">
+              <span className="text-[10px] font-bold text-gm-muted tracking-[0.1em] uppercase">{t('detail.createdAt')}</span>
+              <div className="flex items-center gap-2 font-serif text-sm text-gm-text">
+                <Calendar className="size-3 text-gm-gold opacity-60" />
+                {fmtDate(order.created_at)}
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t('detail.updatedAt', {}, 'Guncelleme')}</span>
-              <span>{fmtDate(order.updated_at)}</span>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-[10px] font-bold text-gm-muted tracking-[0.1em] uppercase">{t('detail.updatedAt')}</span>
+              <div className="flex items-center gap-2 font-serif text-sm text-gm-text">
+                <History className="size-3 text-gm-gold opacity-60" />
+                {fmtDate(order.updated_at)}
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Status Update */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('detail.statusUpdate', {}, 'Durum Guncelle')}</CardTitle>
-            <CardDescription>
-              {t('detail.statusDesc', {}, 'Siparis ve odeme durumunu degistirin')}
+        {/* Status Management */}
+        <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+          <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">
+            <CardTitle className="font-serif text-2xl flex items-center gap-3">
+              <Activity className="h-5 w-5 text-gm-gold" /> {t('detail.statusUpdate')}
+            </CardTitle>
+            <CardDescription className="font-serif italic text-gm-muted opacity-70">
+              {t('detail.statusDesc')}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('detail.orderStatus', {}, 'Siparis Durumu')}</Label>
-              <Select
-                value={editStatus}
-                onValueChange={(v) => { setEditStatus(v as OrderStatus); setDirty(true); }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ORDER_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <CardContent className="p-8 space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-3">
+                <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('detail.orderStatus')}</Label>
+                <Select
+                  value={editStatus}
+                  onValueChange={(v) => { setEditStatus(v as OrderStatus); setDirty(true); }}
+                >
+                  <SelectTrigger className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gm-bg-deep border-gm-border-soft rounded-2xl">
+                    {ORDER_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>{s.toUpperCase()}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('detail.paymentStatus')}</Label>
+                <Select
+                  value={editPayment}
+                  onValueChange={(v) => { setEditPayment(v as PaymentStatus); setDirty(true); }}
+                >
+                  <SelectTrigger className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gm-bg-deep border-gm-border-soft rounded-2xl">
+                    {PAYMENT_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>{s.toUpperCase()}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>{t('detail.paymentStatus', {}, 'Odeme Durumu')}</Label>
-              <Select
-                value={editPayment}
-                onValueChange={(v) => { setEditPayment(v as PaymentStatus); setDirty(true); }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAYMENT_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t('detail.adminNote', {}, 'Admin Notu')}</Label>
+            <div className="space-y-3">
+              <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('detail.adminNote')}</Label>
               <Textarea
                 value={editNote}
                 onChange={(e) => { setEditNote(e.target.value); setDirty(true); }}
-                rows={3}
-                placeholder={t('detail.adminNotePh', {}, 'Dahili not...')}
+                rows={4}
+                placeholder={t('detail.adminNotePh')}
+                className="bg-gm-surface/40 border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 text-sm font-serif italic"
               />
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={onSave}
-                disabled={!dirty || updateState.isLoading}
-              >
-                <Save className="mr-2 size-4" />
-                {t('actions.save', {}, 'Kaydet')}
-              </Button>
-
-              {order.payment_status === 'paid' && order.status !== 'refunded' && (
-                <Button
-                  variant="destructive"
-                  disabled={refundState.isLoading}
-                  onClick={async () => {
-                    const reason = window.prompt(t('detail.refundReason', {}, 'Iade nedeni (opsiyonel):')) || undefined;
-                    try {
-                      await refundOrder({ id: orderId, body: reason ? { reason } : {} }).unwrap();
-                      toast.success(t('messages.refunded', {}, 'Siparis iade edildi'));
-                    } catch (e) {
-                      toast.error(errMsg(e, t('messages.refundFailed', {}, 'Iade basarisiz')));
-                    }
-                  }}
-                >
-                  <RotateCcw className="mr-2 size-4" />
-                  {t('actions.refund', {}, 'Iade Et')}
-                </Button>
-              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Order Items */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            {t('detail.items', {}, 'Siparis Kalemleri')}
-            <Badge variant="outline" className="ml-2">{order.items.length}</Badge>
+      {/* Order Items Table */}
+      <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+        <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">
+          <CardTitle className="font-serif text-2xl flex items-center gap-3">
+            <Package className="h-5 w-5 text-gm-gold" /> {t('detail.items')}
+            <Badge variant="outline" className="ml-2 rounded-full border-gm-gold/30 text-gm-gold bg-gm-gold/5">{order.items.length}</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-gm-surface/40">
+              <TableRow className="border-gm-border-soft hover:bg-transparent">
+                <TableHead className="py-6 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('detail.itemTitle')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('detail.itemType')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-center text-gm-muted">{t('detail.itemQty')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-right text-gm-muted">{t('detail.itemPrice')}</TableHead>
+                <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('detail.itemTotal')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {order.items.length === 0 ? (
                 <TableRow>
-                  <TableHead>{t('detail.itemTitle', {}, 'Baslik')}</TableHead>
-                  <TableHead>{t('detail.itemType', {}, 'Tip')}</TableHead>
-                  <TableHead className="text-right">{t('detail.itemQty', {}, 'Adet')}</TableHead>
-                  <TableHead className="text-right">{t('detail.itemPrice', {}, 'Fiyat')}</TableHead>
-                  <TableHead className="text-right">{t('detail.itemTotal', {}, 'Toplam')}</TableHead>
+                  <TableCell colSpan={5} className="py-12 text-center text-gm-muted font-serif italic opacity-50">
+                    {t('detail.noItems')}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                order.items.map((item) => (
+                  <TableRow key={item.id} className="border-gm-border-soft hover:bg-gm-primary/[0.03] transition-colors group">
+                    <TableCell className="py-6 px-8 font-serif text-lg text-gm-text">{item.title}</TableCell>
+                    <TableCell className="py-6">
+                      <Badge variant="outline" className="rounded-full text-[9px] font-bold tracking-widest uppercase border-gm-border-soft text-gm-muted">
+                        {item.item_type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-6 text-center font-mono text-sm">{item.quantity}</TableCell>
+                    <TableCell className="py-6 text-right font-mono text-sm">{fmtMoney(item.price, item.currency)}</TableCell>
+                    <TableCell className="py-6 px-8 text-right font-serif text-lg text-gm-gold font-bold">
+                      {fmtMoney(Number(item.price) * item.quantity, item.currency)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Transaction History / Payments */}
+      {order.payments.length > 0 && (
+        <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+          <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">
+            <CardTitle className="font-serif text-2xl flex items-center gap-3">
+              <CreditCard className="h-5 w-5 text-gm-gold" /> {t('detail.payments')}
+              <Badge variant="outline" className="ml-2 rounded-full border-gm-gold/30 text-gm-gold bg-gm-gold/5">{order.payments.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader className="bg-gm-surface/40">
+                <TableRow className="border-gm-border-soft hover:bg-transparent">
+                  <TableHead className="py-6 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('detail.payAmount')}</TableHead>
+                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('detail.payStatus')}</TableHead>
+                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('detail.payTxId')}</TableHead>
+                  <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('detail.payDate')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {order.items.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
-                      {t('detail.noItems', {}, 'Kalem bulunamadi')}
+                {order.payments.map((pay) => (
+                  <TableRow key={pay.id} className="border-gm-border-soft hover:bg-gm-primary/[0.03] transition-colors group">
+                    <TableCell className="py-6 px-8 font-serif text-lg text-gm-text font-bold">{fmtMoney(pay.amount, pay.currency)}</TableCell>
+                    <TableCell className="py-6">
+                      <Badge className={cn(
+                        "rounded-full text-[9px] font-bold tracking-widest uppercase border",
+                        pay.status === 'success' ? "bg-gm-success/10 text-gm-success border-gm-success/20" : "bg-gm-error/10 text-gm-error border-gm-error/20"
+                      )}>
+                        {pay.status.toUpperCase()}
+                      </Badge>
                     </TableCell>
-                  </TableRow>
-                ) : null}
-                {order.items.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.title}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{item.item_type}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right">{fmtMoney(item.price, item.currency)}</TableCell>
-                    <TableCell className="text-right">
-                      {fmtMoney(Number(item.price) * item.quantity, item.currency)}
-                    </TableCell>
+                    <TableCell className="py-6 font-mono text-xs text-gm-muted/60">{pay.transaction_id || '-'}</TableCell>
+                    <TableCell className="py-6 px-8 text-right text-[10px] text-gm-muted font-mono">{fmtDate(pay.created_at)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Payments */}
-      {order.payments.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              {t('detail.payments', {}, 'Odemeler')}
-              <Badge variant="outline" className="ml-2">{order.payments.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('detail.payAmount', {}, 'Tutar')}</TableHead>
-                    <TableHead>{t('detail.payStatus', {}, 'Durum')}</TableHead>
-                    <TableHead>{t('detail.payTxId', {}, 'Transaction ID')}</TableHead>
-                    <TableHead>{t('detail.payDate', {}, 'Tarih')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {order.payments.map((pay) => (
-                    <TableRow key={pay.id}>
-                      <TableCell>{fmtMoney(pay.amount, pay.currency)}</TableCell>
-                      <TableCell>
-                        <Badge variant={pay.status === 'success' ? 'secondary' : 'destructive'}>
-                          {pay.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">{pay.transaction_id || '-'}</TableCell>
-                      <TableCell>{fmtDate(pay.created_at)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
           </CardContent>
         </Card>
       )}

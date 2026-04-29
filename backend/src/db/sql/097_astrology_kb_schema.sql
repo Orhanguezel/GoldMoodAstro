@@ -11,15 +11,16 @@ CREATE TABLE IF NOT EXISTS astrology_kb (
 
   -- Kombinasyon türü
   kind ENUM(
-    'planet_sign',     -- Mars Akrep'te
-    'planet_house',    -- Mars 8. ev'de
-    'sign_house',      -- Akrep 8. ev'de
-    'aspect',          -- Mars-Satürn kare
-    'sign',            -- Akrep burcu (genel)
-    'house',           -- 8. ev (genel)
-    'planet',          -- Mars (genel)
-    'transit',         -- Geçiş yorumları
-    'synastry',        -- İlişki sinastri
+    'planet_sign',
+    'planet_house',
+    'sign_house',
+    'aspect',
+    'sign',
+    'house',
+    'planet',
+    'transit',
+    'synastry',
+    'sign_section',
     'misc'
   ) NOT NULL,
 
@@ -47,6 +48,10 @@ CREATE TABLE IF NOT EXISTS astrology_kb (
   -- Atıf bilgisi (Wikipedia, klasik kitap vs.)
   source VARCHAR(255),
   author VARCHAR(120),
+
+  -- Görsel (sign için zodyak ikonu, planet için gezegen sembolü vb.)
+  -- Path: storage_assets.public_url ile aynı (örn. /uploads/zodiac/aries.png)
+  image_url VARCHAR(500),
 
   is_active TINYINT NOT NULL DEFAULT 1,
   reviewed_by CHAR(36),    -- astrolog user_id (FK opsiyonel)

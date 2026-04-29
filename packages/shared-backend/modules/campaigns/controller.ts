@@ -50,6 +50,61 @@ export const listActive: RouteHandler = async (req, reply) => {
   return reply.send({ data: rows });
 };
 
+/** GET /campaigns/me — auth, kullanıcının geçerli ve kullanılmış kampanyaları */
+export const listMine: RouteHandler = async (req, reply) => {
+  const { id: userId } = getUser(req);
+  if (!userId) return reply.code(401).send({ error: { message: "unauthorized" } });
+
+  const now = new Date();
+
+  const activeRows = await db
+    .select({
+      id: campaigns.id,
+      code: campaigns.code,
+      name_tr: campaigns.name_tr,
+      name_en: campaigns.name_en,
+      description_tr: campaigns.description_tr,
+      description_en: campaigns.description_en,
+      type: campaigns.type,
+      value: campaigns.value,
+      applies_to: campaigns.applies_to,
+      ends_at: campaigns.ends_at,
+    })
+    .from(campaigns)
+    .where(
+      and(
+        eq(campaigns.is_active, 1),
+        or(isNull(campaigns.starts_at), lte(campaigns.starts_at, now)),
+        or(isNull(campaigns.ends_at), gte(campaigns.ends_at, now)),
+        or(isNull(campaigns.max_uses), lt(campaigns.used_count, campaigns.max_uses)),
+      ),
+    )
+    .orderBy(desc(campaigns.created_at))
+    .limit(50);
+
+  const redeemedRows = await db
+    .select({
+      id: campaignRedemptions.id,
+      campaign_id: campaignRedemptions.campaign_id,
+      order_id: campaignRedemptions.order_id,
+      value_applied: campaignRedemptions.value_applied,
+      redeemed_at: campaignRedemptions.redeemed_at,
+      code: campaigns.code,
+      name_tr: campaigns.name_tr,
+      name_en: campaigns.name_en,
+      type: campaigns.type,
+      value: campaigns.value,
+      applies_to: campaigns.applies_to,
+    })
+    .from(campaignRedemptions)
+    .innerJoin(campaigns, eq(campaignRedemptions.campaign_id, campaigns.id))
+    .where(eq(campaignRedemptions.user_id, userId))
+    .orderBy(desc(campaignRedemptions.redeemed_at))
+    .limit(50);
+
+  return reply.send({ data: { active: activeRows, redeemed: redeemedRows } });
+};
+
 /**
  * POST /campaigns/redeem — auth, kupon kodu kullan
  * Body: { code, applies_to?, order_id? }

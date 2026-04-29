@@ -275,6 +275,8 @@ export interface BookingPublicCreatePayload {
   message?: string;
 
   customer_message?: string;
+  source_type?: 'daily_reading';
+  source_id?: string;
 }
 
 /** PUBLIC create result — controller { ok, id, status } */

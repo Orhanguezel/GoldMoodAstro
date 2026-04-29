@@ -11,6 +11,15 @@ import { parseJsonObject, uiText } from '@/integrations/shared';
 // Reviews (Public)
 // ===============================
 
+export type ReviewModerationFlags = {
+  safe?: boolean;
+  flags?: string[];
+  matched_patterns?: string[];
+  source?: string;
+  checked_at?: string;
+  [k: string]: unknown;
+};
+
 export type ReviewDto = {
   id: string;
 
@@ -23,6 +32,8 @@ export type ReviewDto = {
 
   is_active: boolean;
   is_approved: boolean;
+  is_verified?: boolean;                          // T17-1
+  moderation_flags?: ReviewModerationFlags | null; // T17-3/T17-7
   display_order: number;
 
   likes_count: number;
@@ -56,6 +67,9 @@ export type ReviewListQueryParams = {
   search?: string;
   approved?: BoolLike;
   active?: BoolLike;
+  verified?: BoolLike;       // T17-7 — is_verified=1
+  auto_flagged?: BoolLike;   // T17-7 — moderation_flags NOT NULL AND is_approved=0
+  has_outcome?: BoolLike;    // T17-7 — review_outcomes.user_response IS NOT NULL
   minRating?: number;
   maxRating?: number;
   limit?: number;

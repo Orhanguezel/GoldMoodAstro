@@ -1,0 +1,1 @@
+export { registerHistoryRoutes } from './index';

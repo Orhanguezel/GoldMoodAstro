@@ -1,18 +1,12 @@
-// src/modules/credits/router.ts
-import type { FastifyInstance } from "fastify";
-import * as controller from "./controller";
-import { requireAuth } from "../../middleware/auth";
+// packages/shared-backend/modules/credits/router.ts
+import type { FastifyInstance } from 'fastify';
+import * as controller from './controller';
 
-export async function registerCredits(app: FastifyInstance) {
-  const BASE = "/credits";
-
-  // Public
-  app.get(`${BASE}/packages`, controller.listPackages);
-
-  // Auth
-  app.get(`${BASE}/me`, { preHandler: [requireAuth] }, controller.getMyCredits);
-  app.post(`${BASE}/purchase`, { preHandler: [requireAuth] }, controller.purchaseCredits);
-  app.post(`${BASE}/webhook`, controller.creditWebhook);
-
-  // Note: /credits/webhook is a server-to-server callback endpoint.
+export function registerCreditsRoutes(fastify: FastifyInstance) {
+  fastify.get('/credits/packages', controller.handleListPackages);
+  fastify.get('/credits/balance', controller.handleGetBalance);
+  fastify.post('/credits/buy', controller.handleBuyCredits);
+  fastify.post('/credits/iyzico/callback', controller.handleIyzicoCallback);
 }
+
+export const registerCredits = registerCreditsRoutes;

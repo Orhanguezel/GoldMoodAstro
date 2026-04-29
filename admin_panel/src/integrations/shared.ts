@@ -38,6 +38,8 @@ export * from '@/integrations/shared/dashboard.types';
 export * from '@/integrations/shared/db_admin';
 export * from '@/integrations/shared/review_admin.types';
 export * from '@/integrations/shared/review.types';
+export * from '@/integrations/shared/llm_prompts.types';
+export * from '@/integrations/shared/astrology_kb.types';
 export * from '@/integrations/shared/projects';
 export * from '@/integrations/shared/blog.helpers';
 export * from '@/integrations/shared/pricing';

@@ -15,7 +15,7 @@ Notifications.setNotificationHandler({
 });
 
 /**
- * Push izni iste, Expo Push token al, AsyncStorage'a kaydet,
+ * Push izni iste, cihaz push tokenını al, AsyncStorage'a kaydet,
  * backend'e ilet.
  */
 export async function registerPushToken(): Promise<string | null> {
@@ -40,12 +40,8 @@ export async function registerPushToken(): Promise<string | null> {
   }
 
   try {
-    const projectId =
-      (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas
-        ?.projectId ||
-      (Constants.easConfig as { projectId?: string } | undefined)?.projectId;
-    
-    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    const tokenResponse = await Notifications.getDevicePushTokenAsync();
+    const token = String(tokenResponse.data);
     await storage.setPushToken(token);
     
     // Backend'e kaydet (ignore error if not logged in yet)

@@ -60,6 +60,14 @@ type FacebookProfile = {
   emailVerified: boolean;
 };
 
+type AppleProfile = {
+  email: string;
+  name: string | null;
+  emailVerified: boolean;
+  /** Apple kullanıcı sub (kalıcı kimlik) — ileride users.apple_id alanı için saklanabilir */
+  appleSub: string;
+};
+
 function getGoogleClient(clientId: string) {
   let client = googleClientCache.get(clientId);
   if (!client) {
@@ -193,6 +201,74 @@ async function verifyFacebookIdentity(params: {
   };
 }
 
+/**
+ * Apple Sign In identity_token doğrulama.
+ * - Apple JWKS (https://appleid.apple.com/auth/keys) ile ES256 imza verify
+ * - issuer === 'https://appleid.apple.com'
+ * - audience === APPLE_CLIENT_ID (Service ID for web, Bundle ID for mobile)
+ * - exp > now (otomatik)
+ *
+ * NOT: Apple sadece İLK login'de `user.name` döner — sonraki login'lerde
+ * sadece `sub` ve `email`. Frontend ilk login'de `apple_user_name`'i body'de geçer.
+ */
+let appleJwks: ReturnType<typeof import('jose').createRemoteJWKSet> | null = null;
+function getAppleJwks() {
+  if (!appleJwks) {
+    // Lazy import — Apple Sign In yapılandırılmamışsa jose hiç yüklenmez
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
+    const { createRemoteJWKSet } = require('jose') as typeof import('jose');
+    appleJwks = createRemoteJWKSet(new URL('https://appleid.apple.com/auth/keys'), {
+      cooldownDuration: 30_000,
+      cacheMaxAge: 600_000, // 10 dk
+    });
+  }
+  return appleJwks;
+}
+
+async function verifyAppleIdentity(params: {
+  identityToken: string;
+  fallbackEmail?: string;
+  appleUserName?: string;
+}): Promise<AppleProfile> {
+  const audienceRaw = (process.env.APPLE_CLIENT_ID || '').trim();
+  if (!audienceRaw) {
+    throw new Error('apple_oauth_not_configured');
+  }
+  // Birden fazla audience destekle (web Service ID + iOS Bundle ID virgülle ayrılır)
+  const audiences = audienceRaw.split(',').map((s) => s.trim()).filter(Boolean);
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
+  const { jwtVerify } = require('jose') as typeof import('jose');
+
+  let payload: any;
+  try {
+    const result = await jwtVerify(params.identityToken, getAppleJwks(), {
+      issuer: 'https://appleid.apple.com',
+      audience: audiences,
+    });
+    payload = result.payload;
+  } catch (err: any) {
+    throw new Error(`apple_token_verify_failed: ${err?.message ?? 'unknown'}`);
+  }
+
+  const email = String(payload?.email ?? params.fallbackEmail ?? '').trim().toLowerCase();
+  if (!email) throw new Error('apple_email_missing');
+
+  const sub = String(payload?.sub ?? '').trim();
+  if (!sub) throw new Error('apple_sub_missing');
+
+  // Apple `email_verified` field — string 'true'/'false' veya bool olabilir
+  const ev = payload?.email_verified;
+  const emailVerified = ev === true || ev === 'true';
+
+  return {
+    email,
+    name: params.appleUserName?.trim() || null,
+    emailVerified,
+    appleSub: sub,
+  };
+}
+
 /** POST /auth/signup */
 export async function signup(req: FastifyRequest, reply: FastifyReply) {
   try {
@@ -288,7 +364,7 @@ export async function socialLogin(req: FastifyRequest, reply: FastifyReply) {
     const parsed = socialLoginBody.safeParse(req.body);
     if (!parsed.success) return reply.status(400).send({ error: { message: 'invalid_body' } });
 
-    let socialProfile: GoogleProfile | FacebookProfile;
+    let socialProfile: GoogleProfile | FacebookProfile | AppleProfile;
     if (parsed.data.type === 'google') {
       socialProfile = await verifyGoogleIdentity({
         idToken: parsed.data.id_token,
@@ -300,6 +376,12 @@ export async function socialLogin(req: FastifyRequest, reply: FastifyReply) {
       socialProfile = await verifyFacebookIdentity({
         accessToken: parsed.data.access_token ?? '',
         fallbackEmail: parsed.data.email,
+      });
+    } else if (parsed.data.type === 'apple') {
+      socialProfile = await verifyAppleIdentity({
+        identityToken: parsed.data.identity_token ?? '',
+        fallbackEmail: parsed.data.email,
+        appleUserName: parsed.data.apple_user_name,
       });
     } else {
       return reply.status(400).send({ error: { message: 'unsupported_social_provider' } });

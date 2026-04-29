@@ -56,6 +56,8 @@ function mergedSelect(sReq: any, sDef: any) {
     status: bookings.status,
     is_read: bookings.is_read,
     media_type: bookings.media_type,
+    source_type: bookings.source_type,
+    source_id: bookings.source_id,
 
     admin_note: bookings.admin_note,
     decided_at: bookings.decided_at,

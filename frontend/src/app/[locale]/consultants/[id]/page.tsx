@@ -21,6 +21,9 @@ async function fetchConsultantForMeta(id: string) {
   }
 }
 
+import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
+import { normPath } from '@/integrations/shared';
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id, locale } = await params;
   const consultant = await fetchConsultantForMeta(id);
@@ -31,10 +34,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : 'View consultant details and book an available session.'
   );
 
-  return {
-    title: name,
-    description: String(bio).slice(0, 160),
-  };
+  let seo = await fetchSeoObject(locale);
+  const pageSeo = await fetchSeoPageObject(locale, 'consultant-detail');
+  seo = mergeSeoPageIntoSeo(seo, pageSeo);
+
+  // Override title and description with dynamic data, but keep openGraph and twitter structure
+  if (name) {
+    seo.title_default = name;
+  }
+  if (bio) {
+    seo.description = String(bio).slice(0, 160);
+  }
+
+  return buildMetadataFromSeo(seo, { locale, pathname: normPath(`/consultants/${id}`) });
 }
 
 export default async function ConsultantDetailPage({ params }: Props) {

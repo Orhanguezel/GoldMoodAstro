@@ -9,10 +9,12 @@ import {
 } from 'react-simple-maps';
 
 import type { AuditGeoStatsRowDto } from '@/integrations/shared';
+import { Badge } from '@/components/ui/badge';
+import { Loader2 } from 'lucide-react';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 
-/* ISO 3166-1 numeric → alpha-2 mapping (for world-atlas topojson) */
 const NUM_TO_A2: Record<string, string> = {
   '004': 'AF', '008': 'AL', '012': 'DZ', '020': 'AD', '024': 'AO',
   '028': 'AG', '032': 'AR', '036': 'AU', '040': 'AT', '044': 'BS',
@@ -56,7 +58,6 @@ const NUM_TO_A2: Record<string, string> = {
   '-99': 'XK', // Kosovo
 };
 
-/* Country name labels for tooltip */
 const COUNTRY_NAMES: Record<string, string> = {
   TR: 'Türkiye', DE: 'Almanya', US: 'ABD', GB: 'Birleşik Krallık',
   FR: 'Fransa', NL: 'Hollanda', IT: 'İtalya', ES: 'İspanya',
@@ -82,16 +83,18 @@ function getCountryName(code: string): string {
   return COUNTRY_NAMES[code] || code;
 }
 
-/* Color scale: 0 → #e2e8f0, max → #1e40af */
 function getColor(count: number, max: number): string {
-  if (count === 0 || max === 0) return '#e2e8f0';
+  if (count === 0 || max === 0) return 'var(--gm-surface)';
   const ratio = Math.min(count / max, 1);
-  // interpolate between light blue and dark blue
-  const colors = ['#dbeafe', '#93c5fd', '#3b82f6', '#1d4ed8', '#1e3a8a'];
-  const idx = Math.min(Math.floor(ratio * (colors.length - 1)), colors.length - 2);
-  const t = ratio * (colors.length - 1) - idx;
-  // simple step
-  return colors[Math.round(ratio * (colors.length - 1))];
+  // Using GM brand colors for the map scale
+  const colors = [
+    'rgba(123, 94, 167, 0.2)', // GM primary light
+    'rgba(123, 94, 167, 0.4)',
+    'rgba(123, 94, 167, 0.6)',
+    'rgba(123, 94, 167, 0.8)',
+    'var(--gm-primary)'         // Full GM primary
+  ];
+  return colors[Math.min(Math.floor(ratio * (colors.length - 1)), colors.length - 1)];
 }
 
 type Props = {
@@ -100,6 +103,7 @@ type Props = {
 };
 
 export const AuditGeoMap: React.FC<Props> = ({ items, loading }) => {
+  const t = useAdminT('audit');
   const [tooltip, setTooltip] = useState<{
     name: string;
     code: string;
@@ -142,14 +146,17 @@ export const AuditGeoMap: React.FC<Props> = ({ items, loading }) => {
   }, [countByCode]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8 h-full flex flex-col">
       <div
-        className="relative rounded-lg border bg-card overflow-hidden"
+        className="relative flex-1 rounded-[24px] border border-gm-border-soft bg-gm-bg-deep/50 overflow-hidden shadow-inner group/map"
         onMouseLeave={() => setTooltip(null)}
       >
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60">
-            <span className="text-sm text-muted-foreground animate-pulse">Harita yükleniyor...</span>
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-gm-bg-deep/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 text-gm-gold animate-spin" />
+              <span className="text-sm font-serif italic text-gm-gold/80">{t('map.loading', null, 'Harita yükleniyor...')}</span>
+            </div>
           </div>
         )}
 
@@ -157,17 +164,14 @@ export const AuditGeoMap: React.FC<Props> = ({ items, loading }) => {
           projectionConfig={{ rotate: [-10, 0, 0], scale: 147 }}
           width={800}
           height={400}
-          style={{ width: '100%', height: 'auto' }}
+          className="w-full h-full"
         >
           <ZoomableGroup center={[10, 20]} zoom={1}>
             <Geographies geography={GEO_URL}>
               {({ geographies }) =>
                 geographies.map((geo) => {
                   const numId = geo.id ?? geo.properties?.['ISO_N3'] ?? '';
-                  const a2 =
-                    geo.properties?.['ISO_A2'] ??
-                    NUM_TO_A2[String(numId)] ??
-                    '';
+                  const a2 = geo.properties?.['ISO_A2'] ?? NUM_TO_A2[String(numId)] ?? '';
                   const data = countByCode.get(a2);
                   const count = data?.count ?? 0;
 
@@ -176,8 +180,8 @@ export const AuditGeoMap: React.FC<Props> = ({ items, loading }) => {
                       key={geo.rsmKey}
                       geography={geo}
                       fill={getColor(count, maxCount)}
-                      stroke="#cbd5e1"
-                      strokeWidth={0.4}
+                      stroke="var(--gm-border-soft)"
+                      strokeWidth={0.5}
                       onMouseEnter={(evt) => {
                         const name = getCountryName(a2);
                         setTooltip({
@@ -190,14 +194,12 @@ export const AuditGeoMap: React.FC<Props> = ({ items, loading }) => {
                         });
                       }}
                       onMouseMove={(evt) => {
-                        setTooltip((prev) =>
-                          prev ? { ...prev, x: evt.clientX, y: evt.clientY } : null,
-                        );
+                        setTooltip((prev) => prev ? { ...prev, x: evt.clientX, y: evt.clientY } : null);
                       }}
                       onMouseLeave={() => setTooltip(null)}
                       style={{
-                        default: { outline: 'none' },
-                        hover: { fill: count > 0 ? '#f59e0b' : '#f1f5f9', outline: 'none' },
+                        default: { outline: 'none', transition: 'all 250ms ease' },
+                        hover: { fill: count > 0 ? 'var(--gm-gold)' : 'var(--gm-surface-high)', outline: 'none', cursor: 'pointer' },
                         pressed: { outline: 'none' },
                       }}
                     />
@@ -210,66 +212,75 @@ export const AuditGeoMap: React.FC<Props> = ({ items, loading }) => {
 
         {tooltip && (
           <div
-            className="pointer-events-none fixed z-50 rounded-md border bg-popover px-3 py-2 text-sm shadow-md"
-            style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}
+            className="pointer-events-none fixed z-50 rounded-2xl bg-gm-bg-deep/95 border border-gm-gold/30 p-4 shadow-2xl backdrop-blur-xl animate-in fade-in duration-200"
+            style={{ left: tooltip.x + 20, top: tooltip.y - 60 }}
           >
-            <div className="font-medium">
-              {tooltip.name} ({tooltip.code})
+            <div className="font-serif italic text-gm-gold text-base">
+              {tooltip.name} <span className="font-mono text-xs opacity-60 not-italic">({tooltip.code})</span>
             </div>
             {tooltip.count > 0 ? (
-              <div className="text-muted-foreground">
-                {tooltip.count} istek · {tooltip.unique_ips} benzersiz IP
+              <div className="mt-2 space-y-1">
+                <div className="text-[11px] font-bold text-gm-text uppercase tracking-wider">
+                  {tooltip.count} {t('map.requests', null, 'istek')}
+                </div>
+                <div className="text-[10px] text-gm-muted uppercase tracking-widest font-mono">
+                  {tooltip.unique_ips} {t('map.uniqueIps', null, 'benzersiz IP')}
+                </div>
               </div>
             ) : (
-              <div className="text-muted-foreground">Veri yok</div>
+              <div className="mt-2 text-[10px] text-gm-muted uppercase tracking-widest italic">{t('map.noData', null, 'Veri yok')}</div>
             )}
           </div>
         )}
       </div>
 
-      {/* Legend + Top Countries */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         {/* Color Legend */}
-        <div className="rounded-lg border bg-card p-4">
-          <div className="mb-2 text-sm font-medium">Renk Skalası</div>
-          <div className="flex items-center gap-1">
-            {['#dbeafe', '#93c5fd', '#3b82f6', '#1d4ed8', '#1e3a8a'].map((c, i) => (
-              <div
-                key={c}
-                className="h-4 flex-1 first:rounded-l last:rounded-r"
-                style={{ backgroundColor: c }}
-              />
-            ))}
-          </div>
-          <div className="mt-1 flex justify-between text-xs text-muted-foreground">
-            <span>0</span>
-            <span>{maxCount}</span>
+        <div className="rounded-[24px] border border-gm-border-soft bg-gm-surface/20 p-6 flex flex-col justify-between">
+          <div>
+            <h4 className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase mb-4">{t('map.legendTitle', null, 'Yoğunluk Skalası')}</h4>
+            <div className="flex items-center gap-1.5 h-3">
+              {['rgba(123, 94, 167, 0.2)', 'rgba(123, 94, 167, 0.4)', 'rgba(123, 94, 167, 0.6)', 'rgba(123, 94, 167, 0.8)', 'var(--gm-primary)'].map((c, i) => (
+                <div key={i} className="flex-1 h-full rounded-full" style={{ backgroundColor: c }} />
+              ))}
+            </div>
+            <div className="mt-3 flex justify-between text-[10px] font-mono text-gm-muted/60 uppercase">
+              <span>Low</span>
+              <span>High ({maxCount})</span>
+            </div>
           </div>
         </div>
 
-        {/* Top Countries Table */}
-        <div className="rounded-lg border bg-card p-4">
-          <div className="mb-2 text-sm font-medium">
-            Top Ülkeler ({totalRequests} toplam istek)
+        {/* Top Countries List */}
+        <div className="md:col-span-2 rounded-[24px] border border-gm-border-soft bg-gm-surface/20 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase">{t('map.topCountries', null, 'En Aktif Konumlar')}</h4>
+            <Badge className="bg-gm-gold/10 text-gm-gold border-gm-gold/20 rounded-full text-[10px] font-mono px-3">
+              {totalRequests} {t('map.total', null, 'Toplam İstek')}
+            </Badge>
           </div>
+
           {topCountries.length === 0 ? (
-            <div className="text-sm text-muted-foreground">Konum verisi yok.</div>
+            <div className="h-32 flex items-center justify-center font-serif italic text-gm-muted/60 text-sm">
+              {t('map.noGeoData', null, 'Konum verisi bulunamadı.')}
+            </div>
           ) : (
-            <div className="space-y-1">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
               {topCountries.map((c, i) => {
                 const pct = totalRequests > 0 ? ((c.count / totalRequests) * 100).toFixed(1) : '0';
                 return (
-                  <div key={c.code} className="flex items-center gap-2 text-sm">
-                    <span className="w-5 text-right text-muted-foreground">{i + 1}.</span>
-                    <span className="w-8 font-mono text-xs">{c.code}</span>
-                    <span className="flex-1 truncate">{getCountryName(c.code)}</span>
-                    <span className="font-medium tabular-nums">{c.count}</span>
-                    <span className="w-12 text-right text-xs text-muted-foreground">{pct}%</span>
-                    <div className="h-2 w-20 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-blue-500"
-                        style={{ width: `${Math.min(100, (c.count / maxCount) * 100)}%` }}
-                      />
+                  <div key={c.code} className="flex items-center gap-3 group/item">
+                    <span className="w-4 font-serif italic text-gm-gold/60 text-xs">{i + 1}.</span>
+                    <span className="w-7 font-mono text-[10px] text-gm-muted bg-gm-surface/40 px-1 rounded">{c.code}</span>
+                    <span className="flex-1 truncate text-xs font-medium text-gm-text">{getCountryName(c.code)}</span>
+                    <div className="flex flex-col items-end gap-0.5">
+                      <span className="text-xs font-bold text-gm-text tabular-nums">{c.count}</span>
+                      <div className="w-16 h-1 rounded-full bg-gm-surface/40 overflow-hidden">
+                        <div 
+                          className="h-full bg-gm-gold rounded-full transition-all duration-1000" 
+                          style={{ width: `${(c.count / maxCount) * 100}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
                 );

@@ -202,7 +202,8 @@ vite.config.ts.timestamp-*
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
 
-# Firebase service account credentials (NEVER commit)
+# Firebase service account credentials (NEVER commit — server-side admin keys)
 *-firebase-adminsdk-*.json
-google-services.json
-GoogleService-Info.plist
+# Note: google-services.json (Android) and GoogleService-Info.plist (iOS) are
+# PUBLIC client configs and SHOULD be committed for EAS Build to pick them up.
+doc/

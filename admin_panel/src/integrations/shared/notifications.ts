@@ -84,6 +84,34 @@ export type MarkAllReadBody = Record<string, never>;
 
 export type OkResp = { ok: true };
 
+export type PushCampaignTargetSegment =
+  | 'all'
+  | 'users'
+  | 'consultants'
+  | 'users_without_booking'
+  | 'inactive_7d';
+
+export type PushCampaignView = {
+  id: string;
+  slug: string;
+  title: string;
+  body: string;
+  target_segment: PushCampaignTargetSegment;
+  deep_link: string | null;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PushCampaignSendResult = {
+  success: boolean;
+  campaign_slug: string;
+  target_segment: PushCampaignTargetSegment;
+  target_count: number;
+  sent_count: number;
+  failed_count: number;
+};
+
 // ----------------------------- Mappers -----------------------------
 
 export const toNotificationsListQuery = (p: NotificationsListParams = {}): Record<string, any> => {
@@ -110,3 +138,23 @@ export const toUpdateNotificationBody = (b: UpdateNotificationBody): Record<stri
   if (typeof b.is_read !== 'undefined') out.is_read = b.is_read;
   return out;
 };
+
+export function normalizePushCampaign(row: any): PushCampaignView {
+  return {
+    id: String(row?.id ?? ''),
+    slug: String(row?.slug ?? ''),
+    title: String(row?.title ?? ''),
+    body: String(row?.body ?? ''),
+    target_segment: String(row?.target_segment ?? 'all') as PushCampaignTargetSegment,
+    deep_link: row?.deep_link ? String(row.deep_link) : null,
+    is_active: toBool(row?.is_active),
+    created_at: row?.created_at ? String(row.created_at) : undefined,
+    updated_at: row?.updated_at ? String(row.updated_at) : undefined,
+  };
+}
+
+export function normalizePushCampaignsList(res: unknown): PushCampaignView[] {
+  const r = (res ?? {}) as any;
+  const rows = Array.isArray(r?.data) ? r.data : Array.isArray(r) ? r : [];
+  return rows.map(normalizePushCampaign);
+}

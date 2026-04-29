@@ -22,6 +22,9 @@ export const profileUpsertSchema = z.object({
   city: z.string().max(128).optional(),
   country: z.string().max(128).optional(),
   postal_code: z.string().max(32).optional(),
+  fcm_token: z.string().optional(),
+  push_notifications: z.union([z.boolean(), z.number()]).optional(),
+  email_notifications: z.union([z.boolean(), z.number()]).optional(),
 });
 
 export type ProfileUpsertInput = z.infer<typeof profileUpsertSchema>;

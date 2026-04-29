@@ -115,7 +115,7 @@ export default function DailyPageClient() {
                   <h4 className="font-serif text-2xl text-[var(--gm-text)] mb-2">Derinleşmek ister misiniz?</h4>
                   <p className="text-[var(--gm-text-dim)] text-sm">Bu yorum genel enerjileri kapsar. Sorularınız için uzman astrologa danışın.</p>
                 </div>
-                <Link href={`/${locale}/consultants`} className="btn-premium whitespace-nowrap flex items-center gap-3 py-4 px-8">
+                <Link href={`/${locale}/consultants?topic=daily_reading_${data.reading.id}`} className="btn-premium whitespace-nowrap flex items-center gap-3 py-4 px-8">
                   Astrologa Sor <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>

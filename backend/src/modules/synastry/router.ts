@@ -1,0 +1,1 @@
+export { registerSynastryRoutes } from './index';

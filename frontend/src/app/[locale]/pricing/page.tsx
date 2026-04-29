@@ -7,16 +7,16 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
+import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
+import { normPath } from '@/integrations/shared';
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
+  let seo = await fetchSeoObject(locale);
+  const pageSeo = await fetchSeoPageObject(locale, 'pricing');
+  seo = mergeSeoPageIntoSeo(seo, pageSeo);
 
-  return {
-    title: locale === 'tr' ? 'Fiyatlandırma | GoldMoodAstro' : 'Pricing | GoldMoodAstro',
-    description:
-      locale === 'tr'
-        ? 'Sesli ve görüntülü danışmanlık karşılaştırmalı ücretler, abonelik planları ve şeffaf ödeme bilgileri.'
-        : 'Voice and video consultation pricing, subscription plans, and transparent checkout details.',
-  };
+  return buildMetadataFromSeo(seo, { locale, pathname: normPath('/pricing') });
 }
 
 export default async function PricingPage({ params }: Props) {

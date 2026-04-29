@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { reviewsApi, bookingsApi } from '@/lib/api';
 import { Star, Sparkles } from 'lucide-react-native';
+import { BannerSlider } from '@/components/BannerSlider';
 
 export default function RateScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
@@ -49,6 +50,8 @@ export default function RateScreen() {
               <Text style={styles.title}>Seans Nasıl Geçti?</Text>
               <Text style={styles.subtitle}>Deneyiminizi paylaşarak topluluğumuza ve danışmanınıza yardımcı olun.</Text>
             </View>
+
+            <BannerSlider placement="mobile_call_end" style={styles.banner} />
 
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map(s => (
@@ -95,6 +98,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { flexGrow: 1, padding: spacing.lg, justifyContent: 'center' },
   header: { alignItems: 'center', marginBottom: 40 },
+  banner: { marginTop: -18, marginBottom: 28 },
   title: { fontFamily: font.display, fontSize: 32, color: colors.text, textAlign: 'center' },
   subtitle: { fontFamily: font.sans, fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22, marginTop: 12, paddingHorizontal: 20 },
   starsRow: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginBottom: 40 },

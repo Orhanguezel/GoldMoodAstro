@@ -69,6 +69,8 @@ export const publicCreateBookingSchema = z.object({
   session_price: z.string().trim().min(1).max(12).optional(),
   session_duration: z.coerce.number().int().min(15).max(480).optional(),
   media_type: mediaTypeSchema,
+  source_type: z.enum(['daily_reading']).optional(),
+  source_id: uuid36Schema.optional(),
 
   appointment_date: dateYmdSchema,
   appointment_time: timeHmSchema,

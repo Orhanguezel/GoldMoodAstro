@@ -110,12 +110,15 @@ export const authApi = baseApi.injectEndpoints({
     /** POST /auth/social-login (Google ID token VEYA Facebook access_token) */
     socialLogin: b.mutation<
       TokenResp & { user?: any },
-      {
-        type: 'google' | 'facebook';
-        access_token?: string;
-        id_token?: string;
-        email?: string;
-      }
+      | { type: 'google'; id_token?: string; access_token?: string; email?: string }
+      | { type: 'facebook'; access_token?: string; email?: string }
+      | {
+          type: 'apple';
+          identity_token: string;
+          authorization_code?: string;
+          apple_user_name?: string;
+          email?: string;
+        }
     >({
       query: (body): FetchArgs => ({
         url: `${BASE}/social-login`,

@@ -1,20 +1,18 @@
-// =============================================================
-// FILE: src/components/admin/audit/AuditDailyChart.tsx
-// FIX:
-//  - date can be "YYYY-MM-DD" OR ISO datetime -> normalize to "YYYY-MM-DD"
-//  - tolerate alternate keys: day, dt, ts, created_at
-// =============================================================
-
 'use client';
 
 import React, { useMemo, useState } from 'react';
-
 import type { AuditMetricsDailyRowDto } from '@/integrations/shared';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 type Props = {
   rows: AuditMetricsDailyRowDto[];
   loading?: boolean;
-  height?: number; // default 220
+  height?: number;
 };
 
 function n(v: unknown, fallback = 0) {
@@ -25,14 +23,11 @@ function n(v: unknown, fallback = 0) {
 function toYmd(input: unknown): string {
   const s = String(input ?? '').trim();
   if (!s) return '';
-  // already YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // ISO datetime -> take first 10 chars
   if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.slice(0, 10);
-  // fallback: try Date parse
   const d = new Date(s);
   if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
-  return s; // last resort (won't crash)
+  return s;
 }
 
 function fmtDayLabel(isoOrDate: string) {
@@ -50,20 +45,16 @@ function fmtIsoNice(isoOrDate: string) {
 }
 
 export const AuditDailyChart: React.FC<Props> = ({ rows, loading, height = 220 }) => {
+  const t = useAdminT('audit');
   const [showUnique, setShowUnique] = useState(true);
   const [showErrors, setShowErrors] = useState(true);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
   const data = useMemo(() => {
     const a = Array.isArray(rows) ? rows : [];
     return [...a]
       .map((r) => {
-        const rawDate =
-          (r as any).date ??
-          (r as any).day ??
-          (r as any).dt ??
-          (r as any).ts ??
-          (r as any).created_at ??
-          '';
+        const rawDate = (r as any).date ?? (r as any).day ?? (r as any).dt ?? (r as any).ts ?? (r as any).created_at ?? '';
         const date = toYmd(rawDate);
 
         return {
@@ -80,13 +71,13 @@ export const AuditDailyChart: React.FC<Props> = ({ rows, loading, height = 220 }
 
   const hasAny = data.length > 0;
 
-  // ---- SVG layout ----
+  // SVG layout
   const W = 980;
   const H = Math.max(140, Math.min(360, height));
-  const padL = 42;
-  const padR = 14;
-  const padT = 12;
-  const padB = 30;
+  const padL = 60;
+  const padR = 20;
+  const padT = 40;
+  const padB = 40;
 
   const chartW = W - padL - padR;
   const chartH = H - padT - padB;
@@ -101,190 +92,248 @@ export const AuditDailyChart: React.FC<Props> = ({ rows, loading, height = 220 }
     Math.round((maxRequests * (yTicks - i)) / yTicks),
   );
 
-  const barGap = 6;
+  const barGap = 8;
   const barCount = Math.max(1, data.length);
-  const barW = Math.max(8, Math.floor((chartW - barGap * (barCount - 1)) / barCount));
+  const barW = Math.max(12, Math.floor((chartW - barGap * (barCount - 1)) / barCount));
 
-  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
-
-  return (
-    <div>
-      <div className="mb-2 flex flex-wrap items-center gap-3">
-        <div className="text-sm text-muted-foreground">
-          Son {data.length || 0} gün: <strong>requests</strong> bar
-          {showUnique ? ', unique' : ''} {showErrors ? ', errors' : ''}
-        </div>
-
-        <div className="ml-auto flex items-center gap-3">
-          <label className="mb-0 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={showUnique}
-              onChange={(e) => setShowUnique(e.target.checked)}
-            />
-            Unique IP
-          </label>
-
-          <label className="mb-0 flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={showErrors}
-              onChange={(e) => setShowErrors(e.target.checked)}
-            />
-            Errors
-          </label>
-
-          {loading && <span className="text-sm text-muted-foreground">Yükleniyor...</span>}
+  if (loading && !hasAny) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-[220px] w-full rounded-[24px] bg-gm-surface/20" />
+        <div className="flex justify-between">
+          <Skeleton className="h-4 w-32 bg-gm-surface/20" />
+          <Skeleton className="h-4 w-64 bg-gm-surface/20" />
         </div>
       </div>
+    );
+  }
 
-      {!hasAny && !loading && (
-        <div className="rounded-md border border-muted bg-muted/40 px-3 py-2 text-sm">
-          Grafik verisi boş. (Backend response shape / date format uyumsuz olabilir.)
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setShowUnique(!showUnique)}>
+            <Checkbox 
+              id="show-unique" 
+              checked={showUnique} 
+              onCheckedChange={(checked) => setShowUnique(!!checked)}
+              className="border-gm-primary/40 data-[state=checked]:bg-gm-primary data-[state=checked]:border-gm-primary"
+            />
+            <Label htmlFor="show-unique" className="text-[10px] font-bold text-gm-muted tracking-widest uppercase cursor-pointer group-hover:text-gm-primary transition-colors">
+              {t('metrics.uniqueIp')}
+            </Label>
+          </div>
+          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setShowErrors(!showErrors)}>
+            <Checkbox 
+              id="show-errors" 
+              checked={showErrors} 
+              onCheckedChange={(checked) => setShowErrors(!!checked)}
+              className="border-gm-error/40 data-[state=checked]:bg-gm-error data-[state=checked]:border-gm-error"
+            />
+            <Label htmlFor="show-errors" className="text-[10px] font-bold text-gm-muted tracking-widest uppercase cursor-pointer group-hover:text-gm-error transition-colors">
+              {t('metrics.errors')}
+            </Label>
+          </div>
         </div>
-      )}
 
-      <div className="overflow-hidden rounded border bg-card">
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          width="100%"
-          height={H}
-          role="img"
-          aria-label="Audit günlük metrik grafiği"
-        >
-          <rect x="0" y="0" width={W} height={H} fill="white" />
+        {loading && (
+          <div className="flex items-center gap-2 text-gm-gold font-serif italic text-xs">
+            <Loader2 className="h-3 w-3 animate-spin" /> {t('common.loading')}
+          </div>
+        )}
+      </div>
 
-          {tickVals.map((tv, i) => {
-            const y = padT + (chartH * i) / yTicks;
-            return (
-              <g key={`t-${i}`}>
-                <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#e9ecef" strokeWidth="1" />
-                <text x={padL - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#6c757d">
-                  {tv}
-                </text>
-              </g>
-            );
-          })}
-
-          {data.map((r, idx) => {
-            const x = padL + idx * (barW + barGap);
-            const h = Math.round((r.requests / maxRequests) * chartH);
-            const y = padT + (chartH - h);
-            const isHover = hoverIdx === idx;
-
-            return (
-              <g
-                key={`${r.date}-${idx}`}
-                onMouseEnter={() => setHoverIdx(idx)}
-                onMouseLeave={() => setHoverIdx(null)}
-              >
-                <rect
-                  x={x}
-                  y={y}
-                  width={barW}
-                  height={h}
-                  rx="3"
-                  fill={isHover ? '#0b5ed7' : '#0d6efd'}
-                  opacity={r.requests === 0 ? 0.25 : 0.9}
-                />
-                {(data.length <= 14 || idx % 2 === 0) && (
-                  <text
-                    x={x + barW / 2}
-                    y={H - 10}
-                    textAnchor="middle"
-                    fontSize="11"
-                    fill="#6c757d"
+      {!hasAny && !loading ? (
+        <div className="rounded-[24px] border border-gm-error/20 bg-gm-error/5 p-12 text-center font-serif italic text-gm-error/70">
+          {t('metrics.noData', null, 'Veri bulunamadı')}
+        </div>
+      ) : (
+        <div className="relative group/chart">
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            className="w-full h-auto overflow-visible"
+            preserveAspectRatio="xMidYMid meet"
+          >
+            {/* Grid lines */}
+            {tickVals.map((tv, i) => {
+              const y = padT + (chartH * i) / yTicks;
+              return (
+                <g key={`t-${i}`}>
+                  <line 
+                    x1={padL} 
+                    y1={y} 
+                    x2={W - padR} 
+                    y2={y} 
+                    stroke="var(--gm-border)" 
+                    strokeWidth="1" 
+                    strokeDasharray="4 4"
+                    className="opacity-30"
+                  />
+                  <text 
+                    x={padL - 15} 
+                    y={y + 4} 
+                    textAnchor="end" 
+                    className="fill-gm-muted/60 font-mono text-[10px] tabular-nums"
                   >
-                    {r.label}
+                    {tv}
                   </text>
-                )}
-              </g>
-            );
-          })}
+                </g>
+              );
+            })}
 
-          {hoverIdx !== null &&
-            data[hoverIdx] &&
-            (() => {
-              const r = data[hoverIdx];
-              const xBar = padL + hoverIdx * (barW + barGap);
-              const boxW = 220;
-              const boxH = showUnique || showErrors ? 76 : 56;
-
-              const px = xBar + barW + 10 + boxW <= W - padR ? xBar + barW + 10 : xBar - boxW - 10;
-              const py = padT + 10;
+            {/* Bars */}
+            {data.map((r, idx) => {
+              const x = padL + idx * (barW + barGap);
+              const h = Math.round((r.requests / maxRequests) * chartH);
+              const y = padT + (chartH - h);
+              const isHover = hoverIdx === idx;
 
               return (
-                <g>
+                <g
+                  key={`${r.date}-${idx}`}
+                  onMouseEnter={() => setHoverIdx(idx)}
+                  onMouseLeave={() => setHoverIdx(null)}
+                  className="cursor-pointer"
+                >
+                  {/* Invisible hit area */}
                   <rect
-                    x={px}
-                    y={py}
-                    width={boxW}
-                    height={boxH}
-                    rx="8"
-                    fill="white"
-                    stroke="#dee2e6"
+                    x={x - barGap / 2}
+                    y={padT}
+                    width={barW + barGap}
+                    height={chartH}
+                    fill="transparent"
                   />
-                  <text x={px + 12} y={py + 20} fontSize="12" fill="#212529">
-                    <tspan fontWeight="600">{fmtIsoNice(r.date)}</tspan>
-                  </text>
-                  <text x={px + 12} y={py + 40} fontSize="12" fill="#212529">
-                    requests: <tspan fontWeight="600">{r.requests}</tspan>
-                  </text>
-                  {(showUnique || showErrors) && (
-                    <text x={px + 12} y={py + 58} fontSize="12" fill="#212529">
-                      {showUnique ? (
-                        <>
-                          unique: <tspan fontWeight="600">{r.unique_ips}</tspan>
-                        </>
-                      ) : null}
-                      {showUnique && showErrors ? <tspan> · </tspan> : null}
-                      {showErrors ? (
-                        <>
-                          errors: <tspan fontWeight="600">{r.errors}</tspan>
-                        </>
-                      ) : null}
+                  
+                  {/* Background track */}
+                  <rect
+                    x={x}
+                    y={padT}
+                    width={barW}
+                    height={chartH}
+                    rx="6"
+                    className="fill-gm-surface/20"
+                  />
+
+                  {/* Main request bar */}
+                  <rect
+                    x={x}
+                    y={y}
+                    width={barW}
+                    height={h}
+                    rx="6"
+                    className={cn(
+                      "transition-all duration-300",
+                      isHover ? "fill-gm-gold shadow-lg" : "fill-gm-gold/60"
+                    )}
+                  />
+
+                  {/* Error indicator dot */}
+                  {showErrors && r.errors > 0 && (
+                    <circle
+                      cx={x + barW / 2}
+                      cy={padT - 10}
+                      r="3"
+                      className="fill-gm-error animate-pulse"
+                    />
+                  )}
+
+                  {/* X-Axis Labels */}
+                  {(data.length <= 14 || idx % 2 === 0) && (
+                    <text
+                      x={x + barW / 2}
+                      y={H - 10}
+                      textAnchor="middle"
+                      className="fill-gm-muted font-mono text-[10px]"
+                    >
+                      {r.label}
                     </text>
                   )}
                 </g>
               );
-            })()}
+            })}
 
-          <line
-            x1={padL}
-            y1={padT + chartH}
-            x2={W - padR}
-            y2={padT + chartH}
-            stroke="#dee2e6"
-            strokeWidth="1"
-          />
-        </svg>
+            {/* Tooltip */}
+            {hoverIdx !== null && data[hoverIdx] && (
+              <g className="pointer-events-none transition-all duration-200">
+                {(() => {
+                  const r = data[hoverIdx];
+                  const xBar = padL + hoverIdx * (barW + barGap);
+                  const boxW = 180;
+                  const boxH = 100;
+                  const px = xBar + barW + 20 + boxW <= W - padR ? xBar + barW + 20 : xBar - boxW - 20;
+                  const py = padT;
 
-        {hasAny && (
-          <div className="flex items-center justify-between border-t px-3 py-2 text-sm text-muted-foreground">
-            <div>{data[data.length - 1]?.date ? fmtIsoNice(data[data.length - 1].date) : '-'}</div>
-            <div className="flex gap-3">
-              <span>
-                requests:{' '}
-                <strong className="text-foreground">{data[data.length - 1]?.requests ?? 0}</strong>
-              </span>
-              {showUnique && (
-                <span>
-                  unique:{' '}
-                  <strong className="text-foreground">
-                    {data[data.length - 1]?.unique_ips ?? 0}
-                  </strong>
-                </span>
-              )}
-              {showErrors && (
-                <span>
-                  errors:{' '}
-                  <strong className="text-foreground">{data[data.length - 1]?.errors ?? 0}</strong>
-                </span>
-              )}
-            </div>
+                  return (
+                    <g>
+                      <rect
+                        x={px}
+                        y={py}
+                        width={boxW}
+                        height={boxH}
+                        rx="16"
+                        className="fill-gm-bg-deep/95 stroke-gm-gold/30 stroke-[1px] shadow-2xl backdrop-blur-md"
+                      />
+                      <text x={px + 20} y={py + 30} className="fill-gm-gold font-serif italic text-sm">
+                        {fmtIsoNice(r.date)}
+                      </text>
+                      <text x={px + 20} y={py + 55} className="fill-gm-text text-xs font-bold">
+                        {t('metrics.requests', null, 'Requests')}: <tspan className="fill-gm-gold">{r.requests}</tspan>
+                      </text>
+                      {showUnique && (
+                        <text x={px + 20} y={py + 72} className="fill-gm-muted text-[10px] font-bold uppercase tracking-wider">
+                          {t('metrics.unique', null, 'Unique')}: <tspan className="fill-gm-primary-light">{r.unique_ips}</tspan>
+                        </text>
+                      )}
+                      {showErrors && (
+                        <text x={px + 20} y={py + 85} className="fill-gm-muted text-[10px] font-bold uppercase tracking-wider">
+                          {t('metrics.errors', null, 'Errors')}: <tspan className="fill-gm-error">{r.errors}</tspan>
+                        </text>
+                      )}
+                    </g>
+                  );
+                })()}
+              </g>
+            )}
+
+            {/* Base line */}
+            <line
+              x1={padL}
+              y1={padT + chartH}
+              x2={W - padR}
+              y2={padT + chartH}
+              stroke="var(--gm-border)"
+              strokeWidth="2"
+              className="opacity-50"
+            />
+          </svg>
+        </div>
+      )}
+
+      {hasAny && (
+        <div className="flex items-center justify-between px-4 py-3 bg-gm-surface/20 rounded-2xl border border-gm-border-soft">
+          <div className="text-[10px] font-bold text-gm-muted uppercase tracking-widest">
+            {fmtIsoNice(data[data.length - 1].date)} {t('metrics.data', null, 'Verileri')}
           </div>
-        )}
-      </div>
+          <div className="flex gap-6">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] text-gm-muted uppercase tracking-[0.1em] font-bold">{t('metrics.totalRequests', null, 'Total Requests')}</span>
+              <span className="text-sm font-mono font-bold text-gm-gold">{data[data.length - 1].requests}</span>
+            </div>
+            {showUnique && (
+              <div className="flex flex-col items-end border-l border-gm-border-soft/30 pl-6">
+                <span className="text-[10px] text-gm-muted uppercase tracking-[0.1em] font-bold">{t('metrics.uniqueIp', null, 'Unique IP')}</span>
+                <span className="text-sm font-mono font-bold text-gm-primary-light">{data[data.length - 1].unique_ips}</span>
+              </div>
+            )}
+            {showErrors && (
+              <div className="flex flex-col items-end border-l border-gm-border-soft/30 pl-6">
+                <span className="text-[10px] text-gm-muted uppercase tracking-[0.1em] font-bold">{t('metrics.errors', null, 'Errors')}</span>
+                <span className="text-sm font-mono font-bold text-gm-error">{data[data.length - 1].errors}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

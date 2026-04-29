@@ -49,8 +49,7 @@ rsync -avz --delete \
   --exclude='.env' \
   --exclude='.env.local' \
   --exclude='.secrets/' \
-  --exclude='uploads/' \
-  --exclude='backend/uploads/' \
+  --exclude='backend/uploads/db_snapshots/' \
   --exclude='*.log' \
   --exclude='.DS_Store' \
   -e "ssh ${SSH_OPTS[*]}" \
@@ -116,11 +115,13 @@ if [[ "$WHAT" == "all" || "$WHAT" == "admin" ]]; then
   remote_sh <<'BASH'
 set -euo pipefail
 cd /var/www/goldmoodastro/admin_panel
+# .env.local Next.js'te .env'i ezer — eski deploylardan kalan v1 URL'leri sızdırır.
+rm -f .env.local
 [[ -f .env ]] || cat > .env <<'ENV'
 PANEL_API_URL=https://www.goldmoodastro.com
-NEXT_PUBLIC_API_URL=https://www.goldmoodastro.com/api/v1
-NEXT_PUBLIC_API_BASE_URL=https://www.goldmoodastro.com/api/v1
-NEXT_PUBLIC_MEDIA_URL=https://www.goldmoodastro.com/api/v1
+NEXT_PUBLIC_API_URL=https://www.goldmoodastro.com/api
+NEXT_PUBLIC_API_BASE_URL=https://www.goldmoodastro.com/api
+NEXT_PUBLIC_MEDIA_URL=https://www.goldmoodastro.com/api
 NEXT_PUBLIC_SOCKET_URL=https://www.goldmoodastro.com
 NEXT_PUBLIC_APP_ENV=production
 NEXT_PUBLIC_SITE_URL=https://admin.goldmoodastro.com
@@ -150,17 +151,23 @@ fi
 # ─── 5. Frontend ──────────────────────────────────────────────────────────────
 if [[ "$WHAT" == "all" || "$WHAT" == "frontend" ]]; then
   say "Frontend build"
-  remote_sh <<'BASH'
+  remote_sh <<BASH
 set -euo pipefail
 cd /var/www/goldmoodastro/frontend
-[[ -f .env ]] || cat > .env <<'ENV'
-NEXT_PUBLIC_API_URL=https://www.goldmoodastro.com/api/v1
-NEXT_PUBLIC_API_BASE_URL=https://www.goldmoodastro.com/api/v1
-NEXT_PUBLIC_MEDIA_URL=https://www.goldmoodastro.com/api/v1
+# .env.local Next.js'te .env'i ezer — eski deploylardan kalan v1 URL'leri sızdırır.
+rm -f .env.local
+cat > .env <<'ENV'
+NEXT_PUBLIC_API_URL=https://www.goldmoodastro.com/api
+NEXT_PUBLIC_API_BASE_URL=https://www.goldmoodastro.com/api
+NEXT_PUBLIC_MEDIA_URL=https://www.goldmoodastro.com/api
 NEXT_PUBLIC_SOCKET_URL=https://www.goldmoodastro.com
 NEXT_PUBLIC_APP_ENV=production
 NEXT_PUBLIC_SITE_URL=https://www.goldmoodastro.com
 NEXT_PUBLIC_APP_NAME=GoldMoodAstro
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+NEXT_PUBLIC_FACEBOOK_APP_ID=${FACEBOOK_APP_ID:-}
+NEXT_PUBLIC_APPLE_CLIENT_ID=${NEXT_PUBLIC_APPLE_CLIENT_ID:-${APPLE_CLIENT_ID:-com.goldmoodastro.web}}
+NEXT_PUBLIC_APPLE_REDIRECT_URI=https://goldmoodastro.com/auth/apple/callback
 ENV
 rm -rf .next
 NODE_ENV=production /usr/local/bin/bun run build

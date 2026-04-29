@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Check, Star, Video, Mic, CreditCard, ShieldCheck, ArrowRight } from 'lucide-react';
 import { localizePath } from '@/integrations/shared';
 import { useListSubscriptionPlansQuery } from '@/integrations/rtk/public/subscriptions.endpoints';
+import { useRedeemCampaignMutation, type Campaign } from '@/integrations/rtk/public/campaigns.endpoints';
 import type { SubscriptionPlanPublicUi } from '@/integrations/rtk/public/subscriptions.endpoints';
 
 type Locale = 'tr' | 'en' | string;
@@ -166,6 +167,10 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
   const { data: plans, isLoading, isError, isFetching } = useListSubscriptionPlansQuery(undefined, {
     pollingInterval: 0,
   });
+  const [redeemCampaign, { isLoading: couponLoading }] = useRedeemCampaignMutation();
+  const [couponCode, setCouponCode] = useState('');
+  const [couponError, setCouponError] = useState('');
+  const [appliedCampaign, setAppliedCampaign] = useState<Partial<Campaign> | null>(null);
 
   const sortedPlans = useMemo(() => {
     const source = normalizePlanSet(plans);
@@ -209,6 +214,12 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         premiumLabel: 'Premium',
         cta: 'Kullanıma Başla',
         cta2: 'Danışman Bul',
+        couponTitle: 'Kupon kodun var mı?',
+        couponLead: 'Abonelik kampanyaları için kodunu gir, indirim koşulunu hemen gör.',
+        couponPlaceholder: 'WELCOME20',
+        couponApply: 'Uygula',
+        couponSuccess: 'Kupon uygulanabilir. Ödeme adımında indirim yansıtılır.',
+        couponError: 'Kupon uygulanamadı. Giriş yapmanız veya farklı bir kod denemeniz gerekebilir.',
       }
     : {
         title: 'Pricing',
@@ -233,7 +244,26 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         premiumLabel: 'Premium',
         cta: 'Start Now',
         cta2: 'Find a Consultant',
+        couponTitle: 'Have a coupon code?',
+        couponLead: 'Enter a subscription campaign code to check the discount.',
+        couponPlaceholder: 'WELCOME20',
+        couponApply: 'Apply',
+        couponSuccess: 'Coupon is eligible. The discount is applied during checkout.',
+        couponError: 'Coupon could not be applied. You may need to sign in or try another code.',
       };
+
+  const applyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) return;
+    setCouponError('');
+    try {
+      const res = await redeemCampaign({ code, applies_to: 'subscription' }).unwrap();
+      setAppliedCampaign(res.campaign);
+    } catch {
+      setAppliedCampaign(null);
+      setCouponError(copy.couponError);
+    }
+  };
 
   const voiceFeatures = [
     {
@@ -426,6 +456,39 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
               </article>
             );
           })}
+        </section>
+
+        <section className="mt-8 rounded-sm border border-[var(--gm-border)] bg-[var(--gm-surface)] p-5 shadow-soft">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-xl">
+              <h2 className="font-serif text-xl text-[var(--gm-gold)]">{copy.couponTitle}</h2>
+              <p className="mt-2 text-sm text-[var(--gm-text-dim)]">{copy.couponLead}</p>
+            </div>
+            <div className="flex w-full gap-2 md:w-auto">
+              <input
+                value={couponCode}
+                onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+                placeholder={copy.couponPlaceholder}
+                disabled={!!appliedCampaign || couponLoading}
+                className="min-w-0 flex-1 rounded-full border border-[var(--gm-border)] bg-[var(--gm-bg)] px-4 py-3 text-sm font-semibold tracking-[0.12em] text-[var(--gm-text)] outline-none placeholder:text-[var(--gm-text-muted)] focus:border-[var(--gm-gold)] md:w-56"
+              />
+              <button
+                type="button"
+                onClick={applyCoupon}
+                disabled={!couponCode.trim() || !!appliedCampaign || couponLoading}
+                className="rounded-full bg-[var(--gm-gold)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--gm-bg-deep)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {couponLoading ? '...' : copy.couponApply}
+              </button>
+            </div>
+          </div>
+          {appliedCampaign && (
+            <p className="mt-3 text-sm text-[var(--gm-success)]">
+              {copy.couponSuccess} ({appliedCampaign.code}
+              {appliedCampaign.value ? ` · ${appliedCampaign.type === 'discount_percentage' ? `%${Number(appliedCampaign.value)}` : appliedCampaign.value}` : ''})
+            </p>
+          )}
+          {couponError && <p className="mt-3 text-sm text-[var(--gm-error)]">{couponError}</p>}
         </section>
 
         <section className="mt-16">

@@ -10,9 +10,11 @@ import AnalyticsScripts from '../features/analytics/AnalyticsScripts';
 import GAViewPages from '../features/analytics/GAViewPages';
 import CookieConsentBanner from '../layout/banner/CookieConsentBanner';
 import PwaRegistration from '../components/system/PwaRegistration';
+import DevPaymentCardBanner from '../components/dev/DevPaymentCardBanner';
 import { resetLayoutSeo } from '../seo';
 
 const SitePopups = lazy(() => import('../layout/banner/SitePopups'));
+const SupportBotWidget = lazy(() => import('../components/containers/chat/SupportBotWidget'));
 
 
 export default function ClientLayout({
@@ -116,6 +118,10 @@ export default function ClientLayout({
       <Suspense fallback={null}>
         <SitePopups />
       </Suspense>
+      <Suspense fallback={null}>
+        <SupportBotWidget />
+      </Suspense>
+      <DevPaymentCardBanner />
     </Fragment>
   );
 }

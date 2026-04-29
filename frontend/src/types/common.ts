@@ -247,3 +247,35 @@ export interface Banner {
   locale: string;
   priority: number;
 }
+
+export interface DailyHoroscope {
+  id: string;
+  date: string;
+  sign: ZodiacSign;
+  contentTr: string;
+  contentEn?: string | null;
+  moodScore: number;
+  luckyNumber: number;
+  luckyColor: string;
+}
+
+export interface SignInfo {
+  id: string;
+  kind: 'sign';
+  key1: ZodiacSign;
+  locale: string;
+  title: string;
+  content: string;
+  short_summary: string | null;
+  tone: string;
+  source: string | null;
+  author: string | null;
+  sections?: {
+    id: string;
+    kind: 'sign_section';
+    key1: ZodiacSign;
+    key2: string; // e.g. 'love', 'career'
+    title: string;
+    content: string;
+  }[];
+}

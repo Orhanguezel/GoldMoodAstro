@@ -38,6 +38,11 @@ CREATE TABLE IF NOT EXISTS profiles (
   city VARCHAR(128),
   country VARCHAR(128),
   postal_code VARCHAR(32),
+  -- Push/notification kolonları (Drizzle profiles/schema.ts ile hizalı)
+  fcm_token TEXT,
+  push_notifications INT NOT NULL DEFAULT 1,
+  email_notifications INT NOT NULL DEFAULT 1,
+  sms_notifications INT NOT NULL DEFAULT 0,
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   CONSTRAINT fk_profiles_id_users_id FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE

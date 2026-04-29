@@ -103,24 +103,35 @@ export const consultantScore: RouteHandler = async (req, reply) => {
   });
 };
 
-/** GET /reviews/me/pending-outcomes — auth, kullanıcının cevap bekleyen karne soruları */
+/**
+ * GET /reviews/me/pending-outcomes — auth, kullanıcının cevap bekleyen karne soruları
+ * Enriched: consultant ad + slug + avatar, review tarihi + ortalama puan
+ */
 export const myPendingOutcomes: RouteHandler = async (req, reply) => {
   const { id: userId } = getUser(req);
   if (!userId) return reply.code(401).send({ error: { message: "unauthorized" } });
 
   const now = new Date();
-  const rows = await db
-    .select()
-    .from(reviewOutcomes)
-    .where(
-      and(
-        eq(reviewOutcomes.user_id, userId),
-        sql`user_response IS NULL`,
-        sql`follow_up_at <= ${now}`,
-      )
-    )
-    .orderBy(desc(reviewOutcomes.follow_up_at))
-    .limit(20);
+  const rows = await db.execute(sql`
+    SELECT
+      ro.id, ro.review_id, ro.consultant_id, ro.follow_up_at,
+      r.rating AS review_rating, r.created_at AS review_created_at,
+      c.slug AS consultant_slug, u.avatar_url AS consultant_avatar,
+      u.full_name AS consultant_name
+    FROM review_outcomes ro
+    LEFT JOIN reviews r       ON r.id = ro.review_id
+    LEFT JOIN consultants c   ON c.id = ro.consultant_id
+    LEFT JOIN users u         ON u.id = c.user_id
+    WHERE ro.user_id = ${userId}
+      AND ro.user_response IS NULL
+      AND ro.follow_up_at <= ${now}
+    ORDER BY ro.follow_up_at DESC
+    LIMIT 20
+  `);
 
-  return reply.send({ data: rows });
+  const arr = Array.isArray((rows as unknown as unknown[])?.[0])
+    ? (rows as unknown as unknown[][])[0]
+    : rows;
+
+  return reply.send({ data: arr });
 };

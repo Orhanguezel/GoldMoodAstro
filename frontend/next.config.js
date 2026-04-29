@@ -58,7 +58,8 @@ const nextConfig = {
   // Dev: localhost:3000/uploads/x.png → localhost:8094/uploads/x.png
   // Prod'da Nginx aynı yönlendirmeyi /uploads location bloğuyla yapar.
   async rewrites() {
-    const backendUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api/v1').replace(/\/api\/v1\/?$/, '');
+    // Strip trailing /api/v1 or /api so we hit backend's static /uploads handler directly.
+    const backendUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/api(\/v\d+)?\/?$/, '');
     return [
       { source: '/uploads/:path*', destination: `${backendUrl}/uploads/:path*` },
     ];

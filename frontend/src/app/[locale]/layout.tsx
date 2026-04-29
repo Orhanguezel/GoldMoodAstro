@@ -5,9 +5,10 @@ import { Cinzel, Fraunces, Manrope } from 'next/font/google';
 import { Providers } from '../providers';
 import ClientLayout from '../ClientLayout';
 import { ThemeProvider } from '@/components/ThemeProvider';
-import { buildMetadataFromSeo, fetchSeoObject } from '@/seo/server';
+import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
 import JsonLd from '@/seo/JsonLd';
 import { graph, org, website } from '@/seo/jsonld';
+import Script from 'next/script';
 
 // 2026-04-27 vizyon revize: Cinzel (display) + Fraunces (editorial body) + Manrope (UI sans)
 const manrope = Manrope({
@@ -41,8 +42,11 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const seo = await fetchSeoObject(locale);
-  return await buildMetadataFromSeo(seo, { locale, pathname: '/' });
+  const [seo, homeSeo] = await Promise.all([
+    fetchSeoObject(locale),
+    fetchSeoPageObject(locale, 'home'),
+  ]);
+  return await buildMetadataFromSeo(mergeSeoPageIntoSeo(seo, homeSeo), { locale, pathname: '/' });
 }
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.goldmoodastro.com';
@@ -74,6 +78,10 @@ export default async function RootLayout({
   return (
     <ThemeProvider>
       <div className={`font-sans antialiased text-text-primary bg-bg-primary ${manrope.variable} ${fraunces.variable} ${cinzel.variable}`}>
+        <Script
+          src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"
+          strategy="beforeInteractive"
+        />
         <JsonLd data={jsonLdData} id="site-graph" />
         <Providers>
           <Suspense fallback={null}>

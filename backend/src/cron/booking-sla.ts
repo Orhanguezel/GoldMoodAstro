@@ -33,11 +33,11 @@ async function listTimedOutBookings(): Promise<TimedOutRow[]> {
       b.id AS booking_id,
       b.user_id,
       u.fcm_token AS user_fcm_token,
-      COALESCE(o.amount_minor, 0) AS price_minor,
+      COALESCE(CAST(o.total_amount * 100 AS SIGNED), 0) AS price_minor,
       ct.amount AS credit_amount
     FROM bookings b
     INNER JOIN users u ON u.id = b.user_id
-    LEFT JOIN orders o ON o.booking_id = b.id AND o.status = 'paid'
+    LEFT JOIN orders o ON o.booking_id = b.id AND o.payment_status = 'paid'
     LEFT JOIN credit_transactions ct ON ct.reference_type = 'booking'
       AND ct.reference_id = b.id AND ct.type = 'consumption'
     LEFT JOIN live_sessions ls ON ls.booking_id = b.id
@@ -77,12 +77,22 @@ async function markTimedOutAndRefund(row: TimedOutRow) {
     `);
   }
 
-  // 3. Push notification kullanıcıya
+  // 3. Para ile ödeme yapıldıysa iade bayrağı koy (Iyzico manuel iade veya admin panel için)
+  if (row.price_minor > 0) {
+    await db.execute(sql`
+      UPDATE orders SET 
+        payment_status = 'refund_pending', 
+        notes = CONCAT(COALESCE(notes, ''), '\nSLA timeout — astrolog 15 dk içinde katılmadı, iade bekliyor.')
+      WHERE booking_id = ${row.booking_id} AND payment_status = 'paid'
+    `);
+  }
+
+  // 4. Push notification kullanıcıya
   if (row.user_fcm_token) {
     await sendPushNotification({
       token: row.user_fcm_token,
       title: 'Görüşmeniz iptal edildi',
-      body: 'Astrolog 15 dakika içinde katılmadığı için kredilerin iade edildi.',
+      body: 'Astrolog 15 dakika içinde katılmadığı için ödemeniz iade sürecine alındı.',
       data: {
         type: 'booking_timed_out',
         booking_id: row.booking_id,

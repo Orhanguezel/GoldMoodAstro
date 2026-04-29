@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Link } from 'expo-router';
 import { Mail, Lock, ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { authApi, setAuthToken } from '@/lib/api';
@@ -24,6 +25,13 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
+
+  React.useEffect(() => {
+    if (Platform.OS === 'ios') {
+      AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable);
+    }
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -45,6 +53,44 @@ export default function LoginScreen() {
       router.replace('/today' as any);
     } catch (err: any) {
       Alert.alert('Giriş Başarısız', err.message || 'E-posta veya şifre hatalı.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    try {
+      setLoading(true);
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      const fullName = credential.fullName
+        ? `${credential.fullName.givenName ?? ''} ${credential.fullName.familyName ?? ''}`.trim()
+        : undefined;
+
+      const res = await authApi.socialLogin({
+        type: 'apple',
+        identity_token: credential.identityToken ?? '',
+        authorization_code: credential.authorizationCode ?? '',
+        apple_user_name: fullName,
+        email: credential.email ?? '',
+      });
+
+      await storage.setUserSession({
+        token: res.access_token,
+        userId: res.user.id,
+        role: res.user.role
+      });
+
+      setAuthToken(res.access_token);
+      router.replace('/today' as any);
+    } catch (err: any) {
+      if (err.code === 'ERR_CANCELED') return;
+      Alert.alert('Hata', 'Apple ile giriş yapılamadı.');
     } finally {
       setLoading(false);
     }
@@ -125,6 +171,24 @@ export default function LoginScreen() {
                   <Text style={styles.loginBtnText}>Giriş Yap</Text>
                 )}
               </Pressable>
+
+              {appleAuthAvailable && (
+                <View style={styles.dividerArea}>
+                  <View style={styles.divider} />
+                  <Text style={styles.dividerText}>VEYA</Text>
+                  <View style={styles.divider} />
+                </View>
+              )}
+
+              {appleAuthAvailable && (
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={radius.pill}
+                  style={styles.appleBtn}
+                  onPress={handleAppleLogin}
+                />
+              )}
             </View>
 
             <View style={styles.footer}>
@@ -263,5 +327,26 @@ const styles = StyleSheet.create({
     fontFamily: font.sansBold,
     fontSize: 14,
     color: colors.gold,
+  },
+  dividerArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginVertical: spacing.sm,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.line,
+  },
+  dividerText: {
+    fontFamily: font.sansBold,
+    fontSize: 10,
+    color: colors.textMuted,
+    letterSpacing: 1,
+  },
+  appleBtn: {
+    height: 56,
+    width: '100%',
   },
 });

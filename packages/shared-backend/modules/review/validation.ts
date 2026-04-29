@@ -32,6 +32,9 @@ export const ReviewListParamsSchema = z
     search: z.string().trim().optional(),
     approved: boolQuery,
     active: boolQuery,
+    verified: boolQuery,        // T17-7 — is_verified=1 (doğrulanmış görüşme)
+    auto_flagged: boolQuery,    // T17-7 — moderation_flags NOT NULL AND is_approved=0
+    has_outcome: boolQuery,     // T17-7 — review_outcomes.user_response IS NOT NULL
     minRating: z.coerce.number().int().min(1).max(5).optional(),
     maxRating: z.coerce.number().int().min(1).max(5).optional(),
     limit: z.coerce.number().int().min(1).max(500).default(100),
@@ -124,6 +127,14 @@ export const ReviewReactionSchema = z.object({
 });
 
 // -------------------------------------------------------------
+// BULK MODERATION (T17-7)
+// -------------------------------------------------------------
+export const ReviewBulkModerationSchema = z.object({
+  ids: z.array(z.string().trim().min(1).max(36)).min(1).max(200),
+  approved: z.boolean(),
+});
+
+// -------------------------------------------------------------
 // TIPLER
 // -------------------------------------------------------------
 export type ReviewListParams = z.infer<typeof ReviewListParamsSchema>;
@@ -131,4 +142,5 @@ export type ReviewCreateInput = z.infer<typeof ReviewCreateSchema>;
 export type ReviewUpdateInput = z.infer<typeof ReviewUpdateSchema>;
 export type ReviewReactionInput = z.infer<typeof ReviewReactionSchema>;
 export type ConsultantReplyInput = z.infer<typeof ConsultantReplySchema>;
+export type ReviewBulkModerationInput = z.infer<typeof ReviewBulkModerationSchema>;
 export type IdParam = z.infer<typeof IdParamSchema>;

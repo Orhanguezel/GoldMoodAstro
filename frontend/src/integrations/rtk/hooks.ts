@@ -8,6 +8,7 @@ export * from './public/auth.endpoints';
 
 // Public
 export * from './public/reviews.public.endpoints';
+export * from './public/review_outcomes.endpoints';
 export * from './public/storage_public.endpoints';
 export * from './public/kvkk.endpoints';
 
@@ -41,4 +42,13 @@ export * from './public/geocode.endpoints';
 export * from './public/readings.endpoints';
 export * from './public/newsletter_public.endpoints';
 export * from './public/subscriptions.endpoints';
+export * from './public/horoscopes.public.endpoints';
+export * from './public/tarot.public.endpoints';
+export * from './public/coffee.public.endpoints';
+export * from './public/dreams.public.endpoints';
+export * from './public/numerology.public.endpoints';
+export * from './public/history.public.endpoints';
+export * from './public/credits.public.endpoints';
+export * from './public/yildizname.public.endpoints';
+export * from './public/synastry.public.endpoints';
 export * from './admin/chat_admin.endpoints';

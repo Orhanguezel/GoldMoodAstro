@@ -53,6 +53,15 @@ export const birthChartsApi = baseApi.injectEndpoints({
       }),
       transformResponse: (res: { data: unknown }) => res.data,
     }),
+    updateBirthChart: build.mutation<BirthChart, { id: string; body: BirthChartCreateInput }>({
+      query: ({ id, body }) => ({
+        url: `/birth-charts/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (result, error, { id }) => ['BirthCharts', { type: 'BirthCharts', id }],
+      transformResponse: (res: { data: BirthChart }) => res.data,
+    }),
   }),
 });
 
@@ -64,4 +73,5 @@ export const {
   useDeleteBirthChartMutation,
   useGetBirthChartTransitMutation,
   useGetBirthChartSynastryMutation,
+  useUpdateBirthChartMutation,
 } = birthChartsApi;

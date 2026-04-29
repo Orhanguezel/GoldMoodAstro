@@ -69,8 +69,8 @@ async function settleBookingCredits(args: {
       .from(creditTransactions)
       .where(
         and(
-          eq(creditTransactions.reference_type, 'booking'),
-          eq(creditTransactions.reference_id, args.bookingId),
+          eq(creditTransactions.referenceType, 'booking'),
+          eq(creditTransactions.referenceId, args.bookingId),
           eq(creditTransactions.type, 'consumption'),
         ),
       )
@@ -83,14 +83,14 @@ async function settleBookingCredits(args: {
     let [wallet] = await tx
       .select()
       .from(userCredits)
-      .where(eq(userCredits.user_id, context.user_id))
+      .where(eq(userCredits.userId, context.user_id))
       .limit(1);
 
     if (!wallet) {
       const walletId = randomUUID();
       await tx.insert(userCredits).values({
         id: walletId,
-        user_id: context.user_id,
+        userId: context.user_id,
         balance: 0,
       } as any);
       [wallet] = await tx
@@ -110,17 +110,17 @@ async function settleBookingCredits(args: {
     }
 
     const balanceAfter = currentBalance - amount;
-    await tx.update(userCredits).set({ balance: balanceAfter, updated_at: new Date() }).where(eq(userCredits.id, wallet.id));
+    await tx.update(userCredits).set({ balance: balanceAfter, updatedAt: new Date() }).where(eq(userCredits.id, wallet.id));
 
     await tx.insert(creditTransactions).values({
       id: randomUUID(),
-      user_id: context.user_id,
+      userId: context.user_id,
       type: 'consumption',
       amount: -amount,
-      balance_after: balanceAfter,
-      reference_type: 'booking',
-      reference_id: args.bookingId,
-      order_id: null,
+      balanceAfter,
+      referenceType: 'booking',
+      referenceId: args.bookingId,
+      orderId: null,
       description: `Live görüşme ${durationSeconds} sn`,
     } as any);
 
@@ -143,6 +143,11 @@ function assertBookingWindow(booking: {
   appointment_time: string | null;
   session_duration: number;
 }) {
+  // DEV: Mock payment / test akışında zaman penceresi kontrolünü bypass et.
+  if (process.env.PAYMENT_MOCK_MODE === 'true' || process.env.LIVEKIT_SKIP_WINDOW_CHECK === 'true') {
+    return;
+  }
+
   const start = parseAppointment(booking.appointment_date, booking.appointment_time);
   if (Number.isNaN(start.getTime())) {
     const error = new Error('invalid_booking_time');
@@ -193,7 +198,7 @@ async function getBookingForParticipant(bookingId: string, userId: string) {
 /**
  * T11-1 — Video feature flag check
  * media_type='video' ise:
- *   - feature.video_call site_setting=1 olmalı (global flag)
+ *   - feature_video_enabled site_setting toggle ON olmalı (admin'in livekit-tab.tsx'ten yönettiği key)
  *   - consultants.supports_video=1 olmalı (consultant tarafı)
  * Aksi halde 403.
  */
@@ -203,13 +208,18 @@ async function assertVideoCallAllowed(args: {
 }) {
   if (args.mediaType !== 'video') return;
 
-  // site_settings.feature.video_call
+  // site_settings.feature_video_enabled — admin paneldeki LiveKit tab toggle bunu set eder
   const flagRows = await db.execute(sql`
-    SELECT value FROM site_settings WHERE \`key\` = 'feature.video_call' LIMIT 1
+    SELECT value FROM site_settings WHERE \`key\` = 'feature_video_enabled' LIMIT 1
   `);
   const arr = Array.isArray((flagRows as unknown as unknown[])?.[0]) ? (flagRows as unknown as unknown[][])[0] : flagRows;
-  const row = (Array.isArray(arr) ? arr[0] : null) as { value?: string | number } | null;
-  const flagOn = String(row?.value ?? '0') === '1';
+  const row = (Array.isArray(arr) ? arr[0] : null) as { value?: string | number | boolean } | null;
+  // Tolerate '1'/'true'/true/1 (admin yazar 'true', seed yazar '0')
+  const raw = row?.value;
+  const flagOn =
+    raw === true || raw === 1 ||
+    String(raw ?? '').trim().toLowerCase() === 'true' ||
+    String(raw ?? '').trim() === '1';
 
   if (!flagOn) {
     const error = new Error('video_call_feature_disabled');

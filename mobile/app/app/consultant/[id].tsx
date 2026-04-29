@@ -26,7 +26,7 @@ import {
 const { width } = Dimensions.get('window');
 
 export default function ConsultantDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, topic } = useLocalSearchParams<{ id: string; topic?: string }>();
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language === 'tr' ? tr : enUS;
 
@@ -84,6 +84,7 @@ export default function ConsultantDetailScreen() {
         price: consultant.session_price,
         duration: consultant.session_duration,
         name: consultant.full_name,
+        topic,
       }
     });
   };

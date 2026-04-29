@@ -21,7 +21,7 @@ export function getStringByPath(obj: unknown, path: string): string | undefined 
   return typeof v === 'string' ? v : undefined;
 }
 
-export function interpolate(template: string, params?: TranslationParams): string {
+export function interpolate(template: string, params?: TranslationParams | null): string {
   if (!params) return template;
 
   let result = template;
@@ -31,7 +31,7 @@ export function interpolate(template: string, params?: TranslationParams): strin
   return result;
 }
 
-export type TranslateFn = (key: string, params?: TranslationParams, fallback?: string) => string;
+export type TranslateFn = (key: string, params?: TranslationParams | null, fallback?: string) => string;
 
 type BuildTranslatorOpts<TLocale extends string> = {
   translations: Partial<Record<TLocale, unknown>>;
@@ -56,7 +56,7 @@ export function buildTranslator<TLocale extends string>(opts: BuildTranslatorOpt
   const allowed = new Set(locales);
   const chain = uniqKeepOrder(fallbackChain).filter((l) => allowed.has(l));
 
-  return (key: string, params?: TranslationParams, fallback?: string): string => {
+  return (key: string, params?: TranslationParams | null, fallback?: string): string => {
     const k = String(key || '').trim();
     if (!k) return '';
 
@@ -70,4 +70,3 @@ export function buildTranslator<TLocale extends string>(opts: BuildTranslatorOpt
     return interpolate(finalText, params);
   };
 }
-

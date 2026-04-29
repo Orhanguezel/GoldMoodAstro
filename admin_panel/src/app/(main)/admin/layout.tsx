@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/app/(main)/admin/layout.tsx
-// FINAL — GoldMoodAstro Rebranded Admin Layout
+// FINAL — GoldMoodAstro Rebranded Admin Layout (POLISHED)
 // =============================================================
 
 import type { ReactNode } from 'react';
@@ -23,11 +23,11 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
   return (
     <AdminAuthGate>
       <AdminSettingsProvider>
-        <SidebarProvider defaultOpen className="bg-background">
+        <SidebarProvider defaultOpen className="bg-gm-bg">
           <AppSidebar
             variant="inset"
             collapsible="icon"
-            className="border-r border-sidebar-border"
+            className="border-r border-gm-border-soft"
             me={{
               id: 'me',
               name: 'Admin',
@@ -40,34 +40,34 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
 
           <SidebarInset
             className={cn(
-              'flex flex-col bg-background',
+              'flex flex-col bg-gm-bg',
               '[html[data-content-layout=centered]_&]:mx-auto! [html[data-content-layout=centered]_&]:max-w-screen-2xl!',
               'max-[113rem]:peer-data-[variant=inset]:mr-2! min-[101rem]:peer-data-[variant=inset]:peer-data-[state=collapsed]:peer-data-[state=collapsed]:mr-auto!',
             )}
           >
             <header
               className={cn(
-                'flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-16',
-                'bg-background/75 backdrop-blur-xl sticky top-0 z-50',
+                'flex h-16 shrink-0 items-center gap-2 border-b border-gm-border-soft transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-16',
+                'bg-gm-bg/80 backdrop-blur-xl sticky top-0 z-50',
               )}
             >
               <div className="flex w-full items-center justify-between px-4 lg:px-8">
                 <div className="flex items-center gap-1 lg:gap-2">
-                  <SidebarTrigger className="-ml-1 text-brand-gold hover:bg-brand-gold-soft" />
+                  <SidebarTrigger className="-ml-1 text-gm-gold hover:bg-gm-gold/10 transition-colors" />
                   <Separator
                     orientation="vertical"
-                    className="mx-3 h-6 bg-brand-gold-border"
+                    className="mx-3 h-6 bg-gm-border-soft"
                   />
                   <div className="flex flex-col">
                     <h2 className="text-sm font-serif font-bold tracking-tight text-foreground hidden sm:block">GOLDMOOD</h2>
-                    <span className="text-[8px] font-bold tracking-[0.3em] text-brand-gold uppercase hidden sm:block">Astro Management</span>
+                    <span className="text-[8px] font-bold tracking-[0.3em] text-gm-gold uppercase hidden sm:block">Astro Management</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                   <LayoutControls />
                   <ThemeSwitcher />
-                  <Separator orientation="vertical" className="h-6 bg-brand-gold-border" />
+                  <Separator orientation="vertical" className="h-6 bg-gm-border-soft" />
                   <AccountSwitcher me={{ id: 'me', email: 'admin', role: 'admin' }} />
                 </div>
               </div>

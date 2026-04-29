@@ -18,6 +18,12 @@ import {
   ShoppingBag,
   CheckCircle2,
   LayoutGrid,
+  Coffee,
+  Moon,
+  Binary,
+  Trash2,
+  Eye,
+  Clock,
 } from 'lucide-react';
 
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -27,11 +33,28 @@ import {
   useUpsertMyProfileMutation,
   useUpdateUserMutation,
   useListMyOrdersQuery,
+  useListMyPendingOutcomesQuery,
+  useGetUserHistoryQuery,
+  useDeleteReadingMutation,
+  useDeleteAllReadingsMutation,
 } from '@/integrations/rtk/hooks';
+import type { HistoryItem, ReadingType } from '@/integrations/rtk/public/history.public.endpoints';
 import AvatarUpload from '@/components/common/AvatarUpload';
 import CityAutocomplete from '@/components/common/CityAutocomplete';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
-type TabKey = 'overview' | 'profile' | 'bookings' | 'security';
+type TabKey = 'overview' | 'profile' | 'bookings' | 'history' | 'security';
+type HistoryFilter = 'all' | ReadingType;
 
 type DashCardProps = {
   href: string;
@@ -95,6 +118,25 @@ function fmtDate(v: string, locale: string) {
   });
 }
 
+const HISTORY_TYPES: Array<{ key: HistoryFilter; tr: string; en: string }> = [
+  { key: 'all', tr: 'Tümü', en: 'All' },
+  { key: 'tarot', tr: 'Tarot', en: 'Tarot' },
+  { key: 'coffee', tr: 'Kahve', en: 'Coffee' },
+  { key: 'dream', tr: 'Rüya', en: 'Dream' },
+  { key: 'synastry', tr: 'Sinastri', en: 'Synastry' },
+  { key: 'yildizname', tr: 'Yıldızname', en: 'Yildizname' },
+  { key: 'numerology', tr: 'Numeroloji', en: 'Numerology' },
+];
+
+const HISTORY_META: Record<ReadingType, { icon: React.ReactNode; tr: string; en: string; route: string }> = {
+  tarot: { icon: <Star size={18} />, tr: 'Tarot', en: 'Tarot', route: '/tarot/reading' },
+  coffee: { icon: <Coffee size={18} />, tr: 'Kahve', en: 'Coffee', route: '/kahve-fali/result' },
+  dream: { icon: <Moon size={18} />, tr: 'Rüya', en: 'Dream', route: '/ruya-tabiri/result' },
+  synastry: { icon: <Heart size={18} />, tr: 'Sinastri', en: 'Synastry', route: '/sinastri/result' },
+  yildizname: { icon: <Sparkles size={18} />, tr: 'Yıldızname', en: 'Yildizname', route: '/yildizname/result' },
+  numerology: { icon: <Binary size={18} />, tr: 'Numeroloji', en: 'Numerology', route: '/numeroloji' },
+};
+
 export default function DashboardPage() {
   const params = useParams();
   const router = useRouter();
@@ -106,16 +148,16 @@ export default function DashboardPage() {
 
   // Tab state — URL ?tab= ile senkronize
   const initialTab = (searchParams.get('tab') as TabKey) || 'overview';
-  const [tab, setTab] = useState<TabKey>(
-    ['overview', 'profile', 'bookings', 'security'].includes(initialTab) ? initialTab : 'overview',
-  );
+  const validTabs: TabKey[] = ['overview', 'profile', 'bookings', 'history', 'security'];
+  const [tab, setTab] = useState<TabKey>(validTabs.includes(initialTab) ? initialTab : 'overview');
+  const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
 
   useEffect(() => {
     const t = searchParams.get('tab') as TabKey | null;
-    if (t && ['overview', 'profile', 'bookings', 'security'].includes(t) && t !== tab) {
+    if (t && validTabs.includes(t) && t !== tab) {
       setTab(t);
     }
-  }, [searchParams, tab]);
+  }, [searchParams, tab, validTabs]);
 
   function switchTab(next: TabKey) {
     setTab(next);
@@ -137,6 +179,16 @@ export default function DashboardPage() {
   const { data: myOrders, isLoading: ordersLoading } = useListMyOrdersQuery(undefined, {
     skip: !isAuthenticated,
   });
+  const { data: pendingOutcomes } = useListMyPendingOutcomesQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  const { data: history, isLoading: historyLoading } = useGetUserHistoryQuery(
+    { limit: 50 },
+    { skip: !isAuthenticated },
+  );
+  const [deleteReading, deleteReadingState] = useDeleteReadingMutation();
+  const [deleteAllReadings, deleteAllReadingsState] = useDeleteAllReadingsMutation();
+  const pendingCount = pendingOutcomes?.length ?? 0;
   const [upsertProfile, upsertProfileState] = useUpsertMyProfileMutation();
   const [updateUser, updateUserState] = useUpdateUserMutation();
 
@@ -229,6 +281,29 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleDeleteReading(item: HistoryItem) {
+    try {
+      await deleteReading({ type: item.type, id: item.id }).unwrap();
+      toast.success(isTr ? 'Yorum silindi' : 'Reading deleted');
+    } catch (err) {
+      toast.error(normalizeError(err).message || (isTr ? 'Silinemedi' : 'Could not delete'));
+    }
+  }
+
+  async function handleDeleteAllReadings() {
+    try {
+      await deleteAllReadings().unwrap();
+      toast.success(isTr ? 'Tüm yorum geçmişi silindi' : 'All reading history deleted');
+    } catch (err) {
+      toast.error(normalizeError(err).message || (isTr ? 'Silinemedi' : 'Could not delete'));
+    }
+  }
+
+  const filteredHistory =
+    historyFilter === 'all'
+      ? history ?? []
+      : (history ?? []).filter((item) => item.type === historyFilter);
+
   const overviewCards: DashCardProps[] = [
     {
       href: `?tab=profile`,
@@ -271,6 +346,16 @@ export default function DashboardPage() {
       cta: isTr ? 'Bugünü oku' : 'Read today',
     },
     {
+      href: `?tab=history`,
+      icon: <Clock size={22} />,
+      eyebrow: isTr ? 'Geçmiş' : 'History',
+      title: isTr ? 'Yorumlarım' : 'My Readings',
+      description: isTr
+        ? 'Tarot, kahve, rüya ve diğer kayıtlı yorumlarınızı tek yerden açın veya silin.'
+        : 'Open or delete your saved tarot, coffee, dream and other readings in one place.',
+      cta: isTr ? 'Geçmişi gör' : 'View history',
+    },
+    {
       href: localizePath(locale, '/pricing'),
       icon: <CreditCard size={22} />,
       eyebrow: isTr ? 'Üyelik' : 'Membership',
@@ -296,6 +381,7 @@ export default function DashboardPage() {
     { key: 'overview', label: isTr ? 'Genel Bakış' : 'Overview', icon: <LayoutGrid size={14} /> },
     { key: 'profile', label: isTr ? 'Profil' : 'Profile', icon: <UserIcon size={14} /> },
     { key: 'bookings', label: isTr ? 'Randevular' : 'Bookings', icon: <ShoppingBag size={14} /> },
+    { key: 'history', label: isTr ? 'Geçmiş Yorumlarım' : 'Reading History', icon: <Sparkles size={14} /> },
     { key: 'security', label: isTr ? 'Güvenlik' : 'Security', icon: <Lock size={14} /> },
   ];
 
@@ -372,6 +458,35 @@ export default function DashboardPage() {
         {/* Tab content */}
         {tab === 'overview' && (
           <>
+            {pendingCount > 0 && (
+              <Link
+                href={localizePath(locale, '/karne')}
+                className="group flex flex-col md:flex-row items-center gap-6 mb-8 p-6 md:p-7 rounded-2xl border-2 border-(--gm-gold)/40 bg-(--gm-gold)/5 hover:bg-(--gm-gold)/10 transition-colors"
+              >
+                <div className="w-14 h-14 rounded-full bg-(--gm-gold)/15 border border-(--gm-gold)/40 flex items-center justify-center text-(--gm-gold-deep) shrink-0">
+                  <Sparkles size={22} />
+                </div>
+                <div className="flex-1 text-center md:text-left">
+                  <div className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold-deep) uppercase mb-1.5">
+                    {isTr ? 'Astrolog Karnesi' : 'Astrologer Report Card'}
+                  </div>
+                  <h3 className="font-serif text-xl text-(--gm-text)">
+                    {isTr
+                      ? `${pendingCount} bekleyen karne sorun var`
+                      : `${pendingCount} pending feedback ${pendingCount === 1 ? 'item' : 'items'}`}
+                  </h3>
+                  <p className="text-sm text-(--gm-text-dim) mt-1">
+                    {isTr
+                      ? '6 ay önce aldığın yorumlar gerçekleşti mi? Cevapların astrologların karnesini şekillendiriyor.'
+                      : 'Did the predictions from 6 months ago come true? Your responses shape the astrologer report card.'}
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-(--gm-gold-deep) group-hover:text-(--gm-gold) transition-colors">
+                  {isTr ? 'Cevapla' : 'Respond'}
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                </span>
+              </Link>
+            )}
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {overviewCards.map((c) => (
                 <DashCard key={c.title} {...c} />
@@ -551,6 +666,178 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {tab === 'history' && (
+          <section>
+            <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold-deep)">
+                  <Sparkles size={18} />
+                </div>
+                <h2 className="font-serif text-2xl md:text-3xl font-light text-(--gm-text)">
+                  {isTr ? 'Geçmiş Yorumlarım' : 'Reading History'}
+                </h2>
+              </div>
+
+              {(history?.length ?? 0) > 0 && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--gm-error)/30 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-error) transition hover:bg-(--gm-error)/10"
+                    >
+                      <Trash2 size={14} />
+                      {isTr ? 'Tümünü Sil' : 'Delete All'}
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        {isTr ? 'Tüm yorum geçmişi silinsin mi?' : 'Delete all reading history?'}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {isTr
+                          ? 'Bu işlem tarot, kahve, rüya, sinastri, yıldızname ve numeroloji kayıtlarınızı anında siler.'
+                          : 'This immediately deletes your tarot, coffee, dream, synastry, yildizname and numerology records.'}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{isTr ? 'Vazgeç' : 'Cancel'}</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteAllReadings}
+                        disabled={deleteAllReadingsState.isLoading}
+                      >
+                        {isTr ? 'Tümünü Sil' : 'Delete All'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
+
+            <div className="mb-6 flex flex-wrap gap-2">
+              {HISTORY_TYPES.map((item) => {
+                const active = historyFilter === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setHistoryFilter(item.key)}
+                    className={`rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] transition ${
+                      active
+                        ? 'border-(--gm-gold)/60 bg-(--gm-gold)/15 text-(--gm-gold-deep)'
+                        : 'border-(--gm-border-soft) text-(--gm-text-dim) hover:border-(--gm-gold)/40 hover:text-(--gm-text)'
+                    }`}
+                  >
+                    {isTr ? item.tr : item.en}
+                  </button>
+                );
+              })}
+            </div>
+
+            {historyLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-28 rounded-2xl bg-(--gm-bg-deep) animate-pulse" />
+                ))}
+              </div>
+            ) : filteredHistory.length === 0 ? (
+              <div className="py-20 text-center space-y-6 rounded-2xl border border-dashed border-(--gm-border-soft)">
+                <div className="w-16 h-16 rounded-full bg-(--gm-bg-deep) flex items-center justify-center mx-auto border border-(--gm-border-soft)">
+                  <Sparkles className="w-6 h-6 text-(--gm-muted)" />
+                </div>
+                <p className="text-(--gm-text-dim) font-serif italic">
+                  {isTr ? 'Henüz kayıtlı yorumun yok.' : 'No saved readings yet.'}
+                </p>
+                <Link href={localizePath(locale, '/tarot')} className="btn-premium inline-flex py-3 px-8">
+                  {isTr ? 'İlk yorumu al' : 'Get a reading'}
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {filteredHistory.map((item) => {
+                  const meta = HISTORY_META[item.type];
+                  const detailHref =
+                    item.type === 'numerology'
+                      ? localizePath(locale, meta.route)
+                      : localizePath(locale, `${meta.route}/${item.id}`);
+                  return (
+                    <article
+                      key={`${item.type}:${item.id}`}
+                      className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-5 md:p-6 transition hover:border-(--gm-gold)/40"
+                    >
+                      <div className="flex flex-col gap-5 md:flex-row md:items-center">
+                        <div className="flex min-w-0 flex-1 items-start gap-4">
+                          <div className="grid size-12 shrink-0 place-items-center rounded-2xl border border-(--gm-gold)/20 bg-(--gm-gold)/10 text-(--gm-gold-deep)">
+                            {meta.icon}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="mb-1 flex flex-wrap items-center gap-2">
+                              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--gm-gold-deep)">
+                                {isTr ? meta.tr : meta.en}
+                              </span>
+                              <span className="text-[10px] text-(--gm-muted)">
+                                {fmtDate(item.created_at, locale)}
+                              </span>
+                            </div>
+                            <h3 className="truncate font-serif text-lg text-(--gm-text)">
+                              {item.title}
+                            </h3>
+                            <p className="mt-1 line-clamp-1 text-sm text-(--gm-text-dim)">
+                              {item.snippet || (isTr ? 'Önizleme metni yok.' : 'No preview available.')}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-2">
+                          <Link
+                            href={detailHref}
+                            className="inline-flex items-center gap-2 rounded-xl border border-(--gm-border-soft) px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-text-dim) transition hover:border-(--gm-gold)/40 hover:text-(--gm-gold)"
+                          >
+                            <Eye size={14} />
+                            {isTr ? 'Aç' : 'Open'}
+                          </Link>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-2 rounded-xl border border-(--gm-error)/25 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-error) transition hover:bg-(--gm-error)/10"
+                              >
+                                <Trash2 size={14} />
+                                {isTr ? 'Sil' : 'Delete'}
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  {isTr ? 'Bu yorum silinsin mi?' : 'Delete this reading?'}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {isTr
+                                    ? 'Bu kayıt hesabınızdan kalıcı olarak kaldırılır.'
+                                    : 'This record will be permanently removed from your account.'}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{isTr ? 'Vazgeç' : 'Cancel'}</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteReading(item)}
+                                  disabled={deleteReadingState.isLoading}
+                                >
+                                  {isTr ? 'Sil' : 'Delete'}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </section>

@@ -1,20 +1,13 @@
 'use client';
 
-// =============================================================
-// FILE: src/app/(main)/admin/(admin)/site-settings/_components/SiteSettingsList.tsx
-// guezelwebdesign – Site Ayarları Liste Bileşeni (shadcn/ui)
-// - FIX: Hide SEO keys in global(*) list.
-// - UI: Card + Table (desktop), Card list (mobile)
-// - FIX: <a href> => next/link (no full reload)
-// - Preview fallback -> object/array OR string(JSON) => JSON preview
-// - NO inline styles
-// =============================================================
-
 import * as React from 'react';
 import Link from 'next/link';
+import { Pencil, Trash2, Database, Search } from 'lucide-react';
+
 import type { SiteSetting, SettingValue } from '@/integrations/shared';
-import { useAdminTranslations } from '@/i18n';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { usePreferencesStore } from '@/stores/preferences/preferences-provider';
+import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,24 +41,15 @@ function isSeoKey(key: string): boolean {
   );
 }
 
-/**
- * Some rows may store JSON as string in DB.
- * For list preview, attempt to parse if it "looks like JSON".
- */
 function coercePreviewValue(input: SettingValue): SettingValue {
   if (input === null || input === undefined) return input;
-
   if (typeof input === 'object') return input;
 
   if (typeof input === 'string') {
     const s = input.trim();
     if (!s) return input;
-
-    const looksJson =
-      (s.startsWith('{') && s.endsWith('}')) || (s.startsWith('[') && s.endsWith(']'));
-
+    const looksJson = (s.startsWith('{') && s.endsWith('}')) || (s.startsWith('[') && s.endsWith(']'));
     if (!looksJson) return input;
-
     try {
       return JSON.parse(s) as any;
     } catch {
@@ -81,17 +65,10 @@ function coercePreviewValue(input: SettingValue): SettingValue {
 export type SiteSettingsListProps = {
   settings?: SiteSetting[];
   loading: boolean;
-
   onEdit?: (setting: SiteSetting) => void;
   onDelete?: (setting: SiteSetting) => void;
-
-  /**
-   * Edit action can be a link.
-   * Example: (s) => `/admin/site-settings/${encodeURIComponent(s.key)}?locale=${selectedLocale}`
-   */
   getEditHref?: (setting: SiteSetting) => string;
-
-  selectedLocale: string; // 'en' | 'de' | '*'
+  selectedLocale: string;
 };
 
 /* ----------------------------- component ----------------------------- */
@@ -104,8 +81,8 @@ export const SiteSettingsList: React.FC<SiteSettingsListProps> = ({
   getEditHref,
   selectedLocale,
 }) => {
+  const t = useAdminT('admin.siteSettings');
   const adminLocale = usePreferencesStore((s) => s.adminLocale);
-  const t = useAdminTranslations(adminLocale || undefined);
 
   const filtered = React.useMemo(() => {
     const arr = Array.isArray(settings) ? settings : [];
@@ -114,8 +91,7 @@ export const SiteSettingsList: React.FC<SiteSettingsListProps> = ({
   }, [settings, selectedLocale]);
 
   const hasData = filtered.length > 0;
-
-  const dash = t('admin.siteSettings.list.dash', undefined, '—');
+  const dash = '—';
 
   const formatValuePreviewI18n = (v: SettingValue): string => {
     const vv = coercePreviewValue(v);
@@ -131,14 +107,14 @@ export const SiteSettingsList: React.FC<SiteSettingsListProps> = ({
 
     if (Array.isArray(vv)) {
       if (vv.length === 0) return '[]';
-      return t('admin.siteSettings.list.preview.array', { count: vv.length }, `Array [${vv.length} items]`);
+      return `Array [${vv.length} items]`;
     }
 
     if (typeof vv === 'object') {
       const keys = Object.keys(vv);
       if (keys.length === 0) return '{}';
       if (keys.length <= 3) return `{ ${keys.join(', ')} }`;
-      return t('admin.siteSettings.list.preview.object', { count: keys.length }, `Object {${keys.length} fields}`);
+      return `Object {${keys.length} fields}`;
     }
 
     try {
@@ -164,9 +140,10 @@ export const SiteSettingsList: React.FC<SiteSettingsListProps> = ({
 
     if (href) {
       return (
-        <Button asChild variant="outline" size="sm">
+        <Button asChild size="sm" variant="ghost" className="rounded-full hover:bg-gm-gold/10 hover:text-gm-gold h-10 px-6 text-[10px] font-bold tracking-widest uppercase">
           <Link prefetch={false} href={href}>
-            {t('admin.siteSettings.actions.edit')}
+            <Pencil className="mr-2 size-4" />
+            {t('admin.common.edit', null, 'Düzenle')}
           </Link>
         </Button>
       );
@@ -174,8 +151,9 @@ export const SiteSettingsList: React.FC<SiteSettingsListProps> = ({
 
     if (onEdit) {
       return (
-        <Button type="button" variant="outline" size="sm" onClick={() => onEdit(s)}>
-          {t('admin.siteSettings.actions.edit')}
+        <Button type="button" variant="ghost" size="sm" onClick={() => onEdit(s)} className="rounded-full hover:bg-gm-gold/10 hover:text-gm-gold h-10 px-6 text-[10px] font-bold tracking-widest uppercase">
+          <Pencil className="mr-2 size-4" />
+          {t('admin.common.edit', null, 'Düzenle')}
         </Button>
       );
     }
@@ -184,171 +162,77 @@ export const SiteSettingsList: React.FC<SiteSettingsListProps> = ({
   };
 
   return (
-    <Card>
-      <CardHeader className="gap-2">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <CardTitle className="text-base">{t('admin.siteSettings.list.title')}</CardTitle>
-            <CardDescription className="text-sm">
-              <span className="text-muted-foreground">
-                {t('admin.siteSettings.list.description')}
-              </span>{' '}
-              <span className="text-muted-foreground">
-                (
-                <span className="font-medium text-foreground">
-                  {selectedLocale || dash}
-                </span>
-                )
-              </span>
-              {selectedLocale === '*' ? (
-                <span className="text-muted-foreground">
-                  {' • '}
-                  {t('admin.siteSettings.list.hideSeoNote')}
-                </span>
-              ) : null}
-            </CardDescription>
-          </div>
+    <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader className="bg-gm-surface/40">
+            <TableRow className="border-gm-border-soft hover:bg-transparent">
+              <TableHead className="w-[25%] py-6 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Ayar Anahtarı</TableHead>
+              <TableHead className="w-[8%] py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Dil</TableHead>
+              <TableHead className="w-[35%] py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Değer Özeti</TableHead>
+              <TableHead className="w-[15%] py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Son Güncelleme</TableHead>
+              <TableHead className="w-[17%] py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">İşlemler</TableHead>
+            </TableRow>
+          </TableHeader>
 
-          <div className="flex items-center gap-2">
-            {selectedLocale ? <Badge variant="secondary">{selectedLocale}</Badge> : null}
-            {loading ? <Badge variant="outline">{t('admin.siteSettings.messages.loading')}</Badge> : null}
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {/* ===================== DESKTOP TABLE (md+) ===================== */}
-        <div className="hidden md:block">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[25%]">{t('admin.siteSettings.list.columns.key')}</TableHead>
-                  <TableHead className="w-[8%]">{t('admin.siteSettings.list.columns.locale')}</TableHead>
-                  <TableHead className="w-[35%]">{t('admin.siteSettings.list.columns.value')}</TableHead>
-                  <TableHead className="w-[15%]">{t('admin.siteSettings.list.columns.updatedAt')}</TableHead>
-                  <TableHead className="w-[17%] text-right">{t('admin.siteSettings.list.columns.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {hasData ? (
-                  filtered.map((s) => (
-                    <TableRow key={`${s.key}_${s.locale || 'none'}`}>
-                      <TableCell className="align-top font-medium wrap-break-word">
-                        {s.key}
-                      </TableCell>
-
-                      <TableCell className="align-top">
-                        {s.locale ? (
-                          <Badge variant="outline">{s.locale}</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">{dash}</span>
-                        )}
-                      </TableCell>
-
-                      <TableCell className="align-top">
-                        <div className="max-w-md overflow-hidden text-ellipsis text-xs text-muted-foreground">
-                          <code className="rounded bg-muted px-1.5 py-0.5">
-                            {formatValuePreviewI18n(s.value)}
-                          </code>
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="align-top">
-                        <span className="text-xs text-muted-foreground">
-                          {formatDateI18n(s.updated_at)}
-                        </span>
-                      </TableCell>
-
-                      <TableCell className="align-top text-right">
-                        <div className="inline-flex items-center gap-2">
-                          {renderEditAction(s)}
-                          {onDelete ? (
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => onDelete(s)}
-                            >
-                              {t('admin.siteSettings.actions.delete')}
-                            </Button>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                      {t('admin.siteSettings.list.noRecords')}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-
-        {/* ===================== MOBILE CARDS (sm and down) ===================== */}
-        <div className="md:hidden">
-          <div className="rounded-md border">
+          <TableBody>
             {hasData ? (
-              <div className="divide-y">
-                {filtered.map((s) => {
-                  const editAction = renderEditAction(s);
-                  return (
-                    <div key={`${s.key}_${s.locale || 'none'}`} className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <div className="font-medium wrap-break-word">{s.key}</div>
-                            {s.locale ? <Badge variant="outline">{s.locale}</Badge> : null}
-                          </div>
+              filtered.map((s) => (
+                <TableRow key={`${s.key}_${s.locale || 'none'}`} className="border-gm-border-soft hover:bg-gm-primary/[0.03] transition-colors group">
+                  <TableCell className="py-6 px-8 font-mono text-sm text-gm-text">
+                    {s.key}
+                  </TableCell>
 
-                          <div className="text-xs text-muted-foreground wrap-break-word">
-                            {formatValuePreviewI18n(s.value)}
-                          </div>
+                  <TableCell className="py-6">
+                    {s.locale ? (
+                      <Badge variant="outline" className="border-gm-gold/30 bg-gm-gold/5 text-gm-gold px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em]">{s.locale}</Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-gm-muted/30 bg-gm-muted/5 text-gm-muted px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em]">GLOBAL</Badge>
+                    )}
+                  </TableCell>
 
-                          <div className="text-xs text-muted-foreground">
-                            {t('admin.siteSettings.list.updatedAtLabel')}: {formatDateI18n(s.updated_at)}
-                          </div>
-                        </div>
-                      </div>
+                  <TableCell className="py-6">
+                    <div className="max-w-md overflow-hidden text-ellipsis text-xs text-gm-muted">
+                      <code className="rounded-lg bg-gm-surface/40 px-2.5 py-1.5 font-mono opacity-80 border border-gm-border-soft/50">
+                        {formatValuePreviewI18n(s.value)}
+                      </code>
+                    </div>
+                  </TableCell>
 
-                      {editAction || onDelete ? (
-                        <div className="mt-4 grid gap-2">
-                          {editAction ? <div className="grid">{editAction}</div> : null}
-                          {onDelete ? (
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => onDelete(s)}
-                            >
-                              {t('admin.siteSettings.actions.delete')}
-                            </Button>
-                          ) : null}
-                        </div>
+                  <TableCell className="py-6">
+                    <span className="text-[10px] text-gm-muted font-mono opacity-70">
+                      {formatDateI18n(s.updated_at)}
+                    </span>
+                  </TableCell>
+
+                  <TableCell className="py-6 px-8 text-right">
+                    <div className="flex justify-end gap-2 opacity-20 group-hover:opacity-100 transition-all duration-300">
+                      {renderEditAction(s)}
+                      {onDelete ? (
+                        <button
+                          type="button"
+                          className="p-2.5 rounded-full hover:bg-gm-error/10 text-gm-error/40 hover:text-gm-error transition-all border border-transparent hover:border-gm-error/20"
+                          onClick={() => onDelete(s)}
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
                       ) : null}
                     </div>
-                  );
-                })}
-              </div>
+                  </TableCell>
+                </TableRow>
+              ))
             ) : (
-              <div className="py-10 text-center text-sm text-muted-foreground">
-                {t('admin.siteSettings.list.noRecords')}
-              </div>
+              <TableRow>
+                <TableCell colSpan={5} className="py-32 text-center">
+                  <div className="flex flex-col items-center gap-6 opacity-30 animate-pulse">
+                    <Database className="w-20 h-20 text-gm-gold/50" />
+                    <span className="font-serif italic text-xl text-gm-muted">{loading ? 'Yükleniyor...' : 'Kayıt bulunamadı.'}</span>
+                  </div>
+                </TableCell>
+              </TableRow>
             )}
-          </div>
-
-          <div className="mt-2 text-xs text-muted-foreground">
-            {t('admin.siteSettings.list.mobileNote')}
-            {selectedLocale === '*'
-              ? ` ${t('admin.siteSettings.list.mobileHideSeoSuffix')}`
-              : ''}
-          </div>
-        </div>
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

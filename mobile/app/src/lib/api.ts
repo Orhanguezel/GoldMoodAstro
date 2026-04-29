@@ -17,12 +17,20 @@ import type {
   MeResponse,
   LoginInput, LoginResponse,
   RegisterInput, RegisterResponse,
+  Campaign, RedeemCampaignResponse,
 } from '@/types';
 
 const API_URL =
   process.env.EXPO_PUBLIC_API_URL ??
   (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ??
   'http://localhost:8094/api/v1';
+
+export const getAssetUrl = (path: string | null | undefined) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  const base = API_URL.replace('/api/v1', '');
+  return `${base}${path}`;
+};
 
 // -------------------------------------------------------------------
 // HTTP core
@@ -103,7 +111,16 @@ export const authApi = {
     get<MeResponse>('/auth/me'),
 
   registerFcmToken: (fcm_token: string) =>
-    post<void>('/push/register-token', { fcm_token }),
+    post<void>('/push/register-token', { token: fcm_token }),
+
+  socialLogin: (data: {
+    type: 'apple' | 'google' | 'facebook';
+    identity_token?: string;
+    access_token?: string;
+    authorization_code?: string;
+    apple_user_name?: string;
+    email?: string;
+  }) => post<LoginResponse>('/auth/social-login', data),
 };
 
 // -------------------------------------------------------------------
@@ -212,7 +229,17 @@ export const creditsApi = {
     return res?.data ?? null;
   },
 
+  getBalance: async () => {
+    const res = await get<{ data: { balance: number } }>('/credits/balance');
+    return res.data;
+  },
+
   packages: async (): Promise<CreditPackage[]> => {
+    const res = await get<{ data: CreditPackage[] }>('/credits/packages');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  listPackages: async (): Promise<CreditPackage[]> => {
     const res = await get<{ data: CreditPackage[] }>('/credits/packages');
     return Array.isArray(res?.data) ? res.data : [];
   },
@@ -228,6 +255,11 @@ export const creditsApi = {
       balance?: number;
     };
   }> => post('/credits/purchase', { package_id: packageId, payment_gateway_slug: paymentGatewaySlug }),
+
+  buy: async (data: { package_id: string; locale?: string }) => {
+    const res = await post<{ data: { checkout_url: string; token: string } }>('/credits/buy', data);
+    return res.data;
+  },
 };
 
 // -------------------------------------------------------------------
@@ -254,6 +286,11 @@ export const birthChartsApi = {
     return Array.isArray(res?.data) ? res.data : [];
   },
 
+  listMyBirthCharts: async (): Promise<BirthChart[]> => {
+    const res = await get<{ data: BirthChart[] }>('/birth-charts');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
   create: async (data: BirthChartCreateInput): Promise<BirthChart> => {
     const res = await post<{ data: BirthChart }>('/birth-charts', data);
     return res.data;
@@ -266,6 +303,18 @@ export const birthChartsApi = {
 
   transit: async (id: string) => {
     const res = await post<{ data: unknown }>(`/birth-charts/${id}/transit`, {});
+    return res.data;
+  },
+};
+
+export const profilesApi = {
+  getMyProfile: async () => {
+    const res = await get<{ data: any }>('/profiles/me');
+    return res.data;
+  },
+
+  upsertMyProfile: async (payload: { profile: Record<string, unknown> }) => {
+    const res = await patch<{ data: any }>('/profiles/me', payload);
     return res.data;
   },
 };
@@ -290,7 +339,7 @@ export const readingsApi = {
 
 export const reviewsApi = {
   forConsultant: async (consultantId: string): Promise<Review[]> => {
-    const res = await get<unknown>('/reviews', { target_type: 'consultant', target_id: consultantId, approved: true, active: true });
+    const res = await get<unknown>('/reviews', { target_type: 'consultant', target_id: consultantId, approved: 'true', active: 'true' });
     return normalizeListResponse<Review>(res);
   },
 
@@ -362,6 +411,157 @@ export const horoscopesApi = {
     const res = await get<{ data: any }>('/horoscopes/today', params);
     return res.data;
   },
+  getSignInfo: async (sign: string): Promise<any> => {
+    const res = await get<{ data: any }>(`/horoscopes/${sign}`);
+    return res.data;
+  },
+  getCompatibility: async (params: { signA: string; signB: string }): Promise<any> => {
+    const res = await get<{ data: any }>('/horoscopes/compatibility', params);
+    return res.data;
+  },
+};
+
+export const tarotApi = {
+  draw: async (data: { spread_type: string; question?: string; locale?: string }) => {
+    const res = await post<{ data: any }>('/tarot/draw', data);
+    return res.data;
+  },
+  getReading: async (id: string) => {
+    const res = await get<{ data: any }>(`/tarot/reading/${id}`);
+    return res.data;
+  },
+};
+
+export const coffeeApi = {
+  read: async (data: { image_ids: string[]; locale?: string }) => {
+    const res = await post<{ data: any }>('/coffee/read', data);
+    return res.data;
+  },
+  getReading: async (id: string) => {
+    const res = await get<{ data: any }>(`/coffee/reading/${id}`);
+    return res.data;
+  },
+};
+
+export const storageApi = {
+  upload: async (formData: FormData): Promise<{ id: string; url?: string | null }> => {
+    const res = await fetch(`${API_URL}/storage/coffee/upload?upsert=1`, {
+      method: 'POST',
+      headers: _authToken ? { Authorization: `Bearer ${_authToken}` } : undefined,
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error((err as { message?: string })?.message ?? `HTTP ${res.status}`);
+    }
+    return res.json() as Promise<{ id: string; url?: string | null }>;
+  },
+};
+
+export const dreamsApi = {
+  interpret: async (data: { dream_text: string; locale?: string }) => {
+    const res = await post<{ data: any }>('/dreams/interpret', data);
+    return res.data;
+  },
+  getReading: async (id: string) => {
+    const res = await get<{ data: any }>(`/dreams/reading/${id}`);
+    return res.data;
+  },
+};
+
+export const numerologyApi = {
+  calculate: async (data: { full_name: string; birth_date: string; locale?: string }) => {
+    const res = await post<{ data: any }>('/numerology/calculate', data);
+    return res.data;
+  },
+  getReading: async (id: string) => {
+    const res = await get<{ data: any }>(`/numerology/reading/${id}`);
+    return res.data;
+  },
+};
+
+export const historyApi = {
+  getUserHistory: async () => {
+    const res = await get<{ data: any[] }>('/history/me');
+    return res.data;
+  },
+};
+
+export const yildiznameApi = {
+  read: async (data: { name: string; mother_name: string; birth_date?: string }) => {
+    const birthYear = data.birth_date ? Number(String(data.birth_date).slice(0, 4)) : new Date().getFullYear();
+    const res = await post<{
+      data: {
+        id: string;
+        ebced_total: number;
+        menzil_no: number;
+        interpretation: string;
+        menzil?: { name_tr?: string };
+      };
+    }>('/yildizname/read', {
+      name: data.name,
+      mother_name: data.mother_name,
+      birth_year: Number.isFinite(birthYear) ? birthYear : new Date().getFullYear(),
+      locale: 'tr',
+    });
+    return {
+      ...res.data,
+      ebcedValue: res.data.ebced_total,
+      signNumber: res.data.menzil_no,
+      readingText: res.data.interpretation,
+    };
+  },
+};
+
+export const synastryApi = {
+  quick: async (data: { sign_a: string; sign_b: string }) => {
+    const res = await post<{ data: any }>('/synastry/quick', data);
+    const d = res.data?.data || res.data;
+    return {
+      title: `${data.sign_a} & ${data.sign_b}`,
+      love_score: d?.result?.love_score ?? 78,
+      sexual_score: d?.result?.sexual_score ?? 74,
+      content: d?.raw ?? d?.content ?? '',
+    };
+  },
+
+  manual: async (data: { partner_data: Record<string, unknown> }) => {
+    const res = await post<{ data: any }>('/synastry/manual', data);
+    const d = res.data?.data || res.data;
+    return d;
+  },
+
+  list: async () => {
+    const res = await get<{ data: any[] }>('/synastry/me');
+    return res.data;
+  },
+
+  listInvites: async () => {
+    const res = await get<{ data: any[] }>('/synastry/invites/me');
+    return res.data;
+  },
+
+  createInvite: async (partnerUserId: string) => {
+    const res = await post<{ data: any }>('/synastry/invite', { partner_user_id: partnerUserId });
+    return res.data;
+  },
+
+  acceptInvite: async (id: string) => {
+    const res = await post<{ data: any }>(`/synastry/invite/${id}/accept`, {});
+    return res.data;
+  },
+
+  declineInvite: async (id: string) => {
+    const res = await post<{ data: any }>(`/synastry/invite/${id}/decline`, {});
+    return res.data;
+  },
+};
+
+export const userApi = {
+  search: async (q: string) => {
+    const res = await get<{ data: any[] }>(`/auth/search?q=${encodeURIComponent(q)}`);
+    return res.data;
+  }
 };
 
 // -------------------------------------------------------------------
@@ -376,4 +576,26 @@ export const bannersApi = {
 
   trackClick: (id: string) =>
     post<void>(`/banners/${id}/click`, {}),
+};
+
+// -------------------------------------------------------------------
+// Campaigns
+// -------------------------------------------------------------------
+
+export const campaignsApi = {
+  active: async (params?: { applies_to?: string }): Promise<Campaign[]> => {
+    const res = await get<{ data: Campaign[] }>('/campaigns/active', params);
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  mine: async (): Promise<{ active: Campaign[]; redeemed: any[] }> => {
+    const res = await get<{ data: { active: Campaign[]; redeemed: any[] } }>('/campaigns/me');
+    return {
+      active: Array.isArray(res?.data?.active) ? res.data.active : [],
+      redeemed: Array.isArray(res?.data?.redeemed) ? res.data.redeemed : [],
+    };
+  },
+
+  redeem: (params: { code: string; applies_to?: string }) =>
+    post<RedeemCampaignResponse>('/campaigns/redeem', params),
 };

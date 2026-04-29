@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { 
   useCreateBannerAdminMutation, 
   useGetBannerAdminQuery, 
+  useListCampaignsAdminQuery,
   useUpdateBannerAdminMutation 
 } from '@/integrations/hooks';
 
@@ -24,6 +25,7 @@ export default function BannerFormPage() {
   const isEdit = Boolean(id);
 
   const { data: existing, isLoading: isFetching } = useGetBannerAdminQuery(id, { skip: !isEdit });
+  const campaignsQuery = useListCampaignsAdminQuery({ is_active: true, limit: 100 });
   const [create, { isLoading: isCreating }] = useCreateBannerAdminMutation();
   const [update, { isLoading: isUpdating }] = useUpdateBannerAdminMutation();
 
@@ -41,6 +43,7 @@ export default function BannerFormPage() {
     placement: 'home_hero' as any,
     locale: '*',
     target_segment: 'all' as any,
+    campaign_id: '',
     priority: 0,
     is_active: true,
     starts_at: '',
@@ -63,6 +66,7 @@ export default function BannerFormPage() {
         placement: existing.placement,
         locale: existing.locale,
         target_segment: existing.target_segment,
+        campaign_id: existing.campaign_id || '',
         priority: existing.priority,
         is_active: !!existing.is_active,
         starts_at: existing.starts_at ? existing.starts_at.slice(0, 16) : '',
@@ -80,6 +84,7 @@ export default function BannerFormPage() {
 
     const payload = {
       ...formData,
+      campaign_id: formData.campaign_id || null,
       starts_at: formData.starts_at ? new Date(formData.starts_at).toISOString() : null,
       ends_at: formData.ends_at ? new Date(formData.ends_at).toISOString() : null,
     };
@@ -334,6 +339,29 @@ export default function BannerFormPage() {
                     <SelectItem value="existing_user">Existing Users</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="campaign_id">Linked Campaign</Label>
+                <Select
+                  value={formData.campaign_id || 'none'}
+                  onValueChange={(v) => setFormData(p => ({ ...p, campaign_id: v === 'none' ? '' : v }))}
+                >
+                  <SelectTrigger id="campaign_id" className="border-gm-border-soft bg-gm-bg-deep/20">
+                    <SelectValue placeholder="No campaign" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No linked campaign</SelectItem>
+                    {campaignsQuery.data?.map((campaign) => (
+                      <SelectItem key={campaign.id} value={campaign.id}>
+                        {campaign.code} — {campaign.name_tr || campaign.name_en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-muted-foreground italic">
+                  Use this to connect banner clicks to a promo/coupon campaign.
+                </p>
               </div>
 
               <div className="space-y-2">

@@ -91,7 +91,7 @@ export default function SubscriptionScreen() {
           await subscriptionsApi.verifyReceipt({
             plan_id: plan.id,
             platform: provider,
-            receipt: purchase.receipt,
+            receipt: purchase.receipt ?? '',
             transaction_id: purchase.transactionId,
             purchase_token: purchase.purchaseToken,
             product_id: purchase.productId,
@@ -192,7 +192,7 @@ export default function SubscriptionScreen() {
               <View style={styles.expiryRow}>
                 <Calendar size={14} color={colors.textMuted} />
                 <Text style={styles.expiryText}>
-                  Yenileme Tarihi: <Text style={styles.bold}>{new Date(active.ends_at).toLocaleDateString('tr-TR')}</Text>
+                  Yenileme Tarihi: <Text style={styles.bold}>{active.ends_at ? new Date(active.ends_at).toLocaleDateString('tr-TR') : 'Belirlenmedi'}</Text>
                 </Text>
               </View>
 

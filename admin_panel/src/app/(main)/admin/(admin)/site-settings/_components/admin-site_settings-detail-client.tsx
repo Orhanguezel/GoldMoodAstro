@@ -691,11 +691,11 @@ export default function SiteSettingsDetailClient({ id }: { id: string }) {
 
   if (!settingKey) {
     return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('admin.siteSettings.detail.keyMissingTitle')}</CardTitle>
-            <CardDescription>{t('admin.siteSettings.detail.keyMissingDesc')}</CardDescription>
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+          <CardHeader className="p-10 text-center">
+            <CardTitle className="font-serif text-3xl text-gm-text">{t('admin.siteSettings.detail.keyMissingTitle', null, 'Ayar Anahtarı Eksik')}</CardTitle>
+            <CardDescription className="text-gm-muted italic font-serif opacity-70 text-lg mt-2">{t('admin.siteSettings.detail.keyMissingDesc', null, 'Lütfen geçerli bir ayar anahtarı seçin.')}</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -704,18 +704,18 @@ export default function SiteSettingsDetailClient({ id }: { id: string }) {
 
   if (!busy && (!appLocaleOptions || appLocaleOptions.length === 0)) {
     return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('admin.siteSettings.detail.localesMissingTitle')}</CardTitle>
-            <CardDescription>
-              {t('admin.siteSettings.detail.localesMissingDesc')}
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+          <CardHeader className="p-10 text-center">
+            <CardTitle className="font-serif text-3xl text-gm-text">{t('admin.siteSettings.detail.localesMissingTitle', null, 'Dil Seçenekleri Bulunamadı')}</CardTitle>
+            <CardDescription className="text-gm-muted italic font-serif opacity-70 text-lg mt-2">
+              {t('admin.siteSettings.detail.localesMissingDesc', null, 'Dil listesi boş döndü.')}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Button asChild variant="outline" size="sm">
+          <CardContent className="flex justify-center pb-10">
+            <Button asChild variant="outline" className="rounded-full border-gm-border-soft hover:bg-gm-surface/40 h-12 px-8 text-[10px] font-bold tracking-widest uppercase">
               <Link prefetch={false} href={backHref}>
-                {t('admin.siteSettings.detail.localesMissingAction')}
+                {t('admin.siteSettings.detail.localesMissingAction', null, 'Listeye Dön')}
               </Link>
             </Button>
           </CardContent>
@@ -725,35 +725,46 @@ export default function SiteSettingsDetailClient({ id }: { id: string }) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <div className="text-sm text-muted-foreground">{t('admin.siteSettings.title')}</div>
-          <h1 className="text-lg font-semibold">
-            {t('admin.siteSettings.detail.editTitle')}: <code>{settingKey}</code>
+    <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              asChild
+              className="rounded-full -ml-3 hover:bg-gm-surface group transition-all"
+            >
+              <Link prefetch={false} href={backHref}>
+                <span className="sr-only">Geri</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-left size-4 group-hover:-translate-x-1 transition-transform"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+              </Link>
+            </Button>
+            <span className="w-8 h-px bg-gm-gold" />
+            <span className="text-gm-gold font-bold text-[10px] tracking-[0.2em] uppercase">
+              {t('admin.siteSettings.title', null, 'Site Ayarları')}
+            </span>
+          </div>
+          <h1 className="font-serif text-4xl text-gm-text flex items-center gap-3">
+            {t('admin.siteSettings.detail.editTitle', null, 'Ayar Detayı')}
+            <code className="text-gm-gold bg-gm-gold/10 px-3 py-1 rounded-xl text-2xl border border-gm-gold/20 shadow-sm">{settingKey}</code>
           </h1>
         </div>
 
-        <div className="flex flex-wrap items-end gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link prefetch={false} href={backHref}>
-              {t('admin.siteSettings.detail.backToList')}
-            </Link>
-          </Button>
-
+        <div className="flex flex-wrap items-end gap-4">
           <div className="space-y-2">
-            <Label>{t('admin.siteSettings.detail.localeLabel')}</Label>
+            <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1 block">{t('admin.siteSettings.detail.localeLabel', null, 'Dil Seçimi')}</Label>
             <Select
               value={selectedLocale || ''}
               onValueChange={(v) => setSelectedLocale(v === '*' ? '*' : toShortLocale(v))}
               disabled={busy || !localeOptions.length}
             >
-              <SelectTrigger className="w-60">
-                <SelectValue placeholder={t('admin.siteSettings.filters.selectLanguage')} />
+              <SelectTrigger className="w-60 bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 text-sm focus:ring-gm-gold/50 transition-all">
+                <SelectValue placeholder={t('admin.siteSettings.filters.selectLanguage', null, 'Dil Seçin')} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-gm-bg-deep border-gm-border-soft rounded-2xl shadow-2xl">
                 {localeOptions.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
+                  <SelectItem key={o.value} value={o.value} className="rounded-xl focus:bg-gm-gold/10 focus:text-gm-gold">
                     {o.label}
                   </SelectItem>
                 ))}
@@ -763,38 +774,39 @@ export default function SiteSettingsDetailClient({ id }: { id: string }) {
 
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => refetch()}
             disabled={busy}
-            title={t('admin.common.refresh')}
+            title={t('admin.common.refresh', null, 'Yenile')}
+            className="rounded-full border-gm-border-soft px-6 h-12 text-[10px] font-bold tracking-widest uppercase transition-all hover:bg-gm-primary/5 shadow-lg backdrop-blur-sm"
           >
             <RefreshCcw className="size-4" />
           </Button>
 
-          {selectedLocale ? <Badge variant="secondary">{selectedLocale}</Badge> : null}
-          {busy ? <Badge variant="outline">{t('admin.siteSettings.messages.loading')}</Badge> : null}
+          {selectedLocale && <Badge variant="outline" className="border-gm-gold/30 bg-gm-gold/5 text-gm-gold px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] h-12">{selectedLocale}</Badge>}
+          {busy && <Badge variant="outline" className="border-gm-border-soft bg-gm-surface/40 text-gm-muted px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] h-12">{t('admin.siteSettings.messages.loading', null, 'Yükleniyor...')}</Badge>}
         </div>
       </div>
 
       {!selectedLocale ? (
-        <div className="rounded-md border p-4 text-sm text-muted-foreground">
-          {t('admin.siteSettings.detail.loadingLocale')}
+        <div className="rounded-[24px] border border-gm-border-soft bg-gm-surface/20 p-6 text-sm text-gm-muted text-center font-serif italic backdrop-blur-sm">
+          {t('admin.siteSettings.detail.loadingLocale', null, 'Dil seçeneği yükleniyor...')}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-6">
           {isFallback ? (
-            <div className="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
+            <div className="rounded-[24px] border border-gm-gold/30 bg-gm-gold/5 p-6 text-sm text-gm-gold font-serif italic backdrop-blur-sm shadow-inner text-center">
               {t('admin.siteSettings.detail.fallbackNotice', {
                 selectedLocale,
                 effectiveLocale,
-              })}
+              }, `Not: "${selectedLocale}" için özel değer bulunamadı. Şu an "${effectiveLocale}" değeri gösteriliyor.`)}
             </div>
           ) : null}
 
           {!row && !busy ? (
-            <div className="rounded-md border p-3 text-sm text-muted-foreground">
-              {t('admin.siteSettings.detail.noRecordNotice', { key: settingKey, locale: selectedLocale })}
+            <div className="rounded-[24px] border border-gm-border-soft bg-gm-surface/20 p-6 text-sm text-gm-muted font-serif italic backdrop-blur-sm text-center">
+              {t('admin.siteSettings.detail.noRecordNotice', { key: settingKey, locale: selectedLocale }, `Kayıt bulunamadı.`)}
             </div>
           ) : null}
 
@@ -814,7 +826,7 @@ export default function SiteSettingsDetailClient({ id }: { id: string }) {
             onSave={handleSave}
             onDelete={async ({ key, locale }) => handleDelete({ key, locale })}
             renderStructured={(ctx) => (
-              <div className="space-y-4">
+              <div className="space-y-8">
                 {React.createElement(renderStructured as any, {
                   value: ctx.value,
                   setValue: ctx.setValue,
@@ -835,8 +847,8 @@ export default function SiteSettingsDetailClient({ id }: { id: string }) {
         </div>
       )}
 
-      <div className="text-xs text-muted-foreground">
-        {t('admin.siteSettings.detail.note')}
+      <div className="text-[10px] text-gm-muted uppercase tracking-[0.15em] opacity-60 text-center pt-8 border-t border-gm-border-soft/50">
+        {t('admin.siteSettings.detail.note', null, 'Not: Değişiklikler genellikle hemen aktif olur.')}
       </div>
     </div>
   );

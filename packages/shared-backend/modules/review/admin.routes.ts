@@ -8,6 +8,7 @@ import {
   createReviewAdmin,
   updateReviewAdmin,
   removeReviewAdmin,
+  bulkModerateReviewsAdmin,
 } from "./admin.controller";
 import { requireAuth } from '../../middleware/auth';
 import { requireAdmin } from '../../middleware/roles';
@@ -54,5 +55,12 @@ export async function registerReviewsAdmin(app: FastifyInstance) {
     `${BASE}/:id`,
     { preHandler: adminGuard },
     removeReviewAdmin,
+  );
+
+  // T17-7 — BULK moderate (toplu onay/red)
+  app.post<{ Body: unknown }>(
+    `${BASE}/bulk-moderate`,
+    { preHandler: adminGuard },
+    bulkModerateReviewsAdmin,
   );
 }

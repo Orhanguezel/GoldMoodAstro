@@ -39,6 +39,7 @@ export default function BookingPage() {
   const price = searchParams.get('price') || '0';
   const duration = searchParams.get('duration') || '60';
   const name = searchParams.get('name') || '';
+  const topic = searchParams.get('topic') || '';
 
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
@@ -114,6 +115,7 @@ export default function BookingPage() {
     try {
       // Backend YYYY-MM-DD bekliyor; URL ISO formatında gelebilir
       const ymd = date.length >= 10 ? date.slice(0, 10) : date;
+      const sourceMatch = topic.match(/^daily_reading_([0-9a-f-]{36})$/i);
 
       const booking = await createBooking({
         consultant_id: consultantId,
@@ -123,6 +125,8 @@ export default function BookingPage() {
         session_duration: Number(duration),
         session_price: price,
         customer_message: note || undefined,
+        source_type: sourceMatch ? 'daily_reading' : undefined,
+        source_id: sourceMatch?.[1],
       } as any).unwrap();
 
       const order = await createOrder({
@@ -304,12 +308,19 @@ export default function BookingPage() {
               <ShieldCheck className="w-4 h-4 text-[var(--gm-success)]" />
               <span>Güvenli Altyapı</span>
               <span className="opacity-20">|</span>
-              <span className="text-[var(--gm-gold-dim)]">Iyzipay</span>
+              <span className="text-[var(--gm-gold-dim)]">Iyzico</span>
             </div>
             
-            <div className="flex gap-4 opacity-30">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" className="h-4 grayscale invert" alt="Visa" />
-              <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" className="h-4 grayscale invert" alt="Mastercard" />
+            <div className="flex items-center gap-5 opacity-50 text-[var(--gm-text-dim)]">
+              {/* Visa wordmark */}
+              <svg viewBox="0 0 1000 324" className="h-4" aria-label="Visa" role="img" fill="currentColor">
+                <path d="M651.2 0c-69.5 0-131.6 36-131.6 102.6 0 76.4 110.3 81.7 110.3 119.9 0 16.1-18.5 30.6-50 30.6-44.7 0-78-20.1-78-20.1l-14.3 67s38.4 17 89.4 17c76 0 135.6-37.9 135.6-105.6 0-80.7-110.7-85.9-110.7-121.5 0-12.6 15.2-26.4 46.7-26.4 35.4 0 64.3 14.6 64.3 14.6l14-64.7S695.5 0 651.2 0zM1.6 4.9L0 14.1s28.6 5.2 54.4 15.7c33.2 12 35.6 18.9 41.2 40.6L156.6 305h81.8L364.4 4.9h-81.6L201.7 209 168.5 35.7c-3-19.8-18.4-30.8-37.1-30.8H1.6zm394.8 0L332.3 305h77.7L474 4.9h-77.6zm433.5 0c-18.7 0-28.6 10-35.8 27.5L681.7 305h81.6l16.2-46h99.3l9.9 46H1000L939 4.9h-109.1zm10.6 81.2L877.6 199h-64.7l24.6-112.9z"/>
+              </svg>
+              {/* Mastercard mark — iki çember */}
+              <svg viewBox="0 0 60 36" className="h-5" aria-label="Mastercard" role="img">
+                <circle cx="22" cy="18" r="14" fill="currentColor" opacity="0.7" />
+                <circle cx="38" cy="18" r="14" fill="currentColor" opacity="0.4" />
+              </svg>
             </div>
           </div>
         </div>

@@ -647,7 +647,7 @@ export const startSubscription: RouteHandler = async (req, reply) => {
     }),
   } as any);
 
-  const callbackUrl = `${resolveApiBase()}/api/v1/subscriptions/webhook?order_id=${orderId}`;
+  const callbackUrl = `${resolveApiBase()}/api/subscriptions/webhook?order_id=${orderId}`;
   const iyzicoLocale = resolveIyzicoLocale(resolveLocale(req));
   const iyzico = new IyzicoService(getGatewayConfig(gateway));
 

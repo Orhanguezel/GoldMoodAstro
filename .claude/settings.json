@@ -50,7 +50,9 @@
       "Bash(bun -e ' *)",
       "Bash(scp \"/home/orhan/Documents/Projeler/goldmoodastro/admin_panel/src/app/\\(main\\)/admin/\\(admin\\)/site-settings/tabs/api-settings-tab.tsx\" \"goldmoodastro:/var/www/goldmoodastro/admin_panel/src/app/\\(main\\)/admin/\\(admin\\)/site-settings/tabs/api-settings-tab.tsx\")",
       "Bash(curl -s https://admin.goldmoodastro.com/admin/site-settings)",
-      "Bash(grep -E '\\(\\\\.env$|\\\\.env\\\\.local|firebase-adminsdk|\\\\.pem$|\\\\.key$|GoogleService|google-services\\\\.json\\)')"
+      "Bash(grep -E '\\(\\\\.env$|\\\\.env\\\\.local|firebase-adminsdk|\\\\.pem$|\\\\.key$|GoogleService|google-services\\\\.json\\)')",
+      "Bash(scp /tmp/sync-api-settings.mjs goldmoodastro:/tmp/sync-api-settings.mjs)",
+      "Bash(curl -s -X POST https://admin.goldmoodastro.com/api/revalidate-proxy -H 'Content-Type: application/json' -d '{\"all\":true}')"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [

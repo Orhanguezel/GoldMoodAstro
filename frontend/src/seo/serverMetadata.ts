@@ -153,6 +153,111 @@ export async function fetchSeoObject(
   return obj ?? {};
 }
 
+export async function fetchSeoPageObject(
+  locale: string,
+  pageKey: string,
+): Promise<Record<string, any>> {
+  const key = String(pageKey || '').trim();
+  if (!key) return {};
+
+  const defaultLocale = await getDefaultLocale();
+  const activeLocales = await resolveActiveLocales();
+  const tryLocales = buildSeoLocaleTryOrder({
+    requestedLocale: locale,
+    defaultLocale,
+    activeLocales,
+  });
+
+  for (const l of tryLocales) {
+    const row = await fetchSetting('seo_pages', l, { revalidate: 600 });
+    const pages = asObj(row?.value);
+    const page = asObj(pages?.[key]);
+    if (page) return page;
+  }
+
+  return {};
+}
+
+export function mergeSeoPageIntoSeo(
+  seo: Record<string, any>,
+  pageSeo: Record<string, any>,
+): Record<string, any> {
+  const title = asStr(pageSeo.title);
+  const description = asStr(pageSeo.description);
+  const ogImage = asStr(pageSeo.og_image);
+  const noIndex = asBool(pageSeo.no_index);
+
+  const openGraph = asObj(seo.open_graph) || {};
+  const robots = asObj(seo.robots) || {};
+
+  return {
+    ...seo,
+    ...(title ? { title_default: title } : {}),
+    ...(description ? { description } : {}),
+    open_graph: {
+      ...openGraph,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
+    robots: {
+      ...robots,
+      ...(typeof noIndex === 'boolean' ? { noindex: noIndex } : {}),
+    },
+  };
+}
+
+/* -------------------- DRY one-liner helper (FAZ 27 SEO refactor) -------------------- */
+
+/**
+ * Tek satırla full Metadata üretir — `seo_pages.{pageKey}` overlay + global `site_seo` fallback.
+ *
+ * **Kullanım** (her sayfanın `generateMetadata` içinde):
+ * ```ts
+ * export async function generateMetadata({ params }): Promise<Metadata> {
+ *   const { locale } = await params;
+ *   return buildPageMetadata({
+ *     locale,
+ *     pageKey: 'pricing',
+ *     pathname: '/pricing',
+ *     fallback: { title: 'Pricing', description: '...' }, // DB boşsa kullanılır
+ *   });
+ * }
+ * ```
+ *
+ * Önceki 4 satır (fetchSeoObject + fetchSeoPageObject + merge + build) → 1 satır.
+ *
+ * **Öncelik sırası:**
+ * 1. `seo_pages.{pageKey}` (admin'den DB'de doldurulan)
+ * 2. `args.fallback` (sayfanın hardcoded baseline metni)
+ * 3. global `site_seo` (genel default)
+ * 4. siteName + default boilerplate (en son fallback)
+ */
+export async function buildPageMetadata(args: {
+  locale: string;
+  pageKey: string;
+  pathname?: string;
+  activeLocales?: string[];
+  fallback?: { title?: string; description?: string; ogImage?: string };
+}): Promise<Metadata> {
+  const [seo, pageSeoRaw] = await Promise.all([
+    fetchSeoObject(args.locale, args.activeLocales),
+    fetchSeoPageObject(args.locale, args.pageKey),
+  ]);
+
+  // DB'de boş olan alanları sayfanın hardcoded fallback'iyle doldur
+  const pageSeo: Record<string, any> = {
+    ...pageSeoRaw,
+    title: asStr(pageSeoRaw.title) || args.fallback?.title || '',
+    description: asStr(pageSeoRaw.description) || args.fallback?.description || '',
+    og_image: asStr(pageSeoRaw.og_image) || args.fallback?.ogImage || '',
+  };
+
+  return buildMetadataFromSeo(mergeSeoPageIntoSeo(seo, pageSeo), {
+    locale: args.locale,
+    pathname: args.pathname,
+    activeLocales: args.activeLocales,
+  });
+}
+
 /* -------------------- Metadata builder -------------------- */
 
 type BuildMetadataArgs = {

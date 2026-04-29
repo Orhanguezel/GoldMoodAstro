@@ -3,7 +3,7 @@ import React from 'react';
 import HomeContent from '@/components/containers/home/HomeContent';
 
 import { normPath, absUrlJoin } from '@/integrations/shared';
-import { buildMetadataFromSeo, fetchSeoObject, fetchUiSectionObject, readUiText } from '@/seo/server';
+import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
 
 export async function generateMetadata({
   params,
@@ -12,34 +12,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
 
-  const [seo, ui] = await Promise.all([fetchSeoObject(locale), fetchUiSectionObject('ui_home', locale)]);
+  let seo = await fetchSeoObject(locale);
+  const pageSeo = await fetchSeoPageObject(locale, 'home');
+  seo = mergeSeoPageIntoSeo(seo, pageSeo);
 
-  const base = await buildMetadataFromSeo(seo, { locale, pathname: normPath('/') });
-
-  const pageTitle =
-    readUiText(ui, 'ui_home_meta_title') || readUiText(ui, 'ui_home_page_title', 'Home');
-  const pageDescription =
-    readUiText(ui, 'ui_home_meta_description') || readUiText(ui, 'ui_home_page_description', '');
-
-  const ogRaw = readUiText(ui, 'ui_home_og_image', '');
-  const baseUrl = base.metadataBase?.toString() || '';
-  const ogAbs = ogRaw ? absUrlJoin(baseUrl, ogRaw) : '';
-
-  return {
-    ...base,
-    title: pageTitle,
-    ...(pageDescription ? { description: pageDescription } : {}),
-    openGraph: {
-      ...(base.openGraph || {}),
-      title: pageTitle,
-      ...(pageDescription ? { description: pageDescription } : {}),
-      ...(ogAbs ? { images: [{ url: ogAbs }] } : {}),
-    },
-    twitter: {
-      ...(base.twitter || {}),
-      ...(ogAbs ? { images: [ogAbs] } : {}),
-    },
-  };
+  return buildMetadataFromSeo(seo, { locale, pathname: normPath('/') });
 }
 
 export default async function HomePage({

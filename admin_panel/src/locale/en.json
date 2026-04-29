@@ -98,27 +98,52 @@
       }
     },
     "consultants": {
-      "title": "Consultants",
-      "title_singular": "Consultant",
-      "labels": {
-        "bio": "Bio",
+      "header": {
+        "title": "Consultants",
+        "description": "Review, approve or edit consultant applications.",
+        "badge": "Guide Management"
+      },
+      "filters": {
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "table": {
+        "consultant": "Consultant",
         "expertise": "Expertise",
-        "languages": "Languages",
-        "session": "Session"
+        "price": "Fee",
+        "status": "Status",
+        "actions": "Actions",
+        "empty": "No consultant applications found yet.",
+        "sessionMinutes": "{minutes} MINUTES"
       },
       "status": {
-        "approved": "Approved",
-        "rejected": "Rejected",
-        "pending": "Pending"
+        "approved": "APPROVED",
+        "rejected": "REJECTED",
+        "pending": "PENDING"
       },
       "actions": {
         "approve": "Approve",
         "approve_success": "Consultant approved.",
-        "approve_failed": "Could not approve consultant.",
+        "approve_failed": "Error occurred while approving.",
         "reject": "Reject",
         "reject_success": "Consultant rejected.",
-        "reject_failed": "Could not reject consultant.",
+        "reject_failed": "Error occurred while rejecting.",
         "rejection_reason_prompt": "Rejection reason"
+      },
+      "detail": {
+        "title": "Consultant Detail",
+        "profile": "Profile Information",
+        "bio": "About / Biography",
+        "expertise": "Areas of Expertise",
+        "languages": "Spoken Languages",
+        "session": "Session Details",
+        "stats": "Statistics",
+        "totalSessions": "Total Sessions",
+        "rating": "Rating",
+        "rejectionReason": "Rejection Reason",
+        "pricePerSession": "{price} {currency} / {duration} min"
       },
       "expertise": {
         "astrology": "Astrology",
@@ -716,129 +741,194 @@
     },
     "reviews": {
       "header": {
-        "title": "Reviews & Testimonials",
-        "description": "Manage customer reviews and testimonials."
+        "title": "Reviews",
+        "description": "Examine consultant reviews and ratings from a moderator's perspective.",
+        "badge": "Customer Experience"
       },
       "actions": {
-        "create": "New review",
+        "create": "Add new",
+        "createManual": "MANUAL REVIEW",
         "backToList": "Back to list",
-        "deleting": "Deleting..."
+        "deleting": "Deleting...",
+        "bulkModerateApprove": "Bulk Approve",
+        "bulkModerateReject": "Bulk Reject",
+        "clearSelection": "Clear",
+        "saveAndApprove": "MARK SAFE AND APPROVE"
       },
       "filters": {
-        "searchLabel": "Search",
-        "searchPlaceholder": "Name, email, comment...",
-        "approvedLabel": "Approval",
-        "activeLabel": "Status",
-        "minRatingLabel": "Min rating",
-        "minRatingPlaceholder": "0",
-        "maxRatingLabel": "Max rating",
-        "maxRatingPlaceholder": "5",
+        "searchLabel": "Search Reviews",
+        "searchPlaceholder": "Name or comment content...",
+        "statusLabel": "Status",
+        "ratingLabel": "Rating",
         "localeLabel": "Language",
-        "options": {
+        "statusOptions": {
           "all": "All",
+          "pending": "Pending / Rejected",
           "approved": "Approved",
-          "unapproved": "Unapproved",
-          "active": "Active",
-          "inactive": "Inactive"
+          "auto_flagged": "Auto-flagged",
+          "verified": "Verified",
+          "with_outcome": "Answered"
         }
       },
-      "summary": {
-        "total": "Total {total} records"
+      "bulk": {
+        "selectedCount": "{count} reviews selected",
+        "success": "{count} reviews {action}."
       },
       "table": {
-        "columns": {
-          "nameEmail": "Name & Email",
-          "rating": "Rating",
-          "comment": "Comment",
-          "approved": "Approved",
-          "active": "Active",
-          "locale": "Locale",
-          "date": "Date"
-        },
-        "empty": "No records found.",
-        "updatedAt": "Updated"
-      },
-      "labels": {
-        "approved": "Approved",
-        "unapproved": "Unapproved",
-        "active": "Active",
-        "inactive": "Inactive",
+        "approval": "Approval",
+        "user": "User",
+        "rating": "Rating",
         "comment": "Comment",
-        "createdAt": "Created",
-        "updatedAt": "Updated"
+        "date": "Date",
+        "actions": "Actions",
+        "empty": "No reviews found yet.",
+        "loading": "Data loading...",
+        "unknownUser": "Anonymous",
+        "noEmail": "No email",
+        "verified": "Verified",
+        "autoFlagged": "Auto-flagged"
       },
-      "deleteDialog": {
-        "title": "Delete review?",
-        "description": "{name} review will be deleted. This action cannot be undone.",
-        "fallbackName": "This record"
+      "dialogs": {
+        "delete": {
+          "title": "Delete Review?",
+          "description": "This review by \"{name}\" will be permanently deleted.",
+          "action": "DELETE",
+          "cancel": "Cancel"
+        },
+        "report": {
+          "title": "Moderation Report",
+          "description": "This review failed automated content checks. Manual review required.",
+          "triggeredFlags": "Triggered Flags",
+          "matchedPatterns": "Matched Patterns",
+          "source": "Source",
+          "checkTime": "Check Time",
+          "empty": "No report data found.",
+          "close": "Close",
+          "flags": {
+            "generic": "Generic flag"
+          }
+        }
       },
       "messages": {
         "activated": "Activated.",
         "deactivated": "Deactivated.",
         "approved": "Approved.",
         "approvalRemoved": "Approval removed.",
-        "created": "Record created.",
-        "updated": "Record updated.",
-        "deleted": "Record deleted.",
-        "loadError": "Failed to load record.",
-        "genericError": "Operation failed. Please try again."
+        "deleted": "Review deleted.",
+        "error": "Error occurred.",
+        "created": "Review created.",
+        "updated": "Review updated.",
+        "genericError": "Operation failed."
       },
       "form": {
-        "titles": {
-          "create": "New review",
-          "edit": "Edit review"
-        },
-        "descriptions": {
-          "create": "Add a new customer review.",
-          "edit": "Edit the existing customer review."
-        },
-        "sections": {
-          "meta": "General",
-          "customer": "Customer information",
-          "content": "Review content",
-          "extras": "Testimonial extras",
-          "extrasDescription": "Optional fields used by testimonial layout.",
-          "adminReply": "Admin reply",
-          "adminReplyDescription": "You can reply to this review as admin."
-        },
-        "fields": {
-          "locale": "Language",
-          "displayOrder": "Display order",
-          "approved": "Approval",
-          "active": "Active",
-          "targetType": "Target type",
-          "targetId": "Target ID",
-          "name": "Name",
-          "email": "Email",
-          "rating": "Rating",
-          "title": "Title",
-          "comment": "Comment",
-          "role": "Role / Position",
-          "company": "Company",
-          "avatarUrl": "Avatar URL",
-          "logoUrl": "Logo URL",
-          "profileHref": "Profile link",
-          "adminReply": "Reply"
-        },
-        "placeholders": {
-          "targetType": "e.g. testimonial, product, service",
-          "targetId": "UUID or identifier",
-          "name": "e.g. Jane Doe",
-          "email": "example@email.com",
-          "title": "Optional review title",
-          "comment": "Customer review...",
-          "role": "e.g. CEO, Manager",
-          "company": "Company name",
-          "adminReply": "Optional admin reply"
-        },
-        "validation": {
-          "targetTypeRequired": "Target type is required.",
-          "targetIdRequired": "Target ID is required.",
-          "nameRequired": "Name is required.",
-          "emailRequired": "Email is required.",
-          "commentRequired": "Comment is required.",
-          "ratingRange": "Rating must be between 0 and 5."
-        }
+        "createTitle": "New Review",
+        "editTitle": "Edit Review",
+        "createDescription": "Create a manual review for the platform.",
+        "editDescription": "Update existing review details.",
+        "userInfo": "User Information",
+        "userName": "User Name",
+        "email": "Email",
+        "rating": "Rating",
+        "commentContent": "Comment Content",
+        "commentTitle": "Title (Optional)",
+        "commentText": "Comment Text",
+        "adminReply": "Admin Reply",
+        "settings": "Settings",
+        "activeStatus": "Publish Status",
+        "activeStatusDesc": "Active on site",
+        "approvedStatus": "Approval Status",
+        "approvedStatusDesc": "Moderator approval",
+        "displayOrder": "Display Order",
+        "targetType": "Target Type",
+        "targetId": "Target ID",
+        "deleteRecord": "DELETE RECORD"
+      }
+    },
+    "support": {
+      "header": {
+        "title": "Support Tickets",
+        "description": "Manage user questions and technical support requests here.",
+        "badge": "Help Desk"
+      },
+      "stats": {
+        "total": "Total Tickets",
+        "open": "Open Tickets",
+        "closed": "Closed"
+      },
+      "filters": {
+        "searchPlaceholder": "Search tickets..."
+      },
+      "table": {
+        "status": "Status",
+        "priority": "Priority",
+        "subject": "Subject & Message",
+        "date": "Date",
+        "actions": "Actions",
+        "empty": "No support tickets found yet.",
+        "loading": "Data loading..."
+      },
+      "status": {
+        "closed": "CLOSED",
+        "waiting_response": "WAITING RESPONSE",
+        "open": "OPEN"
+      },
+      "priority": {
+        "urgent": "URGENT",
+        "high": "HIGH",
+        "medium": "MEDIUM",
+        "low": "LOW"
+      },
+      "actions": {
+        "reply": "Reply",
+        "reopen": "Ticket reopened.",
+        "close": "Ticket closed.",
+        "error": "Error occurred."
+      }
+    },
+    "announcements": {
+      "header": {
+        "title": "Announcements",
+        "description": "Manage announcements and notifications across the application here.",
+        "badge": "System Communication"
+      },
+      "actions": {
+        "create": "NEW ANNOUNCEMENT"
+      },
+      "table": {
+        "active": "Active",
+        "audience": "Target Audience",
+        "titleContent": "Title & Content",
+        "dateRange": "Publication Date",
+        "actions": "Actions",
+        "empty": "No announcements found yet.",
+        "loading": "Loading..."
+      },
+      "audience": {
+        "all": "EVERYONE",
+        "users": "USERS",
+        "consultants": "CONSULTANTS"
+      },
+      "messages": {
+        "statusUpdated": "Status updated.",
+        "deleted": "Announcement deleted.",
+        "deleteConfirm": "Are you sure you want to delete this announcement?",
+        "error": "Error occurred."
+      },
+      "form": {
+        "createTitle": "New Announcement",
+        "editTitle": "Edit Announcement",
+        "description": "Fill in the details to publish an announcement.",
+        "details": "Announcement Details",
+        "title": "Title",
+        "titlePlaceholder": "e.g. New Feature Release",
+        "messageBody": "Message Body",
+        "messagePlaceholder": "Write your announcement here...",
+        "targetAudience": "Target Audience",
+        "active": "Active",
+        "startsAt": "Starts At (Optional)",
+        "endsAt": "Ends At (Optional)",
+        "createAction": "Create Announcement",
+        "updateAction": "Update Announcement"
       }
     },
     "bookings": {
@@ -1295,7 +1385,8 @@
         "wallet": "Wallet",
         "gutschein": "Gift Cards",
         "payment_settings": "Payment Settings",
-        "popups": "Popups"
+        "popups": "Popups",
+        "navigation": "Menu & Footer"
       },
       "stats": {
         "deliveredOrders": "Delivered Orders",
@@ -1624,25 +1715,25 @@
       }
     },
     "notifications": {
-      "title": "Notifications",
-      "description": "Manage all system notifications ({count} notifications, {unread} unread)",
+      "header": {
+        "title": "Notifications",
+        "description": "{count} notifications found, {unread} unread.",
+        "badge": "System Notifications"
+      },
       "actions": {
-        "markAllRead": "Mark All Read",
+        "markAllRead": "MARK ALL READ",
         "refresh": "Refresh",
-        "create": "New Notification",
-        "back": "Back",
-        "delete": "Delete",
-        "save": "Save",
-        "saving": "Saving...",
-        "cancel": "Cancel",
-        "edit": "Edit",
+        "sendPush": "SEND PUSH",
+        "create": "CREATE NEW",
         "markRead": "Mark Read",
-        "markUnread": "Mark Unread"
+        "markUnread": "Mark Unread",
+        "back": "Back",
+        "save": "Save"
       },
       "filters": {
         "title": "Filters",
         "search": "Search",
-        "searchPlaceholder": "Title, message or type...",
+        "searchPlaceholder": "Title or message...",
         "status": "Status",
         "type": "Type",
         "all": "All",
@@ -1651,16 +1742,15 @@
         "typePlaceholder": "All"
       },
       "table": {
-        "status": "Status",
+        "status": "S",
         "title": "Title",
         "message": "Message",
         "type": "Type",
         "date": "Date",
         "actions": "Actions",
+        "empty": "No notifications found yet.",
         "loading": "Loading...",
-        "noRecords": "No notifications found",
-        "read": "Read",
-        "unread": "Unread"
+        "noRecords": "No notifications found"
       },
       "form": {
         "createTitle": "New Notification",
@@ -1669,7 +1759,7 @@
         "editDescription": "View notification details",
         "infoTitle": "Notification Information",
         "userId": "User ID",
-        "userIdPlaceholder": "Existing user if left empty",
+        "userIdPlaceholder": "Leave empty for all users",
         "userIdHelp": "Enter UUID to send to a specific user",
         "title": "Title",
         "titlePlaceholder": "Notification title",
@@ -1679,34 +1769,28 @@
         "optional": "(optional)",
         "editWarning": "ℹ️ Notifications cannot be edited after creation. Only read/unread status can be changed."
       },
-      "details": {
-        "title": "Notification Details",
-        "id": "ID",
-        "userId": "User ID",
-        "status": "Status",
-        "createdAt": "Created At",
-        "read": "Read",
-        "unread": "Unread"
-      },
       "messages": {
-        "markAllSuccess": "All notifications marked as read",
-        "markedRead": "Marked as read",
-        "markedUnread": "Marked as unread",
-        "deleteConfirm": "Are you sure you want to delete notification \"{title}\"?",
-        "deleteSuccess": "Notification deleted",
-        "operationFailed": "Operation failed",
+        "markAllSuccess": "All marked as read.",
+        "markedRead": "Marked as read.",
+        "markedUnread": "Marked as unread.",
+        "deleteConfirm": "Delete notification \"{title}\"?",
+        "deleteSuccess": "Notification deleted.",
+        "operationFailed": "Operation failed.",
         "titleRequired": "Title required",
         "messageRequired": "Message required",
-        "createSuccess": "Notification created",
-        "editNotSupported": "Editing notifications is not supported at this time"
+        "createSuccess": "Notification created"
       },
       "types": {
+        "system": "System",
+        "booking": "Booking",
+        "payment": "Payment",
+        "support": "Support",
+        "announcement": "Announcement",
         "order_created": "Order Created",
         "order_paid": "Order Paid",
         "order_failed": "Order Failed",
         "booking_created": "Booking Created",
         "booking_status_changed": "Booking Status Changed",
-        "system": "System",
         "custom": "Custom"
       }
     },
@@ -2063,17 +2147,81 @@
       "title": "Site Settings",
       "description": "Manage key-value settings. List tabs can be filtered with search.",
       "tabs": {
-        "general": "General",
-        "seo": "SEO",
-        "smtp": "SMTP / Email",
+        "general": "General Settings",
+        "seo": "SEO & Meta",
+        "smtp": "Email (SMTP)",
         "cloudinary": "Cloudinary",
-        "api": "API",
+        "api": "API & Integration",
         "brandMedia": "Logo & Favicon",
-        "list": "List (Language)",
+        "list": "All Records",
         "globalList": "List (Global *)",
         "locales": "Locales",
-        "branding": "Branding",
-        "payment": "Payments"
+        "branding": "Brand & Identity",
+        "payment": "Payment",
+        "design_tokens": "Design Tokens",
+        "custom_css": "Custom CSS",
+        "livekit": "Video Infrastructure"
+      },
+      "messages": {
+        "deleteConfirm": "Are you sure you want to delete setting {key}?",
+        "deleted": "Setting deleted.",
+        "error": "Error occurred."
+      },
+      "general": {
+        "title": "General Settings",
+        "description": "Branding, contact info, and social media links.",
+        "keyLabels": {
+          "contact_info": "Contact Information",
+          "socials": "Social Media",
+          "businessHours": "Business Hours",
+          "company_profile": "Company Profile",
+          "ui_header": "Header Navigation"
+        },
+        "keyDescriptions": {
+          "contact_info": "Phone, email, WhatsApp, and address info.",
+          "socials": "Instagram, Facebook, X, and other social networks.",
+          "businessHours": "Weekly operation and appointment hours.",
+          "company_profile": "Company name, slogan, and about summary.",
+          "ui_header": "Menu labels and CTA button in the header."
+        }
+      },
+      "seo": {
+        "inline": {
+          "title": "SEO Settings",
+          "description": "Page-based title, description, and social media previews.",
+          "saved": "SEO settings saved.",
+          "saveError": "Save error.",
+          "dirty": "Unsaved",
+          "save": "Save",
+          "saveAll": "Save All",
+          "loading": "Loading...",
+          "expandAll": "Expand All",
+          "collapseAll": "Collapse All",
+          "fieldTitle": "Title (meta title)",
+          "fieldDescription": "Description (meta description)",
+          "placeholderTitle": "GoldMoodAstro — ...",
+          "placeholderDescription": "Short summary of the page — ideal 140-160 chars.",
+          "ogImage": "OG Image (1200×630)",
+          "noindex": "Hide this page from search engines (noindex)",
+          "googlePreview": "Google Preview",
+          "socialPreview": "Social Media Preview",
+          "siteName": "GoldMoodAstro",
+          "noDescription": "No description entered yet.",
+          "noOgImage": "OG image not uploaded yet"
+        },
+        "pageLabels": {
+          "home": "Home",
+          "birth-chart": "Birth Chart",
+          "consultants": "Consultants",
+          "consultant-detail": "Consultant Detail",
+          "pricing": "Pricing",
+          "daily": "Daily Horoscope",
+          "blog": "Blog",
+          "blog-post": "Blog Post",
+          "about": "About Us",
+          "contact": "Contact",
+          "faqs": "FAQs"
+        }
       },
       "payment": {
         "title": "Payment Settings",
@@ -2257,9 +2405,24 @@
         "overrideCreated": "{locale} override created for \"{key}\" (GLOBAL copied).",
         "defaultsRestored": "Default values restored for \"{key}\" ({locale}).",
         "missingGlobalError": "GLOBAL (*) record not found. You need to create global value first.",
-        "globalBootstrapSuccess": "Missing GLOBAL (*) General/UI records created.",
+        "globalBootstrapSuccess": "Missing keys created with empty defaults.",
         "loadingNote": "Fetching global + locale records.",
-        "deleteTooltip": "Tip: \"Delete*\" deletes GLOBAL (*) record. \"Delete\" deletes selected locale override."
+        "deleteTooltip": "Tip: \"Delete*\" deletes GLOBAL (*) record. \"Delete\" deletes selected locale override.",
+        "recordCount": "{count} records",
+        "keyLabels": {
+          "contact_info": "Contact Information",
+          "socials": "Social Media",
+          "businessHours": "Business Hours",
+          "company_profile": "Company Profile",
+          "ui_header": "Header / Menu"
+        },
+        "keyDescriptions": {
+          "contact_info": "Phone, email, address, WhatsApp.",
+          "socials": "Instagram, Facebook, LinkedIn, YouTube, X.",
+          "businessHours": "Weekly business hours.",
+          "company_profile": "Company name, slogan, about text.",
+          "ui_header": "Top menu labels and CTA button."
+        }
       },
       "cloudinary": {
         "title": "Cloudinary / Storage Settings",
@@ -2444,6 +2607,43 @@
           "source": "Source",
           "effective": "Effective (Summary)",
           "actions": "Actions"
+        },
+        "inline": {
+          "title": "SEO Settings",
+          "description": "Per-page title, description, OG image, and indexing settings.",
+          "save": "Save",
+          "saveAll": "Save All",
+          "saved": "SEO settings saved.",
+          "saveError": "Save failed.",
+          "loading": "Loading...",
+          "dirty": "Unsaved",
+          "expandAll": "Expand All",
+          "collapseAll": "Collapse All",
+          "fieldTitle": "Title",
+          "fieldDescription": "Description",
+          "ogImage": "OG Image (1200×630)",
+          "noindex": "Hide this page from search engines (noindex)",
+          "googlePreview": "Google Preview",
+          "socialPreview": "Social Media Preview",
+          "siteName": "GoldMoodAstro",
+          "noDescription": "No description yet.",
+          "noOgImage": "No OG image yet",
+          "placeholderTitle": "GoldMoodAstro — Modern astrology meets the stars",
+          "placeholderDescription": "Short summary of the page — ideal 140-160 characters.",
+          "charCount": "{count} / 160"
+        },
+        "pageLabels": {
+          "home": "Home",
+          "birth-chart": "Birth Chart",
+          "consultants": "Consultants",
+          "consultant-detail": "Consultant Detail",
+          "pricing": "Pricing",
+          "daily": "Daily Reading",
+          "blog": "Blog",
+          "blog-post": "Blog Post",
+          "about": "About",
+          "contact": "Contact",
+          "faqs": "FAQs"
         }
       },
       "structured": {
@@ -3021,6 +3221,12 @@
           "minLengthError": "Password must be at least 8 characters.",
           "updated": "Password updated."
         },
+        "verification": {
+          "title": "Email Verification",
+          "description": "User's email verification status.",
+          "verified": "Verified",
+          "unverified": "Unverified"
+        },
         "delete": {
           "title": "Dangerous Operation",
           "description": "Permanently deletes the user.",
@@ -3090,6 +3296,76 @@
         "notFound": "User not found"
       },
       "errorFallback": "Operation failed. Please try again."
+    },
+    "orders": {
+      "header": {
+        "title": "Orders",
+        "description": "Track all payments, refunds and transaction statuses here.",
+        "badge": "Financial Records"
+      },
+      "summary": {
+        "total_label": "Total Transactions"
+      },
+      "filters": {
+        "searchLabel": "Order No / Email",
+        "searchPlaceholder": "Order no or email...",
+        "orderStatusLabel": "Order Status",
+        "paymentStatusLabel": "Payment Status",
+        "all": "All"
+      },
+      "table": {
+        "orderNo": "Order No",
+        "customer": "Customer Info",
+        "amount": "Amount",
+        "status": "Status",
+        "payment": "Payment",
+        "date": "Date",
+        "actions": "Details",
+        "empty": "No order records found.",
+        "loading": "Loading..."
+      },
+      "pagination": {
+        "info": "Page {page} • Total {total} Transactions",
+        "prev": "Previous",
+        "next": "Next"
+      },
+      "detail": {
+        "title": "Order Detail",
+        "loading": "Loading...",
+        "notFound": "Order not found.",
+        "info": "Order Information",
+        "orderNumber": "Order No",
+        "total": "Total",
+        "txId": "Transaction ID",
+        "createdAt": "Created At",
+        "updatedAt": "Updated At",
+        "statusUpdate": "Update Status",
+        "statusDesc": "Change order and payment status.",
+        "orderStatus": "Order Status",
+        "paymentStatus": "Payment Status",
+        "adminNote": "Admin Note",
+        "adminNotePh": "Internal note...",
+        "refundReason": "Refund reason (optional):",
+        "items": "Order Items",
+        "itemTitle": "Title",
+        "itemType": "Type",
+        "itemQty": "Qty",
+        "itemPrice": "Price",
+        "itemTotal": "Total",
+        "noItems": "No items found.",
+        "payments": "Payments",
+        "payAmount": "Amount",
+        "payStatus": "Status",
+        "payTxId": "Transaction ID",
+        "payDate": "Date"
+      },
+      "messages": {
+        "noChanges": "No changes",
+        "updated": "Order updated",
+        "updateFailed": "Update failed",
+        "refunded": "Order refunded",
+        "refundFailed": "Refund failed"
+      }
     },
     "emailTemplates": {
       "list": {

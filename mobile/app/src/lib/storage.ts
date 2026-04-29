@@ -11,8 +11,9 @@ const KEYS = {
   onboarded: 'gma.onboarded.v1',
   language:  'gma.lang.v1',
 
-  // Push
-  pushToken: 'gma.pushToken.v1',
+  // Data
+  tempBirthData: 'gma.temp.birth.v1',
+  pushToken: 'gma.push.token.v1',
 } as const;
 
 async function readJson<T>(key: string): Promise<T | null> {
@@ -103,5 +104,19 @@ export const storage = {
 
   async setPushToken(token: string): Promise<void> {
     await AsyncStorage.setItem(KEYS.pushToken, token);
+  },
+
+  // --- Data ---
+
+  async getTempBirthData(): Promise<any> {
+    return readJson(KEYS.tempBirthData);
+  },
+
+  async setTempBirthData(data: any): Promise<void> {
+    await writeJson(KEYS.tempBirthData, data);
+  },
+
+  async clearTempBirthData(): Promise<void> {
+    await AsyncStorage.removeItem(KEYS.tempBirthData);
   },
 };

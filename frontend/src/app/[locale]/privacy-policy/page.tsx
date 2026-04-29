@@ -5,8 +5,7 @@ import Banner from '@/layout/banner/Breadcrum';
 import PrivacyPolicyPageContent from '@/components/containers/legal/PrivacyPolicyPageContent';
 import { LayoutSeoBridge } from '@/seo';
 import { useLocaleShort, useUiSection } from '@/i18n';
-import { isValidUiText } from '@/integrations/shared';
-import { safeStr } from '@/integrations/shared';
+import { isValidUiText, safeStr } from '@/integrations/shared';
 
 export default function PrivacyPolicyPage() {
   const locale = useLocaleShort();
@@ -23,9 +22,9 @@ export default function PrivacyPolicyPage() {
       <LayoutSeoBridge title={bannerTitle} noindex={false} />
       <Banner title={bannerTitle} />
 
-      <section className="container mx-auto py-16 px-4 bg-bg-primary">
+      <main className="bg-(--gm-bg) min-h-screen">
         <PrivacyPolicyPageContent />
-      </section>
+      </main>
     </>
   );
 }

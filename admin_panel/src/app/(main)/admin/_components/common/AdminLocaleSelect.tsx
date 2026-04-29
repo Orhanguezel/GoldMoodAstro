@@ -35,6 +35,7 @@ export type AdminLocaleSelectProps = {
   loading?: boolean;
   disabled?: boolean;
   label?: string;
+  className?: string;
 
   /**
    * ✅ NEW (non-breaking): allow empty string values safely
@@ -54,6 +55,7 @@ export const AdminLocaleSelect: React.FC<AdminLocaleSelectProps> = ({
   loading = false,
   disabled = false,
   label,
+  className,
   allowEmpty = true,
   emptySentinel = '__all__',
 }) => {
@@ -118,7 +120,7 @@ export const AdminLocaleSelect: React.FC<AdminLocaleSelectProps> = ({
         onValueChange={(v) => onChange(mapFromUiValue(v))}
         disabled={isDisabled}
       >
-        <SelectTrigger>
+        <SelectTrigger className={className}>
           <SelectValue placeholder={placeholderText} />
         </SelectTrigger>
         <SelectContent>

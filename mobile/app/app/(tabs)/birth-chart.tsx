@@ -13,6 +13,7 @@ import {
 import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Plus, Info, ChevronRight, MapPin, Sparkles } from 'lucide-react-native';
 
 import { birthChartsApi } from '@/lib/api';
@@ -66,7 +67,7 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
       <Svg width={300} height={300} viewBox="0 0 300 300">
         {/* Decorative background rings */}
         <Circle cx={150} cy={150} r={145} stroke={colors.goldDim} strokeWidth={0.5} strokeDasharray="2,4" fill="none" />
-        <Circle cx={150} cy={150} r={130} stroke={colors.goldDim} strokeWidth={1} fill={colors.inkDeep} />
+        <Circle cx={150} cy={150} r={130} stroke={colors.goldDim} strokeWidth={1} fill="transparent" />
         <Circle cx={150} cy={150} r={105} stroke={colors.line} strokeWidth={1} fill="none" />
         <Circle cx={150} cy={150} r={70} stroke={colors.lineSoft} strokeWidth={1} fill="none" />
 
@@ -199,8 +200,9 @@ export default function BirthChartScreen() {
           {selected ? (
             <View style={styles.chartContent}>
               
-              <View style={styles.heroCard}>
+              <LinearGradient colors={[colors.inkDeep, colors.surface]} style={styles.heroCard}>
                 <View style={styles.heroInfo}>
+                  <Text style={styles.headerKicker}>HARİTA SAHİBİ</Text>
                   <Text style={styles.heroName}>{selected.name}</Text>
                   <View style={styles.heroRow}>
                     <MapPin size={10} color={colors.goldDim} />
@@ -214,9 +216,11 @@ export default function BirthChartScreen() {
                   <Text style={styles.ascLabel}>ASCENDANT</Text>
                   <Text style={styles.ascValue}>{selected.chart_data.ascendant.sign_label}</Text>
                 </View>
-              </View>
+              </LinearGradient>
 
-              <ChartWheel chart={selected.chart_data} />
+              <LinearGradient colors={[colors.surface, colors.inkDeep]} style={styles.wheelWrap}>
+                <ChartWheel chart={selected.chart_data} />
+              </LinearGradient>
 
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
@@ -250,7 +254,11 @@ export default function BirthChartScreen() {
                   <Text style={styles.sectionTitle}>EV ANALİZLERİ</Text>
                 </View>
                 {selected.chart_data.houses.map(h => (
-                  <View key={h.house} style={styles.houseRow}>
+                  <LinearGradient 
+                    key={h.house} 
+                    colors={[colors.surface, colors.inkDeep]}
+                    style={styles.houseRow}
+                  >
                     <View style={styles.houseNumBox}>
                       <Text style={styles.houseNum}>{h.house}</Text>
                     </View>
@@ -258,7 +266,7 @@ export default function BirthChartScreen() {
                       <Text style={styles.houseHeader}>{h.sign_label} Burcu Kesen</Text>
                       <Text style={styles.houseInfo}>{HOUSE_DESCS[h.house]}</Text>
                     </View>
-                  </View>
+                  </LinearGradient>
                 ))}
               </View>
 

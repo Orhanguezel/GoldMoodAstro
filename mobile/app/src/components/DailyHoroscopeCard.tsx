@@ -79,7 +79,7 @@ export default function DailyHoroscopeCard() {
             </View>
             
             <Text style={styles.content}>
-              {i18n.language === 'tr' ? horoscope.content_tr : (horoscope.content_en || horoscope.content_tr)}
+              {horoscope.content}
             </Text>
 
             <View style={styles.statsGrid}>

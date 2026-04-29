@@ -41,9 +41,15 @@ export const googleBody = z.object({
 });
 
 export const socialLoginBody = z.object({
-  type: z.enum(['google', 'facebook']),
+  type: z.enum(['google', 'facebook', 'apple']),
   access_token: z.string().min(10).optional(),
   id_token: z.string().min(10).optional(),
+  /** Apple identity_token (JWT) — Apple Sign In response.authorization.id_token */
+  identity_token: z.string().min(10).optional(),
+  /** Apple authorization_code (server-to-server için opsiyonel; şu an kullanmıyoruz) */
+  authorization_code: z.string().min(10).optional(),
+  /** Apple sadece İLK login'de ad/soyadı döner — frontend `response.user.name`'i geçer */
+  apple_user_name: z.string().trim().min(1).max(120).optional(),
   email: z.string().trim().email().optional(),
 }).superRefine((value, ctx) => {
   if (value.type === 'google' && !value.access_token && !value.id_token) {
@@ -58,6 +64,13 @@ export const socialLoginBody = z.object({
       code: z.ZodIssueCode.custom,
       path: ['access_token'],
       message: 'facebook_access_token_required',
+    });
+  }
+  if (value.type === 'apple' && !value.identity_token) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['identity_token'],
+      message: 'apple_identity_token_required',
     });
   }
 });

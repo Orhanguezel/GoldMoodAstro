@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useSubscribeNewsletterMutation } from '@/integrations/rtk/public/newsletter_public.endpoints';
 
 export default function WaitlistSection({ locale = 'tr' }: { locale?: string }) {
   const isTr = locale === 'tr';
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [subscribeNewsletter] = useSubscribeNewsletterMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -13,11 +15,17 @@ export default function WaitlistSection({ locale = 'tr' }: { locale?: string }) 
 
     setStatus('loading');
     
-    // Simulate API call for now (can be connected to actual endpoint later)
-    setTimeout(() => {
+    try {
+      await subscribeNewsletter({
+        email,
+        locale,
+        meta: { source: 'home_waitlist' },
+      }).unwrap();
       setStatus('success');
       setEmail('');
-    }, 1000);
+    } catch {
+      setStatus('error');
+    }
   };
 
   return (
@@ -27,23 +35,23 @@ export default function WaitlistSection({ locale = 'tr' }: { locale?: string }) 
       <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--gm-gold)]/30 to-transparent" />
 
       <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
-        <div className="font-display text-[11px] tracking-[0.4em] text-[var(--gm-gold-deep)] uppercase mb-6 reveal">
+        <div className="font-display text-[11px] tracking-[0.4em] text-[var(--gm-gold-deep)] uppercase mb-6">
           {isTr ? 'Yakında Açılıyor' : 'Opening Soon'}
         </div>
 
-        <h2 className="font-serif text-[clamp(2.5rem,5vw,4.5rem)] font-light leading-[1.1] text-[var(--gm-text)] mb-8 reveal">
+        <h2 className="font-serif text-[clamp(2.5rem,5vw,4.5rem)] font-light leading-[1.1] text-[var(--gm-text)] mb-8">
           {isTr ? 'Sıraya girin —' : 'Join the queue —'}<br/>
           <em className="text-[var(--gm-gold)] italic">{isTr ? 'ilk açılanlardan siz olun.' : 'be the first to unlock.'}</em>
         </h2>
 
-        <p className="text-[var(--gm-text-dim)] text-lg font-light leading-relaxed mb-12 max-w-xl mx-auto reveal">
+        <p className="text-[var(--gm-text-dim)] text-lg font-light leading-relaxed mb-12 max-w-xl mx-auto">
           {isTr 
             ? 'Lansman öncesi kayıt olanlara, ilk üç ay %50 indirim ve kişisel doğum haritası raporu hediye.' 
             : 'Pre-launch registrants get 50% off the first three months and a free personal birth chart report.'}
         </p>
 
         {status === 'success' ? (
-          <div className="border border-[var(--gm-gold)]/30 bg-[var(--gm-gold)]/5 p-8 max-w-md mx-auto reveal">
+          <div className="border border-[var(--gm-gold)]/30 bg-[var(--gm-gold)]/5 p-8 max-w-md mx-auto">
             <h4 className="font-display text-[14px] tracking-[0.3em] text-[var(--gm-gold)] uppercase mb-3">
               ✦ {isTr ? 'TEŞEKKÜRLER' : 'THANK YOU'} ✦
             </h4>
@@ -52,7 +60,7 @@ export default function WaitlistSection({ locale = 'tr' }: { locale?: string }) 
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto mb-8 reveal">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto mb-8">
             <input 
               type="email" 
               value={email}
@@ -72,7 +80,13 @@ export default function WaitlistSection({ locale = 'tr' }: { locale?: string }) 
           </form>
         )}
 
-        <p className="font-display text-[9px] tracking-[0.2em] text-[var(--gm-muted)] uppercase mt-8 reveal">
+        {status === 'error' && (
+          <p className="text-sm text-[var(--gm-error)] mt-4">
+            {isTr ? 'Kayıt alınamadı. Lütfen tekrar deneyin.' : 'Could not save your signup. Please try again.'}
+          </p>
+        )}
+
+        <p className="font-display text-[9px] tracking-[0.2em] text-[var(--gm-muted)] uppercase mt-8">
           {isTr 
             ? 'Sadece e-posta. Telefon istemiyoruz. İstediğiniz zaman çıkış yapabilirsiniz.' 
             : 'Email only. No phone needed. You can opt out anytime.'}

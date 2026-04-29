@@ -45,9 +45,9 @@ async function dropAndCreate(root: mysql.Connection) {
 }
 
 async function createRoot(): Promise<mysql.Connection> {
+  const socketMode = env.DB.host.startsWith('/');
   return mysql.createConnection({
-    host: env.DB.host,
-    port: env.DB.port,
+    ...(socketMode ? { socketPath: env.DB.host } : { host: env.DB.host, port: env.DB.port }),
     user: env.DB.user,
     password: env.DB.password,
     multipleStatements: true,
@@ -55,9 +55,9 @@ async function createRoot(): Promise<mysql.Connection> {
 }
 
 async function createConnToDb(): Promise<mysql.Connection> {
+  const socketMode = env.DB.host.startsWith('/');
   return mysql.createConnection({
-    host: env.DB.host,
-    port: env.DB.port,
+    ...(socketMode ? { socketPath: env.DB.host } : { host: env.DB.host, port: env.DB.port }),
     user: env.DB.user,
     password: env.DB.password,
     database: env.DB.name,

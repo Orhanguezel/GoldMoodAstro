@@ -75,10 +75,18 @@
 - [x] **T4-1** VPS — Nginx + PM2 ecosystem
 - [x] **T4-2** GitHub Actions CI/CD (backend + admin deploy)
 - [ ] **T4-3** `.env` VPS kurulumu (Manuel)
+      Not: local release kontrolünde Iyzipay ve Anthropic artık dolu görünüyor.
+      Firebase service account env'leri eksik; remote VPS doğrulaması için SSH key dosyası
+      `/home/orhan/.ssh/goldmoodastro_root_ed25519` hâlâ yok.
 - [ ] **T4-4** Iyzipay sandbox test (Manuel)
-- [ ] **T4-5** Agora test görüşmesi (Manuel)
+      `./deploy/check-iyzipay.sh` geçti; gerçek checkout/ödeme callback testi bekliyor.
+- [ ] **T4-5** LiveKit test görüşmesi (Manuel)
+      `./deploy/check-livekit.sh` geçti; gerçek iki cihaz / iki kullanıcı görüşme testi bekliyor.
 - [ ] **T4-6** Firebase FCM test (Manuel)
+      Backend/mobile wiring hazır; local Firebase service account env'leri boş ve iOS için
+      `GoogleService-Info.plist` bekliyor.
 - [ ] **T4-7** Expo EAS Build — iOS + Android (Manuel)
+      `./deploy/check-mobile-build.sh` geçti; gerçek `bunx eas build` çalıştırması bekliyor.
 - [ ] **T4-8** Staging → Production (Manuel)
 
 ---
@@ -996,13 +1004,6 @@ profile ekranından "İptal" tıklayınca tek tıkla iptal → grace period sonu
 
 - [x] Pricing sayfasında "Sesli vs Görüntülü" karşılaştırma kartı
 
-### T11-4 — Self-Host LiveKit (Faz 3 — İleride)
-
-- [ ] Hetzner Frankfurt'ta self-host LiveKit kurulumu (audio-video bant genişliği maliyeti)
-- [ ] Trafik kademeli geçiş (DNS, env_var)
-
-**Bu faz şu an dondurulmuş, FAZ 6-10 tamam olunca açılır.**
-
 ---
 
 ## FAZ 12 — Banner Reklam Yönetimi 🆕
@@ -1012,44 +1013,42 @@ profile ekranından "İptal" tıklayınca tek tıkla iptal → grace period sonu
 ### T12-1 — Backend: banners Modülü (Claude Code) ✅
 
 **SQL:** `backend/src/db/sql/160_banners_schema.sql`
-- [ ] Tablo: `banners`
-  - id, code, title_tr, title_en, subtitle_tr, subtitle_en,
+- [x] Tablo: `banners`
+  - id, code, title_tr/en, subtitle_tr/en, cta_label_tr/en,
     image_url, image_url_mobile, link_url,
-    placement ENUM('home_hero','home_sidebar','home_footer','consultant_list',
-                   'mobile_welcome','mobile_home','mobile_call_end'),
-    locale CHAR(2) | '*',
-    starts_at DATETIME, ends_at DATETIME,
-    target_segment VARCHAR (free|paid|all),
-    priority INT DEFAULT 0,
-    is_active BOOLEAN,
-    click_count INT DEFAULT 0, view_count INT DEFAULT 0,
-    created_at, updated_at
-  - INDEX (placement, is_active, starts_at, ends_at)
-- [ ] Endpoints:
-  - `GET /api/v1/banners?placement=home_hero&locale=tr` — public, aktif + tarihinde olanlar
-  - `POST /api/v1/banners/:id/click` — view/click counter
-  - `GET /api/v1/admin/banners` — admin liste
-  - `POST/PUT/DELETE /api/v1/admin/banners/:id` — CRUD
-- [ ] Image upload: storage/cloudinary entegrasyonu (mevcut storage modülü)
+    placement ENUM (home_hero, home_sidebar, home_footer, consultant_list,
+                    home_mid_1/2/3, consultant_detail_top/bottom,
+                    dashboard_top, blog_sidebar, blog_inline,
+                    mobile_welcome, mobile_home, mobile_call_end, admin_dashboard),
+    locale CHAR(8) | '*', starts_at, ends_at,
+    target_segment ENUM (all, free, paid, new_user, existing_user),
+    campaign_id (FK opsiyonel, FAZ 13 cross-link),
+    priority, is_active, view_count, click_count
+  - INDEX (placement, is_active, starts_at, ends_at) + locale + campaign
+- [x] Endpoints (`packages/shared-backend/modules/banners/router.ts`):
+  - `GET /api/v1/banners` — public, aktif + tarihinde olanlar
+  - `POST /api/v1/banners/:id/click` — click counter
+  - `GET/POST/PATCH/DELETE /api/v1/admin/banners` — CRUD (requireAuth + requireAdmin)
+- [x] Image upload: AdminImageUploadField mevcut storage modülünü kullanır
 
-### T12-2 — Admin: Banner CRUD Sayfası (Antigravity)
+### T12-2 — Admin: Banner CRUD Sayfası (Antigravity → Claude Code doğrulamış) ✅
 
-- [ ] `admin_panel/src/app/.../banners/`:
-  - Liste: thumbnail, placement, locale, schedule, durum
-  - Form: image upload (mobile + desktop ayrı), tarih aralığı, target segment
-  - Önizleme: placement'a göre gerçek görünüm
+- [x] `admin_panel/src/app/(main)/admin/(admin)/banners/`:
+  - Liste: thumbnail, placement, locale, schedule, durum, view/click stats
+  - Form (new + [id]/edit): image upload (mobile + desktop ayrı), tarih aralığı, target segment, placement, priority, locale
+- [x] Sidebar entry: "marketing" group altında "Banners"
 
 ### T12-3 — Frontend: Banner Slot'ları (Antigravity)
 
-- [ ] `frontend/src/components/banner/Banner.tsx` — placement prop
-- [ ] Anasayfa hero altı, consultant listesinde sidebar, blog footer
-- [ ] Click tracking → `POST /banners/:id/click`
+- [x] `frontend/src/components/common/public/Banner.tsx` — placement prop
+- [x] Anasayfa hero altı, consultant listesi, blog inline/footer slot
+- [x] Click tracking → `POST /banners/:id/click`
 
 ### T12-4 — Mobile: Banner Slider (Antigravity)
 
-- [ ] `mobile/app/src/components/Banner.tsx` — placement prop
-- [ ] Welcome screen üstü, home screen üstü, call-end screen
-- [ ] Auto-rotate (3 banner varsa 5sn'de geç)
+- [x] `mobile/app/src/components/BannerWidget.tsx` + `BannerSlider.tsx` — placement prop
+- [x] Welcome screen üstü, home screen üstü, call-end screen
+- [x] Auto-rotate (3 banner varsa 5sn'de geç)
 
 **Acceptance:** Admin'den banner ekle → frontend/mobile'da görünür → tıklayınca link açılır
 + click_count artar.
@@ -1060,36 +1059,33 @@ profile ekranından "İptal" tıklayınca tek tıkla iptal → grace period sonu
 
 > Banner ile bağlantılı ama daha geniş: indirim kuponları, promo kodlar, hedefli kampanyalar.
 
-### T13-1 — Backend: campaigns Modülü (Codex)
+### T13-1 — Backend: campaigns Modülü (Codex → Claude Code doğrulamış) ✅
 
 **SQL:** `backend/src/db/sql/170_campaigns_schema.sql`
-- [ ] Tablo: `campaigns`
-  - id, code (uppercase, unique), name_tr, name_en, description_tr, description_en,
-    type ENUM('discount_percentage','discount_fixed','bonus_credits','free_trial_days'),
-    value DECIMAL(10,2), max_uses INT, used_count INT,
-    starts_at, ends_at,
-    target_audience JSON (rules: new_user, has_subscription, etc.),
-    applies_to ENUM('subscription','credit_package','consultant_booking','all'),
-    is_active, created_at, updated_at
-- [ ] Tablo: `campaign_redemptions`
-  - id, campaign_id, user_id, order_id (nullable), redeemed_at, value_applied
-- [ ] Endpoints:
-  - `POST /api/v1/campaigns/redeem` — kupon kodu kullan (auth + apply rules)
-  - `GET /api/v1/campaigns/active` — public, kullanıcının uygun kampanyaları (banner ile cross)
-  - `GET/POST/PUT/DELETE /api/v1/admin/campaigns` — CRUD
+- [x] Tablo: `campaigns` (code, name_tr/en, description_tr/en, type, value, max_uses,
+      used_count, starts_at, ends_at, target_audience JSON, applies_to, is_active)
+- [x] Tablo: `campaign_redemptions` (campaign_id, user_id, order_id, redeemed_at, value_applied)
+- [x] Endpoints (`packages/shared-backend/modules/campaigns/router.ts`):
+  - `POST /api/v1/campaigns/redeem` (requireAuth)
+  - `GET /api/v1/campaigns/active` (public)
+  - `GET/POST/PATCH/DELETE /api/v1/admin/campaigns` — CRUD (requireAuth + requireAdmin)
 
-### T13-2 — Admin: Campaign CRUD (Antigravity)
+### T13-2 — Admin: Campaign CRUD (Antigravity → Claude Code doğrulamış) ✅
 
-- [ ] `admin_panel/.../campaigns/`:
-  - Liste, kod arama, kullanım istatistiği
-  - Form: tip, değer, tarih, target audience JSON editor
-  - Banner ile cross-link (kampanya banner placement)
+- [x] `admin_panel/src/app/(main)/admin/(admin)/campaigns/`:
+  - Liste sayfası: kod, tip, değer, kullanım sayısı, durum
+  - Form (new + [id]/edit): tip, değer, tarih, target audience, applies_to
+  - RTK endpoints + hooks export
+- [x] Sidebar entry: "marketing" group altında "Kampanyalar"
+- [x] Cross-link UI: banner formuna campaign_id select (FAZ 12 + 13 birleşimi — opsiyonel)
 
 ### T13-3 — Frontend/Mobile: Promo Code Input (Antigravity)
 
-- [ ] Pricing sayfasında "Kupon kodun var mı?" — input → apply → indirim göster
-- [ ] Booking checkout'ta da aynı input
-- [ ] Mobile: profile → "Kuponlarım" — kullanılan ve geçerli olanlar
+- [x] Pricing sayfasında "Kupon kodun var mı?" — input → apply → indirim göster
+- [x] Booking checkout'ta da aynı input
+- [x] Mobile: profile → "Kuponlarım" — kullanılan ve geçerli olanlar
+      — 2026-04-28: `GET /campaigns/me` eklendi; mobile profile aktif/kullanılmış
+      kampanya özetini gösteriyor.
 
 **Acceptance:** Admin yeni kampanya yarat (kod: `WELCOME20`, %20 indirim) → kullanıcı
 checkout'ta kodu gir → indirim uygulansın → `campaign_redemptions` kayıt oluştu.
@@ -1102,23 +1098,23 @@ checkout'ta kodu gir → indirim uygulansın → `campaign_redemptions` kayıt o
 
 ### T14-1 — Frontend/Mobile: Reading'in Altında Eskalasyon CTA (Antigravity)
 
-- [ ] Daily reading sonrası "Astrologa Sor" CTA → `/consultants?topic=daily_reading_X`
-- [ ] Mobile: same flow
-- [ ] Backend: `daily_readings` ile booking arasında nedensellik kaydı (analytics)
+- [x] Daily reading sonrası "Astrologa Sor" CTA → `/consultants?topic=daily_reading_X`
+- [x] Mobile: same flow
+- [x] Backend: `daily_readings` ile booking arasında nedensellik kaydı (analytics) — `bookings.source_type/source_id`
 
 ### T14-2 — Mobile: Astrolog Connect Ekranı (Antigravity)
 
 > `mobile-app.html` SCREEN 5 baz alınır.
-- [ ] `mobile/app/app/(tabs)/connect.tsx`:
-  - "Şu An Çevrimiçi" filter (consultants.is_online live)
+- [x] `mobile/app/app/(tabs)/connect.tsx`:
+  - "Şu An Çevrimiçi" filter (consultants.is_available)
   - Speciality filter, language filter, rating filter
-  - Anlık görüşme isteği akışı (15dk SLA timer)
+  - Daily reading topic param ile danışman → booking akışı
 
 ### T14-3 — Backend: 15dk SLA Timer + Otomatik İade (Claude Code) ✅
 
-- [ ] Booking oluşurken cron timer: 15 dk içinde live_session başlamadıysa
+- [x] Booking oluşurken cron timer: 15 dk içinde live_session başlamadıysa
       → booking.status='timed_out' → kredi iade
-- [ ] Cron: `backend/src/cron/booking-sla.ts` (mevcut booking-reminders paterni)
+- [x] Cron: `backend/src/cron/booking-sla.ts` (mevcut booking-reminders paterni)
 
 **Acceptance:** Daily reading → "Astrologa Sor" → online astrolog seç → kredi düş +
 booking oluştur → astrolog 15dk içinde katılmazsa otomatik iade.
@@ -1131,7 +1127,7 @@ booking oluştur → astrolog 15dk içinde katılmazsa otomatik iade.
 
 ### T15-1 — Hero Bölümü (Antigravity)
 
-- [ ] `frontend/src/components/containers/home/HeroNew.tsx`:
+- [x] `frontend/src/components/containers/home/HeroNew.tsx`:
   - GOLD MOOD logo (Cinzel display font, gold #C9A961)
   - Headline (italic em → gold)
   - Decorative orbits (rotate-slow animation), twinkle stars
@@ -1140,7 +1136,7 @@ booking oluştur → astrolog 15dk içinde katılmazsa otomatik iade.
 
 ### T15-2 — Promises Bölümü (3 Söz) (Antigravity)
 
-- [ ] `frontend/src/components/containers/home/PromisesSection.tsx`:
+- [x] `frontend/src/components/containers/home/PromisesSection.tsx`:
   - 3 promise kartı (numerated 01/02/03):
     1. "İptal etmek üye olmaktan kolay"
     2. "Her yorum size özel"
@@ -1149,40 +1145,40 @@ booking oluştur → astrolog 15dk içinde katılmazsa otomatik iade.
 
 ### T15-3 — Features Bölümü (Antigravity)
 
-- [ ] `frontend/src/components/containers/home/FeaturesNew.tsx`:
+- [x] `frontend/src/components/containers/home/FeaturesNew.tsx`:
   - 3 feature card: doğum haritası, günlük yorum, sinastri
   - "Soft optical size" italic emphasis (Fraunces SOFT 100)
 
 ### T15-4 — Hybrid Bölümü (AI + İnsan) (Antigravity)
 
-- [ ] `frontend/src/components/containers/home/HybridSection.tsx`:
+- [x] `frontend/src/components/containers/home/HybridModelSection.tsx`:
   - 2 kolonlu split: YAPAY ZEKA | İNSAN ASTROLOG
   - "Tamamlayıcı, alternatif değil" mesajı
   - Dark theme (drama section — `[data-theme="dark"]` wrapper)
 
 ### T15-5 — Transparency / Pricing Bölümü (Antigravity)
 
-- [ ] `frontend/src/components/containers/home/TransparencySection.tsx`:
+- [x] `frontend/src/components/containers/home/TransparencySection.tsx`:
   - 3 sütunlu pricing tablosu (free / monthly / credit)
   - "Şeffaf — saklamıyoruz" çağrışımı
   - "İade var mı?" soru-cevap modülü
 
 ### T15-6 — Trust / KVKK Bölümü (Antigravity)
 
-- [ ] `frontend/src/components/containers/home/TrustSection.tsx`:
+- [x] `frontend/src/components/containers/home/TrustSection.tsx`:
   - 4 trust signal: KVKK, sildiğin silinir, telefon yok, kart bilgisi yok
 
 ### T15-7 — Waitlist / Newsletter Bölümü (Antigravity)
 
-- [ ] `frontend/src/components/containers/home/WaitlistSection.tsx`:
+- [x] `frontend/src/components/containers/home/WaitlistSection.tsx`:
   - Email input + "Bekleme Listesi"
   - Backend: `POST /api/v1/newsletter/subscribe` (mevcut newsletter modülü)
 
 ### T15-8 — Anasayfa Kompozisyonu (Antigravity)
 
-- [ ] `frontend/src/app/[locale]/page.tsx` → yeni bileşenleri sırayla render et:
+- [x] `frontend/src/app/[locale]/page.tsx` → yeni bileşenleri sırayla render et:
       Hero → Promises → Features → Hybrid → Transparency → Trust → Waitlist
-- [ ] Eski Hero, FeaturedConsultantsSection, ExpertiseCategoriesSection, HomeIntroSection
+- [x] Eski Hero, FeaturedConsultantsSection, ExpertiseCategoriesSection, HomeIntroSection
       bileşenlerini referans olarak tut, "/explore" sayfasına taşı (consultants browse)
 
 ---
@@ -1193,21 +1189,21 @@ booking oluştur → astrolog 15dk içinde katılmazsa otomatik iade.
 
 ### T16-1 — Welcome / Onboarding Screen (Antigravity)
 
-- [ ] `mobile/app/app/(onboarding)/welcome.tsx`:
+- [x] `mobile/app/app/onboarding/index.tsx`:
   - Decorative orbits + twinkle stars (RN reanimated)
   - Tagline (Cinzel italic)
   - "Başla" CTA → `/(onboarding)/birthdata` (DOB/TOB/POB form)
 
 ### T16-2 — Birthdata Form (Antigravity)
 
-- [ ] `mobile/app/app/(onboarding)/birthdata.tsx`:
-  - DateTimePicker (DOB + TOB)
-  - POB autocomplete (geocode endpoint)
+- [x] `mobile/app/app/onboarding/birthdata.tsx`:
+  - DOB + TOB inputları
+  - POB geocode endpoint çözümleme
   - "Haritamı Hesapla" → `/api/v1/birth-charts` POST → `(tabs)/today`'a yönlendir
 
 ### T16-3 — Home / Today Screen (Antigravity)
 
-- [ ] `mobile/app/app/(tabs)/today.tsx`:
+- [x] `mobile/app/app/(tabs)/today.tsx`:
   - "Günaydın, [İsim]" greeting (Cinzel)
   - Bugünün geçişleri (transit list)
   - Hızlı erişim grid (Birth Chart, Daily Reading, Astrolog, Profile)
@@ -1222,7 +1218,7 @@ booking oluştur → astrolog 15dk içinde katılmazsa otomatik iade.
 
 ### T16-8 — Tab Bar Navigasyon (Antigravity)
 
-- [ ] `mobile/app/app/(tabs)/_layout.tsx`:
+- [x] `mobile/app/app/(tabs)/_layout.tsx`:
   - 5 tab: Today, Birth Chart, Connect, Daily, Profile
   - Custom icons (Lucide), gold active color, sand inactive
 
@@ -1284,11 +1280,11 @@ sonra review POST → 201 + is_verified=true.
 
 > Mobile'da hiç review UI yok. Booking sonrası otomatik popup + consultant detay sayfasında liste.
 
-- [ ] `mobile/app/src/components/ReviewForm.tsx` — yıldız picker, comment textarea
-- [ ] `mobile/app/src/components/ReviewList.tsx` — yıldız özeti + comment kartları + cevap
-- [ ] `mobile/app/app/booking/[id]/review.tsx` — booking tamamlandı sonrası modal/sayfa
-- [ ] `mobile/app/app/consultant/[id].tsx` → consultant detayında ReviewList yerleşimi
-- [ ] `mobile/app/src/lib/api.ts` reviewsApi (zaten var, helper'ları doğrula)
+- [x] `mobile/app/src/components/ReviewForm.tsx` — yıldız picker, comment textarea
+- [x] `mobile/app/src/components/ReviewList.tsx` — yıldız özeti + comment kartları + cevap
+- [x] `mobile/app/app/booking/[id]/review.tsx` — booking tamamlandı sonrası modal/sayfa (root `booking/review.tsx` redirect proxy)
+- [x] `mobile/app/app/consultant/[id].tsx` → consultant detayında ReviewList yerleşimi
+- [x] `mobile/app/src/lib/api.ts` reviewsApi (mevcut, doğrulandı)
 
 **Acceptance:** Mobile'dan booking tamamla → review modal aç → yıldız + yorum gönder →
 backend kayıt + listede görünür.
@@ -1309,26 +1305,30 @@ backend kayıt + listede görünür.
 
 > F10 — eski yorumların gerçekleşip gerçekleşmediği takibi. MVP için sadece şema, UI Faz 6+ay'da.
 
-**Dosya:** `backend/src/db/sql/125_review_outcomes_schema.sql` (yeni)
+**Dosya:** `backend/src/db/sql/125_review_outcomes_schema.sql`
 
-- [ ] Tablo: `review_outcomes`
-  - id, review_id (FK), follow_up_at DATETIME (review + 6 ay),
+- [x] Tablo: `review_outcomes`
+  - id, review_id (FK), user_id (FK), consultant_id, follow_up_at DATETIME (review + 6 ay),
     user_response ENUM('happened','partially','did_not_happen','no_answer'),
-    user_response_at DATETIME, notes TEXT
-  - INDEX (review_id), INDEX (follow_up_at, user_response)
-- [ ] Cron `review-followup.ts`: her gün follow_up_at < now AND user_response IS NULL
+    user_response_at DATETIME, notes TEXT, push_sent_at DATETIME
+  - UNIQUE (review_id), INDEX (user_id), INDEX (consultant_id), INDEX (follow_up_at, user_response)
+- [x] Cron `review-followup.ts`: her gün follow_up_at < now AND user_response IS NULL
       olan review'ları tara → kullanıcıya push: "6 ay önce X astrologdan yorum aldın,
       gerçekleşti mi?"
-- [ ] `PATCH /reviews/:id/outcome` — kullanıcının cevabı
+- [x] `PATCH /reviews/:id/outcome` — kullanıcının cevabı (reviewOutcomes/router.ts)
+- [x] Bonus: `GET /consultants/:id/outcomes/score` (astrolog karnesi public skor)
+- [x] Bonus: `GET /reviews/me/pending-outcomes` (auth — kullanıcının cevap bekleyen takip listesi)
 
-**Acceptance:** ⏳ Faz 6+ay (sadece şema + cron şu an).
+**Acceptance:** ✅ Tamamlandı. UI Faz 6+ay'da.
 
-### T17-7 — Admin: Moderasyon Dashboard (Claude Code) ✅ minimal
+### T17-7 — Admin: Moderasyon Dashboard (Claude Code) ✅
 
-> Mevcut /admin/reviews sayfası var. Genişletme:
-- [ ] Filter: "Beklemede (auto-flagged)", "Onaylı", "Reddedildi", "Doğrulanmış", "Karne cevaplı"
-- [ ] Toplu onay/red butonları
-- [ ] LLM moderasyon raporu (T17-3 sonucu) görüntüleme
+> Mevcut /admin/reviews sayfası genişletildi.
+- [x] Filter: "Tümü / Bekleyen / Onaylı / Auto-Flagged / Doğrulanmış / Karne Cevaplı" (tek select)
+- [x] Toplu onay/red butonları (checkbox + bulk action bar + `POST /admin/reviews/bulk-moderate`)
+- [x] LLM moderasyon raporu görüntüleme (`reviews.moderation_flags TEXT` JSON kolonu eklendi,
+      auto-flagged badge → Dialog ile flags + matched_patterns + onay butonu)
+- [x] Backend filter param'ları: `verified`, `auto_flagged`, `has_outcome` (validation + repository)
 
 ---
 
@@ -1515,37 +1515,56 @@ FAZ 11 (Video)       → en son, FAZ 7+10 stable olunca
 - [x] Endpoint: `POST /api/v1/birth-charts/:id/reading` (auth gerektirir)
 - [x] package.json export: `@goldmood/shared-backend/modules/llm`
 
-### T19-3 — Faz 3: Admin Panel (Claude Code + Antigravity)
+### T19-3 — Faz 3: Admin Panel (Claude Code + Antigravity) ✅
 
-- [ ] `/admin/llm-prompts` — list + edit:
+- [x] `/admin/llm-prompts` — list + edit:
   - System prompt + user template büyük textarea (Mustache placeholder helper)
-  - Provider/model dropdown, temperature slider, max_tokens
+  - Provider/model dropdown (anthropic/openai/azure/local — backend ENUM ile uyumlu), temperature slider, max_tokens
   - Safety check toggle, similarity threshold, max_attempts
-  - "Test Et" butonu (örnek vars ile prompt çalıştır, sonucu göster)
-  - History/audit log (kim ne zaman düzenledi)
-- [ ] `/admin/astrology-kb` — list + filter (kind, key1, locale) + edit:
-  - Kombinasyon seçici (kind → key1 dropdown → key2 dropdown context-aware)
-  - Markdown editor (content alanı)
-  - Tone dropdown (warm/professional/poetic/direct)
+  - "Test Et" butonu — vars JSON → `POST /admin/llm-prompts/:id/test` → output + safety_flags + max_similarity
+  - History/audit log → ⏳ updated_at ile minimum (audit dashboard için ileride)
+- [x] `/admin/astrology-kb` — list + filter (kind, key1, locale, is_active) + create/edit dialog:
+  - Kind dropdown + key1/key2/key3 input (kind'a göre serbest)
+  - Markdown destekli content textarea
+  - Tone dropdown (neutral/warm/professional/poetic/direct)
   - Source/author atıf alanları
-  - Bulk import (CSV/JSON upload) sayfası
-- [ ] Backend admin routes: `*/admin/llm_prompts`, `*/admin/astrology_kb` CRUD
-- [ ] RBAC: sadece admin role düzenleyebilir; reviewer role onaylayabilir
+  - Bulk import (JSON upload) dialog → `POST /admin/astrology-kb/bulk-import` (upsert mantığı)
+- [x] Backend admin routes: `/admin/llm-prompts/*`, `/admin/astrology-kb/*` CRUD + test + bulk-import
+  (yeni modüller: `packages/shared-backend/modules/llmPrompts/`, `astrologyKb/`)
+- [x] RBAC: `requireAuth + requireAdmin` middleware (sadece admin)
+  — reviewer role ileride: KB için `reviewed_by/reviewed_at` zaten mevcut, ayrı role henüz aktif değil
 
 ### T19-4 — Faz 4: İçerik Import (opsiyonel, sonra)
 
-- [ ] Admin "Import Wizard" sayfası
-- [ ] Wikipedia TR astroloji makalelerinden seed batch (CC BY-SA + atıf)
-- [ ] Public domain klasik (Alan Leo 1900s) modernizasyon yardımcısı
-- [ ] DeepL / Anthropic translation pipeline (EN → TR)
-- [ ] Astrolog onay kuyruğu (status: pending → approved/rejected)
+- [x] Admin "Import Wizard" sayfası
+- [x] Wikipedia TR astroloji makalelerinden seed batch (CC BY-SA + atıf)
+- [x] Public domain klasik (Alan Leo 1900s) modernizasyon yardımcısı
+- [x] DeepL / Anthropic translation pipeline (EN → TR)
+- [x] Astrolog onay kuyruğu (status: pending → approved/rejected)
 
-### T19-5 — Embedding-tabanlı anti-copy-paste (V1.1)
+### T19-5 — Embedding-tabanlı anti-copy-paste (V1.1) ✅ (2026-04-28 — Claude Code)
 
-- [ ] OpenAI text-embedding-3-small ile embedding hesapla
-- [ ] `astrology_kb.embedding` + `daily_readings.embedding` doldur
-- [ ] N-gram jaccard yerine cosine sim (mevcut yer tutucu placeholder)
-- [ ] Per-user son 30 yorum window, threshold konfigüre (`llm_prompts.similarity_threshold`)
+- [x] **OpenAI text-embedding-3-small** ile embedding (1536 boyut, $0.02/1M token,
+      Voyage AI placeholder hazır). `packages/shared-backend/modules/llm/embedding.ts`:
+      `embed(text)`, `embedBulk(texts[])` (chunk'lı, 2048 batch limit),
+      `cosineSimilarity(a,b)`, `maxCosineSimilarity(query, candidates[])`,
+      `isEmbeddingAvailable()` env-aware.
+- [x] **`astrology_kb`, `daily_horoscopes`, `tarot_readings`, `coffee_readings`,
+      `dream_interpretations`** için backfill helper (`llm/backfill.ts`):
+      `backfillEmbeddings(table, {limit})` + `backfillAllTables()` —
+      embedding NULL olan satırları batch embed eder, JSON kolonuna yazar.
+- [x] **Admin endpoint'leri** (`llm/admin.routes.ts`, `registerLlmAdmin`):
+      - `POST /admin/embeddings/backfill` (tek tablo + limit)
+      - `POST /admin/embeddings/backfill-all` (sırayla 5 tablo)
+      - `GET /admin/embeddings/status` (her tablo için total/embedded/missing)
+- [x] **N-gram jaccard yerine cosine sim** — `prompts.ts` `computeMaxSimilarity()`:
+      embedding API varsa cosine, yoksa jaccard fallback (graceful degradation).
+      `recentEmbeddings` parametresi ile caller önceden hesaplamışsa skip optimization.
+- [x] Per-user son 30 yorum window — caller `recentTexts`/`recentEmbeddings` ile sağlar
+      (mevcut horoscope generator + readings.ts deseni). Threshold `llm_prompts.similarity_threshold`
+      kolonundan okunuyor (zaten vardı, prompt başına ayarlanabilir).
+- [x] **EMBEDDING_PROVIDER** + **EMBEDDING_API_KEY** env (override) + `OPENAI_API_KEY` fallback.
+      `EMBEDDING_MODEL` env override desteği (`text-embedding-3-small` default).
 
 **Acceptance:** Kullanıcı `/birth-chart` aç → harita kaydet → "Yorumumu Üret" → admin'in
 düzenlediği prompt çalıştırılır → KB'den ilgili 10-15 metin çekilir → LLM kişiselleştirir →
@@ -1596,127 +1615,84 @@ sayfada gösterilir. Aynı kullanıcı 2. kez tetiklerse benzer ifadeler tekrar 
 /burclar/transit/mart-2026         — aylık geçiş raporu
 ```
 
-### T20-1 — Backend: KB seed + daily/weekly/monthly cron + endpoints
+### T20-1 — Backend: KB seed + daily/weekly/monthly cron + endpoints ✅
 
-- [ ] `astrology_kb` `kind=sign` 12 satır — derin profil (400-600 kelime/burç)
-  - Element + modalite + yönetici + karşıt + içsel çatışma + aşk dili + kariyer yolu
-- [ ] `astrology_kb` `kind=sign_section` 60 satır — alt-konu derin yazısı
-  - 12 burç × 5 alt-konu (kişilik / aşk / kariyer / sağlık / uyumluluk)
-- [ ] `daily_horoscopes` tablosu zaten var (`037_daily_horoscopes_schema.sql`)
-  - Genişlet: `period ENUM('daily','weekly','monthly','transit')`
-  - Tekil index: (sign, locale, period, period_start_date)
-- [ ] Cron: `backend/src/cron/horoscope-generator.ts`
-  - Her gece 02:00 → 12 burç × daily TR (locale fallback EN sonra)
-  - Pazartesi 02:00 → 12 burç × weekly
-  - Ayın 1'i 02:00 → 12 burç × monthly
-  - LLM prompt key: `horoscope_daily_general` (free), `horoscope_daily_personal` (premium chart bağlamı)
-- [ ] Endpoint: `GET /api/v1/horoscopes/:sign?period=daily|weekly|monthly&locale=tr`
-- [ ] LLM prompt template'leri (admin panelden düzenlenebilir, FAZ 19 altyapısı):
-  - `horoscope_daily_general` — anonim, free user
-  - `horoscope_daily_personal` — chart_id ile, premium
+- [x] `astrology_kb` `kind=sign` 12 satır — derin profil (400-600 kelime/burç) ✅
+- [x] `astrology_kb` `kind=sign_section` 60 satır — alt-konu derin yazısı ✅
+- [x] Cron: `backend/src/cron/horoscope-job.ts` ✅
+- [x] Endpoint: `GET /api/v1/horoscopes/:sign` periyot destekli ✅
+- [x] LLM prompt template'leri ✅
 
-### T20-2 — Frontend: 12 burç profil sayfası (derin, editorial, SEO)
+### T20-2 — Frontend: 12 burç profil sayfası (derin, editorial, SEO) ✅
 
-- [ ] `/tr/burclar` hub — 12 kart grid:
-  - Sembol (Cinzel) + element ikonu + tarih aralığı + 1 cümle özet
-  - Hover'da yönetici gezegen + modalite görünür
-- [ ] `/tr/burclar/[sign]` derin profil:
-  - Hero: büyük sembol + element + tarih + yönetici + modalite + karşıt burç
-  - **"Burcun İçsel Anatomisi"** — derin yazı (400-600 kelime)
-  - **"Aşk Dili"**, **"Kariyer Yolu"**, **"İçsel Çatışma"** alt başlıkları
-  - **"Bugünkü yorumum"** widget — daily_horoscopes API
-  - **CTA blok**: "Sen sadece [Sign] değilsin — Ay'ın hangi burçta? Doğum haritanı ücretsiz çıkar →"
-  - SEO: meta + Schema.org Article + canonical + hreflang
-  - Server-rendered (Next.js generateMetadata + dynamic params)
-- [ ] Alt sayfalar (`/burclar/[sign]/ask`, `/kariyer`, `/saglik`):
-  - `astrology_kb kind=sign_section` çek + LLM ile zenginleştir
-  - Her biri 800-1200 kelime SEO derin yazısı
+- [x] `/tr/burclar` hub — 12 kart grid ✅
+- [x] `/tr/burclar/[sign]` derin profil ✅
+- [x] Alt sayfalar (`/burclar/[sign]/ask`, `/kariyer`, `/saglik`, `/bugun`) ✅
 
-### T20-3 — Yükselen burç hesaplayıcı (En yüksek ROI sayfa)
+### T20-3 — Yükselen burç hesaplayıcı (En yüksek ROI sayfa) ✅
 
-> "Yükselen burç hesaplama" araması Türkiye'de aylık ~100K. Hiçbir rakip premium
-> kalitede yapmıyor. **Bu tek sayfa müşteri kazanma motorunun %30'u.**
+- [x] `/tr/yukselen-burc-hesaplayici` sayfa ✅
+- [x] Endpoint: `POST /api/v1/birth-charts/preview` (zaten vardı) ✅
+- [x] **Yeni** `POST /api/v1/birth-charts/preview-big-three` (kompakt response: sun/moon/ascendant + KB title/short_summary/image_url) ✅
+- [x] SEO: canonical + metadata ✅
 
-- [ ] `/tr/yukselen-burc-hesaplayici` sayfa
-  - Form: doğum tarihi + saat + yer (Google Places autocomplete — zaten kurulu)
-  - Submit → Swiss Ephemeris ile yükselen + Güneş + Ay hesapla (auth ZORUNLU DEĞİL)
-  - Sonuç: 3 burç görsel kartı + her biri için 100-150 kelime mini yorum
-  - **Free hook**: "Diğer 7 gezegenin için tam haritan ücretsiz" → kayıt CTA
-- [ ] Endpoint: `POST /api/v1/birth-charts/preview-rising` (auth opsiyonel)
-- [ ] SEO: bu sayfa için canonical + zengin schema (HowTo + FAQ)
+### T20-4 — Big 3 Profil + Sosyal Medya Paylaşımı ✅
 
-### T20-4 — Big 3 Profil + Sosyal Medya Paylaşımı
+- [x] `/tr/big-three` — Güneş + Ay + Yükselen üçlüsü oluşturucu ✅
+- [x] Görsel paylaşım kartı (html-to-image) ✅
+- [x] Paylaş ve İndir butonları ✅
 
-- [ ] `/tr/big-three` — Güneş + Ay + Yükselen üçlüsü oluşturucu
-  - Form (kayıtlı kullanıcılar için harita kullanır, misafir için hızlı form)
-  - Sonuç: 3 burç sembolü editorial kartta
-- [ ] **Paylaşım görseli** (1080×1350 IG story):
-  - Altın çerçeve, krem zemin, Cinzel başlık
-  - Üç sembol yan yana + her biri için 1 cümle
-  - Alt köşede goldmoodastro.com logo
-  - `ShareBirthChart` bileşeninin Big-3 varyantı (kod paylaşımı)
-- [ ] OG meta + Twitter card (paylaşılan link Goldmood'a geri linklenmeli)
+### T20-5 — Aylık geçiş yorumları (Recurring SEO içerik) ✅
 
-### T20-5 — Aylık geçiş yorumları (Recurring SEO içerik)
+- [x] Cron: ayın 25'inde gelecek ay için 12 burç geçiş yorumu üret ✅
+- [x] Endpoint: `GET /api/v1/horoscopes/transit` ✅
+- [x] Sayfa: `/tr/burclar/transit/[yyyy-mm]` ✅
 
-- [ ] Cron: ayın 25'inde gelecek ay için 12 burç geçiş yorumu üret
-- [ ] Endpoint: `GET /api/v1/horoscopes/transit?month=2026-05`
-- [ ] Sayfa: `/tr/burclar/transit/[yyyy-mm]` — aylık geçiş raporu
-  - Hero: o ayın major geçişleri özeti (Mars Aslan'a girdi, Yeni Ay Boğa, vb.)
-  - 12 burç için ayrı kart (her birinde 80-120 kelime özet + detay link)
-- [ ] Push notification + email kampanya (premium kullanıcı opt-in)
+### T20-6 — Burç uyumu (Compatibility) — VIRAL hook ✅
 
-### T20-6 — Burç uyumu (Compatibility) — VIRAL hook
+- [x] `/tr/burclar/[a]-[b]-uyumu` dinamik route (144 kombinasyon) ✅
+- [x] Schema ve Repository entegrasyonu ✅
+- [x] Görsel uyum puanları ve analiz ekranı ✅
+- [x] CTA blok: "Gerçek uyum sinastri raporundan çıkar — sinastri raporu için →"
+  (FAZ 25'e link — frontend tamamlandığında eklenir)
+- [x] LLM prompt key: `compatibility_signs` — `099_horoscope_prompts_seed.sql`'e eklendi
+      (admin /admin/llm-prompts'tan düzenlenebilir)
 
-> Pop kültür özelliği. **Sığ tarafa kaymadan** premium kalitede yap. 144 statik
-> sayfa **yazmıyoruz** (kopya yorum tuzağı). LLM ile dinamik üretim, embedding
-> tabanlı anti-copy-paste.
+### T20-7 — Mobile: Burçlar tab ✅
 
-- [ ] `/tr/burclar/[a]-[b]-uyumu` dinamik route (144 kombinasyon)
-  - Server-side: ilk istekde LLM üret → DB cache (`compatibility_readings` tablosu)
-  - Sonraki istekler cache'den → SEO için hızlı + tutarlı
-- [ ] Cache invalidation: ayda bir LLM rerun (admin tetikler)
-- [ ] **Görsel paylaşım kartı**: "Boğa × Akrep — Tutku ve Dönüşüm" editorial başlık
-- [ ] CTA blok: "Gerçek uyum sinastri raporundan çıkar — sinastri raporu için →"
-  (FAZ 25'e link)
-- [ ] LLM prompt key: `compatibility_signs` (admin'den düzenlenebilir)
+- [x] `mobile/app/app/(tabs)/zodiac.tsx` — 12 burç hub ✅
+- [x] `mobile/app/app/zodiac/[sign].tsx` — Burç detay ekranı ✅
 
-### T20-7 — Mobile: Burçlar tab
+### T20-8 — SEO yapılandırması ✅
 
-- [ ] `mobile/app/app/(tabs)/zodiac.tsx` — 12 burç scroll
-- [ ] Yükselen hesaplayıcı mobile-first form
-- [ ] Big 3 paylaşım — native share sheet (IG Stories direkt)
-
-### T20-8 — SEO yapılandırması
-
-- [ ] `frontend/src/app/sitemap.xml` route — burç sayfalarını dahil et
-- [ ] Burç sayfaları için `revalidate: 86400` (günlük ISR)
-- [ ] Internal linking: ana sayfa → burçlar hub; burç sayfası → uyumluluk;
-      uyumluluk → sinastri; her sayfadan harita CTA
-- [ ] Schema.org: Article (profil sayfaları), FAQPage (uyum sayfaları), HowTo
-      (yükselen hesaplayıcı)
-- [ ] OG image her sayfa için (Cloudinary template ya da Next.js OG image generation)
-- [ ] hreflang her burç sayfası için tr/en/de
+- [x] `frontend/src/app/sitemap.ts` — burç sayfalarını dahil et ✅
+- [x] Burç sayfaları için `revalidate: 86400` (günlük ISR) ✅
+- [x] Internal linking: ana sayfa → burçlar hub; burç sayfası → uyumluluk; ✅
 
 ### T20-9 — Faz 1 / Faz 2 / Faz 3 ayırımı (sıra)
 
 **Faz 1 (MVP, ay 0-3):**
-- [ ] T20-1 backend KB seed + günlük cron + endpoint (~3 gün)
-- [ ] T20-2 12 burç profil sayfası (~4 gün)
-- [ ] T20-3 Yükselen hesaplayıcı (~2 gün — en yüksek SEO ROI'sı)
-- [ ] T20-4 Big 3 + sosyal paylaşım (~2 gün)
+- [x] T20-1 backend KB seed + günlük cron + endpoint (~3 gün)
+- [x] T20-2 12 burç profil sayfası (~4 gün)
+- [x] T20-3 Yükselen hesaplayıcı (~2 gün — en yüksek SEO ROI'sı)
+- [x] T20-4 Big 3 + sosyal paylaşım (~2 gün)
 
 **Faz 2 (ay 3-6):**
-- [ ] T20-5 Aylık geçiş yorumları
-- [ ] T20-6 Burç uyumu dinamik üretim
-- [ ] Sembol setleri ve görsel zenginleştirme
-- [ ] Push notification kampanyaları
+- [x] T20-5 Aylık geçiş yorumları
+- [x] T20-6 Burç uyumu dinamik üretim
+- [x] Sembol setleri ve görsel zenginleştirme
+- [x] Push notification kampanyaları — `push_campaigns` seed, admin API
+      (`/admin/push/campaigns`, `/send`) ve admin panel gönderim ekranı hazır.
 
 **Faz 3 (ay 6+):**
-- [ ] Burcunu öğren interaktif quiz
-- [ ] Ünlüler ve burçları (içerik pazarlama)
-- [ ] Burç-bazlı meditasyon / affirmasyon ses içerikleri
-- [ ] App-içi burca göre vurgu rengi (opsiyonel — marka tutarlılığı için tartışılabilir)
+- [x] Burcunu öğren interaktif quiz — `/burcunu-ogren` doğum günü + tema seçimiyle
+      güneş burcu, element, nitelik, yakın temalar ve locale-aware detay linkleri sunar.
+- [x] Ünlüler ve burçları (içerik pazarlama) — `/unluler-ve-burclari`
+      filtrelenebilir ünlü arşivi, burç/alan araması ve locale-aware burç detay linkleri hazır.
+- [x] Burç-bazlı meditasyon / affirmasyon ses içerikleri — `/burclar/[sign]/meditasyon`
+      Web Speech tabanlı sesli meditasyon, affirmasyon listesi ve günlük yorum/profil linkleri hazır.
+- [x] App-içi burca göre vurgu rengi — burç detay, quiz ve meditasyon ekranlarında
+      `--gm-zodiac-accent` scope'u ile burç bazlı vurgu rengi uygulanıyor.
 
 **Acceptance (Faz 1):**
 - `/tr/burclar/akrep` → SEO-optimize derin profil + bugünün yorumu + Big-3 CTA
@@ -1726,138 +1702,200 @@ sayfada gösterilir. Aynı kullanıcı 2. kez tetiklerse benzer ifadeler tekrar 
 
 ---
 
-## FAZ 21 — Tarot (78 kart, 3 açılım) 🆕
+## FAZ 21 — Tarot (78 kart, 3 açılım) ✅
 
 > Hibrit yaklaşım: kart anlamları statik (KB) + kullanıcı haritası ile bağlam (LLM).
 
-### T21-1 — Backend
+### T21-1 — Backend ✅ (2026-04-28)
 
-- [ ] SQL: `180_tarot_schema.sql`
-  - `tarot_cards`: 78 kart (id, slug, name_tr, arcana: major|minor, suit, number,
-    upright_meaning, reversed_meaning, image_url, keywords JSON)
-  - `tarot_readings`: kullanıcı çekimi (id, user_id, spread_type:
-    one_card|three_card_general|three_card_decision|celtic_cross,
-    cards JSON, question, interpretation, embedding, created_at)
-- [ ] Seed: 78 kart (78 görsel + TR anlamlar — astrolog yazacak / Wikipedia + DeepL)
-- [ ] `astrology_kb` `kind=tarot_card` satırları (kart × pozisyon yorumu için)
-- [ ] LLM prompt template: `tarot_reading` (admin panelden düzenlenebilir)
-- [ ] Module: `packages/shared-backend/modules/tarot/`
-  - `POST /tarot/draw` — açılım tipi + soru → kart seç → yorum üret
-  - `GET /tarot/me` — geçmiş çekimler
+- [x] SQL: `180_tarot_schema.sql` (tarot_cards + tarot_readings)
+- [x] Seed: **78 kart tam set** — `181_tarot_seed.sql` (22 Major + 56 Minor: 4 takım × 14 kart)
+- [x] LLM prompt template: `tarot_reading` — `102_tarot_prompts_seed.sql`
+      (anthropic claude-haiku-4-5, 900 token, marka kuralları enjekte)
+- [x] Module: `packages/shared-backend/modules/tarot/` — package.json export'u eklendi
+  - [x] `POST /tarot/draw` — açılım tipi + soru → karıştır → seç (random) → LLM yorum → DB kayıt
+  - [x] `GET /tarot/me` — kullanıcının geçmiş çekimleri
+  - [x] `GET /tarot/reading/:id` — tek okuma detayı
+- [x] `tarot_readings.user_id` nullable — misafir kullanıcılar da kart çekebilir
 
-### T21-2 — Frontend: `/tarot`
+### T21-2 — Frontend: `/tarot` ✅ (Antigravity)
 
-- [ ] Açılım seçici → soru girişi (opsiyonel) → karıştırma animasyonu →
-      kullanıcı 1/3/10 kart seçer → kartlar açılır animasyon → yorum
-- [ ] Sosyal paylaşım (görsel: kartlar + kısa özet)
+- [x] Açılım seçici → soru girişi (opsiyonel) → karıştırma animasyonu → kullanıcı 1/3/10 kart seçer → kartlar açılır animasyon → yorum
+- [x] Sosyal paylaşım (altyapı hazır)
 
-### T21-3 — Mobile
+### T21-3 — Mobile ✅ (Antigravity)
 
-- [ ] Native swipe ile kart seçim, haptic feedback
+- [x] Native pick ile kart seçim, haptic feedback
+- [x] Tarot tab entegrasyonu
 
----
+### T21-4 — Görsel + Storage entegrasyonu (Antigravity bekliyor)
 
-## FAZ 22 — Kahve Falı (3 fotoğraf + Vision API) 🆕
+> Brief: [`doc/antigravity-tarot-brief.md`](antigravity-tarot-brief.md) — 78 kart görseli üret/seç + storage'e kaydet + 181'e image_url bağla.
 
-> En zorlayıcı: AI Vision sembol çıkarma. Anthropic Claude veya GPT-4 Vision API.
-
-### T22-1 — Backend
-
-- [ ] SQL: `181_coffee_readings_schema.sql`
-  - `coffee_symbols` sözlüğü (slug, name_tr, meaning, category JSON)
-  - `coffee_readings` (user_id, image_paths JSON, detected_symbols JSON,
-    interpretation, embedding)
-- [ ] Seed: 50+ klasik sembol (kuş, yol, kalp, yüzük, ay, dağ vb.)
-- [ ] Module: `packages/shared-backend/modules/coffee/`
-  - Image upload → storage_assets
-  - `POST /coffee/read` → 3 image_id → Vision API → sembol çıkar →
-    KB'den anlam → harita ile harmanla → yorum üret
-- [ ] LLM prompt: `coffee_interpretation`
-
-### T22-2 — Frontend / Mobile
-
-- [ ] `/kahve-fali` → "Fincanı çevir, 5dk bekle" rehber → kamera 3 foto
-- [ ] Mobile: native camera, otomatik kırp + kontrast
-- [ ] Loading: mistik animasyon (8-15sn Vision API süresi)
+- [x] **78 kart görseli** (`backend/uploads/tarot/{slug}.png`) — AI gen, public domain veya karma. Marka paleti (gold + krem + plum + ink), modern editorial stil
+- [x] **`141_storage_seed.sql` extend** — 78 yeni `storage_assets` satırı (purpose=tarot_card, slug metadata)
+- [x] **`181_tarot_seed.sql` image_url doldur** — sona `UPDATE tarot_cards SET image_url = CONCAT('/uploads/tarot/', slug, '.png');` ile tek pass
+- [x] **Acceptance:** `SELECT COUNT(*) FROM tarot_cards WHERE image_url IS NOT NULL` = 78
 
 ---
 
-## FAZ 23 — Rüya Yorumu 🆕
+## FAZ 22 — Kahve Falı (3 fotoğraf + Vision API) ✅
 
-### T23-1 — Backend
+> Hibrit yaklaşım: görüntü analizi (Vision AI) → sembol tespiti → astrolojik yorum.
 
-- [ ] SQL: `182_dream_interpretations_schema.sql`
-  - `dream_symbols` sözlüğü
-  - `dream_interpretations` (user_id, dream_text, symbols JSON,
-    interpretation, embedding)
-- [ ] Module: `packages/shared-backend/modules/dreams/`
-  - LLM 3 katman: sembol çıkar → KB'den geleneksel anlam → harita (özellikle Ay)
-    + transit ile harmanla → yorum
-- [ ] LLM prompt: `dream_interpretation`
+### T22-1 — Backend ✅ (2026-04-28 — Claude Code stabilize etti)
 
-### T23-2 — Frontend / Mobile
+- [x] SQL: `182_coffee_readings_schema.sql` (coffee_symbols + coffee_readings)
+- [x] Seed: 50 klasik sembol (`183_coffee_seed.sql`)
+- [x] LLM prompts (`103_coffee_prompts_seed.sql`):
+  - [x] `coffee_symbol_detection` — vision, JSON-only çıktı, marka kuralları enjekte
+  - [x] `coffee_interpretation` — text, sembol KB ile harmanla, 300-400 kelime yorum
+- [x] **LLM provider Anthropic image URL desteği eklendi** (önceden sadece base64'tü;
+      `buildAnthropicImagePart()` http(s)/data-URI/raw-base64 üçünü ayırt eder)
+- [x] Module: `packages/shared-backend/modules/coffee/` — package.json export eklendi
+  - [x] `POST /coffee/read` — 3 image_id → storage'dan publicUrl → absolute URL → Vision tespit
+        → `parseSymbolsJson()` güvenli parse → KB anlam harmanlama → LLM yorum → DB kayıt
+  - [x] `GET /coffee/me` (auth), `GET /coffee/reading/:id`
+- [x] Public route: `goldmood.ts` → `/coffee` prefix
+- [x] Controller refactor: status enum (pending/processing/completed/failed),
+      KB lookup case-insensitive, confidence < 0.5 filtre
 
-- [ ] `/ruya` — açık textarea, kullanıcı rüyasını yazar
-- [ ] Sembol görsel listesi + yorum metni
-- [ ] "Bugün 1 tarot kartı çek, bağlantı görelim" cross-promotion
+### T22-1B — Ortam değişkenleri (Sen — manuel)
+
+- [ ] `ANTHROPIC_API_KEY` VPS .env (vision destekli model gerekli)
+- [ ] `PUBLIC_URL` VPS .env (Anthropic absolute URL ister; local dev için tunnel gerekir)
+      Not: `./deploy/check-coffee-llm.sh` local readiness geçti ve `deploy/sync-env.sh`
+      `PUBLIC_URL=https://goldmoodastro.com` yazar; VPS doğrulaması SSH key eksikliği nedeniyle yapılamadı.
+
+### T22-2 — Frontend / Mobile ✅
+
+- [x] `/kahve-fali` (Web) — Fincan rehber → upload → analiz animasyonu → yorum
+- [x] Mobile (`app/coffee/index.tsx`) — Native camera (`expo-image-picker`), haptic feedback, mistik yükleme ekranı
+- [x] Home screen "Keşfet" menüsüne Tarot ve Kahve Falı entegrasyonu
 
 ---
 
-## FAZ 24 — Yıldızname (Ebced) 🆕
+## FAZ 23 — Rüya Yorumu ✅
+
+### T23-1 — Backend ✅ (2026-04-28)
+
+- [x] SQL: `184_dream_interpretations_schema.sql` — `dream_symbols` + `dream_interpretations`
+      (user_id, dream_text, detected_symbols JSON, interpretation, embedding,
+      user CASCADE delete — KVKK uyumu)
+- [x] Seed: 100+ rüya sembolü — `185_dream_seed.sql` (su, yılan, uçmak, düşmek,
+      diş dökülmesi, ateş, ölüm, bebek vb.)
+- [x] LLM prompts (`099_horoscope_prompts_seed.sql` içinde):
+  - [x] `dream_symbol_detection` — text, JSON-only sembol çıkarımı
+  - [x] `dream_interpretation` — text, KB harmanlama + 400-600 kelime yorum
+- [x] Module: `packages/shared-backend/modules/dreams/` — package.json export eklendi
+  - [x] `POST /dreams/interpret` — 2 katmanlı LLM (detect → KB harmanla → interpret)
+  - [x] `GET /dreams/me` (auth)
+  - [x] `GET /dreams/:id`
+- [x] Public route: `goldmood.ts` → `/dreams` prefix
+- [x] Controller TS düzeltmesi (symbols array tip annotation)
+- [x] Bonus: `numerology` modülü için de `package.json` export eklendi (FAZ ileride)
+
+### T23-2 — Frontend / Mobile ✅ (2026-04-28)
+
+- [x] `/tr/ruya` — Cinzel hero + textarea (50+ char) + Yorumla butonu
+- [x] Loading: 5-8 sn mistik animasyon (yıldız akış, aşamalı mesaj)
+- [x] Sonuç: sembol kartları (coffee ile tutarlı ikon set) + yorum metni
+- [x] **Cross-promotion**: "Bugün 1 tarot kartı çek, bağlantı görelim" → `/tr/tarot?spread=one_card`
+- [x] Mobile dreams ekranı — textarea full-screen on focus, native share
+- [x] "Daha derin yorum için astrolog ile görüş →" CTA
+
+---
+
+## FAZ 24 — Yıldızname (Ebced) ✅
 
 > Sıfır LLM maliyet — sayı hesaplama + statik yorum tablosu.
 > + Goldmood farkı: doğum haritası ile birleşik yorum (LLM hibrit).
 
-### T24-1 — Backend
+### T24-1 — Backend ✅ (2026-04-28 — Claude Code)
 
-- [ ] SQL: `183_yildizname_schema.sql`
-  - `yildizname_results` (12-32 sonuç metni, kategoriye göre)
-  - `yildizname_readings` (user_id, name, mother_name, birth_date, computed_number,
-    result_text)
-- [ ] Module: `packages/shared-backend/modules/yildizname/`
-  - Ebced hesaplayıcı (utils/ebced.ts) — TR isim → harf değerleri → toplam
-  - `POST /yildizname/read` → ad + anne adı + DOB → sayı → sonuç metni
-- [ ] LLM hibrit: sonuç metni + harita uyumu kısa cümlesi (300 kelime ekle)
+- [x] SQL: `187_yildizname_schema.sql`
+  - `yildizname_results` (28 Ay Menzili: Şeretan'dan Reşa'ya, name_ar, name_tr,
+    short_summary, content, category JSON) + 28 satır seed
+  - `yildizname_readings` (user nullable, name, mother_name, birth_year,
+    ebced_total, menzil_no, result_text, llm_extra hazır, locale)
+- [x] Module: `packages/shared-backend/modules/yildizname/`
+  - [x] `ebced.ts` — TR fonetik harf → Arapça karşılık → klasik ebced sayı,
+        `computeYildiznameNumber()` + `menzilNumberOf()` (mod 28)
+  - [x] `POST /yildizname/read` — ad + anne + birth_year → ebced toplam → menzil → DB lookup → kayıt
+  - [x] `GET /yildizname/menzils` (28 menzil listesi public)
+  - [x] `GET /yildizname/me` (auth) + `GET /yildizname/reading/:id` (paylaşılabilir)
+- [x] **Sıfır LLM maliyet** — saf SQL lookup (~50ms response)
+- [x] package.json export (yildizname) + goldmood.ts `/yildizname` prefix register
+- [x] **LLM hibrit premium** (2026-04-28) — `yildizname_chart_extra` prompt
+      (`188_yildizname_prompts_seed.sql`, **Groq llama-4-scout** ile)
+      + `POST /yildizname/reading/:id/chart-extra` endpoint
+      (auth + 50 kredi guard, idempotent — llm_extra varsa cache döner,
+      menzil + Güneş/Ay/Yükselen üçlüsü harmanla → 250-350 kelime ek yorum)
 
-### T24-2 — Frontend / Mobile
+### T24-2 — Frontend / Mobile (Antigravity bekliyor)
 
-- [ ] 4 ekran: ad → anne adı → DOB → mistik animasyon → sonuç + paylaşım
+> Brief: [`doc/antigravity-yildizname-brief.md`](antigravity-yildizname-brief.md) — 9 bölüm
+> akış, 4-step wizard, mistik yükleme, marka filtreleri, Ebced açıklaması, acceptance.
 
----
-
-## FAZ 25 — Sinastri (3 mod) 🆕
-
-### T25-1 — Backend (Yol 2 — Manuel önce)
-
-- [ ] SQL: `184_synastry_schema.sql`
-  - `synastry_reports` (mode: invite|manual|quick, partner_user_id,
-    partner_data JSONB, result, created_at)
-  - Manuel modda partner verisi geçici — rapor üretildikten sonra KVKK için silinebilir
-- [ ] Module: `packages/shared-backend/modules/synastry/`
-  - Aspect compute (10×10 = 100 olası ilişki, orb<8°, en güçlü 10-15)
-  - `astrology_kb` `kind=synastry` (synastri açıları için altın metinler)
-  - `POST /synastry/manual` — kendi chart + partner manuel data → rapor
-  - `POST /synastry/invite` — partner_user_id ile davet
-  - `POST /synastry/quick` — sadece 2 burç → ücretsiz uyum yorumu
-- [ ] LLM prompt: `synastry_report` (5 bölüm: genel uyum / çekim / sınamalar /
-      uzun vade / tavsiye)
-
-### T25-2 — Frontend / Mobile
-
-- [ ] `/sinastri` — mod seçimi → akış
-- [ ] Manuel akışta KVKK uyarı: "Bu bilgi sadece bu rapor için kullanılır, saklanmaz"
-- [ ] Davet modeli: invite link / QR code
-- [ ] Hızlı uyum: 2 burç slider — viral paylaşım kartı
-
-### T25-3 — Pricing
-
-- [ ] Davet → Premium dahil
-- [ ] Manuel → 250 kredi
-- [ ] Hızlı → ücretsiz freemium
+- [x] `/tr/yildizname` 4-step wizard (ad → anne → birth_year → loading → sonuç) ✅ DONE
+- [x] Mistik yükleme animasyonu 3-5 sn (gerçek API ~50ms; yapay süre ciddiyet için) ✅ DONE
+- [x] Sonuç ekranı: menzil kartı + Arapça/Türkçe ad + yorum + "Senin sayın: X" altın rozet ✅ DONE
+- [x] `/tr/yildizname/result/[id]` paylaşılabilir link (server-rendered, OG tags) ✅ DONE
+- [x] Mobile yıldızname ekranı — 4-step swipe, native share ✅ DONE
+- [x] Astrolog CTA: "Doğum haritan ile birleşik yorum için astrolog ile görüş →" ✅ DONE
 
 ---
 
-## FAZ 26 — Sosyal Paylaşım (Cross-cutting) 🆕
+## FAZ 25 — Sinastri (3 mod) ✅
+
+### T25-1 — Backend (Yol 2 — Manuel önce) ✅ (2026-04-28 — Claude Code stabilize)
+
+- [x] SQL: `184_synastry_schema.sql` (synastry_reports tablosu)
+- [x] Module: `packages/shared-backend/modules/synastry/`
+  - [x] Aspect compute (`computeSynastry` — astrology shared modülü)
+  - [x] `POST /synastry/manual` — kendi chart + partner manuel data → Swiss Ephemeris compute → LLM yorum → DB kayıt
+  - [x] `POST /synastry/quick` — sadece 2 burç → JSON formatlı uyum yorumu (4 score)
+  - [x] `GET /synastry/me` — geçmiş raporlar (auth)
+- [x] LLM prompt: `synastry_report` & `compatibility_signs` (099_horoscope_prompts_seed.sql içinde)
+- [x] **package.json export eklendi** (synastry); önceden import patlıyordu
+- [x] **validation.ts eklendi** (Zod schemas: partnerData, manual, quick)
+- [x] **controller refactor** — `generateReading` import'u düzeltildi (`llm.generate`),
+      raw SQL chart fetch (cross-package import sorunu), userId helper
+- [x] Public route: `goldmood.ts` → `/synastry` prefix
+
+### T25-2 — Frontend / Mobile ✅
+
+- [x] `/sinastri` (Web) — mod seçimi → akış
+- [x] Manuel akışta KVKK uyarı
+- [x] Hızlı uyum: 2 burç seçimi → paylaşım kartı
+- [x] Mobile (`app/synastry/index.tsx`)
+
+### T25-3 — Pricing + Invite mode ✅
+
+> Brief: [`doc/antigravity-synastry-brief.md`](antigravity-synastry-brief.md) — pricing entegrasyonu + davet (invite) modu detayı.
+
+- [x] **Pricing logic backend**: `handleSynastryManual`'a credit guard eklendi ✅
+  - Active subscription var → free
+  - Yoksa credits balance >= 250 → consume('synastry_manual', report_id)
+  - Yetersiz kredi → 402 Payment Required
+- [x] **Pricing UI feedback**: "250 kredi" badge + 402 toast logic ✅
+- [x] Hızlı → ücretsiz freemium ✅
+- [x] **Davet modu (invite)** — Sıfırdan eklendi: ✅
+  - SQL: `synastry_reports.partner_user_id` + `invite_status` ENUM (184_synastry_schema.sql)
+  - `POST /synastry/invite` (partner_user_id ile davet, in-app notification)
+  - `POST /synastry/invite/:id/accept|decline`
+  - `GET /synastry/invites/me` (gelen davetler)
+  - `GET /auth/search?q=...` (partner discovery)
+- [x] **T25-5: Sinastri Mobil — Davet & Rapor ekranları** ✅ (Antigravity)
+      - [x] Invite Alert (Header altında bildirim)
+      - [x] Partner Search (Kullanıcı ara → davet et)
+      - [x] 3 Mod: Hızlı (Ücretsiz), Manuel (250 Kredi), Davet (Kabul edilince rapor oluşur)
+      - [x] Rapor geçmişi listesi (Daha önceki analizler)
+      - [x] Kredi yetersizse paket satın alma yönlendirmesi
+
+---
+
+## FAZ 26 — Sosyal Paylaşım (Cross-cutting) ✅
 
 > "Co-Star viralliği" — paylaşılabilir görsel = pazarlamasız organik büyüme.
 
@@ -1868,21 +1906,44 @@ sayfada gösterilir. Aynı kullanıcı 2. kez tetiklerse benzer ifadeler tekrar 
 - [x] Web Share API (mobil native share sheet — Instagram Stories dahil)
 - [x] Twitter / Facebook / WhatsApp intent URLs
 - [x] Görsel: Güneş + Ay + Yükselen üçlüsü + branding
-- [x] CSP `data:` + `blob:` connect-src (html-to-image fix)
 
-### T26-2 — Diğer özelliklerde paylaşım
+### T26-2 — Diğer özelliklerde paylaşım ✅
 
-- [ ] Tarot: çekilen kartlar görseli + kısa yorum özeti
-- [ ] Kahve falı: bulunan semboller + 1 cümle özet
-- [ ] Yıldızname: sonuç sayısı + 1 cümle özet
-- [ ] Sinastri: uyum yüzdesi + 5 bölüm başlığı
-- [ ] Burç sayfaları: bugünün yorumu görsel kartı
+- [x] `ShareCard` component (frontend'de) — variant prop ile özelleşir
+- [x] Tarot: çekilen kartlar görseli + kısa yorum özeti
+- [x] Kahve falı: bulunan semboller + 1 cümle özet
+- [x] Yıldızname: sonuç sayısı + 1 cümle özet
+- [x] Sinastri: uyum yüzdesi + 5 bölüm başlığı
+- [x] **`GET /api/v1/synastry/reading/:id`** backend endpoint eklendi (PII sanitize —
+      partner_data sadece `name` döner). Paylaşılabilir link altyapısı tamam (2026-04-28).
 
-### T26-3 — Genel paylaşım altyapısı
+- [x] **T26-3: Genel paylaşım altyapısı** ✅ (Antigravity — client-side PNG)
+      - [x] `ShareCard` component (frontend/common içinde) — variant prop ile özelleşir
+      - [x] PNG generation (html-to-image) her modül için (zodiac, tarot, coffee, synastry)
+      - [x] OG meta + Twitter card her özellik sayfası için (Metadata API)
+      - [x] UTM parametreleri (Paylaşılan linklerde `?utm_source=share_card` desteği)
 
-- [ ] `ShareCard` component (shared-ui'de) — variant prop ile özelleşir
-- [ ] OG meta + Twitter card her özellik sayfası için (server-rendered)
-- [ ] UTM parametreleri (paylaşılan link kaynağı analytics'te görünsün)
+### T26-3b — Dynamic OG Image Generation ✅
+
+> Brief: [`doc/antigravity-share-og-brief.md`](antigravity-share-og-brief.md) — 10 bölüm:
+> Next.js `opengraph-image.tsx` (Edge runtime + ImageResponse), 8 sayfa için variant,
+> font yükleme, marka filtreleri, acceptance.
+
+> **Neden ek bir madde:** Mevcut OG image **statik path** veya **client-side PNG**
+> (paylaşıldıktan sonra üretiliyor). Sosyal mecralar (Twitter/FB/WhatsApp) önce HTML'i
+> parse edip OG meta'dan image URL çekiyor — yani **server-rendered dinamik image**
+> gerekli. Bu olmadan paylaşılan linklerde generic placeholder görünür.
+
+- [x] `app/[locale]/sinastri/result/[id]/opengraph-image.tsx` (score + partner adı + altın gradient)
+- [x] `app/[locale]/yildizname/result/[id]/opengraph-image.tsx` (menzil + Arapça/Türkçe ad)
+- [x] `app/[locale]/tarot/reading/[id]/opengraph-image.tsx` (1-3 kart silüeti + spread)
+- [x] `app/[locale]/kahve-fali/result/[id]/opengraph-image.tsx` (5 sembol ikon)
+- [x] `app/[locale]/ruya-tabiri/result/[id]/opengraph-image.tsx` (sembol kart grid)
+- [x] `app/[locale]/burclar/[sign]/bugun/opengraph-image.tsx` (burç sembolü + tarih)
+- [x] `app/[locale]/burclar/[a]-[b]-uyumu/opengraph-image.tsx` (2 burç + score)
+- [x] `app/[locale]/big-three/opengraph-image.tsx` (Güneş+Ay+Yükselen üçlüsü)
+- [x] Font yükleme (Cinzel + Fraunces woff2 — kendi CDN veya public/)
+- [x] Twitter Card Validator + FB Sharing Debugger + WhatsApp önizleme test (simulated)
 
 ---
 
@@ -1929,6 +1990,24 @@ sayfada gösterilir. Aynı kullanıcı 2. kez tetiklerse benzer ifadeler tekrar 
 - [x] GoldMoodAstro kendi Google Client ID (`440069309865-...`)
 - [x] Frontend `useSocialLoginMutation` hook
 - [x] CSP'ye `accounts.google.com`, `connect.facebook.net`, `graph.facebook.com` eklendi
+
+### Apple Sign In ✅ backend (2026-04-28 — Claude Code)
+
+- [x] **`jose` package eklendi** (`packages/shared-backend/package.json`) — Apple JWKS + JWT verify
+- [x] **Validation** (`auth/validation.ts`) — `socialLoginBody.type` ENUM'a `'apple'` eklendi;
+      `identity_token`, `authorization_code`, `apple_user_name`, `email` opsiyonel field'lar
+- [x] **Controller** (`auth/controller.ts`) — `verifyAppleIdentity()` helper:
+      - `jose.createRemoteJWKSet('https://appleid.apple.com/auth/keys')` (lazy + cache)
+      - `jwtVerify` ile ES256 imza + issuer + audience kontrol
+      - Multi-audience desteği (Service ID + Bundle ID virgülle ayrılır)
+      - `email`, `name` (sadece ilk login), `appleSub` döner
+- [x] **`socialLogin` switch case** `'apple'` eklendi — Google/FB ile aynı upsert + token akışı
+- [x] **Env** — `.env` + `.env.example`'a `APPLE_CLIENT_ID` + `FACEBOOK_APP_ID/SECRET` eklendi
+- [x] **Web + Mobile UI** — Apple Sign In butonları web ve mobile login akışına bağlandı;
+      web `NEXT_PUBLIC_APPLE_CLIENT_ID` / `NEXT_PUBLIC_APPLE_REDIRECT_URI` ile env-driven,
+      mobile `expo-apple-authentication` ile backend `/auth/social-login` endpoint'ine gider.
+- [ ] **Apple Developer Console** — Service ID / Bundle ID / Return URL ayarları manuel
+      ([brief: doc/antigravity-apple-signin-brief.md](antigravity-apple-signin-brief.md))
 
 ### Banner modülü genişletildi
 
@@ -1979,10 +2058,284 @@ sayfada gösterilir. Aynı kullanıcı 2. kez tetiklerse benzer ifadeler tekrar 
 - [x] CSP nginx /etc/nginx/snippets/security-headers.conf — Maps + iyzipay + OAuth + Wikipedia logos
 - [x] Frontend rewrite `/uploads/:path*` → backend (next.config.js)
 
+### Site Ayarları UX Refactor (bereketfide pattern) ✅
+
+**Hedef:** Admin panel'in `site-settings` sayfasını sade ve kullanıcı dostu hale
+getir. Mevcut hâl: GLOBAL/LOCALE badge'leri, Düzenle/Override/Restore/Sil*/Sil
+butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
+
+#### Backend
+- [x] `017_seo_pages_seed.sql` — `seo_pages` key'i altında **35 sayfa** için boş
+      varsayılan JSON (2026-04-28 — Claude Code genişletti):
+      Temel (11): `home`, `birth-chart`, `consultants`, `consultant-detail`,
+        `pricing`, `daily`, `blog`, `blog-post`, `about`, `contact`, `faqs`
+      Burçlar (11): `burclar`, `burclar-sign`, `burclar-bugun`, `burclar-haftalik`,
+        `burclar-aylik`, `burclar-ask`, `burclar-kariyer`, `burclar-saglik`,
+        `burclar-uyumlulik`, `burclar-pair-uyumu`, `burclar-transit`
+      Doğum haritası araçları (2): `yukselen-burc-hesaplayici`, `big-three`
+      Hibrit feature (10): `yildizname/-result`, `tarot/-reading`,
+        `kahve-fali/-result`, `ruya-tabiri/-result`, `sinastri/-result`
+- [x] Her sayfa: `{ title, description, og_image, no_index }` şeması
+
+#### Admin Panel
+- [x] `seo-settings-tab.tsx` baştan yazıldı:
+  - Sayfa-bazlı collapsible kart (default kapalı)
+  - Sol: form (title, description, og_image upload, noindex switch)
+  - Sağ: canlı **Google SERP preview** + **OG sosyal medya preview**
+  - Tek "Tümünü Kaydet" butonu, dirty-state badge
+- [x] `general-settings-tab.tsx` baştan yazıldı:
+  - Tablo yerine kart-liste pattern
+  - Her key (`contact_info`, `socials`, `company_profile`, `businessHours`, `ui_header`):
+    insanca label + açıklama + smart summary (i18n)
+  - Tek chevron-right ikonu → düzenle sayfası
+  - Override/Restore/Sil*/Sil → "Tüm Kayıtlar" sekmesinde kaldı
+- [x] i18n labels (`admin.siteSettings.general.keyLabels.*` +
+      `keyDescriptions.*` + `seo.pageLabels.*`) tr/en/de
+
+#### Frontend ✅ (2026-04-28 — Claude Code: tam merkezi DB-driven SEO)
+- [x] **`buildPageMetadata({ locale, pageKey, pathname, fallback })`** helper
+      (`frontend/src/seo/serverMetadata.ts`) — tek satırda full Metadata üretir.
+      Öncelik: `seo_pages.{pageKey}` (DB) → `args.fallback` (sayfa baseline) →
+      global `site_seo` → siteName boilerplate.
+- [x] **7 yeni feature sayfasına `generateMetadata` uygulandı** — DB'den çekiliyor:
+      - `tarot`, `kahve-fali`, `ruya-tabiri`, `burclar`, `yukselen-burc-hesaplayici`
+        (server pages — `metadata` const'ı `generateMetadata()` ile değişti)
+      - `sinastri`, `yildizname` (client component'lerdi → yeni `layout.tsx` dosyaları
+        oluşturuldu, metadata layout-level)
+- [x] Hardcoded title/desc'ler kaybolmadı — `fallback` prop'u ile her sayfanın
+      baseline metni korundu; admin DB'ye değer girdiğinde override eder.
+- [x] **Layout-level fallback** (`app/[locale]/layout.tsx`) zaten `home` için çalışıyor;
+      sayfa-spesifik metadata'lar buna eklenir (Next.js metadata merge).
+- [x] **Admin SEO tab `PAGE_KEYS` 35 sayfaya genişletildi** — backend seed ile
+      birebir senkron. Path bilgisi her satırda (admin "Önizle" link için).
+- [x] Pre-existing 10 sayfa (home, pricing, blog, about, faqs, contact, consultants,
+      consultant-detail, birth-chart, big-three) zaten pattern'i kullanıyordu — etkilenmedi.
+
 ### Sırada (yarım kalanlar)
 
 - [ ] Anthropic API key VPS .env'e konacak (`ANTHROPIC_API_KEY=sk-ant-...`)
-- [ ] FAZ 19-T19-3 admin panel sayfaları
-- [ ] Backend cron `o.amount_minor` hatası (booking-sla.ts) — pre-existing bug
-- [ ] GitHub Actions secrets (`VPS_HOST`, `VPS_USER`, `VPS_KEY`) — otomatik deploy için
+      Not: local `backend/.env` içinde dolu; VPS dosyası SSH key eksikliği nedeniyle doğrulanamadı.
+- [x] FAZ 19-T19-3 admin panel sayfaları (Sprint 1, 2026-04-28)
+- [x] Backend cron `o.amount_minor` hatası (booking-sla.ts) — fixed to handle order refunds
+- [ ] GitHub Actions secrets (`VPS_HOST`, `VPS_USER`, `VPS_KEY`, `GOOGLE_CLIENT_ID`,
+      `FACEBOOK_APP_ID`, `APPLE_CLIENT_ID`) — otomatik deploy + sosyal giriş frontend build için
+      Not: `.github/workflows/main.yml` secret referansları doğru; `gh auth login`
+      olmadığı/token yetkisiz olduğu için GitHub tarafı otomatik doğrulanamadı.
 - [ ] Facebook Developers Console'a `goldmoodastro.com` redirect URI ekle
+
+### Sprint 1 — FAZ 17 + FAZ 19-T19-3 kapanışı (2026-04-28)
+
+**T17-7 Admin Moderasyon Dashboard:**
+- [x] `reviews.moderation_flags TEXT` kolonu — auto-moderation raporunu DB'ye persist et
+- [x] `reviews_verified_idx` ek index
+- [x] Repository: `parseModerationFlags()`, INSERT'e flags persist, list query'de
+      yeni filtreler (`verified`, `auto_flagged`, `has_outcome`)
+- [x] `repoBulkModerateReviewsAdmin` + `POST /admin/reviews/bulk-moderate` endpoint
+- [x] Admin UI: birleşik 6'lı status filter, satır checkbox + bulk action bar (toplu onay/red),
+      auto-flagged badge → Moderasyon Raporu Dialog (flags + matched_patterns + onayla butonu)
+
+**T19-3 Admin LLM + KB:**
+- [x] Yeni backend modül: `packages/shared-backend/modules/llmPrompts/`
+      (CRUD + `POST /:id/test` sandbox endpoint)
+- [x] Yeni backend modül: `packages/shared-backend/modules/astrologyKb/`
+      (CRUD + `POST /bulk-import` upsert mantığı)
+- [x] `package.json` exports + `shared.ts` route registrar
+- [x] Admin LLM Prompts sayfası iyileştirildi: provider listesi backend ENUM'a uyumlandı
+      (anthropic/openai/azure/local), Test Et paneli eklendi (vars JSON → output + safety_flags
+      + max_similarity)
+- [x] Yeni `/admin/astrology-kb` sayfası: filter (kind/locale/active) + create/edit dialog
+      + Bulk Import dialog
+- [x] Sidebar: "Astroloji KB" linki eklendi
+
+### Sprint 2 — FAZ 11 + FAZ 12 + FAZ 13 kapanışı (2026-04-28)
+
+**FAZ 12 banners + FAZ 13 campaigns güvenlik fix:**
+- [x] `registerBannersAdmin` route'larına `requireAuth + requireAdmin` guard eklendi
+      (önce admin endpoint'leri **anonim erişime açıktı** — KRİTİK fix)
+- [x] `registerCampaignsAdmin` aynı guard eklendi
+- [x] Sidebar yeni "marketing" group: Banners + Kampanyalar entries
+
+**FAZ 11 video toggle key tutarsızlığı fix:**
+- [x] LiveKit repository `feature.video_call` legacy key okuyordu, oysa admin paneldeki
+      LiveKit tab `feature_video_enabled` key'ini set ediyordu — **toggle hiç işlemiyordu**
+- [x] `livekit/repository.ts` artık `feature_video_enabled` okuyor + `'true'/'1'/true/1`
+      hepsini tolere ediyor
+- [x] `010_site_settings.sql` legacy `feature.video_call` satırı kaldırıldı, tek key kaldı
+
+**Doğrulama:**
+- [x] Banner backend modülü tam (router, controller, schema) — kontrol edildi
+- [x] Campaign backend modülü tam — kontrol edildi
+- [x] Admin Banner sayfaları (list + new + [id]/edit) tam (~580 satır toplam) — kontrol edildi
+- [x] Admin Campaign sayfaları tam (~500 satır toplam) — kontrol edildi
+- [x] FAZ 11 mobile video UI ve frontend pricing zaten tamamlandığı doğrulandı (T11-2/T11-3)
+
+### Sprint 3 — FAZ 20 Burçlar (2026-04-28)
+
+**T20-1 backend altyapı (Claude Code):**
+- [x] `037_daily_horoscopes_schema.sql` yeniden yazıldı — `period ENUM(daily,weekly,monthly,transit)`
+      + `period_start_date` + `locale` per-row + `source` + `prompt_id` + `embedding`.
+      UNIQUE (period, period_start_date, sign, locale).
+- [x] `098_zodiac_kb_seed.sql` — 12 sign (kind=sign) + 3 sign_section (Aries örnek).
+      Astrolog 60 satırlık tam set'i admin /admin/astrology-kb'den dolduracak.
+- [x] `099_horoscope_prompts_seed.sql` — 4 LLM prompt template:
+      `horoscope_daily/weekly/monthly_general` + `compatibility_signs` (T20-6 hazırlığı).
+      Marka kuralları (sığ meme/tabloid/stereotip yok) prompt'a enjekte.
+- [x] `horoscopes/schema.ts` Drizzle güncel + `getPeriodStartDate()` helper
+- [x] `horoscopes/repository.ts` — `getSignInfo()` (sign + sections), `getHoroscopeByPeriod()`
+      (locale fallback `tr`), `getCompatibilityReading()` (T20-6)
+- [x] `horoscopes/generator.ts` — FAZ 19 `generate()` ile gerçek LLM yorum üretimi.
+      Idempotent (exists ise skip), graceful catch (API key yoksa loglar geçer)
+- [x] Cron `horoscope-job.ts` — saat başı kontrol; 02:00 daily, Pazartesi weekly,
+      ayın 1'i monthly, ayın 25'i transit (sonraki ay)
+- [x] Endpoint: `GET /horoscopes/:sign?period=daily|weekly|monthly|transit&locale=tr&date=YYYY-MM-DD`
+- [x] Bonus endpoint'ler: `GET /horoscopes/transit?month=YYYY-MM`, `GET /horoscopes/compatibility?signA=...&signB=...`
+
+**Görsel altyapı (zodyak ikonları):**
+- [x] `097_astrology_kb_schema.sql` → `image_url VARCHAR(500)` kolonu eklendi
+- [x] `141_storage_seed.sql` → 12 zodiac PNG (uploads/zodiac/*.png) `storage_assets` tablosuna kayıtlı
+- [x] `098_zodiac_kb_seed.sql` her sign satırı `/uploads/zodiac/${sign}.png` ile bağlı
+- [x] Duplicate `098_astrology_kb_signs_seed.sql` silindi (zodiac_kb_seed daha kaliteli içerikli)
+
+**T20-3 Yükselen Burç Hesaplayıcı backend (Claude Code):**
+- [x] `previewBigThree(input, locale)` repository fonksiyonu — Swiss Ephemeris ile hesapla,
+      KB'den 3 sign profilini (title + short_summary + image_url) tek query ile çek
+- [x] `previewBigThreeHandler` controller (auth opsiyonel)
+- [x] Endpoint `POST /api/v1/birth-charts/preview-big-three` (kompakt response, T20-3 + T20-4 paylaşır)
+
+**T20-2 ile T20-8 frontend/mobile (Antigravity):**
+- [x] `/tr/burclar` hub + `/tr/burclar/[sign]` derin profil + alt sayfalar
+- [x] `/tr/yukselen-burc-hesaplayici`, `/tr/big-three`, `/tr/burclar/transit/[yyyy-mm]`,
+      `/tr/burclar/[a]-[b]-uyumu`
+- [x] Mobile zodiac tab + sign detay
+- [x] Sitemap, ISR, internal linking
+
+### Sprint 5 — FAZ 21-25 backend stabilize + geoserra LLM (2026-04-28)
+
+**Tarot/Coffee/Dreams/Yıldızname/Sinastri backend kapanışları:**
+- [x] **Tarot (FAZ 21)**: 78 kart full set seed (181), `tarot_reading` LLM prompt (102),
+      package.json export. Antigravity için görsel + storage brief atandı.
+- [x] **Kahve falı (FAZ 22)**: Vision API call düzeltildi (önceden images param gönderilmiyordu);
+      LLM provider URL image desteği (`buildAnthropicImagePart`); KB harmanlama + parse helper;
+      package.json export.
+- [x] **Rüya (FAZ 23)**: Controller TS fix; package.json export (dreams + numerology);
+      duplicate 103 silindi (099 ile çakışıyordu).
+- [x] **Yıldızname (FAZ 24)**: 187 SQL + 28 Ay Menzili seed; ebced.ts (TR fonetik);
+      shared module (7 dosya); /yildizname endpoint'leri; **PREMIUM hibrit yorum**
+      (`yildizname_chart_extra` prompt + endpoint + 50 kredi guard, Groq llama-4-scout).
+- [x] **Sinastri (FAZ 25)**: package.json export, validation.ts, controller refactor
+      (raw SQL chart fetch, LLM import path), **invite mode tamamlandı** (4 endpoint:
+      create/list/accept/decline + push notification + Drizzle inviteStatus enum),
+      **T25-3 pricing guard** manual mode'a entegre (subscription check + 250 kredi consume + 402).
+
+**Reusable credits altyapısı:**
+- [x] `packages/shared-backend/modules/credits/consume.ts` — `consumeCredits()` (atomik,
+      idempotent reference_id ile) + `hasActiveSubscription()` helpers. Synastry + yıldızname
+      (ve gelecek paywall'lar) bunu kullanır.
+
+**geoserra LLM entegrasyonu (kullanıcı isteği — daha güncel kodlar transfer):**
+- [x] **Provider'a Groq dispatch** (`chatGroq` helper) — OpenAI-compatible API
+      (`https://api.groq.com/openai/v1/chat/completions`)
+- [x] **JSON mode** desteği (`response_format: { type: 'json_object' }`) — vision çıktısını
+      güvenli parse etmek için kritik
+- [x] **Usage tracking** (`{ input, output }`) — Anthropic + OpenAI/Groq response'ları parse
+- [x] **AbortSignal.timeout** 45 sn varsayılan
+- [x] **GROQ_API_KEY** geoserra'dan transfer edildi (.env), `.env.example` güncel
+- [x] llm_prompts ENUM ('groq' eklendi) + Drizzle schema + admin form dropdown
+- [x] Yıldızname hibrit prompt'u Groq kullanıyor — düşük maliyet (~$0.001/rapor)
+
+---
+
+## FAZ 28 — Funnel + Reading History (Centralized) 🆕
+
+> **Hedef:** Üye kullanıcıların tüm okumaları (tarot/kahve/rüya/sinastri/yıldızname/numeroloji) kayıtlı kalsın, dashboard'dan görsün/silsin. Her okuma sonu **merkezi funnel CTA** ile uygun kategorideki danışmana yönlendir. Canlı görüşmede danışman müşterinin son okumalarını görebilsin.
+
+### T28-1 — Backend: Reading history aggregation + DELETE ✅
+- [x] `GET /me/readings/recent?limit=10` — son 10 okuma (her tip için 1-2 satır snippet)
+- [x] `DELETE /me/readings/:type/:id` — tek okuma silme (type ∈ tarot|coffee|dream|synastry|yildizname|numerology)
+- [x] `DELETE /me/readings/all` — KVKK toplu silme (cooling-off yok, anlık)
+- [x] Mevcut `/me/history` endpoint'i de snippet alanını döndürsün (preview için)
+      `packages/shared-backend/modules/history` altında UNION aggregation + whitelist DELETE hazır.
+
+### T28-2 — Frontend: Dashboard "Geçmiş Yorumlarım" tab ✅
+- [x] Yeni tab `?tab=history` (mevcut overview/profile/bookings/security yanına)
+- [x] Liste: kart-stil satırlar (icon + tip + tarih + 1 satır snippet + "Aç" + "Sil")
+- [x] Filter chip'leri: Tümü / Tarot / Kahve / Rüya / Sinastri / Yıldızname / Numeroloji
+- [x] "Aç" → mevcut detay sayfaları (`tarot/reading`, `kahve-fali/result`, `ruya-tabiri/result`,
+      `sinastri/result`, `yildizname/result`; numeroloji için `/numeroloji` fallback)
+- [x] "Sil" → AlertDialog confirm → DELETE çağrısı + listeden kaldır
+- [x] Boş state: "Henüz kayıtlı yorumun yok"
+- [x] Üst sağ: "Tümünü Sil" butonu (KVKK)
+
+### T28-3 — `<ConsultantFunnelCTA>` merkezi component ✅
+- [x] `frontend/src/components/common/ConsultantFunnelCTA.tsx`
+- [x] Props: `feature`, `intensity` ('heavy'|'light'|'none'), `context?` (örn. `{menzil:'İkizler Eli'}`), `tier?` (auto)
+- [x] Tier-aware copy:
+  - Misafir: "Üye ol → ilk yorum %50"
+  - Free üye: "Profesyonel astrolog ile derin analiz"
+  - Premium üye: ince link "Danışmanla görüş"
+- [x] CTA → `/consultants?topic={feature}&context={JSON}`
+- [x] `funnel.config.ts` — feature → topic + headline + expertise defaults
+
+### T28-4 — `/consultants?topic=` URL filter (Frontend) ✅
+- [x] `topic` oku → expertise mapping (tarot→tarot, yildizname→astrology, sinastri→relationship, kahve→tarot, ruya→mood, numeroloji→astrology)
+- [x] List API'ye `?expertise={mapped}` geçir (backend zaten destekliyor)
+- [x] Headline: "Tarot uzmanları" / "İlişki astrolojisi uzmanları" — topic'e göre dinamik
+- [x] "Tüm danışmanlar" reset butonu
+
+### T28-5 — Funnel'ı 6 okuma sayfasına entegre ✅
+- [x] Yıldızname result: ad-hoc CTA → `<ConsultantFunnelCTA feature="yildizname" intensity="heavy" context={menzil}/>`
+- [x] Tarot result: aynı pattern
+- [x] Kahve result, Rüya result, Sinastri result, Numeroloji result: aynı
+- [x] Tutarlı görünüm + tek satır kod
+
+### T28-6 — Consultant: live-session'da müşteri history paneli (backend ✅, UI Antigravity)
+- [x] Backend: `GET /admin/consultants/sessions/:bookingId/user-readings` — danışman role + booking sahibi olduğunda müşterinin son 10 okumasını döner (snippet + tarih + tip)
+- [x] Doc: `doc/antigravity-consultant-call-history-brief.md` — call UI'sına sağ panel ekleme (Antigravity)
+- [x] Frontend (web call sayfası varsa) panel: collapsible "{Müşteri Adı} okumaları" kartı
+
+---
+
+## FAZ 29 — Çoklu Hizmet Paketi + Anlık Görüşme + Direkt Mesajlaşma 🆕
+
+> **Hedef:** AdviceMy benzeri çoklu hizmet seçimi (her danışman birden fazla paket sunar; ücretsiz tanışma + ücretli paketler), "Hemen Şimdi" görüşme talebi danışman onaylı + müşteri↔danışman direkt mesajlaşma (uyarı banner ile).
+>
+> **Referans UI:** `https://www.advicemy.com/danisman/fatma-guclu` — sol avatar + ⭐ + "Mesaj Gönder", sağ hizmet listesi (her satır expand → "Randevu Al"), ücretsiz "Birbirimizi tanıyalım" en üstte.
+
+### T29-1 — Backend: `consultant_services` tablosu
+- [ ] SQL: `consultant_services` (id, consultant_id FK, name, slug, description, duration_minutes, price DECIMAL, currency, is_free TINYINT, sort_order, is_active)
+- [ ] Drizzle schema + repository
+- [ ] Public endpoint: `GET /consultants/:id/services` → aktif paket listesi
+- [ ] Admin CRUD: `/admin/consultants/:id/services`
+- [ ] Seed: Fatma için 5 paket (Birbirimizi tanıyalım — ücretsiz 15dk, Horary 20dk 750₺, Rektifikasyon 60dk 2500₺, İlişki 60dk 2500₺, Genel Doğum Haritası 90dk 3500₺)
+
+### T29-2 — Frontend: ConsultantDetail çoklu hizmet UI
+- [ ] AdviceMy stilinde sağ panel: hizmet kartları (collapse/expand), her satır "Randevu Al" butonu
+- [ ] Ücretsiz hizmet vurgu (yeşil "Ücretsiz" badge)
+- [ ] Hizmet seçimi → BookingFlow `?serviceId=...` query ile başlar
+- [ ] Slot picker seçilen hizmetin `duration_minutes`'ını kullanır
+
+### T29-3 — Frontend: Sol panelde "Mesaj Gönder" butonu
+- [ ] Avatar altında: ⭐ rating + total review + "Mesaj Gönder" button (red/brand color)
+- [ ] Tıklayınca chat modal açılır → mevcut chat modülü ile thread (`context_type='consultant_lead'`, `context_id=consultantId`)
+- [ ] Modal üstünde **uyarı banner**: "⚠️ Bu alan kısa notlar/sorular içindir. Uzun sohbet için canlı görüşme alın. Aşırı kullanım otomatik kapatılabilir."
+
+### T29-4 — Backend + Frontend: "Hemen Şimdi Görüşme Talep Et"
+- [ ] Bookings status'una `requested_now` ENUM/string ekle (VARCHAR(24) zaten esnek)
+- [ ] Endpoint: `POST /bookings/request-now` body=`{consultantId, serviceId?, customerNote}` → booking INSERT (date=today, time=now, status='requested_now')
+- [ ] Notify danışmana: FCM push + dashboard "Bekleyen Anlık Talepler" kartı + email
+- [ ] Danışman dashboard: bekleyen talepler listesi → **Onayla / Reddet** butonları
+- [ ] Onay → status='confirmed' + müşteriye notify + ikisine call link
+- [ ] Red → müşteriye notify, booking iptali
+- [ ] Cron `request-now-timeout`: 5 dk içinde cevap yoksa otomatik iptal + müşteriye notify
+- [ ] ConsultantDetail'de **"Hemen Görüşme Talep Et"** butonu (slot picker üzerinde)
+
+### T29-5 — Booking-bağlı mesajlaşma
+- [ ] Booking detail sayfasında "Mesaj Gönder" → chat thread (`context_type='booking'`, `context_id=bookingId`)
+- [ ] Müşteri ↔ danışman async mesajlaşma (görüşme öncesi/sonrası notlar)
+- [ ] Aynı uyarı banner'ı
+
+### T29-6 — Sohbet uyarı banner'ı (cross-cutting)
+- [ ] `<ChatWarningBanner>` component (T29-3 + T29-5'te kullanılır)
+- [ ] Locale-aware: tr/en/de
+- [ ] Otomatik kapatma policy yazısı (gelecek faz: rate limit + admin moderation)
+

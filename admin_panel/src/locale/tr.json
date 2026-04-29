@@ -326,27 +326,52 @@
       }
     },
     "consultants": {
-      "title": "Danışmanlar",
-      "title_singular": "Danışman",
-      "labels": {
-        "bio": "Biyografi",
+      "header": {
+        "title": "Danışmanlar",
+        "description": "Danışman başvurularını inceleyin, onaylayın veya düzenleyin.",
+        "badge": "Rehber Yönetimi"
+      },
+      "filters": {
+        "all": "Hepsi",
+        "pending": "Bekleyenler",
+        "approved": "Onaylılar",
+        "rejected": "Reddedilenler"
+      },
+      "table": {
+        "consultant": "Danışman",
         "expertise": "Uzmanlık",
-        "languages": "Diller",
-        "session": "Seans"
+        "price": "Ücret",
+        "status": "Durum",
+        "actions": "İşlemler",
+        "empty": "Henüz danışman başvurusu bulunmuyor.",
+        "sessionMinutes": "{minutes} DAKİKA"
       },
       "status": {
-        "approved": "Onaylandı",
-        "rejected": "Reddedildi",
-        "pending": "Bekliyor"
+        "approved": "ONAYLI",
+        "rejected": "REDDEDİLDİ",
+        "pending": "BEKLEMEDE"
       },
       "actions": {
         "approve": "Onayla",
         "approve_success": "Danışman onaylandı.",
-        "approve_failed": "Danışman onaylanamadı.",
+        "approve_failed": "Onaylanırken hata oluştu.",
         "reject": "Reddet",
         "reject_success": "Danışman reddedildi.",
-        "reject_failed": "Danışman reddedilemedi.",
+        "reject_failed": "Reddedilirken hata oluştu.",
         "rejection_reason_prompt": "Reddetme nedeni"
+      },
+      "detail": {
+        "title": "Danışman Detayı",
+        "profile": "Profil Bilgileri",
+        "bio": "Hakkında / Biyografi",
+        "expertise": "Uzmanlık Alanları",
+        "languages": "Konuşulan Diller",
+        "session": "Seans Detayları",
+        "stats": "İstatistikler",
+        "totalSessions": "Toplam Seans",
+        "rating": "Puanlama",
+        "rejectionReason": "Red Nedeni",
+        "pricePerSession": "{price} {currency} / {duration} dk"
       },
       "expertise": {
         "astrology": "Astroloji",
@@ -912,7 +937,8 @@
         "wallet": "Cüzdan",
         "gutschein": "Hediye Kartları",
         "payment_settings": "Ödeme Ayarları",
-        "popups": "Popup"
+        "popups": "Popup",
+        "navigation": "Menü & Footer"
       },
       "stats": {
         "deliveredOrders": "Teslim Edilen Sipariş",
@@ -1241,129 +1267,194 @@
     },
     "reviews": {
       "header": {
-        "title": "Yorumlar & Testimonial",
-        "description": "Müşteri yorumlarını ve değerlendirmelerini yönet."
+        "title": "Değerlendirmeler",
+        "description": "Danışman yorumlarını ve puanlarını moderatör gözüyle inceleyin.",
+        "badge": "Müşteri Deneyimi"
       },
       "actions": {
         "create": "Yeni ekle",
+        "createManual": "MANUEL YORUM",
         "backToList": "Listeye dön",
-        "deleting": "Siliniyor..."
+        "deleting": "Siliniyor...",
+        "bulkModerateApprove": "Toplu Onayla",
+        "bulkModerateReject": "Toplu Reddet",
+        "clearSelection": "Temizle",
+        "saveAndApprove": "GÜVENLİ İŞARETLE VE ONAYLA"
       },
       "filters": {
-        "searchLabel": "Ara",
-        "searchPlaceholder": "İsim, e-posta, yorum...",
-        "approvedLabel": "Onay",
-        "activeLabel": "Durum",
-        "minRatingLabel": "Min. puan",
-        "minRatingPlaceholder": "0",
-        "maxRatingLabel": "Max. puan",
-        "maxRatingPlaceholder": "5",
+        "searchLabel": "Yorum Ara",
+        "searchPlaceholder": "İsim veya yorum içeriği...",
+        "statusLabel": "Durum",
+        "ratingLabel": "Puan",
         "localeLabel": "Dil",
-        "options": {
+        "statusOptions": {
           "all": "Tümü",
+          "pending": "Bekleyen / Reddedilen",
           "approved": "Onaylı",
-          "unapproved": "Onaysız",
-          "active": "Aktif",
-          "inactive": "Pasif"
+          "auto_flagged": "Auto-flagged",
+          "verified": "Doğrulanmış",
+          "with_outcome": "Cevaplı"
         }
       },
-      "summary": {
-        "total": "Toplam {total} kayıt"
+      "bulk": {
+        "selectedCount": "{count} yorum seçildi",
+        "success": "{count} yorum {action}."
       },
       "table": {
-        "columns": {
-          "nameEmail": "İsim & E-posta",
-          "rating": "Puan",
-          "comment": "Yorum",
-          "approved": "Onaylı",
-          "active": "Aktif",
-          "locale": "Locale",
-          "date": "Tarih"
-        },
-        "empty": "Kayıt bulunamadı.",
-        "updatedAt": "Güncelleme"
-      },
-      "labels": {
-        "approved": "Onaylı",
-        "unapproved": "Onaysız",
-        "active": "Aktif",
-        "inactive": "Pasif",
+        "approval": "Onay",
+        "user": "Kullanıcı",
+        "rating": "Puan",
         "comment": "Yorum",
-        "createdAt": "Oluşturma",
-        "updatedAt": "Güncelleme"
+        "date": "Tarih",
+        "actions": "İşlemler",
+        "empty": "Henüz yorum bulunmuyor.",
+        "loading": "Veriler yükleniyor...",
+        "unknownUser": "İsimsiz",
+        "noEmail": "E-posta yok",
+        "verified": "Doğrulanmış",
+        "autoFlagged": "Auto-flagged"
       },
-      "deleteDialog": {
-        "title": "Silmek istediğine emin misin?",
-        "description": "{name} tarafından yapılan yorum silinecek. Bu işlem geri alınamaz.",
-        "fallbackName": "Bu kayıt"
+      "dialogs": {
+        "delete": {
+          "title": "Yorumu Sil?",
+          "description": "\"{name}\" tarafından yapılan bu yorum kalıcı olarak silinecektir.",
+          "action": "SİL",
+          "cancel": "İptal"
+        },
+        "report": {
+          "title": "Moderasyon Raporu",
+          "description": "Bu yorum otomatik içerik kontrolünden geçemedi. Manuel inceleme gerekiyor.",
+          "triggeredFlags": "Tetiklenen Bayraklar",
+          "matchedPatterns": "Eşleşen Desenler",
+          "source": "Kaynak",
+          "checkTime": "Kontrol Zamanı",
+          "empty": "Rapor verisi bulunamadı.",
+          "close": "Kapat",
+          "flags": {
+            "generic": "Genel flag"
+          }
+        }
       },
       "messages": {
         "activated": "Aktif yapıldı.",
         "deactivated": "Pasif yapıldı.",
         "approved": "Onaylandı.",
         "approvalRemoved": "Onay kaldırıldı.",
-        "created": "Kayıt oluşturuldu.",
-        "updated": "Kayıt güncellendi.",
-        "deleted": "Kayıt silindi.",
-        "loadError": "Kayıt yüklenemedi.",
-        "genericError": "İşlem başarısız. Lütfen tekrar deneyin."
+        "deleted": "Yorum silindi.",
+        "error": "Hata oluştu.",
+        "created": "Yorum oluşturuldu.",
+        "updated": "Yorum güncellendi.",
+        "genericError": "İşlem başarısız."
       },
       "form": {
-        "titles": {
-          "create": "Yeni yorum",
-          "edit": "Yorumu düzenle"
-        },
-        "descriptions": {
-          "create": "Yeni bir müşteri yorumu ekleyin.",
-          "edit": "Mevcut müşteri yorumunu düzenleyin."
-        },
-        "sections": {
-          "meta": "Genel bilgiler",
-          "customer": "Müşteri bilgileri",
-          "content": "Yorum içeriği",
-          "extras": "Testimonial ek alanları",
-          "extrasDescription": "Testimonial görünümü için opsiyonel alanlar.",
-          "adminReply": "Admin yanıtı",
-          "adminReplyDescription": "Bu yoruma admin olarak yanıt verebilirsiniz."
-        },
-        "fields": {
-          "locale": "Dil",
-          "displayOrder": "Sıralama",
-          "approved": "Onay",
-          "active": "Durum",
-          "targetType": "Target type",
-          "targetId": "Target ID",
-          "name": "İsim",
-          "email": "E-posta",
-          "rating": "Puan",
-          "title": "Başlık",
-          "comment": "Yorum",
-          "role": "Rol / Pozisyon",
-          "company": "Şirket",
-          "avatarUrl": "Avatar URL",
-          "logoUrl": "Logo URL",
-          "profileHref": "Profil linki",
-          "adminReply": "Yanıt"
-        },
-        "placeholders": {
-          "targetType": "örn: testimonial, product, service",
-          "targetId": "UUID veya identifier",
-          "name": "örn: Ahmet Yılmaz",
-          "email": "ornek@email.com",
-          "title": "Yorum başlığı (opsiyonel)",
-          "comment": "Müşteri yorumu...",
-          "role": "örn: CEO, Müdür",
-          "company": "Şirket adı",
-          "adminReply": "Admin yanıtı (opsiyonel)"
-        },
-        "validation": {
-          "targetTypeRequired": "Target type zorunlu.",
-          "targetIdRequired": "Target ID zorunlu.",
-          "nameRequired": "İsim zorunlu.",
-          "emailRequired": "E-posta zorunlu.",
-          "commentRequired": "Yorum zorunlu.",
-          "ratingRange": "Puan 0-5 arasında olmalı."
-        }
+        "createTitle": "Yeni Değerlendirme",
+        "editTitle": "Değerlendirme Düzenle",
+        "createDescription": "Platform için manuel yorum oluşturun.",
+        "editDescription": "Mevcut yorumun detaylarını güncelleyin.",
+        "userInfo": "Kullanıcı Bilgileri",
+        "userName": "Kullanıcı Adı",
+        "email": "E-posta",
+        "rating": "Puanlama",
+        "commentContent": "Yorum İçeriği",
+        "commentTitle": "Başlık (Opsiyonel)",
+        "commentText": "Yorum Metni",
+        "adminReply": "Yönetici Yanıtı",
+        "settings": "Ayarlar",
+        "activeStatus": "Yayın Durumu",
+        "activeStatusDesc": "Site üzerinde aktif",
+        "approvedStatus": "Onay Durumu",
+        "approvedStatusDesc": "Moderatör onayı",
+        "displayOrder": "Görüntüleme Sırası",
+        "targetType": "Hedef Türü",
+        "targetId": "Hedef ID",
+        "deleteRecord": "KAYDI SİL"
+      }
+    },
+    "support": {
+      "header": {
+        "title": "Destek Talepleri",
+        "description": "Kullanıcı sorularını ve teknik destek taleplerini buradan yönetin.",
+        "badge": "Yardım Masası"
+      },
+      "stats": {
+        "total": "Toplam Talep",
+        "open": "Açık Talepler",
+        "closed": "Kapatılanlar"
+      },
+      "filters": {
+        "searchPlaceholder": "Talep ara..."
+      },
+      "table": {
+        "status": "Durum",
+        "priority": "Öncelik",
+        "subject": "Konu & Mesaj",
+        "date": "Tarih",
+        "actions": "İşlemler",
+        "empty": "Henüz destek talebi bulunmuyor.",
+        "loading": "Veriler yükleniyor..."
+      },
+      "status": {
+        "closed": "KAPANDI",
+        "waiting_response": "YANIT BEKLİYOR",
+        "open": "AÇIK"
+      },
+      "priority": {
+        "urgent": "ACİL",
+        "high": "YÜKSEK",
+        "medium": "ORTA",
+        "low": "DÜŞÜK"
+      },
+      "actions": {
+        "reply": "Yanıtla",
+        "reopen": "Talep yeniden açıldı.",
+        "close": "Talep kapatıldı.",
+        "error": "Hata oluştu."
+      }
+    },
+    "announcements": {
+      "header": {
+        "title": "Duyurular",
+        "description": "Uygulama genelindeki duyuruları ve bildirimleri buradan yönetin.",
+        "badge": "Sistem İletişimi"
+      },
+      "actions": {
+        "create": "YENİ DUYURU"
+      },
+      "table": {
+        "active": "Aktif",
+        "audience": "Hedef Kitle",
+        "titleContent": "Başlık & İçerik",
+        "dateRange": "Yayın Tarihi",
+        "actions": "İşlemler",
+        "empty": "Henüz duyuru bulunmuyor.",
+        "loading": "Yükleniyor..."
+      },
+      "audience": {
+        "all": "HERKES",
+        "users": "DANIŞANLAR",
+        "consultants": "DANIŞMANLAR"
+      },
+      "messages": {
+        "statusUpdated": "Durum güncellendi.",
+        "deleted": "Duyuru silindi.",
+        "deleteConfirm": "Bu duyuruyu silmek istediğinize emin misiniz?",
+        "error": "Hata oluştu."
+      },
+      "form": {
+        "createTitle": "Yeni Duyuru",
+        "editTitle": "Duyuruyu Düzenle",
+        "description": "Duyuru yayınlamak için detayları doldurun.",
+        "details": "Duyuru Detayları",
+        "title": "Başlık",
+        "titlePlaceholder": "örn: Yeni Özellik Yayında",
+        "messageBody": "Mesaj İçeriği",
+        "messagePlaceholder": "Duyurunuzu buraya yazın...",
+        "targetAudience": "Hedef Kitle",
+        "active": "Aktif",
+        "startsAt": "Başlangıç (Opsiyonel)",
+        "endsAt": "Bitiş (Opsiyonel)",
+        "createAction": "Duyuru Oluştur",
+        "updateAction": "Duyuruyu Güncelle"
       }
     },
     "bookings": {
@@ -1727,6 +1818,12 @@
           "minLengthError": "Şifre en az 8 karakter olmalıdır.",
           "updated": "Şifre güncellendi."
         },
+        "verification": {
+          "title": "E-posta Doğrulama",
+          "description": "Kullanıcının e-posta doğrulama durumu.",
+          "verified": "Doğrulanmış",
+          "unverified": "Doğrulanmamış"
+        },
         "delete": {
           "title": "Tehlikeli İşlem",
           "description": "Kullanıcıyı kalıcı olarak siler.",
@@ -1796,6 +1893,76 @@
         "notFound": "Kullanıcı bulunamadı"
       },
       "errorFallback": "İşlem başarısız. Lütfen tekrar deneyin."
+    },
+    "orders": {
+      "header": {
+        "title": "Siparişler",
+        "description": "Tüm ödemeleri, iadeleri ve işlem durumlarını buradan takip edin.",
+        "badge": "Finansal Kayıtlar"
+      },
+      "summary": {
+        "total_label": "Toplam İşlem"
+      },
+      "filters": {
+        "searchLabel": "İşlem No / E-posta",
+        "searchPlaceholder": "Sipariş no veya e-posta...",
+        "orderStatusLabel": "Sipariş Durumu",
+        "paymentStatusLabel": "Ödeme Durumu",
+        "all": "Tümü"
+      },
+      "table": {
+        "orderNo": "Sipariş No",
+        "customer": "Müşteri Bilgisi",
+        "amount": "Tutar",
+        "status": "Durum",
+        "payment": "Ödeme",
+        "date": "Tarih",
+        "actions": "Detay",
+        "empty": "Sipariş kaydı bulunmuyor.",
+        "loading": "Yükleniyor..."
+      },
+      "pagination": {
+        "info": "Sayfa {page} • Toplam {total} İşlem",
+        "prev": "Önceki",
+        "next": "Sonraki"
+      },
+      "detail": {
+        "title": "Sipariş Detayı",
+        "loading": "Yükleniyor...",
+        "notFound": "Sipariş bulunamadı.",
+        "info": "Sipariş Bilgileri",
+        "orderNumber": "Sipariş No",
+        "total": "Toplam",
+        "txId": "İşlem ID",
+        "createdAt": "Oluşturulma",
+        "updatedAt": "Güncelleme",
+        "statusUpdate": "Durum Güncelle",
+        "statusDesc": "Sipariş ve ödeme durumunu değiştirin.",
+        "orderStatus": "Sipariş Durumu",
+        "paymentStatus": "Ödeme Durumu",
+        "adminNote": "Admin Notu",
+        "adminNotePh": "Dahili not...",
+        "refundReason": "İade nedeni (opsiyonel):",
+        "items": "Sipariş Kalemleri",
+        "itemTitle": "Başlık",
+        "itemType": "Tip",
+        "itemQty": "Adet",
+        "itemPrice": "Fiyat",
+        "itemTotal": "Toplam",
+        "noItems": "Kalem bulunamadı.",
+        "payments": "Ödemeler",
+        "payAmount": "Tutar",
+        "payStatus": "Durum",
+        "payTxId": "İşlem ID",
+        "payDate": "Tarih"
+      },
+      "messages": {
+        "noChanges": "Değişiklik yok",
+        "updated": "Sipariş güncellendi",
+        "updateFailed": "Güncelleme başarısız",
+        "refunded": "Sipariş iade edildi",
+        "refundFailed": "İade başarısız"
+      }
     },
     "emailTemplates": {
       "list": {
@@ -1974,43 +2141,42 @@
       }
     },
     "notifications": {
-      "title": "Bildirimler",
-      "description": "Tüm sistem bildirimlerini yönetin ({count} bildirim, {unread} okunmamış)",
+      "header": {
+        "title": "Bildirimler",
+        "description": "{count} bildirim bulundu, {unread} okunmadı.",
+        "badge": "Sistem Bildirimleri"
+      },
       "actions": {
-        "markAllRead": "Tümünü Okundu İşaretle",
+        "markAllRead": "TÜMÜNÜ OKUNDU YAP",
         "refresh": "Yenile",
-        "create": "Yeni Bildirim",
+        "sendPush": "PUSH GÖNDER",
+        "create": "YENİ OLUŞTUR",
+        "markRead": "Okundu",
+        "markUnread": "Okunmadı",
         "back": "Geri",
-        "delete": "Sil",
-        "save": "Kaydet",
-        "saving": "Kaydediliyor...",
-        "cancel": "İptal",
-        "edit": "Düzenle",
-        "markRead": "Okundu Yap",
-        "markUnread": "Okunmadı Yap"
+        "save": "Kaydet"
       },
       "filters": {
         "title": "Filtreler",
-        "search": "Ara",
-        "searchPlaceholder": "Başlık, mesaj veya tip...",
+        "search": "Arama",
+        "searchPlaceholder": "Başlık veya mesaj...",
         "status": "Durum",
-        "type": "Tip",
+        "type": "Tür",
         "all": "Tümü",
-        "read": "Okundu",
-        "unread": "Okunmadı",
+        "read": "Okunmuş",
+        "unread": "Okunmamış",
         "typePlaceholder": "Tümü"
       },
       "table": {
-        "status": "Durum",
+        "status": "D",
         "title": "Başlık",
         "message": "Mesaj",
-        "type": "Tip",
+        "type": "Tür",
         "date": "Tarih",
         "actions": "İşlemler",
+        "empty": "Henüz bildirim bulunmuyor.",
         "loading": "Yükleniyor...",
-        "noRecords": "Bildirim bulunamadı",
-        "read": "Okundu",
-        "unread": "Okunmadı"
+        "noRecords": "Bildirim bulunamadı"
       },
       "form": {
         "createTitle": "Yeni Bildirim",
@@ -2019,44 +2185,38 @@
         "editDescription": "Bildirim detaylarını görüntüleyin",
         "infoTitle": "Bildirim Bilgileri",
         "userId": "Kullanıcı ID",
-        "userIdPlaceholder": "Boş bırakılırsa mevcut kullanıcı",
+        "userIdPlaceholder": "Boş bırakılırsa tüm kullanıcılar",
         "userIdHelp": "Belirli bir kullanıcıya göndermek için UUID girin",
         "title": "Başlık",
         "titlePlaceholder": "Bildirim başlığı",
         "message": "Mesaj",
         "messagePlaceholder": "Bildirim mesajı",
-        "type": "Tip",
+        "type": "Tür",
         "optional": "(opsiyonel)",
         "editWarning": "ℹ️ Bildirimler oluşturulduktan sonra düzenlenemez. Sadece okundu/okunmadı durumu değiştirilebilir."
       },
-      "details": {
-        "title": "Bildirim Detayları",
-        "id": "ID",
-        "userId": "Kullanıcı ID",
-        "status": "Durum",
-        "createdAt": "Oluşturulma Tarihi",
-        "read": "Okundu",
-        "unread": "Okunmadı"
-      },
       "messages": {
-        "markAllSuccess": "Tüm bildirimler okundu olarak işaretlendi",
-        "markedRead": "Okundu olarak işaretlendi",
-        "markedUnread": "Okunmadı olarak işaretlendi",
-        "deleteConfirm": "\"{title}\" bildirimini silmek istediğinize emin misiniz?",
-        "deleteSuccess": "Bildirim silindi",
-        "operationFailed": "İşlem başarısız",
+        "markAllSuccess": "Tümü okundu işaretlendi.",
+        "markedRead": "Okundu işaretlendi.",
+        "markedUnread": "Okunmadı işaretlendi.",
+        "deleteConfirm": "\"{title}\" başlıklı bildirim silinecek?",
+        "deleteSuccess": "Bildirim silindi.",
+        "operationFailed": "İşlem başarısız.",
         "titleRequired": "Başlık gerekli",
         "messageRequired": "Mesaj gerekli",
-        "createSuccess": "Bildirim oluşturuldu",
-        "editNotSupported": "Bildirimleri düzenleme şu anda desteklenmiyor"
+        "createSuccess": "Bildirim oluşturuldu"
       },
       "types": {
+        "system": "Sistem",
+        "booking": "Randevu",
+        "payment": "Ödeme",
+        "support": "Destek",
+        "announcement": "Duyuru",
         "order_created": "Sipariş Oluşturuldu",
         "order_paid": "Sipariş Ödendi",
         "order_failed": "Sipariş Başarısız",
-        "booking_created": "Rezervasyon Oluşturuldu",
-        "booking_status_changed": "Rezervasyon Durumu Değişti",
-        "system": "Sistem",
+        "booking_created": "Randevu Oluşturuldu",
+        "booking_status_changed": "Randevu Durumu Değişti",
         "custom": "Özel"
       }
     },
@@ -2174,17 +2334,81 @@
       "title": "Site Ayarları",
       "description": "Key-value ayarlarını yönetin. Liste sekmeleri arama ile filtrelenebilir.",
       "tabs": {
-        "general": "Genel",
-        "seo": "SEO",
-        "smtp": "SMTP / E-posta",
+        "general": "Genel Ayarlar",
+        "seo": "SEO & Meta",
+        "smtp": "E-posta (SMTP)",
         "cloudinary": "Cloudinary",
-        "api": "API",
+        "api": "API & Entegrasyon",
         "brandMedia": "Logo & Favicon",
-        "list": "Liste (Dil)",
+        "list": "Tüm Kayıtlar",
         "globalList": "Liste (Global *)",
         "locales": "Diller",
-        "branding": "Marka",
-        "payment": "Ödeme"
+        "branding": "Marka & Kimlik",
+        "payment": "Ödeme",
+        "design_tokens": "Tasarım Tokenları",
+        "custom_css": "Özel CSS",
+        "livekit": "Görüntülü Altyapı"
+      },
+      "messages": {
+        "deleteConfirm": "{key} ayarını silmek istediğinize emin misiniz?",
+        "deleted": "Ayar silindi.",
+        "error": "Hata oluştu."
+      },
+      "general": {
+        "title": "Genel Ayarlar",
+        "description": "Marka bilgileri, iletişim ve sosyal medya linkleri.",
+        "keyLabels": {
+          "contact_info": "İletişim Bilgileri",
+          "socials": "Sosyal Medya",
+          "businessHours": "Çalışma Saatleri",
+          "company_profile": "Şirket Profili",
+          "ui_header": "Header Navigasyonu"
+        },
+        "keyDescriptions": {
+          "contact_info": "Telefon, e-posta, WhatsApp ve adres bilgileri.",
+          "socials": "Instagram, Facebook, X ve diğer sosyal ağlar.",
+          "businessHours": "Haftalık çalışma ve randevu saatleri.",
+          "company_profile": "Şirket adı, slogan ve hakkında özeti.",
+          "ui_header": "Header'daki menü etiketleri ve CTA butonu."
+        }
+      },
+      "seo": {
+        "inline": {
+          "title": "SEO Ayarları",
+          "description": "Her sayfa için title, description ve sosyal medya önizlemeleri.",
+          "saved": "SEO ayarları kaydedildi.",
+          "saveError": "Kayıt hatası.",
+          "dirty": "Kaydedilmedi",
+          "save": "Kaydet",
+          "saveAll": "Tümünü Kaydet",
+          "loading": "Yükleniyor...",
+          "expandAll": "Tümünü Aç",
+          "collapseAll": "Tümünü Kapat",
+          "fieldTitle": "Başlık (title)",
+          "fieldDescription": "Açıklama (description)",
+          "placeholderTitle": "GoldMoodAstro — ...",
+          "placeholderDescription": "Sayfanın kısa özeti — ideal 140-160 karakter.",
+          "ogImage": "OG Görsel (1200×630)",
+          "noindex": "Bu sayfayı arama motorlarından gizle (noindex)",
+          "googlePreview": "Google Önizleme",
+          "socialPreview": "Sosyal Medya Önizleme",
+          "siteName": "GoldMoodAstro",
+          "noDescription": "Henüz açıklama girilmedi.",
+          "noOgImage": "OG görsel henüz yüklenmedi"
+        },
+        "pageLabels": {
+          "home": "Ana Sayfa",
+          "birth-chart": "Doğum Haritası",
+          "consultants": "Danışmanlar",
+          "consultant-detail": "Danışman Detayı",
+          "pricing": "Ücretlendirme",
+          "daily": "Günlük Yorum",
+          "blog": "Blog",
+          "blog-post": "Blog Yazısı",
+          "about": "Hakkımızda",
+          "contact": "İletişim",
+          "faqs": "Sıkça Sorulanlar"
+        }
       },
       "payment": {
         "title": "Ödeme Ayarları",
@@ -2368,9 +2592,24 @@
         "overrideCreated": "\"{key}\" için {locale} override oluşturuldu (GLOBAL kopyalandı).",
         "defaultsRestored": "\"{key}\" ({locale}) default değerler geri yüklendi.",
         "missingGlobalError": "GLOBAL (*) kayıt bulunamadı. Önce global değer oluşturmalısın.",
-        "globalBootstrapSuccess": "Eksik GLOBAL (*) General/UI kayıtları oluşturuldu.",
+        "globalBootstrapSuccess": "Eksik anahtarlar boş varsayılanlarla oluşturuldu.",
         "loadingNote": "Global + locale kayıtları çekiliyor.",
-        "deleteTooltip": "İpucu: \"Sil*\" GLOBAL (*) kaydını siler. \"Sil\" seçili locale override'ını siler."
+        "deleteTooltip": "İpucu: \"Sil*\" GLOBAL (*) kaydını siler. \"Sil\" seçili locale override'ını siler.",
+        "recordCount": "{count} kayıt",
+        "keyLabels": {
+          "contact_info": "İletişim Bilgileri",
+          "socials": "Sosyal Medya",
+          "businessHours": "Çalışma Saatleri",
+          "company_profile": "Firma Profili",
+          "ui_header": "Header / Menü"
+        },
+        "keyDescriptions": {
+          "contact_info": "Telefon, e-posta, adres, WhatsApp.",
+          "socials": "Instagram, Facebook, LinkedIn, YouTube, X.",
+          "businessHours": "Haftalık çalışma saatleri.",
+          "company_profile": "Firma adı, slogan, hakkımızda metni.",
+          "ui_header": "Üst menü etiketleri ve CTA butonu."
+        }
       },
       "cloudinary": {
         "title": "Cloudinary / Storage Ayarları",
@@ -2555,6 +2794,43 @@
           "source": "Kaynak",
           "effective": "Effective (Özet)",
           "actions": "İşlemler"
+        },
+        "inline": {
+          "title": "SEO Ayarları",
+          "description": "Her sayfa için title, description, OG görseli ve indexleme ayarı.",
+          "save": "Kaydet",
+          "saveAll": "Tümünü Kaydet",
+          "saved": "SEO ayarları kaydedildi.",
+          "saveError": "Kayıt sırasında hata oluştu.",
+          "loading": "Yükleniyor...",
+          "dirty": "Kaydedilmedi",
+          "expandAll": "Tümünü Aç",
+          "collapseAll": "Tümünü Kapat",
+          "fieldTitle": "Başlık (title)",
+          "fieldDescription": "Açıklama (description)",
+          "ogImage": "OG Görsel (1200×630)",
+          "noindex": "Bu sayfayı arama motorlarından gizle (noindex)",
+          "googlePreview": "Google Önizleme",
+          "socialPreview": "Sosyal Medya Önizleme",
+          "siteName": "GoldMoodAstro",
+          "noDescription": "Henüz açıklama girilmedi.",
+          "noOgImage": "OG görsel henüz yüklenmedi",
+          "placeholderTitle": "GoldMoodAstro — Yıldızlarla tanışan modern astroloji",
+          "placeholderDescription": "Sayfanın kısa özeti — ideal 140-160 karakter.",
+          "charCount": "{count} / 160"
+        },
+        "pageLabels": {
+          "home": "Ana Sayfa",
+          "birth-chart": "Doğum Haritası",
+          "consultants": "Danışmanlar",
+          "consultant-detail": "Danışman Detay",
+          "pricing": "Üyelik / Fiyatlandırma",
+          "daily": "Günlük Yorum",
+          "blog": "Blog",
+          "blog-post": "Blog Yazısı",
+          "about": "Hakkımızda",
+          "contact": "İletişim",
+          "faqs": "S.S.S."
         }
       },
       "structured": {
@@ -3117,7 +3393,7 @@
           "addFailed": "Çalışma aralığı eklenemedi.",
           "updated": "Çalışma aralığı güncellendi.",
           "updateFailed": "Çalışma aralığı güncellenemedi.",
-          "deleted": "Çalışma aralığı silindi.",
+          "deleted": "Çalışma aralığı silinemedi.",
           "deleteFailed": "Çalışma aralığı silinemedi.",
           "deleteConfirm": "Bu çalışma aralığını silmek üzeresiniz.\n\nGün: {day}\nSaat: {start} - {end}\n\nDevam edilsin mi?"
         }

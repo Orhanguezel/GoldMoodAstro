@@ -7,21 +7,21 @@ const COPY = {
     promises: [
       {
         num: '01',
-        title: 'Gerçek Uzmanlar',
-        text: 'AI ile değil, alanında onaylı ve puanlanmış gerçek astrologlarla görüşürsünüz.',
-        target: 'GÜVENİLİRLİK'
+        title: 'İptal etmek üye olmaktan kolay',
+        text: 'Aboneliğinizi tek tıkla, hiçbir form doldurmadan veya bekleme süresi olmadan anında iptal edebilirsiniz. Şeffaflık ana ilkemizdir.',
+        target: 'ŞEFFAFLIK'
       },
       {
         num: '02',
-        title: 'Mahremiyet',
-        text: 'Telefon numaranızı istemiyoruz. Tüm görüşmeler uçtan uca şifreli ve anonimdir.',
-        target: 'GİZLİLİK'
+        title: 'Her yorum size özel',
+        text: 'Genel geçer yorumlar yerine, doğum haritanızın saniye hassasiyetindeki verilerinden beslenen kişisel rehberlik sunuyoruz.',
+        target: 'DERİNLİK'
       },
       {
         num: '03',
-        title: 'Şeffaf Ücretlendirme',
-        text: 'Sürpriz ücretler yok. Dakika bazlı veya paket usulü net fiyatlarla çalışıyoruz.',
-        target: 'ŞEFFAFLIK'
+        title: 'Telefon numaranız bizde yok',
+        text: 'Mahremiyetinize saygı duyuyoruz. Kayıt sırasında telefon numaranızı istemiyoruz, tüm iletişim uygulama içinden sağlanır.',
+        target: 'GİZLİLİK'
       }
     ]
   },
@@ -31,21 +31,21 @@ const COPY = {
     promises: [
       {
         num: '01',
-        title: 'Real Experts',
-        text: 'You talk to certified and rated real astrologers, not AI bots.',
-        target: 'TRUST'
+        title: 'Cancelling is easier than joining',
+        text: 'You can cancel your subscription instantly with one click, without filling out any forms or waiting. Transparency is our core principle.',
+        target: 'TRANSPARENCY'
       },
       {
         num: '02',
-        title: 'Privacy First',
-        text: 'We don\'t ask for your phone number. All calls are end-to-end encrypted and anonymous.',
-        target: 'PRIVACY'
+        title: 'Every reading is unique to you',
+        text: 'Instead of generic readings, we offer personal guidance fed by your birth chart data with second-level precision.',
+        target: 'DEPTH'
       },
       {
         num: '03',
-        title: 'Transparent Pricing',
-        text: 'No hidden fees. We work with clear per-minute or package-based pricing.',
-        target: 'TRANSPARENCY'
+        title: 'We don\'t have your phone number',
+        text: 'We respect your privacy. We don\'t ask for your phone number during registration; all communication is provided through the app.',
+        target: 'PRIVACY'
       }
     ]
   }

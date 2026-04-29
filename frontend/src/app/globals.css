@@ -54,6 +54,9 @@
   --color-bg-accent:       color-mix(in srgb, var(--gm-primary, #C9A961) 8%, transparent);
   --color-bg-dark:         var(--color-deep);
 
+  --color-background:      var(--gm-bg, #FAF6EF);
+  --color-foreground:      var(--gm-text, #2A2620);
+
   --color-text-primary:    var(--gm-text, #2A2620);
   --color-text-secondary:  var(--gm-text-dim, #4A4238);
   --color-text-muted:      var(--gm-muted, #8A8276);
@@ -63,6 +66,15 @@
   --color-brand-hover:     var(--gm-primary-hover, #A8884A);
   --color-brand-dark:      var(--gm-primary-dark, #8C7038);
   --color-brand-light:     color-mix(in srgb, var(--gm-primary, #C9A961) 14%, transparent);
+
+  --color-brand-gold:      var(--gm-gold, #C9A961);
+  --color-brand-gold-deep: var(--gm-gold-deep, #A8884A);
+  --color-brand-gold-dim:  var(--gm-gold-dim, #B89651);
+
+  --color-bg-base:         var(--gm-bg, #FAF6EF);
+  --color-bg-deep:         var(--gm-bg-deep, #F2EBDD);
+  --color-surface:         var(--gm-surface, #FFFFFF);
+  --color-surface-high:    var(--gm-surface-high, #F7F1E4);
 
   --color-primary:         var(--color-brand-primary);
   --color-primary-hover:   var(--color-brand-hover);

@@ -42,6 +42,8 @@ export const bookings = mysqlTable(
     session_duration: tinyint('session_duration').notNull().default(30), // dakika
     session_price: varchar('session_price', { length: 12 }).notNull(),   // snapshot
     media_type: mysqlEnum('media_type', ['audio', 'video']).default('audio'),
+    source_type: varchar('source_type', { length: 50 }),
+    source_id: char('source_id', { length: 36 }),
 
     // Randevu durumu
     // pending_payment → booked → confirmed → completed | cancelled | no_show
@@ -77,6 +79,7 @@ export const bookings = mysqlTable(
     index('bookings_service_idx').on(t.service_id),
     index('bookings_slot_idx').on(t.slot_id),
     index('bookings_status_idx').on(t.status),
+    index('bookings_source_idx').on(t.source_type, t.source_id),
     index('bookings_date_idx').on(t.appointment_date),
     index('bookings_resource_date_idx').on(t.resource_id, t.appointment_date, t.appointment_time),
     foreignKey({

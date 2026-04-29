@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS llm_prompts (
   `key` VARCHAR(80) NOT NULL,
   locale VARCHAR(8) NOT NULL DEFAULT 'tr',
 
-  -- Provider seçimi
-  provider ENUM('openai','anthropic','azure','local') NOT NULL DEFAULT 'anthropic',
+  -- Provider seçimi (groq 2026-04-28 eklendi — geoserra'dan)
+  provider ENUM('openai','anthropic','groq','azure','local') NOT NULL DEFAULT 'anthropic',
   model VARCHAR(120) NOT NULL DEFAULT 'claude-haiku-4-5',
   temperature DECIMAL(3,2) NOT NULL DEFAULT 0.80,
   max_tokens INT NOT NULL DEFAULT 800,

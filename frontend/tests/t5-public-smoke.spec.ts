@@ -123,7 +123,7 @@ test.describe('T5 public smoke', () => {
     await expect(
       page.getByRole('button', { name: /Güvenli Ödemeye Geç|Proceed to Payment/i }),
     ).toBeVisible();
-    await expect(page.getByLabelText('Not (opsiyonel)')).toBeVisible();
+    await expect(page.getByLabel('Not (opsiyonel)')).toBeVisible();
   });
 
   test('auth forms surface validation feedback', async ({ page }) => {

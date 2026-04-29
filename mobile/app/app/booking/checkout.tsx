@@ -7,7 +7,8 @@ import {
   ActivityIndicator, 
   Alert, 
   ScrollView, 
-  Platform 
+  Platform,
+  TextInput 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -19,13 +20,17 @@ import {
   User, 
   ShieldCheck,
   Info,
-  Sparkles
+  Sparkles,
+  Tag, 
+  Check, 
+  X
 } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
-import { bookingsApi, ordersApi } from '@/lib/api';
+import { bookingsApi, ordersApi, campaignsApi } from '@/lib/api';
+import type { Campaign } from '@/types';
 
 export default function BookingCheckoutScreen() {
   const params = useLocalSearchParams<{
@@ -37,14 +42,54 @@ export default function BookingCheckoutScreen() {
     price: string;
     duration: string;
     name: string;
+    topic?: string;
   }>();
   
   const [loading, setLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCampaign, setAppliedCampaign] = useState<Campaign | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+
+  const originalPrice = Number(params.price || 0);
+  let finalPrice = originalPrice;
+  let discountAmount = 0;
+
+  if (appliedCampaign) {
+    if (appliedCampaign.type === 'discount_percentage') {
+      discountAmount = (originalPrice * Number(appliedCampaign.value)) / 100;
+    } else if (appliedCampaign.type === 'discount_fixed') {
+      discountAmount = Number(appliedCampaign.value);
+    }
+    finalPrice = Math.max(0, originalPrice - discountAmount);
+  }
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setCouponLoading(true);
+    try {
+      const res = await campaignsApi.redeem({ 
+        code: couponCode, 
+        applies_to: 'consultant_booking' 
+      });
+      if (res.valid) {
+        setAppliedCampaign(res.campaign);
+      } else {
+        Alert.alert('Hata', res.message || 'Geçersiz kupon kodu.');
+      }
+    } catch (err: any) {
+      Alert.alert('Hata', 'Kupon uygulanırken bir sorun oluştu.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   const handleCheckout = async () => {
     setLoading(true);
     try {
       // 1. Create Booking
+      const sourceMatch = typeof params.topic === 'string'
+        ? params.topic.match(/^daily_reading_([0-9a-f-]{36})$/i)
+        : null;
       const booking = await bookingsApi.create({
         consultant_id: params.consultantId!,
         resource_id: params.resourceId!,
@@ -52,6 +97,8 @@ export default function BookingCheckoutScreen() {
         appointment_time: params.time!,
         session_duration: Number(params.duration),
         session_price: params.price!,
+        source_type: sourceMatch ? 'daily_reading' : undefined,
+        source_id: sourceMatch?.[1],
       });
 
       // 2. Create Order
@@ -132,9 +179,61 @@ export default function BookingCheckoutScreen() {
 
             <View style={styles.divider} />
 
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Seans Ücreti</Text>
+              <Text style={styles.priceVal}>₺{Math.round(originalPrice)}</Text>
+            </View>
+
+            {appliedCampaign && (
+              <View style={styles.priceRow}>
+                <Text style={styles.discountLabel}>İndirim ({appliedCampaign.code})</Text>
+                <Text style={styles.discountVal}>-₺{Math.round(discountAmount)}</Text>
+              </View>
+            )}
+
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Ödenecek Tutar</Text>
-              <Text style={styles.totalValue}>₺{Math.round(Number(params.price))}</Text>
+              <Text style={styles.totalValue}>₺{Math.round(finalPrice)}</Text>
+            </View>
+          </View>
+
+          {/* Promo Code */}
+          <View style={styles.promoCard}>
+            <Text style={styles.promoLabel}>KUPON KODU</Text>
+            <View style={styles.promoInputRow}>
+              <View style={[styles.promoInputWrap, appliedCampaign && styles.promoInputDisabled]}>
+                <Tag size={16} color={colors.goldDim} style={{ marginLeft: 12 }} />
+                <TextInput
+                  style={styles.promoInput}
+                  placeholder="Kupon girin..."
+                  placeholderTextColor={colors.textMuted}
+                  value={couponCode}
+                  onChangeText={(v) => setCouponCode(v.toUpperCase())}
+                  autoCapitalize="characters"
+                  editable={!appliedCampaign && !couponLoading}
+                />
+                {appliedCampaign && (
+                  <Pressable 
+                    onPress={() => { setAppliedCampaign(null); setCouponCode(''); }}
+                    style={styles.clearCoupon}
+                  >
+                    <X size={16} color={colors.danger} />
+                  </Pressable>
+                )}
+              </View>
+              {!appliedCampaign && (
+                <Pressable 
+                  style={[styles.applyBtn, (!couponCode || couponLoading) && styles.applyBtnDisabled]}
+                  onPress={handleApplyCoupon}
+                  disabled={!couponCode || couponLoading}
+                >
+                  {couponLoading ? (
+                    <ActivityIndicator size="small" color={colors.bgDeep} />
+                  ) : (
+                    <Text style={styles.applyBtnText}>UYGULA</Text>
+                  )}
+                </Pressable>
+              )}
             </View>
           </View>
 
@@ -204,6 +303,24 @@ const styles = StyleSheet.create({
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   totalLabel: { fontFamily: font.sansBold, fontSize: 15, color: colors.text },
   totalValue: { fontFamily: font.display, fontSize: 26, color: colors.gold },
+  
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  priceLabel: { fontFamily: font.sans, fontSize: 14, color: colors.textDim },
+  priceVal: { fontFamily: font.sansMedium, fontSize: 14, color: colors.text },
+  discountLabel: { fontFamily: font.sansMedium, fontSize: 14, color: colors.success },
+  discountVal: { fontFamily: font.sansBold, fontSize: 14, color: colors.success },
+
+  promoCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 20, borderWidth: 1, borderColor: colors.line, marginBottom: 20 },
+  promoLabel: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, letterSpacing: 1.5, marginBottom: 12 },
+  promoInputRow: { flexDirection: 'row', gap: 10 },
+  promoInputWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgDeep, borderRadius: radius.md, borderWidth: 1, borderColor: colors.lineSoft, height: 48 },
+  promoInputDisabled: { opacity: 0.8 },
+  promoInput: { flex: 1, paddingHorizontal: 12, fontFamily: font.sansMedium, fontSize: 14, color: colors.text },
+  clearCoupon: { padding: 10 },
+  applyBtn: { backgroundColor: colors.gold, paddingHorizontal: 16, borderRadius: radius.md, justifyContent: 'center', height: 48 },
+  applyBtnDisabled: { opacity: 0.5 },
+  applyBtnText: { fontFamily: font.sansBold, fontSize: 12, color: colors.bgDeep },
+
   trustBox: { backgroundColor: 'rgba(76, 175, 110, 0.05)', borderRadius: radius.lg, padding: 16, borderWidth: 1, borderColor: 'rgba(76, 175, 110, 0.15)', marginBottom: 20 },
   trustHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   trustTitle: { fontFamily: font.sansBold, fontSize: 14, color: colors.success },

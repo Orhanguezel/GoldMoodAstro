@@ -1,24 +1,15 @@
 'use client';
 
-// =============================================================
-// FILE: src/components/admin/site-settings/SiteSettingsForm.tsx
-// guezelwebdesign – Site Settings Unified Form (shadcn/ui)
-// - NO bootstrap classes
-// - Mode: Tabs (Structured / Raw)
-// - Raw: single textarea, JSON parse fallback
-// - Structured: separate state
-// - Image upload supports open library (no full reload)
-// - App Router safe (next/navigation)
-// =============================================================
-
 import * as React from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { Save, Trash2, Code2, LayoutTemplate } from 'lucide-react';
 
 import type { SiteSetting, SettingValue } from '@/integrations/shared';
 import { AdminImageUploadField } from '@/app/(main)/admin/_components/common/AdminImageUploadField';
-import { useAdminTranslations } from '@/i18n';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { usePreferencesStore } from '@/stores/preferences/preferences-provider';
+import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -134,8 +125,8 @@ export const SiteSettingsForm: React.FC<SiteSettingsFormProps> = ({
   imageUpload,
 }) => {
   const router = useRouter();
+  const t = useAdminT('admin.siteSettings');
   const adminLocale = usePreferencesStore((s) => s.adminLocale);
-  const t = useAdminTranslations(adminLocale || undefined);
 
   const canStructured = typeof renderStructured === 'function';
 
@@ -176,10 +167,10 @@ export const SiteSettingsForm: React.FC<SiteSettingsFormProps> = ({
         mode === 'raw' ? parseRawOrString(rawText) : (structuredValue as any);
 
       await onSave({ key: settingKey, locale, value: valueToSave });
-      toast.success(t('admin.siteSettings.form.saved', { key: settingKey, locale }));
+      toast.success(t('form.saved', null, 'Ayar kaydedildi.'));
     } catch (err: any) {
       toast.error(
-        errMsg(err, t('admin.siteSettings.form.saveError')),
+        errMsg(err, t('form.saveError', null, 'Kaydedilirken hata oluştu.'))
       );
     }
   };
@@ -188,70 +179,96 @@ export const SiteSettingsForm: React.FC<SiteSettingsFormProps> = ({
     if (!onDelete || disabled) return;
 
     const ok = window.confirm(
-      t('admin.siteSettings.form.deleteConfirm', { key: settingKey, locale }),
+      t('form.deleteConfirm', { key: settingKey, locale }, 'Bu ayarı silmek istediğinize emin misiniz?')
     );
     if (!ok) return;
 
     try {
       await onDelete({ key: settingKey, locale });
-      toast.success(t('admin.siteSettings.form.deleted', { key: settingKey, locale }));
+      toast.success(t('form.deleted', null, 'Ayar silindi.'));
     } catch (err: any) {
       toast.error(
-        errMsg(err, t('admin.siteSettings.form.deleteError')),
+        errMsg(err, t('form.deleteError', null, 'Silinirken hata oluştu.'))
       );
     }
   };
 
   return (
-    <Card>
-      <CardHeader className="gap-3">
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-base">
-              {t('admin.siteSettings.form.title')}: <code>{settingKey}</code>
-              <Badge variant="secondary" className="ml-2 align-middle">
-                {locale}
-              </Badge>
+    <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+      <CardHeader className="gap-6 bg-gm-surface/40 p-8 border-b border-gm-border-soft">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-2">
+            <CardTitle className="font-serif text-2xl flex items-center gap-3">
+              <span className="text-gm-text">{t('form.title', null, 'Ayar Düzenle')}</span>
+              <code className="text-gm-gold bg-gm-gold/10 px-3 py-1.5 rounded-xl text-lg font-mono border border-gm-gold/20 shadow-sm">{settingKey}</code>
+              {locale && locale !== '*' ? (
+                <Badge variant="outline" className="border-gm-gold/30 bg-gm-gold/5 text-gm-gold px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em]">{locale}</Badge>
+              ) : (
+                <Badge variant="outline" className="border-gm-muted/30 bg-gm-muted/5 text-gm-muted px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em]">GLOBAL</Badge>
+              )}
             </CardTitle>
-            <CardDescription>
-              {t('admin.siteSettings.form.description')}
+            <CardDescription className="text-gm-muted font-serif italic opacity-80">
+              {t('form.description', null, 'Bu ayarın değerini yapılandırın.')}
             </CardDescription>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
             {onDelete ? (
-              <Button type="button" variant="outline" onClick={handleDelete} disabled={disabled}>
-                {t('admin.siteSettings.actions.delete')}
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleDelete} 
+                disabled={disabled}
+                className="rounded-full border-gm-error/30 text-gm-error hover:bg-gm-error/10 hover:text-gm-error h-12 px-6 text-[10px] font-bold tracking-widest uppercase transition-all"
+              >
+                <Trash2 className="mr-2 size-4" />
+                {t('admin.common.delete', null, 'Sil')}
               </Button>
             ) : null}
 
-            <Button type="button" onClick={handleSave} disabled={disabled}>
-              {t('admin.siteSettings.actions.save')}
+            <Button 
+              type="button" 
+              onClick={handleSave} 
+              disabled={disabled}
+              className="rounded-full bg-gm-gold text-gm-bg hover:bg-gm-gold-light h-12 px-8 text-[10px] font-bold tracking-widest uppercase shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-all"
+            >
+              <Save className="mr-2 size-4" />
+              {t('admin.common.save', null, 'Kaydet')}
             </Button>
           </div>
         </div>
 
         {/* Mode tabs */}
-        <Tabs value={mode} onValueChange={(v) => setMode(v as SiteSettingsFormMode)}>
-          <TabsList className="w-fit">
-            <TabsTrigger value="structured" disabled={!canStructured || !!disabled}>
-              {t('admin.siteSettings.form.modes.structured')}
+        <Tabs value={mode} onValueChange={(v) => setMode(v as SiteSettingsFormMode)} className="w-full sm:w-auto">
+          <TabsList className="bg-gm-bg-deep/50 p-1.5 border border-gm-border-soft rounded-2xl">
+            <TabsTrigger 
+              value="structured" 
+              disabled={!canStructured || !!disabled}
+              className="rounded-xl data-[state=active]:bg-gm-surface data-[state=active]:text-gm-gold data-[state=active]:shadow-lg text-[10px] font-bold uppercase tracking-[0.1em] px-6 py-2.5 transition-all flex items-center gap-2"
+            >
+              <LayoutTemplate className="size-3.5" />
+              {t('form.modes.structured', null, 'Görsel Editör')}
             </TabsTrigger>
-            <TabsTrigger value="raw" disabled={!!disabled}>
-              {t('admin.siteSettings.form.modes.raw')}
+            <TabsTrigger 
+              value="raw" 
+              disabled={!!disabled}
+              className="rounded-xl data-[state=active]:bg-gm-surface data-[state=active]:text-gm-gold data-[state=active]:shadow-lg text-[10px] font-bold uppercase tracking-[0.1em] px-6 py-2.5 transition-all flex items-center gap-2"
+            >
+              <Code2 className="size-3.5" />
+              {t('form.modes.raw', null, 'Ham JSON/Metin')}
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="p-8 space-y-6">
         {showImageUpload ? (
-          <div>
+          <div className="bg-gm-surface/30 p-6 rounded-3xl border border-gm-border-soft">
             <AdminImageUploadField
-              label={imageUpload?.label ?? t('admin.siteSettings.form.imageLabel')}
+              label={imageUpload?.label ?? t('form.imageLabel', null, 'Görsel')}
               helperText={imageUpload?.helperText}
               bucket={imageUpload?.bucket ?? 'public'}
-              folder={imageUpload?.folder ?? 'uploads'}
+              folder={imageUpload?.folder ?? 'site-media'}
               metadata={imageUpload?.metadata}
               value={(imageUpload?.value ?? '') as any}
               onChange={(url) => imageUpload?.onChange?.(url)}
@@ -264,29 +281,27 @@ export const SiteSettingsForm: React.FC<SiteSettingsFormProps> = ({
 
         {mode === 'structured' ? (
           canStructured ? (
-            <div className="space-y-4">
-              <div>
-                {renderStructured?.({
-                  key: settingKey,
-                  locale,
-                  value: structuredValue,
-                  setValue: setStructuredValue,
-                  disabled,
-                })}
-              </div>
+            <div className="space-y-4 animate-in fade-in duration-500">
+              {renderStructured?.({
+                key: settingKey,
+                locale,
+                value: structuredValue,
+                setValue: setStructuredValue,
+                disabled,
+              })}
             </div>
           ) : (
-            <Alert>
-              <AlertTitle>{t('admin.siteSettings.form.structuredMissingTitle')}</AlertTitle>
-              <AlertDescription>
-                {t('admin.siteSettings.form.structuredMissingDesc')}
+            <Alert className="bg-gm-warning/10 border-gm-warning/30 text-gm-warning rounded-2xl">
+              <AlertTitle className="font-serif">{t('form.structuredMissingTitle', null, 'Görsel Editör Yok')}</AlertTitle>
+              <AlertDescription className="opacity-80">
+                {t('form.structuredMissingDesc', null, 'Bu ayar için görsel editör mevcut değil. Lütfen Ham JSON/Metin sekmesini kullanın.')}
               </AlertDescription>
             </Alert>
           )
         ) : (
-          <div className="space-y-3">
-            <div className="text-sm text-muted-foreground">
-              {t('admin.siteSettings.form.rawHelp')}
+          <div className="space-y-4 animate-in fade-in duration-500">
+            <div className="text-sm text-gm-muted font-serif italic">
+              {t('form.rawHelp', null, 'Ham veriyi doğrudan düzenleyebilirsiniz. Geçerli bir JSON kullanmaya özen gösterin.')}
             </div>
 
             <Textarea
@@ -295,12 +310,13 @@ export const SiteSettingsForm: React.FC<SiteSettingsFormProps> = ({
               rows={14}
               disabled={disabled}
               spellCheck={false}
-              className="font-mono"
-              placeholder={t('admin.siteSettings.form.rawPlaceholder')}
+              className="font-mono text-sm leading-relaxed bg-gm-bg-deep border-gm-border-soft rounded-2xl p-6 focus:ring-gm-gold/50 focus:border-gm-gold/50 text-gm-text shadow-inner transition-all resize-y"
+              placeholder={t('form.rawPlaceholder', null, '{"key": "value"}')}
             />
 
-            <div className="text-xs text-muted-foreground">
-              {t('admin.siteSettings.form.rawTip')}
+            <div className="text-[10px] text-gm-muted uppercase tracking-[0.1em] flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-gm-gold/50" />
+              {t('form.rawTip', null, 'Not: JSON parse edilemezse ham metin olarak kaydedilir.')}
             </div>
           </div>
         )}

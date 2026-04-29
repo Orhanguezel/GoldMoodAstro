@@ -17,6 +17,61 @@ import { localizePath } from '@/integrations/shared';
 const isExternalHref = (href: string) =>
   /^https?:\/\//i.test(href) || /^mailto:/i.test(href) || /^tel:/i.test(href) || /^#/i.test(href);
 
+// Backend boş dönerse (seed yüklenmemişse) gösterilecek varsayılan footer.
+// API'den gelen veri her zaman önceliklidir.
+const FALLBACK_SECTIONS: Array<{
+  id: string;
+  title: Record<string, string>;
+  items: Array<{ id: string; url: string; label: Record<string, string> }>;
+}> = [
+  {
+    id: 'fb-astrology',
+    title: { tr: 'Astroloji', en: 'Astrology', de: 'Astrologie' },
+    items: [
+      { id: 'fb-astro-birth',    url: '/birth-chart',  label: { tr: 'Doğum Haritası', en: 'Birth Chart', de: 'Geburtshoroskop' } },
+      { id: 'fb-astro-syn',      url: '/sinastri',     label: { tr: 'Sinastri',       en: 'Synastry',    de: 'Synastrie' } },
+      { id: 'fb-astro-yld',      url: '/yildizname',   label: { tr: 'Yıldızname',     en: 'Yildizname',  de: 'Yildizname' } },
+      { id: 'fb-astro-burclar',  url: '/burclar',      label: { tr: 'Burçlar',        en: 'Zodiac',      de: 'Sternzeichen' } },
+    ],
+  },
+  {
+    id: 'fb-fal',
+    title: { tr: 'Fal & Tarot', en: 'Divination', de: 'Wahrsagung' },
+    items: [
+      { id: 'fb-fal-tarot',  url: '/tarot',        label: { tr: 'Tarot',       en: 'Tarot',               de: 'Tarot' } },
+      { id: 'fb-fal-coffee', url: '/kahve-fali',   label: { tr: 'Kahve Falı',  en: 'Coffee Reading',      de: 'Kaffeesatzlesen' } },
+      { id: 'fb-fal-dream',  url: '/ruya-tabiri',  label: { tr: 'Rüya Tabiri', en: 'Dream Interpretation', de: 'Traumdeutung' } },
+      { id: 'fb-fal-num',    url: '/numeroloji',   label: { tr: 'Numeroloji',  en: 'Numerology',          de: 'Numerologie' } },
+    ],
+  },
+  {
+    id: 'fb-company',
+    title: { tr: 'Şirket', en: 'Company', de: 'Unternehmen' },
+    items: [
+      { id: 'fb-comp-about', url: '/about',       label: { tr: 'Hakkımızda',  en: 'About',       de: 'Über uns' } },
+      { id: 'fb-comp-cons',  url: '/consultants', label: { tr: 'Danışmanlar', en: 'Consultants', de: 'Berater' } },
+      { id: 'fb-comp-blog',  url: '/blog',        label: { tr: 'Blog',        en: 'Blog',        de: 'Blog' } },
+      { id: 'fb-comp-cont',  url: '/contact',     label: { tr: 'İletişim',    en: 'Contact',     de: 'Kontakt' } },
+    ],
+  },
+  {
+    id: 'fb-legal',
+    title: { tr: 'Yasal', en: 'Legal', de: 'Rechtliches' },
+    items: [
+      { id: 'fb-leg-kvkk',   url: '/kvkk',                label: { tr: 'KVKK',                en: 'GDPR',          de: 'DSGVO' } },
+      { id: 'fb-leg-priv',   url: '/gizlilik',            label: { tr: 'Gizlilik Politikası', en: 'Privacy Policy', de: 'Datenschutz' } },
+      { id: 'fb-leg-terms',  url: '/kullanim-sartlari',   label: { tr: 'Kullanım Şartları',   en: 'Terms of Use',  de: 'Nutzungsbedingungen' } },
+      { id: 'fb-leg-cookie', url: '/cerez-politikasi',    label: { tr: 'Çerez Politikası',    en: 'Cookie Policy', de: 'Cookie-Richtlinie' } },
+    ],
+  },
+];
+
+type FooterRenderSection = {
+  id: string;
+  title: string;
+  items: Array<{ id: string; url: string; title: string }>;
+};
+
 const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
   const fallbackLocale = useLocaleShort();
   const locale = localeProp || fallbackLocale;
@@ -53,6 +108,33 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
     return m;
   }, [footerMenuItems]);
 
+  // Backend boş döndüyse fallback'e düş
+  const renderSections: FooterRenderSection[] = useMemo(() => {
+    const fromApi = sections
+      .map<FooterRenderSection>((sec) => ({
+        id: sec.id,
+        title: sec.title || '',
+        items: (itemsBySectionId.get(sec.id) ?? []).map((item) => ({
+          id: item.id,
+          url: item.url || '',
+          title: item.title || '',
+        })),
+      }))
+      .filter((sec) => sec.title && sec.items.length > 0);
+
+    if (fromApi.length > 0) return fromApi;
+
+    return FALLBACK_SECTIONS.map<FooterRenderSection>((sec) => ({
+      id: sec.id,
+      title: sec.title[locale] || sec.title.tr,
+      items: sec.items.map((it) => ({
+        id: it.id,
+        url: it.url,
+        title: it.label[locale] || it.label.tr,
+      })),
+    }));
+  }, [sections, itemsBySectionId, locale]);
+
   const homeHref = localizePath(locale, '/');
 
   return (
@@ -76,28 +158,25 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
           </div>
 
           {/* Columns */}
-          {sections.map((sec) => {
-            const items = itemsBySectionId.get(sec.id) ?? [];
-            return (
-              <div key={sec.id}>
-                <h4 className="font-display text-[11px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-8">
-                  {sec.title}
-                </h4>
-                <ul className="list-none p-0 m-0 space-y-4">
-                  {items.map((item) => (
-                    <li key={item.id}>
-                      <Link 
-                        href={isExternalHref(item.url!) ? item.url! : localizePath(locale, item.url!)}
-                        className="text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] transition-colors font-serif italic text-[16px]"
-                      >
-                        {item.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
+          {renderSections.map((sec) => (
+            <div key={sec.id}>
+              <h4 className="font-display text-[11px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-8">
+                {sec.title}
+              </h4>
+              <ul className="list-none p-0 m-0 space-y-4">
+                {sec.items.map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      href={isExternalHref(item.url) ? item.url : localizePath(locale, item.url)}
+                      className="text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] transition-colors font-serif italic text-[16px]"
+                    >
+                      {item.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         <div className="pt-12 border-t border-[var(--gm-border-soft)] flex flex-col md:flex-row justify-between items-center gap-8 text-[11px] tracking-[0.1em] text-[var(--gm-muted)] uppercase">

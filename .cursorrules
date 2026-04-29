@@ -1,0 +1,75 @@
+# GoldMoodAstro — Cursor Rules
+
+> Bu workspace bir astroloji platformudur (web + admin + mobile). Cursor IDE bu
+> dosyayı her oturum başlangıcında okur. **Aşağıdaki kuralları DAİMA uygula.**
+
+## Ne tarafta çalıştığını bil
+
+- **Mobile/** klasörü = bu workspace'in **TEK SAHA**'sı.
+  Backend (`backend/`, `packages/shared-backend/`), web (`frontend/`) ve
+  admin (`admin_panel/`) **başka bir bilgisayarda paralelde** çalışan
+  geliştiricinin sorumluluğundadır. **DOKUNMA.**
+- Sadece `mobile/app/src/`, `mobile/app/app/`, `mobile/app/assets/`,
+  `mobile/app/package.json`, `mobile/app/app.json` üzerinde değişiklik yap.
+
+## Kırmızı çizgiler (KESİN YASAK)
+
+1. **Backend dosyalarını editleme** — `backend/`, `packages/shared-backend/`
+   altında hiçbir dosyaya `Edit`/`Write` çağırma. Sadece referans için oku.
+2. **`frontend/` ve `admin_panel/` dokunma** — paralelde başka geliştirici
+   editliyor, çakışma sync conflict yaratır.
+3. **DB schema veya seed değiştirme** — `backend/src/db/sql/*.sql` salt-okunur.
+   Yeni endpoint gerekiyorsa Orhan'a (paralel geliştirici) bildirmek üzere
+   `mobile/REQUESTS.md` dosyasına yaz, sonra devam et.
+4. **`.env` dosyasına yazma** — credentials içerir, sadece `.env.example` örnek.
+5. **`bun install` veya `npm install` çalıştırmadan önce sor** — yeni paket
+   eklemek monorepo lock dosyasını bozabilir.
+6. **`mvp-checklist.md`'i editleme** — diğer geliştirici update ediyor,
+   sync conflict yaratır.
+
+## Konvansiyonu değiştirme — gözle
+
+- Mevcut pattern'i (Expo Router file-based, AsyncStorage wrapper, fetch-based
+  API client) **değiştirme**, gerekirse **takip et**. Yeni state library, yeni
+  routing pattern, yeni styling sistemi **EKLEME**.
+- `src/lib/api.ts` mevcut endpoint kullanımı için tek kaynak — yeni endpoint
+  gerekirse aynı pattern'le ekle.
+- `src/theme/tokens.ts` sabit renk paleti — yeni hex hardcode etme, token
+  ekle veya mevcuti kullan.
+
+## Backend API — sözleşme sabit
+
+- Backend kontratı `mobile/AGENTS.md` içinde dokümante edilmiştir.
+- Yeni endpoint UYDURMA — backend'de yoksa request yapma. Eğer ihtiyaç varsa
+  `mobile/REQUESTS.md` dosyasına notunu yaz (Orhan görür).
+- API base URL: `app.json → extra.apiUrl` (dev: `http://localhost:8094/api/v1`,
+  prod: `https://www.goldmoodastro.com/api/v1`).
+
+## Sync paylaşım uyarısı (KRİTİK)
+
+Bu workspace **ağ paylaşımıyla iki bilgisayar arasında senkronize** olur.
+Aynı anda iki taraf editleyemez.
+
+- **Tek seferde tek dosya** üzerinde çalış, kaydet, **30 sn bekle**.
+- `*.sync-conflict-*.md` dosyası gördüğünde: **dokunma**, Orhan ile çözecek.
+- `node_modules/` paylaşılmaz (her bilgisayarda ayrı `bun install` gerekir).
+
+## Çalışma stili
+
+- **Test çalıştırmadan iddialı değişiklik yapma**. Mobile için:
+  ```
+  cd mobile/app && bun run lint   # tsc --noEmit
+  ```
+- **"Helpful" diye unsolicited refactor yapma** — istenen işi yap, kapsamı genişletme.
+- Kod yazmadan önce `mobile/AGENTS.md` ve `mobile/MOBILE-STRATEGY.md` oku.
+- Dosya editlemeden önce `Read` tool'u ile mevcut içeriği oku.
+- Türkçe konuş — kullanıcı arayüzü ve doküman dili Türkçe. Kod İngilizce.
+
+## Ek dosyalar
+
+- `mobile/AGENTS.md` — mobil teknoloji kararları + endpoint listesi
+- `mobile/MOBILE-STRATEGY.md` — ürün hedefi + 7 adımlı MVP akışı
+- `mobile/CURSOR-NOTES.md` — bu kuralların uzun versiyonu (Türkçe rehber)
+- `doc/mvp-checklist.md` — tüm proje plan dokümanı (sadece referans, DOKUNMA)
+- `CLAUDE.md` — workspace stratejisi (Claude Code paralel geliştirici için)
+- `AGENTS.md` — Codex paralel geliştirici için (referans)

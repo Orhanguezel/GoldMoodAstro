@@ -3,6 +3,7 @@
 import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ChevronDown } from 'lucide-react';
 
 import HeaderOffcanvas from './HeaderOffcanvas';
 import { useListMenuItemsQuery, useGetSiteSettingByKeyQuery } from '@/integrations/rtk/hooks';
@@ -13,16 +14,43 @@ import { useAuthStore } from '@/features/auth/auth.store';
 import { IconUser } from '@/components/ui/icons';
 import ThemeToggle from '@/components/system/ThemeToggle';
 
-// Menu API boş gelirse gösterilecek varsayılan linkler.
+// Menu API boş gelirse gösterilecek varsayılan menü (dropdown desteğiyle).
 // API'den gelen menü her zaman önceliklidir.
-const FALLBACK_MENU: Array<{ id: string; url: string; label: Record<string, string> }> = [
-  { id: 'fallback-home',        url: '/',            label: { tr: 'Ana Sayfa',   en: 'Home',         de: 'Startseite' } },
-  { id: 'fallback-consultants', url: '/consultants', label: { tr: 'Danışmanlar', en: 'Consultants',  de: 'Berater' } },
-  { id: 'fallback-daily',       url: '/daily',       label: { tr: 'Günlük Yorum',en: 'Daily',        de: 'Täglich' } },
-  { id: 'fallback-birth-chart', url: '/birth-chart', label: { tr: 'Doğum Haritası', en: 'Birth Chart', de: 'Geburtschart' } },
-  { id: 'fallback-blog',        url: '/blog',        label: { tr: 'Blog',        en: 'Blog',         de: 'Blog' } },
-  { id: 'fallback-about',       url: '/about',       label: { tr: 'Hakkımızda',  en: 'About',        de: 'Über uns' } },
-  { id: 'fallback-contact',     url: '/contact',     label: { tr: 'İletişim',    en: 'Contact',      de: 'Kontakt' } },
+type FallbackMenuItem = {
+  id: string;
+  url?: string;
+  label: Record<string, string>;
+  children?: FallbackMenuItem[];
+};
+
+const FALLBACK_MENU: FallbackMenuItem[] = [
+  { id: 'fb-home',        url: '/',            label: { tr: 'Ana Sayfa',   en: 'Home',     de: 'Startseite' } },
+  { id: 'fb-burclar',     url: '/burclar',     label: { tr: 'Burçlar',     en: 'Zodiac',   de: 'Sternzeichen' } },
+  {
+    id: 'fb-astrology',
+    label: { tr: 'Astroloji', en: 'Astrology', de: 'Astrologie' },
+    children: [
+      { id: 'fb-astro-birth',    url: '/birth-chart',                  label: { tr: 'Doğum Haritası', en: 'Birth Chart',  de: 'Geburtshoroskop' } },
+      { id: 'fb-astro-sinastri', url: '/sinastri',                     label: { tr: 'Sinastri',       en: 'Synastry',     de: 'Synastrie' } },
+      { id: 'fb-astro-yildiz',   url: '/yildizname',                   label: { tr: 'Yıldızname',     en: 'Yildizname',   de: 'Yildizname' } },
+      { id: 'fb-astro-bigthree', url: '/big-three',                    label: { tr: 'Big Three',      en: 'Big Three',    de: 'Big Three' } },
+      { id: 'fb-astro-yukselen', url: '/yukselen-burc-hesaplayici',    label: { tr: 'Yükselen Burç',  en: 'Rising Sign',  de: 'Aszendent' } },
+      { id: 'fb-astro-daily',    url: '/daily',                        label: { tr: 'Günlük Yorum',   en: 'Daily Reading', de: 'Tägliche Deutung' } },
+    ],
+  },
+  {
+    id: 'fb-fal',
+    label: { tr: 'Fal & Tarot', en: 'Divination', de: 'Wahrsagung' },
+    children: [
+      { id: 'fb-fal-tarot',  url: '/tarot',        label: { tr: 'Tarot',       en: 'Tarot',                de: 'Tarot' } },
+      { id: 'fb-fal-coffee', url: '/kahve-fali',   label: { tr: 'Kahve Falı',  en: 'Coffee Reading',       de: 'Kaffeesatzlesen' } },
+      { id: 'fb-fal-dream',  url: '/ruya-tabiri',  label: { tr: 'Rüya Tabiri', en: 'Dream Interpretation', de: 'Traumdeutung' } },
+    ],
+  },
+  { id: 'fb-numeroloji',  url: '/numeroloji',  label: { tr: 'Numeroloji',  en: 'Numerology',   de: 'Numerologie' } },
+  { id: 'fb-consultants', url: '/consultants', label: { tr: 'Danışmanlar', en: 'Consultants',  de: 'Berater' } },
+  { id: 'fb-blog',        url: '/blog',        label: { tr: 'Blog',        en: 'Blog',         de: 'Blog' } },
+  { id: 'fb-about',       url: '/about',       label: { tr: 'Hakkımızda',  en: 'About',        de: 'Über uns' } },
 ];
 
 type MenuItemWithChildren = PublicMenuItemDto & {
@@ -70,12 +98,16 @@ const HeaderClient: React.FC<{ brand?: HeaderClientBrand; locale?: string }> = (
     if (list.length > 0) {
       return list.slice().sort((a, b) => ((a as any)?.order_num ?? 0) - ((b as any)?.order_num ?? 0));
     }
-    // API'de menü tanımlı değilse — varsayılan linkleri locale'e göre üret
-    return FALLBACK_MENU.map((m) => ({
+    // API'de menü tanımlı değilse — varsayılan linkleri (dropdown'lı) locale'e göre üret
+    const mapItem = (m: FallbackMenuItem): MenuItemWithChildren => ({
       id: m.id,
-      url: m.url,
+      url: m.url ?? '',
       title: m.label[locale] || m.label.tr,
-    } as MenuItemWithChildren));
+      ...(m.children && m.children.length > 0
+        ? { children: m.children.map(mapItem) as MenuItemWithChildren[] }
+        : {}),
+    } as MenuItemWithChildren);
+    return FALLBACK_MENU.map(mapItem);
   }, [menuData, locale]);
 
   useEffect(() => {
@@ -113,11 +145,47 @@ const HeaderClient: React.FC<{ brand?: HeaderClientBrand; locale?: string }> = (
 
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-12">
-            <ul className="flex gap-10 list-none m-0 p-0 items-center">
+            <ul className="flex gap-8 list-none m-0 p-0 items-center">
               {headerMenuItems.map((item) => {
-                const rawUrl = (item.url || '#') as string;
+                const rawUrl = (item.url || '') as string;
                 const label = item.title || 'Link';
-                const href = isExternalHref(rawUrl) ? rawUrl : localizePath(locale, rawUrl);
+                const children = item.children ?? [];
+                const hasChildren = children.length > 0;
+                const href = rawUrl
+                  ? (isExternalHref(rawUrl) ? rawUrl : localizePath(locale, rawUrl))
+                  : '#';
+
+                if (hasChildren) {
+                  return (
+                    <li key={item.id} className="relative group/dd">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5 font-serif text-[13px] font-normal tracking-[0.05em] text-[var(--gm-text)] hover:text-[var(--gm-gold-deep)] transition-colors cursor-default"
+                      >
+                        {label}
+                        <ChevronDown className="w-3 h-3 transition-transform group-hover/dd:rotate-180" />
+                      </button>
+                      <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 opacity-0 invisible group-hover/dd:opacity-100 group-hover/dd:visible transition-all duration-200 z-50">
+                        <ul className="min-w-[220px] list-none m-0 p-2 bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-2xl shadow-card backdrop-blur-md">
+                          {children.map((child) => {
+                            const cUrl = (child.url || '#') as string;
+                            const cHref = isExternalHref(cUrl) ? cUrl : localizePath(locale, cUrl);
+                            return (
+                              <li key={child.id}>
+                                <Link
+                                  href={cHref}
+                                  className="block px-4 py-2.5 rounded-lg font-serif text-[13px] text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] hover:bg-[var(--gm-gold)]/5 transition-colors"
+                                >
+                                  {child.title || 'Link'}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    </li>
+                  );
+                }
 
                 return (
                   <li key={item.id}>
@@ -184,18 +252,48 @@ const HeaderClient: React.FC<{ brand?: HeaderClientBrand; locale?: string }> = (
           className={`fixed inset-0 z-[40] bg-[var(--gm-bg)]/98 backdrop-blur-xl transition-all duration-500 lg:hidden flex flex-col justify-center items-center px-12 text-center
             ${mobileOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
         >
-          <ul className="flex flex-col gap-8 list-none m-0 p-0 mb-12">
-            {headerMenuItems.map((item) => (
-              <li key={item.id}>
-                <Link 
-                  href={isExternalHref(item.url!) ? item.url! : localizePath(locale, item.url!)}
-                  className="font-display text-2xl tracking-widest text-[var(--gm-gold)]"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.title}
-                </Link>
-              </li>
-            ))}
+          <ul className="flex flex-col gap-6 list-none m-0 p-0 mb-12 max-h-[70vh] overflow-y-auto">
+            {headerMenuItems.map((item) => {
+              const children = item.children ?? [];
+              const hasChildren = children.length > 0;
+              const itemUrl = item.url || '';
+              return (
+                <li key={item.id} className="text-center">
+                  {hasChildren ? (
+                    <details className="group/m">
+                      <summary className="flex items-center justify-center gap-2 cursor-pointer font-display text-2xl tracking-widest text-[var(--gm-gold)] list-none">
+                        {item.title}
+                        <ChevronDown className="w-4 h-4 transition-transform group-open/m:rotate-180" />
+                      </summary>
+                      <ul className="mt-4 flex flex-col gap-3 list-none p-0">
+                        {children.map((c) => {
+                          const cu = c.url || '#';
+                          return (
+                            <li key={c.id}>
+                              <Link
+                                href={isExternalHref(cu) ? cu : localizePath(locale, cu)}
+                                className="font-serif text-lg italic text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)]"
+                                onClick={() => setMobileOpen(false)}
+                              >
+                                {c.title}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </details>
+                  ) : (
+                    <Link
+                      href={itemUrl ? (isExternalHref(itemUrl) ? itemUrl : localizePath(locale, itemUrl)) : '#'}
+                      className="font-display text-2xl tracking-widest text-[var(--gm-gold)]"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {item.title}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           <Link href={consultantsHref} className="btn-premium w-full max-w-xs text-center" onClick={() => setMobileOpen(false)}>
             {ui('ui_header_cta', 'DANIŞMAN BUL')}

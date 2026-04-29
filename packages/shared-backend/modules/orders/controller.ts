@@ -31,6 +31,34 @@ function resolveLocale(req: { query?: unknown; locale?: string }): string {
   return (DEFAULT_LOCALE || "tr").toLowerCase();
 }
 
+function resolveApiBase() {
+  return (
+    process.env.BACKEND_URL ||
+    process.env.PUBLIC_URL ||
+    (process.env.PUBLIC_HOST ? `https://${process.env.PUBLIC_HOST}` : "http://localhost:8094")
+  ).replace(/\/$/, "");
+}
+
+function resolveIyzicoConfig(gateway?: { config: string | null }) {
+  const fromDb = JSON.parse(gateway?.config || "{}") as Partial<{ apiKey: string; secretKey: string; baseUrl: string }>;
+  const testMode = process.env.IYZICO_TEST_MODE;
+  return {
+    apiKey:
+      fromDb.apiKey ??
+      process.env.IYZIPAY_API_KEY ??
+      process.env.IYZICO_API_KEY ??
+      "",
+    secretKey:
+      fromDb.secretKey ??
+      process.env.IYZIPAY_SECRET_KEY ??
+      process.env.IYZICO_SECRET_KEY ??
+      "",
+    baseUrl:
+      fromDb.baseUrl ??
+      (testMode === "false" ? "https://api.iyzipay.com" : "https://sandbox-api.iyzipay.com"),
+  };
+}
+
 /** List Payment Gateways */
 export const listGateways: RouteHandler = async (req, reply) => {
   const rows = await db.select().from(paymentGateways).where(eq(paymentGateways.is_active, 1));
@@ -137,20 +165,50 @@ export const initIyzico: RouteHandler<{ Params: { id: string } }> = async (req, 
   const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
   if (!order || order.user_id !== user.id) return reply.code(404).send({ error: "Order not found" });
 
+  // PAYMENT_MOCK_MODE — Iyzipay'i bypass et, ödeme başarılı say (test için).
+  // Prod'da MUTLAKA "false" olmalı.
+  if (process.env.PAYMENT_MOCK_MODE === 'true') {
+    const [iyzicoGw] = await db.select().from(paymentGateways).where(eq(paymentGateways.slug, 'iyzico')).limit(1);
+    const txId = `mock_${Date.now()}`;
+
+    await db.update(orders).set({
+      payment_status: 'paid',
+      status: 'processing',
+      transaction_id: txId,
+    }).where(eq(orders.id, orderId));
+
+    if (iyzicoGw) {
+      await db.insert(payments).values({
+        id: randomUUID(),
+        order_id: orderId,
+        gateway_id: iyzicoGw.id,
+        amount: order.total_amount,
+        currency: order.currency,
+        status: 'success',
+        transaction_id: txId,
+        raw_response: JSON.stringify({ mock: true, note: 'PAYMENT_MOCK_MODE=true' }),
+      });
+    }
+
+    // Bağlı booking varsa onaylı'ya çek
+    if (order.booking_id) {
+      await db.update(bookings).set({
+        status: 'confirmed',
+      } as any).where(eq(bookings.id, order.booking_id));
+    }
+
+    const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || 'http://localhost:3000';
+    // Booking varsa direkt call ekranına; yoksa dashboard
+    const checkoutUrl = order.booking_id
+      ? `${siteUrl}/${requestLocale}/booking/${order.booking_id}/call?from=mock`
+      : `${siteUrl}/${requestLocale}/dashboard?tab=bookings&booking=success&order_id=${orderId}`;
+    return reply.send({ success: true, mock: true, checkout_url: checkoutUrl });
+  }
+
   const [gateway] = await db.select().from(paymentGateways).where(eq(paymentGateways.slug, "iyzico")).limit(1);
   if (!gateway) return reply.code(400).send({ error: "Iyzico gateway not configured" });
 
-  const config = (() => {
-    const fromDb = JSON.parse(gateway.config || "{}") as Partial<{ apiKey: string; secretKey: string; baseUrl: string }>;
-    return {
-      apiKey:     fromDb.apiKey     ?? process.env.IYZICO_API_KEY    ?? "",
-      secretKey:  fromDb.secretKey  ?? process.env.IYZICO_SECRET_KEY ?? "",
-      baseUrl:    fromDb.baseUrl    ?? (process.env.IYZICO_TEST_MODE === "false"
-                    ? "https://api.iyzipay.com"
-                    : "https://sandbox-api.iyzipay.com"),
-    };
-  })();
-  const iyzico = new IyzicoService(config);
+  const iyzico = new IyzicoService(resolveIyzicoConfig(gateway));
 
   const [address] = await db.select().from(userAddresses)
     .where(eq(userAddresses.id, order.billing_address_id || ""))
@@ -168,7 +226,7 @@ export const initIyzico: RouteHandler<{ Params: { id: string } }> = async (req, 
       paidPrice: amount,
       currency: order.currency,
       basketId: order.order_number,
-      callbackUrl: `${process.env.BACKEND_URL}/api/orders/iyzico/callback?order_id=${orderId}`,
+      callbackUrl: `${resolveApiBase()}/api/orders/iyzico/callback?order_id=${orderId}`,
       buyer: {
         id: user.id,
         name: user.full_name?.split(" ")[0] || "Müşteri",
@@ -228,17 +286,7 @@ export const iyzicoCallback: RouteHandler = async (req, reply) => {
   const { token } = req.body as { token: string };
 
   const [gateway] = await db.select().from(paymentGateways).where(eq(paymentGateways.slug, "iyzico")).limit(1);
-  const config = (() => {
-    const fromDb = JSON.parse(gateway?.config || "{}") as Partial<{ apiKey: string; secretKey: string; baseUrl: string }>;
-    return {
-      apiKey:    fromDb.apiKey    ?? process.env.IYZICO_API_KEY    ?? "",
-      secretKey: fromDb.secretKey ?? process.env.IYZICO_SECRET_KEY ?? "",
-      baseUrl:   fromDb.baseUrl   ?? (process.env.IYZICO_TEST_MODE === "false"
-                   ? "https://api.iyzipay.com"
-                   : "https://sandbox-api.iyzipay.com"),
-    };
-  })();
-  const iyzico = new IyzicoService(config);
+  const iyzico = new IyzicoService(resolveIyzicoConfig(gateway));
 
   const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || "http://localhost:3000";
 

@@ -119,6 +119,8 @@ export interface BookingCreateInput {
   session_duration: number;
   session_price: string;
   customer_message?: string;
+  source_type?: 'daily_reading';
+  source_id?: string;
 }
 
 // ─── Subscription ───────────────────────────────────────────────
@@ -393,4 +395,24 @@ export interface Banner {
   placement: BannerPlacement;
   locale: string;
   priority: number;
+}
+// ─── Campaign ──────────────────────────────────────────────────────
+export type CampaignType = 'discount_percentage' | 'discount_fixed' | 'bonus_credits' | 'free_trial_days';
+export type CampaignAppliesTo = 'all' | 'consultant_booking' | 'subscription' | 'credit_package';
+
+export interface Campaign {
+  id: string;
+  code: string;
+  type: CampaignType;
+  value: string;
+  applies_to: CampaignAppliesTo;
+  is_active: boolean;
+  starts_at?: string;
+  ends_at?: string;
+}
+
+export interface RedeemCampaignResponse {
+  valid: boolean;
+  campaign: Campaign;
+  message?: string;
 }

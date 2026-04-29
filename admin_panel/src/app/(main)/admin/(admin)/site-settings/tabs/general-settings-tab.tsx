@@ -1,44 +1,29 @@
-'use client';
+// =============================================================
+// FILE: src/app/(main)/admin/(admin)/site-settings/tabs/general-settings-tab.tsx
+// Genel Ayarlar — Sade kart-liste pattern (bereketfide)
+// 5 yönetilen anahtar: contact_info, socials, businessHours, company_profile, ui_header
+// Her satır → Düzenle sayfasına link (chevron). GLOBAL/LOCALE badge'leri kaldırıldı.
+// =============================================================
 
-// =============================================================
-// FILE: src/components/admin/site-settings/tabs/GeneralSettingsTab.tsx
-// guezelwebdesign – Genel / UI Ayarları (GLOBAL '*' + Localized Override)
-// - NO bootstrap
-// - UI: UsersListClient pattern (Card + Filters + Table)
-// - Modal yok: edit -> detail form link
-// Route: /admin/site-settings/[id]?locale=tr|en|*
-// =============================================================
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Search, RefreshCcw } from 'lucide-react';
+import { RefreshCcw, Plus, ChevronRight } from 'lucide-react';
 import { useAdminTranslations } from '@/i18n';
 import { usePreferencesStore } from '@/stores/preferences/preferences-provider';
+import { cn } from '@/lib/utils';
 
 import {
   useListSiteSettingsAdminQuery,
   useUpdateSiteSettingAdminMutation,
-  useDeleteSiteSettingAdminMutation,
 } from '@/integrations/hooks';
 
 import type { SiteSetting, SettingValue } from '@/integrations/shared';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-
-/* ----------------------------- config ----------------------------- */
 
 const GENERAL_KEYS = [
   'contact_info',
@@ -64,11 +49,12 @@ const DEFAULTS_BY_KEY: Record<GeneralKey, SettingValue> = {
   ],
   company_profile: { company_name: '', slogan: '', about: '' },
   ui_header: {
-    nav_home: 'Home',
-    nav_products: 'Products',
-    nav_services: 'Services',
-    nav_contact: 'Contact',
-    cta_label: 'Get Offer',
+    nav_home: 'Ana Sayfa',
+    nav_consultants: 'Danışmanlar',
+    nav_birth_chart: 'Doğum Haritası',
+    nav_pricing: 'Üyelik',
+    nav_contact: 'İletişim',
+    cta_label: 'Randevu Al',
   },
 };
 
@@ -76,32 +62,35 @@ function isGeneralKey(k: string): k is GeneralKey {
   return (GENERAL_KEYS as readonly string[]).includes(k);
 }
 
-function stringifyValuePretty(v: SettingValue): string {
+/** JSON value'yu kısa, insanca özete çevir */
+function summariseValue(v: SettingValue | undefined): string {
   if (v === null || v === undefined) return '';
-  if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return String(v);
-  try {
-    return JSON.stringify(v, null, 2);
-  } catch {
-    return String(v as any);
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  if (Array.isArray(v)) {
+    return `${v.length} kayıt`;
   }
+  if (typeof v === 'object') {
+    const entries = Object.entries(v as Record<string, unknown>);
+    const filled = entries.filter(([, val]) => val !== '' && val !== null && val !== undefined);
+    if (filled.length === 0) return '';
+    const strs = filled.slice(0, 2).map(([key, val]) => {
+      if (val && typeof val === 'object') return key;
+      return String(val);
+    });
+    return strs.join(', ') + (filled.length > 2 ? ` +${filled.length - 2}` : '');
+  }
+  return '';
 }
 
-function formatValuePreview(v: SettingValue | undefined): string {
-  if (v === undefined) return '';
-  const s = stringifyValuePretty(v);
-  if (s.length <= 180) return s;
-  return `${s.slice(0, 177)}...`;
-}
-
-type RowGroup = {
+type RowData = {
   key: GeneralKey;
-  globalRow?: SiteSetting;
-  localeRow?: SiteSetting;
-  effectiveValue: SettingValue | undefined;
-  effectiveSource: 'locale' | 'global' | 'none';
+  hasValue: boolean;
+  editLocale: string;
+  value: SettingValue | undefined;
 };
 
-function buildGroups(rows: any, locale: string): RowGroup[] {
+function buildRows(rows: any[], locale: string): RowData[] {
   const only = rows.filter((r: any) => r && isGeneralKey(r.key));
   const byKey = new Map<GeneralKey, { global?: SiteSetting; local?: SiteSetting }>();
 
@@ -115,26 +104,12 @@ function buildGroups(rows: any, locale: string): RowGroup[] {
 
   return GENERAL_KEYS.map((k) => {
     const entry = byKey.get(k) || {};
-    const effectiveSource: RowGroup['effectiveSource'] = entry.local
-      ? 'locale'
-      : entry.global
-        ? 'global'
-        : 'none';
+    const hasLocal = Boolean(entry.local);
+    const hasGlobal = Boolean(entry.global);
+    const value = hasLocal ? entry.local?.value : hasGlobal ? entry.global?.value : undefined;
+    const editLocale = hasLocal ? locale : '*';
 
-    const effectiveValue =
-      effectiveSource === 'locale'
-        ? entry.local?.value
-        : effectiveSource === 'global'
-          ? entry.global?.value
-          : undefined;
-
-    return {
-      key: k,
-      globalRow: entry.global,
-      localeRow: entry.local,
-      effectiveSource,
-      effectiveValue,
-    };
+    return { key: k, hasValue: hasLocal || hasGlobal, editLocale, value };
   });
 }
 
@@ -143,373 +118,171 @@ function editHref(key: string, locale: string) {
 }
 
 function errMsg(err: any, fallback: string): string {
-  return (
-    err?.data?.error?.message ||
-    err?.data?.message ||
-    err?.message ||
-    fallback
-  );
+  return err?.data?.error?.message || err?.data?.message || err?.message || fallback;
 }
 
-/* ----------------------------- component ----------------------------- */
-
 export type GeneralSettingsTabProps = {
-  locale: string; // selected locale (tr/en/...)
+  locale: string;
+  settingPrefix?: string;
 };
 
-export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({ locale }) => {
-  const [search, setSearch] = React.useState('');
-
+export const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({ locale, settingPrefix }) => {
   const [updateSetting, { isLoading: isSaving }] = useUpdateSiteSettingAdminMutation();
-  const [deleteSetting, { isLoading: isDeleting }] = useDeleteSiteSettingAdminMutation();
 
-  const adminLocale = usePreferencesStore((s) => s.adminLocale);
+  const adminLocale = usePreferencesStore((s) => s.adminLocale) || 'tr';
   const t = useAdminTranslations(adminLocale || undefined);
 
-  // list global + locale
-  const listArgsGlobal = React.useMemo(() => {
-    const q = search.trim() || undefined;
-    return { locale: '*', q, keys: GENERAL_KEYS as unknown as string[] };
-  }, [search]);
+  const withPrefix = React.useCallback(
+    (key: string) => `${settingPrefix || ''}${key}`,
+    [settingPrefix],
+  );
+  const stripPrefix = React.useCallback(
+    (key: string) =>
+      settingPrefix && key.startsWith(settingPrefix) ? key.slice(settingPrefix.length) : key,
+    [settingPrefix],
+  );
 
-  const listArgsLocale = React.useMemo(() => {
-    const q = search.trim() || undefined;
-    return { locale, q, keys: GENERAL_KEYS as unknown as string[] };
-  }, [locale, search]);
+  const listArgsGlobal = React.useMemo(
+    () => ({ locale: '*', keys: GENERAL_KEYS.map((key) => withPrefix(key)) as unknown as string[] }),
+    [withPrefix],
+  );
+  const listArgsLocale = React.useMemo(
+    () => ({ locale, keys: GENERAL_KEYS.map((key) => withPrefix(key)) as unknown as string[] }),
+    [locale, withPrefix],
+  );
 
-  const qGlobal = useListSiteSettingsAdminQuery(listArgsGlobal, { skip: !locale });
-  const qLocale = useListSiteSettingsAdminQuery(listArgsLocale, { skip: !locale });
+  const qGlobal = useListSiteSettingsAdminQuery(listArgsGlobal as any, { skip: !locale });
+  const qLocale = useListSiteSettingsAdminQuery(listArgsLocale as any, { skip: !locale });
 
   const rowsMerged = React.useMemo(() => {
     const g = Array.isArray(qGlobal.data) ? qGlobal.data : [];
     const l = Array.isArray(qLocale.data) ? qLocale.data : [];
-    return [...g, ...l];
-  }, [qGlobal.data, qLocale.data]);
+    return [...g, ...l].map((row: any) => ({ ...row, key: stripPrefix(String(row.key || '')) }));
+  }, [qGlobal.data, qLocale.data, stripPrefix]);
 
-  const groups = React.useMemo(() => {
-    const arr = Array.isArray(rowsMerged) ? rowsMerged : [];
-    const s = search.trim().toLowerCase();
-
-    const filtered =
-      s && s.length >= 2
-        ? arr.filter((r) => {
-            if (!r || !isGeneralKey(r.key)) return false;
-            const k = String(r.key || '').toLowerCase();
-            const v = stringifyValuePretty(r.value as any).toLowerCase();
-            return k.includes(s) || v.includes(s);
-          })
-        : arr.filter((r) => r && isGeneralKey(r.key));
-
-    return buildGroups(filtered as SiteSetting[], locale);
-  }, [rowsMerged, locale, search]);
+  const rows = React.useMemo(() => buildRows(rowsMerged as any[], locale), [rowsMerged, locale]);
 
   const busy =
-    qGlobal.isLoading ||
-    qLocale.isLoading ||
-    qGlobal.isFetching ||
-    qLocale.isFetching ||
-    isSaving ||
-    isDeleting;
+    qGlobal.isLoading || qLocale.isLoading || qGlobal.isFetching || qLocale.isFetching || isSaving;
 
   const refetchAll = async () => {
     await Promise.all([qGlobal.refetch(), qLocale.refetch()]);
   };
 
-  const createOverrideFromGlobal = async (g: RowGroup) => {
-    if (!g.globalRow) {
-      toast.error(t('admin.siteSettings.general.missingGlobalError'));
-      return;
-    }
+  const hasAnyMissing = rows.some((r) => !r.hasValue);
 
+  const createMissing = async () => {
     try {
-      await updateSetting({ key: g.key, locale, value: g.globalRow.value }).unwrap();
-      toast.success(t('admin.siteSettings.general.overrideCreated', { key: g.key, locale }));
-      await refetchAll();
-    } catch (err: any) {
-      toast.error(errMsg(err, t('admin.siteSettings.messages.error')));
-    }
-  };
-
-  const restoreDefaults = async (key: GeneralKey, targetLocale: string) => {
-    try {
-      await updateSetting({
-        key,
-        locale: targetLocale,
-        value: DEFAULTS_BY_KEY[key] as any,
-      }).unwrap();
-      toast.success(t('admin.siteSettings.general.defaultsRestored', { key, locale: targetLocale }));
-      await refetchAll();
-    } catch (err: any) {
-      toast.error(errMsg(err, t('admin.siteSettings.messages.error')));
-    }
-  };
-
-  const deleteRow = async (key: GeneralKey, targetLocale: string) => {
-    const ok = window.confirm(t('admin.siteSettings.general.deleteConfirm', { key, locale: targetLocale }));
-    if (!ok) return;
-
-    try {
-      await deleteSetting({ key, locale: targetLocale }).unwrap();
-      toast.success(t('admin.siteSettings.general.deleted', { key, locale: targetLocale }));
-      await refetchAll();
-    } catch (err: any) {
-      toast.error(errMsg(err, t('admin.siteSettings.messages.error')));
-    }
-  };
-
-  const upsertEmptyGlobals = async () => {
-    try {
-      for (const k of GENERAL_KEYS) {
-        const exists = groups.find((g) => g.key === k)?.globalRow;
-        if (exists) continue;
-        await updateSetting({ key: k, locale: '*', value: DEFAULTS_BY_KEY[k] as any }).unwrap();
+      for (const r of rows) {
+        if (r.hasValue) continue;
+        await updateSetting({
+          key: withPrefix(r.key),
+          locale: '*',
+          value: DEFAULTS_BY_KEY[r.key] as any,
+        }).unwrap();
       }
-      toast.success(t('admin.siteSettings.general.globalBootstrapSuccess'));
+      toast.success(
+        t(
+          'admin.siteSettings.general.globalBootstrapSuccess',
+          {},
+          'Eksik anahtarlar boş varsayılanlarla oluşturuldu.',
+        ),
+      );
       await refetchAll();
     } catch (err: any) {
-      toast.error(errMsg(err, t('admin.siteSettings.messages.error')));
+      toast.error(errMsg(err, t('admin.siteSettings.messages.error', {}, 'Hata oluştu')));
     }
   };
-
-  function sourceBadge(src: RowGroup['effectiveSource']) {
-    if (src === 'locale') return <Badge>{t('admin.siteSettings.general.sourceOverride')}</Badge>;
-    if (src === 'global') return <Badge variant="secondary">{t('admin.siteSettings.general.sourceGlobal')}</Badge>;
-    return <Badge variant="outline">{t('admin.siteSettings.general.sourceNone')}</Badge>;
-  }
 
   return (
-    <div className="space-y-6">
-      {/* Header + actions */}
-      <Card>
-        <CardHeader className="gap-2">
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-base">{t('admin.siteSettings.general.title')}</CardTitle>
-              <CardDescription>
-                {t('admin.siteSettings.general.description', { locale })}
-              </CardDescription>
-            </div>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center justify-between bg-gm-surface/20 p-6 rounded-3xl border border-gm-border-soft backdrop-blur-sm">
+        <p className="text-[11px] text-gm-muted uppercase tracking-[0.1em] leading-relaxed max-w-2xl font-bold">
+          {t(
+            'admin.siteSettings.general.description',
+            { locale },
+            `Bu sekmedeki ayarlar tüm dillere uygulanır (GLOBAL); ${locale} için override
+            eklenmediği sürece varsayılanlar görünür.`
+          )}
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={refetchAll}
+          disabled={busy}
+          title={t('admin.common.refresh', null, 'Yenile')}
+          className="rounded-full border-gm-border-soft h-10 px-5 text-[10px] font-bold tracking-widest uppercase transition-all hover:bg-gm-primary/5 hover:text-gm-gold hover:border-gm-gold/30 shrink-0 ml-4"
+        >
+          <RefreshCcw className="mr-2 size-3.5" />
+          {t('admin.common.refresh', null, 'Yenile')}
+        </Button>
+      </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">{t('admin.siteSettings.filters.language')}: {locale}</Badge>
+      <div className="space-y-3">
+        {rows.map((r) => {
+          const summary = summariseValue(r.value);
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={refetchAll}
-                disabled={busy}
-                title={t('admin.siteSettings.filters.refreshButton')}
-              >
-                <RefreshCcw className="mr-2 size-4" />
-                {t('admin.siteSettings.filters.refreshButton')}
-              </Button>
+          return (
+            <Link
+              key={r.key}
+              href={r.hasValue ? editHref(withPrefix(r.key), r.editLocale) : '#'}
+              prefetch={false}
+              className={cn(
+                "group flex items-center justify-between gap-4 rounded-[24px] border border-gm-border-soft bg-gm-surface/10 p-5 transition-all duration-300",
+                r.hasValue 
+                  ? "hover:bg-gm-surface/30 hover:border-gm-gold/30 hover:shadow-lg cursor-pointer" 
+                  : "opacity-60 grayscale"
+              )}
+              onClick={r.hasValue ? undefined : (e) => e.preventDefault()}
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-3">
+                  <span className="font-serif text-lg text-gm-text group-hover:text-gm-gold transition-colors">
+                    {t(`admin.siteSettings.general.keyLabels.${r.key}`, null, r.key)}
+                  </span>
+                  {!r.hasValue ? (
+                    <Badge variant="outline" className="text-[9px] text-gm-muted uppercase tracking-[0.2em] border-gm-border-soft bg-gm-bg-deep">
+                      {t('admin.siteSettings.general.sourceNone', null, 'Boş')}
+                    </Badge>
+                  ) : null}
+                </div>
+                <p className="mt-1 text-xs text-gm-muted">
+                  {t(`admin.siteSettings.general.keyDescriptions.${r.key}`, null, '')}
+                </p>
+                {summary ? (
+                  <p className="mt-3 truncate font-mono text-[11px] text-gm-gold/80 bg-gm-gold/5 border border-gm-gold/10 inline-block px-3 py-1.5 rounded-lg">
+                    {summary}
+                  </p>
+                ) : null}
+              </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={upsertEmptyGlobals}
-                disabled={busy}
-                title={t('admin.siteSettings.general.globalBootstrapTooltip')}
-              >
-                {t('admin.siteSettings.general.globalBootstrap')}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
+              {r.hasValue ? (
+                <div className="flex items-center justify-center size-10 rounded-full bg-gm-surface/40 group-hover:bg-gm-gold/10 transition-colors shrink-0 border border-gm-border-soft group-hover:border-gm-gold/20">
+                  <ChevronRight className="size-4 text-gm-muted group-hover:text-gm-gold transition-transform group-hover:translate-x-0.5" />
+                </div>
+              ) : null}
+            </Link>
+          );
+        })}
+      </div>
 
-        <CardContent className="space-y-4">
-          {/* Search */}
-          <div className="space-y-2">
-            <Label htmlFor="general-search">{t('admin.siteSettings.filters.search')}</Label>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="general-search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t('admin.siteSettings.general.searchPlaceholder')}
-                className="pl-9"
-                disabled={busy}
-              />
-            </div>
-          </div>
-
-          {/* Loading badge */}
-          {busy ? (
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">{t('admin.siteSettings.messages.loading')}</Badge>
-              <span className="text-xs text-muted-foreground">
-                {t('admin.siteSettings.general.loadingNote')}
-              </span>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      {/* Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t('admin.siteSettings.general.recordsTitle')}</CardTitle>
-          <CardDescription>
-            {t('admin.siteSettings.general.managedKeys')}{' '}
-            <span className="text-muted-foreground">
-              {GENERAL_KEYS.map((k) => (
-                <code key={k} className="mr-2">
-                  {k}
-                </code>
-              ))}
-            </span>
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[24%]">{t('admin.siteSettings.general.keyColumn')}</TableHead>
-                  <TableHead className="w-[16%]">{t('admin.siteSettings.general.sourceColumn')}</TableHead>
-                  <TableHead className="w-[40%]">{t('admin.siteSettings.general.effectiveColumn')}</TableHead>
-                  <TableHead className="w-[20%] text-right">{t('admin.siteSettings.general.actionsColumn')}</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {groups.length ? (
-                  groups.map((g) => {
-                    const hasGlobal = Boolean(g.globalRow);
-                    const hasLocal = Boolean(g.localeRow);
-
-                    const editLocale = hasLocal ? locale : '*';
-                    const canEdit = hasGlobal || hasLocal;
-
-                    return (
-                      <TableRow key={`group_${g.key}`}>
-                        <TableCell className="align-top">
-                          <div className="wrap-break-word font-mono text-sm font-medium">
-                            {g.key}
-                          </div>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              {hasGlobal ? t('admin.siteSettings.general.globalExists') : t('admin.siteSettings.general.globalNotExists')}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              {hasLocal ? t('admin.siteSettings.general.localeExists', { locale }) : t('admin.siteSettings.general.localeNotExists', { locale })}
-                            </Badge>
-                          </div>
-                        </TableCell>
-
-                        <TableCell className="align-top">
-                          {sourceBadge(g.effectiveSource)}
-                        </TableCell>
-
-                        <TableCell className="align-top">
-                          <div className="max-w-md overflow-hidden wrap-break-word text-xs text-muted-foreground">
-                            <code className="rounded bg-muted px-1.5 py-0.5">
-                              {formatValuePreview(g.effectiveValue)}
-                            </code>
-                          </div>
-
-                          {g.effectiveSource === 'global' && !hasLocal ? (
-                            <div className="mt-2 text-xs text-muted-foreground">
-                              {t('admin.siteSettings.general.noOverrideNote', { locale })}
-                            </div>
-                          ) : null}
-                        </TableCell>
-
-                        <TableCell className="align-top">
-                          <div className="flex flex-col gap-2">
-                            <div className="flex flex-wrap justify-end gap-1">
-                              <Button asChild variant="outline" size="sm" disabled={busy || !canEdit}>
-                                <Link prefetch={false} href={editHref(g.key, editLocale)}>
-                                  {t('admin.siteSettings.actions.edit')}
-                                </Link>
-                              </Button>
-
-                              {!hasLocal && hasGlobal ? (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => createOverrideFromGlobal(g)}
-                                  disabled={busy}
-                                >
-                                  {t('admin.siteSettings.general.overrideButton')}
-                                </Button>
-                              ) : null}
-
-                              {hasGlobal || hasLocal ? (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => restoreDefaults(g.key, hasLocal ? locale : '*')}
-                                  disabled={busy}
-                                  title={t('admin.siteSettings.general.restoreTooltip')}
-                                >
-                                  {t('admin.siteSettings.general.restoreButton')}
-                                </Button>
-                              ) : null}
-                            </div>
-
-                            {/* Delete buttons (global/local) */}
-                            <div className="flex flex-wrap justify-end gap-1">
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => deleteRow(g.key, '*')}
-                                disabled={busy || !hasGlobal}
-                                title={t('admin.siteSettings.general.deleteGlobalTooltip')}
-                              >
-                                {t('admin.siteSettings.general.deleteGlobal')}
-                              </Button>
-
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => deleteRow(g.key, locale)}
-                                disabled={busy || !hasLocal}
-                                title={t('admin.siteSettings.general.deleteLocaleTooltip', { locale })}
-                              >
-                                {t('admin.siteSettings.general.deleteLocale')}
-                              </Button>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                      {t('admin.siteSettings.general.noRecords')}
-                      <div className="mt-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={upsertEmptyGlobals}
-                          disabled={busy}
-                        >
-                          {t('admin.siteSettings.general.globalBootstrap')}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="text-xs text-muted-foreground">
-            {t('admin.siteSettings.general.deleteTooltip')}
-          </div>
-        </CardContent>
-      </Card>
+      {hasAnyMissing ? (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={createMissing}
+          disabled={busy}
+          className="w-full sm:w-auto rounded-full border-gm-gold/30 text-gm-gold hover:bg-gm-gold/10 h-12 px-6 text-[10px] font-bold tracking-widest uppercase transition-all shadow-sm"
+        >
+          <Plus className="mr-2 size-4" />
+          {t(
+            'admin.siteSettings.general.globalBootstrap',
+            null,
+            'Eksik anahtarları boş varsayılanla oluştur'
+          )}
+        </Button>
+      ) : null}
     </div>
   );
 };
-
-GeneralSettingsTab.displayName = 'GeneralSettingsTab';

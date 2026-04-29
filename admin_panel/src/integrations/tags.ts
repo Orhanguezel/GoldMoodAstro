@@ -187,6 +187,9 @@ export const tags = [
   'ChatKnowledge',
   'Consultants',
   'Consultant',
+  'LlmPrompt',
+  'LlmPrompts',
+  'AstrologyKb',
 ] as const;
 
 export type tag = typeof tags[number];

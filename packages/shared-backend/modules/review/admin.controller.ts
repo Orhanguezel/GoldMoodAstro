@@ -8,6 +8,7 @@ import {
   ReviewListParamsSchema,
   ReviewCreateSchema,
   ReviewUpdateSchema,
+  ReviewBulkModerationSchema,
   IdParamSchema,
 } from "./validation";
 
@@ -20,6 +21,7 @@ import {
   repoCreateReviewAdmin,
   repoUpdateReviewAdmin,
   repoDeleteReviewAdmin,
+  repoBulkModerateReviewsAdmin,
 } from "./repository";
 import { DEFAULT_LOCALE, type Locale } from '../../core/i18n';
 
@@ -86,4 +88,11 @@ export async function removeReviewAdmin(req: FastifyRequest) {
   const { id } = IdParamSchema.parse(req.params);
   const ok = await repoDeleteReviewAdmin(req.server, id);
   return { ok };
+}
+
+// T17-7 — Toplu moderasyon
+export async function bulkModerateReviewsAdmin(req: FastifyRequest) {
+  const body = ReviewBulkModerationSchema.parse((req as any).body);
+  const result = await repoBulkModerateReviewsAdmin(req.server, body.ids, body.approved);
+  return { ok: true, ...result };
 }

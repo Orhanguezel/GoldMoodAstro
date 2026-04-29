@@ -67,6 +67,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="bookings" options={{ href: null }} />
       <Tabs.Screen name="favorites" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
+      <Tabs.Screen name="tarot" options={{ href: null }} />
     </Tabs>
   );
 }

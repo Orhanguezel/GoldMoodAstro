@@ -6,8 +6,9 @@ import { RefreshCcw, Search, Calendar, Filter } from 'lucide-react';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -15,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 export type BookingStatusFilter =
   | 'all'
@@ -56,105 +58,105 @@ export const BookingsHeader: React.FC<BookingsHeaderProps> = ({
   const t = useAdminT('admin.bookings');
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-700">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <span className="w-8 h-px bg-[#C9A961]" />
-            <span className="text-[#C9A961] font-bold text-[10px] tracking-[0.2em] uppercase">Sistem Kayıtları</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-px bg-gm-gold" />
+            <span className="text-gm-gold font-bold text-[10px] tracking-[0.2em] uppercase">{t('list.badge', null, 'Randevu Yönetimi')}</span>
           </div>
-          <h1 className="font-serif text-4xl text-foreground">Randevular</h1>
-          <p className="text-muted-foreground text-sm mt-2 font-serif italic">
-            Tüm seansları, durumlarını ve ödeme detaylarını buradan yönetin.
+          <h1 className="font-serif text-4xl text-gm-text">{t('header.title')}</h1>
+          <p className="text-gm-muted text-sm font-serif italic max-w-xl">
+            {t('header.description')}
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Toplam</p>
-            <p className="font-serif text-2xl text-[#C9A961]">{total}</p>
+        <div className="flex items-center gap-6 bg-gm-surface/20 px-8 py-4 rounded-[24px] border border-gm-border-soft backdrop-blur-sm">
+          <div className="text-center sm:text-right min-w-[80px]">
+            <p className="text-[10px] font-bold text-gm-muted tracking-widest uppercase mb-1">{t('summary.total_label', null, 'Toplam')}</p>
+            <p className="font-serif text-3xl text-gm-gold">{total}</p>
           </div>
           <Button 
-            variant="outline" 
-            size="sm" 
             onClick={onRefresh} 
             disabled={loading}
-            className="rounded-full border-border/40 px-6"
+            variant="outline"
+            className="rounded-full border-gm-border-soft px-8 h-12 hover:bg-gm-surface transition-all font-bold tracking-widest uppercase text-[10px]"
           >
-            <RefreshCcw className={`mr-2 size-4 ${loading ? 'animate-spin' : ''}`} />
-            Yenile
+            <RefreshCcw className={cn("mr-2 size-4", loading && "animate-spin")} />
+            {t('states.refresh', null, 'Yenile')}
           </Button>
         </div>
       </div>
 
       {/* Filters Card */}
-      <Card className="bg-card border-border/40 rounded-[32px] overflow-hidden">
-        <CardContent className="p-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 items-end">
+      <Card className="bg-gm-bg-deep/50 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-md shadow-2xl">
+        <CardContent className="p-8 grid gap-8 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 items-end">
           <div className="space-y-3 md:col-span-2">
-            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1">Arama</label>
+            <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('filters.searchLabel')}</Label>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-gm-muted/50" />
               <Input
                 value={filters.q}
                 onChange={(e) => onFiltersChange({ ...filters, q: e.target.value })}
-                placeholder="Randevu no, danışan veya danışman..."
-                className="pl-12 bg-muted/20 border-border/40 rounded-2xl h-12 focus:border-[#C9A961]/50 transition-all"
+                placeholder={t('filters.searchPlaceholder')}
+                className="pl-12 bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 text-sm"
                 disabled={loading}
               />
             </div>
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 text-center block">Durum</label>
+            <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('filters.statusLabel')}</Label>
             <Select
               value={filters.status}
               onValueChange={(v) => onFiltersChange({ ...filters, status: v as BookingStatusFilter })}
               disabled={loading}
             >
-              <SelectTrigger className="bg-muted/20 border-border/40 rounded-2xl h-12 focus:ring-0 focus:border-[#C9A961]/50">
+              <SelectTrigger className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 text-sm">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-card border-border/40 rounded-2xl">
-                <SelectItem value="all">Tüm Durumlar</SelectItem>
-                <SelectItem value="pending_payment">Ödeme Bekliyor</SelectItem>
-                <SelectItem value="booked">Rezerve</SelectItem>
-                <SelectItem value="new">Yeni</SelectItem>
-                <SelectItem value="confirmed">Onaylı</SelectItem>
-                <SelectItem value="completed">Tamamlandı</SelectItem>
-                <SelectItem value="cancelled">İptal</SelectItem>
+              <SelectContent className="bg-gm-bg-deep border-gm-border-soft rounded-2xl">
+                <SelectItem value="all">{t('filters.statusOptions.all')}</SelectItem>
+                <SelectItem value="pending_payment">{t('filters.statusOptions.pending_payment')}</SelectItem>
+                <SelectItem value="booked">{t('filters.statusOptions.booked')}</SelectItem>
+                <SelectItem value="new">{t('filters.statusOptions.new')}</SelectItem>
+                <SelectItem value="confirmed">{t('filters.statusOptions.confirmed')}</SelectItem>
+                <SelectItem value="completed">{t('filters.statusOptions.completed')}</SelectItem>
+                <SelectItem value="cancelled">{t('filters.statusOptions.cancelled')}</SelectItem>
+                <SelectItem value="rejected">{t('filters.statusOptions.rejected')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 text-center block">Tarih</label>
+            <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('filters.dateLabel')}</Label>
             <div className="relative">
-              <Calendar className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-gm-muted/50" />
               <Input
                 type="date"
                 value={filters.appointment_date}
                 onChange={(e) => onFiltersChange({ ...filters, appointment_date: e.target.value })}
-                className="pl-12 bg-muted/20 border-border/40 rounded-2xl h-12 focus:border-[#C9A961]/50 transition-all"
+                className="pl-12 bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 text-sm"
                 disabled={loading}
               />
             </div>
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase ml-1 text-center block">Okunma</label>
+            <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('filters.readLabel')}</Label>
             <Select
               value={filters.is_read}
               onValueChange={(v) => onFiltersChange({ ...filters, is_read: v as BookingReadFilter })}
               disabled={loading}
             >
-              <SelectTrigger className="bg-muted/20 border-border/40 rounded-2xl h-12 focus:ring-0 focus:border-[#C9A961]/50">
+              <SelectTrigger className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 text-sm">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-card border-border/40 rounded-2xl">
-                <SelectItem value="all">Hepsi</SelectItem>
-                <SelectItem value="unread">Okunmamış</SelectItem>
-                <SelectItem value="read">Okunmuş</SelectItem>
+              <SelectContent className="bg-gm-bg-deep border-gm-border-soft rounded-2xl">
+                <SelectItem value="all">{t('filters.readOptions.all')}</SelectItem>
+                <SelectItem value="unread">{t('filters.readOptions.unread')}</SelectItem>
+                <SelectItem value="read">{t('filters.readOptions.read')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

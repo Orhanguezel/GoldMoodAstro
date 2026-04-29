@@ -20,15 +20,20 @@ import {
   MessageSquare,
   Compass,
   Calendar,
-  LayoutGrid
+  LayoutGrid,
+  Coffee,
+  Hash,
+  Heart,
+  User
 } from 'lucide-react-native';
 
 import { birthChartsApi, readingsApi } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { colors, font, radius, spacing } from '@/theme/tokens';
 import type { BirthChart, DailyReadingResponse } from '@/types';
-import DailyHoroscopeCard from '@/src/components/DailyHoroscopeCard';
-import SkeletonView from '@/src/components/SkeletonView';
+import DailyHoroscopeCard from '@/components/DailyHoroscopeCard';
+import { BannerSlider } from '@/components/BannerSlider';
+import SkeletonView from '@/components/SkeletonView';
 
 const { width } = Dimensions.get('window');
 
@@ -67,10 +72,15 @@ export default function TodayScreen() {
   const moonSign = mainChart?.chart_data?.planets?.moon?.sign_label || 'Boğa';
 
   const QUICK_ACTIONS = [
-    { id: 'birth', label: 'Doğum Haritası', icon: Compass, route: '/(tabs)/birth-chart', color: colors.gold },
-    { id: 'daily', label: 'Günlük Yorum', icon: Calendar, route: '/(tabs)/daily', color: colors.goldDim },
-    { id: 'connect', label: 'Astrologa Sor', icon: MessageSquare, route: '/(tabs)/connect', color: colors.goldDeep },
-    { id: 'all', label: 'Tüm Servisler', icon: LayoutGrid, route: '/(tabs)/connect', color: colors.textMuted },
+    { id: 'birth-chart', label: 'Doğum Haritası', icon: LayoutGrid, route: '/(tabs)/birth-chart', color: colors.gold },
+    { id: 'daily', label: 'Günlük Yorum', icon: Calendar, route: '/(tabs)/daily', color: colors.info },
+    { id: 'connect', label: 'Astrolog', icon: MessageSquare, route: '/(tabs)/connect', color: colors.goldLight },
+    { id: 'profile', label: 'Profil', icon: User, route: '/(tabs)/profile', color: colors.textDim },
+    { id: 'coffee', label: 'Kahve Falı', icon: Coffee, route: '/coffee', color: colors.goldDim },
+    { id: 'ruya', label: 'Rüya Tabiri', icon: Moon, route: '/dreams', color: '#9B7EC8' },
+  { id: 'yildizname', label: 'Yıldızname', icon: Sparkles, route: '/yildizname', color: '#D4AF37' },
+  { id: 'sinastri', label: 'Aşk Uyumu', icon: Heart, route: '/synastry', color: colors.goldLight },
+  { id: 'numerology', label: 'Numeroloji', icon: Hash, route: '/numerology', color: '#5B9BD5' },
   ];
 
   if (authLoading || (loading && !refreshing)) {
@@ -113,7 +123,7 @@ export default function TodayScreen() {
               <Text style={styles.dateText}>
                 {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
               </Text>
-              <Text style={styles.greetingText}>Hoş Geldin, {mainChart?.name?.split(' ')[0] || 'Gezgin'}</Text>
+              <Text style={styles.greetingText}>Günaydın, {mainChart?.name?.split(' ')[0] || 'Gezgin'}</Text>
             </View>
             <View style={styles.sunBadge}>
               <Sun size={14} color={colors.gold} />
@@ -155,6 +165,8 @@ export default function TodayScreen() {
           </View>
 
           <DailyHoroscopeCard />
+
+          <BannerSlider placement="mobile_home" />
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>KEŞFET</Text>

@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Banner from '@/layout/banner/Breadcrum';
+import PublicBanner from '@/components/common/public/Banner';
 import BlogPageContent from '@/components/containers/blog/BlogPageContent';
 import Feedback from '@/components/containers/feedback/Feedback';
 import { LayoutSeoBridge } from '@/seo';
@@ -93,6 +94,10 @@ export default function BlogPage() {
       <div className="bg-bg-primary min-h-[50vh]">
         <section className="container mx-auto py-16 px-4">
           <BlogPageContent />
+        </section>
+
+        <section className="container mx-auto pb-16 px-4">
+          <PublicBanner placement="blog_inline" variant="slim" count={1} dismissable />
         </section>
 
         <section className="container mx-auto pb-16 px-4">

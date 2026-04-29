@@ -92,8 +92,16 @@ export class IyzicoService {
         ? 'https://api.iyzipay.com'
         : 'https://sandbox-api.iyzipay.com');
 
-    const apiKey    = config.apiKey    || process.env.IYZICO_API_KEY    || '';
-    const secretKey = config.secretKey || process.env.IYZICO_SECRET_KEY || '';
+    const apiKey =
+      config.apiKey ||
+      process.env.IYZIPAY_API_KEY ||
+      process.env.IYZICO_API_KEY ||
+      '';
+    const secretKey =
+      config.secretKey ||
+      process.env.IYZIPAY_SECRET_KEY ||
+      process.env.IYZICO_SECRET_KEY ||
+      '';
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.iyzipay = new Iyzipay({ apiKey, secretKey, uri } as any);
