@@ -15,7 +15,7 @@ export interface HomeSection {
 const DEFAULT_LAYOUT: HomeSection[] = [
   { id: 'd-hero', slug: 'hero', label: 'Hero', component_key: 'HeroNew', order_index: 10, is_active: 1, config: null },
   { id: 'd-expertise', slug: 'expertise', label: 'Uzmanlık Alanları', component_key: 'ExpertiseCategoriesSection', order_index: 20, is_active: 1, config: null },
-  { id: 'd-featured', slug: 'featured', label: 'Öne Çıkan Danışmanlar', component_key: 'ConsultantsSection', order_index: 30, is_active: 1, config: { sort: 'rating', limit: 6 } },
+  { id: 'd-featured', slug: 'featured', label: 'Öne Çıkan Danışmanlar', component_key: 'ConsultantsSection', order_index: 30, is_active: 1, config: { sort: 'featured', limit: 6 } },
   { id: 'd-how-it-works', slug: 'how-it-works', label: 'Nasıl Çalışır?', component_key: 'HomeIntroSection', order_index: 40, is_active: 1, config: null },
   { id: 'd-testimonials', slug: 'testimonials', label: 'Yorumlar', component_key: 'HomeTestimonialsSection', order_index: 50, is_active: 1, config: null },
   { id: 'd-become-consultant', slug: 'become-consultant', label: 'Danışman Ol', component_key: 'HomeBecomeConsultantBanner', order_index: 60, is_active: 1, config: null },

@@ -101,10 +101,6 @@ export function SplashScreen({
         </div>
       </div>
 
-      {/* Subtle Background Textures */}
-      <div className="absolute inset-0 pointer-events-none opacity-5 mix-blend-multiply">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/parchment.png')]" />
-      </div>
 
       <style jsx global>{`
         @keyframes fadeIn {

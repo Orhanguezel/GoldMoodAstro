@@ -1,7 +1,7 @@
 -- backend/src/db/sql/181_tarot_seed.sql
 -- FAZ 21 — Tarot 22 Major Arcana + Sample Minor
 
-INSERT INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
+INSERT IGNORE INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
 (UUID(), 'the-fool', 'Mecnun (Joker)', 'major', 'none', 0, 'Yeni başlangıçlar, masumiyet, macera, özgürlük, spontanlık.', 'Safdillik, pervasızlık, risk alma, kararsızlık.', '["başlangıç", "özgürlük", "risk"]'),
 (UUID(), 'the-magician', 'Büyücü', 'major', 'none', 1, 'Yaratıcılık, beceri, odaklanma, tezahür ettirme, irade gücü.', 'Manipülasyon, zayıf planlama, kullanılmayan yetenekler.', '["irade", "yaratım", "beceri"]'),
 (UUID(), 'the-high-priestess', 'Azize', 'major', 'none', 2, 'Sezgi, bilinçaltı, gizem, içsel ses, kutsal bilgi.', 'Gizli gündemler, sezgilerin bastırılması, yüzeysellik.', '["sezgi", "gizem", "bilinçaltı"]'),
@@ -27,14 +27,14 @@ INSERT INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meanin
 
 -- ─── Minor Arcana — 4 takım × 14 kart = 56 (Ace + 2-10 + Page/Knight/Queen/King) ───
 -- Aces (4)
-INSERT INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
+INSERT IGNORE INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
 (UUID(), 'ace-of-cups', 'Kupa Ası', 'minor', 'cups', 1, 'Yeni duygusal başlangıç, aşk, mutluluk, sezgi.', 'Duygusal blokaj, bastırılmış duygular, ayrılık.', '["aşk", "duygu", "başlangıç"]'),
 (UUID(), 'ace-of-swords', 'Kılıç Ası', 'minor', 'swords', 1, 'Zihinsel netlik, yeni fikir, zafer, dürüstlük.', 'Kafa karışıklığı, iletişim bozukluğu, adaletsizlik.', '["zihin", "fikir", "netlik"]'),
 (UUID(), 'ace-of-wands', 'Değnek Ası', 'minor', 'wands', 1, 'İlham, yeni tutku, yaratıcılık, enerji.', 'Gecikme, motivasyon kaybı, yaratıcı tıkanıklık.', '["tutku", "ilham", "enerji"]'),
 (UUID(), 'ace-of-pentacles', 'Tılsım Ası', 'minor', 'pentacles', 1, 'Yeni maddi fırsat, bolluk, pratiklik, başarı.', 'Maddi kayıp, zayıf planlama, açgözlülük.', '["para", "fırsat", "başarı"]');
 
 -- ─── Cups (Kupalar) — duygu, ilişki, sezgi ─────────────────────────────────
-INSERT INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
+INSERT IGNORE INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
 (UUID(), 'two-of-cups', 'Kupa İkilisi', 'minor', 'cups', 2, 'Karşılıklı sevgi, ortaklık, uyum, çekim, anlaşma.', 'Uyumsuzluk, küskünlük, dengesiz ilişki, ayrılık.', '["ortaklık","uyum","çekim"]'),
 (UUID(), 'three-of-cups', 'Kupa Üçlüsü', 'minor', 'cups', 3, 'Dostluk, kutlama, topluluk, neşe, başarı paylaşımı.', 'Yalnızlık, dedikodu, sosyal kopukluk, abartı.', '["dostluk","kutlama","topluluk"]'),
 (UUID(), 'four-of-cups', 'Kupa Dörtlüsü', 'minor', 'cups', 4, 'İçe dönüş, tatminsizlik, fırsatları görememek, durgunluk.', 'Yeni farkındalık, motivasyon, fırsatları kabul.', '["tatminsizlik","içe dönüş","fırsat"]'),
@@ -50,7 +50,7 @@ INSERT INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meanin
 (UUID(), 'king-of-cups', 'Kupa Kralı', 'minor', 'cups', 14, 'Duygusal denge, bilgelik, diplomasi, sakin liderlik.', 'Pasif-agresif, duygusal manipülasyon, kontrolsüzlük.', '["denge","bilgelik","diplomasi"]');
 
 -- ─── Swords (Kılıçlar) — zihin, iletişim, çatışma ──────────────────────────
-INSERT INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
+INSERT IGNORE INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
 (UUID(), 'two-of-swords', 'Kılıç İkilisi', 'minor', 'swords', 2, 'Kararsızlık, çıkmaz, denge arayışı, gerçeği görmemek.', 'Karar verme, gerçekle yüzleşme, kilidin açılması.', '["kararsızlık","çıkmaz","denge"]'),
 (UUID(), 'three-of-swords', 'Kılıç Üçlüsü', 'minor', 'swords', 3, 'Kalp kırıklığı, üzüntü, ihanet, ayrılık, acı gerçek.', 'İyileşme, affetme, acıyı bırakma.', '["kalp kırıklığı","üzüntü","ayrılık"]'),
 (UUID(), 'four-of-swords', 'Kılıç Dörtlüsü', 'minor', 'swords', 4, 'Dinlenme, geri çekilme, iyileşme, içsel toparlanma.', 'Tükenme, dinlenememek, zorla devam etmek.', '["dinlenme","iyileşme","mola"]'),
@@ -66,7 +66,7 @@ INSERT INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meanin
 (UUID(), 'king-of-swords', 'Kılıç Kralı', 'minor', 'swords', 14, 'Adalet, mantık, otorite, etik liderlik, açık zihin.', 'Sertlik, manipülasyon, soğuk yargı, tiranlık.', '["adalet","mantık","otorite"]');
 
 -- ─── Wands (Değnekler) — tutku, eylem, yaratım ─────────────────────────────
-INSERT INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
+INSERT IGNORE INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
 (UUID(), 'two-of-wands', 'Değnek İkilisi', 'minor', 'wands', 2, 'Planlama, gelecek vizyonu, karar anı, ufuk.', 'Korku, plansızlık, fırsatların kaçırılması.', '["plan","vizyon","karar"]'),
 (UUID(), 'three-of-wands', 'Değnek Üçlüsü', 'minor', 'wands', 3, 'Genişleme, fırsatlar, vizyonun gerçekleşmesi, beklenti.', 'Engeller, gecikme, dar bakış.', '["genişleme","fırsat","beklenti"]'),
 (UUID(), 'four-of-wands', 'Değnek Dörtlüsü', 'minor', 'wands', 4, 'Kutlama, ev, istikrar, kök salma, başarı eşiği.', 'Geçici uyumsuzluk, taşınma, eşik gerginliği.', '["kutlama","ev","istikrar"]'),
@@ -82,7 +82,7 @@ INSERT INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meanin
 (UUID(), 'king-of-wands', 'Değnek Kralı', 'minor', 'wands', 14, 'Vizyoner liderlik, ilham, girişimcilik, doğal otorite.', 'Despotluk, sabırsızlık, ego şişkinliği.', '["vizyon","liderlik","girişim"]');
 
 -- ─── Pentacles (Tılsımlar) — para, beden, somut alan ──────────────────────
-INSERT INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
+INSERT IGNORE INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright_meaning, reversed_meaning, keywords) VALUES
 (UUID(), 'two-of-pentacles', 'Tılsım İkilisi', 'minor', 'pentacles', 2, 'Denge kurma, çoklu sorumluluk, esneklik, akış.', 'Dengesizlik, fazla yük, finansal stres.', '["denge","esneklik","öncelik"]'),
 (UUID(), 'three-of-pentacles', 'Tılsım Üçlüsü', 'minor', 'pentacles', 3, 'Ekip çalışması, ustalık, planlı ilerleme, iş birliği.', 'İş birliği eksikliği, yetersiz beceri, anlaşmazlık.', '["ekip","ustalık","iş birliği"]'),
 (UUID(), 'four-of-pentacles', 'Tılsım Dörtlüsü', 'minor', 'pentacles', 4, 'Tutuculuk, biriktirme, güvenlik arayışı, kontrol.', 'Cömertlik, paylaşma, açılma, kayıp korkusu azalır.', '["tutuculuk","güvenlik","kontrol"]'),

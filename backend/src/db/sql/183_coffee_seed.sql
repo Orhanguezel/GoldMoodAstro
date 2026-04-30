@@ -1,7 +1,7 @@
 -- backend/src/db/sql/183_coffee_seed.sql
 -- FAZ 22 — Kahve Falı Sembolleri (50+ Sembol)
 
-INSERT INTO coffee_symbols (id, slug, name_tr, meaning, category) VALUES
+INSERT IGNORE INTO coffee_symbols (id, slug, name_tr, meaning, category) VALUES
 (UUID(), 'bird', 'Kuş', 'Haber, müjde, sevinçli bir gelişme.', '["haber", "genel"]'),
 (UUID(), 'road', 'Yol', 'Yolculuk, yeni bir başlangıç, uzun bir süreç.', '["kariyer", "genel"]'),
 (UUID(), 'heart', 'Kalp', 'Aşk, sevgi, duygusal bağlılık.', '["aşk"]'),

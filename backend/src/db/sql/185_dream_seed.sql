@@ -1,7 +1,7 @@
 -- backend/src/db/sql/185_dream_seed.sql
 -- FAZ 23 — Rüya Sembolleri (100+ Sembol)
 
-INSERT INTO dream_symbols (id, slug, name_tr, meaning, category) VALUES
+INSERT IGNORE INTO dream_symbols (id, slug, name_tr, meaning, category) VALUES
 (UUID(), 'water', 'Su', 'Duygusal durum, saflık, yenilenme veya belirsizlik.', '["genel", "duygu"]'),
 (UUID(), 'snake', 'Yılan', 'Düşman, haset, şifa veya dönüşüm.', '["uyarı", "dönüşüm"]'),
 (UUID(), 'flying', 'Uçmak', 'Özgürlük, kontrol kaybı veya yüksek hedefler.', '["genel", "psikolojik"]'),

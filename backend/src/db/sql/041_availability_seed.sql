@@ -5,7 +5,7 @@
 -- Frontend slot picker bunlardan dinamik olarak günlük plan üretir.
 -- =============================================================
 
-INSERT INTO resources (id, type, title, capacity, external_ref_id, is_active) VALUES
+INSERT IGNORE INTO resources (id, type, title, capacity, external_ref_id, is_active) VALUES
 ('30000000-0000-4000-8000-000000000001','consultant','Zeynep Yıldız',1,'20000000-0000-4000-8000-000000000001',1),
 ('30000000-0000-4000-8000-000000000002','consultant','Ömer Toprak',  1,'20000000-0000-4000-8000-000000000002',1),
 ('30000000-0000-4000-8000-000000000003','consultant','Selin Ay',     1,'20000000-0000-4000-8000-000000000003',1),

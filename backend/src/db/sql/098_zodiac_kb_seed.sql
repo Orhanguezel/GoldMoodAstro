@@ -4,7 +4,7 @@
 -- image_url storage_assets ile aynı path (141'de tanımlı zodiac PNG'leri)
 -- =============================================================
 
-INSERT INTO astrology_kb (id, kind, key1, key2, key3, locale, title, content, short_summary, tone, source, image_url) VALUES
+INSERT IGNORE INTO astrology_kb (id, kind, key1, key2, key3, locale, title, content, short_summary, tone, source, image_url) VALUES
 -- Koç
 (UUID(), 'sign', 'aries', NULL, NULL, 'tr', 'Koç Burcu (Aries)',
 'Koç burcu, zodyakın ilk burcudur ve baharın başlangıcını simgeler. Ateş elementi ve öncü niteliktedir. Yönetici gezegeni Mars''tır. Koçlar cesur, enerjik, bağımsız ve maceracıdırlar. Yeni başlangıçların ve eylemin temsilcisidirler. Bir Koç için hayat, sürekli fethedilmesi gereken bir macera alanıdır. Sabırsızlıkları ve fevrilikleri gölge yanları olsa da, dürüstlükleri ve içtenlikleri onları vazgeçilmez kılar.',
@@ -62,7 +62,7 @@ ON DUPLICATE KEY UPDATE
 -- =============================================================
 -- Sign Sections (Aries Example — şablon, astrolog kalan 11×5 = 55 satır ekleyecek)
 -- =============================================================
-INSERT INTO astrology_kb (id, kind, key1, key2, key3, locale, title, content, short_summary, tone, source, image_url) VALUES
+INSERT IGNORE INTO astrology_kb (id, kind, key1, key2, key3, locale, title, content, short_summary, tone, source, image_url) VALUES
 (UUID(), 'sign_section', 'aries', 'personality', NULL, 'tr', 'Koç Burcu Kişilik Özellikleri',
 'Koç burcu bireyleri, zodyakın çocukları gibidirler; saf bir enerji ve bitmek bilmeyen bir yaşam sevinci ile doludurlar. Dürüstlük onlar için en temel erdemdir. Ne hissediyorlarsa onu söylerler ve maske takmaktan nefret ederler. Cesaretleri, başkalarının geri durduğu yerlerde onların öne atılmasını sağlar. Ancak bu cesaret bazen düşüncesizce risk almalarına da neden olabilir.',
 'Koç burcunun temel kişilik özellikleri: dürüstlük, cesaret ve saf enerji.', 'warm', 'GoldMoodAstro Editorial', NULL),
