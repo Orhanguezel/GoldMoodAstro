@@ -29,7 +29,12 @@ import { registerCampaigns, registerCampaignsAdmin } from '@goldmood/shared-back
 import { registerReviewOutcomes } from '@goldmood/shared-backend/modules/reviewOutcomes/router';
 import { registerNavigation, registerNavigationAdmin } from '@goldmood/shared-backend/modules/navigation/router';
 import { registerCustomPages, registerCustomPagesAdmin } from '@goldmood/shared-backend/modules/customPages/router';
+import { registerHomeSections, registerHomeSectionsAdmin } from '@goldmood/shared-backend/modules/homeSections/router';
+import { registerConsultantServices, registerConsultantServicesAdmin } from '@goldmood/shared-backend/modules/consultantServices/router';
+import { registerConsultantSelf } from '@goldmood/shared-backend/modules/consultantSelf/router';
+import { registerConsultantApplications, registerConsultantApplicationsAdmin } from '@goldmood/shared-backend/modules/consultantApplications/router';
 import { registerKvkk } from '@goldmood/shared-backend/modules/kvkk/router';
+import { registerZodiac } from '@goldmood/shared-backend/modules/zodiac/router';
 
 // Admin routers
 import { registerUserAdmin } from '@goldmood/shared-backend/modules/auth/admin.routes';
@@ -81,7 +86,12 @@ export async function registerSharedPublic(api: FastifyInstance) {
   await registerReviewOutcomes(api);
   await registerNavigation(api);
   await registerCustomPages(api);
+  await registerHomeSections(api);
+  await registerConsultantServices(api);
+  await registerConsultantApplications(api);
+  await registerConsultantSelf(api);
   await registerKvkk(api);
+  await registerZodiac(api);
 }
 
 export async function registerSharedAdmin(adminApi: FastifyInstance) {
@@ -111,6 +121,9 @@ export async function registerSharedAdmin(adminApi: FastifyInstance) {
     registerLlmAdmin,
     registerNavigationAdmin,
     registerCustomPagesAdmin,
+    registerHomeSectionsAdmin,
+    registerConsultantServicesAdmin,
+    registerConsultantApplicationsAdmin,
   ]) {
     await adminApi.register(reg);
   }

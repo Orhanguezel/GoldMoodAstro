@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { X, Info } from 'lucide-react';
 import { useListBannersQuery, useTrackBannerClickMutation } from '@/integrations/rtk/public/banners.endpoints';
 import { BannerPlacement, getMultiLang } from '@/types/common';
@@ -105,10 +106,18 @@ export default function Banner({
             onClick={() => trackClick(banner.id)}
           >
             <div className={cn('relative w-full', ASPECTS[variant])}>
-              <img
+              <Image
                 src={banner.image_url}
                 alt={title || banner.code}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                fill
+                sizes={
+                  variant === 'hero'
+                    ? '(max-width: 768px) 100vw, 1200px'
+                    : variant === 'slim'
+                      ? '(max-width: 768px) 100vw, 900px'
+                      : '(max-width: 768px) 100vw, 480px'
+                }
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-linear-to-r from-(--gm-bg)/85 via-(--gm-bg)/35 to-transparent" />
             </div>

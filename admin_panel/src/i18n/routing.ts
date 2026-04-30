@@ -49,7 +49,7 @@ function pickRuntimeDefault(activeLocales?: string[], defaultLocale?: string) {
   const candDefault = normLocaleTag(defaultLocale);
   if (candDefault && active.includes(candDefault)) return candDefault;
 
-  return normLocaleTag(active[0]) || normLocaleTag(defaultLocale) || "de";
+  return normLocaleTag(active[0]) || normLocaleTag(defaultLocale) || "tr";
 }
 
 function isActiveLocale(locale: string | undefined, activeLocales?: string[]) {

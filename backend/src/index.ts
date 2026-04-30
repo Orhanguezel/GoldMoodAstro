@@ -7,6 +7,15 @@ import { registerDailyReadingsCron } from '@/cron/daily-readings';
 import { registerHoroscopeCron } from '@/cron/horoscope-job';
 import { registerReviewFollowupCron } from '@/cron/review-followup';
 import { registerAccountDeletionCron } from '@/cron/account-deletion';
+import { registerRequestNowTimeoutCron } from '@/cron/request-now-timeout';
+import { registerPushSender } from '@goldmood/shared-backend/modules/notifications';
+import { sendPushNotification } from '@/modules/firebase/service';
+
+// shared-backend modülleri firebase-admin'i import edemediği için
+// startup'ta concrete sender'ı register ediyoruz.
+registerPushSender(async (params) => {
+  await sendPushNotification(params);
+});
 
 async function main() {
   const app: any = await createApp();
@@ -23,6 +32,7 @@ async function main() {
     registerHoroscopeCron();
     registerReviewFollowupCron();
     registerAccountDeletionCron();
+    registerRequestNowTimeoutCron();
   }
 
   console.log(`API listening ${host}:${env.PORT}`);

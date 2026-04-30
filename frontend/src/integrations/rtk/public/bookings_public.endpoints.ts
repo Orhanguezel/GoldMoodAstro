@@ -19,8 +19,48 @@ export const bookingsPublicApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+    /**
+     * T29-4: Anlık görüşme talebi
+     * POST /bookings/request-now
+     */
+    requestNowBooking: build.mutation<
+      { ok: boolean; id: string; status: string; message: string; timeout_at: string },
+      { consultant_id: string; service_id?: string; customer_message?: string }
+    >({
+      query: (body) => ({
+        url: '/bookings/request-now',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Booking'],
+    }),
+    /**
+     * GET /bookings/me
+     */
+    listMyBookings: build.query<any[], void>({
+      query: () => ({
+        url: '/bookings/me',
+        method: 'GET',
+      }),
+      providesTags: ['Booking'],
+    }),
+    /**
+     * GET /bookings/:id
+     */
+    getMyBooking: build.query<any, string>({
+      query: (id) => ({
+        url: `/bookings/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'Booking', id }],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { useCreateBookingPublicMutation } = bookingsPublicApi;
+export const {
+  useCreateBookingPublicMutation,
+  useRequestNowBookingMutation,
+  useListMyBookingsQuery,
+  useGetMyBookingQuery,
+} = bookingsPublicApi;

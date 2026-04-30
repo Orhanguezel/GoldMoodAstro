@@ -25,8 +25,11 @@ function mergeTokens(value: DesignTokens): DesignTokens {
 
 export async function fetchDesignTokens(): Promise<DesignTokens> {
   try {
+    // Tema admin paneldeki preset değişikliklerinin hızlı yansıması için
+    // 30 sn cache. (Önceden 300 sn idi — kullanıcı tema değiştirdiğinde 5dk
+    // beklemek zorunda kalıyordu.)
     const response = await fetch(`${API_BASE}/site_settings/design_tokens`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 30, tags: ['design_tokens'] },
     });
 
     if (!response.ok) return DEFAULT_TOKENS;
@@ -44,7 +47,7 @@ export async function fetchDesignTokens(): Promise<DesignTokens> {
 export async function fetchCustomCss(): Promise<string> {
   try {
     const response = await fetch(`${API_BASE}/site_settings/custom_css`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 30, tags: ['custom_css'] },
     });
 
     if (!response.ok) return '';

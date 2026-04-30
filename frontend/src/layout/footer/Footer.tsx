@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 
 import SocialLinks from '@/components/common/public/SocialLinks';
+import { Apple, Play, ShieldCheck, Lock } from 'lucide-react';
 import {
   useGetSiteSettingByKeyQuery,
   useListFooterSectionsQuery,
@@ -49,6 +50,7 @@ const FALLBACK_SECTIONS: Array<{
     title: { tr: 'Şirket', en: 'Company', de: 'Unternehmen' },
     items: [
       { id: 'fb-comp-about', url: '/about',       label: { tr: 'Hakkımızda',  en: 'About',       de: 'Über uns' } },
+      { id: 'fb-comp-editorial', url: '/editorial-policy', label: { tr: 'Editoryal Politika', en: 'Editorial Policy', de: 'Redaktionelle Richtlinie' } },
       { id: 'fb-comp-cons',  url: '/consultants', label: { tr: 'Danışmanlar', en: 'Consultants', de: 'Berater' } },
       { id: 'fb-comp-blog',  url: '/blog',        label: { tr: 'Blog',        en: 'Blog',        de: 'Blog' } },
       { id: 'fb-comp-cont',  url: '/contact',     label: { tr: 'İletişim',    en: 'Contact',     de: 'Kontakt' } },
@@ -154,15 +156,48 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
             <p className="text-[var(--gm-text-dim)] font-light text-[15px] leading-relaxed mb-8 max-w-[260px]">
               {ui('ui_footer_tagline', 'Doğum haritanızdan beslenen kişisel rehberlik ve modern astroloji deneyimi.')}
             </p>
-            <SocialLinks socials={socials} size="sm" />
+            <div className="mb-8">
+              <SocialLinks socials={socials} size="sm" />
+            </div>
+
+            {/* App Download Links */}
+            <div className="flex flex-col gap-3">
+              <span className="font-display text-[9px] tracking-[0.3em] text-[var(--gm-gold-deep)] uppercase mb-1">
+                {locale === 'tr' ? 'Mobil Uygulamamız' : 'Our Mobile App'}
+              </span>
+              <div className="flex gap-4">
+                <a 
+                  href="#" 
+                  className="flex items-center gap-3 text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] hover:border-[var(--gm-gold)/30] transition-all duration-300 border border-[var(--gm-border-soft)] rounded-xl px-4 py-2 bg-[var(--gm-bg-surface)]/40 backdrop-blur-md shadow-sm group/store"
+                  title="App Store"
+                >
+                  <Apple size={20} className="group-hover/store:scale-110 transition-transform" />
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="text-[8px] uppercase tracking-wider opacity-60 mb-0.5">App Store</span>
+                    <span className="text-[13px] font-semibold">iOS</span>
+                  </div>
+                </a>
+                <a 
+                  href="#" 
+                  className="flex items-center gap-3 text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] hover:border-[var(--gm-gold)/30] transition-all duration-300 border border-[var(--gm-border-soft)] rounded-xl px-4 py-2 bg-[var(--gm-bg-surface)]/40 backdrop-blur-md shadow-sm group/store"
+                  title="Google Play"
+                >
+                  <Play size={18} fill="currentColor" className="group-hover/store:scale-110 transition-transform" />
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="text-[8px] uppercase tracking-wider opacity-60 mb-0.5">Google Play</span>
+                    <span className="text-[13px] font-semibold">Android</span>
+                  </div>
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* Columns */}
           {renderSections.map((sec) => (
             <div key={sec.id}>
-              <h4 className="font-display text-[11px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-8">
+              <div className="font-display text-[11px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-8">
                 {sec.title}
-              </h4>
+              </div>
               <ul className="list-none p-0 m-0 space-y-4">
                 {sec.items.map((item) => (
                   <li key={item.id}>
@@ -179,11 +214,39 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
           ))}
         </div>
 
-        <div className="pt-12 border-t border-[var(--gm-border-soft)] flex flex-col md:flex-row justify-between items-center gap-8 text-[11px] tracking-[0.1em] text-[var(--gm-muted)] uppercase">
+        {/* Payment & Security Section */}
+        <div className="pt-12 mb-12 border-t border-[var(--gm-border-soft)] flex flex-col lg:flex-row justify-between items-center gap-8">
+          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-8 opacity-60">
+            <div className="flex items-center gap-3">
+              <ShieldCheck size={20} className="text-[var(--gm-gold)]" />
+              <span className="font-display text-[10px] tracking-[0.2em] text-[var(--gm-text-dim)] uppercase">
+                {locale === 'tr' ? '256-bit SSL Güvenlik' : '256-bit SSL Security'}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Lock size={18} className="text-[var(--gm-gold)]" />
+              <span className="font-display text-[10px] tracking-[0.2em] text-[var(--gm-text-dim)] uppercase">
+                {locale === 'tr' ? 'Güvenli Ödeme Altyapısı' : 'Secure Payment Gateway'}
+              </span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-6 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+            {/* Generic Payment Icons / Logos */}
+            <div className="font-display text-[14px] font-bold tracking-widest text-[var(--gm-text-dim)]">VISA</div>
+            <div className="font-display text-[14px] font-bold tracking-widest text-[var(--gm-text-dim)]">MASTERCARD</div>
+            <div className="font-display text-[14px] font-bold tracking-widest text-[var(--gm-text-dim)]">IYZICO</div>
+          </div>
+        </div>
+
+        <div className="pt-8 border-t border-[var(--gm-border-soft)] flex flex-col md:flex-row justify-between items-center gap-8 text-[11px] tracking-[0.1em] text-[var(--gm-muted)] uppercase">
           <p>
             &copy; {new Date().getFullYear()} GOLD MOOD ASTROLOGY. {ui('ui_footer_rights', 'TÜM HAKLARI SAKLIDIR.')}
           </p>
           <div className="flex gap-6">
+            <Link href={localizePath(locale, '/editorial-policy')} className="hover:text-[var(--gm-gold)] transition-colors">
+              {locale === 'tr' ? 'EDİTORYAL POLİTİKA' : locale === 'de' ? 'REDAKTIONELLE RICHTLINIE' : 'EDITORIAL POLICY'}
+            </Link>
             <a href="https://guezelwebdesign.com" target="_blank" rel="noopener" className="hover:text-[var(--gm-gold)] transition-colors">
               DESIGNED BY GUEZELEWEB
             </a>

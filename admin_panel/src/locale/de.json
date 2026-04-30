@@ -1,5 +1,216 @@
 {
-  "admin": {
+    "db": {
+      "title": "Datenbankverwaltung",
+      "description": "Erstellen Sie Snapshot-Punkte, laden Sie ein vollständiges Backup herunter, wenden Sie einen SQL-Import an oder führen Sie einen export/import nach Modul durch.",
+      "auth": {
+        "loading": "Admin-Panel wird geladen..."
+      },
+      "help": {
+        "pageTitle": "Was macht diese Seite?",
+        "dbAdmin": "DB-Admin-Bildschirm",
+        "fullDbDesc": "die gesamte Datenbank exportieren / importieren.",
+        "snapshotDesc": "einen Wiederherstellungspunkt vor riskanten Operationen erstellen, diesen wiederherstellen.",
+        "moduleDesc": "nur Tabellen ausgewählter Module übertragen (z. B. Produkte).",
+        "uiDesc": "UI-Texte von site_settings ui_* in großen Mengen nach Locale exportieren/bootstrappen.",
+        "closeHint": "Tipp: Klicken Sie nach draußen oder drücken Sie ESC zum Schließen.",
+        "closeButton": "Schließen"
+      },
+      "fullDb": {
+        "title": "Datenbank-Backup & Snapshot-Verwaltung",
+        "description": "Sie können Snapshots erstellen und vollständige Datenbank-Backups herunterladen.",
+        "snapshotLabel": "Snapshot-Bezeichnung",
+        "snapshotPlaceholder": "Z. B.: Aktuelles Live-System",
+        "notePlaceholder": "Warum wurde dieser Snapshot erstellt?",
+        "noteLabel": "Hinweis (optional)",
+        "createButton": "Snapshot Erstellen",
+        "creating": "Wird erstellt...",
+        "downloadTitle": "Vollständiges Datenbank-Backup Herunterladen",
+        "downloadDesc": "Laden Sie den aktuellen DB-Zustand als vollständigen Dump herunter.",
+        "sqlButton": "SQL Herunterladen (.sql)",
+        "sqlPreparing": "SQL wird vorbereitet...",
+        "jsonButton": "JSON Herunterladen (.json)",
+        "snapshotCreated": "Snapshot erstellt: {label}",
+        "snapshotError": "Fehler beim Erstellen des Snapshots.",
+        "exportSuccess": "SQL-Backup heruntergeladen.",
+        "exportError": "Fehler während DB-Export (SQL).",
+        "jsonNotImplemented": "JSON-Exportfunktion noch nicht implementiert. Sie können SQL-Export verwenden."
+      },
+      "import": {
+        "title": "SQL Import (IMPORT)",
+        "titleWithMode": "SQL Import (IMPORT) — {mode}",
+        "warning": "Diese Operationen können Datenbankinhalte dauerhaft ändern. Besonders wenn Truncate aktiviert ist, erstellen Sie unbedingt einen Snapshot vor dem Fortfahren.",
+        "dangerLabel": "WARNUNG:",
+        "helpTitle": "Import-Erklärung",
+        "helpHeadline": "SQL Import (Full DB)",
+        "helpDesc1": "Dieses Panel wendet SQL-Dump auf die gesamte Datenbank an (Text / URL / Datei).",
+        "helpDesc2": "leert Tabellen vor dem Import. Sehr riskant in der Produktionsumgebung.",
+        "helpDesc3": "ist ein Probelauf in unterstützten Flows (Rollback).",
+        "processing": "Operation läuft...",
+        "tabs": {
+          "text": "SQL-Text",
+          "url": "Von URL",
+          "file": "Von Datei"
+        },
+        "text": {
+          "label": "SQL-Skript (utf8)",
+          "placeholder": "Fügen Sie das vollständige SQL-Skript hier ein.",
+          "required": "SQL-Text darf nicht leer sein.",
+          "helpTitle": "SQL-Text-Tipps",
+          "helpHeadline": "SQL-Text",
+          "helpDesc1": "Fügen Sie das vollständige SQL-Skript hier ein.",
+          "helpDesc2": "Browser kann bei sehr großen Dumps langsam werden; Datei-Import ist besser geeignet.",
+          "helpDesc3": "Inhalt muss korrekte Kodierung haben (utf8)."
+        },
+        "url": {
+          "label": "SQL-Dump-URL (.sql oder .sql.gz)",
+          "placeholder": "https://.../dump.sql oder dump.sql.gz",
+          "required": "Geben Sie zuerst eine gültige .sql oder .sql.gz URL ein.",
+          "helpTitle": "URL-Import-Tipps",
+          "helpHeadline": "URL-Import",
+          "helpDesc1": "HTTPS-Verwendung wird empfohlen.",
+          "helpDesc2": ".sql.gz Dumps übertragen sich schneller bei großen Daten.",
+          "helpDesc3": "URLs, die Authentifizierung/Schutz erfordern, können möglicherweise nicht vom Backend heruntergeladen werden."
+        },
+        "file": {
+          "label": "SQL-Dump-Datei (.sql oder .gz)",
+          "placeholder": "Datei auswählen",
+          "required": "Wählen Sie zuerst eine .sql oder .gz Datei.",
+          "selected": "Ausgewählte Datei:",
+          "note": "Es gibt keinen Dry Run im Datei-Import-Flow (nur Truncate wird angewendet).",
+          "helpTitle": "Datei-Import-Tipps",
+          "helpHeadline": "Von Datei Import",
+          "helpDesc1": "Stabilste Methode (empfohlen für große Dumps).",
+          "helpDesc2": "Es gibt keinen Dry Run im Datei-Import-Flow.",
+          "helpDesc3": "Nginx/Fastify Body-Limit-Einstellungen können die Dateigröße beeinflussen."
+        },
+        "truncate": {
+          "label": "ALLE Tabellen vor der Operation TRUNCATE",
+          "helpTitle": "Was ist Truncate?",
+          "helpHeadline": "TruncateBefore",
+          "helpDesc": "Tabellen werden vor dem Import geleert. Falsche Verwendung führt zu Datenverlust. Das Erstellen eines Snapshots vor der Operation in der Produktion sollte als obligatorisch angesehen werden.",
+          "helpDescFile": "Dies ist die kritischste Option beim Datei-Import. Wenn aktiviert, werden Tabellen vor dem Import vollständig geleert. Betrachten Sie das Erstellen eines Snapshots als obligatorisch."
+        },
+        "dryRun": {
+          "label": "Dry Run (Probe, Änderungen rückgängig machen)",
+          "helpTitle": "Wie funktioniert Dry Run?",
+          "helpHeadline": "Dry Run",
+          "helpDesc": "Wenn Backend unterstützt, läuft innerhalb von SQL-Transaktion und macht Rollback. Einige DDL-Operationen können in MySQL impliziten Commit machen; nicht 100% garantiert.",
+          "helpDescUrl": "Wenn Backend unterstützt, macht Transaktion + Rollback. Zeit- und Ressourcenverbrauch steigt bei großen Dumps."
+        },
+        "buttons": {
+          "apply": "SQL Anwenden",
+          "importing": "Wird importiert...",
+          "importFromUrl": "Von URL Importieren",
+          "importFromFile": "Von Datei Importieren"
+        },
+        "confirm": {
+          "text": "Sie sind dabei, dieses SQL-Skript direkt auf die Datenbank anzuwenden.\n\nTruncate: {truncate}\nMöchten Sie fortfahren?",
+          "url": "SQL-Dump von dieser URL heruntergeladen wird auf die Datenbank angewendet.\n\nURL: {url}\nTruncate: {truncate}\n\nMöchten Sie fortfahren?",
+          "file": "Die von Ihnen ausgewählte SQL-Datei wird auf die Datenbank angewendet.\n\nDatei: {file}\nTruncate: {truncate}\n\nDieser Vorgang kann nicht rückgängig gemacht werden. Möchten Sie fortfahren?",
+          "truncateYes": "JA (alle Tabellen leeren)",
+          "truncateNo": "Nein"
+        },
+        "success": {
+          "text": "SQL-Text erfolgreich importiert.",
+          "url": "SQL-Dump von URL erfolgreich importiert.",
+          "file": "SQL-Dump von Datei erfolgreich importiert.",
+          "dryRun": "Dry Run erfolgreich. Änderungen zurückgerollt."
+        },
+        "error": {
+          "text": "SQL-Import (Text) Fehler.",
+          "textGeneric": "Fehler während SQL-Import (Text).",
+          "url": "SQL-Import (URL) Fehler.",
+          "urlGeneric": "Fehler während SQL-Import (URL).",
+          "file": "SQL-Import (Datei) Fehler.",
+          "fileGeneric": "Fehler während SQL-Import (Datei)."
+        }
+      },
+      "snapshots": {
+        "title": "Snapshot-Punkte",
+        "total": "Gesamt:",
+        "processing": "Operation läuft...",
+        "columns": {
+          "index": "#",
+          "labelNote": "Bezeichnung / Hinweis",
+          "file": "Datei",
+          "created": "Erstellt",
+          "size": "Größe",
+          "actions": "Aktionen"
+        },
+        "noLabel": "Keine Bezeichnung",
+        "noNote": "-",
+        "loading": "Laden...",
+        "noData": "Noch keine Snapshots gefunden.",
+        "scrollNote": "Hinweis: Wenn der Bildschirm schmal ist, kann die Tabelle horizontal gescrollt werden.",
+        "restore": "Wiederherstellen",
+        "delete": "Löschen",
+        "restoreConfirm": "Sie sind dabei, von diesem Snapshot wiederherzustellen.\n\nSnapshot: {label}\n\nDieser Vorgang wird aktuelle Datenbankinhalte ÜBERSCHREIBEN (truncate).\nMöchten Sie fortfahren?",
+        "deleteConfirm": "Sie sind dabei, diese Snapshot-Datei zu löschen.\n\nSnapshot: {label}\n\nMöchten Sie fortfahren?",
+        "restoreSuccess": "Snapshot erfolgreich wiederhergestellt.",
+        "restoreError": "Ein Fehler ist während der Snapshot-Wiederherstellung aufgetreten.",
+        "restoreFailed": "Snapshot-Wiederherstellung fehlgeschlagen",
+        "deleteSuccess": "Snapshot gelöscht.",
+        "deleteFailed": "Snapshot konnte nicht gelöscht werden.",
+        "deleteError": "Snapshot-Löschung fehlgeschlagen"
+      },
+      "modules": {
+        "title": "Modulbasierte DB-Verwaltung",
+        "selected": "Ausgewähltes Modul: {module}",
+        "tabs": {
+          "export": "Export",
+          "import": "Import",
+          "validate": "Manifest Validate",
+          "ui": "UI Export/Bootstrap"
+        },
+        "export": {
+          "title": "Modul-Export",
+          "description": "Tabellen des Moduls {module} werden in Manifest-Reihenfolge exportiert.",
+          "format": {
+            "sql": "SQL",
+            "json": "JSON"
+          },
+          "downloadButton": "Herunterladen",
+          "preparing": "Wird vorbereitet...",
+          "notImplemented": "Modul-Exportfunktion noch nicht implementiert.",
+          "success": "SQL-Backup für Modul {module} heruntergeladen.",
+          "error": "Fehler während des Modul-Exports."
+        },
+        "import": {
+          "title": "Modul-Import",
+          "description": "Wenden Sie SQL/JSON-Dump für das Modul {module} an.",
+          "upsertLabel": "UPSERT (Aktualisieren, wenn vorhanden, andernfalls hinzufügen)",
+          "importButton": "Importieren",
+          "importing": "Wird importiert...",
+          "notImplemented": "Modul-Importfunktion noch nicht implementiert.",
+          "success": "Modul {module} erfolgreich importiert.",
+          "error": "Fehler während des Modul-Imports."
+        },
+        "validate": {
+          "title": "Manifest-Validierung",
+          "description": "Ist das Tabellen-Manifest für Modul {module} mit der DB kompatibel?",
+          "validateButton": "Validieren",
+          "validating": "Wird validiert...",
+          "success": "Manifest kompatibel.",
+          "error": "Manifest inkompatibel!"
+        },
+        "ui": {
+          "title": "Site Settings UI Export / Bootstrap",
+          "description": "Verwalten Sie Einträge mit dem Präfix 'ui_' in der Tabelle site_settings in großen Mengen.",
+          "downloadButton": "JSON Herunterladen",
+          "downloadSuccess": "UI-Einstellungen als JSON heruntergeladen.",
+          "downloadError": "Keine Daten zum Herunterladen gefunden.",
+          "sourceLocale": "Quell-Locale",
+          "targetLocale": "Ziel-Locale",
+          "overwrite": "Bestehende Einträge überschreiben (Overwrite)",
+          "onlyUiKeys": "Nur Schlüssel mit Präfix 'ui_' verarbeiten",
+          "bootstrapButton": "Bootstrap Starten",
+          "applying": "Wird angewendet...",
+          "bootstrapSuccess": "Bootstrap abgeschlossen.",
+          "bootstrapError": "Fehler während des Bootstraps.",
+          "bootstrapErrorGeneric": "Unerwarteter Fehler während des Bootstrap-Vorgangs."
+        }
+      }
+    },
     "reports": {
       "title": "Berichte (Admin)",
       "description": "KPI, Ressourcenleistung und Standortaufschlüsselung.",
@@ -865,7 +1076,12 @@
         "gutschein": "Gutscheine",
         "payment_settings": "Zahlungen",
         "popups": "Popups",
-        "navigation": "Menü & Footer"
+        "navigation": "Menü & Footer",
+        "llm_prompts": "AI Prompts",
+        "astrology_kb": "Astrologie-Wissensdatenbank",
+        "banners": "Banner-Management",
+        "campaigns": "Kampagnen",
+        "home_layout": "Startseiten-Layout"
       },
       "stats": {
         "deliveredOrders": "Gelieferte Bestellungen",
@@ -3541,7 +3757,7 @@
         }
       }
     }
-  },
+  ,
   "header": {
     "title": "Slider Verwaltung",
     "description": "Verwalten Sie hier Ihre Homepage-Slider.",

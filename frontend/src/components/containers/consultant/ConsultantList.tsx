@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Users, Search, Sparkles } from 'lucide-react';
 
 import { useListConsultantsQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
+import type { ConsultantPublic } from '@/integrations/rtk/public/consultants.public.endpoints';
 import ConsultantCard from './ConsultantCard';
 import ConsultantFilters, { type FilterState } from './ConsultantFilters';
 import Banner from '@/components/common/public/Banner';
@@ -11,9 +12,10 @@ import Banner from '@/components/common/public/Banner';
 type Props = {
   locale: string;
   initialExpertise?: string;
+  initialData?: ConsultantPublic[];
 };
 
-export default function ConsultantList({ locale, initialExpertise = '' }: Props) {
+export default function ConsultantList({ locale, initialExpertise = '', initialData = [] }: Props) {
   const [filters, setFilters] = useState<FilterState>({
     expertise: initialExpertise,
     minPrice: 0,
@@ -31,6 +33,13 @@ export default function ConsultantList({ locale, initialExpertise = '' }: Props)
   const { data: consultants = [], isFetching, isError } = useListConsultantsQuery(
     Object.keys(queryParams).length ? queryParams : undefined,
   );
+  const isInitialFilterState =
+    filters.expertise === initialExpertise &&
+    filters.minPrice === 0 &&
+    filters.minRating === 0 &&
+    filters.maxPrice === 0;
+  const visibleConsultants = consultants.length > 0 ? consultants : (isInitialFilterState ? initialData : []);
+  const showSkeleton = isFetching && visibleConsultants.length === 0;
 
   return (
     <div className="space-y-12">
@@ -38,7 +47,7 @@ export default function ConsultantList({ locale, initialExpertise = '' }: Props)
       <div className="bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-[32px] p-6 md:p-8">
         <div className="flex items-center gap-3 mb-8">
           <Search className="w-5 h-5 text-[var(--gm-gold)]" />
-          <h3 className="font-serif text-xl text-[var(--gm-text)]">Arama & Filtreleme</h3>
+          <h2 className="font-serif text-xl text-[var(--gm-text)]">Arama & Filtreleme</h2>
         </div>
         <ConsultantFilters filters={filters} onChange={setFilters} />
       </div>
@@ -57,7 +66,7 @@ export default function ConsultantList({ locale, initialExpertise = '' }: Props)
               {locale === 'tr' ? 'Danışmanlar şu an yüklenemiyor.' : 'Could not load consultants.'}
             </p>
           </div>
-        ) : isFetching ? (
+        ) : showSkeleton ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-[420px] bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-[32px] animate-pulse flex flex-col p-8 gap-6">
@@ -72,7 +81,7 @@ export default function ConsultantList({ locale, initialExpertise = '' }: Props)
               </div>
             ))}
           </div>
-        ) : consultants.length === 0 ? (
+        ) : visibleConsultants.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
             <div className="w-20 h-20 rounded-full bg-[var(--gm-surface)] flex items-center justify-center border border-[var(--gm-border-soft)]">
               <Users size={32} className="text-[var(--gm-gold)] opacity-30" />
@@ -92,7 +101,7 @@ export default function ConsultantList({ locale, initialExpertise = '' }: Props)
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            {consultants.map((consultant) => (
+            {visibleConsultants.map((consultant) => (
               <ConsultantCard key={consultant.id} consultant={consultant} locale={locale} />
             ))}
           </div>

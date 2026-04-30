@@ -47,7 +47,8 @@ export interface ListConsultantsParams {
   maxPrice?: number;
   minRating?: number;
   limit?: number;
-  sort?: string;
+  sort?: 'featured' | 'popular' | 'new' | 'online';
+  onlineOnly?: boolean;
 }
 
 const consultantsPublicApi = baseApi.injectEndpoints({

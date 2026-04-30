@@ -57,11 +57,11 @@ export function NavUser({
                 <AvatarImage src={user.avatar || undefined} alt={user.name} />
                 <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-left text-sm leading-tight group-data-[state=collapsed]:hidden">
                 <span className="truncate font-medium">{user.name}</span>
                 <span className="truncate text-muted-foreground text-xs">{user.email}</span>
               </div>
-              <EllipsisVertical className="ml-auto size-4" />
+              <EllipsisVertical className="ml-auto size-4 group-data-[state=collapsed]:hidden" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent

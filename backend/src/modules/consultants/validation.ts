@@ -17,6 +17,12 @@ export const listConsultantsQuerySchema = z.object({
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().nonnegative().optional(),
   minRating: z.coerce.number().min(0).max(5).optional(),
+  // Anasayfa "Öne Çıkan / Popüler / Yeni / Çevrimiçi" section'ları için.
+  // featured = rating+sessions, popular = sessions, new = created_at, online = is_available + rating.
+  sort: z.enum(['featured', 'popular', 'new', 'online']).optional(),
+  limit: z.coerce.number().int().positive().max(50).optional(),
+  onlineOnly: z.coerce.boolean().optional(),
+  light: z.coerce.boolean().optional(),
 });
 
 export const adminListConsultantsQuerySchema = z.object({

@@ -2,7 +2,7 @@
 // FILE: src/integrations/types/users.ts
 // =============================================================
 
-export type UserRoleName = "admin" | "moderator" | "user";
+export type UserRoleName = "admin" | "moderator" | "consultant" | "user";
 
 export type UserRole = {
   id: string;

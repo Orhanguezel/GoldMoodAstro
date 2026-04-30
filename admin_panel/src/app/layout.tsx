@@ -35,8 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: branding.meta.description,
     icons: {
       icon: [
-        { url: branding.favicon_16, sizes: '16x16', type: 'image/svg+xml' },
-        { url: branding.favicon_32, sizes: '32x32', type: 'image/svg+xml' },
+        { url: branding.favicon_url || '/favicon.ico', sizes: 'any' },
       ],
       apple: branding.apple_touch_icon,
     },

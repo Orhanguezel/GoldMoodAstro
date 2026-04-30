@@ -9,7 +9,7 @@
 
 import type { RouteHandler } from 'fastify';
 import { randomUUID } from 'crypto';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 import { publicCreateBookingSchema } from './validation';
 import {
@@ -21,12 +21,14 @@ import {
 } from './repository';
 import { sendTemplatedEmail } from '@goldmood/shared-backend/modules/emailTemplates/mailer';
 import { createUserNotification } from '@goldmood/shared-backend/modules/notifications/service';
+import { dispatchPushToUser } from '@goldmood/shared-backend/modules/notifications/push';
 
 import { db } from '../../db/client';
 import { siteSettings } from '@goldmood/shared-backend/modules/siteSettings/schema';
 import { users } from '@goldmood/shared-backend/modules/auth/schema';
 import { bookings as bookingsTable } from './schema';
 import { consultants } from '../consultants/schema';
+import { consultantServices } from '../consultantServices/schema';
 import { normalizeSettingBool, getGlobalSettingValue } from '../siteSettings/helpers';
 import { getDefaultLocale } from '../_shared';
 
@@ -200,6 +202,26 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
       mediaType,
     });
 
+    // T29-1: Eğer service_id verilmişse ve service ücretsiz ise → ödeme atla, direkt confirmed.
+    let serviceRow: { id: string; price: string; duration_minutes: number; is_free: number } | null = null;
+    if (input.service_id) {
+      const [s] = await db
+        .select({
+          id: consultantServices.id,
+          price: consultantServices.price,
+          duration_minutes: consultantServices.duration_minutes,
+          is_free: consultantServices.is_free,
+        })
+        .from(consultantServices)
+        .where(eq(consultantServices.id, safeText(input.service_id)))
+        .limit(1);
+      if (s) serviceRow = s as any;
+    }
+    const isFree = !!serviceRow?.is_free;
+    const finalPrice = isFree ? '0.00' : (serviceRow?.price ? toMoneyString(serviceRow.price) : resolvedPrice);
+    const finalDuration = serviceRow?.duration_minutes ?? input.session_duration ?? 30;
+    const initialStatus = isFree ? 'confirmed' : 'pending_payment';
+
     const created = await createBookingPublic({
       booking: {
         id,
@@ -219,13 +241,13 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
         appointment_date: safeText(input.appointment_date),
         appointment_time: safeText(input.appointment_time),
 
-        session_price: resolvedPrice,
+        session_price: finalPrice,
         media_type: mediaType,
-        session_duration: input.session_duration ?? 30,
+        session_duration: finalDuration,
         source_type: input.source_type ?? null,
         source_id: input.source_id ?? null,
 
-        status: 'pending_payment',
+        status: initialStatus,
         is_read: 0,
 
         created_at: now(),
@@ -477,5 +499,167 @@ export const cancelMyBookingHandler: RouteHandler = async (req, reply) => {
   } catch (e: any) {
     req.log.error(e);
     return reply.code(500).send({ error: { message: 'booking_cancel_failed' } });
+  }
+};
+
+/* ─── POST /bookings/request-now (T29-4) ─── */
+// Anlık görüşme talebi: status='requested_now', danışman onayı bekler.
+// Cron 5 dakika sonra otomatik iptal eder (timeout).
+export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
+  try {
+    const jwtUser = (req as any).user as { sub?: string; email?: string } | undefined;
+    const userId = safeText(jwtUser?.sub);
+    if (!userId) return reply.code(401).send({ error: { message: 'unauthorized' } });
+
+    const body = req.body as { consultant_id?: string; service_id?: string; customer_message?: string };
+    const consultantId = safeText(body?.consultant_id);
+    if (!consultantId) return reply.code(400).send({ error: { message: 'consultant_id_required' } });
+
+    const defaultLocale = await getDefaultLocale();
+    const locale = defaultLocale;
+
+    // Kullanıcı bilgileri
+    const [userRow] = await db
+      .select({ full_name: users.full_name, email: users.email, phone: users.phone })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    const userName = safeText(userRow?.full_name);
+    const userEmail = safeText(userRow?.email);
+    const userPhone = safeText(userRow?.phone);
+
+    // Servis (varsa)
+    let serviceRow: { id: string; price: string; duration_minutes: number; is_free: number } | null = null;
+    if (body?.service_id) {
+      const [s] = await db
+        .select({
+          id: consultantServices.id,
+          price: consultantServices.price,
+          duration_minutes: consultantServices.duration_minutes,
+          is_free: consultantServices.is_free,
+        })
+        .from(consultantServices)
+        .where(eq(consultantServices.id, safeText(body.service_id)))
+        .limit(1);
+      if (s) serviceRow = s as any;
+    }
+
+    // Danışmanın is_available flag'ini kontrol et — çevrimiçi değilse 409
+    const [c] = await db
+      .select({ id: consultants.id, is_available: consultants.is_available, user_id: consultants.user_id })
+      .from(consultants)
+      .where(eq(consultants.id, consultantId))
+      .limit(1);
+    if (!c) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
+    if (!c.is_available) {
+      return reply.code(409).send({ error: { message: 'consultant_not_online' } });
+    }
+
+    const nowDate = new Date();
+    const today = nowDate.toISOString().slice(0, 10);
+    const time = nowDate.toTimeString().slice(0, 5);
+    const id = randomUUID();
+
+    // Resource'u bul (anlık talepte slot yok ama resource_id NOT NULL)
+    const [r] = await db
+      .select({ id: consultants.id })
+      .from(consultants)
+      .where(eq(consultants.id, consultantId))
+      .limit(1);
+    if (!r) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
+
+    // resources tablosundan external_ref_id ile bul
+    const resourceRes = await db.execute(
+      sql`SELECT id FROM resources WHERE external_ref_id = ${consultantId} AND type = 'consultant' LIMIT 1`,
+    );
+    const resArr = Array.isArray((resourceRes as any)?.[0]) ? (resourceRes as any)[0] : (resourceRes as any);
+    const resource = (resArr as any[])?.[0];
+    if (!resource) return reply.code(400).send({ error: { message: 'resource_not_found' } });
+
+    // Direkt INSERT — slot validation atla (anlık talepte slot yok)
+    await db.insert(bookingsTable).values({
+      id,
+      user_id: userId,
+      consultant_id: consultantId,
+      name: userName,
+      email: userEmail,
+      phone: userPhone,
+      locale,
+      customer_message: body?.customer_message ? safeText(body.customer_message) : null,
+      service_id: body?.service_id ? safeText(body.service_id) : null,
+      resource_id: resource.id,
+      appointment_date: today,
+      appointment_time: time,
+      session_price: serviceRow?.is_free ? '0.00' : (serviceRow ? toMoneyString(serviceRow.price) : '0.00'),
+      media_type: 'audio',
+      session_duration: serviceRow?.duration_minutes ?? 30,
+      source_type: 'instant',
+      source_id: null,
+      status: 'requested_now',
+      is_read: 0,
+      created_at: nowDate,
+      updated_at: nowDate,
+    } as any);
+
+    // Danışmana bildirim — fire-and-forget (response'u bloklamaz)
+    if (c.user_id) {
+      const notifyTitle = '⚡ Anlık Görüşme Talebi';
+      const notifyBody = `${userName || 'Bir kullanıcı'} hemen şimdi görüşmek istiyor. 5 dakika içinde yanıtlayın.`;
+
+      // Danışmanın email'ini ve adını al
+      const [consultantUser] = await db
+        .select({ email: users.email, full_name: users.full_name })
+        .from(users)
+        .where(eq(users.id, c.user_id))
+        .limit(1);
+
+      const publicUrl = (process.env.PUBLIC_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
+      const panelUrl = `${publicUrl}/${locale}/me/consultant`;
+
+      Promise.allSettled([
+        createUserNotification({
+          userId: c.user_id,
+          title: notifyTitle,
+          message: notifyBody,
+          type: 'booking',
+        }),
+        dispatchPushToUser({
+          userId: c.user_id,
+          title: notifyTitle,
+          body: notifyBody,
+          data: {
+            type: 'booking_requested_now',
+            booking_id: id,
+            url: '/dashboard?tab=bookings',
+          },
+        }),
+        consultantUser?.email
+          ? sendTemplatedEmail({
+              to: consultantUser.email,
+              key: 'booking_request_now_consultant',
+              locale,
+              defaultLocale,
+              params: {
+                consultant_name: safeText(consultantUser.full_name) || 'Danışman',
+                customer_name: userName || 'Bir kullanıcı',
+                customer_message: body?.customer_message ? safeText(body.customer_message) : '',
+                panel_url: panelUrl,
+              },
+              allowMissing: true,
+            })
+          : Promise.resolve(null),
+      ]).catch(() => undefined);
+    }
+
+    return reply.code(201).send({
+      ok: true,
+      id,
+      status: 'requested_now',
+      message: 'Talebiniz alındı. Danışman 5 dakika içinde yanıtlamazsa otomatik iptal edilir.',
+      timeout_at: new Date(nowDate.getTime() + 5 * 60_000).toISOString(),
+    });
+  } catch (e: any) {
+    req.log.error(e);
+    return reply.code(500).send({ error: { message: 'request_now_failed', details: e?.message } });
   }
 };

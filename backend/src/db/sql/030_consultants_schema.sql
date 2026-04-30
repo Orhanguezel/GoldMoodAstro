@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS consultants (
   bio TEXT,
   expertise JSON,
   languages JSON,
+  meeting_platforms JSON,
+  social_links JSON,
   session_price DECIMAL(10,2) NOT NULL,
   session_duration INT NOT NULL DEFAULT 30,
   supports_video TINYINT DEFAULT 0,

@@ -14,17 +14,30 @@ import { getZodiacMeta } from '@/lib/zodiac/signs';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
-export default function ZodiacCompatibility() {
-  const { signA, signB, locale } = useParams();
-  const sA = signA as string;
-  const sB = signB as string;
+interface Props {
+  signA?: string;
+  signB?: string;
+}
+
+export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp }: Props = {}) {
+  const params = useParams();
+  // Önce props (server-side route'tan), yoksa params'tan
+  const sA = (signAProp ?? (params?.signA as string)) || '';
+  const sB = (signBProp ?? (params?.signB as string)) || '';
+  const locale = params?.locale;
   const localePath = typeof locale === 'string' ? locale : 'tr';
   const metaA = getZodiacMeta(sA);
   const metaB = getZodiacMeta(sB);
   const labelA = metaA?.label ?? sA;
   const labelB = metaB?.label ?? sB;
 
-  const { data: reading, isLoading } = useGetCompatibilityQuery({ signA: sA, signB: sB, locale: locale as string });
+  const { data: reading, isLoading } = useGetCompatibilityQuery(
+    { signA: sA, signB: sB, locale: locale as string },
+    { skip: !sA || !sB }
+  );
+
+  // Component yanlışlıkla başka bir route'tan mount edilmişse (signA/signB eksik) hiç render etme.
+  if (!sA || !sB) return null;
 
   if (isLoading) {
     return (

@@ -1,0 +1,2 @@
+-- Consultant application seed placeholder.
+-- Başvurular kullanıcı/admin akışıyla oluşturulur; başlangıç verisi gerekmez.

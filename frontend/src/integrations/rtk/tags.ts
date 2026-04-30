@@ -79,6 +79,9 @@ export const metahubTags = [
   'Horoscope',
   'SignInfo',
   'Synastry',
+  'ConsultantSelfReviews',
+  'ConsultantApplication',
+  'ConsultantApplications',
 ] as const;
 
 export type MetahubTag = (typeof metahubTags)[number];

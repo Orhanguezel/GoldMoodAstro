@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "lh:autorun": "lhci autorun --config=./lighthouserc.cjs",
-    "lh:collect": "lhci collect --config=./lighthouserc.cjs"
+    "lh:collect": "lhci collect --config=./lighthouserc.cjs",
+    "indexnow:ping": "bun scripts/indexnow-ping.ts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.4.0",

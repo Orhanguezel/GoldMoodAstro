@@ -18,6 +18,8 @@ export type AdminBrandingConfig = {
   theme_color: string;
   favicon_16: string;
   favicon_32: string;
+  favicon_url: string;
+  logo_url: string;
   apple_touch_icon: string;
   meta: {
     title: string;
@@ -37,6 +39,8 @@ export const DEFAULT_BRANDING: AdminBrandingConfig = {
   theme_color: '#FFFFFF',
   favicon_16: '/favicon/favicon-16.svg',
   favicon_32: '/favicon/favicon-32.svg',
+  favicon_url: '/favicon.ico',
+  logo_url: '',
   apple_touch_icon: '/favicon/apple-touch-icon.svg',
   meta: {
     title: appName,

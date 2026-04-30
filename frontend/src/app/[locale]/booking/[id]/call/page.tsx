@@ -3,11 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { ArrowRight } from 'lucide-react';
 import { Room, RoomEvent } from 'livekit-client';
+import { cn } from '@/lib/utils';
 import { BASE_URL } from '@/integrations/rtk/constants';
 import { tokenStore } from '@/integrations/rtk/token';
 import { useGetCustomerReadingsForConsultantQuery } from '@/integrations/rtk/hooks';
 import type { HistoryItem, ReadingType } from '@/integrations/rtk/public/history.public.endpoints';
+import BookingMessageButton from '@/components/common/BookingMessageButton';
 
 type LiveKitTokenResponse = {
   token: string;
@@ -183,108 +186,144 @@ export default function BookingCallPage() {
   const ss = String(seconds % 60).padStart(2, '0');
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] px-4 py-10 text-[var(--gm-text)]">
-      <section className="mx-auto grid min-h-[70vh] max-w-6xl gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="flex min-h-[70vh] flex-col items-center justify-between rounded-[var(--gm-radius-xl)] border border-[var(--gm-border)] bg-[var(--gm-surface)] p-8 shadow-[var(--gm-shadow-card)]">
+    <main className="min-h-screen bg-[var(--gm-bg)] pt-32 lg:pt-40 pb-20 px-4 text-[var(--gm-text)] overflow-hidden relative">
+      
+      {/* Background Decorations */}
+      <div className="absolute top-[10%] left-[5%] w-[400px] h-[400px] aura-mint opacity-[0.05] blur-[100px] pointer-events-none" />
+      <div className="absolute top-[20%] right-[5%] w-[400px] h-[400px] aura-rose opacity-[0.05] blur-[100px] pointer-events-none" />
+      
+      {/* Subtle Orbits */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] pointer-events-none opacity-[0.1]">
+        <svg viewBox="0 0 280 280" fill="none" className="w-full h-full rotate-slow">
+          <circle cx="140" cy="140" r="120" stroke="currentColor" className="text-[var(--gm-gold-deep)]" strokeWidth="0.4" strokeDasharray="2 6" />
+        </svg>
+      </div>
+
+      <section className="relative z-10 mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+        
+        {/* Main Call UI */}
+        <div className="flex min-h-[70vh] flex-col items-center justify-between rounded-[var(--gm-radius-xl)] border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/40 backdrop-blur-md p-10 lg:p-16 shadow-[var(--gm-shadow-card)]">
           <div className="text-center">
-            <p className="section-label">GoldMoodAstro LiveKit</p>
-            <h1 className="mt-3 font-display text-3xl">Sesli Görüşme</h1>
-            <p className="mt-2 text-sm text-[var(--gm-muted)]">
-              {state === 'connecting' && 'Bağlanıyor'}
-              {state === 'connected' && 'Bağlandı'}
-              {state === 'reconnecting' && 'Yeniden bağlanıyor'}
-              {state === 'disconnected' && 'Bağlantı kesildi'}
-              {state === 'error' && 'Bağlantı kurulamadı'}
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className={cn("w-2 h-2 rounded-full", state === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-[var(--gm-muted)]')} />
+              <p className="section-label mb-0">GoldMoodAstro Live</p>
+            </div>
+            <h1 className="font-display text-4xl lg:text-5xl text-[var(--gm-text)] tracking-tight">Sesli Görüşme</h1>
+            <p className="mt-4 text-sm font-serif italic text-[var(--gm-muted)]">
+              {state === 'connecting' && 'Yıldızlarla bağlantı kuruluyor...'}
+              {state === 'connected' && 'Bağlantı güvenli ve aktif.'}
+              {state === 'reconnecting' && 'Bağlantı tazeleniyor...'}
+              {state === 'disconnected' && 'Görüşme sonlandı.'}
+              {state === 'error' && 'Bir enerji kesintisi oluştu.'}
             </p>
-            {error ? <p className="mt-3 text-sm text-[var(--gm-error)]">{error}</p> : null}
+            {error ? <p className="mt-4 text-sm text-[var(--gm-error)] font-medium bg-[var(--gm-error)]/5 py-2 px-4 rounded-lg">{error}</p> : null}
           </div>
 
-          <div className="flex flex-col items-center gap-5">
-            <div className="grid size-36 place-items-center rounded-full border border-[var(--gm-border)] bg-[var(--gm-bg-deep)] shadow-[var(--gm-shadow-gold)]">
-              <span className="font-display text-4xl text-[var(--gm-gold)]">GM</span>
+          <div className="flex flex-col items-center gap-8 my-12">
+            <div className="relative">
+              {/* Pulsing Aura */}
+              {state === 'connected' && (
+                <div className="absolute inset-0 rounded-full bg-[var(--gm-gold)]/20 blur-2xl animate-pulse" />
+              )}
+              <div className="relative size-44 lg:size-52 grid place-items-center rounded-full border border-[var(--gm-gold)]/30 bg-[var(--gm-bg-deep)] shadow-glow">
+                <span className="font-display text-5xl lg:text-6xl text-[var(--gm-gold)]">GM</span>
+              </div>
             </div>
-            <div className="font-mono text-2xl text-[var(--gm-gold)]">
+            <div className="font-display text-3xl lg:text-4xl tracking-widest text-[var(--gm-gold)]">
               {mm}:{ss}
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-6 w-full">
             <button
               type="button"
               onClick={toggleMic}
               disabled={state !== 'connected' && state !== 'reconnecting'}
-              className="btn-outline-premium min-w-28 disabled:cursor-not-allowed disabled:opacity-50"
+              className={cn(
+                "min-w-[160px] py-4 rounded-full border transition-all duration-300 font-display text-[11px] tracking-widest uppercase",
+                muted 
+                  ? "bg-[var(--gm-error)]/10 border-[var(--gm-error)]/30 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/20" 
+                  : "bg-[var(--gm-bg-deep)] border-[var(--gm-border-soft)] text-[var(--gm-text)] hover:bg-[var(--gm-surface-high)]"
+              )}
             >
-              {muted ? 'Mikrofon Aç' : 'Sessize Al'}
+              {muted ? 'Mikrofon Kapalı' : 'Mikrofon Açık'}
             </button>
-            <button type="button" onClick={hangup} className="btn-premium min-w-28">
-              Kapat
+            <button
+              type="button"
+              onClick={hangup}
+              className="btn-premium min-w-[160px] py-4 shadow-gold hover:bg-red-900/90"
+            >
+              Görüşmeyi Bitir
             </button>
+            <BookingMessageButton bookingId={bookingId} variant="secondary" label="Mesaj" />
           </div>
 
-          <Link href={`/${locale}/profile/bookings`} className="text-sm text-[var(--gm-muted)]">
-            Randevularıma dön
+          <Link href={`/${locale}/profile/bookings`} className="mt-12 text-[10px] font-display tracking-[0.3em] text-[var(--gm-muted)] uppercase hover:text-[var(--gm-gold)] transition-colors">
+            ← Randevularıma dön
           </Link>
         </div>
 
-        <aside className="rounded-[var(--gm-radius-xl)] border border-[var(--gm-border)] bg-[var(--gm-surface)] p-5 shadow-[var(--gm-shadow-card)]">
+        {/* Sidebar: Customer History */}
+        <aside className="rounded-[var(--gm-radius-xl)] border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/60 backdrop-blur-md p-8 shadow-[var(--gm-shadow-soft)] h-fit">
           <button
             type="button"
             onClick={() => setHistoryOpen((value) => !value)}
-            className="flex w-full items-center justify-between gap-4 text-left"
+            className="flex w-full items-center justify-between gap-4 text-left group"
           >
             <span>
-              <span className="block text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--gm-gold)]">
+              <span className="block text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gm-gold)] mb-1">
                 Müşteri Geçmişi
               </span>
-              <span className="mt-1 block font-display text-xl text-[var(--gm-text)]">
-                Son okumaları
+              <span className="block font-display text-2xl text-[var(--gm-text)]">
+                Son Okumalar
               </span>
             </span>
-            <span className="text-sm text-[var(--gm-muted)]">{historyOpen ? 'Kapat' : 'Aç'}</span>
+            <span className="text-[10px] uppercase tracking-widest text-[var(--gm-muted)] group-hover:text-[var(--gm-gold)] transition-colors">
+              {historyOpen ? 'Kapat' : 'Aç'}
+            </span>
           </button>
 
           {historyOpen ? (
-            <div className="mt-5 space-y-3">
+            <div className="mt-8 space-y-4">
               {readingsLoading ? (
                 [1, 2, 3].map((item) => (
-                  <div key={item} className="h-20 animate-pulse rounded-xl bg-[var(--gm-bg-deep)]" />
+                  <div key={item} className="h-24 animate-pulse rounded-2xl bg-[var(--gm-bg-deep)]/50" />
                 ))
               ) : customerReadings.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-[var(--gm-border)] p-5 text-sm text-[var(--gm-muted)]">
-                  Bu müşterinin henüz kayıtlı yorumu yok.
+                <div className="rounded-2xl border border-dashed border-[var(--gm-border-soft)] p-8 text-center text-sm italic text-[var(--gm-muted)]">
+                  Henüz bir geçmiş bulunamadı.
                 </div>
               ) : (
                 customerReadings.map((item) => (
                   <article
                     key={`${item.type}:${item.id}`}
-                    className="rounded-xl border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)] p-4"
+                    className="group rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface-high)]/40 p-5 hover:border-[var(--gm-gold)]/30 transition-all duration-300"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="grid size-9 shrink-0 place-items-center rounded-lg border border-[var(--gm-border)] bg-[var(--gm-surface-high)] text-xs font-bold text-[var(--gm-gold)]">
-                        {READING_ICONS[item.type]}
+                    <div className="flex items-start gap-4">
+                      <div className="grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)] text-[var(--gm-gold)] shadow-sm">
+                        <span className="font-display text-sm">{READING_ICONS[item.type]}</span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="mb-1 flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--gm-gold)]">
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--gm-gold-deep)]">
                             {READING_LABELS[item.type]}
                           </span>
-                          <span className="shrink-0 text-[10px] text-[var(--gm-muted)]">
+                          <span className="shrink-0 text-[10px] font-serif italic text-[var(--gm-muted)]">
                             {shortDate(item.created_at)}
                           </span>
                         </div>
-                        <h2 className="truncate text-sm font-semibold text-[var(--gm-text)]">
+                        <h2 className="truncate font-serif text-base text-[var(--gm-text)] mb-1">
                           {item.title}
                         </h2>
-                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--gm-muted)]">
-                          {item.snippet || 'Önizleme metni yok.'}
+                        <p className="line-clamp-2 text-xs leading-relaxed text-[var(--gm-text-dim)] opacity-80">
+                          {item.snippet || 'Detaylı yorum içeriği...'}
                         </p>
                         <Link
                           href={readingHref(locale, item)}
                           target="_blank"
-                          className="mt-3 inline-flex text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--gm-gold)]"
+                          className="mt-4 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)] transition-colors"
                         >
-                          Detayı aç
+                          İncele <ArrowRight size={10} />
                         </Link>
                       </div>
                     </div>

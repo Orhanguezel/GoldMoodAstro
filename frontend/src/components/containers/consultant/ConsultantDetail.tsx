@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Award, CheckCircle, Clock, Globe, Star, ShieldCheck, Sparkles, Calendar } from 'lucide-react';
@@ -9,9 +9,15 @@ import {
   useGetConsultantQuery,
   type ConsultantSlotPublic,
 } from '@/integrations/rtk/public/consultants.public.endpoints';
+import { useRequestNowBookingMutation } from '@/integrations/rtk/public/bookings_public.endpoints';
+import { useAuthStore } from '@/features/auth/auth.store';
+import { toast } from 'sonner';
+import { useListConsultantServicesPublicQuery, type ConsultantServicePublic } from '@/integrations/rtk/public/consultant_services.public.endpoints';
 import { useGetConsultantOutcomeScoreQuery } from '@/integrations/rtk/hooks';
 import ReviewList from '@/components/common/public/ReviewList';
 import SlotPicker from './SlotPicker';
+import ConsultantMessageModal from './ConsultantMessageModal';
+import { ChevronDown, MessageCircle, Phone, Check } from 'lucide-react';
 
 const EXPERTISE_LABELS: Record<string, string> = {
   astrology: 'Astroloji',
@@ -35,7 +41,25 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const searchParams = useSearchParams();
   const { data: consultant, isFetching, isError } = useGetConsultantQuery(id, { skip: !id });
   const { data: karne } = useGetConsultantOutcomeScoreQuery(id, { skip: !id });
+  const { data: services = [], isLoading: servicesLoading } = useListConsultantServicesPublicQuery(consultant?.id || '', {
+    skip: !consultant?.id,
+  });
   const [selectedSlot, setSelectedSlot] = useState<ConsultantSlotPublic | null>(null);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [requestNowBooking, { isLoading: isRequestingNow }] = useRequestNowBookingMutation();
+  const { isAuthenticated } = useAuthStore();
+
+  // İlk servis otomatik seçilsin (genelde ücretsiz tanışma)
+  useEffect(() => {
+    if (!selectedServiceId && services.length > 0) {
+      setSelectedServiceId(services[0].id);
+      setExpandedServiceId(services[0].id);
+    }
+  }, [services, selectedServiceId]);
+
+  const selectedService: ConsultantServicePublic | undefined = services.find((s) => s.id === selectedServiceId);
 
   if (isFetching) {
     return (
@@ -65,24 +89,56 @@ export default function ConsultantDetail({ id, locale }: Props) {
 
   const handleBook = () => {
     if (!selectedSlot) return;
+    const svc = selectedService;
     const q = new URLSearchParams({
       consultantId: consultant.id,
       resourceId: selectedSlot.resource_id,
       slotId: selectedSlot.id,
       date: selectedSlot.slot_date,
       time: selectedSlot.slot_time.slice(0, 5),
-      price: String(consultant.session_price),
-      duration: String(consultant.session_duration),
+      price: String(svc?.price ?? consultant.session_price),
+      duration: String(svc?.duration_minutes ?? consultant.session_duration),
       name: consultant.full_name || '',
     });
+    if (svc?.id) q.set('serviceId', svc.id);
+    if (svc?.is_free === 1) q.set('free', '1');
     const topic = searchParams.get('topic');
     if (topic) q.set('topic', topic);
     router.push(`/${locale}/booking?${q.toString()}`);
   };
 
+  const handleSendMessage = () => {
+    setMessageOpen(true);
+  };
+
+  const handleRequestNow = async () => {
+    if (!isAuthenticated) {
+      toast.error('Giriş yapmalısınız');
+      router.push(`/${locale}/auth/login?next=${encodeURIComponent(`/${locale}/consultants/${id}`)}`);
+      return;
+    }
+    if (!consultant.is_available) {
+      toast.error('Danışman şu anda çevrimiçi değil');
+      return;
+    }
+    try {
+      const res = await requestNowBooking({
+        consultant_id: consultant.id,
+        service_id: selectedService?.id,
+        customer_message: 'Hemen görüşme talebi',
+      }).unwrap();
+      toast.success(res.message || 'Talep iletildi, danışman bekleniyor');
+      router.push(`/${locale}/profile/bookings?highlight=${res.id}`);
+    } catch (e: any) {
+      const msg = e?.data?.error?.message;
+      if (msg === 'consultant_not_online') toast.error('Danışman şu an çevrimdışı');
+      else toast.error(msg || 'Talep oluşturulamadı');
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pb-24 pt-32">
-      <div className="mx-auto max-w-7xl px-6">
+    <div className="pb-24 pt-32 lg:pt-40">
+      <div className="container mx-auto">
         
         <Link
           href={`/${locale}/consultants`}
@@ -115,7 +171,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
               
               <div className="flex-1 text-center md:text-left pb-4">
                 <div className="flex items-center justify-center md:justify-start gap-4 mb-4">
-                  <h1 className="font-serif text-[clamp(2.5rem,5vw,4rem)] leading-tight text-[var(--gm-text)]">{consultant.full_name}</h1>
+                  <h1 className="font-display text-[clamp(2.5rem,5vw,4rem)] leading-tight text-[var(--gm-text)] [text-shadow:0_2px_24px_var(--gm-shadow-soft)]">{consultant.full_name}</h1>
                   <ShieldCheck className="w-8 h-8 text-[var(--gm-gold)]" />
                 </div>
                 
@@ -161,7 +217,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
             <div className="space-y-8">
               <div className="flex items-center gap-3">
                 <Sparkles className="w-5 h-5 text-[var(--gm-gold)]" />
-                <h2 className="font-serif text-2xl text-[var(--gm-text)]">Ruhsal Yolculuk & Deneyim</h2>
+                <h2 className="font-display text-2xl text-[var(--gm-text)]">Ruhsal Yolculuk & Deneyim</h2>
               </div>
               <p className="text-[var(--gm-text-dim)] font-serif italic text-[1.35rem] leading-relaxed opacity-90 first-letter:text-5xl first-letter:float-left first-letter:mr-3 first-letter:font-serif first-letter:text-[var(--gm-gold)]">
                 {consultant.bio || 'Bu danışman henüz bir açıklama eklememiş.'}
@@ -170,7 +226,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
 
             {/* Skills & Lang */}
             <div className="grid md:grid-cols-2 gap-12">
-              <div className="bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)] rounded-3xl p-8">
+              <div className="bg-[var(--gm-surface)] border border-[var(--gm-border)] rounded-3xl p-8 shadow-[var(--gm-shadow-soft)]">
                 <h3 className="text-[10px] font-bold text-[var(--gm-gold-dim)] tracking-[0.2em] uppercase mb-6">Uzmanlık Alanları</h3>
                 <div className="flex flex-wrap gap-3">
                   {(consultant.expertise || []).map((exp) => (
@@ -180,7 +236,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                   ))}
                 </div>
               </div>
-              <div className="bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)] rounded-3xl p-8">
+              <div className="bg-[var(--gm-surface)] border border-[var(--gm-border)] rounded-3xl p-8 shadow-[var(--gm-shadow-soft)]">
                 <h3 className="text-[10px] font-bold text-[var(--gm-gold-dim)] tracking-[0.2em] uppercase mb-6">Danışmanlık Dilleri</h3>
                 <div className="flex flex-wrap gap-3">
                   {(consultant.languages || []).map((lang) => (
@@ -193,54 +249,179 @@ export default function ConsultantDetail({ id, locale }: Props) {
               </div>
             </div>
 
+            {/* Değerlendirmeler — sol kolonda, kompakt tek satır */}
+            <ReviewList
+              targetType="consultant"
+              targetId={consultant.id}
+              locale={locale}
+              titleOverride="Değerlendirmeler"
+              compact
+            />
+
           </div>
 
-          {/* Sticky Sidebar */}
-          <div className="lg:sticky lg:top-32 w-full">
-            <div className="bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-[40px] p-10 shadow-[0_0_80px_rgba(201,169,97,0.05)] relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[var(--gm-gold)] to-[var(--gm-gold-dim)]" />
-              
-              <div className="flex items-end justify-between mb-10 pb-8 border-b border-[var(--gm-border-soft)]">
-                <div>
-                  <p className="text-[var(--gm-gold-dim)] text-[10px] font-bold tracking-[0.2em] uppercase mb-2">Seans Ücreti</p>
-                  <span className="font-serif text-5xl text-[var(--gm-gold)]">₺{price}</span>
-                </div>
-                <div className="text-right">
-                  <span className="block text-[var(--gm-text)] font-serif text-lg italic opacity-70">{consultant.session_duration} Dakika</span>
-                </div>
-              </div>
+          {/* Sticky Sidebar — Multi-Service */}
+          <div className="lg:sticky lg:top-32 w-full space-y-6">
 
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <Calendar className="w-4 h-4 text-[var(--gm-gold)]" />
-                  <h3 className="text-[10px] font-bold text-[var(--gm-gold-dim)] tracking-[0.2em] uppercase">
-                    Saat & Slot Seçimi
-                  </h3>
-                </div>
-                
-                <div className="min-h-[200px]">
-                  <SlotPicker consultantId={id} locale={locale} onSelect={setSelectedSlot} selectedSlotId={selectedSlot?.id} />
-                </div>
-
+            {/* Üst eylem butonları: Mesaj + Hemen Görüş */}
+            <div className="space-y-2">
+              <button
+                onClick={handleSendMessage}
+                className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-full border border-[var(--gm-gold)]/40 hover:border-[var(--gm-gold)] hover:bg-[var(--gm-gold)]/10 text-[var(--gm-gold)] text-[11px] font-bold uppercase tracking-widest transition-all"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Mesaj Gönder
+              </button>
+              {/* T29-4: Hemen Görüşme — sadece çevrimiçi danışmanlarda */}
+              {consultant.is_available === 1 && (
                 <button
-                  onClick={handleBook}
-                  disabled={!selectedSlot}
-                  className="w-full group relative py-5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] font-bold text-base tracking-widest uppercase overflow-hidden hover:shadow-[0_0_50px_rgba(201,169,97,0.2)] transition-all disabled:opacity-50"
+                  onClick={handleRequestNow}
+                  disabled={isRequestingNow}
+                  className="w-full relative inline-flex items-center justify-center gap-2 py-3.5 rounded-full bg-[var(--gm-success)] hover:bg-[var(--gm-success)]/90 text-white text-[11px] font-bold uppercase tracking-widest transition-all shadow-lg disabled:opacity-50"
                 >
-                  <span className="relative z-10">
-                    {selectedSlot ? 'RANDEVU AL' : 'SAAT SEÇİN'}
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
                   </span>
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                  <Phone className="w-4 h-4" />
+                  {isRequestingNow ? 'Talep Gönderiliyor...' : 'Hemen Görüş (5 dk)'}
                 </button>
-                
-                <p className="text-center text-[10px] font-medium tracking-[0.1em] text-[var(--gm-muted)] uppercase italic">
-                  * Ödeme bir sonraki adımda Iyzico üzerinden alınacaktır.
-                </p>
+              )}
+            </div>
+
+            <div className="bg-[var(--gm-surface)] border border-[var(--gm-border)] rounded-[32px] p-6 md:p-8 shadow-[var(--gm-shadow-card)] relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[var(--gm-primary)] via-[var(--gm-gold)] to-[var(--gm-accent)]" />
+
+              <div className="flex items-center gap-3 mb-6 pt-2">
+                <Sparkles className="w-4 h-4 text-[var(--gm-gold)]" />
+                <h3 className="text-[10px] font-bold text-[var(--gm-gold-dim)] tracking-[0.2em] uppercase">
+                  Hizmet Paketleri
+                </h3>
               </div>
+
+              {/* Service list */}
+              <div className="space-y-3 mb-6">
+                {servicesLoading && (
+                  <div className="text-center py-6 text-[var(--gm-muted)] text-sm">Paketler yükleniyor...</div>
+                )}
+                {!servicesLoading && services.length === 0 && (
+                  <div className="text-center py-6 text-[var(--gm-muted)] text-sm">Bu danışman için aktif paket yok.</div>
+                )}
+                {services.map((svc) => {
+                  const isSelected = selectedServiceId === svc.id;
+                  const isExpanded = expandedServiceId === svc.id;
+                  const isFree = svc.is_free === 1;
+                  return (
+                    <div
+                      key={svc.id}
+                      className={`rounded-2xl border transition-all ${
+                        isSelected
+                          ? 'border-[var(--gm-gold)] bg-[var(--gm-gold)]/10 shadow-[var(--gm-shadow-gold)]'
+                          : 'border-[var(--gm-border-soft)] hover:border-[var(--gm-gold)]/40 hover:bg-[var(--gm-gold)]/5'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedServiceId(svc.id);
+                          setExpandedServiceId(isExpanded ? null : svc.id);
+                          setSelectedSlot(null);
+                        }}
+                        className="w-full flex items-center justify-between gap-3 p-4 text-left"
+                      >
+                        {/* Sol: Yeşil ✓ tik (seçili) veya boş daire */}
+                        <span
+                          className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                            isSelected
+                              ? 'border-[var(--gm-success)] bg-[var(--gm-success)] text-white'
+                              : 'border-[var(--gm-border-soft)] bg-transparent'
+                          }`}
+                          aria-hidden
+                        >
+                          {isSelected && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-serif text-base text-[var(--gm-text)] truncate">{svc.name}</span>
+                            {isFree && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--gm-success)]/15 text-[var(--gm-success)] text-[9px] font-bold uppercase tracking-widest">
+                                Ücretsiz
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-[11px] text-[var(--gm-text-dim)]">
+                            <span className="inline-flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {svc.duration_minutes} dk
+                            </span>
+                            <span className="text-[var(--gm-gold)] font-bold">
+                              {isFree ? 'Ücretsiz' : `₺${Math.round(Number(svc.price))}`}
+                            </span>
+                          </div>
+                        </div>
+                        <ChevronDown
+                          className={`w-4 h-4 text-[var(--gm-muted)] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+                      {isExpanded && svc.description && (
+                        <div className="px-4 pb-4 -mt-1 text-[12px] text-[var(--gm-text-dim)] leading-relaxed font-serif italic border-t border-[var(--gm-border-soft)] pt-3">
+                          {svc.description}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Slot picker — sadece servis seçildiğinde */}
+              {selectedService && (
+                <div className="space-y-4 pt-6 border-t border-[var(--gm-border-soft)]">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-4 h-4 text-[var(--gm-gold)]" />
+                    <h3 className="text-[10px] font-bold text-[var(--gm-gold-dim)] tracking-[0.2em] uppercase">
+                      Saat Seç
+                    </h3>
+                  </div>
+
+                  <div className="min-h-[160px]">
+                    <SlotPicker
+                      consultantId={id}
+                      locale={locale}
+                      onSelect={setSelectedSlot}
+                      selectedSlotId={selectedSlot?.id}
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleBook}
+                    disabled={!selectedSlot}
+                    className={`w-full group relative py-4 rounded-full font-bold text-sm tracking-widest uppercase overflow-hidden transition-all disabled:opacity-50 ${
+                      selectedService.is_free === 1
+                        ? 'bg-[var(--gm-success)] text-white hover:shadow-[var(--gm-shadow-card)]'
+                        : 'bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] hover:shadow-[var(--gm-shadow-gold)]'
+                    }`}
+                  >
+                    <span className="relative z-10 inline-flex items-center justify-center gap-2">
+                      {selectedService.is_free === 1 && <Phone className="w-4 h-4" />}
+                      {!selectedSlot
+                        ? 'SAAT SEÇİN'
+                        : selectedService.is_free === 1
+                          ? 'ÜCRETSİZ RANDEVU AL'
+                          : 'RANDEVU AL'}
+                    </span>
+                  </button>
+
+                  <p className="text-center text-[10px] font-medium tracking-[0.1em] text-[var(--gm-muted)] uppercase italic">
+                    {selectedService.is_free === 1
+                      ? '* Ücretsiz tanışma görüşmesidir.'
+                      : '* Ödeme bir sonraki adımda Iyzico üzerinden alınacaktır.'}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Trust Info */}
-            <div className="mt-8 flex flex-col items-center gap-4 px-6">
+            <div className="flex flex-col items-center gap-4 px-6">
               <div className="flex items-center gap-3 text-[10px] font-bold text-[var(--gm-gold-dim)] tracking-[0.2em] uppercase">
                 <ShieldCheck className="w-4 h-4 text-[var(--gm-success)]" />
                 <span>Onaylı Uzman Profil</span>
@@ -250,16 +431,15 @@ export default function ConsultantDetail({ id, locale }: Props) {
           </div>
 
         </div>
-
-        <section className="mt-16 max-w-4xl">
-          <ReviewList
-            targetType="consultant"
-            targetId={consultant.id}
-            locale={locale}
-            titleOverride="Değerlendirmeler"
-          />
-        </section>
       </div>
-    </main>
+
+      <ConsultantMessageModal
+        open={messageOpen}
+        onClose={() => setMessageOpen(false)}
+        consultantId={consultant.id}
+        consultantName={consultant.full_name || ''}
+        locale={locale}
+      />
+    </div>
   );
 }

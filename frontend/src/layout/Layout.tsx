@@ -42,7 +42,7 @@ import { FALLBACK_LOCALE } from '@/integrations/shared';
 import { JsonLd, graph, org, website, sameAsFromSocials } from '@/seo';
 
 // ✅ SEO SCHEMA HELPERS (DB-backed)
-import { parseSeoFromSettings } from '@/integrations/shared';
+import { parseSeoFromSettings } from '@/integrations/shared/seoSchema';
 
 // ✅ Store-based page overrides (LayoutSeoBridge)
 import { getLayoutSeoSnapshot, subscribeLayoutSeo, type LayoutSeoOverrides } from '@/seo';
@@ -532,6 +532,12 @@ export default function Layout({
     const orgId = `${base}#org`;
     const websiteId = `${base}#website`;
 
+    const defaultSameAs = [
+      'https://www.instagram.com/goldmoodastro',
+      'https://www.youtube.com/@goldmoodastro',
+      'https://www.linkedin.com/company/goldmoodastro',
+      'https://twitter.com/goldmoodastro',
+    ];
     const sameAs = sameAsFromSocials(effectiveBrand.socials || null);
 
     return graph([
@@ -540,13 +546,17 @@ export default function Layout({
         name: effectiveBrand.name || 'goldmoodastro',
         url: cleanString(effectiveBrand.website) || base,
         logo: siteLogoUrl || undefined,
-        sameAs,
+        sameAs: sameAs.length ? sameAs : defaultSameAs,
+        description: "Turkiye'nin astroloji, tarot ve numeroloji danismanlik platformu.",
+        priceRange: '₺149-₺3500',
+        areaServed: 'TR',
       }),
       website({
         id: websiteId,
         name: effectiveBrand.name || 'goldmoodastro',
         url: base,
         publisherId: orgId,
+        searchUrlTemplate: `${base}/tr/consultants?q={q}`,
       }),
     ]);
   }, [effectiveBrand.name, effectiveBrand.website, effectiveBrand.socials, siteLogoUrl]);

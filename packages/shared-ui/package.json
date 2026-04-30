@@ -9,7 +9,8 @@
     "./admin/stores/*": "./admin/stores/*/*.ts",
     "./admin/lib/*": "./admin/lib/*.ts",
     "./public/seo/*": "./public/components/seo/*.tsx",
-    "./public/lib/*": "./public/lib/*.ts"
+    "./public/lib/*": "./public/lib/*.ts",
+    "./content/*": "./components/content/*.tsx"
   },
   "peerDependencies": {
     "react": "^19.0.0",

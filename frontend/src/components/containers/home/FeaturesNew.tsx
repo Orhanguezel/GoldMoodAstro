@@ -1,4 +1,5 @@
-import React from 'react';
+import Image from 'next/image';
+import { fetchSetting } from '@/i18n/server';
 
 const COPY = {
   tr: {
@@ -51,9 +52,25 @@ const COPY = {
   }
 };
 
-export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
+function settingString(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object' && 'url' in value) return String((value as { url?: unknown }).url || '');
+  return '';
+}
+
+export default async function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
   const isTr = locale === 'tr';
   const copy = COPY[isTr ? 'tr' : 'en'];
+
+  const [natalImg, dailyImg, synastryImg] = await Promise.all([
+    fetchSetting('ui_feature_natal_image', '*', { revalidate: 600 }),
+    fetchSetting('ui_feature_daily_image', '*', { revalidate: 600 }),
+    fetchSetting('ui_feature_synastry_image', '*', { revalidate: 600 }),
+  ]);
+
+  const natalPath = settingString(natalImg?.value) || '/img/natal_chart.png';
+  const dailyPath = settingString(dailyImg?.value) || '/img/daily_reading.png';
+  const synastryPath = settingString(synastryImg?.value) || '/img/synastry_chart.png';
 
   return (
     <section className="py-32 px-6 bg-[var(--gm-bg-deep)] relative border-t border-[var(--gm-border-soft)]">
@@ -89,26 +106,28 @@ export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
               </div>
             </div>
             <div className="flex justify-center md:justify-end">
-              <svg viewBox="0 0 300 300" fill="none" className="w-full max-w-[400px]">
-                <circle cx="150" cy="150" r="130" stroke="var(--gm-gold)" strokeWidth="1"/>
-                <circle cx="150" cy="150" r="100" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.6"/>
-                <circle cx="150" cy="150" r="60" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.4"/>
-                <line x1="20" y1="150" x2="280" y2="150" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.5"/>
-                <line x1="150" y1="20" x2="150" y2="280" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.5"/>
-                <line x1="62" y1="62" x2="238" y2="238" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.3"/>
-                <line x1="238" y1="62" x2="62" y2="238" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.3"/>
-                <g stroke="var(--gm-gold-deep)" strokeWidth="1">
-                  <line x1="150" y1="20" x2="150" y2="35"/>
-                  <line x1="150" y1="265" x2="150" y2="280"/>
-                  <line x1="20" y1="150" x2="35" y2="150"/>
-                  <line x1="265" y1="150" x2="280" y2="150"/>
-                </g>
-                <circle cx="220" cy="80" r="5" fill="var(--gm-gold)"/>
-                <circle cx="80" cy="180" r="4" fill="var(--gm-gold-deep)"/>
-                <circle cx="200" cy="220" r="6" fill="var(--gm-gold)"/>
-                <circle cx="100" cy="100" r="3" fill="var(--gm-gold)"/>
-                <text x="150" y="155" textAnchor="middle" fontFamily="Cinzel" fontSize="14" fill="var(--gm-gold-deep)" letterSpacing="2">☿</text>
-              </svg>
+              <div className="relative group">
+                {/* Glow Effect */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-[var(--gm-primary)]/20 to-[var(--gm-gold)]/20 rounded-full blur-3xl opacity-50 group-hover:opacity-80 transition-opacity duration-700" />
+                
+                <div className="relative aspect-[4/3] w-full max-w-[440px] overflow-hidden rounded-2xl border border-[var(--gm-border)] bg-[var(--gm-bg-deep)] shadow-2xl">
+                  <Image
+                    src={natalPath}
+                    alt="Natal Chart Example"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 440px"
+                    className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+                  />
+                  
+                  {/* Overlay Info */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[var(--gm-text)]/90 via-[var(--gm-text)]/40 to-transparent">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-[var(--gm-gold)] animate-pulse shadow-[0_0_10px_var(--gm-gold)]" />
+                      <span className="font-display text-[10px] tracking-[0.25em] text-[var(--gm-gold)] uppercase font-medium">Canlı Transit Takibi</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -132,22 +151,23 @@ export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
               </div>
             </div>
             <div className="flex justify-center md:justify-start md:order-1">
-              <svg viewBox="0 0 300 300" fill="none" className="w-full max-w-[400px]">
-                <circle cx="150" cy="150" r="50" fill="var(--gm-gold)" opacity="0.15"/>
-                <circle cx="150" cy="150" r="35" fill="var(--gm-gold)" opacity="0.3"/>
-                <circle cx="150" cy="150" r="20" fill="var(--gm-gold)"/>
-                <g stroke="var(--gm-gold)" strokeWidth="1.5" strokeLinecap="round">
-                  <line x1="150" y1="60" x2="150" y2="80"/>
-                  <line x1="150" y1="220" x2="150" y2="240"/>
-                  <line x1="60" y1="150" x2="80" y2="150"/>
-                  <line x1="220" y1="150" x2="240" y2="150"/>
-                  <line x1="86" y1="86" x2="100" y2="100"/>
-                  <line x1="200" y1="200" x2="214" y2="214"/>
-                  <line x1="214" y1="86" x2="200" y2="100"/>
-                  <line x1="100" y1="200" x2="86" y2="214"/>
-                </g>
-                <text x="150" y="156" textAnchor="middle" fontFamily="Cinzel" fontSize="16" fill="var(--color-text-on-dark)">☉</text>
-              </svg>
+              <div className="relative group">
+                {/* Morning Light Glow */}
+                <div className="absolute -inset-4 bg-gradient-to-br from-[var(--gm-gold)]/30 to-[var(--gm-primary)]/10 rounded-full blur-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-700" />
+                
+                <div className="relative aspect-[4/3] w-full max-w-[440px] overflow-hidden rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)] shadow-2xl">
+                  <Image
+                    src={dailyPath}
+                    alt="Daily Reading Example"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 440px"
+                    className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+                  />
+                  
+                  {/* Morning Light Effect Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[var(--gm-gold)]/5 to-transparent pointer-events-none" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -171,21 +191,42 @@ export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
               </div>
             </div>
             <div className="flex justify-center md:justify-end">
-              <svg viewBox="0 0 300 300" fill="none" className="w-full max-w-[400px]">
-                <circle cx="120" cy="150" r="70" stroke="var(--gm-gold)" strokeWidth="1"/>
-                <circle cx="180" cy="150" r="70" stroke="var(--gm-gold-deep)" strokeWidth="1"/>
-                <circle cx="120" cy="150" r="50" stroke="var(--gm-gold)" strokeWidth="0.5" opacity="0.4"/>
-                <circle cx="180" cy="150" r="50" stroke="var(--gm-gold-deep)" strokeWidth="0.5" opacity="0.4"/>
-                <circle cx="150" cy="150" r="6" fill="var(--gm-gold)"/>
-                <circle cx="120" cy="80" r="4" fill="var(--gm-gold)"/>
-                <circle cx="180" cy="220" r="4" fill="var(--gm-gold-deep)"/>
-                <circle cx="60" cy="150" r="3" fill="var(--gm-gold)" opacity="0.7"/>
-                <circle cx="240" cy="150" r="3" fill="var(--gm-gold-deep)" opacity="0.7"/>
-              </svg>
+              <div className="relative group">
+                {/* Cosmic Bond Glow */}
+                <div className="absolute -inset-4 bg-gradient-to-bl from-[var(--gm-primary)]/20 to-blue-500/10 rounded-full blur-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-700" />
+                
+                <div className="relative aspect-[4/3] w-full max-w-[440px] overflow-hidden rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)] shadow-2xl">
+                  <Image
+                    src={synastryPath}
+                    alt="Synastry Chart Example"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 440px"
+                    className="object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+                  />
+                  
+                  {/* Overlay Interaction Badge */}
+                  <div className="absolute top-4 right-4 px-4 py-1.5 bg-[var(--gm-text)]/90 backdrop-blur-md border border-[var(--gm-gold)]/30 rounded-full shadow-xl">
+                    <span className="font-display text-[9px] tracking-[0.25em] text-[var(--gm-gold)] uppercase font-medium">Uyum Oranı: %85</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Energy Reflection / Theme Background Background Decor */}
+      <div 
+        className="absolute bottom-0 left-0 right-0 h-[300px] pointer-events-none opacity-40 mix-blend-screen overflow-hidden"
+        style={{
+          backgroundImage: 'var(--gm-bg-image)',
+          backgroundSize: 'contain',
+          backgroundPosition: 'bottom center',
+          backgroundRepeat: 'no-repeat',
+          maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+          WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+        }}
+      />
     </section>
   );
 }

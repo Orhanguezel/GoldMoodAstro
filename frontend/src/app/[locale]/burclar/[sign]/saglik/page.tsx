@@ -1,6 +1,7 @@
 export const revalidate = 86400;
 import ZodiacDetail from '@/components/containers/zodiac/ZodiacDetail';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/seo/server';
 
 type Props = {
   params: Promise<{ sign: string; locale: string }>;
@@ -13,17 +14,22 @@ const labels: Record<string, string> = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { sign } = await params;
+  const { sign, locale } = await params;
   const label = labels[sign] || sign;
-  return {
-    title: `${label} Burcu Sağlık ve Yaşam Kalitesi — GoldMoodAstro`,
-    description: `${label} burcunun hassas olduğu bölgeler, beslenme önerileri ve ruhsal dengesi için ipuçları.`,
-  };
+  return buildPageMetadata({
+    locale,
+    pageKey: 'burclar-saglik',
+    pathname: `/burclar/${sign}/saglik`,
+    fallback: {
+      title: `${label} Burcu Sağlık ve Yaşam Kalitesi`,
+      description: `${label} burcunun hassas olduğu bölgeler, beslenme önerileri ve ruhsal dengesi için ipuçları.`,
+    },
+  });
 }
 
 export default function SignHealthPage() {
   return (
-    <main className="min-h-screen bg-background pt-20">
+    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
       <ZodiacDetail initialTab="health" />
     </main>
   );

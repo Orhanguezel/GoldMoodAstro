@@ -32,6 +32,8 @@ type ReviewListProps = {
 
   /** Display mode */
   variant?: 'reviews' | 'comments';
+  /** Compact tek satır liste (kart yerine inline). Sticky sidebar yanında dar kolonlar için. */
+  compact?: boolean;
 };
 
 function clampRating(v: number) {
@@ -77,6 +79,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
   titleOverride,
   emptyTextOverride,
   variant = 'reviews',
+  compact = false,
 }) => {
   const resolvedLocale = useResolvedLocale();
   const locale = (localeProp || resolvedLocale || 'tr').split('-')[0];
@@ -203,7 +206,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
       )}
 
       {!isLoading && !isError && reviews.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className={compact ? 'divide-y divide-(--gm-border-soft) border-y border-(--gm-border-soft)' : 'grid grid-cols-1 md:grid-cols-2 gap-5'}>
           {reviews.map((r) => {
             const isVerified = Number((r as any).is_verified) === 1;
             const consultantReply = (r as any).consultant_reply as string | undefined;
@@ -212,7 +215,11 @@ const ReviewList: React.FC<ReviewListProps> = ({
             return (
               <article
                 key={r.id}
-                className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-sm p-6 transition-all duration-300 hover:border-(--gm-gold)/40 hover:shadow-card"
+                className={
+                  compact
+                    ? 'py-4 transition-colors hover:bg-(--gm-gold)/5'
+                    : 'bg-(--gm-surface) border border-(--gm-border-soft) rounded-sm p-6 transition-all duration-300 hover:border-(--gm-gold)/40 hover:shadow-card'
+                }
               >
                 <header className="flex items-start gap-4 mb-4">
                   <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 border border-(--gm-gold)/30 flex items-center justify-center text-(--gm-gold-deep) font-display text-sm shrink-0">
@@ -278,7 +285,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                   </div>
                 )}
 
-                <footer className="mt-5 pt-4 border-t border-(--gm-border-soft) flex items-center justify-end">
+                <footer className={compact ? 'mt-2 flex items-center justify-end' : 'mt-5 pt-4 border-t border-(--gm-border-soft) flex items-center justify-end'}>
                   <button
                     type="button"
                     className="inline-flex items-center gap-2 text-xs font-medium text-(--gm-text-dim) hover:text-(--gm-gold-deep) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

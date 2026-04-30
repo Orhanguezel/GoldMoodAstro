@@ -29,6 +29,7 @@ import {
   Settings,
   Trash2,
   Star,
+  UserCheck,
   Users,
   Menu as MenuIcon,
   type LucideIcon,
@@ -65,6 +66,7 @@ export interface NavGroup {
 export type AdminNavItemKey =
   | 'dashboard'
   | 'consultants'
+  | 'consultant_applications'
   | 'site_settings'
   | 'reviews'
   | 'bookings'
@@ -89,7 +91,8 @@ export type AdminNavItemKey =
   | 'astrology_kb'
   | 'banners'
   | 'campaigns'
-  | 'navigation';
+  | 'navigation'
+  | 'home_layout';
 
 export type AdminNavGroupKey = 'general' | 'content' | 'marketing' | 'communication' | 'system';
 
@@ -145,7 +148,9 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
     key: 'system',
     items: [
       { key: 'site_settings', url: '/admin/site-settings', icon: Settings },
+      { key: 'consultant_applications', url: '/admin/consultant-applications', icon: UserCheck },
       { key: 'navigation', url: '/admin/navigation', icon: MenuIcon },
+      { key: 'home_layout', url: '/admin/home-layout', icon: LayoutDashboard },
       { key: 'cache', url: '/admin/cache', icon: Trash2 },
       { key: 'availability', url: '/admin/availability', icon: Clock },
       { key: 'wallet', url: '/admin/wallet', icon: Receipt },
@@ -167,33 +172,35 @@ export type AdminNavCopy = {
 
 // Fallback titles for when translations are missing
 const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
-  dashboard: 'Dashboard',
-  consultants: 'Consultants',
-  site_settings: 'Site Settings',
-  reviews: 'Reviews',
-  bookings: 'Bookings',
-  mail: 'Mail',
-  users: 'Users',
-  email_templates: 'Email Templates',
-  notifications: 'Notifications',
-  storage: 'Storage',
-  db: 'Database',
-  audit: 'Audit',
-  availability: 'Availability',
-  support: 'Support',
+  dashboard: 'Panel',
+  consultants: 'Danışmanlar',
+  consultant_applications: 'Danışman Başvuruları',
+  site_settings: 'Ayarlar',
+  reviews: 'Yorumlar',
+  bookings: 'Randevular',
+  mail: 'E-Posta',
+  users: 'Kullanıcılar',
+  email_templates: 'E-posta Şablonları',
+  notifications: 'Bildirimler',
+  storage: 'Dosya Yöneticisi',
+  db: 'Veritabanı',
+  audit: 'Denetim Kayıtları',
+  availability: 'Rezervasyon Saatleri',
+  support: 'Destek',
   chat: 'Chat & AI',
-  orders: 'Orders',
-  wallet: 'Wallet',
-  payment_settings: 'Payment Settings',
-  announcements: 'Announcements',
-  subscriptions: 'Subscriptions',
-  subscription_plans: 'Subscription Plans',
+  orders: 'Siparişler',
+  wallet: 'Cüzdan',
+  payment_settings: 'Ödeme Ayarları',
+  announcements: 'Duyurular',
+  subscriptions: 'Abonelikler',
+  subscription_plans: 'Abonelik Planları',
   cache: 'Cache Yönetimi',
-  llm_prompts: 'LLM Prompts',
-  astrology_kb: 'Astroloji KB',
-  banners: 'Banners',
+  llm_prompts: 'AI Promptları',
+  astrology_kb: 'Astroloji Bilgi Bankası',
+  banners: 'Banner Yönetimi',
   campaigns: 'Kampanyalar',
   navigation: 'Menü & Footer',
+  home_layout: 'Anasayfa Düzeni',
 };
 
 export function buildAdminSidebarItems(
@@ -207,8 +214,9 @@ export function buildAdminSidebarItems(
     // 1. Try copy.labels[group.key]
     // 2. Try t(`admin.sidebar.groups.${group.key}`)
     // 3. Fallback to empty (or key)
+    const tGroup = t ? t(`admin.sidebar.groups.${group.key}` as any) : '';
     const label =
-      labels[group.key] || (t ? t(`admin.sidebar.groups.${group.key}` as any) : '') || '';
+      labels[group.key] || (tGroup && !tGroup.includes('admin.sidebar') ? tGroup : '') || '';
 
     return {
       id: group.id,
@@ -218,9 +226,10 @@ export function buildAdminSidebarItems(
         // 2. Try t(`admin.dashboard.items.${item.key}`)
         // 3. Fallback to FALLBACK_TITLES
         // 4. Fallback to key
+        const tItem = t ? t(`admin.dashboard.items.${item.key}` as any) : '';
         const title =
           items[item.key] ||
-          (t ? t(`admin.dashboard.items.${item.key}` as any) : '') ||
+          (tItem && !tItem.includes('admin.dashboard') ? tItem : '') ||
           FALLBACK_TITLES[item.key] ||
           item.key;
 

@@ -13,6 +13,7 @@ type WebSocket = {
 import { randomUUID } from "crypto";
 import { chatRepo } from "./repository";
 import type { ChatRole } from "./validation";
+import { db as sharedDb } from "../../db/client";
 
 type AuthedUser = {
   id: string;
@@ -44,8 +45,8 @@ function roleToChatRole(r: AuthedUser["role"]): ChatRole {
 }
 
 export function chatService(app: FastifyInstance) {
-  // assumes mysqlPlugin exposes app.db (adjust to your project)
-  const db = (app as any).db;
+  // shared-backend standart db/client kullan (app.db pattern eski monorepo'dan kalma).
+  const db = sharedDb as any;
   const repo = chatRepo(db);
 
   // In-memory WS registry (MVP). Later: Redis pub/sub.
@@ -120,7 +121,7 @@ export function chatService(app: FastifyInstance) {
     repo,
 
     async getOrCreateThread(args: {
-      context_type: "job" | "request";
+      context_type: "job" | "request" | "consultant_lead" | "booking" | "support";
       context_id: string;
       created_by: AuthedUser;
     }) {

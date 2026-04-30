@@ -65,6 +65,34 @@ const nextConfig = {
     ];
   },
 
+  async headers() {
+    const staticContentCache = [
+      {
+        key: 'Cache-Control',
+        value: 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    ];
+
+    return [
+      {
+        source: '/:locale(tr|en|de)',
+        headers: staticContentCache,
+      },
+      {
+        source: '/:locale(tr|en|de)/:page(about|blog|burclar|sinastri|tarot|numeroloji|yildizname|birth-chart|big-three|burcunu-ogren|yukselen-burc-hesaplayici|unluler-ve-burclari|faqs|editorial-policy|contact|pricing)',
+        headers: staticContentCache,
+      },
+      {
+        source: '/:locale(tr|en|de)/blog/:path*',
+        headers: staticContentCache,
+      },
+      {
+        source: '/:locale(tr|en|de)/burclar/:path*',
+        headers: staticContentCache,
+      },
+    ];
+  },
+
   async redirects() {
     return [
       // www → non-www

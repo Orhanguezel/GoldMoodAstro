@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function DreamsPage() {
   return (
-    <main className="min-h-screen bg-background pt-20">
+    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
       <DreamHub />
     </main>
   );

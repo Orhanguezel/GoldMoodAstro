@@ -109,7 +109,7 @@ export default function ProfilePrivacyPage() {
   }
 
   return (
-    <main className="min-h-screen bg-bg-base py-16 px-4">
+    <main className="min-h-screen bg-[var(--gm-bg)] pt-32 pb-16 px-4">
       <div className="mx-auto max-w-2xl">
         <h1 className="text-3xl text-text font-serif mb-2">Gizlilik ve Hesap</h1>
         <p className="mb-8 text-text-muted">

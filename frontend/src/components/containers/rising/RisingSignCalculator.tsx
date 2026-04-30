@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cinzel } from 'next/font/google';
 import BirthChartForm from '@/components/containers/birth-chart/BirthChartForm';
@@ -8,6 +8,7 @@ import { BirthChart } from '@/types/common';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Sparkles, ArrowRight, Share2 } from 'lucide-react';
+import { useListMyBirthChartsQuery } from '@/integrations/rtk/public/birth_charts.endpoints';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -19,6 +20,13 @@ const SIGN_LABELS: Record<string, string> = {
 
 export default function RisingSignCalculator() {
   const [result, setResult] = useState<BirthChart | null>(null);
+  const { data: myCharts } = useListMyBirthChartsQuery();
+
+  useEffect(() => {
+    if (!result && myCharts && myCharts.length > 0) {
+      setResult(myCharts[0]);
+    }
+  }, [myCharts, result]);
 
   const sunSign = result?.chart_data.planets.sun.sign;
   const moonSign = result?.chart_data.planets.moon.sign;

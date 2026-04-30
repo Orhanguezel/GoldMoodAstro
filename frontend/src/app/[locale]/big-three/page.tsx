@@ -1,33 +1,29 @@
 import React from 'react';
 import BigThree from '@/components/containers/zodiac/BigThree';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/seo/server';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+type Props = { params: Promise<{ locale: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const ogImageUrl = `https://goldmoodastro.com/${locale}/big-three/opengraph-image`;
 
-  return {
-    title: 'Big Three — Güneş, Ay ve Yükselen Burç Kartı Oluştur',
-    description: 'Kozmik kimliğinizin en önemli üç parçasını keşfedin: Güneş (Ego), Ay (Duygular) ve Yükselen (Dış Dünya). Şık tasarımınızla paylaşın.',
-    openGraph: {
-      title: 'Big Three — Kozmik Kimliğini Keşfet',
-      description: 'Güneş, Ay ve Yükselen burcunuzla kozmik kimlik kartınızı oluşturun.',
-      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: 'Big Three' }],
-      type: 'website',
-      siteName: 'GoldMoodAstro',
+  return buildPageMetadata({
+    locale,
+    pageKey: 'big-three',
+    pathname: '/big-three',
+    fallback: {
+      title: 'Big Three — Güneş, Ay ve Yükselen Burç Kartı',
+      description: 'Kozmik kimliğinizin en önemli üç parçasını keşfedin: Güneş (Ego), Ay (Duygular) ve Yükselen (Dış Dünya).',
+      ogImage: ogImageUrl,
     },
-    twitter: {
-      card: 'summary_large_image',
-      title: 'Big Three — Kozmik Kimliğini Keşfet',
-      description: 'Güneş, Ay ve Yükselen burcunuzla kozmik kimlik kartınızı oluşturun.',
-      images: [ogImageUrl],
-    },
-  };
+  });
 }
 
 export default function BigThreePage() {
   return (
-    <main className="min-h-screen bg-background pt-20">
+    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
       <BigThree />
     </main>
   );

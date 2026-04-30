@@ -59,15 +59,15 @@
 
   --color-text-primary:    var(--gm-text, #2A2620);
   --color-text-secondary:  var(--gm-text-dim, #4A4238);
-  --color-text-muted:      var(--gm-muted, #8A8276);
+  --color-text-muted:      var(--gm-muted-soft, #6B6358);
   --color-text-on-dark:    #FAF6EF;
 
-  --color-brand-primary:   var(--gm-primary, #C9A961);        /* gold is the brand */
+  --color-brand-primary:   var(--gm-primary-dark, #8C7038);   /* darker gold for text contrast */
   --color-brand-hover:     var(--gm-primary-hover, #A8884A);
   --color-brand-dark:      var(--gm-primary-dark, #8C7038);
   --color-brand-light:     color-mix(in srgb, var(--gm-primary, #C9A961) 14%, transparent);
 
-  --color-brand-gold:      var(--gm-gold, #C9A961);
+  --color-brand-gold:      var(--gm-gold-deep, #8C7038);
   --color-brand-gold-deep: var(--gm-gold-deep, #A8884A);
   --color-brand-gold-dim:  var(--gm-gold-dim, #B89651);
 
@@ -104,6 +104,11 @@
   --shadow-medium: var(--gm-shadow-card,   0 8px 40px rgba(45, 37, 32, 0.10));
   --shadow-glow:   var(--gm-shadow-glow,   0 0 60px rgba(201, 169, 97, 0.18));
   --shadow-gold:   var(--gm-shadow-gold,   0 0 30px rgba(201, 169, 97, 0.22));
+
+  /* ─── MYSTICAL ACCENTS (requested colors) ─── */
+  --color-mystic-mint: #F0FFDF;
+  --color-mystic-cyan: #B0FFFA;
+  --color-mystic-rose: #FBEFEF;
 }
 
 /* ============================================================
@@ -112,34 +117,34 @@
    section on the landing page).
    ============================================================ */
 [data-theme="dark"] {
-  --color-bg-primary:      #2A2620;
-  --color-bg-secondary:    #1A1715;
-  --color-bg-card:         #3D362D;
-  --color-bg-card-hover:   #4A4238;
+  --color-bg-primary:      var(--gm-bg, #2A2620);
+  --color-bg-secondary:    var(--gm-bg-deep, #1A1715);
+  --color-bg-card:         var(--gm-surface, #3D362D);
+  --color-bg-card-hover:   var(--gm-surface-high, #4A4238);
   --color-bg-accent:       rgba(201, 169, 97, 0.10);
-  --color-bg-dark:         #1A1715;
+  --color-bg-dark:         var(--gm-bg-deep, #1A1715);
 
-  --color-text-primary:    #FAF6EF;
-  --color-text-secondary:  #E5DCC8;
-  --color-text-muted:      #A09888;
-  --color-text-on-dark:    #FAF6EF;
+  --color-text-primary:    var(--gm-text, #FAF6EF);
+  --color-text-secondary:  var(--gm-text-dim, #E5DCC8);
+  --color-text-muted:      var(--gm-muted, #A09888);
+  --color-text-on-dark:    var(--gm-text, #FAF6EF);
 
-  --color-brand-primary:   #C9A961;
-  --color-brand-hover:     #E5D0A0;   /* lighter on dark for contrast */
-  --color-brand-dark:      #A8884A;
+  --color-brand-primary:   var(--gm-primary, #C9A961);
+  --color-brand-hover:     var(--gm-primary-light, #E5D0A0);   /* lighter on dark for contrast */
+  --color-brand-dark:      var(--gm-primary-dark, #A8884A);
   --color-brand-light:     rgba(201, 169, 97, 0.15);
 
-  --color-primary:         #C9A961;
-  --color-primary-hover:   #E5D0A0;
+  --color-primary:         var(--gm-primary, #C9A961);
+  --color-primary-hover:   var(--gm-primary-light, #E5D0A0);
 
-  --color-border-light:    rgba(201, 169, 97, 0.10);
-  --color-border-medium:   rgba(201, 169, 97, 0.20);
+  --color-border-light:    var(--gm-border-soft, rgba(201, 169, 97, 0.10));
+  --color-border-medium:   var(--gm-border, rgba(201, 169, 97, 0.20));
   --color-border-hover:    rgba(201, 169, 97, 0.40);
 
-  --shadow-soft:           0 2px 20px rgba(0, 0, 0, 0.40);
-  --shadow-medium:         0 8px 40px rgba(0, 0, 0, 0.55);
-  --shadow-glow:           0 0 60px rgba(201, 169, 97, 0.15);
-  --shadow-gold:           0 0 30px rgba(201, 169, 97, 0.25);
+  --shadow-soft:           var(--gm-shadow-soft, 0 2px 20px rgba(0, 0, 0, 0.40));
+  --shadow-medium:         var(--gm-shadow-card, 0 8px 40px rgba(0, 0, 0, 0.55));
+  --shadow-glow:           var(--gm-shadow-glow, 0 0 60px rgba(201, 169, 97, 0.15));
+  --shadow-gold:           var(--gm-shadow-gold, 0 0 30px rgba(201, 169, 97, 0.25));
 }
 
 /* ============================================================
@@ -259,6 +264,27 @@
 
   /* ─── PREMIUM COMPONENTS ─── */
 
+  .skip-link {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    z-index: 100000;
+    transform: translateY(-150%);
+    border-radius: var(--gm-radius-pill, 9999px);
+    background: var(--gm-text, #2A2620);
+    color: var(--gm-bg, #FAF6EF);
+    padding: 0.75rem 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+    outline: 2px solid var(--gm-gold, #C9A961);
+    outline-offset: 3px;
+  }
+
   .section-label {
     display: inline-flex;
     align-items: center;
@@ -360,6 +386,7 @@
   .hero-fade-up-2  { animation-delay: 0.7s; }
   .hero-fade-up-3  { animation-delay: 0.9s; }
   .hero-fade-up-4  { animation-delay: 1.1s; }
+  .hero-critical   { opacity: 1; transform: none; animation: none; }
 
   @keyframes dotPulse {
     0%, 100% { opacity: 0.4; transform: scale(0.8); }
@@ -385,6 +412,31 @@
   }
   .rotate-slow         { animation: rotateSlow 80s linear infinite; }
   .rotate-slow-reverse { animation: rotateSlow 120s linear infinite reverse; }
+
+  /* ─── GOLD BULLION REFLECTION ENERGY ─── */
+  @keyframes goldReflection {
+    0%, 100% { transform: scale(1) translateY(0); opacity: 0.3; filter: blur(40px); }
+    50%      { transform: scale(1.1) translateY(-10px); opacity: 0.5; filter: blur(50px); }
+  }
+  .gold-reflection {
+    position: absolute;
+    bottom: -150px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140%;
+    height: 400px;
+    background: radial-gradient(circle at center, var(--color-gold-400) 0%, transparent 70%);
+    mix-blend-mode: plus-lighter;
+    pointer-events: none;
+    z-index: 1;
+    animation: goldReflection 8s ease-in-out infinite;
+    opacity: 0.4;
+  }
+
+  /* ─── MYSTICAL AURA GLOWS ─── */
+  .aura-mint { background: radial-gradient(circle at center, var(--color-mystic-mint) 0%, transparent 70%); }
+  .aura-cyan { background: radial-gradient(circle at center, var(--color-mystic-cyan) 0%, transparent 70%); }
+  .aura-rose { background: radial-gradient(circle at center, var(--color-mystic-rose) 0%, transparent 70%); }
 }
 
 @utility container {

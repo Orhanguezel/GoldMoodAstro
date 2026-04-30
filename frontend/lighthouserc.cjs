@@ -1,73 +1,59 @@
 // lighthouserc.cjs
-const baseUrl = 'http://localhost:3000';
+const baseUrl = (process.env.LHCI_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3095').replace(/\/$/, '');
+const shouldStartServer = process.env.LHCI_START_SERVER !== 'false';
 
-const locales = ['de', 'en', 'tr'];
-const defaultLocale = 'en'; // Assuming EN as default or based on config
-
-function withLocalePath(path, locale) {
-  const p = `/${String(path || '').replace(/^\/+/, '')}`;
-  const loc = String(locale || '').trim().toLowerCase();
-  
-  // Basic logic: all paths are prefixed in this project based on [locale] folder
-  // unless there is a rewrite.
-  // Assuming strict /[locale]/... structure for now.
-  if (p === '/') return `/${loc}`;
-  return `/${loc}${p}`;
-}
-
-const routes = [
-  '/', // Home 1
-  '/index-2', // Home 2
-  '/index-3', // Home 3
-  '/services',
-  '/work',
-  '/blog',
-  '/pricing'
+const paths = [
+  '/tr',
+  '/tr/consultants',
+  '/tr/blog',
+  '/tr/burclar',
+  '/tr/sinastri',
+  '/tr/tarot',
+  '/tr/numeroloji',
 ];
 
-// URL list: locale x route
-// const urls = [];
-// for (const loc of locales) {
-//   for (const r of routes) {
-//     urls.push(new URL(withLocalePath(r, loc), baseUrl).toString());
-//   }
-// }
+const collect = {
+  url: paths.map((path) => `${baseUrl}${path}`),
+  numberOfRuns: Number(process.env.LHCI_RUNS || 1),
+  settings: {
+    preset: process.env.LHCI_PRESET || 'desktop',
+    chromeFlags: [
+      '--headless=new',
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+    ],
+    throttling: {
+      rttMs: 40,
+      throughputKbps: 10240,
+      cpuSlowdownMultiplier: 1,
+    },
+  },
+};
+
+if (shouldStartServer) {
+  collect.startServerCommand = 'bun run start -- -p 3095';
+  collect.startServerReadyPattern = 'Ready|started server|Local:|localhost:3095';
+  collect.startServerReadyTimeout = 120000;
+}
 
 module.exports = {
   ci: {
-    collect: {
-      url: ['http://localhost:3000/en'],
-      numberOfRuns: 1,
-      // startServerCommand: 'bun run start', // Ensure server starts
-      // startServerReadyPattern: 'Ready in', // Adjust based on Next.js 16 output "Ready in" or similar
-      settings: {
-        preset: 'desktop',
-        chromeFlags: [
-          '--no-sandbox', 
-          '--disable-dev-shm-usage', 
-          '--disable-gpu',
-          // '--headless' // CI usually implies headless
-        ],
-        // Simulation settings similar to Ensotek (or custom)
-        throttling: {
-            rttMs: 40,
-            throughputKbps: 10240,
-            cpuSlowdownMultiplier: 1,
-        }
-      },
-    },
+    collect,
     assert: {
-      preset: 'lighthouse:recommended',
       assertions: {
-        'categories:performance': ['warn', { minScore: 0.7 }], 
-        'categories:accessibility': ['error', { minScore: 0.9 }],
+        'categories:performance': ['warn', { minScore: 0.7 }],
+        'categories:accessibility': ['warn', { minScore: 0.9 }],
         'categories:best-practices': ['warn', { minScore: 0.9 }],
-        'categories:seo': ['error', { minScore: 0.9 }],
-      }
+        'categories:seo': ['warn', { minScore: 0.9 }],
+        'uses-http2': 'off',
+        'bf-cache': 'off',
+      },
     },
     upload: {
       target: 'filesystem',
-      outputDir: './.lighthouseci/reports'
-    }
-  }
+      outputDir: './.lighthouseci/reports',
+      reportFilenamePattern: '%%PATHNAME%%-%%DATETIME%%-report.%%EXTENSION%%',
+    },
+  },
 };

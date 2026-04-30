@@ -41,6 +41,29 @@ function withUserSelect() {
   };
 }
 
+function lightSelect() {
+  return {
+    id: consultants.id,
+    user_id: consultants.user_id,
+    slug: consultants.slug,
+    full_name: users.full_name,
+    avatar_url: users.avatar_url,
+    bio: consultants.bio,
+    expertise: consultants.expertise,
+    languages: consultants.languages,
+    session_price: consultants.session_price,
+    session_duration: consultants.session_duration,
+    supports_video: consultants.supports_video,
+    currency: consultants.currency,
+    approval_status: consultants.approval_status,
+    is_available: consultants.is_available,
+    rating_avg: consultants.rating_avg,
+    rating_count: consultants.rating_count,
+    total_sessions: consultants.total_sessions,
+    created_at: consultants.created_at,
+  };
+}
+
 function expertisePredicate(expertise?: string): SQL | undefined {
   const value = expertise?.trim();
   if (!value) return undefined;
@@ -48,21 +71,40 @@ function expertisePredicate(expertise?: string): SQL | undefined {
 }
 
 export async function listApprovedConsultants(filters: ListConsultantsQuery) {
+  const sort = filters.sort ?? 'featured';
+  const onlineOnly = filters.onlineOnly === true || sort === 'online';
+
   const where = [
     eq(consultants.approval_status, 'approved'),
-    eq(consultants.is_available, 1),
+    onlineOnly ? eq(consultants.is_available, 1) : undefined,
     expertisePredicate(filters.expertise),
     filters.minPrice != null ? gte(consultants.session_price, String(filters.minPrice)) : undefined,
     filters.maxPrice != null ? lte(consultants.session_price, String(filters.maxPrice)) : undefined,
     filters.minRating != null ? gte(consultants.rating_avg, String(filters.minRating)) : undefined,
   ].filter(Boolean) as SQL[];
 
-  return db
-    .select(withUserSelect())
+  const orderBy = (() => {
+    switch (sort) {
+      case 'popular':
+        return [desc(consultants.total_sessions), desc(consultants.rating_avg), asc(users.full_name)];
+      case 'new':
+        return [desc(consultants.created_at), desc(consultants.rating_avg)];
+      case 'online':
+        return [desc(consultants.rating_avg), desc(consultants.total_sessions)];
+      case 'featured':
+      default:
+        return [desc(consultants.rating_avg), desc(consultants.total_sessions), asc(users.full_name)];
+    }
+  })();
+
+  const q = db
+    .select(filters.light ? lightSelect() : withUserSelect())
     .from(consultants)
     .innerJoin(users, eq(users.id, consultants.user_id))
     .where(and(...where))
-    .orderBy(desc(consultants.rating_avg), desc(consultants.total_sessions), asc(users.full_name));
+    .orderBy(...orderBy);
+
+  return filters.limit != null ? q.limit(filters.limit) : q;
 }
 
 export async function listConsultantsAdmin(filters: AdminListConsultantsQuery) {

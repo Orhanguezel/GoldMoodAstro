@@ -118,7 +118,7 @@ export const SiteLogo: React.FC<SiteLogoProps> = ({
 
   if (!finalSrc) {
     return (
-      <span className={frameClass} aria-label={alt}>
+      <span className={frameClass} aria-hidden="true">
         <span
           className="w-full h-10 bg-bg-card-hover border border-border-light animate-pulse"
           aria-hidden="true"
@@ -130,7 +130,7 @@ export const SiteLogo: React.FC<SiteLogoProps> = ({
   // SVG → plain <img> (no Next.js optimization needed, preserves viewBox scaling)
   if (typeof finalSrc === 'string' && isSvg(finalSrc)) {
     return (
-      <span className={frameClass} aria-label={alt}>
+      <span className={frameClass}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={finalSrc}
@@ -146,7 +146,7 @@ export const SiteLogo: React.FC<SiteLogoProps> = ({
   // Raster URL -> use native img so aspect ratio is preserved from the actual file.
   if (typeof finalSrc === 'string') {
     return (
-      <span className={frameClass} aria-label={alt}>
+      <span className={frameClass}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={finalSrc}

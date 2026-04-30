@@ -14,6 +14,9 @@ export {
 
 export { createUserNotification } from './service';
 
+export { registerPushSender, dispatchPushToUser } from './push';
+export type { PushSenderFn } from './push';
+
 export {
   parseNotificationListParams,
   buildNotificationListWhere,

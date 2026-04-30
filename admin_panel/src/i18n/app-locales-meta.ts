@@ -35,7 +35,7 @@ export function computeActiveLocales(meta: AppLocaleMeta[] | null | undefined, f
 
   const out = defCode ? [defCode, ...uniq.filter((x) => x !== defCode)] : uniq;
 
-  const fb = normLocaleTag(fallback) || 'de';
+  const fb = normLocaleTag(fallback) || 'tr';
   return out.length ? out : [fb];
 }
 

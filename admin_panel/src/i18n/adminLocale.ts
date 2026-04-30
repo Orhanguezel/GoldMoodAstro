@@ -10,7 +10,7 @@ import { localeShortClient, localeShortClientOr } from './localeShortClient';
 export function resolveAdminApiLocale(
   localeOptions?: Array<{ value: string } | { value: string; label?: string }> | null,
   defaultLocaleFromDb?: string | null,
-  fallback = 'de',
+  fallback = 'tr',
 ): string {
   // ✅ Güvenlik kontrolü: localeOptions bir array mi?
   const safeOptions = Array.isArray(localeOptions) ? localeOptions : [];

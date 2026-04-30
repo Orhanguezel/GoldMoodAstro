@@ -234,6 +234,8 @@ export default function SupportBotWidget() {
 
   const locale = useLocaleShort();
   const welcomeSetting = useGetSiteSettingByKeyQuery({ key: "chat_ai_welcome_message", locale });
+  const supportImageSetting = useGetSiteSettingByKeyQuery({ key: "ui_support_ai_image" });
+  const supportImageUrl = (supportImageSetting.data?.value as string) || "/img/support_ai.png";
   const { ui } = useUiSection("ui_chat", locale);
   const t = useCallback(
     (key: string, hardFallback: string) => {
@@ -573,7 +575,7 @@ export default function SupportBotWidget() {
         ) : (
 
           <img
-            src="/support_ai.png"
+            src={supportImageUrl}
             alt="AI Support"
             style={{
               width: btnSize - 16,
@@ -612,7 +614,7 @@ export default function SupportBotWidget() {
                   <Headset size={18} />
                 ) : (
                   <Image
-                    src="/support_ai.png"
+                    src={(useGetSiteSettingByKeyQuery({ key: "ui_support_ai_image" }).data?.value as string) || "/img/support_ai.png"}
                     alt="AI"
                     width={24}
                     height={24}

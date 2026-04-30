@@ -69,6 +69,7 @@ export type StatusResp = {
     id: string;
     email: string | null;
     role: UserRoleName;
+    roles?: UserRoleName[];
   };
 };
 

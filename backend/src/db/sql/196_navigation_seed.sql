@@ -47,7 +47,6 @@ INSERT INTO menu_items (id, location, parent_id, type, url, is_active, display_o
   ('mi-h-astro-birth',    'header', 'mi-h-astrology', 'custom', '/birth-chart',                  1, 10),
   ('mi-h-astro-sinastri', 'header', 'mi-h-astrology', 'custom', '/sinastri',                     1, 20),
   ('mi-h-astro-yildiz',   'header', 'mi-h-astrology', 'custom', '/yildizname',                   1, 30),
-  ('mi-h-astro-bigthree', 'header', 'mi-h-astrology', 'custom', '/big-three',                    1, 40),
   ('mi-h-astro-yukselen', 'header', 'mi-h-astrology', 'custom', '/yukselen-burc-hesaplayici',    1, 50),
   ('mi-h-astro-daily',    'header', 'mi-h-astrology', 'custom', '/daily',                        1, 60)
 ON DUPLICATE KEY UPDATE display_order = VALUES(display_order);
@@ -107,10 +106,6 @@ INSERT INTO menu_items_i18n (id, menu_item_id, locale, title) VALUES
   ('mi-i-yld-en', 'mi-h-astro-yildiz', @loc_en, 'Yildizname'),
   ('mi-i-yld-de', 'mi-h-astro-yildiz', @loc_de, 'Yildizname'),
 
-  ('mi-i-big-tr', 'mi-h-astro-bigthree', @loc_tr, 'Big Three'),
-  ('mi-i-big-en', 'mi-h-astro-bigthree', @loc_en, 'Big Three'),
-  ('mi-i-big-de', 'mi-h-astro-bigthree', @loc_de, 'Big Three'),
-
   ('mi-i-yks-tr', 'mi-h-astro-yukselen', @loc_tr, 'Yükselen Burç'),
   ('mi-i-yks-en', 'mi-h-astro-yukselen', @loc_en, 'Rising Sign'),
   ('mi-i-yks-de', 'mi-h-astro-yukselen', @loc_de, 'Aszendent'),
@@ -139,7 +134,6 @@ INSERT INTO menu_items (id, location, section_id, type, url, is_active, display_
   ('mi-f-astro-birth',    'footer', 'fs-astrology', 'custom', '/birth-chart',  1, 10),
   ('mi-f-astro-sinastri', 'footer', 'fs-astrology', 'custom', '/sinastri',     1, 20),
   ('mi-f-astro-yildiz',   'footer', 'fs-astrology', 'custom', '/yildizname',   1, 30),
-  ('mi-f-astro-big',      'footer', 'fs-astrology', 'custom', '/big-three',    1, 40),
   ('mi-f-astro-burclar',  'footer', 'fs-astrology', 'custom', '/burclar',      1, 50)
 ON DUPLICATE KEY UPDATE display_order = VALUES(display_order);
 
@@ -179,9 +173,6 @@ INSERT INTO menu_items_i18n (id, menu_item_id, locale, title) VALUES
   ('mi-fi-fyld-tr',   'mi-f-astro-yildiz', @loc_tr, 'Yıldızname'),
   ('mi-fi-fyld-en',   'mi-f-astro-yildiz', @loc_en, 'Yildizname'),
   ('mi-fi-fyld-de',   'mi-f-astro-yildiz', @loc_de, 'Yildizname'),
-  ('mi-fi-fbig-tr',   'mi-f-astro-big', @loc_tr, 'Big Three'),
-  ('mi-fi-fbig-en',   'mi-f-astro-big', @loc_en, 'Big Three'),
-  ('mi-fi-fbig-de',   'mi-f-astro-big', @loc_de, 'Big Three'),
   ('mi-fi-fburc-tr',  'mi-f-astro-burclar', @loc_tr, 'Burçlar'),
   ('mi-fi-fburc-en',  'mi-f-astro-burclar', @loc_en, 'Zodiac Signs'),
   ('mi-fi-fburc-de',  'mi-f-astro-burclar', @loc_de, 'Sternzeichen'),

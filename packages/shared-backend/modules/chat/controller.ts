@@ -14,13 +14,15 @@ import {
 import { chatService } from "./service";
 
 function getUser(req: any) {
-  // authPlugin attaches req.user (adjust if needed)
-  if (!req.user?.id) {
+  // JWT payload'da id varsa kullan, yoksa sub'tan map et (fastify-jwt sub döner)
+  const u = req.user as { id?: string; sub?: string; role?: string } | undefined;
+  const id = u?.id ?? u?.sub;
+  if (!id) {
     const err: any = new Error("unauthorized");
     err.statusCode = 401;
     throw err;
   }
-  return req.user as { id: string; role: "admin" | "buyer" | "vendor" };
+  return { id: String(id), role: (u?.role as any) ?? 'buyer' } as { id: string; role: "admin" | "buyer" | "vendor" };
 }
 
 function setListHeaders(reply: FastifyReply, total: number, offset: number, limit: number) {

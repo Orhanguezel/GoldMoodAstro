@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import React, { useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cinzel } from 'next/font/google';
 import { 
@@ -12,17 +12,15 @@ import {
   User, 
   Users, 
   Star,
-  RefreshCcw,
   ShieldCheck,
   ChevronLeft,
   Search,
   Check,
   X,
-  Mail,
   Send
 } from 'lucide-react';
-import { 
-  useGetSynastryManualMutation, 
+import {
+  useGetSynastryManualMutation,
   useGetSynastryQuickMutation,
   useSearchUsersQuery,
   useCreateSynastryInviteMutation,
@@ -30,8 +28,14 @@ import {
   useAcceptSynastryInviteMutation,
   useDeclineSynastryInviteMutation
 } from '@/integrations/rtk/hooks';
+import { useAuthStore } from '@/features/auth/auth.store';
 import { toast } from 'sonner';
 import ShareCard from '@/components/common/ShareCard';
+import JsonLd from '@/seo/JsonLd';
+import { articleSchema, breadcrumbSchema, faqSchema, graph } from '@/seo/jsonld';
+import FaqAccordion from '@/components/common/FaqAccordion';
+import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
+import LandingIntro from '@/components/common/LandingIntro';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -41,21 +45,88 @@ const ZODIAC_SIGNS = [
 ];
 
 export default function SynastryPage() {
+  const params = useParams<{ locale?: string }>();
+  const locale = typeof params?.locale === 'string' ? params.locale : 'tr';
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
+  const pageUrl = `${siteUrl}/${locale}/sinastri`;
+  const faqItems = [
+    {
+      question: locale === 'tr' ? 'Sinastri nedir?' : 'What is synastry?',
+      answer: locale === 'tr'
+        ? 'Sinastri, iki kişinin doğum haritalarını karşılaştırarak ilişki dinamiklerini, çekimi ve gelişim alanlarını inceleyen astroloji yöntemidir.'
+        : 'Synastry is an astrology method that compares two birth charts to explore relationship dynamics, attraction and growth areas.',
+    },
+    {
+      question: locale === 'tr' ? 'Sinastri uyumu kesin sonuç verir mi?' : 'Does synastry give a guaranteed result?',
+      answer: locale === 'tr'
+        ? 'Sinastri kesin ilişki sonucu vermez; güçlü temaları, zorlayıcı alanları ve bilinçli iletişim fırsatlarını gösterir.'
+        : 'Synastry does not guarantee relationship outcomes; it shows strong themes, challenges and opportunities for conscious communication.',
+    },
+  ];
+  const intro =
+    locale === 'tr'
+      ? {
+          eyebrow: 'Sinastri Rehberi',
+          title: 'Sinastri nedir, nasıl yapılır ve ilişkide neyi gösterir?',
+          lead:
+            'Sinastri, iki kişinin doğum haritasını karşılaştırarak ilişkinin çekim, iletişim, duygu güvenliği ve gelişim alanlarını anlamaya çalışan astrolojik uyum analizidir.',
+          summary:
+            'Sinastri kesin ilişki sonucu vermez; iki haritanın nasıl konuştuğunu, hangi temaların kolay aktığını ve hangi alanların daha bilinçli iletişim istediğini gösterir. GoldMoodAstro’da sinastri, ilişkiyi yargılamak yerine farkındalık ve diyalog alanı açmak için kullanılır.',
+          sections: [
+            {
+              title: 'Sinastri nasıl yapılır?',
+              paragraphs: [
+                'Sinastri analizinde iki kişinin doğum tarihi, doğum saati ve doğum yeri kullanılarak haritaları karşılaştırılır. Güneş, Ay, Venüs, Mars, Merkür ve yükselen burç gibi temel yerleşimler; iki kişinin birbirini nasıl gördüğünü, nasıl sevgi verdiğini, nasıl çatıştığını ve hangi alanlarda birbirini büyütebileceğini anlamak için birlikte okunur.',
+                'GoldMoodAstro’da hızlı uyum modu iki burç üzerinden genel bir başlangıç sunar. Manuel analiz ise doğum verileriyle daha kişisel bir karşılaştırma yapar. Davet modu, iki kullanıcının kendi verileriyle daha güvenli ve izinli bir analiz oluşturmasına yardımcı olur.',
+              ],
+            },
+            {
+              title: 'Sinastri ne öğrenmene yardımcı olur?',
+              paragraphs: [
+                'Sinastri bir ilişkinin yalnızca “uyumlu” ya da “uyumsuz” olduğunu söylemek için kullanılmamalıdır. Daha değerli olan, ilişkinin hangi dili konuştuğunu anlamaktır. Bazı haritalarda güçlü çekim vardır ama iletişim zorlayıcıdır. Bazılarında duygusal güven güçlüdür ama romantik ifade daha fazla emek ister.',
+                'Bu analiz; çekim, güven, zihinsel uyum, çatışma biçimi, yakınlık ihtiyacı ve ortak gelişim alanlarını görünür kılabilir. Böylece kişi ilişkide neyi büyütmek, neyi konuşmak ve hangi sınırı daha net tutmak istediğini fark edebilir.',
+              ],
+            },
+            {
+              title: 'GoldMoodAstro sinastri yaklaşımı',
+              paragraphs: [
+                'GoldMoodAstro sinastriyi kesin kader ya da ilişki hükmü olarak kullanmaz. Haritalar ilişkinin potansiyellerini ve zorlanma alanlarını gösterir; karar, iletişim ve emek yine iki kişiye aittir. Bu yüzden yorum dili yargılayıcı değil, açıklayıcı ve ilişkiyi daha bilinçli yaşama odaklıdır.',
+                'Sinastri analizinden en iyi sonucu almak için doğum saati ve yerini mümkün olduğunca doğru girmek, soruyu netleştirmek ve sonucu partneri suçlamak için değil, ilişki dinamiğini anlamak için okumak önemlidir.',
+                'Bir sinastri sonucunda güçlü çekim görünüyor diye ilişkinin kendiliğinden sağlıklı olacağı varsayılmamalıdır. Aynı şekilde zorlayıcı açılar da ilişkinin imkansız olduğu anlamına gelmez. Bazı zor açılar iki kişiye sabır, açıklık ve sınır çalışması öğretir; bazı uyumlu açılar ise ilişkinin doğal akışını ve birbirini destekleme biçimini güçlendirir.',
+                'GoldMoodAstro’da sinastri, özellikle konuşulamayan ilişki temalarını görünür kılmak için kullanılır. “Neden aynı konuda tartışıyoruz?”, “Bu ilişkide güven ihtiyacımız nasıl farklı?”, “Yakınlık ve özgürlük dengesini nasıl kuruyoruz?” gibi sorular, harita karşılaştırmasıyla daha somut hale gelebilir. Kullanıcı ister hızlı burç uyumu ister detaylı doğum verisiyle analiz kullansın, amaç ilişkiyi etiketlemek değil, daha bilinçli bir diyalog alanı açmaktır.',
+              ],
+            },
+          ],
+        }
+      : {
+          eyebrow: 'Synastry Guide',
+          title: 'What is synastry, how does it work and what can it show in a relationship?',
+          lead:
+            'Synastry compares two birth charts to understand attraction, communication, emotional safety and growth areas in a relationship.',
+          summary:
+            'Synastry does not guarantee relationship outcomes. It shows how two charts interact, which themes flow easily and which areas require more conscious communication.',
+          sections: [
+            { title: 'How synastry works', paragraphs: ['Synastry compares two birth charts using birth date, time and place. Sun, Moon, Venus, Mars, Mercury and rising signs are read together to understand connection and friction.', 'GoldMoodAstro offers quick sign compatibility, manual birth data analysis and invite-based comparison for safer shared readings.'] },
+            { title: 'What synastry can reveal', paragraphs: ['Synastry should not reduce a relationship to compatible or incompatible. It helps reveal attraction, trust, communication style, conflict patterns and growth areas.', 'The goal is to understand what needs care, what flows naturally and where clearer boundaries or conversation may help.'] },
+            { title: 'GoldMoodAstro synastry approach', paragraphs: ['We do not use synastry as a fixed fate judgment. Charts show potentials and challenges, while choices and communication remain human.', 'For the best reading, enter birth data carefully and read the result as a tool for awareness rather than blame.'] },
+          ],
+        };
   const searchParams = useSearchParams();
   const initialMode = searchParams.get('mode') as any;
   const [step, setStep] = useState<'mode' | 'quick' | 'manual' | 'invite' | 'loading' | 'result'>(
     ['quick', 'manual', 'invite'].includes(initialMode) ? initialMode : 'mode'
   );
-  const [quickData, setQuickData] = useState({ sign_a: 'Aries', sign_b: 'Aries' });
+  const [quickData, setQuickData] = useState({ sign_a: 'aries', sign_b: 'aries' });
   const [manualData, setManualData] = useState({ name: '', dob: '', tob: '', pob_label: '' });
   const [userSearch, setUserSearch] = useState('');
   const [result, setResult] = useState<any>(null);
 
   const [getManual] = useGetSynastryManualMutation();
   const [getQuick] = useGetSynastryQuickMutation();
-  const { data: searchResults, isFetching: isSearching } = useSearchUsersQuery(userSearch, { skip: userSearch.length < 3 });
+  const { isAuthenticated } = useAuthStore();
+  const { data: searchResults, isFetching: isSearching } = useSearchUsersQuery(userSearch, { skip: userSearch.length < 3 || !isAuthenticated });
   const [createInvite] = useCreateSynastryInviteMutation();
-  const { data: pendingInvites } = useGetSynastryInvitesQuery();
+  const { data: pendingInvites } = useGetSynastryInvitesQuery(undefined, { skip: !isAuthenticated });
   const [acceptInvite] = useAcceptSynastryInviteMutation();
   const [declineInvite] = useDeclineSynastryInviteMutation();
 
@@ -115,6 +186,32 @@ export default function SynastryPage() {
 
   return (
     <main className="min-h-screen bg-background pt-32 pb-20 px-4">
+      <JsonLd
+        id="sinastri-schema"
+        data={graph([
+          breadcrumbSchema([
+            { name: 'GoldMoodAstro', item: `${siteUrl}/${locale}` },
+            { name: locale === 'tr' ? 'Sinastri' : 'Synastry', item: pageUrl },
+          ]),
+          articleSchema({
+            headline: locale === 'tr' ? 'Sinastri ve Aşk Uyumu Analizi' : 'Synastry and Love Compatibility Analysis',
+            description:
+              locale === 'tr'
+                ? 'Sinastri analizi ile iki doğum haritası arasındaki ilişki dinamiklerini, çekimi ve gelişim alanlarını keşfedin.'
+                : 'Discover relationship dynamics, attraction and growth areas between two birth charts with synastry analysis.',
+            image: `${siteUrl}/img/synastry_chart.png`,
+            datePublished: '2026-04-30T00:00:00.000Z',
+            dateModified: '2026-04-30T00:00:00.000Z',
+            author: { name: 'GoldMoodAstro Editorial Team', url: `${siteUrl}/${locale}/about` },
+            publisherId: `${siteUrl}/#org`,
+            url: pageUrl,
+            speakableSelectors: ['h1', '[data-speakable]'],
+            inLanguage: locale,
+          }),
+          faqSchema(faqItems),
+        ])}
+      />
+      <LandingIntro {...intro} />
       <div className="max-w-5xl mx-auto relative">
         <AnimatePresence mode="wait">
           {step === 'mode' && (
@@ -307,7 +404,7 @@ export default function SynastryPage() {
                            onChange={(e) => setQuickData({ ...quickData, sign_a: e.target.value })}
                            className="w-full bg-surface-high/50 border border-border/20 rounded-2xl p-5 text-lg outline-none focus:ring-2 focus:ring-brand-gold/20 transition-all appearance-none text-center cursor-pointer"
                         >
-                           {ZODIAC_SIGNS.map(s => <option key={s} value={s}>{s}</option>)}
+                           {ZODIAC_SIGNS.map(s => <option key={s} value={s.toLowerCase()}>{s}</option>)}
                         </select>
                      </div>
 
@@ -318,7 +415,7 @@ export default function SynastryPage() {
                            onChange={(e) => setQuickData({ ...quickData, sign_b: e.target.value })}
                            className="w-full bg-surface-high/50 border border-border/20 rounded-2xl p-5 text-lg outline-none focus:ring-2 focus:ring-brand-gold/20 transition-all appearance-none text-center cursor-pointer"
                         >
-                           {ZODIAC_SIGNS.map(s => <option key={s} value={s}>{s}</option>)}
+                           {ZODIAC_SIGNS.map(s => <option key={s} value={s.toLowerCase()}>{s}</option>)}
                         </select>
                      </div>
                   </div>
@@ -553,6 +650,15 @@ export default function SynastryPage() {
           )}
         </AnimatePresence>
       </div>
+      <FaqAccordion items={faqItems} title={locale === 'tr' ? 'Sinastri Hakkında Sorular' : 'Synastry Questions'} />
+      <AuthorBio
+        name="GoldMoodAstro Editorial Team"
+        title={locale === 'tr' ? 'Astroloji ve ilişki dinamikleri editörleri' : 'Astrology and relationship dynamics editors'}
+        bio={locale === 'tr'
+          ? 'GoldMoodAstro sinastri içerikleri, ilişki astrolojisini kesin hüküm yerine farkındalık, iletişim ve gelişim odağıyla ele alır.'
+          : 'GoldMoodAstro synastry content treats relationship astrology as awareness, communication and growth guidance rather than fixed judgment.'}
+        expertise={['Sinastri', 'İlişki Astrolojisi', 'Doğum Haritası']}
+      />
     </main>
   );
 }

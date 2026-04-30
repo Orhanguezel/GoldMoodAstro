@@ -30,24 +30,15 @@ function normalizeAdminLocaleJson(raw: unknown): PlainObject {
   const admin: PlainObject = { ...adminBase };
   const out: PlainObject = { ...base, admin };
 
-  // de.json gibi: { admin: {...}, db: {...}, services: {...}, siteSettings: {...}, audit: {...} }
-  if (!isPlainObject(admin.db) && isPlainObject(base.db)) admin.db = base.db as PlainObject;
-  if (!isPlainObject(admin.services) && isPlainObject(base.services))
-    admin.services = base.services as PlainObject;
-  if (!isPlainObject(admin.siteSettings) && isPlainObject(base.siteSettings))
-    admin.siteSettings = base.siteSettings as PlainObject;
-  if (!isPlainObject(admin.audit) && isPlainObject(base.audit))
-    admin.audit = base.audit as PlainObject;
-  if (!isPlainObject(admin.notifications) && isPlainObject(base.notifications))
-    admin.notifications = base.notifications as PlainObject;
-  if (!isPlainObject(admin.mail) && isPlainObject(base.mail))
-    admin.mail = base.mail as PlainObject;
-  if (!isPlainObject(admin.availability) && isPlainObject(base.availability))
-    admin.availability = base.availability as PlainObject;
-  if (!isPlainObject(admin.wallet) && isPlainObject(base.wallet))
-    admin.wallet = base.wallet as PlainObject;
-  if (!isPlainObject(admin.popups) && isPlainObject(base.popups))
-    admin.popups = base.popups as PlainObject;
+  // Move and merge all top-level keys to admin for consistency
+  for (const [k, v] of Object.entries(base)) {
+    if (k !== 'admin' && isPlainObject(v)) {
+      admin[k] = {
+        ...(isPlainObject(admin[k]) ? (admin[k] as PlainObject) : {}),
+        ...(v as PlainObject),
+      };
+    }
+  }
 
   // tr.json gibi: admin.db.siteSettings / admin.db.audit (yanlış yerde)
   const adminDb = isPlainObject(admin.db) ? (admin.db as PlainObject) : null;
@@ -141,7 +132,7 @@ export function getAdminTranslations(locale: AdminLocale = 'tr'): TranslateFn {
   const normalized = normLocaleTag(locale);
   const activeLocale: AdminLocale = isAdminLocale(normalized) ? normalized : 'tr';
 
-  const fallbackChain = [activeLocale, 'tr', 'en', 'de'] as const satisfies readonly AdminLocale[];
+  const fallbackChain = ['tr', activeLocale, 'en', 'de'].filter((v, i, a) => a.indexOf(v) === i) as AdminLocale[];
 
   return buildTranslator<AdminLocale>({
     translations,

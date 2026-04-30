@@ -24,10 +24,78 @@ export const dbAdminApi = baseApi.injectEndpoints({
         url: `${ADMIN_BASE}/export`,
         method: 'GET',
         credentials: 'include',
-        // Blob'u TS uyumlu almak için arrayBuffer + transform
         responseHandler: (resp: Response) => resp.arrayBuffer(),
       }),
       transformResponse: (ab: ArrayBuffer) => new Blob([ab], { type: 'application/sql' }),
+    }),
+
+    /* ---------------------------------------------------------
+     * MODULE EXPORT: GET /admin/db/export-module?module=...&upsert=1  -> Blob (.sql)
+     * --------------------------------------------------------- */
+    exportModuleSql: b.mutation<Blob, { module: string; upsert?: boolean }>({
+      query: ({ module, upsert }) => ({
+        url: `${ADMIN_BASE}/export-module`,
+        method: 'GET',
+        params: { module, upsert: upsert ? 1 : undefined },
+        credentials: 'include',
+        responseHandler: (resp: Response) => resp.arrayBuffer(),
+      }),
+      transformResponse: (ab: ArrayBuffer) => new Blob([ab], { type: 'application/sql' }),
+    }),
+
+    /* ---------------------------------------------------------
+     * MODULE IMPORT: POST /admin/db/import-module
+     * body: { module, sql, dryRun?, truncateBefore? }
+     * --------------------------------------------------------- */
+    importModuleSql: b.mutation<
+      DbImportResponse,
+      { module: string; sql: string; dryRun?: boolean; truncateBefore?: boolean }
+    >({
+      query: (body) => ({
+        url: `${ADMIN_BASE}/import-module`,
+        method: 'POST',
+        body,
+        credentials: 'include',
+      }),
+    }),
+
+    /* ---------------------------------------------------------
+     * MODULE MANIFEST VALIDATE: GET /admin/db/modules/validate
+     * params: { module?: string[], includeDbTables?: boolean }
+     * --------------------------------------------------------- */
+    validateModuleManifest: b.query<
+      {
+        ok: boolean;
+        okAll: boolean;
+        db: { database: string };
+        unknownRequested?: string[];
+        dbTables?: string[];
+        results: Array<{
+          module: string;
+          ok: boolean;
+          tables: {
+            expected: string[];
+            present: string[];
+            missing: string[];
+          };
+          suggestions: Record<string, string[]>;
+        }>;
+      },
+      { module?: string[]; includeDbTables?: boolean } | void
+    >({
+      query: (params) => {
+        const search = new URLSearchParams();
+        if (params?.module?.length) {
+          for (const m of params.module) search.append('module', m);
+        }
+        if (params?.includeDbTables) search.append('includeDbTables', '1');
+        const qs = search.toString();
+        return {
+          url: `${ADMIN_BASE}/modules/validate${qs ? `?${qs}` : ''}`,
+          method: 'GET',
+          credentials: 'include',
+        };
+      },
     }),
 
     /* ---------------------------------------------------------
@@ -134,12 +202,41 @@ export const dbAdminApi = baseApi.injectEndpoints({
         credentials: 'include',
       }),
     }),
+
+    /* ---------------------------------------------------------
+     * SITE SETTINGS UI EXPORT: GET /admin/db/site-settings/ui-export
+     * --------------------------------------------------------- */
+    exportSiteSettingsUiJson: b.query<any, { fromLocale: string; prefix?: string[] }>({
+      query: (params) => ({
+        url: `${ADMIN_BASE}/site-settings/ui-export`,
+        method: 'GET',
+        params,
+      }),
+    }),
+
+    /* ---------------------------------------------------------
+     * SITE SETTINGS UI BOOTSTRAP: POST /admin/db/site-settings/ui-bootstrap
+     * --------------------------------------------------------- */
+    bootstrapSiteSettingsUiLocale: b.mutation<
+      { ok: true; insertedOrUpdated?: number; error?: string },
+      { sourceLocale: string; targetLocale: string; prefixes?: string[]; overwrite?: boolean }
+    >({
+      query: (body) => ({
+        url: `${ADMIN_BASE}/site-settings/ui-bootstrap`,
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
   overrideExisting: true,
 });
 
 export const {
   useExportSqlMutation,
+  useExportModuleSqlMutation,
+  useImportModuleSqlMutation,
+  useValidateModuleManifestQuery,
+  useLazyValidateModuleManifestQuery,
   useImportSqlTextMutation,
   useImportSqlUrlMutation,
   useImportSqlFileMutation,
@@ -148,4 +245,7 @@ export const {
   useCreateDbSnapshotMutation,
   useRestoreDbSnapshotMutation,
   useDeleteDbSnapshotMutation,
+  // Site Settings UI bootstrap/export:
+  useExportSiteSettingsUiJsonQuery,
+  useBootstrapSiteSettingsUiLocaleMutation,
 } = dbAdminApi;

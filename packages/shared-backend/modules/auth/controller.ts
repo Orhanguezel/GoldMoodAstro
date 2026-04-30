@@ -4,7 +4,7 @@ import { hash as argonHash } from 'argon2';
 import { OAuth2Client } from 'google-auth-library';
 import { env } from '../../core/env';
 import { handleRouteError } from '../_shared';
-import { getPrimaryRole } from '../userRoles';
+import { getPrimaryRole, repoListUserRoles } from '../userRoles';
 import { sendWelcomeMail, sendPasswordChangedMail } from '../mail';
 import { telegramNotify } from '../telegram';
 import { getGoogleSettings } from '../siteSettings/service';
@@ -48,9 +48,16 @@ import {
 const adminEmails = parseAdminEmailAllowlist();
 const googleClientCache = new Map<string, OAuth2Client>();
 
+async function getUserRoles(userId: string): Promise<Role[]> {
+  const rows = await repoListUserRoles({ user_id: userId, limit: 10, offset: 0, direction: 'asc' });
+  const roles = rows.map((row) => row.role as Role);
+  return roles.length ? roles : ['user'];
+}
+
 type GoogleProfile = {
   email: string;
   name: string | null;
+  picture: string | null;
   emailVerified: boolean;
 };
 
@@ -101,6 +108,7 @@ async function verifyGoogleIdentity(params: {
     return {
       email,
       name: payload?.name?.trim() || null,
+      picture: (payload as any)?.picture || null,
       emailVerified: payload?.email_verified === true,
     };
   }
@@ -122,6 +130,7 @@ async function verifyGoogleIdentity(params: {
   const data = await resp.json() as {
     email?: string;
     name?: string;
+    picture?: string;
     email_verified?: boolean;
   };
 
@@ -131,6 +140,7 @@ async function verifyGoogleIdentity(params: {
   return {
     email,
     name: data.name?.trim() || null,
+    picture: data.picture || null,
     emailVerified: data.email_verified === true,
   };
 }
@@ -293,6 +303,7 @@ export async function signup(req: FastifyRequest, reply: FastifyReply) {
     const assignedRole: Role = isAdmin ? 'admin' : requestedRole;
     await repoAssignRole(id, assignedRole);
     await repoEnsureProfileRow(id, { full_name: full_name ?? null, phone: phone ?? null });
+    const roles = await getUserRoles(id);
 
     void sendWelcomeMail({ to: email, user_name: full_name || email.split('@')[0], user_email: email }).catch((err) => req.log?.error?.(err, 'welcome_mail_failed'));
     void telegramNotify({ event: 'new_user', data: { user_name: full_name || email.split('@')[0], user_email: email, role: assignedRole, created_at: new Date().toISOString() } });
@@ -314,6 +325,7 @@ export async function signup(req: FastifyRequest, reply: FastifyReply) {
         is_active: 1,
         ecosystem_id: u?.ecosystem_id ?? null,
         role: assignedRole,
+        roles,
       },
     });
   } catch (e) {
@@ -335,6 +347,7 @@ export async function token(req: FastifyRequest, reply: FastifyReply) {
     await repoUpdateLastSignIn(u.id);
     await repoEnsureProfileRow(u.id);
     const role = await getPrimaryRole(u.id);
+    const roles = await getUserRoles(u.id);
     const { access, refresh } = await issueTokens(req.server, u, role);
     setAccessCookie(reply, access);
     setRefreshCookie(reply, refresh);
@@ -351,6 +364,7 @@ export async function token(req: FastifyRequest, reply: FastifyReply) {
         is_active: u.is_active,
         ecosystem_id: u.ecosystem_id ?? null,
         role,
+        roles,
       },
     });
   } catch (e) {
@@ -364,7 +378,7 @@ export async function socialLogin(req: FastifyRequest, reply: FastifyReply) {
     const parsed = socialLoginBody.safeParse(req.body);
     if (!parsed.success) return reply.status(400).send({ error: { message: 'invalid_body' } });
 
-    let socialProfile: GoogleProfile | FacebookProfile | AppleProfile;
+    let socialProfile: (GoogleProfile | FacebookProfile | AppleProfile) & { picture?: string | null };
     if (parsed.data.type === 'google') {
       socialProfile = await verifyGoogleIdentity({
         idToken: parsed.data.id_token,
@@ -400,6 +414,7 @@ export async function socialLogin(req: FastifyRequest, reply: FastifyReply) {
         email: socialProfile.email,
         password_hash,
         full_name: fullName,
+        avatar_url: socialProfile.picture ?? undefined,
         email_verified: socialProfile.emailVerified ? 1 : 0,
         is_active: 1,
       });
@@ -436,6 +451,7 @@ export async function socialLogin(req: FastifyRequest, reply: FastifyReply) {
     });
 
     const role = await getPrimaryRole(user.id);
+    const roles = await getUserRoles(user.id);
     const { access, refresh } = await issueTokens(req.server, user, role);
     setAccessCookie(reply, access);
     setRefreshCookie(reply, refresh);
@@ -447,11 +463,13 @@ export async function socialLogin(req: FastifyRequest, reply: FastifyReply) {
         id: user.id,
         email: user.email ?? socialProfile.email,
         full_name: user.full_name ?? socialProfile.name ?? null,
+        avatar_url: user.avatar_url ?? socialProfile.picture ?? null,
         phone: user.phone ?? null,
         email_verified: user.email_verified || socialProfile.emailVerified ? 1 : 0,
         is_active: user.is_active,
         ecosystem_id: user.ecosystem_id ?? null,
         role,
+        roles,
       },
     });
   } catch (e) {
@@ -555,16 +573,19 @@ export async function me(req: FastifyRequest, reply: FastifyReply) {
     const u = await repoGetUserById(p.sub);
     if (!u) return reply.status(401).send({ error: { message: 'invalid_token' } });
     const role = await getPrimaryRole(p.sub);
+    const roles = await getUserRoles(p.sub);
     return reply.send({
       user: {
         id: u.id,
         email: u.email ?? null,
         full_name: u.full_name ?? null,
+        avatar_url: u.avatar_url ?? null,
         phone: u.phone ?? null,
         email_verified: u.email_verified,
         is_active: u.is_active,
         ecosystem_id: u.ecosystem_id ?? null,
         role,
+        roles,
       },
     });
   } catch {
@@ -581,7 +602,12 @@ export async function status(req: FastifyRequest, reply: FastifyReply) {
   try {
     const p = jwt.verify(t);
     const role = await getPrimaryRole(p.sub);
-    return reply.send({ authenticated: true, is_admin: role === 'admin', user: { id: p.sub, email: p.email ?? null, role } });
+    const roles = await getUserRoles(p.sub);
+    return reply.send({
+      authenticated: true,
+      is_admin: roles.includes('admin'),
+      user: { id: p.sub, email: p.email ?? null, role, roles },
+    });
   } catch {
     return reply.send({ authenticated: false, is_admin: false });
   }
@@ -614,16 +640,19 @@ export async function update(req: FastifyRequest, reply: FastifyReply) {
 
     const u = await repoGetUserById(p.sub);
     const role = await getPrimaryRole(p.sub);
+    const roles = await getUserRoles(p.sub);
     return reply.send({
       user: {
         id: p.sub,
         email: p.email ?? null,
         full_name: u?.full_name ?? null,
+        avatar_url: u?.avatar_url ?? null,
         phone: u?.phone ?? null,
         email_verified: u?.email_verified ?? 0,
         is_active: u?.is_active ?? 1,
         ecosystem_id: u?.ecosystem_id ?? null,
         role,
+        roles,
       },
     });
   } catch (e) {

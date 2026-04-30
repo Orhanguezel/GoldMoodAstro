@@ -69,9 +69,9 @@ export default function TrustSection({ locale = 'tr' }: { locale?: string }) {
                 {item.num}
               </div>
               <div>
-                <h4 className="font-serif text-xl text-[var(--gm-text)] mb-3 leading-snug">
+                <h3 className="font-serif text-xl text-[var(--gm-text)] mb-3 leading-snug">
                   {item.title}
-                </h4>
+                </h3>
                 <p className="text-[var(--gm-text-dim)] font-light leading-relaxed">
                   {item.desc}
                 </p>

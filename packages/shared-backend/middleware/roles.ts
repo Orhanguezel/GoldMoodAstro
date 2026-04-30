@@ -51,6 +51,10 @@ export async function requireAdmin(req: FastifyRequest, reply: FastifyReply) {
   return requireRoles(req, reply, ['admin']);
 }
 
+export async function requireConsultant(req: FastifyRequest, reply: FastifyReply) {
+  return requireRoles(req, reply, ['consultant', 'admin']);
+}
+
 export async function requireEditor(req: FastifyRequest, reply: FastifyReply) {
   return requireRoles(req, reply, ['admin']);
 }

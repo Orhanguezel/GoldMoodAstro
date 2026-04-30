@@ -23,6 +23,8 @@ export const consultants = mysqlTable(
     bio: text('bio'),
     expertise: json('expertise').$type<string[]>(),
     languages: json('languages').$type<string[]>(),
+    meeting_platforms: json('meeting_platforms').$type<string[]>(),
+    social_links: json('social_links').$type<Record<string, string>>(),
     session_price: decimal('session_price', { precision: 10, scale: 2 }).notNull(),
     session_duration: int('session_duration').notNull().default(30),
     supports_video: tinyint('supports_video').default(0),

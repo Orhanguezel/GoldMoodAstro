@@ -46,6 +46,12 @@
     "./modules/health/*": "./modules/health/*.ts",
     "./modules/history": "./modules/history/index.ts",
     "./modules/history/*": "./modules/history/*.ts",
+    "./modules/homeSections": "./modules/homeSections/index.ts",
+    "./modules/homeSections/*": "./modules/homeSections/*.ts",
+    "./modules/consultantServices": "./modules/consultantServices/index.ts",
+    "./modules/consultantServices/*": "./modules/consultantServices/*.ts",
+    "./modules/consultantSelf": "./modules/consultantSelf/index.ts",
+    "./modules/consultantSelf/*": "./modules/consultantSelf/*.ts",
     "./modules/kvkk": "./modules/kvkk/index.ts",
     "./modules/kvkk/*": "./modules/kvkk/*.ts",
     "./modules/llm": "./modules/llm/index.ts",
@@ -96,6 +102,10 @@
     "./modules/wallet/*": "./modules/wallet/*.ts",
     "./modules/yildizname": "./modules/yildizname/index.ts",
     "./modules/yildizname/*": "./modules/yildizname/*.ts",
+    "./modules/zodiac": "./modules/zodiac/index.ts",
+    "./modules/zodiac/*": "./modules/zodiac/*.ts",
+    "./modules/consultantApplications": "./modules/consultantApplications/index.ts",
+    "./modules/consultantApplications/*": "./modules/consultantApplications/*.ts",
     "./types": "./types.d.ts"
   },
   "dependencies": {

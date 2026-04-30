@@ -1,59 +1,76 @@
-'use client';
-
 import React from 'react';
-import { useLocaleShort, useUiSection } from '@/i18n';
+import { UserSearch, CalendarCheck, PhoneCall } from 'lucide-react';
 
-const STEPS: Record<string, Array<{ title: string; desc: string; target: string }>> = {
-  tr: [
-    { title: 'Danışman Seç', desc: 'Uzmanlık alanlarına, puanlarına ve gerçek kullanıcı yorumlarına göre size en uygun danışmanı bulun.', target: 'ADIM 01' },
-    { title: 'Randevu Al', desc: 'Danışmanın takviminden size uygun müsait bir slot seçin ve ödemenizi güvenle tamamlayın.', target: 'ADIM 02' },
-    { title: 'Görüşmeyi Başlat', desc: 'Randevu saati geldiğinde uygulama üzerinden sesli görüşmenizi anında başlatın.', target: 'ADIM 03' },
-  ],
-  en: [
-    { title: 'Choose Consultant', desc: 'Find the best consultant for you based on expertise, ratings, and authentic user reviews.', target: 'STEP 01' },
-    { title: 'Book Appointment', desc: 'Select a convenient slot from the consultant\'s calendar and complete your payment securely.', target: 'STEP 02' },
-    { title: 'Start Session', desc: 'When the appointment time arrives, start your voice session instantly through the app.', target: 'STEP 03' },
-  ],
-};
+const STEPS = [
+  {
+    icon: UserSearch,
+    title: 'Danışmanını Seç',
+    desc: 'Uzmanlık alanlarına ve gerçek kullanıcı yorumlarına göre sana en uygun rehberi bul.',
+  },
+  {
+    icon: CalendarCheck,
+    title: 'Randevu Al',
+    desc: 'Danışmanın takviminden sana uygun zamanı seç ve güvenli ödemeni tamamla.',
+  },
+  {
+    icon: PhoneCall,
+    title: 'Görüşmeyi Başlat',
+    desc: 'Randevu saatinde uygulama içinden sesli görüşmeye katıl, rehberliğin tadını çıkar.',
+  },
+];
 
-export default function HomeIntroSection({ locale: explicitLocale }: { locale?: string }) {
-  const locale = useLocaleShort(explicitLocale);
-  const { ui } = useUiSection('ui_home_intro' as any, locale as any);
-
-  const steps = STEPS[locale || 'tr'] || STEPS.tr;
-
-
-
+export default function HomeIntroSection() {
   return (
-    <section className="py-28 lg:py-40 bg-[var(--gm-bg)] border-t border-[var(--gm-border-soft)]">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center max-w-2xl mx-auto mb-20 lg:mb-28 reveal">
-          <span className="font-display text-[11px] tracking-[0.42em] text-[var(--gm-gold-deep)] uppercase mb-6 block">
-            {ui('ui_home_intro_label', locale === 'tr' ? 'NASIL ÇALIŞIR?' : 'HOW IT WORKS?')}
+    <section className="py-32 bg-[var(--gm-bg-deep)] border-y border-[var(--gm-border-soft)] relative overflow-hidden">
+      {/* Decorative Aura */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--gm-gold)] opacity-[0.03] blur-[120px] pointer-events-none rounded-full" />
+
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="text-center mb-20">
+          <span className="font-display text-[10px] tracking-[0.5em] text-[var(--gm-gold-deep)] uppercase mb-4 block">
+            Süreç
           </span>
-          <h2 
-            className="font-serif text-[clamp(2.2rem,4vw,3.8rem)] font-light leading-[1.15] text-[var(--gm-text)]"
-            dangerouslySetInnerHTML={{ __html: ui('ui_home_intro_title', locale === 'tr' ? '3 Adımda <em>Danışmanlık</em>' : '3 Steps to <em>Consultation</em>') }}
-          />
+          <h2 className="font-display text-3xl md:text-5xl text-[var(--gm-text)] mb-6">
+            Yolculuğunuz Nasıl <span className="text-[var(--gm-gold)]">İşler?</span>
+          </h2>
+          <p className="font-serif italic text-[var(--gm-text-dim)] max-w-2xl mx-auto">
+            Sadece üç adımda, aradığınız ruhsal rehberliğe ve içsel huzura kavuşun.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 border border-[var(--gm-border-soft)] bg-[var(--gm-border-soft)] gap-px overflow-hidden rounded-sm shadow-soft">
-          {steps.map((step, i) => (
-            <div key={i} className="group bg-[var(--gm-bg)] p-12 lg:p-16 transition-colors duration-500 hover:bg-[var(--gm-bg-deep)] reveal" style={{ transitionDelay: `${i * 100}ms` }}>
-              <div className="font-display text-6xl lg:text-7xl text-[var(--gm-gold)] opacity-30 mb-8 transition-opacity duration-500 group-hover:opacity-50">
-                {(i + 1).toString().padStart(2, '0')}
+        <div className="relative">
+          {/* Connector Line (Desktop) */}
+          <div className="hidden lg:block absolute top-1/2 left-[15%] right-[15%] h-px bg-gradient-to-r from-transparent via-[var(--gm-border-soft)] to-transparent -translate-y-12" />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative z-10">
+            {STEPS.map((step, idx) => (
+              <div
+                key={idx}
+                className="reveal text-center flex flex-col items-center group"
+                style={{ transitionDelay: `${idx * 120}ms` }}
+              >
+                <div className="relative mb-10">
+                  {/* Step Number */}
+                  <div className="absolute -top-4 -right-4 w-8 h-8 rounded-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] text-[var(--gm-gold)] text-[10px] font-bold flex items-center justify-center shadow-md">
+                    {idx + 1}
+                  </div>
+
+                  {/* Icon Box */}
+                  <div className="w-24 h-24 rounded-[2rem] bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] flex items-center justify-center text-[var(--gm-gold)] shadow-xl group-hover:border-[var(--gm-gold)]/40 transition-all duration-500 transform group-hover:rotate-[10deg]">
+                    <step.icon size={36} strokeWidth={1.5} />
+                  </div>
+                </div>
+
+                <h3 className="font-serif text-2xl text-[var(--gm-text)] mb-4 group-hover:text-[var(--gm-gold)] transition-colors">
+                  {step.title}
+                </h3>
+
+                <p className="text-[var(--gm-text-dim)] text-sm leading-relaxed max-w-[280px]">
+                  {step.desc}
+                </p>
               </div>
-              <h3 className="font-serif text-2xl lg:text-3xl text-[var(--gm-text)] mb-4 tracking-tight leading-tight">
-                {ui(`ui_home_intro_step${i + 1}_title`, step.title)}
-              </h3>
-              <p className="text-[var(--gm-text-dim)] font-light leading-relaxed mb-8">
-                {ui(`ui_home_intro_step${i + 1}_desc`, step.desc)}
-              </p>
-              <div className="font-display text-[10px] tracking-[0.32em] text-[var(--gm-muted)] uppercase">
-                {ui(`ui_home_intro_step${i + 1}_target`, step.target)}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>

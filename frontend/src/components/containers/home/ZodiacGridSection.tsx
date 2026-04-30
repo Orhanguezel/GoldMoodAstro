@@ -1,8 +1,5 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { Cinzel } from 'next/font/google';
 import Image from 'next/image';
 
@@ -42,12 +39,10 @@ export default function ZodiacGridSection() {
 
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
           {shortSigns.map((sign, idx) => (
-            <motion.div
+            <div
               key={sign.key}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.05 }}
+              className="reveal"
+              style={{ transitionDelay: `${idx * 45}ms` }}
             >
               <Link
                 href={`/burclar/${sign.key}`}
@@ -65,7 +60,7 @@ export default function ZodiacGridSection() {
                   {sign.label}
                 </span>
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
 

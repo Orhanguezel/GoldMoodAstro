@@ -46,7 +46,7 @@ function buildLocaleLabel(item: AppLocaleItem): string {
 
   let dn: Intl.DisplayNames | null = null;
   try {
-    dn = new Intl.DisplayNames(['de'], { type: 'language' });
+    dn = new Intl.DisplayNames(['tr'], { type: 'language' });
   } catch {
     dn = null;
   }

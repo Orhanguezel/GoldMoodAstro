@@ -49,7 +49,7 @@ export async function generateMetadata({
 
 export default function SynastryResultPage() {
   return (
-    <main className="min-h-screen bg-background pt-20">
+    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
       <SynastryResultClient />
     </main>
   );

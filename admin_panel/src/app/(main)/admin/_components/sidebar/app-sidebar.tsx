@@ -9,7 +9,9 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  useSidebar,
 } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 
 import { buildAdminSidebarItems } from '@/navigation/sidebar/sidebar-items';
 import type { NavGroup } from '@/navigation/sidebar/sidebar-items';
@@ -52,7 +54,7 @@ export function AppSidebar({
 }) {
   const { copy } = useAdminUiCopy();
   const t = useAdminT();
-  const { pageMeta } = useAdminSettings();
+  const { pageMeta, branding } = useAdminSettings();
 
   const { data: statusData } = useStatusQuery();
   const { data: profileData } = useGetMyProfileQuery();
@@ -95,18 +97,32 @@ export function AppSidebar({
 
   return (
     <Sidebar {...props} variant={variant} collapsible={collapsible} className="bg-sidebar border-r border-sidebar-border">
-      <SidebarHeader className="p-0">
+      <SidebarHeader className="p-0 overflow-hidden">
         <Link
           prefetch={false}
           href="/admin/dashboard"
-          className="flex items-center gap-4 px-7 py-8 border-b border-sidebar-border/70 hover:bg-brand-gold-soft transition-colors group"
+          className={cn(
+            "flex items-center gap-4 px-7 py-8 border-b border-sidebar-border/70 hover:bg-brand-gold-soft transition-all duration-200 group",
+            "group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:py-6 group-data-[state=collapsed]:gap-0"
+          )}
         >
-          <div className="flex aspect-square size-10 items-center justify-center rounded-2xl bg-brand-gold text-brand-ink shadow-[0_8px_24px_-8px_rgba(201,169,97,0.45)] ring-1 ring-brand-gold/30 group-hover:scale-105 transition-transform">
-            <Sparkles className="size-5" />
+          <div className={cn(
+            "flex aspect-square size-10 shrink-0 items-center justify-center rounded-2xl text-brand-ink transition-all duration-200 group-data-[state=collapsed]:size-8 group-data-[state=collapsed]:rounded-xl",
+            branding.logo_url ? "bg-transparent" : "bg-brand-gold shadow-[0_8px_24px_-8px_rgba(201,169,97,0.45)] ring-1 ring-brand-gold/30"
+          )}>
+            {branding.logo_url ? (
+              <img
+                src={branding.logo_url}
+                alt={branding.app_name}
+                className="size-full object-contain transition-all duration-200 group-data-[state=collapsed]:p-0.5"
+              />
+            ) : (
+              <Sparkles className="size-5 transition-all duration-200 group-data-[state=collapsed]:size-4" />
+            )}
           </div>
-          <div className="flex flex-col gap-0.5 leading-none">
-            <span className="font-serif font-bold text-xl tracking-tight text-sidebar-foreground">GOLDMOOD</span>
-            <span className="text-[9px] font-bold tracking-[0.3em] text-brand-gold uppercase opacity-80">Astro Admin</span>
+          <div className="flex flex-col gap-0.5 leading-none transition-all duration-200 group-data-[state=collapsed]:opacity-0 group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:overflow-hidden group-data-[state=collapsed]:hidden">
+            <span className="font-serif font-bold text-xl tracking-tight text-sidebar-foreground whitespace-nowrap">GOLDMOOD</span>
+            <span className="text-[9px] font-bold tracking-[0.3em] text-brand-gold uppercase opacity-80 whitespace-nowrap">Astro Admin</span>
           </div>
         </Link>
       </SidebarHeader>

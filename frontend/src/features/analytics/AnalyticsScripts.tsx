@@ -83,7 +83,7 @@ export default function AnalyticsScripts() {
   return (
     <>
       {/* 1) Consent Mode init (default denied) + external setter + queue flush */}
-      <Script id="analytics-consent-init" strategy="afterInteractive">
+      <Script id="analytics-consent-init" strategy="lazyOnload">
         {`
           window.dataLayer = window.dataLayer || [];
 
@@ -143,7 +143,7 @@ export default function AnalyticsScripts() {
 
       {/* 2) GTM (preferred) */}
       {hasGtm ? (
-        <Script id="gtm-src" strategy="afterInteractive">
+        <Script id="gtm-src" strategy="lazyOnload">
           {`
             (function(w,d,s,l,i){
               w[l]=w[l]||[];
@@ -167,9 +167,9 @@ export default function AnalyticsScripts() {
                 src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(
                   String(ga4Id),
                 )}`}
-                strategy="afterInteractive"
+                strategy="lazyOnload"
               />
-              <Script id="ga-config" strategy="afterInteractive">
+              <Script id="ga-config" strategy="lazyOnload">
                 {`
                   window.dataLayer = window.dataLayer || [];
                   function gtag(){ window.dataLayer.push(arguments); }
@@ -191,7 +191,7 @@ export default function AnalyticsScripts() {
 
       {/* 4) Facebook Pixel */}
       {hasFbPixel ? (
-        <Script id="fb-pixel" strategy="afterInteractive">
+        <Script id="fb-pixel" strategy="lazyOnload">
           {`
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod?

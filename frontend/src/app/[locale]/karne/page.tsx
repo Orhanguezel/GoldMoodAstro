@@ -237,7 +237,7 @@ export default function KarnePage() {
   const items = pending ?? [];
 
   return (
-    <main className="min-h-screen bg-(--gm-bg) pb-24">
+    <main className="min-h-screen bg-(--gm-bg) pt-32 pb-24">
       <div className="max-w-3xl mx-auto px-6 pt-12">
         <Link
           href={localizePath(locale, '/dashboard')}

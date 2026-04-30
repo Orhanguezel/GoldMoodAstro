@@ -357,8 +357,8 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
   ];
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] text-[var(--gm-text)]">
-      <section className="pt-8 pb-14 px-4 md:px-6 max-w-6xl mx-auto">
+    <main className="min-h-screen bg-[var(--gm-bg)] text-[var(--gm-text)] pt-32">
+      <section className="pb-14 px-4 md:px-6 max-w-6xl mx-auto">
         <p className="section-label">{copy.subtitle}</p>
         <div className="mt-2 mb-8">
           <h1 className="font-serif text-[clamp(2rem,4.8vw,3.2rem)] text-[var(--gm-gold)] leading-tight">

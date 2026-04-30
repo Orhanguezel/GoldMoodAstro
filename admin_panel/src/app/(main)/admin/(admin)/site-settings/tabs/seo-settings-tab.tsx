@@ -53,7 +53,8 @@ const PAGE_KEYS = [
   { key: 'burclar-kariyer',            path: '/burclar/[sign]/kariyer' },
   { key: 'burclar-saglik',             path: '/burclar/[sign]/saglik' },
   { key: 'burclar-uyumlulik',          path: '/burclar/[sign]/uyumluluk' },
-  { key: 'burclar-pair-uyumu',         path: '/burclar/[a]-[b]-uyumu' },
+  { key: 'burclar-meditasyon',         path: '/burclar/[sign]/meditasyon' },
+  { key: 'burclar-pair-uyumu',         path: '/burclar/uyum/[pair]' },
   { key: 'burclar-transit',            path: '/burclar/transit/[month]' },
   // Doğum haritası araçları
   { key: 'yukselen-burc-hesaplayici',  path: '/yukselen-burc-hesaplayici' },

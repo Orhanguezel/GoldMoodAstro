@@ -53,7 +53,6 @@ export * from './validation';
 export * from './media';
 
 export * from './local';
-export * from './seoSchema';
 export * from './errors';
 export * from './localeDisplay';
 export * from './popups.types';

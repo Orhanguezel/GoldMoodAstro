@@ -40,6 +40,10 @@ const Login: React.FC = () => {
     if (raw && raw.startsWith('/')) return raw;
     return localizePath(locale, '/dashboard');
   }, [searchParams, locale]);
+  const hasExplicitNext = useMemo(() => {
+    const raw = searchParams.get('next') || '';
+    return raw.startsWith('/');
+  }, [searchParams]);
 
   const registerHref = useMemo(() => localizePath(locale, '/register'), [locale]);
   const forgotPasswordHref = useMemo(() => localizePath(locale, '/forgot-password'), [locale]);
@@ -84,7 +88,7 @@ const Login: React.FC = () => {
       }
 
       const adminBase = trimSlash(String(process.env.NEXT_PUBLIC_ADMIN_URL || '').trim());
-      if (typeof window !== 'undefined' && adminBase) {
+      if (typeof window !== 'undefined' && adminBase && !hasExplicitNext) {
         try {
           const status = await fetchStatus(undefined).unwrap();
           if (status?.authenticated === true && status?.is_admin === true) {

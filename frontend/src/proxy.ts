@@ -24,6 +24,7 @@ export function proxy(req: NextRequest) {
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon') ||
     pathname === '/manifest.webmanifest' ||
+    pathname === '/offline.html' ||
     STATIC_EXT_RE.test(pathname)
   ) {
     return NextResponse.next();

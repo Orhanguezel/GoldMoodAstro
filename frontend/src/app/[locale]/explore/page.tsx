@@ -36,7 +36,7 @@ export default async function ExplorePage({
   const isTr = locale === 'tr';
 
   return (
-    <main className="bg-[var(--gm-bg)] text-[var(--gm-text)]">
+    <main className="bg-[var(--gm-bg)] text-[var(--gm-text)] pt-32">
       <section className="px-6 pt-32 pb-20 border-b border-[var(--gm-border-soft)]">
         <div className="max-w-5xl mx-auto text-center">
           <span className="section-label">{isTr ? 'KEŞFET' : 'EXPLORE'}</span>
@@ -55,7 +55,7 @@ export default async function ExplorePage({
       </section>
       <ExpertiseCategoriesSection locale={locale} />
       <FeaturedConsultantsSection locale={locale} />
-      <HomeIntroSection locale={locale} />
+      <HomeIntroSection />
       <DailyHoroscopeSection />
     </main>
   );

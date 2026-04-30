@@ -1,5 +1,216 @@
 {
-  "admin": {
+    "db": {
+      "title": "Database Management",
+      "description": "Create snapshot points, download full backup, apply SQL import or export/import by module.",
+      "auth": {
+        "loading": "Loading admin panel..."
+      },
+      "help": {
+        "pageTitle": "What does this page do?",
+        "dbAdmin": "DB Admin screen",
+        "fullDbDesc": "export/import the entire database.",
+        "snapshotDesc": "take a restore point before risky operations, restore it.",
+        "moduleDesc": "transfer only selected module tables (e.g. products).",
+        "uiDesc": "export/bootstrap UI texts in bulk by locale.",
+        "closeHint": "Tip: Click outside or press ESC to close.",
+        "closeButton": "Close"
+      },
+      "fullDb": {
+        "title": "Database Backup & Snapshot Management",
+        "description": "You can create snapshots and download full database backups.",
+        "snapshotLabel": "Snapshot label",
+        "snapshotPlaceholder": "E.g: Current live system",
+        "notePlaceholder": "Why was this snapshot taken?",
+        "noteLabel": "Note (optional)",
+        "createButton": "Create Snapshot",
+        "creating": "Creating...",
+        "downloadTitle": "Download Full Database Backup",
+        "downloadDesc": "Download the current DB state as a full dump.",
+        "sqlButton": "Download SQL (.sql)",
+        "sqlPreparing": "Preparing SQL...",
+        "jsonButton": "Download JSON (.json)",
+        "snapshotCreated": "Snapshot created: {label}",
+        "snapshotError": "Error creating snapshot.",
+        "exportSuccess": "SQL backup downloaded.",
+        "exportError": "Error during DB export (SQL).",
+        "jsonNotImplemented": "JSON export feature not implemented yet. You can use SQL export."
+      },
+      "import": {
+        "title": "SQL Import (IMPORT)",
+        "titleWithMode": "SQL Import (IMPORT) — {mode}",
+        "warning": "These operations can permanently change database contents. Especially when truncate is checked, be sure to take a snapshot before proceeding.",
+        "dangerLabel": "WARNING:",
+        "helpTitle": "Import explanation",
+        "helpHeadline": "SQL Import (Full DB)",
+        "helpDesc1": "This panel applies SQL dump to the entire database (text / URL / file).",
+        "helpDesc2": "empties tables before import. Very risky in production environment.",
+        "helpDesc3": "is a dry run in supported flows (rollback).",
+        "processing": "Operation in progress...",
+        "tabs": {
+          "text": "SQL Text",
+          "url": "From URL",
+          "file": "From File"
+        },
+        "text": {
+          "label": "SQL Script (utf8)",
+          "placeholder": "Paste the full SQL script here.",
+          "required": "SQL text cannot be empty.",
+          "helpTitle": "SQL text tips",
+          "helpHeadline": "SQL Text",
+          "helpDesc1": "Paste the full SQL script here.",
+          "helpDesc2": "Browser may slow down with very large dumps; file import is more suitable.",
+          "helpDesc3": "Content must be correct encoding (utf8)."
+        },
+        "url": {
+          "label": "SQL Dump URL (.sql or .sql.gz)",
+          "placeholder": "https://.../dump.sql or dump.sql.gz",
+          "required": "First enter a valid .sql or .sql.gz URL.",
+          "helpTitle": "URL import tips",
+          "helpHeadline": "URL Import",
+          "helpDesc1": "HTTPS usage is recommended.",
+          "helpDesc2": ".sql.gz dumps transfer faster with large data.",
+          "helpDesc3": "URLs requiring authentication/protection may not be downloadable by backend."
+        },
+        "file": {
+          "label": "SQL Dump File (.sql or .gz)",
+          "placeholder": "Select file",
+          "required": "First select a .sql or .gz file.",
+          "selected": "Selected file:",
+          "note": "There is no dry run in file import flow (only truncate is applied).",
+          "helpTitle": "File import tips",
+          "helpHeadline": "From File Import",
+          "helpDesc1": "Most stable method (recommended for large dumps).",
+          "helpDesc2": "There is no dry run in file import flow.",
+          "helpDesc3": "Nginx/Fastify body limit settings can affect file size."
+        },
+        "truncate": {
+          "label": "TRUNCATE ALL tables before operation",
+          "helpTitle": "What is truncate?",
+          "helpHeadline": "TruncateBefore",
+          "helpDesc": "Tables are emptied before import. Incorrect use leads to data loss. Taking a snapshot before the operation in production should be considered mandatory.",
+          "helpDescFile": "This is the most critical option in file import. When enabled, tables are completely emptied before import. Consider taking a snapshot mandatory."
+        },
+        "dryRun": {
+          "label": "Dry run (rehearsal, roll back changes)",
+          "helpTitle": "How does dry run work?",
+          "helpHeadline": "Dry Run",
+          "helpDesc": "If backend supports, runs inside SQL transaction and rolls back. Some DDL operations can do implicit commit in MySQL; not 100% guaranteed.",
+          "helpDescUrl": "If backend supports, does transaction + rollback. Time and resource consumption increases with large dumps."
+        },
+        "buttons": {
+          "apply": "Apply SQL",
+          "importing": "Importing...",
+          "importFromUrl": "Import from URL",
+          "importFromFile": "Import from File"
+        },
+        "confirm": {
+          "text": "You are about to apply this SQL script directly to the database.\n\nTruncate: {truncate}\nDo you want to continue?",
+          "url": "SQL dump downloaded from this URL will be applied to the database.\n\nURL: {url}\nTruncate: {truncate}\n\nDo you want to continue?",
+          "file": "The SQL file you selected will be applied to the database.\n\nFile: {file}\nTruncate: {truncate}\n\nThis operation cannot be undone. Do you want to continue?",
+          "truncateYes": "YES (empty all tables)",
+          "truncateNo": "No"
+        },
+        "success": {
+          "text": "SQL text successfully imported.",
+          "url": "SQL dump from URL successfully imported.",
+          "file": "SQL dump from file successfully imported.",
+          "dryRun": "Dry run successful. Changes rolled back."
+        },
+        "error": {
+          "text": "SQL import (text) error.",
+          "textGeneric": "Error during SQL import (text).",
+          "url": "SQL import (URL) error.",
+          "urlGeneric": "Error during SQL import (URL).",
+          "file": "SQL import (file) error.",
+          "fileGeneric": "Error during SQL import (file)."
+        }
+      },
+      "snapshots": {
+        "title": "Snapshot Points",
+        "total": "Total:",
+        "processing": "Operation in progress...",
+        "columns": {
+          "index": "#",
+          "labelNote": "Label / Note",
+          "file": "File",
+          "created": "Created",
+          "size": "Size",
+          "actions": "Actions"
+        },
+        "noLabel": "No label",
+        "noNote": "-",
+        "loading": "Loading...",
+        "noData": "No snapshots found yet.",
+        "scrollNote": "Note: If the screen is narrow, the table can be scrolled horizontally.",
+        "restore": "Restore",
+        "delete": "Delete",
+        "restoreConfirm": "You are about to restore from this snapshot.\n\nSnapshot: {label}\n\nThis operation will OVERWRITE current database content (truncate).\nDo you want to continue?",
+        "deleteConfirm": "You are about to delete this snapshot file.\n\nSnapshot: {label}\n\nDo you want to continue?",
+        "restoreSuccess": "Snapshot successfully restored.",
+        "restoreError": "An error occurred during snapshot restoration.",
+        "restoreFailed": "Snapshot restore failed",
+        "deleteSuccess": "Snapshot deleted.",
+        "deleteFailed": "Snapshot could not be deleted.",
+        "deleteError": "Snapshot delete failed"
+      },
+      "modules": {
+        "title": "Module Based DB Management",
+        "selected": "Selected module: {module}",
+        "tabs": {
+          "export": "Export",
+          "import": "Import",
+          "validate": "Manifest Validate",
+          "ui": "UI Export/Bootstrap"
+        },
+        "export": {
+          "title": "Module Export",
+          "description": "Tables of module {module} are exported in manifest order.",
+          "format": {
+            "sql": "SQL",
+            "json": "JSON"
+          },
+          "downloadButton": "Download",
+          "preparing": "Preparing...",
+          "notImplemented": "Module export feature not implemented yet.",
+          "success": "SQL backup for module {module} downloaded.",
+          "error": "Error during module export."
+        },
+        "import": {
+          "title": "Module Import",
+          "description": "Apply SQL/JSON dump for module {module}.",
+          "upsertLabel": "UPSERT (Update if exists, otherwise add)",
+          "importButton": "Import",
+          "importing": "Importing...",
+          "notImplemented": "Module import feature not implemented yet.",
+          "success": "Module {module} successfully imported.",
+          "error": "Error during module import."
+        },
+        "validate": {
+          "title": "Manifest Validation",
+          "description": "Is the table manifest for module {module} compatible with DB?",
+          "validateButton": "Validate",
+          "validating": "Validating...",
+          "success": "Manifest compatible.",
+          "error": "Manifest incompatible!"
+        },
+        "ui": {
+          "title": "Site Settings UI Export / Bootstrap",
+          "description": "Manage entries with prefix 'ui_' in site_settings table in bulk.",
+          "downloadButton": "Download JSON",
+          "downloadSuccess": "UI settings downloaded as JSON.",
+          "downloadError": "No data found to download.",
+          "sourceLocale": "Source Locale",
+          "targetLocale": "Target Locale",
+          "overwrite": "Overwrite existing entries",
+          "onlyUiKeys": "Process only keys with 'ui_' prefix",
+          "bootstrapButton": "Start Bootstrap",
+          "applying": "Applying...",
+          "bootstrapSuccess": "Bootstrap completed.",
+          "bootstrapError": "Error during bootstrap.",
+          "bootstrapErrorGeneric": "Unexpected error during bootstrap process."
+        }
+      }
+    },
     "reports": {
       "title": "Reports (Admin)",
       "description": "KPI, resource performance and location breakdown.",
@@ -2478,6 +2689,8 @@
           "themeColor": "Theme Color",
           "favicon16": "Favicon 16×16",
           "favicon32": "Favicon 32×32",
+          "faviconUrl": "Favicon",
+          "logoUrl": "Logo",
           "appleTouchIcon": "Apple Touch Icon",
           "ogImage": "OG Image",
           "metaTitle": "Meta Title",
@@ -4016,7 +4229,7 @@
         }
       }
     }
-  },
+  ,
   "notFound": {
     "title": "Page not found.",
     "description": "The page you are looking for could not be found or has been moved.",

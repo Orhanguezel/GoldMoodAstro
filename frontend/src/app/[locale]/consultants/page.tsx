@@ -3,6 +3,9 @@ import Link from 'next/link';
 
 import ConsultantList from '@/components/containers/consultant/ConsultantList';
 import { FUNNEL_CONFIG, type FunnelFeature } from '@/components/common/funnel.config';
+import type { ConsultantPublic } from '@/integrations/rtk/public/consultants.public.endpoints';
+import JsonLd from '@/seo/JsonLd';
+import { breadcrumbSchema, graph, itemList } from '@/seo/jsonld';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -10,6 +13,33 @@ type Props = {
 };
 import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
 import { normPath } from '@/integrations/shared';
+
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
+
+function absoluteUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${SITE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
+async function getConsultants(params: { expertise?: string; limit?: number }): Promise<ConsultantPublic[]> {
+  const qs = new URLSearchParams();
+  qs.set('light', '1');
+  qs.set('limit', String(params.limit ?? 12));
+  if (params.expertise) qs.set('expertise', params.expertise);
+
+  try {
+    const res = await fetch(`${API_BASE}/consultants?${qs.toString()}`, {
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return Array.isArray(json) ? json : (json?.data ?? []);
+  } catch {
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
@@ -33,20 +63,46 @@ export default async function ConsultantsPage({ params, searchParams }: Props) {
   const headline = topicCfg
     ? (isTr ? topicCfg.headlineTr : topicCfg.headlineEn)
     : (isTr ? 'Danışmanları Keşfet' : 'Explore Consultants');
+  const consultants = await getConsultants({ expertise: initialExpertise, limit: 12 });
+  const listUrl = `${SITE_URL}/${locale}/consultants`;
+  const graphItems = [
+    breadcrumbSchema([
+      { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },
+      { name: isTr ? 'Danışmanlar' : 'Consultants', item: listUrl },
+    ]),
+  ];
+  const itemListSchema = consultants.length
+    ? itemList({
+        url: listUrl,
+        name: isTr ? 'GoldMoodAstro Danışmanları' : 'GoldMoodAstro Consultants',
+        items: consultants.map((consultant, index) => ({
+          name: consultant.full_name || (isTr ? 'GoldMoodAstro Danışmanı' : 'GoldMoodAstro Consultant'),
+          url: `${listUrl}/${encodeURIComponent(consultant.slug || consultant.id)}`,
+          image: absoluteUrl(consultant.avatar_url),
+          position: index + 1,
+          rating: {
+            value: Number(consultant.rating_avg || 0),
+            count: Number(consultant.rating_count || 0),
+          },
+        })),
+      })
+    : null;
+  if (itemListSchema) graphItems.push(itemListSchema);
 
   return (
-    <main className="min-h-screen py-20" style={{ padding: '5rem 4%' }}>
-      <div className="max-w-[1200px] mx-auto">
-        <div className="mb-10">
+    <div className="py-20 lg:py-32">
+      <JsonLd id="consultants-schema" data={graph(graphItems)} />
+      <div className="container mx-auto">
+        <div className="mb-16 reveal">
           <span className="section-label">{isTr ? 'Uzman Danışmanlar' : 'Expert Consultants'}</span>
-          <h1 className="font-serif text-[clamp(2rem,4vw,3rem)] font-light text-text mt-2">
+          <h1 className="font-display text-[clamp(2.5rem,5vw,4rem)] font-light text-[var(--gm-text)] mt-4 leading-tight">
             {headline}
           </h1>
-          <p className="text-text-muted mt-2 text-sm">
+          <p className="text-[var(--gm-text-dim)] mt-6 text-lg max-w-2xl leading-relaxed">
             {topicCfg
               ? (isTr
-                  ? `${headline} arasından sana uygun olanı seç. Sesli/görüntülü görüşme + uygulama içi mesajlaşma.`
-                  : `Pick the right expert from our ${headline.toLowerCase()}. Voice/video sessions + in-app messaging.`)
+                  ? `${headline} arasından sana uygun olanı seç. Sesli seanslar ve uzman rehberliği ile ruhsal yolculuğuna ışık tut.`
+                  : `Pick the right expert from our ${headline.toLowerCase()}. Enlighten your spiritual journey with voice sessions and expert guidance.`)
               : (isTr
                   ? 'Astroloji, tarot, numeroloji ve daha fazlasında onaylı uzmanlar.'
                   : 'Verified experts in astrology, tarot, numerology and more.')}
@@ -54,15 +110,16 @@ export default async function ConsultantsPage({ params, searchParams }: Props) {
           {topicCfg && (
             <Link
               href={`/${locale}/consultants`}
-              className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-text-muted hover:text-brand-gold transition-colors"
+              className="mt-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)] transition-all group"
             >
-              ← {isTr ? 'Tüm danışmanları gör' : 'Show all consultants'}
+              <span className="group-hover:-translate-x-1 transition-transform">←</span>
+              {isTr ? 'Tüm danışmanları gör' : 'Show all consultants'}
             </Link>
           )}
         </div>
 
-        <ConsultantList locale={locale} initialExpertise={initialExpertise} />
+        <ConsultantList locale={locale} initialExpertise={initialExpertise} initialData={consultants} />
       </div>
-    </main>
+    </div>
   );
 }

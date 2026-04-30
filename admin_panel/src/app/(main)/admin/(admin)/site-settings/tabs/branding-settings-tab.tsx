@@ -35,6 +35,8 @@ type BrandingForm = {
   theme_color: string;
   favicon_16: string;
   favicon_32: string;
+  favicon_url: string;
+  logo_url: string;
   apple_touch_icon: string;
   meta_title: string;
   meta_description: string;
@@ -52,6 +54,8 @@ const EMPTY_FORM: BrandingForm = {
   theme_color: '',
   favicon_16: '',
   favicon_32: '',
+  favicon_url: '',
+  logo_url: '',
   apple_touch_icon: '',
   meta_title: '',
   meta_description: '',
@@ -70,6 +74,8 @@ function brandingToForm(b: AdminBrandingConfig): BrandingForm {
     theme_color: b.theme_color || '',
     favicon_16: b.favicon_16 || '',
     favicon_32: b.favicon_32 || '',
+    favicon_url: b.favicon_url || '',
+    logo_url: b.logo_url || '',
     apple_touch_icon: b.apple_touch_icon || '',
     meta_title: b.meta?.title || '',
     meta_description: b.meta?.description || '',
@@ -89,6 +95,8 @@ function formToBranding(f: BrandingForm): AdminBrandingConfig {
     theme_color: f.theme_color.trim(),
     favicon_16: f.favicon_16.trim(),
     favicon_32: f.favicon_32.trim(),
+    favicon_url: f.favicon_url.trim(),
+    logo_url: f.logo_url.trim(),
     apple_touch_icon: f.apple_touch_icon.trim(),
     meta: {
       title: f.meta_title.trim(),
@@ -302,6 +310,26 @@ export const BrandingSettingsTab: React.FC = () => {
               previewAspect="1x1"
               previewObjectFit="contain"
               metadata={{ tag: 'branding_favicon' }}
+            />
+
+            <AdminImageUploadField
+              label={t('admin.siteSettings.branding.fields.faviconUrl') || 'Favicon'}
+              value={form.favicon_url}
+              onChange={(url) => handleChange('favicon_url', url)}
+              disabled={busy}
+              previewAspect="1x1"
+              previewObjectFit="contain"
+              metadata={{ tag: 'branding_favicon' }}
+            />
+
+            <AdminImageUploadField
+              label={t('admin.siteSettings.branding.fields.logoUrl') || 'Logo'}
+              value={form.logo_url}
+              onChange={(url) => handleChange('logo_url', url)}
+              disabled={busy}
+              previewAspect="1x1"
+              previewObjectFit="contain"
+              metadata={{ tag: 'branding_logo' }}
             />
 
             <AdminImageUploadField

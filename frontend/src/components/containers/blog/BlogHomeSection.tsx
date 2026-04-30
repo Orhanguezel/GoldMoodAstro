@@ -108,11 +108,11 @@ export default function BlogHomeSection({ locale: explicitLocale }: { locale?: s
                       </p>
                     )}
 
-                    <h3 className="font-serif text-xl font-light leading-[1.3] mb-3 text-text-primary group-hover:text-brand-primary transition-colors">
+                    <h2 className="font-serif text-xl font-light leading-[1.3] mb-3 text-text-primary group-hover:text-brand-primary transition-colors">
                       <Link href={href} className="no-underline">
                         {titleText}
                       </Link>
-                    </h3>
+                    </h2>
 
                     {summaryText && (
                       <p className="text-[0.9rem] text-text-secondary font-light leading-[1.7] mb-5">

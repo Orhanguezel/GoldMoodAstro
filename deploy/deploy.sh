@@ -117,7 +117,8 @@ set -euo pipefail
 cd /var/www/goldmoodastro/admin_panel
 # .env.local Next.js'te .env'i ezer — eski deploylardan kalan v1 URL'leri sızdırır.
 rm -f .env.local
-[[ -f .env ]] || cat > .env <<'ENV'
+# .env ALWAYS overwrite — eski deploy kalıntısı /api/v1 trap'ine düşmemek için.
+cat > .env <<'ENV'
 PANEL_API_URL=https://www.goldmoodastro.com
 NEXT_PUBLIC_API_URL=https://www.goldmoodastro.com/api
 NEXT_PUBLIC_API_BASE_URL=https://www.goldmoodastro.com/api

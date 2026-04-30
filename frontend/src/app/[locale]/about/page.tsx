@@ -7,6 +7,8 @@ import { LayoutSeoBridge } from '@/seo';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { isValidUiText } from '@/integrations/shared';
 import { safeStr, toCdnSrc } from '@/integrations/shared';
+import JsonLd from '@/seo/JsonLd';
+import { graph } from '@/seo/jsonld';
 
 export default function AboutPage() {
   const locale = useLocaleShort();
@@ -55,6 +57,31 @@ export default function AboutPage() {
     if (/^https?:\/\//i.test(raw)) return raw;
     return toCdnSrc(raw, 1200, 630, 'fill') || raw;
   }, [ui]);
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
+  const founderSchema = useMemo(
+    () =>
+      graph([
+        {
+          '@type': 'Person',
+          '@id': `${siteUrl}/#founder-murat-kisikcilar`,
+          name: 'Murat Kısıkçılar',
+          jobTitle: locale === 'tr' ? 'GoldMoodAstro Kurucusu' : locale === 'de' ? 'Gründer von GoldMoodAstro' : 'Founder of GoldMoodAstro',
+          worksFor: { '@id': `${siteUrl}/#org` },
+          affiliation: { '@id': `${siteUrl}/#org` },
+          knowsAbout: ['Digital product', 'Astrology platform', 'Spiritual guidance', 'Consultant marketplace'],
+          url: `${siteUrl}/${locale}/about`,
+        },
+        {
+          '@type': 'AboutPage',
+          '@id': `${siteUrl}/${locale}/about#about-page`,
+          name: bannerTitle,
+          url: `${siteUrl}/${locale}/about`,
+          mainEntity: { '@id': `${siteUrl}/#org` },
+          author: { '@id': `${siteUrl}/#founder-murat-kisikcilar` },
+        },
+      ]),
+    [bannerTitle, locale, siteUrl],
+  );
 
   return (
     <>
@@ -64,6 +91,7 @@ export default function AboutPage() {
         ogImage={ogImageOverride}
         noindex={false}
       />
+      <JsonLd id="about-founder" data={founderSchema} />
 
       <Banner title={bannerTitle} />
       <AboutPageContent />

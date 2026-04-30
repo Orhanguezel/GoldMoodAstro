@@ -1,6 +1,7 @@
 export const revalidate = 86400;
 import ZodiacDetail from '@/components/containers/zodiac/ZodiacDetail';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/seo/server';
 
 type Props = {
   params: Promise<{ sign: string; locale: string }>;
@@ -13,33 +14,26 @@ const labels: Record<string, string> = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { sign } = await params;
+  const { sign, locale } = await params;
   const label = labels[sign] || sign;
   const today = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-  const ogImageUrl = `https://goldmoodastro.com/${(await params).locale}/burclar/${sign}/bugun/opengraph-image`;
+  const ogImageUrl = `https://goldmoodastro.com/${locale}/burclar/${sign}/bugun/opengraph-image`;
 
-  return {
-    title: `${today} ${label} Burcu Günlük Yorumu — GoldMoodAstro`,
-    description: `${label} burcu için ${today} tarihli günlük yorum. Bugün sizi neler bekliyor? Aşk, para ve sağlık tavsiyeleri.`,
-    openGraph: {
+  return buildPageMetadata({
+    locale,
+    pageKey: 'burclar-bugun',
+    pathname: `/burclar/${sign}/bugun`,
+    fallback: {
       title: `${today} ${label} Burcu Günlük Yorumu`,
-      description: `${label} burcu için ${today} tarihli günlük yorum. Bugün sizi neler bekliyor?`,
-      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: `${label} Burcu` }],
-      type: 'article',
-      siteName: 'GoldMoodAstro',
+      description: `${label} burcu için ${today} tarihli günlük yorum. Bugün sizi neler bekliyor? Aşk, para ve sağlık tavsiyeleri.`,
+      ogImage: ogImageUrl,
     },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${today} ${label} Burcu Günlük Yorumu`,
-      description: `${label} burcu için günlük yorum.`,
-      images: [ogImageUrl],
-    },
-  };
+  });
 }
 
 export default function SignDailyPage() {
   return (
-    <main className="min-h-screen bg-background pt-20">
+    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
       <ZodiacDetail initialTab="daily" />
     </main>
   );

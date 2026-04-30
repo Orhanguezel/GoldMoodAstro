@@ -83,6 +83,7 @@ export interface DesignTokenBranding {
   theme_color: string;
   theme_color_dark?: string;   // PWA / meta — dark mode için ayrı (yeni)
   og_image_url: string;
+  background_image?: string;   // Tema özel arka plan görseli (yeni)
 }
 
 export interface DesignTokens {

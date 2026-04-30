@@ -15,8 +15,7 @@ const Banner: React.FC<Props> = ({ title }) => {
   return (
     <section
       data-header-overlay="true"
-      className="relative py-32 md:py-40 overflow-hidden"
-      style={{ background: 'var(--color-deep)' }}
+      className="relative py-32 md:py-40 overflow-hidden bg-background"
     >
       {/* Grain texture */}
       <div
@@ -35,16 +34,16 @@ const Banner: React.FC<Props> = ({ title }) => {
           <div className="section-label justify-center mb-6">
             <Link
               href={homeHref}
-              className="text-text-muted hover:text-brand-primary transition-colors no-underline"
+              className="text-muted-foreground hover:text-brand-primary transition-colors no-underline"
             >
               {ui('ui_breadcrumb_home', 'Home')}
             </Link>
-            <span className="text-text-muted/50">/</span>
+            <span className="text-muted-foreground/50">/</span>
             <span className="text-brand-primary">{title}</span>
           </div>
 
-          {/* Title */}
-          <h1 className="font-serif text-[clamp(2.4rem,5vw,4rem)] font-light leading-[1.1] tracking-[-0.01em] text-sand-50">
+          {/* Title — theme-aware (dark/light contrast) */}
+          <h1 className="font-serif text-[clamp(2.4rem,5vw,4rem)] font-light leading-[1.1] tracking-[-0.01em] text-foreground">
             {title}
           </h1>
         </div>

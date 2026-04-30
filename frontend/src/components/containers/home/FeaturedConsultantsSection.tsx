@@ -47,7 +47,7 @@ export default function FeaturedConsultantsSection({ locale: explicitLocale }: {
   const copy = COPY[locale as keyof typeof COPY] ?? COPY.tr;
 
   const { data: consultants = [], isLoading } = useListConsultantsPublicQuery(
-    { limit: 6, sort: 'rating' },
+    { limit: 6, sort: 'popular' },
   );
 
   return (
@@ -101,16 +101,16 @@ export default function FeaturedConsultantsSection({ locale: explicitLocale }: {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <StarRow rating={Number(c.average_rating) || 0} />
+                      <StarRow rating={Number(c.rating_avg) || 0} />
                       <span className="text-xs text-text-muted">
-                        {Number(c.average_rating || 0).toFixed(1)}
-                        {c.review_count > 0 && ` (${c.review_count})`}
+                        {Number(c.rating_avg || 0).toFixed(1)}
+                        {Number(c.rating_count || 0) > 0 && ` (${c.rating_count} yorum)`}
                       </span>
                     </div>
-                    {c.session_duration_min && (
+                    {c.session_duration && (
                       <div className="flex items-center gap-1 text-xs text-text-muted">
                         <Clock size={11} />
-                        {c.session_duration_min} {copy.min}
+                        {c.session_duration} {copy.min}
                       </div>
                     )}
                   </div>

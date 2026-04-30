@@ -3,21 +3,36 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Cinzel, Manrope } from 'next/font/google';
+import { Cinzel } from 'next/font/google';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useGetSignInfoQuery, useGetTodayHoroscopeQuery } from '@/integrations/rtk/hooks';
 import { ZodiacSign } from '@/types/common';
+import { localizePath } from '@/integrations/shared';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, Heart, Briefcase, Info, Sparkles, ArrowRight, Volume2 } from 'lucide-react';
 import ShareCard from '@/components/common/ShareCard';
 import { getZodiacMeta } from '@/lib/zodiac/signs';
+import { getCelebritiesBySign } from '@/lib/zodiac/celebrities';
+import FaqAccordion from '@/components/common/FaqAccordion';
+import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
-const manrope = Manrope({ subsets: ['latin'] });
+interface ZodiacDetailProps {
+  initialTab?: string;
+  initialInfo?: any | null;
+  initialToday?: any | null;
+}
 
-export default function ZodiacDetail({ initialTab = 'overview' }: { initialTab?: string }) {
+type ZodiacSection = {
+  id: string;
+  key2: string;
+  title: string;
+  content: string;
+};
+
+export default function ZodiacDetail({ initialTab = 'overview', initialInfo = null, initialToday = null }: ZodiacDetailProps) {
   const { sign, locale } = useParams();
   const signKey = sign as ZodiacSign;
   const meta = getZodiacMeta(signKey) || {
@@ -33,10 +48,39 @@ export default function ZodiacDetail({ initialTab = 'overview' }: { initialTab?:
     image: `/uploads/zodiac/${signKey}.png`,
   };
 
-  const { data: info, isLoading: isInfoLoading } = useGetSignInfoQuery({ sign: signKey, locale: locale as string });
-  const { data: today, isLoading: isTodayLoading } = useGetTodayHoroscopeQuery({ sign: signKey });
+  // Server-side initial data varsa RTK fetch'i atla — SSR'da hemen render olur.
+  const { data: infoFromQuery, isLoading: isInfoLoading } = useGetSignInfoQuery(
+    { sign: signKey, locale: locale as string },
+    { skip: !!initialInfo }
+  );
+  const { data: todayFromQuery, isLoading: isTodayLoading } = useGetTodayHoroscopeQuery(
+    { sign: signKey },
+    { skip: !!initialToday }
+  );
 
-  if (isInfoLoading || isTodayLoading) {
+  const info = infoFromQuery ?? initialInfo;
+  const today = todayFromQuery ?? initialToday;
+  const summaryText = `${meta.label} burcu ${meta.element} elementi, ${meta.modality} nitelik ve ${meta.ruler} yönetimiyle okunur. Bu profil; karakter, ilişki, kariyer ve ruhsal bakım başlıklarında ${meta.label} enerjisinin güçlü yanlarını ve dikkat edilmesi gereken gölge alanlarını anlaşılır şekilde özetler.`;
+  const personalitySection = info?.sections?.find((section: ZodiacSection) => section.key2 === 'personality');
+  const loveSection = info?.sections?.find((section: ZodiacSection) => section.key2 === 'love');
+  const celebrities = getCelebritiesBySign(signKey, 3);
+  const localePrefix = typeof locale === 'string' ? locale : 'tr';
+  const faqItems = [
+    {
+      question: `${meta.label} burcu nedir?`,
+      answer: `${meta.label} burcu, güneşin ${meta.label} arketipinden geçtiği dönemde doğan kişilerin temel enerji, motivasyon ve davranış eğilimlerini anlatan astrolojik profildir.`,
+    },
+    {
+      question: `${meta.label} burcu özellikleri nelerdir?`,
+      answer: info?.short_summary || `${meta.label} burcu karakter, ilişki, kariyer ve gündelik motivasyon alanlarında kendine özgü güçlü yanlar ve gelişim alanları taşır.`,
+    },
+    {
+      question: `${meta.label} burcu uyumu nasıl yorumlanır?`,
+      answer: `${meta.label} burcu uyumu yalnızca güneş burcuyla değil; Ay, Venüs, Mars, yükselen burç ve haritadaki ilişki evleriyle birlikte değerlendirilmelidir.`,
+    },
+  ];
+
+  if (!info && (isInfoLoading || isTodayLoading)) {
     return (
       <div className="max-w-4xl mx-auto py-20 px-4 space-y-8">
         <Skeleton className="h-64 w-full rounded-3xl" />
@@ -111,17 +155,74 @@ export default function ZodiacDetail({ initialTab = 'overview' }: { initialTab?:
         </div>
       </motion.div>
 
+      <section
+        data-speakable
+        className="mb-12 rounded-2xl border border-brand-gold/20 bg-brand-gold/10 p-6 md:p-8"
+      >
+        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-brand-gold">Özetle</p>
+        <p className="mt-3 text-lg leading-relaxed text-foreground/90">{summaryText}</p>
+      </section>
+
+      <section className="mb-14 grid gap-6">
+        <article className="rounded-2xl border border-border/30 bg-surface/50 p-6">
+          <h2 className={`${cinzel.className} text-2xl text-foreground`}>{meta.label} burcu nedir?</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            {info.short_summary || summaryText}
+          </p>
+        </article>
+        <article className="rounded-2xl border border-border/30 bg-surface/50 p-6">
+          <h2 className={`${cinzel.className} text-2xl text-foreground`}>{meta.label} burcu özellikleri nelerdir?</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            {personalitySection?.content || info.content}
+          </p>
+        </article>
+        <article className="rounded-2xl border border-border/30 bg-surface/50 p-6">
+          <h2 className={`${cinzel.className} text-2xl text-foreground`}>{meta.label} burcu uyumu</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            {loveSection?.content || `${meta.label} burcu uyumu, ilişkide sevgi dili, güven ihtiyacı ve iki kişinin harita bütünlüğü üzerinden okunur.`}
+          </p>
+        </article>
+        <article className="rounded-2xl border border-border/30 bg-surface/50 p-6">
+          <h2 className={`${cinzel.className} text-2xl text-foreground`}>{meta.label} burçlu ünlüler</h2>
+          {celebrities.length ? (
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {celebrities.map((celebrity) => (
+                <div
+                  key={celebrity.name}
+                  className="rounded-2xl border border-border/30 bg-background/40 p-4"
+                >
+                  <p className="font-semibold text-foreground">{celebrity.name}</p>
+                  <p className="mt-1 text-xs text-brand-gold">{celebrity.birthday} · {celebrity.field}</p>
+                  <p className="mt-3 text-xs leading-5 text-muted-foreground">{celebrity.note}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              {meta.label} burçlu ünlüler listesi hazırlanırken doğum tarihi doğrulanmış kişiler dikkate alınmalıdır.
+            </p>
+          )}
+          <Link
+            href={localizePath(localePrefix, '/unluler-ve-burclari')}
+            className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-gold hover:text-brand-gold/80"
+          >
+            Tüm ünlü burç arşivi
+            <ArrowRight className="size-4" />
+          </Link>
+        </article>
+      </section>
+
       {/* Main Content Tabs */}
       <Tabs defaultValue={initialTab} className="space-y-8">
-        <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b border-border h-auto p-0 gap-8 rounded-none">
-          <TabsTrigger value="overview" className="px-0 py-4 bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-brand-gold rounded-none gap-2 text-base">
+        <TabsList className="w-full">
+          <TabsTrigger value="overview">
             <Info className="w-4 h-4" /> Genel Bakış
           </TabsTrigger>
-          <TabsTrigger value="daily" className="px-0 py-4 bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-brand-gold rounded-none gap-2 text-base">
+          <TabsTrigger value="daily">
             <Sparkles className="w-4 h-4" /> Günlük Yorum
           </TabsTrigger>
-          {info.sections?.map(s => (
-            <TabsTrigger key={s.id} value={s.key2} className="px-0 py-4 bg-transparent data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-brand-gold rounded-none gap-2 text-base">
+          {info.sections?.map((s: ZodiacSection) => (
+            <TabsTrigger key={s.id} value={s.key2}>
               {s.key2 === 'love' && <Heart className="w-4 h-4" />}
               {s.key2 === 'career' && <Briefcase className="w-4 h-4" />}
               {s.key2 === 'personality' && <Star className="w-4 h-4" />}
@@ -143,7 +244,38 @@ export default function ZodiacDetail({ initialTab = 'overview' }: { initialTab?:
         </TabsContent>
 
         <TabsContent value="daily" className="mt-0">
-          {today && (
+          {!today && (
+            <div className="bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-3xl p-12 text-center">
+              <Sparkles className="w-12 h-12 text-[var(--gm-primary)] mx-auto mb-4 opacity-60" />
+              <h3 className="font-serif text-2xl text-[var(--gm-text)] mb-3">
+                Günlük yorum hazırlanıyor
+              </h3>
+              <p className="text-[var(--gm-text-dim)] max-w-md mx-auto leading-relaxed font-serif italic">
+                {meta.label} burcu için bugünün yorumu henüz yayınlanmadı. Astrolog ekibimiz hazırlıyor — yarın tekrar göz at ya da kişiye özel doğum haritası analizi al.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  href={`/${locale}/birth-chart`}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-dark)] text-white text-xs font-bold uppercase tracking-[0.2em] transition-colors"
+                >
+                  Doğum Haritamı Çıkar
+                </Link>
+                <Link
+                  href={`/${locale}/consultants?expertise=astrology`}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[var(--gm-primary)]/40 hover:border-[var(--gm-primary)] text-[var(--gm-primary)] text-xs font-bold uppercase tracking-[0.2em] transition-colors"
+                >
+                  Astrologa Danış
+                </Link>
+              </div>
+            </div>
+          )}
+          {today && (() => {
+            const todayContent = String((today as any)?.contentTr ?? (today as any)?.content ?? '');
+            const todayDate = (today as any)?.date as string | undefined;
+            const todayMood = (today as any)?.moodScore;
+            const todayLuckyNumber = (today as any)?.luckyNumber;
+            const todayLuckyColor = (today as any)?.luckyColor;
+            return (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -152,54 +284,65 @@ export default function ZodiacDetail({ initialTab = 'overview' }: { initialTab?:
               <div className="absolute top-0 right-0 p-6 opacity-10">
                 <Sparkles className="w-24 h-24 text-brand-gold" />
               </div>
-              
+
               <div className="relative">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="h-px flex-1 bg-brand-gold/20" />
-                  <span className={`${cinzel.className} text-brand-gold text-lg tracking-widest uppercase`}>
-                    {new Date(today.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </span>
-                  <div className="h-px flex-1 bg-brand-gold/20" />
-                </div>
+                {todayDate && (
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="h-px flex-1 bg-brand-gold/20" />
+                    <span className={`${cinzel.className} text-brand-gold text-lg tracking-widest uppercase`}>
+                      {new Date(todayDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
+                    <div className="h-px flex-1 bg-brand-gold/20" />
+                  </div>
+                )}
 
                 <div className="text-xl md:text-2xl leading-relaxed text-foreground mb-10 text-center font-medium">
-                  {today.contentTr}
+                  {todayContent}
                 </div>
 
                 <div className="flex justify-center mb-10">
-                   <ShareCard 
-                     title={`${meta.label} Burcu Günlük Yorumu`}
-                     shareText={`${meta.label} burcu için bugünkü yorumum ✨\n"${today.contentTr.slice(0, 100)}..."\nSenin burcun bugün ne diyor?`}
-                     variant="horoscope"
-                     data={{
-                       sign: meta.label,
-                       date: new Date(today.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }),
-                       symbol: meta.symbol,
-                       content: today.contentTr
-                     }}
-                   />
+                  <ShareCard
+                    title={`${meta.label} Burcu Günlük Yorumu`}
+                    shareText={`${meta.label} burcu için bugünkü yorumum ✨\n"${todayContent.slice(0, 100)}..."\nSenin burcun bugün ne diyor?`}
+                    variant="horoscope"
+                    data={{
+                      sign: meta.label,
+                      date: todayDate ? new Date(todayDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : '',
+                      symbol: meta.symbol,
+                      content: todayContent,
+                    }}
+                  />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-6 rounded-2xl bg-black/20 border border-white/5 text-center">
-                    <div className="text-brand-gold text-sm font-bold mb-2 uppercase tracking-tighter">Günün Modu</div>
-                    <div className="text-3xl font-bold">{today.moodScore}/10</div>
+                {(todayMood != null || todayLuckyNumber != null || todayLuckyColor != null) && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {todayMood != null && (
+                      <div className="p-6 rounded-2xl bg-black/20 border border-white/5 text-center">
+                        <div className="text-brand-gold text-sm font-bold mb-2 uppercase tracking-tighter">Günün Modu</div>
+                        <div className="text-3xl font-bold">{String(todayMood)}/10</div>
+                      </div>
+                    )}
+                    {todayLuckyNumber != null && (
+                      <div className="p-6 rounded-2xl bg-black/20 border border-white/5 text-center">
+                        <div className="text-brand-gold text-sm font-bold mb-2 uppercase tracking-tighter">Şanslı Sayı</div>
+                        <div className="text-3xl font-bold">{String(todayLuckyNumber)}</div>
+                      </div>
+                    )}
+                    {todayLuckyColor != null && (
+                      <div className="p-6 rounded-2xl bg-black/20 border border-white/5 text-center">
+                        <div className="text-brand-gold text-sm font-bold mb-2 uppercase tracking-tighter">Şanslı Renk</div>
+                        <div className="text-3xl font-bold">{String(todayLuckyColor)}</div>
+                      </div>
+                    )}
                   </div>
-                  <div className="p-6 rounded-2xl bg-black/20 border border-white/5 text-center">
-                    <div className="text-brand-gold text-sm font-bold mb-2 uppercase tracking-tighter">Şanslı Sayı</div>
-                    <div className="text-3xl font-bold">{today.luckyNumber}</div>
-                  </div>
-                  <div className="p-6 rounded-2xl bg-black/20 border border-white/5 text-center">
-                    <div className="text-brand-gold text-sm font-bold mb-2 uppercase tracking-tighter">Şanslı Renk</div>
-                    <div className="text-3xl font-bold">{today.luckyColor}</div>
-                  </div>
-                </div>
+                )}
               </div>
             </motion.div>
-          )}
+            );
+          })()}
         </TabsContent>
 
-        {info.sections?.map(s => (
+        {info.sections?.map((s: ZodiacSection) => (
           <TabsContent key={s.id} value={s.key2} className="mt-0">
             <motion.div
               initial={{ opacity: 0, x: 10 }}
@@ -215,10 +358,20 @@ export default function ZodiacDetail({ initialTab = 'overview' }: { initialTab?:
         ))}
       </Tabs>
 
+      <FaqAccordion items={faqItems} title={`${meta.label} Burcu Hakkında Sorular`} />
+
+      <AuthorBio
+        name="GoldMoodAstro Editorial Team"
+        title="Astroloji ve ruhsal danışmanlık editörleri"
+        bio="GoldMoodAstro içerikleri, kullanıcıların danışman görüşmelerine daha hazırlıklı gelmesi için astrolojik sembolizm, pratik öz farkındalık ve anlaşılır rehberlik ilkeleriyle hazırlanır."
+        expertise={['Astroloji', 'Zodyak', 'Ruhsal Danışmanlık']}
+        certificates={['Swiss Ephemeris metodolojisi']}
+      />
+
       {/* Internal Linking CTA */}
       <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link 
-          href={`/burclar/${signKey}-koc-uyumu`} // default example, better to have a selector or link to a hub
+        <Link
+          href={localizePath(localePrefix, `/burclar/uyum/${signKey}-koc`)}
           className="p-8 rounded-3xl bg-surface/40 border border-border/40 hover:border-brand-gold/40 transition-all group shadow-sm"
         >
           <div className="flex items-center gap-4 mb-4">
@@ -233,8 +386,8 @@ export default function ZodiacDetail({ initialTab = 'overview' }: { initialTab?:
           </div>
         </Link>
 
-        <Link 
-          href="/birth-chart"
+        <Link
+          href={localizePath(localePrefix, '/birth-chart')}
           className="p-8 rounded-3xl bg-brand-primary/5 border border-brand-gold/20 hover:border-brand-gold/40 transition-all group shadow-sm"
         >
           <div className="flex items-center gap-4 mb-4">
@@ -250,7 +403,7 @@ export default function ZodiacDetail({ initialTab = 'overview' }: { initialTab?:
         </Link>
 
         <Link
-          href={`/burclar/${signKey}/meditasyon`}
+          href={localizePath(localePrefix, `/burclar/${signKey}/meditasyon`)}
           className="p-8 rounded-3xl bg-surface/40 border border-border/40 hover:border-brand-gold/40 transition-all group shadow-sm"
         >
           <div className="flex items-center gap-4 mb-4">

@@ -2,10 +2,9 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cinzel, Manrope } from 'next/font/google';
+import { Cinzel } from 'next/font/google';
 import { 
   Binary, 
-  Sparkles, 
   ChevronRight, 
   RotateCcw,
   User,
@@ -70,10 +69,11 @@ export default function NumerologyHub() {
 
             <form onSubmit={handleCalculate} className="max-w-md mx-auto space-y-6 bg-surface/30 p-8 rounded-[2.5rem] border border-border/20 shadow-xl">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-4">Tam İsim (Doğumdaki)</label>
+                <label htmlFor="numerology-full-name" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-4">Tam İsim (Doğumdaki)</label>
                 <div className="relative">
                   <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-gold/50" />
                   <input
+                    id="numerology-full-name"
                     required
                     type="text"
                     value={formData.full_name}
@@ -85,10 +85,11 @@ export default function NumerologyHub() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-4">Doğum Tarihi</label>
+                <label htmlFor="numerology-birth-date" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-4">Doğum Tarihi</label>
                 <div className="relative">
                   <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-gold/50" />
                   <input
+                    id="numerology-birth-date"
                     required
                     type="date"
                     value={formData.birth_date}
@@ -101,7 +102,7 @@ export default function NumerologyHub() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-brand-gold text-bg-base font-bold py-5 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+                className="w-full bg-brand-gold text-[#1A1715] font-bold py-5 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
               >
                 HESAPLA & YORUMLA <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>

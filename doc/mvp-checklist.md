@@ -2306,6 +2306,13 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [ ] Drizzle schema + repository
 - [ ] Public endpoint: `GET /consultants/:id/services` → aktif paket listesi
 - [ ] Admin CRUD: `/admin/consultants/:id/services`
+- [ ] **Self-service** endpoint (FAZ 30 ile): danışman kendi servislerini panelinden ekler/düzenler — `POST/PATCH/DELETE /me/consultant/services`
+- [ ] **Ücretsiz ön görüşme akışı:** `is_free=1` seçilen serviste:
+  - Booking flow ödeme adımını atlar (Iyzico init çağırılmaz)
+  - Booking direkt `confirmed` olur, ücret kaydı yok
+  - Wallet'a kazanç eklenmez
+  - Süre kısa (genelde 15-25 dk) — danışman kendisi belirler
+  - Frontend "Ücretsiz" yeşil badge + "Tanışma Görüşmesi" başlık
 - [ ] Seed: Fatma için 5 paket (Birbirimizi tanıyalım — ücretsiz 15dk, Horary 20dk 750₺, Rektifikasyon 60dk 2500₺, İlişki 60dk 2500₺, Genel Doğum Haritası 90dk 3500₺)
 
 ### T29-2 — Frontend: ConsultantDetail çoklu hizmet UI
@@ -2339,3 +2346,102 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [ ] Locale-aware: tr/en/de
 - [ ] Otomatik kapatma policy yazısı (gelecek faz: rate limit + admin moderation)
 
+
+
+## FAZ 30 — Danışman Dashboard (Self-Service Panel) 🆕
+
+> **Hedef:** Danışman, admin paneline gerek kalmadan kendi profilini, hizmetlerini, randevularını, gelen mesajlarını ve kazancını yönetebilsin. AdviceMy/Therapy.com benzeri "consultant workspace".
+>
+> **Konum:** `/{locale}/me/consultant/...` rotaları (giriş yapmış consultant rolü gereken). Mevcut user dashboard'a (`/dashboard`) yeni "Danışman" sekmesi olarak eklenebilir veya ayrı route grubu — karar T30-1'de.
+
+### T30-0 — Karar: rota yapısı
+- [ ] Karar: `/dashboard?tab=consultant` mı yoksa `/me/consultant/*` ayrı rota grubu mu?
+- [ ] Auth guard: sadece `roles.includes('consultant')` olanlar erişebilir; user role'lü erişirse "Danışman olmak için başvur" CTA → `/become-consultant`
+
+### T30-1 — Backend: self-service consultant endpoint'leri
+- [ ] `GET /me/consultant` — kendi consultant kaydı + tüm alanlar (bio, expertise, languages, supports_video, social links)
+- [ ] `PATCH /me/consultant` — bio, expertise, languages, hakkımda, fotoğraf, görüşme platformları (WhatsApp/Skype/Zoom/Meet)
+- [ ] `GET/POST/PATCH/DELETE /me/consultant/services` — kendi servislerini CRUD
+- [ ] `GET /me/consultant/availability` + `PATCH` — kendi çalışma saatlerini ayarla (mevcut availability modülü zaten var, danışman tarafına proxy)
+- [ ] `GET /me/consultant/bookings` — kendi randevuları (filter: pending / confirmed / completed / cancelled)
+- [ ] `POST /me/consultant/bookings/:id/approve` — beklemedeki randevuyu onayla
+- [ ] `POST /me/consultant/bookings/:id/reject` — sebep ile reddet
+- [ ] `GET /me/consultant/messages` — gelen lead mesajları (T29-3'teki `consultant_lead` thread'leri)
+- [ ] `GET /me/consultant/wallet` — bakiye + transactions (mevcut wallet modülü, consultant filter)
+- [ ] `POST /me/consultant/wallet/withdraw` — para çekme talebi (admin onaylı)
+- [ ] `GET /me/consultant/reviews` — gelen yorumlar + cevaplama (T17-2 consultant_reply zaten var, panele bağla)
+- [ ] `GET /me/consultant/stats` — bu ay seans sayısı, ortalama rating, toplam kazanç, yanıt süresi
+- [ ] Tümü `requireAuth + requireConsultant` middleware (yeni middleware: `requireConsultant`)
+
+### T30-2 — Danışman Profil Sekmesi UI
+- [ ] `/me/consultant/profile` — bio (rich text textarea), uzmanlık alanları (multi-select chip), diller (multi-select)
+- [ ] Avatar yükleme (mevcut storage upload — bucket='consultant_avatars')
+- [ ] Görüşme platformları (WhatsApp, Skype, Zoom, Meet, Microsoft Teams) — checkbox listesi → JSON kayıt
+- [ ] Sosyal linkler (Instagram, LinkedIn, opsiyonel website)
+- [ ] Live preview: değişiklikler "Bu danışmanı müşteri böyle görür" küçük kartta gösterilir
+- [ ] Kaydet butonu → `PATCH /me/consultant`
+
+### T30-3 — Hizmet Yönetimi Sekmesi UI
+- [ ] `/me/consultant/services` — tablo: ad, süre, fiyat, ücretsiz, aktif, sıra
+- [ ] Yeni servis ekle modal: name, description, duration_minutes, price, currency, is_free toggle, is_active toggle
+- [ ] Drag-drop sıralama (admin home-layout pattern'ı)
+- [ ] Mevcut servisi düzenle/sil
+- [ ] Ücretsiz servisin fiyatı disabled görünür (otomatik 0)
+- [ ] Validation: en az 1 aktif servis olmalı (silme uyarısı)
+
+### T30-4 — Müsaitlik (Availability) Sekmesi UI
+- [ ] `/me/consultant/availability` — haftalık takvim grid (Pzt-Paz × 09:00-22:00)
+- [ ] Drag-to-select slot ekle/kaldır
+- [ ] Quick toggle: "Pazartesi-Cuma 10:00-18:00" preset
+- [ ] Tatil günleri: tek seferlik gün kapatma (özel tarih → tüm slotlar pasif)
+- [ ] **Müsaitlik durumu toggle (üstte)**: "Şu an çevrimiçi miyim?" → `consultants.is_available` 1/0 (anlık talepler için)
+- [ ] Save → `PATCH /me/consultant/availability`
+
+### T30-5 — Randevular Sekmesi UI
+- [ ] `/me/consultant/bookings` — tabs: Bekleyen / Onaylı / Tamamlanan / İptal
+- [ ] Her satır: müşteri adı + foto, tarih/saat, servis, fiyat, müşteri notu
+- [ ] Bekleyen → "Onayla" / "Reddet" butonları (red → modal: sebep iste)
+- [ ] **Bekleyen Anlık Talepler** ayrı vurgulu kart (T29-4) — 5 dk countdown
+- [ ] Onaylı booking → "Görüşmeyi Başlat" butonu (LiveKit room link)
+- [ ] Tamamlanan booking → "Notlar Ekle" (seans sonrası özel not — sadece danışman görür)
+- [ ] İptal et (con. başlatıyorsa sebep zorunlu)
+
+### T30-6 — Mesajlar Sekmesi UI
+- [ ] `/me/consultant/messages` — sol: thread listesi (lead mesajları + booking mesajları), sağ: aktif sohbet
+- [ ] Müşteri kartı: ad + foto + son mesaj preview + okunmamış badge
+- [ ] Cevapla input + dosya ekleme (storage upload)
+- [ ] Üstte aynı **uyarı banner** (T29-6): "Uzun konuşma için randevu önerin"
+- [ ] Mesaj typing indicator (chat modülü zaten WS destekli mi bak)
+
+### T30-7 — Cüzdan & Kazanç Sekmesi UI
+- [ ] `/me/consultant/wallet` — büyük balance göstergesi (gold)
+- [ ] Bu ay / geçen ay / toplam kazanç kartları
+- [ ] Transactions tablosu: tarih, tip (booking_payout / withdrawal / refund), tutar, durum
+- [ ] **Para Çek** butonu → modal: tutar + IBAN (varsa pre-fill) + onay → `POST /me/consultant/wallet/withdraw`
+- [ ] Bekleyen withdrawal'lar listede pending status
+- [ ] Banka hesabı yönetimi (IBAN, banka adı, hesap sahibi) — settings altında
+
+### T30-8 — Yorumlar & Cevaplar Sekmesi UI
+- [ ] `/me/consultant/reviews` — yorum listesi (T17 schema zaten var)
+- [ ] Her yoruma cevap yaz (`consultant_reply` field — T17-2)
+- [ ] Filter: cevaplanmış / cevaplanmamış / 1-2 yıldız / 4-5 yıldız
+- [ ] Düşük puanlı yoruma önce cevap önerisi (kibar template)
+
+### T30-9 — Stats / İstatistik Dashboard (üst overview)
+- [ ] `/me/consultant` ana sayfası — hızlı bakış kartları:
+  - Bu ay seans sayısı + geçen ay karşılaştırma (% delta)
+  - Ortalama rating (son 30 gün)
+  - Toplam kazanç (bu ay)
+  - Yanıt süresi (mesajlara ortalama yanıt — chat thread'lerden hesaplanır)
+  - Bekleyen randevu sayısı + bekleyen mesaj sayısı (action items)
+- [ ] Son 7 günün seans grafiği (basit bar chart)
+- [ ] Hızlı eylem butonları: Hizmet Ekle, Müsaitlik Düzenle, Mesajları Gör
+
+### T30-10 — Sidebar / Navigation
+- [ ] Frontend layout: consultant role'lü kullanıcı login olunca header'a "Danışman Paneli" linki ekle
+- [ ] Veya `/dashboard` içinde tab grubu: "Müşteri Görünümü" / "Danışman Görünümü" toggle (kullanıcı hem user hem consultant olabilir)
+
+### T30-11 — "Danışman Ol" başvuru akışı (opsiyonel)
+- [ ] `/become-consultant` — başvuru formu (bio, expertise, kimlik, sertifika upload)
+- [ ] Admin panele başvuru notification: pending consultant approve/reject
+- [ ] Onaylanan kullanıcının role'üne `consultant` eklenir + email bilgilendirme

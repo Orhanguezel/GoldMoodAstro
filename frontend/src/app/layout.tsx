@@ -3,6 +3,8 @@ import React from 'react';
 import type { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import { fetchSetting } from '@/i18n/server';
+import { fetchDesignTokens } from '@/lib/tokens/fetchTokens.server';
+import { detectThemeMode } from '@/lib/tokens/detectThemeMode';
 
 export async function generateViewport(): Promise<Viewport> {
   let themeColor = '#C9A961';
@@ -52,6 +54,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const gscVerification = await fetchSetting('google_site_verification', '*');
   const gscCode = String(gscVerification?.value || '').trim();
+  const bingVerification = await fetchSetting('bing_site_verification', '*');
+  const bingCode = String(
+    process.env.BING_SITE_VERIFICATION ||
+    process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ||
+    bingVerification?.value ||
+    '',
+  ).trim();
 
   const metadata: Metadata = {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com'),
@@ -73,13 +82,28 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   }
 
+  if (bingCode) {
+    metadata.verification = {
+      ...metadata.verification,
+      other: {
+        ...(metadata.verification?.other || {}),
+        'msvalidate.01': bingCode,
+      },
+    };
+  }
+
   return metadata;
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const lang = await resolveHtmlLang();
+  // Tema mode'u DB'deki active_theme_preset'in bg_base luminance'ından hesapla.
+  // Light preset (Klasik Altın, Pearl Infinity) → "light", dark preset (Midnight Onyx, Sapphire) → "dark".
+  // Kullanıcı manuel toggle yaparsa client-side override eder (localStorage).
+  const tokens = await fetchDesignTokens();
+  const themeMode = detectThemeMode(tokens);
   return (
-    <html lang={lang} data-theme="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang={lang} data-theme={themeMode} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <meta name="description" content="GoldMoodAstro — Astroloji, tarot, numeroloji ve ruhsal koçluk için uzman danışmanlarla bağlantı platformu." />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />

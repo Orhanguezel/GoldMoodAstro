@@ -37,6 +37,7 @@ export async function repoCreateUser(data: {
   email: string;
   password_hash: string;
   full_name?: string;
+  avatar_url?: string | null;
   phone?: string;
   email_verified?: number;
   is_active?: number;
@@ -47,6 +48,7 @@ export async function repoCreateUser(data: {
     email: data.email,
     password_hash: data.password_hash,
     full_name: data.full_name,
+    avatar_url: data.avatar_url ?? null,
     phone: data.phone,
     is_active: data.is_active ?? 1,
     email_verified: data.email_verified ?? 0,

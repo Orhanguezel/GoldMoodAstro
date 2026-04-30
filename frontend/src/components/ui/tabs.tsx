@@ -23,7 +23,11 @@ function TabsList(
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
-      className={cn("nav nav-pills mb-3", className)}
+      className={cn(
+        // Premium underline tabs — scroll yok, responsive flex-wrap
+        "flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-[var(--gm-border-soft)] text-[var(--gm-text-dim)]",
+        className,
+      )}
       {...props}
     />
   );
@@ -35,7 +39,16 @@ function TabsTrigger(
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
-      className={cn("nav-link", className)}
+      className={cn(
+        // Sade underline trigger — aktif: bold text + alt çizgi (primary), hover: text rengi koyulaşır
+        "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-4 py-3 text-sm font-medium transition-colors",
+        "border-b-2 border-transparent -mb-px",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gm-primary)]/30 focus-visible:rounded-md",
+        "disabled:pointer-events-none disabled:opacity-50",
+        "hover:text-[var(--gm-text)]",
+        "data-[state=active]:text-[var(--gm-primary)] data-[state=active]:border-[var(--gm-primary)] data-[state=active]:font-semibold",
+        className,
+      )}
       {...props}
     />
   );

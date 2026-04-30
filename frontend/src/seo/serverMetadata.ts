@@ -279,7 +279,10 @@ export async function buildMetadataFromSeo(
   // Defaults (DB-driven)
   const siteName = asStr(seo.site_name) || 'GoldMoodAstro';
   const titleDefault = asStr(seo.title_default) || siteName;
-  const titleTemplate = asStr(seo.title_template) || `%s | ${siteName}`;
+  // T31-B7: titleDefault === siteName olduğunda template uygulanırsa
+  // "GoldMoodAstro | GoldMoodAstro" duplikasyonu oluşur. Bu durumda template'i atla.
+  const isDefaultSameAsBrand = titleDefault.trim().toLowerCase() === siteName.trim().toLowerCase();
+  const titleTemplate = asStr(seo.title_template) || (isDefaultSameAsBrand ? '%s' : `%s | ${siteName}`);
   const rawDescription =
     asStr(seo.description) ||
     asStr(seo.description_default) ||

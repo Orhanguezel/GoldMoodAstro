@@ -48,7 +48,7 @@ export async function generateMetadata({
 
 export default function DreamResultPage() {
   return (
-    <main className="min-h-screen bg-background pt-20">
+    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
       <DreamResultClient />
     </main>
   );

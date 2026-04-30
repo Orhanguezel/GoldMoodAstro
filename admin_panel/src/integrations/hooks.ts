@@ -49,6 +49,7 @@ export * from '@/integrations/endpoints/admin/bookings_admin.endpoints';
 export * from '@/integrations/endpoints/admin/consultants_admin.endpoints';
 export * from '@/integrations/endpoints/admin/popups_admin.endpoints';
 export * from '@/integrations/endpoints/admin/menu_items_admin.endpoints';
+export * from '@/integrations/endpoints/admin/home_sections_admin.endpoints';
 export * from '@/integrations/endpoints/admin/projects_admin.endpoints';
 export * from '@/integrations/endpoints/admin/pricing_admin.endpoints';
 export * from '@/integrations/endpoints/admin/resume.admin.endpoints';
@@ -84,3 +85,4 @@ export * from '@/integrations/endpoints/admin/banners_admin.endpoints';
 
 // Campaigns
 export * from '@/integrations/endpoints/admin/campaigns_admin.endpoints';
+export * from '@/integrations/endpoints/admin/consultant_applications_admin.endpoints';

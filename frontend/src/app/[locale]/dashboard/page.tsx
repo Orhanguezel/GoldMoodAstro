@@ -16,7 +16,6 @@ import {
   ShieldCheck,
   Lock,
   ShoppingBag,
-  CheckCircle2,
   LayoutGrid,
   Coffee,
   Moon,
@@ -32,15 +31,17 @@ import {
   useGetMyProfileQuery,
   useUpsertMyProfileMutation,
   useUpdateUserMutation,
-  useListMyOrdersQuery,
   useListMyPendingOutcomesQuery,
   useGetUserHistoryQuery,
   useDeleteReadingMutation,
   useDeleteAllReadingsMutation,
+  useListMyBookingsQuery,
 } from '@/integrations/rtk/hooks';
 import type { HistoryItem, ReadingType } from '@/integrations/rtk/public/history.public.endpoints';
 import AvatarUpload from '@/components/common/AvatarUpload';
 import CityAutocomplete from '@/components/common/CityAutocomplete';
+import ReviewModal from '@/components/common/public/ReviewModal';
+import BookingMessageButton from '@/components/common/BookingMessageButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,6 +56,7 @@ import {
 
 type TabKey = 'overview' | 'profile' | 'bookings' | 'history' | 'security';
 type HistoryFilter = 'all' | ReadingType;
+const VALID_TABS: TabKey[] = ['overview', 'profile', 'bookings', 'history', 'security'];
 
 type DashCardProps = {
   href: string;
@@ -102,12 +104,6 @@ function fieldClasses() {
   return 'w-full bg-(--gm-bg-deep) border border-(--gm-border-soft) rounded-xl px-5 py-3.5 text-sm text-(--gm-text) placeholder:text-(--gm-muted) focus:border-(--gm-gold)/50 outline-none transition-colors';
 }
 
-function money(v: string | number, currency = 'TRY') {
-  const n = Number(v);
-  if (!Number.isFinite(n)) return `${v} ${currency}`;
-  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: currency || 'TRY' }).format(n);
-}
-
 function fmtDate(v: string, locale: string) {
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return v;
@@ -145,19 +141,29 @@ export default function DashboardPage() {
   const isTr = locale === 'tr';
 
   const { isAuthenticated, isReady, user } = useAuthStore();
+  const isConsultantUser = useMemo(() => {
+    const roles = Array.isArray(user?.roles) ? user.roles : [];
+    const primaryRole =
+      typeof user?.role === 'string'
+        ? user.role
+        : user?.role && typeof user.role === 'object'
+          ? user.role.name
+          : null;
+
+    return roles.includes('consultant') || primaryRole === 'consultant';
+  }, [user]);
 
   // Tab state — URL ?tab= ile senkronize
   const initialTab = (searchParams.get('tab') as TabKey) || 'overview';
-  const validTabs: TabKey[] = ['overview', 'profile', 'bookings', 'history', 'security'];
-  const [tab, setTab] = useState<TabKey>(validTabs.includes(initialTab) ? initialTab : 'overview');
+  const [tab, setTab] = useState<TabKey>(VALID_TABS.includes(initialTab) ? initialTab : 'overview');
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
 
   useEffect(() => {
     const t = searchParams.get('tab') as TabKey | null;
-    if (t && validTabs.includes(t) && t !== tab) {
+    if (t && VALID_TABS.includes(t) && t !== tab) {
       setTab(t);
     }
-  }, [searchParams, tab, validTabs]);
+  }, [searchParams, tab]);
 
   function switchTab(next: TabKey) {
     setTab(next);
@@ -176,9 +182,6 @@ export default function DashboardPage() {
 
   // Profile data
   const { data: profile } = useGetMyProfileQuery(undefined, { skip: !isAuthenticated });
-  const { data: myOrders, isLoading: ordersLoading } = useListMyOrdersQuery(undefined, {
-    skip: !isAuthenticated,
-  });
   const { data: pendingOutcomes } = useListMyPendingOutcomesQuery(undefined, {
     skip: !isAuthenticated,
   });
@@ -191,6 +194,19 @@ export default function DashboardPage() {
   const pendingCount = pendingOutcomes?.length ?? 0;
   const [upsertProfile, upsertProfileState] = useUpsertMyProfileMutation();
   const [updateUser, updateUserState] = useUpdateUserMutation();
+  const { data: myBookings, isLoading: bookingsLoading } = useListMyBookingsQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+
+  const [reviewModal, setReviewModal] = useState<{
+    isOpen: boolean;
+    targetId: string;
+    consultantName: string;
+  }>({
+    isOpen: false,
+    targetId: '',
+    consultantName: '',
+  });
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -365,6 +381,20 @@ export default function DashboardPage() {
         : 'Manage your premium status, credit balance and invoices.',
       cta: isTr ? 'Aboneliği yönet' : 'Manage plan',
     },
+    ...(isConsultantUser
+      ? [
+          {
+            href: localizePath(locale, '/me/consultant'),
+            icon: <Settings size={22} />,
+            eyebrow: isTr ? 'Danışman' : 'Consultant',
+            title: isTr ? 'Danışman Paneli' : 'Consultant Dashboard',
+            description: isTr
+              ? 'Profilinizi, hizmetlerinizi, müsaitliklerinizi ve kazançlarınızı yönetin.'
+              : 'Manage your profile, services, availability and earnings.',
+            cta: isTr ? 'Panele git' : 'Open panel',
+          },
+        ]
+      : []),
     {
       href: localizePath(locale, '/consultants'),
       icon: <Heart size={22} />,
@@ -593,13 +623,13 @@ export default function DashboardPage() {
               </h2>
             </div>
 
-            {ordersLoading ? (
+            {bookingsLoading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="h-24 rounded-2xl bg-(--gm-bg-deep) animate-pulse" />
                 ))}
               </div>
-            ) : !myOrders || myOrders.length === 0 ? (
+            ) : !myBookings || myBookings.length === 0 ? (
               <div className="py-20 text-center space-y-6 rounded-2xl border border-dashed border-(--gm-border-soft)">
                 <div className="w-16 h-16 rounded-full bg-(--gm-bg-deep) flex items-center justify-center mx-auto border border-(--gm-border-soft)">
                   <Calendar className="w-6 h-6 text-(--gm-muted)" />
@@ -613,56 +643,82 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {myOrders.map((order: any) => (
+                {myBookings.map((booking: any) => (
                   <div
-                    key={order.id}
-                    className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-(--gm-gold)/40 transition-colors"
+                    key={booking.id}
+                    className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-(--gm-gold)/40 transition-all duration-300 group"
                   >
                     <div className="flex items-center gap-5">
-                      <div className="w-12 h-12 rounded-full bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold-deep) shrink-0">
-                        <ShieldCheck className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-3 mb-1">
-                          <span className="text-[10px] font-bold text-(--gm-gold-deep) tracking-widest uppercase">
-                            #{order.order_number}
-                          </span>
-                          {order.payment_status === 'paid' && (
-                            <span className="flex items-center gap-1 text-(--gm-success) text-[9px] font-bold uppercase tracking-widest">
-                              <CheckCircle2 className="w-3 h-3" /> {isTr ? 'ÖDENDİ' : 'PAID'}
-                            </span>
+                      <div className="relative">
+                        <div className="w-14 h-14 rounded-full bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold-deep) shrink-0 border border-(--gm-gold)/20 overflow-hidden">
+                          {booking.consultant_avatar ? (
+                            <img src={booking.consultant_avatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <UserIcon className="w-6 h-6 opacity-40" />
                           )}
                         </div>
-                        <h4 className="text-(--gm-text) font-serif text-base">
-                          {fmtDate(order.created_at, locale)}
+                        {booking.status === 'confirmed' && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-(--gm-success) rounded-full border-2 border-(--gm-surface) animate-pulse" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3 mb-1.5">
+                          <span className="text-[10px] font-bold text-(--gm-gold-deep) tracking-[0.2em] uppercase">
+                            {isTr ? 'Danışmanlık' : 'Consultation'}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-widest uppercase ${
+                            booking.status === 'completed'
+                              ? 'bg-(--gm-success)/10 text-(--gm-success)'
+                              : booking.status === 'cancelled'
+                              ? 'bg-(--gm-error)/10 text-(--gm-error)'
+                              : 'bg-(--gm-gold)/10 text-(--gm-gold-deep)'
+                          }`}>
+                            {isTr ? booking.status_label_tr || booking.status : booking.status_label_en || booking.status}
+                          </span>
+                        </div>
+                        <h4 className="text-(--gm-text) font-serif text-xl group-hover:text-(--gm-gold) transition-colors">
+                          {booking.resource_title || (isTr ? 'Danışman' : 'Consultant')}
                         </h4>
+                        <div className="flex items-center gap-3 mt-1 text-(--gm-muted) text-xs">
+                           <span className="flex items-center gap-1.5"><Calendar size={13} /> {fmtDate(booking.appointment_date, locale)}</span>
+                           <span className="flex items-center gap-1.5"><Clock size={13} /> {booking.appointment_time}</span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between md:justify-end gap-8">
-                      <div className="text-right">
-                        <p className="text-(--gm-muted) text-[10px] font-bold tracking-widest uppercase mb-1">
-                          {isTr ? 'Tutar' : 'Amount'}
-                        </p>
-                        <p className="text-(--gm-text) font-serif text-lg">
-                          {money(order.total_amount, order.currency)}
-                        </p>
-                      </div>
-                      <div
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase ${
-                          order.status === 'completed'
-                            ? 'bg-(--gm-success)/10 text-(--gm-success)'
-                            : 'bg-(--gm-gold)/10 text-(--gm-gold-deep)'
-                        }`}
+                    <div className="flex items-center gap-4">
+                      {booking.status === 'completed' && (
+                        <button
+                          type="button"
+                          onClick={() => setReviewModal({
+                            isOpen: true,
+                            targetId: booking.consultant_id || booking.resource_id,
+                            consultantName: booking.resource_title || ''
+                          })}
+                          className="btn-outline-premium px-5 py-2.5 text-[10px]"
+                        >
+                          {isTr ? 'YORUM YAP' : 'WRITE REVIEW'}
+                        </button>
+                      )}
+
+                      {booking.status === 'confirmed' && (
+                        <Link
+                          href={localizePath(locale, `/booking/${booking.id}/call`)}
+                          className="btn-premium px-6 py-2.5 text-[10px] shadow-gold"
+                        >
+                          {isTr ? 'GÖRÜŞMEYE KATIL' : 'JOIN CALL'}
+                        </Link>
+                      )}
+
+                      <BookingMessageButton bookingId={booking.id} variant="secondary" label={isTr ? 'MESAJ' : 'MESSAGE'} />
+
+                      <Link
+                        href={localizePath(locale, `/booking/${booking.id}`)}
+                        className="p-2.5 rounded-xl border border-(--gm-border-soft) text-(--gm-muted) hover:text-(--gm-gold) hover:border-(--gm-gold)/40 transition-all"
+                        title={isTr ? 'Detaylar' : 'Details'}
                       >
-                        {order.status === 'completed'
-                          ? isTr
-                            ? 'TAMAMLANDI'
-                            : 'COMPLETED'
-                          : isTr
-                          ? 'BEKLEMEDE'
-                          : 'PENDING'}
-                      </div>
+                        <Eye size={18} />
+                      </Link>
                     </div>
                   </div>
                 ))}
@@ -843,6 +899,7 @@ export default function DashboardPage() {
           </section>
         )}
 
+        {/* Security / Password */}
         {tab === 'security' && (
           <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 max-w-3xl">
             <div className="flex items-center gap-3 mb-8">
@@ -850,41 +907,41 @@ export default function DashboardPage() {
                 <Lock size={18} />
               </div>
               <h2 className="font-serif text-2xl md:text-3xl font-light text-(--gm-text)">
-                {isTr ? 'Güvenlik Ayarları' : 'Security'}
+                {isTr ? 'Güvenlik Ayarları' : 'Security Settings'}
               </h2>
             </div>
 
             <form onSubmit={handleChangePassword} className="space-y-6">
               <div>
-                <FieldLabel>{isTr ? 'Mevcut Şifre' : 'Current Password'}</FieldLabel>
+                <FieldLabel>{isTr ? 'Mevcut Şifre' : 'Current password'}</FieldLabel>
                 <input
                   type="password"
                   className={fieldClasses()}
                   value={passData.old}
                   onChange={(e) => setPassData({ ...passData, old: e.target.value })}
-                  autoComplete="current-password"
+                  placeholder="••••••••"
                 />
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <FieldLabel>{isTr ? 'Yeni Şifre' : 'New Password'}</FieldLabel>
+                  <FieldLabel>{isTr ? 'Yeni Şifre' : 'New password'}</FieldLabel>
                   <input
                     type="password"
                     className={fieldClasses()}
                     value={passData.new}
                     onChange={(e) => setPassData({ ...passData, new: e.target.value })}
-                    autoComplete="new-password"
+                    placeholder="••••••••"
                   />
                 </div>
                 <div>
-                  <FieldLabel>{isTr ? 'Yeni Şifre (Tekrar)' : 'Confirm Password'}</FieldLabel>
+                  <FieldLabel>{isTr ? 'Şifre Tekrar' : 'Confirm password'}</FieldLabel>
                   <input
                     type="password"
                     className={fieldClasses()}
                     value={passData.confirm}
                     onChange={(e) => setPassData({ ...passData, confirm: e.target.value })}
-                    autoComplete="new-password"
+                    placeholder="••••••••"
                   />
                 </div>
               </div>
@@ -908,6 +965,15 @@ export default function DashboardPage() {
           </section>
         )}
       </div>
+
+      <ReviewModal
+        isOpen={reviewModal.isOpen}
+        onClose={() => setReviewModal((prev) => ({ ...prev, isOpen: false }))}
+        targetId={reviewModal.targetId}
+        targetType="consultant"
+        consultantName={reviewModal.consultantName}
+        locale={locale}
+      />
     </main>
   );
 }

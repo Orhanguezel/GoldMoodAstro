@@ -15,7 +15,7 @@ const horoscopesPublicApi = baseApi.injectEndpoints({
     }),
 
     getSignInfo: build.query<SignInfo, { sign: ZodiacSign; locale?: string }>({
-      query: ({ sign, locale }) => ({ url: `/horoscopes/${sign}`, params: { locale } }),
+      query: ({ sign, locale }) => ({ url: `/zodiac/${sign}`, params: { locale } }),
       transformResponse: (res: { data: SignInfo }) => res.data,
       providesTags: (result, _error, { sign }) => (result ? [{ type: 'SignInfo' as any, id: sign }] : []),
     }),

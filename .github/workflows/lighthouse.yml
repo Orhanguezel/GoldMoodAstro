@@ -1,0 +1,50 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/lighthouse.yml'
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    name: Frontend Lighthouse
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          NEXT_PUBLIC_API_URL: http://localhost:8094/api
+          NEXT_PUBLIC_SITE_URL: http://localhost:3095
+          NEXT_PUBLIC_DEFAULT_LOCALE: tr
+        run: bun run build
+
+      - name: Run Lighthouse CI
+        working-directory: frontend
+        env:
+          LHCI_BASE_URL: http://localhost:3095
+          LHCI_START_SERVER: 'true'
+          LHCI_RUNS: '1'
+        run: bun run lh:autorun
+
+      - name: Upload Lighthouse reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-reports
+          path: frontend/.lighthouseci/reports
+          if-no-files-found: ignore

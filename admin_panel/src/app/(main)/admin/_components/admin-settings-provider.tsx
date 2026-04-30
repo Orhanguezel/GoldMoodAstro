@@ -81,7 +81,7 @@ export function AdminSettingsProvider({ children }: { children: React.ReactNode 
   configRef.current = config;
 
   // 2. Fetch Page Meta
-  const locale = adminLocale || config?.default_locale || 'de';
+  const locale = adminLocale || config?.default_locale || 'tr';
   const { data: pagesRow, isLoading: pagesLoading } = useGetSiteSettingAdminByKeyQuery({ key: 'ui_admin_pages', locale });
 
   const pageMeta = useMemo(() => {

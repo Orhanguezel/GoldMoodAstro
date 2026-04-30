@@ -104,14 +104,15 @@ export function LoginForm() {
           control={form.control}
           name="email"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('admin.auth.login.emailLabel')}</FormLabel>
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-[var(--brand-ink)]/70 text-xs font-semibold uppercase tracking-wider">{t('admin.auth.login.emailLabel')}</FormLabel>
               <FormControl>
                 <Input
                   id="email"
                   type="email"
                   placeholder={t('admin.auth.login.emailPlaceholder')}
                   autoComplete="email"
+                  className="bg-white/50 border-[var(--brand-gold-border)] focus:border-[var(--brand-gold)] focus:ring-[var(--brand-gold)]/20 rounded-lg py-5 transition-all"
                   disabled={isBusy}
                   {...field}
                 />
@@ -125,14 +126,15 @@ export function LoginForm() {
           control={form.control}
           name="password"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('admin.auth.login.passwordLabel')}</FormLabel>
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-[var(--brand-ink)]/70 text-xs font-semibold uppercase tracking-wider">{t('admin.auth.login.passwordLabel')}</FormLabel>
               <FormControl>
                 <Input
                   id="password"
                   type="password"
                   placeholder={t('admin.auth.login.passwordPlaceholder')}
                   autoComplete="current-password"
+                  className="bg-white/50 border-[var(--brand-gold-border)] focus:border-[var(--brand-gold)] focus:ring-[var(--brand-gold)]/20 rounded-lg py-5 transition-all"
                   disabled={isBusy}
                   {...field}
                 />
@@ -167,8 +169,17 @@ export function LoginForm() {
           )}
         />
 
-        <Button className="w-full" type="submit" disabled={isBusy}>
-          {isBusy ? t('admin.auth.login.loggingIn') : t('admin.auth.login.loginButton')}
+        <Button 
+          className="w-full bg-[var(--brand-gold)] hover:bg-[var(--brand-gold-strong)] text-[var(--brand-ink)] font-bold py-6 rounded-xl shadow-lg hover:shadow-glow-primary transition-all duration-300" 
+          type="submit" 
+          disabled={isBusy}
+        >
+          {isBusy ? (
+            <div className="flex items-center gap-2">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--brand-ink)] border-t-transparent" />
+              {t('admin.auth.login.loggingIn')}
+            </div>
+          ) : t('admin.auth.login.loginButton')}
         </Button>
       </form>
     </Form>

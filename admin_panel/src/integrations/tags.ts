@@ -190,6 +190,10 @@ export const tags = [
   'LlmPrompt',
   'LlmPrompts',
   'AstrologyKb',
+  'HomeSection',
+  'HomeSections',
+  'ConsultantApplication',
+  'ConsultantApplications',
 ] as const;
 
 export type tag = typeof tags[number];

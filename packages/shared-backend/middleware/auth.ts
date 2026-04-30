@@ -58,3 +58,30 @@ export async function requireAuth(req: FastifyRequest, _reply: FastifyReply) {
 
   throw authError("no_token");
 }
+
+/**
+ * Optional auth: if Bearer header or access_token cookie is present and valid,
+ * attach req.user. Otherwise pass through silently. Reading endpoints that should
+ * persist user_id when logged-in but still work for guests use this.
+ */
+export async function tryAuth(req: FastifyRequest, _reply: FastifyReply) {
+  const auth = req.headers.authorization;
+  if (typeof auth === "string" && auth.startsWith("Bearer ")) {
+    try {
+      await req.jwtVerify<JwtUser>();
+      return;
+    } catch {
+      return;
+    }
+  }
+  const cookies = (req.cookies ?? {}) as Record<string, string | undefined>;
+  const cookieToken = cookies.access_token ?? cookies.accessToken;
+  if (cookieToken) {
+    try {
+      const payload = (await req.server.jwt.verify(cookieToken)) as JwtUser;
+      (req as unknown as { user: JwtUser }).user = payload;
+    } catch {
+      // ignore
+    }
+  }
+}
