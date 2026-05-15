@@ -37,6 +37,9 @@ export const brandSchema = z.object({
   favicon: z.string().default(''),
   og_image: z.string().default(''),
   theme_color: z.string().default('#000000'),
+  tagline: z.string().default(''),
+  // SVG/OG/paylaşım kartı render'ı CSS token (--gm-*) kullanamaz → hex paleti.
+  colors: z.record(z.string()).default({}),
   contact: contactSchema.default({ email: '', phone: '', address: '' }),
   social: socialSchema.default({ instagram: '', twitter: '', facebook: '', linkedin: '', youtube: '' }),
   assets: z.record(z.string()).default({}),
@@ -90,6 +93,8 @@ export function mergeBrand(dbValues?: Record<string, unknown> | null): Brand {
     favicon: str('favicon', brandDefaults.favicon),
     og_image: str('og_image', brandDefaults.og_image),
     theme_color: str('theme_color', brandDefaults.theme_color),
+    tagline: str('tagline', brandDefaults.tagline),
+    colors: resolveObject(dbValues['brand.colors'], brandDefaults.colors),
     contact: resolveObject(dbValues['brand.contact'], brandDefaults.contact),
     social: resolveObject(dbValues['brand.social'], brandDefaults.social),
     assets: resolveObject(dbValues['brand.assets'], brandDefaults.assets),

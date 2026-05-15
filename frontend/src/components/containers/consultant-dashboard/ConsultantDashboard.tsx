@@ -45,6 +45,9 @@ import WalletPanel from './WalletPanel';
 import ReviewsPanel from './ReviewsPanel';
 import AvailabilityPanel from './AvailabilityPanel';
 import BookingMessageButton from '@/components/common/BookingMessageButton';
+import RichContentEditor from '@/components/common/RichContentEditor';
+import MultiSelectChip from '@/components/common/MultiSelectChip';
+import ConsultantCardPreview from './ConsultantCardPreview';
 
 type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'wallet' | 'reviews';
 
@@ -480,16 +483,13 @@ const PLATFORM_OPTIONS = ['WhatsApp', 'Skype', 'Zoom', 'Google Meet', 'Microsoft
 function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
   const [updateProfile, { isLoading }] = useUpdateMyConsultantProfileMutation();
   const [bio, setBio] = useState<string>(profile.bio || '');
-  const [expertise, setExpertise] = useState<string>((profile.expertise || []).join(', '));
-  const [languages, setLanguages] = useState<string>((profile.languages || []).join(', '));
+  const [expertise, setExpertise] = useState<string[]>(profile.expertise || []);
+  const [languages, setLanguages] = useState<string[]>(profile.languages || []);
   const [meetingPlatforms, setMeetingPlatforms] = useState<string[]>(profile.meeting_platforms || []);
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(profile.social_links || {});
   const [avatarUrl, setAvatarUrl] = useState<string>(profile.user?.avatar_url || '');
   const [supportsVideo, setSupportsVideo] = useState<boolean>(profile.supports_video === 1);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const expertiseList = expertise.split(',').map((s) => s.trim()).filter(Boolean);
-  const languageList = languages.split(',').map((s) => s.trim()).filter(Boolean);
 
   const togglePlatform = (platform: string) => {
     setMeetingPlatforms((current) =>
@@ -506,27 +506,29 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (bio.length > 2000) newErrors.bio = 'Bio en fazla 2000 karakter olabilir.';
-    if (expertiseList.length > 20) newErrors.expertise = 'En fazla 20 uzmanlık alanı ekleyebilirsiniz.';
-    if (languageList.length > 10) newErrors.languages = 'En fazla 10 dil ekleyebilirsiniz.';
+    if (bio.length > 5000) newErrors.bio = 'Bio en fazla 5000 karakter olabilir.';
+    if (expertise.length > 20) newErrors.expertise = 'En fazla 20 uzmanlık alanı ekleyebilirsiniz.';
+    if (languages.length > 10) newErrors.languages = 'En fazla 10 dil ekleyebilirsiniz.';
 
     // Social link validation
     if (socialLinks.instagram) {
       const v = socialLinks.instagram.trim();
-      if (v.includes('/') && !v.includes('instagram.com/')) {
-        newErrors.instagram = 'Geçerli bir Instagram URL veya kullanıcı adı girin.';
+      if (v.includes('http') && !v.includes('instagram.com/')) {
+        newErrors.instagram = 'Instagram URL\'si instagram.com içermeli';
+      } else if (v.length > 50) {
+        newErrors.instagram = 'Instagram kullanıcı adı veya URL çok uzun';
       }
     }
     if (socialLinks.linkedin) {
       const v = socialLinks.linkedin.trim();
       if (v && !v.includes('linkedin.com/')) {
-        newErrors.linkedin = 'Geçerli bir LinkedIn profil URL girin.';
+        newErrors.linkedin = 'Geçerli bir LinkedIn profil URL girin';
       }
     }
     if (socialLinks.website) {
       const v = socialLinks.website.trim();
-      if (v && !/^https?:\/\//.test(v)) {
-        newErrors.website = 'Geçerli bir web sitesi URL girin (http:// veya https:// ile).';
+      if (v && !/^https?:\/\/[^\s$.?#].[^\s]*$/i.test(v)) {
+        newErrors.website = 'Geçerli bir web sitesi URL girin (https://...)';
       }
     }
 
@@ -547,8 +549,8 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
       );
       await updateProfile({
         bio: bio.trim() || null,
-        expertise: expertiseList,
-        languages: languageList,
+        expertise: expertise,
+        languages: languages,
         meeting_platforms: meetingPlatforms,
         social_links: cleanSocials,
         avatar_url: avatarUrl || null,
@@ -577,54 +579,40 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
           </div>
         </div>
 
-        <Field label="Hakkımda (Bio)" error={errors.bio}>
-          <textarea
-            value={bio}
-            onChange={(e) => {
-              setBio(e.target.value);
-              if (errors.bio) setErrors((prev) => { const n = { ...prev }; delete n.bio; return n; });
-            }}
-            rows={6}
-            maxLength={2000}
-            className={`w-full bg-[var(--gm-bg-deep)] border rounded-2xl p-4 text-sm text-[var(--gm-text)] outline-none transition-all ${
-              errors.bio ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/40'
-            }`}
-            placeholder="Kendinizi tanıtın..."
-          />
+        <Field label="Hakkımda (Zengin Metin)" error={errors.bio}>
+          <div className="rich-editor-container">
+            <RichContentEditor
+              value={bio}
+              onChange={setBio}
+              height="300px"
+              label=""
+            />
+          </div>
           <div className="flex justify-end mt-1">
-            <span className={`text-[10px] ${bio.length >= 2000 ? 'text-rose-400' : 'text-[var(--gm-muted)]'}`}>
-              {bio.length} / 2000
+            <span className={`text-[10px] ${bio.length >= 5000 ? 'text-rose-400' : 'text-[var(--gm-muted)]'}`}>
+              {bio.length} / 5000 karakter
             </span>
           </div>
         </Field>
-        <Field label="Uzmanlık Alanları (virgülle)" error={errors.expertise}>
-          <input
-            value={expertise}
-            onChange={(e) => {
-              setExpertise(e.target.value);
-              if (errors.expertise) setErrors((prev) => { const n = { ...prev }; delete n.expertise; return n; });
-            }}
-            maxLength={500}
-            className={`w-full h-12 bg-[var(--gm-bg-deep)] border rounded-2xl px-4 text-sm text-[var(--gm-text)] outline-none transition-all ${
-              errors.expertise ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/40'
-            }`}
-            placeholder="astrology, birth_chart, relationship"
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <MultiSelectChip
+            label="Uzmanlık Alanları"
+            selected={expertise}
+            onSelectionChange={setExpertise}
+            options={['Astroloji', 'Tarot', 'Numeroloji', 'Mood Coaching', 'Kariyer', 'İlişki']}
+            error={errors.expertise}
+            placeholder="Eklemek için yazın..."
           />
-        </Field>
-        <Field label="Diller (virgülle)" error={errors.languages}>
-          <input
-            value={languages}
-            onChange={(e) => {
-              setLanguages(e.target.value);
-              if (errors.languages) setErrors((prev) => { const n = { ...prev }; delete n.languages; return n; });
-            }}
-            maxLength={200}
-            className={`w-full h-12 bg-[var(--gm-bg-deep)] border rounded-2xl px-4 text-sm text-[var(--gm-text)] outline-none transition-all ${
-              errors.languages ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/40'
-            }`}
-            placeholder="tr, en"
+          <MultiSelectChip
+            label="Diller"
+            selected={languages}
+            onSelectionChange={setLanguages}
+            options={['Türkçe', 'İngilizce', 'Almanca', 'Fransızca']}
+            error={errors.languages}
+            placeholder="Eklemek için yazın..."
           />
-        </Field>
+        </div>
 
         <Field label="Görüşme Platformları">
           <div className="flex flex-wrap gap-2">
@@ -685,29 +673,27 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
         </button>
       </div>
 
-
-      <div className="h-fit rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-5">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
-          Müşteri Önizlemesi
-        </span>
-        <div className="mt-5 flex items-center gap-3">
-          <div className="h-14 w-14 overflow-hidden rounded-full border border-[var(--gm-gold)]/30 bg-[var(--gm-bg-deep)] flex items-center justify-center text-[var(--gm-gold)] font-serif">
-            {avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : initialsFromName(profile.user?.full_name)}
+      {/* Sidebar: Live Preview */}
+      <div className="space-y-6">
+        <div className="sticky top-32">
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-4 ml-1">
+            Canlı Önizleme
+          </h3>
+          <ConsultantCardPreview
+            fullName={profile.user?.full_name || ''}
+            avatarUrl={avatarUrl}
+            expertise={expertise}
+            ratingAvg={profile.rating_avg}
+            ratingCount={profile.rating_count}
+            sessionPrice={Number(profile.session_price)}
+            sessionDuration={profile.session_duration}
+            isAvailable={profile.is_available === 1}
+          />
+          <div className="mt-6 p-4 rounded-2xl bg-[var(--gm-gold)]/5 border border-[var(--gm-gold)]/20">
+            <p className="text-[11px] text-[var(--gm-text-dim)] font-serif italic leading-relaxed text-center">
+              &quot;Değişiklikleri kaydettikten sonra profil kartınız tüm listelerde bu şekilde görünecektir.&quot;
+            </p>
           </div>
-          <div>
-            <h3 className="font-serif text-lg text-[var(--gm-text)]">{profile.user?.full_name || 'Danışman'}</h3>
-            <p className="text-[11px] text-[var(--gm-text-dim)]">{languageList.join(' / ') || 'tr'}</p>
-          </div>
-        </div>
-        <p className="mt-4 line-clamp-5 text-sm leading-relaxed text-[var(--gm-text-dim)]">
-          {bio || 'Profil açıklaman burada görünecek.'}
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {expertiseList.slice(0, 4).map((item) => (
-            <span key={item} className="rounded-full bg-[var(--gm-gold)]/10 px-3 py-1 text-[10px] text-[var(--gm-gold)]">
-              {item}
-            </span>
-          ))}
         </div>
       </div>
     </div>

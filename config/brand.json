@@ -9,6 +9,17 @@
   "favicon": "",
   "og_image": "",
   "theme_color": "#C9A961",
+  "tagline": "Türkiye'nin astroloji, tarot ve numeroloji danışmanlık platformu.",
+  "colors": {
+    "bg_base": "#12101A",
+    "bg_deep": "#0A0910",
+    "brand_primary": "#C9A961",
+    "brand_secondary": "#7C6BA8",
+    "brand_accent": "#E4C97E",
+    "text_primary": "#F5F0E6",
+    "text_secondary": "#C9C2B5",
+    "text_muted": "#8A8377"
+  },
   "contact": {
     "email": "",
     "phone": "",
@@ -21,5 +32,15 @@
     "linkedin": "",
     "youtube": "https://www.youtube.com/@goldmoodastro"
   },
-  "assets": {}
+  "assets": {
+    "banner_app_download": "/assets/images/banners/app-download-bg.png",
+    "banner_welcome_premium": "/assets/images/banners/welcome-premium-banner-bg.png",
+    "banner_birth_chart": "/assets/images/banners/birth-chart-banner-bg.png",
+    "banner_premium_membership": "/assets/images/banners/premium-membership-banner-bg.png",
+    "banner_first_session_discount": "/assets/images/banners/first-session-discount-banner-bg.png",
+    "img_natal_chart": "/img/natal_chart.png",
+    "img_daily_reading": "/img/daily_reading.png",
+    "img_synastry_chart": "/img/synastry_chart.png",
+    "img_support_ai": "/img/support_ai.png"
+  }
 }
