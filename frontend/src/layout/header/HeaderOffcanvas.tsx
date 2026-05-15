@@ -33,6 +33,14 @@ type MenuItemWithChildren = PublicMenuItemDto & {
   children?: MenuItemWithChildren[];
 };
 
+const cleanHashLink = (href: string) => {
+  if (!href) return href;
+  if (href.startsWith('#')) return `/${href.substring(1)}`;
+  if (href.startsWith('/#')) return `/${href.substring(2)}`;
+  if (href.includes('#')) return `/${href.split('#')[1]}`;
+  return href;
+};
+
 const HeaderOffcanvas: React.FC<HeaderOffcanvasProps> = ({ open, onClose, brand, locale: localeProp }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -108,7 +116,7 @@ const HeaderOffcanvas: React.FC<HeaderOffcanvasProps> = ({ open, onClose, brand,
     if (!hasChildren) {
       return (
         <li key={id} className="border-b border-border-light last:border-0">
-          <Link href={href} onClick={onClose}
+          <Link href={localizePath(resolvedLocale, cleanHashLink(item.url || '#'))} onClick={onClose}
             className="block py-3.5 text-text-primary hover:text-brand-primary font-normal text-[0.95rem] transition-colors">
             {item.title || rawUrl}
           </Link>

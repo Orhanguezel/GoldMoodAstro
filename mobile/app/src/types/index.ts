@@ -333,6 +333,7 @@ export interface GeocodeResult {
   lat: number;
   lng: number;
   label: string;
+  tz_iana?: string;
   source: 'cache' | 'nominatim';
 }
 

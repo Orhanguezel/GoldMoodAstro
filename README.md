@@ -5,6 +5,10 @@ Kullanici danisman secer, randevu olusturur, odeme yapar ve uygulama ici sesli g
 
 Odak alanlari: astroloji ve mood danismanligi.
 
+## Canli Erisim Notu
+
+Canli server `goldmoodastro` SSH kisa yolundadir. Key ile sifresiz erisim: `ssh goldmoodastro`.
+
 ## Teknoloji
 
 | Katman | Stack |

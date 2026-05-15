@@ -47,7 +47,7 @@ export default function HomeCTABanner({ locale: explicitLocale }: { locale?: str
           <Link href={localizePath(locale, '/consultants')} className="btn-premium">
             <span>{copy.cta}</span>
           </Link>
-          <Link href={localizePath(locale, '/#how-it-works')} className="btn-outline-premium">
+          <Link href={localizePath(locale, '/how-it-works')} className="btn-outline-premium">
             {copy.secondary}
           </Link>
         </div>

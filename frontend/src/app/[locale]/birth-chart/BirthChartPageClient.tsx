@@ -46,8 +46,8 @@ function aspectVisual(type: string) {
   const isMajor = type === 'conjunction' || isHarsh || type === 'trine';
   return {
     stroke: isHarmonic ? 'var(--gm-gold)' : isHarsh ? 'var(--gm-error)' : 'var(--gm-gold-light)',
-    strokeOpacity: isMajor ? '0.5' : '0.3',
-    strokeWidth: isMajor ? '1.2' : '0.6',
+    strokeOpacity: isMajor ? '0.7' : '0.4',
+    strokeWidth: isMajor ? '1.8' : '0.9',
   };
 }
 
@@ -75,7 +75,7 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
           const label = point(longitude + 15, 148);
           return (
             <g key={i}>
-              <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--gm-border-soft)" strokeWidth="0.5" />
+              <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--gm-border)" strokeWidth="0.8" strokeOpacity="0.35" />
               <text x={label.x} y={label.y + 7} textAnchor="middle" className="fill-[var(--gm-gold)] text-[20px] font-serif">
                 {SIGN_SYMBOLS[i]}
               </text>
@@ -92,8 +92,8 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
               key={`cusp-${cusp.house}`}
               x1={a.x} y1={a.y} x2={b.x} y2={b.y}
               stroke="var(--gm-gold-dim)"
-              strokeOpacity="0.3"
-              strokeWidth="0.8"
+              strokeOpacity="0.45"
+              strokeWidth="1"
             />
           );
         })}

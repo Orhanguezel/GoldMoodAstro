@@ -5,6 +5,7 @@ import { Cinzel, Fraunces, Manrope, Outfit, Gabriela } from 'next/font/google';
 import { Providers } from '../providers';
 import ClientLayout from '../ClientLayout';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import ScrollAnchorFixer from '@/components/common/ScrollAnchorFixer';
 import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
 import JsonLd from '@/seo/JsonLd';
 import { graph, org, website } from '@/seo/jsonld';
@@ -153,6 +154,7 @@ export default async function RootLayout({
           }}
         />
         <JsonLd data={jsonLdData} id="site-graph" />
+        <ScrollAnchorFixer />
         <Providers>
           <Suspense fallback={null}>
             <ClientLayout locale={locale} initialMenuItems={initialMenuItems}>

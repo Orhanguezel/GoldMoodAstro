@@ -1,3 +1,5 @@
+'use client';
+
 import React, { Suspense } from 'react';
 import HeroNew from './HeroNew';
 import BannerSlot from './BannerSlot';
@@ -42,12 +44,41 @@ const REGISTRY: Record<string, any> = {
   AppDownloadSection,
 };
 
+import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+
 interface Props {
   layout: HomeSection[];
   locale?: string;
 }
 
 export default function HomeLayoutRenderer({ layout, locale }: Props) {
+  const searchParams = useSearchParams();
+  const sectionParam = searchParams.get('section');
+
+  useEffect(() => {
+    if (sectionParam) {
+      // Small delay to ensure dynamic content is painted
+      const timer = setTimeout(() => {
+        const targetId = sectionParam;
+        const element = document.getElementById(targetId);
+        
+        if (element) {
+          const headerOffset = 100;
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [sectionParam]);
+
   return (
     <>
       {layout.map((section) => {
@@ -62,11 +93,13 @@ export default function HomeLayoutRenderer({ layout, locale }: Props) {
         const isHero = section.component_key === 'HeroNew';
 
         const node = (
-          <Component
-            locale={locale}
-            label={section.label}
-            config={section.config}
-          />
+          <div id={section.slug} className="scroll-mt-32">
+            <Component
+              locale={locale}
+              label={section.label}
+              config={section.config}
+            />
+          </div>
         );
 
         if (isHero) {

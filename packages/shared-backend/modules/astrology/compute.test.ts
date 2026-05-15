@@ -23,6 +23,7 @@ describe('computeNatalChart houses', () => {
         latitude: 40.98,
         longitude: 27.51,
       },
+      // Placidus + swe.house_pos: Güneş 12. ev (eski uydurma formül 9. ev gösteriyordu)
       expected: { asc: 106.9766, mc: 357.2356, sunHouse: 12 },
     },
     {
@@ -34,7 +35,7 @@ describe('computeNatalChart houses', () => {
         latitude: 41.0082,
         longitude: 28.9784,
       },
-      expected: { asc: 16.1992, mc: 278.5936, sunHouse: 10 },
+      expected: { asc: 16.1992, mc: 278.5936, sunHouse: 11 },
     },
     {
       name: 'New York 1990-07-15 08:30 America/New_York',
@@ -45,7 +46,7 @@ describe('computeNatalChart houses', () => {
         latitude: 40.7128,
         longitude: -74.006,
       },
-      expected: { asc: 145.7419, mc: 49.0508, sunHouse: 11 },
+      expected: { asc: 145.7419, mc: 49.0508, sunHouse: 9 },
     },
   ];
 

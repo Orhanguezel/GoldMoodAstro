@@ -64,8 +64,8 @@ function aspectVisual(type: ChartAspect['type']) {
   const isMajor = type === 'conjunction' || isHarsh || type === 'trine';
   return {
     stroke: isHarmonic ? colors.gold : isHarsh ? colors.danger : colors.goldLight,
-    strokeOpacity: isMajor ? 0.65 : 0.35,
-    strokeWidth: isMajor ? 1.5 : 0.9,
+    strokeOpacity: isMajor ? 0.8 : 0.4,
+    strokeWidth: isMajor ? 2.0 : 1.0,
   };
 }
 
@@ -111,8 +111,8 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
               x2={b.x}
               y2={b.y}
               stroke={colors.goldDim}
-              strokeOpacity={0.55}
-              strokeWidth={1.2}
+              strokeOpacity={0.7}
+              strokeWidth={1.5}
             />
           );
         })}

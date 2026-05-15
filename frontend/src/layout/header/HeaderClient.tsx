@@ -59,7 +59,17 @@ type MenuItemWithChildren = PublicMenuItemDto & {
 };
 
 const isExternalHref = (href: string) =>
-  /^https?:\/\//i.test(href) || /^mailto:/i.test(href) || /^tel:/i.test(href) || /^#/i.test(href);
+  /^https?:\/\//i.test(href) || /^mailto:/i.test(href) || /^tel:/i.test(href);
+
+const cleanHashLink = (href: string) => {
+  if (!href) return href;
+  // Convert #about or /#about to /about
+  if (href.startsWith('#')) return `/${href.substring(1)}`;
+  if (href.startsWith('/#')) return `/${href.substring(2)}`;
+  // Handle case like referanslar#about -> /about (assuming it's a home page section)
+  if (href.includes('#')) return `/${href.split('#')[1]}`;
+  return href;
+};
 
 type HeaderMegaMenuKind = 'astrology' | 'tarot';
 
@@ -223,7 +233,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
     <Fragment>
       <HeaderOffcanvas open={open} onClose={() => setOpen(false)} brand={resolvedBrand} locale={locale} />
 
-      <header className="relative z-[1000]">
+      <header data-test-marker="antigravity-fix-v1" className="relative z-[1000]">
         <nav
           className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between transition-all duration-500 px-6 lg:px-12
             ${scrolled
@@ -250,7 +260,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                 const children = item.children ?? [];
                 const hasChildren = children.length > 0;
                 const href = rawUrl
-                  ? (isExternalHref(rawUrl) ? rawUrl : localizePath(locale, rawUrl))
+                  ? (isExternalHref(rawUrl) ? rawUrl : localizePath(locale, cleanHashLink(rawUrl)))
                   : '#';
 
                 if (hasChildren) {
@@ -271,7 +281,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                   }
 
                   return (
-                    <li key={item.id} className="relative group/dd">
+                    <li key={item.id} className="static group/dd">
                       <button
                         type="button"
                         className="inline-flex items-center gap-1.5 font-serif text-[13px] font-normal tracking-[0.05em] text-[var(--gm-text)] hover:text-[var(--gm-primary)] transition-colors cursor-default"
@@ -279,17 +289,19 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                         {label}
                         <ChevronDown className="w-3 h-3 transition-transform group-hover/dd:rotate-180" />
                       </button>
-                      <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 opacity-0 invisible group-hover/dd:opacity-100 group-hover/dd:visible transition-all duration-200 z-50">
-                        <MegaMenuPanel
-                          links={children.map((c) => ({ id: c.id, url: (c as any).url, title: c.title }))}
-                          expertise={expertiseFilter}
-                          locale={locale}
-                          consultantsHeading={consultantsHeading}
-                          allConsultantsLabel={locale === 'tr' ? 'Tümünü Gör' : locale === 'de' ? 'Alle ansehen' : 'See All'}
-                          allConsultantsExpertise={allConsultantsExpertise}
-                          panelEyebrow={panelEyebrow || label}
-                          limit={expertiseFilter ? 4 : 0}
-                        />
+                      <div className="absolute left-0 right-0 top-full -mt-4 pt-4 opacity-0 invisible group-hover/dd:opacity-100 group-hover/dd:visible transition-all duration-300 z-50 pointer-events-none group-hover/dd:pointer-events-auto">
+                        <div className="mx-auto w-fit px-6 lg:px-12 drop-shadow-2xl pt-2">
+                          <MegaMenuPanel
+                            links={children.map((c) => ({ id: c.id, url: (c as any).url, title: c.title }))}
+                            expertise={expertiseFilter}
+                            locale={locale}
+                            consultantsHeading={consultantsHeading}
+                            allConsultantsLabel={locale === 'tr' ? 'Tümünü Gör' : locale === 'de' ? 'Alle ansehen' : 'See All'}
+                            allConsultantsExpertise={allConsultantsExpertise}
+                            panelEyebrow={panelEyebrow || label}
+                            limit={expertiseFilter ? 4 : 0}
+                          />
+                        </div>
                       </div>
                     </li>
                   );
@@ -400,7 +412,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                           return (
                             <li key={c.id}>
                               <Link
-                                href={isExternalHref(cu) ? cu : localizePath(locale, cu)}
+                                href={isExternalHref(cu) ? cu : localizePath(locale, cleanHashLink(cu))}
                                 className="font-serif text-lg italic text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)]"
                                 onClick={() => setMobileOpen(false)}
                               >
@@ -413,7 +425,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                     </details>
                   ) : (
                     <Link
-                      href={itemUrl ? (isExternalHref(itemUrl) ? itemUrl : localizePath(locale, itemUrl)) : '#'}
+                      href={itemUrl ? (isExternalHref(itemUrl) ? itemUrl : localizePath(locale, cleanHashLink(itemUrl))) : '#'}
                       className="font-display text-2xl tracking-widest text-[var(--gm-gold)]"
                       onClick={() => setMobileOpen(false)}
                     >

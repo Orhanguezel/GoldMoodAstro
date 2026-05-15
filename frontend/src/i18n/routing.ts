@@ -15,26 +15,19 @@ export const pathnames = {
   "/": "/",
   "/about": "/about",
   "/contact": "/contact",
-
-  "/library": "/library",
-  "/library/[slug]": "/library/[slug]",
-
-  "/references": "/references",
-  "/references/[slug]": "/references/[slug]",
-
-  "/products": "/products",
-  "/products/[slug]": "/products/[slug]",
-
-  "/spare-parts": "/spare-parts",
-  "/spare-parts/[slug]": "/spare-parts/[slug]",
-
   "/blog": "/blog",
   "/blog/[slug]": "/blog/[slug]",
-
-  "/news": "/news",
-  "/news/[slug]": "/news/[slug]",
-
-  "/search": "/search",
+  "/consultants": "/consultants",
+  "/consultants/[id]": "/consultants/[id]",
+  "/tarot": "/tarot",
+  "/kahve-fali": "/kahve-fali",
+  "/ruya-tabiri": "/ruya-tabiri",
+  "/numeroloji": "/numeroloji",
+  "/burclar": "/burclar",
+  "/yildizname": "/yildizname",
+  "/birth-chart": "/birth-chart",
+  "/pricing": "/pricing",
+  "/faqs": "/faqs",
 } as const;
 
 function normalizeActive(activeLocales?: string[]) {

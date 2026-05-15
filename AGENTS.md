@@ -4,6 +4,12 @@ Bu dosya Codex'in okuyup çalıştığı talimat dosyasıdır.
 
 ---
 
+## Canli Erisim Notu
+
+Canli server `goldmoodastro` SSH kisa yolundadir. Key ile sifresiz erisim: `ssh goldmoodastro`.
+
+---
+
 ## Proje Özeti
 
 **GoldMoodAstro** — danışman & kullanıcı eşleştirme platformu.  

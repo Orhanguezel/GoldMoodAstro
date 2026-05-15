@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { DateTime } from 'luxon';
 import { and, eq } from 'drizzle-orm';
 import { db } from '@/db/client';
 import {
@@ -52,6 +53,17 @@ function tobForDb(input: CreateBirthChartInput): string {
   const tobKnown = input.tob_known !== false;
   if (!tobKnown || !input.tob) return '12:00:00';
   return input.tob.length === 5 ? `${input.tob}:00` : input.tob;
+}
+
+/** DST-safe dakika offset — DB legacy kolonu; client göndermese de IANA'dan üretilir. */
+function offsetMinutesForInput(input: CreateBirthChartInput) {
+  if (input.tz_offset != null) return input.tz_offset;
+  const tzIana = timezoneForInput(input);
+  const tob = tobForDb(input);
+  const [hour = 12, minute = 0, second = 0] = tob.split(':').map(Number);
+  const [year, month, day] = input.dob.split('-').map(Number);
+  const local = DateTime.fromObject({ year, month, day, hour, minute, second }, { zone: tzIana });
+  return local.isValid ? local.offset : 180;
 }
 
 function dateForInput(value: BirthChartRow['dob']) {
@@ -111,7 +123,7 @@ export async function createBirthChart(userId: string, input: CreateBirthChartIn
     pob_lat: String(input.pob_lat),
     pob_lng: String(input.pob_lng),
     pob_label: input.pob_label,
-    tz_offset: input.tz_offset ?? 0,
+    tz_offset: offsetMinutesForInput({ ...input, tz_iana: tzIana }),
     chart_data: chart,
   });
 
@@ -130,7 +142,7 @@ export async function previewBirthChart(input: CreateBirthChartInput) {
     pob_lat: String(input.pob_lat),
     pob_lng: String(input.pob_lng),
     pob_label: input.pob_label,
-    tz_offset: input.tz_offset ?? 0,
+    tz_offset: offsetMinutesForInput({ ...input, tz_iana: tzIana }),
     chart_data: chart,
   };
 }
@@ -242,7 +254,7 @@ export async function updateBirthChart(userId: string, id: string, input: Create
       pob_lat: String(input.pob_lat),
       pob_lng: String(input.pob_lng),
       pob_label: input.pob_label,
-      tz_offset: input.tz_offset ?? 0,
+      tz_offset: offsetMinutesForInput({ ...input, tz_iana: tzIana }),
       chart_data: chart,
     })
     .where(and(eq(birthCharts.user_id, userId), eq(birthCharts.id, id)));

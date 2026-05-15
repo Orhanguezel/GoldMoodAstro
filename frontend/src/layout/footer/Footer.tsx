@@ -16,7 +16,16 @@ import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 
 const isExternalHref = (href: string) =>
-  /^https?:\/\//i.test(href) || /^mailto:/i.test(href) || /^tel:/i.test(href) || /^#/i.test(href);
+  /^https?:\/\//i.test(href) || /^mailto:/i.test(href) || /^tel:/i.test(href);
+
+const cleanHashLink = (href: string) => {
+  if (!href) return href;
+  if (href === '/') return href;
+  if (href.startsWith('#')) return `/${href.substring(1)}`;
+  if (href.startsWith('/#')) return `/${href.substring(2)}`;
+  if (href.includes('#')) return `/${href.split('#')[1]}`;
+  return href;
+};
 
 // Backend boş dönerse (seed yüklenmemişse) gösterilecek varsayılan footer.
 // API'den gelen veri her zaman önceliklidir.
@@ -202,7 +211,7 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
                 {sec.items.map((item) => (
                   <li key={item.id}>
                     <Link
-                      href={isExternalHref(item.url) ? item.url : localizePath(locale, item.url)}
+                      href={isExternalHref(item.url) ? item.url : localizePath(locale, cleanHashLink(item.url))}
                       className="text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] transition-colors font-serif italic text-[16px]"
                     >
                       {item.title}

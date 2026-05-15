@@ -184,6 +184,28 @@ function houseFor(longitude: number, houses: HouseCusp[]) {
   return 12;
 }
 
+/** Swiss Ephemeris swe.house_pos — authoritative planet house (Placidus etc.). */
+function planetHouse(
+  swe: SwissEph,
+  julianDay: number,
+  input: BirthChartInput,
+  hsys: string,
+  longitude: number,
+  planetLatitude: number,
+  houses: HouseCusp[],
+): number {
+  try {
+    const armc = swe.sidtime(julianDay) * 15;
+    const housePos = swe.house_pos(armc, input.latitude, 23.4392911, hsys, longitude, planetLatitude);
+    if (!Number.isFinite(housePos)) return houseFor(longitude, houses);
+    const house = Math.floor(housePos);
+    if (house >= 1 && house <= 12) return house;
+    return ((house % 12) + 12) % 12 || 12;
+  } catch {
+    return houseFor(longitude, houses);
+  }
+}
+
 function houseSystemForInput(input: BirthChartInput) {
   const tobKnown = input.tobKnown !== false;
   return input.houseSystem ?? (tobKnown ? 'placidus' : 'whole_sign');
@@ -193,7 +215,13 @@ function calculateHouses(
   swe: SwissEph,
   julianDay: number,
   input: BirthChartInput,
-): { houses: HouseCusp[]; ascendant: HouseCusp; midheaven: HouseCusp; houseSystem: NonNullable<BirthChartInput['houseSystem']> } {
+): {
+  houses: HouseCusp[];
+  ascendant: HouseCusp;
+  midheaven: HouseCusp;
+  houseSystem: NonNullable<BirthChartInput['houseSystem']>;
+  houseSystemCode: string;
+} {
   const requestedSystem = houseSystemForInput(input);
   const hsys = HOUSE_SYSTEM_CODES[requestedSystem];
   const result = swe.houses(julianDay, input.latitude, input.longitude, hsys) as unknown as SwissHouseResult;
@@ -225,6 +253,7 @@ function calculateHouses(
       ...signFor(midheavenLongitude),
     },
     houseSystem: requestedSystem,
+    houseSystemCode: hsys,
   };
 }
 
@@ -287,7 +316,15 @@ export async function computeNatalChart(input: BirthChartInput): Promise<NatalCh
       distance: Number(Number(pos[2] ?? 0).toFixed(6)),
       speed: Number(Number(pos[3] ?? 0).toFixed(6)),
       ...signFor(longitude),
-      house: houseFor(longitude, houseData.houses),
+      house: planetHouse(
+        swe,
+        julianDay,
+        input,
+        houseData.houseSystemCode,
+        longitude,
+        Number(pos[1] ?? 0),
+        houseData.houses,
+      ),
       retrograde: Number(pos[3] ?? 0) < 0,
     };
   }
