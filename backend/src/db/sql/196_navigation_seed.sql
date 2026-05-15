@@ -223,10 +223,7 @@ INSERT INTO menu_items_i18n (id, menu_item_id, locale, title) VALUES
   ('mi-fi-lcok-en',  'mi-f-leg-cookie', @loc_en, 'Cookie Policy'),
   ('mi-fi-lcok-de',  'mi-f-leg-cookie', @loc_de, 'Cookie-Richtlinie')
 ON DUPLICATE KEY UPDATE title = VALUES(title);
-
--- ---- Orphan temizlik: eski "Big Three" footer kaydını büyük-üçlü'ye düzelt ----
--- (db:seed:nodrop satır silmez; eski Nisan seed'inden kalan stale satır/i18n
---  farklı PK taşıyor → menu_item_id'ye göre deterministik düzeltme.)
-UPDATE menu_items SET url = '/buyuk-uclu', is_active = 1 WHERE id = 'mi-f-astro-big';
-UPDATE menu_items_i18n SET title = 'Büyük Üçlü' WHERE menu_item_id = 'mi-f-astro-big' AND locale = @loc_tr;
-UPDATE menu_items_i18n SET title = 'Big Three'  WHERE menu_item_id = 'mi-f-astro-big' AND locale IN (@loc_en, @loc_de);
+-- NOT: Eski Nisan seed'inden kalan stale 'Big Three' /big-three footer kaydı
+-- (id=mi-f-astro-big) otomatik düzeltilir: menu_items PK=id + menu_items_i18n
+-- UNIQUE(menu_item_id,locale) → yukarıdaki INSERT'ler ON DUPLICATE ile mevcut
+-- satırın url'ini (/buyuk-uclu) ve title'ını (Büyük Üçlü) günceller.
