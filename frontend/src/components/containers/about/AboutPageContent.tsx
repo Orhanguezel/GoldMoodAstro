@@ -59,7 +59,7 @@ const ABOUT_COPY: Record<string, AboutCopy> = {
     experienceParagraphs: [
       'GoldMoodAstro ekibi; yazılım geliştirme, ürün tasarımı, astroloji, tarot, içerik editörlüğü ve kullanıcı deneyimi alanlarının birleşiminden oluşur. Kombine deneyimimizi yalnızca yıl sayısıyla değil, kullanıcıya temas eden her küçük akışta ölçüyoruz: danışman bulma, uygun saat seçme, ödeme, hatırlatma, sesli görüşme, mesajlaşma ve görüşme sonrası değerlendirme.',
       'Danışmanlarımız farklı uzmanlıklardan gelir: doğum haritası, ilişki astrolojisi, tarot, numeroloji, mood danışmanlığı, kariyer ve ilişki odaklı rehberlik. Her profilin uzmanlık alanı, dil bilgisi, seans paketi ve kullanıcı yorumları görünür olmalıdır. Çünkü güven, güzel cümlelerden önce şeffaf bilgiyle başlar.',
-      'Bu deneyim anlayışı mobil uygulama, web arayüzü ve danışman panelinde aynı prensiple devam eder. Kullanıcı için önemli olan, ne zaman kiminle görüşeceğini ve görüşmenin ona ne sağlayabileceğini net biçimde bilmektir. Danışman için önemli olan ise zamanını, paketlerini, uygunluk durumunu ve kullanıcı iletişimini düzenli yönetebilmektir. GoldMoodAstro bu iki tarafı aynı ciddiyetle ele alır. Çünkü iyi bir seans yalnızca doğru yorumla değil, o yorumun gerçekleştiği güvenli operasyonel ortamla da ilgilidir.',
+      'Bu deneyim anlayışı mobil uygulama, web arayüzü ve danışman panelinde aynen devam eder. Kullanıcı için önemli olan, ne zaman kiminle görüşeceğini ve görüşmenin ona ne sağlayabileceğini net biçimde bilmektir. Danışman için önemli olan ise zamanını, paketlerini, uygunluk durumunu ve kullanıcı iletişimini düzenli yönetebilmektir. GoldMoodAstro bu iki tarafı aynı ciddiyetle ele alır. Çünkü iyi bir seans yalnızca doğru yorumla değil, o yorumun gerçekleştiği güvenli operasyonel ortamla da ilgilidir.',
     ],
     differentiatorsTitle: 'Neden GoldMood?',
     differentiators: [
@@ -139,30 +139,43 @@ const ABOUT_COPY: Record<string, AboutCopy> = {
   },
 };
 
-function getAboutCopy(locale: string): AboutCopy {
-  if (locale === 'en' || locale === 'de') return ABOUT_COPY[locale];
-  return ABOUT_COPY.tr;
-}
-
 const AboutPageContent: React.FC = () => {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_about', locale as any);
-  const copy = getAboutCopy(locale);
+  const copyFallback = useMemo(() => {
+    if (locale === 'en' || locale === 'de') return ABOUT_COPY[locale];
+    return ABOUT_COPY.tr;
+  }, [locale]);
 
   const t = useCallback((key: string, fallback: any) => ui(key, fallback), [ui]);
 
   const readUi = useCallback(
     (key: string, fallback: any) => {
-      const v = t(key, fallback);
-      if (typeof v === 'string') {
-        const s = v.trim();
-        if (!s) return fallback;
-        if (s === key) return fallback;
+      const v = ui(key, '');
+      if (!v || v === key) return fallback;
+      // Eğer JSON array/object ise parse et
+      if (typeof fallback === 'object' && v.startsWith('[') || v.startsWith('{')) {
+        try { return JSON.parse(v); } catch { return fallback; }
       }
       return v;
     },
-    [t],
+    [ui],
   );
+
+  const copy = useMemo<AboutCopy>(() => ({
+    eyebrow: readUi('ui_about_eyebrow', copyFallback.eyebrow),
+    title: readUi('ui_about_title', copyFallback.title),
+    lead: readUi('ui_about_lead', copyFallback.lead),
+    founderTitle: readUi('ui_about_founder_title', copyFallback.founderTitle),
+    founderParagraphs: readUi('ui_about_founder_paragraphs', copyFallback.founderParagraphs),
+    methodologyTitle: readUi('ui_about_methodology_title', copyFallback.methodologyTitle),
+    methodologyParagraphs: readUi('ui_about_methodology_paragraphs', copyFallback.methodologyParagraphs),
+    experienceTitle: readUi('ui_about_experience_title', copyFallback.experienceTitle),
+    experienceParagraphs: readUi('ui_about_experience_paragraphs', copyFallback.experienceParagraphs),
+    differentiatorsTitle: readUi('ui_about_diff_title', copyFallback.differentiatorsTitle),
+    differentiators: readUi('ui_about_diff_items', copyFallback.differentiators),
+    authorBio: readUi('ui_about_author_bio', copyFallback.authorBio),
+  }), [readUi, copyFallback]);
 
   const { data, isLoading } = useListCustomPagesPublicQuery({
     module_key: 'about',

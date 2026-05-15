@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next';
 import { fetchSetting } from '@/i18n/server';
+import brandFallback from '../../../config/brand.json';
 
 const FALLBACK_BG = '#FAF6EF';
-const FALLBACK_THEME = '#C9A961';
+const FALLBACK_THEME = brandFallback.theme_color || '#C9A961';
 
 async function readBrandColors(): Promise<{ bg: string; theme: string }> {
   try {
@@ -20,9 +21,9 @@ async function readBrandColors(): Promise<{ bg: string; theme: string }> {
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const { bg, theme } = await readBrandColors();
   return {
-    name: 'GoldMoodAstro',
-    short_name: 'GoldMood',
-    description: 'Astroloji, tarot ve yaşam koçluğu için uzman danışmanlarla bağlantı platformu.',
+    name: brandFallback.name || 'GoldMoodAstro',
+    short_name: brandFallback.name?.split(' ')[0] || 'GoldMood',
+    description: brandFallback.tagline || 'Astroloji, tarot ve yaşam koçluğu için uzman danışmanlarla bağlantı platformu.',
     start_url: '/tr',
     display: 'standalone',
     background_color: bg,

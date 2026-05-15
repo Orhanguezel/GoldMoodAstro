@@ -91,7 +91,7 @@ const nextConfig = {
         headers: staticContentCache,
       },
       {
-        source: '/:locale(tr|en|de)/:page(about|blog|burclar|sinastri|tarot|numeroloji|yildizname|birth-chart|big-three|burcunu-ogren|yukselen-burc-hesaplayici|unluler-ve-burclari|faqs|editorial-policy|contact|pricing)',
+        source: '/:locale(tr|en|de)/:page(about|blog|burclar|sinastri|tarot|numeroloji|yildizname|birth-chart|buyuk-uclu|big-three|burcunu-ogren|yukselen-burc-hesaplayici|unluler-ve-burclari|faqs|editorial-policy|contact|pricing)',
         headers: staticContentCache,
       },
       {
@@ -118,6 +118,7 @@ const nextConfig = {
       { source: '/:locale/gutschein', destination: '/:locale', permanent: true },
       { source: '/:locale/services', destination: '/:locale/consultants', permanent: true },
       { source: '/:locale/appointment', destination: '/:locale/consultants', permanent: true },
+      { source: '/:locale/big-three', destination: '/:locale/buyuk-uclu', permanent: true },
     ];
   },
 };

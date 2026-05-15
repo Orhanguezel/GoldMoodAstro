@@ -5,6 +5,7 @@
 // =============================================================
 
 import { z } from 'zod';
+import brand from '../../../../config/brand.json';
 
 const nonEmpty = z.string().trim().min(1);
 
@@ -87,11 +88,11 @@ export const DEFAULT_OG_IMAGE = '/img/og-default.jpg';
  * Asıl değerler site_settings.seo / site_settings.site_seo içinden gelir.
  */
 export const DEFAULT_SEO_GLOBAL: SeoObject = {
-  site_name: 'GoldMoodAstro',
-  title_default: 'GoldMoodAstro – Ruhsal Danışmanlık ve Astroloji Platformu',
-  title_template: '%s – GoldMoodAstro',
+  site_name: brand.name || 'GoldMoodAstro',
+  title_default: `${brand.name} – Ruhsal Danışmanlık ve Astroloji Platformu`,
+  title_template: `%s – ${brand.name}`,
   description:
-    'GoldMoodAstro ile ruhsal yolculuğunuzda rehberlik alın. Astroloji, tarot ve mood coaching seansları için uzman danışmanlarla buluşun.',
+    brand.tagline || 'Ruhsal yolculuğunuzda rehberlik alın. Astroloji, tarot ve mood coaching seansları için uzman danışmanlarla buluşun.',
   open_graph: {
     type: 'website',
     images: [DEFAULT_OG_IMAGE],
@@ -114,25 +115,25 @@ export const DEFAULT_SEO_GLOBAL: SeoObject = {
  */
 export const DEFAULT_SITE_META_DEFAULT_BY_LOCALE: Record<string, SiteMetaDefaultObject> = {
   tr: {
-    title: 'GoldMoodAstro – Ruhsal Danışmanlık ve Astroloji Platformu',
+    title: `${brand.name} – Ruhsal Danışmanlık ve Astroloji Platformu`,
     description:
-      'Astroloji, tarot ve mood coaching ile kendinizi keşfedin. Güvenilir danışmanlarla sesli seanslarınızı hemen başlatın.',
+      brand.tagline || 'Astroloji, tarot ve mood coaching ile kendinizi keşfedin. Güvenilir danışmanlarla sesli seanslarınızı hemen başlatın.',
     keywords:
-      'goldmoodastro, astroloji, tarot, numeroloji, mood coaching, kariyer danışmanlığı, ilişki danışmanlığı, ruhsal rehberlik, online seans',
+      'astroloji, tarot, numeroloji, mood coaching, kariyer danışmanlığı, ilişki danışmanlığı, ruhsal rehberlik, online seans',
   },
   en: {
-    title: 'GoldMoodAstro – Spiritual Guidance and Astrology Platform',
+    title: `${brand.name} – Spiritual Guidance and Astrology Platform`,
     description:
-      'Explore yourself with astrology, tarot, and mood coaching. Start your voice sessions with trusted consultants now.',
+      brand.tagline || 'Explore yourself with astrology, tarot, and mood coaching. Start your voice sessions with trusted consultants now.',
     keywords:
-      'goldmoodastro, astrology, tarot, numerology, mood coaching, career guidance, relationship counseling, spiritual guidance, online session',
+      'astrology, tarot, numerology, mood coaching, career guidance, relationship counseling, spiritual guidance, online session',
   },
   de: {
-    title: 'GoldMoodAstro – Spirituelle Beratung und Astrologie-Plattform',
+    title: `${brand.name} – Spirituelle Beratung und Astrologie-Plattform`,
     description:
-      'Entdecken Sie sich selbst mit Astrologie, Tarot und Mood Coaching. Starten Sie jetzt Ihre Sitzungen mit vertrauenswürdigen Beratern.',
+      brand.tagline || 'Entdecken Sie sich selbst mit Astrologie, Tarot und Mood Coaching. Starten Sie jetzt Ihre Sitzungen mit vertrauenswürdigen Beratern.',
     keywords:
-      'goldmoodastro, astrologie, tarot, numerologie, mood coaching, berufsberatung, beziehungsberatung, spirituelle führung, online-sitzung',
+      'astrologie, tarot, numerologie, mood coaching, berufsberatung, beziehungsberatung, spirituelle führung, online-sitzung',
   },
 };
 

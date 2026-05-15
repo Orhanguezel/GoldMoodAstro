@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { Star, Clock } from 'lucide-react';
 import { useListConsultantsPublicQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
 import { localizePath } from '@/integrations/shared';
-import { useLocaleShort } from '@/i18n';
+import { useLocaleShort, useUiSection } from '@/i18n';
 
-const COPY = {
+const COPY_FALLBACK = {
   tr: {
     label: 'Öne Çıkan Danışmanlar',
     title: 'En yüksek puanlı uzmanlar',
@@ -44,7 +44,18 @@ function StarRow({ rating }: { rating: number }) {
 
 export default function FeaturedConsultantsSection({ locale: explicitLocale }: { locale?: string }) {
   const locale = useLocaleShort(explicitLocale) || 'tr';
-  const copy = COPY[locale as keyof typeof COPY] ?? COPY.tr;
+  const { ui } = useUiSection('ui_home', locale as any);
+  
+  const f = COPY_FALLBACK[locale as keyof typeof COPY_FALLBACK] ?? COPY_FALLBACK.tr;
+  const copy = React.useMemo(() => ({
+    label: ui('ui_home_featured_label', f.label),
+    title: ui('ui_home_featured_title', f.title),
+    desc: ui('ui_home_featured_desc', f.desc),
+    cta: ui('ui_home_featured_cta', f.cta),
+    min: ui('ui_home_featured_min', f.min),
+    from: ui('ui_home_featured_from', f.from),
+    noData: ui('ui_home_featured_no_data', f.noData),
+  }), [ui, f]);
 
   const { data: consultants = [], isLoading } = useListConsultantsPublicQuery(
     { limit: 6, sort: 'popular' },

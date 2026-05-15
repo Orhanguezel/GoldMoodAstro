@@ -14,6 +14,7 @@ import ShareCard from '@/components/common/ShareCard';
 import ConsultantFunnelCTA from '@/components/common/ConsultantFunnelCTA';
 import { useGetTarotReadingQuery } from '@/integrations/rtk/public/tarot.public.endpoints';
 import { useParams, useRouter } from 'next/navigation';
+import { useBrand } from '@/hooks/useBrand';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 const manrope = Manrope({ subsets: ['latin'] });
@@ -21,6 +22,7 @@ const manrope = Manrope({ subsets: ['latin'] });
 export default function TarotResultClient() {
   const { id, locale } = useParams();
   const router = useRouter();
+  const { brand } = useBrand();
   const { data: res, isLoading, error } = useGetTarotReadingQuery(id as string);
 
   if (isLoading) {
@@ -134,7 +136,7 @@ export default function TarotResultClient() {
             <div className="flex items-center gap-4">
               <ShareCard 
                 title="Tarot Falımı Paylaş"
-                shareText={`GoldMoodAstro'da tarot falı baktırdım ✨\nKartlarım: ${drawResult.cards.map((c: any) => c.name).join(', ')}\nSen de geleceğine ışık tut:`}
+                shareText={`${brand.name}'da tarot falı baktırdım ✨\nKartlarım: ${drawResult.cards.map((c: any) => c.name).join(', ')}\nSen de geleceğine ışık tut:`}
                 variant="tarot"
                 data={{
                   cards: drawResult.cards.map((c: any) => ({

@@ -11,6 +11,8 @@ import { Download, Share2, RefreshCcw, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import ShareCard from '@/components/common/ShareCard';
 
+import { useBrand } from '@/hooks/useBrand';
+
 const cinzel = Cinzel({ subsets: ['latin'] });
 
 const SIGN_LABELS: Record<string, string> = {
@@ -20,6 +22,7 @@ const SIGN_LABELS: Record<string, string> = {
 };
 
 export default function BigThree() {
+  const { brand } = useBrand();
   const [result, setResult] = useState<BirthChart | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -32,9 +35,9 @@ export default function BigThree() {
     if (!cardRef.current) return;
     setIsExporting(true);
     try {
-      const dataUrl = await toPng(cardRef.current, { cacheBust: true, backgroundColor: '#0D0B1E' });
+      const dataUrl = await toPng(cardRef.current, { cacheBust: true, backgroundColor: brand.colors.bg_base || '#0D0B1E' });
       const link = document.createElement('a');
-      link.download = `goldmood-big-three-${result?.name}.png`;
+      link.download = `goldmood-buyuk-uclu-${result?.name}.png`;
       link.href = dataUrl;
       link.click();
       toast.success('Görsel başarıyla oluşturuldu!');
@@ -84,11 +87,11 @@ export default function BigThree() {
               <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/10 via-transparent to-brand-gold/5" />
               <div className="absolute -top-20 -left-20 w-64 h-64 bg-brand-primary/10 blur-[80px] rounded-full" />
               <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-brand-gold/10 blur-[80px] rounded-full" />
-              
+
               {/* Header */}
               <div className="relative text-center">
                 <div className="text-[var(--gm-gold)] font-bold text-[10px] tracking-[0.4em] uppercase mb-1">
-                  GOLD MOOD ASTROLOGY
+                  {brand.name.toUpperCase()}
                 </div>
                 <div className="h-px w-12 bg-brand-gold/40 mx-auto mb-4" />
                 <h2 className={`${cinzel.className} text-3xl text-white`}>{result.name}</h2>
@@ -107,7 +110,7 @@ export default function BigThree() {
                       <div className={`${cinzel.className} text-xl text-white`}>{SIGN_LABELS[item.sign!] || item.sign}</div>
                     </div>
                     <div className={`relative ${item.major ? 'w-20 h-20' : 'w-16 h-16'} flex-shrink-0 border border-brand-gold/20 rounded-full bg-white/5 flex items-center justify-center`}>
-                      <Image 
+                      <Image
                         src={`/uploads/zodiac/${item.sign}.png`}
                         alt=""
                         width={item.major ? 60 : 48}
@@ -125,10 +128,10 @@ export default function BigThree() {
               {/* Footer */}
               <div className="relative text-center">
                 <p className="text-[10px] text-muted-foreground tracking-widest italic mb-2">
-                  &quot;Yıldızlar senin için parlıyor.&quot;
+                  &quot;{brand.tagline}&quot;
                 </p>
-                <div className="text-[9px] text-brand-gold/40 font-bold tracking-widest">
-                  WWW.GOLDMOODASTRO.COM
+                <div className="text-[9px] text-brand-gold/40 font-bold tracking-widest uppercase">
+                  {brand.domain}
                 </div>
               </div>
             </div>
@@ -145,8 +148,8 @@ export default function BigThree() {
               </button>
 
               <ShareCard 
-                title="Big Three Kartımı Paylaş"
-                shareText={`${result.name} olarak Big Three kartımı oluşturdum ✨\nSen de kozmik kimliğini keşfet:`}
+                title="Büyük Üçlü Kartımı Paylaş"
+                shareText={`${result.name} olarak Büyük Üçlü kartımı oluşturdum ✨\nSen de kozmik kimliğini keşfet:`}
                 variant="birth-chart"
                 data={{
                   sun: SIGN_LABELS[sunSign!] || sunSign,

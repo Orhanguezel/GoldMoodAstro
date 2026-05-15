@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return buildPageMetadata({
     locale,
     pageKey: 'big-three',
-    pathname: '/big-three',
+    pathname: '/buyuk-uclu',
     fallback: {
       title: 'Büyük Üçlü — Güneş, Ay ve Yükselen Burç Kartı',
       description: 'Kozmik kimliğinizin en önemli üç parçasını keşfedin: Güneş (Ego), Ay (Duygular) ve Yükselen (Dış Dünya).',
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default function BigThreePage() {
+export default function BuyukUcluPage() {
   return (
     <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
       <BigThree />

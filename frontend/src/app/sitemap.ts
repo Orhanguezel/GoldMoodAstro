@@ -5,8 +5,9 @@
 // (alternates.languages property'sinden).
 
 import { MetadataRoute } from 'next';
+import brand from '../../../config/brand.json';
 
-const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
+const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL || brand.public_url || 'https://goldmoodastro.com').replace(/\/$/, '');
 
 const LOCALES = ['tr', 'en', 'de'] as const;
 const DEFAULT_LOCALE = 'tr';
@@ -25,7 +26,7 @@ const STATIC_PAGES = [
   '/numeroloji', '/yildizname',
   '/editorial-policy',
   '/burclar', '/burcunu-ogren', '/unluler-ve-burclari',
-  '/yukselen-burc-hesaplayici', '/big-three',
+  '/yukselen-burc-hesaplayici', '/buyuk-uclu',
 ];
 
 /** Locale'lere göre alternates objesi üret — Next.js sitemap'e <xhtml:link> olarak basar. */

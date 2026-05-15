@@ -183,7 +183,7 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
   function applySuggestion() {
     setReplyText(buildSuggestion(review));
     setIsReplying(true);
-    toast.info('AI cevap önerisi hazırlandı');
+    toast.info('Taslak cevap hazırlandı');
   }
 
   return (

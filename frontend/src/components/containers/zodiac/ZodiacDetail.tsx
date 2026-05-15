@@ -17,6 +17,7 @@ import { getZodiacMeta } from '@/lib/zodiac/signs';
 import { getCelebritiesBySign } from '@/lib/zodiac/celebrities';
 import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
+import { useBrand } from '@/hooks/useBrand';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 interface ZodiacDetailProps {
@@ -34,6 +35,7 @@ type ZodiacSection = {
 
 export default function ZodiacDetail({ initialTab = 'overview', initialInfo = null, initialToday = null }: ZodiacDetailProps) {
   const { sign, locale } = useParams();
+  const { brand } = useBrand();
   const signKey = sign as ZodiacSign;
   const meta = getZodiacMeta(signKey) || {
     key: signKey,
@@ -44,7 +46,7 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
     modality: 'Öncü' as const,
     polarity: 'Yang' as const,
     ruler: '',
-    accent: '#D4AF37',
+    accent: brand.colors.brand_secondary || '#D4AF37',
     image: `/uploads/zodiac/${signKey}.png`,
   };
 
@@ -361,9 +363,9 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
       <FaqAccordion items={faqItems} title={`${meta.label} Burcu Hakkında Sorular`} />
 
       <AuthorBio
-        name="GoldMoodAstro Editorial Team"
+        name={`${brand.name} Editorial Team`}
         title="Astroloji ve ruhsal danışmanlık editörleri"
-        bio="GoldMoodAstro içerikleri, kullanıcıların danışman görüşmelerine daha hazırlıklı gelmesi için astrolojik sembolizm, pratik öz farkındalık ve anlaşılır rehberlik ilkeleriyle hazırlanır."
+        bio={`${brand.name} içerikleri, kullanıcıların danışman görüşmelerine daha hazırlıklı gelmesi için astrolojik sembolizm, pratik öz farkındalık ve anlaşılır rehberlik ilkeleriyle hazırlanır.`}
         expertise={['Astroloji', 'Zodyak', 'Ruhsal Danışmanlık']}
         certificates={['Swiss Ephemeris metodolojisi']}
       />

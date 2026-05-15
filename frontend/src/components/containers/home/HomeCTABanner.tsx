@@ -2,10 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useLocaleShort } from '@/i18n';
+import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 
-const COPY = {
+const COPY_FALLBACK = {
   tr: {
     title: 'İlk adımı atmaya hazır mısınız?',
     desc: 'Danışmanınızla bugün buluşun. Randevu almak sadece birkaç dakikanızı alır.',
@@ -22,7 +22,15 @@ const COPY = {
 
 export default function HomeCTABanner({ locale: explicitLocale }: { locale?: string }) {
   const locale = useLocaleShort(explicitLocale) || 'tr';
-  const copy = COPY[locale as keyof typeof COPY] ?? COPY.tr;
+  const { ui } = useUiSection('ui_home', locale as any);
+  
+  const f = COPY_FALLBACK[locale as keyof typeof COPY_FALLBACK] ?? COPY_FALLBACK.tr;
+  const copy = React.useMemo(() => ({
+    title: ui('ui_home_cta_banner_title', f.title),
+    desc: ui('ui_home_cta_banner_desc', f.desc),
+    cta: ui('ui_home_cta_banner_cta', f.cta),
+    secondary: ui('ui_home_cta_banner_secondary', f.secondary),
+  }), [ui, f]);
 
   return (
     <section

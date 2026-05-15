@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Smartphone, Apple, Play, QrCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useBrand } from '@/hooks/useBrand';
 
 /**
  * AppDownloadSection component.
@@ -11,6 +12,7 @@ import { cn } from '@/lib/utils';
  */
 export default function AppDownloadSection({ locale = 'tr' }: { locale?: string }) {
   const isTr = locale === 'tr';
+  const { brand } = useBrand();
   
   const content = {
     title: isTr ? 'Cebinizdeki Yıldız Rehberi' : 'Your Star Guide in Your Pocket',
@@ -24,17 +26,17 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
     <section className="container mx-auto px-4 py-16">
       <div 
         className={cn(
-          "relative overflow-hidden rounded-[3rem] bg-[#1A1715] border border-white/5 shadow-3xl",
+          "relative overflow-hidden rounded-[3rem] bg-(--gm-bg-deep) border border-white/5 shadow-3xl",
           "min-h-[500px] md:min-h-[450px] lg:min-h-[480px] flex flex-col md:flex-row items-center"
         )}
       >
         {/* Cinematic Background Image (Right Side) */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-linear-to-r from-[#1A1715] via-[#1A1715]/90 to-transparent z-10 md:block hidden" />
-          <div className="absolute inset-0 bg-linear-to-b from-[#1A1715]/40 to-[#1A1715] z-10 md:hidden" />
+          <div className="absolute inset-0 bg-linear-to-r from-(--gm-bg-deep) via-(--gm-bg-deep)/90 to-transparent z-10 md:block hidden" />
+          <div className="absolute inset-0 bg-linear-to-b from-(--gm-bg-deep)/40 to-(--gm-bg-deep) z-10 md:hidden" />
           
           <Image
-            src="/assets/images/banners/app-download-bg.png" 
+            src={brand.assets['banner_app_download'] || "/assets/images/banners/app-download-bg.png"} 
             alt="Mobile App Experience" 
             fill
             sizes="(max-width: 768px) 100vw, 60vw"

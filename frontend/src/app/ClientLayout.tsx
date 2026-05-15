@@ -26,6 +26,7 @@ const SupportBotWidget = dynamic(() => import('../components/containers/chat/Sup
 
 
 import { SplashScreen } from '../layout/SplashScreen';
+import { useBrand } from '@/hooks/useBrand';
 
 export default function ClientLayout({
   children,
@@ -36,8 +37,7 @@ export default function ClientLayout({
   locale?: string;
   initialMenuItems?: PublicMenuItemDto[];
 }) {
-  // Keep layout light: Header already fetches dynamic brand/settings on its own.
-  const brand = useMemo(() => ({ name: 'GoldMoodAstro' }), []);
+  const { brand } = useBrand();
   
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -127,7 +127,7 @@ export default function ClientLayout({
 
   return (
     <Fragment>
-      <SplashScreen />
+      <SplashScreen companyName={brand.name} tagline={brand.tagline} />
       <PwaRegistration />
       <AnalyticsScripts />
       <GAViewPages />

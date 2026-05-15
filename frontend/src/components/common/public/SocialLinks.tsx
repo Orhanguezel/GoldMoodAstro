@@ -8,6 +8,7 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 
 import { IconFacebook, IconInstagram, IconLinkedIn, IconTwitterX, IconYoutube } from '@/components/ui/icons';
+import { useBrand } from '@/hooks/useBrand';
 
 export type SocialLinksMap = Record<string, string>;
 
@@ -37,7 +38,7 @@ const normalizeUrl = (u?: string) => {
 };
 
 export const SocialLinks: React.FC<SocialLinksProps> = ({
-  socials,
+  socials: socialsProp,
   className,
   itemClassName,
   iconClassName,
@@ -45,6 +46,8 @@ export const SocialLinks: React.FC<SocialLinksProps> = ({
   withLabels = false,
   onClickItem,
 }) => {
+  const { brand } = useBrand();
+  const socials = socialsProp || brand.social;
   const items = useMemo<SocialItem[]>(() => {
     const s = (socials ?? {}) as any;
 

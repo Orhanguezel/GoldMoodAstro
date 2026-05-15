@@ -61,7 +61,7 @@ export default function RisingSignCalculator() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8"
           >
-            {/* The Big Three Result */}
+            {/* Büyük Üçlü sonucu */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 { type: 'Güneş Burcu', sign: sunSign, icon: '☀️' },

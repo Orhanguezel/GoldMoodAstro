@@ -2,7 +2,9 @@ import React from 'react';
 import TarotResultClient from './TarotResultClient';
 import type { Metadata } from 'next';
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://goldmoodastro.com/api').replace(/\/$/, '');
+import brand from '../../../../../../../config/brand.json';
+
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || `${brand.public_url}/api`).replace(/\/$/, '');
 
 export async function generateMetadata({
   params,
@@ -17,9 +19,9 @@ export async function generateMetadata({
     const { data } = await res.json();
 
     const cardNames = data.cards.map((c: any) => c.name).join(', ');
-    const title = `Tarot Falı — ${cardNames} — GoldMoodAstro`;
+    const title = `Tarot Falı — ${cardNames} — ${brand.name}`;
     const description = `${data.question || 'Genel rehberlik'} için çekilen ${data.cards.length} kart ve detaylı yapay zeka yorumu.`;
-    const ogImageUrl = `https://goldmoodastro.com/${locale}/tarot/reading/${id}/opengraph-image`;
+    const ogImageUrl = `${brand.public_url}/${locale}/tarot/reading/${id}/opengraph-image`;
 
     return {
       title,
@@ -29,7 +31,7 @@ export async function generateMetadata({
         description,
         images: [{ url: ogImageUrl, width: 1200, height: 630, alt: title }],
         type: 'article',
-        siteName: 'GoldMoodAstro',
+        siteName: brand.name,
       },
       twitter: {
         card: 'summary_large_image',
@@ -40,7 +42,7 @@ export async function generateMetadata({
     };
   } catch (err) {
     return {
-      title: 'Tarot Falı — GoldMoodAstro',
+      title: `Tarot Falı — ${brand.name}`,
       description: 'Detaylı tarot falı yorumu.',
     };
   }

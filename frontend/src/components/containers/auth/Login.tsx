@@ -22,6 +22,7 @@ import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 
 // i18n
 import { useLocaleShort, useUiSection } from '@/i18n';
+import { useBrand } from '@/hooks/useBrand';
 import { localizePath } from '@/integrations/shared';
 
 function trimSlash(x: string) {
@@ -32,6 +33,7 @@ const Login: React.FC = () => {
   const router = useRouter();
   const locale = useLocaleShort();
   const searchParams = useSearchParams();
+  const { brand } = useBrand();
   const { ui } = useUiSection('ui_auth', locale as any);
 
   // Login sonrası dönüş URL'i: ?next=/tr/booking?... → kullanıcı orijinal sayfasına döner
@@ -155,7 +157,7 @@ const Login: React.FC = () => {
                 id="login-email"
                 type="email"
                 className="w-full px-4 py-3 border border-border-light rounded-sm focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 transition-all bg-bg-card placeholder:text-text-muted text-text-primary"
-                placeholder={ui('login_email_placeholder', 'ornek@goldmoodastro.com')}
+                placeholder={ui('login_email_placeholder', `ornek@${brand.domain || 'goldmoodastro.com'}`)}
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

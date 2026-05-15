@@ -18,7 +18,7 @@
 GoldMoodAstro is a marketplace that connects users with professional consultants through three service layers:
 
 1. **Live Consultation** — Verified astrologers, tarot readers, numerologists and spiritual advisors via end-to-end encrypted live audio/video sessions on LiveKit Cloud. Service packages range from 15-minute free intro chats to 90-minute deep analysis sessions.
-2. **Self-Service Calculations** — Birth chart, synastry (relationship compatibility), yıldızname (ebced), Big Three (sun/moon/rising), rising sign calculator — all powered by Swiss Ephemeris precision.
+2. **Self-Service Calculations** — Birth chart, synastry (relationship compatibility), yıldızname (ebced), Büyük Üçlü (sun/moon/rising), rising sign calculator — all powered by Swiss Ephemeris precision.
 3. **Daily & Periodic Readings** — Daily/weekly/monthly love, career and health readings for all 12 zodiac signs; LLM-assisted, reviewed by professional astrologers.
 
 ## Specializations
@@ -47,7 +47,7 @@ GoldMoodAstro is a marketplace that connects users with professional consultants
 ### Astrology Tools
 - Birth Chart: https://www.goldmoodastro.com/tr/birth-chart
 - Synastry: https://www.goldmoodastro.com/tr/sinastri
-- Big Three: https://www.goldmoodastro.com/tr/big-three
+- Büyük Üçlü: https://www.goldmoodastro.com/tr/buyuk-uclu
 - Rising Sign Calculator: https://www.goldmoodastro.com/tr/yukselen-burc-hesaplayici
 - Yıldızname: https://www.goldmoodastro.com/tr/yildizname
 

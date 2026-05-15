@@ -1,6 +1,9 @@
 import Image from 'next/image';
+import { useBrand } from '@/hooks/useBrand';
+import { useUiSection } from '@/i18n';
+import { useMemo } from 'react';
 
-const COPY = {
+const COPY_FALLBACK = {
   tr: {
     eyebrow: 'Deneyim',
     title: 'Sade ve <em>derin</em> bir<br/>astroloji rehberi.',
@@ -53,11 +56,21 @@ const COPY = {
 
 export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
   const isTr = locale === 'tr';
-  const copy = COPY[isTr ? 'tr' : 'en'];
+  const { brand } = useBrand();
+  const { ui } = useUiSection('ui_home', locale as any);
+  
+  const copy = useMemo(() => {
+    const f = isTr ? COPY_FALLBACK.tr : COPY_FALLBACK.en;
+    return {
+      eyebrow: ui('ui_home_features_eyebrow', f.eyebrow),
+      title: ui('ui_home_features_title', f.title),
+      features: f.features // keeping features array fallback for now to avoid massive individual ui keys unless specifically requested
+    };
+  }, [isTr, ui]);
 
-  const natalPath = '/img/natal_chart.png';
-  const dailyPath = '/img/daily_reading.png';
-  const synastryPath = '/img/synastry_chart.png';
+  const natalPath = brand.assets['img_natal_chart'] || '/img/natal_chart.png';
+  const dailyPath = brand.assets['img_daily_reading'] || '/img/daily_reading.png';
+  const synastryPath = brand.assets['img_synastry_chart'] || '/img/synastry_chart.png';
 
   return (
     <section className="py-32 px-6 bg-[var(--gm-bg-deep)] relative border-t border-[var(--gm-border-soft)]">

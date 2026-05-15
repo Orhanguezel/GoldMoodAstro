@@ -5,6 +5,8 @@ import { buildPageMetadata } from '@/seo/server';
 import JsonLd from '@/seo/JsonLd';
 import { articleSchema, graph } from '@/seo/jsonld';
 
+import brand from '../../../../../config/brand.json';
+
 export const revalidate = 86400;
 
 type Props = { params: Promise<{ locale: string }> };
@@ -16,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'burcunu-ogren',
     pathname: '/burcunu-ogren',
     fallback: {
-      title: 'Burcunu Öğren — GoldMoodAstro',
+      title: `Burcunu Öğren — ${brand.name}`,
       description: 'Doğum gününü seçerek güneş burcunu, elementini ve sana yakın astrolojik temaları hızlıca keşfet.',
     },
   });
@@ -24,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BurcunuOgrenPage({ params }: Props) {
   const { locale } = await params;
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || brand.public_url || 'https://goldmoodastro.com').replace(/\/$/, '');
   const isTr = locale === 'tr';
 
   return (
@@ -40,7 +42,7 @@ export default async function BurcunuOgrenPage({ params }: Props) {
             image: `${siteUrl}/img/natal_chart.png`,
             datePublished: '2026-04-30T00:00:00.000Z',
             dateModified: '2026-04-30T00:00:00.000Z',
-            author: { name: 'GoldMoodAstro Editorial Team', url: `${siteUrl}/${locale}/about` },
+            author: { name: `${brand.name} Editorial Team`, url: `${siteUrl}/${locale}/about` },
             publisherId: `${siteUrl}/#org`,
             url: `${siteUrl}/${locale}/burcunu-ogren`,
             speakableSelectors: ['h1', '[data-speakable]'],

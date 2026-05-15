@@ -15,6 +15,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+import { useBrand } from '@/hooks/useBrand';
+
 interface ShareCardProps {
   title: string;
   description?: string;
@@ -34,11 +36,12 @@ export default function ShareCard({
   data,
   trigger,
 }: ShareCardProps) {
+  const { brand } = useBrand();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
-  const url = shareUrl || (typeof window !== 'undefined' ? window.location.href : 'https://goldmoodastro.com');
+  const url = shareUrl || (typeof window !== 'undefined' ? window.location.href : brand.public_url || 'https://goldmoodastro.com');
   const enc = encodeURIComponent;
 
   async function generatePng(): Promise<{ blob: Blob; file: File } | null> {
@@ -139,67 +142,67 @@ export default function ShareCard({
 
       {/* Hidden Card for PNG generation */}
       <div className="fixed -left-[9999px] -top-[9999px]">
-        <div
-          ref={cardRef}
-          style={{
-            width: 1080,
-            height: 1350,
-            background: 'linear-gradient(135deg,#2A2620 0%,#3D2E47 60%,#1A1715 100%)',
-            color: '#FAF6EF',
-            padding: 80,
-            fontFamily: 'Cinzel, Georgia, serif',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ position: 'absolute', top: 60, right: 60, opacity: 0.45 }}>
-            <svg width="200" height="200" viewBox="0 0 200 200">
-              <circle cx="100" cy="100" r="98" fill="none" stroke="#C9A961" strokeWidth="0.5" strokeDasharray="3 3"/>
-              <circle cx="100" cy="100" r="70" fill="none" stroke="#C9A961" strokeWidth="0.5"/>
-              <circle cx="100" cy="100" r="40" fill="none" stroke="#C9A961" strokeWidth="0.5"/>
-              <circle cx="100" cy="100" r="4" fill="#C9A961"/>
-            </svg>
-          </div>
-
-          <div>
-            <div style={{ fontSize: 18, letterSpacing: 8, color: '#C9A961', textTransform: 'uppercase', marginBottom: 24 }}>
-              GoldMoodAstro
+          <div
+            ref={cardRef}
+            style={{
+              width: 1080,
+              height: 1350,
+              background: `linear-gradient(135deg, ${brand.colors.bg_base} 0%, ${brand.colors.brand_accent} 60%, ${brand.colors.bg_deep} 100%)`,
+              color: brand.colors.text_primary,
+              padding: 80,
+              fontFamily: 'Cinzel, Georgia, serif',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{ position: 'absolute', top: 60, right: 60, opacity: 0.45 }}>
+              <svg width="200" height="200" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="98" fill="none" stroke={brand.colors.brand_primary} strokeWidth="0.5" strokeDasharray="3 3"/>
+                <circle cx="100" cy="100" r="70" fill="none" stroke={brand.colors.brand_primary} strokeWidth="0.5"/>
+                <circle cx="100" cy="100" r="40" fill="none" stroke={brand.colors.brand_primary} strokeWidth="0.5"/>
+                <circle cx="100" cy="100" r="4" fill={brand.colors.brand_primary}/>
+              </svg>
             </div>
-            <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 64, fontStyle: 'italic', lineHeight: 1.05, marginBottom: 16, color: '#FAF6EF' }}>
-              {variant === 'birth-chart' && 'Doğum Haritam'}
-              {variant === 'tarot' && 'Tarot Falım'}
-              {variant === 'coffee' && 'Kahve Falım'}
-              {variant === 'yildizname' && 'Yıldıznamem'}
-              {variant === 'synastry' && 'Aşk Uyumumuz'}
-              {variant === 'dream' && 'Rüya Analizim'}
-              {variant === 'horoscope' && 'Günlük Burç Yorumum'}
-              {variant === 'numerology' && 'Numeroloji Analizim'}
+ 
+            <div>
+              <div style={{ fontSize: 18, letterSpacing: 8, color: brand.colors.brand_primary, textTransform: 'uppercase', marginBottom: 24 }}>
+                {brand.name}
+              </div>
+              <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 64, fontStyle: 'italic', lineHeight: 1.05, marginBottom: 16, color: brand.colors.text_primary }}>
+                {variant === 'birth-chart' && 'Doğum Haritam'}
+                {variant === 'tarot' && 'Tarot Falım'}
+                {variant === 'coffee' && 'Kahve Falım'}
+                {variant === 'yildizname' && 'Yıldıznamem'}
+                {variant === 'synastry' && 'Aşk Uyumumuz'}
+                {variant === 'dream' && 'Rüya Analizim'}
+                {variant === 'horoscope' && 'Günlük Burç Yorumum'}
+                {variant === 'numerology' && 'Numeroloji Analizim'}
+              </div>
+            </div>
+ 
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 40 }}>
+              {variant === 'birth-chart' && <BirthChartContent data={data} colors={brand.colors} />}
+              {variant === 'tarot' && <TarotContent data={data} colors={brand.colors} />}
+              {variant === 'coffee' && <CoffeeContent data={data} colors={brand.colors} />}
+              {variant === 'yildizname' && <YildiznameContent data={data} colors={brand.colors} />}
+              {variant === 'synastry' && <SynastryContent data={data} colors={brand.colors} />}
+              {variant === 'dream' && <DreamContent data={data} colors={brand.colors} />}
+              {variant === 'horoscope' && <HoroscopeContent data={data} colors={brand.colors} />}
+              {variant === 'numerology' && <NumerologyContent data={data} colors={brand.colors} />}
+            </div>
+ 
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+              <div style={{ fontSize: 18, color: brand.colors.text_muted, fontFamily: 'Manrope, sans-serif' }}>
+                {brand.domain}
+              </div>
+              <div style={{ fontSize: 14, letterSpacing: 4, color: brand.colors.brand_primary, textTransform: 'uppercase' }}>
+                {brand.tagline}
+              </div>
             </div>
           </div>
-
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 40 }}>
-            {variant === 'birth-chart' && <BirthChartContent data={data} />}
-            {variant === 'tarot' && <TarotContent data={data} />}
-            {variant === 'coffee' && <CoffeeContent data={data} />}
-            {variant === 'yildizname' && <YildiznameContent data={data} />}
-            {variant === 'synastry' && <SynastryContent data={data} />}
-            {variant === 'dream' && <DreamContent data={data} />}
-            {variant === 'horoscope' && <HoroscopeContent data={data} />}
-            {variant === 'numerology' && <NumerologyContent data={data} />}
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <div style={{ fontSize: 18, color: '#A09888', fontFamily: 'Manrope, sans-serif' }}>
-              goldmoodastro.com
-            </div>
-            <div style={{ fontSize: 14, letterSpacing: 4, color: '#C9A961', textTransform: 'uppercase' }}>
-              Yıldızlarla tanışan modern astroloji
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Modal */}
@@ -289,18 +292,17 @@ const iconBtn = 'inline-flex items-center justify-center rounded-xl border borde
 
 // ─── Sub-Components for PNG Card ─────────────────────────────────────
 
-function BirthChartContent({ data }: { data: any }) {
+function BirthChartContent({ data, colors }: { data: any; colors: any }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-      <SignRow label="Güneş" symbol="☀️" sign={data.sun} />
-      <SignRow label="Ay"    symbol="🌙" sign={data.moon} />
-      <SignRow label="Yükselen" symbol="↑" sign={data.rising} />
+      <SignRow label="Güneş" symbol="☀️" sign={data.sun} colors={colors} />
+      <SignRow label="Ay"    symbol="🌙" sign={data.moon} colors={colors} />
+      <SignRow label="Yükselen" symbol="↑" sign={data.rising} colors={colors} />
     </div>
   );
 }
 
-function TarotContent({ data }: { data: any }) {
-  // data: { cards: [{ name, image_url, is_reversed }] }
+function TarotContent({ data, colors }: { data: any; colors: any }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
       {data.cards?.map((card: any, i: number) => (
@@ -311,64 +313,61 @@ function TarotContent({ data }: { data: any }) {
               width: 220, 
               height: 360, 
               borderRadius: 12, 
-              border: '2px solid #C9A961',
+              border: `2px solid ${colors.brand_primary}`,
               transform: card.is_reversed ? 'rotate(180deg)' : 'none'
             }} 
           />
-          <div style={{ fontSize: 18, color: '#C9A961', textTransform: 'uppercase' }}>{card.name}</div>
+          <div style={{ fontSize: 18, color: colors.brand_primary, textTransform: 'uppercase' }}>{card.name}</div>
         </div>
       ))}
     </div>
   );
 }
 
-function CoffeeContent({ data }: { data: any }) {
-  // data: { symbols: string[], summary: string }
+function CoffeeContent({ data, colors }: { data: any; colors: any }) {
   return (
     <div style={{ gap: 40, display: 'flex', flexDirection: 'column' }}>
        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
           {data.symbols?.map((s: string, i: number) => (
-            <div key={i} style={{ padding: '12px 24px', border: '1px solid #C9A961', borderRadius: 40, color: '#C9A961', fontSize: 20 }}>
+            <div key={i} style={{ padding: '12px 24px', border: `1px solid ${colors.brand_primary}`, borderRadius: 40, color: colors.brand_primary, fontSize: 20 }}>
               {s}
             </div>
           ))}
        </div>
-       <div style={{ fontSize: 32, fontFamily: 'Fraunces', fontStyle: 'italic', textAlign: 'center', lineHeight: 1.4, color: '#E5DCC8' }}>
+       <div style={{ fontSize: 32, fontFamily: 'Fraunces', fontStyle: 'italic', textAlign: 'center', lineHeight: 1.4, color: colors.text_secondary }}>
           "{data.summary}"
        </div>
     </div>
   );
 }
 
-function YildiznameContent({ data }: { data: any }) {
-  // data: { name, mother_name, menzil, number }
+function YildiznameContent({ data, colors }: { data: any; colors: any }) {
   return (
     <div style={{ gap: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-       <div style={{ fontSize: 80, color: '#C9A961' }}>{data.number}</div>
+       <div style={{ fontSize: 80, color: colors.brand_primary }}>{data.number}</div>
        <div style={{ fontSize: 24, letterSpacing: 4, textTransform: 'uppercase' }}>Senin Sayın</div>
-       <div style={{ fontSize: 48, fontFamily: 'Fraunces', fontStyle: 'italic', textAlign: 'center', color: '#FAF6EF' }}>
+       <div style={{ fontSize: 48, fontFamily: 'Fraunces', fontStyle: 'italic', textAlign: 'center', color: colors.text_primary }}>
           Menzilin: {data.menzil}
        </div>
     </div>
   );
 }
 
-function SynastryContent({ data }: { data: any }) {
-  // data: { partnerA, partnerB, scoreLove, scoreAttraction }
+function SynastryContent({ data, colors }: { data: any; colors: any }) {
   return (
     <div style={{ gap: 60, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
        <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
           <div style={{ fontSize: 42 }}>{data.partnerA}</div>
-          <div style={{ fontSize: 48, color: '#C9A961' }}>❤️</div>
+          <div style={{ fontSize: 48, color: colors.brand_primary }}>❤️</div>
           <div style={{ fontSize: 42 }}>{data.partnerB}</div>
        </div>
        <div style={{ display: 'flex', gap: 80 }}>
           <div style={{ textAlign: 'center' }}>
-             <div style={{ fontSize: 64, color: '#C9A961' }}>%{data.scoreLove}</div>
+             <div style={{ fontSize: 64, color: colors.brand_primary }}>%{data.scoreLove}</div>
              <div style={{ fontSize: 18, textTransform: 'uppercase', letterSpacing: 2 }}>Aşk Uyumu</div>
           </div>
           <div style={{ textAlign: 'center' }}>
-             <div style={{ fontSize: 64, color: '#C9A961' }}>%{data.scoreAttraction}</div>
+             <div style={{ fontSize: 64, color: colors.brand_primary }}>%{data.scoreAttraction}</div>
              <div style={{ fontSize: 18, textTransform: 'uppercase', letterSpacing: 2 }}>Çekim</div>
           </div>
        </div>
@@ -376,68 +375,65 @@ function SynastryContent({ data }: { data: any }) {
   );
 }
 
-function DreamContent({ data }: { data: any }) {
-  // data: { symbols: string[], excerpt: string }
+function DreamContent({ data, colors }: { data: any; colors: any }) {
   return (
     <div style={{ gap: 40, display: 'flex', flexDirection: 'column' }}>
        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
           {data.symbols?.map((s: string, i: number) => (
-            <div key={i} style={{ padding: '12px 24px', border: '1px solid #C9A961', borderRadius: 40, color: '#C9A961', fontSize: 20 }}>
+            <div key={i} style={{ padding: '12px 24px', border: `1px solid ${colors.brand_primary}`, borderRadius: 40, color: colors.brand_primary, fontSize: 20 }}>
               {s}
             </div>
           ))}
        </div>
-       <div style={{ fontSize: 32, fontFamily: 'Fraunces', fontStyle: 'italic', textAlign: 'center', lineHeight: 1.4, color: '#E5DCC8' }}>
+       <div style={{ fontSize: 32, fontFamily: 'Fraunces', fontStyle: 'italic', textAlign: 'center', lineHeight: 1.4, color: colors.text_secondary }}>
           "{data.excerpt}"
        </div>
     </div>
   );
 }
 
-function HoroscopeContent({ data }: { data: any }) {
-  // data: { sign, symbol, date, content }
+function HoroscopeContent({ data, colors }: { data: any; colors: any }) {
   return (
     <div style={{ gap: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
        <div style={{ 
           fontSize: 160, 
-          color: '#C9A961', 
+          color: colors.brand_primary, 
           width: 200, 
           height: 200, 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center',
           borderRadius: '50%',
-          border: '2px solid rgba(201,169,97,0.3)',
-          backgroundColor: 'rgba(201,169,97,0.1)'
+          border: `2px solid ${colors.brand_primary}44`,
+          backgroundColor: `${colors.brand_primary}11`
        }}>
           {data.symbol}
        </div>
        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 24, letterSpacing: 4, textTransform: 'uppercase', color: '#C9A961', marginBottom: 8 }}>{data.date}</div>
-          <div style={{ fontSize: 48, fontFamily: 'Fraunces', fontStyle: 'italic', color: '#FAF6EF' }}>{data.sign} Burcu</div>
+          <div style={{ fontSize: 24, letterSpacing: 4, textTransform: 'uppercase', color: colors.brand_primary, marginBottom: 8 }}>{data.date}</div>
+          <div style={{ fontSize: 48, fontFamily: 'Fraunces', fontStyle: 'italic', color: colors.text_primary }}>{data.sign} Burcu</div>
        </div>
-       <div style={{ fontSize: 28, fontFamily: 'Fraunces', fontStyle: 'italic', textAlign: 'center', lineHeight: 1.4, color: '#E5DCC8', maxWidth: 800 }}>
+       <div style={{ fontSize: 28, fontFamily: 'Fraunces', fontStyle: 'italic', textAlign: 'center', lineHeight: 1.4, color: colors.text_secondary, maxWidth: 800 }}>
           "{data.content.length > 200 ? data.content.substring(0, 200) + '...' : data.content}"
        </div>
     </div>
   );
 }
 
-function NumerologyContent({ data }: { data: any }) {
-  // data: { lifePath, destiny, soulUrge, personality }
+function NumerologyContent({ data, colors }: { data: any; colors: any }) {
   return (
     <div style={{ gap: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
        <div style={{ display: 'flex', gap: 30, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <NumBox label="Hayat Yolu" value={data.lifePath} color="#60a5fa" />
-          <NumBox label="Kader" value={data.destiny} color="#C9A961" />
-          <NumBox label="Ruh Güdüsü" value={data.soulUrge} color="#f87171" />
-          <NumBox label="Kişilik" value={data.personality} color="#34d399" />
+          <NumBox label="Hayat Yolu" value={data.lifePath} color="#60a5fa" colors={colors} />
+          <NumBox label="Kader" value={data.destiny} color={colors.brand_primary} colors={colors} />
+          <NumBox label="Ruh Güdüsü" value={data.soulUrge} color="#f87171" colors={colors} />
+          <NumBox label="Kişilik" value={data.personality} color="#34d399" colors={colors} />
        </div>
     </div>
   );
 }
 
-function NumBox({ label, value, color }: { label: string; value: number | string; color: string }) {
+function NumBox({ label, value, color, colors }: { label: string; value: number | string; color: string; colors: any }) {
   return (
     <div style={{ 
       width: 200, 
@@ -448,20 +444,20 @@ function NumBox({ label, value, color }: { label: string; value: number | string
       textAlign: 'center' 
     }}>
       <div style={{ fontSize: 56, fontWeight: 'bold', color: color, marginBottom: 8 }}>{value}</div>
-      <div style={{ fontSize: 14, letterSpacing: 3, textTransform: 'uppercase', color: '#A09888' }}>{label}</div>
+      <div style={{ fontSize: 14, letterSpacing: 3, textTransform: 'uppercase', color: colors.text_muted }}>{label}</div>
     </div>
   );
 }
 
-function SignRow({ label, symbol, sign }: { label: string; symbol: string; sign: string }) {
+function SignRow({ label, symbol, sign, colors }: { label: string; symbol: string; sign: string; colors: any }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-      <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(201,169,97,0.12)', border: '1px solid rgba(201,169,97,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>
+      <div style={{ width: 80, height: 80, borderRadius: '50%', background: `${colors.brand_primary}1e`, border: `1px solid ${colors.brand_primary}66`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36 }}>
         {symbol}
       </div>
       <div>
-        <div style={{ fontSize: 14, letterSpacing: 6, color: '#C9A961', textTransform: 'uppercase' }}>{label}</div>
-        <div style={{ fontSize: 56, fontFamily: 'Fraunces', fontStyle: 'italic', color: '#FAF6EF', lineHeight: 1 }}>{sign}</div>
+        <div style={{ fontSize: 14, letterSpacing: 6, color: colors.brand_primary, textTransform: 'uppercase' }}>{label}</div>
+        <div style={{ fontSize: 56, fontFamily: 'Fraunces', fontStyle: 'italic', color: colors.text_primary, lineHeight: 1 }}>{sign}</div>
       </div>
     </div>
   );

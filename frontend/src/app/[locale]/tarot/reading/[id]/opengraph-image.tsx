@@ -1,13 +1,15 @@
 import { ImageResponse } from 'next/og';
 import { getOgFonts } from '@/lib/fonts/og-fonts';
 
+import brand from '../../../../../../../config/brand.json';
+
 export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
-export const alt = 'GoldMoodAstro Tarot';
+export const alt = `${brand.name} Tarot`;
 
 export default async function OG({ params }: { params: { id: string; locale: string } }) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://goldmoodastro.com/api';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? `${brand.public_url}/api`;
   let data;
   try {
     const res = await fetch(`${apiUrl}/tarot/reading/${params.id}`);
@@ -44,7 +46,7 @@ export default async function OG({ params }: { params: { id: string; locale: str
       }}>
         {/* Header */}
         <div style={{ fontSize: 24, color: '#C9A961', letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          GOLDMOODASTRO · TAROT
+          {brand.name.toUpperCase()} · TAROT
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 30, alignItems: 'center', width: '100%' }}>
@@ -94,7 +96,7 @@ export default async function OG({ params }: { params: { id: string; locale: str
 
         {/* Footer */}
         <div style={{ fontSize: 24, color: '#C9A961', display: 'flex', justifyContent: 'center', width: '100%' }}>
-          <span style={{ fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.8 }}>goldmoodastro.com</span>
+          <span style={{ fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.8 }}>{brand.domain}</span>
         </div>
       </div>
     ),

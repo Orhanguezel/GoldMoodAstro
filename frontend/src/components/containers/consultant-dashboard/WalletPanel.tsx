@@ -50,6 +50,11 @@ export default function WalletPanel() {
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<{ amount?: string; iban?: string }>({});
 
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
+    start: '',
+    end: '',
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -59,7 +64,18 @@ export default function WalletPanel() {
   }
 
   const wallet = data?.wallet;
-  const transactions: ConsultantSelfWalletTransaction[] = data?.transactions ?? [];
+  let transactions: ConsultantSelfWalletTransaction[] = data?.transactions ?? [];
+
+  // D34-12: Date filtering
+  if (dateRange.start) {
+    const s = new Date(dateRange.start).getTime();
+    transactions = transactions.filter(t => new Date(t.created_at).getTime() >= s);
+  }
+  if (dateRange.end) {
+    const e = new Date(dateRange.end).getTime() + 86400000; // include full day
+    transactions = transactions.filter(t => new Date(t.created_at).getTime() <= e);
+  }
+
   const monthly = data?.this_month ?? { credits: 0, debits: 0, net: 0 };
   const balance = Number(wallet?.balance ?? 0);
   const currency = wallet?.currency || 'TRY';
@@ -164,7 +180,31 @@ export default function WalletPanel() {
           <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
             Son İşlemler
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                className="h-8 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-lg px-2 text-[10px] text-[var(--gm-text)] outline-none focus:border-[var(--gm-gold)]/40"
+              />
+              <span className="text-[var(--gm-muted)] text-[10px]">—</span>
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                className="h-8 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-lg px-2 text-[10px] text-[var(--gm-text)] outline-none focus:border-[var(--gm-gold)]/40"
+              />
+              {(dateRange.start || dateRange.end) && (
+                <button 
+                  onClick={() => setDateRange({ start: '', end: '' })}
+                  className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-full transition-colors"
+                  title="Filtreyi Temizle"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
             <button
               onClick={() => {
                 const headers = ['Tarih', 'Tür', 'İşlem', 'Tutar', 'Para Birimi', 'Durum', 'Açıklama'];
@@ -275,10 +315,16 @@ export default function WalletPanel() {
                   type="text"
                   value={iban}
                   onChange={(e) => {
-                    setIban(e.target.value.toUpperCase());
+                    const raw = e.target.value.replace(/\s/g, '').toUpperCase();
+                    // TR + 24 digits (total 26 chars)
+                    if (raw.length > 26) return;
+                    
+                    // Add spaces every 4 characters for UX
+                    const formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
+                    setIban(formatted);
                     if (errors.iban) setErrors({ ...errors, iban: undefined });
                   }}
-                  className={`w-full h-11 bg-[var(--gm-bg-deep)] border rounded-xl px-4 text-sm font-mono text-[var(--gm-text)] transition-colors ${
+                  className={`w-full h-11 bg-[var(--gm-bg-deep)] border rounded-xl px-4 text-sm font-mono text-[var(--gm-text)] transition-all ${
                     errors.iban ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/50'
                   }`}
                   placeholder="TR00 0000 0000 0000 0000 0000 00"

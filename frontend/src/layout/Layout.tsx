@@ -391,14 +391,11 @@ export default function Layout({
   // ------------------------------------------------------------
 
   const finalTitle = useMemo(() => {
-    const hardFb = 'GoldMoodAstro – Ruhsal Danışmanlık ve Astroloji Platformu';
-    return cleanString(effectiveTitleProp) || seoTitleDefault || metaDefault.title || hardFb;
+    return cleanString(effectiveTitleProp) || seoTitleDefault || metaDefault.title || "GoldMoodAstro";
   }, [effectiveTitleProp, seoTitleDefault, metaDefault.title]);
 
   const finalDescription = useMemo(() => {
-    const hardFb =
-      'GoldMoodAstro — Ruhsal danışmanlık, astroloji ve mood coaching ile kendinizi keşfedin. Güvenilir danışmanlarla seanslarınızı hemen başlatın.';
-    return cleanString(effectiveDescProp) || seoDescription || metaDefault.description || hardFb;
+    return cleanString(effectiveDescProp) || seoDescription || metaDefault.description || "";
   }, [effectiveDescProp, seoDescription, metaDefault.description]);
 
   const resolvedOgImage = useMemo(() => {
@@ -531,15 +528,9 @@ export default function Layout({
     const base = siteUrlBase();
     const orgId = `${base}#org`;
     const websiteId = `${base}#website`;
+    const sameAs = sameAsFromSocials(effectiveBrand.socials);
 
-    const defaultSameAs = [
-      'https://www.instagram.com/goldmoodastro',
-      'https://www.youtube.com/@goldmoodastro',
-      'https://www.linkedin.com/company/goldmoodastro',
-      'https://twitter.com/goldmoodastro',
-    ];
-    const sameAs = sameAsFromSocials(effectiveBrand.socials || null);
-
+    const defaultSameAs: string[] = [];
     return graph([
       org({
         id: orgId,
@@ -547,7 +538,7 @@ export default function Layout({
         url: cleanString(effectiveBrand.website) || base,
         logo: siteLogoUrl || undefined,
         sameAs: sameAs.length ? sameAs : defaultSameAs,
-        description: "Turkiye'nin astroloji, tarot ve numeroloji danismanlik platformu.",
+        description: [effectiveBrand.name, finalDescription].filter(Boolean).join(' '),
         priceRange: '₺149-₺3500',
         areaServed: 'TR',
       }),

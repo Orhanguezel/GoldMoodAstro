@@ -174,6 +174,18 @@ const SECTION_KEYS: Record<UiSectionKey, readonly string[]> = {
     'ui_about_empty',
     'ui_about_error',
     'ui_about_empty_text',
+    'ui_about_eyebrow',
+    'ui_about_title',
+    'ui_about_lead',
+    'ui_about_founder_title',
+    'ui_about_founder_paragraphs',
+    'ui_about_methodology_title',
+    'ui_about_methodology_paragraphs',
+    'ui_about_experience_title',
+    'ui_about_experience_paragraphs',
+    'ui_about_diff_title',
+    'ui_about_diff_items',
+    'ui_about_author_bio',
   ],
 
   ui_about_stats: [

@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import type { BirthChart } from '@/types/common';
 
+import { useBrand } from '@/hooks/useBrand';
+
 type Props = {
   chart: BirthChart;
   /** Paylaşılabilir public URL (yoksa şu anki sayfa URL'si kullanılır) */
@@ -28,19 +30,20 @@ const SIGN_LABELS_TR: Record<string, string> = {
 };
 
 export default function ShareBirthChart({ chart, shareUrl }: Props) {
+  const { brand } = useBrand();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
   const url =
     shareUrl ||
-    (typeof window !== 'undefined' ? window.location.href : 'https://goldmoodastro.com');
+    (typeof window !== 'undefined' ? window.location.href : brand.public_url || 'https://goldmoodastro.com');
 
   const sun = chart.chart_data?.planets?.sun?.sign;
   const moon = chart.chart_data?.planets?.moon?.sign;
   const rising = chart.chart_data?.ascendant?.sign;
 
-  const text = `Doğum haritamı GoldMoodAstro'da çıkardım ✨\n☀️ Güneş: ${sunLabel(sun)}  •  🌙 Ay: ${sunLabel(moon)}  •  ↑ Yükselen: ${sunLabel(rising)}\nSeninkini de keşfet:`;
+  const text = `Doğum haritamı ${brand.name}'da çıkardım ✨\n☀️ Güneş: ${sunLabel(sun)}  •  🌙 Ay: ${sunLabel(moon)}  •  ↑ Yükselen: ${sunLabel(rising)}\nSeninkini de keşfet:`;
 
   function sunLabel(sign?: string) {
     if (!sign) return '—';
@@ -142,8 +145,8 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
           style={{
             width: 1080,
             height: 1350,
-            background: 'linear-gradient(135deg,#2A2620 0%,#3D2E47 60%,#1A1715 100%)',
-            color: '#FAF6EF',
+            background: `linear-gradient(135deg, ${brand.colors.bg_base} 0%, ${brand.colors.brand_accent} 60%, ${brand.colors.bg_deep} 100%)`,
+            color: brand.colors.text_primary,
             padding: 80,
             fontFamily: 'Cinzel, Georgia, serif',
             display: 'flex',
@@ -155,37 +158,37 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
         >
           <div style={{ position: 'absolute', top: 60, right: 60, opacity: 0.45 }}>
             <svg width="200" height="200" viewBox="0 0 200 200">
-              <circle cx="100" cy="100" r="98" fill="none" stroke="#C9A961" strokeWidth="0.5" strokeDasharray="3 3"/>
-              <circle cx="100" cy="100" r="70" fill="none" stroke="#C9A961" strokeWidth="0.5"/>
-              <circle cx="100" cy="100" r="40" fill="none" stroke="#C9A961" strokeWidth="0.5"/>
-              <circle cx="100" cy="100" r="4" fill="#C9A961"/>
+              <circle cx="100" cy="100" r="98" fill="none" stroke={brand.colors.brand_primary} strokeWidth="0.5" strokeDasharray="3 3"/>
+              <circle cx="100" cy="100" r="70" fill="none" stroke={brand.colors.brand_primary} strokeWidth="0.5"/>
+              <circle cx="100" cy="100" r="40" fill="none" stroke={brand.colors.brand_primary} strokeWidth="0.5"/>
+              <circle cx="100" cy="100" r="4" fill={brand.colors.brand_primary}/>
             </svg>
           </div>
 
           <div>
-            <div style={{ fontSize: 18, letterSpacing: 8, color: '#C9A961', textTransform: 'uppercase', marginBottom: 24 }}>
-              GoldMoodAstro
+            <div style={{ fontSize: 18, letterSpacing: 8, color: brand.colors.brand_primary, textTransform: 'uppercase', marginBottom: 24 }}>
+              {brand.name}
             </div>
-            <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 64, fontStyle: 'italic', lineHeight: 1.05, marginBottom: 16, color: '#FAF6EF' }}>
+            <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 64, fontStyle: 'italic', lineHeight: 1.05, marginBottom: 16, color: brand.colors.text_primary }}>
               Doğum<br/>Haritam
             </div>
-            <div style={{ fontSize: 22, color: '#E5DCC8', fontFamily: 'Manrope, sans-serif' }}>
+            <div style={{ fontSize: 22, color: brand.colors.text_secondary, fontFamily: 'Manrope, sans-serif' }}>
               {chart.name}
             </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-            <SignRow label="Güneş" symbol="☀️" sign={sunLabel(sun)} />
-            <SignRow label="Ay"    symbol="🌙" sign={sunLabel(moon)} />
-            <SignRow label="Yükselen" symbol="↑" sign={sunLabel(rising)} />
+            <SignRow label="Güneş" symbol="☀️" sign={sunLabel(sun)} colors={brand.colors} />
+            <SignRow label="Ay"    symbol="🌙" sign={sunLabel(moon)} colors={brand.colors} />
+            <SignRow label="Yükselen" symbol="↑" sign={sunLabel(rising)} colors={brand.colors} />
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <div style={{ fontSize: 18, color: '#A09888', fontFamily: 'Manrope, sans-serif' }}>
-              goldmoodastro.com
+            <div style={{ fontSize: 18, color: brand.colors.text_muted, fontFamily: 'Manrope, sans-serif' }}>
+              {brand.domain}
             </div>
-            <div style={{ fontSize: 14, letterSpacing: 4, color: '#C9A961', textTransform: 'uppercase' }}>
-              Yıldızlarla tanışan modern astroloji
+            <div style={{ fontSize: 14, letterSpacing: 4, color: brand.colors.brand_primary, textTransform: 'uppercase' }}>
+              {brand.tagline}
             </div>
           </div>
         </div>
@@ -282,7 +285,7 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
 const iconBtn =
   'inline-flex items-center justify-center rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) p-3 text-(--gm-text-dim) transition-colors hover:border-(--gm-gold)/50 hover:text-(--gm-gold-deep)';
 
-function SignRow({ label, symbol, sign }: { label: string; symbol: string; sign: string }) {
+function SignRow({ label, symbol, sign, colors }: { label: string; symbol: string; sign: string; colors: any }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
       <div
@@ -290,8 +293,8 @@ function SignRow({ label, symbol, sign }: { label: string; symbol: string; sign:
           width: 80,
           height: 80,
           borderRadius: '50%',
-          background: 'rgba(201,169,97,0.12)',
-          border: '1px solid rgba(201,169,97,0.4)',
+          background: `${colors.brand_primary}1e`,
+          border: `1px solid ${colors.brand_primary}66`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -302,10 +305,10 @@ function SignRow({ label, symbol, sign }: { label: string; symbol: string; sign:
         {symbol}
       </div>
       <div>
-        <div style={{ fontSize: 14, letterSpacing: 6, color: '#C9A961', textTransform: 'uppercase', fontFamily: 'Manrope, sans-serif' }}>
+        <div style={{ fontSize: 14, letterSpacing: 6, color: colors.brand_primary, textTransform: 'uppercase', fontFamily: 'Manrope, sans-serif' }}>
           {label}
         </div>
-        <div style={{ fontSize: 56, fontFamily: 'Fraunces, Georgia, serif', fontStyle: 'italic', color: '#FAF6EF', lineHeight: 1 }}>
+        <div style={{ fontSize: 56, fontFamily: 'Fraunces, Georgia, serif', fontStyle: 'italic', color: colors.text_primary, lineHeight: 1 }}>
           {sign}
         </div>
       </div>

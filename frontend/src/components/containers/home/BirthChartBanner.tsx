@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useBrand } from '@/hooks/useBrand';
 
 /**
  * Premium BirthChartBanner component.
@@ -12,6 +13,7 @@ import { cn } from '@/lib/utils';
  */
 export default function BirthChartBanner({ locale = 'tr' }: { locale?: string }) {
   const isTr = locale === 'tr';
+  const { brand } = useBrand();
   
   const content = {
     title: isTr ? 'Doğum Haritan Hazır' : 'Your Birth Chart is Ready',
@@ -23,7 +25,7 @@ export default function BirthChartBanner({ locale = 'tr' }: { locale?: string })
     <section className="container mx-auto px-4 py-12">
       <div 
         className={cn(
-          "group relative overflow-hidden rounded-[2rem] border border-(--gm-border-soft) bg-(--gm-bg-deep) shadow-2xl transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(201,169,97,0.3)]",
+          "group relative overflow-hidden rounded-[2rem] border border-(--gm-border-soft) bg-(--gm-bg-deep) shadow-2xl transition-all duration-500 hover:shadow-gold",
           "h-[320px] md:h-[280px] lg:h-[300px]"
         )}
       >
@@ -31,7 +33,7 @@ export default function BirthChartBanner({ locale = 'tr' }: { locale?: string })
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-linear-to-r from-(--gm-bg-deep) via-(--gm-bg-deep)/80 to-transparent z-10" />
           <Image
-            src="/assets/images/banners/birth-chart-banner-bg.png" 
+            src={brand.assets['banner_birth_chart'] || "/assets/images/banners/birth-chart-banner-bg.png"} 
             alt="Mystical Birth Chart" 
             fill
             sizes="(max-width: 768px) 100vw, 70vw"

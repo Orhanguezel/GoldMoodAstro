@@ -43,7 +43,7 @@ function guessDevBackend(): string {
   } catch {
     /* noop */
   }
-  return 'https://www.goldmoodastro.com/api';
+  return process.env.NEXT_PUBLIC_API_URL || '/api';
 }
 
 const BASE_URL = trimSlash(

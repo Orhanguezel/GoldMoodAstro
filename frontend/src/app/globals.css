@@ -63,6 +63,8 @@
   --color-text-on-dark:    #FAF6EF;
 
   --color-brand-primary:   var(--gm-primary-dark, #8C7038);   /* darker gold for text contrast */
+  --color-brand-secondary: var(--gm-gold, #C9A961);
+  --color-brand-accent:    var(--gm-accent, #3D2E47);
   --color-brand-hover:     var(--gm-primary-hover, #A8884A);
   --color-brand-dark:      var(--gm-primary-dark, #8C7038);
   --color-brand-light:     color-mix(in srgb, var(--gm-primary, #C9A961) 14%, transparent);

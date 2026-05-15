@@ -6,6 +6,7 @@ import { useGetSiteSettingByKeyQuery } from '@/integrations/rtk/hooks';
 import { safeStr, safeJson } from '@/integrations/shared';
 
 import { useLocaleShort, useUiSection } from '@/i18n';
+import { useBrand } from '@/hooks/useBrand';
 
 import ContactForm from './ContactForm';
 
@@ -36,15 +37,14 @@ function buildMailto(email: string, subject?: string) {
   return `mailto:${encodeURIComponent(e)}${s ? `?subject=${encodeURIComponent(s)}` : ''}`;
 }
 
-// ── Component ──
-
 export default function ContactPage() {
   const locale = useLocaleShort();
+  const { brand } = useBrand();
   const { ui } = useUiSection('ui_contact', locale as any);
 
   const t = useMemo(
     () => ({
-      subprefix: safeStr(ui('ui_contact_subprefix', 'GoldMoodAstro')),
+      subprefix: safeStr(ui('ui_contact_subprefix', brand.name || 'GoldMoodAstro')),
       sublabel: safeStr(ui('ui_contact_sublabel', 'İletişim')),
       titleLeft: safeStr(ui('ui_contact_title_left', 'Bize Ulaşın')),
       tagline: safeStr(
