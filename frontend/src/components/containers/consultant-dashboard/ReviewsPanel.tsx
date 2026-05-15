@@ -176,7 +176,7 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
       toast.success('Cevabınız başarıyla kaydedildi');
       setIsReplying(false);
     } catch (e) {
-      toast.error(extractApiError(e));
+      toast.error(extractApiError(e, 'Cevap gönderilemedi, lütfen tekrar deneyin'));
     }
   }
 

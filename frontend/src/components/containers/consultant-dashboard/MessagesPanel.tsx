@@ -63,7 +63,7 @@ export default function MessagesPanel() {
       setDraft('');
       toast.success('Cevap gönderildi');
     } catch (e) {
-      toast.error(extractApiError(e));
+      toast.error(extractApiError(e, 'Gönderilemedi'));
     }
   };
 

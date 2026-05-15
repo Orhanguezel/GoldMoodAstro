@@ -143,7 +143,7 @@ export default function AvailabilityPanel() {
       setDirty(false);
       refetch();
     } catch (e: any) {
-      toast.error(extractApiError(e));
+      toast.error(extractApiError(e, 'Kaydedilemedi'));
     }
   };
 
@@ -161,7 +161,7 @@ export default function AvailabilityPanel() {
       if (e?.data?.error?.message === 'slot_has_reservations') {
         toast.error('Bu tarihte rezervasyonlu slot var; gün tamamen kapatılamaz.');
       } else {
-        toast.error(extractApiError(e));
+        toast.error(extractApiError(e, 'Tarih güncellenemedi'));
       }
     }
   };
