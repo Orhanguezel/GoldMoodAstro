@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import { fetchSetting } from '@/i18n/server';
 
 const COPY = {
   tr: {
@@ -52,25 +51,13 @@ const COPY = {
   }
 };
 
-function settingString(value: unknown): string {
-  if (typeof value === 'string') return value;
-  if (value && typeof value === 'object' && 'url' in value) return String((value as { url?: unknown }).url || '');
-  return '';
-}
-
-export default async function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
+export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
   const isTr = locale === 'tr';
   const copy = COPY[isTr ? 'tr' : 'en'];
 
-  const [natalImg, dailyImg, synastryImg] = await Promise.all([
-    fetchSetting('ui_feature_natal_image', '*', { revalidate: 600 }),
-    fetchSetting('ui_feature_daily_image', '*', { revalidate: 600 }),
-    fetchSetting('ui_feature_synastry_image', '*', { revalidate: 600 }),
-  ]);
-
-  const natalPath = settingString(natalImg?.value) || '/img/natal_chart.png';
-  const dailyPath = settingString(dailyImg?.value) || '/img/daily_reading.png';
-  const synastryPath = settingString(synastryImg?.value) || '/img/synastry_chart.png';
+  const natalPath = '/img/natal_chart.png';
+  const dailyPath = '/img/daily_reading.png';
+  const synastryPath = '/img/synastry_chart.png';
 
   return (
     <section className="py-32 px-6 bg-[var(--gm-bg-deep)] relative border-t border-[var(--gm-border-soft)]">
