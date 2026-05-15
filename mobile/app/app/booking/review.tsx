@@ -39,6 +39,9 @@ export default function BookingReviewScreen() {
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>Eksik bilgi</Text>
           <Text style={styles.emptyText}>Booking veya astrolog bilgisi bulunamadı.</Text>
+          <Pressable style={styles.backBtnGhost} onPress={() => router.back()}>
+            <Text style={styles.backBtnGhostText}>Geri</Text>
+          </Pressable>
           <Pressable style={styles.backBtn} onPress={() => router.replace('/(tabs)/bookings')}>
             <Text style={styles.backBtnText}>Randevularıma dön</Text>
           </Pressable>
@@ -55,8 +58,14 @@ const styles = StyleSheet.create({
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl, gap: spacing.md },
   emptyTitle: { fontFamily: font.display, fontSize: 18, color: colors.text },
   emptyText: { fontFamily: font.serif, fontSize: 14, color: colors.textDim, textAlign: 'center' },
+  backBtnGhost: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    alignItems: 'center',
+  },
+  backBtnGhostText: { color: colors.textMuted, fontFamily: font.sansMedium, fontSize: 14 },
   backBtn: {
-    marginTop: spacing.lg,
+    marginTop: spacing.sm,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
     borderWidth: 1,

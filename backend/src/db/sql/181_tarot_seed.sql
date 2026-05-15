@@ -100,3 +100,6 @@ INSERT IGNORE INTO tarot_cards (id, slug, name_tr, arcana, suit, number, upright
 UPDATE tarot_cards
 SET image_url = CONCAT('/uploads/tarot/', slug, '.png')
 WHERE image_url IS NULL OR image_url = '';
+
+-- Tarot kartlarını storage URL'lerine bağla
+UPDATE tarot_cards SET image_url = CONCAT('/uploads/tarot/', slug, '.png');

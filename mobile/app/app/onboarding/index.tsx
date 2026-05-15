@@ -136,6 +136,9 @@ export default function WelcomeScreen() {
             <Text style={styles.loginHint}>
               Zaten hesabınız var mı? <Text style={styles.loginLink} onPress={() => router.push('/auth/login' as any)}>Giriş Yap</Text>
             </Text>
+            <Pressable onPress={() => router.push('/auth/register' as any)} style={styles.registerLinkWrap}>
+              <Text style={styles.registerLink}>Hesap oluştur</Text>
+            </Pressable>
           </View>
         </Animated.View>
       </SafeAreaView>
@@ -248,6 +251,16 @@ const styles = StyleSheet.create({
   loginLink: {
     color: colors.gold,
     fontFamily: font.sansBold,
+  },
+  registerLinkWrap: {
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  registerLink: {
+    fontFamily: font.sansMedium,
+    fontSize: 15,
+    color: colors.textDim,
+    textDecorationLine: 'underline',
   },
 
   // Background Elements

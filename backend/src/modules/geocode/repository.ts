@@ -1,10 +1,9 @@
 import { randomUUID } from 'crypto';
 import { and, eq, gt } from 'drizzle-orm';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 import { db } from '@/db/client';
 import { geocodeCache } from './schema';
 import { geocodeWithNominatim, resolveTimezone, type GeocodeResult } from './service';
-
-const CACHE_TTL_DAYS = 30;
 
 function normalizeQuery(q: string) {
   return q.trim().replace(/\s+/g, ' ').toLocaleLowerCase('tr-TR');
@@ -12,7 +11,7 @@ function normalizeQuery(q: string) {
 
 function ttlDate() {
   const d = new Date();
-  d.setDate(d.getDate() + CACHE_TTL_DAYS);
+  d.setDate(d.getDate() + appConfig.geocode.cacheTtlDays);
   return d;
 }
 

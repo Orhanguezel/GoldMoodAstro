@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { 
   User, 
   Settings, 
@@ -29,10 +30,11 @@ import {
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { useAuth } from '@/hooks/useAuth';
 import { subscriptionsApi, creditsApi, campaignsApi } from '@/lib/api';
+import { mobileBrandConfig } from '@/config/brand';
 import type { Campaign, CreditMe, Subscription } from '@/types';
 
 export default function ProfileScreen() {
-  const { user, isAuthenticated, logout, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, logout, authHydrating } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [credits, setCredits] = useState<CreditMe | null>(null);
   const [campaigns, setCampaigns] = useState<{ active: Campaign[]; redeemed: any[] }>({ active: [], redeemed: [] });
@@ -41,6 +43,7 @@ export default function ProfileScreen() {
 
   const loadData = useCallback(async () => {
     if (!isAuthenticated) return;
+    setLoading(true);
     try {
       const [subscriptionData, creditsData, campaignsData] = await Promise.all([
         subscriptionsApi.me(),
@@ -60,13 +63,9 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (authLoading) return;
-      if (!isAuthenticated) {
-        router.replace('/auth/login' as any);
-        return;
-      }
+      if (authHydrating || !isAuthenticated) return;
       loadData();
-    }, [authLoading, isAuthenticated, loadData]),
+    }, [authHydrating, isAuthenticated, loadData]),
   );
 
   const handleLogout = () => {
@@ -80,7 +79,68 @@ export default function ProfileScreen() {
     );
   };
 
-  if (authLoading || (loading && !refreshing)) {
+  if (authHydrating) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.gold} />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.header}>
+              <View>
+                <Text style={styles.headerKicker}>PROFİL</Text>
+                <Text style={styles.headerTitle}>Profilim</Text>
+              </View>
+              <Pressable style={styles.iconBtn} onPress={() => router.push('/settings' as any)}>
+                <Settings size={22} color={colors.text} />
+              </Pressable>
+            </View>
+
+            <View style={styles.hero}>
+              <View style={styles.avatarWrap}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarInitial}>?</Text>
+                </View>
+              </View>
+              <View style={styles.heroInfo}>
+                <Text style={styles.userName}>Misafir</Text>
+                <Text style={styles.userEmail}>Randevu, bildirim ve kuponlar hesaba bağlıdır.</Text>
+              </View>
+            </View>
+
+            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
+                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
+            </Pressable>
+
+            <View style={styles.group}>
+              <Text style={styles.groupTitle}>KEŞFET</Text>
+              <Pressable style={styles.menuItem} onPress={() => router.push('/(tabs)/connect' as any)}>
+                <View style={styles.menuLeft}>
+                  <User size={20} color={colors.goldDim} />
+                  <Text style={styles.menuText}>Danışmanlar</Text>
+                </View>
+                <ChevronRight size={18} color={colors.line} />
+              </Pressable>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (loading && !refreshing) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.gold} />
@@ -229,7 +289,7 @@ export default function ProfileScreen() {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerVersion}>GoldMoodAstro v1.0.0</Text>
+            <Text style={styles.footerVersion}>{mobileBrandConfig.appName} v1.0.0</Text>
             <Text style={styles.footerCopy}>© 2026 Ruhsal Danışmanlık Platformu</Text>
           </View>
 
@@ -295,4 +355,15 @@ const styles = StyleSheet.create({
   footer: { alignItems: 'center', marginTop: 20, paddingBottom: 40 },
   footerVersion: { fontFamily: font.sansMedium, fontSize: 12, color: colors.textMuted },
   footerCopy: { fontFamily: font.sans, fontSize: 10, color: colors.textMuted, marginTop: 4 },
+  guestPrimaryWrap: { marginHorizontal: spacing.lg, borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
+  guestPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
+  guestSecondary: { paddingVertical: 14, alignItems: 'center', marginBottom: spacing.lg },
+  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
 });

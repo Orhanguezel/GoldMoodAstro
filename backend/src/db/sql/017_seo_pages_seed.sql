@@ -15,7 +15,7 @@
 -- BURÇLAR: burclar, burclar-sign, burclar-bugun, burclar-haftalik,
 --          burclar-aylik, burclar-ask, burclar-kariyer, burclar-saglik,
 --          burclar-uyumlulik, burclar-pair-uyumu, burclar-transit
--- DOĞUM HARİTASI: yukselen-burc-hesaplayici, big-three
+-- DOĞUM HARİTASI: yukselen-burc-hesaplayici, big-three (Büyük Üçlü)
 -- HİBRİT FEATURE'LAR: yildizname, yildizname-result, tarot, tarot-reading,
 --                    kahve-fali, kahve-fali-result, ruya-tabiri, ruya-tabiri-result,
 --                    sinastri, sinastri-result
@@ -53,7 +53,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   "burclar-pair-uyumu":         { "title": "İkili Burç Uyumu Analizi", "description": "İki burç arasındaki astrolojik uyum: sevgili, partner, arkadaş veya iş ortağı. Detaylı element, modalite ve gezegen analizi.", "og_image": "", "no_index": false },
   "burclar-transit":            { "title": "Aylık Gezegen Geçişleri ve Transit Analizi", "description": "Bu ayın gezegen geçişleri, dolunay/yeni ay etkileri ve burçlara genel etkisi. Astrolojik takvim ve uzman yorumları.", "og_image": "", "no_index": false },
   "yukselen-burc-hesaplayici":  { "title": "Yükselen Burç Hesaplayıcı — Anında Sonuç", "description": "Doğum tarihi, saati ve şehir ile yükselen burcunuzu hesaplayın. Yükselen burç anlamı, etkisi ve yorumu hemen.", "og_image": "", "no_index": false },
-  "big-three":                  { "title": "Big Three — Güneş, Ay ve Yükselen Burcunuz", "description": "Astrolojinin üç temel direği: güneş burcu (kim olduğun), ay burcu (nasıl hissettiğin), yükselen burç (nasıl göründüğün).", "og_image": "", "no_index": false },
+  "big-three":                  { "title": "Büyük Üçlü — Güneş, Ay ve Yükselen Burcunuz", "description": "Astrolojinin üç temel direği: güneş burcu (kim olduğun), ay burcu (nasıl hissettiğin), yükselen burç (nasıl göründüğün).", "og_image": "", "no_index": false },
   "yildizname":                 { "title": "Yıldızname — Ebced ile Geleceğin Sırrı", "description": "Klasik Osmanlı astrolojisi yıldızname ile isim ve doğum tarihinden derin analiz. Ebced hesabı ve uzman yorumu.", "og_image": "", "no_index": false },
   "yildizname-result":          { "title": "Yıldızname Sonucunuz", "description": "Kişiye özel yıldızname analizi: karakter, geçmiş, gelecek ve önemli hayat dönüşümleri.", "og_image": "", "no_index": false },
   "tarot":                      { "title": "Tarot Falı — Klasik Rider-Waite ve Daha Fazlası", "description": "Tek kart, üçlü açılım veya Kelt Haçı ile tarot falı. AI destekli sembol yorumu + uzman astrolog danışmanlığı.", "og_image": "", "no_index": false },

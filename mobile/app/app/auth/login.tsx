@@ -19,6 +19,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { authApi, setAuthToken } from '@/lib/api';
 import { storage } from '@/lib/storage';
+import { registerPushToken } from '@/lib/notifications';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -41,6 +42,7 @@ export default function LoginScreen() {
     
     setLoading(true);
     try {
+      setAuthToken(null);
       const res = await authApi.login({ email, password });
 
       await storage.setUserSession({
@@ -50,6 +52,7 @@ export default function LoginScreen() {
       });
 
       setAuthToken(res.access_token);
+      registerPushToken().catch(() => {});
       router.replace('/today' as any);
     } catch (err: any) {
       Alert.alert('Giriş Başarısız', err.message || 'E-posta veya şifre hatalı.');
@@ -61,6 +64,7 @@ export default function LoginScreen() {
   const handleAppleLogin = async () => {
     try {
       setLoading(true);
+      setAuthToken(null);
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -87,6 +91,7 @@ export default function LoginScreen() {
       });
 
       setAuthToken(res.access_token);
+      registerPushToken().catch(() => {});
       router.replace('/today' as any);
     } catch (err: any) {
       if (err.code === 'ERR_CANCELED') return;

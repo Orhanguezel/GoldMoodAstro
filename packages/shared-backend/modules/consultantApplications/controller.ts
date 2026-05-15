@@ -28,6 +28,10 @@ function escapeHtml(value: string) {
     .replace(/'/g, '&#039;');
 }
 
+function appName() {
+  return process.env.APP_NAME || 'Platform';
+}
+
 async function sendApplicationMail(
   req: FastifyRequest,
   to: string,
@@ -83,7 +87,7 @@ export async function approveConsultantApplication(req: FastifyRequest, reply: F
       req,
       row.email,
       'Danışman başvurunuz onaylandı',
-      `<p>Merhaba ${escapeHtml(row.full_name)},</p><p>GoldMoodAstro danışman başvurunuz onaylandı. Danışman panelinden profilinizi tamamlayabilirsiniz.</p>`,
+      `<p>Merhaba ${escapeHtml(row.full_name)},</p><p>${escapeHtml(appName())} danışman başvurunuz onaylandı. Danışman panelinden profilinizi tamamlayabilirsiniz.</p>`,
     );
 
     return reply.send({ data: row });
@@ -104,7 +108,7 @@ export async function rejectConsultantApplication(req: FastifyRequest, reply: Fa
       req,
       row.email,
       'Danışman başvurunuz değerlendirildi',
-      `<p>Merhaba ${escapeHtml(row.full_name)},</p><p>GoldMoodAstro danışman başvurunuz şu nedenle onaylanamadı:</p><p>${escapeHtml(body.rejection_reason)}</p>`,
+      `<p>Merhaba ${escapeHtml(row.full_name)},</p><p>${escapeHtml(appName())} danışman başvurunuz şu nedenle onaylanamadı:</p><p>${escapeHtml(body.rejection_reason)}</p>`,
     );
 
     return reply.send({ data: row });

@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 import { db } from '@/db/client';
 import { sendPushNotification } from '@/modules/firebase/service';
 import { generateDailyReading } from '@goldmood/shared-backend/modules/readings';
@@ -56,7 +57,7 @@ export async function runDailyReadingsSweep() {
         await sendPushNotification({
           token: target.fcm_token,
           title: 'Bugünün yorumunuz hazır',
-          body: 'Günlük astroloji yorumunuz GoldMoodAstro’da sizi bekliyor.',
+          body: 'Günlük astroloji yorumunuz hazır.',
           data: { type: 'daily_reading', date: todayYmd() },
         });
       }
@@ -75,7 +76,7 @@ export function registerDailyReadingsCron() {
   const runIfDue = () => {
     const now = new Date();
     const date = todayYmd();
-    if (now.getUTCHours() !== 6 || lastRunDate === date) return;
+    if (now.getUTCHours() !== appConfig.dailyReadings.runHourUtc || lastRunDate === date) return;
     lastRunDate = date;
     void runDailyReadingsSweep().catch((error) => {
       console.error('daily_readings_sweep_failed', error);
@@ -84,5 +85,5 @@ export function registerDailyReadingsCron() {
   };
 
   runIfDue();
-  setInterval(runIfDue, 5 * 60 * 1000);
+  setInterval(runIfDue, appConfig.dailyReadings.pollIntervalMs);
 }

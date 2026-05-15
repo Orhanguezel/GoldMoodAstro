@@ -10,6 +10,7 @@
 import type { RouteHandler } from 'fastify';
 import { randomUUID } from 'crypto';
 import { eq, sql } from 'drizzle-orm';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 
 import { publicCreateBookingSchema } from './validation';
 import {
@@ -504,16 +505,26 @@ export const cancelMyBookingHandler: RouteHandler = async (req, reply) => {
 
 /* ─── POST /bookings/request-now (T29-4) ─── */
 // Anlık görüşme talebi: status='requested_now', danışman onayı bekler.
-// Cron 5 dakika sonra otomatik iptal eder (timeout).
+// Cron appConfig.requestNow.timeoutMinutes sonra otomatik iptal eder.
 export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
   try {
     const jwtUser = (req as any).user as { sub?: string; email?: string } | undefined;
     const userId = safeText(jwtUser?.sub);
     if (!userId) return reply.code(401).send({ error: { message: 'unauthorized' } });
 
-    const body = req.body as { consultant_id?: string; service_id?: string; customer_message?: string };
-    const consultantId = safeText(body?.consultant_id);
+    const body = req.body as {
+      consultant_id?: string;
+      consultantId?: string;
+      service_id?: string;
+      serviceId?: string;
+      customer_message?: string;
+      customerNote?: string;
+    };
+    const consultantId = safeText(body?.consultant_id || body?.consultantId);
     if (!consultantId) return reply.code(400).send({ error: { message: 'consultant_id_required' } });
+    const serviceId = safeText(body?.service_id || body?.serviceId);
+    const customerMessage = safeText(body?.customer_message || body?.customerNote);
+    const timeoutMinutes = appConfig.requestNow.timeoutMinutes;
 
     const defaultLocale = await getDefaultLocale();
     const locale = defaultLocale;
@@ -530,7 +541,7 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
 
     // Servis (varsa)
     let serviceRow: { id: string; price: string; duration_minutes: number; is_free: number } | null = null;
-    if (body?.service_id) {
+    if (serviceId) {
       const [s] = await db
         .select({
           id: consultantServices.id,
@@ -539,7 +550,7 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
           is_free: consultantServices.is_free,
         })
         .from(consultantServices)
-        .where(eq(consultantServices.id, safeText(body.service_id)))
+        .where(eq(consultantServices.id, serviceId))
         .limit(1);
       if (s) serviceRow = s as any;
     }
@@ -585,14 +596,14 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
       email: userEmail,
       phone: userPhone,
       locale,
-      customer_message: body?.customer_message ? safeText(body.customer_message) : null,
-      service_id: body?.service_id ? safeText(body.service_id) : null,
+      customer_message: customerMessage || null,
+      service_id: serviceId || null,
       resource_id: resource.id,
       appointment_date: today,
       appointment_time: time,
       session_price: serviceRow?.is_free ? '0.00' : (serviceRow ? toMoneyString(serviceRow.price) : '0.00'),
       media_type: 'audio',
-      session_duration: serviceRow?.duration_minutes ?? 30,
+      session_duration: serviceRow?.duration_minutes ?? appConfig.consultants.defaultSessionDurationMinutes,
       source_type: 'instant',
       source_id: null,
       status: 'requested_now',
@@ -604,7 +615,7 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
     // Danışmana bildirim — fire-and-forget (response'u bloklamaz)
     if (c.user_id) {
       const notifyTitle = '⚡ Anlık Görüşme Talebi';
-      const notifyBody = `${userName || 'Bir kullanıcı'} hemen şimdi görüşmek istiyor. 5 dakika içinde yanıtlayın.`;
+      const notifyBody = `${userName || 'Bir kullanıcı'} hemen şimdi görüşmek istiyor. ${timeoutMinutes} dakika içinde yanıtlayın.`;
 
       // Danışmanın email'ini ve adını al
       const [consultantUser] = await db
@@ -613,8 +624,8 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
         .where(eq(users.id, c.user_id))
         .limit(1);
 
-      const publicUrl = (process.env.PUBLIC_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
-      const panelUrl = `${publicUrl}/${locale}/me/consultant`;
+      const publicUrl = (process.env.PUBLIC_URL || process.env.FRONTEND_URL || '').replace(/\/$/, '');
+      const panelUrl = publicUrl ? `${publicUrl}/${locale}/me/consultant` : `/${locale}/me/consultant`;
 
       Promise.allSettled([
         createUserNotification({
@@ -630,7 +641,7 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
           data: {
             type: 'booking_requested_now',
             booking_id: id,
-            url: '/dashboard?tab=bookings',
+            url: `/${locale}/me/consultant`,
           },
         }),
         consultantUser?.email
@@ -642,7 +653,7 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
               params: {
                 consultant_name: safeText(consultantUser.full_name) || 'Danışman',
                 customer_name: userName || 'Bir kullanıcı',
-                customer_message: body?.customer_message ? safeText(body.customer_message) : '',
+                customer_message: customerMessage,
                 panel_url: panelUrl,
               },
               allowMissing: true,
@@ -655,8 +666,8 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
       ok: true,
       id,
       status: 'requested_now',
-      message: 'Talebiniz alındı. Danışman 5 dakika içinde yanıtlamazsa otomatik iptal edilir.',
-      timeout_at: new Date(nowDate.getTime() + 5 * 60_000).toISOString(),
+      message: `Talebiniz alındı. Danışman ${timeoutMinutes} dakika içinde yanıtlamazsa otomatik iptal edilir.`,
+      timeout_at: new Date(nowDate.getTime() + timeoutMinutes * 60_000).toISOString(),
     });
   } catch (e: any) {
     req.log.error(e);

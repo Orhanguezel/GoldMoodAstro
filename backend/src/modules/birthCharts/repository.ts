@@ -7,6 +7,7 @@ import {
   computeSynastry,
   computeTransitChart,
 } from '@goldmood/shared-backend/modules/astrology';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 import { resolveTimezone } from '@/modules/geocode/service';
 import { birthCharts, type BirthChartRow } from './schema';
 import type { CreateBirthChartInput } from './validation';
@@ -104,7 +105,7 @@ async function refreshChartDataIfNeeded(row: BirthChartRow) {
 
 export async function createBirthChart(userId: string, input: CreateBirthChartInput) {
   const rows = await listBirthCharts(userId);
-  if (rows.length >= 5) {
+  if (rows.length >= appConfig.birthCharts.maxChartsPerUser) {
     const error = new Error('birth_chart_limit_reached');
     (error as Error & { statusCode?: number }).statusCode = 403;
     throw error;

@@ -1,5 +1,6 @@
 import SwissEph from 'swisseph-wasm';
 import { DateTime } from 'luxon';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 import type {
   AspectType,
   BirthChartInput,
@@ -39,13 +40,7 @@ const PLANETS: Array<{ key: PlanetKey; name: string; symbol: string; swe: keyof 
   { key: 'pluto', name: 'Pluto', symbol: '♇', swe: 'SE_PLUTO' },
 ];
 
-const ASPECTS: Array<{ type: AspectType; angle: number; orb: number }> = [
-  { type: 'conjunction', angle: 0, orb: 8 },
-  { type: 'sextile', angle: 60, orb: 5 },
-  { type: 'square', angle: 90, orb: 6 },
-  { type: 'trine', angle: 120, orb: 6 },
-  { type: 'opposition', angle: 180, orb: 8 },
-];
+const ASPECTS: Array<{ type: AspectType; angle: number; orb: number }> = appConfig.astrology.aspects;
 
 type SwissHouseResult = {
   cusps: ArrayLike<number>;

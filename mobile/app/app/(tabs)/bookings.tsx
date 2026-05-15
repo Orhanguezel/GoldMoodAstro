@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ChevronLeft, CalendarDays, History } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft, CalendarDays, History, ChevronRight } from 'lucide-react-native';
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { bookingsApi } from '@/lib/api';
@@ -19,7 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { Booking } from '@/types';
 
 export default function BookingsScreen() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, authHydrating } = useAuth();
   
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -40,12 +41,13 @@ export default function BookingsScreen() {
   };
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.replace('/auth/login' as any);
-    } else if (isAuthenticated) {
-      fetchBookings();
+    if (authHydrating) return;
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
     }
-  }, [isAuthenticated, authLoading]);
+    fetchBookings();
+  }, [isAuthenticated, authHydrating]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -61,7 +63,52 @@ export default function BookingsScreen() {
       : new Date(b.appointment_date).getTime() - new Date(a.appointment_date).getTime();
   });
 
-  if (authLoading || (loading && !refreshing)) {
+  if (authHydrating) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+              <ChevronLeft size={24} color={colors.text} />
+            </Pressable>
+            <Text style={styles.headerTitle}>Randevularım</Text>
+            <View style={{ width: 40 }} />
+          </View>
+          <View style={styles.guestBody}>
+            <View style={styles.guestIconWrap}>
+              <CalendarDays size={32} color={colors.bgDeep} />
+            </View>
+            <Text style={styles.guestTitle}>Randevularınız</Text>
+            <Text style={styles.guestSubtitle}>
+              Yaklaşan ve geçmiş randevularınızı listelemek, ödeme ve görüşme için giriş yapın.
+            </Text>
+            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
+                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
+            </Pressable>
+            <Pressable style={styles.guestTertiary} onPress={() => router.push('/(tabs)/connect' as any)}>
+              <Text style={styles.guestTertiaryText}>Önce danışmanlara göz at →</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (loading && !refreshing) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator color={colors.gold} size="large" />
@@ -232,4 +279,47 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.gold,
   },
+  guestBody: {
+    flex: 1,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing['2xl'],
+    alignItems: 'center',
+  },
+  guestIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  guestTitle: {
+    fontFamily: font.display,
+    fontSize: 26,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  guestSubtitle: {
+    fontFamily: font.sans,
+    fontSize: 15,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing['2xl'],
+  },
+  guestPrimaryWrap: { alignSelf: 'stretch', borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
+  guestPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
+  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
+  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
+  guestTertiary: { marginTop: spacing.xl, paddingVertical: 12 },
+  guestTertiaryText: { fontFamily: font.sansMedium, fontSize: 14, color: colors.textMuted },
 });

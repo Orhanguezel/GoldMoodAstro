@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -23,11 +23,13 @@ import {
   VolumeX, 
   SwitchCamera,
   Clock,
+  ChevronRight,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { bookingsApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 import {
   connectLiveKitAudio,
   endLiveKitSession,
@@ -50,6 +52,7 @@ const formatDuration = (seconds: number) => {
 export default function CallScreen() {
   const { bookingId: rawId } = useLocalSearchParams<{ bookingId: string }>();
   const bookingId = Array.isArray(rawId) ? rawId[0] : rawId;
+  const { isAuthenticated, authHydrating } = useAuth();
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,7 +88,16 @@ export default function CallScreen() {
   };
 
   useEffect(() => {
-    if (!bookingId) return;
+    if (authHydrating) return;
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    if (!bookingId) {
+      setLoading(false);
+      router.replace('/(tabs)/bookings' as any);
+      return;
+    }
     let cancelled = false;
     const bootstrap = async () => {
       try {
@@ -131,7 +143,7 @@ export default function CallScreen() {
     };
     bootstrap();
     return () => { cancelled = true; cleanup(); };
-  }, [bookingId]);
+  }, [bookingId, authHydrating, isAuthenticated]);
 
   const handleHangup = async () => {
     await cleanup();
@@ -142,6 +154,44 @@ export default function CallScreen() {
       router.replace('/(tabs)/bookings' as any);
     }
   };
+
+  if (authHydrating) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color={colors.gold} size="large" />
+        <Text style={styles.loaderText}>Yükleniyor...</Text>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={[colors.inkDeep, colors.bgDeep]} style={styles.full}>
+          <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+            <View style={styles.guestBody}>
+              <Text style={styles.guestTitle}>Canlı görüşme</Text>
+              <Text style={styles.guestSubtitle}>
+                Seansa katılmak için giriş yapmanız gerekir. Randevunuz onaylıysa giriş sonrası tekrar deneyin.
+              </Text>
+              <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
+                <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
+                  <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
+                  <ChevronRight size={18} color={colors.bgDeep} />
+                </LinearGradient>
+              </Pressable>
+              <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
+                <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
+              </Pressable>
+              <Pressable style={styles.guestBack} onPress={() => router.back()}>
+                <Text style={styles.guestBackText}>Geri</Text>
+              </Pressable>
+            </View>
+          </SafeAreaView>
+        </LinearGradient>
+      </View>
+    );
+  }
 
   if (loading) {
     return (
@@ -285,4 +335,20 @@ const styles = StyleSheet.create({
   btn: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   btnActive: { backgroundColor: 'rgba(255,255,255,0.2)', borderColor: colors.gold },
   hangup: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center', shadowColor: colors.danger, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 15, elevation: 10 },
+  guestBody: { flex: 1, justifyContent: 'center', paddingHorizontal: spacing.xl },
+  guestTitle: { fontFamily: font.display, fontSize: 26, color: colors.text, textAlign: 'center', marginBottom: spacing.sm },
+  guestSubtitle: { fontFamily: font.sans, fontSize: 15, color: colors.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: spacing['2xl'] },
+  guestPrimaryWrap: { borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
+  guestPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
+  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
+  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
+  guestBack: { marginTop: spacing.xl, alignItems: 'center', paddingVertical: 12 },
+  guestBackText: { fontFamily: font.sansMedium, fontSize: 15, color: colors.textMuted },
 });

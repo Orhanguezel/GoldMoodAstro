@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, ScrollView, Image, 
-  ActivityIndicator, Pressable, Dimensions, Platform 
+  ActivityIndicator, Pressable, Dimensions, Platform, Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { consultantsApi, chatApi, reviewsApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 import type { Consultant, ConsultantSlot, Review } from '@/types';
 import { format, addDays, isSameDay } from 'date-fns';
 import { tr, enUS } from 'date-fns/locale';
@@ -28,6 +29,7 @@ const { width } = Dimensions.get('window');
 export default function ConsultantDetailScreen() {
   const { id, topic } = useLocalSearchParams<{ id: string; topic?: string }>();
   const { t, i18n } = useTranslation();
+  const { isAuthenticated, authHydrating } = useAuth();
   const dateLocale = i18n.language === 'tr' ? tr : enUS;
 
   const [consultant, setConsultant] = useState<Consultant | null>(null);
@@ -42,7 +44,10 @@ export default function ConsultantDetailScreen() {
   const dates = Array.from({ length: 7 }).map((_, i) => addDays(new Date(), i));
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setReviewsLoading(true);
     Promise.all([
@@ -89,10 +94,23 @@ export default function ConsultantDetailScreen() {
     });
   };
 
-  if (loading || !consultant) {
+  if (loading) {
     return (
       <View style={styles.centerLoader}>
         <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!consultant) {
+    return (
+      <View style={[styles.centerLoader, { padding: spacing.lg }]}>
+        <Text style={{ fontFamily: font.sans, color: colors.textMuted, textAlign: 'center', marginBottom: spacing.lg }}>
+          {id ? t('consultant.loadError', 'Danışman bilgisi yüklenemedi.') : t('consultant.missingId', 'Danışman bulunamadı.')}
+        </Text>
+        <Pressable onPress={() => router.back()} style={{ padding: spacing.md }}>
+          <Text style={{ fontFamily: font.sansBold, color: colors.gold }}>{t('common.back', 'Geri')}</Text>
+        </Pressable>
       </View>
     );
   }
@@ -114,10 +132,29 @@ export default function ConsultantDetailScreen() {
                 <ChevronLeft size={24} color={colors.text} />
               </Pressable>
               <Pressable 
-                style={styles.chatBtn} 
+                style={[styles.chatBtn, authHydrating && { opacity: 0.45 }]} 
+                disabled={authHydrating}
                 onPress={async () => {
-                  const { id: tid } = await chatApi.createThread(consultant.id);
-                  router.push(`/chat/${tid}`);
+                  if (!consultant) return;
+                  if (!isAuthenticated) {
+                    Alert.alert(
+                      'Giriş gerekli',
+                      'Danışmana mesaj göndermek için oturum açın.',
+                      [
+                        { text: 'Vazgeç', style: 'cancel' },
+                        { text: 'Kayıt ol', onPress: () => router.push('/auth/register' as any) },
+                        { text: 'Giriş Yap', onPress: () => router.push('/auth/login' as any) },
+                      ],
+                    );
+                    return;
+                  }
+                  try {
+                    const { id: tid } = await chatApi.createThread(consultant.id);
+                    router.push(`/chat/${tid}` as any);
+                  } catch (e) {
+                    console.error('createThread', e);
+                    Alert.alert('Hata', 'Sohbet başlatılamadı. Lütfen tekrar deneyin.');
+                  }
                 }}
               >
                 <MessageSquare size={22} color={colors.text} />

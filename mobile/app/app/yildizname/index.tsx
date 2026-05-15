@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
   TextInput, 
   Pressable, 
   ActivityIndicator,
@@ -34,6 +34,8 @@ import * as Haptics from 'expo-haptics';
 
 import { colors, font, radius, spacing, shadows } from '@/theme/tokens';
 import { yildiznameApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import { mobileBrandConfig, publicShareUrl } from '@/config/brand';
 
 const { width } = Dimensions.get('window');
 
@@ -46,6 +48,7 @@ const LOADING_PHASES = [
 ];
 
 export default function YildiznameScreen() {
+  const { isAuthenticated, authHydrating } = useAuth();
   const [step, setStep] = useState<'intro' | 'name' | 'mother' | 'year' | 'loading' | 'result'>('intro');
   const [formData, setFormData] = useState({ name: '', mother_name: '', birth_year: '' });
   const [result, setResult] = useState<any>(null);
@@ -116,8 +119,8 @@ export default function YildiznameScreen() {
     if (!result) return;
     try {
       await Share.share({
-        message: `${result.name} için Yıldızname Analizi ✨ Menzil: ${result.menzil?.name_tr}\n\n${result.readingText}\n\nKeşfet: https://goldmoodastro.com/tr/yildizname/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=yildizname`,
-        title: 'GoldMoodAstro Yıldızname',
+        message: `${result.name} için Yıldızname Analizi ✨ Menzil: ${result.menzil?.name_tr}\n\n${result.readingText}\n\nKeşfet: ${publicShareUrl(`/tr/yildizname/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=yildizname`)}`,
+        title: `${mobileBrandConfig.appName} Yıldızname`,
       });
     } catch (e) {
       console.error(e);
@@ -144,6 +147,70 @@ export default function YildiznameScreen() {
       </View>
     );
   };
+
+  if (authHydrating) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={[colors.bgDeep, colors.bg]} style={StyleSheet.absoluteFill} />
+        <SafeAreaView style={styles.safe}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color={colors.gold} />
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <LinearGradient colors={[colors.bgDeep, colors.bg]} style={StyleSheet.absoluteFill} />
+        <SafeAreaView style={styles.safe}>
+          <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+              <ChevronLeft size={24} color={colors.gold} />
+            </Pressable>
+            <Text style={styles.headerTitle}>Yıldızname</Text>
+            <View style={{ width: 40 }} />
+          </View>
+          <ScrollView
+            contentContainerStyle={styles.guestScroll}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.introIcon}>
+              <Moon size={48} color={colors.gold} />
+            </View>
+            <Text style={styles.heroTitle}>
+              Yıldızname{'\n'}
+              <Text style={{ color: colors.gold }}>Ebced Sırrı</Text>
+            </Text>
+            <Text style={styles.heroSub}>
+              İsmin ve anne adının evrendeki sayısal titreşimi. Giriş yapınca adımları tamamlayıp menzilini öğrenebilirsin.
+            </Text>
+
+            <View style={styles.featureGrid}>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureLabel}>KADİM HESAP</Text>
+                <Text style={styles.featureVal}>Ebced Sistemi</Text>
+              </View>
+              <View style={styles.featureItem}>
+                <Text style={styles.featureLabel}>AY MENZİLLERİ</Text>
+                <Text style={styles.featureVal}>28 Durak</Text>
+              </View>
+            </View>
+
+            <Pressable style={styles.mainBtn} onPress={() => router.push('/auth/login' as any)}>
+              <Text style={styles.mainBtnText}>GİRİŞ YAP</Text>
+              <ChevronRight size={20} color={colors.bgDeep} />
+            </Pressable>
+            <Pressable style={styles.guestRegisterBtn} onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestRegisterText}>Hesap oluştur</Text>
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -328,6 +395,9 @@ const styles = StyleSheet.create({
   backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface + '88', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontFamily: font.display, fontSize: 18, color: colors.text, letterSpacing: 1 },
   body: { flex: 1 },
+  guestScroll: { alignItems: 'center', paddingHorizontal: 40, paddingTop: 24, paddingBottom: 48, gap: 20 },
+  guestRegisterBtn: { paddingVertical: 16, alignItems: 'center', marginTop: 4 },
+  guestRegisterText: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
   introContent: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 24 },
   introIcon: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.gold + '15', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.gold + '33' },
   heroTitle: { fontFamily: font.display, fontSize: 42, color: colors.text, textAlign: 'center', lineHeight: 50 },

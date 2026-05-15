@@ -23,11 +23,12 @@ import {
   ChevronRight,
   MessageSquare
 } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 
 import { colors, font, radius, spacing } from '@/theme/tokens';
 import { birthChartsApi, readingsApi } from '@/lib/api';
-import { useFocusEffect } from 'expo-router';
+import { useAuth } from '@/hooks/useAuth';
+import type { DailyReadingResponse } from '@/types';
 
 const { width } = Dimensions.get('window');
 
@@ -40,7 +41,8 @@ const MOODS = [
 ];
 
 export default function DailyReadingScreen() {
-  const [reading, setReading] = useState<any>(null);
+  const { isAuthenticated, authHydrating } = useAuth();
+  const [reading, setReading] = useState<DailyReadingResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
@@ -54,12 +56,20 @@ export default function DailyReadingScreen() {
   });
 
   const loadReading = useCallback(async () => {
+    if (!isAuthenticated) {
+      setReading(null);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     setLoading(true);
     try {
       const charts = await birthChartsApi.list();
       if (charts[0]) {
         const data = await readingsApi.daily(charts[0].id);
         setReading(data);
+      } else {
+        setReading(null);
       }
     } catch (err) {
       console.error('Reading load error:', err);
@@ -67,7 +77,7 @@ export default function DailyReadingScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useFocusEffect(
     useCallback(() => {
@@ -80,7 +90,11 @@ export default function DailyReadingScreen() {
     loadReading();
   };
 
-  if (loading && !refreshing) {
+  const readingDoc = reading?.reading;
+  const readingBodyFallback =
+    'Bugün Ay\'ın Boğa burcundaki seyri, seni daha köklü ve güvenli hissetmeye davet ediyor. Maddi konular veya ev hayatınla ilgili yarım kalmış işleri tamamlamak için mükemmel bir zaman.\n\nVenüs\'ün uyumlu açısı, ikili ilişkilerde beklediğin o yumuşak geçişi sağlayabilir. Ancak Merkür\'ün konumu, imza gerektiren işlerde iki kez kontrol etmen gerektiğini hatırlatıyor.';
+
+  if (authHydrating || (loading && !refreshing && isAuthenticated)) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator color={colors.gold} size="large" />
@@ -138,13 +152,25 @@ export default function DailyReadingScreen() {
             </View>
 
             <Text style={styles.readingTitle}>
-              {reading?.title || 'İçsel dengeni bulmak için sessizliğe odaklan.'}
+              {readingDoc?.content ? 'Bugünün rehberi' : !isAuthenticated ? 'Misafir modu' : 'İçsel dengeni bulmak için sessizliğe odaklan.'}
             </Text>
 
             <View style={styles.readingBodyWrapper}>
-              <Text style={styles.readingBody}>
-                {reading?.content || 'Bugün Ay\'ın Boğa burcundaki seyri, seni daha köklü ve güvenli hissetmeye davet ediyor. Maddi konular veya ev hayatınla ilgili yarım kalmış işleri tamamlamak için mükemmel bir zaman.\n\nVenüs\'ün uyumlu açısı, ikili ilişkilerde beklediğin o yumuşak geçişi sağlayabilir. Ancak Merkür\'ün konumu, imza gerektiren işlerde iki kez kontrol etmen gerektiğini hatırlatıyor.'}
-              </Text>
+              {!isAuthenticated ? (
+                <>
+                  <Text style={styles.readingBody}>
+                    Haritanıza bağlı günlük yorumu görmek için giriş yapın ve doğum verilerinizi kaydedin. Genel astroloji
+                    içeriği için Burçlar sekmesine göz atabilirsiniz.
+                  </Text>
+                  <Pressable style={styles.guestLoginBanner} onPress={() => router.push('/auth/login' as any)}>
+                    <Text style={styles.guestLoginBannerText}>Giriş yap</Text>
+                  </Pressable>
+                </>
+              ) : (
+                <Text style={styles.readingBody}>
+                  {readingDoc?.content || readingBodyFallback}
+                </Text>
+              )}
             </View>
 
             <View style={styles.quoteBox}>
@@ -181,7 +207,7 @@ export default function DailyReadingScreen() {
               style={styles.askBtn}
               onPress={() => router.push({
                 pathname: '/(tabs)/connect',
-                params: reading?.id ? { topic: `daily_reading_${reading.id}` } : undefined,
+                params: readingDoc?.id ? { topic: `daily_reading_${readingDoc.id}` } : undefined,
               } as any)}
             >
               <View style={styles.askBtnContent}>
@@ -350,6 +376,15 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     lineHeight: 28,
   },
+  guestLoginBanner: {
+    marginTop: 16,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.gold,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: radius.pill,
+  },
+  guestLoginBannerText: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep },
   quoteBox: {
     marginTop: 32,
     paddingHorizontal: 20,

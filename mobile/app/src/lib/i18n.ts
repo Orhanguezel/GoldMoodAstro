@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
+import { mobileBrandConfig } from '@/config/brand';
 
 const tr = {
   onboarding: {
@@ -150,7 +151,7 @@ const tr = {
     profile: 'Profil',
     language: 'Dil',
     notifications: 'Bildirimler',
-    about: 'GoldMoodAstro Hakkında',
+    about: `${mobileBrandConfig.appName} Hakkında`,
     support: 'Destek',
     logout: 'Çıkış Yap',
     version: 'Sürüm {{v}}',
@@ -390,7 +391,7 @@ const en: typeof tr = {
     profile: 'Profile',
     language: 'Language',
     notifications: 'Notifications',
-    about: 'About GoldMoodAstro',
+    about: `About ${mobileBrandConfig.appName}`,
     support: 'Support',
     logout: 'Sign Out',
     version: 'Version {{v}}',

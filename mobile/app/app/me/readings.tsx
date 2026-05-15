@@ -6,11 +6,11 @@ import {
   ScrollView, 
   Pressable, 
   ActivityIndicator,
-  Dimensions,
   RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { 
   Star, 
   Coffee, 
@@ -18,14 +18,12 @@ import {
   Binary, 
   ChevronRight, 
   ChevronLeft,
-  Calendar,
   Clock
 } from 'lucide-react-native';
 
 import { colors, font, radius, spacing } from '@/theme/tokens';
+import { useAuth } from '@/hooks/useAuth';
 import { historyApi } from '@/lib/api';
-
-const { width } = Dimensions.get('window');
 
 const TYPE_CONFIG: Record<string, { label: string, icon: any, color: string, route: string }> = {
   tarot: { label: 'TAROT', icon: Star, color: colors.gold, route: '/tarot/reading' },
@@ -35,6 +33,7 @@ const TYPE_CONFIG: Record<string, { label: string, icon: any, color: string, rou
 };
 
 export default function HistoryScreen() {
+  const { isAuthenticated, authHydrating } = useAuth();
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -52,8 +51,63 @@ export default function HistoryScreen() {
   };
 
   useEffect(() => {
+    if (authHydrating) return;
+    if (!isAuthenticated) return;
     loadHistory();
-  }, []);
+  }, [authHydrating, isAuthenticated]);
+
+  if (authHydrating) {
+    return (
+      <View style={[styles.container, styles.centerFill]}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.navHeader}>
+            <Pressable onPress={() => router.back()} style={styles.backBtn}>
+              <ChevronLeft size={24} color={colors.gold} />
+            </Pressable>
+            <Text style={styles.navTitle}>Geçmiş Yorumlar</Text>
+            <View style={{ width: 40 }} />
+          </View>
+          <ScrollView contentContainerStyle={styles.guestScroll} showsVerticalScrollIndicator={false}>
+            <View style={styles.guestIconWrap}>
+              <Clock size={28} color={colors.bgDeep} />
+            </View>
+            <Text style={styles.guestTitle}>Yorum geçmişi</Text>
+            <Text style={styles.guestSubtitle}>
+              Tarot, kahve, rüya ve numeroloji kayıtlarınız hesaba bağlıdır. Listelemek için giriş yapın.
+            </Text>
+            <View style={styles.guestChips}>
+              {Object.entries(TYPE_CONFIG).map(([key, cfg]) => {
+                const Icon = cfg.icon;
+                return (
+                  <View key={key} style={styles.guestChip}>
+                    <Icon size={14} color={cfg.color} />
+                    <Text style={styles.guestChipText}>{cfg.label}</Text>
+                  </View>
+                );
+              })}
+            </View>
+            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
+                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -119,11 +173,56 @@ export default function HistoryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
+  centerFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   safe: { flex: 1 },
   navHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   navTitle: { fontFamily: font.display, fontSize: 20, color: colors.text },
   scrollContent: { padding: spacing.lg, gap: 12 },
+  guestScroll: { padding: spacing.xl, paddingTop: spacing.lg, paddingBottom: 48 },
+  guestIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.gold,
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  guestTitle: { fontFamily: font.display, fontSize: 24, color: colors.text, textAlign: 'center', marginBottom: spacing.sm },
+  guestSubtitle: {
+    fontFamily: font.sans,
+    fontSize: 15,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing.lg,
+  },
+  guestChips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginBottom: spacing['2xl'] },
+  guestChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.lineSoft,
+  },
+  guestChipText: { fontFamily: font.sansBold, fontSize: 10, color: colors.textDim, letterSpacing: 0.5 },
+  guestPrimaryWrap: { borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
+  guestPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
+  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
+  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
   loaderWrap: { padding: 40, alignItems: 'center' },
   card: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, padding: 16, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft, gap: 16 },
   iconWrap: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },

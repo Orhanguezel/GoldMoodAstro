@@ -18,6 +18,7 @@ import { User, Mail, Lock, ChevronLeft, CheckCircle2, Circle } from 'lucide-reac
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { authApi, setAuthToken } from '@/lib/api';
 import { storage } from '@/lib/storage';
+import { registerPushToken } from '@/lib/notifications';
 
 export default function RegisterScreen() {
   const [fullName, setFullName] = useState('');
@@ -39,6 +40,7 @@ export default function RegisterScreen() {
     
     setLoading(true);
     try {
+      setAuthToken(null);
       const res = await authApi.register({
         full_name: fullName,
         email,
@@ -53,7 +55,8 @@ export default function RegisterScreen() {
       });
 
       setAuthToken(res.access_token);
-      
+      registerPushToken().catch(() => {});
+
       // Go to onboarding
       router.replace('/onboarding' as any);
     } catch (err: any) {

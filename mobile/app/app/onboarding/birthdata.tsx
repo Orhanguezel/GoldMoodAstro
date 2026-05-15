@@ -17,7 +17,7 @@ import { ChevronLeft, MapPin, Calendar, Clock, Sparkles } from 'lucide-react-nat
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { storage } from '@/lib/storage';
-import { birthChartsApi, geocodeApi } from '@/lib/api';
+import { birthChartsApi, geocodeApi, setAuthToken } from '@/lib/api';
 
 export default function BirthdataScreen() {
   const [date, setDate] = useState('');
@@ -33,10 +33,25 @@ export default function BirthdataScreen() {
       return;
     }
 
+    const token = await storage.getAuthToken();
+    if (!token?.trim()) {
+      Alert.alert(
+        'Giriş gerekli',
+        'Haritanızı hesaplayıp kaydetmek için bir hesaba ihtiyacımız var. İsterseniz önce Büyük üçlüyü hesapsız deneyebilirsiniz — Burçlar sekmesinden.',
+        [
+          { text: 'İptal', style: 'cancel' },
+          { text: 'Kayıt ol', onPress: () => router.push('/auth/register' as any) },
+          { text: 'Giriş yap', onPress: () => router.push('/auth/login' as any) },
+        ],
+      );
+      return;
+    }
+
     try {
       setLoading(true);
 
       const resolvedPlace = place?.label === city ? place : await geocodeApi.search(city);
+      setAuthToken(token);
       await birthChartsApi.create({
         name: 'Ana Haritam',
         dob: normalizeDate(date),

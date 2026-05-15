@@ -51,12 +51,17 @@ export default function RootLayout() {
   });
   const [ready, setReady] = useState(false);
 
-  // Bildirime tıklanınca ilgili ekrana git
+  // Bildirime tıklanınca randevu detayı (veya sekmeler)
   useEffect(() => {
     if (!lastNotification || !ready) return;
     const data = lastNotification.notification.request.content.data as Record<string, unknown>;
-    if (data?.booking_id) {
-      router.push(`/(tabs)/bookings`);
+    const bookingId = data?.booking_id ?? data?.bookingId;
+    if (typeof bookingId === 'string' && bookingId.length > 0) {
+      router.push(`/booking/${bookingId}` as any);
+      return;
+    }
+    if (data?.screen === 'bookings') {
+      router.push('/(tabs)/bookings');
     }
   }, [lastNotification, ready]);
 

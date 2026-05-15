@@ -4,10 +4,13 @@ import {
   ActivityIndicator, Pressable, Alert, Image, Platform 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, router } from 'expo-router';
+import { ChevronRight, CalendarDays } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
 import { bookingsApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 import type { Booking } from '@/types';
 import { format, parseISO } from 'date-fns';
 import { tr, enUS } from 'date-fns/locale';
@@ -15,19 +18,27 @@ import { tr, enUS } from 'date-fns/locale';
 export default function BookingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t, i18n } = useTranslation();
+  const { isAuthenticated, authHydrating } = useAuth();
   const dateLocale = i18n.language === 'tr' ? tr : enUS;
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      bookingsApi.get(id)
-        .then(setBooking)
-        .catch(console.error)
-        .finally(() => setLoading(false));
+    if (authHydrating) return;
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
     }
-  }, [id]);
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    bookingsApi.get(id)
+      .then(setBooking)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [id, authHydrating, isAuthenticated]);
 
   const handleCancel = () => {
     Alert.alert(
@@ -52,11 +63,65 @@ export default function BookingDetailScreen() {
     );
   };
 
-  if (loading || !booking) {
+  if (authHydrating) {
     return (
       <View style={[styles.safe, styles.center]}>
         <ActivityIndicator color={colors.amethyst} size="large" />
       </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
+        <ScrollView contentContainerStyle={styles.guestScroll}>
+          <Pressable onPress={() => router.back()} style={styles.guestBack}>
+            <Text style={styles.guestBackText}>{t('common.back', 'Geri')}</Text>
+          </Pressable>
+          <View style={styles.guestIconWrap}>
+            <CalendarDays size={32} color={colors.midnight} />
+          </View>
+          <Text style={styles.guestTitle}>{t('booking.detailTitle', 'Randevu Detayı')}</Text>
+          <Text style={styles.guestSubtitle}>
+            {t(
+              'booking.guestHint',
+              'Randevu bilgilerinizi görmek, iptal etmek veya görüşmeye katılmak için giriş yapın.',
+            )}
+          </Text>
+          <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
+            <LinearGradient colors={[colors.amethyst, colors.gold]} style={styles.guestPrimaryBtn}>
+              <Text style={styles.guestPrimaryLabel}>{t('auth.login', 'Giriş Yap')}</Text>
+              <ChevronRight size={18} color={colors.stardust} />
+            </LinearGradient>
+          </Pressable>
+          <Pressable onPress={() => router.push('/auth/register' as any)}>
+            <Text style={styles.guestRegister}>{t('auth.registerCta', 'Hesap oluştur')}</Text>
+          </Pressable>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (loading) {
+    return (
+      <View style={[styles.safe, styles.center]}>
+        <ActivityIndicator color={colors.amethyst} size="large" />
+      </View>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['bottom']}>
+        <View style={[styles.center, { flex: 1, padding: spacing.lg }]}>
+          <Text style={{ fontFamily: font.sans, color: colors.textMuted, textAlign: 'center', marginBottom: spacing.lg }}>
+            {id ? t('booking.loadError', 'Randevu bilgisi alınamadı.') : t('booking.missingId', 'Randevu kimliği eksik.')}
+          </Text>
+          <Pressable onPress={() => router.back()} style={{ padding: spacing.md }}>
+            <Text style={{ fontFamily: font.sansBold, color: colors.amethyst }}>{t('common.back', 'Geri')}</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -213,4 +278,28 @@ const styles = StyleSheet.create({
   cancelBtnText: { color: colors.danger, fontFamily: font.sansBold, fontSize: 14 },
   reviewBtn: { marginTop: spacing.sm, paddingVertical: spacing.md, borderRadius: radius.pill, alignItems: 'center', backgroundColor: colors.amethyst, ...shadows.soft },
   reviewBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 14 },
+  guestScroll: { flexGrow: 1, padding: spacing.xl, paddingTop: spacing.lg, alignItems: 'center' },
+  guestBack: { alignSelf: 'flex-start', marginBottom: spacing.lg },
+  guestBackText: { fontFamily: font.sansBold, fontSize: 14, color: colors.amethyst },
+  guestIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  guestTitle: { fontFamily: font.display, fontSize: 26, color: colors.stardust, textAlign: 'center', marginBottom: spacing.sm },
+  guestSubtitle: { fontFamily: font.sans, fontSize: 15, color: colors.muted, textAlign: 'center', lineHeight: 22, marginBottom: spacing['2xl'] },
+  guestPrimaryWrap: { alignSelf: 'stretch', borderRadius: radius.pill, overflow: 'hidden', marginBottom: spacing.md },
+  guestPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 15, color: colors.stardust },
+  guestRegister: { fontFamily: font.sansBold, fontSize: 14, color: colors.amethyst },
 });

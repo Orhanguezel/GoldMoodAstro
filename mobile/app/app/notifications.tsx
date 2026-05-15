@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ChevronLeft, Bell, CheckCircle2, Info, AlertTriangle, MessageCircle } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft, Bell, CheckCircle2, Info, AlertTriangle, MessageCircle, ChevronRight } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
@@ -19,14 +20,18 @@ import { notificationsApi } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function NotificationsScreen() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authHydrating } = useAuth();
   
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchNotifications = async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       const res = await notificationsApi.list();
       setNotifications(res?.items || []);
@@ -39,8 +44,13 @@ export default function NotificationsScreen() {
   };
 
   useEffect(() => {
+    if (authHydrating) return;
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     fetchNotifications();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authHydrating]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -65,6 +75,48 @@ export default function NotificationsScreen() {
       default: return <Bell size={18} color={colors.gold} />;
     }
   };
+
+  if (authHydrating) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+              <ChevronLeft size={24} color={colors.text} />
+            </Pressable>
+            <Text style={styles.headerTitle}>Bildirimler</Text>
+            <View style={{ width: 56 }} />
+          </View>
+          <View style={styles.guestBody}>
+            <View style={styles.guestIconWrap}>
+              <Bell size={32} color={colors.bgDeep} />
+            </View>
+            <Text style={styles.guestTitle}>Bildirim merkezi</Text>
+            <Text style={styles.guestSubtitle}>
+              Randevu hatırlatmaları ve mesajlar hesabınıza bağlıdır. Listelemek için giriş yapın.
+            </Text>
+            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
+                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   if (loading && !refreshing) {
     return (
@@ -235,6 +287,47 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gold,
     marginTop: 6,
   },
+  guestBody: {
+    flex: 1,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing['2xl'],
+    alignItems: 'center',
+  },
+  guestIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  guestTitle: {
+    fontFamily: font.display,
+    fontSize: 26,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  guestSubtitle: {
+    fontFamily: font.sans,
+    fontSize: 15,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing['2xl'],
+  },
+  guestPrimaryWrap: { alignSelf: 'stretch', borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
+  guestPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
+  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
+  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
   emptyContainer: {
     padding: 60,
     alignItems: 'center',

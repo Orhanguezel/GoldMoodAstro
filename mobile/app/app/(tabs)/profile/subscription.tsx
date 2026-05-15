@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
-import { ChevronLeft, Crown, Check, AlertCircle, Calendar } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft, Crown, Check, AlertCircle, Calendar, ChevronRight } from 'lucide-react-native';
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,7 +29,7 @@ function formatCurrencyMinor(value: number | string, currency = 'TRY'): string {
 }
 
 export default function SubscriptionScreen() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, authHydrating } = useAuth();
 
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [active, setActive] = useState<Subscription | null>(null);
@@ -59,13 +60,9 @@ export default function SubscriptionScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (authLoading) return;
-      if (!isAuthenticated) {
-        router.replace('/auth/login' as any);
-        return;
-      }
+      if (authHydrating || !isAuthenticated) return;
       load();
-    }, [authLoading, isAuthenticated, load]),
+    }, [authHydrating, isAuthenticated, load]),
   );
 
   const onRefresh = () => {
@@ -143,7 +140,57 @@ export default function SubscriptionScreen() {
     );
   };
 
-  if (authLoading || (loading && !refreshing)) {
+  if (authHydrating) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+              <ChevronLeft size={24} color={colors.text} />
+            </Pressable>
+            <Text style={styles.headerTitle}>Premium Üyelik</Text>
+            <View style={{ width: 40 }} />
+          </View>
+          <ScrollView contentContainerStyle={styles.guestScroll} showsVerticalScrollIndicator={false}>
+            <View style={styles.guestIconWrap}>
+              <Crown size={36} color={colors.bgDeep} />
+            </View>
+            <Text style={styles.guestTitle}>Premium planlar</Text>
+            <Text style={styles.guestSubtitle}>
+              Abonelik durumunuzu görüntülemek ve satın almak için giriş yapın. Ödeme ve planlar hesabınıza bağlıdır.
+            </Text>
+            <View style={styles.guestBullets}>
+              {['Günlük detaylı analizler', 'Transit etkileri', 'Seanslarda kredi avantajı'].map((b, i) => (
+                <View key={i} style={styles.guestBulletRow}>
+                  <Check size={16} color={colors.gold} />
+                  <Text style={styles.guestBulletText}>{b}</Text>
+                </View>
+              ))}
+            </View>
+            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
+                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (loading && !refreshing) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator color={colors.gold} size="large" />
@@ -311,6 +358,50 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: 40,
   },
+  guestScroll: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: 48,
+  },
+  guestIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.gold,
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  guestTitle: {
+    fontFamily: font.display,
+    fontSize: 26,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  guestSubtitle: {
+    fontFamily: font.sans,
+    fontSize: 15,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing.xl,
+  },
+  guestBullets: { gap: 12, marginBottom: spacing['2xl'] },
+  guestBulletRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  guestBulletText: { fontFamily: font.sans, fontSize: 14, color: colors.textDim, flex: 1 },
+  guestPrimaryWrap: { borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
+  guestPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
+  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
+  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
 
   // Active Plan Card
   activePlanCard: {

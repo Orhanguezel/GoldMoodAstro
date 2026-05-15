@@ -58,7 +58,7 @@ const PAGE_KEYS = [
   { key: 'burclar-transit',            path: '/burclar/transit/[month]' },
   // Doğum haritası araçları
   { key: 'yukselen-burc-hesaplayici',  path: '/yukselen-burc-hesaplayici' },
-  { key: 'big-three',                  path: '/big-three' },
+  { key: 'big-three',                  path: '/buyuk-uclu' },
   // Hibrit feature'lar
   { key: 'yildizname',                 path: '/yildizname' },
   { key: 'yildizname-result',          path: '/yildizname/result/[id]' },

@@ -27,6 +27,8 @@ import { router } from 'expo-router';
 
 import { colors, font, radius, spacing } from '@/theme/tokens';
 import { tarotApi, getAssetUrl } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import { mobileBrandConfig, publicShareUrl } from '@/config/brand';
 
 const { width } = Dimensions.get('window');
 
@@ -38,6 +40,7 @@ const SPREADS = [
 ];
 
 export default function TarotScreen() {
+  const { isAuthenticated, authHydrating } = useAuth();
   const [step, setStep] = useState<'select' | 'pick' | 'result'>('select');
   const [selectedSpread, setSelectedSpread] = useState(SPREADS[0]);
   const [question, setQuestion] = useState('');
@@ -50,8 +53,8 @@ export default function TarotScreen() {
     const cards = result.cards?.map((c: any) => c.name).join(', ');
     try {
       await Share.share({
-        message: `Tarot Açılımım: ${selectedSpread.title} ✨\n\nKartlarım: ${cards}\n\nGoldMoodAstro ile kartların rehberliğini keşfedin!\n\nKeşfet: https://goldmoodastro.com/tr/tarot/reading/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=tarot`,
-        title: 'GoldMoodAstro Tarot',
+        message: `Tarot Açılımım: ${selectedSpread.title} ✨\n\nKartlarım: ${cards}\n\n${mobileBrandConfig.appName} ile kartların rehberliğini keşfedin!\n\nKeşfet: ${publicShareUrl(`/tr/tarot/reading/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=tarot`)}`,
+        title: `${mobileBrandConfig.appName} Tarot`,
       });
     } catch (e) {
       console.error(e);
@@ -85,6 +88,65 @@ export default function TarotScreen() {
       }
     }
   };
+
+  if (authHydrating) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator color={colors.gold} size="large" />
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>Tarot Rehberi</Text>
+              <Text style={styles.headerSubtitle}>
+                Kart açılımları hesabınıza kaydedilir; kişisel yorum için giriş yapın.
+              </Text>
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>AÇILIM TÜRLERİ</Text>
+              <View style={styles.spreadGrid}>
+                {SPREADS.map((s) => (
+                  <View key={s.id} style={[styles.spreadItem, styles.spreadItemGuest]}>
+                    <View style={styles.spreadIcon}>
+                      <Layers size={20} color={colors.gold} />
+                    </View>
+                    <Text style={styles.spreadLabel}>{s.title}</Text>
+                    <Text style={styles.spreadDesc}>{s.desc}</Text>
+                    <Text style={styles.guestCardMeta}>{s.count} kart</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+            <Pressable
+              style={styles.primaryBtn}
+              onPress={() => router.push('/auth/login' as any)}
+            >
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
+                <Text style={styles.primaryBtnText}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable
+              style={styles.guestRegisterBtn}
+              onPress={() => router.push('/auth/register' as any)}
+            >
+              <Text style={styles.guestRegisterText}>Hesap oluştur</Text>
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   if (step === 'select') {
     return (
@@ -264,12 +326,16 @@ const styles = StyleSheet.create({
   sectionTitle: { fontFamily: font.sansBold, fontSize: 10, color: colors.goldDeep, letterSpacing: 2, marginBottom: spacing.lg },
   spreadGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   spreadItem: { width: (width - 40 - 12) / 2, backgroundColor: colors.surface, padding: 16, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft },
+  spreadItemGuest: { opacity: 0.92 },
   spreadItemActive: { borderColor: colors.gold, backgroundColor: colors.inkDeep },
   spreadIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.gold + '15', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   spreadIconActive: { backgroundColor: colors.gold },
   spreadLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.text, marginBottom: 4 },
   spreadLabelActive: { color: colors.gold },
   spreadDesc: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted },
+  guestCardMeta: { fontFamily: font.sansBold, fontSize: 10, color: colors.goldDim, marginTop: 8, letterSpacing: 1 },
+  guestRegisterBtn: { marginHorizontal: spacing.lg, marginTop: 12, paddingVertical: 16, alignItems: 'center' },
+  guestRegisterText: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
   input: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 16, color: colors.text, fontFamily: font.sans, height: 100, textAlignVertical: 'top', borderWidth: 1, borderColor: colors.lineSoft },
   primaryBtn: { marginHorizontal: spacing.lg, borderRadius: radius.pill, overflow: 'hidden' },
   btnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18 },

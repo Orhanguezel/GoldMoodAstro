@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { and, eq, sql } from 'drizzle-orm';
 import type { WebhookEvent } from 'livekit-server-sdk';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 import { db } from '@/db/client';
 import { users } from '@goldmood/shared-backend/modules/auth/schema';
 import { bookings } from '@goldmood/shared-backend/modules/bookings/schema';
@@ -24,7 +25,7 @@ function calcCreditCost(args: { sessionPrice: string | null; durationSeconds: nu
   if (sessionPrice <= 0 || durationSeconds <= 0) return 0;
 
   const durationMinutes = Math.ceil(durationSeconds / 60);
-  const rawCost = sessionPrice * durationMinutes;
+  const rawCost = sessionPrice * durationMinutes * appConfig.credits.liveSessionCreditMultiplier;
   return Math.max(0, Math.ceil(rawCost));
 }
 
@@ -157,8 +158,11 @@ function assertBookingWindow(booking: {
 
   const now = Date.now();
   const startsAt = start.getTime();
-  const endsAt = startsAt + Number(booking.session_duration ?? 30) * 60_000;
-  const buffer = 15 * 60_000;
+  const durationMinutes = Number(
+    booking.session_duration ?? appConfig.livekit.defaultSessionDurationMinutes,
+  );
+  const endsAt = startsAt + durationMinutes * 60_000;
+  const buffer = appConfig.livekit.bookingWindowBufferMinutes * 60_000;
 
   if (now < startsAt - buffer || now > endsAt + buffer) {
     const error = new Error('booking_not_in_call_window');
@@ -329,9 +333,10 @@ export async function endLiveKitSession(bookingId: string, userId: string) {
 
 export async function handleLiveKitWebhook(event: WebhookEvent) {
   const roomName = event.room?.name;
-  if (!roomName?.startsWith('goldmood-')) return { ignored: true };
+  const roomPrefix = `${appConfig.livekit.roomPrefix}-`;
+  if (!roomName?.startsWith(roomPrefix)) return { ignored: true };
 
-  const bookingId = roomName.replace(/^goldmood-/, '');
+  const bookingId = roomName.slice(roomPrefix.length);
 
   if (event.event === 'room_started' || event.event === 'participant_joined') {
     await db

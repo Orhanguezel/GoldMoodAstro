@@ -1702,7 +1702,7 @@ sayfada gösterilir. Aynı kullanıcı 2. kez tetiklerse benzer ifadeler tekrar 
 
 ---
 
-## FAZ 21 — Tarot (78 kart, 3 açılım) ✅
+## FAZ 21 — Tarot (78 kart, 3 açılım) ✅ TAMAMLANDI
 
 > Hibrit yaklaşım: kart anlamları statik (KB) + kullanıcı haritası ile bağlam (LLM).
 
@@ -2348,15 +2348,15 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 
 
 
-## FAZ 30 — Danışman Dashboard (Self-Service Panel) 🆕
+## FAZ 30 — Danışman Dashboard (Self-Service Panel) ✅ TAMAMLANDI
 
 > **Hedef:** Danışman, admin paneline gerek kalmadan kendi profilini, hizmetlerini, randevularını, gelen mesajlarını ve kazancını yönetebilsin. AdviceMy/Therapy.com benzeri "consultant workspace".
 >
 > **Konum:** `/{locale}/me/consultant/...` rotaları (giriş yapmış consultant rolü gereken). Mevcut user dashboard'a (`/dashboard`) yeni "Danışman" sekmesi olarak eklenebilir veya ayrı route grubu — karar T30-1'de.
 
 ### T30-0 — Karar: rota yapısı
-- [ ] Karar: `/dashboard?tab=consultant` mı yoksa `/me/consultant/*` ayrı rota grubu mu?
-- [ ] Auth guard: sadece `roles.includes('consultant')` olanlar erişebilir; user role'lü erişirse "Danışman olmak için başvur" CTA → `/become-consultant`
+- [x] Karar: `/me/consultant` ayrı rota grubu olarak uygulandı.
+- [x] Auth guard: `ConsultantDashboard.tsx` içinde `isAuthenticated` ve profile kontrolü ile uygulandı.
 
 ### T30-1 — Backend: self-service consultant endpoint'leri
 - [x] `GET /me/consultant` — kendi consultant kaydı + tüm alanlar (bio, expertise, languages, supports_video, social links)
@@ -2374,28 +2374,28 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [x] Tümü `requireAuth + requireConsultant` middleware (yeni middleware: `requireConsultant`)
 
 ### T30-2 — Danışman Profil Sekmesi UI
-- [ ] `/me/consultant/profile` — bio (rich text textarea), uzmanlık alanları (multi-select chip), diller (multi-select)
-- [ ] Avatar yükleme (mevcut storage upload — bucket='consultant_avatars')
-- [ ] Görüşme platformları (WhatsApp, Skype, Zoom, Meet, Microsoft Teams) — checkbox listesi → JSON kayıt
-- [ ] Sosyal linkler (Instagram, LinkedIn, opsiyonel website)
-- [ ] Live preview: değişiklikler "Bu danışmanı müşteri böyle görür" küçük kartta gösterilir
-- [ ] Kaydet butonu → `PATCH /me/consultant`
+- [x] `/me/consultant/profile` — bio (rich text textarea), uzmanlık alanları (multi-select chip), diller (multi-select)
+- [x] Avatar yükleme (mevcut storage upload — bucket='consultant_avatars')
+- [x] Görüşme platformları (WhatsApp, Skype, Zoom, Meet, Microsoft Teams) — checkbox listesi → JSON kayıt
+- [x] Sosyal linkler (Instagram, LinkedIn, opsiyonel website)
+- [x] Live preview: değişiklikler "Bu danışmanı müşteri böyle görür" küçük kartta gösterilir
+- [x] Kaydet butonu → `PATCH /me/consultant`
 
 ### T30-3 — Hizmet Yönetimi Sekmesi UI
-- [ ] `/me/consultant/services` — tablo: ad, süre, fiyat, ücretsiz, aktif, sıra
-- [ ] Yeni servis ekle modal: name, description, duration_minutes, price, currency, is_free toggle, is_active toggle
-- [ ] Drag-drop sıralama (admin home-layout pattern'ı)
-- [ ] Mevcut servisi düzenle/sil
-- [ ] Ücretsiz servisin fiyatı disabled görünür (otomatik 0)
-- [ ] Validation: en az 1 aktif servis olmalı (silme uyarısı)
+- [x] `/me/consultant/services` — tablo: ad, süre, fiyat, ücretsiz, aktif, sıra
+- [x] Yeni servis ekle modal: name, description, duration_minutes, price, currency, is_free toggle, is_active toggle
+- [x] Drag-drop sıralama (admin home-layout pattern'ı)
+- [x] Mevcut servisi düzenle/sil
+- [x] Ücretsiz servisin fiyatı disabled görünür (otomatik 0)
+- [x] Validation: en az 1 aktif servis olmalı (silme uyarısı)
 
 ### T30-4 — Müsaitlik (Availability) Sekmesi UI
-- [ ] `/me/consultant/availability` — haftalık takvim grid (Pzt-Paz × 09:00-22:00)
-- [ ] Drag-to-select slot ekle/kaldır
-- [ ] Quick toggle: "Pazartesi-Cuma 10:00-18:00" preset
-- [ ] Tatil günleri: tek seferlik gün kapatma (özel tarih → tüm slotlar pasif)
-- [ ] **Müsaitlik durumu toggle (üstte)**: "Şu an çevrimiçi miyim?" → `consultants.is_available` 1/0 (anlık talepler için)
-- [ ] Save → `PATCH /me/consultant/availability`
+- [x] `/me/consultant/availability` — haftalık takvim grid (Pzt-Paz × 09:00-22:00)
+- [x] Drag-to-select slot ekle/kaldır
+- [x] Quick toggle: "Pazartesi-Cuma 10:00-18:00" preset
+- [x] Tatil günleri: tek seferlik gün kapatma (özel tarih → tüm slotlar pasif)
+- [x] **Müsaitlik durumu toggle (üstte)**: "Şu an çevrimiçi miyim?" → `consultants.is_available` 1/0 (anlık talepler için)
+- [x] Save → `PATCH /me/consultant/availability`
 
 ### T30-5 — Randevular Sekmesi UI
 - [x] `/me/consultant/bookings` — tabs: Bekleyen / Onaylı / Tamamlanan / İptal
@@ -2411,7 +2411,7 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [x] Müşteri kartı: ad + foto + son mesaj preview + okunmamış badge
 - [x] Cevapla input + dosya ekleme (storage upload)
 - [x] Üstte aynı **uyarı banner** (T29-6): "Uzun konuşma için randevu önerin"
-- [ ] Mesaj typing indicator (chat modülü zaten WS destekli mi bak)
+- [x] Mesaj typing indicator (chat modülü zaten WS destekli mi bak)
 
 ### T30-7 — Cüzdan & Kazanç Sekmesi UI
 - [x] `/me/consultant/wallet` — büyük balance göstergesi (gold)
@@ -2483,47 +2483,47 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 
 ---
 
-## FAZ 33 — Hardcode Temizlik Operasyonu 🆕🧹
+## FAZ 33 — Hardcode Temizlik Operasyonu — **%95 TAMAMLANDI** 🆕🧹
 
 > Detaylı checklist: [`doc/hardcode-cleanup-checklist.md`](./hardcode-cleanup-checklist.md)
 > Amaç: kodda sabit yok — marka/metin/renk/iş sabitleri DB(siteSettings) > JSON(brand.json) > .env'den. Marka değişince koda girilmeyecek.
 > İki koldan: **Kol A Claude** (mimari + merkezi katman + frontend kritik + review), **Kol B Codex** (backend + seed SQL + toplu replace).
 
-- [ ] **HC-A1..A4** Audit & envanter (rapor: `doc/raporlar/hardcode-envanter-2026-05-15.md`) + sync-conflict artıkları sil
-- [ ] **HC-A5..A10** Merkezi katman: `config/brand.json`, `getBrand()`/`useBrand()` resolver, `@goldmood/shared-config` appConfig, .env zod audit, seed şablonu — **kısmi:** HC-A8 appConfig tamam
-- [ ] **HC-B1..B6** Codex: siteSettings `brand.*`+`ui_*` seed, iş sabitleri→appConfig, compute.ts orb→config, BE/mobil literal temizliği — **kısmi:** HC-B1, HC-B4, HC-B5, HC-B6 tamam; HC-B2 temel `ui_*` seed eklendi ama kalan fallback envanteri sürüyor; HC-B3 request-now/servis defaultları/fiyat max + Yıldızname/LiveKit kredi sabitleriyle ilerledi ama komisyon kapsamı sürüyor
-- [ ] **HC-A11..A16** Claude: layout metadata/JSON-LD, inline COPY→ui(), asset path resolver, tema token, iletişim/sosyal componentler, Kol B review
-- [ ] **HC-A17..A20** CI literal guard, "marka değiştir" tatbikatı (0 kod değişikliği), build+smoke, envanter kapanış
+- [x] **HC-A1..A4** Audit & envanter (rapor: `doc/raporlar/hardcode-envanter-2026-05-15.md`) + sync-conflict artıkları sil
+- [x] **HC-A5..A10** Merkezi katman: `config/brand.json`, `getBrand()`/`useBrand()` resolver, `@goldmood/shared-config` appConfig, .env zod audit, seed şablonu
+- [x] **HC-B1..B6** Codex: siteSettings `brand.*`+`ui_*` seed, iş sabitleri→appConfig, compute.ts orb→config, BE/mobil literal temizliği — HC-B1..B6 tamam; HC-B2 443 tekil `ui_*` seed anahtarına genişletildi (`ui_auth_` dinamik prefix, `ui_xxx` format örneği)
+- [x] **HC-A11..A16** Claude: layout metadata/JSON-LD, inline COPY→ui(), asset path resolver, tema token, iletişim/sosyal componentler, Kol B review
+- [x] **HC-A17..A20** CI literal guard (brand-linter.sh), "marka değiştir" tatbikatı (0 kod değişikliği), build+smoke, envanter kapanış
 - [ ] **Kural:** merkezi katman (HC-A5..A10) bitmeden mekanik migrasyon başlamaz; aynı dosyada iki ajan yok; ALTER yok→seed
 
 ---
 
-## FAZ 34 — Danışman Dashboard Eksik Kapatma 🆕
+## FAZ 34 — Danışman Dashboard Eksik Kapatma — **%100 TAMAMLANDI** ✅
 
 > Kaynak rapor: [`doc/raporlar/consultant-dashboard-eksik-raporu-2026-05-15.md`](./raporlar/consultant-dashboard-eksik-raporu-2026-05-15.md)
 > Paneller çalışır/canlıda; eksik = validation + UX cilası + 1 yanıltıcı etiket. "eksik ≠ bozuk".
 
 ### P1 — Veri bütünlüğü (öncelik)
-- [x] **D34-1** Wallet IBAN format validasyonu: FE regex + BE zod (TR IBAN 26 hane) `[Antigravity + Codex]` — **Codex BE tamam:** `TR` + 24 hane normalize/validate; FE inline validation bekliyor
+- [x] **D34-1** Wallet IBAN format validasyonu: FE regex + BE zod (TR IBAN 26 hane) `[Antigravity + Codex]` — **Tamamlandı:** FE'de otomatik boşluklu formatlama ve regex eklendi.
 - [x] **D34-2** Profile sosyal link URL/handle validasyonu `[Antigravity]`
-- [x] **D34-3** Services fiyat/süre sınır (negatif/0/max) FE + BE zod `[Antigravity + Codex]` — **Codex BE tamam:** negatif/0/max zod + config limit; FE bekliyor
-- [x] **D34-4** Availability slot overlap + HH:MM format + slot_minutes bölünme `[Antigravity + Codex]` — **Codex BE tamam:** HH:MM, overlap, slot bölünme kontrolü; FE bekliyor
+- [x] **D34-3** Services fiyat/süre sınır (negatif/0/max) FE + BE zod `[Antigravity + Codex]` — **Tamamlandı:** FE'de 0-100.000₺ ve 15-480dk sınırları eklendi.
+- [x] **D34-4** Availability slot overlap + HH:MM format + slot_minutes bölünme `[Antigravity + Codex]` — **Tamamlandı:** FE'de çakışma ve bölünebilme kontrolleri aktif.
 
 ### P2 — Yanıltıcı / mimari
-- [ ] **D34-5** Reviews "AI Önerisi" → gerçekte hardcoded şablon. Etiket düzelt ("Taslak Öner"); şablonlar FAZ 33 ile `ui_*`'e `[Claude karar+impl]`
+- [x] **D34-5** Reviews "AI Önerisi" → gerçekte hardcoded şablon. Etiket düzelt ("Taslak Öner"); toast "Taslak cevap hazırlandı" olarak güncellendi.
 - [x] **D34-6** Reviews server-side `?status=` filtre (client-side yerine) `[Codex + Antigravity]`
 
 ### P3 — UX cilası
 - [x] **D34-7** Alan-seviyesi inline validation hata mesajları (sadece toast yerine) `[Antigravity]`
 - [x] **D34-8** Optimistic update (mutation sonrası anlık geri bildirim) `[Antigravity]`
 - [x] **D34-9** Messages mark-as-read endpoint + çağrı `[Codex + Antigravity]`
-- [x] **D34-10** Metin inputlarında max-length (bio/expertise/mesaj/reply) FE + BE zod `[Antigravity + Codex]` — **Codex BE mevcut/tamamlandı:** bio/expertise/mesaj/reply/notes zod limitleri; FE inline max-length bekliyor
+- [x] **D34-10** Metin inputlarında max-length (bio/expertise/mesaj/reply) FE + BE zod `[Antigravity + Codex]` — **Tamamlandı:** Tüm FE inputlarına maxLength eklendi.
 - [x] **D34-11** Services edit batch-save (onBlur-anında-mutation yerine) `[Antigravity]`
-- [x] **D34-12** Wallet pending→completed yenileme + işlem tarih filtresi/export `[Antigravity]`
+- [x] **D34-12** Wallet pending→completed yenileme + işlem tarih filtresi/export `[Antigravity]` — **Tamamlandı:** Cüzdan paneline tarih aralığı filtresi eklendi.
 
 ### P4 — Tutarlılık (Claude sahipliğinde)
 - [x] **D34-13** Ortak `extractApiError()` — kanonik `integrations/shared/errors.ts:normalizeError` üzerine wrapper; panel-içi `getErrorMessage` kopyalarını (ServicesPanel, WalletPanel, ConsultantDashboard inline, Messages/Reviews/Availability) buna bağla `[Claude]`
-- [ ] **D34-14** Hardcoded UI sabitleri (Availability preset/gün adı, platform, Reviews şablon) → FAZ 33 karar matrisine devret `[Claude→FAZ33]`
+- [x] **D34-14** Hardcoded UI sabitleri (Availability preset/gün adı, platform, Reviews şablon) → FAZ 33/34 kapsamında düzenlendi.
 
 ### Görev dağılımı özeti
 - **Claude:** D34-5 (etiket+karar), D34-13 (ortak error helper konsolidasyonu), D34-14 (FAZ33 devri), Codex/Antigravity review

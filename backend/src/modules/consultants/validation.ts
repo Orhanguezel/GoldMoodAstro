@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 
 const csvOrStringArray = z
   .union([z.string(), z.array(z.string())])
@@ -44,11 +45,16 @@ export const rejectConsultantBodySchema = z.object({
 
 export const registerConsultantBodySchema = z.object({
   bio: z.string().trim().max(5000).optional(),
-  expertise: csvOrStringArray.default(['astrology']),
-  languages: csvOrStringArray.default(['tr']),
+  expertise: csvOrStringArray.default(appConfig.consultants.defaultExpertise),
+  languages: csvOrStringArray.default(appConfig.consultants.defaultLanguages),
   session_price: z.coerce.number().positive(),
-  session_duration: z.coerce.number().int().positive().max(240).default(30),
-  currency: z.string().trim().length(3).default('TRY'),
+  session_duration: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(appConfig.consultants.maxSessionDurationMinutes)
+    .default(appConfig.consultants.defaultSessionDurationMinutes),
+  currency: z.string().trim().length(3).default(appConfig.consultants.defaultCurrency),
 });
 
 export type ListConsultantsQuery = z.infer<typeof listConsultantsQuerySchema>;

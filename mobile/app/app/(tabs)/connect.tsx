@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -28,7 +28,14 @@ import type { Consultant } from '@/types';
 import SkeletonView from '@/components/SkeletonView';
 
 export default function ConnectScreen() {
-  const { topic } = useLocalSearchParams<{ topic?: string }>();
+  const params = useLocalSearchParams<{ topic?: string | string[] }>();
+  const topicNorm = useMemo(() => {
+    const v = params.topic;
+    if (typeof v === 'string') return v;
+    if (Array.isArray(v)) return v[0];
+    return undefined;
+  }, [params.topic]);
+
   const [consultants, setConsultants] = useState<Consultant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,6 +56,12 @@ export default function ConnectScreen() {
       setRefreshing(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!topicNorm) return;
+    const catIds = ['astrology', 'tarot', 'numerology', 'relationship', 'career'];
+    if (catIds.includes(topicNorm)) setFilter(topicNorm);
+  }, [topicNorm]);
 
   useFocusEffect(
     useCallback(() => {
@@ -85,7 +98,7 @@ export default function ConnectScreen() {
   const openConsultant = (id: string) => {
     router.push({
       pathname: '/consultant/[id]',
-      params: topic ? { id, topic } : { id },
+      params: topicNorm ? { id, topic: topicNorm } : { id },
     } as any);
   };
 
@@ -153,7 +166,7 @@ export default function ConnectScreen() {
           <View>
             <Text style={styles.headerKicker}>UZMAN REHBERLER</Text>
             <Text style={styles.headerTitle}>Danışmanlar</Text>
-            {topic && <Text style={styles.topicHint}>Günlük yorum için uzman seçimi</Text>}
+            {topicNorm && <Text style={styles.topicHint}>Seçtiğin konuya uygun danışmanlar</Text>}
           </View>
           <View style={styles.headerActions}>
             <Pressable style={styles.iconBtn}><Search size={20} color={colors.text} /></Pressable>

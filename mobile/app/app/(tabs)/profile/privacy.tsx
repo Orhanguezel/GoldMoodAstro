@@ -14,11 +14,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
-import { ChevronLeft, Download, Trash2, AlertTriangle, ShieldCheck, History } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft, Download, Trash2, AlertTriangle, ShieldCheck, History, ChevronRight } from 'lucide-react-native';
 
 import { useAuth } from '@/hooks/useAuth';
 import { kvkkApi } from '@/lib/api';
 import { colors, font, radius, spacing } from '@/theme/tokens';
+import { mobileBrandConfig } from '@/config/brand';
 import type { KvkkAccountDeletionStatus } from '@/types';
 
 function formatDate(value?: string | null) {
@@ -35,7 +37,7 @@ function formatDate(value?: string | null) {
 }
 
 export default function PrivacyScreen() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, authHydrating } = useAuth();
   const [status, setStatus] = useState<KvkkAccountDeletionStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
   const [deletionReason, setDeletionReason] = useState('');
@@ -60,13 +62,9 @@ export default function PrivacyScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (authLoading) return;
-      if (!isAuthenticated) {
-        router.replace('/auth/login' as any);
-        return;
-      }
+      if (authHydrating || !isAuthenticated) return;
       loadDeletionStatus();
-    }, [authLoading, isAuthenticated, loadDeletionStatus]),
+    }, [authHydrating, isAuthenticated, loadDeletionStatus]),
   );
 
   const onRefresh = () => {
@@ -82,7 +80,7 @@ export default function PrivacyScreen() {
       const jsonText = JSON.stringify(payload, null, 2);
       
       await Share.share({
-        message: `GoldMoodAstro Veri İndirme (${new Date().toLocaleString('tr-TR')})\n\n${jsonText}`,
+        message: `${mobileBrandConfig.appName} Veri İndirme (${new Date().toLocaleString('tr-TR')})\n\n${jsonText}`,
       });
       
       Alert.alert('Başarılı', 'Veri paketiniz dışa aktarıldı.');
@@ -151,10 +149,44 @@ export default function PrivacyScreen() {
     );
   };
 
-  if (authLoading) {
+  if (authHydrating) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+              <ChevronLeft size={24} color={colors.text} />
+            </Pressable>
+            <Text style={styles.headerTitle}>Gizlilik & Veri</Text>
+            <View style={{ width: 40 }} />
+          </View>
+          <ScrollView contentContainerStyle={styles.guestScroll} showsVerticalScrollIndicator={false}>
+            <View style={styles.introArea}>
+              <ShieldCheck size={40} color={colors.gold} />
+              <Text style={styles.introTitle}>KVKK araçları</Text>
+              <Text style={styles.introSubtitle}>
+                Veri dışa aktarma ve hesap silme talepleri yalnızca giriş yapmış kullanıcılar içindir. Devam etmek için oturum açın.
+              </Text>
+            </View>
+            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
+                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
       </View>
     );
   }
@@ -259,7 +291,7 @@ export default function PrivacyScreen() {
 
           <View style={styles.footerInfo}>
             <Text style={styles.footerText}>
-              Sorularınız için <Text style={styles.goldLink}>destek@goldmoodastro.com</Text> adresinden bize ulaşabilirsiniz.
+              Sorularınız için <Text style={styles.goldLink}>{mobileBrandConfig.supportEmail || 'destek ekibi'}</Text> adresinden bize ulaşabilirsiniz.
             </Text>
           </View>
 
@@ -309,6 +341,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: 40,
   },
+  guestScroll: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: 48,
+  },
+  guestPrimaryWrap: { borderRadius: radius.pill, overflow: 'hidden', marginTop: spacing.lg },
+  guestPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
+  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
+  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
   introArea: {
     alignItems: 'center',
     paddingVertical: spacing.xl,

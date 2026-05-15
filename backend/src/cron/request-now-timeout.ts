@@ -5,7 +5,9 @@
 // Cron her dakika çalışır.
 
 import { sql } from 'drizzle-orm';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 import { db } from '@/db/client';
+import { env } from '@/core/env';
 import {
   createUserNotification,
   dispatchPushToUser,
@@ -13,7 +15,7 @@ import {
 import { sendTemplatedEmail } from '@goldmood/shared-backend/modules/emailTemplates/mailer';
 import { getDefaultLocale } from '@goldmood/shared-backend/modules/_shared';
 
-const TIMEOUT_MINUTES = 5;
+const TIMEOUT_MINUTES = appConfig.requestNow.timeoutMinutes;
 
 async function run() {
   try {
@@ -46,7 +48,7 @@ async function run() {
     const title = '⏰ Anlık Görüşme Talebiniz Zaman Aşımına Uğradı';
     const message = 'Danışman 5 dakika içinde yanıt veremedi. Başka bir danışman seçebilir veya tekrar deneyebilirsiniz.';
     const defaultLocale = await getDefaultLocale();
-    const publicUrl = (process.env.PUBLIC_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
+    const publicUrl = env.PUBLIC_URL.replace(/\/$/, '');
     for (const row of expired) {
       if (!row.user_id) continue;
       const locale = row.locale || defaultLocale;
@@ -81,8 +83,8 @@ async function run() {
 
 export function registerRequestNowTimeoutCron() {
   // İlk çalıştırma 10 sn sonra
-  setTimeout(run, 10_000);
+  setTimeout(run, appConfig.requestNow.firstRunDelayMs);
   // Her dakika
-  setInterval(run, 60_000);
-  console.log('[cron] request-now-timeout registered (every 60s)');
+  setInterval(run, appConfig.requestNow.intervalMs);
+  console.log(`[cron] request-now-timeout registered (every ${appConfig.requestNow.intervalMs / 1000}s)`);
 }

@@ -13,8 +13,6 @@ import { router } from 'expo-router';
 import { Cinzel_700Bold } from '@expo-google-fonts/cinzel';
 import { 
   Sparkles, 
-  Heart, 
-  Briefcase, 
   Zap 
 } from 'lucide-react-native';
 
@@ -100,7 +98,7 @@ export default function ZodiacHubScreen() {
 
               <Pressable 
                 style={styles.toolItem}
-                onPress={() => {}} // TODO: Big Three mobile
+                onPress={() => router.push('/zodiac/big-three' as any)}
               >
                 <View style={[styles.toolIconWrap, { backgroundColor: colors.goldDim + '15' }]}>
                   <Sparkles size={20} color={colors.goldDim} />

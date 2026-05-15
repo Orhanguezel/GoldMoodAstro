@@ -1,8 +1,9 @@
 import { AccessToken, WebhookReceiver, type VideoGrant, type WebhookEvent } from 'livekit-server-sdk';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 import { env } from '@/core/env';
 
 export function makeRoomName(bookingId: string) {
-  return `goldmood-${bookingId}`;
+  return `${appConfig.livekit.roomPrefix}-${bookingId}`;
 }
 
 export function assertLiveKitConfigured() {

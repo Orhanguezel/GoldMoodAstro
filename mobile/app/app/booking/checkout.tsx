@@ -12,8 +12,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { 
   ChevronLeft, 
+  ChevronRight,
   CreditCard, 
   Calendar, 
   Clock, 
@@ -30,9 +32,11 @@ import { tr } from 'date-fns/locale';
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { bookingsApi, ordersApi, campaignsApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 import type { Campaign } from '@/types';
 
 export default function BookingCheckoutScreen() {
+  const { isAuthenticated, authHydrating } = useAuth();
   const params = useLocalSearchParams<{
     consultantId: string;
     resourceId: string;
@@ -84,6 +88,7 @@ export default function BookingCheckoutScreen() {
   };
 
   const handleCheckout = async () => {
+    if (!isAuthenticated) return;
     setLoading(true);
     try {
       // 1. Create Booking
@@ -121,6 +126,45 @@ export default function BookingCheckoutScreen() {
       setLoading(false);
     }
   };
+
+  if (authHydrating) {
+    return (
+      <View style={styles.authGate}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+              <ChevronLeft size={24} color={colors.text} />
+            </Pressable>
+            <Text style={styles.headerTitle}>Randevu Onayı</Text>
+            <View style={{ width: 40 }} />
+          </View>
+          <ScrollView contentContainerStyle={styles.guestScroll}>
+            <Text style={styles.guestTitle}>Ödeme için giriş</Text>
+            <Text style={styles.guestSubtitle}>
+              Randevu oluşturma ve güvenli ödeme hesabınıza bağlıdır. Giriş yaptıktan sonra bu ekrandan devam edebilirsiniz.
+            </Text>
+            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
+                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -286,6 +330,7 @@ export default function BookingCheckoutScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
+  authGate: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
   safe: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   headerBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
@@ -333,4 +378,25 @@ const styles = StyleSheet.create({
   payBtn: { backgroundColor: colors.gold, flexDirection: 'row', height: 60, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', gap: 12 },
   payBtnDisabled: { opacity: 0.6 },
   payBtnText: { fontFamily: font.sansBold, fontSize: 16, color: colors.bgDeep },
+  guestScroll: { padding: spacing.xl, paddingTop: spacing['2xl'], paddingBottom: 48 },
+  guestTitle: { fontFamily: font.display, fontSize: 24, color: colors.text, textAlign: 'center', marginBottom: spacing.sm },
+  guestSubtitle: {
+    fontFamily: font.sans,
+    fontSize: 15,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing['2xl'],
+  },
+  guestPrimaryWrap: { borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
+  guestPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
+  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
+  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
 });

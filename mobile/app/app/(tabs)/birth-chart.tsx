@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,7 +13,7 @@ import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Plus, Info, ChevronRight, MapPin, Sparkles } from 'lucide-react-native';
+import { Plus, Info, MapPin, Sparkles } from 'lucide-react-native';
 
 import { birthChartsApi } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
@@ -187,10 +186,10 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
 }
 
 export default function BirthChartScreen() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, authHydrating } = useAuth();
   const [charts, setCharts] = useState<BirthChart[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   
   const selected = useMemo(
@@ -199,7 +198,13 @@ export default function BirthChartScreen() {
   );
 
   const load = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      setCharts([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+    setLoading(true);
     try {
       const rows = await birthChartsApi.list();
       setCharts(rows);
@@ -218,7 +223,50 @@ export default function BirthChartScreen() {
     }, [load])
   );
 
-  if (authLoading || (loading && !refreshing)) {
+  if (authHydrating) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <ScrollView contentContainerStyle={styles.guestScroll}>
+            <View style={styles.header}>
+              <View>
+                <Text style={styles.headerKicker}>GÖKYÜZÜ ANALİZİ</Text>
+                <Text style={styles.headerTitle}>Natal Harita</Text>
+              </View>
+              <View style={{ width: 42 }} />
+            </View>
+
+            <View style={styles.guestCard}>
+              <Text style={styles.guestTitle}>Haritalarınız hesabınıza bağlı</Text>
+              <Text style={styles.guestBody}>
+                Doğum haritasını kaydetmek ve tekrar görmek için giriş yapın. İsterseniz önce ücretsiz Büyük
+                Üçlü (Güneş, Ay, Yükselen) önizlemesini hesapsız deneyin.
+              </Text>
+              <Pressable style={styles.primaryBtn} onPress={() => router.push('/auth/login' as any)}>
+                <Text style={styles.primaryBtnText}>Giriş yap</Text>
+              </Pressable>
+              <Pressable style={styles.guestSecondaryBtn} onPress={() => router.push('/auth/register' as any)}>
+                <Text style={styles.guestSecondaryBtnText}>Hesap oluştur</Text>
+              </Pressable>
+              <Pressable style={styles.guestTertiaryWrap} onPress={() => router.push('/zodiac/big-three' as any)}>
+                <Text style={styles.guestTertiaryText}>Hesapsız: Büyük üçlü hesapla</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (loading && !refreshing) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator color={colors.gold} size="large" />
@@ -459,7 +507,51 @@ const styles = StyleSheet.create({
   houseHeader: { fontFamily: font.sansBold, fontSize: 14, color: colors.text },
   houseInfo: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted, marginTop: 4 },
   emptyWrap: { padding: 40, alignItems: 'center' },
+  guestScroll: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: 40,
+  },
+  guestCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.lineSoft,
+    gap: spacing.md,
+  },
+  guestTitle: { fontFamily: font.sansBold, fontSize: 18, color: colors.text },
+  guestBody: {
+    fontFamily: font.sans,
+    fontSize: 14,
+    color: colors.textMuted,
+    lineHeight: 22,
+    marginBottom: spacing.sm,
+  },
+  guestSecondaryBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.goldDim,
+    alignSelf: 'stretch',
+  },
+  guestSecondaryBtnText: { fontFamily: font.sansBold, fontSize: 15, color: colors.gold },
+  guestTertiaryWrap: { alignItems: 'center', paddingVertical: 8 },
+  guestTertiaryText: {
+    fontFamily: font.sansMedium,
+    fontSize: 14,
+    color: colors.textDim,
+    textDecorationLine: 'underline',
+  },
   emptyTitle: { fontFamily: font.display, fontSize: 20, color: colors.text, marginBottom: 20 },
-  primaryBtn: { backgroundColor: colors.gold, paddingHorizontal: 24, paddingVertical: 14, borderRadius: radius.pill },
+  primaryBtn: {
+    backgroundColor: colors.gold,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    alignSelf: 'stretch',
+  },
   primaryBtnText: { fontFamily: font.sansBold, fontSize: 15, color: colors.bgDeep },
 });

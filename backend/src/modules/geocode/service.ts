@@ -41,7 +41,7 @@ export async function geocodeWithNominatim(q: string): Promise<Omit<GeocodeResul
   const res = await fetch(url, {
     headers: {
       Accept: 'application/json',
-      'User-Agent': `${env.APP_NAME || 'GoldMoodAstro'} geocoder (${env.PUBLIC_URL})`,
+      'User-Agent': `${env.APP_NAME} geocoder (${env.PUBLIC_URL})`,
     },
   });
 

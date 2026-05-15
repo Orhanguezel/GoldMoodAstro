@@ -8,14 +8,13 @@ import { computeYildiznameNumber, menzilNumberOf } from './ebced';
 import { db } from '../../db/client';
 import { generate as llmGenerate } from '../llm';
 import { hasActiveSubscription, consumeCredits } from '../credits/consume';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 
 const SIGN_LABEL_TR: Record<string, string> = {
   aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
   leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
   sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
 };
-
-const YILDIZNAME_EXTRA_COST = 50; // 50 kredi ek hibrit yorum
 
 function userIdFromReq(req: FastifyRequest): string | null {
   const u = (req as any).user;
@@ -142,7 +141,7 @@ export async function handleChartExtra(req: FastifyRequest, reply: FastifyReply)
   if (!isPremium) {
     const consume = await consumeCredits({
       userId,
-      amount: YILDIZNAME_EXTRA_COST,
+      amount: appConfig.credits.yildiznameExtraCost,
       referenceType: 'yildizname_chart_extra',
       referenceId: id,
       description: `Yıldızname hibrit yorum (menzil ${reading.menzilNo})`,
@@ -150,7 +149,7 @@ export async function handleChartExtra(req: FastifyRequest, reply: FastifyReply)
     if (consume.status === 'insufficient') {
       return reply.status(402).send({
         error: 'Yetersiz kredi.',
-        required: YILDIZNAME_EXTRA_COST,
+        required: appConfig.credits.yildiznameExtraCost,
         available: consume.available,
         hint_action_path: '/pricing',
       });

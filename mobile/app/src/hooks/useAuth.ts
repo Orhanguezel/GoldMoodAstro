@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
 import { storage } from '@/lib/storage';
 import { authApi, setAuthToken } from '@/lib/api';
+import { registerPushToken } from '@/lib/notifications';
 import type { User } from '@/types';
 
 export function useAuth() {
@@ -16,6 +17,7 @@ export function useAuth() {
         const res = await authApi.me().catch(() => null);
         if (res && res.user) {
           setUser(res.user);
+          registerPushToken().catch(() => {});
         } else {
           // Token geçersiz veya expired
           await storage.clearSession();
@@ -42,7 +44,10 @@ export function useAuth() {
 
   return { 
     user, 
-    loading, 
+    /** @deprecated Prefer `authHydrating` for new code — same value. */
+    loading,
+    /** True while the first session check runs (storage token + optional `me()`). Avoid guest-only UI when this is true. */
+    authHydrating: loading,
     logout,
     refreshUser: initAuth,
     isAuthenticated: !!user

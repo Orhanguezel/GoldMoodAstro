@@ -5,6 +5,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 import { db } from '../../db/client';
 import { consultants } from '../consultants/schema';
 import { bookings } from '../bookings/schema';
@@ -28,10 +29,21 @@ const profilePatchSchema = z.object({
   avatar_url: z.string().trim().max(1000).nullable().optional(),
   is_available: z.coerce.number().int().min(0).max(1).optional(),
   supports_video: z.coerce.number().int().min(0).max(1).optional(),
-  session_price: z.coerce.number().nonnegative().optional(),
-  session_duration: z.coerce.number().int().positive().max(480).optional(),
-  video_session_price: z.coerce.number().nonnegative().optional(),
+  session_price: z.coerce.number().nonnegative().max(appConfig.consultants.maxSessionPrice).optional(),
+  session_duration: z.coerce.number().int().positive().max(appConfig.consultants.maxSessionDurationMinutes).optional(),
+  video_session_price: z.coerce.number().nonnegative().max(appConfig.consultants.maxSessionPrice).optional(),
 });
+
+const hhMmSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'invalid_time_format');
+
+function toMinutes(value: string): number {
+  const [h, m] = value.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function normalizeIban(value: string): string {
+  return value.replace(/\s+/g, '').toUpperCase();
+}
 
 function getCallerUserId(req: FastifyRequest): string | null {
   const u = (req as any).user as { sub?: string; id?: string } | undefined;
@@ -657,6 +669,46 @@ export async function listMessagesInThread(req: FastifyRequest, reply: FastifyRe
   });
 }
 
+/* ─── POST /me/consultant/messages/:id/mark-read ─── */
+export async function markThreadRead(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const { id } = req.params as { id: string };
+  const [t] = await db
+    .select({ id: chat_threads.id })
+    .from(chat_threads)
+    .where(
+      and(
+        eq(chat_threads.id, id),
+        sql`(
+          (${chat_threads.context_type} = 'consultant_lead' AND ${chat_threads.context_id} = ${c.id})
+          OR (
+            ${chat_threads.context_type} = 'booking'
+            AND EXISTS (
+              SELECT 1 FROM bookings b
+              WHERE b.id = ${chat_threads.context_id}
+                AND b.consultant_id = ${c.id}
+            )
+          )
+        )`,
+      ),
+    )
+    .limit(1);
+  if (!t) return reply.code(404).send({ error: { message: 'not_found' } });
+
+  const now = new Date();
+  await db.execute(
+    sql`
+      INSERT INTO chat_participants (id, thread_id, user_id, role, joined_at, last_read_at)
+      VALUES (${randomUUID()}, ${id}, ${c.user_id}, 'consultant', ${now}, ${now})
+      ON DUPLICATE KEY UPDATE last_read_at = ${now}
+    `,
+  );
+
+  return reply.send({ data: { ok: true, thread_id: id, last_read_at: now, unread_count: 0 } });
+}
+
 /* ─── POST /me/consultant/threads/:id/reply ─── */
 const replySchema = z.object({ text: z.string().trim().min(1).max(2000) });
 
@@ -805,7 +857,12 @@ export async function getMyWallet(req: FastifyRequest, reply: FastifyReply) {
 // T30-7: Para çekme talebi (admin onaylı).
 const withdrawSchema = z.object({
   amount: z.coerce.number().positive(),
-  iban: z.string().trim().min(15).max(50).optional(),
+  iban: z
+    .string()
+    .trim()
+    .transform(normalizeIban)
+    .refine((value) => /^TR\d{24}$/.test(value), 'invalid_tr_iban')
+    .optional(),
   notes: z.string().trim().max(500).optional(),
 });
 
@@ -864,6 +921,17 @@ export async function requestWithdrawal(req: FastifyRequest, reply: FastifyReply
 export async function listMyReviews(req: FastifyRequest, reply: FastifyReply) {
   const c = await getCallerConsultant(req);
   if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+  const status = String((req.query as { status?: string } | undefined)?.status ?? '').trim();
+  const statusSql =
+    status === 'approved'
+      ? sql`AND r.is_approved = 1`
+      : status === 'pending'
+        ? sql`AND r.is_approved = 0`
+        : status === 'replied'
+          ? sql`AND i.consultant_reply IS NOT NULL AND i.consultant_reply <> ''`
+          : status === 'unreplied'
+            ? sql`AND (i.consultant_reply IS NULL OR i.consultant_reply = '')`
+            : sql``;
 
   // reviews + review_i18n LEFT JOIN — yorum metni + danışman cevabı
   const rows = await db.execute(
@@ -890,6 +958,7 @@ export async function listMyReviews(req: FastifyRequest, reply: FastifyReply) {
       WHERE r.target_type = 'consultant'
         AND r.target_id COLLATE utf8mb4_unicode_ci = ${c.id} COLLATE utf8mb4_unicode_ci
         AND r.is_active = 1
+        ${statusSql}
       ORDER BY r.created_at DESC
       LIMIT 200
     `,
@@ -975,15 +1044,54 @@ export async function getMyAvailability(req: FastifyRequest, reply: FastifyReply
 const availSchema = z.object({
   hours: z.array(z.object({
     dow: z.coerce.number().int().min(0).max(7).transform((dow) => (dow === 0 ? 7 : dow)),
-    start_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
-    end_time: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
-    slot_minutes: z.coerce.number().int().positive().max(480).default(30),
+    start_time: hhMmSchema,
+    end_time: hhMmSchema,
+    slot_minutes: z.coerce.number().int().positive().max(appConfig.consultants.maxSessionDurationMinutes).default(appConfig.consultants.defaultSessionDurationMinutes),
     capacity: z.coerce.number().int().positive().max(100).default(1),
     is_active: z.coerce.number().int().min(0).max(1).default(1),
-  }).refine((h) => h.end_time > h.start_time, {
-    message: 'end_time_must_be_after_start_time',
-    path: ['end_time'],
+  }).superRefine((h, ctx) => {
+    const start = toMinutes(h.start_time);
+    const end = toMinutes(h.end_time);
+    if (end <= start) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'end_time_must_be_after_start_time',
+        path: ['end_time'],
+      });
+      return;
+    }
+    const duration = end - start;
+    if (h.slot_minutes > duration || duration % h.slot_minutes !== 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'slot_minutes_must_divide_time_range',
+        path: ['slot_minutes'],
+      });
+    }
   })).max(50),
+}).superRefine((data, ctx) => {
+  const byDow = new Map<number, Array<{ index: number; start: number; end: number }>>();
+  data.hours.forEach((h, index) => {
+    if (h.is_active !== 1) return;
+    const start = toMinutes(h.start_time);
+    const end = toMinutes(h.end_time);
+    if (end <= start) return;
+    const list = byDow.get(h.dow) ?? [];
+    list.push({ index, start, end });
+    byDow.set(h.dow, list);
+  });
+  for (const slots of byDow.values()) {
+    slots.sort((a, b) => a.start - b.start);
+    for (let i = 1; i < slots.length; i += 1) {
+      if (slots[i]!.start < slots[i - 1]!.end) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'availability_slots_overlap',
+          path: ['hours', slots[i]!.index, 'start_time'],
+        });
+      }
+    }
+  }
 });
 
 export async function updateMyAvailability(req: FastifyRequest, reply: FastifyReply) {

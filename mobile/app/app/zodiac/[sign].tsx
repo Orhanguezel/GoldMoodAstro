@@ -25,6 +25,7 @@ import {
 import { colors, font, radius, spacing } from '@/theme/tokens';
 import { horoscopesApi } from '@/lib/api';
 import SkeletonView from '@/components/SkeletonView';
+import { mobileBrandConfig, publicShareUrl } from '@/config/brand';
 
 const { width } = Dimensions.get('window');
 
@@ -71,8 +72,8 @@ export default function ZodiacDetailScreen() {
     if (!today) return;
     try {
       await Share.share({
-        message: `${meta.label} Burcu Günlük Yorumu ✨\n\n${today.content?.substring(0, 200)}...\n\nGoldMoodAstro ile günlük burç yorumunu oku!\n\nKeşfet: https://goldmoodastro.com/tr/burclar/${signKey}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=horoscope`,
-        title: `GoldMoodAstro ${meta.label} Burcu`,
+        message: `${meta.label} Burcu Günlük Yorumu ✨\n\n${today.content?.substring(0, 200)}...\n\n${mobileBrandConfig.appName} ile günlük burç yorumunu oku!\n\nKeşfet: ${publicShareUrl(`/tr/burclar/${signKey}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=horoscope`)}`,
+        title: `${mobileBrandConfig.appName} ${meta.label} Burcu`,
       });
     } catch (e) {
       console.error(e);

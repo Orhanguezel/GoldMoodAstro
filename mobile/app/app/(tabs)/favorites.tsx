@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { 
   View, Text, StyleSheet, FlatList, 
   Pressable, ActivityIndicator, RefreshControl 
@@ -10,18 +10,20 @@ import { colors, spacing, font, radius } from '@/theme/tokens';
 import { consultantsApi } from '@/lib/api';
 import { ConsultantCard } from '@/components/ConsultantCard';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useAuth } from '@/hooks/useAuth';
 import type { Consultant } from '@/types';
 
 export default function FavoritesScreen() {
   const { t } = useTranslation();
-  const { favorites, refresh: refreshFavorites } = useFavorites();
+  const { isAuthenticated, authHydrating } = useAuth();
+  const { refresh: refreshFavorites } = useFavorites();
   
   const [consultants, setConsultants] = useState<Consultant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchFavoriteConsultants = async () => {
-    if (favorites.length === 0) {
+  const fetchFavoriteConsultants = useCallback(async (favoriteIds: string[]) => {
+    if (favoriteIds.length === 0) {
       setConsultants([]);
       setLoading(false);
       setRefreshing(false);
@@ -29,12 +31,8 @@ export default function FavoritesScreen() {
     }
 
     try {
-      // API currently doesn't support multiple IDs in list, 
-      // so we fetch them one by one or fetch all and filter.
-      // For now, let's fetch all and filter for simplicity if count is small,
-      // or just fetch by ID if possible.
       const items = await consultantsApi.list();
-      const filtered = items.filter(c => (favorites || []).includes(c.id));
+      const filtered = items.filter(c => favoriteIds.includes(c.id));
       setConsultants(filtered);
     } catch (err) {
       console.error('Failed to fetch favorite consultants:', err);
@@ -43,18 +41,26 @@ export default function FavoritesScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      refreshFavorites().then(fetchFavoriteConsultants);
-    }, [favorites.length])
+      let cancelled = false;
+      void (async () => {
+        const ids = await refreshFavorites();
+        if (cancelled) return;
+        await fetchFavoriteConsultants(ids);
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [refreshFavorites, fetchFavoriteConsultants]),
   );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchFavoriteConsultants();
-  }, [favorites.length]);
+    void refreshFavorites().then(fetchFavoriteConsultants);
+  }, [refreshFavorites, fetchFavoriteConsultants]);
 
   if (loading && !refreshing) {
     return (
@@ -75,6 +81,18 @@ export default function FavoritesScreen() {
       <FlatList
         data={consultants}
         keyExtractor={item => item.id}
+        ListHeaderComponent={
+          !authHydrating && !isAuthenticated ? (
+            <View style={styles.guestBanner}>
+              <Text style={styles.guestBannerText}>
+                Favori danışmanlar bu cihazda saklanır. Tüm cihazlarda görmek için giriş yapın.
+              </Text>
+              <Pressable onPress={() => router.push('/auth/login' as any)}>
+                <Text style={styles.guestBannerLink}>Giriş Yap</Text>
+              </Pressable>
+            </View>
+          ) : null
+        }
         renderItem={({ item }) => (
           <ConsultantCard 
             consultant={item} 
@@ -108,4 +126,16 @@ const styles = StyleSheet.create({
   emptyText: { color: colors.muted, fontFamily: font.sans, fontSize: 15, textAlign: 'center' },
   emptyBtn: { backgroundColor: colors.amethyst, paddingHorizontal: spacing.lg, paddingVertical: 10, borderRadius: radius.pill },
   emptyBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 14 },
+  guestBanner: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    gap: spacing.sm,
+  },
+  guestBannerText: { fontFamily: font.sans, fontSize: 13, color: colors.muted, lineHeight: 18 },
+  guestBannerLink: { fontFamily: font.sansBold, fontSize: 14, color: colors.amethyst },
 });

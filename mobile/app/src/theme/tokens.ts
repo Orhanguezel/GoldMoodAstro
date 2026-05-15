@@ -1,5 +1,7 @@
+import { mobileBrandConfig } from '@/config/brand';
+
 /**
- * GoldMoodAstro — Mobile Theme Tokens
+ * Mobile Theme Tokens
  * 2026-04-27 vizyon revize: Cream + Gold + Ink + Plum palette.
  * Mobile default = dark theme (cosmos/mystic hissi). Web default = light.
  *
@@ -203,7 +205,7 @@ export const shadows = {
 
 // ── Branding metadata (mobile uses for splash/onboarding/about) ─
 export const branding = {
-  appName: 'GoldMoodAstro',
+  appName: mobileBrandConfig.appName,
   tagline: 'Yıldızlarla tanışan modern astroloji',
   taglineEn: 'Modern astrology meets the stars',
   themeColor: PALETTE.gold,

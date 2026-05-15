@@ -328,6 +328,36 @@ export interface BirthChartCreateInput {
   tob_known?: boolean;
 }
 
+/** POST /birth-charts/preview-big-three Büyük Üçlü yanıtı */
+export interface BigThreeSlotPayload {
+  slot: 'sun' | 'moon' | 'ascendant';
+  sign: string;
+  sign_label: string | null;
+  kb_title: string | null;
+  summary: string | null;
+  image_url: string | null;
+  tob_unknown?: boolean;
+}
+
+export interface BigThreePreviewResponse {
+  big_three: {
+    sun: BigThreeSlotPayload | null;
+    moon: BigThreeSlotPayload | null;
+    ascendant: BigThreeSlotPayload | null;
+  };
+  input: {
+    name: string;
+    dob: string;
+    tob: string;
+    tob_known: boolean;
+    pob_label: string;
+  };
+  cta: {
+    message: string;
+    action_path: string;
+  };
+}
+
 export interface GeocodeResult {
   q: string;
   lat: number;

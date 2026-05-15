@@ -1,10 +1,6 @@
-/**
- * GoldMoodAstro API istemcisi.
- * Tüm istekler /api/v1 altına gider. Auth gerektiren istekler
- * Authorization: Bearer <token> header'ı ile gönderilir.
- */
-
-import Constants from 'expo-constants';
+import { mobileBrandConfig } from '@/config/brand';
+import { router } from 'expo-router';
+import { storage } from '@/lib/storage';
 import type {
   Consultant, ConsultantSlot,
   Booking, BookingCreateInput,
@@ -14,6 +10,7 @@ import type {
   Order, OrderCreateResponse, IyzipayInitResponse,
   LiveKitTokenResponse,
   BirthChart, BirthChartCreateInput, GeocodeResult, DailyReadingResponse,
+  BigThreePreviewResponse,
   MeResponse,
   LoginInput, LoginResponse,
   RegisterInput, RegisterResponse,
@@ -21,9 +18,7 @@ import type {
 } from '@/types';
 
 const API_URL =
-  process.env.EXPO_PUBLIC_API_URL ??
-  (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ??
-  'http://localhost:8094/api/v1';
+  mobileBrandConfig.apiUrl;
 
 export const getAssetUrl = (path: string | null | undefined) => {
   if (!path) return null;
@@ -38,8 +33,26 @@ export const getAssetUrl = (path: string | null | undefined) => {
 
 let _authToken: string | null = null;
 
+/** Bu uçlarda 401 = kimlik bilgisi hatası; oturumu silme / login’e atma. */
+const UNAUTHORIZED_NO_GLOBAL_SIGNOUT = new Set([
+  '/auth/login',
+  '/auth/register',
+  '/auth/social-login',
+]);
+
 export function setAuthToken(token: string | null) {
   _authToken = token;
+}
+
+async function handleSessionExpired(path: string) {
+  if (!_authToken || UNAUTHORIZED_NO_GLOBAL_SIGNOUT.has(path)) return;
+  await storage.clearSession();
+  setAuthToken(null);
+  try {
+    router.replace('/auth/login' as const);
+  } catch {
+    /* navigasyon kapalı olabilir */
+  }
 }
 
 async function request<T>(
@@ -68,6 +81,9 @@ async function request<T>(
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       console.error(`[API ERROR] ${method} ${path} | Status: ${res.status}`, err);
+      if (res.status === 401) {
+        await handleSessionExpired(path);
+      }
       throw new Error((err as { message?: string }).message ?? `HTTP ${res.status}`);
     }
 
@@ -293,6 +309,12 @@ export const birthChartsApi = {
 
   create: async (data: BirthChartCreateInput): Promise<BirthChart> => {
     const res = await post<{ data: BirthChart }>('/birth-charts', data);
+    return res.data;
+  },
+
+  /** Auth gerekmez — Güneş, Ay, Yükselen önizlemesi + KB özeti */
+  previewBigThree: async (data: BirthChartCreateInput): Promise<BigThreePreviewResponse> => {
+    const res = await post<{ data: BigThreePreviewResponse }>('/birth-charts/preview-big-three', data);
     return res.data;
   },
 

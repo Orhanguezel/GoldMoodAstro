@@ -2,24 +2,46 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 import * as repo from './repository';
 import { db } from '../../db/client';
 import { sql } from 'drizzle-orm';
 
 /* ─── Schemas ─── */
-const createSchema = z.object({
+const servicePayloadSchema = z.object({
   name: z.string().trim().min(1).max(160),
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/, 'slug_format'),
   description: z.string().trim().max(2000).nullable().optional(),
-  duration_minutes: z.coerce.number().int().positive().max(480).default(45),
-  price: z.coerce.number().nonnegative().default(0),
-  currency: z.string().trim().length(3).default('TRY'),
+  duration_minutes: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(appConfig.consultants.maxSessionDurationMinutes)
+    .default(appConfig.consultants.defaultSessionDurationMinutes),
+  price: z.coerce.number().nonnegative().max(appConfig.consultants.maxSessionPrice).default(0),
+  currency: z.string().trim().length(3).default(appConfig.consultants.defaultCurrency),
   is_free: z.coerce.number().int().min(0).max(1).default(0),
   is_active: z.coerce.number().int().min(0).max(1).default(1),
   sort_order: z.coerce.number().int().default(0),
 });
 
-const updateSchema = createSchema.partial();
+function validatePaidServicePrice(data: { is_free?: number; price?: number }, ctx: z.RefinementCtx) {
+  if (data.is_free === 1) return;
+  if ((data.price ?? 0) <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['price'],
+      message: 'paid_service_price_must_be_positive',
+    });
+  }
+}
+
+const createSchema = servicePayloadSchema.superRefine(validatePaidServicePrice);
+const updateSchema = servicePayloadSchema.partial().superRefine((data, ctx) => {
+  if (data.is_free !== undefined || data.price !== undefined) {
+    validatePaidServicePrice(data, ctx);
+  }
+});
 
 const reorderSchema = z.object({
   items: z.array(z.object({ id: z.string().min(1), sort_order: z.coerce.number().int() })).min(1),

@@ -17,7 +17,7 @@ import {
   Binary, 
   Sparkles, 
   ChevronLeft, 
-  ChevronRight, 
+  ChevronRight,
   RotateCcw,
   User,
   Calendar,
@@ -30,10 +30,12 @@ import { router } from 'expo-router';
 
 import { colors, font, radius, spacing } from '@/theme/tokens';
 import { numerologyApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 const { width } = Dimensions.get('window');
 
 export default function NumerologyScreen() {
+  const { isAuthenticated, authHydrating } = useAuth();
   const [formData, setFormData] = useState({ full_name: '', birth_date: '' });
   const [step, setStep] = useState<'input' | 'processing' | 'result'>('input');
   const [result, setResult] = useState<any>(null);
@@ -57,6 +59,60 @@ export default function NumerologyScreen() {
       setStep('input');
     }
   };
+
+  if (authHydrating) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator color={colors.gold} size="large" />
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+            <View style={styles.navHeader}>
+              <Pressable onPress={() => router.back()} style={styles.backBtn}>
+                <ChevronLeft size={24} color={colors.gold} />
+              </Pressable>
+            </View>
+
+            <View style={styles.header}>
+              <View style={styles.iconCircle}>
+                <Binary size={40} color={colors.gold} />
+              </View>
+              <Text style={styles.headerTitle}>Numeroloji</Text>
+              <Text style={styles.headerSubtitle}>
+                Hayat yolu, kader ve ruh güdüsü sayıları hesabınıza kaydedilir; kişisel yorum için giriş yapın.
+              </Text>
+            </View>
+
+            <View style={styles.formCard}>
+              <Text style={styles.guestBlurb}>
+                İsminiz ve doğum tarihinizle analiz almak için giriş yapın veya hesap oluşturun.
+              </Text>
+            </View>
+
+            <Pressable style={styles.primaryBtn} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
+                <Text style={styles.primaryBtnText}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable style={styles.guestRegisterBtn} onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestRegisterText}>Hesap oluştur</Text>
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   if (step === 'input') {
     return (
@@ -208,6 +264,9 @@ const styles = StyleSheet.create({
   headerTitle: { fontFamily: font.display, fontSize: 32, color: colors.text, textAlign: 'center' },
   headerSubtitle: { fontFamily: font.serif, fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: 8, fontStyle: 'italic' },
   formCard: { margin: spacing.lg, padding: 24, backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft, gap: 20 },
+  guestBlurb: { fontFamily: font.serif, fontSize: 16, color: colors.textMuted, lineHeight: 26, fontStyle: 'italic', textAlign: 'center' },
+  guestRegisterBtn: { marginHorizontal: spacing.xl, marginTop: 8, paddingVertical: 16, alignItems: 'center' },
+  guestRegisterText: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
   inputGroup: { gap: 8 },
   label: { fontFamily: font.sansBold, fontSize: 10, color: colors.textMuted, letterSpacing: 1.5 },
   inputWrap: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.inkDeep, paddingHorizontal: 16, paddingVertical: 14, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.lineSoft },

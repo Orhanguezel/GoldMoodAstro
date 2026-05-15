@@ -24,7 +24,14 @@ export async function registerConsultantSelf(app: FastifyInstance) {
   // Mesajlar (T30-6)
   app.get('/me/consultant/threads', { preHandler: guard }, controller.listMessageThreads);
   app.get('/me/consultant/threads/:id/messages', { preHandler: guard }, controller.listMessagesInThread);
+  app.post('/me/consultant/threads/:id/mark-read', { preHandler: guard }, controller.markThreadRead);
+  app.post('/me/consultant/threads/:id/read', { preHandler: guard }, controller.markThreadRead);
   app.post('/me/consultant/threads/:id/reply', { preHandler: guard }, controller.replyInThread);
+  app.get('/me/consultant/messages', { preHandler: guard }, controller.listMessageThreads);
+  app.get('/me/consultant/messages/:id', { preHandler: guard }, controller.listMessagesInThread);
+  app.post('/me/consultant/messages/:id/mark-read', { preHandler: guard }, controller.markThreadRead);
+  app.post('/me/consultant/messages/:id/read', { preHandler: guard }, controller.markThreadRead);
+  app.post('/me/consultant/messages/:id/reply', { preHandler: guard }, controller.replyInThread);
 
   // Cüzdan (T30-7)
   app.get('/me/consultant/wallet', { preHandler: guard }, controller.getMyWallet);
@@ -37,5 +44,6 @@ export async function registerConsultantSelf(app: FastifyInstance) {
   // Müsaitlik (T30-4)
   app.get('/me/consultant/availability', { preHandler: guard }, controller.getMyAvailability);
   app.put('/me/consultant/availability', { preHandler: guard }, controller.updateMyAvailability);
+  app.patch('/me/consultant/availability', { preHandler: guard }, controller.updateMyAvailability);
   app.post('/me/consultant/availability/day', { preHandler: guard }, controller.overrideMyAvailabilityDay);
 }

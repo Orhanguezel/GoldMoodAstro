@@ -9,19 +9,20 @@ import {
   KeyboardAvoidingView, 
   Platform, 
   ActivityIndicator,
-  Image 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { ChevronLeft, Send, Phone, Info } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft, Send, Phone, ChevronRight, MessageCircle } from 'lucide-react-native';
 
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { chatApi } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function ChatScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>(); // threadId
-  const { user } = useAuth();
+  const rawId = useLocalSearchParams<{ id: string | string[] }>().id;
+  const id = typeof rawId === 'string' ? rawId : Array.isArray(rawId) ? rawId[0] : undefined;
+  const { user, isAuthenticated, authHydrating } = useAuth();
   
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,12 +31,22 @@ export default function ChatScreen() {
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    if (id) loadMessages();
-  }, [id]);
+    if (authHydrating) return;
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    void loadMessages();
+  }, [id, authHydrating, isAuthenticated]);
 
   const loadMessages = async () => {
+    if (!id || !isAuthenticated) return;
     try {
-      const res = await chatApi.listMessages(id!);
+      const res = await chatApi.listMessages(id);
       setMessages(res.items);
     } catch (err) {
       console.error('Chat load error:', err);
@@ -65,10 +76,71 @@ export default function ChatScreen() {
     }
   };
 
+  if (authHydrating) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.header}>
+            <Pressable style={styles.backBtn} onPress={() => router.back()}>
+              <ChevronLeft size={24} color={colors.text} />
+            </Pressable>
+            <Text style={styles.headerTitle}>Sohbet</Text>
+            <View style={{ width: 40 }} />
+          </View>
+          <View style={[styles.center, { flex: 1, paddingHorizontal: spacing.xl }]}>
+            <MessageCircle size={48} color={colors.gold} style={{ marginBottom: spacing.lg }} />
+            <Text style={styles.guestTitle}>Mesajlaşma</Text>
+            <Text style={styles.guestSubtitle}>
+              Danışmanınızla yazılı sohbet için giriş yapın.
+            </Text>
+            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
+                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestRegister}>Hesap oluştur</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!id) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.header}>
+            <Pressable style={styles.backBtn} onPress={() => router.back()}>
+              <ChevronLeft size={24} color={colors.text} />
+            </Pressable>
+            <Text style={styles.headerTitle}>Sohbet</Text>
+            <View style={{ width: 40 }} />
+          </View>
+          <View style={[styles.center, { flex: 1 }]}>
+            <Text style={{ fontFamily: font.sans, color: colors.textMuted, paddingHorizontal: spacing.lg, textAlign: 'center' }}>
+              Geçersiz veya eksik sohbet bağlantısı.
+            </Text>
+          </View>
+        </SafeAreaView>
       </View>
     );
   }
@@ -185,4 +257,16 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontFamily: font.sans, fontSize: 14, color: colors.text, maxHeight: 100, paddingVertical: 8 },
   sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
   sendBtnDisabled: { opacity: 0.5 },
+  guestTitle: { fontFamily: font.display, fontSize: 22, color: colors.text, textAlign: 'center', marginBottom: spacing.sm },
+  guestSubtitle: { fontFamily: font.sans, fontSize: 15, color: colors.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: spacing['2xl'] },
+  guestPrimaryWrap: { alignSelf: 'stretch', borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
+  guestPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
+  guestRegister: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
 });

@@ -1,9 +1,11 @@
 import { randomUUID } from 'crypto';
 import { and, desc, eq } from 'drizzle-orm';
+import { appConfig } from '@goldmood/shared-config/appConfig';
 import { db } from '../../db/client';
 import { users } from '../auth/schema';
 import { consultants } from '../consultants/schema';
 import { userRoles } from '../userRoles/schema';
+import { createUserNotification } from '../notifications/service';
 import { consultantApplications, type ConsultantApplication } from './schema';
 import type {
   CreateConsultantApplicationInput,
@@ -32,6 +34,22 @@ export async function createApplication(
   });
   const row = await getApplication(id);
   if (!row) throw new Error('application_create_failed');
+
+  // T28-1: Admin panele başvuru notification
+  try {
+    const admins = await db.select({ userId: userRoles.user_id }).from(userRoles).where(eq(userRoles.role, 'admin'));
+    for (const admin of admins) {
+      await createUserNotification({
+        userId: admin.userId,
+        title: 'Yeni Danışman Başvurusu',
+        message: `${input.full_name} danışmanlık başvurusu yaptı.`,
+        type: 'system',
+      });
+    }
+  } catch (err) {
+    console.error('Admin notification failed for consultant application', err);
+  }
+
   return row;
 }
 
@@ -92,10 +110,10 @@ export async function approveApplication(
         user_id: userId,
         bio: app.bio,
         expertise: app.expertise ?? [],
-        languages: app.languages ?? ['tr'],
-        session_price: '0.00',
-        session_duration: 30,
-        currency: 'TRY',
+        languages: app.languages ?? appConfig.consultants.defaultLanguages,
+        session_price: appConfig.consultants.defaultSessionPrice,
+        session_duration: appConfig.consultants.defaultSessionDurationMinutes,
+        currency: appConfig.consultants.defaultCurrency,
         approval_status: 'approved',
         is_available: 1,
       });

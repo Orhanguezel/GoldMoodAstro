@@ -26,12 +26,15 @@ import {
   Share2,
   Star,
   Moon,
-  ArrowRight
+  ArrowRight,
+  ChevronRight
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 import { colors, font, radius, spacing } from '@/theme/tokens';
 import { dreamsApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import { mobileBrandConfig, publicShareUrl } from '@/config/brand';
 
 const { width } = Dimensions.get('window');
 
@@ -44,6 +47,7 @@ const LOADING_PHASES = [
 ];
 
 export default function DreamsScreen() {
+  const { isAuthenticated, authHydrating } = useAuth();
   const [dreamText, setDreamText] = useState('');
   const [step, setStep] = useState<'input' | 'processing' | 'result'>('input');
   const [result, setResult] = useState<any>(null);
@@ -104,12 +108,68 @@ export default function DreamsScreen() {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Rüya Yorumum ✨\n\n${result?.interpretation?.substring(0, 200)}... \n\nGoldMoodAstro ile rüyanı keşfet!\n\nKeşfet: https://goldmoodastro.com/tr/ruya-tabiri/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=dream`,
+        message: `Rüya Yorumum ✨\n\n${result?.interpretation?.substring(0, 200)}... \n\n${mobileBrandConfig.appName} ile rüyanı keşfet!\n\nKeşfet: ${publicShareUrl(`/tr/ruya-tabiri/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=dream`)}`,
       });
     } catch (error) {
       console.error(error);
     }
   };
+
+  if (authHydrating) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator color={colors.gold} size="large" />
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+            <View style={styles.navHeader}>
+              <Pressable onPress={() => router.back()} style={styles.backBtn}>
+                <ChevronLeft size={24} color={colors.gold} />
+              </Pressable>
+            </View>
+
+            <View style={styles.header}>
+              <View style={styles.iconCircle}>
+                <CloudMoon size={40} color={colors.gold} />
+              </View>
+              <Text style={styles.headerTitle}>Rüya Tabiri</Text>
+              <Text style={styles.headerSubtitle}>
+                Yorumlar hesabınıza kaydedilir; rüyanızı yazıp analiz için giriş yapın.
+              </Text>
+            </View>
+
+            <View style={styles.inputSection}>
+              <View style={[styles.inputCard, styles.guestPreviewCard]}>
+                <Text style={styles.guestPreviewText}>
+                  Rüyanızı detaylı yazın; semboller ve kişisel yorum üretilir. Giriş yaptıktan sonra bu alanı kullanabilirsiniz.
+                </Text>
+              </View>
+            </View>
+
+            <Pressable style={styles.primaryBtn} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
+                <Text style={styles.primaryBtnText}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable style={styles.guestRegisterBtn} onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestRegisterText}>Hesap oluştur</Text>
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   if (step === 'input') {
     return (
@@ -310,6 +370,10 @@ const styles = StyleSheet.create({
   headerSubtitle: { fontFamily: font.serif, fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: 10, fontStyle: 'italic', paddingHorizontal: 20 },
   inputSection: { padding: spacing.lg, marginBottom: spacing.md },
   inputCard: { backgroundColor: colors.surface + '80', borderRadius: radius.xl, padding: 24, borderWidth: 1, borderColor: colors.lineSoft },
+  guestPreviewCard: { opacity: 0.72 },
+  guestPreviewText: { fontFamily: font.serif, fontSize: 16, color: colors.textMuted, lineHeight: 26, fontStyle: 'italic' },
+  guestRegisterBtn: { marginHorizontal: spacing.xl, marginTop: 12, paddingVertical: 16, alignItems: 'center' },
+  guestRegisterText: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
   textArea: { height: 240, fontFamily: font.serif, fontSize: 18, color: colors.text, lineHeight: 28 },
   inputFooter: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.lineSoft, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   charHint: { flexDirection: 'row', alignItems: 'center', gap: 6 },

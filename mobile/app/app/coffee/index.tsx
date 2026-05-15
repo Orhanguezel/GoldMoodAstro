@@ -31,10 +31,13 @@ import { router } from 'expo-router';
 
 import { colors, font, radius, spacing } from '@/theme/tokens';
 import { coffeeApi, storageApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import { mobileBrandConfig, publicShareUrl } from '@/config/brand';
 
 const { width } = Dimensions.get('window');
 
 export default function CoffeeScreen() {
+  const { isAuthenticated, authHydrating } = useAuth();
   const [step, setStep] = useState<'intro' | 'wait' | 'upload' | 'processing' | 'result'>('intro');
   const [images, setImages] = useState<string[]>([]); // local uris
   const [imageIds, setImageIds] = useState<string[]>([]);
@@ -49,8 +52,8 @@ export default function CoffeeScreen() {
     if (!result) return;
     try {
       await Share.share({
-        message: `Kahve Falım: ${result?.interpretation?.substring(0, 200)}... \n\nGoldMoodAstro ile geleceğini keşfet!\n\nKeşfet: https://goldmoodastro.com/tr/kahve-fali/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=coffee`,
-        title: 'GoldMoodAstro Kahve Falı',
+        message: `Kahve Falım: ${result?.interpretation?.substring(0, 200)}... \n\n${mobileBrandConfig.appName} ile geleceğini keşfet!\n\nKeşfet: ${publicShareUrl(`/tr/kahve-fali/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=coffee`)}`,
+        title: `${mobileBrandConfig.appName} Kahve Falı`,
       });
     } catch (e) {
       console.error(e);
@@ -140,6 +143,72 @@ export default function CoffeeScreen() {
       setStep('upload');
     }
   };
+
+  if (authHydrating) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.authGate}>
+            <ActivityIndicator color={colors.gold} size="large" />
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <View style={styles.navHeader}>
+              <Pressable onPress={() => router.back()} style={styles.backBtn}>
+                <ChevronLeft size={24} color={colors.gold} />
+              </Pressable>
+            </View>
+
+            <View style={styles.header}>
+              <View style={styles.iconCircle}>
+                <Coffee size={40} color={colors.gold} />
+              </View>
+              <Text style={styles.headerTitle}>Geleneksel Kahve Falı</Text>
+              <Text style={styles.headerSubtitle}>
+                Fotoğraf yükleme ve yorum hesabınıza kaydedilir; kişisel analiz için giriş yapın.
+              </Text>
+            </View>
+
+            <View style={styles.guideSection}>
+              {[
+                { title: 'Fincanı Kapat', desc: 'Kahveni içtikten sonra dilek tutup kapat.' },
+                { title: '5 Dakika Bekle', desc: 'Sembollerin netleşmesi için fincanın soğumasını bekleyin.' },
+                { title: 'Fotoğrafları Çek', desc: 'Fincan içi (2) ve tabak (1) net olmalı.' },
+              ].map((item, i) => (
+                <View key={i} style={[styles.guideItem, styles.guideItemGuest]}>
+                  <View style={styles.guideNumber}>
+                    <Text style={styles.guideNumberText}>{i + 1}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.guideTitle}>{item.title}</Text>
+                    <Text style={styles.guideDesc}>{item.desc}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            <Pressable style={styles.primaryBtn} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
+                <Text style={styles.primaryBtnText}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable style={styles.guestRegisterBtn} onPress={() => router.push('/auth/register' as any)}>
+              <Text style={styles.guestRegisterText}>Hesap oluştur</Text>
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   if (step === 'intro') {
     return (
@@ -372,6 +441,7 @@ export default function CoffeeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
+  authGate: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   safe: { flex: 1, paddingBottom: 20 },
   scrollContent: { paddingBottom: 40 },
   navHeader: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
@@ -382,6 +452,9 @@ const styles = StyleSheet.create({
   headerSubtitle: { fontFamily: font.serif, fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: 8, fontStyle: 'italic' },
   guideSection: { padding: spacing.xl, gap: 24 },
   guideItem: { flexDirection: 'row', gap: 16, alignItems: 'center' },
+  guideItemGuest: { opacity: 0.88 },
+  guestRegisterBtn: { marginHorizontal: spacing.xl, marginTop: 12, paddingVertical: 16, alignItems: 'center' },
+  guestRegisterText: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
   guideNumber: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
   guideNumberText: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep },
   guideTitle: { fontFamily: font.sansBold, fontSize: 16, color: colors.textDim },

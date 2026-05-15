@@ -5,15 +5,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing, font, radius } from '@/theme/tokens';
 import { reviewsApi, bookingsApi } from '@/lib/api';
-import { Star, Sparkles } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
+import { Star, Sparkles, ChevronRight } from 'lucide-react-native';
 import { BannerSlider } from '@/components/BannerSlider';
 
 export default function RateScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
   const { t } = useTranslation();
+  const { isAuthenticated, authHydrating } = useAuth();
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -21,10 +24,12 @@ export default function RateScreen() {
   const [consultantId, setConsultantId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authHydrating) return;
+    if (!isAuthenticated) return;
     if (bookingId) {
       bookingsApi.get(bookingId).then(b => setConsultantId(b.consultant_id));
     }
-  }, [bookingId]);
+  }, [bookingId, authHydrating, isAuthenticated]);
 
   const handleSubmit = async () => {
     if (rating === 0 || !consultantId || !bookingId) return;
@@ -38,6 +43,39 @@ export default function RateScreen() {
       setLoading(false);
     }
   };
+
+  if (authHydrating) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe}>
+          <ScrollView contentContainerStyle={styles.scroll}>
+            <View style={styles.header}>
+              <Sparkles size={40} color={colors.gold} style={{ marginBottom: 20 }} />
+              <Text style={styles.title}>Değerlendirme</Text>
+              <Text style={styles.subtitle}>Seans sonrası puan ve yorum göndermek için giriş yapın.</Text>
+            </View>
+            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
+              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
+                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
+                <ChevronRight size={18} color={colors.bgDeep} />
+              </LinearGradient>
+            </Pressable>
+            <Pressable style={styles.skipBtn} onPress={() => router.replace('/(tabs)/bookings' as any)}>
+              <Text style={styles.skipText}>Randevulara dön</Text>
+            </Pressable>
+          </ScrollView>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -111,4 +149,13 @@ const styles = StyleSheet.create({
   primaryBtnText: { fontFamily: font.sansBold, fontSize: 16, color: colors.bgDeep },
   skipBtn: { marginTop: 20, alignItems: 'center' },
   skipText: { fontFamily: font.sansMedium, fontSize: 14, color: colors.textMuted },
+  guestPrimaryWrap: { borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
+  guestPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+  },
+  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
 });

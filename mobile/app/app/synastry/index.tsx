@@ -28,7 +28,6 @@ import {
   RefreshCcw,
   ShieldCheck,
   Search,
-  Clock,
   Send,
   Check,
   X,
@@ -41,6 +40,7 @@ import { BlurView } from 'expo-blur';
 import { colors, font, radius, spacing, shadows } from '@/theme/tokens';
 import { synastryApi, userApi } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { mobileBrandConfig, publicShareUrl } from '@/config/brand';
 
 const { width } = Dimensions.get('window');
 
@@ -50,8 +50,22 @@ const SIGNS = [
 ];
 
 export default function SynastryScreen() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, isAuthenticated, authHydrating } = useAuth();
   const user = authUser as (typeof authUser & { is_premium?: boolean }) | null;
+
+  const requireUser = (actionLabel = 'Bu işlem') => {
+    if (user) return true;
+    Alert.alert(
+      'Giriş gerekli',
+      `${actionLabel} için oturum açmanız gerekir.`,
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'Kayıt ol', onPress: () => router.push('/auth/register' as any) },
+        { text: 'Giriş Yap', onPress: () => router.push('/auth/login' as any) },
+      ],
+    );
+    return false;
+  };
   const [step, setStep] = useState<'mode' | 'quick' | 'manual' | 'invite' | 'loading' | 'result' | 'history'>('mode');
   const [quickData, setQuickData] = useState({ sign_a: 'Aries', sign_b: 'Aries' });
   const [manualData, setManualData] = useState({ name: '', dob: '', tob: '' });
@@ -77,8 +91,8 @@ export default function SynastryScreen() {
     if (!result) return;
     try {
       await Share.share({
-        message: `Aşk Uyumu Analizimiz: ${result.title || 'Uyum Analizi'} ✨\n\nAşk: %${result.love_score || result.score || '??'}\nÇekim: %${result.sexual_score || '??'}\n\nGoldMoodAstro ile uyumunuzu keşfedin!\n\nKeşfet: https://goldmoodastro.com/tr/sinastri/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=synastry`,
-        title: 'GoldMoodAstro Aşk Uyumu',
+        message: `Aşk Uyumu Analizimiz: ${result.title || 'Uyum Analizi'} ✨\n\nAşk: %${result.love_score || result.score || '??'}\nÇekim: %${result.sexual_score || '??'}\n\n${mobileBrandConfig.appName} ile uyumunuzu keşfedin!\n\nKeşfet: ${publicShareUrl(`/tr/sinastri/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=synastry`)}`,
+        title: `${mobileBrandConfig.appName} Aşk Uyumu`,
       });
     } catch (e) {
       console.error(e);
@@ -104,6 +118,7 @@ export default function SynastryScreen() {
   };
 
   const handleSearch = async () => {
+    if (!requireUser('Kullanıcı araması')) return;
     if (searchQuery.length < 3) return;
     setIsSearching(true);
     try {
@@ -117,6 +132,7 @@ export default function SynastryScreen() {
   };
 
   const handleSendInvite = async (partnerId: string) => {
+    if (!requireUser('Davet gönderme')) return;
     try {
       await synastryApi.createInvite(partnerId);
       Alert.alert('Başarılı', 'Davet gönderildi!');
@@ -127,6 +143,7 @@ export default function SynastryScreen() {
   };
 
   const handleAcceptInvite = async (inviteId: string) => {
+    if (!requireUser('Davet kabulü')) return;
     setStep('loading');
     setLoading(true);
     try {
@@ -162,7 +179,8 @@ export default function SynastryScreen() {
 
   const handleManual = async () => {
     if (!manualData.name || !manualData.dob) return;
-    
+    if (!requireUser('Kredi ile analiz')) return;
+
     setStep('loading');
     setLoading(true);
     try {
@@ -180,10 +198,22 @@ export default function SynastryScreen() {
   };
 
   const onRefresh = async () => {
+    if (!user) {
+      setIsRefreshing(false);
+      return;
+    }
     setIsRefreshing(true);
     await Promise.all([fetchInvites(), fetchReports()]);
     setIsRefreshing(false);
   };
+
+  if (authHydrating) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -193,7 +223,13 @@ export default function SynastryScreen() {
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
           <Text style={styles.headerTitle}>Sinastri & Uyum</Text>
-          <Pressable onPress={() => setStep('history')} style={styles.historyBtn}>
+          <Pressable
+            onPress={() => {
+              if (!requireUser('Geçmiş analizler')) return;
+              setStep('history');
+            }}
+            style={styles.historyBtn}
+          >
             <History size={20} color={colors.gold} />
           </Pressable>
         </View>
@@ -210,7 +246,38 @@ export default function SynastryScreen() {
                   <Text style={styles.heroSubtitle}>Yıldızların aşkınız üzerindeki etkisini bilimsel astroloji ile analiz edin.</Text>
                </View>
 
-               {invites.length > 0 && (
+               {!isAuthenticated && (
+                 <View style={styles.guestHint}>
+                   <LinearGradient
+                     colors={[colors.plumSoft + 'CC', colors.surface + 'EE']}
+                     start={{ x: 0, y: 0 }}
+                     end={{ x: 1, y: 1 }}
+                     style={styles.guestHintGrad}
+                   >
+                     <ShieldCheck size={22} color={colors.gold} />
+                     <Text style={styles.guestHintTitle}>Misafir olarak</Text>
+                     <Text style={styles.guestHintBody}>
+                       Hızlı uyum (burç seçimi) ücretsiz. Partner daveti, kredili manuel analiz ve geçmiş raporlar için giriş yapın.
+                     </Text>
+                     <View style={styles.guestHintRow}>
+                       <Pressable
+                         style={styles.guestHintBtnPrimary}
+                         onPress={() => router.push('/auth/login' as any)}
+                       >
+                         <Text style={styles.guestHintBtnPrimaryText}>GİRİŞ</Text>
+                       </Pressable>
+                       <Pressable
+                         style={styles.guestHintBtnSecondary}
+                         onPress={() => router.push('/auth/register' as any)}
+                       >
+                         <Text style={styles.guestHintBtnSecondaryText}>Kayıt ol</Text>
+                       </Pressable>
+                     </View>
+                   </LinearGradient>
+                 </View>
+               )}
+
+               {!!user && invites.length > 0 && (
                  <View style={styles.inviteAlert}>
                     <BlurView intensity={20} tint="light" style={styles.inviteBlur}>
                        <View style={styles.inviteHeader}>
@@ -252,7 +319,11 @@ export default function SynastryScreen() {
                      <ChevronRight size={20} color={colors.textMuted} />
                   </Pressable>
 
-                  <Pressable style={styles.modeCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setStep('manual'); }}>
+                  <Pressable style={styles.modeCard} onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    if (!requireUser('Manuel analiz')) return;
+                    setStep('manual');
+                  }}>
                      <View style={[styles.modeIcon, { backgroundColor: colors.plum + '55' }]}>
                         <Star size={28} color={colors.goldLight} />
                      </View>
@@ -267,7 +338,11 @@ export default function SynastryScreen() {
                      <ChevronRight size={20} color={colors.textMuted} />
                   </Pressable>
 
-                  <Pressable style={styles.modeCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setStep('invite'); }}>
+                  <Pressable style={styles.modeCard} onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    if (!requireUser('Partner daveti')) return;
+                    setStep('invite');
+                  }}>
                      <View style={[styles.modeIcon, { backgroundColor: colors.surfaceHigh }]}>
                         <User size={28} color={colors.goldLight} />
                      </View>
@@ -280,7 +355,7 @@ export default function SynastryScreen() {
                   </Pressable>
                </View>
 
-               {reports.length > 0 && (
+               {!!user && reports.length > 0 && (
                  <View style={styles.recentSection}>
                     <Text style={styles.sectionLabel}>SON ANALİZLERİN</Text>
                     {reports.slice(0, 3).map((rep) => (
@@ -552,6 +627,31 @@ const styles = StyleSheet.create({
   hero: { marginVertical: 24, gap: 8 },
   heroTitle: { fontFamily: font.display, fontSize: 28, color: colors.text, lineHeight: 34 },
   heroSubtitle: { fontFamily: font.serif, fontSize: 15, color: colors.textMuted, lineHeight: 22 },
+
+  guestHint: { marginBottom: 20, borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.lineSoft },
+  guestHintGrad: { padding: spacing.lg, gap: 10 },
+  guestHintTitle: { fontFamily: font.sansBold, fontSize: 13, color: colors.gold, letterSpacing: 0.5 },
+  guestHintBody: { fontFamily: font.sans, fontSize: 13, color: colors.textDim, lineHeight: 20 },
+  guestHintRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  guestHintBtnPrimary: {
+    flex: 1,
+    backgroundColor: colors.gold,
+    paddingVertical: 12,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestHintBtnPrimaryText: { fontFamily: font.sansBold, fontSize: 12, color: colors.bgDeep, letterSpacing: 0.8 },
+  guestHintBtnSecondary: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.gold + '66',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestHintBtnSecondaryText: { fontFamily: font.sansMedium, fontSize: 12, color: colors.gold },
   
   inviteAlert: { marginBottom: 24, borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.gold + '33' },
   inviteBlur: { padding: 16, gap: 12 },
