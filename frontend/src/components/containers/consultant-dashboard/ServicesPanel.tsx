@@ -11,6 +11,7 @@ import {
   useDeleteMySelfServiceMutation,
   useReorderMySelfServicesMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
+import { extractApiError } from '@/integrations/shared';
 
 interface ServiceForm {
   name: string;
@@ -39,18 +40,6 @@ function slugify(s: string): string {
     .replace(/^-|-$/g, '');
 }
 
-function getErrorMessage(error: unknown, fallback: string) {
-  if (typeof error !== 'object' || error === null) return fallback;
-  const data = 'data' in error ? (error as { data?: unknown }).data : undefined;
-  if (typeof data !== 'object' || data === null) return fallback;
-  const apiError = 'error' in data ? (data as { error?: unknown }).error : undefined;
-  if (typeof apiError === 'object' && apiError !== null && 'message' in apiError) {
-    const message = (apiError as { message?: unknown }).message;
-    if (typeof message === 'string' && message.trim()) return message;
-  }
-  return fallback;
-}
-
 export default function ServicesPanel() {
   const { data: services = [], isLoading } = useListMySelfServicesQuery();
   const [createSvc, { isLoading: isCreating }] = useCreateMySelfServiceMutation();
@@ -60,13 +49,20 @@ export default function ServicesPanel() {
 
   const [showNew, setShowNew] = useState(false);
   const [newForm, setNewForm] = useState<ServiceForm>(EMPTY_FORM);
+  const [newErrors, setNewErrors] = useState<{ name?: string; price?: string; duration?: string }>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleCreate = async () => {
-    if (!newForm.name.trim()) {
-      toast.error('Hizmet adı zorunlu');
+    const errs: typeof newErrors = {};
+    if (!newForm.name.trim()) errs.name = 'İsim zorunlu';
+    if (newForm.price < 0 || newForm.price > 100000) errs.price = '0-100.000₺ arası olmalı';
+    if (newForm.duration_minutes < 15 || newForm.duration_minutes > 480) errs.duration = '15-480 dk arası olmalı';
+    
+    if (Object.keys(errs).length > 0) {
+      setNewErrors(errs);
       return;
     }
+
     try {
       await createSvc({
         name: newForm.name.trim(),
@@ -80,8 +76,9 @@ export default function ServicesPanel() {
       toast.success('Hizmet eklendi');
       setShowNew(false);
       setNewForm(EMPTY_FORM);
+      setNewErrors({});
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Eklenemedi'));
+      toast.error(extractApiError(e, 'Eklenemedi'));
     }
   };
 
@@ -107,8 +104,8 @@ export default function ServicesPanel() {
       if (patch.is_active !== undefined) body.is_active = patch.is_active ? 1 : 0;
       await updateSvc({ id, body }).unwrap();
       toast.success('Kaydedildi');
-    } catch {
-      toast.error('Kaydedilemedi');
+    } catch (e) {
+      toast.error(extractApiError(e, 'Kaydedilemedi'));
     }
   };
 
@@ -121,8 +118,8 @@ export default function ServicesPanel() {
     try {
       await deleteSvc(id).unwrap();
       toast.success('Silindi');
-    } catch {
-      toast.error('Silinemedi');
+    } catch (e) {
+      toast.error(extractApiError(e, 'Silinemedi'));
     }
   };
 
@@ -138,8 +135,8 @@ export default function ServicesPanel() {
     try {
       await reorderSvc(next.map((service, sort_order) => ({ id: service.id, sort_order }))).unwrap();
       toast.success('Sıra güncellendi');
-    } catch {
-      toast.error('Sıra güncellenemedi');
+    } catch (e) {
+      toast.error(extractApiError(e, 'Sıra güncellenemedi'));
     }
   };
 
@@ -167,12 +164,13 @@ export default function ServicesPanel() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
               value={newForm.name}
+              maxLength={100}
               onChange={(e) => {
                 const v = e.target.value;
                 setNewForm({ ...newForm, name: v, slug: newForm.slug || slugify(v) });
               }}
               placeholder="Hizmet adı (ör. Bireysel Seans)"
-              className="h-11 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-4 text-sm text-[var(--gm-text)]"
+              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.name ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
             />
             <input
               value={newForm.slug}
@@ -185,7 +183,7 @@ export default function ServicesPanel() {
               value={newForm.duration_minutes}
               onChange={(e) => setNewForm({ ...newForm, duration_minutes: Number(e.target.value) || 45 })}
               placeholder="Süre (dk)"
-              className="h-11 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-4 text-sm text-[var(--gm-text)]"
+              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.duration ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
             />
             <input
               type="number"
@@ -193,13 +191,14 @@ export default function ServicesPanel() {
               onChange={(e) => setNewForm({ ...newForm, price: Number(e.target.value) || 0 })}
               placeholder="Fiyat (₺)"
               disabled={newForm.is_free}
-              className="h-11 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-4 text-sm text-[var(--gm-text)] disabled:opacity-50"
+              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.price ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)] disabled:opacity-50`}
             />
           </div>
           <textarea
             value={newForm.description}
             onChange={(e) => setNewForm({ ...newForm, description: e.target.value })}
             rows={3}
+            maxLength={500}
             placeholder="Açıklama (opsiyonel)"
             className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)]"
           />
@@ -294,8 +293,43 @@ function ServiceRow({
   onMove: (direction: -1 | 1) => void;
   busy: boolean;
 }) {
+  const [form, setForm] = useState<ServiceForm>({
+    name: svc.name,
+    slug: svc.slug,
+    description: svc.description || '',
+    duration_minutes: svc.duration_minutes,
+    price: Number(svc.price) || 0,
+    is_free: svc.is_free === 1,
+    is_active: svc.is_active === 1,
+  });
+  const [errors, setErrors] = useState<{ name?: string; price?: string; duration?: string }>({});
+
+  const isDirty =
+    form.name !== svc.name ||
+    form.description !== (svc.description || '') ||
+    form.duration_minutes !== svc.duration_minutes ||
+    form.price !== Number(svc.price) ||
+    form.is_free !== (svc.is_free === 1) ||
+    form.is_active !== (svc.is_active === 1);
+
+  const handleSave = () => {
+    if (!form.name.trim()) {
+      toast.error('İsim boş olamaz');
+      return;
+    }
+    if (form.duration_minutes < 15 || form.duration_minutes > 480) {
+      toast.error('Süre 15-480 dakika arası olmalı');
+      return;
+    }
+    if (!form.is_free && (form.price < 0 || form.price > 100000)) {
+      toast.error('Fiyat 0-100.000 arası olmalı');
+      return;
+    }
+    onPatch(form);
+  };
+
   return (
-    <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 overflow-hidden">
+    <div className={`rounded-2xl border transition-all ${expanded ? 'border-[var(--gm-gold)]/40 bg-[var(--gm-gold)]/5' : 'border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30'} overflow-hidden`}>
       <div className="flex items-center gap-3 p-4">
         <button onClick={onToggleExpand} className="text-[var(--gm-muted)]">
           {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -341,7 +375,7 @@ function ServiceRow({
           </button>
         </div>
         <button
-          onClick={() => onPatch({ is_active: svc.is_active === 0 })}
+          onClick={() => onPatch({ ...form, is_active: !form.is_active })}
           className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-[var(--gm-border-soft)] hover:border-[var(--gm-gold)]/40"
           disabled={busy}
         >
@@ -353,43 +387,89 @@ function ServiceRow({
       </div>
 
       {expanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)]/30 space-y-3">
-          <input
-            defaultValue={svc.name}
-            onBlur={(e) => e.target.value !== svc.name && onPatch({ name: e.target.value })}
-            className="w-full h-10 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-3 text-sm text-[var(--gm-text)]"
-          />
-          <textarea
-            defaultValue={svc.description || ''}
-            onBlur={(e) => e.target.value !== (svc.description || '') && onPatch({ description: e.target.value })}
-            rows={3}
-            className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)]"
-            placeholder="Açıklama"
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              type="number"
-              defaultValue={svc.duration_minutes}
-              onBlur={(e) => Number(e.target.value) !== svc.duration_minutes && onPatch({ duration_minutes: Number(e.target.value) })}
-              className="h-10 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-3 text-sm text-[var(--gm-text)]"
-            />
-            <input
-              type="number"
-              defaultValue={Number(svc.price)}
-              onBlur={(e) => Number(e.target.value) !== Number(svc.price) && onPatch({ price: Number(e.target.value) })}
-              disabled={svc.is_free === 1}
-              className="h-10 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-3 text-sm text-[var(--gm-text)] disabled:opacity-50"
+        <div className="px-4 pb-4 pt-2 border-t border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)]/30 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">İsim</label>
+              <input
+                value={form.name}
+                maxLength={100}
+                onChange={(e) => {
+                  setForm({ ...form, name: e.target.value });
+                  if (errors.name) setErrors({ ...errors, name: undefined });
+                }}
+                className={`w-full h-10 bg-[var(--gm-bg-deep)] border ${errors.name ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-3 text-sm text-[var(--gm-text)]`}
+              />
+              {errors.name && <p className="text-[9px] text-rose-400 font-bold uppercase tracking-widest">{errors.name}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Slug (sadece admin için)</label>
+              <input
+                value={form.slug}
+                disabled
+                className="w-full h-10 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-3 text-sm text-[var(--gm-muted)] opacity-50"
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Açıklama</label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              rows={3}
+              maxLength={500}
+              className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)]"
+              placeholder="Açıklama"
             />
           </div>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={svc.is_free === 1}
-              onChange={(e) => onPatch({ is_free: e.target.checked, price: e.target.checked ? 0 : Number(svc.price) })}
-              className="w-5 h-5 accent-[var(--gm-success)]"
-            />
-            <span className="text-sm text-[var(--gm-text)]">Ücretsiz ön görüşme</span>
-          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Süre (Dakika)</label>
+              <input
+                type="number"
+                value={form.duration_minutes}
+                onChange={(e) => {
+                  setForm({ ...form, duration_minutes: Number(e.target.value) || 0 });
+                  if (errors.duration) setErrors({ ...errors, duration: undefined });
+                }}
+                className={`h-10 w-full bg-[var(--gm-bg-deep)] border ${errors.duration ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-3 text-sm text-[var(--gm-text)]`}
+              />
+              {errors.duration && <p className="text-[9px] text-rose-400 font-bold uppercase tracking-widest">{errors.duration}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Fiyat (₺)</label>
+              <input
+                type="number"
+                value={form.price}
+                onChange={(e) => {
+                  setForm({ ...form, price: Number(e.target.value) || 0 });
+                  if (errors.price) setErrors({ ...errors, price: undefined });
+                }}
+                disabled={form.is_free}
+                className={`h-10 w-full bg-[var(--gm-bg-deep)] border ${errors.price ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-3 text-sm text-[var(--gm-text)] disabled:opacity-50`}
+              />
+              {errors.price && <p className="text-[9px] text-rose-400 font-bold uppercase tracking-widest">{errors.price}</p>}
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={form.is_free}
+                onChange={(e) => setForm({ ...form, is_free: e.target.checked, price: e.target.checked ? 0 : form.price })}
+                className="w-5 h-5 accent-[var(--gm-success)]"
+              />
+              <span className="text-sm text-[var(--gm-text)]">Ücretsiz ön görüşme</span>
+            </label>
+            <button
+              onClick={handleSave}
+              disabled={busy || !isDirty}
+              className="px-6 py-2 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-30 flex items-center gap-2"
+            >
+              <Save className="w-3.5 h-3.5" />
+              Değişiklikleri Kaydet
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -233,6 +233,19 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/me/consultant/bookings/${encodeURIComponent(id)}/approve`, method: 'POST' }),
       transformResponse: (res: { data: { id: string; status: string } }) => res.data,
       invalidatesTags: ['ConsultantSelfBookings' as any, 'ConsultantSelfStats' as any],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          consultantSelfApi.util.updateQueryData('getMyConsultantBookings' as any, undefined as any, (draft: any) => {
+            const b = draft.find((x: any) => x.id === id);
+            if (b) b.status = 'confirmed';
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
     rejectBooking: build.mutation<{ id: string; status: string }, { id: string; reason?: string }>({
       query: ({ id, reason }) => ({
@@ -242,6 +255,19 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       }),
       transformResponse: (res: { data: { id: string; status: string } }) => res.data,
       invalidatesTags: ['ConsultantSelfBookings' as any, 'ConsultantSelfStats' as any],
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          consultantSelfApi.util.updateQueryData('getMyConsultantBookings' as any, undefined as any, (draft: any) => {
+            const b = draft.find((x: any) => x.id === id);
+            if (b) b.status = 'rejected';
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
     cancelMyConsultantBooking: build.mutation<{ id: string; status: string }, { id: string; reason: string }>({
       query: ({ id, reason }) => ({
@@ -251,6 +277,19 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       }),
       transformResponse: (res: { data: { id: string; status: string } }) => res.data,
       invalidatesTags: ['ConsultantSelfBookings' as any, 'ConsultantSelfStats' as any],
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          consultantSelfApi.util.updateQueryData('getMyConsultantBookings' as any, undefined as any, (draft: any) => {
+            const b = draft.find((x: any) => x.id === id);
+            if (b) b.status = 'cancelled';
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          patchResult.undo();
+        }
+      },
     }),
     updateMyConsultantBookingNotes: build.mutation<{ id: string; notes: string | null }, { id: string; notes: string | null }>({
       query: ({ id, notes }) => ({
@@ -314,6 +353,11 @@ export const consultantSelfApi = baseApi.injectEndpoints({
         'ConsultantSelfThreads' as any,
       ],
     }),
+    markConsultantThreadAsRead: build.mutation<{ ok: boolean }, string>({
+      query: (id) => ({ url: `/me/consultant/threads/${encodeURIComponent(id)}/read`, method: 'POST' }),
+      transformResponse: (res: { data: { ok: boolean } }) => res.data,
+      invalidatesTags: (_r, _e, id) => [{ type: 'ConsultantSelfThread' as any, id }, 'ConsultantSelfThreads' as any],
+    }),
     // T30-7: Wallet
     getMyConsultantWallet: build.query<ConsultantSelfWalletResponse, void>({
       query: () => '/me/consultant/wallet',
@@ -349,8 +393,8 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       invalidatesTags: ['ConsultantSelfAvailability' as any],
     }),
     // T30-8: Reviews
-    listMyConsultantReviews: build.query<ConsultantSelfReview[], void>({
-      query: () => '/me/consultant/reviews',
+    listMyConsultantReviews: build.query<ConsultantSelfReview[], { status?: string } | void>({
+      query: (args) => ({ url: '/me/consultant/reviews', params: args?.status ? { status: args.status } : undefined }),
       transformResponse: (res: { data: ConsultantSelfReview[] }) => res.data ?? [],
       providesTags: ['ConsultantSelfReviews' as any],
     }),
@@ -384,6 +428,7 @@ export const {
   useListMyConsultantThreadsQuery,
   useGetMyConsultantThreadMessagesQuery,
   useReplyMyConsultantThreadMutation,
+  useMarkConsultantThreadAsReadMutation,
   useGetMyConsultantWalletQuery,
   useRequestMyConsultantWithdrawalMutation,
   useListMyConsultantReviewsQuery,

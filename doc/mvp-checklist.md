@@ -2302,18 +2302,18 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 > **Referans UI:** `https://www.advicemy.com/danisman/fatma-guclu` — sol avatar + ⭐ + "Mesaj Gönder", sağ hizmet listesi (her satır expand → "Randevu Al"), ücretsiz "Birbirimizi tanıyalım" en üstte.
 
 ### T29-1 — Backend: `consultant_services` tablosu
-- [ ] SQL: `consultant_services` (id, consultant_id FK, name, slug, description, duration_minutes, price DECIMAL, currency, is_free TINYINT, sort_order, is_active)
-- [ ] Drizzle schema + repository
-- [ ] Public endpoint: `GET /consultants/:id/services` → aktif paket listesi
-- [ ] Admin CRUD: `/admin/consultants/:id/services`
-- [ ] **Self-service** endpoint (FAZ 30 ile): danışman kendi servislerini panelinden ekler/düzenler — `POST/PATCH/DELETE /me/consultant/services`
-- [ ] **Ücretsiz ön görüşme akışı:** `is_free=1` seçilen serviste:
+- [x] SQL: `consultant_services` (id, consultant_id FK, name, slug, description, duration_minutes, price DECIMAL, currency, is_free TINYINT, sort_order, is_active)
+- [x] Drizzle schema + repository
+- [x] Public endpoint: `GET /consultants/:id/services` → aktif paket listesi
+- [x] Admin CRUD: `/admin/consultants/:id/services`
+- [x] **Self-service** endpoint (FAZ 30 ile): danışman kendi servislerini panelinden ekler/düzenler — `POST/PATCH/DELETE /me/consultant/services`
+- [x] **Ücretsiz ön görüşme akışı:** `is_free=1` seçilen serviste:
   - Booking flow ödeme adımını atlar (Iyzico init çağırılmaz)
   - Booking direkt `confirmed` olur, ücret kaydı yok
   - Wallet'a kazanç eklenmez
   - Süre kısa (genelde 15-25 dk) — danışman kendisi belirler
   - Frontend "Ücretsiz" yeşil badge + "Tanışma Görüşmesi" başlık
-- [ ] Seed: Fatma için 5 paket (Birbirimizi tanıyalım — ücretsiz 15dk, Horary 20dk 750₺, Rektifikasyon 60dk 2500₺, İlişki 60dk 2500₺, Genel Doğum Haritası 90dk 3500₺)
+- [x] Seed: Fatma için 5 paket (Birbirimizi tanıyalım — ücretsiz 15dk, Horary 20dk 750₺, Rektifikasyon 60dk 2500₺, İlişki 60dk 2500₺, Genel Doğum Haritası 90dk 3500₺)
 
 ### T29-2 — Frontend: ConsultantDetail çoklu hizmet UI
 - [x] AdviceMy stilinde sağ panel: hizmet kartları (collapse/expand), her satır "Randevu Al" butonu
@@ -2327,13 +2327,13 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [x] Modal üstünde **uyarı banner**: "⚠️ Bu alan kısa notlar/sorular içindir. Uzun sohbet için canlı görüşme alın. Aşırı kullanım otomatik kapatılabilir."
 
 ### T29-4 — Backend + Frontend: "Hemen Şimdi Görüşme Talep Et"
-- [ ] Bookings status'una `requested_now` ENUM/string ekle (VARCHAR(24) zaten esnek)
-- [ ] Endpoint: `POST /bookings/request-now` body=`{consultantId, serviceId?, customerNote}` → booking INSERT (date=today, time=now, status='requested_now')
-- [ ] Notify danışmana: FCM push + dashboard "Bekleyen Anlık Talepler" kartı + email
+- [x] Bookings status'una `requested_now` ENUM/string ekle (VARCHAR(24) zaten esnek)
+- [x] Endpoint: `POST /bookings/request-now` body=`{consultantId, serviceId?, customerNote}` → booking INSERT (date=today, time=now, status='requested_now')
+- [x] Notify danışmana: FCM push + dashboard "Bekleyen Anlık Talepler" kartı + email
 - [x] Danışman dashboard: bekleyen talepler listesi → **Onayla / Reddet** butonları
-- [ ] Onay → status='confirmed' + müşteriye notify + ikisine call link
-- [ ] Red → müşteriye notify, booking iptali
-- [ ] Cron `request-now-timeout`: 5 dk içinde cevap yoksa otomatik iptal + müşteriye notify
+- [x] Onay → status='confirmed' + müşteriye notify + ikisine call link
+- [x] Red → müşteriye notify, booking iptali
+- [x] Cron `request-now-timeout`: 5 dk içinde cevap yoksa otomatik iptal + müşteriye notify
 - [x] ConsultantDetail'de **"Hemen Görüşme Talep Et"** butonu (slot picker üzerinde)
 
 ### T29-5 — Booking-bağlı mesajlaşma
@@ -2359,19 +2359,19 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [ ] Auth guard: sadece `roles.includes('consultant')` olanlar erişebilir; user role'lü erişirse "Danışman olmak için başvur" CTA → `/become-consultant`
 
 ### T30-1 — Backend: self-service consultant endpoint'leri
-- [ ] `GET /me/consultant` — kendi consultant kaydı + tüm alanlar (bio, expertise, languages, supports_video, social links)
-- [ ] `PATCH /me/consultant` — bio, expertise, languages, hakkımda, fotoğraf, görüşme platformları (WhatsApp/Skype/Zoom/Meet)
-- [ ] `GET/POST/PATCH/DELETE /me/consultant/services` — kendi servislerini CRUD
-- [ ] `GET /me/consultant/availability` + `PATCH` — kendi çalışma saatlerini ayarla (mevcut availability modülü zaten var, danışman tarafına proxy)
-- [ ] `GET /me/consultant/bookings` — kendi randevuları (filter: pending / confirmed / completed / cancelled)
-- [ ] `POST /me/consultant/bookings/:id/approve` — beklemedeki randevuyu onayla
-- [ ] `POST /me/consultant/bookings/:id/reject` — sebep ile reddet
-- [ ] `GET /me/consultant/messages` — gelen lead mesajları (T29-3'teki `consultant_lead` thread'leri)
-- [ ] `GET /me/consultant/wallet` — bakiye + transactions (mevcut wallet modülü, consultant filter)
-- [ ] `POST /me/consultant/wallet/withdraw` — para çekme talebi (admin onaylı)
-- [ ] `GET /me/consultant/reviews` — gelen yorumlar + cevaplama (T17-2 consultant_reply zaten var, panele bağla)
-- [ ] `GET /me/consultant/stats` — bu ay seans sayısı, ortalama rating, toplam kazanç, yanıt süresi
-- [ ] Tümü `requireAuth + requireConsultant` middleware (yeni middleware: `requireConsultant`)
+- [x] `GET /me/consultant` — kendi consultant kaydı + tüm alanlar (bio, expertise, languages, supports_video, social links)
+- [x] `PATCH /me/consultant` — bio, expertise, languages, hakkımda, fotoğraf, görüşme platformları (WhatsApp/Skype/Zoom/Meet)
+- [x] `GET/POST/PATCH/DELETE /me/consultant/services` — kendi servislerini CRUD
+- [x] `GET /me/consultant/availability` + `PATCH` — kendi çalışma saatlerini ayarla (mevcut availability modülü zaten var, danışman tarafına proxy)
+- [x] `GET /me/consultant/bookings` — kendi randevuları (filter: pending / confirmed / completed / cancelled)
+- [x] `POST /me/consultant/bookings/:id/approve` — beklemedeki randevuyu onayla
+- [x] `POST /me/consultant/bookings/:id/reject` — sebep ile reddet
+- [x] `GET /me/consultant/messages` — gelen lead mesajları (T29-3'teki `consultant_lead` thread'leri)
+- [x] `GET /me/consultant/wallet` — bakiye + transactions (mevcut wallet modülü, consultant filter)
+- [x] `POST /me/consultant/wallet/withdraw` — para çekme talebi (admin onaylı)
+- [x] `GET /me/consultant/reviews` — gelen yorumlar + cevaplama (T17-2 consultant_reply zaten var, panele bağla)
+- [x] `GET /me/consultant/stats` — bu ay seans sayısı, ortalama rating, toplam kazanç, yanıt süresi
+- [x] Tümü `requireAuth + requireConsultant` middleware (yeni middleware: `requireConsultant`)
 
 ### T30-2 — Danışman Profil Sekmesi UI
 - [ ] `/me/consultant/profile` — bio (rich text textarea), uzmanlık alanları (multi-select chip), diller (multi-select)
@@ -2480,3 +2480,52 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [x] T32-1 sonrası **gerçek ev cusp çizgileri** wheel'e eklensin (ASC/MC vurgulu) ✅
 - [x] Mobile: [`mobile/app/app/(tabs)/birth-chart.tsx:61-107`](mobile/app/app/(tabs)/birth-chart.tsx#L61-L107) aynı belirginlik ayarı
 - [x] Görsel doğrulama: küçük ekranda da çizgiler okunur (Antigravity screenshot QA)
+
+---
+
+## FAZ 33 — Hardcode Temizlik Operasyonu 🆕🧹
+
+> Detaylı checklist: [`doc/hardcode-cleanup-checklist.md`](./hardcode-cleanup-checklist.md)
+> Amaç: kodda sabit yok — marka/metin/renk/iş sabitleri DB(siteSettings) > JSON(brand.json) > .env'den. Marka değişince koda girilmeyecek.
+> İki koldan: **Kol A Claude** (mimari + merkezi katman + frontend kritik + review), **Kol B Codex** (backend + seed SQL + toplu replace).
+
+- [ ] **HC-A1..A4** Audit & envanter (rapor: `doc/raporlar/hardcode-envanter-2026-05-15.md`) + sync-conflict artıkları sil
+- [ ] **HC-A5..A10** Merkezi katman: `config/brand.json`, `getBrand()`/`useBrand()` resolver, `@goldmood/shared-config` appConfig, .env zod audit, seed şablonu — **kısmi:** HC-A8 appConfig tamam
+- [ ] **HC-B1..B6** Codex: siteSettings `brand.*`+`ui_*` seed, iş sabitleri→appConfig, compute.ts orb→config, BE/mobil literal temizliği — **kısmi:** HC-B1, HC-B4, HC-B5, HC-B6 tamam; HC-B2 temel `ui_*` seed eklendi ama kalan fallback envanteri sürüyor; HC-B3 request-now/servis defaultları/fiyat max + Yıldızname/LiveKit kredi sabitleriyle ilerledi ama komisyon kapsamı sürüyor
+- [ ] **HC-A11..A16** Claude: layout metadata/JSON-LD, inline COPY→ui(), asset path resolver, tema token, iletişim/sosyal componentler, Kol B review
+- [ ] **HC-A17..A20** CI literal guard, "marka değiştir" tatbikatı (0 kod değişikliği), build+smoke, envanter kapanış
+- [ ] **Kural:** merkezi katman (HC-A5..A10) bitmeden mekanik migrasyon başlamaz; aynı dosyada iki ajan yok; ALTER yok→seed
+
+---
+
+## FAZ 34 — Danışman Dashboard Eksik Kapatma 🆕
+
+> Kaynak rapor: [`doc/raporlar/consultant-dashboard-eksik-raporu-2026-05-15.md`](./raporlar/consultant-dashboard-eksik-raporu-2026-05-15.md)
+> Paneller çalışır/canlıda; eksik = validation + UX cilası + 1 yanıltıcı etiket. "eksik ≠ bozuk".
+
+### P1 — Veri bütünlüğü (öncelik)
+- [x] **D34-1** Wallet IBAN format validasyonu: FE regex + BE zod (TR IBAN 26 hane) `[Antigravity + Codex]` — **Codex BE tamam:** `TR` + 24 hane normalize/validate; FE inline validation bekliyor
+- [x] **D34-2** Profile sosyal link URL/handle validasyonu `[Antigravity]`
+- [x] **D34-3** Services fiyat/süre sınır (negatif/0/max) FE + BE zod `[Antigravity + Codex]` — **Codex BE tamam:** negatif/0/max zod + config limit; FE bekliyor
+- [x] **D34-4** Availability slot overlap + HH:MM format + slot_minutes bölünme `[Antigravity + Codex]` — **Codex BE tamam:** HH:MM, overlap, slot bölünme kontrolü; FE bekliyor
+
+### P2 — Yanıltıcı / mimari
+- [ ] **D34-5** Reviews "AI Önerisi" → gerçekte hardcoded şablon. Etiket düzelt ("Taslak Öner"); şablonlar FAZ 33 ile `ui_*`'e `[Claude karar+impl]`
+- [x] **D34-6** Reviews server-side `?status=` filtre (client-side yerine) `[Codex + Antigravity]`
+
+### P3 — UX cilası
+- [x] **D34-7** Alan-seviyesi inline validation hata mesajları (sadece toast yerine) `[Antigravity]`
+- [x] **D34-8** Optimistic update (mutation sonrası anlık geri bildirim) `[Antigravity]`
+- [x] **D34-9** Messages mark-as-read endpoint + çağrı `[Codex + Antigravity]`
+- [x] **D34-10** Metin inputlarında max-length (bio/expertise/mesaj/reply) FE + BE zod `[Antigravity + Codex]` — **Codex BE mevcut/tamamlandı:** bio/expertise/mesaj/reply/notes zod limitleri; FE inline max-length bekliyor
+- [x] **D34-11** Services edit batch-save (onBlur-anında-mutation yerine) `[Antigravity]`
+- [x] **D34-12** Wallet pending→completed yenileme + işlem tarih filtresi/export `[Antigravity]`
+
+### P4 — Tutarlılık (Claude sahipliğinde)
+- [x] **D34-13** Ortak `extractApiError()` — kanonik `integrations/shared/errors.ts:normalizeError` üzerine wrapper; panel-içi `getErrorMessage` kopyalarını (ServicesPanel, WalletPanel, ConsultantDashboard inline, Messages/Reviews/Availability) buna bağla `[Claude]`
+- [ ] **D34-14** Hardcoded UI sabitleri (Availability preset/gün adı, platform, Reviews şablon) → FAZ 33 karar matrisine devret `[Claude→FAZ33]`
+
+### Görev dağılımı özeti
+- **Claude:** D34-5 (etiket+karar), D34-13 (ortak error helper konsolidasyonu), D34-14 (FAZ33 devri), Codex/Antigravity review
+- **Codex:** BE zod (D34-1/3/4/10), D34-6 server filtre, D34-9 endpoint
+- **Antigravity:** FE validation+inline hata (D34-1/2/3/4/7/10), D34-8 optimistic, D34-11/12 UX

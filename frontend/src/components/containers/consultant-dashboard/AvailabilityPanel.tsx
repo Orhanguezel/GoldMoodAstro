@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, Loader2, Calendar as CalendarIcon, Power } from 'lucide-react';
 import { toast } from 'sonner';
+import { extractApiError } from '@/integrations/shared';
 import {
   useGetMyConsultantAvailabilityQuery,
   useOverrideMyConsultantAvailabilityDayMutation,
@@ -97,11 +98,43 @@ export default function AvailabilityPanel() {
   };
 
   const handleSave = async () => {
-    const invalid = hours.find((h) => timeToMinutes(h.end_time) <= timeToMinutes(h.start_time));
-    if (invalid) {
-      const day = DAYS.find((d) => d.dow === invalid.dow)?.label ?? 'Seçili gün';
+    // 1. Basic validation (start < end)
+    const invalidOrder = hours.find((h) => timeToMinutes(h.end_time) <= timeToMinutes(h.start_time));
+    if (invalidOrder) {
+      const day = DAYS.find((d) => d.dow === invalidOrder.dow)?.label ?? 'Seçili gün';
       toast.error(`${day} için bitiş saati başlangıçtan sonra olmalı.`);
       return;
+    }
+
+    // 2. Divisibility validation (slot_minutes should divide duration)
+    const invalidDiv = hours.find((h) => {
+      const duration = timeToMinutes(h.end_time) - timeToMinutes(h.start_time);
+      return duration % h.slot_minutes !== 0;
+    });
+    if (invalidDiv) {
+      const day = DAYS.find((d) => d.dow === invalidDiv.dow)?.label ?? 'Seçili gün';
+      toast.error(`${day} için seans süresi (${invalidDiv.slot_minutes} dk) toplam aralığa tam bölünmeli.`);
+      return;
+    }
+
+    // 3. Overlap validation
+    for (const day of DAYS) {
+      const dayHours = hours.filter((h) => h.dow === day.dow);
+      for (let i = 0; i < dayHours.length; i++) {
+        for (let j = i + 1; j < dayHours.length; j++) {
+          const h1 = dayHours[i];
+          const h2 = dayHours[j];
+          const s1 = timeToMinutes(h1.start_time);
+          const e1 = timeToMinutes(h1.end_time);
+          const s2 = timeToMinutes(h2.start_time);
+          const e2 = timeToMinutes(h2.end_time);
+
+          if ((s1 < e2 && e1 > s2)) {
+            toast.error(`${day.label} için saat aralıkları çakışıyor: ${h1.start_time}-${h1.end_time} ve ${h2.start_time}-${h2.end_time}`);
+            return;
+          }
+        }
+      }
     }
 
     try {
@@ -110,7 +143,7 @@ export default function AvailabilityPanel() {
       setDirty(false);
       refetch();
     } catch (e: any) {
-      toast.error(e?.data?.error?.message || 'Kaydedilemedi');
+      toast.error(extractApiError(e));
     }
   };
 
@@ -125,10 +158,11 @@ export default function AvailabilityPanel() {
       const action = isActive === 1 ? 'açıldı' : 'kapatıldı';
       toast.success(`${overrideDate} ${action}. Etkilenen slot: ${out.updated}/${out.planned}`);
     } catch (e: any) {
-      const message = e?.data?.error?.message === 'slot_has_reservations'
-        ? 'Bu tarihte rezervasyonlu slot var; gün tamamen kapatılamaz.'
-        : e?.data?.error?.message || 'Tarih güncellenemedi';
-      toast.error(message);
+      if (e?.data?.error?.message === 'slot_has_reservations') {
+        toast.error('Bu tarihte rezervasyonlu slot var; gün tamamen kapatılamaz.');
+      } else {
+        toast.error(extractApiError(e));
+      }
     }
   };
 

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Wallet, ArrowUpCircle, ArrowDownCircle, TrendingUp, Loader2, X, Send } from 'lucide-react';
 import { toast } from 'sonner';
+import { extractApiError } from '@/integrations/shared';
 import {
   type ConsultantSelfWalletTransaction,
   useGetMyConsultantWalletQuery,
@@ -23,17 +24,6 @@ function formatDate(iso?: string | null) {
   }
 }
 
-function getErrorMessage(error: unknown) {
-  if (typeof error !== 'object' || error === null) return 'Talep oluşturulamadı';
-  const data = 'data' in error ? (error as { data?: unknown }).data : undefined;
-  if (typeof data !== 'object' || data === null) return 'Talep oluşturulamadı';
-  const apiError = 'error' in data ? (data as { error?: unknown }).error : undefined;
-  if (typeof apiError === 'object' && apiError !== null && 'message' in apiError) {
-    const message = (apiError as { message?: unknown }).message;
-    if (typeof message === 'string' && message.trim()) return message;
-  }
-  return 'Talep oluşturulamadı';
-}
 
 const PURPOSE_LABELS: Record<string, string> = {
   withdrawal: 'Para Çekme',
@@ -58,6 +48,7 @@ export default function WalletPanel() {
   const [amount, setAmount] = useState('');
   const [iban, setIban] = useState('');
   const [notes, setNotes] = useState('');
+  const [errors, setErrors] = useState<{ amount?: string; iban?: string }>({});
 
   if (isLoading) {
     return (
@@ -73,24 +64,39 @@ export default function WalletPanel() {
   const balance = Number(wallet?.balance ?? 0);
   const currency = wallet?.currency || 'TRY';
 
-  const handleWithdraw = async () => {
+  const validate = () => {
+    const newErrors: { amount?: string; iban?: string } = {};
     const amt = Number(amount);
-    if (!amt || amt <= 0) {
-      toast.error('Geçerli bir tutar girin');
-      return;
+
+    if (!amount || isNaN(amt) || amt <= 0) {
+      newErrors.amount = 'Geçerli bir tutar girin';
+    } else if (amt > balance) {
+      newErrors.amount = 'Yetersiz bakiye';
     }
-    if (amt > balance) {
-      toast.error('Yetersiz bakiye');
-      return;
+
+    const cleanIban = iban.replace(/\s/g, '').toUpperCase();
+    if (cleanIban && !/^TR\d{24}$/.test(cleanIban)) {
+      newErrors.iban = 'Geçerli bir TR IBAN girin (26 hane)';
     }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleWithdraw = async () => {
+    if (!validate()) return;
     try {
-      await withdraw({ amount: amt, iban: iban.trim() || undefined, notes: notes.trim() || undefined }).unwrap();
+      await withdraw({
+        amount: Number(amount),
+        iban: iban.replace(/\s/g, '').toUpperCase() || undefined,
+        notes: notes.trim() || undefined
+      }).unwrap();
       toast.success('Para çekme talebiniz alındı');
       setShowModal(false);
-      setAmount(''); setIban(''); setNotes('');
+      setAmount(''); setIban(''); setNotes(''); setErrors({});
       refetch();
     } catch (e: unknown) {
-      toast.error(getErrorMessage(e));
+      toast.error(extractApiError(e, 'Talep oluşturulamadı'));
     }
   };
 
@@ -115,7 +121,7 @@ export default function WalletPanel() {
             )}
           </div>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => { setShowModal(true); setErrors({}); }}
             disabled={balance <= 0}
             className="px-6 py-3 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 inline-flex items-center gap-2 hover:shadow-[0_0_30px_rgba(201,169,97,0.25)] transition-all"
           >
@@ -154,10 +160,35 @@ export default function WalletPanel() {
 
       {/* Transactions */}
       <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 overflow-hidden">
-        <div className="px-5 py-3 border-b border-[var(--gm-border-soft)]">
+        <div className="px-5 py-3 border-b border-[var(--gm-border-soft)] flex items-center justify-between flex-wrap gap-2">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
             Son İşlemler
           </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const headers = ['Tarih', 'Tür', 'İşlem', 'Tutar', 'Para Birimi', 'Durum', 'Açıklama'];
+                const rows = transactions.map(t => [
+                  t.created_at,
+                  t.type,
+                  PURPOSE_LABELS[t.purpose] || t.purpose,
+                  t.amount,
+                  t.currency || currency,
+                  STATUS_LABELS[t.payment_status]?.label || t.payment_status,
+                  t.description || ''
+                ]);
+                const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', `islemler_${new Date().toISOString().slice(0, 10)}.csv`);
+                link.click();
+              }}
+              className="px-3 py-1 rounded-full border border-[var(--gm-border-soft)] text-[9px] font-bold uppercase tracking-widest text-[var(--gm-text-dim)] hover:text-[var(--gm-text)] hover:border-[var(--gm-gold)]/40 transition-all"
+            >
+              CSV İndir
+            </button>
+          </div>
         </div>
         {transactions.length === 0 ? (
           <div className="text-center py-12 text-[var(--gm-muted)] font-serif italic">
@@ -226,21 +257,33 @@ export default function WalletPanel() {
                 <input
                   type="number"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    if (errors.amount) setErrors({ ...errors, amount: undefined });
+                  }}
                   max={balance}
-                  className="w-full h-11 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-4 text-base text-[var(--gm-text)]"
+                  className={`w-full h-11 bg-[var(--gm-bg-deep)] border rounded-xl px-4 text-base text-[var(--gm-text)] transition-colors ${
+                    errors.amount ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/50'
+                  }`}
                   placeholder="0,00"
                 />
+                {errors.amount && <p className="mt-1.5 text-[10px] font-bold text-rose-400 uppercase tracking-widest">{errors.amount}</p>}
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">IBAN (opsiyonel)</label>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">IBAN</label>
                 <input
                   type="text"
                   value={iban}
-                  onChange={(e) => setIban(e.target.value.toUpperCase())}
-                  className="w-full h-11 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-4 text-sm font-mono text-[var(--gm-text)]"
+                  onChange={(e) => {
+                    setIban(e.target.value.toUpperCase());
+                    if (errors.iban) setErrors({ ...errors, iban: undefined });
+                  }}
+                  className={`w-full h-11 bg-[var(--gm-bg-deep)] border rounded-xl px-4 text-sm font-mono text-[var(--gm-text)] transition-colors ${
+                    errors.iban ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/50'
+                  }`}
                   placeholder="TR00 0000 0000 0000 0000 0000 00"
                 />
+                {errors.iban && <p className="mt-1.5 text-[10px] font-bold text-rose-400 uppercase tracking-widest">{errors.iban}</p>}
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">Not (opsiyonel)</label>
@@ -248,7 +291,9 @@ export default function WalletPanel() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={2}
-                  className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)] resize-none"
+                  maxLength={200}
+                  className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)] resize-none outline-none focus:border-[var(--gm-gold)]/50"
+                  placeholder="Opsiyonel not..."
                 />
               </div>
               <p className="text-[10px] text-[var(--gm-muted)] italic">

@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/features/auth/auth.store';
-import { localizePath } from '@/integrations/shared';
+import { localizePath, extractApiError } from '@/integrations/shared';
 import AvatarUpload from '@/components/common/AvatarUpload';
 import {
   type ConsultantSelfProfile,
@@ -454,8 +454,8 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
     try {
       await updateProfile({ is_available: isAvailable ? 0 : 1 }).unwrap();
       toast.success(isAvailable ? 'Çevrimdışı oldun' : 'Çevrimiçi oldun');
-    } catch {
-      toast.error('Güncellenemedi');
+    } catch (e) {
+      toast.error(extractApiError(e, 'Güncellenemedi'));
     }
   };
   return (
@@ -486,6 +486,7 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(profile.social_links || {});
   const [avatarUrl, setAvatarUrl] = useState<string>(profile.user?.avatar_url || '');
   const [supportsVideo, setSupportsVideo] = useState<boolean>(profile.supports_video === 1);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const expertiseList = expertise.split(',').map((s) => s.trim()).filter(Boolean);
   const languageList = languages.split(',').map((s) => s.trim()).filter(Boolean);
@@ -500,9 +501,44 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
 
   const updateSocial = (key: string, value: string) => {
     setSocialLinks((current) => ({ ...current, [key]: value }));
+    if (errors[key]) setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
+  };
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (bio.length > 2000) newErrors.bio = 'Bio en fazla 2000 karakter olabilir.';
+    if (expertiseList.length > 20) newErrors.expertise = 'En fazla 20 uzmanlık alanı ekleyebilirsiniz.';
+    if (languageList.length > 10) newErrors.languages = 'En fazla 10 dil ekleyebilirsiniz.';
+
+    // Social link validation
+    if (socialLinks.instagram) {
+      const v = socialLinks.instagram.trim();
+      if (v.includes('/') && !v.includes('instagram.com/')) {
+        newErrors.instagram = 'Geçerli bir Instagram URL veya kullanıcı adı girin.';
+      }
+    }
+    if (socialLinks.linkedin) {
+      const v = socialLinks.linkedin.trim();
+      if (v && !v.includes('linkedin.com/')) {
+        newErrors.linkedin = 'Geçerli bir LinkedIn profil URL girin.';
+      }
+    }
+    if (socialLinks.website) {
+      const v = socialLinks.website.trim();
+      if (v && !/^https?:\/\//.test(v)) {
+        newErrors.website = 'Geçerli bir web sitesi URL girin (http:// veya https:// ile).';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = async () => {
+    if (!validate()) {
+      toast.error('Lütfen hataları düzeltin.');
+      return;
+    }
     try {
       const cleanSocials = Object.fromEntries(
         Object.entries(socialLinks)
@@ -519,8 +555,8 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
         supports_video: supportsVideo ? 1 : 0,
       }).unwrap();
       toast.success('Profil güncellendi');
-    } catch {
-      toast.error('Kaydedilemedi');
+    } catch (e) {
+      toast.error(extractApiError(e, 'Profil güncellenemedi'));
     }
   };
 
@@ -541,28 +577,51 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
           </div>
         </div>
 
-        <Field label="Hakkımda (Bio)">
+        <Field label="Hakkımda (Bio)" error={errors.bio}>
           <textarea
             value={bio}
-            onChange={(e) => setBio(e.target.value)}
+            onChange={(e) => {
+              setBio(e.target.value);
+              if (errors.bio) setErrors((prev) => { const n = { ...prev }; delete n.bio; return n; });
+            }}
             rows={6}
-            className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-2xl p-4 text-sm text-[var(--gm-text)] focus:ring-2 focus:ring-[var(--gm-gold)]/30 focus:border-[var(--gm-gold)]/40 outline-none transition-all"
+            maxLength={2000}
+            className={`w-full bg-[var(--gm-bg-deep)] border rounded-2xl p-4 text-sm text-[var(--gm-text)] outline-none transition-all ${
+              errors.bio ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/40'
+            }`}
             placeholder="Kendinizi tanıtın..."
           />
+          <div className="flex justify-end mt-1">
+            <span className={`text-[10px] ${bio.length >= 2000 ? 'text-rose-400' : 'text-[var(--gm-muted)]'}`}>
+              {bio.length} / 2000
+            </span>
+          </div>
         </Field>
-        <Field label="Uzmanlık Alanları (virgülle)">
+        <Field label="Uzmanlık Alanları (virgülle)" error={errors.expertise}>
           <input
             value={expertise}
-            onChange={(e) => setExpertise(e.target.value)}
-            className="w-full h-12 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-2xl px-4 text-sm text-[var(--gm-text)] focus:ring-2 focus:ring-[var(--gm-gold)]/30 outline-none"
+            onChange={(e) => {
+              setExpertise(e.target.value);
+              if (errors.expertise) setErrors((prev) => { const n = { ...prev }; delete n.expertise; return n; });
+            }}
+            maxLength={500}
+            className={`w-full h-12 bg-[var(--gm-bg-deep)] border rounded-2xl px-4 text-sm text-[var(--gm-text)] outline-none transition-all ${
+              errors.expertise ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/40'
+            }`}
             placeholder="astrology, birth_chart, relationship"
           />
         </Field>
-        <Field label="Diller (virgülle)">
+        <Field label="Diller (virgülle)" error={errors.languages}>
           <input
             value={languages}
-            onChange={(e) => setLanguages(e.target.value)}
-            className="w-full h-12 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-2xl px-4 text-sm text-[var(--gm-text)] focus:ring-2 focus:ring-[var(--gm-gold)]/30 outline-none"
+            onChange={(e) => {
+              setLanguages(e.target.value);
+              if (errors.languages) setErrors((prev) => { const n = { ...prev }; delete n.languages; return n; });
+            }}
+            maxLength={200}
+            className={`w-full h-12 bg-[var(--gm-bg-deep)] border rounded-2xl px-4 text-sm text-[var(--gm-text)] outline-none transition-all ${
+              errors.languages ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/40'
+            }`}
             placeholder="tr, en"
           />
         </Field>
@@ -590,20 +649,25 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
         </Field>
 
         <Field label="Sosyal Linkler">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {['instagram', 'linkedin', 'website'].map((key) => (
-              <input
-                key={key}
-                value={socialLinks[key] || ''}
-                onChange={(e) => updateSocial(key, e.target.value)}
-                className="h-12 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-2xl px-4 text-sm text-[var(--gm-text)] focus:ring-2 focus:ring-[var(--gm-gold)]/30 outline-none"
-                placeholder={key === 'website' ? 'https://...' : `${key} URL`}
-              />
+              <div key={key} className="space-y-1.5">
+                <input
+                  value={socialLinks[key] || ''}
+                  onChange={(e) => updateSocial(key, e.target.value)}
+                  maxLength={150}
+                  className={`h-12 w-full bg-[var(--gm-bg-deep)] border rounded-2xl px-4 text-sm text-[var(--gm-text)] outline-none transition-all ${
+                    errors[key] ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/40'
+                  }`}
+                  placeholder={key === 'website' ? 'https://...' : `${key} URL / handle`}
+                />
+                {errors[key] && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-widest pl-1">{errors[key]}</p>}
+              </div>
             ))}
           </div>
         </Field>
 
-        <label className="flex items-center gap-3 cursor-pointer">
+        <label className="flex items-center gap-3 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={supportsVideo}
@@ -615,11 +679,12 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
         <button
           onClick={handleSave}
           disabled={isLoading}
-          className="px-8 py-3 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-xs font-bold uppercase tracking-widest disabled:opacity-50"
+          className="px-8 py-3 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-xs font-bold uppercase tracking-widest disabled:opacity-50 hover:shadow-glow transition-all"
         >
           {isLoading ? 'Kaydediliyor...' : 'Profili Kaydet'}
         </button>
       </div>
+
 
       <div className="h-fit rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-5">
         <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
@@ -649,11 +714,12 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
       <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">{label}</label>
       {children}
+      {error && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-widest pl-1">{error}</p>}
     </div>
   );
 }
@@ -693,8 +759,8 @@ function BookingsPanel({ locale }: { locale: string }) {
     try {
       await approve(id).unwrap();
       toast.success('Onaylandı');
-    } catch {
-      toast.error('Onaylanamadı');
+    } catch (e) {
+      toast.error(extractApiError(e, 'Onaylanamadı'));
     }
   };
 
@@ -724,7 +790,7 @@ function BookingsPanel({ locale }: { locale: string }) {
       }
       setActionModal(null);
     } catch (e: any) {
-      toast.error(e?.data?.error?.message || 'İşlem tamamlanamadı');
+      toast.error(extractApiError(e, 'İşlem tamamlanamadı'));
     }
   };
 

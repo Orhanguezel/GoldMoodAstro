@@ -71,6 +71,36 @@ function trimMsg(s: string, max = 280): string {
   return s.length > max ? s.slice(0, max) + "…" : s;
 }
 
+/**
+ * Komponent/panel katmanı için: API hatasından kullanıcıya gösterilecek metin.
+ * Kanonik `normalizeError` üzerine ince sarmalayıcı — anlamlı API mesajı yoksa
+ * `fallback` döner. Panel-içi kopyalanan `getErrorMessage` helper'larının
+ * yerine kullanılır (tek kaynak).
+ */
+export function extractApiError(err: unknown, fallback = "Bir hata oluştu"): string {
+  // Zod/Fastify validation details (data.error.details[]) → birleştir
+  if (isObject(err)) {
+    const data = (err as MaybeData).data;
+    if (isObject(data)) {
+      const apiErr = (data as MaybeError).error;
+      const details = isObject(apiErr) ? (apiErr as MaybeData & { details?: unknown }).details : undefined;
+      if (Array.isArray(details) && details.length) {
+        const joined = details
+          .map((d) => (isObject(d) ? pickStr(d, "message") : null))
+          .filter(Boolean)
+          .join(", ");
+        if (joined) return trimMsg(joined);
+      }
+    }
+  }
+  const { message } = normalizeError(err);
+  if (!message) return fallback;
+  if (message === "unknown_error" || /^request_failed(_\d+)?$/.test(message)) {
+    return fallback;
+  }
+  return message;
+}
+
 // 🔹 RTK helper'larının beklediği ortak sonuç tipi
 export type FetchResult<T> = {
   data: T | null;

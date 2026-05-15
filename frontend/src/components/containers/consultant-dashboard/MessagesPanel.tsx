@@ -9,7 +9,9 @@ import {
   useListMyConsultantThreadsQuery,
   useGetMyConsultantThreadMessagesQuery,
   useReplyMyConsultantThreadMutation,
+  useMarkConsultantThreadAsReadMutation as useMarkAsReadMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
+import { extractApiError } from '@/integrations/shared';
 
 function formatTime(iso: string) {
   try {
@@ -32,6 +34,7 @@ export default function MessagesPanel() {
     skip: !activeId,
   });
   const [reply, { isLoading: replying }] = useReplyMyConsultantThreadMutation();
+  const [markAsRead] = useMarkAsReadMutation();
 
   const [draft, setDraft] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -39,6 +42,15 @@ export default function MessagesPanel() {
   useEffect(() => {
     if (!activeId && threads.length > 0) setActiveId(threads[0].thread_id);
   }, [threads, activeId]);
+
+  useEffect(() => {
+    if (activeId) {
+      const activeThread = threads.find(t => t.thread_id === activeId);
+      if (activeThread && activeThread.unread_count > 0) {
+        markAsRead(activeId);
+      }
+    }
+  }, [activeId, threads, markAsRead]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -50,8 +62,8 @@ export default function MessagesPanel() {
       await reply({ id: activeId, text: draft.trim() }).unwrap();
       setDraft('');
       toast.success('Cevap gönderildi');
-    } catch {
-      toast.error('Gönderilemedi');
+    } catch (e) {
+      toast.error(extractApiError(e));
     }
   };
 
@@ -215,6 +227,7 @@ export default function MessagesPanel() {
                   }
                 }}
                 rows={2}
+                maxLength={2000}
                 placeholder="Cevabını yaz..."
                 disabled={replying}
                 className="flex-1 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)] resize-none focus:ring-2 focus:ring-[var(--gm-gold)]/30 focus:border-[var(--gm-gold)]/40 outline-none"

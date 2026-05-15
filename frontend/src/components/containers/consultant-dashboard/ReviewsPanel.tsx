@@ -9,6 +9,7 @@ import {
   useReplyToMyConsultantReviewMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { cn } from '@/lib/utils';
+import { extractApiError } from '@/integrations/shared';
 
 type ReviewFilter = 'all' | 'unreplied' | 'low' | 'high';
 
@@ -38,8 +39,11 @@ function buildSuggestion(review: ConsultantSelfReview) {
 }
 
 export default function ReviewsPanel() {
-  const { data: reviews = [], isLoading, isError } = useListMyConsultantReviewsQuery();
   const [activeFilter, setActiveFilter] = useState<ReviewFilter>('all');
+  
+  // D34-6: Server-side ?status= mapping
+  const statusParam = activeFilter === 'unreplied' ? 'unreplied' : undefined;
+  const { data: reviews = [], isLoading, isError } = useListMyConsultantReviewsQuery(statusParam ? { status: statusParam } : undefined);
 
   const counts = useMemo(
     () =>
@@ -55,6 +59,8 @@ export default function ReviewsPanel() {
 
   const filteredReviews = useMemo(() => {
     const filter = FILTERS.find((item) => item.key === activeFilter) ?? FILTERS[0];
+    // If it's already filtered by server (unreplied), don't filter again with predicate
+    if (activeFilter === 'unreplied') return reviews;
     return reviews.filter(filter.predicate);
   }, [activeFilter, reviews]);
 
@@ -169,8 +175,8 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
       await replyMutation({ id: review.id, reply }).unwrap();
       toast.success('Cevabınız başarıyla kaydedildi');
       setIsReplying(false);
-    } catch {
-      toast.error('Cevap gönderilemedi, lütfen tekrar deneyin');
+    } catch (e) {
+      toast.error(extractApiError(e));
     }
   }
 
@@ -225,7 +231,7 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
             className="flex items-center gap-2 rounded-xl border border-[var(--gm-primary)]/20 bg-[var(--gm-primary)]/10 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--gm-primary)] transition-all hover:bg-[var(--gm-primary)]/20 hover:scale-105 active:scale-95"
           >
             <Sparkles className="h-3 w-3" />
-            AI Önerisi
+            Taslak Öneri
           </button>
         )}
       </div>
@@ -279,13 +285,14 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
             <textarea
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
+              maxLength={2000}
               placeholder="Müşterinize profesyonel ve içten bir yanıt bırakın..."
               className="min-h-[140px] w-full rounded-[2rem] border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)]/50 p-6 font-serif text-[15px] italic text-[var(--gm-text)] outline-none transition-all focus:border-[var(--gm-gold)]/40 focus:ring-4 focus:ring-[var(--gm-gold)]/[0.05] placeholder:opacity-30"
             />
             <button
               type="button"
               onClick={applySuggestion}
-              title="AI ile yanıt üret"
+              title="Taslak önerisi al"
               className="absolute right-5 top-5 rounded-xl border border-[var(--gm-primary)]/20 bg-[var(--gm-primary)]/10 p-2 text-[var(--gm-primary)] transition-all hover:bg-[var(--gm-primary)]/20 hover:rotate-12"
             >
               <Sparkles className="h-4 w-4" />
