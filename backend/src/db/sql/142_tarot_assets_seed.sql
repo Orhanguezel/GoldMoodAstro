@@ -1,4 +1,4 @@
-INSERT INTO storage_assets (id, owner_user_id, bucket, path, public_url, mime_type, size_bytes, metadata) VALUES 
+INSERT INTO storage_assets (id, user_id, bucket, name, path, mime, size, metadata) VALUES 
 (UUID(), NULL, 'local', 'tarot/ace-of-cups.png', '/uploads/tarot/ace-of-cups.png', 'image/png', 889708, JSON_OBJECT('purpose','tarot_card','slug','ace-of-cups')),
 (UUID(), NULL, 'local', 'tarot/ace-of-pentacles.png', '/uploads/tarot/ace-of-pentacles.png', 'image/png', 167536, JSON_OBJECT('purpose','tarot_card','slug','ace-of-pentacles')),
 (UUID(), NULL, 'local', 'tarot/ace-of-swords.png', '/uploads/tarot/ace-of-swords.png', 'image/png', 174295, JSON_OBJECT('purpose','tarot_card','slug','ace-of-swords')),
