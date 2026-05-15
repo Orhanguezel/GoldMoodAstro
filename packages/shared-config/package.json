@@ -5,7 +5,13 @@
   "description": "GoldMoodAstro Monorepo - Ortak yapılandırma (TS, Tailwind)",
   "type": "module",
   "exports": {
+    ".": "./src/index.ts",
+    "./appConfig": "./src/appConfig.ts",
+    "./brand": "./src/brand.ts",
     "./tsconfig.base": "./tsconfig.base.json",
     "./tailwind-tokens": "./tailwind-tokens.css"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
   }
 }
