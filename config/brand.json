@@ -1,0 +1,25 @@
+{
+  "_doc": "FAZ 33 — Marka kimliği fallback kaynağı. Öncelik: DB site_settings brand.* > BU DOSYA > .env. Anahtarlar DB seed (backend/src/db/sql/014_brand_seed.sql) ile BİREBİR aynı (snake-case). Yeni marka: bu dosyayı + DB seed'i + .env'i değiştir, KOD'a dokunma. getBrand()/useBrand() resolver bu dosyayı okur.",
+  "name": "GoldMoodAstro",
+  "legal_name": "GoldMoodAstro",
+  "domain": "goldmoodastro.com",
+  "public_url": "https://goldmoodastro.com",
+  "logo_light": "",
+  "logo_dark": "",
+  "favicon": "",
+  "og_image": "",
+  "theme_color": "#C9A961",
+  "contact": {
+    "email": "",
+    "phone": "",
+    "address": ""
+  },
+  "social": {
+    "instagram": "",
+    "twitter": "",
+    "facebook": "",
+    "linkedin": "",
+    "youtube": "https://www.youtube.com/@goldmoodastro"
+  },
+  "assets": {}
+}
