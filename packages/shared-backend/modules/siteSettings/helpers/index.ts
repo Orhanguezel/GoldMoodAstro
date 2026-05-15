@@ -70,3 +70,6 @@ export type { SiteMediaKey } from './constants';
 
 export { DEFAULT_APP_LOCALES, cloneDefaultAppLocales } from '../../_shared';
 export type { AppLocaleMeta as SiteSettingsAppLocaleMeta } from '../../_shared';
+
+export { getBrand, invalidateBrandCache } from './brand';
+export type { Brand } from './brand';
