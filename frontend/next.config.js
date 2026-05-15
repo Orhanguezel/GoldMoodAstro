@@ -61,8 +61,9 @@ const nextConfig = {
     // Strip trailing /api/v1 or /api so we hit backend's static /uploads handler directly.
     const backendUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/api(\/v\d+)?\/?$/, '');
     return [
-      { source: '/:locale/about', destination: '/:locale?section=promises' },
-      { source: '/:locale/hakkimizda', destination: '/:locale?section=promises' },
+      // /about artık gerçek route'a sahip (app/[locale]/about) — rewrite KALDIRILDI.
+      // /hakkimizda → kanonik /about'a yönlendir (eski alias).
+      { source: '/:locale/hakkimizda', destination: '/:locale/about' },
       { source: '/:locale/how-it-works', destination: '/:locale?section=hybrid_model' },
       { source: '/:locale/nasil-calisir', destination: '/:locale?section=hybrid_model' },
       { source: '/:locale/referanslar', destination: '/:locale?section=testimonials' },
