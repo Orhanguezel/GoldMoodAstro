@@ -12,7 +12,7 @@ INSERT INTO footer_sections (id, slug, is_active, display_order) VALUES
   ('fs-fal',       'fal',       1, 20),
   ('fs-company',   'company',   1, 30),
   ('fs-legal',     'legal',     1, 40)
-ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
+ON DUPLICATE KEY UPDATE is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 INSERT INTO footer_sections_i18n (id, footer_section_id, locale, title) VALUES
   ('fs-i-astro-tr', 'fs-astrology', @loc_tr, 'Astroloji'),
