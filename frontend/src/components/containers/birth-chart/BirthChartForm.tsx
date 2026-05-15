@@ -22,7 +22,6 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
     name: '',
     dob: '',
     tob: '',
-    tz_offset: 180,
   });
 
   useEffect(() => {
@@ -149,20 +148,7 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
           </button>
         )}
 
-        <label className="block">
-          <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-gold)]">
-            Saat dilimi offseti
-          </span>
-          <input
-            type="number"
-            className="w-full rounded-sm border border-[var(--gm-border-soft)] bg-[var(--gm-bg)] p-3 text-[var(--gm-text)] focus:border-[var(--gm-gold)] focus:outline-none"
-            value={formData.tz_offset}
-            onChange={(e) => setFormData({ ...formData, tz_offset: Number(e.target.value || 0) })}
-            min={-840}
-            max={840}
-            required
-          />
-        </label>
+
       </div>
 
       {error && <p className="text-sm text-[var(--gm-error)]">{error}</p>}

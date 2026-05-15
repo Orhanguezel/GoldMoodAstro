@@ -2316,35 +2316,35 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [ ] Seed: Fatma için 5 paket (Birbirimizi tanıyalım — ücretsiz 15dk, Horary 20dk 750₺, Rektifikasyon 60dk 2500₺, İlişki 60dk 2500₺, Genel Doğum Haritası 90dk 3500₺)
 
 ### T29-2 — Frontend: ConsultantDetail çoklu hizmet UI
-- [ ] AdviceMy stilinde sağ panel: hizmet kartları (collapse/expand), her satır "Randevu Al" butonu
-- [ ] Ücretsiz hizmet vurgu (yeşil "Ücretsiz" badge)
-- [ ] Hizmet seçimi → BookingFlow `?serviceId=...` query ile başlar
-- [ ] Slot picker seçilen hizmetin `duration_minutes`'ını kullanır
+- [x] AdviceMy stilinde sağ panel: hizmet kartları (collapse/expand), her satır "Randevu Al" butonu
+- [x] Ücretsiz hizmet vurgu (yeşil "Ücretsiz" badge)
+- [x] Hizmet seçimi → BookingFlow `?serviceId=...` query ile başlar
+- [x] Slot picker seçilen hizmetin `duration_minutes`'ını kullanır
 
 ### T29-3 — Frontend: Sol panelde "Mesaj Gönder" butonu
-- [ ] Avatar altında: ⭐ rating + total review + "Mesaj Gönder" button (red/brand color)
-- [ ] Tıklayınca chat modal açılır → mevcut chat modülü ile thread (`context_type='consultant_lead'`, `context_id=consultantId`)
-- [ ] Modal üstünde **uyarı banner**: "⚠️ Bu alan kısa notlar/sorular içindir. Uzun sohbet için canlı görüşme alın. Aşırı kullanım otomatik kapatılabilir."
+- [x] Avatar altında: ⭐ rating + total review + "Mesaj Gönder" button (red/brand color)
+- [x] Tıklayınca chat modal açılır → mevcut chat modülü ile thread (`context_type='consultant_lead'`, `context_id=consultantId`)
+- [x] Modal üstünde **uyarı banner**: "⚠️ Bu alan kısa notlar/sorular içindir. Uzun sohbet için canlı görüşme alın. Aşırı kullanım otomatik kapatılabilir."
 
 ### T29-4 — Backend + Frontend: "Hemen Şimdi Görüşme Talep Et"
 - [ ] Bookings status'una `requested_now` ENUM/string ekle (VARCHAR(24) zaten esnek)
 - [ ] Endpoint: `POST /bookings/request-now` body=`{consultantId, serviceId?, customerNote}` → booking INSERT (date=today, time=now, status='requested_now')
 - [ ] Notify danışmana: FCM push + dashboard "Bekleyen Anlık Talepler" kartı + email
-- [ ] Danışman dashboard: bekleyen talepler listesi → **Onayla / Reddet** butonları
+- [x] Danışman dashboard: bekleyen talepler listesi → **Onayla / Reddet** butonları
 - [ ] Onay → status='confirmed' + müşteriye notify + ikisine call link
 - [ ] Red → müşteriye notify, booking iptali
 - [ ] Cron `request-now-timeout`: 5 dk içinde cevap yoksa otomatik iptal + müşteriye notify
-- [ ] ConsultantDetail'de **"Hemen Görüşme Talep Et"** butonu (slot picker üzerinde)
+- [x] ConsultantDetail'de **"Hemen Görüşme Talep Et"** butonu (slot picker üzerinde)
 
 ### T29-5 — Booking-bağlı mesajlaşma
-- [ ] Booking detail sayfasında "Mesaj Gönder" → chat thread (`context_type='booking'`, `context_id=bookingId`)
-- [ ] Müşteri ↔ danışman async mesajlaşma (görüşme öncesi/sonrası notlar)
-- [ ] Aynı uyarı banner'ı
+- [x] Booking detail sayfasında "Mesaj Gönder" → chat thread (`context_type='booking'`, `context_id=bookingId`)
+- [x] Müşteri ↔ danışman async mesajlaşma (görüşme öncesi/sonrası notlar)
+- [x] Aynı uyarı banner'ı
 
 ### T29-6 — Sohbet uyarı banner'ı (cross-cutting)
-- [ ] `<ChatWarningBanner>` component (T29-3 + T29-5'te kullanılır)
-- [ ] Locale-aware: tr/en/de
-- [ ] Otomatik kapatma policy yazısı (gelecek faz: rate limit + admin moderation)
+- [x] `<ChatWarningBanner>` component (T29-3 + T29-5'te kullanılır)
+- [x] Locale-aware: tr/en/de
+- [x] Otomatik kapatma policy yazısı (gelecek faz: rate limit + admin moderation)
 
 
 
@@ -2398,50 +2398,102 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [ ] Save → `PATCH /me/consultant/availability`
 
 ### T30-5 — Randevular Sekmesi UI
-- [ ] `/me/consultant/bookings` — tabs: Bekleyen / Onaylı / Tamamlanan / İptal
-- [ ] Her satır: müşteri adı + foto, tarih/saat, servis, fiyat, müşteri notu
-- [ ] Bekleyen → "Onayla" / "Reddet" butonları (red → modal: sebep iste)
-- [ ] **Bekleyen Anlık Talepler** ayrı vurgulu kart (T29-4) — 5 dk countdown
-- [ ] Onaylı booking → "Görüşmeyi Başlat" butonu (LiveKit room link)
-- [ ] Tamamlanan booking → "Notlar Ekle" (seans sonrası özel not — sadece danışman görür)
-- [ ] İptal et (con. başlatıyorsa sebep zorunlu)
+- [x] `/me/consultant/bookings` — tabs: Bekleyen / Onaylı / Tamamlanan / İptal
+- [x] Her satır: müşteri adı + foto, tarih/saat, servis, fiyat, müşteri notu
+- [x] Bekleyen → "Onayla" / "Reddet" butonları (red → modal: sebep iste)
+- [x] **Bekleyen Anlık Talepler** ayrı vurgulu kart (T29-4) — 5 dk countdown
+- [x] Onaylı booking → "Görüşmeyi Başlat" butonu (LiveKit room link)
+- [x] Tamamlanan booking → "Notlar Ekle" (seans sonrası özel not — sadece danışman görür)
+- [x] İptal et (con. başlatıyorsa sebep zorunlu)
 
 ### T30-6 — Mesajlar Sekmesi UI
-- [ ] `/me/consultant/messages` — sol: thread listesi (lead mesajları + booking mesajları), sağ: aktif sohbet
-- [ ] Müşteri kartı: ad + foto + son mesaj preview + okunmamış badge
-- [ ] Cevapla input + dosya ekleme (storage upload)
-- [ ] Üstte aynı **uyarı banner** (T29-6): "Uzun konuşma için randevu önerin"
+- [x] `/me/consultant/messages` — sol: thread listesi (lead mesajları + booking mesajları), sağ: aktif sohbet
+- [x] Müşteri kartı: ad + foto + son mesaj preview + okunmamış badge
+- [x] Cevapla input + dosya ekleme (storage upload)
+- [x] Üstte aynı **uyarı banner** (T29-6): "Uzun konuşma için randevu önerin"
 - [ ] Mesaj typing indicator (chat modülü zaten WS destekli mi bak)
 
 ### T30-7 — Cüzdan & Kazanç Sekmesi UI
-- [ ] `/me/consultant/wallet` — büyük balance göstergesi (gold)
-- [ ] Bu ay / geçen ay / toplam kazanç kartları
-- [ ] Transactions tablosu: tarih, tip (booking_payout / withdrawal / refund), tutar, durum
-- [ ] **Para Çek** butonu → modal: tutar + IBAN (varsa pre-fill) + onay → `POST /me/consultant/wallet/withdraw`
-- [ ] Bekleyen withdrawal'lar listede pending status
-- [ ] Banka hesabı yönetimi (IBAN, banka adı, hesap sahibi) — settings altında
+- [x] `/me/consultant/wallet` — büyük balance göstergesi (gold)
+- [x] Bu ay / geçen ay / toplam kazanç kartları
+- [x] Transactions tablosu: tarih, tip (booking_payout / withdrawal / refund), tutar, durum
+- [x] **Para Çek** butonu → modal: tutar + IBAN (varsa pre-fill) + onay → `POST /me/consultant/wallet/withdraw`
+- [x] Bekleyen withdrawal'lar listede pending status
+- [x] Banka hesabı yönetimi (IBAN, banka adı, hesap sahibi) — settings altında
 
 ### T30-8 — Yorumlar & Cevaplar Sekmesi UI
-- [ ] `/me/consultant/reviews` — yorum listesi (T17 schema zaten var)
-- [ ] Her yoruma cevap yaz (`consultant_reply` field — T17-2)
-- [ ] Filter: cevaplanmış / cevaplanmamış / 1-2 yıldız / 4-5 yıldız
-- [ ] Düşük puanlı yoruma önce cevap önerisi (kibar template)
+- [x] `/me/consultant/reviews` — yorum listesi (T17 schema zaten var)
+- [x] Her yoruma cevap yaz (`consultant_reply` field — T17-2)
+- [x] Filter: cevaplanmış / cevaplanmamış / 1-2 yıldız / 4-5 yıldız
+- [x] Düşük puanlı yoruma önce cevap önerisi (kibar template)
 
 ### T30-9 — Stats / İstatistik Dashboard (üst overview)
-- [ ] `/me/consultant` ana sayfası — hızlı bakış kartları:
-  - Bu ay seans sayısı + geçen ay karşılaştırma (% delta)
-  - Ortalama rating (son 30 gün)
-  - Toplam kazanç (bu ay)
-  - Yanıt süresi (mesajlara ortalama yanıt — chat thread'lerden hesaplanır)
-  - Bekleyen randevu sayısı + bekleyen mesaj sayısı (action items)
-- [ ] Son 7 günün seans grafiği (basit bar chart)
-- [ ] Hızlı eylem butonları: Hizmet Ekle, Müsaitlik Düzenle, Mesajları Gör
+- [x] `/me/consultant` ana sayfası — hızlı bakış kartları:
+  - [x] Bu ay seans sayısı + geçen ay karşılaştırma (% delta)
+  - [x] Ortalama rating (son 30 gün)
+  - [x] Toplam kazanç (bu ay)
+  - [x] Yanıt süresi (mesajlara ortalama yanıt — chat thread'lerden hesaplanır)
+  - [x] Bekleyen randevu sayısı + bekleyen mesaj sayısı (action items)
+- [x] Son 7 günün seans grafiği (basit bar chart)
+- [x] Hızlı eylem butonları: Hizmet Ekle, Müsaitlik Düzenle, Mesajları Gör
 
 ### T30-10 — Sidebar / Navigation
-- [ ] Frontend layout: consultant role'lü kullanıcı login olunca header'a "Danışman Paneli" linki ekle
-- [ ] Veya `/dashboard` içinde tab grubu: "Müşteri Görünümü" / "Danışman Görünümü" toggle (kullanıcı hem user hem consultant olabilir)
+- [x] Frontend layout: consultant role'lü kullanıcı login olunca header'a "Danışman Paneli" linki ekle
+- [x] Veya `/dashboard` içinde tab grubu: "Müşteri Görünümü" / "Danışman Görünümü" toggle (kullanıcı hem user hem consultant olabilir)
 
 ### T30-11 — "Danışman Ol" başvuru akışı (opsiyonel)
-- [ ] `/become-consultant` — başvuru formu (bio, expertise, kimlik, sertifika upload)
+- [x] `/become-consultant` — başvuru formu (bio, expertise, kimlik, sertifika upload)
 - [ ] Admin panele başvuru notification: pending consultant approve/reject
 - [ ] Onaylanan kullanıcının role'üne `consultant` eklenir + email bilgilendirme
+
+---
+
+## FAZ 32 — Doğum Haritası Doğruluk & UX Düzeltmeleri (Müşteri Geri Bildirimi 2026-05-15) 🆕🔴
+
+> **Kaynak:** Pınar DEMİRCİOĞLU (müşteri) WhatsApp geri bildirimi 2026-05-15.
+> Test verisi: pınar — 12.06.1985 07:38 GMT+03:00, Tekirdağ/Süleymanpaşa, Lat 40.98 Lng 27.51.
+> 3 talep: (1) saat dilimi alanı kaldırılsın, (2) harita çizgileri belirginleşsin,
+> (3) **ev hesabı yanlış — "Sun 12. Evde, beklenen 9. Ev"**.
+
+### T32-1 — 🔴 KRİTİK BUG: Ascendant & ev hesabı tamamen yanlış (Codex — backend)
+
+**Root cause (Claude Code analizi):**
+[`packages/shared-backend/modules/astrology/compute.ts:200`](packages/shared-backend/modules/astrology/compute.ts#L200) —
+Ascendant astronomik temeli olmayan **placeholder formülle** hesaplanıyor:
+```ts
+const ascendantLongitude = norm(Number(sun[0]) + 90 + input.longitude / 2);
+```
+Gerçek Ascendant; **yerel yıldız zamanı (LST) + enlem + ekliptik eğikliği** gerektirir.
+Bu uydurma ASC değeri `equalHouseCusps()` ve `houseFor()` fonksiyonlarına besleniyor →
+**tüm gezegen ev atamaları hatalı** (Güneş 9. yerine 12. evde çıkıyor).
+Ayrıca chart etiketi "Placidus" gösteriyor ama backend `houseSystem: 'equal'` zorluyor
+ve `swe.houses()` hiç çağrılmıyor.
+
+- [ ] `swe.houses(tjd_ut, lat, lon, hsys)` (swisseph-wasm) ile **gerçek** ev cusp'ları + `ascmc` (ASC, MC) hesapla
+- [ ] `houseSystem` input'unu onurlandır; varsayılan **Placidus** (`hsys='P'`) — chart etiketiyle tutarlı. Saat bilinmiyorsa (`tobKnown=false`) Whole Sign / Equal fallback + UI'da "ev konumları yaklaşıktır" uyarısı
+- [ ] `houseFor()` → eşit 30° yerine **gerçek cusp sınırlarına** göre ev ataması (cusp'lar eşit aralıklı değil)
+- [ ] `equalHouseCusps()` yerine cusp dizisini `swe.houses()` çıktısından üret; `ascendant`/`midheaven` `ascmc`'den al (uydurma `+90` / `+270` kaldır)
+- [ ] **Doğrulama:** pınar test verisi (12.06.1985 07:38 +03:00, 40.98/27.51) → Güneş **9. Ev** çıkmalı (referans: astro.com / kıyas hesaplayıcı ile karşılaştır)
+- [ ] Regresyon testi: `compute.test.ts` — ≥3 bilinen doğum verisi için ASC/MC/ev snapshot
+- [ ] Etkilenen tüketiciler kontrol: `birthCharts`, `readings`, `synastry`, `transit`, big-three preview
+
+### T32-2 — Saat dilimi offset alanı kaldır + otomatik TZ çözümle (Codex backend + Antigravity UI)
+
+> Müşteri: "saat dilimi kısmını çıkarsak olmaz mı?" — Manuel offset alanı UX'i bozuyor
+> ve tarihsel DST hatalarına yol açıyor. Altyapı zaten `tz_iana` destekliyor.
+
+- [ ] Backend: doğum yeri lat/lng'den **IANA timezone** çöz (`geocode` modülüne tz lookup ekle; `tz-lookup`/`geo-tz` veya offline tzdata). DST'yi luxon zaten `tzIana` ile hallediyor
+- [ ] `createBirthChartSchema`: `tz_offset` opsiyonel/deprecated, `tz_iana` server-side doldurulur (client göndermez)
+- [ ] Lookup başarısızsa Türkiye fallback (`Europe/Istanbul`); ileride uluslararası için coğrafi çözüm
+- [x] Antigravity: [`frontend/src/components/containers/birth-chart/BirthChartForm.tsx:152-165`](frontend/src/components/containers/birth-chart/BirthChartForm.tsx#L152-L165) "Saat dilimi offseti" input'unu kaldır; `tz_offset` formdan çıkar
+- [x] Mobile aynı formda offset alanı varsa kaldır
+
+### T32-3 — Doğum haritası çizgilerini belirginleştir (Antigravity — UI, web + mobile)
+
+> Müşteri: "doğum haritası çizgileri daha belirgin olabilir mi?"
+
+- [x] Web: [`frontend/src/app/[locale]/birth-chart/BirthChartPageClient.tsx:74-90`](frontend/src/app/[locale]/birth-chart/BirthChartPageClient.tsx#L74-L90) — `strokeOpacity` 0.2 → ~0.5 (major açılar daha yüksek), `strokeWidth` 0.5 → ~1.2; major (conjunction/opposition/square/trine) vs minor görsel ayrımı netleştir
+- [x] Aspect rengi: harmonik (trine/sextile) gold, sert (square/opposition) kontrast renk — tema token'ları içinde okunur olsun
+- [ ] T32-1 sonrası **gerçek ev cusp çizgileri** wheel'e eklensin (ASC/MC vurgulu)
+- [x] Mobile: [`mobile/app/app/(tabs)/birth-chart.tsx:61-107`](mobile/app/app/(tabs)/birth-chart.tsx#L61-L107) aynı belirginlik ayarı
+- [x] Görsel doğrulama: küçük ekranda da çizgiler okunur (Antigravity screenshot QA)

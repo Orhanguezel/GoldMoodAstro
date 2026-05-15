@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { and, eq, gt } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { geocodeCache } from './schema';
-import { geocodeWithNominatim, type GeocodeResult } from './service';
+import { geocodeWithNominatim, resolveTimezone, type GeocodeResult } from './service';
 
 const CACHE_TTL_DAYS = 30;
 
@@ -31,6 +31,7 @@ export async function searchGeocode(q: string): Promise<GeocodeResult | null> {
       lat: Number(cached.lat),
       lng: Number(cached.lng),
       label: cached.label,
+      tz_iana: resolveTimezone(Number(cached.lat), Number(cached.lng)),
       source: 'cache',
     };
   }

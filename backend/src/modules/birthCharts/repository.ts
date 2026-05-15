@@ -6,11 +6,13 @@ import {
   computeSynastry,
   computeTransitChart,
 } from '@goldmood/shared-backend/modules/astrology';
-import { birthCharts } from './schema';
+import { resolveTimezone } from '@/modules/geocode/service';
+import { birthCharts, type BirthChartRow } from './schema';
 import type { CreateBirthChartInput } from './validation';
 
 export async function listBirthCharts(userId: string) {
-  return db.select().from(birthCharts).where(eq(birthCharts.user_id, userId));
+  const rows = await db.select().from(birthCharts).where(eq(birthCharts.user_id, userId));
+  return Promise.all(rows.map((row) => refreshChartDataIfNeeded(row)));
 }
 
 export async function getBirthChart(userId: string, id: string) {
@@ -19,7 +21,12 @@ export async function getBirthChart(userId: string, id: string) {
     .from(birthCharts)
     .where(and(eq(birthCharts.user_id, userId), eq(birthCharts.id, id)))
     .limit(1);
-  return row ?? null;
+  if (!row) return null;
+  return refreshChartDataIfNeeded(row);
+}
+
+function timezoneForInput(input: CreateBirthChartInput) {
+  return input.tz_iana?.trim() || resolveTimezone(input.pob_lat, input.pob_lng);
 }
 
 /** FAZ 8.5 — input → astrology engine input (IANA tz + tob_known fallback). */
@@ -27,15 +34,16 @@ function toAstrologyInput(input: CreateBirthChartInput) {
   const tobKnown = input.tob_known !== false;
   const rawTob = tobKnown && input.tob ? input.tob : '12:00:00';
   const time = rawTob.length === 5 ? `${rawTob}:00` : rawTob;
+  const tzIana = timezoneForInput(input);
   return {
     date: input.dob,
     time,
     tobKnown,
     latitude: input.pob_lat,
     longitude: input.pob_lng,
-    tzIana: input.tz_iana,
-    timezoneOffsetMinutes: input.tz_offset ?? 0,
-    houseSystem: 'equal' as const,
+    tzIana,
+    timezoneOffsetMinutes: input.tz_offset,
+    houseSystem: tobKnown ? 'placidus' as const : 'whole_sign' as const,
   };
 }
 
@@ -46,6 +54,42 @@ function tobForDb(input: CreateBirthChartInput): string {
   return input.tob.length === 5 ? `${input.tob}:00` : input.tob;
 }
 
+function dateForInput(value: BirthChartRow['dob']) {
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return String(value);
+}
+
+function rowToInput(row: BirthChartRow): CreateBirthChartInput {
+  return {
+    name: row.name,
+    dob: dateForInput(row.dob),
+    tob: String(row.tob),
+    tob_known: row.chart_data?.input?.tobKnown !== false,
+    pob_lat: Number(row.pob_lat),
+    pob_lng: Number(row.pob_lng),
+    pob_label: row.pob_label,
+    tz_iana: row.chart_data?.input?.tzIana,
+    tz_offset: Number(row.tz_offset),
+  };
+}
+
+function chartDataNeedsRefresh(row: BirthChartRow) {
+  const chart = row.chart_data as BirthChartRow['chart_data'] | undefined;
+  return !chart?.house_accuracy || chart.input?.houseSystem === 'equal';
+}
+
+async function refreshChartDataIfNeeded(row: BirthChartRow) {
+  if (!chartDataNeedsRefresh(row)) return row;
+
+  const chart = await computeNatalChart(toAstrologyInput(rowToInput(row)));
+  await db
+    .update(birthCharts)
+    .set({ chart_data: chart })
+    .where(eq(birthCharts.id, row.id));
+
+  return { ...row, chart_data: chart };
+}
+
 export async function createBirthChart(userId: string, input: CreateBirthChartInput) {
   const rows = await listBirthCharts(userId);
   if (rows.length >= 5) {
@@ -54,7 +98,8 @@ export async function createBirthChart(userId: string, input: CreateBirthChartIn
     throw error;
   }
 
-  const chart = await computeNatalChart(toAstrologyInput(input));
+  const tzIana = timezoneForInput(input);
+  const chart = await computeNatalChart(toAstrologyInput({ ...input, tz_iana: tzIana }));
 
   const id = randomUUID();
   await db.insert(birthCharts).values({
@@ -74,7 +119,8 @@ export async function createBirthChart(userId: string, input: CreateBirthChartIn
 }
 
 export async function previewBirthChart(input: CreateBirthChartInput) {
-  const chart = await computeNatalChart(toAstrologyInput(input));
+  const tzIana = timezoneForInput(input);
+  const chart = await computeNatalChart(toAstrologyInput({ ...input, tz_iana: tzIana }));
 
   return {
     id: 'preview',
@@ -97,7 +143,8 @@ export async function previewBirthChart(input: CreateBirthChartInput) {
  * İçerik: astrology_kb'den `kind=sign` short_summary + image_url çekilir.
  */
 export async function previewBigThree(input: CreateBirthChartInput, locale: string = 'tr') {
-  const chart = await computeNatalChart(toAstrologyInput(input));
+  const tzIana = timezoneForInput(input);
+  const chart = await computeNatalChart(toAstrologyInput({ ...input, tz_iana: tzIana }));
 
   const sun = chart.planets?.sun;
   const moon = chart.planets?.moon;
@@ -184,7 +231,8 @@ export async function getBirthChartSynastry(userId: string, chartAId: string, ch
 }
 
 export async function updateBirthChart(userId: string, id: string, input: CreateBirthChartInput) {
-  const chart = await computeNatalChart(toAstrologyInput(input));
+  const tzIana = timezoneForInput(input);
+  const chart = await computeNatalChart(toAstrologyInput({ ...input, tz_iana: tzIana }));
 
   await db.update(birthCharts)
     .set({

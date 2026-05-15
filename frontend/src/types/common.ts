@@ -176,7 +176,7 @@ export interface BirthChart {
   pob_lat: string;
   pob_lng: string;
   pob_label: string;
-  tz_offset: number;
+  tz_offset?: number;
   chart_data: NatalChart;
 }
 
@@ -187,7 +187,7 @@ export interface BirthChartCreateInput {
   pob_lat: number;
   pob_lng: number;
   pob_label: string;
-  tz_offset: number;
+  tz_offset?: number;
 }
 
 export interface GeocodeResult {

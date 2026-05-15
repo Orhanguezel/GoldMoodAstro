@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import * as repo from './repository';
-import { geocodeQuerySchema } from './validation';
+import { resolveTimezone } from './service';
+import { geocodeQuerySchema, timezoneQuerySchema } from './validation';
 
 export async function handleSearch(req: FastifyRequest, reply: FastifyReply) {
   try {
@@ -12,6 +13,18 @@ export async function handleSearch(req: FastifyRequest, reply: FastifyReply) {
     const statusCode = Number((error as { statusCode?: number })?.statusCode ?? 400);
     return reply.code(statusCode).send({
       error: { message: error instanceof Error ? error.message : 'geocode_failed' },
+    });
+  }
+}
+
+export async function handleTimezone(req: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { lat, lng } = timezoneQuerySchema.parse(req.query ?? {});
+    return reply.send({ data: { tz_iana: resolveTimezone(lat, lng) } });
+  } catch (error) {
+    const statusCode = Number((error as { statusCode?: number })?.statusCode ?? 400);
+    return reply.code(statusCode).send({
+      error: { message: error instanceof Error ? error.message : 'timezone_lookup_failed' },
     });
   }
 }

@@ -47,6 +47,20 @@ const ASPECTS: Array<{ type: AspectType; angle: number; orb: number }> = [
   { type: 'opposition', angle: 180, orb: 8 },
 ];
 
+type SwissHouseResult = {
+  cusps: ArrayLike<number>;
+  ascmc: ArrayLike<number>;
+};
+
+const HOUSE_SYSTEM_CODES: Record<NonNullable<BirthChartInput['houseSystem']>, string> = {
+  placidus: 'P',
+  koch: 'K',
+  equal: 'E',
+  whole_sign: 'W',
+  campanus: 'C',
+  porphyry: 'O',
+};
+
 let instancePromise: Promise<SwissEph> | null = null;
 
 async function getSwissEph() {
@@ -137,9 +151,9 @@ function parseDateTime(input: BirthChartInput) {
   return { year, month, day, hourDecimal: utcMinutes / 60 };
 }
 
-function equalHouseCusps(ascendantLongitude: number): HouseCusp[] {
-  return Array.from({ length: 12 }, (_, index) => {
-    const longitude = norm(ascendantLongitude + index * 30);
+function cuspsFromLongitudes(cuspLongitudes: number[]): HouseCusp[] {
+  return cuspLongitudes.map((rawLongitude, index) => {
+    const longitude = norm(rawLongitude);
     return {
       house: index + 1,
       longitude: Number(longitude.toFixed(4)),
@@ -148,8 +162,70 @@ function equalHouseCusps(ascendantLongitude: number): HouseCusp[] {
   });
 }
 
-function houseFor(longitude: number, ascendantLongitude: number) {
-  return Math.floor(norm(longitude - ascendantLongitude) / 30) + 1;
+function equalHouseCusps(ascendantLongitude: number): HouseCusp[] {
+  return cuspsFromLongitudes(Array.from({ length: 12 }, (_, index) => ascendantLongitude + index * 30));
+}
+
+function wholeSignCusps(ascendantLongitude: number): HouseCusp[] {
+  const firstHouseStart = Math.floor(norm(ascendantLongitude) / 30) * 30;
+  return cuspsFromLongitudes(Array.from({ length: 12 }, (_, index) => firstHouseStart + index * 30));
+}
+
+function houseFor(longitude: number, houses: HouseCusp[]) {
+  const firstCusp = houses[0]?.longitude ?? 0;
+  const planetOffset = norm(longitude - firstCusp);
+
+  for (let i = 0; i < houses.length; i++) {
+    const start = norm(houses[i].longitude - firstCusp);
+    const end = i === houses.length - 1 ? 360 : norm(houses[i + 1].longitude - firstCusp);
+    if (planetOffset >= start && planetOffset < end) return i + 1;
+  }
+
+  return 12;
+}
+
+function houseSystemForInput(input: BirthChartInput) {
+  const tobKnown = input.tobKnown !== false;
+  return input.houseSystem ?? (tobKnown ? 'placidus' : 'whole_sign');
+}
+
+function calculateHouses(
+  swe: SwissEph,
+  julianDay: number,
+  input: BirthChartInput,
+): { houses: HouseCusp[]; ascendant: HouseCusp; midheaven: HouseCusp; houseSystem: NonNullable<BirthChartInput['houseSystem']> } {
+  const requestedSystem = houseSystemForInput(input);
+  const hsys = HOUSE_SYSTEM_CODES[requestedSystem];
+  const result = swe.houses(julianDay, input.latitude, input.longitude, hsys) as unknown as SwissHouseResult;
+  const ascmc = Array.from(result.ascmc ?? []);
+  const ascendantLongitude = norm(Number(ascmc[0]));
+  const midheavenLongitude = norm(Number(ascmc[1]));
+
+  let houses = cuspsFromLongitudes(Array.from(result.cusps ?? []).slice(1, 13));
+  if (houses.length !== 12 || houses.some((house) => !Number.isFinite(house.longitude))) {
+    houses = requestedSystem === 'whole_sign'
+      ? wholeSignCusps(ascendantLongitude)
+      : equalHouseCusps(ascendantLongitude);
+  }
+
+  if (requestedSystem === 'whole_sign') {
+    houses = wholeSignCusps(ascendantLongitude);
+  }
+
+  return {
+    houses,
+    ascendant: {
+      house: 1,
+      longitude: Number(ascendantLongitude.toFixed(4)),
+      ...signFor(ascendantLongitude),
+    },
+    midheaven: {
+      house: 10,
+      longitude: Number(midheavenLongitude.toFixed(4)),
+      ...signFor(midheavenLongitude),
+    },
+    houseSystem: requestedSystem,
+  };
 }
 
 function calculateAspects(planets: Record<PlanetKey, PlanetPlacement>): ChartAspect[] {
@@ -195,10 +271,7 @@ export async function computeNatalChart(input: BirthChartInput): Promise<NatalCh
   const { year, month, day, hourDecimal } = parseDateTime(input);
   const julianDay = swe.julday(year, month, day, hourDecimal);
   const flags = swe.SEFLG_SWIEPH | swe.SEFLG_SPEED;
-
-  const sun = swe.calc_ut(julianDay, swe.SE_SUN, flags);
-  const ascendantLongitude = norm(Number(sun[0]) + 90 + input.longitude / 2);
-  const houses = equalHouseCusps(ascendantLongitude);
+  const houseData = calculateHouses(swe, julianDay, input);
 
   const planets = {} as Record<PlanetKey, PlanetPlacement>;
   for (const planet of PLANETS) {
@@ -214,25 +287,21 @@ export async function computeNatalChart(input: BirthChartInput): Promise<NatalCh
       distance: Number(Number(pos[2] ?? 0).toFixed(6)),
       speed: Number(Number(pos[3] ?? 0).toFixed(6)),
       ...signFor(longitude),
-      house: houseFor(longitude, ascendantLongitude),
+      house: houseFor(longitude, houseData.houses),
       retrograde: Number(pos[3] ?? 0) < 0,
     };
   }
 
-  const midheavenLongitude = norm(ascendantLongitude + 270);
   return {
     engine: 'swisseph-wasm',
     version: swe.version(),
-    input: { ...input, houseSystem: 'equal' },
+    input: { ...input, houseSystem: houseData.houseSystem },
+    house_accuracy: input.tobKnown === false ? 'approx' : 'exact',
     julian_day_ut: Number(julianDay.toFixed(6)),
     planets,
-    houses,
-    ascendant: houses[0],
-    midheaven: {
-      house: 10,
-      longitude: Number(midheavenLongitude.toFixed(4)),
-      ...signFor(midheavenLongitude),
-    },
+    houses: houseData.houses,
+    ascendant: houseData.ascendant,
+    midheaven: houseData.midheaven,
     aspects: calculateAspects(planets),
   };
 }

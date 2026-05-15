@@ -19,7 +19,7 @@ import { Plus, Info, ChevronRight, MapPin, Sparkles } from 'lucide-react-native'
 import { birthChartsApi } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { colors, font, radius, spacing } from '@/theme/tokens';
-import type { BirthChart, NatalChart, PlanetKey, PlanetPlacement } from '@/types';
+import type { BirthChart, ChartAspect, NatalChart, PlanetKey, PlanetPlacement } from '@/types';
 
 const { width } = Dimensions.get('window');
 
@@ -58,9 +58,21 @@ function formatDegree(p: PlanetPlacement) {
   return `${degree}°${String(minutes).padStart(2, '0')}`;
 }
 
+function aspectVisual(type: ChartAspect['type']) {
+  const isHarmonic = type === 'trine' || type === 'sextile';
+  const isHarsh = type === 'square' || type === 'opposition';
+  const isMajor = type === 'conjunction' || isHarsh || type === 'trine';
+  return {
+    stroke: isHarmonic ? colors.gold : isHarsh ? colors.danger : colors.goldLight,
+    strokeOpacity: isMajor ? 0.65 : 0.35,
+    strokeWidth: isMajor ? 1.5 : 0.9,
+  };
+}
+
 function ChartWheel({ chart }: { chart: NatalChart }) {
   const planets = PLANET_ORDER.map((key) => chart.planets[key]).filter(Boolean);
-  const aspectLines = chart.aspects.slice(0, 15);
+  const aspectLines = chart.aspects.slice(0, 20);
+  const houseCusps = chart.houses?.length === 12 ? chart.houses : [];
 
   return (
     <View style={styles.wheelWrap}>
@@ -79,13 +91,64 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
           const label = point(longitude + 15, 117);
           return (
             <G key={`sign-${i}`}>
-              <Line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={colors.lineSoft} strokeWidth={1} />
+              <Line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={colors.line} strokeWidth={0.8} strokeOpacity={0.35} />
               <SvgText x={label.x} y={label.y + 6} fill={colors.gold} fontSize={14} textAnchor="middle" fontWeight="bold">
                 {SIGN_SYMBOLS[i]}
               </SvgText>
             </G>
           );
         })}
+
+        {/* House cusps (from chart data — T32-1 backend) */}
+        {houseCusps.map((cusp) => {
+          const a = point(cusp.longitude, 72);
+          const b = point(cusp.longitude, 128);
+          return (
+            <Line
+              key={`cusp-${cusp.house}`}
+              x1={a.x}
+              y1={a.y}
+              x2={b.x}
+              y2={b.y}
+              stroke={colors.goldDim}
+              strokeOpacity={0.55}
+              strokeWidth={1.2}
+            />
+          );
+        })}
+
+        {/* ASC / MC axes */}
+        {chart.ascendant && (() => {
+          const a = point(chart.ascendant.longitude, 66);
+          const b = point(chart.ascendant.longitude, 132);
+          return (
+            <Line
+              x1={a.x}
+              y1={a.y}
+              x2={b.x}
+              y2={b.y}
+              stroke={colors.gold}
+              strokeOpacity={0.85}
+              strokeWidth={2}
+            />
+          );
+        })()}
+        {chart.midheaven && (() => {
+          const a = point(chart.midheaven.longitude, 66);
+          const b = point(chart.midheaven.longitude, 132);
+          return (
+            <Line
+              x1={a.x}
+              y1={a.y}
+              x2={b.x}
+              y2={b.y}
+              stroke={colors.goldLight}
+              strokeOpacity={0.7}
+              strokeWidth={1.6}
+              strokeDasharray="4,3"
+            />
+          );
+        })()}
 
         {/* Aspect connections */}
         {aspectLines.map((aspect, i) => {
@@ -94,14 +157,14 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
           if (!a || !b) return null;
           const p1 = point(a.longitude, 68);
           const p2 = point(b.longitude, 68);
-          const isMajor = ['conjunction', 'opposition', 'trine', 'square'].includes(aspect.type);
+          const visual = aspectVisual(aspect.type);
           return (
             <Line
               key={i}
               x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
-              stroke={isMajor ? colors.gold : colors.textMuted}
-              strokeOpacity={isMajor ? 0.4 : 0.1}
-              strokeWidth={1}
+              stroke={visual.stroke}
+              strokeOpacity={visual.strokeOpacity}
+              strokeWidth={visual.strokeWidth}
             />
           );
         })}

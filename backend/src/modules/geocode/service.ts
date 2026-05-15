@@ -1,10 +1,12 @@
 import { env } from '@/core/env';
+import tzLookup from 'tz-lookup';
 
 export interface GeocodeResult {
   q: string;
   lat: number;
   lng: number;
   label: string;
+  tz_iana: string;
   source: 'cache' | 'nominatim';
 }
 
@@ -18,6 +20,15 @@ interface NominatimResult {
 function normalizeCoordinate(value: unknown) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+export function resolveTimezone(lat: number, lng: number) {
+  try {
+    const timezone = tzLookup(lat, lng);
+    return timezone || 'Europe/Istanbul';
+  } catch {
+    return 'Europe/Istanbul';
+  }
 }
 
 export async function geocodeWithNominatim(q: string): Promise<Omit<GeocodeResult, 'q' | 'source'> | null> {
@@ -50,5 +61,6 @@ export async function geocodeWithNominatim(q: string): Promise<Omit<GeocodeResul
     lat,
     lng,
     label: String(first.display_name || first.name || q).slice(0, 500),
+    tz_iana: resolveTimezone(lat, lng),
   };
 }

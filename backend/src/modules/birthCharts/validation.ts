@@ -18,7 +18,7 @@ export const createBirthChartSchema = z.object({
   // Tercih edilen: IANA timezone string. DST-safe.
   tz_iana: z.string().trim().min(1).max(64).optional(),
   // Legacy fallback: sabit offset (DST yok). tz_iana varsa görmezden gelinir.
-  tz_offset: z.coerce.number().int().min(-840).max(840).optional().default(0),
+  tz_offset: z.coerce.number().int().min(-840).max(840).optional(),
 }).refine(
   (d) => !d.tob_known || (typeof d.tob === 'string' && d.tob.length > 0),
   { message: 'tob_required_when_tob_known', path: ['tob'] },

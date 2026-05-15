@@ -67,7 +67,7 @@ export type BirthChartInput = {
   tzIana?: string;
   /** Legacy fallback: sabit dakika offset (DST yok). tzIana varsa görmezden gelinir. */
   timezoneOffsetMinutes?: number;
-  /** House system seçimi (FAZ 8.5'te placidus/koch eklenebilir). Default: equal */
+  /** House system seçimi. Default: placidus; saat bilinmiyorsa whole_sign fallback kullanılır. */
   houseSystem?: 'equal' | 'placidus' | 'koch' | 'whole_sign' | 'campanus' | 'porphyry';
 };
 
@@ -75,6 +75,7 @@ export type NatalChart = {
   engine: 'swisseph-wasm';
   version: string;
   input: BirthChartInput;
+  house_accuracy: 'exact' | 'approx';
   julian_day_ut: number;
   planets: Record<PlanetKey, PlanetPlacement>;
   houses: HouseCusp[];

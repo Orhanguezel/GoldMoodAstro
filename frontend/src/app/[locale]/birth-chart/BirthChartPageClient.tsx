@@ -40,6 +40,17 @@ function formatDegree(p: PlanetPlacement) {
   return `${degree}°${String(minutes).padStart(2, '0')}`;
 }
 
+function aspectVisual(type: string) {
+  const isHarmonic = type === 'trine' || type === 'sextile';
+  const isHarsh = type === 'square' || type === 'opposition';
+  const isMajor = type === 'conjunction' || isHarsh || type === 'trine';
+  return {
+    stroke: isHarmonic ? 'var(--gm-gold)' : isHarsh ? 'var(--gm-error)' : 'var(--gm-gold-light)',
+    strokeOpacity: isMajor ? '0.5' : '0.3',
+    strokeWidth: isMajor ? '1.2' : '0.6',
+  };
+}
+
 function ChartWheel({ chart }: { chart: NatalChart }) {
   const planets = useMemo(() => PLANET_ORDER.map((key) => chart.planets[key]).filter(Boolean), [chart]);
 
@@ -56,6 +67,7 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
         <circle cx="180" cy="180" r="132" fill="none" stroke="var(--gm-border-soft)" strokeWidth="0.5" />
         <circle cx="180" cy="180" r="84" fill="none" stroke="var(--gm-border-soft)" strokeWidth="0.5" />
 
+        {/* Sign sectors and symbols */}
         {Array.from({ length: 12 }).map((_, i) => {
           const longitude = i * 30;
           const a = point(longitude, 84);
@@ -71,33 +83,78 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
           );
         })}
 
-        {chart.aspects.slice(0, 25).map((aspect, i) => {
-          const a = chart.planets[aspect.planet_a];
-          const b = chart.planets[aspect.planet_b];
-          if (!a || !b) return null;
-          const p1 = point(a.longitude, 76);
-          const p2 = point(b.longitude, 76);
-          const stroke = aspect.type === 'trine' || aspect.type === 'sextile' ? 'var(--gm-gold)' : 'var(--gm-text-dim)';
+        {/* House cusps */}
+        {chart.houses?.map((cusp) => {
+          const a = point(cusp.longitude, 84);
+          const b = point(cusp.longitude, 164);
           return (
             <line
-              key={`${aspect.planet_a}-${aspect.planet_b}-${i}`}
-              x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
-              stroke={stroke}
-              strokeOpacity="0.2"
-              strokeWidth="0.5"
+              key={`cusp-${cusp.house}`}
+              x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+              stroke="var(--gm-gold-dim)"
+              strokeOpacity="0.3"
+              strokeWidth="0.8"
             />
           );
         })}
 
+        {/* ASC / MC axes */}
+        {chart.ascendant && (() => {
+          const a = point(chart.ascendant.longitude, 78);
+          const b = point(chart.ascendant.longitude, 170);
+          return (
+            <line
+              x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+              stroke="var(--gm-gold)"
+              strokeOpacity="0.8"
+              strokeWidth="2"
+            />
+          );
+        })()}
+        {chart.midheaven && (() => {
+          const a = point(chart.midheaven.longitude, 78);
+          const b = point(chart.midheaven.longitude, 170);
+          return (
+            <line
+              x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+              stroke="var(--gm-gold-light)"
+              strokeOpacity="0.6"
+              strokeWidth="1.5"
+              strokeDasharray="4,2"
+            />
+          );
+        })()}
+
+        {/* Aspect lines */}
+        {chart.aspects.slice(0, 30).map((aspect, i) => {
+          const a = chart.planets[aspect.planet_a];
+          const b = chart.planets[aspect.planet_b];
+          if (!a || !b) return null;
+          const p1 = point(a.longitude, 80);
+          const p2 = point(b.longitude, 80);
+          const visual = aspectVisual(aspect.type);
+          return (
+            <line
+              key={`${aspect.planet_a}-${aspect.planet_b}-${i}`}
+              x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+              stroke={visual.stroke}
+              strokeOpacity={visual.strokeOpacity}
+              strokeWidth={visual.strokeWidth}
+            />
+          );
+        })}
+
+        {/* Planets symbols */}
         {planets.map((planet, i) => {
-          const p = point(planet.longitude, 110 + (i % 2) * 12);
+          const p = point(planet.longitude, 105 + (i % 2) * 15);
           return (
             <text
               key={planet.key}
               x={p.x} y={p.y + 8}
               textAnchor="middle"
-              className="fill-[var(--gm-text)] text-[24px] font-serif opacity-90"
+              className="fill-[var(--gm-text)] text-[24px] font-serif opacity-90 cursor-help"
             >
+              <title>{planet.name} in {planet.sign_label} ({planet.house}. House)</title>
               {planet.symbol}
             </text>
           );

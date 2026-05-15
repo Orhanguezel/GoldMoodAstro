@@ -310,7 +310,7 @@ export interface BirthChart {
   pob_lat: string;
   pob_lng: string;
   pob_label: string;
-  tz_offset: number;
+  tz_offset?: number;
   chart_data: NatalChart;
   created_at?: string;
   updated_at?: string;
@@ -323,7 +323,9 @@ export interface BirthChartCreateInput {
   pob_lat: number;
   pob_lng: number;
   pob_label: string;
-  tz_offset: number;
+  /** @deprecated Backend resolves timezone from coordinates (T32-2a). Do not send from client. */
+  tz_offset?: number;
+  tob_known?: boolean;
 }
 
 export interface GeocodeResult {

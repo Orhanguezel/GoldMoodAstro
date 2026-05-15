@@ -38,6 +38,7 @@
     "mysql2": "^3.15.3",
     "nodemailer": "^7.0.11",
     "openai": "^6.34.0",
+    "tz-lookup": "^6.1.25",
     "zod": "^3.25.76"
   },
   "devDependencies": {
