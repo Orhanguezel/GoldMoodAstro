@@ -12,7 +12,7 @@ INSERT INTO footer_sections (id, slug, is_active, display_order) VALUES
   ('fs-fal',       'fal',       1, 20),
   ('fs-company',   'company',   1, 30),
   ('fs-legal',     'legal',     1, 40)
-ON DUPLICATE KEY UPDATE display_order = VALUES(display_order);
+ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 INSERT INTO footer_sections_i18n (id, footer_section_id, locale, title) VALUES
   ('fs-i-astro-tr', 'fs-astrology', @loc_tr, 'Astroloji'),
@@ -40,7 +40,7 @@ INSERT INTO menu_items (id, location, type, url, is_active, display_order) VALUE
   ('mi-h-consultants',  'header', 'custom', '/consultants',               1, 60),
   ('mi-h-blog',         'header', 'custom', '/blog',                      1, 70),
   ('mi-h-about',        'header', 'custom', '/about',                     1, 80)
-ON DUPLICATE KEY UPDATE display_order = VALUES(display_order);
+ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Astrology dropdown children
 INSERT INTO menu_items (id, location, parent_id, type, url, is_active, display_order) VALUES
@@ -49,14 +49,14 @@ INSERT INTO menu_items (id, location, parent_id, type, url, is_active, display_o
   ('mi-h-astro-yildiz',   'header', 'mi-h-astrology', 'custom', '/yildizname',                   1, 30),
   ('mi-h-astro-yukselen', 'header', 'mi-h-astrology', 'custom', '/yukselen-burc-hesaplayici',    1, 50),
   ('mi-h-astro-daily',    'header', 'mi-h-astrology', 'custom', '/daily',                        1, 60)
-ON DUPLICATE KEY UPDATE display_order = VALUES(display_order);
+ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Fal & Tarot dropdown children
 INSERT INTO menu_items (id, location, parent_id, type, url, is_active, display_order) VALUES
   ('mi-h-fal-tarot',  'header', 'mi-h-fal', 'custom', '/tarot',         1, 10),
   ('mi-h-fal-coffee', 'header', 'mi-h-fal', 'custom', '/kahve-fali',    1, 20),
   ('mi-h-fal-dream',  'header', 'mi-h-fal', 'custom', '/ruya-tabiri',   1, 30)
-ON DUPLICATE KEY UPDATE display_order = VALUES(display_order);
+ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Header menu i18n
 INSERT INTO menu_items_i18n (id, menu_item_id, locale, title) VALUES
@@ -134,8 +134,9 @@ INSERT INTO menu_items (id, location, section_id, type, url, is_active, display_
   ('mi-f-astro-birth',    'footer', 'fs-astrology', 'custom', '/birth-chart',  1, 10),
   ('mi-f-astro-sinastri', 'footer', 'fs-astrology', 'custom', '/sinastri',     1, 20),
   ('mi-f-astro-yildiz',   'footer', 'fs-astrology', 'custom', '/yildizname',   1, 30),
+  ('mi-f-astro-big',      'footer', 'fs-astrology', 'custom', '/buyuk-uclu',   1, 40),
   ('mi-f-astro-burclar',  'footer', 'fs-astrology', 'custom', '/burclar',      1, 50)
-ON DUPLICATE KEY UPDATE display_order = VALUES(display_order);
+ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Fal column
 INSERT INTO menu_items (id, location, section_id, type, url, is_active, display_order) VALUES
@@ -143,7 +144,7 @@ INSERT INTO menu_items (id, location, section_id, type, url, is_active, display_
   ('mi-f-fal-coffee', 'footer', 'fs-fal', 'custom', '/kahve-fali',  1, 20),
   ('mi-f-fal-dream',  'footer', 'fs-fal', 'custom', '/ruya-tabiri', 1, 30),
   ('mi-f-fal-num',    'footer', 'fs-fal', 'custom', '/numeroloji',  1, 40)
-ON DUPLICATE KEY UPDATE display_order = VALUES(display_order);
+ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Şirket column
 INSERT INTO menu_items (id, location, section_id, type, url, is_active, display_order) VALUES
@@ -151,7 +152,7 @@ INSERT INTO menu_items (id, location, section_id, type, url, is_active, display_
   ('mi-f-comp-cons',  'footer', 'fs-company', 'custom', '/consultants', 1, 20),
   ('mi-f-comp-blog',  'footer', 'fs-company', 'custom', '/blog',        1, 30),
   ('mi-f-comp-cont',  'footer', 'fs-company', 'custom', '/contact',     1, 40)
-ON DUPLICATE KEY UPDATE display_order = VALUES(display_order);
+ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Yasal column
 INSERT INTO menu_items (id, location, section_id, type, url, is_active, display_order) VALUES
@@ -159,7 +160,7 @@ INSERT INTO menu_items (id, location, section_id, type, url, is_active, display_
   ('mi-f-leg-privacy', 'footer', 'fs-legal', 'custom', '/gizlilik',            1, 20),
   ('mi-f-leg-terms',   'footer', 'fs-legal', 'custom', '/kullanim-sartlari',   1, 30),
   ('mi-f-leg-cookie',  'footer', 'fs-legal', 'custom', '/cerez-politikasi',    1, 40)
-ON DUPLICATE KEY UPDATE display_order = VALUES(display_order);
+ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Footer menu i18n
 INSERT INTO menu_items_i18n (id, menu_item_id, locale, title) VALUES
@@ -176,6 +177,9 @@ INSERT INTO menu_items_i18n (id, menu_item_id, locale, title) VALUES
   ('mi-fi-fburc-tr',  'mi-f-astro-burclar', @loc_tr, 'Burçlar'),
   ('mi-fi-fburc-en',  'mi-f-astro-burclar', @loc_en, 'Zodiac Signs'),
   ('mi-fi-fburc-de',  'mi-f-astro-burclar', @loc_de, 'Sternzeichen'),
+  ('mi-fi-fbig-tr',   'mi-f-astro-big', @loc_tr, 'Büyük Üçlü'),
+  ('mi-fi-fbig-en',   'mi-f-astro-big', @loc_en, 'Big Three'),
+  ('mi-fi-fbig-de',   'mi-f-astro-big', @loc_de, 'Big Three'),
 
   -- Fal column
   ('mi-fi-ftarot-tr', 'mi-f-fal-tarot', @loc_tr, 'Tarot'),
@@ -219,3 +223,10 @@ INSERT INTO menu_items_i18n (id, menu_item_id, locale, title) VALUES
   ('mi-fi-lcok-en',  'mi-f-leg-cookie', @loc_en, 'Cookie Policy'),
   ('mi-fi-lcok-de',  'mi-f-leg-cookie', @loc_de, 'Cookie-Richtlinie')
 ON DUPLICATE KEY UPDATE title = VALUES(title);
+
+-- ---- Orphan temizlik: eski "Big Three" footer kaydını büyük-üçlü'ye düzelt ----
+-- (db:seed:nodrop satır silmez; eski Nisan seed'inden kalan stale satır/i18n
+--  farklı PK taşıyor → menu_item_id'ye göre deterministik düzeltme.)
+UPDATE menu_items SET url = '/buyuk-uclu', is_active = 1 WHERE id = 'mi-f-astro-big';
+UPDATE menu_items_i18n SET title = 'Büyük Üçlü' WHERE menu_item_id = 'mi-f-astro-big' AND locale = @loc_tr;
+UPDATE menu_items_i18n SET title = 'Big Three'  WHERE menu_item_id = 'mi-f-astro-big' AND locale IN (@loc_en, @loc_de);
