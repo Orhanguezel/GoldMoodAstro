@@ -78,4 +78,4 @@ INSERT INTO storage_assets (id, user_id, bucket, name, path, mime, size, metadat
 (UUID(), NULL, 'local', 'tarot/two-of-swords.png', '/uploads/tarot/two-of-swords.png', 'image/png', 175103, JSON_OBJECT('purpose','tarot_card','slug','two-of-swords')),
 (UUID(), NULL, 'local', 'tarot/two-of-wands.png', '/uploads/tarot/two-of-wands.png', 'image/png', 171282, JSON_OBJECT('purpose','tarot_card','slug','two-of-wands')),
 (UUID(), NULL, 'local', 'tarot/wheel-of-fortune.png', '/uploads/tarot/wheel-of-fortune.png', 'image/png', 419681, JSON_OBJECT('purpose','tarot_card','slug','wheel-of-fortune'))
-ON DUPLICATE KEY UPDATE path = VALUES(path), public_url = VALUES(public_url), size_bytes = VALUES(size_bytes), metadata = VALUES(metadata);
+ON DUPLICATE KEY UPDATE name = VALUES(name), path = VALUES(path), mime = VALUES(mime), size = VALUES(size), metadata = VALUES(metadata);
