@@ -18,6 +18,7 @@ const toList = (v: string | undefined) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
+const PORT = toInt(process.env.PORT, 8083);
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const CORS_LIST = toList(process.env.CORS_ORIGIN);
 const CORS_ORIGIN = CORS_LIST.length ? CORS_LIST : [FRONTEND_URL];
@@ -30,7 +31,7 @@ const STORAGE_DRIVER = (RAW_STORAGE_DRIVER === 'local' ? 'local' : 'cloudinary')
 
 export const env = {
   NODE_ENV: process.env.NODE_ENV ?? 'development',
-  PORT: toInt(process.env.PORT, 8083),
+  PORT,
   APP_NAME: process.env.APP_NAME || 'Platform',
 
   // Storage driver (fallback). Asıl driver site_settings.storage_driver ile gelebilir.
@@ -100,7 +101,7 @@ export const env = {
   FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL ?? '',
   FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY ?? '',
 
-  PUBLIC_URL: process.env.PUBLIC_URL || 'http://localhost:8094',
+  PUBLIC_URL: process.env.PUBLIC_URL || `http://localhost:${PORT}`,
   FRONTEND_URL: FRONTEND_URL,
 
   PUBLIC_API_BASE: process.env.PUBLIC_API_BASE || '',
@@ -119,3 +120,20 @@ export const env = {
 } as const;
 
 export type AppEnv = typeof env;
+
+// =============================================================
+// HC-A9 — Üretimde güvensiz/eksik kritik secret fail-fast.
+// Dev/test etkilenmez; production'da varsayılan ('change-me' vb.) ile
+// sessizce çalışmak yerine erken ve gürültülü hata ver.
+// =============================================================
+if (env.NODE_ENV === 'production') {
+  const insecure: string[] = [];
+  if (!process.env.JWT_SECRET || env.JWT_SECRET === 'change-me') insecure.push('JWT_SECRET');
+  if (!process.env.COOKIE_SECRET || env.COOKIE_SECRET === 'cookie-secret') insecure.push('COOKIE_SECRET');
+  if (!process.env.DB_PASSWORD && env.DB.password === 'app') insecure.push('DB_PASSWORD');
+  if (insecure.length) {
+    throw new Error(
+      `[env] Production'da güvensiz/eksik secret: ${insecure.join(', ')} — VPS .env değerlerini ayarlayın.`,
+    );
+  }
+}
