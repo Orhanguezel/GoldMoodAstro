@@ -105,26 +105,30 @@ id: char("id", { length: 36 }).primaryKey().notNull()
 > T41-1 bitmeden T41-2/T41-3'e BAŞKA EKLEME yapma.** T41-1 gelince mobile
 > `usePremium` fallback'i backend'e DELEGE et (politikayı client'tan kaldır).
 
-| # | Görev | Kontrat (uy) | Sahip | Engel/sıra |
-|---|-------|--------------|-------|-----------|
-| 1 | **T41-1** `getSubscriptionSummary(userId)` ortak helper + `auth/me` abonelik özeti (additive, non-breaking) | [`auth-me-subscription-contract.md`](doc/contracts/auth-me-subscription-contract.md) | Codex | YOK — ilk bu. T41-2 buna bağlı |
-| 2 | **T41-2** banner `listActive` opsiyonel auth + segment filtre | [`banner-target-segment-filter-contract.md`](doc/contracts/banner-target-segment-filter-contract.md) | Codex | T41-1 helper'ı ister |
-| 3 | **T38-0** hardcoded renk guard lint + CI baseline (regresyon kalkanı) | [`theme-consistency-architecture.md`](doc/contracts/theme-consistency-architecture.md) §2 | Codex | YOK — erken yap, sonraki tema işini korur |
-| 4 | **T40-0** ortak `image-capture/` modülü (`prepareImageForUpload`+`PhotoCaptureInput`) | [`image-capture-shared-module-contract.md`](doc/contracts/image-capture-shared-module-contract.md) | Codex | YOK — T37-5/T40-1 buna bağlı |
-| 5 | **T38-3** globals.css fallback'leri = `defaults.ts` light değerleri + seed↔defaults drift CI + splash/loader token | theme-arch §3 | Codex | T38-0 sonrası |
-| 6 | **T38-1** `<PageContainer>` bileşeni + globals genişlik CSS değişkenleri | theme-arch §1 | Codex (bileşen) → Antigravity (migrasyon) | T38-0 sonrası |
-| 7 | **T35-2** `shared-config/relax-music/presets.json` + çözümleme + drift CI | [`relax-music-engine-contract.md`](doc/contracts/relax-music-engine-contract.md) §2 | Codex | YOK |
-| 8 | **T38-5** 8 `opengraph-image.tsx` tema-aware | theme-arch §4(4) | Codex | T38-3 sonrası |
-| 9 | **T38-4** `doc/raporlar/tema-canli-local-farki.md` runbook (§4 kök nedenlerden) | theme-arch §4 | Codex + Ops | — |
-| 10 | **T39-2** booking `media_type` backend teyit | — (FAZ 39) | Codex | — |
-| 11 | **T35-1 (kalan)** 8 stem topla + `licenses.md` manifest + CI guard | relax §1 | Codex/küratör | — |
+### ✅ TAMAMLANDI & COMMIT'LENDİ (Claude doğrulama 2026-05-16, 6 commit)
+T41-1, T41-2, T41-3(web gating), T41-4(upsell seed), T40-0(EXIF+targetMaxKB+
+PhotoCaptureInput), T37-5(AvatarUpload bağlı), T38-0(guard lint+CI), T38-1
+(PageContainer bileşeni — migrasyon %62), T38-3(fallback hizası), T38-5(ogTheme),
+T35-2(presets.json), FAZ39 web video UI, FAZ42 mobil ekran iskeletleri.
+Doğrulama: backend+frontend typecheck ✅, FAZ41 test 4/4 ✅, theme guard 137/137 ✅.
+Bunlara **DOKUNMA** — yalnız aşağıdaki kalan/revize işleri yap.
 
-**Antigravity kuyruğu** (Codex ilgili backend'i bitirince): T41-3 pro=reklamsız
-gating (web+mobile) → T41-4 upsell+seed → T41-5 mobil banner yerleşim ·
-T39-1 web video UI → T39-2 booking seçimi → T39-4 E2E · T38-1 sayfa wrapper
-migrasyon → T38-7 görsel/canlı-local QA · T37-1/2/3/5 profil yönlendirme+kamera ·
-T40-1/2/3 kahve foto hardening. Hepsi ilgili kontrata + tema token (FAZ 38) +
-FAZ 33 hardcode ilkesine uyar.
+### 🔴 KALAN / REVİZE KUYRUK (öncelik sıralı)
+
+| # | Görev | Kontrat (uy) | Sahip | Not |
+|---|-------|--------------|-------|-----|
+| 1 | **T39-5 🔄 REVİZE** — `consultant_services.media_type` `ENUM('audio','video')` (**'both' KALDIR**); mevcut 'both' satır migrasyonu; aynı danışman sesli+görüntülü = **iki ayrı hizmet** (slug media_type'ı kapsar); booking medya tipi seçilen hizmetten (ayrı toggle kaldır); `supports_video` türev | `doc/mvp-checklist.md` FAZ39 T39-5 | Codex | Codex önceki tur 'both' uyguladı — bu revize öncelikli |
+| 2 | **T39-5 UI** — ServicesPanel **radio ◯ Sesli ◯ Görüntülü** + hizmet-bazlı süre/fiyat; ProfilePanel tek video checkbox/fiyat KALDIR; detay+booking hizmet listesi rozetli | FAZ39 T39-5 | Antigravity | #1 sonrası |
+| 3 | **T42-4 §v2** — mobil `i18n.ts` inline kaldır → backend `siteSettings ui_*` fetch + bundle fallback snapshot; eksik anahtar ui_* seed'e; ölü `frontend/src/i18n/request.ts`+`messages/` cleanup (önce next.config teyit); CI drift | [`i18n-single-source-contract.md`](doc/contracts/i18n-single-source-contract.md) **§v2-PLAN** | Codex | v1 değil — **§v2** (frontend zaten backend-driven) |
+| 4 | **T38-1 migrasyon** — kalan ~26 sayfa `<PageContainer>`'a (42/68 yapıldı) | theme-arch §1 | Antigravity | mekanik |
+| 5 | **T38-4** `doc/raporlar/tema-canli-local-farki.md` runbook | theme-arch §4 | Codex + Ops | — |
+| 6 | **T35-1 (kalan)** 8 stem topla + `licenses.md` + assets | relax §1 | Codex/küratör | — |
+| 7 | **FAZ42** T42-2 customPages seed (legal/about/faq) + T42-0 backend parite teyit + T42-5 admin yönetim teyit | FAZ42 | Codex | mobil ekran iskeleti var, içerik/bağlama eksik |
+| 8 | **T39-4** E2E video + web↔mobil çapraz test | FAZ39 T39-4 | Antigravity | — |
+| 9 | **FAZ41 mobil** `usePremium` fallback'ini T41-1 backend'e DELEGE (politikayı client'tan kaldır) | faz41 | Codex | T41-1 bitti — şimdi yapılabilir |
+
+**Kuyruk sırası kuralı:** #1→#2 (T39-5 zincir) önce; #3 (i18n v2) büyük, kullanıcı
+onayı sonrası; gerisi paralel olabilir.
 
 **Kural:** Her görev bittiğinde `doc/mvp-checklist.md`'deki ilgili kutuyu `[x]`
 yap + kısa not. Kontratta "kabul kriterleri" varsa hepsi geçmeli. Mimari soru
