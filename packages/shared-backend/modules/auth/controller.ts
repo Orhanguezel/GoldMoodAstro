@@ -8,6 +8,7 @@ import { getPrimaryRole, repoListUserRoles } from '../userRoles';
 import { sendWelcomeMail, sendPasswordChangedMail } from '../mail';
 import { telegramNotify } from '../telegram';
 import { getGoogleSettings } from '../siteSettings/service';
+import { getSubscriptionSummary } from '../subscriptions';
 import {
   socialLoginBody,
   signupBody,
@@ -574,6 +575,7 @@ export async function me(req: FastifyRequest, reply: FastifyReply) {
     if (!u) return reply.status(401).send({ error: { message: 'invalid_token' } });
     const role = await getPrimaryRole(p.sub);
     const roles = await getUserRoles(p.sub);
+    const subscription = await getSubscriptionSummary(p.sub);
     return reply.send({
       user: {
         id: u.id,
@@ -586,6 +588,8 @@ export async function me(req: FastifyRequest, reply: FastifyReply) {
         ecosystem_id: u.ecosystem_id ?? null,
         role,
         roles,
+        is_premium: Boolean(subscription),
+        subscription,
       },
     });
   } catch {

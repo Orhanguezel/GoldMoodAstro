@@ -44,32 +44,43 @@ CREATE TABLE IF NOT EXISTS banners (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ────────────────────────────────────────────────────────────────────────────
--- Seed: 1 örnek banner (welcome / hero) — admin sonradan editler veya devre dışı
+-- Seed: house-promo banner'ları — admin sonradan editler veya devre dışı
 -- ────────────────────────────────────────────────────────────────────────────
-INSERT INTO banners (id, code, title_tr, title_en, subtitle_tr, subtitle_en, image_url, link_url, cta_label_tr, cta_label_en, placement, locale, target_segment, priority, is_active) VALUES
+INSERT INTO banners (id, code, title_tr, title_en, subtitle_tr, subtitle_en, image_url, link_url, cta_label_tr, cta_label_en, placement, locale, target_segment, campaign_id, priority, is_active) VALUES
 -- Hero
 ('b0000000-0000-4000-8000-000000000001', 'launch_welcome',
  'GoldMoodAstro''ya Hoş Geldiniz', 'Welcome to GoldMoodAstro',
  'Yıldızlarla tanışan modern astroloji.', 'Modern astrology meets the stars.',
  '/banners/launch.svg', '/tr/consultants', 'Danışmanları Keşfet', 'Discover Consultants',
- 'home_hero', '*', 'all', 100, 1),
+ 'home_hero', '*', 'all', NULL, 100, 1),
 -- Slim (içerik arası reklamlar)
 ('b0000000-0000-4000-8000-000000000010', 'mid_birth_chart',
  'Doğum Haritan Hazır',  'Your Birth Chart Is Ready',
  'Saniyeler içinde detaylı analiz.',  'Detailed analysis in seconds.',
  '/banners/slim_birth_chart.svg', '/tr/birth-chart', 'Haritamı Oluştur', 'Create Chart',
- 'home_mid_1', '*', 'all', 50, 1),
+ 'home_mid_1', '*', 'all', NULL, 50, 1),
 ('b0000000-0000-4000-8000-000000000011', 'mid_premium',
- 'Premium ile Sınırsız',  'Unlimited with Premium',
- 'Aylık ₺149 — istediğin zaman iptal.', 'TRY 149/mo — cancel anytime.',
- '/banners/slim_premium.svg', '/tr/pricing', 'Önerilen Plan', 'Recommended Plan',
- 'home_mid_2', '*', 'all', 50, 1),
-('b0000000-0000-4000-8000-000000000012', 'mid_first_session',
+ 'Reklamsız Premium Deneyim',  'Ad-Free Premium Experience',
+ 'Premium içerikler, öncelikli özellikler ve reklamsız kullanım.', 'Premium content, priority features and an ad-free experience.',
+ '/banners/slim_premium.svg', '/tr/pricing', 'Üye Ol', 'Upgrade',
+ 'home_mid_2', '*', 'free', NULL, 80, 1),
+('b0000000-0000-4000-8000-000000000012', 'mid_welcome20',
+ 'WELCOME20 ile İlk Ay Avantajı',  'Start with WELCOME20',
+ 'Premium üyeliğe başlarken %20 indirim kodunu kullan.',  'Use 20% off when starting Premium.',
+ '/banners/slim_first_session.svg', '/tr/pricing?coupon=WELCOME20', 'Kodu Kullan', 'Use Code',
+ 'home_mid_3', '*', 'free', 'c0000000-0000-4000-8000-000000000001', 70, 1),
+('b0000000-0000-4000-8000-000000000013', 'mid_first_session',
  'İlk Seansa Özel İndirim',  'First Session Discount',
  'Yeni üyelere %20 — danışmanını seç.',  '20% off for new members.',
  '/banners/slim_first_session.svg', '/tr/consultants', 'Hemen Başla', 'Get Started',
- 'home_mid_3', '*', 'new_user', 50, 1)
+ 'consultant_list', '*', 'free', 'c0000000-0000-4000-8000-000000000001', 60, 1),
+('b0000000-0000-4000-8000-000000000014', 'mobile_ad_free_premium',
+ 'Reklamsız Kullanım', 'Ad-Free Experience',
+ 'Premium üyelikle house-promo bannerlarını kapat.', 'Upgrade to hide house-promo banners.',
+ '/banners/slim_premium.svg', '/tr/pricing', 'Premium''a Geç', 'Go Premium',
+ 'mobile_home', '*', 'free', NULL, 80, 1)
 ON DUPLICATE KEY UPDATE
+  code = VALUES(code),
   title_tr = VALUES(title_tr),
   title_en = VALUES(title_en),
   subtitle_tr = VALUES(subtitle_tr),
@@ -77,4 +88,10 @@ ON DUPLICATE KEY UPDATE
   image_url = VALUES(image_url),
   link_url = VALUES(link_url),
   cta_label_tr = VALUES(cta_label_tr),
-  cta_label_en = VALUES(cta_label_en);
+  cta_label_en = VALUES(cta_label_en),
+  placement = VALUES(placement),
+  locale = VALUES(locale),
+  target_segment = VALUES(target_segment),
+  campaign_id = VALUES(campaign_id),
+  priority = VALUES(priority),
+  is_active = VALUES(is_active);

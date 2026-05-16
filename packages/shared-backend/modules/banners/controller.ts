@@ -6,6 +6,8 @@ import { randomUUID } from "crypto";
 import { db } from "../../db/client";
 import { banners } from "./schema";
 import { and, eq, or, lte, gte, isNull, sql, desc, inArray } from "drizzle-orm";
+import { bearerFrom, getJWTFromReq } from "../auth/helpers";
+import { getSubscriptionSummary } from "../subscriptions";
 
 const PLACEMENTS = [
   "home_hero", "home_sidebar", "home_footer", "consultant_list",
@@ -15,6 +17,25 @@ const PLACEMENTS = [
   "mobile_welcome", "mobile_home", "mobile_call_end", "admin_dashboard",
 ] as const;
 type Placement = (typeof PLACEMENTS)[number];
+type TargetSegment = "all" | "free" | "paid";
+
+export function resolveBannerTargetSegments(subscription: unknown): TargetSegment[] {
+  return ["all", subscription ? "paid" : "free"];
+}
+
+async function resolveBannerSegments(req: Parameters<RouteHandler>[0]): Promise<TargetSegment[]> {
+  const token = bearerFrom(req);
+  if (!token) return resolveBannerTargetSegments(null);
+
+  try {
+    const payload = getJWTFromReq(req).verify(token) as { sub?: string };
+    if (!payload.sub) return resolveBannerTargetSegments(null);
+    const subscription = await getSubscriptionSummary(payload.sub);
+    return resolveBannerTargetSegments(subscription);
+  } catch {
+    return resolveBannerTargetSegments(null);
+  }
+}
 
 /** GET /banners?placement=home_hero&locale=tr — public, aktif + tarih içinde */
 export const listActive: RouteHandler = async (req, reply) => {
@@ -27,6 +48,7 @@ export const listActive: RouteHandler = async (req, reply) => {
   }
 
   const now = new Date();
+  const targetSegments = await resolveBannerSegments(req);
 
   const rows = await db
     .select()
@@ -38,6 +60,7 @@ export const listActive: RouteHandler = async (req, reply) => {
         or(eq(banners.locale, "*"), eq(banners.locale, locale)),
         or(isNull(banners.starts_at), lte(banners.starts_at, now)),
         or(isNull(banners.ends_at), gte(banners.ends_at, now)),
+        inArray(banners.target_segment, targetSegments),
       )
     )
     .orderBy(desc(banners.priority), desc(banners.created_at))
