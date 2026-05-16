@@ -86,7 +86,7 @@ export interface ServicePayload {
   duration_minutes: number;
   price: number;
   currency?: string;
-  media_type?: 'audio' | 'video' | 'both';
+  media_type?: 'audio' | 'video';
   is_free?: number;
   is_active?: number;
   sort_order?: number;
@@ -101,7 +101,7 @@ export interface ConsultantSelfService {
   duration_minutes: number;
   price: string;
   currency: string;
-  media_type: 'audio' | 'video' | 'both';
+  media_type: 'audio' | 'video';
   is_free: number;
   is_active: number;
   sort_order: number;

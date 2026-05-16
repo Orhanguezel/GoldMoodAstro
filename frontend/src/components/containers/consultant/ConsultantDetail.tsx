@@ -17,7 +17,7 @@ import { useGetConsultantOutcomeScoreQuery } from '@/integrations/rtk/hooks';
 import ReviewList from '@/components/common/public/ReviewList';
 import SlotPicker from './SlotPicker';
 import ConsultantMessageModal from './ConsultantMessageModal';
-import { ChevronDown, MessageCircle, Phone, Check } from 'lucide-react';
+import { ChevronDown, MessageCircle, Phone, Check, Mic, Video } from 'lucide-react';
 
 const EXPERTISE_LABELS: Record<string, string> = {
   astrology: 'Astroloji',
@@ -356,9 +356,13 @@ export default function ConsultantDetail({ id, locale }: Props) {
                         {isSelected && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-serif text-base text-(--gm-text) truncate">{svc.name}</span>
-                          {isFree && (
+	                        <div className="flex items-center gap-2 mb-1">
+	                          <span className="font-serif text-base text-(--gm-text) truncate">{svc.name}</span>
+	                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-(--gm-bg-deep) border border-(--gm-border-soft) text-(--gm-text-dim) text-[9px] font-bold uppercase tracking-widest">
+	                            {svc.media_type === 'video' ? <Video className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
+	                            {svc.media_type === 'video' ? 'Görüntülü' : 'Sesli'}
+	                          </span>
+	                          {isFree && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-(--gm-success)/15 text-(--gm-success) text-[9px] font-bold uppercase tracking-widest">
                               Ücretsiz
                             </span>

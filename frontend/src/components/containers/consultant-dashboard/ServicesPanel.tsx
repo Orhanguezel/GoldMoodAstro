@@ -13,15 +13,32 @@ import {
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { extractApiError } from '@/integrations/shared';
 
+type ServiceMediaType = 'audio' | 'video';
+
 interface ServiceForm {
   name: string;
   slug: string;
   description: string;
   duration_minutes: number;
   price: number;
-  media_type: 'audio' | 'video' | 'both';
+  media_type: ServiceMediaType;
   is_free: boolean;
   is_active: boolean;
+}
+
+const MEDIA_SLUG_SUFFIX: Record<ServiceMediaType, string> = {
+  audio: 'sesli',
+  video: 'goruntulu',
+};
+
+/**
+ * Slug'a medya tipini gömer → aynı danışman aynı ad/süre ama farklı medya tipi
+ * ile iki ayrı hizmet ekleyebilir (uniq(consultant_id, slug) çakışmaz).
+ * "20-dk-seans" + video → "20-dk-seans-goruntulu"
+ */
+function mediaSlug(base: string, media: ServiceMediaType): string {
+  const cleaned = base.replace(/-(sesli-goruntulu|sesli|goruntulu)$/i, '');
+  return `${cleaned}-${MEDIA_SLUG_SUFFIX[media]}`;
 }
 
 const EMPTY_FORM: ServiceForm = {
@@ -34,6 +51,44 @@ const EMPTY_FORM: ServiceForm = {
   is_free: false,
   is_active: true,
 };
+
+/** Sesli / Görüntülü tek-seçim radio (T39-5: 'both' yok, hizmet başı tek medya). */
+function MediaTypeRadio({
+  value,
+  onChange,
+}: {
+  value: ServiceMediaType;
+  onChange: (v: ServiceMediaType) => void;
+}) {
+  const opts: Array<{ v: ServiceMediaType; label: string }> = [
+    { v: 'audio', label: 'Sesli Görüşme' },
+    { v: 'video', label: 'Görüntülü Görüşme' },
+  ];
+  return (
+    <div className="flex gap-2">
+      {opts.map((o) => {
+        const active = value === o.v;
+        return (
+          <button
+            key={o.v}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(o.v)}
+            className={`flex-1 h-11 rounded-xl border text-sm font-medium transition-all ${
+              active
+                ? 'border-(--gm-gold) bg-(--gm-gold)/15 text-(--gm-gold)'
+                : 'border-(--gm-border-soft) bg-(--gm-bg-deep) text-(--gm-text-dim) hover:text-(--gm-text)'
+            }`}
+          >
+            <span className="mr-1.5">{active ? '◉' : '◯'}</span>
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function slugify(s: string): string {
   return s.toLowerCase().trim()
@@ -68,7 +123,7 @@ export default function ServicesPanel() {
     try {
       await createSvc({
         name: newForm.name.trim(),
-        slug: newForm.slug.trim() || slugify(newForm.name),
+        slug: mediaSlug(newForm.slug.trim() || slugify(newForm.name), newForm.media_type),
         description: newForm.description.trim() || null,
         duration_minutes: newForm.duration_minutes,
         price: newForm.is_free ? 0 : newForm.price,
@@ -96,11 +151,15 @@ export default function ServicesPanel() {
         description: string | null;
         duration_minutes: number;
         price: number;
-        media_type: 'audio' | 'video' | 'both';
+        slug: string;
+        media_type: ServiceMediaType;
         is_free: number;
         is_active: number;
       }> = {};
       if (patch.name !== undefined) body.name = patch.name;
+      if (patch.slug !== undefined || patch.media_type !== undefined) {
+        body.slug = mediaSlug(patch.slug ?? slugify(patch.name ?? ''), patch.media_type ?? 'audio');
+      }
       if (patch.description !== undefined) body.description = patch.description;
       if (patch.duration_minutes !== undefined) body.duration_minutes = patch.duration_minutes;
       if (patch.price !== undefined) body.price = patch.is_free === true ? 0 : patch.price;
@@ -172,7 +231,7 @@ export default function ServicesPanel() {
               maxLength={100}
               onChange={(e) => {
                 const v = e.target.value;
-                setNewForm({ ...newForm, name: v, slug: newForm.slug || slugify(v) });
+                setNewForm({ ...newForm, name: v, slug: newForm.slug || mediaSlug(slugify(v), newForm.media_type) });
               }}
               placeholder="Hizmet adı (ör. Bireysel Seans)"
               className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.name ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
@@ -210,15 +269,14 @@ export default function ServicesPanel() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Medya Tipi</label>
-              <select
+              <MediaTypeRadio
                 value={newForm.media_type}
-                onChange={(e) => setNewForm({ ...newForm, media_type: e.target.value as any })}
-                className="h-11 w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-4 text-sm text-[var(--gm-text)]"
-              >
-                <option value="audio">Sadece Ses</option>
-                <option value="video">Sadece Görüntü</option>
-                <option value="both">Ses + Görüntü</option>
-              </select>
+                onChange={(media_type) => setNewForm({
+                  ...newForm,
+                  media_type,
+                  slug: mediaSlug(newForm.slug || slugify(newForm.name), media_type),
+                })}
+              />
             </div>
           </div>
           <div className="flex items-center gap-6">
@@ -369,7 +427,7 @@ function ServiceRow({
               </span>
             )}
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--gm-gold)]/10 text-[var(--gm-gold)] text-[9px] font-bold uppercase tracking-widest">
-              {svc.media_type === 'both' ? 'Ses+Görüntü' : svc.media_type === 'video' ? 'Görüntülü' : 'Sesli'}
+              {svc.media_type === 'video' ? 'Görüntülü' : 'Sesli'}
             </span>
           </div>
           <div className="text-[11px] text-[var(--gm-text-dim)] mt-1 flex items-center gap-3">
@@ -478,15 +536,14 @@ function ServiceRow({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Medya Tipi</label>
-              <select
+              <MediaTypeRadio
                 value={form.media_type}
-                onChange={(e) => setForm({ ...form, media_type: e.target.value as any })}
-                className="h-10 w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-3 text-sm text-[var(--gm-text)]"
-              >
-                <option value="audio">Sadece Ses</option>
-                <option value="video">Sadece Görüntü</option>
-                <option value="both">Ses + Görüntü</option>
-              </select>
+                onChange={(media_type) => setForm({
+                  ...form,
+                  media_type,
+                  slug: mediaSlug(form.slug || slugify(form.name), media_type),
+                })}
+              />
             </div>
           </div>
           <div className="flex items-center justify-between pt-2">

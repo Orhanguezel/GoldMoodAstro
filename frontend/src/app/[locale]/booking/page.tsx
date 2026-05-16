@@ -65,7 +65,7 @@ export default function BookingPage() {
   const canShowVideoOption =
     isVideoGlobalEnabled &&
     consultant?.supports_video &&
-    (!serviceMediaType || serviceMediaType === 'both');
+    !serviceMediaType;
   const resolvedMediaType = forcedMediaType ?? mediaType;
   const avatarUrl = consultant?.avatar_url || '';
   const consultantName = consultant?.full_name || name;
