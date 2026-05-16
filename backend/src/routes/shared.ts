@@ -50,6 +50,8 @@ import { registerAvailabilityAdmin } from '@goldmood/shared-backend/modules/avai
 import { registerSupportAdmin } from '@goldmood/shared-backend/modules/support/admin.routes';
 import { registerChatAdmin } from '@goldmood/shared-backend/modules/chat/admin.routes';
 import { registerWalletAdmin } from '@goldmood/shared-backend/modules/wallet/admin.routes';
+import { registerResources } from '@goldmood/shared-backend/modules/resources/router';
+import { registerResourcesAdmin } from '@goldmood/shared-backend/modules/resources/admin.routes';
 import { registerDashboardAdmin } from '@goldmood/shared-backend/modules/dashboard/admin.routes';
 import { registerDbAdmin } from '@goldmood/shared-backend/modules/db_admin/admin.routes';
 import { registerAnnouncementsAdmin } from '@goldmood/shared-backend/modules/announcements/admin.routes';
@@ -78,6 +80,7 @@ export async function registerSharedPublic(api: FastifyInstance) {
   await registerChat(api);
   await registerOrders(api);
   await registerWallet(api);
+  await registerResources(api);
   await registerAnnouncements(api);
   await registerSubscriptions(api);
   await registerCredits(api);
@@ -109,6 +112,7 @@ export async function registerSharedAdmin(adminApi: FastifyInstance) {
     registerSupportAdmin,
     registerChatAdmin,
     registerWalletAdmin,
+    registerResourcesAdmin,
     registerOrdersAdmin,
     registerDashboardAdmin,
     registerDbAdmin,
