@@ -341,8 +341,8 @@ function OverviewPanel({
                 profile.approval_status === 'approved'
                   ? 'bg-[var(--gm-success)]/15 text-[var(--gm-success)]'
                   : profile.approval_status === 'pending'
-                    ? 'bg-amber-500/15 text-amber-400'
-                    : 'bg-rose-500/15 text-rose-400'
+                    ? 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]'
+                    : 'bg-[var(--gm-error)]/15 text-[var(--gm-error)]'
               }`}
             >
               {profile.approval_status === 'approved' ? 'Onaylı' : profile.approval_status === 'pending' ? 'İnceleniyor' : 'Reddedildi'}
@@ -397,7 +397,7 @@ function BigStatCard({ icon: Icon, label, value, delta, subLabel }: { icon: Reac
       <div className="font-serif text-3xl text-[var(--gm-text)]">{value}</div>
       <div className="mt-2 flex items-center gap-2">
         {typeof delta === 'number' && (
-          <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${isPos ? 'text-[var(--gm-success)]' : 'text-rose-400'}`}>
+          <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${isPos ? 'text-[var(--gm-success)]' : 'text-[var(--gm-error)]'}`}>
             {isPos ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
             {isPos ? '+' : ''}{delta}%
           </span>
@@ -423,11 +423,11 @@ function StatCardSmall({ icon: Icon, label, value }: { icon: React.ElementType; 
 function ActionRow({ icon: Icon, label, count, onClick, urgent }: { icon: React.ElementType; label: string; count: number; onClick?: () => void; urgent?: boolean }) {
   const has = count > 0;
   const cls = urgent && has
-    ? 'bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/50 animate-pulse'
+    ? 'bg-[var(--gm-error)]/15 hover:bg-[var(--gm-error)]/25 border border-[var(--gm-error)]/50 animate-pulse'
     : has
       ? 'bg-[var(--gm-gold)]/10 hover:bg-[var(--gm-gold)]/15 border border-[var(--gm-gold)]/30'
       : 'bg-[var(--gm-bg-deep)]/30 hover:bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)]';
-  const accent = urgent && has ? 'text-rose-300' : has ? 'text-[var(--gm-gold)]' : 'text-[var(--gm-muted)]';
+  const accent = urgent && has ? 'text-[var(--gm-error)]' : has ? 'text-[var(--gm-gold)]' : 'text-[var(--gm-muted)]';
   return (
     <button onClick={onClick} className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${cls}`}>
       <Icon className={`w-4 h-4 ${accent}`} />
@@ -575,11 +575,39 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
           />
           <div>
             <h3 className="font-serif text-lg text-[var(--gm-text)]">{profile.user?.full_name || 'Danışman'}</h3>
-            <p className="text-[12px] text-[var(--gm-text-dim)]">Profil fotoğrafın public danışman kartlarında kullanılır.</p>
+            <div className="mt-2 space-y-1.5 border-l-2 border-[var(--gm-gold)]/20 pl-4">
+              <p className="text-[11px] text-[var(--gm-text-dim)] flex items-start gap-1.5">
+                <span className="text-[var(--gm-gold)] mt-0.5">•</span>
+                <span>Net bir <strong>yüz fotoğrafı</strong> yükleyin — yüzünüz açıkça görünmeli.</span>
+              </p>
+              <p className="text-[11px] text-[var(--gm-text-dim)] flex items-start gap-1.5">
+                <span className="text-[var(--gm-gold)] mt-0.5">•</span>
+                <span><strong>Yapay zeka ile üretilmiş portre kabul edilir</strong> (yüz odaklı olduğu sürece).</span>
+              </p>
+              <p className="text-[11px] text-[var(--gm-text-dim)] flex items-start gap-1.5">
+                <span className="text-[var(--gm-gold)] mt-0.5">•</span>
+                <span>Manzara, hayvan, logo, nesne veya yazı içeren görseller <strong>kabul edilmez</strong>.</span>
+              </p>
+              <p className="text-[11px] text-[var(--gm-text-dim)] flex items-start gap-1.5">
+                <span className="text-[var(--gm-gold)] mt-0.5">•</span>
+                <span>Tek kişi olmalı; grup, bulanık veya aşırı filtreli fotoğraflar onaylanmaz.</span>
+              </p>
+              <p className="text-[11px] text-[var(--gm-text-dim)] flex items-start gap-1.5">
+                <span className="text-[var(--gm-gold)] mt-0.5">•</span>
+                <span>Öneri: omuz hizası portre, sade arka plan, iyi ışık. Kare (1:1), min ~400×400 px.</span>
+              </p>
+              <p className="text-[11px] text-[var(--gm-gold-dim)] italic font-serif mt-2">
+                &quot;Fotoğrafınız <strong>ekip onayından</strong> geçer; uygun olmayan görseller reddedilir.&quot;
+              </p>
+            </div>
           </div>
         </div>
 
-        <Field label="Hakkımda (Zengin Metin)" error={errors.bio}>
+        <Field 
+          label="Hakkımda (Zengin Metin)" 
+          hint="Kendinizi, yaklaşımınızı ve danışana ne sunduğunuzu anlatın. İletişim bilgisi/dış link yazmayın (Sosyal Linkler alanını kullanın). En az 150 karakter önerilir."
+          error={errors.bio}
+        >
           <div className="rich-editor-container">
             <RichContentEditor
               value={bio}
@@ -589,32 +617,45 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
             />
           </div>
           <div className="flex justify-end mt-1">
-            <span className={`text-[10px] ${bio.length >= 5000 ? 'text-rose-400' : 'text-[var(--gm-muted)]'}`}>
+            <span className={`text-[10px] ${bio.length >= 5000 ? 'text-[var(--gm-error)]' : 'text-[var(--gm-muted)]'}`}>
               {bio.length} / 5000 karakter
             </span>
           </div>
         </Field>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <MultiSelectChip
-            label="Uzmanlık Alanları"
-            selected={expertise}
-            onSelectionChange={setExpertise}
-            options={['Astroloji', 'Tarot', 'Numeroloji', 'Mood Coaching', 'Kariyer', 'İlişki']}
+          <Field 
+            label="Uzmanlık Alanları" 
+            hint="Yalnızca gerçekten danışmanlık verdiğiniz alanları seçin; profiliniz bu alanlarda listelenir."
             error={errors.expertise}
-            placeholder="Eklemek için yazın..."
-          />
-          <MultiSelectChip
-            label="Diller"
-            selected={languages}
-            onSelectionChange={setLanguages}
-            options={['Türkçe', 'İngilizce', 'Almanca', 'Fransızca']}
+          >
+            <MultiSelectChip
+              label=""
+              selected={expertise}
+              onSelectionChange={setExpertise}
+              options={['Astroloji', 'Tarot', 'Numeroloji', 'Mood Coaching', 'Kariyer', 'İlişki']}
+              placeholder="Eklemek için yazın..."
+            />
+          </Field>
+          <Field 
+            label="Diller" 
+            hint="Akıcı danışmanlık verebildiğiniz dilleri seçin."
             error={errors.languages}
-            placeholder="Eklemek için yazın..."
-          />
+          >
+            <MultiSelectChip
+              label=""
+              selected={languages}
+              onSelectionChange={setLanguages}
+              options={['Türkçe', 'İngilizce', 'Almanca', 'Fransızca']}
+              placeholder="Eklemek için yazın..."
+            />
+          </Field>
         </div>
 
-        <Field label="Görüşme Platformları">
+        <Field 
+          label="Görüşme Platformları"
+          hint="Yalnızca aktif kullandığınız platformları işaretleyin; randevu bu kanaldan yapılır."
+        >
           <div className="flex flex-wrap gap-2">
             {PLATFORM_OPTIONS.map((platform) => {
               const active = meetingPlatforms.includes(platform);
@@ -636,7 +677,10 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
           </div>
         </Field>
 
-        <Field label="Sosyal Linkler">
+        <Field 
+          label="Sosyal Linkler"
+          hint="Opsiyonel. Doğrulanabilir profiller güven puanınızı artırır."
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {['instagram', 'linkedin', 'website'].map((key) => (
               <div key={key} className="space-y-1.5">
@@ -645,25 +689,30 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
                   onChange={(e) => updateSocial(key, e.target.value)}
                   maxLength={150}
                   className={`h-12 w-full bg-[var(--gm-bg-deep)] border rounded-2xl px-4 text-sm text-[var(--gm-text)] outline-none transition-all ${
-                    errors[key] ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/40'
+                    errors[key] ? 'border-[var(--gm-error)]/60 focus:border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/40'
                   }`}
                   placeholder={key === 'website' ? 'https://...' : `${key} URL / handle`}
                 />
-                {errors[key] && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-widest pl-1">{errors[key]}</p>}
+                {errors[key] && <p className="text-[10px] font-bold text-[var(--gm-error)] uppercase tracking-widest pl-1">{errors[key]}</p>}
               </div>
             ))}
           </div>
         </Field>
 
-        <label className="flex items-center gap-3 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={supportsVideo}
-            onChange={(e) => setSupportsVideo(e.target.checked)}
-            className="w-5 h-5 accent-[var(--gm-gold)]"
-          />
-          <span className="text-sm text-[var(--gm-text)]">Video görüşme destekliyorum</span>
-        </label>
+        <div className="space-y-3">
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={supportsVideo}
+              onChange={(e) => setSupportsVideo(e.target.checked)}
+              className="w-5 h-5 accent-[var(--gm-gold)]"
+            />
+            <span className="text-sm text-[var(--gm-text)]">Video görüşme destekliyorum</span>
+          </label>
+          <p className="text-[11px] text-[var(--gm-muted)] italic pl-8">
+            İşaretlerseniz danışanlar görüntülü görüşme için randevu alabilir; kamera/ışık hazır olmalı.
+          </p>
+        </div>
         <button
           onClick={handleSave}
           disabled={isLoading}
@@ -700,12 +749,13 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
       <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">{label}</label>
+      {hint && <p className="text-[11px] text-[var(--gm-muted)] italic leading-relaxed">{hint}</p>}
       {children}
-      {error && <p className="text-[10px] font-bold text-rose-400 uppercase tracking-widest pl-1">{error}</p>}
+      {error && <p className="text-[10px] font-bold text-[var(--gm-error)] uppercase tracking-widest pl-1">{error}</p>}
     </div>
   );
 }
@@ -784,19 +834,19 @@ function BookingsPanel({ locale }: { locale: string }) {
     <div className="space-y-4">
       {/* T29-4: Anlık görüşme alarm bandı */}
       {activeRequestedNow.length > 0 && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 flex items-center gap-3 animate-pulse">
-          <Zap className="w-6 h-6 text-rose-300 shrink-0" />
+        <div className="rounded-2xl border border-[var(--gm-error)]/40 bg-[var(--gm-error)]/10 p-4 flex items-center gap-3 animate-pulse">
+          <Zap className="w-6 h-6 text-[var(--gm-error)] shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-[11px] font-bold uppercase tracking-widest text-rose-200">
+            <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--gm-error)]">
               {activeRequestedNow.length} anlık görüşme talebi bekliyor
             </div>
-            <div className="text-[11px] text-rose-100/80 mt-0.5">
+            <div className="text-[11px] text-[var(--gm-error)]/80 mt-0.5">
               5 dakika içinde yanıtlamazsan otomatik iptal olur. Müşteri aktif bekliyor.
             </div>
           </div>
           <button
             onClick={() => setStatusFilter('requested_now')}
-            className="shrink-0 px-3 py-1.5 rounded-full bg-rose-500/30 hover:bg-rose-500/50 text-[10px] font-bold uppercase tracking-widest text-white"
+            className="shrink-0 px-3 py-1.5 rounded-full bg-[var(--gm-error)]/30 hover:bg-[var(--gm-error)]/50 text-[10px] font-bold uppercase tracking-widest text-[var(--gm-text)]"
           >
             Göster
           </button>
@@ -814,13 +864,13 @@ function BookingsPanel({ locale }: { locale: string }) {
                 statusFilter === f.key
                   ? 'border-[var(--gm-gold)] bg-[var(--gm-gold)]/10 text-[var(--gm-gold)]'
                   : showAlert
-                    ? 'border-rose-400/50 bg-rose-500/10 text-rose-300 animate-pulse'
+                    ? 'border-[var(--gm-error)]/50 bg-[var(--gm-error)]/10 text-[var(--gm-error)] animate-pulse'
                     : 'border-[var(--gm-border-soft)] text-[var(--gm-text-dim)] hover:text-[var(--gm-text)]'
               }`}
             >
               {f.label}
               {showAlert && (
-                <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-rose-500 text-white text-[10px] px-1">
+                <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[var(--gm-error)] text-[var(--gm-text)] text-[10px] px-1">
                   {activeRequestedNow.length}
                 </span>
               )}
@@ -844,7 +894,7 @@ function BookingsPanel({ locale }: { locale: string }) {
                 key={b.id}
                 className={`p-4 rounded-2xl border flex items-center gap-4 flex-wrap transition-all ${
                   isActiveRequestNow
-                    ? 'border-rose-400/60 bg-rose-500/10 shadow-[0_0_24px_rgba(244,63,94,0.15)] ring-1 ring-rose-400/30'
+                    ? 'border-[var(--gm-error)]/60 bg-[var(--gm-error)]/10 shadow-[0_0_24px_var(--gm-error)] ring-1 ring-[var(--gm-error)]/30'
                     : 'border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30'
                 }`}
               >
@@ -887,7 +937,7 @@ function BookingsPanel({ locale }: { locale: string }) {
                     </div>
                   )}
                   {b.decision_note && ['rejected', 'cancelled'].includes(b.status) && (
-                    <div className="mt-2 text-[12px] text-rose-300/90 border-l-2 border-rose-400/40 pl-3">
+                    <div className="mt-2 text-[12px] text-[var(--gm-error)]/90 border-l-2 border-[var(--gm-error)]/40 pl-3">
                       <span className="font-bold">Sebep:</span> {b.decision_note}
                     </div>
                   )}
@@ -915,9 +965,9 @@ function BookingsPanel({ locale }: { locale: string }) {
                     <>
                       <button
                         onClick={() => handleApprove(b.id)}
-                        className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-[10px] font-bold uppercase tracking-widest ${
+                        className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest ${
                           isActiveRequestNow
-                            ? 'bg-rose-500 hover:bg-rose-400 shadow-[0_0_18px_rgba(244,63,94,0.5)]'
+                            ? 'bg-[var(--gm-error)] hover:bg-[var(--gm-error)]/80 shadow-[0_0_18px_var(--gm-error)]'
                             : 'bg-[var(--gm-success)]'
                         }`}
                       >
@@ -926,7 +976,7 @@ function BookingsPanel({ locale }: { locale: string }) {
                       </button>
                       <button
                         onClick={() => setActionModal({ kind: 'reject', bookingId: b.id, title: 'Randevuyu Reddet', value: '' })}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 text-[10px] font-bold uppercase tracking-widest"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[var(--gm-error)]/40 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 text-[10px] font-bold uppercase tracking-widest"
                       >
                         <XCircle className="w-3.5 h-3.5" />
                         Reddet
@@ -936,7 +986,7 @@ function BookingsPanel({ locale }: { locale: string }) {
                   {canCancel && b.status !== 'requested_now' && (
                     <button
                       onClick={() => setActionModal({ kind: 'cancel', bookingId: b.id, title: 'Randevuyu İptal Et', value: '' })}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-rose-500/30 text-rose-300 hover:bg-rose-500/10 text-[10px] font-bold uppercase tracking-widest"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[var(--gm-error)]/30 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 text-[10px] font-bold uppercase tracking-widest"
                     >
                       İptal Et
                     </button>
@@ -949,7 +999,7 @@ function BookingsPanel({ locale }: { locale: string }) {
       )}
 
       {actionModal && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 px-4">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[var(--gm-bg-deep)]/50 px-4">
           <div className="w-full max-w-lg rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)] p-6 shadow-2xl">
             <h3 className="font-serif text-xl text-[var(--gm-text)]">{actionModal.title}</h3>
             <p className="mt-2 text-sm text-[var(--gm-text-dim)]">
@@ -993,10 +1043,10 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
     confirmed: { label: 'Onaylı', cls: 'bg-[var(--gm-success)]/15 text-[var(--gm-success)]' },
     completed: { label: 'Tamamlandı', cls: 'bg-[var(--gm-gold)]/15 text-[var(--gm-gold)]' },
-    pending_payment: { label: 'Ödeme Bekliyor', cls: 'bg-amber-500/15 text-amber-400' },
-    pending: { label: 'Bekliyor', cls: 'bg-amber-500/15 text-amber-400' },
-    requested_now: { label: '⚡ Anlık Talep', cls: 'bg-rose-500/20 text-rose-300 ring-1 ring-rose-400/40 animate-pulse' },
-    rejected: { label: 'Reddedildi', cls: 'bg-rose-500/15 text-rose-400' },
+    pending_payment: { label: 'Ödeme Bekliyor', cls: 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]' },
+    pending: { label: 'Bekliyor', cls: 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]' },
+    requested_now: { label: '⚡ Anlık Talep', cls: 'bg-[var(--gm-error)]/20 text-[var(--gm-error)] ring-1 ring-[var(--gm-error)]/40 animate-pulse' },
+    rejected: { label: 'Reddedildi', cls: 'bg-[var(--gm-error)]/15 text-[var(--gm-error)]' },
     cancelled: { label: 'İptal', cls: 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]' },
   };
   const m = map[status] || { label: status, cls: 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]' };
@@ -1026,8 +1076,8 @@ function RequestNowCountdown({ createdAt }: { createdAt: string }) {
       expired
         ? 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]'
         : remaining < 60_000
-          ? 'bg-rose-500/20 text-rose-300 animate-pulse'
-          : 'bg-amber-500/15 text-amber-400'
+          ? 'bg-[var(--gm-error)]/20 text-[var(--gm-error)] animate-pulse'
+          : 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]'
     }`}>
       <Timer className="w-3 h-3" />
       {expired ? 'Süre Doldu' : `${mm}:${ss}`}

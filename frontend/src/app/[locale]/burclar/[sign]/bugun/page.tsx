@@ -31,10 +31,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function SignDailyPage() {
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer width="full" pad="none" className="bg-(--gm-bg)">
       <ZodiacDetail initialTab="daily" />
-    </main>
+    </PageContainer>
   );
 }

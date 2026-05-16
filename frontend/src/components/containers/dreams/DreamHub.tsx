@@ -100,24 +100,24 @@ export default function DreamHub() {
             </div>
 
             <div className="relative group max-w-3xl mx-auto w-full">
-              <div className="absolute -inset-1 bg-gradient-to-r from-brand-primary/30 to-purple-500/30 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-              <div className="relative bg-surface/80 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 md:p-10 shadow-2xl">
+              <div className="absolute -inset-1 bg-gradient-to-r from-brand-primary/30 to-[var(--gm-primary-light)]/30 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+              <div className="relative bg-surface/80 backdrop-blur-xl border border-[var(--gm-text)]/5 rounded-[2.5rem] p-6 md:p-10 shadow-2xl">
                 <textarea
                   value={dreamText}
                   onChange={(e) => setDreamText(e.target.value)}
                   placeholder="Rüyanızda neler gördünüz? Mekanlar, kişiler, renkler ve hissettiklerinizi en az 50 karakterle anlatın..."
                   className="w-full h-72 rounded-2xl bg-bg-primary border border-border-light focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-xl font-serif leading-relaxed text-text-primary placeholder:text-text-muted/60 resize-none p-5 outline-none transition-colors"
                 />
-                <div className="flex flex-col md:flex-row items-center justify-between mt-6 pt-6 border-t border-white/5 gap-4">
+                <div className="flex flex-col md:flex-row items-center justify-between mt-6 pt-6 border-t border-[var(--gm-text)]/5 gap-4">
                   <div className="flex items-center gap-4">
                     <div className="flex flex-col">
                       <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1">Karakter</span>
-                      <span className={`text-sm font-bold ${dreamText.length < 50 ? 'text-orange-400' : 'text-brand-primary'}`}>
+                      <span className={`text-sm font-bold ${dreamText.length < 50 ? 'text-[var(--gm-warning)]' : 'text-brand-primary'}`}>
                         {dreamText.length} / 2000
                       </span>
                     </div>
                     {textStatus && (
-                      <div className="flex flex-col border-l border-white/10 pl-4">
+                      <div className="flex flex-col border-l border-[var(--gm-text)]/10 pl-4">
                         <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1">Durum</span>
                         <span className="text-sm font-bold text-foreground">{textStatus}</span>
                       </div>
@@ -129,8 +129,8 @@ export default function DreamHub() {
                     disabled={dreamText.length < 50 || isLoading}
                     className={`group relative px-10 py-5 rounded-full font-bold transition-all flex items-center gap-3 overflow-hidden ${
                       dreamText.length >= 50 
-                        ? 'bg-brand-primary text-white shadow-xl shadow-brand-primary/20 hover:scale-105 active:scale-95' 
-                        : 'bg-surface-high text-muted-foreground cursor-not-allowed border border-white/5'
+                        ? 'bg-brand-primary text-(--gm-bg) shadow-xl shadow-brand-primary/20 hover:scale-105 active:scale-95' 
+                        : 'bg-surface-high text-muted-foreground cursor-not-allowed border border-[var(--gm-text)]/5'
                     }`}
                   >
                     <span className="relative z-10 flex items-center gap-2">
@@ -141,7 +141,7 @@ export default function DreamHub() {
                         initial={{ x: '-100%' }}
                         animate={{ x: '100%' }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--gm-text)]/20 to-transparent skew-x-12"
                       />
                     )}
                   </button>
@@ -155,7 +155,7 @@ export default function DreamHub() {
                  { icon: <Compass className="w-5 h-5" />, title: 'Sembol Rehberi', desc: '100+ kadim rüya sembolü ile eşleştirme.' },
                  { icon: <Moon className="w-5 h-5" />, title: 'Ruhsal Rehberlik', desc: 'Geleceğe dair sezgisel ipuçları ve tavsiyeler.' }
                ].map((item, i) => (
-                 <div key={i} className="p-6 rounded-[2rem] bg-surface/20 border border-white/5 hover:bg-surface/30 transition-colors group">
+                 <div key={i} className="p-6 rounded-[2rem] bg-surface/20 border border-[var(--gm-text)]/5 hover:bg-surface/30 transition-colors group">
                     <div className="w-12 h-12 rounded-2xl bg-brand-primary/5 flex items-center justify-center text-brand-primary mb-4 group-hover:scale-110 transition-transform">
                       {item.icon}
                     </div>
@@ -279,7 +279,7 @@ export default function DreamHub() {
 
             <div className="relative">
                <div className="absolute -inset-10 bg-brand-primary/5 rounded-[5rem] blur-[100px] pointer-events-none"></div>
-               <div className="relative bg-surface/40 backdrop-blur-2xl border border-white/5 rounded-[3rem] p-8 md:p-20 shadow-2xl">
+               <div className="relative bg-surface/40 backdrop-blur-2xl border border-[var(--gm-text)]/5 rounded-[3rem] p-8 md:p-20 shadow-2xl">
                   <div className={`${fraunces.className} prose prose-invert max-w-none prose-p:text-muted-foreground prose-p:leading-[1.8] prose-p:text-xl md:prose-p:text-2xl prose-p:mb-10 prose-strong:text-brand-primary prose-strong:font-bold`}>
                     {result.interpretation.split('\n').map((line: string, i: number) => (
                       line.trim() ? <p key={i}>{line}</p> : <div key={i} className="h-4" />
@@ -290,7 +290,7 @@ export default function DreamHub() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="mt-20 p-8 rounded-[2.5rem] bg-gradient-to-br from-brand-primary/10 to-purple-900/10 border border-brand-primary/20 relative overflow-hidden group"
+                    className="mt-20 p-8 rounded-[2.5rem] bg-gradient-to-br from-brand-primary/10 to-[var(--gm-primary-dark)]/10 border border-brand-primary/20 relative overflow-hidden group"
                   >
                     <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
                       <Star className="w-32 h-32 text-brand-primary" />
@@ -304,7 +304,7 @@ export default function DreamHub() {
                       </div>
                       <Link 
                         href="/tr/tarot?spread=one_card"
-                        className="px-8 py-4 bg-brand-primary text-white rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 whitespace-nowrap"
+                        className="px-8 py-4 bg-brand-primary text-(--gm-bg) rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 whitespace-nowrap"
                       >
                         1 KART ÇEK <ArrowRight className="w-5 h-5" />
                       </Link>
@@ -319,7 +319,7 @@ export default function DreamHub() {
                     }}
                   />
 
-                  <div className="mt-20 pt-10 border-t border-white/5 flex flex-col lg:flex-row items-center justify-between gap-10">
+                  <div className="mt-20 pt-10 border-t border-[var(--gm-text)]/5 flex flex-col lg:flex-row items-center justify-between gap-10">
                     <div className="flex flex-col gap-2 text-center lg:text-left">
                       <p className="text-sm text-muted-foreground italic font-serif opacity-50">
                         * Bu yorum Jung arketipleri ve kadim semboloji ile harmanlanarak yapay zeka tarafından üretilmiştir.

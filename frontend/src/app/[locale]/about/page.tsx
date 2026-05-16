@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import Banner from '@/layout/banner/Breadcrum';
 import AboutPageContent from '@/components/containers/about/AboutPageContent';
+import PageContainer from '@/components/common/PageContainer';
 import { LayoutSeoBridge } from '@/seo';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { isValidUiText } from '@/integrations/shared';
@@ -57,16 +57,14 @@ export default function AboutPage() {
   }, [ui]);
 
   return (
-    <>
+    <PageContainer verticalPadding="large">
       <LayoutSeoBridge
         title={pageTitle}
         description={pageDescription}
         ogImage={ogImageOverride}
         noindex={false}
       />
-
-      <Banner title={bannerTitle} />
       <AboutPageContent />
-    </>
+    </PageContainer>
   );
 }

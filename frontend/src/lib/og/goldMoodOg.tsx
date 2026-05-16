@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import { DEFAULT_TOKENS } from '../tokens/defaults';
 
 export const ogSize = {
   width: 1200,
@@ -22,6 +23,8 @@ export function createGoldMoodOgImage({
   chips = [],
   symbols = ['☉', '☽', '✦'],
 }: GoldMoodOgParams) {
+  const colors = DEFAULT_TOKENS.colors;
+
   return new ImageResponse(
     (
       <div
@@ -31,9 +34,8 @@ export function createGoldMoodOgImage({
           display: 'flex',
           position: 'relative',
           overflow: 'hidden',
-          background:
-            'linear-gradient(135deg, #120f26 0%, #24163a 46%, #4b2b59 100%)',
-          color: '#fff8e6',
+          background: `linear-gradient(135deg, ${colors.bg_base_dark} 0%, ${colors.bg_deep_dark} 46%, ${colors.brand_accent} 100%)`,
+          color: colors.gold_50,
           fontFamily: 'Georgia, serif',
           padding: 64,
         }}
@@ -42,8 +44,7 @@ export function createGoldMoodOgImage({
           style={{
             position: 'absolute',
             inset: 0,
-            background:
-              'radial-gradient(circle at 16% 18%, rgba(240, 207, 107, 0.28), transparent 24%), radial-gradient(circle at 86% 72%, rgba(155, 126, 200, 0.30), transparent 30%)',
+            background: `radial-gradient(circle at 16% 18%, ${colors.gold_50}48, transparent 24%), radial-gradient(circle at 86% 72%, ${colors.brand_primary_light}30, transparent 30%)`,
           }}
         />
         <div
@@ -54,7 +55,7 @@ export function createGoldMoodOgImage({
             width: 420,
             height: 420,
             borderRadius: 420,
-            border: '2px solid rgba(240, 207, 107, 0.28)',
+            border: `2px solid ${colors.gold_50}48`,
           }}
         />
         <div
@@ -64,7 +65,7 @@ export function createGoldMoodOgImage({
             bottom: 52,
             display: 'flex',
             gap: 18,
-            color: 'rgba(240, 207, 107, 0.48)',
+            color: `${colors.gold_50}7a`,
             fontSize: 42,
           }}
         >
@@ -88,8 +89,8 @@ export function createGoldMoodOgImage({
                 width: 42,
                 height: 42,
                 borderRadius: 42,
-                background: '#d4af37',
-                boxShadow: '0 0 36px rgba(212, 175, 55, 0.42)',
+                background: colors.brand_primary,
+                boxShadow: `0 0 36px ${colors.brand_primary}66`,
               }}
             />
             <div
@@ -97,7 +98,7 @@ export function createGoldMoodOgImage({
                 fontSize: 26,
                 letterSpacing: 4,
                 textTransform: 'uppercase',
-                color: '#f0cf6b',
+                color: colors.brand_primary_light,
               }}
             >
               {eyebrow}
@@ -110,12 +111,12 @@ export function createGoldMoodOgImage({
                 style={{
                   display: 'flex',
                   alignSelf: 'flex-start',
-                  border: '1px solid rgba(240, 207, 107, 0.45)',
+                  border: `1px solid ${colors.gold_50}73`,
                   borderRadius: 999,
                   padding: '12px 24px',
                   fontSize: 30,
-                  color: '#f0cf6b',
-                  background: 'rgba(13, 11, 30, 0.38)',
+                  color: colors.brand_primary_light,
+                  background: 'rgba(0, 0, 0, 0.38)',
                 }}
               >
                 {metric}
@@ -138,7 +139,7 @@ export function createGoldMoodOgImage({
                   maxWidth: 820,
                   fontSize: 31,
                   lineHeight: 1.25,
-                  color: '#e7d7ff',
+                  color: colors.text_secondary_dark,
                 }}
               >
                 {subtitle}
@@ -151,11 +152,11 @@ export function createGoldMoodOgImage({
               <div
                 key={chip}
                 style={{
-                  border: '1px solid rgba(255, 248, 230, 0.18)',
+                  border: `1px solid ${colors.gold_50}2e`,
                   borderRadius: 999,
                   padding: '10px 18px',
                   fontSize: 23,
-                  color: '#fff8e6',
+                  color: colors.gold_50,
                   background: 'rgba(255, 255, 255, 0.07)',
                 }}
               >
@@ -184,4 +185,3 @@ export const zodiacLabels: Record<string, string> = {
   aquarius: 'Kova',
   pisces: 'Balık',
 };
-

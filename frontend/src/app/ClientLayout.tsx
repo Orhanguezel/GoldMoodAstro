@@ -136,7 +136,7 @@ export default function ClientLayout({
       </a>
       
       <Header brand={brand} locale={locale} initialMenuItems={initialMenuItems} />
-      <main id="main-content" className="min-h-screen bg-bg-primary" tabIndex={-1}>
+      <main id="main-content" className="min-h-screen bg-(--gm-bg)" tabIndex={-1}>
         {children}
       </main>
 

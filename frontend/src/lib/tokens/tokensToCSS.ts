@@ -143,6 +143,9 @@ export function tokensToCSS(tokens: DesignTokens): string {
 --gm-shadow-card:${cssValue(s.card)};
 --gm-shadow-glow:${cssValue(s.glow_primary)};
 --gm-shadow-gold:${cssValue(s.glow_gold)};
+--gm-splash-bg:${cssValue(c.splash_bg || c.bg_base)};
+--gm-splash-text:${cssValue(c.splash_text || c.text_primary)};
+--gm-loader-primary:${cssValue(c.loader_primary || c.brand_primary)};
 --gm-bg-image:${tokens.branding.background_image ? `url("${tokens.branding.background_image}")` : 'none'};
 `.trim();
 

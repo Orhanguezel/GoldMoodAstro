@@ -47,7 +47,7 @@ export default function NumerologyHub() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12 md:py-20 min-h-[80vh] flex flex-col">
+    <div className="max-w-4xl mx-auto py-12 md:py-24 flex flex-col">
       <AnimatePresence mode="wait">
         {step === 'input' && (
           <motion.div
@@ -55,23 +55,25 @@ export default function NumerologyHub() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="space-y-12"
+            className="space-y-16"
           >
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 bg-brand-gold/10 rounded-full flex items-center justify-center mx-auto text-brand-gold">
-                <Binary className="w-10 h-10" />
+            <div className="text-center space-y-8">
+              <div className="w-24 h-24 bg-(--gm-gold)/10 rounded-full flex items-center justify-center mx-auto text-(--gm-gold) border border-(--gm-gold)/20 shadow-(--gm-shadow-glow)">
+                <Binary className="w-12 h-12" />
               </div>
-              <h1 className={`${cinzel.className} text-4xl md:text-6xl text-foreground`}>Numeroloji Analizi</h1>
-              <p className="text-muted-foreground text-lg max-w-xl mx-auto italic font-serif leading-relaxed">
+              <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight`}>Numeroloji Analizi</h1>
+              <p className="text-(--gm-text-dim) text-xl max-w-2xl mx-auto italic font-serif leading-relaxed opacity-80">
                 İsminiz ve doğum tarihiniz, ruhunuzun bu hayattaki planını sayılarla fısıldar.
               </p>
             </div>
 
-            <form onSubmit={handleCalculate} className="max-w-md mx-auto space-y-6 bg-surface/30 p-8 rounded-[2.5rem] border border-border/20 shadow-xl">
-              <div className="space-y-2">
-                <label htmlFor="numerology-full-name" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-4">Tam İsim (Doğumdaki)</label>
+            <form onSubmit={handleCalculate} className="max-w-lg mx-auto space-y-10 bg-(--gm-surface) p-10 md:p-12 rounded-[3rem] border border-(--gm-border-soft) shadow-(--gm-shadow-card) relative overflow-hidden">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-(--gm-gold)/5 rounded-full blur-3xl pointer-events-none" />
+              
+              <div className="space-y-4 relative">
+                <label htmlFor="numerology-full-name" className="text-[10px] font-bold text-(--gm-muted) tracking-[0.3em] uppercase ml-4">Tam İsim (Doğumdaki)</label>
                 <div className="relative">
-                  <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-gold/50" />
+                  <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-(--gm-gold)/50" />
                   <input
                     id="numerology-full-name"
                     required
@@ -79,22 +81,22 @@ export default function NumerologyHub() {
                     value={formData.full_name}
                     onChange={(e) => setFormData({...formData, full_name: e.target.value})}
                     placeholder="Adınız ve Soyadınız"
-                    className="w-full bg-surface-high/50 border border-border/20 rounded-2xl py-4 pl-14 pr-6 focus:ring-2 focus:ring-brand-gold/20 focus:border-brand-gold/50 transition-all text-foreground outline-none"
+                    className="w-full bg-(--gm-bg-deep)/50 border border-(--gm-border-soft) rounded-[1.5rem] py-5 pl-16 pr-6 focus:ring-2 focus:ring-(--gm-gold)/20 focus:border-(--gm-gold)/50 transition-all text-(--gm-text) outline-none font-serif text-lg"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="numerology-birth-date" className="text-xs font-bold text-muted-foreground tracking-widest uppercase ml-4">Doğum Tarihi</label>
+              <div className="space-y-4 relative">
+                <label htmlFor="numerology-birth-date" className="text-[10px] font-bold text-(--gm-muted) tracking-[0.3em] uppercase ml-4">Doğum Tarihi</label>
                 <div className="relative">
-                  <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-gold/50" />
+                  <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-(--gm-gold)/50" />
                   <input
                     id="numerology-birth-date"
                     required
                     type="date"
                     value={formData.birth_date}
                     onChange={(e) => setFormData({...formData, birth_date: e.target.value})}
-                    className="w-full bg-surface-high/50 border border-border/20 rounded-2xl py-4 pl-14 pr-6 focus:ring-2 focus:ring-brand-gold/20 focus:border-brand-gold/50 transition-all text-foreground outline-none appearance-none"
+                    className="w-full bg-(--gm-bg-deep)/50 border border-(--gm-border-soft) rounded-[1.5rem] py-5 pl-16 pr-6 focus:ring-2 focus:ring-(--gm-gold)/20 focus:border-(--gm-gold)/50 transition-all text-(--gm-text) outline-none appearance-none font-serif text-lg"
                   />
                 </div>
               </div>
@@ -102,7 +104,7 @@ export default function NumerologyHub() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-brand-gold text-[#1A1715] font-bold py-5 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+                className="w-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold py-6 rounded-full shadow-(--gm-shadow-gold) hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 group tracking-[0.2em] text-xs"
               >
                 HESAPLA & YORUMLA <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
@@ -115,35 +117,35 @@ export default function NumerologyHub() {
             key="processing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex-1 flex flex-col items-center justify-center py-20"
+            className="flex-1 flex flex-col items-center justify-center py-24"
           >
-            <div className="relative w-40 h-40">
+            <div className="relative w-48 h-48">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-                className="absolute inset-0 border border-dashed border-brand-gold/30 rounded-full"
+                className="absolute inset-0 border-2 border-dashed border-(--gm-gold)/30 rounded-full"
               />
               <motion.div
                 animate={{ rotate: -360 }}
                 transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-                className="absolute inset-4 border border-dashed border-brand-gold/20 rounded-full"
+                className="absolute inset-6 border border-dashed border-(--gm-gold)/20 rounded-full"
               />
               <div className="absolute inset-0 flex items-center justify-center">
-                 <div className="flex flex-col items-center gap-1">
+                 <div className="flex flex-col items-center gap-2">
                     <motion.span 
                       animate={{ opacity: [0, 1, 0] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className={`${cinzel.className} text-2xl text-brand-gold`}
+                      className={`${cinzel.className} text-3xl text-(--gm-gold) tracking-[0.2em]`}
                     >
                       7...3...9
                     </motion.span>
-                    <Binary className="w-8 h-8 text-brand-gold/50" />
+                    <Binary className="w-10 h-10 text-(--gm-gold)/50" />
                  </div>
               </div>
             </div>
-            <div className="mt-16 text-center space-y-4">
-              <h2 className={`${cinzel.className} text-3xl text-brand-gold`}>Sayılar Diziliyor...</h2>
-              <p className="text-muted-foreground italic font-serif">Kader çarkınızdaki numerolojik kodlar analiz ediliyor.</p>
+            <div className="mt-20 text-center space-y-6">
+              <h2 className={`${cinzel.className} text-4xl text-(--gm-gold) tracking-widest`}>Sayılar Diziliyor...</h2>
+              <p className="text-(--gm-text-dim) italic font-serif text-xl opacity-70">Kader çarkınızdaki numerolojik kodlar analiz ediliyor.</p>
             </div>
           </motion.div>
         )}
@@ -153,53 +155,59 @@ export default function NumerologyHub() {
             key="result"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-12 py-10"
+            className="space-y-16 py-10"
           >
              <div className="text-center space-y-4">
-              <h1 className={`${cinzel.className} text-4xl md:text-5xl text-foreground`}>Sayılarınızın Gücü</h1>
-              <p className="text-muted-foreground font-serif italic">{formData.full_name}</p>
+              <h1 className={`${cinzel.className} text-5xl md:text-6xl text-(--gm-text) tracking-tight`}>Sayılarınızın Gücü</h1>
+              <p className="text-(--gm-text-dim) font-serif italic text-2xl opacity-60">{formData.full_name}</p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
                {[
-                 { label: 'HAYAT YOLU', value: result.calculation.lifePath, icon: Target, color: 'text-blue-400' },
-                 { label: 'KADER SAYISI', value: result.calculation.destiny, icon: Zap, color: 'text-brand-gold' },
-                 { label: 'RUH GÜDÜSÜ', value: result.calculation.soulUrge, icon: Heart, color: 'text-rose-400' },
-                 { label: 'KİŞİLİK', value: result.calculation.personality, icon: Hash, color: 'text-emerald-400' },
+                 { label: 'HAYAT YOLU', value: result.calculation.lifePath, icon: Target, color: 'text-[var(--gm-info)]' },
+                 { label: 'KADER SAYISI', value: result.calculation.destiny, icon: Zap, color: 'text-(--gm-gold)' },
+                 { label: 'RUH GÜDÜSÜ', value: result.calculation.soulUrge, icon: Heart, color: 'text-[var(--gm-error)]' },
+                 { label: 'KİŞİLİK', value: result.calculation.personality, icon: Hash, color: 'text-[var(--gm-success)]' },
                ].map((item, i) => (
-                 <div key={i} className="bg-surface/40 border border-border/20 rounded-3xl p-6 text-center space-y-3 shadow-lg">
-                    <item.icon className={`w-6 h-6 mx-auto ${item.color}`} />
-                    <div className="text-3xl font-bold text-foreground tracking-tighter">{item.value}</div>
-                    <div className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">{item.label}</div>
+                 <div key={i} className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-[2.5rem] p-10 text-center space-y-4 shadow-(--gm-shadow-soft) hover:border-(--gm-gold)/40 transition-colors group">
+                    <item.icon className={`w-8 h-8 mx-auto ${item.color} group-hover:scale-110 transition-transform`} />
+                    <div className="text-5xl font-bold text-(--gm-text) tracking-tighter">{item.value}</div>
+                    <div className="text-[10px] font-bold text-(--gm-muted) tracking-[0.3em] uppercase">{item.label}</div>
                  </div>
                ))}
             </div>
 
             <div className="relative">
-               <div className="absolute -inset-4 bg-brand-gold/5 rounded-[4rem] blur-3xl"></div>
-               <div className="relative bg-surface/50 border border-border/40 rounded-[3rem] p-10 md:p-16 shadow-2xl overflow-hidden">
-                  <div className="prose prose-invert max-w-none prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:text-lg prose-p:mb-8 prose-strong:text-brand-gold prose-headings:text-brand-gold">
+               <div className="absolute -inset-10 bg-(--gm-gold)/5 rounded-[5rem] blur-3xl"></div>
+               <div className="relative bg-(--gm-surface) border border-(--gm-border-soft) rounded-[4rem] p-10 md:p-20 shadow-(--gm-shadow-card) overflow-hidden">
+                  <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none text-(--gm-gold)">
+                    <Binary className="w-96 h-96" />
+                  </div>
+
+                  <div className="relative z-10 font-serif text-xl md:text-2xl leading-[1.8] text-(--gm-text-dim) space-y-10">
                     {result.interpretation.split('\n').map((line: string, i: number) => (
-                      line.trim() ? <p key={i}>{line}</p> : <br key={i} />
+                      line.trim() ? <p key={i} className="opacity-90">{line}</p> : <div key={i} className="h-6" />
                     ))}
                   </div>
 
-                  <ConsultantFunnelCTA
-                    feature="numeroloji"
-                    intensity="heavy"
-                    context={{
-                      lifePath: result.calculation.lifePath,
-                      destiny: result.calculation.destiny,
-                      soulUrge: result.calculation.soulUrge,
-                      personality: result.calculation.personality,
-                    }}
-                  />
+                  <div className="mt-20">
+                    <ConsultantFunnelCTA
+                      feature="numeroloji"
+                      intensity="heavy"
+                      context={{
+                        lifePath: result.calculation.lifePath,
+                        destiny: result.calculation.destiny,
+                        soulUrge: result.calculation.soulUrge,
+                        personality: result.calculation.personality,
+                      }}
+                    />
+                  </div>
 
-                  <div className="mt-16 pt-10 border-t border-border/20 flex flex-col md:flex-row items-center justify-between gap-8">
-                    <p className="text-sm text-muted-foreground italic font-serif">
+                  <div className="mt-20 pt-12 border-t border-(--gm-border-soft) flex flex-col lg:flex-row items-center justify-between gap-12">
+                    <p className="text-[11px] text-(--gm-muted) italic font-serif leading-relaxed max-w-md uppercase tracking-widest opacity-60">
                       * Pisagor numeroloji sistemi temel alınarak yapay zeka tarafından analiz edilmiştir.
                     </p>
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-wrap items-center justify-center gap-10">
                       <ShareCard 
                         title="Numeroloji Analizimi Paylaş"
                         shareText={`GoldMoodAstro'da numeroloji analizimi yaptım ✨\nHayat Yolu: ${result.calculation.lifePath} • Kader: ${result.calculation.destiny}\nSenin sayıların ne diyor?`}
@@ -217,7 +225,7 @@ export default function NumerologyHub() {
                           setFormData({ full_name: '', birth_date: '' });
                           setResult(null);
                         }}
-                        className="flex items-center gap-3 text-brand-gold font-bold uppercase tracking-widest text-sm hover:text-brand-gold/80 transition-colors"
+                        className="flex items-center gap-4 text-(--gm-gold) font-bold uppercase tracking-[0.2em] text-xs hover:text-(--gm-gold-dim) transition-colors"
                       >
                         YENİ HESAPLAMA <RotateCcw className="w-4 h-4" />
                       </button>

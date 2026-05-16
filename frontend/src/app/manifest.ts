@@ -1,9 +1,10 @@
 import type { MetadataRoute } from 'next';
 import { fetchSetting } from '@/i18n/server';
+import { DEFAULT_TOKENS } from '@/lib/tokens/defaults';
 import brandFallback from '../../../config/brand.json';
 
-const FALLBACK_BG = '#FAF6EF';
-const FALLBACK_THEME = brandFallback.theme_color || '#C9A961';
+const FALLBACK_BG = DEFAULT_TOKENS.colors.bg_base;
+const FALLBACK_THEME = brandFallback.theme_color || DEFAULT_TOKENS.branding.theme_color;
 
 async function readBrandColors(): Promise<{ bg: string; theme: string }> {
   try {

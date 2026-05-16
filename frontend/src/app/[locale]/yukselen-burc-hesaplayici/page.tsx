@@ -20,13 +20,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default async function RisingCalculatorPage({ params }: Props) {
   const { locale } = await params;
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
   const isTr = locale === 'tr';
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <JsonLd
         id="rising-sign-speakable-schema"
         data={graph([
@@ -48,22 +50,22 @@ export default async function RisingCalculatorPage({ params }: Props) {
       />
       <section
         data-speakable
-        className="mx-auto mb-10 max-w-4xl px-4 text-center"
+        className="mx-auto mb-10 max-w-4xl text-center"
         aria-labelledby="rising-sign-voice-answer"
       >
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--gm-gold)]">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-(--gm-gold)">
           {isTr ? 'Kısa Cevap' : 'Short Answer'}
         </p>
-        <h1 id="rising-sign-voice-answer" className="font-serif text-3xl text-text-primary md:text-5xl">
+        <h1 id="rising-sign-voice-answer" className="font-serif text-3xl text-(--gm-text) md:text-5xl">
           {isTr ? 'Yükselen burç nasıl hesaplanır?' : 'How is the rising sign calculated?'}
         </h1>
-        <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-text-secondary md:text-lg">
+        <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-(--gm-text-dim) md:text-lg">
           {isTr
             ? 'Yükselen burç, doğum tarihi, doğum saati ve doğum yerinin birlikte hesaplanmasıyla bulunur. Doğum anında doğu ufkunda yükselen burcu gösterir ve kişinin dış dünyaya verdiği ilk izlenimi, davranış ritmini ve hayata yaklaşım tarzını anlamaya yardımcı olur.'
             : 'The rising sign is calculated from birth date, birth time and birthplace together. It shows the sign rising on the eastern horizon at birth and helps describe first impressions, behavior rhythm and the way someone approaches life.'}
         </p>
       </section>
       <RisingSignCalculator />
-    </main>
+    </PageContainer>
   );
 }

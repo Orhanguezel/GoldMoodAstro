@@ -6,6 +6,7 @@ import JsonLd from '@/seo/JsonLd';
 import { articleSchema, breadcrumbSchema, faqSchema, graph } from '@/seo/jsonld';
 import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
+import PageContainer from '@/components/common/PageContainer';
 import LandingIntro from '@/components/common/LandingIntro';
 
 import brand from '../../../../../config/brand.json';
@@ -56,7 +57,7 @@ export default async function TarotPage({ params }: Props) {
             {
               title: 'Tarot nasıl çalışır?',
               paragraphs: [
-                'Tarot destesi, arketipler ve semboller üzerinden konuşan görsel bir dildir. Bir kart çekildiğinde yalnızca kartın sözlük anlamı değil, sorunun bağlamı, kişinin duygusal durumu ve açılım içindeki kart ilişkileri birlikte değerlendirilir. Bu yüzden tarot, mekanik bir cevap sistemi değildir; daha çok kişinin fark etmekte zorlandığı olasılıkları isimlendiren bir aynadır.',
+                'Tarot destesi, arketipler ve semboler üzerinden konuşan görsel bir dildir. Bir kart çekildiğinde yalnızca kartın sözlük anlamı değil, sorunun bağlamı, kişinin duygusal durumu ve açılım içindeki kart ilişkileri birlikte değerlendirilir. Bu yüzden tarot, mekanik bir cevap sistemi değildir; daha çok kişinin fark etmekte zorlandığı olasılıkları isimlendiren bir aynadır.',
                 `${brand.name} tarot deneyiminde tek kart açılımı hızlı bir içgörü için, üç kart açılımı geçmiş-şimdi-olasılık ekseninde daha dengeli bir okuma için, kapsamlı açılımlar ise karar, ilişki ve yön arayışı gibi daha katmanlı sorular için kullanılır. Her açılımda amaç kullanıcıyı korkutmak değil, sorusuna daha sakin ve bilinçli bakabilmesini sağlamaktır.`,
               ],
             },
@@ -111,7 +112,7 @@ export default async function TarotPage({ params }: Props) {
         };
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <JsonLd
         id="tarot-schema"
         data={graph([
@@ -148,6 +149,6 @@ export default async function TarotPage({ params }: Props) {
           : `${brand.name} tarot content interprets card symbols through everyday awareness and responsible spiritual guidance.`}
         expertise={['Tarot', 'Sembolizm', 'Ruhsal Rehberlik']}
       />
-    </main>
+    </PageContainer>
   );
 }

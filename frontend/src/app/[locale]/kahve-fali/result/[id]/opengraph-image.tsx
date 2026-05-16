@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getOgFonts } from '@/lib/fonts/og-fonts';
+import { getOgTheme } from '@/seo/ogTheme';
 
 export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
@@ -19,6 +20,7 @@ export default async function OG({ params }: { params: { id: string; locale: str
   }
 
   const fonts = await getOgFonts().catch(() => undefined);
+  const theme = await getOgTheme();
   
   const displaySymbols = data.symbols.slice(0, 5); // Max 5 symbols
   const summary = data.interpretation.split('. ')[0] + '.';
@@ -27,8 +29,8 @@ export default async function OG({ params }: { params: { id: string; locale: str
     (
       <div style={{
         width: 1200, height: 630,
-        background: 'linear-gradient(135deg,#2A2620 0%,#3D2E47 60%,#1A1715 100%)',
-        color: '#FAF6EF',
+        background: theme.bg,
+        color: theme.text,
         padding: 80,
         fontFamily: 'Cinzel',
         display: 'flex',
@@ -37,8 +39,8 @@ export default async function OG({ params }: { params: { id: string; locale: str
         alignItems: 'center',
       }}>
         {/* Header */}
-        <div style={{ fontSize: 24, color: '#C9A961', letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          GOLDMOODASTRO · KAHVE FALI
+        <div style={{ fontSize: 24, color: theme.primary, letterSpacing: 4, width: '100%', textAlign: 'center' }}>
+          {theme.brandUpper} · KAHVE FALI
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 40, alignItems: 'center', width: '100%' }}>
@@ -47,12 +49,12 @@ export default async function OG({ params }: { params: { id: string; locale: str
             {displaySymbols.map((s: any, i: number) => (
               <div key={i} style={{ 
                 padding: '16px 32px', 
-                border: '2px solid #C9A961', 
+                border: `2px solid ${theme.primary}`, 
                 borderRadius: 40, 
-                color: '#C9A961', 
+                color: theme.primary, 
                 fontSize: 32,
                 textTransform: 'uppercase',
-                backgroundColor: 'rgba(201,169,97,0.1)'
+                backgroundColor: theme.primarySoft
               }}>
                 {s.name}
               </div>
@@ -60,14 +62,14 @@ export default async function OG({ params }: { params: { id: string; locale: str
           </div>
 
           {/* Summary */}
-          <div style={{ fontSize: 36, fontFamily: 'Fraunces', fontStyle: 'italic', color: '#FAF6EF', textAlign: 'center', maxWidth: 1000, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 36, fontFamily: 'Fraunces', fontStyle: 'italic', color: theme.text, textAlign: 'center', maxWidth: 1000, lineHeight: 1.4 }}>
             "{summary.length > 120 ? summary.substring(0, 120) + '...' : summary}"
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ fontSize: 24, color: '#C9A961', display: 'flex', justifyContent: 'center', width: '100%' }}>
-          <span style={{ fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.8 }}>goldmoodastro.com</span>
+        <div style={{ fontSize: 24, color: theme.primary, display: 'flex', justifyContent: 'center', width: '100%' }}>
+          <span style={{ fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.8 }}>{theme.domain}</span>
         </div>
       </div>
     ),

@@ -66,8 +66,8 @@ export function SplashScreen({
         ${phase === 'exit' ? 'opacity-0 scale-110 pointer-events-none' : 'opacity-100'}
       `}
       style={{ 
-        background: 'var(--gm-bg, #FAF6EF)',
-        color: 'var(--gm-text, #2A2620)'
+        background: 'var(--splash-bg)',
+        color: 'var(--splash-text)'
       }}
     >
       <div className="relative flex flex-col items-center">
@@ -81,7 +81,7 @@ export function SplashScreen({
           <h1 
             className="text-4xl md:text-5xl lg:text-6xl tracking-[0.1em] font-display uppercase"
             style={{ 
-              color: 'var(--gm-gold, #C9A961)',
+              color: 'var(--loader-primary)',
               textShadow: '0 0 40px rgba(201, 169, 97, 0.15)'
             }}
           >
@@ -90,7 +90,7 @@ export function SplashScreen({
           
           <div 
             className="h-px w-24 mx-auto" 
-            style={{ background: 'linear-gradient(90deg, transparent, var(--gm-gold, #C9A961), transparent)' }} 
+            style={{ background: 'linear-gradient(90deg, transparent, var(--loader-primary), transparent)' }} 
           />
           
           {tagline && (

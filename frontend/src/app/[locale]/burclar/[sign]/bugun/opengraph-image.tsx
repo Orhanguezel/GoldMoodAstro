@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getOgFonts } from '@/lib/fonts/og-fonts';
+import { getOgTheme } from '@/seo/ogTheme';
 
 export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
@@ -24,13 +25,14 @@ export default async function OG({ params }: { params: { sign: string; locale: s
   const today = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
 
   const fonts = await getOgFonts().catch(() => undefined);
+  const theme = await getOgTheme();
 
   return new ImageResponse(
     (
       <div style={{
         width: 1200, height: 630,
-        background: 'linear-gradient(135deg,#2A2620 0%,#3D2E47 60%,#1A1715 100%)',
-        color: '#FAF6EF',
+        background: theme.bg,
+        color: theme.text,
         padding: 80,
         fontFamily: 'Cinzel',
         display: 'flex',
@@ -39,15 +41,15 @@ export default async function OG({ params }: { params: { sign: string; locale: s
         alignItems: 'center',
       }}>
         {/* Header */}
-        <div style={{ fontSize: 24, color: '#C9A961', letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          GOLDMOODASTRO · GÜNLÜK YORUM
+        <div style={{ fontSize: 24, color: theme.primary, letterSpacing: 4, width: '100%', textAlign: 'center' }}>
+          {theme.brandUpper} · GÜNLÜK YORUM
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center' }}>
           {/* Symbol */}
           <div style={{ 
             fontSize: 180, 
-            color: '#C9A961', 
+            color: theme.primary, 
             lineHeight: 1,
             width: 240,
             height: 240,
@@ -55,24 +57,24 @@ export default async function OG({ params }: { params: { sign: string; locale: s
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: '50%',
-            backgroundColor: 'rgba(201,169,97,0.1)',
-            border: '2px solid rgba(201,169,97,0.3)'
+            backgroundColor: theme.primarySoft,
+            border: `2px solid ${theme.primaryBorder}`
           }}>
             {symbol}
           </div>
 
           {/* Label & Date */}
-          <div style={{ fontSize: 64, fontFamily: 'Fraunces', fontStyle: 'italic', color: '#FAF6EF' }}>
+          <div style={{ fontSize: 64, fontFamily: 'Fraunces', fontStyle: 'italic', color: theme.text }}>
             {label} Burcu
           </div>
-          <div style={{ fontSize: 32, color: '#C9A961', letterSpacing: 2 }}>
+          <div style={{ fontSize: 32, color: theme.primary, letterSpacing: 2 }}>
             {today}
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ fontSize: 24, color: '#C9A961', display: 'flex', justifyContent: 'center', width: '100%' }}>
-          <span style={{ fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.8 }}>goldmoodastro.com</span>
+        <div style={{ fontSize: 24, color: theme.primary, display: 'flex', justifyContent: 'center', width: '100%' }}>
+          <span style={{ fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.8 }}>{theme.domain}</span>
         </div>
       </div>
     ),

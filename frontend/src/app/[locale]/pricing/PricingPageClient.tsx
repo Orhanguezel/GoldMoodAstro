@@ -1,3 +1,8 @@
+// =============================================================
+// FILE: src/app/[locale]/pricing/PricingPageClient.tsx
+// goldmoodastro – Pricing Page Client (DESIGN SYSTEM SYNC)
+// =============================================================
+
 'use client';
 
 import React, { useMemo, useState } from 'react';
@@ -7,6 +12,7 @@ import { localizePath } from '@/integrations/shared';
 import { useListSubscriptionPlansQuery } from '@/integrations/rtk/public/subscriptions.endpoints';
 import { useRedeemCampaignMutation, type Campaign } from '@/integrations/rtk/public/campaigns.endpoints';
 import type { SubscriptionPlanPublicUi } from '@/integrations/rtk/public/subscriptions.endpoints';
+import PageContainer from '@/components/common/PageContainer';
 
 type Locale = 'tr' | 'en' | string;
 
@@ -357,21 +363,21 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
   ];
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] text-[var(--gm-text)] pt-32">
-      <section className="pb-14 px-4 md:px-6 max-w-6xl mx-auto">
-        <p className="section-label">{copy.subtitle}</p>
+    <PageContainer className="bg-(--gm-bg) text-(--gm-text)" verticalPadding="large">
+      <div className="pb-14">
+        <p className="text-sm font-normal uppercase tracking-[0.2em] text-(--gm-primary) mb-3">{copy.subtitle}</p>
         <div className="mt-2 mb-8">
-          <h1 className="font-serif text-[clamp(2rem,4.8vw,3.2rem)] text-[var(--gm-gold)] leading-tight">
+          <h1 className="font-serif text-[clamp(2rem,4.8vw,3.2rem)] text-(--gm-gold) leading-tight">
             {copy.title}
           </h1>
-          <p className="mt-4 text-[var(--gm-text-dim)] max-w-2xl">
+          <p className="mt-4 text-(--gm-text-dim) max-w-2xl">
             {copy.lead}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href={localizePath(locale, '/register')} className="btn-premium">
+            <Link href={localizePath(locale, '/register')} className="inline-flex items-center gap-2 rounded-full bg-(--gm-primary) px-8 py-4 text-xs font-bold uppercase tracking-[0.24em] text-(--gm-bg) shadow-(--gm-shadow-card) hover:bg-(--gm-primary-dark) transition-all">
               {copy.cta}
             </Link>
-            <Link href={localizePath(locale, '/consultants')} className="btn-outline-premium">
+            <Link href={localizePath(locale, '/consultants')} className="inline-flex items-center gap-2 rounded-full border border-(--gm-border) px-8 py-4 text-xs font-bold uppercase tracking-[0.24em] text-(--gm-text) hover:bg-(--gm-surface) transition-all">
               {copy.cta2}
             </Link>
           </div>
@@ -396,22 +402,22 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
             return (
               <article
                 key={plan.id}
-                className={`rounded-sm border border-[var(--gm-border)] bg-[var(--gm-surface)] overflow-hidden ${
-                  isHighlighted ? 'ring-2 ring-[var(--gm-gold)] shadow-card' : 'shadow-soft'
+                className={`rounded-2xl border border-(--gm-border) bg-(--gm-surface) overflow-hidden ${
+                  isHighlighted ? 'ring-2 ring-(--gm-gold) shadow-(--gm-shadow-card)' : 'shadow-(--gm-shadow-soft)'
                 }`}
               >
-                <div className="px-6 py-6 border-b border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)]">
-                  <div className="inline-flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase text-[var(--gm-gold)]">
+                <div className="px-6 py-6 border-b border-(--gm-border-soft) bg-(--gm-bg-deep)">
+                  <div className="inline-flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase text-(--gm-gold)">
                     <Star size={13} />
                     <span>{badgeLabel}</span>
                   </div>
-                  <h2 className="mt-4 font-serif text-2xl text-[var(--gm-text)]">{name}</h2>
-                  <p className="mt-2 text-sm text-[var(--gm-text-dim)] min-h-[44px]">{description || ''}</p>
+                  <h2 className="mt-4 font-serif text-2xl text-(--gm-text)">{name}</h2>
+                  <p className="mt-2 text-sm text-(--gm-text-dim) min-h-[44px]">{description || ''}</p>
                   <div className="mt-5">
-                    <p className="text-[1.85rem] font-semibold text-[var(--gm-gold)] leading-none">
+                    <p className="text-[1.85rem] font-semibold text-(--gm-gold) leading-none">
                       {plan.price_minor === 0 ? (locale === 'tr' ? 'Ücretsiz' : 'Free') : price}
                     </p>
-                    <p className="mt-1 text-xs text-[var(--gm-text-muted)]">
+                    <p className="mt-1 text-xs text-(--gm-text-muted)">
                       {plan.code === 'free'
                         ? locale === 'tr'
                           ? 'Başlamak için kart bilgisi gerekmez'
@@ -420,7 +426,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
                     </p>
                   </div>
                 </div>
-                <ul className="divide-y divide-[var(--gm-border-soft)]">
+                <ul className="divide-y divide-(--gm-border-soft)">
                   {[
                     { key: 'daily', label: featureCopy[locale === 'tr' ? 'tr' : 'en'].daily },
                     {
@@ -443,9 +449,9 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
                       (item.key === 'support' && isPremiumPlan(plan));
                     return (
                       <li key={item.key} className="px-6 py-3 text-sm flex items-center justify-between">
-                        <span className="text-[var(--gm-text-dim)]">{item.label}</span>
+                        <span className="text-(--gm-text-dim)">{item.label}</span>
                         <span
-                          className={`text-sm ${isIncluded ? 'text-[var(--gm-success)]' : 'text-[var(--gm-text-muted)]'}`}
+                          className={`text-sm ${isIncluded ? 'text-(--gm-success)' : 'text-(--gm-text-muted)'}`}
                         >
                           {CHECK_LABELS[isIncluded ? 'yes' : 'no']}
                         </span>
@@ -458,11 +464,11 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
           })}
         </section>
 
-        <section className="mt-8 rounded-sm border border-[var(--gm-border)] bg-[var(--gm-surface)] p-5 shadow-soft">
+        <section className="mt-8 rounded-2xl border border-(--gm-border) bg-(--gm-surface) p-5 shadow-(--gm-shadow-soft)">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="max-w-xl">
-              <h2 className="font-serif text-xl text-[var(--gm-gold)]">{copy.couponTitle}</h2>
-              <p className="mt-2 text-sm text-[var(--gm-text-dim)]">{copy.couponLead}</p>
+              <h2 className="font-serif text-xl text-(--gm-gold)">{copy.couponTitle}</h2>
+              <p className="mt-2 text-sm text-(--gm-text-dim)">{copy.couponLead}</p>
             </div>
             <div className="flex w-full gap-2 md:w-auto">
               <input
@@ -470,74 +476,73 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
                 onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
                 placeholder={copy.couponPlaceholder}
                 disabled={!!appliedCampaign || couponLoading}
-                className="min-w-0 flex-1 rounded-full border border-[var(--gm-border)] bg-[var(--gm-bg)] px-4 py-3 text-sm font-semibold tracking-[0.12em] text-[var(--gm-text)] outline-none placeholder:text-[var(--gm-text-muted)] focus:border-[var(--gm-gold)] md:w-56"
+                className="min-w-0 flex-1 rounded-full border border-(--gm-border) bg-(--gm-bg) px-4 py-3 text-sm font-semibold tracking-[0.12em] text-(--gm-text) outline-none placeholder:text-(--gm-text-muted) focus:border-(--gm-gold) md:w-56"
               />
               <button
                 type="button"
                 onClick={applyCoupon}
                 disabled={!couponCode.trim() || !!appliedCampaign || couponLoading}
-                className="rounded-full bg-[var(--gm-gold)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--gm-bg-deep)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full bg-(--gm-gold) px-5 py-3 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-bg-deep) disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {couponLoading ? '...' : copy.couponApply}
               </button>
             </div>
           </div>
           {appliedCampaign && (
-            <p className="mt-3 text-sm text-[var(--gm-success)]">
+            <p className="mt-3 text-sm text-(--gm-success)">
               {copy.couponSuccess} ({appliedCampaign.code}
               {appliedCampaign.value ? ` · ${appliedCampaign.type === 'discount_percentage' ? `%${Number(appliedCampaign.value)}` : appliedCampaign.value}` : ''})
             </p>
           )}
-          {couponError && <p className="mt-3 text-sm text-[var(--gm-error)]">{couponError}</p>}
+          {couponError && <p className="mt-3 text-sm text-(--gm-error)">{couponError}</p>}
         </section>
 
         <section className="mt-16">
           <div className="text-center max-w-3xl mx-auto">
-            <p className="section-label">{copy.modeHeadline}</p>
-            <h3 className="mt-2 text-2xl md:text-3xl text-[var(--gm-gold)] font-serif">
+            <h3 className="mt-2 text-2xl md:text-3xl text-(--gm-gold) font-serif">
               {copy.modeHeadline}
             </h3>
-            <p className="mt-3 text-sm text-[var(--gm-text-dim)]">{copy.modeLead}</p>
+            <p className="mt-3 text-sm text-(--gm-text-dim)">{copy.modeLead}</p>
           </div>
 
           <div className="mt-8 grid md:grid-cols-2 gap-6">
-            <article className="rounded-sm bg-[var(--gm-surface)] border border-[var(--gm-border)] p-6 shadow-soft">
+            <article className="rounded-2xl bg-(--gm-surface) border border-(--gm-border) p-6 shadow-(--gm-shadow-soft)">
               <div className="flex items-center gap-3 mb-4">
-                <Mic className="text-[var(--gm-gold)]" size={20} />
-                <h4 className="font-serif text-xl text-[var(--gm-text)]">
+                <Mic className="text-(--gm-gold)" size={20} />
+                <h4 className="font-serif text-xl text-(--gm-text)">
                   {locale === 'tr' ? 'Sesli Görüşme (Standart)' : 'Audio Session (Standard)'}
                 </h4>
               </div>
-              <p className="text-[var(--gm-text-dim)] text-sm mb-3">
+              <p className="text-(--gm-text-dim) text-sm mb-3">
                 {copy.perMinuteVoice}
               </p>
-              <ul className="space-y-2 text-sm text-[var(--gm-text)]">
+              <ul className="space-y-2 text-sm text-(--gm-text)">
                 {voiceFeatures.map((item) => (
                   <li key={item.text} className="flex gap-2">
-                    <Check size={16} className="text-[var(--gm-success)] mt-[2px] flex-shrink-0" />
+                    <Check size={16} className="text-(--gm-success) mt-[2px] flex-shrink-0" />
                     <span>{item.text}</span>
                   </li>
                 ))}
               </ul>
             </article>
 
-            <article className="rounded-sm border border-[var(--gm-gold)] bg-[var(--gm-bg-deep)] p-6 shadow-card relative">
-              <span className="absolute top-4 right-4 inline-flex items-center px-3 py-1 rounded-full text-[10px] tracking-[0.16em] uppercase bg-[var(--gm-gold)]/15 text-[var(--gm-gold)]">
+            <article className="rounded-2xl border border-(--gm-gold) bg-(--gm-bg-deep) p-6 shadow-(--gm-shadow-card) relative">
+              <span className="absolute top-4 right-4 inline-flex items-center px-3 py-1 rounded-full text-[10px] tracking-[0.16em] uppercase bg-(--gm-gold)/15 text-(--gm-gold)">
                 {locale === 'tr' ? 'Premium' : 'Premium'}
               </span>
               <div className="flex items-center gap-3 mb-4">
-                <Video className="text-[var(--gm-gold)]" size={20} />
-                <h4 className="font-serif text-xl text-[var(--gm-text)]">
+                <Video className="text-(--gm-gold)" size={20} />
+                <h4 className="font-serif text-xl text-(--gm-text)">
                   {locale === 'tr' ? 'Görüntülü Görüşme (Premium)' : 'Video Session (Premium)'}
                 </h4>
               </div>
-              <p className="text-[var(--gm-text-dim)] text-sm mb-3">
+              <p className="text-(--gm-text-dim) text-sm mb-3">
                 {copy.perMinuteVideo}
               </p>
-              <ul className="space-y-2 text-sm text-[var(--gm-text)]">
+              <ul className="space-y-2 text-sm text-(--gm-text)">
                 {videoFeatures.map((item) => (
                   <li key={item.text} className="flex gap-2">
-                    <Check size={16} className="text-[var(--gm-success)] mt-[2px] flex-shrink-0" />
+                    <Check size={16} className="text-(--gm-success) mt-[2px] flex-shrink-0" />
                     <span>{item.text}</span>
                   </li>
                 ))}
@@ -545,10 +550,10 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
             </article>
           </div>
 
-        <div className="mt-8 overflow-x-auto">
+          <div className="mt-8 overflow-x-auto">
             <table className="w-full min-w-[680px] text-sm">
               <thead>
-                <tr className="text-[var(--gm-text-muted)] border-b border-[var(--gm-border)]">
+                <tr className="text-(--gm-text-muted) border-b border-(--gm-border)">
                   <th className="py-3 text-left font-medium pr-4">{locale === 'tr' ? 'Özellik' : 'Feature'}</th>
                   <th className="py-3 text-center font-medium px-3">
                     {getPlanLabel(freePlan, locale === 'tr' ? 'Ücretsiz' : 'Free')}
@@ -563,26 +568,26 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
               </thead>
               <tbody>
                 {featureMatrix.map((row) => (
-                  <tr key={row.key} className="border-b border-[var(--gm-border-soft)]">
+                  <tr key={row.key} className="border-b border-(--gm-border-soft)">
                     <td className="py-3 pr-4">
-                      <p className="text-[var(--gm-text)]">{row.feature}</p>
-                      <p className="text-xs text-[var(--gm-text-muted)] mt-1">{row.desc}</p>
+                      <p className="text-(--gm-text)">{row.feature}</p>
+                      <p className="text-xs text-(--gm-text-muted) mt-1">{row.desc}</p>
                     </td>
-                    <td className="py-3 px-3 text-center text-[var(--gm-text)]">
-                      {row.freeValue ? <Check size={16} className="mx-auto text-[var(--gm-success)]" /> : <span className="text-[var(--gm-text-muted)]">—</span>}
+                    <td className="py-3 px-3 text-center text-(--gm-text)">
+                      {row.freeValue ? <Check size={16} className="mx-auto text-(--gm-success)" /> : <span className="text-(--gm-text-muted)">—</span>}
                     </td>
-                    <td className="py-3 px-3 text-center text-[var(--gm-text)]">
+                    <td className="py-3 px-3 text-center text-(--gm-text)">
                       {row.premiumValue ? (
-                        <Check size={16} className="mx-auto text-[var(--gm-success)]" />
+                        <Check size={16} className="mx-auto text-(--gm-success)" />
                       ) : (
-                        <span className="text-[var(--gm-text-muted)]">—</span>
+                        <span className="text-(--gm-text-muted)">—</span>
                       )}
                     </td>
-                    <td className="py-3 px-3 text-center text-[var(--gm-text)]">
+                    <td className="py-3 px-3 text-center text-(--gm-text)">
                       {row.premiumValue ? (
-                        <Check size={16} className="mx-auto text-[var(--gm-success)]" />
+                        <Check size={16} className="mx-auto text-(--gm-success)" />
                       ) : (
-                        <span className="text-[var(--gm-text-muted)]">—</span>
+                        <span className="text-(--gm-text-muted)">—</span>
                       )}
                     </td>
                   </tr>
@@ -592,34 +597,34 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
           </div>
         </section>
 
-        <section className="mt-14 rounded-sm border border-[var(--gm-border-soft)] bg-[var(--gm-bg-surface)]/20 p-6">
+        <section className="mt-14 rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface)/20 p-6">
           <div className="flex items-start justify-between gap-6 flex-wrap">
             <div>
-              <h4 className="font-serif text-xl text-[var(--gm-gold)]">
+              <h4 className="font-serif text-xl text-(--gm-gold)">
                 {copy.transparencyTitle}
               </h4>
-              <p className="mt-2 text-sm text-[var(--gm-text-dim)] max-w-2xl">
+              <p className="mt-2 text-sm text-(--gm-text-dim) max-w-2xl">
                 {copy.policyBody || copy.transparencySubtitle}
               </p>
             </div>
-            <Link href={localizePath(locale, '/terms')} className="btn-outline-premium">
+            <Link href={localizePath(locale, '/terms')} className="inline-flex items-center gap-2 rounded-full border border-(--gm-border) px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-text) hover:bg-(--gm-surface) transition-all">
               <CreditCard size={16} />
               <span>{locale === 'tr' ? 'Şeffaf Kural Kitabı' : 'See policy details'}</span>
             </Link>
           </div>
-          <div className="mt-6 grid sm:grid-cols-3 gap-4 text-sm text-[var(--gm-text-muted)]">
-            <a href={localizePath(locale, '/terms')} className="hover:text-[var(--gm-gold)] transition-colors">
+          <div className="mt-6 grid sm:grid-cols-3 gap-4 text-sm text-(--gm-text-muted)">
+            <a href={localizePath(locale, '/terms')} className="hover:text-(--gm-gold) transition-colors">
               {copy.cancellationPolicy}
             </a>
-            <a href={localizePath(locale, '/kvkk')} className="hover:text-[var(--gm-gold)] transition-colors">
+            <a href={localizePath(locale, '/kvkk')} className="hover:text-(--gm-gold) transition-colors">
               {copy.kvkk}
             </a>
-            <a href={localizePath(locale, '/legal-notice')} className="hover:text-[var(--gm-gold)] transition-colors">
+            <a href={localizePath(locale, '/legal-notice')} className="hover:text-(--gm-gold) transition-colors">
               {copy.returnPolicy}
             </a>
           </div>
-          <p className="mt-4 text-sm text-[var(--gm-text-dim)]">{copy.footerInfo}</p>
-          <p className="mt-5 text-xs text-[var(--gm-text-muted)] flex items-center gap-2">
+          <p className="mt-4 text-sm text-(--gm-text-dim)">{copy.footerInfo}</p>
+          <p className="mt-5 text-xs text-(--gm-text-muted) flex items-center gap-2">
             <ShieldCheck size={14} />
             {copy.cancel}
             <ArrowRight size={14} />
@@ -627,16 +632,16 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         </section>
 
         {(isLoading || isFetching) && (
-          <div className="mt-8 text-sm text-[var(--gm-text-muted)]">
+          <div className="mt-8 text-sm text-(--gm-text-muted)">
             {locale === 'tr' ? 'Fiyat planları güncelleniyor…' : 'Updating pricing plans…'}
           </div>
         )}
         {isError && (
-          <div className="mt-8 text-sm text-[var(--gm-error)]">
+          <div className="mt-8 text-sm text-(--gm-error)">
             {locale === 'tr' ? 'Planlar sunucudan alınamadı, yedek veriler gösteriliyor.' : 'Could not load plans, showing fallback data.'}
           </div>
         )}
-      </section>
-    </main>
+      </div>
+    </PageContainer>
   );
 }

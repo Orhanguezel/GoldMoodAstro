@@ -126,7 +126,7 @@ const ABOUT_COPY: Record<string, AboutCopy> = {
     experienceTitle: 'Team und Erfahrung',
     experienceParagraphs: [
       'Das GoldMoodAstro Team verbindet Software, Produktdesign, Astrologie, Tarot, Redaktion und User Experience. Erfahrung zeigt sich für uns im gesamten Weg: Beratung wählen, Termin buchen, bezahlen, erinnert werden, Gespräch starten, schreiben und bewerten.',
-      'Unsere Berater bringen unterschiedliche Schwerpunkte mit: Geburtshoroskop, Beziehungsastrologie, Tarot, Numerologie, Mood-Beratung, Karriere und Beziehung. Vertrauen beginnt mit sichtbaren Informationen zu Expertise, Sprachen, Leistungen, Verfügbarkeit und Bewertungen.',
+      'Unsere Berater bringen unterschiedliche Schwerpunkte mit: Geburtshoroskop, Beziehungsastrologie, Tarot, Numerologie, Mood-Beratung, Karriere und Beziehung. Vertrauen beginnt mit sichtbaren Informationen zu Expertise, Sprachen, Leistungen, Verfügbarkeit and Bewertungen.',
     ],
     differentiatorsTitle: 'Warum GoldMood?',
     differentiators: [
@@ -147,14 +147,11 @@ const AboutPageContent: React.FC = () => {
     return ABOUT_COPY.tr;
   }, [locale]);
 
-  const t = useCallback((key: string, fallback: any) => ui(key, fallback), [ui]);
-
   const readUi = useCallback(
     (key: string, fallback: any) => {
       const v = ui(key, '');
       if (!v || v === key) return fallback;
-      // Eğer JSON array/object ise parse et
-      if (typeof fallback === 'object' && v.startsWith('[') || v.startsWith('{')) {
+      if (typeof fallback === 'object' && (v.startsWith('[') || v.startsWith('{'))) {
         try { return JSON.parse(v); } catch { return fallback; }
       }
       return v;
@@ -238,8 +235,7 @@ const AboutPageContent: React.FC = () => {
   }, [page, featuredImageRaw]);
 
   return (
-    <section className="relative py-16 md:py-24 z-10 bg-[var(--gm-bg)] text-[var(--gm-text)]">
-      {/* Tema-aware accent glow */}
+    <div className="relative z-10 text-(--gm-text)">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-[600px] opacity-50"
@@ -249,57 +245,53 @@ const AboutPageContent: React.FC = () => {
         }}
       />
 
-      <div className="container mx-auto px-4 relative">
-        {/* Header */}
+      <div className="relative">
         <div className="mb-12 text-center">
           <div className="mb-4">
-            <span className="block text-[var(--gm-primary)] font-bold uppercase tracking-[0.32em] mb-3 text-[10px] md:text-xs">
+            <span className="block text-(--gm-primary) font-bold uppercase tracking-[0.32em] mb-3 text-[10px] md:text-xs">
               <span>{headerSubtitlePrefix}</span>
               {headerSubtitleLabel ? ` ${headerSubtitleLabel}` : null}
             </span>
 
-            <h2 className="text-3xl md:text-5xl font-serif font-light text-[var(--gm-text)] leading-tight max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-5xl font-serif font-light text-(--gm-text) leading-tight max-w-3xl mx-auto">
               {headerTitle}
             </h2>
 
             {headerLead ? (
-              <p className="mt-5 mb-0 text-[var(--gm-text-dim)] max-w-2xl mx-auto text-base md:text-lg leading-relaxed font-serif italic">{headerLead}</p>
+              <p className="mt-5 mb-0 text-(--gm-text-dim) max-w-2xl mx-auto text-base md:text-lg leading-relaxed font-serif italic">{headerLead}</p>
             ) : null}
 
             <div className="mt-8 inline-flex items-center gap-3">
-              <span className="h-px w-12 bg-[var(--gm-primary)]/40" />
-              <span className="text-[var(--gm-primary)] text-xs">✦</span>
-              <span className="h-px w-12 bg-[var(--gm-primary)]/40" />
+              <span className="h-px w-12 bg-(--gm-primary)/40" />
+              <span className="text-(--gm-primary) text-xs">✦</span>
+              <span className="h-px w-12 bg-(--gm-primary)/40" />
             </div>
           </div>
         </div>
 
-        {/* Loading */}
         {isLoading && (
           <div className="mb-10 max-w-4xl mx-auto">
-            <div className="h-4 bg-[var(--gm-bg-deep)] rounded w-full mb-2.5 animate-pulse" aria-hidden />
-            <div className="h-4 bg-[var(--gm-bg-deep)] rounded w-4/5 mb-2.5 animate-pulse" aria-hidden />
-            <div className="h-4 bg-[var(--gm-bg-deep)] rounded w-3/5 animate-pulse" aria-hidden />
+            <div className="h-4 bg-(--gm-bg-deep) rounded w-full mb-2.5 animate-pulse" aria-hidden />
+            <div className="h-4 bg-(--gm-bg-deep) rounded w-4/5 mb-2.5 animate-pulse" aria-hidden />
+            <div className="h-4 bg-(--gm-bg-deep) rounded w-3/5 animate-pulse" aria-hidden />
           </div>
         )}
 
         {!!page && !isLoading && (
           <>
-            {/* Hero image — full-width with elegant framing */}
             {imgSrc && (
               <div
                 className="mb-12 max-w-5xl mx-auto"
                 data-aos="fade-up"
                 data-aos-delay={100}
               >
-                <div className="relative overflow-hidden shadow-medium bg-bg-secondary border border-border-light">
+                <div className="relative overflow-hidden shadow-(--gm-shadow-soft) bg-(--gm-surface) border border-(--gm-border-soft) rounded-(--gm-radius-lg)">
                   <div className="w-full aspect-16/7 md:aspect-16/6 relative">
                     <Image
                       src={imgSrc}
                       alt={imgAlt}
                       fill
                       className="object-cover"
-
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1100px"
                       priority
                     />
@@ -308,7 +300,6 @@ const AboutPageContent: React.FC = () => {
               </div>
             )}
 
-            {/* Content — centered, readable width */}
             <div
               className="max-w-3xl mx-auto mb-12"
               data-aos="fade-up"
@@ -316,14 +307,14 @@ const AboutPageContent: React.FC = () => {
             >
               {html ? (
                 <div
-                  className="prose prose-lg prose-rose text-text-secondary max-w-none
-                    prose-h2:font-serif prose-h2:text-text-primary prose-h2:text-2xl prose-h2:md:text-3xl prose-h2:mt-0 prose-h2:mb-6
-                    prose-h3:font-serif prose-h3:text-text-primary prose-h3:text-xl prose-h3:md:text-2xl prose-h3:mt-10 prose-h3:mb-4
+                  className="prose prose-lg prose-rose text-(--gm-text-dim) max-w-none
+                    prose-h2:font-serif prose-h2:text-(--gm-text) prose-h2:text-2xl prose-h2:md:text-3xl prose-h2:mt-0 prose-h2:mb-6
+                    prose-h3:font-serif prose-h3:text-(--gm-text) prose-h3:text-xl prose-h3:md:text-2xl prose-h3:mt-10 prose-h3:mb-4
                     prose-p:leading-relaxed prose-p:mb-5
                     prose-li:leading-relaxed
-                    prose-strong:text-text-primary
-                    prose-em:text-brand-primary/80
-                    prose-a:text-brand-primary"
+                    prose-strong:text-(--gm-text)
+                    prose-em:text-(--gm-primary)/80
+                    prose-a:text-(--gm-primary)"
                   dangerouslySetInnerHTML={{ __html: html }}
                 />
               ) : (
@@ -335,7 +326,6 @@ const AboutPageContent: React.FC = () => {
               )}
             </div>
 
-            {/* Gallery thumbnails — elegant grid */}
             {galleryThumbs.length > 0 && (
               <div
                 className="max-w-5xl mx-auto"
@@ -352,8 +342,8 @@ const AboutPageContent: React.FC = () => {
                   {galleryThumbs.map((src, i) => (
                     <div
                       key={src}
-                      className={`relative overflow-hidden border border-border-light bg-bg-secondary shadow-soft
-                        transition-transform duration-500 hover:scale-[1.02] hover:shadow-medium
+                      className={`relative overflow-hidden border border-(--gm-border-soft) bg-(--gm-surface) shadow-(--gm-shadow-soft) rounded-(--gm-radius-lg)
+                        transition-transform duration-500 hover:scale-[1.02] hover:shadow-(--gm-shadow-card)
                         ${galleryThumbs.length === 3 && i === 0 ? 'col-span-2 md:col-span-1' : ''}`}
                     >
                       <div className="aspect-4/3 relative">
@@ -362,7 +352,6 @@ const AboutPageContent: React.FC = () => {
                           alt={`${imgAlt} ${i + 1}`}
                           fill
                           className="object-cover"
-    
                           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 350px"
                         />
                       </div>
@@ -375,16 +364,15 @@ const AboutPageContent: React.FC = () => {
         )}
 
         <div className="mx-auto max-w-4xl">
-          {/* Manifesto card — mor accent + soft glow */}
-          <div className="rounded-3xl border border-[var(--gm-primary)]/25 bg-[var(--gm-surface)] p-7 md:p-12 shadow-[var(--gm-shadow-card)] relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--gm-primary)] via-[var(--gm-accent)] to-[var(--gm-gold)]" />
-            <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-[var(--gm-primary)]">
+          <div className="rounded-3xl border border-(--gm-primary)/25 bg-(--gm-surface) p-7 md:p-12 shadow-(--gm-shadow-card) relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-(--gm-primary) via-(--gm-accent) to-(--gm-gold)" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-(--gm-primary)">
               {copy.eyebrow}
             </p>
-            <h1 className="mt-4 text-3xl font-serif leading-tight text-[var(--gm-text)] md:text-5xl">
+            <h1 className="mt-4 text-3xl font-serif leading-tight text-(--gm-text) md:text-5xl">
               {copy.title}
             </h1>
-            <p className="mt-6 text-lg leading-relaxed text-[var(--gm-text-dim)] font-serif italic">{copy.lead}</p>
+            <p className="mt-6 text-lg leading-relaxed text-(--gm-text-dim) font-serif italic">{copy.lead}</p>
           </div>
 
           <div className="mt-10 space-y-8">
@@ -395,17 +383,17 @@ const AboutPageContent: React.FC = () => {
             ].map((section, idx) => (
               <section
                 key={section.title}
-                className="rounded-3xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)] p-7 md:p-10 shadow-[var(--gm-shadow-soft)] hover:border-[var(--gm-primary)]/30 hover:shadow-[var(--gm-shadow-card)] transition-all"
+                className="rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-10 shadow-(--gm-shadow-soft) hover:border-(--gm-primary)/30 hover:shadow-(--gm-shadow-card) transition-all"
               >
                 <div className="flex items-center gap-4 mb-6">
-                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--gm-primary)]/10 text-[var(--gm-primary)] font-serif text-lg font-bold">
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-(--gm-primary)/10 text-(--gm-primary) font-serif text-lg font-bold">
                     {idx + 1}
                   </span>
-                  <h2 className="text-2xl font-serif text-[var(--gm-text)]">{section.title}</h2>
+                  <h2 className="text-2xl font-serif text-(--gm-text)">{section.title}</h2>
                 </div>
                 <div className="space-y-4">
                   {section.paragraphs.map((paragraph) => (
-                    <p key={paragraph} className="text-base leading-relaxed text-[var(--gm-text-dim)]">
+                    <p key={paragraph} className="text-base leading-relaxed text-(--gm-text-dim)">
                       {paragraph}
                     </p>
                   ))}
@@ -416,28 +404,28 @@ const AboutPageContent: React.FC = () => {
 
           <section className="mt-12">
             <div className="text-center mb-8">
-              <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-[var(--gm-primary)] mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-(--gm-primary) mb-2">
                 ✦ {locale === 'tr' ? 'Farkımız' : locale === 'de' ? 'Unsere Stärke' : 'Our Edge'} ✦
               </p>
-              <h2 className="text-2xl md:text-3xl font-serif text-[var(--gm-text)]">{copy.differentiatorsTitle}</h2>
+              <h2 className="text-2xl md:text-3xl font-serif text-(--gm-text)">{copy.differentiatorsTitle}</h2>
             </div>
             <div className="grid gap-5 md:grid-cols-3">
               {copy.differentiators.map((item) => (
                 <article
                   key={item.title}
-                  className="group rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)] p-6 hover:border-[var(--gm-primary)]/40 hover:shadow-[var(--gm-shadow-gold)] hover:-translate-y-1 transition-all"
+                  className="group rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-6 hover:border-(--gm-primary)/40 hover:shadow-(--gm-shadow-gold) hover:-translate-y-1 transition-all"
                 >
-                  <div className="w-10 h-10 rounded-full bg-[var(--gm-primary)]/10 flex items-center justify-center mb-4 group-hover:bg-[var(--gm-primary)]/20 transition-colors">
-                    <span className="text-[var(--gm-primary)] text-lg">✦</span>
+                  <div className="w-10 h-10 rounded-full bg-(--gm-primary)/10 flex items-center justify-center mb-4 group-hover:bg-(--gm-primary)/20 transition-colors">
+                    <span className="text-(--gm-primary) text-lg">✦</span>
                   </div>
-                  <h3 className="text-lg font-serif font-semibold text-[var(--gm-text)]">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[var(--gm-text-dim)]">{item.body}</p>
+                  <h3 className="text-lg font-serif font-semibold text-(--gm-text)">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-(--gm-text-dim)">{item.body}</p>
                 </article>
               ))}
             </div>
           </section>
 
-          <div className="mt-12 rounded-3xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)] p-7 md:p-10 shadow-[var(--gm-shadow-soft)]">
+          <div className="mt-12 rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-10 shadow-(--gm-shadow-soft)">
             <AuthorBio
               name="Murat Kısıkçılar"
               title={locale === 'tr' ? 'GoldMoodAstro Kurucusu' : locale === 'de' ? 'Gründer von GoldMoodAstro' : 'Founder of GoldMoodAstro'}
@@ -450,7 +438,7 @@ const AboutPageContent: React.FC = () => {
           <div className="mt-10 text-center">
             <Link
               href={localizePath(locale, '/editorial-policy')}
-              className="inline-flex items-center gap-3 rounded-full bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-dark)] px-8 py-4 text-xs font-bold uppercase tracking-[0.24em] text-white shadow-[var(--gm-shadow-card)] hover:shadow-[var(--gm-shadow-gold)] transition-all"
+              className="inline-flex items-center gap-3 rounded-full bg-(--gm-primary) hover:bg-(--gm-primary-dark) px-8 py-4 text-xs font-bold uppercase tracking-[0.24em] text-(--gm-bg) shadow-(--gm-shadow-card) hover:shadow-(--gm-shadow-gold) transition-all"
             >
               {locale === 'tr' ? 'Editoryal politika ve metodoloji' : locale === 'de' ? 'Redaktionelle Richtlinie und Methodik' : 'Editorial policy and methodology'}
               <span aria-hidden>→</span>
@@ -458,7 +446,7 @@ const AboutPageContent: React.FC = () => {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

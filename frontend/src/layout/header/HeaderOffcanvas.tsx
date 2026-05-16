@@ -153,7 +153,7 @@ const HeaderOffcanvas: React.FC<HeaderOffcanvasProps> = ({ open, onClose, brand,
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/70 z-[10000] transition-opacity duration-300 ${open ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+        className={`fixed inset-0 bg-[var(--gm-bg-deep)]/70 z-[10000] transition-opacity duration-300 ${open ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
         onClick={onClose} aria-hidden="true"
       />
 

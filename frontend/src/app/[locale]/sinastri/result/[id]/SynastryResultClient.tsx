@@ -93,7 +93,7 @@ export default function SynastryResultClient() {
 
           <button 
             onClick={() => router.push(`/${locale}/sinastri`)}
-            className="w-full flex items-center justify-center gap-3 py-5 rounded-[2.5rem] border border-white/5 hover:bg-surface-high transition-all text-muted-foreground text-sm font-bold tracking-widest group shadow-lg"
+            className="w-full flex items-center justify-center gap-3 py-5 rounded-[2.5rem] border border-[var(--gm-text)]/5 hover:bg-surface-high transition-all text-muted-foreground text-sm font-bold tracking-widest group shadow-lg"
           >
             <ChevronLeft className="w-4 h-4" /> YENİ ANALİZ YAP
           </button>

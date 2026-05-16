@@ -6,6 +6,8 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { localizePath } from '@/integrations/shared';
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function BookingPaymentCallbackPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -38,35 +40,39 @@ export default function BookingPaymentCallbackPage() {
   const copy = t[locale as keyof typeof t] ?? t.tr;
 
   return (
-    <main className="min-h-screen flex items-center justify-center py-20 px-4">
-      <div className="w-full max-w-[440px] text-center">
+    <PageContainer width="narrow" center className="bg-(--gm-bg) min-h-screen">
+      <div className="w-full max-w-[440px] text-center bg-(--gm-surface) p-8 md:p-12 rounded-[24px] border border-(--gm-border-soft) shadow-(--gm-shadow-soft)">
         {isSuccess ? (
           <>
-            <CheckCircle2 size={64} className="mx-auto mb-6 text-success" strokeWidth={1.5} />
-            <h1 className="font-serif text-3xl text-text mb-3">{copy.successTitle}</h1>
-            <p className="text-text-muted text-sm leading-relaxed mb-8">{copy.successDesc}</p>
+            <div className="w-20 h-20 bg-(--gm-success)/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 size={40} className="text-(--gm-success)" strokeWidth={1.5} />
+            </div>
+            <h1 className="font-serif text-3xl text-(--gm-text) mb-3">{copy.successTitle}</h1>
+            <p className="text-(--gm-text-dim) text-sm leading-relaxed mb-8">{copy.successDesc}</p>
             <Link
-              href={localizePath(locale, '/profile/bookings')}
-              className="inline-block w-full py-3.5 rounded-full bg-brand-primary text-text-on-dark font-medium text-base text-center hover:opacity-90 transition-opacity"
+              href={localizePath(locale, '/dashboard?tab=bookings')}
+              className="btn-premium inline-block w-full py-4 text-xs"
             >
               {copy.myBookings}
             </Link>
           </>
         ) : (
           <>
-            <XCircle size={64} className="mx-auto mb-6 text-error" strokeWidth={1.5} />
-            <h1 className="font-serif text-3xl text-text mb-3">{copy.failTitle}</h1>
-            <p className="text-text-muted text-sm leading-relaxed mb-8">{copy.failDesc}</p>
+            <div className="w-20 h-20 bg-(--gm-error)/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <XCircle size={40} className="text-(--gm-error)" strokeWidth={1.5} />
+            </div>
+            <h1 className="font-serif text-3xl text-(--gm-text) mb-3">{copy.failTitle}</h1>
+            <p className="text-(--gm-text-dim) text-sm leading-relaxed mb-8">{copy.failDesc}</p>
             <div className="flex flex-col gap-3">
               <Link
                 href={localizePath(locale, '/consultants')}
-                className="inline-block w-full py-3.5 rounded-full bg-brand-primary text-text-on-dark font-medium text-base text-center hover:opacity-90 transition-opacity"
+                className="btn-premium inline-block w-full py-4 text-xs"
               >
                 {copy.tryAgain}
               </Link>
               <Link
                 href={localizePath(locale, '/')}
-                className="inline-block w-full py-3.5 rounded-full border border-border text-text-muted text-sm text-center hover:border-brand-primary hover:text-text transition-colors"
+                className="btn-outline-premium inline-block w-full py-4 text-xs"
               >
                 {copy.home}
               </Link>
@@ -74,6 +80,6 @@ export default function BookingPaymentCallbackPage() {
           </>
         )}
       </div>
-    </main>
+    </PageContainer>
   );
 }

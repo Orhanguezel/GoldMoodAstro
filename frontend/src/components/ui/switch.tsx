@@ -36,7 +36,7 @@ const Switch = React.forwardRef<
         height: 24,
         padding: 2,
         cursor: props.disabled ? "not-allowed" : "pointer",
-        backgroundColor: isChecked ? "#0d6efd" : "#e9ecef",
+        backgroundColor: isChecked ? "var(--gm-primary)" : "var(--gm-surface-high)",
         transition: "background-color 0.2s ease",
       }}
     >

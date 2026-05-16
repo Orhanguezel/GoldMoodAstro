@@ -50,7 +50,7 @@ export default function ShareCard({
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
         pixelRatio: 2,
-        backgroundColor: '#1A1715',
+        backgroundColor: brand.colors.bg_deep,
       });
       const res = await fetch(dataUrl);
       const blob = await res.blob();
@@ -208,7 +208,7 @@ export default function ShareCard({
       {/* Modal */}
       {open && (
         <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-[var(--gm-bg-deep)]/60 backdrop-blur-sm p-4"
           onClick={() => setOpen(false)}
         >
           <div
@@ -424,10 +424,10 @@ function NumerologyContent({ data, colors }: { data: any; colors: any }) {
   return (
     <div style={{ gap: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
        <div style={{ display: 'flex', gap: 30, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <NumBox label="Hayat Yolu" value={data.lifePath} color="#60a5fa" colors={colors} />
+          <NumBox label="Hayat Yolu" value={data.lifePath} color={colors.info} colors={colors} />
           <NumBox label="Kader" value={data.destiny} color={colors.brand_primary} colors={colors} />
-          <NumBox label="Ruh Güdüsü" value={data.soulUrge} color="#f87171" colors={colors} />
-          <NumBox label="Kişilik" value={data.personality} color="#34d399" colors={colors} />
+          <NumBox label="Ruh Güdüsü" value={data.soulUrge} color={colors.error} colors={colors} />
+          <NumBox label="Kişilik" value={data.personality} color={colors.success} colors={colors} />
        </div>
     </div>
   );

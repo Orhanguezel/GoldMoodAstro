@@ -6,6 +6,7 @@ import PrivacyPolicyPageContent from '@/components/containers/legal/PrivacyPolic
 import { LayoutSeoBridge } from '@/seo';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { isValidUiText, safeStr } from '@/integrations/shared';
+import PageContainer from '@/components/common/PageContainer';
 
 export default function GizlilikPage() {
   const locale = useLocaleShort();
@@ -22,9 +23,9 @@ export default function GizlilikPage() {
       <LayoutSeoBridge title={bannerTitle} noindex={false} />
       <Banner title={bannerTitle} />
 
-      <section className="container mx-auto py-16 px-4 bg-bg-primary">
+      <PageContainer width="narrow">
         <PrivacyPolicyPageContent />
-      </section>
+      </PageContainer>
     </>
   );
 }

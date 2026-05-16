@@ -136,7 +136,7 @@ export default function MessagesPanel() {
                   <div className="mt-2 flex items-center gap-2">
                     <ThreadTypeBadge thread={t} />
                     {t.unread_count > 0 && (
-                      <span className="inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">
+                      <span className="inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-[var(--gm-error)] px-1.5 text-[10px] font-bold text-[var(--gm-text)]">
                         {t.unread_count}
                       </span>
                     )}

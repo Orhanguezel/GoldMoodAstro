@@ -8,6 +8,7 @@ import { useListBannersQuery, useTrackBannerClickMutation } from '@/integrations
 import { BannerPlacement, getMultiLang } from '@/types/common';
 import { useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/features/auth/auth.store';
 
 /** Banner görsel varyantları:
  *  - hero: 21/9 büyük üst banner (home_hero için)
@@ -56,6 +57,11 @@ export default function Banner({
     locale: locale as string,
   });
   const [trackClick] = useTrackBannerClickMutation();
+  const { user } = useAuthStore();
+
+  // Premium Gating — FAZ 41 T41-3: Pro kullanıcı reklam görmez
+  const isPremium = user?.is_premium === true;
+  if (isPremium) return null;
 
   // Dismiss state — placement bazında localStorage
   const dismissKey = `banner-dismissed:${placement}`;
@@ -148,7 +154,7 @@ export default function Banner({
                 {cta && banner.link_url && (
                   <span
                     className={cn(
-                      'inline-flex w-fit items-center gap-2 rounded-full border border-(--gm-gold) bg-(--gm-gold) font-semibold uppercase tracking-[0.18em] text-(--gm-bg-deep) transition-colors group-hover:bg-(--gm-gold-deep) group-hover:text-white',
+                      'inline-flex w-fit items-center gap-2 rounded-full border border-(--gm-gold) bg-(--gm-gold) font-semibold uppercase tracking-[0.18em] text-(--gm-bg-deep) transition-colors group-hover:bg-(--gm-gold-deep) group-hover:text-(--gm-bg)',
                       isSlim ? 'mt-2 px-3 py-1 text-[10px]' : 'mt-5 px-5 py-2 text-xs',
                     )}
                   >

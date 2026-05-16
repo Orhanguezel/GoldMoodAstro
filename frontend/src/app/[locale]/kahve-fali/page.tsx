@@ -3,6 +3,8 @@ import CoffeeHub from '@/components/containers/coffee/CoffeeHub';
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/seo/server';
 
+import PageContainer from '@/components/common/PageContainer';
+
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -20,8 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function CoffeePage() {
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
       <CoffeeHub />
-    </main>
+    </PageContainer>
   );
 }

@@ -196,7 +196,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
         <p className="text-sm text-(--gm-muted) py-8 text-center">{loadingText}</p>
       )}
       {isError && (
-        <p className="text-sm text-red-500 py-8 text-center">{errorText}</p>
+        <p className="text-sm text-[var(--gm-error)] py-8 text-center">{errorText}</p>
       )}
 
       {!isLoading && !isError && reviews.length === 0 && (
@@ -235,7 +235,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                         <span
                           className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] tracking-wider uppercase"
                           style={{
-                            color: 'var(--color-success, #4CAF6E)',
+                            color: 'var(--gm-success)',
                             background: 'rgba(76, 175, 110, 0.10)',
                             border: '1px solid rgba(76, 175, 110, 0.25)',
                           }}

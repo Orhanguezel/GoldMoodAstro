@@ -59,7 +59,7 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
         pixelRatio: 2,
-        backgroundColor: '#1A1715',
+        backgroundColor: brand.colors.bg_deep,
       });
       const res = await fetch(dataUrl);
       const blob = await res.blob();
@@ -197,7 +197,7 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
       {/* Share modal */}
       {open && (
         <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-[var(--gm-bg-deep)]/60 backdrop-blur-sm p-4"
           onClick={() => setOpen(false)}
         >
           <div

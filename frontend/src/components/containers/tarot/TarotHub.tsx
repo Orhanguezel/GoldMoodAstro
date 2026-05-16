@@ -209,7 +209,7 @@ export default function TarotHub() {
                     className="w-24 h-40 md:w-32 md:h-52 relative rounded-xl border border-brand-gold/20 overflow-hidden shadow-lg bg-bg-deep group"
                   >
                     <Image src="/uploads/tarot_back.png" alt="Tarot Back" fill className="object-cover group-hover:opacity-100 opacity-80 transition-opacity" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--gm-bg-deep)]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </motion.button>
                 ))}
               </div>
@@ -271,7 +271,7 @@ export default function TarotHub() {
                     {card.name}
                   </div>
                   {card.is_reversed && (
-                    <div className="flex items-center gap-2 text-xs font-bold text-rose-400 uppercase tracking-widest mb-4">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[var(--gm-error)] uppercase tracking-widest mb-4">
                       <RotateCcw className="w-3 h-3" /> TERS GELDİ
                     </div>
                   )}

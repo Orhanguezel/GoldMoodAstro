@@ -58,13 +58,13 @@ export default function ConsultantCardPreview({
         )}
 
         {isAvailable && (
-          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 bg-[var(--gm-success)] text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-lg">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 bg-[var(--gm-success)] text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-lg">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--gm-text)] animate-pulse" />
             Çevrimiçi
           </span>
         )}
 
-        <span className="absolute top-3 right-3 inline-flex items-center gap-1 bg-black/40 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">
+        <span className="absolute top-3 right-3 inline-flex items-center gap-1 bg-[var(--gm-bg-deep)]/40 backdrop-blur-sm text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">
           <ShieldCheck className="w-3 h-3 text-[var(--gm-gold)]" />
           Onaylı
         </span>
@@ -113,7 +113,7 @@ export default function ConsultantCardPreview({
             Randevu Al
           </div>
           {isAvailable && (
-            <div className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--gm-success)] text-white text-[10px] font-bold uppercase tracking-widest py-2.5">
+            <div className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--gm-success)] text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest py-2.5">
               <Phone className="w-3.5 h-3.5" />
               Hemen Görüş
             </div>

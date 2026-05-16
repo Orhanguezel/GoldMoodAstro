@@ -17,7 +17,12 @@
     "test:e2e:ui": "playwright test --ui",
     "lh:autorun": "lhci autorun --config=./lighthouserc.cjs",
     "lh:collect": "lhci collect --config=./lighthouserc.cjs",
-    "indexnow:ping": "bun scripts/indexnow-ping.ts"
+    "theme:inventory": "node scripts/check-theme-hardcodes.mjs --update-baseline --report",
+    "theme:guard": "node scripts/check-theme-hardcodes.mjs",
+    "theme:drift-check": "node scripts/check-token-drift.mjs",
+    "indexnow:ping": "bun scripts/indexnow-ping.ts",
+    "relax:drift-check": "node scripts/check-relax-drift.mjs",
+    "relax:asset-guard": "node scripts/check-relax-assets.mjs"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.4.0",

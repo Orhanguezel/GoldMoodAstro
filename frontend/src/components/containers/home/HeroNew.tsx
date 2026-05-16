@@ -76,14 +76,14 @@ export default function HeroNew({ locale = 'tr' }: { locale?: string }) {
             className="font-display text-[clamp(3.5rem,10vw,8.5rem)] leading-[0.9] tracking-[0.18em] bg-clip-text text-transparent filter drop-shadow-[0_0_30px_rgba(201,169,97,0.35)]"
             style={{
               backgroundImage:
-                'linear-gradient(135deg, #E5D0A0 0%, #D4BB7A 25%, #C9A961 55%, #A8884A 85%, #856B3A 100%)',
+                'linear-gradient(135deg, var(--gm-primary-light) 0%, var(--gm-gold) 55%, var(--gm-primary-dark) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
             }}
           >
             {copy.title}
           </h1>
-          <div className="font-display text-[clamp(1.2rem,2.5vw,1.8rem)] tracking-[0.7em] text-[#A8884A] mt-4">
+          <div className="font-display text-[clamp(1.2rem,2.5vw,1.8rem)] tracking-[0.7em] text-(--gm-gold-deep) mt-4">
             {copy.subtitle}
           </div>
         </div>

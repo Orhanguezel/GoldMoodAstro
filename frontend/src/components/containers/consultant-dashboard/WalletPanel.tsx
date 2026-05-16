@@ -35,8 +35,8 @@ const PURPOSE_LABELS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
   completed: { label: 'Tamamlandı', cls: 'bg-[var(--gm-success)]/15 text-[var(--gm-success)]' },
-  pending: { label: 'Bekliyor', cls: 'bg-amber-500/15 text-amber-400' },
-  failed: { label: 'Başarısız', cls: 'bg-rose-500/15 text-rose-400' },
+  pending: { label: 'Bekliyor', cls: 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]' },
+  failed: { label: 'Başarısız', cls: 'bg-[var(--gm-error)]/15 text-[var(--gm-error)]' },
   refunded: { label: 'İade', cls: 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]' },
 };
 
@@ -159,7 +159,7 @@ export default function WalletPanel() {
         <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-5">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">Bu Ay Çekilen</span>
-            <ArrowDownCircle className="w-4 h-4 text-rose-400" />
+            <ArrowDownCircle className="w-4 h-4 text-[var(--gm-error)]" />
           </div>
           <div className="font-serif text-2xl text-[var(--gm-text)]">{formatMoney(monthly.debits, currency)}</div>
         </div>
@@ -168,7 +168,7 @@ export default function WalletPanel() {
             <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">Net (30 gün)</span>
             <TrendingUp className="w-4 h-4 text-[var(--gm-gold)]" />
           </div>
-          <div className={`font-serif text-2xl ${monthly.net >= 0 ? 'text-[var(--gm-text)]' : 'text-rose-400'}`}>
+          <div className={`font-serif text-2xl ${monthly.net >= 0 ? 'text-[var(--gm-text)]' : 'text-[var(--gm-error)]'}`}>
             {monthly.net >= 0 ? '+' : ''}{formatMoney(monthly.net, currency)}
           </div>
         </div>
@@ -198,7 +198,7 @@ export default function WalletPanel() {
               {(dateRange.start || dateRange.end) && (
                 <button 
                   onClick={() => setDateRange({ start: '', end: '' })}
-                  className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-full transition-colors"
+                  className="p-1.5 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-full transition-colors"
                   title="Filtreyi Temizle"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -243,7 +243,7 @@ export default function WalletPanel() {
                 <div key={t.id} className="flex items-center gap-4 p-4 hover:bg-[var(--gm-gold)]/5 transition-colors">
                   <span
                     className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                      isCredit ? 'bg-[var(--gm-success)]/15 text-[var(--gm-success)]' : 'bg-rose-500/15 text-rose-400'
+                      isCredit ? 'bg-[var(--gm-success)]/15 text-[var(--gm-success)]' : 'bg-[var(--gm-error)]/15 text-[var(--gm-error)]'
                     }`}
                   >
                     {isCredit ? <ArrowUpCircle className="w-5 h-5" /> : <ArrowDownCircle className="w-5 h-5" />}
@@ -262,7 +262,7 @@ export default function WalletPanel() {
                       {t.description && <span className="ml-2 italic">- {t.description}</span>}
                     </div>
                   </div>
-                  <div className={`font-serif text-base shrink-0 ${isCredit ? 'text-[var(--gm-success)]' : 'text-rose-400'}`}>
+                  <div className={`font-serif text-base shrink-0 ${isCredit ? 'text-[var(--gm-success)]' : 'text-[var(--gm-error)]'}`}>
                     {isCredit ? '+' : '−'}{formatMoney(t.amount, t.currency || currency)}
                   </div>
                 </div>
@@ -275,7 +275,7 @@ export default function WalletPanel() {
       {/* Withdraw modal */}
       {showModal && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[var(--gm-bg-deep)]/60 backdrop-blur-sm"
           onClick={() => !isWithdrawing && setShowModal(false)}
         >
           <div
@@ -303,11 +303,11 @@ export default function WalletPanel() {
                   }}
                   max={balance}
                   className={`w-full h-11 bg-[var(--gm-bg-deep)] border rounded-xl px-4 text-base text-[var(--gm-text)] transition-colors ${
-                    errors.amount ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/50'
+                    errors.amount ? 'border-[var(--gm-error)]/60 focus:border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/50'
                   }`}
                   placeholder="0,00"
                 />
-                {errors.amount && <p className="mt-1.5 text-[10px] font-bold text-rose-400 uppercase tracking-widest">{errors.amount}</p>}
+                {errors.amount && <p className="mt-1.5 text-[10px] font-bold text-[var(--gm-error)] uppercase tracking-widest">{errors.amount}</p>}
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">IBAN</label>
@@ -325,11 +325,11 @@ export default function WalletPanel() {
                     if (errors.iban) setErrors({ ...errors, iban: undefined });
                   }}
                   className={`w-full h-11 bg-[var(--gm-bg-deep)] border rounded-xl px-4 text-sm font-mono text-[var(--gm-text)] transition-all ${
-                    errors.iban ? 'border-rose-500/60 focus:border-rose-500' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/50'
+                    errors.iban ? 'border-[var(--gm-error)]/60 focus:border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/50'
                   }`}
                   placeholder="TR00 0000 0000 0000 0000 0000 00"
                 />
-                {errors.iban && <p className="mt-1.5 text-[10px] font-bold text-rose-400 uppercase tracking-widest">{errors.iban}</p>}
+                {errors.iban && <p className="mt-1.5 text-[10px] font-bold text-[var(--gm-error)] uppercase tracking-widest">{errors.iban}</p>}
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">Not (opsiyonel)</label>

@@ -7,6 +7,8 @@ import { LayoutSeoBridge } from '@/seo';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { isValidUiText, safeStr } from '@/integrations/shared';
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function PrivacyPolicyPage() {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_privacy_policy', locale as any);
@@ -18,13 +20,9 @@ export default function PrivacyPolicyPage() {
   }, [ui]);
 
   return (
-    <>
+    <PageContainer verticalPadding="large">
       <LayoutSeoBridge title={bannerTitle} noindex={false} />
-      <Banner title={bannerTitle} />
-
-      <main className="bg-(--gm-bg) min-h-screen">
-        <PrivacyPolicyPageContent />
-      </main>
-    </>
+      <PrivacyPolicyPageContent />
+    </PageContainer>
   );
 }

@@ -12,6 +12,8 @@ import { useListCustomPagesPublicQuery } from '@/integrations/rtk/hooks';
 import type { CustomPageDto } from '@/integrations/shared';
 import { safeStr } from '@/integrations/shared';
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function BlogPage() {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_blog', locale as any);
@@ -91,19 +93,15 @@ export default function BlogPage() {
 
       <Banner title={bannerTitle} />
 
-      <div className="bg-bg-primary min-h-[50vh]">
-        <section className="container mx-auto py-16 px-4">
+      <PageContainer className="bg-(--gm-bg) min-h-[50vh]" verticalPadding="large">
+        <div className="space-y-16">
           <BlogPageContent />
-        </section>
 
-        <section className="container mx-auto pb-16 px-4">
           <PublicBanner placement="blog_inline" variant="slim" count={1} dismissable />
-        </section>
 
-        <section className="container mx-auto pb-16 px-4">
           <Feedback />
-        </section>
-      </div>
+        </div>
+      </PageContainer>
     </>
   );
 }

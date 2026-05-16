@@ -2,6 +2,9 @@
 
 import { useCallback, useId, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { Cinzel } from 'next/font/google';
+
+const cinzel = Cinzel({ subsets: ['latin'] });
 
 import { useCreateContactPublicMutation } from '@/integrations/rtk/hooks';
 import type { ContactCreatePayload } from '@/integrations/shared';
@@ -54,9 +57,9 @@ const TOPIC_MAP: Record<TopicKey, keyof ContactFormTranslations> = {
 };
 
 const INPUT_CLS =
-  'w-full px-4 py-3 rounded-lg border bg-bg-primary text-text-primary';
-const INPUT_ERR = 'border-rose-400';
-const INPUT_OK = 'border-border-light';
+  'w-full px-6 py-4 rounded-[1rem] border bg-(--gm-bg-deep)/50 text-(--gm-text) focus:ring-2 focus:ring-(--gm-gold)/20 focus:border-(--gm-gold)/50 transition-all outline-none font-serif';
+const INPUT_ERR = 'border-(--gm-error)/50';
+const INPUT_OK = 'border-(--gm-border-soft)';
 
 export default function ContactForm({ locale, t }: Props) {
   const [createContact, { isLoading }] = useCreateContactPublicMutation();
@@ -159,10 +162,12 @@ export default function ContactForm({ locale, t }: Props) {
     `${INPUT_CLS} ${field && hasError(field) ? INPUT_ERR : INPUT_OK}`;
 
   return (
-    <div className="bg-bg-secondary shadow-soft border border-border-light p-6 md:p-8">
-      <h3 className="text-xl font-light font-serif text-text-primary mb-6">{t.formTitle}</h3>
+    <div className="bg-(--gm-surface) shadow-(--gm-shadow-card) border border-(--gm-border-soft) p-10 md:p-16 rounded-[3rem] relative overflow-hidden">
+      <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-(--gm-gold)/5 rounded-full blur-3xl pointer-events-none" />
+      
+      <h3 className={`${cinzel.className} text-3xl text-(--gm-text) mb-12 relative`}>{t.formTitle}</h3>
 
-      <form onSubmit={onSubmit} noValidate className="space-y-5">
+      <form onSubmit={onSubmit} noValidate className="space-y-8 relative">
         {/* Honeypot */}
         <div className="hidden" aria-hidden="true">
           <label>
@@ -172,9 +177,9 @@ export default function ContactForm({ locale, t }: Props) {
         </div>
 
         {/* Ad / Soyad */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2" htmlFor={ids.first}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <label className="block text-[10px] font-bold text-(--gm-muted) uppercase tracking-[0.3em] ml-4" htmlFor={ids.first}>
               {t.firstName}
             </label>
             <input
@@ -186,11 +191,11 @@ export default function ContactForm({ locale, t }: Props) {
               autoComplete="given-name"
             />
             {hasError('firstName') && (
-              <p className="text-sm mt-2 text-rose-700">{t.errRequired}</p>
+              <p className="text-xs mt-2 text-(--gm-error) ml-4">{t.errRequired}</p>
             )}
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2" htmlFor={ids.last}>
+          <div className="space-y-3">
+            <label className="block text-[10px] font-bold text-(--gm-muted) uppercase tracking-[0.3em] ml-4" htmlFor={ids.last}>
               {t.lastName}
             </label>
             <input
@@ -204,9 +209,9 @@ export default function ContactForm({ locale, t }: Props) {
         </div>
 
         {/* Email / Tel */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2" htmlFor={ids.email}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <label className="block text-[10px] font-bold text-(--gm-muted) uppercase tracking-[0.3em] ml-4" htmlFor={ids.email}>
               {t.email}
             </label>
             <input
@@ -219,11 +224,11 @@ export default function ContactForm({ locale, t }: Props) {
               autoComplete="email"
             />
             {hasError('email') && (
-              <p className="text-sm mt-2 text-rose-700">{t.errEmail}</p>
+              <p className="text-xs mt-2 text-(--gm-error) ml-4">{t.errEmail}</p>
             )}
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2" htmlFor={ids.phone}>
+          <div className="space-y-3">
+            <label className="block text-[10px] font-bold text-(--gm-muted) uppercase tracking-[0.3em] ml-4" htmlFor={ids.phone}>
               {t.phone}
             </label>
             <input
@@ -235,31 +240,36 @@ export default function ContactForm({ locale, t }: Props) {
               autoComplete="tel"
             />
             {hasError('phone') && (
-              <p className="text-sm mt-2 text-rose-700">{t.errPhone}</p>
+              <p className="text-xs mt-2 text-(--gm-error) ml-4">{t.errPhone}</p>
             )}
           </div>
         </div>
 
         {/* Konu / Başlık */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2" htmlFor={ids.topic}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <label className="block text-[10px] font-bold text-(--gm-muted) uppercase tracking-[0.3em] ml-4" htmlFor={ids.topic}>
               {t.topicLabel}
             </label>
-            <select
-              id={ids.topic}
-              className={`${INPUT_CLS} ${INPUT_OK}`}
-              value={topic}
-              onChange={(e) => setTopic(e.target.value as TopicKey)}
-            >
-              <option value="appointment">{t.topicAppointment}</option>
-              <option value="question">{t.topicQuestion}</option>
-              <option value="collab">{t.topicCollab}</option>
-              <option value="other">{t.topicOther}</option>
-            </select>
+            <div className="relative">
+              <select
+                id={ids.topic}
+                className={`${INPUT_CLS} ${INPUT_OK} appearance-none cursor-pointer`}
+                value={topic}
+                onChange={(e) => setTopic(e.target.value as TopicKey)}
+              >
+                <option value="appointment">{t.topicAppointment}</option>
+                <option value="question">{t.topicQuestion}</option>
+                <option value="collab">{t.topicCollab}</option>
+                <option value="other">{t.topicOther}</option>
+              </select>
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-(--gm-gold)">
+                ▼
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-text-primary mb-2" htmlFor={ids.subject}>
+          <div className="space-y-3">
+            <label className="block text-[10px] font-bold text-(--gm-muted) uppercase tracking-[0.3em] ml-4" htmlFor={ids.subject}>
               {t.subject}
             </label>
             <input
@@ -273,43 +283,43 @@ export default function ContactForm({ locale, t }: Props) {
         </div>
 
         {/* Mesaj */}
-        <div>
-          <label className="block text-sm font-semibold text-text-primary mb-2" htmlFor={ids.msg}>
+        <div className="space-y-3">
+          <label className="block text-[10px] font-bold text-(--gm-muted) uppercase tracking-[0.3em] ml-4" htmlFor={ids.msg}>
             {t.message}
           </label>
           <textarea
             id={ids.msg}
-            className={`${inputCls('message')} min-h-[140px]`}
+            className={`${inputCls('message')} min-h-[180px] resize-none`}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onBlur={() => touch('message')}
             placeholder={t.messagePh}
           />
           {hasError('message') && (
-            <p className="text-sm mt-2 text-rose-700">{t.errMinMessage}</p>
+            <p className="text-xs mt-2 text-(--gm-error) ml-4">{t.errMinMessage}</p>
           )}
         </div>
 
         {/* Onay */}
-        <div>
-          <label className="inline-flex items-start gap-3 text-sm text-text-secondary" htmlFor={ids.agree}>
+        <div className="pt-2">
+          <label className="inline-flex items-start gap-4 text-sm text-(--gm-text-dim) cursor-pointer group" htmlFor={ids.agree}>
             <input
               id={ids.agree}
               type="checkbox"
-              className="mt-1"
+              className="mt-1 w-5 h-5 rounded border-(--gm-border-soft) bg-(--gm-bg-deep) text-(--gm-gold) focus:ring-(--gm-gold)/20"
               checked={agree}
               onChange={(e) => setAgree(e.target.checked)}
               onBlur={() => touch('agree')}
             />
-            <span>
+            <span className="font-serif italic opacity-80 group-hover:opacity-100 transition-opacity">
               {t.termsPrefix}{' '}
-              <a className="text-brand-primary hover:underline" href={privacyHref}>
+              <a className="text-(--gm-gold) hover:underline font-bold" href={privacyHref}>
                 {t.terms}
               </a>
               {t.conditions && (
                 <>
                   {' / '}
-                  <a className="text-brand-primary hover:underline" href={termsHref}>
+                  <a className="text-(--gm-gold) hover:underline font-bold" href={termsHref}>
                     {t.conditions}
                   </a>
                 </>
@@ -317,15 +327,15 @@ export default function ContactForm({ locale, t }: Props) {
             </span>
           </label>
           {hasError('agree') && (
-            <p className="text-sm mt-2 text-rose-700">{t.errRequired}</p>
+            <p className="text-xs mt-2 text-(--gm-error) ml-9">{t.errRequired}</p>
           )}
         </div>
 
-        <div className="pt-2">
+        <div className="pt-6">
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex items-center justify-center w-full md:w-auto px-8 py-4 bg-brand-primary text-text-on-dark font-normal uppercase tracking-[0.2em] hover:bg-brand-hover transition-all duration-300 shadow-soft rounded-sm disabled:opacity-60"
+            className="inline-flex items-center justify-center w-full md:w-auto px-12 py-5 bg-(--gm-gold) text-(--gm-bg-deep) font-bold uppercase tracking-[0.2em] text-xs hover:scale-[1.02] active:scale-[0.98] transition-all shadow-(--gm-shadow-gold) rounded-full disabled:opacity-60"
           >
             {isLoading ? t.sending : t.submit}
           </button>

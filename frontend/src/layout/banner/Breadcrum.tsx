@@ -15,7 +15,7 @@ const Banner: React.FC<Props> = ({ title }) => {
   return (
     <section
       data-header-overlay="true"
-      className="relative py-32 md:py-40 overflow-hidden bg-background"
+      className="relative py-24 md:py-32 overflow-hidden bg-(--gm-bg)"
     >
       {/* Grain texture */}
       <div
@@ -26,31 +26,31 @@ const Banner: React.FC<Props> = ({ title }) => {
       />
 
       {/* Gold line top */}
-      <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-brand-primary to-transparent opacity-20" />
+      <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-(--gm-primary) to-transparent opacity-20" />
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="w-full max-w-[1300px] mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Section label */}
-          <div className="section-label justify-center mb-6">
+          <div className="flex items-center justify-center gap-2 mb-6 text-[10px] font-bold uppercase tracking-[0.24em]">
             <Link
               href={homeHref}
-              className="text-muted-foreground hover:text-brand-primary transition-colors no-underline"
+              className="text-(--gm-text-dim) hover:text-(--gm-primary) transition-colors no-underline"
             >
               {ui('ui_breadcrumb_home', 'Home')}
             </Link>
-            <span className="text-muted-foreground/50">/</span>
-            <span className="text-brand-primary">{title}</span>
+            <span className="text-(--gm-text-dim)/30">/</span>
+            <span className="text-(--gm-primary)">{title}</span>
           </div>
 
           {/* Title — theme-aware (dark/light contrast) */}
-          <h1 className="font-serif text-[clamp(2.4rem,5vw,4rem)] font-light leading-[1.1] tracking-[-0.01em] text-foreground">
+          <h1 className="font-serif text-[clamp(2.4rem,5vw,4rem)] font-light leading-[1.1] tracking-[-0.01em] text-(--gm-text)">
             {title}
           </h1>
         </div>
       </div>
 
       {/* Gold line bottom */}
-      <div className="absolute bottom-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-brand-primary to-transparent opacity-15" />
+      <div className="absolute bottom-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-(--gm-primary) to-transparent opacity-15" />
     </section>
   );
 };

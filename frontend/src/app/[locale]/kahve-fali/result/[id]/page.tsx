@@ -1,6 +1,7 @@
 import React from 'react';
 import CoffeeResultClient from './CoffeeResultClient';
 import type { Metadata } from 'next';
+import PageContainer from '@/components/common/PageContainer';
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://goldmoodastro.com/api').replace(/\/$/, '');
 
@@ -48,8 +49,8 @@ export async function generateMetadata({
 
 export default function CoffeeResultPage() {
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer verticalPadding="large">
       <CoffeeResultClient />
-    </main>
+    </PageContainer>
   );
 }

@@ -67,7 +67,7 @@ export default function DreamResultClient() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-surface/30 border border-white/5 rounded-3xl p-6 flex flex-col items-center text-center group hover:bg-brand-primary/5 transition-colors"
+              className="bg-surface/30 border border-[var(--gm-text)]/5 rounded-3xl p-6 flex flex-col items-center text-center group hover:bg-brand-primary/5 transition-colors"
             >
               <div className="w-12 h-12 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary mb-4 group-hover:scale-110 transition-transform">
                 <Sparkles className="w-5 h-5" />
@@ -85,7 +85,7 @@ export default function DreamResultClient() {
           ))}
         </div>
 
-        <div className="relative bg-surface/40 backdrop-blur-2xl border border-white/5 rounded-[3rem] p-8 md:p-20 shadow-2xl">
+        <div className="relative bg-surface/40 backdrop-blur-2xl border border-[var(--gm-text)]/5 rounded-[3rem] p-8 md:p-20 shadow-2xl">
           <div className={`${fraunces.className} prose prose-invert max-w-none prose-p:text-muted-foreground prose-p:leading-[1.8] prose-p:text-xl md:prose-p:text-2xl prose-p:mb-10 prose-strong:text-brand-primary prose-strong:font-bold`}>
             {result.interpretation.split('\n').map((line: string, i: number) => (
               line.trim() ? <p key={i}>{line}</p> : <div key={i} className="h-4" />
@@ -100,7 +100,7 @@ export default function DreamResultClient() {
             }}
           />
 
-          <div className="mt-20 pt-10 border-t border-white/5 flex flex-col lg:flex-row items-center justify-between gap-10">
+          <div className="mt-20 pt-10 border-t border-[var(--gm-text)]/5 flex flex-col lg:flex-row items-center justify-between gap-10">
             <div className="flex flex-col gap-2 text-center lg:text-left">
               <p className="text-sm text-muted-foreground italic font-serif opacity-50">
                 * Bu yorum Jung arketipleri ve kadim semboloji ile harmanlanarak yapay zeka tarafından üretilmiştir.

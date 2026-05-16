@@ -9,6 +9,8 @@ import { useLocaleShort, useUiSection } from '@/i18n';
 import { isValidUiText } from '@/integrations/shared';
 import { safeStr, toCdnSrc } from '@/integrations/shared';
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function FaqsPage() {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_faqs', locale as any);
@@ -55,7 +57,7 @@ export default function FaqsPage() {
   }, [ui]);
 
   return (
-    <>
+    <PageContainer verticalPadding="large">
       <LayoutSeoBridge
         title={pageTitle}
         description={pageDescription || undefined}
@@ -63,17 +65,11 @@ export default function FaqsPage() {
         noindex={false}
       />
 
-      <Banner title={bannerTitle} />
-
-      <div className="bg-bg-primary min-h-[50vh]">
-        <section className="container mx-auto py-16 px-4">
-          <FaqsPageContent />
-        </section>
-
-        <section className="container mx-auto pb-16 px-4">
-          <Feedback />
-        </section>
+      <FaqsPageContent />
+      
+      <div className="mt-20">
+        <Feedback />
       </div>
-    </>
+    </PageContainer>
   );
 }

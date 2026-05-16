@@ -108,6 +108,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default async function SignDetailPage({ params }: Props) {
   const { sign, locale } = await params;
   if (!VALID_SIGNS.has(sign)) notFound();
@@ -154,9 +156,9 @@ export default async function SignDetailPage({ params }: Props) {
   ]);
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
       <JsonLd id="zodiac-breadcrumb" data={schema} />
       <ZodiacDetail initialInfo={renderedInfo} initialToday={today} />
-    </main>
+    </PageContainer>
   );
 }

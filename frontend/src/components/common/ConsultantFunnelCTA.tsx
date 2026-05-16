@@ -61,8 +61,8 @@ export default function ConsultantFunnelCTA({
 
   if (intensity === 'none') return null;
 
-  // Premium kontrol — user.subscription veya benzeri (yoksa false)
-  const isPremium = Boolean((user as any)?.subscription_tier === 'premium');
+  // Premium kontrol — FAZ 41 T41-1
+  const isPremium = user?.is_premium === true;
   const resolvedTier: Tier = tier ?? tierOverride ?? detectTier({ isAuthenticated, isPremium });
   const cfg = getFunnelConfig(feature);
   const href = buildHref(locale, feature, context);

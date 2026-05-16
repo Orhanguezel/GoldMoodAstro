@@ -3,14 +3,15 @@
 import React from 'react';
 import { fetchHomeLayout } from './fetchHomeLayout.server';
 import HomeLayoutRenderer from './HomeLayoutRenderer';
+import PageContainer from '@/components/common/PageContainer';
 
 type Props = { locale?: string };
 
 export default async function HomeContent({ locale }: Props) {
   const layout = await fetchHomeLayout();
   return (
-    <main className="flex flex-col w-full bg-[var(--gm-bg)]">
+    <PageContainer width="full" pad="none" as="main" className="flex flex-col bg-[var(--gm-bg)]">
       <HomeLayoutRenderer layout={layout} locale={locale} />
-    </main>
+    </PageContainer>
   );
 }

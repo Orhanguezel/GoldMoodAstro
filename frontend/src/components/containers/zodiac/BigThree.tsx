@@ -10,6 +10,7 @@ import { toPng } from 'html-to-image';
 import { Download, Share2, RefreshCcw, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import ShareCard from '@/components/common/ShareCard';
+import PageContainer from '@/components/common/PageContainer';
 
 import { useBrand } from '@/hooks/useBrand';
 
@@ -35,7 +36,9 @@ export default function BigThree() {
     if (!cardRef.current) return;
     setIsExporting(true);
     try {
-      const dataUrl = await toPng(cardRef.current, { cacheBust: true, backgroundColor: brand.colors.bg_base || '#0D0B1E' });
+      // Use bg_base token or fallback
+      const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--gm-bg-deep').trim() || 'rgb(26, 22, 48)';
+      const dataUrl = await toPng(cardRef.current, { cacheBust: true, backgroundColor: bgColor });
       const link = document.createElement('a');
       link.download = `goldmood-buyuk-uclu-${result?.name}.png`;
       link.href = dataUrl;
@@ -50,7 +53,7 @@ export default function BigThree() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-4">
+    <PageContainer className="max-w-4xl">
       <div className="text-center mb-12">
         <h1 className={`${cinzel.className} text-4xl md:text-6xl mb-4 text-brand-gold`}>
           Büyük Üçlü
@@ -81,7 +84,7 @@ export default function BigThree() {
             {/* Exportable Card */}
             <div 
               ref={cardRef}
-              className="relative w-full max-w-[480px] aspect-[4/5] bg-[#0D0B1E] p-10 rounded-[2.5rem] border-[3px] border-brand-gold/30 overflow-hidden shadow-2xl flex flex-col items-center justify-between"
+              className="relative w-full max-w-[480px] aspect-[4/5] bg-[var(--gm-bg-deep)] p-10 rounded-[2.5rem] border-[3px] border-brand-gold/30 overflow-hidden shadow-2xl flex flex-col items-center justify-between"
             >
               {/* Decorative elements for export */}
               <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/10 via-transparent to-brand-gold/5" />
@@ -94,7 +97,7 @@ export default function BigThree() {
                   {brand.name.toUpperCase()}
                 </div>
                 <div className="h-px w-12 bg-brand-gold/40 mx-auto mb-4" />
-                <h2 className={`${cinzel.className} text-3xl text-white`}>{result.name}</h2>
+                <h2 className={`${cinzel.className} text-3xl text-[var(--gm-text)]`}>{result.name}</h2>
               </div>
 
               {/* Signs */}
@@ -107,9 +110,9 @@ export default function BigThree() {
                   <div key={item.label} className="flex items-center justify-between group">
                     <div className="flex-1 text-right pr-6">
                       <div className="text-[9px] font-bold text-brand-gold/60 tracking-widest uppercase mb-1">{item.label}</div>
-                      <div className={`${cinzel.className} text-xl text-white`}>{SIGN_LABELS[item.sign!] || item.sign}</div>
+                      <div className={`${cinzel.className} text-xl text-[var(--gm-text)]`}>{SIGN_LABELS[item.sign!] || item.sign}</div>
                     </div>
-                    <div className={`relative ${item.major ? 'w-20 h-20' : 'w-16 h-16'} flex-shrink-0 border border-brand-gold/20 rounded-full bg-white/5 flex items-center justify-center`}>
+                    <div className={`relative ${item.major ? 'w-20 h-20' : 'w-16 h-16'} flex-shrink-0 border border-brand-gold/20 rounded-full bg-[var(--gm-text)]/5 flex items-center justify-center`}>
                       <Image
                         src={`/uploads/zodiac/${item.sign}.png`}
                         alt=""
@@ -169,6 +172,6 @@ export default function BigThree() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </PageContainer>
   );
 }

@@ -124,7 +124,7 @@ export default function FeedbackFormModal({ locale, t, onClose }: Props) {
         type="button"
         onClick={onClose}
         aria-label={t.close}
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-[var(--gm-bg-deep)]/70 backdrop-blur-sm"
       />
 
       <div className="relative bg-bg-card w-full max-w-lg shadow-medium overflow-hidden flex flex-col max-h-[90vh]">
@@ -206,13 +206,13 @@ export default function FeedbackFormModal({ locale, t, onClose }: Props) {
 
             {/* Status */}
             {submitState.type === 'success' && (
-              <div className="bg-green-50 text-green-800 p-4 rounded-lg flex items-start gap-3">
+              <div className="bg-[var(--gm-success)]/12 text-[var(--gm-success)] p-4 rounded-lg flex items-start gap-3">
                 <IconCheck className="mt-0.5" size={18} />
                 <p className="text-sm font-medium">{t.okMsg}</p>
               </div>
             )}
             {submitState.type === 'error' && (
-              <div className="bg-red-50 text-red-800 p-4 rounded-lg flex items-start gap-3">
+              <div className="bg-[var(--gm-error)]/12 text-[var(--gm-error)] p-4 rounded-lg flex items-start gap-3">
                 <IconX className="mt-0.5" size={18} />
                 <p className="text-sm font-medium">{submitState.message}</p>
               </div>
@@ -230,7 +230,7 @@ export default function FeedbackFormModal({ locale, t, onClose }: Props) {
               <button
                 type="submit"
                 disabled={!canSubmit || isCreating}
-                className="px-6 py-2.5 text-sm font-medium bg-brand-primary text-white rounded-lg shadow hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-6 py-2.5 text-sm font-medium bg-brand-primary text-[var(--gm-bg)] rounded-lg shadow hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {isCreating ? t.sending : t.submit}
               </button>

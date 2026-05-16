@@ -5,6 +5,7 @@ import JsonLd from '@/seo/JsonLd';
 import { breadcrumbSchema, consultantPersonSchema, graph } from '@/seo/jsonld';
 import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
 import { normPath } from '@/integrations/shared';
+import PageContainer from '@/components/common/PageContainer';
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
@@ -160,7 +161,9 @@ export default async function ConsultantDetailPage({ params }: Props) {
   return (
     <>
       <JsonLd id="consultant-person" data={schema} />
-      <ConsultantDetail id={id} locale={locale} />
+      <PageContainer className="bg-(--gm-bg) text-(--gm-text)" verticalPadding="large">
+        <ConsultantDetail id={id} locale={locale} />
+      </PageContainer>
     </>
   );
 }

@@ -40,7 +40,7 @@ export default function DevPaymentCardBanner() {
         type="button"
         onClick={() => setOpen(true)}
         title="Test kart bilgilerini göster"
-        className="fixed bottom-4 right-4 z-[9999] w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-600 text-white shadow-2xl flex items-center justify-center transition-colors"
+        className="fixed bottom-4 right-4 z-[9999] w-12 h-12 rounded-full bg-[var(--gm-warning)] hover:bg-[var(--gm-gold-dim)] text-[var(--gm-bg)] shadow-2xl flex items-center justify-center transition-colors"
       >
         <CreditCard size={20} />
       </button>
@@ -59,16 +59,16 @@ export default function DevPaymentCardBanner() {
 
   const Row = ({ label, value }: { label: string; value: string }) => (
     <div className="flex items-center justify-between gap-3 text-xs">
-      <span className="text-amber-100/80 font-mono">{label}</span>
+      <span className="text-[var(--gm-gold-light)]/80 font-mono">{label}</span>
       <button
         type="button"
         onClick={() => copy(label, value)}
-        className="flex items-center gap-1.5 font-mono text-white hover:text-amber-200 transition-colors"
+        className="flex items-center gap-1.5 font-mono text-[var(--gm-text)] hover:text-[var(--gm-gold-light)] transition-colors"
         title={`${label} kopyala`}
       >
         <span>{value}</span>
         {copied === label ? (
-          <Check className="w-3 h-3 text-emerald-300" />
+          <Check className="w-3 h-3 text-[var(--gm-success)]" />
         ) : (
           <Copy className="w-3 h-3 opacity-50" />
         )}
@@ -77,18 +77,18 @@ export default function DevPaymentCardBanner() {
   );
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] w-72 rounded-2xl border-2 border-amber-400/60 bg-gradient-to-br from-amber-700 to-amber-900 shadow-2xl backdrop-blur p-4 text-white">
+    <div className="fixed bottom-4 right-4 z-[9999] w-72 rounded-2xl border-2 border-[var(--gm-warning)]/60 bg-gradient-to-br from-[var(--gm-bg-deep)] to-[var(--gm-surface)] shadow-2xl backdrop-blur p-4 text-[var(--gm-text)]">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <CreditCard size={16} className="text-amber-200" />
-          <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-amber-100">
+          <CreditCard size={16} className="text-[var(--gm-gold-light)]" />
+          <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-[var(--gm-gold-light)]">
             Iyzipay Sandbox · DEV
           </span>
         </div>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-amber-100/70 hover:text-white transition-colors"
+          className="text-[var(--gm-gold-light)]/70 hover:text-[var(--gm-text)] transition-colors"
           title="Gizle"
         >
           <X size={16} />
@@ -102,7 +102,7 @@ export default function DevPaymentCardBanner() {
         <Row label="Sahip" value={TEST_CARD.holder} />
       </div>
 
-      <p className="mt-3 pt-3 border-t border-amber-400/30 text-[10px] text-amber-100/70 leading-relaxed">
+      <p className="mt-3 pt-3 border-t border-[var(--gm-warning)]/30 text-[10px] text-[var(--gm-gold-light)]/70 leading-relaxed">
         Sadece dev build'da görünür. Prod'a çıkmadan bu component'i kaldır.
       </p>
     </div>

@@ -3,6 +3,7 @@ import DailyHoroscopeSection from '@/components/containers/home/DailyHoroscopeSe
 import ExpertiseCategoriesSection from '@/components/containers/home/ExpertiseCategoriesSection';
 import FeaturedConsultantsSection from '@/components/containers/home/FeaturedConsultantsSection';
 import HomeIntroSection from '@/components/containers/home/HomeIntroSection';
+import PageContainer from '@/components/common/PageContainer';
 import { normPath, localizePath } from '@/integrations/shared';
 import { buildMetadataFromSeo, fetchSeoObject } from '@/seo/server';
 
@@ -36,7 +37,7 @@ export default async function ExplorePage({
   const isTr = locale === 'tr';
 
   return (
-    <main className="bg-[var(--gm-bg)] text-[var(--gm-text)] pt-32">
+    <PageContainer as="main" width="full" pad="none" withHeaderOffset className="bg-(--gm-bg) text-(--gm-text)">
       <section className="px-6 pt-32 pb-20 border-b border-[var(--gm-border-soft)]">
         <div className="max-w-5xl mx-auto text-center">
           <span className="section-label">{isTr ? 'KEŞFET' : 'EXPLORE'}</span>
@@ -57,6 +58,6 @@ export default async function ExplorePage({
       <FeaturedConsultantsSection locale={locale} />
       <HomeIntroSection />
       <DailyHoroscopeSection />
-    </main>
+    </PageContainer>
   );
 }

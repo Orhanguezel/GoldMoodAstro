@@ -59,6 +59,10 @@ export const DEFAULT_TOKENS: DesignTokens = {
     text_primary_dark: '#FAF6EF',
     text_secondary_dark: '#E5DCC8',
     text_muted_dark: '#A09888',
+    // Splash / Loader (Faz 38)
+    splash_bg: '#FAF6EF',
+    splash_text: '#2A2620',
+    loader_primary: '#C9A961',
   },
   typography: {
     font_display: 'Cinzel, Georgia, serif',

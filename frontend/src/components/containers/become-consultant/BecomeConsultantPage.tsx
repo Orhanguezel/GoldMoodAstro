@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Cinzel } from 'next/font/google';
 import { 
   Users, 
   CheckCircle2, 
@@ -50,6 +51,10 @@ function getApiErrorMessage(error: unknown) {
   if (typeof directMessage === 'string' && directMessage.trim()) return directMessage;
   return 'Başvuru sırasında bir hata oluştu.';
 }
+
+import PageContainer from '@/components/common/PageContainer';
+
+const cinzel = Cinzel({ subsets: ['latin'] });
 
 export default function BecomeConsultantPage() {
   const [step, setStep] = useState(1);
@@ -118,12 +123,12 @@ export default function BecomeConsultantPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--gm-bg)] pt-32 pb-24 relative overflow-hidden">
+    <PageContainer className="bg-(--gm-bg) relative overflow-hidden" verticalPadding="large">
       {/* Mystical Background Orbs */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--gm-gold)]/5 blur-[120px] rounded-full -mr-64 -mt-32 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[var(--gm-primary)]/5 blur-[100px] rounded-full -ml-48 -mb-24 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-(--gm-gold)/5 blur-[120px] rounded-full -mr-64 -mt-32 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-(--gm-primary)/5 blur-[100px] rounded-full -ml-48 -mb-24 pointer-events-none" />
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="relative z-10">
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
@@ -134,24 +139,24 @@ export default function BecomeConsultantPage() {
               transition={{ duration: 0.6 }}
               className="max-w-5xl mx-auto"
             >
-              <div className="text-center mb-16">
+              <div className="text-center mb-20">
                 <motion.span 
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--gm-gold)]/20 bg-[var(--gm-gold)]/[0.03] text-[var(--gm-gold)] text-[10px] font-bold uppercase tracking-[0.3em] mb-8"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-(--gm-gold)/20 bg-(--gm-gold)/5 text-(--gm-gold) text-[11px] font-bold uppercase tracking-[0.3em] mb-10"
                 >
                   <Sparkles size={12} />
                   BİLGELİĞİNİZİ PAYLAŞIN
                 </motion.span>
-                <h1 className="font-serif text-5xl md:text-7xl text-[var(--gm-text)] mb-8 leading-[1.1] tracking-tight">
-                  GoldMoodAstro Ailesine <br /> <span className="text-[var(--gm-gold)] italic">Görkemli Bir Giriş Yapın</span>
+                <h1 className="font-serif text-5xl md:text-8xl text-(--gm-text) mb-10 leading-[1.1] tracking-tight">
+                  GoldMoodAstro Ailesine <br /> <span className="text-(--gm-gold) italic">Görkemli Bir Giriş Yapın</span>
                 </h1>
-                <p className="max-w-2xl mx-auto text-[var(--gm-text-dim)] font-serif italic text-xl leading-relaxed">
+                <p className="max-w-3xl mx-auto text-(--gm-text-dim) font-serif italic text-2xl leading-relaxed opacity-90">
                   Binlerce ruhsal yolculuğa rehberlik edin, uzmanlığınızı markalaştırın ve kendi kutsal çalışma alanınızı yönetin.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
                 <BenefitCard 
                   icon={Users} 
                   title="Seçkin Kitle" 
@@ -172,16 +177,16 @@ export default function BecomeConsultantPage() {
               <div className="flex flex-col items-center gap-6">
                 <button 
                   onClick={() => setStep(2)}
-                  className="group relative px-16 py-5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] font-bold uppercase tracking-[0.2em] text-xs transition-all duration-500 hover:scale-105 hover:shadow-[0_0_40px_rgba(201,169,97,0.3)] overflow-hidden"
+                  className="group relative px-20 py-6 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold uppercase tracking-[0.25em] text-xs transition-all duration-500 hover:scale-105 hover:shadow-(--gm-shadow-gold) overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center gap-3">
                     Hemen Başvuruyu Başlat
-                    <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </span>
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-[var(--gm-text)]/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                 </button>
-                <div className="flex items-center gap-2 text-[10px] text-[var(--gm-muted)] uppercase tracking-widest">
-                  <ShieldCheck size={14} className="text-[var(--gm-success)]" />
+                <div className="flex items-center gap-2 text-[10px] text-(--gm-muted) uppercase tracking-widest font-bold">
+                  <ShieldCheck size={14} className="text-(--gm-success)" />
                   Başvurular 48 saat içinde değerlendirilir
                 </div>
               </div>
@@ -197,27 +202,27 @@ export default function BecomeConsultantPage() {
               transition={{ duration: 0.6 }}
               className="max-w-4xl mx-auto"
             >
-              <div className="mb-10 flex items-center justify-between">
+              <div className="mb-12 flex items-center justify-between">
                 <button 
                   onClick={() => setStep(1)}
-                  className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[var(--gm-muted)] hover:text-[var(--gm-text)] transition-colors"
+                  className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-(--gm-muted) hover:text-(--gm-text) transition-colors"
                 >
-                  <ArrowLeft size={14} />
+                  <ArrowLeft size={16} />
                   Geri Dön
                 </button>
-                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gm-gold)]">
+                <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-(--gm-gold)">
                   Başvuru Formu — Adım 2/2
                 </div>
               </div>
 
-              <div className="relative p-8 md:p-16 rounded-[3rem] border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 backdrop-blur-md shadow-2xl overflow-hidden">
+              <div className="relative p-8 md:p-20 rounded-[3.5rem] border border-(--gm-border-soft) bg-(--gm-surface) shadow-(--gm-shadow-card) overflow-hidden">
                 {/* Internal Decorative Orb */}
-                <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-[var(--gm-gold)]/5 blur-[60px] pointer-events-none" />
+                <div className="absolute -right-20 -bottom-20 h-80 w-80 rounded-full bg-(--gm-gold)/5 blur-[80px] pointer-events-none" />
 
-                <form onSubmit={handleSubmit} className="relative z-10 space-y-12">
-                  <div className="space-y-8">
-                    <h2 className="font-serif text-3xl text-[var(--gm-text)] tracking-tight">Kişisel Bilgiler & Deneyim</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <form onSubmit={handleSubmit} className="relative z-10 space-y-16">
+                  <div className="space-y-10">
+                    <h2 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-tight`}>Kişisel Bilgiler & Deneyim</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                       <InputGroup label="Ad Soyad" required>
                         <input 
                           type="text" 
@@ -259,10 +264,10 @@ export default function BecomeConsultantPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-8">
-                    <h2 className="font-serif text-3xl text-[var(--gm-text)] tracking-tight">Uzmanlık & Diller</h2>
+                  <div className="space-y-10">
+                    <h2 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-tight`}>Uzmanlık & Diller</h2>
                     <InputGroup label="Uzmanlık Alanları" required>
-                      <div className="flex flex-wrap gap-3">
+                      <div className="flex flex-wrap gap-4">
                         {EXPERTISE_OPTIONS.map(opt => (
                           <PillButton
                             key={opt.id}
@@ -275,7 +280,7 @@ export default function BecomeConsultantPage() {
                     </InputGroup>
 
                     <InputGroup label="Danışmanlık Dilleri" required>
-                      <div className="flex flex-wrap gap-3">
+                      <div className="flex flex-wrap gap-4">
                         {LANGUAGES.map(opt => (
                           <PillButton
                             key={opt.id}
@@ -288,17 +293,24 @@ export default function BecomeConsultantPage() {
                     </InputGroup>
                   </div>
 
-                  <div className="space-y-8">
-                    <h2 className="font-serif text-3xl text-[var(--gm-text)] tracking-tight">Anlatım & Belgeler</h2>
-                    <InputGroup label="Kısa Biyografi" required>
+                  <div className="space-y-10">
+                    <h2 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-tight`}>Anlatım & Belgeler</h2>
+                    <InputGroup 
+                      label="Kısa Biyografi" 
+                      required
+                      hint="Kendinizi, yaklaşımınızı ve danışana ne sunduğunuzu anlatın. İletişim bilgisi/dış link yazmayın. En az 150 karakter önerilir."
+                    >
                       <textarea 
                         required
                         rows={5}
                         value={formData.bio}
                         onChange={e => setFormData({...formData, bio: e.target.value})}
-                        className="gm-input-premium py-5 min-h-[160px] resize-none" 
+                        className="gm-input-premium py-6 min-h-[200px] resize-none font-serif italic" 
                         placeholder="Uzmanlığınız, yaklaşımınız ve ruhsal rehberlik tarzınızdan bahsedin..."
                       />
+                      <p className="text-[10px] text-(--gm-muted) font-bold uppercase tracking-[0.2em] mt-4 opacity-70">
+                        * Profil fotoğrafınızı başvurunuz onaylandıktan sonra panel üzerinden ekleyeceksiniz.
+                      </p>
                     </InputGroup>
 
                     <InputGroup label="Sertifikalar & Eğitimler">
@@ -306,12 +318,12 @@ export default function BecomeConsultantPage() {
                         rows={3}
                         value={formData.certifications}
                         onChange={e => setFormData({...formData, certifications: e.target.value})}
-                        className="gm-input-premium py-5 min-h-[100px] resize-none" 
+                        className="gm-input-premium py-6 min-h-[120px] resize-none font-serif italic" 
                         placeholder="Aldığınız eğitimler, sertifikalar ve referans kurumlar..."
                       />
                     </InputGroup>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <FileUploadBox 
                         label="CV / Özgeçmiş" 
                         desc="PDF, JPG veya PNG (Max 5MB)"
@@ -325,19 +337,19 @@ export default function BecomeConsultantPage() {
                     </div>
                   </div>
 
-                  <div className="pt-10 border-t border-[var(--gm-border-soft)] flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div className="flex items-start gap-3 max-w-md">
+                  <div className="pt-12 border-t border-(--gm-border-soft) flex flex-col md:flex-row items-center justify-between gap-10">
+                    <div className="flex items-start gap-4 max-w-md">
                       <div className="mt-1">
-                        <CheckCircle2 size={16} className="text-[var(--gm-gold)]" />
+                        <CheckCircle2 size={18} className="text-(--gm-gold)" />
                       </div>
-                      <p className="text-[11px] text-[var(--gm-muted)] leading-relaxed">
-                        Başvurunuzu göndererek <span className="text-[var(--gm-gold)] hover:underline cursor-pointer transition-all">Danışman Kullanım Şartları</span>&apos;nı ve KVKK aydınlatma metnini kabul etmiş sayılırsınız.
+                      <p className="text-[11px] text-(--gm-text-dim) leading-relaxed font-serif italic">
+                        Başvurunuzu göndererek <span className="text-(--gm-gold) font-bold hover:underline cursor-pointer transition-all">Danışman Kullanım Şartları</span>&apos;nı ve KVKK aydınlatma metnini kabul etmiş sayılırsınız.
                       </p>
                     </div>
                     <button 
                       type="submit"
                       disabled={isLoading}
-                      className="group w-full md:w-auto px-16 py-5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] font-bold uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 transition-all duration-300 hover:shadow-2xl hover:shadow-[var(--gm-gold)]/30 disabled:opacity-50"
+                      className="group w-full md:w-auto px-20 py-6 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold uppercase tracking-[0.25em] text-xs flex items-center justify-center gap-3 transition-all duration-300 hover:shadow-(--gm-shadow-gold) disabled:opacity-50"
                     >
                       {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -360,24 +372,24 @@ export default function BecomeConsultantPage() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="max-w-2xl mx-auto text-center py-20"
+              className="max-w-2xl mx-auto text-center py-32"
             >
-              <div className="relative inline-block mb-12">
-                <div className="absolute inset-0 bg-[var(--gm-success)]/20 blur-[40px] rounded-full animate-pulse" />
-                <div className="relative w-24 h-24 rounded-full bg-[var(--gm-success)]/10 text-[var(--gm-success)] flex items-center justify-center border border-[var(--gm-success)]/30 shadow-2xl">
-                  <CheckCircle2 className="w-12 h-12" />
+              <div className="relative inline-block mb-16">
+                <div className="absolute inset-0 bg-(--gm-success)/20 blur-[60px] rounded-full animate-pulse" />
+                <div className="relative w-32 h-32 rounded-full bg-(--gm-success)/10 text-(--gm-success) flex items-center justify-center border border-(--gm-success)/30 shadow-(--gm-shadow-glow)">
+                  <CheckCircle2 className="w-16 h-16" />
                 </div>
               </div>
               
-              <h2 className="font-serif text-4xl md:text-5xl text-[var(--gm-text)] mb-6 tracking-tight">Başvurunuz Gökyüzüne Ulaştı!</h2>
-              <p className="text-[var(--gm-text-dim)] font-serif italic text-xl mb-12 leading-relaxed">
+              <h2 className={`${cinzel.className} text-4xl md:text-6xl text-(--gm-text) mb-8 tracking-tight`}>Başvurunuz Gökyüzüne Ulaştı!</h2>
+              <p className="text-(--gm-text-dim) font-serif italic text-2xl mb-16 leading-relaxed opacity-90">
                 Değerli vaktinizi ayırdığınız için teşekkür ederiz. Başvurunuz uzman küratör ekibimiz tarafından özenle incelenecek ve en kısa sürede sizinle iletişime geçeceğiz.
               </p>
               
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <button 
                   onClick={() => window.location.href = '/'}
-                  className="px-12 py-4 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] font-bold uppercase tracking-widest text-[10px] hover:scale-105 transition-all shadow-xl shadow-[var(--gm-gold)]/20"
+                  className="px-16 py-5 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold uppercase tracking-[0.25em] text-[11px] hover:scale-105 transition-all shadow-(--gm-shadow-gold)"
                 >
                   Anasayfaya Dön
                 </button>
@@ -390,23 +402,21 @@ export default function BecomeConsultantPage() {
       <style jsx>{`
         .gm-input-premium {
           width: 100%;
-          height: 60px;
-          background: rgba(var(--gm-bg-deep-rgb), 0.4);
+          height: 64px;
+          background: var(--gm-bg-deep);
           border: 1px solid var(--gm-border-soft);
-          border-radius: 20px;
-          padding: 0 24px;
+          border-radius: 24px;
+          padding: 0 28px;
           font-family: var(--font-serif);
           font-size: 16px;
           color: var(--gm-text);
           outline: none;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          backdrop-filter: blur(4px);
         }
         .gm-input-premium:focus {
           border-color: var(--gm-gold);
-          background: rgba(var(--gm-bg-deep-rgb), 0.6);
-          box-shadow: 0 0 25px rgba(201, 169, 97, 0.1);
-          padding-left: 28px;
+          box-shadow: var(--gm-shadow-soft);
+          padding-left: 32px;
         }
         .gm-input-premium::placeholder {
           opacity: 0.3;
@@ -416,7 +426,7 @@ export default function BecomeConsultantPage() {
           height: auto;
         }
       `}</style>
-    </div>
+    </PageContainer>
   );
 }
 
@@ -435,13 +445,14 @@ function BenefitCard({ icon: Icon, title, desc }: { icon: any, title: string, de
   );
 }
 
-function InputGroup({ label, children, required }: { label: string, children: React.ReactNode, required?: boolean }) {
+function InputGroup({ label, children, required, hint }: { label: string, children: React.ReactNode, required?: boolean, hint?: string }) {
   return (
     <div className="space-y-3">
       <label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--gm-gold-dim)] mb-1">
         {label} 
-        {required && <span className="text-rose-500 text-lg leading-none mt-1">*</span>}
+        {required && <span className="text-[var(--gm-error)] text-lg leading-none mt-1">*</span>}
       </label>
+      {hint && <p className="text-[11px] text-[var(--gm-text-dim)] font-serif italic leading-relaxed mb-2">{hint}</p>}
       {children}
     </div>
   );

@@ -227,7 +227,7 @@ export default function AvailabilityPanel() {
         ))}
         <button
           onClick={() => { setHours([]); setDirty(true); }}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 text-[10px] font-bold uppercase tracking-widest text-rose-400 hover:bg-rose-500/15"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--gm-error)]/30 bg-[var(--gm-error)]/10 text-[10px] font-bold uppercase tracking-widest text-[var(--gm-error)] hover:bg-[var(--gm-error)]/15"
         >
           <Trash2 className="w-3 h-3" />
           Hepsini Temizle
@@ -253,7 +253,7 @@ export default function AvailabilityPanel() {
             type="button"
             onClick={() => handleOverrideDay(0)}
             disabled={isOverridingDay}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-[var(--gm-error)]/30 bg-[var(--gm-error)]/10 text-[var(--gm-error)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
           >
             {isOverridingDay ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
             Günü Kapat
@@ -344,7 +344,7 @@ export default function AvailabilityPanel() {
                       />
                       <button
                         onClick={() => removeRow(idx)}
-                        className="ml-auto p-2 text-rose-400 hover:bg-rose-500/10 rounded-lg"
+                        className="ml-auto p-2 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-lg"
                         title="Sil"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

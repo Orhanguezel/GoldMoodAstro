@@ -109,7 +109,7 @@ export default function ZodiacTransit() {
       {/* Footer CTA */}
       <div className="mt-24 p-12 rounded-[3rem] bg-gradient-to-br from-brand-primary/10 to-surface border border-brand-gold/20 text-center relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--gm-gold)_0%,_transparent_70%)] opacity-[0.03]" />
-        <h2 className={`${cinzel.className} text-3xl mb-4 text-white`}>Daha Derine İnin</h2>
+        <h2 className={`${cinzel.className} text-3xl mb-4 text-[var(--gm-text)]`}>Daha Derine İnin</h2>
         <p className="text-muted-foreground max-w-xl mx-auto mb-10 italic">
           Genel gökyüzü etkileri herkesi farklı etkiler. Kendi doğum haritanız üzerindeki transitleri görmek için premium analizimize göz atın.
         </p>

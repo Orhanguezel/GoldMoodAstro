@@ -46,14 +46,12 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
             </Link>
           </div>
 
-          {/* Premium Card — her temada sabit koyu accent (sand-900 = #1A1715),
-              theme-değişmez bir kontrast bloğu olarak çalışır. Açık veya koyu
-              preset farketmeksizin daima dramatic dark accent görünür. */}
+          {/* Premium Card — her temada sabit koyu accent */}
           <div
-            className="rounded-sm p-12 relative transition-all duration-400 hover:-translate-y-1 hover:shadow-glow group border border-gold-600/40 bg-sand-900 text-text-on-dark"
+            className="rounded-sm p-12 relative transition-all duration-400 hover:-translate-y-1 hover:shadow-glow group border border-brand-gold/40 bg-(--gm-bg-deep) text-text-on-dark"
             style={{
               backgroundImage:
-                'radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--color-gold-400) 10%, transparent), transparent 60%)',
+                'radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--gm-gold) 10%, transparent), transparent 60%)',
             }}
           >
             <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-[var(--gm-gold)] text-[var(--gm-gold)] bg-[var(--gm-gold)]/15 rounded-full">

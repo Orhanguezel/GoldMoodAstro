@@ -159,7 +159,7 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
           minHeight,
           maxHeight,
           overflowY: 'auto',
-          backgroundColor: disabled ? '#f8f9fa' : undefined,
+          backgroundColor: disabled ? 'var(--gm-surface-high)' : undefined,
         }}
         contentEditable={!disabled}
         onInput={handleInput}

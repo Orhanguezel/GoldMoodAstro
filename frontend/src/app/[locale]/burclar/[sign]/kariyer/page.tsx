@@ -27,10 +27,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function SignCareerPage() {
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer width="full" pad="none" className="bg-(--gm-bg)">
       <ZodiacDetail initialTab="career" />
-    </main>
+    </PageContainer>
   );
 }

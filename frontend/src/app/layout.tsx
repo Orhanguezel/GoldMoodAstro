@@ -5,9 +5,10 @@ import { headers } from 'next/headers';
 import { fetchSetting } from '@/i18n/server';
 import { fetchDesignTokens } from '@/lib/tokens/fetchTokens.server';
 import { detectThemeMode } from '@/lib/tokens/detectThemeMode';
+import { DEFAULT_TOKENS } from '@/lib/tokens/defaults';
 
 export async function generateViewport(): Promise<Viewport> {
-  let themeColor = '#C9A961';
+  let themeColor = DEFAULT_TOKENS.branding.theme_color;
   try {
     const row = await fetchSetting('design_tokens', '*', { revalidate: 300 });
     const raw = row?.value;

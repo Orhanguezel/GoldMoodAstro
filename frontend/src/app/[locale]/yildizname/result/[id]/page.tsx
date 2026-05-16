@@ -42,11 +42,13 @@ export async function generateMetadata(
   };
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default async function YildiznameResultPage({ params }: Props) {
   await params; // Next.js 16 — params is a Promise even when unused
   return (
-    <main className="min-h-screen bg-bg-deep pt-32 pb-20 px-4">
+    <PageContainer className="bg-(--gm-bg-deep)" verticalPadding="large">
       <YildiznameResultClient />
-    </main>
+    </PageContainer>
   );
 }

@@ -2,8 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import ConsultantList from '@/components/containers/consultant/ConsultantList';
-import Banner from '@/layout/banner/Breadcrum';
 import { FUNNEL_CONFIG, type FunnelFeature } from '@/components/common/funnel.config';
+import { Cinzel } from 'next/font/google';
+
+const cinzel = Cinzel({ subsets: ['latin'] });
 import type { ConsultantPublic } from '@/integrations/rtk/public/consultants.public.endpoints';
 import JsonLd from '@/seo/JsonLd';
 import { breadcrumbSchema, graph, itemList } from '@/seo/jsonld';
@@ -14,6 +16,7 @@ type Props = {
 };
 import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
 import { normPath } from '@/integrations/shared';
+import PageContainer from '@/components/common/PageContainer';
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
@@ -91,35 +94,40 @@ export default async function ConsultantsPage({ params, searchParams }: Props) {
   if (itemListSchema) graphItems.push(itemListSchema);
 
   return (
-    <>
+    <PageContainer verticalPadding="large">
       <JsonLd id="consultants-schema" data={graph(graphItems)} />
-      <Banner title={headline} />
-      <div className="py-20 lg:py-32">
-        <div className="container mx-auto">
-          <div className="mb-16 reveal">
-            <p className="text-[var(--gm-text-dim)] text-lg max-w-2xl leading-relaxed">
-              {topicCfg
-                ? (isTr
-                    ? `${headline} arasından sana uygun olanı seç. Sesli seanslar ve uzman rehberliği ile ruhsal yolculuğuna ışık tut.`
-                    : `Pick the right expert from our ${headline.toLowerCase()}. Enlighten your spiritual journey with voice sessions and expert guidance.`)
-                : (isTr
-                    ? 'Astroloji, tarot, numeroloji ve daha fazlasında onaylı uzmanlar.'
-                    : 'Verified experts in astrology, tarot, numerology and more.')}
-            </p>
-            {topicCfg && (
-              <Link
-                href={`/${locale}/consultants`}
-                className="mt-8 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)] transition-all group"
-              >
-                <span className="group-hover:-translate-x-1 transition-transform">←</span>
-                {isTr ? 'Tüm danışmanları gör' : 'Show all consultants'}
-              </Link>
-            )}
-          </div>
-
-          <ConsultantList locale={locale} initialExpertise={initialExpertise} initialData={consultants} />
-        </div>
+      
+      <div className="max-w-4xl mb-20">
+        <header className="mb-10">
+          <span className="text-[10px] font-bold uppercase tracking-[0.32em] text-(--gm-gold) block mb-4">
+            {isTr ? 'REHBERLİK & BİLGELİK' : 'GUIDANCE & WISDOM'}
+          </span>
+          <h1 className={`${cinzel.className} text-4xl md:text-6xl text-(--gm-text) mb-8 leading-tight`}>
+            {headline}
+          </h1>
+          <p className="text-(--gm-text-dim) text-lg md:text-xl font-serif italic opacity-80 leading-relaxed max-w-2xl">
+            {topicCfg
+              ? (isTr
+                  ? `${headline} arasından sana uygun olanı seç. Sesli seanslar ve uzman rehberliği ile ruhsal yolculuğuna ışık tut.`
+                  : `Pick the right expert from our ${headline.toLowerCase()}. Enlighten your spiritual journey with voice sessions and expert guidance.`)
+              : (isTr
+                  ? 'Astroloji, tarot, numeroloji ve daha fazlasında onaylı uzmanlar.'
+                  : 'Verified experts in astrology, tarot, numerology and more.')}
+          </p>
+          {topicCfg && (
+            <Link
+              href={`/${locale}/consultants`}
+              className="mt-8 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-(--gm-gold) hover:text-(--gm-gold-light) transition-all group"
+            >
+              <span className="group-hover:-translate-x-1 transition-transform">←</span>
+              {isTr ? 'Tüm danışmanları gör' : 'Show all consultants'}
+            </Link>
+          )}
+        </header>
+        <div className="h-px w-32 bg-gradient-to-r from-(--gm-gold)/40 to-transparent" />
       </div>
-    </>
+
+      <ConsultantList locale={locale} initialExpertise={initialExpertise} initialData={consultants} />
+    </PageContainer>
   );
 }

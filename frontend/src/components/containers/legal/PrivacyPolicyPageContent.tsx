@@ -9,6 +9,9 @@ import {
   extractHtmlFromAny,
 } from '@/integrations/shared';
 import { useLocaleShort, useUiSection } from '@/i18n';
+import { Cinzel } from 'next/font/google';
+
+const cinzel = Cinzel({ subsets: ['latin'] });
 
 const PrivacyPolicyPageContent: React.FC = () => {
   const locale = useLocaleShort();
@@ -41,14 +44,14 @@ const PrivacyPolicyPageContent: React.FC = () => {
   }, [page]);
 
   return (
-    <section className="relative min-h-[60vh] py-16 lg:py-24 overflow-hidden">
+    <div className="relative overflow-hidden">
       {/* Background Decor - Spiritual/Celestial Theme */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-24 -right-24 w-[500px] h-[500px] bg-(--gm-gold)/5 rounded-full blur-[120px]" />
         <div className="absolute top-1/2 -left-32 w-[400px] h-[400px] bg-(--gm-primary)/5 rounded-full blur-[100px]" />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="relative z-10">
         {isLoading && (
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="h-12 bg-(--gm-surface) rounded-2xl w-1/3 animate-pulse" />
@@ -76,18 +79,18 @@ const PrivacyPolicyPageContent: React.FC = () => {
             <style>{CMS_FALLBACK_CSS}</style>
 
             <header className="mb-16 text-center">
-              <span className="font-display text-[10px] tracking-[0.4em] text-(--gm-gold-deep) uppercase mb-4 block">
+              <span className="text-[10px] tracking-[0.4em] text-(--gm-gold) font-bold uppercase mb-4 block">
                 {isTr ? 'YASAL BİLGİLENDİRME' : 'LEGAL INFORMATION'}
               </span>
-              <h1 className="text-4xl md:text-6xl font-serif font-light text-(--gm-text) mb-8 leading-tight">
+              <h1 className={`${cinzel.className} text-4xl md:text-5xl text-(--gm-text) mb-8 leading-tight`}>
                 {title}
               </h1>
-              <div className="h-px w-24 bg-gradient-to-r from-transparent via-(--gm-gold) to-transparent mx-auto" />
+              <div className="h-px w-24 bg-gradient-to-r from-transparent via-(--gm-gold)/40 to-transparent mx-auto" />
             </header>
 
             {html ? (
               <article
-                className="prose prose-stone prose-lg max-w-none bg-(--gm-surface) p-8 md:p-16 rounded-[2rem] shadow-card border border-(--gm-border-soft) cms-html text-(--gm-text-dim) leading-relaxed"
+                className="prose prose-stone prose-lg max-w-none bg-(--gm-surface) p-8 md:p-20 rounded-[3rem] shadow-(--gm-shadow-card) border border-(--gm-border-soft) cms-html text-(--gm-text-dim) leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: html }}
               />
             ) : (
@@ -107,7 +110,7 @@ const PrivacyPolicyPageContent: React.FC = () => {
           </div>
         )}
       </div>
-    </section>
+    </div>
   );
 };
 

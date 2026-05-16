@@ -18,6 +18,7 @@ import ShareCard from '@/components/common/ShareCard';
 import ConsultantFunnelCTA from '@/components/common/ConsultantFunnelCTA';
 import { useReadCoffeeMutation } from '@/integrations/rtk/public/coffee.public.endpoints';
 import { useUploadFileMutation } from '@/integrations/rtk/public/storage_public.endpoints';
+import { prepareImageForUpload } from '@/components/common/image-capture';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 const fraunces = Fraunces({ subsets: ['latin'], weight: ['400', '700'], style: ['normal', 'italic'] });
@@ -58,22 +59,31 @@ export default function CoffeeHub() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const newImages = [...images];
-      newImages[index] = reader.result as string;
-      setImages(newImages);
-    };
-    reader.readAsDataURL(file);
+    setError(null);
 
-    // Upload
     try {
+      // T40-1/2: Client-side resize/compress + EXIF
+      const { file: processedFile } = await prepareImageForUpload(file, {
+        maxEdge: 1600,
+        quality: 0.8,
+      });
+
+      // Preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const newImages = [...images];
+        newImages[index] = reader.result as string;
+        setImages(newImages);
+      };
+      reader.readAsDataURL(processedFile);
+
+      // Upload
       const res = await uploadFile({
         bucket: 'coffee',
-        files: file,
+        files: processedFile,
         upsert: true,
       }).unwrap();
+      
       const uploaded = res.items[0];
       if (uploaded?.url || uploaded?.path) {
         const newIds = [...imageIds];
@@ -81,8 +91,8 @@ export default function CoffeeHub() {
         setImageIds(newIds);
       }
     } catch (err) {
-      console.error('Upload failed:', err);
-      setError('Fotoğraf yüklenemedi. Lütfen tekrar deneyin.');
+      console.error('Processing/Upload failed:', err);
+      setError('Fotoğraf yüklenemedi veya işlenemedi. Lütfen tekrar deneyin.');
     }
   };
 
@@ -107,7 +117,7 @@ export default function CoffeeHub() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12 md:py-20 min-h-[80vh] flex flex-col">
+    <div className="min-h-[80vh] flex flex-col py-10 md:py-20">
       <AnimatePresence mode="wait">
         {step === 'intro' && (
           <motion.div
@@ -115,28 +125,28 @@ export default function CoffeeHub() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="text-center space-y-12"
+            className="text-center space-y-16"
           >
-            <div className="space-y-6">
-              <div className="w-24 h-24 bg-brand-gold/10 rounded-[2rem] flex items-center justify-center mx-auto text-brand-gold">
+            <div className="space-y-8">
+              <div className="w-24 h-24 bg-(--gm-gold)/10 rounded-[2.5rem] flex items-center justify-center mx-auto text-(--gm-gold) border border-(--gm-gold)/20 shadow-(--gm-shadow-glow)">
                 <Coffee className="w-12 h-12" />
               </div>
-              <h1 className={`${cinzel.className} text-4xl md:text-6xl text-foreground`}>Geleneksel Kahve Falı</h1>
-              <p className={`${fraunces.className} text-muted-foreground text-lg max-w-xl mx-auto italic leading-relaxed`}>
+              <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight`}>Geleneksel Kahve Falı</h1>
+              <p className={`${fraunces.className} text-(--gm-text-dim) text-xl max-w-2xl mx-auto italic leading-relaxed opacity-80`}>
                 Fincanınızdaki semboller, yapay zekanın vizyonu ve kadim bilgelikle dile geliyor.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left max-w-3xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left max-w-4xl mx-auto">
               {[
                 { step: '01', title: 'Fincanı Kapat', desc: 'Kahvenizi içtikten sonra dilek dileyip fincanı tabağa kapatın.' },
                 { step: '02', title: '5 Dakika Bekle', desc: 'Telvelerin süzülüp sembollerin oluşması için fincanın soğumasını bekleyin.' },
                 { step: '03', title: 'Fotoğrafları Çek', desc: 'Fincanın içinden 2, tabağından 1 net fotoğraf çekip yorumunuzu alın.' },
               ].map((s, i) => (
-                <div key={i} className="p-6 bg-surface/30 border border-border/20 rounded-3xl space-y-4">
-                  <span className="text-brand-gold font-bold tracking-widest text-xs opacity-40">{s.step}</span>
-                  <h3 className={`${cinzel.className} text-lg text-brand-gold`}>{s.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{s.desc}</p>
+                <div key={i} className="p-8 bg-(--gm-surface) border border-(--gm-border-soft) rounded-[2.5rem] space-y-6 shadow-(--gm-shadow-soft) hover:border-(--gm-gold)/30 transition-colors">
+                  <span className="text-(--gm-gold) font-bold tracking-[0.3em] text-[10px] opacity-40 uppercase">{s.step}</span>
+                  <h3 className={`${cinzel.className} text-xl text-(--gm-gold)`}>{s.title}</h3>
+                  <p className="text-(--gm-text-dim) text-sm leading-relaxed font-serif italic">{s.desc}</p>
                 </div>
               ))}
             </div>
@@ -146,7 +156,7 @@ export default function CoffeeHub() {
                 setStep('wait');
                 setTimerActive(true);
               }}
-              className="px-12 py-6 bg-brand-gold text-bg-base font-bold rounded-full hover:scale-[1.05] active:scale-95 transition-all shadow-glow-gold flex items-center justify-center gap-3 mx-auto"
+              className="px-16 py-6 bg-(--gm-gold) text-(--gm-bg-deep) font-bold rounded-full hover:scale-[1.05] active:scale-95 transition-all shadow-(--gm-shadow-gold) flex items-center justify-center gap-3 mx-auto tracking-[0.2em] text-xs"
             >
               FİNCANI KAPATTIM <ChevronRight className="w-5 h-5" />
             </button>
@@ -158,20 +168,20 @@ export default function CoffeeHub() {
             key="wait"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center space-y-12 py-10"
+            className="text-center space-y-16 py-10"
           >
-            <div className="space-y-6">
-              <div className="w-40 h-40 border-2 border-brand-gold/20 rounded-full flex flex-col items-center justify-center mx-auto relative">
+            <div className="space-y-8">
+              <div className="w-48 h-48 border-2 border-(--gm-gold)/20 rounded-full flex flex-col items-center justify-center mx-auto relative bg-(--gm-surface)/30 shadow-(--gm-shadow-glow)">
                 <motion.div 
                   animate={{ rotate: 360 }}
                   transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 border-t-2 border-brand-gold rounded-full"
+                  className="absolute inset-0 border-t-2 border-(--gm-gold) rounded-full"
                 />
-                <Timer className="w-8 h-8 text-brand-gold mb-2" />
-                <span className="text-3xl font-mono text-brand-gold">{formatTime(timeLeft)}</span>
+                <Timer className="w-10 h-10 text-(--gm-gold) mb-3" />
+                <span className="text-4xl font-mono text-(--gm-gold) tracking-tighter">{formatTime(timeLeft)}</span>
               </div>
-              <h2 className={`${cinzel.className} text-3xl text-foreground`}>Telveler Süzülüyor...</h2>
-              <p className="text-muted-foreground max-w-md mx-auto">
+              <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>Telveler Süzülüyor...</h2>
+              <p className="text-(--gm-text-dim) max-w-md mx-auto font-serif italic text-lg opacity-70">
                 Sembollerin netleşmesi için fincanın tamamen soğuması gerekir. Bu sırada niyetinize odaklanın.
               </p>
             </div>
@@ -179,10 +189,10 @@ export default function CoffeeHub() {
             <div className="flex flex-col gap-4 max-w-xs mx-auto">
               <button
                 onClick={() => setStep('upload')}
-                className={`px-8 py-4 rounded-full font-bold transition-all ${
+                className={`px-10 py-5 rounded-full font-bold transition-all tracking-[0.2em] text-xs ${
                   timeLeft === 0 
-                    ? 'bg-brand-gold text-bg-base shadow-glow-gold' 
-                    : 'bg-surface/50 text-muted-foreground border border-border/20'
+                    ? 'bg-(--gm-gold) text-(--gm-bg-deep) shadow-(--gm-shadow-gold)' 
+                    : 'bg-(--gm-surface) text-(--gm-muted) border border-(--gm-border-soft)'
                 }`}
               >
                 {timeLeft === 0 ? 'DEVAM ET' : 'BEKLEMEDEN GEÇ'}
@@ -196,14 +206,19 @@ export default function CoffeeHub() {
             key="upload"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="space-y-12"
+            className="space-y-16"
           >
-            <div className="text-center">
-              <h2 className={`${cinzel.className} text-3xl text-foreground mb-4`}>Fotoğrafları Çek</h2>
-              <p className="text-muted-foreground">Analiz için 3 adet net fotoğrafa ihtiyacımız var.</p>
+            <div className="text-center space-y-6">
+              <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>Fotoğrafları Çek</h2>
+              <div className="max-w-xl mx-auto p-8 rounded-[2rem] bg-(--gm-gold)/5 border border-(--gm-gold)/20 space-y-4">
+                <p className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-[0.4em]">Kusursuz Çekim İçin:</p>
+                <p className="text-sm text-(--gm-text-dim) leading-relaxed font-serif italic opacity-80">
+                  Fincanı düz tut, iyi ışıkta, fincan içi <strong>yakın çekim</strong> yap; tabağı ayrı çek. Net fotoğraflar daha doğru yorum getirir.
+                </p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 { label: 'Fincan İçi 1', desc: 'Yan duvarlar' },
                 { label: 'Fincan İçi 2', desc: 'Taban kısmı' },
@@ -211,26 +226,26 @@ export default function CoffeeHub() {
               ].map((slot, idx) => (
                 <div key={idx} className="aspect-[3/4] relative group">
                   {images[idx] ? (
-                    <div className="w-full h-full rounded-[2.5rem] overflow-hidden border-2 border-brand-gold/40 relative">
+                    <div className="w-full h-full rounded-[3rem] overflow-hidden border-2 border-(--gm-gold)/40 relative shadow-(--gm-shadow-soft)">
                       <Image src={images[idx]} alt={slot.label} fill className="object-cover" />
-                      <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      <label className="absolute inset-0 bg-[var(--gm-bg-deep)]/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm">
                         <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange(e, idx)} className="hidden" />
-                        <Camera className="w-8 h-8 text-brand-gold mb-2" />
-                        <span className="text-xs font-bold text-white uppercase tracking-widest">DEĞİŞTİR</span>
+                        <Camera className="w-10 h-10 text-(--gm-gold) mb-3" />
+                        <span className="text-[10px] font-bold text-[var(--gm-text)] uppercase tracking-[0.3em]">FOTOĞRAFI DEĞİŞTİR</span>
                       </label>
-                      <div className="absolute top-4 right-4 bg-brand-gold rounded-full p-1 shadow-lg">
-                        <CheckCircle2 className="w-5 h-5 text-bg-base" />
+                      <div className="absolute top-6 right-6 bg-(--gm-gold) rounded-full p-2 shadow-(--gm-shadow-gold)">
+                        <CheckCircle2 className="w-6 h-6 text-(--gm-bg-deep)" />
                       </div>
                     </div>
                   ) : (
-                    <label className="w-full h-full rounded-[2.5rem] border-2 border-dashed border-border/40 bg-surface/20 flex flex-col items-center justify-center gap-4 cursor-pointer hover:border-brand-gold/40 hover:bg-brand-gold/5 transition-all">
+                    <label className="w-full h-full rounded-[3rem] border-2 border-dashed border-(--gm-border-soft) bg-(--gm-surface)/40 flex flex-col items-center justify-center gap-6 cursor-pointer hover:border-(--gm-gold)/40 hover:bg-(--gm-gold)/5 transition-all shadow-lg group">
                       <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange(e, idx)} className="hidden" />
-                      <div className="w-16 h-16 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                        <Camera className="w-8 h-8" />
+                      <div className="w-20 h-20 rounded-[1.5rem] bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold) group-hover:scale-110 transition-transform">
+                        <Camera className="w-10 h-10" />
                       </div>
-                      <div className="text-center">
-                        <span className="block text-xs font-bold tracking-widest text-brand-gold uppercase">{slot.label}</span>
-                        <span className="block text-[10px] text-muted-foreground mt-1">{slot.desc}</span>
+                      <div className="text-center space-y-2">
+                        <span className="block text-xs font-bold tracking-[0.3em] text-(--gm-gold) uppercase">{slot.label}</span>
+                        <span className="block text-[11px] text-(--gm-muted) font-serif italic opacity-60">{slot.desc}</span>
                       </div>
                     </label>
                   )}
@@ -239,22 +254,22 @@ export default function CoffeeHub() {
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl flex items-center gap-3">
-                <AlertCircle className="w-5 h-5" />
-                <span>{error}</span>
+              <div className="bg-(--gm-error)/10 border border-(--gm-error)/20 text-(--gm-error) p-6 rounded-[2rem] flex items-center gap-4 animate-in fade-in slide-in-from-top-4">
+                <AlertCircle className="w-6 h-6" />
+                <span className="text-sm font-medium">{error}</span>
               </div>
             )}
 
             <button
               onClick={handleStartAnalysis}
               disabled={imageIds.filter(Boolean).length < 3 || isUploading || isProcessing}
-              className={`w-full py-6 rounded-full font-bold transition-all flex items-center justify-center gap-3 ${
+              className={`w-full py-7 rounded-full font-bold transition-all flex items-center justify-center gap-4 tracking-[0.25em] text-xs ${
                 imageIds.filter(Boolean).length === 3 
-                  ? 'bg-brand-gold text-bg-base shadow-glow-gold hover:scale-[1.02]' 
-                  : 'bg-surface text-muted-foreground cursor-not-allowed border border-border/20'
+                  ? 'bg-(--gm-gold) text-(--gm-bg-deep) shadow-(--gm-shadow-gold) hover:scale-[1.02]' 
+                  : 'bg-(--gm-surface) text-(--gm-muted) cursor-not-allowed border border-(--gm-border-soft)'
               }`}
             >
-              {isUploading ? 'YÜKLENİYOR...' : 'FALIMI YORUMLA'} <Sparkles className="w-5 h-5" />
+              {isUploading ? 'FOTOĞRAFLAR YÜKLENİYOR...' : 'FALIMI ŞİMDİ YORUMLA'} <Sparkles className="w-5 h-5" />
             </button>
           </motion.div>
         )}
@@ -264,38 +279,38 @@ export default function CoffeeHub() {
             key="processing"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex-1 flex flex-col items-center justify-center py-20"
+            className="flex-1 flex flex-col items-center justify-center py-24"
           >
-            <div className="relative w-40 h-40">
+            <div className="relative w-48 h-48">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-                className="absolute inset-0 border-4 border-dashed border-brand-gold/20 rounded-full"
+                className="absolute inset-0 border-4 border-dashed border-(--gm-gold)/20 rounded-full"
               />
               <motion.div
                 animate={{ 
-                  scale: [1, 1.1, 1],
-                  opacity: [0.3, 0.6, 0.3]
+                  scale: [1, 1.15, 1],
+                  opacity: [0.3, 0.8, 0.3]
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-4 bg-brand-gold/10 rounded-full flex items-center justify-center"
+                className="absolute inset-6 bg-(--gm-gold)/10 rounded-full flex items-center justify-center shadow-(--gm-shadow-glow)"
               >
-                <Coffee className="w-16 h-16 text-brand-gold" />
+                <Coffee className="w-20 h-20 text-(--gm-gold)" />
               </motion.div>
             </div>
             
-            <div className="mt-16 text-center space-y-4">
-              <h2 className={`${cinzel.className} text-3xl text-brand-gold`}>Semboller Okunuyor...</h2>
-              <p className={`${fraunces.className} text-muted-foreground italic`}>
+            <div className="mt-20 text-center space-y-6">
+              <h2 className={`${cinzel.className} text-4xl text-(--gm-gold) tracking-widest`}>Semboller Okunuyor...</h2>
+              <p className={`${fraunces.className} text-(--gm-text-dim) text-xl italic opacity-70`}>
                 Yapay zeka fincanınızdaki izleri kadim sembollerle eşleştiriyor.
               </p>
-              <div className="flex gap-2 justify-center mt-8">
+              <div className="flex gap-3 justify-center mt-10">
                 {[0, 1, 2].map(i => (
                   <motion.div
                     key={i}
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                    className="w-2 h-2 bg-brand-gold rounded-full"
+                    animate={{ y: [0, -12, 0], opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                    className="w-3 h-3 bg-(--gm-gold) rounded-full shadow-(--gm-shadow-gold)"
                   />
                 ))}
               </div>
@@ -308,27 +323,27 @@ export default function CoffeeHub() {
             key="result"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="space-y-12 py-10"
+            className="space-y-16 py-10"
           >
-             <div className="text-center space-y-6">
-              <h1 className={`${cinzel.className} text-4xl md:text-6xl text-foreground`}>Fincanın Dili</h1>
+             <div className="text-center space-y-8">
+              <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight leading-tight`}>Fincanın Dili</h1>
               
-              <div className="flex flex-wrap justify-center gap-4">
+              <div className="flex flex-wrap justify-center gap-6">
                 {result.symbols.map((s: any, i: number) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className="px-6 py-4 bg-surface/40 border border-brand-gold/20 rounded-2xl flex flex-col items-center gap-2 min-w-[120px]"
+                    className="px-8 py-6 bg-(--gm-surface) border border-(--gm-border-soft) rounded-[2rem] flex flex-col items-center gap-3 min-w-[150px] shadow-(--gm-shadow-soft) hover:border-(--gm-gold)/40 transition-colors"
                   >
-                    <span className="text-2xl">{s.icon || '✨'}</span>
-                    <span className="text-xs font-bold text-brand-gold uppercase tracking-widest">{s.name}</span>
-                    <div className="w-full bg-brand-gold/10 h-1 rounded-full overflow-hidden mt-1">
+                    <span className="text-4xl filter drop-shadow-md">{s.icon || '✨'}</span>
+                    <span className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-[0.3em]">{s.name}</span>
+                    <div className="w-full bg-(--gm-bg-deep)/50 h-1.5 rounded-full overflow-hidden mt-2">
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${s.confidence * 100}%` }}
-                        className="h-full bg-brand-gold"
+                        className="h-full bg-(--gm-gold) shadow-(--gm-shadow-glow)"
                       />
                     </div>
                   </motion.div>
@@ -336,26 +351,32 @@ export default function CoffeeHub() {
               </div>
             </div>
 
-            <div className="bg-surface/50 border border-border/40 rounded-[3rem] p-10 md:p-16 shadow-2xl relative overflow-hidden">
-               <div className={`${fraunces.className} prose prose-invert max-w-none prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:text-xl prose-p:mb-8 prose-strong:text-brand-gold`}>
+            <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-[4rem] p-10 md:p-20 shadow-(--gm-shadow-card) relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-20 opacity-[0.03] pointer-events-none text-(--gm-gold)">
+                 <Coffee className="w-[30rem] h-[30rem]" />
+               </div>
+
+               <div className={`${fraunces.className} relative z-10 text-xl md:text-3xl leading-[1.8] text-(--gm-text-dim) space-y-12`}>
                 {result.interpretation.split('\n').map((line: string, i: number) => (
-                  <p key={i}>{line}</p>
+                  line.trim() ? <p key={i} className="opacity-90">{line}</p> : <div key={i} className="h-6" />
                 ))}
               </div>
 
-              <ConsultantFunnelCTA
-                feature="kahve"
-                intensity="heavy"
-                context={{
-                  symbols: result.symbols?.map((s: any) => s.name).join(', '),
-                }}
-              />
+              <div className="mt-20">
+                <ConsultantFunnelCTA
+                  feature="kahve"
+                  intensity="heavy"
+                  context={{
+                    symbols: result.symbols?.map((s: any) => s.name).join(', '),
+                  }}
+                />
+              </div>
 
-              <div className="mt-16 pt-10 border-t border-border/20 flex flex-col md:flex-row items-center justify-between gap-8">
-                <div className="text-sm text-muted-foreground italic font-serif">
+              <div className="mt-20 pt-12 border-t border-(--gm-border-soft) flex flex-col lg:flex-row items-center justify-between gap-12">
+                <div className="text-[11px] text-(--gm-muted) italic font-serif leading-relaxed max-w-md uppercase tracking-widest opacity-60">
                   * Bu analiz Vision AI ve astrolojik semboloji veritabanımız tarafından hazırlanmıştır.
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex flex-wrap items-center justify-center gap-10">
                   <ShareCard 
                     title="Kahve Falımı Paylaş"
                     shareText={`GoldMoodAstro'da kahve falıma baktırdım ✨\nSembollerim: ${result.symbols.map((s: any) => s.name).join(', ')}\nSen de fincanındaki sırları keşfet:`}
@@ -373,7 +394,7 @@ export default function CoffeeHub() {
                       setResult(null);
                       setTimeLeft(300);
                     }}
-                    className="flex items-center gap-3 text-brand-gold font-bold uppercase tracking-widest text-xs hover:text-brand-gold-light transition-colors"
+                    className="flex items-center gap-4 text-(--gm-gold) font-bold uppercase tracking-[0.2em] text-xs hover:text-(--gm-gold-dim) transition-colors"
                   >
                     YENİ FAL <RotateCcw className="w-4 h-4" />
                   </button>

@@ -24,8 +24,8 @@ export const AstrologyLoader: React.FC<AstrologyLoaderProps> = ({
     xl: 'w-32 h-32',
   };
 
-  const color = light ? 'var(--gm-gold-light, #E5D0A0)' : 'var(--gm-gold, #C9A961)';
-  const secondaryColor = light ? 'rgba(255,255,255,0.2)' : 'var(--gm-border, rgba(201, 169, 97, 0.2))';
+  const color = light ? 'var(--gm-gold-light)' : 'var(--gm-gold)';
+  const secondaryColor = light ? 'rgba(255,255,255,0.2)' : 'var(--gm-border-soft)';
 
   return (
     <div className={`relative flex items-center justify-center ${sizes[size]} ${className}`}>
@@ -74,7 +74,7 @@ export const AstrologyLoader: React.FC<AstrologyLoaderProps> = ({
           <defs>
             <linearGradient id="astro-grad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor={color} />
-              <stop offset="100%" stopColor="var(--gm-primary-light, #E5D0A0)" />
+              <stop offset="100%" stopColor="var(--gm-primary-light)" />
             </linearGradient>
           </defs>
           
@@ -108,9 +108,9 @@ export const AstrologyLoader: React.FC<AstrologyLoaderProps> = ({
 
       {/* Tiny Sparkling Stars */}
       <div className="absolute inset-[-20%] pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-0.5 h-0.5 bg-white rounded-full animate-ping" />
-        <div className="absolute bottom-0 right-1/4 w-0.5 h-0.5 bg-white rounded-full animate-ping" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 right-0 w-0.5 h-0.5 bg-white rounded-full animate-ping" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-0 left-1/4 w-0.5 h-0.5 bg-[var(--gm-gold-light)] rounded-full animate-ping" />
+        <div className="absolute bottom-0 right-1/4 w-0.5 h-0.5 bg-[var(--gm-gold-light)] rounded-full animate-ping" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 right-0 w-0.5 h-0.5 bg-[var(--gm-gold-light)] rounded-full animate-ping" style={{ animationDelay: '2s' }} />
       </div>
     </div>
   );

@@ -46,10 +46,12 @@ export async function generateMetadata({
   }
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function DreamResultPage() {
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer width="full" pad="none" className="bg-(--gm-bg)">
       <DreamResultClient />
-    </main>
+    </PageContainer>
   );
 }

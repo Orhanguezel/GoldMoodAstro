@@ -76,7 +76,7 @@ export default function MegaMenuPanel({
   );
 
   return (
-    <div className="w-[min(1000px,95vw)] bg-[var(--gm-surface)]/95 border border-[var(--gm-border-soft)] rounded-[32px] shadow-[var(--gm-shadow-card)] backdrop-blur-xl overflow-hidden ring-1 ring-white/10">
+    <div className="w-[min(1000px,95vw)] bg-[var(--gm-surface)]/95 border border-[var(--gm-border-soft)] rounded-[32px] shadow-[var(--gm-shadow-card)] backdrop-blur-xl overflow-hidden ring-1 ring-[var(--gm-text)]/10">
       {/* Premium Accent Line */}
       <div className="h-1 bg-gradient-to-r from-[var(--gm-primary)] via-[var(--gm-gold)] to-[var(--gm-accent)] opacity-80" />
 

@@ -132,7 +132,7 @@ export default function CookieSettingsModal({
 
   return (
     <div
-      className="fixed inset-0 z-[10050] bg-black/60 p-4 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-[10050] bg-(--gm-bg-deep)/70 backdrop-blur-sm p-4 flex items-end sm:items-center justify-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -193,7 +193,7 @@ export default function CookieSettingsModal({
                 onChange={(e) => setAnalytics(e.target.checked)}
                 className="sr-only peer"
               />
-              <span className="relative w-12 h-7 rounded-full bg-sand-300 peer-checked:bg-brand-primary transition-colors border border-border-medium peer-checked:border-brand-primary">
+              <span className="relative w-12 h-7 rounded-full bg-(--gm-border-soft) peer-checked:bg-brand-primary transition-colors border border-border-medium peer-checked:border-brand-primary">
                 <span className="absolute top-0.5 left-0.5 w-6 h-6 bg-bg-card shadow-sm transition-transform peer-checked:translate-x-5" />
               </span>
             </label>

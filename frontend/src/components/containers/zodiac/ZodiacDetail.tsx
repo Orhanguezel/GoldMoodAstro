@@ -46,7 +46,7 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
     modality: 'Öncü' as const,
     polarity: 'Yang' as const,
     ruler: '',
-    accent: brand.colors.brand_secondary || '#D4AF37',
+    accent: brand.colors.brand_secondary || 'var(--gm-gold)',
     image: `/uploads/zodiac/${signKey}.png`,
   };
 
@@ -107,19 +107,19 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
 
   return (
     <div
-      className="zodiac-accent-scope max-w-5xl mx-auto py-12 px-4 md:py-20"
+      className="zodiac-accent-scope"
       style={{ '--gm-zodiac-accent': meta.accent } as React.CSSProperties}
     >
       {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative mb-16 p-8 md:p-12 rounded-[2rem] bg-surface border border-border/40 overflow-hidden shadow-glow"
+        className="relative mb-16 p-8 md:p-16 rounded-[2.5rem] bg-(--gm-surface) border border-(--gm-border-soft) overflow-hidden shadow-(--gm-shadow-glow)"
       >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 blur-[100px] rounded-full -mr-20 -mt-20" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-(--gm-gold)/5 blur-[100px] rounded-full -mr-20 -mt-20" />
         
-        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 relative">
-          <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0 animate-float">
+        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 relative">
+          <div className="relative w-48 h-48 md:w-80 md:h-80 flex-shrink-0 animate-float">
             <Image
               src={meta.image}
               alt={info.title}
@@ -130,27 +130,27 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
           </div>
           
           <div className="text-center md:text-left flex-1">
-            <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-              <span className="text-4xl">{meta.symbol}</span>
-              <span className="text-sm font-bold tracking-[0.2em] text-brand-gold uppercase">
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+              <span className="text-5xl">{meta.symbol}</span>
+              <span className="text-xs font-bold tracking-[0.3em] text-(--gm-gold) uppercase">
                 {meta.date}
               </span>
             </div>
-            <h1 className={`${cinzel.className} text-4xl md:text-6xl mb-4 text-foreground`}>
+            <h1 className={`${cinzel.className} text-4xl md:text-7xl mb-6 text-(--gm-text) leading-tight`}>
               {meta.label}
             </h1>
-            <div className="mb-5 flex flex-wrap justify-center gap-2 md:justify-start">
+            <div className="mb-8 flex flex-wrap justify-center gap-2 md:justify-start">
               {[meta.element, meta.modality, meta.polarity, meta.ruler].filter(Boolean).map((item) => (
                 <span
                   key={item}
-                  className="rounded-full border border-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest"
+                  className="rounded-full border border-(--gm-border-soft) px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] backdrop-blur-md"
                   style={{ backgroundColor: `${meta.accent}18`, color: meta.accent }}
                 >
                   {item}
                 </span>
               ))}
             </div>
-            <p className="text-lg md:text-xl text-muted-foreground italic leading-relaxed">
+            <p className="text-lg md:text-2xl text-(--gm-text-dim) font-serif italic leading-relaxed opacity-80">
               &quot;{info.short_summary}&quot;
             </p>
           </div>
@@ -159,54 +159,56 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
 
       <section
         data-speakable
-        className="mb-12 rounded-2xl border border-brand-gold/20 bg-brand-gold/10 p-6 md:p-8"
+        className="mb-12 rounded-[2rem] border border-(--gm-gold)/20 bg-(--gm-gold)/5 p-8 md:p-12 backdrop-blur-sm"
       >
-        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-brand-gold">Özetle</p>
-        <p className="mt-3 text-lg leading-relaxed text-foreground/90">{summaryText}</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-(--gm-gold) mb-4">Özetle</p>
+        <p className="text-xl md:text-2xl leading-relaxed text-(--gm-text) font-serif italic opacity-90">{summaryText}</p>
       </section>
 
-      <section className="mb-14 grid gap-6">
-        <article className="rounded-2xl border border-border/30 bg-surface/50 p-6">
-          <h2 className={`${cinzel.className} text-2xl text-foreground`}>{meta.label} burcu nedir?</h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+      <section className="mb-16 grid gap-8 md:grid-cols-2 lg:grid-cols-2">
+        <article className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow) transition-shadow">
+          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} burcu nedir?</h2>
+          <p className="text-base leading-relaxed text-(--gm-text-dim) font-serif">
             {info.short_summary || summaryText}
           </p>
         </article>
-        <article className="rounded-2xl border border-border/30 bg-surface/50 p-6">
-          <h2 className={`${cinzel.className} text-2xl text-foreground`}>{meta.label} burcu özellikleri nelerdir?</h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+        <article className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow) transition-shadow">
+          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} burcu özellikleri nelerdir?</h2>
+          <p className="text-base leading-relaxed text-(--gm-text-dim) font-serif">
             {personalitySection?.content || info.content}
           </p>
         </article>
-        <article className="rounded-2xl border border-border/30 bg-surface/50 p-6">
-          <h2 className={`${cinzel.className} text-2xl text-foreground`}>{meta.label} burcu uyumu</h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+        <article className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow) transition-shadow">
+          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} burcu uyumu</h2>
+          <p className="text-base leading-relaxed text-(--gm-text-dim) font-serif">
             {loveSection?.content || `${meta.label} burcu uyumu, ilişkide sevgi dili, güven ihtiyacı ve iki kişinin harita bütünlüğü üzerinden okunur.`}
           </p>
         </article>
-        <article className="rounded-2xl border border-border/30 bg-surface/50 p-6">
-          <h2 className={`${cinzel.className} text-2xl text-foreground`}>{meta.label} burçlu ünlüler</h2>
+        <article className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow) transition-shadow">
+          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} burçlu ünlüler</h2>
           {celebrities.length ? (
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid gap-4">
               {celebrities.map((celebrity) => (
                 <div
                   key={celebrity.name}
-                  className="rounded-2xl border border-border/30 bg-background/40 p-4"
+                  className="rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep)/30 p-5 flex justify-between items-start"
                 >
-                  <p className="font-semibold text-foreground">{celebrity.name}</p>
-                  <p className="mt-1 text-xs text-brand-gold">{celebrity.birthday} · {celebrity.field}</p>
-                  <p className="mt-3 text-xs leading-5 text-muted-foreground">{celebrity.note}</p>
+                  <div>
+                    <p className="font-bold text-(--gm-text) text-base">{celebrity.name}</p>
+                    <p className="text-xs text-(--gm-gold) font-bold uppercase tracking-widest mt-1">{celebrity.birthday} · {celebrity.field}</p>
+                  </div>
+                  <p className="text-xs italic text-(--gm-text-dim) max-w-[200px] text-right">{celebrity.note}</p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-3 text-sm leading-relaxed text-(--gm-text-dim)">
               {meta.label} burçlu ünlüler listesi hazırlanırken doğum tarihi doğrulanmış kişiler dikkate alınmalıdır.
             </p>
           )}
           <Link
             href={localizePath(localePrefix, '/unluler-ve-burclari')}
-            className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-gold hover:text-brand-gold/80"
+            className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-(--gm-gold) hover:text-(--gm-gold-light) transition-colors"
           >
             Tüm ünlü burç arşivi
             <ArrowRight className="size-4" />
@@ -215,19 +217,19 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
       </section>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue={initialTab} className="space-y-8">
-        <TabsList className="w-full">
-          <TabsTrigger value="overview">
-            <Info className="w-4 h-4" /> Genel Bakış
+      <Tabs defaultValue={initialTab} className="space-y-8 mb-20">
+        <TabsList className="w-full bg-(--gm-bg-deep) p-1.5 rounded-full border border-(--gm-border-soft)">
+          <TabsTrigger value="overview" className="rounded-full px-6 data-[state=active]:bg-(--gm-surface) data-[state=active]:text-(--gm-gold) data-[state=active]:shadow-sm">
+            <Info className="w-4 h-4 mr-2" /> Genel Bakış
           </TabsTrigger>
-          <TabsTrigger value="daily">
-            <Sparkles className="w-4 h-4" /> Günlük Yorum
+          <TabsTrigger value="daily" className="rounded-full px-6 data-[state=active]:bg-(--gm-surface) data-[state=active]:text-(--gm-gold) data-[state=active]:shadow-sm">
+            <Sparkles className="w-4 h-4 mr-2" /> Günlük Yorum
           </TabsTrigger>
           {info.sections?.map((s: ZodiacSection) => (
-            <TabsTrigger key={s.id} value={s.key2}>
-              {s.key2 === 'love' && <Heart className="w-4 h-4" />}
-              {s.key2 === 'career' && <Briefcase className="w-4 h-4" />}
-              {s.key2 === 'personality' && <Star className="w-4 h-4" />}
+            <TabsTrigger key={s.id} value={s.key2} className="rounded-full px-6 data-[state=active]:bg-(--gm-surface) data-[state=active]:text-(--gm-gold) data-[state=active]:shadow-sm">
+              {s.key2 === 'love' && <Heart className="w-4 h-4 mr-2" />}
+              {s.key2 === 'career' && <Briefcase className="w-4 h-4 mr-2" />}
+              {s.key2 === 'personality' && <Star className="w-4 h-4 mr-2" />}
               {s.title}
             </TabsTrigger>
           ))}
@@ -237,9 +239,9 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="prose prose-invert max-w-none bg-surface/50 p-8 rounded-3xl border border-border/30"
+            className="bg-(--gm-surface) p-8 md:p-12 rounded-[2rem] border border-(--gm-border-soft) shadow-(--gm-shadow-soft)"
           >
-            <div className="text-lg leading-relaxed whitespace-pre-wrap text-foreground/90">
+            <div className="text-xl leading-relaxed whitespace-pre-wrap text-(--gm-text) font-serif opacity-90">
               {info.content}
             </div>
           </motion.div>
@@ -247,24 +249,24 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
 
         <TabsContent value="daily" className="mt-0">
           {!today && (
-            <div className="bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-3xl p-12 text-center">
-              <Sparkles className="w-12 h-12 text-[var(--gm-primary)] mx-auto mb-4 opacity-60" />
-              <h3 className="font-serif text-2xl text-[var(--gm-text)] mb-3">
+            <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-[2rem] p-16 text-center shadow-(--gm-shadow-soft)">
+              <Sparkles className="w-16 h-16 text-(--gm-gold) mx-auto mb-6 opacity-40 animate-pulse" />
+              <h3 className={`${cinzel.className} text-3xl text-(--gm-text) mb-4`}>
                 Günlük yorum hazırlanıyor
               </h3>
-              <p className="text-[var(--gm-text-dim)] max-w-md mx-auto leading-relaxed font-serif italic">
+              <p className="text-(--gm-text-dim) max-w-lg mx-auto leading-relaxed font-serif italic text-lg">
                 {meta.label} burcu için bugünün yorumu henüz yayınlanmadı. Astrolog ekibimiz hazırlıyor — yarın tekrar göz at ya da kişiye özel doğum haritası analizi al.
               </p>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href={`/${locale}/birth-chart`}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-dark)] text-white text-xs font-bold uppercase tracking-[0.2em] transition-colors"
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-(--gm-primary) hover:bg-(--gm-primary-dark) text-(--gm-bg) text-xs font-bold uppercase tracking-[0.25em] transition-all hover:scale-105 shadow-md"
                 >
                   Doğum Haritamı Çıkar
                 </Link>
                 <Link
                   href={`/${locale}/consultants?expertise=astrology`}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[var(--gm-primary)]/40 hover:border-[var(--gm-primary)] text-[var(--gm-primary)] text-xs font-bold uppercase tracking-[0.2em] transition-colors"
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-(--gm-gold)/40 hover:border-(--gm-gold) text-(--gm-gold) text-xs font-bold uppercase tracking-[0.25em] transition-all"
                 >
                   Astrologa Danış
                 </Link>
@@ -281,28 +283,28 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-gradient-to-br from-surface to-brand-primary/5 p-8 md:p-12 rounded-[2.5rem] border border-brand-gold/20 relative overflow-hidden"
+              className="bg-gradient-to-br from-(--gm-surface) to-(--gm-bg-deep) p-8 md:p-16 rounded-[3rem] border border-(--gm-gold)/20 relative overflow-hidden shadow-(--gm-shadow-card)"
             >
-              <div className="absolute top-0 right-0 p-6 opacity-10">
-                <Sparkles className="w-24 h-24 text-brand-gold" />
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                <Sparkles className="w-40 h-40 text-(--gm-gold)" />
               </div>
 
               <div className="relative">
                 {todayDate && (
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="h-px flex-1 bg-brand-gold/20" />
-                    <span className={`${cinzel.className} text-brand-gold text-lg tracking-widest uppercase`}>
+                  <div className="flex items-center gap-6 mb-12">
+                    <div className="h-px flex-1 bg-(--gm-gold)/20" />
+                    <span className={`${cinzel.className} text-(--gm-gold) text-xl tracking-[0.3em] uppercase backdrop-blur-md px-4`}>
                       {new Date(todayDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
-                    <div className="h-px flex-1 bg-brand-gold/20" />
+                    <div className="h-px flex-1 bg-(--gm-gold)/20" />
                   </div>
                 )}
 
-                <div className="text-xl md:text-2xl leading-relaxed text-foreground mb-10 text-center font-medium">
-                  {todayContent}
+                <div className="text-2xl md:text-4xl leading-relaxed text-(--gm-text) mb-16 text-center font-serif italic font-medium opacity-90 max-w-4xl mx-auto">
+                  &quot;{todayContent}&quot;
                 </div>
 
-                <div className="flex justify-center mb-10">
+                <div className="flex justify-center mb-16">
                   <ShareCard
                     title={`${meta.label} Burcu Günlük Yorumu`}
                     shareText={`${meta.label} burcu için bugünkü yorumum ✨\n"${todayContent.slice(0, 100)}..."\nSenin burcun bugün ne diyor?`}
@@ -317,23 +319,23 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
                 </div>
 
                 {(todayMood != null || todayLuckyNumber != null || todayLuckyColor != null) && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {todayMood != null && (
-                      <div className="p-6 rounded-2xl bg-black/20 border border-white/5 text-center">
-                        <div className="text-brand-gold text-sm font-bold mb-2 uppercase tracking-tighter">Günün Modu</div>
-                        <div className="text-3xl font-bold">{String(todayMood)}/10</div>
+                      <div className="p-8 rounded-2xl bg-(--gm-bg-deep)/40 border border-(--gm-border-soft) text-center backdrop-blur-sm">
+                        <div className="text-(--gm-gold) text-xs font-bold mb-4 uppercase tracking-[0.2em] opacity-80">Günün Modu</div>
+                        <div className={`${cinzel.className} text-4xl text-(--gm-text)`}>{String(todayMood)}/10</div>
                       </div>
                     )}
                     {todayLuckyNumber != null && (
-                      <div className="p-6 rounded-2xl bg-black/20 border border-white/5 text-center">
-                        <div className="text-brand-gold text-sm font-bold mb-2 uppercase tracking-tighter">Şanslı Sayı</div>
-                        <div className="text-3xl font-bold">{String(todayLuckyNumber)}</div>
+                      <div className="p-8 rounded-2xl bg-(--gm-bg-deep)/40 border border-(--gm-border-soft) text-center backdrop-blur-sm">
+                        <div className="text-(--gm-gold) text-xs font-bold mb-4 uppercase tracking-[0.2em] opacity-80">Şanslı Sayı</div>
+                        <div className={`${cinzel.className} text-4xl text-(--gm-text)`}>{String(todayLuckyNumber)}</div>
                       </div>
                     )}
                     {todayLuckyColor != null && (
-                      <div className="p-6 rounded-2xl bg-black/20 border border-white/5 text-center">
-                        <div className="text-brand-gold text-sm font-bold mb-2 uppercase tracking-tighter">Şanslı Renk</div>
-                        <div className="text-3xl font-bold">{String(todayLuckyColor)}</div>
+                      <div className="p-8 rounded-2xl bg-(--gm-bg-deep)/40 border border-(--gm-border-soft) text-center backdrop-blur-sm">
+                        <div className="text-(--gm-gold) text-xs font-bold mb-4 uppercase tracking-[0.2em] opacity-80">Şanslı Renk</div>
+                        <div className={`${cinzel.className} text-xl font-bold text-(--gm-text) uppercase tracking-widest`}>{String(todayLuckyColor)}</div>
                       </div>
                     )}
                   </div>
@@ -349,10 +351,10 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
             <motion.div
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-surface/50 p-8 rounded-3xl border border-border/30"
+              className="bg-(--gm-surface) p-8 md:p-12 rounded-[2rem] border border-(--gm-border-soft) shadow-(--gm-shadow-soft)"
             >
-              <h3 className={`${cinzel.className} text-2xl mb-6 text-brand-gold`}>{s.title}</h3>
-              <div className="text-lg leading-relaxed whitespace-pre-wrap text-foreground/90">
+              <h3 className={`${cinzel.className} text-3xl mb-8 text-(--gm-gold)`}>{s.title}</h3>
+              <div className="text-xl leading-relaxed whitespace-pre-wrap text-(--gm-text) font-serif opacity-90">
                 {s.content}
               </div>
             </motion.div>
@@ -360,62 +362,72 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
         ))}
       </Tabs>
 
-      <FaqAccordion items={faqItems} title={`${meta.label} Burcu Hakkında Sorular`} />
+      <div className="mb-20">
+        <FaqAccordion items={faqItems} title={`${meta.label} Burcu Hakkında Sorular`} />
+      </div>
 
-      <AuthorBio
-        name={`${brand.name} Editorial Team`}
-        title="Astroloji ve ruhsal danışmanlık editörleri"
-        bio={`${brand.name} içerikleri, kullanıcıların danışman görüşmelerine daha hazırlıklı gelmesi için astrolojik sembolizm, pratik öz farkındalık ve anlaşılır rehberlik ilkeleriyle hazırlanır.`}
-        expertise={['Astroloji', 'Zodyak', 'Ruhsal Danışmanlık']}
-        certificates={['Swiss Ephemeris metodolojisi']}
-      />
+      <div className="mb-20">
+        <AuthorBio
+          name={`${brand.name} Editorial Team`}
+          title="Astroloji ve ruhsal danışmanlık editörleri"
+          bio={`${brand.name} içerikleri, kullanıcıların danışman görüşmelerine daha hazırlıklı gelmesi için astrolojik sembolizm, pratik öz farkındalık ve anlaşılır rehberlik ilkeleriyle hazırlanır.`}
+          expertise={['Astroloji', 'Zodyak', 'Ruhsal Danışmanlık']}
+          certificates={['Swiss Ephemeris metodolojisi']}
+        />
+      </div>
 
       {/* Internal Linking CTA */}
-      <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <Link
           href={localizePath(localePrefix, `/burclar/uyum/${signKey}-koc`)}
-          className="p-8 rounded-3xl bg-surface/40 border border-border/40 hover:border-brand-gold/40 transition-all group shadow-sm"
+          className="p-10 rounded-[2.5rem] bg-(--gm-surface) border border-(--gm-border-soft) hover:border-(--gm-gold)/40 transition-all group shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow)"
         >
-          <div className="flex items-center gap-4 mb-4">
-            <Heart className="w-6 h-6 text-rose-400" />
-            <h4 className={`${cinzel.className} text-xl text-foreground`}>Burç Uyumu</h4>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 rounded-full bg-(--gm-error)/10 flex items-center justify-center">
+              <Heart className="w-6 h-6 text-[var(--gm-error)]" />
+            </div>
+            <h4 className={`${cinzel.className} text-xl text-(--gm-text)`}>Burç Uyumu</h4>
           </div>
-          <p className="text-muted-foreground text-sm mb-6">
+          <p className="text-(--gm-text-dim) text-sm mb-8 leading-relaxed font-serif italic">
             {meta.label} burcunun diğer burçlarla olan aşk ve karakter uyumunu detaylıca inceleyin.
           </p>
-          <div className="text-brand-gold text-xs font-bold tracking-widest uppercase flex items-center gap-2">
+          <div className="text-(--gm-gold) text-[10px] font-bold tracking-[0.3em] uppercase flex items-center gap-2">
             UYUMU KEŞFET <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </Link>
 
         <Link
           href={localizePath(localePrefix, '/birth-chart')}
-          className="p-8 rounded-3xl bg-brand-primary/5 border border-brand-gold/20 hover:border-brand-gold/40 transition-all group shadow-sm"
+          className="p-10 rounded-[2.5rem] bg-(--gm-bg-deep) border border-(--gm-gold)/20 hover:border-(--gm-gold)/40 transition-all group shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow)"
         >
-          <div className="flex items-center gap-4 mb-4">
-            <Sparkles className="w-6 h-6 text-brand-gold" />
-            <h4 className={`${cinzel.className} text-xl text-foreground`}>Doğum Haritası</h4>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 rounded-full bg-(--gm-gold)/10 flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-(--gm-gold)" />
+            </div>
+            <h4 className={`${cinzel.className} text-xl text-(--gm-text)`}>Doğum Haritası</h4>
           </div>
-          <p className="text-muted-foreground text-sm mb-6">
+          <p className="text-(--gm-text-dim) text-sm mb-8 leading-relaxed font-serif italic">
             Sadece Güneş burcunuzdan ibaret değilsiniz. Tüm gezegen yerleşimlerinizi ücretsiz hesaplayın.
           </p>
-          <div className="text-brand-gold text-xs font-bold tracking-widest uppercase flex items-center gap-2">
+          <div className="text-(--gm-gold) text-[10px] font-bold tracking-[0.3em] uppercase flex items-center gap-2">
             HARİTANI ÇIKAR <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </Link>
 
         <Link
           href={localizePath(localePrefix, `/burclar/${signKey}/meditasyon`)}
-          className="p-8 rounded-3xl bg-surface/40 border border-border/40 hover:border-brand-gold/40 transition-all group shadow-sm"
+          className="p-10 rounded-[2.5rem] bg-(--gm-surface) border border-(--gm-border-soft) hover:border-(--gm-gold)/40 transition-all group shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow)"
         >
-          <div className="flex items-center gap-4 mb-4">
-            <Volume2 className="w-6 h-6 text-brand-gold" />
-            <h4 className={`${cinzel.className} text-xl text-foreground`}>Meditasyon</h4>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 rounded-full bg-(--gm-gold)/10 flex items-center justify-center">
+              <Volume2 className="w-6 h-6 text-(--gm-gold)" />
+            </div>
+            <h4 className={`${cinzel.className} text-xl text-(--gm-text)`}>Meditasyon</h4>
           </div>
-          <p className="text-muted-foreground text-sm mb-6">
+          <p className="text-(--gm-text-dim) text-sm mb-8 leading-relaxed font-serif italic">
             {meta.label} burcuna özel kısa meditasyon ve günlük affirmasyonları sesli dinleyin.
           </p>
-          <div className="text-brand-gold text-xs font-bold tracking-widest uppercase flex items-center gap-2">
+          <div className="text-(--gm-gold) text-[10px] font-bold tracking-[0.3em] uppercase flex items-center gap-2">
             DİNLE <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </Link>

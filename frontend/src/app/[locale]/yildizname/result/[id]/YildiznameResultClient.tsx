@@ -56,14 +56,14 @@ export default function YildiznameResultClient() {
       className="space-y-12 max-w-6xl mx-auto"
     >
       {/* Header Info */}
-      <div className="text-center space-y-4">
-        <div className="inline-flex items-center gap-3 px-6 py-2 bg-brand-gold/10 border border-brand-gold/20 rounded-full text-brand-gold text-[10px] font-bold tracking-[0.3em] uppercase mb-4">
-           <Star className="w-3 h-3 fill-current" /> {result.name} İçin Analiz
+      <div className="text-center space-y-6">
+        <div className="inline-flex items-center gap-3 px-6 py-2 bg-(--gm-gold)/10 border border-(--gm-gold)/20 rounded-full text-(--gm-gold) text-[10px] font-bold tracking-[0.3em] uppercase mb-4">
+           <Star className="w-3.5 h-3.5 fill-current" /> {result.name} İçin Analiz
         </div>
-        <h1 className={`${cinzel.className} text-5xl md:text-7xl text-foreground tracking-tighter leading-tight`}>
-           Menzilin: <span className="text-brand-gold">{menzil?.name_tr || 'Bilinmiyor'}</span>
+        <h1 className={`${cinzel.className} text-5xl md:text-8xl text-(--gm-text) tracking-tighter leading-tight`}>
+           Menzilin: <span className="text-(--gm-gold)">{menzil?.name_tr || 'Bilinmiyor'}</span>
         </h1>
-        <p className="text-muted-foreground text-xl font-serif italic opacity-60">
+        <p className={`${fraunces.className} text-(--gm-text-dim) text-2xl opacity-70`}>
            Arapça: {menzil?.name_ar} — Ebced Sayın: {result.ebced_total}
         </p>
       </div>
@@ -72,26 +72,26 @@ export default function YildiznameResultClient() {
         {/* Sol Panel: Kartlar */}
         <div className="w-full lg:w-1/3 space-y-6">
           {/* Menzil Card */}
-          <div className="bg-surface/30 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-10 text-center space-y-6 shadow-2xl relative overflow-hidden group">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-gold/5 rounded-full blur-3xl group-hover:bg-brand-gold/10 transition-colors" />
-            <div className="w-24 h-24 bg-brand-gold/10 rounded-[2rem] flex items-center justify-center mx-auto border border-brand-gold/20 text-brand-gold shadow-glow-gold">
+          <div className="bg-(--gm-surface) backdrop-blur-xl border border-(--gm-border-soft) rounded-[3rem] p-12 text-center space-y-8 shadow-(--gm-shadow-card) relative overflow-hidden group">
+            <div className="absolute -top-10 -right-10 w-48 h-48 bg-(--gm-gold)/5 rounded-full blur-3xl group-hover:bg-(--gm-gold)/10 transition-colors" />
+            <div className="w-24 h-24 bg-(--gm-gold)/10 rounded-[2rem] flex items-center justify-center mx-auto border border-(--gm-gold)/20 text-(--gm-gold) shadow-(--gm-shadow-glow)">
                <Sun className="w-12 h-12" />
             </div>
-            <div className="space-y-2">
-              <h3 className={`${cinzel.className} text-xl text-foreground`}>Menzil No</h3>
-              <div className="text-6xl font-bold text-brand-gold tracking-tighter">{result.menzil_no}</div>
+            <div className="space-y-3">
+              <h3 className={`${cinzel.className} text-2xl text-(--gm-text)`}>Menzil No</h3>
+              <div className="text-7xl font-bold text-(--gm-gold) tracking-tighter">{result.menzil_no}</div>
             </div>
-            <p className="text-sm text-muted-foreground italic leading-relaxed px-4">
+            <p className="text-base text-(--gm-text-dim) italic leading-relaxed px-4 font-serif">
               {menzil?.short_summary}
             </p>
           </div>
 
           {/* Categories */}
-          <div className="bg-surface/30 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-8 space-y-6 shadow-xl">
-             <h4 className={`${cinzel.className} text-center text-sm tracking-widest text-muted-foreground uppercase`}>Etki Alanları</h4>
+          <div className="bg-(--gm-surface) backdrop-blur-xl border border-(--gm-border-soft) rounded-[2.5rem] p-10 space-y-8 shadow-(--gm-shadow-soft)">
+             <h4 className={`${cinzel.className} text-center text-xs tracking-[0.3em] text-(--gm-muted) uppercase`}>Etki Alanları</h4>
              <div className="flex flex-wrap justify-center gap-3">
                 {menzil?.category?.map((cat: string, i: number) => (
-                  <span key={i} className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-brand-gold tracking-widest uppercase">
+                  <span key={i} className="px-5 py-2 bg-(--gm-bg-deep)/40 border border-(--gm-border-soft) rounded-full text-[10px] font-bold text-(--gm-gold) tracking-widest uppercase backdrop-blur-md">
                     {cat}
                   </span>
                 ))}
@@ -100,51 +100,53 @@ export default function YildiznameResultClient() {
 
           <button 
             onClick={() => router.push(`/${locale}/yildizname`)}
-            className="w-full flex items-center justify-center gap-3 py-5 rounded-[2rem] border border-white/5 hover:bg-surface-high transition-all text-muted-foreground text-sm font-bold tracking-widest group shadow-lg"
+            className="w-full flex items-center justify-center gap-4 py-6 rounded-full border border-(--gm-border-soft) bg-(--gm-surface) hover:bg-(--gm-surface-high) transition-all text-(--gm-text-dim) text-xs font-bold tracking-[0.2em] group shadow-lg"
           >
             <RefreshCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-700" /> YENİ ANALİZ YAP
           </button>
         </div>
 
         {/* Sağ Panel: Rapor */}
-        <div className="w-full lg:w-2/3 space-y-8">
-          <div className="bg-surface/40 backdrop-blur-3xl border border-white/5 rounded-[3rem] p-10 md:p-20 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
-              <BookOpen className="w-80 h-80" />
+        <div className="w-full lg:w-2/3 space-y-10">
+          <div className="bg-(--gm-surface) backdrop-blur-3xl border border-(--gm-border-soft) rounded-[3.5rem] p-10 md:p-20 shadow-(--gm-shadow-card) relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-16 opacity-[0.03] pointer-events-none text-(--gm-gold)">
+              <BookOpen className="w-96 h-96" />
             </div>
             
-            <div className="space-y-4 relative mb-12">
-               <div className="flex items-center gap-2 text-brand-gold mb-2">
-                  <Sparkles className="w-5 h-5" />
-                  <span className="text-[10px] font-bold tracking-[0.4em] uppercase">Mistik Yıldızname Raporu</span>
+            <div className="space-y-6 relative mb-16">
+               <div className="flex items-center gap-3 text-(--gm-gold) mb-2">
+                  <Sparkles className="w-6 h-6" />
+                  <span className="text-[11px] font-bold tracking-[0.5em] uppercase">Mistik Yıldızname Raporu</span>
                </div>
-               <h2 className={`${cinzel.className} text-4xl text-foreground leading-tight`}>
-                  Kaderin <span className="text-brand-gold">Rakamları</span>
+               <h2 className={`${cinzel.className} text-4xl md:text-5xl text-(--gm-text) leading-tight`}>
+                  Kaderin <span className="text-(--gm-gold)">Rakamları</span>
                </h2>
             </div>
 
-            <div className={`${fraunces.className} prose prose-invert prose-p:text-muted-foreground prose-p:leading-[1.8] prose-p:text-xl md:prose-p:text-2xl prose-p:mb-8 prose-strong:text-brand-gold`}>
+            <div className={`${fraunces.className} text-xl md:text-3xl leading-[1.8] text-(--gm-text-dim) space-y-10`}>
               {result.result_text?.split('\n').map((line: string, i: number) => (
-                line.trim() ? <p key={i}>{line}</p> : <div key={i} className="h-4" />
+                line.trim() ? <p key={i} className="opacity-90">{line}</p> : <div key={i} className="h-6" />
               ))}
             </div>
 
             {/* Funnel CTA — merkezi (FAZ 28 / T28-3) */}
-            <ConsultantFunnelCTA
-              feature="yildizname"
-              intensity="heavy"
-              context={{
-                menzil: menzil?.name_tr,
-                menzil_no: result.menzil_no,
-                ebced: result.ebced_total,
-              }}
-            />
+            <div className="mt-20">
+              <ConsultantFunnelCTA
+                feature="yildizname"
+                intensity="heavy"
+                context={{
+                  menzil: menzil?.name_tr,
+                  menzil_no: result.menzil_no,
+                  ebced: result.ebced_total,
+                }}
+              />
+            </div>
 
-            <div className="mt-16 pt-10 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-8">
-              <p className="text-[10px] text-muted-foreground/50 italic max-w-xs uppercase tracking-widest text-center sm:text-left">
+            <div className="mt-20 pt-12 border-t border-(--gm-border-soft) flex flex-col sm:flex-row items-center justify-between gap-10">
+              <p className="text-[10px] text-(--gm-muted) italic max-w-xs uppercase tracking-[0.2em] text-center sm:text-left leading-relaxed">
                 * Bu analiz ebced hesabı ve kadim ay menzilleri geleneğine dayanmaktadır. Gelecek sadece bir tahmindir.
               </p>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
                 <ShareCard 
                   title="Yıldıznamemi Paylaş"
                   shareText={`GoldMoodAstro'da yıldıznamemi keşfettim ✦\n✧ Menzilim: ${menzil?.name_tr}  •  № Ebced Sayım: ${result.ebced_total}\nSenin kaderinde neler yazıyor?`}

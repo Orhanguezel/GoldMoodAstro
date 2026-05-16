@@ -19,7 +19,7 @@ export default function LandingIntro({
   sections: LandingIntroSection[];
 }) {
   return (
-    <section className="mx-auto mb-12 max-w-5xl px-4">
+    <section className="mb-12">
       <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/60 p-6 md:p-10">
         <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--gm-gold-dim)]">{eyebrow}</p>
         <h1 className="mt-3 text-3xl font-semibold leading-tight text-[var(--gm-text)] md:text-5xl">{title}</h1>

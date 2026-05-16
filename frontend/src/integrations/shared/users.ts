@@ -110,5 +110,17 @@ export type User = {
   /** Supabase / custom metadata */
   user_metadata?: UserMetadata;
 
+  // FAZ 41 T41-1: Subscription summary
+  is_premium?: boolean;
+  subscription?: {
+    tier: 'free' | 'premium';
+    plan_code: string | null;
+    period: 'monthly' | 'yearly' | 'lifetime' | null;
+    status: string;
+    ends_at: string | null;
+    trial_ends_at: string | null;
+    is_trial: boolean;
+  } | null;
+
   [key: string]: unknown;
 };

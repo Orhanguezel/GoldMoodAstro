@@ -66,7 +66,7 @@ const Logout: React.FC = () => {
               <p
                 role="alert"
                 aria-live="polite"
-                className="text-rose-600 text-sm bg-rose-50 p-2 rounded inline-block border border-rose-100"
+                className="text-[var(--gm-error)] text-sm bg-[var(--gm-error)]/10 p-2 rounded inline-block border border-[var(--gm-error)]/20"
               >
                 {ui('logout_error', 'Problem signing out on server, but local session cleared.')}
               </p>

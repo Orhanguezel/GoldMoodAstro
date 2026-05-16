@@ -3,6 +3,8 @@ import ZodiacHub from '@/components/containers/zodiac/ZodiacHub';
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/seo/server';
 
+import PageContainer from '@/components/common/PageContainer';
+
 export const revalidate = 86400; // 24 hours
 
 type Props = { params: Promise<{ locale: string }> };
@@ -22,8 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function BurclarPage() {
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
       <ZodiacHub />
-    </main>
+    </PageContainer>
   );
 }

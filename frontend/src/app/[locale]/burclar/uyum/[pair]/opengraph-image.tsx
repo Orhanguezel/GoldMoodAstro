@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getOgFonts } from '@/lib/fonts/og-fonts';
+import { getOgTheme } from '@/seo/ogTheme';
 
 export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
@@ -43,13 +44,14 @@ export default async function OG({ params }: { params: { signA: string; signB: s
   const labelB = SIGN_LABELS[signB] || signB;
 
   const fonts = await getOgFonts().catch(() => undefined);
+  const theme = await getOgTheme();
 
   return new ImageResponse(
     (
       <div style={{
         width: 1200, height: 630,
-        background: 'linear-gradient(135deg,#2A2620 0%,#3D2E47 60%,#1A1715 100%)',
-        color: '#FAF6EF',
+        background: theme.bg,
+        color: theme.text,
         padding: 80,
         fontFamily: 'Cinzel',
         display: 'flex',
@@ -58,19 +60,19 @@ export default async function OG({ params }: { params: { signA: string; signB: s
         alignItems: 'center',
       }}>
         {/* Header */}
-        <div style={{ fontSize: 24, color: '#C9A961', letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          GOLDMOODASTRO · BURÇ UYUMU
+        <div style={{ fontSize: 24, color: theme.primary, letterSpacing: 4, width: '100%', textAlign: 'center' }}>
+          {theme.brandUpper} · BURÇ UYUMU
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 30, alignItems: 'center' }}>
           {/* Symbols */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
-            <div style={{ fontSize: 120, color: '#C9A961', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontSize: 120, color: theme.primary, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                {symbolA}
                <span style={{ fontSize: 24, fontFamily: 'Inter', opacity: 0.8, marginTop: 10 }}>{labelA}</span>
             </div>
-            <div style={{ fontSize: 80, color: '#FAF6EF', opacity: 0.5 }}>+</div>
-            <div style={{ fontSize: 120, color: '#C9A961', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontSize: 80, color: theme.text, opacity: 0.5 }}>+</div>
+            <div style={{ fontSize: 120, color: theme.primary, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                {symbolB}
                <span style={{ fontSize: 24, fontFamily: 'Inter', opacity: 0.8, marginTop: 10 }}>{labelB}</span>
             </div>
@@ -79,15 +81,15 @@ export default async function OG({ params }: { params: { signA: string; signB: s
           {/* Score */}
           {score > 0 && (
              <div style={{ display: 'flex', alignItems: 'baseline', gap: 20, marginTop: 20 }}>
-               <span style={{ fontSize: 140, fontWeight: 'bold', color: '#C9A961' }}>%{score}</span>
-               <span style={{ fontSize: 32, fontFamily: 'Fraunces', fontStyle: 'italic', color: '#FAF6EF' }}>Aşk Uyumu</span>
+               <span style={{ fontSize: 140, fontWeight: 'bold', color: theme.primary }}>%{score}</span>
+               <span style={{ fontSize: 32, fontFamily: 'Fraunces', fontStyle: 'italic', color: theme.text }}>Aşk Uyumu</span>
              </div>
           )}
         </div>
 
         {/* Footer */}
-        <div style={{ fontSize: 24, color: '#C9A961', display: 'flex', justifyContent: 'center', width: '100%' }}>
-          <span style={{ fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.8 }}>goldmoodastro.com</span>
+        <div style={{ fontSize: 24, color: theme.primary, display: 'flex', justifyContent: 'center', width: '100%' }}>
+          <span style={{ fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.8 }}>{theme.domain}</span>
         </div>
       </div>
     ),

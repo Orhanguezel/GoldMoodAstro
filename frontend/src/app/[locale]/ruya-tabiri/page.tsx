@@ -18,10 +18,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function DreamsPage() {
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <DreamHub />
-    </main>
+    </PageContainer>
   );
 }

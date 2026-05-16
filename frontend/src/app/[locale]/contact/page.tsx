@@ -3,10 +3,9 @@
 
 import React, { useMemo } from 'react';
 
-import Banner from '@/layout/banner/Breadcrum';
-import { LayoutSeoBridge } from '@/seo';
-
 import ContactPage from '@/components/containers/contact/ContactPage';
+import PageContainer from '@/components/common/PageContainer';
+import { LayoutSeoBridge } from '@/seo';
 
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { isValidUiText } from '@/integrations/shared';
@@ -48,10 +47,9 @@ export default function ContactRoutePage() {
   }, [ui, locale]);
 
   return (
-    <>
+    <PageContainer verticalPadding="large">
       <LayoutSeoBridge title={seoTitle} description={seoDescription} noindex={false} />
-      <Banner title={bannerTitle} />
       <ContactPage />
-    </>
+    </PageContainer>
   );
 }

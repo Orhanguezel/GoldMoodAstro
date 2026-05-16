@@ -170,7 +170,7 @@ export default function ServicesPanel() {
                 setNewForm({ ...newForm, name: v, slug: newForm.slug || slugify(v) });
               }}
               placeholder="Hizmet adı (ör. Bireysel Seans)"
-              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.name ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
+              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.name ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
             />
             <input
               value={newForm.slug}
@@ -183,7 +183,7 @@ export default function ServicesPanel() {
               value={newForm.duration_minutes}
               onChange={(e) => setNewForm({ ...newForm, duration_minutes: Number(e.target.value) || 45 })}
               placeholder="Süre (dk)"
-              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.duration ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
+              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.duration ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
             />
             <input
               type="number"
@@ -191,7 +191,7 @@ export default function ServicesPanel() {
               onChange={(e) => setNewForm({ ...newForm, price: Number(e.target.value) || 0 })}
               placeholder="Fiyat (₺)"
               disabled={newForm.is_free}
-              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.price ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)] disabled:opacity-50`}
+              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.price ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)] disabled:opacity-50`}
             />
           </div>
           <textarea
@@ -381,7 +381,7 @@ function ServiceRow({
         >
           {svc.is_active === 1 ? 'Pasifleştir' : 'Aktifleştir'}
         </button>
-        <button onClick={onDelete} disabled={busy} className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-full" title="Sil">
+        <button onClick={onDelete} disabled={busy} className="p-2 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-full" title="Sil">
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
@@ -398,9 +398,9 @@ function ServiceRow({
                   setForm({ ...form, name: e.target.value });
                   if (errors.name) setErrors({ ...errors, name: undefined });
                 }}
-                className={`w-full h-10 bg-[var(--gm-bg-deep)] border ${errors.name ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-3 text-sm text-[var(--gm-text)]`}
+                className={`w-full h-10 bg-[var(--gm-bg-deep)] border ${errors.name ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-3 text-sm text-[var(--gm-text)]`}
               />
-              {errors.name && <p className="text-[9px] text-rose-400 font-bold uppercase tracking-widest">{errors.name}</p>}
+              {errors.name && <p className="text-[9px] text-[var(--gm-error)] font-bold uppercase tracking-widest">{errors.name}</p>}
             </div>
             <div className="space-y-1.5">
               <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Slug (sadece admin için)</label>
@@ -432,9 +432,9 @@ function ServiceRow({
                   setForm({ ...form, duration_minutes: Number(e.target.value) || 0 });
                   if (errors.duration) setErrors({ ...errors, duration: undefined });
                 }}
-                className={`h-10 w-full bg-[var(--gm-bg-deep)] border ${errors.duration ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-3 text-sm text-[var(--gm-text)]`}
+                className={`h-10 w-full bg-[var(--gm-bg-deep)] border ${errors.duration ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-3 text-sm text-[var(--gm-text)]`}
               />
-              {errors.duration && <p className="text-[9px] text-rose-400 font-bold uppercase tracking-widest">{errors.duration}</p>}
+              {errors.duration && <p className="text-[9px] text-[var(--gm-error)] font-bold uppercase tracking-widest">{errors.duration}</p>}
             </div>
             <div className="space-y-1.5">
               <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Fiyat (₺)</label>
@@ -446,9 +446,9 @@ function ServiceRow({
                   if (errors.price) setErrors({ ...errors, price: undefined });
                 }}
                 disabled={form.is_free}
-                className={`h-10 w-full bg-[var(--gm-bg-deep)] border ${errors.price ? 'border-rose-500' : 'border-[var(--gm-border-soft)]'} rounded-xl px-3 text-sm text-[var(--gm-text)] disabled:opacity-50`}
+                className={`h-10 w-full bg-[var(--gm-bg-deep)] border ${errors.price ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-3 text-sm text-[var(--gm-text)] disabled:opacity-50`}
               />
-              {errors.price && <p className="text-[9px] text-rose-400 font-bold uppercase tracking-widest">{errors.price}</p>}
+              {errors.price && <p className="text-[9px] text-[var(--gm-error)] font-bold uppercase tracking-widest">{errors.price}</p>}
             </div>
           </div>
           <div className="flex items-center justify-between pt-2">

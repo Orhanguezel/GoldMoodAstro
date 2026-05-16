@@ -8,6 +8,8 @@ import { useLocaleShort, useUiSection } from '@/i18n';
 import { isValidUiText } from '@/integrations/shared';
 import { safeStr } from '@/integrations/shared';
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function CookiePolicyPage() {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_cookie_policy', locale as any);
@@ -19,13 +21,9 @@ export default function CookiePolicyPage() {
   }, [ui]);
 
   return (
-    <>
+    <PageContainer verticalPadding="large">
       <LayoutSeoBridge title={bannerTitle} noindex={false} />
-      <Banner title={bannerTitle} />
-
-      <section className="container mx-auto py-16 px-4 bg-bg-primary">
-        <CookiePolicyPageContent />
-      </section>
-    </>
+      <CookiePolicyPageContent />
+    </PageContainer>
   );
 }

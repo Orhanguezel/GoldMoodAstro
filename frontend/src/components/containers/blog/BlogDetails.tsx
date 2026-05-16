@@ -324,195 +324,192 @@ export default function BlogDetails() {
 
   return (
     <>
-      <section className="bg-bg-primary py-20 relative">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            {/* SIDEBAR (LEFT) */}
-            <div className="lg:col-span-4 order-2 lg:order-1">
-              <div className="sticky top-24 space-y-8">
-                {otherBlogs.length > 0 && (
-                  <div className="bg-bg-secondary p-6 shadow-soft border border-border-light">
-                    <h3 className="text-xl font-light font-serif text-text-primary mb-6 border-b border-border-light pb-2">
-                      {t.otherBlogsTitle}
-                    </h3>
-                    <ul className="space-y-4">
-                      {otherBlogs.map((b) => {
-                        const href = localizePath(locale, `/blog/${b.slug}`);
-                        return (
-                          <li key={b.id}>
-                            <Link href={href} className="group block">
-                              <h4 className="font-medium text-text-primary group-hover:text-brand-primary transition-colors leading-snug mb-1">
-                                {b.title}
-                              </h4>
-                              {b.date && (
-                                <span className="text-xs font-semibold text-text-muted">
-                                  {new Date(b.date).toLocaleDateString(locale)}
-                                </span>
-                              )}
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                )}
+    <div className="relative">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* SIDEBAR (LEFT) */}
+        <aside className="lg:col-span-4 order-2 lg:order-1">
+          <div className="sticky top-24 space-y-8">
+            {otherBlogs.length > 0 && (
+              <nav className="bg-(--gm-surface) p-6 shadow-(--gm-shadow-soft) border border-(--gm-border-soft) rounded-2xl">
+                <h3 className="text-xl font-light font-serif text-(--gm-text) mb-6 border-b border-(--gm-border-soft) pb-2">
+                  {t.otherBlogsTitle}
+                </h3>
+                <ul className="space-y-4">
+                  {otherBlogs.map((b) => {
+                    const href = localizePath(locale, `/blog/${b.slug}`);
+                    return (
+                      <li key={b.id}>
+                        <Link href={href} className="group block">
+                          <h4 className="font-medium text-(--gm-text) group-hover:text-(--gm-gold) transition-colors leading-snug mb-1">
+                            {b.title}
+                          </h4>
+                          {b.date && (
+                            <span className="text-xs font-semibold text-(--gm-text-muted)">
+                              {new Date(b.date).toLocaleDateString(locale)}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
+            )}
+          </div>
+        </aside>
+
+        {/* MAIN CONTENT */}
+        <article className="lg:col-span-8 order-1 lg:order-2">
+          <div className="mb-8">
+            <Link
+              href={blogListHref}
+              className="inline-flex items-center text-(--gm-text-muted) hover:text-(--gm-primary) transition-colors text-sm font-normal uppercase tracking-[0.15em] group mb-6"
+            >
+              <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span>{' '}
+              {t.backToList}
+            </Link>
+
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-light text-(--gm-text) leading-tight mb-6">
+              {title}
+            </h1>
+          </div>
+
+          {/* HERO */}
+          {heroSrc && (
+            <div className="mb-8 overflow-hidden shadow-(--gm-shadow-card) bg-(--gm-bg-deep) relative group rounded-2xl">
+              <div
+                className="aspect-video relative cursor-pointer"
+                onClick={() => setLightboxOpen(true)}
+              >
+                <Image
+                  src={heroSrc as any}
+                  alt={title}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  priority
+                />
+                <div className="absolute inset-0 bg-[var(--gm-bg-deep)]/0 group-hover:bg-[var(--gm-bg-deep)]/10 transition-colors flex items-center justify-center">
+                  <span className="text-[var(--gm-bg)] opacity-0 group-hover:opacity-100 bg-[var(--gm-bg-deep)]/50 px-3 py-1 rounded text-sm transition-opacity">
+                    {t.galleryTitle}
+                  </span>
+                </div>
               </div>
             </div>
+          )}
 
-            {/* MAIN CONTENT */}
-            <div className="lg:col-span-8 order-1 lg:order-2">
-              <div className="mb-8">
-                <Link
-                  href={blogListHref}
-                  className="inline-flex items-center text-text-muted hover:text-brand-primary transition-colors text-sm font-normal uppercase tracking-[0.15em] group mb-6"
+          {/* Actions (under image) */}
+          <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleLike}
+                className={[
+                  'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors',
+                  liked
+                    ? 'bg-(--gm-primary) text-(--gm-bg) border-(--gm-primary)'
+                    : 'bg-(--gm-surface) text-(--gm-text) border-(--gm-border-soft) hover:bg-(--gm-bg-deep)',
+                ].join(' ')}
+                aria-pressed={liked}
+              >
+                <span aria-hidden="true">{liked ? '♥' : '♡'}</span>
+                <span>{liked ? t.liked : t.like}</span>
+              </button>
+
+              <a
+                href="#comments"
+                className="inline-flex items-center gap-2 rounded-full border border-(--gm-border-soft) bg-(--gm-surface) px-4 py-2 text-sm font-semibold text-(--gm-text) hover:bg-(--gm-bg-deep) transition-colors"
+              >
+                <span aria-hidden="true">💬</span>
+                <span>{t.commentsTitle}</span>
+              </a>
+            </div>
+
+            <SocialShare
+              className="flex items-center justify-start sm:justify-end"
+              showLabel={false}
+              label={t.share}
+              title={title}
+              text={safeStr((post as any)?.summary)}
+            />
+          </div>
+
+          {/* Thumbs */}
+          {galleryImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-4 mb-8">
+              {galleryImages.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setActiveIdx(i);
+                    setLightboxOpen(true);
+                  }}
+                  className={`relative w-24 h-16 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
+                    i === activeIdx
+                      ? 'border-(--gm-gold)'
+                      : 'border-transparent opacity-70 hover:opacity-100'
+                  }`}
+                  type="button"
                 >
-                  <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span>{' '}
-                  {t.backToList}
-                </Link>
-
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-light text-text-primary leading-tight mb-6">
-                  {title}
-                </h1>
-              </div>
-
-              {/* HERO */}
-              {heroSrc && (
-                <div className="mb-8 overflow-hidden shadow-medium bg-bg-card-hover relative group">
-                  <div
-                    className="aspect-video relative cursor-pointer"
-                    onClick={() => setLightboxOpen(true)}
-                  >
-                    <Image
-                      src={heroSrc as any}
-                      alt={title}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      priority
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                      <span className="text-white opacity-0 group-hover:opacity-100 bg-black/50 px-3 py-1 rounded text-sm transition-opacity">
-                        {t.galleryTitle}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Actions (under image) */}
-              <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={toggleLike}
-                    className={[
-                      'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors',
-                      liked
-                        ? 'bg-brand-primary text-white border-brand-primary'
-                        : 'bg-bg-secondary text-text-primary border-border-light hover:bg-bg-card-hover',
-                    ].join(' ')}
-                    aria-pressed={liked}
-                  >
-                    <span aria-hidden="true">{liked ? '♥' : '♡'}</span>
-                    <span>{liked ? t.liked : t.like}</span>
-                  </button>
-
-                  <a
-                    href="#comments"
-                    className="inline-flex items-center gap-2 rounded-full border border-border-light bg-bg-secondary px-4 py-2 text-sm font-semibold text-text-primary hover:bg-bg-card-hover transition-colors"
-                  >
-                    <span aria-hidden="true">💬</span>
-                    <span>{t.commentsTitle}</span>
-                  </a>
-                </div>
-
-                <SocialShare
-                  className="flex items-center justify-start sm:justify-end"
-                  showLabel={false}
-                  label={t.share}
-                  title={title}
-                  text={safeStr((post as any)?.summary)}
-                />
-              </div>
-
-              {/* Thumbs */}
-              {galleryImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-4 mb-8">
-                  {galleryImages.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setActiveIdx(i);
-                        setLightboxOpen(true);
-                      }}
-                      className={`relative w-24 h-16 rounded-md overflow-hidden shrink-0 border-2 transition-all ${
-                        i === activeIdx
-                          ? 'border-brand-primary'
-                          : 'border-transparent opacity-70 hover:opacity-100'
-                      }`}
-                      type="button"
-                    >
-                      <Image
-                        src={(img.thumb || img.raw) as any}
-                        alt="thumb"
-                        fill
-                        className="object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Content */}
-              <div className="bg-bg-secondary p-8 md:p-10 shadow-soft border border-border-light">
-                <div className="prose prose-lg prose-invert max-w-none prose-headings:font-serif prose-headings:font-light prose-headings:text-text-primary prose-a:text-brand-primary prose-p:text-text-secondary prose-p:font-light prose-p:text-base prose-p:leading-[1.8] prose-li:text-text-secondary prose-li:font-light prose-li:text-base prose-li:leading-[1.8] prose-ul:mb-6 prose-ol:mb-6 prose-p:mb-6 prose-strong:text-text-primary prose-em:text-brand-primary/80">
-                  {contentHtml ? (
-                    <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
-                  ) : (
-                    <p>{safeStr((post as any)?.summary)}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Comments */}
-              <div id="comments" className="mt-12">
-                <ReviewList
-                  targetType="blog"
-                  targetId={post.id}
-                  locale={locale}
-                  variant="comments"
-                  titleOverride={t.commentsTitle}
-                />
-
-                <div className="mt-8">
-                  <ReviewForm
-                    targetType="blog"
-                    targetId={post.id}
-                    locale={locale}
-                    initialOpen={false}
-                    showToggle
-                    titleOverride={t.leaveComment}
-                    hideRating
-                    commentLabelOverride={t.commentLabel}
-                    submitTextOverride={t.commentSubmit}
+                  <Image
+                    src={(img.thumb || img.raw) as any}
+                    alt="thumb"
+                    fill
+                    className="object-cover"
                   />
-                </div>
+                </button>
+              ))}
+            </div>
+          )}
 
-                <div className="mt-10">
-                  <ContactCtaCard
-                    title={t.contactCtaTitle}
-                    description={t.contactCtaDesc}
-                    phoneLabel={t.contactPhone}
-                    whatsappLabel={t.contactWhatsapp}
-                    formLabel={t.contactForm}
-                    contactHref={localizePath(locale, '/contact')}
-                  />
-                </div>
-              </div>
+          {/* Content */}
+          <div className="bg-(--gm-surface) p-8 md:p-10 shadow-(--gm-shadow-soft) border border-(--gm-border-soft) rounded-[2rem]">
+            <div className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:font-light prose-headings:text-(--gm-text) prose-a:text-(--gm-primary) prose-p:text-(--gm-text-dim) prose-p:font-light prose-p:text-base prose-p:leading-[1.8] prose-li:text-(--gm-text-dim) prose-li:font-light prose-li:text-base prose-li:leading-[1.8] prose-ul:mb-6 prose-ol:mb-6 prose-p:mb-6 prose-strong:text-(--gm-text) prose-em:text-(--gm-primary)/80">
+              {contentHtml ? (
+                <div dangerouslySetInnerHTML={{ __html: contentHtml }} />
+              ) : (
+                <p>{safeStr((post as any)?.summary)}</p>
+              )}
             </div>
           </div>
-        </div>
-      </section>
 
+          {/* Comments */}
+          <div id="comments" className="mt-12">
+            <ReviewList
+              targetType="blog"
+              targetId={post.id}
+              locale={locale}
+              variant="comments"
+              titleOverride={t.commentsTitle}
+            />
+
+            <div className="mt-8">
+              <ReviewForm
+                targetType="blog"
+                targetId={post.id}
+                locale={locale}
+                initialOpen={false}
+                showToggle
+                titleOverride={t.leaveComment}
+                hideRating
+                commentLabelOverride={t.commentLabel}
+                submitTextOverride={t.commentSubmit}
+              />
+            </div>
+
+            <div className="mt-10">
+              <ContactCtaCard
+                title={t.contactCtaTitle}
+                description={t.contactCtaDesc}
+                phoneLabel={t.contactPhone}
+                whatsappLabel={t.contactWhatsapp}
+                formLabel={t.contactForm}
+                contactHref={localizePath(locale, '/contact')}
+              />
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
       <ImageLightboxModal
         open={lightboxOpen}
         onClose={() => setLightboxOpen(false)}

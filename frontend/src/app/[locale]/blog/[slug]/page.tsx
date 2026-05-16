@@ -63,6 +63,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default async function BlogDetailsPage({ params }: PageProps) {
   const p = (await params) as { locale: string; slug: string };
   const locale = safeStr(p?.locale) || 'tr';
@@ -117,16 +119,30 @@ export default async function BlogDetailsPage({ params }: PageProps) {
         ])}
       />
       <Banner title={title} />
-      <BlogDetails />
-      <FaqAccordion items={faqItems} title={locale === 'tr' ? 'Bu Yazı Hakkında Sorular' : 'Questions About This Article'} />
-      <AuthorBio
-        name="GoldMoodAstro Editorial Team"
-        title={locale === 'tr' ? 'Ruhsal danışmanlık ve astroloji editörleri' : 'Spiritual guidance and astrology editors'}
-        bio={locale === 'tr'
-          ? 'GoldMoodAstro editörleri; astroloji, tarot, numeroloji ve ruhsal farkındalık konularını sade, sorumlu ve uygulanabilir bir dille hazırlar.'
-          : 'GoldMoodAstro editors prepare astrology, tarot, numerology and spiritual awareness topics in clear, responsible and practical language.'}
-        expertise={['Astroloji', 'Tarot', 'Numeroloji', 'Ruhsal Farkındalık']}
-      />
+
+      <PageContainer className="bg-(--gm-bg) text-(--gm-text)" verticalPadding="large">
+        <div className="space-y-12">
+          <BlogDetails />
+
+          <div className="max-w-4xl mx-auto space-y-12">
+            <FaqAccordion
+              items={faqItems}
+              title={locale === 'tr' ? 'Bu Yazı Hakkında Sorular' : 'Questions About This Article'}
+            />
+
+            <div className="rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-10 shadow-(--gm-shadow-soft)">
+              <AuthorBio
+                name="GoldMoodAstro Editorial Team"
+                title={locale === 'tr' ? 'Ruhsal danışmanlık ve astroloji editörleri' : 'Spiritual guidance and astrology editors'}
+                bio={locale === 'tr'
+                  ? 'GoldMoodAstro editörleri; astroloji, tarot, numeroloji ve ruhsal farkındalık konularını sade, sorumlu ve uygulanabilir bir dille hazırlar.'
+                  : 'GoldMoodAstro editors prepare astrology, tarot, numerology and spiritual awareness topics in clear, responsible and practical language.'}
+                expertise={['Astroloji', 'Tarot', 'Numeroloji', 'Ruhsal Farkındalık']}
+              />
+            </div>
+          </div>
+        </div>
+      </PageContainer>
     </>
   );
 }

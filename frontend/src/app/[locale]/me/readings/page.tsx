@@ -23,8 +23,10 @@ import {
   useDeleteAllReadingsMutation,
   type ReadingType,
 } from '@/integrations/rtk/hooks';
+import PageContainer from '@/components/common/PageContainer';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useBrand } from '@/hooks/useBrand';
 import { localizePath, normalizeError } from '@/integrations/shared';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
@@ -86,8 +88,8 @@ export default function MyReadingsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background pt-32 pb-20 px-4">
-      <div className="max-w-4xl mx-auto space-y-10">
+    <PageContainer verticalPadding="large" className="max-w-5xl">
+      <div className="space-y-16">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div>
@@ -109,7 +111,7 @@ export default function MyReadingsPage() {
               type="button"
               onClick={handleDeleteAll}
               disabled={deletingAll}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-rose-500/40 text-rose-400 hover:bg-rose-500/10 transition-colors text-xs font-bold uppercase tracking-[0.18em] disabled:opacity-50 self-start md:self-auto"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[var(--gm-error)]/40 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 transition-colors text-xs font-bold uppercase tracking-[0.18em] disabled:opacity-50 self-start md:self-auto"
             >
               <Trash2 className="w-3.5 h-3.5" />
               {deletingAll ? 'Siliniyor…' : 'Tümünü Sil'}
@@ -202,7 +204,7 @@ export default function MyReadingsPage() {
                     type="button"
                     onClick={() => handleDelete(item.type, item.id, item.title)}
                     disabled={deletingOne}
-                    className="w-10 h-10 rounded-full bg-rose-500/5 flex items-center justify-center text-rose-400 hover:bg-rose-500/15 transition-colors disabled:opacity-40"
+                    className="w-10 h-10 rounded-full bg-[var(--gm-error)]/5 flex items-center justify-center text-[var(--gm-error)] hover:bg-[var(--gm-error)]/15 transition-colors disabled:opacity-40"
                     aria-label="Sil"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -228,6 +230,6 @@ export default function MyReadingsPage() {
           </div>
         )}
       </div>
-    </main>
+    </PageContainer>
   );
 }

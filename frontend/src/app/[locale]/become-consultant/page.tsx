@@ -7,6 +7,12 @@ export const metadata: Metadata = {
   description: 'GoldMoodAstro ailesine katılın, uzmanlığınızı binlerce kullanıcıyla paylaşın ve kazanç elde edin.',
 };
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function Page() {
-  return <BecomeConsultantPage />;
+  return (
+    <PageContainer width="wide" pad="none">
+      <BecomeConsultantPage />
+    </PageContainer>
+  );
 }

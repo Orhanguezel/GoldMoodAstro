@@ -97,7 +97,7 @@ export default function BlogHomeSection({ locale: explicitLocale }: { locale?: s
                       </div>
                     )}
                     {/* Top gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-(--gm-bg-deep)/60 to-transparent pointer-events-none" />
                   </div>
 
                   {/* Content */}

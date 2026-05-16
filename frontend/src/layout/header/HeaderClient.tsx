@@ -338,7 +338,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                 >
                   {locale === 'tr' ? 'Danışman Paneli' : 'Consultant Panel'}
                   {pendingRequestNow > 0 && (
-                    <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold animate-pulse">
+                    <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-[var(--gm-error)] text-[var(--gm-text)] text-[10px] font-bold animate-pulse">
                       ⚡{pendingRequestNow}
                     </span>
                   )}
@@ -447,7 +447,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
             >
               {locale === 'tr' ? 'Danışman Paneli' : 'Consultant Panel'}
               {pendingRequestNow > 0 && (
-                <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold animate-pulse">
+                <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-[var(--gm-error)] text-[var(--gm-text)] text-[10px] font-bold animate-pulse">
                   ⚡{pendingRequestNow}
                 </span>
               )}

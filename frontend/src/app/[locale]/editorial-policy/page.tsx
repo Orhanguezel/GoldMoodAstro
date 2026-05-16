@@ -3,6 +3,9 @@ import Link from 'next/link';
 import JsonLd from '@/seo/JsonLd';
 import { articleSchema, breadcrumbSchema, graph } from '@/seo/jsonld';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
+import { Cinzel } from 'next/font/google';
+
+const cinzel = Cinzel({ subsets: ['latin'] });
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -94,13 +97,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default async function EditorialPolicyPage({ params }: Props) {
   const { locale } = await params;
   const copy = getCopy(locale);
   const pageUrl = `${SITE_URL}/${locale}/editorial-policy`;
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] px-4 py-24 text-[var(--gm-text)] md:py-32">
+    <PageContainer verticalPadding="large">
       <JsonLd
         id="editorial-policy"
         data={graph([
@@ -124,24 +129,31 @@ export default async function EditorialPolicyPage({ params }: Props) {
       />
 
       <div className="mx-auto max-w-4xl">
-        <Link href={`/${locale}/about`} className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gm-gold)]">
-          {copy.back}
+        <Link href={`/${locale}/about`} className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-(--gm-gold) hover:text-(--gm-gold-light) transition-colors">
+          <span aria-hidden>←</span> {copy.back}
         </Link>
-        <section data-speakable className="mt-8 rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/60 p-6 md:p-10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--gm-gold-dim)]">
+        
+        <header data-speakable className="mt-8 mb-12 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-(--gm-gold) mb-4">
             GoldMoodAstro
           </p>
-          <h1 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl">{copy.title}</h1>
-          <p className="mt-6 text-lg leading-relaxed text-[var(--gm-text-dim)]">{copy.description}</p>
-        </section>
+          <h1 className={`${cinzel.className} text-3xl md:text-5xl text-(--gm-text) mb-8 leading-tight`}>{copy.title}</h1>
+          <p className="max-w-2xl mx-auto text-lg leading-relaxed text-(--gm-text-dim) font-serif italic opacity-80">{copy.description}</p>
+          <div className="mt-10 h-px w-24 bg-gradient-to-r from-transparent via-(--gm-gold)/40 to-transparent mx-auto" />
+        </header>
 
-        <div className="mt-10 space-y-6">
-          {copy.sections.map((section) => (
-            <section key={section.title} className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/45 p-6 md:p-8">
-              <h2 className="text-2xl font-semibold">{section.title}</h2>
-              <div className="mt-5 space-y-4">
+        <div className="space-y-8">
+          {copy.sections.map((section, idx) => (
+            <section key={section.title} className="rounded-[2rem] border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-12 shadow-(--gm-shadow-soft) transition-all hover:shadow-(--gm-shadow-card) hover:border-(--gm-primary)/20">
+              <div className="flex items-center gap-5 mb-8">
+                <span className="flex-shrink-0 w-10 h-10 rounded-full bg-(--gm-primary)/10 text-(--gm-primary) flex items-center justify-center font-serif font-bold text-lg">
+                  {idx + 1}
+                </span>
+                <h2 className={`${cinzel.className} text-xl md:text-2xl text-(--gm-text)`}>{section.title}</h2>
+              </div>
+              <div className="space-y-5">
                 {section.paragraphs.map((paragraph) => (
-                  <p key={paragraph} className="leading-relaxed text-[var(--gm-text-dim)]">
+                  <p key={paragraph} className="text-base leading-relaxed text-(--gm-text-dim) opacity-90">
                     {paragraph}
                   </p>
                 ))}
@@ -150,14 +162,16 @@ export default async function EditorialPolicyPage({ params }: Props) {
           ))}
         </div>
 
-        <AuthorBio
-          name="GoldMoodAstro Editorial Team"
-          title={locale === 'tr' ? 'Editoryal ve metodoloji ekibi' : 'Editorial and methodology team'}
-          bio={copy.description}
-          expertise={['Astrology', 'Tarot', 'Numerology', 'Editorial Review']}
-          certificates={['Swiss Ephemeris', 'Rider-Waite-Smith']}
-        />
+        <div className="mt-12 rounded-[2rem] border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-12 shadow-(--gm-shadow-soft)">
+          <AuthorBio
+            name="GoldMoodAstro Editorial Team"
+            title={locale === 'tr' ? 'Editoryal ve metodoloji ekibi' : 'Editorial and methodology team'}
+            bio={copy.description}
+            expertise={['Astrology', 'Tarot', 'Numerology', 'Editorial Review']}
+            certificates={['Swiss Ephemeris', 'Rider-Waite-Smith']}
+          />
+        </div>
       </div>
-    </main>
+    </PageContainer>
   );
 }

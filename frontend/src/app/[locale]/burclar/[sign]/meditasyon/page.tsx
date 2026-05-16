@@ -2,6 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import ZodiacMeditationPlayer from '@/components/containers/zodiac/ZodiacMeditationPlayer';
+import PageContainer from '@/components/common/PageContainer';
 import { getZodiacMeta } from '@/lib/zodiac/signs';
 import type { ZodiacSign } from '@/types/common';
 import { buildPageMetadata } from '@/seo/server';
@@ -34,8 +35,8 @@ export default async function ZodiacMeditationPage({ params }: Props) {
   if (!meta) notFound();
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer width="full" pad="none" className="bg-(--gm-bg)">
       <ZodiacMeditationPlayer signKey={meta.key as ZodiacSign} />
-    </main>
+    </PageContainer>
   );
 }

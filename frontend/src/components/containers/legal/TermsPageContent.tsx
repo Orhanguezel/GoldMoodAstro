@@ -9,6 +9,9 @@ import {
   extractHtmlFromAny,
 } from '@/integrations/shared';
 import { useLocaleShort, useUiSection } from '@/i18n';
+import { Cinzel } from 'next/font/google';
+
+const cinzel = Cinzel({ subsets: ['latin'] });
 
 const TermsPageContent: React.FC = () => {
   const locale = useLocaleShort();
@@ -41,14 +44,18 @@ const TermsPageContent: React.FC = () => {
   }, [page]);
 
   return (
-    <section className="relative min-h-[60vh] py-16 lg:py-24 overflow-hidden">
+    <div className="relative overflow-hidden">
       {/* Background Decor - Spiritual/Celestial Theme */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-24 -right-24 w-[500px] h-[500px] bg-(--gm-gold)/5 rounded-full blur-[120px]" />
         <div className="absolute top-1/2 -left-32 w-[400px] h-[400px] bg-(--gm-primary)/5 rounded-full blur-[100px]" />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="relative z-10">
+        <div className="max-w-4xl mx-auto mb-16 text-center">
+          <h1 className={`${cinzel.className} text-4xl md:text-5xl text-(--gm-text) mb-6`}>{title}</h1>
+          <div className="h-px w-24 bg-gradient-to-r from-transparent via-(--gm-gold)/40 to-transparent mx-auto" />
+        </div>
         {isLoading && (
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="h-12 bg-(--gm-surface) rounded-2xl w-1/3 animate-pulse" />
@@ -75,12 +82,11 @@ const TermsPageContent: React.FC = () => {
           <div className="max-w-4xl mx-auto">
             <style>{CMS_FALLBACK_CSS}</style>
 
-            {/* Başlık zaten <Banner> (Breadcrumb hero) tarafından gösteriliyor —
-                tekrarı önlemek için içerik içi <header> kaldırıldı. */}
+            {/* Content section */}
 
             {html ? (
               <article
-                className="prose prose-stone prose-lg max-w-none bg-(--gm-surface) p-8 md:p-16 rounded-[2rem] shadow-card border border-(--gm-border-soft) cms-html text-(--gm-text-dim) leading-relaxed"
+                className="prose prose-stone prose-lg max-w-none bg-(--gm-surface) p-8 md:p-20 rounded-[3rem] shadow-(--gm-shadow-card) border border-(--gm-border-soft) cms-html text-(--gm-text-dim) leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: html }}
               />
             ) : (
@@ -100,7 +106,7 @@ const TermsPageContent: React.FC = () => {
           </div>
         )}
       </div>
-    </section>
+    </div>
   );
 };
 

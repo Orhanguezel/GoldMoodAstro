@@ -132,7 +132,7 @@ export default async function RootLayout({
 
   return (
     <ThemeProvider>
-      <div className={`font-sans antialiased text-text-primary bg-bg-primary ${manrope.variable} ${fraunces.variable} ${cinzel.variable} ${outfit.variable} ${gabriela.variable}`}>
+      <div className={`font-sans antialiased text-(--gm-text) bg-(--gm-bg) ${manrope.variable} ${fraunces.variable} ${cinzel.variable} ${outfit.variable} ${gabriela.variable}`}>
         {/* SSR Splash Screen Overlay */}
         <div
           id="gm-splash-ssr"
@@ -140,7 +140,7 @@ export default async function RootLayout({
             position: 'fixed',
             inset: 0,
             zIndex: 99998,
-            background: 'var(--gm-bg, #FAF6EF)',
+            background: 'var(--splash-bg)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -150,7 +150,7 @@ export default async function RootLayout({
           suppressHydrationWarning
         >
           <div style={{
-            color: 'var(--gm-gold, #C9A961)',
+            color: 'var(--splash-text)',
             fontSize: '1.5rem',
             letterSpacing: '0.2em',
             fontWeight: 600,

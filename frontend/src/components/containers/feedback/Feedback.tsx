@@ -110,7 +110,7 @@ const Feedback: React.FC<{ locale?: string }> = ({ locale: explicitLocale }) => 
                 {/* Stars */}
                 <div className="flex gap-[3px] mb-5 text-brand-primary text-[0.85rem]">
                   {Array.from({ length: slide.rating }, (_, j) => (
-                    <span key={j}>&#9733;</span>
+                    <span key={j}>&#x2605;</span>
                   ))}
                 </div>
 

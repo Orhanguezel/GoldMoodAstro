@@ -49,43 +49,49 @@ export default function CoffeeResultClient() {
   const result = res.data;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12 md:py-20 min-h-[80vh] flex flex-col">
+    <div className="flex flex-col">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="space-y-12"
+        className="space-y-16"
       >
-        <div className="text-center space-y-4">
-          <h1 className={`${cinzel.className} text-4xl md:text-6xl text-foreground`}>Fincanın Dili</h1>
-          <div className="flex flex-wrap justify-center gap-3">
+        <div className="text-center space-y-8">
+          <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight leading-tight`}>Fincanın Dili</h1>
+          <div className="flex flex-wrap justify-center gap-4">
             {result.symbols.map((s: any, i: number) => (
-              <span key={i} className="px-4 py-2 bg-brand-gold/10 border border-brand-gold/20 rounded-full text-xs font-bold text-brand-gold tracking-widest uppercase">
+              <span key={i} className="px-6 py-2 bg-(--gm-gold)/10 border border-(--gm-gold)/20 rounded-full text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase backdrop-blur-sm">
                 {s.name}
               </span>
             ))}
           </div>
         </div>
 
-        <div className="bg-surface/50 border border-border/40 rounded-[3rem] p-10 md:p-16 shadow-2xl relative overflow-hidden">
-          <div className="prose prose-invert max-w-none prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:text-lg prose-p:mb-6 prose-strong:text-brand-gold">
+        <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-[4rem] p-10 md:p-20 shadow-(--gm-shadow-card) relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-20 opacity-[0.03] pointer-events-none text-(--gm-gold)">
+            <Coffee className="w-[30rem] h-[30rem]" />
+          </div>
+
+          <div className="relative z-10 font-serif text-xl md:text-3xl leading-[1.8] text-(--gm-text-dim) space-y-10">
             {result.interpretation.split('\n').map((line: string, i: number) => (
-              <p key={i}>{line}</p>
+              line.trim() ? <p key={i} className="opacity-90">{line}</p> : <div key={i} className="h-6" />
             ))}
           </div>
 
-          <ConsultantFunnelCTA
-            feature="kahve"
-            intensity="heavy"
-            context={{
-              symbols: result.symbols.map((s: any) => s.name).join(', '),
-            }}
-          />
+          <div className="mt-20">
+            <ConsultantFunnelCTA
+              feature="kahve"
+              intensity="heavy"
+              context={{
+                symbols: result.symbols.map((s: any) => s.name).join(', '),
+              }}
+            />
+          </div>
 
-          <div className="mt-16 pt-10 border-t border-border/20 flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="text-sm text-muted-foreground italic font-serif">
+          <div className="mt-20 pt-12 border-t border-(--gm-border-soft) flex flex-col lg:flex-row items-center justify-between gap-12">
+            <div className="text-[11px] text-(--gm-muted) italic font-serif leading-relaxed max-w-md uppercase tracking-widest opacity-60">
               * Bu analiz Vision AI ve astrolojik semboloji veritabanımız tarafından hazırlanmıştır.
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center justify-center gap-10">
               <ShareCard 
                 title="Kahve Falımı Paylaş"
                 shareText={`GoldMoodAstro'da kahve falıma baktırdım ✨\nSembollerim: ${result.symbols.map((s: any) => s.name).join(', ')}\nSen de fincanındaki sırları keşfet:`}
@@ -97,7 +103,7 @@ export default function CoffeeResultClient() {
               />
               <button 
                 onClick={() => router.push(`/${locale}/kahve-fali`)}
-                className="flex items-center gap-3 text-brand-gold font-bold uppercase tracking-widest text-sm hover:text-brand-gold-light transition-colors"
+                className="flex items-center gap-4 text-(--gm-gold) font-bold uppercase tracking-[0.2em] text-xs hover:text-(--gm-gold-dim) transition-colors"
               >
                 YENİ FAL <RotateCcw className="w-4 h-4" />
               </button>

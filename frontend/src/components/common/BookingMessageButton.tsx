@@ -135,7 +135,7 @@ export default function BookingMessageButton({ bookingId, label = 'Mesaj', iconO
 
       {open && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[var(--gm-bg-deep)]/60 backdrop-blur-sm"
           onClick={() => !sending && setOpen(false)}
         >
           <div

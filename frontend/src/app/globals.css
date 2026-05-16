@@ -37,10 +37,10 @@
   --color-sand-900: #1A1715;   /* deepest ink */
 
   /* ─── DARK PALETTE (used by dark theme + dramatic sections) ─── */
-  --color-deep:       var(--gm-bg, #2A2620);          /* warm ink, not pure black */
-  --color-dark:       var(--gm-bg-deep, #1A1715);
-  --color-card:       var(--gm-surface, #3D362D);
-  --color-card-hover: var(--gm-surface-high, #4A4238);
+  --color-deep:       var(--gm-bg, #FAF6EF);
+  --color-dark:       var(--gm-bg-deep, #F2EBDD);
+  --color-card:       var(--gm-surface, #FFFFFF);
+  --color-card-hover: var(--gm-surface-high, #F7F1E4);
 
   /* ─── PLUM ACCENT (mystical depth) ─── */
   --color-plum:      #3D2E47;
@@ -62,14 +62,14 @@
   --color-text-muted:      var(--gm-muted-soft, #6B6358);
   --color-text-on-dark:    #FAF6EF;
 
-  --color-brand-primary:   var(--gm-primary-dark, #8C7038);   /* darker gold for text contrast */
+  --color-brand-primary:   var(--gm-primary-dark, #A8884A);   /* darker gold for text contrast */
   --color-brand-secondary: var(--gm-gold, #C9A961);
   --color-brand-accent:    var(--gm-accent, #3D2E47);
   --color-brand-hover:     var(--gm-primary-hover, #A8884A);
-  --color-brand-dark:      var(--gm-primary-dark, #8C7038);
+  --color-brand-dark:      var(--gm-primary-dark, #A8884A);
   --color-brand-light:     color-mix(in srgb, var(--gm-primary, #C9A961) 14%, transparent);
 
-  --color-brand-gold:      var(--gm-gold-deep, #8C7038);
+  --color-brand-gold:      var(--gm-gold-deep, #A8884A);
   --color-brand-gold-deep: var(--gm-gold-deep, #A8884A);
   --color-brand-gold-dim:  var(--gm-gold-dim, #B89651);
 
@@ -102,6 +102,10 @@
 
 /* ─── SHADOWS (LIGHT — softer, warm) ─── */
 :root {
+  --gm-w-narrow: 768px;
+  --gm-w-default: 1300px;
+  --gm-w-wide: 1536px;
+
   --shadow-soft:   var(--gm-shadow-soft,   0 2px 20px rgba(45, 37, 32, 0.06));
   --shadow-medium: var(--gm-shadow-card,   0 8px 40px rgba(45, 37, 32, 0.10));
   --shadow-glow:   var(--gm-shadow-glow,   0 0 60px rgba(201, 169, 97, 0.18));
@@ -111,6 +115,11 @@
   --color-mystic-mint: #F0FFDF;
   --color-mystic-cyan: #B0FFFA;
   --color-mystic-rose: #FBEFEF;
+
+  /* ─── SPLASH / LOADER (Faz 38) ─── */
+  --splash-bg: var(--gm-splash-bg, #FAF6EF);
+  --splash-text: var(--gm-splash-text, #2A2620);
+  --loader-primary: var(--gm-loader-primary, #C9A961);
 }
 
 /* ============================================================

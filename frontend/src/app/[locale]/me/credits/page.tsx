@@ -17,6 +17,7 @@ import {
   useBuyCreditsMutation 
 } from '@/integrations/rtk/hooks';
 import { toast } from 'sonner';
+import PageContainer from '@/components/common/PageContainer';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -37,8 +38,8 @@ export default function CreditsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background pt-32 pb-20 px-4">
-      <div className="max-w-5xl mx-auto space-y-16">
+    <PageContainer verticalPadding="large" className="max-w-5xl">
+      <div className="space-y-16">
         
         {/* Bakiye Özeti */}
         <div className="bg-surface/30 border border-border/20 rounded-[3rem] p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12 shadow-2xl relative overflow-hidden">
@@ -98,7 +99,7 @@ export default function CreditsPage() {
                         {(pkg.priceMinor / 100).toLocaleString('tr-TR', { minimumFractionDigits: 0 })} <span className="text-lg">₺</span>
                      </div>
                      {pkg.bonusCredits > 0 && (
-                       <div className="text-xs font-bold text-emerald-400 tracking-wider flex items-center justify-center gap-1">
+                       <div className="text-xs font-bold text-[var(--gm-success)] tracking-wider flex items-center justify-center gap-1">
                           <TrendingUp className="w-3 h-3" /> +{pkg.bonusCredits.toLocaleString()} BONUS
                        </div>
                      )}
@@ -133,6 +134,6 @@ export default function CreditsPage() {
         </div>
 
       </div>
-    </main>
+    </PageContainer>
   );
 }

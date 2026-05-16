@@ -80,8 +80,8 @@ export default function ReviewsPanel() {
 
   if (isError) {
     return (
-      <div className="rounded-[2rem] border border-rose-500/10 bg-rose-500/5 p-12 text-center backdrop-blur-sm">
-        <p className="font-serif italic text-rose-400">Yorumlar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>
+      <div className="rounded-[2rem] border border-[var(--gm-error)]/10 bg-[var(--gm-error)]/5 p-12 text-center backdrop-blur-sm">
+        <p className="font-serif italic text-[var(--gm-error)]">Yorumlar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>
       </div>
     );
   }

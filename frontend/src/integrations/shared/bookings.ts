@@ -33,6 +33,7 @@ export interface BookingMergedDto {
 
   appointment_date: string; // YYYY-MM-DD
   appointment_time: string | null; // HH:mm or null
+  media_type?: 'audio' | 'video';
 
   status: BookingStatus | string;
   is_read: number | boolean;
@@ -74,6 +75,7 @@ export interface BookingDto {
 
   appointment_date: string;
   appointment_time: string | null;
+  media_type?: 'audio' | 'video';
 
   status: BookingStatus | string;
   is_read: number | boolean;
@@ -110,6 +112,7 @@ export interface BookingMerged {
 
   appointment_date: string;
   appointment_time: string | null;
+  media_type?: 'audio' | 'video';
 
   status: BookingStatus | string;
   is_read: boolean;
@@ -179,6 +182,7 @@ export const normalizeBookingMerged = (dto: BookingMergedDto): BookingMerged => 
 
   appointment_date: toStr(dto.appointment_date),
   appointment_time: dto.appointment_time ? toStr(dto.appointment_time) : null,
+  media_type: dto.media_type,
 
   status: toStr(dto.status),
   is_read: toBool01(dto.is_read),
@@ -218,6 +222,7 @@ export const normalizeBookingRowToMerged = (dto: BookingDto): BookingMerged => (
 
   appointment_date: toStr(dto.appointment_date),
   appointment_time: dto.appointment_time ? toStr(dto.appointment_time) : null,
+  media_type: dto.media_type,
 
   status: toStr(dto.status),
   is_read: toBool01(dto.is_read),
@@ -268,6 +273,7 @@ export interface BookingPublicCreatePayload {
 
   appointment_date: string; // YYYY-MM-DD
   appointment_time: string; // HH:mm
+  media_type?: 'audio' | 'video';
 
   resource_id: string;
   service_id?: string;

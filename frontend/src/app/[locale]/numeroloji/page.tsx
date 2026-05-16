@@ -7,6 +7,7 @@ import { articleSchema, breadcrumbSchema, faqSchema, graph } from '@/seo/jsonld'
 import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import LandingIntro from '@/components/common/LandingIntro';
+import PageContainer from '@/components/common/PageContainer';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -91,7 +92,7 @@ export default async function NumerologyPage({ params }: Props) {
         };
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
       <JsonLd
         id="numerology-schema"
         data={graph([
@@ -127,6 +128,6 @@ export default async function NumerologyPage({ params }: Props) {
           : 'GoldMoodAstro numerology content makes name and birth date symbolism understandable through personal awareness.'}
         expertise={['Numeroloji', 'Kişisel Döngüler', 'Farkındalık']}
       />
-    </main>
+    </PageContainer>
   );
 }

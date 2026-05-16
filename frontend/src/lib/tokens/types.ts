@@ -48,6 +48,10 @@ export interface DesignTokenColors {
   text_primary_dark?: string;
   text_secondary_dark?: string;
   text_muted_dark?: string;
+  // Splash / Loader (Faz 38)
+  splash_bg?: string;
+  splash_text?: string;
+  loader_primary?: string;
 }
 
 export interface DesignTokenTypography {

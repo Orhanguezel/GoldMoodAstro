@@ -26,7 +26,7 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
     <section className="container mx-auto px-4 py-16">
       <div 
         className={cn(
-          "relative overflow-hidden rounded-[3rem] bg-(--gm-bg-deep) border border-white/5 shadow-3xl",
+          "relative overflow-hidden rounded-[3rem] bg-(--gm-bg-deep) border border-[var(--gm-text)]/5 shadow-3xl",
           "min-h-[500px] md:min-h-[450px] lg:min-h-[480px] flex flex-col md:flex-row items-center"
         )}
       >
@@ -57,12 +57,12 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
           </div>
 
           {/* Title */}
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-white leading-tight mb-6 tracking-tight">
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-[var(--gm-text)] leading-tight mb-6 tracking-tight">
             {content.title}
           </h2>
 
           {/* Subtitle */}
-          <p className="font-serif italic text-lg md:text-xl text-white/85 mb-12 max-w-lg leading-relaxed">
+          <p className="font-serif italic text-lg md:text-xl text-[var(--gm-text)]/85 mb-12 max-w-lg leading-relaxed">
             {content.subtitle}
           </p>
 
@@ -71,36 +71,36 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
             {/* Apple Store */}
             <a 
               href="#" 
-              className="flex items-center gap-4 bg-black/40 hover:bg-black/60 border border-white/10 backdrop-blur-md px-6 py-3 rounded-2xl transition-all duration-300 group"
+              className="flex items-center gap-4 bg-[var(--gm-bg-deep)]/40 hover:bg-[var(--gm-bg-deep)]/60 border border-[var(--gm-text)]/10 backdrop-blur-md px-6 py-3 rounded-2xl transition-all duration-300 group"
             >
-              <Apple size={32} className="text-white" />
+              <Apple size={32} className="text-[var(--gm-text)]" />
               <div className="flex flex-col text-left">
-                <span className="text-[10px] uppercase tracking-wider text-white/50 leading-none mb-1">Download on</span>
-                <span className="text-lg font-semibold text-white leading-none">App Store</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--gm-text)]/50 leading-none mb-1">Download on</span>
+                <span className="text-lg font-semibold text-[var(--gm-text)] leading-none">App Store</span>
               </div>
             </a>
 
             {/* Play Store */}
             <a 
               href="#" 
-              className="flex items-center gap-4 bg-black/40 hover:bg-black/60 border border-white/10 backdrop-blur-md px-6 py-3 rounded-2xl transition-all duration-300 group"
+              className="flex items-center gap-4 bg-[var(--gm-bg-deep)]/40 hover:bg-[var(--gm-bg-deep)]/60 border border-[var(--gm-text)]/10 backdrop-blur-md px-6 py-3 rounded-2xl transition-all duration-300 group"
             >
-              <Play size={28} fill="white" className="text-white" />
+              <Play size={28} fill="var(--gm-text)" className="text-[var(--gm-text)]" />
               <div className="flex flex-col text-left">
-                <span className="text-[10px] uppercase tracking-wider text-white/50 leading-none mb-1">Get it on</span>
-                <span className="text-lg font-semibold text-white leading-none">Google Play</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--gm-text)]/50 leading-none mb-1">Get it on</span>
+                <span className="text-lg font-semibold text-[var(--gm-text)] leading-none">Google Play</span>
               </div>
             </a>
           </div>
 
           {/* QR Code / Web to App conversion */}
           <div className="flex items-center gap-4 opacity-80 hover:opacity-100 transition-opacity duration-300 group/qr cursor-help">
-            <div className="p-3 bg-white/10 rounded-xl border border-white/20 group-hover/qr:border-(--gm-gold)/40 transition-colors">
-              <QrCode size={48} className="text-white/70 group-hover/qr:text-(--gm-gold-light)" />
+            <div className="p-3 bg-[var(--gm-text)]/10 rounded-xl border border-[var(--gm-text)]/20 group-hover/qr:border-(--gm-gold)/40 transition-colors">
+              <QrCode size={48} className="text-[var(--gm-text)]/70 group-hover/qr:text-(--gm-gold-light)" />
             </div>
             <div className="flex flex-col">
-              <span className="font-display text-[10px] tracking-[0.2em] uppercase text-white/60">{content.qrLabel}</span>
-              <span className="text-xs text-white/40">{isTr ? 'Kameranı aç ve okut' : 'Open camera to scan'}</span>
+              <span className="font-display text-[10px] tracking-[0.2em] uppercase text-[var(--gm-text)]/60">{content.qrLabel}</span>
+              <span className="text-xs text-[var(--gm-text)]/40">{isTr ? 'Kameranı aç ve okut' : 'Open camera to scan'}</span>
             </div>
           </div>
         </div>

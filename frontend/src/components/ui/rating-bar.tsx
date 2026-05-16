@@ -21,10 +21,10 @@ export function RatingBar({
   const percentage = (score / maxScore) * 100
 
   const getColorClass = (score: number) => {
-    if (score >= 8.5) return 'bg-green-600'
-    if (score >= 7) return 'bg-green-500'
-    if (score >= 4) return 'bg-yellow-500'
-    return 'bg-red-500'
+    if (score >= 8.5) return 'bg-[var(--gm-success)]'
+    if (score >= 7) return 'bg-[var(--gm-success)]/90'
+    if (score >= 4) return 'bg-[var(--gm-warning)]'
+    return 'bg-[var(--gm-error)]'
   }
 
   const getSizeClass = (size: string) => {
@@ -43,7 +43,7 @@ export function RatingBar({
       <div className="flex-1">
         <Progress
           value={percentage}
-          className={cn(getSizeClass(size), 'bg-bg-card-hover dark:bg-gray-700')}
+          className={cn(getSizeClass(size), 'bg-[var(--gm-surface-high)]')}
         />
         <div
           className={cn(

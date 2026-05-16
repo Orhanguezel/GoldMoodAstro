@@ -7,8 +7,11 @@ import { safeStr, safeJson } from '@/integrations/shared';
 
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { useBrand } from '@/hooks/useBrand';
-
+import { Cinzel } from 'next/font/google';
+import PageContainer from '@/components/common/PageContainer';
 import ContactForm from './ContactForm';
+
+const cinzel = Cinzel({ subsets: ['latin'] });
 
 // ── Types ──
 
@@ -91,7 +94,7 @@ export default function ContactPage() {
       infoTitle: safeStr(ui('ui_contact_info_title', 'İletişim bilgileri')),
       infoNoteTitle: safeStr(ui('ui_contact_info_note_title', 'Not')),
     }),
-    [ui],
+    [ui, brand.name],
   );
 
   // ── Contact info (localized) ──
@@ -126,88 +129,102 @@ export default function ContactPage() {
   }, [mapRaw, t.mapTitle]);
 
   return (
-    <section className="bg-bg-primary py-20">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          {/* Sol: Bilgi + Harita */}
-          <div className="lg:col-span-5">
-            <div className="mb-8">
-              <div className="text-sm font-normal uppercase tracking-[0.2em] text-brand-primary mb-3">
-                <span>{t.subprefix}</span>{' '}
-                <span className="text-text-muted">{t.sublabel}</span>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-serif font-light text-text-primary mb-4">
-                {t.titleLeft}
-              </h2>
-              <p className="text-text-secondary leading-relaxed">{t.tagline}</p>
-            </div>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+      {/* Sol: Bilgi + Harita */}
+      <div className="lg:col-span-5 space-y-12">
+        <div className="space-y-6">
+          <div className="text-[10px] font-bold uppercase tracking-[0.4em] text-(--gm-gold) mb-3">
+            <span>{t.subprefix}</span>{' '}
+            <span className="text-(--gm-muted)">{t.sublabel}</span>
+          </div>
+          <h2 className={`${cinzel.className} text-4xl md:text-5xl text-(--gm-text) leading-tight`}>
+            {t.titleLeft}
+          </h2>
+          <p className="text-(--gm-text-dim) leading-relaxed text-lg font-serif italic opacity-80">{t.tagline}</p>
+        </div>
 
-            {/* İletişim bilgileri */}
-            <div className="bg-bg-secondary shadow-soft border border-border-light p-6 mb-8">
-              <h3 className="text-lg font-light font-serif text-text-primary mb-4">
-                {t.infoTitle}
-              </h3>
+        {/* İletişim bilgileri */}
+        <div className="bg-(--gm-surface) shadow-(--gm-shadow-card) border border-(--gm-border-soft) p-10 rounded-[2.5rem] relative overflow-hidden group">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-(--gm-gold)/5 rounded-full blur-3xl group-hover:bg-(--gm-gold)/10 transition-colors" />
+          <h3 className={`${cinzel.className} text-xl text-(--gm-text) mb-8`}>
+            {t.infoTitle}
+          </h3>
 
-              <div className="space-y-3 text-sm text-text-secondary">
-                {primaryPhone && (
-                  <div>
-                    <strong className="text-text-primary">{t.phone}:</strong>{' '}
-                    <a className="text-brand-primary hover:underline" href={`tel:${primaryPhone}`}>
-                      {primaryPhone}
-                    </a>
-                  </div>
-                )}
-
-                {emailTo && (
-                  <div>
-                    <strong className="text-text-primary">{t.email}:</strong>{' '}
-                    <a className="text-brand-primary hover:underline" href={buildMailto(emailTo)}>
-                      {emailTo}
-                    </a>
-                  </div>
-                )}
-
-                {address && (
-                  <div>
-                    <strong className="text-text-primary">{t.addressLabel}:</strong>{' '}
-                    <span>{address}</span>
-                    {address2 && <span className="block">{address2}</span>}
-                  </div>
-                )}
-
-                {notes && (
-                  <div className="pt-3 border-t border-border-light">
-                    <strong className="text-text-primary">{t.infoNoteTitle}:</strong>
-                    <div className="mt-1">{notes}</div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Harita */}
-            {mapCfg.embed_url && (
-              <div className="bg-bg-secondary shadow-soft border border-border-light overflow-hidden">
-                <div className="px-6 py-4 border-b border-border-light">
-                  <h3 className="text-lg font-light font-serif text-text-primary">{mapCfg.title}</h3>
+          <div className="space-y-6 text-base text-(--gm-text-dim) relative">
+            {primaryPhone && (
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-(--gm-gold)/10 rounded-xl flex items-center justify-center text-(--gm-gold)">
+                   <strong className="sr-only">{t.phone}</strong>
+                   <span className="text-xl">📞</span>
                 </div>
-                <iframe
-                  title={mapCfg.title}
-                  src={mapCfg.embed_url}
-                  height={mapCfg.height}
-                  className="w-full"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
+                <a className="text-(--gm-text) hover:text-(--gm-gold) transition-colors font-medium" href={`tel:${primaryPhone}`}>
+                  {primaryPhone}
+                </a>
+              </div>
+            )}
+
+            {emailTo && (
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-(--gm-gold)/10 rounded-xl flex items-center justify-center text-(--gm-gold)">
+                   <strong className="sr-only">{t.email}</strong>
+                   <span className="text-xl">✉️</span>
+                </div>
+                <a className="text-(--gm-text) hover:text-(--gm-gold) transition-colors font-medium" href={buildMailto(emailTo)}>
+                  {emailTo}
+                </a>
+              </div>
+            )}
+
+            {address && (
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-(--gm-gold)/10 rounded-xl flex items-center justify-center text-(--gm-gold) shrink-0">
+                   <strong className="sr-only">{t.addressLabel}</strong>
+                   <span className="text-xl">📍</span>
+                </div>
+                <div className="pt-2">
+                  <span className="text-(--gm-text) font-medium">{address}</span>
+                  {address2 && <span className="block mt-1 opacity-70">{address2}</span>}
+                </div>
+              </div>
+            )}
+
+            {notes && (
+              <div className="pt-8 border-t border-(--gm-border-soft) flex gap-4">
+                <div className="w-10 h-10 bg-(--gm-gold)/10 rounded-xl flex items-center justify-center text-(--gm-gold) shrink-0">
+                   <span className="text-xl">📝</span>
+                </div>
+                <div className="pt-2">
+                  <strong className="text-(--gm-text) text-sm uppercase tracking-widest">{t.infoNoteTitle}</strong>
+                  <div className="mt-2 text-sm italic leading-relaxed">{notes}</div>
+                </div>
               </div>
             )}
           </div>
-
-          {/* Sağ: Form */}
-          <div className="lg:col-span-7">
-            <ContactForm locale={locale} t={t} />
-          </div>
         </div>
+
+        {/* Harita */}
+        {mapCfg.embed_url && (
+          <div className="bg-(--gm-surface) shadow-(--gm-shadow-soft) border border-(--gm-border-soft) overflow-hidden rounded-[2.5rem]">
+            <div className="px-8 py-5 border-b border-(--gm-border-soft) flex items-center justify-between">
+              <h3 className={`${cinzel.className} text-sm tracking-widest text-(--gm-text)`}>{mapCfg.title}</h3>
+              <div className="w-2 h-2 bg-[var(--gm-success)] rounded-full animate-pulse shadow-[0_0_8px_var(--gm-success)]" />
+            </div>
+            <iframe
+              title={mapCfg.title}
+              src={mapCfg.embed_url}
+              height={mapCfg.height}
+              className="w-full grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        )}
       </div>
-    </section>
+
+      {/* Sağ: Form */}
+      <div className="lg:col-span-7">
+        <ContactForm locale={locale} t={t} />
+      </div>
+    </div>
   );
 }

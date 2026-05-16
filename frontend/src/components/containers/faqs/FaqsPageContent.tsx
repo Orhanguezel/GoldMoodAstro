@@ -8,6 +8,9 @@
 'use client';
 
 import React, { useMemo, useState, useEffect, useId, useCallback } from 'react';
+import { Cinzel } from 'next/font/google';
+
+const cinzel = Cinzel({ subsets: ['latin'] });
 
 import { useListFaqsQuery } from '@/integrations/rtk/hooks';
 import type { FaqDto } from '@/integrations/shared';
@@ -102,45 +105,45 @@ const FaqsPageContent: React.FC = () => {
   }, [hasFaqs, faqs]); // run only when list changes
 
   return (
-    <section className="bg-bg-primary py-20 min-h-screen">
+    <div className="flex flex-col">
       {faqSchema && <JsonLd data={faqSchema} id="faq-page" />}
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto">
         {/* HEADER */}
-        <div className="text-center mb-16 max-w-3xl mx-auto" data-aos="fade-up">
-          <span className="text-brand-primary font-bold text-sm uppercase tracking-widest block mb-3">
+        <div className="text-center mb-20 max-w-3xl mx-auto">
+          <span className="text-(--gm-gold) font-bold text-[10px] md:text-xs uppercase tracking-[0.32em] block mb-5">
             <span>{kickerPrefix}</span> {kickerLabel}
           </span>
 
-          <h2 className="text-4xl md:text-5xl font-serif font-light text-text-primary mb-6">
+          <h1 className={`${cinzel.className} text-4xl md:text-6xl text-(--gm-text) mb-8 leading-tight`}>
             {titlePrefix}{' '}
-            <span className="text-brand-primary border-b-2 border-brand-primary/20 pb-1">
+            <span className="text-(--gm-gold)">
               {titleMark}
             </span>
-          </h2>
+          </h1>
 
-          {intro && <p className="text-text-secondary text-lg leading-relaxed">{intro}</p>}
+          {intro && <p className="text-(--gm-text-dim) text-lg leading-relaxed font-serif italic opacity-80">{intro}</p>}
         </div>
 
         {/* ACCORDION */}
-        <div className="max-w-4xl mx-auto" data-aos="fade-up" data-aos-delay="200">
-          <div className="space-y-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="space-y-6">
             {/* EMPTY */}
             {!isLoading && !hasFaqs && (
-              <div className="bg-bg-card p-8 shadow-soft text-center border border-border-light">
-                <p className="text-text-muted">{emptyText}</p>
+              <div className="bg-(--gm-surface) p-12 rounded-[2.5rem] shadow-(--gm-shadow-soft) text-center border border-(--gm-border-soft)">
+                <p className="text-(--gm-muted) italic">{emptyText}</p>
               </div>
             )}
 
             {/* LOADING */}
             {isLoading && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="bg-bg-card p-6 border border-border-light shadow-soft animate-pulse"
+                    className="bg-(--gm-surface) p-8 border border-(--gm-border-soft) rounded-[2.5rem] shadow-(--gm-shadow-soft) animate-pulse"
                   >
-                    <div className="h-6 bg-bg-card-hover rounded w-2/3 mb-4" />
-                    <div className="h-4 bg-bg-card-hover rounded w-full" />
+                    <div className="h-7 bg-(--gm-bg-deep) rounded-xl w-2/3 mb-6" />
+                    <div className="h-4 bg-(--gm-bg-deep) rounded-lg w-full" />
                   </div>
                 ))}
               </div>
@@ -159,26 +162,26 @@ const FaqsPageContent: React.FC = () => {
 
               return (
                 <div
-                  className="bg-bg-card border border-border-light shadow-soft overflow-hidden transition-all duration-300 hover:border-brand-primary/20 hover:shadow-medium"
+                  className={`bg-(--gm-surface) border border-(--gm-border-soft) rounded-[2.5rem] shadow-(--gm-shadow-soft) overflow-hidden transition-all duration-500 hover:shadow-(--gm-shadow-card) ${isOpen ? 'ring-1 ring-(--gm-gold)/20' : ''}`}
                   key={id}
                 >
                   <h2>
                     <button
                       type="button"
-                      className={`w-full text-left px-6 py-5 flex justify-between items-center font-bold text-lg md:text-xl transition-colors ${
-                        isOpen ? 'text-brand-primary' : 'text-text-primary hover:text-brand-primary'
+                      className={`w-full text-left px-8 md:px-12 py-7 flex justify-between items-center transition-all ${
+                        isOpen ? 'text-(--gm-gold)' : 'text-(--gm-text) hover:text-(--gm-gold)'
                       }`}
                       aria-expanded={isOpen}
                       aria-controls={panelId}
                       id={headingId}
                       onClick={() => setOpenId((prev) => (prev === id ? null : id))}
                     >
-                      <span className="font-serif">{q}</span>
+                      <span className={`${cinzel.className} text-xl md:text-2xl leading-snug`}>{q}</span>
                       <span
-                        className={`ml-4 transform transition-transform duration-300 flex-shrink-0 w-8 h-8 flex items-center justify-center bg-bg-card ${isOpen ? 'rotate-180 bg-brand-primary/10 text-brand-primary' : 'text-text-muted'}`}
+                        className={`ml-6 transform transition-all duration-500 flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-(--gm-bg-deep) ${isOpen ? 'rotate-180 bg-(--gm-gold) text-(--gm-bg-deep)' : 'text-(--gm-muted)'}`}
                       >
                         <svg
-                          className="w-4 h-4"
+                          className="w-5 h-5"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -196,19 +199,19 @@ const FaqsPageContent: React.FC = () => {
 
                   <div
                     id={panelId}
-                    className={`transition-all duration-300 ease-in-out overflow-hidden bg-bg-card/50 ${
-                      isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+                    className={`transition-all duration-500 ease-in-out overflow-hidden ${
+                      isOpen ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'
                     }`}
                     aria-labelledby={headingId}
                   >
-                    <div className="p-6 pt-2 text-text-secondary leading-relaxed border-t border-border-light/50">
+                    <div className="px-8 md:px-12 pb-10 pt-2 text-(--gm-text-dim) text-lg leading-[1.8] font-serif border-t border-(--gm-border-soft)/50">
                       {a ? (
                         <div
-                          className="prose prose-rose max-w-none"
+                          className="prose prose-rose max-w-none opacity-90"
                           dangerouslySetInnerHTML={{ __html: a }}
                         />
                       ) : (
-                        <p className="text-text-muted italic text-sm">{noAnswer}</p>
+                        <p className="text-(--gm-muted) italic text-sm">{noAnswer}</p>
                       )}
                     </div>
                   </div>
@@ -217,15 +220,15 @@ const FaqsPageContent: React.FC = () => {
             })}
           </div>
 
-          {/* FOOTER NOTE */}
           {footerNote && (
-            <div className="text-center mt-12 bg-bg-card/50 backdrop-blur-sm p-6 border border-border-light">
-              <p className="text-text-secondary font-medium mb-0">{footerNote}</p>
+            <div className="text-center mt-16 bg-(--gm-surface) p-8 md:p-12 rounded-[2.5rem] border border-(--gm-border-soft) shadow-(--gm-shadow-soft) relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-(--gm-gold)/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <p className="text-(--gm-text) text-lg font-serif italic mb-0 opacity-80 group-hover:opacity-100 transition-opacity">{footerNote}</p>
             </div>
           )}
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

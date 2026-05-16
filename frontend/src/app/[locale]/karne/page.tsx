@@ -35,21 +35,21 @@ const RESPONSE_OPTIONS: Array<{
     icon: <CheckCircle2 size={18} />,
     labelTr: 'Evet, gerçekleşti',
     labelEn: 'Yes, it happened',
-    color: 'text-emerald-500 border-emerald-500/40 hover:bg-emerald-500/10',
+    color: 'text-[var(--gm-success)] border-[var(--gm-success)]/40 hover:bg-[var(--gm-success)]/10',
   },
   {
     value: 'partially',
     icon: <Sparkles size={18} />,
     labelTr: 'Kısmen gerçekleşti',
     labelEn: 'Partially happened',
-    color: 'text-amber-500 border-amber-500/40 hover:bg-amber-500/10',
+    color: 'text-[var(--gm-warning)] border-[var(--gm-warning)]/40 hover:bg-[var(--gm-warning)]/10',
   },
   {
     value: 'did_not_happen',
     icon: <XCircle size={18} />,
     labelTr: 'Gerçekleşmedi',
     labelEn: 'Did not happen',
-    color: 'text-rose-500 border-rose-500/40 hover:bg-rose-500/10',
+    color: 'text-[var(--gm-error)] border-[var(--gm-error)]/40 hover:bg-[var(--gm-error)]/10',
   },
   {
     value: 'no_answer',
@@ -209,6 +209,8 @@ function PendingCard({
   );
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function KarnePage() {
   const params = useParams();
   const router = useRouter();
@@ -228,17 +230,17 @@ export default function KarnePage() {
 
   if (!isReady || !isAuthenticated) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-(--gm-bg)">
+      <PageContainer center className="bg-(--gm-bg) min-h-screen">
         <p className="text-(--gm-muted) text-sm">{isTr ? 'Yükleniyor…' : 'Loading…'}</p>
-      </main>
+      </PageContainer>
     );
   }
 
   const items = pending ?? [];
 
   return (
-    <main className="min-h-screen bg-(--gm-bg) pt-32 pb-24">
-      <div className="max-w-3xl mx-auto px-6 pt-12">
+    <PageContainer width="narrow" className="bg-(--gm-bg) pt-32 pb-24">
+      <div className="max-w-3xl mx-auto pt-12">
         <Link
           href={localizePath(locale, '/dashboard')}
           className="inline-flex items-center gap-2 text-xs text-(--gm-text-dim) hover:text-(--gm-gold) tracking-[0.18em] uppercase mb-8"
@@ -266,7 +268,7 @@ export default function KarnePage() {
             {isTr ? 'Yükleniyor…' : 'Loading…'}
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-12 text-center">
+          <div className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-12 text-center shadow-(--gm-shadow-soft)">
             <Sparkles className="mx-auto text-(--gm-gold-deep) mb-4" size={32} strokeWidth={1.4} />
             <h2 className="font-serif text-2xl text-(--gm-text) mb-3">
               {isTr ? 'Şimdilik bekleyen bir karne yok' : 'No pending feedback right now'}
@@ -285,6 +287,6 @@ export default function KarnePage() {
           </div>
         )}
       </div>
-    </main>
+    </PageContainer>
   );
 }

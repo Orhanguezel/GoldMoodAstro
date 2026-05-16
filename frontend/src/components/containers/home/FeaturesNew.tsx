@@ -193,7 +193,7 @@ export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
             <div className="flex justify-center md:justify-end">
               <div className="relative group">
                 {/* Cosmic Bond Glow */}
-                <div className="absolute -inset-4 bg-gradient-to-bl from-[var(--gm-primary)]/20 to-blue-500/10 rounded-full blur-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-700" />
+                <div className="absolute -inset-4 bg-gradient-to-bl from-[var(--gm-primary)]/20 to-[var(--gm-info)]/10 rounded-full blur-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-700" />
                 
                 <div className="relative aspect-[4/3] w-full max-w-[440px] overflow-hidden rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)] shadow-2xl">
                   <Image

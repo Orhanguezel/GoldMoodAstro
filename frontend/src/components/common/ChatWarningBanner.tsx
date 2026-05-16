@@ -38,10 +38,10 @@ export default function ChatWarningBanner({
   if (compact) {
     return (
       <div
-        className={`flex items-start gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 ${className}`}
+        className={`flex items-start gap-2 p-2.5 rounded-xl bg-[var(--gm-warning)]/10 border border-[var(--gm-warning)]/30 ${className}`}
         role="note"
       >
-        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+        <AlertTriangle className="w-3.5 h-3.5 text-[var(--gm-warning)] shrink-0 mt-0.5" />
         <p className="text-[10px] text-[var(--gm-text-dim)] leading-relaxed">{text}</p>
       </div>
     );
@@ -49,10 +49,10 @@ export default function ChatWarningBanner({
 
   return (
     <div
-      className={`flex items-start gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 ${className}`}
+      className={`flex items-start gap-3 p-4 rounded-2xl bg-[var(--gm-warning)]/10 border border-[var(--gm-warning)]/30 ${className}`}
       role="note"
     >
-      <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+      <AlertTriangle className="w-5 h-5 text-[var(--gm-warning)] shrink-0 mt-0.5" />
       <p className="text-[12px] text-[var(--gm-text-dim)] leading-relaxed">{text}</p>
     </div>
   );

@@ -62,60 +62,60 @@ export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-4 md:py-20">
+    <div className="zodiac-compatibility-scope">
       {/* Header / Match Section */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative mb-16 p-10 md:p-16 rounded-[3rem] bg-gradient-to-br from-surface to-brand-primary/10 border border-brand-gold/30 text-center overflow-hidden shadow-glow"
+        className="relative mb-16 p-10 md:p-20 rounded-[3rem] bg-gradient-to-br from-(--gm-surface) to-(--gm-bg-deep) border border-(--gm-gold)/30 text-center overflow-hidden shadow-(--gm-shadow-glow)"
       >
-        <div className="absolute top-0 left-0 w-64 h-64 bg-brand-gold/5 blur-[100px] rounded-full -ml-32 -mt-32" />
+        <div className="absolute top-0 left-0 w-64 h-64 bg-(--gm-gold)/5 blur-[100px] rounded-full -ml-32 -mt-32" />
         
         <div className="relative z-10">
-          <div className="flex items-center justify-center gap-6 md:gap-12 mb-8">
+          <div className="flex items-center justify-center gap-8 md:gap-20 mb-12">
             <div className="flex flex-col items-center">
-              <div className="relative w-24 h-24 md:w-32 md:h-32 mb-4">
+              <div className="relative w-24 h-24 md:w-40 md:h-40 mb-6 group-hover:scale-105 transition-transform">
                 <Image src={metaA?.image ?? `/uploads/zodiac/${sA}.png`} alt={labelA} fill className="object-contain" />
               </div>
-              <span className="text-3xl text-brand-gold/70">{metaA?.symbol}</span>
-              <span className={`${cinzel.className} text-xl md:text-2xl text-foreground`}>{labelA}</span>
+              <span className="text-4xl text-(--gm-gold)/70 mb-2">{metaA?.symbol}</span>
+              <span className={`${cinzel.className} text-xl md:text-3xl text-(--gm-text)`}>{labelA}</span>
             </div>
             
             <div className="flex flex-col items-center">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-brand-gold/10 flex items-center justify-center border border-brand-gold/20 mb-4">
-                <Zap className="w-5 h-5 md:w-6 md:h-6 text-brand-gold" />
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-(--gm-gold)/10 flex items-center justify-center border border-(--gm-gold)/20 mb-6 shadow-gold">
+                <Zap className="w-6 h-6 md:w-8 md:h-8 text-(--gm-gold)" />
               </div>
-              <span className="text-xs font-bold tracking-widest text-brand-gold/60 uppercase">UYUMU</span>
+              <span className="text-[10px] font-bold tracking-[0.3em] text-(--gm-gold)/60 uppercase">UYUMU</span>
             </div>
 
             <div className="flex flex-col items-center">
-              <div className="relative w-24 h-24 md:w-32 md:h-32 mb-4">
+              <div className="relative w-24 h-24 md:w-40 md:h-40 mb-6 group-hover:scale-105 transition-transform">
                 <Image src={metaB?.image ?? `/uploads/zodiac/${sB}.png`} alt={labelB} fill className="object-contain" />
               </div>
-              <span className="text-3xl text-brand-gold/70">{metaB?.symbol}</span>
-              <span className={`${cinzel.className} text-xl md:text-2xl text-foreground`}>{labelB}</span>
+              <span className="text-4xl text-(--gm-gold)/70 mb-2">{metaB?.symbol}</span>
+              <span className={`${cinzel.className} text-xl md:text-3xl text-(--gm-text)`}>{labelB}</span>
             </div>
           </div>
 
-          <div className="mb-8 flex flex-wrap justify-center gap-2">
+          <div className="mb-10 flex flex-wrap justify-center gap-3">
             {[metaA, metaB].filter(Boolean).flatMap((meta) => [
               `${meta!.label}: ${meta!.element}`,
               `${meta!.label}: ${meta!.modality}`,
             ]).map((chip) => (
-              <span key={chip} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-brand-gold/80">
+              <span key={chip} className="rounded-full border border-(--gm-border-soft) bg-(--gm-bg-deep)/40 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-(--gm-gold)/80 backdrop-blur-sm">
                 {chip}
               </span>
             ))}
           </div>
 
-          <h1 className={`${cinzel.className} text-3xl md:text-5xl mb-6 text-white leading-tight`}>
+          <h1 className={`${cinzel.className} text-3xl md:text-6xl mb-8 text-(--gm-text) leading-tight`}>
             {reading.title}
           </h1>
-          <p className="text-lg md:text-xl text-brand-gold/80 italic font-serif">
+          <p className="text-xl md:text-2xl text-(--gm-text-dim) italic font-serif opacity-90 max-w-4xl mx-auto leading-relaxed">
             &quot;{reading.summary}&quot;
           </p>
 
-          <div className="mt-8 flex justify-center">
+          <div className="mt-12 flex justify-center">
             <ShareCard 
               title={`${labelA} & ${labelB} Uyumu`}
               shareText={`${labelA} ve ${labelB} burçlarının uyumuna baktım ✨\nLove Score: %${reading.love_score}\nSenin uyumun ne?`}
@@ -132,28 +132,28 @@ export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp
       </motion.div>
 
       {/* Score Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
         {[
-          { label: 'Aşk', score: reading.love_score, icon: Heart, color: 'text-rose-400' },
-          { label: 'Arkadaşlık', score: reading.friendship_score, icon: Star, color: 'text-amber-400' },
-          { label: 'Kariyer', score: reading.career_score, icon: Briefcase, color: 'text-blue-400' },
-          { label: 'Tutku', score: reading.sexual_score, icon: Zap, color: 'text-purple-400' },
+          { label: 'Aşk', score: reading.love_score, icon: Heart, color: 'text-[var(--gm-error)]' },
+          { label: 'Arkadaşlık', score: reading.friendship_score, icon: Star, color: 'text-[var(--gm-warning)]' },
+          { label: 'Kariyer', score: reading.career_score, icon: Briefcase, color: 'text-[var(--gm-info)]' },
+          { label: 'Tutku', score: reading.sexual_score, icon: Zap, color: 'text-[var(--gm-primary)]' },
         ].map((item, idx) => (
           <motion.div
             key={item.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="bg-surface/50 p-6 rounded-2xl border border-border/40 flex flex-col items-center text-center group hover:bg-surface transition-colors"
+            className="bg-(--gm-surface) p-8 rounded-3xl border border-(--gm-border-soft) flex flex-col items-center text-center group hover:shadow-(--gm-shadow-soft) transition-all"
           >
-            <item.icon className={`w-6 h-6 mb-3 ${item.color}`} />
-            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{item.label}</div>
-            <div className="text-2xl font-bold">{item.score}%</div>
-            <div className="w-full h-1 bg-white/5 rounded-full mt-3 overflow-hidden">
+            <item.icon className={`w-8 h-8 mb-4 ${item.color}`} />
+            <div className="text-[11px] font-bold text-(--gm-muted) uppercase tracking-[0.2em] mb-2">{item.label}</div>
+            <div className={`${cinzel.className} text-3xl font-bold text-(--gm-text)`}>{item.score}%</div>
+            <div className="w-full h-1.5 bg-(--gm-bg-deep) rounded-full mt-5 overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }} 
                 animate={{ width: `${item.score}%` }} 
-                transition={{ duration: 1, delay: idx * 0.1 + 0.5 }}
+                transition={{ duration: 1.5, delay: idx * 0.1 + 0.5, ease: "easeOut" }}
                 className={`h-full ${item.color.replace('text-', 'bg-')}`} 
               />
             </div>
@@ -162,33 +162,35 @@ export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp
       </div>
 
       {/* Detailed Analysis */}
-      <div className="space-y-8">
+      <div className="space-y-12">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="bg-surface/30 p-8 md:p-12 rounded-[2.5rem] border border-border/20"
+          className="bg-(--gm-surface) p-8 md:p-16 rounded-[3rem] border border-(--gm-border-soft) shadow-(--gm-shadow-soft)"
         >
-          <div className="flex items-center gap-3 mb-8">
-            <Info className="w-5 h-5 text-brand-gold" />
-            <h2 className={`${cinzel.className} text-2xl text-brand-gold`}>Derinlemesine Analiz</h2>
+          <div className="flex items-center gap-4 mb-10">
+            <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 flex items-center justify-center">
+              <Info className="w-5 h-5 text-(--gm-gold)" />
+            </div>
+            <h2 className={`${cinzel.className} text-3xl text-(--gm-gold)`}>Derinlemesine Analiz</h2>
           </div>
           
-          <div className="prose prose-invert max-w-none text-lg leading-relaxed whitespace-pre-wrap text-foreground/90">
+          <div className="text-xl leading-relaxed whitespace-pre-wrap text-(--gm-text) font-serif opacity-90 max-w-none">
             {reading.content}
           </div>
         </motion.div>
 
         {/* CTA */}
-        <div className="bg-brand-primary/5 border border-brand-gold/10 p-10 rounded-3xl text-center">
-          <h3 className="text-2xl mb-4 font-serif italic text-white">Gerçek uyum sinastri raporundan çıkar.</h3>
-          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+        <div className="bg-gradient-to-br from-(--gm-primary)/10 to-transparent border border-(--gm-gold)/20 p-12 md:p-20 rounded-[3rem] text-center shadow-(--gm-shadow-soft)">
+          <h3 className={`${cinzel.className} text-3xl md:text-4xl mb-6 text-(--gm-text)`}>Gerçek uyum sinastri raporundan çıkar.</h3>
+          <p className="text-(--gm-text-dim) mb-12 max-w-3xl mx-auto text-lg leading-relaxed font-serif italic">
             Burç uyumu sadece Güneş burçlarıyla sınırlı değildir. Venüs ve Mars yerleşimleriniz asıl hikayeyi anlatır. Kişiye özel sinastri (ilişki haritası) analizi için uzmanlarımıza danışın.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link href={`/${localePath}/sinastri?mode=manual`} className="btn-premium py-4 px-10 rounded-full flex items-center gap-3">
+          <div className="flex flex-wrap justify-center gap-6">
+            <Link href={`/${localePath}/sinastri?mode=manual`} className="rounded-full bg-(--gm-primary) px-10 py-5 text-xs font-bold uppercase tracking-[0.25em] text-(--gm-bg) hover:bg-(--gm-primary-dark) transition-all shadow-lg hover:scale-105 flex items-center gap-3">
               Sinastri raporu için <Zap className="w-4 h-4" />
             </Link>
-            <Link href={`/${localePath}/birth-chart`} className="btn-secondary py-4 px-8 rounded-full">
+            <Link href={`/${localePath}/birth-chart`} className="rounded-full border border-(--gm-border-soft) px-10 py-5 text-xs font-bold uppercase tracking-[0.25em] text-(--gm-text) hover:bg-(--gm-surface) transition-all">
               Doğum Haritası Çıkar
             </Link>
           </div>

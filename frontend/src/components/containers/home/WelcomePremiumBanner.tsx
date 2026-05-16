@@ -59,7 +59,7 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
           </div>
 
           {/* Title - Large & Elegant */}
-          <h2 className="font-display text-4xl md:text-5xl lg:text-7xl text-white leading-[1.1] mb-6 tracking-tight drop-shadow-lg">
+          <h2 className="font-display text-4xl md:text-5xl lg:text-7xl text-[var(--gm-text)] leading-[1.1] mb-6 tracking-tight drop-shadow-lg">
             {content.title.split(' ').map((word, i) => (
               <span key={i} className={i === 0 ? "text-(--gm-gold)" : ""}>
                 {word}{' '}
@@ -68,7 +68,7 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
           </h2>
 
           {/* Subtitle - Italic & Refined */}
-          <p className="font-serif italic text-lg md:text-xl lg:text-2xl text-white/80 mb-12 max-w-xl leading-relaxed">
+          <p className="font-serif italic text-lg md:text-xl lg:text-2xl text-[var(--gm-text)]/80 mb-12 max-w-xl leading-relaxed">
             {content.subtitle}
           </p>
 
@@ -85,7 +85,7 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
             
             <Link 
               href="/about" 
-              className="inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full border border-white/20 text-white/90 backdrop-blur-md hover:bg-white/10 transition-all duration-300 text-sm tracking-[0.15em] uppercase font-medium"
+              className="inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full border border-[var(--gm-text)]/20 text-[var(--gm-text)]/90 backdrop-blur-md hover:bg-[var(--gm-text)]/10 transition-all duration-300 text-sm tracking-[0.15em] uppercase font-medium"
             >
               {isTr ? 'Hikayemiz' : 'Our Story'}
             </Link>
@@ -95,10 +95,10 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
         {/* Corner Detail */}
         <div className="absolute bottom-8 right-12 hidden md:block opacity-40">
           <div className="flex flex-col items-end gap-2">
-            <div className="font-display text-[10px] tracking-[0.6em] uppercase text-white/60">
+            <div className="font-display text-[10px] tracking-[0.6em] uppercase text-[var(--gm-text)]/60">
               GoldMoodAstro ✦ 2026
             </div>
-            <div className="h-px w-32 bg-linear-to-l from-white/60 to-transparent" />
+            <div className="h-px w-32 bg-linear-to-l from-[var(--gm-text)]/60 to-transparent" />
           </div>
         </div>
       </div>

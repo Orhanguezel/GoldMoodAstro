@@ -63,7 +63,7 @@ export default function MultiSelectChip({
       
       <div 
         className={`min-h-11 w-full bg-[var(--gm-bg-deep)] border rounded-xl p-2 flex flex-wrap gap-2 transition-all ${
-          error ? 'border-rose-500/60' : 'border-[var(--gm-border-soft)] focus-within:border-[var(--gm-gold)]/40'
+          error ? 'border-[var(--gm-error)]/60' : 'border-[var(--gm-border-soft)] focus-within:border-[var(--gm-gold)]/40'
         }`}
       >
         {selected.map((item) => (
@@ -75,7 +75,7 @@ export default function MultiSelectChip({
             <button
               type="button"
               onClick={() => handleRemove(item)}
-              className="text-[var(--gm-muted)] hover:text-rose-400 transition-colors"
+              className="text-[var(--gm-muted)] hover:text-[var(--gm-error)] transition-colors"
             >
               <X size={12} />
             </button>
@@ -93,7 +93,7 @@ export default function MultiSelectChip({
         />
       </div>
 
-      {error && <p className="text-[9px] text-rose-400 font-bold uppercase tracking-widest ml-1">{error}</p>}
+      {error && <p className="text-[9px] text-[var(--gm-error)] font-bold uppercase tracking-widest ml-1">{error}</p>}
       
       {options.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-2">

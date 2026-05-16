@@ -133,6 +133,8 @@ const HISTORY_META: Record<ReadingType, { icon: React.ReactNode; tr: string; en:
   numerology: { icon: <Binary size={18} />, tr: 'Numeroloji', en: 'Numerology', route: '/numeroloji' },
 };
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function DashboardPage() {
   const params = useParams();
   const router = useRouter();
@@ -229,9 +231,9 @@ export default function DashboardPage() {
 
   if (!isReady || !user) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-(--gm-bg)">
-        <p className="text-(--gm-muted) text-sm">{isTr ? 'Yükleniyor…' : 'Loading…'}</p>
-      </main>
+      <PageContainer className="bg-(--gm-bg)" verticalPadding="large" center>
+        <p className="text-(--gm-text-muted) text-sm">{isTr ? 'Yükleniyor…' : 'Loading…'}</p>
+      </PageContainer>
     );
   }
 
@@ -416,10 +418,10 @@ export default function DashboardPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-(--gm-bg) pt-32 pb-24 px-6">
+    <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
       <div className="max-w-6xl mx-auto">
         {/* User card */}
-        <header className="mb-8 rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10">
+        <header className="mb-8 rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10 shadow-(--gm-shadow-soft)">
           <AvatarUpload
             src={avatarUrl}
             initials={initials}
@@ -436,7 +438,7 @@ export default function DashboardPage() {
             </h1>
             <p className="text-(--gm-text-dim) text-sm mt-2 truncate">{user.email}</p>
             {memberSince && (
-              <p className="text-(--gm-muted) text-xs mt-1">
+              <p className="text-(--gm-text-muted) text-xs mt-1">
                 {isTr ? `Üye: ${memberSince}` : `Member since ${memberSince}`}
               </p>
             )}
@@ -453,7 +455,7 @@ export default function DashboardPage() {
             </button>
             <Link
               href={localizePath(locale, '/logout')}
-              className="inline-flex items-center gap-2 text-xs font-medium tracking-widest text-(--gm-muted) hover:text-(--gm-text-dim) transition-colors"
+              className="inline-flex items-center gap-2 text-xs font-medium tracking-widest text-(--gm-text-muted) hover:text-(--gm-text-dim) transition-colors"
             >
               {isTr ? 'Çıkış yap' : 'Sign out'}
             </Link>
@@ -542,7 +544,7 @@ export default function DashboardPage() {
         )}
 
         {tab === 'profile' && (
-          <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 max-w-3xl">
+          <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 max-w-3xl shadow-(--gm-shadow-soft)">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold-deep)">
                 <UserIcon size={18} />
@@ -632,7 +634,7 @@ export default function DashboardPage() {
             ) : !myBookings || myBookings.length === 0 ? (
               <div className="py-20 text-center space-y-6 rounded-2xl border border-dashed border-(--gm-border-soft)">
                 <div className="w-16 h-16 rounded-full bg-(--gm-bg-deep) flex items-center justify-center mx-auto border border-(--gm-border-soft)">
-                  <Calendar className="w-6 h-6 text-(--gm-muted)" />
+                  <Calendar className="w-6 h-6 text-(--gm-text-muted)" />
                 </div>
                 <p className="text-(--gm-text-dim) font-serif italic">
                   {isTr ? 'Henüz bir randevunuz bulunmuyor.' : 'No bookings yet.'}
@@ -646,7 +648,7 @@ export default function DashboardPage() {
                 {myBookings.map((booking: any) => (
                   <div
                     key={booking.id}
-                    className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-(--gm-gold)/40 transition-all duration-300 group"
+                    className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-(--gm-gold)/40 transition-all duration-300 group shadow-(--gm-shadow-soft)"
                   >
                     <div className="flex items-center gap-5">
                       <div className="relative">
@@ -679,7 +681,7 @@ export default function DashboardPage() {
                         <h4 className="text-(--gm-text) font-serif text-xl group-hover:text-(--gm-gold) transition-colors">
                           {booking.resource_title || (isTr ? 'Danışman' : 'Consultant')}
                         </h4>
-                        <div className="flex items-center gap-3 mt-1 text-(--gm-muted) text-xs">
+                        <div className="flex items-center gap-3 mt-1 text-(--gm-text-muted) text-xs">
                            <span className="flex items-center gap-1.5"><Calendar size={13} /> {fmtDate(booking.appointment_date, locale)}</span>
                            <span className="flex items-center gap-1.5"><Clock size={13} /> {booking.appointment_time}</span>
                         </div>
@@ -714,7 +716,7 @@ export default function DashboardPage() {
 
                       <Link
                         href={localizePath(locale, `/booking/${booking.id}`)}
-                        className="p-2.5 rounded-xl border border-(--gm-border-soft) text-(--gm-muted) hover:text-(--gm-gold) hover:border-(--gm-gold)/40 transition-all"
+                        className="p-2.5 rounded-xl border border-(--gm-border-soft) text-(--gm-text-muted) hover:text-(--gm-gold) hover:border-(--gm-gold)/40 transition-all"
                         title={isTr ? 'Detaylar' : 'Details'}
                       >
                         <Eye size={18} />
@@ -804,7 +806,7 @@ export default function DashboardPage() {
             ) : filteredHistory.length === 0 ? (
               <div className="py-20 text-center space-y-6 rounded-2xl border border-dashed border-(--gm-border-soft)">
                 <div className="w-16 h-16 rounded-full bg-(--gm-bg-deep) flex items-center justify-center mx-auto border border-(--gm-border-soft)">
-                  <Sparkles className="w-6 h-6 text-(--gm-muted)" />
+                  <Sparkles className="w-6 h-6 text-(--gm-text-muted)" />
                 </div>
                 <p className="text-(--gm-text-dim) font-serif italic">
                   {isTr ? 'Henüz kayıtlı yorumun yok.' : 'No saved readings yet.'}
@@ -824,7 +826,7 @@ export default function DashboardPage() {
                   return (
                     <article
                       key={`${item.type}:${item.id}`}
-                      className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-5 md:p-6 transition hover:border-(--gm-gold)/40"
+                      className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-5 md:p-6 transition hover:border-(--gm-gold)/40 shadow-(--gm-shadow-soft)"
                     >
                       <div className="flex flex-col gap-5 md:flex-row md:items-center">
                         <div className="flex min-w-0 flex-1 items-start gap-4">
@@ -836,7 +838,7 @@ export default function DashboardPage() {
                               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--gm-gold-deep)">
                                 {isTr ? meta.tr : meta.en}
                               </span>
-                              <span className="text-[10px] text-(--gm-muted)">
+                              <span className="text-[10px] text-(--gm-text-muted)">
                                 {fmtDate(item.created_at, locale)}
                               </span>
                             </div>
@@ -901,7 +903,7 @@ export default function DashboardPage() {
 
         {/* Security / Password */}
         {tab === 'security' && (
-          <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 max-w-3xl">
+          <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 max-w-3xl shadow-(--gm-shadow-soft)">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold-deep)">
                 <Lock size={18} />
@@ -974,6 +976,6 @@ export default function DashboardPage() {
         consultantName={reviewModal.consultantName}
         locale={locale}
       />
-    </main>
+    </PageContainer>
   );
 }

@@ -36,6 +36,7 @@ import { articleSchema, breadcrumbSchema, faqSchema, graph } from '@/seo/jsonld'
 import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import LandingIntro from '@/components/common/LandingIntro';
+import PageContainer from '@/components/common/PageContainer';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -185,7 +186,7 @@ export default function SynastryPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background pt-32 pb-20 px-4">
+    <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <JsonLd
         id="sinastri-schema"
         data={graph([
@@ -223,10 +224,10 @@ export default function SynastryPage() {
               className="space-y-12 text-center"
             >
               <div className="space-y-4">
-                <h1 className={`${cinzel.className} text-5xl md:text-7xl text-foreground tracking-tighter`}>
-                  Aşk <span className="text-brand-gold">Uyumu</span>
+                <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tighter`}>
+                  Aşk <span className="text-(--gm-gold)">Uyumu</span>
                 </h1>
-                <p className="text-muted-foreground text-lg max-w-2xl mx-auto font-serif italic">
+                <p className="text-(--gm-text-dim) text-lg max-w-2xl mx-auto font-serif italic">
                   Yıldızların aşkınıza ne dediğini keşfedin. Hangi yöntemi tercih edersiniz?
                 </p>
               </div>
@@ -235,22 +236,22 @@ export default function SynastryPage() {
                 <motion.div 
                   initial={{ scale: 0.95 }}
                   animate={{ scale: 1 }}
-                  className="max-w-2xl mx-auto bg-brand-gold/10 border border-brand-gold/20 p-6 rounded-3xl space-y-4"
+                  className="max-w-2xl mx-auto bg-(--gm-gold)/10 border border-(--gm-gold)/20 p-6 rounded-3xl space-y-4"
                 >
-                  <div className="flex items-center justify-center gap-2 text-brand-gold">
-                    <Heart className="w-5 h-5 fill-brand-gold" />
+                  <div className="flex items-center justify-center gap-2 text-(--gm-gold)">
+                    <Heart className="w-5 h-5 fill-(--gm-gold)" />
                     <span className="text-xs font-bold tracking-widest uppercase">BEKLEYEN DAVETLERİN VAR</span>
                   </div>
                   <div className="space-y-3">
                     {pendingInvites.map((inv: any) => (
-                      <div key={inv.id} className="flex items-center justify-between bg-surface/50 p-4 rounded-2xl border border-border/10">
+                      <div key={inv.id} className="flex items-center justify-between bg-(--gm-surface)/50 p-4 rounded-2xl border border-(--gm-border-soft)">
                         <div className="text-left">
-                          <p className="text-sm font-bold text-foreground">Bir kullanıcı seninle uyumuna bakmak istiyor</p>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
+                          <p className="text-sm font-bold text-(--gm-text)">Bir kullanıcı seninle uyumuna bakmak istiyor</p>
+                          <p className="text-[10px] text-(--gm-text-dim) uppercase tracking-widest">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => handleAccept(inv.id)} className="w-10 h-10 bg-success/20 text-success rounded-full flex items-center justify-center hover:bg-success hover:text-white transition-all"><Check className="w-5 h-5" /></button>
-                          <button onClick={() => declineInvite(inv.id)} className="w-10 h-10 bg-error/20 text-error rounded-full flex items-center justify-center hover:bg-error hover:text-white transition-all"><X className="w-5 h-5" /></button>
+                          <button onClick={() => handleAccept(inv.id)} className="w-10 h-10 bg-success/20 text-success rounded-full flex items-center justify-center hover:bg-success hover:text-(--gm-text) transition-all"><Check className="w-5 h-5" /></button>
+                          <button onClick={() => declineInvite(inv.id)} className="w-10 h-10 bg-error/20 text-error rounded-full flex items-center justify-center hover:bg-error hover:text-(--gm-text) transition-all"><X className="w-5 h-5" /></button>
                         </div>
                       </div>
                     ))}
@@ -261,48 +262,48 @@ export default function SynastryPage() {
               <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                 <button 
                   onClick={() => setStep('quick')}
-                  className="group bg-surface/30 border border-border/20 p-8 rounded-[2.5rem] text-left space-y-6 hover:bg-brand-gold/5 transition-all hover:border-brand-gold/30"
+                  className="group bg-(--gm-surface)/30 border border-(--gm-border-soft) p-8 rounded-[2.5rem] text-left space-y-6 hover:bg-(--gm-gold)/5 transition-all hover:border-(--gm-gold)/30"
                 >
-                  <div className="w-14 h-14 bg-brand-gold/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Zap className="w-7 h-7 text-brand-gold" />
+                  <div className="w-14 h-14 bg-(--gm-gold)/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Zap className="w-7 h-7 text-(--gm-gold)" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className={`${cinzel.className} text-xl text-foreground`}>Hızlı Uyum</h3>
-                    <p className="text-muted-foreground text-xs leading-relaxed">2 Burç seçimi. Anında yorum. Ücretsiz!</p>
+                    <h3 className={`${cinzel.className} text-xl text-(--gm-text)`}>Hızlı Uyum</h3>
+                    <p className="text-(--gm-text-dim) text-xs leading-relaxed">2 Burç seçimi. Anında yorum. Ücretsiz!</p>
                   </div>
-                  <div className="flex items-center text-brand-gold text-[10px] font-bold tracking-widest gap-2">
+                  <div className="flex items-center text-(--gm-gold) text-[10px] font-bold tracking-widest gap-2">
                     DENEMEK ÜCRETSİZ <ChevronRight className="w-4 h-4" />
                   </div>
                 </button>
 
                 <button 
                   onClick={() => setStep('manual')}
-                  className="group bg-surface/30 border border-border/20 p-8 rounded-[2.5rem] text-left space-y-6 hover:bg-brand-primary/5 transition-all hover:border-brand-primary/30"
+                  className="group bg-(--gm-surface)/30 border border-(--gm-border-soft) p-8 rounded-[2.5rem] text-left space-y-6 hover:bg-(--gm-primary)/5 transition-all hover:border-(--gm-primary)/30"
                 >
-                  <div className="w-14 h-14 bg-brand-primary/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Star className="w-7 h-7 text-brand-primary" />
+                  <div className="w-14 h-14 bg-(--gm-primary)/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Star className="w-7 h-7 text-(--gm-primary)" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className={`${cinzel.className} text-xl text-foreground`}>Manuel Rapor</h3>
-                    <p className="text-muted-foreground text-xs leading-relaxed">Partner bilgilerini sen gir, tam raporu hemen al.</p>
+                    <h3 className={`${cinzel.className} text-xl text-(--gm-text)`}>Manuel Rapor</h3>
+                    <p className="text-(--gm-text-dim) text-xs leading-relaxed">Partner bilgilerini sen gir, tam raporu hemen al.</p>
                   </div>
-                  <div className="flex items-center text-brand-primary text-[10px] font-bold tracking-widest gap-2">
+                  <div className="flex items-center text-(--gm-primary) text-[10px] font-bold tracking-widest gap-2">
                     250 KREDİ <ChevronRight className="w-4 h-4" />
                   </div>
                 </button>
 
                 <button 
                   onClick={() => setStep('invite')}
-                  className="group bg-surface/30 border border-border/20 p-8 rounded-[2.5rem] text-left space-y-6 hover:bg-brand-accent/5 transition-all hover:border-brand-accent/30"
+                  className="group bg-(--gm-surface)/30 border border-(--gm-border-soft) p-8 rounded-[2.5rem] text-left space-y-6 hover:bg-(--gm-accent)/5 transition-all hover:border-(--gm-accent)/30"
                 >
-                  <div className="w-14 h-14 bg-brand-accent/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Users className="w-7 h-7 text-brand-accent" />
+                  <div className="w-14 h-14 bg-(--gm-accent)/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Users className="w-7 h-7 text-(--gm-accent)" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className={`${cinzel.className} text-xl text-foreground`}>Davet Et</h3>
-                    <p className="text-muted-foreground text-xs leading-relaxed">Partnerine davet gönder, o da onaylayınca uyuma bakın.</p>
+                    <h3 className={`${cinzel.className} text-xl text-(--gm-text)`}>Davet Et</h3>
+                    <p className="text-(--gm-text-dim) text-xs leading-relaxed">Partnerine davet gönder, o da onaylayınca uyuma bakın.</p>
                   </div>
-                  <div className="flex items-center text-brand-accent text-[10px] font-bold tracking-widest gap-2">
+                  <div className="flex items-center text-(--gm-accent) text-[10px] font-bold tracking-widest gap-2">
                     PREMİUM / ÜCRETSİZ <ChevronRight className="w-4 h-4" />
                   </div>
                 </button>
@@ -317,23 +318,23 @@ export default function SynastryPage() {
               animate={{ opacity: 1, x: 0 }}
               className="max-w-2xl mx-auto space-y-12"
             >
-               <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-xs font-bold tracking-widest">
+               <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-text) transition-colors text-xs font-bold tracking-widest">
                   <ChevronLeft className="w-4 h-4" /> GERİ DÖN
                </button>
                <div className="text-center space-y-4">
-                  <h2 className={`${cinzel.className} text-4xl text-foreground`}>Partnerini Davet Et</h2>
-                  <p className="text-muted-foreground italic font-serif">Birlikte kozmik uyumunuza bakmak istediğiniz kullanıcıyı arayın.</p>
+                  <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>Partnerini Davet Et</h2>
+                  <p className="text-(--gm-text-dim) italic font-serif">Birlikte kozmik uyumunuza bakmak istediğiniz kullanıcıyı arayın.</p>
                </div>
 
                <div className="space-y-8">
                   <div className="relative">
-                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-(--gm-text-dim)" />
                     <input 
                       type="text"
                       placeholder="İsim veya e-posta ile ara..."
                       value={userSearch}
                       onChange={e => setUserSearch(e.target.value)}
-                      className="w-full bg-surface/30 border border-border/20 rounded-full py-6 pl-14 pr-8 outline-none focus:ring-2 focus:ring-brand-accent/30 text-lg"
+                      className="w-full bg-(--gm-surface)/30 border border-(--gm-border-soft) rounded-full py-6 pl-14 pr-8 outline-none focus:ring-2 focus:ring-(--gm-accent)/30 text-lg"
                     />
                   </div>
 
@@ -346,20 +347,20 @@ export default function SynastryPage() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           key={u.id} 
-                          className="bg-surface/30 border border-border/10 p-6 rounded-3xl flex items-center justify-between hover:bg-surface/50 transition-all"
+                          className="bg-(--gm-surface)/30 border border-(--gm-border-soft) p-6 rounded-3xl flex items-center justify-between hover:bg-(--gm-surface)/50 transition-all"
                         >
                           <div className="flex items-center gap-4">
-                             <div className="w-12 h-12 bg-brand-accent/10 rounded-full flex items-center justify-center">
-                                <User className="w-6 h-6 text-brand-accent" />
+                             <div className="w-12 h-12 bg-(--gm-accent)/10 rounded-full flex items-center justify-center">
+                                <User className="w-6 h-6 text-(--gm-accent)" />
                              </div>
                              <div>
-                                <h4 className="font-bold text-foreground">{u.full_name}</h4>
-                                <p className="text-xs text-muted-foreground">{u.email}</p>
+                                <h4 className="font-bold text-(--gm-text)">{u.full_name}</h4>
+                                <p className="text-xs text-(--gm-text-dim)">{u.email}</p>
                              </div>
                           </div>
                           <button 
                             onClick={() => handleSendInvite(u.id)}
-                            className="bg-brand-accent/20 text-brand-accent px-6 py-2 rounded-full text-xs font-bold tracking-widest hover:bg-brand-accent hover:text-white transition-all flex items-center gap-2"
+                            className="bg-(--gm-accent)/20 text-(--gm-accent) px-6 py-2 rounded-full text-xs font-bold tracking-widest hover:bg-(--gm-accent) hover:text-(--gm-text) transition-all flex items-center gap-2"
                           >
                             DAVET ET <Send className="w-3 h-3" />
                           </button>
@@ -381,39 +382,39 @@ export default function SynastryPage() {
               exit={{ opacity: 0, x: -20 }}
               className="max-w-2xl mx-auto space-y-12"
             >
-               <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-xs font-bold tracking-widest">
+               <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-text) transition-colors text-xs font-bold tracking-widest">
                   <ChevronLeft className="w-4 h-4" /> GERİ DÖN
                </button>
                <div className="text-center space-y-4">
-                  <h2 className={`${cinzel.className} text-4xl text-foreground`}>Hızlı Aşk Analizi</h2>
-                  <p className="text-muted-foreground italic font-serif">Siz ve o... Burçlarınızın enerjisi nasıl bir harmoni yaratıyor?</p>
+                  <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>Hızlı Aşk Analizi</h2>
+                  <p className="text-(--gm-text-dim) italic font-serif">Siz ve o... Burçlarınızın enerjisi nasıl bir harmoni yaratıyor?</p>
                </div>
 
-               <form onSubmit={handleQuickSubmit} className="bg-surface/30 border border-border/20 p-10 rounded-[2.5rem] space-y-10 backdrop-blur-xl">
+               <form onSubmit={handleQuickSubmit} className="bg-(--gm-surface)/30 border border-(--gm-border-soft) p-10 rounded-[2.5rem] space-y-10 backdrop-blur-xl">
                   <div className="grid grid-cols-2 gap-8 relative">
                      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                        <div className="w-12 h-12 bg-bg-base border border-border/20 rounded-full flex items-center justify-center shadow-2xl">
-                           <Heart className="w-6 h-6 text-brand-gold fill-brand-gold animate-pulse" />
+                        <div className="w-12 h-12 bg-(--gm-bg) border border-(--gm-border-soft) rounded-full flex items-center justify-center shadow-2xl">
+                           <Heart className="w-6 h-6 text-(--gm-gold) fill-(--gm-gold) animate-pulse" />
                         </div>
                      </div>
 
                      <div className="space-y-4">
-                        <label className="text-[10px] font-bold text-brand-gold tracking-[0.2em] uppercase ml-2 text-center block">SENİN BURCUN</label>
+                        <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-2 text-center block">SENİN BURCUN</label>
                         <select 
                            value={quickData.sign_a}
                            onChange={(e) => setQuickData({ ...quickData, sign_a: e.target.value })}
-                           className="w-full bg-surface-high/50 border border-border/20 rounded-2xl p-5 text-lg outline-none focus:ring-2 focus:ring-brand-gold/20 transition-all appearance-none text-center cursor-pointer"
+                           className="w-full bg-(--gm-surface-high)/50 border border-(--gm-border-soft) rounded-2xl p-5 text-lg outline-none focus:ring-2 focus:ring-(--gm-gold)/20 transition-all appearance-none text-center cursor-pointer"
                         >
                            {ZODIAC_SIGNS.map(s => <option key={s} value={s.toLowerCase()}>{s}</option>)}
                         </select>
                      </div>
 
                      <div className="space-y-4 text-right">
-                        <label className="text-[10px] font-bold text-brand-gold tracking-[0.2em] uppercase mr-2 text-center block">ONUN BURCU</label>
+                        <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase mr-2 text-center block">ONUN BURCU</label>
                         <select 
                            value={quickData.sign_b}
                            onChange={(e) => setQuickData({ ...quickData, sign_b: e.target.value })}
-                           className="w-full bg-surface-high/50 border border-border/20 rounded-2xl p-5 text-lg outline-none focus:ring-2 focus:ring-brand-gold/20 transition-all appearance-none text-center cursor-pointer"
+                           className="w-full bg-(--gm-surface-high)/50 border border-(--gm-border-soft) rounded-2xl p-5 text-lg outline-none focus:ring-2 focus:ring-(--gm-gold)/20 transition-all appearance-none text-center cursor-pointer"
                         >
                            {ZODIAC_SIGNS.map(s => <option key={s} value={s.toLowerCase()}>{s}</option>)}
                         </select>
@@ -422,7 +423,7 @@ export default function SynastryPage() {
 
                   <button 
                     type="submit"
-                    className="w-full bg-brand-gold text-bg-base font-bold py-5 rounded-2xl tracking-[0.1em] shadow-xl shadow-brand-gold/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    className="w-full bg-(--gm-gold) text-(--gm-bg) font-bold py-5 rounded-2xl tracking-[0.1em] shadow-xl shadow-(--gm-gold)/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
                     UYUMU GÖR
                   </button>
@@ -437,54 +438,54 @@ export default function SynastryPage() {
               animate={{ opacity: 1, x: 0 }}
               className="max-w-xl mx-auto space-y-10"
             >
-               <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-xs font-bold tracking-widest">
+               <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-text) transition-colors text-xs font-bold tracking-widest">
                   <ChevronLeft className="w-4 h-4" /> GERİ DÖN
                </button>
                <div className="text-center space-y-4">
-                  <h2 className={`${cinzel.className} text-4xl text-foreground`}>Sinastri Analizi</h2>
-                  <p className="text-muted-foreground italic font-serif leading-relaxed">Partnerinizin doğum bilgilerini girerek 100 farklı astrolojik açıdan derin uyumunuzu keşfedin.</p>
+                  <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>Sinastri Analizi</h2>
+                  <p className="text-(--gm-text-dim) italic font-serif leading-relaxed">Partnerinizin doğum bilgilerini girerek 100 farklı astrolojik açıdan derin uyumunuzu keşfedin.</p>
                </div>
 
-               <form onSubmit={handleManualSubmit} className="bg-surface/30 border border-border/20 p-10 rounded-[2.5rem] space-y-8 shadow-2xl backdrop-blur-xl">
+               <form onSubmit={handleManualSubmit} className="bg-(--gm-surface)/30 border border-(--gm-border-soft) p-10 rounded-[2.5rem] space-y-8 shadow-2xl backdrop-blur-xl">
                   <div className="space-y-6">
                     <div className="space-y-2">
-                       <label className="text-[10px] font-bold text-brand-gold tracking-[0.2em] uppercase ml-4">PARTNERİN ADI</label>
+                       <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-4">PARTNERİN ADI</label>
                        <input 
                          type="text" required placeholder="Örn: Mehmet"
                          value={manualData.name} onChange={e => setManualData({ ...manualData, name: e.target.value })}
-                         className="w-full bg-surface-high/50 border border-border/20 rounded-2xl p-4 pl-6 text-foreground outline-none focus:ring-2 focus:ring-brand-primary/20"
+                         className="w-full bg-(--gm-surface-high)/50 border border-(--gm-border-soft) rounded-2xl p-4 pl-6 text-(--gm-text) outline-none focus:ring-2 focus:ring-(--gm-primary)/20"
                        />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-bold text-brand-gold tracking-[0.2em] uppercase ml-4">DOĞUM TARİHİ</label>
+                       <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-4">DOĞUM TARİHİ</label>
                        <input 
                          type="date" required
                          value={manualData.dob} onChange={e => setManualData({ ...manualData, dob: e.target.value })}
-                         className="w-full bg-surface-high/50 border border-border/20 rounded-2xl p-4 pl-6 text-foreground outline-none focus:ring-2 focus:ring-brand-primary/20"
+                         className="w-full bg-(--gm-surface-high)/50 border border-(--gm-border-soft) rounded-2xl p-4 pl-6 text-(--gm-text) outline-none focus:ring-2 focus:ring-(--gm-primary)/20"
                        />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-bold text-brand-gold tracking-[0.2em] uppercase ml-4">DOĞUM SAATİ (OPSİYONEL)</label>
+                       <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-4">DOĞUM SAATİ (OPSİYONEL)</label>
                        <input 
                          type="time"
                          value={manualData.tob} onChange={e => setManualData({ ...manualData, tob: e.target.value })}
-                         className="w-full bg-surface-high/50 border border-border/20 rounded-2xl p-4 pl-6 text-foreground outline-none focus:ring-2 focus:ring-brand-primary/20"
+                         className="w-full bg-(--gm-surface-high)/50 border border-(--gm-border-soft) rounded-2xl p-4 pl-6 text-(--gm-text) outline-none focus:ring-2 focus:ring-(--gm-primary)/20"
                        />
                     </div>
                   </div>
 
-                  <div className="p-4 bg-brand-gold/5 border border-brand-gold/10 rounded-2xl space-y-2">
-                     <p className="text-[10px] text-brand-gold leading-relaxed italic uppercase tracking-wider text-center font-bold">
+                  <div className="p-4 bg-(--gm-gold)/5 border border-(--gm-gold)/10 rounded-2xl space-y-2">
+                     <p className="text-[10px] text-(--gm-gold) leading-relaxed italic uppercase tracking-wider text-center font-bold">
                         MALİYET: 250 KREDİ
                      </p>
-                     <p className="text-[10px] text-muted-foreground leading-relaxed italic text-center">
+                     <p className="text-[10px] text-(--gm-text-dim) leading-relaxed italic text-center">
                         * Bu veriler sadece rapor üretimi için kullanılır ve sistemimizde saklanmaz.
                      </p>
                   </div>
 
                   <button 
                     type="submit"
-                    className="w-full bg-brand-primary text-white font-bold py-5 rounded-2xl tracking-[0.1em] shadow-xl shadow-brand-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    className="w-full bg-(--gm-primary) text-(--gm-bg) font-bold py-5 rounded-2xl tracking-[0.1em] shadow-xl shadow-(--gm-primary)/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
                     ANALİZİ BAŞLAT
                   </button>
@@ -503,15 +504,15 @@ export default function SynastryPage() {
                   <motion.div 
                     animate={{ rotate: 360, scale: [1, 1.1, 1] }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-32 h-32 border-4 border-brand-gold/20 border-t-brand-gold rounded-full"
+                    className="w-32 h-32 border-4 border-(--gm-gold)/20 border-t-(--gm-gold) rounded-full"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
-                     <Heart className="w-8 h-8 text-brand-gold fill-brand-gold animate-pulse" />
+                     <Heart className="w-8 h-8 text-(--gm-gold) fill-(--gm-gold) animate-pulse" />
                   </div>
                </div>
                <div className="text-center space-y-4">
-                  <h3 className={`${cinzel.className} text-3xl text-foreground tracking-widest`}>Kader Ağları Örülüyor</h3>
-                  <p className="text-muted-foreground font-serif italic">Yıldızların birbirine dokunduğu o an analiz ediliyor...</p>
+                  <h3 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-widest`}>Kader Ağları Örülüyor</h3>
+                  <p className="text-(--gm-text-dim) font-serif italic">Yıldızların birbirine dokunduğu o an analiz ediliyor...</p>
                </div>
             </motion.div>
           )}
@@ -524,7 +525,7 @@ export default function SynastryPage() {
               className="space-y-12"
             >
                {result.type === 'quick' ? (
-                 <div className="max-w-3xl mx-auto bg-surface/30 border border-border/20 rounded-[3rem] p-10 md:p-16 space-y-10 backdrop-blur-xl relative overflow-hidden">
+                 <div className="max-w-3xl mx-auto bg-(--gm-surface)/30 border border-(--gm-border-soft) rounded-[3rem] p-10 md:p-16 space-y-10 backdrop-blur-xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
                        <Users className="w-64 h-64" />
                     </div>
@@ -533,16 +534,16 @@ export default function SynastryPage() {
                        <div className="flex items-center justify-center gap-12">
                           <div className="text-center space-y-2">
                              <div className="text-4xl">{quickData.sign_a}</div>
-                             <div className="text-[10px] font-bold text-brand-gold uppercase tracking-widest">SEN</div>
+                             <div className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-widest">SEN</div>
                           </div>
-                          <Heart className="w-8 h-8 text-brand-gold fill-brand-gold" />
+                          <Heart className="w-8 h-8 text-(--gm-gold) fill-(--gm-gold)" />
                           <div className="text-center space-y-2">
                              <div className="text-4xl">{quickData.sign_b}</div>
-                             <div className="text-[10px] font-bold text-brand-gold uppercase tracking-widest">O</div>
+                             <div className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-widest">O</div>
                           </div>
                        </div>
-                       <h2 className={`${cinzel.className} text-4xl text-foreground tracking-tight`}>{result.title}</h2>
-                       <div className="h-1 w-20 bg-brand-gold/30 mx-auto rounded-full" />
+                       <h2 className={`${cinzel.className} text-4xl text-(--gm-text) tracking-tight`}>{result.title}</h2>
+                       <div className="h-1 w-20 bg-(--gm-gold)/30 mx-auto rounded-full" />
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -552,21 +553,21 @@ export default function SynastryPage() {
                          { label: 'KARİYER', val: result.career_score },
                          { label: 'ÇEKİM', val: result.sexual_score }
                        ].map(s => (
-                         <div key={s.label} className="bg-surface-high/30 p-4 rounded-2xl text-center border border-border/10">
-                            <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1 tracking-widest">{s.label}</div>
-                            <div className="text-2xl font-bold text-brand-gold">%{s.val}</div>
+                         <div key={s.label} className="bg-(--gm-surface-high)/30 p-4 rounded-2xl text-center border border-(--gm-border-soft)">
+                            <div className="text-[10px] font-bold text-(--gm-text-dim) uppercase mb-1 tracking-widest">{s.label}</div>
+                            <div className="text-2xl font-bold text-(--gm-gold)">%{s.val}</div>
                          </div>
                        ))}
                     </div>
 
                     <div className="prose prose-invert prose-brand max-w-none">
-                       <p className="text-lg text-foreground/90 leading-relaxed font-serif italic whitespace-pre-wrap">{result.content}</p>
+                       <p className="text-lg text-(--gm-text)/90 leading-relaxed font-serif italic whitespace-pre-wrap">{result.content}</p>
                     </div>
 
-                     <div className="pt-8 border-t border-border/10 flex flex-col md:flex-row items-center justify-between gap-6">
+                     <div className="pt-8 border-t border-(--gm-border-soft) flex flex-col md:flex-row items-center justify-between gap-6">
                         <button 
                           onClick={() => setStep('mode')}
-                          className="flex-1 py-4 rounded-2xl border border-border/20 text-muted-foreground text-xs font-bold tracking-widest hover:bg-surface-high transition-all"
+                          className="flex-1 py-4 rounded-2xl border border-(--gm-border-soft) text-(--gm-text-dim) text-xs font-bold tracking-widest hover:bg-(--gm-surface-high) transition-all"
                         >
                           BAŞTAN BAŞLA
                         </button>
@@ -586,60 +587,60 @@ export default function SynastryPage() {
                ) : (
                  <div className="flex flex-col lg:flex-row gap-10">
                     <div className="w-full lg:w-1/3 space-y-6">
-                       <div className="bg-surface/30 border border-border/20 rounded-[2.5rem] p-8 text-center space-y-6">
-                          <h3 className={`${cinzel.className} text-xl text-foreground tracking-widest`}>Uyum Skoru</h3>
+                       <div className="bg-(--gm-surface)/30 border border-(--gm-border-soft) rounded-[2.5rem] p-8 text-center space-y-6">
+                          <h3 className={`${cinzel.className} text-xl text-(--gm-text) tracking-widest`}>Uyum Skoru</h3>
                           <div className="relative inline-block">
                              <svg className="w-40 h-40 transform -rotate-90">
-                                <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-border/10" />
-                                <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={440} strokeDashoffset={440 - (440 * (result.result?.score ?? result.score ?? 0)) / 100} className="text-brand-primary" />
+                                <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-(--gm-border-soft)/10" />
+                                <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={440} strokeDashoffset={440 - (440 * (result.result?.score ?? result.score ?? 0)) / 100} className="text-(--gm-primary)" />
                              </svg>
-                             <div className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-brand-primary">%{result.result?.score ?? result.score ?? 0}</div>
+                             <div className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-(--gm-primary)">%{result.result?.score ?? result.score ?? 0}</div>
                           </div>
                        </div>
                        
-                       <div className="bg-surface/30 border border-border/20 rounded-[2.5rem] p-8 space-y-6">
-                          <h4 className="text-[10px] font-bold text-brand-gold uppercase tracking-[0.3em] mb-4">ÖNEMLİ AÇILAR</h4>
+                       <div className="bg-(--gm-surface)/30 border border-(--gm-border-soft) rounded-[2.5rem] p-8 space-y-6">
+                          <h4 className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-[0.3em] mb-4">ÖNEMLİ AÇILAR</h4>
                           <div className="space-y-4">
                              {(result.result?.aspects ?? result.aspects)?.slice(0, 5).map((a: any, i: number) => (
-                               <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-surface-high/30 border border-border/10">
-                                  <div className="text-xs font-bold text-foreground uppercase">{a.planet_a} & {a.planet_b}</div>
-                                  <div className="text-[10px] text-brand-primary font-bold uppercase">{a.type}</div>
+                               <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-(--gm-surface-high)/30 border border-(--gm-border-soft)">
+                                  <div className="text-xs font-bold text-(--gm-text) uppercase">{a.planet_a} & {a.planet_b}</div>
+                                  <div className="text-[10px] text-(--gm-primary) font-bold uppercase">{a.type}</div>
                                </div>
                              ))}
                           </div>
                        </div>
                     </div>
 
-                    <div className="w-full lg:w-2/3 bg-surface/30 border border-border/20 rounded-[3rem] p-10 md:p-14 space-y-10 relative overflow-hidden backdrop-blur-xl">
+                    <div className="w-full lg:w-2/3 bg-(--gm-surface)/30 border border-(--gm-border-soft) rounded-[3rem] p-10 md:p-14 space-y-10 relative overflow-hidden backdrop-blur-xl">
                        <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
-                          <Sparkles className="w-64 h-64 text-brand-primary" />
+                          <Sparkles className="w-64 h-64 text-(--gm-primary)" />
                        </div>
                        
                        <div className="space-y-6 relative">
-                          <div className="flex items-center gap-2 text-brand-primary">
-                             <Star className="w-5 h-5 fill-brand-primary" />
+                          <div className="flex items-center gap-2 text-(--gm-primary)">
+                             <Star className="w-5 h-5 fill-(--gm-primary)" />
                              <span className="text-[10px] font-bold tracking-[0.4em] uppercase">Derin Analiz</span>
                           </div>
-                          <h2 className={`${cinzel.className} text-4xl text-foreground leading-tight`}>
-                             Kozmik <span className="text-brand-primary">Bağlantı</span> Raporu
+                          <h2 className={`${cinzel.className} text-4xl text-(--gm-text) leading-tight`}>
+                             Kozmik <span className="text-(--gm-primary)">Bağlantı</span> Raporu
                           </h2>
-                          <p className="text-muted-foreground font-serif italic text-lg leading-relaxed">
+                          <p className="text-(--gm-text-dim) font-serif italic text-lg leading-relaxed">
                              {result.mode === 'invite' ? 'Partneriniz' : manualData.name} ile olan enerjiniz, gökyüzündeki planetlerin etkileşimiyle bu şekilde yorumlanıyor:
                           </p>
                        </div>
 
                        <div className="prose prose-invert prose-brand max-w-none">
-                          <div className="text-foreground/90 leading-relaxed font-serif whitespace-pre-wrap italic text-lg opacity-90">
+                          <div className="text-(--gm-text)/90 leading-relaxed font-serif whitespace-pre-wrap italic text-lg opacity-90">
                              {result.result?.interpretation ?? result.interpretation ?? result.reading}
                           </div>
                        </div>
 
-                       <div className="pt-10 border-t border-border/10 flex items-center justify-between">
-                          <div className="flex items-center gap-3 text-muted-foreground/60">
+                       <div className="pt-10 border-t border-(--gm-border-soft) flex items-center justify-between">
+                          <div className="flex items-center gap-3 text-(--gm-text-dim)/60">
                              <ShieldCheck className="w-4 h-4" />
                              <span className="text-[10px] font-bold tracking-widest uppercase">Güvenli ve Gizli Analiz</span>
                           </div>
-                          <button onClick={() => setStep('mode')} className="text-brand-primary text-xs font-bold tracking-widest border-b border-brand-primary/30 pb-1">
+                          <button onClick={() => setStep('mode')} className="text-(--gm-primary) text-xs font-bold tracking-widest border-b border-(--gm-primary)/30 pb-1">
                              YENİ BİRİNE BAK
                           </button>
                        </div>
@@ -659,6 +660,6 @@ export default function SynastryPage() {
           : 'GoldMoodAstro synastry content treats relationship astrology as awareness, communication and growth guidance rather than fixed judgment.'}
         expertise={['Sinastri', 'İlişki Astrolojisi', 'Doğum Haritası']}
       />
-    </main>
+    </PageContainer>
   );
 }

@@ -13,6 +13,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return buildMetadataFromSeo(seo, { locale, pathname: normPath('/birth-chart') });
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default function BirthChartPage() {
-  return <BirthChartPageClient />;
+  return (
+    <PageContainer width="wide" pad="none">
+      <BirthChartPageClient />
+    </PageContainer>
+  );
 }

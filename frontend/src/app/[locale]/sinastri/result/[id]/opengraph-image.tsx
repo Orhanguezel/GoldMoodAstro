@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getOgFonts } from '@/lib/fonts/og-fonts';
+import { getOgTheme } from '@/seo/ogTheme';
 
 export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
@@ -19,13 +20,14 @@ export default async function OG({ params }: { params: { id: string; locale: str
   }
 
   const fonts = await getOgFonts().catch(() => undefined);
+  const theme = await getOgTheme();
 
   return new ImageResponse(
     (
       <div style={{
         width: 1200, height: 630,
-        background: 'linear-gradient(135deg,#2A2620 0%,#3D2E47 60%,#1A1715 100%)',
-        color: '#FAF6EF',
+        background: theme.bg,
+        color: theme.text,
         padding: 80,
         fontFamily: 'Cinzel',
         display: 'flex',
@@ -33,27 +35,27 @@ export default async function OG({ params }: { params: { id: string; locale: str
         justifyContent: 'space-between',
       }}>
         {/* Header */}
-        <div style={{ fontSize: 28, color: '#C9A961', letterSpacing: 4 }}>
-          GOLDMOODASTRO · SİNASTRİ
+        <div style={{ fontSize: 28, color: theme.primary, letterSpacing: 4 }}>
+          {theme.brandUpper} · SİNASTRİ
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Score */}
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 20 }}>
-            <span style={{ fontSize: 180, fontWeight: 'bold', color: '#C9A961' }}>{data.result?.score ?? 0}</span>
-            <span style={{ fontSize: 32, color: '#FAF6EF' }}>/ 100 uyum</span>
+            <span style={{ fontSize: 180, fontWeight: 'bold', color: theme.primary }}>{data.result?.score ?? 0}</span>
+            <span style={{ fontSize: 32, color: theme.text }}>/ 100 uyum</span>
           </div>
 
           {/* Subtitle */}
-          <div style={{ fontSize: 42, fontFamily: 'Fraunces', fontStyle: 'italic', color: '#FAF6EF' }}>
+          <div style={{ fontSize: 42, fontFamily: 'Fraunces', fontStyle: 'italic', color: theme.text }}>
             Sen × {data.partner_data?.name ?? 'Partner'}
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ fontSize: 24, color: '#C9A961', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 24, color: theme.primary, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Kendi raporunu oluştur</span>
-          <span style={{ fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.8 }}>goldmoodastro.com</span>
+          <span style={{ fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.8 }}>{theme.domain}</span>
         </div>
       </div>
     ),

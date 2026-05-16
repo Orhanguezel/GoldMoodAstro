@@ -7,6 +7,7 @@ import { LayoutSeoBridge } from '@/seo';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { isValidUiText } from '@/integrations/shared';
 import { safeStr } from '@/integrations/shared';
+import PageContainer from '@/components/common/PageContainer';
 
 export default function PrivacyNoticePage() {
   const locale = useLocaleShort();
@@ -23,9 +24,9 @@ export default function PrivacyNoticePage() {
       <LayoutSeoBridge title={bannerTitle} noindex={false} />
       <Banner title={bannerTitle} />
 
-      <section className="container mx-auto py-16 px-4 bg-bg-primary">
+      <PageContainer width="narrow">
         <PrivacyNoticePageContent />
-      </section>
+      </PageContainer>
     </>
   );
 }

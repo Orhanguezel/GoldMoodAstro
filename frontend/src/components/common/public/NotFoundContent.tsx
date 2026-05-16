@@ -47,7 +47,7 @@ export function NotFoundContent({ locale, homePath }: Props) {
     <div className="relative flex flex-col items-center justify-center min-h-[75vh] px-4 text-center overflow-hidden">
       <div className="max-w-2xl w-full z-10 animate-fade-in">
         <div className="relative mb-6 overflow-hidden max-w-full">
-          <h1 className="text-8xl sm:text-9xl md:text-[14rem] font-serif font-light text-rose-100/40 select-none leading-none animate-slide-up">
+          <h1 className="text-8xl sm:text-9xl md:text-[14rem] font-serif font-light text-[var(--gm-error)]/20 select-none leading-none animate-slide-up">
             404
           </h1>
           <div className="absolute inset-0 flex items-center justify-center">
@@ -62,7 +62,7 @@ export function NotFoundContent({ locale, homePath }: Props) {
             {getNoPageText()}
           </p>
 
-          <div className="flex items-center justify-center gap-2 text-rose-600 font-medium bg-rose-50 w-fit mx-auto px-4 py-2 rounded-full border border-rose-100">
+          <div className="flex items-center justify-center gap-2 text-[var(--gm-error)] font-medium bg-[var(--gm-error)]/10 w-fit mx-auto px-4 py-2 rounded-full border border-[var(--gm-error)]/20">
             <Timer className="w-5 h-5 animate-pulse" />
             <span>{getRedirectText()}</span>
           </div>
@@ -71,7 +71,7 @@ export function NotFoundContent({ locale, homePath }: Props) {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-delay-600">
           <button
             onClick={() => router.push(homePath)}
-            className="flex items-center gap-2 px-10 py-4 bg-brand-primary text-white rounded-full font-bold shadow-medium hover:bg-brand-hover transition-all transform  active:scale-95"
+            className="flex items-center gap-2 px-10 py-4 bg-brand-primary text-(--gm-bg) rounded-full font-bold shadow-medium hover:bg-brand-hover transition-all transform  active:scale-95"
           >
             <Home className="w-5 h-5" />
             {ui('ui_404_back_home', 'Back to Homepage')}
@@ -88,7 +88,7 @@ export function NotFoundContent({ locale, homePath }: Props) {
       </div>
 
       {/* Decorative animated backgrounds */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-200/20 rounded-full blur-[120px] -z-10 animate-float" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--gm-error)]/10 rounded-full blur-[120px] -z-10 animate-float" />
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gold-200/10 rounded-full blur-[140px] -z-10 animate-float-delayed" />
 
       <style jsx>{`

@@ -83,11 +83,11 @@ export default function TarotResultClient() {
                 <Image src={card.image_url || "/uploads/tarot_back.png"} alt={card.name} fill className={`object-cover ${!card.image_url ? 'grayscale' : ''}`} />
                 <div className="absolute inset-0 bg-brand-primary/20 mix-blend-overlay" />
                 <div className="absolute bottom-6 left-0 w-full text-center px-4">
-                    <span className={`${cinzel.className} text-white text-lg drop-shadow-md`}>{card.name}</span>
+                    <span className={`${cinzel.className} text-[var(--gm-text)] text-lg drop-shadow-md`}>{card.name}</span>
                 </div>
               </div>
               {card.is_reversed && (
-                <div className="flex items-center gap-2 text-xs font-bold text-rose-400 uppercase tracking-widest mb-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-[var(--gm-error)] uppercase tracking-widest mb-4">
                   <RotateCcw className="w-3 h-3" /> TERS GELDİ
                 </div>
               )}

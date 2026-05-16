@@ -78,14 +78,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
+import PageContainer from '@/components/common/PageContainer';
+
 export default async function CompatibilityPage({ params }: Props) {
   const { pair } = await params;
   const parsed = parsePair(pair);
   if (!parsed) notFound();
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
       <ZodiacCompatibility signA={parsed.signA} signB={parsed.signB} />
-    </main>
+    </PageContainer>
   );
 }

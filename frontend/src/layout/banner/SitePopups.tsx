@@ -100,15 +100,15 @@ function markSeen(p: PopupPublicDto) {
 
 function popupLinkStyle(p: PopupPublicDto): React.CSSProperties {
   return {
-    backgroundColor: p.button_color ?? '#111827',
-    color: p.button_text_color ?? '#ffffff',
+    backgroundColor: p.button_color ?? 'var(--gm-primary)',
+    color: p.button_text_color ?? 'var(--gm-bg)',
   };
 }
 
 function cardStyle(p: PopupPublicDto): React.CSSProperties {
   return {
-    backgroundColor: p.background_color ?? '#0f172a',
-    color: p.text_color ?? '#f8fafc',
+    backgroundColor: p.background_color ?? 'var(--gm-bg-deep)',
+    color: p.text_color ?? 'var(--gm-text)',
   };
 }
 
@@ -129,7 +129,7 @@ function SidebarPopupCard({
   return (
     <aside
       className={cn(
-        'fixed right-4 z-[70] w-[min(92vw,360px)] shadow-medium ring-1 ring-black/10 overflow-hidden',
+        'fixed right-4 z-[70] w-[min(92vw,360px)] shadow-medium ring-1 ring-(--gm-border-soft) overflow-hidden',
         positionClass,
       )}
       style={cardStyle(popup)}
@@ -186,7 +186,7 @@ function TopbarPopup({
   onClose: (id: string) => void;
 }) {
   return (
-    <div style={cardStyle(popup)} className="relative border-b border-white/10">
+    <div style={cardStyle(popup)} className="relative border-b border-(--gm-border-soft)">
       <div className="mx-auto flex min-h-11 max-w-screen-2xl items-center gap-3 px-4 py-2">
         <div className="min-w-0 flex-1">
           {popup.text_behavior === 'marquee' ? (

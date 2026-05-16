@@ -40,7 +40,7 @@ const C = {
   sand50:  "var(--gm-bg-deep)",                                              // panel derin yuzey
   white:   "var(--gm-surface)",                                              // ana panel zemin (light: beyaz, dark: koyu)
   charcoal: "var(--gm-sand-900)",                                            // koyu kontrast (admin gradient)
-  primaryFg: "#FFFFFF",                                                      // gold zemin uzerine sabit kontrast
+  primaryFg: "var(--gm-bg)",                                                 // gold zemin uzerine sabit kontrast
 } as const;
 
 /* ─── Locale fallbacks (DB ui_chat.* yoksa devreye girer) ────────── */
@@ -731,12 +731,12 @@ export default function SupportBotWidget() {
                   style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
                 />
                 {guestLeadSuccess ? (
-                  <div style={{ fontSize: 12, color: "#166534", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 12, color: "var(--gm-success)", background: "color-mix(in srgb, var(--gm-success) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--gm-success) 20%, transparent)", borderRadius: 10, padding: "10px 12px" }}>
                     {guestLeadSuccess}
                   </div>
                 ) : null}
                 {guestLeadError ? (
-                  <div style={{ fontSize: 12, color: "#991b1b", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 12, color: "var(--gm-error)", background: "color-mix(in srgb, var(--gm-error) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--gm-error) 20%, transparent)", borderRadius: 10, padding: "10px 12px" }}>
                     {guestLeadError}
                   </div>
                 ) : null}

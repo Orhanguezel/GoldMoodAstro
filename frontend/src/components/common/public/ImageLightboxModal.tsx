@@ -234,7 +234,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           display: grid;
           place-items: center;
           padding: 16px;
-          background: rgba(2, 6, 23, 0.72);
+          background: color-mix(in srgb, var(--gm-bg-deep) 72%, transparent);
           backdrop-filter: blur(6px);
         }
 
@@ -243,11 +243,11 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           max-height: min(92vh, 920px);
           display: grid;
           grid-template-rows: auto 1fr;
-          background: rgba(255, 255, 255, 0.98);
-          border: 1px solid rgba(15, 23, 42, 0.12);
+          background: var(--gm-surface);
+          border: 1px solid var(--gm-border-soft);
           border-radius: 18px;
           overflow: hidden;
-          box-shadow: 0 28px 80px rgba(2, 6, 23, 0.35);
+          box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
         }
 
         .ens-lightbox__head {
@@ -256,8 +256,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           justify-content: space-between;
           gap: 12px;
           padding: 12px 12px 12px 16px;
-          background: linear-gradient(to bottom, rgba(248, 250, 252, 1), rgba(255, 255, 255, 1));
-          border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+          background: linear-gradient(to bottom, var(--gm-surface-high), var(--gm-surface));
+          border-bottom: 1px solid var(--gm-border-soft);
         }
 
         .ens-lightbox__meta {
@@ -269,7 +269,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
 
         .ens-lightbox__title {
           font-weight: 800;
-          color: #0f172a;
+          color: var(--gm-text);
           letter-spacing: -0.01em;
           white-space: nowrap;
           overflow: hidden;
@@ -279,7 +279,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
 
         .ens-lightbox__counter {
           font-size: 12px;
-          color: #64748b;
+          color: var(--gm-muted);
         }
 
         .ens-lightbox__actions {
@@ -292,9 +292,9 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           width: 38px;
           height: 38px;
           border-radius: 12px;
-          border: 1px solid rgba(15, 23, 42, 0.1);
-          background: rgba(255, 255, 255, 0.9);
-          color: #0f172a;
+          border: 1px solid var(--gm-border-soft);
+          background: var(--gm-surface-high);
+          color: var(--gm-text);
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -304,8 +304,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
         }
         .ens-lightbox__iconBtn:hover {
           transform: translateY(-1px);
-          box-shadow: 0 10px 20px rgba(2, 6, 23, 0.12);
-          background: #fff;
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+          background: var(--gm-surface);
         }
         .ens-lightbox__iconBtn:active {
           transform: translateY(0);
@@ -317,8 +317,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           display: grid;
           grid-template-rows: 1fr auto;
           min-height: 0;
-          background: radial-gradient(circle at 30% 20%, rgba(2, 6, 23, 0.04), transparent 55%),
-            radial-gradient(circle at 70% 30%, rgba(2, 6, 23, 0.03), transparent 50%);
+          background: radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--gm-text) 4%, transparent), transparent 55%),
+            radial-gradient(circle at 70% 30%, color-mix(in srgb, var(--gm-text) 3%, transparent), transparent 50%);
         }
 
         .ens-lightbox__stage {
@@ -334,9 +334,9 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           width: 100%;
           height: min(62vh, 620px);
           border-radius: 16px;
-          background: #0b1220;
+          background: var(--gm-bg-deep);
           overflow: hidden;
-          border: 1px solid rgba(15, 23, 42, 0.12);
+          border: 1px solid var(--gm-border-soft);
           box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
         }
 
@@ -348,8 +348,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           height: 44px;
           border-radius: 999px;
           border: 1px solid rgba(255, 255, 255, 0.18);
-          background: rgba(2, 6, 23, 0.55);
-          color: #fff;
+          background: rgba(0, 0, 0, 0.55);
+          color: var(--gm-text);
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -358,7 +358,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           z-index: 2;
         }
         .ens-lightbox__nav:hover {
-          background: rgba(2, 6, 23, 0.68);
+          background: rgba(0, 0, 0, 0.68);
           transform: translateY(-50%) scale(1.03);
         }
         .ens-lightbox__nav:disabled {
@@ -377,8 +377,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           gap: 10px;
           padding: 12px 14px 14px;
           overflow-x: auto;
-          border-top: 1px solid rgba(15, 23, 42, 0.08);
-          background: rgba(255, 255, 255, 0.96);
+          border-top: 1px solid var(--gm-border-soft);
+          background: var(--gm-surface);
         }
 
         .ens-lightbox__thumb {
@@ -386,8 +386,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           width: 84px;
           height: 60px;
           border-radius: 12px;
-          border: 1px solid rgba(15, 23, 42, 0.12);
-          background: #fff;
+          border: 1px solid var(--gm-border-soft);
+          background: var(--gm-surface-high);
           padding: 0;
           cursor: pointer;
           overflow: hidden;
@@ -395,11 +395,11 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
         }
         .ens-lightbox__thumb:hover {
           transform: translateY(-1px);
-          box-shadow: 0 10px 20px rgba(2, 6, 23, 0.12);
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
         }
         .ens-lightbox__thumb.is-active {
-          border-color: rgba(37, 99, 235, 0.6);
-          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+          border-color: var(--gm-primary);
+          box-shadow: 0 0 0 3px color-mix(in srgb, var(--gm-primary) 18%, transparent);
         }
 
         .ens-lightbox__thumbImg {

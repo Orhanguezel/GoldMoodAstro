@@ -138,7 +138,7 @@ export default function SettingsPage() {
                     >
                       <motion.div
                         animate={{ x: formData[item.key as keyof typeof formData] ? 24 : 4 }}
-                        className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-md"
+                        className="absolute top-1 w-6 h-6 bg-[var(--gm-text)] rounded-full shadow-md"
                       />
                     </button>
                  </div>
@@ -147,8 +147,8 @@ export default function SettingsPage() {
           </section>
 
           {/* Tehlikeli Bölge */}
-          <section className="bg-rose-500/5 border border-rose-500/10 rounded-[2.5rem] p-8 md:p-10 space-y-8">
-            <div className="flex items-center gap-4 text-rose-400">
+          <section className="bg-[var(--gm-error)]/5 border border-[var(--gm-error)]/10 rounded-[2.5rem] p-8 md:p-10 space-y-8">
+            <div className="flex items-center gap-4 text-[var(--gm-error)]">
               <ShieldAlert className="w-6 h-6" />
               <h2 className={`${cinzel.className} text-xl tracking-wider`}>Tehlikeli Bölge</h2>
             </div>
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                   <div className="text-foreground font-bold">Hesabı Kapat</div>
                   <div className="text-sm text-muted-foreground">Tüm verileriniz 7 gün sonra kalıcı olarak silinecektir.</div>
                </div>
-               <button className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-all font-bold text-sm tracking-widest">
+               <button className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[var(--gm-error)]/10 text-[var(--gm-error)] border border-[var(--gm-error)]/20 hover:bg-[var(--gm-error)]/20 transition-all font-bold text-sm tracking-widest">
                   <Trash2 className="w-4 h-4" /> HESABI SİL
                </button>
             </div>
