@@ -79,10 +79,14 @@ const nextConfig = {
   },
 
   async headers() {
+    // Tema/içerik DB'den geliyor (design_tokens, ui_*, brand.*) → agresif cache
+    // değişiklikleri saatlerce gizliyordu. max-age=0: tarayıcı her zaman
+    // revalidate eder (hard-refresh gerekmez). s-maxage=60: kısa CDN/proxy
+    // cache (perf korunur, değişiklik ~1dk içinde yansır).
     const staticContentCache = [
       {
         key: 'Cache-Control',
-        value: 'public, s-maxage=3600, stale-while-revalidate=86400',
+        value: 'public, max-age=0, s-maxage=60, stale-while-revalidate=120',
       },
     ];
 
