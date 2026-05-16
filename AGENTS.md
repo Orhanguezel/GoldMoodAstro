@@ -118,7 +118,7 @@ Bunlara **DOKUNMA** — yalnız aşağıdaki kalan/revize işleri yap.
 | # | Görev | Kontrat (uy) | Sahip | Not |
 |---|-------|--------------|-------|-----|
 | 1 | ✅ **T39-5 BACKEND DONE** (Claude 2026-05-16, commit `28f0fe9`) — 'both' tüm backend'den kaldırıldı (enum/zod/drizzle/booking/livekit/syncFlags), typecheck ✅. ⚠️ `db:seed` ENUM için kullanıcı onayıyla çalıştırılmalı. **DOKUNMA** | FAZ39 T39-5 | — | tamam |
-| 2 | **T39-5 UI** (sıradaki) — ServicesPanel **radio ◯ Sesli ◯ Görüntülü** + hizmet-bazlı süre/fiyat; **slug'a media_type kat** ("20dk-sesli"/"20dk-goruntulu" — uniq(consultant_id,slug) korunur); ProfilePanel tek video checkbox/fiyat KALDIR; detay+booking hizmet listesi rozetli, ayrı audio/video toggle kaldır | FAZ39 T39-5 | Antigravity | backend hazır, başlanabilir |
+| 2 | ✅ **T39-5 UI DONE** (Claude+Codex 2026-05-16, commit `8329ab0`) — MediaTypeRadio (Sesli/Görüntülü, 'both' yok), mediaSlug suffix, ProfilePanel video checkbox kaldırıldı, booking medya tipi hizmetten (toggle yalnız hizmetsiz fallback), ConsultantDetail rozet, admin hizmet listesi. frontend typecheck ✅. **DOKUNMA** | FAZ39 T39-5 | — | tamam |
 | 3 | **T42-4 §v2** — mobil `i18n.ts` inline kaldır → backend `siteSettings ui_*` fetch + bundle fallback snapshot; eksik anahtar ui_* seed'e; ölü `frontend/src/i18n/request.ts`+`messages/` cleanup (önce next.config teyit); CI drift | [`i18n-single-source-contract.md`](doc/contracts/i18n-single-source-contract.md) **§v2-PLAN** | Codex | v1 değil — **§v2** (frontend zaten backend-driven) |
 | 4 | **T38-1 migrasyon** — kalan ~26 sayfa `<PageContainer>`'a (42/68 yapıldı) | theme-arch §1 | Antigravity | mekanik |
 | 5 | **T38-4** `doc/raporlar/tema-canli-local-farki.md` runbook | theme-arch §4 | Codex + Ops | — |
