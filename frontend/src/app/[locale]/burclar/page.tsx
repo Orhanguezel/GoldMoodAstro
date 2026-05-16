@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/seo/server';
 
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
 
 export const revalidate = 86400; // 24 hours
 
@@ -22,10 +23,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default function BurclarPage() {
+export default async function BurclarPage({ params }: Props) {
+  const { locale } = await params;
+
   return (
-    <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
-      <ZodiacHub />
-    </PageContainer>
+    <>
+      <Banner title={locale === 'tr' ? 'Burçlar' : 'Zodiac Signs'} />
+      <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
+        <ZodiacHub />
+      </PageContainer>
+    </>
   );
 }

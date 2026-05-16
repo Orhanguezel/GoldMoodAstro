@@ -6,13 +6,7 @@
 'use client';
 
 import React, { useMemo, useCallback } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-
-// RTK – Custom Pages Public
-import { useListCustomPagesPublicQuery } from '@/integrations/rtk/hooks';
-import type { CustomPageDto } from '@/integrations/shared';
-import { downgradeH1ToH2, pickPage, toCdnSrc } from '@/integrations/shared';
 
 // Helpers
 import { useLocaleShort, useUiSection } from '@/i18n';
@@ -174,66 +168,6 @@ const AboutPageContent: React.FC = () => {
     authorBio: readUi('ui_about_author_bio', copyFallback.authorBio),
   }), [readUi, copyFallback]);
 
-  const { data, isLoading } = useListCustomPagesPublicQuery({
-    module_key: 'about',
-    locale,
-    limit: 10,
-    sort: 'created_at',
-    orderDir: 'asc',
-  });
-
-  const page = useMemo<CustomPageDto | null>(
-    () => pickPage(data?.items ?? []),
-    [data],
-  );
-
-  const headerSubtitlePrefix = useMemo(
-    () => String(readUi('ui_about_subprefix', 'Spiritüel Rehberlik') || '').trim() || 'Spiritüel Rehberlik',
-    [readUi],
-  );
-
-  const headerSubtitleLabel = useMemo(() => {
-    const v = String(readUi('ui_about_sublabel', '') || '').trim();
-    return v;
-  }, [readUi]);
-
-  const headerTitle = useMemo(() => {
-    const v = String(readUi('ui_about_page_title', '') || '').trim();
-    if (v) return v;
-    if (locale === 'de') return 'Über mich';
-    if (locale === 'tr') return 'Hakkımda';
-    return 'About';
-  }, [readUi, locale]);
-
-  const headerLead = useMemo(() => String(readUi('ui_about_page_lead', '') || '').trim(), [readUi]);
-
-  const html = useMemo(() => {
-    const raw = page?.content_html || page?.content || '';
-    return raw ? downgradeH1ToH2(raw) : '';
-  }, [page]);
-
-  const featuredImageRaw = useMemo(
-    () => (page?.featured_image ?? '').trim(),
-    [page],
-  );
-
-  const imgSrc = useMemo(() => {
-    if (!featuredImageRaw) return '';
-    const cdn = toCdnSrc(featuredImageRaw, 1200, 800, 'fill');
-    return (cdn || featuredImageRaw) as any;
-  }, [featuredImageRaw]);
-
-  const imgAlt = useMemo(() => {
-    const alt = (page?.featured_image_alt ?? '').trim();
-    return alt || 'about image';
-  }, [page]);
-
-  const galleryThumbs = useMemo(() => {
-    const images = page?.images ?? [];
-    const unique = Array.from(new Set(images.filter(Boolean)));
-    return unique.filter((x) => x !== featuredImageRaw).slice(0, 3);
-  }, [page, featuredImageRaw]);
-
   return (
     <div className="relative z-10 text-(--gm-text)">
       <div
@@ -246,132 +180,15 @@ const AboutPageContent: React.FC = () => {
       />
 
       <div className="relative">
-        <div className="mb-12 text-center">
-          <div className="mb-4">
-            <span className="block text-(--gm-primary) font-bold uppercase tracking-[0.32em] mb-3 text-[10px] md:text-xs">
-              <span>{headerSubtitlePrefix}</span>
-              {headerSubtitleLabel ? ` ${headerSubtitleLabel}` : null}
-            </span>
-
-            <h2 className="text-3xl md:text-5xl font-serif font-light text-(--gm-text) leading-tight max-w-3xl mx-auto">
-              {headerTitle}
-            </h2>
-
-            {headerLead ? (
-              <p className="mt-5 mb-0 text-(--gm-text-dim) max-w-2xl mx-auto text-base md:text-lg leading-relaxed font-serif italic">{headerLead}</p>
-            ) : null}
-
-            <div className="mt-8 inline-flex items-center gap-3">
-              <span className="h-px w-12 bg-(--gm-primary)/40" />
-              <span className="text-(--gm-primary) text-xs">✦</span>
-              <span className="h-px w-12 bg-(--gm-primary)/40" />
-            </div>
-          </div>
-        </div>
-
-        {isLoading && (
-          <div className="mb-10 max-w-4xl mx-auto">
-            <div className="h-4 bg-(--gm-bg-deep) rounded w-full mb-2.5 animate-pulse" aria-hidden />
-            <div className="h-4 bg-(--gm-bg-deep) rounded w-4/5 mb-2.5 animate-pulse" aria-hidden />
-            <div className="h-4 bg-(--gm-bg-deep) rounded w-3/5 animate-pulse" aria-hidden />
-          </div>
-        )}
-
-        {!!page && !isLoading && (
-          <>
-            {imgSrc && (
-              <div
-                className="mb-12 max-w-5xl mx-auto"
-                data-aos="fade-up"
-                data-aos-delay={100}
-              >
-                <div className="relative overflow-hidden shadow-(--gm-shadow-soft) bg-(--gm-surface) border border-(--gm-border-soft) rounded-(--gm-radius-lg)">
-                  <div className="w-full aspect-16/7 md:aspect-16/6 relative">
-                    <Image
-                      src={imgSrc}
-                      alt={imgAlt}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1100px"
-                      priority
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div
-              className="max-w-3xl mx-auto mb-12"
-              data-aos="fade-up"
-              data-aos-delay={200}
-            >
-              {html ? (
-                <div
-                  className="prose prose-lg prose-rose text-(--gm-text-dim) max-w-none
-                    prose-h2:font-serif prose-h2:text-(--gm-text) prose-h2:text-2xl prose-h2:md:text-3xl prose-h2:mt-0 prose-h2:mb-6
-                    prose-h3:font-serif prose-h3:text-(--gm-text) prose-h3:text-xl prose-h3:md:text-2xl prose-h3:mt-10 prose-h3:mb-4
-                    prose-p:leading-relaxed prose-p:mb-5
-                    prose-li:leading-relaxed
-                    prose-strong:text-(--gm-text)
-                    prose-em:text-(--gm-primary)/80
-                    prose-a:text-(--gm-primary)"
-                  dangerouslySetInnerHTML={{ __html: html }}
-                />
-              ) : (
-                <div>
-                  <p className="mb-0">
-                    {readUi('ui_about_empty_text', 'Content will be published here.')}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {galleryThumbs.length > 0 && (
-              <div
-                className="max-w-5xl mx-auto"
-                data-aos="fade-up"
-                data-aos-delay={300}
-              >
-                <div className={`grid gap-4 md:gap-6 ${
-                  galleryThumbs.length === 1
-                    ? 'grid-cols-1 max-w-2xl mx-auto'
-                    : galleryThumbs.length === 2
-                      ? 'grid-cols-2 max-w-4xl mx-auto'
-                      : 'grid-cols-2 md:grid-cols-3'
-                }`}>
-                  {galleryThumbs.map((src, i) => (
-                    <div
-                      key={src}
-                      className={`relative overflow-hidden border border-(--gm-border-soft) bg-(--gm-surface) shadow-(--gm-shadow-soft) rounded-(--gm-radius-lg)
-                        transition-transform duration-500 hover:scale-[1.02] hover:shadow-(--gm-shadow-card)
-                        ${galleryThumbs.length === 3 && i === 0 ? 'col-span-2 md:col-span-1' : ''}`}
-                    >
-                      <div className="aspect-4/3 relative">
-                        <Image
-                          src={src}
-                          alt={`${imgAlt} ${i + 1}`}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 350px"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
         <div className="mx-auto max-w-4xl">
           <div className="rounded-3xl border border-(--gm-primary)/25 bg-(--gm-surface) p-7 md:p-12 shadow-(--gm-shadow-card) relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-(--gm-primary) via-(--gm-accent) to-(--gm-gold)" />
             <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-(--gm-primary)">
               {copy.eyebrow}
             </p>
-            <h1 className="mt-4 text-3xl font-serif leading-tight text-(--gm-text) md:text-5xl">
+            <h2 className="mt-4 text-3xl font-serif leading-tight text-(--gm-text) md:text-5xl">
               {copy.title}
-            </h1>
+            </h2>
             <p className="mt-6 text-lg leading-relaxed text-(--gm-text-dim) font-serif italic">{copy.lead}</p>
           </div>
 

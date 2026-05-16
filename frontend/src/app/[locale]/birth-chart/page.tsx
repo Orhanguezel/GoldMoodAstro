@@ -14,11 +14,17 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
 
-export default function BirthChartPage() {
+export default async function BirthChartPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+
   return (
-    <PageContainer width="wide" pad="none">
-      <BirthChartPageClient />
-    </PageContainer>
+    <>
+      <Banner title={locale === 'tr' ? 'Doğum Haritası' : 'Birth Chart'} />
+      <PageContainer width="wide" pad="none">
+        <BirthChartPageClient />
+      </PageContainer>
+    </>
   );
 }

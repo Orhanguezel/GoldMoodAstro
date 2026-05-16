@@ -21,11 +21,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
 
-export default function UnlulerVeBurclariPage() {
+export default async function UnlulerVeBurclariPage({ params }: Props) {
+  const { locale } = await params;
+
   return (
-    <PageContainer width="full" pad="none" className="bg-(--gm-bg)">
-      <CelebrityZodiacPage />
-    </PageContainer>
+    <>
+      <Banner title={locale === 'tr' ? 'Ünlüler ve Burçları' : 'Celebrities and Zodiac Signs'} />
+      <PageContainer width="full" pad="none" className="bg-(--gm-bg)">
+        <CelebrityZodiacPage />
+      </PageContainer>
+    </>
   );
 }

@@ -1,12 +1,12 @@
 import type { CustomPageDto } from './custom_pages.types';
 
 export const THEME_COLORS = {
-  textDark: '#292524',
-  textMedium: '#57534e',
-  primary: '#881337',
-  bgWhite: '#ffffff',
-  bgSand: '#fafaf9',
-  border: '#e7e5e4',
+  textDark: 'var(--gm-text)',
+  textMedium: 'var(--gm-text-dim)',
+  primary: 'var(--gm-gold)',
+  bgWhite: 'var(--gm-surface)',
+  bgSand: 'var(--gm-bg-deep)',
+  border: 'var(--gm-border-soft)',
 };
 
 export const CMS_FALLBACK_CSS = `

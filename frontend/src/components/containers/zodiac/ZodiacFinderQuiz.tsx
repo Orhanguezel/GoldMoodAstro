@@ -94,9 +94,9 @@ export default function ZodiacFinderQuiz() {
           <Sparkles className="size-4" />
           İnteraktif burç keşfi
         </div>
-        <h1 className="text-4xl font-semibold tracking-normal text-foreground md:text-6xl">
+        <h2 className="text-4xl font-semibold tracking-normal text-foreground md:text-6xl">
           Burcunu öğren, enerjini hızlıca yorumla
-        </h1>
+        </h2>
         <p className="mt-5 text-base leading-7 text-muted-foreground md:text-lg">
           Doğum gününü seç; güneş burcunu, elementini ve sana yakın temaları anında gör.
         </p>

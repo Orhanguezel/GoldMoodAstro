@@ -97,3 +97,13 @@ INSERT INTO storage_assets (id, user_id, bucket, path, url, mime, size, name, fo
 ('33000000-0000-4000-8000-000000000003', NULL, 'features', 'features/synastry_chart.png', '/uploads/features/synastry_chart.png', 'image/png', 1000000, 'synastry_chart.png', 'features', 'local', JSON_OBJECT('purpose','feature_image','slug','synastry_chart')),
 ('33000000-0000-4000-8000-000000000004', NULL, 'support', 'support/support_ai.png', '/uploads/support/support_ai.png', 'image/png', 1000000, 'support_ai.png', 'support', 'local', JSON_OBJECT('purpose','support_ai_avatar'))
 ON DUPLICATE KEY UPDATE url = VALUES(url);
+
+-- SEO OG Images
+INSERT INTO storage_assets (id, user_id, bucket, path, url, mime, size, name, folder, provider, metadata) VALUES
+('34000000-0000-4000-8000-000000000001', NULL, 'seo', 'seo/og_home.png', '/uploads/seo/og_home.png', 'image/png', 500000, 'og_home.png', 'seo', 'local', JSON_OBJECT('purpose','og_image','page','home')),
+('34000000-0000-4000-8000-000000000002', NULL, 'seo', 'seo/og_horoscope.png', '/uploads/seo/og_horoscope.png', 'image/png', 500000, 'og_horoscope.png', 'seo', 'local', JSON_OBJECT('purpose','og_image','page','horoscope')),
+('34000000-0000-4000-8000-000000000003', NULL, 'seo', 'seo/og_tarot.png', '/uploads/seo/og_tarot.png', 'image/png', 500000, 'og_tarot.png', 'seo', 'local', JSON_OBJECT('purpose','og_image','page','tarot')),
+('34000000-0000-4000-8000-000000000004', NULL, 'seo', 'seo/og_coffee.png', '/uploads/seo/og_coffee.png', 'image/png', 500000, 'og_coffee.png', 'seo', 'local', JSON_OBJECT('purpose','og_image','page','coffee')),
+('34000000-0000-4000-8000-000000000005', NULL, 'seo', 'seo/og_consultants.png', '/uploads/seo/og_consultants.png', 'image/png', 500000, 'og_consultants.png', 'seo', 'local', JSON_OBJECT('purpose','og_image','page','consultants')),
+('34000000-0000-4000-8000-000000000006', NULL, 'seo', 'seo/og_daily.png', '/uploads/seo/og_daily.png', 'image/png', 500000, 'og_daily.png', 'seo', 'local', JSON_OBJECT('purpose','og_image','page','daily'))
+ON DUPLICATE KEY UPDATE url = VALUES(url);

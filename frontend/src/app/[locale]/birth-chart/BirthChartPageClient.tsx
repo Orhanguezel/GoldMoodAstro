@@ -198,7 +198,7 @@ export default function BirthChartPageClient() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] px-4 pb-24 pt-32">
+    <main className="min-h-screen bg-[var(--gm-bg)] px-4 pb-24 pt-12">
       <div className="mx-auto max-w-[var(--gm-w-wide)]">
         {!chart ? (
           <>
@@ -208,9 +208,9 @@ export default function BirthChartPageClient() {
                 <span className="text-[var(--gm-gold)] font-bold text-xs uppercase tracking-[0.2em]">Kozmik Rehber</span>
                 <span className="w-8 h-px bg-[var(--gm-gold)]" />
               </div>
-              <h1 className="mb-8 font-serif text-[clamp(2.5rem,5vw,4.5rem)] font-light leading-tight text-[var(--gm-text)]">
+              <h2 className="mb-8 font-serif text-[clamp(2.5rem,5vw,4.5rem)] font-light leading-tight text-[var(--gm-text)]">
                 Gökyüzündeki İmzanız
-              </h1>
+              </h2>
               <p className="text-xl font-serif italic text-[var(--gm-text-dim)] leading-relaxed">
                 Doğduğunuz anın gezegen konumlarını, ev yerleşimlerini ve temel açılarını keşfederek ruhsal DNA'nızı analiz edin.
               </p>

@@ -40,26 +40,29 @@ const PrivacyNoticePageContent: React.FC = () => {
   }, [page]);
 
   return (
-    <section className="bg-bg-primary relative min-h-[60vh] py-20 lg:py-32">
-      {/* Background Decor */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-96 h-96 bg-bg-card-hover rounded-full mix-blend-multiply filter blur-3xl opacity-50" />
-        <div className="absolute top-40 -left-20 w-72 h-72 bg-[var(--gm-error)]/10 rounded-full mix-blend-multiply filter blur-3xl opacity-50" />
+    <div className="relative overflow-hidden">
+      {/* Background Decor - Spiritual/Celestial Theme */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-24 -right-24 w-[500px] h-[500px] bg-(--gm-gold)/5 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 -left-32 w-[400px] h-[400px] bg-(--gm-primary)/5 rounded-full blur-[100px]" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="relative z-10">
         {isLoading && (
-          <div className="max-w-4xl mx-auto space-y-4">
-            <div className="h-4 bg-bg-card-hover rounded w-full animate-pulse" />
-            <div className="h-4 bg-bg-card-hover rounded w-5/6 animate-pulse" />
-            <div className="h-4 bg-bg-card-hover rounded w-4/6 animate-pulse" />
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="h-12 bg-(--gm-surface) rounded-2xl w-1/3 animate-pulse" />
+            <div className="space-y-3">
+              <div className="h-4 bg-(--gm-surface) rounded w-full animate-pulse" />
+              <div className="h-4 bg-(--gm-surface) rounded w-5/6 animate-pulse" />
+              <div className="h-4 bg-(--gm-surface) rounded w-4/6 animate-pulse" />
+            </div>
           </div>
         )}
 
         {!isLoading && (isError || !page) && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto text-center py-20">
             <div
-              className="bg-bg-card border border-border-light text-text-primary px-6 py-4 rounded-xl"
+              className="inline-block bg-(--gm-surface) border border-(--gm-border-soft) text-(--gm-text-dim) px-8 py-4 rounded-2xl font-serif italic"
               role="alert"
             >
               {ui('ui_privacy_notice_empty', 'Content not found.')}
@@ -71,21 +74,16 @@ const PrivacyNoticePageContent: React.FC = () => {
           <div className="max-w-4xl mx-auto">
             <style>{CMS_FALLBACK_CSS}</style>
 
-            <div className="mb-12 text-center">
-              <h1 className="text-4xl md:text-5xl font-serif font-light text-text-primary mb-4">
-                {title}
-              </h1>
-              <div className="h-1 w-24 bg-brand-primary mx-auto rounded-full" />
-            </div>
+
 
             {html ? (
               <article
-                className="prose prose-stone prose-lg max-w-none bg-bg-card p-8 md:p-12 shadow-sm border border-border-light cms-html"
+                className="prose prose-lg max-w-none bg-(--gm-surface) p-8 md:p-20 rounded-[2rem] shadow-(--gm-shadow-card) border border-(--gm-border-soft) cms-html prose-headings:font-serif prose-headings:font-light prose-headings:text-(--gm-text) prose-a:text-(--gm-primary) prose-p:text-(--gm-text-dim) prose-p:font-light prose-p:text-base prose-p:leading-[1.8] prose-li:text-(--gm-text-dim) prose-li:font-light prose-li:text-base prose-li:leading-[1.8] prose-ul:mb-6 prose-ol:mb-6 prose-p:mb-6 prose-strong:text-(--gm-text) prose-em:text-(--gm-primary)/80"
                 dangerouslySetInnerHTML={{ __html: html }}
               />
             ) : (
               <div
-                className="bg-bg-card border border-border-light text-text-primary px-6 py-4 rounded-xl"
+                className="bg-(--gm-surface) border border-(--gm-border-soft) text-(--gm-text-dim) px-8 py-6 rounded-2xl text-center italic font-serif"
                 role="alert"
               >
                 {ui('ui_privacy_notice_empty_text', 'Content coming soon.')}
@@ -94,7 +92,7 @@ const PrivacyNoticePageContent: React.FC = () => {
           </div>
         )}
       </div>
-    </section>
+    </div>
   );
 };
 

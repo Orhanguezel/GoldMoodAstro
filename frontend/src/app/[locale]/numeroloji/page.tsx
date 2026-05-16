@@ -8,6 +8,7 @@ import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import LandingIntro from '@/components/common/LandingIntro';
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -92,7 +93,9 @@ export default async function NumerologyPage({ params }: Props) {
         };
 
   return (
-    <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
+    <>
+      <Banner title={locale === 'tr' ? 'Numeroloji' : 'Numerology'} />
+      <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
       <JsonLd
         id="numerology-schema"
         data={graph([
@@ -117,7 +120,7 @@ export default async function NumerologyPage({ params }: Props) {
           faqSchema(faqItems),
         ])}
       />
-      <LandingIntro {...intro} />
+      <LandingIntro {...intro} showHeader={false} />
       <NumerologyHub />
       <FaqAccordion items={faqItems} title={locale === 'tr' ? 'Numeroloji Hakkında Sorular' : 'Numerology Questions'} />
       <AuthorBio
@@ -129,5 +132,6 @@ export default async function NumerologyPage({ params }: Props) {
         expertise={['Numeroloji', 'Kişisel Döngüler', 'Farkındalık']}
       />
     </PageContainer>
+    </>
   );
 }

@@ -8,8 +8,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import ChatWarningBanner from './ChatWarningBanner';
+import { getPublicApiBase } from '@/i18n/publicMetaApi';
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
+const API_BASE = getPublicApiBase() || '/api';
 
 interface Message {
   id: string;

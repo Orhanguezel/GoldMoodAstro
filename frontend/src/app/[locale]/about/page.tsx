@@ -7,29 +7,30 @@ import { LayoutSeoBridge } from '@/seo';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { isValidUiText } from '@/integrations/shared';
 import { safeStr, toCdnSrc } from '@/integrations/shared';
+import Banner from '@/layout/banner/Breadcrum';
 
 export default function AboutPage() {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_about', locale as any);
 
-  const fbBannerTitle = useMemo(() => {
-    if (locale === 'de') return 'Über mich';
-    if (locale === 'tr') return 'Hakkımda';
+  const routeTitle = useMemo(() => {
+    if (locale === 'de') return 'Über uns';
+    if (locale === 'tr') return 'Hakkımızda';
     return 'About';
   }, [locale]);
 
   const bannerTitle = useMemo(() => {
     const key = 'ui_about_page_title';
     const v = safeStr(ui(key, ''));
-    return isValidUiText(v, key) ? v : fbBannerTitle;
-  }, [ui, fbBannerTitle]);
+    return isValidUiText(v, key) ? v : routeTitle;
+  }, [ui, routeTitle]);
 
   const pageTitle = useMemo(() => {
     const key = 'ui_about_meta_title';
     const v = safeStr(ui(key, ''));
     if (isValidUiText(v, key)) return v;
-    return `${bannerTitle || fbBannerTitle} | GoldMoodAstro`;
-  }, [ui, bannerTitle, fbBannerTitle]);
+    return `${bannerTitle || routeTitle} | GoldMoodAstro`;
+  }, [ui, bannerTitle, routeTitle]);
 
   const pageDescription = useMemo(() => {
     const key = 'ui_about_meta_description';
@@ -57,7 +58,9 @@ export default function AboutPage() {
   }, [ui]);
 
   return (
-    <PageContainer pad="large">
+    <>
+      <Banner title={routeTitle} />
+      <PageContainer pad="large">
       <LayoutSeoBridge
         title={pageTitle}
         description={pageDescription}
@@ -66,5 +69,6 @@ export default function AboutPage() {
       />
       <AboutPageContent />
     </PageContainer>
+    </>
   );
 }

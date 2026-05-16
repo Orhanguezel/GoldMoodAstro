@@ -92,7 +92,7 @@ export default function DreamHub() {
               >
                 <CloudMoon className="w-12 h-12" />
               </motion.div>
-              <h1 className={`${cinzel.className} text-4xl md:text-6xl text-foreground tracking-tight`}>Rüya Tabiri</h1>
+              <h2 className={`${cinzel.className} text-4xl md:text-6xl text-foreground tracking-tight`}>Rüya Tabiri</h2>
               <p className={`${fraunces.className} text-muted-foreground text-lg max-w-xl mx-auto italic leading-relaxed`}>
                 Rüyalar, ruhun uyanıkken söyleyemedikleridir. <br />
                 <span className="text-brand-primary/60">Bilinçaltının gizli dilini yapay zeka ile keşfedin.</span>
@@ -250,7 +250,7 @@ export default function DreamHub() {
           >
              <div className="text-center space-y-4">
               <span className="text-xs font-bold tracking-[0.3em] text-brand-primary uppercase opacity-60">Rüyanın Bilinçaltı Yansıması</span>
-              <h1 className={`${cinzel.className} text-5xl md:text-7xl text-foreground`}>Rüya Analizi</h1>
+              <h2 className={`${cinzel.className} text-5xl md:text-7xl text-foreground`}>Rüya Analizi</h2>
             </div>
 
             <div className="flex flex-wrap justify-center gap-4 md:gap-6">

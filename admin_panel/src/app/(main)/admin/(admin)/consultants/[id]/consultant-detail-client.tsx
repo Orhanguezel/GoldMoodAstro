@@ -15,7 +15,12 @@ import {
   Clock, 
   CreditCard,
   History,
-  AlertCircle
+  AlertCircle,
+  Mic,
+  Plus,
+  Save,
+  Trash2,
+  Video
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -30,16 +35,65 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import {
   useApproveConsultantAdminMutation,
+  useCreateConsultantServiceAdminMutation,
+  useDeleteConsultantServiceAdminMutation,
   useGetConsultantAdminQuery,
+  useListConsultantServicesAdminQuery,
   useRejectConsultantAdminMutation,
+  useUpdateConsultantServiceAdminMutation,
 } from '@/integrations/hooks';
+
+type ServiceForm = {
+  name: string;
+  slug: string;
+  duration_minutes: number;
+  price: number;
+  media_type: 'audio' | 'video';
+  is_free: boolean;
+  is_active: boolean;
+};
+
+const EMPTY_SERVICE_FORM: ServiceForm = {
+  name: '',
+  slug: '',
+  duration_minutes: 45,
+  price: 0,
+  media_type: 'audio',
+  is_free: false,
+  is_active: true,
+};
+
+const MEDIA_SUFFIX: Record<ServiceForm['media_type'], string> = {
+  audio: 'sesli',
+  video: 'goruntulu',
+};
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[ığüşöç]/g, (c) => ({ ı: 'i', ğ: 'g', ü: 'u', ş: 's', ö: 'o', ç: 'c' })[c] || c)
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function mediaSlug(base: string, media: ServiceForm['media_type']): string {
+  const cleaned = slugify(base).replace(/-(sesli|goruntulu)$/i, '');
+  return `${cleaned}-${MEDIA_SUFFIX[media]}`;
+}
 
 export default function ConsultantDetailClient({ id }: { id: string }) {
   const t = useAdminT('admin.consultants');
   const query = useGetConsultantAdminQuery(id);
+  const servicesQuery = useListConsultantServicesAdminQuery(id);
   const [approve, approveState] = useApproveConsultantAdminMutation();
   const [reject, rejectState] = useRejectConsultantAdminMutation();
+  const [createService, createServiceState] = useCreateConsultantServiceAdminMutation();
+  const [updateService, updateServiceState] = useUpdateConsultantServiceAdminMutation();
+  const [deleteService, deleteServiceState] = useDeleteConsultantServiceAdminMutation();
+  const [serviceForm, setServiceForm] = React.useState<ServiceForm>(EMPTY_SERVICE_FORM);
   const item = query.data;
+  const services = servicesQuery.data ?? [];
 
   async function approveCurrent() {
     try {
@@ -60,6 +114,57 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
       query.refetch();
     } catch {
       toast.error(t('actions.reject_failed'));
+    }
+  }
+
+  async function createServiceCurrent() {
+    const name = serviceForm.name.trim();
+    if (!name) {
+      toast.error('Hizmet adı zorunlu');
+      return;
+    }
+    if (!serviceForm.is_free && serviceForm.price <= 0) {
+      toast.error('Ücretli hizmette fiyat 0’dan büyük olmalı');
+      return;
+    }
+    try {
+      await createService({
+        consultantId: id,
+        body: {
+          name,
+          slug: mediaSlug(serviceForm.slug || name, serviceForm.media_type),
+          duration_minutes: serviceForm.duration_minutes,
+          price: serviceForm.is_free ? 0 : serviceForm.price,
+          currency: item?.currency ?? 'TRY',
+          media_type: serviceForm.media_type,
+          is_free: serviceForm.is_free ? 1 : 0,
+          is_active: serviceForm.is_active ? 1 : 0,
+          sort_order: services.length,
+        },
+      }).unwrap();
+      toast.success('Hizmet eklendi');
+      setServiceForm(EMPTY_SERVICE_FORM);
+    } catch {
+      toast.error('Hizmet eklenemedi');
+    }
+  }
+
+  async function updateServiceCurrent(serviceId: string, body: { media_type?: 'audio' | 'video'; is_active?: number }) {
+    try {
+      await updateService({ consultantId: id, id: serviceId, body }).unwrap();
+      toast.success('Hizmet güncellendi');
+    } catch {
+      toast.error('Hizmet güncellenemedi');
+    }
+  }
+
+  async function deleteServiceCurrent(serviceId: string) {
+    if (!window.confirm('Hizmet silinsin mi?')) return;
+    try {
+      await deleteService({ consultantId: id, id: serviceId }).unwrap();
+      toast.success('Hizmet silindi');
+    } catch {
+      toast.error('Hizmet silinemedi');
     }
   }
 
@@ -210,6 +315,145 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+            <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">
+              <CardTitle className="font-serif text-2xl flex items-center gap-3">
+                <CreditCard className="h-5 w-5 text-gm-gold" /> Hizmet Paketleri
+              </CardTitle>
+              <CardDescription>Danışmanın sesli/görüntülü hizmet paketlerini yönetin.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="grid gap-3 md:grid-cols-[1.2fr_0.8fr_0.7fr_0.7fr]">
+                <input
+                  value={serviceForm.name}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setServiceForm((prev) => ({ ...prev, name, slug: prev.slug || mediaSlug(name, prev.media_type) }));
+                  }}
+                  placeholder="Hizmet adı"
+                  className="h-11 rounded-xl border border-gm-border-soft bg-gm-bg-deep px-4 text-sm text-gm-text"
+                />
+                <input
+                  type="number"
+                  value={serviceForm.duration_minutes}
+                  onChange={(e) => setServiceForm((prev) => ({ ...prev, duration_minutes: Number(e.target.value) || 45 }))}
+                  placeholder="Süre"
+                  className="h-11 rounded-xl border border-gm-border-soft bg-gm-bg-deep px-4 text-sm text-gm-text"
+                />
+                <input
+                  type="number"
+                  value={serviceForm.price}
+                  onChange={(e) => setServiceForm((prev) => ({ ...prev, price: Number(e.target.value) || 0 }))}
+                  disabled={serviceForm.is_free}
+                  placeholder="Fiyat"
+                  className="h-11 rounded-xl border border-gm-border-soft bg-gm-bg-deep px-4 text-sm text-gm-text disabled:opacity-50"
+                />
+                <select
+                  value={serviceForm.media_type}
+                  onChange={(e) => {
+                    const media_type = e.target.value as ServiceForm['media_type'];
+                    setServiceForm((prev) => ({ ...prev, media_type, slug: mediaSlug(prev.slug || prev.name, media_type) }));
+                  }}
+                  className="h-11 rounded-xl border border-gm-border-soft bg-gm-bg-deep px-4 text-sm text-gm-text"
+                >
+                  <option value="audio">Sesli</option>
+                  <option value="video">Görüntülü</option>
+                </select>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-5">
+                  <label className="inline-flex items-center gap-2 text-sm text-gm-muted">
+                    <input
+                      type="checkbox"
+                      checked={serviceForm.is_free}
+                      onChange={(e) => setServiceForm((prev) => ({ ...prev, is_free: e.target.checked, price: e.target.checked ? 0 : prev.price }))}
+                      className="accent-gm-success"
+                    />
+                    Ücretsiz
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm text-gm-muted">
+                    <input
+                      type="checkbox"
+                      checked={serviceForm.is_active}
+                      onChange={(e) => setServiceForm((prev) => ({ ...prev, is_active: e.target.checked }))}
+                      className="accent-gm-gold"
+                    />
+                    Aktif
+                  </label>
+                </div>
+                <Button
+                  onClick={createServiceCurrent}
+                  disabled={createServiceState.isLoading}
+                  className="rounded-full bg-gm-gold text-gm-bg hover:bg-gm-gold-dim px-6 h-11 font-bold tracking-widest uppercase text-[10px]"
+                >
+                  <Plus className="mr-2 size-4" />
+                  Hizmet Ekle
+                </Button>
+              </div>
+
+              <Separator className="bg-gm-border-soft" />
+
+              {servicesQuery.isLoading ? (
+                <Skeleton className="h-24 w-full rounded-2xl bg-gm-surface/20" />
+              ) : services.length === 0 ? (
+                <p className="text-sm text-gm-muted italic">Henüz hizmet paketi yok.</p>
+              ) : (
+                <div className="space-y-3">
+                  {services.map((service) => (
+                    <div
+                      key={service.id}
+                      className="flex flex-col gap-4 rounded-2xl border border-gm-border-soft bg-gm-surface/30 p-4 md:flex-row md:items-center md:justify-between"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-serif text-lg text-gm-text">{service.name}</p>
+                          <Badge variant="outline" className="rounded-full border-gm-border-soft text-[10px] uppercase tracking-widest">
+                            {service.media_type === 'video' ? <Video className="mr-1 size-3" /> : <Mic className="mr-1 size-3" />}
+                            {service.media_type === 'video' ? 'Görüntülü' : 'Sesli'}
+                          </Badge>
+                          {service.is_free === 1 && <Badge className="rounded-full bg-gm-success/10 text-gm-success">Ücretsiz</Badge>}
+                          {service.is_active !== 1 && <Badge className="rounded-full bg-gm-muted/10 text-gm-muted">Pasif</Badge>}
+                        </div>
+                        <p className="mt-1 font-mono text-[11px] text-gm-muted">
+                          {service.slug} · {service.duration_minutes} dk · {service.is_free === 1 ? 'Ücretsiz' : `${service.price} ${service.currency}`}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          value={service.media_type}
+                          onChange={(e) => updateServiceCurrent(service.id, { media_type: e.target.value as 'audio' | 'video' })}
+                          disabled={updateServiceState.isLoading}
+                          className="h-10 rounded-xl border border-gm-border-soft bg-gm-bg-deep px-3 text-xs text-gm-text"
+                        >
+                          <option value="audio">Sesli</option>
+                          <option value="video">Görüntülü</option>
+                        </select>
+                        <Button
+                          variant="outline"
+                          onClick={() => updateServiceCurrent(service.id, { is_active: service.is_active === 1 ? 0 : 1 })}
+                          disabled={updateServiceState.isLoading}
+                          className="h-10 rounded-full border-gm-border-soft text-[10px] uppercase tracking-widest"
+                        >
+                          <Save className="mr-2 size-3" />
+                          {service.is_active === 1 ? 'Pasifleştir' : 'Aktifleştir'}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => deleteServiceCurrent(service.id)}
+                          disabled={deleteServiceState.isLoading}
+                          className="h-10 rounded-full border-gm-error/20 text-gm-error hover:bg-gm-error hover:text-white"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 

@@ -8,6 +8,7 @@ import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import PageContainer from '@/components/common/PageContainer';
 import LandingIntro from '@/components/common/LandingIntro';
+import Banner from '@/layout/banner/Breadcrum';
 
 import brand from '../../../../../config/brand.json';
 
@@ -112,7 +113,9 @@ export default async function TarotPage({ params }: Props) {
         };
 
   return (
-    <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
+    <>
+      <Banner title="Tarot" />
+      <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <JsonLd
         id="tarot-schema"
         data={graph([
@@ -138,7 +141,7 @@ export default async function TarotPage({ params }: Props) {
           faqSchema(faqItems),
         ])}
       />
-      <LandingIntro {...intro} />
+      <LandingIntro {...intro} showHeader={false} />
       <TarotHub />
       <FaqAccordion items={faqItems} title={locale === 'tr' ? 'Tarot Hakkında Sorular' : 'Tarot Questions'} />
       <AuthorBio
@@ -150,5 +153,6 @@ export default async function TarotPage({ params }: Props) {
         expertise={['Tarot', 'Sembolizm', 'Ruhsal Rehberlik']}
       />
     </PageContainer>
+    </>
   );
 }

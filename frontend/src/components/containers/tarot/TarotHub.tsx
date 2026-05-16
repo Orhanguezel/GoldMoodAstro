@@ -99,7 +99,7 @@ export default function TarotHub() {
             className="flex-1"
           >
             <div className="text-center mb-16">
-              <h1 className={`${cinzel.className} text-4xl md:text-6xl text-foreground mb-6`}>Tarot Rehberliği</h1>
+              <h2 className={`${cinzel.className} text-4xl md:text-6xl text-foreground mb-6`}>Tarot Rehberliği</h2>
               <p className="text-muted-foreground text-lg italic font-serif">Kozmik sembollerin bilgeliğiyle yolunuzu aydınlatın.</p>
             </div>
 
@@ -232,7 +232,7 @@ export default function TarotHub() {
             className="space-y-16 py-10"
           >
             <div className="text-center">
-              <h1 className={`${cinzel.className} text-4xl md:text-6xl text-foreground mb-6`}>Kozmik Yanıt</h1>
+              <h2 className={`${cinzel.className} text-4xl md:text-6xl text-foreground mb-6`}>Kozmik Yanıt</h2>
               <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-brand-primary/10 border border-brand-gold/20">
                 <HelpCircle className="w-4 h-4 text-brand-gold" />
                 <span className="text-muted-foreground italic font-serif">&quot;{question || 'Genel Rehberlik'}&quot;</span>

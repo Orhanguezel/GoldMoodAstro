@@ -37,6 +37,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 const COMPONENT_OPTIONS = [
   'HeroNew',
@@ -280,38 +281,40 @@ export default function HomeLayoutAdminClient() {
   const busy = isLoading || isFetching || isUpdating || isReordering || isDeleting || isCreating;
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-5xl space-y-6">
-      <Card className="bg-gm-surface/20 border-gm-border-soft rounded-3xl overflow-hidden backdrop-blur-sm">
-        <CardHeader className="p-6 border-b border-gm-border-soft flex flex-row items-center justify-between gap-4">
-          <div>
-            <CardTitle className="font-serif text-2xl text-gm-text">Anasayfa Düzeni</CardTitle>
-            <CardDescription className="text-gm-muted font-serif italic mt-1">
-              Section'ları sürükleyip sırasını değiştir, aktif/pasif yap, config'i düzenle.
-            </CardDescription>
+    <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-gm-gold" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">Tema & Tasarım</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={busy}
-              className="border-gm-border-soft"
-            >
-              <RefreshCcw className="size-3.5 mr-2" />
-              Yenile
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => setShowNew((v) => !v)}
-              disabled={busy}
-              className="bg-gm-gold text-gm-bg hover:bg-gm-gold-light"
-            >
-              <Plus className="size-3.5 mr-2" />
-              Yeni Section
-            </Button>
-          </div>
-        </CardHeader>
+          <h1 className="font-serif text-4xl text-gm-text">Anasayfa Düzeni</h1>
+          <p className="text-sm italic text-gm-muted">Section'ları sürükleyip sırasını değiştir, aktif/pasif yap, config'i düzenle.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={busy}
+            className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-8 text-[10px] font-bold uppercase tracking-widest"
+          >
+            <RefreshCcw className={cn("mr-2 size-4", (isLoading || isFetching) && "animate-spin")} />
+            Yenile
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setShowNew((v) => !v)}
+            disabled={busy}
+            className="h-12 rounded-full bg-gm-gold text-gm-bg hover:bg-gm-gold-light px-8 text-[10px] font-bold uppercase tracking-widest"
+          >
+            <Plus className="mr-2 size-4" />
+            Yeni Section
+          </Button>
+        </div>
+      </div>
 
+      <Card className="overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-surface/20 shadow-xl backdrop-blur-sm">
         {showNew && (
           <div className="p-6 border-b border-gm-border-soft bg-gm-bg-deep/40 grid gap-3 md:grid-cols-4">
             <div>

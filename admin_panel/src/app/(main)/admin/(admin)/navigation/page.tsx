@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -489,15 +490,15 @@ function HeaderMenuTab({ locale }: { locale: string }) {
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-gm-muted" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Başlık ara…"
-            className="pl-9"
+            className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-6 pl-12 text-sm text-gm-text"
           />
         </div>
         <Button
@@ -506,7 +507,7 @@ function HeaderMenuTab({ locale }: { locale: string }) {
             setDefaultParent(undefined);
             setOpen(true);
           }}
-          className="ml-auto"
+          className="ml-auto h-12 rounded-full bg-gm-gold text-gm-bg hover:bg-gm-gold-light px-8 text-[10px] font-bold uppercase tracking-widest"
         >
           <Plus className="mr-2 size-4" />
           Yeni Top-Level
@@ -514,40 +515,41 @@ function HeaderMenuTab({ locale }: { locale: string }) {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground text-sm">Yükleniyor…</div>
+        <div className="text-center py-12 text-gm-muted text-sm">Yükleniyor…</div>
       ) : items.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground text-sm">
+        <div className="text-center py-12 text-gm-muted text-sm">
           Henüz menü öğesi yok. Üstten "Yeni" ile başla.
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-4">
           {filtered.map((parent) => {
             const kids = ((parent as any).children as AdminMenuItemDto[] | undefined) ?? [];
             return (
-              <Card key={parent.id} className="border-gm-border-soft">
-                <CardContent className="p-4">
+              <Card key={parent.id} className="overflow-hidden rounded-[24px] border-gm-border-soft bg-gm-surface/20 shadow-lg backdrop-blur-sm">
+                <CardContent className="p-6">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs text-muted-foreground w-8">
+                    <span className="font-mono text-xs text-gm-muted w-8">
                       #{parent.display_order}
                     </span>
                     <div className="flex-1">
-                      <div className="font-medium">
-                        {parent.title || <em className="text-muted-foreground">başlıksız</em>}
+                      <div className="font-medium text-gm-text">
+                        {parent.title || <em className="text-gm-muted">başlıksız</em>}
                         {!parent.is_active && (
-                          <span className="ml-2 text-[10px] uppercase bg-muted text-muted-foreground px-2 py-0.5 rounded">
+                          <span className="ml-2 text-[10px] uppercase bg-gm-bg-deep border border-gm-border-soft text-gm-muted px-2 py-0.5 rounded-full">
                             pasif
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-gm-muted mt-1">
                         {parent.url || (
-                          <em>dropdown kök ({kids.length} alt öğe)</em>
+                          <em className="italic">dropdown kök ({kids.length} alt öğe)</em>
                         )}
                       </div>
                     </div>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="rounded-full hover:bg-gm-surface/50 text-gm-text"
                       onClick={() => {
                         setEditing(null);
                         setDefaultParent(parent.id);
@@ -559,7 +561,8 @@ function HeaderMenuTab({ locale }: { locale: string }) {
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="rounded-full hover:bg-gm-surface/50 text-gm-text"
                       onClick={() => {
                         setEditing(parent);
                         setOpen(true);
@@ -569,46 +572,49 @@ function HeaderMenuTab({ locale }: { locale: string }) {
                     </Button>
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="rounded-full hover:bg-gm-error/10 text-gm-error"
                       onClick={() => handleDelete(parent)}
                     >
-                      <Trash2 className="size-4 text-rose-500" />
+                      <Trash2 className="size-4" />
                     </Button>
                   </div>
 
                   {kids.length > 0 && (
-                    <div className="mt-3 ml-8 space-y-1.5 border-l-2 border-gm-border-soft pl-4">
+                    <div className="mt-4 ml-8 space-y-2 border-l-2 border-gm-border-soft pl-4">
                       {kids.map((kid) => (
-                        <div key={kid.id} className="flex items-center gap-2 text-sm">
-                          <ChevronRight className="size-3 text-muted-foreground" />
-                          <span className="font-mono text-[10px] text-muted-foreground w-6">
+                        <div key={kid.id} className="flex items-center gap-2 text-sm text-gm-text">
+                          <ChevronRight className="size-3 text-gm-muted" />
+                          <span className="font-mono text-[10px] text-gm-muted w-6">
                             #{kid.display_order}
                           </span>
                           <span className="flex-1">
                             {kid.title}
                             {!kid.is_active && (
-                              <span className="ml-2 text-[10px] uppercase bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
+                              <span className="ml-2 text-[10px] uppercase bg-gm-bg-deep border border-gm-border-soft text-gm-muted px-2 py-0.5 rounded-full">
                                 pasif
                               </span>
                             )}
                           </span>
-                          <span className="text-xs text-muted-foreground">{kid.url}</span>
+                          <span className="text-xs text-gm-muted">{kid.url}</span>
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
+                            className="rounded-full hover:bg-gm-surface/50 text-gm-text size-8"
                             onClick={() => {
                               setEditing(kid);
                               setOpen(true);
                             }}
                           >
-                            <Pencil className="size-3" />
+                            <Pencil className="size-3.5" />
                           </Button>
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
+                            className="rounded-full hover:bg-gm-error/10 text-gm-error size-8"
                             onClick={() => handleDelete(kid)}
                           >
-                            <Trash2 className="size-3 text-rose-500" />
+                            <Trash2 className="size-3.5" />
                           </Button>
                         </div>
                       ))}
@@ -698,6 +704,7 @@ function FooterTab({ locale }: { locale: string }) {
             setEditingSection(null);
             setSectionOpen(true);
           }}
+          className="h-12 rounded-full bg-gm-gold text-gm-bg hover:bg-gm-gold-light px-8 text-[10px] font-bold uppercase tracking-widest"
         >
           <Plus className="mr-2 size-4" />
           Yeni Bölüm
@@ -705,35 +712,36 @@ function FooterTab({ locale }: { locale: string }) {
       </div>
 
       {secLoading ? (
-        <div className="text-center py-12 text-muted-foreground text-sm">Yükleniyor…</div>
+        <div className="text-center py-12 text-gm-muted text-sm">Yükleniyor…</div>
       ) : sections.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground text-sm">
+        <div className="text-center py-12 text-gm-muted text-sm">
           Henüz bölüm yok. Üstten "Yeni Bölüm" ile başla.
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {sections.map((sec) => {
             const links = itemsBySection.get(sec.id) ?? [];
             return (
-              <Card key={sec.id} className="border-gm-border-soft">
-                <CardHeader className="pb-3 flex flex-row items-center gap-3">
-                  <span className="font-mono text-xs text-muted-foreground w-8">
+              <Card key={sec.id} className="overflow-hidden rounded-[24px] border-gm-border-soft bg-gm-surface/20 shadow-lg backdrop-blur-sm">
+                <CardHeader className="pb-3 flex flex-row items-center gap-3 border-b border-gm-border-soft/50 bg-gm-surface/10 px-6 py-4">
+                  <span className="font-mono text-xs text-gm-muted w-8">
                     #{sec.display_order}
                   </span>
                   <div className="flex-1">
-                    <CardTitle className="text-base">
-                      {sec.title || <em className="text-muted-foreground">başlıksız</em>}
+                    <CardTitle className="text-base text-gm-text font-serif">
+                      {sec.title || <em className="text-gm-muted">başlıksız</em>}
                       {!sec.is_active && (
-                        <span className="ml-2 text-[10px] uppercase bg-muted text-muted-foreground px-2 py-0.5 rounded">
+                        <span className="ml-2 text-[10px] uppercase bg-gm-bg-deep border border-gm-border-soft text-gm-muted px-2 py-0.5 rounded-full">
                           pasif
                         </span>
                       )}
                     </CardTitle>
-                    <p className="text-xs text-muted-foreground">slug: {sec.slug}</p>
+                    <p className="text-xs text-gm-muted mt-1">slug: {sec.slug}</p>
                   </div>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    className="rounded-full hover:bg-gm-surface/50 text-gm-text"
                     onClick={() => {
                       setEditingItem(null);
                       setDefaultSection(sec.id);
@@ -745,7 +753,8 @@ function FooterTab({ locale }: { locale: string }) {
                   </Button>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    className="rounded-full hover:bg-gm-surface/50 text-gm-text"
                     onClick={() => {
                       setEditingSection(sec);
                       setSectionOpen(true);
@@ -755,46 +764,49 @@ function FooterTab({ locale }: { locale: string }) {
                   </Button>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    className="rounded-full hover:bg-gm-error/10 text-gm-error"
                     onClick={() => handleDeleteSection(sec)}
                   >
-                    <Trash2 className="size-4 text-rose-500" />
+                    <Trash2 className="size-4" />
                   </Button>
                 </CardHeader>
                 {links.length > 0 && (
-                  <CardContent className="pt-0">
-                    <div className="space-y-1.5 border-l-2 border-gm-border-soft pl-4">
+                  <CardContent className="p-6">
+                    <div className="space-y-2 border-l-2 border-gm-border-soft pl-4">
                       {links.map((link) => (
-                        <div key={link.id} className="flex items-center gap-2 text-sm">
-                          <ChevronRight className="size-3 text-muted-foreground" />
-                          <span className="font-mono text-[10px] text-muted-foreground w-6">
+                        <div key={link.id} className="flex items-center gap-2 text-sm text-gm-text">
+                          <ChevronRight className="size-3 text-gm-muted" />
+                          <span className="font-mono text-[10px] text-gm-muted w-6">
                             #{link.display_order}
                           </span>
                           <span className="flex-1">
                             {link.title}
                             {!link.is_active && (
-                              <span className="ml-2 text-[10px] uppercase bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
+                              <span className="ml-2 text-[10px] uppercase bg-gm-bg-deep border border-gm-border-soft text-gm-muted px-2 py-0.5 rounded-full">
                                 pasif
                               </span>
                             )}
                           </span>
-                          <span className="text-xs text-muted-foreground">{link.url}</span>
+                          <span className="text-xs text-gm-muted">{link.url}</span>
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
+                            className="rounded-full hover:bg-gm-surface/50 text-gm-text size-8"
                             onClick={() => {
                               setEditingItem(link);
                               setItemOpen(true);
                             }}
                           >
-                            <Pencil className="size-3" />
+                            <Pencil className="size-3.5" />
                           </Button>
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
+                            className="rounded-full hover:bg-gm-error/10 text-gm-error size-8"
                             onClick={() => handleDeleteItem(link)}
                           >
-                            <Trash2 className="size-3 text-rose-500" />
+                            <Trash2 className="size-3.5" />
                           </Button>
                         </div>
                       ))}
@@ -806,34 +818,36 @@ function FooterTab({ locale }: { locale: string }) {
           })}
 
           {(itemsBySection.get('__none__') ?? []).length > 0 && (
-            <Card className="border-dashed">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-muted-foreground">
+            <Card className="overflow-hidden rounded-[24px] border-dashed border-gm-border-soft bg-gm-surface/10">
+              <CardHeader className="pb-3 border-b border-gm-border-soft/50 bg-gm-surface/5 px-6 py-4">
+                <CardTitle className="text-sm text-gm-muted font-serif">
                   Bölümsüz Linkler ({itemsBySection.get('__none__')!.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-1.5">
+              <CardContent className="p-6">
+                <div className="space-y-2">
                   {(itemsBySection.get('__none__') ?? []).map((link) => (
-                    <div key={link.id} className="flex items-center gap-2 text-sm">
+                    <div key={link.id} className="flex items-center gap-2 text-sm text-gm-text">
                       <span className="flex-1">{link.title}</span>
-                      <span className="text-xs text-muted-foreground">{link.url}</span>
+                      <span className="text-xs text-gm-muted">{link.url}</span>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
+                        className="rounded-full hover:bg-gm-surface/50 text-gm-text size-8"
                         onClick={() => {
                           setEditingItem(link);
                           setItemOpen(true);
                         }}
                       >
-                        <Pencil className="size-3" />
+                        <Pencil className="size-3.5" />
                       </Button>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
+                        className="rounded-full hover:bg-gm-error/10 text-gm-error size-8"
                         onClick={() => handleDeleteItem(link)}
                       >
-                        <Trash2 className="size-3 text-rose-500" />
+                        <Trash2 className="size-3.5" />
                       </Button>
                     </div>
                   ))}
@@ -872,24 +886,24 @@ export default function NavigationAdminPage() {
   const [locale, setLocale] = React.useState<string>('tr');
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 pb-12">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold italic text-gm-primary">
-            Navigasyon Yönetimi
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Üst menü (header) ve footer linklerini buradan yönet. Dropdown desteği var.
-          </p>
+    <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-gm-gold" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">Navigasyon & Menü</span>
+          </div>
+          <h1 className="font-serif text-4xl text-gm-text">Navigasyon Yönetimi</h1>
+          <p className="text-sm italic text-gm-muted">Üst menü (header) ve footer linklerini buradan yönet. Dropdown desteği var.</p>
         </div>
         <div className="w-44">
           <Select value={locale} onValueChange={setLocale}>
-            <SelectTrigger>
+            <SelectTrigger className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-6 text-gm-text">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="border-gm-border-soft bg-gm-bg-deep">
               {LOCALES.map((l) => (
-                <SelectItem key={l.value} value={l.value}>
+                <SelectItem key={l.value} value={l.value} className="text-gm-text hover:bg-gm-surface">
                   {l.label}
                 </SelectItem>
               ))}
@@ -898,15 +912,25 @@ export default function NavigationAdminPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="header">
-        <TabsList>
-          <TabsTrigger value="header">Header Menü</TabsTrigger>
-          <TabsTrigger value="footer">Footer Düzeni</TabsTrigger>
+      <Tabs defaultValue="header" className="space-y-6">
+        <TabsList className="flex w-fit flex-wrap gap-2 rounded-full border border-gm-border-soft bg-gm-surface/20 p-1.5 h-auto">
+          <TabsTrigger
+            value="header"
+            className="rounded-full px-7 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg data-[state=active]:shadow-gm-gold/20 text-gm-muted hover:text-gm-text"
+          >
+            Header Menü
+          </TabsTrigger>
+          <TabsTrigger
+            value="footer"
+            className="rounded-full px-7 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg data-[state=active]:shadow-gm-gold/20 text-gm-muted hover:text-gm-text"
+          >
+            Footer Düzeni
+          </TabsTrigger>
         </TabsList>
-        <TabsContent value="header" className="mt-6">
+        <TabsContent value="header" className="mt-0 outline-none">
           <HeaderMenuTab locale={locale} />
         </TabsContent>
-        <TabsContent value="footer" className="mt-6">
+        <TabsContent value="footer" className="mt-0 outline-none">
           <FooterTab locale={locale} />
         </TabsContent>
       </Tabs>

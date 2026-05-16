@@ -24,6 +24,16 @@ export function getPublicApiBase(): string {
     (process.env.API_BASE_URL || '').trim();
 
   const base = raw.replace(/\/+$/, '');
+  if (typeof window !== 'undefined' && /^https?:\/\//i.test(base)) {
+    const host = window.location.hostname;
+    if (['localhost', '127.0.0.1', '0.0.0.0'].includes(host)) {
+      try {
+        if (new URL(base).origin !== window.location.origin) return '/api';
+      } catch {
+        return '/api';
+      }
+    }
+  }
 
   // RTK calls usually go to "/api/...". Tolerate env that points to domain root.
   // base zaten /api veya /api/v1 ile bitiyorsa double-append yapma.
@@ -41,4 +51,3 @@ export async function fetchJsonNoStore<T>(url: string): Promise<T | null> {
     return null;
   }
 }
-

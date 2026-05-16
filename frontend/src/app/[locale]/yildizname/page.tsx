@@ -15,9 +15,10 @@ import {
 } from 'lucide-react';
 import { useReadYildiznameMutation } from '@/integrations/rtk/public/yildizname.public.endpoints';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 const fraunces = Fraunces({ subsets: ['latin'], style: 'italic' });
@@ -32,6 +33,8 @@ const LOADING_PHASES = [
 
 export default function YildiznamePage() {
   const router = useRouter();
+  const params = useParams<{ locale?: string }>();
+  const locale = typeof params?.locale === 'string' ? params.locale : 'tr';
   const [step, setStep] = useState<'intro' | 'name' | 'mother' | 'year' | 'loading'>('intro');
   const [formData, setFormData] = useState({ name: '', mother_name: '', birth_year: '' });
   const [loadingPhase, setLoadingPhase] = useState(0);
@@ -84,6 +87,8 @@ export default function YildiznamePage() {
   };
 
   return (
+    <>
+    <Banner title={locale === 'tr' ? 'Yıldızname' : 'Yildizname'} />
     <PageContainer className="min-h-screen bg-(--gm-bg-deep) relative overflow-hidden" verticalPadding="large">
       {/* Mystic Background */}
       <div className="absolute inset-0 pointer-events-none">
@@ -107,10 +112,10 @@ export default function YildiznamePage() {
                 <div className="w-24 h-24 bg-(--gm-gold)/10 rounded-[2.5rem] flex items-center justify-center mx-auto text-(--gm-gold) border border-(--gm-gold)/20 shadow-(--gm-shadow-gold)">
                    <Moon className="w-12 h-12" />
                 </div>
-                <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tighter`}>
+                <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tighter`}>
                   Yıldızname <br />
                   <span className="text-(--gm-gold)">Ebced Sırrı</span>
-                </h1>
+                </h2>
                 <p className={`${fraunces.className} text-(--gm-text-dim) text-xl max-w-[var(--gm-w-form)] mx-auto leading-relaxed`}>
                   İsmin ve anne adın, evrendeki sayısal titreşimindir. Kadim Ebced hesabı ile 28 Ay Menzili'ndeki yerini keşfet.
                 </p>
@@ -264,5 +269,6 @@ export default function YildiznamePage() {
         </AnimatePresence>
       </div>
     </PageContainer>
+    </>
   );
 }

@@ -119,11 +119,11 @@ function getMimeIcon(mime: string) {
 }
 
 function getMimeColor(mime: string): string {
-  if (mime.startsWith('image/')) return 'text-blue-600 dark:text-blue-400';
-  if (mime.startsWith('video/')) return 'text-purple-600 dark:text-purple-400';
-  if (mime.startsWith('audio/')) return 'text-green-600 dark:text-green-400';
-  if (mime.includes('pdf')) return 'text-red-600 dark:text-red-400';
-  return 'text-muted-foreground';
+  if (mime.startsWith('image/')) return 'text-blue-500';
+  if (mime.startsWith('video/')) return 'text-purple-500';
+  if (mime.startsWith('audio/')) return 'text-green-500';
+  if (mime.includes('pdf')) return 'text-rose-500';
+  return 'text-gm-muted';
 }
 
 function isImageMime(mime: string | null | undefined) {
@@ -275,65 +275,65 @@ export default function AdminStorageClient() {
 
   return (
     <>
-      <div className="space-y-6">
-        {/* Header */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="space-y-1.5">
-                <CardTitle>{t('list.title')}</CardTitle>
-                <CardDescription>
-                  {t('list.description')}
-                </CardDescription>
-              </div>
-              <div className="flex gap-2">
-                {hasSelection && (
-                  <Button
-                    variant="destructive"
-                    onClick={handleBulkDelete}
-                    disabled={busy}
-                    className="gap-2"
-                  >
-                    <Trash2 className="size-4" />
-                    {t('list.deleteSelected', { count: selectedIds.size })}
-                  </Button>
-                )}
-                <Button
-                  onClick={() => router.push('/admin/storage/new')}
-                  disabled={busy}
-                  className="gap-2"
-                >
-                  <Plus className="size-4" />
-                  {t('list.uploadButton')}
-                </Button>
-              </div>
+      <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Outside Page Header */}
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <span className="h-px w-8 bg-gm-gold" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">BULUT DEPOLAMA</span>
             </div>
-          </CardHeader>
+            <h1 className="font-serif text-4xl text-gm-text">{t('list.title')}</h1>
+            <p className="text-sm italic text-gm-muted">{t('list.description')}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {hasSelection && (
+              <Button
+                variant="destructive"
+                onClick={handleBulkDelete}
+                disabled={busy}
+                className="h-12 rounded-full px-6 text-xs font-bold uppercase tracking-widest shadow-lg shadow-red-500/10 border-transparent gap-2"
+              >
+                <Trash2 className="size-4" />
+                {t('list.deleteSelected', { count: selectedIds.size })}
+              </Button>
+            )}
+            <Button
+              onClick={() => router.push('/admin/storage/new')}
+              disabled={busy}
+              className="h-12 rounded-full px-8 text-xs font-bold uppercase tracking-widest bg-gm-gold text-gm-bg hover:bg-gm-gold/80 shadow-lg shadow-gm-gold/10 border-transparent gap-2"
+            >
+              <Plus className="size-4" />
+              {t('list.uploadButton')}
+            </Button>
+          </div>
+        </div>
 
-          <CardContent className="space-y-4">
-            {/* Filters */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Filters Card */}
+        <Card className="overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-surface/20 shadow-xl backdrop-blur-sm">
+          <CardContent className="p-8 space-y-6">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {/* Search */}
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="search" className="text-sm">
+                <Label htmlFor="search" className="text-[10px] font-bold uppercase tracking-widest text-gm-gold">
                   {t('list.searchLabel')}
                 </Label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-gm-muted" />
                   <Input
                     id="search"
                     placeholder={t('list.searchPlaceholder')}
                     value={filters.search}
                     onChange={(e) => handleSearch(e.target.value)}
                     disabled={busy}
-                    className="pl-9"
+                    className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 pl-11 pr-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
               </div>
 
               {/* Bucket */}
               <div className="space-y-2">
-                <Label htmlFor="bucket" className="text-sm">
+                <Label htmlFor="bucket" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">
                   {t('list.bucketLabel')}
                 </Label>
                 <Select
@@ -341,10 +341,10 @@ export default function AdminStorageClient() {
                   onValueChange={handleBucketChange}
                   disabled={busy}
                 >
-                  <SelectTrigger id="bucket">
+                  <SelectTrigger id="bucket" className="h-11 rounded-full border-gm-border-soft bg-gm-bg-deep/30 px-5 text-gm-text focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-gm-surface text-gm-text border-gm-border-soft">
                     <SelectItem value="all">{t('list.allOption')}</SelectItem>
                     {buckets.map((b) => (
                       <SelectItem key={b} value={b}>
@@ -357,7 +357,7 @@ export default function AdminStorageClient() {
 
               {/* Folder */}
               <div className="space-y-2">
-                <Label htmlFor="folder" className="text-sm">
+                <Label htmlFor="folder" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">
                   <div className="flex items-center gap-1.5">
                     <Folder className="size-3.5" />
                     {t('list.folderLabel')}
@@ -368,10 +368,10 @@ export default function AdminStorageClient() {
                   onValueChange={handleFolderChange}
                   disabled={busy}
                 >
-                  <SelectTrigger id="folder">
+                  <SelectTrigger id="folder" className="h-11 rounded-full border-gm-border-soft bg-gm-bg-deep/30 px-5 text-gm-text focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-gm-surface text-gm-text border-gm-border-soft">
                     <SelectItem value="all">{t('list.allOption')}</SelectItem>
                     <SelectItem value={ROOT_FOLDER_VALUE}>{t('list.rootFolder')}</SelectItem>
                     {folders.map((f) => (
@@ -384,10 +384,10 @@ export default function AdminStorageClient() {
               </div>
             </div>
 
-            {/* MIME Filter */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="space-y-2">
-                <Label htmlFor="mime" className="text-sm">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+              {/* MIME Filter */}
+              <div className="space-y-2 w-full max-w-xs">
+                <Label htmlFor="mime" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">
                   {t('list.fileTypeLabel')}
                 </Label>
                 <Select
@@ -395,10 +395,10 @@ export default function AdminStorageClient() {
                   onValueChange={handleMimeChange}
                   disabled={busy}
                 >
-                  <SelectTrigger id="mime">
+                  <SelectTrigger id="mime" className="h-11 rounded-full border-gm-border-soft bg-gm-bg-deep/30 px-5 text-gm-text focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-gm-surface text-gm-text border-gm-border-soft">
                     <SelectItem value="all">{t('list.allOption')}</SelectItem>
                     <SelectItem value="image/">{t('list.imageType')}</SelectItem>
                     <SelectItem value="video/">{t('list.videoType')}</SelectItem>
@@ -408,210 +408,216 @@ export default function AdminStorageClient() {
                 </Select>
               </div>
 
-              <div className="flex items-end lg:col-span-3">
+              <div className="flex flex-wrap items-center gap-3 justify-between sm:justify-end w-full">
+                {/* Info Text */}
+                <div className="text-xs text-gm-muted flex flex-col items-start gap-1">
+                  <span>
+                    {t('list.totalFiles', { total })}
+                    {hasSelection && ` • ${t('list.selectedCount', { count: selectedIds.size })}`}
+                  </span>
+                  {isFetching && (
+                    <div className="flex items-center gap-2 text-gm-gold">
+                      <Loader2 className="size-3.5 animate-spin" />
+                      <span className="font-semibold">{t('list.loading')}</span>
+                    </div>
+                  )}
+                </div>
+
                 <Button
                   variant="outline"
                   onClick={() => refetch()}
                   disabled={busy}
-                  className="gap-2"
+                  className="h-11 rounded-full border-gm-border-soft bg-gm-surface/50 px-6 text-[10px] font-bold uppercase tracking-widest text-gm-text hover:bg-gm-surface/80 gap-2"
                 >
                   <RefreshCcw
-                    className={cn('size-4', isFetching && 'animate-spin')}
+                    className={cn('size-4 text-gm-gold', isFetching && 'animate-spin')}
                   />
                   {t('list.refreshButton')}
                 </Button>
               </div>
             </div>
-
-            {/* Info */}
-            <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-              <span>
-                {t('list.totalFiles', { total })}
-                {hasSelection && ` • ${t('list.selectedCount', { count: selectedIds.size })}`}
-              </span>
-              {isFetching && (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="size-4 animate-spin" />
-                  <span>{t('list.loading')}</span>
-                </div>
-              )}
-            </div>
           </CardContent>
         </Card>
 
         {/* Table (Desktop) */}
-        <Card className="hidden xl:block">
+        <Card className="hidden xl:block overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-surface/20 shadow-xl backdrop-blur-sm">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={handleSelectAll}
-                      disabled={busy}
-                    >
-                      {selectedIds.size === items.length && items.length > 0 ? (
-                        <CheckSquare className="size-4" />
-                      ) : (
-                        <Square className="size-4" />
-                      )}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="w-16">{t('list.previewColumn')}</TableHead>
-                  <TableHead>{t('list.fileColumn')}</TableHead>
-                  <TableHead className="w-32">{t('list.bucketColumn')}</TableHead>
-                  <TableHead className="w-32">{t('list.folderColumn')}</TableHead>
-                  <TableHead className="w-32">{t('list.typeColumn')}</TableHead>
-                  <TableHead className="w-24 text-right">{t('list.sizeColumn')}</TableHead>
-                  <TableHead className="w-44">{t('list.dateColumn')}</TableHead>
-                  <TableHead className="w-40 text-right">{t('list.actionsColumn')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Loader2 className="size-5 animate-spin" />
-                        <span>{t('list.loading')}</span>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-gm-surface/40">
+                  <TableRow className="border-gm-border-soft hover:bg-transparent">
+                    <TableHead className="w-16 px-6 py-4">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleSelectAll}
+                        disabled={busy}
+                        className="h-9 w-9 rounded-full text-gm-muted hover:bg-gm-surface/20"
+                      >
+                        {selectedIds.size === items.length && items.length > 0 ? (
+                          <CheckSquare className="size-4 text-gm-gold" />
+                        ) : (
+                          <Square className="size-4" />
+                        )}
+                      </Button>
+                    </TableHead>
+                    <TableHead className="w-20 py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.previewColumn')}</TableHead>
+                    <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.fileColumn')}</TableHead>
+                    <TableHead className="w-36 py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.bucketColumn')}</TableHead>
+                    <TableHead className="w-36 py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.folderColumn')}</TableHead>
+                    <TableHead className="w-32 py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.typeColumn')}</TableHead>
+                    <TableHead className="w-28 py-4 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.sizeColumn')}</TableHead>
+                    <TableHead className="w-48 py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.dateColumn')}</TableHead>
+                    <TableHead className="w-48 px-6 py-4 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.actionsColumn')}</TableHead>
                   </TableRow>
-                ) : items.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center">
-                      {t('list.noFiles')}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  items.map((item) => {
-                    const Icon = getMimeIcon(item.mime);
-                    const colorClass = getMimeColor(item.mime);
-                    const isSelected = selectedIds.has(item.id);
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow className="border-gm-border-soft">
+                      <TableCell colSpan={9} className="py-24 text-center">
+                        <div className="flex items-center justify-center gap-3 text-gm-gold font-serif italic text-lg">
+                          <Loader2 className="size-6 animate-spin" />
+                          <span>{t('list.loading')}</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : items.length === 0 ? (
+                    <TableRow className="border-gm-border-soft">
+                      <TableCell colSpan={9} className="py-24 text-center font-serif italic text-gm-muted">
+                        {t('list.noFiles')}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    items.map((item) => {
+                      const Icon = getMimeIcon(item.mime);
+                      const colorClass = getMimeColor(item.mime);
+                      const isSelected = selectedIds.has(item.id);
 
-                    return (
-                      <TableRow key={item.id} className={cn(isSelected && 'bg-muted/50')}>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => handleSelectItem(item.id)}
-                            disabled={busy}
-                          >
-                            {isSelected ? (
-                              <CheckSquare className="size-4" />
+                      return (
+                        <TableRow key={item.id} className={cn('border-gm-border-soft hover:bg-gm-surface/40 transition-colors', isSelected && 'bg-gm-gold/5')}>
+                          <TableCell className="px-6 py-4">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleSelectItem(item.id)}
+                              disabled={busy}
+                              className="h-9 w-9 rounded-full text-gm-muted hover:bg-gm-surface/20"
+                            >
+                              {isSelected ? (
+                                <CheckSquare className="size-4 text-gm-gold" />
+                              ) : (
+                                <Square className="size-4" />
+                              )}
+                            </Button>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            {item.url && isImageMime(item.mime) ? (
+                              <img
+                                src={item.url}
+                                alt={item.name}
+                                className="size-11 rounded-xl object-cover border border-gm-border-soft/60 bg-gm-bg-deep/50 shadow-md"
+                              />
                             ) : (
-                              <Square className="size-4" />
-                            )}
-                          </Button>
-                        </TableCell>
-                        <TableCell>
-                          {item.url && isImageMime(item.mime) ? (
-                            <img
-                              src={item.url}
-                              alt={item.name}
-                              className="size-10 rounded object-cover"
-                            />
-                          ) : (
-                            <div className="flex size-10 items-center justify-center rounded bg-muted">
-                              <Icon className={cn('size-5', colorClass)} />
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="font-medium">{truncate(item.name, 30)}</div>
-                            {item.path && (
-                              <div className="text-xs text-muted-foreground">
-                                {truncate(item.path, 40)}
+                              <div className="flex size-11 items-center justify-center rounded-xl bg-gm-bg-deep/50 border border-gm-border-soft/60 shadow-inner">
+                                <Icon className={cn('size-5', colorClass)} />
                               </div>
                             )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{item.bucket}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          {item.folder ? (
-                            <div className="flex items-center gap-1.5 text-xs">
-                              <Folder className="size-3" />
-                              {item.folder}
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <div className="space-y-1 pr-4">
+                              <div className="font-bold text-gm-text text-sm break-all">{truncate(item.name, 35)}</div>
+                              {item.path && (
+                                <div className="text-[11px] font-mono text-gm-muted break-all">
+                                  {truncate(item.path, 50)}
+                                </div>
+                              )}
                             </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-xs text-muted-foreground">
-                            {item.mime.split('/')[1] || item.mime}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right text-sm">
-                          {formatBytes(item.size)}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          <div>{fmtDate(item.created_at)}</div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {item.url && (
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <Badge variant="outline" className="rounded-full px-2.5 py-0.5 border-gm-border-soft/80 text-[10px] text-gm-text bg-gm-surface/30 font-medium">
+                              {item.bucket}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            {item.folder ? (
+                              <div className="flex items-center gap-1.5 text-xs text-gm-text font-medium">
+                                <Folder className="size-3.5 text-gm-gold" />
+                                {item.folder}
+                              </div>
+                            ) : (
+                              <span className="text-gm-muted/65 italic text-xs">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <span className="text-xs font-mono text-gm-muted bg-gm-bg-deep/40 px-2 py-0.5 rounded border border-gm-border-soft/40">
+                              {item.mime.split('/')[1] || item.mime}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-4 text-right font-semibold text-gm-text text-xs">
+                            {formatBytes(item.size)}
+                          </TableCell>
+                          <TableCell className="py-4 text-xs text-gm-muted">
+                            <div>{fmtDate(item.created_at)}</div>
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {item.url && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  asChild
+                                  title={t('list.downloadTitle')}
+                                  className="h-9 w-9 rounded-full hover:bg-gm-surface/20 text-gm-muted"
+                                >
+                                  <a href={item.url} download target="_blank" rel="noopener noreferrer">
+                                    <Download className="size-4 text-gm-gold" />
+                                  </a>
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
-                                size="icon-sm"
-                                asChild
-                                title={t('list.downloadTitle')}
+                                size="icon"
+                                onClick={() => handleEdit(item)}
+                                disabled={busy}
+                                className="h-9 w-9 rounded-full hover:bg-gm-primary/10 hover:text-gm-primary text-gm-muted"
                               >
-                                <a href={item.url} download target="_blank" rel="noopener noreferrer">
-                                  <Download className="size-3.5" />
-                                </a>
+                                <Pencil className="size-4" />
                               </Button>
-                            )}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(item)}
-                              disabled={busy}
-                              className="gap-2"
-                            >
-                              <Pencil className="size-3.5" />
-                              {t('list.editButton')}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteClick(item)}
-                              disabled={busy}
-                              className="gap-2"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteClick(item)}
+                                disabled={busy}
+                                className="h-9 w-9 rounded-full text-gm-error hover:bg-gm-error/10 hover:text-gm-error"
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 
         {/* Cards (Mobile) */}
         <div className="space-y-4 xl:hidden">
           {isLoading ? (
-            <Card>
-              <CardContent className="flex items-center justify-center py-12">
-                <div className="flex items-center gap-2">
+            <Card className="rounded-[24px] border-gm-border-soft bg-gm-surface/20 backdrop-blur-sm">
+              <CardContent className="flex items-center justify-center py-16">
+                <div className="flex items-center gap-2 text-gm-gold">
                   <Loader2 className="size-5 animate-spin" />
                   <span>{t('list.loading')}</span>
                 </div>
               </CardContent>
             </Card>
           ) : items.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
+            <Card className="rounded-[24px] border-gm-border-soft bg-gm-surface/20 backdrop-blur-sm">
+              <CardContent className="py-16 text-center text-gm-muted italic font-serif">
                 {t('list.noFiles')}
               </CardContent>
             </Card>
@@ -622,18 +628,19 @@ export default function AdminStorageClient() {
               const isSelected = selectedIds.has(item.id);
 
               return (
-                <Card key={item.id} className={cn(isSelected && 'ring-2 ring-primary')}>
+                <Card key={item.id} className={cn('overflow-hidden rounded-[24px] border-gm-border-soft bg-gm-surface/20 shadow-lg backdrop-blur-sm transition-all', isSelected && 'ring-2 ring-gm-gold')}>
                   <CardContent className="space-y-4 pt-6">
                     {/* Preview & Selection */}
                     <div className="flex items-start gap-4">
                       <Button
                         variant="ghost"
-                        size="icon-sm"
+                        size="icon"
                         onClick={() => handleSelectItem(item.id)}
                         disabled={busy}
+                        className="h-9 w-9 rounded-full text-gm-muted hover:bg-gm-surface/20"
                       >
                         {isSelected ? (
-                          <CheckSquare className="size-4" />
+                          <CheckSquare className="size-4 text-gm-gold" />
                         ) : (
                           <Square className="size-4" />
                         )}
@@ -643,33 +650,35 @@ export default function AdminStorageClient() {
                         <img
                           src={item.url}
                           alt={item.name}
-                          className="size-20 rounded object-cover"
+                          className="size-20 rounded-xl object-cover border border-gm-border-soft shadow"
                         />
                       ) : (
-                        <div className="flex size-20 items-center justify-center rounded bg-muted">
+                        <div className="flex size-20 items-center justify-center rounded-xl bg-gm-bg-deep border border-gm-border-soft shadow-inner">
                           <Icon className={cn('size-8', colorClass)} />
                         </div>
                       )}
 
                       <div className="flex-1 space-y-1">
-                        <h3 className="font-semibold">{item.name}</h3>
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline">{item.bucket}</Badge>
+                        <h3 className="font-bold text-gm-text text-sm">{item.name}</h3>
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          <Badge variant="outline" className="rounded-full px-2 py-0 border-gm-border-soft/60 text-[9px] text-gm-text bg-gm-surface/30">
+                            {item.bucket}
+                          </Badge>
                           {item.folder && (
-                            <Badge variant="secondary">
-                              <Folder className="size-3" />
+                            <Badge variant="secondary" className="rounded-full px-2 py-0 border-transparent text-[9px] bg-gm-gold/10 text-gm-gold">
+                              <Folder className="size-2.5 mr-1 inline" />
                               {item.folder}
                             </Badge>
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-[11px] text-gm-muted">
                           {item.mime.split('/')[1]} • {formatBytes(item.size)}
                         </div>
                       </div>
                     </div>
 
                     {/* Date */}
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-[11px] text-gm-muted/80 pl-2">
                       {fmtDate(item.created_at)}
                     </div>
 
@@ -680,10 +689,10 @@ export default function AdminStorageClient() {
                           variant="outline"
                           size="sm"
                           asChild
-                          className="flex-1 gap-2"
+                          className="flex-1 h-10 rounded-full border-gm-border-soft bg-gm-surface/50 text-[10px] font-bold uppercase tracking-widest text-gm-text hover:bg-gm-surface/80 gap-2"
                         >
                           <a href={item.url} download target="_blank" rel="noopener noreferrer">
-                            <Download className="size-3.5" />
+                            <Download className="size-3.5 text-gm-gold" />
                             {t('list.downloadTitle')}
                           </a>
                         </Button>
@@ -693,9 +702,9 @@ export default function AdminStorageClient() {
                         size="sm"
                         onClick={() => handleEdit(item)}
                         disabled={busy}
-                        className="flex-1 gap-2"
+                        className="flex-1 h-10 rounded-full border-gm-border-soft bg-gm-surface/50 text-[10px] font-bold uppercase tracking-widest text-gm-text hover:bg-gm-surface/80 gap-2"
                       >
-                        <Pencil className="size-3.5" />
+                        <Pencil className="size-3.5 text-gm-primary" />
                         {t('list.editButton')}
                       </Button>
                       <Button
@@ -703,7 +712,7 @@ export default function AdminStorageClient() {
                         size="sm"
                         onClick={() => handleDeleteClick(item)}
                         disabled={busy}
-                        className="gap-2"
+                        className="h-10 w-10 rounded-full border-gm-border-soft bg-gm-surface/50 text-gm-error hover:bg-gm-error/10"
                       >
                         <Trash2 className="size-3.5" />
                       </Button>
@@ -718,16 +727,16 @@ export default function AdminStorageClient() {
 
       {/* Delete Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-3xl border-gm-border-soft bg-gm-surface shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('list.deleteConfirmTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="font-serif text-xl text-gm-text">{t('list.deleteConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-gm-muted/80">
               {t('list.deleteConfirmDescription', { name: itemToDelete?.name || t('list.defaultFileName') })}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('list.cancelButton')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>{t('list.deleteButton')}</AlertDialogAction>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="h-11 rounded-full border-gm-border-soft bg-gm-surface/50 text-gm-text hover:bg-gm-surface">{t('list.cancelButton')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="h-11 rounded-full bg-red-500 hover:bg-red-600 text-white font-semibold">{t('list.deleteButton')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

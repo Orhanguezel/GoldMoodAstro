@@ -18,6 +18,7 @@
     "build:admin": "bun run --cwd admin_panel build",
     "build:frontend": "bun run --cwd frontend build",
     "check:i18n": "bun run scripts/check-mobile-i18n.ts",
+    "relax:generate-stems": "bun run scripts/generate-relax-stems.ts",
     "db:seed": "bun run --cwd backend db:seed",
     "typecheck": "bun run --cwd backend typecheck && bun run --cwd admin_panel typecheck"
   }

@@ -59,8 +59,9 @@ const nextConfig = {
   // Prod'da Nginx aynı yönlendirmeyi /uploads location bloğuyla yapar.
   async rewrites() {
     // Strip trailing /api/v1 or /api so we hit backend's static /uploads handler directly.
-    const backendUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/api(\/v\d+)?\/?$/, '');
-    return [
+    const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/+$/, '');
+    const backendUrl = apiBase.replace(/\/api(\/v\d+)?\/?$/, '');
+    const rewrites = [
       // /about artık gerçek route'a sahip (app/[locale]/about) — rewrite KALDIRILDI.
       // /hakkimizda → kanonik /about'a yönlendir (eski alias).
       { source: '/:locale/hakkimizda', destination: '/:locale/about' },
@@ -73,9 +74,16 @@ const nextConfig = {
       { source: '/:locale/popular', destination: '/:locale?section=consultants_popular' },
       { source: '/:locale/trust', destination: '/:locale?section=trust' },
       { source: '/:locale/privacy', destination: '/:locale?section=trust' },
-      { source: '/:locale/gizlilik', destination: '/:locale?section=trust' },
       { source: '/uploads/:path*', destination: `${backendUrl}/uploads/:path*` },
     ];
+
+    // Local dev can point server-side reads at the live API, but browser-side
+    // requests must stay same-origin to avoid live CORS blocking localhost.
+    if (process.env.NODE_ENV !== 'production' && /^https?:\/\//i.test(apiBase)) {
+      rewrites.unshift({ source: '/api/:path*', destination: `${apiBase}/:path*` });
+    }
+
+    return rewrites;
   },
 
   async headers() {
@@ -96,7 +104,7 @@ const nextConfig = {
         headers: staticContentCache,
       },
       {
-        source: '/:locale(tr|en|de)/:page(about|blog|burclar|sinastri|tarot|numeroloji|yildizname|birth-chart|buyuk-uclu|big-three|burcunu-ogren|yukselen-burc-hesaplayici|unluler-ve-burclari|faqs|editorial-policy|contact|pricing)',
+        source: '/:locale(tr|en|de)/:page(about|blog|burclar|sinastri|tarot|numeroloji|yildizname|birth-chart|buyuk-uclu|big-three|burcunu-ogren|yukselen-burc-hesaplayici|unluler-ve-burclari|faqs|editorial-policy|contact|pricing|gizlilik|kvkk|kullanim-sartlari|cerez-politikasi|privacy-policy|privacy-notice|terms|cookie-policy|legal-notice)',
         headers: staticContentCache,
       },
       {

@@ -124,7 +124,7 @@ export default function CoffeeHub() {
               <div className="w-24 h-24 bg-(--gm-gold)/10 rounded-[2.5rem] flex items-center justify-center mx-auto text-(--gm-gold) border border-(--gm-gold)/20 shadow-(--gm-shadow-glow)">
                 <Coffee className="w-12 h-12" />
               </div>
-              <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight`}>Geleneksel Kahve Falı</h1>
+              <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight`}>Geleneksel Kahve Falı</h2>
               <p className={`${fraunces.className} text-(--gm-text-dim) text-xl max-w-2xl mx-auto italic leading-relaxed opacity-80`}>
                 Fincanınızdaki semboller, yapay zekanın vizyonu ve kadim bilgelikle dile geliyor.
               </p>
@@ -334,7 +334,7 @@ export default function CoffeeHub() {
             className="space-y-16 py-10"
           >
              <div className="text-center space-y-8">
-              <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight leading-tight`}>Fincanın Dili</h1>
+              <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight leading-tight`}>Fincanın Dili</h2>
               
               <div className="flex flex-wrap justify-center gap-6">
                 {result.symbols.map((s: any, i: number) => (

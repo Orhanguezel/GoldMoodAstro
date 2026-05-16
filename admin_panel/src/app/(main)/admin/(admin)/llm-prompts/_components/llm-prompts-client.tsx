@@ -4,7 +4,7 @@ import * as React from 'react';
 import { 
   Bot, Plus, RefreshCcw, 
   Trash2, Pencil, Search,
-  Globe, Cpu, Zap, Activity
+  Cpu, Zap, Activity
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -21,6 +21,7 @@ import {
   useUpdateLlmPromptMutation,
   useDeleteLlmPromptMutation,
 } from '@/integrations/hooks';
+import { cn } from '@/lib/utils';
 
 export default function LlmPromptsClient() {
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -47,112 +48,136 @@ export default function LlmPromptsClient() {
     }
   };
 
+  const busy = query.isFetching;
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold italic font-display text-gm-primary">LLM Prompts</h1>
-          <p className="text-sm text-muted-foreground">Manage AI model configurations, prompts, and hyper-parameters.</p>
+    <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Outside Page Header */}
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-gm-gold" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">YAPAY ZEKA YÖNETİMİ</span>
+          </div>
+          <h1 className="font-serif text-4xl text-gm-text">LLM Prompts</h1>
+          <p className="text-sm italic text-gm-muted">Yapay zeka model yapılandırmalarını, prompt şablonlarını ve parametreleri yönetin.</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => query.refetch()} disabled={query.isFetching}>
-            <RefreshCcw className={`mr-2 size-4${query.isFetching ? ' animate-spin' : ''}`} />
-            Refresh
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => query.refetch()}
+            disabled={busy}
+            className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-text hover:bg-gm-surface/80"
+          >
+            <RefreshCcw className={cn("mr-2 size-4 text-gm-gold", query.isFetching && "animate-spin")} />
+            Yenile
           </Button>
-          <Button size="sm" asChild className="bg-gm-primary hover:bg-gm-primary-dark">
+          <Button 
+            size="sm" 
+            asChild 
+            className="h-12 rounded-full bg-gm-gold hover:bg-gm-gold/80 text-gm-bg px-8 text-[10px] font-bold uppercase tracking-widest border border-transparent shadow-lg shadow-gm-gold/10"
+          >
             <Link href="/admin/llm-prompts/new">
               <Plus className="mr-2 size-4" />
-              New Prompt
+              Yeni Prompt
             </Link>
           </Button>
         </div>
       </div>
 
+      {/* Filter / Search Bar */}
       <div className="flex items-center gap-2 max-w-sm">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-gm-muted" />
           <Input 
-            placeholder="Search by key or content..." 
-            className="pl-9 border-gm-border-soft"
+            placeholder="Prompt anahtarı veya içeriğe göre ara..." 
+            className="pl-11 h-11 rounded-full border-gm-border-soft bg-gm-surface/20 text-sm text-gm-text placeholder:text-gm-muted/60 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <Card className="border-gm-border-soft bg-gm-surface/50 backdrop-blur-sm">
+      {/* Main Glassmorphic Card & Table */}
+      <Card className="overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-surface/20 shadow-xl backdrop-blur-sm">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-gm-surface-high/50">
+            <TableHeader className="bg-gm-surface/40">
               <TableRow className="border-gm-border-soft hover:bg-transparent">
-                <TableHead className="w-12">Active</TableHead>
-                <TableHead>Key / Locale</TableHead>
-                <TableHead>Model / Provider</TableHead>
-                <TableHead>Parameters</TableHead>
-                <TableHead>Last Updated</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Aktif</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Anahtar / Dil</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Model / Sağlayıcı</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Parametreler</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Son Güncelleme</TableHead>
+                <TableHead className="px-8 py-6 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">İşlem</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {query.isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center">Loading...</TableCell>
+                <TableRow className="border-gm-border-soft">
+                  <TableCell colSpan={6} className="py-16 text-center text-sm text-gm-muted italic font-serif">
+                    Yükleniyor...
+                  </TableCell>
                 </TableRow>
               ) : query.data?.items.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">No prompt configurations found.</TableCell>
+                <TableRow className="border-gm-border-soft">
+                  <TableCell colSpan={6} className="py-16 text-center text-sm text-gm-muted italic font-serif">
+                    Prompt yapılandırması bulunamadı.
+                  </TableCell>
                 </TableRow>
               ) : (
                 query.data?.items.map((item) => (
-                  <TableRow key={item.id} className="border-gm-border-soft hover:bg-gm-surface-high/30 transition-colors">
-                    <TableCell>
+                  <TableRow key={item.id} className="border-gm-border-soft hover:bg-gm-surface/40 transition-colors">
+                    <TableCell className="px-8 py-5">
                       <Switch 
                         checked={item.is_active} 
                         onCheckedChange={() => handleToggleActive(item.id, item.is_active)}
+                        className="data-[state=checked]:bg-gm-gold"
                       />
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
+                    <TableCell className="py-5">
+                      <div className="flex flex-col gap-1.5">
                         <div className="font-bold text-gm-text flex items-center gap-2">
                           {item.key}
-                          <Badge variant="outline" className="text-[10px] uppercase border-gm-primary/30 text-gm-primary">
+                          <Badge variant="outline" className="rounded-full border-gm-primary/30 text-gm-primary bg-gm-primary/5 text-[9px] uppercase tracking-widest px-2.5 py-0.5">
                             {item.locale}
                           </Badge>
                         </div>
-                        <div className="text-xs text-gm-muted truncate max-w-[200px]">
-                          {item.notes || 'No notes provided'}
+                        <div className="text-xs text-gm-muted truncate max-w-[240px]">
+                          {item.notes || 'Açıklama belirtilmedi'}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
+                    <TableCell className="py-5">
+                      <div className="flex flex-col gap-1.5">
                         <div className="text-sm font-medium text-gm-text flex items-center gap-1.5">
-                          <Cpu className="size-3 text-gm-info" />
+                          <Cpu className="size-3.5 text-gm-info" />
                           {item.model}
                         </div>
-                        <Badge variant="secondary" className="w-fit text-[10px] bg-gm-bg-deep text-gm-text-dim border-gm-border-soft uppercase">
+                        <Badge variant="secondary" className="w-fit rounded-full text-[9px] bg-gm-bg-deep text-gm-text-dim border border-gm-border-soft uppercase tracking-widest px-2 py-0.5">
                           {item.provider}
                         </Badge>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-5">
                       <div className="flex flex-wrap gap-2">
-                        <div className="flex items-center gap-1 text-xs text-gm-text-dim">
-                          <Zap className="size-3 text-gm-gold" />
+                        <Badge variant="outline" className="rounded-full border-gm-gold/20 bg-gm-gold/5 text-gm-gold text-[9px] tracking-widest uppercase px-2.5 py-0.5 flex items-center gap-1">
+                          <Zap className="size-2.5" />
                           <span>T: {item.temperature}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-gm-text-dim">
-                          <Activity className="size-3 text-gm-success" />
+                        </Badge>
+                        <Badge variant="outline" className="rounded-full border-gm-success/20 bg-gm-success/5 text-gm-success text-[9px] tracking-widest uppercase px-2.5 py-0.5 flex items-center gap-1">
+                          <Activity className="size-2.5" />
                           <span>M: {item.max_tokens}</span>
-                        </div>
+                        </Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs text-gm-text-dim">
+                    <TableCell className="py-5 text-xs text-gm-text-dim">
                       {format(new Date(item.updated_at), 'dd MMM yyyy HH:mm')}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button asChild size="icon" variant="ghost" className="hover:bg-gm-primary/10 hover:text-gm-primary">
+                    <TableCell className="px-8 py-5 text-right">
+                      <div className="flex justify-end gap-1.5">
+                        <Button asChild size="icon" variant="ghost" className="h-9 w-9 rounded-full hover:bg-gm-primary/10 hover:text-gm-primary text-gm-muted">
                           <Link href={`/admin/llm-prompts/${item.id}`}>
                             <Pencil className="size-4" />
                           </Link>
@@ -160,7 +185,7 @@ export default function LlmPromptsClient() {
                         <Button 
                           size="icon" 
                           variant="ghost" 
-                          className="text-gm-error hover:bg-gm-error/10 hover:text-gm-error"
+                          className="h-9 w-9 rounded-full text-gm-error hover:bg-gm-error/10 hover:text-gm-error"
                           onClick={() => handleDelete(item.id)}
                         >
                           <Trash2 className="size-4" />

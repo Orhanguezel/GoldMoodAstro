@@ -21,6 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
 
 export default async function RisingCalculatorPage({ params }: Props) {
   const { locale } = await params;
@@ -28,7 +29,9 @@ export default async function RisingCalculatorPage({ params }: Props) {
   const isTr = locale === 'tr';
 
   return (
-    <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
+    <>
+      <Banner title={isTr ? 'Yükselen Burç Hesaplama' : 'Rising Sign Calculator'} />
+      <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <JsonLd
         id="rising-sign-speakable-schema"
         data={graph([
@@ -56,9 +59,9 @@ export default async function RisingCalculatorPage({ params }: Props) {
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-(--gm-gold)">
           {isTr ? 'Kısa Cevap' : 'Short Answer'}
         </p>
-        <h1 id="rising-sign-voice-answer" className="font-serif text-3xl text-(--gm-text) md:text-5xl">
+        <h2 id="rising-sign-voice-answer" className="font-serif text-3xl text-(--gm-text) md:text-5xl">
           {isTr ? 'Yükselen burç nasıl hesaplanır?' : 'How is the rising sign calculated?'}
-        </h1>
+        </h2>
         <p className="mx-auto mt-5 max-w-[var(--gm-w-narrow)] text-base leading-8 text-(--gm-text-dim) md:text-lg">
           {isTr
             ? 'Yükselen burç, doğum tarihi, doğum saati ve doğum yerinin birlikte hesaplanmasıyla bulunur. Doğum anında doğu ufkunda yükselen burcu gösterir ve kişinin dış dünyaya verdiği ilk izlenimi, davranış ritmini ve hayata yaklaşım tarzını anlamaya yardımcı olur.'
@@ -67,5 +70,6 @@ export default async function RisingCalculatorPage({ params }: Props) {
       </section>
       <RisingSignCalculator />
     </PageContainer>
+    </>
   );
 }

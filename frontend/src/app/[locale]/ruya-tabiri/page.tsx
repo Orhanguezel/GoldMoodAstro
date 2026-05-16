@@ -19,11 +19,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
 
-export default function DreamsPage() {
+export default async function DreamsPage({ params }: Props) {
+  const { locale } = await params;
+
   return (
-    <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
-      <DreamHub />
-    </PageContainer>
+    <>
+      <Banner title={locale === 'tr' ? 'Rüya Tabiri' : 'Dream Interpretation'} />
+      <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
+        <DreamHub />
+      </PageContainer>
+    </>
   );
 }

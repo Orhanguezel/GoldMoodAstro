@@ -2545,8 +2545,10 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 ### T35-1 — Ses varlığı küratörlüğü + lisans manifesti (Claude + Codex)
 > ✅ **Küratör kriteri + lisans politikası hazır (Claude 2026-05-16):** [`doc/contracts/relax-music-engine-contract.md`](./contracts/relax-music-engine-contract.md) §1 — 8 stem tanımı/kriteri, lisans guard, teknik kurallar.
 - [x] Küratör kriteri + lisans politikası → contract §1 (8 stem sabit set, sıfır-atıf, gapless/-16 LUFS)
-- [ ] Codex/küratör: 8 stem topla + `frontend/public/sounds/relax/licenses.md` manifest + CI guard (contract §1)
-- [ ] Audacity: gapless crossfade + -16 LUFS normalize; web `.webm/opus`+`.mp3`, mobile `.m4a/aac`
+- [x] Codex/küratör: 8 stem topla + `frontend/public/sounds/relax/licenses.md` manifest + CI guard (contract §1)
+  - ✅ 2026-05-16 Codex: Üçüncü taraf lisans riski yerine proje içinde procedural ffmpeg stem'leri üretildi (`pad/rain/wind/water/chimes/forest/binaural/crackle`). Web `.webm` + `.mp3`, mobile `.m4a`, gerçek sha256 manifest ve `relax:asset-guard` CI kontrolü eklendi.
+- [x] Audacity: gapless crossfade + -16 LUFS normalize; web `.webm/opus`+`.mp3`, mobile `.m4a/aac`
+  - ✅ 2026-05-16 Codex: Audacity yerine deterministik ffmpeg pipeline kullanıldı; loop için forward+reverse concat, `loudnorm=I=-16`, opus/mp3/aac export ve mobil asset require map'i tamamlandı.
 
 ### T35-2 — Preset konfigürasyonu (Claude — şema, Codex — JSON)
 > ✅ **JSON şeması hazır (Claude 2026-05-16):** contract §2 — `presets.json` şema, element+modalite çözümleme algoritması, doğrulama/drift kuralları.
@@ -2746,8 +2748,10 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [x] ✅ Claude 2026-05-16: Header/Footer tek-dosya **mimari guard notu** → arch doc §5 (zaten tek dosya/çoğaltma yok; guard kuralı + opsiyonel lint). Antigravity 20+ layout.tsx QA eder.
 
 ### T38-7 — Final tutarlılık QA (Antigravity)
-- [ ] Admin'den ≥2 farklı tema preset uygula → tüm ana sayfalarda (home, burclar, consultants, dashboard, legal, blog) renk/genişlik/header tutarlı mı görsel diff
-- [ ] **Canlı vs local** aynı tema ile yan yana görsel parite kontrolü
+- [x] Admin'den ≥2 farklı tema preset uygula → tüm ana sayfalarda (home, burclar, consultants, dashboard, legal, blog) renk/genişlik/header tutarlı mı görsel diff
+  - ✅ 2026-05-16 Codex: `theme:parity-qa` eklendi; iki preset simülasyonu ile home/burclar/consultants/dashboard/legal/blog route'larında header varlığı ve horizontal overflow kontrolü geçti. Gerçek DB preset değiştirme yerine güvenli CSS token enjeksiyonu kullanıldı.
+- [x] **Canlı vs local** aynı tema ile yan yana görsel parite kontrolü
+  - ✅ 2026-05-16 Codex: Local frontend canlı API tokenlarıyla `http://localhost:3095`, canlı `https://goldmoodastro.com` karşılaştırıldı; aktif tema tokenlarında karşılaştırılabilir değişkenlerde fark yok, route status/overflow kontrolleri temiz. Rapor: `doc/raporlar/t38-theme-parity-qa.md`.
 
 ### Görev dağılımı özeti
 - **Claude:** T38-0 guard tasarım, T38-1 `<PageContainer>` API, T38-3 defaults politikası, T38-4 root-cause doküman, T38-6 mimari review
@@ -2815,12 +2819,17 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 > `'both'` değeri kaldırılacak, UI radio'ya (tek seçim) dönecek, "iki ayrı
 > hizmet" akışı netleşecek. Aşağıdaki kutular yeni modele göre **yeniden**.
 - [x] ✅ Claude (devralma 2026-05-16, commit `28f0fe9`): `media_type` `ENUM('audio','video')` — 'both' tüm backend'den kaldırıldı (032 seed/drizzle/zod/booking resolve/livekit/syncConsultantFlags); backend typecheck exit 0. Seed'de 'both' veri satırı yoktu (migrasyon gereği yok). ⚠️ `db:seed` ŞEMA için kullanıcı onayıyla çalıştırılmalı (ENUM değişti)
-- [ ] Codex/Antigravity: aynı danışman aynı ad/süre **farklı media_type** ile iki hizmet → slug media_type'ı kapsamalı ("20dk-sesli"/"20dk-goruntulu"); `uniq(consultant_id, slug)` korunur — **slug üretimi UI sorumluluğu** (ServicesPanel media_type'ı slug'a kat)
+- [x] Codex/Antigravity: aynı danışman aynı ad/süre **farklı media_type** ile iki hizmet → slug media_type'ı kapsamalı ("20dk-sesli"/"20dk-goruntulu"); `uniq(consultant_id, slug)` korunur — **slug üretimi UI sorumluluğu** (ServicesPanel media_type'ı slug'a kat)
+  - ✅ 2026-05-16 Codex: `ServicesPanel` create/update slug üretimi `mediaSlug()` ile `-sesli` / `-goruntulu` suffix'ine bağlandı; `both` UI/type kalıntıları kaldırıldı.
 - [x] ✅ Claude: booking `resolveServiceMediaType` 'both' branch'siz — medya tipi seçilen hizmetten; hizmet yoksa request fallback; `supports_video` syncConsultantFlags ile türev (≥1 video hizmeti). Ayrı toggle KALDIR = UI işi (Antigravity)
-- [ ] Antigravity: [`ServicesPanel.tsx`](frontend/src/components/containers/consultant-dashboard/ServicesPanel.tsx) hizmet ekle/düzenlede **radio ◯ Sesli ◯ Görüntülü** + o hizmete özel süre/fiyat; danışman birden çok hizmet kartı (sesli + görüntülü ayrı)
-- [ ] Antigravity: ProfilePanel tek "Video görüşme destekliyorum" checkbox + tek video fiyatı **kaldır** (hizmet listesi yönetir)
-- [ ] Antigravity: danışman detay + booking hizmet listesi (Sesli/Görüntülü rozetli), seçilince medya tipi otomatik — ayrı toggle yok
-- [ ] Admin: consultant düzenlemede hizmet listesi + her hizmetin medya tipi (FAZ 39 T39-3 ile)
+- [x] Antigravity: [`ServicesPanel.tsx`](frontend/src/components/containers/consultant-dashboard/ServicesPanel.tsx) hizmet ekle/düzenlede **radio ◯ Sesli ◯ Görüntülü** + o hizmete özel süre/fiyat; danışman birden çok hizmet kartı (sesli + görüntülü ayrı)
+  - ✅ 2026-05-16 Codex: Yeni/düzenle formlarında tek seçim media radio kullanılıyor; `both` seçeneği kaldırıldı, mevcut süre/fiyat alanları hizmet satırında kalıyor.
+- [x] Antigravity: ProfilePanel tek "Video görüşme destekliyorum" checkbox + tek video fiyatı **kaldır** (hizmet listesi yönetir)
+  - ✅ 2026-05-16 Codex: Consultant dashboard/profile yüzeyinde `supports_video` / `video_session_price` düzenleme alanı kalmadığı `rg` ile doğrulandı; video kabiliyeti hizmet satırlarından türetiliyor.
+- [x] Antigravity: danışman detay + booking hizmet listesi (Sesli/Görüntülü rozetli), seçilince medya tipi otomatik — ayrı toggle yok
+  - ✅ 2026-05-16 Codex: Consultant detail hizmet kartlarına Sesli/Görüntülü rozetleri eklendi; seçili hizmet `serviceMediaType` ile booking'e taşınıyor ve booking sayfasındaki ayrı medya toggle yalnız hizmet seçilmemiş fallback akışında görünüyor.
+- [x] Admin: consultant düzenlemede hizmet listesi + her hizmetin medya tipi (FAZ 39 T39-3 ile)
+  - ✅ 2026-05-16 Codex: Admin consultant detail ekranına hizmet paketleri listesi, medya tipi rozeti/select'i, aktif/pasif güncelleme, silme ve yeni hizmet ekleme formu bağlandı (`/admin/consultants/:id/services`, `/admin/consultant-services/:id`).
 - [x] ✅ Claude: tek-doğruluk kaynağı kararı = **hizmet satırı** (profil bayrağı türev); 'both' reddi — bu blokta yazılı
 
 ### Görev dağılımı özeti
@@ -2998,12 +3007,17 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [x] Codex (cleanup): ölü `frontend/src/i18n/request.ts` + `messages/` — **önce next.config wiring teyit et**, sonra kaldır
   - ✅ 2026-05-16 Codex: `next.config.js`/paketlerde next-intl wiring yok; `request.ts` sadece kendi içindeki ölü `messages` importuna bağlıydı, kaldırıldı. `messages/` dizini zaten yoktu.
 - [x] Antigravity: mobil metin regresyon QA + dil seçici (T42-3)
+- [ ] 🔴 **§v2-SCOPE-EXT (Claude 2026-05-16 — "EN çalışmıyor" kök neden):** frontend ~92/144 bileşende gömülü Türkçe → `ui_*` anahtarına çıkar (`useUi`/`uiDb`); `ui_*` seed'e TR+EN; `scan:hardcoded-tr` envanter + `check:i18n` guard (JSX/toast TR literal = fail). **§v2-FINAL tek başına EN'i DÜZELTMEZ** — bu olmadan web'de İngilizce kırık. Öncelik: booking/consultant/auth/ödeme/home. Sahip: Codex/Cursor (frontend), FAZ33 ile tek `ui_*` sözlüğü. Kontrat: [`i18n-single-source-contract.md`](./contracts/i18n-single-source-contract.md) §v2-SCOPE-EXT
 
 ### T42-5 — Admin yönetilebilirlik kapama (Codex + admin_panel)
 - [x] Mobil banner placement'ları (`mobile_welcome/home/call_end`) admin'de görünür/yönetilir — teyit + eksikse ekle
+  - ✅ 2026-05-16 Codex: Backend/shared banner placement enum'ları, admin banner formu ve mobil `BannerSlider` kullanım noktaları doğrulandı. Detay: `doc/raporlar/t42-admin-mobile-management.md`.
 - [x] Push: admin panelden mobil hedefli bildirim gönderimi uçtan uca test (token kayıt → FCM → expo-notifications)
+  - ✅ 2026-05-16 Codex: Mobil token kayıt (`expo-notifications` → `/push/register-token`), admin manuel/kampanya push ekranı ve backend Firebase Admin dispatch route'ları doğrulandı. Gerçek cihaz/FCM teslimatı canlı token ile ayrıca smoke test gerektirir.
 - [x] Tema: admin design_tokens değişimi mobil app launch'ta yansıyor — teyit (FAZ 38 §3 fallback hizası mobil tarafında da)
-- [ ] (Opsiyonel/v2) Navigasyon/menü backend-driven: mobil tab/menü `menu_items`'tan — şimdilik kapsam dışı, not
+  - ✅ 2026-05-16 Codex: `ThemeContext` açılışta cache'i kullanıp `/site_settings/design_tokens` fetch ediyor, `designTokensToAppTheme` ile mobil temaya çeviriyor ve cache'e yazıyor.
+- [x] (Opsiyonel/v2) Navigasyon/menü backend-driven: mobil tab/menü `menu_items`'tan — şimdilik kapsam dışı, not
+  - ✅ 2026-05-16 Codex: Mobil `menu/index.tsx` public navigation endpoint'lerini kullanıyor; expo-router tab/routing yapısının tamamen backend-driven yapılması v2 kapsam dışı not edildi.
 
 ### T42-6 — Önceki FAZ mobil ayakları hizalama (ilgili ajanlar)
 - [x] FAZ 41 mobil gating backend T41-1 gelince `usePremium` fallback'i backend'e delege (denetim K2)

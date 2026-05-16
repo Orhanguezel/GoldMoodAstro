@@ -5,8 +5,9 @@ import { X, Send, Loader2, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/features/auth/auth.store';
 import ChatWarningBanner from '@/components/common/ChatWarningBanner';
+import { getPublicApiBase } from '@/i18n/publicMetaApi';
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
+const API_BASE = getPublicApiBase() || '/api';
 
 interface Props {
   open: boolean;

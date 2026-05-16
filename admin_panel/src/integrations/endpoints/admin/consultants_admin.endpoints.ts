@@ -22,6 +22,36 @@ export type ConsultantAdmin = {
   updated_at: string | null;
 };
 
+export type ConsultantServiceAdmin = {
+  id: string;
+  consultant_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  duration_minutes: number;
+  price: string;
+  currency: string;
+  media_type: 'audio' | 'video';
+  is_free: number;
+  is_active: number;
+  sort_order: number;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type ConsultantServiceAdminPayload = {
+  name?: string;
+  slug?: string;
+  description?: string | null;
+  duration_minutes?: number;
+  price?: number;
+  currency?: string;
+  media_type?: 'audio' | 'video';
+  is_free?: number;
+  is_active?: number;
+  sort_order?: number;
+};
+
 function unwrapList(raw: unknown): ConsultantAdmin[] {
   if (Array.isArray(raw)) return raw as ConsultantAdmin[];
   const data = (raw as { data?: unknown })?.data;
@@ -30,6 +60,12 @@ function unwrapList(raw: unknown): ConsultantAdmin[] {
 
 function unwrapOne(raw: unknown): ConsultantAdmin {
   return ((raw as { data?: unknown })?.data ?? raw) as ConsultantAdmin;
+}
+
+function unwrapServices(raw: unknown): ConsultantServiceAdmin[] {
+  if (Array.isArray(raw)) return raw as ConsultantServiceAdmin[];
+  const data = (raw as { data?: unknown })?.data;
+  return Array.isArray(data) ? (data as ConsultantServiceAdmin[]) : [];
 }
 
 export const consultantsAdminApi = baseApi.injectEndpoints({
@@ -70,6 +106,40 @@ export const consultantsAdminApi = baseApi.injectEndpoints({
         { type: 'Consultants' as const, id: 'LIST' },
       ],
     }),
+    listConsultantServicesAdmin: b.query<ConsultantServiceAdmin[], string>({
+      query: (consultantId) => ({ url: `/admin/consultants/${encodeURIComponent(consultantId)}/services` }),
+      transformResponse: unwrapServices,
+      providesTags: (_r, _e, consultantId) => [{ type: 'Consultants' as const, id: `services:${consultantId}` }],
+    }),
+    createConsultantServiceAdmin: b.mutation<
+      { data?: { id: string } } | { id: string },
+      { consultantId: string; body: Required<Pick<ConsultantServiceAdminPayload, 'name' | 'slug' | 'duration_minutes' | 'price' | 'media_type'>> & ConsultantServiceAdminPayload }
+    >({
+      query: ({ consultantId, body }) => ({
+        url: `/admin/consultants/${encodeURIComponent(consultantId)}/services`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (_r, _e, arg) => [{ type: 'Consultants' as const, id: `services:${arg.consultantId}` }],
+    }),
+    updateConsultantServiceAdmin: b.mutation<
+      { data?: { id: string } } | { id: string },
+      { consultantId: string; id: string; body: ConsultantServiceAdminPayload }
+    >({
+      query: ({ id, body }) => ({
+        url: `/admin/consultant-services/${encodeURIComponent(id)}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (_r, _e, arg) => [{ type: 'Consultants' as const, id: `services:${arg.consultantId}` }],
+    }),
+    deleteConsultantServiceAdmin: b.mutation<{ ok?: boolean }, { consultantId: string; id: string }>({
+      query: ({ id }) => ({
+        url: `/admin/consultant-services/${encodeURIComponent(id)}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_r, _e, arg) => [{ type: 'Consultants' as const, id: `services:${arg.consultantId}` }],
+    }),
   }),
   overrideExisting: true,
 });
@@ -79,4 +149,8 @@ export const {
   useGetConsultantAdminQuery,
   useApproveConsultantAdminMutation,
   useRejectConsultantAdminMutation,
+  useListConsultantServicesAdminQuery,
+  useCreateConsultantServiceAdminMutation,
+  useUpdateConsultantServiceAdminMutation,
+  useDeleteConsultantServiceAdminMutation,
 } = consultantsAdminApi;

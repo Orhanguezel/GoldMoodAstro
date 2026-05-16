@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/seo/server';
 
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -20,10 +21,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default function CoffeePage() {
+export default async function CoffeePage({ params }: Props) {
+  const { locale } = await params;
+
   return (
-    <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
-      <CoffeeHub />
-    </PageContainer>
+    <>
+      <Banner title={locale === 'tr' ? 'Kahve Falı' : 'Coffee Reading'} />
+      <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
+        <CoffeeHub />
+      </PageContainer>
+    </>
   );
 }

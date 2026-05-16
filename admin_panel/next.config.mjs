@@ -41,12 +41,16 @@ const nextConfig = {
     const origin =
       process.env.PANEL_API_URL || process.env.NEXT_PUBLIC_PANEL_API_URL || 'http://localhost:8094';
 
-    const base = String(origin).replace(/\/+$/, '');
+    const base = String(origin).replace(/\/+$/, '').replace(/\/api$/, '');
 
     return [
       {
         source: '/api/:path*',
         destination: `${base}/api/:path*`,
+      },
+      {
+        source: '/uploads/:path*',
+        destination: `${base}/uploads/:path*`,
       },
     ];
   },

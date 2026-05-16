@@ -35,9 +35,9 @@ export default function RisingSignCalculator() {
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
       <div className="text-center mb-12">
-        <h1 className={`${cinzel.className} text-4xl md:text-6xl mb-6 text-brand-gold`}>
+        <h2 className={`${cinzel.className} text-4xl md:text-6xl mb-6 text-brand-gold`}>
           Yükselen Burç Hesaplayıcı
-        </h1>
+        </h2>
         <p className="text-lg text-muted-foreground italic max-w-2xl mx-auto">
           Doğduğunuz anın gökyüzü haritasını çıkararak yükselen burcunuzu ve kozmik kimliğinizin temel taşlarını keşfedin.
         </p>

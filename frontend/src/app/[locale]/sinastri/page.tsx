@@ -37,6 +37,7 @@ import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import LandingIntro from '@/components/common/LandingIntro';
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -186,7 +187,9 @@ export default function SynastryPage() {
   };
 
   return (
-    <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
+    <>
+      <Banner title={locale === 'tr' ? 'Sinastri' : 'Synastry'} />
+      <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <JsonLd
         id="sinastri-schema"
         data={graph([
@@ -212,7 +215,7 @@ export default function SynastryPage() {
           faqSchema(faqItems),
         ])}
       />
-      <LandingIntro {...intro} />
+      <LandingIntro {...intro} showHeader={false} />
       <div className="max-w-[var(--gm-w-content)] mx-auto relative">
         <AnimatePresence mode="wait">
           {step === 'mode' && (
@@ -224,9 +227,9 @@ export default function SynastryPage() {
               className="space-y-12 text-center"
             >
               <div className="space-y-4">
-                <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tighter`}>
+                <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tighter`}>
                   Aşk <span className="text-(--gm-gold)">Uyumu</span>
-                </h1>
+                </h2>
                 <p className="text-(--gm-text-dim) text-lg max-w-[var(--gm-w-narrow)] mx-auto font-serif italic">
                   Yıldızların aşkınıza ne dediğini keşfedin. Hangi yöntemi tercih edersiniz?
                 </p>
@@ -660,6 +663,7 @@ export default function SynastryPage() {
           : 'GoldMoodAstro synastry content treats relationship astrology as awareness, communication and growth guidance rather than fixed judgment.'}
         expertise={['Sinastri', 'İlişki Astrolojisi', 'Doğum Haritası']}
       />
-    </PageContainer>
+      </PageContainer>
+    </>
   );
 }

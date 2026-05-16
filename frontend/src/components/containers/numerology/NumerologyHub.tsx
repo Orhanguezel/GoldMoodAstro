@@ -61,7 +61,7 @@ export default function NumerologyHub() {
               <div className="w-24 h-24 bg-(--gm-gold)/10 rounded-full flex items-center justify-center mx-auto text-(--gm-gold) border border-(--gm-gold)/20 shadow-(--gm-shadow-glow)">
                 <Binary className="w-12 h-12" />
               </div>
-              <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight`}>Numeroloji Analizi</h1>
+              <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight`}>Numeroloji Analizi</h2>
               <p className="text-(--gm-text-dim) text-xl max-w-2xl mx-auto italic font-serif leading-relaxed opacity-80">
                 İsminiz ve doğum tarihiniz, ruhunuzun bu hayattaki planını sayılarla fısıldar.
               </p>
@@ -158,7 +158,7 @@ export default function NumerologyHub() {
             className="space-y-16 py-10"
           >
              <div className="text-center space-y-4">
-              <h1 className={`${cinzel.className} text-5xl md:text-6xl text-(--gm-text) tracking-tight`}>Sayılarınızın Gücü</h1>
+              <h2 className={`${cinzel.className} text-5xl md:text-6xl text-(--gm-text) tracking-tight`}>Sayılarınızın Gücü</h2>
               <p className="text-(--gm-text-dim) font-serif italic text-2xl opacity-60">{formData.full_name}</p>
             </div>
 

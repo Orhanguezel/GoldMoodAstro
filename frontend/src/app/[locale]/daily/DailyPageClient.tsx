@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { useGenerateDailyReadingMutation, useListMyBirthChartsQuery } from '@/integrations/rtk/hooks';
-import { Sparkles, Calendar, ChevronLeft, ArrowRight } from 'lucide-react';
+import { Sparkles, Calendar, ArrowRight } from 'lucide-react';
 
 import PageContainer from '@/components/common/PageContainer';
 
@@ -30,7 +30,7 @@ export default function DailyPageClient() {
           <div className="w-16 h-16 bg-(--gm-surface) rounded-full flex items-center justify-center mx-auto border border-(--gm-gold)">
             <Sparkles className="w-8 h-8 text-(--gm-gold)" />
           </div>
-          <h1 className="font-serif text-4xl text-(--gm-text)">Ruhsal bir yolculuğa hazır mısınız?</h1>
+          <h2 className="font-serif text-4xl text-(--gm-text)">Ruhsal bir yolculuğa hazır mısınız?</h2>
           <p className="text-(--gm-text-dim) leading-relaxed">
             Günlük yorum Natal haritanız ve gökyüzü transitleriyle size özel hazırlanır. Başlamak için giriş yapın.
           </p>
@@ -49,7 +49,7 @@ export default function DailyPageClient() {
           <div className="w-16 h-16 bg-(--gm-surface) rounded-full flex items-center justify-center mx-auto border border-(--gm-gold)">
             <Calendar className="w-8 h-8 text-(--gm-gold)" />
           </div>
-          <h1 className="font-serif text-4xl text-(--gm-text)">Haritanız Henüz Yok</h1>
+          <h2 className="font-serif text-4xl text-(--gm-text)">Haritanız Henüz Yok</h2>
           <p className="text-(--gm-text-dim) leading-relaxed">
             Kozmik rehberliğimizi alabilmek için önce doğum haritanızı oluşturmalısınız.
           </p>
@@ -64,23 +64,15 @@ export default function DailyPageClient() {
   return (
     <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <div className="mx-auto max-w-[var(--gm-w-readable)]">
-        {/* Breadcrumb */}
-        <div className="mb-12 flex items-center gap-4">
-          <Link href={`/${locale}`} className="text-(--gm-text-dim) hover:text-(--gm-gold) transition-colors flex items-center gap-2 text-sm uppercase tracking-widest font-bold">
-            <ChevronLeft className="w-4 h-4" /> Geri
-          </Link>
-          <div className="h-px flex-1 bg-(--gm-border-soft)" />
-        </div>
-
         {/* Header */}
         <div className="mb-16">
           <div className="flex items-center gap-3 mb-6">
             <span className="w-8 h-px bg-(--gm-gold)" />
             <span className="text-(--gm-gold) font-bold text-xs uppercase tracking-[0.2em]">Kozmik Rehber</span>
           </div>
-          <h1 className="font-serif text-[clamp(2.5rem,6vw,4.5rem)] leading-[1.1] text-(--gm-text) mb-6">
+          <h2 className="font-serif text-[clamp(2.5rem,6vw,4.5rem)] leading-[1.1] text-(--gm-text) mb-6">
             Gökyüzü bugün <br />ne söylüyor?
-          </h1>
+          </h2>
           <p className="text-(--gm-text-dim) text-lg max-w-[var(--gm-w-narrow)] font-serif italic">
             Natal haritanızdaki gezegenler, bugünün göksel hareketleriyle dans ediyor.
           </p>

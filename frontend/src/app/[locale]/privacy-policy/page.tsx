@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import Banner from '@/layout/banner/Breadcrum';
 import PrivacyPolicyPageContent from '@/components/containers/legal/PrivacyPolicyPageContent';
 import { LayoutSeoBridge } from '@/seo';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { isValidUiText, safeStr } from '@/integrations/shared';
-
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
 
 export default function PrivacyPolicyPage() {
   const locale = useLocaleShort();
@@ -20,9 +19,12 @@ export default function PrivacyPolicyPage() {
   }, [ui]);
 
   return (
-    <PageContainer width="readable" pad="large">
+    <>
       <LayoutSeoBridge title={bannerTitle} noindex={false} />
-      <PrivacyPolicyPageContent />
-    </PageContainer>
+      <Banner title={bannerTitle} />
+      <PageContainer width="readable" pad="large" className="bg-(--gm-bg) min-h-[50vh]">
+        <PrivacyPolicyPageContent />
+      </PageContainer>
+    </>
   );
 }

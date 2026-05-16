@@ -25,6 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
 
 export default async function BurcunuOgrenPage({ params }: Props) {
   const { locale } = await params;
@@ -32,7 +33,9 @@ export default async function BurcunuOgrenPage({ params }: Props) {
   const isTr = locale === 'tr';
 
   return (
-    <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
+    <>
+      <Banner title={isTr ? 'Burcunu Öğren' : 'Find Your Zodiac Sign'} />
+      <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <JsonLd
         id="zodiac-finder-speakable-schema"
         data={graph([
@@ -60,9 +63,9 @@ export default async function BurcunuOgrenPage({ params }: Props) {
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-(--gm-gold)">
           {isTr ? 'Kısa Cevap' : 'Short Answer'}
         </p>
-        <h1 id="zodiac-finder-voice-answer" className="font-serif text-3xl text-(--gm-text) md:text-5xl">
+        <h2 id="zodiac-finder-voice-answer" className="font-serif text-3xl text-(--gm-text) md:text-5xl">
           {isTr ? 'Burcumu nasıl öğrenirim?' : 'How do I find my zodiac sign?'}
-        </h1>
+        </h2>
         <p className="mx-auto mt-5 max-w-[var(--gm-w-narrow)] text-base leading-8 text-(--gm-text-dim) md:text-lg">
           {isTr
             ? 'Güneş burcunuzu öğrenmek için doğum gününüz yeterlidir. Doğduğunuz tarihte Güneş hangi burç aralığındaysa temel burcunuz odur. Daha kişisel bir yorum için Ay burcu, yükselen burç ve doğum haritasındaki evler de birlikte değerlendirilmelidir.'
@@ -71,5 +74,6 @@ export default async function BurcunuOgrenPage({ params }: Props) {
       </section>
       <ZodiacFinderQuiz />
     </PageContainer>
+    </>
   );
 }

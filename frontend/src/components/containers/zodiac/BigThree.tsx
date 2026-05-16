@@ -55,9 +55,9 @@ export default function BigThree() {
   return (
     <PageContainer className="max-w-4xl">
       <div className="text-center mb-12">
-        <h1 className={`${cinzel.className} text-4xl md:text-6xl mb-4 text-brand-gold`}>
+        <h2 className={`${cinzel.className} text-4xl md:text-6xl mb-4 text-brand-gold`}>
           Büyük Üçlü
-        </h1>
+        </h2>
         <p className="text-lg text-muted-foreground italic max-w-2xl mx-auto">
           Güneş, Ay ve Yükselen burcunuzla kozmik kimlik kartınızı oluşturun ve paylaşın.
         </p>

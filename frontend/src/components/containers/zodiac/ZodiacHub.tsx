@@ -17,9 +17,9 @@ export default function ZodiacHub() {
   return (
     <section className="reveal">
       <div className="text-center mb-16">
-        <h1 className={`${cinzel.className} text-4xl md:text-5xl lg:text-6xl mb-6 text-(--gm-gold)`}>
+        <h2 className={`${cinzel.className} text-4xl md:text-5xl lg:text-6xl mb-6 text-(--gm-gold)`}>
           Zodyak Kuşağı
-        </h1>
+        </h2>
         <p className="text-lg text-(--gm-text-dim) max-w-2xl mx-auto italic">
           Gökyüzünün rehberliğinde burçların derinliklerini keşfedin. Karakter analizlerinden günlük yorumlara kadar her şey burada.
         </p>

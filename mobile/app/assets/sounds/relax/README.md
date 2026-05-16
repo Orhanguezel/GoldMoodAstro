@@ -13,4 +13,6 @@
 | `binaural.m4a` | binaural |
 | `crackle.m4a` | crackle |
 
-Dosyalar eklendikten sonra `src/lib/relax/stemAssets.ts` içindeki `RELAX_STEM_ASSETS` map'ine require ekleyin.
+Dosyalar `scripts/generate-relax-stems.ts` ile proje içinde procedural olarak üretilir.
+Manifest ve hash doğrulaması: `frontend/public/sounds/relax/licenses.md`.
+CI guard: `cd frontend && bun run relax:asset-guard`.
