@@ -6,6 +6,18 @@
 
 SET @loc_tr = 'tr', @loc_en = 'en', @loc_de = 'de';
 
+-- ============================================================================
+-- AUTHORITATIVE RESEED (FAZ 33 — "local == canlı", orphan = imkânsız)
+-- Seed-owned namespace'i (mi-h-*, mi-f-*, fs-*) önce SİL, sonra yeniden kur.
+-- Böylece eski seed'lerden kalan stale satırlar (orphan) hayatta kalamaz.
+-- Admin panelden eklenen özel kayıtlar FARKLI id taşır (UUID) → DOKUNULMAZ.
+-- Silme sırası FK-güvenli: i18n → menu_items → footer i18n → footer_sections.
+-- ============================================================================
+DELETE FROM menu_items_i18n     WHERE menu_item_id   LIKE 'mi-h-%' OR menu_item_id   LIKE 'mi-f-%';
+DELETE FROM menu_items          WHERE id             LIKE 'mi-h-%' OR id             LIKE 'mi-f-%';
+DELETE FROM footer_sections_i18n WHERE footer_section_id LIKE 'fs-%';
+DELETE FROM footer_sections     WHERE id             LIKE 'fs-%';
+
 -- ---- FOOTER SECTIONS ----------------------------------------------------
 INSERT INTO footer_sections (id, slug, is_active, display_order) VALUES
   ('fs-astrology', 'astrology', 1, 10),
