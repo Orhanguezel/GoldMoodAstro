@@ -1,109 +1,21 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  Pressable, 
-  ActivityIndicator, 
-  Alert, 
-  KeyboardAvoidingView, 
-  Platform, 
-  ScrollView 
+import React, { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Pressable,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Mail, ChevronLeft, Send } from 'lucide-react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
 
-import { colors, spacing, font, radius } from '@/theme/tokens';
-
-export default function ForgotPasswordScreen() {
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleReset = async () => {
-    if (!email) return;
-    setLoading(true);
-    try {
-      // Mock API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      Alert.alert(
-        'Şifre Sıfırlama',
-        'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.',
-        [{ text: 'Tamam', onPress: () => router.back() }]
-      );
-    } catch (err) {
-      Alert.alert('Hata', 'Bir hata oluştu. Lütfen tekrar deneyin.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
-            <ChevronLeft size={24} color={colors.text} />
-          </Pressable>
-        </View>
-
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ flex: 1 }}
-        >
-          <ScrollView contentContainerStyle={styles.scroll}>
-            
-            <View style={styles.titleArea}>
-              <Text style={styles.kicker}>ŞİFRE KURTARMA</Text>
-              <Text style={styles.title}>Şifrenizi mi{'\n'}unuttunuz?</Text>
-              <Text style={styles.subtitle}>
-                E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.
-              </Text>
-            </View>
-
-            <View style={styles.form}>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>E-POSTA ADRESİ</Text>
-                <View style={styles.inputContainer}>
-                  <Mail size={20} color={colors.goldDim} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="email@ornek.com"
-                    placeholderTextColor={colors.textMuted}
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                  />
-                </View>
-              </View>
-
-              <Pressable 
-                style={[styles.resetBtn, (loading || !email) && styles.btnDisabled]}
-                onPress={handleReset}
-                disabled={loading || !email}
-              >
-                {loading ? (
-                  <ActivityIndicator color={colors.bgDeep} />
-                ) : (
-                  <>
-                    <Text style={styles.resetBtnText}>Bağlantı Gönder</Text>
-                    <Send size={18} color={colors.bgDeep} />
-                  </>
-                )}
-              </Pressable>
-            </View>
-
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -203,6 +115,104 @@ const styles = StyleSheet.create({
   resetBtnText: {
     fontFamily: font.sansBold,
     fontSize: 16,
-    color: colors.bgDeep,
+    color: colors.ink,
   },
-});
+  });
+}
+
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { safeRouterBack } from '@/lib/navigation';
+import { Mail, ChevronLeft, Send } from 'lucide-react-native';
+
+
+
+export default function ForgotPasswordScreen() {
+  const theme = useAppTheme();
+  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleReset = async () => {
+    if (!email) return;
+    setLoading(true);
+    try {
+      // Mock API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      Alert.alert(
+        'Şifre Sıfırlama',
+        'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.',
+        [{ text: 'Tamam', onPress: () => safeRouterBack() }]
+      );
+    } catch (err) {
+      Alert.alert('Hata', 'Bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        
+        <View style={styles.header}>
+          <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
+            <ChevronLeft size={24} color={colors.text} />
+          </Pressable>
+        </View>
+
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
+        >
+          <ScrollView contentContainerStyle={styles.scroll}>
+            
+            <View style={styles.titleArea}>
+              <Text style={styles.kicker}>ŞİFRE KURTARMA</Text>
+              <Text style={styles.title}>Şifrenizi mi{'\n'}unuttunuz?</Text>
+              <Text style={styles.subtitle}>
+                E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.
+              </Text>
+            </View>
+
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>E-POSTA ADRESİ</Text>
+                <View style={styles.inputContainer}>
+                  <Mail size={20} color={colors.goldDim} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="email@ornek.com"
+                    placeholderTextColor={colors.textMuted}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
+              </View>
+
+              <Pressable 
+                style={[styles.resetBtn, (loading || !email) && styles.btnDisabled]}
+                onPress={handleReset}
+                disabled={loading || !email}
+              >
+                {loading ? (
+                  <ActivityIndicator color={colors.ink} />
+                ) : (
+                  <>
+                    <Text style={styles.resetBtnText}>Bağlantı Gönder</Text>
+                    <Send size={18} color={colors.ink} />
+                  </>
+                )}
+              </Pressable>
+            </View>
+
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
+  );
+}
+

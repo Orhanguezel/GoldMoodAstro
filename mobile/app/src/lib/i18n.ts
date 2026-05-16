@@ -1,7 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
-import { mobileBrandConfig } from '@/config/brand';
 
 const tr = {
   onboarding: {
@@ -151,7 +150,7 @@ const tr = {
     profile: 'Profil',
     language: 'Dil',
     notifications: 'Bildirimler',
-    about: `${mobileBrandConfig.appName} Hakkında`,
+    about: 'GoldMoodAstro Hakkında',
     support: 'Destek',
     logout: 'Çıkış Yap',
     version: 'Sürüm {{v}}',
@@ -220,6 +219,14 @@ const tr = {
     creditPurchaseInitiatedTitle: 'Ödeme Başlatıldı',
     creditPurchaseInitiatedMessage: 'Kredi paketi için ödeme ekranı açıldı.',
     creditPurchaseError: 'Kredi yüklenemedi',
+  },
+  navigation: {
+    menuTitle: 'Menü',
+    loadError: 'Menü yüklenemedi',
+    empty: 'Gösterilecek menü öğesi yok',
+    siteLinks: 'Site bağlantıları',
+    webViewTitle: 'Sayfa',
+    missingUrl: 'Sayfa adresi eksik',
   },
   tabs: {
     home: 'Danışmanlar',
@@ -391,7 +398,7 @@ const en: typeof tr = {
     profile: 'Profile',
     language: 'Language',
     notifications: 'Notifications',
-    about: `About ${mobileBrandConfig.appName}`,
+    about: 'About GoldMoodAstro',
     support: 'Support',
     logout: 'Sign Out',
     version: 'Version {{v}}',
@@ -460,6 +467,14 @@ const en: typeof tr = {
     creditPurchaseInitiatedTitle: 'Payment Started',
     creditPurchaseInitiatedMessage: 'Credit checkout has started. Complete the payment flow.',
     creditPurchaseError: 'Could not purchase credits',
+  },
+  navigation: {
+    menuTitle: 'Menu',
+    loadError: 'Could not load menu',
+    empty: 'No menu entries',
+    siteLinks: 'Site links',
+    webViewTitle: 'Page',
+    missingUrl: 'Page URL is missing',
   },
   tabs: {
     home: 'Consultants',

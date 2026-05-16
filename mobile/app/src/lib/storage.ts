@@ -14,6 +14,9 @@ const KEYS = {
   // Data
   tempBirthData: 'gma.temp.birth.v1',
   pushToken: 'gma.push.token.v1',
+
+  /** design_tokens → AppTheme önbelleği */
+  themeCache: 'gma.theme.app.v1',
 } as const;
 
 async function readJson<T>(key: string): Promise<T | null> {
@@ -118,5 +121,13 @@ export const storage = {
 
   async clearTempBirthData(): Promise<void> {
     await AsyncStorage.removeItem(KEYS.tempBirthData);
+  },
+
+  async getThemeCache(): Promise<unknown | null> {
+    return readJson(KEYS.themeCache);
+  },
+
+  async setThemeCache(payload: unknown): Promise<void> {
+    await writeJson(KEYS.themeCache, payload);
   },
 };

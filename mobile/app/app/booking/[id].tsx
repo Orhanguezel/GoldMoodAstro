@@ -1,44 +1,87 @@
-import { useState, useEffect } from 'react';
-import { 
-  View, Text, StyleSheet, ScrollView, 
-  ActivityIndicator, Pressable, Alert, Image, Platform 
+import { useState, useEffect, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Pressable,
+  Alert,
+  Image,
+  Platform,
 } from 'react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius, shadows } = t;
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.bg },
+  center: { alignItems: 'center', justifyContent: 'center' },
+  scroll: { paddingBottom: 120 },
+  header: { padding: spacing.lg, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  title: { fontSize: 24, fontFamily: font.display, color: colors.stardust },
+  statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.sm },
+  statusText: { fontSize: 12, fontFamily: font.sansBold, textTransform: 'uppercase' },
+  section: { padding: spacing.lg, borderBottomWidth: 1, borderColor: colors.lineSoft },
+  sectionTitle: { fontSize: 14, fontFamily: font.sansBold, color: colors.gold, textTransform: 'uppercase', letterSpacing: 1, marginBottom: spacing.md },
+  consultantCard: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
+  avatar: { width: 56, height: 56, borderRadius: 28 },
+  avatarPlaceholder: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.amethyst, alignItems: 'center', justifyContent: 'center' },
+  avatarInitials: { color: colors.stardust, fontSize: 18, fontFamily: font.sansBold },
+  consultantInfo: { gap: 2 },
+  consultantName: { fontSize: 18, fontFamily: font.display, color: colors.stardust },
+  expertise: { fontSize: 12, color: colors.muted, fontFamily: font.sans },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm },
+  label: { fontSize: 14, color: colors.muted, fontFamily: font.sans },
+  value: { fontSize: 14, color: colors.stardust, fontFamily: font.sansMedium },
+  priceValue: { fontSize: 18, color: colors.gold, fontFamily: font.sansBold },
+  note: { fontSize: 14, color: colors.stardustDim, fontFamily: font.sans, fontStyle: 'italic', lineHeight: 20 },
+  footer: { 
+    position: 'absolute', bottom: 0, left: 0, right: 0, 
+    padding: spacing.lg, gap: spacing.md,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1, borderColor: colors.line,
+    paddingBottom: Platform.OS === 'ios' ? 34 : spacing.lg
+  },
+  joinBtn: { backgroundColor: colors.amethyst, paddingVertical: spacing.md, borderRadius: radius.pill, alignItems: 'center', ...shadows.soft },
+  joinBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 16 },
+  cancelBtn: { paddingVertical: spacing.md, borderRadius: radius.pill, alignItems: 'center', borderWidth: 1, borderColor: colors.danger + '40' },
+  cancelBtnText: { color: colors.danger, fontFamily: font.sansBold, fontSize: 14 },
+  reviewBtn: { marginTop: spacing.sm, paddingVertical: spacing.md, borderRadius: radius.pill, alignItems: 'center', backgroundColor: colors.amethyst, ...shadows.soft },
+  reviewBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 14 },
+});
+}
+
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, router } from 'expo-router';
-import { ChevronRight, CalendarDays } from 'lucide-react-native';
+import { safeRouterBack } from '@/lib/navigation';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
+
 import { bookingsApi } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
 import type { Booking } from '@/types';
 import { format, parseISO } from 'date-fns';
 import { tr, enUS } from 'date-fns/locale';
 
 export default function BookingDetailScreen() {
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t, i18n } = useTranslation();
-  const { isAuthenticated, authHydrating } = useAuth();
   const dateLocale = i18n.language === 'tr' ? tr : enUS;
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authHydrating) return;
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
+    if (id) {
+      bookingsApi.get(id)
+        .then(setBooking)
+        .catch(console.error)
+        .finally(() => setLoading(false));
     }
-    if (!id) {
-      setLoading(false);
-      return;
-    }
-    bookingsApi.get(id)
-      .then(setBooking)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [id, authHydrating, isAuthenticated]);
+  }, [id]);
 
   const handleCancel = () => {
     Alert.alert(
@@ -53,7 +96,7 @@ export default function BookingDetailScreen() {
             try {
               await bookingsApi.cancel(id!);
               Alert.alert(t('common.success'), t('booking.cancelSuccess', 'Randevunuz iptal edildi.'));
-              router.back();
+              safeRouterBack();
             } catch (err: any) {
               Alert.alert(t('common.error'), err.message || 'İptal edilemedi.');
             }
@@ -63,65 +106,11 @@ export default function BookingDetailScreen() {
     );
   };
 
-  if (authHydrating) {
+  if (loading || !booking) {
     return (
       <View style={[styles.safe, styles.center]}>
         <ActivityIndicator color={colors.amethyst} size="large" />
       </View>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
-        <ScrollView contentContainerStyle={styles.guestScroll}>
-          <Pressable onPress={() => router.back()} style={styles.guestBack}>
-            <Text style={styles.guestBackText}>{t('common.back', 'Geri')}</Text>
-          </Pressable>
-          <View style={styles.guestIconWrap}>
-            <CalendarDays size={32} color={colors.midnight} />
-          </View>
-          <Text style={styles.guestTitle}>{t('booking.detailTitle', 'Randevu Detayı')}</Text>
-          <Text style={styles.guestSubtitle}>
-            {t(
-              'booking.guestHint',
-              'Randevu bilgilerinizi görmek, iptal etmek veya görüşmeye katılmak için giriş yapın.',
-            )}
-          </Text>
-          <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
-            <LinearGradient colors={[colors.amethyst, colors.gold]} style={styles.guestPrimaryBtn}>
-              <Text style={styles.guestPrimaryLabel}>{t('auth.login', 'Giriş Yap')}</Text>
-              <ChevronRight size={18} color={colors.stardust} />
-            </LinearGradient>
-          </Pressable>
-          <Pressable onPress={() => router.push('/auth/register' as any)}>
-            <Text style={styles.guestRegister}>{t('auth.registerCta', 'Hesap oluştur')}</Text>
-          </Pressable>
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
-
-  if (loading) {
-    return (
-      <View style={[styles.safe, styles.center]}>
-        <ActivityIndicator color={colors.amethyst} size="large" />
-      </View>
-    );
-  }
-
-  if (!booking) {
-    return (
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
-        <View style={[styles.center, { flex: 1, padding: spacing.lg }]}>
-          <Text style={{ fontFamily: font.sans, color: colors.textMuted, textAlign: 'center', marginBottom: spacing.lg }}>
-            {id ? t('booking.loadError', 'Randevu bilgisi alınamadı.') : t('booking.missingId', 'Randevu kimliği eksik.')}
-          </Text>
-          <Pressable onPress={() => router.back()} style={{ padding: spacing.md }}>
-            <Text style={{ fontFamily: font.sansBold, color: colors.amethyst }}>{t('common.back', 'Geri')}</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
     );
   }
 
@@ -133,8 +122,8 @@ export default function BookingDetailScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <Text style={styles.title}>{t('booking.detailTitle', 'Randevu Detayı')}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(booking.status) + '20' }]}>
-            <Text style={[styles.statusText, { color: getStatusColor(booking.status) }]}>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(booking.status, colors) + '20' }]}>
+            <Text style={[styles.statusText, { color: getStatusColor(booking.status, colors) }]}>
               {t(`booking.status.${booking.status}`)}
             </Text>
           </View>
@@ -234,72 +223,17 @@ export default function BookingDetailScreen() {
   );
 }
 
-function getStatusColor(status: string) {
+function getStatusColor(status: string, c: AppTheme['colors']) {
   switch (status) {
-    case 'confirmed': return colors.success;
-    case 'completed': return colors.muted;
-    case 'cancelled': case 'no_show': return colors.danger;
-    default: return colors.gold;
+    case 'confirmed':
+      return c.success;
+    case 'completed':
+      return c.muted;
+    case 'cancelled':
+    case 'no_show':
+      return c.danger;
+    default:
+      return c.gold;
   }
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.midnight },
-  center: { alignItems: 'center', justifyContent: 'center' },
-  scroll: { paddingBottom: 120 },
-  header: { padding: spacing.lg, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 24, fontFamily: font.display, color: colors.stardust },
-  statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.sm },
-  statusText: { fontSize: 12, fontFamily: font.sansBold, textTransform: 'uppercase' },
-  section: { padding: spacing.lg, borderBottomWidth: 1, borderColor: colors.lineSoft },
-  sectionTitle: { fontSize: 14, fontFamily: font.sansBold, color: colors.gold, textTransform: 'uppercase', letterSpacing: 1, marginBottom: spacing.md },
-  consultantCard: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
-  avatar: { width: 56, height: 56, borderRadius: 28 },
-  avatarPlaceholder: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.amethyst, alignItems: 'center', justifyContent: 'center' },
-  avatarInitials: { color: colors.stardust, fontSize: 18, fontFamily: font.sansBold },
-  consultantInfo: { gap: 2 },
-  consultantName: { fontSize: 18, fontFamily: font.display, color: colors.stardust },
-  expertise: { fontSize: 12, color: colors.muted, fontFamily: font.sans },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm },
-  label: { fontSize: 14, color: colors.muted, fontFamily: font.sans },
-  value: { fontSize: 14, color: colors.stardust, fontFamily: font.sansMedium },
-  priceValue: { fontSize: 18, color: colors.gold, fontFamily: font.sansBold },
-  note: { fontSize: 14, color: colors.stardustDim, fontFamily: font.sans, fontStyle: 'italic', lineHeight: 20 },
-  footer: { 
-    position: 'absolute', bottom: 0, left: 0, right: 0, 
-    padding: spacing.lg, gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderTopWidth: 1, borderColor: colors.line,
-    paddingBottom: Platform.OS === 'ios' ? 34 : spacing.lg
-  },
-  joinBtn: { backgroundColor: colors.amethyst, paddingVertical: spacing.md, borderRadius: radius.pill, alignItems: 'center', ...shadows.soft },
-  joinBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 16 },
-  cancelBtn: { paddingVertical: spacing.md, borderRadius: radius.pill, alignItems: 'center', borderWidth: 1, borderColor: colors.danger + '40' },
-  cancelBtnText: { color: colors.danger, fontFamily: font.sansBold, fontSize: 14 },
-  reviewBtn: { marginTop: spacing.sm, paddingVertical: spacing.md, borderRadius: radius.pill, alignItems: 'center', backgroundColor: colors.amethyst, ...shadows.soft },
-  reviewBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 14 },
-  guestScroll: { flexGrow: 1, padding: spacing.xl, paddingTop: spacing.lg, alignItems: 'center' },
-  guestBack: { alignSelf: 'flex-start', marginBottom: spacing.lg },
-  guestBackText: { fontFamily: font.sansBold, fontSize: 14, color: colors.amethyst },
-  guestIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  guestTitle: { fontFamily: font.display, fontSize: 26, color: colors.stardust, textAlign: 'center', marginBottom: spacing.sm },
-  guestSubtitle: { fontFamily: font.sans, fontSize: 15, color: colors.muted, textAlign: 'center', lineHeight: 22, marginBottom: spacing['2xl'] },
-  guestPrimaryWrap: { alignSelf: 'stretch', borderRadius: radius.pill, overflow: 'hidden', marginBottom: spacing.md },
-  guestPrimaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-  },
-  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 15, color: colors.stardust },
-  guestRegister: { fontFamily: font.sansBold, fontSize: 14, color: colors.amethyst },
-});

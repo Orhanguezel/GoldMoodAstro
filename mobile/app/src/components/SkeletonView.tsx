@@ -1,7 +1,19 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, DimensionValue } from 'react-native';
-import { colors, radius } from '@/theme/tokens';
 import { LinearGradient } from 'expo-linear-gradient';
+
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, radius } = t;
+  return StyleSheet.create({
+  container: {
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+  },
+});
+}
+
 
 interface Props {
   width?: DimensionValue;
@@ -10,12 +22,16 @@ interface Props {
   style?: any;
 }
 
-export default function SkeletonView({ 
-  width = '100%', 
-  height = 20, 
-  borderRadius = radius.sm,
-  style 
+export default function SkeletonView({
+  width = '100%',
+  height = 20,
+  borderRadius: borderRadiusProp,
+  style,
 }: Props) {
+  const theme = useAppTheme();
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const borderRadius = borderRadiusProp ?? theme.radius.sm;
+
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -50,9 +66,3 @@ export default function SkeletonView({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.surface,
-    overflow: 'hidden',
-  },
-});

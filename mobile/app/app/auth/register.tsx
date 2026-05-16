@@ -1,183 +1,21 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  Pressable, 
-  StyleSheet, 
-  ActivityIndicator, 
-  Alert, 
-  KeyboardAvoidingView, 
-  Platform, 
-  ScrollView 
+import React, { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, Link } from 'expo-router';
-import { User, Mail, Lock, ChevronLeft, CheckCircle2, Circle } from 'lucide-react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
 
-import { colors, spacing, font, radius } from '@/theme/tokens';
-import { authApi, setAuthToken } from '@/lib/api';
-import { storage } from '@/lib/storage';
-import { registerPushToken } from '@/lib/notifications';
-
-export default function RegisterScreen() {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rulesAccepted, setRulesAccepted] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const handleRegister = async () => {
-    if (!fullName || !email || !password) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
-      return;
-    }
-
-    if (!rulesAccepted) {
-      Alert.alert('Hata', 'Lütfen kullanım koşullarını kabul edin.');
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      setAuthToken(null);
-      const res = await authApi.register({
-        full_name: fullName,
-        email,
-        password,
-        rules_accepted: true,
-      });
-      
-      await storage.setUserSession({
-        token: res.access_token,
-        userId: res.user.id,
-        role: res.user.role
-      });
-
-      setAuthToken(res.access_token);
-      registerPushToken().catch(() => {});
-
-      // Go to onboarding
-      router.replace('/onboarding' as any);
-    } catch (err: any) {
-      Alert.alert('Kayıt Başarısız', err.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
-            <ChevronLeft size={24} color={colors.text} />
-          </Pressable>
-        </View>
-
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-          style={{ flex: 1 }}
-        >
-          <ScrollView contentContainerStyle={styles.scroll}>
-            
-            <View style={styles.welcomeArea}>
-              <Text style={styles.welcomeKicker}>YENİ BAŞLANGIÇ</Text>
-              <Text style={styles.title}>Ruhsal yolculuğunuza{'\n'}bugün başlayın.</Text>
-            </View>
-
-            <View style={styles.form}>
-              
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>AD SOYAD</Text>
-                <View style={styles.inputContainer}>
-                  <User size={20} color={colors.goldDim} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Adınız Soyadınız"
-                    placeholderTextColor={colors.textMuted}
-                    value={fullName}
-                    onChangeText={setFullName}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>E-POSTA ADRESİ</Text>
-                <View style={styles.inputContainer}>
-                  <Mail size={20} color={colors.goldDim} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="email@ornek.com"
-                    placeholderTextColor={colors.textMuted}
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>ŞİFRE</Text>
-                <View style={styles.inputContainer}>
-                  <Lock size={20} color={colors.goldDim} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="••••••••"
-                    placeholderTextColor={colors.textMuted}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                  />
-                </View>
-              </View>
-
-              <Pressable 
-                style={styles.checkboxRow}
-                onPress={() => setRulesAccepted(!rulesAccepted)}
-              >
-                {rulesAccepted ? (
-                  <CheckCircle2 size={20} color={colors.gold} />
-                ) : (
-                  <Circle size={20} color={colors.line} />
-                )}
-                <Text style={styles.checkboxText}>
-                  Kullanım Koşullarını ve KVKK metnini okudum, kabul ediyorum.
-                </Text>
-              </Pressable>
-
-              <Pressable 
-                style={[styles.registerBtn, (loading || !rulesAccepted) && styles.btnDisabled]} 
-                onPress={handleRegister}
-                disabled={loading || !rulesAccepted}
-              >
-                {loading ? (
-                  <ActivityIndicator color={colors.bgDeep} />
-                ) : (
-                  <Text style={styles.registerBtnText}>Hesap Oluştur</Text>
-                )}
-              </Pressable>
-            </View>
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Zaten hesabınız var mı?</Text>
-              <Link href="/auth/login" asChild>
-                <Pressable>
-                  <Text style={styles.loginLink}>Giriş Yap</Text>
-                </Pressable>
-              </Link>
-            </View>
-
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -282,7 +120,7 @@ const styles = StyleSheet.create({
   registerBtnText: {
     fontFamily: font.sansBold,
     fontSize: 16,
-    color: colors.bgDeep,
+    color: colors.ink,
   },
   footer: {
     flexDirection: 'row',
@@ -301,4 +139,174 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.gold,
   },
-});
+  });
+}
+
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useLocalSearchParams, Link } from 'expo-router';
+import { safeRouterBack } from '@/lib/navigation';
+import { User, Mail, Lock, ChevronLeft, CheckCircle2, Circle } from 'lucide-react-native';
+
+
+import { authApi, setAuthToken } from '@/lib/api';
+import { storage } from '@/lib/storage';
+
+export default function RegisterScreen() {
+  const theme = useAppTheme();
+  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { next } = useLocalSearchParams<{ next?: string }>();
+
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rulesAccepted, setRulesAccepted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (!fullName || !email || !password) {
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
+      return;
+    }
+
+    if (!rulesAccepted) {
+      Alert.alert('Hata', 'Lütfen kullanım koşullarını kabul edin.');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const res = await authApi.register({
+        full_name: fullName,
+        email,
+        password,
+        rules_accepted: true,
+      });
+      
+      await storage.setUserSession({
+        token: res.access_token,
+        userId: res.user.id,
+        role: res.user.role
+      });
+
+      setAuthToken(res.access_token);
+      
+      const dest = typeof next === 'string' && next.startsWith('/') ? next : '/onboarding';
+      router.replace(dest as any);
+    } catch (err: any) {
+      Alert.alert('Kayıt Başarısız', err.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        
+        <View style={styles.header}>
+          <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
+            <ChevronLeft size={24} color={colors.text} />
+          </Pressable>
+        </View>
+
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+          style={{ flex: 1 }}
+        >
+          <ScrollView contentContainerStyle={styles.scroll}>
+            
+            <View style={styles.welcomeArea}>
+              <Text style={styles.welcomeKicker}>YENİ BAŞLANGIÇ</Text>
+              <Text style={styles.title}>Ruhsal yolculuğunuza{'\n'}bugün başlayın.</Text>
+            </View>
+
+            <View style={styles.form}>
+              
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>AD SOYAD</Text>
+                <View style={styles.inputContainer}>
+                  <User size={20} color={colors.goldDim} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Adınız Soyadınız"
+                    placeholderTextColor={colors.textMuted}
+                    value={fullName}
+                    onChangeText={setFullName}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>E-POSTA ADRESİ</Text>
+                <View style={styles.inputContainer}>
+                  <Mail size={20} color={colors.goldDim} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="email@ornek.com"
+                    placeholderTextColor={colors.textMuted}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>ŞİFRE</Text>
+                <View style={styles.inputContainer}>
+                  <Lock size={20} color={colors.goldDim} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="••••••••"
+                    placeholderTextColor={colors.textMuted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                  />
+                </View>
+              </View>
+
+              <Pressable 
+                style={styles.checkboxRow}
+                onPress={() => setRulesAccepted(!rulesAccepted)}
+              >
+                {rulesAccepted ? (
+                  <CheckCircle2 size={20} color={colors.gold} />
+                ) : (
+                  <Circle size={20} color={colors.line} />
+                )}
+                <Text style={styles.checkboxText}>
+                  Kullanım Koşullarını ve KVKK metnini okudum, kabul ediyorum.
+                </Text>
+              </Pressable>
+
+              <Pressable 
+                style={[styles.registerBtn, (loading || !rulesAccepted) && styles.btnDisabled]} 
+                onPress={handleRegister}
+                disabled={loading || !rulesAccepted}
+              >
+                {loading ? (
+                  <ActivityIndicator color={colors.ink} />
+                ) : (
+                  <Text style={styles.registerBtnText}>Hesap Oluştur</Text>
+                )}
+              </Pressable>
+            </View>
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Zaten hesabınız var mı?</Text>
+              <Link href="/auth/login" asChild>
+                <Pressable>
+                  <Text style={styles.loginLink}>Giriş Yap</Text>
+                </Pressable>
+              </Link>
+            </View>
+
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
+  );
+}
+

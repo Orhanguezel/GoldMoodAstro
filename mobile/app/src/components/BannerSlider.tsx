@@ -1,17 +1,19 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Pressable, 
-  Image, 
-  Dimensions, 
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Image,
+  Dimensions,
   Linking,
   ScrollView,
   NativeScrollEvent,
-  NativeSyntheticEvent
+  NativeSyntheticEvent,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
-import { colors, spacing, font, radius } from '@/theme/tokens';
+import { useAppTheme, type AppTheme } from '@/theme';
 import { bannersApi } from '@/lib/api';
 import { Banner, BannerPlacement } from '@/types';
 import { useTranslation } from 'react-i18next';
@@ -19,15 +21,99 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SLIDER_WIDTH = SCREEN_WIDTH - (spacing.lg * 2);
+
+function buildScreenStyles(t: AppTheme, sliderWidth: number) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
+    container: {
+      marginVertical: spacing.md,
+    },
+    bannerWrap: {
+      width: sliderWidth,
+      height: 160,
+      borderRadius: radius.xl,
+      overflow: 'hidden',
+      backgroundColor: colors.inkDeep,
+      borderWidth: 1,
+      borderColor: colors.line,
+    },
+    image: {
+      width: '100%',
+      height: '100%',
+    },
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'flex-end',
+      padding: 20,
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    textColumn: {
+      flex: 1,
+    },
+    title: {
+      color: colors.text,
+      fontSize: 22,
+      fontFamily: font.display,
+      marginBottom: 4,
+      lineHeight: 28,
+    },
+    subtitle: {
+      color: colors.goldDim,
+      fontSize: 12,
+      fontFamily: font.sansMedium,
+      letterSpacing: 0.5,
+    },
+    ctaButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: colors.gold,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+    },
+    ctaText: {
+      color: colors.ink,
+      fontSize: 12,
+      fontFamily: font.sansBold,
+    },
+    pagination: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 12,
+      gap: 6,
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.line,
+    },
+    dotActive: {
+      width: 18,
+      backgroundColor: colors.gold,
+    },
+  });
+}
 
 interface Props {
   placement: BannerPlacement;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function BannerSlider({ placement, style }: Props) {
   const { i18n } = useTranslation();
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const sliderWidth = SCREEN_WIDTH - theme.spacing.lg * 2;
+  const styles = useMemo(() => buildScreenStyles(theme, sliderWidth), [theme, sliderWidth]);
+
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -43,19 +129,19 @@ export function BannerSlider({ placement, style }: Props) {
     const timer = setInterval(() => {
       setActiveIndex((current) => {
         const next = (current + 1) % banners.length;
-        scrollRef.current?.scrollTo({ x: next * SLIDER_WIDTH, animated: true });
+        scrollRef.current?.scrollTo({ x: next * sliderWidth, animated: true });
         return next;
       });
     }, 5000);
 
     return () => clearInterval(timer);
-  }, [banners.length]);
+  }, [banners.length, sliderWidth]);
 
   const loadBanners = async () => {
     try {
-      const data = await bannersApi.list({ 
-        placement, 
-        locale: i18n.language 
+      const data = await bannersApi.list({
+        placement,
+        locale: i18n.language,
       });
       setBanners(data);
     } catch (e) {
@@ -73,13 +159,13 @@ export function BannerSlider({ placement, style }: Props) {
     }
 
     if (banner.link_url) {
-      Linking.openURL(banner.link_url).catch(err => console.error("Couldn't load page", err));
+      Linking.openURL(banner.link_url).catch((err) => console.error("Couldn't load page", err));
     }
   };
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const x = event.nativeEvent.contentOffset.x;
-    const index = Math.round(x / SLIDER_WIDTH);
+    const index = Math.round(x / sliderWidth);
     if (index !== activeIndex) {
       setActiveIndex(index);
     }
@@ -99,45 +185,43 @@ export function BannerSlider({ placement, style }: Props) {
         onScroll={onScroll}
         scrollEventThrottle={16}
         decelerationRate="fast"
-        snapToInterval={SLIDER_WIDTH}
+        snapToInterval={sliderWidth}
         snapToAlignment="center"
       >
-        {banners.map((banner, index) => {
-          const title = locale === 'tr' ? (banner.title_tr || banner.code) : (banner.title_en || banner.code);
+        {banners.map((banner) => {
+          const title = locale === 'tr' ? banner.title_tr || banner.code : banner.title_en || banner.code;
           const subtitle = locale === 'tr' ? banner.subtitle_tr : banner.subtitle_en;
           const cta = locale === 'tr' ? banner.cta_label_tr : banner.cta_label_en;
           const imageUrl = banner.image_url_mobile || banner.image_url;
 
           return (
-            <Pressable 
+            <Pressable
               key={banner.id}
-              style={({ pressed }) => [
-                styles.bannerWrap, 
-                { transform: [{ scale: pressed ? 0.98 : 1 }] }
-              ]}
+              style={({ pressed }) => [styles.bannerWrap, { transform: [{ scale: pressed ? 0.98 : 1 }] }]}
               onPress={() => handlePress(banner)}
             >
-              <Image 
-                source={{ uri: imageUrl }} 
-                style={styles.image} 
-                resizeMode="cover"
-              />
-              <LinearGradient
-                colors={['transparent', 'rgba(26, 23, 21, 0.9)']}
-                style={styles.overlay}
-              >
+              <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+              <LinearGradient colors={['transparent', 'rgba(26, 23, 21, 0.9)']} style={styles.overlay}>
                 <View style={styles.content}>
                   <View style={styles.textColumn}>
-                    {title && <Text style={styles.title} numberOfLines={2}>{title}</Text>}
-                    {subtitle && <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>}
+                    {title ? (
+                      <Text style={styles.title} numberOfLines={2}>
+                        {title}
+                      </Text>
+                    ) : null}
+                    {subtitle ? (
+                      <Text style={styles.subtitle} numberOfLines={1}>
+                        {subtitle}
+                      </Text>
+                    ) : null}
                   </View>
-                  
-                  {cta && (
+
+                  {cta ? (
                     <View style={styles.ctaButton}>
                       <Text style={styles.ctaText}>{cta}</Text>
-                      <ChevronRight size={14} color={colors.bgDeep} />
+                      <ChevronRight size={14} color={colors.ink} />
                     </View>
-                  )}
+                  ) : null}
                 </View>
               </LinearGradient>
             </Pressable>
@@ -145,96 +229,13 @@ export function BannerSlider({ placement, style }: Props) {
         })}
       </ScrollView>
 
-      {banners.length > 1 && (
+      {banners.length > 1 ? (
         <View style={styles.pagination}>
           {banners.map((_, i) => (
-            <View 
-              key={i} 
-              style={[
-                styles.dot, 
-                activeIndex === i && styles.dotActive
-              ]} 
-            />
+            <View key={i} style={[styles.dot, activeIndex === i && styles.dotActive]} />
           ))}
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: spacing.md,
-  },
-  bannerWrap: {
-    width: SLIDER_WIDTH,
-    height: 160,
-    borderRadius: radius.xl,
-    overflow: 'hidden',
-    backgroundColor: colors.inkDeep,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-    padding: 20,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  textColumn: {
-    flex: 1,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 22,
-    fontFamily: font.display,
-    marginBottom: 4,
-    lineHeight: 28,
-  },
-  subtitle: {
-    color: colors.goldDim,
-    fontSize: 12,
-    fontFamily: font.sansMedium,
-    letterSpacing: 0.5,
-  },
-  ctaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.gold,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-  },
-  ctaText: {
-    color: colors.bgDeep,
-    fontSize: 12,
-    fontFamily: font.sansBold,
-  },
-  pagination: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 12,
-    gap: 6,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.line,
-  },
-  dotActive: {
-    width: 18,
-    backgroundColor: colors.gold,
-  },
-});

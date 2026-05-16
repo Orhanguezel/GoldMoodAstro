@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,239 +9,20 @@ import {
   RefreshControl,
   Alert,
   Linking,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, Wallet, Gift, ArrowUpRight, ArrowDownLeft, Zap, ChevronRight } from 'lucide-react-native';
+import { ChevronLeft, Wallet, Gift, ArrowUpRight, ArrowDownLeft, Zap } from 'lucide-react-native';
 
-import { colors, spacing, font, radius } from '@/theme/tokens';
+import { useAppTheme, type AppTheme } from '@/theme';
+import { safeRouterBack } from '@/lib/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { creditsApi } from '@/lib/api';
 import type { CreditMe, CreditPackage, CreditTransaction } from '@/types';
 
-const { width } = Dimensions.get('window');
-
-function formatMoneyMinor(value: number, currency: string): string {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return `0 ${currency}`;
-  return `${(amount / 100).toFixed(0)} ${currency}`;
-}
-
-export default function CreditsScreen() {
-  const { isAuthenticated, authHydrating } = useAuth();
-
-  const [creditMe, setCreditMe] = useState<CreditMe | null>(null);
-  const [packages, setPackages] = useState<CreditPackage[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [purchasingId, setPurchasingId] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    if (!isAuthenticated) return;
-    setLoading(true);
-    try {
-      const [me, pkgList] = await Promise.all([
-        creditsApi.me(),
-        creditsApi.packages(),
-      ]);
-      setCreditMe(me);
-      setPackages(pkgList);
-    } catch (err: any) {
-      console.error('Credits load error:', err);
-      setCreditMe(null);
-      setPackages([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [isAuthenticated]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (authHydrating || !isAuthenticated) return;
-      load();
-    }, [authHydrating, isAuthenticated, load]),
-  );
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    load();
-  };
-
-  const onPurchase = async (pkg: CreditPackage) => {
-    setPurchasingId(pkg.id);
-    try {
-      const result = await creditsApi.purchase(pkg.id, 'iyzipay');
-      const data = (result as any).data || result;
-      const checkout = data?.checkout_url;
-
-      if (checkout) {
-        await Linking.openURL(checkout);
-      } else {
-        await load();
-        Alert.alert('İşlem Başlatıldı', 'Ödeme akışını tamamlamak için yönlendirileceksiniz.');
-      }
-    } catch (err: any) {
-      Alert.alert('Hata', err.message || 'Kredi paketi alınamadı.');
-    } finally {
-      setPurchasingId(null);
-    }
-  };
-
-  const transactions = creditMe?.recent_transactions || [];
-
-  if (authHydrating) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safe} edges={['top']}>
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-              <ChevronLeft size={24} color={colors.text} />
-            </Pressable>
-            <Text style={styles.headerTitle}>Kredi & Cüzdan</Text>
-            <View style={{ width: 40 }} />
-          </View>
-          <ScrollView contentContainerStyle={styles.guestScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.guestIconWrap}>
-              <Wallet size={32} color={colors.bgDeep} />
-            </View>
-            <Text style={styles.guestTitle}>Kredi bakiyeniz</Text>
-            <Text style={styles.guestSubtitle}>
-              Bakiye, paketler ve işlem geçmişi hesabınıza bağlıdır. Yükleme veya harcama için giriş yapın.
-            </Text>
-            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
-              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
-                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
-                <ChevronRight size={18} color={colors.bgDeep} />
-              </LinearGradient>
-            </Pressable>
-            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
-              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
-            </Pressable>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-            <ChevronLeft size={24} color={colors.text} />
-          </Pressable>
-          <Text style={styles.headerTitle}>Kredi & Cüzdan</Text>
-          <View style={{ width: 40 }} />
-        </View>
-
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
-        >
-          
-          {/* Balance Card */}
-          <View style={styles.balanceCard}>
-            <View style={styles.balanceHeader}>
-              <Wallet size={20} color={colors.gold} />
-              <Text style={styles.balanceLabel}>MEVCUT BAKİYE</Text>
-            </View>
-            <Text style={styles.balanceValue}>
-              {creditMe?.balance || 0} <Text style={styles.currency}>KREDİ</Text>
-            </Text>
-            <View style={styles.balanceFooter}>
-              <Zap size={14} color={colors.success} />
-              <Text style={styles.balanceInfo}>Anında kullanılabilir bakiyeniz.</Text>
-            </View>
-          </View>
-
-          {/* Packages Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>KREDİ YÜKLE</Text>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pkgScroll}>
-              <View style={styles.pkgContainer}>
-                {packages.map((pkg) => (
-                  <View key={pkg.id} style={styles.pkgCard}>
-                    <View style={styles.pkgTop}>
-                      <Text style={styles.pkgCredits}>{pkg.credits}</Text>
-                      <Text style={styles.pkgCreditsLabel}>KREDİ</Text>
-                    </View>
-                    {pkg.bonus_credits > 0 && (
-                      <View style={styles.bonusBadge}>
-                        <Gift size={10} color={colors.bgDeep} />
-                        <Text style={styles.bonusText}>+{pkg.bonus_credits} BONUS</Text>
-                      </View>
-                    )}
-                    <Text style={styles.pkgPrice}>{formatMoneyMinor(pkg.price_minor, pkg.currency)}</Text>
-                    <Pressable
-                      style={[styles.buyBtn, purchasingId === pkg.id && styles.btnDisabled]}
-                      onPress={() => onPurchase(pkg)}
-                      disabled={purchasingId === pkg.id}
-                    >
-                      {purchasingId === pkg.id ? <ActivityIndicator size="small" color={colors.bgDeep} /> : <Text style={styles.buyBtnText}>Satın Al</Text>}
-                    </Pressable>
-                  </View>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-
-          {/* Transactions Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>SON İŞLEMLER</Text>
-            </View>
-            {transactions.length > 0 ? (
-              transactions.map((tx) => (
-                <View key={tx.id} style={styles.txItem}>
-                  <View style={styles.txIcon}>
-                    {tx.amount > 0 ? <ArrowDownLeft size={16} color={colors.success} /> : <ArrowUpRight size={16} color={colors.danger} />}
-                  </View>
-                  <View style={styles.txBody}>
-                    <Text style={styles.txTitle}>{tx.description || (tx.amount > 0 ? 'Kredi Yükleme' : 'Kredi Harcaması')}</Text>
-                    <Text style={styles.txDate}>{new Date(tx.created_at).toLocaleDateString('tr-TR')}</Text>
-                  </View>
-                  <Text style={[styles.txAmount, tx.amount > 0 ? styles.txPlus : styles.txMinus]}>
-                    {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
-                  </Text>
-                </View>
-              ))
-            ) : (
-              <View style={styles.emptyBox}>
-                <Text style={styles.emptyText}>Henüz bir işlem bulunmuyor.</Text>
-              </View>
-            )}
-          </View>
-
-        </ScrollView>
-      </SafeAreaView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -281,47 +62,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: 40,
   },
-  guestScroll: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: 48,
-  },
-  guestIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.gold,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  guestTitle: {
-    fontFamily: font.display,
-    fontSize: 26,
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  guestSubtitle: {
-    fontFamily: font.sans,
-    fontSize: 15,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing['2xl'],
-  },
-  guestPrimaryWrap: { borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
-  guestPrimaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-  },
-  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
-  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
-  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
 
   // Balance Card
   balanceCard: {
@@ -427,7 +167,7 @@ const styles = StyleSheet.create({
   bonusText: {
     fontFamily: font.sansBold,
     fontSize: 9,
-    color: colors.bgDeep,
+    color: colors.ink,
   },
   pkgPrice: {
     fontFamily: font.sansBold,
@@ -449,7 +189,7 @@ const styles = StyleSheet.create({
   buyBtnText: {
     fontFamily: font.sansBold,
     fontSize: 12,
-    color: colors.bgDeep,
+    color: colors.ink,
   },
 
   // Transactions
@@ -505,4 +245,190 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
   },
-});
+  });
+}
+
+function formatMoneyMinor(value: number, currency: string): string {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return `0 ${currency}`;
+  return `${(amount / 100).toFixed(0)} ${currency}`;
+}
+
+export default function CreditsScreen() {
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
+  const { isAuthenticated, loading: authLoading } = useAuth();
+
+  const [creditMe, setCreditMe] = useState<CreditMe | null>(null);
+  const [packages, setPackages] = useState<CreditPackage[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [purchasingId, setPurchasingId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setLoading(true);
+    try {
+      const [me, pkgList] = await Promise.all([
+        creditsApi.me(),
+        creditsApi.packages(),
+      ]);
+      setCreditMe(me);
+      setPackages(pkgList);
+    } catch (err: any) {
+      console.error('Credits load error:', err);
+      setCreditMe(null);
+      setPackages([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [isAuthenticated]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (authLoading) return;
+      if (!isAuthenticated) {
+        router.replace('/auth/login' as any);
+        return;
+      }
+      load();
+    }, [authLoading, isAuthenticated, load]),
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    load();
+  };
+
+  const onPurchase = async (pkg: CreditPackage) => {
+    setPurchasingId(pkg.id);
+    try {
+      const result = await creditsApi.purchase(pkg.id, 'iyzipay');
+      const data = (result as any).data || result;
+      const checkout = data?.checkout_url;
+
+      if (checkout) {
+        await Linking.openURL(checkout);
+      } else {
+        await load();
+        Alert.alert('İşlem Başlatıldı', 'Ödeme akışını tamamlamak için yönlendirileceksiniz.');
+      }
+    } catch (err: any) {
+      Alert.alert('Hata', err.message || 'Kredi paketi alınamadı.');
+    } finally {
+      setPurchasingId(null);
+    }
+  };
+
+  const transactions = creditMe?.recent_transactions || [];
+
+  if (authLoading || (loading && !refreshing)) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable onPress={() => safeRouterBack('/(tabs)/profile')} style={styles.headerBtn}>
+            <ChevronLeft size={24} color={colors.text} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Kredi & Cüzdan</Text>
+          <View style={{ width: 40 }} />
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
+        >
+          
+          {/* Balance Card */}
+          <View style={styles.balanceCard}>
+            <View style={styles.balanceHeader}>
+              <Wallet size={20} color={colors.gold} />
+              <Text style={styles.balanceLabel}>MEVCUT BAKİYE</Text>
+            </View>
+            <Text style={styles.balanceValue}>
+              {creditMe?.balance || 0} <Text style={styles.currency}>KREDİ</Text>
+            </Text>
+            <View style={styles.balanceFooter}>
+              <Zap size={14} color={colors.success} />
+              <Text style={styles.balanceInfo}>Anında kullanılabilir bakiyeniz.</Text>
+            </View>
+          </View>
+
+          {/* Packages Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>KREDİ YÜKLE</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pkgScroll}>
+              <View style={styles.pkgContainer}>
+                {packages.map((pkg) => (
+                  <View key={pkg.id} style={styles.pkgCard}>
+                    <View style={styles.pkgTop}>
+                      <Text style={styles.pkgCredits}>{pkg.credits}</Text>
+                      <Text style={styles.pkgCreditsLabel}>KREDİ</Text>
+                    </View>
+                    {pkg.bonus_credits > 0 && (
+                      <View style={styles.bonusBadge}>
+                        <Gift size={10} color={colors.ink} />
+                        <Text style={styles.bonusText}>+{pkg.bonus_credits} BONUS</Text>
+                      </View>
+                    )}
+                    <Text style={styles.pkgPrice}>{formatMoneyMinor(pkg.price_minor, pkg.currency)}</Text>
+                    <Pressable
+                      style={[styles.buyBtn, purchasingId === pkg.id && styles.btnDisabled]}
+                      onPress={() => onPurchase(pkg)}
+                      disabled={purchasingId === pkg.id}
+                    >
+                      {purchasingId === pkg.id ? <ActivityIndicator size="small" color={colors.ink} /> : <Text style={styles.buyBtnText}>Satın Al</Text>}
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+
+          {/* Transactions Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>SON İŞLEMLER</Text>
+            </View>
+            {transactions.length > 0 ? (
+              transactions.map((tx) => (
+                <View key={tx.id} style={styles.txItem}>
+                  <View style={styles.txIcon}>
+                    {tx.amount > 0 ? <ArrowDownLeft size={16} color={colors.success} /> : <ArrowUpRight size={16} color={colors.danger} />}
+                  </View>
+                  <View style={styles.txBody}>
+                    <Text style={styles.txTitle}>{tx.description || (tx.amount > 0 ? 'Kredi Yükleme' : 'Kredi Harcaması')}</Text>
+                    <Text style={styles.txDate}>{new Date(tx.created_at).toLocaleDateString('tr-TR')}</Text>
+                  </View>
+                  <Text style={[styles.txAmount, tx.amount > 0 ? styles.txPlus : styles.txMinus]}>
+                    {tx.amount > 0 ? `+${tx.amount}` : tx.amount}
+                  </Text>
+                </View>
+              ))
+            ) : (
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyText}>Henüz bir işlem bulunmuyor.</Text>
+              </View>
+            )}
+          </View>
+
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
+

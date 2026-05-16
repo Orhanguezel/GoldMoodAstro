@@ -46,7 +46,7 @@ export function useAuth() {
     user, 
     /** @deprecated Prefer `authHydrating` for new code — same value. */
     loading,
-    /** True while the first session check runs (storage token + optional `me()`). Avoid guest-only UI when this is true. */
+    /** True while the first session check runs. Avoid guest-only UI while this is true. */
     authHydrating: loading,
     logout,
     refreshUser: initAuth,

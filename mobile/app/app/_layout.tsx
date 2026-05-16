@@ -1,3 +1,4 @@
+import '@/polyfills';
 import { useEffect, useState } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -26,12 +27,13 @@ import {
 
 import { initI18n } from '@/lib/i18n';
 import { registerPushToken } from '@/lib/notifications';
-import { statusBar } from '@/theme/tokens';
+import { ThemeProvider, useAppTheme } from '@/theme';
 
 initI18n();
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-export default function RootLayout() {
+function RootLayoutInner() {
+  const { statusBar } = useAppTheme();
   const router = useRouter();
   const lastNotification = Notifications.useLastNotificationResponse();
 
@@ -51,17 +53,11 @@ export default function RootLayout() {
   });
   const [ready, setReady] = useState(false);
 
-  // Bildirime tıklanınca randevu detayı (veya sekmeler)
   useEffect(() => {
     if (!lastNotification || !ready) return;
     const data = lastNotification.notification.request.content.data as Record<string, unknown>;
-    const bookingId = data?.booking_id ?? data?.bookingId;
-    if (typeof bookingId === 'string' && bookingId.length > 0) {
-      router.push(`/booking/${bookingId}` as any);
-      return;
-    }
-    if (data?.screen === 'bookings') {
-      router.push('/(tabs)/bookings');
+    if (data?.booking_id) {
+      router.push(`/(tabs)/bookings`);
     }
   }, [lastNotification, ready]);
 
@@ -69,67 +65,55 @@ export default function RootLayout() {
     if (fontsReady) {
       SplashScreen.hideAsync().catch(() => {});
       setReady(true);
-      registerPushToken().catch(err => console.warn('Push init error:', err));
+      registerPushToken().catch((err) => console.warn('Push init error:', err));
     }
   }, [fontsReady]);
 
   if (!ready) return null;
 
   return (
+    <SafeAreaProvider>
+      <StatusBar style={statusBar.default} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+
+        <Stack.Screen name="onboarding/index" options={{ presentation: 'fullScreenModal' }} />
+
+        <Stack.Screen name="auth/login" />
+        <Stack.Screen name="auth/register" />
+
+        <Stack.Screen
+          name="consultant/[id]"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+
+        <Stack.Screen name="booking/checkout" options={{ presentation: 'modal' }} />
+
+        <Stack.Screen name="booking/payment" options={{ presentation: 'fullScreenModal' }} />
+
+        <Stack.Screen
+          name="call/[bookingId]"
+          options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
+        />
+
+        <Stack.Screen name="call/rate" options={{ presentation: 'modal' }} />
+
+        <Stack.Screen name="menu/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+
+        <Stack.Screen name="webview/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+
+        <Stack.Screen name="booking/[id]/review" options={{ presentation: 'modal' }} />
+      </Stack>
+    </SafeAreaProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <StatusBar style={statusBar.default} />
-        <Stack screenOptions={{ headerShown: false }}>
-          {/* Ana navigasyon */}
-          <Stack.Screen name="(tabs)" />
-
-          {/* Onboarding — ilk açılış */}
-          <Stack.Screen
-            name="onboarding/index"
-            options={{ presentation: 'fullScreenModal' }}
-          />
-
-          {/* Auth ekranları */}
-          <Stack.Screen name="auth/login" />
-          <Stack.Screen name="auth/register" />
-
-          {/* Danışman detay — modal olarak açılır */}
-          <Stack.Screen
-            name="consultant/[id]"
-            options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
-          />
-
-          {/* Randevu ödeme */}
-          <Stack.Screen
-            name="booking/checkout"
-            options={{ presentation: 'modal' }}
-          />
-
-          {/* Iyzipay WebView ödeme */}
-          <Stack.Screen
-            name="booking/payment"
-            options={{ presentation: 'fullScreenModal' }}
-          />
-
-          {/* Sesli görüşme — tam ekran */}
-          <Stack.Screen
-            name="call/[bookingId]"
-            options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
-          />
-
-          {/* Seans sonu değerlendirme */}
-          <Stack.Screen
-            name="call/rate"
-            options={{ presentation: 'modal' }}
-          />
-
-          {/* Seans sonrası değerlendirme */}
-          <Stack.Screen
-            name="booking/[id]/review"
-            options={{ presentation: 'modal' }}
-          />
-        </Stack>
-      </SafeAreaProvider>
+      <ThemeProvider>
+        <RootLayoutInner />
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

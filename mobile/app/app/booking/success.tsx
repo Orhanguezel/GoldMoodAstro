@@ -1,82 +1,15 @@
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { useMemo } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, font, radius, shadows } from '@/theme/tokens';
-import { useAuth } from '@/hooks/useAuth';
 
-export default function BookingSuccessScreen() {
-  const { t } = useTranslation();
-  const { isAuthenticated, authHydrating } = useAuth();
+import { useAppTheme, type AppTheme } from '@/theme';
 
-  if (authHydrating) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={[styles.container, { justifyContent: 'center' }]}>
-          <ActivityIndicator size="large" color={colors.gold} />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.container}>
-          <Text style={styles.title}>{t('booking.successTitle', 'Randevunuz Alındı!')}</Text>
-          <Text style={styles.subtitle}>
-            Randevularınızı görmek ve görüşmeye katılmak için oturum açın.
-          </Text>
-          <View style={styles.actions}>
-            <Pressable style={styles.primaryBtn} onPress={() => router.push('/auth/login' as any)}>
-              <Text style={styles.primaryBtnText}>Giriş Yap</Text>
-            </Pressable>
-            <Pressable style={styles.registerBtn} onPress={() => router.push('/auth/register' as any)}>
-              <Text style={styles.registerBtnText}>Hesap oluştur</Text>
-            </Pressable>
-            <Pressable style={styles.secondaryBtn} onPress={() => router.replace('/(tabs)' as any)}>
-              <Text style={styles.secondaryBtnText}>{t('common.backToHome', 'Ana Sayfaya Dön')}</Text>
-            </Pressable>
-          </View>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        <View style={styles.iconContainer}>
-          <Text style={styles.icon}>✨</Text>
-        </View>
-        
-        <Text style={styles.title}>{t('booking.successTitle', 'Randevunuz Alındı!')}</Text>
-        <Text style={styles.subtitle}>
-          Yıldızlar harika bir görüşme için hizalandı. Randevu detaylarınıza 'Randevularım' sekmesinden ulaşabilirsiniz.
-        </Text>
-
-        <View style={styles.actions}>
-          <Pressable 
-            style={styles.primaryBtn} 
-            onPress={() => router.replace('/(tabs)/bookings' as any)}
-          >
-            <Text style={styles.primaryBtnText}>{t('booking.viewBookings', 'Randevularıma Git')}</Text>
-          </Pressable>
-
-          <Pressable 
-            style={styles.secondaryBtn} 
-            onPress={() => router.replace('/(tabs)' as any)}
-          >
-            <Text style={styles.secondaryBtnText}>{t('common.backToHome', 'Ana Sayfaya Dön')}</Text>
-          </Pressable>
-        </View>
-      </View>
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.midnight },
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius, shadows } = t;
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.bg },
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
   iconContainer: { 
     width: 100, height: 100, borderRadius: 50, 
@@ -103,14 +36,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxl
   },
   actions: { width: '100%', gap: spacing.md },
-  registerBtn: {
-    paddingVertical: spacing.md,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  registerBtnText: { color: colors.gold, fontFamily: font.sansMedium, fontSize: 16 },
   primaryBtn: { 
     backgroundColor: colors.amethyst, 
     paddingVertical: spacing.md, 
@@ -128,3 +53,46 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: { color: colors.stardustDim, fontFamily: font.sansMedium, fontSize: 16 },
 });
+}
+
+
+
+export default function BookingSuccessScreen() {
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
+  const { t } = useTranslation();
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.container}>
+        <View style={styles.iconContainer}>
+          <Text style={styles.icon}>✨</Text>
+        </View>
+        
+        <Text style={styles.title}>{t('booking.successTitle', 'Randevunuz Alındı!')}</Text>
+        <Text style={styles.subtitle}>
+          Yıldızlar harika bir görüşme için hizalandı. Randevu detaylarınıza 'Randevularım' sekmesinden ulaşabilirsiniz.
+        </Text>
+
+        <View style={styles.actions}>
+          <Pressable 
+            style={styles.primaryBtn} 
+            onPress={() => router.replace('/(tabs)/bookings')}
+          >
+            <Text style={styles.primaryBtnText}>{t('booking.viewBookings', 'Randevularıma Git')}</Text>
+          </Pressable>
+
+          <Pressable 
+            style={styles.secondaryBtn} 
+            onPress={() => router.replace('/(tabs)/today')}
+          >
+            <Text style={styles.secondaryBtnText}>{t('common.backToHome', 'Ana Sayfaya Dön')}</Text>
+          </Pressable>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+

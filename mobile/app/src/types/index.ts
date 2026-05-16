@@ -323,7 +323,7 @@ export interface BirthChartCreateInput {
   pob_lat: number;
   pob_lng: number;
   pob_label: string;
-  /** @deprecated Backend resolves timezone from coordinates (T32-2a). Do not send from client. */
+  /** @deprecated Backend resolves timezone from coordinates. Do not send from client. */
   tz_offset?: number;
   tob_known?: boolean;
 }
@@ -448,4 +448,29 @@ export interface RedeemCampaignResponse {
   valid: boolean;
   campaign: Campaign;
   message?: string;
+}
+
+// ─── Navigation / menu_items (backend public tree) ───────────────
+
+export interface PublicMenuItemDto {
+  id: string;
+  title: string;
+  url: string;
+  href: string;
+  slug: string | null;
+  section_id: string | null;
+  parent_id: string | null;
+  icon: string | null;
+  is_active: boolean;
+  position: number;
+  order_num: number;
+  children?: PublicMenuItemDto[];
+}
+
+/** GET /footer_sections — public liste (mobil footer grupları) */
+export interface FooterSectionPublic {
+  id: string;
+  slug: string;
+  title: string | null;
+  display_order: number;
 }

@@ -1,4 +1,10 @@
-import { mobileBrandConfig } from '@/config/brand';
+/**
+ * GoldMoodAstro API istemcisi.
+ * Base URL Fastify ön ekiyle uyumlu: /api (örn. /api/auth/login).
+ * Auth gerektiren istekler Authorization: Bearer ile gider.
+ */
+
+import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { storage } from '@/lib/storage';
 import type {
@@ -15,17 +21,59 @@ import type {
   LoginInput, LoginResponse,
   RegisterInput, RegisterResponse,
   Campaign, RedeemCampaignResponse,
+  PublicMenuItemDto,
+  FooterSectionPublic,
 } from '@/types';
 
 const API_URL =
-  mobileBrandConfig.apiUrl;
+  process.env.EXPO_PUBLIC_API_URL ??
+  (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ??
+  'http://localhost:8094/api';
+
+/** Cihazın yerel takvimine göre YYYY-MM-DD — günlük burç eşlemesi için sunucu TZ’inden bağımsız. */
+export function formatLocalYmd(d: Date = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** YYYY-MM-DD → yerel gece yarısı Date (UTC kayması yok). */
+export function localDateFromYmd(ymd: string): Date | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd.trim());
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
 
 export const getAssetUrl = (path: string | null | undefined) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  const base = API_URL.replace('/api/v1', '');
+  const base = API_URL.replace(/\/api(\/v1)?\/?$/i, '');
   return `${base}${path}`;
 };
+
+/** Public web origin derived from API base — used for CMS routes (blog, about, …). */
+export function getPublicSiteOrigin(): string {
+  return API_URL.replace(/\/api(\/v1)?\/?$/i, '').replace(/\/+$/, '');
+}
+
+/** Next.js site (aynı içerik / web menüleri) — WebView URL’leri için. */
+export function getPublicWebUrl(): string {
+  const fromEnv = typeof process !== 'undefined' ? process.env.EXPO_PUBLIC_SITE_URL?.trim() : '';
+  const extra = (Constants.expoConfig?.extra ?? {}) as { siteUrl?: string };
+  const fromExtra = extra.siteUrl?.trim();
+  if (fromEnv) return fromEnv.replace(/\/+$/, '');
+  if (fromExtra) return fromExtra.replace(/\/+$/, '');
+  const apiOrigin = API_URL.replace(/\/api(\/v1)?\/?$/i, '').replace(/\/+$/, '');
+  if (/127\.0\.0\.1|localhost/i.test(apiOrigin)) return 'http://localhost:3000';
+  try {
+    const normalized = apiOrigin.startsWith('http') ? apiOrigin : `https://${apiOrigin}`;
+    const u = new URL(normalized);
+    return `${u.protocol}//${u.hostname}`.replace(/\/+$/, '');
+  } catch {
+    return 'http://localhost:3000';
+  }
+}
 
 // -------------------------------------------------------------------
 // HTTP core
@@ -33,7 +81,7 @@ export const getAssetUrl = (path: string | null | undefined) => {
 
 let _authToken: string | null = null;
 
-/** Bu uçlarda 401 = kimlik bilgisi hatası; oturumu silme / login’e atma. */
+/** Bu uçlarda 401 = kimlik bilgisi hatası; global oturum temizliği yapılmaz. */
 const UNAUTHORIZED_NO_GLOBAL_SIGNOUT = new Set([
   '/auth/login',
   '/auth/register',
@@ -44,6 +92,26 @@ export function setAuthToken(token: string | null) {
   _authToken = token;
 }
 
+/** Bellekte token yoksa AsyncStorage'dan yükler (soğuk açılış / onboarding). */
+export async function hydrateAuthTokenFromStorage(): Promise<string | null> {
+  if (_authToken) return _authToken;
+  const t = await storage.getAuthToken();
+  if (t) _authToken = t;
+  return _authToken;
+}
+
+function messageFromApiErrorBody(err: unknown): string | undefined {
+  if (!err || typeof err !== 'object') return undefined;
+  const o = err as Record<string, unknown>;
+  if (typeof o.message === 'string') return o.message;
+  const nested = o.error;
+  if (typeof nested === 'string') return nested;
+  if (nested && typeof nested === 'object' && typeof (nested as { message?: string }).message === 'string') {
+    return (nested as { message: string }).message;
+  }
+  return undefined;
+}
+
 async function handleSessionExpired(path: string) {
   if (!_authToken || UNAUTHORIZED_NO_GLOBAL_SIGNOUT.has(path)) return;
   await storage.clearSession();
@@ -51,7 +119,7 @@ async function handleSessionExpired(path: string) {
   try {
     router.replace('/auth/login' as const);
   } catch {
-    /* navigasyon kapalı olabilir */
+    // Navigation may not be mounted during early app startup.
   }
 }
 
@@ -61,6 +129,8 @@ async function request<T>(
   body?: unknown,
   params?: Record<string, string | number>,
 ): Promise<T> {
+  await hydrateAuthTokenFromStorage();
+
   const url = new URL(`${API_URL}${path}`);
   if (params) {
     for (const [k, v] of Object.entries(params)) {
@@ -84,13 +154,56 @@ async function request<T>(
       if (res.status === 401) {
         await handleSessionExpired(path);
       }
-      throw new Error((err as { message?: string }).message ?? `HTTP ${res.status}`);
+      const msg =
+        messageFromApiErrorBody(err) ??
+        (typeof (err as { error?: unknown }).error === 'object'
+          ? JSON.stringify((err as { error: object }).error)
+          : undefined);
+      throw new Error(msg ?? `HTTP ${res.status}`);
     }
 
     return res.json() as Promise<T>;
-  } catch (e: any) {
-    console.error(`[NETWORK ERROR] ${method} ${path} | ${e.message}`);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`[NETWORK ERROR] ${method} ${path} | ${msg}`);
     throw e;
+  }
+}
+
+/** GET: 404 veya ağ hatası → null (tema / opsiyonel veri; LogBox spam’i yok). */
+async function getAllow404<T>(
+  path: string,
+  params?: Record<string, string | number>,
+): Promise<T | null> {
+  await hydrateAuthTokenFromStorage();
+
+  const url = new URL(`${API_URL}${path}`);
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      url.searchParams.set(k, String(v));
+    }
+  }
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (_authToken) headers['Authorization'] = `Bearer ${_authToken}`;
+
+  try {
+    const res = await fetch(url.toString(), { method: 'GET', headers });
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      if (__DEV__) {
+        const err = await res.json().catch(() => ({}));
+        console.warn(`[GoldMood] GET ${path} → ${res.status}`, err);
+      }
+      return null;
+    }
+    return (await res.json()) as T;
+  } catch {
+    if (__DEV__) {
+      console.warn(
+        `[GoldMood] GET ${path} — ağ hatası (backend çalışıyor mu? iOS simülatör: localhost; gerçek cihaz: Mac LAN IP + EXPO_PUBLIC_API_URL)`,
+      );
+    }
+    return null;
   }
 }
 
@@ -429,9 +542,49 @@ export const kvkkApi = {
 // -------------------------------------------------------------------
 
 export const horoscopesApi = {
-  getToday: async (params: { sign: string; date?: string }): Promise<any> => {
-    const res = await get<{ data: any }>('/horoscopes/today', params);
-    return res.data;
+  /** Bugün için kayıt yoksa backend 404 döner; uygulama bunu null sayar. */
+  getToday: async (params: {
+    sign: string;
+    /** YYYY-MM-DD; verilmezse cihazın yerel günü kullanılır (TR’de doğru “bugün”). */
+    date?: string;
+    locale?: string;
+  }): Promise<any | null> => {
+    const date = params.date ?? formatLocalYmd(new Date());
+    const url = new URL(`${API_URL}/horoscopes/today`);
+    url.searchParams.set('sign', params.sign);
+    url.searchParams.set('date', date);
+    if (params.locale) url.searchParams.set('locale', params.locale);
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+    };
+    if (_authToken) headers.Authorization = `Bearer ${_authToken}`;
+
+    try {
+      const res = await fetch(url.toString(), {
+        method: 'GET',
+        headers,
+        cache: 'no-store',
+      });
+      if (res.status === 404) return null;
+      if (!res.ok) {
+        if (__DEV__) {
+          const err = await res.json().catch(() => ({}));
+          console.warn(`[GoldMood] GET /horoscopes/today → ${res.status}`, err);
+        }
+        return null;
+      }
+      const json = (await res.json()) as { data: any };
+      const row = json?.data;
+      if (!row) return null;
+      const periodStart = row.period_start_date ?? row.periodStartDate ?? row.date;
+      return { ...row, date: periodStart };
+    } catch {
+      if (__DEV__) console.warn('[GoldMood] GET /horoscopes/today network error');
+      return null;
+    }
   },
   getSignInfo: async (sign: string): Promise<any> => {
     const res = await get<{ data: any }>(`/horoscopes/${sign}`);
@@ -587,17 +740,77 @@ export const userApi = {
 };
 
 // -------------------------------------------------------------------
+// Site settings (public)
+// -------------------------------------------------------------------
+
+export const siteSettingsApi = {
+  getDesignTokens: async (): Promise<unknown | null> => {
+    const row = await getAllow404<{ value: unknown }>('/site_settings/design_tokens');
+    if (!row) return null;
+    return row.value;
+  },
+};
+
+// -------------------------------------------------------------------
 // Banners
 // -------------------------------------------------------------------
 
 export const bannersApi = {
   list: async (params: { placement: string; locale?: string }): Promise<any[]> => {
-    const res = await get<{ data: any[] }>('/banners', params);
-    return Array.isArray(res?.data) ? res.data : [];
+    try {
+      const res = await get<{ data: any[] }>('/banners', params);
+      return Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      return [];
+    }
   },
 
-  trackClick: (id: string) =>
-    post<void>(`/banners/${id}/click`, {}),
+  trackClick: (id: string) => {
+    post<void>(`/banners/${id}/click`, {}).catch(() => {});
+  },
+};
+
+// -------------------------------------------------------------------
+// Navigation (admin-managed header menu — same payload as web)
+// -------------------------------------------------------------------
+
+export const navigationApi = {
+  listHeaderMenu: async (locale: string): Promise<PublicMenuItemDto[]> => {
+    const raw = await get<unknown>('/menu_items', {
+      location: 'header',
+      nested: 'true',
+      is_active: 'true',
+      locale,
+    });
+    return normalizeListResponse<PublicMenuItemDto>(raw);
+  },
+
+  listFooterMenu: async (locale: string): Promise<PublicMenuItemDto[]> => {
+    const raw = await get<unknown>('/menu_items', {
+      location: 'footer',
+      is_active: 'true',
+      locale,
+    });
+    return normalizeListResponse<PublicMenuItemDto>(raw).sort(
+      (a, b) => (a.position ?? a.order_num ?? 0) - (b.position ?? b.order_num ?? 0),
+    );
+  },
+
+  listFooterSections: async (locale: string): Promise<FooterSectionPublic[]> => {
+    const raw = await get<unknown>('/footer_sections', {
+      is_active: 'true',
+      locale,
+    });
+    const rows = normalizeListResponse<FooterSectionPublic & { display_order?: number }>(raw);
+    return rows
+      .map((r) => ({
+        id: r.id,
+        slug: r.slug,
+        title: r.title,
+        display_order: typeof r.display_order === 'number' ? r.display_order : 0,
+      }))
+      .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+  },
 };
 
 // -------------------------------------------------------------------

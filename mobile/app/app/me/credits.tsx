@@ -1,17 +1,53 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Pressable, 
+import React, { useMemo, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
   ActivityIndicator,
   Dimensions,
   RefreshControl,
   Alert
 } from 'react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, font, radius, spacing } = t;
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
+  navHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  navTitle: { fontFamily: font.display, fontSize: 20, color: colors.text },
+  scrollContent: { padding: spacing.lg },
+  balanceCard: { padding: 24, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.gold + '22', marginBottom: 32, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', overflow: 'hidden' },
+  balanceInfo: { gap: 4 },
+  balanceLabel: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, letterSpacing: 1 },
+  balanceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
+  balanceValue: { fontFamily: font.display, fontSize: 40, color: colors.text },
+  balanceUnit: { fontFamily: font.sansBold, fontSize: 14, color: colors.textMuted },
+  balanceIcon: { position: 'absolute', right: -10, bottom: -10 },
+  sectionTitle: { fontFamily: font.display, fontSize: 18, color: colors.text, marginBottom: 16 },
+  packagesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  pkgCard: { width: (width - 40 - 12) / 2, backgroundColor: colors.surface, borderRadius: radius.xl, padding: 20, borderWidth: 1, borderColor: colors.lineSoft, gap: 12 },
+  featuredCard: { borderColor: colors.gold + '66', backgroundColor: colors.gold + '05' },
+  featuredBadge: { position: 'absolute', top: -10, left: 20, backgroundColor: colors.gold, paddingHorizontal: 8, paddingVertical: 4, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  featuredText: { fontFamily: font.sansBold, fontSize: 9, color: colors.ink },
+  pkgName: { fontFamily: font.sansBold, fontSize: 12, color: colors.textMuted, letterSpacing: 0.5 },
+  pkgValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
+  pkgCredits: { fontFamily: font.display, fontSize: 24, color: colors.text },
+  pkgUnit: { fontFamily: font.sansBold, fontSize: 10, color: colors.textMuted },
+  pkgFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.lineSoft },
+  pkgPrice: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
+  footerInfo: { marginTop: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  footerText: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted },
+  });
+}
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { safeRouterBack } from '@/lib/navigation';
 import { 
   Zap, 
   ChevronLeft, 
@@ -22,14 +58,15 @@ import {
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, font, radius, spacing } from '@/theme/tokens';
-import { useAuth } from '@/hooks/useAuth';
+
 import { creditsApi } from '@/lib/api';
 
 const { width } = Dimensions.get('window');
 
 export default function CreditsScreen() {
-  const { isAuthenticated, authHydrating } = useAuth();
+  const theme = useAppTheme();
+  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
   const [balance, setBalance] = useState(0);
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,10 +90,8 @@ export default function CreditsScreen() {
   };
 
   useEffect(() => {
-    if (authHydrating) return;
-    if (!isAuthenticated) return;
     loadData();
-  }, [authHydrating, isAuthenticated]);
+  }, []);
 
   const handleBuy = async (packageId: string) => {
     setBuyLoading(true);
@@ -75,53 +110,11 @@ export default function CreditsScreen() {
     }
   };
 
-  if (authHydrating) {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safe} edges={['top']}>
-          <View style={styles.navHeader}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <ChevronLeft size={24} color={colors.gold} />
-            </Pressable>
-            <Text style={styles.navTitle}>Kredi Yükle</Text>
-            <View style={{ width: 40 }} />
-          </View>
-          <ScrollView contentContainerStyle={styles.guestScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.guestIconWrap}>
-              <Zap size={28} color={colors.bgDeep} />
-            </View>
-            <Text style={styles.guestTitle}>Kredi bakiyesi</Text>
-            <Text style={styles.guestSubtitle}>
-              Paketleri görüntülemek ve ödeme başlatmak için giriş yapın. İşlemler hesabınıza bağlıdır.
-            </Text>
-            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
-              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
-                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
-                <ChevronRight size={18} color={colors.bgDeep} />
-              </LinearGradient>
-            </Pressable>
-            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
-              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
-            </Pressable>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.navHeader}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
           <Text style={styles.navTitle}>Kredi Yükle</Text>
@@ -160,7 +153,7 @@ export default function CreditsScreen() {
                 >
                   {pkg.isFeatured && (
                     <View style={styles.featuredBadge}>
-                       <Award size={10} color={colors.bgDeep} />
+                       <Award size={10} color={colors.ink} />
                        <Text style={styles.featuredText}>POPÜLER</Text>
                     </View>
                   )}
@@ -190,64 +183,3 @@ export default function CreditsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  safe: { flex: 1 },
-  navHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  navTitle: { fontFamily: font.display, fontSize: 20, color: colors.text },
-  scrollContent: { padding: spacing.lg },
-  guestScroll: { padding: spacing.xl, paddingTop: spacing.lg, paddingBottom: 48 },
-  guestIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.gold,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  guestTitle: { fontFamily: font.display, fontSize: 24, color: colors.text, textAlign: 'center', marginBottom: spacing.sm },
-  guestSubtitle: {
-    fontFamily: font.sans,
-    fontSize: 15,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing['2xl'],
-  },
-  guestPrimaryWrap: { borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
-  guestPrimaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-  },
-  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
-  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
-  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
-  balanceCard: { padding: 24, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.gold + '22', marginBottom: 32, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', overflow: 'hidden' },
-  balanceInfo: { gap: 4 },
-  balanceLabel: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, letterSpacing: 1 },
-  balanceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
-  balanceValue: { fontFamily: font.display, fontSize: 40, color: colors.text },
-  balanceUnit: { fontFamily: font.sansBold, fontSize: 14, color: colors.textMuted },
-  balanceIcon: { position: 'absolute', right: -10, bottom: -10 },
-  sectionTitle: { fontFamily: font.display, fontSize: 18, color: colors.text, marginBottom: 16 },
-  packagesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  pkgCard: { width: (width - 40 - 12) / 2, backgroundColor: colors.surface, borderRadius: radius.xl, padding: 20, borderWidth: 1, borderColor: colors.lineSoft, gap: 12 },
-  featuredCard: { borderColor: colors.gold + '66', backgroundColor: colors.gold + '05' },
-  featuredBadge: { position: 'absolute', top: -10, left: 20, backgroundColor: colors.gold, paddingHorizontal: 8, paddingVertical: 4, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  featuredText: { fontFamily: font.sansBold, fontSize: 9, color: colors.bgDeep },
-  pkgName: { fontFamily: font.sansBold, fontSize: 12, color: colors.textMuted, letterSpacing: 0.5 },
-  pkgValueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  pkgCredits: { fontFamily: font.display, fontSize: 24, color: colors.text },
-  pkgUnit: { fontFamily: font.sansBold, fontSize: 10, color: colors.textMuted },
-  pkgFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.lineSoft },
-  pkgPrice: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
-  footerInfo: { marginTop: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  footerText: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted },
-  center: { alignItems: 'center', justifyContent: 'center' },
-});

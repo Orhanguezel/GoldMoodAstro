@@ -1,189 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  Pressable, 
-  ActivityIndicator, 
-  RefreshControl 
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Pressable,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, Bell, CheckCircle2, Info, AlertTriangle, MessageCircle, ChevronRight } from 'lucide-react-native';
-import { format, parseISO } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { useAppTheme, type AppTheme } from '@/theme';
 
-import { colors, spacing, font, radius } from '@/theme/tokens';
-import { notificationsApi } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
-
-export default function NotificationsScreen() {
-  const { isAuthenticated, authHydrating } = useAuth();
-  
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchNotifications = async () => {
-    if (!isAuthenticated) {
-      setLoading(false);
-      setRefreshing(false);
-      return;
-    }
-    try {
-      const res = await notificationsApi.list();
-      setNotifications(res?.items || []);
-    } catch (err) {
-      console.error('Failed to fetch notifications:', err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    if (authHydrating) return;
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
-    }
-    fetchNotifications();
-  }, [isAuthenticated, authHydrating]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchNotifications();
-  }, [isAuthenticated]);
-
-  const handleMarkAsRead = async (id: string) => {
-    try {
-      await notificationsApi.markAsRead(id);
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-    } catch (err) {
-      console.error('Mark as read error:', err);
-    }
-  };
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'booking_confirmed': return <CheckCircle2 size={18} color={colors.success} />;
-      case 'message': return <MessageCircle size={18} color={colors.gold} />;
-      case 'reminder': return <Info size={18} color={colors.info} />;
-      case 'alert': return <AlertTriangle size={18} color={colors.warning} />;
-      default: return <Bell size={18} color={colors.gold} />;
-    }
-  };
-
-  if (authHydrating) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safe} edges={['top']}>
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-              <ChevronLeft size={24} color={colors.text} />
-            </Pressable>
-            <Text style={styles.headerTitle}>Bildirimler</Text>
-            <View style={{ width: 56 }} />
-          </View>
-          <View style={styles.guestBody}>
-            <View style={styles.guestIconWrap}>
-              <Bell size={32} color={colors.bgDeep} />
-            </View>
-            <Text style={styles.guestTitle}>Bildirim merkezi</Text>
-            <Text style={styles.guestSubtitle}>
-              Randevu hatırlatmaları ve mesajlar hesabınıza bağlıdır. Listelemek için giriş yapın.
-            </Text>
-            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
-              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
-                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
-                <ChevronRight size={18} color={colors.bgDeep} />
-              </LinearGradient>
-            </Pressable>
-            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
-              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
-            </Pressable>
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-            <ChevronLeft size={24} color={colors.text} />
-          </Pressable>
-          <Text style={styles.headerTitle}>Bildirimler</Text>
-          <Pressable onPress={() => notificationsApi.markAllAsRead().then(fetchNotifications)} style={styles.markAllBtn}>
-            <Text style={styles.markAllText}>Hepsini Oku</Text>
-          </Pressable>
-        </View>
-
-        <FlatList
-          data={notifications}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />
-          }
-          renderItem={({ item }) => (
-            <Pressable 
-              style={[styles.notifCard, !item.is_read && styles.notifUnread]}
-              onPress={() => handleMarkAsRead(item.id)}
-            >
-              <View style={styles.notifIcon}>
-                {getIcon(item.type)}
-              </View>
-              <View style={styles.notifBody}>
-                <Text style={[styles.notifTitle, !item.is_read && styles.notifTitleUnread]}>
-                  {item.title}
-                </Text>
-                <Text style={styles.notifText}>{item.body}</Text>
-                <Text style={styles.notifTime}>
-                  {format(parseISO(item.created_at), 'd MMM, HH:mm', { locale: tr })}
-                </Text>
-              </View>
-              {!item.is_read && <View style={styles.unreadDot} />}
-            </Pressable>
-          )}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconWrap}>
-                <Bell size={40} color={colors.inkDeep} />
-              </View>
-              <Text style={styles.emptyText}>Henüz bir bildiriminiz bulunmuyor.</Text>
-            </View>
-          }
-        />
-
-      </SafeAreaView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -287,47 +116,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gold,
     marginTop: 6,
   },
-  guestBody: {
-    flex: 1,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing['2xl'],
-    alignItems: 'center',
-  },
-  guestIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  guestTitle: {
-    fontFamily: font.display,
-    fontSize: 26,
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  guestSubtitle: {
-    fontFamily: font.sans,
-    fontSize: 15,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing['2xl'],
-  },
-  guestPrimaryWrap: { alignSelf: 'stretch', borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
-  guestPrimaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-  },
-  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
-  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
-  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
   emptyContainer: {
     padding: 60,
     alignItems: 'center',
@@ -350,4 +138,133 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
   },
-});
+  });
+}
+
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { safeRouterBack } from '@/lib/navigation';
+import { ChevronLeft, Bell, CheckCircle2, Info, AlertTriangle, MessageCircle } from 'lucide-react-native';
+import { format, parseISO } from 'date-fns';
+import { tr } from 'date-fns/locale';
+
+
+import { notificationsApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+
+export default function NotificationsScreen() {
+  const theme = useAppTheme();
+  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
+  const { isAuthenticated } = useAuth();
+  
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchNotifications = async () => {
+    if (!isAuthenticated) return;
+    try {
+      const res = await notificationsApi.list();
+      setNotifications(res?.items || []);
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [isAuthenticated]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchNotifications();
+  }, [isAuthenticated]);
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await notificationsApi.markAsRead(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch (err) {
+      console.error('Mark as read error:', err);
+    }
+  };
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'booking_confirmed': return <CheckCircle2 size={18} color={colors.success} />;
+      case 'message': return <MessageCircle size={18} color={colors.gold} />;
+      case 'reminder': return <Info size={18} color={colors.info} />;
+      case 'alert': return <AlertTriangle size={18} color={colors.warning} />;
+      default: return <Bell size={18} color={colors.gold} />;
+    }
+  };
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable onPress={() => safeRouterBack()} style={styles.headerBtn}>
+            <ChevronLeft size={24} color={colors.text} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Bildirimler</Text>
+          <Pressable onPress={() => notificationsApi.markAllAsRead().then(fetchNotifications)} style={styles.markAllBtn}>
+            <Text style={styles.markAllText}>Hepsini Oku</Text>
+          </Pressable>
+        </View>
+
+        <FlatList
+          data={notifications}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />
+          }
+          renderItem={({ item }) => (
+            <Pressable 
+              style={[styles.notifCard, !item.is_read && styles.notifUnread]}
+              onPress={() => handleMarkAsRead(item.id)}
+            >
+              <View style={styles.notifIcon}>
+                {getIcon(item.type)}
+              </View>
+              <View style={styles.notifBody}>
+                <Text style={[styles.notifTitle, !item.is_read && styles.notifTitleUnread]}>
+                  {item.title}
+                </Text>
+                <Text style={styles.notifText}>{item.body}</Text>
+                <Text style={styles.notifTime}>
+                  {format(parseISO(item.created_at), 'd MMM, HH:mm', { locale: tr })}
+                </Text>
+              </View>
+              {!item.is_read && <View style={styles.unreadDot} />}
+            </Pressable>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconWrap}>
+                <Bell size={40} color={colors.inkDeep} />
+              </View>
+              <Text style={styles.emptyText}>Henüz bir bildiriminiz bulunmuyor.</Text>
+            </View>
+          }
+        />
+
+      </SafeAreaView>
+    </View>
+  );
+}
+

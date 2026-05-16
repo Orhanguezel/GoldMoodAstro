@@ -1,21 +1,76 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Pressable, 
-  ActivityIndicator, 
-  Alert, 
-  ScrollView, 
+import React, { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
   Platform,
-  TextInput 
+  TextInput
 } from 'react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  headerBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
+  headerTitle: { fontFamily: font.display, fontSize: 16, color: colors.text },
+  scrollContent: { padding: spacing.lg, paddingBottom: 120 },
+  summaryCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 24, borderWidth: 1, borderColor: colors.line, marginBottom: 20 },
+  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 24 },
+  summaryTitle: { fontFamily: font.sansBold, fontSize: 11, color: colors.gold, letterSpacing: 2 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 20 },
+  iconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.inkDeep, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.lineSoft },
+  infoTextCol: { flex: 1 },
+  infoLabel: { fontFamily: font.sansBold, fontSize: 10, color: colors.textMuted, letterSpacing: 1 },
+  infoValue: { fontFamily: font.display, fontSize: 18, color: colors.text, marginTop: 4 },
+  divider: { height: 1, backgroundColor: colors.lineSoft, marginVertical: 20 },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  totalLabel: { fontFamily: font.sansBold, fontSize: 15, color: colors.text },
+  totalValue: { fontFamily: font.display, fontSize: 26, color: colors.gold },
+  
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  priceLabel: { fontFamily: font.sans, fontSize: 14, color: colors.textDim },
+  priceVal: { fontFamily: font.sansMedium, fontSize: 14, color: colors.text },
+  discountLabel: { fontFamily: font.sansMedium, fontSize: 14, color: colors.success },
+  discountVal: { fontFamily: font.sansBold, fontSize: 14, color: colors.success },
+
+  promoCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 20, borderWidth: 1, borderColor: colors.line, marginBottom: 20 },
+  promoLabel: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, letterSpacing: 1.5, marginBottom: 12 },
+  promoInputRow: { flexDirection: 'row', gap: 10 },
+  promoInputWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.lineSoft, height: 48 },
+  promoInputDisabled: { opacity: 0.8 },
+  promoInput: { flex: 1, paddingHorizontal: 12, fontFamily: font.sansMedium, fontSize: 14, color: colors.text },
+  clearCoupon: { padding: 10 },
+  applyBtn: { backgroundColor: colors.gold, paddingHorizontal: 16, borderRadius: radius.md, justifyContent: 'center', height: 48 },
+  applyBtnDisabled: { opacity: 0.5 },
+  applyBtnText: { fontFamily: font.sansBold, fontSize: 12, color: colors.ink },
+
+  trustBox: { backgroundColor: 'rgba(76, 175, 110, 0.05)', borderRadius: radius.lg, padding: 16, borderWidth: 1, borderColor: 'rgba(76, 175, 110, 0.15)', marginBottom: 20 },
+  trustHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  trustTitle: { fontFamily: font.sansBold, fontSize: 14, color: colors.success },
+  trustText: { fontFamily: font.sans, fontSize: 12, color: colors.textDim, lineHeight: 18 },
+  policyBox: { paddingHorizontal: 4 },
+  policyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  policyTitle: { fontFamily: font.sansBold, fontSize: 11, color: colors.goldDeep, letterSpacing: 1.5 },
+  policyText: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted, lineHeight: 20 },
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.surface, padding: spacing.lg, paddingBottom: Platform.OS === 'ios' ? 40 : spacing.lg, borderTopWidth: 1, borderColor: colors.line },
+  payBtn: { backgroundColor: colors.gold, flexDirection: 'row', height: 60, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  payBtnDisabled: { opacity: 0.6 },
+  payBtnText: { fontFamily: font.sansBold, fontSize: 16, color: colors.ink },
+  });
+}
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { safeRouterBack } from '@/lib/navigation';
 import { 
   ChevronLeft, 
-  ChevronRight,
   CreditCard, 
   Calendar, 
   Clock, 
@@ -30,13 +85,14 @@ import {
 import { format, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
-import { colors, spacing, font, radius } from '@/theme/tokens';
+
 import { bookingsApi, ordersApi, campaignsApi } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
 import type { Campaign } from '@/types';
 
 export default function BookingCheckoutScreen() {
-  const { isAuthenticated, authHydrating } = useAuth();
+  const theme = useAppTheme();
+  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
   const params = useLocalSearchParams<{
     consultantId: string;
     resourceId: string;
@@ -88,7 +144,6 @@ export default function BookingCheckoutScreen() {
   };
 
   const handleCheckout = async () => {
-    if (!isAuthenticated) return;
     setLoading(true);
     try {
       // 1. Create Booking
@@ -127,52 +182,13 @@ export default function BookingCheckoutScreen() {
     }
   };
 
-  if (authHydrating) {
-    return (
-      <View style={styles.authGate}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safe} edges={['top']}>
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-              <ChevronLeft size={24} color={colors.text} />
-            </Pressable>
-            <Text style={styles.headerTitle}>Randevu Onayı</Text>
-            <View style={{ width: 40 }} />
-          </View>
-          <ScrollView contentContainerStyle={styles.guestScroll}>
-            <Text style={styles.guestTitle}>Ödeme için giriş</Text>
-            <Text style={styles.guestSubtitle}>
-              Randevu oluşturma ve güvenli ödeme hesabınıza bağlıdır. Giriş yaptıktan sonra bu ekrandan devam edebilirsiniz.
-            </Text>
-            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
-              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
-                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
-                <ChevronRight size={18} color={colors.bgDeep} />
-              </LinearGradient>
-            </Pressable>
-            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
-              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
-            </Pressable>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+          <Pressable onPress={() => safeRouterBack()} style={styles.headerBtn}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
           <Text style={styles.headerTitle}>Randevu Onayı</Text>
@@ -272,7 +288,7 @@ export default function BookingCheckoutScreen() {
                   disabled={!couponCode || couponLoading}
                 >
                   {couponLoading ? (
-                    <ActivityIndicator size="small" color={colors.bgDeep} />
+                    <ActivityIndicator size="small" color={colors.ink} />
                   ) : (
                     <Text style={styles.applyBtnText}>UYGULA</Text>
                   )}
@@ -313,10 +329,10 @@ export default function BookingCheckoutScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={colors.bgDeep} />
+              <ActivityIndicator color={colors.ink} />
             ) : (
               <>
-                <CreditCard size={20} color={colors.bgDeep} />
+                <CreditCard size={20} color={colors.ink} />
                 <Text style={styles.payBtnText}>Ödemeyi Tamamla</Text>
               </>
             )}
@@ -328,75 +344,3 @@ export default function BookingCheckoutScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  authGate: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
-  safe: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  headerBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
-  headerTitle: { fontFamily: font.display, fontSize: 16, color: colors.text },
-  scrollContent: { padding: spacing.lg, paddingBottom: 120 },
-  summaryCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 24, borderWidth: 1, borderColor: colors.line, marginBottom: 20 },
-  summaryHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 24 },
-  summaryTitle: { fontFamily: font.sansBold, fontSize: 11, color: colors.gold, letterSpacing: 2 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 20 },
-  iconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.inkDeep, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.lineSoft },
-  infoTextCol: { flex: 1 },
-  infoLabel: { fontFamily: font.sansBold, fontSize: 10, color: colors.textMuted, letterSpacing: 1 },
-  infoValue: { fontFamily: font.display, fontSize: 18, color: colors.text, marginTop: 4 },
-  divider: { height: 1, backgroundColor: colors.lineSoft, marginVertical: 20 },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  totalLabel: { fontFamily: font.sansBold, fontSize: 15, color: colors.text },
-  totalValue: { fontFamily: font.display, fontSize: 26, color: colors.gold },
-  
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  priceLabel: { fontFamily: font.sans, fontSize: 14, color: colors.textDim },
-  priceVal: { fontFamily: font.sansMedium, fontSize: 14, color: colors.text },
-  discountLabel: { fontFamily: font.sansMedium, fontSize: 14, color: colors.success },
-  discountVal: { fontFamily: font.sansBold, fontSize: 14, color: colors.success },
-
-  promoCard: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 20, borderWidth: 1, borderColor: colors.line, marginBottom: 20 },
-  promoLabel: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, letterSpacing: 1.5, marginBottom: 12 },
-  promoInputRow: { flexDirection: 'row', gap: 10 },
-  promoInputWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgDeep, borderRadius: radius.md, borderWidth: 1, borderColor: colors.lineSoft, height: 48 },
-  promoInputDisabled: { opacity: 0.8 },
-  promoInput: { flex: 1, paddingHorizontal: 12, fontFamily: font.sansMedium, fontSize: 14, color: colors.text },
-  clearCoupon: { padding: 10 },
-  applyBtn: { backgroundColor: colors.gold, paddingHorizontal: 16, borderRadius: radius.md, justifyContent: 'center', height: 48 },
-  applyBtnDisabled: { opacity: 0.5 },
-  applyBtnText: { fontFamily: font.sansBold, fontSize: 12, color: colors.bgDeep },
-
-  trustBox: { backgroundColor: 'rgba(76, 175, 110, 0.05)', borderRadius: radius.lg, padding: 16, borderWidth: 1, borderColor: 'rgba(76, 175, 110, 0.15)', marginBottom: 20 },
-  trustHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  trustTitle: { fontFamily: font.sansBold, fontSize: 14, color: colors.success },
-  trustText: { fontFamily: font.sans, fontSize: 12, color: colors.textDim, lineHeight: 18 },
-  policyBox: { paddingHorizontal: 4 },
-  policyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  policyTitle: { fontFamily: font.sansBold, fontSize: 11, color: colors.goldDeep, letterSpacing: 1.5 },
-  policyText: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted, lineHeight: 20 },
-  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.bgDeep, padding: spacing.lg, paddingBottom: Platform.OS === 'ios' ? 40 : spacing.lg, borderTopWidth: 1, borderColor: colors.line },
-  payBtn: { backgroundColor: colors.gold, flexDirection: 'row', height: 60, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  payBtnDisabled: { opacity: 0.6 },
-  payBtnText: { fontFamily: font.sansBold, fontSize: 16, color: colors.bgDeep },
-  guestScroll: { padding: spacing.xl, paddingTop: spacing['2xl'], paddingBottom: 48 },
-  guestTitle: { fontFamily: font.display, fontSize: 24, color: colors.text, textAlign: 'center', marginBottom: spacing.sm },
-  guestSubtitle: {
-    fontFamily: font.sans,
-    fontSize: 15,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing['2xl'],
-  },
-  guestPrimaryWrap: { borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
-  guestPrimaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-  },
-  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
-  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
-  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
-});

@@ -1,32 +1,25 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FAVORITES_KEY = 'gma.favorites.v1';
 
-async function readFavoriteIds(): Promise<string[]> {
-  try {
-    const stored = await AsyncStorage.getItem(FAVORITES_KEY);
-    if (!stored) return [];
-    const parsed = JSON.parse(stored) as unknown;
-    return Array.isArray(parsed) ? (parsed as string[]) : [];
-  } catch (err) {
-    console.error('Failed to load favorites:', err);
-    return [];
-  }
-}
-
 export function useFavorites() {
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  const refresh = useCallback(async (): Promise<string[]> => {
-    const ids = await readFavoriteIds();
-    setFavorites(ids);
-    return ids;
+  useEffect(() => {
+    loadFavorites();
   }, []);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const loadFavorites = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(FAVORITES_KEY);
+      if (stored) {
+        setFavorites(JSON.parse(stored));
+      }
+    } catch (err) {
+      console.error('Failed to load favorites:', err);
+    }
+  };
 
   const toggleFavorite = async (id: string) => {
     try {
@@ -45,5 +38,5 @@ export function useFavorites() {
 
   const isFavorite = (id: string) => favorites.includes(id);
 
-  return { favorites, toggleFavorite, isFavorite, refresh };
+  return { favorites, toggleFavorite, isFavorite, refresh: loadFavorites };
 }

@@ -1,12 +1,66 @@
-import { useState, useEffect, useCallback } from 'react';
-import { 
-  View, Text, StyleSheet, FlatList, TextInput, 
-  Pressable, ScrollView, ActivityIndicator, RefreshControl 
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.bg },
+  header: { padding: spacing.lg, gap: spacing.md },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  brand: {
+    fontSize: 24,
+    fontFamily: font.display,
+    color: colors.stardust,
+    letterSpacing: -0.5,
+  },
+  brandAccent: { color: colors.gold, fontStyle: 'italic' },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
+    height: 48,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  searchIcon: { fontSize: 16, marginRight: spacing.sm },
+  searchInput: { flex: 1, color: colors.stardust, fontFamily: font.sans, fontSize: 15 },
+  categoriesContainer: { marginBottom: spacing.md },
+  categoriesScroll: { paddingHorizontal: spacing.lg, gap: spacing.sm },
+  categoryBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  categoryBtnActive: { backgroundColor: colors.amethyst, borderColor: colors.amethyst },
+  categoryText: { color: colors.stardustDim, fontFamily: font.sansMedium, fontSize: 13 },
+  categoryTextActive: { color: colors.stardust },
+  list: { padding: spacing.lg, paddingTop: 0 },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  empty: { padding: spacing.xxl, alignItems: 'center' },
+  emptyText: { color: colors.muted, fontFamily: font.sans, fontSize: 15 },
+});
+}
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, font, radius } from '@/theme/tokens';
+
 import { consultantsApi } from '@/lib/api';
 import { ConsultantCard } from '@/components/ConsultantCard';
 import DailyHoroscopeCard from '@/components/DailyHoroscopeCard';
@@ -18,6 +72,10 @@ const CATEGORIES = [
 ];
 
 export default function HomeScreen() {
+  const theme = useAppTheme();
+  const { colors, spacing } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
   const { t } = useTranslation();
   const [consultants, setConsultants] = useState<Consultant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,44 +195,3 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.midnight },
-  header: { padding: spacing.lg, gap: spacing.md },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  brand: {
-    fontSize: 24,
-    fontFamily: font.display,
-    color: colors.stardust,
-    letterSpacing: -0.5,
-  },
-  brandAccent: { color: colors.gold, fontStyle: 'italic' },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    paddingHorizontal: spacing.md,
-    height: 48,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  searchIcon: { fontSize: 16, marginRight: spacing.sm },
-  searchInput: { flex: 1, color: colors.stardust, fontFamily: font.sans, fontSize: 15 },
-  categoriesContainer: { marginBottom: spacing.md },
-  categoriesScroll: { paddingHorizontal: spacing.lg, gap: spacing.sm },
-  categoryBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  categoryBtnActive: { backgroundColor: colors.amethyst, borderColor: colors.amethyst },
-  categoryText: { color: colors.stardustDim, fontFamily: font.sansMedium, fontSize: 13 },
-  categoryTextActive: { color: colors.stardust },
-  list: { padding: spacing.lg, paddingTop: 0 },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  empty: { padding: spacing.xxl, alignItems: 'center' },
-  emptyText: { color: colors.muted, fontFamily: font.sans, fontSize: 15 },
-});

@@ -1,218 +1,21 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  Pressable, 
-  StyleSheet, 
-  ActivityIndicator, 
-  Alert, 
-  KeyboardAvoidingView, 
-  Platform, 
-  ScrollView 
+import React, { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, Link } from 'expo-router';
-import { Mail, Lock, ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
-import * as AppleAuthentication from 'expo-apple-authentication';
+import { useAppTheme, type AppTheme } from '@/theme';
 
-import { colors, spacing, font, radius } from '@/theme/tokens';
-import { authApi, setAuthToken } from '@/lib/api';
-import { storage } from '@/lib/storage';
-import { registerPushToken } from '@/lib/notifications';
-
-export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
-
-  React.useEffect(() => {
-    if (Platform.OS === 'ios') {
-      AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable);
-    }
-  }, []);
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      setAuthToken(null);
-      const res = await authApi.login({ email, password });
-
-      await storage.setUserSession({
-        token: res.access_token,
-        userId: res.user.id,
-        role: res.user.role
-      });
-
-      setAuthToken(res.access_token);
-      registerPushToken().catch(() => {});
-      router.replace('/today' as any);
-    } catch (err: any) {
-      Alert.alert('Giriş Başarısız', err.message || 'E-posta veya şifre hatalı.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAppleLogin = async () => {
-    try {
-      setLoading(true);
-      setAuthToken(null);
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-
-      const fullName = credential.fullName
-        ? `${credential.fullName.givenName ?? ''} ${credential.fullName.familyName ?? ''}`.trim()
-        : undefined;
-
-      const res = await authApi.socialLogin({
-        type: 'apple',
-        identity_token: credential.identityToken ?? '',
-        authorization_code: credential.authorizationCode ?? '',
-        apple_user_name: fullName,
-        email: credential.email ?? '',
-      });
-
-      await storage.setUserSession({
-        token: res.access_token,
-        userId: res.user.id,
-        role: res.user.role
-      });
-
-      setAuthToken(res.access_token);
-      registerPushToken().catch(() => {});
-      router.replace('/today' as any);
-    } catch (err: any) {
-      if (err.code === 'ERR_CANCELED') return;
-      Alert.alert('Hata', 'Apple ile giriş yapılamadı.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
-            <ChevronLeft size={24} color={colors.text} />
-          </Pressable>
-        </View>
-
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-          style={{ flex: 1 }}
-        >
-          <ScrollView contentContainerStyle={styles.scroll}>
-            
-            <View style={styles.welcomeArea}>
-              <Text style={styles.welcomeKicker}>TEKRAR HOŞ GELDİNİZ</Text>
-              <Text style={styles.title}>Yıldızların rehberliği{'\n'}sizi bekliyor.</Text>
-            </View>
-
-            <View style={styles.form}>
-              
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>E-POSTA ADRESİ</Text>
-                <View style={styles.inputContainer}>
-                  <Mail size={20} color={colors.goldDim} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="email@ornek.com"
-                    placeholderTextColor={colors.textMuted}
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.label}>ŞİFRE</Text>
-                  <Link href="/auth/forgot" asChild>
-                    <Pressable>
-                      <Text style={styles.forgotText}>Şifremi Unuttum</Text>
-                    </Pressable>
-                  </Link>
-                </View>
-                <View style={styles.inputContainer}>
-                  <Lock size={20} color={colors.goldDim} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="••••••••"
-                    placeholderTextColor={colors.textMuted}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                  />
-                  <Pressable onPress={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff size={20} color={colors.textMuted} /> : <Eye size={20} color={colors.textMuted} />}
-                  </Pressable>
-                </View>
-              </View>
-
-              <Pressable 
-                style={[styles.loginBtn, loading && styles.btnDisabled]} 
-                onPress={handleLogin}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color={colors.bgDeep} />
-                ) : (
-                  <Text style={styles.loginBtnText}>Giriş Yap</Text>
-                )}
-              </Pressable>
-
-              {appleAuthAvailable && (
-                <View style={styles.dividerArea}>
-                  <View style={styles.divider} />
-                  <Text style={styles.dividerText}>VEYA</Text>
-                  <View style={styles.divider} />
-                </View>
-              )}
-
-              {appleAuthAvailable && (
-                <AppleAuthentication.AppleAuthenticationButton
-                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                  cornerRadius={radius.pill}
-                  style={styles.appleBtn}
-                  onPress={handleAppleLogin}
-                />
-              )}
-            </View>
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Henüz hesabınız yok mu?</Text>
-              <Link href="/auth/register" asChild>
-                <Pressable>
-                  <Text style={styles.registerLink}>Hemen Kaydol</Text>
-                </Pressable>
-              </Link>
-            </View>
-
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -314,7 +117,7 @@ const styles = StyleSheet.create({
   loginBtnText: {
     fontFamily: font.sansBold,
     fontSize: 16,
-    color: colors.bgDeep,
+    color: colors.ink,
   },
   footer: {
     flexDirection: 'row',
@@ -354,4 +157,229 @@ const styles = StyleSheet.create({
     height: 56,
     width: '100%',
   },
-});
+  });
+}
+
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useLocalSearchParams, Link } from 'expo-router';
+import { safeRouterBack } from '@/lib/navigation';
+import { Mail, Lock, ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
+
+
+import { authApi, setAuthToken } from '@/lib/api';
+import { storage } from '@/lib/storage';
+
+export default function LoginScreen() {
+  const theme = useAppTheme();
+  const { colors, radius } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { next } = useLocalSearchParams<{ next?: string }>();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [appleAuthAvailable, setAppleAuthAvailable] = useState(false);
+
+  React.useEffect(() => {
+    if (Platform.OS === 'ios') {
+      AppleAuthentication.isAvailableAsync().then(setAppleAuthAvailable);
+    }
+  }, []);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const res = await authApi.login({ email, password });
+
+      await storage.setUserSession({
+        token: res.access_token,
+        userId: res.user.id,
+        role: res.user.role
+      });
+
+      setAuthToken(res.access_token);
+      const onboarded = await storage.isOnboarded();
+      if (onboarded) {
+        router.replace('/(tabs)/today' as any);
+      } else if (typeof next === 'string' && next.startsWith('/')) {
+        router.replace(next as any);
+      } else {
+        router.replace('/onboarding/birthdata' as any);
+      }
+    } catch (err: any) {
+      Alert.alert('Giriş Başarısız', err.message || 'E-posta veya şifre hatalı.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    try {
+      setLoading(true);
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      const fullName = credential.fullName
+        ? `${credential.fullName.givenName ?? ''} ${credential.fullName.familyName ?? ''}`.trim()
+        : undefined;
+
+      const res = await authApi.socialLogin({
+        type: 'apple',
+        identity_token: credential.identityToken ?? '',
+        authorization_code: credential.authorizationCode ?? '',
+        apple_user_name: fullName,
+        email: credential.email ?? '',
+      });
+
+      await storage.setUserSession({
+        token: res.access_token,
+        userId: res.user.id,
+        role: res.user.role
+      });
+
+      setAuthToken(res.access_token);
+      const onboarded = await storage.isOnboarded();
+      if (onboarded) {
+        router.replace('/(tabs)/today' as any);
+      } else if (typeof next === 'string' && next.startsWith('/')) {
+        router.replace(next as any);
+      } else {
+        router.replace('/onboarding/birthdata' as any);
+      }
+    } catch (err: any) {
+      if (err.code === 'ERR_CANCELED') return;
+      Alert.alert('Hata', 'Apple ile giriş yapılamadı.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        
+        <View style={styles.header}>
+          <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
+            <ChevronLeft size={24} color={colors.text} />
+          </Pressable>
+        </View>
+
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+          style={{ flex: 1 }}
+        >
+          <ScrollView contentContainerStyle={styles.scroll}>
+            
+            <View style={styles.welcomeArea}>
+              <Text style={styles.welcomeKicker}>TEKRAR HOŞ GELDİNİZ</Text>
+              <Text style={styles.title}>Yıldızların rehberliği{'\n'}sizi bekliyor.</Text>
+            </View>
+
+            <View style={styles.form}>
+              
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>E-POSTA ADRESİ</Text>
+                <View style={styles.inputContainer}>
+                  <Mail size={20} color={colors.goldDim} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="email@ornek.com"
+                    placeholderTextColor={colors.textMuted}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <View style={styles.labelRow}>
+                  <Text style={styles.label}>ŞİFRE</Text>
+                  <Link href="/auth/forgot" asChild>
+                    <Pressable>
+                      <Text style={styles.forgotText}>Şifremi Unuttum</Text>
+                    </Pressable>
+                  </Link>
+                </View>
+                <View style={styles.inputContainer}>
+                  <Lock size={20} color={colors.goldDim} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="••••••••"
+                    placeholderTextColor={colors.textMuted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                  />
+                  <Pressable onPress={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff size={20} color={colors.textMuted} /> : <Eye size={20} color={colors.textMuted} />}
+                  </Pressable>
+                </View>
+              </View>
+
+              <Pressable 
+                style={[styles.loginBtn, loading && styles.btnDisabled]} 
+                onPress={handleLogin}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color={colors.ink} />
+                ) : (
+                  <Text style={styles.loginBtnText}>Giriş Yap</Text>
+                )}
+              </Pressable>
+
+              {appleAuthAvailable && (
+                <View style={styles.dividerArea}>
+                  <View style={styles.divider} />
+                  <Text style={styles.dividerText}>VEYA</Text>
+                  <View style={styles.divider} />
+                </View>
+              )}
+
+              {appleAuthAvailable && (
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                  cornerRadius={radius.pill}
+                  style={styles.appleBtn}
+                  onPress={handleAppleLogin}
+                />
+              )}
+            </View>
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Henüz hesabınız yok mu?</Text>
+              <Link
+                href={
+                  next
+                    ? ({ pathname: '/auth/register', params: { next: String(next) } } as const)
+                    : '/auth/register'
+                }
+                asChild
+              >
+                <Pressable>
+                  <Text style={styles.registerLink}>Hemen Kaydol</Text>
+                </Pressable>
+              </Link>
+            </View>
+
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
+  );
+}
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -22,20 +22,135 @@ import {
   Zap,
 } from 'lucide-react-native';
 
+import { useAppTheme, type AppTheme } from '@/theme';
 import { consultantsApi } from '@/lib/api';
-import { colors, font, radius, spacing } from '@/theme/tokens';
 import type { Consultant } from '@/types';
 import SkeletonView from '@/components/SkeletonView';
+import { MenuHeaderButton } from '@/components/MenuHeaderButton';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, font, radius, spacing } = t;
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  headerTitles: { flex: 1, minWidth: 0 },
+  headerKicker: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, letterSpacing: 2, marginBottom: 4 },
+  headerTitle: { fontFamily: font.display, fontSize: 28, color: colors.text },
+  topicHint: { fontFamily: font.sansMedium, fontSize: 12, color: colors.textMuted, marginTop: 4 },
+  headerActions: { flexDirection: 'row', gap: 10 },
+  iconBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  filterIconBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.gold,
+    borderWidth: 2,
+    borderColor: colors.surface,
+  },
+  searchWrap: { marginHorizontal: spacing.lg, marginBottom: spacing.md, height: 48, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.lineSoft, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 10 },
+  searchInput: { flex: 1, color: colors.text, fontFamily: font.sansMedium, fontSize: 14 },
+  catBar: { marginBottom: spacing.md },
+  catScroll: { paddingHorizontal: spacing.lg, gap: 10 },
+  catBtn: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
+  catBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
+  catText: { fontFamily: font.sansMedium, fontSize: 13, color: colors.textDim },
+  catTextActive: { fontFamily: font.sansBold, color: colors.ink },
+  filterPanelWrap: { marginHorizontal: spacing.lg, marginBottom: spacing.md },
+  filterPanel: {
+    padding: 12,
+    borderRadius: radius.xl,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.lineSoft,
+    gap: 10,
+  },
+  filterTitle: { fontFamily: font.sansBold, fontSize: 9, color: colors.goldDeep, letterSpacing: 1.4, marginBottom: 6 },
+  togglePill: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.bgDeep },
+  togglePillActive: { backgroundColor: colors.gold, borderColor: colors.gold },
+  toggleText: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold },
+  toggleTextActive: { color: colors.ink },
+  segmentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  segmentBtn: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: colors.bgDeep, borderWidth: 1, borderColor: colors.lineSoft },
+  segmentBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
+  segmentText: { fontFamily: font.sansMedium, fontSize: 12, color: colors.textDim },
+  segmentTextActive: { fontFamily: font.sansBold, color: colors.ink },
+  list: { paddingHorizontal: spacing.lg, paddingBottom: 40, gap: 16 },
+  card: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: spacing.lg, borderWidth: 1, borderColor: colors.line },
+  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  avatarWrap: { position: 'relative' },
+  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.surfaceHigh },
+  avatarFallback: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.goldDim, alignItems: 'center', justifyContent: 'center' },
+  avatarInitial: { fontFamily: font.display, fontSize: 24, color: colors.ink },
+  onlineDot: { position: 'absolute', bottom: 2, right: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: colors.success, borderWidth: 2, borderColor: colors.surface },
+  cardBody: { flex: 1 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  name: { fontFamily: font.display, fontSize: 18, color: colors.text },
+  expertise: { fontFamily: font.sans, fontSize: 13, color: colors.goldDim, marginTop: 2 },
+  statsRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
+  stat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  statVal: { fontFamily: font.sansBold, fontSize: 13, color: colors.text },
+  statCount: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted },
+  statDivider: { width: 1, height: 10, backgroundColor: colors.lineSoft },
+  cardRight: { alignItems: 'flex-end', gap: 12 },
+  price: { fontFamily: font.display, fontSize: 20, color: colors.text },
+  arrowCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(201, 169, 97, 0.1)', alignItems: 'center', justifyContent: 'center' },
+  cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.lineSoft },
+  features: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  featuresText: { fontFamily: font.sansMedium, fontSize: 12, color: colors.gold },
+  featuresTextMuted: { color: colors.textMuted },
+  actionBtn: { backgroundColor: 'transparent', paddingHorizontal: 16, paddingVertical: 8, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.goldDim },
+  actionBtnText: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold },
+  empty: { padding: 40, alignItems: 'center' },
+  emptyText: { fontFamily: font.sans, fontSize: 14, color: colors.textMuted, textAlign: 'center' },
+  });
+}
+
+/** Backend JSON / string / dizi karışık gelebilir */
+function asStringArray(value: unknown): string[] {
+  if (value == null) return [];
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  if (typeof value === 'string') {
+    const s = value.trim();
+    if (!s) return [];
+    try {
+      const parsed = JSON.parse(s) as unknown;
+      if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+    } catch {
+      /* tek slug vb. */
+    }
+    return [s];
+  }
+  return [];
+}
 
 export default function ConnectScreen() {
-  const params = useLocalSearchParams<{ topic?: string | string[] }>();
-  const topicNorm = useMemo(() => {
-    const v = params.topic;
-    if (typeof v === 'string') return v;
-    if (Array.isArray(v)) return v[0];
-    return undefined;
-  }, [params.topic]);
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
+  const { topic } = useLocalSearchParams<{ topic?: string }>();
   const [consultants, setConsultants] = useState<Consultant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -44,6 +159,10 @@ export default function ConnectScreen() {
   const [minRating, setMinRating] = useState(0);
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [query, setQuery] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const activeFilterCount =
+    (onlineOnly ? 1 : 0) + (language !== 'all' ? 1 : 0) + (minRating > 0 ? 1 : 0);
 
   const loadConsultants = useCallback(async () => {
     try {
@@ -56,12 +175,6 @@ export default function ConnectScreen() {
       setRefreshing(false);
     }
   }, []);
-
-  useEffect(() => {
-    if (!topicNorm) return;
-    const catIds = ['astrology', 'tarot', 'numerology', 'relationship', 'career'];
-    if (catIds.includes(topicNorm)) setFilter(topicNorm);
-  }, [topicNorm]);
 
   useFocusEffect(
     useCallback(() => {
@@ -85,11 +198,11 @@ export default function ConnectScreen() {
   ];
 
   const filteredConsultants = consultants.filter((item) => {
-    const expertise = item.expertise ?? [];
+    const expertise = asStringArray(item.expertise);
     const text = `${item.full_name ?? ''} ${expertise.join(' ')}`.toLowerCase();
     if (query.trim() && !text.includes(query.trim().toLowerCase())) return false;
     if (filter !== 'all' && !expertise.includes(filter)) return false;
-    if (language !== 'all' && !(item.languages ?? []).includes(language)) return false;
+    if (language !== 'all' && !asStringArray(item.languages).includes(language)) return false;
     if (onlineOnly && !item.is_available) return false;
     if (Number(item.rating_avg ?? 0) < minRating) return false;
     return true;
@@ -98,7 +211,7 @@ export default function ConnectScreen() {
   const openConsultant = (id: string) => {
     router.push({
       pathname: '/consultant/[id]',
-      params: topicNorm ? { id, topic: topicNorm } : { id },
+      params: topic ? { id, topic } : { id },
     } as any);
   };
 
@@ -113,7 +226,7 @@ export default function ConnectScreen() {
               <Text style={styles.avatarInitial}>{item.full_name?.[0] || 'C'}</Text>
             </View>
           )}
-          {item.is_available && <View style={styles.onlineDot} />}
+          {!!item.is_available && <View style={styles.onlineDot} />}
         </View>
 
         <View style={styles.cardBody}>
@@ -121,7 +234,7 @@ export default function ConnectScreen() {
             <Text style={styles.name} numberOfLines={1}>{item.full_name}</Text>
             <ShieldCheck size={14} color={colors.gold} />
           </View>
-          <Text style={styles.expertise} numberOfLines={1}>{(item.expertise ?? []).join(' · ')}</Text>
+          <Text style={styles.expertise} numberOfLines={1}>{asStringArray(item.expertise).join(' · ')}</Text>
 
           <View style={styles.statsRow}>
             <View style={styles.stat}>
@@ -163,14 +276,26 @@ export default function ConnectScreen() {
     <View style={styles.container}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <View>
+          <MenuHeaderButton />
+          <View style={styles.headerTitles}>
             <Text style={styles.headerKicker}>UZMAN REHBERLER</Text>
             <Text style={styles.headerTitle}>Danışmanlar</Text>
-            {topicNorm && <Text style={styles.topicHint}>Seçtiğin konuya uygun danışmanlar</Text>}
+            {topic && <Text style={styles.topicHint}>Günlük yorum için uzman seçimi</Text>}
           </View>
           <View style={styles.headerActions}>
-            <Pressable style={styles.iconBtn}><Search size={20} color={colors.text} /></Pressable>
-            <Pressable style={styles.iconBtn}><SlidersHorizontal size={20} color={colors.text} /></Pressable>
+            <Pressable style={styles.iconBtn} accessibilityRole="button" accessibilityLabel="Ara">
+              <Search size={20} color={colors.text} />
+            </Pressable>
+            <Pressable
+              style={styles.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel={filtersOpen ? 'Filtreleri kapat' : 'Filtreleri aç'}
+              accessibilityState={{ expanded: filtersOpen }}
+              onPress={() => setFiltersOpen((o) => !o)}
+            >
+              <SlidersHorizontal size={20} color={colors.text} />
+              {activeFilterCount > 0 ? <View style={styles.filterIconBadge} /> : null}
+            </Pressable>
           </View>
         </View>
 
@@ -199,52 +324,58 @@ export default function ConnectScreen() {
           </ScrollView>
         </View>
 
-        <View style={styles.filterPanel}>
-          <View>
-            <Text style={styles.filterTitle}>ŞU AN ÇEVRİMİÇİ</Text>
-            <Pressable
-              onPress={() => setOnlineOnly((v) => !v)}
-              style={[styles.togglePill, onlineOnly && styles.togglePillActive]}
-            >
-              <Zap size={13} color={onlineOnly ? colors.bgDeep : colors.gold} />
-              <Text style={[styles.toggleText, onlineOnly && styles.toggleTextActive]}>
-                {onlineOnly ? 'Açık' : 'Tüm danışmanlar'}
-              </Text>
-            </Pressable>
-          </View>
-
-          <View>
-            <Text style={styles.filterTitle}>DİL</Text>
-            <View style={styles.segmentRow}>
-              {languages.map((item) => (
+        {filtersOpen ? (
+          <View style={styles.filterPanelWrap}>
+            <View style={styles.filterPanel}>
+              <View>
+                <Text style={styles.filterTitle}>ŞU AN ÇEVRİMİÇİ</Text>
                 <Pressable
-                  key={item.id}
-                  onPress={() => setLanguage(item.id)}
-                  style={[styles.segmentBtn, language === item.id && styles.segmentBtnActive]}
+                  onPress={() => setOnlineOnly((v) => !v)}
+                  style={[styles.togglePill, onlineOnly && styles.togglePillActive]}
                 >
-                  <Text style={[styles.segmentText, language === item.id && styles.segmentTextActive]}>{item.label}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-
-          <View>
-            <Text style={styles.filterTitle}>PUAN</Text>
-            <View style={styles.segmentRow}>
-              {[0, 4, 4.5].map((rating) => (
-                <Pressable
-                  key={rating}
-                  onPress={() => setMinRating(rating)}
-                  style={[styles.segmentBtn, minRating === rating && styles.segmentBtnActive]}
-                >
-                  <Text style={[styles.segmentText, minRating === rating && styles.segmentTextActive]}>
-                    {rating === 0 ? 'Tümü' : `${rating}+`}
+                  <Zap size={13} color={onlineOnly ? colors.ink : colors.gold} />
+                  <Text style={[styles.toggleText, onlineOnly && styles.toggleTextActive]}>
+                    {onlineOnly ? 'Açık' : 'Tüm danışmanlar'}
                   </Text>
                 </Pressable>
-              ))}
+              </View>
+
+              <View>
+                <Text style={styles.filterTitle}>DİL</Text>
+                <View style={styles.segmentRow}>
+                  {languages.map((item) => (
+                    <Pressable
+                      key={item.id}
+                      onPress={() => setLanguage(item.id)}
+                      style={[styles.segmentBtn, language === item.id && styles.segmentBtnActive]}
+                    >
+                      <Text style={[styles.segmentText, language === item.id && styles.segmentTextActive]}>
+                        {item.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+
+              <View>
+                <Text style={styles.filterTitle}>PUAN</Text>
+                <View style={styles.segmentRow}>
+                  {[0, 4, 4.5].map((rating) => (
+                    <Pressable
+                      key={rating}
+                      onPress={() => setMinRating(rating)}
+                      style={[styles.segmentBtn, minRating === rating && styles.segmentBtnActive]}
+                    >
+                      <Text style={[styles.segmentText, minRating === rating && styles.segmentTextActive]}>
+                        {rating === 0 ? 'Tümü' : `${rating}+`}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
             </View>
           </View>
-        </View>
+        ) : null}
 
         {loading && !refreshing ? (
           <View style={styles.list}>
@@ -272,60 +403,3 @@ export default function ConnectScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  safe: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, marginBottom: spacing.md },
-  headerKicker: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, letterSpacing: 2, marginBottom: 4 },
-  headerTitle: { fontFamily: font.display, fontSize: 28, color: colors.text },
-  topicHint: { fontFamily: font.sansMedium, fontSize: 12, color: colors.textMuted, marginTop: 4 },
-  headerActions: { flexDirection: 'row', gap: 10 },
-  iconBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center' },
-  searchWrap: { marginHorizontal: spacing.lg, marginBottom: spacing.md, height: 48, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.lineSoft, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 10 },
-  searchInput: { flex: 1, color: colors.text, fontFamily: font.sansMedium, fontSize: 14 },
-  catBar: { marginBottom: spacing.md },
-  catScroll: { paddingHorizontal: spacing.lg, gap: 10 },
-  catBtn: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
-  catBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
-  catText: { fontFamily: font.sansMedium, fontSize: 13, color: colors.textDim },
-  catTextActive: { fontFamily: font.sansBold, color: colors.bgDeep },
-  filterPanel: { marginHorizontal: spacing.lg, marginBottom: spacing.lg, padding: 14, borderRadius: radius.xl, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.lineSoft, gap: 14 },
-  filterTitle: { fontFamily: font.sansBold, fontSize: 9, color: colors.goldDeep, letterSpacing: 1.4, marginBottom: 8 },
-  togglePill: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.bgDeep },
-  togglePillActive: { backgroundColor: colors.gold, borderColor: colors.gold },
-  toggleText: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold },
-  toggleTextActive: { color: colors.bgDeep },
-  segmentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  segmentBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: colors.bgDeep, borderWidth: 1, borderColor: colors.lineSoft },
-  segmentBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
-  segmentText: { fontFamily: font.sansMedium, fontSize: 12, color: colors.textDim },
-  segmentTextActive: { fontFamily: font.sansBold, color: colors.bgDeep },
-  list: { paddingHorizontal: spacing.lg, paddingBottom: 40, gap: 16 },
-  card: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: spacing.lg, borderWidth: 1, borderColor: colors.line },
-  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  avatarWrap: { position: 'relative' },
-  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.bgDeep },
-  avatarFallback: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.goldDim, alignItems: 'center', justifyContent: 'center' },
-  avatarInitial: { fontFamily: font.display, fontSize: 24, color: colors.bgDeep },
-  onlineDot: { position: 'absolute', bottom: 2, right: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: colors.success, borderWidth: 2, borderColor: colors.surface },
-  cardBody: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontFamily: font.display, fontSize: 18, color: colors.text },
-  expertise: { fontFamily: font.sans, fontSize: 13, color: colors.goldDim, marginTop: 2 },
-  statsRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
-  stat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  statVal: { fontFamily: font.sansBold, fontSize: 13, color: colors.text },
-  statCount: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted },
-  statDivider: { width: 1, height: 10, backgroundColor: colors.lineSoft },
-  cardRight: { alignItems: 'flex-end', gap: 12 },
-  price: { fontFamily: font.display, fontSize: 20, color: colors.text },
-  arrowCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(201, 169, 97, 0.1)', alignItems: 'center', justifyContent: 'center' },
-  cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.lineSoft },
-  features: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  featuresText: { fontFamily: font.sansMedium, fontSize: 12, color: colors.gold },
-  featuresTextMuted: { color: colors.textMuted },
-  actionBtn: { backgroundColor: 'transparent', paddingHorizontal: 16, paddingVertical: 8, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.goldDim },
-  actionBtnText: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold },
-  empty: { padding: 40, alignItems: 'center' },
-  emptyText: { fontFamily: font.sans, fontSize: 14, color: colors.textMuted, textAlign: 'center' },
-});

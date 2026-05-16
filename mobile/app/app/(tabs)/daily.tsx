@@ -1,233 +1,19 @@
-import React, { useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Pressable, 
-  Dimensions, 
+import React, { useMemo, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Dimensions,
   ActivityIndicator,
   RefreshControl
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  Smile, 
-  Heart, 
-  Meh, 
-  CloudRain, 
-  Frown,
-  Sparkles,
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-  MessageSquare
-} from 'lucide-react-native';
-import { router, useFocusEffect } from 'expo-router';
+import { useAppTheme, type AppTheme } from '@/theme';
 
-import { colors, font, radius, spacing } from '@/theme/tokens';
-import { birthChartsApi, readingsApi } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
-import type { DailyReadingResponse } from '@/types';
-
-const { width } = Dimensions.get('window');
-
-const MOODS = [
-  { id: 'happy', icon: Smile, label: 'Mutlu' },
-  { id: 'calm', icon: Heart, label: 'Huzurlu' },
-  { id: 'neutral', icon: Meh, label: 'Nötr' },
-  { id: 'sad', icon: CloudRain, label: 'Hüzünlü' },
-  { id: 'stressed', icon: Frown, label: 'Gergin' },
-];
-
-export default function DailyReadingScreen() {
-  const { isAuthenticated, authHydrating } = useAuth();
-  const [reading, setReading] = useState<DailyReadingResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
-  const [currentDate, setCurrentDate] = useState(new Date());
-
-  const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-  const weekDates = Array.from({ length: 7 }).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - 3 + i);
-    return d;
-  });
-
-  const loadReading = useCallback(async () => {
-    if (!isAuthenticated) {
-      setReading(null);
-      setLoading(false);
-      setRefreshing(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const charts = await birthChartsApi.list();
-      if (charts[0]) {
-        const data = await readingsApi.daily(charts[0].id);
-        setReading(data);
-      } else {
-        setReading(null);
-      }
-    } catch (err) {
-      console.error('Reading load error:', err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [isAuthenticated]);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadReading();
-    }, [loadReading])
-  );
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadReading();
-  };
-
-  const readingDoc = reading?.reading;
-  const readingBodyFallback =
-    'Bugün Ay\'ın Boğa burcundaki seyri, seni daha köklü ve güvenli hissetmeye davet ediyor. Maddi konular veya ev hayatınla ilgili yarım kalmış işleri tamamlamak için mükemmel bir zaman.\n\nVenüs\'ün uyumlu açısı, ikili ilişkilerde beklediğin o yumuşak geçişi sağlayabilir. Ancak Merkür\'ün konumu, imza gerektiren işlerde iki kez kontrol etmen gerektiğini hatırlatıyor.';
-
-  if (authHydrating || (loading && !refreshing && isAuthenticated)) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
-        >
-          
-          {/* Header */}
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.headerKicker}>GÜNLÜK REHBER</Text>
-              <Text style={styles.headerTitle}>Gök Günlüğü</Text>
-            </View>
-            <View style={styles.calendarNav}>
-              <Pressable style={styles.navBtn}><ChevronLeft size={20} color={colors.gold} /></Pressable>
-              <Text style={styles.monthText}>NİSAN</Text>
-              <Pressable style={styles.navBtn}><ChevronRight size={20} color={colors.gold} /></Pressable>
-            </View>
-          </View>
-
-          {/* Date Picker */}
-          <View style={styles.weekContainer}>
-            {weekDates.map((d, i) => {
-              const isSelected = d.toDateString() === currentDate.toDateString();
-              const isToday = d.toDateString() === new Date().toDateString();
-              return (
-                <Pressable 
-                  key={i} 
-                  onPress={() => setCurrentDate(d)}
-                  style={[styles.dayBox, isSelected && styles.dayBoxSelected]}
-                >
-                  <Text style={[styles.dayName, isSelected && styles.dayNameSelected]}>{days[d.getDay() === 0 ? 6 : d.getDay() - 1]}</Text>
-                  <View style={[styles.dayCircle, isSelected && styles.dayCircleSelected, isToday && !isSelected && styles.dayCircleToday]}>
-                    <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>{d.getDate()}</Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          {/* Main Content */}
-          <View style={styles.contentCard}>
-            <View style={styles.readingHeader}>
-              <Sparkles size={20} color={colors.gold} />
-              <Text style={styles.readingKicker}>YILDIZLARIN MESAJI</Text>
-              <Sparkles size={20} color={colors.gold} />
-            </View>
-
-            <Text style={styles.readingTitle}>
-              {readingDoc?.content ? 'Bugünün rehberi' : !isAuthenticated ? 'Misafir modu' : 'İçsel dengeni bulmak için sessizliğe odaklan.'}
-            </Text>
-
-            <View style={styles.readingBodyWrapper}>
-              {!isAuthenticated ? (
-                <>
-                  <Text style={styles.readingBody}>
-                    Haritanıza bağlı günlük yorumu görmek için giriş yapın ve doğum verilerinizi kaydedin. Genel astroloji
-                    içeriği için Burçlar sekmesine göz atabilirsiniz.
-                  </Text>
-                  <Pressable style={styles.guestLoginBanner} onPress={() => router.push('/auth/login' as any)}>
-                    <Text style={styles.guestLoginBannerText}>Giriş yap</Text>
-                  </Pressable>
-                </>
-              ) : (
-                <Text style={styles.readingBody}>
-                  {readingDoc?.content || readingBodyFallback}
-                </Text>
-              )}
-            </View>
-
-            <View style={styles.quoteBox}>
-              <Text style={styles.quoteText}>
-                "Gerçek güç, sakinlikte gizlidir."
-              </Text>
-            </View>
-          </View>
-
-          {/* Mood Check-in */}
-          <View style={styles.section}>
-            <LinearGradient colors={[colors.surface, colors.inkDeep]} style={styles.moodCard}>
-              <Text style={styles.moodTitle}>Bugün nasıl hissediyorsun?</Text>
-              <View style={styles.moodRow}>
-                {MOODS.map(m => (
-                  <Pressable 
-                    key={m.id} 
-                    onPress={() => setSelectedMood(m.id)}
-                    style={styles.moodItem}
-                  >
-                    <View style={[styles.moodCircle, selectedMood === m.id && styles.moodCircleSelected]}>
-                      <m.icon size={24} color={selectedMood === m.id ? colors.bgDeep : colors.goldDim} />
-                    </View>
-                    <Text style={[styles.moodLabel, selectedMood === m.id && styles.moodLabelSelected]}>{m.label}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </LinearGradient>
-          </View>
-
-          {/* CTA Section */}
-          <View style={styles.ctaArea}>
-            <Pressable
-              style={styles.askBtn}
-              onPress={() => router.push({
-                pathname: '/(tabs)/connect',
-                params: readingDoc?.id ? { topic: `daily_reading_${readingDoc.id}` } : undefined,
-              } as any)}
-            >
-              <View style={styles.askBtnContent}>
-                <MessageSquare size={20} color={colors.bgDeep} />
-                <View>
-                  <Text style={styles.askBtnTitle}>Detaylı Yorum İster Misin?</Text>
-                  <Text style={styles.askBtnSub}>Bu haritayı bir astrologla değerlendir.</Text>
-                </View>
-              </View>
-              <ArrowRight size={20} color={colors.bgDeep} />
-            </Pressable>
-          </View>
-
-        </ScrollView>
-      </SafeAreaView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+function buildScreenStyles(t: AppTheme) {
+  const { colors, font, radius, spacing } = t;
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -253,7 +39,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     marginBottom: spacing.lg,
+    gap: spacing.sm,
   },
+  headerTitles: { flex: 1, minWidth: 0 },
   headerKicker: {
     fontFamily: font.sansBold,
     fontSize: 10,
@@ -333,7 +121,7 @@ const styles = StyleSheet.create({
     color: colors.textDim,
   },
   dayNumberSelected: {
-    color: colors.bgDeep,
+    color: colors.ink,
   },
 
   // Content Card
@@ -376,15 +164,6 @@ const styles = StyleSheet.create({
     color: colors.textDim,
     lineHeight: 28,
   },
-  guestLoginBanner: {
-    marginTop: 16,
-    alignSelf: 'flex-start',
-    backgroundColor: colors.gold,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: radius.pill,
-  },
-  guestLoginBannerText: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep },
   quoteBox: {
     marginTop: 32,
     paddingHorizontal: 20,
@@ -469,12 +248,258 @@ const styles = StyleSheet.create({
   askBtnTitle: {
     fontFamily: font.sansBold,
     fontSize: 15,
-    color: colors.bgDeep,
+    color: colors.ink,
   },
   askBtnSub: {
     fontFamily: font.sans,
     fontSize: 12,
-    color: colors.bgDeep,
+    color: colors.ink,
     opacity: 0.8,
   },
-});
+  });
+}
+
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { 
+  Smile, 
+  Heart, 
+  Meh, 
+  CloudRain, 
+  Frown,
+  Sparkles,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  MessageSquare
+} from 'lucide-react-native';
+import { router, useFocusEffect } from 'expo-router';
+
+import { birthChartsApi, readingsApi } from '@/lib/api';
+import { MenuHeaderButton } from '@/components/MenuHeaderButton';
+import { useAuth } from '@/hooks/useAuth';
+
+const { width } = Dimensions.get('window');
+
+function addCalendarMonths(date: Date, delta: number): Date {
+  const d = new Date(date.getTime());
+  const day = d.getDate();
+  d.setMonth(d.getMonth() + delta);
+  if (d.getDate() < day) d.setDate(0);
+  return d;
+}
+
+const MOODS = [
+  { id: 'happy', icon: Smile, label: 'Mutlu' },
+  { id: 'calm', icon: Heart, label: 'Huzurlu' },
+  { id: 'neutral', icon: Meh, label: 'Nötr' },
+  { id: 'sad', icon: CloudRain, label: 'Hüzünlü' },
+  { id: 'stressed', icon: Frown, label: 'Gergin' },
+];
+
+export default function DailyReadingScreen() {
+  const theme = useAppTheme();
+  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const [reading, setReading] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+
+  const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+
+  const monthLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat('tr-TR', { month: 'long' })
+        .format(currentDate)
+        .toLocaleUpperCase('tr-TR'),
+    [currentDate]
+  );
+
+  const weekDates = useMemo(() => {
+    const base = new Date(currentDate.getTime());
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(base.getTime());
+      d.setDate(base.getDate() - 3 + i);
+      return d;
+    });
+  }, [currentDate]);
+
+  const loadReading = useCallback(async () => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      setReading(null);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const charts = await birthChartsApi.list();
+      if (charts[0]) {
+        const data = await readingsApi.daily(charts[0].id);
+        setReading(data);
+      } else {
+        setReading(null);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg !== 'no_token' && !msg.includes('401')) {
+        console.error('Reading load error:', err);
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [isAuthenticated, authLoading]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setCurrentDate(new Date());
+      loadReading();
+    }, [loadReading])
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadReading();
+  };
+
+  if (authLoading || (loading && !refreshing)) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
+        >
+          
+          {/* Header */}
+          <View style={styles.header}>
+            <MenuHeaderButton />
+            <View style={styles.headerTitles}>
+              <Text style={styles.headerKicker}>GÜNLÜK REHBER</Text>
+              <Text style={styles.headerTitle}>Gök Günlüğü</Text>
+            </View>
+            <View style={styles.calendarNav}>
+              <Pressable
+                style={styles.navBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Önceki ay"
+                onPress={() => setCurrentDate((d) => addCalendarMonths(d, -1))}
+              >
+                <ChevronLeft size={20} color={colors.gold} />
+              </Pressable>
+              <Text style={styles.monthText}>{monthLabel}</Text>
+              <Pressable
+                style={styles.navBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Sonraki ay"
+                onPress={() => setCurrentDate((d) => addCalendarMonths(d, 1))}
+              >
+                <ChevronRight size={20} color={colors.gold} />
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Date Picker */}
+          <View style={styles.weekContainer}>
+            {weekDates.map((d) => {
+              const isSelected = d.toDateString() === currentDate.toDateString();
+              const isToday = d.toDateString() === new Date().toDateString();
+              return (
+                <Pressable 
+                  key={d.toISOString().slice(0, 10)} 
+                  onPress={() => setCurrentDate(new Date(d.getTime()))}
+                  style={[styles.dayBox, isSelected && styles.dayBoxSelected]}
+                >
+                  <Text style={[styles.dayName, isSelected && styles.dayNameSelected]}>{days[d.getDay() === 0 ? 6 : d.getDay() - 1]}</Text>
+                  <View style={[styles.dayCircle, isSelected && styles.dayCircleSelected, isToday && !isSelected && styles.dayCircleToday]}>
+                    <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>{d.getDate()}</Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Main Content */}
+          <View style={styles.contentCard}>
+            <View style={styles.readingHeader}>
+              <Sparkles size={20} color={colors.gold} />
+              <Text style={styles.readingKicker}>YILDIZLARIN MESAJI</Text>
+              <Sparkles size={20} color={colors.gold} />
+            </View>
+
+            <Text style={styles.readingTitle}>
+              {reading?.title || 'İçsel dengeni bulmak için sessizliğe odaklan.'}
+            </Text>
+
+            <View style={styles.readingBodyWrapper}>
+              <Text style={styles.readingBody}>
+                {reading?.content || 'Bugün Ay\'ın Boğa burcundaki seyri, seni daha köklü ve güvenli hissetmeye davet ediyor. Maddi konular veya ev hayatınla ilgili yarım kalmış işleri tamamlamak için mükemmel bir zaman.\n\nVenüs\'ün uyumlu açısı, ikili ilişkilerde beklediğin o yumuşak geçişi sağlayabilir. Ancak Merkür\'ün konumu, imza gerektiren işlerde iki kez kontrol etmen gerektiğini hatırlatıyor.'}
+              </Text>
+            </View>
+
+            <View style={styles.quoteBox}>
+              <Text style={styles.quoteText}>
+                "Gerçek güç, sakinlikte gizlidir."
+              </Text>
+            </View>
+          </View>
+
+          {/* Mood Check-in */}
+          <View style={styles.section}>
+            <LinearGradient colors={[colors.surface, colors.inkDeep]} style={styles.moodCard}>
+              <Text style={styles.moodTitle}>Bugün nasıl hissediyorsun?</Text>
+              <View style={styles.moodRow}>
+                {MOODS.map(m => (
+                  <Pressable 
+                    key={m.id} 
+                    onPress={() => setSelectedMood(m.id)}
+                    style={styles.moodItem}
+                  >
+                    <View style={[styles.moodCircle, selectedMood === m.id && styles.moodCircleSelected]}>
+                      <m.icon size={24} color={selectedMood === m.id ? colors.ink : colors.goldDim} />
+                    </View>
+                    <Text style={[styles.moodLabel, selectedMood === m.id && styles.moodLabelSelected]}>{m.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </LinearGradient>
+          </View>
+
+          {/* CTA Section */}
+          <View style={styles.ctaArea}>
+            <Pressable
+              style={styles.askBtn}
+              onPress={() => router.push({
+                pathname: '/(tabs)/connect',
+                params: reading?.id ? { topic: `daily_reading_${reading.id}` } : undefined,
+              } as any)}
+            >
+              <View style={styles.askBtnContent}>
+                <MessageSquare size={20} color={colors.ink} />
+                <View>
+                  <Text style={styles.askBtnTitle}>Detaylı Yorum İster Misin?</Text>
+                  <Text style={styles.askBtnSub}>Bu haritayı bir astrologla değerlendir.</Text>
+                </View>
+              </View>
+              <ArrowRight size={20} color={colors.ink} />
+            </Pressable>
+          </View>
+
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
+

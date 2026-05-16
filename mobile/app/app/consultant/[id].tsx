@@ -1,14 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, Text, StyleSheet, ScrollView, Image, 
-  ActivityIndicator, Pressable, Dimensions, Platform, Alert
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+  Pressable,
+  Dimensions,
+  Platform,
 } from 'react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  centerLoader: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
+  scroll: { paddingBottom: 120 },
+  
+  // Hero
+  hero: { backgroundColor: colors.inkDeep, overflow: 'hidden', paddingBottom: 30 },
+  heroBg: { ...StyleSheet.absoluteFillObject, opacity: 0.3 },
+  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(26, 23, 21, 0.6)' },
+  topNav: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  chatBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  profileArea: { alignItems: 'center', marginTop: 10 },
+  avatarContainer: { position: 'relative', marginBottom: 16 },
+  avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: colors.gold },
+  avatarFallback: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.goldDim, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.gold },
+  avatarInitial: { fontFamily: font.display, fontSize: 40, color: colors.ink },
+  onlineDot: { position: 'absolute', bottom: 4, right: 4, width: 18, height: 18, borderRadius: 9, backgroundColor: colors.success, borderWidth: 3, borderColor: colors.inkDeep },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  name: { fontFamily: font.display, fontSize: 26, color: colors.text },
+  expertise: { fontFamily: font.sansMedium, fontSize: 14, color: colors.goldDim, marginTop: 4 },
+  metrics: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 20 },
+  metric: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  metricVal: { fontFamily: font.sansBold, fontSize: 13, color: colors.text },
+  metricDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.2)' },
+
+  // Sections
+  section: { padding: spacing.lg, borderBottomWidth: 1, borderColor: colors.lineSoft },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
+  sectionTitle: { fontFamily: font.sansBold, fontSize: 15, color: colors.text, marginBottom: 12 },
+  bio: { fontFamily: font.sans, fontSize: 14, color: colors.textDim, lineHeight: 22 },
+  datesScroll: { gap: 10 },
+  dateBtn: { width: 64, height: 74, borderRadius: radius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
+  dateBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
+  dateDay: { fontFamily: font.sansMedium, fontSize: 11, color: colors.textMuted, textTransform: 'uppercase' },
+  dateNum: { fontFamily: font.sansBold, fontSize: 18, color: colors.text, marginTop: 2 },
+  dateTextActive: { color: colors.ink },
+  slotsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  slotBtn: { width: (width - 40 - 30) / 4, height: 44, borderRadius: radius.md, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
+  slotBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
+  slotBtnFull: { opacity: 0.2 },
+  slotText: { fontFamily: font.sansBold, fontSize: 14, color: colors.text },
+  slotTextActive: { color: colors.ink },
+  slotTextFull: { color: colors.textMuted },
+  emptySlots: { paddingVertical: 20, alignItems: 'center' },
+  emptySlotsText: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted },
+
+  // Footer
+  footer: { 
+    position: 'absolute', bottom: 0, left: 0, right: 0, 
+    backgroundColor: colors.surface, padding: spacing.lg, 
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderTopWidth: 1, borderColor: colors.line,
+    paddingBottom: Platform.OS === 'ios' ? 34 : spacing.lg
+  },
+  footerPrice: { gap: 2 },
+  footerPriceLabel: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted },
+  footerPriceVal: { fontFamily: font.display, fontSize: 24, color: colors.gold },
+  bookBtn: { 
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.gold, 
+    paddingHorizontal: 24, 
+    paddingVertical: 14, 
+    borderRadius: radius.pill,
+  },
+  bookBtnDisabled: { opacity: 0.5 },
+  bookBtnText: { fontFamily: font.sansBold, fontSize: 16, color: colors.ink },
+});
+}
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
+import { safeRouterBack } from '@/lib/navigation';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, font, radius } from '@/theme/tokens';
+
 import { consultantsApi, chatApi, reviewsApi } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
 import type { Consultant, ConsultantSlot, Review } from '@/types';
 import { format, addDays, isSameDay } from 'date-fns';
 import { tr, enUS } from 'date-fns/locale';
@@ -27,9 +110,12 @@ import {
 const { width } = Dimensions.get('window');
 
 export default function ConsultantDetailScreen() {
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
   const { id, topic } = useLocalSearchParams<{ id: string; topic?: string }>();
   const { t, i18n } = useTranslation();
-  const { isAuthenticated, authHydrating } = useAuth();
   const dateLocale = i18n.language === 'tr' ? tr : enUS;
 
   const [consultant, setConsultant] = useState<Consultant | null>(null);
@@ -44,10 +130,7 @@ export default function ConsultantDetailScreen() {
   const dates = Array.from({ length: 7 }).map((_, i) => addDays(new Date(), i));
 
   useEffect(() => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
+    if (!id) return;
     setLoading(true);
     setReviewsLoading(true);
     Promise.all([
@@ -94,23 +177,10 @@ export default function ConsultantDetailScreen() {
     });
   };
 
-  if (loading) {
+  if (loading || !consultant) {
     return (
       <View style={styles.centerLoader}>
         <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  if (!consultant) {
-    return (
-      <View style={[styles.centerLoader, { padding: spacing.lg }]}>
-        <Text style={{ fontFamily: font.sans, color: colors.textMuted, textAlign: 'center', marginBottom: spacing.lg }}>
-          {id ? t('consultant.loadError', 'Danışman bilgisi yüklenemedi.') : t('consultant.missingId', 'Danışman bulunamadı.')}
-        </Text>
-        <Pressable onPress={() => router.back()} style={{ padding: spacing.md }}>
-          <Text style={{ fontFamily: font.sansBold, color: colors.gold }}>{t('common.back', 'Geri')}</Text>
-        </Pressable>
       </View>
     );
   }
@@ -128,33 +198,14 @@ export default function ConsultantDetailScreen() {
           
           <SafeAreaView edges={['top']}>
             <View style={styles.topNav}>
-              <Pressable style={styles.backBtn} onPress={() => router.back()}>
+              <Pressable style={styles.backBtn} onPress={() => safeRouterBack()}>
                 <ChevronLeft size={24} color={colors.text} />
               </Pressable>
               <Pressable 
-                style={[styles.chatBtn, authHydrating && { opacity: 0.45 }]} 
-                disabled={authHydrating}
+                style={styles.chatBtn} 
                 onPress={async () => {
-                  if (!consultant) return;
-                  if (!isAuthenticated) {
-                    Alert.alert(
-                      'Giriş gerekli',
-                      'Danışmana mesaj göndermek için oturum açın.',
-                      [
-                        { text: 'Vazgeç', style: 'cancel' },
-                        { text: 'Kayıt ol', onPress: () => router.push('/auth/register' as any) },
-                        { text: 'Giriş Yap', onPress: () => router.push('/auth/login' as any) },
-                      ],
-                    );
-                    return;
-                  }
-                  try {
-                    const { id: tid } = await chatApi.createThread(consultant.id);
-                    router.push(`/chat/${tid}` as any);
-                  } catch (e) {
-                    console.error('createThread', e);
-                    Alert.alert('Hata', 'Sohbet başlatılamadı. Lütfen tekrar deneyin.');
-                  }
+                  const { id: tid } = await chatApi.createThread(consultant.id);
+                  router.push(`/chat/${tid}`);
                 }}
               >
                 <MessageSquare size={22} color={colors.text} />
@@ -280,7 +331,7 @@ export default function ConsultantDetailScreen() {
           onPress={handleBooking}
           disabled={!selectedSlot}
         >
-          <Zap size={18} color={colors.bgDeep} />
+          <Zap size={18} color={colors.ink} />
           <Text style={styles.bookBtnText}>Randevu Al</Text>
         </Pressable>
       </View>
@@ -288,73 +339,3 @@ export default function ConsultantDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  centerLoader: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
-  scroll: { paddingBottom: 120 },
-  
-  // Hero
-  hero: { backgroundColor: colors.inkDeep, overflow: 'hidden', paddingBottom: 30 },
-  heroBg: { ...StyleSheet.absoluteFillObject, opacity: 0.3 },
-  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(26, 23, 21, 0.6)' },
-  topNav: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  chatBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
-  profileArea: { alignItems: 'center', marginTop: 10 },
-  avatarContainer: { position: 'relative', marginBottom: 16 },
-  avatar: { width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: colors.gold },
-  avatarFallback: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.goldDim, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.gold },
-  avatarInitial: { fontFamily: font.display, fontSize: 40, color: colors.bgDeep },
-  onlineDot: { position: 'absolute', bottom: 4, right: 4, width: 18, height: 18, borderRadius: 9, backgroundColor: colors.success, borderWidth: 3, borderColor: colors.inkDeep },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontFamily: font.display, fontSize: 26, color: colors.text },
-  expertise: { fontFamily: font.sansMedium, fontSize: 14, color: colors.goldDim, marginTop: 4 },
-  metrics: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 20 },
-  metric: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metricVal: { fontFamily: font.sansBold, fontSize: 13, color: colors.text },
-  metricDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.2)' },
-
-  // Sections
-  section: { padding: spacing.lg, borderBottomWidth: 1, borderColor: colors.lineSoft },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-  sectionTitle: { fontFamily: font.sansBold, fontSize: 15, color: colors.text, marginBottom: 12 },
-  bio: { fontFamily: font.sans, fontSize: 14, color: colors.textDim, lineHeight: 22 },
-  datesScroll: { gap: 10 },
-  dateBtn: { width: 64, height: 74, borderRadius: radius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
-  dateBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
-  dateDay: { fontFamily: font.sansMedium, fontSize: 11, color: colors.textMuted, textTransform: 'uppercase' },
-  dateNum: { fontFamily: font.sansBold, fontSize: 18, color: colors.text, marginTop: 2 },
-  dateTextActive: { color: colors.bgDeep },
-  slotsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  slotBtn: { width: (width - 40 - 30) / 4, height: 44, borderRadius: radius.md, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
-  slotBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
-  slotBtnFull: { opacity: 0.2 },
-  slotText: { fontFamily: font.sansBold, fontSize: 14, color: colors.text },
-  slotTextActive: { color: colors.bgDeep },
-  slotTextFull: { color: colors.textMuted },
-  emptySlots: { paddingVertical: 20, alignItems: 'center' },
-  emptySlotsText: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted },
-
-  // Footer
-  footer: { 
-    position: 'absolute', bottom: 0, left: 0, right: 0, 
-    backgroundColor: colors.surface, padding: spacing.lg, 
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderTopWidth: 1, borderColor: colors.line,
-    paddingBottom: Platform.OS === 'ios' ? 34 : spacing.lg
-  },
-  footerPrice: { gap: 2 },
-  footerPriceLabel: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted },
-  footerPriceVal: { fontFamily: font.display, fontSize: 24, color: colors.gold },
-  bookBtn: { 
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.gold, 
-    paddingHorizontal: 24, 
-    paddingVertical: 14, 
-    borderRadius: radius.pill,
-  },
-  bookBtnDisabled: { opacity: 0.5 },
-  bookBtnText: { fontFamily: font.sansBold, fontSize: 16, color: colors.bgDeep },
-});

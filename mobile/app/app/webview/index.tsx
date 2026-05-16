@@ -1,90 +1,113 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, ActivityIndicator, Pressable, Text } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useLocalSearchParams, router } from 'expo-router';
+import { safeRouterBack } from '@/lib/navigation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
-import { colors, font, radius, spacing } from '@/theme/tokens';
+import { Pressable } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
-function normalizeParam(value: string | string[] | undefined): string | undefined {
-  if (typeof value === 'string') return value;
-  if (Array.isArray(value)) return value[0];
-  return undefined;
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, font, spacing } = t;
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: { flex: 1, fontFamily: font.display, fontSize: 18, color: colors.text, textAlign: 'center', marginHorizontal: 8 },
+  loader: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bg,
+  },
+  err: { fontFamily: font.sans, fontSize: 15, color: colors.textMuted, textAlign: 'center', padding: spacing.lg },
+});
+}
+
+
+
+
+function pickParam(v: string | string[] | undefined): string {
+  if (typeof v === 'string') return v;
+  if (Array.isArray(v) && v[0]) return v[0];
+  return '';
 }
 
 export default function WebViewScreen() {
-  const params = useLocalSearchParams<{ url: string | string[]; title?: string | string[] }>();
-  const url = useMemo(() => normalizeParam(params.url), [params.url]);
-  const title = useMemo(() => normalizeParam(params.title), [params.title]);
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
-  if (!url) {
-    return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safe} edges={['top']}>
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <ChevronLeft size={24} color={colors.gold} />
-            </Pressable>
-            <Text style={styles.title}>Bağlantı yok</Text>
-            <View style={{ width: 40 }} />
-          </View>
-          <View style={styles.missingWrap}>
-            <Text style={styles.missingText}>Görüntülenecek adres bulunamadı.</Text>
-            <Pressable style={styles.missingBtn} onPress={() => router.back()}>
-              <Text style={styles.missingBtnText}>Geri</Text>
-            </Pressable>
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
+  const { t } = useTranslation();
+  const params = useLocalSearchParams<{ url?: string | string[]; title?: string | string[] }>();
+
+  const url = useMemo(() => {
+    const raw = pickParam(params.url).trim();
+    if (!raw) return '';
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
+  }, [params.url]);
+
+  const title = useMemo(() => {
+    const raw = pickParam(params.title).trim();
+    return raw || t('navigation.webViewTitle');
+  }, [params.title, t]);
 
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
           <Text style={styles.title} numberOfLines={1}>
-            {title || 'Ödeme'}
+            {title}
           </Text>
           <View style={{ width: 40 }} />
         </View>
 
-        <View style={styles.webviewWrap}>
+        {!url ? (
+          <View style={styles.loader}>
+            <Text style={styles.err}>{t('navigation.missingUrl')}</Text>
+          </View>
+        ) : (
           <WebView
-            style={{ flex: 1 }}
             source={{ uri: url }}
             startInLoadingState
+            originWhitelist={['*']}
+            mixedContentMode="always"
+            allowsInlineMediaPlayback
+            mediaPlaybackRequiresUserAction={false}
+            setSupportMultipleWindows={false}
             renderLoading={() => (
               <View style={styles.loader}>
                 <ActivityIndicator color={colors.gold} size="large" />
               </View>
             )}
           />
-        </View>
+        )}
       </SafeAreaView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  safe: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  title: { fontFamily: font.display, fontSize: 18, color: colors.text },
-  loader: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  missingWrap: { flex: 1, padding: spacing.lg, justifyContent: 'center', gap: spacing.lg },
-  missingText: { fontFamily: font.sans, fontSize: 15, color: colors.textMuted, textAlign: 'center', lineHeight: 22 },
-  missingBtn: {
-    alignSelf: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.pill,
-    backgroundColor: colors.gold,
-  },
-  missingBtnText: { fontFamily: font.sansBold, fontSize: 15, color: colors.bgDeep },
-  webviewWrap: { flex: 1 },
-});

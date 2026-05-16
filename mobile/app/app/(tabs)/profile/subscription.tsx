@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,316 +9,13 @@ import {
   RefreshControl,
   Alert,
   Linking,
-  Platform,
+  Platform
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, Crown, Check, AlertCircle, Calendar, ChevronRight } from 'lucide-react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
 
-import { colors, spacing, font, radius } from '@/theme/tokens';
-import { useAuth } from '@/hooks/useAuth';
-import { subscriptionsApi } from '@/lib/api';
-import { getIapProvider, purchaseSubscriptionPlan } from '@/lib/iap';
-import type { Subscription, SubscriptionPlan } from '@/types';
-
-function formatCurrencyMinor(value: number | string, currency = 'TRY'): string {
-  const number = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(number)) return `0 ${currency}`;
-  return `${(number / 100).toFixed(0)} ${currency}`;
-}
-
-export default function SubscriptionScreen() {
-  const { isAuthenticated, authHydrating } = useAuth();
-
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [active, setActive] = useState<Subscription | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [actionId, setActionId] = useState<string | null>(null);
-  const [isCancelling, setIsCancelling] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const load = useCallback(async () => {
-    if (!isAuthenticated) return;
-    setLoading(true);
-    try {
-      const [planList, me] = await Promise.all([
-        subscriptionsApi.plans(), 
-        subscriptionsApi.me()
-      ]);
-      setPlans(planList);
-      setActive(me);
-    } catch (err: any) {
-      console.error('Subscription load error:', err);
-      setPlans([]);
-      setActive(null);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [isAuthenticated]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (authHydrating || !isAuthenticated) return;
-      load();
-    }, [authHydrating, isAuthenticated, load]),
-  );
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    load();
-  };
-
-  const startPlan = async (plan: SubscriptionPlan) => {
-    setActionId(plan.id);
-    try {
-      if (plan.price_minor <= 0) {
-        await subscriptionsApi.start(plan.id, 'iyzipay');
-        await load();
-        Alert.alert('Başarılı', 'Aboneliğiniz aktif edildi.');
-        return;
-      }
-
-      // IAP logic if mobile
-      if (Platform.OS !== 'web') {
-        const provider = getIapProvider();
-        if (provider) {
-          const purchase = await purchaseSubscriptionPlan(plan);
-          await subscriptionsApi.verifyReceipt({
-            plan_id: plan.id,
-            platform: provider,
-            receipt: purchase.receipt ?? '',
-            transaction_id: purchase.transactionId,
-            purchase_token: purchase.purchaseToken,
-            product_id: purchase.productId,
-          });
-          await load();
-          Alert.alert('Başarılı', 'Premium üyeliğiniz hayırlı olsun!');
-          return;
-        }
-      }
-
-      // Fallback to web checkout
-      const res = await subscriptionsApi.start(plan.id, 'iyzipay');
-      const checkout = (res as any).data?.checkout_url || (res as any).checkout_url;
-      if (checkout) {
-        await Linking.openURL(checkout);
-      } else {
-        await load();
-      }
-    } catch (err: any) {
-      Alert.alert('Hata', err.message || 'İşlem başarısız.');
-    } finally {
-      setActionId(null);
-    }
-  };
-
-  const onCancel = async () => {
-    Alert.alert(
-      'Aboneliği İptal Et',
-      'Premium avantajlarını kaybetmek istediğinize emin misiniz? Dönem sonuna kadar erişiminiz devam eder.',
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'İptal Et',
-          style: 'destructive',
-          onPress: async () => {
-            setIsCancelling(true);
-            try {
-              await subscriptionsApi.cancel();
-              await load();
-              Alert.alert('İptal Edildi', 'Abonelik yenilemesi durduruldu.');
-            } catch (err: any) {
-              Alert.alert('Hata', err.message || 'İşlem başarısız.');
-            } finally {
-              setIsCancelling(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  if (authHydrating) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safe} edges={['top']}>
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-              <ChevronLeft size={24} color={colors.text} />
-            </Pressable>
-            <Text style={styles.headerTitle}>Premium Üyelik</Text>
-            <View style={{ width: 40 }} />
-          </View>
-          <ScrollView contentContainerStyle={styles.guestScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.guestIconWrap}>
-              <Crown size={36} color={colors.bgDeep} />
-            </View>
-            <Text style={styles.guestTitle}>Premium planlar</Text>
-            <Text style={styles.guestSubtitle}>
-              Abonelik durumunuzu görüntülemek ve satın almak için giriş yapın. Ödeme ve planlar hesabınıza bağlıdır.
-            </Text>
-            <View style={styles.guestBullets}>
-              {['Günlük detaylı analizler', 'Transit etkileri', 'Seanslarda kredi avantajı'].map((b, i) => (
-                <View key={i} style={styles.guestBulletRow}>
-                  <Check size={16} color={colors.gold} />
-                  <Text style={styles.guestBulletText}>{b}</Text>
-                </View>
-              ))}
-            </View>
-            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
-              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
-                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
-                <ChevronRight size={18} color={colors.bgDeep} />
-              </LinearGradient>
-            </Pressable>
-            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
-              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
-            </Pressable>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  const activePlan = plans.find(p => p.id === active?.plan_id);
-
-  return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-            <ChevronLeft size={24} color={colors.text} />
-          </Pressable>
-          <Text style={styles.headerTitle}>Premium Üyelik</Text>
-          <View style={{ width: 40 }} />
-        </View>
-
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
-        >
-          
-          {/* Active Status */}
-          {active && (active.status === 'active' || active.status === 'grace_period') ? (
-            <View style={styles.activePlanCard}>
-              <View style={styles.activeHeader}>
-                <View style={styles.crownCircle}>
-                  <Crown size={24} color={colors.bgDeep} />
-                </View>
-                <View>
-                  <Text style={styles.activeTitle}>{activePlan?.name_tr || 'Premium Plan'}</Text>
-                  <View style={styles.statusRow}>
-                    <View style={styles.statusDot} />
-                    <Text style={styles.statusText}>Abonelik Aktif</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.activeDivider} />
-
-              <View style={styles.expiryRow}>
-                <Calendar size={14} color={colors.textMuted} />
-                <Text style={styles.expiryText}>
-                  Yenileme Tarihi: <Text style={styles.bold}>{active.ends_at ? new Date(active.ends_at).toLocaleDateString('tr-TR') : 'Belirlenmedi'}</Text>
-                </Text>
-              </View>
-
-              <Pressable style={styles.cancelLink} onPress={onCancel} disabled={isCancelling}>
-                {isCancelling ? <ActivityIndicator size="small" color={colors.textMuted} /> : <Text style={styles.cancelLinkText}>Aboneliği Yönet veya İptal Et</Text>}
-              </Pressable>
-            </View>
-          ) : (
-            <View style={styles.promoArea}>
-              <Text style={styles.promoKicker}>GOLDMOOD PREMIUM</Text>
-              <Text style={styles.promoTitle}>Yıldızların rehberliğini{'\n'}kesintisiz deneyimleyin.</Text>
-              <View style={styles.benefitsList}>
-                {[
-                  'Günlük detaylı astroloji analizleri',
-                  'Doğum haritası transit etkileri',
-                  'Seanslarda %10 kredi indirimi',
-                  'Öncelikli destek hattı',
-                ].map((b, i) => (
-                  <View key={i} style={styles.benefitItem}>
-                    <Check size={16} color={colors.gold} />
-                    <Text style={styles.benefitText}>{b}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* Plans Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>PLAN SEÇİN</Text>
-            {plans.map((plan) => {
-              const isCurrent = active?.plan_id === plan.id;
-              return (
-                <View key={plan.id} style={[styles.planCard, isCurrent && styles.planCardActive]}>
-                  <View style={styles.planHeader}>
-                    <View>
-                      <Text style={styles.planName}>{plan.name_tr}</Text>
-                      <Text style={styles.planInterval}>Aylık ödeme</Text>
-                    </View>
-                    <View style={styles.planPriceArea}>
-                      <Text style={styles.planPrice}>{formatCurrencyMinor(plan.price_minor, plan.currency)}</Text>
-                      <Text style={styles.planPriceLabel}>/ay</Text>
-                    </View>
-                  </View>
-                  
-                  <Text style={styles.planDesc}>{plan.description_tr}</Text>
-
-                  <Pressable
-                    style={[styles.planBtn, isCurrent && styles.planBtnCurrent, actionId === plan.id && styles.btnDisabled]}
-                    onPress={() => startPlan(plan)}
-                    disabled={isCurrent || actionId === plan.id}
-                  >
-                    {actionId === plan.id ? (
-                      <ActivityIndicator size="small" color={colors.bgDeep} />
-                    ) : (
-                      <Text style={[styles.planBtnText, isCurrent && styles.planBtnTextCurrent]}>
-                        {isCurrent ? 'Mevcut Planınız' : 'Hemen Başlat'}
-                      </Text>
-                    )}
-                  </Pressable>
-                </View>
-              );
-            })}
-          </View>
-
-          <View style={styles.infoBox}>
-            <AlertCircle size={14} color={colors.textMuted} />
-            <Text style={styles.infoBoxText}>
-              Abonelikler otomatik olarak yenilenir. İstediğiniz zaman iptal edebilirsiniz.
-            </Text>
-          </View>
-
-        </ScrollView>
-      </SafeAreaView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -358,50 +55,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: 40,
   },
-  guestScroll: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: 48,
-  },
-  guestIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.gold,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  guestTitle: {
-    fontFamily: font.display,
-    fontSize: 26,
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  guestSubtitle: {
-    fontFamily: font.sans,
-    fontSize: 15,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing.xl,
-  },
-  guestBullets: { gap: 12, marginBottom: spacing['2xl'] },
-  guestBulletRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  guestBulletText: { fontFamily: font.sans, fontSize: 14, color: colors.textDim, flex: 1 },
-  guestPrimaryWrap: { borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
-  guestPrimaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-  },
-  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
-  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
-  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
 
   // Active Plan Card
   activePlanCard: {
@@ -590,7 +243,7 @@ const styles = StyleSheet.create({
   planBtnText: {
     fontFamily: font.sansBold,
     fontSize: 14,
-    color: colors.bgDeep,
+    color: colors.ink,
   },
   planBtnTextCurrent: {
     color: colors.gold,
@@ -614,4 +267,270 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     flex: 1,
   },
-});
+  });
+}
+
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect, router } from 'expo-router';
+import { safeRouterBack } from '@/lib/navigation';
+import { ChevronLeft, Crown, Check, AlertCircle, Calendar } from 'lucide-react-native';
+
+
+import { useAuth } from '@/hooks/useAuth';
+import { subscriptionsApi } from '@/lib/api';
+import { getIapProvider, purchaseSubscriptionPlan } from '@/lib/iap';
+import type { Subscription, SubscriptionPlan } from '@/types';
+
+function formatCurrencyMinor(value: number | string, currency = 'TRY'): string {
+  const number = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(number)) return `0 ${currency}`;
+  return `${(number / 100).toFixed(0)} ${currency}`;
+}
+
+export default function SubscriptionScreen() {
+  const theme = useAppTheme();
+  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
+  const { isAuthenticated, loading: authLoading } = useAuth();
+
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [active, setActive] = useState<Subscription | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [actionId, setActionId] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setLoading(true);
+    try {
+      const [planList, me] = await Promise.all([
+        subscriptionsApi.plans(), 
+        subscriptionsApi.me()
+      ]);
+      setPlans(planList);
+      setActive(me);
+    } catch (err: any) {
+      console.error('Subscription load error:', err);
+      setPlans([]);
+      setActive(null);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [isAuthenticated]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (authLoading) return;
+      if (!isAuthenticated) {
+        router.replace('/auth/login' as any);
+        return;
+      }
+      load();
+    }, [authLoading, isAuthenticated, load]),
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    load();
+  };
+
+  const startPlan = async (plan: SubscriptionPlan) => {
+    setActionId(plan.id);
+    try {
+      if (plan.price_minor <= 0) {
+        await subscriptionsApi.start(plan.id, 'iyzipay');
+        await load();
+        Alert.alert('Başarılı', 'Aboneliğiniz aktif edildi.');
+        return;
+      }
+
+      // IAP logic if mobile
+      if (Platform.OS !== 'web') {
+        const provider = getIapProvider();
+        if (provider) {
+          const purchase = await purchaseSubscriptionPlan(plan);
+          await subscriptionsApi.verifyReceipt({
+            plan_id: plan.id,
+            platform: provider,
+            receipt: purchase.receipt ?? '',
+            transaction_id: purchase.transactionId,
+            purchase_token: purchase.purchaseToken,
+            product_id: purchase.productId,
+          });
+          await load();
+          Alert.alert('Başarılı', 'Premium üyeliğiniz hayırlı olsun!');
+          return;
+        }
+      }
+
+      // Fallback to web checkout
+      const res = await subscriptionsApi.start(plan.id, 'iyzipay');
+      const checkout = (res as any).data?.checkout_url || (res as any).checkout_url;
+      if (checkout) {
+        await Linking.openURL(checkout);
+      } else {
+        await load();
+      }
+    } catch (err: any) {
+      Alert.alert('Hata', err.message || 'İşlem başarısız.');
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const onCancel = async () => {
+    Alert.alert(
+      'Aboneliği İptal Et',
+      'Premium avantajlarını kaybetmek istediğinize emin misiniz? Dönem sonuna kadar erişiminiz devam eder.',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'İptal Et',
+          style: 'destructive',
+          onPress: async () => {
+            setIsCancelling(true);
+            try {
+              await subscriptionsApi.cancel();
+              await load();
+              Alert.alert('İptal Edildi', 'Abonelik yenilemesi durduruldu.');
+            } catch (err: any) {
+              Alert.alert('Hata', err.message || 'İşlem başarısız.');
+            } finally {
+              setIsCancelling(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (authLoading || (loading && !refreshing)) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  const activePlan = plans.find(p => p.id === active?.plan_id);
+
+  return (
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable onPress={() => safeRouterBack('/(tabs)/profile')} style={styles.headerBtn}>
+            <ChevronLeft size={24} color={colors.text} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Premium Üyelik</Text>
+          <View style={{ width: 40 }} />
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
+        >
+          
+          {/* Active Status */}
+          {active && (active.status === 'active' || active.status === 'grace_period') ? (
+            <View style={styles.activePlanCard}>
+              <View style={styles.activeHeader}>
+                <View style={styles.crownCircle}>
+                  <Crown size={24} color={colors.ink} />
+                </View>
+                <View>
+                  <Text style={styles.activeTitle}>{activePlan?.name_tr || 'Premium Plan'}</Text>
+                  <View style={styles.statusRow}>
+                    <View style={styles.statusDot} />
+                    <Text style={styles.statusText}>Abonelik Aktif</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.activeDivider} />
+
+              <View style={styles.expiryRow}>
+                <Calendar size={14} color={colors.textMuted} />
+                <Text style={styles.expiryText}>
+                  Yenileme Tarihi: <Text style={styles.bold}>{active.ends_at ? new Date(active.ends_at).toLocaleDateString('tr-TR') : 'Belirlenmedi'}</Text>
+                </Text>
+              </View>
+
+              <Pressable style={styles.cancelLink} onPress={onCancel} disabled={isCancelling}>
+                {isCancelling ? <ActivityIndicator size="small" color={colors.textMuted} /> : <Text style={styles.cancelLinkText}>Aboneliği Yönet veya İptal Et</Text>}
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.promoArea}>
+              <Text style={styles.promoKicker}>GOLDMOOD PREMIUM</Text>
+              <Text style={styles.promoTitle}>Yıldızların rehberliğini{'\n'}kesintisiz deneyimleyin.</Text>
+              <View style={styles.benefitsList}>
+                {[
+                  'Günlük detaylı astroloji analizleri',
+                  'Doğum haritası transit etkileri',
+                  'Seanslarda %10 kredi indirimi',
+                  'Öncelikli destek hattı',
+                ].map((b, i) => (
+                  <View key={i} style={styles.benefitItem}>
+                    <Check size={16} color={colors.gold} />
+                    <Text style={styles.benefitText}>{b}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Plans Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>PLAN SEÇİN</Text>
+            {plans.map((plan) => {
+              const isCurrent = active?.plan_id === plan.id;
+              return (
+                <View key={plan.id} style={[styles.planCard, isCurrent && styles.planCardActive]}>
+                  <View style={styles.planHeader}>
+                    <View>
+                      <Text style={styles.planName}>{plan.name_tr}</Text>
+                      <Text style={styles.planInterval}>Aylık ödeme</Text>
+                    </View>
+                    <View style={styles.planPriceArea}>
+                      <Text style={styles.planPrice}>{formatCurrencyMinor(plan.price_minor, plan.currency)}</Text>
+                      <Text style={styles.planPriceLabel}>/ay</Text>
+                    </View>
+                  </View>
+                  
+                  <Text style={styles.planDesc}>{plan.description_tr}</Text>
+
+                  <Pressable
+                    style={[styles.planBtn, isCurrent && styles.planBtnCurrent, actionId === plan.id && styles.btnDisabled]}
+                    onPress={() => startPlan(plan)}
+                    disabled={isCurrent || actionId === plan.id}
+                  >
+                    {actionId === plan.id ? (
+                      <ActivityIndicator size="small" color={colors.ink} />
+                    ) : (
+                      <Text style={[styles.planBtnText, isCurrent && styles.planBtnTextCurrent]}>
+                        {isCurrent ? 'Mevcut Planınız' : 'Hemen Başlat'}
+                      </Text>
+                    )}
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+
+          <View style={styles.infoBox}>
+            <AlertCircle size={14} color={colors.textMuted} />
+            <Text style={styles.infoBoxText}>
+              Abonelikler otomatik olarak yenilenir. İstediğiniz zaman iptal edebilirsiniz.
+            </Text>
+          </View>
+
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
+

@@ -1,10 +1,80 @@
 // FAZ 17 / T17-4 — Mobile review form
 // Booking tamamlandıktan sonra modal/sayfa olarak açılır.
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { reviewsApi } from '@/lib/api';
-import { colors, spacing, font, radius } from '@/theme/tokens';
+
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
+  container: { padding: spacing.lg, gap: spacing.md },
+  title: {
+    fontFamily: font.display,
+    fontSize: 22,
+    color: colors.text,
+    letterSpacing: 0.5,
+  },
+  subtitle: {
+    fontFamily: font.serifItalic,
+    fontSize: 14,
+    color: colors.gold,
+    marginTop: -spacing.xs,
+  },
+  starsRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.xs, marginTop: spacing.sm },
+  starBtn: { padding: 4 },
+  star: { fontSize: 36, color: colors.textMuted, fontFamily: font.display },
+  starOn: { color: colors.gold },
+  label: {
+    fontFamily: font.sansMedium,
+    fontSize: 12,
+    letterSpacing: 0.8,
+    color: colors.textDim,
+    textTransform: 'uppercase',
+    marginTop: spacing.sm,
+  },
+  textarea: {
+    minHeight: 100,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+    color: colors.text,
+    fontFamily: font.serif,
+    fontSize: 14,
+    textAlignVertical: 'top',
+  },
+  actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+  },
+  cancelBtnText: { color: colors.textDim, fontFamily: font.sansMedium, fontSize: 14 },
+  submitBtn: {
+    flex: 2,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.gold,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+  },
+  submitBtnDisabled: { opacity: 0.6 },
+  submitBtnText: { color: colors.bg, fontFamily: font.sansBold, fontSize: 14, letterSpacing: 1 },
+  notice: {
+    marginTop: spacing.sm,
+    fontSize: 11,
+    color: colors.textMuted,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+});
+}
 
 type Props = {
   bookingId: string;
@@ -15,6 +85,10 @@ type Props = {
 };
 
 export default function ReviewForm({ bookingId, consultantId, consultantName, onSubmitted, onCancel }: Props) {
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -101,68 +175,3 @@ export default function ReviewForm({ bookingId, consultantId, consultantName, on
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: spacing.lg, gap: spacing.md },
-  title: {
-    fontFamily: font.display,
-    fontSize: 22,
-    color: colors.text,
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontFamily: font.serifItalic,
-    fontSize: 14,
-    color: colors.gold,
-    marginTop: -spacing.xs,
-  },
-  starsRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.xs, marginTop: spacing.sm },
-  starBtn: { padding: 4 },
-  star: { fontSize: 36, color: colors.textMuted, fontFamily: font.display },
-  starOn: { color: colors.gold },
-  label: {
-    fontFamily: font.sansMedium,
-    fontSize: 12,
-    letterSpacing: 0.8,
-    color: colors.textDim,
-    textTransform: 'uppercase',
-    marginTop: spacing.sm,
-  },
-  textarea: {
-    minHeight: 100,
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.line,
-    color: colors.text,
-    fontFamily: font.serif,
-    fontSize: 14,
-    textAlignVertical: 'top',
-  },
-  actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-  },
-  cancelBtnText: { color: colors.textDim, fontFamily: font.sansMedium, fontSize: 14 },
-  submitBtn: {
-    flex: 2,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.gold,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-  },
-  submitBtnDisabled: { opacity: 0.6 },
-  submitBtnText: { color: colors.bg, fontFamily: font.sansBold, fontSize: 14, letterSpacing: 1 },
-  notice: {
-    marginTop: spacing.sm,
-    fontSize: 11,
-    color: colors.textMuted,
-    fontStyle: 'italic',
-    textAlign: 'center',
-  },
-});

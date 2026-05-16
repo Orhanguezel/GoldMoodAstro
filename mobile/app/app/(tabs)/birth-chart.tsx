@@ -1,403 +1,20 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
   Dimensions,
-  RefreshControl,
+  RefreshControl
 } from 'react-native';
-import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useFocusEffect } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Plus, Info, MapPin, Sparkles } from 'lucide-react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
 
-import { birthChartsApi } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
-import { colors, font, radius, spacing } from '@/theme/tokens';
-import type { BirthChart, ChartAspect, NatalChart, PlanetKey, PlanetPlacement } from '@/types';
-
-const { width } = Dimensions.get('window');
-
-const PLANET_ORDER: PlanetKey[] = [
-  'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
-];
-
-const SIGN_SYMBOLS = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
-
-const HOUSE_DESCS: Record<number, string> = {
-  1: 'Kişilik, dış görünüş ve hayata yaklaşım.',
-  2: 'Maddi değerler, özgüven ve kaynaklar.',
-  3: 'İletişim, yakın çevre ve zihinsel yapı.',
-  4: 'Yuva, aile, kökler ve içsel dünya.',
-  5: 'Aşk, yaratıcılık, çocuklar ve hobiler.',
-  6: 'Günlük rutin, sağlık ve hizmet alanı.',
-  7: 'İkili ilişkiler, ortaklıklar ve evlilik.',
-  8: 'Dönüşüm, derinlik ve ortak paylaşımlar.',
-  9: 'Yüksek öğrenim, inançlar ve keşifler.',
-  10: 'Kariyer, toplumsal statü ve hedefler.',
-  11: 'Sosyal çevre, idealler ve arkadaşlıklar.',
-  12: 'Bilinçaltı, mahremiyet ve spiritüellik.',
-};
-
-function point(longitude: number, radiusValue: number, center = 150) {
-  const angle = ((longitude - 90) * Math.PI) / 180;
-  return {
-    x: center + radiusValue * Math.cos(angle),
-    y: center + radiusValue * Math.sin(angle),
-  };
-}
-
-function formatDegree(p: PlanetPlacement) {
-  const degree = Math.floor(p.degree_in_sign);
-  const minutes = Math.round((p.degree_in_sign - degree) * 60);
-  return `${degree}°${String(minutes).padStart(2, '0')}`;
-}
-
-function aspectVisual(type: ChartAspect['type']) {
-  const isHarmonic = type === 'trine' || type === 'sextile';
-  const isHarsh = type === 'square' || type === 'opposition';
-  const isMajor = type === 'conjunction' || isHarsh || type === 'trine';
-  return {
-    stroke: isHarmonic ? colors.gold : isHarsh ? colors.danger : colors.goldLight,
-    strokeOpacity: isMajor ? 0.8 : 0.4,
-    strokeWidth: isMajor ? 2.0 : 1.0,
-  };
-}
-
-function ChartWheel({ chart }: { chart: NatalChart }) {
-  const planets = PLANET_ORDER.map((key) => chart.planets[key]).filter(Boolean);
-  const aspectLines = chart.aspects.slice(0, 20);
-  const houseCusps = chart.houses?.length === 12 ? chart.houses : [];
-
-  return (
-    <View style={styles.wheelWrap}>
-      <Svg width={300} height={300} viewBox="0 0 300 300">
-        {/* Decorative background rings */}
-        <Circle cx={150} cy={150} r={145} stroke={colors.goldDim} strokeWidth={0.5} strokeDasharray="2,4" fill="none" />
-        <Circle cx={150} cy={150} r={130} stroke={colors.goldDim} strokeWidth={1} fill="transparent" />
-        <Circle cx={150} cy={150} r={105} stroke={colors.line} strokeWidth={1} fill="none" />
-        <Circle cx={150} cy={150} r={70} stroke={colors.lineSoft} strokeWidth={1} fill="none" />
-
-        {/* Sign sectors and symbols */}
-        {Array.from({ length: 12 }).map((_, i) => {
-          const longitude = i * 30;
-          const a = point(longitude, 70);
-          const b = point(longitude, 130);
-          const label = point(longitude + 15, 117);
-          return (
-            <G key={`sign-${i}`}>
-              <Line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={colors.line} strokeWidth={0.8} strokeOpacity={0.35} />
-              <SvgText x={label.x} y={label.y + 6} fill={colors.gold} fontSize={14} textAnchor="middle" fontWeight="bold">
-                {SIGN_SYMBOLS[i]}
-              </SvgText>
-            </G>
-          );
-        })}
-
-        {/* House cusps (from chart data — T32-1 backend) */}
-        {houseCusps.map((cusp) => {
-          const a = point(cusp.longitude, 72);
-          const b = point(cusp.longitude, 128);
-          return (
-            <Line
-              key={`cusp-${cusp.house}`}
-              x1={a.x}
-              y1={a.y}
-              x2={b.x}
-              y2={b.y}
-              stroke={colors.goldDim}
-              strokeOpacity={0.7}
-              strokeWidth={1.5}
-            />
-          );
-        })}
-
-        {/* ASC / MC axes */}
-        {chart.ascendant && (() => {
-          const a = point(chart.ascendant.longitude, 66);
-          const b = point(chart.ascendant.longitude, 132);
-          return (
-            <Line
-              x1={a.x}
-              y1={a.y}
-              x2={b.x}
-              y2={b.y}
-              stroke={colors.gold}
-              strokeOpacity={0.85}
-              strokeWidth={2}
-            />
-          );
-        })()}
-        {chart.midheaven && (() => {
-          const a = point(chart.midheaven.longitude, 66);
-          const b = point(chart.midheaven.longitude, 132);
-          return (
-            <Line
-              x1={a.x}
-              y1={a.y}
-              x2={b.x}
-              y2={b.y}
-              stroke={colors.goldLight}
-              strokeOpacity={0.7}
-              strokeWidth={1.6}
-              strokeDasharray="4,3"
-            />
-          );
-        })()}
-
-        {/* Aspect connections */}
-        {aspectLines.map((aspect, i) => {
-          const a = chart.planets[aspect.planet_a];
-          const b = chart.planets[aspect.planet_b];
-          if (!a || !b) return null;
-          const p1 = point(a.longitude, 68);
-          const p2 = point(b.longitude, 68);
-          const visual = aspectVisual(aspect.type);
-          return (
-            <Line
-              key={i}
-              x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
-              stroke={visual.stroke}
-              strokeOpacity={visual.strokeOpacity}
-              strokeWidth={visual.strokeWidth}
-            />
-          );
-        })}
-
-        {/* Planets symbols */}
-        {planets.map((planet, i) => {
-          const p = point(planet.longitude, 88);
-          return (
-            <G key={planet.key}>
-              <Circle cx={p.x} cy={p.y} r={11} fill={colors.inkDeep} />
-              <SvgText x={p.x} y={p.y + 5} fill={planet.retrograde ? colors.warning : colors.gold} fontSize={16} textAnchor="middle">
-                {planet.symbol}
-              </SvgText>
-            </G>
-          );
-        })}
-      </Svg>
-    </View>
-  );
-}
-
-export default function BirthChartScreen() {
-  const { isAuthenticated, authHydrating } = useAuth();
-  const [charts, setCharts] = useState<BirthChart[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  
-  const selected = useMemo(
-    () => charts.find((c) => c.id === selectedId) ?? charts[0] ?? null,
-    [charts, selectedId]
-  );
-
-  const load = useCallback(async () => {
-    if (!isAuthenticated) {
-      setCharts([]);
-      setLoading(false);
-      setRefreshing(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const rows = await birthChartsApi.list();
-      setCharts(rows);
-      if (rows[0] && !selectedId) setSelectedId(rows[0].id);
-    } catch (err) {
-      console.error('Birth charts error:', err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [isAuthenticated, selectedId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load])
-  );
-
-  if (authHydrating) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safe} edges={['top']}>
-          <ScrollView contentContainerStyle={styles.guestScroll}>
-            <View style={styles.header}>
-              <View>
-                <Text style={styles.headerKicker}>GÖKYÜZÜ ANALİZİ</Text>
-                <Text style={styles.headerTitle}>Natal Harita</Text>
-              </View>
-              <View style={{ width: 42 }} />
-            </View>
-
-            <View style={styles.guestCard}>
-              <Text style={styles.guestTitle}>Haritalarınız hesabınıza bağlı</Text>
-              <Text style={styles.guestBody}>
-                Doğum haritasını kaydetmek ve tekrar görmek için giriş yapın. İsterseniz önce ücretsiz Büyük
-                Üçlü (Güneş, Ay, Yükselen) önizlemesini hesapsız deneyin.
-              </Text>
-              <Pressable style={styles.primaryBtn} onPress={() => router.push('/auth/login' as any)}>
-                <Text style={styles.primaryBtnText}>Giriş yap</Text>
-              </Pressable>
-              <Pressable style={styles.guestSecondaryBtn} onPress={() => router.push('/auth/register' as any)}>
-                <Text style={styles.guestSecondaryBtnText}>Hesap oluştur</Text>
-              </Pressable>
-              <Pressable style={styles.guestTertiaryWrap} onPress={() => router.push('/zodiac/big-three' as any)}>
-                <Text style={styles.guestTertiaryText}>Hesapsız: Büyük üçlü hesapla</Text>
-              </Pressable>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.gold} />}
-        >
-          
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.headerKicker}>GÖKYÜZÜ ANALİZİ</Text>
-              <Text style={styles.headerTitle}>Natal Harita</Text>
-            </View>
-            <Pressable style={styles.addBtn} onPress={() => router.push('/onboarding/birthdata' as any)}>
-              <Plus size={20} color={colors.gold} />
-            </Pressable>
-          </View>
-
-          {charts.length > 1 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
-              <View style={styles.tabsInner}>
-                {charts.map(c => (
-                  <Pressable 
-                    key={c.id} 
-                    onPress={() => setSelectedId(c.id)}
-                    style={[styles.tab, selectedId === c.id && styles.tabActive]}
-                  >
-                    <Text style={[styles.tabText, selectedId === c.id && styles.tabTextActive]}>{c.name}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </ScrollView>
-          )}
-
-          {selected ? (
-            <View style={styles.chartContent}>
-              
-              <LinearGradient colors={[colors.inkDeep, colors.surface]} style={styles.heroCard}>
-                <View style={styles.heroInfo}>
-                  <Text style={styles.headerKicker}>HARİTA SAHİBİ</Text>
-                  <Text style={styles.heroName}>{selected.name}</Text>
-                  <View style={styles.heroRow}>
-                    <MapPin size={10} color={colors.goldDim} />
-                    <Text style={styles.heroDetail}>{selected.pob_label}</Text>
-                  </View>
-                  <Text style={styles.heroDate}>
-                    {new Date(selected.dob).toLocaleDateString('tr-TR')} · {selected.tob.slice(0, 5)}
-                  </Text>
-                </View>
-                <View style={styles.ascBadge}>
-                  <Text style={styles.ascLabel}>ASCENDANT</Text>
-                  <Text style={styles.ascValue}>{selected.chart_data.ascendant.sign_label}</Text>
-                </View>
-              </LinearGradient>
-
-              <LinearGradient colors={[colors.surface, colors.inkDeep]} style={styles.wheelWrap}>
-                <ChartWheel chart={selected.chart_data} />
-              </LinearGradient>
-
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Sparkles size={16} color={colors.gold} />
-                  <Text style={styles.sectionTitle}>GEZEGEN KONUMLARI</Text>
-                </View>
-                <View style={styles.planetGrid}>
-                  {PLANET_ORDER.map(key => {
-                    const p = selected.chart_data.planets[key];
-                    if (!p) return null;
-                    return (
-                      <View key={key} style={styles.planetCard}>
-                        <View style={styles.planetTop}>
-                          <Text style={styles.planetIcon}>{p.symbol}</Text>
-                          <Text style={styles.planetName}>{p.name}</Text>
-                        </View>
-                        <Text style={styles.planetSign}>{p.sign_label}</Text>
-                        <View style={styles.planetBottom}>
-                          <Text style={styles.planetDegree}>{formatDegree(p)}</Text>
-                          <Text style={styles.planetHouse}>{p.house}. Ev</Text>
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Info size={16} color={colors.gold} />
-                  <Text style={styles.sectionTitle}>EV ANALİZLERİ</Text>
-                </View>
-                {selected.chart_data.houses.map(h => (
-                  <LinearGradient 
-                    key={h.house} 
-                    colors={[colors.surface, colors.inkDeep]}
-                    style={styles.houseRow}
-                  >
-                    <View style={styles.houseNumBox}>
-                      <Text style={styles.houseNum}>{h.house}</Text>
-                    </View>
-                    <View style={styles.houseBody}>
-                      <Text style={styles.houseHeader}>{h.sign_label} Burcu Kesen</Text>
-                      <Text style={styles.houseInfo}>{HOUSE_DESCS[h.house]}</Text>
-                    </View>
-                  </LinearGradient>
-                ))}
-              </View>
-
-            </View>
-          ) : (
-            <View style={styles.emptyWrap}>
-              <Text style={styles.emptyTitle}>Henüz haritanız yok.</Text>
-              <Pressable style={styles.primaryBtn} onPress={() => router.push('/onboarding/birthdata' as any)}>
-                <Text style={styles.primaryBtnText}>Yeni Harita Oluştur</Text>
-              </Pressable>
-            </View>
-          )}
-
-        </ScrollView>
-      </SafeAreaView>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
+function buildScreenStyles(t: AppTheme) {
+  const { colors, font, radius, spacing } = t;
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
@@ -409,7 +26,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     marginBottom: spacing.lg,
+    gap: spacing.sm,
   },
+  headerTitles: { flex: 1, minWidth: 0 },
   headerKicker: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, letterSpacing: 2, marginBottom: 4 },
   headerTitle: { fontFamily: font.display, fontSize: 28, color: colors.text },
   addBtn: {
@@ -427,7 +46,7 @@ const styles = StyleSheet.create({
   tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
   tabActive: { backgroundColor: colors.gold, borderColor: colors.gold },
   tabText: { fontFamily: font.sansMedium, fontSize: 13, color: colors.textDim },
-  tabTextActive: { color: colors.bgDeep },
+  tabTextActive: { color: colors.ink },
   chartContent: { paddingHorizontal: spacing.lg, gap: spacing.lg },
   heroCard: {
     flexDirection: 'row',
@@ -507,51 +126,323 @@ const styles = StyleSheet.create({
   houseHeader: { fontFamily: font.sansBold, fontSize: 14, color: colors.text },
   houseInfo: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted, marginTop: 4 },
   emptyWrap: { padding: 40, alignItems: 'center' },
-  guestScroll: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: 40,
-  },
-  guestCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.lineSoft,
-    gap: spacing.md,
-  },
-  guestTitle: { fontFamily: font.sansBold, fontSize: 18, color: colors.text },
-  guestBody: {
-    fontFamily: font.sans,
-    fontSize: 14,
-    color: colors.textMuted,
-    lineHeight: 22,
-    marginBottom: spacing.sm,
-  },
-  guestSecondaryBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.goldDim,
-    alignSelf: 'stretch',
-  },
-  guestSecondaryBtnText: { fontFamily: font.sansBold, fontSize: 15, color: colors.gold },
-  guestTertiaryWrap: { alignItems: 'center', paddingVertical: 8 },
-  guestTertiaryText: {
-    fontFamily: font.sansMedium,
-    fontSize: 14,
-    color: colors.textDim,
-    textDecorationLine: 'underline',
-  },
   emptyTitle: { fontFamily: font.display, fontSize: 20, color: colors.text, marginBottom: 20 },
-  primaryBtn: {
-    backgroundColor: colors.gold,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    alignSelf: 'stretch',
-  },
-  primaryBtnText: { fontFamily: font.sansBold, fontSize: 15, color: colors.bgDeep },
-});
+  primaryBtn: { backgroundColor: colors.gold, paddingHorizontal: 24, paddingVertical: 14, borderRadius: radius.pill },
+  primaryBtnText: { fontFamily: font.sansBold, fontSize: 15, color: colors.ink },
+  });
+}
+
+import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Plus, Info, ChevronRight, MapPin, Sparkles } from 'lucide-react-native';
+
+import { birthChartsApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+
+import type { BirthChart, NatalChart, PlanetKey, PlanetPlacement } from '@/types';
+import { MenuHeaderButton } from '@/components/MenuHeaderButton';
+
+const { width } = Dimensions.get('window');
+
+const PLANET_ORDER: PlanetKey[] = [
+  'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
+];
+
+const SIGN_SYMBOLS = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
+
+const HOUSE_DESCS: Record<number, string> = {
+  1: 'Kişilik, dış görünüş ve hayata yaklaşım.',
+  2: 'Maddi değerler, özgüven ve kaynaklar.',
+  3: 'İletişim, yakın çevre ve zihinsel yapı.',
+  4: 'Yuva, aile, kökler ve içsel dünya.',
+  5: 'Aşk, yaratıcılık, çocuklar ve hobiler.',
+  6: 'Günlük rutin, sağlık ve hizmet alanı.',
+  7: 'İkili ilişkiler, ortaklıklar ve evlilik.',
+  8: 'Dönüşüm, derinlik ve ortak paylaşımlar.',
+  9: 'Yüksek öğrenim, inançlar ve keşifler.',
+  10: 'Kariyer, toplumsal statü ve hedefler.',
+  11: 'Sosyal çevre, idealler ve arkadaşlıklar.',
+  12: 'Bilinçaltı, mahremiyet ve spiritüellik.',
+};
+
+function point(longitude: number, radiusValue: number, center = 150) {
+  const angle = ((longitude - 90) * Math.PI) / 180;
+  return {
+    x: center + radiusValue * Math.cos(angle),
+    y: center + radiusValue * Math.sin(angle),
+  };
+}
+
+function formatDegree(p: PlanetPlacement) {
+  const degree = Math.floor(p.degree_in_sign);
+  const minutes = Math.round((p.degree_in_sign - degree) * 60);
+  return `${degree}°${String(minutes).padStart(2, '0')}`;
+}
+
+function isRenderableNatalChart(cd: NatalChart | null | undefined): cd is NatalChart {
+  if (!cd || typeof cd !== 'object') return false;
+  if (!cd.planets || typeof cd.planets !== 'object') return false;
+  if (!Array.isArray(cd.houses)) return false;
+  return true;
+}
+
+function ChartWheel({ chart }: { chart: NatalChart }) {
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const planets = PLANET_ORDER.map((key) => chart.planets[key]).filter(Boolean);
+  const aspectLines = (chart.aspects ?? []).slice(0, 15);
+
+  return (
+    <View style={styles.wheelWrap}>
+      <Svg width={300} height={300} viewBox="0 0 300 300">
+        {/* Decorative background rings */}
+        <Circle cx={150} cy={150} r={145} stroke={colors.goldDim} strokeWidth={0.5} strokeDasharray="2,4" fill="none" />
+        <Circle cx={150} cy={150} r={130} stroke={colors.goldDim} strokeWidth={1} fill="transparent" />
+        <Circle cx={150} cy={150} r={105} stroke={colors.line} strokeWidth={1} fill="none" />
+        <Circle cx={150} cy={150} r={70} stroke={colors.lineSoft} strokeWidth={1} fill="none" />
+
+        {/* Sign sectors and symbols */}
+        {Array.from({ length: 12 }).map((_, i) => {
+          const longitude = i * 30;
+          const a = point(longitude, 70);
+          const b = point(longitude, 130);
+          const label = point(longitude + 15, 117);
+          return (
+            <G key={`sign-${i}`}>
+              <Line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={colors.lineSoft} strokeWidth={1} />
+              <SvgText x={label.x} y={label.y + 6} fill={colors.gold} fontSize={14} textAnchor="middle" fontWeight="bold">
+                {SIGN_SYMBOLS[i]}
+              </SvgText>
+            </G>
+          );
+        })}
+
+        {/* Aspect connections */}
+        {aspectLines.map((aspect, i) => {
+          const a = chart.planets[aspect.planet_a];
+          const b = chart.planets[aspect.planet_b];
+          if (!a || !b) return null;
+          const p1 = point(a.longitude, 68);
+          const p2 = point(b.longitude, 68);
+          const isMajor = ['conjunction', 'opposition', 'trine', 'square'].includes(aspect.type);
+          return (
+            <Line
+              key={i}
+              x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
+              stroke={isMajor ? colors.gold : colors.textMuted}
+              strokeOpacity={isMajor ? 0.4 : 0.1}
+              strokeWidth={1}
+            />
+          );
+        })}
+
+        {/* Planets symbols */}
+        {planets.map((planet, i) => {
+          const p = point(planet.longitude, 88);
+          return (
+            <G key={planet.key}>
+              <Circle cx={p.x} cy={p.y} r={11} fill={colors.inkDeep} />
+              <SvgText x={p.x} y={p.y + 5} fill={planet.retrograde ? colors.warning : colors.gold} fontSize={16} textAnchor="middle">
+                {planet.symbol}
+              </SvgText>
+            </G>
+          );
+        })}
+      </Svg>
+    </View>
+  );
+}
+
+export default function BirthChartScreen() {
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const [charts, setCharts] = useState<BirthChart[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const selected = useMemo(
+    () => charts.find((c) => c.id === selectedId) ?? charts[0] ?? null,
+    [charts, selectedId]
+  );
+
+  const load = useCallback(async () => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+    try {
+      const rows = await birthChartsApi.list();
+      setCharts(rows);
+      if (rows[0] && !selectedId) setSelectedId(rows[0].id);
+    } catch (err) {
+      console.error('Birth charts error:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [isAuthenticated, selectedId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  if (authLoading || (loading && !refreshing)) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.gold} />}
+        >
+          
+          <View style={styles.header}>
+            <MenuHeaderButton />
+            <View style={styles.headerTitles}>
+              <Text style={styles.headerKicker}>GÖKYÜZÜ ANALİZİ</Text>
+              <Text style={styles.headerTitle}>Natal Harita</Text>
+            </View>
+            <Pressable style={styles.addBtn} onPress={() => router.push('/onboarding/birthdata' as any)}>
+              <Plus size={20} color={colors.gold} />
+            </Pressable>
+          </View>
+
+          {charts.length > 1 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
+              <View style={styles.tabsInner}>
+                {charts.map(c => (
+                  <Pressable 
+                    key={c.id} 
+                    onPress={() => setSelectedId(c.id)}
+                    style={[styles.tab, selectedId === c.id && styles.tabActive]}
+                  >
+                    <Text style={[styles.tabText, selectedId === c.id && styles.tabTextActive]}>{c.name}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </ScrollView>
+          )}
+
+          {selected ? (
+            <View style={styles.chartContent}>
+              {(() => {
+                const cd = selected.chart_data;
+                const chartOk = isRenderableNatalChart(cd);
+                const ascLabel = cd?.ascendant?.sign_label ?? '—';
+
+                return (
+                  <>
+              <LinearGradient colors={[colors.inkDeep, colors.surface]} style={styles.heroCard}>
+                <View style={styles.heroInfo}>
+                  <Text style={styles.headerKicker}>HARİTA SAHİBİ</Text>
+                  <Text style={styles.heroName}>{selected.name}</Text>
+                  <View style={styles.heroRow}>
+                    <MapPin size={10} color={colors.goldDim} />
+                    <Text style={styles.heroDetail}>{selected.pob_label}</Text>
+                  </View>
+                  <Text style={styles.heroDate}>
+                    {new Date(selected.dob).toLocaleDateString('tr-TR')} · {(selected.tob ?? '12:00:00').slice(0, 5)}
+                  </Text>
+                </View>
+                <View style={styles.ascBadge}>
+                  <Text style={styles.ascLabel}>ASCENDANT</Text>
+                  <Text style={styles.ascValue}>{ascLabel}</Text>
+                </View>
+              </LinearGradient>
+
+              {chartOk ? (
+              <LinearGradient colors={[colors.surface, colors.inkDeep]} style={styles.wheelWrap}>
+                <ChartWheel chart={cd} />
+              </LinearGradient>
+              ) : (
+                <View style={[styles.wheelWrap, { paddingHorizontal: 20 }]}>
+                  <Text style={{ fontFamily: theme.font.sans, fontSize: 14, color: colors.textMuted, textAlign: 'center' }}>
+                    Harita çarkı için veri eksik. Haritayı yeniden oluşturmayı deneyin.
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Sparkles size={16} color={colors.gold} />
+                  <Text style={styles.sectionTitle}>GEZEGEN KONUMLARI</Text>
+                </View>
+                <View style={styles.planetGrid}>
+                  {PLANET_ORDER.map(key => {
+                    const p = chartOk ? cd.planets[key] : undefined;
+                    if (!p) return null;
+                    return (
+                      <View key={key} style={styles.planetCard}>
+                        <View style={styles.planetTop}>
+                          <Text style={styles.planetIcon}>{p.symbol}</Text>
+                          <Text style={styles.planetName}>{p.name}</Text>
+                        </View>
+                        <Text style={styles.planetSign}>{p.sign_label}</Text>
+                        <View style={styles.planetBottom}>
+                          <Text style={styles.planetDegree}>{formatDegree(p)}</Text>
+                          <Text style={styles.planetHouse}>{p.house}. Ev</Text>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Info size={16} color={colors.gold} />
+                  <Text style={styles.sectionTitle}>EV ANALİZLERİ</Text>
+                </View>
+                {(chartOk ? cd.houses : []).filter(Boolean).map((h) => (
+                  <LinearGradient 
+                    key={h.house} 
+                    colors={[colors.surface, colors.inkDeep]}
+                    style={styles.houseRow}
+                  >
+                    <View style={styles.houseNumBox}>
+                      <Text style={styles.houseNum}>{h.house}</Text>
+                    </View>
+                    <View style={styles.houseBody}>
+                      <Text style={styles.houseHeader}>
+                        {(h.sign_label ?? '—')} Burcu Kesen
+                      </Text>
+                      <Text style={styles.houseInfo}>{HOUSE_DESCS[h.house] ?? ''}</Text>
+                    </View>
+                  </LinearGradient>
+                ))}
+              </View>
+                  </>
+                );
+              })()}
+            </View>
+          ) : (
+            <View style={styles.emptyWrap}>
+              <Text style={styles.emptyTitle}>Henüz haritanız yok.</Text>
+              <Pressable style={styles.primaryBtn} onPress={() => router.push('/onboarding/birthdata' as any)}>
+                <Text style={styles.primaryBtnText}>Yeni Harita Oluştur</Text>
+              </Pressable>
+            </View>
+          )}
+
+        </ScrollView>
+      </SafeAreaView>
+    </View>
+  );
+}
+

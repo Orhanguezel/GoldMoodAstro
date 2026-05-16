@@ -1,17 +1,85 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Pressable, 
-  Dimensions, 
+import React, { useMemo, useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Dimensions,
   Image,
   ActivityIndicator,
   Alert,
   Platform,
   Share
 } from 'react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, font, radius, spacing } = t;
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1, paddingBottom: 20 },
+  scrollContent: { paddingBottom: 40 },
+  navHeader: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  header: { padding: spacing.xl, alignItems: 'center' },
+  iconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.gold + '15', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  headerTitle: { fontFamily: font.display, fontSize: 32, color: colors.text, textAlign: 'center' },
+  headerSubtitle: { fontFamily: font.serif, fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: 8, fontStyle: 'italic' },
+  guideSection: { padding: spacing.xl, gap: 24 },
+  guideItem: { flexDirection: 'row', gap: 16, alignItems: 'center' },
+  guideNumber: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
+  guideNumberText: { fontFamily: font.sansBold, fontSize: 14, color: colors.ink },
+  guideTitle: { fontFamily: font.sansBold, fontSize: 16, color: colors.textDim },
+  guideDesc: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  primaryBtn: { marginHorizontal: spacing.xl, borderRadius: radius.pill, overflow: 'hidden' },
+  btnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18 },
+  primaryBtnText: { fontFamily: font.sansBold, fontSize: 14, color: colors.ink, letterSpacing: 1 },
+  
+  waitContent: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+  timerCircle: { width: 180, height: 180, borderRadius: 90, borderWidth: 2, borderColor: colors.gold + '30', alignItems: 'center', justifyContent: 'center', marginBottom: 30 },
+  timerText: { fontFamily: font.sansBold, fontSize: 40, color: colors.gold },
+  waitTitle: { fontFamily: font.display, fontSize: 24, color: colors.text },
+  waitSubtitle: { fontFamily: font.serif, fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: 12, fontStyle: 'italic', paddingHorizontal: 20 },
+
+  stepTitle: { fontFamily: font.display, fontSize: 24, color: colors.text, textAlign: 'center' },
+  stepSubtitle: { fontFamily: font.sans, fontSize: 14, color: colors.textMuted, textAlign: 'center', marginTop: 8 },
+  uploadGrid: { flexDirection: 'row', justifyContent: 'center', gap: 10, paddingHorizontal: spacing.lg, marginTop: 20 },
+  uploadBox: { width: (width - 60) / 3, height: ((width - 60) / 3) * 1.33, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.line, borderStyle: 'dashed', backgroundColor: colors.surface + '40', overflow: 'hidden' },
+  uploadBoxActive: { borderStyle: 'solid', borderColor: colors.gold },
+  previewWrap: { flex: 1 },
+  previewImg: { width: '100%', height: '100%' },
+  checkBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 12 },
+  placeholderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  placeholderText: { fontFamily: font.sansBold, fontSize: 9, color: colors.gold, letterSpacing: 1 },
+  placeholderSubText: { fontFamily: font.sans, fontSize: 8, color: colors.textMuted },
+  miniLoader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 15 },
+  miniLoaderText: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted },
+  
+  processingCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing['2xl'] },
+  processingTitle: { fontFamily: font.display, fontSize: 24, color: colors.gold, marginTop: 24 },
+  processingSubtitle: { fontFamily: font.serif, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 12, fontStyle: 'italic' },
+  
+  resultContent: { paddingBottom: 40 },
+  resultHeader: { padding: spacing.xl, alignItems: 'center' },
+  resultTitle: { fontFamily: font.display, fontSize: 32, color: colors.text },
+  symbolGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, paddingHorizontal: spacing.lg, marginBottom: 24 },
+  symbolCard: { borderRadius: radius.lg, overflow: 'hidden', minWidth: (width - 60) / 3, borderWidth: 1, borderColor: colors.lineSoft },
+  symbolInner: { flex: 1, padding: 12, alignItems: 'center' },
+  symbolIcon: { fontSize: 24, marginBottom: 4 },
+  symbolName: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, textTransform: 'uppercase', letterSpacing: 1 },
+  confidenceBar: { width: '100%', height: 2, backgroundColor: colors.gold + '20', borderRadius: 1, marginTop: 6 },
+  confidenceFill: { height: '100%', backgroundColor: colors.gold, borderRadius: 1 },
+
+  interpretationBox: { marginHorizontal: spacing.lg, padding: 24, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft },
+  interpretationText: { fontFamily: font.serif, fontSize: 18, color: colors.textDim, lineHeight: 30, fontStyle: 'italic' },
+  resultActions: { flexDirection: 'row', gap: 12, paddingHorizontal: spacing.lg, marginTop: 32, marginBottom: 20 },
+  actionBtn: { flex: 1, height: 56, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.lineSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  actionBtnGold: { borderColor: colors.gold + '44', backgroundColor: colors.gold + '08' },
+  actionBtnText: { fontFamily: font.sansBold, fontSize: 12, color: colors.textMuted, letterSpacing: 1 },
+  });
+}
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -28,16 +96,17 @@ import {
   Share2
 } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { safeRouterBack } from '@/lib/navigation';
 
-import { colors, font, radius, spacing } from '@/theme/tokens';
+
 import { coffeeApi, storageApi } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
-import { mobileBrandConfig, publicShareUrl } from '@/config/brand';
 
 const { width } = Dimensions.get('window');
 
 export default function CoffeeScreen() {
-  const { isAuthenticated, authHydrating } = useAuth();
+  const theme = useAppTheme();
+  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
   const [step, setStep] = useState<'intro' | 'wait' | 'upload' | 'processing' | 'result'>('intro');
   const [images, setImages] = useState<string[]>([]); // local uris
   const [imageIds, setImageIds] = useState<string[]>([]);
@@ -52,8 +121,8 @@ export default function CoffeeScreen() {
     if (!result) return;
     try {
       await Share.share({
-        message: `Kahve Falım: ${result?.interpretation?.substring(0, 200)}... \n\n${mobileBrandConfig.appName} ile geleceğini keşfet!\n\nKeşfet: ${publicShareUrl(`/tr/kahve-fali/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=coffee`)}`,
-        title: `${mobileBrandConfig.appName} Kahve Falı`,
+        message: `Kahve Falım: ${result?.interpretation?.substring(0, 200)}... \n\nGoldMoodAstro ile geleceğini keşfet!\n\nKeşfet: https://goldmoodastro.com/tr/kahve-fali/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=coffee`,
+        title: 'GoldMoodAstro Kahve Falı',
       });
     } catch (e) {
       console.error(e);
@@ -144,79 +213,13 @@ export default function CoffeeScreen() {
     }
   };
 
-  if (authHydrating) {
-    return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safe} edges={['top']}>
-          <View style={styles.authGate}>
-            <ActivityIndicator color={colors.gold} size="large" />
-          </View>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safe} edges={['top']}>
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            <View style={styles.navHeader}>
-              <Pressable onPress={() => router.back()} style={styles.backBtn}>
-                <ChevronLeft size={24} color={colors.gold} />
-              </Pressable>
-            </View>
-
-            <View style={styles.header}>
-              <View style={styles.iconCircle}>
-                <Coffee size={40} color={colors.gold} />
-              </View>
-              <Text style={styles.headerTitle}>Geleneksel Kahve Falı</Text>
-              <Text style={styles.headerSubtitle}>
-                Fotoğraf yükleme ve yorum hesabınıza kaydedilir; kişisel analiz için giriş yapın.
-              </Text>
-            </View>
-
-            <View style={styles.guideSection}>
-              {[
-                { title: 'Fincanı Kapat', desc: 'Kahveni içtikten sonra dilek tutup kapat.' },
-                { title: '5 Dakika Bekle', desc: 'Sembollerin netleşmesi için fincanın soğumasını bekleyin.' },
-                { title: 'Fotoğrafları Çek', desc: 'Fincan içi (2) ve tabak (1) net olmalı.' },
-              ].map((item, i) => (
-                <View key={i} style={[styles.guideItem, styles.guideItemGuest]}>
-                  <View style={styles.guideNumber}>
-                    <Text style={styles.guideNumberText}>{i + 1}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.guideTitle}>{item.title}</Text>
-                    <Text style={styles.guideDesc}>{item.desc}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-
-            <Pressable style={styles.primaryBtn} onPress={() => router.push('/auth/login' as any)}>
-              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
-                <Text style={styles.primaryBtnText}>GİRİŞ YAP</Text>
-                <ChevronRight size={18} color={colors.bgDeep} />
-              </LinearGradient>
-            </Pressable>
-            <Pressable style={styles.guestRegisterBtn} onPress={() => router.push('/auth/register' as any)}>
-              <Text style={styles.guestRegisterText}>Hesap oluştur</Text>
-            </Pressable>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
   if (step === 'intro') {
     return (
       <View style={styles.container}>
         <SafeAreaView style={styles.safe} edges={['top']}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.navHeader}>
-              <Pressable onPress={() => router.back()} style={styles.backBtn}>
+              <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
                 <ChevronLeft size={24} color={colors.gold} />
               </Pressable>
             </View>
@@ -254,7 +257,7 @@ export default function CoffeeScreen() {
             >
               <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
                 <Text style={styles.primaryBtnText}>FİNCANI KAPATTIM</Text>
-                <ChevronRight size={18} color={colors.bgDeep} />
+                <ChevronRight size={18} color={colors.ink} />
               </LinearGradient>
             </Pressable>
           </ScrollView>
@@ -362,7 +365,7 @@ export default function CoffeeScreen() {
           >
             <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
               <Text style={styles.primaryBtnText}>FALIMI YORUMLA</Text>
-              <Sparkles size={18} color={colors.bgDeep} />
+              <Sparkles size={18} color={colors.ink} />
             </LinearGradient>
           </Pressable>
         </SafeAreaView>
@@ -439,69 +442,3 @@ export default function CoffeeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  authGate: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  safe: { flex: 1, paddingBottom: 20 },
-  scrollContent: { paddingBottom: 40 },
-  navHeader: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  header: { padding: spacing.xl, alignItems: 'center' },
-  iconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.gold + '15', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  headerTitle: { fontFamily: font.display, fontSize: 32, color: colors.text, textAlign: 'center' },
-  headerSubtitle: { fontFamily: font.serif, fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: 8, fontStyle: 'italic' },
-  guideSection: { padding: spacing.xl, gap: 24 },
-  guideItem: { flexDirection: 'row', gap: 16, alignItems: 'center' },
-  guideItemGuest: { opacity: 0.88 },
-  guestRegisterBtn: { marginHorizontal: spacing.xl, marginTop: 12, paddingVertical: 16, alignItems: 'center' },
-  guestRegisterText: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
-  guideNumber: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
-  guideNumberText: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep },
-  guideTitle: { fontFamily: font.sansBold, fontSize: 16, color: colors.textDim },
-  guideDesc: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  primaryBtn: { marginHorizontal: spacing.xl, borderRadius: radius.pill, overflow: 'hidden' },
-  btnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18 },
-  primaryBtnText: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
-  
-  waitContent: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  timerCircle: { width: 180, height: 180, borderRadius: 90, borderWidth: 2, borderColor: colors.gold + '30', alignItems: 'center', justifyContent: 'center', marginBottom: 30 },
-  timerText: { fontFamily: font.sansBold, fontSize: 40, color: colors.gold },
-  waitTitle: { fontFamily: font.display, fontSize: 24, color: colors.text },
-  waitSubtitle: { fontFamily: font.serif, fontSize: 16, color: colors.textMuted, textAlign: 'center', marginTop: 12, fontStyle: 'italic', paddingHorizontal: 20 },
-
-  stepTitle: { fontFamily: font.display, fontSize: 24, color: colors.text, textAlign: 'center' },
-  stepSubtitle: { fontFamily: font.sans, fontSize: 14, color: colors.textMuted, textAlign: 'center', marginTop: 8 },
-  uploadGrid: { flexDirection: 'row', justifyContent: 'center', gap: 10, paddingHorizontal: spacing.lg, marginTop: 20 },
-  uploadBox: { width: (width - 60) / 3, height: ((width - 60) / 3) * 1.33, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.line, borderStyle: 'dashed', backgroundColor: colors.surface + '40', overflow: 'hidden' },
-  uploadBoxActive: { borderStyle: 'solid', borderColor: colors.gold },
-  previewWrap: { flex: 1 },
-  previewImg: { width: '100%', height: '100%' },
-  checkBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 12 },
-  placeholderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
-  placeholderText: { fontFamily: font.sansBold, fontSize: 9, color: colors.gold, letterSpacing: 1 },
-  placeholderSubText: { fontFamily: font.sans, fontSize: 8, color: colors.textMuted },
-  miniLoader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 15 },
-  miniLoaderText: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted },
-  
-  processingCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing['2xl'] },
-  processingTitle: { fontFamily: font.display, fontSize: 24, color: colors.gold, marginTop: 24 },
-  processingSubtitle: { fontFamily: font.serif, fontSize: 15, color: colors.textMuted, textAlign: 'center', marginTop: 12, fontStyle: 'italic' },
-  
-  resultContent: { paddingBottom: 40 },
-  resultHeader: { padding: spacing.xl, alignItems: 'center' },
-  resultTitle: { fontFamily: font.display, fontSize: 32, color: colors.text },
-  symbolGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, paddingHorizontal: spacing.lg, marginBottom: 24 },
-  symbolCard: { borderRadius: radius.lg, overflow: 'hidden', minWidth: (width - 60) / 3, borderWidth: 1, borderColor: colors.lineSoft },
-  symbolInner: { flex: 1, padding: 12, alignItems: 'center' },
-  symbolIcon: { fontSize: 24, marginBottom: 4 },
-  symbolName: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, textTransform: 'uppercase', letterSpacing: 1 },
-  confidenceBar: { width: '100%', height: 2, backgroundColor: colors.gold + '20', borderRadius: 1, marginTop: 6 },
-  confidenceFill: { height: '100%', backgroundColor: colors.gold, borderRadius: 1 },
-
-  interpretationBox: { marginHorizontal: spacing.lg, padding: 24, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft },
-  interpretationText: { fontFamily: font.serif, fontSize: 18, color: colors.textDim, lineHeight: 30, fontStyle: 'italic' },
-  resultActions: { flexDirection: 'row', gap: 12, paddingHorizontal: spacing.lg, marginTop: 32, marginBottom: 20 },
-  actionBtn: { flex: 1, height: 56, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.lineSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  actionBtnGold: { borderColor: colors.gold + '44', backgroundColor: colors.gold + '08' },
-  actionBtnText: { fontFamily: font.sansBold, fontSize: 12, color: colors.textMuted, letterSpacing: 1 },
-});

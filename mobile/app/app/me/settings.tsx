@@ -1,18 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Pressable, 
+import React, { useMemo, useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
   TextInput,
   Switch,
   Alert,
   ActivityIndicator
 } from 'react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, font, radius, spacing } = t;
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  center: { alignItems: 'center', justifyContent: 'center' },
+  safe: { flex: 1 },
+  navHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  navTitle: { fontFamily: font.display, fontSize: 20, color: colors.text },
+  saveBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.gold + '15', alignItems: 'center', justifyContent: 'center' },
+  scrollContent: { padding: spacing.lg, gap: 20 },
+  section: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 20, borderWidth: 1, borderColor: colors.lineSoft, gap: 16 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
+  sectionTitle: { fontFamily: font.display, fontSize: 16, color: colors.gold, letterSpacing: 1 },
+  inputGroup: { gap: 8 },
+  label: { fontFamily: font.sansBold, fontSize: 10, color: colors.textMuted, letterSpacing: 1.5 },
+  input: { backgroundColor: colors.inkDeep, paddingHorizontal: 16, paddingVertical: 14, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.lineSoft, fontFamily: font.sans, fontSize: 16, color: colors.text },
+  chartCard: { backgroundColor: colors.inkDeep, borderRadius: radius.xl, padding: 16, gap: 12 },
+  chartHeader: { borderBottomWidth: 1, borderBottomColor: colors.lineSoft, paddingBottom: 8, marginBottom: 4 },
+  chartTitle: { fontFamily: font.sansBold, fontSize: 9, color: colors.gold, letterSpacing: 1 },
+  chartGrid: { gap: 8 },
+  chartItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  chartValue: { fontFamily: font.sans, fontSize: 13, color: colors.textDim },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  rowBody: { flex: 1, gap: 2 },
+  rowTitle: { fontFamily: font.sansBold, fontSize: 15, color: colors.text },
+  rowDesc: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted },
+  dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.danger + '33', backgroundColor: colors.danger + '08' },
+  dangerBtnText: { fontFamily: font.sansBold, fontSize: 12, color: colors.danger, letterSpacing: 1 },
+  });
+}
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { safeRouterBack } from '@/lib/navigation';
 import { 
   User, 
   Bell, 
@@ -20,18 +54,18 @@ import {
   Trash2, 
   Save,
   ChevronLeft,
-  ChevronRight,
   Calendar,
   Clock,
   MapPin
 } from 'lucide-react-native';
 
-import { colors, font, radius, spacing } from '@/theme/tokens';
-import { useAuth } from '@/hooks/useAuth';
+
 import { profilesApi, birthChartsApi } from '@/lib/api';
 
 export default function SettingsScreen() {
-  const { isAuthenticated, authHydrating } = useAuth();
+  const theme = useAppTheme();
+  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [primaryChart, setPrimaryChart] = useState<any>(null);
@@ -62,60 +96,8 @@ export default function SettingsScreen() {
   };
 
   useEffect(() => {
-    if (authHydrating) return;
-    if (!isAuthenticated) return;
     loadData();
-  }, [authHydrating, isAuthenticated]);
-
-  if (authHydrating) {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <View style={styles.container}>
-        <SafeAreaView style={styles.safe} edges={['top']}>
-          <View style={styles.navHeader}>
-            <Pressable onPress={() => router.back()} style={styles.backBtn}>
-              <ChevronLeft size={24} color={colors.gold} />
-            </Pressable>
-            <Text style={styles.navTitle}>Profil Ayarları</Text>
-            <View style={{ width: 40 }} />
-          </View>
-          <ScrollView contentContainerStyle={styles.guestScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.guestIconWrap}>
-              <User size={28} color={colors.bgDeep} />
-            </View>
-            <Text style={styles.guestTitle}>Hesap ayarları</Text>
-            <Text style={styles.guestSubtitle}>
-              Ad, bildirim tercihleri ve doğum bilgileri sunucudan yüklenir. Düzenlemek için giriş yapın.
-            </Text>
-            <Pressable style={styles.guestPrimaryWrap} onPress={() => router.push('/auth/login' as any)}>
-              <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.guestPrimaryBtn}>
-                <Text style={styles.guestPrimaryLabel}>GİRİŞ YAP</Text>
-                <ChevronRight size={18} color={colors.bgDeep} />
-              </LinearGradient>
-            </Pressable>
-            <Pressable style={styles.guestSecondary} onPress={() => router.push('/auth/register' as any)}>
-              <Text style={styles.guestSecondaryLabel}>Hesap oluştur</Text>
-            </Pressable>
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    );
-  }
-
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
+  }, []);
 
   const handleSave = async () => {
     try {
@@ -132,11 +114,19 @@ export default function SettingsScreen() {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator color={colors.gold} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.navHeader}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
           <Text style={styles.navTitle}>Profil Ayarları</Text>
@@ -248,62 +238,3 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  center: { alignItems: 'center', justifyContent: 'center' },
-  safe: { flex: 1 },
-  navHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  navTitle: { fontFamily: font.display, fontSize: 20, color: colors.text },
-  saveBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.gold + '15', alignItems: 'center', justifyContent: 'center' },
-  scrollContent: { padding: spacing.lg, gap: 20 },
-  guestScroll: { padding: spacing.xl, paddingTop: spacing.lg, paddingBottom: 48 },
-  guestIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.gold,
-    alignSelf: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  guestTitle: { fontFamily: font.display, fontSize: 24, color: colors.text, textAlign: 'center', marginBottom: spacing.sm },
-  guestSubtitle: {
-    fontFamily: font.sans,
-    fontSize: 15,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: spacing['2xl'],
-  },
-  guestPrimaryWrap: { borderRadius: radius.pill, overflow: 'hidden', marginBottom: 12 },
-  guestPrimaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-  },
-  guestPrimaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1 },
-  guestSecondary: { paddingVertical: 14, alignItems: 'center' },
-  guestSecondaryLabel: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
-  section: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 20, borderWidth: 1, borderColor: colors.lineSoft, gap: 16 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
-  sectionTitle: { fontFamily: font.display, fontSize: 16, color: colors.gold, letterSpacing: 1 },
-  inputGroup: { gap: 8 },
-  label: { fontFamily: font.sansBold, fontSize: 10, color: colors.textMuted, letterSpacing: 1.5 },
-  input: { backgroundColor: colors.inkDeep, paddingHorizontal: 16, paddingVertical: 14, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.lineSoft, fontFamily: font.sans, fontSize: 16, color: colors.text },
-  chartCard: { backgroundColor: colors.inkDeep, borderRadius: radius.xl, padding: 16, gap: 12 },
-  chartHeader: { borderBottomWidth: 1, borderBottomColor: colors.lineSoft, paddingBottom: 8, marginBottom: 4 },
-  chartTitle: { fontFamily: font.sansBold, fontSize: 9, color: colors.gold, letterSpacing: 1 },
-  chartGrid: { gap: 8 },
-  chartItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  chartValue: { fontFamily: font.sans, fontSize: 13, color: colors.textDim },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  rowBody: { flex: 1, gap: 2 },
-  rowTitle: { fontFamily: font.sansBold, fontSize: 15, color: colors.text },
-  rowDesc: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted },
-  dangerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.danger + '33', backgroundColor: colors.danger + '08' },
-  dangerBtnText: { fontFamily: font.sansBold, fontSize: 12, color: colors.danger, letterSpacing: 1 },
-});

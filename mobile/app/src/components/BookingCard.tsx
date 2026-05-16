@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { 
   Calendar, 
@@ -13,8 +13,121 @@ import {
 import { format, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
-import { colors, spacing, font, radius } from '@/theme/tokens';
+import { useAppTheme, type AppTheme } from '@/theme';
 import type { Booking } from '@/types';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
+      borderWidth: 1,
+      borderColor: colors.line,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    consultantArea: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    avatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: colors.gold,
+    },
+    avatarPlaceholder: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.inkDeep,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.gold,
+    },
+    avatarInitials: {
+      fontFamily: font.display,
+      fontSize: 20,
+      color: colors.gold,
+    },
+    consultantInfo: {
+      gap: 4,
+    },
+    consultantName: {
+      fontFamily: font.display,
+      fontSize: 16,
+      color: colors.text,
+    },
+    dateTimeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    dateTimeText: {
+      fontFamily: font.sans,
+      fontSize: 12,
+      color: colors.textMuted,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.lineSoft,
+      marginVertical: spacing.md,
+    },
+    cardFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    statusWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    statusLabel: {
+      fontFamily: font.sansBold,
+      fontSize: 10,
+      letterSpacing: 1,
+    },
+    priceWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    priceLabel: {
+      fontFamily: font.sans,
+      fontSize: 12,
+      color: colors.textMuted,
+    },
+    priceVal: {
+      fontFamily: font.sansBold,
+      fontSize: 14,
+      color: colors.gold,
+    },
+    joinBtn: {
+      backgroundColor: colors.gold,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: radius.pill,
+    },
+    joinBtnText: {
+      fontFamily: font.sansBold,
+      fontSize: 12,
+      color: colors.ink,
+    },
+  });
+}
 
 interface Props {
   booking: Booking;
@@ -23,7 +136,10 @@ interface Props {
 }
 
 export function BookingCard({ booking, onPress, onJoinCall }: Props) {
-  
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -82,7 +198,7 @@ export function BookingCard({ booking, onPress, onJoinCall }: Props) {
 
         {isJoinable && onJoinCall ? (
           <Pressable style={styles.joinBtn} onPress={onJoinCall}>
-            <PhoneCall size={14} color={colors.bgDeep} />
+            <PhoneCall size={14} color={colors.ink} />
             <Text style={styles.joinBtnText}>Görüşmeye Katıl</Text>
           </Pressable>
         ) : (
@@ -95,113 +211,3 @@ export function BookingCard({ booking, onPress, onJoinCall }: Props) {
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  consultantArea: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: colors.gold,
-  },
-  avatarPlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.inkDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.gold,
-  },
-  avatarInitials: {
-    fontFamily: font.display,
-    fontSize: 20,
-    color: colors.gold,
-  },
-  consultantInfo: {
-    gap: 4,
-  },
-  consultantName: {
-    fontFamily: font.display,
-    fontSize: 16,
-    color: colors.text,
-  },
-  dateTimeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  dateTimeText: {
-    fontFamily: font.sans,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.lineSoft,
-    marginVertical: spacing.md,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statusWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statusLabel: {
-    fontFamily: font.sansBold,
-    fontSize: 10,
-    letterSpacing: 1,
-  },
-  priceWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  priceLabel: {
-    fontFamily: font.sans,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  priceVal: {
-    fontFamily: font.sansBold,
-    fontSize: 14,
-    color: colors.gold,
-  },
-  joinBtn: {
-    backgroundColor: colors.gold,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: radius.pill,
-  },
-  joinBtnText: {
-    fontFamily: font.sansBold,
-    fontSize: 12,
-    color: colors.bgDeep,
-  },
-});

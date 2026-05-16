@@ -58,6 +58,11 @@
       "typedRoutes": true
     },
     "extra": {
+      "apiUrl": "http://localhost:8094/api",
+      "siteUrl": "http://localhost:3000",
+      "appName": "GoldMoodAstro",
+      "publicUrl": "https://goldmoodastro.com",
+      "supportEmail": "destek@goldmoodastro.com",
       "router": {
         "origin": false
       },

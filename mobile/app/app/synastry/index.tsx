@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Pressable, 
+import React, { useMemo, useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
   ActivityIndicator,
   Dimensions,
   TextInput,
@@ -13,9 +13,131 @@ import {
   RefreshControl,
   Share
 } from 'react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, font, radius, spacing, shadows } = t;
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  historyBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontFamily: font.display, fontSize: 18, color: colors.text, letterSpacing: 0.5 },
+  content: { flex: 1, paddingHorizontal: spacing.lg },
+  hero: { marginVertical: 24, gap: 8 },
+  heroTitle: { fontFamily: font.display, fontSize: 28, color: colors.text, lineHeight: 34 },
+  heroSubtitle: { fontFamily: font.serif, fontSize: 15, color: colors.textMuted, lineHeight: 22 },
+  
+  inviteAlert: { marginBottom: 24, borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.gold + '33' },
+  inviteBlur: { padding: 16, gap: 12 },
+  inviteHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  inviteAlertTitle: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold, letterSpacing: 1 },
+  inviteScroll: { flexDirection: 'row' },
+  inviteItem: { width: 220, backgroundColor: colors.surfaceHigh + '88', padding: 12, borderRadius: radius.lg, marginRight: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  inviteInfo: { flex: 1 },
+  inviteUser: { fontFamily: font.sansBold, fontSize: 13, color: colors.text },
+  inviteAction: { fontFamily: font.sans, fontSize: 10, color: colors.textMuted },
+  inviteBtns: { flexDirection: 'row', gap: 6 },
+  acceptBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
+  declineBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+
+  modes: { gap: 16 },
+  modeCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface + '88', padding: 18, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft, gap: 16 },
+  modeIcon: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  modeInfo: { flex: 1, gap: 4 },
+  modeTitle: { fontFamily: font.display, fontSize: 17, color: colors.text },
+  modeDesc: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted, lineHeight: 16 },
+  
+  freeBadge: { alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.success + '22', borderRadius: 4, marginTop: 2 },
+  freeText: { fontFamily: font.sansBold, fontSize: 8, color: colors.success },
+  priceBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.gold + '22', borderRadius: 4, marginTop: 2 },
+  priceText: { fontFamily: font.sansBold, fontSize: 8, color: colors.gold },
+  socialBadge: { alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.info + '22', borderRadius: 4, marginTop: 2 },
+  socialText: { fontFamily: font.sansBold, fontSize: 8, color: colors.info },
+
+  recentSection: { marginTop: 32, gap: 12 },
+  sectionLabel: { fontFamily: font.sansBold, fontSize: 10, color: colors.textMuted, letterSpacing: 2, marginLeft: 4 },
+  recentItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface + '44', padding: 14, borderRadius: radius.lg, gap: 12 },
+  recentName: { flex: 1, fontFamily: font.sansBold, fontSize: 14, color: colors.textDim },
+  recentScore: { fontFamily: font.display, fontSize: 14, color: colors.gold },
+
+  formSection: { marginTop: 12, gap: 20 },
+  sectionTitle: { fontFamily: font.display, fontSize: 24, color: colors.text, textAlign: 'center' },
+  sectionSubtitle: { fontFamily: font.serif, fontSize: 14, color: colors.textMuted, textAlign: 'center', fontStyle: 'italic' },
+  
+  quickForm: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 12 },
+  pickerBox: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft, minHeight: 110, justifyContent: 'center' },
+  pickerLabel: { fontFamily: font.sansBold, fontSize: 9, color: colors.gold, textAlign: 'center', marginTop: 10, letterSpacing: 2 },
+  pickerValue: { fontFamily: font.display, fontSize: 18, color: colors.text, textAlign: 'center', paddingVertical: 24 },
+  heartCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.bgDeep, borderWidth: 1, borderColor: colors.lineSoft, alignItems: 'center', justifyContent: 'center', ...shadows.soft },
+  
+  manualForm: { backgroundColor: colors.surface + '66', padding: 20, borderRadius: radius.xl * 1.5, borderWidth: 1, borderColor: colors.lineSoft, gap: 16 },
+  inputGroup: { gap: 6 },
+  label: { fontFamily: font.sansBold, fontSize: 9, color: colors.gold, letterSpacing: 1.5, marginLeft: 8 },
+  input: { backgroundColor: colors.bgDeep + '66', borderRadius: radius.lg, padding: 14, color: colors.text, fontFamily: font.sans, fontSize: 15, borderWidth: 1, borderColor: colors.lineSoft },
+  warningBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, backgroundColor: colors.gold + '08', borderRadius: radius.lg },
+  warningText: { fontFamily: font.sans, fontSize: 10, color: colors.gold, fontStyle: 'italic' },
+  
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, paddingHorizontal: 16, height: 56, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.lineSoft, gap: 12 },
+  searchInput: { flex: 1, color: colors.text, fontFamily: font.sans, fontSize: 14 },
+  searchText: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold },
+  
+  userItem: { flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: colors.lineSoft, gap: 12 },
+  userAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.gold + '22', alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontFamily: font.display, fontSize: 16, color: colors.gold },
+  userInfo: { flex: 1 },
+  userName: { fontFamily: font.sansBold, fontSize: 14, color: colors.text },
+  userEmail: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted },
+  sendBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  
+  submitBtn: { backgroundColor: colors.gold, height: 60, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', marginTop: 12, ...shadows.gold },
+  submitText: { fontFamily: font.sansBold, fontSize: 14, color: colors.ink, letterSpacing: 1.5 },
+  
+  centerContent: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24 },
+  loaderRing: { width: 90, height: 90, borderRadius: 45, borderWidth: 2, borderColor: colors.gold, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
+  loadingText: { fontFamily: font.display, fontSize: 18, color: colors.gold, letterSpacing: 1 },
+  
+  resultScroll: { paddingBottom: 40, gap: 24 },
+  quickResult: { gap: 24 },
+  resultHeader: { alignItems: 'center', gap: 8, marginVertical: 12 },
+  resultEmoji: { fontSize: 28 },
+  resultTitle: { fontFamily: font.display, fontSize: 24, color: colors.text, textAlign: 'center' },
+  scoreGrid: { flexDirection: 'row', gap: 12 },
+  scoreItem: { flex: 1, borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.lineSoft },
+  scoreInner: { flex: 1, padding: 20, alignItems: 'center', gap: 4 },
+  scoreLabel: { fontFamily: font.sansBold, fontSize: 9, color: colors.textMuted, letterSpacing: 1 },
+  scoreValue: { fontFamily: font.display, fontSize: 26, color: colors.gold },
+  resultCard: { padding: 28, borderRadius: radius.xl * 1.5, borderWidth: 1, borderColor: colors.lineSoft, marginTop: 10 },
+  resultText: { fontFamily: font.serif, fontSize: 17, color: colors.textDim, lineHeight: 28, fontStyle: 'italic', textAlign: 'center' },
+  
+  manualResult: { gap: 24 },
+  scoreCircleBox: { alignSelf: 'center', width: 150, height: 150, borderRadius: 75, borderWidth: 4, borderColor: colors.gold, alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: colors.bgDeep, ...shadows.gold },
+  scoreCircleLabel: { fontFamily: font.sansBold, fontSize: 9, color: colors.textMuted },
+  scoreCircleValue: { fontFamily: font.display, fontSize: 44, color: colors.gold },
+  reportCard: { backgroundColor: colors.surface + '88', padding: 24, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft, gap: 16 },
+  reportHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.lineSoft },
+  reportTitle: { fontFamily: font.display, fontSize: 18, color: colors.text },
+  reportText: { fontFamily: font.serif, fontSize: 16, color: colors.textDim, lineHeight: 28, fontStyle: 'italic' },
+  
+  footerActions: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  footerBtn: { flex: 1, height: 54, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.lineSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  footerBtnText: { fontFamily: font.sansBold, fontSize: 11, color: colors.textMuted, letterSpacing: 1 },
+  
+  historyItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface + '44', padding: 16, borderRadius: radius.lg, marginBottom: 12, gap: 12, borderWidth: 1, borderColor: colors.lineSoft },
+  historyIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  historyInfo: { flex: 1 },
+  historyName: { fontFamily: font.sansBold, fontSize: 15, color: colors.text },
+  historyDate: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted },
+  historyScore: { fontFamily: font.display, fontSize: 16, color: colors.gold },
+  emptyText: { textAlign: 'center', marginTop: 40, fontFamily: font.serif, color: colors.textMuted, fontStyle: 'italic' }
+  });
+}
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { safeRouterBack } from '@/lib/navigation';
 import { 
   Heart, 
   Zap, 
@@ -28,6 +150,7 @@ import {
   RefreshCcw,
   ShieldCheck,
   Search,
+  Clock,
   Send,
   Check,
   X,
@@ -37,10 +160,9 @@ import {
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 
-import { colors, font, radius, spacing, shadows } from '@/theme/tokens';
+
 import { synastryApi, userApi } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
-import { mobileBrandConfig, publicShareUrl } from '@/config/brand';
 
 const { width } = Dimensions.get('window');
 
@@ -50,22 +172,11 @@ const SIGNS = [
 ];
 
 export default function SynastryScreen() {
-  const { user: authUser, isAuthenticated, authHydrating } = useAuth();
-  const user = authUser as (typeof authUser & { is_premium?: boolean }) | null;
+  const theme = useAppTheme();
+  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
-  const requireUser = (actionLabel = 'Bu işlem') => {
-    if (user) return true;
-    Alert.alert(
-      'Giriş gerekli',
-      `${actionLabel} için oturum açmanız gerekir.`,
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        { text: 'Kayıt ol', onPress: () => router.push('/auth/register' as any) },
-        { text: 'Giriş Yap', onPress: () => router.push('/auth/login' as any) },
-      ],
-    );
-    return false;
-  };
+  const { user: authUser } = useAuth();
+  const user = authUser as (typeof authUser & { is_premium?: boolean }) | null;
   const [step, setStep] = useState<'mode' | 'quick' | 'manual' | 'invite' | 'loading' | 'result' | 'history'>('mode');
   const [quickData, setQuickData] = useState({ sign_a: 'Aries', sign_b: 'Aries' });
   const [manualData, setManualData] = useState({ name: '', dob: '', tob: '' });
@@ -91,8 +202,8 @@ export default function SynastryScreen() {
     if (!result) return;
     try {
       await Share.share({
-        message: `Aşk Uyumu Analizimiz: ${result.title || 'Uyum Analizi'} ✨\n\nAşk: %${result.love_score || result.score || '??'}\nÇekim: %${result.sexual_score || '??'}\n\n${mobileBrandConfig.appName} ile uyumunuzu keşfedin!\n\nKeşfet: ${publicShareUrl(`/tr/sinastri/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=synastry`)}`,
-        title: `${mobileBrandConfig.appName} Aşk Uyumu`,
+        message: `Aşk Uyumu Analizimiz: ${result.title || 'Uyum Analizi'} ✨\n\nAşk: %${result.love_score || result.score || '??'}\nÇekim: %${result.sexual_score || '??'}\n\nGoldMoodAstro ile uyumunuzu keşfedin!\n\nKeşfet: https://goldmoodastro.com/tr/sinastri/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=synastry`,
+        title: 'GoldMoodAstro Aşk Uyumu',
       });
     } catch (e) {
       console.error(e);
@@ -118,7 +229,6 @@ export default function SynastryScreen() {
   };
 
   const handleSearch = async () => {
-    if (!requireUser('Kullanıcı araması')) return;
     if (searchQuery.length < 3) return;
     setIsSearching(true);
     try {
@@ -132,7 +242,6 @@ export default function SynastryScreen() {
   };
 
   const handleSendInvite = async (partnerId: string) => {
-    if (!requireUser('Davet gönderme')) return;
     try {
       await synastryApi.createInvite(partnerId);
       Alert.alert('Başarılı', 'Davet gönderildi!');
@@ -143,7 +252,6 @@ export default function SynastryScreen() {
   };
 
   const handleAcceptInvite = async (inviteId: string) => {
-    if (!requireUser('Davet kabulü')) return;
     setStep('loading');
     setLoading(true);
     try {
@@ -179,8 +287,7 @@ export default function SynastryScreen() {
 
   const handleManual = async () => {
     if (!manualData.name || !manualData.dob) return;
-    if (!requireUser('Kredi ile analiz')) return;
-
+    
     setStep('loading');
     setLoading(true);
     try {
@@ -198,38 +305,20 @@ export default function SynastryScreen() {
   };
 
   const onRefresh = async () => {
-    if (!user) {
-      setIsRefreshing(false);
-      return;
-    }
     setIsRefreshing(true);
     await Promise.all([fetchInvites(), fetchReports()]);
     setIsRefreshing(false);
   };
 
-  if (authHydrating) {
-    return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator color={colors.gold} size="large" />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <Pressable onPress={() => step === 'mode' ? router.back() : setStep('mode')} style={styles.backBtn}>
+          <Pressable onPress={() => step === 'mode' ? safeRouterBack() : setStep('mode')} style={styles.backBtn}>
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
           <Text style={styles.headerTitle}>Sinastri & Uyum</Text>
-          <Pressable
-            onPress={() => {
-              if (!requireUser('Geçmiş analizler')) return;
-              setStep('history');
-            }}
-            style={styles.historyBtn}
-          >
+          <Pressable onPress={() => setStep('history')} style={styles.historyBtn}>
             <History size={20} color={colors.gold} />
           </Pressable>
         </View>
@@ -246,38 +335,7 @@ export default function SynastryScreen() {
                   <Text style={styles.heroSubtitle}>Yıldızların aşkınız üzerindeki etkisini bilimsel astroloji ile analiz edin.</Text>
                </View>
 
-               {!isAuthenticated && (
-                 <View style={styles.guestHint}>
-                   <LinearGradient
-                     colors={[colors.plumSoft + 'CC', colors.surface + 'EE']}
-                     start={{ x: 0, y: 0 }}
-                     end={{ x: 1, y: 1 }}
-                     style={styles.guestHintGrad}
-                   >
-                     <ShieldCheck size={22} color={colors.gold} />
-                     <Text style={styles.guestHintTitle}>Misafir olarak</Text>
-                     <Text style={styles.guestHintBody}>
-                       Hızlı uyum (burç seçimi) ücretsiz. Partner daveti, kredili manuel analiz ve geçmiş raporlar için giriş yapın.
-                     </Text>
-                     <View style={styles.guestHintRow}>
-                       <Pressable
-                         style={styles.guestHintBtnPrimary}
-                         onPress={() => router.push('/auth/login' as any)}
-                       >
-                         <Text style={styles.guestHintBtnPrimaryText}>GİRİŞ</Text>
-                       </Pressable>
-                       <Pressable
-                         style={styles.guestHintBtnSecondary}
-                         onPress={() => router.push('/auth/register' as any)}
-                       >
-                         <Text style={styles.guestHintBtnSecondaryText}>Kayıt ol</Text>
-                       </Pressable>
-                     </View>
-                   </LinearGradient>
-                 </View>
-               )}
-
-               {!!user && invites.length > 0 && (
+               {invites.length > 0 && (
                  <View style={styles.inviteAlert}>
                     <BlurView intensity={20} tint="light" style={styles.inviteBlur}>
                        <View style={styles.inviteHeader}>
@@ -293,7 +351,7 @@ export default function SynastryScreen() {
                                </View>
                                <View style={styles.inviteBtns}>
                                   <Pressable style={styles.acceptBtn} onPress={() => handleAcceptInvite(inv.id)}>
-                                     <Check size={16} color={colors.bgDeep} />
+                                     <Check size={16} color={colors.ink} />
                                   </Pressable>
                                   <Pressable style={styles.declineBtn}>
                                      <X size={16} color={colors.textMuted} />
@@ -319,11 +377,7 @@ export default function SynastryScreen() {
                      <ChevronRight size={20} color={colors.textMuted} />
                   </Pressable>
 
-                  <Pressable style={styles.modeCard} onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    if (!requireUser('Manuel analiz')) return;
-                    setStep('manual');
-                  }}>
+                  <Pressable style={styles.modeCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setStep('manual'); }}>
                      <View style={[styles.modeIcon, { backgroundColor: colors.plum + '55' }]}>
                         <Star size={28} color={colors.goldLight} />
                      </View>
@@ -338,11 +392,7 @@ export default function SynastryScreen() {
                      <ChevronRight size={20} color={colors.textMuted} />
                   </Pressable>
 
-                  <Pressable style={styles.modeCard} onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    if (!requireUser('Partner daveti')) return;
-                    setStep('invite');
-                  }}>
+                  <Pressable style={styles.modeCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setStep('invite'); }}>
                      <View style={[styles.modeIcon, { backgroundColor: colors.surfaceHigh }]}>
                         <User size={28} color={colors.goldLight} />
                      </View>
@@ -355,7 +405,7 @@ export default function SynastryScreen() {
                   </Pressable>
                </View>
 
-               {!!user && reports.length > 0 && (
+               {reports.length > 0 && (
                  <View style={styles.recentSection}>
                     <Text style={styles.sectionLabel}>SON ANALİZLERİN</Text>
                     {reports.slice(0, 3).map((rep) => (
@@ -616,143 +666,3 @@ export default function SynastryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgDeep },
-  safe: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  historyBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontFamily: font.display, fontSize: 18, color: colors.text, letterSpacing: 0.5 },
-  content: { flex: 1, paddingHorizontal: spacing.lg },
-  hero: { marginVertical: 24, gap: 8 },
-  heroTitle: { fontFamily: font.display, fontSize: 28, color: colors.text, lineHeight: 34 },
-  heroSubtitle: { fontFamily: font.serif, fontSize: 15, color: colors.textMuted, lineHeight: 22 },
-
-  guestHint: { marginBottom: 20, borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.lineSoft },
-  guestHintGrad: { padding: spacing.lg, gap: 10 },
-  guestHintTitle: { fontFamily: font.sansBold, fontSize: 13, color: colors.gold, letterSpacing: 0.5 },
-  guestHintBody: { fontFamily: font.sans, fontSize: 13, color: colors.textDim, lineHeight: 20 },
-  guestHintRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
-  guestHintBtnPrimary: {
-    flex: 1,
-    backgroundColor: colors.gold,
-    paddingVertical: 12,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  guestHintBtnPrimaryText: { fontFamily: font.sansBold, fontSize: 12, color: colors.bgDeep, letterSpacing: 0.8 },
-  guestHintBtnSecondary: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.gold + '66',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  guestHintBtnSecondaryText: { fontFamily: font.sansMedium, fontSize: 12, color: colors.gold },
-  
-  inviteAlert: { marginBottom: 24, borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.gold + '33' },
-  inviteBlur: { padding: 16, gap: 12 },
-  inviteHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  inviteAlertTitle: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold, letterSpacing: 1 },
-  inviteScroll: { flexDirection: 'row' },
-  inviteItem: { width: 220, backgroundColor: colors.surfaceHigh + '88', padding: 12, borderRadius: radius.lg, marginRight: 12, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  inviteInfo: { flex: 1 },
-  inviteUser: { fontFamily: font.sansBold, fontSize: 13, color: colors.text },
-  inviteAction: { fontFamily: font.sans, fontSize: 10, color: colors.textMuted },
-  inviteBtns: { flexDirection: 'row', gap: 6 },
-  acceptBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
-  declineBtn: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-
-  modes: { gap: 16 },
-  modeCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface + '88', padding: 18, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft, gap: 16 },
-  modeIcon: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  modeInfo: { flex: 1, gap: 4 },
-  modeTitle: { fontFamily: font.display, fontSize: 17, color: colors.text },
-  modeDesc: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted, lineHeight: 16 },
-  
-  freeBadge: { alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.success + '22', borderRadius: 4, marginTop: 2 },
-  freeText: { fontFamily: font.sansBold, fontSize: 8, color: colors.success },
-  priceBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.gold + '22', borderRadius: 4, marginTop: 2 },
-  priceText: { fontFamily: font.sansBold, fontSize: 8, color: colors.gold },
-  socialBadge: { alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, backgroundColor: colors.info + '22', borderRadius: 4, marginTop: 2 },
-  socialText: { fontFamily: font.sansBold, fontSize: 8, color: colors.info },
-
-  recentSection: { marginTop: 32, gap: 12 },
-  sectionLabel: { fontFamily: font.sansBold, fontSize: 10, color: colors.textMuted, letterSpacing: 2, marginLeft: 4 },
-  recentItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface + '44', padding: 14, borderRadius: radius.lg, gap: 12 },
-  recentName: { flex: 1, fontFamily: font.sansBold, fontSize: 14, color: colors.textDim },
-  recentScore: { fontFamily: font.display, fontSize: 14, color: colors.gold },
-
-  formSection: { marginTop: 12, gap: 20 },
-  sectionTitle: { fontFamily: font.display, fontSize: 24, color: colors.text, textAlign: 'center' },
-  sectionSubtitle: { fontFamily: font.serif, fontSize: 14, color: colors.textMuted, textAlign: 'center', fontStyle: 'italic' },
-  
-  quickForm: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 12 },
-  pickerBox: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft, minHeight: 110, justifyContent: 'center' },
-  pickerLabel: { fontFamily: font.sansBold, fontSize: 9, color: colors.gold, textAlign: 'center', marginTop: 10, letterSpacing: 2 },
-  pickerValue: { fontFamily: font.display, fontSize: 18, color: colors.text, textAlign: 'center', paddingVertical: 24 },
-  heartCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.bgDeep, borderWidth: 1, borderColor: colors.lineSoft, alignItems: 'center', justifyContent: 'center', ...shadows.soft },
-  
-  manualForm: { backgroundColor: colors.surface + '66', padding: 20, borderRadius: radius.xl * 1.5, borderWidth: 1, borderColor: colors.lineSoft, gap: 16 },
-  inputGroup: { gap: 6 },
-  label: { fontFamily: font.sansBold, fontSize: 9, color: colors.gold, letterSpacing: 1.5, marginLeft: 8 },
-  input: { backgroundColor: colors.bgDeep + '66', borderRadius: radius.lg, padding: 14, color: colors.text, fontFamily: font.sans, fontSize: 15, borderWidth: 1, borderColor: colors.lineSoft },
-  warningBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, backgroundColor: colors.gold + '08', borderRadius: radius.lg },
-  warningText: { fontFamily: font.sans, fontSize: 10, color: colors.gold, fontStyle: 'italic' },
-  
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, paddingHorizontal: 16, height: 56, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.lineSoft, gap: 12 },
-  searchInput: { flex: 1, color: colors.text, fontFamily: font.sans, fontSize: 14 },
-  searchText: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold },
-  
-  userItem: { flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: colors.lineSoft, gap: 12 },
-  userAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.gold + '22', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: font.display, fontSize: 16, color: colors.gold },
-  userInfo: { flex: 1 },
-  userName: { fontFamily: font.sansBold, fontSize: 14, color: colors.text },
-  userEmail: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted },
-  sendBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  
-  submitBtn: { backgroundColor: colors.gold, height: 60, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', marginTop: 12, ...shadows.gold },
-  submitText: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep, letterSpacing: 1.5 },
-  
-  centerContent: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24 },
-  loaderRing: { width: 90, height: 90, borderRadius: 45, borderWidth: 2, borderColor: colors.gold, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
-  loadingText: { fontFamily: font.display, fontSize: 18, color: colors.gold, letterSpacing: 1 },
-  
-  resultScroll: { paddingBottom: 40, gap: 24 },
-  quickResult: { gap: 24 },
-  resultHeader: { alignItems: 'center', gap: 8, marginVertical: 12 },
-  resultEmoji: { fontSize: 28 },
-  resultTitle: { fontFamily: font.display, fontSize: 24, color: colors.text, textAlign: 'center' },
-  scoreGrid: { flexDirection: 'row', gap: 12 },
-  scoreItem: { flex: 1, borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.lineSoft },
-  scoreInner: { flex: 1, padding: 20, alignItems: 'center', gap: 4 },
-  scoreLabel: { fontFamily: font.sansBold, fontSize: 9, color: colors.textMuted, letterSpacing: 1 },
-  scoreValue: { fontFamily: font.display, fontSize: 26, color: colors.gold },
-  resultCard: { padding: 28, borderRadius: radius.xl * 1.5, borderWidth: 1, borderColor: colors.lineSoft, marginTop: 10 },
-  resultText: { fontFamily: font.serif, fontSize: 17, color: colors.textDim, lineHeight: 28, fontStyle: 'italic', textAlign: 'center' },
-  
-  manualResult: { gap: 24 },
-  scoreCircleBox: { alignSelf: 'center', width: 150, height: 150, borderRadius: 75, borderWidth: 4, borderColor: colors.gold, alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: colors.bgDeep, ...shadows.gold },
-  scoreCircleLabel: { fontFamily: font.sansBold, fontSize: 9, color: colors.textMuted },
-  scoreCircleValue: { fontFamily: font.display, fontSize: 44, color: colors.gold },
-  reportCard: { backgroundColor: colors.surface + '88', padding: 24, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.lineSoft, gap: 16 },
-  reportHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.lineSoft },
-  reportTitle: { fontFamily: font.display, fontSize: 18, color: colors.text },
-  reportText: { fontFamily: font.serif, fontSize: 16, color: colors.textDim, lineHeight: 28, fontStyle: 'italic' },
-  
-  footerActions: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  footerBtn: { flex: 1, height: 54, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.lineSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  footerBtnText: { fontFamily: font.sansBold, fontSize: 11, color: colors.textMuted, letterSpacing: 1 },
-  
-  historyItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface + '44', padding: 16, borderRadius: radius.lg, marginBottom: 12, gap: 12, borderWidth: 1, borderColor: colors.lineSoft },
-  historyIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  historyInfo: { flex: 1 },
-  historyName: { fontFamily: font.sansBold, fontSize: 15, color: colors.text },
-  historyDate: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted },
-  historyScore: { fontFamily: font.display, fontSize: 16, color: colors.gold },
-  emptyText: { textAlign: 'center', marginTop: 40, fontFamily: font.serif, color: colors.textMuted, fontStyle: 'italic' }
-});

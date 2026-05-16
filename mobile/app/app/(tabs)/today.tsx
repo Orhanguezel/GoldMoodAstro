@@ -1,13 +1,71 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Pressable, 
-  Dimensions, 
-  RefreshControl 
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Dimensions,
+  RefreshControl
 } from 'react-native';
+import { useAppTheme, type AppTheme } from '@/theme';
+
+function buildScreenStyles(t: AppTheme) {
+  const { colors, font, radius, spacing } = t;
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
+  scrollContent: { paddingBottom: 40 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+  headerMain: { flex: 1, minWidth: 0 },
+  dateText: { fontFamily: font.sansMedium, fontSize: 11, color: colors.textMuted, letterSpacing: 1.5, textTransform: 'uppercase' },
+  greetingText: { fontFamily: font.display, fontSize: 26, color: colors.text, marginTop: 4 },
+  sunBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line },
+  sunBadgeText: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold },
+  section: { paddingHorizontal: spacing.lg, marginBottom: spacing['2xl'] },
+  sectionTitle: { fontFamily: font.sansBold, fontSize: 10, color: colors.goldDeep, letterSpacing: 2, marginBottom: spacing.lg },
+  readingCard: { borderRadius: radius.xl, padding: spacing.xl, borderWidth: 1, borderColor: colors.line },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
+  cardKicker: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, letterSpacing: 2 },
+  readingText: { fontFamily: font.serif, fontSize: 17, color: colors.text, lineHeight: 26, marginBottom: 20 },
+  emptyReading: { paddingVertical: 20 },
+  emptyReadingText: { fontFamily: font.serif, fontSize: 15, color: colors.textMuted, fontStyle: 'italic' },
+  readMoreBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  readMoreText: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold },
+  cardDivider: { height: 1, backgroundColor: colors.lineSoft, marginVertical: 20 },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  moonRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  moonText: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  gridItem: { width: (width - 40 - 12) / 2, backgroundColor: colors.surface, padding: 16, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.lineSoft, alignItems: 'center', gap: 12 },
+  gridIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceHigh, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  gridLabel: { fontFamily: font.sansBold, fontSize: 12, color: colors.textDim },
+  transitList: { gap: 12 },
+  transitItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, padding: 14, borderRadius: radius.md, gap: 14, borderWidth: 1, borderColor: colors.lineSoft },
+  transitIconWrap: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.gold + '18', alignItems: 'center', justifyContent: 'center' },
+  transitBody: { flex: 1 },
+  transitTitle: { fontFamily: font.sansBold, fontSize: 14, color: colors.text },
+  transitDesc: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  advisorCta: { marginHorizontal: spacing.lg, borderRadius: radius.xl, overflow: 'hidden', shadowColor: colors.gold, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 10 },
+  ctaGradient: { padding: spacing.xl },
+  ctaContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  ctaTextCol: { flex: 1 },
+  ctaKicker: { fontFamily: font.sansBold, fontSize: 10, color: colors.ink, letterSpacing: 2, opacity: 0.8 },
+  ctaTitle: { fontFamily: font.display, fontSize: 22, color: colors.ink, marginTop: 8, marginBottom: 12 },
+  ctaBadge: { backgroundColor: 'rgba(26, 23, 21, 0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.xs, alignSelf: 'flex-start' },
+  ctaBadgeText: { fontFamily: font.sansBold, fontSize: 9, color: colors.ink },
+  ctaCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(26, 23, 21, 0.15)', alignItems: 'center', justifyContent: 'center', marginLeft: 20 },
+  });
+}
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,40 +76,42 @@ import {
   Star, 
   ArrowRight,
   MessageSquare,
+  Compass,
   Calendar,
   LayoutGrid,
   Coffee,
   Hash,
   Heart,
-  User
+  User,
 } from 'lucide-react-native';
 
 import { birthChartsApi, readingsApi } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
-import { colors, font, radius, spacing } from '@/theme/tokens';
+
 import type { BirthChart, DailyReadingResponse } from '@/types';
 import DailyHoroscopeCard from '@/components/DailyHoroscopeCard';
 import { BannerSlider } from '@/components/BannerSlider';
 import SkeletonView from '@/components/SkeletonView';
+import { MenuHeaderButton } from '@/components/MenuHeaderButton';
 
 const { width } = Dimensions.get('window');
 
 export default function TodayScreen() {
-  const { isAuthenticated, authHydrating } = useAuth();
+  const theme = useAppTheme();
+  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [charts, setCharts] = useState<BirthChart[]>([]);
   const [reading, setReading] = useState<DailyReadingResponse | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!isAuthenticated) {
-      setCharts([]);
-      setReading(null);
       setLoading(false);
       setRefreshing(false);
       return;
     }
-    setLoading(true);
     try {
       const rows = await birthChartsApi.list();
       setCharts(rows);
@@ -74,13 +134,13 @@ export default function TodayScreen() {
   );
 
   const mainChart = charts[0];
-  const sunSign = mainChart?.chart_data?.planets?.sun?.sign_label ?? '';
-  const moonSign = mainChart?.chart_data?.planets?.moon?.sign_label ?? '';
+  const sunSign = mainChart?.chart_data?.planets?.sun?.sign_label || 'Aslan';
+  const moonSign = mainChart?.chart_data?.planets?.moon?.sign_label || 'Boğa';
 
   const QUICK_ACTIONS = [
     { id: 'birth-chart', label: 'Doğum Haritası', icon: LayoutGrid, route: '/(tabs)/birth-chart', color: colors.gold },
     { id: 'daily', label: 'Günlük Yorum', icon: Calendar, route: '/(tabs)/daily', color: colors.info },
-    { id: 'connect', label: 'Astrolog', icon: MessageSquare, route: '/(tabs)/connect', color: colors.goldLight },
+    { id: 'connect', label: 'Danışmanlar', icon: MessageSquare, route: '/(tabs)/connect', color: colors.goldLight },
     { id: 'profile', label: 'Profil', icon: User, route: '/(tabs)/profile', color: colors.textDim },
     { id: 'coffee', label: 'Kahve Falı', icon: Coffee, route: '/coffee', color: colors.goldDim },
     { id: 'ruya', label: 'Rüya Tabiri', icon: Moon, route: '/dreams', color: '#9B7EC8' },
@@ -89,12 +149,13 @@ export default function TodayScreen() {
   { id: 'numerology', label: 'Numeroloji', icon: Hash, route: '/numerology', color: '#5B9BD5' },
   ];
 
-  if (authHydrating || (isAuthenticated && loading && !refreshing)) {
+  if (authLoading || (loading && !refreshing)) {
     return (
       <View style={styles.container}>
         <SafeAreaView style={styles.safe} edges={['top']}>
           <View style={styles.header}>
-            <View>
+            <SkeletonView width={40} height={40} borderRadius={20} />
+            <View style={{ flex: 1 }}>
               <SkeletonView width={100} height={12} style={{ marginBottom: 8 }} />
               <SkeletonView width={180} height={28} />
             </View>
@@ -125,75 +186,49 @@ export default function TodayScreen() {
         >
           
           <View style={styles.header}>
-            <View>
+            <MenuHeaderButton />
+            <View style={styles.headerMain}>
               <Text style={styles.dateText}>
                 {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
               </Text>
               <Text style={styles.greetingText}>Günaydın, {mainChart?.name?.split(' ')[0] || 'Gezgin'}</Text>
             </View>
-            {mainChart ? (
-              <View style={styles.sunBadge}>
-                <Sun size={14} color={colors.gold} />
-                <Text style={styles.sunBadgeText}>{sunSign}</Text>
-              </View>
-            ) : (
-              <View style={styles.sunBadgePlaceholder} />
-            )}
+            <View style={styles.sunBadge}>
+              <Sun size={14} color={colors.gold} />
+              <Text style={styles.sunBadgeText}>{sunSign}</Text>
+            </View>
           </View>
 
           <View style={styles.section}>
-            <LinearGradient colors={[colors.inkDeep, colors.surface]} style={styles.readingCard}>
+            <LinearGradient colors={[colors.surfaceHigh, colors.surface]} style={styles.readingCard}>
               <View style={styles.cardHeader}>
                 <Sparkles size={18} color={colors.gold} />
                 <Text style={styles.cardKicker}>BUGÜNÜN REHBERİ</Text>
               </View>
 
-              {isAuthenticated ? (
-                reading ? (
-                  <Text style={styles.readingText} numberOfLines={4}>
-                    {reading.reading.content}
-                  </Text>
-                ) : (
-                  <View style={styles.emptyReading}>
-                    <Text style={styles.emptyReadingText}>Haritanız yoksa veya yorum hazır değilse burada tekrar kontrol edin.</Text>
-                  </View>
-                )
+              {reading ? (
+                <Text style={styles.readingText} numberOfLines={4}>
+                  {reading.reading.content}
+                </Text>
               ) : (
-                <View style={styles.guestReadingBox}>
-                  <Text style={styles.guestReadingTitle}>Kişisel günlük okuma</Text>
-                  <Text style={styles.guestReadingDesc}>
-                    Güneş ve Ay burcunuza göre hazırlanan metin için giriş yapıp doğum haritanızı ekleyin.
-                  </Text>
-                  <Pressable style={styles.guestReadingBtn} onPress={() => router.push('/auth/login' as any)}>
-                    <Text style={styles.guestReadingBtnText}>Giriş yap</Text>
-                  </Pressable>
-                  <Pressable onPress={() => router.push('/auth/register' as any)}>
-                    <Text style={styles.guestReadingLink}>Hesap oluştur</Text>
-                  </Pressable>
+                <View style={styles.emptyReading}>
+                  <Text style={styles.emptyReadingText}>Haritanıza özel yorumunuz hazırlanıyor...</Text>
                 </View>
               )}
 
-              {isAuthenticated ? (
-                <>
-                  <Pressable style={styles.readMoreBtn} onPress={() => router.push('/(tabs)/daily' as any)}>
-                    <Text style={styles.readMoreText}>Devamını Oku</Text>
-                    <ArrowRight size={14} color={colors.gold} />
-                  </Pressable>
+              <Pressable style={styles.readMoreBtn} onPress={() => router.push('/(tabs)/daily' as any)}>
+                <Text style={styles.readMoreText}>Devamını Oku</Text>
+                <ArrowRight size={14} color={colors.gold} />
+              </Pressable>
 
-                  {mainChart ? (
-                    <>
-                      <View style={styles.cardDivider} />
+              <View style={styles.cardDivider} />
 
-                      <View style={styles.cardFooter}>
-                        <View style={styles.moonRow}>
-                          <Moon size={12} color={colors.goldDim} />
-                          <Text style={styles.moonText}>Ay {moonSign} burcunda ilerliyor</Text>
-                        </View>
-                      </View>
-                    </>
-                  ) : null}
-                </>
-              ) : null}
+              <View style={styles.cardFooter}>
+                <View style={styles.moonRow}>
+                  <Moon size={12} color={colors.goldDim} />
+                  <Text style={styles.moonText}>Ay {moonSign} burcunda ilerliyor</Text>
+                </View>
+              </View>
             </LinearGradient>
           </View>
 
@@ -259,7 +294,7 @@ export default function TodayScreen() {
                   </View>
                 </View>
                 <View style={styles.ctaCircle}>
-                  <ArrowRight size={24} color={colors.bgDeep} />
+                  <ArrowRight size={24} color={colors.ink} />
                 </View>
               </View>
             </LinearGradient>
@@ -271,59 +306,3 @@ export default function TodayScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  safe: { flex: 1 },
-  scrollContent: { paddingBottom: 40 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, marginBottom: spacing.lg },
-  dateText: { fontFamily: font.sansMedium, fontSize: 11, color: colors.textMuted, letterSpacing: 1.5, textTransform: 'uppercase' },
-  greetingText: { fontFamily: font.display, fontSize: 26, color: colors.text, marginTop: 4 },
-  sunBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.line },
-  sunBadgeText: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold },
-  sunBadgePlaceholder: { minWidth: 42, height: 32 },
-  section: { paddingHorizontal: spacing.lg, marginBottom: spacing['2xl'] },
-  sectionTitle: { fontFamily: font.sansBold, fontSize: 10, color: colors.goldDeep, letterSpacing: 2, marginBottom: spacing.lg },
-  readingCard: { borderRadius: radius.xl, padding: spacing.xl, borderWidth: 1, borderColor: colors.line },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  cardKicker: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold, letterSpacing: 2 },
-  readingText: { fontFamily: font.serif, fontSize: 17, color: colors.text, lineHeight: 26, marginBottom: 20 },
-  emptyReading: { paddingVertical: 20 },
-  emptyReadingText: { fontFamily: font.serif, fontSize: 15, color: colors.textMuted, fontStyle: 'italic' },
-  guestReadingBox: { paddingVertical: 8, gap: 12 },
-  guestReadingTitle: { fontFamily: font.sansBold, fontSize: 16, color: colors.text },
-  guestReadingDesc: { fontFamily: font.sans, fontSize: 14, color: colors.textMuted, lineHeight: 22 },
-  guestReadingBtn: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.gold,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: radius.pill,
-  },
-  guestReadingBtnText: { fontFamily: font.sansBold, fontSize: 14, color: colors.bgDeep },
-  guestReadingLink: { fontFamily: font.sansMedium, fontSize: 14, color: colors.gold, textDecorationLine: 'underline' },
-  readMoreBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  readMoreText: { fontFamily: font.sansBold, fontSize: 12, color: colors.gold },
-  cardDivider: { height: 1, backgroundColor: colors.lineSoft, marginVertical: 20 },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  moonRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  moonText: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  gridItem: { width: (width - 40 - 12) / 2, backgroundColor: colors.surface, padding: 16, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.lineSoft, alignItems: 'center', gap: 12 },
-  gridIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.inkDeep, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
-  gridLabel: { fontFamily: font.sansBold, fontSize: 12, color: colors.textDim },
-  transitList: { gap: 12 },
-  transitItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, padding: 14, borderRadius: radius.md, gap: 14, borderWidth: 1, borderColor: colors.lineSoft },
-  transitIconWrap: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.inkDeep, alignItems: 'center', justifyContent: 'center' },
-  transitBody: { flex: 1 },
-  transitTitle: { fontFamily: font.sansBold, fontSize: 14, color: colors.text },
-  transitDesc: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  advisorCta: { marginHorizontal: spacing.lg, borderRadius: radius.xl, overflow: 'hidden', shadowColor: colors.gold, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 15, elevation: 10 },
-  ctaGradient: { padding: spacing.xl },
-  ctaContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  ctaTextCol: { flex: 1 },
-  ctaKicker: { fontFamily: font.sansBold, fontSize: 10, color: colors.bgDeep, letterSpacing: 2, opacity: 0.8 },
-  ctaTitle: { fontFamily: font.display, fontSize: 22, color: colors.bgDeep, marginTop: 8, marginBottom: 12 },
-  ctaBadge: { backgroundColor: 'rgba(26, 23, 21, 0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.xs, alignSelf: 'flex-start' },
-  ctaBadgeText: { fontFamily: font.sansBold, fontSize: 9, color: colors.bgDeep },
-  ctaCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(26, 23, 21, 0.15)', alignItems: 'center', justifyContent: 'center', marginLeft: 20 },
-});

@@ -8,9 +8,10 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://localhost:8094/api/v1",
+        "EXPO_PUBLIC_API_URL": "http://localhost:8094/api",
+        "EXPO_PUBLIC_SITE_URL": "http://localhost:3000",
         "EXPO_PUBLIC_APP_NAME": "GoldMoodAstro",
-        "EXPO_PUBLIC_PUBLIC_URL": "http://localhost:3095",
+        "EXPO_PUBLIC_PUBLIC_URL": "http://localhost:3000",
         "EXPO_PUBLIC_SUPPORT_EMAIL": "destek@goldmoodastro.com"
       }
     },
@@ -19,7 +20,8 @@
       "ios": { "simulator": false },
       "android": { "buildType": "apk" },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://goldmoodastro.com/api/v1",
+        "EXPO_PUBLIC_API_URL": "https://goldmoodastro.com/api",
+        "EXPO_PUBLIC_SITE_URL": "https://goldmoodastro.com",
         "EXPO_PUBLIC_APP_NAME": "GoldMoodAstro",
         "EXPO_PUBLIC_PUBLIC_URL": "https://goldmoodastro.com",
         "EXPO_PUBLIC_SUPPORT_EMAIL": "destek@goldmoodastro.com"
@@ -28,7 +30,8 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://goldmoodastro.com/api/v1",
+        "EXPO_PUBLIC_API_URL": "https://goldmoodastro.com/api",
+        "EXPO_PUBLIC_SITE_URL": "https://goldmoodastro.com",
         "EXPO_PUBLIC_APP_NAME": "GoldMoodAstro",
         "EXPO_PUBLIC_PUBLIC_URL": "https://goldmoodastro.com",
         "EXPO_PUBLIC_SUPPORT_EMAIL": "destek@goldmoodastro.com"
