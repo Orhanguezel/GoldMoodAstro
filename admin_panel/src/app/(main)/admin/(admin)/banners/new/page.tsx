@@ -335,8 +335,8 @@ export default function BannerFormPage() {
                     <SelectItem value="all">Everyone</SelectItem>
                     <SelectItem value="free">Free Users</SelectItem>
                     <SelectItem value="paid">Subscribers</SelectItem>
-                    <SelectItem value="new_user">New Users</SelectItem>
-                    <SelectItem value="existing_user">Existing Users</SelectItem>
+                    <SelectItem value="new_user">New Users (v2)</SelectItem>
+                    <SelectItem value="existing_user">Existing Users (v2)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

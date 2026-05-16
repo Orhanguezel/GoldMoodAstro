@@ -152,6 +152,7 @@ jobs:
           NEXT_PUBLIC_APPLE_REDIRECT_URI: https://goldmoodastro.com/auth/apple/callback
         run: |
           bun install --frozen-lockfile || bun install
+          bun run theme:guard
           bun run build
 
       - name: Setup SSH
