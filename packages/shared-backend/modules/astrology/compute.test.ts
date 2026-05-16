@@ -48,6 +48,20 @@ describe('computeNatalChart houses', () => {
       },
       expected: { asc: 145.7419, mc: 49.0508, sunHouse: 9 },
     },
+    {
+      // Tarihsel TZ regresyon guard'ı: Türkiye 1979 yaz boyu UTC+3 (DST yok).
+      // luxon Europe/Istanbul 180dk vermeli; UTC+4 olursa ASC ~Kova 8° (yanlış).
+      // Doğru (Swiss Ephemeris): ASC Balık 0°21', MC Yay 13°18'.
+      name: 'Kaman/Kirsehir 1979-06-08 00:30 Europe/Istanbul (TZ guard)',
+      input: {
+        date: '1979-06-08',
+        time: '00:30:00',
+        tzIana: 'Europe/Istanbul',
+        latitude: 39.35,
+        longitude: 33.72,
+      },
+      expected: { asc: 330.3574, mc: 253.3077, sunHouse: 5 },
+    },
   ];
 
   for (const { name, input, expected } of cases) {
