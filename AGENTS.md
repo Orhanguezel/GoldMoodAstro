@@ -88,6 +88,50 @@ id: char("id", { length: 36 }).primaryKey().notNull()
 
 ## GÖREV LİSTESİ — ÖNCELİK SIRALI
 
+---
+
+## 🔥 EN GÜNCEL — FAZ 35–41 DEVİR KUYRUĞU (2026-05-16, Claude orkestrasyon)
+
+> Tam detay + checkbox: [`doc/mvp-checklist.md`](doc/mvp-checklist.md) FAZ 35–41.
+> Tüm Claude kontrat/karar dokümanları **HAZIR** — Codex bu kontratlara birebir
+> uyar, mimari karar tekrar sorgulanmaz. **Sırayla yap (bağımlılık var).**
+> FAZ 36 (e-Arşiv) GATE'li — şimdilik DOKUNMA.
+>
+> ⚠️ **2026-05-16 DENETİM UYARISI** ([`doc/raporlar/faz35-41-kontrat-denetim-2026-05-16.md`](doc/raporlar/faz35-41-kontrat-denetim-2026-05-16.md)):
+> Önceki turda **#1 T41-1 ATLANDI**, doğrudan üst katmanlara geçildi → mobile
+> client-side workaround yazıldı (premium politikası client'ta tekrarlandı) ve
+> **web reklam gating'i hiç çalışmıyor** (premium web kullanıcısı hâlâ reklam
+> görüyor — müşteri gereksinimi yarı karşılandı). **Bu yüzden sıralama ZORUNLU:
+> T41-1 bitmeden T41-2/T41-3'e BAŞKA EKLEME yapma.** T41-1 gelince mobile
+> `usePremium` fallback'i backend'e DELEGE et (politikayı client'tan kaldır).
+
+| # | Görev | Kontrat (uy) | Sahip | Engel/sıra |
+|---|-------|--------------|-------|-----------|
+| 1 | **T41-1** `getSubscriptionSummary(userId)` ortak helper + `auth/me` abonelik özeti (additive, non-breaking) | [`auth-me-subscription-contract.md`](doc/contracts/auth-me-subscription-contract.md) | Codex | YOK — ilk bu. T41-2 buna bağlı |
+| 2 | **T41-2** banner `listActive` opsiyonel auth + segment filtre | [`banner-target-segment-filter-contract.md`](doc/contracts/banner-target-segment-filter-contract.md) | Codex | T41-1 helper'ı ister |
+| 3 | **T38-0** hardcoded renk guard lint + CI baseline (regresyon kalkanı) | [`theme-consistency-architecture.md`](doc/contracts/theme-consistency-architecture.md) §2 | Codex | YOK — erken yap, sonraki tema işini korur |
+| 4 | **T40-0** ortak `image-capture/` modülü (`prepareImageForUpload`+`PhotoCaptureInput`) | [`image-capture-shared-module-contract.md`](doc/contracts/image-capture-shared-module-contract.md) | Codex | YOK — T37-5/T40-1 buna bağlı |
+| 5 | **T38-3** globals.css fallback'leri = `defaults.ts` light değerleri + seed↔defaults drift CI + splash/loader token | theme-arch §3 | Codex | T38-0 sonrası |
+| 6 | **T38-1** `<PageContainer>` bileşeni + globals genişlik CSS değişkenleri | theme-arch §1 | Codex (bileşen) → Antigravity (migrasyon) | T38-0 sonrası |
+| 7 | **T35-2** `shared-config/relax-music/presets.json` + çözümleme + drift CI | [`relax-music-engine-contract.md`](doc/contracts/relax-music-engine-contract.md) §2 | Codex | YOK |
+| 8 | **T38-5** 8 `opengraph-image.tsx` tema-aware | theme-arch §4(4) | Codex | T38-3 sonrası |
+| 9 | **T38-4** `doc/raporlar/tema-canli-local-farki.md` runbook (§4 kök nedenlerden) | theme-arch §4 | Codex + Ops | — |
+| 10 | **T39-2** booking `media_type` backend teyit | — (FAZ 39) | Codex | — |
+| 11 | **T35-1 (kalan)** 8 stem topla + `licenses.md` manifest + CI guard | relax §1 | Codex/küratör | — |
+
+**Antigravity kuyruğu** (Codex ilgili backend'i bitirince): T41-3 pro=reklamsız
+gating (web+mobile) → T41-4 upsell+seed → T41-5 mobil banner yerleşim ·
+T39-1 web video UI → T39-2 booking seçimi → T39-4 E2E · T38-1 sayfa wrapper
+migrasyon → T38-7 görsel/canlı-local QA · T37-1/2/3/5 profil yönlendirme+kamera ·
+T40-1/2/3 kahve foto hardening. Hepsi ilgili kontrata + tema token (FAZ 38) +
+FAZ 33 hardcode ilkesine uyar.
+
+**Kural:** Her görev bittiğinde `doc/mvp-checklist.md`'deki ilgili kutuyu `[x]`
+yap + kısa not. Kontratta "kabul kriterleri" varsa hepsi geçmeli. Mimari soru
+çıkarsa Claude'a sor — kontratı kendi başına değiştirme.
+
+---
+
 ### ✅ FAZA 0: Temizlik — TAMAMLANDI
 
 #### T0-1: `frontend/` dizinini sil — ✅ DONE

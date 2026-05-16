@@ -14,9 +14,9 @@ Danışman & kullanıcı eşleştirme platformu. Kullanıcı danışman seçiyor
 |---------|-------|-------------|---------|
 | **Backend** | Fastify 5, Drizzle ORM, MySQL, Bun, Zod | 8094 | goldmoodastro-backend |
 | **Admin Panel** | Next.js 16, React 19, Tailwind v4, Radix UI, React Query, Zustand | 3094 | goldmoodastro-admin |
-| **Mobile** | Expo (React Native 0.81), TypeScript, expo-router, Zustand, React Query, react-native-agora, expo-notifications | — | iOS + Android |
+| **Mobile** | Expo (React Native 0.81), TypeScript, expo-router, Zustand, React Query, @livekit/react-native, expo-notifications | — | iOS + Android |
 
-**Entegrasyonlar:** Agora SDK (sesli görüşme), Firebase FCM (push), Iyzipay (ödeme)
+**Entegrasyonlar:** LiveKit (sesli + görüntülü görüşme — Agora yerine), Firebase FCM (push), Iyzipay (ödeme)
 
 ## Monorepo Yapısı
 
