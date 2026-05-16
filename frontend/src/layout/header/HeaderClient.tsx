@@ -284,12 +284,12 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                     <li key={item.id} className="static group/dd">
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1.5 font-serif text-[13px] font-normal tracking-[0.05em] text-[var(--gm-text)] hover:text-[var(--gm-primary)] transition-colors cursor-default"
+                        className="inline-flex items-center gap-1.5 py-3 font-serif text-[13px] font-normal tracking-[0.05em] text-[var(--gm-text)] hover:text-[var(--gm-primary)] transition-colors cursor-default"
                       >
                         {label}
                         <ChevronDown className="w-3 h-3 transition-transform group-hover/dd:rotate-180" />
                       </button>
-                      <div className="absolute left-0 right-0 top-full -mt-4 pt-4 opacity-0 invisible group-hover/dd:opacity-100 group-hover/dd:visible transition-all duration-300 z-50 pointer-events-none group-hover/dd:pointer-events-auto">
+                      <div className="absolute left-0 right-0 top-full -mt-6 pt-6 opacity-0 invisible group-hover/dd:opacity-100 group-hover/dd:visible transition-all duration-200 delay-200 group-hover/dd:delay-0 z-50 pointer-events-none group-hover/dd:pointer-events-auto">
                         <div className="mx-auto w-fit px-6 lg:px-12 drop-shadow-2xl pt-2">
                           <MegaMenuPanel
                             links={children.map((c) => ({ id: c.id, url: (c as any).url, title: c.title }))}
