@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -27,6 +27,11 @@ import { consultantsApi } from '@/lib/api';
 import type { Consultant } from '@/types';
 import SkeletonView from '@/components/SkeletonView';
 import { MenuHeaderButton } from '@/components/MenuHeaderButton';
+import {
+  FUNNEL_CONFIG,
+  FUNNEL_TOPIC_TO_CONNECT_FILTER,
+  normalizeFunnelTopic,
+} from '@/lib/funnel.config';
 
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
@@ -188,8 +193,18 @@ export default function ConnectScreen() {
     { id: 'tarot', label: 'Tarot' },
     { id: 'numerology', label: 'Numeroloji' },
     { id: 'relationship', label: 'İlişki' },
+    { id: 'mood', label: 'Ruh Hali' },
     { id: 'career', label: 'Kariyer' },
   ];
+
+  const funnelTopic = normalizeFunnelTopic(topic);
+  const funnelHeadline = funnelTopic ? FUNNEL_CONFIG[funnelTopic].headlineTr : null;
+
+  useEffect(() => {
+    if (!funnelTopic) return;
+    const mapped = FUNNEL_TOPIC_TO_CONNECT_FILTER[funnelTopic];
+    if (mapped) setFilter(mapped);
+  }, [funnelTopic]);
 
   const languages = [
     { id: 'all', label: 'Tüm Diller' },
@@ -280,7 +295,11 @@ export default function ConnectScreen() {
           <View style={styles.headerTitles}>
             <Text style={styles.headerKicker}>UZMAN REHBERLER</Text>
             <Text style={styles.headerTitle}>Danışmanlar</Text>
-            {topic && <Text style={styles.topicHint}>Günlük yorum için uzman seçimi</Text>}
+            {funnelHeadline ? (
+              <Text style={styles.topicHint}>{funnelHeadline}</Text>
+            ) : topic ? (
+              <Text style={styles.topicHint}>Konuya göre uzman seçimi</Text>
+            ) : null}
           </View>
           <View style={styles.headerActions}>
             <Pressable style={styles.iconBtn} accessibilityRole="button" accessibilityLabel="Ara">

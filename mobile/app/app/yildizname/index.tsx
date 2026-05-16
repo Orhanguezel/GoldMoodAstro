@@ -31,6 +31,7 @@ import * as Haptics from 'expo-haptics';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
 import { yildiznameApi } from '@/lib/api';
+import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
 
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing, shadows } = t;
@@ -375,16 +376,11 @@ export default function YildiznameScreen() {
                 <Text style={styles.interpretationText}>{result.readingText}</Text>
               </View>
 
-              <Pressable 
-                style={styles.promoCard}
-                onPress={() => router.push('/(tabs)/connect' as any)}
-              >
-                <View style={styles.promoInfo}>
-                  <Text style={styles.promoTitle}>Derin Analiz İster Misin?</Text>
-                  <Text style={styles.promoSub}>Yıldıznameniz ile doğum haritanızın birleşik yorumu için astrolog seçin.</Text>
-                </View>
-                <ArrowRight size={20} color={colors.gold} />
-              </Pressable>
+              <ConsultantFunnelCTA
+                feature="yildizname"
+                intensity="heavy"
+                context={{ menzil: result.menzil?.name_tr }}
+              />
 
               <View style={styles.resultActions}>
                 <Pressable style={styles.actionBtn} onPress={() => setStep('intro')}>

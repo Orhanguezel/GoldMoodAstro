@@ -210,7 +210,6 @@ export default function BirthdataScreen() {
         pob_lat: resolvedPlace.lat,
         pob_lng: resolvedPlace.lng,
         pob_label: resolvedPlace.label,
-        tz_offset: 180,
       });
 
       await storage.markOnboarded();

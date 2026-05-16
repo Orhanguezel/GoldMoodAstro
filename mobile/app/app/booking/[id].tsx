@@ -49,6 +49,18 @@ function buildScreenStyles(t: AppTheme) {
   cancelBtnText: { color: colors.danger, fontFamily: font.sansBold, fontSize: 14 },
   reviewBtn: { marginTop: spacing.sm, paddingVertical: spacing.md, borderRadius: radius.pill, alignItems: 'center', backgroundColor: colors.amethyst, ...shadows.soft },
   reviewBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 14 },
+  messageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: spacing.md,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.gold + '55',
+    backgroundColor: colors.inkDeep,
+  },
+  messageBtnText: { color: colors.gold, fontFamily: font.sansBold, fontSize: 14 },
 });
 }
 
@@ -57,8 +69,11 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 import { useTranslation } from 'react-i18next';
 
-import { bookingsApi } from '@/lib/api';
+import { MessageSquare } from 'lucide-react-native';
+import { bookingsApi, chatApi } from '@/lib/api';
 import type { Booking } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
+import { ChatWarningBanner } from '@/components/ChatWarningBanner';
 import { format, parseISO } from 'date-fns';
 import { tr, enUS } from 'date-fns/locale';
 
@@ -70,9 +85,11 @@ export default function BookingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language === 'tr' ? tr : enUS;
+  const { isAuthenticated, authHydrating } = useAuth();
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
+  const [messageLoading, setMessageLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -82,6 +99,33 @@ export default function BookingDetailScreen() {
         .finally(() => setLoading(false));
     }
   }, [id]);
+
+  const handleBookingMessage = () => {
+    if (!id) return;
+    if (authHydrating) return;
+    if (!isAuthenticated) {
+      Alert.alert(
+        t('auth.loginRequired', 'Giriş gerekli'),
+        t('booking.messageLogin', 'Randevu mesajları için giriş yapın.'),
+        [
+          { text: t('common.cancel', 'İptal'), style: 'cancel' },
+          { text: t('auth.login', 'Giriş'), onPress: () => router.push('/auth/login' as any) },
+        ],
+      );
+      return;
+    }
+    setMessageLoading(true);
+    chatApi
+      .createThreadForBooking(id)
+      .then(({ id: threadId }) => router.push(`/chat/${threadId}`))
+      .catch((err: unknown) => {
+        Alert.alert(
+          t('common.error', 'Hata'),
+          err instanceof Error ? err.message : t('booking.messageFailed', 'Mesaj başlatılamadı.'),
+        );
+      })
+      .finally(() => setMessageLoading(false));
+  };
 
   const handleCancel = () => {
     Alert.alert(
@@ -164,7 +208,23 @@ export default function BookingDetailScreen() {
             <Text style={styles.label}>{t('booking.duration')}</Text>
             <Text style={styles.value}>{booking.session_duration} dk</Text>
           </View>
+          {booking.media_type ? (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>{t('booking.mediaType', 'Görüşme')}</Text>
+              <Text style={styles.value}>
+                {booking.media_type === 'video'
+                  ? t('booking.mediaVideo', 'Görüntülü')
+                  : t('booking.mediaAudio', 'Sesli')}
+              </Text>
+            </View>
+          ) : null}
         </View>
+
+        {isAuthenticated && booking.status !== 'cancelled' ? (
+          <View style={styles.section}>
+            <ChatWarningBanner compact />
+          </View>
+        ) : null}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('booking.price')}</Text>
@@ -183,6 +243,25 @@ export default function BookingDetailScreen() {
       </ScrollView>
 
         <View style={styles.footer}>
+        {isAuthenticated && booking.status !== 'cancelled' && (
+          <Pressable
+            style={[styles.messageBtn, messageLoading && { opacity: 0.6 }]}
+            onPress={handleBookingMessage}
+            disabled={messageLoading || authHydrating}
+          >
+            {messageLoading ? (
+              <ActivityIndicator color={colors.gold} />
+            ) : (
+              <>
+                <MessageSquare size={18} color={colors.gold} />
+                <Text style={styles.messageBtnText}>
+                  {t('booking.sendMessage', 'Mesaj Gönder')}
+                </Text>
+              </>
+            )}
+          </Pressable>
+        )}
+
         {isJoinable && (
           <Pressable 
             style={styles.joinBtn} 

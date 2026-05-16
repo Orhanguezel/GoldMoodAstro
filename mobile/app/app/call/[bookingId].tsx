@@ -18,6 +18,18 @@ function buildScreenStyles(t: AppTheme) {
   safe: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.deep },
   loaderText: { fontFamily: font.sans, fontSize: 14, color: 'rgba(250,246,239,0.6)', marginTop: 16 },
+  loaderMsgBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  loaderMsgText: { fontFamily: font.sansBold, fontSize: 13, color: colors.gold },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg },
   name: { fontFamily: font.display, fontSize: 20, color: colors.cream },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
@@ -66,11 +78,12 @@ import {
   VolumeX, 
   SwitchCamera,
   Clock,
+  MessageCircle,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 
-import { bookingsApi } from '@/lib/api';
+import { bookingsApi, chatApi } from '@/lib/api';
 import {
   connectLiveKitAudio,
   endLiveKitSession,
@@ -190,11 +203,27 @@ export default function CallScreen() {
     }
   };
 
+  const openBookingChat = async () => {
+    if (!bookingId) return;
+    try {
+      const { id: threadId } = await chatApi.createThreadForBooking(bookingId);
+      router.push(`/chat/${threadId}` as any);
+    } catch (err: unknown) {
+      console.error('Call chat open failed:', err);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={colors.gold} size="large" />
         <Text style={styles.loaderText}>Görüşme Başlatılıyor...</Text>
+        {bookingId ? (
+          <Pressable style={styles.loaderMsgBtn} onPress={openBookingChat}>
+            <MessageCircle size={18} color={colors.gold} />
+            <Text style={styles.loaderMsgText}>Mesaj Gönder</Text>
+          </Pressable>
+        ) : null}
       </View>
     );
   }

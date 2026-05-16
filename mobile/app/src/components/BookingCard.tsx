@@ -5,7 +5,8 @@ import {
   Clock, 
   ChevronRight, 
   Video, 
-  PhoneCall, 
+  PhoneCall,
+  MessageSquare, 
   CheckCircle2, 
   Clock3, 
   AlertCircle 
@@ -133,9 +134,10 @@ interface Props {
   booking: Booking;
   onPress: () => void;
   onJoinCall?: () => void;
+  onMessage?: () => void;
 }
 
-export function BookingCard({ booking, onPress, onJoinCall }: Props) {
+export function BookingCard({ booking, onPress, onJoinCall, onMessage }: Props) {
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
@@ -161,6 +163,7 @@ export function BookingCard({ booking, onPress, onJoinCall }: Props) {
   const config = getStatusConfig(booking.status);
   const StatusIcon = config.icon;
   const isJoinable = booking.status === 'confirmed';
+  const canMessage = booking.status !== 'cancelled' && !!onMessage;
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -196,17 +199,32 @@ export function BookingCard({ booking, onPress, onJoinCall }: Props) {
           <Text style={[styles.statusLabel, { color: config.color }]}>{config.label}</Text>
         </View>
 
-        {isJoinable && onJoinCall ? (
-          <Pressable style={styles.joinBtn} onPress={onJoinCall}>
-            <PhoneCall size={14} color={colors.ink} />
-            <Text style={styles.joinBtnText}>Görüşmeye Katıl</Text>
-          </Pressable>
-        ) : (
-          <View style={styles.priceWrap}>
-            <Text style={styles.priceLabel}>Ücret:</Text>
-            <Text style={styles.priceVal}>₺{Math.round(Number(booking.session_price))}</Text>
-          </View>
-        )}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {canMessage ? (
+            <Pressable
+              style={[styles.joinBtn, { backgroundColor: colors.inkDeep, borderWidth: 1, borderColor: colors.gold }]}
+              onPress={() => onMessage?.()}
+            >
+              <MessageSquare size={14} color={colors.gold} />
+              <Text style={[styles.joinBtnText, { color: colors.gold }]}>Mesaj</Text>
+            </Pressable>
+          ) : null}
+          {isJoinable && onJoinCall ? (
+            <Pressable style={styles.joinBtn} onPress={onJoinCall}>
+              <PhoneCall size={14} color={colors.ink} />
+              <Text style={styles.joinBtnText}>Katıl</Text>
+            </Pressable>
+          ) : !canMessage ? (
+            <View style={styles.priceWrap}>
+              <Text style={styles.priceLabel}>Ücret:</Text>
+              <Text style={styles.priceVal}>₺{Math.round(Number(booking.session_price))}</Text>
+            </View>
+          ) : (
+            <View style={styles.priceWrap}>
+              <Text style={styles.priceVal}>₺{Math.round(Number(booking.session_price))}</Text>
+            </View>
+          )}
+        </View>
       </View>
     </Pressable>
   );

@@ -7,9 +7,10 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { storage } from '@/lib/storage';
+import type { CustomPageRow } from '@/lib/cms';
 import type {
-  Consultant, ConsultantSlot,
-  Booking, BookingCreateInput,
+  Consultant, ConsultantSlot, ConsultantService,
+  Booking, BookingCreateInput, BookingCreateResult,
   Review,
   Subscription, SubscriptionPlan, CreditMe, CreditPackage,
   KvkkAccountDeletionStatus,
@@ -123,6 +124,49 @@ async function handleSessionExpired(path: string) {
   }
 }
 
+const GET_CACHE_TTL_MS = 5 * 60 * 1000;
+const getResponseCache = new Map<string, { at: number; data: unknown }>();
+
+function cacheKey(method: string, path: string, params?: Record<string, string | number>) {
+  const qs = params
+    ? Object.entries(params)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([k, v]) => `${k}=${v}`)
+        .join('&')
+    : '';
+  return `${method}:${path}?${qs}`;
+}
+
+function readGetCache<T>(key: string): T | null {
+  const hit = getResponseCache.get(key);
+  if (!hit || Date.now() - hit.at > GET_CACHE_TTL_MS) return null;
+  return hit.data as T;
+}
+
+function writeGetCache(key: string, data: unknown) {
+  getResponseCache.set(key, { at: Date.now(), data });
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(url: string, init: RequestInit, retries = 2): Promise<Response> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, init);
+      if (res.ok || res.status < 500 || res.status === 401 || attempt === retries) return res;
+      await delay(250 * 2 ** attempt);
+    } catch (err) {
+      lastErr = err;
+      if (attempt === retries) throw err;
+      await delay(250 * 2 ** attempt);
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error('Network request failed');
+}
+
 async function request<T>(
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
   path: string,
@@ -141,8 +185,11 @@ async function request<T>(
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (_authToken) headers['Authorization'] = `Bearer ${_authToken}`;
 
+  const key = cacheKey(method, path, params);
+  const cached = method === 'GET' ? readGetCache<T>(key) : null;
+
   try {
-    const res = await fetch(url.toString(), {
+    const res = await fetchWithRetry(url.toString(), {
       method,
       headers,
       body: body != null ? JSON.stringify(body) : undefined,
@@ -162,8 +209,14 @@ async function request<T>(
       throw new Error(msg ?? `HTTP ${res.status}`);
     }
 
-    return res.json() as Promise<T>;
+    const data = (await res.json()) as T;
+    if (method === 'GET') writeGetCache(key, data);
+    return data;
   } catch (e: unknown) {
+    if (method === 'GET' && cached != null) {
+      if (__DEV__) console.warn(`[GoldMood] GET ${path} — önbellekten gösteriliyor`);
+      return cached;
+    }
     const msg = e instanceof Error ? e.message : String(e);
     console.error(`[NETWORK ERROR] ${method} ${path} | ${msg}`);
     throw e;
@@ -271,6 +324,11 @@ export const consultantsApi = {
     const res = await get<{ data: ConsultantSlot[] }>(`/consultants/${consultantId}/slots`, { date });
     return Array.isArray(res?.data) ? res.data : [];
   },
+
+  services: async (consultantId: string): Promise<ConsultantService[]> => {
+    const res = await get<{ data: ConsultantService[] }>(`/consultants/${consultantId}/services`);
+    return Array.isArray(res?.data) ? res.data : [];
+  },
 };
 
 // -------------------------------------------------------------------
@@ -279,7 +337,17 @@ export const consultantsApi = {
 
 export const bookingsApi = {
   create: (data: BookingCreateInput) =>
-    post<Booking>('/bookings', data),
+    post<BookingCreateResult>('/bookings', data),
+
+  requestNow: (data: {
+    consultant_id: string;
+    service_id?: string;
+    customer_message?: string;
+  }) =>
+    post<{ ok: boolean; id: string; status: string; message?: string; timeout_at?: string }>(
+      '/bookings/request-now',
+      data,
+    ),
 
   list: (params?: { status?: string }) =>
     get<{ items: Booking[] }>('/bookings/me', params as Record<string, string>),
@@ -486,18 +554,54 @@ export const reviewsApi = {
 // Chat
 // -------------------------------------------------------------------
 
+export type ChatContextType =
+  | 'consultant_lead'
+  | 'booking'
+  | 'support'
+  | 'job'
+  | 'request';
+
+export interface ChatMessage {
+  id: string;
+  thread_id: string;
+  sender_user_id: string;
+  text: string;
+  created_at: string;
+}
+
 export const chatApi = {
   listThreads: () =>
-    get<{ items: any[] }>('/chat/threads'),
+    get<{ items: unknown[] }>('/chat/threads'),
 
-  createThread: (targetId: string) =>
-    post<{ id: string }>('/chat/threads', { target_id: targetId }),
+  getOrCreateThread: async (params: {
+    context_type: ChatContextType;
+    context_id: string;
+  }): Promise<{ id: string }> => {
+    const res = await post<{ thread: { id: string } }>('/chat/threads', params);
+    return res.thread;
+  },
+
+  /** T29-3 — danışman ön mesaj thread'i */
+  createThreadForConsultant: (consultantId: string) =>
+    chatApi.getOrCreateThread({
+      context_type: 'consultant_lead',
+      context_id: consultantId,
+    }),
+
+  /** T29-5 — randevu bağlı mesajlaşma */
+  createThreadForBooking: (bookingId: string) =>
+    chatApi.getOrCreateThread({ context_type: 'booking', context_id: bookingId }),
 
   listMessages: (threadId: string) =>
-    get<{ items: any[] }>(`/chat/threads/${threadId}/messages`),
+    get<{ items: ChatMessage[] }>(`/chat/threads/${threadId}/messages`, { limit: 100 }),
 
-  postMessage: (threadId: string, message: string) =>
-    post<{ id: string }>(`/chat/threads/${threadId}/messages`, { message }),
+  postMessage: async (threadId: string, text: string): Promise<ChatMessage> => {
+    const res = await post<{ message: ChatMessage }>(
+      `/chat/threads/${threadId}/messages`,
+      { text },
+    );
+    return res.message;
+  },
 };
 
 // -------------------------------------------------------------------
@@ -655,11 +759,33 @@ export const numerologyApi = {
   },
 };
 
+export type ReadingHistoryType =
+  | 'tarot'
+  | 'coffee'
+  | 'dream'
+  | 'numerology'
+  | 'yildizname'
+  | 'synastry';
+
+export interface ReadingHistoryItem {
+  type: ReadingHistoryType;
+  id: string;
+  created_at: string;
+  title: string;
+  snippet: string | null;
+}
+
 export const historyApi = {
-  getUserHistory: async () => {
-    const res = await get<{ data: any[] }>('/history/me');
-    return res.data;
+  getUserHistory: async (limit = 50): Promise<ReadingHistoryItem[]> => {
+    const res = await get<{ data: ReadingHistoryItem[] }>('/me/history', { limit });
+    return Array.isArray(res?.data) ? res.data : [];
   },
+
+  deleteReading: async (type: ReadingHistoryType, id: string) =>
+    del<{ ok: boolean }>(`/me/readings/${type}/${encodeURIComponent(id)}`),
+
+  deleteAll: async () =>
+    del<{ ok: boolean; total?: number; deleted?: Record<string, number> }>('/me/readings/all'),
 };
 
 export const yildiznameApi = {
@@ -686,6 +812,15 @@ export const yildiznameApi = {
       readingText: res.data.interpretation,
     };
   },
+
+  getReading: async (id: string) => {
+    const res = await get<{ data: any }>(`/yildizname/reading/${id}`);
+    const d = res.data;
+    return {
+      ...d,
+      readingText: d?.interpretation ?? d?.result_text ?? '',
+    };
+  },
 };
 
 export const synastryApi = {
@@ -709,6 +844,11 @@ export const synastryApi = {
   list: async () => {
     const res = await get<{ data: any[] }>('/synastry/me');
     return res.data;
+  },
+
+  getReading: async (id: string) => {
+    const res = await get<{ data: any }>(`/synastry/reading/${id}`);
+    return res.data?.data ?? res.data;
   },
 
   listInvites: async () => {
@@ -743,7 +883,26 @@ export const userApi = {
 // Site settings (public)
 // -------------------------------------------------------------------
 
+function parseSettingBool(value: unknown): boolean {
+  if (value === true || value === 1) return true;
+  if (typeof value === 'string') {
+    const v = value.trim().toLowerCase();
+    return v === '1' || v === 'true' || v === 'yes';
+  }
+  return false;
+}
+
 export const siteSettingsApi = {
+  getSettingValue: async (key: string): Promise<unknown | null> => {
+    const row = await getAllow404<{ value: unknown }>(`/site_settings/${key}`);
+    return row?.value ?? null;
+  },
+
+  isFeatureEnabled: async (key: string): Promise<boolean> => {
+    const value = await siteSettingsApi.getSettingValue(key);
+    return parseSettingBool(value);
+  },
+
   getDesignTokens: async (): Promise<unknown | null> => {
     const row = await getAllow404<{ value: unknown }>('/site_settings/design_tokens');
     if (!row) return null;
@@ -833,4 +992,111 @@ export const campaignsApi = {
 
   redeem: (params: { code: string; applies_to?: string }) =>
     post<RedeemCampaignResponse>('/campaigns/redeem', params),
+};
+
+// -------------------------------------------------------------------
+// Custom pages (CMS — blog, legal, about)
+// -------------------------------------------------------------------
+
+export const customPagesApi = {
+  list: async (params: {
+    module_key?: string;
+    locale?: string;
+    limit?: number;
+    sort?: string;
+    orderDir?: string;
+    is_published?: string;
+  }): Promise<CustomPageRow[]> => {
+    const raw = await get<unknown>('/custom-pages', {
+      limit: params.limit ?? 50,
+      sort: params.sort ?? 'created_at',
+      orderDir: params.orderDir ?? 'desc',
+      is_published: params.is_published ?? '1',
+      ...(params.module_key ? { module_key: params.module_key } : {}),
+      ...(params.locale ? { locale: params.locale } : {}),
+    });
+    return normalizeListResponse<CustomPageRow>(raw);
+  },
+
+  getBySlug: async (slug: string, locale?: string): Promise<CustomPageRow | null> => {
+    try {
+      return await get<CustomPageRow>(
+        `/custom-pages/by-slug/${encodeURIComponent(slug)}`,
+        locale ? { locale } : undefined,
+      );
+    } catch {
+      return null;
+    }
+  },
+};
+
+// -------------------------------------------------------------------
+// Consultant application (become consultant)
+// -------------------------------------------------------------------
+
+export interface ConsultantApplicationInput {
+  email: string;
+  full_name: string;
+  phone?: string;
+  bio: string;
+  expertise: string[];
+  languages: string[];
+  experience_years?: number;
+  certifications?: string;
+}
+
+export const consultantApplicationsApi = {
+  apply: (body: ConsultantApplicationInput) =>
+    post<{ data: { id: string } }>('/consultants/apply', body).then((r) => r.data),
+};
+
+// -------------------------------------------------------------------
+// Review outcomes (astrolog karnesi — T42-1)
+// -------------------------------------------------------------------
+
+export type ReviewOutcomeResponse =
+  | 'happened'
+  | 'partially'
+  | 'did_not_happen'
+  | 'no_answer';
+
+export interface PendingOutcomeDto {
+  id: string;
+  review_id: string;
+  consultant_id: string;
+  follow_up_at: string;
+  review_rating: number | null;
+  review_created_at: string | null;
+  consultant_slug: string | null;
+  consultant_avatar: string | null;
+  consultant_name: string | null;
+}
+
+export const reviewOutcomesApi = {
+  listPending: async (): Promise<PendingOutcomeDto[]> => {
+    const raw = await get<unknown>('/reviews/me/pending-outcomes');
+    return normalizeListResponse<PendingOutcomeDto>(raw);
+  },
+
+  submit: (reviewId: string, user_response: ReviewOutcomeResponse, notes?: string) =>
+    patch<{ data: { id: string; user_response: ReviewOutcomeResponse } }>(
+      `/reviews/${encodeURIComponent(reviewId)}/outcome`,
+      { user_response, notes },
+    ),
+};
+
+// -------------------------------------------------------------------
+// Contact form (T42-2)
+// -------------------------------------------------------------------
+
+export interface ContactCreateInput {
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+}
+
+export const contactApi = {
+  submit: (body: ContactCreateInput) => post<{ data?: { id: string } }>('/contacts', body),
 };

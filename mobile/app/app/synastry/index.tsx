@@ -162,6 +162,7 @@ import { BlurView } from 'expo-blur';
 
 
 import { synastryApi, userApi } from '@/lib/api';
+import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
 import { useAuth } from '@/hooks/useAuth';
 
 const { width } = Dimensions.get('window');
@@ -615,6 +616,8 @@ export default function SynastryScreen() {
                         </LinearGradient>
                     </View>
                   )}
+
+                  <ConsultantFunnelCTA feature="sinastri" intensity="heavy" />
 
                   <View style={styles.footerActions}>
                      <Pressable style={styles.footerBtn} onPress={() => setStep('mode')}>

@@ -42,7 +42,7 @@ import { useTranslation } from 'react-i18next';
 
 import { reviewsApi, bookingsApi } from '@/lib/api';
 import { Star, Sparkles } from 'lucide-react-native';
-import { BannerSlider } from '@/components/BannerSlider';
+import { PromoBannerSection } from '@/components/PromoBannerSection';
 
 export default function RateScreen() {
   const theme = useAppTheme();
@@ -88,7 +88,7 @@ export default function RateScreen() {
               <Text style={styles.subtitle}>Deneyiminizi paylaşarak topluluğumuza ve danışmanınıza yardımcı olun.</Text>
             </View>
 
-            <BannerSlider placement="mobile_call_end" style={styles.banner} />
+            <PromoBannerSection placement="mobile_call_end" style={styles.banner} />
 
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map(s => (

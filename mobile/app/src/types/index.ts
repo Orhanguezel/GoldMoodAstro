@@ -48,6 +48,9 @@ export interface User {
   avatar_url?: string;
   fcm_token?: string;
   is_active: boolean;
+  /** FAZ 41 — auth/me; yoksa subscriptions/me ile türetilir */
+  is_premium?: boolean;
+  subscription?: UserSubscriptionSummary | null;
 }
 
 // ─── Consultant ────────────────────────────────────────────────────
@@ -64,6 +67,8 @@ export interface Consultant {
   languages: string[];          // ["tr","en"]
   session_price: string;        // decimal as string: "850.00"
   session_duration: number;     // minutes
+  video_session_price?: string | null;
+  supports_video?: number;      // 0 | 1
   currency: string;             // "TRY"
   approval_status: 'pending' | 'approved' | 'rejected';
   is_available: number;         // 0 | 1
@@ -80,6 +85,20 @@ export interface ConsultantSlot {
   capacity: number;
   is_active: number;
   reserved_count?: number;
+}
+
+export interface ConsultantService {
+  id: string;
+  consultant_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  duration_minutes: number;
+  price: string;
+  currency: string;
+  is_free: number;
+  is_active: number;
+  sort_order: number;
 }
 
 // ─── Booking ───────────────────────────────────────────────────────
@@ -118,15 +137,33 @@ export interface BookingCreateInput {
   appointment_time: string;
   session_duration: number;
   session_price: string;
+  media_type?: 'audio' | 'video';
+  service_id?: string;
   customer_message?: string;
   source_type?: 'daily_reading';
   source_id?: string;
+}
+
+export interface BookingCreateResult {
+  ok: boolean;
+  id: string;
+  status: BookingStatus;
 }
 
 // ─── Subscription ───────────────────────────────────────────────
 
 export type SubscriptionProvider = 'iyzipay' | 'apple_iap' | 'google_iap' | 'manual';
 export type SubscriptionStatus = 'pending' | 'active' | 'cancelled' | 'expired' | 'grace_period' | 'past_due';
+
+export interface UserSubscriptionSummary {
+  tier: 'free' | 'premium';
+  plan_code: string | null;
+  period: 'monthly' | 'yearly' | 'lifetime' | null;
+  status: SubscriptionStatus;
+  ends_at: string | null;
+  trial_ends_at: string | null;
+  is_trial: boolean;
+}
 
 export interface SubscriptionPlan {
   id: string;

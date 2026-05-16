@@ -14,6 +14,8 @@ import { useAppTheme, type AppTheme } from '@/theme';
 import { bannersApi } from '@/lib/api';
 import { Banner, BannerPlacement } from '@/types';
 import { useTranslation } from 'react-i18next';
+import { usePremium } from '@/hooks/usePremium';
+import { useAuth } from '@/hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight } from 'lucide-react-native';
 
@@ -87,6 +89,8 @@ interface Props {
 
 export function BannerWidget({ placement, style }: Props) {
   const { i18n } = useTranslation();
+  const { isPremium, loading: premiumLoading } = usePremium();
+  const { isAuthenticated, authHydrating } = useAuth();
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
@@ -94,8 +98,10 @@ export function BannerWidget({ placement, style }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authHydrating || premiumLoading) return;
+    setLoading(true);
     loadBanners();
-  }, [placement, i18n.language]);
+  }, [placement, i18n.language, authHydrating, isAuthenticated, isPremium]);
 
   const loadBanners = async () => {
     try {
@@ -123,6 +129,7 @@ export function BannerWidget({ placement, style }: Props) {
     }
   };
 
+  if (premiumLoading || isPremium) return null;
   if (loading || banners.length === 0) return null;
 
   const banner = banners[0];

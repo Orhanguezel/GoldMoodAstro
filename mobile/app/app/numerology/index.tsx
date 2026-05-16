@@ -73,6 +73,7 @@ import { safeRouterBack } from '@/lib/navigation';
 
 
 import { numerologyApi } from '@/lib/api';
+import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
 
 const { width } = Dimensions.get('window');
 
@@ -267,6 +268,8 @@ export default function NumerologyScreen() {
             <Sparkles size={20} color={colors.gold} style={{ marginBottom: 16, opacity: 0.3 }} />
             <Text style={styles.interpretationText}>{result?.interpretation}</Text>
           </LinearGradient>
+
+          <ConsultantFunnelCTA feature="numeroloji" intensity="heavy" />
 
           <Pressable 
             style={styles.resetBtn} 

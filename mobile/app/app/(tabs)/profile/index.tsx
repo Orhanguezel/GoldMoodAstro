@@ -88,7 +88,8 @@ import {
   AlertTriangle,
   CalendarDays,
   Bell,
-  MessageSquare
+  MessageSquare,
+  Star,
 } from 'lucide-react-native';
 
 
@@ -96,6 +97,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { subscriptionsApi, creditsApi, campaignsApi } from '@/lib/api';
 import type { Campaign, CreditMe, Subscription } from '@/types';
 import { MenuHeaderButton } from '@/components/MenuHeaderButton';
+import { BannerUpsell } from '@/components/BannerUpsell';
 
 export default function ProfileScreen() {
   const theme = useAppTheme();
@@ -245,6 +247,9 @@ export default function ProfileScreen() {
             </Pressable>
           </View>
 
+          {/* Banner Upsell — FAZ 41 T41-4/5 */}
+          <BannerUpsell />
+
           <View style={styles.group}>
             <Text style={styles.groupTitle}>KUPONLARIM</Text>
             <View style={styles.couponPanel}>
@@ -274,7 +279,15 @@ export default function ProfileScreen() {
           <View style={styles.group}>
             <Text style={styles.groupTitle}>DESTEK & GÜVENLİK</Text>
             
-            <Pressable style={styles.menuItem}>
+            <Pressable style={styles.menuItem} onPress={() => router.push('/karne' as any)}>
+              <View style={styles.menuLeft}>
+                <Star size={20} color={colors.goldDim} />
+                <Text style={styles.menuText}>Astrolog Karnesi</Text>
+              </View>
+              <ChevronRight size={18} color={colors.line} />
+            </Pressable>
+
+            <Pressable style={styles.menuItem} onPress={() => router.push('/info' as any)}>
               <View style={styles.menuLeft}>
                 <MessageSquare size={20} color={colors.goldDim} />
                 <Text style={styles.menuText}>Yardım & Destek</Text>

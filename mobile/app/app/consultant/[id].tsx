@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Pressable,
   Dimensions,
   Platform,
+  Alert,
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
@@ -61,6 +62,61 @@ function buildScreenStyles(t: AppTheme) {
   emptySlots: { paddingVertical: 20, alignItems: 'center' },
   emptySlotsText: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted },
 
+  serviceCard: {
+    padding: 16,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    marginBottom: 10,
+  },
+  serviceCardActive: { borderColor: colors.gold, backgroundColor: colors.inkDeep },
+  serviceCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
+  serviceName: { fontFamily: font.sansBold, fontSize: 15, color: colors.text, flex: 1 },
+  servicePrice: { fontFamily: font.display, fontSize: 18, color: colors.gold },
+  serviceMeta: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted, marginTop: 6 },
+  serviceDesc: { fontFamily: font.sans, fontSize: 13, color: colors.textDim, marginTop: 10, lineHeight: 20 },
+  freeBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(76, 175, 110, 0.15)',
+  },
+  freeBadgeText: { fontFamily: font.sansBold, fontSize: 10, color: colors.success, letterSpacing: 0.5 },
+  requestNowBtn: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.gold,
+    backgroundColor: 'rgba(201, 169, 97, 0.08)',
+  },
+  requestNowText: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
+
+  mediaRow: { flexDirection: 'row', gap: 10 },
+  mediaChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+  },
+  mediaChipActive: { backgroundColor: colors.gold, borderColor: colors.gold },
+  mediaChipText: { fontFamily: font.sansBold, fontSize: 13, color: colors.text },
+  mediaChipTextActive: { color: colors.ink },
+  mediaHint: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted, marginTop: 10, lineHeight: 18 },
+
   // Footer
   footer: { 
     position: 'absolute', bottom: 0, left: 0, right: 0, 
@@ -91,20 +147,24 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 import { useTranslation } from 'react-i18next';
 
-import { consultantsApi, chatApi, reviewsApi } from '@/lib/api';
-import type { Consultant, ConsultantSlot, Review } from '@/types';
+import { consultantsApi, chatApi, reviewsApi, bookingsApi, siteSettingsApi } from '@/lib/api';
+import type { Consultant, ConsultantSlot, ConsultantService, Review } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
 import { format, addDays, isSameDay } from 'date-fns';
 import { tr, enUS } from 'date-fns/locale';
 import ReviewList from '@/components/ReviewList';
 import { 
   ChevronLeft, 
   MessageSquare, 
-  Star, 
-  ShieldCheck, 
-  Clock, 
+  Star,
+  ShieldCheck,
+  Clock,
   Globe,
   Calendar,
-  Zap
+  Zap,
+  Sparkles,
+  Video,
+  Mic,
 } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
@@ -117,34 +177,82 @@ export default function ConsultantDetailScreen() {
   const { id, topic } = useLocalSearchParams<{ id: string; topic?: string }>();
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language === 'tr' ? tr : enUS;
+  const { isAuthenticated, authHydrating } = useAuth();
 
   const [consultant, setConsultant] = useState<Consultant | null>(null);
+  const [services, setServices] = useState<ConsultantService[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [slots, setSlots] = useState<ConsultantSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  const [requestNowLoading, setRequestNowLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState<ConsultantSlot | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [videoFeatureEnabled, setVideoFeatureEnabled] = useState(false);
+  const [mediaType, setMediaType] = useState<'audio' | 'video'>('audio');
+
+  const selectedService = useMemo(
+    () => services.find((s) => s.id === selectedServiceId) ?? null,
+    [services, selectedServiceId],
+  );
 
   const dates = Array.from({ length: 7 }).map((_, i) => addDays(new Date(), i));
+
+  const showVideoOption =
+    videoFeatureEnabled && consultant?.supports_video === 1;
+
+  const baseSessionPrice = useMemo(() => {
+    if (selectedService) return Number(selectedService.price);
+    return Number(consultant?.session_price ?? 0);
+  }, [selectedService, consultant?.session_price]);
+
+  const videoSessionPrice = useMemo(() => {
+    const vp = Number(consultant?.video_session_price ?? 0);
+    return vp > 0 ? vp : baseSessionPrice;
+  }, [consultant?.video_session_price, baseSessionPrice]);
+
+  const displaySessionPrice =
+    mediaType === 'video' && showVideoOption ? videoSessionPrice : baseSessionPrice;
+
+  useEffect(() => {
+    siteSettingsApi
+      .isFeatureEnabled('feature_video_enabled')
+      .then(setVideoFeatureEnabled)
+      .catch(() => setVideoFeatureEnabled(false));
+  }, []);
+
+  useEffect(() => {
+    if (!showVideoOption && mediaType === 'video') {
+      setMediaType('audio');
+    }
+  }, [showVideoOption, mediaType]);
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     setReviewsLoading(true);
+    setServicesLoading(true);
     Promise.all([
       consultantsApi.get(id),
       reviewsApi.forConsultant(id),
+      consultantsApi.services(id).catch(() => [] as ConsultantService[]),
     ])
-      .then(([consultantData, reviewData]) => {
+      .then(([consultantData, reviewData, serviceList]) => {
         setConsultant(consultantData);
         setReviews(reviewData);
+        setServices(serviceList);
+        if (serviceList.length > 0) {
+          setSelectedServiceId(serviceList[0].id);
+        }
       })
       .catch(console.error)
       .finally(() => {
         setLoading(false);
         setReviewsLoading(false);
+        setServicesLoading(false);
       });
   }, [id]);
 
@@ -159,8 +267,87 @@ export default function ConsultantDetailScreen() {
     }
   }, [id, selectedDate]);
 
+  const handleMessage = () => {
+    if (!consultant) return;
+    if (authHydrating) return;
+    if (!isAuthenticated) {
+      Alert.alert(
+        'Giriş gerekli',
+        'Danışmana mesaj göndermek için giriş yapın veya hesap oluşturun.',
+        [
+          { text: 'İptal', style: 'cancel' },
+          {
+            text: 'Kayıt ol',
+            onPress: () =>
+              router.push({
+                pathname: '/auth/register',
+                params: { next: `/consultant/${consultant.id}` },
+              } as any),
+          },
+          {
+            text: 'Giriş',
+            onPress: () =>
+              router.push({
+                pathname: '/auth/login',
+                params: { next: `/consultant/${consultant.id}` },
+              } as any),
+          },
+        ],
+      );
+      return;
+    }
+    chatApi
+      .createThreadForConsultant(consultant.id)
+      .then(({ id: tid }) => router.push(`/chat/${tid}`))
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : 'Mesaj başlatılamadı.';
+        Alert.alert('Hata', msg);
+      });
+  };
+
+  const handleRequestNow = async () => {
+    if (!consultant) return;
+    if (!isAuthenticated) {
+      Alert.alert('Giriş gerekli', 'Anlık görüşme talebi için giriş yapmalısınız.', [
+        { text: 'İptal', style: 'cancel' },
+        { text: 'Giriş', onPress: () => router.push('/auth/login' as any) },
+      ]);
+      return;
+    }
+    if (!consultant.is_available) {
+      Alert.alert('Müsait değil', 'Danışman şu an çevrimiçi görünmüyor.');
+      return;
+    }
+    setRequestNowLoading(true);
+    try {
+      const res = await bookingsApi.requestNow({
+        consultant_id: consultant.id,
+        ...(selectedServiceId ? { service_id: selectedServiceId } : {}),
+      });
+      Alert.alert(
+        'Talep gönderildi',
+        res.message ?? 'Danışman onayladığında bildirim alacaksınız.',
+        [{ text: 'Tamam', onPress: () => router.push('/(tabs)/bookings' as any) }],
+      );
+    } catch (err: unknown) {
+      Alert.alert('Hata', err instanceof Error ? err.message : 'Talep gönderilemedi.');
+    } finally {
+      setRequestNowLoading(false);
+    }
+  };
+
   const handleBooking = () => {
     if (!consultant || !selectedSlot) return;
+    const svc = selectedService;
+    const price =
+      svc != null
+        ? String(svc.price)
+        : mediaType === 'video' && showVideoOption
+          ? String(videoSessionPrice)
+          : consultant.session_price;
+    const duration = svc?.duration_minutes ?? consultant.session_duration;
+    const isFree = svc?.is_free === 1 || Number(price) === 0;
+
     router.push({
       pathname: '/booking/checkout',
       params: {
@@ -169,13 +356,19 @@ export default function ConsultantDetailScreen() {
         slotId: selectedSlot.id,
         date: format(selectedDate, 'yyyy-MM-dd'),
         time: selectedSlot.slot_time.substring(0, 5),
-        price: consultant.session_price,
-        duration: consultant.session_duration,
-        name: consultant.full_name,
+        price: String(price),
+        duration: String(duration),
+        name: consultant.full_name ?? '',
         topic,
-      }
+        ...(showVideoOption ? { mediaType } : {}),
+        ...(svc?.id ? { serviceId: svc.id, serviceName: svc.name } : {}),
+        ...(isFree ? { free: '1' } : {}),
+      },
     });
   };
+
+  const footerPrice = displaySessionPrice;
+  const footerIsFree = selectedService?.is_free === 1 || footerPrice === 0;
 
   if (loading || !consultant) {
     return (
@@ -201,12 +394,10 @@ export default function ConsultantDetailScreen() {
               <Pressable style={styles.backBtn} onPress={() => safeRouterBack()}>
                 <ChevronLeft size={24} color={colors.text} />
               </Pressable>
-              <Pressable 
-                style={styles.chatBtn} 
-                onPress={async () => {
-                  const { id: tid } = await chatApi.createThread(consultant.id);
-                  router.push(`/chat/${tid}`);
-                }}
+              <Pressable
+                style={[styles.chatBtn, authHydrating && { opacity: 0.5 }]}
+                onPress={handleMessage}
+                disabled={authHydrating}
               >
                 <MessageSquare size={22} color={colors.text} />
               </Pressable>
@@ -254,6 +445,97 @@ export default function ConsultantDetailScreen() {
           <Text style={styles.sectionTitle}>Hakkında</Text>
           <Text style={styles.bio}>{consultant.bio || 'Bu danışman henüz bir açıklama eklememiş.'}</Text>
         </View>
+
+        {/* Services (FAZ 29) */}
+        {servicesLoading ? (
+          <View style={styles.section}>
+            <ActivityIndicator color={colors.gold} />
+          </View>
+        ) : services.length > 0 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Sparkles size={18} color={colors.gold} />
+              <Text style={styles.sectionTitle}>Hizmetler</Text>
+            </View>
+            {services.map((svc) => {
+              const active = selectedServiceId === svc.id;
+              const isFree = svc.is_free === 1 || Number(svc.price) === 0;
+              return (
+                <Pressable
+                  key={svc.id}
+                  style={[styles.serviceCard, active && styles.serviceCardActive]}
+                  onPress={() => setSelectedServiceId(svc.id)}
+                >
+                  <View style={styles.serviceCardHeader}>
+                    <Text style={styles.serviceName}>{svc.name}</Text>
+                    <Text style={styles.servicePrice}>
+                      {isFree ? 'Ücretsiz' : `₺${Math.round(Number(svc.price))}`}
+                    </Text>
+                  </View>
+                  <Text style={styles.serviceMeta}>{svc.duration_minutes} dakika</Text>
+                  {svc.description ? (
+                    <Text style={styles.serviceDesc} numberOfLines={active ? 6 : 2}>
+                      {svc.description}
+                    </Text>
+                  ) : null}
+                  {isFree ? (
+                    <View style={styles.freeBadge}>
+                      <Text style={styles.freeBadgeText}>TANIŞMA GÖRÜŞMESİ</Text>
+                    </View>
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+
+        {showVideoOption && !selectedService ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Video size={18} color={colors.gold} />
+              <Text style={styles.sectionTitle}>Görüşme türü</Text>
+            </View>
+            <View style={styles.mediaRow}>
+              <Pressable
+                style={[styles.mediaChip, mediaType === 'audio' && styles.mediaChipActive]}
+                onPress={() => setMediaType('audio')}
+              >
+                <Mic
+                  size={16}
+                  color={mediaType === 'audio' ? colors.ink : colors.gold}
+                />
+                <Text
+                  style={[
+                    styles.mediaChipText,
+                    mediaType === 'audio' && styles.mediaChipTextActive,
+                  ]}
+                >
+                  Sesli · ₺{Math.round(baseSessionPrice)}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[styles.mediaChip, mediaType === 'video' && styles.mediaChipActive]}
+                onPress={() => setMediaType('video')}
+              >
+                <Video
+                  size={16}
+                  color={mediaType === 'video' ? colors.ink : colors.gold}
+                />
+                <Text
+                  style={[
+                    styles.mediaChipText,
+                    mediaType === 'video' && styles.mediaChipTextActive,
+                  ]}
+                >
+                  Görüntülü · ₺{Math.round(videoSessionPrice)}
+                </Text>
+              </Pressable>
+            </View>
+            <Text style={styles.mediaHint}>
+              Görüntülü seanslar uygulama içi video görüşme ile yapılır.
+            </Text>
+          </View>
+        ) : null}
 
         {/* Date Selection */}
         <View style={styles.section}>
@@ -310,6 +592,23 @@ export default function ConsultantDetailScreen() {
               })}
             </View>
           )}
+
+          {consultant.is_available ? (
+            <Pressable
+              style={[styles.requestNowBtn, requestNowLoading && { opacity: 0.6 }]}
+              onPress={handleRequestNow}
+              disabled={requestNowLoading}
+            >
+              {requestNowLoading ? (
+                <ActivityIndicator color={colors.gold} />
+              ) : (
+                <>
+                  <Zap size={18} color={colors.gold} />
+                  <Text style={styles.requestNowText}>Hemen Görüşme Talep Et</Text>
+                </>
+              )}
+            </Pressable>
+          ) : null}
         </View>
 
         {/* Reviews */}
@@ -323,8 +622,12 @@ export default function ConsultantDetailScreen() {
       {/* Floating Footer */}
       <View style={styles.footer}>
         <View style={styles.footerPrice}>
-          <Text style={styles.footerPriceLabel}>Seans Ücreti</Text>
-          <Text style={styles.footerPriceVal}>₺{Math.round(Number(consultant.session_price))}</Text>
+          <Text style={styles.footerPriceLabel}>
+            {selectedService ? selectedService.name : 'Seans Ücreti'}
+          </Text>
+          <Text style={styles.footerPriceVal}>
+            {footerIsFree ? 'Ücretsiz' : `₺${Math.round(footerPrice)}`}
+          </Text>
         </View>
         <Pressable 
           style={[styles.bookBtn, !selectedSlot && styles.bookBtnDisabled]}

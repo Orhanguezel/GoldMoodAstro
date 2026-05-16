@@ -65,12 +65,7 @@ function buildScreenStyles(t: AppTheme) {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Cinzel_700Bold } from '@expo-google-fonts/cinzel';
-import { 
-  Sparkles, 
-  Heart, 
-  Briefcase, 
-  Zap 
-} from 'lucide-react-native';
+import { Sparkles, Zap, Star } from 'lucide-react-native';
 
 
 import { MenuHeaderButton } from '@/components/MenuHeaderButton';
@@ -147,29 +142,42 @@ export default function ZodiacHubScreen() {
           <View style={styles.toolsSection}>
             <Text style={styles.sectionTitle}>ASTROLOJİK ARAÇLAR</Text>
             <View style={styles.toolList}>
-              <Pressable 
+              <Pressable
                 style={styles.toolItem}
-                onPress={() => router.push('/(tabs)/birth-chart' as any)}
+                onPress={() => router.push('/zodiac/big-three' as any)}
               >
                 <View style={[styles.toolIconWrap, { backgroundColor: colors.gold + '15' }]}>
                   <Zap size={20} color={colors.gold} />
                 </View>
                 <View style={styles.toolBody}>
-                  <Text style={styles.toolTitle}>Yükselen Hesapla</Text>
-                  <Text style={styles.toolDesc}>Doğum saatinizle tam haritanızı keşfedin.</Text>
+                  <Text style={styles.toolTitle}>Yükselen Burç Hesapla</Text>
+                  <Text style={styles.toolDesc}>Doğum tarihi, saati ve yeri ile Büyük Üçlü.</Text>
                 </View>
               </Pressable>
 
-              <Pressable 
+              <Pressable
                 style={styles.toolItem}
-                onPress={() => {}} // TODO: Big Three mobile
+                onPress={() => router.push('/unluler' as any)}
+              >
+                <View style={[styles.toolIconWrap, { backgroundColor: colors.amethyst + '22' }]}>
+                  <Star size={20} color={colors.amethyst} />
+                </View>
+                <View style={styles.toolBody}>
+                  <Text style={styles.toolTitle}>Ünlüler ve Burçları</Text>
+                  <Text style={styles.toolDesc}>Ünlü isimlerin burç yorumları.</Text>
+                </View>
+              </Pressable>
+
+              <Pressable
+                style={styles.toolItem}
+                onPress={() => router.push('/(tabs)/birth-chart' as any)}
               >
                 <View style={[styles.toolIconWrap, { backgroundColor: colors.goldDim + '15' }]}>
                   <Sparkles size={20} color={colors.goldDim} />
                 </View>
                 <View style={styles.toolBody}>
-                  <Text style={styles.toolTitle}>Büyük Üçlü</Text>
-                  <Text style={styles.toolDesc}>Güneş, Ay ve Yükselen kombinasyonun.</Text>
+                  <Text style={styles.toolTitle}>Doğum Haritası</Text>
+                  <Text style={styles.toolDesc}>Tam natal harita ve gezegen listesi.</Text>
                 </View>
               </Pressable>
             </View>

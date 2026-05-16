@@ -80,7 +80,9 @@ import {
   Sparkles,
   Tag, 
   Check, 
-  X
+  X,
+  Video,
+  Mic,
 } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -103,7 +105,16 @@ export default function BookingCheckoutScreen() {
     duration: string;
     name: string;
     topic?: string;
+    serviceId?: string;
+    serviceName?: string;
+    free?: string;
+    mediaType?: string;
   }>();
+
+  const sessionMedia =
+    params.mediaType === 'video' ? ('video' as const) : ('audio' as const);
+
+  const isFreeService = params.free === '1' || Number(params.price || 0) === 0;
   
   const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState('');
@@ -157,23 +168,29 @@ export default function BookingCheckoutScreen() {
         appointment_time: params.time!,
         session_duration: Number(params.duration),
         session_price: params.price!,
+        ...(params.mediaType ? { media_type: sessionMedia } : {}),
+        ...(params.serviceId ? { service_id: params.serviceId } : {}),
         source_type: sourceMatch ? 'daily_reading' : undefined,
         source_id: sourceMatch?.[1],
       });
 
-      // 2. Create Order
-      const orderResult = await ordersApi.createForBooking(booking.id);
+      if (booking.status === 'confirmed' || isFreeService) {
+        router.replace({
+          pathname: '/booking/success' as any,
+          params: { bookingId: booking.id },
+        });
+        return;
+      }
 
-      // 3. Init Iyzipay
+      const orderResult = await ordersApi.createForBooking(booking.id);
       const iyziResult = await ordersApi.initIyzipay(orderResult.order_id);
 
-      // 4. Redirect to Payment (WebView)
       router.push({
         pathname: '/booking/payment' as any,
         params: {
           orderId: orderResult.order_id,
           url: iyziResult.checkout_url,
-        }
+        },
       });
     } catch (err: any) {
       Alert.alert('Hata', err.message || 'Randevu oluşturulamadı. Lütfen tekrar deneyin.');
@@ -212,6 +229,36 @@ export default function BookingCheckoutScreen() {
                 <Text style={styles.infoValue}>{params.name}</Text>
               </View>
             </View>
+
+            {params.serviceName ? (
+              <View style={styles.infoRow}>
+                <View style={styles.iconBox}>
+                  <Sparkles size={18} color={colors.gold} />
+                </View>
+                <View style={styles.infoTextCol}>
+                  <Text style={styles.infoLabel}>HİZMET</Text>
+                  <Text style={styles.infoValue}>{params.serviceName}</Text>
+                </View>
+              </View>
+            ) : null}
+
+            {params.mediaType ? (
+              <View style={styles.infoRow}>
+                <View style={styles.iconBox}>
+                  {sessionMedia === 'video' ? (
+                    <Video size={18} color={colors.gold} />
+                  ) : (
+                    <Mic size={18} color={colors.gold} />
+                  )}
+                </View>
+                <View style={styles.infoTextCol}>
+                  <Text style={styles.infoLabel}>GÖRÜŞME TÜRÜ</Text>
+                  <Text style={styles.infoValue}>
+                    {sessionMedia === 'video' ? 'Görüntülü' : 'Sesli'}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
 
             <View style={styles.infoRow}>
               <View style={styles.iconBox}>
@@ -257,7 +304,7 @@ export default function BookingCheckoutScreen() {
             </View>
           </View>
 
-          {/* Promo Code */}
+          {!isFreeService ? (
           <View style={styles.promoCard}>
             <Text style={styles.promoLabel}>KUPON KODU</Text>
             <View style={styles.promoInputRow}>
@@ -296,6 +343,7 @@ export default function BookingCheckoutScreen() {
               )}
             </View>
           </View>
+          ) : null}
 
           {/* Trust Box */}
           <View style={styles.trustBox}>
@@ -304,7 +352,9 @@ export default function BookingCheckoutScreen() {
               <Text style={styles.trustTitle}>Güvenli Ödeme Sistemi</Text>
             </View>
             <Text style={styles.trustText}>
-              Ödemeniz Iyzipay güvencesiyle 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz hiçbir şekilde kaydedilmez.
+              {isFreeService
+                ? 'Ücretsiz tanışma görüşmeniz onaylandığında randevularım sekmesinden takip edebilirsiniz.'
+                : 'Ödemeniz Iyzipay güvencesiyle 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz hiçbir şekilde kaydedilmez.'}
             </Text>
           </View>
 
@@ -332,8 +382,14 @@ export default function BookingCheckoutScreen() {
               <ActivityIndicator color={colors.ink} />
             ) : (
               <>
-                <CreditCard size={20} color={colors.ink} />
-                <Text style={styles.payBtnText}>Ödemeyi Tamamla</Text>
+                {isFreeService ? (
+                  <Calendar size={20} color={colors.ink} />
+                ) : (
+                  <CreditCard size={20} color={colors.ink} />
+                )}
+                <Text style={styles.payBtnText}>
+                  {isFreeService ? 'Randevuyu Onayla' : 'Ödemeyi Tamamla'}
+                </Text>
               </>
             )}
           </Pressable>

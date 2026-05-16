@@ -22,6 +22,19 @@ function buildScreenStyles(t: AppTheme) {
   emptyText: { color: colors.muted, fontFamily: font.sans, fontSize: 15, textAlign: 'center' },
   emptyBtn: { backgroundColor: colors.amethyst, paddingHorizontal: spacing.lg, paddingVertical: 10, borderRadius: radius.pill },
   emptyBtnText: { color: colors.stardust, fontFamily: font.sansBold, fontSize: 14 },
+  guestWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xxl, gap: spacing.md },
+  guestTitle: { fontFamily: font.display, fontSize: 22, color: colors.stardust, textAlign: 'center' },
+  guestDesc: { fontFamily: font.sans, fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 22 },
+  guestBtn: { backgroundColor: colors.gold, paddingHorizontal: 28, paddingVertical: 14, borderRadius: radius.pill, marginTop: spacing.sm },
+  guestBtnText: { fontFamily: font.sansBold, fontSize: 14, color: colors.ink },
+  guestBtnOutline: {
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  guestBtnOutlineText: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
 });
 }
 
@@ -32,6 +45,7 @@ import { useTranslation } from 'react-i18next';
 import { consultantsApi } from '@/lib/api';
 import { ConsultantCard } from '@/components/ConsultantCard';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useAuth } from '@/hooks/useAuth';
 import type { Consultant } from '@/types';
 
 export default function FavoritesScreen() {
@@ -40,6 +54,7 @@ export default function FavoritesScreen() {
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
   const { t } = useTranslation();
+  const { isAuthenticated, authHydrating } = useAuth();
   const { favorites, refresh: refreshFavorites } = useFavorites();
   
   const [consultants, setConsultants] = useState<Consultant[]>([]);
@@ -82,13 +97,35 @@ export default function FavoritesScreen() {
     fetchFavoriteConsultants();
   }, [favorites.length]);
 
-  if (loading && !refreshing) {
+  if (authHydrating || (loading && !refreshing)) {
     return (
       <View style={styles.safe}>
         <View style={styles.loader}>
           <ActivityIndicator color={colors.amethyst} size="large" />
         </View>
       </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.title}>{t('tabs.favorites')}</Text>
+        </View>
+        <View style={styles.guestWrap}>
+          <Text style={styles.guestTitle}>Giriş gerekli</Text>
+          <Text style={styles.guestDesc}>
+            Beğendiğiniz danışmanları kaydetmek için giriş yapın. Favoriler cihazınızda güvenle saklanır.
+          </Text>
+          <Pressable style={styles.guestBtn} onPress={() => router.push('/auth/login' as any)}>
+            <Text style={styles.guestBtnText}>Giriş Yap</Text>
+          </Pressable>
+          <Pressable style={styles.guestBtnOutline} onPress={() => router.push('/connect' as any)}>
+            <Text style={styles.guestBtnOutlineText}>Danışmanları İncele</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -114,9 +151,9 @@ export default function FavoritesScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>Henüz favori danışmanınız yok.</Text>
-            <Pressable style={styles.emptyBtn} onPress={() => router.push('/(tabs)/today')}>
-              <Text style={styles.emptyBtnText}>{t('bookings.emptyCta')}</Text>
-            </Pressable>
+              <Pressable style={styles.emptyBtn} onPress={() => router.push('/connect' as any)}>
+                <Text style={styles.emptyBtnText}>Danışmanları İncele</Text>
+              </Pressable>
           </View>
         }
       />

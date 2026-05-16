@@ -63,8 +63,9 @@ import { safeRouterBack } from '@/lib/navigation';
 import { ChevronLeft, Send, Phone, Info } from 'lucide-react-native';
 
 
-import { chatApi } from '@/lib/api';
+import { chatApi, type ChatMessage } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { ChatWarningBanner } from '@/components/ChatWarningBanner';
 
 export default function ChatScreen() {
   const theme = useAppTheme();
@@ -73,7 +74,7 @@ export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>(); // threadId
   const { user } = useAuth();
   
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -100,14 +101,8 @@ export default function ChatScreen() {
     const text = inputText.trim();
     setInputText('');
     try {
-      const res = await chatApi.postMessage(id, text);
-      const newMessage = {
-        id: res.id,
-        message: text,
-        sender_id: user?.id,
-        created_at: new Date().toISOString(),
-      };
-      setMessages(prev => [...prev, newMessage]);
+      const msg = await chatApi.postMessage(id, text);
+      setMessages((prev) => [...prev, msg]);
     } catch (err) {
       console.error('Send error:', err);
     } finally {
@@ -144,6 +139,8 @@ export default function ChatScreen() {
           </View>
         </View>
 
+        <ChatWarningBanner compact style={{ marginHorizontal: 16, marginTop: 8 }} />
+
         <KeyboardAvoidingView 
           style={{ flex: 1 }} 
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -156,11 +153,12 @@ export default function ChatScreen() {
             contentContainerStyle={styles.list}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
             renderItem={({ item }) => {
-              const isMe = item.sender_id === user?.id;
+              const isMe = item.sender_user_id === user?.id;
+              const body = item.text ?? (item as { message?: string }).message ?? '';
               return (
                 <View style={[styles.msgRow, isMe ? styles.myRow : styles.theirRow]}>
                   <View style={[styles.bubble, isMe ? styles.myBubble : styles.theirBubble]}>
-                    <Text style={[styles.msgText, isMe ? styles.myText : styles.theirText]}>{item.message}</Text>
+                    <Text style={[styles.msgText, isMe ? styles.myText : styles.theirText]}>{body}</Text>
                     <Text style={[styles.timeText, isMe ? styles.myTime : styles.theirTime]}>
                       {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </Text>

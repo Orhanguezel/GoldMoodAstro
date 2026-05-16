@@ -28,6 +28,7 @@ import {
 import { initI18n } from '@/lib/i18n';
 import { registerPushToken } from '@/lib/notifications';
 import { ThemeProvider, useAppTheme } from '@/theme';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 initI18n();
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -56,8 +57,11 @@ function RootLayoutInner() {
   useEffect(() => {
     if (!lastNotification || !ready) return;
     const data = lastNotification.notification.request.content.data as Record<string, unknown>;
-    if (data?.booking_id) {
-      router.push(`/(tabs)/bookings`);
+    const bookingId = data?.booking_id ?? data?.bookingId;
+    if (typeof bookingId === 'string' && bookingId) {
+      router.push(`/booking/${bookingId}` as any);
+    } else if (data?.screen === 'bookings') {
+      router.push('/(tabs)/bookings' as any);
     }
   }, [lastNotification, ready]);
 
@@ -101,6 +105,15 @@ function RootLayoutInner() {
         <Stack.Screen name="menu/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
 
         <Stack.Screen name="webview/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="legal/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="cms/[moduleKey]" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="blog/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="blog/[slug]" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="become-consultant/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="karne/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="unluler/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="info/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="contact/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
 
         <Stack.Screen name="booking/[id]/review" options={{ presentation: 'modal' }} />
       </Stack>
@@ -111,9 +124,11 @@ function RootLayoutInner() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <RootLayoutInner />
-      </ThemeProvider>
+      <ErrorBoundary>
+        <ThemeProvider>
+          <RootLayoutInner />
+        </ThemeProvider>
+      </ErrorBoundary>
     </GestureHandlerRootView>
   );
 }

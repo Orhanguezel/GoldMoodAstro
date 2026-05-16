@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Dimensions, Animated, Easing, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { BannerSlider } from '@/components/BannerSlider';
+import { PromoBannerSection } from '@/components/PromoBannerSection';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 
@@ -285,7 +285,7 @@ export default function WelcomeScreen() {
             <Text style={styles.brandSub}>ASTROLOGY</Text>
           </View>
 
-          <BannerSlider placement="mobile_welcome" style={styles.welcomeBanner} />
+          <PromoBannerSection placement="mobile_welcome" style={styles.welcomeBanner} />
 
           <View style={styles.centerText}>
             <Text style={styles.tagline}>

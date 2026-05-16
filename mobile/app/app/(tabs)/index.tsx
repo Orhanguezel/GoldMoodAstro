@@ -64,7 +64,7 @@ import { useTranslation } from 'react-i18next';
 import { consultantsApi } from '@/lib/api';
 import { ConsultantCard } from '@/components/ConsultantCard';
 import DailyHoroscopeCard from '@/components/DailyHoroscopeCard';
-import { BannerWidget } from '@/components/BannerWidget';
+import { PromoBannerSection } from '@/components/PromoBannerSection';
 import type { Consultant } from '@/types';
 
 const CATEGORIES = [
@@ -176,7 +176,7 @@ export default function HomeScreen() {
           )}
           ListHeaderComponent={
             <View style={{ gap: spacing.md, marginBottom: spacing.md }}>
-              <BannerWidget placement="mobile_home" />
+              <PromoBannerSection placement="mobile_home" variant="widget" />
               <DailyHoroscopeCard />
             </View>
           }

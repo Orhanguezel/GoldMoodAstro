@@ -90,7 +90,9 @@ import { useAuth } from '@/hooks/useAuth';
 
 import type { BirthChart, DailyReadingResponse } from '@/types';
 import DailyHoroscopeCard from '@/components/DailyHoroscopeCard';
-import { BannerSlider } from '@/components/BannerSlider';
+import { PromoBannerSection } from '@/components/PromoBannerSection';
+import { RelaxMixerCard } from '@/components/RelaxMixerCard';
+import type { ZodiacSignKey } from '@/lib/relax/types';
 import SkeletonView from '@/components/SkeletonView';
 import { MenuHeaderButton } from '@/components/MenuHeaderButton';
 
@@ -136,6 +138,7 @@ export default function TodayScreen() {
   const mainChart = charts[0];
   const sunSign = mainChart?.chart_data?.planets?.sun?.sign_label || 'Aslan';
   const moonSign = mainChart?.chart_data?.planets?.moon?.sign_label || 'Boğa';
+  const sunSignKey = (mainChart?.chart_data?.planets?.sun?.sign ?? 'aries') as ZodiacSignKey;
 
   const QUICK_ACTIONS = [
     { id: 'birth-chart', label: 'Doğum Haritası', icon: LayoutGrid, route: '/(tabs)/birth-chart', color: colors.gold },
@@ -234,7 +237,11 @@ export default function TodayScreen() {
 
           <DailyHoroscopeCard />
 
-          <BannerSlider placement="mobile_home" />
+          {isAuthenticated && mainChart ? (
+            <RelaxMixerCard sign={sunSignKey} />
+          ) : null}
+
+          <PromoBannerSection placement="mobile_home" />
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>KEŞFET</Text>

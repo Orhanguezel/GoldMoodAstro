@@ -315,6 +315,56 @@ export default function MenuScreen() {
           <ScrollView contentContainerStyle={styles.list}>
             {headerItems.length > 0 ? renderBranch(headerItems, 0) : null}
             {renderFooter()}
+            <View style={styles.footerDivider} />
+            <Text style={styles.footerSectionLabel}>{t('navigation.appLinks', 'Uygulama')}</Text>
+            <MenuRow
+              title="Hakkında & Destek"
+              depth={0}
+              hasChildren={false}
+              expanded={false}
+              navigable
+              onPress={() => router.push('/info' as any)}
+            />
+            <MenuRow
+              title="Astrolog Karnesi"
+              depth={0}
+              hasChildren={false}
+              expanded={false}
+              navigable
+              onPress={() => router.push('/karne' as any)}
+            />
+            <MenuRow
+              title="Ünlüler ve Burçları"
+              depth={0}
+              hasChildren={false}
+              expanded={false}
+              navigable
+              onPress={() => router.push('/unluler' as any)}
+            />
+            <MenuRow
+              title="Blog"
+              depth={0}
+              hasChildren={false}
+              expanded={false}
+              navigable
+              onPress={() => router.push('/blog' as any)}
+            />
+            <MenuRow
+              title="Danışman Ol"
+              depth={0}
+              hasChildren={false}
+              expanded={false}
+              navigable
+              onPress={() => router.push('/become-consultant' as any)}
+            />
+            <MenuRow
+              title="Yasal & Gizlilik"
+              depth={0}
+              hasChildren={false}
+              expanded={false}
+              navigable
+              onPress={() => router.push('/legal' as any)}
+            />
           </ScrollView>
         )}
       </SafeAreaView>

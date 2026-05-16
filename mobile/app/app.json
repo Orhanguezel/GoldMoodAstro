@@ -19,7 +19,8 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Danışmanınızla sesli görüşme yapabilmek için mikrofon erişimi gereklidir.",
-        "NSCameraUsageDescription": "Profil fotoğrafı yüklemek için kamera erişimi gereklidir."
+        "NSCameraUsageDescription": "Profil fotoğrafı yüklemek için kamera erişimi gereklidir.",
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {

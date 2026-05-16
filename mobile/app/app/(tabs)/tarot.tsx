@@ -114,6 +114,7 @@ import { router } from 'expo-router';
 
 import { tarotApi, getAssetUrl } from '@/lib/api';
 import { MenuHeaderButton } from '@/components/MenuHeaderButton';
+import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
 
 const { width } = Dimensions.get('window');
 
@@ -323,6 +324,8 @@ export default function TarotScreen() {
                <Text style={styles.interText}>{result?.interpretation}</Text>
             </View>
           </View>
+
+          <ConsultantFunnelCTA feature="tarot" intensity="heavy" />
 
           <View style={styles.resultActions}>
             <Pressable 

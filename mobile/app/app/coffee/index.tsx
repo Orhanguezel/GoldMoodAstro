@@ -100,6 +100,7 @@ import { safeRouterBack } from '@/lib/navigation';
 
 
 import { coffeeApi, storageApi } from '@/lib/api';
+import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
 
 const { width } = Dimensions.get('window');
 
@@ -411,6 +412,8 @@ export default function CoffeeScreen() {
           <LinearGradient colors={[colors.surface + '88', colors.bgDeep + '88']} style={styles.interpretationBox}>
             <Text style={styles.interpretationText}>{result?.interpretation}</Text>
           </LinearGradient>
+
+          <ConsultantFunnelCTA feature="kahve" intensity="heavy" />
 
           <View style={styles.resultActions}>
             <Pressable 

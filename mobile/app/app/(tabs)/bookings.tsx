@@ -7,6 +7,7 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -14,7 +15,7 @@ import { ChevronLeft, CalendarDays, History } from 'lucide-react-native';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
-import { bookingsApi } from '@/lib/api';
+import { bookingsApi, chatApi } from '@/lib/api';
 import { BookingCard } from '@/components/BookingCard';
 import { useAuth } from '@/hooks/useAuth';
 import type { Booking } from '@/types';
@@ -118,6 +119,51 @@ function buildScreenStyles(t: AppTheme) {
     fontSize: 14,
     color: colors.gold,
   },
+  guestWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  guestTitle: {
+    fontFamily: font.display,
+    fontSize: 22,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  guestDesc: {
+    fontFamily: font.sans,
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  guestBtn: {
+    marginTop: spacing.md,
+    backgroundColor: colors.gold,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: radius.pill,
+  },
+  guestBtnText: {
+    fontFamily: font.sansBold,
+    fontSize: 14,
+    color: colors.ink,
+  },
+  guestBtnOutline: {
+    marginTop: spacing.sm,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.gold,
+  },
+  guestBtnOutlineText: {
+    fontFamily: font.sansBold,
+    fontSize: 14,
+    color: colors.gold,
+  },
   });
 }
 
@@ -147,10 +193,10 @@ export default function BookingsScreen() {
   };
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.replace('/auth/login' as any);
-    } else if (isAuthenticated) {
+    if (!authLoading && isAuthenticated) {
       fetchBookings();
+    } else if (!authLoading && !isAuthenticated) {
+      setLoading(false);
     }
   }, [isAuthenticated, authLoading]);
 
@@ -158,6 +204,15 @@ export default function BookingsScreen() {
     setRefreshing(true);
     fetchBookings();
   }, [isAuthenticated]);
+
+  const handleBookingMessage = useCallback(async (bookingId: string) => {
+    try {
+      const { id: threadId } = await chatApi.createThreadForBooking(bookingId);
+      router.push(`/chat/${threadId}`);
+    } catch (err: unknown) {
+      Alert.alert('Hata', err instanceof Error ? err.message : 'Mesaj başlatılamadı.');
+    }
+  }, []);
 
   const filteredBookings = (bookings || []).filter(b => {
     const isPast = ['completed', 'cancelled', 'no_show'].includes(b.status);
@@ -168,10 +223,39 @@ export default function BookingsScreen() {
       : new Date(b.appointment_date).getTime() - new Date(a.appointment_date).getTime();
   });
 
-  if (authLoading || (loading && !refreshing)) {
+  if (authLoading || (isAuthenticated && loading && !refreshing)) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.header}>
+            <Pressable onPress={() => safeRouterBack('/(tabs)/profile')} style={styles.headerBtn}>
+              <ChevronLeft size={24} color={colors.text} />
+            </Pressable>
+            <Text style={styles.headerTitle}>Randevularım</Text>
+            <View style={{ width: 40 }} />
+          </View>
+          <View style={styles.guestWrap}>
+            <CalendarDays size={48} color={colors.gold} />
+            <Text style={styles.guestTitle}>Giriş gerekli</Text>
+            <Text style={styles.guestDesc}>
+              Yaklaşan ve geçmiş randevularınızı görmek için giriş yapın veya yeni bir danışman seçin.
+            </Text>
+            <Pressable style={styles.guestBtn} onPress={() => router.push('/auth/login' as any)}>
+              <Text style={styles.guestBtnText}>Giriş Yap</Text>
+            </Pressable>
+            <Pressable style={styles.guestBtnOutline} onPress={() => router.push('/connect' as any)}>
+              <Text style={styles.guestBtnOutlineText}>Danışmanları İncele</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
       </View>
     );
   }
@@ -221,6 +305,7 @@ export default function BookingsScreen() {
               booking={item} 
               onPress={() => router.push(`/booking/${item.id}` as any)}
               onJoinCall={() => router.push(`/call/${item.id}` as any)}
+              onMessage={() => handleBookingMessage(item.id)}
             />
           )}
           contentContainerStyle={styles.listContent}

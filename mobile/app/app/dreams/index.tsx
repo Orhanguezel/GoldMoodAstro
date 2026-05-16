@@ -105,6 +105,7 @@ import { safeRouterBack } from '@/lib/navigation';
 
 
 import { dreamsApi } from '@/lib/api';
+import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
 
 const { width } = Dimensions.get('window');
 
@@ -319,6 +320,8 @@ export default function DreamsScreen() {
                </Text>
             </View>
           </LinearGradient>
+
+          <ConsultantFunnelCTA feature="ruya" intensity="heavy" />
 
           <Pressable 
             style={styles.promoCard}
