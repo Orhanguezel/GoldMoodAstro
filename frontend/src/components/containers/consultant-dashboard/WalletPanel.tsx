@@ -279,7 +279,7 @@ export default function WalletPanel() {
           onClick={() => !isWithdrawing && setShowModal(false)}
         >
           <div
-            className="w-full max-w-md bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-3xl shadow-2xl overflow-hidden"
+            className="w-full max-w-[var(--gm-w-form)] bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-3xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-5 border-b border-[var(--gm-border-soft)]">

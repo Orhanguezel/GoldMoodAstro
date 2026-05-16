@@ -26,7 +26,7 @@ export default function DailyPageClient() {
   if (!isAuthenticated) {
     return (
       <PageContainer className="min-h-screen bg-(--gm-bg) flex flex-col items-center justify-center" verticalPadding="large">
-        <div className="max-w-xl w-full text-center space-y-8">
+        <div className="max-w-[var(--gm-w-form)] w-full text-center space-y-8">
           <div className="w-16 h-16 bg-(--gm-surface) rounded-full flex items-center justify-center mx-auto border border-(--gm-gold)">
             <Sparkles className="w-8 h-8 text-(--gm-gold)" />
           </div>
@@ -45,7 +45,7 @@ export default function DailyPageClient() {
   if (!chartsLoading && charts.length === 0) {
     return (
       <PageContainer className="min-h-screen bg-(--gm-bg) flex flex-col items-center justify-center" verticalPadding="large">
-        <div className="max-w-xl w-full text-center space-y-8">
+        <div className="max-w-[var(--gm-w-form)] w-full text-center space-y-8">
           <div className="w-16 h-16 bg-(--gm-surface) rounded-full flex items-center justify-center mx-auto border border-(--gm-gold)">
             <Calendar className="w-8 h-8 text-(--gm-gold)" />
           </div>
@@ -63,7 +63,7 @@ export default function DailyPageClient() {
 
   return (
     <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-[var(--gm-w-readable)]">
         {/* Breadcrumb */}
         <div className="mb-12 flex items-center gap-4">
           <Link href={`/${locale}`} className="text-(--gm-text-dim) hover:text-(--gm-gold) transition-colors flex items-center gap-2 text-sm uppercase tracking-widest font-bold">
@@ -81,7 +81,7 @@ export default function DailyPageClient() {
           <h1 className="font-serif text-[clamp(2.5rem,6vw,4.5rem)] leading-[1.1] text-(--gm-text) mb-6">
             Gökyüzü bugün <br />ne söylüyor?
           </h1>
-          <p className="text-(--gm-text-dim) text-lg max-w-2xl font-serif italic">
+          <p className="text-(--gm-text-dim) text-lg max-w-[var(--gm-w-narrow)] font-serif italic">
             Natal haritanızdaki gezegenler, bugünün göksel hareketleriyle dans ediyor.
           </p>
         </div>

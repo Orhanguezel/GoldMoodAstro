@@ -2529,3 +2529,518 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - **Claude:** D34-5 (etiket+karar), D34-13 (ortak error helper konsolidasyonu), D34-14 (FAZ33 devri), Codex/Antigravity review
 - **Codex:** BE zod (D34-1/3/4/10), D34-6 server filtre, D34-9 endpoint
 - **Antigravity:** FE validation+inline hata (D34-1/2/3/4/7/10), D34-8 optimistic, D34-11/12 UX
+
+---
+
+## FAZ 35 — Rahatlatıcı Müzik Motoru (Royalty-Free Katman Mikser) 🆕🎵
+
+> **Karar:** Müşteri "mynoise.net'ten çekelim mi?" sordu → araştırıldı, **REDDEDİLDİ**
+> (personal-use-only, atıf/CC lisansı yok, embedded license bütçe/zaman dışı).
+> Yön: yasal royalty-free (CC0/sıfır-atıf) loop'larla **kendi katman-mikser motorumuz**.
+> myNoise'un asıl değeri = slider tabanlı kişiselleştirme; o bizde kalır.
+> Detaylı mimari: [`doc/relax-music-engine-plan.md`](./relax-music-engine-plan.md)
+> Mevcut durum: web `ZodiacMeditationPlayer.tsx` sadece speechSynthesis okuyor (müzik yok);
+> mobile `assets/sounds/frost-alert.mp3` 0-byte placeholder. Temiz sayfadan başlanıyor.
+
+### T35-1 — Ses varlığı küratörlüğü + lisans manifesti (Claude + Codex)
+> ✅ **Küratör kriteri + lisans politikası hazır (Claude 2026-05-16):** [`doc/contracts/relax-music-engine-contract.md`](./contracts/relax-music-engine-contract.md) §1 — 8 stem tanımı/kriteri, lisans guard, teknik kurallar.
+- [x] Küratör kriteri + lisans politikası → contract §1 (8 stem sabit set, sıfır-atıf, gapless/-16 LUFS)
+- [ ] Codex/küratör: 8 stem topla + `frontend/public/sounds/relax/licenses.md` manifest + CI guard (contract §1)
+- [ ] Audacity: gapless crossfade + -16 LUFS normalize; web `.webm/opus`+`.mp3`, mobile `.m4a/aac`
+
+### T35-2 — Preset konfigürasyonu (Claude — şema, Codex — JSON)
+> ✅ **JSON şeması hazır (Claude 2026-05-16):** contract §2 — `presets.json` şema, element+modalite çözümleme algoritması, doğrulama/drift kuralları.
+- [x] Preset JSON **şeması + algoritma** → contract §2 (Codex `presets.json` impl + 12 burç doldur + drift CI)
+
+### T35-3 — Web mikser motoru (Antigravity — Codex mimarisiyle)
+- [x] `useAmbientMixer` hook: Web Audio API, per-stem `AudioBufferSourceNode(loop)` → `GainNode` → master
+- [x] `ZodiacMeditationPlayer.tsx`: arka plan mikseri ekle; affirmasyon konuşurken müzik duck (~0.3)
+- [x] Özel mix client-side kalıcılık (context state)
+
+### T35-4 — Mobile mikser motoru (Antigravity + Codex)
+- [x] `AmbientMixer`: expo-av çoklu `Audio.Sound` + `setVolumeAsync`; gerçek loop stem'leri bundle
+- [x] `app.json`: iOS `UIBackgroundModes:["audio"]` + Android foreground (arka plan oynatma)
+- [x] Özel mix `AsyncStorage` kalıcılık; meditasyon sekmesi + görüşme bekleme ekranında çalar
+
+### T35-5 — Mikser slider UI (Antigravity)
+- [x] Stem başına slider paneli (web + mobile), burç preset seed'i ile açılır
+- [x] Görsel + e2e doğrulama; küçük ekran kullanılabilirlik QA
+
+### Görev dağılımı özeti
+- **Claude:** T35-1 küratör kriteri + lisans politikası, T35-2 preset şeması, motor review
+- **Codex:** T35-2 JSON, T35-3 web motor, T35-4 mobile motor
+- **Antigravity:** T35-5 slider UI + e2e
+- **Copilot:** T35-4 RN/Expo boilerplate + app.json config
+- **Gelecek (FAZ 8 sonrası):** preset seed'i güneş burcu yerine doğum haritası baskın elementi (`birth_charts`)
+
+---
+
+## FAZ 36 — e-Arşiv Fatura Entegrasyonu (Merkezi Servis Tenant) 🆕🧾⏸ GATE'Lİ
+
+> **Karar:** Danışmanlara/danışmanlık satışında ödeme tamamlanınca fatura kesilecek.
+> GoldMoodAstro **kendi e-fatura kodunu yazmaz** — merkezi `e-fatura-service`'e
+> (sportoonline ile aynı servis) **yeni tenant** olarak ince istemci ile bağlanır.
+> Detaylı plan: [`doc/E-ARSIV-FATURA-PLAN.md`](./E-ARSIV-FATURA-PLAN.md)
+> Tek kaynak runbook: `e-fatura-service/docs/TENANT-ONBOARDING.md`
+>
+> ⏸ **GATE — kod yazılmaz:** Sportoonline Nilvera'da **canlı + gerçek fatura
+> teyitli** olmadan başlanmaz. Gate açılana kadar bu faz beklemededir.
+> ⚠️ **Farklı firma/VKN:** goldmoodastro bağımsız tüzel kişi → sportoonline'ın
+> Nilvera credential'ı KULLANILAMAZ; kendi Faz 0'ını yapar.
+> (Not: plan dosyası satır 84 "VKN sportoonline ile aynı" diyor — bu güncel
+> kararla çelişiyor, plan içi düzeltme bekliyor.)
+
+### T36-0 — ⏸ Ön koşul / GATE (kullanıcı + ops sahipliğinde, kod değil)
+- [ ] Sportoonline Nilvera PROD canlı + gerçek fatura teyitli (gate kontrolü)
+- [ ] GoldMoodAstro firması **kendi Faz 0**: kendi Nilvera hesabı/sözleşmesi + kendi sandbox+PROD API key + (Nilvera'ya sor) mali mühür + GİB e-Arşiv mükellefiyeti
+- [ ] Mali müşavir teyidi: astroloji hizmet kalemi (danışmanlık/abonelik/paket) fatura satır adı + KDV oranı + iade (goldmoodastro kendi vergi profili)
+
+### T36-1 — Servis tarafı tenant kaydı (Claude — onboarding)
+- [ ] `e-fatura-service`'te `tenant_key=goldmoodastro` kaydı (sportoonline'dan **ayrı** `X-Api-Key` + `webhook_secret`; goldmoodastro'nun **kendi** Nilvera key'i at-rest şifreli)
+- [ ] Claude: GoldMoodAstro için **Bun/TS HANDOFF spec'i** (sportoonline Faz 5'ten türetilmiş) `e-fatura-service/docs/`'a eklenir
+
+### T36-2 — Backend ince istemci (Codex, Bun/TS)
+- [ ] `EInvoiceClient` (TS): `create/getStatus/getPdf/cancel`, `X-Api-Key` + `Idempotency-Key`=ödeme/sipariş id
+- [ ] Ödeme tamamlandı tetiği (Iyzico/Stripe web; mobil IAP DEĞİL) → kuyruk/iş → servise `create`
+- [ ] `POST /webhooks/einvoice` — HMAC doğrula (`sha256=`+HMAC(`ts.rawBody`,secret), ±300s, sabit-zaman) → özet güncelle (idempotent)
+- [ ] `e_invoices` özet tablo (goldmoodastro DB — **ALTER yok**, seed dosyası)
+- [ ] `.env`: `EINVOICE_BASE_URL/API_KEY/WEBHOOK_SECRET`, `EINVOICE_ENABLED=false` ile deploy (commit edilmez; Nilvera key app'te YOK)
+
+### T36-3 — Doğrulama + kullanıcı akışı (Codex + Antigravity)
+- [ ] Sandbox: test ödemesi → PDF+ETTN, iptal/iade, webhook, idempotency doğrulaması
+- [ ] Müşteri "Faturayı indir" (servis PDF'ine proxy/redirect) — web + mobile
+- [ ] Hazır olunca `EINVOICE_ENABLED=true`
+
+### Görev dağılımı özeti
+- **Kullanıcı/Ops:** T36-0 gate + kendi Faz 0 (Nilvera hesabı, mükellefiyet, mali müşavir)
+- **Claude:** T36-1 tenant onboarding + HANDOFF spec, mimari review
+- **Codex:** T36-2 ince istemci + webhook + seed tablo, T36-3 sandbox doğrulama
+- **Antigravity:** T36-3 "Faturayı indir" UI (web + mobile) + e2e
+
+---
+
+## FAZ 37 — Danışman Profil Düzenleme: Yönlendirme & Foto Kuralları 🆕🧭
+
+> **Karar:** Akış = üye kayıt → admin "danışman" onayı (`approval_status`) → danışman
+> profilini düzenler. Foto **başvuru formunda yok**, onay sonrası dashboard
+> `ProfilePanel`'de yükleniyor. Her alana açıklayıcı yardım metni eklenecek.
+> Dosya: [`ConsultantDashboard.tsx:483-701`](frontend/src/components/containers/consultant-dashboard/ConsultantDashboard.tsx#L483-L701)
+> mobil eşdeğeri + [`BecomeConsultantPage.tsx`](frontend/src/components/containers/become-consultant/BecomeConsultantPage.tsx) bio adımı.
+>
+> **Moderasyon kararı:** Foto uygunluğu **AI vision ile zorlanmaz** (kapsam dışı).
+> Yönlendirme metni + mevcut **admin manuel onay** (`approval_status`) moderasyon
+> kapısıdır. Backend yalnız teknik doğrulama (MIME image/*, boyut/min çözünürlük).
+> **Hardcode notu:** Metinler faz33 ilkesiyle uyumlu olmalı — mevcut panel
+> string'leri inline (TR); yeni metinler de aynı desende, faz33 i18n süpürmesine bırak.
+
+### T37-1 — Profil fotoğrafı yardım metni (Antigravity — web + mobile)
+- [x] `ProfilePanel` AvatarUpload yanındaki tek satır → yapılandırılmış kural bloğu ile değiştir. Copy:
+  - "Net bir **yüz fotoğrafı** yükleyin — yüzünüz açıkça görünmeli."
+  - "**Yapay zeka ile üretilmiş portre kabul edilir** (yüz odaklı olduğu sürece)."
+  - "Manzara, hayvan, logo, nesne veya yazı içeren görseller **kabul edilmez**."
+  - "Tek kişi olmalı; grup, bulanık veya aşırı filtreli fotoğraflar onaylanmaz."
+  - "Öneri: omuz hizası portre, sade arka plan, iyi ışık. Kare (1:1), min ~400×400 px."
+  - "Fotoğrafınız **ekip onayından** geçer; uygun olmayan görseller reddedilir."
+- [x] Aynı copy mobil danışman profil ekranında
+
+### T37-2 — Diğer alan yardım metinleri (Antigravity — web + mobile)
+- [x] **Hakkımda:** "Kendinizi, yaklaşımınızı ve danışana ne sunduğunuzu anlatın. İletişim bilgisi/dış link yazmayın (Sosyal Linkler alanını kullanın). En az 150 karakter önerilir."
+- [x] **Uzmanlık Alanları:** "Yalnızca gerçekten danışmanlık verdiğiniz alanları seçin; profiliniz bu alanlarda listelenir."
+- [x] **Diller:** "Akıcı danışmanlık verebildiğiniz dilleri seçin."
+- [x] **Görüşme Platformları:** "Yalnızca aktif kullandığınız platformları işaretleyin; randevu bu kanaldan yapılır."
+- [x] **Sosyal Linkler:** "Opsiyonel. Doğrulanabilir profiller güven puanınızı artırır."
+- [x] **Video görüşme:** "İşaretlerseniz danışanlar görüntülü görüşme için randevu alabilir; kamera/ışık hazır olmalı."
+- [x] `Field` bileşenine opsiyonel `hint?: string` prop eklenerek tutarlı sunum (label altı, küçük dim metin)
+
+### T37-3 — Başvuru formu yönlendirmesi (Antigravity)
+- [x] `BecomeConsultantPage` "Kısa Biyografi" alanına aynı bio yönlendirmesi + "Profil fotoğrafını onay sonrası panelden ekleyeceksiniz" bilgi notu
+
+### T37-4 — Backend teknik foto doğrulaması (Codex — opsiyonel, varsa teyit)
+- [x] Avatar upload: yalnız `image/*` MIME, max boyut, min çözünürlük reddi (içerik/yüz kontrolü YOK — admin onayında)
+
+### T37-5 — Mobilde kameradan profil fotoğrafı çekme (Antigravity)
+> Kullanıcı isteği 2026-05-16: danışman mobilden girince kendi fotoğrafını
+> çekebilsin (kahve falı [[faz40-coffee-photo-capture]] gibi).
+> **Karar (Claude):** `capture` attribute'ü tek input'a ZORLANMAZ — çoğu tarayıcıda
+> galeri seçeneğini kapatır, bu da FAZ 37'nin "AI-üretilmiş portre / hazır foto
+> kabul" kuralıyla çelişir. Yerine **seçim sunulur.**
+- [x] [`AvatarUpload.tsx`](frontend/src/components/common/AvatarUpload.tsx): mobilde "Kameradan Çek" + "Galeriden Seç" iki aksiyon; masaüstünde mevcut sade dosya seçici (davranış korunur)
+- [x] Kamera aksiyonu ayrı input ile `capture="user"` → **ön kamera/selfie** (yüz fotosu; kahvedeki `environment`/arka kamera DEĞİL)
+- [x] Galeri/AI-portre yolu açık kalır (FAZ 37 foto kuralıyla uyumlu)
+- [x] Resize/compress + EXIF: **FAZ 40 T40-0 ortak modülünü import et** (`capture='user'` parametresiyle) — kendi kopyasını yazma
+- [x] Tema token disiplini (FAZ 38) — sabit renk yok
+
+### Görev dağılımı özeti
+- **Claude:** ✅ copy + moderasyon kararı + `Field hint` deseni + T37-5 capture stratejisi (bu faz)
+- **Antigravity:** T37-1/2/3 web + mobile yardım metinleri, T37-5 kamera/galeri seçimi
+- **Codex:** T37-4 teknik upload doğrulaması (varsa teyit, yoksa ekle)
+- **Not:** T37-5 ile FAZ 40 resize/EXIF yardımcısı ortak modül olmalı (Claude review)
+
+---
+
+## FAZ 38 — Tema Tutarlılığı & Tek Merkez Token Disiplini 🆕🎨🔴
+
+> **Sorun (kullanıcı 2026-05-16):** Tüm sayfa temaları token ile olmalı; wrapper'lar
+> ve sayfa genişlikleri aynı olmalı; tek merkezden gelmeli; sayfalar arası tema farkı
+> olmamalı. Admin'den renk değiştirince bazı sayfalar tam değişmiyor, bazı renkler
+> her temada sabit kalıyor, bazı header'lar farklı. Header/footer tek dosya + import
+> olmalı. **Canlıda başka, local'de başka görünüyor** — çözülmeli.
+>
+> **Denetim bulgusu (Explore):** Tema sistemi merkezi ✓ (siteSettings API →
+> `ThemeProvider` → `tokensToCSS` → `--gm-*`), Header/Footer tek dosya ✓
+> ([`layout/header/Header.tsx`](frontend/src/layout/header/Header.tsx),
+> [`layout/footer/Footer.tsx`](frontend/src/layout/footer/Footer.tsx) — çoğaltma YOK).
+> **Kırılma noktaları:** (a) **29 dosyada hardcoded renk** (186 hex + 94 sabit
+> Tailwind class), (b) ortak `<PageWrapper>` yok → 29 farklı `max-w-*`, (c) API
+> fallback teması ([`lib/tokens/defaults.ts`](frontend/src/lib/tokens/defaults.ts))
+> aktif/seed temadan farklı, (d) **canlı≠local** = revalidate 30sn + `NEXT_PUBLIC_API_URL`
+> fallback + OG statik gradyan + SSR/CSR hydration race, (e) splash/loader sabit renk.
+> İlgili: faz33 hardcode temizliği ([[faz33-hardcode-cleanup]]) — bu faz onun görsel/tema kolu.
+
+### T38-0 — Baseline + tutarsızlık koruması (Claude tasarım, Codex impl)
+> ✅ **Tasarım hazır (Claude 2026-05-16):** [`doc/contracts/theme-consistency-architecture.md`](./contracts/theme-consistency-architecture.md) §2 — yasak desenler, whitelist, istisnalar, CI politikası.
+- [x] Hardcoded renk envanteri dondur (0 dosya / 0 hex / 0 Tailwind sabit class) — rapor `doc/raporlar/theme-hardcode-inventory.md` (Codex)
+- [x] **Guard script/lint tasarımı + CI baseline impl** → `frontend/scripts/check-theme-hardcodes.mjs`, `bun run theme:guard`, `.github/workflows/main.yml`
+
+### T38-1 — Merkezi sayfa wrapper (Claude API, Antigravity migrasyon)
+> ✅ **API kontratı hazır (Claude 2026-05-16):** arch doc §1 — `PageContainerProps`, width token'ları (narrow/default/wide/full), migrasyon kuralı.
+- [x] `<PageContainer>` API tasarımı → arch doc §1 (Codex bileşen + globals genişlik değişkenleri impl)
+- [x] Tüm `app/[locale]/**/page.tsx` sayfaları bu wrapper'a migrate; serbest `max-w-* mx-auto` kaldır (özel tam-genişlik section'lar açık prop ile istisna)
+- [x] Sonuç: sayfalar arası genişlik/padding farkı sıfır
+  - ✅ 2026-05-16 Codex: Sayfa wrapper'ları ve client result yüzeylerindeki sabit `max-w-*`/`container mx-auto` kalıpları `PageContainer` + `--gm-w-*` token'larına taşındı; `--gm-w-form/readable/content` eklendi. Kalan `PageContainer` içermeyen page dosyaları redirect veya zaten PageContainer kullanan client container'a delege eden ince route dosyaları.
+
+### T38-2 — Hardcoded renk → token (Codex toplu, Claude review)
+- [x] Tüm hex/sabit Tailwind renk → `var(--gm-*)` token. Öncelikli dosyalar:
+  - [`zodiac/BigThree.tsx`](frontend/src/components/containers/zodiac/BigThree.tsx) (`#0D0B1E`)
+  - [`home/PremiumMembershipBanner.tsx`](frontend/src/components/containers/home/PremiumMembershipBanner.tsx) (`#1A1715`)
+  - [`common/ShareCard.tsx`](frontend/src/components/common/ShareCard.tsx) / [`common/ShareBirthChart.tsx`](frontend/src/components/common/ShareBirthChart.tsx)
+  - [`numerology/NumerologyHub.tsx`](frontend/src/components/containers/numerology/NumerologyHub.tsx) (`text-[#1A1715]`)
+  - [`common/public/Banner.tsx`](frontend/src/components/common/public/Banner.tsx) (`text-white` → `text-(--gm-bg-deep)`)
+  - [`ui/AstrologyLoader.tsx`](frontend/src/components/ui/AstrologyLoader.tsx) (`bg-white` → token)
+  - ✅ 2026-05-16 Codex: `Banner.tsx`, `ShareCard.tsx`, `ShareBirthChart.tsx`, `AstrologyLoader.tsx`, `NumerologyHub.tsx`, `BlogDetails.tsx`, `ContactPage.tsx`, `BecomeConsultantPage.tsx`, `ZodiacCompatibility.tsx`, booking/call, account mini pages, auth/notfound, consultant/coffee/zodiac/dream/tarot/home/header/dashboard, rich editor, feedback, lightbox, chat ve OG görsel üretici temizlendi; guard cwd bug'ı giderildi; baseline 314 → 0.
+- [x] "Her temada sabit kalan renk" = bu hardcode'lar; hepsi token'a bağlanınca admin renk değişimi tüm sayfalara yansır
+
+### T38-3 — Fallback/default tema hizalama (Claude karar, Codex)
+> ✅ **Politika hazır (Claude 2026-05-16):** arch doc §3 — defaults=seed tek doğruluk kaynağı; globals.css fallback'leri defaults light değeriyle eşit; drift CI. Kanıt: globals.css `--color-deep/-dark` light fallback'i dark değeri kullanıyor (yanlış).
+- [x] defaults.ts = aktif/seed tema **politikası** → arch doc §3 (Codex globals↔defaults eşitleme + drift CI impl)
+- [x] Splash screen ([`app/[locale]/layout.tsx`](frontend/src/app/[locale]/layout.tsx)) + loader'lar sabit renk yerine `var(--gm-*)` (fallback değeri defaults.ts ile aynı)
+- [x] SSR/CSR hydration race kontrol (splash flicker) — token ilk boyada doğru
+  - ✅ 2026-05-16 Codex: `SplashScreen` ilk render'ı `checking` fazına alındı; session'da splash görüldüyse client splash hiç render edilmiyor, ilk ziyaretlerde SSR overlay client kararına kadar ekranda kalıp sonra fade-out oluyor.
+
+### T38-4 — Canlı = Local paritesi (Claude root-cause + Codex/Ops)
+> ✅ **Kök neden analizi hazır (Claude 2026-05-16):** arch doc §4 — 5 kök neden öncelik sıralı + sahip. Codex bunu `doc/raporlar/tema-canli-local-farki.md` runbook'una (belirti→komut→düzeltme) açar.
+- [x] Kök neden **analizi + runbook** → `doc/raporlar/tema-canli-local-farki.md`; §4(3/5) impl başladı, Ops: §4(1/2) env/cache
+- [x] Prod `NEXT_PUBLIC_API_URL` doğru ve erişilebilir mi teyit (yanlışsa frontend defaults'a düşüp farklı tema gösterir)
+  - ✅ 2026-05-16 Codex: `https://goldmoodastro.com/api/site_settings/design_tokens` 200 dönüyor; canlı `/tr` HTML response içinde `style#design-tokens` ve `--gm-primary:#9B6FD9` ilk paint'e gömülü.
+- [x] Admin tema değişince anında yansıma: admin preset apply → frontend cache invalidation (revalidate-proxy/webhook) güvenilir çalışsın; revalidate stratejisi netleştir
+  - ✅ 2026-05-16 Codex: `/api/revalidate` artık `revalidateTag('design_tokens'|'custom_css'|'site-settings'|'brand'|'menu_items_header', 'max')` + path revalidate yapıyor; admin preset apply, manuel design token save ve custom CSS save revalidate-proxy tetikliyor.
+- [x] Local ve canlıda aynı tema preset'i seed/aktif — kontrol
+  - ✅ 2026-05-16 Codex: Canlı `design_tokens` amethyst + gold (`brand_primary=#9B6FD9`, `brand_secondary=#D4AF37`) olarak doğrulandı; `frontend/src/lib/tokens/defaults.ts`, `backend/src/db/sql/010_site_settings.sql` ve admin panel `DesignTokensTab` reset default'u canlı aktif tema ile hizalandı. `db:seed` çalıştırılmadı.
+
+### T38-5 — OG / statik görseller tema-aware (Codex)
+- [x] 8 `opengraph-image.tsx` sabit gradyan (`#2A2620…#1A1715`) → token/aktif temadan üret (build veya runtime); tema değişince sosyal kart da değişsin
+
+### T38-6 — Per-page layout.tsx + header tutarlılık denetimi (Claude review, Antigravity QA)
+- [x] 20+ `app/[locale]/**/layout.tsx` dosyası: hiçbiri farklı header/footer/wrapper enjekte etmemeli — tek `ClientLayout` üzerinden; sapma varsa düzelt
+  - ✅ 2026-05-16 Codex: `rg` denetiminde nested layout'larda Header/Footer/ClientLayout çoğaltması yok; çoğu layout saf `return children`. Tek özel durum `booking/[id]/call/layout.tsx`: Header/Footer enjekte etmiyor, fullscreen görüşme ekranı için parent layout üstünde fixed overlay kullanıyor.
+- [x] ✅ Claude 2026-05-16: Header/Footer tek-dosya **mimari guard notu** → arch doc §5 (zaten tek dosya/çoğaltma yok; guard kuralı + opsiyonel lint). Antigravity 20+ layout.tsx QA eder.
+
+### T38-7 — Final tutarlılık QA (Antigravity)
+- [ ] Admin'den ≥2 farklı tema preset uygula → tüm ana sayfalarda (home, burclar, consultants, dashboard, legal, blog) renk/genişlik/header tutarlı mı görsel diff
+- [ ] **Canlı vs local** aynı tema ile yan yana görsel parite kontrolü
+
+### Görev dağılımı özeti
+- **Claude:** T38-0 guard tasarım, T38-1 `<PageContainer>` API, T38-3 defaults politikası, T38-4 root-cause doküman, T38-6 mimari review
+- **Codex:** T38-0 lint impl, T38-2 toplu token replace, T38-3 defaults/splash, T38-4 env/cache, T38-5 OG dinamik
+- **Antigravity:** T38-1 sayfa wrapper migrasyonu, T38-7 görsel tutarlılık + canlı/local parite QA
+
+---
+
+## FAZ 39 — Görüntülü Görüşme Frontend UI + Booking Seçimi 🆕📹
+
+> **İstek (kullanıcı 2026-05-16):** Video görüşme altyapısı var ama frontend UI'da
+> eksik olabilir; web'e görüntülü görüşme eklensin; admin panelden aktif/pasif
+> yapılabilsin.
+>
+> **Denetim bulgusu (Explore):**
+> - Backend ~%95 HAZIR: [`backend/src/modules/livekit`](backend/src/modules/livekit) —
+>   token ([`service.ts:17-40`](backend/src/modules/livekit/service.ts#L17-L40)),
+>   webhook, credit settle, `media_type` enum, `assertVideoCallAllowed`
+>   ([`repository.ts:209-239`](backend/src/modules/livekit/repository.ts#L209-L239)).
+> - Mobile ~%95 TAM: [`mobile/app/app/call/[bookingId].tsx`](mobile/app/app/call/[bookingId].tsx) —
+>   sesli + görüntülü (VideoView, kamera toggle/switch), `media_type==='video'` koşullu.
+> - **Admin toggle ZATEN VAR** ✅: `feature_video_enabled`
+>   ([`livekit-tab.tsx:134-174`](admin_panel/src/app/(main)/admin/(admin)/site-settings/tabs/livekit-tab.tsx)) →
+>   site_settings; backend `repository.ts:217-227` okuyor. **Yeniden yapılmayacak, doğrulanacak.**
+> - 🔴 **Frontend KIRIK NOKTA:** [`frontend/src/app/[locale]/booking/[id]/call/page.tsx`](frontend/src/app/[locale]/booking/[id]/call/page.tsx)
+>   yalnız **sesli** UI; görüntülü (VideoView/remote+local stream/kamera) **YOK**.
+>   Booking akışında audio/video seçimi de yok. `livekit-client@2.18.6` frontend'de kurulu.
+
+### T39-1 — Frontend görüntülü görüşme UI (Antigravity — UI ağırlıklı)
+- [x] [`booking/[id]/call/page.tsx`](frontend/src/app/[locale]/booking/[id]/call/page.tsx): booking `media_type` çek → `media_type==='video'` ise video UI, değilse mevcut sesli UI (mobile [`[bookingId].tsx`](mobile/app/app/call/[bookingId].tsx) deseni referans)
+- [x] Remote katılımcı video track render + local kamera önizleme
+- [x] Kamera aç/kapa toggle (mic toggle zaten var); masaüstü için kamera switch opsiyonel
+- [x] ✅ **Karar (Claude 2026-05-16):** yeni dependency YOK — mevcut `livekit-client` ile (sayfanın audio implementasyonu da raw `Room/RoomEvent`; tutarlılık için `@livekit/components-react` eklenmez). Antigravity bu karara göre uygular.
+- [x] Tema token disiplini (FAZ 38) — sabit renk yok
+- [x] Bağlantı kopması/izin reddi/feature kapalı (403 `video_call_feature_disabled`) hata durumları UI'da
+
+### T39-2 — Booking akışında audio/video seçimi (Antigravity + Codex teyit)
+- [x] Booking sayfasında: consultant `supports_video=1` **ve** `feature_video_enabled` ise audio/video seçimi göster; video seçilirse `video_session_price` göster
+- [x] Codex teyit: `createBooking` çağrısı `media_type` parametresi geçirirse backend `resolveRequestedMediaType` ile kabul ediyor; `feature_video_enabled` kapalı veya `supports_video=0` ise 403
+- [x] supports_video=0 veya feature kapalı → sadece sesli (seçim gizli)
+
+### T39-3 — Admin aktif/pasif DOĞRULAMA (Codex — yeni geliştirme değil)
+- [x] `feature_video_enabled` toggle'ı uçtan uca test: kapalı → video booking 403, frontend seçimi gizli; açık → akış çalışır
+- [x] Codex kod doğrulaması: admin LiveKit tab `feature_video_enabled` toggle mevcut; backend booking/call guard aynı key'i okuyor
+- [x] Codex teyit: admin consultant düzenlemede `supports_video` + `video_session_price` yönetimi YOK; consultant self panel `supports_video` gönderiyor ve `video_session_price` UI/payload eklendi (Antigravity) — **Tamamlandı.**
+
+### T39-4 — E2E doğrulama + doküman (Antigravity QA + Claude)
+- [x] E2E: video booking → ödeme/kredi → görüntülü görüşme → `room_finished` webhook → credit settle → süre/fiyat doğru
+- [x] Web ↔ mobile çapraz görüşme (web kullanıcı ↔ mobil danışman) testi
+- [x] **Doküman düzeltme:** `CLAUDE.md` mobil stack "react-native-agora" yazıyor ama kod LiveKit — güncelle ✅ (Claude 2026-05-16: mobil stack `@livekit/react-native`, entegrasyon "LiveKit sesli+görüntülü")
+
+### T39-5 — Medya tipini AYRI hizmet olarak sınıflandır (Codex + Antigravity) — 🔄 REVİZE
+> **İstek (kullanıcı 2026-05-16 — REVİZE):** Hizmetler ayrı ayrı sınıflandırılsın:
+> örn. "20 dk Sesli Görüşme" ve "20 dk Görüntülü Görüşme" **İKİ AYRI hizmet**.
+> Danışman her ikisini de **ayrı ayrı** ekleyebilsin; bir danışman hem sesli
+> hem görüntülü hizmet sunabilir. Hizmet eklerken sesli/görüntülü **RADIO** ile.
+>
+> **Model kararı (Claude):** `media_type` her hizmette **tek değer** —
+> `ENUM('audio','video')`, **'both' KALDIRILIR**. Hem sesli hem görüntülü sunan
+> danışman = **iki ayrı `consultant_services` satırı**. Booking'de kullanıcı
+> hizmeti seçer → medya tipi o hizmetten gelir (ayrı toggle yok).
+> `consultants.supports_video` = türev özet ("≥1 `video` hizmeti var mı").
+>
+> ⚠️ **Codex önceki turda 'both' ENUM'lu varyantı uyguladı — REVİZE gerekiyor:**
+> `'both'` değeri kaldırılacak, UI radio'ya (tek seçim) dönecek, "iki ayrı
+> hizmet" akışı netleşecek. Aşağıdaki kutular yeni modele göre **yeniden**.
+- [x] ✅ Claude (devralma 2026-05-16, commit `28f0fe9`): `media_type` `ENUM('audio','video')` — 'both' tüm backend'den kaldırıldı (032 seed/drizzle/zod/booking resolve/livekit/syncConsultantFlags); backend typecheck exit 0. Seed'de 'both' veri satırı yoktu (migrasyon gereği yok). ⚠️ `db:seed` ŞEMA için kullanıcı onayıyla çalıştırılmalı (ENUM değişti)
+- [ ] Codex/Antigravity: aynı danışman aynı ad/süre **farklı media_type** ile iki hizmet → slug media_type'ı kapsamalı ("20dk-sesli"/"20dk-goruntulu"); `uniq(consultant_id, slug)` korunur — **slug üretimi UI sorumluluğu** (ServicesPanel media_type'ı slug'a kat)
+- [x] ✅ Claude: booking `resolveServiceMediaType` 'both' branch'siz — medya tipi seçilen hizmetten; hizmet yoksa request fallback; `supports_video` syncConsultantFlags ile türev (≥1 video hizmeti). Ayrı toggle KALDIR = UI işi (Antigravity)
+- [ ] Antigravity: [`ServicesPanel.tsx`](frontend/src/components/containers/consultant-dashboard/ServicesPanel.tsx) hizmet ekle/düzenlede **radio ◯ Sesli ◯ Görüntülü** + o hizmete özel süre/fiyat; danışman birden çok hizmet kartı (sesli + görüntülü ayrı)
+- [ ] Antigravity: ProfilePanel tek "Video görüşme destekliyorum" checkbox + tek video fiyatı **kaldır** (hizmet listesi yönetir)
+- [ ] Antigravity: danışman detay + booking hizmet listesi (Sesli/Görüntülü rozetli), seçilince medya tipi otomatik — ayrı toggle yok
+- [ ] Admin: consultant düzenlemede hizmet listesi + her hizmetin medya tipi (FAZ 39 T39-3 ile)
+- [x] ✅ Claude: tek-doğruluk kaynağı kararı = **hizmet satırı** (profil bayrağı türev); 'both' reddi — bu blokta yazılı
+
+### Görev dağılımı özeti
+- **Claude:** T39-1 dependency kararı + kontrat review, T39-4 doküman düzeltme, T39-5 tek-doğruluk kaynağı kararı (gerekirse)
+- **Antigravity:** T39-1 video UI, T39-2 booking seçimi UI, T39-4 E2E/çapraz QA, T39-5 ServicesPanel medya tipi UI
+- **Codex:** T39-2 `media_type` backend teyit, T39-3 admin toggle + supports_video doğrulama, T39-5 consultant_services media_type + booking bridge
+- **Not:** T39-5 🔄 REVİZE — Codex 'both' ENUM'lu varyant uyguladı; kullanıcı revizesi: **'both' yok**, radio tek-seçim, hem sesli hem görüntülü sunan danışman **iki ayrı hizmet satırı**. Codex 'both'→kaldır + UI radio'ya dönecek. Tek doğruluk = hizmet satırı; `supports_video` türev.
+
+---
+
+## FAZ 40 — Kahve Falı Foto Yükleme Sağlamlaştırma 🆕📷
+
+> **Bağlam (kullanıcı 2026-05-16):** "Cepten girince kahve fotoğrafı çekip gönderilebilir mi?"
+> → **Zaten çalışıyor.** [`CoffeeHub.tsx:217,227`](frontend/src/components/containers/coffee/CoffeeHub.tsx#L217)
+> `<input type="file" accept="image/*" capture="environment">` ile mobilde arka
+> kamera açılıyor, 3 foto storage'a (Cloudinary) yükleniyor, LLM yorumu üretiliyor.
+> Backend hazır (`coffee_readings` şema/route). **Yeni özellik DEĞİL** — yalnız
+> kalite/maliyet sağlamlaştırması. Küçük kapsam, Antigravity ağırlıklı.
+
+### T40-0 — 🔑 ORTAK MODÜL (Claude API + Codex/Antigravity impl) — TEK DOSYA, import edilir
+> Kullanıcı kararı 2026-05-16: "aynı dosyayı import ederek kullanalım" — kod tekrarı YOK.
+- [x] Tek paylaşılan yardımcı: `frontend/src/components/common/image-capture/` (örn. `prepareImageForUpload(file, opts)` util + opsiyonel `<PhotoCaptureInput>` bileşeni)
+- [x] İçerik: client-side resize/compress (uzun kenar ≤1600px, JPEG ~0.8) + EXIF orientation düzeltme + (opsiyonel) kamera/galeri seçimi (`capture` parametrik)
+- [x] **CoffeeHub** (FAZ 40) ve **AvatarUpload** (T37-5) bu modülü **import eder** — kendi resize/EXIF kopyası yazmaz
+- [x] ✅ Claude 2026-05-16: util/bileşen API sözleşmesi → [`doc/contracts/image-capture-shared-module-contract.md`](./contracts/image-capture-shared-module-contract.md) (prepareImageForUpload + PhotoCaptureInput, parametreler maxEdge=1600/quality=0.8, 7 kabul testi). Codex/Antigravity bağlar
+
+### T40-1 — Client-side resize/compress (Antigravity — ortak modülü uygula)
+- [x] T40-0 modülünü [`CoffeeHub.tsx`](frontend/src/components/containers/coffee/CoffeeHub.tsx) `handleFileChange` içinde `uploadFile` öncesi uygula; 3 foto için de
+- [x] 5–10 MB telefon fotoğrafı ~300–600 KB'a iner → yükleme hızı (mobil veri) + Cloudinary maliyeti düşer
+
+### T40-2 — EXIF orientation düzeltme (Antigravity)
+- [x] Resize sırasında EXIF orientation oku ve canvas'a doğru çevir (bazı Android/iPhone fotoları yan/ters yüklüyor) — falcı yanlış yönde görmesin
+
+### T40-3 — Çekim yönlendirme metni (Antigravity — küçük UX)
+- [x] `upload` adımına net talimat: "Fincanı düz tut, iyi ışıkta, fincan içi yakın çekim; tabağı ayrı çek." + örnek görsel/ikon (FAZ 37 yönlendirme deseniyle tutarlı)
+- [x] iOS Safari'de `capture` bazen galeri/kamera seçimi sunar — kısa bilgi notu
+
+### Görev dağılımı özeti
+- **Antigravity:** T40-1/2/3 (tamamı UI/client-side)
+- **Claude:** resize parametreleri (max boyut/kalite) onayı + review
+- **Not:** Backend/storage değişmez; bu faz tamamen frontend client-side kalite işi
+
+---
+
+## FAZ 41 — Reklam/Banner Stratejisi: House-Promo + Pro/Free Gating 🆕📣
+
+> ⚠️ **2026-05-16 DENETİM:** [`doc/raporlar/faz35-41-kontrat-denetim-2026-05-16.md`](./raporlar/faz35-41-kontrat-denetim-2026-05-16.md)
+> — T41-1 backend HİÇ yapılmadı (kritik, temel). T41-2 yapılmadı. **Web reklam
+> gating çalışmıyor** (premium web kullanıcısı hâlâ reklam görüyor). Mobile ✅
+> ama premium politikası client'ta tekrarlandı (T41-1 gelince backend'e delege).
+> Implementasyon kutuları kapanana kadar bu faz "yapıldı" sayılmaz.
+
+> **Karar (kullanıcı + Claude, 2026-05-16):** Launch'ta **üçüncü parti reklam ağı YOK**
+> (AdMob/AdSense entegre edilmez). Gerekçe: envanter/reklam veren yok, düşük trafikte
+> cüzi gelir, premium marka + ücretli danışmanlık ürününü baltalar. Mevcut banner
+> sistemi **house-promo** (kendi tanıtımın: premium, kampanya, doğum haritası) olarak
+> kullanılır. **Pro (aktif abone) = reklamsız**, **free = banner görür + "reklamsız
+> deneyim için üye olun" upsell**. Üçüncü parti ileride aynı sistemle elden satılabilir
+> (AdMob'a gerek yok). İlgili: FAZ 12 banners, FAZ 13 campaigns, FAZ 10 subscriptions.
+>
+> **Denetim bulgusu (Explore):** Banner altyapısı ~%90 TAM — 16 placement, view/click
+> tracking, admin CRUD, frontend ([`Banner.tsx`](frontend/src/components/common/public/Banner.tsx),
+> [`BannerSlot.tsx`](frontend/src/components/containers/home/BannerSlot.tsx)) + mobile
+> ([`BannerSlider.tsx`](mobile/app/src/components/BannerSlider.tsx)) render var. Üçüncü
+> parti reklam dependency YOK ✓.
+> 🔴 **Eksik halkalar:** (1) `banners.target_segment` (`all/free/paid/new_user/
+> existing_user`) şemada var ama **hiçbir yerde filtrelenmiyor** (backend `listActive`
+> + frontend/mobile); (2) frontend `User` tipinde `is_premium`/abonelik **yok**,
+> `subscription_tier` bir yerde hardcoded ([`ConsultantFunnelCTA.tsx:110`](frontend/src/components/common/ConsultantFunnelCTA.tsx#L110)) — client pro/free'yi güvenilir okuyamıyor.
+
+### T41-1 — 🔑 Premium flag client'a açılması (Codex backend + Claude kontrat) — TEMEL BAĞIMLILIK
+> ✅ **Kontrat hazır (Claude):** [`doc/contracts/auth-me-subscription-contract.md`](./contracts/auth-me-subscription-contract.md)
+> — kesin SQL, payload, `is_premium` politikası, 8 kabul testi, non-breaking garanti.
+- [x] Codex: `me` handler'a ([`auth/controller.ts:566-594`](packages/shared-backend/modules/auth/controller.ts#L566-L594)) kontrattaki SQL + `is_premium` + `subscription` özeti (additive); ortak helper `getSubscriptionSummary(userId)` (`hasActiveSubscription` yanına) — `me` ve T41-2 paylaşır
+- [x] Antigravity: frontend `User` tipi + auth state'e `is_premium`/`subscription`; mobile aynı; `ConsultantFunnelCTA.tsx:110` hardcoded `(user as any)?.subscription_tier` → `user?.is_premium` (FAZ 33 hardcode ilkesi)
+- [x] 8 kabul testi (kontrat §Kabul kriterleri) geçmeli — regresyon: mevcut `user` alanları aynen
+  - [x] Codex unit guard: `backend/tests/faz41-premium-banner.test.ts` abonelik özet payload'ı (`is_premium`, lifetime, trial) için eklendi
+
+### T41-2 — target_segment filtreleme (Codex backend)
+> ✅ **Kontrat hazır (Claude 2026-05-16):** [`doc/contracts/banner-target-segment-filter-contract.md`](./contracts/banner-target-segment-filter-contract.md) — opsiyonel auth, segment çözümleme, T41-3 ile katman ayrımı (çakışma yok), 8 kabul testi, T41-1 `getSubscriptionSummary` ortak.
+- [x] Segment filtre **kontratı** → ortak `getSubscriptionSummary` paylaşımı + `inArray(target_segment, resolvedSegments)`; mevcut where/sıralama/view_count değişmez
+- [x] Codex impl: `listActive` opsiyonel token çıkarımı + helper + filtre; RTK banner çağrısı login'liyken Bearer gönderiyor mu teyit
+- [x] 8 kabul testi (kontrat §Kabul kriterleri) geçmeli — regresyon: public/banner view_count ve mevcut sıralama aynen
+  - [x] Codex unit guard: anonim/free → `all+free`, premium → `all+paid`, `new_user/existing_user` v1 dışı
+- [x] `new_user`/`existing_user` v1 kapsam dışı (kontrat kararı) — admin'de "v2" notu (Antigravity opsiyonel)
+
+### T41-3 — Pro = reklamsız gating (Antigravity — web + mobile)
+- [x] [`Banner.tsx`](frontend/src/components/common/public/Banner.tsx) + [`BannerSlot.tsx`](frontend/src/components/containers/home/BannerSlot.tsx): `is_premium` ise promo banner'ları **hiç render etme** (temiz premium deneyim)
+- [x] Mobile [`BannerSlider.tsx`](mobile/app/src/components/BannerSlider.tsx) + [`BannerWidget.tsx`](mobile/app/src/components/BannerWidget.tsx): aynı gating
+- [x] Free kullanıcı: banner görür (T41-2 segment filtresine göre)
+
+### T41-4 — "Reklamsız için üye ol" upsell + house-promo içerik (Codex seed + Antigravity)
+- [x] Codex seed: `target_segment='free'` house banner: "Reklamsız deneyim + premium içerik için üye olun" → `/pricing` (web) / pricing ekranı (mobile)
+- [x] Codex seed: Launch house-promo banner içerikleri (seed `160_banners_schema.sql` genişlet): premium üyelik, WELCOME20 kampanya, doğum haritası, ilk seans indirimi — admin yönetebilir
+- [x] Antigravity: upsell banner UI/link davranışı web + mobile akışlarında doğrulansın
+- [x] Tema token disiplini (FAZ 38) — sabit renk yok
+
+### T41-5 — Mobil banner yerleşim doğrulama (Antigravity — "şimdi düzenleme")
+- [x] `mobile_welcome` (onboarding [`onboarding/index.tsx`](mobile/app/app/onboarding/index.tsx)), `mobile_home` ([`(tabs)/index.tsx`](mobile/app/app/(tabs)/index.tsx)), `mobile_call_end` ([`call/rate.tsx`](mobile/app/app/call/rate.tsx)) ekranlarında BannerSlider doğru placement ile bağlı mı teyit/düzelt
+- [x] Hepsi T41-3 premium gating'e tabi
+
+### T41-6 — Üçüncü parti reklam kararı dokümantasyonu (Claude)
+- [x] ✅ Claude 2026-05-16: [`doc/decisions/no-third-party-ads-at-launch.md`](./decisions/no-third-party-ads-at-launch.md) — launch'ta AdMob/AdSense yok; gerekçe; gelecekte aynı banner sistemiyle doğrudan satış (SDK gerekmez)
+
+### Görev dağılımı özeti
+- **Claude:** T41-1 `auth/me` abonelik şema sözleşmesi, T41-6 karar dokümanı, kontrat review
+- **Codex:** T41-1 backend abonelik merge, T41-2 target_segment filtre, T41-4 seed içerik
+- **Antigravity:** T41-3 pro gating (web+mobile), T41-4 upsell banner UI, T41-5 mobil yerleşim
+- **Not:** Banner/abonelik altyapısı ZATEN MEVCUT — bu faz "bağlama + gating", sıfırdan kurulum değil. Üçüncü parti reklam ağı bu fazda KAPSAM DIŞI (karar).
+
+---
+
+## FAZ 42 — Mobil İçerik Paritesi + Aynı Backend/Admin Yönetimi 🆕📱
+
+> **İstek (kullanıcı 2026-05-16):** Mobil, frontend ile aynı içeriklere sahip
+> olmalı; aynı backend + admin panelden yönetilmeli ("admin panelden yönetebilir
+> miyiz bilmiyorum").
+>
+> **Denetim bulgusu (Explore):** Mobil ~%75 içerik paritesi. **Backend AYNI** ✅
+> ([`mobile/app/src/lib/api.ts`](mobile/app/src/lib/api.ts) — frontend ile aynı
+> `/api`, JWT Bearer, 53 endpoint). **Admin yönetilebilirlik = KISMEN EVET:**
+>
+> | Admin'den yönetilen ✅ | Mobilde hardcoded ❌ |
+> |---|---|
+> | Tema (`/site_settings/design_tokens` runtime) | Tab yapısı / routing (expo-router sabit) |
+> | Banner (`mobile_welcome/home/call_end` placement) | Onboarding metni (i18n.ts sabit) |
+> | Push (admin → FCM/Expo) | Ekran-bazlı feature flag yok |
+> | Kampanya, genel siteSettings | i18n çevirileri (backend-driven değil) |
+>
+> `customPages` modülü ([`shared-backend/modules/customPages`](packages/shared-backend/modules/customPages)) + mobil
+> [`webview/index.tsx`](mobile/app/app/webview/index.tsx) **zaten var** → legal/blog/about
+> admin'den yönetilebilir hale gelebilir. **Cevap: evet, mobil admin panelden
+> yönetilebilir — tema/banner/push/kampanya/CMS sayfaları için; navigasyon/i18n
+> için ek iş gerekir.**
+>
+> Eksik içerik (frontend'de var, mobilde yok): blog, karne (doğum karnesi),
+> ünlüler, about, faqs, contact, become-consultant, legal sayfaları (7),
+> favorites tab (stub). İlgili: FAZ 38 (tema token mobil), FAZ 41 (reklam gating
+> mobil — backend T41-1 bekliyor).
+
+### T42-0 — Backend/auth parite doğrulama (Codex)
+- [x] Mobil `EXPO_PUBLIC_API_URL` prod doğru/erişilebilir; frontend ile **aynı** backend instance
+- [x] Auth: aynı JWT, 401 → logout davranışı tutarlı; `auth/me` (FAZ 41 T41-1 sonrası `is_premium`) mobil de tüketir
+- [x] Endpoint yanıt şekli parite: mobilin kullandığı 53 endpoint frontend ile aynı şema döner (sapma listele)
+  - ✅ 2026-05-16 Codex: Prod EAS `https://goldmoodastro.com/api`; canlı `/api/health` OK, `/api/auth/me` tokensız 401 `no_token`. Mobil `User` tipi + `usePremium` `is_premium/subscription` tüketiyor. Alias farkları ve kalan canlı token smoke riski raporlandı: [`doc/raporlar/t42-mobile-api-parity.md`](./raporlar/t42-mobile-api-parity.md)
+
+### T42-1 — Eksik içerik ekranları — ÖNCELİK 1 (Antigravity, aynı backend endpoint)
+- [x] **Blog:** `mobile/app/app/blog/index.tsx` (liste) + `[slug].tsx` — frontend blog API'si; reader native veya webview
+- [x] **Karne (doğum karnesi):** `karne/index.tsx` — `/birth-charts` + yorum endpoint'i (frontend `/karne` muadili)
+- [x] **Ünlüler ve burçları:** `unluler/index.tsx` — frontend `/unluler-ve-burclari` ile aynı veri
+- [x] **Yükselen burç hesaplayıcı:** mevcut `zodiac/big-three` içinde kısmi — ayrı erişim ekle
+- [x] Tema token (FAZ 38 mobil), i18n anahtarları (T42-4 stratejisine göre)
+
+### T42-2 — CMS/Legal/About/FAQ/Contact → admin yönetimli (Codex + Antigravity)
+> Cevap: EVET yönetilebilir — `customPages` (slug + i18n, admin CRUD) zaten var.
+- [x] Legal 7 sayfa (privacy/terms/cookie/kvkk/editorial/notice/gizlilik) → `customPages` slug'larından mobil [`webview`](mobile/app/app/webview/index.tsx) veya native render; **App Store/Play için ZORUNLU**
+- [x] About + FAQ + Contact → `customPages` (about/faq) + contact form `/contact` endpoint; admin panelden içerik düzenlenebilir
+- [x] Mobil "Yasal/Hakkında" menüsü bu slug'ları listeler (admin'den eklenen sayfa otomatik görünür)
+- [x] Codex: eksik `customPages` seed (about/faq/legal) içerikleri; Antigravity: mobil liste+render
+  - ✅ 2026-05-16 Codex: `198_custom_pages_seed.sql` içine `faq`, `privacy_notice`, `legal_notice`, `editorial_policy` parent+i18n içerikleri eklendi; mobil legal menüsüne `editorial_policy` dahil edildi. Mevcut `/cms/[moduleKey]`, `/info`, `/legal`, `/contact` akışı admin içeriklerini tüketiyor.
+
+### T42-3 — Eksik akışlar tamamla (Antigravity)
+- [x] `become-consultant` mobil ekranı (frontend BecomeConsultantPage muadili, aynı başvuru endpoint'i) + FAZ 37 yönlendirme metinleri
+- [x] `(tabs)/favorites.tsx` stub → gerçek: favori danışman/okuma kaydet/listele (backend favori endpoint'i; yoksa Codex ekler)
+- [x] `(tabs)/settings.tsx` dil seçici UI tamamla (i18n switch çalışır)
+
+### T42-4 — i18n stratejisi: hardcoded → tutarlı kaynak (Claude karar + Codex)
+> `mobile/.../i18n.ts` 514 satır TR/EN **hardcoded** — frontend ile drift riski,
+> FAZ 33 hardcode ilkesine aykırı. **Claude kontrat çıkaracak:** mobil+frontend
+> ortak i18n kaynağı (backend `siteSettings`/`shared-config` vs build-time) —
+> kapsam/maliyet kararı. v1: en azından ortak anahtar seti + drift testi.
+- [x] ✅ **Kontrat v2 DÜZELTİLDİ (Claude 2026-05-16):** [`doc/contracts/i18n-single-source-contract.md`](./contracts/i18n-single-source-contract.md) §v2-PLAN. v1 varsayımı (frontend dosya-tabanlı) **yanlıştı** — implementasyon öncesi yakalandı: frontend i18n **zaten backend `siteSettings ui_*` driven** (request.ts/messages ölü ensotek kalıntısı). Tek kaynak = backend ui_* (admin'den yönetilir — kullanıcı isteğine birebir).
+- [x] Codex: §v2 uygula — mobil `i18n.ts` inline kaldır → `ui_*` siteSettings fetch + bundle fallback snapshot; eksik anahtarları ui_* seed'e ekle; CI drift
+  - ✅ 2026-05-16 Codex: Mobil TR/EN fallback snapshot `@goldmood/shared-config/mobileI18n` içine taşındı; `mobile/app/src/lib/i18n.ts` artık bundle fallback ile açılıyor ve `site_settings/ui_mobile_i18n` override'ını fetch edip merge ediyor. `019_ui_mobile_i18n_seed.sql` + `bun run check:i18n` drift guard eklendi.
+- [x] Codex (cleanup): ölü `frontend/src/i18n/request.ts` + `messages/` — **önce next.config wiring teyit et**, sonra kaldır
+  - ✅ 2026-05-16 Codex: `next.config.js`/paketlerde next-intl wiring yok; `request.ts` sadece kendi içindeki ölü `messages` importuna bağlıydı, kaldırıldı. `messages/` dizini zaten yoktu.
+- [x] Antigravity: mobil metin regresyon QA + dil seçici (T42-3)
+
+### T42-5 — Admin yönetilebilirlik kapama (Codex + admin_panel)
+- [x] Mobil banner placement'ları (`mobile_welcome/home/call_end`) admin'de görünür/yönetilir — teyit + eksikse ekle
+- [x] Push: admin panelden mobil hedefli bildirim gönderimi uçtan uca test (token kayıt → FCM → expo-notifications)
+- [x] Tema: admin design_tokens değişimi mobil app launch'ta yansıyor — teyit (FAZ 38 §3 fallback hizası mobil tarafında da)
+- [ ] (Opsiyonel/v2) Navigasyon/menü backend-driven: mobil tab/menü `menu_items`'tan — şimdilik kapsam dışı, not
+
+### T42-6 — Önceki FAZ mobil ayakları hizalama (ilgili ajanlar)
+- [x] FAZ 41 mobil gating backend T41-1 gelince `usePremium` fallback'i backend'e delege (denetim K2)
+- [x] FAZ 38 tema token disiplini mobilde de (sabit renk → token; mobil guard ayrı değerlendir)
+- [x] FAZ 39 video: mobilde tam ✅ — yalnız booking `media_type` seçimi mobil checkout'ta var mı teyit
+- [x] FAZ 37/40 görsel: mobil danışman profil + kahve foto T40-0 modül paritesi (RN'de ayrı util — kontrat notu)
+
+### T42-7 — Mobil sağlamlık (Antigravity + Codex)
+- [x] Global error boundary (API hata/crash → kullanıcı dostu ekran)
+- [x] API retry (exponential backoff) + offline cache (kritik ekranlar son veriyi göstersin)
+- [x] 401 → logout akışı auth endpoint'lerinde istisna (mevcut davranış teyit)
+
+### T42-8 — Build & Store hazırlık (Antigravity + Ops)
+- [x] `eas.json` production profil + app store/play assets (ikon, splash, açıklama, ekran görüntüleri)
+- [x] Store zorunluları: gizlilik politikası URL'i (T42-2), hesap silme (KVKK — `profile/privacy` var ✅), izin açıklamaları (kamera/mikrofon/bildirim — `app.json` ✅)
+- [x] iOS/Android build smoke testi (TSC + Lint OK)
+
+### Parite Kabul Kriterleri (Claude 2026-05-16 — "parite bitti" tanımı)
+FAZ 42 ancak hepsi sağlanınca "tamam" sayılır:
+1. **İçerik:** frontend'deki her gelir/içerik sayfasının mobilde karşılığı var
+   (blog, karne, ünlüler, about, faqs, contact, become-consultant) — eşdeğer
+   işlev; legal 7 sayfa erişilebilir (store zorunlu).
+2. **Aynı backend:** mobil yeni endpoint **yazmaz**; frontend ile aynı `/api`
+   + JWT; yanıt şeması parite (T42-0 sapma listesi boş).
+3. **Tek yönetim:** legal/about/faq admin `customPages`'ten; tema/banner/push/
+   kampanya admin'den yansıyor (T42-5 teyitli). UI metni tek kaynak
+   ([i18n kontratı](./contracts/i18n-single-source-contract.md)) — iki repoda
+   elle senkron YOK.
+4. **Tutarlılık:** mobil tema FAZ 38 token disiplininde; reklam gating FAZ 41
+   (backend T41-1 sonrası); i18n drift CI yeşil.
+5. **Sağlamlık:** error boundary + 401 logout + kritik ekran offline davranışı.
+6. **Store:** eas prod build + gizlilik/hesap-silme/izin metinleri tam.
+> Kısmi migrasyon "parite" sayılmaz — bir kategori (örn. legal) ya tam ya raporlu eksik.
+
+### Görev dağılımı özeti
+- **Claude:** ✅ T42-4 i18n strateji kontratı + parite kabul kriterleri (bu faz); review
+- **Codex:** T42-0 backend parite, T42-2 customPages seed/endpoint, T42-5 admin yönetim, T42-4 impl
+- **Antigravity:** T42-1 eksik ekranlar, T42-2/3 CMS+akış UI, T42-7 sağlamlık, T42-8 build
+- **Öncelik:** T42-0 → T42-1 (içerik) + T42-2 (legal — store zorunlu) → T42-3/5 → T42-4/6/7 → T42-8
+- **Not:** Backend AYNI (yeni API yazılmaz, var olan tüketilir). Admin yönetimi büyük ölçüde MEVCUT — eksik = içerik ekranları + customPages bağlama + i18n stratejisi.

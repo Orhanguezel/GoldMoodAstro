@@ -124,7 +124,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
         <div className="space-y-12">
           <BlogDetails />
 
-          <div className="max-w-4xl mx-auto space-y-12">
+          <div className="max-w-[var(--gm-w-readable)] mx-auto space-y-12">
             <FaqAccordion
               items={faqItems}
               title={locale === 'tr' ? 'Bu Yazı Hakkında Sorular' : 'Questions About This Article'}

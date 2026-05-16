@@ -1,5 +1,6 @@
 import React from 'react';
 import SynastryResultClient from './SynastryResultClient';
+import PageContainer from '@/components/common/PageContainer';
 import type { Metadata } from 'next';
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://goldmoodastro.com/api').replace(/\/$/, '');
@@ -49,8 +50,8 @@ export async function generateMetadata({
 
 export default function SynastryResultPage() {
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer as="main" width="full" pad="none" className="min-h-screen bg-[var(--gm-bg)] pt-32">
       <SynastryResultClient />
-    </main>
+    </PageContainer>
   );
 }

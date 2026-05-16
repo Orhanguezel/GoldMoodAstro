@@ -52,7 +52,7 @@ export default function TarotResultClient() {
   const drawResult = res.data;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12 md:py-20 min-h-[80vh] flex flex-col">
+    <div className="max-w-[var(--gm-w-wide)] mx-auto px-4 py-12 md:py-20 min-h-[80vh] flex flex-col">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -67,7 +67,7 @@ export default function TarotResultClient() {
         </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-[var(--gm-w-content)] mx-auto">
           {drawResult.cards.map((card: any, idx: number) => (
             <motion.div
               key={idx}
@@ -100,7 +100,7 @@ export default function TarotResultClient() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="max-w-3xl mx-auto bg-surface/50 border border-border/40 rounded-[3rem] p-10 md:p-16 shadow-2xl relative overflow-hidden"
+          className="max-w-[var(--gm-w-narrow)] mx-auto bg-surface/50 border border-border/40 rounded-[3rem] p-10 md:p-16 shadow-2xl relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-10 opacity-5">
             <Sparkles className="w-40 h-40 text-brand-gold" />

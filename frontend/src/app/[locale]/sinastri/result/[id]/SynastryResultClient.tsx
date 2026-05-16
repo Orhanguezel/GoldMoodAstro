@@ -58,7 +58,7 @@ export default function SynastryResultClient() {
   const result = res.data;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12 md:py-20 min-h-[80vh]">
+    <div className="max-w-[var(--gm-w-wide)] mx-auto px-4 py-12 md:py-20 min-h-[80vh]">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

@@ -4,6 +4,7 @@ import * as React from 'react';
 import { X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useLocaleShort } from '@/i18n';
+import { useAuthStore } from '@/features/auth/auth.store';
 import { useListPopupsPublicQuery } from '@/integrations/rtk/hooks';
 import type { PopupPublicDto } from '@/integrations/shared';
 import { cn, normPath, stripLocalePrefix } from '@/integrations/shared';
@@ -297,9 +298,15 @@ function BottombarPopup({
 export default function SitePopups() {
   const locale = useLocaleShort();
   const pathname = usePathname();
+  const { user } = useAuthStore();
+  
+  // Premium Gating — FAZ 41 T41-3: Pro kullanıcı popup/topbar görmez
+  const isPremium = user?.is_premium === true;
+
   const cleanPath = React.useMemo(() => normPath(stripLocalePrefix(pathname || '/')), [pathname]);
 
   const canRenderOnPage = React.useMemo(() => {
+    if (isPremium) return false;
     return (
       cleanPath === '/' ||
       cleanPath === '/consultants' ||

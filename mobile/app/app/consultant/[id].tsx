@@ -201,8 +201,21 @@ export default function ConsultantDetailScreen() {
 
   const dates = Array.from({ length: 7 }).map((_, i) => addDays(new Date(), i));
 
-  const showVideoOption =
-    videoFeatureEnabled && consultant?.supports_video === 1;
+  const canShowVideoOption = useMemo(() => {
+    if (!videoFeatureEnabled) return false;
+    if (selectedService) return selectedService.media_type === 'both';
+    return consultant?.supports_video === 1;
+  }, [videoFeatureEnabled, selectedService, consultant?.supports_video]);
+
+  const resolvedMediaType = useMemo(() => {
+    if (!videoFeatureEnabled) return 'audio';
+    if (selectedService) {
+      if (selectedService.media_type === 'video') return 'video';
+      if (selectedService.media_type === 'both') return mediaType;
+      return 'audio';
+    }
+    return consultant?.supports_video === 1 ? mediaType : 'audio';
+  }, [videoFeatureEnabled, selectedService, consultant?.supports_video, mediaType]);
 
   const baseSessionPrice = useMemo(() => {
     if (selectedService) return Number(selectedService.price);
@@ -215,7 +228,7 @@ export default function ConsultantDetailScreen() {
   }, [consultant?.video_session_price, baseSessionPrice]);
 
   const displaySessionPrice =
-    mediaType === 'video' && showVideoOption ? videoSessionPrice : baseSessionPrice;
+    resolvedMediaType === 'video' && !selectedService ? videoSessionPrice : baseSessionPrice;
 
   useEffect(() => {
     siteSettingsApi
@@ -225,10 +238,10 @@ export default function ConsultantDetailScreen() {
   }, []);
 
   useEffect(() => {
-    if (!showVideoOption && mediaType === 'video') {
+    if (!canShowVideoOption && mediaType === 'video') {
       setMediaType('audio');
     }
-  }, [showVideoOption, mediaType]);
+  }, [canShowVideoOption, mediaType]);
 
   useEffect(() => {
     if (!id) return;
@@ -342,7 +355,7 @@ export default function ConsultantDetailScreen() {
     const price =
       svc != null
         ? String(svc.price)
-        : mediaType === 'video' && showVideoOption
+        : resolvedMediaType === 'video' && canShowVideoOption
           ? String(videoSessionPrice)
           : consultant.session_price;
     const duration = svc?.duration_minutes ?? consultant.session_duration;
@@ -360,7 +373,7 @@ export default function ConsultantDetailScreen() {
         duration: String(duration),
         name: consultant.full_name ?? '',
         topic,
-        ...(showVideoOption ? { mediaType } : {}),
+        ...(resolvedMediaType ? { mediaType: resolvedMediaType } : {}),
         ...(svc?.id ? { serviceId: svc.id, serviceName: svc.name } : {}),
         ...(isFree ? { free: '1' } : {}),
       },
@@ -489,7 +502,7 @@ export default function ConsultantDetailScreen() {
           </View>
         ) : null}
 
-        {showVideoOption && !selectedService ? (
+        {canShowVideoOption ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Video size={18} color={colors.gold} />

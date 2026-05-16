@@ -9,6 +9,8 @@ export interface CustomPageRow {
   content?: string | null;
   content_html?: string | null;
   is_published?: number | boolean;
+  display_order?: number | null;
+  order_num?: number | null;
   created_at?: string;
 }
 
@@ -47,6 +49,7 @@ export const LEGAL_CMS_PAGES = [
   { module_key: 'terms', title: 'Kullanım Koşulları' },
   { module_key: 'cookies', title: 'Çerez Politikası' },
   { module_key: 'kvkk', title: 'KVKK Aydınlatma Metni' },
+  { module_key: 'editorial_policy', title: 'Editoryal Politika' },
   { module_key: 'privacy_notice', title: 'Gizlilik Bildirimi' },
   { module_key: 'legal_notice', title: 'Yasal Uyarı' },
 ] as const;

@@ -20,7 +20,7 @@ export default function KvkkPage() {
   }, [ui]);
 
   return (
-    <PageContainer verticalPadding="large">
+    <PageContainer width="readable" pad="page">
       <LayoutSeoBridge title={bannerTitle} noindex={false} />
       <KvkkPageContent />
     </PageContainer>

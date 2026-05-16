@@ -67,7 +67,7 @@ export default function VerifyEmailPage() {
 
   return (
     <PageContainer width="narrow" center className="bg-(--gm-bg) min-h-screen">
-      <div className="w-full max-w-md mx-auto bg-(--gm-surface) p-8 md:p-12 rounded-[24px] border border-(--gm-border-soft) shadow-(--gm-shadow-soft) text-center">
+      <div className="w-full max-w-[var(--gm-w-form)] mx-auto bg-(--gm-surface) p-8 md:p-12 rounded-[24px] border border-(--gm-border-soft) shadow-(--gm-shadow-soft) text-center">
         {mode === 'pending' && !token ? (
           <>
             <div className="w-16 h-16 bg-(--gm-gold)/10 rounded-full flex items-center justify-center mx-auto mb-4">

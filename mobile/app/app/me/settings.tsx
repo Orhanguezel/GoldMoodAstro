@@ -60,7 +60,17 @@ import {
 } from 'lucide-react-native';
 
 
-import { profilesApi, birthChartsApi } from '@/lib/api';
+import { profilesApi, birthChartsApi, getAssetUrl } from '@/lib/api';
+import AvatarUpload from '@/components/AvatarUpload';
+
+function initialsFromName(name?: string | null) {
+  return (name || 'GM')
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export default function SettingsScreen() {
   const theme = useAppTheme();
@@ -104,6 +114,7 @@ export default function SettingsScreen() {
       await profilesApi.upsertMyProfile({
         profile: {
           full_name: formData.full_name,
+          avatar_url: profile?.avatar_url,
           push_notifications: formData.push_notifications ? 1 : 0,
           email_notifications: formData.email_notifications ? 1 : 0
         }
@@ -141,6 +152,18 @@ export default function SettingsScreen() {
             <View style={styles.sectionHeader}>
               <User size={18} color={colors.gold} />
               <Text style={styles.sectionTitle}>Kişisel Bilgiler</Text>
+            </View>
+
+            <View style={{ alignItems: 'center', marginVertical: 10 }}>
+              <AvatarUpload
+                uri={profile?.avatar_url}
+                initials={initialsFromName(profile?.full_name)}
+                onUploaded={(url: string) => setProfile((prev: any) => ({ ...prev, avatar_url: url }))}
+                size={90}
+              />
+              <Text style={[styles.rowDesc, { textAlign: 'center', marginTop: 8, paddingHorizontal: 20 }]}>
+                Net bir yüz fotoğrafı yükleyin. Yüzünüzün açıkça görünmesi profil onayınızı kolaylaştırır.
+              </Text>
             </View>
 
             <View style={styles.inputGroup}>
@@ -237,4 +260,3 @@ export default function SettingsScreen() {
     </View>
   );
 }
-

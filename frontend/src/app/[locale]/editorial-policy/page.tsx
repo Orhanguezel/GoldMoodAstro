@@ -105,7 +105,7 @@ export default async function EditorialPolicyPage({ params }: Props) {
   const pageUrl = `${SITE_URL}/${locale}/editorial-policy`;
 
   return (
-    <PageContainer verticalPadding="large">
+    <PageContainer width="readable" pad="large">
       <JsonLd
         id="editorial-policy"
         data={graph([
@@ -128,7 +128,7 @@ export default async function EditorialPolicyPage({ params }: Props) {
         ])}
       />
 
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-[var(--gm-w-readable)]">
         <Link href={`/${locale}/about`} className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-(--gm-gold) hover:text-(--gm-gold-light) transition-colors">
           <span aria-hidden>←</span> {copy.back}
         </Link>
@@ -138,7 +138,7 @@ export default async function EditorialPolicyPage({ params }: Props) {
             GoldMoodAstro
           </p>
           <h1 className={`${cinzel.className} text-3xl md:text-5xl text-(--gm-text) mb-8 leading-tight`}>{copy.title}</h1>
-          <p className="max-w-2xl mx-auto text-lg leading-relaxed text-(--gm-text-dim) font-serif italic opacity-80">{copy.description}</p>
+          <p className="max-w-[var(--gm-w-narrow)] mx-auto text-lg leading-relaxed text-(--gm-text-dim) font-serif italic opacity-80">{copy.description}</p>
           <div className="mt-10 h-px w-24 bg-gradient-to-r from-transparent via-(--gm-gold)/40 to-transparent mx-auto" />
         </header>
 

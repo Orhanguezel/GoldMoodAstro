@@ -370,7 +370,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
           <h1 className="font-serif text-[clamp(2rem,4.8vw,3.2rem)] text-(--gm-gold) leading-tight">
             {copy.title}
           </h1>
-          <p className="mt-4 text-(--gm-text-dim) max-w-2xl">
+          <p className="mt-4 text-(--gm-text-dim) max-w-[var(--gm-w-narrow)]">
             {copy.lead}
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
@@ -466,7 +466,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
 
         <section className="mt-8 rounded-2xl border border-(--gm-border) bg-(--gm-surface) p-5 shadow-(--gm-shadow-soft)">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div className="max-w-xl">
+            <div className="max-w-[var(--gm-w-form)]">
               <h2 className="font-serif text-xl text-(--gm-gold)">{copy.couponTitle}</h2>
               <p className="mt-2 text-sm text-(--gm-text-dim)">{copy.couponLead}</p>
             </div>
@@ -498,7 +498,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         </section>
 
         <section className="mt-16">
-          <div className="text-center max-w-3xl mx-auto">
+          <div className="text-center max-w-[var(--gm-w-narrow)] mx-auto">
             <h3 className="mt-2 text-2xl md:text-3xl text-(--gm-gold) font-serif">
               {copy.modeHeadline}
             </h3>
@@ -603,7 +603,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
               <h4 className="font-serif text-xl text-(--gm-gold)">
                 {copy.transparencyTitle}
               </h4>
-              <p className="mt-2 text-sm text-(--gm-text-dim) max-w-2xl">
+              <p className="mt-2 text-sm text-(--gm-text-dim) max-w-[var(--gm-w-narrow)]">
                 {copy.policyBody || copy.transparencySubtitle}
               </p>
             </div>

@@ -316,7 +316,7 @@ export default function CallScreen() {
             </View>
 
             <Pressable style={styles.hangup} onPress={handleHangup}>
-              <PhoneOff size={28} color="#FAF6EF" />
+              <PhoneOff size={28} color={colors.text} />
             </Pressable>
           </View>
 

@@ -240,7 +240,7 @@ export default function KarnePage() {
 
   return (
     <PageContainer width="narrow" className="bg-(--gm-bg) pt-32 pb-24">
-      <div className="max-w-3xl mx-auto pt-12">
+      <div className="max-w-[var(--gm-w-narrow)] mx-auto pt-12">
         <Link
           href={localizePath(locale, '/dashboard')}
           className="inline-flex items-center gap-2 text-xs text-(--gm-text-dim) hover:text-(--gm-gold) tracking-[0.18em] uppercase mb-8"
@@ -273,7 +273,7 @@ export default function KarnePage() {
             <h2 className="font-serif text-2xl text-(--gm-text) mb-3">
               {isTr ? 'Şimdilik bekleyen bir karne yok' : 'No pending feedback right now'}
             </h2>
-            <p className="text-(--gm-text-dim) text-sm leading-relaxed max-w-md mx-auto">
+            <p className="text-(--gm-text-dim) text-sm leading-relaxed max-w-[var(--gm-w-form)] mx-auto">
               {isTr
                 ? 'Bir astrologdan yorum aldıktan 6 ay sonra burada karne sorularını görürsün. Cevapların hem astrologlara hem de diğer kullanıcılara yardımcı olur.'
                 : 'Six months after a reading, you will see report card questions here. Your answers help both consultants and other users.'}

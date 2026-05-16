@@ -27,7 +27,7 @@ export default function TermsPage() {
   const pageTitle = bannerTitle;
 
   return (
-    <PageContainer verticalPadding="large">
+    <PageContainer width="readable" pad="large">
       <LayoutSeoBridge title={pageTitle} noindex={false} />
       <TermsPageContent />
     </PageContainer>

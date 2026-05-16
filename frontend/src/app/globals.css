@@ -103,6 +103,9 @@
 /* ─── SHADOWS (LIGHT — softer, warm) ─── */
 :root {
   --gm-w-narrow: 768px;
+  --gm-w-form: 448px;
+  --gm-w-readable: 896px;
+  --gm-w-content: 1024px;
   --gm-w-default: 1300px;
   --gm-w-wide: 1536px;
 

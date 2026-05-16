@@ -50,6 +50,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const [messageOpen, setMessageOpen] = useState(false);
   const [requestNowBooking, { isLoading: isRequestingNow }] = useRequestNowBookingMutation();
   const { isAuthenticated } = useAuthStore();
+  const isTr = locale === 'tr';
 
   // İlk servis otomatik seçilsin (genelde ücretsiz tanışma)
   useEffect(() => {
@@ -101,6 +102,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
       name: consultant.full_name || '',
     });
     if (svc?.id) q.set('serviceId', svc.id);
+    if (svc?.media_type) q.set('serviceMediaType', svc.media_type);
     if (svc?.is_free === 1) q.set('free', '1');
     const topic = searchParams.get('topic');
     if (topic) q.set('topic', topic);
@@ -193,6 +195,13 @@ export default function ConsultantDetail({ id, locale }: Props) {
                   <span className="font-bold">{consultant.session_duration}</span>
                   <span>Dakika</span>
                 </div>
+                {consultant.supports_video && (
+                  <div className="flex items-center gap-2 text-(--gm-text-dim) text-sm">
+                    <div className="w-2 h-2 rounded-full bg-(--gm-success) animate-pulse" />
+                    <span className="font-bold">{isTr ? 'Görüntülü' : 'Video'}</span>
+                    <span className="opacity-70">{isTr ? 'Görüşme Mevcut' : 'Available'}</span>
+                  </div>
+                )}
                 {karne && karne.total_answered > 0 && typeof karne.score === 'number' && (
                   <div
                     className="flex items-center gap-2 text-(--gm-text-dim) text-sm"

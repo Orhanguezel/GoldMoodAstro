@@ -1,8 +1,12 @@
 import React, { Component, type ReactNode } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 
+import { defaultAppTheme } from '@/theme';
+
 type Props = { children: ReactNode; onReset?: () => void };
 type State = { hasError: boolean };
+
+const { colors } = defaultAppTheme;
 
 const styles = StyleSheet.create({
   wrap: {
@@ -10,17 +14,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#0D0B1E',
+    backgroundColor: colors.bg,
   },
-  title: { fontSize: 20, color: '#F0E6FF', marginBottom: 12, textAlign: 'center' },
-  body: { fontSize: 14, color: '#7A6DA0', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
+  title: { fontSize: 20, color: colors.text, marginBottom: 12, textAlign: 'center' },
+  body: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   btn: {
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 999,
-    backgroundColor: '#D4AF37',
+    backgroundColor: colors.gold,
   },
-  btnText: { color: '#1A1630', fontWeight: '700' },
+  btnText: { color: colors.ink, fontWeight: '700' },
 });
 
 /** T42-7 — Beklenmeyen render hatalarında kullanıcı dostu ekran */

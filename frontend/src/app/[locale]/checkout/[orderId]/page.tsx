@@ -7,6 +7,7 @@ import { useLocaleShort } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 import { useGetMyOrderQuery, useInitIyzicoPaymentMutation } from '@/integrations/rtk/hooks';
 import { useAuthStore } from '@/features/auth/auth.store';
+import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 
 const TEXTS: Record<string, Record<string, string>> = {
@@ -165,7 +166,7 @@ export default function CheckoutPage() {
     <>
       <Banner title={t.banner} />
       <section className="bg-bg-primary py-16">
-        <div className="container mx-auto max-w-2xl px-4">
+        <PageContainer width="narrow" pad="none">
           <div className="border border-border-light bg-bg-card p-6 shadow-sm space-y-6">
             {/* Order Summary */}
             <div className="space-y-2">
@@ -236,7 +237,7 @@ export default function CheckoutPage() {
               </div>
             )}
           </div>
-        </div>
+        </PageContainer>
       </section>
     </>
   );

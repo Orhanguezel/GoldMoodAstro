@@ -359,7 +359,7 @@ export default function AvailabilityPanel() {
       </div>
 
       {dirty && (
-        <div className="sticky bottom-4 mx-auto max-w-md p-4 rounded-2xl bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] shadow-2xl flex items-center justify-between gap-4">
+        <div className="sticky bottom-4 mx-auto max-w-[var(--gm-w-form)] p-4 rounded-2xl bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] shadow-2xl flex items-center justify-between gap-4">
           <span className="text-[11px] font-bold">Kaydedilmemiş değişiklikler var.</span>
           <button
             onClick={handleSave}

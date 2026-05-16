@@ -24,6 +24,19 @@ export function CustomCssTab() {
 
   const busy = isLoading || isFetching || isSaving;
 
+  const purgeFrontendThemeCache = async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/revalidate-proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true, tags: ['custom_css', 'design_tokens', 'site-settings'] }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  };
+
   const handleSave = async () => {
     try {
       await updateSetting({
@@ -31,7 +44,12 @@ export function CustomCssTab() {
         value: cssValue,
         locale: '*',
       }).unwrap();
-      toast.success('Özel CSS kaydedildi. 5 dakika içinde yansır.');
+      const revalidated = await purgeFrontendThemeCache();
+      toast.success(
+        revalidated
+          ? 'Özel CSS kaydedildi ve frontend cache temizlendi.'
+          : 'Özel CSS kaydedildi (cache kısa süre içinde yenilenecek).',
+      );
     } catch (err) {
       toast.error('Kaydetme hatası.');
     }

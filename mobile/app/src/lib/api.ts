@@ -723,8 +723,16 @@ export const coffeeApi = {
 };
 
 export const storageApi = {
-  upload: async (formData: FormData): Promise<{ id: string; url?: string | null }> => {
-    const res = await fetch(`${API_URL}/storage/coffee/upload?upsert=1`, {
+  upload: async (
+    formData: FormData,
+    options: { bucket?: string; path?: string; upsert?: boolean } = {}
+  ): Promise<{ id: string; url?: string | null; path?: string }> => {
+    const bucket = options.bucket ?? 'coffee';
+    const params = new URLSearchParams();
+    if (options.path) params.set('path', options.path);
+    if (options.upsert) params.set('upsert', '1');
+
+    const res = await fetch(`${API_URL}/storage/${bucket}/upload?${params.toString()}`, {
       method: 'POST',
       headers: _authToken ? { Authorization: `Bearer ${_authToken}` } : undefined,
       body: formData,
@@ -733,7 +741,14 @@ export const storageApi = {
       const err = await res.json().catch(() => ({}));
       throw new Error((err as { message?: string })?.message ?? `HTTP ${res.status}`);
     }
-    return res.json() as Promise<{ id: string; url?: string | null }>;
+    const data = await res.json();
+    // Wrap to match common response shape
+    const item = data.items?.[0] ?? data;
+    return {
+      id: item.id || item.path,
+      url: item.url,
+      path: item.path,
+    };
   },
 };
 

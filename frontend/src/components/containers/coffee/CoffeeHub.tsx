@@ -18,7 +18,7 @@ import ShareCard from '@/components/common/ShareCard';
 import ConsultantFunnelCTA from '@/components/common/ConsultantFunnelCTA';
 import { useReadCoffeeMutation } from '@/integrations/rtk/public/coffee.public.endpoints';
 import { useUploadFileMutation } from '@/integrations/rtk/public/storage_public.endpoints';
-import { prepareImageForUpload } from '@/components/common/image-capture';
+import { PhotoCaptureInput, type PrepareImageResult } from '@/components/common/image-capture';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 const fraunces = Fraunces({ subsets: ['latin'], weight: ['400', '700'], style: ['normal', 'italic'] });
@@ -55,19 +55,12 @@ export default function CoffeeHub() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handlePicked = async (result: PrepareImageResult, index: number) => {
+    const { file: processedFile } = result;
 
     setError(null);
 
     try {
-      // T40-1/2: Client-side resize/compress + EXIF
-      const { file: processedFile } = await prepareImageForUpload(file, {
-        maxEdge: 1600,
-        quality: 0.8,
-      });
-
       // Preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -91,8 +84,8 @@ export default function CoffeeHub() {
         setImageIds(newIds);
       }
     } catch (err) {
-      console.error('Processing/Upload failed:', err);
-      setError('Fotoğraf yüklenemedi veya işlenemedi. Lütfen tekrar deneyin.');
+      console.error('Upload failed:', err);
+      setError('Fotoğraf yüklenemedi. Lütfen tekrar deneyin.');
     }
   };
 
@@ -225,30 +218,45 @@ export default function CoffeeHub() {
                 { label: 'Tabak', desc: 'Süzülen izler' }
               ].map((slot, idx) => (
                 <div key={idx} className="aspect-[3/4] relative group">
-                  {images[idx] ? (
-                    <div className="w-full h-full rounded-[3rem] overflow-hidden border-2 border-(--gm-gold)/40 relative shadow-(--gm-shadow-soft)">
-                      <Image src={images[idx]} alt={slot.label} fill className="object-cover" />
-                      <label className="absolute inset-0 bg-[var(--gm-bg-deep)]/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer backdrop-blur-sm">
-                        <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange(e, idx)} className="hidden" />
-                        <Camera className="w-10 h-10 text-(--gm-gold) mb-3" />
-                        <span className="text-[10px] font-bold text-[var(--gm-text)] uppercase tracking-[0.3em]">FOTOĞRAFI DEĞİŞTİR</span>
-                      </label>
-                      <div className="absolute top-6 right-6 bg-(--gm-gold) rounded-full p-2 shadow-(--gm-shadow-gold)">
-                        <CheckCircle2 className="w-6 h-6 text-(--gm-bg-deep)" />
+                  <PhotoCaptureInput
+                    capture="environment"
+                    offerGalleryChoice={true}
+                    onPicked={(res) => handlePicked(res, idx)}
+                    onError={(code) => setError(code === 'not_an_image' ? 'Lütfen bir resim dosyası seçin.' : 'Resim çok büyük veya yüklenemedi.')}
+                    prepareOptions={{
+                      maxEdge: 1600,
+                      quality: 0.8,
+                      targetMaxKB: 600
+                    }}
+                    className="w-full h-full"
+                  >
+                    {images[idx] ? (
+                      <div className="w-full h-full rounded-[3rem] overflow-hidden border-2 border-(--gm-gold)/40 relative shadow-(--gm-shadow-soft)">
+                        <Image src={images[idx]} alt={slot.label} fill className="object-cover" />
+                        <div className="absolute inset-0 bg-[var(--gm-bg-deep)]/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                          <Camera className="w-10 h-10 text-(--gm-gold) mb-3" />
+                          <span className="text-[10px] font-bold text-[var(--gm-text)] uppercase tracking-[0.3em]">FOTOĞRAFI DEĞİŞTİR</span>
+                        </div>
+                        <div className="absolute top-6 right-6 bg-(--gm-gold) rounded-full p-2 shadow-(--gm-shadow-gold)">
+                          <CheckCircle2 className="w-6 h-6 text-(--gm-bg-deep)" />
+                        </div>
+                        {/* Guide mask overlay */}
+                        <div className="absolute inset-0 border-[40px] border-[var(--gm-bg-deep)]/20 pointer-events-none rounded-[3rem]">
+                           <div className="w-full h-full border border-dashed border-(--gm-gold)/30 rounded-2xl" />
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <label className="w-full h-full rounded-[3rem] border-2 border-dashed border-(--gm-border-soft) bg-(--gm-surface)/40 flex flex-col items-center justify-center gap-6 cursor-pointer hover:border-(--gm-gold)/40 hover:bg-(--gm-gold)/5 transition-all shadow-lg group">
-                      <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange(e, idx)} className="hidden" />
-                      <div className="w-20 h-20 rounded-[1.5rem] bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold) group-hover:scale-110 transition-transform">
-                        <Camera className="w-10 h-10" />
+                    ) : (
+                      <div className="w-full h-full rounded-[3rem] border-2 border-dashed border-(--gm-border-soft) bg-(--gm-surface)/40 flex flex-col items-center justify-center gap-6 cursor-pointer hover:border-(--gm-gold)/40 hover:bg-(--gm-gold)/5 transition-all shadow-lg">
+                        <div className="w-20 h-20 rounded-[1.5rem] bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold) group-hover:scale-110 transition-transform">
+                          <Camera className="w-10 h-10" />
+                        </div>
+                        <div className="text-center space-y-2">
+                          <span className="block text-xs font-bold tracking-[0.3em] text-(--gm-gold) uppercase">{slot.label}</span>
+                          <span className="block text-[11px] text-(--gm-muted) font-serif italic opacity-60">{slot.desc}</span>
+                        </div>
                       </div>
-                      <div className="text-center space-y-2">
-                        <span className="block text-xs font-bold tracking-[0.3em] text-(--gm-gold) uppercase">{slot.label}</span>
-                        <span className="block text-[11px] text-(--gm-muted) font-serif italic opacity-60">{slot.desc}</span>
-                      </div>
-                    </label>
-                  )}
+                    )}
+                  </PhotoCaptureInput>
                 </div>
               ))}
             </div>

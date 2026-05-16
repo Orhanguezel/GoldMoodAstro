@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils';
 export type PageContainerProps<T extends React.ElementType = 'div'> = {
   children: React.ReactNode;
   className?: string;
-  width?: 'narrow' | 'default' | 'wide' | 'full';
-  pad?: 'page' | 'tight' | 'none';
+  width?: 'narrow' | 'readable' | 'content' | 'default' | 'wide' | 'full';
+  pad?: 'page' | 'tight' | 'large' | 'none';
   as?: T;
   /** @deprecated Use width="full". Kept for existing call sites. */
   fullWidth?: boolean;
@@ -19,6 +19,8 @@ export type PageContainerProps<T extends React.ElementType = 'div'> = {
 
 const widthClasses = {
   narrow: 'max-w-[var(--gm-w-narrow)]',
+  readable: 'max-w-[var(--gm-w-readable)]',
+  content: 'max-w-[var(--gm-w-content)]',
   default: 'max-w-[var(--gm-w-default)]',
   wide: 'max-w-[var(--gm-w-wide)]',
   full: 'max-w-none',
@@ -28,6 +30,7 @@ const padClasses = {
   none: 'py-0',
   tight: 'py-8 md:py-12',
   page: 'py-12 md:py-20',
+  large: 'py-12 md:py-32',
 };
 
 const legacyPadMap = {

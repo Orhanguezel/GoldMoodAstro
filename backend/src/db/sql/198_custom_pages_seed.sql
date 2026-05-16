@@ -1,6 +1,7 @@
 -- =============================================================
 -- FILE: 198_custom_pages_seed.sql
--- Seed: about, blog landing, kvkk, gizlilik, kullanim-sartlari, cerez-politikasi
+-- Seed: about, faq, blog landing, kvkk, gizlilik, kullanim-sartlari,
+-- cerez-politikasi, gizlilik bildirimi, yasal uyari, editorial policy
 -- Content stored as JSON {"html":"..."} per backend convention
 -- =============================================================
 
@@ -15,7 +16,11 @@ INSERT INTO custom_pages (id, module_key, is_published, featured, display_order,
   ('cp-kvkk',        'kvkk',    1, 0, 30, 30),
   ('cp-gizlilik',    'privacy', 1, 0, 40, 40),
   ('cp-terms',       'terms',   1, 0, 50, 50),
-  ('cp-cookie',      'cookies', 1, 0, 60, 60)
+  ('cp-cookie',      'cookies', 1, 0, 60, 60),
+  ('cp-faq',         'faq',     1, 0, 70, 70),
+  ('cp-privacy-not', 'privacy_notice', 1, 0, 80, 80),
+  ('cp-legal-not',   'legal_notice', 1, 0, 90, 90),
+  ('cp-editorial',   'editorial_policy', 1, 0, 100, 100)
 ON DUPLICATE KEY UPDATE module_key = VALUES(module_key), display_order = VALUES(display_order), featured = VALUES(featured);
 
 -- ---- ABOUT --------------------------------------------------------------
@@ -29,6 +34,58 @@ INSERT INTO custom_pages_i18n (id, custom_page_id, locale, title, slug, content,
   ('cpi-about-de', 'cp-about', 'de', 'Über uns', 'ueber-uns',
    '{"html":"<h2>Über GoldMoodAstro</h2><p>GoldMoodAstro übersetzt moderne Astrologie in eine warme, menschliche Sprache. Geburtshoroskop, Synastrie, Yıldızname und tägliche Transite — alles in einem fließenden Erlebnis.</p><h3>Mission</h3><p>Astrologie nicht als deterministisches Werkzeug, sondern als Spiegel für Selbstwahrnehmung, Beziehungen und Entscheidungen anzubieten.</p>"}',
    'Was GoldMoodAstro ist.', 'Über uns — GoldMoodAstro', 'Über GoldMoodAstro: Mission, Vision und moderner Astrologie-Ansatz.')
+ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content);
+
+-- ---- GIZLILIK BILDIRIMI -------------------------------------------------
+INSERT INTO custom_pages_i18n (id, custom_page_id, locale, title, slug, content, summary, meta_title, meta_description) VALUES
+  ('cpi-pn-tr', 'cp-privacy-not', 'tr', 'Gizlilik Bildirimi', 'gizlilik-bildirimi',
+   '{"html":"<h2>Gizlilik Bildirimi</h2><p>GoldMoodAstro, hesap ve doğum verilerinizi yalnızca hizmeti sunmak, güvenliği sağlamak ve yasal yükümlülükleri yerine getirmek için işler.</p><h3>Kontrol Sizde</h3><p>Verilerinizi indirebilir, düzeltme isteyebilir veya hesabınızı silme talebi oluşturabilirsiniz.</p><h3>Üçüncü Taraflar</h3><p>Ödeme, depolama, bildirim ve yorum üretimi sağlayıcıları yalnızca gerekli veriyle çalışır.</p>"}',
+   'Kısa gizlilik bildirimi.', 'Gizlilik Bildirimi — GoldMoodAstro', 'GoldMoodAstro kısa gizlilik bildirimi ve veri kontrol hakları.'),
+  ('cpi-pn-en', 'cp-privacy-not', 'en', 'Privacy Notice', 'privacy-notice',
+   '{"html":"<h2>Privacy Notice</h2><p>GoldMoodAstro processes account and birth data only to provide the service, protect security and meet legal obligations.</p><h3>You stay in control</h3><p>You may export your data, request correction or request account deletion.</p><h3>Third parties</h3><p>Payment, storage, notification and reading-generation providers receive only the data required for their role.</p>"}',
+   'Short privacy notice.', 'Privacy Notice — GoldMoodAstro', 'Short privacy notice and data control rights for GoldMoodAstro.'),
+  ('cpi-pn-de', 'cp-privacy-not', 'de', 'Datenschutzhinweis', 'datenschutzhinweis',
+   '{"html":"<h2>Datenschutzhinweis</h2><p>GoldMoodAstro verarbeitet Konto- und Geburtsdaten nur zur Bereitstellung des Dienstes, zur Sicherheit und zur Erfüllung rechtlicher Pflichten.</p><h3>Ihre Kontrolle</h3><p>Sie können Daten exportieren, Berichtigung verlangen oder die Löschung Ihres Kontos beantragen.</p>"}',
+   'Kurzer Datenschutzhinweis.', 'Datenschutzhinweis — GoldMoodAstro', 'Kurzer Datenschutzhinweis und Kontrollrechte.')
+ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content);
+
+-- ---- YASAL UYARI --------------------------------------------------------
+INSERT INTO custom_pages_i18n (id, custom_page_id, locale, title, slug, content, summary, meta_title, meta_description) VALUES
+  ('cpi-ln-tr', 'cp-legal-not', 'tr', 'Yasal Uyarı', 'yasal-uyari',
+   '{"html":"<h2>Yasal Uyarı</h2><p>GoldMoodAstro içerikleri kişisel farkındalık ve eğlence amaçlıdır. Tıbbi, hukuki, psikolojik veya finansal danışmanlık yerine geçmez.</p><h3>Sorumluluk</h3><p>Platformdaki yorumlar ve danışman görüşmeleri kullanıcının kendi kararının yerine geçmez. Acil sağlık veya güvenlik durumlarında ilgili resmi kurumlara başvurun.</p><h3>Fikri Mülkiyet</h3><p>Metin, görsel, yazılım ve marka unsurları GoldMoodAstro veya lisans verenlerine aittir.</p>"}',
+   'Hizmet niteliği ve sorumluluk sınırları.', 'Yasal Uyarı — GoldMoodAstro', 'GoldMoodAstro hizmetleri için yasal uyarı, sorumluluk ve fikri mülkiyet açıklaması.'),
+  ('cpi-ln-en', 'cp-legal-not', 'en', 'Legal Notice', 'legal-notice',
+   '{"html":"<h2>Legal Notice</h2><p>GoldMoodAstro content is for self-awareness and entertainment. It is not a substitute for medical, legal, psychological or financial advice.</p><h3>Responsibility</h3><p>Readings and consultant sessions do not replace your own judgement. In urgent health or safety situations, contact the relevant official services.</p><h3>Intellectual property</h3><p>Text, media, software and brand assets belong to GoldMoodAstro or its licensors.</p>"}',
+   'Service nature and liability limits.', 'Legal Notice — GoldMoodAstro', 'Legal notice, liability and intellectual property information for GoldMoodAstro.'),
+  ('cpi-ln-de', 'cp-legal-not', 'de', 'Rechtlicher Hinweis', 'rechtlicher-hinweis',
+   '{"html":"<h2>Rechtlicher Hinweis</h2><p>GoldMoodAstro-Inhalte dienen Selbstreflexion und Unterhaltung. Sie ersetzen keine medizinische, rechtliche, psychologische oder finanzielle Beratung.</p><h3>Verantwortung</h3><p>Deutungen und Beratungen ersetzen nicht Ihre eigene Entscheidung. In Notfällen wenden Sie sich an offizielle Stellen.</p>"}',
+   'Art des Dienstes und Haftungsgrenzen.', 'Rechtlicher Hinweis — GoldMoodAstro', 'Rechtlicher Hinweis und Haftungsgrenzen fuer GoldMoodAstro.')
+ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content);
+
+-- ---- EDITORIAL POLICY ---------------------------------------------------
+INSERT INTO custom_pages_i18n (id, custom_page_id, locale, title, slug, content, summary, meta_title, meta_description) VALUES
+  ('cpi-ep-tr', 'cp-editorial', 'tr', 'Editoryal Politika', 'editorial-policy',
+   '{"html":"<h2>Editoryal Politika</h2><p>GoldMoodAstro içerikleri astrologlar, içerik editörleri ve otomasyon araçlarının kontrollü katkısıyla hazırlanır.</p><h3>İlke</h3><p>İçerikler açık, saygılı, korku veya baskı yaratmayan bir dille yazılır. Kesin gelecek vaadi, sağlık teşhisi veya finansal yönlendirme yapılmaz.</p><h3>Gözden Geçirme</h3><p>Önemli rehber içerikler periyodik olarak güncellenir; kullanıcı geri bildirimleri editoryal süreçte dikkate alınır.</p>"}',
+   'GoldMoodAstro içerik üretim ilkeleri.', 'Editoryal Politika — GoldMoodAstro', 'GoldMoodAstro içeriklerinin nasıl hazırlandığını ve gözden geçirildiğini açıklayan editoryal politika.'),
+  ('cpi-ep-en', 'cp-editorial', 'en', 'Editorial Policy', 'editorial-policy',
+   '{"html":"<h2>Editorial Policy</h2><p>GoldMoodAstro content is prepared with controlled contributions from astrologers, editors and automation tools.</p><h3>Principles</h3><p>Content is written in a clear, respectful and non-alarming tone. We do not promise certainty, diagnose health conditions or provide financial direction.</p><h3>Review</h3><p>Important guidance content is reviewed periodically and user feedback is considered in the editorial process.</p>"}',
+   'GoldMoodAstro content principles.', 'Editorial Policy — GoldMoodAstro', 'How GoldMoodAstro content is prepared, reviewed and kept responsible.'),
+  ('cpi-ep-de', 'cp-editorial', 'de', 'Redaktionelle Richtlinie', 'redaktionelle-richtlinie',
+   '{"html":"<h2>Redaktionelle Richtlinie</h2><p>GoldMoodAstro-Inhalte entstehen mit kontrollierten Beiträgen von Astrologen, Redakteuren und Automatisierung.</p><h3>Grundsätze</h3><p>Die Inhalte sind klar, respektvoll und nicht alarmierend. Es gibt keine sicheren Zukunftsversprechen, Diagnosen oder Finanzberatung.</p>"}',
+   'GoldMoodAstro Inhaltsgrundsätze.', 'Redaktionelle Richtlinie — GoldMoodAstro', 'Wie GoldMoodAstro Inhalte erstellt und prüft.')
+ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content);
+
+-- ---- FAQ ----------------------------------------------------------------
+INSERT INTO custom_pages_i18n (id, custom_page_id, locale, title, slug, content, summary, meta_title, meta_description) VALUES
+  ('cpi-faq-tr', 'cp-faq', 'tr', 'Sık Sorulan Sorular', 'sss',
+   '{"html":"<h2>Sık Sorulan Sorular</h2><h3>GoldMoodAstro ne sunar?</h3><p>Doğum haritası, günlük yorum, tarot, kahve falı, sinastri ve onaylı danışmanlarla canlı görüşme deneyimleri sunar.</p><h3>Astroloji yorumları kesin gelecek tahmini midir?</h3><p>Hayır. Yorumlar kişisel farkındalık ve eğlence amaçlıdır; tıbbi, hukuki veya finansal tavsiye yerine geçmez.</p><h3>Premium üyelik ne sağlar?</h3><p>Premium üyelik reklamsız deneyim, ek içerikler ve öncelikli özellikler sunar.</p><h3>Hesabımı silebilir miyim?</h3><p>Evet. Profildeki Gizlilik ve Veri alanından silme talebi oluşturabilirsiniz. Talep 7 günlük soğuma süresiyle işlenir.</p>"}',
+   'GoldMoodAstro hakkında sık sorulan sorular.', 'Sık Sorulan Sorular — GoldMoodAstro', 'GoldMoodAstro hizmetleri, premium üyelik ve hesap yönetimi hakkında sık sorulan sorular.'),
+  ('cpi-faq-en', 'cp-faq', 'en', 'Frequently Asked Questions', 'faq',
+   '{"html":"<h2>Frequently Asked Questions</h2><h3>What does GoldMoodAstro offer?</h3><p>Birth charts, daily readings, tarot, coffee readings, synastry and live sessions with verified consultants.</p><h3>Are astrology readings certain predictions?</h3><p>No. Readings are for self-awareness and entertainment; they are not medical, legal or financial advice.</p><h3>What does Premium include?</h3><p>Premium includes an ad-free experience, additional content and priority features.</p><h3>Can I delete my account?</h3><p>Yes. You can request deletion from Privacy & Data. A 7-day cooling-off period applies.</p>"}',
+   'Frequently asked questions about GoldMoodAstro.', 'FAQ — GoldMoodAstro', 'Common questions about GoldMoodAstro services, Premium and account management.'),
+  ('cpi-faq-de', 'cp-faq', 'de', 'Häufige Fragen', 'faq',
+   '{"html":"<h2>Häufige Fragen</h2><h3>Was bietet GoldMoodAstro?</h3><p>Geburtshoroskope, Tagesdeutungen, Tarot, Kaffeesatzlesen, Synastrie und Live-Sitzungen mit geprüften Beratern.</p><h3>Sind astrologische Deutungen sichere Vorhersagen?</h3><p>Nein. Die Inhalte dienen Selbstreflexion und Unterhaltung; sie ersetzen keine medizinische, rechtliche oder finanzielle Beratung.</p><h3>Kann ich mein Konto löschen?</h3><p>Ja. Löschanfragen werden mit einer 7-tägigen Bedenkzeit verarbeitet.</p>"}',
+   'Häufige Fragen zu GoldMoodAstro.', 'FAQ — GoldMoodAstro', 'Häufige Fragen zu GoldMoodAstro, Premium und Kontoverwaltung.')
 ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content);
 
 -- ---- BLOG LANDING -------------------------------------------------------

@@ -8,6 +8,8 @@
     ".": "./src/index.ts",
     "./appConfig": "./src/appConfig.ts",
     "./brand": "./src/brand.ts",
+    "./mobileI18n": "./src/mobileI18n.ts",
+    "./relax-music": "./src/relax-music.ts",
     "./tsconfig.base": "./tsconfig.base.json",
     "./tailwind-tokens": "./tailwind-tokens.css"
   },

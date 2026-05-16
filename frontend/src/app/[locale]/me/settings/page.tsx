@@ -21,6 +21,7 @@ import {
   useUpdateBirthChartMutation
 } from '@/integrations/rtk/hooks';
 import { toast } from 'sonner';
+import PageContainer from '@/components/common/PageContainer';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -64,8 +65,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background pt-32 pb-20 px-4">
-      <div className="max-w-3xl mx-auto space-y-12">
+    <PageContainer as="main" className="min-h-screen bg-background pt-32 pb-20">
+      <div className="max-w-[var(--gm-w-narrow)] mx-auto space-y-12">
         <div className="text-center space-y-4">
           <h1 className={`${cinzel.className} text-4xl md:text-5xl text-foreground`}>Ayarlar</h1>
           <p className="text-muted-foreground italic font-serif">Kişisel bilgilerinizi ve tercihlerinizi yönetin.</p>
@@ -174,6 +175,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </main>
+    </PageContainer>
   );
 }

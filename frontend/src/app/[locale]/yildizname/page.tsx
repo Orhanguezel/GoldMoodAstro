@@ -93,7 +93,7 @@ export default function YildiznamePage() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto relative z-10">
+      <div className="max-w-[var(--gm-w-narrow)] mx-auto relative z-10">
         <AnimatePresence mode="wait">
           {step === 'intro' && (
             <motion.div
@@ -111,12 +111,12 @@ export default function YildiznamePage() {
                   Yıldızname <br />
                   <span className="text-(--gm-gold)">Ebced Sırrı</span>
                 </h1>
-                <p className={`${fraunces.className} text-(--gm-text-dim) text-xl max-w-xl mx-auto leading-relaxed`}>
+                <p className={`${fraunces.className} text-(--gm-text-dim) text-xl max-w-[var(--gm-w-form)] mx-auto leading-relaxed`}>
                   İsmin ve anne adın, evrendeki sayısal titreşimindir. Kadim Ebced hesabı ile 28 Ay Menzili'ndeki yerini keşfet.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left max-w-2xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left max-w-[var(--gm-w-narrow)] mx-auto">
                 {[
                   { t: 'Kadim Hesap', d: 'Binlerce yıllık Ebced sistemi.' },
                   { t: 'Ay Menzilleri', d: '28 farklı enerji duraklarından birisin.' },
@@ -144,7 +144,7 @@ export default function YildiznamePage() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
-              className="max-w-md mx-auto space-y-12"
+              className="max-w-[var(--gm-w-form)] mx-auto space-y-12"
             >
               <div className="flex items-center gap-4">
                 <button onClick={handleBack} className="w-12 h-12 rounded-full border border-(--gm-border-soft) flex items-center justify-center hover:bg-(--gm-surface-high) transition-colors">

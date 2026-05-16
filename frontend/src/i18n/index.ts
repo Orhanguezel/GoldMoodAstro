@@ -6,7 +6,6 @@
 //   '@/i18n/LangBoot'
 //   '@/i18n/HtmlLangSync'
 //   '@/i18n/IntlProviderClient'
-//   '@/i18n/request'
 
 export * from './activeLocales';
 export * from './locale';

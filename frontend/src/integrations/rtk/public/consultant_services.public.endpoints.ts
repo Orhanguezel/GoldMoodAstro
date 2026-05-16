@@ -13,6 +13,7 @@ export interface ConsultantServicePublic {
   duration_minutes: number;
   price: string; // DECIMAL string: "0.00", "750.00"
   currency: string;
+  media_type: 'audio' | 'video' | 'both';
   is_free: number;
   is_active: number;
   sort_order: number;

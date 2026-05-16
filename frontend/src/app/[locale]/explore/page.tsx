@@ -39,12 +39,12 @@ export default async function ExplorePage({
   return (
     <PageContainer as="main" width="full" pad="none" withHeaderOffset className="bg-(--gm-bg) text-(--gm-text)">
       <section className="px-6 pt-32 pb-20 border-b border-[var(--gm-border-soft)]">
-        <div className="max-w-5xl mx-auto text-center">
+        <div className="max-w-[var(--gm-w-content)] mx-auto text-center">
           <span className="section-label">{isTr ? 'KEŞFET' : 'EXPLORE'}</span>
           <h1 className="font-serif text-[clamp(2.8rem,6vw,5.5rem)] font-light leading-[1.05] mt-6 mb-8">
             {isTr ? 'Danışmanlık akışını keşfet' : 'Explore the guidance flow'}
           </h1>
-          <p className="max-w-2xl mx-auto text-[var(--gm-text-dim)] font-light leading-relaxed mb-10">
+          <p className="max-w-[var(--gm-w-narrow)] mx-auto text-[var(--gm-text-dim)] font-light leading-relaxed mb-10">
             {isTr
               ? 'Uzmanlık kategorilerini inceleyin, öne çıkan danışmanlara göz atın ve size uygun randevu akışını seçin.'
               : 'Browse expertise categories, featured consultants, and the booking flow that fits your needs.'}

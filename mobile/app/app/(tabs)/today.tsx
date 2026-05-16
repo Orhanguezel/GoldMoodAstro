@@ -146,10 +146,10 @@ export default function TodayScreen() {
     { id: 'connect', label: 'Danışmanlar', icon: MessageSquare, route: '/(tabs)/connect', color: colors.goldLight },
     { id: 'profile', label: 'Profil', icon: User, route: '/(tabs)/profile', color: colors.textDim },
     { id: 'coffee', label: 'Kahve Falı', icon: Coffee, route: '/coffee', color: colors.goldDim },
-    { id: 'ruya', label: 'Rüya Tabiri', icon: Moon, route: '/dreams', color: '#9B7EC8' },
-  { id: 'yildizname', label: 'Yıldızname', icon: Sparkles, route: '/yildizname', color: '#D4AF37' },
+    { id: 'ruya', label: 'Rüya Tabiri', icon: Moon, route: '/dreams', color: colors.plumSoft },
+  { id: 'yildizname', label: 'Yıldızname', icon: Sparkles, route: '/yildizname', color: colors.gold },
   { id: 'sinastri', label: 'Aşk Uyumu', icon: Heart, route: '/synastry', color: colors.goldLight },
-  { id: 'numerology', label: 'Numeroloji', icon: Hash, route: '/numerology', color: '#5B9BD5' },
+  { id: 'numerology', label: 'Numeroloji', icon: Hash, route: '/numerology', color: colors.info },
   ];
 
   if (authLoading || (loading && !refreshing)) {

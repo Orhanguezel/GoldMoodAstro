@@ -112,7 +112,7 @@ export default function ProfilePrivacyPage() {
 
   return (
     <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-[var(--gm-w-narrow)]">
         <h1 className="text-3xl text-(--gm-text) font-serif mb-2">Gizlilik ve Hesap</h1>
         <p className="mb-8 text-(--gm-text-dim)">
           KVKK kapsamında kişisel verileriniz ve hesap güvenliği için işlemler.

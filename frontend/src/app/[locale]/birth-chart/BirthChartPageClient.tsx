@@ -199,10 +199,10 @@ export default function BirthChartPageClient() {
 
   return (
     <main className="min-h-screen bg-[var(--gm-bg)] px-4 pb-24 pt-32">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-[var(--gm-w-wide)]">
         {!chart ? (
           <>
-            <div className="mx-auto mb-16 max-w-2xl text-center">
+            <div className="mx-auto mb-16 max-w-[var(--gm-w-narrow)] text-center">
               <div className="flex items-center justify-center gap-3 mb-6">
                 <span className="w-8 h-px bg-[var(--gm-gold)]" />
                 <span className="text-[var(--gm-gold)] font-bold text-xs uppercase tracking-[0.2em]">Kozmik Rehber</span>
@@ -215,7 +215,7 @@ export default function BirthChartPageClient() {
                 Doğduğunuz anın gezegen konumlarını, ev yerleşimlerini ve temel açılarını keşfederek ruhsal DNA'nızı analiz edin.
               </p>
             </div>
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-[var(--gm-w-narrow)] mx-auto">
               <BirthChartForm onSuccess={(c) => { setChart(c); setShowForm(false); }} />
             </div>
           </>

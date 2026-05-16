@@ -418,8 +418,8 @@ export default function DashboardPage() {
   ];
 
   return (
-    <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
-      <div className="max-w-6xl mx-auto">
+    <PageContainer width="wide" className="bg-(--gm-bg)" verticalPadding="large">
+      <div className="w-full">
         {/* User card */}
         <header className="mb-8 rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10 shadow-(--gm-shadow-soft)">
           <AvatarUpload
@@ -544,7 +544,7 @@ export default function DashboardPage() {
         )}
 
         {tab === 'profile' && (
-          <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 max-w-3xl shadow-(--gm-shadow-soft)">
+          <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 max-w-[var(--gm-w-narrow)] shadow-(--gm-shadow-soft)">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold-deep)">
                 <UserIcon size={18} />
@@ -903,7 +903,7 @@ export default function DashboardPage() {
 
         {/* Security / Password */}
         {tab === 'security' && (
-          <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 max-w-3xl shadow-(--gm-shadow-soft)">
+          <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 max-w-[var(--gm-w-narrow)] shadow-(--gm-shadow-soft)">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold-deep)">
                 <Lock size={18} />

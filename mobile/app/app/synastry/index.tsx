@@ -500,7 +500,7 @@ export default function SynastryScreen() {
                         </View>
 
                         <Pressable style={[styles.submitBtn, { backgroundColor: colors.plumSoft }]} onPress={handleManual}>
-                           <Text style={[styles.submitText, { color: '#fff' }]}>ANALİZİ BAŞLAT (250 KREDİ)</Text>
+                           <Text style={[styles.submitText, { color: colors.ink }]}>ANALİZİ BAŞLAT (250 KREDİ)</Text>
                         </Pressable>
                      </View>
                   </View>

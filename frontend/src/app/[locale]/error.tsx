@@ -23,7 +23,7 @@ export default function ErrorPage({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
-      <div className="max-w-2xl w-full animate-fade-in-up">
+      <div className="max-w-[var(--gm-w-narrow)] w-full animate-fade-in-up">
         <div className="flex justify-center mb-8">
           <div className="p-6 bg-error/10 text-error rounded-3xl shadow-soft animate-scale-in">
             <AlertCircle className="w-20 h-20" />
@@ -34,7 +34,7 @@ export default function ErrorPage({
           {ui('ui_500_title', 'Internal Server Error')}
         </h1>
 
-        <p className="text-lg text-text-secondary mb-10 max-w-md mx-auto animate-fade-in-delay-400">
+        <p className="text-lg text-text-secondary mb-10 max-w-[var(--gm-w-form)] mx-auto animate-fade-in-delay-400">
           {ui('ui_500_subtitle', 'Something went wrong on our end. Please try again later.')}
         </p>
 
@@ -66,7 +66,7 @@ export default function ErrorPage({
       </div>
 
       {/* Decorative Aura */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-96 bg-error/5 rounded-full blur-[120px] -z-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[var(--gm-w-readable)] h-96 bg-error/5 rounded-full blur-[120px] -z-10" />
 
       <style jsx>{`
         @keyframes fade-in-up {

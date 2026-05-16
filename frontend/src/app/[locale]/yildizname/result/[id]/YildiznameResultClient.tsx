@@ -53,7 +53,7 @@ export default function YildiznameResultClient() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-12 max-w-6xl mx-auto"
+      className="space-y-12 max-w-[var(--gm-w-wide)] mx-auto"
     >
       {/* Header Info */}
       <div className="text-center space-y-6">

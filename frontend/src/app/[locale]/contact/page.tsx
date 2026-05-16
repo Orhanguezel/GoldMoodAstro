@@ -47,7 +47,7 @@ export default function ContactRoutePage() {
   }, [ui, locale]);
 
   return (
-    <PageContainer verticalPadding="large">
+    <PageContainer pad="large">
       <LayoutSeoBridge title={seoTitle} description={seoDescription} noindex={false} />
       <ContactPage />
     </PageContainer>

@@ -48,6 +48,7 @@ import BookingMessageButton from '@/components/common/BookingMessageButton';
 import RichContentEditor from '@/components/common/RichContentEditor';
 import MultiSelectChip from '@/components/common/MultiSelectChip';
 import ConsultantCardPreview from './ConsultantCardPreview';
+import PageContainer from '@/components/common/PageContainer';
 
 type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'wallet' | 'reviews';
 
@@ -111,7 +112,7 @@ export default function ConsultantDashboard({ locale }: Props) {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl pt-32">
+    <PageContainer width="wide" className="pt-32">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
         <div>
@@ -154,7 +155,7 @@ export default function ConsultantDashboard({ locale }: Props) {
       {tab === 'messages' && <MessagesPanel />}
       {tab === 'wallet' && <WalletPanel />}
       {tab === 'reviews' && <ReviewsPanel />}
-    </div>
+    </PageContainer>
   );
 }
 
@@ -176,7 +177,7 @@ function EmptyState({
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center">
       <h2 className="font-serif text-2xl text-[var(--gm-text)]">{title}</h2>
-      <p className="max-w-md text-[var(--gm-text-dim)]">{description}</p>
+      <p className="max-w-[var(--gm-w-form)] text-[var(--gm-text-dim)]">{description}</p>
       <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
         <Link
           href={primaryHref}
@@ -488,7 +489,6 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
   const [meetingPlatforms, setMeetingPlatforms] = useState<string[]>(profile.meeting_platforms || []);
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(profile.social_links || {});
   const [avatarUrl, setAvatarUrl] = useState<string>(profile.user?.avatar_url || '');
-  const [supportsVideo, setSupportsVideo] = useState<boolean>(profile.supports_video === 1);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const togglePlatform = (platform: string) => {
@@ -554,7 +554,6 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
         meeting_platforms: meetingPlatforms,
         social_links: cleanSocials,
         avatar_url: avatarUrl || null,
-        supports_video: supportsVideo ? 1 : 0,
       }).unwrap();
       toast.success('Profil güncellendi');
     } catch (e) {
@@ -699,20 +698,7 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
           </div>
         </Field>
 
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={supportsVideo}
-              onChange={(e) => setSupportsVideo(e.target.checked)}
-              className="w-5 h-5 accent-[var(--gm-gold)]"
-            />
-            <span className="text-sm text-[var(--gm-text)]">Video görüşme destekliyorum</span>
-          </label>
-          <p className="text-[11px] text-[var(--gm-muted)] italic pl-8">
-            İşaretlerseniz danışanlar görüntülü görüşme için randevu alabilir; kamera/ışık hazır olmalı.
-          </p>
-        </div>
+
         <button
           onClick={handleSave}
           disabled={isLoading}

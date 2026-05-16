@@ -24,18 +24,18 @@ export default function SlotCalendar({ locale, selectedDate, onSelectDate }: Pro
         <button
           onClick={() => setWeekOffset((w) => Math.max(0, w - 1))}
           disabled={weekOffset === 0}
-          className="p-1.5 rounded-lg border border-border disabled:opacity-30 hover:border-brand-primary/50 transition-colors"
+          className="p-1.5 rounded-lg border border-(--gm-border-soft) disabled:opacity-30 hover:border-(--gm-gold)/50 transition-colors"
         >
-          <ChevronLeft size={16} className="text-text-muted" />
+          <ChevronLeft size={16} className="text-(--gm-muted)" />
         </button>
-        <span className="text-sm text-text-muted">
+        <span className="text-sm text-(--gm-muted)">
           {format(weekStart, 'MMMM yyyy', { locale: dateLocale })}
         </span>
         <button
           onClick={() => setWeekOffset((w) => w + 1)}
-          className="p-1.5 rounded-lg border border-border hover:border-brand-primary/50 transition-colors"
+          className="p-1.5 rounded-lg border border-(--gm-border-soft) hover:border-(--gm-gold)/50 transition-colors"
         >
-          <ChevronRight size={16} className="text-text-muted" />
+          <ChevronRight size={16} className="text-(--gm-muted)" />
         </button>
       </div>
 
@@ -50,10 +50,10 @@ export default function SlotCalendar({ locale, selectedDate, onSelectDate }: Pro
               onClick={() => onSelectDate(day)}
               className={`flex flex-col items-center py-2 rounded-xl transition-all text-xs border ${
                 isSelected
-                  ? 'bg-brand-primary border-brand-primary text-text'
+                  ? 'bg-(--gm-gold) border-(--gm-gold) text-(--gm-bg-deep)'
                   : isPast
-                  ? 'border-border text-text-muted opacity-30 cursor-not-allowed'
-                  : 'border-border text-text-muted hover:border-brand-primary/50'
+                  ? 'border-(--gm-border-soft) text-(--gm-muted) opacity-30 cursor-not-allowed'
+                  : 'border-(--gm-border-soft) text-(--gm-muted) hover:border-(--gm-gold)/50'
               }`}
             >
               <span className="uppercase text-[10px] mb-0.5">

@@ -88,7 +88,7 @@ export default function CoffeeResultClient() {
           </div>
 
           <div className="mt-20 pt-12 border-t border-(--gm-border-soft) flex flex-col lg:flex-row items-center justify-between gap-12">
-            <div className="text-[11px] text-(--gm-muted) italic font-serif leading-relaxed max-w-md uppercase tracking-widest opacity-60">
+            <div className="text-[11px] text-(--gm-muted) italic font-serif leading-relaxed max-w-[var(--gm-w-form)] uppercase tracking-widest opacity-60">
               * Bu analiz Vision AI ve astrolojik semboloji veritabanımız tarafından hazırlanmıştır.
             </div>
             <div className="flex flex-wrap items-center justify-center gap-10">

@@ -94,10 +94,10 @@ export default async function ConsultantsPage({ params, searchParams }: Props) {
   if (itemListSchema) graphItems.push(itemListSchema);
 
   return (
-    <PageContainer verticalPadding="large">
+    <PageContainer width="default" pad="large">
       <JsonLd id="consultants-schema" data={graph(graphItems)} />
       
-      <div className="max-w-4xl mb-20">
+      <div className="max-w-[var(--gm-w-readable)] mb-20">
         <header className="mb-10">
           <span className="text-[10px] font-bold uppercase tracking-[0.32em] text-(--gm-gold) block mb-4">
             {isTr ? 'REHBERLİK & BİLGELİK' : 'GUIDANCE & WISDOM'}
@@ -105,7 +105,7 @@ export default async function ConsultantsPage({ params, searchParams }: Props) {
           <h1 className={`${cinzel.className} text-4xl md:text-6xl text-(--gm-text) mb-8 leading-tight`}>
             {headline}
           </h1>
-          <p className="text-(--gm-text-dim) text-lg md:text-xl font-serif italic opacity-80 leading-relaxed max-w-2xl">
+          <p className="text-(--gm-text-dim) text-lg md:text-xl font-serif italic opacity-80 leading-relaxed max-w-[var(--gm-w-narrow)]">
             {topicCfg
               ? (isTr
                   ? `${headline} arasından sana uygun olanı seç. Sesli seanslar ve uzman rehberliği ile ruhsal yolculuğuna ışık tut.`

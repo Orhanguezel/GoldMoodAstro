@@ -97,6 +97,7 @@ export interface ConsultantService {
   price: string;
   currency: string;
   is_free: number;
+  media_type?: 'audio' | 'video' | 'both';
   is_active: number;
   sort_order: number;
 }

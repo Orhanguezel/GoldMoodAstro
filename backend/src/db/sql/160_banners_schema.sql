@@ -78,7 +78,12 @@ INSERT INTO banners (id, code, title_tr, title_en, subtitle_tr, subtitle_en, ima
  'Reklamsız Kullanım', 'Ad-Free Experience',
  'Premium üyelikle house-promo bannerlarını kapat.', 'Upgrade to hide house-promo banners.',
  '/banners/slim_premium.svg', '/tr/pricing', 'Premium''a Geç', 'Go Premium',
- 'mobile_home', '*', 'free', NULL, 80, 1)
+ 'mobile_home', '*', 'free', NULL, 80, 1),
+('b0000000-0000-4000-8000-000000000020', 'upsell_consultant',
+ 'Yapay Zeka Yorumu Yetmez Mi?', 'AI Reading Not Enough?',
+ 'Onaylı uzmanlarımızla canlı sesli veya görüntülü görüşme yaparak derinlemesine analiz al.', 'Get deep analysis with a live voice or video session with our verified experts.',
+ '/banners/upsell_expert.svg', '/tr/consultants', 'Bir Uzmanla Görüş', 'Talk to an Expert',
+ 'home_mid_1', '*', 'all', NULL, 110, 1)
 ON DUPLICATE KEY UPDATE
   code = VALUES(code),
   title_tr = VALUES(title_tr),

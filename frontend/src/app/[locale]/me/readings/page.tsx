@@ -88,7 +88,7 @@ export default function MyReadingsPage() {
   };
 
   return (
-    <PageContainer verticalPadding="large" className="max-w-5xl">
+    <PageContainer width="wide" verticalPadding="large">
       <div className="space-y-16">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">

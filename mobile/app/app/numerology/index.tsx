@@ -244,10 +244,10 @@ export default function NumerologyScreen() {
 
           <View style={styles.numbersGrid}>
             {[
-              { label: 'Hayat Yolu', value: result?.calculation?.lifePath, icon: Target, color: '#60a5fa' },
+              { label: 'Hayat Yolu', value: result?.calculation?.lifePath, icon: Target, color: colors.info },
               { label: 'Kader', value: result?.calculation?.destiny, icon: Zap, color: colors.gold },
-              { label: 'Ruh Güdüsü', value: result?.calculation?.soulUrge, icon: Heart, color: '#f87171' },
-              { label: 'Kişilik', value: result?.calculation?.personality, icon: Hash, color: '#34d399' },
+              { label: 'Ruh Güdüsü', value: result?.calculation?.soulUrge, icon: Heart, color: colors.danger },
+              { label: 'Kişilik', value: result?.calculation?.personality, icon: Hash, color: colors.success },
             ].map((item, i) => (
               <LinearGradient
                 key={i}

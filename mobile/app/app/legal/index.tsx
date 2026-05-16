@@ -6,7 +6,8 @@ import { ChevronLeft, ChevronRight, Scale } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
-import { LEGAL_CMS_PAGES } from '@/lib/cms';
+import { customPagesApi } from '@/lib/api';
+import type { CustomPageRow } from '@/lib/cms';
 
 function buildStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
@@ -56,8 +57,37 @@ export default function LegalIndexScreen() {
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { colors } = theme;
   const { i18n } = useTranslation();
+  const locale = i18n.language?.slice(0, 2) ?? 'tr';
 
-  return (
+  const [pages, setPages] = React.useState<CustomPageRow[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const allPages = await customPagesApi.list({ locale });
+        const legalKeys = [
+          'privacy',
+          'terms',
+          'cookies',
+          'kvkk',
+          'editorial_policy',
+          'privacy_notice',
+          'legal_notice',
+        ];
+        // Sadece legal sayfalar (yeni eklenenler de buraya düşebilir eğer 'page' değil de başka bir mantık varsa)
+        // Ama şimdilik db'de olanları dinamik alıyoruz, başlıklar db'den gelsin.
+        const filtered = allPages.filter((p) => legalKeys.includes(p.module_key));
+        // Sıralama display_order'a göre
+        setPages(filtered.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPages();
+  }, [locale]);  return (
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <View style={styles.header}>
@@ -70,26 +100,30 @@ export default function LegalIndexScreen() {
           Mağaza yayını için zorunlu metinler. İçerikler admin panelinden güncellenir.
         </Text>
         <ScrollView>
-          {LEGAL_CMS_PAGES.map((page) => (
-            <Pressable
-              key={page.module_key}
-              style={styles.row}
-              onPress={() =>
-                router.push({
-                  pathname: '/cms/[moduleKey]' as any,
-                  params: {
-                    moduleKey: page.module_key,
-                    title: page.title,
-                    locale: i18n.language?.slice(0, 2) ?? 'tr',
-                  },
-                })
-              }
-            >
-              <Scale size={18} color={colors.gold} style={{ marginRight: 12 }} />
-              <Text style={styles.rowTitle}>{page.title}</Text>
-              <ChevronRight size={18} color={colors.textMuted} />
-            </Pressable>
-          ))}
+          {loading ? (
+             <View style={{ padding: 20 }}><Text style={styles.intro}>Yükleniyor...</Text></View>
+          ) : (
+            pages.map((page) => (
+              <Pressable
+                key={page.id}
+                style={styles.row}
+                onPress={() =>
+                  router.push({
+                    pathname: '/cms/[moduleKey]' as any,
+                    params: {
+                      moduleKey: page.module_key,
+                      title: page.title || '',
+                      locale,
+                    },
+                  })
+                }
+              >
+                <Scale size={18} color={colors.gold} style={{ marginRight: 12 }} />
+                <Text style={styles.rowTitle}>{page.title}</Text>
+                <ChevronRight size={18} color={colors.textMuted} />
+              </Pressable>
+            ))
+          )}
         </ScrollView>
       </SafeAreaView>
     </View>

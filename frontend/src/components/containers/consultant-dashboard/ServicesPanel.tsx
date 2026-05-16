@@ -19,6 +19,7 @@ interface ServiceForm {
   description: string;
   duration_minutes: number;
   price: number;
+  media_type: 'audio' | 'video' | 'both';
   is_free: boolean;
   is_active: boolean;
 }
@@ -29,6 +30,7 @@ const EMPTY_FORM: ServiceForm = {
   description: '',
   duration_minutes: 45,
   price: 0,
+  media_type: 'audio',
   is_free: false,
   is_active: true,
 };
@@ -70,6 +72,7 @@ export default function ServicesPanel() {
         description: newForm.description.trim() || null,
         duration_minutes: newForm.duration_minutes,
         price: newForm.is_free ? 0 : newForm.price,
+        media_type: newForm.media_type,
         is_free: newForm.is_free ? 1 : 0,
         is_active: newForm.is_active ? 1 : 0,
       }).unwrap();
@@ -93,6 +96,7 @@ export default function ServicesPanel() {
         description: string | null;
         duration_minutes: number;
         price: number;
+        media_type: 'audio' | 'video' | 'both';
         is_free: number;
         is_active: number;
       }> = {};
@@ -100,6 +104,7 @@ export default function ServicesPanel() {
       if (patch.description !== undefined) body.description = patch.description;
       if (patch.duration_minutes !== undefined) body.duration_minutes = patch.duration_minutes;
       if (patch.price !== undefined) body.price = patch.is_free === true ? 0 : patch.price;
+      if (patch.media_type !== undefined) body.media_type = patch.media_type;
       if (patch.is_free !== undefined) body.is_free = patch.is_free ? 1 : 0;
       if (patch.is_active !== undefined) body.is_active = patch.is_active ? 1 : 0;
       await updateSvc({ id, body }).unwrap();
@@ -202,6 +207,20 @@ export default function ServicesPanel() {
             placeholder="Açıklama (opsiyonel)"
             className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)]"
           />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Medya Tipi</label>
+              <select
+                value={newForm.media_type}
+                onChange={(e) => setNewForm({ ...newForm, media_type: e.target.value as any })}
+                className="h-11 w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-4 text-sm text-[var(--gm-text)]"
+              >
+                <option value="audio">Sadece Ses</option>
+                <option value="video">Sadece Görüntü</option>
+                <option value="both">Ses + Görüntü</option>
+              </select>
+            </div>
+          </div>
           <div className="flex items-center gap-6">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -299,6 +318,7 @@ function ServiceRow({
     description: svc.description || '',
     duration_minutes: svc.duration_minutes,
     price: Number(svc.price) || 0,
+    media_type: svc.media_type || 'audio',
     is_free: svc.is_free === 1,
     is_active: svc.is_active === 1,
   });
@@ -309,6 +329,7 @@ function ServiceRow({
     form.description !== (svc.description || '') ||
     form.duration_minutes !== svc.duration_minutes ||
     form.price !== Number(svc.price) ||
+    form.media_type !== (svc.media_type || 'audio') ||
     form.is_free !== (svc.is_free === 1) ||
     form.is_active !== (svc.is_active === 1);
 
@@ -347,6 +368,9 @@ function ServiceRow({
                 Pasif
               </span>
             )}
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--gm-gold)]/10 text-[var(--gm-gold)] text-[9px] font-bold uppercase tracking-widest">
+              {svc.media_type === 'both' ? 'Ses+Görüntü' : svc.media_type === 'video' ? 'Görüntülü' : 'Sesli'}
+            </span>
           </div>
           <div className="text-[11px] text-[var(--gm-text-dim)] mt-1 flex items-center gap-3">
             <span>{svc.duration_minutes} dk</span>
@@ -449,6 +473,20 @@ function ServiceRow({
                 className={`h-10 w-full bg-[var(--gm-bg-deep)] border ${errors.price ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-3 text-sm text-[var(--gm-text)] disabled:opacity-50`}
               />
               {errors.price && <p className="text-[9px] text-[var(--gm-error)] font-bold uppercase tracking-widest">{errors.price}</p>}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Medya Tipi</label>
+              <select
+                value={form.media_type}
+                onChange={(e) => setForm({ ...form, media_type: e.target.value as any })}
+                className="h-10 w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-3 text-sm text-[var(--gm-text)]"
+              >
+                <option value="audio">Sadece Ses</option>
+                <option value="video">Sadece Görüntü</option>
+                <option value="both">Ses + Görüntü</option>
+              </select>
             </div>
           </div>
           <div className="flex items-center justify-between pt-2">

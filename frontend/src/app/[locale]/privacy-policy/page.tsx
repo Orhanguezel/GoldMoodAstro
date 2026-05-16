@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
   }, [ui]);
 
   return (
-    <PageContainer verticalPadding="large">
+    <PageContainer width="readable" pad="large">
       <LayoutSeoBridge title={bannerTitle} noindex={false} />
       <PrivacyPolicyPageContent />
     </PageContainer>

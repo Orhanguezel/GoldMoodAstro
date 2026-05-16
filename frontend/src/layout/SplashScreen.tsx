@@ -18,8 +18,7 @@ export function SplashScreen({
   companyName?: string; 
   tagline?: string 
 }) {
-  const [phase, setPhase] = useState<'loading' | 'exit' | 'done'>('loading');
-  const [mounted, setMounted] = useState(false);
+  const [phase, setPhase] = useState<'checking' | 'loading' | 'exit' | 'done'>('checking');
 
   const handleFinish = useCallback(() => {
     setPhase('exit');
@@ -31,8 +30,6 @@ export function SplashScreen({
   }, []);
 
   useEffect(() => {
-    setMounted(true);
-    
     // Check if already seen
     try {
       if (sessionStorage.getItem('gm_splash_seen')) {
@@ -41,22 +38,23 @@ export function SplashScreen({
       }
     } catch(e) {}
 
+    setPhase('loading');
     const timer = setTimeout(handleFinish, 2400); // Loading duration
     return () => clearTimeout(timer);
   }, [handleFinish]);
 
-  // Hide SSR overlay once mounted
+  // Hide SSR overlay only after the client has decided whether to show its splash.
   useEffect(() => {
-    if (mounted) {
-      const ssrEl = document.getElementById('gm-splash-ssr');
-      if (ssrEl) {
-        ssrEl.style.opacity = '0';
-        setTimeout(() => { ssrEl.style.display = 'none'; }, 400);
-      }
-    }
-  }, [mounted]);
+    if (phase === 'checking') return;
 
-  if (phase === 'done') return null;
+    const ssrEl = document.getElementById('gm-splash-ssr');
+    if (ssrEl) {
+      ssrEl.style.opacity = '0';
+      setTimeout(() => { ssrEl.style.display = 'none'; }, 400);
+    }
+  }, [phase]);
+
+  if (phase === 'checking' || phase === 'done') return null;
 
   return (
     <div 

@@ -50,7 +50,7 @@ export default async function RisingCalculatorPage({ params }: Props) {
       />
       <section
         data-speakable
-        className="mx-auto mb-10 max-w-4xl text-center"
+        className="mx-auto mb-10 max-w-[var(--gm-w-readable)] text-center"
         aria-labelledby="rising-sign-voice-answer"
       >
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-(--gm-gold)">
@@ -59,7 +59,7 @@ export default async function RisingCalculatorPage({ params }: Props) {
         <h1 id="rising-sign-voice-answer" className="font-serif text-3xl text-(--gm-text) md:text-5xl">
           {isTr ? 'Yükselen burç nasıl hesaplanır?' : 'How is the rising sign calculated?'}
         </h1>
-        <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-(--gm-text-dim) md:text-lg">
+        <p className="mx-auto mt-5 max-w-[var(--gm-w-narrow)] text-base leading-8 text-(--gm-text-dim) md:text-lg">
           {isTr
             ? 'Yükselen burç, doğum tarihi, doğum saati ve doğum yerinin birlikte hesaplanmasıyla bulunur. Doğum anında doğu ufkunda yükselen burcu gösterir ve kişinin dış dünyaya verdiği ilk izlenimi, davranış ritmini ve hayata yaklaşım tarzını anlamaya yardımcı olur.'
             : 'The rising sign is calculated from birth date, birth time and birthplace together. It shows the sign rising on the eastern horizon at birth and helps describe first impressions, behavior rhythm and the way someone approaches life.'}

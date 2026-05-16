@@ -57,7 +57,7 @@ export default function AboutPage() {
   }, [ui]);
 
   return (
-    <PageContainer verticalPadding="large">
+    <PageContainer pad="large">
       <LayoutSeoBridge
         title={pageTitle}
         description={pageDescription}

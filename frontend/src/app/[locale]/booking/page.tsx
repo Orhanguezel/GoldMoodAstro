@@ -42,6 +42,8 @@ export default function BookingPage() {
   const duration = searchParams.get('duration') || '60';
   const name = searchParams.get('name') || '';
   const topic = searchParams.get('topic') || '';
+  const serviceId = searchParams.get('serviceId') || '';
+  const serviceMediaType = searchParams.get('serviceMediaType') || '';
 
   const [note, setNote] = useState('');
   const [mediaType, setMediaType] = useState<'audio' | 'video'>('audio');
@@ -59,7 +61,12 @@ export default function BookingPage() {
   
   const { data: videoSetting } = useGetSiteSettingByKeyQuery({ key: 'feature_video_enabled' });
   const isVideoGlobalEnabled = videoSetting?.value === '1' || videoSetting?.value === 'true';
-  const canShowVideoOption = isVideoGlobalEnabled && consultant?.supports_video;
+  const forcedMediaType = serviceMediaType === 'video' || serviceMediaType === 'audio' ? serviceMediaType : null;
+  const canShowVideoOption =
+    isVideoGlobalEnabled &&
+    consultant?.supports_video &&
+    (!serviceMediaType || serviceMediaType === 'both');
+  const resolvedMediaType = forcedMediaType ?? mediaType;
   const avatarUrl = consultant?.avatar_url || '';
   const consultantName = consultant?.full_name || name;
   const initials = (consultantName || 'GM')
@@ -76,7 +83,13 @@ export default function BookingPage() {
 
   const dateLocale = locale === 'tr' ? dateFnsTr : undefined;
   
-  const originalPrice = Number(price);
+  const basePrice = Number(price);
+
+  useEffect(() => {
+    if (forcedMediaType) setMediaType(forcedMediaType);
+  }, [forcedMediaType]);
+
+  const originalPrice = basePrice;
   let finalPrice = originalPrice;
   let discountAmount = 0;
 
@@ -128,8 +141,9 @@ export default function BookingPage() {
         appointment_date: ymd,
         appointment_time: time,
         session_duration: Number(duration),
-        session_price: price,
-        media_type: mediaType,
+        session_price: String(originalPrice),
+        media_type: resolvedMediaType,
+        service_id: serviceId || undefined,
         customer_message: note || undefined,
         source_type: sourceMatch ? 'daily_reading' : undefined,
         source_id: sourceMatch?.[1],
@@ -150,8 +164,8 @@ export default function BookingPage() {
   };
 
   return (
-    <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
-      <div className="mx-auto max-w-5xl grid lg:grid-cols-2 gap-16 items-start">
+    <PageContainer width="wide" className="bg-(--gm-bg)" verticalPadding="large">
+      <div className="grid lg:grid-cols-2 gap-16 items-start">
         
         {/* Left: Summary */}
         <div className="space-y-10">

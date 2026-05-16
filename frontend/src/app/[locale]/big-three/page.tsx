@@ -1,5 +1,6 @@
 import React from 'react';
 import BigThree from '@/components/containers/zodiac/BigThree';
+import PageContainer from '@/components/common/PageContainer';
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/seo/server';
 
@@ -23,8 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function BigThreePage() {
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] pt-32">
+    <PageContainer as="main" width="full" pad="none" className="min-h-screen bg-[var(--gm-bg)] pt-32">
       <BigThree />
-    </main>
+    </PageContainer>
   );
 }

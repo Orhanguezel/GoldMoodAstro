@@ -259,7 +259,7 @@ export default function BookingCallPage() {
         </svg>
       </div>
 
-      <div className="relative z-10 mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="relative z-10 mx-auto grid w-full max-w-[var(--gm-w-wide)] gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
         
         {/* Main Call UI */}
         <div className={cn(

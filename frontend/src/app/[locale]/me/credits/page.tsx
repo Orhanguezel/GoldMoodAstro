@@ -38,7 +38,7 @@ export default function CreditsPage() {
   };
 
   return (
-    <PageContainer verticalPadding="large" className="max-w-5xl">
+    <PageContainer width="wide" verticalPadding="large">
       <div className="space-y-16">
         
         {/* Bakiye Özeti */}
@@ -47,7 +47,7 @@ export default function CreditsPage() {
            
            <div className="space-y-6 text-center md:text-left relative">
               <h1 className={`${cinzel.className} text-4xl md:text-6xl text-foreground`}>Kredi Bakiyeniz</h1>
-              <p className="text-muted-foreground text-lg max-w-md italic font-serif leading-relaxed">
+              <p className="text-muted-foreground text-lg max-w-[var(--gm-w-form)] italic font-serif leading-relaxed">
                 Astroloji danışmanlıkları ve özel yorumlar için kredi bakiyenizi kullanın.
               </p>
            </div>
@@ -118,7 +118,7 @@ export default function CreditsPage() {
         </div>
 
         {/* Güvenlik */}
-        <div className="max-w-2xl mx-auto pt-10 flex flex-col md:flex-row items-center justify-center gap-8 text-center md:text-left">
+        <div className="max-w-[var(--gm-w-narrow)] mx-auto pt-10 flex flex-col md:flex-row items-center justify-center gap-8 text-center md:text-left">
            <div className="flex items-center gap-3 text-muted-foreground/60">
               <ShieldCheck className="w-10 h-10 text-brand-gold/40" />
               <div className="text-xs font-serif italic">

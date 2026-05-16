@@ -48,7 +48,7 @@ export default function DreamResultClient() {
   const result = res.data;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12 md:py-20 min-h-[80vh] flex flex-col">
+    <div className="max-w-[var(--gm-w-content)] mx-auto px-4 py-12 md:py-20 min-h-[80vh] flex flex-col">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

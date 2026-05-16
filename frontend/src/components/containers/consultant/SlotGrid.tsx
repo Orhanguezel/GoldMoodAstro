@@ -17,7 +17,7 @@ export default function SlotGrid({ locale, slots, isFetching, selectedSlotId, on
     return (
       <div className="grid grid-cols-3 gap-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-10 bg-bg-surface rounded-lg animate-pulse" />
+          <div key={i} className="h-10 bg-(--gm-surface) rounded-lg animate-pulse" />
         ))}
       </div>
     );
@@ -25,7 +25,7 @@ export default function SlotGrid({ locale, slots, isFetching, selectedSlotId, on
 
   if (slots.length === 0) {
     return (
-      <p className="text-center text-text-muted text-sm py-6">
+      <p className="text-center text-(--gm-muted) text-sm py-6">
         {locale === 'tr' ? 'Bu tarihte müsait slot yok.' : 'No available slots on this date.'}
       </p>
     );
@@ -44,10 +44,10 @@ export default function SlotGrid({ locale, slots, isFetching, selectedSlotId, on
             onClick={() => onSelect(slot)}
             className={`py-2 rounded-xl text-sm font-medium border transition-all ${
               isSelected
-                ? 'bg-brand-primary border-brand-primary text-text shadow-glow'
+                ? 'bg-(--gm-gold) border-(--gm-gold) text-(--gm-bg-deep) shadow-(--gm-shadow-gold)'
                 : isReserved
-                ? 'border-border text-text-muted opacity-35 cursor-not-allowed'
-                : 'border-border text-text-muted hover:border-brand-primary/50 hover:text-text'
+                ? 'border-(--gm-border-soft) text-(--gm-muted) opacity-35 cursor-not-allowed'
+                : 'border-(--gm-border-soft) text-(--gm-muted) hover:border-(--gm-gold)/50 hover:text-(--gm-text)'
             }`}
           >
             {time}

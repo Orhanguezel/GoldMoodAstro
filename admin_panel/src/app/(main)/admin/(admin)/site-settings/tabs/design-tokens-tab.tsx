@@ -41,39 +41,52 @@ type ThemePreset = {
   tokens: TokenForm;
 };
 
+async function purgeFrontendThemeCache(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/revalidate-proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ all: true, tags: ['design_tokens', 'custom_css', 'site-settings', 'brand'] }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 const DEFAULTS: TokenForm = {
   version: '2',
   colors: {
-    brand_primary: '#C9A961',
-    brand_primary_dark: '#A8884A',
-    brand_primary_light: '#D4BB7A',
-    brand_secondary: '#C9A961',
-    brand_accent: '#3D2E47',
-    bg_base: '#FAF6EF',
-    bg_deep: '#F2EBDD',
+    brand_primary: '#9B6FD9',
+    brand_primary_dark: '#7C4FBF',
+    brand_primary_light: '#C7A4F2',
+    brand_secondary: '#D4AF37',
+    brand_accent: '#4C1D95',
+    bg_base: '#F5EFFF',
+    bg_deep: '#EDE2FA',
     bg_surface: '#FFFFFF',
-    bg_surface_high: '#F7F1E4',
-    text_primary: '#2A2620',
-    text_secondary: '#4A4238',
-    text_muted: '#8A8276',
-    border: 'rgba(168,136,74,0.25)',
+    bg_surface_high: '#F8F2FF',
+    text_primary: '#1B0A3D',
+    text_secondary: '#3D2466',
+    text_muted: '#6B559A',
+    border: 'rgba(155,111,217,0.30)',
     success: '#4CAF6E',
     warning: '#F0A030',
     error: '#E55B4D',
   },
   typography: {
-    font_display: 'Cinzel, Georgia, serif',
-    font_serif: 'Fraunces, Georgia, serif',
-    font_sans: 'Manrope, system-ui, sans-serif',
+    font_display: 'Fraunces, serif',
+    font_serif: 'Gabriela, serif',
+    font_sans: 'Outfit, sans-serif',
     font_mono: 'JetBrains Mono, monospace',
     base_size: '16px',
   },
-  radius: { xs: '4px', sm: '8px', md: '12px', lg: '16px', xl: '24px', pill: '9999px' },
+  radius: { xs: '12px', sm: '20px', md: '32px', lg: '48px', xl: '64px', pill: '9999px' },
   shadows: {
-    soft: '0 2px 20px rgba(45,37,32,0.06)',
-    card: '0 8px 40px rgba(45,37,32,0.10)',
-    glow_primary: '0 0 60px rgba(201,169,97,0.18)',
-    glow_gold: '0 0 30px rgba(201,169,97,0.22)',
+    soft: '0 10px 40px rgba(46,16,101,0.20)',
+    card: '0 30px 90px rgba(46,16,101,0.30)',
+    glow_primary: '0 0 120px rgba(155,111,217,0.40)',
+    glow_gold: '0 0 60px rgba(212,175,55,0.30)',
   },
   branding: {
     app_name: 'GoldMoodAstro',
@@ -81,7 +94,7 @@ const DEFAULTS: TokenForm = {
     tagline_en: 'Modern astrology meets the stars',
     logo_url: '',
     favicon_url: '',
-    theme_color: '#C9A961',
+    theme_color: '#9B6FD9',
   },
 };
 
@@ -181,17 +194,7 @@ function ThemePresetsSection({
 
       // Auto-purge frontend cache so theme change is visible immediately.
       // Best-effort: don't fail the apply if revalidation errors out.
-      let revalidated = false;
-      try {
-        const res = await fetch('/api/revalidate-proxy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ all: true }),
-        });
-        revalidated = res.ok;
-      } catch {
-        revalidated = false;
-      }
+      const revalidated = await purgeFrontendThemeCache();
 
       toast.success(
         revalidated
@@ -301,7 +304,12 @@ export const DesignTokensTab: React.FC = () => {
   const handleSave = async () => {
     try {
       await updateSetting({ key: 'design_tokens', value: JSON.stringify(form), locale: '*' }).unwrap();
-      toast.success('Tasarım tokenları başarıyla güncellendi.');
+      const revalidated = await purgeFrontendThemeCache();
+      toast.success(
+        revalidated
+          ? 'Tasarım tokenları kaydedildi ve frontend cache temizlendi.'
+          : 'Tasarım tokenları kaydedildi (cache kısa süre içinde yenilenecek).',
+      );
     } catch {
       toast.error('Kayıt sırasında hata oluştu.');
     }

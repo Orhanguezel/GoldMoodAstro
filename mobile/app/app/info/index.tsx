@@ -6,7 +6,8 @@ import { ChevronLeft, ChevronRight, HelpCircle, Info, Mail } from 'lucide-react-
 import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
-import { INFO_CMS_PAGES } from '@/lib/cms';
+import { customPagesApi } from '@/lib/api';
+import type { CustomPageRow } from '@/lib/cms';
 
 function buildStyles(t: AppTheme) {
   const { colors, spacing, font } = t;
@@ -59,6 +60,25 @@ export default function InfoIndexScreen() {
   const { i18n } = useTranslation();
   const locale = i18n.language?.slice(0, 2) ?? 'tr';
 
+  const [pages, setPages] = React.useState<CustomPageRow[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const allPages = await customPagesApi.list({ locale });
+        const infoKeys = ['about', 'faq', 'page']; // Genel eklenen 'page' tipleri de buraya gelsin
+        const filtered = allPages.filter((p) => infoKeys.includes(p.module_key));
+        setPages(filtered.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPages();
+  }, [locale]);
+
   const openCms = (moduleKey: string, title: string) => {
     router.push({
       pathname: '/cms/[moduleKey]' as any,
@@ -77,21 +97,25 @@ export default function InfoIndexScreen() {
         </View>
         <Text style={styles.intro}>İçerikler admin panelinden güncellenir.</Text>
         <ScrollView>
-          {INFO_CMS_PAGES.map((page) => (
-            <Pressable
-              key={page.module_key}
-              style={styles.row}
-              onPress={() => openCms(page.module_key, page.title)}
-            >
-              {page.module_key === 'faq' ? (
-                <HelpCircle size={18} color={colors.gold} />
-              ) : (
-                <Info size={18} color={colors.gold} />
-              )}
-              <Text style={styles.rowTitle}>{page.title}</Text>
-              <ChevronRight size={18} color={colors.textMuted} />
-            </Pressable>
-          ))}
+          {loading ? (
+             <View style={{ padding: 20 }}><Text style={styles.intro}>Yükleniyor...</Text></View>
+          ) : (
+            pages.map((page) => (
+              <Pressable
+                key={page.id}
+                style={styles.row}
+                onPress={() => openCms(page.module_key, page.title || '')}
+              >
+                {page.module_key === 'faq' ? (
+                  <HelpCircle size={18} color={colors.gold} />
+                ) : (
+                  <Info size={18} color={colors.gold} />
+                )}
+                <Text style={styles.rowTitle}>{page.title}</Text>
+                <ChevronRight size={18} color={colors.textMuted} />
+              </Pressable>
+            ))
+          )}
           <Pressable style={styles.row} onPress={() => router.push('/contact' as any)}>
             <Mail size={18} color={colors.gold} />
             <Text style={styles.rowTitle}>İletişim</Text>

@@ -213,7 +213,7 @@ export default function SynastryPage() {
         ])}
       />
       <LandingIntro {...intro} />
-      <div className="max-w-5xl mx-auto relative">
+      <div className="max-w-[var(--gm-w-content)] mx-auto relative">
         <AnimatePresence mode="wait">
           {step === 'mode' && (
             <motion.div
@@ -227,7 +227,7 @@ export default function SynastryPage() {
                 <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tighter`}>
                   Aşk <span className="text-(--gm-gold)">Uyumu</span>
                 </h1>
-                <p className="text-(--gm-text-dim) text-lg max-w-2xl mx-auto font-serif italic">
+                <p className="text-(--gm-text-dim) text-lg max-w-[var(--gm-w-narrow)] mx-auto font-serif italic">
                   Yıldızların aşkınıza ne dediğini keşfedin. Hangi yöntemi tercih edersiniz?
                 </p>
               </div>
@@ -236,7 +236,7 @@ export default function SynastryPage() {
                 <motion.div 
                   initial={{ scale: 0.95 }}
                   animate={{ scale: 1 }}
-                  className="max-w-2xl mx-auto bg-(--gm-gold)/10 border border-(--gm-gold)/20 p-6 rounded-3xl space-y-4"
+                  className="max-w-[var(--gm-w-narrow)] mx-auto bg-(--gm-gold)/10 border border-(--gm-gold)/20 p-6 rounded-3xl space-y-4"
                 >
                   <div className="flex items-center justify-center gap-2 text-(--gm-gold)">
                     <Heart className="w-5 h-5 fill-(--gm-gold)" />
@@ -259,7 +259,7 @@ export default function SynastryPage() {
                 </motion.div>
               )}
 
-              <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              <div className="grid md:grid-cols-3 gap-6 max-w-[var(--gm-w-content)] mx-auto">
                 <button 
                   onClick={() => setStep('quick')}
                   className="group bg-(--gm-surface)/30 border border-(--gm-border-soft) p-8 rounded-[2.5rem] text-left space-y-6 hover:bg-(--gm-gold)/5 transition-all hover:border-(--gm-gold)/30"
@@ -316,7 +316,7 @@ export default function SynastryPage() {
               key="invite"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="max-w-2xl mx-auto space-y-12"
+              className="max-w-[var(--gm-w-narrow)] mx-auto space-y-12"
             >
                <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-text) transition-colors text-xs font-bold tracking-widest">
                   <ChevronLeft className="w-4 h-4" /> GERİ DÖN
@@ -380,7 +380,7 @@ export default function SynastryPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="max-w-2xl mx-auto space-y-12"
+              className="max-w-[var(--gm-w-narrow)] mx-auto space-y-12"
             >
                <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-text) transition-colors text-xs font-bold tracking-widest">
                   <ChevronLeft className="w-4 h-4" /> GERİ DÖN
@@ -436,7 +436,7 @@ export default function SynastryPage() {
               key="manual"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="max-w-xl mx-auto space-y-10"
+              className="max-w-[var(--gm-w-form)] mx-auto space-y-10"
             >
                <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-text) transition-colors text-xs font-bold tracking-widest">
                   <ChevronLeft className="w-4 h-4" /> GERİ DÖN
@@ -525,7 +525,7 @@ export default function SynastryPage() {
               className="space-y-12"
             >
                {result.type === 'quick' ? (
-                 <div className="max-w-3xl mx-auto bg-(--gm-surface)/30 border border-(--gm-border-soft) rounded-[3rem] p-10 md:p-16 space-y-10 backdrop-blur-xl relative overflow-hidden">
+                 <div className="max-w-[var(--gm-w-narrow)] mx-auto bg-(--gm-surface)/30 border border-(--gm-border-soft) rounded-[3rem] p-10 md:p-16 space-y-10 backdrop-blur-xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
                        <Users className="w-64 h-64" />
                     </div>
