@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { 
   Search, 
@@ -106,7 +107,20 @@ export default function AdminSiteSettingsClient() {
   const localesQ = useGetAppLocalesAdminQuery();
   const defaultLocaleQ = useGetDefaultLocaleAdminQuery();
 
-  const [tab, setTab] = React.useState<SettingsTab>('design_tokens');
+  const searchParams = useSearchParams();
+  // Sidebar derin-link desteği: /admin/site-settings?tab=api|smtp|...
+  const initialTab = React.useMemo<SettingsTab>(() => {
+    const q = (searchParams?.get('tab') || '').trim();
+    const allowed: SettingsTab[] = [
+      'list', 'global_list', 'general', 'seo', 'smtp', 'cloudinary',
+      'brand_media', 'api', 'locales', 'branding', 'design_tokens',
+      'custom_css', 'livekit',
+    ];
+    return (allowed as string[]).includes(q) ? (q as SettingsTab) : 'design_tokens';
+    // sadece ilk montajda; sonradan sekme değişimi state ile
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [tab, setTab] = React.useState<SettingsTab>(initialTab);
   const [search, setSearch] = React.useState('');
   const [locale, setLocale] = React.useState<string>('tr');
 
