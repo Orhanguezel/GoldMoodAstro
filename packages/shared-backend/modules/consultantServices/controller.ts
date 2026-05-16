@@ -20,6 +20,7 @@ const servicePayloadSchema = z.object({
     .default(appConfig.consultants.defaultSessionDurationMinutes),
   price: z.coerce.number().nonnegative().max(appConfig.consultants.maxSessionPrice).default(0),
   currency: z.string().trim().length(3).default(appConfig.consultants.defaultCurrency),
+  media_type: z.enum(['audio', 'video']).default('audio'),
   is_free: z.coerce.number().int().min(0).max(1).default(0),
   is_active: z.coerce.number().int().min(0).max(1).default(1),
   sort_order: z.coerce.number().int().default(0),
@@ -97,7 +98,7 @@ export async function createSelf(req: FastifyRequest, reply: FastifyReply) {
   const id = randomUUID();
   // is_free=1 ise price'ı 0 zorla
   const data = normalizeServicePayload(parsed.data);
-  await repo.create({ id, consultant_id: consultantId, ...data });
+  await repo.createWithSync({ id, consultant_id: consultantId, ...data });
   return reply.send({ data: { id } });
 }
 
@@ -111,7 +112,7 @@ export async function updateSelf(req: FastifyRequest, reply: FastifyReply) {
   const parsed = updateSchema.safeParse(req.body);
   if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
   const patch = normalizeServicePayload(parsed.data);
-  await repo.update(id, patch as any);
+  await repo.updateWithSync(id, consultantId, patch as any);
   return reply.send({ data: { id } });
 }
 
@@ -121,7 +122,7 @@ export async function deleteSelf(req: FastifyRequest, reply: FastifyReply) {
   const { id } = req.params as { id: string };
   const own = await repo.getByIdForConsultant(id, consultantId);
   if (!own) return reply.code(404).send({ error: { message: 'not_found' } });
-  await repo.remove(id);
+  await repo.removeWithSync(id, consultantId);
   return reply.send({ data: { id, ok: true } });
 }
 
@@ -147,7 +148,7 @@ export async function createAdmin(req: FastifyRequest, reply: FastifyReply) {
   if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
   const id = randomUUID();
   const data = normalizeServicePayload(parsed.data);
-  await repo.create({ id, consultant_id: consultantId, ...data });
+  await repo.createWithSync({ id, consultant_id: consultantId, ...data });
   return reply.send({ data: { id } });
 }
 
@@ -158,7 +159,7 @@ export async function updateAdmin(req: FastifyRequest, reply: FastifyReply) {
   const parsed = updateSchema.safeParse(req.body);
   if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
   const patch = normalizeServicePayload(parsed.data);
-  await repo.update(id, patch as any);
+  await repo.updateWithSync(id, row.consultant_id, patch as any);
   return reply.send({ data: { id } });
 }
 
@@ -166,6 +167,6 @@ export async function deleteAdmin(req: FastifyRequest, reply: FastifyReply) {
   const { id } = req.params as { id: string };
   const row = await repo.getById(id);
   if (!row) return reply.code(404).send({ error: { message: 'not_found' } });
-  await repo.remove(id);
+  await repo.removeWithSync(id, row.consultant_id);
   return reply.send({ data: { id, ok: true } });
 }

@@ -5,6 +5,7 @@ import { appConfig } from '@goldmood/shared-config/appConfig';
 import { db } from '@/db/client';
 import { users } from '@goldmood/shared-backend/modules/auth/schema';
 import { bookings } from '@goldmood/shared-backend/modules/bookings/schema';
+import { consultantServices } from '@goldmood/shared-backend/modules/consultantServices/schema';
 import { userCredits, creditTransactions } from '@goldmood/shared-backend/modules/credits/schema';
 import { createUserNotification } from '@goldmood/shared-backend/modules/notifications/service';
 import { consultants } from '@/modules/consultants/schema';
@@ -182,11 +183,13 @@ async function getBookingForParticipant(bookingId: string, userId: string) {
       session_duration: bookings.session_duration,
       status: bookings.status,
       media_type: bookings.media_type,
+      service_media_type: consultantServices.media_type,
       consultant_user_id: consultants.user_id,
       consultant_supports_video: consultants.supports_video,
     })
     .from(bookings)
     .innerJoin(consultants, eq(consultants.id, bookings.consultant_id))
+    .leftJoin(consultantServices, eq(consultantServices.id, bookings.service_id))
     .where(eq(bookings.id, bookingId))
     .limit(1);
 
@@ -209,6 +212,7 @@ async function getBookingForParticipant(bookingId: string, userId: string) {
 async function assertVideoCallAllowed(args: {
   mediaType: 'audio' | 'video';
   consultantSupportsVideo: number | null | undefined;
+  serviceMediaType?: 'audio' | 'video' | null;
 }) {
   if (args.mediaType !== 'video') return;
 
@@ -231,7 +235,8 @@ async function assertVideoCallAllowed(args: {
     throw error;
   }
 
-  if (!args.consultantSupportsVideo || Number(args.consultantSupportsVideo) === 0) {
+  const serviceAllowsVideo = args.serviceMediaType === 'video';
+  if (!serviceAllowsVideo && (!args.consultantSupportsVideo || Number(args.consultantSupportsVideo) === 0)) {
     const error = new Error('consultant_does_not_support_video');
     (error as Error & { statusCode?: number }).statusCode = 403;
     throw error;
@@ -258,6 +263,7 @@ export async function issueLiveKitToken(bookingId: string, userId: string) {
   await assertVideoCallAllowed({
     mediaType: access.booking.media_type === 'video' ? 'video' : 'audio',
     consultantSupportsVideo: access.booking.consultant_supports_video,
+    serviceMediaType: access.booking.service_media_type,
   });
 
   const roomName = makeRoomName(bookingId);

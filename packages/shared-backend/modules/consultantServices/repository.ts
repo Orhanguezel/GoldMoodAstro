@@ -1,7 +1,8 @@
 // packages/shared-backend/modules/consultantServices/repository.ts
 import { db } from '../../db/client';
 import { consultantServices, type ConsultantService, type NewConsultantService } from './schema';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
+import { consultants } from '../consultants/schema';
 
 export async function listByConsultant(
   consultantId: string,
@@ -51,4 +52,46 @@ export async function reorder(consultantId: string, items: Array<{ id: string; s
       .set({ sort_order: it.sort_order })
       .where(and(eq(consultantServices.id, it.id), eq(consultantServices.consultant_id, consultantId)));
   }
+}
+
+/**
+ * T39-3: Syncs the 'supports_video' flag on the consultant profile
+ * based on whether they have at least one active video-capable service.
+ */
+async function syncConsultantFlags(consultantId: string): Promise<void> {
+  const [result] = await db
+    .select({
+      count: sql<number>`COUNT(*)`,
+    })
+    .from(consultantServices)
+    .where(
+      and(
+        eq(consultantServices.consultant_id, consultantId),
+        eq(consultantServices.is_active, 1),
+        eq(consultantServices.media_type, 'video')
+      )
+    );
+
+  const hasVideo = (result?.count ?? 0) > 0;
+
+  await db
+    .update(consultants)
+    .set({ supports_video: hasVideo ? 1 : 0 } as any)
+    .where(eq(consultants.id, consultantId));
+}
+
+// Wrappers to include sync
+export async function createWithSync(data: NewConsultantService): Promise<void> {
+  await create(data);
+  await syncConsultantFlags(data.consultant_id);
+}
+
+export async function updateWithSync(id: string, consultantId: string, patch: Partial<NewConsultantService>): Promise<void> {
+  await update(id, patch);
+  await syncConsultantFlags(consultantId);
+}
+
+export async function removeWithSync(id: string, consultantId: string): Promise<void> {
+  await remove(id);
+  await syncConsultantFlags(consultantId);
 }

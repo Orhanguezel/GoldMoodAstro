@@ -1,5 +1,5 @@
 // packages/shared-backend/modules/consultantServices/schema.ts
-import { mysqlTable, char, varchar, text, int, tinyint, decimal, datetime, uniqueIndex, index } from 'drizzle-orm/mysql-core';
+import { mysqlTable, char, varchar, text, int, tinyint, decimal, datetime, mysqlEnum, uniqueIndex, index } from 'drizzle-orm/mysql-core';
 import { sql } from 'drizzle-orm';
 
 export const consultantServices = mysqlTable(
@@ -13,6 +13,7 @@ export const consultantServices = mysqlTable(
     duration_minutes: int('duration_minutes').notNull().default(45),
     price: decimal('price', { precision: 10, scale: 2 }).notNull().default('0'),
     currency: varchar('currency', { length: 3 }).notNull().default('TRY'),
+    media_type: mysqlEnum('media_type', ['audio', 'video']).notNull().default('audio'),
     is_free: tinyint('is_free').notNull().default(0),
     is_active: tinyint('is_active').notNull().default(1),
     sort_order: int('sort_order').notNull().default(0),

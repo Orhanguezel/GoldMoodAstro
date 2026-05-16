@@ -9,7 +9,7 @@
 
 import type { RouteHandler } from 'fastify';
 import { randomUUID } from 'crypto';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { appConfig } from '@goldmood/shared-config/appConfig';
 
 import { publicCreateBookingSchema } from './validation';
@@ -50,6 +50,17 @@ function toMoneyString(v: unknown): string {
 function resolveRequestedMediaType(input: unknown): 'audio' | 'video' {
   const mediaType = safeText(input);
   return mediaType === 'video' ? 'video' : 'audio';
+}
+
+function resolveServiceMediaType(
+  serviceMediaType: 'audio' | 'video' | null | undefined,
+  requestedMediaType: 'audio' | 'video',
+): 'audio' | 'video' {
+  // Hizmet seçilmişse medya tipi onun (tek doğruluk kaynağı = hizmet satırı).
+  if (serviceMediaType === 'video') return 'video';
+  if (serviceMediaType === 'audio') return 'audio';
+  // Hizmet yoksa (service_id'siz booking) istek/varsayılan.
+  return requestedMediaType;
 }
 
 async function resolveMediaAllowedForConsultant(args: { consultantId: string; mediaType: 'audio' | 'video' }) {
@@ -197,14 +208,14 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
       }
     }
 
-    const mediaType = resolveRequestedMediaType(input.media_type);
-    const { resolvedPrice } = await resolveMediaAllowedForConsultant({
-      consultantId: safeText(input.consultant_id),
-      mediaType,
-    });
-
     // T29-1: Eğer service_id verilmişse ve service ücretsiz ise → ödeme atla, direkt confirmed.
-    let serviceRow: { id: string; price: string; duration_minutes: number; is_free: number } | null = null;
+    let serviceRow: {
+      id: string;
+      price: string;
+      duration_minutes: number;
+      is_free: number;
+      media_type: 'audio' | 'video';
+    } | null = null;
     if (input.service_id) {
       const [s] = await db
         .select({
@@ -212,12 +223,25 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
           price: consultantServices.price,
           duration_minutes: consultantServices.duration_minutes,
           is_free: consultantServices.is_free,
+          media_type: consultantServices.media_type,
         })
         .from(consultantServices)
-        .where(eq(consultantServices.id, safeText(input.service_id)))
+        .where(
+          and(
+            eq(consultantServices.id, safeText(input.service_id)),
+            eq(consultantServices.consultant_id, safeText(input.consultant_id)),
+            eq(consultantServices.is_active, 1),
+          ),
+        )
         .limit(1);
       if (s) serviceRow = s as any;
     }
+
+    const mediaType = resolveServiceMediaType(serviceRow?.media_type, resolveRequestedMediaType(input.media_type));
+    const { resolvedPrice } = await resolveMediaAllowedForConsultant({
+      consultantId: safeText(input.consultant_id),
+      mediaType,
+    });
     const isFree = !!serviceRow?.is_free;
     const finalPrice = isFree ? '0.00' : (serviceRow?.price ? toMoneyString(serviceRow.price) : resolvedPrice);
     const finalDuration = serviceRow?.duration_minutes ?? input.session_duration ?? 30;
@@ -540,7 +564,13 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
     const userPhone = safeText(userRow?.phone);
 
     // Servis (varsa)
-    let serviceRow: { id: string; price: string; duration_minutes: number; is_free: number } | null = null;
+    let serviceRow: {
+      id: string;
+      price: string;
+      duration_minutes: number;
+      is_free: number;
+      media_type: 'audio' | 'video';
+    } | null = null;
     if (serviceId) {
       const [s] = await db
         .select({
@@ -548,9 +578,16 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
           price: consultantServices.price,
           duration_minutes: consultantServices.duration_minutes,
           is_free: consultantServices.is_free,
+          media_type: consultantServices.media_type,
         })
         .from(consultantServices)
-        .where(eq(consultantServices.id, serviceId))
+        .where(
+          and(
+            eq(consultantServices.id, serviceId),
+            eq(consultantServices.consultant_id, consultantId),
+            eq(consultantServices.is_active, 1),
+          ),
+        )
         .limit(1);
       if (s) serviceRow = s as any;
     }
@@ -587,6 +624,9 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
     const resource = (resArr as any[])?.[0];
     if (!resource) return reply.code(400).send({ error: { message: 'resource_not_found' } });
 
+    const mediaType = resolveServiceMediaType(serviceRow?.media_type, 'audio');
+    const { resolvedPrice } = await resolveMediaAllowedForConsultant({ consultantId, mediaType });
+
     // Direkt INSERT — slot validation atla (anlık talepte slot yok)
     await db.insert(bookingsTable).values({
       id,
@@ -601,8 +641,8 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
       resource_id: resource.id,
       appointment_date: today,
       appointment_time: time,
-      session_price: serviceRow?.is_free ? '0.00' : (serviceRow ? toMoneyString(serviceRow.price) : '0.00'),
-      media_type: 'audio',
+      session_price: serviceRow?.is_free ? '0.00' : (serviceRow ? toMoneyString(serviceRow.price) : resolvedPrice),
+      media_type: mediaType,
       session_duration: serviceRow?.duration_minutes ?? appConfig.consultants.defaultSessionDurationMinutes,
       source_type: 'instant',
       source_id: null,

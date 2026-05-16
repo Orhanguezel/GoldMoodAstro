@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS consultant_services (
   duration_minutes INT NOT NULL DEFAULT 45,
   price DECIMAL(10,2) NOT NULL DEFAULT 0,
   currency VARCHAR(3) NOT NULL DEFAULT 'TRY',
+  media_type ENUM('audio','video') NOT NULL DEFAULT 'audio',
   is_free TINYINT NOT NULL DEFAULT 0,
   is_active TINYINT NOT NULL DEFAULT 1,
   sort_order INT NOT NULL DEFAULT 0,
