@@ -75,15 +75,8 @@ const KvkkPageContent: React.FC = () => {
           <div className="max-w-4xl mx-auto">
             <style>{CMS_FALLBACK_CSS}</style>
 
-            <header className="mb-16 text-center">
-              <span className="font-display text-[10px] tracking-[0.4em] text-(--gm-gold-deep) uppercase mb-4 block">
-                {isTr ? 'YASAL BİLGİLENDİRME' : 'LEGAL INFORMATION'}
-              </span>
-              <h1 className="text-4xl md:text-6xl font-serif font-light text-(--gm-text) mb-8 leading-tight">
-                {title}
-              </h1>
-              <div className="h-px w-24 bg-gradient-to-r from-transparent via-(--gm-gold) to-transparent mx-auto" />
-            </header>
+            {/* Başlık zaten <Banner> (Breadcrumb hero) tarafından gösteriliyor —
+                tekrarı önlemek için içerik içi <header> kaldırıldı. */}
 
             {html ? (
               <article
