@@ -20,6 +20,10 @@
     "theme:inventory": "node scripts/check-theme-hardcodes.mjs --update-baseline --report",
     "theme:guard": "node scripts/check-theme-hardcodes.mjs",
     "theme:drift-check": "node scripts/check-token-drift.mjs",
+    "i18n:scan": "node scripts/scan-hardcoded-tr.mjs --report",
+    "i18n:scan:baseline": "node scripts/scan-hardcoded-tr.mjs --update-baseline --report",
+    "i18n:guard": "node scripts/scan-hardcoded-tr.mjs",
+    "theme:parity-qa": "node scripts/theme-parity-qa.mjs",
     "indexnow:ping": "bun scripts/indexnow-ping.ts",
     "relax:drift-check": "node scripts/check-relax-drift.mjs",
     "relax:asset-guard": "node scripts/check-relax-assets.mjs"
