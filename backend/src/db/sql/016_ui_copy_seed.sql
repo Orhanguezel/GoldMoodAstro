@@ -48,6 +48,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('01000000-0000-4000-8000-000000000225', 'ui_404_title', '*', '{"label":{"tr":"Sayfa Bulunamadı","en":"Page Not Found","de":"Seite nicht gefunden"}}'),
 ('01000000-0000-4000-8000-000000000226', 'ui_404_subtitle', '*', '{"label":{"tr":"Aradığınız sayfa taşınmış, silinmiş veya hiç var olmamış olabilir.","en":"The page you are looking for might have been moved, deleted, or does not exist.","de":"Die gesuchte Seite wurde moglicherweise verschoben, geloscht oder existiert nicht."}}'),
 ('01000000-0000-4000-8000-000000000227', 'ui_404_back_home', '*', '{"label":{"tr":"Ana Sayfaya Dön","en":"Back to Homepage","de":"Zur Startseite"}}'),
+('01000000-0000-4000-8000-00000000022d', 'ui_404_go_back', '*', '{"label":{"tr":"Geri Dön","en":"Go Back","de":"Zuruck"}}'),
 ('01000000-0000-4000-8000-000000000228', 'ui_500_title', '*', '{"label":{"tr":"Sunucu Hatası","en":"Internal Server Error","de":"Interner Serverfehler"}}'),
 ('01000000-0000-4000-8000-000000000229', 'ui_500_subtitle', '*', '{"label":{"tr":"Bizim tarafta bir şey ters gitti. Lütfen daha sonra tekrar deneyin.","en":"Something went wrong on our end. Please try again later.","de":"Auf unserer Seite ist etwas schiefgelaufen. Bitte versuche es spater erneut."}}'),
 ('01000000-0000-4000-8000-00000000022a', 'ui_500_try_again', '*', '{"label":{"tr":"Tekrar Dene","en":"Try Again","de":"Erneut versuchen"}}'),

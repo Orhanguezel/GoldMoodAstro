@@ -1,6 +1,13 @@
 /**
  * BecomeConsultantHero — "Danışman Ol" sayfası için premium hero banner.
  * Server Component — no 'use client' needed.
+ *
+ * Kontrast stratejisi:
+ *   • Arka plan görseli her zaman koyu (gece uzayı).
+ *   • Tüm metin renkleri theme değişkenlerine BAĞLI DEĞİL — sabit white/amber
+ *     kullanılıyor. Böylece light/dark her iki temada da garanti okunur.
+ *   • Header alanı (üst ~96px) için ekstra top-to-transparent siyah gradient
+ *     katmanı var; header nav linkleri transparan modda bile görünür.
  */
 import React from 'react';
 import Image from 'next/image';
@@ -30,46 +37,51 @@ export default function BecomeConsultantHero({ locale = 'tr' }: Props) {
         priority
       />
 
-      {/* Layered gradient overlays for depth */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0D0B1E]/95 via-[#120825]/80 to-[#0D0B1E]/30" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0D0B1E] via-transparent to-transparent opacity-60" />
+      {/* ── Kontrast katmanları ─────────────────────────────────────────── */}
+      {/* 1. Genel gradient sol → sağ: metin alanını karartır */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/20" />
+      {/* 2. Header overlay için üst kenar: nav linkleri (light modda da) okunur */}
+      <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/70 to-transparent" />
+      {/* 3. Alt kenar: alttaki sayfa içeriğiyle yumuşak geçiş */}
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
+      {/* ────────────────────────────────────────────────────────────────── */}
 
       {/* Decorative golden glow */}
       <div
         className="absolute right-[20%] top-1/2 -translate-y-1/2 h-96 w-96 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)' }}
       />
 
       {/* Animated star particles */}
-      <span className="absolute top-12 left-[42%] w-1.5 h-1.5 rounded-full bg-amber-300/70 animate-ping" style={{ animationDuration: '2.8s' }} />
+      <span className="absolute top-16 left-[42%] w-1.5 h-1.5 rounded-full bg-amber-300/70 animate-ping" style={{ animationDuration: '2.8s' }} />
       <span className="absolute top-1/3 left-[55%] w-1 h-1 rounded-full bg-purple-300/60 animate-ping" style={{ animationDuration: '3.5s' }} />
       <Star size={8} className="absolute bottom-20 left-[48%] text-amber-300/40 fill-amber-300/30 animate-pulse" style={{ animationDuration: '4s' }} />
 
-      {/* Gold line top */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
+      {/* Gold accent line top */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
 
-      {/* Content */}
+      {/* ── Content ────────────────────────────────────────────────────── */}
       <div className="relative z-10 w-full max-w-[1300px] mx-auto px-6 py-24 md:py-32 lg:py-36">
         <div className="max-w-2xl">
-          {/* Breadcrumb */}
+          {/* Breadcrumb — always white for contrast on dark hero */}
           <div className="flex items-center gap-2 mb-8 text-[10px] font-bold uppercase tracking-[0.24em]">
             <Link
               href={`/${locale}`}
-              className="text-white/40 hover:text-amber-300/80 transition-colors no-underline"
+              className="text-white/40 hover:text-amber-300/90 transition-colors no-underline"
             >
               {isTr ? 'Ana Sayfa' : 'Home'}
             </Link>
             <span className="text-white/20">/</span>
-            <span className="text-amber-400/80">{isTr ? 'Danışman Ol' : 'Become a Consultant'}</span>
+            <span className="text-amber-400/90">{isTr ? 'Danışman Ol' : 'Become a Consultant'}</span>
           </div>
 
           {/* Badge */}
-          <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-400/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.3em] text-amber-300 mb-8">
+          <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.3em] text-amber-300 mb-8 backdrop-blur-sm">
             <Sparkles size={10} />
             {isTr ? 'KARİYER FIRSATI' : 'CAREER OPPORTUNITY'}
           </span>
 
-          {/* Headline */}
+          {/* Headline — white, not theme-variable */}
           <h1 className="font-display text-4xl font-light leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl mb-6">
             {isTr ? (
               <>
@@ -86,8 +98,8 @@ export default function BecomeConsultantHero({ locale = 'tr' }: Props) {
             )}
           </h1>
 
-          {/* Subtitle */}
-          <p className="font-serif italic text-white/60 text-lg leading-relaxed mb-10 max-w-xl">
+          {/* Subtitle — always light on dark */}
+          <p className="font-serif italic text-white/65 text-lg leading-relaxed mb-10 max-w-xl">
             {isTr
               ? 'Binlerce ruhsal yolculuğa rehberlik edin. Kendi takviminizi oluşturun, kazancınızı büyütün.'
               : 'Guide thousands on their spiritual journey. Set your own schedule and grow your income.'}
@@ -124,8 +136,8 @@ export default function BecomeConsultantHero({ locale = 'tr' }: Props) {
         </div>
       </div>
 
-      {/* Gold line bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent" />
+      {/* Gold accent line bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/25 to-transparent" />
     </section>
   );
 }

@@ -36,10 +36,10 @@ const ABOUT_COPY: Record<string, AboutCopy> = {
       'GoldMoodAstro; astroloji, tarot, numeroloji ve ilişki dinamiklerini tek bir danışmanlık deneyiminde buluşturan bir platformdur. Amacımız insanlara kesin hükümler vermek değil, karar anlarında daha bilinçli, sakin ve kendilerine yakın hissettiren bir rehberlik alanı açmaktır.',
     founderTitle: 'Kurucu Hikayesi',
     founderParagraphs: [
-      'GoldMoodAstro fikri, Murat Kısıkçılar’ın dijital ürün deneyimiyle insanların hayatlarında daha kişisel, daha güven veren ve daha kolay ulaşılabilir rehberlik arayışını bir araya getirme isteğinden doğdu. Murat için iyi bir platform yalnızca hızlı çalışan ekranlardan ibaret değildir; kullanıcıyı doğru uzmana taşıyan, ödeme ve randevu akışını güvenle çözen, seans başladığında teknik detayları aradan kaldıran görünmez bir düzen demektir.',
+      'GoldMoodAstro fikri, Pınar Demircioğlu’nun ruhsal danışmanlık vizyonuyla insanların hayatlarında daha kişisel, daha güven veren ve daha kolay ulaşılabilir rehberlik arayışını bir araya getirme isteğinden doğdu. Pınar için iyi bir platform yalnızca hızlı çalışan ekranlardan ibaret değildir; kullanıcıyı doğru uzmana taşıyan, ödeme ve randevu akışını güvenle çözen, seans başladığında teknik detayları aradan kaldıran görünmez bir düzen demektir.',
       'Bu nedenle GoldMoodAstro’da teknoloji, spiritüel danışmanlığın önüne geçmez; ona alan açar. Kullanıcı danışman seçerken profil, uzmanlık, yorum, seans süresi ve ücret gibi bilgileri şeffaf biçimde görür. Danışman ise kendi takvimini, paketlerini, mesajlarını ve görüşmelerini yönetebileceği profesyonel bir panelle çalışır. Kurucu perspektifimiz basittir: ruhsal rehberlik, dijital dünyada da özenli, etik ve anlaşılır olabilir.',
       'GoldMoodAstro’nun ilk hedefi astroloji veya tarot merakını tek seferlik bir eğlenceye indirgemek değil, danışmanla kullanıcı arasında güvenli bir konuşma zemini kurmaktır. Bazen bir doğum haritası kişinin tekrar eden ilişki döngülerini görmesine yardımcı olur. Bazen bir tarot açılımı kararsızlık anında farklı olasılıkları isimlendirir. Bazen numeroloji, kişinin kendi ritmini ve karar alma biçimini fark etmesi için sade bir ayna tutar.',
-      'Murat’ın ürün yaklaşımında en kritik soru şudur: Kullanıcı seansa girmeden önce kendini daha güvende, daha bilgili ve daha az yalnız hissediyor mu? Bu yüzden platform yalnızca danışman listesi sunmaz; danışmanların hangi konularda çalıştığını, hangi dillerde hizmet verdiğini, hangi paketleri sunduğunu ve seansın nasıl ilerleyeceğini görünür kılar. Kullanıcı bir randevu oluşturduğunda ödeme, hatırlatma, mesajlaşma ve sesli görüşme adımları aynı akış içinde kalır. Böylece asıl odak teknik ayrıntılar değil, danışmanla kurulacak anlamlı görüşme olur.',
+      'Pınar’ın kurucu yaklaşımında en kritik soru şudur: Kullanıcı seansa girmeden önce kendini daha güvende, daha bilgili ve daha az yalnız hissediyor mu? Bu yüzden platform yalnızca danışman listesi sunmaz; danışmanların hangi konularda çalıştığını, hangi dillerde hizmet verdiğini, hangi paketleri sunduğunu ve seansın nasıl ilerleyeceğini görünür kılar. Kullanıcı bir randevu oluşturduğunda ödeme, hatırlatma, mesajlaşma ve sesli görüşme adımları aynı akış içinde kalır. Böylece asıl odak teknik ayrıntılar değil, danışmanla kurulacak anlamlı görüşme olur.',
       'GoldMoodAstro’nun uzun vadeli vizyonu, Türkiye’den başlayarak farklı dillerde hizmet veren güvenilir bir ruhsal danışmanlık ağı kurmaktır. Bu ağda danışmanların emeği görünür olmalı, kullanıcıların soruları ciddiyetle karşılanmalı ve her içerik sorumlu bir dille yazılmalıdır. Astroloji, tarot veya numeroloji bir insanın hayatını tek başına yönetmez; ancak kişi kendi duygusunu, ihtiyacını ve olasılıklarını daha iyi gördüğünde karar alma biçimi değişebilir. Platformun varlık sebebi tam olarak bu farkındalık alanını büyütmektir.',
     ],
     methodologyTitle: 'Metodoloji',
@@ -80,7 +80,7 @@ const ABOUT_COPY: Record<string, AboutCopy> = {
       'GoldMoodAstro brings astrology, tarot, numerology and relationship insight into one consultation platform. We do not aim to hand people fixed answers; we create a guided space where choices can be seen with more calm, context and self-trust.',
     founderTitle: 'Founder Story',
     founderParagraphs: [
-      'GoldMoodAstro was shaped by Murat Kısıkçılar’s product perspective and by a simple observation: people look for guidance at sensitive moments, but the digital experience around that guidance is often scattered. A good platform should help users find the right consultant, understand the session clearly, pay safely and start the conversation without technical friction.',
+      'GoldMoodAstro was shaped by founder Pınar Demircioğlu’s vision for spiritual guidance and by a simple observation: people look for guidance at sensitive moments, but the digital experience around that guidance is often scattered. A good platform should help users find the right consultant, understand the session clearly, pay safely and start the conversation without technical friction.',
       'Technology is therefore not the hero of GoldMoodAstro. It is the quiet structure that protects the consultation. Users can compare profiles, expertise, reviews, session duration and pricing. Consultants can manage availability, services, messages and calls through a professional workflow. The founding principle is practical: spiritual guidance can be thoughtful, ethical and modern at the same time.',
     ],
     methodologyTitle: 'Methodology',
@@ -109,7 +109,7 @@ const ABOUT_COPY: Record<string, AboutCopy> = {
       'GoldMoodAstro verbindet Astrologie, Tarot, Numerologie und Beziehungsfragen in einer Plattform für Beratung. Unser Ziel sind keine starren Antworten, sondern ein ruhiger Raum für Orientierung, Kontext und bewusstere Entscheidungen.',
     founderTitle: 'Gründungsgeschichte',
     founderParagraphs: [
-      'GoldMoodAstro entstand aus Murat Kısıkçılars Produktperspektive und der Beobachtung, dass Menschen in sensiblen Momenten Orientierung suchen, die digitale Erfahrung rund um Beratung aber oft unübersichtlich ist. Eine gute Plattform soll helfen, die passende Beratungsperson zu finden, den Ablauf zu verstehen, sicher zu bezahlen und ohne technische Hürden ins Gespräch zu kommen.',
+      'GoldMoodAstro entstand aus der Vision der Gründerin Pınar Demircioğlu für spirituelle Beratung und der Beobachtung, dass Menschen in sensiblen Momenten Orientierung suchen, die digitale Erfahrung rund um Beratung aber oft unübersichtlich ist. Eine gute Plattform soll helfen, die passende Beratungsperson zu finden, den Ablauf zu verstehen, sicher zu bezahlen und ohne technische Hürden ins Gespräch zu kommen.',
       'Technologie steht bei GoldMoodAstro deshalb nicht im Vordergrund. Sie bildet die ruhige Struktur, die Beratung möglich macht. Nutzer sehen Profile, Fachgebiete, Bewertungen, Dauer und Preise. Berater verwalten Verfügbarkeit, Angebote, Nachrichten und Gespräche in einem professionellen Ablauf.',
     ],
     methodologyTitle: 'Methodik',
@@ -244,7 +244,7 @@ const AboutPageContent: React.FC = () => {
 
           <div className="mt-12 rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-10 shadow-(--gm-shadow-soft)">
             <AuthorBio
-              name="Murat Kısıkçılar"
+              name="Pınar Demircioğlu"
               title={locale === 'tr' ? 'GoldMoodAstro Kurucusu' : locale === 'de' ? 'Gründer von GoldMoodAstro' : 'Founder of GoldMoodAstro'}
               bio={copy.authorBio}
               expertise={['Product', 'Astrology Platform', 'Spiritual Guidance']}

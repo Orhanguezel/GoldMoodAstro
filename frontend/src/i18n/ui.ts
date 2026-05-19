@@ -24,6 +24,7 @@ export const UI_FALLBACK_EN = {
   ui_404_title: 'Page Not Found',
   ui_404_subtitle: "The page you are looking for might have been moved, deleted, or doesn't exist.",
   ui_404_back_home: 'Back to Homepage',
+  ui_404_go_back: 'Go Back',
   ui_404_redirect_info: 'You will be redirected to the homepage in {seconds} seconds.',
   ui_500_title: 'Internal Server Error',
   ui_500_subtitle: 'Something went wrong on our end. Please try again later.',

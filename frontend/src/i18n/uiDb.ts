@@ -566,6 +566,8 @@ const SECTION_KEYS: Record<UiSectionKey, readonly string[]> = {
     'ui_404_title',
     'ui_404_subtitle',
     'ui_404_back_home',
+    'ui_404_go_back',
+    'ui_404_redirect_info',
     'ui_500_title',
     'ui_500_subtitle',
     'ui_500_try_again',

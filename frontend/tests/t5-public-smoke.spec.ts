@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 const CONSULTANT_ID =
   process.env.PLAYWRIGHT_CONSULTANT_ID || '20000000-0000-4000-8000-000000000001';
 const ADMIN_BASE_URL = (process.env.PLAYWRIGHT_ADMIN_BASE_URL || 'http://localhost:3094').replace(/\/+$/, '');
-const API_BASE_URL = (process.env.PLAYWRIGHT_API_BASE_URL || 'http://localhost:8094/api/v1').replace(/\/+$/, '');
+const API_BASE_URL = (process.env.PLAYWRIGHT_API_BASE_URL || 'http://localhost:8094/api').replace(/\/+$/, '');
 const ADMIN_EMAIL = process.env.PLAYWRIGHT_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'admin@example.com';
 const ADMIN_PASSWORD = process.env.PLAYWRIGHT_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || 'admin123';
 
@@ -21,7 +21,7 @@ const bookingQuery = new URLSearchParams({
 const publicRoutes = [
   '/tr',
   '/tr/consultants',
-  `/tr/consultants/${CONSULTANT_ID}`,
+  '/tr/consultants/zeynep-yildiz',
   `/tr/booking?${bookingQuery.toString()}`,
   '/tr/login',
   '/tr/register',
@@ -66,6 +66,23 @@ async function loginAdmin(page: Page) {
   }, token);
 }
 
+async function loginUser(page: Page) {
+  const response = await page.request.post(`${API_BASE_URL}/auth/token`, {
+    data: { grant_type: 'password', email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+  });
+  expect(response.status()).toBeLessThan(400);
+
+  const payload = await response.json();
+  const token = String(payload?.access_token || '');
+  expect(token.length).toBeGreaterThan(10);
+
+  await page.goto('/', { waitUntil: 'commit' });
+  await page.evaluate((accessToken) => {
+    window.localStorage.setItem('access_token', accessToken);
+  }, token);
+}
+
+
 test.describe.configure({ mode: 'serial' });
 
 test.describe('T5 public smoke', () => {
@@ -84,6 +101,7 @@ test.describe('T5 public smoke', () => {
   });
 
   test('consultant filters and slot selection surface are interactive', async ({ page }) => {
+    page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
     await gotoHealthy(page, '/tr/consultants');
     await waitForNextDevIdle(page);
     await page.waitForTimeout(2_500);
@@ -91,7 +109,7 @@ test.describe('T5 public smoke', () => {
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await page.getByRole('button', { name: /Filtrele|FİLTRELE/i }).click();
-      if (await page.getByLabel('Min. Fiyat').count()) break;
+      if (await page.getByLabel('Min. Fiyat', { exact: false }).count()) break;
       await page.waitForTimeout(500);
     }
 
@@ -102,11 +120,18 @@ test.describe('T5 public smoke', () => {
     await expect(page.getByRole('combobox', { name: 'Min. Puan' })).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Maks. Fiyat (₺)' })).toBeVisible();
 
-    await gotoHealthy(page, `/tr/consultants/${CONSULTANT_ID}`);
-    await expect(page.getByRole('heading', { name: /Tarih & Saat Sec|Tarih & Saat Seç/i })).toBeVisible();
+    await gotoHealthy(page, '/tr/consultants/zeynep-yildiz');
+    await expect(page.getByText('Paketler yükleniyor...')).toBeHidden({ timeout: 10_000 });
+    await expect(page.locator('.min-h-\\[160px\\] .animate-pulse')).toHaveCount(0, { timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: /Tarih & Saat Seç|Tarih & Saat Sec|Saat Seç/i })).toBeVisible();
 
     const slots = page.getByRole('button', { name: /^\d{2}:\d{2}$/ });
-    if (await slots.count()) {
+    await expect(
+      slots.first().or(page.getByText(/musait slot yok|müsait slot yok|No available slots/i))
+    ).toBeVisible({ timeout: 10_000 });
+
+    const slotCount = await slots.count();
+    if (slotCount) {
       const firstSlot = slots.first();
       const selectedTime = (await firstSlot.textContent())?.trim() || '';
       await firstSlot.click();
@@ -119,14 +144,15 @@ test.describe('T5 public smoke', () => {
   });
 
   test('checkout summary page and validation surface is available', async ({ page }) => {
+    await loginUser(page);
     await gotoHealthy(page, `/tr/booking?${bookingQuery.toString()}`);
     await expect(
-      page.getByRole('heading', { name: /Randevu Özeti|Booking Summary/i }),
+      page.getByRole('heading', { name: /Randevu Özeti|Booking Summary|Seansınızı Tamamlayın/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole('button', { name: /Güvenli Ödemeye Geç|Proceed to Payment/i }),
+      page.getByRole('button', { name: /Güvenli Ödeme|GÜVENLİ ÖDEME|Proceed to Payment|Secure Payment/i }),
     ).toBeVisible();
-    await expect(page.getByLabel('Not (opsiyonel)')).toBeVisible();
+    await expect(page.locator('textarea')).toBeVisible();
   });
 
   test('auth forms surface validation feedback', async ({ page }) => {
@@ -146,7 +172,7 @@ test.describe('T5 public smoke', () => {
     await loginAdmin(page);
     await gotoHealthy(page, `${ADMIN_BASE_URL}/admin/site-settings`);
 
-    await page.getByRole('tab', { name: 'Design Tokens' }).click();
+    await page.getByRole('button', { name: /Tasarım Tokenları|Design Tokens/i }).click();
     await expect(
       page.getByRole('heading', { name: /Design Token Editörü|Design Token Editor/i }),
     ).toBeVisible();

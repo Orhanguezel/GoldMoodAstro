@@ -167,8 +167,9 @@ ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), displa
 INSERT INTO menu_items (id, location, section_id, type, url, is_active, display_order) VALUES
   ('mi-f-comp-about', 'footer', 'fs-company', 'custom', '/about',       1, 10),
   ('mi-f-comp-cons',  'footer', 'fs-company', 'custom', '/consultants', 1, 20),
-  ('mi-f-comp-blog',  'footer', 'fs-company', 'custom', '/blog',        1, 30),
-  ('mi-f-comp-cont',  'footer', 'fs-company', 'custom', '/contact',     1, 40)
+  ('mi-f-comp-become','footer', 'fs-company', 'custom', '/become-consultant', 1, 30),
+  ('mi-f-comp-blog',  'footer', 'fs-company', 'custom', '/blog',        1, 40),
+  ('mi-f-comp-cont',  'footer', 'fs-company', 'custom', '/contact',     1, 50)
 ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Yasal column
@@ -219,6 +220,9 @@ INSERT INTO menu_items_i18n (id, menu_item_id, locale, title) VALUES
   ('mi-fi-ccons-tr', 'mi-f-comp-cons',  @loc_tr, 'Danışmanlar'),
   ('mi-fi-ccons-en', 'mi-f-comp-cons',  @loc_en, 'Consultants'),
   ('mi-fi-ccons-de', 'mi-f-comp-cons',  @loc_de, 'Berater'),
+  ('mi-fi-cbec-tr',  'mi-f-comp-become', @loc_tr, 'Danışman Ol'),
+  ('mi-fi-cbec-en',  'mi-f-comp-become', @loc_en, 'Become a Consultant'),
+  ('mi-fi-cbec-de',  'mi-f-comp-become', @loc_de, 'Berater werden'),
   ('mi-fi-cblog-tr', 'mi-f-comp-blog',  @loc_tr, 'Blog'),
   ('mi-fi-cblog-en', 'mi-f-comp-blog',  @loc_en, 'Blog'),
   ('mi-fi-cblog-de', 'mi-f-comp-blog',  @loc_de, 'Blog'),

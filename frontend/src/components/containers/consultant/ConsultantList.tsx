@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Users, Search } from 'lucide-react';
 
 
@@ -19,6 +19,7 @@ type Props = {
 };
 
 export default function ConsultantList({ locale, initialExpertise = '', initialData = [] }: Props) {
+  const resultsRef = useRef<HTMLDivElement | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     expertise: initialExpertise,
     minPrice: 0,
@@ -44,6 +45,21 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
   const visibleConsultants = consultants.length > 0 ? consultants : (isInitialFilterState ? initialData : []);
   const showSkeleton = isFetching && visibleConsultants.length === 0;
 
+  const scrollToResults = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      const el = resultsRef.current;
+      if (!el) return;
+      const headerOffset = 112;
+      const top = el.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    });
+  }, []);
+
+  const handleFilterChange = useCallback((nextFilters: FilterState) => {
+    setFilters(nextFilters);
+    scrollToResults();
+  }, [scrollToResults]);
+
   return (
     <div className="space-y-12">
       {/* Filters Section */}
@@ -52,13 +68,13 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
           <Search className="w-5 h-5 text-[var(--gm-gold)]" />
           <h2 className="font-serif text-xl text-[var(--gm-text)]">Arama & Filtreleme</h2>
         </div>
-        <ConsultantFilters filters={filters} onChange={setFilters} />
+        <ConsultantFilters filters={filters} onChange={handleFilterChange} />
       </div>
 
       <DiscountPromoBanner locale={locale} />
 
       {/* Grid Section */}
-      <div className="relative min-h-[400px]">
+      <div ref={resultsRef} className="relative min-h-[400px] scroll-mt-28">
         {isError ? (
           <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
             <div className="w-16 h-16 rounded-full bg-[var(--gm-error)]/10 flex items-center justify-center">
@@ -96,7 +112,7 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
                 : 'No consultants match your criteria.'}
             </p>
             <button 
-              onClick={() => setFilters({ expertise: '', minPrice: 0, minRating: 0, maxPrice: 0 })}
+              onClick={() => handleFilterChange({ expertise: '', minPrice: 0, minRating: 0, maxPrice: 0 })}
               className="text-[var(--gm-gold)] font-bold text-xs uppercase tracking-widest border-b border-[var(--gm-gold)] pb-1"
             >
               Filtreleri Temizle

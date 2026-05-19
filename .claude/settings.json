@@ -126,7 +126,12 @@
       "Bash(git ls-tree *)",
       "Bash(curl -s -o /dev/null -w \"admin /admin/mail → %{http_code}\\\\n\" \"https://admin.goldmoodastro.com/admin/mail\" --max-time 12)",
       "Bash(curl -s -o /dev/null -w \"admin /admin/payment-settings → %{http_code}\\\\n\" \"https://admin.goldmoodastro.com/admin/payment-settings\" --max-time 12)",
-      "Bash(timeout 590 ./deploy/deploy.sh backend)"
+      "Bash(timeout 590 ./deploy/deploy.sh backend)",
+      "Bash(awk -F/ '{print $1\"/\"$2}')",
+      "Bash(git branch *)",
+      "Bash(timeout 240 bunx tsc --noEmit)",
+      "Bash(timeout 280 bunx tsc --noEmit)",
+      "Bash(timeout 200 bunx tsc --noEmit)"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [

@@ -412,30 +412,30 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
 
         {/* Mobile Menu Dropdown */}
         <div
-          className={`fixed inset-0 z-[40] bg-[var(--gm-bg)]/98 backdrop-blur-xl transition-all duration-500 lg:hidden flex flex-col justify-center items-center px-12 text-center
+          className={`fixed inset-0 z-[40] bg-[var(--gm-bg)]/98 backdrop-blur-xl transition-all duration-500 lg:hidden flex flex-col items-center overflow-y-auto px-6 pb-10 pt-28 text-center
             ${mobileOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
         >
-          <ul className="flex flex-col gap-6 list-none m-0 p-0 mb-12 max-h-[70vh] overflow-y-auto">
+          <ul className="flex w-full max-w-sm flex-col gap-3 list-none m-0 p-0 mb-8">
             {headerMenuItems.map((item) => {
               const children = item.children ?? [];
               const hasChildren = children.length > 0;
               const itemUrl = item.url || '';
               return (
-                <li key={item.id} className="text-center">
+                <li key={item.id} className="w-full text-center">
                   {hasChildren ? (
-                    <details className="group/m">
-                      <summary className="flex items-center justify-center gap-2 cursor-pointer font-display text-2xl tracking-widest text-[var(--gm-gold)] list-none">
+                    <details className="group/m rounded-2xl border border-transparent open:border-[var(--gm-border-soft)] open:bg-[var(--gm-surface)]/55 open:px-3 open:py-3 open:shadow-[var(--gm-shadow-soft)] transition-all">
+                      <summary className="flex min-h-12 items-center justify-center gap-2 cursor-pointer font-display text-[1.35rem] tracking-[0.16em] text-[var(--gm-gold)] list-none [&::-webkit-details-marker]:hidden">
                         {item.title}
-                        <ChevronDown className="w-4 h-4 transition-transform group-open/m:rotate-180" />
+                        <ChevronDown className="w-4 h-4 shrink-0 transition-transform group-open/m:rotate-180" />
                       </summary>
-                      <ul className="mt-4 flex flex-col gap-3 list-none p-0">
+                      <ul className="mt-2 flex flex-col gap-1 list-none rounded-xl border border-[var(--gm-border-soft)] bg-[var(--gm-bg)]/45 p-2">
                         {children.map((c) => {
                           const cu = c.url || '#';
                           return (
                             <li key={c.id}>
                               <Link
                                 href={isExternalHref(cu) ? cu : localizePath(locale, cleanHashLink(cu))}
-                                className="font-serif text-lg italic text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)]"
+                                className="block rounded-lg px-4 py-2.5 font-serif text-base italic text-[var(--gm-text-dim)] transition-colors hover:bg-[var(--gm-primary)]/10 hover:text-[var(--gm-gold)]"
                                 onClick={() => setMobileOpen(false)}
                               >
                                 {c.title}
@@ -448,7 +448,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                   ) : (
                     <Link
                       href={itemUrl ? (isExternalHref(itemUrl) ? itemUrl : localizePath(locale, cleanHashLink(itemUrl))) : '#'}
-                      className="font-display text-2xl tracking-widest text-[var(--gm-gold)]"
+                      className="flex min-h-12 items-center justify-center rounded-2xl px-3 font-display text-[1.35rem] tracking-[0.16em] text-[var(--gm-gold)] transition-colors hover:bg-[var(--gm-surface)]/55"
                       onClick={() => setMobileOpen(false)}
                     >
                       {item.title}
