@@ -225,6 +225,15 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
+  // Sayfada koyu (dark) bir hero/banner var mı? — transparent header'da
+  // metin beyaz/kontrastlı olsun. Anasayfa hero'su koyu ay/gece görseli
+  // kullanıyor → nav metni beyaz olmalı (yoksa koyu zeminde okunmuyor).
+  const isHome = !pathname || pathname === '/' || /^\/(tr|en|de)\/?$/.test(pathname);
+  const hasHeroOverlay = !scrolled && (
+    isHome ||
+    pathname?.includes('/become-consultant')
+  );
+
   const homeHref = localizePath(locale, '/');
   const consultantsHref = localizePath(locale, '/consultants');
   const consultantPanelHref = localizePath(locale, '/me/consultant');
@@ -246,7 +255,9 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
             <span className="font-display font-semibold text-[16px] lg:text-[18px] tracking-[0.18em] text-[var(--gm-gold-deep)] transition-colors group-hover:text-[var(--gm-gold)]">
               GOLD MOOD
             </span>
-            <span className="font-display text-[9px] lg:text-[10px] tracking-[0.32em] text-[var(--gm-text-dim)] mt-0.5">
+            <span className={`font-display text-[9px] lg:text-[10px] tracking-[0.32em] mt-0.5 transition-colors ${
+              hasHeroOverlay ? 'text-white/50' : 'text-[var(--gm-text-dim)]'
+            }`}>
               ASTROLOGY
             </span>
           </Link>
@@ -284,7 +295,11 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                     <li key={item.id} className="static group/dd">
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1.5 py-3 font-serif text-[13px] font-normal tracking-[0.05em] text-[var(--gm-text)] hover:text-[var(--gm-primary)] transition-colors cursor-default"
+                        className={`inline-flex items-center gap-1.5 py-3 font-serif text-[13px] font-normal tracking-[0.05em] transition-colors cursor-default ${
+                          hasHeroOverlay
+                            ? 'text-white/90 hover:text-amber-300'
+                            : 'text-[var(--gm-text)] hover:text-[var(--gm-primary)]'
+                        }`}
                       >
                         {label}
                         <ChevronDown className="w-3 h-3 transition-transform group-hover/dd:rotate-180" />
@@ -309,7 +324,14 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
 
                 return (
                   <li key={item.id}>
-                    <Link href={href} className="font-serif text-[13px] font-normal tracking-[0.05em] text-[var(--gm-text)] hover:text-[var(--gm-gold-deep)] transition-colors relative group">
+                    <Link
+                      href={href}
+                      className={`font-serif text-[13px] font-normal tracking-[0.05em] transition-colors relative group ${
+                        hasHeroOverlay
+                          ? 'text-white/90 hover:text-amber-300'
+                          : 'text-[var(--gm-text)] hover:text-[var(--gm-gold-deep)]'
+                      }`}
+                    >
                       {label}
                       <span className="absolute bottom-[-4px] left-0 w-0 h-[1px] bg-[var(--gm-gold)] transition-all duration-300 group-hover:w-full" />
                     </Link>
