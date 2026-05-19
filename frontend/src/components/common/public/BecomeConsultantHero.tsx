@@ -1,0 +1,131 @@
+/**
+ * BecomeConsultantHero — "Danışman Ol" sayfası için premium hero banner.
+ * Server Component — no 'use client' needed.
+ */
+import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Sparkles, ChevronRight, ShieldCheck, Star } from 'lucide-react';
+
+interface Props {
+  locale?: string;
+}
+
+export default function BecomeConsultantHero({ locale = 'tr' }: Props) {
+  const isTr = locale === 'tr';
+
+  return (
+    <section
+      data-header-overlay="true"
+      className="relative overflow-hidden"
+      style={{ minHeight: 480 }}
+    >
+      {/* Background image */}
+      <Image
+        src="/images/banner-become-consultant-bg.png"
+        alt={isTr ? 'Danışman Ol' : 'Become a Consultant'}
+        fill
+        sizes="100vw"
+        className="object-cover object-right-center"
+        priority
+      />
+
+      {/* Layered gradient overlays for depth */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#0D0B1E]/95 via-[#120825]/80 to-[#0D0B1E]/30" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0D0B1E] via-transparent to-transparent opacity-60" />
+
+      {/* Decorative golden glow */}
+      <div
+        className="absolute right-[20%] top-1/2 -translate-y-1/2 h-96 w-96 rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)' }}
+      />
+
+      {/* Animated star particles */}
+      <span className="absolute top-12 left-[42%] w-1.5 h-1.5 rounded-full bg-amber-300/70 animate-ping" style={{ animationDuration: '2.8s' }} />
+      <span className="absolute top-1/3 left-[55%] w-1 h-1 rounded-full bg-purple-300/60 animate-ping" style={{ animationDuration: '3.5s' }} />
+      <Star size={8} className="absolute bottom-20 left-[48%] text-amber-300/40 fill-amber-300/30 animate-pulse" style={{ animationDuration: '4s' }} />
+
+      {/* Gold line top */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
+
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-[1300px] mx-auto px-6 py-24 md:py-32 lg:py-36">
+        <div className="max-w-2xl">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 mb-8 text-[10px] font-bold uppercase tracking-[0.24em]">
+            <Link
+              href={`/${locale}`}
+              className="text-white/40 hover:text-amber-300/80 transition-colors no-underline"
+            >
+              {isTr ? 'Ana Sayfa' : 'Home'}
+            </Link>
+            <span className="text-white/20">/</span>
+            <span className="text-amber-400/80">{isTr ? 'Danışman Ol' : 'Become a Consultant'}</span>
+          </div>
+
+          {/* Badge */}
+          <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-400/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.3em] text-amber-300 mb-8">
+            <Sparkles size={10} />
+            {isTr ? 'KARİYER FIRSATI' : 'CAREER OPPORTUNITY'}
+          </span>
+
+          {/* Headline */}
+          <h1 className="font-display text-4xl font-light leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl mb-6">
+            {isTr ? (
+              <>
+                Uzmanlığınla{' '}
+                <span className="text-amber-400 italic font-serif">Danışman Ol,</span>
+                <br />
+                Dünyayı Aydınlat
+              </>
+            ) : (
+              <>
+                Share Your Wisdom,{' '}
+                <span className="text-amber-400 italic font-serif">Become a Consultant</span>
+              </>
+            )}
+          </h1>
+
+          {/* Subtitle */}
+          <p className="font-serif italic text-white/60 text-lg leading-relaxed mb-10 max-w-xl">
+            {isTr
+              ? 'Binlerce ruhsal yolculuğa rehberlik edin. Kendi takviminizi oluşturun, kazancınızı büyütün.'
+              : 'Guide thousands on their spiritual journey. Set your own schedule and grow your income.'}
+          </p>
+
+          {/* Stats row */}
+          <div className="flex flex-wrap gap-8 mb-10">
+            {[
+              { val: '500+', label: isTr ? 'Aktif Kullanıcı' : 'Active Users' },
+              { val: '%70', label: isTr ? 'Gelir Payı' : 'Revenue Share' },
+              { val: '48s', label: isTr ? 'Hızlı Onay' : 'Fast Approval' },
+            ].map(({ val, label }) => (
+              <div key={label} className="flex flex-col gap-0.5">
+                <span className="font-display text-2xl font-semibold text-amber-400">{val}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">{label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA button */}
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="#basvuru-formu"
+              className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-8 py-3.5 text-xs font-bold uppercase tracking-[0.22em] text-[#0D0B1E] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(212,175,55,0.5)]"
+            >
+              {isTr ? 'Hemen Başvur' : 'Apply Now'}
+              <ChevronRight size={14} />
+            </Link>
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/40">
+              <ShieldCheck size={13} className="text-emerald-400/70" />
+              {isTr ? 'Başvurular 48s içinde değerlendirilir' : 'Applications reviewed within 48h'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Gold line bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent" />
+    </section>
+  );
+}

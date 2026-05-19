@@ -1,13 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Users, Search, Sparkles } from 'lucide-react';
+import { Users, Search } from 'lucide-react';
+
 
 import { useListConsultantsQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
 import type { ConsultantPublic } from '@/integrations/rtk/public/consultants.public.endpoints';
 import ConsultantCard from './ConsultantCard';
 import ConsultantFilters, { type FilterState } from './ConsultantFilters';
 import Banner from '@/components/common/public/Banner';
+import { DiscountPromoBanner, BecomeConsultantBanner } from '@/components/common/public/PromoBanners';
+
 
 type Props = {
   locale: string;
@@ -52,7 +55,7 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
         <ConsultantFilters filters={filters} onChange={setFilters} />
       </div>
 
-      <Banner placement="consultant_list" className="rounded-[32px] overflow-hidden" />
+      <DiscountPromoBanner locale={locale} />
 
       {/* Grid Section */}
       <div className="relative min-h-[400px]">
@@ -108,14 +111,8 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
         )}
       </div>
 
-      {/* Footer Info */}
-      <div className="mt-20 p-12 rounded-[40px] bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] text-center relative overflow-hidden">
-        <Sparkles className="w-12 h-12 text-[var(--gm-gold)] opacity-10 absolute top-10 right-10" />
-        <h3 className="font-serif text-3xl text-[var(--gm-text)] mb-4">Gezegenlerin Rehberliği</h3>
-        <p className="text-[var(--gm-text-dim)] max-w-2xl mx-auto italic font-serif leading-relaxed">
-          Tüm danışmanlarımız alanında uzman ve doğrulanmış profillerdir. Kişisel gelişiminize ve ruhsal farkındalığınıza katkı sağlamak için buradayız.
-        </p>
-      </div>
+      {/* Become Consultant CTA Banner */}
+      <BecomeConsultantBanner locale={locale} className="mt-8" />
     </div>
   );
 }
