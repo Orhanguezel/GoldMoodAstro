@@ -22,6 +22,8 @@ const STATIC_EXT_RE = /\.(?:ico|png|jpg|jpeg|gif|svg|webp|woff2?|ttf|otf|eot|css
 // Danışman detay kanonikleştirme
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 const CONSULTANT_PATH_RE = /^\/([^/]+)\/consultants\/([^/]+)\/?$/;
+// Sezgisel /:locale/consultant → gerçek panel /:locale/me/consultant
+const CONSULTANT_PANEL_RE = /^\/([^/]+)\/consultant\/?$/;
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
 
 async function consultantSlugRedirect(req: NextRequest): Promise<NextResponse | null> {
@@ -72,6 +74,13 @@ export async function proxy(req: NextRequest) {
 
   // Locale prefix var ve destekli
   if (firstSeg && (SUPPORTED_LOCALES as readonly string[]).includes(firstSeg)) {
+    // Sezgisel /:locale/consultant → danışman paneli /:locale/me/consultant (308)
+    const panelMatch = pathname.match(CONSULTANT_PANEL_RE);
+    if (panelMatch) {
+      const url = req.nextUrl.clone();
+      url.pathname = `/${panelMatch[1]}/me/consultant`;
+      return NextResponse.redirect(url, 308);
+    }
     // Danışman detay: id (UUID) → slug kanonik 308
     const redirect = await consultantSlugRedirect(req);
     if (redirect) return redirect;
