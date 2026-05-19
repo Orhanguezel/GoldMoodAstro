@@ -125,6 +125,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
   // URL her zaman isim-slug olsun: param slug değilse (id/eski slug) slug'a yönlendir.
   // UUID_RE'ye bağlı değil — slug varsa ve param slug'a eşit değilse koşulsuz yönlendir.
   const slug = consultant?.slug?.trim();
+  console.error('[CONSULTANT_REDIRECT_DEBUG]', JSON.stringify({ id, slug, willRedirect: !!(slug && decodeURIComponent(id) !== slug) }));
   if (slug && decodeURIComponent(id) !== slug) {
     permanentRedirect(`/${locale}/consultants/${slug}`);
   }
