@@ -133,7 +133,9 @@ export default function BecomeConsultantPage() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-(--gm-gold)/5 blur-[120px] rounded-full -mr-64 -mt-32 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-(--gm-primary)/5 blur-[100px] rounded-full -ml-48 -mb-24 pointer-events-none" />
 
-      <div className="relative z-10">
+      {/* Hero'daki "Hemen Başvur" (#basvuru-formu) buraya kayar.
+          scroll-mt: sabit header altında kalmasın. */}
+      <div id="basvuru-formu" className="relative z-10 scroll-mt-28">
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
