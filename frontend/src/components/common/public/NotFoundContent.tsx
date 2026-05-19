@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Home, ArrowLeft, Timer } from 'lucide-react';
+import { Home, ArrowLeft, Timer, Star } from 'lucide-react';
 import { useUiSection } from '@/i18n';
 
 type Props = {
@@ -26,136 +26,136 @@ export function NotFoundContent({ locale, homePath }: Props) {
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [homePath, router]);
 
   const getRedirectText = () => {
-    const raw = ui('ui_404_redirect_info', 'You will be redirected to the homepage in {seconds} seconds.');
+    const raw = ui(
+      'ui_404_redirect_info',
+      '{seconds} saniye içinde ana sayfaya yönlendirileceksiniz.',
+    );
     return raw.replace('{seconds}', countdown.toString());
   };
 
-  const getNoPageText = () => {
-    switch (locale) {
-      case 'tr': return 'Aradığınız sayfa bulunamadı veya artık mevcut değil.';
-      case 'de': return 'Die von Ihnen gesuchte Seite wurde nicht gefunden oder existiert nicht mehr.';
-      default: return ui('ui_404_subtitle', "The page you are looking for might have been moved, deleted, or doesn't exist.");
-    }
-  };
-
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-[75vh] px-4 text-center overflow-hidden">
-      <div className="max-w-2xl w-full z-10 animate-fade-in">
-        <div className="relative mb-6 overflow-hidden max-w-full">
-          <h1 className="text-8xl sm:text-9xl md:text-[14rem] font-serif font-light text-[var(--gm-error)]/20 select-none leading-none animate-slide-up">
-            404
-          </h1>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <h2 className="text-4xl md:text-6xl font-serif font-light text-text-primary px-4 animate-fade-in-delay-300">
-              {ui('ui_404_title', 'Page Not Found')}
-            </h2>
-          </div>
+    /*
+     * Kontrast stratejisi: tüm sayfa kendi koyu arka planına sahip.
+     * Metin renkleri sabit white/amber — tema değişkenine BAĞIMLI DEĞİL.
+     * Böylece hem light hem dark temada garantili okunur.
+     */
+    <div
+      className="relative flex flex-col items-center justify-center min-h-screen px-6 py-20 text-center overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #0D0B1E 0%, #1A1630 50%, #120825 100%)' }}
+    >
+      {/* ── Decorative glows ─────────────────────────────────────── */}
+      <div
+        className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(123,94,167,0.18) 0%, transparent 70%)' }}
+      />
+      <div
+        className="absolute bottom-[-10%] left-[-5%] w-[700px] h-[700px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(212,175,55,0.10) 0%, transparent 70%)' }}
+      />
+
+      {/* ── Animated star particles ───────────────────────────────── */}
+      <span className="absolute top-[15%] left-[20%] w-1.5 h-1.5 rounded-full bg-amber-300/60 animate-ping" style={{ animationDuration: '2.8s' }} />
+      <span className="absolute top-[35%] right-[18%] w-1 h-1 rounded-full bg-purple-300/50 animate-ping" style={{ animationDuration: '3.5s' }} />
+      <span className="absolute bottom-[25%] left-[30%] w-1.5 h-1.5 rounded-full bg-amber-200/40 animate-ping" style={{ animationDuration: '4.2s' }} />
+      <Star size={9} className="absolute top-[28%] right-[28%] text-amber-300/30 fill-amber-300/20 animate-pulse" style={{ animationDuration: '3s' }} />
+      <Star size={7} className="absolute bottom-[35%] right-[15%] text-purple-300/25 fill-purple-300/15 animate-pulse" style={{ animationDuration: '4s' }} />
+
+      {/* ── Gold line top ─────────────────────────────────────────── */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
+
+      {/* ── Content ──────────────────────────────────────────────── */}
+      <div className="relative z-10 max-w-2xl w-full" style={{ animation: 'fadeUp 0.6s ease-out both' }}>
+
+        {/* 404 number */}
+        <p
+          aria-hidden="true"
+          className="select-none leading-[0.85] font-display"
+          style={{
+            fontSize: 'clamp(8rem,25vw,14rem)',
+            background: 'linear-gradient(135deg, #F5E6C8 0%, #D4AF37 40%, #9B7EC8 80%, #7B5EA7 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            filter: 'drop-shadow(0 0 60px rgba(212,175,55,0.25))',
+            animation: 'slideUp 0.8s ease-out 0.1s both',
+          }}
+        >
+          404
+        </p>
+
+        {/* Divider */}
+        <div className="flex items-center justify-center gap-4 my-6" style={{ animation: 'fadeUp 0.6s ease-out 0.2s both' }}>
+          <div className="h-px w-16 bg-gradient-to-r from-transparent to-amber-400/50" />
+          <Star size={12} className="text-amber-400/60 fill-amber-400/40" />
+          <div className="h-px w-16 bg-gradient-to-l from-transparent to-amber-400/50" />
         </div>
 
-        <div className="space-y-4 mb-10 animate-fade-in-delay-400">
-          <p className="text-xl md:text-2xl text-text-secondary font-medium">
-            {getNoPageText()}
-          </p>
+        {/* Title */}
+        <h1
+          className="text-3xl md:text-5xl font-serif font-light text-white mb-4 px-4"
+          style={{ animation: 'fadeUp 0.6s ease-out 0.3s both' }}
+        >
+          {ui('ui_404_title', 'Sayfa Bulunamadı')}
+        </h1>
 
-          <div className="flex items-center justify-center gap-2 text-[var(--gm-error)] font-medium bg-[var(--gm-error)]/10 w-fit mx-auto px-4 py-2 rounded-full border border-[var(--gm-error)]/20">
-            <Timer className="w-5 h-5 animate-pulse" />
-            <span>{getRedirectText()}</span>
-          </div>
+        {/* Subtitle */}
+        <p
+          className="text-lg text-white/55 font-light leading-relaxed mb-8 max-w-lg mx-auto"
+          style={{ animation: 'fadeUp 0.6s ease-out 0.4s both' }}
+        >
+          {ui(
+            'ui_404_subtitle',
+            'Aradığınız sayfa taşınmış, silinmiş veya hiç var olmamış olabilir.',
+          )}
+        </p>
+
+        {/* Countdown badge */}
+        <div
+          className="inline-flex items-center justify-center gap-2.5 mx-auto mb-10 px-5 py-2.5 rounded-full border border-amber-400/20 bg-amber-400/8 backdrop-blur-sm"
+          style={{ animation: 'fadeUp 0.6s ease-out 0.5s both' }}
+        >
+          <Timer className="w-4 h-4 text-amber-400 animate-pulse shrink-0" />
+          <span className="text-sm text-amber-300/80 font-medium">{getRedirectText()}</span>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-delay-600">
+        {/* CTA buttons */}
+        <div
+          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          style={{ animation: 'fadeUp 0.6s ease-out 0.6s both' }}
+        >
           <button
             onClick={() => router.push(homePath)}
-            className="flex items-center gap-2 px-10 py-4 bg-brand-primary text-(--gm-bg) rounded-full font-bold shadow-medium hover:bg-brand-hover transition-all transform  active:scale-95"
+            className="inline-flex items-center justify-center gap-2 min-w-52 px-8 py-4 rounded-full bg-amber-400 text-[#0D0B1E] font-bold text-sm uppercase tracking-[0.18em] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_36px_rgba(212,175,55,0.5)] active:scale-95"
           >
-            <Home className="w-5 h-5" />
-            {ui('ui_404_back_home', 'Back to Homepage')}
+            <Home className="w-4 h-4" />
+            {ui('ui_404_back_home', 'Ana Sayfaya Dön')}
           </button>
 
           <button
             onClick={() => window.history.back()}
-            className="flex items-center gap-2 px-10 py-4 border-2 border-border-medium text-text-primary rounded-full font-bold hover:border-brand-primary hover:bg-bg-card transition-all whitespace-nowrap active:scale-95"
+            className="inline-flex items-center justify-center gap-2 min-w-44 px-8 py-4 rounded-full border border-white/20 bg-white/6 text-white/85 font-bold text-sm uppercase tracking-[0.18em] backdrop-blur-sm transition-all duration-300 hover:border-amber-400/40 hover:bg-white/10 hover:text-white active:scale-95 whitespace-nowrap"
           >
-            <ArrowLeft className="w-5 h-5" />
-            {locale === 'tr' ? 'Geri Dön' : (locale === 'de' ? 'Zurück' : 'Go Back')}
+            <ArrowLeft className="w-4 h-4" />
+            {ui('ui_404_go_back', 'Go Back')}
           </button>
         </div>
       </div>
 
-      {/* Decorative animated backgrounds */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--gm-error)]/10 rounded-full blur-[120px] -z-10 animate-float" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gold-200/10 rounded-full blur-[140px] -z-10 animate-float-delayed" />
+      {/* ── Bottom accent line ────────────────────────────────────── */}
+      <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent" />
 
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
-
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes float {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-            opacity: 0.1;
-          }
-          50% {
-            transform: translate(50px, -50px) scale(1.2);
-            opacity: 0.2;
-          }
-        }
-
-        @keyframes float-delayed {
-          0%, 100% {
-            transform: translate(0, 0) scale(1);
-            opacity: 0.1;
-          }
-          50% {
-            transform: translate(-30px, 40px) scale(1.3);
-            opacity: 0.2;
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out;
-        }
-
-        .animate-fade-in-delay-300 {
-          animation: fade-in 0.8s ease-out 0.3s both;
-        }
-
-        .animate-fade-in-delay-400 {
-          animation: fade-in 0.6s ease-out 0.4s both;
-        }
-
-        .animate-fade-in-delay-600 {
-          animation: fade-in 0.6s ease-out 0.6s both;
-        }
-
-        .animate-slide-up {
-          animation: slide-up 0.8s ease-out 0.1s both;
-        }
-
-        .animate-float {
-          animation: float 15s linear infinite;
-        }
-
-        .animate-float-delayed {
-          animation: float-delayed 12s linear infinite;
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(32px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>
