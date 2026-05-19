@@ -29,7 +29,6 @@ import {
   Settings,
   Trash2,
   Star,
-  UserCheck,
   Users,
   Menu as MenuIcon,
   type LucideIcon,
@@ -148,7 +147,6 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
     key: 'system',
     items: [
       { key: 'site_settings', url: '/admin/site-settings', icon: Settings },
-      { key: 'consultant_applications', url: '/admin/consultant-applications', icon: UserCheck },
       { key: 'navigation', url: '/admin/navigation', icon: MenuIcon },
       { key: 'home_layout', url: '/admin/home-layout', icon: LayoutDashboard },
       { key: 'cache', url: '/admin/cache', icon: Trash2 },

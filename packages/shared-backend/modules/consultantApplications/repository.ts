@@ -35,14 +35,20 @@ export async function createApplication(
   const row = await getApplication(id);
   if (!row) throw new Error('application_create_failed');
 
-  // T28-1: Admin panele başvuru notification
+  // T28-1: Admin panele başvuru notification.
+  // Adminler hem user_roles (role='admin') hem users.role='admin' üzerinden bulunur;
+  // birinde kayıt yoksa diğeri devreye girer (sessiz kaçırma engellenir).
   try {
-    const admins = await db.select({ userId: userRoles.user_id }).from(userRoles).where(eq(userRoles.role, 'admin'));
-    for (const admin of admins) {
+    const [roleAdmins, userAdmins] = await Promise.all([
+      db.select({ userId: userRoles.user_id }).from(userRoles).where(eq(userRoles.role, 'admin')),
+      db.select({ userId: users.id }).from(users).where(eq(users.role, 'admin')),
+    ]);
+    const adminIds = [...new Set([...roleAdmins, ...userAdmins].map((a) => a.userId))];
+    for (const userId of adminIds) {
       await createUserNotification({
-        userId: admin.userId,
+        userId,
         title: 'Yeni Danışman Başvurusu',
-        message: `${input.full_name} danışmanlık başvurusu yaptı.`,
+        message: `${input.full_name} danışmanlık başvurusu yaptı. Danışmanlar → Bekleyenler sekmesinden inceleyebilirsiniz.`,
         type: 'system',
       });
     }
