@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { permanentRedirect } from 'next/navigation';
 
 import ConsultantDetail from '@/components/containers/consultant/ConsultantDetail';
 import JsonLd from '@/seo/JsonLd';
@@ -14,8 +15,12 @@ type Props = {
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
 
+// UUID v4: 8-4-4-4-12. Slug'lar bu kalıba uymaz.
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 type ConsultantForSchema = {
   id: string;
+  slug?: string | null;
   full_name?: string | null;
   avatar_url?: string | null;
   bio?: string | null;
@@ -105,7 +110,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     seo.description = String(bio).slice(0, 160);
   }
 
-  return buildMetadataFromSeo(seo, { locale, pathname: normPath(`/consultants/${id}`) });
+  const canonicalParam = consultant?.slug?.trim() || id;
+  return buildMetadataFromSeo(seo, { locale, pathname: normPath(`/consultants/${canonicalParam}`) });
 }
 
 export default async function ConsultantDetailPage({ params }: Props) {
@@ -115,7 +121,14 @@ export default async function ConsultantDetailPage({ params }: Props) {
     fetchConsultantServicesForSchema(id),
   ]);
 
-  const pageUrl = `${SITE_URL}/${locale}/consultants/${encodeURIComponent(id)}`;
+  // URL her zaman isim-slug olsun: id (UUID) ile gelindiyse slug'a kalıcı yönlendir.
+  const slug = consultant?.slug?.trim();
+  if (slug && UUID_RE.test(id) && slug !== id) {
+    permanentRedirect(`/${locale}/consultants/${slug}`);
+  }
+
+  const canonicalParam = slug || id;
+  const pageUrl = `${SITE_URL}/${locale}/consultants/${encodeURIComponent(canonicalParam)}`;
   const consultantName = consultant?.full_name?.trim() || 'GoldMoodAstro Danışmanı';
   const ratingValue = Number(consultant?.rating_avg ?? 0);
   const ratingCount = Number(consultant?.rating_count ?? 0);
