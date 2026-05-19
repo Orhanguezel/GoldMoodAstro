@@ -49,14 +49,15 @@ export default function WalletPanel() {
 
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState('');
-  const [iban, setIban] = useState('');
   const [notes, setNotes] = useState('');
-  const [errors, setErrors] = useState<{ amount?: string; iban?: string }>({});
+  const [errors, setErrors] = useState<{ amount?: string }>({});
 
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
     start: '',
     end: '',
   });
+  // C6: Transaction type filter
+  const [txType, setTxType] = useState<'all' | 'credit' | 'debit'>('all');
 
   if (isLoading) {
     return (
@@ -78,24 +79,25 @@ export default function WalletPanel() {
     const e = new Date(dateRange.end).getTime() + 86400000; // include full day
     transactions = transactions.filter(t => new Date(t.created_at).getTime() <= e);
   }
+  // C6: Type filtering
+  if (txType === 'credit') {
+    transactions = transactions.filter(t => t.type === 'credit' || Number(t.amount) > 0);
+  } else if (txType === 'debit') {
+    transactions = transactions.filter(t => t.type === 'debit' || Number(t.amount) < 0);
+  }
 
   const monthly = data?.this_month ?? { credits: 0, debits: 0, net: 0 };
   const balance = Number(wallet?.balance ?? 0);
   const currency = wallet?.currency || 'TRY';
 
   const validate = () => {
-    const newErrors: { amount?: string; iban?: string } = {};
+    const newErrors: { amount?: string } = {};
     const amt = Number(amount);
 
     if (!amount || isNaN(amt) || amt <= 0) {
       newErrors.amount = 'Geçerli bir tutar girin';
     } else if (amt > balance) {
       newErrors.amount = 'Yetersiz bakiye';
-    }
-
-    const cleanIban = iban.replace(/\s/g, '').toUpperCase();
-    if (cleanIban && !/^TR\d{24}$/.test(cleanIban)) {
-      newErrors.iban = 'Geçerli bir TR IBAN girin (26 hane)';
     }
 
     setErrors(newErrors);
@@ -107,12 +109,11 @@ export default function WalletPanel() {
     try {
       await withdraw({
         amount: Number(amount),
-        iban: iban.replace(/\s/g, '').toUpperCase() || undefined,
         notes: notes.trim() || undefined
       }).unwrap();
       toast.success('Para çekme talebiniz alındı');
       setShowModal(false);
-      setAmount(''); setIban(''); setNotes(''); setErrors({});
+      setAmount(''); setNotes(''); setErrors({});
       refetch();
     } catch (e: unknown) {
       toast.error(extractApiError(e, 'Talep oluşturulamadı'));
@@ -188,7 +189,27 @@ export default function WalletPanel() {
           <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
             Son İşlemler
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* C6: Type filter */}
+            <div className="flex gap-1 p-0.5 rounded-lg bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)]">
+              {(['all', 'credit', 'debit'] as const).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setTxType(type)}
+                  className={`px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest transition-all ${
+                    txType === type
+                      ? type === 'credit'
+                        ? 'bg-[var(--gm-success)]/20 text-[var(--gm-success)]'
+                        : type === 'debit'
+                        ? 'bg-[var(--gm-error)]/20 text-[var(--gm-error)]'
+                        : 'bg-[var(--gm-gold)] text-[var(--gm-bg-deep)]'
+                      : 'text-[var(--gm-text)] opacity-40 hover:opacity-70'
+                  }`}
+                >
+                  {type === 'all' ? 'Tümü' : type === 'credit' ? 'Gelir' : 'Gider'}
+                </button>
+              ))}
+            </div>
             <div className="flex items-center gap-1.5">
               <input
                 type="date"
@@ -300,6 +321,9 @@ export default function WalletPanel() {
               <div className="text-[11px] text-[var(--gm-text-dim)] bg-[var(--gm-bg-deep)]/50 rounded-xl p-3">
                 Mevcut bakiye: <strong className="text-[var(--gm-gold)]">{formatMoney(balance, currency)}</strong>
               </div>
+              <div className="text-[11px] text-[var(--gm-text-dim)] bg-[var(--gm-gold)]/10 border border-[var(--gm-gold)]/20 rounded-xl p-3">
+                Ödeme, profilinizde kayıtlı banka hesabına gönderilir. IBAN değişikliği için Profil sekmesindeki banka bilgilerini güncelleyin.
+              </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">Tutar ({currency})</label>
                 <input
@@ -316,28 +340,6 @@ export default function WalletPanel() {
                   placeholder="0,00"
                 />
                 {errors.amount && <p className="mt-1.5 text-[10px] font-bold text-[var(--gm-error)] uppercase tracking-widest">{errors.amount}</p>}
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">IBAN</label>
-                <input
-                  type="text"
-                  value={iban}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/\s/g, '').toUpperCase();
-                    // TR + 24 digits (total 26 chars)
-                    if (raw.length > 26) return;
-                    
-                    // Add spaces every 4 characters for UX
-                    const formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
-                    setIban(formatted);
-                    if (errors.iban) setErrors({ ...errors, iban: undefined });
-                  }}
-                  className={`w-full h-11 bg-[var(--gm-bg-deep)] border rounded-xl px-4 text-sm font-mono text-[var(--gm-text)] transition-all ${
-                    errors.iban ? 'border-[var(--gm-error)]/60 focus:border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/50'
-                  }`}
-                  placeholder="TR00 0000 0000 0000 0000 0000 00"
-                />
-                {errors.iban && <p className="mt-1.5 text-[10px] font-bold text-[var(--gm-error)] uppercase tracking-widest">{errors.iban}</p>}
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">Not (opsiyonel)</label>

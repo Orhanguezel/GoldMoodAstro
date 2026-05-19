@@ -55,13 +55,14 @@ import ReviewsPanel from './ReviewsPanel';
 import AvailabilityPanel from './AvailabilityPanel';
 import BlogPanel from './BlogPanel';
 import ClientsPanel from './ClientsPanel'; // C8
+import ProfileViewsPanel from './ProfileViewsPanel'; // C7
 import BookingMessageButton from '@/components/common/BookingMessageButton';
 import RichContentEditor from '@/components/common/RichContentEditor';
 import MultiSelectChip from '@/components/common/MultiSelectChip';
 import ConsultantCardPreview from './ConsultantCardPreview';
 import PageContainer from '@/components/common/PageContainer';
 
-type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'blog' | 'wallet' | 'reviews' | 'clients';
+type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'blog' | 'wallet' | 'reviews' | 'clients' | 'analytics';
 
 const TABS: Array<{ key: TabKey; labelKey: string; fallback: string; icon: React.ElementType }> = [
   { key: 'overview', labelKey: 'ui_dashboard_tab_overview', fallback: 'Genel Bakış', icon: LayoutDashboard },
@@ -72,6 +73,7 @@ const TABS: Array<{ key: TabKey; labelKey: string; fallback: string; icon: React
   { key: 'clients', labelKey: 'ui_dashboard_tab_clients', fallback: 'Danışanlarım', icon: Users },
   { key: 'messages', labelKey: 'ui_dashboard_tab_messages', fallback: 'Mesajlar', icon: MessageCircle },
   { key: 'wallet', labelKey: 'ui_dashboard_tab_wallet', fallback: 'Cüzdan', icon: Wallet },
+  { key: 'analytics', labelKey: 'ui_dashboard_tab_analytics', fallback: 'Analitik', icon: BarChart3 },
   { key: 'reviews', labelKey: 'ui_dashboard_tab_reviews', fallback: 'Yorumlar', icon: Star },
   { key: 'blog', labelKey: 'ui_dashboard_tab_blog', fallback: 'Blog', icon: FileText },
 ];
@@ -225,6 +227,7 @@ export default function ConsultantDashboard({ locale }: Props) {
         {tab === 'messages' && <MessagesPanel />}
         {tab === 'blog' && <BlogPanel locale={locale} />}
         {tab === 'wallet' && <WalletPanel />}
+        {tab === 'analytics' && <ProfileViewsPanel />}
         {tab === 'reviews' && <ReviewsPanel />}
       </div>
     </PageContainer>

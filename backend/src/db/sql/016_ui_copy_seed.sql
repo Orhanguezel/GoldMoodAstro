@@ -761,5 +761,6 @@ ON DUPLICATE KEY UPDATE value = VALUES(value);
 -- 2026-05-20 C2: hizmetler i18n + danisanlar tab anahtarı
 INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('00000000-0000-0000-0000-00000000000b','ui_dashboard_tab_clients','*','{"label":{"tr":"Danışanlar","en":"Clients","de":"Klienten"}}'),
-('00000000-0000-0000-0000-00000000000c','ui_dashboard_services_intro','*','{"label":{"tr":"Hizmet paketlerinizi buradan yönetin. Ücretsiz tanışma paketi ekleyebilirsiniz.","en":"Manage your service packages here. You can add a free intro call.","de":"Verwalten Sie hier Ihre Paketangebote. Sie können ein kostenloses Einführungspaket hinzufügen."}}')
+('00000000-0000-0000-0000-00000000000c','ui_dashboard_services_intro','*','{"label":{"tr":"Hizmet paketlerinizi buradan yönetin. Ücretsiz tanışma paketi ekleyebilirsiniz.","en":"Manage your service packages here. You can add a free intro call.","de":"Verwalten Sie hier Ihre Paketangebote. Sie können ein kostenloses Einführungspaket hinzufügen."}}'),
+('00000000-0000-0000-0000-00000000000d','ui_dashboard_tab_analytics','*','{"label":{"tr":"Analitik","en":"Analytics","de":"Analytik"}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);

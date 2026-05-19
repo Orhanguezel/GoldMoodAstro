@@ -7,6 +7,7 @@ import { ArrowLeft, Award, CheckCircle, Clock, Globe, Star, ShieldCheck, Sparkle
 
 import {
   useGetConsultantQuery,
+  useTrackConsultantViewMutation,
   type ConsultantSlotPublic,
 } from '@/integrations/rtk/public/consultants.public.endpoints';
 import { useRequestNowBookingMutation } from '@/integrations/rtk/public/bookings_public.endpoints';
@@ -40,6 +41,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: consultant, isFetching, isError } = useGetConsultantQuery(id, { skip: !id });
+  const [trackConsultantView] = useTrackConsultantViewMutation();
   const { data: karne } = useGetConsultantOutcomeScoreQuery(id, { skip: !id });
   const { data: services = [], isLoading: servicesLoading } = useListConsultantServicesPublicQuery(consultant?.id || '', {
     skip: !consultant?.id,
@@ -59,6 +61,12 @@ export default function ConsultantDetail({ id, locale }: Props) {
       setExpandedServiceId(services[0].id);
     }
   }, [services, selectedServiceId]);
+
+  useEffect(() => {
+    const targetId = consultant?.id || id;
+    if (!targetId) return;
+    trackConsultantView(targetId);
+  }, [consultant?.id, id, trackConsultantView]);
 
   const selectedService: ConsultantServicePublic | undefined = services.find((s) => s.id === selectedServiceId);
 

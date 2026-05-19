@@ -115,8 +115,19 @@ export interface ConsultantSelfService {
   is_free: number;
   is_active: number;
   sort_order: number;
+  is_boosted?: number;
+  boost_ends_at?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ServiceBoostCheckoutResponse {
+  id: string;
+  status: 'pending_payment' | 'active' | 'expired' | 'cancelled';
+  checkout_url: string;
+  checkout_html?: string | null;
+  token?: string;
+  package: { id: string; days: number; price: number; currency?: string };
 }
 
 export interface ConsultantSelfReview {
@@ -264,6 +275,12 @@ export interface MonthlyEarningStat {
   year_month: string; // 'YYYY-MM'
   earnings: number;
   sessions: number;
+}
+
+// C7: Profil görüntülenme
+export interface ProfileViewStat {
+  date: string;
+  count: number;
 }
 
 export const consultantSelfApi = baseApi.injectEndpoints({
@@ -450,7 +467,7 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       transformResponse: (res: { data: ConsultantSelfWalletResponse }) => res.data,
       providesTags: ['ConsultantSelfWallet' as any],
     }),
-    requestMyConsultantWithdrawal: build.mutation<ConsultantWithdrawalResponse, { amount: number; iban?: string; notes?: string }>({
+    requestMyConsultantWithdrawal: build.mutation<ConsultantWithdrawalResponse, { amount: number; notes?: string }>({
       query: (body) => ({ url: '/me/consultant/wallet/withdraw', method: 'POST', body }),
       transformResponse: (res: { data: ConsultantWithdrawalResponse }) => res.data,
       invalidatesTags: ['ConsultantSelfWallet' as any],
@@ -506,6 +523,15 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       transformResponse: (res: { data: ConsultantSelfService }) => res.data,
       invalidatesTags: ['ConsultantSelfServices' as any, 'ConsultantSelfServiceTemplates' as any],
     }),
+    createServiceBoostCheckout: build.mutation<ServiceBoostCheckoutResponse, { serviceId: string; package_id: string }>({
+      query: ({ serviceId, package_id }) => ({
+        url: `/me/consultant/services/${encodeURIComponent(serviceId)}/boost/checkout`,
+        method: 'POST',
+        body: { package_id },
+      }),
+      transformResponse: (res: { data: ServiceBoostCheckoutResponse }) => res.data,
+      invalidatesTags: ['ConsultantSelfServices' as any],
+    }),
     // C8: Danışanlarım
     getMyConsultantClients: build.query<ConsultantClient[], { q?: string; limit?: number; offset?: number } | void>({
       query: (args) => ({ url: '/me/consultant/clients', params: args || undefined }),
@@ -523,6 +549,12 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       query: (args) => ({ url: '/me/consultant/wallet/monthly-stats', params: args?.months ? { months: args.months } : { months: 24 } }),
       transformResponse: (res: { data: MonthlyEarningStat[] }) => res.data ?? [],
       providesTags: ['ConsultantSelfWallet' as any],
+    }),
+    // C7: Profil görüntülenme
+    getMyConsultantProfileViews: build.query<ProfileViewStat[], { range: string } | void>({
+      query: (args) => ({ url: '/me/consultant/profile-views', params: args || { range: '30d' } }),
+      transformResponse: (res: { data: ProfileViewStat[] }) => res.data ?? [],
+      providesTags: ['ConsultantSelfProfileViews' as any],
     }),
   }),
   overrideExisting: false,
@@ -559,10 +591,13 @@ export const {
   useOverrideMyConsultantAvailabilityDayMutation,
   useListMyServiceTemplatesQuery,
   useAdoptServiceTemplateMutation,
+  useCreateServiceBoostCheckoutMutation,
   // C8
   useGetMyConsultantClientsQuery,
   // C9
   useGetMyConsultantProfileCompletionQuery,
   // C5
   useGetMyConsultantMonthlyStatsQuery,
+  // C7
+  useGetMyConsultantProfileViewsQuery,
 } = consultantSelfApi;

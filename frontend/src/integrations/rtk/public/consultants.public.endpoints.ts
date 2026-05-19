@@ -74,6 +74,11 @@ const consultantsPublicApi = baseApi.injectEndpoints({
         Array.isArray(res) ? res : ((res as any)?.data ?? []),
       providesTags: (_r, _e, { id }) => [{ type: 'ConsultantSlots', id }],
     }),
+
+    trackConsultantView: build.mutation<{ tracked: boolean; reason?: string }, string>({
+      query: (id) => ({ url: `/consultants/${encodeURIComponent(id)}/view`, method: 'POST' }),
+      transformResponse: (res: { data: { tracked: boolean; reason?: string } }) => res.data,
+    }),
   }),
   overrideExisting: false,
 });
@@ -82,6 +87,7 @@ export const {
   useListConsultantsPublicQuery,
   useGetConsultantPublicQuery,
   useGetConsultantSlotsPublicQuery,
+  useTrackConsultantViewMutation,
 } = consultantsPublicApi;
 
 export const useListConsultantsQuery = useListConsultantsPublicQuery;

@@ -379,6 +379,8 @@ const SECTION_KEYS: Record<UiSectionKey, readonly string[]> = {
     'ui_dashboard_tab_availability',
     'ui_dashboard_tab_blog',
     'ui_dashboard_tab_bookings',
+    'ui_dashboard_tab_clients',
+    'ui_dashboard_tab_analytics',
     'ui_dashboard_tab_messages',
     'ui_dashboard_tab_overview',
     'ui_dashboard_tab_profile',

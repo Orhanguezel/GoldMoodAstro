@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { ArrowDown, ArrowUp, Plus, Trash2, Save, ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowDown, ArrowUp, Plus, Trash2, Save, ChevronDown, ChevronRight, Sparkles, Zap, X, Rocket } from 'lucide-react';
 import {
   type ConsultantSelfService,
   useListMySelfServicesQuery,
@@ -12,6 +12,7 @@ import {
   useReorderMySelfServicesMutation,
   useListMyServiceTemplatesQuery,
   useAdoptServiceTemplateMutation,
+  useCreateServiceBoostCheckoutMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { extractApiError } from '@/integrations/shared';
 import { useUiSection } from '@/i18n';
@@ -473,6 +474,7 @@ function ServiceRow({
   busy: boolean;
 }) {
   const { ui } = useUiSection('ui_dashboard');
+  const [showBoostModal, setShowBoostModal] = useState(false);
   const [form, setForm] = useState<ServiceForm>({
     name: svc.name,
     slug: svc.slug,
@@ -510,7 +512,20 @@ function ServiceRow({
     onPatch(form);
   };
 
+  const isBoostActive = svc.is_boosted === 1;
+  const boostDaysLeft = svc.boost_ends_at
+    ? Math.max(0, Math.ceil((new Date(svc.boost_ends_at).getTime() - Date.now()) / 86400000))
+    : 0;
+
   return (
+    <>
+    {showBoostModal && (
+      <ServiceBoostModal
+        serviceId={svc.id}
+        serviceName={svc.name}
+        onClose={() => setShowBoostModal(false)}
+      />
+    )}
     <div className={`rounded-2xl border transition-all ${expanded ? 'border-[var(--gm-gold)]/40 bg-[var(--gm-gold)]/5' : 'border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30'} overflow-hidden`}>
       <div className="flex items-center gap-3 p-4">
         <button onClick={onToggleExpand} className="text-[var(--gm-muted)]">
@@ -527,6 +542,13 @@ function ServiceRow({
             {svc.is_active === 0 && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--gm-muted)]/15 text-[var(--gm-muted)] text-[9px] font-bold uppercase tracking-widest">
                 {ui('ui_dashboard_status_inactive', 'Inactive')}
+              </span>
+            )}
+            {/* C3: Boost badge */}
+            {isBoostActive && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[9px] font-bold uppercase tracking-widest">
+                <Rocket className="w-2.5 h-2.5" />
+                Öne Çıkarıldı — {boostDaysLeft}g kaldı
               </span>
             )}
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--gm-gold)]/10 text-[var(--gm-gold)] text-[9px] font-bold uppercase tracking-widest">
@@ -566,9 +588,18 @@ function ServiceRow({
         >
           {svc.is_active === 1 ? ui('ui_dashboard_deactivate', 'Deactivate') : ui('ui_dashboard_activate', 'Activate')}
         </button>
-        <button onClick={onDelete} disabled={busy} className="p-2 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-full" title={ui('ui_dashboard_delete', 'Delete')}>
-          <Trash2 className="w-4 h-4" />
-        </button>
+          <button onClick={onDelete} disabled={busy} className="p-2 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-full" title={ui('ui_dashboard_delete', 'Delete')}>
+            <Trash2 className="w-4 h-4" />
+          </button>
+          {/* C3: Öne Çıkart */}
+          <button
+            onClick={() => setShowBoostModal(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-(--gm-gold)/40 text-(--gm-gold) text-[9px] font-bold uppercase tracking-widest hover:bg-(--gm-gold)/10 transition-colors"
+            title="Hizmetini öne çıkart"
+          >
+            <Rocket className="w-3.5 h-3.5" />
+            Öne Çıkart
+          </button>
       </div>
 
       {expanded && (
@@ -670,6 +701,139 @@ function ServiceRow({
           </div>
         </div>
       )}
+    </div>
+    </>
+  );
+}
+
+/* ── C3: Service Boost Modal ── */
+const DEFAULT_BOOST_PACKAGES = [
+  { id: 'wk1', days: 7, price: 599, label: '1 Hafta' },
+  { id: 'wk2', days: 14, price: 1099, label: '2 Hafta' },
+  { id: 'wk4', days: 28, price: 1899, label: '4 Hafta' },
+];
+
+function ServiceBoostModal({
+  serviceId,
+  serviceName,
+  onClose,
+}: {
+  serviceId: string;
+  serviceName: string;
+  onClose: () => void;
+}) {
+  const [selected, setSelected] = useState<string>('wk1');
+  const [checkout, { isLoading }] = useCreateServiceBoostCheckoutMutation();
+
+  const packages = DEFAULT_BOOST_PACKAGES;
+  const chosen = packages.find((p) => p.id === selected) ?? packages[0];
+
+  const handleBuy = async () => {
+    try {
+      const result = await checkout({ serviceId, package_id: chosen.id }).unwrap();
+      if (result.checkout_url) {
+        window.location.href = result.checkout_url;
+      } else {
+        toast.error('Ödeme sayfası açılamadı. Lütfen tekrar deneyin.');
+      }
+    } catch (error) {
+      toast.error(extractApiError(error, 'Boost satın alınamadı. Lütfen tekrar deneyin.'));
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={() => !isLoading && onClose()}
+    >
+      <div
+        className="w-full max-w-md bg-(--gm-surface) border border-(--gm-gold)/30 rounded-3xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="relative p-6 pb-4 bg-gradient-to-br from-(--gm-gold)/15 via-(--gm-gold)/5 to-transparent">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-(--gm-gold)/10 blur-[60px] rounded-full -mr-10 -mt-10" />
+          <div className="relative flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Rocket className="w-5 h-5 text-(--gm-gold)" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-(--gm-gold)">Hizmetini Öne Çıkart</span>
+              </div>
+              <p className="text-sm text-(--gm-text) opacity-60 font-serif italic max-w-xs">
+                "{serviceName}" hizmetini listede üst sıralara taşı, daha fazla danışana ulaş.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              disabled={isLoading}
+              className="p-1.5 text-(--gm-text) opacity-40 hover:opacity-70 transition-opacity"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Packages */}
+        <div className="p-6 space-y-3">
+          {packages.map((pkg) => {
+            const isActive = selected === pkg.id;
+            return (
+              <button
+                key={pkg.id}
+                onClick={() => setSelected(pkg.id)}
+                className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                  isActive
+                    ? 'border-(--gm-gold) bg-(--gm-gold)/10'
+                    : 'border-(--gm-border-soft) bg-(--gm-surface) hover:border-(--gm-gold)/30'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    isActive ? 'border-(--gm-gold)' : 'border-(--gm-border-soft)'
+                  }`}>
+                    {isActive && <span className="w-2.5 h-2.5 rounded-full bg-(--gm-gold)" />}
+                  </span>
+                  <div className="text-left">
+                    <div className="font-serif text-base text-(--gm-text)">{pkg.label}</div>
+                    <div className="text-[11px] text-(--gm-text) opacity-40">{pkg.days} gün boyunca üstte</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-(--gm-gold) text-lg">₺{pkg.price.toLocaleString('tr-TR')}</div>
+                  <div className="text-[10px] text-(--gm-text) opacity-40">tek seferlik</div>
+                </div>
+              </button>
+            );
+          })}
+
+          <p className="text-[10px] text-(--gm-text) opacity-40 italic text-center pt-2">
+            Satın alma onaylandıktan sonra hizmetiniz anında öne çıkarılır.
+          </p>
+        </div>
+
+        {/* CTA */}
+        <div className="px-6 pb-6 flex gap-3">
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="flex-1 h-12 rounded-full border border-(--gm-border-soft) text-[10px] font-bold uppercase tracking-widest text-(--gm-text) opacity-60 hover:opacity-100"
+          >
+            Vazgeç
+          </button>
+          <button
+            onClick={handleBuy}
+            disabled={isLoading}
+            className="flex-1 h-12 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) text-[10px] font-bold uppercase tracking-widest inline-flex items-center justify-center gap-2 hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] transition-shadow disabled:opacity-50"
+          >
+            {isLoading ? (
+              <span className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+            ) : (
+              <Zap className="w-4 h-4" />
+            )}
+            ₺{chosen.price.toLocaleString('tr-TR')} — Satın Al
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
