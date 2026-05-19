@@ -84,9 +84,9 @@ export default function ConsultantDashboard({ locale }: Props) {
 
   if (!isReady || authLoading || profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[var(--gm-gold)] animate-spin" />
-      </div>
+      <PageContainer width="wide" className="bg-(--gm-bg)" verticalPadding="large" center>
+        <div className="w-8 h-8 rounded-full border-2 border-(--gm-gold)/30 border-t-(--gm-gold) animate-spin" />
+      </PageContainer>
     );
   }
 
@@ -117,51 +117,107 @@ export default function ConsultantDashboard({ locale }: Props) {
     );
   }
 
+  const avatarUrl = profile.user?.avatar_url || '';
+  const fullName = profile.user?.full_name || ui('ui_dashboard_consultant_fallback', 'Danışman');
+  const initials = initialsFromName(fullName);
+  const isTr = locale === 'tr';
+
   return (
-    <PageContainer width="wide" className="pt-32">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
-        <div>
-          <h1 className="font-serif text-3xl md:text-4xl text-[var(--gm-text)]">{ui('ui_dashboard_title', 'Consultant Dashboard')}</h1>
-          <p className="text-[var(--gm-text-dim)] font-serif italic mt-1">
-            {ui('ui_dashboard_header_desc', '{name} - manage your profile, services and bookings.').replace('{name}', profile.user?.full_name || ui('ui_dashboard_consultant_fallback', 'Consultant'))}
-          </p>
-        </div>
-        <AvailabilityToggle isAvailable={profile.is_available === 1} />
-      </div>
+    <PageContainer width="wide" className="bg-(--gm-bg)" verticalPadding="large">
+      <div className="w-full">
+        {/* ─── Header card — matches user dashboard ─── */}
+        <header className="mb-8 rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10 shadow-(--gm-shadow-soft)">
+          {/* Avatar */}
+          <div className="w-20 h-20 shrink-0 rounded-full bg-(--gm-gold)/15 border-2 border-(--gm-gold)/40 flex items-center justify-center text-(--gm-gold) font-serif text-2xl overflow-hidden">
+            {avatarUrl
+              ? <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover" />
+              : initials
+            }
+          </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 mb-8 border-b border-[var(--gm-border-soft)] overflow-x-auto">
-        {TABS.map((t) => {
-          const Icon = t.icon;
-          const active = tab === t.key;
-          return (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`inline-flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-widest border-b-2 transition-all whitespace-nowrap ${
-                active
-                  ? 'border-[var(--gm-gold)] text-[var(--gm-gold)]'
-                  : 'border-transparent text-[var(--gm-text-dim)] hover:text-[var(--gm-text)]'
-              }`}
+          {/* Name + status */}
+          <div className="flex-1 min-w-0">
+            <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold) uppercase opacity-80">
+              {isTr ? 'Danışman Paneli' : 'Consultant Dashboard'}
+            </span>
+            <h1 className="font-serif text-3xl md:text-4xl font-light text-(--gm-text) mt-1 leading-tight">
+              {isTr ? `Merhaba, ${fullName.split(' ')[0]}` : `Hello, ${fullName.split(' ')[0]}`}
+            </h1>
+            <p className="text-(--gm-text) opacity-55 text-sm mt-2 truncate">{profile.user?.email || ''}</p>
+            {/* Approval + online badges */}
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
+                profile.approval_status === 'approved'
+                  ? 'bg-(--gm-success)/15 text-(--gm-success)'
+                  : profile.approval_status === 'pending'
+                  ? 'bg-(--gm-warning)/15 text-(--gm-warning)'
+                  : 'bg-(--gm-error)/15 text-(--gm-error)'
+              }`}>
+                {profile.approval_status === 'approved'
+                  ? (isTr ? 'Onaylı' : 'Approved')
+                  : profile.approval_status === 'pending'
+                  ? (isTr ? 'İncelemede' : 'In Review')
+                  : (isTr ? 'Reddedildi' : 'Rejected')}
+              </span>
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
+                profile.is_available
+                  ? 'bg-(--gm-success)/15 text-(--gm-success)'
+                  : 'bg-(--gm-border-soft) text-(--gm-text) opacity-50'
+              }`}>
+                {profile.is_available ? (isTr ? 'Çevrimiçi' : 'Online') : (isTr ? 'Çevrimdışı' : 'Offline')}
+              </span>
+            </div>
+          </div>
+
+          {/* Right: Online toggle + profile link */}
+          <div className="flex flex-col gap-3 md:items-end shrink-0">
+            <AvailabilityToggle isAvailable={profile.is_available === 1} />
+            <Link
+              href={localizePath(locale, `/consultants/${profile.id}`)}
+              className="inline-flex items-center gap-2 text-xs font-medium tracking-widest text-(--gm-text) opacity-45 hover:opacity-70 transition-opacity"
             >
-              <Icon className="w-4 h-4" />
-              {ui(t.labelKey, t.fallback)}
-            </button>
-          );
-        })}
-      </div>
+              {isTr ? 'Profilimi Gör' : 'View Profile'}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </header>
 
-      {/* Content */}
-      {tab === 'overview' && <OverviewPanel locale={locale} stats={stats} profile={profile} isLoading={statsLoading} onTabChange={setTab} />}
-      {tab === 'profile' && <ProfilePanel locale={locale} profile={profile} />}
-      {tab === 'services' && <ServicesPanel />}
-      {tab === 'availability' && <AvailabilityPanel />}
-      {tab === 'bookings' && <BookingsPanel locale={locale} />}
-      {tab === 'messages' && <MessagesPanel />}
-      {tab === 'blog' && <BlogPanel locale={locale} />}
-      {tab === 'wallet' && <WalletPanel />}
-      {tab === 'reviews' && <ReviewsPanel />}
+        {/* ─── Tabs — matches user dashboard style ─── */}
+        <nav className="mb-10 flex flex-wrap gap-1 border-b border-(--gm-border-soft) overflow-x-auto">
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`relative inline-flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] transition-all whitespace-nowrap ${
+                  active
+                    ? 'text-(--gm-gold)'
+                    : 'text-(--gm-text) opacity-50 hover:opacity-80'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {ui(t.labelKey, t.fallback)}
+                {active && (
+                  <span className="absolute -bottom-px left-0 right-0 h-0.5 bg-(--gm-gold)" />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* ─── Tab content ─── */}
+        {tab === 'overview' && <OverviewPanel locale={locale} stats={stats} profile={profile} isLoading={statsLoading} onTabChange={setTab} />}
+        {tab === 'profile' && <ProfilePanel locale={locale} profile={profile} />}
+        {tab === 'services' && <ServicesPanel />}
+        {tab === 'availability' && <AvailabilityPanel />}
+        {tab === 'bookings' && <BookingsPanel locale={locale} />}
+        {tab === 'messages' && <MessagesPanel />}
+        {tab === 'blog' && <BlogPanel locale={locale} />}
+        {tab === 'wallet' && <WalletPanel />}
+        {tab === 'reviews' && <ReviewsPanel />}
+      </div>
     </PageContainer>
   );
 }
@@ -400,20 +456,20 @@ function initialsFromName(name?: string | null) {
 function BigStatCard({ icon: Icon, label, value, delta, subLabel }: { icon: React.ElementType; label: string; value: React.ReactNode; delta?: number; subLabel?: string }) {
   const isPos = (delta ?? 0) >= 0;
   return (
-    <div className="p-5 rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30">
+    <div className="p-5 rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) shadow-(--gm-shadow-soft)">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">{label}</span>
-        <Icon className="w-4 h-4 text-[var(--gm-gold)]/70" />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-(--gm-gold) opacity-80">{label}</span>
+        <Icon className="w-4 h-4 text-(--gm-gold) opacity-60" />
       </div>
-      <div className="font-serif text-3xl text-[var(--gm-text)]">{value}</div>
+      <div className="font-serif text-3xl text-(--gm-text)">{value}</div>
       <div className="mt-2 flex items-center gap-2">
         {typeof delta === 'number' && (
-          <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${isPos ? 'text-[var(--gm-success)]' : 'text-[var(--gm-error)]'}`}>
+          <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${isPos ? 'text-(--gm-success)' : 'text-(--gm-error)'}`}>
             {isPos ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
             {isPos ? '+' : ''}{delta}%
           </span>
         )}
-        {subLabel && <span className="text-[10px] text-[var(--gm-muted)]">{subLabel}</span>}
+        {subLabel && <span className="text-[10px] text-(--gm-text) opacity-40">{subLabel}</span>}
       </div>
     </div>
   );
@@ -421,12 +477,12 @@ function BigStatCard({ icon: Icon, label, value, delta, subLabel }: { icon: Reac
 
 function StatCardSmall({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: React.ReactNode }) {
   return (
-    <div className="p-5 rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30">
+    <div className="p-5 rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) shadow-(--gm-shadow-soft)">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">{label}</span>
-        <Icon className="w-4 h-4 text-[var(--gm-gold)]/70" />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-(--gm-gold) opacity-80">{label}</span>
+        <Icon className="w-4 h-4 text-(--gm-gold) opacity-60" />
       </div>
-      <div className="font-serif text-2xl text-[var(--gm-text)]">{value}</div>
+      <div className="font-serif text-2xl text-(--gm-text)">{value}</div>
     </div>
   );
 }
@@ -477,10 +533,10 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
     <button
       onClick={handleToggle}
       disabled={isLoading}
-      className={`inline-flex items-center gap-2 px-5 py-3 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${
+      className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border text-xs font-bold uppercase tracking-[0.18em] transition-all ${
         isAvailable
-          ? 'border-[var(--gm-success)]/40 bg-[var(--gm-success)]/10 text-[var(--gm-success)]'
-          : 'border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 text-[var(--gm-muted)] hover:text-[var(--gm-text)]'
+          ? 'border-(--gm-success)/40 bg-(--gm-success)/10 text-(--gm-success) hover:bg-(--gm-success)/20'
+          : 'border-(--gm-border-soft) bg-(--gm-surface) text-(--gm-text) opacity-60 hover:opacity-100'
       }`}
     >
       {isAvailable ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
@@ -766,10 +822,10 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
 function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">{label}</label>
-      {hint && <p className="text-[11px] text-[var(--gm-muted)] italic leading-relaxed">{hint}</p>}
+      <label className="block text-[10px] font-bold uppercase tracking-widest text-(--gm-gold) opacity-80">{label}</label>
+      {hint && <p className="text-[11px] text-(--gm-text) opacity-50 italic leading-relaxed">{hint}</p>}
       {children}
-      {error && <p className="text-[10px] font-bold text-[var(--gm-error)] uppercase tracking-widest pl-1">{error}</p>}
+      {error && <p className="text-[10px] font-bold text-(--gm-error) uppercase tracking-widest pl-1">{error}</p>}
     </div>
   );
 }
