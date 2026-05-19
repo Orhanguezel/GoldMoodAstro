@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { localizePath } from '@/integrations/shared';
+import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 import { useUiSection } from '@/i18n';
 import {
   Compass,
@@ -9,20 +10,32 @@ import {
   Heart,
   Briefcase,
   Moon,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 
+const ICONS = {
+  astrology: Compass,
+  birth_chart: Compass,
+  tarot: Layers,
+  numerology: Hash,
+  relationship: Heart,
+  career: Briefcase,
+  mood: Moon,
+} as const;
+
 const CATEGORIES_FALLBACK = [
-  { id: 'astrology', label: 'Astroloji', icon: Compass, desc: 'Doğum haritası ve gezegen etkileriyle hayatınıza rehberlik edin.' },
-  { id: 'tarot', label: 'Tarot', icon: Layers, desc: 'Kartların sembolizmiyle bilinçaltınızın kapılarını aralayın.' },
-  { id: 'numerology', label: 'Numeroloji', icon: Hash, desc: 'Sayıların gizemli dünyasında kaderinizin kodlarını çözün.' },
-  { id: 'mood', label: 'Ruhsal Rehberlik', icon: Moon, desc: 'İçsel huzur ve denge için manevi bir yolculuğa çıkın.' },
-  { id: 'career', label: 'Kariyer & Para', icon: Briefcase, desc: 'İş hayatınızda doğru zamanı ve fırsatları keşfedin.' },
-  { id: 'relationship', label: 'İlişki & Aşk', icon: Heart, desc: 'Sevgi bağlarınızı güçlendirin, uyumu yıldızlarda arayın.' },
+  { id: 'astrology', label: 'Astrology', icon: Compass, desc: 'Birth chart and planetary guidance.' },
+  { id: 'tarot', label: 'Tarot', icon: Layers, desc: 'Symbolic card guidance for clearer questions.' },
+  { id: 'numerology', label: 'Numerology', icon: Hash, desc: 'Life path insight through numbers.' },
+  { id: 'mood', label: 'Spiritual Guidance', icon: Moon, desc: 'Inner balance and awareness support.' },
+  { id: 'career', label: 'Career & Money', icon: Briefcase, desc: 'Timing and opportunity guidance for work.' },
+  { id: 'relationship', label: 'Relationship & Love', icon: Heart, desc: 'Relationship dynamics and compatibility.' },
 ];
 
 export default function ExpertiseCategoriesSection({ locale = 'tr' }: { locale?: string }) {
   const { ui } = useUiSection('ui_home', locale as any);
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
   
   const copy = useMemo(() => ({
     label: ui('ui_home_expertise_label', 'Kategoriler'),
@@ -32,12 +45,21 @@ export default function ExpertiseCategoriesSection({ locale = 'tr' }: { locale?:
   }), [ui]);
 
   const categories = useMemo(() => {
-    return CATEGORIES_FALLBACK.map(cat => ({
+    const source = serviceCategories.length
+      ? serviceCategories.slice(0, 6).map((cat) => ({
+          id: cat.slug,
+          label: cat.name,
+          desc: cat.description || '',
+          icon: ICONS[cat.slug as keyof typeof ICONS] ?? Sparkles,
+        }))
+      : CATEGORIES_FALLBACK;
+
+    return source.map(cat => ({
       ...cat,
       label: ui(`ui_home_expertise_cat_${cat.id}_label`, cat.label),
       desc: ui(`ui_home_expertise_cat_${cat.id}_desc`, cat.desc)
     }));
-  }, [ui]);
+  }, [serviceCategories, ui]);
 
   return (
     <section className="py-24 bg-[var(--gm-bg)] relative overflow-hidden">

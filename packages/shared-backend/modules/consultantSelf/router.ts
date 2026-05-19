@@ -11,6 +11,12 @@ export async function registerConsultantSelf(app: FastifyInstance) {
   app.get('/me/consultant', { preHandler: guard }, controller.getProfile);
   app.patch('/me/consultant', { preHandler: guard }, controller.updateProfile);
 
+  // Blog taslakları: danışman yazar, admin yayına alır.
+  app.get('/me/consultant/blog-posts', { preHandler: guard }, controller.listBlogPosts);
+  app.post('/me/consultant/blog-posts', { preHandler: guard }, controller.createBlogPost);
+  app.patch('/me/consultant/blog-posts/:id', { preHandler: guard }, controller.updateBlogPost);
+  app.delete('/me/consultant/blog-posts/:id', { preHandler: guard }, controller.deleteBlogPost);
+
   // Randevular
   app.get('/me/consultant/bookings', { preHandler: guard }, controller.listBookings);
   app.post('/me/consultant/bookings/:id/approve', { preHandler: guard }, controller.approveBooking);

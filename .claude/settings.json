@@ -117,7 +117,16 @@
       "Bash(sed -n '23p' packages/shared-backend/modules/consultantServices/controller.ts)",
       "Bash(sed -n '213,217p' packages/shared-backend/modules/bookings/controller.ts)",
       "Bash(sed -n '568,572p' packages/shared-backend/modules/bookings/controller.ts)",
-      "Bash(grep -n \"T39-5\\\\|Codex: \\\\`consultant_services\\\\|Codex: aynı danışman\\\\|Codex: booking →\\\\|Codex: \\\\`consultants.supports_video\\\\`\\\\|Antigravity: \\\\`ServicesPanel\" doc/mvp-checklist.md)"
+      "Bash(grep -n \"T39-5\\\\|Codex: \\\\`consultant_services\\\\|Codex: aynı danışman\\\\|Codex: booking →\\\\|Codex: \\\\`consultants.supports_video\\\\`\\\\|Antigravity: \\\\`ServicesPanel\" doc/mvp-checklist.md)",
+      "Bash(git stash *)",
+      "Bash(timeout 590 ./deploy/deploy.sh admin)",
+      "Bash(timeout 590 ./deploy/deploy.sh frontend)",
+      "Bash(curl -s -o /dev/null -w \"GET /api/admin/consultants/sessions/x/user-readings → %{http_code}\\\\n\" \"https://www.goldmoodastro.com/api/admin/consultants/sessions/test/user-readings\" --max-time 12)",
+      "Bash(curl -s -o /dev/null -w \"GET /api/v1/admin/.../user-readings → %{http_code}\\\\n\" \"https://www.goldmoodastro.com/api/v1/admin/consultants/sessions/test/user-readings\" --max-time 12)",
+      "Bash(git ls-tree *)",
+      "Bash(curl -s -o /dev/null -w \"admin /admin/mail → %{http_code}\\\\n\" \"https://admin.goldmoodastro.com/admin/mail\" --max-time 12)",
+      "Bash(curl -s -o /dev/null -w \"admin /admin/payment-settings → %{http_code}\\\\n\" \"https://admin.goldmoodastro.com/admin/payment-settings\" --max-time 12)",
+      "Bash(timeout 590 ./deploy/deploy.sh backend)"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [

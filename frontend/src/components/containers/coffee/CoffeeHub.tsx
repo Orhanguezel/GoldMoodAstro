@@ -19,11 +19,13 @@ import ConsultantFunnelCTA from '@/components/common/ConsultantFunnelCTA';
 import { useReadCoffeeMutation } from '@/integrations/rtk/public/coffee.public.endpoints';
 import { useUploadFileMutation } from '@/integrations/rtk/public/storage_public.endpoints';
 import { PhotoCaptureInput, type PrepareImageResult } from '@/components/common/image-capture';
+import { useUiSection } from '@/i18n';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 const fraunces = Fraunces({ subsets: ['latin'], weight: ['400', '700'], style: ['normal', 'italic'] });
 
 export default function CoffeeHub() {
+  const { ui } = useUiSection('ui_coffee');
   const [step, setStep] = useState<'intro' | 'wait' | 'upload' | 'processing' | 'result'>('intro');
   const [images, setImages] = useState<string[]>([]); // base64 for preview
   const [imageIds, setImageIds] = useState<string[]>([]);
@@ -70,9 +72,7 @@ export default function CoffeeHub() {
       };
       reader.readAsDataURL(processedFile);
 
-      // Upload
-      // Benzersiz path: iPhone aynı dosya adını (IMG_xxxx) verince
-      // upsert mevcut asset'e çökertir → 3 foto < 3 distinct id → /coffee/read 400.
+      // Upload with a unique path so repeated mobile filenames stay distinct.
       const uniqueSuffix =
         typeof crypto !== 'undefined' && 'randomUUID' in crypto
           ? crypto.randomUUID().slice(0, 8)
@@ -92,7 +92,7 @@ export default function CoffeeHub() {
       }
     } catch (err) {
       console.error('Upload failed:', err);
-      setError('Fotoğraf yüklenemedi. Lütfen tekrar deneyin.');
+      setError(ui('ui_coffee_upload_failed', 'Could not upload the photo. Please try again.'));
     }
   };
 

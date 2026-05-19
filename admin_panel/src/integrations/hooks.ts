@@ -86,3 +86,5 @@ export * from '@/integrations/endpoints/admin/banners_admin.endpoints';
 // Campaigns
 export * from '@/integrations/endpoints/admin/campaigns_admin.endpoints';
 export * from '@/integrations/endpoints/admin/consultant_applications_admin.endpoints';
+export * from '@/integrations/endpoints/admin/service_categories_admin.endpoints';
+export * from '@/integrations/endpoints/admin/service_templates_admin.endpoints';

@@ -10,8 +10,11 @@ import {
   useUpdateMySelfServiceMutation,
   useDeleteMySelfServiceMutation,
   useReorderMySelfServicesMutation,
+  useListMyServiceTemplatesQuery,
+  useAdoptServiceTemplateMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { extractApiError } from '@/integrations/shared';
+import { useUiSection } from '@/i18n';
 
 type ServiceMediaType = 'audio' | 'video';
 
@@ -31,11 +34,7 @@ const MEDIA_SLUG_SUFFIX: Record<ServiceMediaType, string> = {
   video: 'goruntulu',
 };
 
-/**
- * Slug'a medya tipini gömer → aynı danışman aynı ad/süre ama farklı medya tipi
- * ile iki ayrı hizmet ekleyebilir (uniq(consultant_id, slug) çakışmaz).
- * "20-dk-seans" + video → "20-dk-seans-goruntulu"
- */
+// Keep media type in the slug so duplicate service names can coexist.
 function mediaSlug(base: string, media: ServiceMediaType): string {
   const cleaned = base.replace(/-(sesli-goruntulu|sesli|goruntulu)$/i, '');
   return `${cleaned}-${MEDIA_SLUG_SUFFIX[media]}`;
@@ -52,7 +51,6 @@ const EMPTY_FORM: ServiceForm = {
   is_active: true,
 };
 
-/** Sesli / Görüntülü tek-seçim radio (T39-5: 'both' yok, hizmet başı tek medya). */
 function MediaTypeRadio({
   value,
   onChange,
@@ -60,9 +58,10 @@ function MediaTypeRadio({
   value: ServiceMediaType;
   onChange: (v: ServiceMediaType) => void;
 }) {
+  const { ui } = useUiSection('ui_dashboard');
   const opts: Array<{ v: ServiceMediaType; label: string }> = [
-    { v: 'audio', label: 'Sesli Görüşme' },
-    { v: 'video', label: 'Görüntülü Görüşme' },
+    { v: 'audio', label: ui('ui_dashboard_service_media_audio_call', 'Audio call') },
+    { v: 'video', label: ui('ui_dashboard_service_media_video_call', 'Video call') },
   ];
   return (
     <div className="flex gap-2">
@@ -90,14 +89,24 @@ function MediaTypeRadio({
   );
 }
 
+const SLUG_CHAR_MAP: Record<string, string> = {
+  '\u0131': 'i',
+  '\u011f': 'g',
+  '\u00fc': 'u',
+  '\u015f': 's',
+  '\u00f6': 'o',
+  '\u00e7': 'c',
+};
+
 function slugify(s: string): string {
   return s.toLowerCase().trim()
-    .replace(/[ığüşöç]/g, (c) => ({ ı: 'i', ğ: 'g', ü: 'u', ş: 's', ö: 'o', ç: 'c' })[c] || c)
+    .replace(/[\u0131\u011f\u00fc\u015f\u00f6\u00e7]/g, (c) => SLUG_CHAR_MAP[c] || c)
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 }
 
 export default function ServicesPanel() {
+  const { ui } = useUiSection('ui_dashboard');
   const { data: services = [], isLoading } = useListMySelfServicesQuery();
   const [createSvc, { isLoading: isCreating }] = useCreateMySelfServiceMutation();
   const [updateSvc, { isLoading: isUpdating }] = useUpdateMySelfServiceMutation();
@@ -111,9 +120,9 @@ export default function ServicesPanel() {
 
   const handleCreate = async () => {
     const errs: typeof newErrors = {};
-    if (!newForm.name.trim()) errs.name = 'İsim zorunlu';
-    if (newForm.price < 0 || newForm.price > 100000) errs.price = '0-100.000₺ arası olmalı';
-    if (newForm.duration_minutes < 15 || newForm.duration_minutes > 480) errs.duration = '15-480 dk arası olmalı';
+    if (!newForm.name.trim()) errs.name = ui('ui_dashboard_service_error_name_required', 'Name is required');
+    if (newForm.price < 0 || newForm.price > 100000) errs.price = ui('ui_dashboard_service_error_price_range', 'Must be between 0 and 100,000');
+    if (newForm.duration_minutes < 15 || newForm.duration_minutes > 480) errs.duration = ui('ui_dashboard_service_error_duration_range', 'Must be between 15 and 480 minutes');
     
     if (Object.keys(errs).length > 0) {
       setNewErrors(errs);
@@ -131,18 +140,18 @@ export default function ServicesPanel() {
         is_free: newForm.is_free ? 1 : 0,
         is_active: newForm.is_active ? 1 : 0,
       }).unwrap();
-      toast.success('Hizmet eklendi');
+      toast.success(ui('ui_dashboard_service_created', 'Service added'));
       setShowNew(false);
       setNewForm(EMPTY_FORM);
       setNewErrors({});
     } catch (e: unknown) {
-      toast.error(extractApiError(e, 'Eklenemedi'));
+      toast.error(extractApiError(e, ui('ui_dashboard_service_create_failed', 'Could not add service')));
     }
   };
 
   const handlePatch = async (id: string, patch: Partial<ServiceForm>) => {
     if (patch.is_active === false && services.filter((service) => service.is_active === 1 && service.id !== id).length === 0) {
-      toast.error('En az bir aktif hizmet kalmalı');
+      toast.error(ui('ui_dashboard_service_error_one_active', 'At least one active service must remain'));
       return;
     }
     try {
@@ -167,23 +176,23 @@ export default function ServicesPanel() {
       if (patch.is_free !== undefined) body.is_free = patch.is_free ? 1 : 0;
       if (patch.is_active !== undefined) body.is_active = patch.is_active ? 1 : 0;
       await updateSvc({ id, body }).unwrap();
-      toast.success('Kaydedildi');
+      toast.success(ui('ui_dashboard_saved', 'Saved'));
     } catch (e) {
-      toast.error(extractApiError(e, 'Kaydedilemedi'));
+      toast.error(extractApiError(e, ui('ui_dashboard_save_failed', 'Could not save')));
     }
   };
 
   const handleDelete = async (id: string, name: string, isActive: boolean) => {
     if (isActive && services.filter((service) => service.is_active === 1 && service.id !== id).length === 0) {
-      toast.error('En az bir aktif hizmet kalmalı');
+      toast.error(ui('ui_dashboard_service_error_one_active', 'At least one active service must remain'));
       return;
     }
-    if (!confirm(`"${name}" silinsin mi?`)) return;
+    if (!confirm(ui('ui_dashboard_service_delete_confirm', 'Delete "{name}"?').replace('{name}', name))) return;
     try {
       await deleteSvc(id).unwrap();
-      toast.success('Silindi');
+      toast.success(ui('ui_dashboard_deleted', 'Deleted'));
     } catch (e) {
-      toast.error(extractApiError(e, 'Silinemedi'));
+      toast.error(extractApiError(e, ui('ui_dashboard_delete_failed', 'Could not delete')));
     }
   };
 
@@ -198,9 +207,9 @@ export default function ServicesPanel() {
 
     try {
       await reorderSvc(next.map((service, sort_order) => ({ id: service.id, sort_order }))).unwrap();
-      toast.success('Sıra güncellendi');
+      toast.success(ui('ui_dashboard_service_order_updated', 'Order updated'));
     } catch (e) {
-      toast.error(extractApiError(e, 'Sıra güncellenemedi'));
+      toast.error(extractApiError(e, ui('ui_dashboard_service_order_failed', 'Could not update order')));
     }
   };
 
@@ -210,7 +219,7 @@ export default function ServicesPanel() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-[var(--gm-text-dim)] font-serif italic">
-          Sunduğunuz hizmet paketlerini buradan yönetin. Ücretsiz tanışma görüşmesi ekleyebilirsiniz.
+          {ui('ui_dashboard_services_intro', 'Manage your service packages here. You can add a free intro call.')}
         </p>
         <button
           onClick={() => setShowNew((v) => !v)}
@@ -218,13 +227,13 @@ export default function ServicesPanel() {
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest"
         >
           <Plus className="w-4 h-4" />
-          Yeni Hizmet
+          {ui('ui_dashboard_service_new', 'New Service')}
         </button>
       </div>
 
       {showNew && (
         <div className="p-5 rounded-2xl border border-[var(--gm-gold)]/40 bg-[var(--gm-gold)]/5 space-y-4">
-          <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold)]">Yeni Hizmet</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold)]">{ui('ui_dashboard_service_new', 'New Service')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
               value={newForm.name}
@@ -233,27 +242,27 @@ export default function ServicesPanel() {
                 const v = e.target.value;
                 setNewForm({ ...newForm, name: v, slug: newForm.slug || mediaSlug(slugify(v), newForm.media_type) });
               }}
-              placeholder="Hizmet adı (ör. Bireysel Seans)"
+              placeholder={ui('ui_dashboard_service_name_placeholder', 'Service name, e.g. Personal Session')}
               className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.name ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
             />
             <input
               value={newForm.slug}
               onChange={(e) => setNewForm({ ...newForm, slug: slugify(e.target.value) })}
-              placeholder="slug (otomatik oluşur)"
+              placeholder={ui('ui_dashboard_service_slug_placeholder', 'slug, generated automatically')}
               className="h-11 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-4 text-sm font-mono text-[var(--gm-muted)]"
             />
             <input
               type="number"
               value={newForm.duration_minutes}
               onChange={(e) => setNewForm({ ...newForm, duration_minutes: Number(e.target.value) || 45 })}
-              placeholder="Süre (dk)"
+              placeholder={ui('ui_dashboard_service_duration_placeholder', 'Duration (min)')}
               className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.duration ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
             />
             <input
               type="number"
               value={newForm.price}
               onChange={(e) => setNewForm({ ...newForm, price: Number(e.target.value) || 0 })}
-              placeholder="Fiyat (₺)"
+              placeholder={ui('ui_dashboard_service_price_placeholder', 'Price')}
               disabled={newForm.is_free}
               className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.price ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)] disabled:opacity-50`}
             />
@@ -263,12 +272,12 @@ export default function ServicesPanel() {
             onChange={(e) => setNewForm({ ...newForm, description: e.target.value })}
             rows={3}
             maxLength={500}
-            placeholder="Açıklama (opsiyonel)"
+            placeholder={ui('ui_dashboard_service_description_placeholder', 'Description, optional')}
             className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)]"
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Medya Tipi</label>
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">{ui('ui_dashboard_service_media_type', 'Media Type')}</label>
               <MediaTypeRadio
                 value={newForm.media_type}
                 onChange={(media_type) => setNewForm({
@@ -289,7 +298,7 @@ export default function ServicesPanel() {
               />
               <span className="text-sm text-[var(--gm-text)] inline-flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-[var(--gm-success)]" />
-                Ücretsiz Ön Görüşme
+                {ui('ui_dashboard_service_free_intro', 'Free Intro Call')}
               </span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -299,7 +308,7 @@ export default function ServicesPanel() {
                 onChange={(e) => setNewForm({ ...newForm, is_active: e.target.checked })}
                 className="w-5 h-5 accent-[var(--gm-gold)]"
               />
-              <span className="text-sm text-[var(--gm-text)]">Aktif</span>
+              <span className="text-sm text-[var(--gm-text)]">{ui('ui_dashboard_status_active', 'Active')}</span>
             </label>
           </div>
           <div className="flex gap-2 justify-end">
@@ -307,7 +316,7 @@ export default function ServicesPanel() {
               onClick={() => { setShowNew(false); setNewForm(EMPTY_FORM); }}
               className="px-5 py-2.5 rounded-full border border-[var(--gm-border-soft)] text-[10px] font-bold uppercase tracking-widest"
             >
-              İptal
+              {ui('ui_dashboard_cancel', 'Cancel')}
             </button>
             <button
               onClick={handleCreate}
@@ -315,17 +324,17 @@ export default function ServicesPanel() {
               className="px-6 py-2.5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest"
             >
               <Save className="w-3.5 h-3.5 inline mr-1" />
-              Kaydet
+              {ui('ui_dashboard_save', 'Save')}
             </button>
           </div>
         </div>
       )}
 
       {isLoading ? (
-        <div className="text-center py-12 text-[var(--gm-muted)]">Yükleniyor...</div>
+        <div className="text-center py-12 text-[var(--gm-muted)]">{ui('ui_dashboard_loading', 'Loading...')}</div>
       ) : services.length === 0 ? (
         <div className="text-center py-12 text-[var(--gm-muted)] font-serif italic">
-          Henüz hiç hizmet eklemediniz.
+          {ui('ui_dashboard_services_empty', 'You have not added any services yet.')}
         </div>
       ) : (
         <div className="space-y-2">
@@ -345,6 +354,99 @@ export default function ServicesPanel() {
           ))}
         </div>
       )}
+
+      <ServiceTemplatesSection onAdoptSuccess={(id) => setExpandedId(id)} />
+    </div>
+  );
+}
+
+function ServiceTemplatesSection({
+  onAdoptSuccess,
+}: {
+  onAdoptSuccess: (newServiceId: string) => void;
+}) {
+  const { ui } = useUiSection('ui_dashboard');
+  const { data: templates = [], isLoading } = useListMyServiceTemplatesQuery();
+  const [adopt, { isLoading: isAdopting }] = useAdoptServiceTemplateMutation();
+
+  const handleAdopt = async (id: string, name: string) => {
+    try {
+      const result = await adopt(id).unwrap();
+      toast.success(ui('ui_dashboard_service_template_added', '"{name}" was added to your services.').replace('{name}', name));
+      if (result?.id) {
+        onAdoptSuccess(result.id);
+      }
+    } catch (e) {
+      toast.error(ui('ui_dashboard_service_template_add_failed', 'Could not add template.'));
+    }
+  };
+
+  if (isLoading) return null;
+  if (templates.length === 0) return null;
+
+  return (
+    <div className="mt-8 pt-8 border-t border-[var(--gm-border-soft)] space-y-4">
+      <div className="space-y-1">
+        <h3 className="font-serif text-lg text-[var(--gm-text)] flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-[var(--gm-gold)]" />
+          {ui('ui_dashboard_service_templates_title', 'Suggested Templates (draft)')}
+        </h3>
+        <p className="text-xs text-[var(--gm-text-dim)]">
+          {ui('ui_dashboard_service_templates_desc', 'Use ready templates matched to your specialties to open services faster.')}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {templates.map((t) => (
+          <div
+            key={t.id}
+            className="p-4 rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/20 flex flex-col justify-between gap-4 hover:border-[var(--gm-gold)]/30 transition-all"
+          >
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="font-serif text-sm text-[var(--gm-text)] font-semibold">{t.name}</h4>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--gm-gold)]/10 text-[var(--gm-gold)] text-[8px] font-bold uppercase tracking-widest">
+                  {t.media_type === 'video' ? ui('ui_dashboard_service_media_video', 'Video') : ui('ui_dashboard_service_media_audio', 'Audio')}
+                </span>
+                {t.is_free === 1 && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--gm-success)]/15 text-[var(--gm-success)] text-[8px] font-bold uppercase tracking-widest">
+                    {ui('ui_dashboard_free', 'Free')}
+                  </span>
+                )}
+              </div>
+              {t.description && (
+                <p className="text-xs text-[var(--gm-text-dim)] line-clamp-2">{t.description}</p>
+              )}
+              <div className="text-[10px] text-[var(--gm-text-dim)] pt-1 flex items-center gap-2">
+                <span>{t.duration_minutes} dk</span>
+                <span>•</span>
+                <span className="text-[var(--gm-gold)] font-bold">
+                  {t.is_free === 1 ? ui('ui_dashboard_free', 'Free') : `₺${Math.round(Number(t.price))}`}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              {t.adopted ? (
+                <button
+                  disabled
+                  className="w-full h-9 rounded-xl bg-[var(--gm-border-soft)] text-[var(--gm-muted)] text-[10px] font-bold uppercase tracking-widest cursor-not-allowed flex items-center justify-center gap-1"
+                >
+                  {ui('ui_dashboard_service_template_added_badge', 'Added')}
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleAdopt(t.id, t.name)}
+                  disabled={isAdopting}
+                  className="w-full h-9 rounded-xl bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {ui('ui_dashboard_service_template_use', 'Use / Edit')}
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -370,6 +472,7 @@ function ServiceRow({
   onMove: (direction: -1 | 1) => void;
   busy: boolean;
 }) {
+  const { ui } = useUiSection('ui_dashboard');
   const [form, setForm] = useState<ServiceForm>({
     name: svc.name,
     slug: svc.slug,
@@ -393,15 +496,15 @@ function ServiceRow({
 
   const handleSave = () => {
     if (!form.name.trim()) {
-      toast.error('İsim boş olamaz');
+      toast.error(ui('ui_dashboard_service_error_name_empty', 'Name cannot be empty'));
       return;
     }
     if (form.duration_minutes < 15 || form.duration_minutes > 480) {
-      toast.error('Süre 15-480 dakika arası olmalı');
+      toast.error(ui('ui_dashboard_service_error_duration_range', 'Must be between 15 and 480 minutes'));
       return;
     }
     if (!form.is_free && (form.price < 0 || form.price > 100000)) {
-      toast.error('Fiyat 0-100.000 arası olmalı');
+      toast.error(ui('ui_dashboard_service_error_price_range', 'Must be between 0 and 100,000'));
       return;
     }
     onPatch(form);
@@ -418,23 +521,23 @@ function ServiceRow({
             <span className="font-serif text-base text-[var(--gm-text)] truncate">{svc.name}</span>
             {svc.is_free === 1 && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--gm-success)]/15 text-[var(--gm-success)] text-[9px] font-bold uppercase tracking-widest">
-                Ücretsiz
+                {ui('ui_dashboard_free', 'Free')}
               </span>
             )}
             {svc.is_active === 0 && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--gm-muted)]/15 text-[var(--gm-muted)] text-[9px] font-bold uppercase tracking-widest">
-                Pasif
+                {ui('ui_dashboard_status_inactive', 'Inactive')}
               </span>
             )}
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--gm-gold)]/10 text-[var(--gm-gold)] text-[9px] font-bold uppercase tracking-widest">
-              {svc.media_type === 'video' ? 'Görüntülü' : 'Sesli'}
+              {svc.media_type === 'video' ? ui('ui_dashboard_service_media_video', 'Video') : ui('ui_dashboard_service_media_audio', 'Audio')}
             </span>
           </div>
           <div className="text-[11px] text-[var(--gm-text-dim)] mt-1 flex items-center gap-3">
             <span>{svc.duration_minutes} dk</span>
             <span>•</span>
             <span className="text-[var(--gm-gold)] font-bold">
-              {svc.is_free === 1 ? 'Ücretsiz' : `₺${Math.round(Number(svc.price))}`}
+              {svc.is_free === 1 ? ui('ui_dashboard_free', 'Free') : `₺${Math.round(Number(svc.price))}`}
             </span>
           </div>
         </div>
@@ -443,7 +546,7 @@ function ServiceRow({
             onClick={() => onMove(-1)}
             disabled={busy || index === 0}
             className="p-2 text-[var(--gm-muted)] hover:text-[var(--gm-gold)] disabled:opacity-30"
-            title="Yukarı taşı"
+            title={ui('ui_dashboard_move_up', 'Move up')}
           >
             <ArrowUp className="w-4 h-4" />
           </button>
@@ -451,7 +554,7 @@ function ServiceRow({
             onClick={() => onMove(1)}
             disabled={busy || index === total - 1}
             className="p-2 text-[var(--gm-muted)] hover:text-[var(--gm-gold)] disabled:opacity-30"
-            title="Aşağı taşı"
+            title={ui('ui_dashboard_move_down', 'Move down')}
           >
             <ArrowDown className="w-4 h-4" />
           </button>
@@ -461,9 +564,9 @@ function ServiceRow({
           className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-[var(--gm-border-soft)] hover:border-[var(--gm-gold)]/40"
           disabled={busy}
         >
-          {svc.is_active === 1 ? 'Pasifleştir' : 'Aktifleştir'}
+          {svc.is_active === 1 ? ui('ui_dashboard_deactivate', 'Deactivate') : ui('ui_dashboard_activate', 'Activate')}
         </button>
-        <button onClick={onDelete} disabled={busy} className="p-2 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-full" title="Sil">
+        <button onClick={onDelete} disabled={busy} className="p-2 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-full" title={ui('ui_dashboard_delete', 'Delete')}>
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
@@ -472,7 +575,7 @@ function ServiceRow({
         <div className="px-4 pb-4 pt-2 border-t border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)]/30 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">İsim</label>
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">{ui('ui_dashboard_service_name', 'Name')}</label>
               <input
                 value={form.name}
                 maxLength={100}
@@ -485,7 +588,7 @@ function ServiceRow({
               {errors.name && <p className="text-[9px] text-[var(--gm-error)] font-bold uppercase tracking-widest">{errors.name}</p>}
             </div>
             <div className="space-y-1.5">
-              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Slug (sadece admin için)</label>
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">{ui('ui_dashboard_service_slug_admin', 'Slug (admin only)')}</label>
               <input
                 value={form.slug}
                 disabled
@@ -494,19 +597,19 @@ function ServiceRow({
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Açıklama</label>
+            <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">{ui('ui_dashboard_service_description', 'Description')}</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={3}
               maxLength={500}
               className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)]"
-              placeholder="Açıklama"
+              placeholder={ui('ui_dashboard_service_description', 'Description')}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Süre (Dakika)</label>
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">{ui('ui_dashboard_service_duration_minutes', 'Duration (Minutes)')}</label>
               <input
                 type="number"
                 value={form.duration_minutes}
@@ -519,7 +622,7 @@ function ServiceRow({
               {errors.duration && <p className="text-[9px] text-[var(--gm-error)] font-bold uppercase tracking-widest">{errors.duration}</p>}
             </div>
             <div className="space-y-1.5">
-              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Fiyat (₺)</label>
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">{ui('ui_dashboard_service_price', 'Price')}</label>
               <input
                 type="number"
                 value={form.price}
@@ -535,7 +638,7 @@ function ServiceRow({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">Medya Tipi</label>
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">{ui('ui_dashboard_service_media_type', 'Media Type')}</label>
               <MediaTypeRadio
                 value={form.media_type}
                 onChange={(media_type) => setForm({
@@ -554,7 +657,7 @@ function ServiceRow({
                 onChange={(e) => setForm({ ...form, is_free: e.target.checked, price: e.target.checked ? 0 : form.price })}
                 className="w-5 h-5 accent-[var(--gm-success)]"
               />
-              <span className="text-sm text-[var(--gm-text)]">Ücretsiz ön görüşme</span>
+              <span className="text-sm text-[var(--gm-text)]">{ui('ui_dashboard_service_free_intro', 'Free intro call')}</span>
             </label>
             <button
               onClick={handleSave}
@@ -562,7 +665,7 @@ function ServiceRow({
               className="px-6 py-2 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-30 flex items-center gap-2"
             >
               <Save className="w-3.5 h-3.5" />
-              Değişiklikleri Kaydet
+              {ui('ui_dashboard_save_changes', 'Save Changes')}
             </button>
           </div>
         </div>

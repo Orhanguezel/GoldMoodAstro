@@ -62,3 +62,4 @@ export * from '@/integrations/shared/telegram_webhook';
 export * from '@/integrations/shared/chat';
 export * from '@/integrations/shared/wallet';
 export * from '@/integrations/shared/orders';
+export * from '@/integrations/shared/service_templates.types';

@@ -14,7 +14,9 @@ export async function registerConsultantServices(app: FastifyInstance) {
     await requireConsultant(req, reply);
   };
   app.get('/me/consultant/services', { preHandler: authGuard }, controller.listSelf);
+  app.get('/me/consultant/service-templates', { preHandler: authGuard }, controller.listSelfTemplates);
   app.post('/me/consultant/services', { preHandler: authGuard }, controller.createSelf);
+  app.post('/me/consultant/services/from-template/:templateId', { preHandler: authGuard }, controller.createSelfFromTemplate);
   app.patch('/me/consultant/services/:id', { preHandler: authGuard }, controller.updateSelf);
   app.delete('/me/consultant/services/:id', { preHandler: authGuard }, controller.deleteSelf);
   app.post('/me/consultant/services/reorder', { preHandler: authGuard }, controller.reorderSelf);

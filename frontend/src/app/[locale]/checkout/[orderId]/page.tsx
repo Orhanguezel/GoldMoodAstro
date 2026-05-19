@@ -11,39 +11,22 @@ import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 
 const TEXTS: Record<string, Record<string, string>> = {
-  de: {
-    banner: 'Bezahlung',
-    loading: 'Bestellung wird geladen…',
-    notFound: 'Bestellung nicht gefunden.',
-    backHome: 'Zurück zur Startseite',
-    orderNumber: 'Bestellnr.',
-    total: 'Gesamtbetrag',
-    status: 'Status',
-    paymentStatus: 'Zahlungsstatus',
-    items: 'Positionen',
-    payNow: 'Jetzt bezahlen',
-    redirecting: 'Weiterleitung zur Zahlungsseite…',
-    paymentError: 'Zahlung konnte nicht gestartet werden. Bitte versuchen Sie es erneut.',
-    alreadyPaid: 'Diese Bestellung ist bereits bezahlt.',
-    loginRequired: 'Bitte melden Sie sich an, um fortzufahren.',
-    login: 'Anmelden',
-  },
   tr: {
-    banner: 'Odeme',
-    loading: 'Siparis yukleniyor…',
-    notFound: 'Siparis bulunamadi.',
-    backHome: 'Ana Sayfaya Don',
-    orderNumber: 'Siparis No',
+    banner: 'Ödeme',
+    loading: 'Sipariş yükleniyor…',
+    notFound: 'Sipariş bulunamadı.',
+    backHome: 'Ana Sayfaya Dön',
+    orderNumber: 'Sipariş No',
     total: 'Toplam',
     status: 'Durum',
-    paymentStatus: 'Odeme Durumu',
+    paymentStatus: 'Ödeme Durumu',
     items: 'Kalemler',
-    payNow: 'Simdi Ode',
-    redirecting: 'Odeme sayfasina yonlendiriliyor…',
-    paymentError: 'Odeme baslatılamadı. Lutfen tekrar deneyin.',
-    alreadyPaid: 'Bu siparis zaten odenmis.',
-    loginRequired: 'Devam etmek icin giris yapin.',
-    login: 'Giris Yap',
+    payNow: 'Şimdi Öde',
+    redirecting: 'Ödeme sayfasına yönlendiriliyor…',
+    paymentError: 'Ödeme başlatılamadı. Lütfen tekrar deneyin.',
+    alreadyPaid: 'Bu sipariş zaten ödenmiş.',
+    loginRequired: 'Devam etmek için giriş yapın.',
+    login: 'Giriş Yap',
   },
   en: {
     banner: 'Checkout',
@@ -64,13 +47,13 @@ const TEXTS: Record<string, Record<string, string>> = {
   },
 };
 
-function money(v: string | number, currency = 'EUR') {
+function money(v: string | number, currency = 'TRY') {
   const n = Number(v);
   if (!Number.isFinite(n)) return `${v} ${currency}`;
   try {
-    return new Intl.NumberFormat('de-DE', {
+    return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
-      currency: currency || 'EUR',
+      currency: currency || 'TRY',
       minimumFractionDigits: 2,
     }).format(n);
   } catch {
@@ -79,8 +62,8 @@ function money(v: string | number, currency = 'EUR') {
 }
 
 export default function CheckoutPage() {
-  const locale = useLocaleShort() || 'de';
-  const t = TEXTS[locale] ?? TEXTS['de'];
+  const locale = useLocaleShort() || 'en';
+  const t = TEXTS[locale] ?? TEXTS['en'];
   const params = useParams();
   const orderId = params.orderId as string;
   const { isAuthenticated } = useAuthStore();

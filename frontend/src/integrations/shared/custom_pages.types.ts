@@ -289,6 +289,7 @@ export interface CustomPageCreatePayload {
   tags?: string | null;
 
   // parent alanları
+  module_key?: string;
   is_published?: BoolLike;
   featured?: BoolLike;
 
@@ -308,6 +309,7 @@ export interface CustomPageUpdatePayload {
   locale?: string;
 
   // parent
+  module_key?: string;
   is_published?: BoolLike;
   featured?: BoolLike;
   featured_image?: string | null;

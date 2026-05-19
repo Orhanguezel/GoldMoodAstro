@@ -3,6 +3,8 @@
 // T30-1 frontend bağı: /me/consultant/* endpoint'leri için RTK hooks.
 // =============================================================
 import { baseApi } from '@/integrations/rtk/baseApi';
+import type { ApiCustomPage, CustomPageDto, CustomPageCreatePayload, CustomPageUpdatePayload } from '@/integrations/shared';
+import { mapApiCustomPageToDto } from '@/integrations/shared';
 
 export interface ConsultantSelfProfile {
   id: string;
@@ -209,6 +211,23 @@ export interface ConsultantWithdrawalResponse {
   message: string;
 }
 
+export interface ConsultantServiceTemplate {
+  id: string;
+  category_slug: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  duration_minutes: number;
+  price: string;
+  currency: string;
+  media_type: 'audio' | 'video';
+  is_free: number;
+  sort_order: number;
+  is_active: number;
+  adopted: boolean;
+  adopted_service_id: string | null;
+}
+
 export const consultantSelfApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getMyConsultantProfile: build.query<ConsultantSelfProfile, void>({
@@ -220,6 +239,33 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       query: (body) => ({ url: '/me/consultant', method: 'PATCH', body }),
       transformResponse: (res: { data: { id: string } }) => res.data,
       invalidatesTags: ['ConsultantSelf' as any],
+    }),
+    listMyConsultantBlogPosts: build.query<CustomPageDto[], { locale?: string } | void>({
+      query: (args) => ({
+        url: '/me/consultant/blog-posts',
+        params: args?.locale ? { locale: args.locale } : undefined,
+      }),
+      transformResponse: (res: { data: ApiCustomPage[] }) => (res.data ?? []).map(mapApiCustomPageToDto),
+      providesTags: ['ConsultantSelfBlogPosts' as any],
+    }),
+    createMyConsultantBlogPost: build.mutation<CustomPageDto, CustomPageCreatePayload>({
+      query: (body) => ({ url: '/me/consultant/blog-posts', method: 'POST', body }),
+      transformResponse: (res: { data: ApiCustomPage }) => mapApiCustomPageToDto(res.data),
+      invalidatesTags: ['ConsultantSelfBlogPosts' as any],
+    }),
+    updateMyConsultantBlogPost: build.mutation<CustomPageDto, { id: string; patch: CustomPageUpdatePayload }>({
+      query: ({ id, patch }) => ({
+        url: `/me/consultant/blog-posts/${encodeURIComponent(id)}`,
+        method: 'PATCH',
+        body: patch,
+      }),
+      transformResponse: (res: { data: ApiCustomPage }) => mapApiCustomPageToDto(res.data),
+      invalidatesTags: ['ConsultantSelfBlogPosts' as any],
+    }),
+    deleteMyConsultantBlogPost: build.mutation<{ id: string; ok: boolean }, string>({
+      query: (id) => ({ url: `/me/consultant/blog-posts/${encodeURIComponent(id)}`, method: 'DELETE' }),
+      transformResponse: (res: { data: { id: string; ok: boolean } }) => res.data,
+      invalidatesTags: ['ConsultantSelfBlogPosts' as any],
     }),
     getMyConsultantStats: build.query<ConsultantSelfStats, void>({
       query: () => '/me/consultant/stats',
@@ -409,6 +455,19 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       transformResponse: (res: { data: ConsultantReviewReplyResponse }) => res.data,
       invalidatesTags: ['ConsultantSelfReviews' as any],
     }),
+    listMyServiceTemplates: build.query<ConsultantServiceTemplate[], void>({
+      query: () => '/me/consultant/service-templates',
+      transformResponse: (res: { data: ConsultantServiceTemplate[] }) => res.data ?? [],
+      providesTags: ['ConsultantSelfServiceTemplates' as any],
+    }),
+    adoptServiceTemplate: build.mutation<ConsultantSelfService, string>({
+      query: (templateId) => ({
+        url: `/me/consultant/services/from-template/${encodeURIComponent(templateId)}`,
+        method: 'POST',
+      }),
+      transformResponse: (res: { data: ConsultantSelfService }) => res.data,
+      invalidatesTags: ['ConsultantSelfServices' as any, 'ConsultantSelfServiceTemplates' as any],
+    }),
   }),
   overrideExisting: false,
 });
@@ -416,6 +475,10 @@ export const consultantSelfApi = baseApi.injectEndpoints({
 export const {
   useGetMyConsultantProfileQuery,
   useUpdateMyConsultantProfileMutation,
+  useListMyConsultantBlogPostsQuery,
+  useCreateMyConsultantBlogPostMutation,
+  useUpdateMyConsultantBlogPostMutation,
+  useDeleteMyConsultantBlogPostMutation,
   useGetMyConsultantStatsQuery,
   useGetMyConsultantBookingsQuery,
   useApproveBookingMutation,
@@ -438,4 +501,6 @@ export const {
   useGetMyConsultantAvailabilityQuery,
   useUpdateMyConsultantAvailabilityMutation,
   useOverrideMyConsultantAvailabilityDayMutation,
+  useListMyServiceTemplatesQuery,
+  useAdoptServiceTemplateMutation,
 } = consultantSelfApi;

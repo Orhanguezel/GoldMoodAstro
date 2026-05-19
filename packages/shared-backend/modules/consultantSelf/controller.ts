@@ -18,6 +18,7 @@ import { getDefaultLocale } from '../_shared';
 import { overrideDaySlots } from '../availability/repository';
 import { releaseSlotTx } from '../bookings/repository';
 import { consultantServices } from '../consultantServices/schema';
+import * as customPagesRepo from '../customPages/repository';
 // wallets/walletTransactions: bu projede DB schema farklı (consultant_id), raw SQL kullanılıyor.
 
 const profilePatchSchema = z.object({
@@ -33,6 +34,27 @@ const profilePatchSchema = z.object({
   session_duration: z.coerce.number().int().positive().max(appConfig.consultants.maxSessionDurationMinutes).optional(),
   video_session_price: z.coerce.number().nonnegative().max(appConfig.consultants.maxSessionPrice).optional(),
 });
+
+const blogPostSchema = z.object({
+  locale: z.string().min(2).max(8).default('tr'),
+  title: z.string().trim().min(1).max(255),
+  slug: z
+    .string()
+    .trim()
+    .min(1)
+    .max(160)
+    .regex(/^[a-z0-9-]+$/i, 'slug must be url-safe'),
+  content: z.string().max(200000).default(''),
+  summary: z.string().trim().max(2000).nullable().optional(),
+  featured_image: z.string().trim().max(500).nullable().optional(),
+  featured_image_alt: z.string().trim().max(255).nullable().optional(),
+  meta_title: z.string().trim().max(255).nullable().optional(),
+  meta_description: z.string().trim().max(500).nullable().optional(),
+  tags: z.string().trim().max(500).nullable().optional(),
+  featured: z.coerce.boolean().optional(),
+});
+
+const blogPatchSchema = blogPostSchema.partial();
 
 const hhMmSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'invalid_time_format');
 
@@ -55,6 +77,24 @@ async function getCallerConsultant(req: FastifyRequest) {
   if (!userId) return null;
   const [row] = await db.select().from(consultants).where(eq(consultants.user_id, userId)).limit(1);
   return row ?? null;
+}
+
+function consultantBlogMarker(consultantId: string): string {
+  return `author_consultant:${consultantId}`;
+}
+
+function mergeConsultantBlogTags(raw: string | null | undefined, consultantId: string): string {
+  const marker = consultantBlogMarker(consultantId);
+  const tags = String(raw || '')
+    .split(/[;,]/)
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+  if (!tags.includes(marker)) tags.push(marker);
+  return tags.join(', ');
+}
+
+function belongsToConsultantBlog(row: { module_key?: string | null; tags?: string | null }, consultantId: string): boolean {
+  return row.module_key === 'blog' && String(row.tags || '').split(/[;,]/).map((tag) => tag.trim()).includes(consultantBlogMarker(consultantId));
 }
 
 /* ─── GET /me/consultant — profil ─── */
@@ -106,6 +146,83 @@ export async function updateProfile(req: FastifyRequest, reply: FastifyReply) {
     await db.update(users).set(userPatch as any).where(eq(users.id, c.user_id));
   }
   return reply.send({ data: { id: c.id } });
+}
+
+/* ─── Blog taslakları (/me/consultant/blog-posts) ─── */
+export async function listBlogPosts(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const locale = String((req.query as any)?.locale || 'tr');
+  const rows = await customPagesRepo.listCustomPages({
+    module_key: 'blog',
+    locale,
+    sort: 'created_at',
+    orderDir: 'desc',
+    limit: 500,
+  });
+
+  return reply.send({
+    data: rows.filter((row) => belongsToConsultantBlog(row, c.id)),
+  });
+}
+
+export async function createBlogPost(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const parsed = blogPostSchema.safeParse(req.body);
+  if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
+
+  const input = parsed.data;
+  const created = await customPagesRepo.createCustomPage({
+    ...input,
+    module_key: 'blog',
+    is_published: false,
+    featured: input.featured ?? false,
+    image_url: input.featured_image ?? null,
+    tags: mergeConsultantBlogTags(input.tags, c.id),
+  });
+
+  return reply.code(201).send({ data: created });
+}
+
+export async function updateBlogPost(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const { id } = req.params as { id: string };
+  const existing = await customPagesRepo.getCustomPageById(id, String((req.query as any)?.locale || 'tr'));
+  if (!existing || !belongsToConsultantBlog(existing, c.id)) {
+    return reply.code(404).send({ error: { message: 'blog_post_not_found' } });
+  }
+
+  const parsed = blogPatchSchema.safeParse(req.body);
+  if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
+
+  const patch = parsed.data;
+  const updated = await customPagesRepo.updateCustomPage(id, {
+    ...patch,
+    module_key: 'blog',
+    image_url: patch.featured_image ?? undefined,
+    tags: patch.tags !== undefined ? mergeConsultantBlogTags(patch.tags, c.id) : undefined,
+  });
+
+  return reply.send({ data: updated });
+}
+
+export async function deleteBlogPost(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const { id } = req.params as { id: string };
+  const existing = await customPagesRepo.getCustomPageById(id);
+  if (!existing || !belongsToConsultantBlog(existing, c.id)) {
+    return reply.code(404).send({ error: { message: 'blog_post_not_found' } });
+  }
+
+  await customPagesRepo.deleteCustomPage(id);
+  return reply.send({ data: { id, ok: true } });
 }
 
 /* ─── GET /me/consultant/bookings ─── */

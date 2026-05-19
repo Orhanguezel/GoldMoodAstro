@@ -38,6 +38,7 @@ export * from './public/wallet.endpoints';
 export * from './public/orders.endpoints';
 export * from './public/consultants.public.endpoints';
 export * from './public/consultant_services.public.endpoints';
+export * from './public/service_categories.public.endpoints';
 export * from './public/birth_charts.endpoints';
 export * from './public/geocode.endpoints';
 export * from './public/readings.endpoints';

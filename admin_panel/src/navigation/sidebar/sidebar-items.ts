@@ -9,6 +9,7 @@ import {
   BarChart,
   Bell,
   BookOpen,
+  Newspaper,
   Bot,
   Calendar,
   Image as ImageIcon,
@@ -31,6 +32,8 @@ import {
   Star,
   Users,
   Menu as MenuIcon,
+  Layers,
+  FolderTree,
   type LucideIcon,
 } from 'lucide-react';
 import type { TranslateFn } from '@/i18n';
@@ -91,7 +94,10 @@ export type AdminNavItemKey =
   | 'banners'
   | 'campaigns'
   | 'navigation'
-  | 'home_layout';
+  | 'home_layout'
+  | 'service_categories'
+  | 'service_templates'
+  | 'blog';
 
 export type AdminNavGroupKey = 'general' | 'content' | 'marketing' | 'communication' | 'system';
 
@@ -139,6 +145,7 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
     key: 'marketing',
     items: [
       { key: 'banners', url: '/admin/banners', icon: ImageIcon },
+      { key: 'blog', url: '/admin/blog', icon: Newspaper },
       { key: 'campaigns', url: '/admin/campaigns', icon: Tag },
     ],
   },
@@ -147,6 +154,8 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
     key: 'system',
     items: [
       { key: 'site_settings', url: '/admin/site-settings', icon: Settings },
+      { key: 'service_categories', url: '/admin/service-categories', icon: FolderTree },
+      { key: 'service_templates', url: '/admin/service-templates', icon: Layers },
       { key: 'navigation', url: '/admin/navigation', icon: MenuIcon },
       { key: 'home_layout', url: '/admin/home-layout', icon: LayoutDashboard },
       { key: 'cache', url: '/admin/cache', icon: Trash2 },
@@ -197,8 +206,11 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   astrology_kb: 'Astroloji Bilgi Bankası',
   banners: 'Banner Yönetimi',
   campaigns: 'Kampanyalar',
+  service_categories: 'Hizmet Kategorileri',
+  service_templates: 'Hizmet Şablonları',
   navigation: 'Menü & Footer',
   home_layout: 'Anasayfa Düzeni',
+  blog: 'Blog',
 };
 
 export function buildAdminSidebarItems(

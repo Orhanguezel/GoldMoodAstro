@@ -6,7 +6,7 @@ import { X, Plus } from 'lucide-react';
 interface MultiSelectChipProps {
   label?: string;
   selected: string[];
-  options?: string[]; // Optional predefined options
+  options?: Array<string | { value: string; label: string }>;
   onSelectionChange: (selected: string[]) => void;
   placeholder?: string;
   error?: string;
@@ -23,6 +23,10 @@ export default function MultiSelectChip({
   maxItems,
 }: MultiSelectChipProps) {
   const [inputValue, setInputValue] = useState('');
+  const normalizedOptions = options.map((option) =>
+    typeof option === 'string' ? { value: option, label: option } : option,
+  );
+  const optionLabelByValue = new Map(normalizedOptions.map((option) => [option.value, option.label]));
 
   const handleAdd = (value: string) => {
     const trimmed = value.trim();
@@ -71,7 +75,7 @@ export default function MultiSelectChip({
             key={item}
             className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--gm-gold)]/10 border border-[var(--gm-gold)]/30 text-[12px] text-[var(--gm-text)]"
           >
-            {item}
+            {optionLabelByValue.get(item) ?? item}
             <button
               type="button"
               onClick={() => handleRemove(item)}
@@ -97,14 +101,14 @@ export default function MultiSelectChip({
       
       {options.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-2">
-          {options.filter(opt => !selected.includes(opt)).map(opt => (
+          {normalizedOptions.filter((opt) => !selected.includes(opt.value)).map((opt) => (
             <button
-              key={opt}
+              key={opt.value}
               type="button"
-              onClick={() => handleAdd(opt)}
+              onClick={() => handleAdd(opt.value)}
               className="px-2 py-0.5 rounded-full border border-[var(--gm-border-soft)] text-[10px] text-[var(--gm-muted)] hover:border-[var(--gm-gold)]/40 hover:text-[var(--gm-gold)] transition-all"
             >
-              + {opt}
+              + {opt.label}
             </button>
           ))}
         </div>

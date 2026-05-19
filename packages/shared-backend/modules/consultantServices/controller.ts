@@ -24,6 +24,8 @@ const servicePayloadSchema = z.object({
   is_free: z.coerce.number().int().min(0).max(1).default(0),
   is_active: z.coerce.number().int().min(0).max(1).default(1),
   sort_order: z.coerce.number().int().default(0),
+  template_id: z.string().trim().max(36).nullable().optional(),
+  category_slug: z.string().trim().max(64).nullable().optional(),
 });
 
 function validatePaidServicePrice(data: { is_free?: number; price?: number }, ctx: z.RefinementCtx) {
@@ -75,7 +77,7 @@ export async function listPublic(req: FastifyRequest, reply: FastifyReply) {
 }
 
 /* ─── SELF (consultant kendi servisleri) ─── */
-async function resolveCallerConsultantId(req: FastifyRequest): Promise<string | null> {
+export async function resolveCallerConsultantId(req: FastifyRequest): Promise<string | null> {
   const u = (req as any).user as { sub?: string; id?: string } | undefined;
   const userId = u?.id ?? u?.sub;
   if (!userId) return null;
@@ -133,6 +135,73 @@ export async function reorderSelf(req: FastifyRequest, reply: FastifyReply) {
   if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
   await repo.reorder(consultantId, parsed.data.items);
   return reply.send({ data: { ok: true, count: parsed.data.items.length } });
+}
+
+function isDuplicateKeyError(error: unknown): boolean {
+  const e = error as { code?: string; errno?: number } | undefined;
+  return e?.code === 'ER_DUP_ENTRY' || e?.errno === 1062;
+}
+
+async function uniqueSlugForConsultant(consultantId: string, baseSlug: string): Promise<string> {
+  const cleanBase = baseSlug.replace(/-\d+$/i, '') || 'service';
+  if (!(await repo.slugExistsForConsultant(consultantId, cleanBase))) return cleanBase;
+  for (let i = 2; i < 100; i += 1) {
+    const candidate = `${cleanBase}-${i}`;
+    if (!(await repo.slugExistsForConsultant(consultantId, candidate))) return candidate;
+  }
+  return `${cleanBase}-${Date.now()}`;
+}
+
+export async function listSelfTemplates(req: FastifyRequest, reply: FastifyReply) {
+  const consultantId = await resolveCallerConsultantId(req);
+  if (!consultantId) return reply.code(403).send({ error: { message: 'not_consultant' } });
+  const rows = await repo.listTemplatesForConsultant(consultantId);
+  return reply.send({ data: rows });
+}
+
+export async function createSelfFromTemplate(req: FastifyRequest, reply: FastifyReply) {
+  const consultantId = await resolveCallerConsultantId(req);
+  if (!consultantId) return reply.code(403).send({ error: { message: 'not_consultant' } });
+  const { templateId } = req.params as { templateId: string };
+
+  const existing = await repo.getByTemplateForConsultant(templateId, consultantId);
+  if (existing) return reply.send({ data: existing });
+
+  const template = await repo.getTemplateById(templateId);
+  if (!template || template.is_active !== 1) return reply.code(404).send({ error: { message: 'template_not_found' } });
+
+  const id = randomUUID();
+  const sortOrder = await repo.nextSortOrder(consultantId);
+  const slug = await uniqueSlugForConsultant(consultantId, template.slug);
+  const data = {
+    id,
+    consultant_id: consultantId,
+    template_id: template.id,
+    category_slug: template.category_slug,
+    name: template.name,
+    slug,
+    description: template.description ?? null,
+    duration_minutes: template.duration_minutes,
+    price: String(template.is_free === 1 ? '0.00' : template.price),
+    currency: template.currency,
+    media_type: template.media_type,
+    is_free: template.is_free,
+    is_active: 1,
+    sort_order: sortOrder,
+  };
+
+  try {
+    await repo.createWithSync(data);
+  } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      const duplicate = await repo.getByTemplateForConsultant(templateId, consultantId);
+      if (duplicate) return reply.send({ data: duplicate });
+    }
+    throw error;
+  }
+
+  const created = await repo.getByIdForConsultant(id, consultantId);
+  return reply.send({ data: created ?? { id } });
 }
 
 /* ─── ADMIN ─── */

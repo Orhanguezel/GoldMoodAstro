@@ -5,88 +5,88 @@
      GOLD MOOD ASTRO — Theme Tokens
      ------------------------------------------------------------
      Variable names are preserved from the previous theme.
-     Color values are updated to the editorial cream + gold + ink
-     brand identity. Default theme is LIGHT (matches brand).
-     [data-theme="dark"] is the dramatic ink + gold alternative.
+     Color values are updated to the active Amethyst theme values.
+     Default theme is LIGHT (matches brand).
+     [data-theme="dark"] is the dramatic amethyst + gold alternative.
 
      Override via --gm-* runtime variables when needed.
      ============================================================ */
 
   /* ─── GOLD PALETTE (warm editorial gold, not Vegas gold) ─── */
-  --color-gold-50:  #FAF6EF;
-  --color-gold-100: #F2EBDD;
-  --color-gold-200: #E5D0A0;
-  --color-gold-300: var(--gm-gold-light, #D4BB7A);
-  --color-gold-400: var(--gm-gold, #C9A961);          /* PRIMARY GOLD */
-  --color-gold-500: var(--gm-gold-dim, #B89651);
-  --color-gold-600: var(--gm-gold-deep, #A8884A);     /* deep gold */
-  --color-gold-700: #8C7038;
-  --color-gold-800: #6E5829;
-  --color-gold-900: #4D3D1A;
+  --color-gold-50:  #FDF6E3;
+  --color-gold-100: #F8E8B8;
+  --color-gold-200: #F2D685;
+  --color-gold-300: var(--gm-gold-light, #E5C868);
+  --color-gold-400: var(--gm-gold, #DCB02D);          /* PRIMARY GOLD */
+  --color-gold-500: var(--gm-gold-dim, #B89230);
+  --color-gold-600: var(--gm-gold-deep, #544315);     /* deep gold */
+  --color-gold-700: #7C631F;
+  --color-gold-800: #544315;
+  --color-gold-900: #2E250B;
 
   /* ─── SAND / INK NEUTRAL PALETTE ─── */
-  --color-sand-50:  #FAF6EF;   /* ivory base */
-  --color-sand-100: #F2EBDD;   /* ivory deep */
-  --color-sand-200: #E5DCC8;
-  --color-sand-300: #C9BFA8;
-  --color-sand-400: #A09888;
-  --color-sand-500: #8A8276;   /* ink muted */
-  --color-sand-600: #6B6358;
-  --color-sand-700: #4A4238;   /* ink soft */
-  --color-sand-800: #2A2620;   /* ink — primary dark text */
-  --color-sand-900: #1A1715;   /* deepest ink */
+  --color-sand-50:  #F8F2FF;   /* lila base */
+  --color-sand-100: #EDE2FA;   /* lila deep */
+  --color-sand-200: #D9C4F0;
+  --color-sand-300: #BFA0E5;
+  --color-sand-400: #A57DD5;
+  --color-sand-500: #9B6FD9;   /* primary brand */
+  --color-sand-600: #7C4FBF;
+  --color-sand-700: #5C3792;   /* amethyst soft */
+  --color-sand-800: #381F66;   /* primary dark text */
+  --color-sand-900: #1B0A3D;   /* deepest ink */
 
   /* ─── DARK PALETTE (used by dark theme + dramatic sections) ─── */
-  --color-deep:       var(--gm-bg, #FAF6EF);
-  --color-dark:       var(--gm-bg-deep, #F2EBDD);
+  --color-deep:       var(--gm-bg, #F5EFFF);
+  --color-dark:       var(--gm-bg-deep, #EDE2FA);
   --color-card:       var(--gm-surface, #FFFFFF);
-  --color-card-hover: var(--gm-surface-high, #F7F1E4);
+  --color-card-hover: var(--gm-surface-high, #F8F2FF);
 
   /* ─── PLUM ACCENT (mystical depth) ─── */
-  --color-plum:      #3D2E47;
-  --color-plum-soft: #5D4A66;
+  --color-plum:      #4C1D95;
+  --color-plum-soft: #5B21B6;
 
   /* ─── SEMANTIC TOKENS (LIGHT THEME — DEFAULT) ─── */
-  --color-bg-primary:      var(--gm-bg, #FAF6EF);
-  --color-bg-secondary:    var(--gm-bg-deep, #F2EBDD);
+  --color-bg-primary:      var(--gm-bg, #F5EFFF);
+  --color-bg-secondary:    var(--gm-bg-deep, #EDE2FA);
   --color-bg-card:         var(--gm-surface, #FFFFFF);
-  --color-bg-card-hover:   var(--gm-surface-high, #F7F1E4);
-  --color-bg-accent:       color-mix(in srgb, var(--gm-primary, #C9A961) 8%, transparent);
+  --color-bg-card-hover:   var(--gm-surface-high, #F8F2FF);
+  --color-bg-accent:       color-mix(in srgb, var(--gm-primary, #9B6FD9) 8%, transparent);
   --color-bg-dark:         var(--color-deep);
 
-  --color-background:      var(--gm-bg, #FAF6EF);
-  --color-foreground:      var(--gm-text, #2A2620);
+  --color-background:      var(--gm-bg, #F5EFFF);
+  --color-foreground:      var(--gm-text, #1B0A3D);
 
-  --color-text-primary:    var(--gm-text, #2A2620);
-  --color-text-secondary:  var(--gm-text-dim, #4A4238);
-  --color-text-muted:      var(--gm-muted-soft, #6B6358);
-  --color-text-on-dark:    #FAF6EF;
+  --color-text-primary:    var(--gm-text, #1B0A3D);
+  --color-text-secondary:  var(--gm-text-dim, #3D2466);
+  --color-text-muted:      var(--gm-muted-soft, #8B7BB8);
+  --color-text-on-dark:    #F5EFFF;
 
-  --color-brand-primary:   var(--gm-primary-dark, #A8884A);   /* darker gold for text contrast */
-  --color-brand-secondary: var(--gm-gold, #C9A961);
-  --color-brand-accent:    var(--gm-accent, #3D2E47);
-  --color-brand-hover:     var(--gm-primary-hover, #A8884A);
-  --color-brand-dark:      var(--gm-primary-dark, #A8884A);
-  --color-brand-light:     color-mix(in srgb, var(--gm-primary, #C9A961) 14%, transparent);
+  --color-brand-primary:   var(--gm-primary-dark, #7C4FBF);   /* darker amethyst for text contrast */
+  --color-brand-secondary: var(--gm-gold, #D4AF37);
+  --color-brand-accent:    var(--gm-accent, #4C1D95);
+  --color-brand-hover:     var(--gm-primary-hover, #7C4FBF);
+  --color-brand-dark:      var(--gm-primary-dark, #7C4FBF);
+  --color-brand-light:     color-mix(in srgb, var(--gm-primary, #9B6FD9) 14%, transparent);
 
-  --color-brand-gold:      var(--gm-gold-deep, #A8884A);
-  --color-brand-gold-deep: var(--gm-gold-deep, #A8884A);
-  --color-brand-gold-dim:  var(--gm-gold-dim, #B89651);
+  --color-brand-gold:      var(--gm-gold-deep, #544315);
+  --color-brand-gold-deep: var(--gm-gold-deep, #544315);
+  --color-brand-gold-dim:  var(--gm-gold-dim, #B89230);
 
-  --color-bg-base:         var(--gm-bg, #FAF6EF);
-  --color-bg-deep:         var(--gm-bg-deep, #F2EBDD);
+  --color-bg-base:         var(--gm-bg, #F5EFFF);
+  --color-bg-deep:         var(--gm-bg-deep, #EDE2FA);
   --color-surface:         var(--gm-surface, #FFFFFF);
-  --color-surface-high:    var(--gm-surface-high, #F7F1E4);
+  --color-surface-high:    var(--gm-surface-high, #F8F2FF);
 
   --color-primary:         var(--color-brand-primary);
   --color-primary-hover:   var(--color-brand-hover);
 
-  --color-accent-gold:      var(--gm-gold, #C9A961);
-  --color-accent-spiritual: var(--gm-accent, #3D2E47);        /* plum for mystical accent */
+  --color-accent-gold:      var(--gm-gold, #D4AF37);
+  --color-accent-spiritual: var(--gm-accent, #4C1D95);
 
-  --color-border-light:  var(--gm-border-soft, rgba(168, 136, 74, 0.15));
-  --color-border-medium: var(--gm-border, rgba(168, 136, 74, 0.25));
-  --color-border-hover:  color-mix(in srgb, var(--gm-primary, #C9A961) 40%, transparent);
+  --color-border-light:  var(--gm-border-soft, rgba(155, 111, 217, 0.15));
+  --color-border-medium: var(--gm-border, rgba(155, 111, 217, 0.30));
+  --color-border-hover:  color-mix(in srgb, var(--gm-primary, #9B6FD9) 40%, transparent);
 
   /* ─── STATUS COLORS (mode-aware via --gm-* runtime) ─── */
   --color-success: var(--gm-success, #4CAF6E);
@@ -95,9 +95,9 @@
   --color-info:    var(--gm-info,    #5B9BD5);
 
   /* ─── TYPOGRAPHY ─── */
-  --font-sans:    var(--gm-font-sans, 'Manrope', system-ui, -apple-system, sans-serif);
-  --font-serif:   var(--gm-font-serif, 'Fraunces', Georgia, serif);
-  --font-display: var(--gm-font-display, 'Cinzel', 'Trajan Pro', Georgia, serif);
+  --font-sans:    var(--gm-font-sans, 'Outfit', system-ui, -apple-system, sans-serif);
+  --font-serif:   var(--gm-font-serif, 'Gabriela', Georgia, serif);
+  --font-display: var(--gm-font-display, 'Fraunces', Georgia, serif);
 }
 
 /* ─── SHADOWS (LIGHT — softer, warm) ─── */
@@ -109,10 +109,10 @@
   --gm-w-default: 1300px;
   --gm-w-wide: 1536px;
 
-  --shadow-soft:   var(--gm-shadow-soft,   0 2px 20px rgba(45, 37, 32, 0.06));
-  --shadow-medium: var(--gm-shadow-card,   0 8px 40px rgba(45, 37, 32, 0.10));
-  --shadow-glow:   var(--gm-shadow-glow,   0 0 60px rgba(201, 169, 97, 0.18));
-  --shadow-gold:   var(--gm-shadow-gold,   0 0 30px rgba(201, 169, 97, 0.22));
+  --shadow-soft:   var(--gm-shadow-soft,   0 10px 40px rgba(46,16,101,0.20));
+  --shadow-medium: var(--gm-shadow-card,   0 30px 90px rgba(46,16,101,0.30));
+  --shadow-glow:   var(--gm-shadow-glow,   0 0 120px rgba(155,111,217,0.40));
+  --shadow-gold:   var(--gm-shadow-gold,   0 0 60px rgba(212,175,55,0.30));
 
   /* ─── MYSTICAL ACCENTS (requested colors) ─── */
   --color-mystic-mint: #F0FFDF;
@@ -120,9 +120,9 @@
   --color-mystic-rose: #FBEFEF;
 
   /* ─── SPLASH / LOADER (Faz 38) ─── */
-  --splash-bg: var(--gm-splash-bg, #FAF6EF);
-  --splash-text: var(--gm-splash-text, #2A2620);
-  --loader-primary: var(--gm-loader-primary, #C9A961);
+  --splash-bg: var(--gm-splash-bg, #F5EFFF);
+  --splash-text: var(--gm-splash-text, #1B0A3D);
+  --loader-primary: var(--gm-loader-primary, #9B6FD9);
 }
 
 /* ============================================================
@@ -131,34 +131,34 @@
    section on the landing page).
    ============================================================ */
 [data-theme="dark"] {
-  --color-bg-primary:      var(--gm-bg, #2A2620);
-  --color-bg-secondary:    var(--gm-bg-deep, #1A1715);
-  --color-bg-card:         var(--gm-surface, #3D362D);
-  --color-bg-card-hover:   var(--gm-surface-high, #4A4238);
-  --color-bg-accent:       rgba(201, 169, 97, 0.10);
-  --color-bg-dark:         var(--gm-bg-deep, #1A1715);
+  --color-bg-primary:      var(--gm-bg, #2E1065);
+  --color-bg-secondary:    var(--gm-bg-deep, #1B0A3D);
+  --color-bg-card:         var(--gm-surface, #4C1D95);
+  --color-bg-card-hover:   var(--gm-surface-high, #5B21B6);
+  --color-bg-accent:       rgba(212, 175, 55, 0.10);
+  --color-bg-dark:         var(--gm-bg-deep, #1B0A3D);
 
-  --color-text-primary:    var(--gm-text, #FAF6EF);
-  --color-text-secondary:  var(--gm-text-dim, #E5DCC8);
-  --color-text-muted:      var(--gm-muted, #A09888);
-  --color-text-on-dark:    var(--gm-text, #FAF6EF);
+  --color-text-primary:    var(--gm-text, #F5F3FF);
+  --color-text-secondary:  var(--gm-text-dim, #DDD6FE);
+  --color-text-muted:      var(--gm-muted, #A88BC9);
+  --color-text-on-dark:    var(--gm-text, #F5F3FF);
 
-  --color-brand-primary:   var(--gm-primary, #C9A961);
-  --color-brand-hover:     var(--gm-primary-light, #E5D0A0);   /* lighter on dark for contrast */
-  --color-brand-dark:      var(--gm-primary-dark, #A8884A);
-  --color-brand-light:     rgba(201, 169, 97, 0.15);
+  --color-brand-primary:   var(--gm-primary, #9B6FD9);
+  --color-brand-hover:     var(--gm-primary-light, #C7A4F2);   /* lighter on dark for contrast */
+  --color-brand-dark:      var(--gm-primary-dark, #7C4FBF);
+  --color-brand-light:     rgba(155, 111, 217, 0.15);
 
-  --color-primary:         var(--gm-primary, #C9A961);
-  --color-primary-hover:   var(--gm-primary-light, #E5D0A0);
+  --color-primary:         var(--gm-primary, #9B6FD9);
+  --color-primary-hover:   var(--gm-primary-light, #C7A4F2);
 
-  --color-border-light:    var(--gm-border-soft, rgba(201, 169, 97, 0.10));
-  --color-border-medium:   var(--gm-border, rgba(201, 169, 97, 0.20));
-  --color-border-hover:    rgba(201, 169, 97, 0.40);
+  --color-border-light:    var(--gm-border-soft, rgba(155, 111, 217, 0.15));
+  --color-border-medium:   var(--gm-border, rgba(155, 111, 217, 0.30));
+  --color-border-hover:    rgba(155, 111, 217, 0.40);
 
-  --shadow-soft:           var(--gm-shadow-soft, 0 2px 20px rgba(0, 0, 0, 0.40));
-  --shadow-medium:         var(--gm-shadow-card, 0 8px 40px rgba(0, 0, 0, 0.55));
-  --shadow-glow:           var(--gm-shadow-glow, 0 0 60px rgba(201, 169, 97, 0.15));
-  --shadow-gold:           var(--gm-shadow-gold, 0 0 30px rgba(201, 169, 97, 0.25));
+  --shadow-soft:           var(--gm-shadow-soft, 0 10px 40px rgba(0, 0, 0, 0.40));
+  --shadow-medium:         var(--gm-shadow-card, 0 30px 90px rgba(0, 0, 0, 0.55));
+  --shadow-glow:           var(--gm-shadow-glow, 0 0 120px rgba(155, 111, 217, 0.15));
+  --shadow-gold:           var(--gm-shadow-gold, 0 0 60px rgba(212, 175, 55, 0.25));
 }
 
 /* ============================================================
@@ -167,34 +167,34 @@
    case existing code forces light mode somewhere.
    ============================================================ */
 [data-theme="light"] {
-  --color-bg-primary:      #FAF6EF;
-  --color-bg-secondary:    #F2EBDD;
+  --color-bg-primary:      #F5EFFF;
+  --color-bg-secondary:    #EDE2FA;
   --color-bg-card:         #FFFFFF;
-  --color-bg-card-hover:   #F7F1E4;
-  --color-bg-accent:       rgba(201, 169, 97, 0.08);
-  --color-bg-dark:         #2A2620;
+  --color-bg-card-hover:   #F8F2FF;
+  --color-bg-accent:       rgba(155, 111, 217, 0.08);
+  --color-bg-dark:         #1B0A3D;
 
-  --color-text-primary:    #2A2620;
-  --color-text-secondary:  #4A4238;
-  --color-text-muted:      #8A8276;
-  --color-text-on-dark:    #FAF6EF;
+  --color-text-primary:    #1B0A3D;
+  --color-text-secondary:  #3D2466;
+  --color-text-muted:      #6B559A;
+  --color-text-on-dark:    #F5EFFF;
 
-  --color-brand-primary:   #C9A961;
-  --color-brand-hover:     #A8884A;
-  --color-brand-dark:      #8C7038;
-  --color-brand-light:     rgba(201, 169, 97, 0.14);
+  --color-brand-primary:   #9B6FD9;
+  --color-brand-hover:     #7C4FBF;
+  --color-brand-dark:      #5C3792;
+  --color-brand-light:     rgba(155, 111, 217, 0.14);
 
-  --color-primary:         #C9A961;
-  --color-primary-hover:   #A8884A;
+  --color-primary:         #9B6FD9;
+  --color-primary-hover:   #7C4FBF;
 
-  --color-border-light:    rgba(168, 136, 74, 0.15);
-  --color-border-medium:   rgba(168, 136, 74, 0.25);
-  --color-border-hover:    rgba(168, 136, 74, 0.40);
+  --color-border-light:    rgba(155, 111, 217, 0.15);
+  --color-border-medium:   rgba(155, 111, 217, 0.30);
+  --color-border-hover:    rgba(155, 111, 217, 0.40);
 
-  --shadow-soft:           0 2px 20px rgba(45, 37, 32, 0.06);
-  --shadow-medium:         0 8px 40px rgba(45, 37, 32, 0.10);
-  --shadow-glow:           0 0 60px rgba(201, 169, 97, 0.18);
-  --shadow-gold:           0 0 30px rgba(201, 169, 97, 0.22);
+  --shadow-soft:           0 10px 40px rgba(46, 16, 101, 0.20);
+  --shadow-medium:         0 30px 90px rgba(46, 16, 101, 0.30);
+  --shadow-glow:           0 0 120px rgba(155, 111, 217, 0.40);
+  --shadow-gold:           0 0 60px rgba(212, 175, 55, 0.30);
 }
 
 @layer base {

@@ -3008,6 +3008,7 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
   - ✅ 2026-05-16 Codex: `next.config.js`/paketlerde next-intl wiring yok; `request.ts` sadece kendi içindeki ölü `messages` importuna bağlıydı, kaldırıldı. `messages/` dizini zaten yoktu.
 - [x] Antigravity: mobil metin regresyon QA + dil seçici (T42-3)
 - [ ] 🔴 **§v2-SCOPE-EXT (Claude 2026-05-16 — "EN çalışmıyor" kök neden):** frontend ~92/144 bileşende gömülü Türkçe → `ui_*` anahtarına çıkar (`useUi`/`uiDb`); `ui_*` seed'e TR+EN; `scan:hardcoded-tr` envanter + `check:i18n` guard (JSX/toast TR literal = fail). **§v2-FINAL tek başına EN'i DÜZELTMEZ** — bu olmadan web'de İngilizce kırık. Öncelik: booking/consultant/auth/ödeme/home. Sahip: Codex/Cursor (frontend), FAZ33 ile tek `ui_*` sözlüğü. Kontrat: [`i18n-single-source-contract.md`](./contracts/i18n-single-source-contract.md) §v2-SCOPE-EXT
+  - 🟡 2026-05-19 Codex: danışman dashboard P1 hattında `ConsultantDashboard` + `BlogPanel` + `ServicesPanel` TR literal artışı temizlendi; `ServicesPanel` metinleri `ui_dashboard_*` anahtarlarına ve `016_ui_copy_seed.sql` TR/EN/DE seed satırlarına bağlandı. `CoffeeHub` baseline sapması için `ui_coffee_upload_failed` eklendi. `i18n:scan` guard ✅, frontend/backend typecheck ✅, frontend build ✅.
 
 ### T42-5 — Admin yönetilebilirlik kapama (Codex + admin_panel)
 - [x] Mobil banner placement'ları (`mobile_welcome/home/call_end`) admin'de görünür/yönetilir — teyit + eksikse ekle
@@ -3016,6 +3017,8 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
   - ✅ 2026-05-16 Codex: Mobil token kayıt (`expo-notifications` → `/push/register-token`), admin manuel/kampanya push ekranı ve backend Firebase Admin dispatch route'ları doğrulandı. Gerçek cihaz/FCM teslimatı canlı token ile ayrıca smoke test gerektirir.
 - [x] Tema: admin design_tokens değişimi mobil app launch'ta yansıyor — teyit (FAZ 38 §3 fallback hizası mobil tarafında da)
   - ✅ 2026-05-16 Codex: `ThemeContext` açılışta cache'i kullanıp `/site_settings/design_tokens` fetch ediyor, `designTokensToAppTheme` ile mobil temaya çeviriyor ve cache'e yazıyor.
+- [x] Blog: web/mobil blog içerikleri admin panelden yönetilir; danışmanlar taslak blog yazabilir, admin yayına alır
+  - ✅ 2026-05-19 Codex: `/admin/blog` customPages `module_key=blog` CRUD eklendi; `/me/consultant/blog-posts` danışman taslak uçları ve danışman paneli Blog sekmesi eklendi. Yayınlama admin panelde kalıyor.
 - [x] (Opsiyonel/v2) Navigasyon/menü backend-driven: mobil tab/menü `menu_items`'tan — şimdilik kapsam dışı, not
   - ✅ 2026-05-16 Codex: Mobil `menu/index.tsx` public navigation endpoint'lerini kullanıyor; expo-router tab/routing yapısının tamamen backend-driven yapılması v2 kapsam dışı not edildi.
 

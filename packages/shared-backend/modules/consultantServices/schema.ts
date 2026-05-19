@@ -17,13 +17,17 @@ export const consultantServices = mysqlTable(
     is_free: tinyint('is_free').notNull().default(0),
     is_active: tinyint('is_active').notNull().default(1),
     sort_order: int('sort_order').notNull().default(0),
+    template_id: char('template_id', { length: 36 }),
+    category_slug: varchar('category_slug', { length: 64 }),
     created_at: datetime('created_at', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
     updated_at: datetime('updated_at', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)`),
   },
   (t) => ({
     uniq_slug: uniqueIndex('uniq_consultant_service_slug').on(t.consultant_id, t.slug),
+    uniq_template: uniqueIndex('uniq_consultant_template').on(t.consultant_id, t.template_id),
     idx_consultant: index('idx_consultant_services_consultant').on(t.consultant_id),
     idx_active: index('idx_consultant_services_active').on(t.consultant_id, t.is_active, t.sort_order),
+    idx_category: index('idx_consultant_services_category').on(t.consultant_id, t.category_slug),
   }),
 );
 

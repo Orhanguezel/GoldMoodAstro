@@ -16,6 +16,7 @@ import {
   Loader2,
   MessageCircle,
   Wallet,
+  FileText,
   TrendingUp,
   TrendingDown,
   Timer,
@@ -26,6 +27,7 @@ import {
 import { toast } from 'sonner';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { localizePath, extractApiError } from '@/integrations/shared';
+import { useUiSection } from '@/i18n';
 import AvatarUpload from '@/components/common/AvatarUpload';
 import {
   type ConsultantSelfProfile,
@@ -39,28 +41,31 @@ import {
   useCancelMyConsultantBookingMutation,
   useUpdateMyConsultantBookingNotesMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
+import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 import ServicesPanel from './ServicesPanel';
 import MessagesPanel from './MessagesPanel';
 import WalletPanel from './WalletPanel';
 import ReviewsPanel from './ReviewsPanel';
 import AvailabilityPanel from './AvailabilityPanel';
+import BlogPanel from './BlogPanel';
 import BookingMessageButton from '@/components/common/BookingMessageButton';
 import RichContentEditor from '@/components/common/RichContentEditor';
 import MultiSelectChip from '@/components/common/MultiSelectChip';
 import ConsultantCardPreview from './ConsultantCardPreview';
 import PageContainer from '@/components/common/PageContainer';
 
-type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'wallet' | 'reviews';
+type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'blog' | 'wallet' | 'reviews';
 
-const TABS: Array<{ key: TabKey; label: string; icon: React.ElementType }> = [
-  { key: 'overview', label: 'Genel Bakış', icon: LayoutDashboard },
-  { key: 'profile', label: 'Profil', icon: User },
-  { key: 'services', label: 'Hizmetler', icon: Package },
-  { key: 'availability', label: 'Müsaitlik', icon: Calendar },
-  { key: 'bookings', label: 'Randevular', icon: CheckCircle2 },
-  { key: 'messages', label: 'Mesajlar', icon: MessageCircle },
-  { key: 'wallet', label: 'Cüzdan', icon: Wallet },
-  { key: 'reviews', label: 'Yorumlar', icon: Star },
+const TABS: Array<{ key: TabKey; labelKey: string; fallback: string; icon: React.ElementType }> = [
+  { key: 'overview', labelKey: 'ui_dashboard_tab_overview', fallback: 'Overview', icon: LayoutDashboard },
+  { key: 'profile', labelKey: 'ui_dashboard_tab_profile', fallback: 'Profile', icon: User },
+  { key: 'services', labelKey: 'ui_dashboard_tab_services', fallback: 'Services', icon: Package },
+  { key: 'availability', labelKey: 'ui_dashboard_tab_availability', fallback: 'Availability', icon: Calendar },
+  { key: 'bookings', labelKey: 'ui_dashboard_tab_bookings', fallback: 'Bookings', icon: CheckCircle2 },
+  { key: 'messages', labelKey: 'ui_dashboard_tab_messages', fallback: 'Messages', icon: MessageCircle },
+  { key: 'blog', labelKey: 'ui_dashboard_tab_blog', fallback: 'Blog', icon: FileText },
+  { key: 'wallet', labelKey: 'ui_dashboard_tab_wallet', fallback: 'Wallet', icon: Wallet },
+  { key: 'reviews', labelKey: 'ui_dashboard_tab_reviews', fallback: 'Reviews', icon: Star },
 ];
 
 interface Props {
@@ -70,6 +75,7 @@ interface Props {
 export default function ConsultantDashboard({ locale }: Props) {
   const [tab, setTab] = useState<TabKey>('overview');
   const { isAuthenticated, isReady, isLoading: authLoading } = useAuthStore();
+  const { ui } = useUiSection('ui_dashboard', locale as any);
 
   const { data: profile, isLoading: profileLoading, isError: profileError } = useGetMyConsultantProfileQuery(undefined, {
     skip: !isReady || !isAuthenticated,
@@ -88,12 +94,12 @@ export default function ConsultantDashboard({ locale }: Props) {
     const next = encodeURIComponent(localizePath(locale, '/me/consultant'));
     return (
       <EmptyState
-        title="Danışman paneline giriş yap"
-        description="Bu alan yalnızca giriş yapmış danışman hesapları için açıktır."
+        title={ui('ui_dashboard_auth_required_title', 'Sign in to consultant dashboard')}
+        description={ui('ui_dashboard_auth_required_desc', 'This area is only available to signed-in consultant accounts.')}
         primaryHref={`${localizePath(locale, '/login')}?next=${next}`}
-        primaryLabel="Giriş Yap"
+        primaryLabel={ui('ui_dashboard_sign_in', 'Sign In')}
         secondaryHref={localizePath(locale, '/become-consultant')}
-        secondaryLabel="Danışman Ol"
+        secondaryLabel={ui('ui_dashboard_become_consultant', 'Become a Consultant')}
       />
     );
   }
@@ -101,12 +107,12 @@ export default function ConsultantDashboard({ locale }: Props) {
   if (profileError || !profile) {
     return (
       <EmptyState
-        title="Bu sayfa sadece danışmanlara açık"
-        description="Hesabın henüz danışman değilse başvuru formunu doldurup onay sürecini başlatabilirsin."
+        title={ui('ui_dashboard_consultant_only_title', 'This page is only available to consultants')}
+        description={ui('ui_dashboard_consultant_only_desc', 'If your account is not a consultant account yet, you can start the approval process with the application form.')}
         primaryHref={localizePath(locale, '/become-consultant')}
-        primaryLabel="Danışman Ol"
+        primaryLabel={ui('ui_dashboard_become_consultant', 'Become a Consultant')}
         secondaryHref={localizePath(locale, '/')}
-        secondaryLabel="Anasayfaya Dön"
+        secondaryLabel={ui('ui_dashboard_back_home', 'Back to Home')}
       />
     );
   }
@@ -116,9 +122,9 @@ export default function ConsultantDashboard({ locale }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl text-[var(--gm-text)]">Danışman Paneli</h1>
+          <h1 className="font-serif text-3xl md:text-4xl text-[var(--gm-text)]">{ui('ui_dashboard_title', 'Consultant Dashboard')}</h1>
           <p className="text-[var(--gm-text-dim)] font-serif italic mt-1">
-            {profile.user?.full_name || 'Danışman'} — kendi profilini, hizmetlerini ve randevularını yönet.
+            {ui('ui_dashboard_header_desc', '{name} - manage your profile, services and bookings.').replace('{name}', profile.user?.full_name || ui('ui_dashboard_consultant_fallback', 'Consultant'))}
           </p>
         </div>
         <AvailabilityToggle isAvailable={profile.is_available === 1} />
@@ -140,19 +146,20 @@ export default function ConsultantDashboard({ locale }: Props) {
               }`}
             >
               <Icon className="w-4 h-4" />
-              {t.label}
+              {ui(t.labelKey, t.fallback)}
             </button>
           );
         })}
       </div>
 
       {/* Content */}
-      {tab === 'overview' && <OverviewPanel stats={stats} profile={profile} isLoading={statsLoading} onTabChange={setTab} />}
-      {tab === 'profile' && <ProfilePanel profile={profile} />}
+      {tab === 'overview' && <OverviewPanel locale={locale} stats={stats} profile={profile} isLoading={statsLoading} onTabChange={setTab} />}
+      {tab === 'profile' && <ProfilePanel locale={locale} profile={profile} />}
       {tab === 'services' && <ServicesPanel />}
       {tab === 'availability' && <AvailabilityPanel />}
       {tab === 'bookings' && <BookingsPanel locale={locale} />}
       {tab === 'messages' && <MessagesPanel />}
+      {tab === 'blog' && <BlogPanel locale={locale} />}
       {tab === 'wallet' && <WalletPanel />}
       {tab === 'reviews' && <ReviewsPanel />}
     </PageContainer>
@@ -198,30 +205,33 @@ function EmptyState({
 
 /* ────────── Overview (T30-9) ────────── */
 function OverviewPanel({
+  locale,
   stats,
   profile,
   isLoading,
   onTabChange,
 }: {
+  locale: string;
   stats?: ConsultantSelfStats;
   profile: ConsultantSelfProfile;
   isLoading?: boolean;
   onTabChange?: (k: TabKey) => void;
 }) {
+  const { ui } = useUiSection('ui_dashboard', locale as any);
   const days = stats?.last_7_days?.length ? stats.last_7_days : getEmptyLast7Days();
   const maxCount = Math.max(1, ...days.map((d) => d.count));
   const sessionDelta = stats?.session_delta_pct ?? 0;
   const earningsDelta = stats?.earnings_delta_pct ?? 0;
   const avgRespMin = stats?.avg_response_minutes ?? 0;
   const respLabel = avgRespMin > 0
-    ? avgRespMin >= 60 ? `~${Math.round(avgRespMin / 60)}sa` : `~${avgRespMin}dk`
+    ? avgRespMin >= 60 ? ui('ui_dashboard_hours_short', '~{value}h').replace('{value}', String(Math.round(avgRespMin / 60))) : ui('ui_dashboard_minutes_short', '~{value}m').replace('{value}', String(avgRespMin))
     : '—';
 
   return (
     <div className="space-y-6">
       {isLoading && (
         <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-4 text-[12px] text-[var(--gm-text-dim)]">
-          İstatistikler güncelleniyor...
+          {ui('ui_dashboard_stats_loading', 'Updating statistics...')}
         </div>
       )}
 
@@ -229,29 +239,29 @@ function OverviewPanel({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <BigStatCard
           icon={Calendar}
-          label="Bu Ay Seans"
+          label={ui('ui_dashboard_stat_month_sessions', 'Sessions This Month')}
           value={stats?.this_month_session_count ?? 0}
           delta={sessionDelta}
-          subLabel={`Geçen ay: ${stats?.last_month_session_count ?? 0}`}
+          subLabel={ui('ui_dashboard_stat_last_month_count', 'Last month: {value}').replace('{value}', String(stats?.last_month_session_count ?? 0))}
         />
         <BigStatCard
           icon={BarChart3}
-          label="Bu Ay Kazanç"
+          label={ui('ui_dashboard_stat_month_earnings', 'Earnings This Month')}
           value={`₺${Math.round(stats?.this_month_earnings ?? 0)}`}
           delta={earningsDelta}
-          subLabel={`Geçen ay: ₺${Math.round(stats?.last_month_earnings ?? 0)}`}
+          subLabel={ui('ui_dashboard_stat_last_month_money', 'Last month: ₺{value}').replace('{value}', String(Math.round(stats?.last_month_earnings ?? 0)))}
         />
         <BigStatCard
           icon={Star}
-          label="Ortalama Puan"
+          label={ui('ui_dashboard_stat_rating', 'Average Rating')}
           value={(stats?.rating_avg ?? 0).toFixed(2)}
-          subLabel={`${stats?.rating_count ?? 0} yorum`}
+          subLabel={ui('ui_dashboard_stat_reviews_count', '{value} reviews').replace('{value}', String(stats?.rating_count ?? 0))}
         />
         <BigStatCard
           icon={Timer}
-          label="Yanıt Süresi"
+          label={ui('ui_dashboard_stat_response_time', 'Response Time')}
           value={respLabel}
-          subLabel="ort. mesaj cevap süresi"
+          subLabel={ui('ui_dashboard_stat_response_sub', 'average message reply time')}
         />
       </div>
 
@@ -261,20 +271,20 @@ function OverviewPanel({
         <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">Son 7 Gün</h3>
-              <p className="text-[12px] text-[var(--gm-text-dim)] mt-1">Günlük seans sayısı</p>
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">{ui('ui_dashboard_last_7_days', 'Last 7 Days')}</h3>
+              <p className="text-[12px] text-[var(--gm-text-dim)] mt-1">{ui('ui_dashboard_daily_sessions', 'Daily session count')}</p>
             </div>
             <div className="text-[10px] text-[var(--gm-muted)]">
-              Toplam {days.reduce((s, d) => s + d.count, 0)} seans
+              {ui('ui_dashboard_total_sessions_inline', 'Total {value} sessions').replace('{value}', String(days.reduce((s, d) => s + d.count, 0)))}
             </div>
           </div>
           <div className="flex items-end gap-2 h-32 mt-6">
             {days.map((d) => {
               const heightPct = (d.count / maxCount) * 100;
               const dt = new Date(`${d.date}T12:00:00`);
-              const dayLabel = dt.toLocaleDateString('tr-TR', { weekday: 'short' });
+              const dayLabel = dt.toLocaleDateString(locale === 'tr' ? 'tr-TR' : locale === 'de' ? 'de-DE' : 'en-US', { weekday: 'short' });
               return (
-                <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1.5 group" title={`${d.date}: ${d.count} seans · ₺${d.earnings}`}>
+                <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1.5 group" title={ui('ui_dashboard_chart_bar_title', '{date}: {count} sessions - ₺{earnings}').replace('{date}', d.date).replace('{count}', String(d.count)).replace('{earnings}', String(d.earnings))}>
                   <span className="text-[10px] text-[var(--gm-muted)] font-bold">{d.count > 0 ? d.count : ''}</span>
                   <div
                     className="w-full rounded-t-md bg-[var(--gm-gold)] group-hover:bg-[var(--gm-gold-light)] transition-colors"
@@ -290,13 +300,13 @@ function OverviewPanel({
         {/* Eylem gerektiren */}
         <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-6 min-w-[260px]">
           <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-4">
-            Eylem Gerekiyor
+            {ui('ui_dashboard_actions_needed', 'Needs Action')}
           </h3>
           <div className="space-y-2">
             {(stats?.requested_now_count ?? 0) > 0 && (
               <ActionRow
                 icon={Zap}
-                label="⚡ Anlık Görüşme Talebi"
+                label={ui('ui_dashboard_action_instant_request', 'Instant Session Request')}
                 count={stats?.requested_now_count ?? 0}
                 onClick={() => onTabChange?.('bookings')}
                 urgent
@@ -304,13 +314,13 @@ function OverviewPanel({
             )}
             <ActionRow
               icon={Bell}
-              label="Bekleyen Randevu"
+              label={ui('ui_dashboard_action_pending_booking', 'Pending Booking')}
               count={stats?.pending_bookings ?? 0}
               onClick={() => onTabChange?.('bookings')}
             />
             <ActionRow
               icon={MessageCircle}
-              label="Yanıtsız Mesaj"
+              label={ui('ui_dashboard_action_unanswered_message', 'Unanswered Message')}
               count={stats?.pending_messages ?? 0}
               onClick={() => onTabChange?.('messages')}
             />
@@ -321,21 +331,21 @@ function OverviewPanel({
       {/* Hızlı eylem butonları */}
       <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-6">
         <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-4">
-          Hızlı Eylemler
+          {ui('ui_dashboard_quick_actions', 'Quick Actions')}
         </h3>
         <div className="flex items-center gap-3 flex-wrap">
-          <QuickActionButton icon={Package} label="Hizmet Ekle" onClick={() => onTabChange?.('services')} />
-          <QuickActionButton icon={Calendar} label="Müsaitlik Düzenle" onClick={() => onTabChange?.('availability')} />
-          <QuickActionButton icon={MessageCircle} label="Mesajları Gör" onClick={() => onTabChange?.('messages')} />
-          <QuickActionButton icon={Wallet} label="Cüzdan" onClick={() => onTabChange?.('wallet')} />
-          <QuickActionButton icon={User} label="Profili Düzenle" onClick={() => onTabChange?.('profile')} />
+          <QuickActionButton icon={Package} label={ui('ui_dashboard_quick_add_service', 'Add Service')} onClick={() => onTabChange?.('services')} />
+          <QuickActionButton icon={Calendar} label={ui('ui_dashboard_quick_edit_availability', 'Edit Availability')} onClick={() => onTabChange?.('availability')} />
+          <QuickActionButton icon={MessageCircle} label={ui('ui_dashboard_quick_view_messages', 'View Messages')} onClick={() => onTabChange?.('messages')} />
+          <QuickActionButton icon={Wallet} label={ui('ui_dashboard_tab_wallet', 'Wallet')} onClick={() => onTabChange?.('wallet')} />
+          <QuickActionButton icon={User} label={ui('ui_dashboard_quick_edit_profile', 'Edit Profile')} onClick={() => onTabChange?.('profile')} />
         </div>
       </div>
 
       {/* Onay durumu + toplam */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">Onay Durumu</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">{ui('ui_dashboard_approval_status', 'Approval Status')}</span>
           <div className="mt-3 flex items-center gap-2 flex-wrap">
             <span
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
@@ -346,7 +356,7 @@ function OverviewPanel({
                     : 'bg-[var(--gm-error)]/15 text-[var(--gm-error)]'
               }`}
             >
-              {profile.approval_status === 'approved' ? 'Onaylı' : profile.approval_status === 'pending' ? 'İnceleniyor' : 'Reddedildi'}
+              {profile.approval_status === 'approved' ? ui('ui_dashboard_status_approved', 'Approved') : profile.approval_status === 'pending' ? ui('ui_dashboard_status_pending_review', 'In Review') : ui('ui_dashboard_status_rejected', 'Rejected')}
             </span>
             <span
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
@@ -355,12 +365,12 @@ function OverviewPanel({
                   : 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]'
               }`}
             >
-              {profile.is_available ? 'Çevrimiçi' : 'Çevrimdışı'}
+              {profile.is_available ? ui('ui_dashboard_online', 'Online') : ui('ui_dashboard_offline', 'Offline')}
             </span>
           </div>
         </div>
-        <StatCardSmall icon={CheckCircle2} label="Toplam Seans" value={stats?.total_sessions ?? 0} />
-        <StatCardSmall icon={Star} label="Toplam Yorum" value={stats?.rating_count ?? 0} />
+        <StatCardSmall icon={CheckCircle2} label={ui('ui_dashboard_total_sessions', 'Total Sessions')} value={stats?.total_sessions ?? 0} />
+        <StatCardSmall icon={Star} label={ui('ui_dashboard_total_reviews', 'Total Reviews')} value={stats?.rating_count ?? 0} />
       </div>
     </div>
   );
@@ -453,13 +463,14 @@ function QuickActionButton({ icon: Icon, label, onClick }: { icon: React.Element
 
 /* ────────── Availability Toggle ────────── */
 function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
+  const { ui } = useUiSection('ui_dashboard');
   const [updateProfile, { isLoading }] = useUpdateMyConsultantProfileMutation();
   const handleToggle = async () => {
     try {
       await updateProfile({ is_available: isAvailable ? 0 : 1 }).unwrap();
-      toast.success(isAvailable ? 'Çevrimdışı oldun' : 'Çevrimiçi oldun');
+      toast.success(isAvailable ? ui('ui_dashboard_toast_offline', 'You are offline') : ui('ui_dashboard_toast_online', 'You are online'));
     } catch (e) {
-      toast.error(extractApiError(e, 'Güncellenemedi'));
+      toast.error(extractApiError(e, ui('ui_dashboard_toast_update_failed', 'Could not update')));
     }
   };
   return (
@@ -473,7 +484,7 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
       }`}
     >
       {isAvailable ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-      {isAvailable ? 'Çevrimiçi' : 'Çevrimdışı'}
+      {isAvailable ? ui('ui_dashboard_online', 'Online') : ui('ui_dashboard_offline', 'Offline')}
     </button>
   );
 }
@@ -481,7 +492,9 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
 /* ────────── Profile ────────── */
 const PLATFORM_OPTIONS = ['WhatsApp', 'Skype', 'Zoom', 'Google Meet', 'Microsoft Teams'];
 
-function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
+function ProfilePanel({ locale, profile }: { locale: string; profile: ConsultantSelfProfile }) {
+  const { ui } = useUiSection('ui_dashboard', locale as any);
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
   const [updateProfile, { isLoading }] = useUpdateMyConsultantProfileMutation();
   const [bio, setBio] = useState<string>(profile.bio || '');
   const [expertise, setExpertise] = useState<string[]>(profile.expertise || []);
@@ -490,6 +503,16 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(profile.social_links || {});
   const [avatarUrl, setAvatarUrl] = useState<string>(profile.user?.avatar_url || '');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const expertiseOptions = serviceCategories.length
+    ? serviceCategories.map((category) => ({ value: category.slug, label: category.name }))
+    : [
+        { value: 'astrology', label: ui('ui_dashboard_expertise_astrology', 'Astrology') },
+        { value: 'tarot', label: ui('ui_dashboard_expertise_tarot', 'Tarot') },
+        { value: 'numerology', label: ui('ui_dashboard_expertise_numerology', 'Numerology') },
+        { value: 'mood', label: ui('ui_dashboard_expertise_mood', 'Mood Coaching') },
+        { value: 'career', label: ui('ui_dashboard_expertise_career', 'Career') },
+        { value: 'relationship', label: ui('ui_dashboard_expertise_relationship', 'Relationship') },
+      ];
 
   const togglePlatform = (platform: string) => {
     setMeetingPlatforms((current) =>
@@ -506,29 +529,29 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (bio.length > 5000) newErrors.bio = 'Bio en fazla 5000 karakter olabilir.';
-    if (expertise.length > 20) newErrors.expertise = 'En fazla 20 uzmanlık alanı ekleyebilirsiniz.';
-    if (languages.length > 10) newErrors.languages = 'En fazla 10 dil ekleyebilirsiniz.';
+    if (bio.length > 5000) newErrors.bio = ui('ui_dashboard_error_bio_max', 'Bio can be up to 5000 characters.');
+    if (expertise.length > 20) newErrors.expertise = ui('ui_dashboard_error_expertise_max', 'You can add up to 20 expertise areas.');
+    if (languages.length > 10) newErrors.languages = ui('ui_dashboard_error_languages_max', 'You can add up to 10 languages.');
 
     // Social link validation
     if (socialLinks.instagram) {
       const v = socialLinks.instagram.trim();
       if (v.includes('http') && !v.includes('instagram.com/')) {
-        newErrors.instagram = 'Instagram URL\'si instagram.com içermeli';
+        newErrors.instagram = ui('ui_dashboard_error_instagram_url', 'Instagram URL must include instagram.com');
       } else if (v.length > 50) {
-        newErrors.instagram = 'Instagram kullanıcı adı veya URL çok uzun';
+        newErrors.instagram = ui('ui_dashboard_error_instagram_length', 'Instagram username or URL is too long');
       }
     }
     if (socialLinks.linkedin) {
       const v = socialLinks.linkedin.trim();
       if (v && !v.includes('linkedin.com/')) {
-        newErrors.linkedin = 'Geçerli bir LinkedIn profil URL girin';
+        newErrors.linkedin = ui('ui_dashboard_error_linkedin_url', 'Enter a valid LinkedIn profile URL');
       }
     }
     if (socialLinks.website) {
       const v = socialLinks.website.trim();
       if (v && !/^https?:\/\/[^\s$.?#].[^\s]*$/i.test(v)) {
-        newErrors.website = 'Geçerli bir web sitesi URL girin (https://...)';
+        newErrors.website = ui('ui_dashboard_error_website_url', 'Enter a valid website URL (https://...)');
       }
     }
 
@@ -538,7 +561,7 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
 
   const handleSave = async () => {
     if (!validate()) {
-      toast.error('Lütfen hataları düzeltin.');
+      toast.error(ui('ui_dashboard_error_fix_fields', 'Please fix the highlighted errors.'));
       return;
     }
     try {
@@ -555,9 +578,9 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
         social_links: cleanSocials,
         avatar_url: avatarUrl || null,
       }).unwrap();
-      toast.success('Profil güncellendi');
+      toast.success(ui('ui_dashboard_profile_saved', 'Profile updated'));
     } catch (e) {
-      toast.error(extractApiError(e, 'Profil güncellenemedi'));
+      toast.error(extractApiError(e, ui('ui_dashboard_profile_save_failed', 'Profile could not be updated')));
     }
   };
 
@@ -573,38 +596,38 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
             folder={profile.id}
           />
           <div>
-            <h3 className="font-serif text-lg text-[var(--gm-text)]">{profile.user?.full_name || 'Danışman'}</h3>
+            <h3 className="font-serif text-lg text-[var(--gm-text)]">{profile.user?.full_name || ui('ui_dashboard_consultant_fallback', 'Consultant')}</h3>
             <div className="mt-2 space-y-1.5 border-l-2 border-[var(--gm-gold)]/20 pl-4">
               <p className="text-[11px] text-[var(--gm-text-dim)] flex items-start gap-1.5">
                 <span className="text-[var(--gm-gold)] mt-0.5">•</span>
-                <span>Net bir <strong>yüz fotoğrafı</strong> yükleyin — yüzünüz açıkça görünmeli.</span>
+                <span>{ui('ui_dashboard_avatar_rule_face', 'Upload a clear face photo where your face is visible.')}</span>
               </p>
               <p className="text-[11px] text-[var(--gm-text-dim)] flex items-start gap-1.5">
                 <span className="text-[var(--gm-gold)] mt-0.5">•</span>
-                <span><strong>Yapay zeka ile üretilmiş portre kabul edilir</strong> (yüz odaklı olduğu sürece).</span>
+                <span>{ui('ui_dashboard_avatar_rule_ai', 'AI-generated portraits are accepted if they are face-focused.')}</span>
               </p>
               <p className="text-[11px] text-[var(--gm-text-dim)] flex items-start gap-1.5">
                 <span className="text-[var(--gm-gold)] mt-0.5">•</span>
-                <span>Manzara, hayvan, logo, nesne veya yazı içeren görseller <strong>kabul edilmez</strong>.</span>
+                <span>{ui('ui_dashboard_avatar_rule_reject', 'Images containing landscapes, logos, objects or text are not accepted.')}</span>
               </p>
               <p className="text-[11px] text-[var(--gm-text-dim)] flex items-start gap-1.5">
                 <span className="text-[var(--gm-gold)] mt-0.5">•</span>
-                <span>Tek kişi olmalı; grup, bulanık veya aşırı filtreli fotoğraflar onaylanmaz.</span>
+                <span>{ui('ui_dashboard_avatar_rule_single', 'Use a single-person photo; group, blurry or heavily filtered photos are not approved.')}</span>
               </p>
               <p className="text-[11px] text-[var(--gm-text-dim)] flex items-start gap-1.5">
                 <span className="text-[var(--gm-gold)] mt-0.5">•</span>
-                <span>Öneri: omuz hizası portre, sade arka plan, iyi ışık. Kare (1:1), min ~400×400 px.</span>
+                <span>{ui('ui_dashboard_avatar_rule_tip', 'Tip: shoulder-level portrait, simple background, good light. Square (1:1), min ~400x400 px.')}</span>
               </p>
               <p className="text-[11px] text-[var(--gm-gold-dim)] italic font-serif mt-2">
-                &quot;Fotoğrafınız <strong>ekip onayından</strong> geçer; uygun olmayan görseller reddedilir.&quot;
+                &quot;{ui('ui_dashboard_avatar_approval_note', 'Your photo is reviewed by the team; unsuitable images are rejected.')}&quot;
               </p>
             </div>
           </div>
         </div>
 
         <Field 
-          label="Hakkımda (Zengin Metin)" 
-          hint="Kendinizi, yaklaşımınızı ve danışana ne sunduğunuzu anlatın. İletişim bilgisi/dış link yazmayın (Sosyal Linkler alanını kullanın). En az 150 karakter önerilir."
+          label={ui('ui_dashboard_profile_bio_label', 'About Me (Rich Text)')}
+          hint={ui('ui_dashboard_profile_bio_hint', 'Describe yourself, your approach and what you offer. Do not add contact details or external links here.')}
           error={errors.bio}
         >
           <div className="rich-editor-container">
@@ -617,43 +640,48 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
           </div>
           <div className="flex justify-end mt-1">
             <span className={`text-[10px] ${bio.length >= 5000 ? 'text-[var(--gm-error)]' : 'text-[var(--gm-muted)]'}`}>
-              {bio.length} / 5000 karakter
+              {ui('ui_dashboard_character_count', '{count} / 5000 characters').replace('{count}', String(bio.length))}
             </span>
           </div>
         </Field>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Field 
-            label="Uzmanlık Alanları" 
-            hint="Yalnızca gerçekten danışmanlık verdiğiniz alanları seçin; profiliniz bu alanlarda listelenir."
+            label={ui('ui_dashboard_expertise_label', 'Expertise Areas')}
+            hint={ui('ui_dashboard_expertise_hint', 'Select only the areas where you actually provide guidance.')}
             error={errors.expertise}
           >
             <MultiSelectChip
               label=""
               selected={expertise}
               onSelectionChange={setExpertise}
-              options={['Astroloji', 'Tarot', 'Numeroloji', 'Mood Coaching', 'Kariyer', 'İlişki']}
-              placeholder="Eklemek için yazın..."
+              options={expertiseOptions}
+              placeholder={ui('ui_dashboard_add_placeholder', 'Type to add...')}
             />
           </Field>
           <Field 
-            label="Diller" 
-            hint="Akıcı danışmanlık verebildiğiniz dilleri seçin."
+            label={ui('ui_dashboard_languages_label', 'Languages')}
+            hint={ui('ui_dashboard_languages_hint', 'Select the languages you can use fluently in sessions.')}
             error={errors.languages}
           >
             <MultiSelectChip
               label=""
               selected={languages}
               onSelectionChange={setLanguages}
-              options={['Türkçe', 'İngilizce', 'Almanca', 'Fransızca']}
-              placeholder="Eklemek için yazın..."
+              options={[
+                ui('ui_dashboard_language_tr', 'Turkish'),
+                ui('ui_dashboard_language_en', 'English'),
+                ui('ui_dashboard_language_de', 'German'),
+                ui('ui_dashboard_language_fr', 'French'),
+              ]}
+              placeholder={ui('ui_dashboard_add_placeholder', 'Type to add...')}
             />
           </Field>
         </div>
 
         <Field 
-          label="Görüşme Platformları"
-          hint="Yalnızca aktif kullandığınız platformları işaretleyin; randevu bu kanaldan yapılır."
+          label={ui('ui_dashboard_platforms_label', 'Meeting Platforms')}
+          hint={ui('ui_dashboard_platforms_hint', 'Select only the platforms you actively use.')}
         >
           <div className="flex flex-wrap gap-2">
             {PLATFORM_OPTIONS.map((platform) => {
@@ -677,8 +705,8 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
         </Field>
 
         <Field 
-          label="Sosyal Linkler"
-          hint="Opsiyonel. Doğrulanabilir profiller güven puanınızı artırır."
+          label={ui('ui_dashboard_social_links_label', 'Social Links')}
+          hint={ui('ui_dashboard_social_links_hint', 'Optional. Verifiable profiles increase trust.')}
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {['instagram', 'linkedin', 'website'].map((key) => (
@@ -704,7 +732,7 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
           disabled={isLoading}
           className="px-8 py-3 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-xs font-bold uppercase tracking-widest disabled:opacity-50 hover:shadow-glow transition-all"
         >
-          {isLoading ? 'Kaydediliyor...' : 'Profili Kaydet'}
+          {isLoading ? ui('ui_dashboard_saving', 'Saving...') : ui('ui_dashboard_save_profile', 'Save Profile')}
         </button>
       </div>
 
@@ -712,7 +740,7 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
       <div className="space-y-6">
         <div className="sticky top-32">
           <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-4 ml-1">
-            Canlı Önizleme
+            {ui('ui_dashboard_live_preview', 'Live Preview')}
           </h3>
           <ConsultantCardPreview
             fullName={profile.user?.full_name || ''}
@@ -726,7 +754,7 @@ function ProfilePanel({ profile }: { profile: ConsultantSelfProfile }) {
           />
           <div className="mt-6 p-4 rounded-2xl bg-[var(--gm-gold)]/5 border border-[var(--gm-gold)]/20">
             <p className="text-[11px] text-[var(--gm-text-dim)] font-serif italic leading-relaxed text-center">
-              &quot;Değişiklikleri kaydettikten sonra profil kartınız tüm listelerde bu şekilde görünecektir.&quot;
+              &quot;{ui('ui_dashboard_preview_note', 'After saving changes, your profile card will appear like this in all lists.')}&quot;
             </p>
           </div>
         </div>
@@ -752,6 +780,7 @@ type BookingActionModal =
   | null;
 
 function BookingsPanel({ locale }: { locale: string }) {
+  const { ui } = useUiSection('ui_dashboard', locale as any);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [actionModal, setActionModal] = useState<BookingActionModal>(null);
   const { data: bookings = [], isLoading } = useGetMyConsultantBookingsQuery(statusFilter ? { status: statusFilter } : undefined);
@@ -761,13 +790,13 @@ function BookingsPanel({ locale }: { locale: string }) {
   const [updateNotes] = useUpdateMyConsultantBookingNotesMutation();
 
   const FILTERS = [
-    { key: '', label: 'Tümü' },
-    { key: 'requested_now', label: '⚡ Anlık Talepler' },
-    { key: 'pending_payment', label: 'Ödeme Bekleyen' },
-    { key: 'confirmed', label: 'Onaylı' },
-    { key: 'completed', label: 'Tamamlanan' },
-    { key: 'rejected', label: 'Reddedilen' },
-    { key: 'cancelled', label: 'İptal' },
+    { key: '', label: ui('ui_dashboard_filter_all', 'All') },
+    { key: 'requested_now', label: ui('ui_dashboard_filter_instant', 'Instant Requests') },
+    { key: 'pending_payment', label: ui('ui_dashboard_filter_pending_payment', 'Pending Payment') },
+    { key: 'confirmed', label: ui('ui_dashboard_filter_confirmed', 'Confirmed') },
+    { key: 'completed', label: ui('ui_dashboard_filter_completed', 'Completed') },
+    { key: 'rejected', label: ui('ui_dashboard_filter_rejected', 'Rejected') },
+    { key: 'cancelled', label: ui('ui_dashboard_filter_cancelled', 'Cancelled') },
   ];
 
   // T29-4: Aktif anlık talepler — süresi dolmamış olanlar
@@ -780,9 +809,9 @@ function BookingsPanel({ locale }: { locale: string }) {
   const handleApprove = async (id: string) => {
     try {
       await approve(id).unwrap();
-      toast.success('Onaylandı');
+      toast.success(ui('ui_dashboard_toast_approved', 'Approved'));
     } catch (e) {
-      toast.error(extractApiError(e, 'Onaylanamadı'));
+      toast.error(extractApiError(e, ui('ui_dashboard_toast_approve_failed', 'Could not approve')));
     }
   };
 
@@ -791,28 +820,28 @@ function BookingsPanel({ locale }: { locale: string }) {
     const value = actionModal.value.trim();
 
     if (actionModal.kind === 'reject' && value.length < 2) {
-      toast.error('Red sebebi en az 2 karakter olmalı.');
+      toast.error(ui('ui_dashboard_reject_reason_min', 'Rejection reason must be at least 2 characters.'));
       return;
     }
     if (actionModal.kind === 'cancel' && value.length < 5) {
-      toast.error('İptal sebebi en az 5 karakter olmalı.');
+      toast.error(ui('ui_dashboard_cancel_reason_min', 'Cancellation reason must be at least 5 characters.'));
       return;
     }
 
     try {
       if (actionModal.kind === 'reject') {
         await reject({ id: actionModal.bookingId, reason: value }).unwrap();
-        toast.success('Reddedildi');
+        toast.success(ui('ui_dashboard_toast_rejected', 'Rejected'));
       } else if (actionModal.kind === 'cancel') {
         await cancelBooking({ id: actionModal.bookingId, reason: value }).unwrap();
-        toast.success('İptal edildi');
+        toast.success(ui('ui_dashboard_toast_cancelled', 'Cancelled'));
       } else {
         await updateNotes({ id: actionModal.bookingId, notes: value || null }).unwrap();
-        toast.success('Not kaydedildi');
+        toast.success(ui('ui_dashboard_toast_note_saved', 'Note saved'));
       }
       setActionModal(null);
     } catch (e: any) {
-      toast.error(extractApiError(e, 'İşlem tamamlanamadı'));
+      toast.error(extractApiError(e, ui('ui_dashboard_toast_action_failed', 'Action could not be completed')));
     }
   };
 
@@ -824,17 +853,17 @@ function BookingsPanel({ locale }: { locale: string }) {
           <Zap className="w-6 h-6 text-[var(--gm-error)] shrink-0" />
           <div className="flex-1 min-w-0">
             <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--gm-error)]">
-              {activeRequestedNow.length} anlık görüşme talebi bekliyor
+              {ui('ui_dashboard_instant_alert_title', '{count} instant session requests waiting').replace('{count}', String(activeRequestedNow.length))}
             </div>
             <div className="text-[11px] text-[var(--gm-error)]/80 mt-0.5">
-              5 dakika içinde yanıtlamazsan otomatik iptal olur. Müşteri aktif bekliyor.
+              {ui('ui_dashboard_instant_alert_desc', 'If you do not respond within 5 minutes, it is cancelled automatically. The client is waiting.')}
             </div>
           </div>
           <button
             onClick={() => setStatusFilter('requested_now')}
             className="shrink-0 px-3 py-1.5 rounded-full bg-[var(--gm-error)]/30 hover:bg-[var(--gm-error)]/50 text-[10px] font-bold uppercase tracking-widest text-[var(--gm-text)]"
           >
-            Göster
+            {ui('ui_dashboard_show', 'Show')}
           </button>
         </div>
       )}
@@ -866,9 +895,9 @@ function BookingsPanel({ locale }: { locale: string }) {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-[var(--gm-muted)]">Yükleniyor...</div>
+        <div className="text-center py-12 text-[var(--gm-muted)]">{ui('ui_dashboard_loading', 'Loading...')}</div>
       ) : bookings.length === 0 ? (
-        <div className="text-center py-12 text-[var(--gm-muted)]">Bu filtrede randevu yok.</div>
+        <div className="text-center py-12 text-[var(--gm-muted)]">{ui('ui_dashboard_no_bookings_filter', 'No bookings in this filter.')}</div>
       ) : (
         <div className="space-y-3">
           {bookings.map((b) => {
@@ -919,32 +948,32 @@ function BookingsPanel({ locale }: { locale: string }) {
                   )}
                   {b.admin_note && (
                     <div className="mt-2 text-[12px] text-[var(--gm-text-dim)] border-l-2 border-[var(--gm-border)]/60 pl-3">
-                      <span className="font-bold text-[var(--gm-gold-dim)]">Seans notu:</span> {b.admin_note}
+                      <span className="font-bold text-[var(--gm-gold-dim)]">{ui('ui_dashboard_session_note_label', 'Session note:')}</span> {b.admin_note}
                     </div>
                   )}
                   {b.decision_note && ['rejected', 'cancelled'].includes(b.status) && (
                     <div className="mt-2 text-[12px] text-[var(--gm-error)]/90 border-l-2 border-[var(--gm-error)]/40 pl-3">
-                      <span className="font-bold">Sebep:</span> {b.decision_note}
+                      <span className="font-bold">{ui('ui_dashboard_reason_label', 'Reason:')}</span> {b.decision_note}
                     </div>
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <BookingMessageButton bookingId={b.id} variant="secondary" label="Mesaj" />
+                  <BookingMessageButton bookingId={b.id} variant="secondary" label={ui('ui_dashboard_message', 'Message')} />
                   {b.status === 'confirmed' && (
                     <Link
                       href={localizePath(locale, `/booking/${b.id}/call`)}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest"
                     >
                       <ArrowRight className="w-3.5 h-3.5" />
-                      Görüşmeyi Başlat
+                      {ui('ui_dashboard_start_call', 'Start Session')}
                     </Link>
                   )}
                   {b.status === 'completed' && (
                     <button
-                      onClick={() => setActionModal({ kind: 'notes', bookingId: b.id, title: 'Seans Notu', value: b.admin_note || '' })}
+                      onClick={() => setActionModal({ kind: 'notes', bookingId: b.id, title: ui('ui_dashboard_session_note_title', 'Session Note'), value: b.admin_note || '' })}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[var(--gm-border-soft)] text-[var(--gm-text-dim)] hover:text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest"
                     >
-                      Notlar
+                      {ui('ui_dashboard_notes', 'Notes')}
                     </button>
                   )}
                   {(b.status === 'pending_payment' || b.status === 'pending' || isActiveRequestNow) && (
@@ -958,23 +987,23 @@ function BookingsPanel({ locale }: { locale: string }) {
                         }`}
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        {isActiveRequestNow ? 'Hemen Kabul Et' : 'Onayla'}
+                        {isActiveRequestNow ? ui('ui_dashboard_accept_now', 'Accept Now') : ui('ui_dashboard_approve', 'Approve')}
                       </button>
                       <button
-                        onClick={() => setActionModal({ kind: 'reject', bookingId: b.id, title: 'Randevuyu Reddet', value: '' })}
+                        onClick={() => setActionModal({ kind: 'reject', bookingId: b.id, title: ui('ui_dashboard_reject_booking_title', 'Reject Booking'), value: '' })}
                         className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[var(--gm-error)]/40 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 text-[10px] font-bold uppercase tracking-widest"
                       >
                         <XCircle className="w-3.5 h-3.5" />
-                        Reddet
+                        {ui('ui_dashboard_reject', 'Reject')}
                       </button>
                     </>
                   )}
                   {canCancel && b.status !== 'requested_now' && (
                     <button
-                      onClick={() => setActionModal({ kind: 'cancel', bookingId: b.id, title: 'Randevuyu İptal Et', value: '' })}
+                      onClick={() => setActionModal({ kind: 'cancel', bookingId: b.id, title: ui('ui_dashboard_cancel_booking_title', 'Cancel Booking'), value: '' })}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[var(--gm-error)]/30 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 text-[10px] font-bold uppercase tracking-widest"
                     >
-                      İptal Et
+                      {ui('ui_dashboard_cancel', 'Cancel')}
                     </button>
                   )}
                 </div>
@@ -990,17 +1019,17 @@ function BookingsPanel({ locale }: { locale: string }) {
             <h3 className="font-serif text-xl text-[var(--gm-text)]">{actionModal.title}</h3>
             <p className="mt-2 text-sm text-[var(--gm-text-dim)]">
               {actionModal.kind === 'notes'
-                ? 'Bu not yalnızca danışman panelinde görünür.'
+                ? ui('ui_dashboard_modal_notes_desc', 'This note is visible only in the consultant panel.')
                 : actionModal.kind === 'cancel'
-                  ? 'İptal sebebi müşteriye bildirim olarak gönderilir.'
-                  : 'Red sebebi müşteriye bildirim olarak gönderilir.'}
+                  ? ui('ui_dashboard_modal_cancel_desc', 'The cancellation reason is sent to the client as a notification.')
+                  : ui('ui_dashboard_modal_reject_desc', 'The rejection reason is sent to the client as a notification.')}
             </p>
             <textarea
               value={actionModal.value}
               onChange={(e) => setActionModal({ ...actionModal, value: e.target.value })}
               rows={5}
               className="mt-4 w-full rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)] p-4 text-sm text-[var(--gm-text)] outline-none focus:border-[var(--gm-gold)]/50"
-              placeholder={actionModal.kind === 'notes' ? 'Seans sonrası özel not...' : 'Sebep yaz...'}
+              placeholder={actionModal.kind === 'notes' ? ui('ui_dashboard_notes_placeholder', 'Private note after the session...') : ui('ui_dashboard_reason_placeholder', 'Write a reason...')}
             />
             <div className="mt-5 flex justify-end gap-2">
               <button
@@ -1008,14 +1037,14 @@ function BookingsPanel({ locale }: { locale: string }) {
                 onClick={() => setActionModal(null)}
                 className="px-5 py-2.5 rounded-full border border-[var(--gm-border-soft)] text-[10px] font-bold uppercase tracking-widest text-[var(--gm-text-dim)]"
               >
-                Vazgeç
+                {ui('ui_dashboard_discard', 'Discard')}
               </button>
               <button
                 type="button"
                 onClick={submitActionModal}
                 className="px-5 py-2.5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest"
               >
-                Kaydet
+                {ui('ui_dashboard_save', 'Save')}
               </button>
             </div>
           </div>
@@ -1026,14 +1055,15 @@ function BookingsPanel({ locale }: { locale: string }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const { ui } = useUiSection('ui_dashboard');
   const map: Record<string, { label: string; cls: string }> = {
-    confirmed: { label: 'Onaylı', cls: 'bg-[var(--gm-success)]/15 text-[var(--gm-success)]' },
-    completed: { label: 'Tamamlandı', cls: 'bg-[var(--gm-gold)]/15 text-[var(--gm-gold)]' },
-    pending_payment: { label: 'Ödeme Bekliyor', cls: 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]' },
-    pending: { label: 'Bekliyor', cls: 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]' },
-    requested_now: { label: '⚡ Anlık Talep', cls: 'bg-[var(--gm-error)]/20 text-[var(--gm-error)] ring-1 ring-[var(--gm-error)]/40 animate-pulse' },
-    rejected: { label: 'Reddedildi', cls: 'bg-[var(--gm-error)]/15 text-[var(--gm-error)]' },
-    cancelled: { label: 'İptal', cls: 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]' },
+    confirmed: { label: ui('ui_dashboard_status_confirmed', 'Confirmed'), cls: 'bg-[var(--gm-success)]/15 text-[var(--gm-success)]' },
+    completed: { label: ui('ui_dashboard_status_completed', 'Completed'), cls: 'bg-[var(--gm-gold)]/15 text-[var(--gm-gold)]' },
+    pending_payment: { label: ui('ui_dashboard_status_pending_payment', 'Payment Pending'), cls: 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]' },
+    pending: { label: ui('ui_dashboard_status_pending', 'Pending'), cls: 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]' },
+    requested_now: { label: ui('ui_dashboard_status_requested_now', 'Instant Request'), cls: 'bg-[var(--gm-error)]/20 text-[var(--gm-error)] ring-1 ring-[var(--gm-error)]/40 animate-pulse' },
+    rejected: { label: ui('ui_dashboard_status_rejected', 'Rejected'), cls: 'bg-[var(--gm-error)]/15 text-[var(--gm-error)]' },
+    cancelled: { label: ui('ui_dashboard_status_cancelled', 'Cancelled'), cls: 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]' },
   };
   const m = map[status] || { label: status, cls: 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]' };
   return (
@@ -1047,6 +1077,7 @@ function StatusBadge({ status }: { status: string }) {
 const REQUEST_NOW_TIMEOUT_MS = 5 * 60_000;
 
 function RequestNowCountdown({ createdAt }: { createdAt: string }) {
+  const { ui } = useUiSection('ui_dashboard');
   const [now, setNow] = useState(() => Date.now());
   React.useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -1066,7 +1097,7 @@ function RequestNowCountdown({ createdAt }: { createdAt: string }) {
           : 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]'
     }`}>
       <Timer className="w-3 h-3" />
-      {expired ? 'Süre Doldu' : `${mm}:${ss}`}
+      {expired ? ui('ui_dashboard_time_expired', 'Expired') : `${mm}:${ss}`}
     </span>
   );
 }

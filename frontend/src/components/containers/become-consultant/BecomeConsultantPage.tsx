@@ -22,18 +22,19 @@ import {
   type ConsultantApplicationPayload,
   useApplyConsultantMutation,
 } from '@/integrations/rtk/public/consultant_applications.endpoints';
+import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 import { useUploadToBucketMutation } from '@/integrations/rtk/public/storage_public.endpoints';
 import { cn } from '@/lib/utils';
 
 const EXPERTISE_OPTIONS = [
-  { id: 'astrology', label: 'Astroloji' },
+  { id: 'astrology', label: 'Astrology' },
   { id: 'tarot', label: 'Tarot' },
-  { id: 'coffee', label: 'Kahve Falı' },
-  { id: 'numerology', label: 'Numeroloji' },
-  { id: 'birth_chart', label: 'Doğum Haritası' },
-  { id: 'dream_interpretation', label: 'Rüya Tabiri' },
-  { id: 'relationship_advice', label: 'İlişki Danışmanlığı' },
-  { id: 'energy_healing', label: 'Enerji Şifası' },
+  { id: 'coffee', label: 'Coffee Reading' },
+  { id: 'numerology', label: 'Numerology' },
+  { id: 'birth_chart', label: 'Birth Chart' },
+  { id: 'dream_interpretation', label: 'Dream Interpretation' },
+  { id: 'relationship', label: 'Relationship Guidance' },
+  { id: 'energy_healing', label: 'Energy Healing' },
 ];
 
 const LANGUAGES = [
@@ -59,6 +60,10 @@ const cinzel = Cinzel({ subsets: ['latin'] });
 export default function BecomeConsultantPage() {
   const [step, setStep] = useState(1);
   const [apply, { isLoading }] = useApplyConsultantMutation();
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const expertiseOptions = serviceCategories.length
+    ? serviceCategories.map((category) => ({ id: category.slug, label: category.name }))
+    : EXPERTISE_OPTIONS;
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -268,7 +273,7 @@ export default function BecomeConsultantPage() {
                     <h2 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-tight`}>Uzmanlık & Diller</h2>
                     <InputGroup label="Uzmanlık Alanları" required>
                       <div className="flex flex-wrap gap-4">
-                        {EXPERTISE_OPTIONS.map(opt => (
+                        {expertiseOptions.map(opt => (
                           <PillButton
                             key={opt.id}
                             label={opt.label}

@@ -140,6 +140,8 @@ export const tags = [
   'ServiceImage',
   'ServiceCategories',
   'ServiceCategory',
+  'ServiceTemplate',
+  'ServiceTemplates',
   'Contacts',
   'Contact',
   'Accessory',

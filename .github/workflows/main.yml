@@ -153,6 +153,7 @@ jobs:
         run: |
           bun install --frozen-lockfile || bun install
           bun run theme:guard
+          bun run theme:drift-check
           bun run relax:drift-check
           bun run relax:asset-guard
           bun run build

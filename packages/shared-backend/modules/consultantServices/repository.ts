@@ -1,8 +1,10 @@
 // packages/shared-backend/modules/consultantServices/repository.ts
 import { db } from '../../db/client';
 import { consultantServices, type ConsultantService, type NewConsultantService } from './schema';
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { consultants } from '../consultants/schema';
+import { serviceCategories } from '../serviceCategories/schema';
+import { serviceTemplates, type ServiceTemplate } from '../serviceTemplates/schema';
 
 export async function listByConsultant(
   consultantId: string,
@@ -33,6 +35,75 @@ export async function getByIdForConsultant(id: string, consultantId: string): Pr
   return row;
 }
 
+export async function getByTemplateForConsultant(templateId: string, consultantId: string): Promise<ConsultantService | undefined> {
+  const [row] = await db
+    .select()
+    .from(consultantServices)
+    .where(and(eq(consultantServices.template_id, templateId), eq(consultantServices.consultant_id, consultantId)))
+    .limit(1);
+  return row;
+}
+
+export async function getTemplateById(id: string): Promise<ServiceTemplate | undefined> {
+  const [row] = await db.select().from(serviceTemplates).where(eq(serviceTemplates.id, id)).limit(1);
+  return row;
+}
+
+export async function getConsultantExpertise(consultantId: string): Promise<string[]> {
+  const [row] = await db
+    .select({ expertise: consultants.expertise })
+    .from(consultants)
+    .where(eq(consultants.id, consultantId))
+    .limit(1);
+  const raw = row?.expertise;
+  if (Array.isArray(raw)) return raw.map(String);
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+export type ConsultantServiceTemplate = ServiceTemplate & {
+  adopted: boolean;
+  adopted_service_id: string | null;
+};
+
+export async function listTemplatesForConsultant(consultantId: string): Promise<ConsultantServiceTemplate[]> {
+  const expertise = await getConsultantExpertise(consultantId);
+  if (expertise.length === 0) return [];
+
+  const categories = await db
+    .select({ slug: serviceCategories.slug })
+    .from(serviceCategories)
+    .where(and(eq(serviceCategories.is_active, 1), inArray(serviceCategories.slug, expertise)));
+  const categorySlugs = categories.map((row) => row.slug);
+  if (categorySlugs.length === 0) return [];
+
+  const templates = await db
+    .select()
+    .from(serviceTemplates)
+    .where(and(eq(serviceTemplates.is_active, 1), inArray(serviceTemplates.category_slug, categorySlugs)))
+    .orderBy(asc(serviceTemplates.category_slug), asc(serviceTemplates.sort_order), asc(serviceTemplates.name));
+  if (templates.length === 0) return [];
+
+  const adopted = await db
+    .select({ id: consultantServices.id, template_id: consultantServices.template_id })
+    .from(consultantServices)
+    .where(and(eq(consultantServices.consultant_id, consultantId), inArray(consultantServices.template_id, templates.map((t) => t.id))));
+  const adoptedByTemplate = new Map(adopted.filter((row) => row.template_id).map((row) => [row.template_id!, row.id]));
+
+  return templates.map((template) => ({
+    ...template,
+    adopted: adoptedByTemplate.has(template.id),
+    adopted_service_id: adoptedByTemplate.get(template.id) ?? null,
+  }));
+}
+
 export async function create(data: NewConsultantService): Promise<void> {
   await db.insert(consultantServices).values(data);
 }
@@ -52,6 +123,25 @@ export async function reorder(consultantId: string, items: Array<{ id: string; s
       .set({ sort_order: it.sort_order })
       .where(and(eq(consultantServices.id, it.id), eq(consultantServices.consultant_id, consultantId)));
   }
+}
+
+export async function nextSortOrder(consultantId: string): Promise<number> {
+  const [row] = await db
+    .select({ sort_order: consultantServices.sort_order })
+    .from(consultantServices)
+    .where(eq(consultantServices.consultant_id, consultantId))
+    .orderBy(desc(consultantServices.sort_order))
+    .limit(1);
+  return Number(row?.sort_order ?? -1) + 1;
+}
+
+export async function slugExistsForConsultant(consultantId: string, slug: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: consultantServices.id })
+    .from(consultantServices)
+    .where(and(eq(consultantServices.consultant_id, consultantId), eq(consultantServices.slug, slug)))
+    .limit(1);
+  return Boolean(row);
 }
 
 /**
