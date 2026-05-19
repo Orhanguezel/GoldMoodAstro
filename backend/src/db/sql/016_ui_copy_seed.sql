@@ -757,3 +757,9 @@ ON DUPLICATE KEY UPDATE value = VALUES(value);
 INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('00000000-0000-0000-0000-00000000000a','ui_dashboard_avatar_rule_ai','*','{"label":{"tr":"AI üretimi portreler kabul edilir; yüz odaklı olmak şartıyla.","en":"AI-generated portraits are accepted if they are face-focused.","de":"KI-generierte Porträts sind erlaubt, wenn sie auf das Gesicht fokussiert sind."}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);
+
+-- 2026-05-20 C2: hizmetler i18n + danisanlar tab anahtarı
+INSERT INTO site_settings (id, `key`, locale, value) VALUES
+('00000000-0000-0000-0000-00000000000b','ui_dashboard_tab_clients','*','{"label":{"tr":"Danışanlar","en":"Clients","de":"Klienten"}}'),
+('00000000-0000-0000-0000-00000000000c','ui_dashboard_services_intro','*','{"label":{"tr":"Hizmet paketlerinizi buradan yönetin. Ücretsiz tanışma paketi ekleyebilirsiniz.","en":"Manage your service packages here. You can add a free intro call.","de":"Verwalten Sie hier Ihre Paketangebote. Sie können ein kostenloses Einführungspaket hinzufügen."}}')
+ON DUPLICATE KEY UPDATE value = VALUES(value);
