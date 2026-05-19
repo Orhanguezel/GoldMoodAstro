@@ -13,6 +13,7 @@ import {
   Compass,
   ArrowRight
 } from 'lucide-react';
+import Image from 'next/image';
 import { useInterpretDreamMutation } from '@/integrations/rtk/public/dreams.public.endpoints';
 import ShareCard from '@/components/common/ShareCard';
 import ConsultantFunnelCTA from '@/components/common/ConsultantFunnelCTA';
@@ -84,19 +85,26 @@ export default function DreamHub() {
             exit={{ opacity: 0, y: -20 }}
             className="space-y-12"
           >
-            <div className="text-center space-y-6">
-              <motion.div 
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-24 h-24 bg-brand-primary/10 rounded-[2.5rem] flex items-center justify-center mx-auto text-brand-primary border border-brand-primary/20"
-              >
-                <CloudMoon className="w-12 h-12" />
-              </motion.div>
-              <h2 className={`${cinzel.className} text-4xl md:text-6xl text-foreground tracking-tight`}>Rüya Tabiri</h2>
-              <p className={`${fraunces.className} text-muted-foreground text-lg max-w-xl mx-auto italic leading-relaxed`}>
-                Rüyalar, ruhun uyanıkken söyleyemedikleridir. <br />
-                <span className="text-brand-primary/60">Bilinçaltının gizli dilini yapay zeka ile keşfedin.</span>
-              </p>
+            {/* Hero photo banner */}
+            <div className="relative w-full max-w-4xl mx-auto rounded-[3rem] overflow-hidden shadow-2xl" style={{ height: 360 }}>
+              <Image
+                src="/images/ruya-tabiri-hero.png"
+                alt="Rüya Tabiri"
+                fill
+                className="object-cover object-top"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/15" />
+              <div className="absolute inset-x-0 bottom-0 p-10 text-center">
+                <h2 className={`${cinzel.className} text-4xl md:text-6xl text-white tracking-tight drop-shadow-lg`}>Rüya Tabiri</h2>
+                <p className={`${fraunces.className} text-white/70 text-lg mt-3 italic`}>
+                  Rüyalar, ruhun uyanıkken söyleyemedikleridir. Bilinçaltının gizli dilini keşfedin.
+                </p>
+              </div>
+              {/* Floating crescent badge */}
+              <div className="absolute top-6 right-6 w-14 h-14 rounded-full bg-black/40 border border-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Moon className="w-7 h-7 text-amber-300" />
+              </div>
             </div>
 
             <div className="relative group max-w-3xl mx-auto w-full">
@@ -150,19 +158,20 @@ export default function DreamHub() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-               {[
-                 { icon: <Sparkles className="w-5 h-5" />, title: 'Arketip Analizi', desc: 'Rüyanızdaki figürlerin psikolojik karşılıkları.' },
-                 { icon: <Compass className="w-5 h-5" />, title: 'Sembol Rehberi', desc: '100+ kadim rüya sembolü ile eşleştirme.' },
-                 { icon: <Moon className="w-5 h-5" />, title: 'Ruhsal Rehberlik', desc: 'Geleceğe dair sezgisel ipuçları ve tavsiyeler.' }
-               ].map((item, i) => (
-                 <div key={i} className="p-6 rounded-[2rem] bg-surface/20 border border-[var(--gm-text)]/5 hover:bg-surface/30 transition-colors group">
-                    <div className="w-12 h-12 rounded-2xl bg-brand-primary/5 flex items-center justify-center text-brand-primary mb-4 group-hover:scale-110 transition-transform">
-                      {item.icon}
-                    </div>
-                    <h4 className="font-bold text-foreground mb-2">{item.title}</h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                 </div>
-               ))}
+              {[
+                { img: '/images/ruya-tabiri-archetype.png', title: 'Arketip Analizi', desc: 'Rüyanızdaki figürlerin psikolojik karşılıkları.' },
+                { img: '/images/ruya-tabiri-symbols.png',   title: 'Sembol Rehberi', desc: '100+ kadim rüya sembolü ile eşleştirme.' },
+                { img: '/images/ruya-tabiri-hero.png',      title: 'Ruhsal Rehberlik', desc: 'Geleceğe dair sezgisel ipuçları ve tavsiyeler.' },
+              ].map((item, i) => (
+                <div key={i} className="group relative rounded-[2rem] overflow-hidden shadow-lg hover:scale-[1.02] transition-transform duration-300" style={{ minHeight: 220 }}>
+                  <Image src={item.img} alt={item.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/15" />
+                  <div className="relative z-10 p-6 flex flex-col justify-end" style={{ minHeight: 220 }}>
+                    <h4 className={`${cinzel.className} text-base text-amber-400 mb-2`}>{item.title}</h4>
+                    <p className="text-sm text-white/65 leading-relaxed font-serif italic">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </motion.div>
         )}
