@@ -71,9 +71,16 @@ export default function CoffeeHub() {
       reader.readAsDataURL(processedFile);
 
       // Upload
+      // Benzersiz path: iPhone aynı dosya adını (IMG_xxxx) verince
+      // upsert mevcut asset'e çökertir → 3 foto < 3 distinct id → /coffee/read 400.
+      const uniqueSuffix =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID().slice(0, 8)
+          : Math.random().toString(36).slice(2, 10);
       const res = await uploadFile({
         bucket: 'coffee',
         files: processedFile,
+        path: `coffee/${Date.now()}-${index}-${uniqueSuffix}`,
         upsert: true,
       }).unwrap();
       
@@ -90,14 +97,18 @@ export default function CoffeeHub() {
   };
 
   const handleStartAnalysis = async () => {
-    if (imageIds.filter(Boolean).length < 3) return;
-    
+    const distinctIds = [...new Set(imageIds.filter(Boolean))];
+    if (distinctIds.length < 3) {
+      setError('Lütfen 3 farklı fotoğraf seçin.');
+      return;
+    }
+
     setStep('processing');
     setError(null);
 
     try {
       const res = await readCoffee({
-        image_ids: imageIds,
+        image_ids: distinctIds,
         locale: 'tr'
       }).unwrap();
       setResult(res.data);
