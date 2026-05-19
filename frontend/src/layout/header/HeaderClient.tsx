@@ -342,7 +342,10 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
 
             <div className="flex items-center gap-6">
               <ThemeToggle />
-              {isAuthenticated && (
+              {/* Consultant ise yalnız "Danışman Paneli" göster — "Panel" (kullanıcı
+                  paneli /dashboard) ile karışmasın. Non-consultant authenticated
+                  kullanıcı için "Panel" gösterilir. */}
+              {isAuthenticated && !isConsultant && (
                 <Link
                   href={localizePath(locale, '/dashboard')}
                   className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.18em] uppercase text-[var(--gm-text)] hover:text-[var(--gm-gold-deep)] transition-colors"

@@ -147,7 +147,25 @@ const HeaderOffcanvas: React.FC<HeaderOffcanvasProps> = ({ open, onClose, brand,
   const registerHref = localizePath(resolvedLocale, '/register');
   const profileHref = localizePath(resolvedLocale, '/profile');
   const logoutHref = localizePath(resolvedLocale, '/logout');
-  const { isAuthenticated } = useAuthStore();
+  const consultantPanelHref = localizePath(resolvedLocale, '/me/consultant');
+  const { isAuthenticated, user } = useAuthStore();
+  const isConsultant = (() => {
+    const role = (user as { role?: unknown } | null)?.role;
+    const roleStr = typeof role === 'string'
+      ? role.toLowerCase()
+      : (role as { name?: string } | null)?.name?.toLowerCase();
+    if (roleStr === 'consultant') return true;
+    const roles = (user as { roles?: unknown[] } | null)?.roles;
+    if (Array.isArray(roles)) {
+      return roles.some((r) => {
+        const s = typeof r === 'string'
+          ? r.toLowerCase()
+          : (r as { name?: string } | null)?.name?.toLowerCase();
+        return s === 'consultant';
+      });
+    }
+    return false;
+  })();
 
   return (
     <>
@@ -207,6 +225,16 @@ const HeaderOffcanvas: React.FC<HeaderOffcanvasProps> = ({ open, onClose, brand,
               </ul>
             </nav>
 
+            {/* Danışman Paneli kısayolu (mobile menüde de erişilebilir) */}
+            {isAuthenticated && isConsultant && (
+              <Link
+                href={consultantPanelHref}
+                onClick={onClose}
+                className="mb-4 flex items-center justify-center gap-2 px-4 py-3 border border-[var(--gm-gold)]/40 text-sm font-bold uppercase tracking-[0.18em] text-[var(--gm-gold)] hover:bg-[var(--gm-gold)]/5 transition-all"
+              >
+                {ui('ui_header_consultant_panel', resolvedLocale === 'tr' ? 'Danışman Paneli' : 'Consultant Panel')}
+              </Link>
+            )}
             {/* Auth */}
             <div className="grid grid-cols-2 gap-3 mb-8">
               {isAuthenticated ? (
