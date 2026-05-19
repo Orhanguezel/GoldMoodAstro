@@ -783,3 +783,45 @@ jobs:
       - name: Reload PM2
         run: ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "pm2 reload goldmoodastro-frontend"
 ```
+
+---
+
+## T-SVCTPL: Hizmet Şablonları & Kategoriler — BACKEND (Codex)
+
+> Mimari + kontratlar: `doc/service-templates-plan.md` (Claude yazdı, ÖNCE OKU).
+> Şema + seed Claude tarafından yazıldı — Drizzle schema BUNLARLA BİREBİR uyumlu olmalı:
+> - `backend/src/db/sql/032a_service_categories_schema.sql`
+> - `backend/src/db/sql/032b_service_templates_schema.sql`
+> - `backend/src/db/sql/032_consultant_services_schema.sql` (yeni `template_id`,`category_slug` + `uniq_consultant_template`)
+
+### T-SVCTPL-1 — `serviceCategories` modülü (shared-backend)
+`packages/shared-backend/modules/serviceCategories/`: `schema.ts` (Drizzle, 032a ile birebir),
+`repository.ts`, `validation.ts` (zod), `controller.ts`, `router.ts`, `index.ts`.
+- Public: `GET /service-categories` (is_active=1, sort_order) — auth yok.
+- Admin: `GET/POST/PATCH/DELETE /service-categories[/:id]` (requireAuth+requireAdmin).
+  DELETE: bağlı `service_templates` varsa `409 {error:{message:'category_has_templates'}}`.
+- Route kayıt: public → `registerSharedPublic` benzeri (shared.ts `api`), admin → admin api.
+
+### T-SVCTPL-2 — `serviceTemplates` modülü (shared-backend)
+`packages/shared-backend/modules/serviceTemplates/` aynı dosya seti (schema 032b ile birebir).
+- Admin: `GET/POST/PATCH/DELETE /service-templates[/:id]`, `GET ?category_slug=` filtre.
+- slug benzersizliği (category_slug, slug). is_free=0 ise price>0 zorunlu (consultantServices
+  `validatePaidServicePrice` ile aynı kural — reuse et).
+
+### T-SVCTPL-3 — `consultantServices` genişletme
+- Drizzle `consultantServices` schema'ya `template_id` (char36 null), `category_slug` (varchar64 null).
+- `GET /me/consultant/service-templates` (requireConsultant): danışmanın `consultants.expertise`
+  ∩ aktif kategorilerdeki aktif `service_templates`; her satıra `adopted` (bu danışmanın
+  consultant_services'inde aynı template_id var mı) + `adopted_service_id`.
+- `POST /me/consultant/services/from-template/:templateId` (requireConsultant):
+  yeni consultant_services satırı (yeni id, consultant_id=me, template_id=şablon,
+  alanlar şablondan kopya, category_slug=şablonun kategorisi). **Idempotent**:
+  (consultant_id, template_id) zaten varsa onu döndür (UNIQUE guard hatası → mevcut kaydı getir).
+- slug çakışması: aynı slug danışmanda varsa `slug-2` gibi suffix üret.
+- Mevcut `/me/consultant/services` GET/POST/PATCH/DELETE/reorder AYNEN korunur; GET
+  yanıtına template_id/category_slug eklenir.
+
+### T-SVCTPL-4 — Route kayıt + typecheck
+- `backend/src/routes/shared.ts`: serviceCategories/serviceTemplates public+admin+self register.
+- `cd backend && bun run typecheck` temiz. ALTER YASAK — şema dosyaları yeterli.
+- Yanıt zarfı her uçta `{ data: ... }`.
