@@ -108,5 +108,16 @@ export const normalizeNotification = (raw: unknown): NotificationView => {
   };
 };
 
-export const normalizeNotificationsList = (raw: unknown): NotificationView[] =>
-  Array.isArray(raw) ? raw.map(normalizeNotification) : [];
+export const normalizeNotificationsList = (raw: unknown): NotificationView[] => {
+  // Backend `{ data: [...], page, ... }` döner; bazı uçlar `{ items }` veya
+  // ham array. Her durumda diziye indir (yoksa liste boş kalır).
+  const r = raw as { data?: unknown; items?: unknown } | null;
+  const arr = Array.isArray(raw)
+    ? raw
+    : Array.isArray(r?.data)
+      ? r.data
+      : Array.isArray(r?.items)
+        ? r.items
+        : [];
+  return (arr as unknown[]).map(normalizeNotification);
+};
