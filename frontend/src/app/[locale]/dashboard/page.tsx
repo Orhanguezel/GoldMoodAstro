@@ -75,15 +75,20 @@ function DashCard({ href, icon, eyebrow, title, description, cta }: DashCardProp
     >
       <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-(--gm-gold)/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
       <div className="relative">
-        <div className="w-14 h-14 rounded-full bg-(--gm-gold)/10 border border-(--gm-gold)/30 flex items-center justify-center text-(--gm-gold-deep) mb-6">
+        {/* icon: gold color guaranteed in both themes */}
+        <div className="w-14 h-14 rounded-full bg-(--gm-gold)/15 border border-(--gm-gold)/40 flex items-center justify-center text-(--gm-gold) mb-6">
           {icon}
         </div>
-        <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold-deep) uppercase">
+        {/* eyebrow: use --gm-gold (brighter) instead of --gm-gold-deep (too dark in dark mode) */}
+        <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold) uppercase opacity-80">
           {eyebrow}
         </span>
+        {/* title: --gm-text is fine */}
         <h3 className="font-serif text-2xl text-(--gm-text) mt-1 mb-3">{title}</h3>
-        <p className="text-sm text-(--gm-text-dim) leading-relaxed mb-6">{description}</p>
-        <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-(--gm-gold-deep) group-hover:text-(--gm-gold) transition-colors mt-auto">
+        {/* description: use --gm-text with opacity instead of --gm-text-dim which can be invisible */}
+        <p className="text-sm text-(--gm-text) opacity-60 leading-relaxed mb-6">{description}</p>
+        {/* CTA: gold, always visible */}
+        <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-(--gm-gold) group-hover:opacity-100 opacity-80 transition-all mt-auto">
           {cta}
           <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
         </span>
@@ -94,14 +99,15 @@ function DashCard({ href, icon, eyebrow, title, description, cta }: DashCardProp
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="block text-[10px] font-bold text-(--gm-gold-deep) tracking-[0.2em] uppercase mb-2">
+    <label className="block text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase mb-2 opacity-80">
       {children}
     </label>
   );
 }
 
 function fieldClasses() {
-  return 'w-full bg-(--gm-bg-deep) border border-(--gm-border-soft) rounded-xl px-5 py-3.5 text-sm text-(--gm-text) placeholder:text-(--gm-muted) focus:border-(--gm-gold)/50 outline-none transition-colors';
+  // bg-(--gm-surface) instead of bg-deep: surface is lighter than bg-deep in dark mode, making text visible
+  return 'w-full bg-(--gm-surface) border border-(--gm-border-soft) rounded-xl px-5 py-3.5 text-sm text-(--gm-text) placeholder:text-(--gm-text)/40 focus:border-(--gm-gold)/50 outline-none transition-colors';
 }
 
 function fmtDate(v: string, locale: string) {
@@ -430,15 +436,16 @@ export default function DashboardPage() {
           />
 
           <div className="flex-1 min-w-0">
-            <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold-deep) uppercase">
+            <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold) uppercase opacity-80">
               {isTr ? 'Hoş geldin' : 'Welcome'}
             </span>
             <h1 className="font-serif text-3xl md:text-4xl font-light text-(--gm-text) mt-1 leading-tight">
               {firstName ? (isTr ? `Merhaba, ${firstName}` : `Hello, ${firstName}`) : isTr ? 'Panelim' : 'Dashboard'}
             </h1>
-            <p className="text-(--gm-text-dim) text-sm mt-2 truncate">{user.email}</p>
+            {/* email: text-dim can be too faint in dark — use text with explicit opacity */}
+            <p className="text-(--gm-text) opacity-55 text-sm mt-2 truncate">{user.email}</p>
             {memberSince && (
-              <p className="text-(--gm-text-muted) text-xs mt-1">
+              <p className="text-(--gm-text) opacity-40 text-xs mt-1">
                 {isTr ? `Üye: ${memberSince}` : `Member since ${memberSince}`}
               </p>
             )}
@@ -448,14 +455,14 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => switchTab('profile')}
-              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-(--gm-gold-deep) hover:text-(--gm-gold) transition-colors"
+              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-(--gm-gold) hover:opacity-100 opacity-80 transition-all"
             >
               <Settings size={14} />
               {isTr ? 'Hesap Ayarları' : 'Account Settings'}
             </button>
             <Link
               href={localizePath(locale, '/logout')}
-              className="inline-flex items-center gap-2 text-xs font-medium tracking-widest text-(--gm-text-muted) hover:text-(--gm-text-dim) transition-colors"
+              className="inline-flex items-center gap-2 text-xs font-medium tracking-widest text-(--gm-text) opacity-45 hover:opacity-70 transition-opacity"
             >
               {isTr ? 'Çıkış yap' : 'Sign out'}
             </Link>
@@ -471,10 +478,10 @@ export default function DashboardPage() {
                 key={t.key}
                 type="button"
                 onClick={() => switchTab(t.key)}
-                className={`relative inline-flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] transition-colors ${
+                className={`relative inline-flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] transition-all ${
                   active
-                    ? 'text-(--gm-gold-deep)'
-                    : 'text-(--gm-text-dim) hover:text-(--gm-text)'
+                    ? 'text-(--gm-gold)'
+                    : 'text-(--gm-text) opacity-50 hover:opacity-80'
                 }`}
               >
                 {t.icon}
