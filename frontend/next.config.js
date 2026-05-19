@@ -132,6 +132,7 @@ const nextConfig = {
       { source: '/:locale/services', destination: '/:locale/consultants', permanent: true },
       { source: '/:locale/appointment', destination: '/:locale/consultants', permanent: true },
       { source: '/:locale/big-three', destination: '/:locale/buyuk-uclu', permanent: true },
+      { source: '/:locale/consultant', destination: '/:locale/consultants', permanent: true },
     ];
   },
 };

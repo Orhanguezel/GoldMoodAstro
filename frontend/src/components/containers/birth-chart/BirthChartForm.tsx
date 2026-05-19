@@ -66,10 +66,10 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto max-w-xl space-y-6 rounded-sm border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)] p-6 shadow-soft md:p-8"
+      className="mx-auto max-w-xl space-y-6 rounded-3xl border border-[var(--gm-primary)]/20 bg-[var(--gm-surface)] p-6 shadow-[var(--gm-shadow-card)] md:p-8"
     >
       <div className="mb-8 text-center">
-        <h3 className="mb-2 font-serif text-2xl text-[var(--gm-gold)]">Gökyüzü Haritanız</h3>
+        <h3 className="mb-2 font-serif text-2xl text-[var(--gm-primary)]">Gökyüzü Haritanız</h3>
         <p className="text-sm font-light italic text-[var(--gm-text-dim)]">
           Doğum bilgilerinizle natal haritanızı ücretsiz hesaplayın.
         </p>
@@ -77,13 +77,13 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
 
       <div className="space-y-4">
         <label className="block">
-          <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-gold)]">
+          <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-primary)]">
             Harita adı
           </span>
           <input
             type="text"
             placeholder="Örn: Benim Haritam"
-            className="w-full rounded-sm border border-[var(--gm-border-soft)] bg-[var(--gm-bg)] p-3 text-[var(--gm-text)] transition-colors focus:border-[var(--gm-gold)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface-high)] p-3 text-[var(--gm-text)] transition-colors focus:border-[var(--gm-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gm-primary)]/15"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
@@ -92,24 +92,24 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="block">
-            <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-gold)]">
+            <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-primary)]">
               Doğum tarihi
             </span>
             <input
               type="date"
-              className="w-full rounded-sm border border-[var(--gm-border-soft)] bg-[var(--gm-bg)] p-3 text-[var(--gm-text)] focus:border-[var(--gm-gold)] focus:outline-none"
+              className="w-full rounded-xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface-high)] p-3 text-[var(--gm-text)] focus:border-[var(--gm-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gm-primary)]/15"
               value={formData.dob}
               onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
               required
             />
           </label>
           <label className="block">
-            <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-gold)]">
+            <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-primary)]">
               Doğum saati
             </span>
             <input
               type="time"
-              className="w-full rounded-sm border border-[var(--gm-border-soft)] bg-[var(--gm-bg)] p-3 text-[var(--gm-text)] focus:border-[var(--gm-gold)] focus:outline-none"
+              className="w-full rounded-xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface-high)] p-3 text-[var(--gm-text)] focus:border-[var(--gm-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gm-primary)]/15"
               value={formData.tob}
               onChange={(e) => setFormData({ ...formData, tob: e.target.value })}
               required
@@ -118,13 +118,13 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
         </div>
 
         <label className="block">
-          <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-gold)]">
+          <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-primary)]">
             Doğum yeri
           </span>
           <input
             type="text"
             placeholder="Şehir ara..."
-            className="w-full rounded-sm border border-[var(--gm-border-soft)] bg-[var(--gm-bg)] p-3 text-[var(--gm-text)] focus:border-[var(--gm-gold)] focus:outline-none"
+            className="w-full rounded-xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface-high)] p-3 text-[var(--gm-text)] focus:border-[var(--gm-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gm-primary)]/15"
             value={geoQuery || selectedPlace?.label || ''}
             onChange={(e) => {
               setGeoQuery(e.target.value);
@@ -138,7 +138,7 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
         {geoResult && geoQuery.trim().length > 2 && (
           <button
             type="button"
-            className="w-full rounded-sm border border-[var(--gm-border-soft)] bg-[var(--gm-surface)] p-3 text-left text-xs text-[var(--gm-text-dim)] transition-colors hover:border-[var(--gm-gold)]"
+            className="w-full rounded-xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface-high)] p-3 text-left text-xs text-[var(--gm-text-dim)] transition-colors hover:border-[var(--gm-primary)]"
             onClick={() => {
               setSelectedPlace(geoResult);
               setGeoQuery('');
@@ -153,7 +153,7 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
 
       {error && <p className="text-sm text-[var(--gm-error)]">{error}</p>}
 
-      <button type="submit" disabled={isLoading} className="btn-premium w-full py-4 text-sm tracking-[0.2em] disabled:opacity-60">
+      <button type="submit" disabled={isLoading} className="flex w-full items-center justify-center rounded-full bg-[var(--gm-primary)] px-8 py-4 text-sm font-bold uppercase tracking-[0.2em] text-white shadow-[var(--gm-shadow-card)] transition-all hover:-translate-y-0.5 hover:bg-[var(--gm-primary-dark)] disabled:translate-y-0 disabled:opacity-60">
         {saving
           ? 'Kaydediliyor...'
           : previewing
@@ -163,7 +163,7 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
           : 'Haritayı Hesapla'}
       </button>
       {!isAuthenticated && (
-        <p className="text-center text-[11px] text-(--gm-muted)">
+        <p className="text-center text-[11px] text-[var(--gm-muted)]">
           Giriş yaparsan haritan profilinde kaydedilir, tekrar doldurmana gerek kalmaz.
         </p>
       )}

@@ -131,7 +131,10 @@
       "Bash(git branch *)",
       "Bash(timeout 240 bunx tsc --noEmit)",
       "Bash(timeout 280 bunx tsc --noEmit)",
-      "Bash(timeout 200 bunx tsc --noEmit)"
+      "Bash(timeout 200 bunx tsc --noEmit)",
+      "Bash(curl -s -o /dev/null -w \"frontend / → %{http_code}\\\\n\" \"https://goldmoodastro.com/tr\" --max-time 15)",
+      "Bash(curl -s -o /dev/null -w \"api/health → %{http_code}\\\\n\" \"https://goldmoodastro.com/api/health\" --max-time 12)",
+      "Bash(curl -s -o /dev/null -w \"become-consultant → %{http_code}\\\\n\" \"https://goldmoodastro.com/tr/become-consultant\" --max-time 15)"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [

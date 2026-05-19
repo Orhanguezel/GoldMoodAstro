@@ -25,10 +25,14 @@ export function DiscountPromoBanner({
   className?: string;
   locale?: string;
 }) {
-  const { user } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   if (user?.is_premium) return null;
 
   const isTr = locale === 'tr';
+  const consultantsHref = `/${locale}/consultants`;
+  const ctaHref = isAuthenticated
+    ? `${consultantsHref}#consultants-results`
+    : `/${locale}/register?next=${encodeURIComponent(consultantsHref)}`;
 
   return (
     <div
@@ -81,7 +85,7 @@ export function DiscountPromoBanner({
 
         {/* CTA */}
         <Link
-          href={`/${locale}/consultants`}
+          href={ctaHref}
           className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-amber-400 px-6 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#0D0B1E] transition-all duration-300 hover:shadow-[0_0_28px_rgba(212,175,55,0.55)] hover:scale-105"
         >
           {isTr ? 'Hemen Başla' : 'Get Started'}

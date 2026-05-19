@@ -45,7 +45,7 @@ function aspectVisual(type: string) {
   const isHarsh = type === 'square' || type === 'opposition';
   const isMajor = type === 'conjunction' || isHarsh || type === 'trine';
   return {
-    stroke: isHarmonic ? 'var(--gm-gold)' : isHarsh ? 'var(--gm-error)' : 'var(--gm-gold-light)',
+    stroke: isHarmonic ? 'var(--gm-primary)' : isHarsh ? 'var(--gm-error)' : 'var(--gm-primary-light)',
     strokeOpacity: isMajor ? '0.7' : '0.4',
     strokeWidth: isMajor ? '1.8' : '0.9',
   };
@@ -59,11 +59,11 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
       <svg viewBox="0 0 360 360" className="h-full w-full">
         <defs>
           <radialGradient id="wheelGrad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-            <stop offset="0%" stopColor="var(--gm-bg-deep)" />
+            <stop offset="0%" stopColor="color-mix(in srgb, var(--gm-primary) 14%, var(--gm-bg-deep))" />
             <stop offset="100%" stopColor="var(--gm-surface)" />
           </radialGradient>
         </defs>
-        <circle cx="180" cy="180" r="164" fill="url(#wheelGrad)" stroke="var(--gm-gold)" strokeWidth="0.5" />
+        <circle cx="180" cy="180" r="164" fill="url(#wheelGrad)" stroke="var(--gm-primary)" strokeWidth="0.5" />
         <circle cx="180" cy="180" r="132" fill="none" stroke="var(--gm-border-soft)" strokeWidth="0.5" />
         <circle cx="180" cy="180" r="84" fill="none" stroke="var(--gm-border-soft)" strokeWidth="0.5" />
 
@@ -76,7 +76,7 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
           return (
             <g key={i}>
               <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--gm-border)" strokeWidth="0.8" strokeOpacity="0.35" />
-              <text x={label.x} y={label.y + 7} textAnchor="middle" className="fill-[var(--gm-gold)] text-[20px] font-serif">
+              <text x={label.x} y={label.y + 7} textAnchor="middle" className="fill-[var(--gm-primary)] text-[20px] font-serif">
                 {SIGN_SYMBOLS[i]}
               </text>
             </g>
@@ -91,7 +91,7 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
             <line
               key={`cusp-${cusp.house}`}
               x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-              stroke="var(--gm-gold-dim)"
+              stroke="var(--gm-primary-dark)"
               strokeOpacity="0.45"
               strokeWidth="1"
             />
@@ -105,7 +105,7 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
           return (
             <line
               x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-              stroke="var(--gm-gold)"
+              stroke="var(--gm-primary)"
               strokeOpacity="0.8"
               strokeWidth="2"
             />
@@ -117,7 +117,7 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
           return (
             <line
               x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-              stroke="var(--gm-gold-light)"
+              stroke="var(--gm-primary-light)"
               strokeOpacity="0.6"
               strokeWidth="1.5"
               strokeDasharray="4,2"
@@ -198,15 +198,15 @@ export default function BirthChartPageClient() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--gm-bg)] px-4 pb-24 pt-12">
+    <main className="min-h-screen bg-[var(--gm-bg)] px-4 pb-24 pt-12 text-[var(--gm-text)]">
       <div className="mx-auto max-w-[var(--gm-w-wide)]">
         {!chart ? (
           <>
             <div className="mx-auto mb-16 max-w-[var(--gm-w-narrow)] text-center">
               <div className="flex items-center justify-center gap-3 mb-6">
-                <span className="w-8 h-px bg-[var(--gm-gold)]" />
-                <span className="text-[var(--gm-gold)] font-bold text-xs uppercase tracking-[0.2em]">Kozmik Rehber</span>
-                <span className="w-8 h-px bg-[var(--gm-gold)]" />
+                <span className="w-8 h-px bg-[var(--gm-primary)]" />
+                <span className="text-[var(--gm-primary)] font-bold text-xs uppercase tracking-[0.2em]">Kozmik Rehber</span>
+                <span className="w-8 h-px bg-[var(--gm-primary)]" />
               </div>
               <h2 className="mb-8 font-serif text-[clamp(2.5rem,5vw,4.5rem)] font-light leading-tight text-[var(--gm-text)]">
                 Gökyüzündeki İmzanız
@@ -222,24 +222,24 @@ export default function BirthChartPageClient() {
         ) : (
           <div className="grid gap-12 lg:grid-cols-[400px_1fr] lg:items-start">
             <aside className="space-y-8">
-              <div className="rounded-3xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)] p-10 relative overflow-hidden">
+              <div className="rounded-3xl border border-[var(--gm-primary)]/20 bg-[var(--gm-surface)] p-10 relative overflow-hidden shadow-[var(--gm-shadow-soft)]">
                 <div className="absolute top-0 right-0 p-4">
-                  <Compass className="w-12 h-12 text-[var(--gm-gold)] opacity-10" />
+                  <Compass className="w-12 h-12 text-[var(--gm-primary)] opacity-10" />
                 </div>
                 
                 <h2 className="mb-6 font-serif text-4xl text-[var(--gm-text)] leading-tight">{chart.name}</h2>
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 text-[var(--gm-text-dim)]">
-                    <MapPin className="w-4 h-4 text-[var(--gm-gold)]" />
+                    <MapPin className="w-4 h-4 text-[var(--gm-primary)]" />
                     <span className="text-sm font-medium">{chart.pob_label}</span>
                   </div>
                   <div className="flex items-center gap-4 text-[var(--gm-text-dim)]">
-                    <Calendar className="w-4 h-4 text-[var(--gm-gold)]" />
+                    <Calendar className="w-4 h-4 text-[var(--gm-primary)]" />
                     <span className="text-sm font-medium">{new Date(chart.dob).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                   </div>
                   <div className="flex items-center gap-4 text-[var(--gm-text-dim)]">
-                    <Clock className="w-4 h-4 text-[var(--gm-gold)]" />
+                    <Clock className="w-4 h-4 text-[var(--gm-primary)]" />
                     <span className="text-sm font-medium">{String(chart.tob).slice(0, 5)}</span>
                   </div>
                 </div>
@@ -258,7 +258,7 @@ export default function BirthChartPageClient() {
                   <button
                     type="button"
                     onClick={() => { setChart(null); setShowForm(true); }}
-                    className="flex items-center gap-3 text-[var(--gm-gold)] font-bold text-xs uppercase tracking-widest hover:translate-x-2 transition-transform"
+                    className="flex items-center gap-3 text-[var(--gm-primary)] font-bold text-xs uppercase tracking-widest hover:translate-x-2 transition-transform"
                   >
                     <ChevronLeft className="w-4 h-4" /> Yeni Harita Oluştur
                   </button>
@@ -266,7 +266,7 @@ export default function BirthChartPageClient() {
                     <button
                       type="button"
                       onClick={handleDelete}
-                      className="flex items-center gap-3 text-(--gm-text-dim) hover:text-(--gm-error) text-[10px] uppercase tracking-widest transition-colors"
+                      className="flex items-center gap-3 text-[var(--gm-text-dim)] hover:text-[var(--gm-error)] text-[10px] uppercase tracking-widest transition-colors"
                     >
                       <Trash2 className="w-3 h-3" /> Bu haritayı sil
                     </button>
@@ -275,8 +275,8 @@ export default function BirthChartPageClient() {
 
                 {/* Birden fazla kayıtlı harita varsa hızlı seçim */}
                 {isAuthenticated && savedCharts && savedCharts.length > 1 && (
-                  <div className="mt-6 pt-6 border-t border-(--gm-border-soft)">
-                    <p className="font-display text-[9px] tracking-[0.3em] uppercase text-(--gm-gold-deep) mb-3">
+                  <div className="mt-6 pt-6 border-t border-[var(--gm-border-soft)]">
+                    <p className="font-display text-[9px] tracking-[0.3em] uppercase text-[var(--gm-primary-dark)] mb-3">
                       Diğer haritalarım
                     </p>
                     <div className="space-y-1.5">
@@ -285,7 +285,7 @@ export default function BirthChartPageClient() {
                           key={c.id}
                           type="button"
                           onClick={() => setChart(c)}
-                          className="block w-full text-left text-sm text-(--gm-text-dim) hover:text-(--gm-gold) transition-colors"
+                          className="block w-full text-left text-sm text-[var(--gm-text-dim)] hover:text-[var(--gm-primary)] transition-colors"
                         >
                           → {c.name}
                         </button>
@@ -295,19 +295,18 @@ export default function BirthChartPageClient() {
                 )}
               </div>
 
-              <div className="p-10 rounded-3xl bg-[var(--gm-surface-high)] border border-[var(--gm-border-soft)]">
+              <div className="p-10 rounded-3xl bg-[var(--gm-surface-high)] border border-[var(--gm-primary)]/20 shadow-[var(--gm-shadow-soft)]">
                 <h4 className="font-serif text-2xl text-[var(--gm-text)] mb-4">Derin Analiz</h4>
                 <p className="text-[var(--gm-text-dim)] text-sm leading-relaxed mb-8">
                   Bu harita sizin gökyüzündeki parmak izinizdir. Gezegenlerin ev yerleşimleri ve birbirleriyle olan açıları hayatınızdaki temel potansiyelleri gösterir.
                 </p>
-                <Link href={`/${locale}/consultants`} className="btn-premium flex items-center justify-center gap-3 py-4 w-full">
+                <Link href={`/${locale}/consultants`} className="flex w-full items-center justify-center gap-3 rounded-full bg-[var(--gm-primary)] px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[var(--gm-shadow-card)] transition-all hover:-translate-y-0.5 hover:bg-[var(--gm-primary-dark)]">
                   Uzman Analizi Al <Sparkles className="w-4 h-4" />
                 </Link>
               </div>
             </aside>
 
-            <section className="rounded-3xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)] p-8 md:p-12 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--gm-gold)] opacity-[0.03] blur-[120px] rounded-full" />
+            <section className="rounded-3xl border border-[var(--gm-primary)]/20 bg-[var(--gm-surface)] p-8 md:p-12 relative overflow-hidden shadow-[var(--gm-shadow-soft)]">
               
               <ChartWheel chart={chart.chart_data} />
               
@@ -317,16 +316,16 @@ export default function BirthChartPageClient() {
                   if (!planet) return null;
                   return (
                     <div key={key} className="flex items-center gap-6 p-6 rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)]/40 hover:bg-[var(--gm-surface-high)] transition-colors group">
-                      <span className="w-12 h-12 rounded-full bg-[var(--gm-surface)] flex items-center justify-center font-serif text-3xl text-[var(--gm-gold)] border border-[var(--gm-border-soft)] group-hover:scale-110 transition-transform">
+                      <span className="w-12 h-12 rounded-full bg-[var(--gm-surface)] flex items-center justify-center font-serif text-3xl text-[var(--gm-primary)] border border-[var(--gm-border-soft)] group-hover:scale-110 transition-transform">
                         {planet.symbol}
                       </span>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-bold text-[var(--gm-text)] uppercase tracking-wider">{planet.name}</span>
-                          <span className="text-[10px] text-[var(--gm-gold)] font-bold">{planet.house}. EV</span>
+                          <span className="text-[10px] text-[var(--gm-primary)] font-bold">{planet.house}. EV</span>
                         </div>
                         <div className="text-xs text-[var(--gm-text-dim)] flex items-center gap-2">
-                          <span className="text-[var(--gm-gold)]">{SIGN_LABELS[planet.sign] ?? planet.sign_label}</span>
+                          <span className="text-[var(--gm-primary)]">{SIGN_LABELS[planet.sign] ?? planet.sign_label}</span>
                           <span className="opacity-30">·</span>
                           <span>{formatDegree(planet)}</span>
                           {planet.retrograde && (

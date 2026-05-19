@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Star, Clock, ShieldCheck, Phone, Calendar } from 'lucide-react';
 import type { ConsultantPublic } from '@/integrations/rtk/public/consultants.public.endpoints';
@@ -21,6 +21,7 @@ interface Props {
 }
 
 export default function ConsultantCard({ consultant, locale }: Props) {
+  const [imageFailed, setImageFailed] = useState(false);
   const rating = parseFloat(consultant.rating_avg || '0');
   const price = Math.round(Number(consultant.session_price));
   const isOnline = !!consultant.is_available;
@@ -39,11 +40,12 @@ export default function ConsultantCard({ consultant, locale }: Props) {
 
       {/* Big Image (advicemy style) */}
       <Link href={detailHref} className="relative block aspect-square w-full overflow-hidden bg-[var(--gm-bg-deep)]">
-        {consultant.avatar_url ? (
+        {consultant.avatar_url && !imageFailed ? (
           <img
             src={consultant.avatar_url}
             alt={consultant.full_name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            onError={() => setImageFailed(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-[var(--gm-gold)] font-serif text-6xl">

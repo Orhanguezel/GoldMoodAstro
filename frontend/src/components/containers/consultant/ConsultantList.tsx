@@ -74,7 +74,7 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
       <DiscountPromoBanner locale={locale} />
 
       {/* Grid Section */}
-      <div ref={resultsRef} className="relative min-h-[400px] scroll-mt-28">
+      <div id="consultants-results" ref={resultsRef} className="relative min-h-[400px] scroll-mt-28">
         {isError ? (
           <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
             <div className="w-16 h-16 rounded-full bg-[var(--gm-error)]/10 flex items-center justify-center">
