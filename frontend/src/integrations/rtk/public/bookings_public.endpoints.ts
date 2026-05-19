@@ -42,6 +42,15 @@ export const bookingsPublicApi = baseApi.injectEndpoints({
         url: '/bookings/me',
         method: 'GET',
       }),
+      // Backend `{ items: [...] }` döner; bazı uçlar `{ data: [...] }` veya ham
+      // array. Her durumda diziye indir → tüketen .map() kırılmasın.
+      transformResponse: (res: unknown): any[] => {
+        if (Array.isArray(res)) return res;
+        const r = res as { items?: unknown; data?: unknown } | null;
+        if (Array.isArray(r?.items)) return r.items as any[];
+        if (Array.isArray(r?.data)) return r.data as any[];
+        return [];
+      },
       providesTags: ['Booking'],
     }),
     /**
