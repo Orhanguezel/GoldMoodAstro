@@ -720,3 +720,34 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   ('257ff506-0430-4f3e-8908-93198d867201', 'ui_dashboard_total_sessions_inline', '*', '{"label": {"tr": "{count} seans", "en": "{count} sessions", "de": "{count} Sitzungen"}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);
 
+
+-- =============================================================
+-- 2026-05-20 PLACEHOLDER FIX: ui_dashboard çevirilerinde {count}/{amount}/{max}/{min}
+-- yerine kodun beklediği {value} convention (veya replace yapılmayan yerlerde
+-- sabit sayılar). Lexical olarak SON INSERT olduğu için ON DUPLICATE KEY UPDATE
+-- ile önceki hatalı satırları geçersiz kılar.
+-- =============================================================
+-- ui_dashboard placeholder uyuşmazlığı fix:
+-- Kod {value} convention kullanıyor + bazı hata mesajlarında replace YAPMIYOR (sabit sayı yazılmalı).
+-- Idempotent: ON DUPLICATE KEY UPDATE value = VALUES(value).
+-- Deterministik UUID: MD5(key) — mevcut satırla aynı uuid (önceki seed bloğu da MD5'le üretti).
+
+INSERT INTO site_settings (id, `key`, locale, value) VALUES
+-- {value} convention (kod .replace('{value}', ...) yapıyor)
+('aa78d24a-ee69-43c5-a242-e7b51e80b78c','ui_dashboard_stat_last_month_count','*','{"label":{"tr":"Geçen ay: {value}","en":"Last month: {value}","de":"Letzter Monat: {value}"}}'),
+('33f02e0b-9c70-44f9-b3eb-7a2c91d10571','ui_dashboard_stat_last_month_money','*','{"label":{"tr":"Geçen ay: ₺{value}","en":"Last month: ₺{value}","de":"Letzter Monat: ₺{value}"}}'),
+('df6c1bef-1d97-4f1c-b830-d4b51d7d6478','ui_dashboard_stat_reviews_count','*','{"label":{"tr":"{value} yorum","en":"{value} reviews","de":"{value} Bewertungen"}}'),
+('257ff506-0430-4f3e-8908-93198d867201','ui_dashboard_total_sessions_inline','*','{"label":{"tr":"Toplam {value} seans","en":"Total {value} sessions","de":"Insgesamt {value} Sitzungen"}}'),
+('00000000-0000-0000-0000-000000000000','ui_dashboard_hours_short','*','{"label":{"tr":"~{value}s","en":"~{value}h","de":"~{value}Std"}}'),
+('00000000-0000-0000-0000-000000000001','ui_dashboard_minutes_short','*','{"label":{"tr":"~{value}dk","en":"~{value}m","de":"~{value}Min"}}'),
+-- {count}/{date}/{earnings}/{name} convention (kod ayrı .replace)
+('00000000-0000-0000-0000-000000000002','ui_dashboard_chart_bar_title','*','{"label":{"tr":"{date}: {count} seans — ₺{earnings}","en":"{date}: {count} sessions — ₺{earnings}","de":"{date}: {count} Sitzungen — ₺{earnings}"}}'),
+('00000000-0000-0000-0000-000000000003','ui_dashboard_character_count','*','{"label":{"tr":"{count} / 5000 karakter","en":"{count} / 5000 characters","de":"{count} / 5000 Zeichen"}}'),
+('00000000-0000-0000-0000-000000000004','ui_dashboard_instant_alert_title','*','{"label":{"tr":"{count} anlık görüşme talebi bekliyor","en":"{count} instant session requests waiting","de":"{count} Sofortanfragen warten"}}'),
+-- Hata mesajları (kod replace YAPMIYOR; sabit sayı yazılmalı)
+('00000000-0000-0000-0000-000000000005','ui_dashboard_error_bio_max','*','{"label":{"tr":"Biyografi en fazla 5000 karakter olabilir.","en":"Bio can be up to 5000 characters.","de":"Bio kann bis zu 5000 Zeichen lang sein."}}'),
+('00000000-0000-0000-0000-000000000006','ui_dashboard_error_expertise_max','*','{"label":{"tr":"En fazla 20 uzmanlık alanı ekleyebilirsiniz.","en":"You can add up to 20 expertise areas.","de":"Sie können bis zu 20 Fachgebiete hinzufügen."}}'),
+('00000000-0000-0000-0000-000000000007','ui_dashboard_error_languages_max','*','{"label":{"tr":"En fazla 10 dil ekleyebilirsiniz.","en":"You can add up to 10 languages.","de":"Sie können bis zu 10 Sprachen hinzufügen."}}'),
+('00000000-0000-0000-0000-000000000008','ui_dashboard_reject_reason_min','*','{"label":{"tr":"Red sebebi en az 2 karakter olmalı.","en":"Rejection reason must be at least 2 characters.","de":"Ablehnungsgrund muss mindestens 2 Zeichen haben."}}'),
+('00000000-0000-0000-0000-000000000009','ui_dashboard_cancel_reason_min','*','{"label":{"tr":"İptal sebebi en az 5 karakter olmalı.","en":"Cancellation reason must be at least 5 characters.","de":"Stornogrund muss mindestens 5 Zeichen haben."}}')
+ON DUPLICATE KEY UPDATE value = VALUES(value);
