@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
+import { IyzicoService, resolveIyzicoLocale } from '@goldmood/shared-backend/modules/orders/iyzico.service';
 
 type BoostPackage = { id: string; days: number; price: number; currency?: string };
 
@@ -17,6 +18,49 @@ function rowsFromExecute<T = any>(result: unknown): T[] {
 function userIdFromRequest(req: Parameters<RouteHandler>[0]) {
   const user = req.user as { sub?: string; id?: string } | undefined;
   return user?.sub ?? user?.id ?? null;
+}
+
+function resolveApiBase() {
+  return (
+    process.env.BACKEND_URL ||
+    process.env.PUBLIC_URL ||
+    (process.env.PUBLIC_HOST ? `https://${process.env.PUBLIC_HOST}` : 'http://localhost:8094')
+  ).replace(/\/$/, '');
+}
+
+function resolveSiteUrl() {
+  return (process.env.FRONTEND_URL || process.env.PUBLIC_URL || 'http://localhost:3000').replace(/\/$/, '');
+}
+
+function resolveRequestLocale(req: Parameters<RouteHandler>[0]) {
+  const queryLocale = String(((req.query as Record<string, unknown> | undefined)?.locale ?? '') || '').trim();
+  return queryLocale || String((req as any).locale || 'tr');
+}
+
+function splitName(fullName: string | null | undefined) {
+  const parts = String(fullName || 'GoldMoodAstro Danışmanı').trim().split(/\s+/).filter(Boolean);
+  return {
+    name: parts[0] || 'Danışman',
+    surname: parts.slice(1).join(' ') || '.',
+  };
+}
+
+function resolveIyzicoConfig(gateway?: { config: string | null }) {
+  let fromDb = {} as Partial<{ apiKey: string; secretKey: string; baseUrl: string }>;
+  try {
+    fromDb = JSON.parse(gateway?.config || '{}');
+  } catch {
+    fromDb = {};
+  }
+  const testMode = process.env.IYZICO_TEST_MODE;
+  return {
+    apiKey: fromDb.apiKey ?? process.env.IYZIPAY_API_KEY ?? process.env.IYZICO_API_KEY ?? '',
+    secretKey: fromDb.secretKey ?? process.env.IYZIPAY_SECRET_KEY ?? process.env.IYZICO_SECRET_KEY ?? '',
+    baseUrl:
+      fromDb.baseUrl ??
+      process.env.IYZIPAY_BASE_URL ??
+      (testMode === 'false' ? 'https://api.iyzipay.com' : 'https://sandbox-api.iyzipay.com'),
+  };
 }
 
 async function getCallerConsultant(req: Parameters<RouteHandler>[0]) {
@@ -71,6 +115,8 @@ export const createCheckout: RouteHandler = async (req, reply) => {
   if (!selected) return reply.code(400).send({ error: { message: 'boost_package_not_found' } });
 
   const boostId = randomUUID();
+  const locale = resolveRequestLocale(req);
+  const siteUrl = resolveSiteUrl();
   await db.execute(sql`
     INSERT INTO service_boosts (
       id, consultant_service_id, consultant_id, duration_days, price, currency,
@@ -82,16 +128,117 @@ export const createCheckout: RouteHandler = async (req, reply) => {
     )
   `);
 
-  return reply.code(201).send({
-    data: {
-      id: boostId,
-      status: 'pending_payment',
-      package: selected,
-      // Iyzipay bağlandığında bu alan gerçek paymentPageUrl ile değiştirilecek.
-      checkout_url: `/tr/me/consultant?boost_id=${encodeURIComponent(boostId)}&checkout=pending`,
-      checkout_html: null,
-    },
-  });
+  if (process.env.PAYMENT_MOCK_MODE === 'true') {
+    const paymentId = `mock_boost_${Date.now()}`;
+    await db.execute(sql`
+      UPDATE service_boosts
+      SET status = 'active',
+          starts_at = NOW(3),
+          ends_at = DATE_ADD(NOW(3), INTERVAL duration_days DAY),
+          iyzipay_payment_id = ${paymentId},
+          updated_at = NOW(3)
+      WHERE id = ${boostId}
+    `);
+    return reply.code(201).send({
+      data: {
+        id: boostId,
+        status: 'active',
+        package: selected,
+        checkout_url: `${siteUrl}/${locale}/me/consultant?boost_id=${encodeURIComponent(boostId)}&checkout=success&mock=1`,
+        checkout_html: null,
+      },
+    });
+  }
+
+  const gatewayResult = await db.execute(sql`
+    SELECT id, config FROM payment_gateways
+    WHERE slug = 'iyzico' AND is_active = 1
+    LIMIT 1
+  `);
+  const gateway = rowsFromExecute<{ id: string; config: string | null }>(gatewayResult)[0];
+  if (!gateway) return reply.code(400).send({ error: { message: 'iyzico_gateway_not_configured' } });
+
+  const userResult = await db.execute(sql`
+    SELECT id, full_name, email, phone
+    FROM users
+    WHERE id = ${c.user_id}
+    LIMIT 1
+  `);
+  const user = rowsFromExecute<{ id: string; full_name: string | null; email: string; phone: string | null }>(userResult)[0];
+  if (!user?.email) return reply.code(400).send({ error: { message: 'consultant_email_required' } });
+
+  const iyzico = new IyzicoService(resolveIyzicoConfig(gateway));
+  const name = splitName(user.full_name);
+  const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const price = Number(selected.price).toFixed(2);
+
+  try {
+    const result = await iyzico.initializeCheckoutForm({
+      locale: resolveIyzicoLocale(locale),
+      conversationId: `boost_${boostId}`,
+      price,
+      paidPrice: price,
+      currency: selected.currency ?? 'TRY',
+      basketId: `BOOST-${boostId}`,
+      callbackUrl: `${resolveApiBase()}/api/service-boosts/iyzico/callback?boost_id=${encodeURIComponent(boostId)}&locale=${encodeURIComponent(locale)}`,
+      buyer: {
+        id: user.id,
+        name: name.name,
+        surname: name.surname,
+        gsmNumber: user.phone || '+905000000000',
+        email: user.email,
+        identityNumber: '11111111111',
+        lastLoginDate: nowStr,
+        registrationDate: nowStr,
+        registrationAddress: 'Adres belirtilmedi',
+        ip: req.ip,
+        city: 'İstanbul',
+        country: 'Turkey',
+        zipCode: '34000',
+      },
+      shippingAddress: {
+        contactName: user.full_name || 'GoldMoodAstro Danışmanı',
+        city: 'İstanbul',
+        country: 'Turkey',
+        address: 'Dijital hizmet',
+        zipCode: '34000',
+      },
+      billingAddress: {
+        contactName: user.full_name || 'GoldMoodAstro Danışmanı',
+        city: 'İstanbul',
+        country: 'Turkey',
+        address: 'Dijital hizmet',
+        zipCode: '34000',
+      },
+      basketItems: [{
+        id: boostId,
+        name: `Hizmet öne çıkarma - ${service.name}`,
+        category1: 'Service Boost',
+        itemType: 'VIRTUAL',
+        price,
+      }],
+    });
+
+    if (result.status === 'success') {
+      return reply.code(201).send({
+        data: {
+          id: boostId,
+          status: 'pending_payment',
+          package: selected,
+          checkout_url: result.paymentPageUrl,
+          checkout_html: result.checkoutFormContent ?? null,
+          token: result.token,
+        },
+      });
+    }
+
+    await db.execute(sql`UPDATE service_boosts SET status = 'cancelled', updated_at = NOW(3) WHERE id = ${boostId}`);
+    return reply.code(400).send({ error: { message: String(result.errorMessage || 'iyzico_checkout_failed') } });
+  } catch (error) {
+    await db.execute(sql`UPDATE service_boosts SET status = 'cancelled', updated_at = NOW(3) WHERE id = ${boostId}`);
+    const message = error instanceof Error ? error.message : 'iyzico_checkout_failed';
+    return reply.code(500).send({ error: { message } });
+  }
 };
 
 export const getStatus: RouteHandler = async (req, reply) => {
@@ -144,20 +291,38 @@ export const cancelAdmin: RouteHandler = async (req, reply) => {
 };
 
 export const iyzicoCallback: RouteHandler = async (req, reply) => {
-  const body = (req.body ?? {}) as { boost_id?: string; status?: string; paymentId?: string; payment_id?: string };
-  const query = (req.query ?? {}) as { boost_id?: string; status?: string; paymentId?: string; payment_id?: string };
+  const body = (req.body ?? {}) as { boost_id?: string; status?: string; paymentId?: string; payment_id?: string; token?: string };
+  const query = (req.query ?? {}) as { boost_id?: string; status?: string; paymentId?: string; payment_id?: string; token?: string; locale?: string };
   const boostId = String(body.boost_id ?? query.boost_id ?? '').trim();
   const status = String(body.status ?? query.status ?? '').trim().toLowerCase();
-  const paymentId = String(body.paymentId ?? body.payment_id ?? query.paymentId ?? query.payment_id ?? '').trim() || null;
+  const token = String(body.token ?? query.token ?? '').trim();
+  let paymentId = String(body.paymentId ?? body.payment_id ?? query.paymentId ?? query.payment_id ?? '').trim() || null;
   if (!boostId) return reply.code(400).send({ error: { message: 'boost_id_required' } });
+  const locale = String(query.locale || 'tr').trim() || 'tr';
 
-  if (status && status !== 'success') {
+  let paymentStatus = status;
+  if (token) {
+    const gatewayResult = await db.execute(sql`
+      SELECT id, config FROM payment_gateways
+      WHERE slug = 'iyzico' AND is_active = 1
+      LIMIT 1
+    `);
+    const gateway = rowsFromExecute<{ id: string; config: string | null }>(gatewayResult)[0];
+    if (gateway) {
+      const iyzico = new IyzicoService(resolveIyzicoConfig(gateway));
+      const result = await iyzico.retrieveCheckoutResult(token);
+      paymentStatus = String(result.paymentStatus ?? result.status ?? paymentStatus).toLowerCase();
+      paymentId = String(result.paymentId ?? result.conversationId ?? paymentId ?? '').trim() || null;
+    }
+  }
+
+  if (paymentStatus && paymentStatus !== 'success') {
     await db.execute(sql`
       UPDATE service_boosts
       SET status = 'cancelled', iyzipay_payment_id = ${paymentId}, updated_at = NOW(3)
       WHERE id = ${boostId} AND status = 'pending_payment'
     `);
-    return { data: { id: boostId, status: 'cancelled' } };
+    return reply.redirect(`${resolveSiteUrl()}/${locale}/me/consultant?boost_id=${encodeURIComponent(boostId)}&checkout=failed`);
   }
 
   await db.execute(sql`
@@ -169,5 +334,6 @@ export const iyzicoCallback: RouteHandler = async (req, reply) => {
         updated_at = NOW(3)
     WHERE id = ${boostId} AND status = 'pending_payment'
   `);
-  return { data: { id: boostId, status: 'active' } };
+  const siteUrl = resolveSiteUrl();
+  return reply.redirect(`${siteUrl}/${locale}/me/consultant?boost_id=${encodeURIComponent(boostId)}&checkout=success`);
 };
