@@ -26,6 +26,10 @@ export async function registerConsultantSelf(app: FastifyInstance) {
 
   // İstatistik
   app.get('/me/consultant/stats', { preHandler: guard }, controller.getStats);
+  app.get('/me/consultant/profile-completion', { preHandler: guard }, controller.getProfileCompletion);
+  app.get('/me/consultant/profile-views', { preHandler: guard }, controller.getProfileViews);
+  app.get('/me/consultant/clients', { preHandler: guard }, controller.listClients);
+  app.get('/me/consultant/clients/:userId', { preHandler: guard }, controller.getClientDetail);
 
   // Mesajlar (T30-6)
   app.get('/me/consultant/threads', { preHandler: guard }, controller.listMessageThreads);
@@ -41,6 +45,7 @@ export async function registerConsultantSelf(app: FastifyInstance) {
 
   // Cüzdan (T30-7)
   app.get('/me/consultant/wallet', { preHandler: guard }, controller.getMyWallet);
+  app.get('/me/consultant/wallet/monthly-stats', { preHandler: guard }, controller.getWalletMonthlyStats);
   app.post('/me/consultant/wallet/withdraw', { preHandler: guard }, controller.requestWithdrawal);
 
   // Yorumlar (T30-8)

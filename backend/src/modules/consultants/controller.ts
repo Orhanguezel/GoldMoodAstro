@@ -1,4 +1,5 @@
 import type { RouteHandler } from 'fastify';
+import { createHash, randomUUID } from 'crypto';
 import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { hasAnyRole } from '@goldmood/shared-backend/middleware/roles';
@@ -48,6 +49,42 @@ export const getConsultantSlotsHandler: RouteHandler = async (req, reply) => {
     return reply.code(404).send({ error: { message: 'consultant_not_found' } });
   }
   return { data: result.slots };
+};
+
+const BOT_UA_RE = /bot|crawl|spider|slurp|headless|lighthouse|preview|facebookexternalhit|whatsapp/i;
+
+export const trackConsultantViewHandler: RouteHandler = async (req, reply) => {
+  const { id } = consultantIdParamsSchema.parse(req.params ?? {});
+  const row = await getApprovedConsultantById(id);
+  if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
+
+  const userAgent = String(req.headers['user-agent'] ?? '');
+  if (BOT_UA_RE.test(userAgent)) return { data: { tracked: false, reason: 'bot' } };
+
+  const userId = userIdFromRequest(req);
+  const ipSeed = `${req.ip ?? ''}|${userAgent.slice(0, 160)}`;
+  const ipHash = createHash('sha256').update(ipSeed).digest('hex');
+
+  const existing = await db.execute(sql`
+    SELECT id
+    FROM consultant_profile_views
+    WHERE consultant_id = ${row.id}
+      AND viewed_at >= DATE_SUB(NOW(3), INTERVAL 30 MINUTE)
+      AND (
+        (${userId} IS NOT NULL AND viewer_user_id = ${userId})
+        OR viewer_ip_hash = ${ipHash}
+      )
+    LIMIT 1
+  `);
+  const existingRows = Array.isArray((existing as any)?.[0]) ? (existing as any)[0] : (existing as any);
+  if ((existingRows as any[])?.[0]) return { data: { tracked: false, reason: 'throttled' } };
+
+  await db.execute(sql`
+    INSERT INTO consultant_profile_views (id, consultant_id, viewer_user_id, viewer_ip_hash, viewed_at)
+    VALUES (${randomUUID()}, ${row.id}, ${userId}, ${ipHash}, NOW(3))
+  `);
+
+  return { data: { tracked: true } };
 };
 
 export const registerConsultantHandler: RouteHandler = async (req, reply) => {

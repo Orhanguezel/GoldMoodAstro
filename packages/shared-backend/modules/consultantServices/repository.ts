@@ -9,16 +9,38 @@ import { serviceTemplates, type ServiceTemplate } from '../serviceTemplates/sche
 export async function listByConsultant(
   consultantId: string,
   opts?: { activeOnly?: boolean },
-): Promise<ConsultantService[]> {
-  const where = opts?.activeOnly
-    ? and(eq(consultantServices.consultant_id, consultantId), eq(consultantServices.is_active, 1))
-    : eq(consultantServices.consultant_id, consultantId);
-
-  return db
-    .select()
-    .from(consultantServices)
-    .where(where)
-    .orderBy(asc(consultantServices.sort_order), asc(consultantServices.created_at));
+): Promise<Array<ConsultantService & { is_boosted?: number; boost_ends_at?: Date | null }>> {
+  const result = await db.execute(
+    opts?.activeOnly
+      ? sql`
+          SELECT cs.*,
+                 CASE WHEN sb.id IS NULL THEN 0 ELSE 1 END AS is_boosted,
+                 sb.ends_at AS boost_ends_at
+          FROM consultant_services cs
+          LEFT JOIN service_boosts sb
+            ON sb.consultant_service_id = cs.id
+           AND sb.status = 'active'
+           AND sb.ends_at > NOW(3)
+          WHERE cs.consultant_id = ${consultantId}
+            AND cs.is_active = 1
+          ORDER BY is_boosted DESC, cs.sort_order ASC, cs.created_at ASC
+        `
+      : sql`
+          SELECT cs.*,
+                 CASE WHEN sb.id IS NULL THEN 0 ELSE 1 END AS is_boosted,
+                 sb.ends_at AS boost_ends_at
+          FROM consultant_services cs
+          LEFT JOIN service_boosts sb
+            ON sb.consultant_service_id = cs.id
+           AND sb.status = 'active'
+           AND sb.ends_at > NOW(3)
+          WHERE cs.consultant_id = ${consultantId}
+          ORDER BY is_boosted DESC, cs.sort_order ASC, cs.created_at ASC
+        `,
+  );
+  return (Array.isArray((result as any)?.[0]) ? (result as any)[0] : (result as any)) as Array<
+    ConsultantService & { is_boosted?: number; boost_ends_at?: Date | null }
+  >;
 }
 
 export async function getById(id: string): Promise<ConsultantService | undefined> {

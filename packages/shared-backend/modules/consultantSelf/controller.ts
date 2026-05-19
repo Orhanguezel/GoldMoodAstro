@@ -25,8 +25,17 @@ const profilePatchSchema = z.object({
   bio: z.string().trim().max(5000).nullable().optional(),
   expertise: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
   languages: z.array(z.string().trim().min(2).max(8)).max(10).optional(),
-  meeting_platforms: z.array(z.string().trim().min(1).max(40)).max(10).optional(),
+  meeting_platforms: z.array(z.enum(['audio', 'video'])).max(2).optional(),
   social_links: z.record(z.string().trim().max(1000)).optional(),
+  bank_name: z.string().trim().max(120).nullable().optional(),
+  bank_iban: z
+    .string()
+    .trim()
+    .transform(normalizeIban)
+    .refine((value) => /^TR\d{24}$/.test(value), 'invalid_tr_iban')
+    .nullable()
+    .optional(),
+  bank_account_holder: z.string().trim().max(160).nullable().optional(),
   avatar_url: z.string().trim().max(1000).nullable().optional(),
   is_available: z.coerce.number().int().min(0).max(1).optional(),
   supports_video: z.coerce.number().int().min(0).max(1).optional(),
@@ -95,6 +104,24 @@ function mergeConsultantBlogTags(raw: string | null | undefined, consultantId: s
 
 function belongsToConsultantBlog(row: { module_key?: string | null; tags?: string | null }, consultantId: string): boolean {
   return row.module_key === 'blog' && String(row.tags || '').split(/[;,]/).map((tag) => tag.trim()).includes(consultantBlogMarker(consultantId));
+}
+
+function rowsFromExecute<T = any>(result: unknown): T[] {
+  return (Array.isArray((result as any)?.[0]) ? (result as any)[0] : (result as any)) as T[];
+}
+
+function formatDateKey(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatYearMonth(date: Date): string {
+  return date.toISOString().slice(0, 7);
+}
+
+function parsePositiveInt(value: unknown, fallback: number, max: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.min(Math.trunc(parsed), max);
 }
 
 /* ─── GET /me/consultant — profil ─── */
@@ -618,6 +645,207 @@ export async function getStats(req: FastifyRequest, reply: FastifyReply) {
   });
 }
 
+/* ─── GET /me/consultant/wallet/monthly-stats ─── */
+export async function getWalletMonthlyStats(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const months = parsePositiveInt((req.query as { months?: string | number } | undefined)?.months, 24, 36);
+  const start = new Date();
+  start.setUTCDate(1);
+  start.setUTCHours(0, 0, 0, 0);
+  start.setUTCMonth(start.getUTCMonth() - (months - 1));
+
+  const result = await db.execute(
+    sql`
+      SELECT DATE_FORMAT(created_at, '%Y-%m') AS year_month,
+             COALESCE(SUM(CASE WHEN type='credit' AND payment_status='completed' THEN amount ELSE 0 END), 0) AS earnings,
+             COALESCE(SUM(CASE WHEN type='credit' AND payment_status='completed' THEN 1 ELSE 0 END), 0) AS sessions
+      FROM wallet_transactions
+      WHERE user_id = ${c.user_id}
+        AND created_at >= ${start}
+      GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+      ORDER BY year_month ASC
+    `,
+  );
+  const byMonth = new Map(rowsFromExecute(result).map((row: any) => [
+    String(row.year_month),
+    { earnings: Number(row.earnings ?? 0), sessions: Number(row.sessions ?? 0) },
+  ]));
+
+  const data: Array<{ year_month: string; earnings: number; sessions: number }> = [];
+  for (let i = 0; i < months; i += 1) {
+    const d = new Date(start);
+    d.setUTCMonth(start.getUTCMonth() + i);
+    const yearMonth = formatYearMonth(d);
+    const v = byMonth.get(yearMonth) ?? { earnings: 0, sessions: 0 };
+    data.push({ year_month: yearMonth, ...v });
+  }
+
+  return reply.send({ data });
+}
+
+/* ─── GET /me/consultant/profile-views ─── */
+export async function getProfileViews(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const range = String((req.query as { range?: string } | undefined)?.range ?? '180d');
+  const days = Math.min(Math.max(Number(range.replace(/d$/i, '')) || 180, 1), 365);
+  const start = new Date();
+  start.setUTCDate(start.getUTCDate() - (days - 1));
+  start.setUTCHours(0, 0, 0, 0);
+
+  const result = await db.execute(
+    sql`
+      SELECT DATE(viewed_at) AS view_date, COUNT(*) AS count
+      FROM consultant_profile_views
+      WHERE consultant_id = ${c.id}
+        AND viewed_at >= ${start}
+      GROUP BY DATE(viewed_at)
+      ORDER BY view_date ASC
+    `,
+  );
+  const byDate = new Map(rowsFromExecute(result).map((row: any) => [
+    String(row.view_date).slice(0, 10),
+    Number(row.count ?? 0),
+  ]));
+
+  const data: Array<{ date: string; count: number }> = [];
+  for (let i = 0; i < days; i += 1) {
+    const d = new Date(start);
+    d.setUTCDate(start.getUTCDate() + i);
+    const key = formatDateKey(d);
+    data.push({ date: key, count: byDate.get(key) ?? 0 });
+  }
+
+  return reply.send({ data });
+}
+
+/* ─── GET /me/consultant/clients ─── */
+export async function listClients(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const q = String((req.query as { q?: string } | undefined)?.q ?? '').trim();
+  const limit = parsePositiveInt((req.query as { limit?: string | number } | undefined)?.limit, 50, 100);
+  const offset = Math.max(Number((req.query as { offset?: string | number } | undefined)?.offset ?? 0) || 0, 0);
+  const like = `%${q}%`;
+
+  const result = await db.execute(
+    q
+      ? sql`
+          SELECT b.user_id, u.full_name, u.email, u.avatar_url,
+                 MAX(CONCAT(b.appointment_date, ' ', COALESCE(b.appointment_time, '00:00'))) AS last_booking_at,
+                 COUNT(*) AS booking_count
+          FROM bookings b
+          INNER JOIN users u ON u.id = b.user_id
+          WHERE b.consultant_id = ${c.id}
+            AND (u.full_name LIKE ${like} OR u.email LIKE ${like})
+          GROUP BY b.user_id, u.full_name, u.email, u.avatar_url
+          ORDER BY last_booking_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `
+      : sql`
+          SELECT b.user_id, u.full_name, u.email, u.avatar_url,
+                 MAX(CONCAT(b.appointment_date, ' ', COALESCE(b.appointment_time, '00:00'))) AS last_booking_at,
+                 COUNT(*) AS booking_count
+          FROM bookings b
+          INNER JOIN users u ON u.id = b.user_id
+          WHERE b.consultant_id = ${c.id}
+          GROUP BY b.user_id, u.full_name, u.email, u.avatar_url
+          ORDER BY last_booking_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `,
+  );
+
+  return reply.send({
+    data: rowsFromExecute(result).map((row: any) => ({
+      user_id: row.user_id,
+      full_name: row.full_name,
+      email: row.email,
+      avatar_url: row.avatar_url,
+      last_booking_at: row.last_booking_at,
+      booking_count: Number(row.booking_count ?? 0),
+    })),
+  });
+}
+
+/* ─── GET /me/consultant/clients/:userId ─── */
+export async function getClientDetail(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+  const userId = String((req.params as { userId?: string })?.userId ?? '').trim();
+  if (!userId) return reply.code(400).send({ error: { message: 'user_id_required' } });
+
+  const userResult = await db.execute(
+    sql`
+      SELECT u.id, u.full_name, u.email, u.phone, u.avatar_url
+      FROM users u
+      WHERE u.id = ${userId}
+        AND EXISTS (SELECT 1 FROM bookings b WHERE b.user_id = u.id AND b.consultant_id = ${c.id})
+      LIMIT 1
+    `,
+  );
+  const user = rowsFromExecute(userResult)[0];
+  if (!user) return reply.code(404).send({ error: { message: 'client_not_found' } });
+
+  const bookingsResult = await db.execute(
+    sql`
+      SELECT id, service_id, appointment_date, appointment_time, session_duration,
+             session_price, media_type, status, customer_message, created_at
+      FROM bookings
+      WHERE consultant_id = ${c.id} AND user_id = ${userId}
+      ORDER BY appointment_date DESC, appointment_time DESC, created_at DESC
+      LIMIT 100
+    `,
+  );
+
+  return reply.send({ data: { user, bookings: rowsFromExecute(bookingsResult) } });
+}
+
+/* ─── GET /me/consultant/profile-completion ─── */
+export async function getProfileCompletion(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const [u] = await db
+    .select({ avatar_url: users.avatar_url })
+    .from(users)
+    .where(eq(users.id, c.user_id))
+    .limit(1);
+
+  const statsResult = await db.execute(sql`
+    SELECT
+      (SELECT COUNT(*) FROM consultant_services WHERE consultant_id = ${c.id} AND is_active = 1) AS service_count,
+      (SELECT COUNT(*) FROM consultant_services WHERE consultant_id = ${c.id} AND is_active = 1 AND is_free = 1) AS free_service_count,
+      (SELECT COUNT(*) FROM resource_slots rs
+        INNER JOIN resources r ON r.id = rs.resource_id
+        WHERE r.external_ref_id = ${c.id} AND rs.is_active = 1) AS availability_count,
+      (SELECT COUNT(*) FROM reviews WHERE target_type='consultant' AND target_id = ${c.id} AND is_approved = 1) AS review_count
+  `);
+  const stats = rowsFromExecute(statsResult)[0] as any;
+  const expertise = Array.isArray(c.expertise) ? c.expertise : [];
+  const languages = Array.isArray(c.languages) ? c.languages : [];
+  const bankIban = typeof (c as any).bank_iban === 'string' ? normalizeIban((c as any).bank_iban) : '';
+
+  const items = [
+    { id: 'avatar', label: 'Profil fotoğrafı yüklenmiş', done: Boolean(u?.avatar_url), weight: 10 },
+    { id: 'bio_500', label: 'Kendinizi anlatın metni 500 karakter veya daha uzun', done: String(c.bio ?? '').trim().length >= 500, weight: 15 },
+    { id: 'multi_package', label: 'En az 2 hizmet paketi var', done: Number(stats?.service_count ?? 0) >= 2, weight: 20 },
+    { id: 'free_intro', label: 'Ücretsiz tanışma paketi var', done: Number(stats?.free_service_count ?? 0) >= 1, weight: 10 },
+    { id: 'expertise_3', label: 'En az 3 uzmanlık seçilmiş', done: expertise.length >= 3, weight: 10 },
+    { id: 'language_1', label: 'En az 1 dil seçilmiş', done: languages.length >= 1, weight: 5 },
+    { id: 'availability', label: 'Müsaitlik saatleri tanımlı', done: Number(stats?.availability_count ?? 0) >= 1, weight: 15 },
+    { id: 'bank_iban', label: 'Banka IBAN bilgisi tanımlı', done: /^TR\d{24}$/.test(bankIban), weight: 10 },
+    { id: 'approved_review', label: 'En az 1 onaylı yorum var', done: Number(stats?.review_count ?? 0) >= 1, weight: 5 },
+  ];
+  const score = items.reduce((sum, item) => sum + (item.done ? item.weight : 0), 0);
+  const status = score >= 90 ? 'excellent' : score >= 70 ? 'improvable' : 'incomplete';
+
+  return reply.send({ data: { score, status, items } });
+}
+
 /* ─── GET /me/consultant/threads ─── */
 // Bu danışmana gelen consultant_lead thread'lerini listele.
 // Her thread için son mesaj + okunmamış sayısı dönülür.
@@ -932,9 +1160,28 @@ export async function getMyWallet(req: FastifyRequest, reply: FastifyReply) {
   let monthCredits = 0;
   let monthDebits = 0;
   try {
+    const query = req.query as {
+      from?: string;
+      to?: string;
+      page?: string | number;
+      page_size?: string | number;
+      type?: string;
+    };
+    const page = parsePositiveInt(query?.page, 1, 100000);
+    const pageSize = parsePositiveInt(query?.page_size, 50, 100);
+    const offset = (page - 1) * pageSize;
+    const from = query?.from && /^\d{4}-\d{2}-\d{2}$/.test(String(query.from)) ? `${query.from} 00:00:00` : null;
+    const to = query?.to && /^\d{4}-\d{2}-\d{2}$/.test(String(query.to)) ? `${query.to} 23:59:59` : null;
+    const type = query?.type === 'credit' || query?.type === 'debit' ? query.type : null;
     const txResult = await db.execute(
       sql`SELECT id, wallet_id, user_id, amount, currency, type, purpose, description, payment_method, payment_status, transaction_ref, is_admin_created, created_at
-          FROM wallet_transactions WHERE wallet_id = ${w.id} ORDER BY created_at DESC LIMIT 50`,
+          FROM wallet_transactions
+          WHERE wallet_id = ${w.id}
+            AND (${from} IS NULL OR created_at >= ${from})
+            AND (${to} IS NULL OR created_at <= ${to})
+            AND (${type} IS NULL OR type = ${type})
+          ORDER BY created_at DESC
+          LIMIT ${pageSize} OFFSET ${offset}`,
     );
     const txRows = Array.isArray((txResult as any)?.[0]) ? (txResult as any)[0] : (txResult as any);
     transactions = (txRows as any[]) ?? [];
@@ -974,12 +1221,6 @@ export async function getMyWallet(req: FastifyRequest, reply: FastifyReply) {
 // T30-7: Para çekme talebi (admin onaylı).
 const withdrawSchema = z.object({
   amount: z.coerce.number().positive(),
-  iban: z
-    .string()
-    .trim()
-    .transform(normalizeIban)
-    .refine((value) => /^TR\d{24}$/.test(value), 'invalid_tr_iban')
-    .optional(),
   notes: z.string().trim().max(500).optional(),
 });
 
@@ -1010,9 +1251,21 @@ export async function requestWithdrawal(req: FastifyRequest, reply: FastifyReply
     return reply.code(400).send({ error: { message: 'insufficient_balance', balance } });
   }
 
+  const bankIban = typeof (c as any).bank_iban === 'string' ? normalizeIban((c as any).bank_iban) : '';
+  if (!/^TR\d{24}$/.test(bankIban)) {
+    return reply.code(400).send({ error: { message: 'bank_iban_required' } });
+  }
+
   // pending withdrawal transaction (wallet_transactions tablosu varsa insert)
   const txId = randomUUID();
-  const desc = parsed.data.notes || (parsed.data.iban ? `IBAN: ${parsed.data.iban}` : null);
+  const bankHolder = String((c as any).bank_account_holder || '').trim();
+  const bankName = String((c as any).bank_name || '').trim();
+  const desc = [
+    parsed.data.notes,
+    `IBAN: ${bankIban}`,
+    bankHolder ? `Hesap sahibi: ${bankHolder}` : null,
+    bankName ? `Banka: ${bankName}` : null,
+  ].filter(Boolean).join(' | ');
   try {
     await db.execute(
       sql`INSERT INTO wallet_transactions (id, wallet_id, user_id, type, amount, currency, purpose, description, payment_status, is_admin_created)

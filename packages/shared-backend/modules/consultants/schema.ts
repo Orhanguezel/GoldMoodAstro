@@ -1,6 +1,7 @@
 import {
   mysqlTable,
   char,
+  varchar,
   text,
   json,
   decimal,
@@ -25,6 +26,9 @@ export const consultants = mysqlTable(
     languages: json('languages').$type<string[]>(),
     meeting_platforms: json('meeting_platforms').$type<string[]>(),
     social_links: json('social_links').$type<Record<string, string>>(),
+    bank_name: varchar('bank_name', { length: 120 }),
+    bank_iban: varchar('bank_iban', { length: 64 }),
+    bank_account_holder: varchar('bank_account_holder', { length: 160 }),
     session_price: decimal('session_price', { precision: 10, scale: 2 }).notNull(),
     session_duration: int('session_duration').notNull().default(30),
     supports_video: tinyint('supports_video').default(0),

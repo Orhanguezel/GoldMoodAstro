@@ -24,6 +24,10 @@ export interface ConsultantSelfProfile {
   rating_avg: string;
   rating_count: number;
   total_sessions: number;
+  // C4: Banka bilgileri
+  bank_name: string | null;
+  bank_iban: string | null;
+  bank_account_holder: string | null;
   user?: { full_name: string | null; email: string | null; phone: string | null; avatar_url: string | null } | null;
 }
 
@@ -79,6 +83,10 @@ export interface ProfilePatch {
   session_price?: number;
   session_duration?: number;
   video_session_price?: number;
+  // C4: Banka bilgileri
+  bank_name?: string | null;
+  bank_iban?: string | null;
+  bank_account_holder?: string | null;
 }
 
 export interface ServicePayload {
@@ -226,6 +234,29 @@ export interface ConsultantServiceTemplate {
   is_active: number;
   adopted: boolean;
   adopted_service_id: string | null;
+}
+
+// C8: Danışanlarım
+export interface ConsultantClient {
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  email: string | null;
+  last_booking_at: string | null;
+  booking_count: number;
+}
+
+// C9: Profil tamamlama
+export interface ProfileCompletionItem {
+  id: string;
+  label: string;
+  done: boolean;
+  weight: number;
+  tab?: string; // deep-link to tab
+}
+export interface ProfileCompletionResult {
+  score: number;
+  items: ProfileCompletionItem[];
 }
 
 export const consultantSelfApi = baseApi.injectEndpoints({
@@ -468,6 +499,18 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       transformResponse: (res: { data: ConsultantSelfService }) => res.data,
       invalidatesTags: ['ConsultantSelfServices' as any, 'ConsultantSelfServiceTemplates' as any],
     }),
+    // C8: Danışanlarım
+    getMyConsultantClients: build.query<ConsultantClient[], { q?: string; limit?: number; offset?: number } | void>({
+      query: (args) => ({ url: '/me/consultant/clients', params: args || undefined }),
+      transformResponse: (res: { data: ConsultantClient[] }) => res.data ?? [],
+      providesTags: ['ConsultantSelfClients' as any],
+    }),
+    // C9: Profil tamamlama skoru
+    getMyConsultantProfileCompletion: build.query<ProfileCompletionResult, void>({
+      query: () => '/me/consultant/profile-completion',
+      transformResponse: (res: { data: ProfileCompletionResult }) => res.data,
+      providesTags: ['ConsultantSelfCompletion' as any],
+    }),
   }),
   overrideExisting: false,
 });
@@ -503,4 +546,8 @@ export const {
   useOverrideMyConsultantAvailabilityDayMutation,
   useListMyServiceTemplatesQuery,
   useAdoptServiceTemplateMutation,
+  // C8
+  useGetMyConsultantClientsQuery,
+  // C9
+  useGetMyConsultantProfileCompletionQuery,
 } = consultantSelfApi;

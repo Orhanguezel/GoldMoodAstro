@@ -23,6 +23,10 @@ import {
   Bell,
   ArrowRight,
   Zap,
+  Users,
+  CreditCard,
+  CheckCheck,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -32,6 +36,7 @@ import AvatarUpload from '@/components/common/AvatarUpload';
 import {
   type ConsultantSelfProfile,
   type ConsultantSelfStats,
+  type ProfileCompletionItem,
   useGetMyConsultantProfileQuery,
   useUpdateMyConsultantProfileMutation,
   useGetMyConsultantStatsQuery,
@@ -40,6 +45,7 @@ import {
   useRejectBookingMutation,
   useCancelMyConsultantBookingMutation,
   useUpdateMyConsultantBookingNotesMutation,
+  useGetMyConsultantProfileCompletionQuery,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 import ServicesPanel from './ServicesPanel';
@@ -48,24 +54,26 @@ import WalletPanel from './WalletPanel';
 import ReviewsPanel from './ReviewsPanel';
 import AvailabilityPanel from './AvailabilityPanel';
 import BlogPanel from './BlogPanel';
+import ClientsPanel from './ClientsPanel'; // C8
 import BookingMessageButton from '@/components/common/BookingMessageButton';
 import RichContentEditor from '@/components/common/RichContentEditor';
 import MultiSelectChip from '@/components/common/MultiSelectChip';
 import ConsultantCardPreview from './ConsultantCardPreview';
 import PageContainer from '@/components/common/PageContainer';
 
-type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'blog' | 'wallet' | 'reviews';
+type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'blog' | 'wallet' | 'reviews' | 'clients';
 
 const TABS: Array<{ key: TabKey; labelKey: string; fallback: string; icon: React.ElementType }> = [
-  { key: 'overview', labelKey: 'ui_dashboard_tab_overview', fallback: 'Overview', icon: LayoutDashboard },
-  { key: 'profile', labelKey: 'ui_dashboard_tab_profile', fallback: 'Profile', icon: User },
-  { key: 'services', labelKey: 'ui_dashboard_tab_services', fallback: 'Services', icon: Package },
-  { key: 'availability', labelKey: 'ui_dashboard_tab_availability', fallback: 'Availability', icon: Calendar },
-  { key: 'bookings', labelKey: 'ui_dashboard_tab_bookings', fallback: 'Bookings', icon: CheckCircle2 },
-  { key: 'messages', labelKey: 'ui_dashboard_tab_messages', fallback: 'Messages', icon: MessageCircle },
+  { key: 'overview', labelKey: 'ui_dashboard_tab_overview', fallback: 'Genel Bakış', icon: LayoutDashboard },
+  { key: 'profile', labelKey: 'ui_dashboard_tab_profile', fallback: 'Profil', icon: User },
+  { key: 'services', labelKey: 'ui_dashboard_tab_services', fallback: 'Hizmetler', icon: Package },
+  { key: 'availability', labelKey: 'ui_dashboard_tab_availability', fallback: 'Müsaitlik', icon: Calendar },
+  { key: 'bookings', labelKey: 'ui_dashboard_tab_bookings', fallback: 'Randevular', icon: CheckCircle2 },
+  { key: 'clients', labelKey: 'ui_dashboard_tab_clients', fallback: 'Danışanlarım', icon: Users },
+  { key: 'messages', labelKey: 'ui_dashboard_tab_messages', fallback: 'Mesajlar', icon: MessageCircle },
+  { key: 'wallet', labelKey: 'ui_dashboard_tab_wallet', fallback: 'Cüzdan', icon: Wallet },
+  { key: 'reviews', labelKey: 'ui_dashboard_tab_reviews', fallback: 'Yorumlar', icon: Star },
   { key: 'blog', labelKey: 'ui_dashboard_tab_blog', fallback: 'Blog', icon: FileText },
-  { key: 'wallet', labelKey: 'ui_dashboard_tab_wallet', fallback: 'Wallet', icon: Wallet },
-  { key: 'reviews', labelKey: 'ui_dashboard_tab_reviews', fallback: 'Reviews', icon: Star },
 ];
 
 interface Props {
@@ -213,6 +221,7 @@ export default function ConsultantDashboard({ locale }: Props) {
         {tab === 'services' && <ServicesPanel />}
         {tab === 'availability' && <AvailabilityPanel />}
         {tab === 'bookings' && <BookingsPanel locale={locale} />}
+        {tab === 'clients' && <ClientsPanel />}
         {tab === 'messages' && <MessagesPanel />}
         {tab === 'blog' && <BlogPanel locale={locale} />}
         {tab === 'wallet' && <WalletPanel />}
@@ -274,6 +283,7 @@ function OverviewPanel({
   onTabChange?: (k: TabKey) => void;
 }) {
   const { ui } = useUiSection('ui_dashboard', locale as any);
+  const { data: completion } = useGetMyConsultantProfileCompletionQuery();
   const days = stats?.last_7_days?.length ? stats.last_7_days : getEmptyLast7Days();
   const maxCount = Math.max(1, ...days.map((d) => d.count));
   const sessionDelta = stats?.session_delta_pct ?? 0;
@@ -428,6 +438,11 @@ function OverviewPanel({
         <StatCardSmall icon={CheckCircle2} label={ui('ui_dashboard_total_sessions', 'Total Sessions')} value={stats?.total_sessions ?? 0} />
         <StatCardSmall icon={Star} label={ui('ui_dashboard_total_reviews', 'Total Reviews')} value={stats?.rating_count ?? 0} />
       </div>
+
+      {/* C9: Profilinizi Güçlendirin (Completion Score) */}
+      {completion && (
+        <CompletionScoreWidget score={completion.score} items={completion.items} onTabChange={onTabChange} />
+      )}
     </div>
   );
 }
@@ -546,7 +561,11 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
 }
 
 /* ────────── Profile ────────── */
-const PLATFORM_OPTIONS = ['WhatsApp', 'Skype', 'Zoom', 'Google Meet', 'Microsoft Teams'];
+// C1: Platformlar sadece site-içi sesli/görüntülü (dış platform yok)
+const PLATFORM_OPTIONS: Array<{ slug: string; label: string }> = [
+  { slug: 'audio', label: 'Sesli Görüşme' },
+  { slug: 'video', label: 'Görüntülü Görüşme' },
+];
 
 function ProfilePanel({ locale, profile }: { locale: string; profile: ConsultantSelfProfile }) {
   const { ui } = useUiSection('ui_dashboard', locale as any);
@@ -556,8 +575,12 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
   const [expertise, setExpertise] = useState<string[]>(profile.expertise || []);
   const [languages, setLanguages] = useState<string[]>(profile.languages || []);
   const [meetingPlatforms, setMeetingPlatforms] = useState<string[]>(profile.meeting_platforms || []);
-  const [socialLinks, setSocialLinks] = useState<Record<string, string>>(profile.social_links || {});
+  // C1: socialLinks state kaldırıldı (Müşteri kaçırma yasağı)
   const [avatarUrl, setAvatarUrl] = useState<string>(profile.user?.avatar_url || '');
+  // C4: Banka bilgileri
+  const [bankIban, setBankIban] = useState<string>(profile.bank_iban || '');
+  const [bankHolder, setBankHolder] = useState<string>(profile.bank_account_holder || '');
+  const [bankName, setBankName] = useState<string>(profile.bank_name || '');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const expertiseOptions = serviceCategories.length
     ? serviceCategories.map((category) => ({ value: category.slug, label: category.name }))
@@ -570,17 +593,12 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
         { value: 'relationship', label: ui('ui_dashboard_expertise_relationship', 'Relationship') },
       ];
 
-  const togglePlatform = (platform: string) => {
+  const togglePlatform = (slug: string) => {
     setMeetingPlatforms((current) =>
-      current.includes(platform)
-        ? current.filter((item) => item !== platform)
-        : [...current, platform],
+      current.includes(slug)
+        ? current.filter((item) => item !== slug)
+        : [...current, slug],
     );
-  };
-
-  const updateSocial = (key: string, value: string) => {
-    setSocialLinks((current) => ({ ...current, [key]: value }));
-    if (errors[key]) setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
   };
 
   const validate = () => {
@@ -588,29 +606,11 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
     if (bio.length > 5000) newErrors.bio = ui('ui_dashboard_error_bio_max', 'Bio can be up to 5000 characters.');
     if (expertise.length > 20) newErrors.expertise = ui('ui_dashboard_error_expertise_max', 'You can add up to 20 expertise areas.');
     if (languages.length > 10) newErrors.languages = ui('ui_dashboard_error_languages_max', 'You can add up to 10 languages.');
-
-    // Social link validation
-    if (socialLinks.instagram) {
-      const v = socialLinks.instagram.trim();
-      if (v.includes('http') && !v.includes('instagram.com/')) {
-        newErrors.instagram = ui('ui_dashboard_error_instagram_url', 'Instagram URL must include instagram.com');
-      } else if (v.length > 50) {
-        newErrors.instagram = ui('ui_dashboard_error_instagram_length', 'Instagram username or URL is too long');
-      }
+    // C4: IBAN validation (TR + 24 rakam, toplam 26 karakter)
+    const cleanIban = bankIban.replace(/\s/g, '').toUpperCase();
+    if (cleanIban && !/^TR\d{24}$/.test(cleanIban)) {
+      newErrors.bankIban = 'Geçerli bir TR IBAN girin (TR + 24 rakam, toplam 26 karakter)';
     }
-    if (socialLinks.linkedin) {
-      const v = socialLinks.linkedin.trim();
-      if (v && !v.includes('linkedin.com/')) {
-        newErrors.linkedin = ui('ui_dashboard_error_linkedin_url', 'Enter a valid LinkedIn profile URL');
-      }
-    }
-    if (socialLinks.website) {
-      const v = socialLinks.website.trim();
-      if (v && !/^https?:\/\/[^\s$.?#].[^\s]*$/i.test(v)) {
-        newErrors.website = ui('ui_dashboard_error_website_url', 'Enter a valid website URL (https://...)');
-      }
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -621,18 +621,18 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
       return;
     }
     try {
-      const cleanSocials = Object.fromEntries(
-        Object.entries(socialLinks)
-          .map(([key, value]) => [key, value.trim()])
-          .filter(([, value]) => Boolean(value)),
-      );
+      const cleanIban = bankIban.replace(/\s/g, '').toUpperCase();
       await updateProfile({
         bio: bio.trim() || null,
         expertise: expertise,
         languages: languages,
         meeting_platforms: meetingPlatforms,
-        social_links: cleanSocials,
+        // C1: social_links artık gönderilmiyor (UI kaldırıldı)
         avatar_url: avatarUrl || null,
+        // C4: Banka bilgileri
+        bank_iban: cleanIban || null,
+        bank_account_holder: bankHolder.trim() || null,
+        bank_name: bankName.trim() || null,
       }).unwrap();
       toast.success(ui('ui_dashboard_profile_saved', 'Profile updated'));
     } catch (e) {
@@ -735,52 +735,85 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
           </Field>
         </div>
 
-        <Field 
-          label={ui('ui_dashboard_platforms_label', 'Meeting Platforms')}
-          hint={ui('ui_dashboard_platforms_hint', 'Select only the platforms you actively use.')}
+        <Field
+          label={ui('ui_dashboard_platforms_label', 'Seans Tipi')}
+          hint={ui('ui_dashboard_platforms_hint', 'Hangi seans tiplerini sunuyorsunuz?')}
         >
           <div className="flex flex-wrap gap-2">
-            {PLATFORM_OPTIONS.map((platform) => {
-              const active = meetingPlatforms.includes(platform);
+            {PLATFORM_OPTIONS.map((opt) => {
+              const active = meetingPlatforms.includes(opt.slug);
               return (
                 <button
-                  key={platform}
+                  key={opt.slug}
                   type="button"
-                  onClick={() => togglePlatform(platform)}
+                  onClick={() => togglePlatform(opt.slug)}
                   className={`rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${
                     active
-                      ? 'border-[var(--gm-gold)] bg-[var(--gm-gold)] text-[var(--gm-bg-deep)]'
-                      : 'border-[var(--gm-border-soft)] text-[var(--gm-text-dim)] hover:text-[var(--gm-text)]'
+                      ? 'border-(--gm-gold) bg-(--gm-gold) text-(--gm-bg-deep)'
+                      : 'border-(--gm-border-soft) text-(--gm-text) opacity-60 hover:opacity-100'
                   }`}
                 >
-                  {platform}
+                  {opt.label}
                 </button>
               );
             })}
           </div>
         </Field>
+        {/* C1: Sosyal Medya bölümü kaldırıldı */}
 
-        <Field 
-          label={ui('ui_dashboard_social_links_label', 'Social Links')}
-          hint={ui('ui_dashboard_social_links_hint', 'Optional. Verifiable profiles increase trust.')}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {['instagram', 'linkedin', 'website'].map((key) => (
-              <div key={key} className="space-y-1.5">
-                <input
-                  value={socialLinks[key] || ''}
-                  onChange={(e) => updateSocial(key, e.target.value)}
-                  maxLength={150}
-                  className={`h-12 w-full bg-[var(--gm-bg-deep)] border rounded-2xl px-4 text-sm text-[var(--gm-text)] outline-none transition-all ${
-                    errors[key] ? 'border-[var(--gm-error)]/60 focus:border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/40'
-                  }`}
-                  placeholder={key === 'website' ? 'https://...' : `${key} URL / handle`}
-                />
-                {errors[key] && <p className="text-[10px] font-bold text-[var(--gm-error)] uppercase tracking-widest pl-1">{errors[key]}</p>}
-              </div>
-            ))}
+        {/* C4: Banka Hesap Bilgileri */}
+        <div className="rounded-2xl border border-(--gm-gold)/20 bg-(--gm-gold)/5 p-6 space-y-4">
+          <div className="flex items-center gap-2 mb-1">
+            <CreditCard className="w-4 h-4 text-(--gm-gold)" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--gm-gold)">Banka Hesap Bilgileri</span>
           </div>
-        </Field>
+          <p className="text-[11px] text-(--gm-text) opacity-50 italic">
+            Para çekme taleplerinde kullanılır. Sadece siz görebilirsiniz.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-(--gm-gold) opacity-80 mb-2">IBAN</label>
+              <input
+                type="text"
+                value={bankIban}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\s/g, '').toUpperCase();
+                  if (raw.length > 26) return;
+                  const formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
+                  setBankIban(formatted);
+                  if (errors.bankIban) setErrors((prev) => { const n = { ...prev }; delete n.bankIban; return n; });
+                }}
+                placeholder="TR00 0000 0000 0000 0000 0000 00"
+                className={`w-full h-11 bg-(--gm-surface) border rounded-xl px-4 text-sm font-mono text-(--gm-text) outline-none transition-colors ${
+                  errors.bankIban ? 'border-(--gm-error)/60 focus:border-(--gm-error)' : 'border-(--gm-border-soft) focus:border-(--gm-gold)/50'
+                }`}
+              />
+              {errors.bankIban && <p className="mt-1.5 text-[10px] font-bold text-(--gm-error) uppercase tracking-widest">{errors.bankIban}</p>}
+            </div>
+            <div>
+              <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-(--gm-gold) opacity-80 mb-2">Hesap Sahibi</label>
+              <input
+                type="text"
+                value={bankHolder}
+                onChange={(e) => setBankHolder(e.target.value)}
+                placeholder="Ad Soyad"
+                maxLength={160}
+                className="w-full h-11 bg-(--gm-surface) border border-(--gm-border-soft) rounded-xl px-4 text-sm text-(--gm-text) outline-none focus:border-(--gm-gold)/50 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-(--gm-gold) opacity-80 mb-2">Banka Adı</label>
+              <input
+                type="text"
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                placeholder="ör. Ziraat Bankası"
+                maxLength={120}
+                className="w-full h-11 bg-(--gm-surface) border border-(--gm-border-soft) rounded-xl px-4 text-sm text-(--gm-text) outline-none focus:border-(--gm-gold)/50 transition-colors"
+              />
+            </div>
+          </div>
+        </div>
 
 
         <button
@@ -1155,5 +1188,116 @@ function RequestNowCountdown({ createdAt }: { createdAt: string }) {
       <Timer className="w-3 h-3" />
       {expired ? ui('ui_dashboard_time_expired', 'Expired') : `${mm}:${ss}`}
     </span>
+  );
+}
+
+/* ────────── C9: Profile Completion Score Widget ────────── */
+
+function CompletionScoreWidget({
+  score,
+  items,
+  onTabChange,
+}: {
+  score: number;
+  items: ProfileCompletionItem[];
+  onTabChange?: (k: TabKey) => void;
+}) {
+  const tier =
+    score >= 90
+      ? { label: 'Mükemmel', color: 'text-(--gm-success)', bg: 'bg-(--gm-success)' }
+      : score >= 70
+      ? { label: 'Geliştirilebilir', color: 'text-(--gm-warning)', bg: 'bg-(--gm-warning)' }
+      : { label: 'Eksik', color: 'text-(--gm-error)', bg: 'bg-(--gm-error)' };
+
+  const incomplete = items.filter((i) => !i.done);
+  const done = items.filter((i) => i.done);
+
+  return (
+    <div className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-6">
+      <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+        <div>
+          <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold) uppercase opacity-80">
+            Profilinizi Güçlendirin
+          </span>
+          <h3 className="font-serif text-xl text-(--gm-text) mt-0.5">Profil Tamamlama Skoru</h3>
+        </div>
+        {/* Score circle */}
+        <div className="flex items-center gap-3">
+          <div className="relative w-16 h-16">
+            <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="6" className="text-(--gm-border-soft)" />
+              <circle
+                cx="32" cy="32" r="28" fill="none" strokeWidth="6"
+                strokeDasharray={`${(score / 100) * 175.9} 175.9`}
+                strokeLinecap="round"
+                className={`${tier.bg} opacity-80 transition-all duration-700`}
+                style={{ stroke: 'currentColor' }}
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center font-bold text-sm text-(--gm-text)">
+              {score}%
+            </span>
+          </div>
+          <span className={`text-xs font-bold uppercase tracking-widest ${tier.color}`}>{tier.label}</span>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full h-1.5 bg-(--gm-border-soft) rounded-full mb-6">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ${tier.bg} opacity-70`}
+          style={{ width: `${score}%` }}
+        />
+      </div>
+
+      {/* Incomplete items */}
+      {incomplete.length > 0 && (
+        <div className="space-y-2 mb-4">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-(--gm-text) opacity-40">
+            Eksik ({incomplete.length})
+          </span>
+          {incomplete.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-center justify-between gap-3 p-3 rounded-xl border border-(--gm-border-soft) hover:border-(--gm-gold)/30 hover:bg-(--gm-gold)/5 transition-all"
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5 text-(--gm-warning) shrink-0" />
+                <span className="text-sm text-(--gm-text) opacity-70">{item.label}</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-[9px] font-bold text-(--gm-warning) opacity-70">+{item.weight}p</span>
+                {item.tab && onTabChange && (
+                  <button
+                    onClick={() => onTabChange(item.tab as TabKey)}
+                    className="text-[9px] font-bold uppercase tracking-widest text-(--gm-gold) hover:opacity-100 opacity-70 transition-opacity"
+                  >
+                    Gide →
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Completed items (collapsed summary) */}
+      {done.length > 0 && (
+        <details className="group">
+          <summary className="text-[9px] font-bold uppercase tracking-widest text-(--gm-text) opacity-40 cursor-pointer hover:opacity-60 transition-opacity list-none flex items-center gap-1">
+            <CheckCheck className="w-3.5 h-3.5 text-(--gm-success)" />
+            Tamamlanan ({done.length})
+          </summary>
+          <div className="mt-2 space-y-1.5">
+            {done.map((item) => (
+              <div key={item.id} className="flex items-center gap-2 py-1.5 px-3">
+                <CheckCheck className="w-3.5 h-3.5 text-(--gm-success) shrink-0" />
+                <span className="text-sm text-(--gm-text) opacity-40 line-through">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+    </div>
   );
 }
