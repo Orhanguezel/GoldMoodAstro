@@ -12,6 +12,7 @@ import {
   FileText,
   Send,
   UserCheck,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -35,6 +36,7 @@ import {
   type ConsultantApplicationAdmin,
   useApproveConsultantAdminMutation,
   useApproveConsultantApplicationAdminMutation,
+  useDeleteConsultantAdminMutation,
   useListConsultantApplicationsAdminQuery,
   useListConsultantsAdminQuery,
   useRejectConsultantAdminMutation,
@@ -94,6 +96,7 @@ export default function ConsultantsClient() {
   const [reject, rejectState] = useRejectConsultantAdminMutation();
   const [approveApp, approveAppState] = useApproveConsultantApplicationAdminMutation();
   const [rejectApp, rejectAppState] = useRejectConsultantApplicationAdminMutation();
+  const [deleteConsultant, deleteState] = useDeleteConsultantAdminMutation();
 
   const [selected, setSelected] = React.useState<ConsultantApplicationAdmin | null>(null);
   const [rejectTarget, setRejectTarget] = React.useState<ConsultantApplicationAdmin | null>(null);
@@ -132,6 +135,27 @@ export default function ConsultantsClient() {
       consultantsQuery.refetch();
     } catch {
       toast.error(t('actions.reject_failed'));
+    }
+  }
+
+  async function removeConsultant(id: string, name?: string | null) {
+    const ok = window.confirm(
+      `${name || 'Bu danışman'} reddedilmiş kaydı kalıcı olarak silinecek. Onaylıyor musunuz?`,
+    );
+    if (!ok) return;
+    try {
+      await deleteConsultant(id).unwrap();
+      toast.success('Reddedilen danışman silindi');
+      consultantsQuery.refetch();
+    } catch (error) {
+      const code = (error as { data?: { error?: { message?: string } } })?.data?.error?.message;
+      toast.error(
+        code === 'consultant_has_dependencies'
+          ? 'Bu danışmana bağlı kayıtlar (randevu vb.) olduğu için silinemiyor.'
+          : code === 'only_rejected_can_be_deleted'
+            ? 'Yalnızca reddedilmiş danışman kaydı silinebilir.'
+            : 'Danışman silinemedi',
+      );
     }
   }
 
@@ -174,7 +198,8 @@ export default function ConsultantsClient() {
     approveState.isLoading ||
     rejectState.isLoading ||
     approveAppState.isLoading ||
-    rejectAppState.isLoading;
+    rejectAppState.isLoading ||
+    deleteState.isLoading;
 
   const isLoading = isPending ? appsQuery.isLoading : consultantsQuery.isLoading;
   const isEmpty = isPending
@@ -414,6 +439,18 @@ export default function ConsultantsClient() {
                         >
                           <X className="size-5" />
                         </Button>
+                        {item.approval_status === 'rejected' && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="rounded-full hover:bg-gm-error/10 text-gm-error/60 hover:text-gm-error transition-all disabled:opacity-10"
+                            disabled={deleteState.isLoading}
+                            onClick={() => removeConsultant(item.id, item.full_name)}
+                            title="Reddedilen kaydı sil"
+                          >
+                            <Trash2 className="size-5" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

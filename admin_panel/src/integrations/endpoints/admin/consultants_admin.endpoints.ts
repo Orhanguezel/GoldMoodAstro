@@ -140,6 +140,16 @@ export const consultantsAdminApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_r, _e, arg) => [{ type: 'Consultants' as const, id: `services:${arg.consultantId}` }],
     }),
+    deleteConsultantAdmin: b.mutation<{ ok?: boolean }, string>({
+      query: (id) => ({
+        url: `/admin/consultants/${encodeURIComponent(id)}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_r, _e, id) => [
+        { type: 'Consultants' as const, id },
+        { type: 'Consultants' as const, id: 'LIST' },
+      ],
+    }),
   }),
   overrideExisting: true,
 });
@@ -153,4 +163,5 @@ export const {
   useCreateConsultantServiceAdminMutation,
   useUpdateConsultantServiceAdminMutation,
   useDeleteConsultantServiceAdminMutation,
+  useDeleteConsultantAdminMutation,
 } = consultantsAdminApi;

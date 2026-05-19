@@ -197,6 +197,48 @@ export async function rejectConsultant(id: string, rejectionReason: string) {
   return getConsultantById(id);
 }
 
+type DeleteConsultantResult =
+  | { ok: true }
+  | { ok: false; reason: 'not_found' | 'not_rejected' | 'has_dependencies' };
+
+/**
+ * Reddedilmiş danışman kaydını siler. Güvenlik için yalnızca approval_status='rejected'.
+ * createConsultantForUser'ın tersi: consultant + resource silinir, consultant rolü geri alınır.
+ * Kullanıcı ve başvuru geçmişi (consultant_applications) korunur.
+ */
+export async function deleteConsultant(id: string): Promise<DeleteConsultantResult> {
+  const [row] = await db
+    .select({
+      id: consultants.id,
+      userId: consultants.user_id,
+      status: consultants.approval_status,
+    })
+    .from(consultants)
+    .where(eq(consultants.id, id))
+    .limit(1);
+
+  if (!row) return { ok: false, reason: 'not_found' };
+  if (row.status !== 'rejected') return { ok: false, reason: 'not_rejected' };
+
+  try {
+    await db.transaction(async (tx) => {
+      await tx.delete(resources).where(eq(resources.external_ref_id, id));
+      await tx.delete(consultants).where(eq(consultants.id, id));
+      await tx.execute(
+        sql`DELETE FROM user_roles WHERE user_id = ${row.userId} AND role = 'consultant'`,
+      );
+      // users.role temizliği: admin yetkisi user_roles 'admin'den geldiği için bu güvenli.
+      await tx.execute(
+        sql`UPDATE users SET role = 'user', updated_at = NOW(3) WHERE id = ${row.userId} AND role = 'consultant'`,
+      );
+    });
+    return { ok: true };
+  } catch {
+    // FK kısıtı (randevu/ödeme vb. bağlı kayıt) varsa
+    return { ok: false, reason: 'has_dependencies' };
+  }
+}
+
 export async function createConsultantForUser(userId: string, input: RegisterConsultantBody) {
   const id = randomUUID();
   const resourceId = randomUUID();

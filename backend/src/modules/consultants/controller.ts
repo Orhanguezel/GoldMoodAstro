@@ -14,6 +14,7 @@ import {
 import {
   approveConsultant,
   createConsultantForUser,
+  deleteConsultant,
   getApprovedConsultantById,
   getConsultantById,
   getConsultantSlots,
@@ -91,6 +92,21 @@ export const rejectConsultantAdminHandler: RouteHandler = async (req, reply) => 
   const row = await rejectConsultant(id, body.rejection_reason);
   if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
   return { data: row };
+};
+
+export const deleteConsultantAdminHandler: RouteHandler = async (req, reply) => {
+  const { id } = consultantIdParamsSchema.parse(req.params ?? {});
+  const result = await deleteConsultant(id);
+  if (result.ok) return reply.code(204).send();
+  if (result.reason === 'not_found') {
+    return reply.code(404).send({ error: { message: 'consultant_not_found' } });
+  }
+  if (result.reason === 'not_rejected') {
+    return reply.code(409).send({
+      error: { message: 'only_rejected_can_be_deleted' },
+    });
+  }
+  return reply.code(409).send({ error: { message: 'consultant_has_dependencies' } });
 };
 
 export const getConsultantSessionUserReadingsAdminHandler: RouteHandler = async (req, reply) => {
