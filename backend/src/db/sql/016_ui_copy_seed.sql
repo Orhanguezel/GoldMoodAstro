@@ -751,3 +751,9 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('00000000-0000-0000-0000-000000000008','ui_dashboard_reject_reason_min','*','{"label":{"tr":"Red sebebi en az 2 karakter olmalı.","en":"Rejection reason must be at least 2 characters.","de":"Ablehnungsgrund muss mindestens 2 Zeichen haben."}}'),
 ('00000000-0000-0000-0000-000000000009','ui_dashboard_cancel_reason_min','*','{"label":{"tr":"İptal sebebi en az 5 karakter olmalı.","en":"Cancellation reason must be at least 5 characters.","de":"Stornogrund muss mindestens 5 Zeichen haben."}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);
+
+-- 2026-05-20 C1: ui_dashboard_avatar_rule_ai TR çevirisi düzeltildi
+-- (önceki seed "kabul edilmez" diyordu; kod ve EN fallback "accepted" diyor).
+INSERT INTO site_settings (id, `key`, locale, value) VALUES
+('00000000-0000-0000-0000-00000000000a','ui_dashboard_avatar_rule_ai','*','{"label":{"tr":"AI üretimi portreler kabul edilir; yüz odaklı olmak şartıyla.","en":"AI-generated portraits are accepted if they are face-focused.","de":"KI-generierte Porträts sind erlaubt, wenn sie auf das Gesicht fokussiert sind."}}')
+ON DUPLICATE KEY UPDATE value = VALUES(value);

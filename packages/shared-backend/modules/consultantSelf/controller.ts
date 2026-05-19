@@ -28,13 +28,16 @@ const profilePatchSchema = z.object({
   meeting_platforms: z.array(z.enum(['audio', 'video'])).max(2).optional(),
   social_links: z.record(z.string().trim().max(1000)).optional(),
   bank_name: z.string().trim().max(120).nullable().optional(),
-  bank_iban: z
-    .string()
-    .trim()
-    .transform(normalizeIban)
-    .refine((value) => /^TR\d{24}$/.test(value), 'invalid_tr_iban')
-    .nullable()
-    .optional(),
+  bank_iban: z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() === '' ? null : value),
+    z
+      .string()
+      .trim()
+      .transform(normalizeIban)
+      .refine((value) => /^TR\d{24}$/.test(value), 'invalid_tr_iban')
+      .nullable()
+      .optional(),
+  ),
   bank_account_holder: z.string().trim().max(160).nullable().optional(),
   avatar_url: z.string().trim().max(1000).nullable().optional(),
   is_available: z.coerce.number().int().min(0).max(1).optional(),

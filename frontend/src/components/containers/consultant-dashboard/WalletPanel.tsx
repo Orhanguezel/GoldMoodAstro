@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Wallet, ArrowUpCircle, ArrowDownCircle, TrendingUp, Loader2, X, Send } from 'lucide-react';
+import { Wallet, ArrowUpCircle, ArrowDownCircle, TrendingUp, Loader2, X, Send, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { extractApiError } from '@/integrations/shared';
 import {
   type ConsultantSelfWalletTransaction,
+  type MonthlyEarningStat,
   useGetMyConsultantWalletQuery,
   useRequestMyConsultantWithdrawalMutation,
+  useGetMyConsultantMonthlyStatsQuery,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 
 function formatMoney(v: string | number | null | undefined, currency = 'TRY') {
@@ -42,6 +44,7 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
 
 export default function WalletPanel() {
   const { data, isLoading, refetch } = useGetMyConsultantWalletQuery();
+  const { data: monthlyStats = [] } = useGetMyConsultantMonthlyStatsQuery();
   const [withdraw, { isLoading: isWithdrawing }] = useRequestMyConsultantWithdrawalMutation();
 
   const [showModal, setShowModal] = useState(false);
@@ -173,6 +176,11 @@ export default function WalletPanel() {
           </div>
         </div>
       </div>
+
+      {/* C5: Aylık Gelirleriniz */}
+      {monthlyStats.length > 0 && (
+        <MonthlyEarningsChart data={monthlyStats} currency={currency} />
+      )}
 
       {/* Transactions */}
       <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 overflow-hidden">
@@ -366,6 +374,67 @@ export default function WalletPanel() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ── C5: Aylık Gelir Bar Chart ── */
+
+function MonthlyEarningsChart({ data, currency }: { data: MonthlyEarningStat[]; currency: string }) {
+  const [hovered, setHovered] = useState<number | null>(null);
+  // Show last 12 months max for readability
+  const shown = data.slice(-12);
+  const maxEarnings = Math.max(1, ...shown.map((d) => d.earnings));
+
+  function monthLabel(ym: string) {
+    const [y, m] = ym.split('-');
+    const d = new Date(Number(y), Number(m) - 1, 1);
+    return d.toLocaleDateString('tr-TR', { month: 'short', year: '2-digit' });
+  }
+
+  return (
+    <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-6">
+      <div className="flex items-center gap-2 mb-6">
+        <BarChart3 className="w-4 h-4 text-[var(--gm-gold)]" />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
+          Aylık Gelirleriniz
+        </span>
+        <span className="text-[10px] text-[var(--gm-muted)] ml-auto">Son {shown.length} ay</span>
+      </div>
+      <div className="flex items-end gap-1.5 h-32">
+        {shown.map((d, i) => {
+          const heightPct = (d.earnings / maxEarnings) * 100;
+          const isHov = hovered === i;
+          return (
+            <div
+              key={d.year_month}
+              className="flex-1 flex flex-col items-center justify-end gap-1 group cursor-default"
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              {isHov && (
+                <div className="absolute -translate-y-full mb-1 bg-[var(--gm-surface)] border border-[var(--gm-gold)]/30 rounded-xl px-3 py-2 text-[10px] text-[var(--gm-text)] whitespace-nowrap z-10 shadow-lg">
+                  <strong className="text-[var(--gm-gold)]">{formatMoney(d.earnings, currency)}</strong>
+                  <br />{d.sessions} seans
+                </div>
+              )}
+              <div
+                className="w-full rounded-t-md transition-all"
+                style={{
+                  height: `${Math.max(3, heightPct)}%`,
+                  minHeight: 4,
+                  background: isHov
+                    ? 'var(--gm-gold)'
+                    : `color-mix(in srgb, var(--gm-gold) 60%, transparent)`,
+                }}
+              />
+              <span className="text-[8px] text-[var(--gm-muted)] truncate w-full text-center" style={{ fontSize: 7 }}>
+                {monthLabel(d.year_month)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

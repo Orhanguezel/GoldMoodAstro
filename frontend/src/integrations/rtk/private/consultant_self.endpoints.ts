@@ -259,6 +259,13 @@ export interface ProfileCompletionResult {
   items: ProfileCompletionItem[];
 }
 
+// C5: Aylık gelir istatistikleri
+export interface MonthlyEarningStat {
+  year_month: string; // 'YYYY-MM'
+  earnings: number;
+  sessions: number;
+}
+
 export const consultantSelfApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getMyConsultantProfile: build.query<ConsultantSelfProfile, void>({
@@ -511,6 +518,12 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       transformResponse: (res: { data: ProfileCompletionResult }) => res.data,
       providesTags: ['ConsultantSelfCompletion' as any],
     }),
+    // C5: Aylık gelir istatistikleri
+    getMyConsultantMonthlyStats: build.query<MonthlyEarningStat[], { months?: number } | void>({
+      query: (args) => ({ url: '/me/consultant/wallet/monthly-stats', params: args?.months ? { months: args.months } : { months: 24 } }),
+      transformResponse: (res: { data: MonthlyEarningStat[] }) => res.data ?? [],
+      providesTags: ['ConsultantSelfWallet' as any],
+    }),
   }),
   overrideExisting: false,
 });
@@ -550,4 +563,6 @@ export const {
   useGetMyConsultantClientsQuery,
   // C9
   useGetMyConsultantProfileCompletionQuery,
+  // C5
+  useGetMyConsultantMonthlyStatsQuery,
 } = consultantSelfApi;
