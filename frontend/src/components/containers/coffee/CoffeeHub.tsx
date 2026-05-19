@@ -131,26 +131,46 @@ export default function CoffeeHub() {
             exit={{ opacity: 0, y: -20 }}
             className="text-center space-y-16"
           >
-            <div className="space-y-8">
-              <div className="w-24 h-24 bg-(--gm-gold)/10 rounded-[2.5rem] flex items-center justify-center mx-auto text-(--gm-gold) border border-(--gm-gold)/20 shadow-(--gm-shadow-glow)">
-                <Coffee className="w-12 h-12" />
+            {/* Hero photo */}
+            <div className="relative w-full max-w-3xl mx-auto rounded-[3rem] overflow-hidden shadow-2xl" style={{ height: 340 }}>
+              <Image
+                src="/images/kahve-fali-3.png"
+                alt="Kahve Falı"
+                fill
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-10 text-center">
+                <h2 className={`${cinzel.className} text-4xl md:text-6xl text-white tracking-tight drop-shadow-lg`}>Geleneksel Kahve Falı</h2>
+                <p className={`${fraunces.className} text-white/70 text-lg mt-3 italic`}>
+                  Fincanınızdaki semboller, yapay zekanın vizyonu ve kadim bilgelikle dile geliyor.
+                </p>
               </div>
-              <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight`}>Geleneksel Kahve Falı</h2>
-              <p className={`${fraunces.className} text-(--gm-text-dim) text-xl max-w-2xl mx-auto italic leading-relaxed opacity-80`}>
-                Fincanınızdaki semboller, yapay zekanın vizyonu ve kadim bilgelikle dile geliyor.
-              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left max-w-4xl mx-auto">
               {[
-                { step: '01', title: 'Fincanı Kapat', desc: 'Kahvenizi içtikten sonra dilek dileyip fincanı tabağa kapatın.' },
-                { step: '02', title: '5 Dakika Bekle', desc: 'Telvelerin süzülüp sembollerin oluşması için fincanın soğumasını bekleyin.' },
-                { step: '03', title: 'Fotoğrafları Çek', desc: 'Fincanın içinden 2, tabağından 1 net fotoğraf çekip yorumunuzu alın.' },
+                { step: '01', title: 'Fincanı Kapat', desc: 'Kahvenizi içtikten sonra dilek dileyip fincanı tabağa kapatın.', img: '/images/kahve-fali-1.png' },
+                { step: '02', title: '5 Dakika Bekle', desc: 'Telvelerin süzülüp sembollerin oluşması için fincanın soğumasını bekleyin.', img: '/images/kahve-fali-2.png' },
+                { step: '03', title: 'Fotoğrafları Çek', desc: 'Fincanın içinden 2, tabağından 1 net fotoğraf çekip yorumunuzu alın.', img: '/images/kahve-fali-3.png' },
               ].map((s, i) => (
-                <div key={i} className="p-8 bg-(--gm-surface) border border-(--gm-border-soft) rounded-[2.5rem] space-y-6 shadow-(--gm-shadow-soft) hover:border-(--gm-gold)/30 transition-colors">
-                  <span className="text-(--gm-gold) font-bold tracking-[0.3em] text-[10px] opacity-40 uppercase">{s.step}</span>
-                  <h3 className={`${cinzel.className} text-xl text-(--gm-gold)`}>{s.title}</h3>
-                  <p className="text-(--gm-text-dim) text-sm leading-relaxed font-serif italic">{s.desc}</p>
+                <div key={i} className="group relative rounded-[2.5rem] overflow-hidden shadow-(--gm-shadow-soft) hover:scale-[1.02] transition-transform duration-300" style={{ minHeight: 280 }}>
+                  {/* Photo background */}
+                  <Image
+                    src={s.img}
+                    alt={s.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  {/* Dark overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+                  {/* Content */}
+                  <div className="relative z-10 p-8 flex flex-col justify-end h-full" style={{ minHeight: 280 }}>
+                    <span className="text-amber-400/60 font-bold tracking-[0.3em] text-[10px] uppercase mb-2">{s.step}</span>
+                    <h3 className={`${cinzel.className} text-xl text-amber-400 mb-3`}>{s.title}</h3>
+                    <p className="text-white/65 text-sm leading-relaxed font-serif italic">{s.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
