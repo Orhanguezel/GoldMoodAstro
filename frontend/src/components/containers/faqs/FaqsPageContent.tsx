@@ -1,6 +1,6 @@
 // =============================================================
 // FILE: src/components/containers/faqs/FaqsPageContent.tsx
-// GoldMoods Massage – Full FAQs Page Content [FINAL]
+// GoldMoodAstro – Full FAQs Page Content [FINAL]
 // - Tailwind v4 Semantic Tokens
 // - Standard Accordion
 // =============================================================

@@ -1,6 +1,6 @@
 // ===================================================================
 // FILE: src/integrations/endpoints/admin/chat_admin.endpoints.ts
-// Chat Admin RTK Query endpoints (Energetische Massage)
+// Chat Admin RTK Query endpoints (GoldMoodAstro)
 // ===================================================================
 
 import type { FetchArgs } from '@reduxjs/toolkit/query';

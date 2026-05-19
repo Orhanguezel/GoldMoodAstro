@@ -249,7 +249,7 @@ export function parseSeoFromSettings(input: unknown): SeoObject {
 }
 
 /**
- * site_settings.site_meta_default parse helper (Energetische Massage uyumlu):
+ * site_settings.site_meta_default parse helper (GoldMoodAstro uyumlu):
  *
  * Desteklenen DB formatları:
  *

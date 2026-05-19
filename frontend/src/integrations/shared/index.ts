@@ -22,7 +22,6 @@ export * from './notifications.types';
 export * from './review.types';
 export * from './review_admin.types';
 
-export * from './services.types';
 export * from './slider.types';
 
 export * from './site_settings.types';
