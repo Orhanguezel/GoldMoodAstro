@@ -12,6 +12,10 @@ type Props = {
   params: Promise<{ locale: string; id: string }>;
 };
 
+// id (UUID) → slug kalıcı yönlendirmesinin her istekte çalışması için:
+// ISR/Full Route Cache devre dışı (aksi halde redirect statik 200'e takılıyor).
+export const dynamic = 'force-dynamic';
+
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
 
