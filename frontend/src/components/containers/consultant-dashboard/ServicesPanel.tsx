@@ -546,7 +546,7 @@ function ServiceRow({
             )}
             {/* C3: Boost badge */}
             {isBoostActive && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[9px] font-bold uppercase tracking-widest">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-(--gm-warning)/20 text-(--gm-warning) text-[9px] font-bold uppercase tracking-widest">
                 <Rocket className="w-2.5 h-2.5" />
                 Öne Çıkarıldı — {boostDaysLeft}g kaldı
               </span>

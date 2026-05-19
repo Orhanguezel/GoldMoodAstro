@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard,
   User,
@@ -83,7 +84,19 @@ interface Props {
 }
 
 export default function ConsultantDashboard({ locale }: Props) {
-  const [tab, setTab] = useState<TabKey>('overview');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get('tab') as TabKey | null) ?? 'overview';
+  const [tab, setTab] = useState<TabKey>(TABS.some(t => t.key === initialTab) ? initialTab : 'overview');
+
+  // C10: sync tab to URL
+  const handleTabChange = (key: TabKey) => {
+    setTab(key);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', key);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
+
   const { isAuthenticated, isReady, isLoading: authLoading } = useAuthStore();
   const { ui } = useUiSection('ui_dashboard', locale as any);
 
@@ -128,9 +141,8 @@ export default function ConsultantDashboard({ locale }: Props) {
   }
 
   const avatarUrl = profile.user?.avatar_url || '';
-  const fullName = profile.user?.full_name || ui('ui_dashboard_consultant_fallback', 'Danışman');
+  const fullName = profile.user?.full_name || ui('ui_dashboard_consultant_fallback', 'Consultant');
   const initials = initialsFromName(fullName);
-  const isTr = locale === 'tr';
 
   return (
     <PageContainer width="wide" className="bg-(--gm-bg)" verticalPadding="large">
@@ -148,10 +160,10 @@ export default function ConsultantDashboard({ locale }: Props) {
           {/* Name + status */}
           <div className="flex-1 min-w-0">
             <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold) uppercase opacity-80">
-              {isTr ? 'Danışman Paneli' : 'Consultant Dashboard'}
+              {ui('ui_dashboard_page_title', 'Consultant Panel')}
             </span>
             <h1 className="font-serif text-3xl md:text-4xl font-light text-(--gm-text) mt-1 leading-tight">
-              {isTr ? `Merhaba, ${fullName.split(' ')[0]}` : `Hello, ${fullName.split(' ')[0]}`}
+              {ui('ui_dashboard_greeting', 'Hello, {name}').replace('{name}', fullName.split(' ')[0])}
             </h1>
             <p className="text-(--gm-text) opacity-55 text-sm mt-2 truncate">{profile.user?.email || ''}</p>
             {/* Approval + online badges */}
@@ -164,17 +176,19 @@ export default function ConsultantDashboard({ locale }: Props) {
                   : 'bg-(--gm-error)/15 text-(--gm-error)'
               }`}>
                 {profile.approval_status === 'approved'
-                  ? (isTr ? 'Onaylı' : 'Approved')
+                  ? ui('ui_dashboard_status_approved', 'Approved')
                   : profile.approval_status === 'pending'
-                  ? (isTr ? 'İncelemede' : 'In Review')
-                  : (isTr ? 'Reddedildi' : 'Rejected')}
+                  ? ui('ui_dashboard_status_pending_review', 'In Review')
+                  : ui('ui_dashboard_status_rejected', 'Rejected')}
               </span>
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
                 profile.is_available
                   ? 'bg-(--gm-success)/15 text-(--gm-success)'
                   : 'bg-(--gm-border-soft) text-(--gm-text) opacity-50'
               }`}>
-                {profile.is_available ? (isTr ? 'Çevrimiçi' : 'Online') : (isTr ? 'Çevrimdışı' : 'Offline')}
+                {profile.is_available
+                  ? ui('ui_dashboard_online', 'Online')
+                  : ui('ui_dashboard_offline', 'Offline')}
               </span>
             </div>
           </div>
@@ -186,7 +200,7 @@ export default function ConsultantDashboard({ locale }: Props) {
               href={localizePath(locale, `/consultants/${profile.id}`)}
               className="inline-flex items-center gap-2 text-xs font-medium tracking-widest text-(--gm-text) opacity-45 hover:opacity-70 transition-opacity"
             >
-              {isTr ? 'Profilimi Gör' : 'View Profile'}
+            {ui('ui_dashboard_view_profile', 'View Profile')}
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -200,7 +214,7 @@ export default function ConsultantDashboard({ locale }: Props) {
             return (
               <button
                 key={t.key}
-                onClick={() => setTab(t.key)}
+                onClick={() => handleTabChange(t.key)}
                 className={`relative inline-flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] transition-all whitespace-nowrap ${
                   active
                     ? 'text-(--gm-gold)'
@@ -218,7 +232,7 @@ export default function ConsultantDashboard({ locale }: Props) {
         </nav>
 
         {/* ─── Tab content ─── */}
-        {tab === 'overview' && <OverviewPanel locale={locale} stats={stats} profile={profile} isLoading={statsLoading} onTabChange={setTab} />}
+        {tab === 'overview' && <OverviewPanel locale={locale} stats={stats} profile={profile} isLoading={statsLoading} onTabChange={handleTabChange} />}
         {tab === 'profile' && <ProfilePanel locale={locale} profile={profile} />}
         {tab === 'services' && <ServicesPanel />}
         {tab === 'availability' && <AvailabilityPanel />}

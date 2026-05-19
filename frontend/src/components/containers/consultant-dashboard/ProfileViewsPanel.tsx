@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, TrendingUp, Loader2, Calendar } from 'lucide-react';
 import { useGetMyConsultantProfileViewsQuery } from '@/integrations/rtk/private/consultant_self.endpoints';
 
@@ -28,6 +28,16 @@ export default function ProfileViewsPanel() {
     { range: `${selectedDays}d` },
     { skip: false }
   );
+
+  // C7: Tracking instrumentation — refresh stats when panel is mounted
+  useEffect(() => {
+    // Silently ping the backend to refresh cached profile-view data.
+    // This is a best-effort request; errors are intentionally swallowed.
+    fetch('/api/v1/me/consultant/profile-views/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    }).catch(() => { /* backend may not exist yet; safe to ignore */ });
+  }, []);
 
   const totalViews = views.reduce((sum, d) => sum + d.count, 0);
   const maxCount = Math.max(1, ...views.map((d) => d.count));
