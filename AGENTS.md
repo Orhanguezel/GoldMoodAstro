@@ -825,3 +825,15 @@ jobs:
 - `backend/src/routes/shared.ts`: serviceCategories/serviceTemplates public+admin+self register.
 - `cd backend && bun run typecheck` temiz. ALTER YASAK — şema dosyaları yeterli.
 - Yanıt zarfı her uçta `{ data: ... }`.
+
+---
+
+## T-CONSULTANT-PANEL-ROADMAP — Danisman Paneli (2026-05-20)
+
+Detay + is bolumu: `doc/consultant-panel-roadmap-2026-05-20.md`
+9 bolum (C1-C9): platforms/sosyal medya/avatar TR, hizmet i18n, **service boost**
+(yeni tablo + Iyzipay), banka hesap kolonlari, aylik gelir chart, hesap
+hareketleri pagination, **profile views analytics** (yeni tablo + tracking),
+**danisanlarim** liste endpoint'i, **profil completion score** endpoint'i.
+Codex isleri: backend moduller + sema dosyalari (Claude yazar, sen Drizzle
+schema uydur). Antigravity ayri brief'lerden UI yapar.
