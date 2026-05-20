@@ -659,22 +659,38 @@ export async function getWalletMonthlyStats(req: FastifyRequest, reply: FastifyR
   start.setUTCHours(0, 0, 0, 0);
   start.setUTCMonth(start.getUTCMonth() - (months - 1));
 
-  const result = await db.execute(
-    sql`
-      SELECT DATE_FORMAT(created_at, '%Y-%m') AS year_month,
-             COALESCE(SUM(CASE WHEN type='credit' AND payment_status='completed' THEN amount ELSE 0 END), 0) AS earnings,
-             COALESCE(SUM(CASE WHEN type='credit' AND payment_status='completed' THEN 1 ELSE 0 END), 0) AS sessions
-      FROM wallet_transactions
-      WHERE user_id = ${c.user_id}
-        AND created_at >= ${start}
-      GROUP BY DATE_FORMAT(created_at, '%Y-%m')
-      ORDER BY year_month ASC
-    `,
-  );
-  const byMonth = new Map(rowsFromExecute(result).map((row: any) => [
-    String(row.year_month),
-    { earnings: Number(row.earnings ?? 0), sessions: Number(row.sessions ?? 0) },
-  ]));
+  // Önce caller'ın wallet'ını bul (getMyWallet ile aynı pattern). user_id'ye göre
+  // doğrudan filtre olası null/eksik durumda boş döner; wallet_id daha güvenli.
+  let byMonth = new Map<string, { earnings: number; sessions: number }>();
+  try {
+    const walletResult = await db.execute(
+      sql`SELECT id FROM wallets WHERE consultant_id = ${c.id} OR user_id = ${c.user_id} LIMIT 1`,
+    );
+    const walletRows = Array.isArray((walletResult as any)?.[0]) ? (walletResult as any)[0] : (walletResult as any);
+    const w = (walletRows as any[])?.[0];
+    if (w?.id) {
+      const result = await db.execute(
+        sql`
+          SELECT DATE_FORMAT(created_at, '%Y-%m') AS year_month,
+                 COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE 0 END), 0) AS earnings,
+                 COALESCE(SUM(CASE WHEN type='credit' THEN 1 ELSE 0 END), 0) AS sessions
+          FROM wallet_transactions
+          WHERE wallet_id = ${w.id}
+            AND created_at >= ${start}
+            AND payment_status = 'completed'
+          GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+          ORDER BY year_month ASC
+        `,
+      );
+      byMonth = new Map(rowsFromExecute(result).map((row: any) => [
+        String(row.year_month),
+        { earnings: Number(row.earnings ?? 0), sessions: Number(row.sessions ?? 0) },
+      ]));
+    }
+  } catch (err) {
+    req.log.warn({ err, consultantId: c.id }, 'monthly_stats_query_failed');
+    // Sessizce boş döneriz — UI 0'la grafik çizer.
+  }
 
   const data: Array<{ year_month: string; earnings: number; sessions: number }> = [];
   for (let i = 0; i < months; i += 1) {

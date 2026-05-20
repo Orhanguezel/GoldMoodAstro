@@ -33,10 +33,11 @@ export default function ProfileViewsPanel() {
   useEffect(() => {
     // Silently ping the backend to refresh cached profile-view data.
     // This is a best-effort request; errors are intentionally swallowed.
-    fetch('/api/v1/me/consultant/profile-views/refresh', {
+    // Not: backend prefix /api (v1 deprecated — memory feedback_v1_prefix_legacy)
+    fetch('/api/me/consultant/profile-views/refresh', {
       method: 'POST',
       credentials: 'include',
-    }).catch(() => { /* backend may not exist yet; safe to ignore */ });
+    }).catch(() => { /* endpoint optional; safe to ignore */ });
   }, []);
 
   const totalViews = views.reduce((sum, d) => sum + d.count, 0);
