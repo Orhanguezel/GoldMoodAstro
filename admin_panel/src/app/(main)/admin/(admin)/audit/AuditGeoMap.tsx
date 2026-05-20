@@ -13,7 +13,9 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
-const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+// Bundled locally (admin_panel/public/world-atlas/countries-110m.json) — avoids
+// dependency on cdn.jsdelivr.net which is blocked by the admin panel CSP.
+const GEO_URL = '/world-atlas/countries-110m.json';
 
 const NUM_TO_A2: Record<string, string> = {
   '004': 'AF', '008': 'AL', '012': 'DZ', '020': 'AD', '024': 'AO',

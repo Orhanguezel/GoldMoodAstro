@@ -65,12 +65,26 @@ function ensureBusSubscribed() {
 export async function handleAuditStreamSse(req: FastifyRequest, reply: FastifyReply) {
   ensureBusSubscribed();
 
+  // SSE bypasses Fastify reply lifecycle (raw.writeHead overrides headers),
+  // so CORS headers set by @fastify/cors get dropped. Echo the Origin manually
+  // for credentialed EventSource requests. Allowed list is enforced by
+  // @fastify/cors at preflight; here we just mirror what survived.
+  const origin = (req.headers.origin as string | undefined) || '';
+  const corsHeaders: Record<string, string> = origin
+    ? {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Credentials': 'true',
+        Vary: 'Origin',
+      }
+    : {};
+
   // SSE headers
   reply.raw.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8',
     'Cache-Control': 'no-cache, no-transform',
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no',
+    ...corsHeaders,
   });
 
   const streamReq = req as StreamRequest;
