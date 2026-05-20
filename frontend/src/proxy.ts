@@ -24,6 +24,9 @@ const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0
 const CONSULTANT_PATH_RE = /^\/([^/]+)\/consultants\/([^/]+)\/?$/;
 // Sezgisel /:locale/consultant → gerçek panel /:locale/me/consultant
 const CONSULTANT_PANEL_RE = /^\/([^/]+)\/consultant\/?$/;
+// /:locale/booking/<UUID> — detail sayfası yok; kullanıcının randevu listesine
+// highlight ile yönlendir (Antigravity detail sayfası eklerse bu redirect kalkar)
+const BOOKING_DETAIL_RE = /^\/([^/]+)\/booking\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\/?$/;
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
 
 async function consultantSlugRedirect(req: NextRequest): Promise<NextResponse | null> {
@@ -80,6 +83,15 @@ export async function proxy(req: NextRequest) {
       const url = req.nextUrl.clone();
       url.pathname = `/${panelMatch[1]}/me/consultant`;
       return NextResponse.redirect(url, 308);
+    }
+    // /:locale/booking/<UUID> → /:locale/profile/bookings?highlight=<UUID>
+    // (detail sayfası henüz yok; randevu listesine yönlendir)
+    const bookingMatch = pathname.match(BOOKING_DETAIL_RE);
+    if (bookingMatch) {
+      const url = req.nextUrl.clone();
+      url.pathname = `/${bookingMatch[1]}/profile/bookings`;
+      url.searchParams.set('highlight', bookingMatch[2]);
+      return NextResponse.redirect(url, 307);
     }
     // Danışman detay: id (UUID) → slug kanonik 308
     const redirect = await consultantSlugRedirect(req);

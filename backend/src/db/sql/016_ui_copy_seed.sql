@@ -806,3 +806,9 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('00000000-0000-0000-0000-00000000012b','ui_dashboard_service_template_use','*','{"label":{"tr":"Kullan / Düzenle","en":"Use / Edit","de":"Verwenden / Bearbeiten"}}'),
 ('00000000-0000-0000-0000-00000000012c','ui_dashboard_deactivate','*','{"label":{"tr":"Pasifleştir","en":"Deactivate","de":"Deaktivieren"}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);
+
+-- 2026-05-20 JSON tirnak fix: bozuk escape \"{name}\" -> {name}
+INSERT INTO site_settings (id, `key`, locale, value) VALUES
+('00000000-0000-0000-0000-000000000123','ui_dashboard_service_template_added','*','{"label":{"tr":"{name} hizmetlerinize eklendi.","en":"{name} was added to your services.","de":"{name} wurde zu Ihren Diensten hinzugefügt."}}'),
+('00000000-0000-0000-0000-000000000114','ui_dashboard_service_delete_confirm','*','{"label":{"tr":"{name} silinsin mi?","en":"Delete {name}?","de":"{name} löschen?"}}')
+ON DUPLICATE KEY UPDATE value = VALUES(value);
