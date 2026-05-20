@@ -10,6 +10,7 @@ import {
   useGetMyConsultantWalletQuery,
   useGetMyConsultantMonthlyStatsQuery,
   useGetMyConsultantProfileQuery,
+  useRequestMyConsultantWithdrawalMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { useListSiteSettingsQuery } from '@/integrations/rtk/public/site_settings.endpoints';
 
@@ -50,6 +51,7 @@ export default function WalletPanel() {
   const { data: settings = [] } = useListSiteSettingsQuery({ keys: ['platform_commission_rate'] });
   const commissionRateSetting = settings.find(s => s.key === 'platform_commission_rate');
   const commissionRate = (commissionRateSetting?.value as { percent?: number } | undefined)?.percent ?? 15;
+  const [withdraw, { isLoading: isWithdrawing }] = useRequestMyConsultantWithdrawalMutation();
 
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState('');

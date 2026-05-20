@@ -80,7 +80,7 @@ export default function CheckoutPage() {
 
   const { data: settings = [] } = useListSiteSettingsQuery({ keys: ['platform_commission_rate'] });
   const commissionRateSetting = settings.find(s => s.key === 'platform_commission_rate');
-  const commissionRate = commissionRateSetting?.value?.percent || 15;
+  const commissionRate = (commissionRateSetting?.value as { percent?: number } | undefined)?.percent ?? 15;
 
   async function handlePay() {
     if (!order) return;

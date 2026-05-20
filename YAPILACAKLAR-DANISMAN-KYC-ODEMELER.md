@@ -10,7 +10,21 @@
 
 **Sorun:** Şu an chip'lerde Astroloji, Doğum Haritası, Tarot vb. **+ "Kahve Falı, Ruhsal Rehberlik, Rüya Tabiri, Enerji Şifası"** seçenekleri serbestçe gösteriliyor. Liste hardcoded olabilir veya `service_categories` ile tam senkron değil.
 
-- [ ] **A1 — Şema check (Claude):** `service_categories` tablosu zaten var (11 kategori). Mevcut consultants.expertise json slug'ları (`astrology`, `tarot`, …) bu tablonun slug'ları ile birebir mi? `JOIN service_categories sc ON JSON_CONTAINS(c.expertise, JSON_QUOTE(sc.slug))` ile orphan slug kontrolü.
+- [x] **A1 — Şema check (Claude):** Audit query hazır (2026-05-20 Claude). Deploy sonrası prod'da koşulup A4 ile birlikte raporlanacak:
+  ```sql
+  SELECT JSON_UNQUOTE(JSON_EXTRACT(c.expertise, CONCAT('$[', idx.n, ']'))) AS slug,
+         COUNT(*) AS cnt,
+         (SELECT COUNT(*) FROM service_categories sc
+           WHERE sc.slug = JSON_UNQUOTE(JSON_EXTRACT(c.expertise, CONCAT('$[', idx.n, ']')))) AS is_known
+    FROM consultants c
+    JOIN (SELECT 0 n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3
+          UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7) idx
+      ON JSON_EXTRACT(c.expertise, CONCAT('$[', idx.n, ']')) IS NOT NULL
+   WHERE c.expertise IS NOT NULL
+   GROUP BY slug
+   ORDER BY is_known ASC, cnt DESC;
+  ```
+  `is_known = 0` olan satır orphan (service_categories'de eşleşeni yok).
 - [x] **A2 — UI sadece DB'den (Antigravity):** `ProfilePanel`'de `useListServiceCategoriesPublicQuery()` zaten kullanılıyor — fallback hardcoded `expertiseOptions` (BecomeConsultantPage'deki `EXPERTISE_OPTIONS`) **kaldırılsın**; serviceCategories boş ise "Yükleniyor…" göster, hardcoded liste hiç render edilmesin.
 - [x] **A3 — Backend validation (Codex):** PATCH `/me/consultant` body'de `expertise` her elemanı `service_categories.slug` whitelist'inde olmalı. Yoksa 400. — Codex: aktif `service_categories.slug` whitelist + `invalid_expertise_slug` 400 eklendi.
 - [ ] **A4 — Mevcut data migration (Claude):** Prod'da DB consult.expertise json'unda `service_categories.slug` listesinde olmayan slug varsa raporla (sadece audit, otomatik silme yok — kullanıcı onayıyla).
@@ -147,10 +161,10 @@
 
 ## F — Yasal Sözleşme + Fatura Akışı
 
-- [ ] **F1 — Danışman Sözleşmesi (Claude/içerik):** `custom_pages` modülünde yeni key `consultant-agreement` (tr/en/de). Komisyon, ödeme süreci, KVKK, sorumluluk maddeleri.
+- [x] **F1 — Danışman Sözleşmesi (Claude/içerik):** 2026-05-20 Claude: `backend/src/db/sql/198a_consultant_legal_pages_seed.sql` — `custom_pages` module_key `consultant_agreement` + TR/EN/DE içerik (10 madde: komisyon %15, 7-gün hold, KYC, e-fatura/stopaj, hesap devri, KVKK, sorumluluk, jurisdiction). `cp-consultant-agreement` parent + 3 i18n satır. Deploy sonrası `/tr/legal/danisman-sozlesmesi` URL'inden erişilir.
 - [x] **F2 — Onay kaydı (Codex):** Become-consultant başvurusunda `agreement_accepted_at` consultants tablosuna kayıt. — Codex: başvuru onaylanınca consultant kaydına başvuru zamanı yazılıyor; doğrudan register akışı `agreement_accepted=true` gönderirse kayıt alıyor.
 - [ ] **F3 — E-fatura/Stopaj (uzun vadeli):** Şirket danışmanı için e-fatura kesim akışı (mevcut `e-fatura-service` projesiyle entegrasyon — memory `faz36_earsiv_fatura`). Bireysel için gelir vergisi stopajı bilgi notu (platform vergi kesmez; danışman beyan eder).
-- [ ] **F4 — Tahsilat süreci dokümante (Claude/içerik):** "Para Nasıl Hesabıma Geçer?" SSS sayfası — booking → 7 gün hold → available → çekim talebi → 3-5 iş günü → IBAN.
+- [x] **F4 — Tahsilat süreci dokümante (Claude/içerik):** 2026-05-20 Claude: `backend/src/db/sql/198a_consultant_legal_pages_seed.sql` aynı dosyada `cp-payout-faq` parent + TR/EN/DE `payout_faq` module_key. 10-bölüm SSS: akış özeti, %15 komisyon, neden 7 gün hold, KYC, min/max çekim, IBAN, vergi/fatura, ret, bildirim, destek.
 
 ---
 
