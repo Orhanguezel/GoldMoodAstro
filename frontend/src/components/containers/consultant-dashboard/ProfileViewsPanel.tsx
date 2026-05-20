@@ -29,16 +29,9 @@ export default function ProfileViewsPanel() {
     { skip: false }
   );
 
-  // C7: Tracking instrumentation — refresh stats when panel is mounted
-  useEffect(() => {
-    // Silently ping the backend to refresh cached profile-view data.
-    // This is a best-effort request; errors are intentionally swallowed.
-    // Not: backend prefix /api (v1 deprecated — memory feedback_v1_prefix_legacy)
-    fetch('/api/me/consultant/profile-views/refresh', {
-      method: 'POST',
-      credentials: 'include',
-    }).catch(() => { /* endpoint optional; safe to ignore */ });
-  }, []);
+  // C7: Refresh fetch kaldırıldı — useGetMyConsultantProfileViewsQuery zaten
+  // her mount'ta backend'den taze data çekiyor; ayrı POST /refresh endpoint'i
+  // backend'de tanımlı değildi ve 404 console hatasına yol açıyordu.
 
   const totalViews = views.reduce((sum, d) => sum + d.count, 0);
   const maxCount = Math.max(1, ...views.map((d) => d.count));
