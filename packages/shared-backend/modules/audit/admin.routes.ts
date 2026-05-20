@@ -51,6 +51,8 @@ export async function registerAuditAdmin(app: FastifyInstance) {
   app.get(`${B}/geo-stats`, getAuditGeoStatsAdmin);
   app.delete(`${B}/clear`, clearAuditLogsAdmin);
   app.get(`${B}/funnel`, getFunnelReportAdmin);
+  // SSE stream — frontend admin-audit-client GET /api/admin/audit/stream
+  app.get(`${B}/stream`, handleAuditStreamSse);
 
   // Product analytics aliases requested by the GoldMoodAstro ops plan.
   app.get('/funnel', getFunnelReportAdmin);
