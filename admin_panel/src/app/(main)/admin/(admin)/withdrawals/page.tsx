@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { WithdrawalsClient } from './withdrawals-client';
-import { PageContainer } from '@/components/layout/PageContainer';
 
 export const metadata: Metadata = {
   title: 'Para Çekme Talepleri | GoldMoodAstro',
@@ -10,15 +9,14 @@ export const metadata: Metadata = {
 
 export default function AdminWithdrawalsPage() {
   return (
-    <PageContainer
-      title="Para Çekme Talepleri"
-      description="Danışmanların para çekme taleplerini görüntüleyin, onaylayın veya reddedin."
-      breadcrumbs={[
-        { label: 'Admin', href: '/admin/dashboard' },
-        { label: 'Para Çekme Talepleri' },
-      ]}
-    >
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Para Çekme Talepleri</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Danışmanların para çekme taleplerini görüntüleyin, onaylayın veya reddedin.
+        </p>
+      </div>
       <WithdrawalsClient />
-    </PageContainer>
+    </div>
   );
 }

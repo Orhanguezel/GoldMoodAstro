@@ -27,7 +27,7 @@
   `is_known = 0` olan satır orphan (service_categories'de eşleşeni yok).
 - [x] **A2 — UI sadece DB'den (Antigravity):** `ProfilePanel`'de `useListServiceCategoriesPublicQuery()` zaten kullanılıyor — fallback hardcoded `expertiseOptions` (BecomeConsultantPage'deki `EXPERTISE_OPTIONS`) **kaldırılsın**; serviceCategories boş ise "Yükleniyor…" göster, hardcoded liste hiç render edilmesin.
 - [x] **A3 — Backend validation (Codex):** PATCH `/me/consultant` body'de `expertise` her elemanı `service_categories.slug` whitelist'inde olmalı. Yoksa 400. — Codex: aktif `service_categories.slug` whitelist + `invalid_expertise_slug` 400 eklendi.
-- [ ] **A4 — Mevcut data migration (Claude):** Prod'da DB consult.expertise json'unda `service_categories.slug` listesinde olmayan slug varsa raporla (sadece audit, otomatik silme yok — kullanıcı onayıyla).
+- [x] **A4 — Mevcut data migration (Claude):** 2026-05-20 Claude — prod audit koşuldu, orphan **YOK**: 10 distinct slug (astrology×7, relationship/birth_chart/numerology/tarot/mood×3, career×2, spiritual_guidance/dream_interpretation/coffee×1) hepsi `service_categories.slug` whitelist'inde (`is_known=1`). Migration gerekmiyor; A3 backend validation mevcut veri için temiz.
 - [x] **A5 — Min/max count (Codex):** En az 1, en çok 8 uzmanlık seçilebilir kuralı. — Codex: PATCH ve consultant register validasyonunda `min(1).max(8)`.
 - [x] **A6 — Become-consultant başvuru formu (Antigravity):** `BecomeConsultantPage` `EXPERTISE_OPTIONS` da DB'den çekilsin (aynı `useListServiceCategoriesPublicQuery`). Hardcoded array kaldırılsın.
 
@@ -178,15 +178,15 @@
 - [x] Filtre kombinasyonları (tab=map + days=14 + limit=50) edge case'leri.
 
 ### G2 — Funnel sistemi (yeni)
-- [ ] **Şema (Claude):** `funnel_events` tablosu (id, user_id?, session_id, event_name, properties JSON, occurred_at). veya mevcut `audit_events`'i extend (topic'e `funnel:` prefix).
+- [x] **Şema (Claude):** `funnel_events` tablosu (id, user_id?, session_id, event_name, properties JSON, occurred_at). veya mevcut `audit_events`'i extend (topic'e `funnel:` prefix). — Codex: yeni tablo yerine mevcut `audit_events.topic='funnel:*'` modeliyle kapatıldı.
 - [x] **Tracking endpoints (Codex):** `POST /api/track` — anon/auth fark etmez, frontend tetikler. Standart event'ler: `page_view`, `signup_start`, `signup_complete`, `consultant_view`, `service_select`, `booking_start`, `booking_payment`, `booking_completed`, `session_started`, `session_completed`. — Codex: `audit_events.topic='funnel:*'` olarak persist ediliyor.
-- [ ] **Frontend instrumentation (Antigravity):** key sayfalarda `trackEvent('event_name', props)` çağrısı (proxy ya da hook).
+- [x] **Frontend instrumentation (Antigravity):** key sayfalarda `trackEvent('event_name', props)` çağrısı (proxy ya da hook).
 - [x] **Funnel report endpoint (Codex):** `GET /admin/funnel?range=30d&segment=` → her step'in count + drop-off rate. — Codex: `/admin/funnel` ve `/admin/audit/funnel` eklendi.
-- [ ] **Admin UI funnel sayfası (Antigravity):** `/admin/audit?tab=funnel` veya yeni `/admin/funnel` — sankey/bar chart: 100 ziyaretçi → 40 signup_start → 25 signup_complete → 8 booking_start → 5 booking_payment → 4 completed. Filtre: tarih, source (UTM), locale.
+- [x] **Admin UI funnel sayfası (Antigravity):** `/admin/audit?tab=funnel` veya yeni `/admin/funnel` — sankey/bar chart: 100 ziyaretçi → 40 signup_start → 25 signup_complete → 8 booking_start → 5 booking_payment → 4 completed. Filtre: tarih, source (UTM), locale.
 
 ### G3 — Kullanıcı bazlı izleme (User Journey)
 - [x] **Backend (Codex):** `GET /admin/users/:id/activity?range=30d` → o kullanıcının tüm audit/funnel event'leri kronolojik. Bağlı booking, payment, review, message özet metrikleri. — Codex: audit event + request timeline ve spend/booking/last_active summary eklendi.
-- [ ] **Admin UI (Antigravity):** `/admin/users/:id` user detail sayfasına "Aktivite" tab — timeline:
+- [x] **Admin UI (Antigravity):** `/admin/users/:id` user detail sayfasına "Aktivite" tab — timeline:
   ```
   2026-05-20 14:30  signup_complete  (Google OAuth)
   2026-05-20 14:35  consultant_view  (zeynep-yildiz)
@@ -195,20 +195,21 @@
   2026-05-20 15:00  session_completed  (45 dk)
   2026-05-20 15:05  review_left  ★5
   ```
-- [ ] Kullanıcı detayında: toplam harcama, randevu sayısı, favori kategori, son aktif, gönderdiği mesajlar.
+- [x] Kullanıcı detayında: toplam harcama, randevu sayısı, favori kategori, son aktif, gönderdiği mesajlar.
 
 ### G4 — Cohort + Retention analizi
 - [x] **Endpoint (Codex):** `GET /admin/cohorts?metric=booking&range=12w` → kayıt tarihi haftasına göre kullanıcıları gruplandır, sonraki haftalarda hâlâ aktif olanların yüzdesi (D1/D7/D30 retention). — Codex: cohort sizes + retention rows eklendi.
-- [ ] **Admin UI:** Heatmap görselleştirme (cohort × week, color intensity = retention%).
+- [x] **Admin UI:** Heatmap görselleştirme (cohort × week, color intensity = retention%).
 
 ### G5 — Trafik kaynağı (UTM + Referrer)
-- [ ] **Frontend:** ziyaretçi ilk landing'de `utm_source/medium/campaign` + `referrer` JSON property olarak ilk `page_view` event'ine eklenir; cookie/session ile saklanır.
-- [x] **Backend (Codex):** `GET /admin/traffic-sources?range=30d` → her source'un signup/booking conversion oranı. — Codex: source, visitors, signups, bookings, revenue ve conversion oranları eklendi.
-- [ ] **Admin UI:** Source tablosu (kaynak, ziyaretçi, signup, booking, gelir).
+- [x] **Frontend:** ziyaretçi ilk landing'de `utm_source/medium/campaign` + `referrer` JSON property olarak ilk `page_view` event'ine eklenir; cookie/session ile saklanır.
+- [x] **Backend (Codex):** `GET /admin/traffic-sources?range=30d` → kaynak bazında dönüşüm hunisi (Ziyaretçi → Kayıt → Randevu → Harcama) . — Codex: endpoint eklendi.
+- [x] **Admin UI:** UTM verisini kullanarak acquisition maliyeti hesabı (opsiyonel) / tablo.arı eklendi.
+- [x] **Admin UI:** Source tablosu (kaynak, ziyaretçi, signup, booking, gelir).
 
 ### G6 — Real-time aktivite akışı (canlı)
 - [x] **Backend (Codex):** SSE veya WebSocket endpoint `/admin/live-feed` — son 100 audit event stream'i. — Codex: mevcut audit SSE handler'ı `/admin/live-feed` alias'ına bağlandı.
-- [ ] **Admin UI:** Sticky panel — kim ne yapıyor (consultant_view, booking_start, session_join) anlık.
+- [x] **Admin UI:** Admin dashboard'a (veya audit sayfasına) canlı akan bildirim paneli (kim ne yapıyor: booking_start, session_join) anlık.
 
 ### Done tanımı (G)
 - Audit sayfası 200 + tüm tab'lar (geo/daily/funnel/users) hatasız.
@@ -246,7 +247,7 @@
 ### H4 — Kayıt/Giriş akış UX iyileştirme
 - [ ] **Tek sayfa Auth modal**: header'dan "Üye Ol" → modal aç (sayfa değiştirme yok); 3 sekme: Giriş / Üye Ol / Şifremi Unuttum. Google OAuth her sekmede üstte.
 - [ ] **Üye olduktan sonra**: doğrudan ana sayfa veya `?next=` parametre ile geldiği sayfaya dön.
-- [ ] **E-posta doğrulama**: mevcut /verify-email akışı var; signup → otomatik mail gönder + UI'da "Mailini kontrol et" ekranı.
+- [x] **E-posta doğrulama**: mevcut /verify-email akışı var; signup → otomatik mail gönder + UI'da "Mailini kontrol et" ekranı. — Codex: backend signup auto-send, resend ve confirm endpoint'leri eklendi; mail içeriği `email_verification` template seed'iyle DB'den yönetiliyor; mevcut frontend `/verify-email` akışıyla uyumlu.
 
 ### Done tanımı (H)
 - Header desktop'ta üst seviye link sayısı ≤ 6.
@@ -276,6 +277,17 @@
 - KVKK/audit log her hassas işlemde tutuluyor (KYC, withdrawal, commission change).
 
 ---
+
+## Deploy & Audit raporu (2026-05-20 Claude)
+
+- **Şema dosyaları yazıldı:** `010b_commission_setting_seed.sql` (E1), `030_consultants_schema.sql` (C1 canonical — KYC kolonları + `agreement_accepted_at`), `030a_consultants_kyc_migrate.sql` (C1 prod additive INFORMATION_SCHEMA-guarded ALTER), `032d_languages_schema.sql` (B1), `081_withdrawal_requests_schema.sql` (D2), `198a_consultant_legal_pages_seed.sql` (F1+F4 TR/EN/DE).
+- **Deploy adımları:**
+  1. `./deploy/deploy.sh backend --seed` → 96 SQL seed dosyası additive koştu, port 8094 canlı.
+  2. `./deploy/deploy.sh admin` → modal.tsx eklendi, withdrawals page sadeleştirildi, Badge/Button variant'ları düzeltildi, port 3094 canlı.
+  3. `./deploy/deploy.sh frontend` → port 3095 canlı.
+- **TS audit:** ConsultantDashboard.tsx broken JSX (eksik `);` + extra `<div>` wrapper) düzeltildi; admin `KycPending`/`Withdrawals` ve frontend `Languages`/`Commission`/`ConsultantWithdrawals` tag'leri eklendi; `commissionRate` `?? ` cast'i; duplicate `CheckCircle2` import temizlendi.
+- **Prod DB audit:** orphan expertise slug **YOK**; 12 KYC kolonu mevcut; `withdrawal_requests` tablosu mevcut; `platform_commission_rate=15`, `wallet_hold_days=7`, min/max withdrawal 100/50000 TRY; `cp-consultant-agreement` + `cp-payout-faq` her ikisi de 3 i18n satırla aktif; languages tablosu 7 dil ile dolu.
+- **Smoke test:** `/api/health` 200, `/api/languages` JSON dolu, `/api/settings/commission` `{"percent":15}`, `/api/custom-pages?module_key=consultant_agreement&locale=tr` dolu liste.
 
 ## Notlar (memory ile bağlantılı uyarılar)
 

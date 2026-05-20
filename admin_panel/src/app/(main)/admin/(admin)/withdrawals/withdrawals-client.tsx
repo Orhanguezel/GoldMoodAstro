@@ -177,9 +177,9 @@ export function WithdrawalsClient() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {row.status === 'pending' && <Badge variant="warning">Bekliyor</Badge>}
-                      {row.status === 'approved' && <Badge variant="info">Onaylandı (Bekliyor)</Badge>}
-                      {row.status === 'paid' && <Badge variant="success">Ödendi</Badge>}
+                      {row.status === 'pending' && <Badge variant="secondary" className="bg-amber-500/15 text-amber-600 border-amber-500/30">Bekliyor</Badge>}
+                      {row.status === 'approved' && <Badge variant="secondary" className="bg-sky-500/15 text-sky-600 border-sky-500/30">Onaylandı (Bekliyor)</Badge>}
+                      {row.status === 'paid' && <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">Ödendi</Badge>}
                       {row.status === 'rejected' && <Badge variant="destructive">Reddedildi</Badge>}
                       {row.status === 'cancelled' && <Badge variant="secondary">İptal</Badge>}
                     </td>
@@ -196,7 +196,7 @@ export function WithdrawalsClient() {
                           </>
                         )}
                         {row.status === 'approved' && (
-                          <Button size="sm" variant="success" onClick={() => setActionModal({ type: 'mark-paid', id: row.id, amount: row.amount, iban: row.bank_iban, holder: row.bank_holder })}>
+                          <Button size="sm" variant="default" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setActionModal({ type: 'mark-paid', id: row.id, amount: row.amount, iban: row.bank_iban, holder: row.bank_holder })}>
                             Ödendi İşaretle
                           </Button>
                         )}
@@ -267,7 +267,7 @@ export function WithdrawalsClient() {
           </div>
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="ghost" onClick={() => setActionModal(null)}>İptal</Button>
-            <Button variant="success" onClick={handleMarkPaid} disabled={actionLoading || !transferReference.trim()}>
+            <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleMarkPaid} disabled={actionLoading || !transferReference.trim()}>
               {actionLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Ödendi Olarak Kaydet
             </Button>
