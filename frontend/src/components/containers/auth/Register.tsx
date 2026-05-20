@@ -7,7 +7,7 @@
 
 import React, { useState, useMemo, FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import {
   useSignupMutation,
@@ -20,16 +20,28 @@ import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { useBrand } from '@/hooks/useBrand';
 import { localizePath } from '@/integrations/shared';
+import { trackEvent } from '@/integrations/telemetry';
 
 import PageContainer from '@/components/common/PageContainer';
 
 const Register: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locale = useLocaleShort();
   const { brand } = useBrand();
   const { ui } = useUiSection('ui_auth', locale as any);
 
-  const loginHref = useMemo(() => localizePath(locale, '/login'), [locale]);
+  // H4: signup sonrası `?next=/tr/booking?...` → kullanıcı geldiği sayfaya döner.
+  // Yoksa ana sayfa. Sadece path başlayan değerler kabul edilir (open redirect koruması).
+  const nextParam = useMemo(() => {
+    const raw = searchParams.get('next') || '';
+    return raw.startsWith('/') ? raw : '';
+  }, [searchParams]);
+
+  const loginHref = useMemo(() => {
+    const base = localizePath(locale, '/login');
+    return nextParam ? `${base}?next=${encodeURIComponent(nextParam)}` : base;
+  }, [locale, nextParam]);
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -86,11 +98,13 @@ const Register: React.FC = () => {
 
       const resp = await signup(payload).unwrap();
       if (resp.access_token) tokenStore.set(resp.access_token);
-      router.push(
-        `${localizePath(locale, '/verify-email')}?mode=pending&email=${encodeURIComponent(
-          email.trim(),
-        )}`,
+      trackEvent('signup_complete', { method: 'email' }).catch(() => {});
+      const verifyUrl = new URL(
+        `${localizePath(locale, '/verify-email')}?mode=pending&email=${encodeURIComponent(email.trim())}`,
+        'http://x',
       );
+      if (nextParam) verifyUrl.searchParams.set('next', nextParam);
+      router.push(`${verifyUrl.pathname}${verifyUrl.search}`);
     } catch {
       // Error handled by signupState
     }

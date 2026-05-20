@@ -19,6 +19,12 @@ export default function VerifyEmailPage() {
   const email = searchParams.get('email');
   const locale = useLocaleShort();
 
+  // H4: signup sonrası ?next=... ile geldiği sayfaya dön. Yoksa ana sayfa.
+  const nextRaw = searchParams.get('next') || '';
+  const nextHref = nextRaw.startsWith('/') ? nextRaw : localizePath(locale, '/');
+  const continueLabel =
+    locale === 'de' ? 'Weiter' : locale === 'tr' ? 'Devam Et' : 'Continue';
+
   const [confirm, { isLoading }] = useConfirmEmailVerificationMutation();
   const [sendVerification, sendState] = useSendEmailVerificationMutation();
   const [status, setStatus] = useState<'pending' | 'success' | 'error' | 'no_token'>('pending');
@@ -107,10 +113,10 @@ export default function VerifyEmailPage() {
                 {sendState.isLoading ? '...' : resendLabel}
               </button>
               <Link
-                href={localizePath(locale, '/profile')}
+                href={nextHref}
                 className="btn-outline-premium w-full py-3.5 text-xs"
               >
-                {locale === 'de' ? 'Zum Profil' : locale === 'tr' ? 'Profile Git' : 'Go to Profile'}
+                {continueLabel}
               </Link>
             </div>
             {message ? <p className="mt-4 text-xs italic text-(--gm-text-dim)">{message}</p> : null}
@@ -148,10 +154,10 @@ export default function VerifyEmailPage() {
                   : 'Your email address has been successfully verified.'}
             </p>
             <Link
-              href={localizePath(locale, '/profile')}
+              href={nextHref}
               className="btn-premium py-3 px-8 text-xs inline-block"
             >
-              {locale === 'de' ? 'Zum Profil' : locale === 'tr' ? 'Profile Git' : 'Go to Profile'}
+              {continueLabel}
             </Link>
           </>
         ) : status === 'no_token' ? (

@@ -133,7 +133,7 @@
     - Modal: Çekilecek tutar girilir (max: balance). Submit edilince POST `/me/consultant/wallet/withdraw`.
     - Eğer `balance < 500` (min limit) ise uyarı.
 - [x] **D5 — Admin paneli (Antigravity):** `/admin/withdrawals` — pending withdrawals listesi, onayla → mark-paid → transfer_reference gir.
-- [x] **D6 — Mail bildirimleri (Codex):** Withdrawal approved/paid/rejected → danışmana e-posta. — Codex: `withdrawal_approved_consultant`, `withdrawal_paid_consultant`, `withdrawal_rejected_consultant` template keyleriyle best-effort mail.
+- [x] **D6 — Mail bildirimleri (Codex):** Withdrawal approved/paid/rejected → danışmana e-posta. — Codex: `withdrawal_approved_consultant`, `withdrawal_paid_consultant`, `withdrawal_rejected_consultant` template keyleriyle best-effort mail; `150_email_templates.sql` içinde TR/EN/DE seed'leri eklendi.
 
 ---
 
@@ -240,13 +240,13 @@
 - [x] Burçlar ve Numeroloji üst seviyeden alınıp dropdown'lara yerleştirilir. Üst seviye 8 → 6.
 - [x] Önerilen sade (6 adet): Ana Sayfa, Astroloji ▾ (alt: Burçlar, Doğum Haritası, Sinastri, Yıldızname, Yükselen Burç, Günlük Yorum), Fal & Tarot ▾ (alt: Tarot, Kahve Falı, Rüya Tabiri, Numeroloji), Danışmanlar, Blog, Hakkımızda.
 - [x] DB-driven nav (`menu_items`) içinde mevcut seed'i bu düzene göre güncelle (`196_navigation_seed.sql` edit + prod additive UPDATE/DELETE/INSERT).
-- [ ] **Veya daha agresif (5 adet):** Hakkımızda → footer'a taşı, header'dan çıkar. Üst seviye 6 → 5.
-- [ ] DB-driven nav (`menu_items`) içinde mevcut seed'i bu düzene göre güncelle (`196_navigation_seed.sql` edit + prod additive UPDATE/DELETE/INSERT).
-- [ ] **Mobile offcanvas:** her şey orada kalsın (yer var, hamburger içi); desktop üst bar minimal.
+- [x] **Veya daha agresif (5 adet):** Hakkımızda → footer'a taşı, header'dan çıkar. Üst seviye 6 → 5.
+- [x] DB-driven nav (`menu_items`) içinde mevcut seed'i bu düzene göre güncelle (`196_navigation_seed.sql` edit + prod additive UPDATE/DELETE/INSERT).
+- [x] **Mobile offcanvas:** her şey orada kalsın (yer var, hamburger içi); desktop üst bar minimal.
 
 ### H4 — Kayıt/Giriş akış UX iyileştirme
-- [ ] **Tek sayfa Auth modal**: header'dan "Üye Ol" → modal aç (sayfa değiştirme yok); 3 sekme: Giriş / Üye Ol / Şifremi Unuttum. Google OAuth her sekmede üstte.
-- [ ] **Üye olduktan sonra**: doğrudan ana sayfa veya `?next=` parametre ile geldiği sayfaya dön.
+- [x] **Tek sayfa Auth modal**: header'dan "Üye Ol" → modal aç (sayfa değiştirme yok); 3 sekme: Giriş / Üye Ol / Şifremi Unuttum. Google OAuth her sekmede üstte.
+- [x] **Üye olduktan sonra**: doğrudan ana sayfa veya `?next=` parametre ile geldiği sayfaya dön. — 2026-05-20 Claude: `Register.tsx` `?next=` query'sini verify-email URL'sine taşıyor; `verify-email/page.tsx` `next` query'i okur (open-redirect koruması: yalnız `/` ile başlayanlar geçerli), pending + success durumlarında "Devam Et" linki `next` ya da `/` (ana sayfa). `Login.tsx`'de aynı mantık zaten vardı. Frontend deploy edildi.
 - [x] **E-posta doğrulama**: mevcut /verify-email akışı var; signup → otomatik mail gönder + UI'da "Mailini kontrol et" ekranı. — Codex: backend signup auto-send, resend ve confirm endpoint'leri eklendi; mail içeriği `email_verification` template seed'iyle DB'den yönetiliyor; mevcut frontend `/verify-email` akışıyla uyumlu.
 
 ### Done tanımı (H)
