@@ -1,14 +1,18 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import { createHmac, randomUUID } from 'crypto';
+import { createHash, createHmac, randomUUID } from 'crypto';
 import { hash as argonHash } from 'argon2';
 import { OAuth2Client } from 'google-auth-library';
+import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 import { env } from '../../core/env';
+import { db } from '../../db/client';
 import { handleRouteError } from '../_shared';
 import { getPrimaryRole, repoListUserRoles } from '../userRoles';
-import { sendWelcomeMail, sendPasswordChangedMail } from '../mail';
+import { sendWelcomeMail, sendPasswordChangedMail, sendEmailVerificationMail } from '../mail';
 import { telegramNotify } from '../telegram';
 import { getGoogleSettings } from '../siteSettings/service';
 import { getSubscriptionSummary } from '../subscriptions';
+import { users } from './schema';
 import {
   socialLoginBody,
   signupBody,
@@ -48,6 +52,9 @@ import {
 
 const adminEmails = parseAdminEmailAllowlist();
 const googleClientCache = new Map<string, OAuth2Client>();
+const emailVerificationBody = z.object({
+  token: z.string().min(20).max(500),
+});
 
 async function getUserRoles(userId: string): Promise<Role[]> {
   const rows = await repoListUserRoles({ user_id: userId, limit: 10, offset: 0, direction: 'asc' });
@@ -83,6 +90,54 @@ function getGoogleClient(clientId: string) {
     googleClientCache.set(clientId, client);
   }
   return client;
+}
+
+function sha256(input: string): string {
+  return createHash('sha256').update(input).digest('hex');
+}
+
+function buildEmailVerificationUrl(token: string, locale?: string): string {
+  const base = (env.FRONTEND_URL || process.env.FRONTEND_URL || process.env.PUBLIC_URL || '').replace(/\/$/, '');
+  const safeLocale = locale === 'en' || locale === 'de' ? locale : 'tr';
+  const path = `/${safeLocale}/verify-email?token=${encodeURIComponent(token)}`;
+  return base ? `${base}${path}` : path;
+}
+
+async function issueEmailVerificationForUser(
+  req: FastifyRequest,
+  user: { id: string; email: string | null; full_name?: string | null; email_verified?: number | boolean | null },
+) {
+  if (!user.email) return { sent: false, reason: 'email_missing' };
+  if (Number(user.email_verified ?? 0) === 1) return { sent: false, reason: 'email_already_verified' };
+
+  const rawToken = `${randomUUID()}${randomUUID()}`;
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  await db
+    .update(users)
+    .set({
+      email_verification_token: sha256(rawToken),
+      email_verification_expires: expiresAt,
+      updated_at: new Date(),
+    })
+    .where(eq(users.id, user.id));
+
+  const locale = (req.headers['x-locale'] as string | undefined)?.trim() || undefined;
+  const verifyUrl = buildEmailVerificationUrl(rawToken, locale);
+
+  try {
+    await sendEmailVerificationMail({
+      to: user.email,
+      user_name: user.full_name || user.email.split('@')[0],
+      verification_link: verifyUrl,
+      expires_in: locale === 'en' ? '24 hours' : locale === 'de' ? '24 Stunden' : '24 saat',
+      locale,
+    });
+    return { sent: true, reason: 'verification_email_sent' };
+  } catch (err) {
+    req.log?.error?.({ err, user_id: user.id }, 'email_verification_mail_failed');
+    return { sent: false, reason: 'mail_delivery_failed' };
+  }
 }
 
 async function verifyGoogleIdentity(params: {
@@ -310,6 +365,9 @@ export async function signup(req: FastifyRequest, reply: FastifyReply) {
     void telegramNotify({ event: 'new_user', data: { user_name: full_name || email.split('@')[0], user_email: email, role: assignedRole, created_at: new Date().toISOString() } });
 
     const u = await repoGetUserById(id);
+    if (u) {
+      void issueEmailVerificationForUser(req, u).catch((err) => req.log?.error?.(err, 'email_verification_issue_failed'));
+    }
     const { access, refresh } = await issueTokens(req.server, u!, assignedRole);
     setAccessCookie(reply, access);
     setRefreshCookie(reply, refresh);
@@ -560,6 +618,64 @@ export async function passwordResetConfirm(req: FastifyRequest, reply: FastifyRe
     return reply.send({ success: true, message: 'Parolanız başarıyla güncellendi.' });
   } catch (e) {
     return handleRouteError(reply, req, e, 'auth_password_reset_confirm');
+  }
+}
+
+/** POST /auth/email-verification/send */
+export async function sendEmailVerification(req: FastifyRequest, reply: FastifyReply) {
+  try {
+    const jwt = getJWTFromReq(req);
+    const t = bearerFrom(req);
+    if (!t) return reply.status(401).send({ success: false, error: 'no_token' });
+
+    let payload: JWTPayload;
+    try { payload = jwt.verify(t); } catch { return reply.status(401).send({ success: false, error: 'invalid_token' }); }
+
+    const u = await repoGetUserById(payload.sub);
+    if (!u) return reply.status(404).send({ success: false, error: 'user_not_found' });
+    if (Number(u.email_verified ?? 0) === 1) {
+      return reply.send({ success: true, message: 'email_already_verified' });
+    }
+
+    const result = await issueEmailVerificationForUser(req, u);
+    return reply.send({
+      success: true,
+      message: result.sent ? 'verification_email_sent' : result.reason,
+    });
+  } catch (e) {
+    return handleRouteError(reply, req, e, 'auth_email_verification_send');
+  }
+}
+
+/** POST /auth/email-verification/confirm */
+export async function confirmEmailVerification(req: FastifyRequest, reply: FastifyReply) {
+  try {
+    const parsed = emailVerificationBody.safeParse(req.body);
+    if (!parsed.success) return reply.status(400).send({ success: false, error: 'invalid_body' });
+
+    const tokenHash = sha256(parsed.data.token);
+    const [u] = await db.select().from(users).where(eq(users.email_verification_token, tokenHash)).limit(1);
+    if (!u?.email_verification_expires) {
+      return reply.status(400).send({ success: false, error: 'invalid_or_expired_token' });
+    }
+
+    if (new Date(u.email_verification_expires).getTime() < Date.now()) {
+      return reply.status(400).send({ success: false, error: 'invalid_or_expired_token' });
+    }
+
+    await db
+      .update(users)
+      .set({
+        email_verified: 1,
+        email_verification_token: null,
+        email_verification_expires: null,
+        updated_at: new Date(),
+      })
+      .where(eq(users.id, u.id));
+
+    return reply.send({ success: true, message: 'email_verified' });
+  } catch (e) {
+    return handleRouteError(reply, req, e, 'auth_email_verification_confirm');
   }
 }
 

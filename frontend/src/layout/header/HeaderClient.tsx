@@ -15,6 +15,8 @@ import { useLocaleShort, useUiSection } from '@/i18n';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { IconUser } from '@/components/ui/icons';
 import ThemeToggle from '@/components/system/ThemeToggle';
+import { trackEvent } from '@/integrations/telemetry';
+import { AuthModal } from '@/components/containers/auth/AuthModal';
 
 // Menu API boş gelirse gösterilecek varsayılan menü (dropdown desteğiyle).
 // API'den gelen menü her zaman önceliklidir.
@@ -172,6 +174,8 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<'login' | 'register'>('login');
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuthStore();
   const isConsultant = hasUserRole(user, 'consultant');
@@ -240,6 +244,11 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
 
   return (
     <Fragment>
+      <AuthModal 
+        open={authModalOpen} 
+        onOpenChange={setAuthModalOpen} 
+        defaultTab={authModalTab} 
+      />
       <HeaderOffcanvas open={open} onClose={() => setOpen(false)} brand={resolvedBrand} locale={locale} />
 
       <header data-test-marker="antigravity-fix-v1" className="relative z-[1000]">
@@ -372,18 +381,24 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
               {/* H1: Üye Ol / Giriş Yap */}
               {!isAuthenticated && (
                 <div className="flex items-center gap-3">
-                  <Link 
-                    href={localizePath(locale, '/login')} 
+                  <button 
+                    type="button"
+                    onClick={() => { setAuthModalTab('login'); setAuthModalOpen(true); }}
                     className="text-[11px] font-bold tracking-[0.15em] uppercase text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)] transition-colors px-4 py-2 border border-[var(--gm-gold)]/40 hover:border-[var(--gm-gold)] rounded-full"
                   >
                     {locale === 'tr' ? 'Giriş Yap' : 'Login'}
-                  </Link>
-                  <Link 
-                    href={localizePath(locale, '/register')} 
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => { 
+                      trackEvent('signup_start').catch(() => {});
+                      setAuthModalTab('register'); 
+                      setAuthModalOpen(true); 
+                    }}
                     className="text-[11px] font-bold tracking-[0.15em] uppercase text-white bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-light)] transition-colors px-4 py-2 rounded-full shadow-[var(--gm-glow-primary)] hover:shadow-lg"
                   >
                     {locale === 'tr' ? 'Üye Ol' : 'Sign Up'}
-                  </Link>
+                  </button>
                 </div>
               )}
 
@@ -427,9 +442,13 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                 <IconUser className="w-5 h-5" />
               </Link>
             ) : (
-              <Link href={localizePath(locale, '/login')} className="p-2 text-[var(--gm-gold)]">
+              <button 
+                type="button" 
+                onClick={() => { setAuthModalTab('login'); setAuthModalOpen(true); }}
+                className="p-2 text-[var(--gm-gold)]"
+              >
                 <IconUser className="w-5 h-5" />
-              </Link>
+              </button>
             )}
             <button
               type="button"
@@ -505,20 +524,29 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
 
           {!isAuthenticated && (
             <div className="flex flex-col w-full max-w-xs gap-3">
-              <Link 
-                href={localizePath(locale, '/register')} 
+              <button 
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  trackEvent('signup_start').catch(() => {});
+                  setAuthModalTab('register');
+                  setAuthModalOpen(true);
+                }}
                 className="w-full flex items-center justify-center rounded-full bg-[var(--gm-primary)] px-5 py-3 text-[12px] font-bold uppercase tracking-[0.15em] text-white transition-colors hover:bg-[var(--gm-primary-light)]"
-                onClick={() => setMobileOpen(false)}
               >
                 {locale === 'tr' ? 'Üye Ol' : 'Sign Up'}
-              </Link>
-              <Link 
-                href={localizePath(locale, '/login')} 
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  setAuthModalTab('login');
+                  setAuthModalOpen(true);
+                }}
                 className="w-full flex items-center justify-center rounded-full border border-[var(--gm-gold)]/40 px-5 py-3 text-[12px] font-bold uppercase tracking-[0.15em] text-[var(--gm-gold)] transition-colors hover:border-[var(--gm-gold)]"
-                onClick={() => setMobileOpen(false)}
               >
                 {locale === 'tr' ? 'Giriş Yap' : 'Login'}
-              </Link>
+              </button>
             </div>
           )}
 

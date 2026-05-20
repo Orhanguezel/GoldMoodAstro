@@ -97,6 +97,42 @@ export const auditAdminApi = baseApi.injectEndpoints({
         { type: 'AuditMetric' as const, id: 'GEO' },
       ],
     }),
+
+    getFunnelReportAdmin: build.query<
+      any,
+      { range?: string; segment?: string } | void
+    >({
+      query: (params) => ({
+        url: `${BASE}/funnel`,
+        method: 'GET',
+        params: params ?? undefined,
+      }),
+      providesTags: [{ type: 'AuditMetric' as const, id: 'FUNNEL' }],
+    }),
+
+    getTrafficSourcesAdmin: build.query<
+      any,
+      { range?: string } | void
+    >({
+      query: (params) => ({
+        url: `${BASE}/traffic-sources`,
+        method: 'GET',
+        params: params ?? undefined,
+      }),
+      providesTags: [{ type: 'AuditMetric' as const, id: 'TRAFFIC' }],
+    }),
+
+    getCohortsAdmin: build.query<
+      any,
+      { range?: string; metric?: string } | void
+    >({
+      query: (params) => ({
+        url: `${BASE}/cohorts`,
+        method: 'GET',
+        params: params ?? undefined,
+      }),
+      providesTags: [{ type: 'AuditMetric' as const, id: 'COHORT' }],
+    }),
   }),
 });
 
@@ -106,4 +142,7 @@ export const {
   useGetAuditMetricsDailyAdminQuery,
   useGetAuditGeoStatsAdminQuery,
   useClearAuditLogsAdminMutation,
+  useGetFunnelReportAdminQuery,
+  useGetTrafficSourcesAdminQuery,
+  useGetCohortsAdminQuery,
 } = auditAdminApi;

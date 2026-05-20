@@ -28,6 +28,8 @@ export const users = mysqlTable(
     fcm_token: text("fcm_token"),
     is_active: tinyint("is_active").notNull().default(1),
     email_verified: tinyint("email_verified").notNull().default(0),
+    email_verification_token: varchar("email_verification_token", { length: 255 }),
+    email_verification_expires: datetime("email_verification_expires", { fsp: 3 }),
     reset_token: varchar("reset_token", { length: 255 }),
     reset_token_expires: datetime("reset_token_expires", { fsp: 3 }),
     created_at: datetime("created_at", { fsp: 3 })
@@ -43,6 +45,7 @@ export const users = mysqlTable(
   (t) => [
     uniqueIndex("users_email_unique").on(t.email),
     index("users_ecosystem_id_idx").on(t.ecosystem_id),
+    index("users_email_verification_token_idx").on(t.email_verification_token),
   ],
 );
 

@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, UserPlus } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/auth.store';
+import { trackEvent } from '@/integrations/telemetry';
 
 type HeroCTAsProps = {
   locale: string;
@@ -40,6 +40,7 @@ export default function HeroCTAs({ locale, primaryCTA, secondaryCTA, ctaHref, se
           <Link
             href={registerHref}
             className="group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--gm-primary)] px-8 py-4 text-sm font-bold uppercase tracking-[0.2em] text-white transition-all duration-300 hover:bg-[var(--gm-primary-light)] hover:scale-105 hover:shadow-[var(--gm-glow-primary)] min-w-[220px]"
+            onClick={() => trackEvent('signup_start').catch(() => {})}
           >
             <UserPlus size={16} className="transition-transform group-hover:scale-110" />
             {locale === 'tr' ? 'Hesap Aç' : 'Sign Up'}

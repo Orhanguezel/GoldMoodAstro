@@ -8,7 +8,20 @@ import {
   tokenBody,
   updateBody,
 } from './validation';
-import { signup, token, socialLogin, refresh, passwordResetRequest, passwordResetConfirm, me, status, update, logout } from './controller';
+import {
+  signup,
+  token,
+  socialLogin,
+  refresh,
+  passwordResetRequest,
+  passwordResetConfirm,
+  sendEmailVerification,
+  confirmEmailVerification,
+  me,
+  status,
+  update,
+  logout,
+} from './controller';
 import { handleRequestDeletion, handleCancelDeletion } from './deletion.controller';
 
 export async function registerAuth(app: FastifyInstance) {
@@ -46,6 +59,14 @@ export async function registerAuth(app: FastifyInstance) {
     config: { rateLimit: { max: 20, timeWindow: '1 minute' } } as any,
     schema: { tags: ['auth'], body: fromZodSchema(passwordResetConfirmBody, 'PasswordResetConfirmBody') } as any,
   }, passwordResetConfirm);
+  app.post(`${B}/email-verification/send`, {
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } } as any,
+    schema: { tags: ['auth'], security: authSecurity } as any,
+  }, sendEmailVerification);
+  app.post(`${B}/email-verification/confirm`, {
+    config: { rateLimit: { max: 20, timeWindow: '1 minute' } } as any,
+    schema: { tags: ['auth'] } as any,
+  }, confirmEmailVerification);
 
   app.get(`${B}/user`, {
     schema: { tags: ['auth'], security: authSecurity } as any,

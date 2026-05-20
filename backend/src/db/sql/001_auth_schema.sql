@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS users (
   fcm_token     TEXT,
   is_active     TINYINT      NOT NULL DEFAULT 1,
   email_verified TINYINT     NOT NULL DEFAULT 0,
+  email_verification_token VARCHAR(255),
+  email_verification_expires DATETIME(3),
   reset_token        VARCHAR(255),
   reset_token_expires DATETIME(3),
   rules_accepted_at  DATETIME(3),
@@ -24,6 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
   PRIMARY KEY (id),
   UNIQUE KEY users_email_unique (email),
   KEY users_ecosystem_id_idx (ecosystem_id),
+  KEY users_email_verification_token_idx (email_verification_token),
   KEY users_role_idx (role),
   KEY users_google_id_idx (google_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

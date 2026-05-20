@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { localizePath } from '@/integrations/shared';
+import { trackEvent } from '@/integrations/telemetry';
 
 import PageContainer from '@/components/common/PageContainer';
 
@@ -15,6 +16,12 @@ export default function BookingPaymentCallbackPage() {
 
   const status = searchParams.get('status');
   const isSuccess = status === 'success';
+
+  useEffect(() => {
+    if (isSuccess) {
+      trackEvent('booking_completed', { status: 'success' }).catch(() => {});
+    }
+  }, [isSuccess]);
 
   const t = {
     tr: {

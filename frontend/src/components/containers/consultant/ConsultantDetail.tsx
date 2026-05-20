@@ -10,9 +10,10 @@ import {
   useTrackConsultantViewMutation,
   type ConsultantSlotPublic,
 } from '@/integrations/rtk/public/consultants.public.endpoints';
-import { useRequestNowBookingMutation } from '@/integrations/rtk/public/bookings_public.endpoints';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { toast } from 'sonner';
+import { trackEvent } from '@/integrations/telemetry';
+import { useRequestNowBookingMutation } from '@/integrations/rtk/public/bookings_public.endpoints';
 import { useListConsultantServicesPublicQuery, type ConsultantServicePublic } from '@/integrations/rtk/public/consultant_services.public.endpoints';
 import { useGetConsultantOutcomeScoreQuery } from '@/integrations/rtk/hooks';
 import ReviewList from '@/components/common/public/ReviewList';
@@ -66,7 +67,8 @@ export default function ConsultantDetail({ id, locale }: Props) {
     const targetId = consultant?.id || id;
     if (!targetId) return;
     trackConsultantView(targetId);
-  }, [consultant?.id, id, trackConsultantView]);
+    trackEvent('consultant_view', { consultant_id: targetId, slug: consultant?.slug }).catch(() => {});
+  }, [consultant?.id, consultant?.slug, id, trackConsultantView]);
 
   const selectedService: ConsultantServicePublic | undefined = services.find((s) => s.id === selectedServiceId);
 
@@ -99,6 +101,12 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const handleBook = () => {
     if (!selectedSlot) return;
     const svc = selectedService;
+    trackEvent('booking_start', {
+      consultant_id: consultant.id,
+      service_id: svc?.id,
+      slot_id: selectedSlot.id,
+      media_type: svc?.media_type,
+    }).catch(() => {});
     const q = new URLSearchParams({
       consultantId: consultant.id,
       resourceId: selectedSlot.resource_id,
@@ -352,6 +360,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                         setSelectedServiceId(svc.id);
                         setExpandedServiceId(isExpanded ? null : svc.id);
                         setSelectedSlot(null);
+                        trackEvent('service_select', { service_id: svc.id }).catch(() => {});
                       }}
                       className="w-full flex items-center justify-between gap-3 p-4 text-left"
                     >

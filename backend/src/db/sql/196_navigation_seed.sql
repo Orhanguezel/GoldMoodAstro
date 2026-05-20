@@ -48,8 +48,7 @@ INSERT INTO menu_items (id, location, type, url, is_active, display_order) VALUE
   ('mi-h-astrology',    'header', 'custom', NULL,                         1, 20),  -- dropdown parent
   ('mi-h-fal',          'header', 'custom', NULL,                         1, 30),  -- dropdown parent
   ('mi-h-consultants',  'header', 'custom', '/consultants',               1, 40),
-  ('mi-h-blog',         'header', 'custom', '/blog',                      1, 50),
-  ('mi-h-about',        'header', 'custom', '/about',                     1, 60)
+  ('mi-h-blog',         'header', 'custom', '/blog',                      1, 50)
 ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Astrology dropdown children
@@ -101,10 +100,6 @@ INSERT INTO menu_items_i18n (id, menu_item_id, locale, title) VALUES
   ('mi-i-blog-tr', 'mi-h-blog', @loc_tr, 'Blog'),
   ('mi-i-blog-en', 'mi-h-blog', @loc_en, 'Blog'),
   ('mi-i-blog-de', 'mi-h-blog', @loc_de, 'Blog'),
-
-  ('mi-i-about-tr', 'mi-h-about', @loc_tr, 'Hakkımızda'),
-  ('mi-i-about-en', 'mi-h-about', @loc_en, 'About'),
-  ('mi-i-about-de', 'mi-h-about', @loc_de, 'Über uns'),
 
   -- Astrology dropdown
   ('mi-i-birth-tr', 'mi-h-astro-birth', @loc_tr, 'Doğum Haritası'),

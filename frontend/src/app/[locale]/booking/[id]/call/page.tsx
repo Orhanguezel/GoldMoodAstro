@@ -14,6 +14,7 @@ import {
 } from '@/integrations/rtk/hooks';
 import type { HistoryItem, ReadingType } from '@/integrations/rtk/public/history.public.endpoints';
 import BookingMessageButton from '@/components/common/BookingMessageButton';
+import { trackEvent } from '@/integrations/telemetry';
 
 type LiveKitTokenResponse = {
   token: string;
@@ -101,6 +102,7 @@ export default function BookingCallPage() {
   const roomRef = useRef<Room | null>(null);
   const endingRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const trackedStartRef = useRef(false);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -141,6 +143,10 @@ export default function BookingCallPage() {
         room.on(RoomEvent.Connected, () => {
           setState('connected');
           startTimer();
+          if (!trackedStartRef.current) {
+            trackedStartRef.current = true;
+            trackEvent('session_started', { booking_id: bookingId }).catch(() => {});
+          }
         });
         room.on(RoomEvent.Disconnected, () => {
           setState('disconnected');
@@ -182,6 +188,10 @@ export default function BookingCallPage() {
         if (!cancelled) {
           setState('connected');
           startTimer();
+          if (!trackedStartRef.current) {
+            trackedStartRef.current = true;
+            trackEvent('session_started', { booking_id: bookingId }).catch(() => {});
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -231,6 +241,7 @@ export default function BookingCallPage() {
     roomRef.current?.disconnect();
     roomRef.current = null;
     await endLiveKitSession(bookingId);
+    trackEvent('session_completed', { booking_id: bookingId, duration_seconds: seconds }).catch(() => {});
     window.location.href = `/${locale}/dashboard?tab=bookings`;
   }
 

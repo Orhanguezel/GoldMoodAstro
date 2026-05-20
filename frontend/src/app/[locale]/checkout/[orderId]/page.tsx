@@ -8,6 +8,7 @@ import { localizePath } from '@/integrations/shared';
 import { useGetMyOrderQuery, useInitIyzicoPaymentMutation } from '@/integrations/rtk/hooks';
 import { useListSiteSettingsQuery } from '@/integrations/rtk/public/site_settings.endpoints';
 import { useAuthStore } from '@/features/auth/auth.store';
+import { trackEvent } from '@/integrations/telemetry';
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 
@@ -85,6 +86,7 @@ export default function CheckoutPage() {
   async function handlePay() {
     if (!order) return;
     setPayState('redirecting');
+    trackEvent('booking_payment', { order_id: order.id, amount: order.total_amount }).catch(() => {});
     try {
       const res = await initIyzico({ orderId: order.id, locale }).unwrap();
       if (res.checkout_url) {

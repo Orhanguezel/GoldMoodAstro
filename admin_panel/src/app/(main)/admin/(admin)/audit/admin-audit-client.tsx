@@ -62,6 +62,9 @@ import { cn } from '@/lib/utils';
 
 import { AuditDailyChart } from './AuditDailyChart';
 import { AuditGeoMap } from './AuditGeoMap';
+import { AuditFunnelChart } from './AuditFunnelChart';
+import { AuditCohortChart } from './AuditCohortChart';
+import { AuditTrafficChart } from './AuditTrafficChart';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { BASE_URL } from '@/integrations/baseApi';
 
@@ -84,7 +87,7 @@ import {
 
 /* ----------------------------- helpers ----------------------------- */
 
-type TabKey = 'requests' | 'auth' | 'metrics' | 'map' | 'stream';
+type TabKey = 'requests' | 'auth' | 'metrics' | 'map' | 'stream' | 'funnel' | 'cohort';
 
 type StreamStatus = 'connecting' | 'open' | 'closed' | 'error';
 
@@ -129,6 +132,8 @@ function normalizeTab(v: string | null): TabKey {
   if (s === 'metrics') return 'metrics';
   if (s === 'map') return 'map';
   if (s === 'stream') return 'stream';
+  if (s === 'funnel') return 'funnel';
+  if (s === 'cohort') return 'cohort';
   return 'requests';
 }
 
@@ -695,6 +700,12 @@ export default function AdminAuditClient() {
           <TabsTrigger value="map" className="rounded-full px-8 py-2.5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg transition-all text-[10px] font-bold tracking-widest uppercase">
             <Globe className="mr-2 h-4 w-4" /> {t('tabs.map')}
           </TabsTrigger>
+          <TabsTrigger value="funnel" className="rounded-full px-8 py-2.5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg transition-all text-[10px] font-bold tracking-widest uppercase">
+            <Filter className="mr-2 h-4 w-4" /> Funnel
+          </TabsTrigger>
+          <TabsTrigger value="cohort" className="rounded-full px-8 py-2.5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg transition-all text-[10px] font-bold tracking-widest uppercase">
+            <Calendar className="mr-2 h-4 w-4" /> Cohort
+          </TabsTrigger>
           <TabsTrigger value="stream" className="rounded-full px-8 py-2.5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg transition-all text-[10px] font-bold tracking-widest uppercase">
             <Zap className="mr-2 h-4 w-4" /> {t('tabs.stream')}
           </TabsTrigger>
@@ -1256,6 +1267,82 @@ export default function AdminAuditClient() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ==================== FUNNEL TAB ==================== */}
+        <TabsContent value="funnel" className="animate-in fade-in duration-700 space-y-8">
+          <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+            <CardHeader className="p-8 pb-4 border-b border-gm-border-soft bg-gm-surface/40">
+              <CardTitle className="font-serif text-2xl flex items-center gap-3">
+                <Filter className="h-5 w-5 text-gm-gold" /> Filtreler
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8">
+              <form onSubmit={onSubmitMetrics} className="grid gap-6 md:grid-cols-4">
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('metrics.days')}</Label>
+                  <Select value={daysText} onValueChange={setDaysText}>
+                    <SelectTrigger className="bg-gm-surface border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gm-surface border-gm-border-soft rounded-2xl">
+                      <SelectItem value="7">Son 7 Gün</SelectItem>
+                      <SelectItem value="14">Son 14 Gün</SelectItem>
+                      <SelectItem value="30">Son 30 Gün</SelectItem>
+                      <SelectItem value="90">Son 90 Gün</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="md:col-span-4 flex items-center gap-2 pt-4">
+                  <Button type="submit" disabled={metricsLoading} className="rounded-full bg-gm-gold hover:bg-gm-gold-light text-gm-bg px-8 h-12">
+                    <Search className="mr-2 h-4 w-4" /> {t('common.apply')}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={onResetMetrics} disabled={metricsLoading} className="rounded-full border-gm-border-soft px-8 h-12 hover:bg-gm-surface">
+                    {t('common.reset')}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          <AuditFunnelChart range={days} />
+          <AuditTrafficChart range={days} />
+        </TabsContent>
+
+        {/* ==================== COHORT TAB ==================== */}
+        <TabsContent value="cohort" className="animate-in fade-in duration-700 space-y-8">
+          <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+            <CardHeader className="p-8 pb-4 border-b border-gm-border-soft bg-gm-surface/40">
+              <CardTitle className="font-serif text-2xl flex items-center gap-3">
+                <Filter className="h-5 w-5 text-gm-gold" /> Filtreler
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8">
+              <form onSubmit={onSubmitMetrics} className="grid gap-6 md:grid-cols-4">
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">Hafta Sayısı</Label>
+                  <Select value={daysText} onValueChange={setDaysText}>
+                    <SelectTrigger className="bg-gm-surface border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gm-surface border-gm-border-soft rounded-2xl">
+                      <SelectItem value="4">Son 4 Hafta</SelectItem>
+                      <SelectItem value="8">Son 8 Hafta</SelectItem>
+                      <SelectItem value="12">Son 12 Hafta</SelectItem>
+                      <SelectItem value="24">Son 24 Hafta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="md:col-span-4 flex items-center gap-2 pt-4">
+                  <Button type="submit" disabled={metricsLoading} className="rounded-full bg-gm-gold hover:bg-gm-gold-light text-gm-bg px-8 h-12">
+                    <Search className="mr-2 h-4 w-4" /> {t('common.apply')}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+
+          <AuditCohortChart range={daysText} />
         </TabsContent>
 
         {/* ==================== STREAM TAB ==================== */}

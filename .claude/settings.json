@@ -149,7 +149,11 @@
       "Bash(mysql --protocol=TCP -h 127.0.0.1 -P 3307 -u app -papp goldmoodastro -e \"SELECT 1\")",
       "Bash(mysql --protocol=TCP -h 127.0.0.1 -P 3307 -u root -proot -e \"SHOW DATABASES\")",
       "Bash(curl -s http://localhost:8094/api/health)",
-      "Bash(echo \"exit=$?\")"
+      "Bash(echo \"exit=$?\")",
+      "Bash(git status *)",
+      "Bash(./deploy/deploy.sh admin *)",
+      "Bash(./deploy/deploy.sh frontend *)",
+      "Bash(echo \"BE exit=$?\")"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [

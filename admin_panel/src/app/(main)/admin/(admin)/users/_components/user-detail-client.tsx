@@ -24,8 +24,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { UserActivityPanel } from './UserActivityPanel';
 
 import type { UserRoleName, AdminUserView } from '@/integrations/shared';
 import {
@@ -220,8 +222,18 @@ export default function UserDetailClient({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Profile Card */}
+      <Tabs defaultValue="profile" className="w-full space-y-8">
+        <TabsList className="bg-gm-surface/30 border border-gm-border-soft p-1.5 rounded-full h-auto backdrop-blur-sm">
+          <TabsTrigger value="profile" className="rounded-full px-8 py-2.5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg transition-all text-[10px] font-bold tracking-widest uppercase">
+            Profil & Ayarlar
+          </TabsTrigger>
+          <TabsTrigger value="activity" className="rounded-full px-8 py-2.5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg transition-all text-[10px] font-bold tracking-widest uppercase">
+            Aktivite Geçmişi
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="profile" className="grid gap-8 lg:grid-cols-3">
+          {/* Profile Card */}
         <Card className="lg:col-span-2 bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl flex flex-col">
           <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">
             <CardTitle className="font-serif text-2xl flex items-center gap-3">
@@ -410,7 +422,12 @@ export default function UserDetailClient({ id }: { id: string }) {
             </CardContent>
           </Card>
         </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="activity">
+          <UserActivityPanel userId={id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

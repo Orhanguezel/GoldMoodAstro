@@ -15,6 +15,7 @@ import type { FooterSectionDto, PublicMenuItemDto } from '@/integrations/shared'
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 import { useAuthStore } from '@/features/auth/auth.store';
+import { trackEvent } from '@/integrations/telemetry';
 
 const isExternalHref = (href: string) =>
   /^https?:\/\//i.test(href) || /^mailto:/i.test(href) || /^tel:/i.test(href);
@@ -180,6 +181,7 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
                 <Link 
                   href={localizePath(locale, '/register')} 
                   className="inline-flex items-center gap-2 text-[var(--gm-text)] hover:text-[var(--gm-gold)] transition-colors text-[13px] font-bold tracking-wider uppercase border border-[var(--gm-border-soft)] rounded-full px-5 py-2 w-fit bg-[var(--gm-surface)]/20 hover:border-[var(--gm-gold)]/40"
+                  onClick={() => trackEvent('signup_start').catch(() => {})}
                 >
                   {locale === 'tr' ? 'Hesap Aç' : 'Create Account'}
                 </Link>

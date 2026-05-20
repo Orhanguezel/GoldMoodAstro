@@ -14,6 +14,7 @@ import CookieConsentBanner from '../layout/banner/CookieConsentBanner';
 import PwaRegistration from '../components/system/PwaRegistration';
 import DevPaymentCardBanner from '../components/dev/DevPaymentCardBanner';
 import { resetLayoutSeo } from '../seo';
+import { trackEvent } from '../integrations/telemetry';
 
 const SitePopups = dynamic(() => import('../layout/banner/SitePopups'), {
   ssr: false,
@@ -46,6 +47,8 @@ export default function ClientLayout({
   useEffect(() => {
      // Reset SEO store on route change
      resetLayoutSeo();
+     // Track page view
+     trackEvent('page_view').catch(() => {});
   }, [pathname, searchParams]);
 
   useEffect(() => {

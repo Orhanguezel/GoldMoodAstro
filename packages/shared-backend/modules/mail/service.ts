@@ -563,6 +563,63 @@ export async function sendWelcomeMail(input: WelcomeMailInput) {
 }
 
 /* ==================================================================
+   EMAIL VERIFICATION MAIL (email_templates → email_verification)
+// ================================================================== */
+
+const emailVerificationMailSchema = z.object({
+  to: z.string().email(),
+  user_name: z.string(),
+  verification_link: z.string().min(1),
+  expires_in: z.string().optional(),
+  site_name: z.string().optional(),
+  locale: z.string().optional(),
+});
+
+export type EmailVerificationMailInput =
+  z.infer<typeof emailVerificationMailSchema>;
+
+export async function sendEmailVerificationMail(
+  input: EmailVerificationMailInput,
+) {
+  const data = emailVerificationMailSchema.parse(input);
+
+  const baseParams: Record<string, unknown> = {
+    user_name: data.user_name,
+    verification_link: data.verification_link,
+    expires_in: data.expires_in ?? "24 saat",
+    site_name: data.site_name,
+  };
+
+  const params = await enrichParamsWithSiteName(baseParams);
+
+  const rendered = await renderEmailTemplateByKey(
+    "email_verification",
+    params,
+    data.locale ?? null,
+  );
+
+  if (!rendered) {
+    throw new Error("email_template_not_found:email_verification");
+  }
+
+  if (rendered.missing_variables.length > 0) {
+    throw new Error(
+      `email_template_missing_params:email_verification:${rendered.missing_variables.join(
+        ",",
+      )}`,
+    );
+  }
+
+  await sendMail({
+    to: data.to,
+    subject: rendered.subject,
+    html: rendered.html,
+  });
+
+  return rendered;
+}
+
+/* ==================================================================
    PASSWORD CHANGED MAIL (email_templates → password_changed)
 // ================================================================== */
 
@@ -675,4 +732,3 @@ export async function sendMailRaw(input: SendMailInput) {
     throw err;
   }
 }
-

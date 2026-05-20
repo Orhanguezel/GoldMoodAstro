@@ -146,6 +146,20 @@ export const authAdminApi = baseApi.injectEndpoints({
         { type: 'AdminUsers' as const, id: 'LIST' },
       ],
     }),
+
+    /** GET /users/:id/activity */
+    adminGetUserActivity: b.query<any, { id: string; range?: string }>({
+      query: ({ id, range }) => {
+        const sp = new URLSearchParams();
+        if (range) sp.set('range', range);
+        const qs = sp.toString();
+        return {
+          url: qs ? `${ADMIN_USERS_BASE}/${encodeURIComponent(id)}/activity?${qs}` : `${ADMIN_USERS_BASE}/${encodeURIComponent(id)}/activity`,
+          method: 'GET',
+        };
+      },
+      providesTags: (_r, _e, arg) => [{ type: 'Activity' as const, id: arg.id }],
+    }),
   }),
   overrideExisting: true,
 });
@@ -158,6 +172,7 @@ export const {
   useAdminSetRolesMutation,
   useAdminSetPasswordMutation,
   useAdminRemoveUserMutation,
+  useAdminGetUserActivityQuery,
 } = authAdminApi;
 
 // Legacy/admin-panel aliases
@@ -168,3 +183,4 @@ export const useSetUserActiveAdminMutation = useAdminSetActiveMutation;
 export const useSetUserRolesAdminMutation = useAdminSetRolesMutation;
 export const useSetUserPasswordAdminMutation = useAdminSetPasswordMutation;
 export const useRemoveUserAdminMutation = useAdminRemoveUserMutation;
+export const useGetUserActivityAdminQuery = useAdminGetUserActivityQuery;
