@@ -369,9 +369,13 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                   )}
                 </Link>
               )}
-              <Link href={consultantsHref} className="btn-premium py-2.5 px-6 text-[12px]">
-                {ui('ui_header_cta', 'DANIŞMAN BUL')}
-              </Link>
+              {/* "DANIŞMAN BUL" public listeye gider — consultant zaten danışmandır, gizle.
+                  "Danışman Paneli" ile karışmasın. */}
+              {!isConsultant && (
+                <Link href={consultantsHref} className="btn-premium py-2.5 px-6 text-[12px]">
+                  {ui('ui_header_cta', 'DANIŞMAN BUL')}
+                </Link>
+              )}
 
               {/* Hamburger Toggle */}
               <button
@@ -461,9 +465,11 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
               );
             })}
           </ul>
-          <Link href={consultantsHref} className="btn-premium w-full max-w-xs text-center" onClick={() => setMobileOpen(false)}>
-            {ui('ui_header_cta', 'DANIŞMAN BUL')}
-          </Link>
+          {!isConsultant && (
+            <Link href={consultantsHref} className="btn-premium w-full max-w-xs text-center" onClick={() => setMobileOpen(false)}>
+              {ui('ui_header_cta', 'DANIŞMAN BUL')}
+            </Link>
+          )}
           {isConsultant && (
             <Link
               href={consultantPanelHref}

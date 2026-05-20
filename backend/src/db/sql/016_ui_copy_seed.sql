@@ -764,3 +764,45 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('00000000-0000-0000-0000-00000000000c','ui_dashboard_services_intro','*','{"label":{"tr":"Hizmet paketlerinizi buradan yönetin. Ücretsiz tanışma paketi ekleyebilirsiniz.","en":"Manage your service packages here. You can add a free intro call.","de":"Verwalten Sie hier Ihre Paketangebote. Sie können ein kostenloses Einführungspaket hinzufügen."}}'),
 ('00000000-0000-0000-0000-00000000000d','ui_dashboard_tab_analytics','*','{"label":{"tr":"Analitik","en":"Analytics","de":"Analytik"}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);
+
+-- 2026-05-20 ServicesPanel i18n: 35 yeni anahtar TR/EN/DE
+-- ServicesPanel eksik TR/EN/DE anahtarları (33 anahtar)
+-- Deterministik MD5 UUID, idempotent ON DUPLICATE KEY UPDATE.
+
+INSERT INTO site_settings (id, `key`, locale, value) VALUES
+('00000000-0000-0000-0000-00000000010a','ui_dashboard_service_media_audio_call','*','{"label":{"tr":"Sesli görüşme","en":"Audio call","de":"Audio-Anruf"}}'),
+('00000000-0000-0000-0000-00000000010b','ui_dashboard_service_media_video_call','*','{"label":{"tr":"Görüntülü görüşme","en":"Video call","de":"Videoanruf"}}'),
+('00000000-0000-0000-0000-00000000010c','ui_dashboard_service_error_name_required','*','{"label":{"tr":"İsim zorunlu","en":"Name is required","de":"Name ist erforderlich"}}'),
+('00000000-0000-0000-0000-00000000010d','ui_dashboard_service_error_price_range','*','{"label":{"tr":"0 ile 100.000 arasında olmalı","en":"Must be between 0 and 100,000","de":"Muss zwischen 0 und 100.000 liegen"}}'),
+('00000000-0000-0000-0000-00000000010e','ui_dashboard_service_error_duration_range','*','{"label":{"tr":"15 ile 480 dakika arasında olmalı","en":"Must be between 15 and 480 minutes","de":"Muss zwischen 15 und 480 Minuten liegen"}}'),
+('00000000-0000-0000-0000-00000000010f','ui_dashboard_service_created','*','{"label":{"tr":"Hizmet eklendi","en":"Service added","de":"Dienst hinzugefügt"}}'),
+('00000000-0000-0000-0000-000000000110','ui_dashboard_service_create_failed','*','{"label":{"tr":"Hizmet eklenemedi","en":"Could not add service","de":"Dienst konnte nicht hinzugefügt werden"}}'),
+('00000000-0000-0000-0000-000000000111','ui_dashboard_service_error_one_active','*','{"label":{"tr":"En az bir aktif hizmet kalmalı","en":"At least one active service must remain","de":"Mindestens ein aktiver Dienst muss bleiben"}}'),
+('00000000-0000-0000-0000-000000000112','ui_dashboard_saved','*','{"label":{"tr":"Kaydedildi","en":"Saved","de":"Gespeichert"}}'),
+('00000000-0000-0000-0000-000000000113','ui_dashboard_save_failed','*','{"label":{"tr":"Kaydedilemedi","en":"Could not save","de":"Konnte nicht gespeichert werden"}}'),
+('00000000-0000-0000-0000-000000000114','ui_dashboard_service_delete_confirm','*','{"label":{"tr":"\"{name}\" silinsin mi?","en":"Delete \"{name}\"?","de":"\"{name}\" löschen?"}}'),
+('00000000-0000-0000-0000-000000000115','ui_dashboard_deleted','*','{"label":{"tr":"Silindi","en":"Deleted","de":"Gelöscht"}}'),
+('00000000-0000-0000-0000-000000000116','ui_dashboard_delete_failed','*','{"label":{"tr":"Silinemedi","en":"Could not delete","de":"Konnte nicht gelöscht werden"}}'),
+('00000000-0000-0000-0000-000000000117','ui_dashboard_service_order_updated','*','{"label":{"tr":"Sıra güncellendi","en":"Order updated","de":"Reihenfolge aktualisiert"}}'),
+('00000000-0000-0000-0000-000000000118','ui_dashboard_service_order_failed','*','{"label":{"tr":"Sıra güncellenemedi","en":"Could not update order","de":"Reihenfolge konnte nicht aktualisiert werden"}}'),
+('00000000-0000-0000-0000-000000000119','ui_dashboard_service_new','*','{"label":{"tr":"Yeni Hizmet","en":"New Service","de":"Neuer Dienst"}}'),
+('00000000-0000-0000-0000-00000000011a','ui_dashboard_service_name_placeholder','*','{"label":{"tr":"Hizmet adı, örn. Bireysel Seans","en":"Service name, e.g. Personal Session","de":"Dienstname, z.B. Einzelsitzung"}}'),
+('00000000-0000-0000-0000-00000000011b','ui_dashboard_service_slug_placeholder','*','{"label":{"tr":"slug, otomatik oluşturulur","en":"slug, generated automatically","de":"Slug, automatisch generiert"}}'),
+('00000000-0000-0000-0000-00000000011c','ui_dashboard_service_duration_placeholder','*','{"label":{"tr":"Süre (dk)","en":"Duration (min)","de":"Dauer (Min)"}}'),
+('00000000-0000-0000-0000-00000000011d','ui_dashboard_service_price_placeholder','*','{"label":{"tr":"Fiyat","en":"Price","de":"Preis"}}'),
+('00000000-0000-0000-0000-00000000011e','ui_dashboard_service_description_placeholder','*','{"label":{"tr":"Açıklama, isteğe bağlı","en":"Description, optional","de":"Beschreibung, optional"}}'),
+('00000000-0000-0000-0000-00000000011f','ui_dashboard_service_media_type','*','{"label":{"tr":"Görüşme Türü","en":"Media Type","de":"Medientyp"}}'),
+('00000000-0000-0000-0000-000000000120','ui_dashboard_service_free_intro','*','{"label":{"tr":"Ücretsiz Tanışma","en":"Free Intro Call","de":"Kostenloses Vorgespräch"}}'),
+('00000000-0000-0000-0000-000000000121','ui_dashboard_status_active','*','{"label":{"tr":"Aktif","en":"Active","de":"Aktiv"}}'),
+('00000000-0000-0000-0000-000000000122','ui_dashboard_services_empty','*','{"label":{"tr":"Henüz hizmet eklemediniz.","en":"You have not added any services yet.","de":"Sie haben noch keine Dienste hinzugefügt."}}'),
+('00000000-0000-0000-0000-000000000123','ui_dashboard_service_template_added','*','{"label":{"tr":"\"{name}\" hizmetlerinize eklendi.","en":"\"{name}\" was added to your services.","de":"\"{name}\" wurde zu Ihren Diensten hinzugefügt."}}'),
+('00000000-0000-0000-0000-000000000124','ui_dashboard_service_template_add_failed','*','{"label":{"tr":"Şablon eklenemedi.","en":"Could not add template.","de":"Vorlage konnte nicht hinzugefügt werden."}}'),
+('00000000-0000-0000-0000-000000000125','ui_dashboard_service_templates_title','*','{"label":{"tr":"Önerilen Şablonlar (taslak)","en":"Suggested Templates (draft)","de":"Vorgeschlagene Vorlagen (Entwurf)"}}'),
+('00000000-0000-0000-0000-000000000126','ui_dashboard_service_templates_desc','*','{"label":{"tr":"Uzmanlıklarınıza uygun hazır şablonları kullanarak hizmetlerinizi hızlıca açın.","en":"Use ready templates matched to your specialties to open services faster.","de":"Verwenden Sie fertige Vorlagen für Ihre Spezialgebiete."}}'),
+('00000000-0000-0000-0000-000000000127','ui_dashboard_service_media_video','*','{"label":{"tr":"Görüntülü","en":"Video","de":"Video"}}'),
+('00000000-0000-0000-0000-000000000128','ui_dashboard_service_media_audio','*','{"label":{"tr":"Sesli","en":"Audio","de":"Audio"}}'),
+('00000000-0000-0000-0000-000000000129','ui_dashboard_free','*','{"label":{"tr":"Ücretsiz","en":"Free","de":"Kostenlos"}}'),
+('00000000-0000-0000-0000-00000000012a','ui_dashboard_service_template_added_badge','*','{"label":{"tr":"Eklendi","en":"Added","de":"Hinzugefügt"}}'),
+('00000000-0000-0000-0000-00000000012b','ui_dashboard_service_template_use','*','{"label":{"tr":"Kullan / Düzenle","en":"Use / Edit","de":"Verwenden / Bearbeiten"}}'),
+('00000000-0000-0000-0000-00000000012c','ui_dashboard_deactivate','*','{"label":{"tr":"Pasifleştir","en":"Deactivate","de":"Deaktivieren"}}')
+ON DUPLICATE KEY UPDATE value = VALUES(value);
