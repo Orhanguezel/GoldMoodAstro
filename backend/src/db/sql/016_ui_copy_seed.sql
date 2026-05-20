@@ -812,3 +812,10 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('00000000-0000-0000-0000-000000000123','ui_dashboard_service_template_added','*','{"label":{"tr":"{name} hizmetlerinize eklendi.","en":"{name} was added to your services.","de":"{name} wurde zu Ihren Diensten hinzugefügt."}}'),
 ('00000000-0000-0000-0000-000000000114','ui_dashboard_service_delete_confirm','*','{"label":{"tr":"{name} silinsin mi?","en":"Delete {name}?","de":"{name} löschen?"}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);
+
+-- 2026-05-20 ConsultantDashboard 3 eksik anahtar (greeting/page_title/view_profile)
+INSERT INTO site_settings (id, `key`, locale, value) VALUES
+('00000000-0000-0000-0000-00000000020a','ui_dashboard_greeting','*','{"label":{"tr":"Merhaba, {name}","en":"Hello, {name}","de":"Hallo, {name}"}}'),
+('00000000-0000-0000-0000-00000000020b','ui_dashboard_page_title','*','{"label":{"tr":"Danışman Paneli","en":"Consultant Panel","de":"Berater-Panel"}}'),
+('00000000-0000-0000-0000-00000000020c','ui_dashboard_view_profile','*','{"label":{"tr":"Profili Görüntüle","en":"View Profile","de":"Profil ansehen"}}')
+ON DUPLICATE KEY UPDATE value = VALUES(value);
