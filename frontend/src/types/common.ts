@@ -178,6 +178,8 @@ export interface BirthChart {
   pob_label: string;
   tz_offset?: number;
   chart_data: NatalChart;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface BirthChartCreateInput {

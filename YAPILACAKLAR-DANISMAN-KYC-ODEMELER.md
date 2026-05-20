@@ -350,11 +350,11 @@
 - [x] **Admin override:** `?force=true` query param + admin rolü ile bypass — istisnai durumlar için.
 
 ### J4 — Otomatik aylık batch (opsiyonel, faz 2)
-- [ ] **Cron (Codex, ikinci aşama):** Ayın 1'inde (config'ten okur) tüm danışmanlar için:
+- [x] **Cron (Codex):** Ayın 1'inde / `payout_cycle.request_day` gününde (config'ten okur) tüm danışmanlar için:
   - Eğer `available_balance >= min_threshold` ve KYC onaylı → otomatik `withdrawal_requests` row oluştur (status='pending').
   - Admin manuel onaylar.
   - Hold süresi geçmemiş seans hakedişleri dahil edilmez.
-- [x] **MVP'de manuel kalsın:** J4'ü ileriye atalım — önce J3 (kısıt) yeterli; auto-create cron'a sonra geçeriz. — Codex: cron yazılmadı, J3 manuel kısıt ile kapatıldı.
+- [x] **Uygulama notu:** `backend/src/cron/consultant-withdrawals.ts` eklendi; backend startup'ta cron kaydı yapılıyor. Tek seferlik ops komutu: `bun run withdrawals:auto`. Aynı takvim ayında `pending/approved/paid` talep varsa yeni talep açılmaz.
 
 ### J5 — Frontend hardcode kaldırma
 - [x] **WalletPanel (Antigravity):** `WalletPanel.tsx:53` — `?? 15` fallback → `?? null` veya loading state. Veri gelmeden komisyon yazısı render edilmesin (`{commissionRate !== null && <Info ...>}` pattern).
@@ -368,19 +368,19 @@
   - "her zaman ödeme talebi" → "ayda 1 kez ödeme talebi (takvim ayı)"
   - "3-5 iş günü transfer" — aynı kalsın
   - **YENİ MADDE:** "Komisyon oranı %15'ten %30'a çıkarılmıştır; bu değişiklik 30 gün önceden tüm aktif danışmanlara e-posta ile bildirilmiştir. Mevcut açık bakiye eski oran ile hesaplanır; yeni seanslar yeni oran üzerinden işler." — 2026-05-20 içerik dosyası bu metinlerle güncel görünüyor.
-- [ ] **Prod additive:** Sözleşme v1 → v2 arşivlemesi. Önerilen yaklaşım iki seçenek:
+- [x] **Prod additive (Codex):** Sözleşme v1 → v2 arşivlemesi. Seçenek B uygulandı:
   - **Seçenek A (minimum invaziv):** `custom_pages_i18n` tablosuna `version` INT DEFAULT 1 kolonu, mevcut TR/EN/DE içerik v1 kalır; v2 yeni satır ekleyerek (`UNIQUE (custom_page_id, locale, version)`) frontend default olarak en yüksek version'u render eder. Önerilen — geçmiş kayıtlı kalıyor.
-  - **Seçenek B (basit):** v1 metnini ayrı `cp-consultant-agreement-v1` sayfasına kopyala, mevcut `cp-consultant-agreement` v2 ile çalışmaya devam etsin. Backwards compatibility kolay; ama URL ayrılığı tutarsız.
-  - **Not:** Site yeni kurulum olduğu için dış onay beklenmeyecek; arşivleme sadece ileride izlenebilirlik için yapılacak. Mevcut SQL şu an v2 metniyle deploy edildi → v1 hard-arşiv değilse kayıtlı consultant onaylarının tam olarak hangi metne tekabül ettiği belirsiz kalıyor. Şu an git history (commit öncesi) v1 metnini tutuyor; kalıcı SQL arşivi yapılmadı.
-- [ ] **Migration konteksti:** Mevcut danışman onayları (`consultants.agreement_accepted_at`) eski v1'e refere.
+  - **Seçenek B (basit):** v1 metni ayrı `cp-consultant-agreement-v1` sayfasına kopyalandı; mevcut `cp-consultant-agreement` v2 ile çalışmaya devam eder. Dosya: `198b_consultant_agreement_v1_archive.sql`.
+  - **Not:** Site yeni kurulum olduğu için dış onay beklenmeyecek; arşivleme sadece ileride izlenebilirlik için yapıldı.
+- [x] **Migration konteksti (Codex):** Mevcut danışman onayları (`consultants.agreement_accepted_at`) eski v1'e refere.
   - **Türk Borçlar Kanunu yorum:** Sözleşme madde 2'de "değişikliği kabul etmeyen danışman sözleşmeyi feshedebilir" yazıyor → opt-out modeli, otomatik reaccept gerekmiyor (J7 mail bildirimi + 30-gün süresi geçince zımni kabul).
   - **Önerilen UX:** Yasal olarak gerekmese de güven için danışman dashboard'unda "Yeni sözleşme metnini onayla" banner'ı eklenebilir; `consultants.agreement_version_accepted` INT kolonu ile track. Şu an v1'de kalan tüm danışmanlar 2026-06-20'de otomatik v2'ye geçmiş sayılır (mailli bildirim + opt-out hakkı).
-  - **Sonraki adım:** Dış onay beklemeden v2 arşivleme ve opsiyonel dashboard banner işi Faz 2'de implement edilebilir; effective_from'a kadar süre var.
+  - **Sonraki adım:** Opsiyonel dashboard banner işi Faz 2'de implement edilebilir; v1 arşiv sayfası hazır.
 
 ### J7 — Komisyon oranı değişimi BİLDİRİMİ (yasal zorunluluk)
-- [ ] **30-gün önceden bildirim (Claude/içerik):** Sözleşme madde 2'de yazıyor: "Komisyon oranı değiştiğinde danışmana en az 30 gün önceden e-posta ile bildirilir". Hayata geçirmek için:
+- [x] **30-gün önceden bildirim altyapısı (Codex):** Sözleşme madde 2'de yazıyor: "Komisyon oranı değiştiğinde danışmana en az 30 gün önceden e-posta ile bildirilir". Hayata geçirmek için:
   - **Bildirim mail template (Codex):** `commission_rate_change` template (TR/EN/DE) — "Komisyon oranı 2026-06-20'den itibaren %30 olacak. İtirazınız varsa sözleşmeyi feshetme hakkınız vardır." — ✅ Codex seed'i eklendi.
-  - **One-shot script (Claude):** Tüm aktif onaylanmış danışmanlara bu maili gönder; site_settings'te `commission_change_announcement_sent_at` flag'i sakla.
+  - **One-shot script/admin endpoint (Codex):** Tüm aktif onaylanmış danışmanlara bu maili gönderir; `consultants.commission_change_announcement_sent_at` flag'i saklanır. Admin panel endpoint'i ve CLI hazır: `bun run commission:notice` dry-run, gerçek gönderim için `bun run commission:notice -- --send`.
   - **Geçiş tarihi:** `effective_from` = bildirimden 30 gün sonra (örn. bugün 2026-05-20 bildirim → 2026-06-20 yürürlük). DB seed'i effective_from içerecek; backend bu tarihten itibaren %30 uygular.
 - [x] **Geçiş öncesi/sonrası ayrımı (Codex):** `getPlatformCommissionPercent()` artık date-aware olmalı:
   - Eğer `effective_from > now()` → eski oran (15)
@@ -403,7 +403,7 @@
   5. WalletPanel + BecomeConsultantPage + checkout `?? 15` hardcode'ları kaldırıldı ✓ (Agent C doğruladı; J8 final grep 0 commission-hardcode).
   6. Admin paneli Raw JSON ile `effective_from`/`previous_percent`/`minimum_notice_days` editlenebilir ✓.
 - [x] **Onay beklenmiyor:** Site yeni kurulum. Komisyon danışanla ilgili değildir; danışman-platform arası hakediş kesintisidir. Danışan ödeme ekranında komisyon/hizmet bedeli satırı gösterilmez.
-- [ ] **One-shot mail script (J7 ikinci adım):** `commission_rate_change` template seed'i hazır; aktif onaylanmış danışmanlara TR/EN/DE locale'larına göre tek seferlik mail gönderecek ops script eksik. Effective_from öncesinde koşulmalı.
+- [x] **One-shot mail script (J7 ikinci adım):** `commission_rate_change` template seed'i hazır; aktif onaylanmış danışmanlara TR/EN/DE locale'larına göre tek seferlik mail gönderecek ops script eklendi. Not: Lokal dry-run DB kapalı olduğu için `ECONNREFUSED 127.0.0.1:3306` ile doğrulanamadı; VPS/backend DB açık ortamda `bun run commission:notice` dry-run ve `bun run commission:notice -- --send` gerçek gönderim olarak koşulacak.
 
 ---
 

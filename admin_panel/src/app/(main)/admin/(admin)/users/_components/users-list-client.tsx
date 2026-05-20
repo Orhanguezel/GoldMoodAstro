@@ -96,7 +96,6 @@ export default function UsersListClient() {
   const router = useRouter();
   const sp = useSearchParams();
   const t = useAdminT('admin.users');
-  const tCommon = useAdminT('admin.common');
 
   const params = React.useMemo(() => pickQuery(sp), [sp]);
   const usersQ = useListUsersAdminQuery(params);
@@ -310,7 +309,7 @@ export default function UsersListClient() {
             className="rounded-full border-gm-border-soft px-8 h-12 hover:bg-gm-surface transition-all text-[10px] font-bold tracking-widest uppercase"
           >
             <ChevronLeft className="mr-2 size-4" />
-            {t('pagination.previous')}
+            {t('list.pagination.previous')}
           </Button>
           <Button
             variant="outline"
@@ -319,7 +318,7 @@ export default function UsersListClient() {
             onClick={() => apply({ offset: offset + limit })}
             className="rounded-full border-gm-border-soft px-8 h-12 hover:bg-gm-surface transition-all text-[10px] font-bold tracking-widest uppercase"
           >
-            {t('pagination.next')}
+            {t('list.pagination.next')}
             <ChevronRight className="ml-2 size-4" />
           </Button>
         </div>

@@ -22,6 +22,8 @@
     "gen:theme-snapshot": "bun run scripts/generate-theme-snapshot.ts",
     "check:theme": "bun run scripts/check-theme-snapshot.ts",
     "relax:generate-stems": "bun run scripts/generate-relax-stems.ts",
+    "commission:notice": "bun run --cwd backend commission:notice",
+    "withdrawals:auto": "bun run --cwd backend withdrawals:auto",
     "db:seed": "bun run --cwd backend db:seed",
     "typecheck": "bun run --cwd backend typecheck && bun run --cwd admin_panel typecheck"
   }

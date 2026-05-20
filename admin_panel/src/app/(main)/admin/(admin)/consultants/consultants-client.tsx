@@ -171,10 +171,13 @@ export default function ConsultantsClient() {
 
   async function handleApproveApp(item: ConsultantApplicationAdmin) {
     try {
-      const updated = await approveApp(item.id).unwrap();
-      toast.success('Başvuru onaylandı');
-      setSelected(updated);
+      await approveApp(item.id).unwrap();
+      toast.success('Başvuru onaylandı — kullanıcı hesabı ve davet maili işleniyor.');
+      // Modal'ı kapat ki kullanıcı işlemin tamamlandığını net görsün.
+      setSelected(null);
       appsQuery.refetch();
+      // Yeni eklenmiş danışman kaydı consultants tabında görünecek — onu da yenile.
+      consultantsQuery.refetch();
     } catch (error) {
       const message =
         (error as { data?: { error?: string } })?.data?.error === 'user_required_for_approval'
@@ -191,10 +194,11 @@ export default function ConsultantsClient() {
       return;
     }
     try {
-      const updated = await rejectApp({ id: rejectTarget.id, rejection_reason: reason.trim() }).unwrap();
+      await rejectApp({ id: rejectTarget.id, rejection_reason: reason.trim() }).unwrap();
       toast.success('Başvuru reddedildi');
-      setSelected(updated);
+      // Hem reddet modal'ını hem de detay modal'ını kapat.
       setRejectTarget(null);
+      setSelected(null);
       setReason('');
       appsQuery.refetch();
     } catch {

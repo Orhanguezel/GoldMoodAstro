@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cinzel } from 'next/font/google';
 import BirthChartForm from '@/components/containers/birth-chart/BirthChartForm';
@@ -13,6 +13,11 @@ import ShareCard from '@/components/common/ShareCard';
 import PageContainer from '@/components/common/PageContainer';
 
 import { useBrand } from '@/hooks/useBrand';
+import { useAuthStore } from '@/features/auth/auth.store';
+import {
+  useListMyBirthChartsQuery,
+  useDeleteBirthChartMutation,
+} from '@/integrations/rtk/public/birth_charts.endpoints';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -27,6 +32,40 @@ export default function BigThree() {
   const [result, setResult] = useState<BirthChart | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Auto-load: oturum açmış kullanıcının kayıtlı doğum haritası varsa, formu
+  // boş gösterip tekrar veri istemek yerine kayıtlı veriyi otomatik yükle.
+  // Kullanıcı "Yeni Harita" butonuyla mevcut kaydı silip baştan başlatabilir.
+  const { isAuthenticated } = useAuthStore();
+  const { data: savedCharts } = useListMyBirthChartsQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  const [deleteChart] = useDeleteBirthChartMutation();
+
+  useEffect(() => {
+    if (isAuthenticated && !result && savedCharts && savedCharts.length > 0) {
+      const latest = savedCharts[0];
+      if (latest) setResult(latest);
+    }
+  }, [isAuthenticated, savedCharts, result]);
+
+  const handleResetForNewSearch = async () => {
+    if (!isAuthenticated || !result?.id) {
+      setResult(null);
+      return;
+    }
+    const confirmDelete = window.confirm(
+      'Kayıtlı doğum haritanız silinerek yeni hesaplama açılacak. Devam edilsin mi?',
+    );
+    if (!confirmDelete) return;
+    try {
+      await deleteChart(result.id).unwrap();
+      toast.success('Kayıt silindi, yeni hesaplama açıldı');
+      setResult(null);
+    } catch {
+      toast.error('Kayıt silinemedi');
+    }
+  };
 
   const sunSign = result?.chart_data.planets.sun.sign;
   const moonSign = result?.chart_data.planets.moon.sign;
@@ -55,9 +94,6 @@ export default function BigThree() {
   return (
     <PageContainer className="max-w-4xl">
       <div className="text-center mb-12">
-        <h2 className={`${cinzel.className} text-4xl md:text-6xl mb-4 text-brand-gold`}>
-          Büyük Üçlü
-        </h2>
         <p className="text-lg text-muted-foreground italic max-w-2xl mx-auto">
           Güneş, Ay ve Yükselen burcunuzla kozmik kimlik kartınızı oluşturun ve paylaşın.
         </p>
@@ -161,10 +197,10 @@ export default function BigThree() {
                 }}
               />
 
-              <button 
-                onClick={() => setResult(null)}
+              <button
+                onClick={handleResetForNewSearch}
                 className="p-4 rounded-full bg-surface border border-border/40 hover:text-brand-gold transition-colors"
-                title="Yeniden Hesapla"
+                title={isAuthenticated ? 'Sil ve Yeniden Hesapla' : 'Yeniden Hesapla'}
               >
                 <RefreshCcw className="w-5 h-5" />
               </button>

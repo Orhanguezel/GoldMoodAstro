@@ -32,6 +32,7 @@ const READING_LABELS: Record<ReadingType, string> = {
   numerology: 'Numeroloji',
   yildizname: 'Yıldızname',
   synastry: 'Sinastri',
+  birth_chart: 'Doğum Haritası',
 };
 
 const READING_ICONS: Record<ReadingType, string> = {
@@ -41,6 +42,7 @@ const READING_ICONS: Record<ReadingType, string> = {
   numerology: 'N',
   yildizname: 'Y',
   synastry: 'S',
+  birth_chart: 'D',
 };
 
 function readingHref(locale: string, item: HistoryItem) {
@@ -51,6 +53,7 @@ function readingHref(locale: string, item: HistoryItem) {
     numerology: '/numeroloji',
     yildizname: `/yildizname/result/${item.id}`,
     synastry: `/sinastri/result/${item.id}`,
+    birth_chart: '/birth-chart',
   };
   return `/${locale}${routes[item.type]}`;
 }

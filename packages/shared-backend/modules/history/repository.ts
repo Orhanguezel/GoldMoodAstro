@@ -9,7 +9,8 @@ export type ReadingType =
   | 'dream'
   | 'numerology'
   | 'yildizname'
-  | 'synastry';
+  | 'synastry'
+  | 'birth_chart';
 
 export const READING_TYPES: ReadingType[] = [
   'tarot',
@@ -18,6 +19,7 @@ export const READING_TYPES: ReadingType[] = [
   'numerology',
   'yildizname',
   'synastry',
+  'birth_chart',
 ];
 
 export type HistoryRow = {
@@ -81,6 +83,14 @@ export async function getUserHistory(
     FROM synastry_reports
     WHERE user_id = ${userId}
 
+    UNION ALL
+
+    SELECT 'birth_chart' as type, id, created_at,
+           CONCAT('Doğum Haritası · ', name) as title,
+           pob_label as snippet
+    FROM birth_charts
+    WHERE user_id = ${userId}
+
     ORDER BY created_at DESC
     LIMIT ${limit}
   `;
@@ -107,6 +117,8 @@ function deleteQuery(type: ReadingType, id: string, userId: string): SQL<unknown
       return sql`DELETE FROM yildizname_readings WHERE id = ${id} AND user_id = ${userId}`;
     case 'synastry':
       return sql`DELETE FROM synastry_reports WHERE id = ${id} AND user_id = ${userId}`;
+    case 'birth_chart':
+      return sql`DELETE FROM birth_charts WHERE id = ${id} AND user_id = ${userId}`;
   }
 }
 
@@ -124,6 +136,8 @@ function deleteAllForTypeQuery(type: ReadingType, userId: string): SQL<unknown> 
       return sql`DELETE FROM yildizname_readings WHERE user_id = ${userId}`;
     case 'synastry':
       return sql`DELETE FROM synastry_reports WHERE user_id = ${userId}`;
+    case 'birth_chart':
+      return sql`DELETE FROM birth_charts WHERE user_id = ${userId}`;
   }
 }
 
@@ -148,6 +162,7 @@ export async function deleteAllReadings(
     numerology: 0,
     yildizname: 0,
     synastry: 0,
+    birth_chart: 0,
   };
 
   for (const type of READING_TYPES) {

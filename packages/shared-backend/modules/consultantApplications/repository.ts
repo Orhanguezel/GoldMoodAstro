@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { and, desc, eq } from 'drizzle-orm';
+import { hash as argonHash } from 'argon2';
 import { appConfig } from '@goldmood/shared-config/appConfig';
 import { db } from '../../db/client';
 import { users } from '../auth/schema';
@@ -91,16 +92,48 @@ async function resolveUserId(app: ConsultantApplication): Promise<string | null>
   return user?.id ?? null;
 }
 
+/**
+ * Başvurudaki email için users tablosunda kayıt yoksa, application alanlarından
+ * (full_name + phone) yeni bir user oluşturur. Random argon2 hash ile şifre kilitli;
+ * kullanıcı email'le gönderilen şifre belirleme bağlantısından kendi şifresini set
+ * etmek zorundadır. Onaylama akışı anonim form gönderimlerini buradan çözer.
+ */
+async function createUserForApplication(app: ConsultantApplication): Promise<string> {
+  const id = randomUUID();
+  const password_hash = await argonHash(randomUUID());
+  await db.insert(users).values({
+    id,
+    email: app.email,
+    password_hash,
+    full_name: app.full_name,
+    phone: app.phone ?? null,
+    role: 'consultant',
+    is_active: 1,
+    email_verified: 0,
+  } as any);
+  return id;
+}
+
+export type ApproveApplicationResult = {
+  application: ConsultantApplication;
+  user_id: string;
+  /** approveApplication içinde yeni user oluştuysa true. Controller bunu görür ve
+   *  "şifre belirleme" davet maili gönderir; aksi takdirde sade onay maili gider. */
+  created_new_user: boolean;
+};
+
 export async function approveApplication(
   id: string,
   reviewerId: string | null,
-): Promise<ConsultantApplication | null> {
+): Promise<ApproveApplicationResult | null> {
   const app = await getApplication(id);
   if (!app) return null;
 
-  const userId = await resolveUserId(app);
+  let userId = await resolveUserId(app);
+  let createdNewUser = false;
   if (!userId) {
-    throw Object.assign(new Error('user_required_for_approval'), { statusCode: 400 });
+    userId = await createUserForApplication(app);
+    createdNewUser = true;
   }
 
   await db.transaction(async (tx) => {
@@ -155,7 +188,9 @@ export async function approveApplication(
       .where(eq(consultantApplications.id, id));
   });
 
-  return getApplication(id);
+  const fresh = await getApplication(id);
+  if (!fresh) return null;
+  return { application: fresh, user_id: userId, created_new_user: createdNewUser };
 }
 
 export async function rejectApplication(

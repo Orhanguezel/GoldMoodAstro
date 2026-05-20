@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { Edit3, Plus, Save, Trash2, X } from 'lucide-react';
+import React, { useMemo, useRef, useState } from 'react';
+import { Edit3, ImagePlus, Loader2, Plus, Save, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   type CustomPageDto,
@@ -14,7 +14,9 @@ import {
   useListMyConsultantBlogPostsQuery,
   useUpdateMyConsultantBlogPostMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
+import { useUploadToBucketMutation } from '@/integrations/rtk/public/storage_public.endpoints';
 import { useUiSection } from '@/i18n';
+import RichTextEditor from '@/components/common/RichTextEditor';
 
 type BlogForm = {
   id?: string;
@@ -68,13 +70,26 @@ function toForm(post: CustomPageDto): BlogForm {
   };
 }
 
-export default function BlogPanel({ locale }: { locale: string }) {
+type BlogPanelProps = {
+  locale: string;
+  consultantId?: string;
+};
+
+export default function BlogPanel({ locale, consultantId }: BlogPanelProps) {
   const { ui } = useUiSection('ui_dashboard', locale as any);
   const [form, setForm] = useState<BlogForm | null>(null);
   const { data: posts = [], isLoading } = useListMyConsultantBlogPostsQuery({ locale });
   const [createPost, createState] = useCreateMyConsultantBlogPostMutation();
   const [updatePost, updateState] = useUpdateMyConsultantBlogPostMutation();
   const [deletePost, deleteState] = useDeleteMyConsultantBlogPostMutation();
+  const [uploadCover, coverUploadState] = useUploadToBucketMutation();
+  const coverInputRef = useRef<HTMLInputElement | null>(null);
+
+  const editorFolder = useMemo(() => {
+    const slug = form?.slug?.trim();
+    if (consultantId) return slug ? `${consultantId}/${slug}` : consultantId;
+    return slug || 'editor';
+  }, [consultantId, form?.slug]);
 
   const busy = isLoading || createState.isLoading || updateState.isLoading || deleteState.isLoading;
   const sortedPosts = useMemo(() => [...posts].sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at))), [posts]);
@@ -119,6 +134,31 @@ export default function BlogPanel({ locale }: { locale: string }) {
       setForm(null);
     } catch (error) {
       toast.error(extractApiError(error, ui('ui_dashboard_blog_save_failed', 'Blog post could not be saved')));
+    }
+  };
+
+  const handleCoverFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error(ui('ui_dashboard_blog_cover_invalid', 'Please choose an image file.'));
+      return;
+    }
+    try {
+      const res = await uploadCover({
+        bucket: 'consultant_blog',
+        files: file,
+        path: `${editorFolder}/cover`,
+        upsert: true,
+      }).unwrap();
+      const item = res.items?.[0];
+      const url = item?.url || (item?.path ? `/uploads/${item.path}` : '');
+      if (!url) throw new Error('upload_url_missing');
+      patchForm({ featured_image: url });
+      toast.success(ui('ui_dashboard_blog_cover_uploaded', 'Cover image uploaded'));
+    } catch (error) {
+      toast.error(extractApiError(error, ui('ui_dashboard_blog_cover_failed', 'Cover image upload failed')));
     }
   };
 
@@ -167,8 +207,49 @@ export default function BlogPanel({ locale }: { locale: string }) {
               <textarea value={form.summary} onChange={(event) => patchForm({ summary: event.target.value })} className="input min-h-24" />
             </Field>
             <div className="grid gap-4">
-              <Field label={ui('ui_dashboard_blog_cover_url_label', 'Cover Image URL')}>
-                <input value={form.featured_image} onChange={(event) => patchForm({ featured_image: event.target.value })} className="input" />
+              <Field label={ui('ui_dashboard_blog_cover_label', 'Cover Image')}>
+                <div className="space-y-3">
+                  {form.featured_image ? (
+                    <div className="flex items-center gap-3 rounded-2xl border border-(--gm-border-soft) bg-(--gm-bg-deep)/40 p-2">
+                      <img
+                        src={form.featured_image}
+                        alt=""
+                        className="h-16 w-24 rounded-xl object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs text-(--gm-text-dim)">{form.featured_image}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => patchForm({ featured_image: '' })}
+                        className="rounded-full border border-(--gm-border-soft) px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-(--gm-text-dim) hover:text-(--gm-gold)"
+                      >
+                        {ui('ui_dashboard_blog_cover_clear', 'Remove')}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => coverInputRef.current?.click()}
+                      disabled={coverUploadState.isLoading}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-dashed border-(--gm-border-soft) bg-(--gm-bg-deep)/30 px-4 py-3 text-xs text-(--gm-text-dim) hover:border-(--gm-gold)/50 hover:text-(--gm-gold) disabled:opacity-50"
+                    >
+                      {coverUploadState.isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ImagePlus className="h-4 w-4" />
+                      )}
+                      {ui('ui_dashboard_blog_cover_upload', 'Upload cover image')}
+                    </button>
+                  )}
+                  <input
+                    ref={coverInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleCoverFile}
+                  />
+                </div>
               </Field>
               <Field label={ui('ui_dashboard_blog_tags_label', 'Tags')}>
                 <input value={form.tags} onChange={(event) => patchForm({ tags: event.target.value })} className="input" placeholder={ui('ui_dashboard_blog_tags_placeholder', 'astrology, tarot')} />
@@ -176,7 +257,14 @@ export default function BlogPanel({ locale }: { locale: string }) {
             </div>
           </div>
           <Field label={ui('ui_dashboard_blog_content_label', 'Content')}>
-            <textarea value={form.content} onChange={(event) => patchForm({ content: event.target.value })} className="input min-h-[260px] font-mono text-sm" />
+            <RichTextEditor
+              value={form.content}
+              onChange={(html) => patchForm({ content: html })}
+              placeholder={ui('ui_dashboard_blog_content_placeholder', 'Start writing your post...')}
+              bucket="consultant_blog"
+              folder={editorFolder}
+              minHeight="320px"
+            />
           </Field>
           <div className="flex justify-end">
             <button onClick={save} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-[var(--gm-gold)] px-6 py-3 text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest">

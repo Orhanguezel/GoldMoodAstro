@@ -30,6 +30,7 @@ import { users } from '@goldmood/shared-backend/modules/auth/schema';
 import { bookings as bookingsTable } from './schema';
 import { consultants } from '../consultants/schema';
 import { consultantServices } from '../consultantServices/schema';
+import { resources } from '../resources/schema';
 import { normalizeSettingBool, getGlobalSettingValue } from '../siteSettings/helpers';
 import { getDefaultLocale } from '../_shared';
 
@@ -37,6 +38,33 @@ const safeText = (v: unknown) => String(v ?? '').trim();
 const now = () => new Date();
 const FALLBACK_SITE_NAME = process.env.APP_NAME || 'Platform';
 const VIDEO_PRICE_FALLBACK_RATE = 1.4;
+
+async function getOrCreateConsultantResource(consultantId: string, consultantUserId: string | null | undefined) {
+  const [existing] = await db
+    .select({ id: resources.id })
+    .from(resources)
+    .where(and(eq(resources.external_ref_id, consultantId), eq(resources.type, 'consultant')))
+    .limit(1);
+
+  if (existing?.id) return existing.id;
+
+  const resourceId = randomUUID();
+  const title = consultantUserId ? `Consultant ${consultantUserId.slice(0, 8)}` : `Consultant ${consultantId.slice(0, 8)}`;
+  const nowDate = new Date();
+
+  await db.insert(resources).values({
+    id: resourceId,
+    type: 'consultant',
+    title,
+    capacity: 1,
+    external_ref_id: consultantId,
+    is_active: 1,
+    created_at: nowDate,
+    updated_at: nowDate,
+  } as any);
+
+  return resourceId;
+}
 
 function parseMoney(v: unknown): number {
   const n = Number(safeText(v));
@@ -608,21 +636,9 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
     const time = nowDate.toTimeString().slice(0, 5);
     const id = randomUUID();
 
-    // Resource'u bul (anlık talepte slot yok ama resource_id NOT NULL)
-    const [r] = await db
-      .select({ id: consultants.id })
-      .from(consultants)
-      .where(eq(consultants.id, consultantId))
-      .limit(1);
-    if (!r) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
-
-    // resources tablosundan external_ref_id ile bul
-    const resourceRes = await db.execute(
-      sql`SELECT id FROM resources WHERE external_ref_id = ${consultantId} AND type = 'consultant' LIMIT 1`,
-    );
-    const resArr = Array.isArray((resourceRes as any)?.[0]) ? (resourceRes as any)[0] : (resourceRes as any);
-    const resource = (resArr as any[])?.[0];
-    if (!resource) return reply.code(400).send({ error: { message: 'resource_not_found' } });
+    // Anlık talepte slot yok ama bookings.resource_id NOT NULL. Eski danışmanlarda
+    // resource seed'i eksik olabiliyor; bu durumda talebi bozmak yerine kaydı tamamla.
+    const resourceId = await getOrCreateConsultantResource(consultantId, c.user_id);
 
     const mediaType = resolveServiceMediaType(serviceRow?.media_type, 'audio');
     const { resolvedPrice } = await resolveMediaAllowedForConsultant({ consultantId, mediaType });
@@ -638,7 +654,7 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
       locale,
       customer_message: customerMessage || null,
       service_id: serviceId || null,
-      resource_id: resource.id,
+      resource_id: resourceId,
       appointment_date: today,
       appointment_time: time,
       session_price: serviceRow?.is_free ? '0.00' : (serviceRow ? toMoneyString(serviceRow.price) : resolvedPrice),

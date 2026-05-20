@@ -27,6 +27,7 @@ import { useListLanguagesPublicQuery } from '@/integrations/rtk/public/languages
 import { useUploadToBucketMutation } from '@/integrations/rtk/public/storage_public.endpoints';
 import { useListSiteSettingsQuery } from '@/integrations/rtk/public/site_settings.endpoints';
 import { cn } from '@/lib/utils';
+import { localizePath } from '@/integrations/shared';
 import Link from 'next/link';
 
 
@@ -386,7 +387,15 @@ export default function BecomeConsultantPage() {
                           <CheckCircle2 size={14} className="absolute text-(--gm-bg-deep) opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
                         </div>
                         <p className="text-[11px] text-(--gm-text-dim) leading-relaxed font-serif italic flex-1 group-hover:text-(--gm-text) transition-colors">
-                          {ui('ui_become_consultant_form_terms_pre', 'Platform komisyon oranını ve')} <Link href="/tr/legal/consultant-agreement" target="_blank" className="text-(--gm-gold) font-bold hover:underline transition-all">{ui('ui_become_consultant_form_terms_link', 'Danışman Kullanım Sözleşmesi')}</Link> {ui('ui_become_consultant_form_terms_post', "'ni okudum, kabul ediyorum.")}
+                          {ui('ui_become_consultant_form_terms_pre', 'Platform komisyon oranını ve')}{' '}
+                          <Link
+                            href={localizePath(locale, locale === 'tr' ? '/legal/danisman-sozlesmesi' : '/legal/consultant-agreement')}
+                            target="_blank"
+                            className="text-(--gm-gold) font-bold hover:underline transition-all"
+                          >
+                            {ui('ui_become_consultant_form_terms_link', 'Danışman Kullanım Sözleşmesi')}
+                          </Link>{' '}
+                          {ui('ui_become_consultant_form_terms_post', "'ni okudum, kabul ediyorum.")}
                         </p>
                       </label>
                     </div>

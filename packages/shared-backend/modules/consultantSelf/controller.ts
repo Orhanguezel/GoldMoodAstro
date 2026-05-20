@@ -29,8 +29,25 @@ import * as customPagesRepo from '../customPages/repository';
 const profilePatchSchema = z.object({
   bio: z.string().trim().max(5000).nullable().optional(),
   expertise: z.array(z.string().trim().toLowerCase().min(1).max(64).regex(/^[a-z0-9_-]+$/, 'slug_format')).min(1).max(8).optional(),
-  languages: z.array(z.string().trim().toLowerCase().min(2).max(8).regex(/^[a-z]+$/, 'slug_format')).min(1).max(10).optional(),
-  meeting_platforms: z.array(z.enum(['audio', 'video'])).max(2).optional(),
+  // Eski kayıtlardaki bozuk dil değerlerini (boş string, locale tag "tr-TR" vs.) sessizce
+  // ele: trim+lowercase ve invalid olanları filtre. Geriye kalan dizi normal kurala uyar.
+  languages: z.preprocess(
+    (v) => Array.isArray(v)
+      ? Array.from(new Set(
+          v
+            .map((s) => (typeof s === 'string' ? s.trim().toLowerCase() : ''))
+            .filter((s) => /^[a-z]{2,8}$/.test(s)),
+        ))
+      : v,
+    z.array(z.string().regex(/^[a-z]+$/, 'slug_format').min(2).max(8)).min(1).max(10),
+  ).optional(),
+  // Eski kayıtlarda kalan 'chat' / 'sms' gibi enum dışı değerleri sessizce at.
+  // UI sadece audio/video gösteriyor; kullanıcı yanlış değer gönderemez ama legacy
+  // data'da olabiliyor (önceki şema farklıydı).
+  meeting_platforms: z.preprocess(
+    (v) => Array.isArray(v) ? v.filter((s) => s === 'audio' || s === 'video') : v,
+    z.array(z.enum(['audio', 'video'])).max(2),
+  ).optional(),
   social_links: z.record(z.string().trim().max(1000)).optional(),
   bank_name: z.string().trim().max(120).nullable().optional(),
   bank_iban: z.preprocess(
@@ -2194,6 +2211,7 @@ export async function listCustomerThreads(req: FastifyRequest, reply: FastifyRep
   const userId = getCallerUserId(req);
   if (!userId) return reply.code(401).send({ error: { message: 'unauthenticated' } });
 
+  try {
   // chat_participants joinli: kullanıcı thread'in member'ı olduğu tüm threadler.
   const rows = await db
     .select({
@@ -2300,6 +2318,20 @@ export async function listCustomerThreads(req: FastifyRequest, reply: FastifyRep
   );
 
   return reply.send({ data: enriched });
+  } catch (err: any) {
+    req.log.error(err);
+    const code = String(err?.code ?? '').trim();
+    const message = String(err?.message ?? '').trim();
+    if (
+      code === 'ER_NO_SUCH_TABLE' ||
+      code === 'ER_BAD_FIELD_ERROR' ||
+      message.includes("doesn't exist") ||
+      message.includes('Unknown column')
+    ) {
+      return reply.send({ data: [] });
+    }
+    return reply.code(500).send({ error: { message: 'customer_threads_failed' } });
+  }
 }
 
 /* ─── GET /me/customer/threads/:id/messages ─── */

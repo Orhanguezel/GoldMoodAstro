@@ -1,6 +1,8 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { getAuthUserId, handleRouteError, sendNotFound } from '../_shared';
 import { sendMail } from '../mail/service';
+import { getJWTFromReq } from '../auth/helpers/core';
+import { env } from '../../core/env';
 import {
   createConsultantApplicationSchema,
   listConsultantApplicationsSchema,
@@ -76,19 +78,52 @@ export async function getConsultantApplication(req: FastifyRequest, reply: Fasti
   }
 }
 
+function buildPasswordSetupUrl(token: string): string {
+  const base = (env.FRONTEND_URL || process.env.FRONTEND_URL || process.env.PUBLIC_URL || '').replace(/\/$/, '');
+  const path = `/tr/password-reset?token=${encodeURIComponent(token)}`;
+  return base ? `${base}${path}` : path;
+}
+
 export async function approveConsultantApplication(req: FastifyRequest, reply: FastifyReply) {
   try {
     const { id } = req.params as { id: string };
     const reviewerId = getAuthUserId(req) || null;
-    const row = await approveApplication(id, reviewerId);
-    if (!row) return sendNotFound(reply);
+    const result = await approveApplication(id, reviewerId);
+    if (!result) return sendNotFound(reply);
 
-    void sendApplicationMail(
-      req,
-      row.email,
-      'Danışman başvurunuz onaylandı',
-      `<p>Merhaba ${escapeHtml(row.full_name)},</p><p>${escapeHtml(appName())} danışman başvurunuz onaylandı. Danışman panelinden profilinizi tamamlayabilirsiniz.</p>`,
-    );
+    const { application: row, user_id, created_new_user } = result;
+
+    if (created_new_user) {
+      // Onaylama sırasında otomatik oluşturulan kullanıcıya şifre belirleme
+      // bağlantısı gönder. 14-gün süreli password_reset JWT — kullanıcı linke
+      // tıklayıp şifresini set ettiğinde sisteme giriş yapabilir.
+      try {
+        const jwt = getJWTFromReq(req);
+        const setupToken = jwt.sign(
+          { sub: user_id, email: row.email, purpose: 'password_reset' as const },
+          { expiresIn: '14d' },
+        );
+        const setupUrl = buildPasswordSetupUrl(setupToken);
+        void sendApplicationMail(
+          req,
+          row.email,
+          'Danışman başvurunuz onaylandı — şifrenizi belirleyin',
+          `<p>Merhaba ${escapeHtml(row.full_name)},</p>
+           <p>${escapeHtml(appName())} danışman başvurunuz onaylandı. Hesabınız oluşturuldu; oturum açmak için aşağıdaki bağlantıdan kendi şifrenizi belirleyin (bağlantı 14 gün geçerlidir):</p>
+           <p><a href="${setupUrl}">Şifremi belirle</a></p>
+           <p>Şifrenizi belirledikten sonra danışman panelinden profilinizi, hizmetlerinizi ve müsaitliklerinizi tamamlayabilirsiniz.</p>`,
+        );
+      } catch (err) {
+        req.log.warn({ err, user_id }, 'consultant_invite_email_failed');
+      }
+    } else {
+      void sendApplicationMail(
+        req,
+        row.email,
+        'Danışman başvurunuz onaylandı',
+        `<p>Merhaba ${escapeHtml(row.full_name)},</p><p>${escapeHtml(appName())} danışman başvurunuz onaylandı. Danışman panelinden profilinizi tamamlayabilirsiniz.</p>`,
+      );
+    }
 
     return reply.send({ data: row });
   } catch (err) {

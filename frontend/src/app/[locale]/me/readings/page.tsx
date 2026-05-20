@@ -41,10 +41,12 @@ const TYPE_CONFIG: Record<
   numerology: { label: 'Numeroloji',   icon: Binary,   color: 'text-brand-gold',     route: 'numeroloji' },
   yildizname: { label: 'Yıldızname',   icon: Sparkles, color: 'text-brand-gold',     route: 'yildizname/result' },
   synastry:   { label: 'Sinastri',     icon: Heart,    color: 'text-brand-primary',  route: 'sinastri/result' },
+  birth_chart: { label: 'Doğum Haritası', icon: Sparkles, color: 'text-brand-primary', route: 'birth-chart' },
 };
 
 const FILTERS: Array<{ key: 'all' | ReadingType; label: string }> = [
   { key: 'all',        label: 'Tümü' },
+  { key: 'birth_chart', label: 'Doğum Haritası' },
   { key: 'tarot',      label: 'Tarot' },
   { key: 'coffee',     label: 'Kahve' },
   { key: 'dream',      label: 'Rüya' },
@@ -152,6 +154,9 @@ export default function MyReadingsPage() {
             {filtered.map((item, i) => {
               const config = TYPE_CONFIG[item.type] || TYPE_CONFIG.tarot;
               const Icon = config.icon;
+              const itemHref = item.type === 'birth_chart'
+                ? localizePath(localeStr, '/birth-chart')
+                : `/${localeStr}/${config.route}/${item.id}`;
               return (
                 <motion.div
                   key={`${item.type}:${item.id}`}
@@ -167,7 +172,7 @@ export default function MyReadingsPage() {
                   </div>
 
                   <Link
-                    href={`/${localeStr}/${config.route}/${item.id}`}
+                    href={itemHref}
                     className="flex-1 min-w-0"
                   >
                     <div className="flex items-center gap-3 mb-1">
@@ -193,7 +198,7 @@ export default function MyReadingsPage() {
                   </Link>
 
                   <Link
-                    href={`/${localeStr}/${config.route}/${item.id}`}
+                    href={itemHref}
                     className="hidden sm:flex w-10 h-10 rounded-full bg-surface-high/50 items-center justify-center text-muted-foreground hover:text-brand-gold hover:bg-brand-gold/10 transition-all"
                     aria-label="Aç"
                   >

@@ -7,7 +7,8 @@ export type ReadingType =
   | 'dream'
   | 'numerology'
   | 'yildizname'
-  | 'synastry';
+  | 'synastry'
+  | 'birth_chart';
 
 export interface HistoryItem {
   type: ReadingType;

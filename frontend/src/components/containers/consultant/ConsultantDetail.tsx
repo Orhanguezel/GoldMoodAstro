@@ -22,6 +22,7 @@ import ReviewList from '@/components/common/public/ReviewList';
 import SlotPicker from './SlotPicker';
 import ConsultantMessageModal from './ConsultantMessageModal';
 import { ChevronDown, MessageCircle, Phone, Check, Mic, Video } from 'lucide-react';
+import { useUiSection } from '@/i18n';
 
 type Props = {
   id: string;
@@ -29,6 +30,7 @@ type Props = {
 };
 
 export default function ConsultantDetail({ id, locale }: Props) {
+  const { ui } = useUiSection('ui_consultant', locale);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: consultant, isFetching, isError } = useGetConsultantQuery(id, { skip: !id });
@@ -45,7 +47,6 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const [messageOpen, setMessageOpen] = useState(false);
   const [requestNowBooking, { isLoading: isRequestingNow }] = useRequestNowBookingMutation();
   const { isAuthenticated } = useAuthStore();
-  const isTr = locale === 'tr';
   const expertiseLabels = React.useMemo(
     () => Object.fromEntries(serviceCategories.map((category) => [category.slug, category.name])),
     [serviceCategories],
@@ -89,17 +90,21 @@ export default function ConsultantDetail({ id, locale }: Props) {
         <div className="w-20 h-20 rounded-full bg-[var(--gm-surface)] flex items-center justify-center border border-[var(--gm-border-soft)]">
           <span className="text-3xl text-[var(--gm-gold)] opacity-30">!</span>
         </div>
-        <h2 className="font-serif text-3xl text-[var(--gm-text)]">Danışman Bulunamadı</h2>
+        <h2 className="font-serif text-3xl text-[var(--gm-text)]">{ui('ui_consultant_not_found', 'Danışman Bulunamadı')}</h2>
         <Link href={`/${locale}/consultants`} className="btn-premium py-3 px-8">
-          Tüm Danışmanlar
+          {ui('ui_consultant_all_consultants', 'Tüm Danışmanlar')}
         </Link>
       </div>
     );
   }
 
   const rating = parseFloat(consultant.rating_avg || '0');
-  const price = Math.round(Number(consultant.session_price));
   const initials = (consultant.full_name || 'GS').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  const format = (key: string, fallback: string, vars: Record<string, string | number>) =>
+    Object.entries(vars).reduce(
+      (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
+      ui(key, fallback),
+    );
 
   const handleBook = () => {
     if (!selectedSlot) return;
@@ -134,26 +139,26 @@ export default function ConsultantDetail({ id, locale }: Props) {
 
   const handleRequestNow = async () => {
     if (!isAuthenticated) {
-      toast.error('Giriş yapmalısınız');
-      router.push(`/${locale}/auth/login?next=${encodeURIComponent(`/${locale}/consultants/${id}`)}`);
+      toast.error(ui('ui_consultant_error_login_required', 'Giriş yapmalısınız'));
+      router.push(`/${locale}/login?next=${encodeURIComponent(`/${locale}/consultants/${id}`)}`);
       return;
     }
     if (!consultant.is_available) {
-      toast.error('Danışman şu anda çevrimiçi değil');
+      toast.error(ui('ui_consultant_error_not_online', 'Danışman şu anda çevrimiçi değil'));
       return;
     }
     try {
       const res = await requestNowBooking({
         consultant_id: consultant.id,
         service_id: selectedService?.id,
-        customer_message: 'Hemen görüşme talebi',
+        customer_message: ui('ui_consultant_instant_request_msg', 'Hemen görüşme talebi'),
       }).unwrap();
-      toast.success(res.message || 'Talep iletildi, danışman bekleniyor');
+      toast.success(res.message || ui('ui_consultant_request_sent', 'Talep iletildi, danışman bekleniyor'));
       router.push(`/${locale}/profile/bookings?highlight=${res.id}`);
     } catch (e: any) {
       const msg = e?.data?.error?.message;
-      if (msg === 'consultant_not_online') toast.error('Danışman şu an çevrimdışı');
-      else toast.error(msg || 'Talep oluşturulamadı');
+      if (msg === 'consultant_not_online') toast.error(ui('ui_consultant_error_offline', 'Danışman şu an çevrimdışı'));
+      else toast.error(msg || ui('ui_consultant_request_failed', 'Talep oluşturulamadı'));
     }
   };
 
@@ -163,7 +168,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
         href={`/${locale}/consultants`}
         className="inline-flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-gold) transition-colors text-sm font-bold uppercase tracking-widest mb-12"
       >
-        <ArrowLeft className="w-4 h-4" /> Tüm Danışmanlar
+        <ArrowLeft className="w-4 h-4" /> {ui('ui_consultant_all_consultants', 'Tüm Danışmanlar')}
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-16 items-start">
@@ -202,29 +207,31 @@ export default function ConsultantDetail({ id, locale }: Props) {
                 <div className="flex items-center gap-2">
                   <Star className="w-5 h-5 text-(--gm-gold) fill-(--gm-gold)" />
                   <span className="text-(--gm-text) font-bold text-xl">{rating.toFixed(1)}</span>
-                  <span className="text-(--gm-text-dim) text-sm">({consultant.rating_count} Yorum)</span>
+                  <span className="text-(--gm-text-dim) text-sm">
+                    ({format('ui_consultant_reviews_count', '{n} Yorum', { n: consultant.rating_count })})
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-(--gm-text-dim) text-sm">
                   <Award className="w-5 h-5 text-(--gm-gold)" />
                   <span className="font-bold">{consultant.total_sessions}</span>
-                  <span>Seans</span>
+                  <span>{ui('ui_consultant_sessions_label', 'Seans')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-(--gm-text-dim) text-sm">
                   <Clock className="w-5 h-5 text-(--gm-gold)" />
                   <span className="font-bold">{consultant.session_duration}</span>
-                  <span>Dakika</span>
+                  <span>{ui('ui_consultant_minutes_label', 'Dakika')}</span>
                 </div>
                 {consultant.supports_video && (
                   <div className="flex items-center gap-2 text-(--gm-text-dim) text-sm">
                     <div className="w-2 h-2 rounded-full bg-(--gm-success) animate-pulse" />
-                    <span className="font-bold">{isTr ? 'Görüntülü' : 'Video'}</span>
-                    <span className="opacity-70">{isTr ? 'Görüşme Mevcut' : 'Available'}</span>
+                    <span className="font-bold">{ui('ui_consultant_video_label', 'Görüntülü')}</span>
+                    <span className="opacity-70">{ui('ui_consultant_video_available', 'Görüşme Mevcut')}</span>
                   </div>
                 )}
                 {karne && karne.total_answered > 0 && typeof karne.score === 'number' && (
                   <div
                     className="flex items-center gap-2 text-(--gm-text-dim) text-sm"
-                    title={`Karne: ${karne.happened} gerçekleşti · ${karne.partially} kısmen · ${karne.did_not_happen} olmadı`}
+                    title={`${ui('ui_consultant_karne_title', 'Karne')}: ${karne.happened} ${ui('ui_consultant_karne_happened', 'gerçekleşti')} · ${karne.partially} ${ui('ui_consultant_karne_partial', 'kısmen')} · ${karne.did_not_happen} ${ui('ui_consultant_karne_not_happened', 'olmadı')}`}
                   >
                     <ShieldCheck
                       className={`w-5 h-5 ${
@@ -236,7 +243,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                       }`}
                     />
                     <span className="font-bold">%{karne.score}</span>
-                    <span>Karne ({karne.total_answered} takip)</span>
+                    <span>{ui('ui_consultant_karne_title', 'Karne')} ({karne.total_answered} {ui('ui_consultant_karne_followup', 'takip')})</span>
                   </div>
                 )}
               </div>
@@ -247,10 +254,10 @@ export default function ConsultantDetail({ id, locale }: Props) {
           <div className="space-y-8">
             <div className="flex items-center gap-3">
               <Sparkles className="w-5 h-5 text-(--gm-gold)" />
-              <h2 className="font-display text-2xl text-(--gm-text)">Ruhsal Yolculuk & Deneyim</h2>
+              <h2 className="font-display text-2xl text-(--gm-text)">{ui('ui_consultant_section_experience', 'Ruhsal Yolculuk & Deneyim')}</h2>
             </div>
             <p className="text-(--gm-text-dim) font-serif italic text-[1.35rem] leading-relaxed opacity-90 first-letter:text-5xl first-letter:float-left first-letter:mr-3 first-letter:font-serif first-letter:text-(--gm-gold)">
-              {consultant.bio || 'Bu danışman henüz bir açıklama eklememiş.'}
+              {consultant.bio || ui('ui_consultant_no_bio', 'Bu danışman henüz bir açıklama eklememiş.')}
             </p>
           </div>
 
@@ -258,7 +265,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
           <div className="grid md:grid-cols-2 gap-12">
             <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-3xl p-8 shadow-(--gm-shadow-soft)">
               <h3 className="text-[10px] font-bold text-(--gm-gold-dim) tracking-[0.2em] uppercase mb-6">
-                Uzmanlık Alanları
+                {ui('ui_consultant_expertise_title', 'Uzmanlık Alanları')}
               </h3>
               <div className="flex flex-wrap gap-3">
                 {(consultant.expertise || []).map((exp) => (
@@ -273,7 +280,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
             </div>
             <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-3xl p-8 shadow-(--gm-shadow-soft)">
               <h3 className="text-[10px] font-bold text-(--gm-gold-dim) tracking-[0.2em] uppercase mb-6">
-                Danışmanlık Dilleri
+                {ui('ui_consultant_languages_title', 'Danışmanlık Dilleri')}
               </h3>
               <div className="flex flex-wrap gap-3">
                 {(consultant.languages || []).map((lang) => (
@@ -294,7 +301,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
             targetType="consultant"
             targetId={consultant.id}
             locale={locale}
-            titleOverride="Değerlendirmeler"
+            titleOverride={ui('ui_consultant_reviews_title', 'Değerlendirmeler')}
             compact
           />
         </div>
@@ -308,7 +315,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
               className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-full border border-(--gm-gold)/40 hover:border-(--gm-gold) hover:bg-(--gm-gold)/10 text-(--gm-gold) text-[11px] font-bold uppercase tracking-widest transition-all"
             >
               <MessageCircle className="w-4 h-4" />
-              Mesaj Gönder
+              {ui('ui_consultant_send_message', 'Mesaj Gönder')}
             </button>
             {consultant.is_available === 1 && (
               <button
@@ -321,7 +328,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--gm-text)]" />
                 </span>
                 <Phone className="w-4 h-4" />
-                {isRequestingNow ? 'Talep Gönderiliyor...' : 'Hemen Görüş (5 dk)'}
+                {isRequestingNow ? ui('ui_consultant_request_now_loading', 'Talep Gönderiliyor...') : ui('ui_consultant_request_now', 'Hemen Görüş (5 dk)')}
               </button>
             )}
           </div>
@@ -332,17 +339,17 @@ export default function ConsultantDetail({ id, locale }: Props) {
             <div className="flex items-center gap-3 mb-6 pt-2">
               <Sparkles className="w-4 h-4 text-(--gm-gold)" />
               <h3 className="text-[10px] font-bold text-(--gm-gold-dim) tracking-[0.2em] uppercase">
-                Hizmet Paketleri
+                {ui('ui_consultant_packages_title', 'Hizmet Paketleri')}
               </h3>
             </div>
 
             {/* Service list */}
             <div className="space-y-3 mb-6">
               {servicesLoading && (
-                <div className="text-center py-6 text-(--gm-text-muted) text-sm">Paketler yükleniyor...</div>
+                <div className="text-center py-6 text-(--gm-text-muted) text-sm">{ui('ui_consultant_packages_loading', 'Paketler yükleniyor...')}</div>
               )}
               {!servicesLoading && services.length === 0 && (
-                <div className="text-center py-6 text-(--gm-text-muted) text-sm">Bu danışman için aktif paket yok.</div>
+                <div className="text-center py-6 text-(--gm-text-muted) text-sm">{ui('ui_consultant_packages_empty', 'Bu danışman için aktif paket yok.')}</div>
               )}
               {services.map((svc) => {
                 const isSelected = selectedServiceId === svc.id;
@@ -380,21 +387,23 @@ export default function ConsultantDetail({ id, locale }: Props) {
 	                          <span className="font-serif text-base text-(--gm-text) truncate">{svc.name}</span>
 	                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-(--gm-bg-deep) border border-(--gm-border-soft) text-(--gm-text-dim) text-[9px] font-bold uppercase tracking-widest">
 	                            {svc.media_type === 'video' ? <Video className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
-	                            {svc.media_type === 'video' ? 'Görüntülü' : 'Sesli'}
+	                            {svc.media_type === 'video'
+                                ? ui('ui_consultant_video_badge', 'Görüntülü')
+                                : ui('ui_consultant_audio_badge', 'Sesli')}
 	                          </span>
 	                          {isFree && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-(--gm-success)/15 text-(--gm-success) text-[9px] font-bold uppercase tracking-widest">
-                              Ücretsiz
+                              {ui('ui_consultant_free_badge', 'Ücretsiz')}
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-3 text-[11px] text-(--gm-text-dim)">
                           <span className="inline-flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {svc.duration_minutes} dk
+                            {svc.duration_minutes} {ui('ui_consultant_minutes_short', 'dk')}
                           </span>
                           <span className="text-(--gm-gold) font-bold">
-                            {isFree ? 'Ücretsiz' : `₺${Math.round(Number(svc.price))}`}
+                            {isFree ? ui('ui_consultant_free_badge', 'Ücretsiz') : `₺${Math.round(Number(svc.price))}`}
                           </span>
                         </div>
                       </div>
@@ -417,7 +426,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
               <div className="space-y-4 pt-6 border-t border-(--gm-border-soft)">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-4 h-4 text-(--gm-gold)" />
-                  <h3 className="text-[10px] font-bold text-(--gm-gold-dim) tracking-[0.2em] uppercase">Saat Seç</h3>
+                  <h3 className="text-[10px] font-bold text-(--gm-gold-dim) tracking-[0.2em] uppercase">{ui('ui_consultant_slot_pick_title', 'Saat Seç')}</h3>
                 </div>
 
                 <div className="min-h-[160px]">
@@ -441,17 +450,17 @@ export default function ConsultantDetail({ id, locale }: Props) {
                   <span className="relative z-10 inline-flex items-center justify-center gap-2">
                     {selectedService.is_free === 1 && <Phone className="w-4 h-4" />}
                     {!selectedSlot
-                      ? 'SAAT SEÇİN'
+                      ? ui('ui_consultant_book_select_slot', 'SAAT SEÇİN')
                       : selectedService.is_free === 1
-                      ? 'ÜCRETSİZ RANDEVU AL'
-                      : 'RANDEVU AL'}
+                      ? ui('ui_consultant_book_free', 'ÜCRETSİZ RANDEVU AL')
+                      : ui('ui_consultant_book_paid', 'RANDEVU AL')}
                   </span>
                 </button>
 
                 <p className="text-center text-[10px] font-medium tracking-[0.1em] text-(--gm-text-muted) uppercase italic">
                   {selectedService.is_free === 1
-                    ? '* Ücretsiz tanışma görüşmesidir.'
-                    : '* Ödeme bir sonraki adımda Iyzico üzerinden alınacaktır.'}
+                    ? ui('ui_consultant_note_free', '* Ücretsiz tanışma görüşmesidir.')
+                    : ui('ui_consultant_note_paid', '* Ödeme bir sonraki adımda Iyzico üzerinden alınacaktır.')}
                 </p>
               </div>
             )}
@@ -461,7 +470,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
           <div className="flex flex-col items-center gap-4 px-6">
             <div className="flex items-center gap-3 text-[10px] font-bold text-(--gm-gold-dim) tracking-[0.2em] uppercase">
               <ShieldCheck className="w-4 h-4 text-(--gm-success)" />
-              <span>Onaylı Uzman Profil</span>
+              <span>{ui('ui_consultant_verified_profile', 'Onaylı Uzman Profil')}</span>
             </div>
           </div>
         </aside>

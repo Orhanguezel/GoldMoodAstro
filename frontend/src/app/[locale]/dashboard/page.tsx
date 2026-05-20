@@ -124,6 +124,7 @@ function fmtDate(v: string, locale: string) {
 
 const HISTORY_TYPES: Array<{ key: HistoryFilter; tr: string; en: string }> = [
   { key: 'all', tr: 'Tümü', en: 'All' },
+  { key: 'birth_chart', tr: 'Doğum Haritası', en: 'Birth Chart' },
   { key: 'tarot', tr: 'Tarot', en: 'Tarot' },
   { key: 'coffee', tr: 'Kahve', en: 'Coffee' },
   { key: 'dream', tr: 'Rüya', en: 'Dream' },
@@ -139,6 +140,9 @@ const HISTORY_META: Record<ReadingType, { icon: React.ReactNode; tr: string; en:
   synastry: { icon: <Heart size={18} />, tr: 'Sinastri', en: 'Synastry', route: '/sinastri/result' },
   yildizname: { icon: <Sparkles size={18} />, tr: 'Yıldızname', en: 'Yildizname', route: '/yildizname/result' },
   numerology: { icon: <Binary size={18} />, tr: 'Numeroloji', en: 'Numerology', route: '/numeroloji' },
+  // Doğum haritası kayıtları aynı zamanda Büyük Üçlü için de kaynak — kullanıcı
+  // /birth-chart sayfasında detay görür, oradan transit + sinastri başlatabilir.
+  birth_chart: { icon: <Sparkles size={18} />, tr: 'Doğum Haritası', en: 'Birth Chart', route: '/birth-chart' },
 };
 
 import PageContainer from '@/components/common/PageContainer';
@@ -853,8 +857,11 @@ export default function DashboardPage() {
               <div className="grid gap-4">
                 {filteredHistory.map((item) => {
                   const meta = HISTORY_META[item.type];
+                  // Sayfa detay route'u kabul etmiyorsa kök route'a git.
+                  // numerology + birth_chart: kullanıcının kayıtlı verilerini listeleyen
+                  // ana sayfaya yönlendir.
                   const detailHref =
-                    item.type === 'numerology'
+                    item.type === 'numerology' || item.type === 'birth_chart'
                       ? localizePath(locale, meta.route)
                       : localizePath(locale, `${meta.route}/${item.id}`);
                   return (

@@ -56,6 +56,7 @@ export type UiSectionKey =
   | 'ui_common'
   | 'ui_solutions'
   | 'ui_chat'
+  | 'ui_consultant'
   | 'ui_become_consultant'
   | 'ui_reviews'
   | 'ui_boost';
@@ -660,6 +661,48 @@ const SECTION_KEYS: Record<UiSectionKey, readonly string[]> = {
     'ui_chat_queue_all',
     'ui_chat_unread_label',
     'ui_chat_empty',
+  ],
+  ui_consultant: [
+    'ui_consultant_not_found',
+    'ui_consultant_all_consultants',
+    'ui_consultant_reviews_count',
+    'ui_consultant_sessions_label',
+    'ui_consultant_minutes_label',
+    'ui_consultant_minutes_short',
+    'ui_consultant_video_available',
+    'ui_consultant_video_label',
+    'ui_consultant_karne_title',
+    'ui_consultant_karne_followup',
+    'ui_consultant_karne_happened',
+    'ui_consultant_karne_partial',
+    'ui_consultant_karne_not_happened',
+    'ui_consultant_section_experience',
+    'ui_consultant_no_bio',
+    'ui_consultant_expertise_title',
+    'ui_consultant_languages_title',
+    'ui_consultant_reviews_title',
+    'ui_consultant_send_message',
+    'ui_consultant_request_now_loading',
+    'ui_consultant_request_now',
+    'ui_consultant_error_login_required',
+    'ui_consultant_error_not_online',
+    'ui_consultant_error_offline',
+    'ui_consultant_request_sent',
+    'ui_consultant_request_failed',
+    'ui_consultant_instant_request_msg',
+    'ui_consultant_packages_title',
+    'ui_consultant_packages_loading',
+    'ui_consultant_packages_empty',
+    'ui_consultant_video_badge',
+    'ui_consultant_audio_badge',
+    'ui_consultant_free_badge',
+    'ui_consultant_slot_pick_title',
+    'ui_consultant_book_select_slot',
+    'ui_consultant_book_free',
+    'ui_consultant_book_paid',
+    'ui_consultant_note_free',
+    'ui_consultant_note_paid',
+    'ui_consultant_verified_profile',
   ],
   ui_become_consultant: [
     'ui_become_consultant_sparkle',

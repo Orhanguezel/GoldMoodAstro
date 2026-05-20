@@ -296,7 +296,7 @@ function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabCha
         {tab === 'bookings' && <BookingsPanel locale={locale} />}
         {tab === 'clients' && <ClientsPanel />}
         {tab === 'messages' && <MessagesPanel />}
-        {tab === 'blog' && <BlogPanel locale={locale} />}
+        {tab === 'blog' && <BlogPanel locale={locale} consultantId={profile.id} />}
         {tab === 'wallet' && <WalletPanel />}
         {tab === 'analytics' && <ProfileViewsPanel />}
         {tab === 'reviews' && <ReviewsPanel />}
@@ -797,8 +797,10 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
             <RichContentEditor
               value={bio}
               onChange={setBio}
-              height="300px"
+              height="320px"
               label=""
+              showHelp={false}
+              showPreview={false}
             />
           </div>
           <div className="flex justify-end mt-1">

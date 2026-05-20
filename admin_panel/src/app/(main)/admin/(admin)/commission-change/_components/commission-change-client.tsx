@@ -204,7 +204,7 @@ export default function CommissionChangeClient() {
                 <strong>{preview.total_candidates}</strong> danismana gonderilecek.
               </p>
               <p>
-                Oran: %{commission.previous_percent ?? 15} -&gt; %{commission.new_percent}
+                Oran: {commission.previous_percent != null ? `%${commission.previous_percent}` : '-'} -&gt; %{commission.new_percent}
               </p>
               <p>
                 Yururluk: <strong>{commission.effective_from ?? '-'}</strong>

@@ -16,6 +16,21 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import {
+  Bold,
+  Code2,
+  Eraser,
+  Eye,
+  Heading2,
+  Heading3,
+  Image as ImageIcon,
+  Italic,
+  List,
+  ListOrdered,
+  Pilcrow,
+  Table2,
+  Underline,
+} from 'lucide-react';
 
 export type RichContentEditorProps = {
   label?: string;
@@ -28,6 +43,8 @@ export type RichContentEditorProps = {
    * Storage modülüne upload edip public URL döndürmek için kullanabilirsin.
    */
   onUploadImage?: (file: File) => Promise<string>;
+  showHelp?: boolean;
+  showPreview?: boolean;
 };
 
 type ActiveTab = 'visual' | 'source';
@@ -88,12 +105,14 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
   disabled = false,
   height = DEFAULT_HEIGHT,
   onUploadImage,
+  showHelp = true,
+  showPreview = true,
 }) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const toolbarButtonClass =
-    'px-2 py-1 text-xs font-medium text-text-secondary bg-bg-card border border-[var(--gm-border)] rounded hover:bg-bg-card';
-  const toolbarSeparatorClass = 'w-px h-auto bg-[var(--gm-border)] mx-1';
+    'inline-flex h-9 min-w-9 items-center justify-center gap-1 rounded-xl border border-[var(--gm-border-soft)] bg-[var(--gm-bg)]/60 px-2.5 text-[11px] font-bold text-[var(--gm-text-dim)] transition-all hover:border-[var(--gm-gold)]/45 hover:bg-[var(--gm-gold)]/10 hover:text-[var(--gm-gold)] disabled:pointer-events-none disabled:opacity-35';
+  const toolbarSeparatorClass = 'mx-1 h-9 w-px bg-[var(--gm-border-soft)]';
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('visual');
   const [html, setHtml] = useState<string>(normalizeLegacyHtmlValue(value));
@@ -225,39 +244,41 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
 
   return (
     <div className="mt-3">
-      {label && <label className="block text-xs font-medium text-text-secondary mb-1">{label}</label>}
+      {label && <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-[var(--gm-text-dim)]">{label}</label>}
 
       {/* Tabs */}
-      <div className="flex border-b mb-1 text-sm">
+      <div className="mb-3 inline-flex rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/45 p-1 text-sm shadow-[var(--gm-shadow-soft)]">
         <button
           type="button"
-          className={`px-3 py-1 border-0 rounded-t ${
+          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
             activeTab === 'visual'
-              ? 'bg-bg-card-hover font-semibold text-[var(--gm-text)]'
-              : 'text-text-muted hover:text-text-secondary'
+              ? 'bg-[var(--gm-bg)] text-[var(--gm-gold)] shadow-sm'
+              : 'text-[var(--gm-text-dim)] hover:text-[var(--gm-text)]'
           }`}
           onClick={() => setActiveTab('visual')}
           disabled={disabled}
         >
+          <Eye className="size-3.5" />
           Görsel editör
         </button>
         <button
           type="button"
-          className={`px-3 py-1 border-0 rounded-t ${
+          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
             activeTab === 'source'
-              ? 'bg-bg-card-hover font-semibold text-[var(--gm-text)]'
-              : 'text-text-muted hover:text-text-secondary'
+              ? 'bg-[var(--gm-bg)] text-[var(--gm-gold)] shadow-sm'
+              : 'text-[var(--gm-text-dim)] hover:text-[var(--gm-text)]'
           }`}
           onClick={() => setActiveTab('source')}
           disabled={disabled}
         >
+          <Code2 className="size-3.5" />
           Kaynak (HTML)
         </button>
       </div>
 
-      <div className="border rounded relative">
+      <div className="relative overflow-hidden rounded-[28px] border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/55 shadow-[var(--gm-shadow-soft)]">
         {/* Toolbar */}
-        <div className="border-b bg-bg-card px-2 py-1 flex flex-wrap gap-1 text-sm">
+        <div className="flex flex-wrap items-center gap-2 border-b border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)]/35 px-4 py-3 text-sm">
           <button
             type="button"
             className={toolbarButtonClass}
@@ -265,7 +286,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             disabled={disabled || activeTab !== 'visual'}
             title="Kalın"
           >
-            <strong>B</strong>
+            <Bold className="size-4" />
           </button>
           <button
             type="button"
@@ -274,7 +295,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             disabled={disabled || activeTab !== 'visual'}
             title="İtalik"
           >
-            <em>I</em>
+            <Italic className="size-4" />
           </button>
           <button
             type="button"
@@ -283,7 +304,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             disabled={disabled || activeTab !== 'visual'}
             title="Altı çizili"
           >
-            <span style={{ textDecoration: 'underline' }}>U</span>
+            <Underline className="size-4" />
           </button>
 
           <span className={toolbarSeparatorClass} />
@@ -296,7 +317,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             disabled={disabled || activeTab !== 'visual'}
             title="Paragraf"
           >
-            P
+            <Pilcrow className="size-4" />
           </button>
           <button
             type="button"
@@ -305,7 +326,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             disabled={disabled || activeTab !== 'visual'}
             title="Başlık (H2)"
           >
-            H2
+            <Heading2 className="size-4" />
           </button>
           <button
             type="button"
@@ -314,7 +335,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             disabled={disabled || activeTab !== 'visual'}
             title="Alt başlık (H3)"
           >
-            H3
+            <Heading3 className="size-4" />
           </button>
 
           <span className={toolbarSeparatorClass} />
@@ -326,7 +347,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             disabled={disabled || activeTab !== 'visual'}
             title="Madde işaretli liste"
           >
-            ••
+            <List className="size-4" />
           </button>
           <button
             type="button"
@@ -335,7 +356,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             disabled={disabled || activeTab !== 'visual'}
             title="Numaralı liste"
           >
-            1.
+            <ListOrdered className="size-4" />
           </button>
 
           <span className={toolbarSeparatorClass} />
@@ -347,7 +368,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             disabled={disabled || activeTab !== 'visual'}
             title="Tablo ekle"
           >
-            Tbl
+            <Table2 className="size-4" />
           </button>
 
           <button
@@ -357,7 +378,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             disabled={disabled || activeTab !== 'visual'}
             title={onUploadImage ? 'Resim yükle ve ekle' : "Resim URL'si ile ekle"}
           >
-            Resim
+            <ImageIcon className="size-4" />
           </button>
 
           <span className={toolbarSeparatorClass} />
@@ -369,7 +390,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             disabled={disabled || activeTab !== 'visual'}
             title="Biçimlendirmeyi temizle"
           >
-            Temizle
+            <Eraser className="size-4" />
           </button>
 
           {onUploadImage && (
@@ -387,12 +408,12 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
         {activeTab === 'visual' ? (
           <div
             ref={editorRef}
-            className="px-2 py-2"
+            className="prose prose-sm max-w-none px-5 py-5 text-[var(--gm-text)] outline-none prose-headings:font-serif prose-headings:text-[var(--gm-text)] prose-p:my-3 prose-p:leading-7 prose-p:text-[var(--gm-text)] prose-li:text-[var(--gm-text)] prose-strong:text-[var(--gm-gold)] prose-a:text-[var(--gm-gold)]"
             style={{
               minHeight: height,
               maxHeight: '600px',
               overflowY: 'auto',
-              backgroundColor: disabled ? 'var(--gm-surface-high)' : 'var(--gm-bg)',
+              backgroundColor: disabled ? 'var(--gm-surface-high)' : 'color-mix(in srgb, var(--gm-bg) 82%, transparent)',
               cursor: disabled ? 'not-allowed' : 'text',
             }}
             contentEditable={!disabled}
@@ -401,7 +422,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
           />
         ) : (
           <textarea
-            className="w-full px-2 py-2 border-0 font-mono text-sm focus:outline-none"
+            className="w-full border-0 bg-[var(--gm-bg)]/80 px-5 py-5 font-mono text-sm leading-7 text-[var(--gm-text)] outline-none placeholder:text-[var(--gm-muted)] focus:outline-none"
             style={{ height, maxHeight: '600px', resize: 'vertical' }}
             value={html}
             onChange={(e) => propagateChange(e.target.value)}
@@ -411,48 +432,34 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
         )}
       </div>
 
-      <div className="mt-1 text-xs text-text-muted">
-        <ul className="mb-0 pl-3">
-          <li>
-            <strong>Görsel editör</strong> sekmesinde tablo, başlık, liste vb. zengin içeriği
-            düzenleyebilirsin.
-          </li>
-          <li>
-            <strong>Kaynak (HTML)</strong> sekmesinde ham HTML’i görüp düzenleyebilirsin.
-          </li>
-          <li>
-            <strong>Tbl</strong> butonu varsayılan bir tablo ekler.
-          </li>
-          <li>
-            <strong>Resim</strong> butonu{' '}
-            {onUploadImage
-              ? 'dosya seçip upload eder ve URL ile ekler.'
-              : "resim URL'si ister ve o URL’yi ekler."}
-          </li>
-        </ul>
-      </div>
+      {showHelp && (
+        <div className="mt-3 rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/35 px-4 py-3 text-xs leading-6 text-[var(--gm-text-dim)]">
+          Görsel editörde başlık, liste, tablo ve görsel ekleyebilir; Kaynak sekmesinde HTML'i ince ayarla düzenleyebilirsin.
+        </div>
+      )}
 
       {/* Live Preview */}
-      <div className="mt-3">
-        <div className="text-xs text-text-muted mb-1">Önizleme</div>
+      {showPreview && (
+      <div className="mt-4">
+        <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--gm-gold-dim)]">Önizleme</div>
         <div
-          className="border rounded p-2 bg-bg-card"
+          className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-bg)]/75 p-4 text-[var(--gm-text)]"
           style={{
             minHeight: '120px',
             maxHeight: '400px',
             overflowY: 'auto',
-            backgroundColor: 'var(--gm-bg)',
           }}
         >
           {html && html.trim() ? (
-            <div dangerouslySetInnerHTML={{ __html: html }} />
+            <div className="prose prose-sm max-w-none prose-headings:font-serif prose-headings:text-[var(--gm-text)] prose-p:text-[var(--gm-text-dim)] prose-li:text-[var(--gm-text-dim)] prose-strong:text-[var(--gm-gold)]" dangerouslySetInnerHTML={{ __html: html }} />
           ) : (
-            <p className="text-text-muted text-xs mb-0">
+            <p className="mb-0 text-xs italic text-[var(--gm-muted)]">
               Henüz içerik yok. Yazdıkça burada anlık olarak gözükecek.
             </p>
           )}
         </div>
       </div>
+      )}
     </div>
   );
 };

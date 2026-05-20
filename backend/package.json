@@ -11,7 +11,9 @@
     "test": "bun test",
     "db:seed": "bun src/db/index.ts",
     "db:seed:nodrop": "bun src/db/index.ts --no-drop",
-    "db:seed:only": "bun src/db/index.ts"
+    "db:seed:only": "bun src/db/index.ts",
+    "commission:notice": "bun src/scripts/send-commission-change-notices.ts",
+    "withdrawals:auto": "bun src/scripts/run-monthly-withdrawal-auto-requests.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11",

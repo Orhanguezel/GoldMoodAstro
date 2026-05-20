@@ -96,7 +96,7 @@ export default function DreamHub() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/15" />
               <div className="absolute inset-x-0 bottom-0 p-10 text-center">
-                <h2 className={`${cinzel.className} text-4xl md:text-6xl text-white tracking-tight drop-shadow-lg`}>Rüya Tabiri</h2>
+                <h2 className={`${cinzel.className} text-4xl md:text-6xl text-white tracking-tight drop-shadow-lg`}>Bilinçaltının Dili</h2>
                 <p className={`${fraunces.className} text-white/70 text-lg mt-3 italic`}>
                   Rüyalar, ruhun uyanıkken söyleyemedikleridir. Bilinçaltının gizli dilini keşfedin.
                 </p>

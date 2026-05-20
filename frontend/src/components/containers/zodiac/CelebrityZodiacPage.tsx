@@ -33,7 +33,7 @@ export default function CelebrityZodiacPage() {
           Ünlü burç arşivi
         </div>
         <h2 className="text-4xl font-semibold tracking-normal text-foreground md:text-6xl">
-          Ünlüler ve burçları
+          Tanıdık isimlerin astrolojik temaları
         </h2>
         <p className="mt-5 text-base leading-7 text-muted-foreground md:text-lg">
           Kamuya açık doğum tarihleri üzerinden hazırlanan bu rehber, burç sembollerini tanıdık isimlerin üretim tarzlarıyla birlikte okur.
