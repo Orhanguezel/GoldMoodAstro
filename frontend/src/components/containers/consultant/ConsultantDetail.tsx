@@ -15,23 +15,13 @@ import { toast } from 'sonner';
 import { trackEvent } from '@/integrations/telemetry';
 import { useRequestNowBookingMutation } from '@/integrations/rtk/public/bookings_public.endpoints';
 import { useListConsultantServicesPublicQuery, type ConsultantServicePublic } from '@/integrations/rtk/public/consultant_services.public.endpoints';
+import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
+import { useListLanguagesPublicQuery } from '@/integrations/rtk/public/languages.public.endpoints';
 import { useGetConsultantOutcomeScoreQuery } from '@/integrations/rtk/hooks';
 import ReviewList from '@/components/common/public/ReviewList';
 import SlotPicker from './SlotPicker';
 import ConsultantMessageModal from './ConsultantMessageModal';
 import { ChevronDown, MessageCircle, Phone, Check, Mic, Video } from 'lucide-react';
-
-const EXPERTISE_LABELS: Record<string, string> = {
-  astrology: 'Astroloji',
-  tarot: 'Tarot',
-  numerology: 'Numeroloji',
-  mood: 'Mood Coaching',
-  career: 'Kariyer',
-  relationship: 'İlişki',
-  birth_chart: 'Doğum Haritası',
-};
-
-const LANG_LABELS: Record<string, string> = { tr: 'Türkçe', en: 'İngilizce', de: 'Almanca', ar: 'Arapça' };
 
 type Props = {
   id: string;
@@ -42,6 +32,8 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: consultant, isFetching, isError } = useGetConsultantQuery(id, { skip: !id });
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const { data: dbLanguages = [] } = useListLanguagesPublicQuery();
   const [trackConsultantView] = useTrackConsultantViewMutation();
   const { data: karne } = useGetConsultantOutcomeScoreQuery(id, { skip: !id });
   const { data: services = [], isLoading: servicesLoading } = useListConsultantServicesPublicQuery(consultant?.id || '', {
@@ -54,6 +46,17 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const [requestNowBooking, { isLoading: isRequestingNow }] = useRequestNowBookingMutation();
   const { isAuthenticated } = useAuthStore();
   const isTr = locale === 'tr';
+  const expertiseLabels = React.useMemo(
+    () => Object.fromEntries(serviceCategories.map((category) => [category.slug, category.name])),
+    [serviceCategories],
+  );
+  const languageLabels = React.useMemo(
+    () => Object.fromEntries(dbLanguages.map((lang) => [
+      lang.slug,
+      locale === 'tr' ? lang.name_tr : locale === 'de' ? lang.name_de : lang.name_en,
+    ])),
+    [dbLanguages, locale],
+  );
 
   // İlk servis otomatik seçilsin (genelde ücretsiz tanışma)
   useEffect(() => {
@@ -263,7 +266,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                     key={exp}
                     className="px-5 py-2.5 rounded-full text-[11px] font-bold tracking-widest uppercase border border-(--gm-gold)/30 text-(--gm-gold) bg-(--gm-gold)/5"
                   >
-                    {EXPERTISE_LABELS[exp] || exp}
+                    {expertiseLabels[exp] || exp}
                   </span>
                 ))}
               </div>
@@ -279,7 +282,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                     className="flex items-center gap-3 px-5 py-2.5 rounded-full text-[11px] font-bold tracking-widest uppercase border border-(--gm-border-soft) text-(--gm-text-dim) bg-(--gm-surface)"
                   >
                     <Globe className="w-4 h-4 text-(--gm-gold)" />
-                    {LANG_LABELS[lang] || lang.toUpperCase()}
+                    {languageLabels[lang] || lang.toUpperCase()}
                   </span>
                 ))}
               </div>

@@ -25,13 +25,33 @@ const ICONS = {
 } as const;
 
 const CATEGORIES_FALLBACK = [
-  { id: 'astrology', label: 'Astrology', icon: Compass, desc: 'Birth chart and planetary guidance.' },
-  { id: 'tarot', label: 'Tarot', icon: Layers, desc: 'Symbolic card guidance for clearer questions.' },
-  { id: 'numerology', label: 'Numerology', icon: Hash, desc: 'Life path insight through numbers.' },
-  { id: 'mood', label: 'Spiritual Guidance', icon: Moon, desc: 'Inner balance and awareness support.' },
-  { id: 'career', label: 'Career & Money', icon: Briefcase, desc: 'Timing and opportunity guidance for work.' },
-  { id: 'relationship', label: 'Relationship & Love', icon: Heart, desc: 'Relationship dynamics and compatibility.' },
+  { id: 'astrology', label: 'Astroloji', icon: Compass, desc: 'Doğum haritası ve gezegen etkileriyle rehberlik.' },
+  { id: 'tarot', label: 'Tarot', icon: Layers, desc: 'Kartların sembolizmiyle rehberlik.' },
+  { id: 'numerology', label: 'Numeroloji', icon: Hash, desc: 'Sayıların diliyle yaşam yolu yorumu.' },
+  { id: 'mood', label: 'Ruhsal Rehberlik', icon: Moon, desc: 'İçsel denge ve farkındalık desteği.' },
+  { id: 'career', label: 'Kariyer & Para', icon: Briefcase, desc: 'İş hayatı ve finansal akış rehberliği.' },
+  { id: 'relationship', label: 'İlişki & Aşk', icon: Heart, desc: 'İlişki dinamikleri ve uyum rehberliği.' },
 ];
+
+const CATEGORY_COPY_TR: Record<string, { label: string; desc: string }> = {
+  astrology: { label: 'Astroloji', desc: 'Doğum haritası ve gezegen etkileriyle rehberlik.' },
+  birth_chart: { label: 'Doğum Haritası', desc: 'Detaylı natal harita analizi.' },
+  tarot: { label: 'Tarot', desc: 'Kartların sembolizmiyle rehberlik.' },
+  numerology: { label: 'Numeroloji', desc: 'Sayıların diliyle yaşam yolu yorumu.' },
+  coffee: { label: 'Kahve Falı', desc: 'Fincan sembollerinin geleneksel yorumu.' },
+  relationship: { label: 'İlişki & Aşk', desc: 'İlişki dinamikleri ve sinastri.' },
+  mood: { label: 'Ruhsal Rehberlik', desc: 'İçsel denge ve farkındalık desteği.' },
+  career: { label: 'Kariyer & Para', desc: 'İş hayatı ve finansal akış rehberliği.' },
+  dream_interpretation: { label: 'Rüya Tabiri', desc: 'Rüya sembollerinin yorumu.' },
+  energy_healing: { label: 'Enerji Şifası', desc: 'Enerji dengeleme ve şifa çalışması.' },
+  spiritual_guidance: { label: 'Manevi Rehberlik', desc: 'Manevi yolculukta destek.' },
+  nefes_terapisi: { label: 'Nefes Terapisi', desc: 'Bilinçli nefes teknikleriyle stres azaltma ve içsel denge.' },
+  bioenerji: { label: 'Bioenerji', desc: 'Bedendeki enerji akışını dengeleme ve şifa çalışması.' },
+  reiki: { label: 'Reiki', desc: 'Evrensel yaşam enerjisiyle şifa seansı.' },
+  yasam_koclugu: { label: 'Yaşam Koçluğu', desc: 'Hedef belirleme, motivasyon ve kişisel gelişim rehberliği.' },
+  bilincalti_donusum: { label: 'Bilinçaltı Dönüşüm', desc: 'Bilinçaltı kalıplarını fark etme ve dönüştürme çalışmaları.' },
+  psikoloji: { label: 'Psikoloji', desc: 'Lisanslı psikolog desteğiyle bireysel danışmanlık.' },
+};
 
 export default function ExpertiseCategoriesSection({ locale = 'tr' }: { locale?: string }) {
   const { ui } = useUiSection('ui_home', locale as any);
@@ -48,18 +68,18 @@ export default function ExpertiseCategoriesSection({ locale = 'tr' }: { locale?:
     const source = serviceCategories.length
       ? serviceCategories.slice(0, 6).map((cat) => ({
           id: cat.slug,
-          label: cat.name,
-          desc: cat.description || '',
+          label: locale === 'tr' ? (CATEGORY_COPY_TR[cat.slug]?.label ?? cat.name) : cat.name,
+          desc: locale === 'tr' ? (CATEGORY_COPY_TR[cat.slug]?.desc ?? cat.description ?? '') : (cat.description || ''),
           icon: ICONS[cat.slug as keyof typeof ICONS] ?? Sparkles,
         }))
       : CATEGORIES_FALLBACK;
 
     return source.map(cat => ({
       ...cat,
-      label: ui(`ui_home_expertise_cat_${cat.id}_label`, cat.label),
-      desc: ui(`ui_home_expertise_cat_${cat.id}_desc`, cat.desc)
+      label: cat.label,
+      desc: cat.desc
     }));
-  }, [serviceCategories, ui]);
+  }, [locale, serviceCategories]);
 
   return (
     <section className="py-24 bg-[var(--gm-bg)] relative overflow-hidden">

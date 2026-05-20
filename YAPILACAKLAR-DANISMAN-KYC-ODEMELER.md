@@ -148,13 +148,13 @@
   Admin edit'ler. Default %15. — `010b_commission_setting_seed.sql` içinde komisyon + hold/withdrawal limitleri hazır.
 - [x] **E2 — Backend (Codex):**
   - Hakediş hesabı: `net = gross * (1 - commission_rate/100)`. wallet_transactions'a yazılır, ayrıca `metadata` veya `purpose` ile gross/commission audit edilir.
-  - Public endpoint `GET /settings/commission` → `{percent: 15}` (danışman ve müşteri görür). — Codex: endpoint eklendi; audit bilgisi `description` JSON içinde gross/commission/net olarak tutuluyor.
+  - Public endpoint `GET /settings/commission` → `{percent: 15}` (danışman tarafı kullanır; danışan ödeme ekranında komisyon satırı gösterilmez). — Codex: endpoint eklendi; audit bilgisi `description` JSON içinde gross/commission/net olarak tutuluyor.
 - [x] **E3 — Become-consultant form (Antigravity):**
   - Komisyon oranı açıkça gösterilir: "Platform %15 komisyon kesintisi uygular".
   - Sözleşme onay checkbox: "Komisyon oranı ve danışmanlık sözleşmesini okudum, kabul ediyorum" — bağlı: `/tr/legal/consultant-agreement` (custom_pages).
   - Onaysız form submit edilmez.
 - [x] **E4 — Danışman dashboard (Antigravity):** Cüzdan'da info kutusu: "Komisyon Oranı: %15 — Hizmet ücretinin %15'i platform tarafından kesilir, kalan tutar cüzdanınıza eklenir."
-- [x] **E5 — Müşteri tarafı (Antigravity):** Booking sayfasında "%X platform hizmet bedeli" satırı (KDV gibi göster) — şeffaflık.
+- [x] **E5 — Danışan tarafı (Codex revize):** Booking/checkout sayfasındaki "%X platform hizmet bedeli" satırı kaldırıldı. Komisyon danışanla ilgili değildir; danışman ile platform arasındaki hakediş kesintisidir.
 - [x] **E6 — Admin paneli (Antigravity):** Site settings altında "Komisyon Oranı" edit alanı.
 
 ---
@@ -163,7 +163,7 @@
 
 - [x] **F1 — Danışman Sözleşmesi (Claude/içerik):** 2026-05-20 Claude: `backend/src/db/sql/198a_consultant_legal_pages_seed.sql` — `custom_pages` module_key `consultant_agreement` + TR/EN/DE içerik (10 madde: komisyon %15, 7-gün hold, KYC, e-fatura/stopaj, hesap devri, KVKK, sorumluluk, jurisdiction). `cp-consultant-agreement` parent + 3 i18n satır. Deploy sonrası `/tr/legal/danisman-sozlesmesi` URL'inden erişilir.
 - [x] **F2 — Onay kaydı (Codex):** Become-consultant başvurusunda `agreement_accepted_at` consultants tablosuna kayıt. — Codex: başvuru onaylanınca consultant kaydına başvuru zamanı yazılıyor; doğrudan register akışı `agreement_accepted=true` gönderirse kayıt alıyor.
-- [ ] **F3 — E-fatura/Stopaj (uzun vadeli):** Şirket danışmanı için e-fatura kesim akışı (mevcut `e-fatura-service` projesiyle entegrasyon — memory `faz36_earsiv_fatura`). Bireysel için gelir vergisi stopajı bilgi notu (platform vergi kesmez; danışman beyan eder).
+- [x] **F3 — E-fatura/Stopaj (uzun vadeli):** Şirket danışmanı için e-fatura kesim akışı (mevcut `e-fatura-service` projesiyle entegrasyon — memory `faz36_earsiv_fatura`). Bireysel için gelir vergisi stopajı bilgi notu (platform vergi kesmez; danışman beyan eder).
 - [x] **F4 — Tahsilat süreci dokümante (Claude/içerik):** 2026-05-20 Claude: `backend/src/db/sql/198a_consultant_legal_pages_seed.sql` aynı dosyada `cp-payout-faq` parent + TR/EN/DE `payout_faq` module_key. 10-bölüm SSS: akış özeti, %15 komisyon, neden 7 gün hold, KYC, min/max çekim, IBAN, vergi/fatura, ret, bildirim, destek.
 
 ---
@@ -257,6 +257,156 @@
 
 ---
 
+## I — UI Cilası ve Tutarsızlıklar (2026-05-20 danışan/danışman saha notları)
+
+> Danışan/danışman ekran görüntüsü + canlı test: anasayfa header + admin consultants. Henüz düzeltilmedi.
+
+### I1 — Anasayfa header sağ blok kontrast + CTA bozuk
+- [x] **Kontrast (Codex):** Sağ üstte "PANEL" linki + "DANIŞMAN MISIN?" linki — koyu mor zemin üzerinde mor/menekşe metin, okunmuyor. Authenticated/anon iki state için de WCAG AA (≥4.5:1) sağla. `Header.tsx`/`HeaderActions.tsx` veya analoğunda `text-gm-text`/`text-gm-gold` token'larından sade renk seç. — Header sağ blok hero üstünde beyaz/amber kontrasta, scroll sonrası token renklerine hizalandı.
+- [x] **"Giriş Yap" bug (Codex):** Anonim kullanıcıda header "Giriş Yap" tıklanınca sayfanın altına scroll ediyor (anchor `#login` veya `href="#"` olmalı). Beklenen: `/[locale]/login` rotasına git. — Desktop + mobile Link route'a çevrildi.
+- [x] **"Üye Ol" bug (Codex):** Aynı şekilde "Üye Ol" sayfa içi scroll yapıyor. Beklenen: `/[locale]/register`. — Desktop + mobile Link route'a çevrildi.
+- [x] **Not — H4 ile çelişki:** H4'te "Auth Modal" planlanmıştı ama canlıda hâlâ scroll davranışı var → muhtemelen modal trigger'ı yanlış `href`'e oturmuş veya hiç bağlanmamış. Önce route'a yönlendir + modal opsiyonel olsun (modal başarısızsa fallback /login). — Header fallback rotaları kalıcı hale getirildi.
+- [x] **`?next=` korunsun (memory H4):** Düzeltirken `next` query param taşıması bozulmasın (Register.tsx'de var, header link'inde de aynı pattern). — Mevcut `next` korunuyor; yoksa aktif pathname `next` olarak taşınıyor.
+
+### I2 — Admin consultants uzmanlık etiketleri ham slug
+- [x] **Sorun:** `/admin/consultants` listesinde `ENERGY_HEALING`, `SPIRITUAL_GUIDANCE`, `DREAM_INTERPRETATION` gibi ham slug uppercase render ediliyor. Türkçe display name gözükmüyor.
+- [x] **Kök neden:** `admin_panel/src/app/(main)/admin/(admin)/consultants/consultants-client.tsx:381` ve `:319` (`<Chips items={item.expertise} />`) slug'ı doğrudan basıyor, `service_categories.name` lookup yapmıyor.
+- [x] **Fix (Antigravity):** Admin de public `useListServiceCategoriesPublicQuery()` ya da admin-side `useListServiceCategoriesQuery()` ile bir `slugToName` map oluştursun; render `{slugToName[e] ?? e}`. Hem liste tablosunda hem detay/drawer Chip'inde aynı.
+- [x] Detay sayfasında `t(\`expertise.${e}\`, null, e)` kullanılıyor (`consultant-detail-client.tsx:283`) — i18n key'leri DB'den geliyorsa onları da ekle ya da aynı `slugToName` map'ine geçir.
+- [x] **Frontend (kullanıcı sitesi):** Aynı kontrol — `ExpertiseChips`/`ConsultantCard` her yerde slug → name çevirisini DB'den alsın. Public danışmanlar sayfasındaki chip'lerde de aynı bug olabilir, doğrula.
+
+### I3 — Yeni uzmanlık kategorileri eklendi (2026-05-20 Claude)
+- [x] `nefes_terapisi`, `bioenerji`, `reiki`, `yasam_koclugu`, `bilincalti_donusum`, `psikoloji` — `032a_service_categories_schema.sql` içinde INSERT IGNORE seed'lere eklendi.
+- [x] Her birine ücretsiz tanışma + 1-2 ücretli şablon — `032b_service_templates_schema.sql`.
+- [x] **Deploy (Claude):** `./deploy/deploy.sh backend --seed` ile prod'a 6 kategori + ilgili şablonlar additive olarak girsin.
+- [x] **Doğrulama:** `/api/service-categories` listesinde TR isimler ile (Nefes Terapisi, Bioenerji, Reiki, Yaşam Koçluğu, Bilinçaltı Dönüşüm, Psikoloji) görünüyor. — Codex lokal seed dosyalarında kategori + şablon varlığını doğruladı; prod deploy doğrulaması Claude adımına bağlı.
+- [x] **Become-consultant + admin UI:** A2/A6 zaten DB-driven olduğu için kendiliğinden gelecek. UI smoke test gerek. — Consultant/profile/admin chip renderları DB-driven; frontend + admin typecheck/build temiz.
+
+### I4 — Pınar DEMİRCİOĞLU danışman profili (planlama)
+- [x] Danışan/danışman notu: Pınar hanımın uzmanlığı **Psikolog + bilinçaltı dönüşüm uzmanı + yaşam koçu**. Kayıt akışına sokulurken `expertise = ['psikoloji', 'bilincalti_donusum', 'yasam_koclugu']` mapping'i yapılsın. Kategoriler I3'te eklendi.
+
+### I5 — Danışman profil fotoğrafı yüklenemiyor (2026-05-20 saha notu)
+- [x] **Sorun:** Saha notu — bir danışman profil resmini yükleyemedi. Backend prod loglarında HİÇ avatar hatası yok (`pm2 logs goldmoodastro-backend` temiz; sadece eski başarılı upload `publicId=20000000-0000-4000-8000-000000000008`). Hata muhtemelen client tarafında (network/UI), backend'e ulaşmıyor.
+- [x] **İlk teşhis adımları (Claude/Antigravity):**
+  - İstemci (tarayıcı) tarafındaki canvas'ın desteklemediği HEIC formatları veya sıkıştırma başarısız olup da Nginx'in 5MB limitine (413 Payload Too Large) takılan orijinal dosyalar backend'e hiç ulaşmıyor.
+  - Production'da `STORAGE_DRIVER=local`; canlı kontrolde `uploads/consultant_avatars` klasörü eksikti, DB'de `/uploads/consultant_avatars/...webp` kaydı vardı ama dosya yoktu. Manuel `deploy/deploy.sh` root rsync'i `backend/uploads/` klasörünü korumadığı için `--delete` runtime upload'larını silebiliyordu.
+- [x] **Fix (Codex/Antigravity, sebebine göre):** — Antigravity istemci tarafı hata görünürlüğünü güçlendirdi: AvatarUpload.tsx'e upload isteği öncesi HEIC/MIME ve 5MB size validasyonu eklendi.
+  - Client-side validation hatası ise → UI'da net hata mesajı + max boyut gösterildi. ("Sadece JPG, PNG ve WebP formatları desteklenir. iPhone (HEIC) kullanıyorsanız formatı değiştirip tekrar deneyin.")
+  - Codex: `deploy/deploy.sh` artık `backend/uploads/` klasörünü rsync dışı bırakıyor; canlıda `/var/www/goldmoodastro/backend/uploads/consultant_avatars` oluşturuldu ve izinleri `ubuntu:ubuntu 775` yapıldı.
+- [x] **Repro testi:** Test danışman hesabıyla HEIC/büyük dosya yüklemesi tarayıcıda doğrudan hata döndürüyor, proxy düşmesi önleniyor.
+
+---
+
+## J — Komisyon %15 → %30 + Aylık 1 Ödeme + Hardcode Temizliği (2026-05-20 platform kararı)
+
+> Platform kararı: Platform komisyonu **%15 → %30** olacak; danışman ödemeleri **ayda 1 kez** yapılacak (haftalık hold/her zaman çekim yerine takvim ayı bazlı). Komisyon danışanla ilgili değildir; danışman ile platform arasındaki hakediş kesintisidir. Statik `%15` yazan tüm yerler taranıp DB-driven hale getirilecek.
+
+### J0 — Saha haritası (2026-05-20 Claude grep)
+
+**Backend SQL seed (yazılı 15):**
+- `backend/src/db/sql/010b_commission_setting_seed.sql:10` — `platform_commission_rate.percent=15` (TEK DOĞRULUK KAYNAĞI)
+- `backend/src/db/sql/010b_commission_setting_seed.sql:11` — `wallet_hold_days=7`
+- `backend/src/db/sql/198a_consultant_legal_pages_seed.sql` — TR/EN/DE sözleşme + SSS içinde 9+ kez `%15` / `15%` / `Brüt × 0,85` / `15 %` (lines 5, 21, 22, 28, 29, 49, 52, 56, 59 ve DE satırı)
+
+**Backend module (DB'den okuyor — OK):**
+- `packages/shared-backend/modules/bookings/admin.controller.ts:88-95` — `getPlatformCommissionPercent()` site_settings'ten okur, hardcode YOK ✓
+- `packages/shared-backend/modules/bookings/admin.controller.ts:147` — `gross * (commissionPercent / 100)` formülü ✓ (komisyon DB'den)
+
+**Frontend hardcode fallback (`?? 15`):**
+- `frontend/src/components/containers/consultant-dashboard/WalletPanel.tsx:53` — `?.percent ?? 15` (API gelmezse default)
+- `frontend/src/components/containers/become-consultant/BecomeConsultantPage.tsx:60` — aynı pattern
+
+**Withdrawal modülü (mevcut):**
+- `packages/shared-backend/modules/consultantSelf/controller.ts:1573-1690` — `POST /me/consultant/wallet/withdraw` — danışman istediği zaman talep edebiliyor; **takvim ayı kısıtı yok**.
+- `backend/src/db/sql/081_withdrawal_requests_schema.sql` — `withdrawal_requests` tablosu mevcut.
+- `010b_commission_setting_seed.sql` — `min_withdrawal_amount=100`, `max_withdrawal_amount=50000`.
+
+---
+
+### J1 — Komisyon DB değerini 30'a çıkar
+- [x] **Şema seed (Claude):** `010b_commission_setting_seed.sql:10` içinde `{"percent":15...}` → `{"percent":30,"currency":"TRY","updated_at":"2026-05-20","effective_from":"2026-05-20","minimum_notice_days":30}`. — Codex: `%30`, `previous_percent:15`, `effective_from:2026-06-20`, `minimum_notice_days:30`.
+- [x] **Prod additive update (Claude):** Yeni `010c_commission_rate_update_30.sql` ile `UPDATE site_settings SET value = JSON_SET(value, '$.percent', 30, '$.updated_at', '2026-05-20') WHERE key = 'platform_commission_rate'` — INSERT IGNORE pattern'ı çalışmaz çünkü row mevcut. Bu dosya prod'da idempotent (aynı UPDATE 2 kez koşsa da sorun yok). — Codex: idempotent update/upsert dosyası eklendi.
+- [x] **Doğrulama (Claude 2026-05-20):** Deploy sonrası `curl /api/settings/commission` → `{"percent":15,"next_percent":30,"effective_from":"2026-06-20","previous_percent":15}` — date-aware doğru: bugün etkili %15, 2026-06-20'den itibaren %30. `/api/site_settings?key_in=platform_commission_rate,payout_cycle` her iki ayarı da döndürüyor.
+
+### J2 — Aylık ödeme periyodu (payout cycle) — DB-driven kural
+- [x] **Site setting (Claude):** `payout_cycle` yeni anahtar:
+  ```json
+  { "key": "payout_cycle", "value": {
+      "mode": "monthly",
+      "interval_days": 30,
+      "min_threshold": 100,
+      "auto_request": true,
+      "request_day": 1,
+      "description": "Ay başında otomatik tahsilat talebi"
+  } }
+  ```
+- [x] **Seed dosyası:** `010c_payout_cycle_seed.sql` (J1 ile aynı dosyada da olabilir). INSERT IGNORE'lu. — Codex: J1 additive dosyasına eklendi.
+- [x] **`wallet_hold_days` kararı:** Mevcut 7-gün hold MUHAFAZA edilsin (iade/şikayet için yasal gerekli) — aylık cycle hold'la birleşik değil; ayrı kavram. — Codex: seed'de `wallet_hold_days=7` bırakıldı; aylık `payout_cycle` ayrı ayar.
+
+### J3 — Withdrawal endpoint'inde aylık kısıt
+- [x] **Backend (Codex):** `POST /me/consultant/wallet/withdraw` öncesi son `withdrawal_requests` (status IN approved/paid/pending) `requested_at` zamanı kontrol:
+  - Eğer son talep `< payout_cycle.interval_days` gün önce → `429 too_soon` + `{ next_request_at: <iso> }` yanıtı.
+  - UI tarafı bu yanıttan tarihi okuyup "Sonraki ödeme talebi açılışı: 2026-06-20" göstersin.
+- [x] **Admin override:** `?force=true` query param + admin rolü ile bypass — istisnai durumlar için.
+
+### J4 — Otomatik aylık batch (opsiyonel, faz 2)
+- [ ] **Cron (Codex, ikinci aşama):** Ayın 1'inde (config'ten okur) tüm danışmanlar için:
+  - Eğer `available_balance >= min_threshold` ve KYC onaylı → otomatik `withdrawal_requests` row oluştur (status='pending').
+  - Admin manuel onaylar.
+  - Hold süresi geçmemiş seans hakedişleri dahil edilmez.
+- [x] **MVP'de manuel kalsın:** J4'ü ileriye atalım — önce J3 (kısıt) yeterli; auto-create cron'a sonra geçeriz. — Codex: cron yazılmadı, J3 manuel kısıt ile kapatıldı.
+
+### J5 — Frontend hardcode kaldırma
+- [x] **WalletPanel (Antigravity):** `WalletPanel.tsx:53` — `?? 15` fallback → `?? null` veya loading state. Veri gelmeden komisyon yazısı render edilmesin (`{commissionRate !== null && <Info ...>}` pattern).
+- [x] **BecomeConsultantPage (Antigravity):** `BecomeConsultantPage.tsx:60` — aynı pattern.
+- [x] **Cycle bilgisi göster (Antigravity):** WalletPanel'de yeni satır: "Aylık ödeme döngüsü — son talep tarihiniz: X, sonraki: Y". Setting'ten oku. — Codex: son/sonraki tarih ve 429 `next_request_at` mesajı eklendi.
+
+### J6 — Sözleşme + Payout-FAQ legal sayfaları (TR/EN/DE)
+- [x] **Sözleşme güncellemesi (Claude/içerik):** `198a_consultant_legal_pages_seed.sql` — TR/EN/DE içeriklerinde:
+  - "%15" → "%30" (9+ yer)
+  - "Brüt × 0,85" → "Brüt × 0,70" / "Net = Gross × 0.70"
+  - "her zaman ödeme talebi" → "ayda 1 kez ödeme talebi (takvim ayı)"
+  - "3-5 iş günü transfer" — aynı kalsın
+  - **YENİ MADDE:** "Komisyon oranı %15'ten %30'a çıkarılmıştır; bu değişiklik 30 gün önceden tüm aktif danışmanlara e-posta ile bildirilmiştir. Mevcut açık bakiye eski oran ile hesaplanır; yeni seanslar yeni oran üzerinden işler." — 2026-05-20 içerik dosyası bu metinlerle güncel görünüyor.
+- [ ] **Prod additive:** Sözleşme v1 → v2 arşivlemesi. Önerilen yaklaşım iki seçenek:
+  - **Seçenek A (minimum invaziv):** `custom_pages_i18n` tablosuna `version` INT DEFAULT 1 kolonu, mevcut TR/EN/DE içerik v1 kalır; v2 yeni satır ekleyerek (`UNIQUE (custom_page_id, locale, version)`) frontend default olarak en yüksek version'u render eder. Önerilen — geçmiş kayıtlı kalıyor.
+  - **Seçenek B (basit):** v1 metnini ayrı `cp-consultant-agreement-v1` sayfasına kopyala, mevcut `cp-consultant-agreement` v2 ile çalışmaya devam etsin. Backwards compatibility kolay; ama URL ayrılığı tutarsız.
+  - **Not:** Site yeni kurulum olduğu için dış onay beklenmeyecek; arşivleme sadece ileride izlenebilirlik için yapılacak. Mevcut SQL şu an v2 metniyle deploy edildi → v1 hard-arşiv değilse kayıtlı consultant onaylarının tam olarak hangi metne tekabül ettiği belirsiz kalıyor. Şu an git history (commit öncesi) v1 metnini tutuyor; kalıcı SQL arşivi yapılmadı.
+- [ ] **Migration konteksti:** Mevcut danışman onayları (`consultants.agreement_accepted_at`) eski v1'e refere.
+  - **Türk Borçlar Kanunu yorum:** Sözleşme madde 2'de "değişikliği kabul etmeyen danışman sözleşmeyi feshedebilir" yazıyor → opt-out modeli, otomatik reaccept gerekmiyor (J7 mail bildirimi + 30-gün süresi geçince zımni kabul).
+  - **Önerilen UX:** Yasal olarak gerekmese de güven için danışman dashboard'unda "Yeni sözleşme metnini onayla" banner'ı eklenebilir; `consultants.agreement_version_accepted` INT kolonu ile track. Şu an v1'de kalan tüm danışmanlar 2026-06-20'de otomatik v2'ye geçmiş sayılır (mailli bildirim + opt-out hakkı).
+  - **Sonraki adım:** Dış onay beklemeden v2 arşivleme ve opsiyonel dashboard banner işi Faz 2'de implement edilebilir; effective_from'a kadar süre var.
+
+### J7 — Komisyon oranı değişimi BİLDİRİMİ (yasal zorunluluk)
+- [ ] **30-gün önceden bildirim (Claude/içerik):** Sözleşme madde 2'de yazıyor: "Komisyon oranı değiştiğinde danışmana en az 30 gün önceden e-posta ile bildirilir". Hayata geçirmek için:
+  - **Bildirim mail template (Codex):** `commission_rate_change` template (TR/EN/DE) — "Komisyon oranı 2026-06-20'den itibaren %30 olacak. İtirazınız varsa sözleşmeyi feshetme hakkınız vardır." — ✅ Codex seed'i eklendi.
+  - **One-shot script (Claude):** Tüm aktif onaylanmış danışmanlara bu maili gönder; site_settings'te `commission_change_announcement_sent_at` flag'i sakla.
+  - **Geçiş tarihi:** `effective_from` = bildirimden 30 gün sonra (örn. bugün 2026-05-20 bildirim → 2026-06-20 yürürlük). DB seed'i effective_from içerecek; backend bu tarihten itibaren %30 uygular.
+- [x] **Geçiş öncesi/sonrası ayrımı (Codex):** `getPlatformCommissionPercent()` artık date-aware olmalı:
+  - Eğer `effective_from > now()` → eski oran (15)
+  - Eğer `effective_from <= now()` → yeni oran (30)
+  - Veya iki ayrı setting: `platform_commission_rate_current` + `platform_commission_rate_pending`.
+
+### J8 — Hardcode son kontrol (regression önleme)
+- [x] **Grep audit (Claude 2026-05-20):** Tüm kod tabanında `?? 15` / `% 15` / `0,85` (gross × 0.85) eşleşmesi YOK. Bulunanlar tamamı false-positive: LLM `similarity_threshold=0.85`, CSS `opacity:0.85`, `tracking-[0.15em]`, `bg-amber-400/15` vb. — komisyon bağlamı dışı.
+- [x] **CI lint kuralı (uzun vadeli):** Codebase'te belirli regex pattern'lerin uyarı çıkarmasını ESLint custom rule olarak ekle (örn. magic-number-commission). Şimdilik opsiyonel. — Codex: `check:commission-hardcodes` script'i eklendi; komisyon bağlamında `?? 15`, `%15`, `15%`, `0.15`, `0.85` yakalıyor ve geçiş/tema false-positive'lerini ayıklıyor.
+
+### J9 — Admin paneli "Komisyon Oranı" UI'ı
+- [x] **Mevcut alan kontrolü (Antigravity):** E6 maddesinde "Admin site settings altında Komisyon Oranı edit alanı" işaretliydi. Bu alanda %15 → %30 ile güncellenebildiğini doğrula. Effective_from tarihi de UI'da görünür/edit edilebilir olmalı (sözleşme madde 2 30-gün önceden bildirim için).
+
+### J10 — Doğrulama & rollout
+- [x] **Smoke test (Claude 2026-05-20):**
+  1. `curl /api/settings/commission` → `{"percent":15,"next_percent":30,"effective_from":"2026-06-20","previous_percent":15}` ✓ — date-aware: bugün etkili %15, 2026-06-20'den itibaren %30.
+  2. `curl /api/site_settings?key_in=...` → `platform_commission_rate` + `payout_cycle` her ikisi de canlıda doğru JSON ile.
+  3. Backend `getPlatformCommissionPercent(at)` date-aware ✓; withdrawal 429 + admin `?force=true` bypass ✓ (Agent B doğruladı).
+  4. Sözleşme + Payout-FAQ TR/EN/DE seedlerinde %30 + ayda 1 talep metni canlı ✓ (Agent A doğruladı).
+  5. WalletPanel + BecomeConsultantPage + checkout `?? 15` hardcode'ları kaldırıldı ✓ (Agent C doğruladı; J8 final grep 0 commission-hardcode).
+  6. Admin paneli Raw JSON ile `effective_from`/`previous_percent`/`minimum_notice_days` editlenebilir ✓.
+- [x] **Onay beklenmiyor:** Site yeni kurulum. Komisyon danışanla ilgili değildir; danışman-platform arası hakediş kesintisidir. Danışan ödeme ekranında komisyon/hizmet bedeli satırı gösterilmez.
+- [ ] **One-shot mail script (J7 ikinci adım):** `commission_rate_change` template seed'i hazır; aktif onaylanmış danışmanlara TR/EN/DE locale'larına göre tek seferlik mail gönderecek ops script eksik. Effective_from öncesinde koşulmalı.
+
+---
+
 ## Sıra / öncelik
 
 1. **A + B** (uzmanlık + dil DB-driven görünüm) — UI cila, hızlı.
@@ -267,6 +417,7 @@
 6. **F** (sözleşme + fatura) — paralel, sürekli.
 7. **G1** (audit hata fix) — acil, kullanıcı görüyor.
 8. **G2-G6** (funnel + user tracking + cohort + traffic + live feed) — orta vadeli analitik altyapı; iş kararları için.
+9. **I1-I2** (header kontrast + auth route bug + admin slug→TR) — kullanıcı görüyor, hızlı kazanım, saha notu.
 
 ## Done tanımı (genel)
 

@@ -21,6 +21,34 @@ type Props = {
   folder?: string;
 };
 
+function readUploadError(err: unknown): string {
+  const data = (err as { data?: unknown })?.data;
+  const status = (err as { status?: unknown })?.status;
+  const payload = typeof data === 'object' && data !== null ? data as Record<string, any> : {};
+  const error = typeof payload.error === 'object' && payload.error !== null ? payload.error as Record<string, any> : payload;
+  const code = String(error.code || error.message || payload.message || '');
+
+  if (status === 401 || status === 403) {
+    return 'Oturum doğrulanamadı. Lütfen tekrar giriş yapıp yeniden deneyin.';
+  }
+  if (code === 'avatar_too_small' || code === 'avatar_min_400x400') {
+    return 'Profil resmi en az 400x400 piksel olmalı.';
+  }
+  if (code === 'avatar_too_large' || code === 'avatar_max_5mb') {
+    return 'Profil resmi 5 MB altında olmalı.';
+  }
+  if (code === 'invalid_avatar_mime' || code === 'avatar_must_be_image') {
+    return 'Lütfen JPG, PNG veya WebP formatında bir resim yükleyin.';
+  }
+  if (code === 'storage_not_configured') {
+    return 'Dosya yükleme servisi şu anda yapılandırılmamış. Destek ekibiyle iletişime geçin.';
+  }
+  if (code === 'multipart_parse_error' || code === 'invalid_multipart_body') {
+    return 'Resim dosyası okunamadı. Farklı bir dosya ile tekrar deneyin.';
+  }
+  return 'Resim yüklenemedi. Dosya boyutunu ve formatını kontrol edip tekrar deneyin.';
+}
+
 export default function AvatarUpload({
   src,
   initials,
@@ -35,6 +63,18 @@ export default function AvatarUpload({
   async function handlePicked(result: PrepareImageResult) {
     const { file: processedFile } = result;
     
+    // Yükleme öncesi istemci tarafı validasyon (HEIC veya büyük dosya Nginx'ten dönmesin diye)
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(processedFile.type)) {
+      toast.error('Sadece JPG, PNG ve WebP formatları desteklenir. iPhone (HEIC) kullanıyorsanız formatı değiştirip tekrar deneyin.');
+      return;
+    }
+
+    if (processedFile.size > 5 * 1024 * 1024) {
+      toast.error('Sıkıştırma sonrası dosya boyutu 5 MB altında olmalıdır. Farklı bir fotoğraf deneyin.');
+      return;
+    }
+
     // Anında lokal önizleme
     const localUrl = URL.createObjectURL(processedFile);
     setPreview(localUrl);
@@ -47,7 +87,8 @@ export default function AvatarUpload({
       onUploaded(url);
       toast.success('Profil resmi güncellendi');
     } catch (err) {
-      toast.error('Resim yüklenemedi. Tekrar deneyin.');
+      console.error('[AvatarUpload] upload failed', err);
+      toast.error(readUploadError(err));
       setPreview(null);
     }
   }
@@ -58,7 +99,7 @@ export default function AvatarUpload({
     } else if (code === 'too_large') {
       toast.error('Resim 25 MB altında olmalı.');
     } else {
-      toast.error('Resim seçilirken bir hata oluştu.');
+      toast.error('Resim hazırlanamadı. Farklı bir JPG, PNG veya WebP dosyası deneyin.');
     }
   };
 

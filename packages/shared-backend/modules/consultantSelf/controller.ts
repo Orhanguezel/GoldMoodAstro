@@ -643,7 +643,7 @@ export async function approveBooking(req: FastifyRequest, reply: FastifyReply) {
 
   await db.update(bookings).set({ status: 'confirmed' } as any).where(eq(bookings.id, id));
 
-  // Müşteriye bildirim + email — fire-and-forget
+  // Danışana bildirim + email — fire-and-forget
   if (b.user_id) {
     const isInstant = b.status === 'requested_now';
     const title = isInstant ? '✅ Anlık Görüşmeniz Onaylandı' : '✅ Randevunuz Onaylandı';
@@ -678,7 +678,7 @@ export async function approveBooking(req: FastifyRequest, reply: FastifyReply) {
             locale,
             defaultLocale: await getDefaultLocale(),
             params: {
-              customer_name: b.name || 'Değerli müşterimiz',
+              customer_name: b.name || 'Değerli danışanımız',
               consultant_name: consultantName,
               appointment_date: b.appointment_date || '',
               appointment_time: b.appointment_time?.slice(0, 5) || '',
@@ -721,7 +721,7 @@ export async function rejectBooking(req: FastifyRequest, reply: FastifyReply) {
     if (b.slot_id) await releaseSlotTx(tx, { slot_id: b.slot_id });
   });
 
-  // Müşteriye bildirim + email — fire-and-forget
+  // Danışana bildirim + email — fire-and-forget
   if (b.user_id) {
     const title = '❌ Randevunuz Reddedildi';
     const reason = parsed.data.reason ? ` Sebep: ${parsed.data.reason}` : '';
@@ -750,7 +750,7 @@ export async function rejectBooking(req: FastifyRequest, reply: FastifyReply) {
             locale,
             defaultLocale: await getDefaultLocale(),
             params: {
-              customer_name: b.name || 'Değerli müşterimiz',
+              customer_name: b.name || 'Değerli danışanımız',
               consultant_name: consultantName,
               appointment_date: b.appointment_date || '',
               appointment_time: b.appointment_time?.slice(0, 5) || '',
@@ -910,7 +910,7 @@ export async function getStats(req: FastifyRequest, reply: FastifyReply) {
     last7Days.push({ date: key, count: v.count, earnings: v.earnings });
   }
 
-  // Yanıt süresi (chat threads) — basit ortalama: gelen müşteri mesajından danışman cevabına kadar geçen ms
+  // Yanıt süresi (chat threads) — basit ortalama: gelen danışan mesajından danışman cevabına kadar geçen ms
   let avgResponseMinutes = 0;
   try {
     const respRows = await db.execute(
@@ -932,7 +932,7 @@ export async function getStats(req: FastifyRequest, reply: FastifyReply) {
     avgResponseMinutes = 0;
   }
 
-  // Bekleyen mesaj sayısı — son mesajı müşteriden gelen thread'ler (henüz cevap yok)
+  // Bekleyen mesaj sayısı — son mesajı danışandan gelen thread'ler (henüz cevap yok)
   let pendingMessages = 0;
   try {
     const pmRows = await db.execute(
@@ -1232,7 +1232,7 @@ export async function listMessageThreads(req: FastifyRequest, reply: FastifyRepl
     )
     .orderBy(desc(chat_threads.updated_at));
 
-  // Her thread için: son mesaj + müşteri adı
+  // Her thread için: son mesaj + danışan adı
   const enriched = await Promise.all(
     threads.map(async (t) => {
       // Son mesaj
@@ -1248,7 +1248,7 @@ export async function listMessageThreads(req: FastifyRequest, reply: FastifyRepl
         .orderBy(desc(chat_messages.created_at))
         .limit(1);
 
-      // Müşteri adı (created_by_user_id'den)
+      // Danışan adı (created_by_user_id'den)
       let customer = null as null | { id: string; full_name: string | null; email: string | null; avatar_url: string | null };
       if (t.created_by_user_id) {
         const [u] = await db
@@ -1583,6 +1583,44 @@ const withdrawalAdminActionSchema = z.object({
   transfer_reference: z.string().trim().max(120).optional(),
 });
 
+function requestUserIsAdmin(req: FastifyRequest): boolean {
+  const user = (req as any).user as { role?: unknown; roles?: unknown; is_admin?: unknown } | undefined;
+  return user?.is_admin === true || user?.role === 'admin' || (Array.isArray(user?.roles) && user.roles.includes('admin'));
+}
+
+function parseJsonSetting<T extends Record<string, unknown>>(raw: unknown): T | null {
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw as T;
+  if (typeof raw !== 'string' || !raw.trim()) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function getPayoutCycleSetting(): Promise<{ intervalDays: number; minThreshold: number; mode: string }> {
+  const result = await db.execute(sql`
+    SELECT value
+    FROM site_settings
+    WHERE \`key\` = 'payout_cycle' AND locale = '*'
+    LIMIT 1
+  `);
+  const row = rowsFromExecute<{ value: unknown }>(result)[0];
+  const value = parseJsonSetting(row?.value);
+  const intervalDays = Number(value?.interval_days);
+  const minThreshold = Number(value?.min_threshold);
+  return {
+    intervalDays: Number.isFinite(intervalDays) && intervalDays > 0 ? Math.floor(intervalDays) : 30,
+    minThreshold: Number.isFinite(minThreshold) && minThreshold > 0 ? minThreshold : 100,
+    mode: typeof value?.mode === 'string' && value.mode ? value.mode : 'monthly',
+  };
+}
+
+function addDays(date: Date, days: number): Date {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
 function emailWithdrawalStatus(row: any, status: 'approved' | 'paid' | 'rejected', extra?: Record<string, unknown>) {
   if (!row?.email) return Promise.resolve(null);
   const key = `withdrawal_${status}_consultant`;
@@ -1613,6 +1651,46 @@ export async function requestWithdrawal(req: FastifyRequest, reply: FastifyReply
 
   const parsed = withdrawSchema.safeParse(req.body);
   if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
+
+  const payoutCycle = await getPayoutCycleSetting();
+  if (parsed.data.amount < payoutCycle.minThreshold) {
+    return reply.code(400).send({
+      error: { message: 'below_min_withdrawal_amount' },
+      min_amount: payoutCycle.minThreshold,
+    });
+  }
+
+  const force = ((req.query || {}) as { force?: string | boolean }).force;
+  const bypassCycle = requestUserIsAdmin(req) && (force === true || force === 'true' || force === '1');
+  if (!bypassCycle && payoutCycle.intervalDays > 0) {
+    const lastResult = await db.execute(sql`
+      SELECT id, status, requested_at
+      FROM withdrawal_requests
+      WHERE consultant_id = ${c.id}
+        AND status IN ('approved', 'paid', 'pending')
+      ORDER BY requested_at DESC
+      LIMIT 1
+    `);
+    const last = rowsFromExecute<{ id: string; status: string; requested_at: string | Date }>(lastResult)[0];
+    if (last?.requested_at) {
+      const requestedAt = new Date(last.requested_at);
+      const nextRequestAt = addDays(requestedAt, payoutCycle.intervalDays);
+      if (!Number.isNaN(nextRequestAt.getTime()) && nextRequestAt.getTime() > Date.now()) {
+        return reply.code(429).send({
+          error: {
+            message: 'withdrawal_too_soon',
+            next_request_at: nextRequestAt.toISOString(),
+            last_requested_at: requestedAt.toISOString(),
+          },
+          // Top-level mirrors kept for backwards-compatibility with any
+          // earlier client that may already consume them.
+          next_request_at: nextRequestAt.toISOString(),
+          last_request_at: requestedAt.toISOString(),
+          interval_days: payoutCycle.intervalDays,
+        });
+      }
+    }
+  }
 
   // Wallet'i bul; varsa user cüzdanını danışman cüzdanı olarak bağla.
   const wResult = await db.execute(
@@ -2102,4 +2180,230 @@ export async function overrideMyAvailabilityDay(req: FastifyRequest, reply: Fast
     }
     throw e;
   }
+}
+
+/* =============================================================================
+ * CUSTOMER (NON-CONSULTANT) MESSAGE INBOX
+ * Kullanıcı tarafı: danışan /me/customer/threads* endpoint'leri.
+ * Mirror of consultant's /me/consultant/threads but viewing from buyer's
+ * perspective — returns thread with `consultant` info (not customer).
+ * ===========================================================================*/
+
+/* ─── GET /me/customer/threads ─── */
+export async function listCustomerThreads(req: FastifyRequest, reply: FastifyReply) {
+  const userId = getCallerUserId(req);
+  if (!userId) return reply.code(401).send({ error: { message: 'unauthenticated' } });
+
+  // chat_participants joinli: kullanıcı thread'in member'ı olduğu tüm threadler.
+  const rows = await db
+    .select({
+      id: chat_threads.id,
+      context_type: chat_threads.context_type,
+      context_id: chat_threads.context_id,
+      created_by_user_id: chat_threads.created_by_user_id,
+      created_at: chat_threads.created_at,
+      updated_at: chat_threads.updated_at,
+      participant_last_read_at: chat_participants.last_read_at,
+    })
+    .from(chat_participants)
+    .innerJoin(chat_threads, eq(chat_threads.id, chat_participants.thread_id))
+    .where(eq(chat_participants.user_id, userId))
+    .orderBy(desc(chat_threads.updated_at));
+
+  // Booking + consultant_lead context'leri için consultant info çek.
+  const enriched = await Promise.all(
+    rows.map(async (t) => {
+      let consultant: null | { id: string; display_name: string | null; full_name: string | null; avatar_url: string | null } = null;
+
+      if (t.context_type === 'booking') {
+        const [b] = await db.execute(
+          sql`SELECT b.consultant_id, c.display_name, u.full_name, u.avatar_url
+              FROM bookings b
+              INNER JOIN consultants c ON c.id = b.consultant_id
+              INNER JOIN users u ON u.id = c.user_id
+              WHERE b.id = ${t.context_id}
+              LIMIT 1`,
+        );
+        const row = Array.isArray(b) ? (b as any)[0] : (b as any);
+        if (row) {
+          consultant = {
+            id: row.consultant_id,
+            display_name: row.display_name ?? null,
+            full_name: row.full_name ?? null,
+            avatar_url: row.avatar_url ?? null,
+          };
+        }
+      } else if (t.context_type === 'consultant_lead') {
+        const [c] = await db.execute(
+          sql`SELECT c.id AS consultant_id, c.display_name, u.full_name, u.avatar_url
+              FROM consultants c
+              INNER JOIN users u ON u.id = c.user_id
+              WHERE c.id = ${t.context_id}
+              LIMIT 1`,
+        );
+        const row = Array.isArray(c) ? (c as any)[0] : (c as any);
+        if (row) {
+          consultant = {
+            id: row.consultant_id,
+            display_name: row.display_name ?? null,
+            full_name: row.full_name ?? null,
+            avatar_url: row.avatar_url ?? null,
+          };
+        }
+      }
+
+      // Son mesaj
+      const [last] = await db
+        .select({
+          id: chat_messages.id,
+          text: chat_messages.text,
+          sender_user_id: chat_messages.sender_user_id,
+          created_at: chat_messages.created_at,
+        })
+        .from(chat_messages)
+        .where(eq(chat_messages.thread_id, t.id))
+        .orderBy(desc(chat_messages.created_at))
+        .limit(1);
+
+      // Unread sayısı (caller'ın last_read_at'inden sonra gelen, kendi göndermediği)
+      const unreadRows = await db.execute(
+        sql`
+          SELECT COUNT(*) AS cnt
+          FROM chat_messages
+          WHERE thread_id = ${t.id}
+            AND sender_user_id <> ${userId}
+            AND (${t.participant_last_read_at ?? null} IS NULL OR created_at > ${t.participant_last_read_at ?? null})
+        `,
+      );
+      const unreadArr = Array.isArray((unreadRows as any)?.[0]) ? (unreadRows as any)[0] : (unreadRows as any);
+      const unreadCount = Number((unreadArr as any[])?.[0]?.cnt ?? 0);
+
+      return {
+        thread_id: t.id,
+        context_type: t.context_type,
+        context_id: t.context_id,
+        created_at: t.created_at,
+        updated_at: t.updated_at,
+        consultant,
+        unread_count: unreadCount,
+        last_message: last
+          ? {
+              id: last.id,
+              text: last.text,
+              sender_user_id: last.sender_user_id,
+              created_at: last.created_at,
+              from_self: last.sender_user_id === userId,
+            }
+          : null,
+      };
+    }),
+  );
+
+  return reply.send({ data: enriched });
+}
+
+/* ─── GET /me/customer/threads/:id/messages ─── */
+export async function listCustomerThreadMessages(req: FastifyRequest, reply: FastifyReply) {
+  const userId = getCallerUserId(req);
+  if (!userId) return reply.code(401).send({ error: { message: 'unauthenticated' } });
+
+  const { id } = req.params as { id: string };
+  // Member kontrolü
+  const [member] = await db
+    .select({ user_id: chat_participants.user_id })
+    .from(chat_participants)
+    .where(and(eq(chat_participants.thread_id, id), eq(chat_participants.user_id, userId)))
+    .limit(1);
+  if (!member) return reply.code(404).send({ error: { message: 'not_found' } });
+
+  const messages = await db
+    .select({
+      id: chat_messages.id,
+      thread_id: chat_messages.thread_id,
+      sender_user_id: chat_messages.sender_user_id,
+      text: chat_messages.text,
+      created_at: chat_messages.created_at,
+    })
+    .from(chat_messages)
+    .where(eq(chat_messages.thread_id, id))
+    .orderBy(chat_messages.created_at);
+
+  // Görüntüleme = okundu say
+  const now = new Date();
+  await db.execute(
+    sql`
+      INSERT INTO chat_participants (id, thread_id, user_id, role, joined_at, last_read_at)
+      VALUES (${randomUUID()}, ${id}, ${userId}, 'customer', ${now}, ${now})
+      ON DUPLICATE KEY UPDATE last_read_at = ${now}
+    `,
+  );
+
+  return reply.send({ data: { thread_id: id, messages, last_read_at: now } });
+}
+
+/* ─── POST /me/customer/threads/:id/mark-read ─── */
+export async function markCustomerThreadRead(req: FastifyRequest, reply: FastifyReply) {
+  const userId = getCallerUserId(req);
+  if (!userId) return reply.code(401).send({ error: { message: 'unauthenticated' } });
+
+  const { id } = req.params as { id: string };
+  const [member] = await db
+    .select({ user_id: chat_participants.user_id })
+    .from(chat_participants)
+    .where(and(eq(chat_participants.thread_id, id), eq(chat_participants.user_id, userId)))
+    .limit(1);
+  if (!member) return reply.code(404).send({ error: { message: 'not_found' } });
+
+  const now = new Date();
+  await db.execute(
+    sql`
+      INSERT INTO chat_participants (id, thread_id, user_id, role, joined_at, last_read_at)
+      VALUES (${randomUUID()}, ${id}, ${userId}, 'customer', ${now}, ${now})
+      ON DUPLICATE KEY UPDATE last_read_at = ${now}
+    `,
+  );
+
+  return reply.send({ data: { ok: true, thread_id: id, last_read_at: now, unread_count: 0 } });
+}
+
+/* ─── POST /me/customer/threads/:id/reply ─── */
+const customerReplySchema = z.object({ text: z.string().trim().min(1).max(2000) });
+
+export async function replyAsCustomer(req: FastifyRequest, reply: FastifyReply) {
+  const userId = getCallerUserId(req);
+  if (!userId) return reply.code(401).send({ error: { message: 'unauthenticated' } });
+
+  const { id } = req.params as { id: string };
+  const parsed = customerReplySchema.safeParse(req.body);
+  if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body' } });
+
+  const [member] = await db
+    .select({ user_id: chat_participants.user_id })
+    .from(chat_participants)
+    .where(and(eq(chat_participants.thread_id, id), eq(chat_participants.user_id, userId)))
+    .limit(1);
+  if (!member) return reply.code(404).send({ error: { message: 'not_found' } });
+
+  const messageId = randomUUID();
+  const now = new Date();
+  await db.insert(chat_messages).values({
+    id: messageId,
+    thread_id: id,
+    sender_user_id: userId,
+    text: parsed.data.text,
+    created_at: now,
+  } as any);
+
+  await db.update(chat_threads).set({ updated_at: now } as any).where(eq(chat_threads.id, id));
+
+  return reply.send({
+    data: {
+      id: messageId,
+      thread_id: id,
+      sender_user_id: userId,
+      text: parsed.data.text,
+      created_at: now,
+      from_self: true,
+    },
+  });
 }

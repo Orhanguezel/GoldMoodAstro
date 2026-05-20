@@ -3,19 +3,10 @@
 import React from 'react';
 import { Star, Clock, ShieldCheck, Phone, Calendar } from 'lucide-react';
 
-const EXPERTISE_LABELS: Record<string, string> = {
-  astrology: 'Astroloji',
-  tarot: 'Tarot',
-  numerology: 'Numeroloji',
-  mood: 'Mood Coaching',
-  career: 'Kariyer',
-  relationship: 'İlişki',
-  birth_chart: 'Doğum Haritası',
-};
-
 interface Props {
   fullName: string;
   expertise: string[];
+  expertiseLabels?: Record<string, string>;
   avatarUrl?: string;
   ratingAvg?: string;
   ratingCount?: number;
@@ -27,6 +18,7 @@ interface Props {
 export default function ConsultantCardPreview({
   fullName,
   expertise,
+  expertiseLabels = {},
   avatarUrl,
   ratingAvg = '5.0',
   ratingCount = 0,
@@ -76,7 +68,7 @@ export default function ConsultantCardPreview({
         </h3>
 
         <p className="text-[var(--gm-gold-dim)] text-[10px] font-bold tracking-widest uppercase mb-4 truncate">
-          {expertise.length > 0 ? expertise.map((e) => EXPERTISE_LABELS[e] || e).join(' · ') : 'Uzmanlıklar'}
+          {expertise.length > 0 ? expertise.map((e) => expertiseLabels[e] || e).join(' · ') : 'Uzmanlıklar'}
         </p>
 
         <div className="flex items-center gap-4 mb-4 text-xs">

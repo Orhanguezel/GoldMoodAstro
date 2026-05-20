@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useLocaleShort } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 import { useGetMyOrderQuery, useInitIyzicoPaymentMutation } from '@/integrations/rtk/hooks';
-import { useListSiteSettingsQuery } from '@/integrations/rtk/public/site_settings.endpoints';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { trackEvent } from '@/integrations/telemetry';
 import PageContainer from '@/components/common/PageContainer';
@@ -78,10 +77,6 @@ export default function CheckoutPage() {
   const [initIyzico] = useInitIyzicoPaymentMutation();
   const [payState, setPayState] = useState<'idle' | 'redirecting' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-
-  const { data: settings = [] } = useListSiteSettingsQuery({ keys: ['platform_commission_rate'] });
-  const commissionRateSetting = settings.find(s => s.key === 'platform_commission_rate');
-  const commissionRate = (commissionRateSetting?.value as { percent?: number } | undefined)?.percent ?? 15;
 
   async function handlePay() {
     if (!order) return;
@@ -171,10 +166,6 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-text-muted">{t.paymentStatus}</span>
                 <span className={isPaid ? 'text-success font-medium' : ''}>{order.payment_status}</span>
-              </div>
-              <div className="flex justify-between text-sm py-2 border-t border-b border-border-light/50 my-2">
-                <span className="text-text-muted">%{commissionRate} Platform Hizmet Bedeli</span>
-                <span className="text-text-muted italic text-xs flex items-center">Fiyata dahildir</span>
               </div>
               <div className="flex justify-between text-lg font-bold pt-2">
                 <span>{t.total}</span>

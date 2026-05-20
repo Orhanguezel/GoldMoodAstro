@@ -32,6 +32,7 @@ const GENERAL_KEYS = [
   'company_profile',
   'ui_header',
   'platform_commission_rate',
+  'payout_cycle',
 ] as const;
 
 type GeneralKey = (typeof GENERAL_KEYS)[number];
@@ -57,7 +58,15 @@ const DEFAULTS_BY_KEY: Record<GeneralKey, SettingValue> = {
     nav_contact: 'İletişim',
     cta_label: 'Randevu Al',
   },
-  platform_commission_rate: { percent: 15 },
+  platform_commission_rate: { percent: 30, effective_from: '2026-06-20' },
+  payout_cycle: {
+    mode: 'monthly',
+    interval_days: 30,
+    min_threshold: 100,
+    auto_request: true,
+    request_day: 1,
+    description: 'Ay başında otomatik tahsilat talebi'
+  },
 };
 
 function isGeneralKey(k: string): k is GeneralKey {

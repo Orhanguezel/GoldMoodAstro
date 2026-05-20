@@ -24,6 +24,7 @@ import {
   type ConsultantApplicationStatus,
   useApproveConsultantApplicationAdminMutation,
   useListConsultantApplicationsAdminQuery,
+  useListServiceCategoriesAdminQuery,
   useRejectConsultantApplicationAdminMutation,
 } from "@/integrations/hooks";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,7 @@ function statusClass(status: ConsultantApplicationStatus) {
   return "border-gm-gold/25 bg-gm-gold/10 text-gm-gold";
 }
 
-function Chips({ items }: { items?: string[] | null }) {
+function Chips({ items, slugToName }: { items?: string[] | null; slugToName?: Record<string, string> }) {
   if (!items?.length) return <span className="text-gm-muted">-</span>;
   return (
     <div className="flex flex-wrap gap-2">
@@ -64,9 +65,9 @@ function Chips({ items }: { items?: string[] | null }) {
         <Badge
           key={item}
           variant="outline"
-          className="rounded-full border-gm-border-soft text-[10px] uppercase tracking-widest"
+          className="rounded-full border-gm-border-soft text-[10px] font-medium tracking-wide"
         >
-          {item}
+          {slugToName?.[item] ?? item}
         </Badge>
       ))}
     </div>
@@ -91,6 +92,14 @@ export default function ConsultantApplicationsList() {
   const [reason, setReason] = React.useState("");
 
   const query = useListConsultantApplicationsAdminQuery(status ? { status } : undefined);
+  const categoriesQuery = useListServiceCategoriesAdminQuery();
+  const slugToName = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const category of categoriesQuery.data ?? []) {
+      map[category.slug] = category.name;
+    }
+    return map;
+  }, [categoriesQuery.data]);
   const [approve, approveState] = useApproveConsultantApplicationAdminMutation();
   const [reject, rejectState] = useRejectConsultantApplicationAdminMutation();
 
@@ -234,7 +243,7 @@ export default function ConsultantApplicationsList() {
                       </div>
                     </TableCell>
                     <TableCell className="py-6">
-                      <Chips items={item.expertise} />
+                      <Chips items={item.expertise} slugToName={slugToName} />
                     </TableCell>
                     <TableCell className="py-6">
                       <Badge
@@ -300,7 +309,7 @@ export default function ConsultantApplicationsList() {
                   label="Deneyim"
                   value={selected.experience_years != null ? `${selected.experience_years} yıl` : undefined}
                 />
-                <DetailBlock label="Uzmanlık" value={<Chips items={selected.expertise} />} />
+                <DetailBlock label="Uzmanlık" value={<Chips items={selected.expertise} slugToName={slugToName} />} />
                 <DetailBlock label="Diller" value={<Chips items={selected.languages} />} />
               </div>
               <DetailBlock label="Biyografi" value={selected.bio} />

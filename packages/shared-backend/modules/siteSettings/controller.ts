@@ -12,7 +12,7 @@ import { siteSettings } from './schema';
 
 type LocaleRequest = FastifyRequest & { locale?: string | null };
 type SeoPageDto = { pageKey: string } & Record<string, unknown>;
-const DEFAULT_COMMISSION_PERCENT = 15;
+const DEFAULT_COMMISSION_PERCENT = 30;
 
 function normalizeCommissionPercent(raw: unknown): number {
   if (raw == null) return DEFAULT_COMMISSION_PERCENT;
@@ -35,6 +35,47 @@ function normalizeCommissionPercent(raw: unknown): number {
   }
 }
 
+// Date-aware komisyon çözücü — effective_from < now ise previous_percent kullan.
+function resolveCommissionFromValue(raw: unknown, now = new Date()): {
+  percent: number;
+  next_percent?: number | null;
+  effective_from?: string | null;
+  previous_percent?: number | null;
+} {
+  const fallback = { percent: normalizeCommissionPercent(raw) };
+  if (typeof raw === 'string') {
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      return fallback;
+    }
+  }
+  if (raw == null || typeof raw !== 'object' || Array.isArray(raw)) return fallback;
+  const obj = raw as Record<string, unknown>;
+
+  const newPercent = Number(obj.percent);
+  const prevPercent = Number(obj.previous_percent);
+  const effFromRaw = typeof obj.effective_from === 'string' ? obj.effective_from : null;
+  const effFromDate = effFromRaw ? new Date(effFromRaw) : null;
+  const validEff = effFromDate && !Number.isNaN(effFromDate.getTime()) ? effFromDate : null;
+
+  // effective_from gelecekteyse + previous_percent varsa → eski oran uygulanır, yeni oran kuyrukta
+  if (validEff && now < validEff && Number.isFinite(prevPercent)) {
+    return {
+      percent: Math.min(Math.max(prevPercent, 0), 100),
+      next_percent: Number.isFinite(newPercent) ? Math.min(Math.max(newPercent, 0), 100) : null,
+      effective_from: effFromRaw,
+      previous_percent: Math.min(Math.max(prevPercent, 0), 100),
+    };
+  }
+
+  // Geçiş tamamlandı veya effective_from yok → yeni oran zaten geçerli
+  return {
+    percent: Number.isFinite(newPercent) ? Math.min(Math.max(newPercent, 0), 100) : fallback.percent,
+    effective_from: effFromRaw,
+  };
+}
+
 // GET /settings/commission
 export async function getCommissionPublic(req: FastifyRequest, reply: FastifyReply) {
   try {
@@ -50,10 +91,10 @@ export async function getCommissionPublic(req: FastifyRequest, reply: FastifyRep
         .from(siteSettings)
         .where(eq(siteSettings.key, 'platform_commission_rate'))
         .limit(1);
-      return reply.send({ percent: normalizeCommissionPercent(fallback?.value) });
+      return reply.send(resolveCommissionFromValue(fallback?.value));
     }
 
-    return reply.send({ percent: normalizeCommissionPercent(row.value) });
+    return reply.send(resolveCommissionFromValue(row.value));
   } catch (e) {
     return handleRouteError(reply, req, e, 'get_commission_public');
   }

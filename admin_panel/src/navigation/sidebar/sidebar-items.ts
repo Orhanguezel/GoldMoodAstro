@@ -97,7 +97,8 @@ export type AdminNavItemKey =
   | 'home_layout'
   | 'service_categories'
   | 'service_templates'
-  | 'blog';
+  | 'blog'
+  | 'commission_change';
 
 export type AdminNavGroupKey = 'general' | 'content' | 'marketing' | 'communication' | 'system';
 
@@ -162,6 +163,7 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'availability', url: '/admin/availability', icon: Clock },
       { key: 'wallet', url: '/admin/wallet', icon: Receipt },
       { key: 'payment_settings', url: '/admin/payment-settings', icon: CreditCard },
+      { key: 'commission_change', url: '/admin/commission-change', icon: Send },
       { key: 'mail', url: '/admin/mail', icon: Send },
       { key: 'storage', url: '/admin/storage', icon: HardDrive },
       { key: 'db', url: '/admin/db', icon: Database },
@@ -211,6 +213,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   navigation: 'Menü & Footer',
   home_layout: 'Anasayfa Düzeni',
   blog: 'Blog',
+  commission_change: 'Komisyon Bildirimi',
 };
 
 export function buildAdminSidebarItems(

@@ -84,7 +84,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
       callbackUrl: `${resolveApiBase()}/api/credits/iyzico/callback?order_id=${orderId}&package_id=${pkg.id}`,
       buyer: {
         id: user.id,
-        name: profile?.full_name?.split(' ')[0] || 'Müşteri',
+        name: profile?.full_name?.split(' ')[0] || 'Danışan',
         surname: profile?.full_name?.split(' ').slice(1).join(' ') || '.',
         gsmNumber: profile?.phone || '+905000000000',
         email: user.email,
@@ -98,14 +98,14 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
         zipCode: profile?.postal_code || '34000',
       },
       shippingAddress: {
-        contactName: profile?.full_name || 'Müşteri',
+        contactName: profile?.full_name || 'Danışan',
         city: profile?.city || 'İstanbul',
         country: 'Turkey',
         address: profile?.address_line1 || 'İstanbul',
         zipCode: profile?.postal_code || '34000',
       },
       billingAddress: {
-        contactName: profile?.full_name || 'Müşteri',
+        contactName: profile?.full_name || 'Danışan',
         city: profile?.city || 'İstanbul',
         country: 'Turkey',
         address: profile?.address_line1 || 'İstanbul',

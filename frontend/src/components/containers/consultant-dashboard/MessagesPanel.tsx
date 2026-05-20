@@ -80,7 +80,7 @@ export default function MessagesPanel() {
       <div className="text-center py-16 px-4">
         <MessageCircle className="w-12 h-12 text-[var(--gm-gold)]/30 mx-auto mb-4" />
         <p className="text-[var(--gm-text-dim)] font-serif italic">
-          Henüz mesajınız yok. Müşteriler sayfanızdaki Mesaj Gönder ile size ulaşabilir.
+          Henüz mesajınız yok. Danışanlar sayfanızdaki Mesaj Gönder ile size ulaşabilir.
         </p>
       </div>
     );
@@ -168,7 +168,7 @@ export default function MessagesPanel() {
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-serif text-base text-[var(--gm-text)]">
-                    {active.customer?.full_name || 'Bilinmeyen Müşteri'}
+                    {active.customer?.full_name || 'Bilinmeyen Danışan'}
                   </span>
                   <ThreadTypeBadge thread={active} />
                 </div>

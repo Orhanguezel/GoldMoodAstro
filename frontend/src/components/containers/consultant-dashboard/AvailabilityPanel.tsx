@@ -199,7 +199,7 @@ export default function AvailabilityPanel() {
         <div>
           <h2 className="font-serif text-lg text-[var(--gm-text)]">Haftalık Çalışma Saatleri</h2>
           <p className="text-[12px] text-[var(--gm-text-dim)] font-serif italic">
-            Müşteriler bu saatlere göre randevu alabilir. Her gün için birden fazla aralık ekleyebilirsin.
+            Danışanlar bu saatlere göre randevu alabilir. Her gün için birden fazla aralık ekleyebilirsin.
           </p>
         </div>
         <button

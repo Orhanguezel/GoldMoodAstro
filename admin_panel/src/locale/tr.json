@@ -1211,7 +1211,7 @@
     "header": {
       "title": "Değerlendirmeler",
       "description": "Danışman yorumlarını ve puanlarını moderatör gözüyle inceleyin.",
-      "badge": "Müşteri Deneyimi"
+      "badge": "Danışan Deneyimi"
     },
     "actions": {
       "create": "Yeni ekle",
@@ -1471,7 +1471,7 @@
       },
       "columns": {
         "status": "Durum",
-        "customer": "Müşteri",
+        "customer": "Danışan",
         "date": "Tarih",
         "resource": "Kaynak",
         "service": "Servis"
@@ -1481,7 +1481,7 @@
       "dateTime": "Tarih/saat",
       "resource": "Kaynak",
       "service": "Servis",
-      "customerMessage": "Müşteri mesajı",
+      "customerMessage": "Danışan mesajı",
       "selected": "Seçili",
       "available": "Müsait",
       "full": "Dolu",
@@ -1508,12 +1508,12 @@
       "actionAccept": "Kabul et",
       "actionReject": "Reddet",
       "noteLabel": "Karar notu (opsiyonel)",
-      "notePlaceholder": "Bu not, e-posta template içinde müşteriye gösterilebilir.",
+      "notePlaceholder": "Bu not, e-posta template içinde danışana gösterilebilir.",
       "noteHelp": "Bu işlem backend’de e-posta template + bildirim tetikler.",
       "processing": "İşleniyor..."
     },
     "confirm": {
-      "delete": "Bu randevu kaydını silmek üzeresin.\n\nMüşteri: {name}\nTarih: {dateTime}\n\nDevam etmek istiyor musun?",
+      "delete": "Bu randevu kaydını silmek üzeresin.\n\nDanışan: {name}\nTarih: {dateTime}\n\nDevam etmek istiyor musun?",
       "reject": "Bu randevu talebini reddetmek üzeresin. Devam edilsin mi?"
     },
     "messages": {
@@ -1535,7 +1535,7 @@
         "create": "Yeni randevu",
         "edit": "Randevu düzenle"
       },
-      "description": "Müşteri bilgileri, tarih/saat, kaynak ve durum alanlarını yönet.",
+      "description": "Danışan bilgileri, tarih/saat, kaynak ve durum alanlarını yönet.",
       "fields": {
         "name": "İsim",
         "email": "E-posta",
@@ -1547,7 +1547,7 @@
         "resource": "Kaynak",
         "date": "Tarih",
         "time": "Saat",
-        "customerMessage": "Müşteri mesajı",
+        "customerMessage": "Danışan mesajı",
         "adminNote": "Admin notu",
         "decisionNote": "Decision note"
       },
@@ -1557,10 +1557,10 @@
         "time": "Saat seç",
         "select": "Seç...",
         "optional": "(opsiyonel)",
-        "decisionNote": "(opsiyonel) Kabul/Red e-postasında müşteriye gösterilebilir."
+        "decisionNote": "(opsiyonel) Kabul/Red e-postasında danışana gösterilebilir."
       },
       "help": {
-        "locale": "Müşterinin tercih dili. E-posta template dili bu alana göre seçilir.",
+        "locale": "Danışanın tercih dili. E-posta template dili bu alana göre seçilir.",
         "status": "Kabul/Red için aksiyonları kullan. (Decision note + e-posta + bildirim)",
         "date": "Günlük plan bu tarihe göre çekilir.",
         "pickResourceAndDate": "Kaynak + tarih seç.",
@@ -1854,7 +1854,7 @@
     },
     "table": {
       "orderNo": "Sipariş No",
-      "customer": "Müşteri Bilgisi",
+      "customer": "Danışan Bilgisi",
       "amount": "Tutar",
       "status": "Durum",
       "payment": "Ödeme",
@@ -2469,7 +2469,7 @@
       },
       "bookingPayment": {
         "title": "Randevu Online Ödeme",
-        "description": "Aktif olduğunda, müşteriler randevu onay e-postasında bir ödeme bağlantısı alır.",
+        "description": "Aktif olduğunda, danışanlar randevu onay e-postasında bir ödeme bağlantısı alır.",
         "enabled": "Randevular için online ödemeyi etkinleştir",
         "activeNote": "Aktif: Randevu onay e-postaları bir ödeme bağlantısı içerecektir. Randevu sayfasında rezervasyon sonrası \"Ödeme Yap\" butonu görünecektir.",
         "inactiveNote": "Pasif: Randevu onay e-postaları yalnızca randevuyu onaylar, ödeme bağlantısı içermez."
@@ -3470,9 +3470,9 @@
       "saving": "Kaydediliyor...",
       "generalTitle": "Genel Ayarlar",
       "aiEnabled": "AI Destek Aktif",
-      "aiEnabledDesc": "AI müşteri mesajlarına otomatik yanıt verir.",
+      "aiEnabledDesc": "AI danışan mesajlarına otomatik yanıt verir.",
       "widgetEnabled": "Web Sitesinde Chat Widget",
-      "widgetEnabledDesc": "Müşteri web sitesinde chat widget'ı göster.",
+      "widgetEnabledDesc": "Danışan web sitesinde chat widget'ı göster.",
       "defaultProvider": "Varsayılan AI Sağlayıcı",
       "providerOrder": "Sağlayıcı Sırası (Fallback)",
       "providerOrderDesc": "Virgülle ayrılmış sıra: grok, openai, anthropic. Hata durumunda sıradaki sağlayıcı denenir.",
@@ -3852,7 +3852,7 @@
       "form": {
         "title": "Ürün Oluştur",
         "editTitle": "Ürün Düzenle",
-        "description": "Müşterilerin satın alabileceği yeni bir hediye kartı şablonu oluşturun.",
+        "description": "Danışanların satın alabileceği yeni bir hediye kartı şablonu oluşturun.",
         "editDescription": "Hediye kartı şablonunu güncelleyin.",
         "name": "Ad",
         "namePlaceholder": "Hediye Kartı 50 €",
@@ -3863,7 +3863,7 @@
         "displayOrder": "Görüntüleme Sırası",
         "productDescription": "Açıklama",
         "descriptionPlaceholder": "Opsiyonel açıklama...",
-        "isActive": "Aktif (müşterilere görünür)",
+        "isActive": "Aktif (danışanlara görünür)",
         "save": "Değişiklikleri Kaydet",
         "create": "Ürün Oluştur",
         "cancel": "İptal"

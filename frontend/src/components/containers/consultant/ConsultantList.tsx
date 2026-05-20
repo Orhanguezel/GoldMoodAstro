@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Users, Search } from 'lucide-react';
 
 
 import { useListConsultantsQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
 import type { ConsultantPublic } from '@/integrations/rtk/public/consultants.public.endpoints';
+import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 import ConsultantCard from './ConsultantCard';
 import ConsultantFilters, { type FilterState } from './ConsultantFilters';
 import Banner from '@/components/common/public/Banner';
@@ -36,6 +37,11 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
 
   const { data: consultants = [], isFetching, isError } = useListConsultantsQuery(
     Object.keys(queryParams).length ? queryParams : undefined,
+  );
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const expertiseLabels = useMemo(
+    () => Object.fromEntries(serviceCategories.map((category) => [category.slug, category.name])),
+    [serviceCategories],
   );
   const isInitialFilterState =
     filters.expertise === initialExpertise &&
@@ -121,7 +127,7 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {visibleConsultants.map((consultant) => (
-              <ConsultantCard key={consultant.id} consultant={consultant} locale={locale} />
+              <ConsultantCard key={consultant.id} consultant={consultant} locale={locale} expertiseLabels={expertiseLabels} />
             ))}
           </div>
         )}

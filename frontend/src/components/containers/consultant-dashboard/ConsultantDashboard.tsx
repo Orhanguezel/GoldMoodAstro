@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -145,22 +145,74 @@ export default function ConsultantDashboard({ locale }: Props) {
     );
   }
 
-  const avatarUrl = profile.user?.avatar_url || '';
+  const serverAvatarUrl = profile.user?.avatar_url || '';
   const fullName = profile.user?.full_name || ui('ui_dashboard_consultant_fallback', 'Consultant');
   const initials = initialsFromName(fullName);
+
+  return (
+    <DashboardBody
+      profile={profile}
+      stats={stats}
+      statsLoading={statsLoading}
+      locale={locale}
+      tab={tab}
+      handleTabChange={handleTabChange}
+      ui={ui}
+      serverAvatarUrl={serverAvatarUrl}
+      fullName={fullName}
+      initials={initials}
+    />
+  );
+}
+
+type DashboardBodyProps = {
+  profile: any;
+  stats: any;
+  statsLoading: boolean;
+  locale: string;
+  tab: string;
+  handleTabChange: (key: any) => void;
+  ui: any;
+  serverAvatarUrl: string;
+  fullName: string;
+  initials: string;
+};
+
+function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabChange, ui, serverAvatarUrl, fullName, initials }: DashboardBodyProps) {
+  const [headerAvatarUrl, setHeaderAvatarUrl] = useState<string>(serverAvatarUrl);
+  const [updateHeaderProfile] = useUpdateMyConsultantProfileMutation();
+
+  useEffect(() => { setHeaderAvatarUrl(serverAvatarUrl); }, [serverAvatarUrl]);
+
+  const handleHeaderAvatarUploaded = async (url: string) => {
+    // Cache-bust: aynı publicId/URL'e yeni dosya yazıldıysa tarayıcı eski versiyonu
+    // göstermesin diye URL'e ?v=<timestamp> ekle. Hem state hem DB'ye busted url'i yaz.
+    const sep = url.includes('?') ? '&' : '?';
+    const bustedUrl = `${url}${sep}v=${Date.now()}`;
+    setHeaderAvatarUrl(bustedUrl);
+    try {
+      await updateHeaderProfile({ avatar_url: bustedUrl }).unwrap();
+    } catch (err) {
+      console.error('[ConsultantDashboard] avatar persist failed', err);
+    }
+  };
+
+  const avatarUrl = headerAvatarUrl;
 
   return (
     <PageContainer width="wide" className="bg-(--gm-bg)" verticalPadding="large">
       <div className="w-full">
         {/* ─── Header card — matches user dashboard ─── */}
         <header className="mb-8 rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10 shadow-(--gm-shadow-soft)">
-          {/* Avatar */}
-          <div className="w-20 h-20 shrink-0 rounded-full bg-(--gm-gold)/15 border-2 border-(--gm-gold)/40 flex items-center justify-center text-(--gm-gold) font-serif text-2xl overflow-hidden">
-            {avatarUrl
-              ? <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover" />
-              : initials
-            }
-          </div>
+          {/* Avatar — clickable for upload (consultant panel) */}
+          <AvatarUpload
+            src={avatarUrl}
+            initials={initials}
+            onUploaded={handleHeaderAvatarUploaded}
+            size={80}
+            bucket="consultant_avatars"
+            folder={profile.id}
+          />
 
           {/* Name + status */}
           <div className="flex-1 min-w-0">
@@ -598,7 +650,7 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
   const [expertise, setExpertise] = useState<string[]>(profile.expertise || []);
   const [languages, setLanguages] = useState<string[]>(profile.languages || []);
   const [meetingPlatforms, setMeetingPlatforms] = useState<string[]>(profile.meeting_platforms || []);
-  // C1: socialLinks state kaldırıldı (Müşteri kaçırma yasağı)
+  // C1: socialLinks state kaldırıldı (Danışan kaçırma yasağı)
   const [avatarUrl, setAvatarUrl] = useState<string>(profile.user?.avatar_url || '');
   // C4: Banka bilgileri
   const [bankIban, setBankIban] = useState<string>(profile.bank_iban || '');
@@ -626,6 +678,10 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
   };
 
   const languageOptions = dbLanguages.map((lang) => ({ value: lang.slug, label: getLanguageLabel(lang, locale) }));
+  const expertiseLabels = useMemo(
+    () => Object.fromEntries(serviceCategories.map((category) => [category.slug, category.name])),
+    [serviceCategories],
+  );
 
   const togglePlatform = (slug: string) => {
     setMeetingPlatforms((current) =>
@@ -907,6 +963,20 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
               </label>
             </div>
 
+            <div className="p-4 rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep)/40 text-[11px] text-(--gm-text-dim) leading-relaxed">
+              {accountType === 'individual' ? (
+                <>
+                  <strong className="text-(--gm-gold) block mb-1">Gelir Vergisi Beyanı (Bireysel):</strong>
+                  Bireysel hesaba sahip danışmanlarımız için platform herhangi bir vergi kesintisi (stopaj) <strong>yapmamaktadır</strong>. Elde ettiğiniz gelirin vergi beyanı tamamen kendi yükümlülüğünüzdedir.
+                </>
+              ) : (
+                <>
+                  <strong className="text-(--gm-gold) block mb-1">E-Fatura / Makbuz (Şirket):</strong>
+                  Şirket (veya şahıs firması) hesabına sahip danışmanlarımız, elde ettikleri hizmet gelirleri için fatura veya e-SMM düzenlemekle yükümlüdür. E-fatura otomatik kesim akışı altyapısı yakında devreye alınacaktır.
+                </>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {accountType === 'individual' ? (
                 <div>
@@ -1006,6 +1076,7 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
             fullName={profile.user?.full_name || ''}
             avatarUrl={avatarUrl}
             expertise={expertise}
+            expertiseLabels={expertiseLabels}
             ratingAvg={profile.rating_avg}
             ratingCount={profile.rating_count}
             sessionPrice={Number(profile.session_price)}
@@ -1520,4 +1591,3 @@ function KycUploadBox({ label, onUpload, uploaded }: { label: string, onUpload: 
     </div>
   );
 }
-

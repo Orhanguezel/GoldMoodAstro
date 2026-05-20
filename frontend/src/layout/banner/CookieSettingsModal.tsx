@@ -93,27 +93,27 @@ export default function CookieSettingsModal({
 
   const nextState: ConsentState = useMemo(() => ({ necessary: true, analytics }), [analytics]);
 
-  const uiTitle = ui('cc_title', 'Cookie Settings');
+  const uiTitle = ui('cc_title', locale === 'tr' ? 'Çerez Ayarları' : 'Cookie Settings');
   const uiDesc = ui(
     'cc_description',
-    'You can choose which cookie categories you allow. Necessary cookies are always enabled.',
+    locale === 'tr' ? 'Hangi çerez kategorilerine izin vereceğinizi seçebilirsiniz. Gerekli çerezler her zaman etkindir.' : 'You can choose which cookie categories you allow. Necessary cookies are always enabled.',
   );
 
-  const uiLabelNecessary = ui('cc_label_necessary', 'Necessary');
+  const uiLabelNecessary = ui('cc_label_necessary', locale === 'tr' ? 'Gerekli' : 'Necessary');
   const uiDescNecessary = ui(
     'cc_desc_necessary',
-    'Required for core functions (session, security, language preference, etc.).',
+    locale === 'tr' ? 'Temel işlevler için gereklidir (oturum, güvenlik, dil tercihi vb.).' : 'Required for core functions (session, security, language preference, etc.).',
   );
 
-  const uiLabelAnalytics = ui('cc_label_analytics', 'Analytics');
+  const uiLabelAnalytics = ui('cc_label_analytics', locale === 'tr' ? 'Analitik' : 'Analytics');
   const uiDescAnalytics = ui(
     'cc_desc_analytics',
-    'Helps us understand traffic and performance (e.g., page views).',
+    locale === 'tr' ? 'Trafiği ve performansı (örn. sayfa görüntülemeleri) anlamamıza yardımcı olur.' : 'Helps us understand traffic and performance (e.g., page views).',
   );
 
-  const uiBtnSave = ui('cc_btn_save', 'Save');
-  const uiBtnCancel = ui('cc_btn_cancel', 'Cancel');
-  const uiAriaClose = ui('cc_aria_close', 'Close');
+  const uiBtnSave = ui('cc_btn_save', locale === 'tr' ? 'Kaydet' : 'Save');
+  const uiBtnCancel = ui('cc_btn_cancel', locale === 'tr' ? 'İptal' : 'Cancel');
+  const uiAriaClose = ui('cc_aria_close', locale === 'tr' ? 'Kapat' : 'Close');
 
   const finalTitle = pickText(title, uiTitle, 'Cookie Settings');
   const finalDesc = pickText(description, uiDesc, '');
@@ -173,7 +173,7 @@ export default function CookieSettingsModal({
               <p className="mt-1 text-sm text-text-secondary leading-relaxed">{finalDescNecessary}</p>
             </div>
             <span className="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-brand-primary/10 text-text-primary border border-brand-primary/15">
-              {ui('cc_pill_on', 'On')}
+              {ui('cc_pill_on', locale === 'tr' ? 'Açık' : 'On')}
             </span>
           </div>
 

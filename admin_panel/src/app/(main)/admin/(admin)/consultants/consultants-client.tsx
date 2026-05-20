@@ -41,6 +41,7 @@ import {
   useListConsultantsAdminQuery,
   useRejectConsultantAdminMutation,
   useRejectConsultantApplicationAdminMutation,
+  useListServiceCategoriesAdminQuery,
 } from '@/integrations/hooks';
 
 function formatDate(value?: string | null) {
@@ -50,7 +51,7 @@ function formatDate(value?: string | null) {
   return date.toLocaleString('tr-TR');
 }
 
-function Chips({ items }: { items?: string[] | null }) {
+function Chips({ items, slugToName }: { items?: string[] | null, slugToName?: Record<string, string> }) {
   if (!items?.length) return <span className="text-gm-muted">-</span>;
   return (
     <div className="flex flex-wrap gap-2">
@@ -58,9 +59,9 @@ function Chips({ items }: { items?: string[] | null }) {
         <Badge
           key={item}
           variant="outline"
-          className="rounded-full border-gm-border-soft bg-gm-surface text-[9px] uppercase tracking-widest text-gm-muted"
+          className="rounded-full border-gm-border-soft bg-gm-surface text-[10px] font-medium tracking-wide text-gm-muted"
         >
-          {item}
+          {slugToName?.[item] ?? item}
         </Badge>
       ))}
     </div>
@@ -91,6 +92,15 @@ export default function ConsultantsClient() {
   );
   // Başvuru sayacı rozeti için her zaman aktif (hafif liste).
   const appsQuery = useListConsultantApplicationsAdminQuery({ status: 'pending' });
+
+  const categoriesQuery = useListServiceCategoriesAdminQuery();
+  const slugToName = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const cat of categoriesQuery.data ?? []) {
+      map[cat.slug] = cat.name;
+    }
+    return map;
+  }, [categoriesQuery.data]);
 
   const [approve, approveState] = useApproveConsultantAdminMutation();
   const [reject, rejectState] = useRejectConsultantAdminMutation();
@@ -316,7 +326,7 @@ export default function ConsultantsClient() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="py-6"><Chips items={item.expertise} /></TableCell>
+                    <TableCell className="py-6"><Chips items={item.expertise} slugToName={slugToName} /></TableCell>
                     <TableCell className="py-6 text-sm text-gm-muted">{formatDate(item.created_at)}</TableCell>
                     <TableCell className="py-6">
                       <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] border bg-gm-gold/5 border-gm-gold/20 text-gm-gold">
@@ -379,8 +389,8 @@ export default function ConsultantsClient() {
                     <TableCell className="py-6">
                       <div className="flex flex-wrap gap-2">
                         {item.expertise?.slice(0, 3).map(e => (
-                          <Badge key={e} variant="outline" className="text-[9px] font-bold px-3 py-1 rounded-full bg-gm-surface border-gm-border-soft text-gm-muted uppercase tracking-widest">
-                            {e}
+                          <Badge key={e} variant="outline" className="text-[10px] font-medium px-3 py-1 rounded-full bg-gm-surface border-gm-border-soft text-gm-muted tracking-wide">
+                            {slugToName[e] ?? e}
                           </Badge>
                         ))}
                         {(item.expertise?.length || 0) > 3 && (
@@ -478,7 +488,7 @@ export default function ConsultantsClient() {
                   label="Deneyim"
                   value={selected.experience_years != null ? `${selected.experience_years} yıl` : undefined}
                 />
-                <DetailBlock label="Uzmanlık" value={<Chips items={selected.expertise} />} />
+                <DetailBlock label="Uzmanlık" value={<Chips items={selected.expertise} slugToName={slugToName} />} />
                 <DetailBlock label="Diller" value={<Chips items={selected.languages} />} />
               </div>
               <DetailBlock label="Biyografi" value={selected.bio} />

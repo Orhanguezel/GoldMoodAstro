@@ -17,6 +17,7 @@ import { registerSynastryRoutes } from '@/modules/synastry/router';
 import { registerHistoryRoutes } from '@/modules/history/router';
 import { registerCreditsRoutes } from '@/modules/credits/router';
 import { registerServiceBoosts, registerServiceBoostsAdmin } from '@/modules/serviceBoosts/router';
+import { registerCommissionChangeAdmin } from '@/modules/commissionChange/admin.routes';
 import { registerStubs } from './stubs';
 
 import { registerFirebaseAdmin } from '@/modules/firebase/admin.routes';
@@ -51,4 +52,5 @@ export async function registerGoldmoodAdmin(adminApi: FastifyInstance) {
   await adminApi.register(registerFirebaseAdmin);
   await adminApi.register(registerLiveKitAdmin);
   await adminApi.register(registerServiceBoostsAdmin);
+  await adminApi.register(registerCommissionChangeAdmin);
 }

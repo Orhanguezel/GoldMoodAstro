@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight, Sparkles, TrendingUp, Clock3, Wifi, Star } from 'lucide-react';
 import { useListConsultantsPublicQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
+import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 import ConsultantCard from '@/components/containers/consultant/ConsultantCard';
 
 type SortKey = 'featured' | 'popular' | 'new' | 'online';
@@ -42,6 +43,12 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
   });
 
   const items = data ?? [];
+
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const expertiseLabels = useMemo(
+    () => Object.fromEntries(serviceCategories.map((category) => [category.slug, category.name])),
+    [serviceCategories],
+  );
 
   // Carousel
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -159,7 +166,7 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
               data-carousel-item
               className="snap-start shrink-0 w-[85%] sm:w-[60%] md:w-[calc((100%-3rem)/3)] lg:w-[calc((100%-3rem)/3)]"
             >
-              <ConsultantCard consultant={c} locale={locale} />
+              <ConsultantCard consultant={c} locale={locale} expertiseLabels={expertiseLabels} />
             </div>
           ))}
         </div>

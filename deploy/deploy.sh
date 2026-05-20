@@ -49,7 +49,7 @@ rsync -avz --delete \
   --exclude='.env' \
   --exclude='.env.local' \
   --exclude='.secrets/' \
-  --exclude='backend/uploads/db_snapshots/' \
+  --exclude='backend/uploads/' \
   --exclude='*.log' \
   --exclude='.DS_Store' \
   -e "ssh ${SSH_OPTS[*]}" \

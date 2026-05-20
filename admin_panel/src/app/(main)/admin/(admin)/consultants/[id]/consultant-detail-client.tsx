@@ -41,6 +41,7 @@ import {
   useListConsultantServicesAdminQuery,
   useRejectConsultantAdminMutation,
   useUpdateConsultantServiceAdminMutation,
+  useListServiceCategoriesAdminQuery,
 } from '@/integrations/hooks';
 
 type ServiceForm = {
@@ -86,6 +87,15 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
   const t = useAdminT('admin.consultants');
   const query = useGetConsultantAdminQuery(id);
   const servicesQuery = useListConsultantServicesAdminQuery(id);
+
+  const categoriesQuery = useListServiceCategoriesAdminQuery();
+  const slugToName = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const cat of categoriesQuery.data ?? []) {
+      map[cat.slug] = cat.name;
+    }
+    return map;
+  }, [categoriesQuery.data]);
   const [approve, approveState] = useApproveConsultantAdminMutation();
   const [reject, rejectState] = useRejectConsultantAdminMutation();
   const [createService, createServiceState] = useCreateConsultantServiceAdminMutation();
@@ -279,8 +289,8 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                   <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('detail.expertise')}</Label>
                   <div className="flex flex-wrap gap-2">
                     {item.expertise?.map(e => (
-                      <Badge key={e} variant="outline" className="text-[10px] font-bold px-4 py-1.5 rounded-full bg-gm-surface/40 border-gm-border-soft text-gm-gold uppercase tracking-widest">
-                        {t(`expertise.${e}`, null, e)}
+                      <Badge key={e} variant="outline" className="text-[10px] font-medium px-4 py-1.5 rounded-full bg-gm-surface/40 border-gm-border-soft text-gm-gold tracking-wide">
+                        {slugToName[e] ?? t(`expertise.${e}`, null, e)}
                       </Badge>
                     ))}
                     {!item.expertise?.length && <span className="text-sm text-gm-muted italic">-</span>}

@@ -411,7 +411,7 @@ export default function BookingCallPage() {
           >
             <span>
               <span className="block text-[10px] font-bold uppercase tracking-[0.3em] text-(--gm-gold) mb-1">
-                Müşteri Geçmişi
+                Danışan Geçmişi
               </span>
               <span className="block font-serif text-2xl text-(--gm-text)">
                 Son Okumalar

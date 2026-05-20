@@ -10,6 +10,7 @@ import {
   useGetMyConsultantWalletQuery,
   useGetMyConsultantMonthlyStatsQuery,
   useGetMyConsultantProfileQuery,
+  useListMyConsultantWithdrawalsQuery,
   useRequestMyConsultantWithdrawalMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { useListSiteSettingsQuery } from '@/integrations/rtk/public/site_settings.endpoints';
@@ -26,6 +27,14 @@ function formatDate(iso?: string | null) {
   } catch {
     return iso;
   }
+}
+
+function getTooSoonDate(error: unknown): string | null {
+  if (!error || typeof error !== 'object') return null;
+  const data = 'data' in error ? (error as { data?: unknown }).data : null;
+  if (!data || typeof data !== 'object') return null;
+  const next = 'next_request_at' in data ? (data as { next_request_at?: unknown }).next_request_at : null;
+  return typeof next === 'string' && next ? next : null;
 }
 
 
@@ -48,9 +57,19 @@ export default function WalletPanel() {
   const { data, isLoading, refetch } = useGetMyConsultantWalletQuery();
   const { data: monthlyStats = [] } = useGetMyConsultantMonthlyStatsQuery();
   const { data: profile } = useGetMyConsultantProfileQuery();
-  const { data: settings = [] } = useListSiteSettingsQuery({ keys: ['platform_commission_rate'] });
+  const { data: withdrawals = [] } = useListMyConsultantWithdrawalsQuery();
+  const { data: settings = [], isLoading: isLoadingSettings } = useListSiteSettingsQuery({ keys: ['platform_commission_rate', 'payout_cycle'] });
   const commissionRateSetting = settings.find(s => s.key === 'platform_commission_rate');
-  const commissionRate = (commissionRateSetting?.value as { percent?: number } | undefined)?.percent ?? 15;
+  const commissionRate = commissionRateSetting ? ((commissionRateSetting.value as { percent?: number } | undefined)?.percent ?? null) : null;
+  const payoutCycleSetting = settings.find(s => s.key === 'payout_cycle');
+  const payoutCycle = payoutCycleSetting?.value as {
+    mode?: string;
+    interval_days?: number;
+    min_threshold?: number;
+    auto_request?: boolean;
+    request_day?: number;
+  } | undefined;
+  
   const [withdraw, { isLoading: isWithdrawing }] = useRequestMyConsultantWithdrawalMutation();
 
   const [showModal, setShowModal] = useState(false);
@@ -65,7 +84,7 @@ export default function WalletPanel() {
   // C6: Transaction type filter
   const [txType, setTxType] = useState<'all' | 'credit' | 'debit'>('all');
 
-  if (isLoading) {
+  if (isLoading || isLoadingSettings) {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="w-6 h-6 text-[var(--gm-gold)] animate-spin" />
@@ -95,6 +114,12 @@ export default function WalletPanel() {
   const monthly = data?.this_month ?? { credits: 0, debits: 0, net: 0 };
   const balance = Number(wallet?.balance ?? 0);
   const currency = wallet?.currency || 'TRY';
+  const minWithdrawalAmount = Number(payoutCycle?.min_threshold ?? 100);
+  const activeWithdrawals = withdrawals.filter((w) => ['approved', 'paid', 'pending'].includes(w.status));
+  const lastWithdrawal = activeWithdrawals[0] ?? null;
+  const nextWithdrawalAt = lastWithdrawal?.requested_at && payoutCycle?.interval_days
+    ? new Date(new Date(lastWithdrawal.requested_at).getTime() + Number(payoutCycle.interval_days) * 24 * 60 * 60 * 1000).toISOString()
+    : null;
 
   const validate = () => {
     const newErrors: { amount?: string } = {};
@@ -102,8 +127,8 @@ export default function WalletPanel() {
 
     if (!amount || isNaN(amt) || amt <= 0) {
       newErrors.amount = 'Geçerli bir tutar girin';
-    } else if (amt < 500) {
-      newErrors.amount = 'Minimum para çekme limiti 500 TRY\'dir';
+    } else if (amt < minWithdrawalAmount) {
+      newErrors.amount = `Minimum para çekme limiti ${formatMoney(minWithdrawalAmount, currency)}.`;
     } else if (amt > balance) {
       newErrors.amount = 'Yetersiz bakiye';
     }
@@ -124,6 +149,11 @@ export default function WalletPanel() {
       setAmount(''); setNotes(''); setErrors({});
       refetch();
     } catch (e: unknown) {
+      const next = getTooSoonDate(e);
+      if (next) {
+        toast.error(`Bu ay ödeme talebiniz alınmış. Sonraki talep açılışı: ${formatDate(next)}`);
+        return;
+      }
       toast.error(extractApiError(e, 'Talep oluşturulamadı'));
     }
   };
@@ -148,17 +178,33 @@ export default function WalletPanel() {
               </p>
             )}
             
-            <div className="mt-6 p-3 rounded-xl bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)] max-w-sm">
-              <p className="text-[10px] text-[var(--gm-text-dim)] leading-relaxed">
-                <strong className="text-[var(--gm-gold)] uppercase tracking-widest block mb-1">Komisyon Oranı: %{commissionRate}</strong>
-                Hizmet ücretinin %{commissionRate}&apos;i platform tarafından kesilir, kalan tutar cüzdanınıza eklenir.
-              </p>
-            </div>
+            {commissionRate !== null && (
+              <div className="mt-6 p-3 rounded-xl bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)] max-w-sm">
+                <p className="text-[10px] text-[var(--gm-text-dim)] leading-relaxed">
+                  <strong className="text-[var(--gm-gold)] uppercase tracking-widest block mb-1">Komisyon Oranı: %{commissionRate}</strong>
+                  Hizmet ücretinin %{commissionRate}&apos;i platform tarafından kesilir, kalan tutar cüzdanınıza eklenir.
+                </p>
+              </div>
+            )}
+
+            {payoutCycle?.mode === 'monthly' && (
+              <div className="mt-3 p-3 rounded-xl bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)] max-w-sm">
+                <p className="text-[10px] text-[var(--gm-text-dim)] leading-relaxed">
+                  <strong className="text-[var(--gm-gold)] uppercase tracking-widest block mb-1">Aylık Ödeme Döngüsü</strong>
+                  Bakiyenize ulaşmak için ayda 1 kez çekim talebi açabilirsiniz.
+                  {lastWithdrawal ? <> Son talebiniz: {formatDate(lastWithdrawal.requested_at)}.</> : <> Henüz ödeme talebiniz yok.</>}
+                  {nextWithdrawalAt ? <> Sonraki talep açılışı: {formatDate(nextWithdrawalAt)}.</> : <> Talep günü: her ayın {payoutCycle.request_day || 1}. günü.</>}
+                  {typeof payoutCycle.min_threshold === 'number' && (
+                    <> Minimum çekim tutarı: {formatMoney(payoutCycle.min_threshold, currency)}.</>
+                  )}
+                </p>
+              </div>
+            )}
           </div>
           <div className="relative group flex items-center justify-center">
             <button
               onClick={() => { setShowModal(true); setErrors({}); }}
-              disabled={balance < 500 || profile?.kyc_status !== 'approved'}
+              disabled={balance < minWithdrawalAmount || profile?.kyc_status !== 'approved'}
               className="px-6 py-3 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 inline-flex items-center gap-2 hover:shadow-[0_0_30px_rgba(201,169,97,0.25)] transition-all"
             >
               <ArrowDownCircle className="w-4 h-4" />
@@ -169,9 +215,9 @@ export default function WalletPanel() {
                 Para çekmek için Profil sekmesinden Kimlik Doğrulama (KYC) işlemini tamamlayın.
               </div>
             )}
-            {profile?.kyc_status === 'approved' && balance < 500 && (
+            {profile?.kyc_status === 'approved' && balance < minWithdrawalAmount && (
               <div className="absolute bottom-full mb-2 hidden group-hover:block w-[150px] bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] p-2 rounded shadow-lg text-[10px] text-center text-[var(--gm-text)] z-10">
-                Minimum limit: 500 TRY
+                Minimum limit: {formatMoney(minWithdrawalAmount, currency)}
               </div>
             )}
           </div>

@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Star, Clock } from 'lucide-react';
 import { useListConsultantsPublicQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
+import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 import { localizePath } from '@/integrations/shared';
 import { useLocaleShort, useUiSection } from '@/i18n';
 
@@ -60,6 +61,11 @@ export default function FeaturedConsultantsSection({ locale: explicitLocale }: {
   const { data: consultants = [], isLoading } = useListConsultantsPublicQuery(
     { limit: 6, sort: 'popular' },
   );
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const expertiseLabels = React.useMemo<Record<string, string>>(
+    () => Object.fromEntries(serviceCategories.map((category) => [category.slug, category.name])),
+    [serviceCategories],
+  );
 
   return (
     <section className="py-28 lg:py-36" style={{ padding: '7rem 4%' }}>
@@ -105,7 +111,9 @@ export default function FeaturedConsultantsSection({ locale: explicitLocale }: {
                     <div className="min-w-0">
                       <p className="font-medium text-text truncate">{c.display_name || c.full_name}</p>
                       {c.expertise && c.expertise.length > 0 && (
-                        <p className="text-xs text-text-muted truncate">{c.expertise.slice(0, 2).join(' · ')}</p>
+                        <p className="text-xs text-text-muted truncate">
+                          {c.expertise.slice(0, 2).map((e: string) => expertiseLabels[e] || e).join(' · ')}
+                        </p>
                       )}
                     </div>
                   </div>

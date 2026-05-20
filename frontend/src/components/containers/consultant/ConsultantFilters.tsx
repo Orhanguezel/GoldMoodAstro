@@ -4,17 +4,6 @@ import React, { useState, useCallback } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 
-const EXPERTISE_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: 'astrology', label: 'Astrology' },
-  { value: 'tarot', label: 'Tarot' },
-  { value: 'numerology', label: 'Numerology' },
-  { value: 'mood', label: 'Mood Coaching' },
-  { value: 'career', label: 'Career' },
-  { value: 'relationship', label: 'Relationship' },
-  { value: 'birth_chart', label: 'Birth Chart' },
-];
-
 export interface FilterState {
   expertise: string;
   minPrice: number;
@@ -29,10 +18,10 @@ interface Props {
 
 export default function ConsultantFilters({ filters, onChange }: Props) {
   const [open, setOpen] = useState(false);
-  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const { data: serviceCategories = [], isLoading: isLoadingCategories } = useListServiceCategoriesPublicQuery();
   const expertiseOptions = serviceCategories.length
     ? [{ value: '', label: 'All' }, ...serviceCategories.map((category) => ({ value: category.slug, label: category.name }))]
-    : EXPERTISE_OPTIONS;
+    : [];
 
   const set = useCallback(
     (patch: Partial<FilterState>) => onChange({ ...filters, ...patch }),
@@ -43,7 +32,11 @@ export default function ConsultantFilters({ filters, onChange }: Props) {
     <div className="mb-12">
       {/* Expertise quick-filter row */}
       <div className="flex items-center gap-3 flex-wrap">
-        {expertiseOptions.map((opt) => (
+        {isLoadingCategories && expertiseOptions.length === 0 ? (
+          <span className="px-5 py-2 rounded-full border border-[var(--gm-border-soft)] text-[10px] tracking-widest uppercase text-[var(--gm-muted)]">
+            Yükleniyor...
+          </span>
+        ) : expertiseOptions.map((opt) => (
           <button
             key={opt.value}
             onClick={() => set({ expertise: opt.value })}

@@ -5,22 +5,13 @@ import Link from 'next/link';
 import { Star, Clock, ShieldCheck, Phone, Calendar } from 'lucide-react';
 import type { ConsultantPublic } from '@/integrations/rtk/public/consultants.public.endpoints';
 
-const EXPERTISE_LABELS: Record<string, string> = {
-  astrology: 'Astroloji',
-  tarot: 'Tarot',
-  numerology: 'Numeroloji',
-  mood: 'Mood Coaching',
-  career: 'Kariyer',
-  relationship: 'İlişki',
-  birth_chart: 'Doğum Haritası',
-};
-
 interface Props {
   consultant: ConsultantPublic;
   locale: string;
+  expertiseLabels?: Record<string, string>;
 }
 
-export default function ConsultantCard({ consultant, locale }: Props) {
+export default function ConsultantCard({ consultant, locale, expertiseLabels = {} }: Props) {
   const [imageFailed, setImageFailed] = useState(false);
   const rating = parseFloat(consultant.rating_avg || '0');
   const price = Math.round(Number(consultant.session_price));
@@ -77,7 +68,7 @@ export default function ConsultantCard({ consultant, locale }: Props) {
         </Link>
 
         <p className="text-[var(--gm-gold-dim)] text-[10px] font-bold tracking-widest uppercase mb-4 truncate">
-          {consultant.expertise.slice(0, 3).map((e) => EXPERTISE_LABELS[e] || e).join(' · ')}
+          {consultant.expertise.slice(0, 3).map((e) => expertiseLabels[e] || e).join(' · ')}
         </p>
 
         <div className="flex items-center gap-4 mb-4 text-xs">

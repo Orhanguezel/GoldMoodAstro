@@ -23,7 +23,7 @@
 -- 2026-04-30 — T31 GEO/SEO çalışması: tüm placeholder'lar GoldMoodAstro
 -- markası için gerçek değerlerle dolduruldu (TR/EN/DE). OG görselleri
 -- admin panelden yüklenebilir; bu seed boş bıraktığı OG'leri Antigravity
--- + müşteri ortak çalışmasıyla zamanla doldurulacak.
+-- + danışan ortak çalışmasıyla zamanla doldurulacak.
 -- =============================================================
 
 -- TR ──────────────────────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   },
   "consultant-detail": {
     "title": "Danışman Profili ve Randevu",
-    "description": "Danışman profili: uzmanlık, deneyim, dil, hizmet paketleri, müşteri yorumları ve müsaitlik. Anlık veya planlı randevu alın.",
+    "description": "Danışman profili: uzmanlık, deneyim, dil, hizmet paketleri, danışan yorumları ve müsaitlik. Anlık veya planlı randevu alın.",
     "og_image": "/uploads/seo/og_consultants.png",
     "no_index": false
   },

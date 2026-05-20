@@ -40,7 +40,8 @@ import { to01, getDefaultLocale } from '../_shared';
 const safeText = (v: unknown) => String(v ?? '').trim();
 const now = () => new Date();
 const FALLBACK_SITE_NAME = process.env.APP_NAME || 'Platform';
-const DEFAULT_COMMISSION_PERCENT = 15;
+const DEFAULT_COMMISSION_PERCENT = 30;
+const LEGACY_COMMISSION_PERCENT = 15;
 
 
 
@@ -69,33 +70,76 @@ async function getBookingAdminUserId(): Promise<string | null> {
   return s && s.length === 36 ? s : null;
 }
 
-function parseCommissionPercent(raw: unknown): number {
-  if (raw == null) return DEFAULT_COMMISSION_PERCENT;
+function clampPercent(n: number, fallback = DEFAULT_COMMISSION_PERCENT): number {
+  return Number.isFinite(n) ? Math.min(Math.max(n, 0), 100) : fallback;
+}
+
+function parseCommissionConfig(raw: unknown): {
+  percent: number;
+  previousPercent: number | null;
+  effectiveFrom: string | null;
+} {
+  if (raw == null) return { percent: DEFAULT_COMMISSION_PERCENT, previousPercent: null, effectiveFrom: null };
   if (typeof raw === 'object' && !Array.isArray(raw)) {
-    const n = Number((raw as Record<string, unknown>).percent);
-    return Number.isFinite(n) ? Math.min(Math.max(n, 0), 100) : DEFAULT_COMMISSION_PERCENT;
+    const obj = raw as Record<string, unknown>;
+    const percent = clampPercent(Number(obj.percent));
+    const prevRaw = obj.previous_percent ?? obj.previousPercent;
+    const previousPercent = prevRaw == null ? null : clampPercent(Number(prevRaw), LEGACY_COMMISSION_PERCENT);
+    const effectiveFrom = typeof obj.effective_from === 'string' ? obj.effective_from : null;
+    return { percent, previousPercent, effectiveFrom };
   }
   const text = String(raw).trim();
-  if (!text) return DEFAULT_COMMISSION_PERCENT;
+  if (!text) return { percent: DEFAULT_COMMISSION_PERCENT, previousPercent: null, effectiveFrom: null };
   try {
-    return parseCommissionPercent(JSON.parse(text));
+    return parseCommissionConfig(JSON.parse(text));
   } catch {
     const n = Number(text);
-    return Number.isFinite(n) ? Math.min(Math.max(n, 0), 100) : DEFAULT_COMMISSION_PERCENT;
+    return { percent: clampPercent(n), previousPercent: null, effectiveFrom: null };
   }
 }
 
-async function getPlatformCommissionPercent(): Promise<number> {
+/**
+ * Date-aware platform commission rate getter.
+ *
+ * Resolution rules against the `platform_commission_rate` JSON in site_settings
+ * (shape: { percent, previous_percent, effective_from, ... }):
+ *   - If `effective_from` is present and parseable:
+ *       • `at <  effective_from` → return `previous_percent`
+ *         (falls back to LEGACY_COMMISSION_PERCENT when missing).
+ *       • `at >= effective_from` → return `percent` (the new rate).
+ *   - If `effective_from` is missing/unparseable → fall back to `percent`
+ *     (existing behaviour). Net effect: today, with no `effective_from` set in
+ *     site_settings, this still returns `percent` exactly like before.
+ *
+ * @param at Optional point-in-time to evaluate the rate at. Useful for
+ *           backfilling old bookings against the historical rate. If omitted,
+ *           "now" is used, which is appropriate for fresh earnings created at
+ *           the moment a booking transitions to `completed`.
+ */
+async function getPlatformCommissionPercent(at?: Date): Promise<number> {
   const [row] = await db
     .select({ value: siteSettings.value })
     .from(siteSettings)
     .where(and(eq(siteSettings.key, 'platform_commission_rate'), eq(siteSettings.locale, '*')))
     .limit(1);
-  return parseCommissionPercent(row?.value);
+  const config = parseCommissionConfig(row?.value);
+  if (config.effectiveFrom) {
+    const effectiveAt = new Date(config.effectiveFrom);
+    if (!Number.isNaN(effectiveAt.getTime())) {
+      const evalAt = (at ?? new Date()).getTime();
+      if (evalAt < effectiveAt.getTime()) {
+        return config.previousPercent ?? LEGACY_COMMISSION_PERCENT;
+      }
+    }
+  }
+  return config.percent;
 }
 
-async function createPendingSessionEarning(bookingId: string) {
-  const commissionPercent = await getPlatformCommissionPercent();
+async function createPendingSessionEarning(bookingId: string, completedAt?: Date) {
+  // Earnings are created at the moment a booking transitions to `completed`,
+  // so the completion timestamp is effectively "now" — but accept an override
+  // (for backfills/replays against historical rates).
+  const commissionPercent = await getPlatformCommissionPercent(completedAt ?? new Date());
 
   await db.transaction(async (tx) => {
     const [booking] = await tx

@@ -2,7 +2,7 @@
 
 // T29-5 — Booking-bağlı mesajlaşma
 // Booking detay/listesinde "Mesaj Gönder" butonu → chat thread (context_type='booking')
-// Müşteri ↔ danışman async mesajlaşma (görüşme öncesi/sonrası notlar).
+// Danışan ↔ danışman async mesajlaşma (görüşme öncesi/sonrası notlar).
 
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';

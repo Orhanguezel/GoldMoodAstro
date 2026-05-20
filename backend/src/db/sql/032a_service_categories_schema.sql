@@ -46,4 +46,17 @@ VALUES
   (CONCAT(SUBSTRING(MD5('energy_healing'),1,8),'-',SUBSTRING(MD5('energy_healing'),9,4),'-4',SUBSTRING(MD5('energy_healing'),14,3),'-8',SUBSTRING(MD5('energy_healing'),18,3),'-',SUBSTRING(MD5('energy_healing'),21,12)),
    'energy_healing','Enerji Şifası','Enerji dengeleme ve şifa çalışması.','Sparkles',100,1),
   (CONCAT(SUBSTRING(MD5('spiritual_guidance'),1,8),'-',SUBSTRING(MD5('spiritual_guidance'),9,4),'-4',SUBSTRING(MD5('spiritual_guidance'),14,3),'-8',SUBSTRING(MD5('spiritual_guidance'),18,3),'-',SUBSTRING(MD5('spiritual_guidance'),21,12)),
-   'spiritual_guidance','Manevi Rehberlik','Manevi yolculukta destek.','Flame',110,1);
+   'spiritual_guidance','Manevi Rehberlik','Manevi yolculukta destek.','Flame',110,1),
+  -- 2026-05-20: Pınar DEMİRCİOĞLU başvurusu sonrası eklenen kategoriler.
+  (CONCAT(SUBSTRING(MD5('nefes_terapisi'),1,8),'-',SUBSTRING(MD5('nefes_terapisi'),9,4),'-4',SUBSTRING(MD5('nefes_terapisi'),14,3),'-8',SUBSTRING(MD5('nefes_terapisi'),18,3),'-',SUBSTRING(MD5('nefes_terapisi'),21,12)),
+   'nefes_terapisi','Nefes Terapisi','Bilinçli nefes teknikleriyle stres azaltma ve içsel denge.','Wind',120,1),
+  (CONCAT(SUBSTRING(MD5('bioenerji'),1,8),'-',SUBSTRING(MD5('bioenerji'),9,4),'-4',SUBSTRING(MD5('bioenerji'),14,3),'-8',SUBSTRING(MD5('bioenerji'),18,3),'-',SUBSTRING(MD5('bioenerji'),21,12)),
+   'bioenerji','Bioenerji','Bedendeki enerji akışını dengeleme ve şifa çalışması.','Zap',130,1),
+  (CONCAT(SUBSTRING(MD5('reiki'),1,8),'-',SUBSTRING(MD5('reiki'),9,4),'-4',SUBSTRING(MD5('reiki'),14,3),'-8',SUBSTRING(MD5('reiki'),18,3),'-',SUBSTRING(MD5('reiki'),21,12)),
+   'reiki','Reiki','Evrensel yaşam enerjisiyle uzaktan veya yakın şifa seansı.','HandHeart',140,1),
+  (CONCAT(SUBSTRING(MD5('yasam_koclugu'),1,8),'-',SUBSTRING(MD5('yasam_koclugu'),9,4),'-4',SUBSTRING(MD5('yasam_koclugu'),14,3),'-8',SUBSTRING(MD5('yasam_koclugu'),18,3),'-',SUBSTRING(MD5('yasam_koclugu'),21,12)),
+   'yasam_koclugu','Yaşam Koçluğu','Hedef belirleme, motivasyon ve kişisel gelişim rehberliği.','Target',150,1),
+  (CONCAT(SUBSTRING(MD5('bilincalti_donusum'),1,8),'-',SUBSTRING(MD5('bilincalti_donusum'),9,4),'-4',SUBSTRING(MD5('bilincalti_donusum'),14,3),'-8',SUBSTRING(MD5('bilincalti_donusum'),18,3),'-',SUBSTRING(MD5('bilincalti_donusum'),21,12)),
+   'bilincalti_donusum','Bilinçaltı Dönüşüm','Bilinçaltı kalıplarını fark etme ve dönüştürme çalışmaları.','Brain',160,1),
+  (CONCAT(SUBSTRING(MD5('psikoloji'),1,8),'-',SUBSTRING(MD5('psikoloji'),9,4),'-4',SUBSTRING(MD5('psikoloji'),14,3),'-8',SUBSTRING(MD5('psikoloji'),18,3),'-',SUBSTRING(MD5('psikoloji'),21,12)),
+   'psikoloji','Psikoloji','Lisanslı psikolog desteğiyle bireysel danışmanlık.','HeartPulse',170,1);

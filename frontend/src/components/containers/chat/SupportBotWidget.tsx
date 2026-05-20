@@ -614,7 +614,7 @@ export default function SupportBotWidget() {
                   <Headset size={18} />
                 ) : (
                   <Image
-                    src={(useGetSiteSettingByKeyQuery({ key: "ui_support_ai_image" }).data?.value as string) || "/img/support_ai.png"}
+                    src={supportImageUrl}
                     alt="AI"
                     width={24}
                     height={24}

@@ -42,6 +42,7 @@ export const consultants = mysqlTable(
     kyc_rejection_reason: text('kyc_rejection_reason'),
     kyc_documents: json('kyc_documents').$type<Array<Record<string, unknown>>>(),
     agreement_accepted_at: datetime('agreement_accepted_at', { fsp: 3 }),
+    commission_change_announcement_sent_at: datetime('commission_change_announcement_sent_at', { fsp: 3 }),
     session_price: decimal('session_price', { precision: 10, scale: 2 }).notNull(),
     session_duration: int('session_duration').notNull().default(30),
     supports_video: tinyint('supports_video').default(0),

@@ -59,7 +59,7 @@ export default function ClientsPanel() {
             Danışanlarım
           </span>
           <h2 className="font-serif text-2xl text-(--gm-text) mt-0.5">
-            Müşteri Listesi
+            Danışan Listesi
           </h2>
         </div>
         {!isLoading && (

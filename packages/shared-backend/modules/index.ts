@@ -23,7 +23,7 @@
  *   - subcategories  : Alt kategori
  *   - gallery        : Gorsel galeri yonetimi
  *   - library        : Dijital kaynak kutuphanesi
- *   - references     : Referans / musteri hikayeleri
+ *   - references     : Referans / danisan hikayeleri
  *
  * AUTH & KULLANICI
  *   - auth           : JWT kimlik dogrulama, rol yonetimi

@@ -7,7 +7,7 @@ import { z } from "zod";
 export const ChatContextTypeEnum = z.enum([
   "job",
   "request",
-  "consultant_lead", // T29-3: müşteri → danışman ön mesaj
+  "consultant_lead", // T29-3: danışan → danışman ön mesaj
   "booking",          // T29-5: booking-bağlı mesajlaşma
   "support",          // genel destek thread'i
 ]);

@@ -16,45 +16,10 @@ import { useAuthStore } from '@/features/auth/auth.store';
 import { IconUser } from '@/components/ui/icons';
 import ThemeToggle from '@/components/system/ThemeToggle';
 import { trackEvent } from '@/integrations/telemetry';
-import { AuthModal } from '@/components/containers/auth/AuthModal';
 
-// Menu API boş gelirse gösterilecek varsayılan menü (dropdown desteğiyle).
-// API'den gelen menü her zaman önceliklidir.
-type FallbackMenuItem = {
-  id: string;
-  url?: string;
-  label: Record<string, string>;
-  children?: FallbackMenuItem[];
-};
-
-const FALLBACK_MENU: FallbackMenuItem[] = [
-  { id: 'fb-home',        url: '/',            label: { tr: 'Ana Sayfa',   en: 'Home',     de: 'Startseite' } },
-  {
-    id: 'fb-astrology',
-    label: { tr: 'Astroloji', en: 'Astrology', de: 'Astrologie' },
-    children: [
-      { id: 'fb-burclar',        url: '/burclar',                      label: { tr: 'Burçlar',        en: 'Zodiac',       de: 'Sternzeichen' } },
-      { id: 'fb-astro-birth',    url: '/birth-chart',                  label: { tr: 'Doğum Haritası', en: 'Birth Chart',  de: 'Geburtshoroskop' } },
-      { id: 'fb-astro-sinastri', url: '/sinastri',                     label: { tr: 'Sinastri',       en: 'Synastry',     de: 'Synastrie' } },
-      { id: 'fb-astro-yildiz',   url: '/yildizname',                   label: { tr: 'Yıldızname',     en: 'Yildizname',   de: 'Yildizname' } },
-      { id: 'fb-astro-yukselen', url: '/yukselen-burc-hesaplayici',    label: { tr: 'Yükselen Burç',  en: 'Rising Sign',  de: 'Aszendent' } },
-      { id: 'fb-astro-daily',    url: '/daily',                        label: { tr: 'Günlük Yorum',   en: 'Daily Reading', de: 'Tägliche Deutung' } },
-    ],
-  },
-  {
-    id: 'fb-fal',
-    label: { tr: 'Fal & Tarot', en: 'Divination', de: 'Wahrsagung' },
-    children: [
-      { id: 'fb-fal-tarot',  url: '/tarot',        label: { tr: 'Tarot',       en: 'Tarot',                de: 'Tarot' } },
-      { id: 'fb-fal-coffee', url: '/kahve-fali',   label: { tr: 'Kahve Falı',  en: 'Coffee Reading',       de: 'Kaffeesatzlesen' } },
-      { id: 'fb-fal-dream',  url: '/ruya-tabiri',  label: { tr: 'Rüya Tabiri', en: 'Dream Interpretation', de: 'Traumdeutung' } },
-      { id: 'fb-numeroloji', url: '/numeroloji',   label: { tr: 'Numeroloji',  en: 'Numerology',           de: 'Numerologie' } },
-    ],
-  },
-  { id: 'fb-consultants', url: '/consultants', label: { tr: 'Danışmanlar', en: 'Consultants',  de: 'Berater' } },
-  { id: 'fb-blog',        url: '/blog',        label: { tr: 'Blog',        en: 'Blog',         de: 'Blog' } },
-  { id: 'fb-about',       url: '/about',       label: { tr: 'Hakkımızda',  en: 'About',        de: 'Über uns' } },
-];
+// Menü sadece DB'den gelir (menu_items). Hardcoded fallback YOK — istemci
+// "düzgün menu → hardcoded" flicker'ı yaşamasın. SSR fetch başarısızsa header
+// menü kısmı boş kalır; brand + sağ blok CTA'lar görünür kalmaya devam eder.
 
 type MenuItemWithChildren = PublicMenuItemDto & {
   children?: MenuItemWithChildren[];
@@ -174,8 +139,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authModalTab, setAuthModalTab] = useState<'login' | 'register'>('login');
+  const [nextQuery, setNextQuery] = useState('');
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuthStore();
   const isConsultant = hasUserRole(user, 'consultant');
@@ -204,27 +168,28 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
 
   // HİDRASYON STRATEJİSİ: SSR'da Header.tsx pre-fetch eder, client'ta initialMenuItems
   // kullanılır. RTK Query çağrısı yok — server/client farkını tamamen ortadan kaldırır.
-  // (Menü değişiklikleri admin'den sayfa yenilenmesiyle yansır; revalidate: 60sn.)
+  // Hardcoded fallback YOK: SSR fetch başarısız ise menü boş kalır (yanlış hardcoded
+  // menü göstermek yerine boş gösterip flicker'ı önler). Admin menu_items'i güncellerse
+  // revalidate: 60sn sonra otomatik yenilenir.
   const headerMenuItems: MenuItemWithChildren[] = useMemo(() => {
     if (initialMenuItems && initialMenuItems.length > 0) {
       return initialMenuItems.slice().sort((a, b) => ((a as any)?.order_num ?? 0) - ((b as any)?.order_num ?? 0)) as MenuItemWithChildren[];
     }
-    // initialMenuItems boş ise (SSR fetch başarısız) — varsayılan linkleri locale'e göre üret
-    const mapItem = (m: FallbackMenuItem): MenuItemWithChildren => ({
-      id: m.id,
-      url: m.url ?? '',
-      title: m.label[locale] || m.label.tr,
-      ...(m.children && m.children.length > 0
-        ? { children: m.children.map(mapItem) as MenuItemWithChildren[] }
-        : {}),
-    } as MenuItemWithChildren);
-    return FALLBACK_MENU.map(mapItem);
-  }, [locale, initialMenuItems]);
+    return [];
+  }, [initialMenuItems]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get('next');
+      if (next) setNextQuery(`?next=${encodeURIComponent(next)}`);
+    }
   }, []);
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
@@ -241,14 +206,10 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
   const homeHref = localizePath(locale, '/');
   const consultantsHref = localizePath(locale, '/consultants');
   const consultantPanelHref = localizePath(locale, '/me/consultant');
+  const authNextQuery = nextQuery || (pathname && pathname !== '/' ? `?next=${encodeURIComponent(pathname)}` : '');
 
   return (
     <Fragment>
-      <AuthModal 
-        open={authModalOpen} 
-        onOpenChange={setAuthModalOpen} 
-        defaultTab={authModalTab} 
-      />
       <HeaderOffcanvas open={open} onClose={() => setOpen(false)} brand={resolvedBrand} locale={locale} />
 
       <header data-test-marker="antigravity-fix-v1" className="relative z-[1000]">
@@ -357,7 +318,11 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
               {isAuthenticated && !isConsultant && (
                 <Link
                   href={localizePath(locale, '/dashboard')}
-                  className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.18em] uppercase text-[var(--gm-text)] hover:text-[var(--gm-gold-deep)] transition-colors"
+                  className={`inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.18em] uppercase transition-colors ${
+                    hasHeroOverlay
+                      ? 'text-white hover:text-amber-200 drop-shadow-md'
+                      : 'text-[var(--gm-gold-deep)] hover:text-[var(--gm-gold)]'
+                  }`}
                   title={locale === 'tr' ? 'Panelim' : 'Dashboard'}
                 >
                   <IconUser className="w-4 h-4" />
@@ -367,7 +332,11 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
               {isConsultant && (
                 <Link
                   href={consultantPanelHref}
-                  className="relative inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.18em] uppercase text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)] transition-colors"
+                  className={`relative inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.18em] uppercase transition-colors ${
+                    hasHeroOverlay
+                      ? 'text-amber-300 hover:text-white drop-shadow-md'
+                      : 'text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)]'
+                  }`}
                   title={locale === 'tr' ? 'Danışman Paneli' : 'Consultant Panel'}
                 >
                   {locale === 'tr' ? 'Danışman Paneli' : 'Consultant Panel'}
@@ -381,32 +350,35 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
               {/* H1: Üye Ol / Giriş Yap */}
               {!isAuthenticated && (
                 <div className="flex items-center gap-3">
-                  <button 
-                    type="button"
-                    onClick={() => { setAuthModalTab('login'); setAuthModalOpen(true); }}
-                    className="text-[11px] font-bold tracking-[0.15em] uppercase text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)] transition-colors px-4 py-2 border border-[var(--gm-gold)]/40 hover:border-[var(--gm-gold)] rounded-full"
+                  <Link 
+                    href={`${localizePath(locale, '/login')}${authNextQuery}`}
+                    className={`text-[11px] font-bold tracking-[0.15em] uppercase transition-colors px-4 py-2 border rounded-full ${
+                      hasHeroOverlay
+                        ? 'border-white/45 text-white hover:border-amber-300 hover:text-amber-200'
+                        : 'border-[var(--gm-gold)]/40 text-[var(--gm-gold)] hover:border-[var(--gm-gold)] hover:text-[var(--gm-gold-light)]'
+                    }`}
                   >
                     {locale === 'tr' ? 'Giriş Yap' : 'Login'}
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => { 
-                      trackEvent('signup_start').catch(() => {});
-                      setAuthModalTab('register'); 
-                      setAuthModalOpen(true); 
-                    }}
+                  </Link>
+                  <Link 
+                    href={`${localizePath(locale, '/register')}${authNextQuery}`}
+                    onClick={() => trackEvent('signup_start').catch(() => {})}
                     className="text-[11px] font-bold tracking-[0.15em] uppercase text-white bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-light)] transition-colors px-4 py-2 rounded-full shadow-[var(--gm-glow-primary)] hover:shadow-lg"
                   >
                     {locale === 'tr' ? 'Üye Ol' : 'Sign Up'}
-                  </button>
+                  </Link>
                 </div>
               )}
 
               {/* H2: Danışman mısın? CTA */}
               {!isConsultant && (
-                <Link 
-                  href={localizePath(locale, '/become-consultant')} 
-                  className="text-[10px] uppercase tracking-[0.15em] text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] transition-colors underline decoration-[var(--gm-border-soft)] hover:decoration-[var(--gm-gold)] underline-offset-4"
+                <Link
+                  href={localizePath(locale, '/become-consultant')}
+                  className={`text-[10px] uppercase tracking-[0.15em] transition-colors underline underline-offset-4 ${
+                    hasHeroOverlay
+                      ? 'text-white/80 hover:text-white decoration-white/30 hover:decoration-white drop-shadow-md'
+                      : 'text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] decoration-[var(--gm-border-soft)] hover:decoration-[var(--gm-gold)]'
+                  }`}
                 >
                   {locale === 'tr' ? 'Danışman mısın?' : 'Join as Consultant'}
                 </Link>
@@ -442,13 +414,12 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                 <IconUser className="w-5 h-5" />
               </Link>
             ) : (
-              <button 
-                type="button" 
-                onClick={() => { setAuthModalTab('login'); setAuthModalOpen(true); }}
+              <Link 
+                href={`${localizePath(locale, '/login')}${authNextQuery}`}
                 className="p-2 text-[var(--gm-gold)]"
               >
                 <IconUser className="w-5 h-5" />
-              </button>
+              </Link>
             )}
             <button
               type="button"
@@ -524,29 +495,23 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
 
           {!isAuthenticated && (
             <div className="flex flex-col w-full max-w-xs gap-3">
-              <button 
-                type="button"
+              <Link 
+                href={`${localizePath(locale, '/register')}${authNextQuery}`}
                 onClick={() => {
                   setMobileOpen(false);
                   trackEvent('signup_start').catch(() => {});
-                  setAuthModalTab('register');
-                  setAuthModalOpen(true);
                 }}
                 className="w-full flex items-center justify-center rounded-full bg-[var(--gm-primary)] px-5 py-3 text-[12px] font-bold uppercase tracking-[0.15em] text-white transition-colors hover:bg-[var(--gm-primary-light)]"
               >
                 {locale === 'tr' ? 'Üye Ol' : 'Sign Up'}
-              </button>
-              <button 
-                type="button"
-                onClick={() => {
-                  setMobileOpen(false);
-                  setAuthModalTab('login');
-                  setAuthModalOpen(true);
-                }}
+              </Link>
+              <Link 
+                href={`${localizePath(locale, '/login')}${authNextQuery}`}
+                onClick={() => setMobileOpen(false)}
                 className="w-full flex items-center justify-center rounded-full border border-[var(--gm-gold)]/40 px-5 py-3 text-[12px] font-bold uppercase tracking-[0.15em] text-[var(--gm-gold)] transition-colors hover:border-[var(--gm-gold)]"
               >
                 {locale === 'tr' ? 'Giriş Yap' : 'Login'}
-              </button>
+              </Link>
             </div>
           )}
 

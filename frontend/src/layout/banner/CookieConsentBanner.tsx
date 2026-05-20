@@ -243,22 +243,24 @@ export default function CookieConsentBanner() {
   }
 
   const titleText =
-    (consentSetting?.texts?.title ?? '').trim() || ui('cc_banner_title', 'Cookie Preferences');
+    (consentSetting?.texts?.title ?? '').trim() || ui('cc_banner_title', locale === 'tr' ? 'Çerez Tercihleri' : 'Cookie Preferences');
 
   const descText =
     (consentSetting?.texts?.description ?? '').trim() ||
     ui(
       'cc_banner_desc',
-      'We use cookies to ensure the site works properly and to optionally analyze traffic. You can manage your preferences.',
+      locale === 'tr' 
+        ? 'Sitenin düzgün çalışmasını sağlamak ve trafiği analiz etmek için çerezler kullanıyoruz. Tercihlerinizi yönetebilirsiniz.'
+        : 'We use cookies to ensure the site works properly and to optionally analyze traffic. You can manage your preferences.',
     );
 
-  const policyLabel = ui('cc_banner_link_policy', 'Cookie Policy');
+  const policyLabel = ui('cc_banner_link_policy', locale === 'tr' ? 'Çerez Politikası' : 'Cookie Policy');
 
-  const btnSettings = ui('cc_banner_btn_settings', 'Cookie Settings');
-  const btnReject = ui('cc_banner_btn_reject', 'Reject All');
-  const btnAccept = ui('cc_banner_btn_accept', 'Accept All');
+  const btnSettings = ui('cc_banner_btn_settings', locale === 'tr' ? 'Çerez Ayarları' : 'Cookie Settings');
+  const btnReject = ui('cc_banner_btn_reject', locale === 'tr' ? 'Tümünü Reddet' : 'Reject All');
+  const btnAccept = ui('cc_banner_btn_accept', locale === 'tr' ? 'Tümünü Kabul Et' : 'Accept All');
 
-  const ariaClose = ui('cc_banner_aria_close', 'Close');
+  const ariaClose = ui('cc_banner_aria_close', locale === 'tr' ? 'Kapat' : 'Close');
 
   return (
     <>

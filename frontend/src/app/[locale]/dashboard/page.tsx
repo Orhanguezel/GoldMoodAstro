@@ -23,6 +23,7 @@ import {
   Trash2,
   Eye,
   Clock,
+  MessageCircle,
 } from 'lucide-react';
 
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -42,6 +43,7 @@ import AvatarUpload from '@/components/common/AvatarUpload';
 import CityAutocomplete from '@/components/common/CityAutocomplete';
 import ReviewModal from '@/components/common/public/ReviewModal';
 import BookingMessageButton from '@/components/common/BookingMessageButton';
+import UserMessagesPanel from '@/components/containers/user-dashboard/UserMessagesPanel';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,9 +56,9 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-type TabKey = 'overview' | 'profile' | 'bookings' | 'history' | 'security';
+type TabKey = 'overview' | 'profile' | 'bookings' | 'messages' | 'history' | 'security';
 type HistoryFilter = 'all' | ReadingType;
-const VALID_TABS: TabKey[] = ['overview', 'profile', 'bookings', 'history', 'security'];
+const VALID_TABS: TabKey[] = ['overview', 'profile', 'bookings', 'messages', 'history', 'security'];
 
 type DashCardProps = {
   href: string;
@@ -350,6 +352,16 @@ export default function DashboardPage() {
       cta: isTr ? 'Randevuları gör' : 'View bookings',
     },
     {
+      href: `?tab=messages`,
+      icon: <MessageCircle size={22} />,
+      eyebrow: isTr ? 'Sohbet' : 'Chat',
+      title: isTr ? 'Mesajlarım' : 'My Messages',
+      description: isTr
+        ? 'Danışmanlarınızdan gelen cevapları okuyun, yeni mesaj gönderin.'
+        : 'Read replies from consultants and send new messages.',
+      cta: isTr ? 'Mesajları gör' : 'View messages',
+    },
+    {
       href: localizePath(locale, '/birth-chart'),
       icon: <Sparkles size={22} />,
       eyebrow: isTr ? 'Astroloji' : 'Astrology',
@@ -419,6 +431,7 @@ export default function DashboardPage() {
     { key: 'overview', label: isTr ? 'Genel Bakış' : 'Overview', icon: <LayoutGrid size={14} /> },
     { key: 'profile', label: isTr ? 'Profil' : 'Profile', icon: <UserIcon size={14} /> },
     { key: 'bookings', label: isTr ? 'Randevular' : 'Bookings', icon: <ShoppingBag size={14} /> },
+    { key: 'messages', label: isTr ? 'Mesajlar' : 'Messages', icon: <MessageCircle size={14} /> },
     { key: 'history', label: isTr ? 'Geçmiş Yorumlarım' : 'Reading History', icon: <Sparkles size={14} /> },
     { key: 'security', label: isTr ? 'Güvenlik' : 'Security', icon: <Lock size={14} /> },
   ];
@@ -733,6 +746,20 @@ export default function DashboardPage() {
                 ))}
               </div>
             )}
+          </section>
+        )}
+
+        {tab === 'messages' && (
+          <section>
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold-deep)">
+                <MessageCircle size={18} />
+              </div>
+              <h2 className="font-serif text-2xl md:text-3xl font-light text-(--gm-text)">
+                {isTr ? 'Mesajlarım' : 'My Messages'}
+              </h2>
+            </div>
+            <UserMessagesPanel isTr={isTr} />
           </section>
         )}
 

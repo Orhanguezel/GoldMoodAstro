@@ -27,6 +27,32 @@ async function fetchHeaderMenuItems(locale: string): Promise<PublicMenuItemDto[]
   }
 }
 
+async function fetchFooterSections(locale: string) {
+  try {
+    const url = `${API_BASE}/footer_sections?is_active=true&order=display_order.asc&locale=${encodeURIComponent(locale)}`;
+    const res = await fetch(url, { next: { revalidate: 60, tags: ['footer_sections'] } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const items = Array.isArray(json) ? json : (json?.items ?? json?.data ?? []);
+    return Array.isArray(items) ? items : [];
+  } catch {
+    return [];
+  }
+}
+
+async function fetchFooterMenuItems(locale: string): Promise<PublicMenuItemDto[]> {
+  try {
+    const url = `${API_BASE}/menu_items?location=footer&is_active=true&locale=${encodeURIComponent(locale)}`;
+    const res = await fetch(url, { next: { revalidate: 60, tags: ['menu_items_footer'] } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const items = Array.isArray(json) ? json : (json?.items ?? json?.data ?? []);
+    return Array.isArray(items) ? items : [];
+  } catch {
+    return [];
+  }
+}
+
 // 2026-04-27 vizyon revize: Cinzel (display) + Fraunces (editorial body) + Manrope (UI sans)
 const manrope = Manrope({
   subsets: ['latin'],
@@ -101,9 +127,11 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  // SSR fetch: header menu items + brand settings
-  const [initialMenuItems, brand] = await Promise.all([
+  // SSR fetch: header + footer menu items + brand settings (paralel)
+  const [initialMenuItems, initialFooterSections, initialFooterMenuItems, brand] = await Promise.all([
     fetchHeaderMenuItems(locale),
+    fetchFooterSections(locale),
+    fetchFooterMenuItems(locale),
     getBrandServer(),
   ]);
 
@@ -169,7 +197,12 @@ export default async function RootLayout({
         <ScrollAnchorFixer />
         <Providers>
           <Suspense fallback={null}>
-            <ClientLayout locale={locale} initialMenuItems={initialMenuItems}>
+            <ClientLayout
+              locale={locale}
+              initialMenuItems={initialMenuItems}
+              initialFooterSections={initialFooterSections}
+              initialFooterMenuItems={initialFooterMenuItems}
+            >
               {children}
             </ClientLayout>
           </Suspense>

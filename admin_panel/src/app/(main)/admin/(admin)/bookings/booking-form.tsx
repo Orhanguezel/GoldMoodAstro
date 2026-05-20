@@ -380,7 +380,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
             <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">
               <CardTitle className="font-serif text-2xl flex items-center gap-3">
-                <User className="h-5 w-5 text-gm-gold" /> {t('form.sections.customer', null, 'Müşteri Bilgileri')}
+                <User className="h-5 w-5 text-gm-gold" /> {t('form.sections.customer', null, 'Danışan Bilgileri')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 space-y-8">

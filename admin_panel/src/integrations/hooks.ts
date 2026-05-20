@@ -88,3 +88,4 @@ export * from '@/integrations/endpoints/admin/campaigns_admin.endpoints';
 export * from '@/integrations/endpoints/admin/consultant_applications_admin.endpoints';
 export * from '@/integrations/endpoints/admin/service_categories_admin.endpoints';
 export * from '@/integrations/endpoints/admin/service_templates_admin.endpoints';
+export * from '@/integrations/endpoints/admin/commission_change_admin.endpoints';

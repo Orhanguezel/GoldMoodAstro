@@ -53,7 +53,7 @@ function buildDisplayNameFromUser(u: {
 }): string {
   if (u.full_name && u.full_name.trim()) return u.full_name.trim();
   if (u.email) return u.email.split("@")[0] ?? u.email;
-  return "Müşterimiz";
+  return "Danışanımız";
 }
 
 /**

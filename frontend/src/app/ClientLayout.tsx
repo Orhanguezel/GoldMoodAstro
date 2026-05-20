@@ -4,7 +4,7 @@ import React, { Fragment, useMemo, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname, useSearchParams } from 'next/navigation';
 import Header from '../layout/header/Header';
-import type { PublicMenuItemDto } from '@/integrations/shared';
+import type { FooterSectionDto, PublicMenuItemDto } from '@/integrations/shared';
 import FooterTwo from '../layout/footer/Footer';
 import ScrollProgress from '../layout/ScrollProgress';
 
@@ -33,10 +33,14 @@ export default function ClientLayout({
   children,
   locale,
   initialMenuItems,
+  initialFooterSections,
+  initialFooterMenuItems,
 }: {
   children: React.ReactNode;
   locale?: string;
   initialMenuItems?: PublicMenuItemDto[];
+  initialFooterSections?: FooterSectionDto[];
+  initialFooterMenuItems?: PublicMenuItemDto[];
 }) {
   const { brand } = useBrand();
   
@@ -143,7 +147,11 @@ export default function ClientLayout({
         {children}
       </main>
 
-      <FooterTwo locale={locale} />
+      <FooterTwo
+        locale={locale}
+        initialFooterSections={initialFooterSections}
+        initialFooterMenuItems={initialFooterMenuItems}
+      />
       <ScrollProgress />
 
       <CookieConsentBanner />

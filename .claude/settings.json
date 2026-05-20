@@ -153,7 +153,15 @@
       "Bash(git status *)",
       "Bash(./deploy/deploy.sh admin *)",
       "Bash(./deploy/deploy.sh frontend *)",
-      "Bash(echo \"BE exit=$?\")"
+      "Bash(echo \"BE exit=$?\")",
+      "Bash(./deploy/deploy.sh backend *)",
+      "Bash(curl -s \"https://www.goldmoodastro.com/api/menu_items\")",
+      "Bash(curl -sI -H \"Origin: https://admin.goldmoodastro.com\" \"https://www.goldmoodastro.com/api/admin/audit/stream\")",
+      "Bash(curl -s \"https://www.goldmoodastro.com/tr\" -H \"Accept: text/html\" --max-time 20 -o /tmp/gm_home.html)",
+      "Bash(curl -sL \"https://goldmoodastro.com/tr\" --max-time 20 -o /tmp/gm_home.html)",
+      "Bash(curl -sL \"https://goldmoodastro.com/tr\" --max-time 25 -o /tmp/gm_home2.html)",
+      "Bash(awk '/<footer/,/<\\\\/footer>/' /tmp/gm_home4.html)",
+      "Bash(grep -n \"^const ConsultantDashboard\\\\|^function \\\\|^export default\\\\|^};$\\\\|^}$\" /home/orhan/Documents/Projeler/goldmoodastro/frontend/src/components/containers/consultant-dashboard/ConsultantDashboard.tsx)"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [

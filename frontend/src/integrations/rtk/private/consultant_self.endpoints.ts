@@ -202,6 +202,34 @@ export interface ConsultantReviewReplyResponse {
   consultant_reply: string;
 }
 
+/* ───────── Customer (kullanıcı) mesaj kutusu tipleri ───────── */
+export interface CustomerThreadConsultant {
+  id: string;
+  display_name: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
+export interface CustomerThreadMessage {
+  id: string;
+  thread_id: string;
+  sender_user_id: string;
+  text: string;
+  created_at: string;
+  from_self?: boolean;
+}
+
+export interface CustomerThread {
+  thread_id: string;
+  context_type: 'consultant_lead' | 'booking' | string;
+  context_id: string;
+  created_at: string;
+  updated_at: string;
+  consultant: CustomerThreadConsultant | null;
+  unread_count: number;
+  last_message: (CustomerThreadMessage & { from_self: boolean }) | null;
+}
+
 export interface ConsultantSelfWallet {
   id: string;
   balance: string;
@@ -246,6 +274,22 @@ export interface ConsultantWithdrawalResponse {
   amount: number;
   currency: string;
   message: string;
+}
+
+export interface ConsultantWithdrawalRequest {
+  id: string;
+  consultant_id: string;
+  amount: string;
+  currency: string;
+  bank_iban: string;
+  bank_holder: string;
+  status: 'pending' | 'approved' | 'paid' | 'rejected' | 'cancelled';
+  requested_at: string;
+  reviewed_at?: string | null;
+  paid_at?: string | null;
+  rejection_reason?: string | null;
+  admin_note?: string | null;
+  transfer_reference?: string | null;
 }
 
 export interface ConsultantServiceTemplate {
@@ -484,6 +528,34 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       transformResponse: (res: { data: { ok: boolean } }) => res.data,
       invalidatesTags: (_r, _e, id) => [{ type: 'ConsultantSelfThread' as any, id }, 'ConsultantSelfThreads' as any],
     }),
+    // Danışan tarafı mesaj kutusu (kullanıcı dashboard'ı için)
+    listMyCustomerThreads: build.query<CustomerThread[], void>({
+      query: () => '/me/customer/threads',
+      transformResponse: (res: { data: CustomerThread[] }) => res.data ?? [],
+      providesTags: ['CustomerThreads' as any],
+    }),
+    getMyCustomerThreadMessages: build.query<{ thread_id: string; messages: CustomerThreadMessage[]; last_read_at?: string }, string>({
+      query: (id) => `/me/customer/threads/${encodeURIComponent(id)}/messages`,
+      transformResponse: (res: { data: { thread_id: string; messages: CustomerThreadMessage[]; last_read_at?: string } }) => res.data,
+      providesTags: (_r, _e, id) => [{ type: 'CustomerThread' as any, id }],
+    }),
+    replyMyCustomerThread: build.mutation<CustomerThreadMessage, { id: string; text: string }>({
+      query: ({ id, text }) => ({
+        url: `/me/customer/threads/${encodeURIComponent(id)}/reply`,
+        method: 'POST',
+        body: { text },
+      }),
+      transformResponse: (res: { data: CustomerThreadMessage }) => res.data,
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: 'CustomerThread' as any, id },
+        'CustomerThreads' as any,
+      ],
+    }),
+    markCustomerThreadAsRead: build.mutation<{ ok: boolean }, string>({
+      query: (id) => ({ url: `/me/customer/threads/${encodeURIComponent(id)}/read`, method: 'POST' }),
+      transformResponse: (res: { data: { ok: boolean } }) => res.data,
+      invalidatesTags: (_r, _e, id) => [{ type: 'CustomerThread' as any, id }, 'CustomerThreads' as any],
+    }),
     // T30-7: Wallet
     getMyConsultantWallet: build.query<ConsultantSelfWalletResponse, void>({
       query: () => '/me/consultant/wallet',
@@ -493,7 +565,12 @@ export const consultantSelfApi = baseApi.injectEndpoints({
     requestMyConsultantWithdrawal: build.mutation<ConsultantWithdrawalResponse, { amount: number; notes?: string }>({
       query: (body) => ({ url: '/me/consultant/wallet/withdraw', method: 'POST', body }),
       transformResponse: (res: { data: ConsultantWithdrawalResponse }) => res.data,
-      invalidatesTags: ['ConsultantSelfWallet' as any],
+      invalidatesTags: ['ConsultantSelfWallet' as any, 'ConsultantWithdrawals' as any],
+    }),
+    listMyConsultantWithdrawals: build.query<ConsultantWithdrawalRequest[], void>({
+      query: () => '/me/consultant/withdrawals',
+      transformResponse: (res: { data: ConsultantWithdrawalRequest[] }) => res.data,
+      providesTags: ['ConsultantWithdrawals' as any],
     }),
     // T30-4: Availability (working hours)
     getMyConsultantAvailability: build.query<{
@@ -606,8 +683,13 @@ export const {
   useGetMyConsultantThreadMessagesQuery,
   useReplyMyConsultantThreadMutation,
   useMarkConsultantThreadAsReadMutation,
+  useListMyCustomerThreadsQuery,
+  useGetMyCustomerThreadMessagesQuery,
+  useReplyMyCustomerThreadMutation,
+  useMarkCustomerThreadAsReadMutation,
   useGetMyConsultantWalletQuery,
   useRequestMyConsultantWithdrawalMutation,
+  useListMyConsultantWithdrawalsQuery,
   useListMyConsultantReviewsQuery,
   useReplyToMyConsultantReviewMutation,
   useGetMyConsultantAvailabilityQuery,

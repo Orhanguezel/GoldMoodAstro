@@ -17,7 +17,7 @@ INSERT INTO home_sections (id, slug, label, component_key, order_index, is_activ
 ('a1000000-0000-4000-8000-00000000000b', 'hybrid_model',          'Hibrit Model Açıklaması',              'HybridModelSection',       110, 1, NULL),
 ('a1000000-0000-4000-8000-00000000000d', 'transparency',          'Şeffaflık / Fiyat',                    'TransparencySection',      120, 1, NULL),
 ('a1000000-0000-4000-8000-00000000000f', 'banner_discount',       'İndirim Bannerı (Altın Pusula)',       'FirstSessionDiscountBanner', 130, 1, NULL),
-('a1000000-0000-4000-8000-000000000011', 'testimonials',          'Müşteri Yorumları',                    'HomeTestimonialsSection',  140, 1, NULL),
+('a1000000-0000-4000-8000-000000000011', 'testimonials',          'Danışan Yorumları',                    'HomeTestimonialsSection',  140, 1, NULL),
 ('a1000000-0000-4000-8000-000000000012', 'app_download',           'Mobil Uygulama İndirme Section',       'AppDownloadSection',       145, 1, NULL),
 ('a1000000-0000-4000-8000-00000000000e', 'trust',                 'Güven / Gizlilik',                     'TrustSection',             150, 1, NULL),
 ('a1000000-0000-4000-8000-000000000010', 'waitlist',              'Danışman Ol / Katıl',                  'WaitlistSection',          160, 1, NULL)

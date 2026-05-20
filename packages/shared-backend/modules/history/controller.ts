@@ -64,7 +64,7 @@ export async function handleDeleteAllReadings(req: FastifyRequest, reply: Fastif
 }
 
 /**
- * T28-6 — Danışman, müşterisinin son okumalarını canlı görüşmede görür.
+ * T28-6 — Danışman, danışansinin son okumalarını canlı görüşmede görür.
  * Yetki: çağrıyı yapan kullanıcı consultant/admin olmalı VE consultants
  * tablosunda kendi user_id'sine bağlı bir kayıt olmalı VE
  * o consultant_id ile customerUserId arasında bir booking olmalı.
@@ -99,7 +99,7 @@ export async function handleGetCustomerReadingsForConsultant(
     `);
     const arr = Array.isArray(rows?.[0]) ? rows[0] : rows;
     if (!arr || (arr as unknown[]).length === 0) {
-      return reply.status(403).send({ error: 'Bu müşteriyle bir randevu ilişkiniz yok.' });
+      return reply.status(403).send({ error: 'Bu danışanla bir randevu ilişkiniz yok.' });
     }
   }
 

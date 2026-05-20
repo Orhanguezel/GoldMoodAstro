@@ -29,7 +29,7 @@ export function registerHistoryRoutes(fastify: FastifyInstance) {
     controller.handleDeleteAllReadings,
   );
 
-  // T28-6 — Danışman: müşteri son okumaları (canlı görüşmede)
+  // T28-6 — Danışman: danışan son okumaları (canlı görüşmede)
   fastify.get(
     '/customers/:userId/readings',
     { preHandler: requireAuth },

@@ -651,10 +651,10 @@ export const startSubscription: RouteHandler = async (req, reply) => {
   const iyzicoLocale = resolveIyzicoLocale(resolveLocale(req));
   const iyzico = new IyzicoService(getGatewayConfig(gateway));
 
-  const names = (full_name || 'Müşteri').trim().split(/\s+/);
-  const buyerName = names.shift() || 'Müşteri';
+  const names = (full_name || 'Danışan').trim().split(/\s+/);
+  const buyerName = names.shift() || 'Danışan';
   const buyerSurname = names.join(' ') || '.';
-  const name = email || `${buyerName} ${buyerSurname}`.trim() || 'Müşteri';
+  const name = email || `${buyerName} ${buyerSurname}`.trim() || 'Danışan';
 
   try {
     const result = await iyzico.initializeCheckoutForm({

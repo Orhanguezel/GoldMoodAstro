@@ -10,37 +10,32 @@ import {
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { cn } from '@/lib/utils';
 import { extractApiError } from '@/integrations/shared';
+import { useUiSection, useLocaleShort } from '@/i18n';
 
 type ReviewFilter = 'all' | 'unreplied' | 'low' | 'high';
 
-const FILTERS: Array<{ key: ReviewFilter; label: string; predicate: (review: ConsultantSelfReview) => boolean }> = [
-  { key: 'all', label: 'Tümü', predicate: () => true },
-  { key: 'unreplied', label: 'Cevaplanmamış', predicate: (review) => !review.consultant_reply },
-  { key: 'low', label: '1-2 yıldız', predicate: (review) => Number(review.rating) <= 2 },
-  { key: 'high', label: '4-5 yıldız', predicate: (review) => Number(review.rating) >= 4 },
+// Filter labels will be rendered dynamically via ui() calls — see ReviewsPanel component
+const FILTER_KEYS: Array<{ key: ReviewFilter; predicate: (review: ConsultantSelfReview) => boolean }> = [
+  { key: 'all', predicate: () => true },
+  { key: 'unreplied', predicate: (review) => !review.consultant_reply },
+  { key: 'low', predicate: (review) => Number(review.rating) <= 2 },
+  { key: 'high', predicate: (review) => Number(review.rating) >= 4 },
 ];
 
-function formatDate(iso?: string | null) {
-  if (!iso) return 'Tarih yok';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return 'Tarih yok';
-  return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-function customerName(review: ConsultantSelfReview) {
-  return review.customer_name || review.user?.full_name || review.name || 'Gizli Kullanıcı';
-}
-
-function buildSuggestion(review: ConsultantSelfReview) {
-  if (Number(review.rating) <= 2) {
-    return 'Geri bildiriminiz için teşekkür ederim. Deneyiminizi daha iyi anlamak ve sonraki seansta beklentinizi daha doğru karşılamak isterim.';
-  }
-  return 'Değerli yorumunuz için teşekkür ederim. Seansın size katkı sağlamasına çok sevindim.';
-}
-
 export default function ReviewsPanel() {
+  const locale = useLocaleShort();
+  const { ui } = useUiSection('ui_reviews', locale);
   const [activeFilter, setActiveFilter] = useState<ReviewFilter>('all');
-  
+
+  const FILTERS = FILTER_KEYS.map((f) => ({
+    ...f,
+    label:
+      f.key === 'all' ? ui('ui_reviews_filter_all', 'Tümü') :
+      f.key === 'unreplied' ? ui('ui_reviews_filter_unreplied', 'Cevaplanmamış') :
+      f.key === 'low' ? ui('ui_reviews_filter_low', '1-2 yıldız') :
+      ui('ui_reviews_filter_high', '4-5 yıldız'),
+  }));
+
   // D34-6: Server-side ?status= mapping
   const statusParam = activeFilter === 'unreplied' ? 'unreplied' : undefined;
   const { data: reviews = [], isLoading, isError } = useListMyConsultantReviewsQuery(statusParam ? { status: statusParam } : undefined);
@@ -73,7 +68,7 @@ export default function ReviewsPanel() {
             <Star className="h-4 w-4 text-[var(--gm-gold)] animate-pulse" />
           </div>
         </div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gm-gold-dim)]">Geri bildirimler yükleniyor</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gm-gold-dim)]">{ui('ui_reviews_loading', 'Geri bildirimler yükleniyor')}</p>
       </div>
     );
   }
@@ -81,7 +76,7 @@ export default function ReviewsPanel() {
   if (isError) {
     return (
       <div className="rounded-[2rem] border border-[var(--gm-error)]/10 bg-[var(--gm-error)]/5 p-12 text-center backdrop-blur-sm">
-        <p className="font-serif italic text-[var(--gm-error)]">Yorumlar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>
+        <p className="font-serif italic text-[var(--gm-error)]">{ui('ui_reviews_error', 'Yorumlar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.')}</p>
       </div>
     );
   }
@@ -91,7 +86,7 @@ export default function ReviewsPanel() {
       <div className="flex flex-wrap items-center gap-3 border-b border-[var(--gm-border-soft)] pb-6">
         <div className="flex items-center gap-2 mr-4 text-[var(--gm-gold-dim)] opacity-60">
           <Filter className="h-4 w-4" />
-          <span className="text-[10px] font-bold uppercase tracking-widest">Filtrele</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest">{ui('ui_reviews_filter_label', 'Filtrele')}</span>
         </div>
         {FILTERS.map((filter) => (
           <FilterChip
@@ -110,13 +105,13 @@ export default function ReviewsPanel() {
             <MessageSquare className="absolute inset-0 h-full w-full text-[var(--gm-gold)] opacity-10" />
             <Star className="absolute top-0 right-0 h-6 w-6 text-[var(--gm-gold)] opacity-20 animate-pulse" />
           </div>
-          <p className="font-serif italic text-xl text-[var(--gm-text-dim)]">Henüz bu kategoride bir yorum bulunmuyor.</p>
-          <p className="text-[11px] text-[var(--gm-muted)] mt-2 uppercase tracking-widest">Yeni yorumlar geldiğinde burada görünecektir.</p>
+          <p className="font-serif italic text-xl text-[var(--gm-text-dim)]">{ui('ui_reviews_empty', 'Henüz bu kategoride bir yorum bulunmuyor.')}</p>
+          <p className="text-[11px] text-[var(--gm-muted)] mt-2 uppercase tracking-widest">{ui('ui_reviews_empty_hint', 'Yeni yorumlar geldiğinde burada görünecektir.')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {filteredReviews.map((review) => (
-            <ReviewItem key={review.id} review={review} />
+            <ReviewItem key={review.id} review={review} ui={ui} locale={locale} />
           ))}
         </div>
       )}
@@ -159,7 +154,19 @@ function FilterChip({
   );
 }
 
-function ReviewItem({ review }: { review: ConsultantSelfReview }) {
+function customerName(review: ConsultantSelfReview) {
+  return review.customer_name || review.user?.full_name || review.name || '';
+}
+
+function formatDate(iso: string | null | undefined, locale: string, noDate: string) {
+  if (!iso) return noDate;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return noDate;
+  const loc = locale === 'tr' ? 'tr-TR' : locale === 'de' ? 'de-DE' : 'en-US';
+  return date.toLocaleDateString(loc, { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function ReviewItem({ review, ui, locale }: { review: ConsultantSelfReview; ui: (k: string, f?: string) => string; locale: string }) {
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState(review.consultant_reply || '');
   const [replyMutation, { isLoading: isSending }] = useReplyToMyConsultantReviewMutation();
@@ -173,17 +180,20 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
 
     try {
       await replyMutation({ id: review.id, reply }).unwrap();
-      toast.success('Cevabınız başarıyla kaydedildi');
+      toast.success(ui('ui_reviews_reply_saved', 'Cevabınız başarıyla kaydedildi'));
       setIsReplying(false);
     } catch (e) {
-      toast.error(extractApiError(e, 'Cevap gönderilemedi, lütfen tekrar deneyin'));
+      toast.error(extractApiError(e, ui('ui_reviews_reply_failed', 'Cevap gönderilemedi, lütfen tekrar deneyin')));
     }
   }
 
   function applySuggestion() {
-    setReplyText(buildSuggestion(review));
+    const suggestion = Number(review.rating) <= 2
+      ? ui('ui_reviews_suggestion_low', 'Geri bildiriminiz için teşekkür ederim. Deneyiminizi daha iyi anlamak ve sonraki seansta beklentinizi daha doğru karşılamak isterim.')
+      : ui('ui_reviews_suggestion_high', 'Değerli yorumunuz için teşekkür ederim. Seansın size katkı sağlamasına çok sevindim.');
+    setReplyText(suggestion);
     setIsReplying(true);
-    toast.info('Taslak cevap hazırlandı');
+    toast.info(ui('ui_reviews_draft_ready', 'Taslak cevap hazırlandı'));
   }
 
   return (
@@ -219,7 +229,7 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
               </div>
             </div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--gm-muted)]">
-              {formatDate(review.created_at)}
+              {formatDate(review.created_at, locale, ui('ui_reviews_no_date', 'Tarih yok'))}
             </p>
           </div>
         </div>
@@ -231,7 +241,7 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
             className="flex items-center gap-2 rounded-xl border border-[var(--gm-primary)]/20 bg-[var(--gm-primary)]/10 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--gm-primary)] transition-all hover:bg-[var(--gm-primary)]/20 hover:scale-105 active:scale-95"
           >
             <Sparkles className="h-3 w-3" />
-            Taslak Öneri
+            {ui('ui_reviews_draft_suggestion', 'Taslak Öneri')}
           </button>
         )}
       </div>
@@ -239,7 +249,7 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
       <div className="relative mb-10 pl-8">
         <Quote className="absolute left-0 top-0 h-6 w-6 text-[var(--gm-gold)] opacity-10" />
         <p className="font-serif text-[17px] italic leading-relaxed text-[var(--gm-text-dim)]">
-          {review.comment || 'Müşteri yorum bırakmadı, sadece puan verdi.'}
+          {review.comment || ui('ui_reviews_no_comment', 'Danışan yorum bırakmadı, sadece puan verdi.')}
         </p>
       </div>
 
@@ -250,14 +260,14 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)]">
                 <MessageSquare className="h-3 w-3" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--gm-gold)]">Danışman Yanıtı</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[var(--gm-gold)]">{ui('ui_reviews_consultant_reply_label', 'Danışman Yanıtı')}</span>
             </div>
             <button
               type="button"
               onClick={() => setIsReplying((value) => !value)}
               className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] hover:text-[var(--gm-gold)] transition-colors underline underline-offset-4"
             >
-              Düzenle
+              {ui('ui_reviews_edit_reply', 'Düzenle')}
             </button>
           </div>
           <p className="font-serif text-[15px] leading-relaxed text-[var(--gm-text)] italic opacity-90">
@@ -274,7 +284,7 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
             <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--gm-gold-dim)]/20 group-hover/btn:border-[var(--gm-gold)]/40 transition-colors">
               <MessageSquare className="h-4 w-4" />
             </div>
-            Cevap Yaz
+            {ui('ui_reviews_write_reply', 'Cevap Yaz')}
           </button>
         )
       )}
@@ -286,7 +296,7 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               maxLength={2000}
-              placeholder="Müşterinize profesyonel ve içten bir yanıt bırakın..."
+              placeholder={ui('ui_reviews_reply_placeholder', 'Danışanınıza profesyonel ve içten bir yanıt bırakın...')}
               className="min-h-[140px] w-full rounded-[2rem] border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)]/50 p-6 font-serif text-[15px] italic text-[var(--gm-text)] outline-none transition-all focus:border-[var(--gm-gold)]/40 focus:ring-4 focus:ring-[var(--gm-gold)]/[0.05] placeholder:opacity-30"
             />
             <button
@@ -307,7 +317,7 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
               }}
               className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-muted)] hover:text-[var(--gm-text)] transition-colors"
             >
-              Vazgeç
+              {ui('ui_reviews_cancel', 'Vazgeç')}
             </button>
             <button
               type="button"
@@ -320,7 +330,7 @@ function ReviewItem({ review }: { review: ConsultantSelfReview }) {
               ) : (
                 <Send className="h-3.5 w-3.5" />
               )}
-              {hasReply ? 'Cevabı Güncelle' : 'Yorumu Yayınla'}
+              {hasReply ? ui('ui_reviews_update', 'Cevabı Güncelle') : ui('ui_reviews_publish', 'Yorumu Yayınla')}
             </button>
           </div>
         </div>

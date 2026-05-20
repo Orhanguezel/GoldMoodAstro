@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS consultants (
   kyc_rejection_reason TEXT NULL,
   kyc_documents JSON NULL,
   agreement_accepted_at DATETIME(3) NULL,
+  commission_change_announcement_sent_at DATETIME(3) NULL DEFAULT NULL,
   session_price DECIMAL(10,2) NOT NULL,
   session_duration INT NOT NULL DEFAULT 30,
   supports_video TINYINT DEFAULT 0,

@@ -5,108 +5,135 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
   const isTr = locale === 'tr';
 
   return (
-    <section className="py-32 bg-[var(--gm-bg)] border-t border-[var(--gm-border-soft)]">
+    <section className="py-32 bg-(--gm-bg) border-t border-(--gm-border-soft)">
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-16 reveal">
           <span className="section-label">{isTr ? 'Üyelik' : 'Membership'}</span>
-          <h2 className="font-serif text-[clamp(2.5rem,5vw,4rem)] font-light leading-tight text-[var(--gm-text)]">
+          <h2 className="font-serif text-[clamp(2.5rem,5vw,4rem)] font-light leading-tight text-(--gm-text)">
             {isTr ? 'Şeffaf fiyat,' : 'Transparent pricing,'}<br/>
-            <em className="text-[var(--gm-gold)] italic">{isTr ? 'saklı koşul yok.' : 'no hidden terms.'}</em>
+            <em className="text-(--gm-gold) italic">{isTr ? 'saklı koşul yok.' : 'no hidden terms.'}</em>
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 reveal">
-          {/* Free Card — tema-aware surface */}
-          <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-sm p-12 relative transition-all duration-400 hover:-translate-y-1 hover:shadow-card hover:border-(--gm-gold)/40 group">
-            <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-[var(--gm-gold)] text-[var(--gm-gold-deep)] rounded-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 reveal items-stretch">
+          {/* Free Card */}
+          <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-2xl p-10 relative transition-all duration-500 hover:-translate-y-2 hover:shadow-(--gm-shadow-card) hover:border-(--gm-gold)/40 group flex flex-col">
+            <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-(--gm-gold)/30 text-(--gm-gold-dim) rounded-full">
               {isTr ? 'Ücretsiz' : 'Free'}
             </div>
-            <div className="font-display text-[14px] tracking-[0.32em] text-[var(--gm-gold-deep)] uppercase mb-6">
+            <div className="font-display text-[14px] tracking-[0.32em] text-(--gm-gold-dim) uppercase mb-6">
               {isTr ? 'Misafir' : 'Guest'}
             </div>
-            <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-[var(--gm-text)]">
-              <sup className="text-2xl font-normal text-[var(--gm-gold-deep)] mr-1 -top-7 relative">₺</sup>0<small className="text-base text-[var(--gm-muted)] font-normal tracking-wide ml-1">{isTr ? '/ ay' : '/ mo'}</small>
+            <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-(--gm-text)">
+              <sup className="text-2xl font-normal text-(--gm-gold-dim) mr-1 -top-7 relative">₺</sup>0<small className="text-base text-(--gm-muted) font-normal tracking-wide ml-1">{isTr ? '/ ay' : '/ mo'}</small>
             </div>
-            <p className="italic text-[var(--gm-text-dim)] mb-8 text-base leading-relaxed">
+            <p className="italic text-(--gm-text-dim) mb-8 text-sm leading-relaxed">
               {isTr ? 'Yıldızlarla tanışın, taahhüt aramayın.' : 'Meet the stars, no commitment.'}
             </p>
-            <ul className="space-y-4 mb-10 text-[var(--gm-text-dim)]">
-              <li className="flex items-center gap-3">
-                <span className="text-[var(--gm-gold)]">✦</span> {isTr ? 'Doğum haritası temel görünümü' : 'Basic birth chart view'}
+            <ul className="space-y-4 mb-10 text-sm text-(--gm-text-dim) flex-grow">
+              <li className="flex items-start gap-3">
+                <span className="text-(--gm-gold)/50 mt-1">✦</span> {isTr ? 'Doğum haritası temel görünümü' : 'Basic birth chart view'}
               </li>
-              <li className="flex items-center gap-3">
-                <span className="text-[var(--gm-gold)]">✦</span> {isTr ? 'Günlük kısa yorum' : 'Short daily reading'}
+              <li className="flex items-start gap-3">
+                <span className="text-(--gm-gold)/50 mt-1">✦</span> {isTr ? 'Günlük kısa yorum' : 'Short daily reading'}
               </li>
-              <li className="flex items-center gap-3">
-                <span className="text-[var(--gm-gold)]">✦</span> {isTr ? 'Burç uyumu (özet)' : 'Sign compatibility (summary)'}
+              <li className="flex items-start gap-3">
+                <span className="text-(--gm-gold)/50 mt-1">✦</span> {isTr ? 'Burç uyumu (özet)' : 'Sign compatibility (summary)'}
               </li>
             </ul>
-            <Link href={`/${locale}/register`} className="btn-outline-premium w-full justify-center">
+            <Link href={`/${locale}/register`} className="w-full py-4 text-center rounded-full border border-(--gm-border) text-(--gm-text) text-xs font-bold uppercase tracking-[0.2em] hover:bg-(--gm-surface-high) transition-all mt-auto">
               {isTr ? 'Ücretsiz Başla' : 'Start for Free'}
             </Link>
           </div>
 
-          {/* Premium Card — her temada sabit koyu accent */}
+          {/* Premium Monthly Card — Recommended */}
           <div
-            className="rounded-sm p-12 relative transition-all duration-400 hover:-translate-y-1 hover:shadow-glow group border border-brand-gold/40 bg-(--gm-bg-deep) text-text-on-dark"
+            className="rounded-2xl p-10 relative transition-all duration-500 hover:-translate-y-2 hover:shadow-(--gm-shadow-glow-gold) group border-2 border-(--gm-gold) bg-(--gm-bg-deep) text-(--gm-text) flex flex-col transform lg:scale-105 z-10 shadow-(--gm-shadow-card)"
             style={{
               backgroundImage:
-                'radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--gm-gold) 10%, transparent), transparent 60%)',
+                'radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--gm-gold) 15%, transparent), transparent 60%)',
             }}
           >
-            <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-[var(--gm-gold)] text-[var(--gm-gold)] bg-[var(--gm-gold)]/15 rounded-full">
+            <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-(--gm-gold) text-(--gm-bg-deep) font-bold bg-(--gm-gold) rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)]">
               {isTr ? 'Önerilen' : 'Recommended'}
             </div>
-            <div className="font-display text-[14px] tracking-[0.32em] text-[var(--gm-gold)] uppercase mb-6">
-              {isTr ? 'Premium' : 'Premium'}
+            <div className="font-display text-[14px] tracking-[0.32em] text-(--gm-gold) uppercase mb-6 font-bold">
+              {isTr ? 'Premium Aylık' : 'Premium Monthly'}
             </div>
-            <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-text-on-dark">
-              <sup className="text-2xl font-normal text-[var(--gm-gold)] mr-1 -top-7 relative">₺</sup>149<small className="text-base font-normal tracking-wide ml-1 text-text-on-dark/65">{isTr ? '/ ay' : '/ mo'}</small>
+            <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-(--gm-gold) drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]">
+              <sup className="text-2xl font-normal text-(--gm-gold) mr-1 -top-7 relative">₺</sup>149<small className="text-base font-normal tracking-wide ml-1 text-(--gm-gold)/60">{isTr ? '/ ay' : '/ mo'}</small>
             </div>
-            <p className="italic mb-8 text-base leading-relaxed text-text-on-dark/85">
-              {isTr ? 'Sınırsız derinlik, gizli sürpriz yok.' : 'Limitless depth, no hidden surprises.'}
+            <p className="italic mb-8 text-sm leading-relaxed text-(--gm-text-dim)">
+              {isTr ? 'Sınırsız derinlik, esnek ödeme.' : 'Limitless depth, flexible payment.'}
             </p>
-            <ul className="space-y-4 mb-10 text-text-on-dark">
-              <li className="flex items-center gap-3">
-                <span className="text-[var(--gm-gold)]">✦</span> {isTr ? 'Detaylı doğum haritası analizi' : 'Detailed birth chart analysis'}
+            <ul className="space-y-4 mb-10 text-sm text-(--gm-text) flex-grow">
+              <li className="flex items-start gap-3">
+                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> {isTr ? 'Detaylı doğum haritası analizi' : 'Detailed birth chart analysis'}
               </li>
-              <li className="flex items-center gap-3">
-                <span className="text-[var(--gm-gold)]">✦</span> {isTr ? 'Günlük · haftalık · aylık öngörü' : 'Daily · weekly · monthly forecast'}
+              <li className="flex items-start gap-3">
+                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> {isTr ? 'Günlük · haftalık · aylık öngörü' : 'Daily · weekly · monthly forecast'}
               </li>
-              <li className="flex items-center gap-3">
-                <span className="text-[var(--gm-gold)]">✦</span> {isTr ? 'Sinastri & kompozit haritalar' : 'Synastry & composite charts'}
+              <li className="flex items-start gap-3">
+                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> {isTr ? 'Sinastri & kompozit haritalar' : 'Synastry & composite charts'}
               </li>
-              <li className="flex items-center gap-3">
-                <span className="text-[var(--gm-gold)]">✦</span> {isTr ? 'Tarot okuması (Kelt Haçı dahil)' : 'Tarot reading (inc. Celtic Cross)'}
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="text-[var(--gm-gold)]">✦</span> {isTr ? 'Astrolog görüşmesi için indirim' : 'Discount for astrologer sessions'}
-              </li>
-              <li className="flex items-center gap-3">
-                <span className="text-[var(--gm-gold)]">✦</span> {isTr ? 'Tek tıkla iptal · 7 gün önceden hatırlatma' : '1-click cancel · 7-day reminder'}
+              <li className="flex items-start gap-3">
+                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> {isTr ? 'Tarot okuması (Kelt Haçı dahil)' : 'Tarot reading (inc. Celtic Cross)'}
               </li>
             </ul>
-            <Link href={`/${locale}/pricing`} className="btn-premium w-full justify-center">
+            <Link href={`/${locale}/pricing`} className="w-full py-4 text-center rounded-full bg-(--gm-gold) text-(--gm-bg-deep) text-xs font-bold uppercase tracking-[0.25em] hover:scale-[1.02] transition-transform mt-auto shadow-(--gm-shadow-gold)">
+              {isTr ? 'Hemen Seç' : 'Select Now'}
+            </Link>
+          </div>
+
+          {/* Premium Yearly Card */}
+          <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-2xl p-10 relative transition-all duration-500 hover:-translate-y-2 hover:shadow-(--gm-shadow-card) hover:border-(--gm-gold)/40 group flex flex-col">
+            <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-(--gm-gold)/30 text-(--gm-gold) bg-(--gm-gold)/10 rounded-full">
+              {isTr ? 'Avantajlı' : 'Best Value'}
+            </div>
+            <div className="font-display text-[14px] tracking-[0.32em] text-(--gm-gold-dim) uppercase mb-6">
+              {isTr ? 'Premium Yıllık' : 'Premium Yearly'}
+            </div>
+            <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-(--gm-text) flex items-baseline">
+              <sup className="text-2xl font-normal text-(--gm-gold-dim) mr-1 -top-7 relative">₺</sup>1499<small className="text-base text-(--gm-muted) font-normal tracking-wide ml-1">{isTr ? '/ yıl' : '/ yr'}</small>
+            </div>
+            <p className="italic text-(--gm-text-dim) mb-8 text-sm leading-relaxed">
+              {isTr ? '2 ay bizden hediye. Kesintisiz deneyim.' : '2 months free. Uninterrupted experience.'}
+            </p>
+            <ul className="space-y-4 mb-10 text-sm text-(--gm-text-dim) flex-grow">
+              <li className="flex items-start gap-3">
+                <span className="text-(--gm-gold)/80 mt-1">✦</span> {isTr ? 'Aylık plandaki tüm özellikler' : 'All features in Monthly'}
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-(--gm-gold)/80 mt-1">✦</span> {isTr ? 'Astrolog görüşmesi için %20 indirim' : '20% Discount for astrologer sessions'}
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-(--gm-gold)/80 mt-1">✦</span> {isTr ? 'VIP Öncelikli danışan desteği' : 'VIP Priority support'}
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-(--gm-gold)/80 mt-1">✦</span> {isTr ? 'Kapsamlı Yıllık genel değerlendirme' : 'Comprehensive Year-ahead overview'}
+              </li>
+            </ul>
+            <Link href={`/${locale}/pricing`} className="w-full py-4 text-center rounded-full border border-(--gm-gold) text-(--gm-gold) text-xs font-bold uppercase tracking-[0.2em] hover:bg-(--gm-gold) hover:text-(--gm-bg-deep) transition-all mt-auto shadow-[0_0_15px_rgba(212,175,55,0.1)] hover:shadow-(--gm-shadow-gold)">
               {isTr ? 'Ön Kayıt Ol' : 'Pre-Register'}
             </Link>
           </div>
         </div>
 
-        <div className="mt-16 flex flex-col md:flex-row items-center gap-6 p-8 border border-[var(--gm-gold)]/20 bg-[var(--gm-gold)]/5 reveal">
-          <div className="flex-shrink-0 text-[var(--gm-gold)]">
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <path d="M18 3 L30 9 V18 C30 24, 25 30, 18 33 C11 30, 6 24, 6 18 V9 Z" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M13 18 L17 22 L24 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <div className="mt-20 flex flex-col md:flex-row items-center gap-6 p-8 border border-(--gm-gold)/20 bg-(--gm-gold)/5 rounded-2xl reveal">
+          <div className="flex-shrink-0 text-(--gm-gold) bg-(--gm-gold)/10 p-4 rounded-full">
+            <svg width="24" height="24" viewBox="0 0 36 36" fill="none">
+              <path d="M18 3 L30 9 V18 C30 24, 25 30, 18 33 C11 30, 6 24, 6 18 V9 Z" stroke="currentColor" strokeWidth="2"/>
+              <path d="M13 18 L17 22 L24 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
           <div>
-            <div className="font-display text-[11px] tracking-[0.2em] text-[var(--gm-gold-deep)] uppercase mb-2">
+            <div className="font-display text-[11px] tracking-[0.2em] text-(--gm-gold) uppercase mb-2 font-bold">
               {isTr ? 'Şeffaflık Garantisi' : 'Transparency Guarantee'}
             </div>
-            <p className="text-[var(--gm-text-dim)] font-light leading-relaxed">
+            <p className="text-(--gm-text-dim) text-sm font-light leading-relaxed">
               {isTr 
-                ? "Ücretsiz deneme süresi kart bilgisi istemeden başlar. Premium'a geçişi siz manuel onaylarsınız — kimse sizden habersiz para çekmez." 
-                : "Free trial starts without asking for a credit card. You manually approve the transition to Premium — no one charges you without your knowledge."}
+                ? "Ücretsiz deneme süresi kart bilgisi istemeden başlar. Premium'a geçişi siz manuel onaylarsınız — kimse sizden habersiz para çekmez. İptal etmek sadece bir tık uzağınızdadır." 
+                : "Free trial starts without asking for a credit card. You manually approve the transition to Premium — no one charges you without your knowledge. Canceling is just a click away."}
             </p>
           </div>
         </div>

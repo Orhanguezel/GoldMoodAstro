@@ -1,7 +1,7 @@
 'use client';
 
 // T29-6 — Sohbet uyarı banner'ı (cross-cutting)
-// Müşteri↔danışman mesajlaşma alanlarında kullanılır:
+// Danışan↔danışman mesajlaşma alanlarında kullanılır:
 //  - ConsultantDetail "Mesaj Gönder" modalı
 //  - Consultant Dashboard "Mesajlar" sekmesi
 //  - Booking detail sayfası (T29-5)

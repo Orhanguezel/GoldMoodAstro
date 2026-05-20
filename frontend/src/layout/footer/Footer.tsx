@@ -12,6 +12,14 @@ import {
 } from '@/integrations/rtk/hooks';
 
 import type { FooterSectionDto, PublicMenuItemDto } from '@/integrations/shared';
+
+export type FooterProps = {
+  locale?: string;
+  /** SSR'da fetch edilen footer sections — RTK Query loading flicker'ını önler. */
+  initialFooterSections?: FooterSectionDto[];
+  /** SSR'da fetch edilen footer menu items (location='footer'). */
+  initialFooterMenuItems?: PublicMenuItemDto[];
+};
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -29,55 +37,10 @@ const cleanHashLink = (href: string) => {
   return href;
 };
 
-// Backend boş dönerse (seed yüklenmemişse) gösterilecek varsayılan footer.
-// API'den gelen veri her zaman önceliklidir.
-const FALLBACK_SECTIONS: Array<{
-  id: string;
-  title: Record<string, string>;
-  items: Array<{ id: string; url: string; label: Record<string, string> }>;
-}> = [
-  {
-    id: 'fb-astrology',
-    title: { tr: 'Astroloji', en: 'Astrology', de: 'Astrologie' },
-    items: [
-      { id: 'fb-astro-birth',    url: '/birth-chart',  label: { tr: 'Doğum Haritası', en: 'Birth Chart', de: 'Geburtshoroskop' } },
-      { id: 'fb-astro-syn',      url: '/sinastri',     label: { tr: 'Sinastri',       en: 'Synastry',    de: 'Synastrie' } },
-      { id: 'fb-astro-yld',      url: '/yildizname',   label: { tr: 'Yıldızname',     en: 'Yildizname',  de: 'Yildizname' } },
-      { id: 'fb-astro-burclar',  url: '/burclar',      label: { tr: 'Burçlar',        en: 'Zodiac',      de: 'Sternzeichen' } },
-    ],
-  },
-  {
-    id: 'fb-fal',
-    title: { tr: 'Fal & Tarot', en: 'Divination', de: 'Wahrsagung' },
-    items: [
-      { id: 'fb-fal-tarot',  url: '/tarot',        label: { tr: 'Tarot',       en: 'Tarot',               de: 'Tarot' } },
-      { id: 'fb-fal-coffee', url: '/kahve-fali',   label: { tr: 'Kahve Falı',  en: 'Coffee Reading',      de: 'Kaffeesatzlesen' } },
-      { id: 'fb-fal-dream',  url: '/ruya-tabiri',  label: { tr: 'Rüya Tabiri', en: 'Dream Interpretation', de: 'Traumdeutung' } },
-      { id: 'fb-fal-num',    url: '/numeroloji',   label: { tr: 'Numeroloji',  en: 'Numerology',          de: 'Numerologie' } },
-    ],
-  },
-  {
-    id: 'fb-company',
-    title: { tr: 'Şirket', en: 'Company', de: 'Unternehmen' },
-    items: [
-      { id: 'fb-comp-about', url: '/about',       label: { tr: 'Hakkımızda',  en: 'About',       de: 'Über uns' } },
-      { id: 'fb-comp-editorial', url: '/editorial-policy', label: { tr: 'Editoryal Politika', en: 'Editorial Policy', de: 'Redaktionelle Richtlinie' } },
-      { id: 'fb-comp-cons',  url: '/consultants', label: { tr: 'Danışmanlar', en: 'Consultants', de: 'Berater' } },
-      { id: 'fb-comp-blog',  url: '/blog',        label: { tr: 'Blog',        en: 'Blog',        de: 'Blog' } },
-      { id: 'fb-comp-cont',  url: '/contact',     label: { tr: 'İletişim',    en: 'Contact',     de: 'Kontakt' } },
-    ],
-  },
-  {
-    id: 'fb-legal',
-    title: { tr: 'Yasal', en: 'Legal', de: 'Rechtliches' },
-    items: [
-      { id: 'fb-leg-kvkk',   url: '/kvkk',                label: { tr: 'KVKK',                en: 'GDPR',          de: 'DSGVO' } },
-      { id: 'fb-leg-priv',   url: '/gizlilik',            label: { tr: 'Gizlilik Politikası', en: 'Privacy Policy', de: 'Datenschutz' } },
-      { id: 'fb-leg-terms',  url: '/kullanim-sartlari',   label: { tr: 'Kullanım Şartları',   en: 'Terms of Use',  de: 'Nutzungsbedingungen' } },
-      { id: 'fb-leg-cookie', url: '/cerez-politikasi',    label: { tr: 'Çerez Politikası',    en: 'Cookie Policy', de: 'Cookie-Richtlinie' } },
-    ],
-  },
-];
+// Footer sadece DB'den gelir (footer_sections + menu_items location='footer').
+// Hardcoded fallback YOK — RTK Query loading sırasında footer link bölümü boş kalır,
+// veri gelince doğrulanmış DB içerik tek seferde render edilir. "Düzgün menu → hardcoded"
+// flicker'ı bu sayede tetiklenmez.
 
 type FooterRenderSection = {
   id: string;
@@ -85,12 +48,15 @@ type FooterRenderSection = {
   items: Array<{ id: string; url: string; title: string }>;
 };
 
-const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
+const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSections, initialFooterMenuItems }) => {
   const fallbackLocale = useLocaleShort();
   const locale = localeProp || fallbackLocale;
   const { ui } = useUiSection('ui_footer', locale);
   const { isAuthenticated } = useAuthStore();
 
+  // SSR initial data varsa RTK Query'yi atla → flicker yok. Aksi halde RTK Query çağrılır.
+  const hasInitialSections = Array.isArray(initialFooterSections) && initialFooterSections.length > 0;
+  const hasInitialMenuItems = Array.isArray(initialFooterMenuItems) && initialFooterMenuItems.length > 0;
 
   const { data: companyBrandSetting } = useGetSiteSettingByKeyQuery({ key: 'company_brand', locale });
   const { data: socialsSetting } = useGetSiteSettingByKeyQuery({ key: 'socials', locale });
@@ -102,13 +68,23 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
     return { socials: mergedSocials };
   }, [companyBrandSetting?.value, socialsSetting?.value]);
 
-  const { data: footerSections } = useListFooterSectionsQuery({ is_active: true, order: 'display_order.asc', locale });
+  const { data: footerSections } = useListFooterSectionsQuery(
+    { is_active: true, order: 'display_order.asc', locale },
+    { skip: hasInitialSections },
+  );
   const sections: FooterSectionDto[] = useMemo(() => {
-    return (footerSections ?? []).slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)) as FooterSectionDto[];
-  }, [footerSections]);
+    const source = hasInitialSections ? initialFooterSections! : (footerSections ?? []);
+    return source.slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)) as FooterSectionDto[];
+  }, [footerSections, hasInitialSections, initialFooterSections]);
 
-  const { data: footerMenuData } = useListMenuItemsQuery({ location: 'footer', is_active: true, locale });
-  const footerMenuItems: PublicMenuItemDto[] = useMemo(() => footerMenuData?.items ?? [], [footerMenuData]);
+  const { data: footerMenuData } = useListMenuItemsQuery(
+    { location: 'footer', is_active: true, locale },
+    { skip: hasInitialMenuItems },
+  );
+  const footerMenuItems: PublicMenuItemDto[] = useMemo(() => {
+    if (hasInitialMenuItems) return initialFooterMenuItems!;
+    return footerMenuData?.items ?? [];
+  }, [footerMenuData, hasInitialMenuItems, initialFooterMenuItems]);
 
   const itemsBySectionId = useMemo(() => {
     const m = new Map<string, PublicMenuItemDto[]>();
@@ -122,9 +98,9 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
     return m;
   }, [footerMenuItems]);
 
-  // Backend boş döndüyse fallback'e düş
+  // Footer sadece DB'den render edilir. Veri gelene kadar boş; hardcoded fallback YOK.
   const renderSections: FooterRenderSection[] = useMemo(() => {
-    const fromApi = sections
+    return sections
       .map<FooterRenderSection>((sec) => ({
         id: sec.id,
         title: sec.title || '',
@@ -135,19 +111,7 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
         })),
       }))
       .filter((sec) => sec.title && sec.items.length > 0);
-
-    if (fromApi.length > 0) return fromApi;
-
-    return FALLBACK_SECTIONS.map<FooterRenderSection>((sec) => ({
-      id: sec.id,
-      title: sec.title[locale] || sec.title.tr,
-      items: sec.items.map((it) => ({
-        id: it.id,
-        url: it.url,
-        title: it.label[locale] || it.label.tr,
-      })),
-    }));
-  }, [sections, itemsBySectionId, locale]);
+  }, [sections, itemsBySectionId]);
 
   const homeHref = localizePath(locale, '/');
 

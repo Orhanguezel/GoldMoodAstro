@@ -161,7 +161,7 @@ export async function deleteAllReadings(
 }
 
 /**
- * Consultant tarafı: müşterinin son N okumasını snippet ile göster.
+ * Consultant tarafı: danışanın son N okumasını snippet ile göster.
  * Yetkilendirme controller'da (consultant role + booking owner).
  */
 export async function getRecentReadingsForConsultant(

@@ -548,7 +548,7 @@ function ServiceRow({
             {isBoostActive && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-(--gm-warning)/20 text-(--gm-warning) text-[9px] font-bold uppercase tracking-widest">
                 <Rocket className="w-2.5 h-2.5" />
-                Öne Çıkarıldı — {boostDaysLeft}g kaldı
+                {ui('ui_dashboard_service_boost_active', 'Öne Çıkarıldı').replace('{days}', String(boostDaysLeft))}{' '}{boostDaysLeft}g kaldı
               </span>
             )}
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--gm-gold)]/10 text-[var(--gm-gold)] text-[9px] font-bold uppercase tracking-widest">
@@ -595,10 +595,10 @@ function ServiceRow({
           <button
             onClick={() => setShowBoostModal(true)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-(--gm-gold)/40 text-(--gm-gold) text-[9px] font-bold uppercase tracking-widest hover:bg-(--gm-gold)/10 transition-colors"
-            title="Hizmetini öne çıkart"
+            title={ui('ui_dashboard_service_boost_title', 'Hizmetini öne çıkart')}
           >
             <Rocket className="w-3.5 h-3.5" />
-            Öne Çıkart
+            {ui('ui_dashboard_service_boost_btn', 'Öne Çıkart')}
           </button>
       </div>
 
@@ -722,6 +722,7 @@ function ServiceBoostModal({
   serviceName: string;
   onClose: () => void;
 }) {
+  const { ui } = useUiSection('ui_boost');
   const [selected, setSelected] = useState<string>('wk1');
   const [checkout, { isLoading }] = useCreateServiceBoostCheckoutMutation();
 
@@ -734,10 +735,10 @@ function ServiceBoostModal({
       if (result.checkout_url) {
         window.location.href = result.checkout_url;
       } else {
-        toast.error('Ödeme sayfası açılamadı. Lütfen tekrar deneyin.');
+        toast.error(ui('ui_boost_payment_error', 'Ödeme sayfası açılamadı. Lütfen tekrar deneyin.'));
       }
     } catch (error) {
-      toast.error(extractApiError(error, 'Boost satın alınamadı. Lütfen tekrar deneyin.'));
+      toast.error(extractApiError(error, ui('ui_boost_buy_failed', 'Boost satın alınamadı. Lütfen tekrar deneyin.')));
     }
   };
 
@@ -757,10 +758,10 @@ function ServiceBoostModal({
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Rocket className="w-5 h-5 text-(--gm-gold)" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-(--gm-gold)">Hizmetini Öne Çıkart</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-(--gm-gold)">{ui('ui_boost_title', 'Hizmetini Öne Çıkart')}</span>
               </div>
               <p className="text-sm text-(--gm-text) opacity-60 font-serif italic max-w-xs">
-                "{serviceName}" hizmetini listede üst sıralara taşı, daha fazla danışana ulaş.
+                &ldquo;{serviceName}&rdquo; {ui('ui_boost_desc', 'hizmetini listede üst sıralara taşı, daha fazla danışana ulaş.')}
               </p>
             </div>
             <button
@@ -795,19 +796,19 @@ function ServiceBoostModal({
                   </span>
                   <div className="text-left">
                     <div className="font-serif text-base text-(--gm-text)">{pkg.label}</div>
-                    <div className="text-[11px] text-(--gm-text) opacity-40">{pkg.days} gün boyunca üstte</div>
+                    <div className="text-[11px] text-(--gm-text) opacity-40">{ui('ui_boost_days_label', '{days} gün boyunca üstte').replace('{days}', String(pkg.days))}</div>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-(--gm-gold) text-lg">₺{pkg.price.toLocaleString('tr-TR')}</div>
-                  <div className="text-[10px] text-(--gm-text) opacity-40">tek seferlik</div>
+                  <div className="text-[10px] text-(--gm-text) opacity-40">{ui('ui_boost_one_time', 'tek seferlik')}</div>
                 </div>
               </button>
             );
           })}
 
           <p className="text-[10px] text-(--gm-text) opacity-40 italic text-center pt-2">
-            Satın alma onaylandıktan sonra hizmetiniz anında öne çıkarılır.
+            {ui('ui_boost_note', 'Satın alma onaylandıktan sonra hizmetiniz anında öne çıkarılır.')}
           </p>
         </div>
 
@@ -818,7 +819,7 @@ function ServiceBoostModal({
             disabled={isLoading}
             className="flex-1 h-12 rounded-full border border-(--gm-border-soft) text-[10px] font-bold uppercase tracking-widest text-(--gm-text) opacity-60 hover:opacity-100"
           >
-            Vazgeç
+            {ui('ui_boost_cancel', 'Vazgeç')}
           </button>
           <button
             onClick={handleBuy}
@@ -830,7 +831,7 @@ function ServiceBoostModal({
             ) : (
               <Zap className="w-4 h-4" />
             )}
-            ₺{chosen.price.toLocaleString('tr-TR')} — Satın Al
+            ₺{chosen.price.toLocaleString('tr-TR')} — {ui('ui_boost_buy', 'Satın Al')}
           </button>
         </div>
       </div>
