@@ -2,13 +2,62 @@
 // Public handler'lar — DB sorgusu yok, repo fonksiyonları kullanılır.
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import { and, eq } from 'drizzle-orm';
 import { handleRouteError, normalizeLooseLocale } from '../_shared';
 
 import { buildLocaleFallbackChain, getAppLocalesMeta, getEffectiveDefaultLocale } from './service';
 import { rowToDto, repoGetAllByConditions, repoGetRowsByKey, repoGetFirstRowByFallback } from './repository';
+import { db } from '../../db/client';
+import { siteSettings } from './schema';
 
 type LocaleRequest = FastifyRequest & { locale?: string | null };
 type SeoPageDto = { pageKey: string } & Record<string, unknown>;
+const DEFAULT_COMMISSION_PERCENT = 15;
+
+function normalizeCommissionPercent(raw: unknown): number {
+  if (raw == null) return DEFAULT_COMMISSION_PERCENT;
+
+  if (typeof raw === 'number' && Number.isFinite(raw)) return Math.min(Math.max(raw, 0), 100);
+
+  if (typeof raw === 'object' && !Array.isArray(raw)) {
+    const candidate = Number((raw as Record<string, unknown>).percent);
+    return Number.isFinite(candidate) ? Math.min(Math.max(candidate, 0), 100) : DEFAULT_COMMISSION_PERCENT;
+  }
+
+  const text = String(raw).trim();
+  if (!text) return DEFAULT_COMMISSION_PERCENT;
+
+  try {
+    return normalizeCommissionPercent(JSON.parse(text));
+  } catch {
+    const candidate = Number(text);
+    return Number.isFinite(candidate) ? Math.min(Math.max(candidate, 0), 100) : DEFAULT_COMMISSION_PERCENT;
+  }
+}
+
+// GET /settings/commission
+export async function getCommissionPublic(req: FastifyRequest, reply: FastifyReply) {
+  try {
+    const [row] = await db
+      .select({ value: siteSettings.value })
+      .from(siteSettings)
+      .where(and(eq(siteSettings.key, 'platform_commission_rate'), eq(siteSettings.locale, '*')))
+      .limit(1);
+
+    if (!row) {
+      const [fallback] = await db
+        .select({ value: siteSettings.value })
+        .from(siteSettings)
+        .where(eq(siteSettings.key, 'platform_commission_rate'))
+        .limit(1);
+      return reply.send({ percent: normalizeCommissionPercent(fallback?.value) });
+    }
+
+    return reply.send({ percent: normalizeCommissionPercent(row.value) });
+  } catch (e) {
+    return handleRouteError(reply, req, e, 'get_commission_public');
+  }
+}
 
 // GET /site_settings?locale=de&prefix=foo
 export async function listSiteSettings(req: FastifyRequest, reply: FastifyReply) {

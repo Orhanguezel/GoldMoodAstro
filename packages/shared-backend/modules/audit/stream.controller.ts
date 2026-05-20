@@ -4,7 +4,9 @@
 // =============================================================
 
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { sql } from 'drizzle-orm';
 import { bus, type AppEvent } from '../../core/events';
+import { db } from '../../db/client';
 import { repoPersistAuditEvent } from './helpers';
 
 type SseClient = { id: string; reply: FastifyReply };
@@ -27,6 +29,10 @@ function broadcast(event: string, data: unknown) {
       // ignore; disconnect cleanup handles removal
     }
   }
+}
+
+function rowsFromExecute<T = any>(result: unknown): T[] {
+  return (Array.isArray((result as any)?.[0]) ? (result as any)[0] : (result as any)) as T[];
 }
 
 function ensureBusSubscribed() {
@@ -77,6 +83,21 @@ export async function handleAuditStreamSse(req: FastifyRequest, reply: FastifyRe
     ok: true,
     clients: clients.size,
   });
+
+  try {
+    const recent = rowsFromExecute(await db.execute(sql`
+      SELECT id, ts, level, topic, message, actor_user_id, ip, entity_type, entity_id, meta_json
+      FROM audit_events
+      ORDER BY ts DESC, id DESC
+      LIMIT 100
+    `));
+    sseWrite(reply, 'snapshot', { ts: new Date().toISOString(), items: recent.reverse() });
+  } catch (err) {
+    sseWrite(reply, 'snapshot_error', {
+      ts: new Date().toISOString(),
+      message: String((err as ErrorWithMessage)?.message ?? err),
+    });
+  }
 
   // keep-alive ping
   const t = setInterval(() => {

@@ -63,3 +63,4 @@ export * from '@/integrations/shared/chat';
 export * from '@/integrations/shared/wallet';
 export * from '@/integrations/shared/orders';
 export * from '@/integrations/shared/service_templates.types';
+export * from '@/integrations/shared/withdrawals';

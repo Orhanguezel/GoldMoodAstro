@@ -31,7 +31,7 @@ export async function repoGetAuditMetricsDaily(
 ): Promise<{ days: AuditMetricsDailyRow[] }> {
   const days = clampDays(input.days, 14);
 
-  const fromExpr = sql<Date>`DATE_SUB(CURDATE(), INTERVAL ${days - 1} DAY)`;
+  const fromExpr = sql<Date>`DATE_SUB(CURDATE(), INTERVAL ${sql.raw(String(days - 1))} DAY)`;
 
   const conds: SQL[] = [gte(auditRequestLogs.created_at, fromExpr)];
 

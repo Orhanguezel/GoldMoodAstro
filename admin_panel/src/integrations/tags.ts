@@ -196,6 +196,9 @@ export const tags = [
   'HomeSections',
   'ConsultantApplication',
   'ConsultantApplications',
+  'KycPending',
+  'Withdrawal',
+  'Withdrawals',
 ] as const;
 
 export type tag = typeof tags[number];

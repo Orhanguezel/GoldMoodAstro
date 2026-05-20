@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { appConfig } from '@goldmood/shared-config/appConfig';
 
+const slugList = z.array(z.string().trim().toLowerCase().min(1).max(64).regex(/^[a-z0-9_-]+$/, 'slug_format'));
+const languageSlugList = z.array(z.string().trim().toLowerCase().min(2).max(8).regex(/^[a-z]+$/, 'slug_format'));
+
 const csvOrStringArray = z
   .union([z.string(), z.array(z.string())])
   .optional()
@@ -45,8 +48,12 @@ export const rejectConsultantBodySchema = z.object({
 
 export const registerConsultantBodySchema = z.object({
   bio: z.string().trim().max(5000).optional(),
-  expertise: csvOrStringArray.default(appConfig.consultants.defaultExpertise),
-  languages: csvOrStringArray.default(appConfig.consultants.defaultLanguages),
+  expertise: csvOrStringArray
+    .default(appConfig.consultants.defaultExpertise)
+    .pipe(slugList.min(1).max(8)),
+  languages: csvOrStringArray
+    .default(appConfig.consultants.defaultLanguages)
+    .pipe(languageSlugList.min(1).max(10)),
   session_price: z.coerce.number().positive(),
   session_duration: z.coerce
     .number()
@@ -55,6 +62,7 @@ export const registerConsultantBodySchema = z.object({
     .max(appConfig.consultants.maxSessionDurationMinutes)
     .default(appConfig.consultants.defaultSessionDurationMinutes),
   currency: z.string().trim().length(3).default(appConfig.consultants.defaultCurrency),
+  agreement_accepted: z.literal(true).optional(),
 });
 
 export type ListConsultantsQuery = z.infer<typeof listConsultantsQuerySchema>;

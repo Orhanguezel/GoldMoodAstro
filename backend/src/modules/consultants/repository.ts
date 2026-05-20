@@ -255,6 +255,7 @@ export async function createConsultantForUser(userId: string, input: RegisterCon
       session_duration: input.session_duration,
       supports_video: 0,
       currency: input.currency.toUpperCase(),
+      agreement_accepted_at: input.agreement_accepted === true ? now : null,
       approval_status: 'pending',
       is_available: 1,
       created_at: now,

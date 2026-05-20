@@ -269,7 +269,7 @@ export async function repoGetAuditGeoStats(
   q: AuditGeoStatsQuery,
 ): Promise<AuditGeoStatsRow[]> {
   const days = Math.max(1, Math.min(90, Number(q.days ?? 30)));
-  const startExpr = sql`DATE_SUB(UTC_DATE(), INTERVAL ${days - 1} DAY)`;
+  const startExpr = sql`DATE_SUB(UTC_DATE(), INTERVAL ${sql.raw(String(days - 1))} DAY)`;
 
   const useAuth = q.source === 'auth';
   const table = useAuth ? auditAuthEvents : auditRequestLogs;
@@ -349,7 +349,7 @@ export async function repoGetAuditMetricsDaily(
   const conds: (SQL | undefined)[] = [];
 
   const days = Math.max(1, Math.min(90, Number(q.days ?? 14)));
-  const startExpr = sql`DATE_SUB(UTC_DATE(), INTERVAL ${days - 1} DAY)`;
+  const startExpr = sql`DATE_SUB(UTC_DATE(), INTERVAL ${sql.raw(String(days - 1))} DAY)`;
 
   conds.push(sql`DATE(${auditRequestLogs.created_at}) >= ${startExpr}`);
 
@@ -500,19 +500,19 @@ export async function repoPersistAuditEvent(evt: {
  * ------------------------------------------------------------- */
 export async function repoDeleteOldRequestLogs(retentionDays: number) {
   await db.execute(
-    sql`DELETE FROM audit_request_logs WHERE created_at < DATE_SUB(NOW(), INTERVAL ${retentionDays} DAY)`,
+    sql`DELETE FROM audit_request_logs WHERE created_at < DATE_SUB(NOW(), INTERVAL ${sql.raw(String(retentionDays))} DAY)`,
   );
 }
 
 export async function repoDeleteOldAuthEvents(retentionDays: number) {
   await db.execute(
-    sql`DELETE FROM audit_auth_events WHERE created_at < DATE_SUB(NOW(), INTERVAL ${retentionDays} DAY)`,
+    sql`DELETE FROM audit_auth_events WHERE created_at < DATE_SUB(NOW(), INTERVAL ${sql.raw(String(retentionDays))} DAY)`,
   );
 }
 
 export async function repoDeleteOldAuditEvents(retentionDays: number) {
   await db.execute(
-    sql`DELETE FROM audit_events WHERE ts < DATE_SUB(NOW(), INTERVAL ${retentionDays} DAY)`,
+    sql`DELETE FROM audit_events WHERE ts < DATE_SUB(NOW(), INTERVAL ${sql.raw(String(retentionDays))} DAY)`,
   );
 }
 

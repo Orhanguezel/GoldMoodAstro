@@ -28,6 +28,8 @@ import {
   CreditCard,
   CheckCheck,
   AlertCircle,
+  ShieldCheck,
+  Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -47,8 +49,10 @@ import {
   useCancelMyConsultantBookingMutation,
   useUpdateMyConsultantBookingNotesMutation,
   useGetMyConsultantProfileCompletionQuery,
+  useSubmitMyConsultantKycMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
+import { useListLanguagesPublicQuery } from '@/integrations/rtk/public/languages.public.endpoints';
 import ServicesPanel from './ServicesPanel';
 import MessagesPanel from './MessagesPanel';
 import WalletPanel from './WalletPanel';
@@ -62,6 +66,7 @@ import RichContentEditor from '@/components/common/RichContentEditor';
 import MultiSelectChip from '@/components/common/MultiSelectChip';
 import ConsultantCardPreview from './ConsultantCardPreview';
 import PageContainer from '@/components/common/PageContainer';
+import { useUploadToBucketMutation } from '@/integrations/rtk/public/storage_public.endpoints';
 
 type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'blog' | 'wallet' | 'reviews' | 'clients' | 'analytics';
 
@@ -586,7 +591,8 @@ const PLATFORM_OPTIONS: Array<{ slug: string; label: string }> = [
 
 function ProfilePanel({ locale, profile }: { locale: string; profile: ConsultantSelfProfile }) {
   const { ui } = useUiSection('ui_dashboard', locale as any);
-  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const { data: serviceCategories = [], isLoading: isLoadingCategories } = useListServiceCategoriesPublicQuery();
+  const { data: dbLanguages = [], isLoading: isLoadingLanguages } = useListLanguagesPublicQuery();
   const [updateProfile, { isLoading }] = useUpdateMyConsultantProfileMutation();
   const [bio, setBio] = useState<string>(profile.bio || '');
   const [expertise, setExpertise] = useState<string[]>(profile.expertise || []);
@@ -598,17 +604,28 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
   const [bankIban, setBankIban] = useState<string>(profile.bank_iban || '');
   const [bankHolder, setBankHolder] = useState<string>(profile.bank_account_holder || '');
   const [bankName, setBankName] = useState<string>(profile.bank_name || '');
+  
+  // C3: KYC bilgileri
+  const [accountType, setAccountType] = useState<'individual' | 'company'>(profile.account_type || 'individual');
+  const [identityNumber, setIdentityNumber] = useState(profile.identity_number || '');
+  const [taxNumber, setTaxNumber] = useState(profile.tax_number || '');
+  const [taxOffice, setTaxOffice] = useState(profile.tax_office || '');
+  const [companyName, setCompanyName] = useState(profile.company_name || '');
+  const [billingAddress, setBillingAddress] = useState(profile.billing_address || '');
+  const [kycDocuments, setKycDocuments] = useState<Array<{type: string, url: string}>>(profile.kyc_documents || []);
+  const [submitKyc, { isLoading: isSubmittingKyc }] = useSubmitMyConsultantKycMutation();
+
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const expertiseOptions = serviceCategories.length
-    ? serviceCategories.map((category) => ({ value: category.slug, label: category.name }))
-    : [
-        { value: 'astrology', label: ui('ui_dashboard_expertise_astrology', 'Astrology') },
-        { value: 'tarot', label: ui('ui_dashboard_expertise_tarot', 'Tarot') },
-        { value: 'numerology', label: ui('ui_dashboard_expertise_numerology', 'Numerology') },
-        { value: 'mood', label: ui('ui_dashboard_expertise_mood', 'Mood Coaching') },
-        { value: 'career', label: ui('ui_dashboard_expertise_career', 'Career') },
-        { value: 'relationship', label: ui('ui_dashboard_expertise_relationship', 'Relationship') },
-      ];
+  const expertiseOptions = serviceCategories.map((category) => ({ value: category.slug, label: category.name }));
+
+  const getLanguageLabel = (lang: any, localeStr: string) => {
+    if (localeStr === 'tr') return lang.name_tr || lang.slug;
+    if (localeStr === 'en') return lang.name_en || lang.slug;
+    if (localeStr === 'de') return lang.name_de || lang.slug;
+    return lang.name_en || lang.slug;
+  };
+
+  const languageOptions = dbLanguages.map((lang) => ({ value: lang.slug, label: getLanguageLabel(lang, locale) }));
 
   const togglePlatform = (slug: string) => {
     setMeetingPlatforms((current) =>
@@ -628,6 +645,15 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
     if (cleanIban && !/^TR\d{24}$/.test(cleanIban)) {
       newErrors.bankIban = 'Geçerli bir TR IBAN girin (TR + 24 rakam, toplam 26 karakter)';
     }
+
+    // C3: KYC validation
+    if (accountType === 'individual' && identityNumber && identityNumber.length !== 11) {
+      newErrors.identityNumber = 'TC Kimlik numarası 11 haneli olmalıdır.';
+    }
+    if (accountType === 'company' && taxNumber && (taxNumber.length < 10 || taxNumber.length > 11)) {
+      newErrors.taxNumber = 'Vergi numarası 10 veya 11 haneli olmalıdır.';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -650,6 +676,14 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
         bank_iban: cleanIban || null,
         bank_account_holder: bankHolder.trim() || null,
         bank_name: bankName.trim() || null,
+        // C3: KYC bilgileri
+        account_type: accountType,
+        identity_number: identityNumber.trim() || null,
+        tax_number: taxNumber.trim() || null,
+        tax_office: taxOffice.trim() || null,
+        company_name: companyName.trim() || null,
+        billing_address: billingAddress.trim() || null,
+        kyc_documents: kycDocuments.length > 0 ? kycDocuments : null,
       }).unwrap();
       toast.success(ui('ui_dashboard_profile_saved', 'Profile updated'));
     } catch (e) {
@@ -724,31 +758,34 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
             hint={ui('ui_dashboard_expertise_hint', 'Select only the areas where you actually provide guidance.')}
             error={errors.expertise}
           >
-            <MultiSelectChip
-              label=""
-              selected={expertise}
-              onSelectionChange={setExpertise}
-              options={expertiseOptions}
-              placeholder={ui('ui_dashboard_add_placeholder', 'Type to add...')}
-            />
+            {isLoadingCategories ? (
+              <div className="text-[12px] text-(--gm-text-dim) py-2">{ui('ui_dashboard_loading', 'Yükleniyor...')}</div>
+            ) : (
+              <MultiSelectChip
+                label=""
+                selected={expertise}
+                onSelectionChange={setExpertise}
+                options={expertiseOptions}
+                placeholder={ui('ui_dashboard_add_placeholder', 'Type to add...')}
+              />
+            )}
           </Field>
           <Field 
             label={ui('ui_dashboard_languages_label', 'Languages')}
             hint={ui('ui_dashboard_languages_hint', 'Select the languages you can use fluently in sessions.')}
             error={errors.languages}
           >
-            <MultiSelectChip
-              label=""
-              selected={languages}
-              onSelectionChange={setLanguages}
-              options={[
-                ui('ui_dashboard_language_tr', 'Turkish'),
-                ui('ui_dashboard_language_en', 'English'),
-                ui('ui_dashboard_language_de', 'German'),
-                ui('ui_dashboard_language_fr', 'French'),
-              ]}
-              placeholder={ui('ui_dashboard_add_placeholder', 'Type to add...')}
-            />
+            {isLoadingLanguages ? (
+              <div className="text-[12px] text-(--gm-text-dim) py-2">{ui('ui_dashboard_loading', 'Yükleniyor...')}</div>
+            ) : (
+              <MultiSelectChip
+                label=""
+                selected={languages}
+                onSelectionChange={setLanguages}
+                options={languageOptions}
+                placeholder={ui('ui_dashboard_add_placeholder', 'Type to add...')}
+              />
+            )}
           </Field>
         </div>
 
@@ -832,14 +869,131 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
           </div>
         </div>
 
+        {/* C3: KYC / Kimlik Doğrulama */}
+        <div className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface)/30 p-6 space-y-6">
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-(--gm-gold)" />
+              <span className="text-[12px] font-bold uppercase tracking-[0.2em] text-(--gm-gold)">KYC / Kimlik Doğrulama</span>
+            </div>
+            {profile.kyc_status && profile.kyc_status !== 'none' && (
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                profile.kyc_status === 'approved' ? 'bg-(--gm-success)/15 text-(--gm-success)' :
+                profile.kyc_status === 'pending' ? 'bg-(--gm-warning)/15 text-(--gm-warning)' :
+                'bg-(--gm-error)/15 text-(--gm-error)'
+              }`}>
+                {profile.kyc_status === 'approved' ? 'Onaylandı' :
+                 profile.kyc_status === 'pending' ? 'Doğrulama Bekleniyor' : 'Reddedildi'}
+              </span>
+            )}
+          </div>
+          
+          {profile.kyc_status === 'rejected' && profile.kyc_rejection_reason && (
+            <div className="p-3 rounded-xl bg-(--gm-error)/10 border border-(--gm-error)/30 text-[11px] text-(--gm-error)">
+              <span className="font-bold block mb-1">Reddedilme Sebebi:</span>
+              {profile.kyc_rejection_reason}
+            </div>
+          )}
 
-        <button
-          onClick={handleSave}
-          disabled={isLoading}
-          className="px-8 py-3 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-xs font-bold uppercase tracking-widest disabled:opacity-50 hover:shadow-glow transition-all"
-        >
-          {isLoading ? ui('ui_dashboard_saving', 'Saving...') : ui('ui_dashboard_save_profile', 'Save Profile')}
-        </button>
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 text-sm text-(--gm-text) cursor-pointer">
+                <input type="radio" name="account_type" value="individual" checked={accountType === 'individual'} onChange={() => setAccountType('individual')} className="accent-(--gm-gold)" />
+                Bireysel
+              </label>
+              <label className="flex items-center gap-2 text-sm text-(--gm-text) cursor-pointer">
+                <input type="radio" name="account_type" value="company" checked={accountType === 'company'} onChange={() => setAccountType('company')} className="accent-(--gm-gold)" />
+                Şirket
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {accountType === 'individual' ? (
+                <div>
+                  <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-(--gm-gold) opacity-80 mb-2">TC Kimlik No *</label>
+                  <input type="text" value={identityNumber} onChange={e => setIdentityNumber(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="11 haneli TC No" className={`w-full h-11 bg-(--gm-surface) border rounded-xl px-4 text-sm text-(--gm-text) outline-none transition-colors ${errors.identityNumber ? 'border-(--gm-error)/60 focus:border-(--gm-error)' : 'border-(--gm-border-soft) focus:border-(--gm-gold)/50'}`} />
+                  {errors.identityNumber && <p className="mt-1.5 text-[10px] font-bold text-(--gm-error) uppercase tracking-widest">{errors.identityNumber}</p>}
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-(--gm-gold) opacity-80 mb-2">Vergi No *</label>
+                    <input type="text" value={taxNumber} onChange={e => setTaxNumber(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="10 veya 11 haneli" className={`w-full h-11 bg-(--gm-surface) border rounded-xl px-4 text-sm text-(--gm-text) outline-none transition-colors ${errors.taxNumber ? 'border-(--gm-error)/60 focus:border-(--gm-error)' : 'border-(--gm-border-soft) focus:border-(--gm-gold)/50'}`} />
+                    {errors.taxNumber && <p className="mt-1.5 text-[10px] font-bold text-(--gm-error) uppercase tracking-widest">{errors.taxNumber}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-(--gm-gold) opacity-80 mb-2">Vergi Dairesi *</label>
+                    <input type="text" value={taxOffice} onChange={e => setTaxOffice(e.target.value)} placeholder="Vergi Dairesi" className="w-full h-11 bg-(--gm-surface) border border-(--gm-border-soft) rounded-xl px-4 text-sm text-(--gm-text) outline-none focus:border-(--gm-gold)/50 transition-colors" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-(--gm-gold) opacity-80 mb-2">Şirket Unvanı *</label>
+                    <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Tam Şirket Unvanı" className="w-full h-11 bg-(--gm-surface) border border-(--gm-border-soft) rounded-xl px-4 text-sm text-(--gm-text) outline-none focus:border-(--gm-gold)/50 transition-colors" />
+                  </div>
+                </>
+              )}
+              <div className="sm:col-span-2">
+                <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-(--gm-gold) opacity-80 mb-2">Fatura Adresi *</label>
+                <textarea value={billingAddress} onChange={e => setBillingAddress(e.target.value)} placeholder="Açık Adres" rows={3} className="w-full bg-(--gm-surface) border border-(--gm-border-soft) rounded-xl p-4 text-sm text-(--gm-text) outline-none focus:border-(--gm-gold)/50 transition-colors resize-none" />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-[9px] font-bold uppercase tracking-[0.2em] text-(--gm-gold) opacity-80 mb-3">Belge Yükleme</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <KycUploadBox 
+                  label="Kimlik Ön Yüzü" 
+                  onUpload={(url) => setKycDocuments(prev => [...prev.filter(d => d.type !== 'id_front'), { type: 'id_front', url }])} 
+                  uploaded={kycDocuments.some(d => d.type === 'id_front')}
+                />
+                <KycUploadBox 
+                  label="Kimlik Arka Yüzü" 
+                  onUpload={(url) => setKycDocuments(prev => [...prev.filter(d => d.type !== 'id_back'), { type: 'id_back', url }])} 
+                  uploaded={kycDocuments.some(d => d.type === 'id_back')}
+                />
+                {accountType === 'company' && (
+                  <div className="sm:col-span-2">
+                    <KycUploadBox 
+                      label="Vergi Levhası" 
+                      onUpload={(url) => setKycDocuments(prev => [...prev.filter(d => d.type !== 'tax_certificate'), { type: 'tax_certificate', url }])} 
+                      uploaded={kycDocuments.some(d => d.type === 'tax_certificate')}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {(!profile.kyc_status || profile.kyc_status === 'none' || profile.kyc_status === 'rejected') && (
+              <div className="pt-4">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await handleSave(); // save profile info first
+                    try {
+                      await submitKyc().unwrap();
+                      toast.success('KYC Başvurusu gönderildi.');
+                    } catch(e) {
+                      toast.error('KYC gönderilirken hata oluştu.');
+                    }
+                  }}
+                  disabled={isSubmittingKyc || isLoading}
+                  className="w-full px-6 py-3 rounded-full bg-(--gm-surface) border border-(--gm-gold)/40 text-(--gm-gold) text-xs font-bold uppercase tracking-widest hover:bg-(--gm-gold)/10 transition-colors"
+                >
+                  {isSubmittingKyc ? 'Gönderiliyor...' : 'KYC Onayına Gönder'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="pt-6 border-t border-(--gm-border-soft)">
+          <button
+            onClick={handleSave}
+            disabled={isLoading}
+            className="px-8 py-3 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-xs font-bold uppercase tracking-widest disabled:opacity-50 hover:shadow-glow transition-all"
+          >
+            {isLoading ? ui('ui_dashboard_saving', 'Saving...') : ui('ui_dashboard_save_profile', 'Save Profile')}
+          </button>
+        </div>
       </div>
 
       {/* Sidebar: Live Preview */}
@@ -1318,3 +1472,52 @@ function CompletionScoreWidget({
     </div>
   );
 }
+
+/* ────────── C3: KycUploadBox ────────── */
+function KycUploadBox({ label, onUpload, uploaded }: { label: string, onUpload: (url: string) => void, uploaded: boolean }) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [upload, { isLoading }] = useUploadToBucketMutation();
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Dosya boyutu 5MB altında olmalıdır.');
+      return;
+    }
+
+    try {
+      const res = await upload({ bucket: 'uploads', files: file, path: 'kyc' }).unwrap();
+      const url = res.items?.[0]?.url || '';
+      onUpload(url);
+      toast.success(`${label} yüklendi.`);
+    } catch {
+      toast.error('Yükleme başarısız oldu.');
+    }
+  };
+
+  return (
+    <div 
+      onClick={() => inputRef.current?.click()}
+      className={`p-4 rounded-xl border border-dashed flex flex-col items-center justify-center gap-2 text-center cursor-pointer transition-all ${
+        uploaded 
+          ? 'border-(--gm-success)/40 bg-(--gm-success)/[0.03]' 
+          : 'border-(--gm-border-soft) bg-(--gm-bg-deep)/30 hover:border-(--gm-gold)/40'
+      }`}
+    >
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${uploaded ? 'bg-(--gm-success)/10 text-(--gm-success)' : 'bg-(--gm-gold)/10 text-(--gm-gold)'}`}>
+        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : uploaded ? <CheckCircle2 className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
+      </div>
+      <div className="text-[10px] font-bold uppercase tracking-widest text-(--gm-text)">{label}</div>
+      <input 
+        ref={inputRef}
+        type="file" 
+        className="hidden" 
+        onChange={handleUpload}
+        accept=".pdf,.jpg,.jpeg,.png"
+      />
+    </div>
+  );
+}
+

@@ -120,9 +120,15 @@ export async function approveApplication(
         session_price: appConfig.consultants.defaultSessionPrice,
         session_duration: appConfig.consultants.defaultSessionDurationMinutes,
         currency: appConfig.consultants.defaultCurrency,
+        agreement_accepted_at: app.created_at ?? new Date(),
         approval_status: 'approved',
         is_available: 1,
       });
+    } else {
+      await tx
+        .update(consultants)
+        .set({ agreement_accepted_at: app.created_at ?? new Date(), updated_at: new Date() } as any)
+        .where(eq(consultants.id, existingConsultant.id));
     }
 
     await tx.update(users).set({ role: 'consultant', updated_at: new Date() }).where(eq(users.id, userId));

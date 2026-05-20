@@ -14,6 +14,7 @@ import {
 import type { FooterSectionDto, PublicMenuItemDto } from '@/integrations/shared';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
+import { useAuthStore } from '@/features/auth/auth.store';
 
 const isExternalHref = (href: string) =>
   /^https?:\/\//i.test(href) || /^mailto:/i.test(href) || /^tel:/i.test(href);
@@ -87,6 +88,7 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
   const fallbackLocale = useLocaleShort();
   const locale = localeProp || fallbackLocale;
   const { ui } = useUiSection('ui_footer', locale);
+  const { isAuthenticated } = useAuthStore();
 
 
   const { data: companyBrandSetting } = useGetSiteSettingByKeyQuery({ key: 'company_brand', locale });
@@ -167,6 +169,28 @@ const Footer: React.FC<{ locale?: string }> = ({ locale: localeProp }) => {
             </p>
             <div className="mb-8">
               <SocialLinks socials={socials} size="sm" />
+            </div>
+
+            {/* Hızlı Erişim / Auth CTA */}
+            <div className="mb-8 flex flex-col gap-3">
+              <span className="font-display text-[9px] tracking-[0.3em] text-[var(--gm-gold-deep)] uppercase mb-1">
+                {locale === 'tr' ? 'Hesabınız' : 'Your Account'}
+              </span>
+              {!isAuthenticated ? (
+                <Link 
+                  href={localizePath(locale, '/register')} 
+                  className="inline-flex items-center gap-2 text-[var(--gm-text)] hover:text-[var(--gm-gold)] transition-colors text-[13px] font-bold tracking-wider uppercase border border-[var(--gm-border-soft)] rounded-full px-5 py-2 w-fit bg-[var(--gm-surface)]/20 hover:border-[var(--gm-gold)]/40"
+                >
+                  {locale === 'tr' ? 'Hesap Aç' : 'Create Account'}
+                </Link>
+              ) : (
+                <Link 
+                  href={localizePath(locale, '/dashboard')} 
+                  className="inline-flex items-center gap-2 text-[var(--gm-text)] hover:text-[var(--gm-gold)] transition-colors text-[13px] font-bold tracking-wider uppercase border border-[var(--gm-border-soft)] rounded-full px-5 py-2 w-fit bg-[var(--gm-surface)]/20 hover:border-[var(--gm-gold)]/40"
+                >
+                  {locale === 'tr' ? 'Panelime Git' : 'Go to Dashboard'}
+                </Link>
+              )}
             </div>
 
             {/* App Download Links */}

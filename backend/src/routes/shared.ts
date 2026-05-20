@@ -33,7 +33,8 @@ import { registerHomeSections, registerHomeSectionsAdmin } from '@goldmood/share
 import { registerConsultantServices, registerConsultantServicesAdmin } from '@goldmood/shared-backend/modules/consultantServices/router';
 import { registerServiceCategories, registerServiceCategoriesAdmin } from '@goldmood/shared-backend/modules/serviceCategories/router';
 import { registerServiceTemplatesAdmin } from '@goldmood/shared-backend/modules/serviceTemplates/router';
-import { registerConsultantSelf } from '@goldmood/shared-backend/modules/consultantSelf/router';
+import { registerLanguages, registerLanguagesAdmin } from '@goldmood/shared-backend/modules/languages/router';
+import { registerConsultantSelf, registerConsultantSelfAdmin } from '@goldmood/shared-backend/modules/consultantSelf/router';
 import { registerConsultantApplications, registerConsultantApplicationsAdmin } from '@goldmood/shared-backend/modules/consultantApplications/router';
 import { registerKvkk } from '@goldmood/shared-backend/modules/kvkk/router';
 import { registerZodiac } from '@goldmood/shared-backend/modules/zodiac/router';
@@ -93,6 +94,7 @@ export async function registerSharedPublic(api: FastifyInstance) {
   await registerCustomPages(api);
   await registerHomeSections(api);
   await registerServiceCategories(api);
+  await registerLanguages(api);
   await registerConsultantServices(api);
   await registerConsultantApplications(api);
   await registerConsultantSelf(api);
@@ -130,8 +132,10 @@ export async function registerSharedAdmin(adminApi: FastifyInstance) {
     registerCustomPagesAdmin,
     registerHomeSectionsAdmin,
     registerServiceCategoriesAdmin,
+    registerLanguagesAdmin,
     registerServiceTemplatesAdmin,
     registerConsultantServicesAdmin,
+    registerConsultantSelfAdmin,
     registerConsultantApplicationsAdmin,
   ]) {
     await adminApi.register(reg);

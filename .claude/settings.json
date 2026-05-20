@@ -145,7 +145,11 @@
       "Bash(sed -n '1,30p' frontend/src/layout/header/HeaderOffcanvas.tsx)",
       "Bash(sed -n '140,230p' frontend/src/layout/header/HeaderOffcanvas.tsx)",
       "Bash(curl -s -o /dev/null -w \"/admin/audit?tab=map → %{http_code}\\\\n\" \"https://admin.goldmoodastro.com/admin/audit?tab=map&days=14&limit=50\" --max-time 12)",
-      "Bash(git worktree *)"
+      "Bash(git worktree *)",
+      "Bash(mysql --protocol=TCP -h 127.0.0.1 -P 3307 -u app -papp goldmoodastro -e \"SELECT 1\")",
+      "Bash(mysql --protocol=TCP -h 127.0.0.1 -P 3307 -u root -proot -e \"SHOW DATABASES\")",
+      "Bash(curl -s http://localhost:8094/api/health)",
+      "Bash(echo \"exit=$?\")"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [

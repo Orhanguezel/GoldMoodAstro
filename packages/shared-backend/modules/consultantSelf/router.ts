@@ -2,7 +2,7 @@
 import type { FastifyInstance } from 'fastify';
 import * as controller from './controller';
 import { requireAuth } from '../../middleware/auth';
-import { requireConsultant } from '../../middleware/roles';
+import { requireAdmin, requireConsultant } from '../../middleware/roles';
 
 export async function registerConsultantSelf(app: FastifyInstance) {
   const guard = [requireAuth, requireConsultant];
@@ -10,6 +10,8 @@ export async function registerConsultantSelf(app: FastifyInstance) {
   // Profil
   app.get('/me/consultant', { preHandler: guard }, controller.getProfile);
   app.patch('/me/consultant', { preHandler: guard }, controller.updateProfile);
+  app.post('/me/consultant/kyc/documents', { preHandler: guard }, controller.uploadKycDocument);
+  app.post('/me/consultant/kyc/submit', { preHandler: guard }, controller.submitKyc);
 
   // Blog taslakları: danışman yazar, admin yayına alır.
   app.get('/me/consultant/blog-posts', { preHandler: guard }, controller.listBlogPosts);
@@ -47,6 +49,7 @@ export async function registerConsultantSelf(app: FastifyInstance) {
   app.get('/me/consultant/wallet', { preHandler: guard }, controller.getMyWallet);
   app.get('/me/consultant/wallet/monthly-stats', { preHandler: guard }, controller.getWalletMonthlyStats);
   app.post('/me/consultant/wallet/withdraw', { preHandler: guard }, controller.requestWithdrawal);
+  app.get('/me/consultant/withdrawals', { preHandler: guard }, controller.listMyWithdrawals);
 
   // Yorumlar (T30-8)
   app.get('/me/consultant/reviews', { preHandler: guard }, controller.listMyReviews);
@@ -57,4 +60,17 @@ export async function registerConsultantSelf(app: FastifyInstance) {
   app.put('/me/consultant/availability', { preHandler: guard }, controller.updateMyAvailability);
   app.patch('/me/consultant/availability', { preHandler: guard }, controller.updateMyAvailability);
   app.post('/me/consultant/availability/day', { preHandler: guard }, controller.overrideMyAvailabilityDay);
+}
+
+export async function registerConsultantSelfAdmin(app: FastifyInstance) {
+  const guard = [requireAuth, requireAdmin];
+
+  app.get('/kyc/pending', { preHandler: guard }, controller.listPendingKyc);
+  app.post('/kyc/:consultantId/approve', { preHandler: guard }, controller.approveKycAdmin);
+  app.post('/kyc/:consultantId/reject', { preHandler: guard }, controller.rejectKycAdmin);
+
+  app.get('/withdrawals', { preHandler: guard }, controller.listWithdrawalsAdmin);
+  app.post('/withdrawals/:id/approve', { preHandler: guard }, controller.approveWithdrawalAdmin);
+  app.post('/withdrawals/:id/reject', { preHandler: guard }, controller.rejectWithdrawalAdmin);
+  app.post('/withdrawals/:id/mark-paid', { preHandler: guard }, controller.markWithdrawalPaidAdmin);
 }

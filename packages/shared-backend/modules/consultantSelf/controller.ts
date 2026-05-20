@@ -3,8 +3,9 @@
 // /me/consultant — kendi profilini görür/günceller, randevuları, istatistikleri.
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { randomUUID } from 'crypto';
+import type { MultipartFile } from '@fastify/multipart';
 import { z } from 'zod';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, sql } from 'drizzle-orm';
 import { appConfig } from '@goldmood/shared-config/appConfig';
 import { db } from '../../db/client';
 import { consultants } from '../consultants/schema';
@@ -18,13 +19,17 @@ import { getDefaultLocale } from '../_shared';
 import { overrideDaySlots } from '../availability/repository';
 import { releaseSlotTx } from '../bookings/repository';
 import { consultantServices } from '../consultantServices/schema';
+import { serviceCategories } from '../serviceCategories/schema';
+import { languages } from '../languages/schema';
+import { buildPublicUrl, getCloudinaryConfig, repoInsert as insertStorageAsset, uploadBufferAuto } from '../storage';
+import { repoPersistAuditEvent } from '../audit/repository';
 import * as customPagesRepo from '../customPages/repository';
 // wallets/walletTransactions: bu projede DB schema farklı (consultant_id), raw SQL kullanılıyor.
 
 const profilePatchSchema = z.object({
   bio: z.string().trim().max(5000).nullable().optional(),
-  expertise: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
-  languages: z.array(z.string().trim().min(2).max(8)).max(10).optional(),
+  expertise: z.array(z.string().trim().toLowerCase().min(1).max(64).regex(/^[a-z0-9_-]+$/, 'slug_format')).min(1).max(8).optional(),
+  languages: z.array(z.string().trim().toLowerCase().min(2).max(8).regex(/^[a-z]+$/, 'slug_format')).min(1).max(10).optional(),
   meeting_platforms: z.array(z.enum(['audio', 'video'])).max(2).optional(),
   social_links: z.record(z.string().trim().max(1000)).optional(),
   bank_name: z.string().trim().max(120).nullable().optional(),
@@ -39,6 +44,12 @@ const profilePatchSchema = z.object({
       .optional(),
   ),
   bank_account_holder: z.string().trim().max(160).nullable().optional(),
+  account_type: z.enum(['individual', 'company']).nullable().optional(),
+  identity_number: z.string().trim().regex(/^\d{11}$/, 'invalid_identity_number').nullable().optional(),
+  tax_number: z.string().trim().regex(/^\d{10,11}$/, 'invalid_tax_number').nullable().optional(),
+  tax_office: z.string().trim().max(120).nullable().optional(),
+  company_name: z.string().trim().max(200).nullable().optional(),
+  billing_address: z.string().trim().max(5000).nullable().optional(),
   avatar_url: z.string().trim().max(1000).nullable().optional(),
   is_available: z.coerce.number().int().min(0).max(1).optional(),
   supports_video: z.coerce.number().int().min(0).max(1).optional(),
@@ -127,6 +138,96 @@ function parsePositiveInt(value: unknown, fallback: number, max: number): number
   return Math.min(Math.trunc(parsed), max);
 }
 
+const KYC_DOCUMENT_TYPES = ['id_front', 'id_back', 'tax_certificate', 'other'] as const;
+const kycDocumentTypeSchema = z.enum(KYC_DOCUMENT_TYPES);
+const kycRejectSchema = z.object({
+  rejection_reason: z.string().trim().min(2).max(2000),
+});
+
+type KycDocument = {
+  type: (typeof KYC_DOCUMENT_TYPES)[number];
+  url: string;
+  storage_asset_id?: string;
+  name?: string;
+  mime?: string;
+  size?: number;
+  uploaded_at: string;
+};
+
+function isValidTurkishIdentityNumber(value: string): boolean {
+  if (!/^[1-9]\d{10}$/.test(value)) return false;
+  const digits = value.split('').map(Number);
+  const oddSum = digits[0] + digits[2] + digits[4] + digits[6] + digits[8];
+  const evenSum = digits[1] + digits[3] + digits[5] + digits[7];
+  return digits[9] === (((oddSum * 7) - evenSum) % 10) && digits[10] === (digits.slice(0, 10).reduce((sum, digit) => sum + digit, 0) % 10);
+}
+
+function kycValidationError(c: Record<string, unknown>): { message: string; field?: string } | null {
+  const accountType = c.account_type === 'company' ? 'company' : c.account_type === 'individual' ? 'individual' : null;
+  if (!accountType) return { message: 'account_type_required', field: 'account_type' };
+
+  const bankHolder = String(c.bank_account_holder ?? '').trim();
+  if (!bankHolder) return { message: 'bank_account_holder_required', field: 'bank_account_holder' };
+
+  if (accountType === 'individual') {
+    const identityNumber = String(c.identity_number ?? '').trim();
+    return isValidTurkishIdentityNumber(identityNumber) ? null : { message: 'invalid_identity_number', field: 'identity_number' };
+  }
+
+  const taxNumber = String(c.tax_number ?? '').trim();
+  if (!/^\d{10,11}$/.test(taxNumber)) return { message: 'invalid_tax_number', field: 'tax_number' };
+  if (!String(c.tax_office ?? '').trim()) return { message: 'tax_office_required', field: 'tax_office' };
+  if (!String(c.company_name ?? '').trim()) return { message: 'company_name_required', field: 'company_name' };
+  return null;
+}
+
+async function logKycAudit(args: {
+  req: FastifyRequest;
+  topic: string;
+  message: string;
+  consultantId: string;
+  meta?: Record<string, unknown>;
+}) {
+  await repoPersistAuditEvent({
+    ts: new Date().toISOString(),
+    level: 'info',
+    topic: args.topic,
+    message: args.message,
+    actor_user_id: getCallerUserId(args.req),
+    ip: args.req.ip ?? null,
+    entity: { type: 'consultant', id: args.consultantId },
+    meta: args.meta ?? {},
+  });
+}
+
+function uniqueSlugs(values: string[]): string[] {
+  return Array.from(new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean)));
+}
+
+async function findInactiveOrMissingServiceCategorySlugs(slugs: string[]): Promise<string[]> {
+  const unique = uniqueSlugs(slugs);
+  if (unique.length === 0) return [];
+
+  const rows = await db
+    .select({ slug: serviceCategories.slug })
+    .from(serviceCategories)
+    .where(and(eq(serviceCategories.is_active, 1), inArray(serviceCategories.slug, unique)));
+  const allowed = new Set(rows.map((row) => row.slug));
+  return unique.filter((slug) => !allowed.has(slug));
+}
+
+async function findInactiveOrMissingLanguageSlugs(slugs: string[]): Promise<string[]> {
+  const unique = uniqueSlugs(slugs);
+  if (unique.length === 0) return [];
+
+  const rows = await db
+    .select({ slug: languages.slug })
+    .from(languages)
+    .where(and(eq(languages.is_active, 1), inArray(languages.slug, unique)));
+  const allowed = new Set(rows.map((row) => row.slug));
+  return unique.filter((slug) => !allowed.has(slug));
+}
+
 /* ─── GET /me/consultant — profil ─── */
 export async function getProfile(req: FastifyRequest, reply: FastifyReply) {
   const c = await getCallerConsultant(req);
@@ -155,9 +256,33 @@ export async function updateProfile(req: FastifyRequest, reply: FastifyReply) {
   const parsed = profilePatchSchema.safeParse(req.body);
   if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
 
+  const data = { ...parsed.data };
+  if (data.expertise) {
+    data.expertise = uniqueSlugs(data.expertise);
+    const invalid = await findInactiveOrMissingServiceCategorySlugs(data.expertise);
+    if (invalid.length > 0) {
+      return reply.code(400).send({ error: { message: 'invalid_expertise_slug', invalid } });
+    }
+  }
+  if (data.languages) {
+    data.languages = uniqueSlugs(data.languages);
+    const invalid = await findInactiveOrMissingLanguageSlugs(data.languages);
+    if (invalid.length > 0) {
+      return reply.code(400).send({ error: { message: 'invalid_language_slug', invalid } });
+    }
+  }
+
+  const touchesKyc = ['account_type', 'identity_number', 'tax_number', 'tax_office', 'company_name', 'billing_address', 'bank_account_holder']
+    .some((key) => Object.prototype.hasOwnProperty.call(data, key));
+  if (touchesKyc) {
+    const merged = { ...(c as any), ...data };
+    const error = kycValidationError(merged);
+    if (error) return reply.code(400).send({ error });
+  }
+
   const patch: Record<string, unknown> = {};
   const userPatch: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(parsed.data)) {
+  for (const [k, v] of Object.entries(data)) {
     if (v === undefined) continue;
     if (k === 'avatar_url') {
       userPatch.avatar_url = v;
@@ -176,6 +301,215 @@ export async function updateProfile(req: FastifyRequest, reply: FastifyReply) {
     await db.update(users).set(userPatch as any).where(eq(users.id, c.user_id));
   }
   return reply.send({ data: { id: c.id } });
+}
+
+/* ─── KYC: belge yükle / gönder ─── */
+type FileRequest = FastifyRequest & {
+  file?: () => Promise<MultipartFile | undefined>;
+};
+
+function cleanFileName(value: string): string {
+  return (value || 'document').replace(/[^\w.\-]+/g, '_').slice(0, 160);
+}
+
+export async function uploadKycDocument(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const typeParsed = kycDocumentTypeSchema.safeParse(String((req.query as any)?.type || '').trim());
+  if (!typeParsed.success) return reply.code(400).send({ error: { message: 'invalid_document_type' } });
+
+  let mp: MultipartFile | undefined;
+  try {
+    mp = await (req as FileRequest).file?.();
+  } catch {
+    return reply.code(400).send({ error: { message: 'invalid_multipart_body' } });
+  }
+  if (!mp) return reply.code(400).send({ error: { message: 'file_required' } });
+
+  const mime = String(mp.mimetype || '').toLowerCase();
+  if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'].includes(mime)) {
+    return reply.code(400).send({ error: { message: 'invalid_kyc_document_mime' } });
+  }
+
+  const buf = await mp.toBuffer();
+  if (buf.length > 10 * 1024 * 1024) {
+    return reply.code(400).send({ error: { message: 'kyc_document_max_10mb' } });
+  }
+
+  const cfg = await getCloudinaryConfig();
+  if (!cfg) return reply.code(501).send({ error: { message: 'storage_not_configured' } });
+
+  const bucket = 'consultant_kyc';
+  const folder = `${bucket}/${c.id}`;
+  const assetId = randomUUID();
+  const originalName = `${assetId.slice(0, 8)}-${cleanFileName(mp.filename || `${typeParsed.data}`)}`;
+  const publicId = `${typeParsed.data}-${Date.now()}-${assetId.slice(0, 8)}`;
+  const uploaded = await uploadBufferAuto(cfg, buf, { folder, publicId, mime });
+  const path = `${folder}/${originalName}`;
+  const url = buildPublicUrl(bucket, path, uploaded.secure_url || null, cfg);
+
+  await insertStorageAsset({
+    id: assetId,
+    user_id: c.user_id,
+    name: originalName,
+    bucket,
+    path,
+    folder,
+    mime,
+    size: uploaded.bytes ?? buf.length,
+    url,
+    provider: cfg.driver === 'local' ? 'local' : 'cloudinary',
+    provider_public_id: uploaded.public_id ?? null,
+    provider_resource_type: uploaded.resource_type ?? null,
+    provider_format: uploaded.format ?? null,
+    provider_version: uploaded.version ?? null,
+    etag: uploaded.etag ?? null,
+    metadata: { consultant_id: c.id, kyc_document_type: typeParsed.data },
+  } as any);
+
+  const doc: KycDocument = {
+    type: typeParsed.data,
+    url,
+    storage_asset_id: assetId,
+    name: originalName,
+    mime,
+    size: uploaded.bytes ?? buf.length,
+    uploaded_at: new Date().toISOString(),
+  };
+  const documents = Array.isArray((c as any).kyc_documents) ? ([...(c as any).kyc_documents] as KycDocument[]) : [];
+  documents.push(doc);
+
+  await db.update(consultants).set({ kyc_documents: documents, updated_at: new Date() } as any).where(eq(consultants.id, c.id));
+  await logKycAudit({ req, topic: 'kyc.document_uploaded', message: 'kyc_document_uploaded', consultantId: c.id, meta: { type: doc.type, storage_asset_id: assetId } });
+
+  return reply.code(201).send({ data: doc });
+}
+
+export async function submitKyc(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+  if ((c as any).kyc_status === 'pending') return reply.code(409).send({ error: { message: 'kyc_already_pending' } });
+  if ((c as any).kyc_status === 'approved') return reply.code(409).send({ error: { message: 'kyc_already_approved' } });
+
+  const error = kycValidationError(c as any);
+  if (error) return reply.code(400).send({ error });
+
+  await db.update(consultants).set({
+    kyc_status: 'pending',
+    kyc_submitted_at: new Date(),
+    kyc_reviewed_at: null,
+    kyc_rejection_reason: null,
+    updated_at: new Date(),
+  } as any).where(eq(consultants.id, c.id));
+
+  const adminUserId = String((process.env.KYC_ADMIN_USER_ID || process.env.BOOKING_ADMIN_USER_ID || '')).trim();
+  if (adminUserId.length === 36) {
+    await createUserNotification({
+      userId: adminUserId,
+      type: 'custom',
+      title: 'Yeni KYC başvurusu',
+      message: `Danışman KYC başvurusu bekliyor: ${c.id}`,
+    }).catch(() => undefined);
+  }
+  await logKycAudit({ req, topic: 'kyc.submitted', message: 'kyc_submitted', consultantId: c.id });
+
+  return reply.send({ data: { id: c.id, kyc_status: 'pending' } });
+}
+
+/* ─── Admin KYC ─── */
+export async function listPendingKyc(req: FastifyRequest, reply: FastifyReply) {
+  const result = await db.execute(sql`
+    SELECT
+      c.id, c.user_id, c.account_type, c.identity_number, c.tax_number, c.tax_office,
+      c.company_name, c.billing_address, c.bank_name, c.bank_iban, c.bank_account_holder,
+      c.kyc_status, c.kyc_submitted_at, c.kyc_reviewed_at, c.kyc_rejection_reason, c.kyc_documents,
+      u.full_name, u.email, u.phone, u.avatar_url
+    FROM consultants c
+    INNER JOIN users u ON u.id = c.user_id
+    WHERE c.kyc_status = 'pending'
+    ORDER BY c.kyc_submitted_at ASC, c.updated_at ASC
+  `);
+  return reply.send({ data: rowsFromExecute(result) });
+}
+
+async function getConsultantForKycAdmin(consultantId: string) {
+  const result = await db.execute(sql`
+    SELECT c.id, c.user_id, c.kyc_status, u.email, u.full_name
+    FROM consultants c
+    INNER JOIN users u ON u.id = c.user_id
+    WHERE c.id = ${consultantId}
+    LIMIT 1
+  `);
+  return rowsFromExecute(result)[0] ?? null;
+}
+
+export async function approveKycAdmin(req: FastifyRequest, reply: FastifyReply) {
+  const consultantId = String((req.params as any)?.consultantId || '').trim();
+  if (consultantId.length !== 36) return reply.code(400).send({ error: { message: 'invalid_consultant_id' } });
+
+  const row = await getConsultantForKycAdmin(consultantId);
+  if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
+
+  await db.update(consultants).set({
+    kyc_status: 'approved',
+    kyc_reviewed_at: new Date(),
+    kyc_rejection_reason: null,
+    updated_at: new Date(),
+  } as any).where(eq(consultants.id, consultantId));
+
+  await logKycAudit({
+    req,
+    topic: 'kyc.approved',
+    message: 'kyc_approved',
+    consultantId,
+    meta: { reviewed_by: getCallerUserId(req) },
+  });
+
+  return reply.send({ data: { id: consultantId, kyc_status: 'approved' } });
+}
+
+export async function rejectKycAdmin(req: FastifyRequest, reply: FastifyReply) {
+  const consultantId = String((req.params as any)?.consultantId || '').trim();
+  if (consultantId.length !== 36) return reply.code(400).send({ error: { message: 'invalid_consultant_id' } });
+
+  const parsed = kycRejectSchema.safeParse(req.body);
+  if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
+
+  const row = await getConsultantForKycAdmin(consultantId);
+  if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
+
+  await db.update(consultants).set({
+    kyc_status: 'rejected',
+    kyc_reviewed_at: new Date(),
+    kyc_rejection_reason: parsed.data.rejection_reason,
+    updated_at: new Date(),
+  } as any).where(eq(consultants.id, consultantId));
+
+  await logKycAudit({
+    req,
+    topic: 'kyc.rejected',
+    message: 'kyc_rejected',
+    consultantId,
+    meta: { reviewed_by: getCallerUserId(req), rejection_reason: parsed.data.rejection_reason },
+  });
+
+  if ((row as any).email) {
+    const defaultLocale = await getDefaultLocale();
+    await sendTemplatedEmail({
+      to: String((row as any).email),
+      key: 'kyc_rejected_consultant',
+      locale: defaultLocale,
+      defaultLocale,
+      params: {
+        consultant_name: String((row as any).full_name || 'Danışman'),
+        rejection_reason: parsed.data.rejection_reason,
+      },
+      allowMissing: true,
+    }).catch(() => undefined);
+  }
+
+  return reply.send({ data: { id: consultantId, kyc_status: 'rejected' } });
 }
 
 /* ─── Blog taslakları (/me/consultant/blog-posts) ─── */
@@ -1243,9 +1577,39 @@ const withdrawSchema = z.object({
   notes: z.string().trim().max(500).optional(),
 });
 
+const withdrawalAdminActionSchema = z.object({
+  admin_note: z.string().trim().max(1000).optional(),
+  rejection_reason: z.string().trim().min(2).max(2000).optional(),
+  transfer_reference: z.string().trim().max(120).optional(),
+});
+
+function emailWithdrawalStatus(row: any, status: 'approved' | 'paid' | 'rejected', extra?: Record<string, unknown>) {
+  if (!row?.email) return Promise.resolve(null);
+  const key = `withdrawal_${status}_consultant`;
+  return sendTemplatedEmail({
+    to: String(row.email),
+    key,
+    locale: 'tr',
+    defaultLocale: 'tr',
+    params: {
+      consultant_name: String(row.full_name || 'Danışman'),
+      amount: String(row.amount || ''),
+      currency: String(row.currency || 'TRY'),
+      bank_iban: String(row.bank_iban || ''),
+      transfer_reference: String(row.transfer_reference || ''),
+      rejection_reason: String(row.rejection_reason || ''),
+      ...(extra ?? {}),
+    },
+    allowMissing: true,
+  }).catch(() => null);
+}
+
 export async function requestWithdrawal(req: FastifyRequest, reply: FastifyReply) {
   const c = await getCallerConsultant(req);
   if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+  if ((c as any).kyc_status !== 'approved') {
+    return reply.code(403).send({ error: { message: 'kyc_required_for_withdrawal' } });
+  }
 
   const parsed = withdrawSchema.safeParse(req.body);
   if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
@@ -1275,34 +1639,218 @@ export async function requestWithdrawal(req: FastifyRequest, reply: FastifyReply
     return reply.code(400).send({ error: { message: 'bank_iban_required' } });
   }
 
-  // pending withdrawal transaction (wallet_transactions tablosu varsa insert)
   const txId = randomUUID();
+  const withdrawalId = randomUUID();
   const bankHolder = String((c as any).bank_account_holder || '').trim();
   const bankName = String((c as any).bank_name || '').trim();
+  if (!bankHolder) return reply.code(400).send({ error: { message: 'bank_account_holder_required' } });
   const desc = [
     parsed.data.notes,
+    `Withdrawal: ${withdrawalId}`,
     `IBAN: ${bankIban}`,
     bankHolder ? `Hesap sahibi: ${bankHolder}` : null,
     bankName ? `Banka: ${bankName}` : null,
   ].filter(Boolean).join(' | ');
   try {
-    await db.execute(
-      sql`INSERT INTO wallet_transactions (id, wallet_id, user_id, type, amount, currency, purpose, description, payment_status, is_admin_created)
-          VALUES (${txId}, ${w.id}, ${c.user_id}, 'debit', ${String(parsed.data.amount)}, ${w.currency}, 'withdrawal', ${desc}, 'pending', 0)`,
-    );
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`
+        UPDATE wallets
+        SET balance = balance - ${String(parsed.data.amount)},
+            total_withdrawn = total_withdrawn + ${String(parsed.data.amount)},
+            updated_at = NOW(3)
+        WHERE id = ${w.id} AND balance >= ${String(parsed.data.amount)}
+      `);
+
+      await tx.execute(sql`
+        INSERT INTO withdrawal_requests (
+          id, consultant_id, user_id, amount, currency, bank_iban, bank_holder, bank_name, status, requested_at, admin_note
+        )
+        VALUES (
+          ${withdrawalId}, ${c.id}, ${c.user_id}, ${String(parsed.data.amount)}, ${w.currency || 'TRY'},
+          ${bankIban}, ${bankHolder}, ${bankName || null}, 'pending', NOW(3), ${parsed.data.notes ?? null}
+        )
+      `);
+
+      await tx.execute(
+        sql`INSERT INTO wallet_transactions (id, wallet_id, user_id, type, amount, currency, purpose, description, payment_status, transaction_ref, is_admin_created)
+            VALUES (${txId}, ${w.id}, ${c.user_id}, 'debit', ${String(parsed.data.amount)}, ${w.currency}, 'withdrawal', ${desc}, 'pending', ${withdrawalId}, 0)`,
+      );
+    });
   } catch {
-    return reply.code(500).send({ error: { message: 'tx_table_missing' } });
+    return reply.code(500).send({ error: { message: 'withdrawal_request_failed' } });
   }
 
   return reply.send({
     data: {
-      id: txId,
+      id: withdrawalId,
+      transaction_id: txId,
       status: 'pending',
       amount: parsed.data.amount,
       currency: w.currency,
       message: 'Para çekme talebiniz alındı. Admin onayından sonra hesabınıza geçecektir.',
     },
   });
+}
+
+export async function listMyWithdrawals(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const result = await db.execute(sql`
+    SELECT id, consultant_id, amount, currency, bank_iban, bank_holder, status,
+           requested_at, reviewed_at, paid_at, rejection_reason, admin_note, transfer_reference
+    FROM withdrawal_requests
+    WHERE consultant_id = ${c.id}
+    ORDER BY requested_at DESC
+    LIMIT 100
+  `);
+  return reply.send({ data: rowsFromExecute(result) });
+}
+
+export async function listWithdrawalsAdmin(req: FastifyRequest, reply: FastifyReply) {
+  const status = String((req.query as any)?.status || '').trim();
+  const statusSql = ['pending', 'approved', 'paid', 'rejected', 'cancelled'].includes(status)
+    ? sql`AND wr.status = ${status}`
+    : sql``;
+  const result = await db.execute(sql`
+    SELECT wr.*, u.full_name, u.email, u.phone
+    FROM withdrawal_requests wr
+    INNER JOIN consultants c ON c.id = wr.consultant_id
+    INNER JOIN users u ON u.id = c.user_id
+    WHERE 1=1 ${statusSql}
+    ORDER BY wr.requested_at DESC
+    LIMIT 300
+  `);
+  return reply.send({ data: rowsFromExecute(result) });
+}
+
+async function getWithdrawalForAdmin(id: string) {
+  const result = await db.execute(sql`
+    SELECT wr.*, w.id AS wallet_id, u.id AS user_id, u.full_name, u.email
+    FROM withdrawal_requests wr
+    INNER JOIN consultants c ON c.id = wr.consultant_id
+    INNER JOIN users u ON u.id = c.user_id
+    LEFT JOIN wallets w ON w.consultant_id = c.id OR w.user_id = c.user_id
+    WHERE wr.id = ${id}
+    LIMIT 1
+  `);
+  return rowsFromExecute(result)[0] ?? null;
+}
+
+export async function approveWithdrawalAdmin(req: FastifyRequest, reply: FastifyReply) {
+  const id = String((req.params as any)?.id || '').trim();
+  if (id.length !== 36) return reply.code(400).send({ error: { message: 'invalid_withdrawal_id' } });
+  const parsed = withdrawalAdminActionSchema.safeParse(req.body ?? {});
+  if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
+
+  const row = await getWithdrawalForAdmin(id);
+  if (!row) return reply.code(404).send({ error: { message: 'withdrawal_not_found' } });
+  if ((row as any).status !== 'pending') return reply.code(409).send({ error: { message: 'invalid_withdrawal_status' } });
+
+  await db.execute(sql`
+    UPDATE withdrawal_requests
+    SET status = 'approved',
+        reviewed_at = NOW(3),
+        reviewed_by = ${getCallerUserId(req)},
+        admin_note = ${parsed.data.admin_note ?? null},
+        updated_at = NOW(3)
+    WHERE id = ${id}
+  `);
+  await db.execute(sql`
+    UPDATE wallet_transactions
+    SET payment_status = 'completed', approved_by = ${getCallerUserId(req)}, approved_at = NOW(3), updated_at = NOW(3)
+    WHERE transaction_ref = ${id} AND purpose = 'withdrawal' AND payment_status = 'pending'
+  `);
+  await logKycAudit({ req, topic: 'withdrawal.approved', message: 'withdrawal_approved', consultantId: String((row as any).consultant_id), meta: { withdrawal_id: id } });
+  await emailWithdrawalStatus(row, 'approved', parsed.data);
+
+  return reply.send({ data: { id, status: 'approved' } });
+}
+
+export async function rejectWithdrawalAdmin(req: FastifyRequest, reply: FastifyReply) {
+  const id = String((req.params as any)?.id || '').trim();
+  if (id.length !== 36) return reply.code(400).send({ error: { message: 'invalid_withdrawal_id' } });
+  const parsed = withdrawalAdminActionSchema.safeParse(req.body ?? {});
+  if (!parsed.success || !parsed.data.rejection_reason) {
+    return reply.code(400).send({ error: { message: 'rejection_reason_required' } });
+  }
+
+  const row = await getWithdrawalForAdmin(id);
+  if (!row) return reply.code(404).send({ error: { message: 'withdrawal_not_found' } });
+  if (!['pending', 'approved'].includes(String((row as any).status))) {
+    return reply.code(409).send({ error: { message: 'invalid_withdrawal_status' } });
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`
+      UPDATE withdrawal_requests
+      SET status = 'rejected',
+          reviewed_at = NOW(3),
+          reviewed_by = ${getCallerUserId(req)},
+          rejection_reason = ${parsed.data.rejection_reason},
+          admin_note = ${parsed.data.admin_note ?? null},
+          updated_at = NOW(3)
+      WHERE id = ${id}
+    `);
+    if ((row as any).wallet_id) {
+      await tx.execute(sql`
+        UPDATE wallets
+        SET balance = balance + ${String((row as any).amount)},
+            total_withdrawn = GREATEST(total_withdrawn - ${String((row as any).amount)}, 0),
+            updated_at = NOW(3)
+        WHERE id = ${(row as any).wallet_id}
+      `);
+    }
+    await tx.execute(sql`
+      UPDATE wallet_transactions
+      SET payment_status = 'failed', updated_at = NOW(3)
+      WHERE transaction_ref = ${id} AND purpose = 'withdrawal'
+    `);
+  });
+  await logKycAudit({ req, topic: 'withdrawal.rejected', message: 'withdrawal_rejected', consultantId: String((row as any).consultant_id), meta: { withdrawal_id: id, rejection_reason: parsed.data.rejection_reason } });
+  await emailWithdrawalStatus({ ...row, rejection_reason: parsed.data.rejection_reason }, 'rejected', parsed.data);
+
+  return reply.send({ data: { id, status: 'rejected' } });
+}
+
+export async function markWithdrawalPaidAdmin(req: FastifyRequest, reply: FastifyReply) {
+  const id = String((req.params as any)?.id || '').trim();
+  if (id.length !== 36) return reply.code(400).send({ error: { message: 'invalid_withdrawal_id' } });
+  const parsed = withdrawalAdminActionSchema.safeParse(req.body ?? {});
+  if (!parsed.success || !parsed.data.transfer_reference) {
+    return reply.code(400).send({ error: { message: 'transfer_reference_required' } });
+  }
+
+  const row = await getWithdrawalForAdmin(id);
+  if (!row) return reply.code(404).send({ error: { message: 'withdrawal_not_found' } });
+  if (!['pending', 'approved'].includes(String((row as any).status))) {
+    return reply.code(409).send({ error: { message: 'invalid_withdrawal_status' } });
+  }
+
+  await db.execute(sql`
+    UPDATE withdrawal_requests
+    SET status = 'paid',
+        reviewed_at = COALESCE(reviewed_at, NOW(3)),
+        reviewed_by = COALESCE(reviewed_by, ${getCallerUserId(req)}),
+        paid_at = NOW(3),
+        transfer_reference = ${parsed.data.transfer_reference},
+        admin_note = ${parsed.data.admin_note ?? null},
+        updated_at = NOW(3)
+    WHERE id = ${id}
+  `);
+  await db.execute(sql`
+    UPDATE wallet_transactions
+    SET payment_status = 'completed',
+        transaction_ref = ${id},
+        approved_by = ${getCallerUserId(req)},
+        approved_at = COALESCE(approved_at, NOW(3)),
+        updated_at = NOW(3)
+    WHERE transaction_ref = ${id} AND purpose = 'withdrawal'
+  `);
+  await logKycAudit({ req, topic: 'withdrawal.paid', message: 'withdrawal_paid', consultantId: String((row as any).consultant_id), meta: { withdrawal_id: id, transfer_reference: parsed.data.transfer_reference } });
+  await emailWithdrawalStatus({ ...row, transfer_reference: parsed.data.transfer_reference }, 'paid', parsed.data);
+
+  return reply.send({ data: { id, status: 'paid' } });
 }
 
 /* ─── GET /me/consultant/reviews ─── */

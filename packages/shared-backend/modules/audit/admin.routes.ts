@@ -14,6 +14,13 @@ import {
   getAuditGeoStatsAdmin,
   clearAuditLogsAdmin,
 } from './admin.controller';
+import {
+  getCohortsAdmin,
+  getFunnelReportAdmin,
+  getTrafficSourcesAdmin,
+  getUserActivityAdmin,
+} from './funnel.controller';
+import { handleAuditStreamSse } from './stream.controller';
 
 import {
   getTopEndpointsAdmin,
@@ -43,6 +50,14 @@ export async function registerAuditAdmin(app: FastifyInstance) {
   app.get(`${B}/metrics/daily`, getAuditMetricsDailyAdmin);
   app.get(`${B}/geo-stats`, getAuditGeoStatsAdmin);
   app.delete(`${B}/clear`, clearAuditLogsAdmin);
+  app.get(`${B}/funnel`, getFunnelReportAdmin);
+
+  // Product analytics aliases requested by the GoldMoodAstro ops plan.
+  app.get('/funnel', getFunnelReportAdmin);
+  app.get('/users/:id/activity', getUserActivityAdmin);
+  app.get('/cohorts', getCohortsAdmin);
+  app.get('/traffic-sources', getTrafficSourcesAdmin);
+  app.get('/live-feed', handleAuditStreamSse);
 
   // ---- Analytics endpoints ----
   app.get(`${A}/summary`, getAuditSummaryAdmin);

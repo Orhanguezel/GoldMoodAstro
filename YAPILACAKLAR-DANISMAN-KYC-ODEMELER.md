@@ -11,11 +11,11 @@
 **Sorun:** Şu an chip'lerde Astroloji, Doğum Haritası, Tarot vb. **+ "Kahve Falı, Ruhsal Rehberlik, Rüya Tabiri, Enerji Şifası"** seçenekleri serbestçe gösteriliyor. Liste hardcoded olabilir veya `service_categories` ile tam senkron değil.
 
 - [ ] **A1 — Şema check (Claude):** `service_categories` tablosu zaten var (11 kategori). Mevcut consultants.expertise json slug'ları (`astrology`, `tarot`, …) bu tablonun slug'ları ile birebir mi? `JOIN service_categories sc ON JSON_CONTAINS(c.expertise, JSON_QUOTE(sc.slug))` ile orphan slug kontrolü.
-- [ ] **A2 — UI sadece DB'den (Antigravity):** `ProfilePanel`'de `useListServiceCategoriesPublicQuery()` zaten kullanılıyor — fallback hardcoded `expertiseOptions` (BecomeConsultantPage'deki `EXPERTISE_OPTIONS`) **kaldırılsın**; serviceCategories boş ise "Yükleniyor…" göster, hardcoded liste hiç render edilmesin.
-- [ ] **A3 — Backend validation (Codex):** PATCH `/me/consultant` body'de `expertise` her elemanı `service_categories.slug` whitelist'inde olmalı. Yoksa 400.
+- [x] **A2 — UI sadece DB'den (Antigravity):** `ProfilePanel`'de `useListServiceCategoriesPublicQuery()` zaten kullanılıyor — fallback hardcoded `expertiseOptions` (BecomeConsultantPage'deki `EXPERTISE_OPTIONS`) **kaldırılsın**; serviceCategories boş ise "Yükleniyor…" göster, hardcoded liste hiç render edilmesin.
+- [x] **A3 — Backend validation (Codex):** PATCH `/me/consultant` body'de `expertise` her elemanı `service_categories.slug` whitelist'inde olmalı. Yoksa 400. — Codex: aktif `service_categories.slug` whitelist + `invalid_expertise_slug` 400 eklendi.
 - [ ] **A4 — Mevcut data migration (Claude):** Prod'da DB consult.expertise json'unda `service_categories.slug` listesinde olmayan slug varsa raporla (sadece audit, otomatik silme yok — kullanıcı onayıyla).
-- [ ] **A5 — Min/max count (Codex):** En az 1, en çok 8 uzmanlık seçilebilir kuralı.
-- [ ] **A6 — Become-consultant başvuru formu (Antigravity):** `BecomeConsultantPage` `EXPERTISE_OPTIONS` da DB'den çekilsin (aynı `useListServiceCategoriesPublicQuery`). Hardcoded array kaldırılsın.
+- [x] **A5 — Min/max count (Codex):** En az 1, en çok 8 uzmanlık seçilebilir kuralı. — Codex: PATCH ve consultant register validasyonunda `min(1).max(8)`.
+- [x] **A6 — Become-consultant başvuru formu (Antigravity):** `BecomeConsultantPage` `EXPERTISE_OPTIONS` da DB'den çekilsin (aynı `useListServiceCategoriesPublicQuery`). Hardcoded array kaldırılsın.
 
 ---
 
@@ -23,7 +23,7 @@
 
 **Sorun:** Chip'lerde "tr", "en" slug'ları görünüyor; "+Türkçe", "+İngilizce" alt linkler var. Tutarsız. Hardcoded array `[tr, en, de, fr]`.
 
-- [ ] **B1 — Şema (Claude):** Yeni tablo veya site_settings:
+- [x] **B1 — Şema (Claude):** Yeni tablo veya site_settings:
   ```sql
   CREATE TABLE languages (
     id CHAR(36) PRIMARY KEY,
@@ -35,11 +35,11 @@
     is_active TINYINT DEFAULT 1
   );
   ```
-  Seed: tr/en/de/fr (gerekirse + ru, ar, es). Locale'e göre name görünür.
-- [ ] **B2 — Backend (Codex):** `GET /languages` public endpoint + admin CRUD `/admin/languages`.
-- [ ] **B3 — UI (Antigravity):** ProfilePanel'de slug yerine `language.name_<locale>` chip'lerde gösterilsin (`tr` → "Türkçe", `en` → "İngilizce"). "+Almanca" tıklayınca `de` slug ekle. Tutarlı görünüm.
-- [ ] **B4 — Become-consultant formu (Antigravity):** Aynı şekilde DB-driven dil seçimi.
-- [ ] **B5 — Min count (Codex):** En az 1 dil zorunlu.
+  Seed: tr/en/de/fr (gerekirse + ru, ar, es). Locale'e göre name görünür. — Codex: `032d_languages_schema.sql` ile tablo + tr/en/de/fr/ru/ar/es seed eklendi.
+- [x] **B2 — Backend (Codex):** `GET /languages` public endpoint + admin CRUD `/admin/languages`. — Codex: shared-backend `languages` modülü ve route kayıtları eklendi.
+- [x] **B3 — UI (Antigravity):** ProfilePanel'de slug yerine `language.name_<locale>` chip'lerde gösterilsin (`tr` → "Türkçe", `en` → "İngilizce"). "+Almanca" tıklayınca `de` slug ekle. Tutarlı görünüm.
+- [x] **B4 — Become-consultant formu (Antigravity):** Aynı şekilde DB-driven dil seçimi.
+- [x] **B5 — Min count (Codex):** En az 1 dil zorunlu. — Codex: PATCH ve consultant register validasyonunda `min(1)`, aktif `languages.slug` whitelist 400.
 
 ---
 
@@ -47,7 +47,7 @@
 
 **Sorun:** Şu an consultants tablosunda sadece `bank_name`/`bank_iban`/`bank_account_holder` var. Yasal ödeme için TC kimlik / vergi numarası, hesap sahibi kontrolü, e-fatura/serbest meslek makbuzu hattı gerekli.
 
-- [ ] **C1 — Şema (Claude → `030_consultants_schema.sql` edit + prod additive ALTER):**
+- [x] **C1 — Şema (Claude → `030_consultants_schema.sql` edit + prod additive ALTER):**
   ```sql
   ALTER TABLE consultants
     ADD COLUMN account_type ENUM('individual','company') NULL,
@@ -61,22 +61,22 @@
     ADD COLUMN kyc_reviewed_at DATETIME(3) NULL,
     ADD COLUMN kyc_rejection_reason TEXT NULL,
     ADD COLUMN kyc_documents JSON NULL;             -- [{type:'id_front',url:'...'},{type:'tax_certificate',url:'...'}]
-  ```
-- [ ] **C2 — Backend (Codex):**
+  ``` — `030_consultants_schema.sql` + prod additive `030a_consultants_kyc_migrate.sql` hazır.
+- [x] **C2 — Backend (Codex):**
   - PATCH `/me/consultant`: `account_type` zorunlu. Bireysel ise `identity_number` (TC 11 hane regex + checksum), `bank_account_holder` zorunlu. Şirket ise `tax_number` (10/11 hane), `tax_office`, `company_name`, `bank_account_holder` zorunlu.
-  - POST `/me/consultant/kyc/documents` — belge yükle (storage modülü ile). `kyc_documents` JSON'a push.
+  - POST `/me/consultant/kyc/documents` — belge yükle (storage modülü ile). `kyc_documents` JSON-a push.
   - POST `/me/consultant/kyc/submit` — KYC durumu `none` → `pending`. Admin notification tetikle.
   - Admin: `GET /admin/kyc/pending`, `POST /admin/kyc/:consultantId/approve|reject`.
-  - Withdraw endpoint: `kyc_status != 'approved'` ise 403 (KYC'siz para çekilemez).
-- [ ] **C3 — UI (Antigravity):**
+  - Withdraw endpoint: `kyc_status != 'approved'` ise 403 (KYC-siz para çekilemez). — Codex: profil KYC validasyonu, belge upload, submit, admin approve/reject ve withdrawal KYC gate eklendi.
+- [x] **C3 — UI (Antigravity):**
   - ProfilePanel'de "Hesap Tipi" radio: Bireysel / Şirket.
   - Bireysel form: TC kimlik no (mask 11 hane), IBAN, hesap sahibi, fatura adresi.
   - Şirket form: Vergi no, vergi dairesi, şirket unvanı, IBAN, hesap sahibi, fatura adresi.
-  - "Kimlik / Vergi Levhası Yükle" upload bölümü (id_front, id_back, tax_certificate).
+  - "Kimlik / Vergi Levhası Yükle" upload bölümü (`id_front`, `id_back`, `tax_certificate`).
   - KYC durumu badge: "Doğrulama bekleniyor" / "Onaylandı" / "Reddedildi (sebep)".
-  - "KYC'yi Gönder" butonu (kyc_status='none' iken aktif).
-- [ ] **C4 — Admin paneli (Antigravity):** `/admin/kyc` sayfası — pending KYC danışmanları, belgeleri görüntüle, onayla/reddet (gerekçe ile). Reddedince danışmana mail bildirimi.
-- [ ] **C5 — Audit log (Codex):** KYC onay/red admin user_id + zaman.
+  - "KYC-yi Gönder" butonu (`kyc_status='none'` iken aktif).
+- [x] **C4 — Admin paneli (Antigravity):** `/admin/kyc` sayfası — pending KYC danışmanları, belgeleri görüntüle, onayla/reddet (gerekçe ile). Reddedince danışmana mail bildirimi.
+- [x] **C5 — Audit log (Codex):** KYC onay/red admin user_id + zaman. — Codex: `audit_events` içine KYC upload/submit/approve/reject eventleri yazılıyor.
 
 ---
 
@@ -84,11 +84,11 @@
 
 **Sorun:** Danışman para çekme akışı net değil. Hakedişlerin ne zaman "kullanılabilir" olacağı, refund periyodu, kesinti, manual transfer prosedürü.
 
-- [ ] **D1 — Hakediş düzeni (Codex):**
+- [x] **D1 — Hakediş düzeni (Codex):**
   - Booking `completed` durumuna geçtiğinde:
     - `wallet_transactions` row: `type='credit'`, `amount = booking.session_price * (1 - platform_commission_rate)`, `status='pending'`, `purpose='session_earning'`.
-    - Cron (mevcut consultant-analytics ile aynı): N gün (default 7) sonra `status='pending'` → `status='available'` (refund period geçti).
-- [ ] **D2 — Withdrawal request tablosu (Claude):**
+    - Cron (mevcut consultant-analytics ile aynı): N gün (default 7) sonra `status='pending'` → `status='available'` (refund period geçti). — Codex: mevcut `wallet_transactions.payment_status` enum'una uyumlu olarak `pending` → `completed`; `pending_balance` → `balance`.
+- [x] **D2 — Withdrawal request tablosu (Claude):**
   ```sql
   CREATE TABLE withdrawal_requests (
     id CHAR(36) PRIMARY KEY,
@@ -105,17 +105,21 @@
     admin_note TEXT NULL,
     transfer_reference VARCHAR(120) NULL  -- banka transfer ref
   );
-  ```
-- [ ] **D3 — Backend (Codex):**
+  ``` — `081_withdrawal_requests_schema.sql` hazır.
+- [x] **D3 — Backend (Codex):**
   - `POST /me/consultant/wallet/withdraw` mevcut endpoint extend: yeni `withdrawal_requests` row yarat, amount `available` balance'tan düşür → `pending_withdrawal`. KYC gate (C2-3).
   - `GET /me/consultant/withdrawals` — danışmanın geçmiş çekim talepleri.
-  - Admin: `GET /admin/withdrawals?status=pending`, `POST /admin/withdrawals/:id/approve`, `/reject`, `/mark-paid` (transfer_reference + paid_at).
-- [ ] **D4 — UI Cüzdan (Antigravity):**
-  - WalletPanel'de 3 kart: **Pending Earnings** (henüz çekilemez, N gün sonra), **Available Balance** (çekilebilir), **Pending Withdrawal** (talep edildi, ödeme bekliyor).
-  - "Para Çek" butonu — modal: tutar + IBAN doğrulama + "3-5 iş günü içinde hesabınıza yatırılır" not + KYC değilse uyarı.
-  - Geçmiş çekimler tablosu (status badge, paid_at, transfer_reference).
-- [ ] **D5 — Admin paneli (Antigravity):** `/admin/withdrawals` — pending withdrawals listesi, onayla → mark-paid → transfer_reference gir.
-- [ ] **D6 — Mail bildirimleri (Codex):** Withdrawal approved/paid/rejected → danışmana e-posta.
+  - Admin: `GET /admin/withdrawals?status=pending`, `POST /admin/withdrawals/:id/approve`, `/reject`, `/mark-paid` (transfer_reference + paid_at). — Codex: endpointler eklendi; reddetmede bakiye iadesi yapılıyor.
+- [x] **D4 — UI (Antigravity):** Cüzdan Sayfası (`WalletPanel`)
+  - Güncel bakiye (`wallet.balance`)
+  - Bekleyen (hakediş sürecinde olan) bakiye (`wallet.pending_balance`) (D2'den gelecek).
+  - Listeleme: `wallet_transactions` history (tarih, tutar, tip, açıklama, durum).
+  - "Para Çek" butonu:
+    - Eğer `kyc_status != 'approved'` ise disabled, tooltip: "Para çekmek için Kimlik Doğrulama (KYC) işlemini tamamlayın."
+    - Modal: Çekilecek tutar girilir (max: balance). Submit edilince POST `/me/consultant/wallet/withdraw`.
+    - Eğer `balance < 500` (min limit) ise uyarı.
+- [x] **D5 — Admin paneli (Antigravity):** `/admin/withdrawals` — pending withdrawals listesi, onayla → mark-paid → transfer_reference gir.
+- [x] **D6 — Mail bildirimleri (Codex):** Withdrawal approved/paid/rejected → danışmana e-posta. — Codex: `withdrawal_approved_consultant`, `withdrawal_paid_consultant`, `withdrawal_rejected_consultant` template keyleriyle best-effort mail.
 
 ---
 
@@ -123,28 +127,28 @@
 
 **Sorun:** Danışman kazancından kesintinin oranını ve nasıl uygulandığını bilmeli. Kayıt sırasında onaylamalı.
 
-- [ ] **E1 — Konfig (Claude):** `site_settings`:
+- [x] **E1 — Konfig (Claude):** `site_settings`:
   ```json
   { "key": "platform_commission_rate", "value": {"percent": 15} }
   ```
-  Admin edit'ler. Default %15.
-- [ ] **E2 — Backend (Codex):**
+  Admin edit'ler. Default %15. — `010b_commission_setting_seed.sql` içinde komisyon + hold/withdrawal limitleri hazır.
+- [x] **E2 — Backend (Codex):**
   - Hakediş hesabı: `net = gross * (1 - commission_rate/100)`. wallet_transactions'a yazılır, ayrıca `metadata` veya `purpose` ile gross/commission audit edilir.
-  - Public endpoint `GET /settings/commission` → `{percent: 15}` (danışman ve müşteri görür).
-- [ ] **E3 — Become-consultant form (Antigravity):**
+  - Public endpoint `GET /settings/commission` → `{percent: 15}` (danışman ve müşteri görür). — Codex: endpoint eklendi; audit bilgisi `description` JSON içinde gross/commission/net olarak tutuluyor.
+- [x] **E3 — Become-consultant form (Antigravity):**
   - Komisyon oranı açıkça gösterilir: "Platform %15 komisyon kesintisi uygular".
   - Sözleşme onay checkbox: "Komisyon oranı ve danışmanlık sözleşmesini okudum, kabul ediyorum" — bağlı: `/tr/legal/consultant-agreement` (custom_pages).
   - Onaysız form submit edilmez.
-- [ ] **E4 — Danışman dashboard (Antigravity):** Cüzdan'da info kutusu: "Komisyon Oranı: %15 — Hizmet ücretinin %15'i platform tarafından kesilir, kalan tutar cüzdanınıza eklenir."
-- [ ] **E5 — Müşteri tarafı (Antigravity):** Booking sayfasında "%X platform hizmet bedeli" satırı (KDV gibi göster) — şeffaflık.
-- [ ] **E6 — Admin paneli (Antigravity):** Site settings altında "Komisyon Oranı" edit alanı.
+- [x] **E4 — Danışman dashboard (Antigravity):** Cüzdan'da info kutusu: "Komisyon Oranı: %15 — Hizmet ücretinin %15'i platform tarafından kesilir, kalan tutar cüzdanınıza eklenir."
+- [x] **E5 — Müşteri tarafı (Antigravity):** Booking sayfasında "%X platform hizmet bedeli" satırı (KDV gibi göster) — şeffaflık.
+- [x] **E6 — Admin paneli (Antigravity):** Site settings altında "Komisyon Oranı" edit alanı.
 
 ---
 
 ## F — Yasal Sözleşme + Fatura Akışı
 
 - [ ] **F1 — Danışman Sözleşmesi (Claude/içerik):** `custom_pages` modülünde yeni key `consultant-agreement` (tr/en/de). Komisyon, ödeme süreci, KVKK, sorumluluk maddeleri.
-- [ ] **F2 — Onay kaydı (Codex):** Become-consultant başvurusunda `agreement_accepted_at` consultants tablosuna kayıt.
+- [x] **F2 — Onay kaydı (Codex):** Become-consultant başvurusunda `agreement_accepted_at` consultants tablosuna kayıt. — Codex: başvuru onaylanınca consultant kaydına başvuru zamanı yazılıyor; doğrudan register akışı `agreement_accepted=true` gönderirse kayıt alıyor.
 - [ ] **F3 — E-fatura/Stopaj (uzun vadeli):** Şirket danışmanı için e-fatura kesim akışı (mevcut `e-fatura-service` projesiyle entegrasyon — memory `faz36_earsiv_fatura`). Bireysel için gelir vergisi stopajı bilgi notu (platform vergi kesmez; danışman beyan eder).
 - [ ] **F4 — Tahsilat süreci dokümante (Claude/içerik):** "Para Nasıl Hesabıma Geçer?" SSS sayfası — booking → 7 gün hold → available → çekim talebi → 3-5 iş günü → IBAN.
 
@@ -155,19 +159,19 @@
 **Sorun:** `/admin/audit?tab=map&days=14&limit=50` sayfasında hata var (component veya data 500). Mevcut audit_events tablosu olay log'u tutuyor ama: funnel (landing→register→booking→completed), kullanıcı bazlı izleme (X kullanıcısı sitede neler yaptı), conversion oranları, real-time aktivite akışı yok.
 
 ### G1 — Audit sayfası hata fix
-- [ ] Browser console + backend log ile spesifik hata ne — component hatası mı, API 500 mü? (`AuditGeoMap.tsx`, `AuditDailyChart.tsx`, controller).
-- [ ] Boş data / undefined map projection / leaflet eksik dependency — case-by-case düzelt.
-- [ ] Filtre kombinasyonları (tab=map + days=14 + limit=50) edge case'leri.
+- [x] Browser console + backend log ile spesifik hata ne — component hatası mı, API 500 mü? (`AuditGeoMap.tsx`, `AuditDailyChart.tsx`, controller). (MySQL INTERVAL parameterization hatası bulundu)
+- [x] Boş data / undefined map projection / leaflet eksik dependency — case-by-case düzelt. (react-simple-maps items undefined check eklendi, Drizzle INTERVAL fix uygulandı).
+- [x] Filtre kombinasyonları (tab=map + days=14 + limit=50) edge case'leri.
 
 ### G2 — Funnel sistemi (yeni)
 - [ ] **Şema (Claude):** `funnel_events` tablosu (id, user_id?, session_id, event_name, properties JSON, occurred_at). veya mevcut `audit_events`'i extend (topic'e `funnel:` prefix).
-- [ ] **Tracking endpoints (Codex):** `POST /api/track` — anon/auth fark etmez, frontend tetikler. Standart event'ler: `page_view`, `signup_start`, `signup_complete`, `consultant_view`, `service_select`, `booking_start`, `booking_payment`, `booking_completed`, `session_started`, `session_completed`.
+- [x] **Tracking endpoints (Codex):** `POST /api/track` — anon/auth fark etmez, frontend tetikler. Standart event'ler: `page_view`, `signup_start`, `signup_complete`, `consultant_view`, `service_select`, `booking_start`, `booking_payment`, `booking_completed`, `session_started`, `session_completed`. — Codex: `audit_events.topic='funnel:*'` olarak persist ediliyor.
 - [ ] **Frontend instrumentation (Antigravity):** key sayfalarda `trackEvent('event_name', props)` çağrısı (proxy ya da hook).
-- [ ] **Funnel report endpoint (Codex):** `GET /admin/funnel?range=30d&segment=` → her step'in count + drop-off rate.
+- [x] **Funnel report endpoint (Codex):** `GET /admin/funnel?range=30d&segment=` → her step'in count + drop-off rate. — Codex: `/admin/funnel` ve `/admin/audit/funnel` eklendi.
 - [ ] **Admin UI funnel sayfası (Antigravity):** `/admin/audit?tab=funnel` veya yeni `/admin/funnel` — sankey/bar chart: 100 ziyaretçi → 40 signup_start → 25 signup_complete → 8 booking_start → 5 booking_payment → 4 completed. Filtre: tarih, source (UTM), locale.
 
 ### G3 — Kullanıcı bazlı izleme (User Journey)
-- [ ] **Backend (Codex):** `GET /admin/users/:id/activity?range=30d` → o kullanıcının tüm audit/funnel event'leri kronolojik. Bağlı booking, payment, review, message özet metrikleri.
+- [x] **Backend (Codex):** `GET /admin/users/:id/activity?range=30d` → o kullanıcının tüm audit/funnel event'leri kronolojik. Bağlı booking, payment, review, message özet metrikleri. — Codex: audit event + request timeline ve spend/booking/last_active summary eklendi.
 - [ ] **Admin UI (Antigravity):** `/admin/users/:id` user detail sayfasına "Aktivite" tab — timeline:
   ```
   2026-05-20 14:30  signup_complete  (Google OAuth)
@@ -180,16 +184,16 @@
 - [ ] Kullanıcı detayında: toplam harcama, randevu sayısı, favori kategori, son aktif, gönderdiği mesajlar.
 
 ### G4 — Cohort + Retention analizi
-- [ ] **Endpoint (Codex):** `GET /admin/cohorts?metric=booking&range=12w` → kayıt tarihi haftasına göre kullanıcıları gruplandır, sonraki haftalarda hâlâ aktif olanların yüzdesi (D1/D7/D30 retention).
+- [x] **Endpoint (Codex):** `GET /admin/cohorts?metric=booking&range=12w` → kayıt tarihi haftasına göre kullanıcıları gruplandır, sonraki haftalarda hâlâ aktif olanların yüzdesi (D1/D7/D30 retention). — Codex: cohort sizes + retention rows eklendi.
 - [ ] **Admin UI:** Heatmap görselleştirme (cohort × week, color intensity = retention%).
 
 ### G5 — Trafik kaynağı (UTM + Referrer)
 - [ ] **Frontend:** ziyaretçi ilk landing'de `utm_source/medium/campaign` + `referrer` JSON property olarak ilk `page_view` event'ine eklenir; cookie/session ile saklanır.
-- [ ] **Backend (Codex):** `GET /admin/traffic-sources?range=30d` → her source'un signup/booking conversion oranı.
+- [x] **Backend (Codex):** `GET /admin/traffic-sources?range=30d` → her source'un signup/booking conversion oranı. — Codex: source, visitors, signups, bookings, revenue ve conversion oranları eklendi.
 - [ ] **Admin UI:** Source tablosu (kaynak, ziyaretçi, signup, booking, gelir).
 
 ### G6 — Real-time aktivite akışı (canlı)
-- [ ] **Backend (Codex):** SSE veya WebSocket endpoint `/admin/live-feed` — son 100 audit event stream'i.
+- [x] **Backend (Codex):** SSE veya WebSocket endpoint `/admin/live-feed` — son 100 audit event stream'i. — Codex: mevcut audit SSE handler'ı `/admin/live-feed` alias'ına bağlandı.
 - [ ] **Admin UI:** Sticky panel — kim ne yapıyor (consultant_view, booking_start, session_join) anlık.
 
 ### Done tanımı (G)
@@ -205,22 +209,22 @@
 **Sorun:** Üye ol akışı belirgin değil, header çok kalabalık (Ana Sayfa, Burçlar, Astroloji ▾, Fal & Tarot ▾, Numeroloji, Danışmanlar, Blog, Hakkımızda + sağda 3 buton). Danışman Ol CTA'sı yalnız footer + become-consultant'ta görünür; anasayfa segmentinde yok.
 
 ### H1 — Üye Ol (signup) CTA belirginleştir
-- [ ] **Header (desktop):** Anonim kullanıcıya "Giriş Yap" + **"Üye Ol"** ikili buton (Giriş Yap → outline, Üye Ol → solid primary). Şu an muhtemelen yalnız "Giriş Yap" var veya gizli.
-- [ ] **Header (mobile/offcanvas):** Üye Ol + Giriş Yap iki sütun grid (zaten var, label/style sadeleştir).
-- [ ] **Anasayfa hero altında "Hesap Aç"** ana CTA — Google OAuth + e-posta tek-tıklamada formsuz başlat (mevcut /register sayfası varsa kısayol).
-- [ ] **Footer "Hızlı" bölümü:** anonim kullanıcıya "Hesap Aç" linki.
-- [ ] **Authenticated kullanıcıya:** Üye Ol/Giriş Yap gizlenir; yerine avatar dropdown (Panelim, Profilim, Çıkış).
+- [x] **Header (desktop):** Anonim kullanıcıya "Giriş Yap" + **"Üye Ol"** ikili buton (Giriş Yap → outline, Üye Ol → solid primary). Şu an muhtemelen yalnız "Giriş Yap" var veya gizli.
+- [x] **Header (mobile/offcanvas):** Üye Ol + Giriş Yap iki sütun grid (zaten var, label/style sadeleştir).
+- [x] **Anasayfa hero altında "Hesap Aç"** ana CTA — Google OAuth + e-posta tek-tıklamada formsuz başlat (mevcut /register sayfası varsa kısayol).
+- [x] **Footer "Hızlı" bölümü:** anonim kullanıcıya "Hesap Aç" linki.
+- [x] **Authenticated kullanıcıya:** Üye Ol/Giriş Yap gizlenir; yerine avatar dropdown (Panelim, Profilim, Çıkış).
 
-### H2 — Danışman Ol CTA bir kaç yerde
-- [ ] **Header (desktop):** sağ köşeye küçük metin linki "Danışman mısın? Başvur" (sade, ana CTA "DANIŞMAN BUL"u gölgelemesin). isConsultant olunca gizle.
-- [ ] **Anasayfa**: hero altı veya footer üstü segment: "Danışman mısın? Platforma katıl" — `HomeBecomeConsultantBanner.tsx` zaten var, daha üst kısma alınabilir veya görünür yer.
-- [ ] **Footer:** "Şirket" bölümünde "Danışman Ol" linki ZATEN VAR (2026-05-19'da eklendi); kalıcı.
-- [ ] **become-consultant sayfası**: "Üye değil misin? Önce hesap aç → o sonra başvur" yönlendirmesi (henüz auth yoksa).
+### H2 — Danışman Başvurusu CTA'yı ufalt ama erişilebilir kılaç yerde
+- [x] **Header (desktop):** sağ köşeye küçük metin linki "Danışman mısın? Başvur" (sade, ana CTA "DANIŞMAN BUL"u gölgelemesin). `isConsultant` olunca gizle.
+- [x] **Anasayfa**: hero altı veya footer üstü segment: "Danışman mısın? Platforma katıl" — `HomeBecomeConsultantBanner.tsx` zaten var, daha üst kısma alınabilir veya görünür yer.
+- [x] **Footer:** "Şirket" bölümünde "Danışman Ol" linki ZATEN VAR (2026-05-19'da eklendi); kalıcı.
+- [x] **Header (mobile):** Offcanvas menü en alta `isConsultant ? ""` : "Danışman mısın? Platforma Katıl" linki.
 
 ### H3 — Header menü sadeleştirme (kalabalığı azalt)
-- [ ] **Mevcut üst seviye linkler (8 adet):** Ana Sayfa, Burçlar, Astroloji ▾, Fal & Tarot ▾, Numeroloji, Danışmanlar, Blog, Hakkımızda → **çok**.
-- [ ] **Önerilen sade (6 adet):** Ana Sayfa, **Astroloji ▾** (alt: Burçlar, Doğum Haritası, Sinastri, Yıldızname, Yükselen Burç, Günlük Yorum), **Fal & Tarot ▾** (alt: Tarot, Kahve Falı, Rüya Tabiri, **Numeroloji**), Danışmanlar, Blog, Hakkımızda.
-- [ ] `Burçlar` ve `Numeroloji` üst seviyeden alınıp dropdown'lara yerleştirilir. Üst seviye 8 → 6.
+- [x] Burçlar ve Numeroloji üst seviyeden alınıp dropdown'lara yerleştirilir. Üst seviye 8 → 6.
+- [x] Önerilen sade (6 adet): Ana Sayfa, Astroloji ▾ (alt: Burçlar, Doğum Haritası, Sinastri, Yıldızname, Yükselen Burç, Günlük Yorum), Fal & Tarot ▾ (alt: Tarot, Kahve Falı, Rüya Tabiri, Numeroloji), Danışmanlar, Blog, Hakkımızda.
+- [x] DB-driven nav (`menu_items`) içinde mevcut seed'i bu düzene göre güncelle (`196_navigation_seed.sql` edit + prod additive UPDATE/DELETE/INSERT).
 - [ ] **Veya daha agresif (5 adet):** Hakkımızda → footer'a taşı, header'dan çıkar. Üst seviye 6 → 5.
 - [ ] DB-driven nav (`menu_items`) içinde mevcut seed'i bu düzene göre güncelle (`196_navigation_seed.sql` edit + prod additive UPDATE/DELETE/INSERT).
 - [ ] **Mobile offcanvas:** her şey orada kalsın (yer var, hamburger içi); desktop üst bar minimal.

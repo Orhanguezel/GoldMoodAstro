@@ -9,6 +9,7 @@ import {
   getPageSeo,
   listAllPageSeo,
   getHomepageSettings,
+  getCommissionPublic,
 } from './controller';
 
 const B = '/site_settings';
@@ -20,5 +21,6 @@ export async function registerSiteSettings(app: FastifyInstance) {
   app.get(`${B}/seo`, listAllPageSeo);
   app.get(`${B}/seo/:pageKey`, getPageSeo);
   app.get(`${B}/homepage`, getHomepageSettings);
+  app.get('/settings/commission', getCommissionPublic);
   app.get(`${B}/:key`, getSiteSettingByKey);
 }

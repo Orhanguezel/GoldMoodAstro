@@ -28,6 +28,16 @@ export interface ConsultantSelfProfile {
   bank_name: string | null;
   bank_iban: string | null;
   bank_account_holder: string | null;
+  // C3: KYC bilgileri
+  account_type: 'individual' | 'company' | null;
+  identity_number: string | null;
+  tax_number: string | null;
+  tax_office: string | null;
+  company_name: string | null;
+  billing_address: string | null;
+  kyc_status: 'none' | 'pending' | 'approved' | 'rejected';
+  kyc_rejection_reason: string | null;
+  kyc_documents?: Array<{ type: string; url: string }> | null;
   user?: { full_name: string | null; email: string | null; phone: string | null; avatar_url: string | null } | null;
 }
 
@@ -87,6 +97,14 @@ export interface ProfilePatch {
   bank_name?: string | null;
   bank_iban?: string | null;
   bank_account_holder?: string | null;
+  // C3: KYC bilgileri
+  account_type?: 'individual' | 'company' | null;
+  identity_number?: string | null;
+  tax_number?: string | null;
+  tax_office?: string | null;
+  company_name?: string | null;
+  billing_address?: string | null;
+  kyc_documents?: Array<{ type: string; url: string }> | null;
 }
 
 export interface ServicePayload {
@@ -293,6 +311,11 @@ export const consultantSelfApi = baseApi.injectEndpoints({
     updateMyConsultantProfile: build.mutation<{ id: string }, ProfilePatch>({
       query: (body) => ({ url: '/me/consultant', method: 'PATCH', body }),
       transformResponse: (res: { data: { id: string } }) => res.data,
+      invalidatesTags: ['ConsultantSelf' as any],
+    }),
+    submitMyConsultantKyc: build.mutation<{ status: string }, void>({
+      query: () => ({ url: '/me/consultant/kyc/submit', method: 'POST' }),
+      transformResponse: (res: { data: { status: string } }) => res.data,
       invalidatesTags: ['ConsultantSelf' as any],
     }),
     listMyConsultantBlogPosts: build.query<CustomPageDto[], { locale?: string } | void>({
@@ -563,6 +586,7 @@ export const consultantSelfApi = baseApi.injectEndpoints({
 export const {
   useGetMyConsultantProfileQuery,
   useUpdateMyConsultantProfileMutation,
+  useSubmitMyConsultantKycMutation,
   useListMyConsultantBlogPostsQuery,
   useCreateMyConsultantBlogPostMutation,
   useUpdateMyConsultantBlogPostMutation,

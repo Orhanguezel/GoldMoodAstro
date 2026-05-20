@@ -54,6 +54,8 @@
     "./modules/consultantSelf/*": "./modules/consultantSelf/*.ts",
     "./modules/kvkk": "./modules/kvkk/index.ts",
     "./modules/kvkk/*": "./modules/kvkk/*.ts",
+    "./modules/languages": "./modules/languages/index.ts",
+    "./modules/languages/*": "./modules/languages/*.ts",
     "./modules/llm": "./modules/llm/index.ts",
     "./modules/llm/*": "./modules/llm/*.ts",
     "./modules/llmPrompts": "./modules/llmPrompts/index.ts",

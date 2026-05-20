@@ -8,8 +8,10 @@
 // =============================================================
 
 import type { FastifyInstance } from 'fastify';
+import { tryAuth } from '../../middleware/auth';
+import { trackEventPublic } from './funnel.controller';
 
-export async function registerAudit(_api: FastifyInstance, _opts?: unknown) {
-  // No public audit routes currently.
+export async function registerAudit(api: FastifyInstance, _opts?: unknown) {
+  api.post('/track', { preHandler: tryAuth }, trackEventPublic);
   // Admin endpoints and SSE stream are registered under /admin scope in app.ts.
 }

@@ -9,6 +9,7 @@ import { registerReviewFollowupCron } from '@/cron/review-followup';
 import { registerAccountDeletionCron } from '@/cron/account-deletion';
 import { registerRequestNowTimeoutCron } from '@/cron/request-now-timeout';
 import { registerConsultantAnalyticsCron } from '@/cron/consultant-analytics';
+import { registerConsultantEarningsCron } from '@/cron/consultant-earnings';
 import { registerPushSender } from '@goldmood/shared-backend/modules/notifications';
 import { sendPushNotification } from '@/modules/firebase/service';
 
@@ -35,6 +36,7 @@ async function main() {
     registerAccountDeletionCron();
     registerRequestNowTimeoutCron();
     registerConsultantAnalyticsCron();
+    registerConsultantEarningsCron();
   }
 
   console.log(`API listening ${host}:${env.PORT}`);

@@ -115,7 +115,8 @@ export const AuditGeoMap: React.FC<Props> = ({ items, loading }) => {
 
   const countByCode = useMemo(() => {
     const map = new Map<string, { count: number; unique_ips: number }>();
-    for (const r of items) {
+    const safeItems = Array.isArray(items) ? items : [];
+    for (const r of safeItems) {
       const c = r.country?.toUpperCase();
       if (!c) continue;
       const prev = map.get(c) ?? { count: 0, unique_ips: 0 };
@@ -134,7 +135,10 @@ export const AuditGeoMap: React.FC<Props> = ({ items, loading }) => {
   }, [countByCode]);
 
   const totalRequests = useMemo(
-    () => items.reduce((s, r) => s + r.count, 0),
+    () => {
+      const safeItems = Array.isArray(items) ? items : [];
+      return safeItems.reduce((s, r) => s + r.count, 0);
+    },
     [items],
   );
 

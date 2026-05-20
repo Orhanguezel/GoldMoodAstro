@@ -45,17 +45,16 @@ ON DUPLICATE KEY UPDATE title = VALUES(title);
 -- Top-level items
 INSERT INTO menu_items (id, location, type, url, is_active, display_order) VALUES
   ('mi-h-home',         'header', 'custom', '/',                          1, 10),
-  ('mi-h-burclar',      'header', 'custom', '/burclar',                   1, 20),
-  ('mi-h-astrology',    'header', 'custom', NULL,                         1, 30),  -- dropdown parent
-  ('mi-h-fal',          'header', 'custom', NULL,                         1, 40),  -- dropdown parent
-  ('mi-h-numeroloji',   'header', 'custom', '/numeroloji',                1, 50),
-  ('mi-h-consultants',  'header', 'custom', '/consultants',               1, 60),
-  ('mi-h-blog',         'header', 'custom', '/blog',                      1, 70),
-  ('mi-h-about',        'header', 'custom', '/about',                     1, 80)
+  ('mi-h-astrology',    'header', 'custom', NULL,                         1, 20),  -- dropdown parent
+  ('mi-h-fal',          'header', 'custom', NULL,                         1, 30),  -- dropdown parent
+  ('mi-h-consultants',  'header', 'custom', '/consultants',               1, 40),
+  ('mi-h-blog',         'header', 'custom', '/blog',                      1, 50),
+  ('mi-h-about',        'header', 'custom', '/about',                     1, 60)
 ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Astrology dropdown children
 INSERT INTO menu_items (id, location, parent_id, type, url, is_active, display_order) VALUES
+  ('mi-h-burclar',        'header', 'mi-h-astrology', 'custom', '/burclar',                   1, 5),
   ('mi-h-astro-birth',    'header', 'mi-h-astrology', 'custom', '/birth-chart',                  1, 10),
   ('mi-h-astro-sinastri', 'header', 'mi-h-astrology', 'custom', '/sinastri',                     1, 20),
   ('mi-h-astro-yildiz',   'header', 'mi-h-astrology', 'custom', '/yildizname',                   1, 30),
@@ -68,7 +67,8 @@ ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), displa
 INSERT INTO menu_items (id, location, parent_id, type, url, is_active, display_order) VALUES
   ('mi-h-fal-tarot',  'header', 'mi-h-fal', 'custom', '/tarot',         1, 10),
   ('mi-h-fal-coffee', 'header', 'mi-h-fal', 'custom', '/kahve-fali',    1, 20),
-  ('mi-h-fal-dream',  'header', 'mi-h-fal', 'custom', '/ruya-tabiri',   1, 30)
+  ('mi-h-fal-dream',  'header', 'mi-h-fal', 'custom', '/ruya-tabiri',   1, 30),
+  ('mi-h-numeroloji', 'header', 'mi-h-fal', 'custom', '/numeroloji',    1, 40)
 ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Header menu i18n

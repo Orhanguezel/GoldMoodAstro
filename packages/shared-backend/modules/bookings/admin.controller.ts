@@ -5,7 +5,7 @@
 
 import type { RouteHandler } from 'fastify';
 import { randomUUID } from 'crypto';
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 import {
   listBookingsMerged,
@@ -34,11 +34,13 @@ import { db } from '../../db/client';
 import { ensureLocalesLoadedFromSettings, getRuntimeDefaultLocale } from '../../core/i18n';
 import { siteSettings } from '@goldmood/shared-backend/modules/siteSettings/schema';
 import { bookings as bookingsTable } from './schema';
+import { consultants } from '../consultants/schema';
 import { to01, getDefaultLocale } from '../_shared';
 
 const safeText = (v: unknown) => String(v ?? '').trim();
 const now = () => new Date();
 const FALLBACK_SITE_NAME = process.env.APP_NAME || 'Platform';
+const DEFAULT_COMMISSION_PERCENT = 15;
 
 
 
@@ -65,6 +67,112 @@ async function getBookingAdminUserId(): Promise<string | null> {
   const v = await getSettingValue('booking_admin_user_id');
   const s = (v ?? '').trim();
   return s && s.length === 36 ? s : null;
+}
+
+function parseCommissionPercent(raw: unknown): number {
+  if (raw == null) return DEFAULT_COMMISSION_PERCENT;
+  if (typeof raw === 'object' && !Array.isArray(raw)) {
+    const n = Number((raw as Record<string, unknown>).percent);
+    return Number.isFinite(n) ? Math.min(Math.max(n, 0), 100) : DEFAULT_COMMISSION_PERCENT;
+  }
+  const text = String(raw).trim();
+  if (!text) return DEFAULT_COMMISSION_PERCENT;
+  try {
+    return parseCommissionPercent(JSON.parse(text));
+  } catch {
+    const n = Number(text);
+    return Number.isFinite(n) ? Math.min(Math.max(n, 0), 100) : DEFAULT_COMMISSION_PERCENT;
+  }
+}
+
+async function getPlatformCommissionPercent(): Promise<number> {
+  const [row] = await db
+    .select({ value: siteSettings.value })
+    .from(siteSettings)
+    .where(and(eq(siteSettings.key, 'platform_commission_rate'), eq(siteSettings.locale, '*')))
+    .limit(1);
+  return parseCommissionPercent(row?.value);
+}
+
+async function createPendingSessionEarning(bookingId: string) {
+  const commissionPercent = await getPlatformCommissionPercent();
+
+  await db.transaction(async (tx) => {
+    const [booking] = await tx
+      .select({
+        id: bookingsTable.id,
+        consultant_id: bookingsTable.consultant_id,
+        session_price: bookingsTable.session_price,
+        consultant_user_id: consultants.user_id,
+      })
+      .from(bookingsTable)
+      .innerJoin(consultants, eq(consultants.id, bookingsTable.consultant_id))
+      .where(eq(bookingsTable.id, bookingId))
+      .limit(1);
+
+    if (!booking) return;
+
+    const existing = await tx.execute(sql`
+      SELECT id
+      FROM wallet_transactions
+      WHERE booking_id = ${booking.id} AND purpose = 'session_earning'
+      LIMIT 1
+    `);
+    const existingRows = Array.isArray((existing as any)?.[0]) ? (existing as any)[0] : (existing as any);
+    if ((existingRows as any[])?.[0]) return;
+
+    const gross = Number(booking.session_price);
+    if (!Number.isFinite(gross) || gross <= 0) return;
+
+    let walletResult = await tx.execute(sql`
+      SELECT id, consultant_id
+      FROM wallets
+      WHERE consultant_id = ${booking.consultant_id} OR user_id = ${booking.consultant_user_id}
+      LIMIT 1
+    `);
+    let walletRows = Array.isArray((walletResult as any)?.[0]) ? (walletResult as any)[0] : (walletResult as any);
+    let wallet = (walletRows as any[])?.[0];
+
+    if (!wallet) {
+      const walletId = randomUUID();
+      await tx.execute(sql`
+        INSERT INTO wallets (id, user_id, consultant_id, balance, pending_balance, total_earnings, total_withdrawn, currency, status)
+        VALUES (${walletId}, ${booking.consultant_user_id}, ${booking.consultant_id}, 0.00, 0.00, 0.00, 0.00, 'TRY', 'active')
+      `);
+      wallet = { id: walletId, consultant_id: booking.consultant_id };
+    } else if (!wallet.consultant_id) {
+      await tx.execute(sql`UPDATE wallets SET consultant_id = ${booking.consultant_id} WHERE id = ${wallet.id}`);
+    }
+
+    const commissionAmount = gross * (commissionPercent / 100);
+    const net = Math.max(gross - commissionAmount, 0);
+    const description = JSON.stringify({
+      gross: Number(gross.toFixed(2)),
+      commission_percent: commissionPercent,
+      commission_amount: Number(commissionAmount.toFixed(2)),
+      net: Number(net.toFixed(2)),
+    });
+
+    await tx.execute(sql`
+      INSERT INTO wallet_transactions (
+        id, wallet_id, user_id, booking_id, type, amount, currency, purpose,
+        description, payment_method, payment_status, transaction_ref, is_admin_created
+      )
+      VALUES (
+        ${randomUUID()}, ${wallet.id}, ${booking.consultant_user_id}, ${booking.id},
+        'credit', ${net.toFixed(2)}, 'TRY', 'session_earning',
+        ${description}, 'admin_manual', 'pending', ${`booking:${booking.id}`}, 0
+      )
+    `);
+
+    await tx.execute(sql`
+      UPDATE wallets
+      SET pending_balance = pending_balance + ${net.toFixed(2)},
+          total_earnings = total_earnings + ${net.toFixed(2)},
+          updated_at = NOW(3)
+      WHERE id = ${wallet.id}
+    `);
+  });
 }
 
 function getAdminIdentity(req: any): string {
@@ -406,6 +514,14 @@ export const updateBookingAdminHandler: RouteHandler = async (req, reply) => {
 
     // Side effects on status change (best-effort)
     if (isStatusChanged) {
+      if (statusAfter === 'completed') {
+        try {
+          await createPendingSessionEarning(String((updated as any).id));
+        } catch (e: any) {
+          req.log.error({ err: String(e?.message || e), bookingId: (updated as any).id }, 'booking earning creation failed');
+        }
+      }
+
       const siteName = await getSiteName();
       const customerLocale = String((updated as any).locale || defaultLocale);
 

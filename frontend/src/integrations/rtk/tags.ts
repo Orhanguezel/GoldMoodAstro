@@ -82,6 +82,9 @@ export const metahubTags = [
   'ConsultantSelfReviews',
   'ConsultantApplication',
   'ConsultantApplications',
+  'Languages',
+  'Commission',
+  'ConsultantWithdrawals',
 ] as const;
 
 export type MetahubTag = (typeof metahubTags)[number];

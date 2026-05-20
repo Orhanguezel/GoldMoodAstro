@@ -23,26 +23,13 @@ import {
   useApplyConsultantMutation,
 } from '@/integrations/rtk/public/consultant_applications.endpoints';
 import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
+import { useListLanguagesPublicQuery } from '@/integrations/rtk/public/languages.public.endpoints';
 import { useUploadToBucketMutation } from '@/integrations/rtk/public/storage_public.endpoints';
+import { useListSiteSettingsQuery } from '@/integrations/rtk/public/site_settings.endpoints';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
-const EXPERTISE_OPTIONS = [
-  { id: 'astrology', label: 'Astrology' },
-  { id: 'tarot', label: 'Tarot' },
-  { id: 'coffee', label: 'Coffee Reading' },
-  { id: 'numerology', label: 'Numerology' },
-  { id: 'birth_chart', label: 'Birth Chart' },
-  { id: 'dream_interpretation', label: 'Dream Interpretation' },
-  { id: 'relationship', label: 'Relationship Guidance' },
-  { id: 'energy_healing', label: 'Energy Healing' },
-];
 
-const LANGUAGES = [
-  { id: 'tr', label: 'Türkçe' },
-  { id: 'en', label: 'İngilizce' },
-  { id: 'de', label: 'Almanca' },
-  { id: 'fr', label: 'Fransızca' },
-];
 
 function getApiErrorMessage(error: unknown) {
   if (typeof error !== 'object' || error === null) return 'Başvuru sırasında bir hata oluştu.';
@@ -60,10 +47,19 @@ const cinzel = Cinzel({ subsets: ['latin'] });
 export default function BecomeConsultantPage() {
   const [step, setStep] = useState(1);
   const [apply, { isLoading }] = useApplyConsultantMutation();
-  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
-  const expertiseOptions = serviceCategories.length
-    ? serviceCategories.map((category) => ({ id: category.slug, label: category.name }))
-    : EXPERTISE_OPTIONS;
+  const { data: serviceCategories = [], isLoading: isLoadingCategories } = useListServiceCategoriesPublicQuery();
+  const expertiseOptions = serviceCategories.map((category) => ({ id: category.slug, label: category.name }));
+
+  const { data: dbLanguages = [], isLoading: isLoadingLanguages } = useListLanguagesPublicQuery();
+  // We don't have locale here, so we default to name_tr or name_en
+  const getLanguageLabel = (lang: any) => lang.name_tr || lang.name_en || lang.slug;
+  const languageOptions = dbLanguages.map((lang) => ({ id: lang.slug, label: getLanguageLabel(lang) }));
+
+  const { data: settings = [] } = useListSiteSettingsQuery({ keys: ['platform_commission_rate'] });
+  const commissionRateSetting = settings.find(s => s.key === 'platform_commission_rate');
+  const commissionRate = (commissionRateSetting?.value as { percent?: number } | undefined)?.percent ?? 15;
+
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
 
   const [formData, setFormData] = useState({
     full_name: '',
@@ -104,6 +100,10 @@ export default function BecomeConsultantPage() {
     }
     if (formData.languages.length === 0) {
       toast.error('Lütfen en az bir dil seçin');
+      return;
+    }
+    if (!agreementAccepted) {
+      toast.error('Lütfen danışmanlık sözleşmesini kabul edin');
       return;
     }
     try {
@@ -274,29 +274,37 @@ export default function BecomeConsultantPage() {
                   <div className="space-y-10">
                     <h2 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-tight`}>Uzmanlık & Diller</h2>
                     <InputGroup label="Uzmanlık Alanları" required>
-                      <div className="flex flex-wrap gap-4">
-                        {expertiseOptions.map(opt => (
-                          <PillButton
-                            key={opt.id}
-                            label={opt.label}
-                            active={formData.expertise.includes(opt.id)}
-                            onClick={() => handleToggleExpertise(opt.id)}
-                          />
-                        ))}
-                      </div>
+                      {isLoadingCategories ? (
+                        <div className="text-[12px] text-(--gm-text-dim) py-2">Yükleniyor...</div>
+                      ) : (
+                        <div className="flex flex-wrap gap-4">
+                          {expertiseOptions.map(opt => (
+                            <PillButton
+                              key={opt.id}
+                              label={opt.label}
+                              active={formData.expertise.includes(opt.id)}
+                              onClick={() => handleToggleExpertise(opt.id)}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </InputGroup>
 
                     <InputGroup label="Danışmanlık Dilleri" required>
-                      <div className="flex flex-wrap gap-4">
-                        {LANGUAGES.map(opt => (
-                          <PillButton
-                            key={opt.id}
-                            label={opt.label}
-                            active={formData.languages.includes(opt.id)}
-                            onClick={() => handleToggleLanguage(opt.id)}
-                          />
-                        ))}
-                      </div>
+                      {isLoadingLanguages ? (
+                        <div className="text-[12px] text-(--gm-text-dim) py-2">Yükleniyor...</div>
+                      ) : (
+                        <div className="flex flex-wrap gap-4">
+                          {languageOptions.map(opt => (
+                            <PillButton
+                              key={opt.id}
+                              label={opt.label}
+                              active={formData.languages.includes(opt.id)}
+                              onClick={() => handleToggleLanguage(opt.id)}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </InputGroup>
                   </div>
 
@@ -345,17 +353,31 @@ export default function BecomeConsultantPage() {
                   </div>
 
                   <div className="pt-12 border-t border-(--gm-border-soft) flex flex-col md:flex-row items-center justify-between gap-10">
-                    <div className="flex items-start gap-4 max-w-md">
-                      <div className="mt-1">
-                        <CheckCircle2 size={18} className="text-(--gm-gold)" />
+                    <div className="flex flex-col gap-4 max-w-md w-full">
+                      <div className="p-4 bg-(--gm-gold)/5 border border-(--gm-gold)/20 rounded-xl text-[11px] text-(--gm-text-dim) leading-relaxed">
+                        <strong className="text-(--gm-gold)">Platform Komisyonu: %{commissionRate}</strong>
+                        <br />
+                        Hizmet ücretinizin %{commissionRate}&apos;i platform tarafından kesilir, kalan tutar cüzdanınıza eklenir.
                       </div>
-                      <p className="text-[11px] text-(--gm-text-dim) leading-relaxed font-serif italic">
-                        Başvurunuzu göndererek <span className="text-(--gm-gold) font-bold hover:underline cursor-pointer transition-all">Danışman Kullanım Şartları</span>&apos;nı ve KVKK aydınlatma metnini kabul etmiş sayılırsınız.
-                      </p>
+                      
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <div className="mt-0.5 relative flex items-center justify-center">
+                          <input 
+                            type="checkbox" 
+                            className="peer appearance-none w-5 h-5 border border-(--gm-border-soft) rounded bg-(--gm-bg-deep) checked:bg-(--gm-gold) checked:border-(--gm-gold) transition-all cursor-pointer"
+                            checked={agreementAccepted}
+                            onChange={(e) => setAgreementAccepted(e.target.checked)}
+                          />
+                          <CheckCircle2 size={14} className="absolute text-(--gm-bg-deep) opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
+                        </div>
+                        <p className="text-[11px] text-(--gm-text-dim) leading-relaxed font-serif italic flex-1 group-hover:text-(--gm-text) transition-colors">
+                          Platform komisyon oranını ve <Link href="/tr/legal/consultant-agreement" target="_blank" className="text-(--gm-gold) font-bold hover:underline transition-all">Danışman Kullanım Sözleşmesi</Link>&apos;ni okudum, kabul ediyorum.
+                        </p>
+                      </label>
                     </div>
                     <button 
                       type="submit"
-                      disabled={isLoading}
+                      disabled={isLoading || !agreementAccepted}
                       className="group w-full md:w-auto px-20 py-6 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold uppercase tracking-[0.25em] text-xs flex items-center justify-center gap-3 transition-all duration-300 hover:shadow-(--gm-shadow-gold) disabled:opacity-50"
                     >
                       {isLoading ? (

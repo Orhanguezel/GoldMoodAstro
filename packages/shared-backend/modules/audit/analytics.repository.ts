@@ -470,7 +470,7 @@ export async function repoGetMonthlyAggregation(opts: {
   exclude_localhost?: AuditBoolLike;
 }): Promise<MonthlyRow[]> {
   const monthCount = Math.min(Math.max(opts.months ?? 12, 1), 24);
-  const conds: SQL[] = [sql`${auditRequestLogs.created_at} >= DATE_SUB(CURDATE(), INTERVAL ${monthCount} MONTH)`];
+  const conds: SQL[] = [sql`${auditRequestLogs.created_at} >= DATE_SUB(CURDATE(), INTERVAL ${sql.raw(String(monthCount))} MONTH)`];
   if (typeof opts.exclude_localhost !== 'undefined' && isTruthyBoolLike(opts.exclude_localhost)) {
     conds.push(excludeLocalhostCond(auditRequestLogs));
   }

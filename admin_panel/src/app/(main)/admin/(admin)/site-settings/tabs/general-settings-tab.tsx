@@ -31,6 +31,7 @@ const GENERAL_KEYS = [
   'businessHours',
   'company_profile',
   'ui_header',
+  'platform_commission_rate',
 ] as const;
 
 type GeneralKey = (typeof GENERAL_KEYS)[number];
@@ -56,6 +57,7 @@ const DEFAULTS_BY_KEY: Record<GeneralKey, SettingValue> = {
     nav_contact: 'İletişim',
     cta_label: 'Randevu Al',
   },
+  platform_commission_rate: { percent: 15 },
 };
 
 function isGeneralKey(k: string): k is GeneralKey {

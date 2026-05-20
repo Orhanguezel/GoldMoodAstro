@@ -27,11 +27,11 @@ type FallbackMenuItem = {
 
 const FALLBACK_MENU: FallbackMenuItem[] = [
   { id: 'fb-home',        url: '/',            label: { tr: 'Ana Sayfa',   en: 'Home',     de: 'Startseite' } },
-  { id: 'fb-burclar',     url: '/burclar',     label: { tr: 'Burçlar',     en: 'Zodiac',   de: 'Sternzeichen' } },
   {
     id: 'fb-astrology',
     label: { tr: 'Astroloji', en: 'Astrology', de: 'Astrologie' },
     children: [
+      { id: 'fb-burclar',        url: '/burclar',                      label: { tr: 'Burçlar',        en: 'Zodiac',       de: 'Sternzeichen' } },
       { id: 'fb-astro-birth',    url: '/birth-chart',                  label: { tr: 'Doğum Haritası', en: 'Birth Chart',  de: 'Geburtshoroskop' } },
       { id: 'fb-astro-sinastri', url: '/sinastri',                     label: { tr: 'Sinastri',       en: 'Synastry',     de: 'Synastrie' } },
       { id: 'fb-astro-yildiz',   url: '/yildizname',                   label: { tr: 'Yıldızname',     en: 'Yildizname',   de: 'Yildizname' } },
@@ -46,9 +46,9 @@ const FALLBACK_MENU: FallbackMenuItem[] = [
       { id: 'fb-fal-tarot',  url: '/tarot',        label: { tr: 'Tarot',       en: 'Tarot',                de: 'Tarot' } },
       { id: 'fb-fal-coffee', url: '/kahve-fali',   label: { tr: 'Kahve Falı',  en: 'Coffee Reading',       de: 'Kaffeesatzlesen' } },
       { id: 'fb-fal-dream',  url: '/ruya-tabiri',  label: { tr: 'Rüya Tabiri', en: 'Dream Interpretation', de: 'Traumdeutung' } },
+      { id: 'fb-numeroloji', url: '/numeroloji',   label: { tr: 'Numeroloji',  en: 'Numerology',           de: 'Numerologie' } },
     ],
   },
-  { id: 'fb-numeroloji',  url: '/numeroloji',  label: { tr: 'Numeroloji',  en: 'Numerology',   de: 'Numerologie' } },
   { id: 'fb-consultants', url: '/consultants', label: { tr: 'Danışmanlar', en: 'Consultants',  de: 'Berater' } },
   { id: 'fb-blog',        url: '/blog',        label: { tr: 'Blog',        en: 'Blog',         de: 'Blog' } },
   { id: 'fb-about',       url: '/about',       label: { tr: 'Hakkımızda',  en: 'About',        de: 'Über uns' } },
@@ -369,6 +369,34 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                   )}
                 </Link>
               )}
+              {/* H1: Üye Ol / Giriş Yap */}
+              {!isAuthenticated && (
+                <div className="flex items-center gap-3">
+                  <Link 
+                    href={localizePath(locale, '/login')} 
+                    className="text-[11px] font-bold tracking-[0.15em] uppercase text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)] transition-colors px-4 py-2 border border-[var(--gm-gold)]/40 hover:border-[var(--gm-gold)] rounded-full"
+                  >
+                    {locale === 'tr' ? 'Giriş Yap' : 'Login'}
+                  </Link>
+                  <Link 
+                    href={localizePath(locale, '/register')} 
+                    className="text-[11px] font-bold tracking-[0.15em] uppercase text-white bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-light)] transition-colors px-4 py-2 rounded-full shadow-[var(--gm-glow-primary)] hover:shadow-lg"
+                  >
+                    {locale === 'tr' ? 'Üye Ol' : 'Sign Up'}
+                  </Link>
+                </div>
+              )}
+
+              {/* H2: Danışman mısın? CTA */}
+              {!isConsultant && (
+                <Link 
+                  href={localizePath(locale, '/become-consultant')} 
+                  className="text-[10px] uppercase tracking-[0.15em] text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] transition-colors underline decoration-[var(--gm-border-soft)] hover:decoration-[var(--gm-gold)] underline-offset-4"
+                >
+                  {locale === 'tr' ? 'Danışman mısın?' : 'Join as Consultant'}
+                </Link>
+              )}
+
               {/* "DANIŞMAN BUL" public listeye gider — consultant zaten danışmandır, gizle.
                   "Danışman Paneli" ile karışmasın. */}
               {!isConsultant && (
@@ -394,8 +422,12 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
           {/* Mobile Right */}
           <div className="flex lg:hidden items-center gap-3">
             <ThemeToggle />
-            {isAuthenticated && (
+            {isAuthenticated ? (
               <Link href={localizePath(locale, '/profile')} className="p-2 text-[var(--gm-text)]">
+                <IconUser className="w-5 h-5" />
+              </Link>
+            ) : (
+              <Link href={localizePath(locale, '/login')} className="p-2 text-[var(--gm-gold)]">
                 <IconUser className="w-5 h-5" />
               </Link>
             )}
@@ -466,8 +498,37 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
             })}
           </ul>
           {!isConsultant && (
-            <Link href={consultantsHref} className="btn-premium w-full max-w-xs text-center" onClick={() => setMobileOpen(false)}>
+            <Link href={consultantsHref} className="btn-premium w-full max-w-xs text-center mb-4" onClick={() => setMobileOpen(false)}>
               {ui('ui_header_cta', 'DANIŞMAN BUL')}
+            </Link>
+          )}
+
+          {!isAuthenticated && (
+            <div className="flex flex-col w-full max-w-xs gap-3">
+              <Link 
+                href={localizePath(locale, '/register')} 
+                className="w-full flex items-center justify-center rounded-full bg-[var(--gm-primary)] px-5 py-3 text-[12px] font-bold uppercase tracking-[0.15em] text-white transition-colors hover:bg-[var(--gm-primary-light)]"
+                onClick={() => setMobileOpen(false)}
+              >
+                {locale === 'tr' ? 'Üye Ol' : 'Sign Up'}
+              </Link>
+              <Link 
+                href={localizePath(locale, '/login')} 
+                className="w-full flex items-center justify-center rounded-full border border-[var(--gm-gold)]/40 px-5 py-3 text-[12px] font-bold uppercase tracking-[0.15em] text-[var(--gm-gold)] transition-colors hover:border-[var(--gm-gold)]"
+                onClick={() => setMobileOpen(false)}
+              >
+                {locale === 'tr' ? 'Giriş Yap' : 'Login'}
+              </Link>
+            </div>
+          )}
+
+          {!isConsultant && (
+            <Link 
+              href={localizePath(locale, '/become-consultant')} 
+              className="mt-6 text-[11px] uppercase tracking-[0.15em] text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] transition-colors underline decoration-[var(--gm-border-soft)] underline-offset-4"
+              onClick={() => setMobileOpen(false)}
+            >
+              {locale === 'tr' ? 'Danışman mısın? Platforma Katıl' : 'Join as Consultant'}
             </Link>
           )}
           {isConsultant && (

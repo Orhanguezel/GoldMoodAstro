@@ -1,9 +1,11 @@
 import type { RouteHandler } from 'fastify';
 import { createHash, randomUUID } from 'crypto';
-import { sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { hasAnyRole } from '@goldmood/shared-backend/middleware/roles';
 import { getUserHistory } from '@goldmood/shared-backend/modules/history/repository';
+import { serviceCategories } from '@goldmood/shared-backend/modules/serviceCategories/schema';
+import { languages } from '@goldmood/shared-backend/modules/languages/schema';
 import {
   adminListConsultantsQuerySchema,
   consultantIdParamsSchema,
@@ -27,6 +29,32 @@ import {
 function userIdFromRequest(req: Parameters<RouteHandler>[0]) {
   const user = req.user as { sub?: string; id?: string } | undefined;
   return user?.sub ?? user?.id ?? null;
+}
+
+function uniqueSlugs(values: string[]): string[] {
+  return Array.from(new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean)));
+}
+
+async function findInactiveOrMissingServiceCategorySlugs(slugs: string[]): Promise<string[]> {
+  const unique = uniqueSlugs(slugs);
+  if (unique.length === 0) return [];
+  const rows = await db
+    .select({ slug: serviceCategories.slug })
+    .from(serviceCategories)
+    .where(and(eq(serviceCategories.is_active, 1), inArray(serviceCategories.slug, unique)));
+  const allowed = new Set(rows.map((row) => row.slug));
+  return unique.filter((slug) => !allowed.has(slug));
+}
+
+async function findInactiveOrMissingLanguageSlugs(slugs: string[]): Promise<string[]> {
+  const unique = uniqueSlugs(slugs);
+  if (unique.length === 0) return [];
+  const rows = await db
+    .select({ slug: languages.slug })
+    .from(languages)
+    .where(and(eq(languages.is_active, 1), inArray(languages.slug, unique)));
+  const allowed = new Set(rows.map((row) => row.slug));
+  return unique.filter((slug) => !allowed.has(slug));
 }
 
 export const listConsultantsHandler: RouteHandler = async (req) => {
@@ -92,6 +120,17 @@ export const registerConsultantHandler: RouteHandler = async (req, reply) => {
   if (!userId) return reply.code(401).send({ error: { message: 'no_user' } });
 
   const body = registerConsultantBodySchema.parse(req.body ?? {});
+  body.expertise = uniqueSlugs(body.expertise);
+  body.languages = uniqueSlugs(body.languages);
+
+  const invalidExpertise = await findInactiveOrMissingServiceCategorySlugs(body.expertise);
+  if (invalidExpertise.length > 0) {
+    return reply.code(400).send({ error: { message: 'invalid_expertise_slug', invalid: invalidExpertise } });
+  }
+  const invalidLanguages = await findInactiveOrMissingLanguageSlugs(body.languages);
+  if (invalidLanguages.length > 0) {
+    return reply.code(400).send({ error: { message: 'invalid_language_slug', invalid: invalidLanguages } });
+  }
 
   try {
     const consultant = await createConsultantForUser(userId, body);

@@ -8,9 +8,10 @@ import {
   type ConsultantSelfWalletTransaction,
   type MonthlyEarningStat,
   useGetMyConsultantWalletQuery,
-  useRequestMyConsultantWithdrawalMutation,
   useGetMyConsultantMonthlyStatsQuery,
+  useGetMyConsultantProfileQuery,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
+import { useListSiteSettingsQuery } from '@/integrations/rtk/public/site_settings.endpoints';
 
 function formatMoney(v: string | number | null | undefined, currency = 'TRY') {
   const n = Number(v ?? 0);
@@ -45,7 +46,10 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
 export default function WalletPanel() {
   const { data, isLoading, refetch } = useGetMyConsultantWalletQuery();
   const { data: monthlyStats = [] } = useGetMyConsultantMonthlyStatsQuery();
-  const [withdraw, { isLoading: isWithdrawing }] = useRequestMyConsultantWithdrawalMutation();
+  const { data: profile } = useGetMyConsultantProfileQuery();
+  const { data: settings = [] } = useListSiteSettingsQuery({ keys: ['platform_commission_rate'] });
+  const commissionRateSetting = settings.find(s => s.key === 'platform_commission_rate');
+  const commissionRate = (commissionRateSetting?.value as { percent?: number } | undefined)?.percent ?? 15;
 
   const [showModal, setShowModal] = useState(false);
   const [amount, setAmount] = useState('');
@@ -96,6 +100,8 @@ export default function WalletPanel() {
 
     if (!amount || isNaN(amt) || amt <= 0) {
       newErrors.amount = 'Geçerli bir tutar girin';
+    } else if (amt < 500) {
+      newErrors.amount = 'Minimum para çekme limiti 500 TRY\'dir';
     } else if (amt > balance) {
       newErrors.amount = 'Yetersiz bakiye';
     }
@@ -135,19 +141,38 @@ export default function WalletPanel() {
             </div>
             <div className="font-serif text-5xl text-[var(--gm-gold)] mb-2">{formatMoney(balance, currency)}</div>
             {wallet?.pending_balance && Number(wallet.pending_balance) > 0 && (
-              <p className="text-[12px] text-[var(--gm-text-dim)] italic">
+              <p className="text-[12px] text-[var(--gm-text-dim)] italic mb-4">
                 Bekleyen: {formatMoney(wallet.pending_balance, currency)} (henüz hesaba geçmedi)
               </p>
             )}
+            
+            <div className="mt-6 p-3 rounded-xl bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)] max-w-sm">
+              <p className="text-[10px] text-[var(--gm-text-dim)] leading-relaxed">
+                <strong className="text-[var(--gm-gold)] uppercase tracking-widest block mb-1">Komisyon Oranı: %{commissionRate}</strong>
+                Hizmet ücretinin %{commissionRate}&apos;i platform tarafından kesilir, kalan tutar cüzdanınıza eklenir.
+              </p>
+            </div>
           </div>
-          <button
-            onClick={() => { setShowModal(true); setErrors({}); }}
-            disabled={balance <= 0}
-            className="px-6 py-3 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 inline-flex items-center gap-2 hover:shadow-[0_0_30px_rgba(201,169,97,0.25)] transition-all"
-          >
-            <ArrowDownCircle className="w-4 h-4" />
-            Para Çek
-          </button>
+          <div className="relative group flex items-center justify-center">
+            <button
+              onClick={() => { setShowModal(true); setErrors({}); }}
+              disabled={balance < 500 || profile?.kyc_status !== 'approved'}
+              className="px-6 py-3 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 inline-flex items-center gap-2 hover:shadow-[0_0_30px_rgba(201,169,97,0.25)] transition-all"
+            >
+              <ArrowDownCircle className="w-4 h-4" />
+              Para Çek
+            </button>
+            {profile?.kyc_status !== 'approved' && (
+              <div className="absolute bottom-full mb-2 hidden group-hover:block w-[200px] bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] p-2 rounded shadow-lg text-[10px] text-center text-[var(--gm-text)] z-10">
+                Para çekmek için Profil sekmesinden Kimlik Doğrulama (KYC) işlemini tamamlayın.
+              </div>
+            )}
+            {profile?.kyc_status === 'approved' && balance < 500 && (
+              <div className="absolute bottom-full mb-2 hidden group-hover:block w-[150px] bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] p-2 rounded shadow-lg text-[10px] text-center text-[var(--gm-text)] z-10">
+                Minimum limit: 500 TRY
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
