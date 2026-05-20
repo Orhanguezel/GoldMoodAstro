@@ -137,7 +137,15 @@
       "Bash(curl -s -o /dev/null -w \"become-consultant → %{http_code}\\\\n\" \"https://goldmoodastro.com/tr/become-consultant\" --max-time 15)",
       "Bash(awk 'NR>=7 && NR<=14' backend/src/db/sql/016_ui_copy_seed.sql)",
       "Bash(awk '/ui_dashboard/{print NR\": \"$0; if\\(++c==2\\)exit}' backend/src/db/sql/016_ui_copy_seed.sql)",
-      "Bash(python3 /tmp/gen_ui_dashboard_seed.py)"
+      "Bash(python3 /tmp/gen_ui_dashboard_seed.py)",
+      "Bash(curl -s -L -o /dev/null -w \"GET /tr/me/consultant \\(anon redirect zincirinin sonu\\) → %{url_effective} %{http_code}\\\\n\" \"https://goldmoodastro.com/tr/me/consultant\" --max-time 15)",
+      "Bash(curl -s -o /dev/null -w \"  ilk yanıt: %{http_code} loc=%{redirect_url}\\\\n\" \"https://goldmoodastro.com/tr/me/consultant\" --max-time 12)",
+      "Bash(curl -s -L -o /dev/null -w \"GET /me/consultant \\(locale-siz takipli\\) → final=%{url_effective} %{http_code}\\\\n\" \"https://goldmoodastro.com/me/consultant\" --max-time 15)",
+      "Bash(curl -s \"https://goldmoodastro.com/tr\" --max-time 20)",
+      "Bash(sed -n '1,30p' frontend/src/layout/header/HeaderOffcanvas.tsx)",
+      "Bash(sed -n '140,230p' frontend/src/layout/header/HeaderOffcanvas.tsx)",
+      "Bash(curl -s -o /dev/null -w \"/admin/audit?tab=map → %{http_code}\\\\n\" \"https://admin.goldmoodastro.com/admin/audit?tab=map&days=14&limit=50\" --max-time 12)",
+      "Bash(git worktree *)"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [
