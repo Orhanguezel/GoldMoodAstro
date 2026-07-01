@@ -14,30 +14,10 @@ import React, { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useUiSection } from '@/i18n';
 import HeroTrustCards from './HeroTrustCards';
 import HeroStats from './HeroStats';
 import HeroCTAs from './HeroCTAs';
-
-const COPY = {
-  tr: {
-    eyebrow: 'Ruhsal Rehberlik',
-    headline: ['Meet the stars through', 'modern astrology'],
-    tagline:
-      'Personal readings shaped by your birth chart and the option to connect with a real astrologer.',
-    primaryCTA: 'Explore Consultants',
-    secondaryCTA: 'Create Your Chart',
-    scrollHint: 'Scroll Down',
-  },
-  en: {
-    eyebrow: 'Spiritual Guidance',
-    headline: ['Modern astrology', 'meets the stars'],
-    tagline:
-      'Personal readings fed by your birth chart and the option to connect to a real astrologer whenever you want.',
-    primaryCTA: 'Explore Consultants',
-    secondaryCTA: 'Get Your Chart',
-    scrollHint: 'Scroll Down',
-  },
-};
 
 /* Fallback skeletons for Suspense boundaries */
 function TrustCardsSkeleton() {
@@ -60,8 +40,21 @@ function StatsSkeleton() {
 }
 
 export default function HeroNew({ locale = 'tr' }: { locale?: string }) {
-  const isTr = locale === 'tr';
-  const copy = COPY[isTr ? 'tr' : 'en'];
+  const { ui } = useUiSection('ui_home', locale as any);
+  const copy = {
+    eyebrow: ui('ui_home_hero_eyebrow', 'Ruhsal Rehberlik'),
+    headline: [
+      ui('ui_home_hero_headline_1', 'Modern astroloji ile'),
+      ui('ui_home_hero_headline_2', 'yıldızlarla buluşun'),
+    ],
+    tagline: ui(
+      'ui_home_hero_subtitle',
+      'Doğum haritanıza göre şekillenen kişisel yorumlar ve dilediğiniz an gerçek bir astrologla görüşme imkânı.',
+    ),
+    primaryCTA: ui('ui_home_hero_cta_primary', 'Danışmanları Keşfet'),
+    secondaryCTA: ui('ui_home_hero_cta_secondary', 'Haritanı Oluştur'),
+    scrollHint: ui('ui_home_hero_scroll_hint', 'Aşağı Kaydır'),
+  };
 
   const ctaHref = `/${locale}/consultants`;
   const secondaryHref = `/${locale}/birth-chart`;

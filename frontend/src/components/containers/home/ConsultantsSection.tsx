@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight, Sparkles, TrendingUp, Clock3, Wifi, Star } from 'lucide-react';
 import { useListConsultantsPublicQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
 import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
+import { useUiSection } from '@/i18n';
 import ConsultantCard from '@/components/containers/consultant/ConsultantCard';
 
 type SortKey = 'featured' | 'popular' | 'new' | 'online';
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export default function ConsultantsSection({ locale = 'tr', label, config }: Props) {
+  const { ui } = useUiSection('ui_home', locale as any);
   const sort = config?.sort ?? 'featured';
   const limit = config?.limit ?? 6;
   const onlineOnly = config?.onlineOnly === true || sort === 'online';
@@ -86,17 +88,23 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
 
   if (!isLoading && items.length === 0) return null;
 
-  const subtitle =
-    config?.subtitle ||
-    (sort === 'popular'
-      ? 'Experienced experts with the most completed sessions'
-      : sort === 'new'
-        ? 'Astrologers who recently joined the platform'
-        : sort === 'online'
-          ? 'Available now, ready to connect'
-          : 'Experts with the highest ratings and session counts');
+  const SUBTITLE_FALLBACK: Record<SortKey, string> = {
+    featured: 'En yüksek puana ve seans sayısına sahip uzmanlar',
+    popular: 'En çok seans tamamlamış deneyimli uzmanlar',
+    new: 'Platforma yeni katılan astrologlar',
+    online: 'Şu anda müsait, görüşmeye hazır',
+  };
+  const TITLE_FALLBACK: Record<SortKey, string> = {
+    featured: 'Öne Çıkan Danışmanlar',
+    popular: 'Popüler Danışmanlar',
+    new: 'Yeni Danışmanlar',
+    online: 'Çevrimiçi Danışmanlar',
+  };
 
-  const title = label || 'Consultants';
+  const subtitle =
+    config?.subtitle || ui(`ui_home_consultants_${sort}_subtitle`, SUBTITLE_FALLBACK[sort]);
+
+  const title = ui(`ui_home_consultants_${sort}_title`, TITLE_FALLBACK[sort] || label || 'Danışmanlar');
 
   return (
     <section className="container mx-auto px-4 py-16 md:py-20">
