@@ -170,10 +170,28 @@ export async function uploadToBucket(req: FastifyRequest, reply: FastifyReply) {
 
     const desiredRaw = (query.path ?? mp.filename ?? "file").trim();
     const desired = normalizePath(bucket, desiredRaw);
-    const cleanName = desired.split("/").pop()!.replace(/[^\w.\-]+/g, "_");
-    const folderRaw = desired.includes("/") ? desired.split("/").slice(0, -1).join("/") : undefined;
-    const folder = folderRaw || bucket; // bucket'ı her zaman folder olarak kullan
-    const publicIdBase = cleanName.replace(/\.[^.]+$/, "");
+    const lastSeg = desired.split("/").pop() || "";
+    const pathHasExt = /\.[^./]+$/.test(lastSeg);
+
+    let cleanName: string;
+    let folder: string;
+    let publicIdBase: string;
+
+    if (query.path && !pathHasExt) {
+      // path bir KLASÖR niyeti (örn 'applications') — dosya adı olarak kullanma;
+      // gerçek dosya adından + benzersiz suffix üret ki farklı yüklemeler çakışmasın (409 fix).
+      folder = normalizePath(bucket, query.path.trim()) || bucket;
+      const orig = (mp.filename ?? "file").split("/").pop()!.replace(/[^\w.\-]+/g, "_");
+      const ext = orig.includes(".") ? orig.slice(orig.lastIndexOf(".")) : "";
+      const base = orig.replace(/\.[^.]+$/, "") || "file";
+      publicIdBase = `${base}-${randomUUID().slice(0, 8)}`;
+      cleanName = `${publicIdBase}${ext}`;
+    } else {
+      cleanName = lastSeg.replace(/[^\w.\-]+/g, "_");
+      const folderRaw = desired.includes("/") ? desired.split("/").slice(0, -1).join("/") : undefined;
+      folder = folderRaw || bucket; // bucket'ı her zaman folder olarak kullan
+      publicIdBase = cleanName.replace(/\.[^.]+$/, "");
+    }
 
     const up = await uploadBufferAuto(cfg, buf, { folder, publicId: publicIdBase, mime: mp.mimetype });
 
