@@ -25,8 +25,11 @@ export const createConsultantApplicationSchema = z.object({
   languages: jsonStringArray.default(['tr']),
   experience_years: z.coerce.number().int().min(0).max(80).optional().nullable(),
   certifications: z.string().trim().max(5000).optional().nullable(),
-  cv_url: z.string().trim().url().max(500).optional().nullable(),
-  sample_chart_url: z.string().trim().url().max(500).optional().nullable(),
+  // Yüklemeler aynı-origin relative path dönebilir (/api/storage/...); .url() relative'i
+  // reddedip 500 üretiyordu. Relative VEYA absolute kabul et.
+  cv_url: z.string().trim().min(1).max(500).optional().nullable(),
+  sample_chart_url: z.string().trim().min(1).max(500).optional().nullable(),
+  sample_review: z.string().trim().max(5000).optional().nullable(),
 });
 
 export const listConsultantApplicationsSchema = z.object({

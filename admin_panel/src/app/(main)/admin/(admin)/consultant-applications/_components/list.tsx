@@ -347,6 +347,7 @@ export default function ConsultantApplicationsList() {
                   }
                 />
               </div>
+              {selected.sample_review && <DetailBlock label={ca("detail.sampleReview", "Örnek Yorum")} value={selected.sample_review} />}
               {selected.rejection_reason && <DetailBlock label={ca("detail.rejectionReason", "Red Sebebi")} value={selected.rejection_reason} />}
               <div className="flex flex-wrap justify-end gap-3">
                 <Button

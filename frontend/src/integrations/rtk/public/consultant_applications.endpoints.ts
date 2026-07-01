@@ -11,6 +11,7 @@ export interface ConsultantApplicationPayload {
   certifications?: string;
   cv_url?: string;
   sample_chart_url?: string;
+  sample_review?: string;
 }
 
 export const consultantApplicationsApi = baseApi.injectEndpoints({

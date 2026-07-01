@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS consultant_applications (
   certifications TEXT,
   cv_url VARCHAR(500),
   sample_chart_url VARCHAR(500),
+  sample_review TEXT,
   status ENUM('pending','approved','rejected') DEFAULT 'pending',
   rejection_reason TEXT,
   reviewed_by CHAR(36),

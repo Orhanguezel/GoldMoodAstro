@@ -32,6 +32,7 @@ export async function createApplication(
     certifications: input.certifications ?? null,
     cv_url: input.cv_url ?? null,
     sample_chart_url: input.sample_chart_url ?? null,
+    sample_review: input.sample_review ?? null,
     status: 'pending',
   });
   const row = await getApplication(id);

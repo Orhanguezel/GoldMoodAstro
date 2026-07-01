@@ -77,7 +77,7 @@ export default function BecomeConsultantPage() {
     experience_years: 1,
     certifications: '',
     cv_url: '',
-    sample_chart_url: '',
+    sample_review: '',
   });
 
   const handleToggleExpertise = (id: string) => {
@@ -123,7 +123,7 @@ export default function BecomeConsultantPage() {
         ...(formData.phone.trim() ? { phone: formData.phone.trim() } : {}),
         ...(formData.certifications.trim() ? { certifications: formData.certifications.trim() } : {}),
         ...(formData.cv_url.trim() ? { cv_url: formData.cv_url.trim() } : {}),
-        ...(formData.sample_chart_url.trim() ? { sample_chart_url: formData.sample_chart_url.trim() } : {}),
+        ...(formData.sample_review.trim() ? { sample_review: formData.sample_review.trim() } : {}),
       };
       await apply(payload).unwrap();
       toast.success(ui('ui_become_consultant_success_toast', 'Your application has been received successfully!'));
@@ -343,22 +343,23 @@ export default function BecomeConsultantPage() {
                       />
                     </InputGroup>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <FileUploadBox 
-                        label={ui('ui_become_consultant_form_cv', 'CV / Resume')}
-                        desc={ui('ui_become_consultant_form_cv_desc', 'PDF, JPG veya PNG (Max 5MB)')}
-                        onUpload={(url) => setFormData({...formData, cv_url: url})}
-                        ui={ui}
-                        uiErrors={uiErrors}
+                    <FileUploadBox
+                      label={ui('ui_become_consultant_form_cv', 'CV / Resume')}
+                      desc={ui('ui_become_consultant_form_cv_desc', 'PDF, JPG veya PNG (Max 5MB)')}
+                      onUpload={(url) => setFormData({...formData, cv_url: url})}
+                      ui={ui}
+                      uiErrors={uiErrors}
+                    />
+
+                    <InputGroup label={ui('ui_become_consultant_form_sample', 'Sample Review')}>
+                      <textarea
+                        rows={4}
+                        value={formData.sample_review}
+                        onChange={e => setFormData({...formData, sample_review: e.target.value})}
+                        className="gm-input-premium py-6 min-h-[140px] resize-none font-serif italic"
+                        placeholder={ui('ui_become_consultant_form_sample_desc', 'Danışmanlık tarzınızı yansıtan örnek bir yorum yazın...')}
                       />
-                      <FileUploadBox 
-                        label={ui('ui_become_consultant_form_sample', 'Sample Reading')}
-                        desc={ui('ui_become_consultant_form_sample_desc', 'A sample reading that reflects your consulting style')}
-                        onUpload={(url) => setFormData({...formData, sample_chart_url: url})} 
-                        ui={ui}
-                        uiErrors={uiErrors}
-                      />
-                    </div>
+                    </InputGroup>
                   </div>
 
                   <div className="pt-12 border-t border-(--gm-border-soft) flex flex-col md:flex-row items-center justify-between gap-10">

@@ -15,6 +15,7 @@ export type ConsultantApplicationAdmin = {
   certifications: string | null;
   cv_url: string | null;
   sample_chart_url: string | null;
+  sample_review: string | null;
   status: ConsultantApplicationStatus;
   rejection_reason: string | null;
   reviewed_by: string | null;

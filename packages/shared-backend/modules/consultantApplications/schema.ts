@@ -28,6 +28,7 @@ export const consultantApplications = mysqlTable(
     certifications: text('certifications'),
     cv_url: varchar('cv_url', { length: 500 }),
     sample_chart_url: varchar('sample_chart_url', { length: 500 }),
+    sample_review: text('sample_review'),
     status: mysqlEnum('status', ['pending', 'approved', 'rejected']).default('pending'),
     rejection_reason: text('rejection_reason'),
     reviewed_by: char('reviewed_by', { length: 36 }),
