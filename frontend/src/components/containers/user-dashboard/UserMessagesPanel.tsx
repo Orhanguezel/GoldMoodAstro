@@ -98,9 +98,6 @@ export default function UserMessagesPanel({ isTr }: Props) {
 
   const active = threads.find((t) => t.thread_id === activeId);
   const messages = convo?.messages ?? [];
-  const myUserId = active?.last_message?.sender_user_id && active.last_message.from_self
-    ? active.last_message.sender_user_id
-    : undefined;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 h-[600px]">
@@ -202,8 +199,8 @@ export default function UserMessagesPanel({ isTr }: Props) {
                 </p>
               ) : (
                 messages.map((m) => {
-                  // Infer the current user from the active thread when message rows do not include from_self.
-                  const mine = myUserId ? m.sender_user_id === myUserId : false;
+                  // Backend her mesaja çağıran kullanıcıya göre from_self ekliyor.
+                  const mine = m.from_self === true;
                   return (
                     <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                       <div

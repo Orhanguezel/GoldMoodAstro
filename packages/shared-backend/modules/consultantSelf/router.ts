@@ -45,12 +45,14 @@ export async function registerConsultantSelf(app: FastifyInstance) {
   app.post('/me/consultant/messages/:id/read', { preHandler: guard }, controller.markThreadRead);
   app.post('/me/consultant/messages/:id/reply', { preHandler: guard }, controller.replyInThread);
 
-  // Danışan tarafı mesaj kutusu (kullanıcı dashboard'ı için danışman cevaplarını görme)
-  app.get('/me/customer/threads', { preHandler: guard }, controller.listCustomerThreads);
-  app.get('/me/customer/threads/:id/messages', { preHandler: guard }, controller.listCustomerThreadMessages);
-  app.post('/me/customer/threads/:id/mark-read', { preHandler: guard }, controller.markCustomerThreadRead);
-  app.post('/me/customer/threads/:id/read', { preHandler: guard }, controller.markCustomerThreadRead);
-  app.post('/me/customer/threads/:id/reply', { preHandler: guard }, controller.replyAsCustomer);
+  // Danışan tarafı mesaj kutusu — düz kullanıcı (role=user) da erişebilmeli;
+  // yetki controller'da chat_participants üyeliğiyle kontrol ediliyor.
+  const customerGuard = [requireAuth];
+  app.get('/me/customer/threads', { preHandler: customerGuard }, controller.listCustomerThreads);
+  app.get('/me/customer/threads/:id/messages', { preHandler: customerGuard }, controller.listCustomerThreadMessages);
+  app.post('/me/customer/threads/:id/mark-read', { preHandler: customerGuard }, controller.markCustomerThreadRead);
+  app.post('/me/customer/threads/:id/read', { preHandler: customerGuard }, controller.markCustomerThreadRead);
+  app.post('/me/customer/threads/:id/reply', { preHandler: customerGuard }, controller.replyAsCustomer);
 
   // Cüzdan (T30-7)
   app.get('/me/consultant/wallet', { preHandler: guard }, controller.getMyWallet);

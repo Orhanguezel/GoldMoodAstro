@@ -362,6 +362,26 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       transformResponse: (res: { data: { status: string } }) => res.data,
       invalidatesTags: ['ConsultantSelf' as any],
     }),
+    // Güvenli KYC belge yükleme: consultant_kyc bucket + DB persist + audit (backend).
+    uploadMyConsultantKycDocument: build.mutation<{ type: string; url: string }, { type: string; file: File }>({
+      async queryFn({ type, file }, _api, _extra, baseQuery) {
+        try {
+          const fd = new FormData();
+          fd.append('file', file, file.name || `${type}`);
+          const res = await baseQuery({
+            url: `/me/consultant/kyc/documents?type=${encodeURIComponent(type)}`,
+            method: 'POST',
+            body: fd,
+          });
+          if (res.error) return { error: res.error as any };
+          const doc = (res.data as any)?.data ?? res.data;
+          return { data: { type: doc.type, url: doc.url } };
+        } catch (e: any) {
+          return { error: { status: 500, data: { message: e?.message || 'kyc_upload_failed' } } as any };
+        }
+      },
+      invalidatesTags: ['ConsultantSelf' as any],
+    }),
     listMyConsultantBlogPosts: build.query<CustomPageDto[], { locale?: string } | void>({
       query: (args) => ({
         url: '/me/consultant/blog-posts',
@@ -664,6 +684,7 @@ export const {
   useGetMyConsultantProfileQuery,
   useUpdateMyConsultantProfileMutation,
   useSubmitMyConsultantKycMutation,
+  useUploadMyConsultantKycDocumentMutation,
   useListMyConsultantBlogPostsQuery,
   useCreateMyConsultantBlogPostMutation,
   useUpdateMyConsultantBlogPostMutation,

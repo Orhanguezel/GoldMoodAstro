@@ -305,8 +305,16 @@ export default function DashboardPage() {
       toast.error(ui('ui_extra_b0_dash_passwords_mismatch', 'Passwords do not match'));
       return;
     }
+    if (!passData.old) {
+      toast.error(ui('ui_extra_b0_dash_current_password_required', 'Please enter your current password'));
+      return;
+    }
+    if (passData.new.length < 6) {
+      toast.error(ui('ui_extra_b0_dash_password_min', 'Password must be at least 6 characters'));
+      return;
+    }
     try {
-      await updateUser({ email: user!.email, password: passData.new }).unwrap();
+      await updateUser({ password: passData.new, current_password: passData.old }).unwrap();
       setPassData({ old: '', new: '', confirm: '' });
       toast.success(ui('ui_extra_b0_dash_password_updated', 'Password updated'));
     } catch (err) {

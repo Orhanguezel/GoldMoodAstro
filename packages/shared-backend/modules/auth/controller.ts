@@ -755,7 +755,18 @@ export async function update(req: FastifyRequest, reply: FastifyReply) {
     const parsed = updateBody.safeParse(req.body);
     if (!parsed.success) return reply.status(400).send({ error: { message: 'invalid_body' } });
 
-    const { email, password } = parsed.data as { email?: string; password?: string };
+    const { email, password, current_password } = parsed.data as { email?: string; password?: string; current_password?: string };
+
+    // Hassas değişiklik (şifre veya e-posta) → mevcut şifre doğrulaması zorunlu.
+    // Aksi halde ele geçirilmiş bir oturum, mevcut şifreyi bilmeden hesabı devralabilir.
+    if (password || email) {
+      const current = await repoGetUserById(p.sub);
+      const ok = !!current?.password_hash && !!current_password
+        && await verifyPasswordSmart(current.password_hash, current_password);
+      if (!ok) {
+        return reply.status(400).send({ error: { message: 'invalid_current_password' } });
+      }
+    }
 
     if (email) { await repoUpdateUserEmail(p.sub, email); p.email = email; }
     if (password) {

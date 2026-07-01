@@ -289,12 +289,17 @@ export async function updateProfile(req: FastifyRequest, reply: FastifyReply) {
     }
   }
 
-  const touchesKyc = ['account_type', 'identity_number', 'tax_number', 'tax_office', 'company_name', 'billing_address', 'bank_account_holder']
-    .some((key) => Object.prototype.hasOwnProperty.call(data, key));
-  if (touchesKyc) {
-    const merged = { ...(c as any), ...data };
-    const error = kycValidationError(merged);
-    if (error) return reply.code(400).send({ error });
+  // Profil kaydında KYC completeness (bank_holder zorunlu + TC checksum) DAYATILMAZ —
+  // bu, yeni danışmanın bio/uzmanlık gibi alanları KYC'siz kaydetmesini engelliyordu.
+  // Completeness yalnızca submitKyc'te (satır ~412) kontrol edilir. Burada sadece
+  // GÖNDERİLEN ve DOLU olan alanların FORMATI doğrulanır (bozuk veri kaydını önlemek için).
+  const idNum = data.identity_number != null ? String(data.identity_number).trim() : '';
+  if (idNum && !isValidTurkishIdentityNumber(idNum)) {
+    return reply.code(400).send({ error: { message: 'invalid_identity_number', field: 'identity_number' } });
+  }
+  const taxNum = data.tax_number != null ? String(data.tax_number).trim() : '';
+  if (taxNum && !/^\d{10,11}$/.test(taxNum)) {
+    return reply.code(400).send({ error: { message: 'invalid_tax_number', field: 'tax_number' } });
   }
 
   const patch: Record<string, unknown> = {};
@@ -587,6 +592,9 @@ export async function updateBlogPost(req: FastifyRequest, reply: FastifyReply) {
     module_key: 'blog',
     image_url: patch.featured_image ?? undefined,
     tags: patch.tags !== undefined ? mergeConsultantBlogTags(patch.tags, c.id) : undefined,
+    // Danışman düzenlemesi yazıyı yeniden moderasyona düşürür (yayınlanmış içeriğin
+    // onay sonrası serbestçe değiştirilmesini önler).
+    is_published: false,
   });
 
   return reply.send({ data: updated });
@@ -600,6 +608,10 @@ export async function deleteBlogPost(req: FastifyRequest, reply: FastifyReply) {
   const existing = await customPagesRepo.getCustomPageById(id);
   if (!existing || !belongsToConsultantBlog(existing, c.id)) {
     return reply.code(404).send({ error: { message: 'blog_post_not_found' } });
+  }
+  // Yayınlanmış yazı danışman tarafından silinemez (admin moderasyonu); yalnız taslak.
+  if ((existing as any).is_published === 1 || (existing as any).is_published === true) {
+    return reply.code(409).send({ error: { message: 'published_post_delete_forbidden' } });
   }
 
   await customPagesRepo.deleteCustomPage(id);
@@ -657,6 +669,20 @@ export async function approveBooking(req: FastifyRequest, reply: FastifyReply) {
   const { id } = req.params as { id: string };
   const [b] = await db.select().from(bookings).where(and(eq(bookings.id, id), eq(bookings.consultant_id, c.id))).limit(1);
   if (!b) return reply.code(404).send({ error: { message: 'not_found' } });
+
+  // Statü guard: yalnız beklemedeki/ödeme bekleyen/anlık talepler onaylanabilir.
+  // (cancelled/rejected/completed/confirmed onayı → çifte rezervasyon / ödemesiz onay riski.)
+  const APPROVABLE = new Set(['pending', 'pending_payment', 'requested_now']);
+  if (!APPROVABLE.has(String(b.status))) {
+    return reply.code(409).send({ error: { message: 'booking_not_approvable', status: b.status } });
+  }
+  // Anlık talep 5 dakikadan eskiyse onaylanamaz (timeout).
+  if (b.status === 'requested_now') {
+    const created = b.created_at ? new Date(b.created_at as any).getTime() : 0;
+    if (!created || Date.now() - created > 5 * 60 * 1000) {
+      return reply.code(409).send({ error: { message: 'instant_request_expired' } });
+    }
+  }
 
   await db.update(bookings).set({ status: 'confirmed' } as any).where(eq(bookings.id, id));
 
@@ -723,6 +749,13 @@ export async function rejectBooking(req: FastifyRequest, reply: FastifyReply) {
 
   const [b] = await db.select().from(bookings).where(and(eq(bookings.id, id), eq(bookings.consultant_id, c.id))).limit(1);
   if (!b) return reply.code(404).send({ error: { message: 'not_found' } });
+
+  // Statü guard: yalnız bekleyen talepler reddedilebilir. Onaylanmış/tamamlanmış
+  // (ödenmiş) randevu reject edilirse iade akışı olmadan slot boşaltılır → cancel akışı kullanılmalı.
+  const REJECTABLE = new Set(['pending', 'pending_payment', 'requested_now']);
+  if (!REJECTABLE.has(String(b.status))) {
+    return reply.code(409).send({ error: { message: 'booking_not_rejectable', status: b.status } });
+  }
 
   await db.transaction(async (tx) => {
     await tx
@@ -1748,13 +1781,21 @@ export async function requestWithdrawal(req: FastifyRequest, reply: FastifyReply
   ].filter(Boolean).join(' | ');
   try {
     await db.transaction(async (tx) => {
-      await tx.execute(sql`
+      // Bakiye düşümü koşullu (WHERE balance >= amount). 0 satır etkilenirse
+      // (yarış durumu / yetersiz bakiye) tx'i abort et → talep/debit oluşmasın.
+      const upd = await tx.execute(sql`
         UPDATE wallets
         SET balance = balance - ${String(parsed.data.amount)},
             total_withdrawn = total_withdrawn + ${String(parsed.data.amount)},
             updated_at = NOW(3)
         WHERE id = ${w.id} AND balance >= ${String(parsed.data.amount)}
       `);
+      const affected = Number(
+        (upd as any)?.affectedRows
+        ?? (Array.isArray(upd) ? (upd[0] as any)?.affectedRows : 0)
+        ?? 0,
+      );
+      if (affected < 1) throw new Error('insufficient_balance_race');
 
       await tx.execute(sql`
         INSERT INTO withdrawal_requests (
@@ -1771,7 +1812,10 @@ export async function requestWithdrawal(req: FastifyRequest, reply: FastifyReply
             VALUES (${txId}, ${w.id}, ${c.user_id}, 'debit', ${String(parsed.data.amount)}, ${w.currency}, 'withdrawal', ${desc}, 'pending', ${withdrawalId}, 0)`,
       );
     });
-  } catch {
+  } catch (err) {
+    if (err instanceof Error && err.message === 'insufficient_balance_race') {
+      return reply.code(400).send({ error: { message: 'insufficient_balance', balance } });
+    }
     return reply.code(500).send({ error: { message: 'withdrawal_request_failed' } });
   }
 
@@ -2360,6 +2404,9 @@ export async function listCustomerThreadMessages(req: FastifyRequest, reply: Fas
     .where(eq(chat_messages.thread_id, id))
     .orderBy(chat_messages.created_at);
 
+  // Her mesaja çağıran kullanıcıya göre from_self ekle (FE balon hizalaması için).
+  const messagesWithSelf = messages.map((m) => ({ ...m, from_self: m.sender_user_id === userId }));
+
   // Görüntüleme = okundu say
   const now = new Date();
   await db.execute(
@@ -2370,7 +2417,7 @@ export async function listCustomerThreadMessages(req: FastifyRequest, reply: Fas
     `,
   );
 
-  return reply.send({ data: { thread_id: id, messages, last_read_at: now } });
+  return reply.send({ data: { thread_id: id, messages: messagesWithSelf, last_read_at: now } });
 }
 
 /* ─── POST /me/customer/threads/:id/mark-read ─── */

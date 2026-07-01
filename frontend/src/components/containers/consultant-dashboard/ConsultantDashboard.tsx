@@ -50,6 +50,7 @@ import {
   useUpdateMyConsultantBookingNotesMutation,
   useGetMyConsultantProfileCompletionQuery,
   useSubmitMyConsultantKycMutation,
+  useUploadMyConsultantKycDocumentMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 import { useListLanguagesPublicQuery } from '@/integrations/rtk/public/languages.public.endpoints';
@@ -731,7 +732,7 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
         tax_office: taxOffice.trim() || null,
         company_name: companyName.trim() || null,
         billing_address: billingAddress.trim() || null,
-        kyc_documents: kycDocuments.length > 0 ? kycDocuments : null,
+        // kyc_documents burada gönderilmez — güvenli /kyc/documents endpoint'i DB'ye yazar.
       }).unwrap();
       toast.success(ui('ui_dashboard_profile_saved', 'Profile updated'));
     } catch (e) {
@@ -1006,11 +1007,13 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <KycUploadBox
                   label={uiP('ui_consultantpanel_doc_id_front', 'ID front side')}
+                  docType="id_front"
                   onUpload={(url) => setKycDocuments(prev => [...prev.filter(d => d.type !== 'id_front'), { type: 'id_front', url }])}
                   uploaded={kycDocuments.some(d => d.type === 'id_front')}
                 />
                 <KycUploadBox
                   label={uiP('ui_consultantpanel_doc_id_back', 'ID back side')}
+                  docType="id_back"
                   onUpload={(url) => setKycDocuments(prev => [...prev.filter(d => d.type !== 'id_back'), { type: 'id_back', url }])}
                   uploaded={kycDocuments.some(d => d.type === 'id_back')}
                 />
@@ -1018,7 +1021,8 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
                   <div className="sm:col-span-2">
                     <KycUploadBox
                       label={uiP('ui_consultantpanel_doc_tax_certificate', 'Tax certificate')}
-                      onUpload={(url) => setKycDocuments(prev => [...prev.filter(d => d.type !== 'tax_certificate'), { type: 'tax_certificate', url }])} 
+                      docType="tax_certificate"
+                      onUpload={(url) => setKycDocuments(prev => [...prev.filter(d => d.type !== 'tax_certificate'), { type: 'tax_certificate', url }])}
                       uploaded={kycDocuments.some(d => d.type === 'tax_certificate')}
                     />
                   </div>
@@ -1540,24 +1544,24 @@ function CompletionScoreWidget({
 }
 
 /* ────────── C3: KycUploadBox ────────── */
-function KycUploadBox({ label, onUpload, uploaded }: { label: string, onUpload: (url: string) => void, uploaded: boolean }) {
+function KycUploadBox({ label, docType, onUpload, uploaded }: { label: string, docType: string, onUpload: (url: string) => void, uploaded: boolean }) {
   const { ui: uiP } = useUiSection('ui_consultantpanel');
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const [upload, { isLoading }] = useUploadToBucketMutation();
+  // Güvenli KYC endpoint'i: consultant_kyc bucket (public DEĞİL) + DB persist + audit.
+  const [upload, { isLoading }] = useUploadMyConsultantKycDocumentMutation();
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error(uiP('ui_consultantpanel_upload_size_error', 'File size must be under 5MB.'));
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(uiP('ui_consultantpanel_upload_size_error', 'File size must be under 10MB.'));
       return;
     }
 
     try {
-      const res = await upload({ bucket: 'uploads', files: file, path: 'kyc' }).unwrap();
-      const url = res.items?.[0]?.url || '';
-      onUpload(url);
+      const res = await upload({ type: docType, file }).unwrap();
+      onUpload(res.url || '');
       toast.success(`${label} ${uiP('ui_consultantpanel_upload_success_suffix', 'uploaded.')}`);
     } catch {
       toast.error(uiP('ui_consultantpanel_upload_error', 'Upload failed.'));

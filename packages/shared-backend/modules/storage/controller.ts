@@ -146,10 +146,19 @@ export async function publicServe(req: FastifyRequest, reply: FastifyReply) {
 }
 
 /** POST /storage/:bucket/upload (FormData) — server-side upload */
+const AUTH_REQUIRED_BUCKETS = new Set(['consultant_blog', 'consultant_avatars', 'consultant_kyc']);
+
 export async function uploadToBucket(req: FastifyRequest, reply: FastifyReply) {
   try {
     const { bucket } = req.params as { bucket: string };
     const query = req.query as { path?: string; upsert?: string };
+
+    // Hassas bucket'lara yükleme kimlik doğrulaması ister (anonim overwrite/istismar önleme);
+    // anonim akışlar (uploads=başvuru CV, coffee=fal foto) açık kalır.
+    const callerId = (req as FileRequest).user?.id ? String((req as FileRequest).user?.id) : null;
+    if (AUTH_REQUIRED_BUCKETS.has(bucket) && !callerId) {
+      return reply.code(401).send({ error: { message: 'unauthenticated' } });
+    }
 
     const cfg = await getCloudinaryConfig();
     if (!cfg) return reply.code(501).send({ message: "storage_not_configured" });

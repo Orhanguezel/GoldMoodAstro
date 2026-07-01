@@ -35,6 +35,7 @@ export type SignUpBody = {
 export type UpdateUserBody = {
   email?: string;
   password?: string;
+  current_password?: string;
 };
 
 export type PasswordResetRequestBody = {

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Cinzel } from 'next/font/google';
 import { 
@@ -28,6 +30,8 @@ const cinzel = Cinzel({ subsets: ['latin'] });
 
 export default function SettingsPage() {
   const { ui } = useUiSection('ui_settings');
+  const params = useParams();
+  const locale = (params?.locale as string) || 'tr';
   const { data: profile } = useGetMyProfileQuery();
   const { data: charts } = useListMyBirthChartsQuery();
   const [upsertProfile] = useUpsertMyProfileMutation();
@@ -161,9 +165,11 @@ export default function SettingsPage() {
 	                  <div className="text-foreground font-bold">{ui('ui_settings_close_account_title', 'Close Account')}</div>
 	                  <div className="text-sm text-muted-foreground">{ui('ui_settings_close_account_desc', 'All your data will be permanently deleted after 7 days.')}</div>
                </div>
-               <button className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[var(--gm-error)]/10 text-[var(--gm-error)] border border-[var(--gm-error)]/20 hover:bg-[var(--gm-error)]/20 transition-all font-bold text-sm tracking-widest">
+               <Link
+                  href={`/${locale}/profile/privacy`}
+                  className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[var(--gm-error)]/10 text-[var(--gm-error)] border border-[var(--gm-error)]/20 hover:bg-[var(--gm-error)]/20 transition-all font-bold text-sm tracking-widest no-underline">
 	                  <Trash2 className="w-4 h-4" /> {ui('ui_settings_delete_account_button', 'DELETE ACCOUNT')}
-               </button>
+               </Link>
             </div>
           </section>
 

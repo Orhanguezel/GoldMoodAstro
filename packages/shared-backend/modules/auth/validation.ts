@@ -34,6 +34,8 @@ export const tokenBody = z.object({
 export const updateBody = z.object({
   email: z.string().email().optional(),
   password: z.string().min(6).optional(),
+  // Hassas değişiklik (şifre/e-posta) için mevcut şifre doğrulaması zorunlu.
+  current_password: z.string().min(1).optional(),
 });
 
 export const googleBody = z.object({
