@@ -165,5 +165,10 @@ export async function handleGetReading(req: FastifyRequest, reply: FastifyReply)
   const { id } = req.params as { id: string };
   const reading = await repo.getReadingById(id);
   if (!reading) return reply.status(404).send({ error: apiMessage(req, 'coffee_not_found') });
+  // Sahiplik: bir kullanıcıya bağlı okuma yalnız sahibine görünür (KVKK). Anonim okuma açık kalır.
+  const caller = (req as any).user;
+  if ((reading as any).userId && (reading as any).userId !== caller?.id) {
+    return reply.status(404).send({ error: apiMessage(req, 'coffee_not_found') });
+  }
   return reply.send({ data: reading });
 }

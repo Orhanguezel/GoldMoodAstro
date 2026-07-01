@@ -5,7 +5,7 @@ import { tryAuth } from '../../middleware/auth';
 
 export function registerDreamsPublic(fastify: FastifyInstance) {
   fastify.post('/dreams/interpret', { preHandler: [tryAuth] }, controller.handleInterpret);
-  fastify.get('/dreams/reading/:id', controller.handleGetInterpretation);
+  fastify.get('/dreams/reading/:id', { preHandler: [tryAuth] }, controller.handleGetInterpretation);
 }
 
 export function registerDreamsPrivate(fastify: FastifyInstance) {

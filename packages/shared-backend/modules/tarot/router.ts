@@ -5,7 +5,7 @@ import { tryAuth } from '../../middleware/auth';
 
 export function registerTarotPublic(fastify: FastifyInstance) {
   fastify.post('/tarot/draw', { preHandler: [tryAuth] }, controller.handleDraw);
-  fastify.get('/tarot/reading/:id', controller.handleGetReading);
+  fastify.get('/tarot/reading/:id', { preHandler: [tryAuth] }, controller.handleGetReading);
 }
 
 export function registerTarotPrivate(fastify: FastifyInstance) {

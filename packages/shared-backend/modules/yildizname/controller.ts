@@ -102,6 +102,12 @@ export async function handleGetReading(req: FastifyRequest, reply: FastifyReply)
   const row = await repo.getReadingById(id);
   if (!row) return reply.status(404).send({ error: apiMessage(req, 'yildizname_not_found') });
 
+  // Sahiplik: bir kullanıcıya bağlı okuma yalnız sahibine görünür (KVKK). Anonim okuma açık kalır.
+  const callerId = userIdFromReq(req);
+  if ((row as any).userId && (row as any).userId !== callerId) {
+    return reply.status(404).send({ error: apiMessage(req, 'yildizname_not_found') });
+  }
+
   // Drizzle camelCase → frontend snake_case eşlemesi
   return reply.send({
     data: {

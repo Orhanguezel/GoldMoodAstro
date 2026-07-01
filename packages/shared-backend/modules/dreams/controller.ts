@@ -97,5 +97,10 @@ export async function handleGetInterpretation(req: FastifyRequest, reply: Fastif
   const { id } = req.params as { id: string };
   const row = await repo.getInterpretationById(id);
   if (!row) return reply.status(404).send({ error: apiMessage(req, 'dream_not_found') });
+  // Sahiplik: bir kullanıcıya bağlı okuma yalnız sahibine görünür (KVKK). Anonim okuma açık kalır.
+  const caller = (req as any).user;
+  if ((row as any).userId && (row as any).userId !== caller?.id) {
+    return reply.status(404).send({ error: apiMessage(req, 'dream_not_found') });
+  }
   return reply.send({ data: row });
 }

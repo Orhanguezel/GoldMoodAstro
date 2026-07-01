@@ -20,7 +20,7 @@
 - [x] **Kredi sayfası i18n bozuk** — `me/credits/page.tsx:33,93,101`. `pkg.nameTr` (locale yok sayılıyor) + `buyCredits` `locale:'tr'` hardcoded + sabit `₺`. **Fix:** locale'i packages query + buy body'sine geçir, `pkg.name` kullan, `currency` sembolü.
 - [x] **me/readings numeroloji kaydı 404** — `me/readings/page.tsx:42,159`. `/numeroloji/<id>` sayfası yok; dashboard index'e yönlendiriyor (tutarsız). **Fix:** index'e yönlendir.
 - [x] **`me/readings`, `me/credits`, `me/settings` orphan + guard yok** — auth guard yok, hiçbir yerden link verilmiyor, dashboard sekmeleriyle duplike ve ayrışmış. **Fix:** ya guard+navigasyon, ya dashboard'ı kanonik kabul edip bunları redirect'e çevir/sil.
-- [ ] **Okuma detay endpoint'leri public + ownership yok** — `tarot/coffee/dreams/yildizname router.ts` `reading/:id` auth'suz; kişisel içerik UUID ile herkese açık (`synastry` tryAuth'lu — tutarsız). Paylaşım linki mi belirsiz (doğrulanmadı). **Fix:** `is_public` bayrağı + uyarı, ya da `tryAuth` + owner-veya-public.
+- [x] **Okuma detay endpoint'leri public + ownership yok** — `tarot/coffee/dreams/yildizname router.ts` `reading/:id` auth'suz; kişisel içerik UUID ile herkese açık (`synastry` tryAuth'lu — tutarsız). Paylaşım linki mi belirsiz (doğrulanmadı). **Fix:** `is_public` bayrağı + uyarı, ya da `tryAuth` + owner-veya-public.
 - [x] **Mesajlarda canlı güncelleme yok** — `UserMessagesPanel.tsx:41-48`. polling/WS yok; danışman cevabı yenilemeden görünmez. **Fix:** `pollingInterval` (threads 30sn, mesajlar 10-15sn).
 - [ ] **me/readings büyük ölçüde çevrilmemiş/dil karışık** — `TYPE_CONFIG`/`FILTERS`/boş durum hardcoded. **Fix:** `ui()`'ye taşı; dashboard `HISTORY_TYPES/HISTORY_META` ile ortak modüle çıkar.
 

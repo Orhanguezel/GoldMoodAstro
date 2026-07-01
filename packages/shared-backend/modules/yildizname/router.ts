@@ -7,7 +7,7 @@ import { tryAuth } from '../../middleware/auth';
 export function registerYildiznamePublic(fastify: FastifyInstance) {
   fastify.post('/read', { preHandler: [tryAuth] }, controller.handleRead);
   fastify.get('/menzils', controller.handleListMenzils);
-  fastify.get('/reading/:id', controller.handleGetReading);
+  fastify.get('/reading/:id', { preHandler: [tryAuth] }, controller.handleGetReading);
   // FAZ 24 / T24-1 PREMIUM — Hibrit yorum (auth zorunlu, credit guard)
   fastify.post('/reading/:id/chart-extra', controller.handleChartExtra);
 }
