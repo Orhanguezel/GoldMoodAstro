@@ -1944,6 +1944,26 @@ export function useUiSection(section: UiSectionKey, localeOverride?: string): Ui
       if (fromDb && fromDb !== k) return fromDb;
     }
 
+    // B2) allowlist (SECTION_KEYS) dışı ama DB'de mevcut herhangi bir ui_ anahtarı.
+    // prefix=ui_ ile tüm ui_* satırları zaten allUiMap'te; SECTION_KEYS bakımına
+    // gerek kalmadan yeni anahtarlar (ui_home_consultants_*, ui_home_transparency_* ...)
+    // doğrudan çözülür.
+    if (!record && k.startsWith('ui_')) {
+      const row2 = allUiMap.get(k);
+      if (row2) {
+        const label2 = (normalizeValueToLabel(row2.value).label || {}) as TranslatedLabel;
+        const l2 = normShortLocale(locale);
+        const val2 =
+          (l2 && (label2 as any)[l2]) ||
+          (label2 as any).en ||
+          (label2 as any).tr ||
+          (Object.values(label2 || {})[0] as string) ||
+          '';
+        const fromDb2 = (typeof val2 === 'string' ? val2 : '').trim();
+        if (fromDb2 && fromDb2 !== k) return fromDb2;
+      }
+    }
+
     // C) param hard fallback
     const hf = String(hardFallback || '').trim();
     if (hf) return hf;
