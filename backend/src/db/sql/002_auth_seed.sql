@@ -11,9 +11,10 @@ VALUES
 ('10000000-0000-4000-8000-0000000000b3', 'fatma.guclu@goldmoodastro.com', @ADMIN_PASSWORD_HASH, 'Fatma Güçlü',     NULL, 'admin', 1, 1, NOW(3)),
 -- Test danışmanı (ücretsiz, sistem testleri için)
 ('10000000-0000-4000-8000-0000000000b4', 'test.danisman@goldmoodastro.com', @ADMIN_PASSWORD_HASH, 'Test Danışman', NULL, 'consultant', 1, 1, NOW(3))
+-- NOT: password_hash ve full_name kasıtlı OLARAK güncellenmez — kullanıcı bunları
+-- değiştirebilir; her deploy'da db:seed bunları ezmemeli (manuel şifre/ad korunur).
+-- Yalnızca sistem flag'leri (rol, aktiflik) idempotent güncellenir.
 ON DUPLICATE KEY UPDATE
-  password_hash = VALUES(password_hash),
-  full_name = VALUES(full_name),
   role = VALUES(role),
   is_active = 1,
   email_verified = 1;
