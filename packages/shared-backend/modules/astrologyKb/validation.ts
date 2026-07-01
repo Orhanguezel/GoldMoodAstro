@@ -10,7 +10,7 @@ export const IdParamSchema = z.object({
 
 const KIND_ENUM = z.enum([
   "planet_sign", "planet_house", "sign_house",
-  "aspect", "sign", "house", "planet",
+  "aspect", "sign", "sign_section", "house", "planet",
   "transit", "synastry", "misc",
 ]);
 

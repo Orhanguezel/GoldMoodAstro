@@ -5,7 +5,7 @@
 
 export type AstrologyKbKind =
   | 'planet_sign' | 'planet_house' | 'sign_house'
-  | 'aspect' | 'sign' | 'house' | 'planet'
+  | 'aspect' | 'sign' | 'sign_section' | 'house' | 'planet'
   | 'transit' | 'synastry' | 'misc';
 
 export type AstrologyKbTone =

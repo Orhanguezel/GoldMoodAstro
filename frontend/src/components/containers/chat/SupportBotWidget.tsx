@@ -555,11 +555,13 @@ export default function SupportBotWidget() {
           width: btnSize,
           height: btnSize,
           borderRadius: isAdmin ? 14 : "50%",
-          border: `2px solid ${C.rose200}`,
+          border: open ? `1px solid ${C.rose200}` : "none",
           zIndex: 9999,
-          background: open ? headerGradient : C.white,
+          background: open ? headerGradient : "transparent",
           color: open ? C.primaryFg : C.rose900,
-          boxShadow: `0 8px 28px rgba(0,0,0,0.4), 0 0 20px rgba(201,169,110,0.1)`,
+          boxShadow: open
+            ? `0 8px 28px rgba(0,0,0,0.4), 0 0 20px rgba(201,169,110,0.1)`
+            : `0 6px 18px rgba(0,0,0,0.22), 0 0 0 1px ${C.rose200}`,
           display: "grid",
           placeItems: "center",
           padding: 0,
@@ -576,10 +578,11 @@ export default function SupportBotWidget() {
             src={supportImageUrl}
             alt="AI Support"
             style={{
-              width: btnSize - 16,
-              height: btnSize - 16,
-              objectFit: "contain",
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
               display: "block",
+              borderRadius: isAdmin ? 14 : "50%",
             }}
           />
         )}

@@ -60,7 +60,7 @@ import type {
 
 const KIND_OPTIONS: AstrologyKbKind[] = [
   'planet_sign', 'planet_house', 'sign_house',
-  'aspect', 'sign', 'house', 'planet',
+  'aspect', 'sign', 'sign_section', 'house', 'planet',
   'transit', 'synastry', 'misc',
 ];
 
