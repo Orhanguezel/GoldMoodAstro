@@ -258,7 +258,10 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                   }
 
                   return (
-                    <li key={item.id} className="static group/dd">
+                    // key'e pathname ekli: navigasyon sonrası li remount olur → yeni
+                    // element :hover almaz (imleç hareket edene dek) → CSS-hover mega
+                    // menü paneli otomatik kapanır. (Mobil zaten pathname ile kapanır.)
+                    <li key={`${item.id}-${pathname}`} className="static group/dd">
                       <button
                         type="button"
                         className={`inline-flex items-center gap-1.5 py-3 font-serif text-[13px] font-normal tracking-[0.05em] transition-colors cursor-default ${
