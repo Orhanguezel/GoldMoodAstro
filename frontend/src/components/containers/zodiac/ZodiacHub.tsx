@@ -7,7 +7,7 @@ import { Cinzel } from 'next/font/google';
 import Image from 'next/image';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
-import { ZODIAC_SIGNS } from '@/lib/zodiac/signs';
+import { ZODIAC_SIGNS, localizeSign } from '@/lib/zodiac/signs';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -41,7 +41,9 @@ export default function ZodiacHub() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-        {ZODIAC_SIGNS.map((sign, idx) => (
+        {ZODIAC_SIGNS.map((sign, idx) => {
+          const s = localizeSign(sign, locale);
+          return (
           <motion.div
             key={sign.key}
             initial={{ opacity: 0, y: 20 }}
@@ -60,31 +62,32 @@ export default function ZodiacHub() {
                 <div className="relative w-24 h-24 mb-4 transform group-hover:scale-110 transition-transform duration-500">
                   <Image
                     src={sign.image}
-                    alt={sign.label}
+                    alt={s.label}
                     fill
                     className="object-contain"
                   />
                 </div>
-                
+
                 <span className="text-3xl mb-1 opacity-50 group-hover:opacity-100 transition-opacity">{sign.symbol}</span>
                 <h3 className={`${cinzel.className} text-xl md:text-2xl text-(--gm-text) mb-1`}>
-                  {sign.label}
+                  {s.label}
                 </h3>
                 <p className="text-xs font-medium text-(--gm-gold) uppercase tracking-widest mb-2">
-                  {sign.date}
+                  {s.date}
                 </p>
                 <div className="flex flex-wrap justify-center gap-2">
                   <div className="px-3 py-1 rounded-full bg-(--gm-gold)/5 border border-(--gm-gold)/10">
-                    <span className="text-[10px] font-bold text-(--gm-gold) uppercase">{sign.element}</span>
+                    <span className="text-[10px] font-bold text-(--gm-gold) uppercase">{s.element}</span>
                   </div>
                   <div className="px-3 py-1 rounded-full border border-(--gm-border-soft)" style={{ backgroundColor: `${sign.accent}18`, color: sign.accent }}>
-                    <span className="text-[10px] font-bold uppercase">{sign.modality}</span>
+                    <span className="text-[10px] font-bold uppercase">{s.modality}</span>
                   </div>
                 </div>
               </div>
             </Link>
           </motion.div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

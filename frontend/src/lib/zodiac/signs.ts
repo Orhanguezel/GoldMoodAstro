@@ -44,3 +44,52 @@ export function getZodiacMeta(sign: string | undefined): ZodiacSignMeta | null {
   if (!sign || !(sign in ZODIAC_META)) return null;
   return ZODIAC_META[sign as ZodiacSign];
 }
+
+// ── i18n: signs.ts sabitleri TR kanonik; en/de gösterim çevirileri ───────────
+// element/modality hem mantık anahtarı hem gösterim → key TR kalır, gösterimde çevrilir.
+type EnDe = { en: string; de: string };
+
+const SIGN_I18N: Record<ZodiacSign, { label: EnDe; date: EnDe }> = {
+  aries: { label: { en: 'Aries', de: 'Widder' }, date: { en: '21 March - 19 April', de: '21. März - 19. April' } },
+  taurus: { label: { en: 'Taurus', de: 'Stier' }, date: { en: '20 April - 20 May', de: '20. April - 20. Mai' } },
+  gemini: { label: { en: 'Gemini', de: 'Zwillinge' }, date: { en: '21 May - 20 June', de: '21. Mai - 20. Juni' } },
+  cancer: { label: { en: 'Cancer', de: 'Krebs' }, date: { en: '21 June - 22 July', de: '21. Juni - 22. Juli' } },
+  leo: { label: { en: 'Leo', de: 'Löwe' }, date: { en: '23 July - 22 August', de: '23. Juli - 22. August' } },
+  virgo: { label: { en: 'Virgo', de: 'Jungfrau' }, date: { en: '23 August - 22 September', de: '23. August - 22. September' } },
+  libra: { label: { en: 'Libra', de: 'Waage' }, date: { en: '23 September - 22 October', de: '23. September - 22. Oktober' } },
+  scorpio: { label: { en: 'Scorpio', de: 'Skorpion' }, date: { en: '23 October - 21 November', de: '23. Oktober - 21. November' } },
+  sagittarius: { label: { en: 'Sagittarius', de: 'Schütze' }, date: { en: '22 November - 21 December', de: '22. November - 21. Dezember' } },
+  capricorn: { label: { en: 'Capricorn', de: 'Steinbock' }, date: { en: '22 December - 19 January', de: '22. Dezember - 19. Januar' } },
+  aquarius: { label: { en: 'Aquarius', de: 'Wassermann' }, date: { en: '20 January - 18 February', de: '20. Januar - 18. Februar' } },
+  pisces: { label: { en: 'Pisces', de: 'Fische' }, date: { en: '19 February - 20 March', de: '19. Februar - 20. März' } },
+};
+
+const ELEMENT_I18N: Record<ZodiacElement, EnDe> = {
+  'Ateş': { en: 'Fire', de: 'Feuer' },
+  'Toprak': { en: 'Earth', de: 'Erde' },
+  'Hava': { en: 'Air', de: 'Luft' },
+  'Su': { en: 'Water', de: 'Wasser' },
+};
+
+const MODALITY_I18N: Record<ZodiacModality, EnDe> = {
+  'Öncü': { en: 'Cardinal', de: 'Kardinal' },
+  'Sabit': { en: 'Fixed', de: 'Fix' },
+  'Değişken': { en: 'Mutable', de: 'Veränderlich' },
+};
+
+export type LocalizedSign = { label: string; date: string; element: string; modality: string };
+
+/** ZodiacSignMeta'nın label/date/element/modality alanlarını locale'e göre döndürür (tr fallback). */
+export function localizeSign(meta: ZodiacSignMeta, locale?: string): LocalizedSign {
+  const l = String(locale ?? 'tr').toLowerCase().split(/[-_]/)[0];
+  if (l !== 'en' && l !== 'de') {
+    return { label: meta.label, date: meta.date, element: meta.element, modality: meta.modality };
+  }
+  const s = SIGN_I18N[meta.key];
+  return {
+    label: s?.label[l] ?? meta.label,
+    date: s?.date[l] ?? meta.date,
+    element: ELEMENT_I18N[meta.element]?.[l] ?? meta.element,
+    modality: MODALITY_I18N[meta.modality]?.[l] ?? meta.modality,
+  };
+}
