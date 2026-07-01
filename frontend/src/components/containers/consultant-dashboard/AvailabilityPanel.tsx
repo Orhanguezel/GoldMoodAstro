@@ -344,15 +344,7 @@ export default function AvailabilityPanel() {
                         />
                         {ui('ui_consultantpanel_availability_active', 'Active')}
                       </label>
-                      <span className="text-[10px] text-[var(--gm-muted)] uppercase tracking-widest ml-2">{ui('ui_consultantpanel_availability_capacity', 'Capacity:')}</span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={row.capacity}
-                        onChange={(e) => patchRow(idx, { capacity: Math.max(1, Number(e.target.value) || 1) })}
-                        className="h-9 w-20 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-lg px-2 text-sm text-[var(--gm-text)]"
-                      />
+                      {/* Kapasite UI kaldırıldı: seanslar 1:1, kapasite her zaman 1. */}
                       <button
                         onClick={() => removeRow(idx)}
                         className="ml-auto p-2 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-lg"
