@@ -13,6 +13,8 @@ import {
   useListMyServiceTemplatesQuery,
   useAdoptServiceTemplateMutation,
   useCreateServiceBoostCheckoutMutation,
+  useGetServiceBoostPackagesQuery,
+  type BoostPackage,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { extractApiError } from '@/integrations/shared';
 import { useUiSection } from '@/i18n';
@@ -123,6 +125,7 @@ export default function ServicesPanel() {
     const errs: typeof newErrors = {};
     if (!newForm.name.trim()) errs.name = ui('ui_dashboard_service_error_name_required', 'Name is required');
     if (newForm.price < 0 || newForm.price > 100000) errs.price = ui('ui_dashboard_service_error_price_range', 'Must be between 0 and 100,000');
+    else if (!newForm.is_free && newForm.price <= 0) errs.price = ui('ui_dashboard_service_error_price_paid', 'Paid service price must be greater than 0');
     if (newForm.duration_minutes < 15 || newForm.duration_minutes > 480) errs.duration = ui('ui_dashboard_service_error_duration_range', 'Must be between 15 and 480 minutes');
     
     if (Object.keys(errs).length > 0) {
@@ -511,6 +514,10 @@ function ServiceRow({
       toast.error(ui('ui_dashboard_service_error_price_range', 'Must be between 0 and 100,000'));
       return;
     }
+    if (!form.is_free && form.price <= 0) {
+      toast.error(ui('ui_dashboard_service_error_price_paid', 'Paid service price must be greater than 0'));
+      return;
+    }
     onPatch(form);
   };
 
@@ -550,7 +557,7 @@ function ServiceRow({
             {isBoostActive && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-(--gm-warning)/20 text-(--gm-warning) text-[9px] font-bold uppercase tracking-widest">
                 <Rocket className="w-2.5 h-2.5" />
-                {ui('ui_dashboard_service_boost_active', 'Boosted').replace('{days}', String(boostDaysLeft))}{' '}{uiP('ui_consultantpanel_services_boost_days_left', '{days}d left').replace('{days}', String(boostDaysLeft))}
+                {ui('ui_dashboard_service_boost_active', 'Boosted')}{' · '}{uiP('ui_consultantpanel_services_boost_days_left', '{days}d left').replace('{days}', String(boostDaysLeft))}
               </span>
             )}
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--gm-gold)]/10 text-[var(--gm-gold)] text-[9px] font-bold uppercase tracking-widest">
@@ -584,7 +591,7 @@ function ServiceRow({
           </button>
         </div>
         <button
-          onClick={() => onPatch({ ...form, is_active: !form.is_active })}
+          onClick={() => onPatch({ is_active: !(svc.is_active === 1) })}
           className="text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-[var(--gm-border-soft)] hover:border-[var(--gm-gold)]/40"
           disabled={busy}
         >
@@ -708,7 +715,7 @@ function ServiceRow({
   );
 }
 
-const DEFAULT_BOOST_PACKAGES = [
+const DEFAULT_BOOST_PACKAGES: BoostPackage[] = [
   { id: 'wk1', days: 7, price: 599 },
   { id: 'wk2', days: 14, price: 1099 },
   { id: 'wk4', days: 28, price: 1899 },
@@ -726,8 +733,10 @@ function ServiceBoostModal({
   const { ui } = useUiSection('ui_boost');
   const [selected, setSelected] = useState<string>('wk1');
   const [checkout, { isLoading }] = useCreateServiceBoostCheckoutMutation();
+  const { data: apiPackages } = useGetServiceBoostPackagesQuery();
 
-  const packages = DEFAULT_BOOST_PACKAGES;
+  // Fiyatlar tek kaynak (site_settings) — API'den; yüklenene kadar default fallback.
+  const packages = apiPackages && apiPackages.length > 0 ? apiPackages : DEFAULT_BOOST_PACKAGES;
   const chosen = packages.find((p) => p.id === selected) ?? packages[0];
 
   const handleBuy = async () => {

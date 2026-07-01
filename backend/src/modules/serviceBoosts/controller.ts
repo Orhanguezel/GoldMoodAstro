@@ -93,6 +93,11 @@ async function readPackages(): Promise<BoostPackage[]> {
   ];
 }
 
+export const getPackages: RouteHandler = async (_req, reply) => {
+  const packages = await readPackages();
+  return reply.send({ data: packages });
+};
+
 export const createCheckout: RouteHandler = async (req, reply) => {
   const c = await getCallerConsultant(req);
   if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });

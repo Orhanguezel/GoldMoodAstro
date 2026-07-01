@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Users, Calendar, Star, Loader2 } from 'lucide-react';
 import { useGetMyConsultantClientsQuery } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { useUiSection } from '@/i18n';
@@ -41,16 +41,19 @@ function Avatar({ src, name }: { src?: string | null; name?: string | null }) {
 export default function ClientsPanel() {
   const { ui } = useUiSection('ui_consultantpanel');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Debounce: her tuş vuruşunda sorgu atma; 350ms bekle.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const { data: clients = [], isLoading, isError } = useGetMyConsultantClientsQuery(
-    search.length >= 2 ? { q: search } : undefined
+    debouncedSearch.length >= 2 ? { q: debouncedSearch } : undefined
   );
 
-  const filtered = search.length < 2
-    ? clients
-    : clients.filter((c) =>
-        (c.full_name || '').toLowerCase().includes(search.toLowerCase()) ||
-        (c.email || '').toLowerCase().includes(search.toLowerCase())
-      );
+  // Sunucu zaten q ile filtreliyor — çifte filtre yok; listeyi doğrudan kullan.
+  const filtered = clients;
 
   return (
     <div className="space-y-6">
@@ -114,7 +117,7 @@ export default function ClientsPanel() {
             </div>
             {/* Rows */}
             <div className="divide-y divide-(--gm-border-soft)">
-              {filtered.map((client, idx) => (
+              {filtered.map((client) => (
                 <div
                   key={client.user_id}
                   className="flex items-center gap-4 px-5 py-4 hover:bg-(--gm-gold)/5 transition-colors"
@@ -125,7 +128,7 @@ export default function ClientsPanel() {
                       <span className="font-serif text-sm text-(--gm-text)">
                         {client.full_name || ui('ui_consultantpanel_clients_unnamedUser', 'Unnamed user')}
                       </span>
-                      {idx === 0 && client.booking_count > 0 && (
+                      {client.booking_count >= 3 && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-(--gm-gold)/15 text-(--gm-gold) text-[9px] font-bold uppercase tracking-widest">
                           <Star className="w-2.5 h-2.5" />
                           {ui('ui_consultantpanel_clients_loyal', 'Loyal')}

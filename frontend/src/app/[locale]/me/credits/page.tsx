@@ -33,7 +33,7 @@ export default function CreditsPage() {
   React.useEffect(() => {
     if (isReady && !isAuthenticated) router.replace(`/${locale}/login?next=/${locale}/me/credits`);
   }, [isReady, isAuthenticated, locale, router]);
-  const { data: balanceData } = useGetUserBalanceQuery();
+  const { data: balanceData, isError: balanceError } = useGetUserBalanceQuery();
   const { data: packages, isLoading: pkgLoading } = useListCreditPackagesQuery();
   const [buyCredits, { isLoading: buyLoading }] = useBuyCreditsMutation();
 
@@ -67,7 +67,7 @@ export default function CreditsPage() {
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-brand-gold/20 flex flex-col items-center justify-center bg-surface-high/50 shadow-xl">
                  <Zap className="w-6 h-6 text-brand-gold mb-1" />
                  <span className="text-4xl md:text-5xl font-bold text-foreground tracking-tighter">
-                    {balanceData?.balance?.toLocaleString() || '0'}
+                    {balanceError ? '—' : (balanceData?.balance?.toLocaleString() ?? '0')}
                  </span>
 	                 <span className="text-[10px] font-bold text-brand-gold tracking-widest uppercase">{ui('ui_account_credits_unit', 'CREDIT')}</span>
               </div>

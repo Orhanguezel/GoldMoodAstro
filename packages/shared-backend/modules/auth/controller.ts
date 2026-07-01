@@ -711,6 +711,7 @@ export async function me(req: FastifyRequest, reply: FastifyReply) {
         email_verified: u.email_verified,
         is_active: u.is_active,
         ecosystem_id: u.ecosystem_id ?? null,
+        created_at: (u as any).created_at ?? null,
         role,
         roles,
         is_premium: Boolean(subscription),

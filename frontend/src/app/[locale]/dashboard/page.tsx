@@ -166,7 +166,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const locale = (params?.locale as string) || 'tr';
-  const isTr = locale === 'tr';
   const { ui } = useUiSection('ui_extra' as any);
 
   const { isAuthenticated, isReady, user } = useAuthStore();
@@ -204,9 +203,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (isReady && !isAuthenticated) {
-      router.replace(`/${locale}/login?next=/${locale}/dashboard`);
+      const dest = tab === 'overview' ? `/${locale}/dashboard` : `/${locale}/dashboard?tab=${tab}`;
+      router.replace(`/${locale}/login?next=${encodeURIComponent(dest)}`);
     }
-  }, [isReady, isAuthenticated, locale, router]);
+  }, [isReady, isAuthenticated, locale, router, tab]);
 
   const { data: profile } = useGetMyProfileQuery(undefined, { skip: !isAuthenticated });
   const { data: pendingOutcomes } = useListMyPendingOutcomesQuery(undefined, {
@@ -721,12 +721,12 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                      {booking.status === 'completed' && (
+                      {booking.status === 'completed' && booking.consultant_id && (
                         <button
                           type="button"
                           onClick={() => setReviewModal({
                             isOpen: true,
-                            targetId: booking.consultant_id || booking.resource_id,
+                            targetId: booking.consultant_id!,
                             consultantName: booking.consultant_name || booking.resource_title || ''
                           })}
                           className="btn-outline-premium px-5 py-2.5 text-[10px]"
@@ -764,7 +764,7 @@ export default function DashboardPage() {
                 {ui('ui_extra_b0_dash_card_my_messages', 'My Messages')}
               </h2>
             </div>
-            <UserMessagesPanel isTr={isTr} />
+            <UserMessagesPanel />
           </section>
         )}
 

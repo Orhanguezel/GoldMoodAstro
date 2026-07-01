@@ -1085,6 +1085,7 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
             sessionPrice={Number(profile.session_price)}
             sessionDuration={profile.session_duration}
             isAvailable={profile.is_available === 1}
+            isVerified={profile.approval_status === 'approved'}
           />
           <div className="mt-6 p-4 rounded-2xl bg-[var(--gm-gold)]/5 border border-[var(--gm-gold)]/20">
             <p className="text-[11px] text-[var(--gm-text-dim)] font-serif italic leading-relaxed text-center">
@@ -1476,7 +1477,7 @@ function CompletionScoreWidget({
                 cx="32" cy="32" r="28" fill="none" strokeWidth="6"
                 strokeDasharray={`${(score / 100) * 175.9} 175.9`}
                 strokeLinecap="round"
-                className={`${tier.bg} opacity-80 transition-all duration-700`}
+                className={`${tier.color} opacity-80 transition-all duration-700`}
                 style={{ stroke: 'currentColor' }}
               />
             </svg>

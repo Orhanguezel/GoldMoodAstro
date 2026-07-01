@@ -14,6 +14,7 @@ async function adminGuard(req: FastifyRequest, reply: FastifyReply) {
 }
 
 export async function registerServiceBoosts(app: FastifyInstance) {
+  app.get('/me/consultant/services/boost/packages', { preHandler: consultantGuard }, controller.getPackages);
   app.post('/me/consultant/services/:id/boost/checkout', { preHandler: consultantGuard }, controller.createCheckout);
   app.get('/me/consultant/services/:id/boost/status', { preHandler: consultantGuard }, controller.getStatus);
   app.post('/service-boosts/iyzico/callback', controller.iyzicoCallback);

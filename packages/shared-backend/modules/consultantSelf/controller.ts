@@ -928,11 +928,16 @@ export async function getStats(req: FastifyRequest, reply: FastifyReply) {
     .from(bookings)
     .where(and(eq(bookings.consultant_id, c.id), sql`${bookings.status} IN ('pending_payment','pending','requested_now')`));
 
-  // T29-4: Anlık görüşme talebi sayısı (5dk timeout)
+  // T29-4: Anlık görüşme talebi sayısı (5dk timeout) — süresi geçmiş talepler sayılmaz.
+  const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
   const [requestedNowRow] = await db
     .select({ count: sql<number>`COUNT(*)` })
     .from(bookings)
-    .where(and(eq(bookings.consultant_id, c.id), sql`${bookings.status} = 'requested_now'`));
+    .where(and(
+      eq(bookings.consultant_id, c.id),
+      sql`${bookings.status} = 'requested_now'`,
+      gte(bookings.created_at, fiveMinAgo),
+    ));
 
   // 7-günlük trend (her gün için seans sayısı)
   const sevenDaysAgo = new Date(now); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
@@ -1048,7 +1053,7 @@ export async function getWalletMonthlyStats(req: FastifyRequest, reply: FastifyR
   let byMonth = new Map<string, { earnings: number; sessions: number }>();
   try {
     const walletResult = await db.execute(
-      sql`SELECT id FROM wallets WHERE consultant_id = ${c.id} OR user_id = ${c.user_id} LIMIT 1`,
+      sql`SELECT id FROM wallets WHERE consultant_id = ${c.id} OR user_id = ${c.user_id} ORDER BY CASE WHEN consultant_id = ${c.id} THEN 0 ELSE 1 END, created_at ASC LIMIT 1`,
     );
     const walletRows = Array.isArray((walletResult as any)?.[0]) ? (walletResult as any)[0] : (walletResult as any);
     const w = (walletRows as any[])?.[0];
@@ -1503,6 +1508,24 @@ export async function replyInThread(req: FastifyRequest, reply: FastifyReply) {
   // Thread updated_at'i güncelle
   await db.update(chat_threads).set({ updated_at: now } as any).where(eq(chat_threads.id, id));
 
+  // Karşı tarafa (danışan) bildirim + push — reply'lar önceden hiç bildirim üretmiyordu.
+  try {
+    const recip = await db.execute(
+      sql`SELECT sender_user_id FROM chat_messages WHERE thread_id = ${id} AND sender_user_id <> ${c.user_id} ORDER BY created_at ASC LIMIT 1`,
+    );
+    const recipArr = Array.isArray((recip as any)?.[0]) ? (recip as any)[0] : (recip as any);
+    const recipientId = (recipArr as any[])?.[0]?.sender_user_id;
+    if (recipientId) {
+      const [cu] = await db.select({ full_name: users.full_name }).from(users).where(eq(users.id, c.user_id)).limit(1);
+      const title = `💬 ${cu?.full_name || 'Danışman'}`;
+      const body = parsed.data.text.slice(0, 120);
+      Promise.allSettled([
+        createUserNotification({ userId: String(recipientId), title, message: body, type: 'message' }),
+        dispatchPushToUser({ userId: String(recipientId), title, body, data: { type: 'chat_message', thread_id: id, url: '/dashboard?tab=messages' } }),
+      ]).catch(() => undefined);
+    }
+  } catch { /* bildirim best-effort */ }
+
   return reply.send({
     data: {
       id: messageId,
@@ -1527,6 +1550,7 @@ export async function getMyWallet(req: FastifyRequest, reply: FastifyReply) {
     sql`SELECT id, user_id, consultant_id, balance, pending_balance, currency, created_at, updated_at
         FROM wallets
         WHERE consultant_id = ${c.id} OR user_id = ${c.user_id}
+        ORDER BY CASE WHEN consultant_id = ${c.id} THEN 0 ELSE 1 END, created_at ASC
         LIMIT 1`,
   );
   const walletRows = Array.isArray((walletResult as any)?.[0]) ? (walletResult as any)[0] : (walletResult as any);
@@ -1747,6 +1771,7 @@ export async function requestWithdrawal(req: FastifyRequest, reply: FastifyReply
     sql`SELECT id, consultant_id, balance, currency
         FROM wallets
         WHERE consultant_id = ${c.id} OR user_id = ${c.user_id}
+        ORDER BY CASE WHEN consultant_id = ${c.id} THEN 0 ELSE 1 END, created_at ASC
         LIMIT 1`,
   );
   const wRows = Array.isArray((wResult as any)?.[0]) ? (wResult as any)[0] : (wResult as any);
@@ -2492,6 +2517,24 @@ export async function replyAsCustomer(req: FastifyRequest, reply: FastifyReply) 
   } as any);
 
   await db.update(chat_threads).set({ updated_at: now } as any).where(eq(chat_threads.id, id));
+
+  // Karşı tarafa (danışman) bildirim + push.
+  try {
+    const recip = await db.execute(
+      sql`SELECT sender_user_id FROM chat_messages WHERE thread_id = ${id} AND sender_user_id <> ${userId} ORDER BY created_at ASC LIMIT 1`,
+    );
+    const recipArr = Array.isArray((recip as any)?.[0]) ? (recip as any)[0] : (recip as any);
+    const recipientId = (recipArr as any[])?.[0]?.sender_user_id;
+    if (recipientId) {
+      const [su] = await db.select({ full_name: users.full_name }).from(users).where(eq(users.id, userId)).limit(1);
+      const title = `💬 ${su?.full_name || 'Danışan'}`;
+      const body = parsed.data.text.slice(0, 120);
+      Promise.allSettled([
+        createUserNotification({ userId: String(recipientId), title, message: body, type: 'message' }),
+        dispatchPushToUser({ userId: String(recipientId), title, body, data: { type: 'chat_message', thread_id: id, url: '/me/consultant?tab=messages' } }),
+      ]).catch(() => undefined);
+    }
+  } catch { /* bildirim best-effort */ }
 
   return reply.send({
     data: {

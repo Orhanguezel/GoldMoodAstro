@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { Send, MessageCircle, Loader2, User as UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -15,10 +16,12 @@ import { extractApiError } from '@/integrations/shared';
 import ChatWarningBanner from '@/components/common/ChatWarningBanner';
 import { useUiSection } from '@/i18n';
 
-function formatTime(iso: string) {
+const LOCALE_MAP: Record<string, string> = { tr: 'tr-TR', en: 'en-US', de: 'de-DE' };
+
+function formatTime(iso: string, locale: string) {
   try {
     const d = new Date(iso);
-    return d.toLocaleString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleString(LOCALE_MAP[locale] || 'tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   } catch {
     return iso;
   }
@@ -32,12 +35,10 @@ function threadTitle(t: CustomerThread, fallback: string): string {
   return t.consultant?.display_name || t.consultant?.full_name || fallback;
 }
 
-interface Props {
-  isTr: boolean;
-}
-
-export default function UserMessagesPanel({ isTr }: Props) {
+export default function UserMessagesPanel() {
   const { ui } = useUiSection('ui_account');
+  const params = useParams();
+  const locale = (params?.locale as string) || 'tr';
   const { data: threads = [], isLoading: threadsLoading } = useListMyCustomerThreadsQuery(undefined, {
     pollingInterval: 30000,
   });
@@ -65,6 +66,11 @@ export default function UserMessagesPanel({ isTr }: Props) {
       }
     }
   }, [activeId, threads, markAsRead]);
+
+  // Thread değişince taslağı temizle — yanlış kişiye gönderme riskini önle.
+  useEffect(() => {
+    setDraft('');
+  }, [activeId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -215,7 +221,7 @@ export default function UserMessagesPanel({ isTr }: Props) {
                       >
                         <div className="whitespace-pre-wrap break-words">{m.text}</div>
                         <div className={`text-[10px] mt-1 ${mine ? 'text-(--gm-bg-deep)/60' : 'text-(--gm-text-dim)'}`}>
-                          {formatTime(m.created_at)}
+                          {formatTime(m.created_at, locale)}
                         </div>
                       </div>
                     </div>

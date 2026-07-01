@@ -139,6 +139,13 @@ export interface ConsultantSelfService {
   updated_at: string;
 }
 
+export interface BoostPackage {
+  id: string;
+  days: number;
+  price: number;
+  currency?: string;
+}
+
 export interface ServiceBoostCheckoutResponse {
   id: string;
   status: 'pending_payment' | 'active' | 'expired' | 'cancelled';
@@ -643,6 +650,10 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       transformResponse: (res: { data: ConsultantSelfService }) => res.data,
       invalidatesTags: ['ConsultantSelfServices' as any, 'ConsultantSelfServiceTemplates' as any],
     }),
+    getServiceBoostPackages: build.query<BoostPackage[], void>({
+      query: () => '/me/consultant/services/boost/packages',
+      transformResponse: (res: { data: BoostPackage[] }) => res.data ?? [],
+    }),
     createServiceBoostCheckout: build.mutation<ServiceBoostCheckoutResponse, { serviceId: string; package_id: string }>({
       query: ({ serviceId, package_id }) => ({
         url: `/me/consultant/services/${encodeURIComponent(serviceId)}/boost/checkout`,
@@ -719,6 +730,7 @@ export const {
   useListMyServiceTemplatesQuery,
   useAdoptServiceTemplateMutation,
   useCreateServiceBoostCheckoutMutation,
+  useGetServiceBoostPackagesQuery,
   // C8
   useGetMyConsultantClientsQuery,
   // C9

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { Send, MessageCircle, Loader2 } from 'lucide-react';
 import ChatWarningBanner from '@/components/common/ChatWarningBanner';
 import { toast } from 'sonner';
@@ -14,10 +15,12 @@ import {
 import { extractApiError } from '@/integrations/shared';
 import { useUiSection } from '@/i18n';
 
-function formatTime(iso: string) {
+const LOCALE_MAP: Record<string, string> = { tr: 'tr-TR', en: 'en-US', de: 'de-DE' };
+
+function formatTime(iso: string, locale: string) {
   try {
     const d = new Date(iso);
-    return d.toLocaleString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleString(LOCALE_MAP[locale] || 'tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   } catch {
     return iso;
   }
@@ -29,12 +32,14 @@ function initialsOf(name: string | null | undefined) {
 
 export default function MessagesPanel() {
   const { ui } = useUiSection('ui_consultantpanel');
+  const params = useParams();
+  const locale = (params?.locale as string) || 'tr';
   const { data: threads = [], isLoading: threadsLoading } = useListMyConsultantThreadsQuery(undefined, {
     pollingInterval: 30000,
   });
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const { data: convo, isFetching: convoLoading } = useGetMyConsultantThreadMessagesQuery(activeId || '', {
+  const { data: convo, isFetching: convoLoading, isError: convoError } = useGetMyConsultantThreadMessagesQuery(activeId || '', {
     skip: !activeId,
     pollingInterval: 12000,
   });
@@ -56,6 +61,11 @@ export default function MessagesPanel() {
       }
     }
   }, [activeId, threads, markAsRead]);
+
+  // Thread değişince taslağı temizle — yanlış kişiye gönderme riskini önle.
+  useEffect(() => {
+    setDraft('');
+  }, [activeId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -128,7 +138,7 @@ export default function MessagesPanel() {
                     </span>
                     {t.last_message && (
                       <span className="text-[10px] text-[var(--gm-muted)] shrink-0">
-                        {formatTime(t.last_message.created_at)}
+                        {formatTime(t.last_message.created_at, locale)}
                       </span>
                     )}
                   </div>
@@ -192,6 +202,10 @@ export default function MessagesPanel() {
                 <div className="flex justify-center py-6">
                   <Loader2 className="w-5 h-5 animate-spin text-[var(--gm-muted)]" />
                 </div>
+              ) : convoError && !convo ? (
+                <div className="flex justify-center py-6 text-sm text-[var(--gm-error)]">
+                  {ui('ui_consultantpanel_messages_load_error', 'Messages could not be loaded.')}
+                </div>
               ) : (
                 convo?.messages.map((m) => {
                   const mine = m.from_consultant;
@@ -210,7 +224,7 @@ export default function MessagesPanel() {
                             mine ? 'text-[var(--gm-bg-deep)]/60' : 'text-[var(--gm-muted)]'
                           }`}
                         >
-                          {formatTime(m.created_at)}
+                          {formatTime(m.created_at, locale)}
                         </div>
                       </div>
                     </div>

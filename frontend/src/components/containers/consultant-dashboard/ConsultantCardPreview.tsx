@@ -14,6 +14,7 @@ interface Props {
   sessionPrice?: number;
   sessionDuration?: number;
   isAvailable?: boolean;
+  isVerified?: boolean;
 }
 
 export default function ConsultantCardPreview({
@@ -26,9 +27,12 @@ export default function ConsultantCardPreview({
   sessionPrice = 0,
   sessionDuration = 30,
   isAvailable = true,
+  isVerified = false,
 }: Props) {
   const { ui } = useUiSection('ui_consultantpanel');
-  const rating = parseFloat(ratingAvg);
+  // ratingAvg null gelebilir (DB nullable) → parseFloat(null)=NaN; güvenli fallback.
+  const parsedRating = parseFloat(String(ratingAvg ?? ''));
+  const rating = Number.isFinite(parsedRating) ? parsedRating : 5.0;
   const initials = (fullName || 'GS')
     .split(' ')
     .map((w) => w[0])
@@ -37,7 +41,7 @@ export default function ConsultantCardPreview({
     .toUpperCase();
 
   return (
-    <div className="w-full max-w-[320px] mx-auto bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-3xl overflow-hidden shadow-xl scale-95 origin-top opacity-90">
+    <div className="relative w-full max-w-[320px] mx-auto bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-3xl overflow-hidden shadow-xl scale-95 origin-top opacity-90">
       <div className="relative aspect-square w-full bg-[var(--gm-bg-deep)]">
         {avatarUrl ? (
           <img
@@ -58,10 +62,12 @@ export default function ConsultantCardPreview({
           </span>
         )}
 
-        <span className="absolute top-3 right-3 inline-flex items-center gap-1 bg-[var(--gm-bg-deep)]/40 backdrop-blur-sm text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">
-          <ShieldCheck className="w-3 h-3 text-[var(--gm-gold)]" />
-          {ui('ui_consultantpanel_cardpreview_verified', 'Verified')}
-        </span>
+        {isVerified && (
+          <span className="absolute top-3 right-3 inline-flex items-center gap-1 bg-[var(--gm-bg-deep)]/40 backdrop-blur-sm text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">
+            <ShieldCheck className="w-3 h-3 text-[var(--gm-gold)]" />
+            {ui('ui_consultantpanel_cardpreview_verified', 'Verified')}
+          </span>
+        )}
       </div>
 
       <div className="p-6 pb-4 flex flex-col">
