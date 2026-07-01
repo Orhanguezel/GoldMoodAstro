@@ -53,14 +53,14 @@
 - [x] **`/storage/:bucket/upload` tamamen auth'suz** — `storage/router.ts:9`, `controller.ts:98-204`. `preHandler` yok → anonim yükleme; MIME kontrolü sadece `consultant_avatars`+`coffee`'de; deterministik path + upsert ile başka danışmanın blog kapağı anonim ezilebilir. **Fix:** `requireAuth` + bucket-bazlı sahiplik/rol + `consultant_blog` image MIME zorunlu. *(Not: 2026-07-01 path→uuid fix'i uygulandı; auth hâlâ eksik.)*
 - [x] **Expertise/languages limit çelişkisi save'i kırıyor** — FE max20 / backend `z.max(8)`; boş dizi backend `.min(1)`. **Fix:** limitleri tek kaynaktan eşitle; boş diziyi FE'de engelle/anlamlı hata.
 - [x] **`rejectBooking`'de statü guard yok** — `controller.ts:716-783`. confirmed/completed reddedilebilir, iade/kazanç geri alma yok. **Fix:** `cancellable` liste kontrolü + ödenmişse refund.
-- [ ] **Overview kazanç BRÜT, Wallet NET (%30 düşük) — iki farklı rakam** — `controller.ts:868-890`. "This Month" aslında rolling 30 gün. **Fix:** stats'a net hesap/"brüt" etiketi + takvim ayı ya da "son 30 gün" etiketi.
+- [x] **Overview kazanç BRÜT, Wallet NET (%30 düşük) — iki farklı rakam** — `controller.ts:868-890`. "This Month" aslında rolling 30 gün. **Fix:** stats'a net hesap/"brüt" etiketi + takvim ayı ya da "son 30 gün" etiketi.
 - [x] **KYC submit `handleSave` başarısız olsa da gönderiliyor** — `ConsultantDashboard.tsx:1033-1041`. **Fix:** `handleSave` boolean dönsün, false'ta submit dur.
 - [x] **Yorum yanıtı sessizce kaybolabilir + duplicate satır riski** — `controller.ts:2024-2032` (sadece UPDATE, satır yoksa 0 etkiler ama 200) ve `listMyReviews` `LEFT JOIN review_i18n` locale filtresiz → aynı yorum 2-3 kez listelenebilir (duplicate React key). İki farklı reply implementasyonu (consultantSelf vs review modülü). **Fix:** UPSERT'e delege; `listMyReviews`'a `i.locale=r.submitted_locale` / `GROUP BY r.id`; tek reply endpoint.
 - [x] **Availability kaydı transaction'sız DELETE+INSERT** — `controller.ts:2144-2151`. Ortada hata olursa tüm çalışma saatleri kaybolur. **Fix:** `db.transaction`.
 - [x] **Chat mesajlarında bildirim yok + panel polling/WS yok** — `controller.ts:1430-1483,2404-2440`. reply'lar notification/push üretmiyor; MessagesPanel'de canlı güncelleme yok. **Fix:** reply'da karşı tarafa notification+push; panele `pollingInterval` veya WS.
 - [x] **Boost paket fiyatları FE'de hardcoded** — `ServicesPanel.tsx:711-715` `{599,1099,1899}`, backend site-setting'ten okuyor → yanlış fiyat/checkout tutarsızlığı. **Fix:** API'den çek.
-- [ ] **ReviewsPanel filtre sayaçları 'unreplied' seçiliyken yanlış** — `ReviewsPanel.tsx:40-53`. Sayaçlar daraltılmış listeden hesaplanıyor. **Fix:** sayaçları filtresiz cache'ten hesapla.
-- [ ] **Danışman onaysız yorumları görüyor; `is_verified` rozeti render edilmiyor** — `controller.ts:1990-1995`. Sadece `is_active=1` filtre; moderasyon bekleyen yorum "yayında" görünür. Tipteki `customer_name/user/title/booking_id/admin_reply` backend'de dönmüyor (ölü alanlar). **Fix:** "onay bekliyor" + "doğrulanmış randevu" rozetleri; tip↔SELECT eşitle.
+- [x] **ReviewsPanel filtre sayaçları 'unreplied' seçiliyken yanlış** — `ReviewsPanel.tsx:40-53`. Sayaçlar daraltılmış listeden hesaplanıyor. **Fix:** sayaçları filtresiz cache'ten hesapla.
+- [x] **Danışman onaysız yorumları görüyor; `is_verified` rozeti render edilmiyor** — `controller.ts:1990-1995`. Sadece `is_active=1` filtre; moderasyon bekleyen yorum "yayında" görünür. Tipteki `customer_name/user/title/booking_id/admin_reply` backend'de dönmüyor (ölü alanlar). **Fix:** "onay bekliyor" + "doğrulanmış randevu" rozetleri; tip↔SELECT eşitle.
 - [x] **Optimistic update yalnız filtresiz cache'i yamalıyor** — `consultant_self.endpoints.ts:406-462`. Statü filtresi aktifken approve/reject anında yansımaz.
 - [x] **Cüzdan filtre/CSV yalnız ilk 50 işlemde** — `WalletPanel.tsx:107-123`. `from/to/page/type` FE'den gönderilmiyor → eksik export. **Fix:** query param'ları geçir; CSV için tüm sayfalar.
 
@@ -76,7 +76,7 @@
 - [x] `CompletionScoreWidget` ring rengi çalışmıyor (`bg-*` yerine `text-*` olmalı) (`ConsultantDashboard.tsx:1466-1472`).
 - [x] `ConsultantCardPreview` kök div `relative` değil → "Preview" overlay tüm sidebar'ı kaplar (40,117). Ayrıca `₺` hardcoded, "Verified" rozeti approval'dan bağımsız hep görünür, `rating_avg` null → "NaN", video seans fiyatı önizlenmiyor.
 - [x] `MessagesPanel`: thread değişince taslak temizlenmiyor (yanlış kişiye gönderme riski) (41,109); `isError` yutuluyor; okundu çift-işaretleme (GET yan etkisi + `markAsRead`); `tr-TR` hardcoded.
-- [ ] CSV escape + BOM yok (Excel Türkçe bozulur) (`WalletPanel.tsx:340`).
+- [x] CSV escape + BOM yok (Excel Türkçe bozulur) (`WalletPanel.tsx:340`).
 - [ ] Para birimi format tutarsız (Wallet `1.234,56 TRY` vs `₺X`) — tek helper.
 - [x] "Deactivate" hızlı butonu kaydedilmemiş taslağı da persist ediyor (`ServicesPanel.tsx:587`).
 - [x] Boost rozeti metni bozuk birleşim (`{days}` çift) (`ServicesPanel.tsx:553`).
