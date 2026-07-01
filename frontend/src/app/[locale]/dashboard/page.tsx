@@ -45,17 +45,6 @@ import CityAutocomplete from '@/components/common/CityAutocomplete';
 import ReviewModal from '@/components/common/public/ReviewModal';
 import BookingMessageButton from '@/components/common/BookingMessageButton';
 import UserMessagesPanel from '@/components/containers/user-dashboard/UserMessagesPanel';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 
 type TabKey = 'overview' | 'profile' | 'bookings' | 'messages' | 'history' | 'security';
 type HistoryFilter = 'all' | ReadingType;
@@ -136,6 +125,18 @@ const HISTORY_TYPES: Array<{ key: HistoryFilter } & UiLabel> = [
   { key: 'yildizname', labelKey: 'ui_extra_b0_call_reading_yildizname', fallback: 'Yildizname' },
   { key: 'numerology', labelKey: 'ui_extra_b0_call_reading_numerology', fallback: 'Numerology' },
 ];
+
+// Boş-durum CTA: aktif filtreye göre ilgili modülün giriş sayfasına yönlendir ('all' → tarot).
+const HISTORY_CTA_PATHS: Record<HistoryFilter, string> = {
+  all: '/tarot',
+  tarot: '/tarot',
+  coffee: '/kahve-fali',
+  dream: '/ruya-tabiri',
+  synastry: '/sinastri',
+  yildizname: '/yildizname',
+  numerology: '/numeroloji',
+  birth_chart: '/birth-chart',
+};
 
 const HISTORY_META: Record<ReadingType, { icon: React.ReactNode; route: string } & UiLabel> = {
   tarot: { icon: <Star size={18} />, labelKey: 'ui_extra_b0_call_reading_tarot', fallback: 'Tarot', route: '/tarot/reading' },
@@ -827,7 +828,7 @@ export default function DashboardPage() {
                 <p className="text-(--gm-text-dim) font-serif italic">
                   {ui('ui_extra_b0_dash_no_saved_readings', 'No saved readings yet.')}
                 </p>
-                <Link href={localizePath(locale, '/tarot')} className="btn-premium inline-flex py-3 px-8">
+                <Link href={localizePath(locale, HISTORY_CTA_PATHS[historyFilter] ?? '/tarot')} className="btn-premium inline-flex py-3 px-8">
                   {ui('ui_extra_b0_dash_get_reading', 'Get a reading')}
                 </Link>
               </div>
@@ -912,6 +913,7 @@ export default function DashboardPage() {
                 <FieldLabel>{ui('ui_extra_b0_dash_current_password', 'Current password')}</FieldLabel>
                 <input
                   type="password"
+                  autoComplete="current-password"
                   className={fieldClasses()}
                   value={passData.old}
                   onChange={(e) => setPassData({ ...passData, old: e.target.value })}
@@ -924,6 +926,8 @@ export default function DashboardPage() {
                   <FieldLabel>{ui('ui_extra_b0_dash_new_password', 'New password')}</FieldLabel>
                   <input
                     type="password"
+                    autoComplete="new-password"
+                    minLength={6}
                     className={fieldClasses()}
                     value={passData.new}
                     onChange={(e) => setPassData({ ...passData, new: e.target.value })}
@@ -934,6 +938,8 @@ export default function DashboardPage() {
                   <FieldLabel>{ui('ui_extra_b0_dash_confirm_password', 'Confirm password')}</FieldLabel>
                   <input
                     type="password"
+                    autoComplete="new-password"
+                    minLength={6}
                     className={fieldClasses()}
                     value={passData.confirm}
                     onChange={(e) => setPassData({ ...passData, confirm: e.target.value })}

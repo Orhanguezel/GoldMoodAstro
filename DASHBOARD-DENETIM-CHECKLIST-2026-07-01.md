@@ -29,14 +29,14 @@
 - [x] `UserMessagesPanel` `isTr` ölü + tarih hep `tr-TR` (21,35-39); `BookingMessageButton.tsx:37` aynı.
 - [ ] Sekme geçişi `replaceState` vs kart `Link` push — history tutarsız.
 - [x] Login redirect `?tab` kaybediyor (`dashboard/page.tsx:195`).
-- [ ] Ölü `AlertDialog` importları (`dashboard/page.tsx:48-58`); `window.confirm`'e geçilmiş.
+- [x] Ölü `AlertDialog` importları (`dashboard/page.tsx:48-58`); `window.confirm`'e geçilmiş.
 - [ ] Silme sonrası çift fetch (invalidate + manuel `refetchHistory`).
 - [ ] `CityAutocomplete` EN kullanıcı `tr` şehirlerine hapsoluyor (`dashboard/page.tsx:607`).
-- [ ] Şifre inputlarında `autocomplete`/`required`/`minLength` yok.
-- [ ] me/settings toggle anlık kayıt izlenimi + Save `isLoading`/disabled yok + `aria-checked` yok.
+- [x] Şifre inputlarında `autocomplete`/`required`/`minLength` yok.
+- [x] me/settings toggle anlık kayıt izlenimi + Save `isLoading`/disabled yok + `aria-checked` yok.
 - [x] me/credits balance hatası "0" olarak gizleniyor (`isError` göster).
 - [x] Review modal `targetId` fallback şüpheli (`consultant_id || resource_id`) — `consultant_id` yoksa butonu gizle.
-- [ ] History boş durum CTA'sı filtreyi yok sayıyor (hep `/tarot`).
+- [x] History boş durum CTA'sı filtreyi yok sayıyor (hep `/tarot`).
 
 ---
 
@@ -86,7 +86,7 @@
 - [x] Cüzdan seçimi `ORDER BY`'sız belirsiz + zorla `consultant_id` bağlama (`controller.ts:1493-1525`).
 - [ ] Performans: `listMessageThreads` N+1 (thread başına 3-4 sorgu, LIMIT yok); `listBookings` LIMIT 200 sabit, sayfalama yok.
 - [ ] ProfileViews ölü kod (`RANGE_OPTIONS.label`, `{skip:false}`) + bayat "endpoint yakında" hata metni.
-- [ ] ReviewsPanel buton "Publish Review" (yanıt yayınlanıyor, yorum değil) + `aria-label`/`title` hardcoded İngilizce.
+- [x] ReviewsPanel buton "Publish Review" (yanıt yayınlanıyor, yorum değil) + `aria-label`/`title` hardcoded İngilizce.
 
 ---
 

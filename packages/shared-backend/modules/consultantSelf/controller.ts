@@ -590,7 +590,11 @@ export async function updateBlogPost(req: FastifyRequest, reply: FastifyReply) {
   const updated = await customPagesRepo.updateCustomPage(id, {
     ...patch,
     module_key: 'blog',
-    image_url: patch.featured_image ?? undefined,
+    // Kapak kaldırma: featured_image açıkça null/'' gönderilirse image_url temizlenir;
+    // hiç gönderilmezse (absent) mevcut kapak korunur.
+    image_url: Object.prototype.hasOwnProperty.call(patch, 'featured_image')
+      ? (patch.featured_image || null)
+      : undefined,
     tags: patch.tags !== undefined ? mergeConsultantBlogTags(patch.tags, c.id) : undefined,
     // Danışman düzenlemesi yazıyı yeniden moderasyona düşürür (yayınlanmış içeriğin
     // onay sonrası serbestçe değiştirilmesini önler).

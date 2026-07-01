@@ -40,7 +40,7 @@ export default function SettingsPage() {
   }, [isReady, isAuthenticated, locale, router]);
   const { data: profile } = useGetMyProfileQuery();
   const { data: charts } = useListMyBirthChartsQuery();
-  const [upsertProfile] = useUpsertMyProfileMutation();
+  const [upsertProfile, { isLoading: isSaving }] = useUpsertMyProfileMutation();
   const [updateChart] = useUpdateBirthChartMutation();
 
   const [formData, setFormData] = useState({
@@ -146,6 +146,9 @@ export default function SettingsPage() {
                        <div className="text-sm text-muted-foreground">{item.desc}</div>
                     </div>
                     <button
+                      role="switch"
+                      aria-checked={!!formData[item.key as keyof typeof formData]}
+                      aria-label={item.label}
                       onClick={() => setFormData({...formData, [item.key]: !formData[item.key as keyof typeof formData]})}
                       className={`relative w-14 h-8 rounded-full transition-colors ${formData[item.key as keyof typeof formData] ? 'bg-brand-gold' : 'bg-surface-high'}`}
                     >
@@ -182,9 +185,10 @@ export default function SettingsPage() {
           <div className="flex justify-center pt-8">
             <button
               onClick={handleSaveProfile}
-              className="flex items-center gap-3 px-12 py-5 rounded-2xl bg-brand-gold text-bg-base font-bold tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl shadow-brand-gold/20"
+              disabled={isSaving}
+              className="flex items-center gap-3 px-12 py-5 rounded-2xl bg-brand-gold text-bg-base font-bold tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl shadow-brand-gold/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-	              <Save className="w-5 h-5" /> {ui('ui_settings_save_changes_button', 'SAVE CHANGES')}
+	              <Save className="w-5 h-5" /> {isSaving ? ui('ui_settings_saving', 'SAVING…') : ui('ui_settings_save_changes_button', 'SAVE CHANGES')}
             </button>
           </div>
         </div>

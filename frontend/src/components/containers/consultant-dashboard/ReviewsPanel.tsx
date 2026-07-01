@@ -312,7 +312,8 @@ function ReviewItem({ review, ui, locale }: { review: ConsultantSelfReview; ui: 
             <button
               type="button"
               onClick={applySuggestion}
-              title="Get a draft suggestion"
+              title={ui('ui_reviews_ai_suggest', 'Get a draft suggestion')}
+              aria-label={ui('ui_reviews_ai_suggest', 'Get a draft suggestion')}
               className="absolute right-5 top-5 rounded-xl border border-[var(--gm-primary)]/20 bg-[var(--gm-primary)]/10 p-2 text-[var(--gm-primary)] transition-all hover:bg-[var(--gm-primary)]/20 hover:rotate-12"
             >
               <Sparkles className="h-4 w-4" />
@@ -340,7 +341,7 @@ function ReviewItem({ review, ui, locale }: { review: ConsultantSelfReview; ui: 
               ) : (
                 <Send className="h-3.5 w-3.5" />
               )}
-              {hasReply ? ui('ui_reviews_update', 'Update Reply') : ui('ui_reviews_publish', 'Publish Review')}
+              {hasReply ? ui('ui_reviews_update', 'Update Reply') : ui('ui_reviews_publish', 'Publish Reply')}
             </button>
           </div>
         </div>
