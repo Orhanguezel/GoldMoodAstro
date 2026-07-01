@@ -17,6 +17,16 @@ import {
 
 const ADMIN_BASE = '/admin/banners';
 
+// Backend {data:...} / {items:...} zarfını açar (RTK transformResponse için).
+const unwrap = (res: unknown): unknown => {
+  if (res && typeof res === 'object') {
+    const o = res as Record<string, unknown>;
+    if ('data' in o) return o.data;
+    if ('items' in o) return o.items;
+  }
+  return res;
+};
+
 const extendedApi = baseApi.enhanceEndpoints({ addTagTypes: ['Banners'] as const });
 
 export const bannersAdminApi = extendedApi.injectEndpoints({
@@ -26,8 +36,10 @@ export const bannersAdminApi = extendedApi.injectEndpoints({
         const q = buildAdminBannersListParams(params);
         return { url: ADMIN_BASE, params: q };
       },
-      transformResponse: (res: unknown): BannerRow[] =>
-        Array.isArray(res) ? res.map(normalizeBannerRow) : [],
+      transformResponse: (res: unknown): BannerRow[] => {
+        const arr = unwrap(res);
+        return Array.isArray(arr) ? arr.map(normalizeBannerRow) : [];
+      },
       providesTags: (result) =>
         result
           ? [
@@ -39,8 +51,10 @@ export const bannersAdminApi = extendedApi.injectEndpoints({
 
     getBannerAdmin: b.query<BannerRow | null, string>({
       query: (id) => ({ url: `${ADMIN_BASE}/${id}` }),
-      transformResponse: (res: unknown): BannerRow | null =>
-        res ? normalizeBannerRow(res) : null,
+      transformResponse: (res: unknown): BannerRow | null => {
+        const d = unwrap(res);
+        return d ? normalizeBannerRow(d) : null;
+      },
       providesTags: (_r, _e, id) => [{ type: 'Banners', id }],
     }),
 
@@ -50,7 +64,7 @@ export const bannersAdminApi = extendedApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      transformResponse: (res: unknown): BannerRow => normalizeBannerRow(res),
+      transformResponse: (res: unknown): BannerRow => normalizeBannerRow(unwrap(res)),
       invalidatesTags: [{ type: 'Banners', id: 'LIST' }],
     }),
 
@@ -60,7 +74,7 @@ export const bannersAdminApi = extendedApi.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      transformResponse: (res: unknown): BannerRow => normalizeBannerRow(res),
+      transformResponse: (res: unknown): BannerRow => normalizeBannerRow(unwrap(res)),
       invalidatesTags: (_r, _e, { id }) => [
         { type: 'Banners', id },
         { type: 'Banners', id: 'LIST' },
