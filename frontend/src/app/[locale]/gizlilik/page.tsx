@@ -15,7 +15,7 @@ export default function GizlilikPage() {
   const bannerTitle = useMemo(() => {
     const key = 'ui_privacy_policy_fallback_title';
     const v = safeStr(ui(key, ''));
-    return isValidUiText(v, key) ? v : 'Gizlilik Politikası';
+    return isValidUiText(v, key) ? v : 'Privacy Policy';
   }, [ui]);
 
   return (

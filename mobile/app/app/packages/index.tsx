@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 import { ChevronLeft, CreditCard, Star, Zap, Crown } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 
@@ -41,12 +42,13 @@ function buildScreenStyles(t: AppTheme) {
 
 
 const PACKAGES = [
-  { id: 'p1', title: 'Mini Paket', credits: 250, price: '₺149', desc: '1 Detaylı Analiz' },
-  { id: 'p2', title: 'Standart Paket', credits: 1000, price: '₺499', desc: '4 Detaylı Analiz + Hediye', hot: true },
-  { id: 'p3', title: 'Premium Paket', credits: 5000, price: '₺1999', desc: 'Sınırsız Deneyim' },
+  { id: 'p1', titleKey: 'packages.miniTitle', credits: 250, price: '₺149', descKey: 'packages.miniDesc' },
+  { id: 'p2', titleKey: 'packages.standardTitle', credits: 1000, price: '₺499', descKey: 'packages.standardDesc', hot: true },
+  { id: 'p3', titleKey: 'packages.premiumTitle', credits: 5000, price: '₺1999', descKey: 'packages.premiumDesc' },
 ];
 
 export default function PackagesScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
@@ -58,27 +60,27 @@ export default function PackagesScreen() {
           <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
-          <Text style={styles.headerTitle}>Kredi Paketleri</Text>
+          <Text style={styles.headerTitle}>{t('packages.title')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.hero}>
              <Zap size={48} color={colors.gold} />
-             <Text style={styles.heroTitle}>Kozmik Gücünü Artır</Text>
-             <Text style={styles.heroSub}>Analizler, raporlar ve derin sırlar için kredi yükleyin.</Text>
+             <Text style={styles.heroTitle}>{t('packages.heroTitle')}</Text>
+             <Text style={styles.heroSub}>{t('packages.heroSub')}</Text>
           </View>
 
           <View style={styles.grid}>
              {PACKAGES.map((pkg) => (
                <Pressable key={pkg.id} style={[styles.card, pkg.hot && styles.hotCard]}>
-                  {pkg.hot && <View style={styles.hotBadge}><Text style={styles.hotText}>EN POPÜLER</Text></View>}
-                  <Text style={styles.pkgTitle}>{pkg.title}</Text>
+                  {pkg.hot && <View style={styles.hotBadge}><Text style={styles.hotText}>{t('packages.mostPopular')}</Text></View>}
+                  <Text style={styles.pkgTitle}>{t(pkg.titleKey)}</Text>
                   <View style={styles.creditRow}>
                      <Text style={styles.creditVal}>{pkg.credits}</Text>
-                     <Text style={styles.creditLabel}>KREDİ</Text>
+                     <Text style={styles.creditLabel}>{t('packages.creditUnit')}</Text>
                   </View>
-                  <Text style={styles.pkgDesc}>{pkg.desc}</Text>
+                  <Text style={styles.pkgDesc}>{t(pkg.descKey)}</Text>
                   <View style={styles.priceBtn}>
                      <Text style={styles.priceText}>{pkg.price}</Text>
                   </View>
@@ -90,7 +92,7 @@ export default function PackagesScreen() {
              <View style={styles.premiumIcon}><Crown size={24} color={colors.ink} /></View>
              <View style={{ flex: 1 }}>
                 <Text style={styles.premiumTitle}>GoldMood Premium</Text>
-                <Text style={styles.premiumSub}>Aylık abonelik ile tüm özelliklere sınırsız erişin.</Text>
+                <Text style={styles.premiumSub}>{t('packages.premiumBannerSub')}</Text>
              </View>
              <ChevronRight size={20} color={colors.gold} />
           </Pressable>

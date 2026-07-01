@@ -80,7 +80,7 @@ export const DEFAULT_TOKENS: DesignTokens = {
   },
   "branding": {
     "app_name": "GoldMoodAstro",
-    "tagline": "Yıldızlarla tanışan modern astroloji",
+    "tagline": "Modern astrology guided by the stars",
     "tagline_en": "Modern astrology meets the stars",
     "logo_url": "",
     "favicon_url": "",

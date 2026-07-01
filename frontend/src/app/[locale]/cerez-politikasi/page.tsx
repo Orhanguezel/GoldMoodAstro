@@ -15,7 +15,7 @@ export default function CerezPolitikasiPage() {
   const bannerTitle = useMemo(() => {
     const key = 'ui_cookie_policy_fallback_title';
     const v = safeStr(ui(key, ''));
-    return isValidUiText(v, key) ? v : 'Çerez Politikası';
+    return isValidUiText(v, key) ? v : 'Cookie Policy';
   }, [ui]);
 
   return (

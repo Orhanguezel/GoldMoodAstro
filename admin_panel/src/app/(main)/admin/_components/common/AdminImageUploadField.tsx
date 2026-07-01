@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAdminT } from './useAdminT';
 
 export type AdminImageUploadFieldProps = {
   label?: string;
@@ -154,6 +155,7 @@ const ratioOf = (aspect: '16x9' | '4x3' | '1x1') => {
 };
 
 const UrlLine: React.FC<{ url: string; disabled?: boolean }> = ({ url, disabled }) => {
+  const t = useAdminT('admin.common');
   const safe = norm(url);
   if (!safe) return null;
 
@@ -162,9 +164,9 @@ const UrlLine: React.FC<{ url: string; disabled?: boolean }> = ({ url, disabled 
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(safe);
-      toast.success('URL kopyalandı.');
+      toast.success(t('imageUpload.urlCopied'));
     } catch {
-      toast.error('Kopyalanamadı.');
+      toast.error(t('imageUpload.copyFailed'));
     }
   };
 
@@ -181,17 +183,17 @@ const UrlLine: React.FC<{ url: string; disabled?: boolean }> = ({ url, disabled 
         size="sm"
         onClick={copy}
         disabled={disabled}
-        title="Kopyala"
+        title={t('copy')}
       >
         <Copy className="mr-2 size-4" />
-        Kopyala
+        {t('copy')}
       </Button>
     </div>
   );
 };
 
 export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
-  label = 'Görsel',
+  label,
   helperText,
   bucket = 'public',
   folder = 'uploads',
@@ -213,6 +215,8 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
   previewAspect = '16x9',
   previewObjectFit = 'cover',
 }) => {
+  const t = useAdminT('admin.common');
+  const resolvedLabel = label ?? t('imageUpload.image');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [createAssetAdmin, { isLoading: isUploading }] = useCreateAssetAdminMutation();
 
@@ -249,10 +253,10 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
 
     if (multiple && onChangeMultiple) {
       onChangeMultiple(uniqAppend(gallery, [url]));
-      toast.success('Görsel eklendi.');
+      toast.success(t('imageUpload.imageAdded'));
     } else if (onChange) {
       onChange(url);
-      toast.success('Görsel seçildi.');
+      toast.success(t('imageUpload.imageSelected'));
     }
 
     setIsModalOpen(false);
@@ -290,9 +294,9 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
           metadata: meta,
         } as any).unwrap();
         const url = norm((res as any)?.url);
-        if (!url) throw new Error("Görsel URL'i alınamadı.");
+        if (!url) throw new Error(t('imageUpload.urlMissing'));
         onChange?.(url);
-        toast.success('Görsel yüklendi.');
+        toast.success(t('imageUpload.imageUploaded'));
         setIsModalOpen(false);
       } catch (err: any) {
         console.error('[AdminImageUpload] upload failed:', JSON.stringify(err, null, 2), err);
@@ -301,8 +305,8 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
           err?.data?.message ||
           err?.error ||
           err?.message ||
-          'Görsel yüklenirken hata oluştu.';
-        toast.error(typeof msg === 'string' ? msg : 'Görsel yüklenirken hata oluştu.');
+          t('imageUpload.uploadError');
+        toast.error(typeof msg === 'string' ? msg : t('imageUpload.uploadError'));
       }
       return;
     }
@@ -339,9 +343,9 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
           err?.data?.message ||
           err?.error ||
           err?.message ||
-          'Bazı görseller yüklenirken hata oluştu.';
+          t('imageUpload.bulkUploadError');
         toast.error(
-          typeof emsg === 'string' ? emsg : 'Bazı görseller yüklenirken hata oluştu.',
+          typeof emsg === 'string' ? emsg : t('imageUpload.bulkUploadError'),
         );
       }
     }
@@ -352,7 +356,11 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
       } else {
         onChange?.(uploadedUrls[0]);
       }
-      toast.success(successCount === 1 ? 'Görsel yüklendi.' : `${successCount} görsel yüklendi.`);
+      toast.success(
+        successCount === 1
+          ? t('imageUpload.imageUploaded')
+          : t('imageUpload.imagesUploadedCount', { count: successCount }),
+      );
       setIsModalOpen(false);
     }
   };
@@ -371,7 +379,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
     const isCover = !!coverValue && norm(coverValue) === url;
 
     if (isCover) {
-      toast.error('Kapak görseli silinemez. Önce başka bir kapak seç.');
+      toast.error(t('imageUpload.coverCannotDelete'));
       return;
     }
     onChangeMultiple(gallery.filter((_, i) => i !== idx));
@@ -383,7 +391,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
     if (!value) {
       return (
         <div className="rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
-          Henüz görsel seçilmedi.
+          {t('imageUpload.noImageSelected')}
         </div>
       );
     }
@@ -393,7 +401,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
 
     return (
       <div className="space-y-2">
-        <div className="text-xs text-muted-foreground">Önizleme</div>
+        <div className="text-xs text-muted-foreground">{t('preview')}</div>
 
         <div className="overflow-hidden rounded-md border bg-background">
           <AspectRatio ratio={aspect}>
@@ -402,10 +410,10 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
                 data={previewUrl}
                 type="image/svg+xml"
                 className="h-full w-full"
-                aria-label="SVG preview"
+                aria-label={t('imageUpload.svgPreview')}
               >
                 <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                  SVG önizleme açılamadı.
+                  {t('imageUpload.svgPreviewFailed')}
                 </div>
               </object>
             ) : (
@@ -413,7 +421,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={previewUrl}
-                  alt="Görsel"
+                  alt={t('imageUpload.image')}
                   className="h-full w-full"
                   style={{ objectFit: previewObjectFit }}
                   onError={(e) => {
@@ -428,7 +436,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
                         <svg class="size-12 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <span class="text-xs text-muted-foreground">Görsel yüklenemedi</span>
+                        <span class="text-xs text-muted-foreground">${t('imageUpload.imageLoadFailed')}</span>
                       `;
                       parent.appendChild(errorDiv);
                     }
@@ -441,7 +449,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
 
         {/* Full URL display */}
         <div className="rounded-md border bg-muted/50 p-2">
-          <div className="mb-1 text-xs font-medium text-muted-foreground">URL:</div>
+          <div className="mb-1 text-xs font-medium text-muted-foreground">{t('imageUpload.urlLabel')}</div>
           <code className="block wrap-break-word text-xs font-mono leading-relaxed text-foreground">
             {value}
           </code>
@@ -456,14 +464,14 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
     if (!gallery.length) {
       return (
         <div className="rounded-md border bg-muted/20 p-3 text-center text-sm text-muted-foreground">
-          Henüz galeri görseli yok.
+          {t('imageUpload.noGalleryImage')}
         </div>
       );
     }
 
     return (
       <div className="space-y-2">
-        <div className="text-xs text-muted-foreground">Galeri</div>
+        <div className="text-xs text-muted-foreground">{t('imageUpload.gallery')}</div>
 
         <div className="flex flex-col gap-2">
           {gallery.map((u, idx) => {
@@ -485,10 +493,10 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
                             data={previewUrl}
                             type="image/svg+xml"
                             className="h-full w-full"
-                            aria-label={`SVG image ${idx + 1}`}
+                            aria-label={t('imageUpload.svgImageN', { n: idx + 1 })}
                           >
                             <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                              SVG yüklenemedi.
+                              {t('imageUpload.svgLoadFailed')}
                             </div>
                           </object>
                         ) : (
@@ -525,11 +533,11 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <div className="truncate text-sm font-medium" title={u}>
-                          {isCover ? 'Kapak' : `Görsel ${idx + 1}`}
+                          {isCover ? t('imageUpload.cover') : t('imageUpload.imageN', { n: idx + 1 })}
                         </div>
                         {isCover ? (
                           <Badge variant="secondary" className="mt-1">
-                            Kapak
+                            {t('imageUpload.cover')}
                           </Badge>
                         ) : null}
                       </div>
@@ -542,10 +550,10 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
                             size="sm"
                             disabled={busy}
                             onClick={() => onSelectAsCover(u)}
-                            title="Kapak yap"
+                            title={t('imageUpload.makeCover')}
                           >
                             <Star className="mr-2 size-4" />
-                            Kapak
+                            {t('imageUpload.cover')}
                           </Button>
                         ) : null}
 
@@ -555,10 +563,10 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
                           size="sm"
                           disabled={busy || !onChangeMultiple || isCover}
                           onClick={() => removeAt(idx)}
-                          title={isCover ? 'Kapak silinemez' : 'Sil'}
+                          title={isCover ? t('imageUpload.coverNotDeletable') : t('delete')}
                         >
                           <Trash2 className="mr-2 size-4" />
-                          Sil
+                          {t('delete')}
                         </Button>
                       </div>
                     </div>
@@ -567,8 +575,8 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
 
                     {!onChangeMultiple ? (
                       <div className="mt-2 text-xs text-muted-foreground">
-                        Not: <code>onChangeMultiple</code> verilmediği için galeri parent tarafından
-                        yönetilmiyor.
+                        {t('imageUpload.galleryNotManagedPrefix')} <code>onChangeMultiple</code>{' '}
+                        {t('imageUpload.galleryNotManagedSuffix')}
                       </div>
                     ) : null}
                   </div>
@@ -586,15 +594,15 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
       <CardHeader className="space-y-1 pb-3">
         <div className="flex items-center justify-between gap-3">
           <div className="space-y-0.5">
-            <div className="text-sm font-semibold">{label}</div>
+            <div className="text-sm font-semibold">{resolvedLabel}</div>
             {helperText ? <div className="text-xs text-muted-foreground">{helperText}</div> : null}
           </div>
-          {isUploading ? <Badge variant="secondary">Yükleniyor…</Badge> : null}
+          {isUploading ? <Badge variant="secondary">{t('loading')}</Badge> : null}
         </div>
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <Label className="sr-only">Upload</Label>
+        <Label className="sr-only">{t('upload')}</Label>
         <Input
           ref={fileInputRef as any}
           type="file"
@@ -608,7 +616,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="outline" onClick={handlePickClick} disabled={busy}>
             <Upload className="mr-2 size-4" />
-            {multiple ? 'Görseller Yükle' : 'Görsel Yükle'}
+            {multiple ? t('imageUpload.uploadImages') : t('imageUpload.uploadImageBtn')}
           </Button>
         </div>
 
@@ -618,9 +626,9 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{multiple ? 'Görseller Yükle' : 'Görsel Yükle'}</DialogTitle>
+              <DialogTitle>{multiple ? t('imageUpload.uploadImages') : t('imageUpload.uploadImageBtn')}</DialogTitle>
               <DialogDescription>
-                Bilgisayarınızdan yükleyin veya kütüphaneden seçin.
+                {t('imageUpload.uploadDialogDesc')}
               </DialogDescription>
             </DialogHeader>
 
@@ -628,11 +636,11 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="upload">
                   <Upload className="mr-2 size-4" />
-                  Yükle
+                  {t('upload')}
                 </TabsTrigger>
                 <TabsTrigger value="library">
                   <Library className="mr-2 size-4" />
-                  Kütüphane
+                  {t('imageUpload.library')}
                 </TabsTrigger>
               </TabsList>
 
@@ -644,16 +652,16 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
                       <Upload className="size-8 text-primary" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="font-semibold">Görsel seçin</h3>
+                      <h3 className="font-semibold">{t('imageUpload.selectImage')}</h3>
                       <p className="text-sm text-muted-foreground">
                         {multiple
-                          ? 'Birden fazla görsel yükleyebilirsiniz.'
-                          : 'Tek bir görsel yükleyebilirsiniz.'}
+                          ? t('imageUpload.multiHint')
+                          : t('imageUpload.singleHint')}
                       </p>
                     </div>
                     <Button type="button" onClick={handleDirectFileSelect} disabled={busy} size="lg">
                       <Upload className="mr-2 size-4" />
-                      Dosya Seç
+                      {t('imageUpload.selectFile')}
                     </Button>
                   </div>
                 </div>
@@ -663,7 +671,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
               <TabsContent value="library" className="space-y-4">
                 {isLoadingAssets ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="text-sm text-muted-foreground">Yükleniyor...</div>
+                    <div className="text-sm text-muted-foreground">{t('loading')}</div>
                   </div>
                 ) : !assetsData?.items?.length ? (
                   <div className="rounded-lg border bg-muted/20 p-6 text-center">
@@ -672,9 +680,9 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
                         <ImageIcon className="size-8 text-muted-foreground" />
                       </div>
                       <div className="space-y-2">
-                        <h3 className="font-semibold">Kütüphane boş</h3>
+                        <h3 className="font-semibold">{t('imageUpload.libraryEmpty')}</h3>
                         <p className="text-sm text-muted-foreground">
-                          Henüz yüklenmiş görsel yok. "Yükle" sekmesinden görsel yükleyebilirsiniz.
+                          {t('imageUpload.libraryEmptyDesc')}
                         </p>
                       </div>
                     </div>
@@ -707,7 +715,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
                           </AspectRatio>
                           {isSelected && (
                             <div className="absolute inset-0 flex items-center justify-center bg-primary/20">
-                              <Badge>Seçildi</Badge>
+                              <Badge>{t('imageUpload.selected')}</Badge>
                             </div>
                           )}
                         </button>

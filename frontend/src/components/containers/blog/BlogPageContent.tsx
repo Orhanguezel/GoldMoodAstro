@@ -10,48 +10,6 @@ import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 
 const FALLBACK_BLOG_POSTS = {
-  tr: [
-    {
-      id: 'fallback-blog-1',
-      title: 'Doğum Haritası Nedir, İlk Bakışta Neler Anlatır?',
-      slug: 'dogum-haritasi-nedir',
-      summary: 'Doğum haritasının temel anlamını ve ilk danışmanlıkta hangi göstergelerin birlikte okunduğunu öğrenin.',
-      featured_image: '/img/natal_chart.png',
-      created_at: '2026-04-30T09:00:00.000Z',
-    },
-    {
-      id: 'fallback-blog-2',
-      title: 'Sinastri Uyumu Nasıl Okunur?',
-      slug: 'sinastri-uyumu-nasil-okunur',
-      summary: 'Sinastri haritasında ilişki uyumu, çekim, iletişim ve duygusal güven göstergeleri nasıl okunur?',
-      featured_image: '/img/synastry_chart.png',
-      created_at: '2026-04-23T09:00:00.000Z',
-    },
-    {
-      id: 'fallback-blog-3',
-      title: 'Tarot Açılımında Daha İyi Soru Nasıl Sorulur?',
-      slug: 'tarot-acilimi-soru-sorma-rehberi',
-      summary: 'Tarot açılımına girmeden önce daha net, etik ve uygulanabilir sorular hazırlamak için kısa rehber.',
-      featured_image: '/img/daily_reading.png',
-      created_at: '2026-04-16T09:00:00.000Z',
-    },
-    {
-      id: 'fallback-blog-4',
-      title: 'Numerolojide Hayat Yolu Sayısı Ne Anlatır?',
-      slug: 'numeroloji-hayat-yolu-sayisi',
-      summary: 'Hayat yolu sayısının numerolojideki yerini, nasıl hesaplandığını ve danışmanlıkta nasıl kullanıldığını öğrenin.',
-      featured_image: '/img/natal_chart.png',
-      created_at: '2026-04-09T09:00:00.000Z',
-    },
-    {
-      id: 'fallback-blog-5',
-      title: 'Ay Burcu Duygusal İhtiyaçları Nasıl Gösterir?',
-      slug: 'ay-burcu-duygusal-ihtiyaclar',
-      summary: 'Ay burcunun duygusal güven, ilişki ritmi ve içsel ihtiyaçlarla bağlantısını keşfedin.',
-      featured_image: '/img/daily_reading.png',
-      created_at: '2026-04-02T09:00:00.000Z',
-    },
-  ],
   en: [
     {
       id: 'fallback-blog-1',
@@ -94,48 +52,6 @@ const FALLBACK_BLOG_POSTS = {
       created_at: '2026-04-02T09:00:00.000Z',
     },
   ],
-  de: [
-    {
-      id: 'fallback-blog-1',
-      title: 'Was ist ein Geburtshoroskop und was zeigt es zuerst?',
-      slug: 'was-ist-ein-geburtshoroskop',
-      summary: 'Eine klare Einführung in Geburtshoroskope und die ersten Faktoren einer astrologischen Beratung.',
-      featured_image: '/img/natal_chart.png',
-      created_at: '2026-04-30T09:00:00.000Z',
-    },
-    {
-      id: 'fallback-blog-2',
-      title: 'Synastrie richtig lesen',
-      slug: 'synastrie-richtig-lesen',
-      summary: 'Ein Leitfaden zu Synastrie, Beziehungskompatibilität, Anziehung, Kommunikation und emotionaler Sicherheit.',
-      featured_image: '/img/synastry_chart.png',
-      created_at: '2026-04-23T09:00:00.000Z',
-    },
-    {
-      id: 'fallback-blog-3',
-      title: 'Bessere Tarot-Fragen stellen',
-      slug: 'bessere-tarot-fragen-stellen',
-      summary: 'Ein kurzer Leitfaden für klare, ethische und nützliche Fragen vor einer Tarot Beratung.',
-      featured_image: '/img/daily_reading.png',
-      created_at: '2026-04-16T09:00:00.000Z',
-    },
-    {
-      id: 'fallback-blog-4',
-      title: 'Lebenswegzahl in der Numerologie',
-      slug: 'lebenswegzahl-numerologie',
-      summary: 'Erfahren Sie, was die Lebenswegzahl bedeutet, wie sie berechnet wird und wie sie in Beratungen genutzt wird.',
-      featured_image: '/img/natal_chart.png',
-      created_at: '2026-04-09T09:00:00.000Z',
-    },
-    {
-      id: 'fallback-blog-5',
-      title: 'Mondzeichen und emotionale Bedürfnisse',
-      slug: 'mondzeichen-und-emotionale-beduerfnisse',
-      summary: 'Entdecken Sie, wie das Mondzeichen mit emotionaler Sicherheit, Beziehungsrhythmus und inneren Bedürfnissen verbunden ist.',
-      featured_image: '/img/daily_reading.png',
-      created_at: '2026-04-02T09:00:00.000Z',
-    },
-  ],
 };
 
 const BLOG_IMAGE_FALLBACKS: Record<string, string> = {
@@ -166,18 +82,16 @@ const BlogPageContent: React.FC = () => {
 
   const renderedItems = useMemo(() => {
     if (items.length > 0) return items;
-    return FALLBACK_BLOG_POSTS[locale as keyof typeof FALLBACK_BLOG_POSTS] ?? FALLBACK_BLOG_POSTS.en;
-  }, [items, locale]);
+    return FALLBACK_BLOG_POSTS.en;
+  }, [items]);
 
   const blogListHref = useMemo(() => localizePath(locale, '/blog'), [locale]);
 
-  const readMore = t('ui_blog_read_more',
-    locale === 'de' ? 'Weiterlesen' : locale === 'tr' ? 'Devamini oku' : 'Read more'
-  );
+  const readMore = t('ui_blog_read_more', 'Read more');
 
   return (
     <section className="bg-[var(--gm-bg)] min-h-screen relative" style={{ padding: '3rem 4% 7rem' }}>
-      {/* Tema-aware accent glow — her preset'te primary rengi parlatır */}
+      {/* Theme-aware accent glow for every preset. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-[480px] opacity-50"
@@ -188,29 +102,21 @@ const BlogPageContent: React.FC = () => {
       />
 
       <div className="max-w-[1300px] mx-auto relative">
-        {/* Hero header — eyebrow + lead */}
+        {/* Hero header */}
         <header className="text-center mb-14 md:mb-20">
           <p className="text-[10px] md:text-[11px] font-bold tracking-[0.32em] uppercase text-[var(--gm-primary)] mb-4">
-            {t('ui_blog_eyebrow', locale === 'tr' ? 'GoldMoodAstro Günlüğü' : locale === 'de' ? 'GoldMoodAstro Tagebuch' : 'GoldMoodAstro Journal')}
+            {t('ui_blog_eyebrow', 'GoldMoodAstro Journal')}
           </p>
           <h1 className="font-serif text-[clamp(2rem,5vw,3.5rem)] leading-[1.1] text-[var(--gm-text)] max-w-3xl mx-auto mb-5">
             {t(
               'ui_blog_hero_title',
-              locale === 'tr'
-                ? 'Astroloji, tarot ve numeroloji üzerine derinlikli yazılar'
-                : locale === 'de'
-                  ? 'Tiefgehende Beiträge zu Astrologie, Tarot und Numerologie'
-                  : 'In-depth articles on astrology, tarot and numerology',
+              'In-depth articles on astrology, tarot and numerology',
             )}
           </h1>
           <p className="text-base md:text-lg text-[var(--gm-text-dim)] max-w-2xl mx-auto leading-relaxed font-serif italic">
             {t(
               'ui_blog_hero_lead',
-              locale === 'tr'
-                ? 'Uzman danışmanlardan ipuçları, rehberler ve sembolik bir dilden farkındalık notları.'
-                : locale === 'de'
-                  ? 'Tipps, Anleitungen und reflektierende Notizen unserer Expertenberater.'
-                  : 'Tips, guides and reflective notes from our expert consultants.',
+              'Tips, guides and reflective notes from our expert consultants.',
             )}
           </p>
           <div className="mt-8 inline-flex items-center gap-3">
@@ -269,7 +175,7 @@ const BlogPageContent: React.FC = () => {
                     ) : (
                       <div className="flex items-center justify-center h-full text-[var(--gm-muted)] text-sm">(No image)</div>
                     )}
-                    {/* Mor gradient overlay — tema-aware (her preset'te primary tonunda) */}
+                    {/* Theme-aware primary overlay. */}
                     <div
                       aria-hidden
                       className="absolute inset-0 pointer-events-none"

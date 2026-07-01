@@ -18,10 +18,12 @@ import {
 } from '@/integrations/rtk/hooks';
 import { toast } from 'sonner';
 import PageContainer from '@/components/common/PageContainer';
+import { useUiSection } from '@/i18n';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
 export default function CreditsPage() {
+  const { ui } = useUiSection('ui_account');
   const { data: balanceData } = useGetUserBalanceQuery();
   const { data: packages, isLoading: pkgLoading } = useListCreditPackagesQuery();
   const [buyCredits, { isLoading: buyLoading }] = useBuyCreditsMutation();
@@ -33,7 +35,7 @@ export default function CreditsPage() {
         window.location.href = res.checkout_url;
       }
     } catch (err) {
-      toast.error('Ödeme başlatılamadı');
+	      toast.error(ui('ui_account_credits_payment_failed', 'Payment could not be started'));
     }
   };
 
@@ -41,14 +43,14 @@ export default function CreditsPage() {
     <PageContainer width="wide" verticalPadding="large">
       <div className="space-y-16">
         
-        {/* Bakiye Özeti */}
+	        {/* Balance Summary */}
         <div className="bg-surface/30 border border-border/20 rounded-[3rem] p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-12 shadow-2xl relative overflow-hidden">
            <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
            
            <div className="space-y-6 text-center md:text-left relative">
-              <h1 className={`${cinzel.className} text-4xl md:text-6xl text-foreground`}>Kredi Bakiyeniz</h1>
+	              <h1 className={`${cinzel.className} text-4xl md:text-6xl text-foreground`}>{ui('ui_account_credits_balance_title', 'Your Credit Balance')}</h1>
               <p className="text-muted-foreground text-lg max-w-[var(--gm-w-form)] italic font-serif leading-relaxed">
-                Astroloji danışmanlıkları ve özel yorumlar için kredi bakiyenizi kullanın.
+	                {ui('ui_account_credits_balance_subtitle', 'Use your credit balance for astrology consultations and private readings.')}
               </p>
            </div>
 
@@ -58,16 +60,16 @@ export default function CreditsPage() {
                  <span className="text-4xl md:text-5xl font-bold text-foreground tracking-tighter">
                     {balanceData?.balance?.toLocaleString() || '0'}
                  </span>
-                 <span className="text-[10px] font-bold text-brand-gold tracking-widest uppercase">KREDİ</span>
+	                 <span className="text-[10px] font-bold text-brand-gold tracking-widest uppercase">{ui('ui_account_credits_unit', 'CREDIT')}</span>
               </div>
            </div>
         </div>
 
-        {/* Paketler */}
+	        {/* Packages */}
         <div className="space-y-10">
            <div className="text-center space-y-2">
-              <h2 className={`${cinzel.className} text-3xl text-foreground`}>Kredi Paketleri</h2>
-              <p className="text-muted-foreground font-serif italic">Size en uygun paketi seçerek devam edin.</p>
+	              <h2 className={`${cinzel.className} text-3xl text-foreground`}>{ui('ui_account_credits_packages_title', 'Credit Packages')}</h2>
+	              <p className="text-muted-foreground font-serif italic">{ui('ui_account_credits_packages_subtitle', 'Choose the package that fits you best to continue.')}</p>
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -83,14 +85,14 @@ export default function CreditsPage() {
                 >
                   {pkg.isFeatured && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-brand-gold text-bg-base text-[10px] font-bold px-4 py-1.5 rounded-full tracking-widest flex items-center gap-1 shadow-lg">
-                      <Award className="w-3 h-3" /> EN POPÜLER
+	                      <Award className="w-3 h-3" /> {ui('ui_account_credits_most_popular', 'MOST POPULAR')}
                     </div>
                   )}
 
                   <div className="space-y-2">
                     <h3 className={`${cinzel.className} text-2xl text-foreground`}>{pkg.nameTr}</h3>
                     <div className="text-4xl font-bold text-brand-gold tracking-tighter">
-                       {(pkg.credits + pkg.bonusCredits).toLocaleString()} <span className="text-sm">kr</span>
+                       {(pkg.credits + pkg.bonusCredits).toLocaleString()} <span className="text-sm">{ui('ui_account_credits_short_unit', 'kr')}</span>
                     </div>
                   </div>
 
@@ -100,7 +102,7 @@ export default function CreditsPage() {
                      </div>
                      {pkg.bonusCredits > 0 && (
                        <div className="text-xs font-bold text-[var(--gm-success)] tracking-wider flex items-center justify-center gap-1">
-                          <TrendingUp className="w-3 h-3" /> +{pkg.bonusCredits.toLocaleString()} BONUS
+                          <TrendingUp className="w-3 h-3" /> +{pkg.bonusCredits.toLocaleString()} {ui('ui_account_credits_bonus', 'BONUS')}
                        </div>
                      )}
                   </div>
@@ -110,19 +112,19 @@ export default function CreditsPage() {
                     disabled={buyLoading}
                     className="w-full py-4 rounded-2xl bg-brand-gold text-bg-base font-bold tracking-widest text-xs hover:bg-brand-gold-dim transition-all flex items-center justify-center gap-2 group"
                   >
-                    SATIN AL <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+	                    {ui('ui_account_credits_buy_button', 'BUY')} <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </motion.div>
               ))}
            </div>
         </div>
 
-        {/* Güvenlik */}
+	        {/* Security */}
         <div className="max-w-[var(--gm-w-narrow)] mx-auto pt-10 flex flex-col md:flex-row items-center justify-center gap-8 text-center md:text-left">
            <div className="flex items-center gap-3 text-muted-foreground/60">
               <ShieldCheck className="w-10 h-10 text-brand-gold/40" />
               <div className="text-xs font-serif italic">
-                 Ödemeleriniz <span className="text-brand-gold/60 font-bold">iyzico</span> altyapısı ile 256-bit SSL sertifikası korunmaktadır.
+	                 {ui('ui_account_credits_security_before', 'Your payments are protected by')} <span className="text-brand-gold/60 font-bold">iyzico</span> {ui('ui_account_credits_security_after', 'infrastructure and 256-bit SSL certificate.')}
               </div>
            </div>
            <div className="flex items-center gap-4 opacity-30 grayscale hover:grayscale-0 transition-all">

@@ -28,6 +28,7 @@ import {
 
 import { useAuthStore } from '@/features/auth/auth.store';
 import { localizePath, normalizeError } from '@/integrations/shared';
+import { useUiSection } from '@/i18n';
 import {
   useGetMyProfileQuery,
   useUpsertMyProfileMutation,
@@ -115,34 +116,35 @@ function fieldClasses() {
 function fmtDate(v: string, locale: string) {
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return v;
-  return d.toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', {
+  const dateLocale = locale === 'tr' ? 'tr-TR' : locale === 'de' ? 'de-DE' : 'en-US';
+  return d.toLocaleDateString(dateLocale, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
 }
 
-const HISTORY_TYPES: Array<{ key: HistoryFilter; tr: string; en: string }> = [
-  { key: 'all', tr: 'Tümü', en: 'All' },
-  { key: 'birth_chart', tr: 'Doğum Haritası', en: 'Birth Chart' },
-  { key: 'tarot', tr: 'Tarot', en: 'Tarot' },
-  { key: 'coffee', tr: 'Kahve', en: 'Coffee' },
-  { key: 'dream', tr: 'Rüya', en: 'Dream' },
-  { key: 'synastry', tr: 'Sinastri', en: 'Synastry' },
-  { key: 'yildizname', tr: 'Yıldızname', en: 'Yildizname' },
-  { key: 'numerology', tr: 'Numeroloji', en: 'Numerology' },
+type UiLabel = { labelKey: string; fallback: string };
+
+const HISTORY_TYPES: Array<{ key: HistoryFilter } & UiLabel> = [
+  { key: 'all', labelKey: 'ui_extra_b0_dash_history_all', fallback: 'All' },
+  { key: 'birth_chart', labelKey: 'ui_extra_b0_call_reading_birth_chart', fallback: 'Birth Chart' },
+  { key: 'tarot', labelKey: 'ui_extra_b0_call_reading_tarot', fallback: 'Tarot' },
+  { key: 'coffee', labelKey: 'ui_extra_b0_call_reading_coffee', fallback: 'Coffee reading' },
+  { key: 'dream', labelKey: 'ui_extra_b0_call_reading_dream', fallback: 'Dream' },
+  { key: 'synastry', labelKey: 'ui_extra_b0_call_reading_synastry', fallback: 'Synastry' },
+  { key: 'yildizname', labelKey: 'ui_extra_b0_call_reading_yildizname', fallback: 'Yildizname' },
+  { key: 'numerology', labelKey: 'ui_extra_b0_call_reading_numerology', fallback: 'Numerology' },
 ];
 
-const HISTORY_META: Record<ReadingType, { icon: React.ReactNode; tr: string; en: string; route: string }> = {
-  tarot: { icon: <Star size={18} />, tr: 'Tarot', en: 'Tarot', route: '/tarot/reading' },
-  coffee: { icon: <Coffee size={18} />, tr: 'Kahve', en: 'Coffee', route: '/kahve-fali/result' },
-  dream: { icon: <Moon size={18} />, tr: 'Rüya', en: 'Dream', route: '/ruya-tabiri/result' },
-  synastry: { icon: <Heart size={18} />, tr: 'Sinastri', en: 'Synastry', route: '/sinastri/result' },
-  yildizname: { icon: <Sparkles size={18} />, tr: 'Yıldızname', en: 'Yildizname', route: '/yildizname/result' },
-  numerology: { icon: <Binary size={18} />, tr: 'Numeroloji', en: 'Numerology', route: '/numeroloji' },
-  // Doğum haritası kayıtları aynı zamanda Büyük Üçlü için de kaynak — kullanıcı
-  // /birth-chart sayfasında detay görür, oradan transit + sinastri başlatabilir.
-  birth_chart: { icon: <Sparkles size={18} />, tr: 'Doğum Haritası', en: 'Birth Chart', route: '/birth-chart' },
+const HISTORY_META: Record<ReadingType, { icon: React.ReactNode; route: string } & UiLabel> = {
+  tarot: { icon: <Star size={18} />, labelKey: 'ui_extra_b0_call_reading_tarot', fallback: 'Tarot', route: '/tarot/reading' },
+  coffee: { icon: <Coffee size={18} />, labelKey: 'ui_extra_b0_call_reading_coffee', fallback: 'Coffee reading', route: '/kahve-fali/result' },
+  dream: { icon: <Moon size={18} />, labelKey: 'ui_extra_b0_call_reading_dream', fallback: 'Dream', route: '/ruya-tabiri/result' },
+  synastry: { icon: <Heart size={18} />, labelKey: 'ui_extra_b0_call_reading_synastry', fallback: 'Synastry', route: '/sinastri/result' },
+  yildizname: { icon: <Sparkles size={18} />, labelKey: 'ui_extra_b0_call_reading_yildizname', fallback: 'Yildizname', route: '/yildizname/result' },
+  numerology: { icon: <Binary size={18} />, labelKey: 'ui_extra_b0_call_reading_numerology', fallback: 'Numerology', route: '/numeroloji' },
+  birth_chart: { icon: <Sparkles size={18} />, labelKey: 'ui_extra_b0_call_reading_birth_chart', fallback: 'Birth Chart', route: '/birth-chart' },
 };
 
 import PageContainer from '@/components/common/PageContainer';
@@ -153,6 +155,7 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const locale = (params?.locale as string) || 'tr';
   const isTr = locale === 'tr';
+  const { ui } = useUiSection('ui_extra' as any);
 
   const { isAuthenticated, isReady, user } = useAuthStore();
   const isConsultantUser = useMemo(() => {
@@ -167,7 +170,7 @@ export default function DashboardPage() {
     return roles.includes('consultant') || primaryRole === 'consultant';
   }, [user]);
 
-  // Tab state — URL ?tab= ile senkronize
+  // Keep tab state synchronized with URL ?tab=.
   const initialTab = (searchParams.get('tab') as TabKey) || 'overview';
   const [tab, setTab] = useState<TabKey>(VALID_TABS.includes(initialTab) ? initialTab : 'overview');
   const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
@@ -187,19 +190,17 @@ export default function DashboardPage() {
     window.history.replaceState({}, '', url.toString());
   }
 
-  // Auth guard
   useEffect(() => {
     if (isReady && !isAuthenticated) {
       router.replace(`/${locale}/login?next=/${locale}/dashboard`);
     }
   }, [isReady, isAuthenticated, locale, router]);
 
-  // Profile data
   const { data: profile } = useGetMyProfileQuery(undefined, { skip: !isAuthenticated });
   const { data: pendingOutcomes } = useListMyPendingOutcomesQuery(undefined, {
     skip: !isAuthenticated,
   });
-  const { data: history, isLoading: historyLoading } = useGetUserHistoryQuery(
+  const { data: history, isLoading: historyLoading, refetch: refetchHistory } = useGetUserHistoryQuery(
     { limit: 50 },
     { skip: !isAuthenticated },
   );
@@ -230,6 +231,8 @@ export default function DashboardPage() {
   });
   const [passData, setPassData] = useState({ old: '', new: '', confirm: '' });
 
+  // Use native confirm to avoid AlertDialog body lock and event timing issues.
+
   useEffect(() => {
     if (profile) {
       setFormData({
@@ -244,7 +247,7 @@ export default function DashboardPage() {
   if (!isReady || !user) {
     return (
       <PageContainer className="bg-(--gm-bg)" verticalPadding="large" center>
-        <p className="text-(--gm-text-muted) text-sm">{isTr ? 'Yükleniyor…' : 'Loading…'}</p>
+        <p className="text-(--gm-text-muted) text-sm">{ui('ui_extra_b0_dash_loading', 'Loading...')}</p>
       </PageContainer>
     );
   }
@@ -269,7 +272,7 @@ export default function DashboardPage() {
         profile: { avatar_url: newUrl },
       } as any).unwrap();
     } catch (err) {
-      toast.error(normalizeError(err).message || 'Avatar kaydedilemedi.');
+      toast.error(normalizeError(err).message || ui('ui_extra_b0_dash_avatar_save_failed', 'Avatar could not be saved.'));
     }
   }
   const memberSince = (user as any).created_at
@@ -290,42 +293,52 @@ export default function DashboardPage() {
           city: formData.city || null,
         },
       }).unwrap();
-      toast.success(isTr ? 'Profil güncellendi' : 'Profile updated');
+      toast.success(ui('ui_extra_b0_dash_profile_updated', 'Profile updated'));
     } catch (err) {
-      toast.error(normalizeError(err).message || (isTr ? 'Hata oluştu' : 'An error occurred'));
+      toast.error(normalizeError(err).message || ui('ui_extra_b0_dash_error_occurred', 'An error occurred'));
     }
   }
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
     if (passData.new !== passData.confirm) {
-      toast.error(isTr ? 'Şifreler uyuşmuyor' : 'Passwords do not match');
+      toast.error(ui('ui_extra_b0_dash_passwords_mismatch', 'Passwords do not match'));
       return;
     }
     try {
       await updateUser({ email: user!.email, password: passData.new }).unwrap();
       setPassData({ old: '', new: '', confirm: '' });
-      toast.success(isTr ? 'Şifre güncellendi' : 'Password updated');
+      toast.success(ui('ui_extra_b0_dash_password_updated', 'Password updated'));
     } catch (err) {
-      toast.error(normalizeError(err).message || (isTr ? 'Hata oluştu' : 'An error occurred'));
+      toast.error(normalizeError(err).message || ui('ui_extra_b0_dash_error_occurred', 'An error occurred'));
     }
   }
 
   async function handleDeleteReading(item: HistoryItem) {
+    const ok = window.confirm(
+      ui('ui_extra_b0_dash_delete_record_confirm', 'Delete this record permanently?'),
+    );
+    if (!ok) return;
     try {
       await deleteReading({ type: item.type, id: item.id }).unwrap();
-      toast.success(isTr ? 'Yorum silindi' : 'Reading deleted');
+      toast.success(ui('ui_extra_b0_dash_record_deleted', 'Record deleted'));
+      refetchHistory();
     } catch (err) {
-      toast.error(normalizeError(err).message || (isTr ? 'Silinemedi' : 'Could not delete'));
+      toast.error(normalizeError(err).message || ui('ui_extra_b0_dash_could_not_delete', 'Could not delete'));
     }
   }
 
   async function handleDeleteAllReadings() {
+    const ok = window.confirm(
+      ui('ui_extra_b0_dash_delete_all_confirm', 'ALL history records (tarot, coffee, dream, synastry, yildizname, numerology, birth chart) will be deleted. Are you sure?'),
+    );
+    if (!ok) return;
     try {
       await deleteAllReadings().unwrap();
-      toast.success(isTr ? 'Tüm yorum geçmişi silindi' : 'All reading history deleted');
+      toast.success(ui('ui_extra_b0_dash_all_history_deleted', 'All history deleted'));
+      refetchHistory();
     } catch (err) {
-      toast.error(normalizeError(err).message || (isTr ? 'Silinemedi' : 'Could not delete'));
+      toast.error(normalizeError(err).message || ui('ui_extra_b0_dash_could_not_delete', 'Could not delete'));
     }
   }
 
@@ -338,106 +351,88 @@ export default function DashboardPage() {
     {
       href: `?tab=profile`,
       icon: <UserIcon size={22} />,
-      eyebrow: isTr ? 'Hesap' : 'Account',
-      title: isTr ? 'Profilim' : 'My Profile',
-      description: isTr
-        ? 'Kişisel bilgilerinizi, doğum verilerinizi ve tercihlerinizi yönetin.'
-        : 'Manage your personal info, birth data and preferences.',
-      cta: isTr ? 'Profili düzenle' : 'Edit profile',
+      eyebrow: ui('ui_extra_b0_dash_card_account', 'Account'),
+      title: ui('ui_extra_b0_dash_card_my_profile', 'My Profile'),
+      description: ui('ui_extra_b0_dash_card_profile_desc', 'Manage your personal details, birth data, and preferences.'),
+      cta: ui('ui_extra_b0_dash_card_edit_profile', 'Edit profile'),
     },
     {
       href: `?tab=bookings`,
       icon: <Calendar size={22} />,
-      eyebrow: isTr ? 'Randevular' : 'Bookings',
-      title: isTr ? 'Seanslarım' : 'My Sessions',
-      description: isTr
-        ? 'Yaklaşan randevularınızı ve geçmiş görüşmelerinizi görüntüleyin.'
-        : 'View upcoming appointments and past sessions.',
-      cta: isTr ? 'Randevuları gör' : 'View bookings',
+      eyebrow: ui('ui_extra_b0_dash_card_bookings', 'Bookings'),
+      title: ui('ui_extra_b0_dash_card_my_sessions', 'My Sessions'),
+      description: ui('ui_extra_b0_dash_card_sessions_desc', 'View your upcoming appointments and past sessions.'),
+      cta: ui('ui_extra_b0_dash_card_view_bookings', 'View bookings'),
     },
     {
       href: `?tab=messages`,
       icon: <MessageCircle size={22} />,
-      eyebrow: isTr ? 'Sohbet' : 'Chat',
-      title: isTr ? 'Mesajlarım' : 'My Messages',
-      description: isTr
-        ? 'Danışmanlarınızdan gelen cevapları okuyun, yeni mesaj gönderin.'
-        : 'Read replies from consultants and send new messages.',
-      cta: isTr ? 'Mesajları gör' : 'View messages',
+      eyebrow: ui('ui_extra_b0_dash_card_chat', 'Chat'),
+      title: ui('ui_extra_b0_dash_card_my_messages', 'My Messages'),
+      description: ui('ui_extra_b0_dash_card_messages_desc', 'Read replies from your consultants and send new messages.'),
+      cta: ui('ui_extra_b0_dash_card_view_messages', 'View messages'),
     },
     {
       href: localizePath(locale, '/birth-chart'),
       icon: <Sparkles size={22} />,
-      eyebrow: isTr ? 'Astroloji' : 'Astrology',
-      title: isTr ? 'Doğum Haritam' : 'My Birth Chart',
-      description: isTr
-        ? 'Detaylı doğum haritanızı oluşturun, gezegen yorumlarını okuyun.'
-        : 'Build your detailed birth chart, read planet interpretations.',
-      cta: isTr ? 'Haritamı aç' : 'Open chart',
+      eyebrow: ui('ui_extra_b0_dash_card_astrology', 'Astrology'),
+      title: ui('ui_extra_b0_dash_card_my_birth_chart', 'My Birth Chart'),
+      description: ui('ui_extra_b0_dash_card_birth_chart_desc', 'Create your detailed birth chart and read planetary interpretations.'),
+      cta: ui('ui_extra_b0_dash_card_open_chart', 'Open my chart'),
     },
     {
       href: localizePath(locale, '/daily'),
       icon: <Star size={22} />,
-      eyebrow: isTr ? 'Günlük' : 'Daily',
-      title: isTr ? 'Günlük Yorumum' : 'Daily Reading',
-      description: isTr
-        ? 'Bugünün enerjisi, kişisel transit yorumu ve önerileri.'
-        : "Today's energy, your personal transit and recommendations.",
-      cta: isTr ? 'Bugünü oku' : 'Read today',
+      eyebrow: ui('ui_extra_b0_dash_card_daily', 'Daily'),
+      title: ui('ui_extra_b0_dash_card_daily_reading', 'My Daily Reading'),
+      description: ui('ui_extra_b0_dash_card_daily_desc', "Today's energy, personal transit reading, and suggestions."),
+      cta: ui('ui_extra_b0_dash_card_read_today', 'Read today'),
     },
     {
       href: `?tab=history`,
       icon: <Clock size={22} />,
-      eyebrow: isTr ? 'Geçmiş' : 'History',
-      title: isTr ? 'Yorumlarım' : 'My Readings',
-      description: isTr
-        ? 'Tarot, kahve, rüya ve diğer kayıtlı yorumlarınızı tek yerden açın veya silin.'
-        : 'Open or delete your saved tarot, coffee, dream and other readings in one place.',
-      cta: isTr ? 'Geçmişi gör' : 'View history',
+      eyebrow: ui('ui_extra_b0_dash_card_history', 'History'),
+      title: ui('ui_extra_b0_dash_card_my_readings', 'My Readings'),
+      description: ui('ui_extra_b0_dash_card_readings_desc', 'Open or delete your tarot, coffee, dream, and other saved readings in one place.'),
+      cta: ui('ui_extra_b0_dash_card_view_history', 'View history'),
     },
     {
       href: localizePath(locale, '/pricing'),
       icon: <CreditCard size={22} />,
-      eyebrow: isTr ? 'Üyelik' : 'Membership',
-      title: isTr ? 'Aboneliğim' : 'My Subscription',
-      description: isTr
-        ? 'Premium üyelik durumunuzu, kredi bakiyenizi ve faturaları yönetin.'
-        : 'Manage your premium status, credit balance and invoices.',
-      cta: isTr ? 'Aboneliği yönet' : 'Manage plan',
+      eyebrow: ui('ui_extra_b0_dash_card_membership', 'Membership'),
+      title: ui('ui_extra_b0_dash_card_my_subscription', 'My Subscription'),
+      description: ui('ui_extra_b0_dash_card_subscription_desc', 'Manage your premium status, credit balance, and invoices.'),
+      cta: ui('ui_extra_b0_dash_card_manage_plan', 'Manage plan'),
     },
     ...(isConsultantUser
       ? [
           {
             href: localizePath(locale, '/me/consultant'),
             icon: <Settings size={22} />,
-            eyebrow: isTr ? 'Danışman' : 'Consultant',
-            title: isTr ? 'Danışman Paneli' : 'Consultant Dashboard',
-            description: isTr
-              ? 'Profilinizi, hizmetlerinizi, müsaitliklerinizi ve kazançlarınızı yönetin.'
-              : 'Manage your profile, services, availability and earnings.',
-            cta: isTr ? 'Panele git' : 'Open panel',
+            eyebrow: ui('ui_extra_b0_dash_card_consultant', 'Consultant'),
+            title: ui('ui_extra_b0_dash_card_consultant_dashboard', 'Consultant Panel'),
+            description: ui('ui_extra_b0_dash_card_consultant_desc', 'Manage your profile, services, availability, and earnings.'),
+            cta: ui('ui_extra_b0_dash_card_open_panel', 'Open panel'),
           },
         ]
       : []),
     {
       href: localizePath(locale, '/consultants'),
       icon: <Heart size={22} />,
-      eyebrow: isTr ? 'Keşfet' : 'Explore',
-      title: isTr ? 'Danışman Bul' : 'Find a Consultant',
-      description: isTr
-        ? 'Uzman astrolog ve danışmanlarla yeni bir görüşme planlayın.'
-        : 'Schedule a new session with our expert astrologers.',
-      cta: isTr ? 'Danışmanları gör' : 'Browse experts',
+      eyebrow: ui('ui_extra_b0_dash_card_explore', 'Explore'),
+      title: ui('ui_extra_b0_dash_card_find_consultant', 'Find a Consultant'),
+      description: ui('ui_extra_b0_dash_card_explore_desc', 'Plan a new session with expert astrologers and consultants.'),
+      cta: ui('ui_extra_b0_dash_card_browse_experts', 'View consultants'),
     },
   ];
 
   const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
-    { key: 'overview', label: isTr ? 'Genel Bakış' : 'Overview', icon: <LayoutGrid size={14} /> },
-    { key: 'profile', label: isTr ? 'Profil' : 'Profile', icon: <UserIcon size={14} /> },
-    { key: 'bookings', label: isTr ? 'Randevular' : 'Bookings', icon: <ShoppingBag size={14} /> },
-    { key: 'messages', label: isTr ? 'Mesajlar' : 'Messages', icon: <MessageCircle size={14} /> },
-    { key: 'history', label: isTr ? 'Geçmiş Yorumlarım' : 'Reading History', icon: <Sparkles size={14} /> },
-    { key: 'security', label: isTr ? 'Güvenlik' : 'Security', icon: <Lock size={14} /> },
+    { key: 'overview', label: ui('ui_extra_b0_dash_tab_overview', 'Overview'), icon: <LayoutGrid size={14} /> },
+    { key: 'profile', label: ui('ui_extra_b0_dash_tab_profile', 'Profile'), icon: <UserIcon size={14} /> },
+    { key: 'bookings', label: ui('ui_extra_b0_dash_tab_bookings', 'Bookings'), icon: <ShoppingBag size={14} /> },
+    { key: 'messages', label: ui('ui_extra_b0_dash_tab_messages', 'Messages'), icon: <MessageCircle size={14} /> },
+    { key: 'history', label: ui('ui_extra_b0_dash_tab_history', 'My Past Readings'), icon: <Sparkles size={14} /> },
+    { key: 'security', label: ui('ui_extra_b0_dash_tab_security', 'Security'), icon: <Lock size={14} /> },
   ];
 
   return (
@@ -454,16 +449,16 @@ export default function DashboardPage() {
 
           <div className="flex-1 min-w-0">
             <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold) uppercase opacity-80">
-              {isTr ? 'Hoş geldin' : 'Welcome'}
+              {ui('ui_extra_b0_dash_welcome', 'Welcome')}
             </span>
             <h1 className="font-serif text-3xl md:text-4xl font-light text-(--gm-text) mt-1 leading-tight">
-              {firstName ? (isTr ? `Merhaba, ${firstName}` : `Hello, ${firstName}`) : isTr ? 'Panelim' : 'Dashboard'}
+              {firstName ? `${ui('ui_extra_b0_dash_hello', 'Hello')}, ${firstName}` : ui('ui_extra_b0_dash_my_panel', 'My Dashboard')}
             </h1>
             {/* email: text-dim can be too faint in dark — use text with explicit opacity */}
             <p className="text-(--gm-text) opacity-55 text-sm mt-2 truncate">{user.email}</p>
             {memberSince && (
               <p className="text-(--gm-text) opacity-40 text-xs mt-1">
-                {isTr ? `Üye: ${memberSince}` : `Member since ${memberSince}`}
+                {`${ui('ui_extra_b0_dash_member_since', 'Member')}: ${memberSince}`}
               </p>
             )}
           </div>
@@ -475,13 +470,13 @@ export default function DashboardPage() {
               className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-(--gm-gold) hover:opacity-100 opacity-80 transition-all"
             >
               <Settings size={14} />
-              {isTr ? 'Hesap Ayarları' : 'Account Settings'}
+              {ui('ui_extra_b0_dash_account_settings', 'Account Settings')}
             </button>
             <Link
               href={localizePath(locale, '/logout')}
               className="inline-flex items-center gap-2 text-xs font-medium tracking-widest text-(--gm-text) opacity-45 hover:opacity-70 transition-opacity"
             >
-              {isTr ? 'Çıkış yap' : 'Sign out'}
+              {ui('ui_extra_b0_dash_sign_out', 'Sign out')}
             </Link>
           </div>
         </header>
@@ -524,21 +519,17 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex-1 text-center md:text-left">
                   <div className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold-deep) uppercase mb-1.5">
-                    {isTr ? 'Astrolog Karnesi' : 'Astrologer Report Card'}
+                    {ui('ui_extra_b0_dash_astrologer_report', 'Astrologer Report Card')}
                   </div>
                   <h3 className="font-serif text-xl text-(--gm-text)">
-                    {isTr
-                      ? `${pendingCount} bekleyen karne sorun var`
-                      : `${pendingCount} pending feedback ${pendingCount === 1 ? 'item' : 'items'}`}
+                    {`${pendingCount} ${ui('ui_extra_b0_dash_pending_report', 'pending report card questions')}`}
                   </h3>
                   <p className="text-sm text-(--gm-text-dim) mt-1">
-                    {isTr
-                      ? '6 ay önce aldığın yorumlar gerçekleşti mi? Cevapların astrologların karnesini şekillendiriyor.'
-                      : 'Did the predictions from 6 months ago come true? Your responses shape the astrologer report card.'}
+                    {ui('ui_extra_b0_dash_report_desc', 'Did the readings you received 6 months ago come true? Your answers shape astrologers report cards.')}
                   </p>
                 </div>
                 <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-(--gm-gold-deep) group-hover:text-(--gm-gold) transition-colors">
-                  {isTr ? 'Cevapla' : 'Respond'}
+                  {ui('ui_extra_b0_dash_respond', 'Respond')}
                   <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                 </span>
               </Link>
@@ -555,12 +546,10 @@ export default function DashboardPage() {
               </div>
               <div>
                 <div className="font-display text-[11px] tracking-[0.2em] text-(--gm-gold-deep) uppercase mb-2">
-                  {isTr ? 'Gizlilik Sözü' : 'Privacy Promise'}
+                  {ui('ui_extra_b0_dash_privacy_promise', 'Privacy Promise')}
                 </div>
                 <p className="text-(--gm-text-dim) font-light leading-relaxed text-sm">
-                  {isTr
-                    ? 'Doğum bilgileri ve seans notlarınız KVKK uyumlu olarak şifreli saklanır. Hesabını dilediğin an silebilir, verilerini indirebilirsin.'
-                    : 'Your birth data and session notes are stored encrypted, KVKK-compliant. You can delete your account or export your data at any time.'}
+                  {ui('ui_extra_b0_dash_privacy_desc', 'Your birth data and session notes are stored encrypted in compliance with KVKK. You can delete your account or download your data at any time.')}
                 </p>
               </div>
             </section>
@@ -574,23 +563,23 @@ export default function DashboardPage() {
                 <UserIcon size={18} />
               </div>
               <h2 className="font-serif text-2xl md:text-3xl font-light text-(--gm-text)">
-                {isTr ? 'Profil Bilgileri' : 'Profile Info'}
+                {ui('ui_extra_b0_dash_profile_info', 'Profile Information')}
               </h2>
             </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <FieldLabel>{isTr ? 'Ad Soyad' : 'Full name'}</FieldLabel>
+                  <FieldLabel>{ui('ui_extra_b0_dash_full_name', 'Full Name')}</FieldLabel>
                   <input
                     className={fieldClasses()}
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    placeholder={isTr ? 'Adınız ve soyadınız' : 'Your full name'}
+                    placeholder={ui('ui_extra_b0_dash_full_name_ph', 'Your full name')}
                   />
                 </div>
                 <div>
-                  <FieldLabel>{isTr ? 'Telefon' : 'Phone'}</FieldLabel>
+                  <FieldLabel>{ui('ui_extra_b0_dash_phone', 'Phone')}</FieldLabel>
                   <input
                     className={fieldClasses()}
                     value={formData.phone}
@@ -601,7 +590,7 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <FieldLabel>{isTr ? 'Adres' : 'Address'}</FieldLabel>
+                <FieldLabel>{ui('ui_extra_b0_dash_address', 'Address')}</FieldLabel>
                 <input
                   className={fieldClasses()}
                   value={formData.address}
@@ -610,11 +599,11 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <FieldLabel>{isTr ? 'Şehir' : 'City'}</FieldLabel>
+                <FieldLabel>{ui('ui_extra_b0_dash_city', 'City')}</FieldLabel>
                 <CityAutocomplete
                   value={formData.city}
                   onChange={(city) => setFormData({ ...formData, city })}
-                  placeholder={isTr ? 'Şehir ara…' : 'Search city…'}
+                  placeholder={ui('ui_extra_b0_dash_city_ph', 'Search city...')}
                   country={locale === 'de' ? 'de' : 'tr'}
                 />
               </div>
@@ -626,12 +615,8 @@ export default function DashboardPage() {
                   className="btn-premium px-10 py-3 text-xs disabled:opacity-50"
                 >
                   {upsertProfileState.isLoading
-                    ? isTr
-                      ? 'KAYDEDİLİYOR...'
-                      : 'SAVING...'
-                    : isTr
-                    ? 'DEĞİŞİKLİKLERİ KAYDET'
-                    : 'SAVE CHANGES'}
+                    ? ui('ui_extra_b0_dash_saving', 'SAVING...')
+                    : ui('ui_extra_b0_dash_save_changes', 'SAVE CHANGES')}
                 </button>
               </div>
             </form>
@@ -645,7 +630,7 @@ export default function DashboardPage() {
                 <ShoppingBag size={18} />
               </div>
               <h2 className="font-serif text-2xl md:text-3xl font-light text-(--gm-text)">
-                {isTr ? 'Randevularım' : 'My Bookings'}
+                {ui('ui_extra_b0_dash_my_bookings', 'My Bookings')}
               </h2>
             </div>
 
@@ -661,10 +646,10 @@ export default function DashboardPage() {
                   <Calendar className="w-6 h-6 text-(--gm-text-muted)" />
                 </div>
                 <p className="text-(--gm-text-dim) font-serif italic">
-                  {isTr ? 'Henüz bir randevunuz bulunmuyor.' : 'No bookings yet.'}
+                  {ui('ui_extra_b0_dash_no_bookings', 'No bookings yet.')}
                 </p>
                 <Link href={localizePath(locale, '/consultants')} className="btn-premium inline-flex py-3 px-8">
-                  {isTr ? 'Danışmanları Keşfet' : 'Find Consultants'}
+                  {ui('ui_extra_b0_dash_find_consultants', 'Find Consultants')}
                 </Link>
               </div>
             ) : (
@@ -690,7 +675,7 @@ export default function DashboardPage() {
                       <div>
                         <div className="flex items-center gap-3 mb-1.5">
                           <span className="text-[10px] font-bold text-(--gm-gold-deep) tracking-[0.2em] uppercase">
-                            {isTr ? 'Danışmanlık' : 'Consultation'}
+                            {ui('ui_extra_b0_dash_consultation', 'Consultation')}
                           </span>
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold tracking-widest uppercase ${
                             booking.status === 'completed'
@@ -703,8 +688,11 @@ export default function DashboardPage() {
                           </span>
                         </div>
                         <h4 className="text-(--gm-text) font-serif text-xl group-hover:text-(--gm-gold) transition-colors">
-                          {booking.resource_title || (isTr ? 'Danışman' : 'Consultant')}
+                          {booking.consultant_name || booking.resource_title || ui('ui_account_msg_consultant_fallback', 'Consultant')}
                         </h4>
+                        {booking.service_title && (
+                          <p className="text-[11px] text-(--gm-text-dim) mt-0.5">{booking.service_title}</p>
+                        )}
                         <div className="flex items-center gap-3 mt-1 text-(--gm-text-muted) text-xs">
                            <span className="flex items-center gap-1.5"><Calendar size={13} /> {fmtDate(booking.appointment_date, locale)}</span>
                            <span className="flex items-center gap-1.5"><Clock size={13} /> {booking.appointment_time}</span>
@@ -719,11 +707,11 @@ export default function DashboardPage() {
                           onClick={() => setReviewModal({
                             isOpen: true,
                             targetId: booking.consultant_id || booking.resource_id,
-                            consultantName: booking.resource_title || ''
+                            consultantName: booking.consultant_name || booking.resource_title || ''
                           })}
                           className="btn-outline-premium px-5 py-2.5 text-[10px]"
                         >
-                          {isTr ? 'YORUM YAP' : 'WRITE REVIEW'}
+                          {ui('ui_extra_b0_dash_write_review', 'WRITE REVIEW')}
                         </button>
                       )}
 
@@ -732,16 +720,16 @@ export default function DashboardPage() {
                           href={localizePath(locale, `/booking/${booking.id}/call`)}
                           className="btn-premium px-6 py-2.5 text-[10px] shadow-gold"
                         >
-                          {isTr ? 'GÖRÜŞMEYE KATIL' : 'JOIN CALL'}
+                          {ui('ui_extra_b0_dash_join_call', 'JOIN CALL')}
                         </Link>
                       )}
 
-                      <BookingMessageButton bookingId={booking.id} variant="secondary" label={isTr ? 'MESAJ' : 'MESSAGE'} />
+                      <BookingMessageButton bookingId={booking.id} variant="secondary" label={ui('ui_account_msg_button_label', 'MESSAGE')} />
 
                       <Link
                         href={localizePath(locale, `/booking/${booking.id}`)}
                         className="p-2.5 rounded-xl border border-(--gm-border-soft) text-(--gm-text-muted) hover:text-(--gm-gold) hover:border-(--gm-gold)/40 transition-all"
-                        title={isTr ? 'Detaylar' : 'Details'}
+                        title={ui('ui_extra_b0_dash_details', 'Details')}
                       >
                         <Eye size={18} />
                       </Link>
@@ -760,7 +748,7 @@ export default function DashboardPage() {
                 <MessageCircle size={18} />
               </div>
               <h2 className="font-serif text-2xl md:text-3xl font-light text-(--gm-text)">
-                {isTr ? 'Mesajlarım' : 'My Messages'}
+                {ui('ui_extra_b0_dash_card_my_messages', 'My Messages')}
               </h2>
             </div>
             <UserMessagesPanel isTr={isTr} />
@@ -775,43 +763,20 @@ export default function DashboardPage() {
                   <Sparkles size={18} />
                 </div>
                 <h2 className="font-serif text-2xl md:text-3xl font-light text-(--gm-text)">
-                  {isTr ? 'Geçmiş Yorumlarım' : 'Reading History'}
+                  {ui('ui_extra_b0_dash_tab_history', 'Reading History')}
                 </h2>
               </div>
 
               {(history?.length ?? 0) > 0 && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--gm-error)/30 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-error) transition hover:bg-(--gm-error)/10"
-                    >
-                      <Trash2 size={14} />
-                      {isTr ? 'Tümünü Sil' : 'Delete All'}
-                    </button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        {isTr ? 'Tüm yorum geçmişi silinsin mi?' : 'Delete all reading history?'}
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {isTr
-                          ? 'Bu işlem tarot, kahve, rüya, sinastri, yıldızname ve numeroloji kayıtlarınızı anında siler.'
-                          : 'This immediately deletes your tarot, coffee, dream, synastry, yildizname and numerology records.'}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>{isTr ? 'Vazgeç' : 'Cancel'}</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDeleteAllReadings}
-                        disabled={deleteAllReadingsState.isLoading}
-                      >
-                        {isTr ? 'Tümünü Sil' : 'Delete All'}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <button
+                  type="button"
+                  onClick={handleDeleteAllReadings}
+                  disabled={deleteAllReadingsState.isLoading}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-(--gm-error)/30 px-4 py-3 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-error) transition hover:bg-(--gm-error)/10 disabled:opacity-50"
+                >
+                  <Trash2 size={14} />
+                  {ui('ui_extra_b0_dash_delete_all', 'Delete All')}
+                </button>
               )}
             </div>
 
@@ -829,7 +794,7 @@ export default function DashboardPage() {
                         : 'border-(--gm-border-soft) text-(--gm-text-dim) hover:border-(--gm-gold)/40 hover:text-(--gm-text)'
                     }`}
                   >
-                    {isTr ? item.tr : item.en}
+                    {ui(item.labelKey, item.fallback)}
                   </button>
                 );
               })}
@@ -847,19 +812,17 @@ export default function DashboardPage() {
                   <Sparkles className="w-6 h-6 text-(--gm-text-muted)" />
                 </div>
                 <p className="text-(--gm-text-dim) font-serif italic">
-                  {isTr ? 'Henüz kayıtlı yorumun yok.' : 'No saved readings yet.'}
+                  {ui('ui_extra_b0_dash_no_saved_readings', 'No saved readings yet.')}
                 </p>
                 <Link href={localizePath(locale, '/tarot')} className="btn-premium inline-flex py-3 px-8">
-                  {isTr ? 'İlk yorumu al' : 'Get a reading'}
+                  {ui('ui_extra_b0_dash_get_reading', 'Get a reading')}
                 </Link>
               </div>
             ) : (
               <div className="grid gap-4">
                 {filteredHistory.map((item) => {
                   const meta = HISTORY_META[item.type];
-                  // Sayfa detay route'u kabul etmiyorsa kök route'a git.
-                  // numerology + birth_chart: kullanıcının kayıtlı verilerini listeleyen
-                  // ana sayfaya yönlendir.
+                  // Route to the index page for modules that do not expose detail pages.
                   const detailHref =
                     item.type === 'numerology' || item.type === 'birth_chart'
                       ? localizePath(locale, meta.route)
@@ -877,7 +840,7 @@ export default function DashboardPage() {
                           <div className="min-w-0">
                             <div className="mb-1 flex flex-wrap items-center gap-2">
                               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--gm-gold-deep)">
-                                {isTr ? meta.tr : meta.en}
+                                {ui(meta.labelKey, meta.fallback)}
                               </span>
                               <span className="text-[10px] text-(--gm-text-muted)">
                                 {fmtDate(item.created_at, locale)}
@@ -887,7 +850,7 @@ export default function DashboardPage() {
                               {item.title}
                             </h3>
                             <p className="mt-1 line-clamp-1 text-sm text-(--gm-text-dim)">
-                              {item.snippet || (isTr ? 'Önizleme metni yok.' : 'No preview available.')}
+                              {item.snippet || ui('ui_extra_b0_dash_no_preview', 'No preview available.')}
                             </p>
                           </div>
                         </div>
@@ -898,40 +861,17 @@ export default function DashboardPage() {
                             className="inline-flex items-center gap-2 rounded-xl border border-(--gm-border-soft) px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-text-dim) transition hover:border-(--gm-gold)/40 hover:text-(--gm-gold)"
                           >
                             <Eye size={14} />
-                            {isTr ? 'Aç' : 'Open'}
+                            {ui('ui_extra_b0_dash_open', 'Open')}
                           </Link>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <button
-                                type="button"
-                                className="inline-flex items-center gap-2 rounded-xl border border-(--gm-error)/25 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-error) transition hover:bg-(--gm-error)/10"
-                              >
-                                <Trash2 size={14} />
-                                {isTr ? 'Sil' : 'Delete'}
-                              </button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  {isTr ? 'Bu yorum silinsin mi?' : 'Delete this reading?'}
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  {isTr
-                                    ? 'Bu kayıt hesabınızdan kalıcı olarak kaldırılır.'
-                                    : 'This record will be permanently removed from your account.'}
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>{isTr ? 'Vazgeç' : 'Cancel'}</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteReading(item)}
-                                  disabled={deleteReadingState.isLoading}
-                                >
-                                  {isTr ? 'Sil' : 'Delete'}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReading(item)}
+                            disabled={deleteReadingState.isLoading}
+                            className="inline-flex items-center gap-2 rounded-xl border border-(--gm-error)/25 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-error) transition hover:bg-(--gm-error)/10 disabled:opacity-50"
+                          >
+                            <Trash2 size={14} />
+                            {ui('ui_extra_b0_dash_delete', 'Delete')}
+                          </button>
                         </div>
                       </div>
                     </article>
@@ -950,13 +890,13 @@ export default function DashboardPage() {
                 <Lock size={18} />
               </div>
               <h2 className="font-serif text-2xl md:text-3xl font-light text-(--gm-text)">
-                {isTr ? 'Güvenlik Ayarları' : 'Security Settings'}
+                {ui('ui_extra_b0_dash_security_settings', 'Security Settings')}
               </h2>
             </div>
 
             <form onSubmit={handleChangePassword} className="space-y-6">
               <div>
-                <FieldLabel>{isTr ? 'Mevcut Şifre' : 'Current password'}</FieldLabel>
+                <FieldLabel>{ui('ui_extra_b0_dash_current_password', 'Current password')}</FieldLabel>
                 <input
                   type="password"
                   className={fieldClasses()}
@@ -968,7 +908,7 @@ export default function DashboardPage() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <FieldLabel>{isTr ? 'Yeni Şifre' : 'New password'}</FieldLabel>
+                  <FieldLabel>{ui('ui_extra_b0_dash_new_password', 'New password')}</FieldLabel>
                   <input
                     type="password"
                     className={fieldClasses()}
@@ -978,7 +918,7 @@ export default function DashboardPage() {
                   />
                 </div>
                 <div>
-                  <FieldLabel>{isTr ? 'Şifre Tekrar' : 'Confirm password'}</FieldLabel>
+                  <FieldLabel>{ui('ui_extra_b0_dash_confirm_password', 'Confirm password')}</FieldLabel>
                   <input
                     type="password"
                     className={fieldClasses()}
@@ -996,12 +936,8 @@ export default function DashboardPage() {
                   className="btn-premium px-10 py-3 text-xs disabled:opacity-50"
                 >
                   {updateUserState.isLoading
-                    ? isTr
-                      ? 'GÜNCELLENİYOR...'
-                      : 'UPDATING...'
-                    : isTr
-                    ? 'ŞİFREYİ GÜNCELLE'
-                    : 'UPDATE PASSWORD'}
+                    ? ui('ui_extra_b0_dash_updating', 'UPDATING...')
+                    : ui('ui_extra_b0_dash_update_password', 'UPDATE PASSWORD')}
                 </button>
               </div>
             </form>

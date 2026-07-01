@@ -9,30 +9,30 @@ type Props = {
 };
 
 const labels: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık'
+  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces'
 };
 
 const VALID_SIGNS = new Set(Object.keys(labels));
 
 /**
- * Türkçe slug → İngilizce key mapping (URL'lerde "koc-yengec" gibi yazılırsa).
- * Hem İngilizce hem Türkçe slug'ları kabul eder.
+ * Turkish slug alias to English key mapping.
+ * Accepts English and Turkish slugs.
  */
 const TR_TO_EN: Record<string, string> = {
-  koc: 'aries', 'koç': 'aries',
-  boga: 'taurus', 'boğa': 'taurus',
+  koc: 'aries', 'ko\u00e7': 'aries',
+  boga: 'taurus', 'bo\u011fa': 'taurus',
   ikizler: 'gemini',
-  yengec: 'cancer', 'yengeç': 'cancer',
+  yengec: 'cancer', 'yenge\u00e7': 'cancer',
   aslan: 'leo',
-  basak: 'virgo', 'başak': 'virgo',
+  basak: 'virgo', 'ba\u015fak': 'virgo',
   terazi: 'libra',
   akrep: 'scorpio',
   yay: 'sagittarius',
-  oglak: 'capricorn', 'oğlak': 'capricorn',
+  oglak: 'capricorn', 'o\u011flak': 'capricorn',
   kova: 'aquarius',
-  balik: 'pisces', 'balık': 'pisces',
+  balik: 'pisces', 'bal\u0131k': 'pisces',
 };
 
 function normalizeSign(token: string): string | null {
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale,
       pageKey: 'burclar-pair-uyumu',
       pathname: `/burclar/uyum/${pair}`,
-      fallback: { title: 'Burç Uyumu', description: 'İki burç arası uyum analizi.' },
+      fallback: { title: 'Zodiac Compatibility', description: 'Compatibility analysis between two zodiac signs.' },
     });
   }
   const labelA = labels[parsed.signA];
@@ -71,8 +71,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'burclar-pair-uyumu',
     pathname: `/burclar/uyum/${parsed.signA}-${parsed.signB}`,
     fallback: {
-      title: `${labelA} ve ${labelB} Burç Uyumu Analizi`,
-      description: `${labelA} burcu ile ${labelB} burcu arasındaki aşk, arkadaşlık ve iş uyumu. İki burç arasındaki tutku ve dinamikleri keşfedin.`,
+      title: `${labelA} and ${labelB} Zodiac Compatibility Analysis`,
+      description: `Love, friendship and work compatibility between ${labelA} and ${labelB}. Discover the passion and dynamics between both signs.`,
       ogImage: ogImageUrl,
     },
   });

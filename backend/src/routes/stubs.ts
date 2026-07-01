@@ -46,7 +46,4 @@ export async function registerStubs(api: FastifyInstance) {
     const { key } = req.query as { key: string };
     return { key, value: null };
   });
-
-  api.get('/site_settings/ga4_measurement_id', async () => ({ value: null }));
-  api.get('/site_settings/facebook_pixel_id', async () => ({ value: null }));
 }

@@ -27,6 +27,7 @@ import PageContainer from '@/components/common/PageContainer';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useBrand } from '@/hooks/useBrand';
+import { useUiSection } from '@/i18n';
 import { localizePath, normalizeError } from '@/integrations/shared';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
@@ -35,22 +36,22 @@ const TYPE_CONFIG: Record<
   ReadingType,
   { label: string; icon: any; color: string; route: string }
 > = {
-  tarot:      { label: 'Tarot Falı',   icon: Star,     color: 'text-brand-gold',     route: 'tarot/reading' },
-  coffee:     { label: 'Kahve Falı',   icon: Coffee,   color: 'text-brand-gold-dim', route: 'kahve-fali/result' },
-  dream:      { label: 'Rüya Tabiri',  icon: Moon,     color: 'text-brand-primary',  route: 'ruya-tabiri/result' },
+  tarot:      { label: 'Tarot Reading', icon: Star,     color: 'text-brand-gold',     route: 'tarot/reading' },
+  coffee:     { label: 'Coffee Reading', icon: Coffee,   color: 'text-brand-gold-dim', route: 'kahve-fali/result' },
+  dream:      { label: 'Dream Reading', icon: Moon,     color: 'text-brand-primary',  route: 'ruya-tabiri/result' },
   numerology: { label: 'Numeroloji',   icon: Binary,   color: 'text-brand-gold',     route: 'numeroloji' },
-  yildizname: { label: 'Yıldızname',   icon: Sparkles, color: 'text-brand-gold',     route: 'yildizname/result' },
+  yildizname: { label: 'Yildizname',   icon: Sparkles, color: 'text-brand-gold',     route: 'yildizname/result' },
   synastry:   { label: 'Sinastri',     icon: Heart,    color: 'text-brand-primary',  route: 'sinastri/result' },
-  birth_chart: { label: 'Doğum Haritası', icon: Sparkles, color: 'text-brand-primary', route: 'birth-chart' },
+  birth_chart: { label: 'Birth Chart', icon: Sparkles, color: 'text-brand-primary', route: 'birth-chart' },
 };
 
 const FILTERS: Array<{ key: 'all' | ReadingType; label: string }> = [
-  { key: 'all',        label: 'Tümü' },
-  { key: 'birth_chart', label: 'Doğum Haritası' },
+  { key: 'all',        label: 'All' },
+  { key: 'birth_chart', label: 'Birth Chart' },
   { key: 'tarot',      label: 'Tarot' },
   { key: 'coffee',     label: 'Kahve' },
-  { key: 'dream',      label: 'Rüya' },
-  { key: 'yildizname', label: 'Yıldızname' },
+  { key: 'dream',      label: 'Dream' },
+  { key: 'yildizname', label: 'Yildizname' },
   { key: 'synastry',   label: 'Sinastri' },
   { key: 'numerology', label: 'Numeroloji' },
 ];
@@ -58,6 +59,7 @@ const FILTERS: Array<{ key: 'all' | ReadingType; label: string }> = [
 export default function MyReadingsPage() {
   const { locale } = useParams();
   const localeStr = (locale as string) || 'tr';
+  const { ui } = useUiSection('ui_extra' as any, localeStr as any);
   const { data: history, isLoading } = useGetUserHistoryQuery();
   const [deleteOne, { isLoading: deletingOne }] = useDeleteReadingMutation();
   const [deleteAll, { isLoading: deletingAll }] = useDeleteAllReadingsMutation();
@@ -70,22 +72,22 @@ export default function MyReadingsPage() {
   }, [history, filter]);
 
   const handleDelete = async (type: ReadingType, id: string, title: string) => {
-    if (!confirm(`"${title}" silinsin mi? Bu işlem geri alınamaz.`)) return;
+    if (!confirm(`"${title}" ${ui('ui_extra_b1_confirm_delete_one', 'should be deleted? This cannot be undone.')}`)) return;
     try {
       await deleteOne({ type, id }).unwrap();
-      toast.success('Kayıt silindi');
+      toast.success(ui('ui_extra_b1_record_deleted', 'Record deleted'));
     } catch (err) {
-      toast.error(normalizeError(err).message || 'Silinemedi');
+      toast.error(normalizeError(err).message || ui('ui_extra_b1_delete_failed', 'Silinemedi'));
     }
   };
 
   const handleDeleteAll = async () => {
-    if (!confirm('TÜM yorumların silinsin mi? Bu işlem geri alınamaz (KVKK).')) return;
+    if (!confirm(ui('ui_extra_b1_confirm_delete_all', 'Delete ALL readings? This cannot be undone.'))) return;
     try {
       const res = await deleteAll().unwrap();
-      toast.success(`${res.total} kayıt silindi`);
+      toast.success(`${res.total} ${ui('ui_extra_b1_records_deleted', 'records deleted')}`);
     } catch (err) {
-      toast.error(normalizeError(err).message || 'Silinemedi');
+      toast.error(normalizeError(err).message || ui('ui_extra_b1_delete_failed', 'Silinemedi'));
     }
   };
 
@@ -99,13 +101,13 @@ export default function MyReadingsPage() {
               href={localizePath(localeStr, '/dashboard')}
               className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-brand-gold tracking-[0.18em] uppercase mb-4"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Panele Dön
+              <ArrowLeft className="w-3.5 h-3.5" /> {ui('ui_extra_b1_back_to_dashboard_2', 'Back to Dashboard')}
             </Link>
             <h1 className={`${cinzel.className} text-4xl md:text-5xl text-foreground`}>
-              Geçmiş Yorumlarım
+              {ui('ui_extra_b1_my_past_readings', 'My Past Readings')}
             </h1>
             <p className="text-muted-foreground italic font-serif mt-2">
-              Kader çarkındaki izleri takip et, istediğin zaman sil.
+              {ui('ui_extra_b1_readings_subtitle', 'Follow the traces in the wheel of fate and delete them whenever you want.')}
             </p>
           </div>
           {(history?.length ?? 0) > 0 && (
@@ -116,7 +118,7 @@ export default function MyReadingsPage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[var(--gm-error)]/40 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 transition-colors text-xs font-bold uppercase tracking-[0.18em] disabled:opacity-50 self-start md:self-auto"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              {deletingAll ? 'Siliniyor…' : 'Tümünü Sil'}
+              {deletingAll ? 'Deleting…' : 'Delete All'}
             </button>
           )}
         </div>
@@ -184,11 +186,11 @@ export default function MyReadingsPage() {
                       <span className="text-[10px] text-muted-foreground/40">•</span>
                       <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-widest">
                         <Calendar className="w-3 h-3" />{' '}
-                        {new Date(item.created_at).toLocaleDateString('tr-TR')}
+                        {new Date(item.created_at).toLocaleDateString(localeStr === 'tr' ? 'tr-TR' : 'en-US')}
                       </span>
                     </div>
                     <h3 className="text-base font-bold text-foreground truncate">
-                      {item.title || `${config.label} Analizi`}
+                      {item.title || `${config.label} Analysis`}
                     </h3>
                     {item.snippet && (
                       <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
@@ -200,7 +202,7 @@ export default function MyReadingsPage() {
                   <Link
                     href={itemHref}
                     className="hidden sm:flex w-10 h-10 rounded-full bg-surface-high/50 items-center justify-center text-muted-foreground hover:text-brand-gold hover:bg-brand-gold/10 transition-all"
-                    aria-label="Aç"
+                    aria-label="Open"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </Link>
@@ -210,7 +212,7 @@ export default function MyReadingsPage() {
                     onClick={() => handleDelete(item.type, item.id, item.title)}
                     disabled={deletingOne}
                     className="w-10 h-10 rounded-full bg-[var(--gm-error)]/5 flex items-center justify-center text-[var(--gm-error)] hover:bg-[var(--gm-error)]/15 transition-colors disabled:opacity-40"
-                    aria-label="Sil"
+                    aria-label="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -223,14 +225,14 @@ export default function MyReadingsPage() {
             <Clock className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
             <p className="text-muted-foreground font-serif italic">
               {filter === 'all'
-                ? 'Henüz bir yorumun bulunmuyor.'
-                : 'Bu kategoride yorumun yok.'}
+                ? 'You do not have any readings yet.'
+                : 'You do not have a reading in this category.'}
             </p>
             <Link
               href={localizePath(localeStr, '/')}
               className="mt-6 inline-block text-brand-gold font-bold uppercase tracking-widest text-sm hover:underline"
             >
-              Keşfetmeye Başla
+              Start Exploring
             </Link>
           </div>
         )}

@@ -3,8 +3,10 @@
 import React from 'react';
 import { Quote, Star } from 'lucide-react';
 import { useListReviewsPublicQuery } from '@/integrations/rtk/public/reviews.public.endpoints';
+import { useUiSection } from '@/i18n';
 
 export default function HomeTestimonialsSection() {
+  const { ui } = useUiSection('ui_extra' as any);
   const { data: reviews = [], isLoading } = useListReviewsPublicQuery({
     limit: 6,
     approved: true,
@@ -19,13 +21,13 @@ export default function HomeTestimonialsSection() {
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
           <span className="font-display text-[10px] tracking-[0.5em] text-[var(--gm-gold-deep)] uppercase mb-4 block">
-            Deneyimler
+            {ui('ui_extra_b3_testimonials_label', 'Deneyimler')}
           </span>
           <h2 className="font-display text-3xl md:text-5xl text-[var(--gm-text)] mb-6">
-            Danışan <span className="text-[var(--gm-gold)]">Yorumları</span>
+            {ui('ui_extra_b3_testimonials_title_a', 'Client')} <span className="text-[var(--gm-gold)]">{ui('ui_extra_b3_testimonials_title_b', 'Reviews')}</span>
           </h2>
           <p className="font-serif italic text-[var(--gm-text-dim)] max-w-2xl mx-auto">
-            GoldMoodAstro ile hayatına dokunduğumuz binlerce kullanıcıdan sadece birkaçı.
+            {ui('ui_extra_b3_testimonials_desc', 'A few of the thousands of users whose lives GoldMoodAstro has touched.')}
           </p>
         </div>
 
@@ -37,8 +39,8 @@ export default function HomeTestimonialsSection() {
           ) : (
             reviews.map((review, idx) => (
               (() => {
-                const reviewerName = review.name || 'Anonim Kullanıcı';
-                const targetName = review.target_type === 'consultant' ? 'Danışmanlık' : review.target_type || 'Danışmanlık';
+                const reviewerName = review.name || ui('ui_extra_b3_testimonials_anon', 'Anonymous User');
+                const targetName = review.target_type === 'consultant' ? ui('ui_extra_b3_testimonials_consulting', 'Consulting') : review.target_type || ui('ui_extra_b3_testimonials_consulting', 'Consulting');
 
                 return (
               <div

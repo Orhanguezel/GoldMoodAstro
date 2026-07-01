@@ -13,6 +13,7 @@ import {
 } from '@/integrations/rtk/public/birth_charts.endpoints';
 import { useAuthStore } from '@/features/auth/auth.store';
 import ShareCard from '@/components/common/ShareCard';
+import { useUiSection } from '@/i18n';
 
 const PLANET_ORDER: PlanetKey[] = [
   'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
@@ -21,9 +22,9 @@ const PLANET_ORDER: PlanetKey[] = [
 const SIGN_SYMBOLS = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
 
 const SIGN_LABELS: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
 };
 
 function point(longitude: number, radius: number, center = 180) {
@@ -167,17 +168,16 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
 export default function BirthChartPageClient() {
   const params = useParams<{ locale?: string }>();
   const locale = params?.locale || 'tr';
+  const { ui } = useUiSection('ui_extra' as any);
   const { isAuthenticated } = useAuthStore();
   const [chart, setChart] = useState<BirthChart | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  // Login kullanıcı için kayıtlı haritaları çek
   const { data: savedCharts } = useListMyBirthChartsQuery(undefined, {
     skip: !isAuthenticated,
   });
   const [deleteChart] = useDeleteBirthChartMutation();
 
-  // İlk yüklenmede en son kaydedilmiş haritayı otomatik göster
   useEffect(() => {
     if (!chart && !showForm && savedCharts && savedCharts.length > 0) {
       setChart(savedCharts[0]);
@@ -186,14 +186,14 @@ export default function BirthChartPageClient() {
 
   async function handleDelete() {
     if (!chart) return;
-    if (!confirm('Bu haritayı silmek istediğine emin misin?')) return;
+    if (!confirm(ui('ui_extra_b0_bc_delete_confirm', 'Are you sure you want to delete this chart?'))) return;
     try {
       await deleteChart(chart.id).unwrap();
-      toast.success('Harita silindi');
+      toast.success(ui('ui_extra_b0_bc_deleted', 'Chart deleted'));
       setChart(null);
       setShowForm(true);
     } catch {
-      toast.error('Silinemedi.');
+      toast.error(ui('ui_extra_b0_bc_delete_failed', 'Could not delete.'));
     }
   }
 
@@ -205,14 +205,14 @@ export default function BirthChartPageClient() {
             <div className="mx-auto mb-16 max-w-[var(--gm-w-narrow)] text-center">
               <div className="flex items-center justify-center gap-3 mb-6">
                 <span className="w-8 h-px bg-[var(--gm-primary)]" />
-                <span className="text-[var(--gm-primary)] font-bold text-xs uppercase tracking-[0.2em]">Kozmik Rehber</span>
+                <span className="text-[var(--gm-primary)] font-bold text-xs uppercase tracking-[0.2em]">{ui('ui_extra_b0_bc_cosmic_guide', 'Cosmic Guide')}</span>
                 <span className="w-8 h-px bg-[var(--gm-primary)]" />
               </div>
               <h2 className="mb-8 font-serif text-[clamp(2.5rem,5vw,4.5rem)] font-light leading-tight text-[var(--gm-text)]">
-                Gökyüzündeki İmzanız
+                {ui('ui_extra_b0_bc_signature_heading', 'Your Signature in the Sky')}
               </h2>
               <p className="text-xl font-serif italic text-[var(--gm-text-dim)] leading-relaxed">
-                Doğduğunuz anın gezegen konumlarını, ev yerleşimlerini ve temel açılarını keşfederek ruhsal DNA'nızı analiz edin.
+                {ui('ui_extra_b0_bc_signature_desc', 'Analyze your spiritual DNA by exploring the planetary positions, house placements and core aspects of your birth moment.')}
               </p>
             </div>
             <div className="max-w-[var(--gm-w-narrow)] mx-auto">
@@ -245,9 +245,9 @@ export default function BirthChartPageClient() {
                 </div>
 
                 <div className="mt-12 pt-8 border-t border-[var(--gm-border-soft)] space-y-4">
-                  <ShareCard 
-                    title="Doğum Haritamı Paylaş"
-                    shareText={`GoldMoodAstro'da doğum haritamı çıkardım ✨\n☀️ Güneş: ${SIGN_LABELS[chart.chart_data.planets.sun?.sign || ''] || chart.chart_data.planets.sun?.sign}  •  🌙 Ay: ${SIGN_LABELS[chart.chart_data.planets.moon?.sign || ''] || chart.chart_data.planets.moon?.sign}  •  ↑ Yükselen: ${SIGN_LABELS[chart.chart_data.ascendant?.sign || ''] || chart.chart_data.ascendant?.sign}\nSeninkini de keşfet:`}
+                  <ShareCard
+                    title={ui('ui_extra_b0_bc_share_title', 'Share My Birth Chart')}
+                    shareText={`I created my birth chart on GoldMoodAstro ✨\n☀️ Sun: ${SIGN_LABELS[chart.chart_data.planets.sun?.sign || ''] || chart.chart_data.planets.sun?.sign}  •  🌙 Moon: ${SIGN_LABELS[chart.chart_data.planets.moon?.sign || ''] || chart.chart_data.planets.moon?.sign}  •  ↑ Rising: ${SIGN_LABELS[chart.chart_data.ascendant?.sign || ''] || chart.chart_data.ascendant?.sign}\nDiscover yours too:`}
                     variant="birth-chart"
                     data={{
                       sun: SIGN_LABELS[chart.chart_data.planets.sun?.sign || ''] || chart.chart_data.planets.sun?.sign,
@@ -260,7 +260,7 @@ export default function BirthChartPageClient() {
                     onClick={() => { setChart(null); setShowForm(true); }}
                     className="flex items-center gap-3 text-[var(--gm-primary)] font-bold text-xs uppercase tracking-widest hover:translate-x-2 transition-transform"
                   >
-                    <ChevronLeft className="w-4 h-4" /> Yeni Harita Oluştur
+                    <ChevronLeft className="w-4 h-4" /> {ui('ui_extra_b0_bc_new_chart', 'Create New Chart')}
                   </button>
                   {isAuthenticated && (savedCharts?.some((c) => c.id === chart.id) ?? false) && (
                     <button
@@ -268,16 +268,15 @@ export default function BirthChartPageClient() {
                       onClick={handleDelete}
                       className="flex items-center gap-3 text-[var(--gm-text-dim)] hover:text-[var(--gm-error)] text-[10px] uppercase tracking-widest transition-colors"
                     >
-                      <Trash2 className="w-3 h-3" /> Bu haritayı sil
+                      <Trash2 className="w-3 h-3" /> {ui('ui_extra_b0_bc_delete_this', 'Delete this chart')}
                     </button>
                   )}
                 </div>
 
-                {/* Birden fazla kayıtlı harita varsa hızlı seçim */}
                 {isAuthenticated && savedCharts && savedCharts.length > 1 && (
                   <div className="mt-6 pt-6 border-t border-[var(--gm-border-soft)]">
                     <p className="font-display text-[9px] tracking-[0.3em] uppercase text-[var(--gm-primary-dark)] mb-3">
-                      Diğer haritalarım
+                      {ui('ui_extra_b0_bc_other_charts', 'My other charts')}
                     </p>
                     <div className="space-y-1.5">
                       {savedCharts.filter((c) => c.id !== chart.id).map((c) => (
@@ -296,12 +295,12 @@ export default function BirthChartPageClient() {
               </div>
 
               <div className="p-10 rounded-3xl bg-[var(--gm-surface-high)] border border-[var(--gm-primary)]/20 shadow-[var(--gm-shadow-soft)]">
-                <h4 className="font-serif text-2xl text-[var(--gm-text)] mb-4">Derin Analiz</h4>
+                <h4 className="font-serif text-2xl text-[var(--gm-text)] mb-4">{ui('ui_extra_b0_bc_deep_analysis', 'Deep Analysis')}</h4>
                 <p className="text-[var(--gm-text-dim)] text-sm leading-relaxed mb-8">
-                  Bu harita sizin gökyüzündeki parmak izinizdir. Gezegenlerin ev yerleşimleri ve birbirleriyle olan açıları hayatınızdaki temel potansiyelleri gösterir.
+                  {ui('ui_extra_b0_bc_deep_analysis_desc', 'This chart is your fingerprint in the sky. Planetary house placements and their aspects reveal the core potentials in your life.')}
                 </p>
                 <Link href={`/${locale}/consultants`} className="flex w-full items-center justify-center gap-3 rounded-full bg-[var(--gm-primary)] px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[var(--gm-shadow-card)] transition-all hover:-translate-y-0.5 hover:bg-[var(--gm-primary-dark)]">
-                  Uzman Analizi Al <Sparkles className="w-4 h-4" />
+                  {ui('ui_extra_b0_bc_expert_analysis', 'Get Expert Analysis')} <Sparkles className="w-4 h-4" />
                 </Link>
               </div>
             </aside>
@@ -322,7 +321,7 @@ export default function BirthChartPageClient() {
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-bold text-[var(--gm-text)] uppercase tracking-wider">{planet.name}</span>
-                          <span className="text-[10px] text-[var(--gm-primary)] font-bold">{planet.house}. EV</span>
+                          <span className="text-[10px] text-[var(--gm-primary)] font-bold">{planet.house}. {ui('ui_extra_b0_bc_house_label', 'EV')}</span>
                         </div>
                         <div className="text-xs text-[var(--gm-text-dim)] flex items-center gap-2">
                           <span className="text-[var(--gm-primary)]">{SIGN_LABELS[planet.sign] ?? planet.sign_label}</span>

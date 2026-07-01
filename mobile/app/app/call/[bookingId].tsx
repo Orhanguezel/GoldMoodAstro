@@ -64,6 +64,7 @@ function buildScreenStyles(t: AppTheme) {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { VideoView } from '@livekit/react-native';
 import type { VideoTrack } from 'livekit-client';
 
@@ -106,6 +107,7 @@ const formatDuration = (seconds: number) => {
 export default function CallScreen() {
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const { bookingId: rawId } = useLocalSearchParams<{ bookingId: string }>();
   const bookingId = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -125,7 +127,7 @@ export default function CallScreen() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isVideoCall = booking?.media_type === 'video';
-  const remoteName = booking?.consultant?.full_name || 'Danışman';
+  const remoteName = booking?.consultant?.full_name || t('call.consultantFallback', 'Danışman');
 
   const refreshTrackState = (room: LiveKitRoom | null) => {
     if (!room) return;
@@ -217,11 +219,11 @@ export default function CallScreen() {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={colors.gold} size="large" />
-        <Text style={styles.loaderText}>Görüşme Başlatılıyor...</Text>
+        <Text style={styles.loaderText}>{t('call.starting', 'Görüşme Başlatılıyor...')}</Text>
         {bookingId ? (
           <Pressable style={styles.loaderMsgBtn} onPress={openBookingChat}>
             <MessageCircle size={18} color={colors.gold} />
-            <Text style={styles.loaderMsgText}>Mesaj Gönder</Text>
+            <Text style={styles.loaderMsgText}>{t('booking.sendMessage', 'Mesaj Gönder')}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -238,7 +240,7 @@ export default function CallScreen() {
               <Text style={styles.name}>{remoteName}</Text>
               <View style={styles.statusRow}>
                 <View style={[styles.statusDot, connected ? styles.online : styles.offline]} />
-                <Text style={styles.statusText}>{connected ? 'CANLI SEANS' : 'BAĞLANIYOR'}</Text>
+                <Text style={styles.statusText}>{connected ? t('call.liveSession', 'CANLI SEANS') : t('call.connectingStatus', 'BAĞLANIYOR')}</Text>
               </View>
             </View>
             <View style={styles.timer}>
@@ -253,7 +255,7 @@ export default function CallScreen() {
                 {remoteVideoTrack ? (
                   <VideoView style={styles.remoteVideo} videoTrack={remoteVideoTrack as any} />
                 ) : (
-                  <View style={styles.placeholder}><ActivityIndicator color={colors.gold} /><Text style={styles.placeholderText}>Görüntü bekleniyor...</Text></View>
+                  <View style={styles.placeholder}><ActivityIndicator color={colors.gold} /><Text style={styles.placeholderText}>{t('call.waitingVideo', 'Görüntü bekleniyor...')}</Text></View>
                 )}
                 {localVideoTrack && (
                   <View style={styles.localPreview}>
@@ -273,7 +275,7 @@ export default function CallScreen() {
                   </View>
                   {connected && <View style={styles.pulse} />}
                 </View>
-                <Text style={styles.audioInfo}>Sesli Görüşme Aktif</Text>
+                <Text style={styles.audioInfo}>{t('call.audioActive', 'Sesli Görüşme Aktif')}</Text>
               </View>
             )}
           </View>

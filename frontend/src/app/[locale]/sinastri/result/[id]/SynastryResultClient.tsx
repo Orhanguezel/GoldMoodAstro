@@ -14,12 +14,14 @@ import { useGetSynastryReadingByIdQuery } from '@/integrations/rtk/hooks';
 import ShareCard from '@/components/common/ShareCard';
 import ConsultantFunnelCTA from '@/components/common/ConsultantFunnelCTA';
 import { useParams, useRouter } from 'next/navigation';
+import { useUiSection, type UiSectionKey } from '@/i18n';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
 export default function SynastryResultClient() {
   const { id, locale } = useParams();
   const router = useRouter();
+  const { ui } = useUiSection('ui_results' as UiSectionKey);
   const { data: res, isLoading, error } = useGetSynastryReadingByIdQuery(id as string);
 
   if (isLoading) {
@@ -35,7 +37,7 @@ export default function SynastryResultClient() {
             <Heart className="w-8 h-8 text-brand-gold fill-brand-gold animate-pulse" />
           </div>
         </div>
-        <p className="text-muted-foreground font-serif italic tracking-widest animate-pulse">Kader Bağları Çözümleniyor...</p>
+        <p className="text-muted-foreground font-serif italic tracking-widest animate-pulse">{ui('ui_results_synastry_loading', 'Decoding destiny bonds...')}</p>
       </div>
     );
   }
@@ -43,13 +45,13 @@ export default function SynastryResultClient() {
   if (error || !res) {
     return (
       <div className="text-center py-40 space-y-8">
-        <h2 className={`${cinzel.className} text-3xl text-foreground`}>Sonuç Bulunamadı</h2>
-        <p className="text-muted-foreground">Aradığınız aşk uyumu kaydı mevcut değil veya bir hata oluştu.</p>
-        <button 
+        <h2 className={`${cinzel.className} text-3xl text-foreground`}>{ui('ui_results_not_found_title', 'Result Not Found')}</h2>
+        <p className="text-muted-foreground">{ui('ui_results_synastry_not_found_desc', 'The love compatibility record you are looking for does not exist or an error occurred.')}</p>
+        <button
           onClick={() => router.push(`/${locale}/sinastri`)}
           className="inline-flex items-center gap-2 text-brand-gold font-bold"
         >
-          YENİ UYUM ANALİZİ
+          {ui('ui_results_synastry_new_analysis', 'NEW COMPATIBILITY ANALYSIS')}
         </button>
       </div>
     );
@@ -66,7 +68,7 @@ export default function SynastryResultClient() {
       >
         <div className="w-full lg:w-1/3 space-y-6">
           <div className="bg-surface/30 border border-border/20 rounded-[2.5rem] p-8 text-center space-y-6 backdrop-blur-xl">
-            <h3 className={`${cinzel.className} text-xl text-foreground tracking-widest`}>Uyum Skoru</h3>
+            <h3 className={`${cinzel.className} text-xl text-foreground tracking-widest`}>{ui('ui_results_synastry_score', 'Compatibility Score')}</h3>
             <div className="relative inline-block">
               <svg className="w-40 h-40 transform -rotate-90">
                 <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-border/10" />
@@ -75,12 +77,12 @@ export default function SynastryResultClient() {
               <div className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-brand-primary">%{result.result?.score ?? 0}</div>
             </div>
             <div className="text-sm font-serif italic text-muted-foreground">
-               Sen & {result.partner_data?.name ?? 'Partner'}
+               {ui('ui_results_synastry_you', 'You')} & {result.partner_data?.name ?? ui('ui_results_partner', 'Partner')}
             </div>
           </div>
           
           <div className="bg-surface/30 border border-border/20 rounded-[2.5rem] p-8 space-y-6 backdrop-blur-xl">
-            <h4 className="text-[10px] font-bold text-brand-gold uppercase tracking-[0.3em] mb-4">ÖNEMLİ AÇILAR</h4>
+            <h4 className="text-[10px] font-bold text-brand-gold uppercase tracking-[0.3em] mb-4">{ui('ui_results_synastry_important_aspects', 'IMPORTANT ASPECTS')}</h4>
             <div className="space-y-4">
               {result.result?.aspects?.slice(0, 8).map((a: any, i: number) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-surface-high/30 border border-border/10">
@@ -95,7 +97,7 @@ export default function SynastryResultClient() {
             onClick={() => router.push(`/${locale}/sinastri`)}
             className="w-full flex items-center justify-center gap-3 py-5 rounded-[2.5rem] border border-[var(--gm-text)]/5 hover:bg-surface-high transition-all text-muted-foreground text-sm font-bold tracking-widest group shadow-lg"
           >
-            <ChevronLeft className="w-4 h-4" /> YENİ ANALİZ YAP
+            <ChevronLeft className="w-4 h-4" /> {ui('ui_results_new_analysis', 'START NEW ANALYSIS')}
           </button>
         </div>
 
@@ -107,13 +109,13 @@ export default function SynastryResultClient() {
           <div className="space-y-6 relative">
             <div className="flex items-center gap-2 text-brand-primary">
               <Star className="w-5 h-5 fill-brand-primary" />
-              <span className="text-[10px] font-bold tracking-[0.4em] uppercase">Derin Analiz</span>
+              <span className="text-[10px] font-bold tracking-[0.4em] uppercase">{ui('ui_results_synastry_deep_analysis', 'Deep Analysis')}</span>
             </div>
             <h2 className={`${cinzel.className} text-4xl text-foreground leading-tight`}>
-              Kozmik <span className="text-brand-primary">Bağlantı</span> Raporu
+              {ui('ui_results_synastry_report_title_1', 'Cosmic')} <span className="text-brand-primary">{ui('ui_results_synastry_report_title_2', 'Connection')}</span> {ui('ui_results_synastry_report_title_3', 'Report')}
             </h2>
             <p className="text-muted-foreground font-serif italic text-lg leading-relaxed">
-              Yıldızların rehberliğinde hazırlanan özel uyum analiziniz:
+              {ui('ui_results_synastry_report_intro', 'Your private compatibility analysis prepared with the guidance of the stars:')}
             </p>
           </div>
 
@@ -135,15 +137,15 @@ export default function SynastryResultClient() {
           <div className="pt-10 border-t border-border/10 flex flex-col sm:flex-row items-center justify-between gap-8">
             <div className="flex items-center gap-3 text-muted-foreground/60">
               <ShieldCheck className="w-4 h-4" />
-              <span className="text-[10px] font-bold tracking-widest uppercase">Güvenli ve Gizli Analiz</span>
+              <span className="text-[10px] font-bold tracking-widest uppercase">{ui('ui_results_synastry_secure_private', 'Secure and Private Analysis')}</span>
             </div>
-            <ShareCard 
-              title="Aşk Uyumumuzu Paylaş"
-              shareText={`GoldMoodAstro'da aşk uyumumuzu ölçtüm ✨\n❤️ Uyum Skoru: %${result.result?.score}\nPartnerimle olan kozmik bağımızı keşfet:`}
+            <ShareCard
+              title={ui('ui_results_synastry_share_title', 'Share Our Love Compatibility')}
+              shareText={`I measured our love compatibility on GoldMoodAstro\nCompatibility Score: %${result.result?.score}\nDiscover the cosmic bond with my partner:`}
               variant="synastry"
               data={{
-                partnerA: 'Sen',
-                partnerB: result.partner_data?.name ?? 'Partner',
+                partnerA: ui('ui_results_synastry_you', 'You'),
+                partnerB: result.partner_data?.name ?? ui('ui_results_partner', 'Partner'),
                 scoreLove: result.result?.score,
                 scoreAttraction: result.result?.score // Reusing for now
               }}

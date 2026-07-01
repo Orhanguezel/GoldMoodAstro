@@ -11,6 +11,7 @@ import PageContainer from '@/components/common/PageContainer';
 export default function ForgotPasswordPage() {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_auth', locale as any);
+  const { ui: uiX } = useUiSection('ui_extra' as any, locale as any);
 
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
@@ -25,13 +26,7 @@ export default function ForgotPasswordPage() {
     setFormError(null);
 
     if (!email.trim()) {
-      setFormError(
-        locale === 'de'
-          ? 'Bitte geben Sie Ihre E-Mail-Adresse ein.'
-          : locale === 'tr'
-            ? 'Lütfen e-posta adresinizi girin.'
-            : 'Please enter your email address.',
-      );
+      setFormError(uiX('ui_extra_b1_enter_email', 'Please enter your email address.'));
       return;
     }
 
@@ -53,24 +48,16 @@ export default function ForgotPasswordPage() {
             </svg>
           </div>
           <h2 className="text-2xl font-serif text-(--gm-text) mb-3">
-            {locale === 'de'
-              ? 'E-Mail gesendet'
-              : locale === 'tr'
-                ? 'E-posta Gönderildi'
-                : 'Email Sent'}
+            {uiX('ui_extra_b1_email_sent_title', 'Email Sent')}
           </h2>
           <p className="text-(--gm-text-dim) mb-6">
-            {locale === 'de'
-              ? 'Wenn ein Konto mit dieser E-Mail-Adresse existiert, haben wir Ihnen einen Link zum Zurücksetzen des Passworts gesendet.'
-              : locale === 'tr'
-                ? 'Bu e-posta adresiyle bir hesap varsa, şifre sıfırlama bağlantısı gönderildi. Lütfen e-postanızı kontrol edin.'
-                : 'If an account with that email exists, we have sent a password reset link. Please check your email.'}
+            {uiX('ui_extra_b1_reset_email_sent_body', 'If an account exists with this email address, a password reset link has been sent. Please check your inbox.')}
           </p>
           <Link
             href={loginHref}
             className="btn-premium inline-block py-3 px-8 text-xs"
           >
-            {locale === 'de' ? 'Zurück zum Login' : locale === 'tr' ? 'Giriş Sayfasına Dön' : 'Back to Login'}
+            {uiX('ui_extra_b1_back_to_login', 'Back to Login')}
           </Link>
         </div>
       </PageContainer>
@@ -87,18 +74,10 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-[var(--gm-w-form)] mx-auto bg-(--gm-surface) p-8 md:p-12 rounded-[24px] border border-(--gm-border-soft) shadow-(--gm-shadow-soft) relative z-10">
         <div className="text-center mb-8">
           <h3 className="text-3xl font-serif text-(--gm-text) mb-3">
-            {locale === 'de'
-              ? 'Passwort vergessen'
-              : locale === 'tr'
-                ? 'Şifremi Unuttum'
-                : 'Forgot Password'}
+            {uiX('ui_extra_b1_forgot_password_title', 'Forgot Password')}
           </h3>
           <p className="text-(--gm-text-dim) leading-relaxed">
-            {locale === 'de'
-              ? 'Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen.'
-              : locale === 'tr'
-                ? 'E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.'
-                : 'Enter your email address and we will send you a reset link.'}
+            {uiX('ui_extra_b1_forgot_password_lead', 'Enter your email address and we will send you a password reset link.')}
           </p>
         </div>
 
@@ -135,8 +114,8 @@ export default function ForgotPasswordPage() {
             disabled={isLoading}
           >
             {isLoading
-              ? (locale === 'de' ? 'Wird gesendet...' : locale === 'tr' ? 'Gönderiliyor...' : 'Sending...')
-              : (locale === 'de' ? 'Link senden' : locale === 'tr' ? 'Bağlantı Gönder' : 'Send Reset Link')}
+              ? uiX('ui_extra_b1_sending', 'Sending...')
+              : uiX('ui_extra_b1_send_reset_link', 'Send Link')}
           </button>
         </form>
 
@@ -145,7 +124,7 @@ export default function ForgotPasswordPage() {
             href={loginHref}
             className="text-xs font-bold uppercase tracking-[0.18em] text-(--gm-text-muted) hover:text-(--gm-gold) transition-all"
           >
-            {locale === 'de' ? '← Zurück zum Login' : locale === 'tr' ? '← Giriş Sayfasına Dön' : '← Back to Login'}
+            {uiX('ui_extra_b1_back_to_login_arrow', '← Back to Login')}
           </Link>
         </div>
       </div>

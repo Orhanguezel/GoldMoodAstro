@@ -1,21 +1,22 @@
 // =============================================================
 // FILE: src/components/common/RichContentEditor.tsx
-// goldmoodastro – Zengin HTML Editörü + Canlı Önizleme (depsiz)
-//  - contentEditable tabanlı WYSIWYG
-//  - Tablo ve Resim ekleme butonları
-//  - Kaynak (HTML) sekmesi
-//  - Önizleme anlık güncellenir
-//  - Eski {"html":"..."} kayıtlarını otomatik düz HTML'e çevirir
+// goldmoodastro - rich HTML editor with live preview and no extra deps
+//  - contentEditable based WYSIWYG
+//  - Table and image insertion controls
+//  - Source (HTML) tab
+//  - Live preview
+//  - Automatically normalizes legacy {"html":"..."} records to plain HTML
 //
 // FIXES (FINAL):
-//  - ✅ H2/H3 buton label/arg düzeltildi
+//  - H2/H3 button label/arg fixed
 //  - ✅ formatBlock arg: <p>, <h2>, <h3>
-//  - ✅ insertHtmlAtCursor caret davranışı iyileştirildi
+//  - insertHtmlAtCursor caret behavior improved
 // =============================================================
 
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useUiSection } from '@/i18n';
 import {
   Bold,
   Code2,
@@ -39,8 +40,8 @@ export type RichContentEditorProps = {
   disabled?: boolean;
   height?: string;
   /**
-   * Opsiyonel image upload hook'u.
-   * Storage modülüne upload edip public URL döndürmek için kullanabilirsin.
+   * Optional image upload hook.
+   * Can upload to storage and return a public URL.
    */
   onUploadImage?: (file: File) => Promise<string>;
   showHelp?: boolean;
@@ -60,7 +61,7 @@ function normalizeLegacyHtmlValue(raw: string | undefined | null): string {
       const parsed = JSON.parse(trimmed) as any;
       if (parsed && typeof parsed.html === 'string') return parsed.html;
     } catch {
-      // parse edilemezse olduğu gibi bırak
+      // Leave invalid JSON untouched.
     }
   }
   return raw;
@@ -88,7 +89,7 @@ function insertHtmlAtCursor(html: string) {
 
   range.insertNode(frag);
 
-  // caret: inserted content sonrası
+  // Move caret after inserted content.
   if (lastNode) {
     const after = document.createRange();
     after.setStartAfter(lastNode);
@@ -99,7 +100,7 @@ function insertHtmlAtCursor(html: string) {
 }
 
 const RichContentEditor: React.FC<RichContentEditorProps> = ({
-  label = 'İçerik',
+  label,
   value,
   onChange,
   disabled = false,
@@ -108,6 +109,8 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
   showHelp = true,
   showPreview = true,
 }) => {
+  const { ui } = useUiSection('ui_editor');
+  const resolvedLabel = label ?? ui('ui_editor_label_content', 'Content');
   const editorRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const toolbarButtonClass =
@@ -117,7 +120,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
   const [activeTab, setActiveTab] = useState<ActiveTab>('visual');
   const [html, setHtml] = useState<string>(normalizeLegacyHtmlValue(value));
 
-  // dış value sync + legacy normalize
+  // Sync external value and normalize legacy data.
   useEffect(() => {
     const normalized = normalizeLegacyHtmlValue(value);
     setHtml(normalized);
@@ -169,7 +172,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
       document.execCommand(command, false, valueArg);
       if (editorRef.current) propagateChange(editorRef.current.innerHTML);
     } catch {
-      // sessiz geç
+      // Ignore unsupported browser command failures.
     }
   };
 
@@ -185,8 +188,12 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
 
     if (command === 'insertTable') {
       focusEditor();
+      const th1 = ui('ui_editor_table_header_1', 'Header 1');
+      const th2 = ui('ui_editor_table_header_2', 'Header 2');
+      const cell1 = ui('ui_editor_table_cell_1', 'Cell 1');
+      const cell2 = ui('ui_editor_table_cell_2', 'Cell 2');
       const tableHtml =
-        '<table class="table table-bordered"><thead><tr><th>Başlık 1</th><th>Başlık 2</th></tr></thead><tbody><tr><td>Hücre 1</td><td>Hücre 2</td></tr></tbody></table><p></p>';
+        `<table class="table table-bordered"><thead><tr><th>${th1}</th><th>${th2}</th></tr></thead><tbody><tr><td>${cell1}</td><td>${cell2}</td></tr></tbody></table><p></p>`;
       insertHtmlAtCursor(tableHtml);
       if (editorRef.current) propagateChange(editorRef.current.innerHTML);
       return;
@@ -201,7 +208,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
 
       // yoksa URL prompt
       if (typeof window !== 'undefined') {
-        const url = window.prompt("Resim URL'si girin:");
+        const url = window.prompt(ui('ui_editor_image_url_prompt', 'Enter image URL:'));
         if (url && url.trim()) {
           const safeUrl = url.trim();
           const imgHtml = `<img src="${safeUrl}" alt="" class="img-fluid" style="max-width: 100%; height: auto;" />`;
@@ -244,7 +251,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
 
   return (
     <div className="mt-3">
-      {label && <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-[var(--gm-text-dim)]">{label}</label>}
+      {resolvedLabel && <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-[var(--gm-text-dim)]">{resolvedLabel}</label>}
 
       {/* Tabs */}
       <div className="mb-3 inline-flex rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/45 p-1 text-sm shadow-[var(--gm-shadow-soft)]">
@@ -259,7 +266,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
           disabled={disabled}
         >
           <Eye className="size-3.5" />
-          Görsel editör
+          {ui('ui_editor_tab_visual', 'Visual editor')}
         </button>
         <button
           type="button"
@@ -272,7 +279,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
           disabled={disabled}
         >
           <Code2 className="size-3.5" />
-          Kaynak (HTML)
+          {ui('ui_editor_tab_source', 'Kaynak (HTML)')}
         </button>
       </div>
 
@@ -284,7 +291,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             className={toolbarButtonClass}
             onMouseDown={(e) => handleToolbarMouseDown(e, 'bold')}
             disabled={disabled || activeTab !== 'visual'}
-            title="Kalın"
+            title={ui('ui_editor_btn_bold', 'Bold')}
           >
             <Bold className="size-4" />
           </button>
@@ -293,7 +300,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             className={toolbarButtonClass}
             onMouseDown={(e) => handleToolbarMouseDown(e, 'italic')}
             disabled={disabled || activeTab !== 'visual'}
-            title="İtalik"
+            title={ui('ui_editor_btn_italic', 'Italic')}
           >
             <Italic className="size-4" />
           </button>
@@ -302,7 +309,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             className={toolbarButtonClass}
             onMouseDown={(e) => handleToolbarMouseDown(e, 'underline')}
             disabled={disabled || activeTab !== 'visual'}
-            title="Altı çizili"
+            title={ui('ui_editor_btn_underline', 'Underline')}
           >
             <Underline className="size-4" />
           </button>
@@ -315,7 +322,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             className={toolbarButtonClass}
             onMouseDown={(e) => handleToolbarMouseDown(e, 'formatBlock', '<p>')}
             disabled={disabled || activeTab !== 'visual'}
-            title="Paragraf"
+            title={ui('ui_editor_btn_paragraph', 'Paragraf')}
           >
             <Pilcrow className="size-4" />
           </button>
@@ -324,7 +331,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             className={toolbarButtonClass}
             onMouseDown={(e) => handleToolbarMouseDown(e, 'formatBlock', '<h2>')}
             disabled={disabled || activeTab !== 'visual'}
-            title="Başlık (H2)"
+            title={ui('ui_editor_btn_heading2', 'Heading (H2)')}
           >
             <Heading2 className="size-4" />
           </button>
@@ -333,7 +340,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             className={toolbarButtonClass}
             onMouseDown={(e) => handleToolbarMouseDown(e, 'formatBlock', '<h3>')}
             disabled={disabled || activeTab !== 'visual'}
-            title="Alt başlık (H3)"
+            title={ui('ui_editor_btn_heading3', 'Subheading (H3)')}
           >
             <Heading3 className="size-4" />
           </button>
@@ -345,7 +352,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             className={toolbarButtonClass}
             onMouseDown={(e) => handleToolbarMouseDown(e, 'insertUnorderedList')}
             disabled={disabled || activeTab !== 'visual'}
-            title="Madde işaretli liste"
+            title={ui('ui_editor_btn_bullet_list', 'Bulleted list')}
           >
             <List className="size-4" />
           </button>
@@ -354,7 +361,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             className={toolbarButtonClass}
             onMouseDown={(e) => handleToolbarMouseDown(e, 'insertOrderedList')}
             disabled={disabled || activeTab !== 'visual'}
-            title="Numaralı liste"
+            title={ui('ui_editor_btn_ordered_list', 'Numbered list')}
           >
             <ListOrdered className="size-4" />
           </button>
@@ -366,7 +373,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             className={toolbarButtonClass}
             onMouseDown={(e) => handleToolbarMouseDown(e, 'insertTable')}
             disabled={disabled || activeTab !== 'visual'}
-            title="Tablo ekle"
+            title={ui('ui_editor_btn_table', 'Insert table')}
           >
             <Table2 className="size-4" />
           </button>
@@ -376,7 +383,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             className={toolbarButtonClass}
             onMouseDown={(e) => handleToolbarMouseDown(e, 'insertImage')}
             disabled={disabled || activeTab !== 'visual'}
-            title={onUploadImage ? 'Resim yükle ve ekle' : "Resim URL'si ile ekle"}
+            title={onUploadImage ? ui('ui_editor_btn_image_upload', 'Upload and insert image') : ui('ui_editor_btn_image_url', 'Insert image from URL')}
           >
             <ImageIcon className="size-4" />
           </button>
@@ -388,7 +395,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             className={toolbarButtonClass}
             onMouseDown={(e) => handleToolbarMouseDown(e, 'removeFormat')}
             disabled={disabled || activeTab !== 'visual'}
-            title="Biçimlendirmeyi temizle"
+            title={ui('ui_editor_btn_clear_format', 'Clear formatting')}
           >
             <Eraser className="size-4" />
           </button>
@@ -427,21 +434,21 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             value={html}
             onChange={(e) => propagateChange(e.target.value)}
             disabled={disabled}
-            placeholder="<p>HTML içeriği buraya yaz...</p>"
+            placeholder={ui('ui_editor_source_placeholder', '<p>Write HTML content here...</p>')}
           />
         )}
       </div>
 
       {showHelp && (
         <div className="mt-3 rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/35 px-4 py-3 text-xs leading-6 text-[var(--gm-text-dim)]">
-          Görsel editörde başlık, liste, tablo ve görsel ekleyebilir; Kaynak sekmesinde HTML'i ince ayarla düzenleyebilirsin.
+          {ui('ui_editor_help_text', 'Use the visual editor to add headings, lists, tables and images; fine tune HTML in the source tab.')}
         </div>
       )}
 
       {/* Live Preview */}
       {showPreview && (
       <div className="mt-4">
-        <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--gm-gold-dim)]">Önizleme</div>
+        <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--gm-gold-dim)]">{ui('ui_editor_preview_title', 'Preview')}</div>
         <div
           className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-bg)]/75 p-4 text-[var(--gm-text)]"
           style={{
@@ -454,7 +461,7 @@ const RichContentEditor: React.FC<RichContentEditorProps> = ({
             <div className="prose prose-sm max-w-none prose-headings:font-serif prose-headings:text-[var(--gm-text)] prose-p:text-[var(--gm-text-dim)] prose-li:text-[var(--gm-text-dim)] prose-strong:text-[var(--gm-gold)]" dangerouslySetInnerHTML={{ __html: html }} />
           ) : (
             <p className="mb-0 text-xs italic text-[var(--gm-muted)]">
-              Henüz içerik yok. Yazdıkça burada anlık olarak gözükecek.
+              {ui('ui_editor_preview_empty', 'No content yet. It will appear here as you write.')}
             </p>
           )}
         </div>

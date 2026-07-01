@@ -36,8 +36,13 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 -- 2026-04-27 vizyon revizyonu: Gold (#C9A961) + Cream (#FAF6EF) + Ink (#2A2620) + Plum (#3D2E47)
 -- Frontend'in beklediği boş default kayıtlar (404 yerine 200 boş döndürmek için).
 -- Admin panelden doldurulabilir.
+-- gtm_container_id: GTM container WDQ822LF Google'da var ama sitede AKTİF DEĞİL.
+-- GTM-öncelikli kod yüzünden dolu olursa direkt gtag yüklenmez; container boş olduğundan
+-- GA4'e veri gitmez. Direkt GA4 (gtag) kullanılıyor → boş bırakıldı (2026-06-20).
 ('01000000-0000-4000-8000-000000000020', 'gtm_container_id',         '*', ''),
+('01000000-0000-4000-8000-00000000002f', 'ga4_measurement_id',       '*', 'G-M8FPZB5FFC'),
 ('01000000-0000-4000-8000-000000000021', 'google_site_verification', '*', ''),
+('01000000-0000-4000-8000-0000000000fb', 'facebook_pixel_id',        '*', ''),
 ('01000000-0000-4000-8000-000000000022', 'site_logo_light',          '*', ''),
 ('01000000-0000-4000-8000-000000000023', 'site_logo_dark',           '*', ''),
 ('01000000-0000-4000-8000-000000000024', 'site_favicon',             '*', ''),

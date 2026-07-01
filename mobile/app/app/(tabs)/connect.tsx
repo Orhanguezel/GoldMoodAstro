@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import {
   Search,
   SlidersHorizontal,
@@ -154,6 +155,7 @@ export default function ConnectScreen() {
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const { topic } = useLocalSearchParams<{ topic?: string }>();
   const [consultants, setConsultants] = useState<Consultant[]>([]);
@@ -188,13 +190,13 @@ export default function ConnectScreen() {
   );
 
   const categories = [
-    { id: 'all', label: 'Tümü' },
-    { id: 'astrology', label: 'Astroloji' },
-    { id: 'tarot', label: 'Tarot' },
-    { id: 'numerology', label: 'Numeroloji' },
-    { id: 'relationship', label: 'İlişki' },
-    { id: 'mood', label: 'Ruh Hali' },
-    { id: 'career', label: 'Kariyer' },
+    { id: 'all', label: t('connect.catAll') },
+    { id: 'astrology', label: t('home.expertise.astrology') },
+    { id: 'tarot', label: t('home.expertise.tarot') },
+    { id: 'numerology', label: t('home.expertise.numerology') },
+    { id: 'relationship', label: t('home.expertise.relationship') },
+    { id: 'mood', label: t('connect.catMood') },
+    { id: 'career', label: t('home.expertise.career') },
   ];
 
   const funnelTopic = normalizeFunnelTopic(topic);
@@ -207,7 +209,7 @@ export default function ConnectScreen() {
   }, [funnelTopic]);
 
   const languages = [
-    { id: 'all', label: 'Tüm Diller' },
+    { id: 'all', label: t('connect.langAll') },
     { id: 'tr', label: 'TR' },
     { id: 'en', label: 'EN' },
   ];
@@ -260,7 +262,7 @@ export default function ConnectScreen() {
             <View style={styles.statDivider} />
             <View style={styles.stat}>
               <Clock size={12} color={colors.textMuted} />
-              <Text style={styles.statVal}>{item.session_duration} dk</Text>
+              <Text style={styles.statVal}>{t('connect.durationMin', { count: item.session_duration })}</Text>
             </View>
           </View>
         </View>
@@ -277,11 +279,11 @@ export default function ConnectScreen() {
         <View style={styles.features}>
           <Zap size={12} color={item.is_available ? colors.gold : colors.textMuted} />
           <Text style={[styles.featuresText, !item.is_available && styles.featuresTextMuted]}>
-            {item.is_available ? 'Şu an çevrimiçi' : 'Planlı randevu'}
+            {item.is_available ? t('connect.online') : t('connect.scheduled')}
           </Text>
         </View>
         <Pressable style={styles.actionBtn} onPress={() => openConsultant(item.id)}>
-          <Text style={styles.actionBtnText}>Profil</Text>
+          <Text style={styles.actionBtnText}>{t('connect.profile')}</Text>
         </Pressable>
       </View>
     </Pressable>
@@ -293,22 +295,22 @@ export default function ConnectScreen() {
         <View style={styles.header}>
           <MenuHeaderButton />
           <View style={styles.headerTitles}>
-            <Text style={styles.headerKicker}>UZMAN REHBERLER</Text>
-            <Text style={styles.headerTitle}>Danışmanlar</Text>
+            <Text style={styles.headerKicker}>{t('connect.kicker')}</Text>
+            <Text style={styles.headerTitle}>{t('connect.title')}</Text>
             {funnelHeadline ? (
               <Text style={styles.topicHint}>{funnelHeadline}</Text>
             ) : topic ? (
-              <Text style={styles.topicHint}>Konuya göre uzman seçimi</Text>
+              <Text style={styles.topicHint}>{t('connect.topicHint')}</Text>
             ) : null}
           </View>
           <View style={styles.headerActions}>
-            <Pressable style={styles.iconBtn} accessibilityRole="button" accessibilityLabel="Ara">
+            <Pressable style={styles.iconBtn} accessibilityRole="button" accessibilityLabel={t('connect.searchA11y')}>
               <Search size={20} color={colors.text} />
             </Pressable>
             <Pressable
               style={styles.iconBtn}
               accessibilityRole="button"
-              accessibilityLabel={filtersOpen ? 'Filtreleri kapat' : 'Filtreleri aç'}
+              accessibilityLabel={filtersOpen ? t('connect.filtersCloseA11y') : t('connect.filtersOpenA11y')}
               accessibilityState={{ expanded: filtersOpen }}
               onPress={() => setFiltersOpen((o) => !o)}
             >
@@ -323,7 +325,7 @@ export default function ConnectScreen() {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="İsim veya uzmanlık ara"
+            placeholder={t('connect.searchPlaceholder')}
             placeholderTextColor={colors.textMuted}
             style={styles.searchInput}
           />
@@ -347,20 +349,20 @@ export default function ConnectScreen() {
           <View style={styles.filterPanelWrap}>
             <View style={styles.filterPanel}>
               <View>
-                <Text style={styles.filterTitle}>ŞU AN ÇEVRİMİÇİ</Text>
+                <Text style={styles.filterTitle}>{t('connect.filterOnlineTitle')}</Text>
                 <Pressable
                   onPress={() => setOnlineOnly((v) => !v)}
                   style={[styles.togglePill, onlineOnly && styles.togglePillActive]}
                 >
                   <Zap size={13} color={onlineOnly ? colors.ink : colors.gold} />
                   <Text style={[styles.toggleText, onlineOnly && styles.toggleTextActive]}>
-                    {onlineOnly ? 'Açık' : 'Tüm danışmanlar'}
+                    {onlineOnly ? t('connect.toggleOn') : t('connect.toggleAll')}
                   </Text>
                 </Pressable>
               </View>
 
               <View>
-                <Text style={styles.filterTitle}>DİL</Text>
+                <Text style={styles.filterTitle}>{t('connect.filterLangTitle')}</Text>
                 <View style={styles.segmentRow}>
                   {languages.map((item) => (
                     <Pressable
@@ -377,7 +379,7 @@ export default function ConnectScreen() {
               </View>
 
               <View>
-                <Text style={styles.filterTitle}>PUAN</Text>
+                <Text style={styles.filterTitle}>{t('connect.filterRatingTitle')}</Text>
                 <View style={styles.segmentRow}>
                   {[0, 4, 4.5].map((rating) => (
                     <Pressable
@@ -386,7 +388,7 @@ export default function ConnectScreen() {
                       style={[styles.segmentBtn, minRating === rating && styles.segmentBtnActive]}
                     >
                       <Text style={[styles.segmentText, minRating === rating && styles.segmentTextActive]}>
-                        {rating === 0 ? 'Tümü' : `${rating}+`}
+                        {rating === 0 ? t('connect.catAll') : `${rating}+`}
                       </Text>
                     </Pressable>
                   ))}
@@ -412,7 +414,7 @@ export default function ConnectScreen() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadConsultants(); }} tintColor={colors.gold} />}
             ListEmptyComponent={
               <View style={styles.empty}>
-                <Text style={styles.emptyText}>Bu filtrelerle uygun danışman bulunmuyor.</Text>
+                <Text style={styles.emptyText}>{t('connect.emptyFiltered')}</Text>
               </View>
             }
           />

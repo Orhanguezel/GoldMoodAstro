@@ -32,34 +32,34 @@ type ZodiacPageInfo = {
 };
 
 const labels: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık'
+  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces'
 };
 
 function buildFallbackInfo(sign: string, label: string): ZodiacPageInfo {
   return {
-    title: `${label} Burcu Özellikleri`,
-    short_summary: `${label} burcu; karakter, ilişki, kariyer ve ruhsal bakım alanlarında kendine özgü motivasyonlar taşıyan güçlü bir astrolojik arketiptir.`,
-    content: `${label} burcu profili, kişinin güneş burcu üzerinden temel yaşam motivasyonlarını, ilişki kurma biçimini, karar alma tarzını ve gündelik enerji ritmini anlamaya yardımcı olur. Bu yorum tek başına kesin bir kişilik tanımı değildir; yükselen burç, Ay burcu, Venüs, Mars ve doğum haritasındaki ev yerleşimleriyle birlikte okunduğunda daha derin ve kişisel hale gelir.`,
+    title: `${label} Zodiac Traits`,
+    short_summary: `${label} is a strong astrological archetype with its own motivations across character, relationships, career and spiritual care.`,
+    content: `${label} helps explain core life motivations, relationship style, decision patterns and daily energy rhythm through the Sun sign. This reading is not a fixed personality definition; it becomes deeper and more personal when read with the rising sign, Moon sign, Venus, Mars and house placements in the birth chart.`,
     sections: [
       {
         id: `${sign}-personality-fallback`,
         key2: 'personality',
-        title: `${label} Karakteri`,
-        content: `${label} burcu karakterinde öne çıkan tema, kişinin kendi enerjisini nasıl kullandığı ve çevresiyle hangi ihtiyaç üzerinden bağ kurduğudur. Güçlü yanlar bilinçli kullanıldığında netlik, üretkenlik ve içsel yön duygusu verir; gölge taraflar ise acele karar, savunma veya duygusal kapanma gibi kalıplarla çalışılabilir hale gelir.`,
+        title: `${label} Personality`,
+        content: `${label} personality highlights how someone uses their energy and which needs shape their connections. When strengths are used consciously, they bring clarity, productivity and inner direction; shadow patterns can be explored with more awareness.`,
       },
       {
         id: `${sign}-love-fallback`,
         key2: 'love',
-        title: `${label} Aşk ve Uyum`,
-        content: `${label} burcu uyumu yalnızca güneş burcuna göre değerlendirilmemelidir. İlişkilerde Ay burcu duygusal güveni, Venüs sevgi dilini, Mars arzu ve çatışma tarzını, yükselen burç ise ilk temas biçimini gösterir. Bu nedenle en sağlıklı yorum, iki doğum haritasının tamamının birlikte okunmasıyla yapılır.`,
+        title: `${label} Love and Compatibility`,
+        content: `${label} compatibility should not be judged by Sun sign alone. In relationships, the Moon shows emotional safety, Venus shows love language, Mars shows desire and conflict style, and the rising sign shows first contact. The healthiest reading compares both complete birth charts.`,
       },
       {
         id: `${sign}-career-fallback`,
         key2: 'career',
-        title: `${label} Kariyer ve Yön`,
-        content: `${label} burcu kariyer alanında kişinin motivasyon, odak ve üretim biçimini anlamak için iyi bir başlangıçtır. Doğru çalışma ortamı, bu burcun güçlü yönlerini görünür kılar; zorlayıcı döngüler ise daha bilinçli planlama, sınır koyma ve ritim düzenleme ihtiyacını hatırlatır.`,
+        title: `${label} Career and Direction`,
+        content: `${label} is a useful starting point for understanding motivation, focus and working style. The right environment makes this sign strengths visible, while challenging cycles can point to planning, boundaries and rhythm adjustments.`,
       },
     ],
   };
@@ -95,15 +95,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sign, locale } = await params;
   const label = labels[sign] || sign;
 
-  // Admin paneldeki `burclar-sign` SEO ayarı geçerli; boşsa burç-spesifik fallback kullanılır.
-  // Title template'inde "{sign}" placeholder'ı varsa burç adıyla değiştir.
+  // Admin `burclar-sign` SEO settings win; fallback is used only when empty.
+  // If the title template contains "{sign}", it is replaced with the sign label.
   return buildPageMetadata({
     locale,
     pageKey: 'burclar-sign',
     pathname: `/burclar/${sign}`,
     fallback: {
-      title: `${label} Burcu — Özellikleri, Yorumları ve Uyumu`,
-      description: `${label} burcunun detaylı karakter analizi, aşk, kariyer ve sağlık yorumları. Günlük ${label} burcu yorumu, uyum haritası ve uzman astrolog rehberliği.`,
+      title: `${label} Zodiac — Traits, Readings and Compatibility`,
+      description: `Detailed ${label} character analysis, love, career and wellness readings. Daily ${label} horoscope, compatibility map and expert astrology guidance.`,
     },
   });
 }
@@ -124,12 +124,12 @@ export default async function SignDetailPage({ params }: Props) {
   const schema = graph([
     breadcrumbSchema([
       { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },
-      { name: locale === 'tr' ? 'Burçlar' : 'Zodiac Signs', item: `${SITE_URL}/${locale}/burclar` },
-      { name: `${label} Burcu`, item: pageUrl },
+      { name: 'Zodiac Signs', item: `${SITE_URL}/${locale}/burclar` },
+      { name: `${label} Zodiac`, item: pageUrl },
     ]),
     articleSchema({
       headline: renderedInfo.title,
-      description: renderedInfo.short_summary || `${label} burcu özellikleri, aşk, kariyer, uyum ve günlük yorum rehberi.`,
+      description: renderedInfo.short_summary || `${label} zodiac traits, love, career, compatibility and daily reading guide.`,
       image: `${SITE_URL}/uploads/zodiac/${sign}.png`,
       datePublished: '2026-04-30T00:00:00.000Z',
       dateModified: '2026-04-30T00:00:00.000Z',
@@ -141,16 +141,16 @@ export default async function SignDetailPage({ params }: Props) {
     }),
     faqSchema([
       {
-        question: `${label} burcu nedir?`,
-        answer: `${label} burcu, güneşin ${label} arketipinden geçtiği dönemde doğan kişilerin temel enerji, motivasyon ve davranış eğilimlerini anlatan astrolojik profildir.`,
+        question: `What is ${label}?`,
+        answer: `${label} is an astrological profile describing core energy, motivation and behavioral tendencies for people born while the Sun moves through this archetype.`,
       },
       {
-        question: `${label} burcu özellikleri nelerdir?`,
-        answer: renderedInfo.short_summary || `${label} burcu aşk, kariyer, ilişki, duygu düzenleme ve gündelik motivasyon başlıklarında kendine özgü güçlü yanlar ve gelişim alanları taşır.`,
+        question: `What are ${label} traits?`,
+        answer: renderedInfo.short_summary || `${label} carries distinctive strengths and growth areas in love, career, relationships, emotional regulation and daily motivation.`,
       },
       {
-        question: `${label} burcu yorumu tek başına yeterli mi?`,
-        answer: 'Güneş burcu iyi bir başlangıçtır; daha doğru yorum için yükselen burç, Ay burcu, evler, gezegen yerleşimleri ve açılar birlikte değerlendirilmelidir.',
+        question: `Is a ${label} reading enough by itself?`,
+        answer: 'The Sun sign is a useful starting point; for a more accurate reading, the rising sign, Moon sign, houses, planet placements and aspects should be considered together.',
       },
     ]),
   ]);

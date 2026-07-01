@@ -63,11 +63,13 @@ import { safeRouterBack } from '@/lib/navigation';
 import { ChevronLeft, Send, Phone, Info } from 'lucide-react-native';
 
 
+import { useTranslation } from 'react-i18next';
 import { chatApi, type ChatMessage } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatWarningBanner } from '@/components/ChatWarningBanner';
 
 export default function ChatScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -172,7 +174,7 @@ export default function ChatScreen() {
             <View style={styles.inputBox}>
               <TextInput
                 style={styles.input}
-                placeholder="Mesajınızı yazın..."
+                placeholder={t('chat.inputPlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 value={inputText}
                 onChangeText={setInputText}

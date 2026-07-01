@@ -25,9 +25,7 @@ goldmoodastro/                        ← bun workspaces root
 ├── packages/
 │   ├── shared-backend/               ← @goldmood/shared-backend (24 modül)
 │   ├── shared-ui/                    ← @goldmood/shared-ui
-│   ├── shared-types/                 ← @goldmood/shared-types
-│   ├── shared-config/                ← @goldmood/shared-config
-│   └── core/                         ← @goldmood/core
+│   └── shared-config/                ← @goldmood/shared-config
 ├── backend/                          ← Fastify API
 ├── admin_panel/                      ← Next.js admin (Faz 2'de oluşturulacak)
 └── mobile/                           ← Flutter (Faz 3'te oluşturulacak)

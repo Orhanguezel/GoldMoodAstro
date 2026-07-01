@@ -16,21 +16,22 @@ import {
 import type { BirthChart } from '@/types/common';
 
 import { useBrand } from '@/hooks/useBrand';
+import { useUiSection } from '@/i18n';
 
 type Props = {
   chart: BirthChart;
-  /** Paylaşılabilir public URL (yoksa şu anki sayfa URL'si kullanılır) */
   shareUrl?: string;
 };
 
-const SIGN_LABELS_TR: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+const SIGN_LABELS: Record<string, string> = {
+  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
 };
 
 export default function ShareBirthChart({ chart, shareUrl }: Props) {
   const { brand } = useBrand();
+  const { ui: uiS } = useUiSection('ui_share');
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -43,16 +44,15 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
   const moon = chart.chart_data?.planets?.moon?.sign;
   const rising = chart.chart_data?.ascendant?.sign;
 
-  const text = `Doğum haritamı ${brand.name}'da çıkardım ✨\n☀️ Güneş: ${sunLabel(sun)}  •  🌙 Ay: ${sunLabel(moon)}  •  ↑ Yükselen: ${sunLabel(rising)}\nSeninkini de keşfet:`;
+  const text = `${uiS('ui_share_text_birth_chart_intro', 'I created my birth chart on {brand} ✨').replace('{brand}', brand.name)}\n☀️ ${uiS('ui_share_label_sun', 'Sun')}: ${sunLabel(sun)}  •  🌙 ${uiS('ui_share_label_moon', 'Moon')}: ${sunLabel(moon)}  •  ↑ ${uiS('ui_share_label_rising', 'Rising')}: ${sunLabel(rising)}\n${uiS('ui_share_text_birth_chart_cta', 'Discover yours too:')}`;
 
   function sunLabel(sign?: string) {
     if (!sign) return '—';
-    return SIGN_LABELS_TR[sign] ?? sign;
+    return SIGN_LABELS[sign] ?? sign;
   }
 
   const enc = encodeURIComponent;
 
-  // ─── Görsel oluştur (PNG) ──────────────────────────────────
   async function generatePng(): Promise<{ blob: Blob; file: File } | null> {
     if (!cardRef.current) return null;
     try {
@@ -63,7 +63,7 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
       });
       const res = await fetch(dataUrl);
       const blob = await res.blob();
-      const file = new File([blob], `dogum-haritam-${Date.now()}.png`, { type: 'image/png' });
+      const file = new File([blob], `birth-chart-${Date.now()}.png`, { type: 'image/png' });
       return { blob, file };
     } catch (e) {
       console.error('toPng failed', e);
@@ -71,13 +71,11 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
     }
   }
 
-  // ─── Native Web Share (mobile, Instagram dahil) ────────────
   async function nativeShare() {
     setBusy(true);
     try {
       const result = await generatePng();
-      const data: ShareData = { title: 'Doğum Haritam', text, url };
-      // Görsel paylaşımı destekleniyorsa (mobilde IG, FB Story vs.)
+      const data: ShareData = { title: uiS('ui_share_card_title_birth_chart', 'My Birth Chart'), text, url };
       if (result && (navigator as any).canShare?.({ files: [result.file] })) {
         await navigator.share({ ...data, files: [result.file] });
       } else if ((navigator as any).share) {
@@ -86,19 +84,17 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
         await copyLink();
       }
     } catch (e) {
-      // Kullanıcı iptal etti — sessiz geç
     } finally {
       setBusy(false);
     }
   }
 
-  // ─── Görsel indir ──────────────────────────────────────────
   async function downloadImage() {
     setBusy(true);
     try {
       const result = await generatePng();
       if (!result) {
-        toast.error('Görsel oluşturulamadı');
+        toast.error(uiS('ui_share_toast_image_failed', 'Image could not be generated'));
         return;
       }
       const link = document.createElement('a');
@@ -106,23 +102,21 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
       link.download = result.file.name;
       link.click();
       URL.revokeObjectURL(link.href);
-      toast.success('Görsel indirildi');
+      toast.success(uiS('ui_share_toast_image_downloaded', 'Image downloaded'));
     } finally {
       setBusy(false);
     }
   }
 
-  // ─── Link kopyala ──────────────────────────────────────────
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(`${text}\n${url}`);
-      toast.success('Link kopyalandı');
+      toast.success(uiS('ui_share_toast_link_copied', 'Link copied'));
     } catch {
-      toast.error('Kopyalanamadı');
+      toast.error(uiS('ui_share_toast_copy_failed', 'Could not copy'));
     }
   }
 
-  // ─── Intent URLs ────────────────────────────────────────────
   const twitterUrl = `https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(url)}`;
   const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}&quote=${enc(text)}`;
   const whatsappUrl = `https://wa.me/?text=${enc(`${text}\n${url}`)}`;
@@ -135,10 +129,9 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
         className="inline-flex items-center justify-center gap-2 rounded-full border border-(--gm-gold) bg-(--gm-gold)/10 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.18em] text-(--gm-gold-deep) transition-colors hover:bg-(--gm-gold) hover:text-(--gm-bg-deep)"
       >
         <Share2 size={14} />
-        Paylaş
+        {uiS('ui_share_button_share', 'Share')}
       </button>
 
-      {/* Paylaşılabilir kart — modal'a render edilir, görüntülenmez ama PNG'e dönüşür */}
       <div className="fixed -left-[9999px] -top-[9999px]">
         <div
           ref={cardRef}
@@ -170,7 +163,7 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
               {brand.name}
             </div>
             <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 64, fontStyle: 'italic', lineHeight: 1.05, marginBottom: 16, color: brand.colors.text_primary }}>
-              Doğum<br/>Haritam
+              {uiS('ui_share_card_title_birth_chart', 'My Birth Chart')}
             </div>
             <div style={{ fontSize: 22, color: brand.colors.text_secondary, fontFamily: 'Manrope, sans-serif' }}>
               {chart.name}
@@ -178,9 +171,9 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-            <SignRow label="Güneş" symbol="☀️" sign={sunLabel(sun)} colors={brand.colors} />
-            <SignRow label="Ay"    symbol="🌙" sign={sunLabel(moon)} colors={brand.colors} />
-            <SignRow label="Yükselen" symbol="↑" sign={sunLabel(rising)} colors={brand.colors} />
+            <SignRow label={uiS('ui_share_label_sun', 'Sun')} symbol="☀️" sign={sunLabel(sun)} colors={brand.colors} />
+            <SignRow label={uiS('ui_share_label_moon', 'Moon')}    symbol="🌙" sign={sunLabel(moon)} colors={brand.colors} />
+            <SignRow label={uiS('ui_share_label_rising', 'Rising')} symbol="↑" sign={sunLabel(rising)} colors={brand.colors} />
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -214,17 +207,16 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
 
             <div className="mb-6">
               <div className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold-deep) uppercase">
-                Paylaş
+                {uiS('ui_share_button_share', 'Share')}
               </div>
               <h3 className="mt-1 font-serif text-2xl text-(--gm-text)">
-                Haritanı paylaş
+                {uiS('ui_share_birth_chart_modal_title', 'Share your chart')}
               </h3>
               <p className="mt-2 text-sm text-(--gm-text-dim)">
-                Görsel oluşturulup arkadaşlarına gönderilebilir.
+                {uiS('ui_share_birth_chart_modal_desc', 'An image can be generated and sent to your friends.')}
               </p>
             </div>
 
-            {/* Native share + indir */}
             <div className="grid grid-cols-2 gap-3 mb-3">
               <button
                 type="button"
@@ -233,7 +225,7 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
                 className="inline-flex flex-col items-center gap-2 rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) p-4 text-(--gm-text) transition-colors hover:border-(--gm-gold)/50 disabled:opacity-50"
               >
                 <Share2 size={20} className="text-(--gm-gold-deep)" />
-                <span className="text-xs font-medium">Hızlı paylaş</span>
+                <span className="text-xs font-medium">{uiS('ui_share_button_quick_share', 'Quick share')}</span>
               </button>
               <button
                 type="button"
@@ -242,15 +234,14 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
                 className="inline-flex flex-col items-center gap-2 rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) p-4 text-(--gm-text) transition-colors hover:border-(--gm-gold)/50 disabled:opacity-50"
               >
                 <Download size={20} className="text-(--gm-gold-deep)" />
-                <span className="text-xs font-medium">Görseli indir</span>
+                <span className="text-xs font-medium">{uiS('ui_share_button_download_image', 'Download image')}</span>
               </button>
             </div>
 
             <p className="text-[11px] text-(--gm-muted) mb-3 mt-2">
-              Instagram için: görseli indir → Instagram → Story / Post olarak yükle
+              {uiS('ui_share_instagram_instructions', 'For Instagram: download the image, then upload it as a Story or Post.')}
             </p>
 
-            {/* Platforma özel */}
             <div className="grid grid-cols-4 gap-2 mb-4">
               <a href={twitterUrl}    target="_blank" rel="noopener noreferrer" className={iconBtn} title="X (Twitter)">
                 <Twitter size={18} />
@@ -261,19 +252,18 @@ export default function ShareBirthChart({ chart, shareUrl }: Props) {
               <a href={whatsappUrl}   target="_blank" rel="noopener noreferrer" className={iconBtn} title="WhatsApp">
                 <MessageCircle size={18} />
               </a>
-              <button type="button" onClick={() => { downloadImage(); toast.info('Görseli indirip Instagram\'a yükleyebilirsin'); }} className={iconBtn} title="Instagram">
+              <button type="button" onClick={() => { downloadImage(); toast.info(uiS('ui_share_toast_instagram_hint', 'Download the image and upload it to Instagram.')); }} className={iconBtn} title="Instagram">
                 <Instagram size={18} />
               </button>
             </div>
 
-            {/* Linki kopyala */}
             <button
               type="button"
               onClick={copyLink}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) px-4 py-3 text-sm text-(--gm-text-dim) transition-colors hover:text-(--gm-text)"
             >
               <Copy size={14} />
-              Linki kopyala
+              {uiS('ui_share_button_copy_link', 'Copy link')}
             </button>
           </div>
         </div>

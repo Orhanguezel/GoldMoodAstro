@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Cinzel } from 'next/font/google';
 import Image from 'next/image';
-import { useLocaleShort } from '@/i18n';
+import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 import { ZODIAC_SIGNS } from '@/lib/zodiac/signs';
 
@@ -13,28 +13,29 @@ const cinzel = Cinzel({ subsets: ['latin'] });
 
 export default function ZodiacHub() {
   const locale = useLocaleShort();
+  const { ui } = useUiSection('ui_zodiacx' as any);
 
   return (
     <section className="reveal">
       <div className="text-center mb-16">
         <h2 className={`${cinzel.className} text-4xl md:text-5xl lg:text-6xl mb-6 text-(--gm-gold)`}>
-          Zodyak Kuşağı
+          {ui('ui_zodiacx_hub_title', 'Zodiac Circle')}
         </h2>
         <p className="text-lg text-(--gm-text-dim) max-w-2xl mx-auto italic">
-          Gökyüzünün rehberliğinde burçların derinliklerini keşfedin. Karakter analizlerinden günlük yorumlara kadar her şey burada.
+          {ui('ui_zodiacx_hub_subtitle', 'Explore the depths of the signs with guidance from the sky. From character analysis to daily readings, everything is here.')}
         </p>
         <div className="mt-8 flex items-center justify-center gap-4">
           <Link
             href={localizePath(locale, '/burcunu-ogren')}
             className="inline-flex items-center rounded-full border border-(--gm-gold)/30 bg-(--gm-gold)/10 px-5 py-3 text-sm font-semibold text-(--gm-gold) transition hover:bg-(--gm-gold) hover:text-(--gm-bg)"
           >
-            Burcunu öğren
+            {ui('ui_zodiacx_hub_learn_sign', 'Find your sign')}
           </Link>
           <Link
             href={localizePath(locale, '/unluler-ve-burclari')}
             className="inline-flex items-center rounded-full border border-(--gm-border-soft) px-5 py-3 text-sm font-semibold text-(--gm-text) transition hover:border-(--gm-gold)/40 hover:text-(--gm-gold)"
           >
-            Ünlüler ve burçları
+            {ui('ui_zodiacx_hub_celebrities', 'Celebrities and their signs')}
           </Link>
         </div>
       </div>

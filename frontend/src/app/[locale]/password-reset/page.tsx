@@ -12,6 +12,7 @@ import PageContainer from '@/components/common/PageContainer';
 export default function PasswordResetPage() {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_auth', locale as any);
+  const { ui: uiX } = useUiSection('ui_extra' as any, locale as any);
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
@@ -34,20 +35,16 @@ export default function PasswordResetPage() {
             </svg>
           </div>
           <h2 className="text-2xl font-serif text-(--gm-text) mb-3">
-            {locale === 'de' ? 'Ungültiger Link' : locale === 'tr' ? 'Geçersiz Bağlantı' : 'Invalid Link'}
+            {uiX('ui_extra_b1_invalid_link', 'Invalid Link')}
           </h2>
           <p className="text-(--gm-text-dim) mb-6">
-            {locale === 'de'
-              ? 'Kein Zurücksetzungs-Token gefunden. Bitte fordern Sie einen neuen Link an.'
-              : locale === 'tr'
-                ? 'Sıfırlama tokeni bulunamadı. Lütfen yeni bir bağlantı talep edin.'
-                : 'No reset token found. Please request a new link.'}
+            {uiX('ui_extra_b1_no_reset_token', 'Reset token was not found. Please request a new link.')}
           </p>
           <Link
             href={localizePath(locale, '/forgot-password')}
             className="btn-premium inline-block py-3 px-8 text-xs"
           >
-            {locale === 'de' ? 'Neuen Link anfordern' : locale === 'tr' ? 'Yeni Bağlantı Talep Et' : 'Request New Link'}
+            {uiX('ui_extra_b1_request_new_link', 'Request New Link')}
           </Link>
         </div>
       </PageContainer>
@@ -64,24 +61,16 @@ export default function PasswordResetPage() {
             </svg>
           </div>
           <h2 className="text-2xl font-serif text-(--gm-text) mb-3">
-            {locale === 'de'
-              ? 'Passwort aktualisiert!'
-              : locale === 'tr'
-                ? 'Şifre Güncellendi!'
-                : 'Password Updated!'}
+            {uiX('ui_extra_b1_password_updated_title', 'Password Updated!')}
           </h2>
           <p className="text-(--gm-text-dim) mb-6">
-            {locale === 'de'
-              ? 'Ihr Passwort wurde erfolgreich zurückgesetzt. Sie können sich jetzt anmelden.'
-              : locale === 'tr'
-                ? 'Şifreniz başarıyla sıfırlandı. Şimdi giriş yapabilirsiniz.'
-                : 'Your password has been successfully reset. You can now sign in.'}
+            {uiX('ui_extra_b1_password_updated_body', 'Your password has been reset successfully. You can sign in now.')}
           </p>
           <Link
             href={loginHref}
             className="btn-premium inline-block py-3 px-8 text-xs"
           >
-            {locale === 'de' ? 'Zum Login' : locale === 'tr' ? 'Giriş Yap' : 'Sign In'}
+            {uiX('ui_extra_b1_sign_in', 'Sign In')}
           </Link>
         </div>
       </PageContainer>
@@ -93,24 +82,12 @@ export default function PasswordResetPage() {
     setFormError(null);
 
     if (password.length < 6) {
-      setFormError(
-        locale === 'de'
-          ? 'Das Passwort muss mindestens 6 Zeichen lang sein.'
-          : locale === 'tr'
-            ? 'Şifre en az 6 karakter olmalıdır.'
-            : 'Password must be at least 6 characters.',
-      );
+      setFormError(uiX('ui_extra_b1_password_min_length', 'Password must be at least 6 characters.'));
       return;
     }
 
     if (password !== confirmPwd) {
-      setFormError(
-        locale === 'de'
-          ? 'Die Passwörter stimmen nicht überein.'
-          : locale === 'tr'
-            ? 'Şifreler eşleşmiyor.'
-            : 'Passwords do not match.',
-      );
+      setFormError(uiX('ui_extra_b1_passwords_no_match', 'Passwords do not match.'));
       return;
     }
 
@@ -121,11 +98,7 @@ export default function PasswordResetPage() {
       const msg = normalizeError(err as any).message;
       setFormError(
         msg ||
-        (locale === 'de'
-          ? 'Fehler beim Zurücksetzen. Der Link ist möglicherweise abgelaufen.'
-          : locale === 'tr'
-            ? 'Sıfırlama başarısız. Bağlantının süresi dolmuş olabilir.'
-            : 'Reset failed. The link may have expired.'),
+        uiX('ui_extra_b1_reset_failed', 'Reset failed. The link may have expired.'),
       );
     }
   };
@@ -140,18 +113,10 @@ export default function PasswordResetPage() {
       <div className="w-full max-w-[var(--gm-w-form)] mx-auto bg-(--gm-surface) p-8 md:p-12 rounded-[24px] border border-(--gm-border-soft) shadow-(--gm-shadow-soft) relative z-10">
         <div className="text-center mb-8">
           <h3 className="text-3xl font-serif text-(--gm-text) mb-3">
-            {locale === 'de'
-              ? 'Neues Passwort festlegen'
-              : locale === 'tr'
-                ? 'Yeni Şifre Belirle'
-                : 'Set New Password'}
+            {uiX('ui_extra_b1_set_new_password_title', 'Set New Password')}
           </h3>
           <p className="text-(--gm-text-dim) leading-relaxed">
-            {locale === 'de'
-              ? 'Geben Sie Ihr neues Passwort ein.'
-              : locale === 'tr'
-                ? 'Yeni şifrenizi girin.'
-                : 'Enter your new password.'}
+            {uiX('ui_extra_b1_set_new_password_lead', 'Enter your new password.')}
           </p>
         </div>
 
@@ -167,7 +132,7 @@ export default function PasswordResetPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="new-password" className="block text-[10px] font-bold text-(--gm-gold-dim) mb-2 uppercase tracking-[0.2em]">
-              {locale === 'de' ? 'Neues Passwort' : locale === 'tr' ? 'Yeni Şifre' : 'New Password'}
+              {uiX('ui_extra_b1_new_password_label', 'New Password')}
             </label>
             <input
               id="new-password"
@@ -185,7 +150,7 @@ export default function PasswordResetPage() {
 
           <div>
             <label htmlFor="confirm-password" className="block text-[10px] font-bold text-(--gm-gold-dim) mb-2 uppercase tracking-[0.2em]">
-              {locale === 'de' ? 'Passwort bestätigen' : locale === 'tr' ? 'Şifre Tekrar' : 'Confirm Password'}
+              {uiX('ui_extra_b1_confirm_password_label', 'Repeat Password')}
             </label>
             <input
               id="confirm-password"
@@ -207,8 +172,8 @@ export default function PasswordResetPage() {
             disabled={isLoading}
           >
             {isLoading
-              ? (locale === 'de' ? 'Wird gespeichert...' : locale === 'tr' ? 'Kaydediliyor...' : 'Saving...')
-              : (locale === 'de' ? 'Passwort speichern' : locale === 'tr' ? 'Şifreyi Kaydet' : 'Save Password')}
+              ? uiX('ui_extra_b1_saving', 'Saving...')
+              : uiX('ui_extra_b1_save_password', 'Save Password')}
           </button>
         </form>
 
@@ -217,7 +182,7 @@ export default function PasswordResetPage() {
             href={loginHref}
             className="text-xs font-bold uppercase tracking-[0.18em] text-(--gm-text-muted) hover:text-(--gm-gold) transition-all"
           >
-            {locale === 'de' ? '← Zurück zum Login' : locale === 'tr' ? '← Giriş Sayfasına Dön' : '← Back to Login'}
+            {uiX('ui_extra_b1_back_to_login_arrow', '← Back to Login')}
           </Link>
         </div>
       </div>

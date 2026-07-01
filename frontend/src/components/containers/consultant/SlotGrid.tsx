@@ -3,6 +3,7 @@
 import React from 'react';
 
 import type { ConsultantSlotPublic } from '@/integrations/rtk/public/consultants.public.endpoints';
+import { useUiSection } from '@/i18n';
 
 type Props = {
   locale: string;
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export default function SlotGrid({ locale, slots, isFetching, selectedSlotId, onSelect }: Props) {
+  const { ui } = useUiSection('ui_consultantbrowse' as any, locale);
   if (isFetching) {
     return (
       <div className="grid grid-cols-3 gap-2">
@@ -26,7 +28,7 @@ export default function SlotGrid({ locale, slots, isFetching, selectedSlotId, on
   if (slots.length === 0) {
     return (
       <p className="text-center text-(--gm-muted) text-sm py-6">
-        {locale === 'tr' ? 'Bu tarihte müsait slot yok.' : 'No available slots on this date.'}
+        {ui('ui_consultantbrowse_no_slots', 'No available slots on this date.')}
       </p>
     );
   }

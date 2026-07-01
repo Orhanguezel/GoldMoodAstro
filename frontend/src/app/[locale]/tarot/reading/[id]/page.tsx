@@ -19,8 +19,8 @@ export async function generateMetadata({
     const { data } = await res.json();
 
     const cardNames = data.cards.map((c: any) => c.name).join(', ');
-    const title = `Tarot Falı — ${cardNames} — ${brand.name}`;
-    const description = `${data.question || 'Genel rehberlik'} için çekilen ${data.cards.length} kart ve detaylı yapay zeka yorumu.`;
+    const title = `Tarot Reading — ${cardNames} — ${brand.name}`;
+    const description = `${data.cards.length} cards drawn for ${data.question || 'general guidance'} with detailed AI interpretation.`;
     const ogImageUrl = `${brand.public_url}/${locale}/tarot/reading/${id}/opengraph-image`;
 
     return {
@@ -42,8 +42,8 @@ export async function generateMetadata({
     };
   } catch (err) {
     return {
-      title: `Tarot Falı — ${brand.name}`,
-      description: 'Detaylı tarot falı yorumu.',
+      title: `Tarot Reading — ${brand.name}`,
+      description: 'Detailed tarot reading interpretation.',
     };
   }
 }

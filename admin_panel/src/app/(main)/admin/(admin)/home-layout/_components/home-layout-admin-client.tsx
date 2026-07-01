@@ -38,6 +38,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useAdminT } from '../../../_components/common/useAdminT';
 
 const COMPONENT_OPTIONS = [
   'HeroNew',
@@ -62,6 +63,7 @@ interface RowProps {
 }
 
 function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, saving }: RowProps) {
+  const t = useAdminT('admin.common');
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: section.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -82,7 +84,7 @@ function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, sav
       setConfigError(null);
       onPatch({ config: parsed });
     } catch {
-      setConfigError('Geçersiz JSON');
+      setConfigError(t('jsonEditor.invalidJson'));
     }
   };
 
@@ -98,7 +100,7 @@ function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, sav
           {...attributes}
           {...listeners}
           className="cursor-grab active:cursor-grabbing text-gm-muted hover:text-gm-gold transition-colors p-1"
-          aria-label="Sürükle"
+          aria-label={t('dnd.drag')}
         >
           <GripVertical className="size-5" />
         </button>
@@ -118,7 +120,7 @@ function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, sav
             </Badge>
             <code className="text-[10px] text-gm-muted/70 font-mono">{section.slug}</code>
           </div>
-          <div className="text-[11px] text-gm-muted mt-1">Sıra: {section.order_index}</div>
+          <div className="text-[11px] text-gm-muted mt-1">{t('homeLayout.order')}: {section.order_index}</div>
         </div>
 
         <Switch
@@ -128,7 +130,7 @@ function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, sav
           className="data-[state=checked]:bg-gm-gold"
         />
         <span className="text-[10px] uppercase tracking-widest text-gm-muted w-10">
-          {section.is_active ? 'Aktif' : 'Pasif'}
+          {section.is_active ? t('active') : t('inactive')}
         </span>
 
         <Button
@@ -137,7 +139,7 @@ function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, sav
           onClick={onDelete}
           disabled={saving}
           className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border-gm-border-soft size-8 p-0"
-          title="Sil"
+          title={t('delete')}
         >
           <Trash2 className="size-3.5" />
         </Button>
@@ -148,7 +150,7 @@ function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, sav
         <div className="px-4 pb-4 pt-2 border-t border-gm-border-soft space-y-4 bg-gm-bg-deep/30">
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">Etiket (Admin)</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">{t('homeLayout.labelAdmin')}</Label>
               <Input
                 defaultValue={section.label}
                 onBlur={(e) => e.target.value !== section.label && onPatch({ label: e.target.value })}
@@ -157,7 +159,7 @@ function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, sav
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">Component</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">{t('homeLayout.component')}</Label>
               <select
                 defaultValue={section.component_key}
                 onBlur={(e) => e.target.value !== section.component_key && onPatch({ component_key: e.target.value })}
@@ -172,7 +174,7 @@ function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, sav
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">Config (JSON)</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">{t('homeLayout.configJson')}</Label>
               <Button
                 size="sm"
                 variant="outline"
@@ -180,7 +182,7 @@ function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, sav
                 disabled={saving}
                 className="h-7 text-[10px] uppercase tracking-widest border-gm-border-soft"
               >
-                Config Kaydet
+                {t('homeLayout.saveConfig')}
               </Button>
             </div>
             <Textarea
@@ -199,6 +201,7 @@ function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, sav
 }
 
 export default function HomeLayoutAdminClient() {
+  const t = useAdminT('admin.common');
   const { data, isLoading, isFetching, refetch } = useListHomeSectionsAdminQuery();
   const [updateSection, { isLoading: isUpdating }] = useUpdateHomeSectionAdminMutation();
   const [reorderSections, { isLoading: isReordering }] = useReorderHomeSectionsAdminMutation();
@@ -229,9 +232,9 @@ export default function HomeLayoutAdminClient() {
 
     try {
       await reorderSections({ items: reordered.map((s) => ({ id: s.id, order_index: s.order_index })) }).unwrap();
-      toast.success('Sıralama güncellendi');
+      toast.success(t('homeLayout.reorderSuccess'));
     } catch {
-      toast.error('Sıralama kaydedilemedi');
+      toast.error(t('homeLayout.reorderFailed'));
       refetch();
     }
   };
@@ -239,25 +242,25 @@ export default function HomeLayoutAdminClient() {
   const patchRow = async (id: string, patch: Partial<AdminHomeSectionDto>) => {
     try {
       await updateSection({ id, data: patch as any }).unwrap();
-      toast.success('Kaydedildi');
+      toast.success(t('homeLayout.saved'));
     } catch {
-      toast.error('Kaydedilemedi');
+      toast.error(t('homeLayout.saveFailed'));
     }
   };
 
   const deleteRow = async (id: string, label: string) => {
-    if (!confirm(`"${label}" silinsin mi?`)) return;
+    if (!confirm(t('deleteConfirm', { item: label }))) return;
     try {
       await deleteSection(id).unwrap();
-      toast.success('Silindi');
+      toast.success(t('deleted', { item: label }));
     } catch {
-      toast.error('Silinemedi');
+      toast.error(t('homeLayout.deleteFailed'));
     }
   };
 
   const handleCreate = async () => {
     if (!newRow.slug || !newRow.label) {
-      toast.error('Slug ve etiket zorunlu');
+      toast.error(t('homeLayout.slugLabelRequired'));
       return;
     }
     try {
@@ -270,11 +273,11 @@ export default function HomeLayoutAdminClient() {
         is_active: 1,
         config: null,
       }).unwrap();
-      toast.success('Eklendi');
+      toast.success(t('homeLayout.added'));
       setShowNew(false);
       setNewRow({ slug: '', label: '', component_key: 'PromisesSection' });
     } catch (e: any) {
-      toast.error(e?.data?.error?.message || 'Eklenemedi');
+      toast.error(e?.data?.error?.message || t('homeLayout.addFailed'));
     }
   };
 
@@ -286,10 +289,10 @@ export default function HomeLayoutAdminClient() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-gm-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">Tema & Tasarım</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">{t('homeLayout.themeDesign')}</span>
           </div>
-          <h1 className="font-serif text-4xl text-gm-text">Anasayfa Düzeni</h1>
-          <p className="text-sm italic text-gm-muted">Section'ları sürükleyip sırasını değiştir, aktif/pasif yap, config'i düzenle.</p>
+          <h1 className="font-serif text-4xl text-gm-text">{t('homeLayout.title')}</h1>
+          <p className="text-sm italic text-gm-muted">{t('homeLayout.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -300,7 +303,7 @@ export default function HomeLayoutAdminClient() {
             className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-8 text-[10px] font-bold uppercase tracking-widest"
           >
             <RefreshCcw className={cn("mr-2 size-4", (isLoading || isFetching) && "animate-spin")} />
-            Yenile
+            {t('refresh')}
           </Button>
           <Button
             size="sm"
@@ -309,7 +312,7 @@ export default function HomeLayoutAdminClient() {
             className="h-12 rounded-full bg-gm-gold text-gm-bg hover:bg-gm-gold-light px-8 text-[10px] font-bold uppercase tracking-widest"
           >
             <Plus className="mr-2 size-4" />
-            Yeni Section
+            {t('homeLayout.newSection')}
           </Button>
         </div>
       </div>
@@ -318,7 +321,7 @@ export default function HomeLayoutAdminClient() {
         {showNew && (
           <div className="p-6 border-b border-gm-border-soft bg-gm-bg-deep/40 grid gap-3 md:grid-cols-4">
             <div>
-              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">Slug (a-z, _)</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">{t('homeLayout.slug')}</Label>
               <Input
                 value={newRow.slug}
                 onChange={(e) => setNewRow({ ...newRow, slug: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
@@ -327,16 +330,16 @@ export default function HomeLayoutAdminClient() {
               />
             </div>
             <div>
-              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">Etiket</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">{t('homeLayout.label')}</Label>
               <Input
                 value={newRow.label}
                 onChange={(e) => setNewRow({ ...newRow, label: e.target.value })}
-                placeholder="Yeni Section"
+                placeholder={t('homeLayout.newSection')}
                 className="h-9 bg-gm-bg-deep border-gm-border-soft mt-1"
               />
             </div>
             <div>
-              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">Component</Label>
+              <Label className="text-[10px] uppercase tracking-widest text-gm-muted">{t('homeLayout.component')}</Label>
               <select
                 value={newRow.component_key}
                 onChange={(e) => setNewRow({ ...newRow, component_key: e.target.value })}
@@ -354,7 +357,7 @@ export default function HomeLayoutAdminClient() {
                 className="bg-gm-gold text-gm-bg hover:bg-gm-gold-light w-full h-9"
               >
                 <Save className="size-3.5 mr-2" />
-                Ekle
+                {t('add')}
               </Button>
             </div>
           </div>
@@ -362,9 +365,9 @@ export default function HomeLayoutAdminClient() {
 
         <CardContent className="p-6">
           {isLoading ? (
-            <div className="text-center py-12 text-gm-muted">Yükleniyor...</div>
+            <div className="text-center py-12 text-gm-muted">{t('loading')}</div>
           ) : items.length === 0 ? (
-            <div className="text-center py-12 text-gm-muted">Hiç section yok.</div>
+            <div className="text-center py-12 text-gm-muted">{t('homeLayout.noSections')}</div>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={items.map((s) => s.id)} strategy={verticalListSortingStrategy}>

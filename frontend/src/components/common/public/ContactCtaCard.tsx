@@ -13,7 +13,7 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 
 import { useGetSiteSettingByKeyQuery } from '@/integrations/rtk/hooks';
-import { useLocaleShort } from '@/i18n';
+import { useLocaleShort, useUiSection } from '@/i18n';
 
 
 type Props = {
@@ -24,7 +24,7 @@ type Props = {
 
   phoneLabel?: string; // e.g. "Telefon"
   whatsappLabel?: string; // e.g. "WhatsApp"
-  formLabel?: string; // e.g. "İletişim Formu"
+  formLabel?: string; // e.g. "Contact Form"
 
   contactHref?: string; // default: /contact
 };
@@ -82,13 +82,16 @@ const ContactCtaCard: React.FC<Props> = ({
   title,
   description,
 
-  phoneLabel = 'Telefon',
+  phoneLabel: phoneLabelProp,
   whatsappLabel = 'WhatsApp',
-  formLabel = 'İletişim Formu',
+  formLabel: formLabelProp,
 
   contactHref = '/contact',
 }) => {
   const locale = useLocaleShort();
+  const { ui } = useUiSection('ui_misc' as any);
+  const phoneLabel = phoneLabelProp ?? ui('ui_misc_phone', 'Telefon');
+  const formLabel = formLabelProp ?? ui('ui_misc_contact_form', 'Contact Form');
   const { data: contactRow } = useGetSiteSettingByKeyQuery({ key: 'contact_info', locale: locale as any });
 
   const contactData = useMemo(() => {

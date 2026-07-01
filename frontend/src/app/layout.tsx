@@ -66,7 +66,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const metadata: Metadata = {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com'),
     title: {
-      default: 'GoldMoodAstro — Astroloji & Ruhsal Danışmanlık',
+      default: 'GoldMoodAstro - Astrology & Spiritual Guidance',
       template: '%s | GoldMoodAstro',
     },
     manifest: '/manifest.webmanifest',
@@ -98,15 +98,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const lang = await resolveHtmlLang();
-  // Tema mode'u DB'deki active_theme_preset'in bg_base luminance'ından hesapla.
-  // Light preset (Klasik Altın, Pearl Infinity) → "light", dark preset (Midnight Onyx, Sapphire) → "dark".
-  // Kullanıcı manuel toggle yaparsa client-side override eder (localStorage).
+  // Compute theme mode from active_theme_preset bg_base luminance.
+  // Client-side manual toggle can override it via localStorage.
   const tokens = await fetchDesignTokens();
   const themeMode = detectThemeMode(tokens);
   return (
     <html lang={lang} data-theme={themeMode} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <meta name="description" content="GoldMoodAstro — Astroloji, tarot, numeroloji ve ruhsal koçluk için uzman danışmanlarla bağlantı platformu." />
+        <meta name="description" content="GoldMoodAstro - platform for expert consultants in astrology, tarot, numerology and spiritual coaching." />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />

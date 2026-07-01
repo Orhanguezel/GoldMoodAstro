@@ -18,8 +18,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'burcunu-ogren',
     pathname: '/burcunu-ogren',
     fallback: {
-      title: `Burcunu Öğren — ${brand.name}`,
-      description: 'Doğum gününü seçerek güneş burcunu, elementini ve sana yakın astrolojik temaları hızlıca keşfet.',
+      title: `Find Your Zodiac Sign — ${brand.name}`,
+      description: 'Choose your birthday and quickly discover your Sun sign, element and nearby astrological themes.',
     },
   });
 }
@@ -30,20 +30,16 @@ import Banner from '@/layout/banner/Breadcrum';
 export default async function BurcunuOgrenPage({ params }: Props) {
   const { locale } = await params;
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || brand.public_url || 'https://goldmoodastro.com').replace(/\/$/, '');
-  const isTr = locale === 'tr';
-
   return (
     <>
-      <Banner title={isTr ? 'Burcunu Öğren' : 'Find Your Zodiac Sign'} />
+      <Banner title="Find Your Zodiac Sign" />
       <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <JsonLd
         id="zodiac-finder-speakable-schema"
         data={graph([
           articleSchema({
-            headline: isTr ? 'Burcunu Öğren Rehberi' : 'Zodiac Sign Finder Guide',
-            description: isTr
-              ? 'Güneş burcu doğum gününüzde Güneşin bulunduğu burçtur ve temel yaşam enerjinizi anlatır.'
-              : 'The Sun sign is the zodiac sign where the Sun was on your birthday and describes your core life energy.',
+            headline: 'Zodiac Sign Finder Guide',
+            description: 'The Sun sign is the zodiac sign where the Sun was on your birthday and describes your core life energy.',
             image: `${siteUrl}/img/natal_chart.png`,
             datePublished: '2026-04-30T00:00:00.000Z',
             dateModified: '2026-04-30T00:00:00.000Z',
@@ -61,15 +57,13 @@ export default async function BurcunuOgrenPage({ params }: Props) {
         aria-labelledby="zodiac-finder-voice-answer"
       >
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-(--gm-gold)">
-          {isTr ? 'Kısa Cevap' : 'Short Answer'}
+          Short Answer
         </p>
         <h2 id="zodiac-finder-voice-answer" className="font-serif text-3xl text-(--gm-text) md:text-5xl">
-          {isTr ? 'Burcumu nasıl öğrenirim?' : 'How do I find my zodiac sign?'}
+          How do I find my zodiac sign?
         </h2>
         <p className="mx-auto mt-5 max-w-[var(--gm-w-narrow)] text-base leading-8 text-(--gm-text-dim) md:text-lg">
-          {isTr
-            ? 'Güneş burcunuzu öğrenmek için doğum gününüz yeterlidir. Doğduğunuz tarihte Güneş hangi burç aralığındaysa temel burcunuz odur. Daha kişisel bir yorum için Ay burcu, yükselen burç ve doğum haritasındaki evler de birlikte değerlendirilmelidir.'
-            : 'Your birthday is enough to find your Sun sign. Your main zodiac sign is the sign range where the Sun was on your date of birth. For a more personal reading, the Moon sign, rising sign and houses in the birth chart should also be considered.'}
+          Your birthday is enough to find your Sun sign. Your main zodiac sign is the sign range where the Sun was on your date of birth. For a more personal reading, the Moon sign, rising sign and houses in the birth chart should also be considered.
         </p>
       </section>
       <ZodiacFinderQuiz />

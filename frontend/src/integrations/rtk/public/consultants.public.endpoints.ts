@@ -4,6 +4,7 @@
 // =============================================================
 
 import { baseApi } from '@/integrations/rtk/baseApi';
+import { cleanParams, makeLocaleHeaders } from '@/integrations/shared';
 
 export interface ConsultantPublic {
   id: string;
@@ -12,6 +13,7 @@ export interface ConsultantPublic {
   full_name?: string;
   email?: string;
   avatar_url?: string;
+  headline?: string | null;
   bio?: string;
   expertise: string[];
   languages: string[];
@@ -50,26 +52,52 @@ export interface ListConsultantsParams {
   limit?: number;
   sort?: 'featured' | 'popular' | 'new' | 'online';
   onlineOnly?: boolean;
+  locale?: string;
+}
+
+type ConsultantArg = string | { id: string; locale?: string };
+type ConsultantSlotsArg = { id: string; date: string; locale?: string };
+
+function consultantArgId(arg: ConsultantArg) {
+  return typeof arg === 'string' ? arg : arg.id;
 }
 
 const consultantsPublicApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     listConsultantsPublic: build.query<ConsultantPublic[], ListConsultantsParams | void>({
-      query: (params) => ({ url: '/consultants', params: params ?? undefined }),
+      query: (params) => {
+        const { locale, ...rest } = params ?? {};
+        return {
+          url: '/consultants',
+          params: cleanParams(rest),
+          headers: makeLocaleHeaders(locale),
+        };
+      },
       transformResponse: (res: { data: ConsultantPublic[] } | ConsultantPublic[]) =>
         Array.isArray(res) ? res : ((res as any)?.data ?? []),
       providesTags: ['Consultants'],
     }),
 
-    getConsultantPublic: build.query<ConsultantPublic, string>({
-      query: (id) => `/consultants/${id}`,
+    getConsultantPublic: build.query<ConsultantPublic, ConsultantArg>({
+      query: (arg) => {
+        const id = consultantArgId(arg);
+        const locale = typeof arg === 'string' ? undefined : arg.locale;
+        return {
+          url: `/consultants/${encodeURIComponent(id)}`,
+          headers: makeLocaleHeaders(locale),
+        };
+      },
       transformResponse: (res: { data: ConsultantPublic } | ConsultantPublic) =>
         (res as any)?.data ?? res,
-      providesTags: (_r, _e, id) => [{ type: 'Consultant', id }],
+      providesTags: (_r, _e, arg) => [{ type: 'Consultant', id: consultantArgId(arg) }],
     }),
 
-    getConsultantSlotsPublic: build.query<ConsultantSlotPublic[], { id: string; date: string }>({
-      query: ({ id, date }) => ({ url: `/consultants/${id}/slots`, params: { date } }),
+    getConsultantSlotsPublic: build.query<ConsultantSlotPublic[], ConsultantSlotsArg>({
+      query: ({ id, date, locale }) => ({
+        url: `/consultants/${encodeURIComponent(id)}/slots`,
+        params: { date },
+        headers: makeLocaleHeaders(locale),
+      }),
       transformResponse: (res: { data: ConsultantSlotPublic[] } | ConsultantSlotPublic[]) =>
         Array.isArray(res) ? res : ((res as any)?.data ?? []),
       providesTags: (_r, _e, { id }) => [{ type: 'ConsultantSlots', id }],

@@ -8,19 +8,19 @@ type MaybeStatus = { status?: unknown };
 type MaybeData = { data?: unknown };
 
 export function normalizeError(err: unknown): { message: string; status?: number } {
-  // RTK FetchBaseQueryError şekli: { status, data? }
+  // RTK FetchBaseQueryError shape: { status, data? }
   if (isObject(err) && "status" in err) {
     const statusRaw = (err as MaybeStatus).status;
     const status = typeof statusRaw === "number" ? statusRaw : undefined;
 
     const data = (err as MaybeData).data;
 
-    // data string ise (Fastify/plain) → direkt göster
+    // If data is a string, show it directly.
     if (typeof data === "string" && data.trim()) {
       return { message: trimMsg(data), status };
     }
 
-    // data object ise yaygın alanları sırayla dene
+    // If data is an object, try common fields in order.
     if (isObject(data)) {
       const cand =
         pickStr(data, "message") ??
@@ -31,7 +31,7 @@ export function normalizeError(err: unknown): { message: string; status?: number
         pickStr(data, "msg");
       if (cand) return { message: trimMsg(cand), status };
 
-      // mesaj alanı yoksa objeyi kısaltıp döndür
+      // If no message field exists, return a shortened object.
       try {
         return { message: trimMsg(JSON.stringify(data)), status };
       } catch {
@@ -39,7 +39,7 @@ export function normalizeError(err: unknown): { message: string; status?: number
       }
     }
 
-    // RTK bazen `error` alanına string koyabilir
+    // RTK may put a string in the `error` field.
     const e = (err as MaybeError).error;
     if (typeof e === "string" && e.trim()) {
       return { message: trimMsg(e), status };
@@ -72,13 +72,12 @@ function trimMsg(s: string, max = 280): string {
 }
 
 /**
- * Komponent/panel katmanı için: API hatasından kullanıcıya gösterilecek metin.
- * Kanonik `normalizeError` üzerine ince sarmalayıcı — anlamlı API mesajı yoksa
- * `fallback` döner. Panel-içi kopyalanan `getErrorMessage` helper'larının
- * yerine kullanılır (tek kaynak).
+ * User-facing API error text for component/panel layers.
+ * Thin wrapper over canonical `normalizeError`; returns `fallback` when no useful
+ * API message exists.
  */
-export function extractApiError(err: unknown, fallback = "Bir hata oluştu"): string {
-  // Zod/Fastify validation details (data.error.details[]) → birleştir
+export function extractApiError(err: unknown, fallback = "Something went wrong"): string {
+  // Join Zod/Fastify validation details.
   if (isObject(err)) {
     const data = (err as MaybeData).data;
     if (isObject(data)) {
@@ -101,7 +100,7 @@ export function extractApiError(err: unknown, fallback = "Bir hata oluştu"): st
   return message;
 }
 
-// 🔹 RTK helper'larının beklediği ortak sonuç tipi
+// Shared result type expected by RTK helpers.
 export type FetchResult<T> = {
   data: T | null;
   error: { message: string; status?: number } | null;

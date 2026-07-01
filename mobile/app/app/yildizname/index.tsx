@@ -27,6 +27,7 @@ import {
   Moon,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useTranslation } from 'react-i18next';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
@@ -102,12 +103,12 @@ function buildScreenStyles(t: AppTheme) {
 });
 }
 
-const LOADING_PHASES = [
-  'Yıldızlar diziliyor...',
-  'Ebced değerleri hesaplanıyor...',
-  'Harfler sayıya dönüşüyor...',
-  'Menzilin belirleniyor...',
-  'Kadim sırlar açılıyor...',
+const LOADING_PHASE_KEYS = [
+  'yildizname.loading1',
+  'yildizname.loading2',
+  'yildizname.loading3',
+  'yildizname.loading4',
+  'yildizname.loading5',
 ];
 
 /** API menzil.category bazen string[] bazen tek string / nesne dönebilir */
@@ -126,6 +127,7 @@ function menzilCategories(raw: unknown): string[] {
 }
 
 export default function YildiznameScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
@@ -149,7 +151,7 @@ export default function YildiznameScreen() {
     let interval: ReturnType<typeof setInterval> | undefined;
     if (step === 'loading') {
       interval = setInterval(() => {
-        setLoadingPhase((prev) => (prev + 1) % LOADING_PHASES.length);
+        setLoadingPhase((prev) => (prev + 1) % LOADING_PHASE_KEYS.length);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }, 1500);
     }
@@ -201,7 +203,7 @@ export default function YildiznameScreen() {
     try {
       await Share.share({
         message: `${result.name} için Yıldızname Analizi ✨ Menzil: ${result.menzil?.name_tr}\n\n${result.readingText}\n\nKeşfet: https://goldmoodastro.com/tr/yildizname/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=yildizname`,
-        title: 'GoldMoodAstro Yıldızname',
+        title: t('yildizname.shareTitle'),
       });
     } catch (e) {
       console.error(e);
@@ -241,7 +243,7 @@ export default function YildiznameScreen() {
           <Pressable onPress={() => step === 'intro' || step === 'result' ? safeRouterBack() : handleBack()} style={styles.backBtn}>
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
-          <Text style={styles.headerTitle}>Yıldızname</Text>
+          <Text style={styles.headerTitle}>{t('yildizname.headerTitle')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -251,22 +253,22 @@ export default function YildiznameScreen() {
               <View style={styles.introIcon}>
                 <Moon size={48} color={colors.gold} />
               </View>
-              <Text style={styles.heroTitle}>Yıldızname{'\n'}<Text style={{ color: colors.gold }}>Ebced Sırrı</Text></Text>
-              <Text style={styles.heroSub}>İsminin ve anne adının evrendeki sayısal titreşimini keşfet. Kadim Ebced hesabı ile yolunu aydınlat.</Text>
-              
+              <Text style={styles.heroTitle}>{t('yildizname.heroTitleLine1')}{'\n'}<Text style={{ color: colors.gold }}>{t('yildizname.heroTitleLine2')}</Text></Text>
+              <Text style={styles.heroSub}>{t('yildizname.heroSub')}</Text>
+
               <View style={styles.featureGrid}>
                 <View style={styles.featureItem}>
-                  <Text style={styles.featureLabel}>KADİM HESAP</Text>
-                  <Text style={styles.featureVal}>Ebced Sistemi</Text>
+                  <Text style={styles.featureLabel}>{t('yildizname.feature1Label')}</Text>
+                  <Text style={styles.featureVal}>{t('yildizname.feature1Value')}</Text>
                 </View>
                 <View style={styles.featureItem}>
-                  <Text style={styles.featureLabel}>AY MENZİLLERİ</Text>
-                  <Text style={styles.featureVal}>28 Durak</Text>
+                  <Text style={styles.featureLabel}>{t('yildizname.feature2Label')}</Text>
+                  <Text style={styles.featureVal}>{t('yildizname.feature2Value')}</Text>
                 </View>
               </View>
 
               <Pressable style={styles.mainBtn} onPress={() => setStep('name')}>
-                <Text style={styles.mainBtnText}>BAŞLA</Text>
+                <Text style={styles.mainBtnText}>{t('yildizname.startBtn')}</Text>
                 <ChevronRight size={20} color={colors.ink} />
               </Pressable>
             </View>
@@ -279,10 +281,10 @@ export default function YildiznameScreen() {
               <View style={styles.wizardCard}>
                 <View style={styles.wizardHeader}>
                   <Text style={styles.wizardTitle}>
-                    {step === 'name' ? 'Senin İsmin' : step === 'mother' ? 'Annenin İsmi' : 'Doğum Yılın'}
+                    {step === 'name' ? t('yildizname.stepNameTitle') : step === 'mother' ? t('yildizname.stepMotherTitle') : t('yildizname.stepYearTitle')}
                   </Text>
                   <Text style={styles.wizardSub}>
-                    {step === 'name' ? 'Seni çağıran asıl titreşim.' : step === 'mother' ? 'Soy bağını taşıyan manevi kökün.' : 'Dünyaya adım attığın zamanın imzası.'}
+                    {step === 'name' ? t('yildizname.stepNameSub') : step === 'mother' ? t('yildizname.stepMotherSub') : t('yildizname.stepYearSub')}
                   </Text>
                 </View>
 
@@ -293,7 +295,7 @@ export default function YildiznameScreen() {
                     keyboardType={step === 'year' ? 'number-pad' : 'default'}
                     maxLength={step === 'year' ? 4 : 50}
                     style={styles.textInput}
-                    placeholder={step === 'name' ? 'Örn: Orhan' : step === 'mother' ? 'Örn: Fatma' : '1990'}
+                    placeholder={step === 'name' ? t('yildizname.namePlaceholder') : step === 'mother' ? t('yildizname.motherPlaceholder') : '1990'}
                     placeholderTextColor={colors.textMuted + '44'}
                     value={step === 'name' ? formData.name : step === 'mother' ? formData.mother_name : formData.birth_year}
                     onChangeText={(t) => setFormData({ ...formData, [step === 'year' ? 'birth_year' : step === 'name' ? 'name' : 'mother_name']: t })}
@@ -304,7 +306,7 @@ export default function YildiznameScreen() {
                   style={[styles.mainBtn, { opacity: (step === 'name' ? formData.name : step === 'mother' ? formData.mother_name : formData.birth_year).length > 0 ? 1 : 0.5 }]} 
                   onPress={handleNext}
                 >
-                  <Text style={styles.mainBtnText}>{step === 'year' ? 'YILDIZNAMEMİ AÇ' : 'DEVAM ET'}</Text>
+                  <Text style={styles.mainBtnText}>{step === 'year' ? t('yildizname.openBtn') : t('yildizname.continueBtn')}</Text>
                   <ChevronRight size={20} color={colors.ink} />
                 </Pressable>
               </View>
@@ -317,8 +319,8 @@ export default function YildiznameScreen() {
                 <ActivityIndicator size="large" color={colors.gold} />
                 <Sparkles size={32} color={colors.gold} style={styles.loaderSparkle} />
               </View>
-              <Text style={styles.loadingTitle}>{LOADING_PHASES[loadingPhase]}</Text>
-              <Text style={styles.loadingSub}>Kadim sırlar çözülüyor...</Text>
+              <Text style={styles.loadingTitle}>{t(LOADING_PHASE_KEYS[loadingPhase])}</Text>
+              <Text style={styles.loadingSub}>{t('yildizname.loadingSub')}</Text>
             </View>
           )}
 
@@ -327,10 +329,10 @@ export default function YildiznameScreen() {
               <View style={styles.resultHead}>
                 <View style={styles.menzilBadge}>
                   <Star size={12} color={colors.gold} fill={colors.gold} />
-                  <Text style={styles.menzilBadgeText}>{result.name?.toUpperCase()} İÇİN ANALİZ</Text>
+                  <Text style={styles.menzilBadgeText}>{t('yildizname.analysisFor', { name: result.name?.toUpperCase() })}</Text>
                 </View>
-                <Text style={styles.menzilTitle}>Menzilin: <Text style={{ color: colors.gold }}>{result.menzil?.name_tr}</Text></Text>
-                <Text style={styles.menzilSub}>Arapça: {result.menzil?.name_ar}</Text>
+                <Text style={styles.menzilTitle}>{t('yildizname.yourMenzil')} <Text style={{ color: colors.gold }}>{result.menzil?.name_tr}</Text></Text>
+                <Text style={styles.menzilSub}>{t('yildizname.arabic', { value: result.menzil?.name_ar })}</Text>
               </View>
 
               <View style={styles.resultCards}>
@@ -339,13 +341,13 @@ export default function YildiznameScreen() {
                     <View style={styles.ebcedBadge}>
                       <Text style={styles.ebcedBadgeText}>{result.ebced_total}</Text>
                     </View>
-                    <Text style={styles.resCardLabel}>EBCED PUANI</Text>
+                    <Text style={styles.resCardLabel}>{t('yildizname.ebcedScore')}</Text>
                   </LinearGradient>
                 </View>
                 <View style={styles.resCardWrapper}>
                   <LinearGradient colors={[colors.surface, colors.surfaceHigh]} style={styles.resCard}>
                     <Text style={styles.menzilNoText}>{result.menzil_no}</Text>
-                    <Text style={styles.resCardLabel}>MENZİL NO</Text>
+                    <Text style={styles.resCardLabel}>{t('yildizname.menzilNo')}</Text>
                   </LinearGradient>
                 </View>
               </View>
@@ -371,7 +373,7 @@ export default function YildiznameScreen() {
               <View style={styles.interpretationBox}>
                 <View style={styles.interHeader}>
                   <Sparkles size={16} color={colors.gold} />
-                  <Text style={styles.interTitle}>KADİM YORUM</Text>
+                  <Text style={styles.interTitle}>{t('yildizname.ancientReading')}</Text>
                 </View>
                 <Text style={styles.interpretationText}>{result.readingText}</Text>
               </View>
@@ -385,11 +387,11 @@ export default function YildiznameScreen() {
               <View style={styles.resultActions}>
                 <Pressable style={styles.actionBtn} onPress={() => setStep('intro')}>
                   <RefreshCcw size={18} color={colors.textMuted} />
-                  <Text style={styles.actionBtnText}>YENİ ANALİZ</Text>
+                  <Text style={styles.actionBtnText}>{t('yildizname.newAnalysis')}</Text>
                 </Pressable>
                 <Pressable style={[styles.actionBtn, styles.actionBtnGold]} onPress={handleShare}>
                   <Share2 size={18} color={colors.gold} />
-                  <Text style={[styles.actionBtnText, { color: colors.gold }]}>PAYLAŞ</Text>
+                  <Text style={[styles.actionBtnText, { color: colors.gold }]}>{t('common.share')}</Text>
                 </Pressable>
               </View>
             </ScrollView>

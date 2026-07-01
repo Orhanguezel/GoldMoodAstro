@@ -13,16 +13,16 @@ const SIGN_SYMBOLS: Record<string, string> = {
 };
 
 const SIGN_LABELS: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
 };
 
 export default async function OG({ params }: { params: { sign: string; locale: string } }) {
   const sign = params.sign.toLowerCase();
   const symbol = SIGN_SYMBOLS[sign] || '✨';
   const label = SIGN_LABELS[sign] || sign;
-  const today = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 
   const fonts = await getOgFonts().catch(() => undefined);
   const theme = await getOgTheme();
@@ -42,7 +42,7 @@ export default async function OG({ params }: { params: { sign: string; locale: s
       }}>
         {/* Header */}
         <div style={{ fontSize: 24, color: theme.primary, letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          {theme.brandUpper} · GÜNLÜK YORUM
+          {theme.brandUpper} · DAILY READING
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center' }}>
@@ -65,7 +65,7 @@ export default async function OG({ params }: { params: { sign: string; locale: s
 
           {/* Label & Date */}
           <div style={{ fontSize: 64, fontFamily: 'Fraunces', fontStyle: 'italic', color: theme.text }}>
-            {label} Burcu
+            {label} Zodiac
           </div>
           <div style={{ fontSize: 32, color: theme.primary, letterSpacing: 2 }}>
             {today}

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Pause, Play, Sparkles, Volume2 } from 'lucide-react';
-import { useLocaleShort } from '@/i18n';
+import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 import { getZodiacAffirmationContent } from '@/lib/zodiac/affirmations';
 import { ZODIAC_META } from '@/lib/zodiac/signs';
@@ -12,6 +12,8 @@ import { useAmbientMixerContext } from '@/context/ambient-mixer';
 
 export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSign }) {
   const locale = useLocaleShort();
+  const { ui } = useUiSection('ui_extra' as any);
+  const { ui: uiZ } = useUiSection('ui_zodiacx' as any);
   const sign = ZODIAC_META[signKey];
   const content = getZodiacAffirmationContent(signKey);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
@@ -37,7 +39,7 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
     };
   }, []);
 
-  const speechText = `${content.title}. ${content.meditation} Affirmasyonlar. ${content.affirmations.join(' ')}`;
+  const speechText = `${content.title}. ${content.meditation} Affirmations. ${content.affirmations.join(' ')}`;
 
   const handleToggleAmbient = async () => {
     await togglePlay();
@@ -55,7 +57,7 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
     }
 
     const utterance = new SpeechSynthesisUtterance(speechText);
-    utterance.lang = 'tr-TR';
+    utterance.lang = locale === 'tr' ? 'tr-TR' : 'en-US';
     utterance.rate = 0.88;
     utterance.pitch = 0.95;
     
@@ -99,13 +101,13 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
           <div className="flex-1">
             <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-gold/20 bg-brand-gold/10 px-4 py-2 text-sm text-brand-gold">
               <Volume2 className="size-4" />
-              Sesli affirmasyon
+              {ui('ui_extra_b4_zodiac_voice_affirmation', 'Voice affirmation')}
             </div>
             <h1 className="text-4xl font-semibold tracking-normal text-foreground md:text-5xl">
               {content.title}
             </h1>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
-              {sign.element} elementi ve {sign.modality.toLowerCase()} niteliğiyle {content.focus}.
+              {sign.element} {uiZ('ui_zodiacx_meditation_element_label', 'element and')} {sign.modality.toLowerCase()} {uiZ('ui_zodiacx_meditation_modality_label', 'modality')} {content.focus}.
             </p>
           </div>
         </div>
@@ -117,7 +119,7 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-gold px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-background transition hover:bg-brand-gold/90 shadow-lg shadow-brand-gold/20"
           >
             {isSpeaking ? <Pause className="size-4" /> : <Play className="size-4" />}
-            {isSpeaking ? 'Sesi durdur' : 'Meditasyonu dinle'}
+            {isSpeaking ? ui('ui_extra_b4_zodiac_stop_voice', 'Stop voice') : ui('ui_extra_b4_zodiac_listen', 'Listen to meditation')}
           </button>
 
           <button
@@ -130,12 +132,12 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
             }`}
           >
             <Volume2 className="size-4" />
-            {isMixerPlaying ? 'Müziği Kapat' : 'Arka Plan Müziği'}
+            {isMixerPlaying ? ui('ui_extra_b4_zodiac_music_off', 'Turn music off') : ui('ui_extra_b4_zodiac_music_on', 'Background music')}
           </button>
 
           {isMixerPlaying && (
             <div className="flex items-center gap-3 px-4 py-2 bg-surface/50 rounded-xl border border-border/40">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Ses</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{ui('ui_extra_b4_zodiac_volume', 'Volume')}</span>
               <input 
                 type="range" 
                 min="0" 
@@ -157,7 +159,7 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
           </div>
           <div className="mb-4 flex items-center gap-3 text-brand-gold relative">
             <Sparkles className="size-5" />
-            <h2 className="text-xl font-semibold text-foreground">3 dakikalık odak metni</h2>
+            <h2 className="text-xl font-semibold text-foreground">{ui('ui_extra_b4_zodiac_focus_text', '3-minute focus text')}</h2>
           </div>
           <p className="text-lg leading-8 text-muted-foreground relative">{content.meditation}</p>
         </article>
@@ -165,7 +167,7 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
         <aside className="rounded-2xl border border-border/50 bg-surface p-6">
           <h2 className="mb-6 text-xl font-semibold flex items-center gap-2">
              <div className="size-2 rounded-full bg-brand-gold" />
-             Günün affirmasyonları
+             {ui('ui_extra_b4_zodiac_daily_affirmations', 'Daily affirmations')}
           </h2>
           <div className="space-y-4">
             {content.affirmations.map((affirmation, i) => (
@@ -183,13 +185,13 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
           href={localizePath(locale, `/burclar/${sign.key}`)}
           className="rounded-xl border border-border/60 px-4 py-3 text-sm font-semibold text-foreground transition hover:border-brand-gold/50 hover:text-brand-gold"
         >
-          {sign.label} profilini aç
+          {sign.label} {ui('ui_extra_b4_zodiac_open_profile', 'open profile')}
         </Link>
         <Link
           href={localizePath(locale, `/burclar/${sign.key}/bugun`)}
           className="rounded-xl border border-border/60 px-4 py-3 text-sm font-semibold text-foreground transition hover:border-brand-gold/50 hover:text-brand-gold"
         >
-          Günlük yorumunu oku
+          {ui('ui_extra_b4_zodiac_read_daily', 'Read daily interpretation')}
         </Link>
       </div>
     </section>

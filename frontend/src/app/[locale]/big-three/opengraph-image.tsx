@@ -25,7 +25,7 @@ export default async function OG() {
       }}>
         {/* Header */}
         <div style={{ fontSize: 24, color: theme.primary, letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          {theme.brandUpper} · BÜYÜK ÜÇLÜ
+          {theme.brandUpper} · BIG THREE
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 40, alignItems: 'center' }}>
@@ -33,11 +33,11 @@ export default async function OG() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 60 }}>
             <div style={{ fontSize: 100, color: theme.primary, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                ☀️
-               <span style={{ fontSize: 24, fontFamily: 'Inter', opacity: 0.8, marginTop: 10 }}>GÜNEŞ</span>
+               <span style={{ fontSize: 24, fontFamily: 'Inter', opacity: 0.8, marginTop: 10 }}>SUN</span>
             </div>
             <div style={{ fontSize: 140, color: theme.text, display: 'flex', flexDirection: 'column', alignItems: 'center', border: `2px solid ${theme.primaryBorder}`, borderRadius: '50%', padding: '20px 40px', backgroundColor: theme.primarySoft }}>
                🌅
-               <span style={{ fontSize: 32, fontFamily: 'Inter', opacity: 0.8, marginTop: 10, color: theme.primary }}>YÜKSELEN</span>
+               <span style={{ fontSize: 32, fontFamily: 'Inter', opacity: 0.8, marginTop: 10, color: theme.primary }}>RISING</span>
             </div>
             <div style={{ fontSize: 100, color: theme.primary, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                🌙
@@ -46,7 +46,7 @@ export default async function OG() {
           </div>
 
           <div style={{ fontSize: 56, fontFamily: 'Fraunces', fontStyle: 'italic', color: theme.text, textAlign: 'center', marginTop: 20 }}>
-            Kozmik Kimliğini Keşfet
+            Discover Your Cosmic Identity
           </div>
         </div>
 

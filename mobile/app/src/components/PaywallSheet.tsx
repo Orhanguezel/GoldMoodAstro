@@ -4,13 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { safeRouterBack } from '@/lib/navigation';
 import { useAppTheme, type AppTheme } from '@/theme';
 
-const FEATURES = [
-  { tr: 'Sınırsız randevu planlama', en: 'Unlimited appointment booking' },
-  { tr: 'Detaylı doğum haritası analizi', en: 'Detailed natal chart analysis' },
-  { tr: 'Günlük kişiselleştirilmiş yorumlar', en: 'Daily personalized insights' },
-  { tr: 'Öncelikli destek hattı', en: 'Priority support line' },
-  { tr: 'Sesli görüşmelerde %20 indirim', en: '20% discount on voice calls' },
-  { tr: 'Canlı yayın etkinliklerine erişim', en: 'Access to live stream events' },
+const FEATURE_KEYS = [
+  { key: 'paywall.featureUnlimitedBooking', tr: 'Sınırsız randevu planlama' },
+  { key: 'paywall.featureNatalChart', tr: 'Detaylı doğum haritası analizi' },
+  { key: 'paywall.featureDailyInsights', tr: 'Günlük kişiselleştirilmiş yorumlar' },
+  { key: 'paywall.featurePrioritySupport', tr: 'Öncelikli destek hattı' },
+  { key: 'paywall.featureVoiceDiscount', tr: 'Sesli görüşmelerde %20 indirim' },
+  { key: 'paywall.featureLiveStream', tr: 'Canlı yayın etkinliklerine erişim' },
 ];
 
 function buildScreenStyles(t: AppTheme) {
@@ -94,8 +94,7 @@ function buildScreenStyles(t: AppTheme) {
 }
 
 export function PaywallSheet() {
-  const { t, i18n } = useTranslation();
-  const lang = i18n.language === 'en' ? 'en' : 'tr';
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -108,10 +107,10 @@ export function PaywallSheet() {
         <Text style={styles.subtitle}>{t('paywall.subtitle', 'Mistik dünyanızı daha derinlemesine keşfedin.')}</Text>
 
         <View style={styles.features}>
-          {FEATURES.map((f) => (
-            <View key={f.tr} style={styles.feature}>
+          {FEATURE_KEYS.map((f) => (
+            <View key={f.key} style={styles.feature}>
               <Text style={styles.check}>✨</Text>
-              <Text style={styles.featureText}>{lang === 'tr' ? f.tr : f.en}</Text>
+              <Text style={styles.featureText}>{t(f.key, f.tr)}</Text>
             </View>
           ))}
         </View>

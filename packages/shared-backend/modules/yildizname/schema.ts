@@ -27,6 +27,24 @@ export const yildiznameResults = mysqlTable(
   ],
 );
 
+export const yildiznameResultsI18n = mysqlTable(
+  'yildizname_results_i18n',
+  {
+    id: char('id', { length: 36 }).primaryKey().notNull(),
+    menzilNo: tinyint('menzil_no').notNull(),
+    locale: varchar('locale', { length: 8 }).notNull(),
+    name: varchar('name', { length: 80 }).notNull(),
+    shortSummary: varchar('short_summary', { length: 255 }),
+    content: text('content').notNull(),
+    createdAt: datetime('created_at', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
+    updatedAt: datetime('updated_at', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`).$onUpdateFn(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex('yildizname_results_i18n_uq').on(t.menzilNo, t.locale),
+    index('yildizname_results_i18n_locale_idx').on(t.locale),
+  ],
+);
+
 export const yildiznameReadings = mysqlTable(
   'yildizname_readings',
   {

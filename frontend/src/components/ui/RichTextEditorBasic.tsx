@@ -1,9 +1,10 @@
 // =============================================================
 // FILE: src/components/ui/RichTextEditorBasic.tsx
-// goldmoodastro – Basit Rich Text Editor (HTML tabanlı + toolbar)
+// goldmoodastro - Basic Rich Text Editor (HTML based + toolbar)
 // =============================================================
 
 import React, { useEffect, useRef } from 'react';
+import { useUiSection } from '@/i18n';
 
 export type RichTextEditorBasicProps = {
   value: string;
@@ -20,9 +21,10 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
   minHeight = 220,
   maxHeight = 600,
 }) => {
+  const { ui } = useUiSection('ui_editor');
   const ref = useRef<HTMLDivElement | null>(null);
 
-  // Dışarıdan gelen value değiştiğinde editörü senkronize et
+  // Keep editor content in sync with external value changes.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -46,12 +48,12 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
 
   const exec = (command: string, value?: string) => {
     if (disabled) return;
-    // mousedown'da focus kaybını engelle
+    // Prevent focus loss from mouse down toolbar actions.
     focusEditor();
     try {
       document.execCommand(command, false, value);
     } catch {
-      // bazı browserlarda desteklenmeyen komutlar olabilir – sessiz geç
+      // Ignore unsupported commands in older browsers.
     }
   };
 
@@ -60,7 +62,7 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
     command: string,
     value?: string,
   ) => {
-    e.preventDefault(); // butonun focus almasını engelle
+    e.preventDefault();
     exec(command, value);
   };
 
@@ -72,7 +74,7 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
           type="button"
           className="btn btn-sm btn-outline-secondary"
           onMouseDown={(e) => handleToolbarMouseDown(e, 'bold')}
-          title="Kalın (Ctrl+B)"
+          title={ui('ui_editor_basic_btn_bold', 'Bold (Ctrl+B)')}
         >
           <strong>B</strong>
         </button>
@@ -80,7 +82,7 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
           type="button"
           className="btn btn-sm btn-outline-secondary"
           onMouseDown={(e) => handleToolbarMouseDown(e, 'italic')}
-          title="İtalik (Ctrl+I)"
+          title={ui('ui_editor_basic_btn_italic', 'Italic (Ctrl+I)')}
         >
           <em>I</em>
         </button>
@@ -88,7 +90,7 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
           type="button"
           className="btn btn-sm btn-outline-secondary"
           onMouseDown={(e) => handleToolbarMouseDown(e, 'underline')}
-          title="Altı çizili (Ctrl+U)"
+          title={ui('ui_editor_basic_btn_underline', 'Underline (Ctrl+U)')}
         >
           <span style={{ textDecoration: 'underline' }}>U</span>
         </button>
@@ -99,7 +101,7 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
           type="button"
           className="btn btn-sm btn-outline-secondary"
           onMouseDown={(e) => handleToolbarMouseDown(e, 'insertUnorderedList')}
-          title="Madde işaretli liste"
+          title={ui('ui_editor_btn_bullet_list', 'Bulleted list')}
         >
           ••
         </button>
@@ -107,7 +109,7 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
           type="button"
           className="btn btn-sm btn-outline-secondary"
           onMouseDown={(e) => handleToolbarMouseDown(e, 'insertOrderedList')}
-          title="Numaralı liste"
+          title={ui('ui_editor_btn_ordered_list', 'Numbered list')}
         >
           1.
         </button>
@@ -118,7 +120,7 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
           type="button"
           className="btn btn-sm btn-outline-secondary"
           onMouseDown={(e) => handleToolbarMouseDown(e, 'formatBlock', 'p')}
-          title="Paragraf"
+          title={ui('ui_editor_btn_paragraph', 'Paragraf')}
         >
           P
         </button>
@@ -126,7 +128,7 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
           type="button"
           className="btn btn-sm btn-outline-secondary"
           onMouseDown={(e) => handleToolbarMouseDown(e, 'formatBlock', 'h2')}
-          title="Başlık 1"
+          title={ui('ui_editor_basic_btn_heading1', 'Heading 1')}
         >
           H1
         </button>
@@ -134,7 +136,7 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
           type="button"
           className="btn btn-sm btn-outline-secondary"
           onMouseDown={(e) => handleToolbarMouseDown(e, 'formatBlock', 'h3')}
-          title="Başlık 2"
+          title={ui('ui_editor_basic_btn_heading2', 'Heading 2')}
         >
           H2
         </button>
@@ -145,13 +147,13 @@ export const RichTextEditorBasic: React.FC<RichTextEditorBasicProps> = ({
           type="button"
           className="btn btn-sm btn-outline-secondary"
           onMouseDown={(e) => handleToolbarMouseDown(e, 'removeFormat')}
-          title="Biçimlendirmeyi temizle"
+          title={ui('ui_editor_btn_clear_format', 'Clear formatting')}
         >
-          Temizle
+          {ui('ui_editor_basic_btn_clear_label', 'Clear')}
         </button>
       </div>
 
-      {/* Editör alanı */}
+      {/* Editor area */}
       <div
         ref={ref}
         className="px-2 py-2"

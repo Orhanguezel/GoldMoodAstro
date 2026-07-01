@@ -137,8 +137,7 @@ export default function ConsultantFunnelCTA({
   context: _context,
   tier,
 }: Props) {
-  const { i18n } = useTranslation();
-  const isTr = i18n.language === 'tr';
+  const { t, i18n } = useTranslation();
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { colors } = theme;
@@ -149,33 +148,29 @@ export default function ConsultantFunnelCTA({
 
   const resolvedTier = tier ?? detectTier(isAuthenticated, isPremium);
   const cfg = getFunnelConfig(feature);
-  const categoryLabel = isTr ? cfg.headlineTr : cfg.headlineEn;
+  const categoryLabel = i18n.language === 'tr' ? cfg.headlineTr : cfg.headlineEn;
+
+  const category = categoryLabel.toLowerCase();
 
   const headline = (() => {
-    if (resolvedTier === 'guest') return isTr ? 'Üye ol — ilk yorum %50 indirimli' : 'Sign up — 50% off first reading';
-    if (resolvedTier === 'free') return isTr ? 'Derin analiz ister misin?' : 'Want a deeper analysis?';
-    return isTr ? 'Bir uzmanla görüş' : 'Talk to an expert';
+    if (resolvedTier === 'guest') return t('funnel.headlineGuest', 'Üye ol — ilk yorum %50 indirimli');
+    if (resolvedTier === 'free') return t('funnel.headlineFree', 'Derin analiz ister misin?');
+    return t('funnel.headlinePremium', 'Bir uzmanla görüş');
   })();
 
   const description = (() => {
     if (resolvedTier === 'guest') {
-      return isTr
-        ? `Hesabını aç, ${categoryLabel.toLowerCase()} ile birebir görüş. İlk seansa özel %50 indirim.`
-        : 'Create an account and meet our experts one-on-one. 50% off your first session.';
+      return t('funnel.descGuest', { category, defaultValue: 'Hesabını aç, {{category}} ile birebir görüş. İlk seansa özel %50 indirim.' });
     }
     if (resolvedTier === 'free') {
-      return isTr
-        ? `Yapay zeka yorumun yeterli mi? Onaylı ${categoryLabel.toLowerCase()} ile sesli veya görüntülü görüş.`
-        : `Is the AI reading enough? Connect with verified experts via voice or video.`;
+      return t('funnel.descFree', { category, defaultValue: 'Yapay zeka yorumun yeterli mi? Onaylı {{category}} ile sesli veya görüntülü görüş.' });
     }
-    return isTr
-      ? 'Premium üyeliğinle ek seans avantajların var.'
-      : 'You have additional session perks with your premium plan.';
+    return t('funnel.descPremium', 'Premium üyeliğinle ek seans avantajların var.');
   })();
 
   const ctaLabel = (() => {
-    if (resolvedTier === 'guest') return isTr ? 'Üye Ol' : 'Sign Up';
-    return isTr ? 'Danışman Seç' : 'Choose a Consultant';
+    if (resolvedTier === 'guest') return t('funnel.ctaGuest', 'Üye Ol');
+    return t('funnel.ctaChoose', 'Danışman Seç');
   })();
 
   const onPress = () => navigateFunnel(feature, resolvedTier);

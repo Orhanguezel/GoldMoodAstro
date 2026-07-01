@@ -13,6 +13,7 @@ import ShareCard from '@/components/common/ShareCard';
 import PageContainer from '@/components/common/PageContainer';
 
 import { useBrand } from '@/hooks/useBrand';
+import { useUiSection } from '@/i18n';
 import { useAuthStore } from '@/features/auth/auth.store';
 import {
   useListMyBirthChartsQuery,
@@ -22,20 +23,18 @@ import {
 const cinzel = Cinzel({ subsets: ['latin'] });
 
 const SIGN_LABELS: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
 };
 
 export default function BigThree() {
   const { brand } = useBrand();
+  const { ui } = useUiSection('ui_zodiacx' as any);
   const [result, setResult] = useState<BirthChart | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  // Auto-load: oturum açmış kullanıcının kayıtlı doğum haritası varsa, formu
-  // boş gösterip tekrar veri istemek yerine kayıtlı veriyi otomatik yükle.
-  // Kullanıcı "Yeni Harita" butonuyla mevcut kaydı silip baştan başlatabilir.
   const { isAuthenticated } = useAuthStore();
   const { data: savedCharts } = useListMyBirthChartsQuery(undefined, {
     skip: !isAuthenticated,
@@ -55,15 +54,15 @@ export default function BigThree() {
       return;
     }
     const confirmDelete = window.confirm(
-      'Kayıtlı doğum haritanız silinerek yeni hesaplama açılacak. Devam edilsin mi?',
+      ui('ui_zodiacx_bigthree_confirm_delete', 'Your saved birth chart will be deleted and a new calculation will open. Continue?'),
     );
     if (!confirmDelete) return;
     try {
       await deleteChart(result.id).unwrap();
-      toast.success('Kayıt silindi, yeni hesaplama açıldı');
+      toast.success(ui('ui_zodiacx_bigthree_delete_success', 'Record deleted, new calculation opened'));
       setResult(null);
     } catch {
-      toast.error('Kayıt silinemedi');
+      toast.error(ui('ui_zodiacx_bigthree_delete_error', 'Record could not be deleted'));
     }
   };
 
@@ -82,10 +81,10 @@ export default function BigThree() {
       link.download = `goldmood-buyuk-uclu-${result?.name}.png`;
       link.href = dataUrl;
       link.click();
-      toast.success('Görsel başarıyla oluşturuldu!');
+      toast.success(ui('ui_zodiacx_bigthree_image_success', 'Image created successfully!'));
     } catch (err) {
       console.error(err);
-      toast.error('Görsel oluşturulurken bir hata oluştu.');
+      toast.error(ui('ui_zodiacx_bigthree_image_error', 'An error occurred while creating the image.'));
     } finally {
       setIsExporting(false);
     }
@@ -95,7 +94,7 @@ export default function BigThree() {
     <PageContainer className="max-w-4xl">
       <div className="text-center mb-12">
         <p className="text-lg text-muted-foreground italic max-w-2xl mx-auto">
-          Güneş, Ay ve Yükselen burcunuzla kozmik kimlik kartınızı oluşturun ve paylaşın.
+          {ui('ui_zodiacx_bigthree_intro', 'Create and share your cosmic identity card with your Sun, Moon and Rising signs.')}
         </p>
       </div>
 
@@ -139,9 +138,9 @@ export default function BigThree() {
               {/* Signs */}
               <div className="relative w-full space-y-8">
                 {[
-                  { label: 'GÜNEŞ', sign: sunSign, icon: '☀️' },
-                  { label: 'YÜKSELEN', sign: risingSign, icon: '🌅', major: true },
-                  { label: 'AY', sign: moonSign, icon: '🌙' },
+                  { label: ui('ui_zodiacx_bigthree_sun', 'SUN'), sign: sunSign, icon: '☀️' },
+                  { label: ui('ui_zodiacx_bigthree_rising', 'RISING'), sign: risingSign, icon: '🌅', major: true },
+                  { label: ui('ui_zodiacx_bigthree_moon', 'MOON'), sign: moonSign, icon: '🌙' },
                 ].map((item, i) => (
                   <div key={item.label} className="flex items-center justify-between group">
                     <div className="flex-1 text-right pr-6">
@@ -183,12 +182,12 @@ export default function BigThree() {
                 className="btn-premium py-4 px-10 rounded-full flex items-center gap-3 disabled:opacity-50"
               >
                 {isExporting ? <Sparkles className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-                Görsel Olarak İndir
+                {ui('ui_zodiacx_bigthree_download', 'Download as Image')}
               </button>
 
-              <ShareCard 
-                title="Büyük Üçlü Kartımı Paylaş"
-                shareText={`${result.name} olarak Büyük Üçlü kartımı oluşturdum ✨\nSen de kozmik kimliğini keşfet:`}
+              <ShareCard
+                title={ui('ui_zodiacx_bigthree_share_title', 'Share My Big Three Card')}
+                shareText={`${result.name} ${ui('ui_zodiacx_bigthree_share_text', 'as my Big Three card ✨\nDiscover your cosmic identity too:')}`}
                 variant="birth-chart"
                 data={{
                   sun: SIGN_LABELS[sunSign!] || sunSign,
@@ -200,7 +199,7 @@ export default function BigThree() {
               <button
                 onClick={handleResetForNewSearch}
                 className="p-4 rounded-full bg-surface border border-border/40 hover:text-brand-gold transition-colors"
-                title={isAuthenticated ? 'Sil ve Yeniden Hesapla' : 'Yeniden Hesapla'}
+                title={isAuthenticated ? ui('ui_zodiacx_bigthree_delete_recalc', 'Delete and Calculate Again') : ui('ui_zodiacx_bigthree_recalc', 'Calculate Again')}
               >
                 <RefreshCcw className="w-5 h-5" />
               </button>

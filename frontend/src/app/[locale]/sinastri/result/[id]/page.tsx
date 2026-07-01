@@ -19,8 +19,8 @@ export async function generateMetadata({
 
     const partnerName = data.partner_data?.name ?? 'Partner';
     const score = data.result?.score ?? 0;
-    const title = `Aşk Uyumu Raporu — %${score} Uyum — GoldMoodAstro`;
-    const description = `${partnerName} ile olan kozmik uyumunuzun detaylı analizi. Yıldızların aşkınıza olan etkisini keşfedin.`;
+    const title = `Love Compatibility Report — ${score}% Match — GoldMoodAstro`;
+    const description = `Detailed analysis of your cosmic compatibility with ${partnerName}. Discover how the stars influence your connection.`;
     const ogImageUrl = `https://goldmoodastro.com/${locale}/sinastri/result/${id}/opengraph-image`;
 
     return {
@@ -42,8 +42,8 @@ export async function generateMetadata({
     };
   } catch (err) {
     return {
-      title: 'Aşk Uyumu Raporu — GoldMoodAstro',
-      description: 'Detaylı sinastri (uyum) analizi.',
+      title: 'Love Compatibility Report — GoldMoodAstro',
+      description: 'Detailed synastry compatibility analysis.',
     };
   }
 }

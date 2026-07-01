@@ -31,6 +31,7 @@ import {
   useCreateNotificationMutation,
   useUpdateNotificationMutation,
   useDeleteNotificationMutation,
+  useGetUserAdminQuery,
 } from '@/integrations/hooks';
 
 // function getErrMsg(e: unknown): string { ... } moved inside or adapted
@@ -89,6 +90,15 @@ export default function AdminNotificationDetailClient({ id }: { id: string }) {
     message: '',
     type: 'system',
   });
+
+  // Bildirimin user_id'sini gerçek kullanıcıya çevir: full_name + email göster.
+  // Yoksa fallback UUID. (broadcast: user_id null/empty → bilgi göstermeyiz.)
+  const targetUserId = (item?.user_id || formData.user_id || '').trim();
+  const userQ = useGetUserAdminQuery(
+    targetUserId ? { id: targetUserId } : (undefined as any),
+    { skip: !targetUserId },
+  );
+  const targetUser = (userQ.data as any) as { id?: string; full_name?: string | null; email?: string | null } | undefined;
 
   // Load existing data
   React.useEffect(() => {
@@ -209,16 +219,40 @@ export default function AdminNotificationDetailClient({ id }: { id: string }) {
               <Label htmlFor="user_id">
                 {t('notifications.form.userId')} <span className="text-muted-foreground">{t('notifications.form.optional')}</span>
               </Label>
-              <Input
-                id="user_id"
-                value={formData.user_id}
-                onChange={(e) => setFormData((p) => ({ ...p, user_id: e.target.value }))}
-                placeholder={t('notifications.form.userIdPlaceholder')}
-                disabled={!isNew || busy}
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('notifications.form.userIdHelp')}
-              </p>
+              {/* Yeni bildirim oluştururken UUID input görünür (admin alıcı id'sini girer).
+                  Mevcut bildirimi görüntülerken UUID gizlenir, sadece kullanıcı adı + email
+                  okunabilir biçimde gösterilir. */}
+              {isNew ? (
+                <Input
+                  id="user_id"
+                  value={formData.user_id}
+                  onChange={(e) => setFormData((p) => ({ ...p, user_id: e.target.value }))}
+                  placeholder={t('notifications.form.userIdPlaceholder')}
+                  disabled={busy}
+                />
+              ) : targetUserId ? (
+                <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+                  {targetUser && (targetUser.full_name || targetUser.email) ? (
+                    <>
+                      <span className="font-medium">{targetUser.full_name || '—'}</span>
+                      {targetUser.email && (
+                        <span className="text-muted-foreground"> · {targetUser.email}</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground italic">{t('notifications.details.loadingUser')}</span>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground italic">
+                  {t('notifications.details.broadcastAll')}
+                </div>
+              )}
+              {isNew && (
+                <p className="text-xs text-muted-foreground">
+                  {t('notifications.form.userIdHelp')}
+                </p>
+              )}
             </div>
 
             {/* Title */}
@@ -308,12 +342,21 @@ export default function AdminNotificationDetailClient({ id }: { id: string }) {
           <CardContent className="space-y-3">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">{t('notifications.details.id')}</p>
-                <p className="text-sm">{item.id}</p>
-              </div>
-              <div>
                 <p className="text-sm font-medium text-muted-foreground">{t('notifications.details.userId')}</p>
-                <p className="text-sm">{item.user_id}</p>
+                {item.user_id ? (
+                  targetUser && (targetUser.full_name || targetUser.email) ? (
+                    <p className="text-sm">
+                      <span className="font-medium">{targetUser.full_name || '—'}</span>
+                      {targetUser.email && (
+                        <span className="text-muted-foreground"> · {targetUser.email}</span>
+                      )}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">{t('notifications.details.loadingUser')}</p>
+                  )
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">{t('notifications.details.broadcastAll')}</p>
+                )}
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">{t('notifications.details.status')}</p>

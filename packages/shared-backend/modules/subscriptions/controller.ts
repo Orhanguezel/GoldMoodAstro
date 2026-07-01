@@ -474,12 +474,19 @@ function resolveIyzicoPaymentPrice(result: Record<string, unknown>): string {
 }
 
 /** GET /subscriptions/plans — public, aktif planlar */
-export const listPlans: RouteHandler = async (_req, reply) => {
-  const rows = await db
-    .select()
-    .from(subscriptionPlans)
-    .where(eq(subscriptionPlans.is_active, 1))
-    .orderBy(subscriptionPlans.display_order);
+export const listPlans: RouteHandler = async (req, reply) => {
+  const locale = resolveLocale(req);
+  const [rows] = await (db as any).session.client.query(
+    `SELECT p.*,
+      COALESCE(req_i18n.name, tr_i18n.name, IF(? = 'en', p.name_en, p.name_tr)) AS name,
+      COALESCE(req_i18n.description, tr_i18n.description, IF(? = 'en', p.description_en, p.description_tr)) AS description
+     FROM subscription_plans p
+     LEFT JOIN subscription_plan_i18n req_i18n ON req_i18n.plan_id = p.id AND req_i18n.locale = ?
+     LEFT JOIN subscription_plan_i18n tr_i18n ON tr_i18n.plan_id = p.id AND tr_i18n.locale = 'tr'
+     WHERE p.is_active = 1
+     ORDER BY p.display_order`,
+    [locale, locale, locale],
+  );
   return reply.send({ data: rows });
 };
 

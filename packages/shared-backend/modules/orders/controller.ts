@@ -198,9 +198,9 @@ export const initIyzico: RouteHandler<{ Params: { id: string } }> = async (req, 
     }
 
     const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || 'http://localhost:3000';
-    // Booking varsa direkt call ekranına; yoksa dashboard
+    // Mock akış da gerçek ödeme akışıyla aynı onay sayfasına düşer (tutarlılık).
     const checkoutUrl = order.booking_id
-      ? `${siteUrl}/${requestLocale}/booking/${order.booking_id}/call?from=mock`
+      ? `${siteUrl}/${requestLocale}/booking/payment?status=success&order_id=${orderId}`
       : `${siteUrl}/${requestLocale}/dashboard?tab=bookings&booking=success&order_id=${orderId}`;
     return reply.send({ success: true, mock: true, checkout_url: checkoutUrl });
   }
@@ -226,7 +226,7 @@ export const initIyzico: RouteHandler<{ Params: { id: string } }> = async (req, 
       paidPrice: amount,
       currency: order.currency,
       basketId: order.order_number,
-      callbackUrl: `${resolveApiBase()}/api/orders/iyzico/callback?order_id=${orderId}`,
+      callbackUrl: `${resolveApiBase()}/api/orders/iyzico/callback?order_id=${orderId}&locale=${encodeURIComponent(requestLocale)}`,
       buyer: {
         id: user.id,
         name: user.full_name?.split(" ")[0] || "Danışan",
@@ -284,11 +284,24 @@ export const initIyzico: RouteHandler<{ Params: { id: string } }> = async (req, 
 export const iyzicoCallback: RouteHandler = async (req, reply) => {
   const { order_id } = req.query as { order_id: string };
   const { token } = req.body as { token: string };
+  const locale = resolveLocale(req);
+
+  const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || "http://localhost:3000";
+
+  // Order'ı önceden çek: booking siparişi mi e-ticaret mi olduğunu bilmemiz gerekiyor.
+  const [order] = await db.select().from(orders).where(eq(orders.id, order_id)).limit(1);
+  const isBooking = !!order?.booking_id;
+
+  // Tutarlı yönlendirme yardımcısı: booking → /[locale]/booking/payment, diğer → e-ticaret rotaları.
+  const landing = (status: "success" | "failed") =>
+    isBooking
+      ? `${siteUrl}/${locale}/booking/payment?status=${status}&order_id=${order_id}`
+      : status === "success"
+        ? `${siteUrl}/${locale}/siparis/basarili?order_id=${order_id}`
+        : `${siteUrl}/${locale}/sepet?payment=failed&order_id=${order_id}`;
 
   const [gateway] = await db.select().from(paymentGateways).where(eq(paymentGateways.slug, "iyzico")).limit(1);
   const iyzico = new IyzicoService(resolveIyzicoConfig(gateway));
-
-  const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || "http://localhost:3000";
 
   try {
     const result = await iyzico.retrieveCheckoutResult(token);
@@ -314,13 +327,9 @@ export const iyzicoCallback: RouteHandler = async (req, reply) => {
       raw_response: JSON.stringify(result),
     });
 
-    const redirectUrl = isPaid
-      ? `${siteUrl}/siparis/basarili?order_id=${order_id}`
-      : `${siteUrl}/sepet?payment=failed&order_id=${order_id}`;
-
-    return reply.redirect(redirectUrl);
+    return reply.redirect(landing(isPaid ? "success" : "failed"));
   } catch {
-    return reply.redirect(`${siteUrl}/sepet?payment=error`);
+    return reply.redirect(landing("failed"));
   }
 };
 

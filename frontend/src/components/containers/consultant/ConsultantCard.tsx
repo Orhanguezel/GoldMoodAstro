@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Star, Clock, ShieldCheck, Phone, Calendar } from 'lucide-react';
 import type { ConsultantPublic } from '@/integrations/rtk/public/consultants.public.endpoints';
+import { useUiSection } from '@/i18n';
 
 interface Props {
   consultant: ConsultantPublic;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function ConsultantCard({ consultant, locale, expertiseLabels = {} }: Props) {
+  const { ui } = useUiSection('ui_consultantbrowse' as any, locale);
   const [imageFailed, setImageFailed] = useState(false);
   const rating = parseFloat(consultant.rating_avg || '0');
   const price = Math.round(Number(consultant.session_price));
@@ -48,14 +50,14 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
         {isOnline && (
           <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 bg-[var(--gm-success)] text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-lg">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--gm-text)] animate-pulse" />
-            Çevrimiçi
+            {ui('ui_consultantbrowse_online', 'Online')}
           </span>
         )}
 
         {/* Verified badge */}
         <span className="absolute top-3 right-3 inline-flex items-center gap-1 bg-[var(--gm-bg-deep)]/40 backdrop-blur-sm text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">
           <ShieldCheck className="w-3 h-3 text-[var(--gm-gold)]" />
-          Onaylı
+          {ui('ui_consultantbrowse_verified', 'Verified')}
         </span>
       </Link>
 
@@ -74,7 +76,9 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
         <div className="flex items-center gap-4 mb-4 text-xs">
           <div
             className="flex items-center gap-2 rounded-full border border-[var(--gm-gold)]/20 bg-[var(--gm-gold)]/10 px-3 py-1.5"
-            aria-label={`${rating.toFixed(1)} puan, ${consultant.rating_count} yorum`}
+            aria-label={ui('ui_consultantbrowse_rating_aria', '{rating} rating, {count} reviews')
+              .replace('{rating}', rating.toFixed(1))
+              .replace('{count}', String(consultant.rating_count))}
           >
             <div className="flex items-center gap-0.5">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -89,17 +93,17 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
               ))}
             </div>
             <span className="text-[var(--gm-text)] font-bold">{rating.toFixed(1)}</span>
-            <span className="text-[var(--gm-text-dim)]">{consultant.rating_count} yorum</span>
+            <span className="text-[var(--gm-text-dim)]">{consultant.rating_count} {ui('ui_consultantbrowse_reviews_word', 'reviews')}</span>
           </div>
           <span className="w-px h-3 bg-[var(--gm-border-soft)]" />
           <div className="flex items-center gap-1.5 text-[var(--gm-text-dim)]">
             <Clock className="w-3.5 h-3.5" />
-            <span>{consultant.session_duration} dk</span>
+            <span>{consultant.session_duration} {ui('ui_consultantbrowse_minutes_short', 'min')}</span>
           </div>
         </div>
 
         <div className="mt-auto pt-3 border-t border-[var(--gm-border-soft)] flex items-baseline justify-between gap-2 mb-4">
-          <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase">Seans</span>
+          <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase">{ui('ui_consultantbrowse_session_label', 'Session')}</span>
           <span className="text-[var(--gm-gold)] font-serif text-2xl leading-none">₺{price}</span>
         </div>
 
@@ -112,7 +116,7 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
             }`}
           >
             <Calendar className="w-3.5 h-3.5" />
-            Randevu Al
+            {ui('ui_consultantbrowse_book_appointment', 'Book Appointment')}
           </Link>
           {isOnline && (
             <Link
@@ -120,7 +124,7 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
               className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--gm-success)] hover:bg-[var(--gm-success)]/90 text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest py-2.5 transition-all shadow-md"
             >
               <Phone className="w-3.5 h-3.5" />
-              Hemen Görüş
+              {ui('ui_consultantbrowse_talk_now', 'Talk Now')}
             </Link>
           )}
         </div>

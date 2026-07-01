@@ -1,19 +1,20 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { Music2, Play, Square, RotateCcw } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { useAmbientMixer } from '@/hooks/useAmbientMixer';
 import type { StemId, ZodiacSignKey } from '@/lib/relax/types';
 
-const STEM_LABELS: Record<StemId, string> = {
-  pad: 'Pad',
-  rain: 'Yağmur',
-  wind: 'Rüzgâr',
-  water: 'Su',
-  chimes: 'Çan',
-  forest: 'Orman',
-  binaural: 'Derin',
-  crackle: 'Ateş',
+const STEM_LABEL_KEYS: Record<StemId, string> = {
+  pad: 'relax.stemPad',
+  rain: 'relax.stemRain',
+  wind: 'relax.stemWind',
+  water: 'relax.stemWater',
+  chimes: 'relax.stemChimes',
+  forest: 'relax.stemForest',
+  binaural: 'relax.stemBinaural',
+  crackle: 'relax.stemCrackle',
 };
 
 function buildStyles(t: AppTheme) {
@@ -90,6 +91,7 @@ type Props = {
 };
 
 export function RelaxMixerCard({ sign = 'aries' }: Props) {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { colors } = theme;
@@ -102,15 +104,14 @@ export function RelaxMixerCard({ sign = 'aries' }: Props) {
           <Music2 size={22} color={colors.gold} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Rahatlatıcı ortam</Text>
-          <Text style={styles.subtitle}>Burç enerjisine göre katman miksi</Text>
+          <Text style={styles.title}>{t('relax.title')}</Text>
+          <Text style={styles.subtitle}>{t('relax.subtitle')}</Text>
         </View>
       </View>
 
       {!mixer.stemsAvailable ? (
         <Text style={styles.notice}>
-          Ses dosyaları henüz uygulamaya eklenmedi (FAZ 35 T35-1). Stem’ler
-          `assets/sounds/relax/*.m4a` olarak paketlendiğinde buradan çalacak.
+          {t('relax.notice')}
         </Text>
       ) : (
         mixer.stemIds.map((stem) => {
@@ -122,7 +123,7 @@ export function RelaxMixerCard({ sign = 'aries' }: Props) {
               onPress={() => mixer.setStemGain(stem, Math.min(1, v + 0.15))}
               onLongPress={() => mixer.setStemGain(stem, Math.max(0, v - 0.15))}
             >
-              <Text style={styles.stemLabel}>{STEM_LABELS[stem]}</Text>
+              <Text style={styles.stemLabel}>{t(STEM_LABEL_KEYS[stem])}</Text>
               <View style={styles.track}>
                 <View style={[styles.fill, { width: `${Math.round(v * 100)}%` }]} />
               </View>
@@ -143,12 +144,12 @@ export function RelaxMixerCard({ sign = 'aries' }: Props) {
           ) : mixer.playing ? (
             <>
               <Square size={16} color={colors.ink} fill={colors.ink} />
-              <Text style={styles.playText}>Durdur</Text>
+              <Text style={styles.playText}>{t('relax.stop')}</Text>
             </>
           ) : (
             <>
               <Play size={16} color={colors.ink} fill={colors.ink} />
-              <Text style={styles.playText}>Çal</Text>
+              <Text style={styles.playText}>{t('relax.play')}</Text>
             </>
           )}
         </Pressable>

@@ -2,13 +2,14 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
 import * as repo from './deletion.repository';
+import { apiMessage } from '../_shared/api-i18n';
 
 export async function handleRequestDeletion(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const existing = await repo.getActiveRequest(user.id);
-  if (existing) return reply.status(400).send({ error: 'Zaten aktif bir silme talebiniz bulunuyor.' });
+  if (existing) return reply.status(400).send({ error: apiMessage(req, 'deletion_request_exists') });
 
   const requestedAt = new Date();
   const scheduledFor = new Date();
@@ -29,10 +30,10 @@ export async function handleRequestDeletion(req: FastifyRequest, reply: FastifyR
 
 export async function handleCancelDeletion(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const existing = await repo.getActiveRequest(user.id);
-  if (!existing) return reply.status(404).send({ error: 'Aktif bir silme talebi bulunamadı.' });
+  if (!existing) return reply.status(404).send({ error: apiMessage(req, 'deletion_request_not_found') });
 
   await repo.cancelRequest(existing.id);
   return reply.send({ data: { ok: true } });

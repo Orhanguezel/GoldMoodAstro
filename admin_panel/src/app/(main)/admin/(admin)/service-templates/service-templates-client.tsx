@@ -43,8 +43,10 @@ import {
   useDeleteServiceTemplateAdminMutation,
   useListServiceCategoriesAdminQuery,
 } from '@/integrations/hooks';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 export default function ServiceTemplatesClient() {
+  const t = useAdminT('admin.services');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = React.useState<string>('all');
 
   const { data: templates = [], isLoading, isFetching, refetch } = useListServiceTemplatesAdminQuery(
@@ -113,17 +115,17 @@ export default function ServiceTemplatesClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!categorySlug) {
-      toast.error('Lütfen bir kategori seçin.');
+      toast.error(t('templates.toast.categoryRequired'));
       return;
     }
     if (!name.trim() || !slug.trim()) {
-      toast.error('Ad ve Slug alanları zorunludur.');
+      toast.error(t('templates.toast.nameSlugRequired'));
       return;
     }
 
     const priceNum = Number(price);
     if (!isFree && (Number.isNaN(priceNum) || priceNum <= 0)) {
-      toast.error('Ücretli şablonlar için fiyat 0\'dan büyük olmalıdır.');
+      toast.error(t('templates.toast.priceRequired'));
       return;
     }
 
@@ -144,26 +146,26 @@ export default function ServiceTemplatesClient() {
     try {
       if (editingTemplate) {
         await updateTemplate({ id: editingTemplate.id, patch: payload }).unwrap();
-        toast.success('Şablon başarıyla güncellendi.');
+        toast.success(t('templates.toast.updated'));
       } else {
         await createTemplate(payload).unwrap();
-        toast.success('Şablon başarıyla oluşturuldu.');
+        toast.success(t('templates.toast.created'));
       }
       setIsOpen(false);
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || 'Bir hata oluştu.');
+      toast.error(err?.data?.error?.message || t('templates.toast.error'));
     }
   };
 
   const handleDelete = async (id: string, tempName: string) => {
-    const ok = window.confirm(`"${tempName}" şablonunu silmek istediğinize emin misiniz?`);
+    const ok = window.confirm(t('templates.toast.deleteConfirm', { name: tempName }));
     if (!ok) return;
 
     try {
       await deleteTemplate({ id }).unwrap();
-      toast.success('Şablon başarıyla silindi.');
+      toast.success(t('templates.toast.deleted'));
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || 'Silme işlemi sırasında bir hata oluştu.');
+      toast.error(err?.data?.error?.message || t('templates.toast.deleteError'));
     }
   };
 
@@ -177,12 +179,12 @@ export default function ServiceTemplatesClient() {
           <div className="flex items-center gap-3">
             <span className="w-8 h-px bg-gm-gold" />
             <span className="text-gm-gold font-bold text-[10px] tracking-[0.2em] uppercase">
-              Sistem & Ayarlar
+              {t('templates.eyebrow')}
             </span>
           </div>
-          <h1 className="font-serif text-4xl text-gm-text text-foreground">Hizmet Şablonları</h1>
+          <h1 className="font-serif text-4xl text-gm-text text-foreground">{t('templates.title')}</h1>
           <p className="text-gm-muted text-sm font-serif italic opacity-70">
-            Kategori bazlı global hizmet şablonları tanımlayın. Danışmanlar bu şablonları kopyalayarak hizmet açabilir.
+            {t('templates.description')}
           </p>
         </div>
 
@@ -195,7 +197,7 @@ export default function ServiceTemplatesClient() {
             className="rounded-full border-gm-border-soft bg-gm-surface/50 px-8 h-12 text-[10px] font-bold tracking-widest uppercase transition-all hover:bg-gm-primary/5 shadow-lg backdrop-blur-sm"
           >
             <RefreshCcw className={cn('mr-2 size-4', busy && 'animate-spin')} />
-            Yenile
+            {t('templates.refresh')}
           </Button>
 
           <Button
@@ -204,7 +206,7 @@ export default function ServiceTemplatesClient() {
             className="rounded-full bg-gm-gold text-white px-8 h-12 text-[10px] font-bold tracking-widest uppercase transition-all hover:opacity-90 shadow-lg"
           >
             <Plus className="mr-2 size-4" />
-            Yeni Şablon
+            {t('templates.newButton')}
           </Button>
         </div>
       </div>
@@ -212,14 +214,14 @@ export default function ServiceTemplatesClient() {
       {/* Filter and Content */}
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-4">
-          <Label className="text-sm font-bold uppercase tracking-widest text-gm-muted">Kategori Filtresi:</Label>
+          <Label className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('templates.categoryFilter')}</Label>
           <div className="w-64">
             <Select value={selectedCategoryFilter} onValueChange={setSelectedCategoryFilter}>
               <SelectTrigger className="border-gm-border-soft bg-gm-surface/40">
-                <SelectValue placeholder="Kategori seçin" />
+                <SelectValue placeholder={t('templates.categoryPlaceholder')} />
               </SelectTrigger>
               <SelectContent className="bg-gm-bg-deep text-gm-text">
-                <SelectItem value="all">Tüm Kategoriler</SelectItem>
+                <SelectItem value="all">{t('templates.allCategories')}</SelectItem>
                 {categories.map((c) => (
                   <SelectItem key={c.id} value={c.slug}>
                     {c.name}
@@ -235,12 +237,12 @@ export default function ServiceTemplatesClient() {
             <Table>
               <TableHeader className="bg-gm-surface/40">
                 <TableRow className="border-gm-border-soft hover:bg-transparent">
-                  <TableHead className="py-6 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Şablon Adı</TableHead>
-                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Kategori</TableHead>
-                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Süre & Tip</TableHead>
-                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Fiyat</TableHead>
-                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Durum</TableHead>
-                  <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">İşlemler</TableHead>
+                  <TableHead className="py-6 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('templates.col.name')}</TableHead>
+                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('templates.col.category')}</TableHead>
+                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('templates.col.durationType')}</TableHead>
+                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('templates.col.price')}</TableHead>
+                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('templates.col.status')}</TableHead>
+                  <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('templates.col.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -261,7 +263,7 @@ export default function ServiceTemplatesClient() {
                       <div className="flex flex-col items-center gap-6 opacity-30">
                         <Layers className="w-20 h-20 text-gm-gold/50" />
                         <span className="font-serif italic text-xl text-gm-muted">
-                          Bu filtrede şablon bulunamadı.
+                          {t('templates.emptyFilter')}
                         </span>
                       </div>
                     </TableCell>
@@ -287,17 +289,17 @@ export default function ServiceTemplatesClient() {
                         </TableCell>
                         <TableCell className="py-6">
                           <div className="flex flex-col gap-1">
-                            <span className="text-xs text-gm-text text-foreground font-bold">{item.duration_minutes} dk</span>
+                            <span className="text-xs text-gm-text text-foreground font-bold">{item.duration_minutes} {t('templates.minutesShort')}</span>
                             <div className="flex items-center gap-1 text-[10px] text-gm-muted uppercase">
                               {item.media_type === 'video' ? <Video className="size-3 text-gm-gold" /> : <AudioLines className="size-3 text-gm-gold" />}
-                              {item.media_type === 'video' ? 'Görüntülü' : 'Sesli'}
+                              {item.media_type === 'video' ? t('templates.mediaVideo') : t('templates.mediaAudio')}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="py-6">
                           {item.is_free ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gm-success/10 text-gm-success border border-gm-success/20">
-                              <Gift className="size-3" /> Ücretsiz
+                              <Gift className="size-3" /> {t('templates.free')}
                             </span>
                           ) : (
                             <span className="font-serif text-lg text-gm-gold font-bold">
@@ -314,7 +316,7 @@ export default function ServiceTemplatesClient() {
                               'w-1.5 h-1.5 rounded-full animate-pulse',
                               item.is_active ? 'bg-gm-success' : 'bg-gm-error'
                             )} />
-                            {item.is_active ? 'Aktif' : 'Pasif'}
+                            {item.is_active ? t('templates.active') : t('templates.inactive')}
                           </div>
                         </TableCell>
                         <TableCell className="py-6 px-8 text-right">
@@ -352,10 +354,10 @@ export default function ServiceTemplatesClient() {
         <DialogContent className="max-h-[86vh] max-w-xl overflow-y-auto border-gm-border-soft bg-gm-bg-deep text-gm-text text-foreground">
           <DialogHeader>
             <DialogTitle className="font-serif text-2xl">
-              {editingTemplate ? 'Şablonu Düzenle' : 'Yeni Şablon Ekle'}
+              {editingTemplate ? t('templates.dialog.editTitle') : t('templates.dialog.createTitle')}
             </DialogTitle>
             <DialogDescription className="text-gm-muted">
-              Hizmet şablonu detaylarını doldurun.
+              {t('templates.dialog.description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -363,10 +365,10 @@ export default function ServiceTemplatesClient() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Kategori</Label>
+                  <Label htmlFor="category" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('templates.field.category')}</Label>
                   <Select value={categorySlug} onValueChange={setCategorySlug}>
                     <SelectTrigger className="border-gm-border-soft bg-gm-surface/40">
-                      <SelectValue placeholder="Kategori seçin" />
+                      <SelectValue placeholder={t('templates.categoryPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent className="bg-gm-bg-deep text-gm-text">
                       {categories.map((c) => (
@@ -379,14 +381,14 @@ export default function ServiceTemplatesClient() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="mediaType" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Görüşme Tipi</Label>
+                  <Label htmlFor="mediaType" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('templates.field.mediaType')}</Label>
                   <Select value={mediaType} onValueChange={(val: any) => setMediaType(val)}>
                     <SelectTrigger className="border-gm-border-soft bg-gm-surface/40">
-                      <SelectValue placeholder="Seçin" />
+                      <SelectValue placeholder={t('templates.field.selectPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent className="bg-gm-bg-deep text-gm-text">
-                      <SelectItem value="audio">Sesli Görüşme</SelectItem>
-                      <SelectItem value="video">Görüntülü Görüşme</SelectItem>
+                      <SelectItem value="audio">{t('templates.mediaAudioCall')}</SelectItem>
+                      <SelectItem value="video">{t('templates.mediaVideoCall')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -394,19 +396,19 @@ export default function ServiceTemplatesClient() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="tempName" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Şablon Adı</Label>
+                  <Label htmlFor="tempName" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('templates.field.name')}</Label>
                   <Input
                     id="tempName"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ör: Astroloji Harita Analizi"
+                    placeholder={t('templates.field.namePlaceholder')}
                     className="border-gm-border-soft bg-gm-surface/40"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="tempSlug" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Slug</Label>
+                  <Label htmlFor="tempSlug" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('templates.field.slug')}</Label>
                   <Input
                     id="tempSlug"
                     value={slug}
@@ -420,12 +422,12 @@ export default function ServiceTemplatesClient() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tempDesc" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Açıklama</Label>
+                <Label htmlFor="tempDesc" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('templates.field.description')}</Label>
                 <Textarea
                   id="tempDesc"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Şablon hakkında kısa açıklama..."
+                  placeholder={t('templates.field.descriptionPlaceholder')}
                   className="border-gm-border-soft bg-gm-surface/40"
                   rows={3}
                 />
@@ -433,7 +435,7 @@ export default function ServiceTemplatesClient() {
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="duration" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Süre (Dk)</Label>
+                  <Label htmlFor="duration" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('templates.field.duration')}</Label>
                   <Input
                     id="duration"
                     type="number"
@@ -445,7 +447,7 @@ export default function ServiceTemplatesClient() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="tempPrice" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Önerilen Fiyat</Label>
+                  <Label htmlFor="tempPrice" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('templates.field.price')}</Label>
                   <Input
                     id="tempPrice"
                     type="number"
@@ -458,7 +460,7 @@ export default function ServiceTemplatesClient() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="tempCurrency" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Para Birimi</Label>
+                  <Label htmlFor="tempCurrency" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('templates.field.currency')}</Label>
                   <Input
                     id="tempCurrency"
                     value={currency}
@@ -472,8 +474,8 @@ export default function ServiceTemplatesClient() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center justify-between p-4 rounded-2xl border border-gm-border-soft bg-gm-surface/40">
                   <div className="space-y-0.5">
-                    <Label className="text-sm font-bold uppercase tracking-widest text-gm-text text-foreground">Ücretsiz mi?</Label>
-                    <p className="text-[10px] text-gm-muted">Tanışma veya ilk görüşme şablonları için.</p>
+                    <Label className="text-sm font-bold uppercase tracking-widest text-gm-text text-foreground">{t('templates.field.isFree')}</Label>
+                    <p className="text-[10px] text-gm-muted">{t('templates.field.isFreeHelp')}</p>
                   </div>
                   <Switch
                     checked={isFree}
@@ -485,7 +487,7 @@ export default function ServiceTemplatesClient() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="tempSort" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Sıralama</Label>
+                  <Label htmlFor="tempSort" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('templates.field.sortOrder')}</Label>
                   <Input
                     id="tempSort"
                     type="number"
@@ -499,8 +501,8 @@ export default function ServiceTemplatesClient() {
 
               <div className="flex items-center justify-between p-4 rounded-2xl border border-gm-border-soft bg-gm-surface/40">
                 <div className="space-y-0.5">
-                  <Label className="text-sm font-bold uppercase tracking-widest text-gm-text text-foreground">Şablon Aktif mi?</Label>
-                  <p className="text-xs text-gm-muted">Aktif olmayan şablonlar danışmanlara öneri olarak çıkmaz.</p>
+                  <Label className="text-sm font-bold uppercase tracking-widest text-gm-text text-foreground">{t('templates.field.isActive')}</Label>
+                  <p className="text-xs text-gm-muted">{t('templates.field.isActiveHelp')}</p>
                 </div>
                 <Switch
                   checked={isActive}
@@ -511,10 +513,10 @@ export default function ServiceTemplatesClient() {
 
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
-                Vazgeç
+                {t('templates.cancel')}
               </Button>
               <Button type="submit" disabled={busy} className="bg-gm-gold text-white px-6">
-                Kaydet
+                {t('templates.save')}
               </Button>
             </DialogFooter>
           </form>

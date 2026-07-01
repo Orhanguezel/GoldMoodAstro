@@ -80,19 +80,19 @@ export type SiteMetaDefaultObject = z.infer<typeof siteMetaDefaultSchema>;
 export const DEFAULT_OG_IMAGE = '/img/og-default.jpg';
 
 /** -------------------------------------------------------------
- * GLOBAL FALLBACKS (DB boş/kırık ise)
+ * GLOBAL FALLBACKS (when DB is empty or invalid)
  * ------------------------------------------------------------ */
 
 /**
- * ✅ Global fallback – DB boş/kırık olduğunda kullanılır.
- * Asıl değerler site_settings.seo / site_settings.site_seo içinden gelir.
+ * Global fallback used when DB values are empty or invalid.
+ * Primary values come from site_settings.seo / site_settings.site_seo.
  */
 export const DEFAULT_SEO_GLOBAL: SeoObject = {
   site_name: brand.name || 'GoldMoodAstro',
-  title_default: `${brand.name} – Ruhsal Danışmanlık ve Astroloji Platformu`,
-  title_template: `%s – ${brand.name}`,
+  title_default: `${brand.name} - Spiritual Guidance and Astrology Platform`,
+  title_template: `%s - ${brand.name}`,
   description:
-    brand.tagline || 'Ruhsal yolculuğunuzda rehberlik alın. Astroloji, tarot ve mood coaching seansları için uzman danışmanlarla buluşun.',
+    brand.tagline || 'Get guidance on your spiritual journey. Meet expert consultants for astrology, tarot and mood coaching sessions.',
   open_graph: {
     type: 'website',
     images: [DEFAULT_OG_IMAGE],
@@ -110,35 +110,35 @@ export const DEFAULT_SEO_GLOBAL: SeoObject = {
 };
 
 /**
- * ✅ Locale bazlı meta fallback – DB’de locale karşılığı yoksa kullanılır.
- * Asıl değerler site_settings.site_meta_default içinden gelecektir.
+ * Locale-based meta fallback used when DB has no locale value.
+ * Primary values come from site_settings.site_meta_default.
  */
 export const DEFAULT_SITE_META_DEFAULT_BY_LOCALE: Record<string, SiteMetaDefaultObject> = {
   tr: {
-    title: `${brand.name} – Ruhsal Danışmanlık ve Astroloji Platformu`,
+    title: `${brand.name} - Spiritual Guidance and Astrology Platform`,
     description:
-      brand.tagline || 'Astroloji, tarot ve mood coaching ile kendinizi keşfedin. Güvenilir danışmanlarla sesli seanslarınızı hemen başlatın.',
+      brand.tagline || 'Explore yourself with astrology, tarot and mood coaching. Start your voice sessions with trusted consultants now.',
     keywords:
-      'astroloji, tarot, numeroloji, mood coaching, kariyer danışmanlığı, ilişki danışmanlığı, ruhsal rehberlik, online seans',
+      'astrology, tarot, numerology, mood coaching, career guidance, relationship counseling, spiritual guidance, online session',
   },
   en: {
-    title: `${brand.name} – Spiritual Guidance and Astrology Platform`,
+    title: `${brand.name} - Spiritual Guidance and Astrology Platform`,
     description:
       brand.tagline || 'Explore yourself with astrology, tarot, and mood coaching. Start your voice sessions with trusted consultants now.',
     keywords:
       'astrology, tarot, numerology, mood coaching, career guidance, relationship counseling, spiritual guidance, online session',
   },
   de: {
-    title: `${brand.name} – Spirituelle Beratung und Astrologie-Plattform`,
+    title: `${brand.name} - Spiritual Guidance and Astrology Platform`,
     description:
-      brand.tagline || 'Entdecken Sie sich selbst mit Astrologie, Tarot und Mood Coaching. Starten Sie jetzt Ihre Sitzungen mit vertrauenswürdigen Beratern.',
+      brand.tagline || 'Explore yourself with astrology, tarot and mood coaching. Start your sessions with trusted consultants now.',
     keywords:
-      'astrologie, tarot, numerologie, mood coaching, berufsberatung, beziehungsberatung, spirituelle führung, online-sitzung',
+      'astrology, tarot, numerology, mood coaching, career guidance, relationship counseling, spiritual guidance, online session',
   },
 };
 
 /* ------------------------------------------------------------------
- * HELPERS – DB site_settings.value -> Tip güvenli objeler
+ * HELPERS - DB site_settings.value -> type-safe objects
  * ------------------------------------------------------------------ */
 
 function tryParseJson(input: unknown): unknown {
@@ -157,8 +157,8 @@ function tryParseJson(input: unknown): unknown {
 
 /**
  * open_graph.images normalizer:
- * - DB’de bazen images: [{url:"..."}] veya {images:[...]} gibi karışık format gelebilir
- * - Bizim tek kabulümüz: string[]
+ * - DB can sometimes return mixed formats such as images: [{url:"..."}] or {images:[...]}
+ * - The normalized output is string[]
  */
 function normalizeOgImages(input: unknown): string[] {
   const out: string[] = [];
@@ -203,15 +203,15 @@ function normalizeOgImages(input: unknown): string[] {
 }
 
 /**
- * site_settings.seo / site_seo için parse helper:
+ * Parse helper for site_settings.seo / site_seo:
  *
- *  - input: DB’den gelen value (JSON string, object, vs.)
+ *  - input: value from DB (JSON string, object, etc.)
  *  - output: SeoObject
- *  - davranış:
- *      * Zod ile validate eder
- *      * Eksik alanları DEFAULT_SEO_GLOBAL ile doldurur
+ *  - behavior:
+ *      * validates with Zod
+ *      * fills missing fields with DEFAULT_SEO_GLOBAL
  *      * open_graph.images normalize edilir (string[])
- *      * Bozuk/parse edilemeyen durumda tam fallback: DEFAULT_SEO_GLOBAL
+ *      * falls back to DEFAULT_SEO_GLOBAL when parsing fails
  */
 export function parseSeoFromSettings(input: unknown): SeoObject {
   const base = DEFAULT_SEO_GLOBAL;
@@ -249,21 +249,21 @@ export function parseSeoFromSettings(input: unknown): SeoObject {
 }
 
 /**
- * site_settings.site_meta_default parse helper (GoldMoodAstro uyumlu):
+ * site_settings.site_meta_default parse helper for GoldMoodAstro:
  *
- * Desteklenen DB formatları:
+ * Supported DB formats:
  *
- * A) ✅ Yeni standart (senin seed’in): locale başına tek kayıt
+ * A) New standard: one record per locale
  *    value = { "title":"...", "description":"...", "keywords":"..." }
  *
- * B) Eski/alternatif: tek kayıtta map
+ * B) Legacy/alternative: map in a single record
  *    value = {
  *      "tr": { "title":"...", "description":"...", "keywords":"..." },
  *      "en": { ... },
  *      "de": { ... }
  *    }
  *
- * Bu helper her iki formatı da normalize edip döndürür:
+ * This helper normalizes both formats and returns:
  *   Record<string, SiteMetaDefaultObject>
  */
 export function parseSiteMetaDefaultByLocale(
@@ -276,8 +276,8 @@ export function parseSiteMetaDefaultByLocale(
   const raw = tryParseJson(input);
 
   // Case A: direct object {title,description,...}
-  // (DB'den locale bazlı tek kayıt okuyorsan bu fonksiyonu çağırırken locale'ı ayrıca biliyor olabilirsin,
-  // ama burada yine de map formatına normalize edeceğiz.)
+  // When the caller reads one DB record per locale, it may already know the locale;
+  // this branch still normalizes the value to map format.
   const looksLikeSingle = (v: unknown) => {
     return (
       !!v &&
@@ -329,8 +329,8 @@ export function parseSiteMetaDefaultByLocale(
 }
 
 /**
- * ✅ site_settings.site_meta_default tek kayıt (locale’ye göre okunuyorsa) için pratik helper:
- * - input: o locale için value (tek obje)
+ * Practical helper for a single site_settings.site_meta_default record:
+ * - input: value for that locale (single object)
  * - locale: 'tr' | 'en' | 'de' | ...
  */
 export function parseSiteMetaDefault(input: unknown, locale: string): SiteMetaDefaultObject {

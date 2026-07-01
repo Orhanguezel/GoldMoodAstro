@@ -17,12 +17,19 @@ import {
   useUpdateSiteSettingAdminMutation,
 } from "@/integrations/hooks";
 import { toBool } from "@/integrations/shared";
+import { useAdminT } from "@/app/(main)/admin/_components/common/useAdminT";
+import type { TranslateFn } from "@/i18n";
 
-function StatusBadge({ ok }: { ok: boolean }) {
-  return ok ? <Badge>Aktif</Badge> : <Badge variant="destructive">Eksik</Badge>;
+function StatusBadge({ ok, t }: { ok: boolean; t: TranslateFn }) {
+  return ok ? (
+    <Badge>{t("livekit.statusActive", null, "Aktif")}</Badge>
+  ) : (
+    <Badge variant="destructive">{t("livekit.statusMissing", null, "Eksik")}</Badge>
+  );
 }
 
 export function LiveKitTab() {
+  const t = useAdminT("admin.siteSettings");
   const { data, isLoading, isFetching, refetch } = useGetLiveKitAdminStatusQuery();
   const {
     data: featureSetting,
@@ -56,10 +63,10 @@ export function LiveKitTab() {
 
       setFeatureVideoEnabled(featureVideoDraft);
       setFeatureChanged(false);
-      toast.success("Video görüşme flagi güncellendi.");
+      toast.success(t("livekit.featureSaved", null, "Video görüşme flagi güncellendi."));
       await refetchFeature();
     } catch {
-      toast.error("Video görüşme flagi kaydedilemedi.");
+      toast.error(t("livekit.featureSaveError", null, "Video görüşme flagi kaydedilemedi."));
       setFeatureVideoDraft(featureVideoEnabled);
       setFeatureChanged(false);
     }
@@ -78,25 +85,29 @@ export function LiveKitTab() {
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2 text-base">
               <RadioTower className="size-4" />
-              LiveKit Durumu
+              {t("livekit.statusTitle", null, "LiveKit Durumu")}
             </CardTitle>
             <CardDescription>
-              LiveKit değerleri backend .env dosyasından okunur. Secret alanlar admin panelde sadece maskeleme ve
-              yapılandırma durumu olarak gösterilir.
+              {t(
+                "livekit.statusDescription",
+                null,
+                "LiveKit değerleri backend .env dosyasından okunur. Secret alanlar admin panelde sadece maskeleme ve yapılandırma durumu olarak gösterilir.",
+              )}
             </CardDescription>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={() => refetch()} disabled={busy}>
             <RefreshCcw className="mr-2 size-4" />
-            Yenile
+            {t("actions.refresh", null, "Yenile")}
           </Button>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge ok={Boolean(data?.configured)} />
+            <StatusBadge ok={Boolean(data?.configured)} t={t} />
             <Badge variant="outline">
-              Aktif oda: {data?.active_rooms === null || data?.active_rooms === undefined ? "-" : data.active_rooms}
+              {t("livekit.activeRoomsBadge", null, "Aktif oda:")}{" "}
+              {data?.active_rooms === null || data?.active_rooms === undefined ? "-" : data.active_rooms}
             </Badge>
-            {data?.rooms_error ? <Badge variant="destructive">Room API hata</Badge> : null}
+            {data?.rooms_error ? <Badge variant="destructive">{t("livekit.roomApiError", null, "Room API hata")}</Badge> : null}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -109,11 +120,18 @@ export function LiveKitTab() {
               <Input value={data?.api_key_masked ?? ""} readOnly />
             </div>
             <div className="space-y-2">
-              <Label>Webhook Signing Key</Label>
-              <Input value={data?.webhook_signing_key_configured ? "Tanımlı" : "Eksik"} readOnly />
+              <Label>{t("livekit.webhookSigningKey", null, "Webhook Signing Key")}</Label>
+              <Input
+                value={
+                  data?.webhook_signing_key_configured
+                    ? t("livekit.configured", null, "Tanımlı")
+                    : t("livekit.statusMissing", null, "Eksik")
+                }
+                readOnly
+              />
             </div>
             <div className="space-y-2">
-              <Label>Aktif Oda Sayısı</Label>
+              <Label>{t("livekit.activeRoomCount", null, "Aktif Oda Sayısı")}</Label>
               <Input
                 value={
                   data?.active_rooms === null || data?.active_rooms === undefined ? "-" : String(data.active_rooms)
@@ -134,19 +152,22 @@ export function LiveKitTab() {
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
           <div className="space-y-1">
-            <CardTitle className="text-base">Video Görüşme Özelliği</CardTitle>
+            <CardTitle className="text-base">{t("livekit.featureTitle", null, "Video Görüşme Özelliği")}</CardTitle>
             <CardDescription>
-              `feature_video_enabled` ile video akışı global olarak açılır/kapatılır. Sistem sadece bu bayrağın true
-              olduğu durumlarda video akışını aktive etmeye hazırdır.
+              {t(
+                "livekit.featureDescription",
+                null,
+                "`feature_video_enabled` ile video akışı global olarak açılır/kapatılır. Sistem sadece bu bayrağın true olduğu durumlarda video akışını aktive etmeye hazırdır.",
+              )}
             </CardDescription>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={() => refetchFeature()} disabled={featureBusy}>
             <RefreshCcw className="mr-2 size-4" />
-            {featureBusy ? "Yükleniyor..." : "Yenile"}
+            {featureBusy ? t("messages.loading", null, "Yükleniyor...") : t("actions.refresh", null, "Yenile")}
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          {featureBusy ? <div className="text-muted-foreground text-sm">Ayar yükleniyor...</div> : null}
+          {featureBusy ? <div className="text-muted-foreground text-sm">{t("livekit.settingLoading", null, "Ayar yükleniyor...")}</div> : null}
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <Checkbox
@@ -156,19 +177,19 @@ export function LiveKitTab() {
                 disabled={featureBusy}
               />
               <Label htmlFor="feature-video-enabled" className="text-sm">
-                Video görüşmeleri aktif
+                {t("livekit.featureToggleLabel", null, "Video görüşmeleri aktif")}
               </Label>
             </div>
             <Button type="button" onClick={saveFeatureEnabled} disabled={featureBusy || !featureChanged}>
-              {isSavingFeature ? "Kaydediliyor..." : "Kaydet"}
+              {isSavingFeature ? t("actions.saving", null, "Kaydediliyor...") : t("actions.save", null, "Kaydet")}
             </Button>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Badge variant={featureVideoEnabled ? "default" : "outline"}>
-              {featureVideoEnabled ? "Aktif" : "Pasif"}
+              {featureVideoEnabled ? t("livekit.statusActive", null, "Aktif") : t("livekit.statusInactive", null, "Pasif")}
             </Badge>
-            <Badge variant="secondary">Kayıtlı değer: {featureVideoEnabled ? "1" : "0"}</Badge>
+            <Badge variant="secondary">{t("livekit.savedValueBadge", null, "Kayıtlı değer:")} {featureVideoEnabled ? "1" : "0"}</Badge>
           </div>
         </CardContent>
       </Card>

@@ -9,14 +9,28 @@
 // =============================================================
 import { generate, fetchKbForChart, formatKbExcerpts } from '@goldmood/shared-backend/modules/llm';
 
-const SIGN_LABELS_TR: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+const SIGN_LABELS: Record<string, Record<string, string>> = {
+  tr: {
+    aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
+    leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
+    sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+  },
+  en: {
+    aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+    leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+    sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
+  },
+  de: {
+    aries: 'Widder', taurus: 'Stier', gemini: 'Zwillinge', cancer: 'Krebs',
+    leo: 'Löwe', virgo: 'Jungfrau', libra: 'Waage', scorpio: 'Skorpion',
+    sagittarius: 'Schütze', capricorn: 'Steinbock', aquarius: 'Wassermann', pisces: 'Fische',
+  },
 };
 
-function tr(sign?: string) {
-  return (sign && SIGN_LABELS_TR[sign]) || sign || '—';
+function signLabel(sign: string | undefined, locale: string) {
+  if (!sign) return '—';
+  const normalized = locale.toLowerCase().split('-')[0];
+  return SIGN_LABELS[normalized]?.[sign] ?? SIGN_LABELS.tr[sign] ?? sign;
 }
 
 export async function generateNatalReading(args: {
@@ -47,11 +61,11 @@ export async function generateNatalReading(args: {
     locale,
     vars: {
       name,
-      sun_sign: tr(sun?.sign),
+      sun_sign: signLabel(sun?.sign, locale),
       sun_house: sun?.house ?? '—',
-      moon_sign: tr(moon?.sign),
+      moon_sign: signLabel(moon?.sign, locale),
       moon_house: moon?.house ?? '—',
-      ascendant_sign: tr(asc?.sign),
+      ascendant_sign: signLabel(asc?.sign, locale),
       kb_excerpts: kbExcerpts,
       key_aspects: keyAspects,
     },

@@ -73,7 +73,7 @@ export default function BookingSuccessScreen() {
         
         <Text style={styles.title}>{t('booking.successTitle', 'Randevunuz Alındı!')}</Text>
         <Text style={styles.subtitle}>
-          Yıldızlar harika bir görüşme için hizalandı. Randevu detaylarınıza 'Randevularım' sekmesinden ulaşabilirsiniz.
+          {t('booking.successSubtitle', "Yıldızlar harika bir görüşme için hizalandı. Randevu detaylarınıza 'Randevularım' sekmesinden ulaşabilirsiniz.")}
         </Text>
 
         <View style={styles.actions}>

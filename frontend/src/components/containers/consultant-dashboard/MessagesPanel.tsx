@@ -12,6 +12,7 @@ import {
   useMarkConsultantThreadAsReadMutation as useMarkAsReadMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { extractApiError } from '@/integrations/shared';
+import { useUiSection } from '@/i18n';
 
 function formatTime(iso: string) {
   try {
@@ -27,6 +28,7 @@ function initialsOf(name: string | null | undefined) {
 }
 
 export default function MessagesPanel() {
+  const { ui } = useUiSection('ui_consultantpanel');
   const { data: threads = [], isLoading: threadsLoading } = useListMyConsultantThreadsQuery();
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -61,9 +63,9 @@ export default function MessagesPanel() {
     try {
       await reply({ id: activeId, text: draft.trim() }).unwrap();
       setDraft('');
-      toast.success('Cevap gönderildi');
+      toast.success(ui('ui_consultantpanel_messages_reply_sent', 'Reply sent'));
     } catch (e) {
-      toast.error(extractApiError(e, 'Gönderilemedi'));
+      toast.error(extractApiError(e, ui('ui_consultantpanel_messages_send_failed', 'Could not send')));
     }
   };
 
@@ -80,7 +82,7 @@ export default function MessagesPanel() {
       <div className="text-center py-16 px-4">
         <MessageCircle className="w-12 h-12 text-[var(--gm-gold)]/30 mx-auto mb-4" />
         <p className="text-[var(--gm-text-dim)] font-serif italic">
-          Henüz mesajınız yok. Danışanlar sayfanızdaki Mesaj Gönder ile size ulaşabilir.
+          {ui('ui_consultantpanel_messages_empty', 'You have no messages yet. Clients can reach you via the Send Message button on your page.')}
         </p>
       </div>
     );
@@ -94,7 +96,7 @@ export default function MessagesPanel() {
       <div className="border border-[var(--gm-border-soft)] rounded-2xl bg-[var(--gm-surface)]/30 overflow-hidden flex flex-col">
         <div className="px-4 py-3 border-b border-[var(--gm-border-soft)] flex items-center justify-between">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
-            Sohbetler ({threads.length})
+            {ui('ui_consultantpanel_messages_threads_label', 'Chats')} ({threads.length})
           </span>
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -119,7 +121,7 @@ export default function MessagesPanel() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <span className="font-serif text-sm text-[var(--gm-text)] truncate">
-                      {t.customer?.full_name || t.customer?.email || 'Bilinmeyen'}
+                      {t.customer?.full_name || t.customer?.email || ui('ui_consultantpanel_messages_unknown', 'Unknown')}
                     </span>
                     {t.last_message && (
                       <span className="text-[10px] text-[var(--gm-muted)] shrink-0">
@@ -129,7 +131,7 @@ export default function MessagesPanel() {
                   </div>
                   {t.last_message && (
                     <div className="text-[12px] text-[var(--gm-text-dim)] truncate">
-                      {lastFromMe && <span className="text-[var(--gm-gold-dim)] mr-1">Sen:</span>}
+                      {lastFromMe && <span className="text-[var(--gm-gold-dim)] mr-1">{ui('ui_consultantpanel_messages_you_prefix', 'You:')}</span>}
                       {t.last_message.text}
                     </div>
                   )}
@@ -152,7 +154,7 @@ export default function MessagesPanel() {
       <div className="border border-[var(--gm-border-soft)] rounded-2xl bg-[var(--gm-surface)]/30 overflow-hidden flex flex-col">
         {!active ? (
           <div className="flex-1 flex items-center justify-center text-[var(--gm-muted)]">
-            Bir sohbet seçin
+            {ui('ui_consultantpanel_messages_select_thread', 'Select a chat')}
           </div>
         ) : (
           <>
@@ -168,7 +170,7 @@ export default function MessagesPanel() {
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-serif text-base text-[var(--gm-text)]">
-                    {active.customer?.full_name || 'Bilinmeyen Danışan'}
+                    {active.customer?.full_name || ui('ui_consultantpanel_messages_unknown_customer', 'Unknown client')}
                   </span>
                   <ThreadTypeBadge thread={active} />
                 </div>
@@ -176,7 +178,7 @@ export default function MessagesPanel() {
               </div>
             </div>
 
-            {/* T29-6: ortak uyarı banner */}
+            {/* T29-6: shared warning banner */}
             <div className="m-4 mb-0">
               <ChatWarningBanner compact />
             </div>
@@ -228,7 +230,7 @@ export default function MessagesPanel() {
                 }}
                 rows={2}
                 maxLength={2000}
-                placeholder="Cevabını yaz..."
+                placeholder={ui('ui_consultantpanel_messages_reply_placeholder', 'Write your reply...')}
                 disabled={replying}
                 className="flex-1 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)] resize-none focus:ring-2 focus:ring-[var(--gm-gold)]/30 focus:border-[var(--gm-gold)]/40 outline-none"
               />
@@ -238,7 +240,7 @@ export default function MessagesPanel() {
                 className="h-11 px-4 rounded-xl bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] disabled:opacity-50 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
               >
                 {replying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                Gönder
+                {ui('ui_consultantpanel_messages_send_btn', 'Send')}
               </button>
             </div>
           </>
@@ -249,6 +251,7 @@ export default function MessagesPanel() {
 }
 
 function ThreadTypeBadge({ thread }: { thread: Pick<ConsultantSelfThread, 'context_type'> }) {
+  const { ui } = useUiSection('ui_consultantpanel');
   const isBooking = thread.context_type === 'booking';
   return (
     <span
@@ -258,7 +261,7 @@ function ThreadTypeBadge({ thread }: { thread: Pick<ConsultantSelfThread, 'conte
           : 'bg-[var(--gm-bg-deep)] text-[var(--gm-muted)]'
       }`}
     >
-      {isBooking ? 'Randevu' : 'Ön Mesaj'}
+      {isBooking ? ui('ui_consultantpanel_messages_badge_booking', 'Appointment') : ui('ui_consultantpanel_messages_badge_premessage', 'Pre-message')}
     </span>
   );
 }

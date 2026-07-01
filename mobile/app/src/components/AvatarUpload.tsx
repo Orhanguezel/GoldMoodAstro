@@ -11,6 +11,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { Camera, User } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { storageApi, getAssetUrl } from '@/lib/api';
 
@@ -31,6 +32,7 @@ export default function AvatarUpload({
   bucket = 'uploads',
   folder = 'avatars'
 }: AvatarUploadProps) {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors, radius } = theme;
   const [loading, setLoading] = useState(false);
@@ -41,12 +43,12 @@ export default function AvatarUpload({
   const handlePickImage = async () => {
     // Show action sheet for Camera vs Gallery
     Alert.alert(
-      'Profil Fotoğrafı',
-      'Bir fotoğraf seçin',
+      t('avatar.title'),
+      t('avatar.choosePhoto'),
       [
-        { text: 'Kamera', onPress: () => pickImage('camera') },
-        { text: 'Galeri', onPress: () => pickImage('gallery') },
-        { text: 'Vazgeç', style: 'cancel' }
+        { text: t('avatar.camera'), onPress: () => pickImage('camera') },
+        { text: t('avatar.gallery'), onPress: () => pickImage('gallery') },
+        { text: t('avatar.cancel'), style: 'cancel' }
       ]
     );
   };
@@ -58,7 +60,7 @@ export default function AvatarUpload({
         : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permission.granted) {
-        Alert.alert('İzin Gerekli', 'Fotoğraf seçmek için izin vermeniz gerekiyor.');
+        Alert.alert(t('avatar.permissionTitle'), t('avatar.permissionBody'));
         return;
       }
 
@@ -82,7 +84,7 @@ export default function AvatarUpload({
       }
     } catch (e) {
       console.error('Pick image error:', e);
-      Alert.alert('Hata', 'Fotoğraf seçilemedi.');
+      Alert.alert(t('common.error'), t('avatar.pickFailed'));
     }
   };
 
@@ -104,7 +106,7 @@ export default function AvatarUpload({
       }
     } catch (e) {
       console.error('Upload error:', e);
-      Alert.alert('Hata', 'Fotoğraf yüklenemedi.');
+      Alert.alert(t('common.error'), t('avatar.uploadFailed'));
       setPreview(null);
     } finally {
       setLoading(false);

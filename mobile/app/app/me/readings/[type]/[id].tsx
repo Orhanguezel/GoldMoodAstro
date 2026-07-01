@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
 import {
@@ -115,6 +116,7 @@ async function loadReading(type: ReadingHistoryType, id: string): Promise<string
 }
 
 export default function ReadingDetailScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { colors } = theme;
@@ -131,7 +133,7 @@ export default function ReadingDetailScreen() {
 
   useEffect(() => {
     if (!validType || !id) {
-      setError('Geçersiz kayıt.');
+      setError(t('readings.invalidRecord'));
       setLoading(false);
       return;
     }
@@ -140,11 +142,11 @@ export default function ReadingDetailScreen() {
     setError(null);
     loadReading(type as ReadingHistoryType, id)
       .then((body) => {
-        if (!cancelled) setText(body || 'İçerik bulunamadı.');
+        if (!cancelled) setText(body || t('readings.noContent'));
       })
       .catch((e: unknown) => {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'Yüklenemedi.');
+          setError(e instanceof Error ? e.message : t('readings.loadFailed'));
         }
       })
       .finally(() => {
@@ -153,7 +155,7 @@ export default function ReadingDetailScreen() {
     return () => {
       cancelled = true;
     };
-  }, [validType, type, id]);
+  }, [validType, type, id, t]);
 
   return (
     <View style={styles.container}>
@@ -163,7 +165,7 @@ export default function ReadingDetailScreen() {
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
           <Text style={styles.navTitle} numberOfLines={1}>
-            Yorum Detayı
+            {t('readings.detailTitle')}
           </Text>
         </View>
 

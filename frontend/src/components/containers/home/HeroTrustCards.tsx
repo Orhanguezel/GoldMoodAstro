@@ -1,20 +1,11 @@
 'use client';
 
-/**
- * HeroTrustCards — Hero'nun sağ tarafındaki dinamik "floating" kartlar.
- * - Onaylı Danışman kartı: API'den approved danışmanları çeker, avatarlarını döndürür.
- * - Canlı Görüşme kartı: is_available=true olan danışman sayısını gösterir.
- * - İstatistik kartları: toplam kullanıcı / danışman / puan (API'den canlı).
- *
- * Fallback: API yüklenirken skeleton gösterir, hata olursa statik değerlere düşer.
- */
-
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Star, Award } from 'lucide-react';
 import { useListConsultantsPublicQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
+import { useUiSection } from '@/i18n';
 
-/* ── Rotating avatar stack ────────────────────────────────────────────── */
 function AvatarStack({ consultants }: { consultants: Array<{ id: string; full_name?: string; avatar_url?: string }> }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const show = consultants.slice(0, 4);
@@ -58,7 +49,7 @@ function AvatarStack({ consultants }: { consultants: Array<{ id: string; full_na
               {c.avatar_url ? (
                 <Image
                   src={c.avatar_url}
-                  alt={c.full_name || 'Danışman'}
+                  alt={c.full_name || 'Consultant'}
                   width={36}
                   height={36}
                   className="object-cover w-full h-full"
@@ -68,7 +59,6 @@ function AvatarStack({ consultants }: { consultants: Array<{ id: string; full_na
                 initials
               )}
             </div>
-            {/* Tooltip name on hover/active */}
             {isActive && c.full_name && (
               <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] font-bold text-amber-300 tracking-wide animate-fade-in pointer-events-none">
                 {c.full_name.split(' ')[0]}
@@ -86,24 +76,23 @@ function AvatarStack({ consultants }: { consultants: Array<{ id: string; full_na
   );
 }
 
-/* ── Skeleton pulse ───────────────────────────────────────────────────── */
 function Skeleton({ className }: { className?: string }) {
   return (
     <div className={`animate-pulse rounded bg-white/10 ${className ?? ''}`} />
   );
 }
 
-/* ── Main export ─────────────────────────────────────────────────────── */
 interface Props {
   locale?: string;
 }
 
 export default function HeroTrustCards({ locale = 'tr' }: Props) {
-  const isTr = locale === 'tr';
+  const { ui } = useUiSection('ui_extra' as any);
 
   const { data: consultants = [], isLoading } = useListConsultantsPublicQuery({
     sort: 'popular',
     limit: 20,
+    locale,
   });
 
   const approved = consultants.filter((c) => c.approval_status === 'approved');
@@ -111,14 +100,12 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
   const totalCount = approved.length;
   const onlineCount = online.length;
 
-  // Average rating across all approved consultants
   const avgRating = approved.length > 0
     ? (approved.reduce((sum, c) => sum + parseFloat(c.rating_avg || '0'), 0) / approved.length).toFixed(1)
     : '4.9';
 
   return (
     <div className="flex flex-col gap-4 w-64">
-      {/* ── Trust card ─────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-white/10 bg-black/45 p-5 backdrop-blur-xl shadow-2xl">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center shrink-0">
@@ -126,19 +113,16 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-amber-400">
-              {isTr ? 'Onaylı Danışman' : 'Verified Consultants'}
+              {ui('ui_extra_b3_trust_verified_title', 'Verified Consultants')}
             </p>
             <p className="text-[10px] text-white/40 mt-0.5">
               {isLoading
                 ? '...'
-                : isTr
-                ? `${totalCount} uzman profil`
-                : `${totalCount} expert profiles`}
+                : ui('ui_extra_b3_trust_expert_profiles', '{count} expert profiles').replace('{count}', String(totalCount))}
             </p>
           </div>
         </div>
 
-        {/* Avatar stack */}
         <div className="mb-4 min-h-[44px]">
           {isLoading ? (
             <div className="flex -space-x-2">
@@ -151,7 +135,6 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
           )}
         </div>
 
-        {/* Stars + rating */}
         <div className="flex items-center gap-1.5">
           {[...Array(5)].map((_, i) => (
             <Star key={i} size={11} className="text-amber-400 fill-amber-400" />
@@ -164,7 +147,6 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
         </div>
       </div>
 
-      {/* ── Live session card ──────────────────────────────────────── */}
       <div className="rounded-2xl border border-emerald-400/20 bg-emerald-900/30 p-4 backdrop-blur-xl shadow-xl">
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-2.5 w-2.5 shrink-0">
@@ -173,25 +155,20 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
           </span>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">
-              {isTr ? 'Canlı Görüşme' : 'Live Session'}
+              {ui('ui_extra_b3_trust_live_session', 'Live Session')}
             </p>
             {isLoading ? (
               <Skeleton className="w-24 h-2.5 mt-1" />
             ) : (
               <p className="text-[9px] text-white/40 mt-0.5">
                 {onlineCount > 0
-                  ? isTr
-                    ? `${onlineCount} danışman aktif`
-                    : `${onlineCount} consultants online`
-                  : isTr
-                  ? 'Yakında müsait'
-                  : 'Available soon'}
+                  ? ui('ui_extra_b3_trust_consultants_online', '{count} consultants online').replace('{count}', String(onlineCount))
+                  : ui('ui_extra_b3_trust_available_soon', 'Available soon')}
               </p>
             )}
           </div>
         </div>
 
-        {/* Mini avatar row for online consultants */}
         {!isLoading && online.length > 0 && (
           <div className="mt-3 flex -space-x-1.5">
             {online.slice(0, 5).map((c) => {

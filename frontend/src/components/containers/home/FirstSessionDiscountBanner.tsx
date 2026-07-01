@@ -5,18 +5,19 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Gift, Sparkle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUiSection } from '@/i18n';
 
 /**
  * Premium FirstSessionDiscountBanner component.
  * A warm, welcoming design to convert new users with a special discount.
  */
 export default function FirstSessionDiscountBanner({ locale = 'tr' }: { locale?: string }) {
-  const isTr = locale === 'tr';
-  
+  const { ui } = useUiSection('ui_extra' as any);
+
   const content = {
-    title: isTr ? 'İlk Seansa Özel İndirim' : 'First Session Special',
-    subtitle: isTr ? 'Yeni üyelere %20 — danışmanını seç.' : '20% off for new members — pick your expert.',
-    cta: isTr ? 'Hemen Başla' : 'Start Now'
+    title: ui('ui_extra_b3_first_session_title', 'First Session Special'),
+    subtitle: ui('ui_extra_b3_first_session_subtitle', '20% off for new members. Pick your expert.'),
+    cta: ui('ui_extra_b3_first_session_cta', 'Start Now')
   };
 
   return (
@@ -50,7 +51,7 @@ export default function FirstSessionDiscountBanner({ locale = 'tr' }: { locale?:
               <Gift size={18} />
             </div>
             <span className="font-display text-[11px] tracking-[0.3em] uppercase text-(--gm-gold-deep) font-semibold">
-              {isTr ? 'Hoş Geldin Hediyesi' : 'Welcome Gift'}
+              {ui('ui_extra_b3_first_session_badge', 'Welcome Gift')}
             </span>
           </div>
 
@@ -63,7 +64,7 @@ export default function FirstSessionDiscountBanner({ locale = 'tr' }: { locale?:
             {/* Premium %20 Badge */}
             <div className="hidden md:flex items-center justify-center bg-(--gm-gold) text-(--gm-bg-deep) px-4 py-1.5 rounded-full rotate-3 shadow-md border border-(--gm-gold-light)">
               <span className="font-display text-lg font-bold tracking-tighter">%20</span>
-              <span className="text-[10px] ml-1 font-bold uppercase tracking-wider">{isTr ? 'İNDİRİM' : 'OFF'}</span>
+              <span className="text-[10px] ml-1 font-bold uppercase tracking-wider">{ui('ui_extra_b3_first_session_off', 'OFF')}</span>
             </div>
           </div>
 

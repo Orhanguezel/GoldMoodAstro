@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Star, Clock, ShieldCheck, Phone, Calendar } from 'lucide-react';
+import { useUiSection } from '@/i18n';
 
 interface Props {
   fullName: string;
@@ -26,6 +27,7 @@ export default function ConsultantCardPreview({
   sessionDuration = 30,
   isAvailable = true,
 }: Props) {
+  const { ui } = useUiSection('ui_consultantpanel');
   const rating = parseFloat(ratingAvg);
   const initials = (fullName || 'GS')
     .split(' ')
@@ -52,23 +54,23 @@ export default function ConsultantCardPreview({
         {isAvailable && (
           <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 bg-[var(--gm-success)] text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-lg">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--gm-text)] animate-pulse" />
-            Çevrimiçi
+            {ui('ui_consultantpanel_cardpreview_online', 'Online')}
           </span>
         )}
 
         <span className="absolute top-3 right-3 inline-flex items-center gap-1 bg-[var(--gm-bg-deep)]/40 backdrop-blur-sm text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">
           <ShieldCheck className="w-3 h-3 text-[var(--gm-gold)]" />
-          Onaylı
+          {ui('ui_consultantpanel_cardpreview_verified', 'Verified')}
         </span>
       </div>
 
       <div className="p-6 pb-4 flex flex-col">
         <h3 className="font-serif text-xl text-[var(--gm-text)] mb-1 truncate">
-          {fullName || 'Danışman Adı'}
+          {fullName || ui('ui_consultantpanel_cardpreview_name_placeholder', 'Consultant Name')}
         </h3>
 
         <p className="text-[var(--gm-gold-dim)] text-[10px] font-bold tracking-widest uppercase mb-4 truncate">
-          {expertise.length > 0 ? expertise.map((e) => expertiseLabels[e] || e).join(' · ') : 'Uzmanlıklar'}
+          {expertise.length > 0 ? expertise.map((e) => expertiseLabels[e] || e).join(' · ') : ui('ui_consultantpanel_cardpreview_expertise_placeholder', 'Specialties')}
         </p>
 
         <div className="flex items-center gap-4 mb-4 text-xs">
@@ -86,35 +88,35 @@ export default function ConsultantCardPreview({
               ))}
             </div>
             <span className="text-[var(--gm-text)] font-bold">{rating.toFixed(1)}</span>
-            <span className="text-[var(--gm-text-dim)]">{ratingCount} yorum</span>
+            <span className="text-[var(--gm-text-dim)]">{ratingCount} {ui('ui_consultantpanel_cardpreview_reviews', 'reviews')}</span>
           </div>
           <div className="flex items-center gap-1.5 text-[var(--gm-text-dim)]">
             <Clock className="w-3.5 h-3.5" />
-            <span>{sessionDuration} dk</span>
+            <span>{sessionDuration} {ui('ui_consultantpanel_cardpreview_minutes_abbr', 'min')}</span>
           </div>
         </div>
 
         <div className="mt-auto pt-3 border-t border-[var(--gm-border-soft)] flex items-baseline justify-between gap-2 mb-4">
-          <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase">Seans</span>
+          <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase">{ui('ui_consultantpanel_cardpreview_session', 'Session')}</span>
           <span className="text-[var(--gm-gold)] font-serif text-2xl leading-none">₺{Math.round(sessionPrice)}</span>
         </div>
 
         <div className="flex gap-2 opacity-50">
           <div className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full border border-[var(--gm-gold)]/40 text-[var(--gm-gold)] text-[10px] font-bold uppercase tracking-widest py-2.5">
             <Calendar className="w-3.5 h-3.5" />
-            Randevu Al
+            {ui('ui_consultantpanel_cardpreview_book', 'Book Appointment')}
           </div>
           {isAvailable && (
             <div className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--gm-success)] text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest py-2.5">
               <Phone className="w-3.5 h-3.5" />
-              Hemen Görüş
+              {ui('ui_consultantpanel_cardpreview_call_now', 'Call Now')}
             </div>
           )}
         </div>
       </div>
       <div className="absolute inset-0 flex items-center justify-center bg-[var(--gm-bg-deep)]/20 pointer-events-none backdrop-blur-[1px]">
         <span className="bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[8px] font-bold uppercase tracking-[2px] px-3 py-1 rounded-full shadow-lg border border-[var(--gm-gold-light)]/50">
-          Önizleme
+          {ui('ui_consultantpanel_cardpreview_preview', 'Preview')}
         </span>
       </div>
     </div>

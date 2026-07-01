@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/features/auth/auth.store';
 import ChatWarningBanner from '@/components/common/ChatWarningBanner';
 import { getPublicApiBase } from '@/i18n/publicMetaApi';
+import { useUiSection } from '@/i18n';
 
 const API_BASE = getPublicApiBase() || '/api';
 
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function ConsultantMessageModal({ open, onClose, consultantId, consultantName, locale }: Props) {
+  const { ui } = useUiSection('ui_consultantbrowse' as any, locale);
   const { isAuthenticated } = useAuthStore();
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -26,17 +28,17 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
 
   const handleSend = async () => {
     if (!message.trim()) {
-      toast.error('Mesaj boş olamaz');
+      toast.error(ui('ui_consultantbrowse_msg_empty', 'Message cannot be empty'));
       return;
     }
     if (!isAuthenticated) {
-      toast.error('Mesaj göndermek için giriş yapmalısınız');
+      toast.error(ui('ui_consultantbrowse_msg_login_required', 'You must sign in to send a message'));
       window.location.href = `/${locale}/auth/login?next=${encodeURIComponent(window.location.pathname)}`;
       return;
     }
     setSending(true);
     try {
-      // 1) Thread oluştur ya da getir (consultant_lead context)
+      // 1) Create or load thread (consultant_lead context)
       const tRes = await fetch(`${API_BASE}/chat/threads`, {
         method: 'POST',
         credentials: 'include',
@@ -46,7 +48,7 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
       if (!tRes.ok) throw new Error('thread_failed');
       const { thread } = await tRes.json();
 
-      // 2) Mesajı gönder (backend `text` field bekliyor)
+      // 2) Send message (backend expects the `text` field)
       const mRes = await fetch(`${API_BASE}/chat/threads/${encodeURIComponent(thread.id)}/messages`, {
         method: 'POST',
         credentials: 'include',
@@ -55,11 +57,11 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
       });
       if (!mRes.ok) throw new Error('send_failed');
 
-      toast.success('Mesajınız iletildi');
+      toast.success(ui('ui_consultantbrowse_msg_sent', 'Your message has been sent'));
       setMessage('');
       onClose();
     } catch (e: any) {
-      toast.error('Mesaj gönderilemedi');
+      toast.error(ui('ui_consultantbrowse_msg_failed', 'Message could not be sent'));
     } finally {
       setSending(false);
     }
@@ -81,8 +83,8 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
               <MessageCircle className="w-5 h-5" />
             </span>
             <div>
-              <h3 className="font-serif text-lg text-[var(--gm-text)]">{consultantName} ile mesajlaş</h3>
-              <p className="text-[11px] text-[var(--gm-muted)]">Kısa not / soru için</p>
+              <h3 className="font-serif text-lg text-[var(--gm-text)]">{ui('ui_consultantbrowse_modal_title', 'Message {name}').replace('{name}', consultantName)}</h3>
+              <p className="text-[11px] text-[var(--gm-muted)]">{ui('ui_consultantbrowse_modal_subtitle', 'For a short note or question')}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 text-[var(--gm-muted)] hover:text-[var(--gm-text)]">
@@ -90,7 +92,7 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
           </button>
         </div>
 
-        {/* T29-6: ortak uyarı banner */}
+        {/* T29-6: shared warning banner */}
         <div className="m-5 mb-0">
           <ChatWarningBanner locale={locale as any} />
         </div>
@@ -98,13 +100,13 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
         {/* Body */}
         <div className="p-5 space-y-3">
           <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
-            Mesajınız
+            {ui('ui_consultantbrowse_message_label', 'Your message')}
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={5}
-            placeholder="Merhaba, kısa bir sorum var..."
+            placeholder={ui('ui_consultantbrowse_message_placeholder', 'Hello, I have a quick question...')}
             disabled={sending}
             className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-2xl p-4 text-sm text-[var(--gm-text)] focus:ring-2 focus:ring-[var(--gm-gold)]/30 focus:border-[var(--gm-gold)]/40 outline-none resize-none"
             maxLength={500}
@@ -119,7 +121,7 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
             disabled={sending}
             className="px-5 py-2.5 rounded-full border border-[var(--gm-border-soft)] text-[10px] font-bold uppercase tracking-widest text-[var(--gm-text-dim)] hover:text-[var(--gm-text)]"
           >
-            Vazgeç
+            {ui('ui_consultantbrowse_cancel', 'Cancel')}
           </button>
           <button
             onClick={handleSend}
@@ -127,7 +129,7 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 transition-all"
           >
             {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-            {sending ? 'Gönderiliyor' : 'Gönder'}
+            {sending ? ui('ui_consultantbrowse_sending', 'Sending') : ui('ui_consultantbrowse_send', 'Send')}
           </button>
         </div>
       </div>

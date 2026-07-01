@@ -27,28 +27,24 @@ import {
   useListServiceCategoriesAdminQuery,
   useRejectConsultantApplicationAdminMutation,
 } from "@/integrations/hooks";
+import { useLocaleContext } from "@/i18n";
 import { cn } from "@/lib/utils";
 
-const FILTERS: Array<{ label: string; value?: ConsultantApplicationStatus }> = [
-  { label: "Tümü" },
-  { label: "Bekleyen", value: "pending" },
-  { label: "Onaylanan", value: "approved" },
-  { label: "Reddedilen", value: "rejected" },
+const FILTERS: Array<{ key: string; fallback: string; value?: ConsultantApplicationStatus }> = [
+  { key: "filters.all", fallback: "Tümü" },
+  { key: "filters.pending", fallback: "Bekleyen", value: "pending" },
+  { key: "filters.approved", fallback: "Onaylanan", value: "approved" },
+  { key: "filters.rejected", fallback: "Reddedilen", value: "rejected" },
 ];
 
 const SKELETON_ROWS = ["one", "two", "three", "four", "five"];
 
-const STATUS_COPY: Record<ConsultantApplicationStatus, string> = {
-  pending: "Bekliyor",
-  approved: "Onaylandı",
-  rejected: "Reddedildi",
-};
-
-function formatDate(value?: string | null) {
+function formatDate(value: string | null | undefined, locale: string) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleString("tr-TR");
+  const tag = locale === "de" ? "de-DE" : locale === "en" ? "en-US" : "tr-TR";
+  return date.toLocaleString(tag);
 }
 
 function statusClass(status: ConsultantApplicationStatus) {
@@ -86,6 +82,12 @@ function DetailBlock({ label, value }: { label: string; value?: React.ReactNode 
 }
 
 export default function ConsultantApplicationsList() {
+  const { t, locale } = useLocaleContext();
+  const ca = React.useCallback(
+    (key: string, fallback: string, vars?: Record<string, string | number>) =>
+      t(`admin.consultantApplications.${key}`, vars, fallback),
+    [t],
+  );
   const [status, setStatus] = React.useState<ConsultantApplicationStatus | undefined>("pending");
   const [selected, setSelected] = React.useState<ConsultantApplicationAdmin | null>(null);
   const [rejectTarget, setRejectTarget] = React.useState<ConsultantApplicationAdmin | null>(null);
@@ -106,33 +108,37 @@ export default function ConsultantApplicationsList() {
   async function handleApprove(item: ConsultantApplicationAdmin) {
     try {
       const updated = await approve(item.id).unwrap();
-      toast.success("Başvuru onaylandı");
+      toast.success(ca("toast.approved", "Başvuru onaylandı"));
       setSelected(updated);
       query.refetch();
     } catch (error) {
       const message =
         (error as { data?: { error?: string } })?.data?.error === "user_required_for_approval"
           ? "Bu başvuruyu onaylamak için aynı e-postayla kayıtlı bir kullanıcı gerekiyor."
-          : "Başvuru onaylanamadı";
-      toast.error(message);
+          : ca("toast.approveError", "Başvuru onaylanamadı");
+      const localizedMessage =
+        (error as { data?: { error?: string } })?.data?.error === "user_required_for_approval"
+          ? ca("toast.userRequired", "Bu başvuruyu onaylamak için aynı e-postayla kayıtlı bir kullanıcı gerekiyor.")
+          : message;
+      toast.error(localizedMessage);
     }
   }
 
   async function handleReject() {
     if (!rejectTarget) return;
     if (reason.trim().length < 10) {
-      toast.error("Red sebebi en az 10 karakter olmalı");
+      toast.error(ca("toast.reasonMin", "Red sebebi en az 10 karakter olmalı"));
       return;
     }
     try {
       const updated = await reject({ id: rejectTarget.id, rejection_reason: reason.trim() }).unwrap();
-      toast.success("Başvuru reddedildi");
+      toast.success(ca("toast.rejected", "Başvuru reddedildi"));
       setSelected(updated);
       setRejectTarget(null);
       setReason("");
       query.refetch();
     } catch {
-      toast.error("Başvuru reddedilemedi");
+      toast.error(ca("toast.rejectError", "Başvuru reddedilemedi"));
     }
   }
 
@@ -144,10 +150,10 @@ export default function ConsultantApplicationsList() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-gm-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">Danışman Onboarding</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">{ca("eyebrow", "Danışman Onboarding")}</span>
           </div>
-          <h1 className="font-serif text-4xl text-gm-text">Danışman Başvuruları</h1>
-          <p className="text-sm italic text-gm-muted">Yeni danışman adaylarını incele, onayla veya gerekçeli reddet.</p>
+          <h1 className="font-serif text-4xl text-gm-text">{ca("title", "Danışman Başvuruları")}</h1>
+          <p className="text-sm italic text-gm-muted">{ca("description", "Yeni danışman adaylarını incele, onayla veya gerekçeli reddet.")}</p>
         </div>
         <Button
           variant="outline"
@@ -157,14 +163,14 @@ export default function ConsultantApplicationsList() {
           className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-8 text-[10px] font-bold uppercase tracking-widest"
         >
           <RefreshCcw className={cn("mr-2 size-4", query.isFetching && "animate-spin")} />
-          Yenile
+          {ca("refresh", "Yenile")}
         </Button>
       </div>
 
       <div className="flex w-fit flex-wrap gap-2 rounded-full border border-gm-border-soft bg-gm-surface/20 p-1.5">
         {FILTERS.map((item) => (
           <button
-            key={item.label}
+            key={item.key}
             type="button"
             onClick={() => setStatus(item.value)}
             className={cn(
@@ -174,7 +180,7 @@ export default function ConsultantApplicationsList() {
                 : "text-gm-muted hover:bg-gm-surface/40 hover:text-gm-text",
             )}
           >
-            {item.label}
+            {ca(item.key, item.fallback)}
           </button>
         ))}
       </div>
@@ -185,19 +191,19 @@ export default function ConsultantApplicationsList() {
             <TableHeader className="bg-gm-surface/40">
               <TableRow className="border-gm-border-soft hover:bg-transparent">
                 <TableHead className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
-                  Aday
+                  {ca("table.candidate", "Aday")}
                 </TableHead>
                 <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
-                  Uzmanlık
+                  {ca("table.expertise", "Uzmanlık")}
                 </TableHead>
                 <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
-                  Durum
+                  {ca("table.status", "Durum")}
                 </TableHead>
                 <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
-                  Tarih
+                  {ca("table.date", "Tarih")}
                 </TableHead>
                 <TableHead className="px-8 py-6 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">
-                  İşlem
+                  {ca("table.actions", "İşlem")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -225,7 +231,7 @@ export default function ConsultantApplicationsList() {
               ) : query.data?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="py-24 text-center text-gm-muted">
-                    Bu filtrede başvuru yok.
+                    {ca("empty", "Bu filtrede başvuru yok.")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -234,7 +240,7 @@ export default function ConsultantApplicationsList() {
                     <TableCell className="px-8 py-6">
                       <div className="flex items-center gap-4">
                         <div className="flex size-12 items-center justify-center rounded-full border border-gm-border-soft bg-gm-surface font-serif text-xl text-gm-gold">
-                          {item.full_name[0] || "D"}
+                          {item.full_name[0] || ca("fallbackInitial", "D")}
                         </div>
                         <div>
                           <div className="font-serif text-lg text-gm-text">{item.full_name}</div>
@@ -253,10 +259,10 @@ export default function ConsultantApplicationsList() {
                           statusClass(item.status),
                         )}
                       >
-                        {STATUS_COPY[item.status]}
+                        {ca(`status.${item.status}`, item.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="py-6 text-sm text-gm-muted">{formatDate(item.created_at)}</TableCell>
+                    <TableCell className="py-6 text-sm text-gm-muted">{formatDate(item.created_at, locale)}</TableCell>
                     <TableCell className="px-8 py-6">
                       <div className="flex justify-end gap-2">
                         <Button size="icon" variant="ghost" className="rounded-full" onClick={() => setSelected(item)}>
@@ -296,37 +302,37 @@ export default function ConsultantApplicationsList() {
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent className="max-h-[86vh] max-w-3xl overflow-y-auto border-gm-border-soft bg-gm-bg-deep text-gm-text">
           <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">Başvuru Detayı</DialogTitle>
-            <DialogDescription className="text-gm-muted">Form alanları salt okunur görüntülenir.</DialogDescription>
+            <DialogTitle className="font-serif text-2xl">{ca("detail.title", "Başvuru Detayı")}</DialogTitle>
+            <DialogDescription className="text-gm-muted">{ca("detail.description", "Form alanları salt okunur görüntülenir.")}</DialogDescription>
           </DialogHeader>
           {selected && (
             <div className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
-                <DetailBlock label="Ad Soyad" value={selected.full_name} />
-                <DetailBlock label="E-posta" value={selected.email} />
-                <DetailBlock label="Telefon" value={selected.phone} />
+                <DetailBlock label={ca("detail.fullName", "Ad Soyad")} value={selected.full_name} />
+                <DetailBlock label={ca("detail.email", "E-posta")} value={selected.email} />
+                <DetailBlock label={ca("detail.phone", "Telefon")} value={selected.phone} />
                 <DetailBlock
-                  label="Deneyim"
-                  value={selected.experience_years != null ? `${selected.experience_years} yıl` : undefined}
+                  label={ca("detail.experience", "Deneyim")}
+                  value={selected.experience_years != null ? ca("detail.years", "{count} yıl", { count: selected.experience_years }) : undefined}
                 />
-                <DetailBlock label="Uzmanlık" value={<Chips items={selected.expertise} slugToName={slugToName} />} />
-                <DetailBlock label="Diller" value={<Chips items={selected.languages} />} />
+                <DetailBlock label={ca("detail.expertise", "Uzmanlık")} value={<Chips items={selected.expertise} slugToName={slugToName} />} />
+                <DetailBlock label={ca("detail.languages", "Diller")} value={<Chips items={selected.languages} />} />
               </div>
-              <DetailBlock label="Biyografi" value={selected.bio} />
-              <DetailBlock label="Sertifikalar" value={selected.certifications} />
+              <DetailBlock label={ca("detail.bio", "Biyografi")} value={selected.bio} />
+              <DetailBlock label={ca("detail.certifications", "Sertifikalar")} value={selected.certifications} />
               <div className="grid gap-4 md:grid-cols-2">
                 <DetailBlock
-                  label="CV"
+                  label={ca("detail.cv", "CV")}
                   value={
                     selected.cv_url ? (
                       <a className="text-gm-gold underline" href={selected.cv_url} target="_blank" rel="noreferrer">
-                        Dosyayı aç
+                        {ca("detail.openFile", "Dosyayı aç")}
                       </a>
                     ) : undefined
                   }
                 />
                 <DetailBlock
-                  label="Örnek Harita"
+                  label={ca("detail.sampleChart", "Örnek Harita")}
                   value={
                     selected.sample_chart_url ? (
                       <a
@@ -335,13 +341,13 @@ export default function ConsultantApplicationsList() {
                         target="_blank"
                         rel="noreferrer"
                       >
-                        Dosyayı aç
+                        {ca("detail.openFile", "Dosyayı aç")}
                       </a>
                     ) : undefined
                   }
                 />
               </div>
-              {selected.rejection_reason && <DetailBlock label="Red Sebebi" value={selected.rejection_reason} />}
+              {selected.rejection_reason && <DetailBlock label={ca("detail.rejectionReason", "Red Sebebi")} value={selected.rejection_reason} />}
               <div className="flex flex-wrap justify-end gap-3">
                 <Button
                   variant="outline"
@@ -349,7 +355,7 @@ export default function ConsultantApplicationsList() {
                   disabled={busy || selected.status === "approved"}
                   onClick={() => handleApprove(selected)}
                 >
-                  <UserCheck className="mr-2 size-4" /> Onayla
+                  <UserCheck className="mr-2 size-4" /> {ca("actions.approve", "Onayla")}
                 </Button>
                 <Button
                   variant="outline"
@@ -360,7 +366,7 @@ export default function ConsultantApplicationsList() {
                     setReason("");
                   }}
                 >
-                  <FileText className="mr-2 size-4" /> Reddet
+                  <FileText className="mr-2 size-4" /> {ca("actions.reject", "Reddet")}
                 </Button>
               </div>
             </div>
@@ -371,8 +377,8 @@ export default function ConsultantApplicationsList() {
       <Dialog open={!!rejectTarget} onOpenChange={(open) => !open && setRejectTarget(null)}>
         <DialogContent className="border-gm-border-soft bg-gm-bg-deep text-gm-text">
           <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">Başvuruyu Reddet</DialogTitle>
-            <DialogDescription className="text-gm-muted">Adaya gönderilecek red sebebini yazın.</DialogDescription>
+            <DialogTitle className="font-serif text-2xl">{ca("reject.title", "Başvuruyu Reddet")}</DialogTitle>
+            <DialogDescription className="text-gm-muted">{ca("reject.description", "Adaya gönderilecek red sebebini yazın.")}</DialogDescription>
           </DialogHeader>
           <Textarea
             value={reason}
@@ -380,14 +386,14 @@ export default function ConsultantApplicationsList() {
             minLength={10}
             rows={5}
             className="border-gm-border-soft bg-gm-surface/40"
-            placeholder="En az 10 karakter..."
+            placeholder={ca("reject.placeholder", "En az 10 karakter...")}
           />
           <DialogFooter>
             <Button variant="ghost" onClick={() => setRejectTarget(null)}>
-              Vazgeç
+              {ca("actions.cancel", "Vazgeç")}
             </Button>
             <Button onClick={handleReject} disabled={rejectState.isLoading || reason.trim().length < 10}>
-              <Send className="mr-2 size-4" /> Reddet
+              <Send className="mr-2 size-4" /> {ca("actions.reject", "Reddet")}
             </Button>
           </DialogFooter>
         </DialogContent>

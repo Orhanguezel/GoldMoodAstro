@@ -7,11 +7,11 @@ const COPY = {
     eyebrow: 'Ruhsal Rehberlik ✦ GoldMoodAstro',
     title: 'GOLD MOOD',
     subtitle: 'ASTRO',
-    headline: 'Yıldızlarla tanışan <em>modern</em> astroloji<br/>— <strong>tuzaksız, tekrarsız, sahici</strong>.',
-    tagline: 'Doğum haritanızdan beslenen kişisel yorumlar ve dilediğinizde gerçek bir astrologa bağlanma seçeneği. Bilgeliği keşfedin.',
-    primaryCTA: 'Danışmanları Gör',
-    secondaryCTA: 'Haritayı Çıkar',
-    scrollHint: 'Aşağı Kaydır',
+    headline: '<em>Modern</em> astrology meets the stars<br/>— <strong>no traps, no repetition, just authentic</strong>.',
+    tagline: 'Personal readings fed by your birth chart and the option to connect to a real astrologer whenever you want. Discover wisdom.',
+    primaryCTA: 'Explore Consultants',
+    secondaryCTA: 'Get Your Chart',
+    scrollHint: 'Scroll Down',
   },
   en: {
     eyebrow: 'Spiritual Guidance ✦ GoldMoodAstro',
@@ -71,7 +71,6 @@ export default function HeroNew({ locale = 'tr' }: { locale?: string }) {
         </div>
 
         <div className="relative mb-6 hero-critical">
-          {/* Marka adı: tema-bağımsız altın — her preset'te aynı kimlik */}
           <h1
             className="font-display text-[clamp(3.5rem,10vw,8.5rem)] leading-[0.9] tracking-[0.18em] bg-clip-text text-transparent filter drop-shadow-[0_0_30px_rgba(201,169,97,0.35)]"
             style={{

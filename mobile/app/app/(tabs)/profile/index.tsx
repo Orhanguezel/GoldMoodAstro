@@ -75,6 +75,7 @@ function buildScreenStyles(t: AppTheme) {
 }
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useFocusEffect, router } from 'expo-router';
 import { 
   User, 
@@ -100,6 +101,7 @@ import { MenuHeaderButton } from '@/components/MenuHeaderButton';
 import { BannerUpsell } from '@/components/BannerUpsell';
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -143,11 +145,11 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      'Oturumu Kapat',
-      'Çıkış yapmak istediğinize emin misiniz?',
+      t('profile.logoutTitle', 'Oturumu Kapat'),
+      t('auth.logoutConfirm', 'Çıkış yapmak istediğinize emin misiniz?'),
       [
-        { text: 'Vazgeç', style: 'cancel' },
-        { text: 'Çıkış Yap', style: 'destructive', onPress: () => logout() },
+        { text: t('common.giveUp', 'Vazgeç'), style: 'cancel' },
+        { text: t('settings.logout', 'Çıkış Yap'), style: 'destructive', onPress: () => logout() },
       ]
     );
   };
@@ -173,8 +175,8 @@ export default function ProfileScreen() {
           <View style={styles.header}>
             <MenuHeaderButton />
             <View style={styles.headerTitles}>
-              <Text style={styles.headerKicker}>ÜYE PANELİ</Text>
-              <Text style={styles.headerTitle}>Profilim</Text>
+              <Text style={styles.headerKicker}>{t('profile.headerKicker', 'ÜYE PANELİ')}</Text>
+              <Text style={styles.headerTitle}>{t('profile.headerTitle', 'Profilim')}</Text>
             </View>
             <Pressable style={styles.iconBtn} onPress={() => router.push('/settings' as any)}>
               <Settings size={22} color={colors.text} />
@@ -191,7 +193,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.heroInfo}>
               <View style={styles.nameRow}>
-                <Text style={styles.userName}>{user?.full_name || 'Kullanıcı'}</Text>
+                <Text style={styles.userName}>{user?.full_name || t('profile.defaultUserName', 'Kullanıcı')}</Text>
                 <ShieldCheck size={18} color={colors.gold} />
               </View>
               <Text style={styles.userEmail}>{user?.email}</Text>
@@ -203,7 +205,7 @@ export default function ProfileScreen() {
             <Pressable style={styles.summaryCard} onPress={() => router.push('/profile/credits' as any)}>
               <View style={styles.summaryIcon}><Wallet size={20} color={colors.gold} /></View>
               <View>
-                <Text style={styles.summaryLabel}>KREDİ BAKİYESİ</Text>
+                <Text style={styles.summaryLabel}>{t('profile.creditBalanceLabel', 'KREDİ BAKİYESİ')}</Text>
                 <Text style={styles.summaryValue}>{credits?.balance || 0}</Text>
               </View>
             </Pressable>
@@ -212,20 +214,20 @@ export default function ProfileScreen() {
                 <Crown size={20} color={hasActiveSub ? colors.ink : colors.goldDim} />
               </View>
               <View>
-                <Text style={styles.summaryLabel}>ÜYELİK TİPİ</Text>
-                <Text style={[styles.summaryValue, hasActiveSub && { color: colors.gold }]}>{hasActiveSub ? 'Premium' : 'Standart'}</Text>
+                <Text style={styles.summaryLabel}>{t('profile.membershipTypeLabel', 'ÜYELİK TİPİ')}</Text>
+                <Text style={[styles.summaryValue, hasActiveSub && { color: colors.gold }]}>{hasActiveSub ? t('profile.membershipPremium', 'Premium') : t('profile.membershipStandard', 'Standart')}</Text>
               </View>
             </Pressable>
           </View>
 
           {/* Menu Sections */}
           <View style={styles.group}>
-            <Text style={styles.groupTitle}>HESAP YÖNETİMİ</Text>
-            
+            <Text style={styles.groupTitle}>{t('profile.groupAccount', 'HESAP YÖNETİMİ')}</Text>
+
             <Pressable style={styles.menuItem} onPress={() => router.push('/(tabs)/bookings' as any)}>
               <View style={styles.menuLeft}>
                 <CalendarDays size={20} color={colors.goldDim} />
-                <Text style={styles.menuText}>Randevularım</Text>
+                <Text style={styles.menuText}>{t('profile.menuBookings', 'Randevularım')}</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
@@ -233,7 +235,7 @@ export default function ProfileScreen() {
             <Pressable style={styles.menuItem} onPress={() => router.push('/notifications' as any)}>
               <View style={styles.menuLeft}>
                 <Bell size={20} color={colors.goldDim} />
-                <Text style={styles.menuText}>Bildirimler</Text>
+                <Text style={styles.menuText}>{t('profile.menuNotifications', 'Bildirimler')}</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
@@ -241,7 +243,7 @@ export default function ProfileScreen() {
             <Pressable style={styles.menuItem}>
               <View style={styles.menuLeft}>
                 <User size={20} color={colors.goldDim} />
-                <Text style={styles.menuText}>Profil Bilgileri</Text>
+                <Text style={styles.menuText}>{t('profile.menuProfileInfo', 'Profil Bilgileri')}</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
@@ -251,14 +253,14 @@ export default function ProfileScreen() {
           <BannerUpsell />
 
           <View style={styles.group}>
-            <Text style={styles.groupTitle}>KUPONLARIM</Text>
+            <Text style={styles.groupTitle}>{t('profile.groupCoupons', 'KUPONLARIM')}</Text>
             <View style={styles.couponPanel}>
               <View style={styles.couponHeader}>
                 <Text style={styles.couponCount}>{campaigns.active.length}</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.couponTitle}>Geçerli Kampanyalar</Text>
+                  <Text style={styles.couponTitle}>{t('profile.couponsValidTitle', 'Geçerli Kampanyalar')}</Text>
                   <Text style={styles.couponSubtitle}>
-                    Kullanılmış kupon: {campaigns.redeemed.length}
+                    {t('profile.couponsRedeemed', { defaultValue: 'Kullanılmış kupon: {{count}}', count: campaigns.redeemed.length })}
                   </Text>
                 </View>
               </View>
@@ -266,23 +268,23 @@ export default function ProfileScreen() {
                 <View key={campaign.id} style={styles.couponItem}>
                   <Text style={styles.couponCode}>{campaign.code}</Text>
                   <Text style={styles.couponMeta}>
-                    {campaign.type === 'discount_percentage' ? `%${Number(campaign.value)}` : `${campaign.value}`} indirim
+                    {t('profile.couponDiscount', { defaultValue: '{{value}} indirim', value: campaign.type === 'discount_percentage' ? `%${Number(campaign.value)}` : `${campaign.value}` })}
                   </Text>
                 </View>
               ))}
               {campaigns.active.length === 0 && (
-                <Text style={styles.couponEmpty}>Şu anda hesabınıza uygun aktif kupon yok.</Text>
+                <Text style={styles.couponEmpty}>{t('profile.couponsEmpty', 'Şu anda hesabınıza uygun aktif kupon yok.')}</Text>
               )}
             </View>
           </View>
 
           <View style={styles.group}>
-            <Text style={styles.groupTitle}>DESTEK & GÜVENLİK</Text>
-            
+            <Text style={styles.groupTitle}>{t('profile.groupSupport', 'DESTEK & GÜVENLİK')}</Text>
+
             <Pressable style={styles.menuItem} onPress={() => router.push('/karne' as any)}>
               <View style={styles.menuLeft}>
                 <Star size={20} color={colors.goldDim} />
-                <Text style={styles.menuText}>Astrolog Karnesi</Text>
+                <Text style={styles.menuText}>{t('profile.menuKarne', 'Astrolog Karnesi')}</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
@@ -290,7 +292,7 @@ export default function ProfileScreen() {
             <Pressable style={styles.menuItem} onPress={() => router.push('/info' as any)}>
               <View style={styles.menuLeft}>
                 <MessageSquare size={20} color={colors.goldDim} />
-                <Text style={styles.menuText}>Yardım & Destek</Text>
+                <Text style={styles.menuText}>{t('profile.menuHelp', 'Yardım & Destek')}</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
@@ -298,7 +300,7 @@ export default function ProfileScreen() {
             <Pressable style={styles.menuItem} onPress={() => router.push('/profile/privacy' as any)}>
               <View style={styles.menuLeft}>
                 <AlertTriangle size={20} color={colors.danger} />
-                <Text style={[styles.menuText, { color: colors.danger }]}>Gizlilik ve Veri</Text>
+                <Text style={[styles.menuText, { color: colors.danger }]}>{t('profile.menuPrivacy', 'Gizlilik ve Veri')}</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
@@ -306,7 +308,7 @@ export default function ProfileScreen() {
             <Pressable style={styles.menuItem} onPress={handleLogout}>
               <View style={styles.menuLeft}>
                 <LogOut size={20} color={colors.danger} />
-                <Text style={[styles.menuText, { color: colors.danger }]}>Oturumu Kapat</Text>
+                <Text style={[styles.menuText, { color: colors.danger }]}>{t('profile.logoutTitle', 'Oturumu Kapat')}</Text>
               </View>
             </Pressable>
           </View>
@@ -314,7 +316,7 @@ export default function ProfileScreen() {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerVersion}>GoldMoodAstro v1.0.0</Text>
-            <Text style={styles.footerCopy}>© 2026 Ruhsal Danışmanlık Platformu</Text>
+            <Text style={styles.footerCopy}>{t('profile.footerCopy', '© 2026 Ruhsal Danışmanlık Platformu')}</Text>
           </View>
 
         </ScrollView>

@@ -12,6 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, Send } from 'lucide-react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
@@ -79,6 +80,7 @@ export default function ContactScreen() {
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { colors } = theme;
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   const [name, setName] = useState(user?.full_name ?? '');
@@ -90,7 +92,7 @@ export default function ContactScreen() {
 
   const handleSubmit = async () => {
     if (!name.trim() || !email.trim() || phone.trim().length < 5 || !subject.trim() || message.trim().length < 10) {
-      Alert.alert('Eksik bilgi', 'Tüm alanları doldurun (mesaj en az 10 karakter).');
+      Alert.alert(t('common.missingInfo'), t('contact.errorFields'));
       return;
     }
     setLoading(true);
@@ -102,11 +104,11 @@ export default function ContactScreen() {
         subject: subject.trim(),
         message: message.trim(),
       });
-      Alert.alert('Teşekkürler', 'Mesajınız alındı. En kısa sürede dönüş yapacağız.', [
-        { text: 'Tamam', onPress: () => safeRouterBack() },
+      Alert.alert(t('contact.successTitle'), t('contact.successBody'), [
+        { text: t('common.ok'), onPress: () => safeRouterBack() },
       ]);
     } catch (err: unknown) {
-      Alert.alert('Hata', err instanceof Error ? err.message : 'Gönderilemedi.');
+      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('contact.submitError'));
     } finally {
       setLoading(false);
     }
@@ -119,13 +121,13 @@ export default function ContactScreen() {
           <Pressable style={styles.backBtn} onPress={() => safeRouterBack()}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>İletişim</Text>
+          <Text style={styles.title}>{t('contact.title')}</Text>
         </View>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-            <Text style={styles.label}>AD SOYAD</Text>
+            <Text style={styles.label}>{t('contact.nameLabel')}</Text>
             <TextInput style={styles.input} value={name} onChangeText={setName} placeholderTextColor={colors.textMuted} />
-            <Text style={styles.label}>E-POSTA</Text>
+            <Text style={styles.label}>{t('contact.emailLabel')}</Text>
             <TextInput
               style={styles.input}
               value={email}
@@ -134,7 +136,7 @@ export default function ContactScreen() {
               autoCapitalize="none"
               placeholderTextColor={colors.textMuted}
             />
-            <Text style={styles.label}>TELEFON</Text>
+            <Text style={styles.label}>{t('contact.phoneLabel')}</Text>
             <TextInput
               style={styles.input}
               value={phone}
@@ -143,9 +145,9 @@ export default function ContactScreen() {
               placeholder="+90..."
               placeholderTextColor={colors.textMuted}
             />
-            <Text style={styles.label}>KONU</Text>
+            <Text style={styles.label}>{t('contact.subjectLabel')}</Text>
             <TextInput style={styles.input} value={subject} onChangeText={setSubject} placeholderTextColor={colors.textMuted} />
-            <Text style={styles.label}>MESAJ</Text>
+            <Text style={styles.label}>{t('contact.messageLabel')}</Text>
             <TextInput
               style={[styles.input, styles.message]}
               value={message}
@@ -159,7 +161,7 @@ export default function ContactScreen() {
               ) : (
                 <>
                   <Send size={18} color={colors.ink} />
-                  <Text style={styles.submitText}>Gönder</Text>
+                  <Text style={styles.submitText}>{t('contact.submit')}</Text>
                 </>
               )}
             </Pressable>

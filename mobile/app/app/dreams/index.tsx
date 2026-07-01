@@ -104,20 +104,23 @@ import { router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 
 
+import { useTranslation } from 'react-i18next';
+
 import { dreamsApi } from '@/lib/api';
 import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
 
 const { width } = Dimensions.get('window');
 
-const LOADING_PHASES = [
-  'Rüyandaki sembolleri okuyorum...',
-  'Bilinçaltının derinliklerine iniyorum...',
-  'Anlamlarıyla harmanlıyorum...',
-  'Arketipleri analiz ediyorum...',
-  'Kişisel yorumunu hazırlıyorum...'
+const LOADING_PHASE_KEYS = [
+  'dream.loading1',
+  'dream.loading2',
+  'dream.loading3',
+  'dream.loading4',
+  'dream.loading5',
 ];
 
 export default function DreamsScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -132,7 +135,7 @@ export default function DreamsScreen() {
     let interval: ReturnType<typeof setInterval> | undefined;
     if (step === 'processing') {
       interval = setInterval(() => {
-        setLoadingPhase((prev) => (prev + 1) % LOADING_PHASES.length);
+        setLoadingPhase((prev) => (prev + 1) % LOADING_PHASE_KEYS.length);
       }, 2500);
 
       Animated.loop(
@@ -157,7 +160,7 @@ export default function DreamsScreen() {
   const handleInterpret = async () => {
     if (dreamText.length < 50) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Eksik Bilgi', 'Lütfen rüyanızı biraz daha detaylı anlatın (en az 50 karakter).');
+      Alert.alert(t('dream.missingInfoTitle'), t('dream.minLengthError'));
       return;
     }
     
@@ -173,7 +176,7 @@ export default function DreamsScreen() {
       setStep('result');
     } catch (e: any) {
       console.error('Dream interpretation error:', e);
-      Alert.alert('Hata', e?.message || 'Rüya yorumlanırken bir hata oluştu.');
+      Alert.alert(t('common.errorTitle'), e?.message || t('dream.interpretError'));
       setStep('input');
     }
   };
@@ -203,15 +206,15 @@ export default function DreamsScreen() {
               <View style={styles.iconCircle}>
                 <CloudMoon size={40} color={colors.gold} />
               </View>
-              <Text style={styles.headerTitle}>Rüya Tabiri</Text>
-              <Text style={styles.headerSubtitle}>Bilinçaltının uykudaki gizli dilini çözün.</Text>
+              <Text style={styles.headerTitle}>{t('dream.headerTitle')}</Text>
+              <Text style={styles.headerSubtitle}>{t('dream.headerSubtitle')}</Text>
             </View>
 
             <View style={styles.inputSection}>
               <View style={styles.inputCard}>
                 <TextInput
                   style={styles.textArea}
-                  placeholder="Rüyanızda neler gördünüz? Mekanlar, kişiler, renkler ve hissettiklerinizi detaylıca anlatın..."
+                  placeholder={t('dream.inputPlaceholder')}
                   placeholderTextColor={colors.textMuted + '66'}
                   value={dreamText}
                   onChangeText={setDreamText}
@@ -222,11 +225,11 @@ export default function DreamsScreen() {
                    <View style={styles.charHint}>
                      <BookOpen size={12} color={dreamText.length < 50 ? colors.warning : colors.gold} />
                      <Text style={[styles.charHintText, dreamText.length < 50 && { color: colors.warning }]}>
-                       {dreamText.length} / 2000 Karakter
+                       {t('dream.charCount', { count: dreamText.length, max: 2000 })}
                      </Text>
                    </View>
                    <Text style={styles.statusText}>
-                     {dreamText.length < 50 ? 'Yetersiz' : dreamText.length < 200 ? 'İyi' : 'Harika!'}
+                     {dreamText.length < 50 ? t('dream.statusInsufficient') : dreamText.length < 200 ? t('dream.statusGood') : t('dream.statusGreat')}
                    </Text>
                 </View>
               </View>
@@ -238,7 +241,7 @@ export default function DreamsScreen() {
               disabled={dreamText.length < 50}
             >
               <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
-                <Text style={styles.primaryBtnText}>RÜYAMI YORUMLA</Text>
+                <Text style={styles.primaryBtnText}>{t('dream.interpretBtn')}</Text>
                 <Send size={16} color={colors.ink} />
               </LinearGradient>
             </Pressable>
@@ -275,8 +278,8 @@ export default function DreamsScreen() {
           </View>
           
           <View style={styles.phaseTextContainer}>
-            <Text style={styles.processingTitle}>{LOADING_PHASES[loadingPhase]}</Text>
-            <Text style={styles.processingSubtitle}>Lütfen bekleyin, rüyanız analiz ediliyor...</Text>
+            <Text style={styles.processingTitle}>{t(LOADING_PHASE_KEYS[loadingPhase])}</Text>
+            <Text style={styles.processingSubtitle}>{t('dream.processingSubtitle')}</Text>
           </View>
         </View>
       </View>
@@ -288,8 +291,8 @@ export default function DreamsScreen() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         <ScrollView contentContainerStyle={styles.resultContent} showsVerticalScrollIndicator={false}>
           <View style={styles.resultHeader}>
-             <Text style={styles.resultOverline}>Rüya Mesajı</Text>
-             <Text style={styles.resultTitle}>Rüya Analizi</Text>
+             <Text style={styles.resultOverline}>{t('dream.resultOverline')}</Text>
+             <Text style={styles.resultTitle}>{t('dream.resultTitle')}</Text>
           </View>
 
           <ScrollView 
@@ -316,7 +319,7 @@ export default function DreamsScreen() {
             
             <View style={styles.footerNote}>
                <Text style={styles.footerNoteText}>
-                 * Bu yorum psikolojik arketipler ve kadim semboloji temel alınarak üretilmiştir.
+                 {t('dream.footerNote')}
                </Text>
             </View>
           </LinearGradient>
@@ -334,10 +337,10 @@ export default function DreamsScreen() {
               style={styles.promoGradient}
             >
               <View style={styles.promoContent}>
-                <Text style={styles.promoTitle}>🌙 Bu Rüyanın Yansıması</Text>
-                <Text style={styles.promoDesc}>Enerjini bugüne taşımak için 1 tarot kartı çek.</Text>
+                <Text style={styles.promoTitle}>{t('dream.promoTitle')}</Text>
+                <Text style={styles.promoDesc}>{t('dream.promoDesc')}</Text>
                 <View style={styles.promoAction}>
-                  <Text style={styles.promoActionText}>KART ÇEK</Text>
+                  <Text style={styles.promoActionText}>{t('dream.promoAction')}</Text>
                   <ArrowRight size={14} color={colors.gold} />
                 </View>
               </View>
@@ -348,7 +351,7 @@ export default function DreamsScreen() {
           <View style={styles.resultActions}>
             <Pressable style={styles.shareBtn} onPress={handleShare}>
               <Share2 size={20} color={colors.text} />
-              <Text style={styles.shareBtnText}>PAYLAŞ</Text>
+              <Text style={styles.shareBtnText}>{t('common.share')}</Text>
             </Pressable>
 
             <Pressable 
@@ -361,7 +364,7 @@ export default function DreamsScreen() {
               }}
             >
               <RotateCcw size={16} color={colors.gold} />
-              <Text style={styles.resetBtnText}>YENİ RÜYA</Text>
+              <Text style={styles.resetBtnText}>{t('dream.newDream')}</Text>
             </Pressable>
           </View>
 
@@ -369,7 +372,7 @@ export default function DreamsScreen() {
             style={styles.consultantCta}
             onPress={() => router.push('/(tabs)/connect' as any)}
           >
-            <Text style={styles.consultantCtaText}>Daha derin analiz için bir astrolog ile görüşün →</Text>
+            <Text style={styles.consultantCtaText}>{t('dream.consultantCta')}</Text>
           </Pressable>
         </ScrollView>
       </SafeAreaView>

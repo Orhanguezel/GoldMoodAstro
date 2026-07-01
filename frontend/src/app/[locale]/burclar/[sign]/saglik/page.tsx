@@ -8,9 +8,9 @@ type Props = {
 };
 
 const labels: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık'
+  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces'
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -21,8 +21,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'burclar-saglik',
     pathname: `/burclar/${sign}/saglik`,
     fallback: {
-      title: `${label} Burcu Sağlık ve Yaşam Kalitesi`,
-      description: `${label} burcunun hassas olduğu bölgeler, beslenme önerileri ve ruhsal dengesi için ipuçları.`,
+      title: `${label} Wellness and Quality of Life`,
+      description: `Sensitive areas, nutrition suggestions and spiritual balance tips for ${label}.`,
     },
   });
 }

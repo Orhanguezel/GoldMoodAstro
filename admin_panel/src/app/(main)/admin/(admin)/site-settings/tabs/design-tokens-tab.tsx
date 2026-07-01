@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
+import type { TranslateFn } from '@/i18n';
 
 type TokenForm = {
   version: string;
@@ -128,13 +130,13 @@ function ColorRow({ label, value, onChange, disabled }: { label: string; value: 
   );
 }
 
-function PreviewCard({ form }: { form: TokenForm }) {
+function PreviewCard({ form, t }: { form: TokenForm; t: TranslateFn }) {
   return (
     <Card className="bg-[#FAF6EF] border-[#C9A961]/20 rounded-[32px] overflow-hidden p-8 shadow-[0_20px_50px_rgba(45,37,32,0.15)]">
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <div className="w-8 h-px bg-[#C9A961]" />
-          <span className="text-[#C9A961] font-bold text-[9px] tracking-[0.3em] uppercase" style={{ fontFamily: form.typography.font_sans }}>Önizleme</span>
+          <span className="text-[#C9A961] font-bold text-[9px] tracking-[0.3em] uppercase" style={{ fontFamily: form.typography.font_sans }}>{t('designTokens.preview', null, 'Önizleme')}</span>
         </div>
         <h3 className="text-3xl text-[#2A2620]" style={{ fontFamily: form.typography.font_display }}>{form.branding.app_name}</h3>
         <p className="text-lg text-[#4A4238] italic leading-relaxed" style={{ fontFamily: form.typography.font_serif }}>
@@ -142,10 +144,10 @@ function PreviewCard({ form }: { form: TokenForm }) {
         </p>
         <div className="flex flex-wrap gap-3 pt-4">
           <Button style={{ backgroundColor: form.colors.brand_primary, color: '#1A1715', borderRadius: form.radius.pill, fontFamily: form.typography.font_sans }} className="px-8 font-bold tracking-widest uppercase text-[10px] border-none shadow-[0_10px_20px_rgba(201,169,97,0.2)] hover:scale-105 transition-transform">
-            Randevu Al
+            {t('designTokens.previewBookButton', null, 'Randevu Al')}
           </Button>
           <Button variant="outline" style={{ borderColor: form.colors.brand_primary, color: '#2A2620', borderRadius: form.radius.pill, fontFamily: form.typography.font_sans }} className="px-8 font-bold tracking-widest uppercase text-[10px] bg-transparent hover:bg-[#C9A961]/5 transition-colors">
-            Profil
+            {t('designTokens.previewProfileButton', null, 'Profil')}
           </Button>
         </div>
       </div>
@@ -156,9 +158,11 @@ function PreviewCard({ form }: { form: TokenForm }) {
 function ThemePresetsSection({
   busy,
   onApplied,
+  t,
 }: {
   busy: boolean;
   onApplied: (tokens: TokenForm) => void;
+  t: TranslateFn;
 }) {
   const { data: presetsRow, isLoading: lp } = useGetSiteSettingAdminByKeyQuery('theme_presets');
   const { data: activeRow, isLoading: la, refetch: refetchActive } =
@@ -198,11 +202,11 @@ function ThemePresetsSection({
 
       toast.success(
         revalidated
-          ? `"${preset.label}" teması uygulandı ve frontend cache temizlendi.`
-          : `"${preset.label}" teması uygulandı (cache 5 dk içinde otomatik yenilenecek).`,
+          ? t('designTokens.themeAppliedWithCache', { label: preset.label }, `"${preset.label}" teması uygulandı ve frontend cache temizlendi.`)
+          : t('designTokens.themeAppliedNoCache', { label: preset.label }, `"${preset.label}" teması uygulandı (cache 5 dk içinde otomatik yenilenecek).`),
       );
     } catch {
-      toast.error('Tema uygulanırken hata oluştu.');
+      toast.error(t('designTokens.themeApplyError', null, 'Tema uygulanırken hata oluştu.'));
     } finally {
       setApplyingId(null);
     }
@@ -218,9 +222,9 @@ function ThemePresetsSection({
           <Layout size={20} />
         </div>
         <div>
-          <h4 className="font-serif text-xl">Tema Şablonları</h4>
+          <h4 className="font-serif text-xl">{t('designTokens.presetsTitle', null, 'Tema Şablonları')}</h4>
           <p className="text-xs text-muted-foreground italic">
-            Hazır tema paletlerinden birini uygulayın. Aktif şablon:{' '}
+            {t('designTokens.presetsDescription', null, 'Hazır tema paletlerinden birini uygulayın. Aktif şablon:')}{' '}
             <span className="font-semibold text-foreground not-italic">{activeLabel || '—'}</span>
           </p>
         </div>
@@ -256,7 +260,7 @@ function ThemePresetsSection({
                 </div>
                 {isActive && (
                   <Badge className="absolute top-3 right-3 bg-[#C9A961] text-[#1A1715] hover:bg-[#C9A961] text-[10px] tracking-widest uppercase">
-                    Aktif
+                    {t('designTokens.presetActive', null, 'Aktif')}
                   </Badge>
                 )}
               </div>
@@ -277,7 +281,7 @@ function ThemePresetsSection({
                     !isActive && 'bg-[#C9A961] text-[#1A1715] hover:bg-[#C9A961]/90',
                   )}
                 >
-                  {isLoading ? 'Uygulanıyor...' : isActive ? 'Şu an aktif' : 'Bu Temayı Uygula'}
+                  {isLoading ? t('designTokens.presetApplying', null, 'Uygulanıyor...') : isActive ? t('designTokens.presetCurrentlyActive', null, 'Şu an aktif') : t('designTokens.presetApply', null, 'Bu Temayı Uygula')}
                 </Button>
               </CardContent>
             </Card>
@@ -290,6 +294,7 @@ function ThemePresetsSection({
 }
 
 export const DesignTokensTab: React.FC = () => {
+  const t = useAdminT('admin.siteSettings');
   const { data: settingRow, isLoading, isFetching, refetch } = useGetSiteSettingAdminByKeyQuery('design_tokens');
   const [updateSetting, { isLoading: isSaving }] = useUpdateSiteSettingAdminMutation();
   const [form, setForm] = React.useState<TokenForm>(DEFAULTS);
@@ -307,11 +312,11 @@ export const DesignTokensTab: React.FC = () => {
       const revalidated = await purgeFrontendThemeCache();
       toast.success(
         revalidated
-          ? 'Tasarım tokenları kaydedildi ve frontend cache temizlendi.'
-          : 'Tasarım tokenları kaydedildi (cache kısa süre içinde yenilenecek).',
+          ? t('designTokens.savedWithCache', null, 'Tasarım tokenları kaydedildi ve frontend cache temizlendi.')
+          : t('designTokens.savedNoCache', null, 'Tasarım tokenları kaydedildi (cache kısa süre içinde yenilenecek).'),
       );
     } catch {
-      toast.error('Kayıt sırasında hata oluştu.');
+      toast.error(t('designTokens.saveError', null, 'Kayıt sırasında hata oluştu.'));
     }
   };
 
@@ -324,21 +329,21 @@ export const DesignTokensTab: React.FC = () => {
         <div>
           <div className="flex items-center gap-3 mb-4">
             <span className="w-8 h-px bg-[#C9A961]" />
-            <span className="text-[#C9A961] font-bold text-[10px] tracking-[0.2em] uppercase">Görsel Kimlik</span>
+            <span className="text-[#C9A961] font-bold text-[10px] tracking-[0.2em] uppercase">{t('designTokens.eyebrow', null, 'Görsel Kimlik')}</span>
           </div>
-          <h2 className="font-serif text-3xl text-foreground">Design Token Editörü</h2>
+          <h2 className="font-serif text-3xl text-foreground">{t('designTokens.title', null, 'Design Token Editörü')}</h2>
           <p className="text-muted-foreground text-sm mt-2 font-serif italic">
-            Uygulamanın renk paleti, tipografi ve stil kurallarını gerçek zamanlı yönetin.
+            {t('designTokens.description', null, 'Uygulamanın renk paleti, tipografi ve stil kurallarını gerçek zamanlı yönetin.')}
           </p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={busy} className="rounded-full border-border/40 px-6 h-11">
             <RefreshCcw className={cn("mr-2 size-4", busy && "animate-spin")} />
-            Yenile
+            {t('actions.refresh', null, 'Yenile')}
           </Button>
           <Button onClick={handleSave} disabled={busy} className="bg-[#C9A961] text-[#1A1715] hover:bg-[#C9A961]/90 rounded-full px-10 h-11 font-bold tracking-widest uppercase">
             <Save className="mr-2 size-4" />
-            DEĞİŞİKLİKLERİ KAYDET
+            {t('designTokens.saveButton', null, 'DEĞİŞİKLİKLERİ KAYDET')}
           </Button>
         </div>
       </div>
@@ -346,6 +351,7 @@ export const DesignTokensTab: React.FC = () => {
       <ThemePresetsSection
         busy={busy}
         onApplied={(tokens) => setForm((prev) => ({ ...prev, ...tokens }))}
+        t={t}
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
@@ -358,8 +364,8 @@ export const DesignTokensTab: React.FC = () => {
                 <Palette size={20} />
               </div>
               <div>
-                <h4 className="font-serif text-xl">Renk Paleti</h4>
-                <p className="text-xs text-muted-foreground italic">Marka renkleri ve arayüz tonları.</p>
+                <h4 className="font-serif text-xl">{t('designTokens.colorsTitle', null, 'Renk Paleti')}</h4>
+                <p className="text-xs text-muted-foreground italic">{t('designTokens.colorsDescription', null, 'Marka renkleri ve arayüz tonları.')}</p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -378,8 +384,8 @@ export const DesignTokensTab: React.FC = () => {
                 <Type size={20} />
               </div>
               <div>
-                <h4 className="font-serif text-xl">Tipografi</h4>
-                <p className="text-xs text-muted-foreground italic">Font aileleri ve temel metin boyutları.</p>
+                <h4 className="font-serif text-xl">{t('designTokens.typographyTitle', null, 'Tipografi')}</h4>
+                <p className="text-xs text-muted-foreground italic">{t('designTokens.typographyDescription', null, 'Font aileleri ve temel metin boyutları.')}</p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-muted/5 rounded-[32px] border border-border/30">
@@ -405,7 +411,7 @@ export const DesignTokensTab: React.FC = () => {
                 <div className="w-10 h-10 rounded-2xl bg-[#4CAF6E]/10 flex items-center justify-center text-[#4CAF6E]">
                   <MousePointer2 size={20} />
                 </div>
-                <h4 className="font-serif text-xl">Köşe Yuvarlama</h4>
+                <h4 className="font-serif text-xl">{t('designTokens.radiusTitle', null, 'Köşe Yuvarlama')}</h4>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {Object.entries(form.radius).map(([key, value]) => (
@@ -422,7 +428,7 @@ export const DesignTokensTab: React.FC = () => {
                 <div className="w-10 h-10 rounded-2xl bg-[#F0A030]/10 flex items-center justify-center text-[#F0A030]">
                   <Box size={20} />
                 </div>
-                <h4 className="font-serif text-xl">Gölgeler</h4>
+                <h4 className="font-serif text-xl">{t('designTokens.shadowsTitle', null, 'Gölgeler')}</h4>
               </div>
               <div className="space-y-3">
                 {Object.entries(form.shadows).map(([key, value]) => (
@@ -441,16 +447,16 @@ export const DesignTokensTab: React.FC = () => {
           <div className="sticky top-24 space-y-8">
             <div className="flex items-center gap-4 px-6">
               <Eye className="text-[#C9A961]" />
-              <h4 className="font-serif text-xl italic">Canlı Önizleme</h4>
+              <h4 className="font-serif text-xl italic">{t('designTokens.livePreview', null, 'Canlı Önizleme')}</h4>
             </div>
-            <PreviewCard form={form} />
+            <PreviewCard form={form} t={t} />
             <div className="p-8 rounded-[32px] bg-[#C9A961]/5 border border-[#C9A961]/20 space-y-4">
               <div className="flex items-center gap-3">
                 <Info size={16} className="text-[#C9A961]" />
-                <span className="text-[10px] font-bold text-[#C9A961] tracking-widest uppercase">Bilgi</span>
+                <span className="text-[10px] font-bold text-[#C9A961] tracking-widest uppercase">{t('designTokens.infoLabel', null, 'Bilgi')}</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed italic font-serif">
-                Yaptığınız değişiklikler frontend ve mobile uygulamalar tarafından anlık olarak (cache süresi sonrasında) takip edilecektir. Versiyon v{form.version} olarak işaretlenmiştir.
+                {t('designTokens.infoText', { version: form.version }, `Yaptığınız değişiklikler frontend ve mobile uygulamalar tarafından anlık olarak (cache süresi sonrasında) takip edilecektir. Versiyon v${form.version} olarak işaretlenmiştir.`)}
               </p>
             </div>
           </div>

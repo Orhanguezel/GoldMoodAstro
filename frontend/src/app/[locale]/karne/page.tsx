@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { useAuthStore } from '@/features/auth/auth.store';
+import { useUiSection } from '@/i18n';
 import { localizePath, normalizeError } from '@/integrations/shared';
 import {
   useListMyPendingOutcomesQuery,
@@ -33,28 +34,28 @@ const RESPONSE_OPTIONS: Array<{
   {
     value: 'happened',
     icon: <CheckCircle2 size={18} />,
-    labelTr: 'Evet, gerçekleşti',
+    labelTr: 'Yes, it happened',
     labelEn: 'Yes, it happened',
     color: 'text-[var(--gm-success)] border-[var(--gm-success)]/40 hover:bg-[var(--gm-success)]/10',
   },
   {
     value: 'partially',
     icon: <Sparkles size={18} />,
-    labelTr: 'Kısmen gerçekleşti',
+    labelTr: 'Partially happened',
     labelEn: 'Partially happened',
     color: 'text-[var(--gm-warning)] border-[var(--gm-warning)]/40 hover:bg-[var(--gm-warning)]/10',
   },
   {
     value: 'did_not_happen',
     icon: <XCircle size={18} />,
-    labelTr: 'Gerçekleşmedi',
+    labelTr: 'Did not happen',
     labelEn: 'Did not happen',
     color: 'text-[var(--gm-error)] border-[var(--gm-error)]/40 hover:bg-[var(--gm-error)]/10',
   },
   {
     value: 'no_answer',
     icon: <HelpCircle size={18} />,
-    labelTr: 'Cevap vermek istemiyorum',
+    labelTr: "I'd rather not answer",
     labelEn: "I'd rather not answer",
     color: 'text-(--gm-muted) border-(--gm-border-soft) hover:bg-(--gm-bg-deep)',
   },
@@ -81,13 +82,14 @@ function PendingCard({
   onSubmitted: () => void;
 }) {
   const isTr = locale === 'tr';
+  const { ui } = useUiSection('ui_extra' as any, locale as any);
   const [selected, setSelected] = useState<ReviewOutcomeResponse | null>(null);
   const [notes, setNotes] = useState('');
   const [submit, { isLoading }] = useSubmitReviewOutcomeMutation();
 
   async function handleSubmit() {
     if (!selected) {
-      toast.error(isTr ? 'Lütfen bir cevap seçin' : 'Please select a response');
+      toast.error(ui('ui_extra_b1_select_response', 'Please select a response'));
       return;
     }
     try {
@@ -96,14 +98,14 @@ function PendingCard({
         user_response: selected,
         notes: notes.trim() || undefined,
       }).unwrap();
-      toast.success(isTr ? 'Cevabınız kaydedildi. Teşekkürler!' : 'Response saved. Thanks!');
+      toast.success(ui('ui_extra_b1_response_saved', 'Your response has been saved. Thank you!'));
       onSubmitted();
     } catch (err) {
-      toast.error(normalizeError(err).message || (isTr ? 'Kaydedilemedi' : 'Failed to save'));
+      toast.error(normalizeError(err).message || ui('ui_extra_b1_save_failed', 'Could not save'));
     }
   }
 
-  const consultantName = outcome.consultant_name || (isTr ? 'Astrolog' : 'Consultant');
+  const consultantName = outcome.consultant_name || ui('ui_extra_b1_astrologer', 'Astrologer');
   const consultantHref = outcome.consultant_slug
     ? localizePath(locale, `/consultants/${outcome.consultant_slug}`)
     : localizePath(locale, '/consultants');
@@ -124,7 +126,7 @@ function PendingCard({
         )}
         <div className="flex-1">
           <div className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold-deep) uppercase mb-1">
-            {isTr ? '6 ay önce yorum aldın' : 'Reading received 6 months ago'}
+            {ui('ui_extra_b1_reading_received_6mo', 'You received a reading 6 months ago')}
           </div>
           <h3 className="font-serif text-xl text-(--gm-text)">
             <Link href={consultantHref} className="hover:text-(--gm-gold) transition-colors">
@@ -148,9 +150,8 @@ function PendingCard({
 
       <div>
         <p className="font-serif text-lg text-(--gm-text) leading-relaxed">
-          {isTr
-            ? `${consultantName} sana yaptığı yorumda öngörülerde bulundu. Aradan 6 ay geçti — bu öngörüler ne kadar doğru çıktı?`
-            : `${consultantName} shared predictions with you. 6 months have passed — how accurate did they turn out?`}
+          {consultantName}{' '}
+          {ui('ui_extra_b1_prediction_followup', 'made predictions in your reading. Six months have passed. How accurate were those predictions?')}
         </p>
       </div>
 
@@ -178,7 +179,7 @@ function PendingCard({
       {selected && selected !== 'no_answer' && (
         <div>
           <label className="block text-[10px] font-bold text-(--gm-gold-deep) tracking-[0.2em] uppercase mb-2">
-            {isTr ? 'Notların (opsiyonel)' : 'Notes (optional)'}
+            {ui('ui_extra_b1_notes_optional', 'Your notes (optional)')}
           </label>
           <textarea
             value={notes}
@@ -186,11 +187,7 @@ function PendingCard({
             rows={3}
             maxLength={500}
             className="w-full bg-(--gm-bg-deep) border border-(--gm-border-soft) rounded-xl px-5 py-3.5 text-sm text-(--gm-text) placeholder:text-(--gm-muted) focus:border-(--gm-gold)/50 outline-none resize-y"
-            placeholder={
-              isTr
-                ? 'Detaylar geri besleme için bizim için değerli (gizli kalacak)…'
-                : 'Details help us improve (kept private)…'
-            }
+            placeholder={ui('ui_extra_b1_notes_placeholder', 'Details are valuable for feedback and will stay private...')}
           />
         </div>
       )}
@@ -202,7 +199,7 @@ function PendingCard({
           disabled={!selected || isLoading}
           className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-(--gm-gold) text-(--gm-bg) text-sm font-bold uppercase tracking-[0.18em] disabled:opacity-50 hover:bg-(--gm-gold-light) transition-colors"
         >
-          {isLoading ? (isTr ? 'Kaydediliyor…' : 'Saving…') : isTr ? 'Cevapla' : 'Submit'}
+          {isLoading ? ui('ui_extra_b1_saving_dots', 'Saving...') : ui('ui_extra_b1_reply', 'Reply')}
         </button>
       </div>
     </article>
@@ -216,6 +213,7 @@ export default function KarnePage() {
   const router = useRouter();
   const locale = (params?.locale as string) || 'tr';
   const isTr = locale === 'tr';
+  const { ui } = useUiSection('ui_extra' as any, locale as any);
 
   const { isAuthenticated, isReady } = useAuthStore();
   const { data: pending, isLoading, refetch } = useListMyPendingOutcomesQuery(undefined, {
@@ -231,7 +229,7 @@ export default function KarnePage() {
   if (!isReady || !isAuthenticated) {
     return (
       <PageContainer center className="bg-(--gm-bg) min-h-screen">
-        <p className="text-(--gm-muted) text-sm">{isTr ? 'Yükleniyor…' : 'Loading…'}</p>
+        <p className="text-(--gm-muted) text-sm">{ui('ui_extra_b1_loading_dots', 'Loading...')}</p>
       </PageContainer>
     );
   }
@@ -246,37 +244,33 @@ export default function KarnePage() {
           className="inline-flex items-center gap-2 text-xs text-(--gm-text-dim) hover:text-(--gm-gold) tracking-[0.18em] uppercase mb-8"
         >
           <ArrowLeft size={14} />
-          {isTr ? 'Panele dön' : 'Back to dashboard'}
+          {ui('ui_extra_b1_back_to_dashboard', 'Back to dashboard')}
         </Link>
 
         <header className="mb-12">
           <div className="font-display text-[11px] tracking-[0.32em] text-(--gm-gold-deep) uppercase mb-3">
-            {isTr ? 'Astrolog Karnesi' : 'Astrologer Report Card'}
+            {ui('ui_extra_b1_astrologer_report_card', 'Astrologer Report Card')}
           </div>
           <h1 className="font-serif text-4xl md:text-5xl text-(--gm-text) leading-tight mb-4">
-            {isTr ? 'Yorumların gerçekleşti mi?' : 'Did the predictions come true?'}
+            {ui('ui_extra_b1_did_predictions_come_true', 'Did your readings come true?')}
           </h1>
           <p className="text-(--gm-text-dim) leading-relaxed font-light">
-            {isTr
-              ? 'Aldığın yorumlardan 6 ay sonra geri besleme topluyoruz. Cevapların astrologların karnesini şekillendiriyor — başka kullanıcılar onları seçerken bu skorları görüyor.'
-              : 'We collect feedback 6 months after each reading. Your responses build the astrologer report card — visible to others when they choose a consultant.'}
+            {ui('ui_extra_b1_report_card_lead', 'We collect feedback 6 months after your readings. Your answers shape astrologer report cards and help other users choose.')}
           </p>
         </header>
 
         {isLoading ? (
           <div className="text-center py-16 text-(--gm-muted) text-sm">
-            {isTr ? 'Yükleniyor…' : 'Loading…'}
+            {ui('ui_extra_b1_loading_dots', 'Loading...')}
           </div>
         ) : items.length === 0 ? (
           <div className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-12 text-center shadow-(--gm-shadow-soft)">
             <Sparkles className="mx-auto text-(--gm-gold-deep) mb-4" size={32} strokeWidth={1.4} />
             <h2 className="font-serif text-2xl text-(--gm-text) mb-3">
-              {isTr ? 'Şimdilik bekleyen bir karne yok' : 'No pending feedback right now'}
+              {ui('ui_extra_b1_no_pending_feedback', 'No pending report card for now')}
             </h2>
             <p className="text-(--gm-text-dim) text-sm leading-relaxed max-w-[var(--gm-w-form)] mx-auto">
-              {isTr
-                ? 'Bir astrologdan yorum aldıktan 6 ay sonra burada karne sorularını görürsün. Cevapların hem astrologlara hem de diğer kullanıcılara yardımcı olur.'
-                : 'Six months after a reading, you will see report card questions here. Your answers help both consultants and other users.'}
+              {ui('ui_extra_b1_no_pending_feedback_body', 'Six months after receiving a reading from an astrologer, report card questions will appear here. Your answers help both astrologers and other users.')}
             </p>
           </div>
         ) : (

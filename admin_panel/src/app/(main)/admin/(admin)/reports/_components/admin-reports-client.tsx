@@ -1399,6 +1399,7 @@ export default function AdminReportsClient() {
                       previousLabel={`${compareRange.from} → ${compareRange.to}`}
                       currentTotals={currentTotals}
                       previousTotals={previousTotals}
+                      t={t}
                     />
                   ) : null}
                   <Card>
@@ -1481,6 +1482,7 @@ export default function AdminReportsClient() {
                       previousLabel={`${compareRange.from} → ${compareRange.to}`}
                       currentTotals={currentTotals}
                       previousTotals={previousTotals}
+                      t={t}
                     />
                   ) : null}
                   <Card>
@@ -1505,7 +1507,7 @@ export default function AdminReportsClient() {
                           </BarChart>
                         </ChartContainer>
                       ) : (
-                        <div className="text-sm text-muted-foreground">Kayıt bulunamadı.</div>
+                        <div className="text-sm text-muted-foreground">{t('reports.noData', {}, 'Kayıt bulunamadı.')}</div>
                       )}
                     </CardContent>
                   </Card>
@@ -1561,7 +1563,7 @@ export default function AdminReportsClient() {
                                   colSpan={7}
                                   className="py-10 text-center text-muted-foreground"
                                 >
-                                  Kayıt bulunamadı.
+                                  {t('reports.noData', {}, 'Kayıt bulunamadı.')}
                                 </TableCell>
                               </TableRow>
                             ) : null}
@@ -1595,6 +1597,7 @@ export default function AdminReportsClient() {
                       previousLabel={`${compareRange.from} → ${compareRange.to}`}
                       currentTotals={currentTotals}
                       previousTotals={previousTotals}
+                      t={t}
                     />
                   ) : null}
                   <Card>
@@ -1619,7 +1622,7 @@ export default function AdminReportsClient() {
                           </BarChart>
                         </ChartContainer>
                       ) : (
-                        <div className="text-sm text-muted-foreground">Kayıt bulunamadı.</div>
+                        <div className="text-sm text-muted-foreground">{t('reports.noData', {}, 'Kayıt bulunamadı.')}</div>
                       )}
                     </CardContent>
                   </Card>
@@ -1681,7 +1684,7 @@ export default function AdminReportsClient() {
                                   colSpan={7}
                                   className="py-10 text-center text-muted-foreground"
                                 >
-                                  Kayıt bulunamadı.
+                                  {t('reports.noData', {}, 'Kayıt bulunamadı.')}
                                 </TableCell>
                               </TableRow>
                             ) : null}
@@ -1708,8 +1711,11 @@ function ComparisonSummary(props: {
   previousLabel: string;
   currentTotals: { bookings_total: number; completed_total: number; cancelled_total: number };
   previousTotals: { bookings_total: number; completed_total: number; cancelled_total: number };
+  t: (k: string, p?: any, fb?: string) => string;
 }) {
-  const { title, currentLabel, previousLabel, currentTotals, previousTotals } = props;
+  const { title, currentLabel, previousLabel, currentTotals, previousTotals, t } = props;
+  const prevLabel = t('reports.compare.previous', {}, 'Önceki');
+  const diffLabel = t('reports.compare.diff', {}, 'Fark');
 
   return (
     <Card>
@@ -1719,24 +1725,24 @@ function ComparisonSummary(props: {
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-3">
         <div className="rounded-md border p-3">
-          <div className="text-xs text-muted-foreground">Rezervasyon</div>
+          <div className="text-xs text-muted-foreground">{t('reports.compare.bookings', {}, 'Rezervasyon')}</div>
           <div className="text-lg font-semibold">{fmtNum(currentTotals.bookings_total)}</div>
           <div className="text-xs text-muted-foreground">
-            Önceki: {fmtNum(previousTotals.bookings_total)} · Fark: {deltaText(currentTotals.bookings_total, previousTotals.bookings_total)}
+            {prevLabel}: {fmtNum(previousTotals.bookings_total)} · {diffLabel}: {deltaText(currentTotals.bookings_total, previousTotals.bookings_total)}
           </div>
         </div>
         <div className="rounded-md border p-3">
-          <div className="text-xs text-muted-foreground">Tamamlanan</div>
+          <div className="text-xs text-muted-foreground">{t('reports.compare.completed', {}, 'Tamamlanan')}</div>
           <div className="text-lg font-semibold">{fmtNum(currentTotals.completed_total)}</div>
           <div className="text-xs text-muted-foreground">
-            Önceki: {fmtNum(previousTotals.completed_total)} · Fark: {deltaText(currentTotals.completed_total, previousTotals.completed_total)}
+            {prevLabel}: {fmtNum(previousTotals.completed_total)} · {diffLabel}: {deltaText(currentTotals.completed_total, previousTotals.completed_total)}
           </div>
         </div>
         <div className="rounded-md border p-3">
-          <div className="text-xs text-muted-foreground">İptal</div>
+          <div className="text-xs text-muted-foreground">{t('reports.compare.cancelled', {}, 'İptal')}</div>
           <div className="text-lg font-semibold">{fmtNum(currentTotals.cancelled_total)}</div>
           <div className="text-xs text-muted-foreground">
-            Önceki: {fmtNum(previousTotals.cancelled_total)} · Fark: {deltaText(currentTotals.cancelled_total, previousTotals.cancelled_total)}
+            {prevLabel}: {fmtNum(previousTotals.cancelled_total)} · {diffLabel}: {deltaText(currentTotals.cancelled_total, previousTotals.cancelled_total)}
           </div>
         </div>
       </CardContent>

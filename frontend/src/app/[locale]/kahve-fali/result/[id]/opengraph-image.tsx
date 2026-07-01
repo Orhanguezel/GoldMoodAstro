@@ -5,7 +5,7 @@ import { getOgTheme } from '@/seo/ogTheme';
 export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
-export const alt = 'GoldMoodAstro Kahve Falı';
+export const alt = 'GoldMoodAstro Coffee Reading';
 
 export default async function OG({ params }: { params: { id: string; locale: string } }) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://goldmoodastro.com/api';
@@ -16,7 +16,7 @@ export default async function OG({ params }: { params: { id: string; locale: str
     const json = await res.json();
     data = json.data;
   } catch (e) {
-    data = { symbols: [], interpretation: 'Fincanınızdaki sırlar...' };
+    data = { symbols: [], interpretation: 'Secrets in your cup...' };
   }
 
   const fonts = await getOgFonts().catch(() => undefined);
@@ -40,7 +40,7 @@ export default async function OG({ params }: { params: { id: string; locale: str
       }}>
         {/* Header */}
         <div style={{ fontSize: 24, color: theme.primary, letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          {theme.brandUpper} · KAHVE FALI
+          {theme.brandUpper} · COFFEE READING
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 40, alignItems: 'center', width: '100%' }}>

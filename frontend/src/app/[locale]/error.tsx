@@ -17,7 +17,25 @@ export default function ErrorPage({
   const { ui } = useUiSection('ui_errors', locale);
 
   useEffect(() => {
-    // Log the error to an error reporting service
+    // ChunkLoadError: yeni deploy sonrası tarayıcı eski cache HTML'i ile yeni
+    // build'in chunk hash'leri uyuşmuyor → 404. Tek seferlik otomatik hard-reload
+    // ile çözüyoruz (sessionStorage flag'i sonsuz loop'u engeller).
+    const msg = String((error as any)?.name || '') + ' ' + String((error as any)?.message || '');
+    const isChunkError = /ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module/i.test(msg);
+    if (isChunkError && typeof window !== 'undefined') {
+      try {
+        const k = 'gm_chunk_reload_at';
+        const last = Number(sessionStorage.getItem(k) || 0);
+        if (Date.now() - last > 10_000) {
+          sessionStorage.setItem(k, String(Date.now()));
+          // location.reload(true) artık ignored — query bust ile cache atla.
+          const url = new URL(window.location.href);
+          url.searchParams.set('_r', String(Date.now()));
+          window.location.replace(url.toString());
+          return;
+        }
+      } catch {}
+    }
     console.error(error);
   }, [error]);
 

@@ -9,16 +9,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Sparkles, ArrowRight, Share2 } from 'lucide-react';
 import { useListMyBirthChartsQuery } from '@/integrations/rtk/public/birth_charts.endpoints';
+import { useUiSection } from '@/i18n';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
 const SIGN_LABELS: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
 };
 
 export default function RisingSignCalculator() {
+  const { ui } = useUiSection('ui_extra' as any);
   const [result, setResult] = useState<BirthChart | null>(null);
   const { data: myCharts } = useListMyBirthChartsQuery();
 
@@ -36,10 +38,10 @@ export default function RisingSignCalculator() {
     <div className="max-w-4xl mx-auto py-12 px-4">
       <div className="text-center mb-12">
         <h2 className={`${cinzel.className} text-4xl md:text-6xl mb-6 text-brand-gold`}>
-          Yükselen Burç Hesaplayıcı
+          {ui('ui_extra_b4_rising_title', 'Rising Sign Calculator')}
         </h2>
         <p className="text-lg text-muted-foreground italic max-w-2xl mx-auto">
-          Doğduğunuz anın gökyüzü haritasını çıkararak yükselen burcunuzu ve kozmik kimliğinizin temel taşlarını keşfedin.
+          {ui('ui_extra_b4_rising_subtitle', 'Map the sky at your birth moment and discover your rising sign and the foundations of your cosmic identity.')}
         </p>
       </div>
 
@@ -61,12 +63,11 @@ export default function RisingSignCalculator() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8"
           >
-            {/* Büyük Üçlü sonucu */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { type: 'Güneş Burcu', sign: sunSign, icon: '☀️' },
-                { type: 'Yükselen Burç', sign: risingSign, icon: '🌅', highlight: true },
-                { type: 'Ay Burcu', sign: moonSign, icon: '🌙' },
+                { type: 'Sun Sign', sign: sunSign, icon: '☀️' },
+                { type: 'Rising Sign', sign: risingSign, icon: '🌅', highlight: true },
+                { type: 'Moon Sign', sign: moonSign, icon: '🌙' },
               ].map((item, idx) => (
                 <motion.div
                   key={item.type}
@@ -100,15 +101,14 @@ export default function RisingSignCalculator() {
                 <Sparkles className="w-32 h-32 text-brand-gold" />
               </div>
               
-              <h2 className={`${cinzel.className} text-3xl mb-6 text-brand-gold`}>Yükselen {SIGN_LABELS[risingSign!] || risingSign} Etkisi</h2>
+              <h2 className={`${cinzel.className} text-3xl mb-6 text-brand-gold`}>{ui('ui_extra_b4_rising_insight_title_prefix', 'Rising')} {SIGN_LABELS[risingSign!] || risingSign} {ui('ui_extra_b4_rising_insight_title_suffix', 'Effect')}</h2>
               <div className="prose prose-invert max-w-none text-lg text-muted-foreground leading-relaxed">
                 <p>
-                  Yükselen burcunuz, doğduğunuz an ufuk çizgisinde yükselen burçtur ve dış dünyaya sunduğunuz maskenizi temsil eder. 
-                  Bir <strong>{SIGN_LABELS[risingSign!] || risingSign}</strong> yükselen olarak, insanlar sizi ilk tanıdıklarında bu burcun özelliklerini görürler.
+                  {ui('ui_extra_b4_rising_insight_p1_a', 'Your rising sign is the sign rising on the horizon at your birth moment and represents the mask you present to the outside world.')}{' '}
+                  {ui('ui_extra_b4_rising_insight_p1_b', 'As a')} <strong>{SIGN_LABELS[risingSign!] || risingSign}</strong> {ui('ui_extra_b4_rising_insight_p1_c', 'rising, people notice these sign qualities when they first meet you.')}
                 </p>
                 <p>
-                  Hayata bakış açınız, fiziksel görünümünüz ve ilk tepkileriniz bu burcun enerjisiyle şekillenir. 
-                  Bu sizin kozmik vitrininizdir.
+                  {ui('ui_extra_b4_rising_insight_p2', 'Your outlook on life, physical presence and first reactions are shaped by this sign’s energy. This is your cosmic front window.')}
                 </p>
               </div>
 
@@ -117,15 +117,15 @@ export default function RisingSignCalculator() {
                   onClick={() => setResult(null)}
                   className="text-sm font-bold text-muted-foreground hover:text-brand-gold transition-colors uppercase tracking-widest"
                 >
-                  Yeniden Hesapla
+                  {ui('ui_extra_b4_rising_recalc', 'Calculate Again')}
                 </button>
 
                 <div className="flex gap-4">
                   <button className="btn-secondary py-3 px-6 rounded-full flex items-center gap-2 text-sm">
-                    <Share2 className="w-4 h-4" /> Paylaş
+                    <Share2 className="w-4 h-4" /> {ui('ui_extra_b4_rising_share', 'Share')}
                   </button>
                   <Link href="/birth-chart" className="btn-premium py-3 px-8 rounded-full flex items-center gap-2 text-sm">
-                    Tam Haritanı İncele <ArrowRight className="w-4 h-4" />
+                    {ui('ui_extra_b4_rising_full_chart', 'View Full Chart')} <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
@@ -133,12 +133,12 @@ export default function RisingSignCalculator() {
 
             {/* CTA Section */}
             <div className="bg-brand-primary/5 border border-brand-gold/10 p-8 rounded-3xl text-center">
-              <h4 className="text-xl mb-4 font-serif italic text-foreground">Sadece bir yükselen değilsiniz...</h4>
+              <h4 className="text-xl mb-4 font-serif italic text-foreground">{ui('ui_extra_b4_rising_cta_title', 'You are more than a rising sign...')}</h4>
               <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-                Gezegenlerin 12 evdeki yerleşimi ve aralarındaki açılar, kaderinizin yol haritasını çizer. Uzman astrologlarımızla seans yaparak haritanızın derinliklerini keşfedin.
+                {ui('ui_extra_b4_rising_cta_desc', 'The placements of planets across the 12 houses and their aspects draw the roadmap of your potential. Explore your chart in depth with our expert astrologers.')}
               </p>
               <Link href="/consultants" className="text-brand-gold font-bold uppercase tracking-[0.2em] text-sm hover:underline">
-                Uzmanlardan Analiz Alın →
+                {ui('ui_extra_b4_rising_cta_link', 'Get Analysis From Experts →')}
               </Link>
             </div>
           </motion.div>

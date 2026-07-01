@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, Send, Sparkles } from 'lucide-react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
@@ -97,14 +98,15 @@ function buildStyles(t: AppTheme) {
 }
 
 const LANG_OPTIONS = [
-  { id: 'tr', label: 'Türkçe' },
-  { id: 'en', label: 'İngilizce' },
+  { id: 'tr', labelKey: 'becomeConsultant.langTr' },
+  { id: 'en', labelKey: 'becomeConsultant.langEn' },
 ] as const;
 
 export default function BecomeConsultantScreen() {
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { colors } = theme;
+  const { t } = useTranslation();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -120,11 +122,11 @@ export default function BecomeConsultantScreen() {
 
   const handleSubmit = async () => {
     if (!fullName.trim() || !email.trim() || bio.trim().length < 50) {
-      Alert.alert('Eksik bilgi', 'Ad, e-posta ve en az 50 karakter biyografi gerekli.');
+      Alert.alert(t('common.missingInfo'), t('becomeConsultant.errorBio'));
       return;
     }
     if (expertise.length === 0 || languages.length === 0) {
-      Alert.alert('Eksik bilgi', 'En az bir uzmanlık ve dil seçin.');
+      Alert.alert(t('common.missingInfo'), t('becomeConsultant.errorSelect'));
       return;
     }
     setLoading(true);
@@ -139,12 +141,12 @@ export default function BecomeConsultantScreen() {
         experience_years: 1,
       });
       Alert.alert(
-        'Başvuru alındı',
-        'Profil fotoğrafınızı onay sonrası danışman panelinden ekleyebilirsiniz. Ekibimiz başvurunuzu inceleyecek.',
-        [{ text: 'Tamam', onPress: () => router.replace('/(tabs)/profile' as any) }],
+        t('becomeConsultant.successTitle'),
+        t('becomeConsultant.successBody'),
+        [{ text: t('common.ok'), onPress: () => router.replace('/(tabs)/profile' as any) }],
       );
     } catch (err: unknown) {
-      Alert.alert('Hata', err instanceof Error ? err.message : 'Başvuru gönderilemedi.');
+      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('becomeConsultant.submitError'));
     } finally {
       setLoading(false);
     }
@@ -157,7 +159,7 @@ export default function BecomeConsultantScreen() {
           <Pressable style={styles.backBtn} onPress={() => safeRouterBack()}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>Danışman Ol</Text>
+          <Text style={styles.title}>{t('becomeConsultant.title')}</Text>
         </View>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -165,24 +167,22 @@ export default function BecomeConsultantScreen() {
         >
           <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
             <Text style={styles.hint}>
-              Kendinizi, yaklaşımınızı ve danışana ne sunduğunuzu anlatın (en az 150 karakter önerilir).
-              İletişim bilgisi veya dış link yazmayın. Profil fotoğrafını onay sonrası panelden
-              yükleyeceksiniz.
+              {t('becomeConsultant.hint')}
             </Text>
 
-            <Text style={styles.label}>AD SOYAD</Text>
-            <TextInput style={styles.input} value={fullName} onChangeText={setFullName} placeholder="Adınız" placeholderTextColor={colors.textMuted} />
+            <Text style={styles.label}>{t('becomeConsultant.fullNameLabel')}</Text>
+            <TextInput style={styles.input} value={fullName} onChangeText={setFullName} placeholder={t('becomeConsultant.fullNamePlaceholder')} placeholderTextColor={colors.textMuted} />
 
-            <Text style={styles.label}>E-POSTA</Text>
+            <Text style={styles.label}>{t('becomeConsultant.emailLabel')}</Text>
             <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="ornek@email.com" placeholderTextColor={colors.textMuted} />
 
-            <Text style={styles.label}>TELEFON (OPSİYONEL)</Text>
+            <Text style={styles.label}>{t('becomeConsultant.phoneLabel')}</Text>
             <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+90..." placeholderTextColor={colors.textMuted} />
 
-            <Text style={styles.label}>HAKKIMDA</Text>
-            <TextInput style={[styles.input, styles.bio]} value={bio} onChangeText={setBio} multiline placeholder="Danışmanlık yaklaşımınız..." placeholderTextColor={colors.textMuted} />
+            <Text style={styles.label}>{t('becomeConsultant.bioLabel')}</Text>
+            <TextInput style={[styles.input, styles.bio]} value={bio} onChangeText={setBio} multiline placeholder={t('becomeConsultant.bioPlaceholder')} placeholderTextColor={colors.textMuted} />
 
-            <Text style={styles.label}>UZMANLIK</Text>
+            <Text style={styles.label}>{t('becomeConsultant.expertiseLabel')}</Text>
             <View style={styles.chips}>
               {CONSULTANT_EXPERTISE_OPTIONS.map((opt) => {
                 const active = expertise.includes(opt.id);
@@ -198,7 +198,7 @@ export default function BecomeConsultantScreen() {
               })}
             </View>
 
-            <Text style={styles.label}>DİLLER</Text>
+            <Text style={styles.label}>{t('becomeConsultant.languagesLabel')}</Text>
             <View style={styles.chips}>
               {LANG_OPTIONS.map((opt) => {
                 const active = languages.includes(opt.id);
@@ -208,7 +208,7 @@ export default function BecomeConsultantScreen() {
                     style={[styles.chip, active && styles.chipActive]}
                     onPress={() => toggle(languages, opt.id, setLanguages)}
                   >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt.label}</Text>
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{t(opt.labelKey)}</Text>
                   </Pressable>
                 );
               })}
@@ -224,7 +224,7 @@ export default function BecomeConsultantScreen() {
               ) : (
                 <>
                   <Sparkles size={18} color={colors.ink} />
-                  <Text style={styles.submitText}>Başvuruyu Gönder</Text>
+                  <Text style={styles.submitText}>{t('becomeConsultant.submit')}</Text>
                   <Send size={16} color={colors.ink} />
                 </>
               )}

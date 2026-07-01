@@ -3,6 +3,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
 import { loadGoogleMaps } from '@/lib/googleMaps';
+import { useUiSection } from '@/i18n';
 
 type Suggestion = {
   description: string;
@@ -16,7 +17,7 @@ type Props = {
   onChange: (city: string) => void;
   className?: string;
   placeholder?: string;
-  /** ISO ülke kodu (varsayılan TR). Türkiye dışı için 'us', 'de' vs. */
+  /** ISO country code. Use values such as 'tr', 'us', 'de'. */
   country?: string;
   disabled?: boolean;
 };
@@ -25,10 +26,12 @@ export default function CityAutocomplete({
   value,
   onChange,
   className,
-  placeholder = 'Şehir ara…',
+  placeholder,
   country = 'tr',
   disabled,
 }: Props) {
+  const { ui } = useUiSection('ui_misc' as any);
+  const resolvedPlaceholder = placeholder ?? ui('ui_misc_city_search_placeholder', 'Search city...');
   const inputId = useId();
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const serviceRef = useRef<any>(null);
@@ -38,7 +41,7 @@ export default function CityAutocomplete({
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
-  // Google Maps SDK'yı yükle (lazy)
+  // Load Google Maps SDK lazily.
   useEffect(() => {
     let cancelled = false;
     loadGoogleMaps()
@@ -48,14 +51,14 @@ export default function CityAutocomplete({
         sessionRef.current = new g.maps.places.AutocompleteSessionToken();
       })
       .catch(() => {
-        // API key yok ya da load fail → input fallback olarak çalışır
+        // If API key is missing or load fails, the input still works as fallback.
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Dış tıklama → kapat
+  // Close on outside click.
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
@@ -134,7 +137,7 @@ export default function CityAutocomplete({
           value={value}
           onChange={handleInput}
           onFocus={() => value && setOpen(true)}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           disabled={disabled}
           autoComplete="off"
           className={`w-full bg-(--gm-bg-deep) border border-(--gm-border-soft) rounded-xl pl-11 pr-10 py-3.5 text-sm text-(--gm-text) placeholder:text-(--gm-muted) focus:border-(--gm-gold)/50 outline-none transition-colors ${

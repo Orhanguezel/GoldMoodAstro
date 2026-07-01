@@ -22,6 +22,7 @@ import { normalizeError, localizePath } from '@/integrations/shared';
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { trackEvent } from '@/integrations/telemetry';
+import { gaEvent } from '@/lib/ga';
 
 function trimSlash(x: string) {
   return String(x || '').replace(/\/+$/, '');
@@ -38,6 +39,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
   const locale = useLocaleShort();
   const searchParams = useSearchParams();
   const { ui } = useUiSection('ui_auth', locale as any);
+  const { ui: uiX } = useUiSection('ui_extra' as any);
 
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>(defaultTab);
 
@@ -87,7 +89,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
     setFormError(null);
 
     if (!loginEmail.trim() || !loginPassword) {
-      setFormError(ui('login_error_required', 'E-posta ve şifre zorunludur.'));
+      setFormError(ui('login_error_required', 'Email and password are required.'));
       return;
     }
 
@@ -119,15 +121,15 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
     setFormError(null);
 
     if (!regEmail.trim() || !regPassword) {
-      setFormError(ui('register_error_required', 'E-posta ve şifre zorunludur.'));
+      setFormError(ui('register_error_required', 'Email and password are required.'));
       return;
     }
     if (regPassword.length < 6) {
-      setFormError(ui('register_error_password_length', 'Şifre en az 6 karakter olmalıdır.'));
+      setFormError(ui('register_error_password_length', 'Password must be at least 6 characters.'));
       return;
     }
     if (!regRules) {
-      setFormError(ui('register_error_rules_required', 'Kullanım koşullarını ve KVKK metnini kabul etmelisiniz.'));
+      setFormError(ui('register_error_rules_required', 'You must accept the terms and KVKK notice.'));
       return;
     }
 
@@ -142,7 +144,8 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
       const resp = await signup(payload).unwrap();
       if (resp.access_token) tokenStore.set(resp.access_token);
       trackEvent('signup_complete', { method: 'email' }).catch(() => {});
-      
+      gaEvent('sign_up', { method: 'email' });
+
       onOpenChange(false);
       // Wait for 1 second before redirect to avoid abrupt changes
       setTimeout(() => {
@@ -155,12 +158,12 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
     e.preventDefault();
     setFormError(null);
     if (!forgotEmail.trim()) {
-      setFormError(ui('login_email_label', 'E-posta') + ' zorunludur.');
+      setFormError(uiX('ui_extra_b2_authmodal_email_required', 'Email is required.'));
       return;
     }
     try {
       await resetReq({ email: forgotEmail.trim() }).unwrap();
-      setFormError('Şifre sıfırlama e-postası gönderildi. Lütfen e-postanızı kontrol edin.');
+      setFormError(uiX('ui_extra_b2_authmodal_reset_sent', 'Password reset email sent. Please check your inbox.'));
     } catch {}
   };
 
@@ -169,7 +172,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
       <DialogContent className="sm:max-w-[425px] p-0 border-gm-border-soft bg-gm-surface shadow-2xl rounded-3xl overflow-hidden">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-2xl font-serif text-center mb-4">
-            Hoş Geldiniz
+            {uiX('ui_extra_b2_authmodal_welcome', 'Welcome')}
           </DialogTitle>
         </DialogHeader>
 
@@ -177,10 +180,10 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
           <Tabs value={activeTab} onValueChange={(v: any) => { setActiveTab(v); setFormError(null); }} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-gm-bg border border-gm-border-soft rounded-xl p-1 h-12">
               <TabsTrigger value="login" className="rounded-lg data-[state=active]:bg-gm-surface data-[state=active]:shadow-sm data-[state=active]:text-gm-gold">
-                Giriş Yap
+                {uiX('ui_extra_b2_authmodal_tab_login', 'Sign In')}
               </TabsTrigger>
               <TabsTrigger value="register" className="rounded-lg data-[state=active]:bg-gm-surface data-[state=active]:shadow-sm data-[state=active]:text-gm-gold">
-                Üye Ol
+                {uiX('ui_extra_b2_authmodal_tab_register', 'Sign Up')}
               </TabsTrigger>
             </TabsList>
 
@@ -197,7 +200,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                   <input
                     type="email"
                     className="w-full px-4 py-3.5 border border-gm-border-soft rounded-xl focus:outline-none focus:border-gm-gold/50 bg-gm-bg-deep placeholder:text-gm-muted text-gm-text transition-all"
-                    placeholder="E-posta adresiniz"
+                    placeholder={uiX('ui_extra_b2_authmodal_email_placeholder', 'Your email address')}
                     value={loginEmail}
                     onChange={e => setLoginEmail(e.target.value)}
                     required
@@ -207,7 +210,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                   <input
                     type="password"
                     className="w-full px-4 py-3.5 border border-gm-border-soft rounded-xl focus:outline-none focus:border-gm-gold/50 bg-gm-bg-deep placeholder:text-gm-muted text-gm-text transition-all"
-                    placeholder="Şifreniz"
+                    placeholder={uiX('ui_extra_b2_authmodal_password_placeholder', 'Your password')}
                     value={loginPassword}
                     onChange={e => setLoginPassword(e.target.value)}
                     required
@@ -219,7 +222,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                     onClick={() => setActiveTab('forgot')}
                     className="text-xs font-bold uppercase tracking-widest text-gm-gold hover:text-gm-gold-light transition-all"
                   >
-                    Şifremi Unuttum?
+                    {uiX('ui_extra_b2_authmodal_forgot_link', 'Forgot Password?')}
                   </button>
                 </div>
                 <button
@@ -227,7 +230,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                   className="btn-premium w-full py-4 text-xs font-bold"
                   disabled={loginState.isLoading}
                 >
-                  {loginState.isLoading ? 'Giriş yapılıyor...' : 'GİRİŞ YAP'}
+                  {loginState.isLoading ? uiX('ui_extra_b2_authmodal_login_loading', 'Signing in...') : uiX('ui_extra_b2_authmodal_login_submit', 'SIGN IN')}
                 </button>
               </form>
             </TabsContent>
@@ -238,7 +241,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                   <input
                     type="text"
                     className="w-full px-4 py-3.5 border border-gm-border-soft rounded-xl focus:outline-none focus:border-gm-gold/50 bg-gm-bg-deep placeholder:text-gm-muted text-gm-text transition-all"
-                    placeholder="Adınız Soyadınız (Opsiyonel)"
+                    placeholder={uiX('ui_extra_b2_authmodal_fullname_placeholder', 'Full name (optional)')}
                     value={regFullName}
                     onChange={e => setRegFullName(e.target.value)}
                   />
@@ -247,7 +250,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                   <input
                     type="email"
                     className="w-full px-4 py-3.5 border border-gm-border-soft rounded-xl focus:outline-none focus:border-gm-gold/50 bg-gm-bg-deep placeholder:text-gm-muted text-gm-text transition-all"
-                    placeholder="E-posta adresiniz *"
+                    placeholder={uiX('ui_extra_b2_authmodal_email_placeholder_req', 'Your email address *')}
                     value={regEmail}
                     onChange={e => setRegEmail(e.target.value)}
                     required
@@ -257,7 +260,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                   <input
                     type="password"
                     className="w-full px-4 py-3.5 border border-gm-border-soft rounded-xl focus:outline-none focus:border-gm-gold/50 bg-gm-bg-deep placeholder:text-gm-muted text-gm-text transition-all"
-                    placeholder="Şifre belirleyin *"
+                    placeholder={uiX('ui_extra_b2_authmodal_password_placeholder_req', 'Choose a password *')}
                     value={regPassword}
                     onChange={e => setRegPassword(e.target.value)}
                     required
@@ -274,8 +277,8 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                     required
                   />
                   <label htmlFor="modal-reg-rules" className="text-xs text-gm-text-muted leading-relaxed">
-                    <Link href={localizePath(locale, '/terms')} target="_blank" className="text-gm-gold hover:underline">Kullanım Koşulları</Link> ve{' '}
-                    <Link href={localizePath(locale, '/kvkk')} target="_blank" className="text-gm-gold hover:underline">KVKK</Link> onaylıyorum.
+                    <Link href={localizePath(locale, '/terms')} target="_blank" className="text-gm-gold hover:underline">{uiX('ui_extra_b2_authmodal_terms_link', 'Terms of Use')}</Link> {uiX('ui_extra_b2_authmodal_terms_and', 'and')}{' '}
+                    <Link href={localizePath(locale, '/kvkk')} target="_blank" className="text-gm-gold hover:underline">{uiX('ui_extra_b2_authmodal_kvkk_link', 'KVKK')}</Link> {uiX('ui_extra_b2_authmodal_terms_accept', 'I accept.')}
                   </label>
                 </div>
                 <button
@@ -283,21 +286,21 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                   className="btn-premium w-full py-4 text-xs font-bold"
                   disabled={signupState.isLoading}
                 >
-                  {signupState.isLoading ? 'Hesap oluşturuluyor...' : 'ÜYE OL'}
+                  {signupState.isLoading ? uiX('ui_extra_b2_authmodal_register_loading', 'Creating account...') : uiX('ui_extra_b2_authmodal_register_submit', 'SIGN UP')}
                 </button>
               </form>
             </TabsContent>
 
             <TabsContent value="forgot" className="mt-0 focus-visible:outline-none">
               <div className="mb-4 text-sm text-gm-text-dim text-center">
-                E-posta adresinizi girin, şifre sıfırlama bağlantısı gönderelim.
+                {uiX('ui_extra_b2_authmodal_forgot_desc', 'Enter your email address and we will send a password reset link.')}
               </div>
               <form onSubmit={handleForgot} className="space-y-4">
                 <div>
                   <input
                     type="email"
                     className="w-full px-4 py-3.5 border border-gm-border-soft rounded-xl focus:outline-none focus:border-gm-gold/50 bg-gm-bg-deep placeholder:text-gm-muted text-gm-text transition-all"
-                    placeholder="E-posta adresiniz"
+                    placeholder={uiX('ui_extra_b2_authmodal_email_placeholder', 'Your email address')}
                     value={forgotEmail}
                     onChange={e => setForgotEmail(e.target.value)}
                     required
@@ -308,7 +311,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                   className="btn-premium w-full py-4 text-xs font-bold"
                   disabled={resetState.isLoading}
                 >
-                  {resetState.isLoading ? 'Gönderiliyor...' : 'BAĞLANTI GÖNDER'}
+                  {resetState.isLoading ? uiX('ui_extra_b2_authmodal_forgot_loading', 'Sending...') : uiX('ui_extra_b2_authmodal_forgot_submit', 'SEND LINK')}
                 </button>
                 <div className="text-center">
                   <button
@@ -316,7 +319,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                     onClick={() => setActiveTab('login')}
                     className="text-xs font-bold uppercase tracking-widest text-gm-text-muted hover:text-gm-text transition-all"
                   >
-                    Geri Dön
+                    {uiX('ui_extra_b2_authmodal_back', 'Go Back')}
                   </button>
                 </div>
               </form>
@@ -331,7 +334,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                   </div>
                   <div className="relative">
                     <span className="px-3 bg-gm-surface text-gm-text-muted text-[10px] uppercase tracking-[0.2em] font-bold">
-                      veya
+                      {uiX('ui_extra_b2_authmodal_or', 'or')}
                     </span>
                   </div>
                 </div>

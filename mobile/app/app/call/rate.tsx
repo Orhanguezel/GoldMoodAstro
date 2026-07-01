@@ -70,7 +70,7 @@ export default function RateScreen() {
       await reviewsApi.create({ booking_id: bookingId, target_id: consultantId, rating, comment });
       router.replace('/(tabs)/bookings' as any);
     } catch (err: any) {
-      Alert.alert('Hata', err.message || 'Değerlendirme gönderilemedi.');
+      Alert.alert(t('common.error'), err.message || t('rate.submitFailed', 'Değerlendirme gönderilemedi.'));
     } finally {
       setLoading(false);
     }
@@ -84,8 +84,8 @@ export default function RateScreen() {
             
             <View style={styles.header}>
               <Sparkles size={40} color={colors.gold} style={{ marginBottom: 20 }} />
-              <Text style={styles.title}>Seans Nasıl Geçti?</Text>
-              <Text style={styles.subtitle}>Deneyiminizi paylaşarak topluluğumuza ve danışmanınıza yardımcı olun.</Text>
+              <Text style={styles.title}>{t('rate.title', 'Seans Nasıl Geçti?')}</Text>
+              <Text style={styles.subtitle}>{t('rate.subtitle', 'Deneyiminizi paylaşarak topluluğumuza ve danışmanınıza yardımcı olun.')}</Text>
             </View>
 
             <PromoBannerSection placement="mobile_call_end" style={styles.banner} />
@@ -99,10 +99,10 @@ export default function RateScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Yorumunuz (Opsiyonel)</Text>
+              <Text style={styles.inputLabel}>{t('rate.commentLabel', 'Yorumunuz (Opsiyonel)')}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Görüşlerinizi buraya yazabilirsiniz..."
+                placeholder={t('rate.commentPlaceholder', 'Görüşlerinizi buraya yazabilirsiniz...')}
                 placeholderTextColor={colors.textMuted}
                 multiline
                 numberOfLines={4}
@@ -116,11 +116,11 @@ export default function RateScreen() {
               onPress={handleSubmit}
               disabled={loading || rating === 0}
             >
-              {loading ? <ActivityIndicator color={colors.ink} /> : <Text style={styles.primaryBtnText}>Değerlendir</Text>}
+              {loading ? <ActivityIndicator color={colors.ink} /> : <Text style={styles.primaryBtnText}>{t('booking.review', 'Değerlendir')}</Text>}
             </Pressable>
 
             <Pressable style={styles.skipBtn} onPress={() => router.replace('/(tabs)/bookings' as any)} disabled={loading}>
-              <Text style={styles.skipText}>Daha Sonra</Text>
+              <Text style={styles.skipText}>{t('call.rateLater')}</Text>
             </Pressable>
 
           </ScrollView>

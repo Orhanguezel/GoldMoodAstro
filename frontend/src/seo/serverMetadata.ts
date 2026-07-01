@@ -31,7 +31,7 @@ import {
 
 /**
  * ✅ Server runtime base URL (proxy-safe).
- * Öncelik:
+ * Priority:
  *  1) NEXT_PUBLIC_SITE_URL (varsa sabit)
  *  2) x-forwarded-proto + x-forwarded-host
  *  3) host + https (fallback)
@@ -64,7 +64,7 @@ async function getRuntimeBaseUrl(): Promise<string> {
 }
 
 /**
- * OpenGraph locale formatına çevir:
+ * Convert to OpenGraph locale format:
  * - "pt-br" -> "pt_BR"
  * - "de"    -> "tr_TR" (region yoksa LANG_LANG)
  */
@@ -81,7 +81,7 @@ function toOgLocale(l: string): string {
   return `${lang}_${region || lang.toUpperCase()}`;
 }
 
-/** Path normalizasyonu: başında / olsun; kök dışı ise sonda / olmasın */
+/** Path normalization: starts with / and has no trailing slash outside root. */
 // normPath imported from helpers
 
 // localizedPath + absUrlJoin imported from helpers (App Router: always "/{locale}/...")
@@ -96,12 +96,12 @@ async function resolveActiveLocales(provided?: string[]) {
 }
 
 /**
- * NEW STANDARD: seo/site_seo için fallback kuralı
- * Öncelik:
+ * NEW STANDARD: fallback rule for seo/site_seo
+ * Priority:
  *  1) requested locale
- *  2) global '*'   (kritik: başka locale'a düşmeden önce!)
+ *  2) global '*' before falling back to another locale
  *  3) default locale
- *  4) (opsiyonel) diğer active locale'ler
+ *  4) optional other active locales
  */
 function buildSeoLocaleTryOrder(args: {
   requestedLocale: string;
@@ -132,7 +132,7 @@ async function fetchSeoRowWithFallback(locale: string, providedActiveLocales?: s
     activeLocales,
   });
 
-  // ✅ Key önce (seo > site_seo), locale sonra
+  // Key first (seo > site_seo), then locale.
   for (const k of tryKeys) {
     for (const l of tryLocales) {
       const row = await fetchSetting(k, l, { revalidate: 600 });
@@ -208,9 +208,9 @@ export function mergeSeoPageIntoSeo(
 /* -------------------- DRY one-liner helper (FAZ 27 SEO refactor) -------------------- */
 
 /**
- * Tek satırla full Metadata üretir — `seo_pages.{pageKey}` overlay + global `site_seo` fallback.
+ * Produces full Metadata in one call: `seo_pages.{pageKey}` overlay + global `site_seo` fallback.
  *
- * **Kullanım** (her sayfanın `generateMetadata` içinde):
+ * Usage inside each page's `generateMetadata`:
  * ```ts
  * export async function generateMetadata({ params }): Promise<Metadata> {
  *   const { locale } = await params;
@@ -218,16 +218,16 @@ export function mergeSeoPageIntoSeo(
  *     locale,
  *     pageKey: 'pricing',
  *     pathname: '/pricing',
- *     fallback: { title: 'Pricing', description: '...' }, // DB boşsa kullanılır
+ *     fallback: { title: 'Pricing', description: '...' }, // used when DB is empty
  *   });
  * }
  * ```
  *
- * Önceki 4 satır (fetchSeoObject + fetchSeoPageObject + merge + build) → 1 satır.
+ * Replaces fetchSeoObject + fetchSeoPageObject + merge + build.
  *
- * **Öncelik sırası:**
+ * Priority order:
  * 1. `seo_pages.{pageKey}` (admin'den DB'de doldurulan)
- * 2. `args.fallback` (sayfanın hardcoded baseline metni)
+ * 2. `args.fallback` page baseline text
  * 3. global `site_seo` (genel default)
  * 4. siteName + default boilerplate (en son fallback)
  */
@@ -243,7 +243,7 @@ export async function buildPageMetadata(args: {
     fetchSeoPageObject(args.locale, args.pageKey),
   ]);
 
-  // DB'de boş olan alanları sayfanın hardcoded fallback'iyle doldur
+  // Fill empty DB fields with page fallback text.
   const pageSeo: Record<string, any> = {
     ...pageSeoRaw,
     title: asStr(pageSeoRaw.title) || args.fallback?.title || '',
@@ -279,8 +279,7 @@ export async function buildMetadataFromSeo(
   // Defaults (DB-driven)
   const siteName = asStr(seo.site_name) || 'GoldMoodAstro';
   const titleDefault = asStr(seo.title_default) || siteName;
-  // T31-B7: titleDefault === siteName olduğunda template uygulanırsa
-  // "GoldMoodAstro | GoldMoodAstro" duplikasyonu oluşur. Bu durumda template'i atla.
+  // T31-B7: skip template when titleDefault === siteName to avoid duplication.
   const isDefaultSameAsBrand = titleDefault.trim().toLowerCase() === siteName.trim().toLowerCase();
   const titleTemplate = asStr(seo.title_template) || (isDefaultSameAsBrand ? '%s' : `%s | ${siteName}`);
   const rawDescription =
@@ -294,7 +293,7 @@ export async function buildMetadataFromSeo(
     (locale === 'de'
       ? "GoldMoodAstro — Entdecken Sie sich selbst durch Astrologie, Tarot und spirituelles Coaching. Jetzt Sitzung buchen."
       : locale === 'tr'
-        ? "GoldMoodAstro — Astroloji, tarot ve ruhsal koçluk için uzman danışmanlarla bağlantı kurun. Seansınızı hemen başlatın."
+        ? "GoldMoodAstro - connect with expert consultants for astrology, tarot and spiritual coaching. Start your session now."
         : "GoldMoodAstro — Connect with expert consultants for astrology, tarot, and spiritual coaching. Start your session now.");
 
   // Open Graph

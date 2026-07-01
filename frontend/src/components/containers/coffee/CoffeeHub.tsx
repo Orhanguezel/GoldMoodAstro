@@ -99,7 +99,7 @@ export default function CoffeeHub() {
   const handleStartAnalysis = async () => {
     const distinctIds = [...new Set(imageIds.filter(Boolean))];
     if (distinctIds.length < 3) {
-      setError('Lütfen 3 farklı fotoğraf seçin.');
+      setError(ui('ui_coffee_select_three', 'Please select 3 different photos.'));
       return;
     }
 
@@ -115,7 +115,7 @@ export default function CoffeeHub() {
       setStep('result');
     } catch (err) {
       console.error('Analysis failed:', err);
-      setError('Falınız yorumlanırken bir hata oluştu. Lütfen tekrar deneyin.');
+      setError(ui('ui_coffee_analysis_failed', 'An error occurred while reading your cup. Please try again.'));
       setStep('upload');
     }
   };
@@ -135,25 +135,25 @@ export default function CoffeeHub() {
             <div className="relative w-full max-w-3xl mx-auto rounded-[3rem] overflow-hidden shadow-2xl" style={{ height: 340 }}>
               <Image
                 src="/images/kahve-fali-3.png"
-                alt="Kahve Falı"
+                alt={ui('ui_coffee_hero_alt', 'Coffee Reading')}
                 fill
                 className="object-cover"
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-10 text-center">
-                <h2 className={`${cinzel.className} text-4xl md:text-6xl text-white tracking-tight drop-shadow-lg`}>Geleneksel Kahve Falı</h2>
+                <h2 className={`${cinzel.className} text-4xl md:text-6xl text-white tracking-tight drop-shadow-lg`}>{ui('ui_coffee_hero_title', 'Traditional Coffee Reading')}</h2>
                 <p className={`${fraunces.className} text-white/70 text-lg mt-3 italic`}>
-                  Fincanınızdaki semboller, yapay zekanın vizyonu ve kadim bilgelikle dile geliyor.
+                  {ui('ui_coffee_hero_subtitle', 'The symbols in your cup come to life through AI vision and ancient wisdom.')}
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left max-w-4xl mx-auto">
               {[
-                { step: '01', title: 'Fincanı Kapat', desc: 'Kahvenizi içtikten sonra dilek dileyip fincanı tabağa kapatın.', img: '/images/kahve-fali-1.png' },
-                { step: '02', title: '5 Dakika Bekle', desc: 'Telvelerin süzülüp sembollerin oluşması için fincanın soğumasını bekleyin.', img: '/images/kahve-fali-2.png' },
-                { step: '03', title: 'Fotoğrafları Çek', desc: 'Fincanın içinden 2, tabağından 1 net fotoğraf çekip yorumunuzu alın.', img: '/images/kahve-fali-3.png' },
+                { step: '01', title: ui('ui_coffee_step1_title', 'Turn the Cup Over'), desc: ui('ui_coffee_step1_desc', 'After drinking your coffee, make a wish and turn the cup onto the saucer.'), img: '/images/kahve-fali-1.png' },
+                { step: '02', title: ui('ui_coffee_step2_title', 'Wait 5 Minutes'), desc: ui('ui_coffee_step2_desc', 'Let the cup cool so the grounds can settle and the symbols can form.'), img: '/images/kahve-fali-2.png' },
+                { step: '03', title: ui('ui_coffee_step3_title', 'Take Photos'), desc: ui('ui_coffee_step3_desc', 'Take 2 clear photos inside the cup and 1 of the saucer to receive your reading.'), img: '/images/kahve-fali-3.png' },
               ].map((s, i) => (
                 <div key={i} className="group relative rounded-[2.5rem] overflow-hidden shadow-(--gm-shadow-soft) hover:scale-[1.02] transition-transform duration-300" style={{ minHeight: 280 }}>
                   {/* Photo background */}
@@ -182,7 +182,7 @@ export default function CoffeeHub() {
               }}
               className="px-16 py-6 bg-(--gm-gold) text-(--gm-bg-deep) font-bold rounded-full hover:scale-[1.05] active:scale-95 transition-all shadow-(--gm-shadow-gold) flex items-center justify-center gap-3 mx-auto tracking-[0.2em] text-xs"
             >
-              FİNCANI KAPATTIM <ChevronRight className="w-5 h-5" />
+              {ui('ui_coffee_closed_cup_cta', 'I TURNED THE CUP OVER')} <ChevronRight className="w-5 h-5" />
             </button>
           </motion.div>
         )}
@@ -204,9 +204,9 @@ export default function CoffeeHub() {
                 <Timer className="w-10 h-10 text-(--gm-gold) mb-3" />
                 <span className="text-4xl font-mono text-(--gm-gold) tracking-tighter">{formatTime(timeLeft)}</span>
               </div>
-              <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>Telveler Süzülüyor...</h2>
+              <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>{ui('ui_coffee_wait_title', 'The Grounds Are Settling...')}</h2>
               <p className="text-(--gm-text-dim) max-w-md mx-auto font-serif italic text-lg opacity-70">
-                Sembollerin netleşmesi için fincanın tamamen soğuması gerekir. Bu sırada niyetinize odaklanın.
+                {ui('ui_coffee_wait_desc', 'The cup needs to cool completely for the symbols to become clearer. Focus on your intention while you wait.')}
               </p>
             </div>
 
@@ -219,7 +219,7 @@ export default function CoffeeHub() {
                     : 'bg-(--gm-surface) text-(--gm-muted) border border-(--gm-border-soft)'
                 }`}
               >
-                {timeLeft === 0 ? 'DEVAM ET' : 'BEKLEMEDEN GEÇ'}
+                {timeLeft === 0 ? ui('ui_coffee_continue', 'CONTINUE') : ui('ui_coffee_skip_wait', 'SKIP WAITING')}
               </button>
             </div>
           </motion.div>
@@ -233,27 +233,27 @@ export default function CoffeeHub() {
             className="space-y-16"
           >
             <div className="text-center space-y-6">
-              <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>Fotoğrafları Çek</h2>
+              <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>{ui('ui_coffee_upload_title', 'Take Photos')}</h2>
               <div className="max-w-xl mx-auto p-8 rounded-[2rem] bg-(--gm-gold)/5 border border-(--gm-gold)/20 space-y-4">
-                <p className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-[0.4em]">Kusursuz Çekim İçin:</p>
+                <p className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-[0.4em]">{ui('ui_coffee_tips_label', 'For a Clear Shot:')}</p>
                 <p className="text-sm text-(--gm-text-dim) leading-relaxed font-serif italic opacity-80">
-                  Fincanı düz tut, iyi ışıkta, fincan içi <strong>yakın çekim</strong> yap; tabağı ayrı çek. Net fotoğraflar daha doğru yorum getirir.
+                  {ui('ui_coffee_tips_desc', 'Hold the cup steady, use good light, take close shots inside the cup and photograph the saucer separately. Clear photos make the reading stronger.')}
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { label: 'Fincan İçi 1', desc: 'Yan duvarlar' },
-                { label: 'Fincan İçi 2', desc: 'Taban kısmı' },
-                { label: 'Tabak', desc: 'Süzülen izler' }
+                { label: ui('ui_coffee_slot1_label', 'Cup Interior 1'), desc: ui('ui_coffee_slot1_desc', 'Side walls') },
+                { label: ui('ui_coffee_slot2_label', 'Cup Interior 2'), desc: ui('ui_coffee_slot2_desc', 'Bottom area') },
+                { label: ui('ui_coffee_slot3_label', 'Saucer'), desc: ui('ui_coffee_slot3_desc', 'Settled traces') }
               ].map((slot, idx) => (
                 <div key={idx} className="aspect-[3/4] relative group">
                   <PhotoCaptureInput
                     capture="environment"
                     offerGalleryChoice={true}
                     onPicked={(res) => handlePicked(res, idx)}
-                    onError={(code) => setError(code === 'not_an_image' ? 'Lütfen bir resim dosyası seçin.' : 'Resim çok büyük veya yüklenemedi.')}
+                    onError={(code) => setError(code === 'not_an_image' ? ui('ui_coffee_not_an_image', 'Please select an image file.') : ui('ui_coffee_image_too_large', 'The image is too large or could not be uploaded.'))}
                     prepareOptions={{
                       maxEdge: 1600,
                       quality: 0.8,
@@ -266,7 +266,7 @@ export default function CoffeeHub() {
                         <Image src={images[idx]} alt={slot.label} fill className="object-cover" />
                         <div className="absolute inset-0 bg-[var(--gm-bg-deep)]/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
                           <Camera className="w-10 h-10 text-(--gm-gold) mb-3" />
-                          <span className="text-[10px] font-bold text-[var(--gm-text)] uppercase tracking-[0.3em]">FOTOĞRAFI DEĞİŞTİR</span>
+                          <span className="text-[10px] font-bold text-[var(--gm-text)] uppercase tracking-[0.3em]">{ui('ui_coffee_change_photo', 'CHANGE PHOTO')}</span>
                         </div>
                         <div className="absolute top-6 right-6 bg-(--gm-gold) rounded-full p-2 shadow-(--gm-shadow-gold)">
                           <CheckCircle2 className="w-6 h-6 text-(--gm-bg-deep)" />
@@ -308,7 +308,7 @@ export default function CoffeeHub() {
                   : 'bg-(--gm-surface) text-(--gm-muted) cursor-not-allowed border border-(--gm-border-soft)'
               }`}
             >
-              {isUploading ? 'FOTOĞRAFLAR YÜKLENİYOR...' : 'FALIMI ŞİMDİ YORUMLA'} <Sparkles className="w-5 h-5" />
+              {isUploading ? ui('ui_coffee_uploading', 'PHOTOS ARE UPLOADING...') : ui('ui_coffee_analyze_cta', 'READ MY CUP NOW')} <Sparkles className="w-5 h-5" />
             </button>
           </motion.div>
         )}
@@ -339,9 +339,9 @@ export default function CoffeeHub() {
             </div>
             
             <div className="mt-20 text-center space-y-6">
-              <h2 className={`${cinzel.className} text-4xl text-(--gm-gold) tracking-widest`}>Semboller Okunuyor...</h2>
+              <h2 className={`${cinzel.className} text-4xl text-(--gm-gold) tracking-widest`}>{ui('ui_coffee_processing_title', 'Reading the Symbols...')}</h2>
               <p className={`${fraunces.className} text-(--gm-text-dim) text-xl italic opacity-70`}>
-                Yapay zeka fincanınızdaki izleri kadim sembollerle eşleştiriyor.
+                {ui('ui_coffee_processing_desc', 'AI is matching the traces in your cup with ancient symbols.')}
               </p>
               <div className="flex gap-3 justify-center mt-10">
                 {[0, 1, 2].map(i => (
@@ -365,7 +365,7 @@ export default function CoffeeHub() {
             className="space-y-16 py-10"
           >
              <div className="text-center space-y-8">
-              <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight leading-tight`}>Fincanın Dili</h2>
+              <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight leading-tight`}>{ui('ui_coffee_result_title', 'The Language of Your Cup')}</h2>
               
               <div className="flex flex-wrap justify-center gap-6">
                 {result.symbols.map((s: any, i: number) => (
@@ -413,12 +413,12 @@ export default function CoffeeHub() {
 
               <div className="mt-20 pt-12 border-t border-(--gm-border-soft) flex flex-col lg:flex-row items-center justify-between gap-12">
                 <div className="text-[11px] text-(--gm-muted) italic font-serif leading-relaxed max-w-md uppercase tracking-widest opacity-60">
-                  * Bu analiz Vision AI ve astrolojik semboloji veritabanımız tarafından hazırlanmıştır.
+                  {ui('ui_coffee_disclaimer', '* This analysis was prepared by Vision AI and our astrological symbolism database.')}
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-10">
-                  <ShareCard 
-                    title="Kahve Falımı Paylaş"
-                    shareText={`GoldMoodAstro'da kahve falıma baktırdım ✨\nSembollerim: ${result.symbols.map((s: any) => s.name).join(', ')}\nSen de fincanındaki sırları keşfet:`}
+                  <ShareCard
+                    title={ui('ui_coffee_share_title', 'Share My Coffee Reading')}
+                    shareText={`${ui('ui_coffee_share_text_intro', 'I had my coffee cup read on GoldMoodAstro ✨')}\n${ui('ui_coffee_share_text_symbols', 'My symbols:')} ${result.symbols.map((s: any) => s.name).join(', ')}\n${ui('ui_coffee_share_text_outro', 'Discover the secrets in your cup too:')}`}
                     variant="coffee"
                     data={{
                       symbols: result.symbols.map((s: any) => s.name),
@@ -435,7 +435,7 @@ export default function CoffeeHub() {
                     }}
                     className="flex items-center gap-4 text-(--gm-gold) font-bold uppercase tracking-[0.2em] text-xs hover:text-(--gm-gold-dim) transition-colors"
                   >
-                    YENİ FAL <RotateCcw className="w-4 h-4" />
+                    {ui('ui_coffee_new_reading', 'NEW READING')} <RotateCcw className="w-4 h-4" />
                   </button>
                 </div>
               </div>

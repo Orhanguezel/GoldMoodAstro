@@ -14,6 +14,29 @@ import { liveSessions } from './schema';
 import { buildLiveKitToken, getLiveKitUrl, makeRoomName } from './service';
 
 type ParticipantKind = 'user' | 'consultant';
+type NotificationLocale = 'tr' | 'en' | 'de';
+
+const CREDIT_INSUFFICIENT_COPY: Record<NotificationLocale, { title: string; message: string }> = {
+  tr: {
+    title: 'Görüşme Bitişi',
+    message: 'Kredi bakiyeniz görüşme süresini karşılamaya yetmedi. Kredi yükleyerek tekrar deneyebilirsiniz.',
+  },
+  en: {
+    title: 'Session Ended',
+    message: 'Your credit balance was not enough to cover the session duration. You can add credits and try again.',
+  },
+  de: {
+    title: 'Sitzung beendet',
+    message:
+      'Dein Guthaben hat nicht ausgereicht, um die Sitzungsdauer abzudecken. Du kannst Guthaben aufladen und es erneut versuchen.',
+  },
+};
+
+function notificationLocale(value: unknown): NotificationLocale {
+  const locale = String(value ?? '').trim().toLowerCase().split('-')[0];
+  return locale === 'en' || locale === 'de' ? locale : 'tr';
+}
+
 function toSafeNumber(value: unknown) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -37,6 +60,7 @@ async function getBookingBillingContext(bookingId: string) {
       user_id: bookings.user_id,
       booking_status: bookings.status,
       session_price: bookings.session_price,
+      locale: bookings.locale,
       fcm_token: users.fcm_token,
     })
     .from(bookings)
@@ -398,9 +422,7 @@ export async function handleLiveKitWebhook(event: WebhookEvent) {
     await db.update(bookings).set({ status: nextBookingStatus } as any).where(eq(bookings.id, bookingId));
 
     if (settlement.status === 'insufficient') {
-      const title = 'Görüşme Bitişi';
-      const message =
-        'Kredi bakiyeniz görüşme süresini karşılamaya yetmedi. Kredi yükleyerek tekrar deneyebilirsiniz.';
+      const { title, message } = CREDIT_INSUFFICIENT_COPY[notificationLocale(booking.locale)];
       const payload = { type: 'booking_credit_insufficient', booking_id: bookingId };
       void createUserNotification({
         userId: booking.user_id,

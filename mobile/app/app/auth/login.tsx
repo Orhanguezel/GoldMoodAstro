@@ -162,6 +162,7 @@ function buildScreenStyles(t: AppTheme) {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams, Link } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { safeRouterBack } from '@/lib/navigation';
 import { Mail, Lock, ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
@@ -174,6 +175,7 @@ export default function LoginScreen() {
   const theme = useAppTheme();
   const { colors, radius } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
   const { next } = useLocalSearchParams<{ next?: string }>();
 
   const [email, setEmail] = useState('');
@@ -190,7 +192,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
+      Alert.alert(t('common.error'), t('common.fillAllFields'));
       return;
     }
     
@@ -214,7 +216,7 @@ export default function LoginScreen() {
         router.replace('/onboarding/birthdata' as any);
       }
     } catch (err: any) {
-      Alert.alert('Giriş Başarısız', err.message || 'E-posta veya şifre hatalı.');
+      Alert.alert(t('auth.loginFailed'), err.message || t('auth.invalidCredentials'));
     } finally {
       setLoading(false);
     }
@@ -259,7 +261,7 @@ export default function LoginScreen() {
       }
     } catch (err: any) {
       if (err.code === 'ERR_CANCELED') return;
-      Alert.alert('Hata', 'Apple ile giriş yapılamadı.');
+      Alert.alert(t('common.error'), t('auth.appleLoginFailed'));
     } finally {
       setLoading(false);
     }
@@ -282,14 +284,14 @@ export default function LoginScreen() {
           <ScrollView contentContainerStyle={styles.scroll}>
             
             <View style={styles.welcomeArea}>
-              <Text style={styles.welcomeKicker}>TEKRAR HOŞ GELDİNİZ</Text>
-              <Text style={styles.title}>Yıldızların rehberliği{'\n'}sizi bekliyor.</Text>
+              <Text style={styles.welcomeKicker}>{t('auth.loginKicker')}</Text>
+              <Text style={styles.title}>{t('auth.loginHeadline')}</Text>
             </View>
 
             <View style={styles.form}>
               
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>E-POSTA ADRESİ</Text>
+                <Text style={styles.label}>{t('auth.emailLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <Mail size={20} color={colors.goldDim} />
                   <TextInput
@@ -306,10 +308,10 @@ export default function LoginScreen() {
 
               <View style={styles.inputGroup}>
                 <View style={styles.labelRow}>
-                  <Text style={styles.label}>ŞİFRE</Text>
+                  <Text style={styles.label}>{t('auth.passwordLabel')}</Text>
                   <Link href="/auth/forgot" asChild>
                     <Pressable>
-                      <Text style={styles.forgotText}>Şifremi Unuttum</Text>
+                      <Text style={styles.forgotText}>{t('auth.forgotPassword')}</Text>
                     </Pressable>
                   </Link>
                 </View>
@@ -337,14 +339,14 @@ export default function LoginScreen() {
                 {loading ? (
                   <ActivityIndicator color={colors.ink} />
                 ) : (
-                  <Text style={styles.loginBtnText}>Giriş Yap</Text>
+                  <Text style={styles.loginBtnText}>{t('auth.loginBtn')}</Text>
                 )}
               </Pressable>
 
               {appleAuthAvailable && (
                 <View style={styles.dividerArea}>
                   <View style={styles.divider} />
-                  <Text style={styles.dividerText}>VEYA</Text>
+                  <Text style={styles.dividerText}>{t('auth.or')}</Text>
                   <View style={styles.divider} />
                 </View>
               )}
@@ -361,7 +363,7 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Henüz hesabınız yok mu?</Text>
+              <Text style={styles.footerText}>{t('auth.noAccount')}</Text>
               <Link
                 href={
                   next
@@ -371,7 +373,7 @@ export default function LoginScreen() {
                 asChild
               >
                 <Pressable>
-                  <Text style={styles.registerLink}>Hemen Kaydol</Text>
+                  <Text style={styles.registerLink}>{t('auth.registerNow')}</Text>
                 </Pressable>
               </Link>
             </View>

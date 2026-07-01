@@ -10,12 +10,6 @@ type Props = {
   style?: object;
 };
 
-const MESSAGES = {
-  tr: 'Bu alan kısa notlar ve sorular içindir. Uzun sohbet için canlı görüşme rezervasyonu yapın. Aşırı kullanım otomatik kapatılabilir.',
-  en: 'This space is for short notes and questions only. Book a live session for longer conversations. Excessive use may be auto-restricted.',
-  de: 'Dieser Bereich ist für kurze Notizen und Fragen. Buche eine Live-Sitzung für längere Gespräche.',
-} as const;
-
 function buildStyles(t: AppTheme, compact: boolean) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -42,10 +36,9 @@ function buildStyles(t: AppTheme, compact: boolean) {
 }
 
 export function ChatWarningBanner({ compact = false, message, style }: Props) {
-  const { i18n } = useTranslation();
+  const { t } = useTranslation();
   const theme = useAppTheme();
-  const lang = (i18n.language?.slice(0, 2) ?? 'tr') as keyof typeof MESSAGES;
-  const text = message ?? MESSAGES[lang] ?? MESSAGES.tr;
+  const text = message ?? t('chat.warning');
   const styles = useMemo(() => buildStyles(theme, compact), [theme, compact]);
 
   return (

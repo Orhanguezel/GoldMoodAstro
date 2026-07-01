@@ -656,7 +656,7 @@ export default function AdminAuditClient() {
         <div>
           <div className="flex items-center gap-3 mb-4">
             <span className="w-12 h-px bg-gm-gold" />
-            <span className="text-gm-gold font-bold text-[10px] tracking-[0.3em] uppercase">Sistem Güvenliği</span>
+            <span className="text-gm-gold font-bold text-[10px] tracking-[0.3em] uppercase">{t('eyebrow')}</span>
           </div>
           <h1 className="font-serif text-5xl text-foreground leading-tight tracking-tight">{t('header.title')}</h1>
           <p className="text-gm-muted text-lg mt-3 font-serif italic max-w-2xl leading-relaxed">
@@ -793,7 +793,7 @@ export default function AdminAuditClient() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">Sıralama Yönü</Label>
+                  <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('requests.sortDirection')}</Label>
                    <Select value={orderDirText} onValueChange={(v) => setOrderDirText(v as 'asc' | 'desc')}>
                       <SelectTrigger className="bg-gm-surface border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 w-full">
                         <SelectValue />
@@ -836,7 +836,7 @@ export default function AdminAuditClient() {
               </div>
               <div className="flex items-center gap-4">
                 <Badge className="bg-gm-gold/10 text-gm-gold border-gm-gold/20 rounded-full px-4 py-1 font-mono text-xs">
-                  {reqLoading ? t('common.loading') : `${reqData.items.length} kayıt`}
+                  {reqLoading ? t('common.loading') : t('common.recordCount', { count: String(reqData.items.length) })}
                 </Badge>
                 <Separator orientation="vertical" className="h-6 bg-gm-border-soft" />
                 <Button
@@ -1060,7 +1060,7 @@ export default function AdminAuditClient() {
                 </CardDescription>
               </div>
               <Badge className="bg-gm-gold/10 text-gm-gold border-gm-gold/20 rounded-full px-4 py-1 font-mono text-xs">
-                {authLoading ? t('common.loading') : `${authData.items.length} kayıt`}
+                {authLoading ? t('common.loading') : t('common.recordCount', { count: String(authData.items.length) })}
               </Badge>
             </CardHeader>
             <CardContent className="p-0">
@@ -1274,7 +1274,7 @@ export default function AdminAuditClient() {
           <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
             <CardHeader className="p-8 pb-4 border-b border-gm-border-soft bg-gm-surface/40">
               <CardTitle className="font-serif text-2xl flex items-center gap-3">
-                <Filter className="h-5 w-5 text-gm-gold" /> Filtreler
+                <Filter className="h-5 w-5 text-gm-gold" /> {t('requests.filtersTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
@@ -1286,10 +1286,10 @@ export default function AdminAuditClient() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-gm-surface border-gm-border-soft rounded-2xl">
-                      <SelectItem value="7">Son 7 Gün</SelectItem>
-                      <SelectItem value="14">Son 14 Gün</SelectItem>
-                      <SelectItem value="30">Son 30 Gün</SelectItem>
-                      <SelectItem value="90">Son 90 Gün</SelectItem>
+                      <SelectItem value="7">{t('metrics.lastNDays', { n: '7' })}</SelectItem>
+                      <SelectItem value="14">{t('metrics.lastNDays', { n: '14' })}</SelectItem>
+                      <SelectItem value="30">{t('metrics.lastNDays', { n: '30' })}</SelectItem>
+                      <SelectItem value="90">{t('metrics.lastNDays', { n: '90' })}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1314,22 +1314,22 @@ export default function AdminAuditClient() {
           <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
             <CardHeader className="p-8 pb-4 border-b border-gm-border-soft bg-gm-surface/40">
               <CardTitle className="font-serif text-2xl flex items-center gap-3">
-                <Filter className="h-5 w-5 text-gm-gold" /> Filtreler
+                <Filter className="h-5 w-5 text-gm-gold" /> {t('requests.filtersTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
               <form onSubmit={onSubmitMetrics} className="grid gap-6 md:grid-cols-4">
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">Hafta Sayısı</Label>
+                  <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('cohort.weekCount')}</Label>
                   <Select value={daysText} onValueChange={setDaysText}>
                     <SelectTrigger className="bg-gm-surface border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-gm-surface border-gm-border-soft rounded-2xl">
-                      <SelectItem value="4">Son 4 Hafta</SelectItem>
-                      <SelectItem value="8">Son 8 Hafta</SelectItem>
-                      <SelectItem value="12">Son 12 Hafta</SelectItem>
-                      <SelectItem value="24">Son 24 Hafta</SelectItem>
+                      <SelectItem value="4">{t('cohort.lastNWeeks', { n: '4' })}</SelectItem>
+                      <SelectItem value="8">{t('cohort.lastNWeeks', { n: '8' })}</SelectItem>
+                      <SelectItem value="12">{t('cohort.lastNWeeks', { n: '12' })}</SelectItem>
+                      <SelectItem value="24">{t('cohort.lastNWeeks', { n: '24' })}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

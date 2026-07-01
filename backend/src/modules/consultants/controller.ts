@@ -31,6 +31,11 @@ function userIdFromRequest(req: Parameters<RouteHandler>[0]) {
   return user?.sub ?? user?.id ?? null;
 }
 
+function localeFromRequest(req: Parameters<RouteHandler>[0]) {
+  const queryLocale = (req.query as { locale?: string } | undefined)?.locale;
+  return queryLocale || (req as any).locale || 'tr';
+}
+
 function uniqueSlugs(values: string[]): string[] {
   return Array.from(new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean)));
 }
@@ -59,12 +64,12 @@ async function findInactiveOrMissingLanguageSlugs(slugs: string[]): Promise<stri
 
 export const listConsultantsHandler: RouteHandler = async (req) => {
   const query = listConsultantsQuerySchema.parse(req.query ?? {});
-  return { data: await listApprovedConsultants(query) };
+  return { data: await listApprovedConsultants(query, localeFromRequest(req)) };
 };
 
 export const getConsultantHandler: RouteHandler = async (req, reply) => {
   const { id } = consultantIdParamsSchema.parse(req.params ?? {});
-  const row = await getApprovedConsultantById(id);
+  const row = await getApprovedConsultantById(id, localeFromRequest(req));
   if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
   return { data: row };
 };
@@ -72,7 +77,7 @@ export const getConsultantHandler: RouteHandler = async (req, reply) => {
 export const getConsultantSlotsHandler: RouteHandler = async (req, reply) => {
   const { id } = consultantIdParamsSchema.parse(req.params ?? {});
   const query = consultantSlotsQuerySchema.parse(req.query ?? {});
-  const result = await getConsultantSlots(id, query.date);
+  const result = await getConsultantSlots(id, query.date, localeFromRequest(req));
   if (!result.consultant) {
     return reply.code(404).send({ error: { message: 'consultant_not_found' } });
   }

@@ -1,26 +1,8 @@
 import React from 'react';
 import { Sparkles, Users } from 'lucide-react';
+import { useUiSection } from '@/i18n';
 
 const COPY = {
-  tr: {
-    eyebrow: 'HİBRİT MODELİMİZ',
-    title: 'AI Zekası, <em>İnsan</em> Sezgisi',
-    description: 'Gold Mood, modern teknolojiyi kadim bilgilerle birleştirir. Doğum haritanızı saniyeler içinde analiz eden AI ve derin ruhsal rehberlik sunan gerçek danışmanlar bir arada.',
-    ai: {
-      title: 'Hızlı & Analitik',
-      text: 'AI motorumuz, karmaşık astrolojik verileri saniyeler içinde işler ve günlük yorumunuzu hazırlar.'
-    },
-    human: {
-      title: 'Derin & Sezgisel',
-      text: 'Gerçek danışmanlarımız, AI\'nın ötesine geçerek hayatınızdaki özel düğümleri çözer.'
-    },
-    bridge: 'SİNERJİ',
-    stats: [
-      { num: '%100', label: 'GİZLİLİK' },
-      { num: '7/24', label: 'ERİŞİM' },
-      { num: '50+', label: 'UZMAN' }
-    ]
-  },
   en: {
     eyebrow: 'OUR HYBRID MODEL',
     title: 'AI Intelligence, <em>Human</em> Intuition',
@@ -43,7 +25,27 @@ const COPY = {
 };
 
 export default function HybridModelSection({ locale = 'tr' }: { locale?: string }) {
-  const copy = COPY[locale as keyof typeof COPY] || COPY.tr;
+  const { ui } = useUiSection('ui_home', locale as any);
+  const fb = COPY.en;
+  const copy = {
+    eyebrow: ui('ui_home_hybrid_eyebrow', fb.eyebrow),
+    title: ui('ui_home_hybrid_title', fb.title),
+    description: ui('ui_home_hybrid_description', fb.description),
+    ai: {
+      title: ui('ui_home_hybrid_ai_title', fb.ai.title),
+      text: ui('ui_home_hybrid_ai_text', fb.ai.text),
+    },
+    human: {
+      title: ui('ui_home_hybrid_human_title', fb.human.title),
+      text: ui('ui_home_hybrid_human_text', fb.human.text),
+    },
+    bridge: ui('ui_home_hybrid_bridge', fb.bridge),
+    stats: [
+      { num: fb.stats[0].num, label: ui('ui_home_hybrid_stat_privacy', fb.stats[0].label) },
+      { num: fb.stats[1].num, label: ui('ui_home_hybrid_stat_access', fb.stats[1].label) },
+      { num: fb.stats[2].num, label: ui('ui_home_hybrid_stat_experts', fb.stats[2].label) },
+    ],
+  };
 
   return (
     <section className="py-32 px-6 bg-[var(--gm-bg-deep)] relative overflow-hidden text-[var(--gm-text)] border-y border-[var(--gm-border-soft)]">

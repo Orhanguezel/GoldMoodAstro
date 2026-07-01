@@ -1,4 +1,4 @@
-// FAZ 28 / T28-3 — Funnel feature → consultant topic mapping
+// FAZ 28 / T28-3 - Funnel feature -> consultant topic mapping
 // frontend/src/components/common/funnel.config.ts
 
 export type FunnelFeature =
@@ -12,8 +12,8 @@ export type FunnelFeature =
   | 'daily';
 
 /**
- * topic = /consultants?topic= URL parametresi (FE filter)
- * expertise = backend `?expertise=` parametresi (consultants.expertise JSON içinde aranır)
+ * topic = /consultants?topic= URL parameter (FE filter)
+ * expertise = backend `?expertise=` parameter, searched in consultants.expertise JSON
  */
 export const FUNNEL_CONFIG: Record<
   FunnelFeature,
@@ -22,49 +22,49 @@ export const FUNNEL_CONFIG: Record<
   tarot: {
     topic: 'tarot',
     expertise: 'tarot',
-    headlineTr: 'Tarot Uzmanları',
+    headlineTr: 'Tarot Experts',
     headlineEn: 'Tarot Experts',
   },
   kahve: {
     topic: 'kahve',
     expertise: 'tarot',
-    headlineTr: 'Fal Uzmanları',
+    headlineTr: 'Divination Experts',
     headlineEn: 'Divination Experts',
   },
   ruya: {
     topic: 'ruya',
     expertise: 'mood',
-    headlineTr: 'Rüya & Sembol Uzmanları',
+    headlineTr: 'Dream & Symbol Experts',
     headlineEn: 'Dream & Symbol Experts',
   },
   sinastri: {
     topic: 'sinastri',
     expertise: 'relationship',
-    headlineTr: 'İlişki Astrolojisi Uzmanları',
+    headlineTr: 'Relationship Astrology Experts',
     headlineEn: 'Relationship Astrology Experts',
   },
   yildizname: {
     topic: 'yildizname',
     expertise: 'astrology',
-    headlineTr: 'Yıldızname & Klasik Astroloji Uzmanları',
+    headlineTr: 'Yildizname & Classical Astrology Experts',
     headlineEn: 'Yildizname & Classical Astrology Experts',
   },
   numeroloji: {
     topic: 'numeroloji',
     expertise: 'astrology',
-    headlineTr: 'Numeroloji Uzmanları',
+    headlineTr: 'Numerology Experts',
     headlineEn: 'Numerology Experts',
   },
   'birth-chart': {
     topic: 'birth-chart',
     expertise: 'birth_chart',
-    headlineTr: 'Doğum Haritası Uzmanları',
+    headlineTr: 'Birth Chart Experts',
     headlineEn: 'Birth Chart Experts',
   },
   daily: {
     topic: 'daily',
     expertise: 'astrology',
-    headlineTr: 'Astroloji Uzmanları',
+    headlineTr: 'Astrology Experts',
     headlineEn: 'Astrology Experts',
   },
 };

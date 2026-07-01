@@ -14,6 +14,7 @@ import {
   useRequestMyConsultantWithdrawalMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { useListSiteSettingsQuery } from '@/integrations/rtk/public/site_settings.endpoints';
+import { useUiSection } from '@/i18n';
 
 function formatMoney(v: string | number | null | undefined, currency = 'TRY') {
   const n = Number(v ?? 0);
@@ -38,22 +39,33 @@ function getTooSoonDate(error: unknown): string | null {
 }
 
 
-const PURPOSE_LABELS: Record<string, string> = {
-  withdrawal: 'Para Çekme',
-  booking_payout: 'Seans Geliri',
-  refund: 'İade',
-  bonus: 'Bonus',
-  adjustment: 'Düzeltme',
+const PURPOSE_LABEL_KEYS: Record<string, { key: string; fallback: string }> = {
+  withdrawal: { key: 'ui_consultantpanel_wallet_purpose_withdrawal', fallback: 'Withdrawal' },
+  booking_payout: { key: 'ui_consultantpanel_wallet_purpose_booking_payout', fallback: 'Session income' },
+  refund: { key: 'ui_consultantpanel_wallet_purpose_refund', fallback: 'Refund' },
+  bonus: { key: 'ui_consultantpanel_wallet_purpose_bonus', fallback: 'Bonus' },
+  adjustment: { key: 'ui_consultantpanel_wallet_purpose_adjustment', fallback: 'Adjustment' },
 };
 
-const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  completed: { label: 'Tamamlandı', cls: 'bg-[var(--gm-success)]/15 text-[var(--gm-success)]' },
-  pending: { label: 'Bekliyor', cls: 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]' },
-  failed: { label: 'Başarısız', cls: 'bg-[var(--gm-error)]/15 text-[var(--gm-error)]' },
-  refunded: { label: 'İade', cls: 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]' },
+const STATUS_LABELS: Record<string, { key: string; fallback: string; cls: string }> = {
+  completed: { key: 'ui_consultantpanel_wallet_status_completed', fallback: 'Completed', cls: 'bg-[var(--gm-success)]/15 text-[var(--gm-success)]' },
+  pending: { key: 'ui_consultantpanel_wallet_status_pending', fallback: 'Pending', cls: 'bg-[var(--gm-warning)]/15 text-[var(--gm-warning)]' },
+  failed: { key: 'ui_consultantpanel_wallet_status_failed', fallback: 'Failed', cls: 'bg-[var(--gm-error)]/15 text-[var(--gm-error)]' },
+  refunded: { key: 'ui_consultantpanel_wallet_status_refunded', fallback: 'Refunded', cls: 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]' },
 };
+
+function labelForPurpose(ui: (key: string, hardFallback?: string) => string, purpose: string) {
+  const entry = PURPOSE_LABEL_KEYS[purpose];
+  return entry ? ui(entry.key, entry.fallback) : purpose;
+}
+
+function labelForStatus(ui: (key: string, hardFallback?: string) => string, status: string) {
+  const entry = STATUS_LABELS[status];
+  return entry ? ui(entry.key, entry.fallback) : status;
+}
 
 export default function WalletPanel() {
+  const { ui } = useUiSection('ui_consultantpanel');
   const { data, isLoading, refetch } = useGetMyConsultantWalletQuery();
   const { data: monthlyStats = [] } = useGetMyConsultantMonthlyStatsQuery();
   const { data: profile } = useGetMyConsultantProfileQuery();
@@ -81,7 +93,6 @@ export default function WalletPanel() {
     start: '',
     end: '',
   });
-  // C6: Transaction type filter
   const [txType, setTxType] = useState<'all' | 'credit' | 'debit'>('all');
 
   if (isLoading || isLoadingSettings) {
@@ -126,11 +137,11 @@ export default function WalletPanel() {
     const amt = Number(amount);
 
     if (!amount || isNaN(amt) || amt <= 0) {
-      newErrors.amount = 'Geçerli bir tutar girin';
+      newErrors.amount = ui('ui_consultantpanel_wallet_enterValidAmount', 'Enter a valid amount');
     } else if (amt < minWithdrawalAmount) {
-      newErrors.amount = `Minimum para çekme limiti ${formatMoney(minWithdrawalAmount, currency)}.`;
+      newErrors.amount = `${ui('ui_consultantpanel_wallet_minWithdrawalLimit', 'Minimum withdrawal limit')} ${formatMoney(minWithdrawalAmount, currency)}.`;
     } else if (amt > balance) {
-      newErrors.amount = 'Yetersiz bakiye';
+      newErrors.amount = ui('ui_consultantpanel_wallet_insufficientBalance', 'Insufficient balance');
     }
 
     setErrors(newErrors);
@@ -144,17 +155,17 @@ export default function WalletPanel() {
         amount: Number(amount),
         notes: notes.trim() || undefined
       }).unwrap();
-      toast.success('Para çekme talebiniz alındı');
+      toast.success(ui('ui_consultantpanel_wallet_withdrawalReceived', 'Your withdrawal request has been received'));
       setShowModal(false);
       setAmount(''); setNotes(''); setErrors({});
       refetch();
     } catch (e: unknown) {
       const next = getTooSoonDate(e);
       if (next) {
-        toast.error(`Bu ay ödeme talebiniz alınmış. Sonraki talep açılışı: ${formatDate(next)}`);
+        toast.error(`${ui('ui_consultantpanel_wallet_alreadyRequestedThisMonth', 'You have already requested a payout this month. Next request opens:')} ${formatDate(next)}`);
         return;
       }
-      toast.error(extractApiError(e, 'Talep oluşturulamadı'));
+      toast.error(extractApiError(e, ui('ui_consultantpanel_wallet_requestFailed', 'Request could not be created')));
     }
   };
 
@@ -168,21 +179,21 @@ export default function WalletPanel() {
             <div className="flex items-center gap-2 mb-3">
               <Wallet className="w-4 h-4 text-[var(--gm-gold)]" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
-                Mevcut Bakiye
+                {ui('ui_consultantpanel_wallet_currentBalance', 'Current balance')}
               </span>
             </div>
             <div className="font-serif text-5xl text-[var(--gm-gold)] mb-2">{formatMoney(balance, currency)}</div>
             {wallet?.pending_balance && Number(wallet.pending_balance) > 0 && (
               <p className="text-[12px] text-[var(--gm-text-dim)] italic mb-4">
-                Bekleyen: {formatMoney(wallet.pending_balance, currency)} (henüz hesaba geçmedi)
+                {ui('ui_consultantpanel_wallet_pendingLabel', 'Pending:')} {formatMoney(wallet.pending_balance, currency)} {ui('ui_consultantpanel_wallet_pendingNote', '(not yet credited)')}
               </p>
             )}
             
             {commissionRate !== null && (
               <div className="mt-6 p-3 rounded-xl bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)] max-w-sm">
                 <p className="text-[10px] text-[var(--gm-text-dim)] leading-relaxed">
-                  <strong className="text-[var(--gm-gold)] uppercase tracking-widest block mb-1">Komisyon Oranı: %{commissionRate}</strong>
-                  Hizmet ücretinin %{commissionRate}&apos;i platform tarafından kesilir, kalan tutar cüzdanınıza eklenir.
+                  <strong className="text-[var(--gm-gold)] uppercase tracking-widest block mb-1">{ui('ui_consultantpanel_wallet_commissionRateLabel', 'Commission rate:')} %{commissionRate}</strong>
+                  {ui('ui_consultantpanel_wallet_commissionExplainPre', 'Of the service fee,')} %{commissionRate}{ui('ui_consultantpanel_wallet_commissionExplainPost', ' is deducted by the platform, and the remaining amount is added to your wallet.')}
                 </p>
               </div>
             )}
@@ -190,12 +201,12 @@ export default function WalletPanel() {
             {payoutCycle?.mode === 'monthly' && (
               <div className="mt-3 p-3 rounded-xl bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)] max-w-sm">
                 <p className="text-[10px] text-[var(--gm-text-dim)] leading-relaxed">
-                  <strong className="text-[var(--gm-gold)] uppercase tracking-widest block mb-1">Aylık Ödeme Döngüsü</strong>
-                  Bakiyenize ulaşmak için ayda 1 kez çekim talebi açabilirsiniz.
-                  {lastWithdrawal ? <> Son talebiniz: {formatDate(lastWithdrawal.requested_at)}.</> : <> Henüz ödeme talebiniz yok.</>}
-                  {nextWithdrawalAt ? <> Sonraki talep açılışı: {formatDate(nextWithdrawalAt)}.</> : <> Talep günü: her ayın {payoutCycle.request_day || 1}. günü.</>}
+                  <strong className="text-[var(--gm-gold)] uppercase tracking-widest block mb-1">{ui('ui_consultantpanel_wallet_monthlyPayoutCycle', 'Monthly payout cycle')}</strong>
+                  {ui('ui_consultantpanel_wallet_monthlyPayoutHint', 'You can open one withdrawal request per month to access your balance.')}
+                  {lastWithdrawal ? <> {ui('ui_consultantpanel_wallet_lastRequestLabel', 'Your last request:')} {formatDate(lastWithdrawal.requested_at)}.</> : <> {ui('ui_consultantpanel_wallet_noRequestYet', 'You have no payout requests yet.')}</>}
+                  {nextWithdrawalAt ? <> {ui('ui_consultantpanel_wallet_nextRequestOpens', 'Next request opens:')} {formatDate(nextWithdrawalAt)}.</> : <> {ui('ui_consultantpanel_wallet_requestDayPre', 'Request day: the')} {payoutCycle.request_day || 1}{ui('ui_consultantpanel_wallet_requestDayPost', ' day of each month.')}</>}
                   {typeof payoutCycle.min_threshold === 'number' && (
-                    <> Minimum çekim tutarı: {formatMoney(payoutCycle.min_threshold, currency)}.</>
+                    <> {ui('ui_consultantpanel_wallet_minWithdrawalAmountLabel', 'Minimum withdrawal amount:')} {formatMoney(payoutCycle.min_threshold, currency)}.</>
                   )}
                 </p>
               </div>
@@ -208,16 +219,16 @@ export default function WalletPanel() {
               className="px-6 py-3 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 inline-flex items-center gap-2 hover:shadow-[0_0_30px_rgba(201,169,97,0.25)] transition-all"
             >
               <ArrowDownCircle className="w-4 h-4" />
-              Para Çek
+              {ui('ui_consultantpanel_wallet_withdraw', 'Withdraw')}
             </button>
             {profile?.kyc_status !== 'approved' && (
               <div className="absolute bottom-full mb-2 hidden group-hover:block w-[200px] bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] p-2 rounded shadow-lg text-[10px] text-center text-[var(--gm-text)] z-10">
-                Para çekmek için Profil sekmesinden Kimlik Doğrulama (KYC) işlemini tamamlayın.
+                {ui('ui_consultantpanel_wallet_kycRequired', 'To withdraw funds, complete identity verification (KYC) in the Profile tab.')}
               </div>
             )}
             {profile?.kyc_status === 'approved' && balance < minWithdrawalAmount && (
               <div className="absolute bottom-full mb-2 hidden group-hover:block w-[150px] bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] p-2 rounded shadow-lg text-[10px] text-center text-[var(--gm-text)] z-10">
-                Minimum limit: {formatMoney(minWithdrawalAmount, currency)}
+                {ui('ui_consultantpanel_wallet_minLimitLabel', 'Minimum limit:')} {formatMoney(minWithdrawalAmount, currency)}
               </div>
             )}
           </div>
@@ -228,21 +239,21 @@ export default function WalletPanel() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">Bu Ay Gelen</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">{ui('ui_consultantpanel_wallet_incomingThisMonth', 'Earned this month')}</span>
             <ArrowUpCircle className="w-4 h-4 text-[var(--gm-success)]" />
           </div>
           <div className="font-serif text-2xl text-[var(--gm-text)]">{formatMoney(monthly.credits, currency)}</div>
         </div>
         <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">Bu Ay Çekilen</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">{ui('ui_consultantpanel_wallet_withdrawnThisMonth', 'Withdrawn this month')}</span>
             <ArrowDownCircle className="w-4 h-4 text-[var(--gm-error)]" />
           </div>
           <div className="font-serif text-2xl text-[var(--gm-text)]">{formatMoney(monthly.debits, currency)}</div>
         </div>
         <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">Net (30 gün)</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">{ui('ui_consultantpanel_wallet_net30Days', 'Net (30 days)')}</span>
             <TrendingUp className="w-4 h-4 text-[var(--gm-gold)]" />
           </div>
           <div className={`font-serif text-2xl ${monthly.net >= 0 ? 'text-[var(--gm-text)]' : 'text-[var(--gm-error)]'}`}>
@@ -251,7 +262,7 @@ export default function WalletPanel() {
         </div>
       </div>
 
-      {/* C5: Aylık Gelirleriniz */}
+      {/* C5: Monthly earnings */}
       {monthlyStats.length > 0 && (
         <MonthlyEarningsChart data={monthlyStats} currency={currency} />
       )}
@@ -260,10 +271,9 @@ export default function WalletPanel() {
       <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 overflow-hidden">
         <div className="px-5 py-3 border-b border-[var(--gm-border-soft)] flex items-center justify-between flex-wrap gap-2">
           <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
-            Son İşlemler
+            {ui('ui_consultantpanel_wallet_recentTransactions', 'Recent transactions')}
           </span>
           <div className="flex items-center gap-3 flex-wrap">
-            {/* C6: Type filter */}
             <div className="flex gap-1 p-0.5 rounded-lg bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)]">
               {(['all', 'credit', 'debit'] as const).map((type) => (
                 <button
@@ -279,7 +289,7 @@ export default function WalletPanel() {
                       : 'text-[var(--gm-text)] opacity-40 hover:opacity-70'
                   }`}
                 >
-                  {type === 'all' ? 'Tümü' : type === 'credit' ? 'Gelir' : 'Gider'}
+                  {type === 'all' ? ui('ui_consultantpanel_wallet_filterAll', 'All') : type === 'credit' ? ui('ui_consultantpanel_wallet_filterIncome', 'Income') : ui('ui_consultantpanel_wallet_filterExpense', 'Expense')}
                 </button>
               ))}
             </div>
@@ -301,7 +311,7 @@ export default function WalletPanel() {
                 <button 
                   onClick={() => setDateRange({ start: '', end: '' })}
                   className="p-1.5 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-full transition-colors"
-                  title="Filtreyi Temizle"
+                  title={ui('ui_consultantpanel_wallet_clearFilter', 'Clear filter')}
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -309,38 +319,46 @@ export default function WalletPanel() {
             </div>
             <button
               onClick={() => {
-                const headers = ['Tarih', 'Tür', 'İşlem', 'Tutar', 'Para Birimi', 'Durum', 'Açıklama'];
+                const headers = [
+                  ui('ui_consultantpanel_wallet_csvDate', 'Date'),
+                  ui('ui_consultantpanel_wallet_csvType', 'Type'),
+                  ui('ui_consultantpanel_wallet_csvTransaction', 'Transaction'),
+                  ui('ui_consultantpanel_wallet_csvAmount', 'Amount'),
+                  ui('ui_consultantpanel_wallet_csvCurrency', 'Currency'),
+                  ui('ui_consultantpanel_wallet_csvStatus', 'Status'),
+                  ui('ui_consultantpanel_wallet_csvDescription', 'Description'),
+                ];
                 const rows = transactions.map(t => [
                   t.created_at,
                   t.type,
-                  PURPOSE_LABELS[t.purpose] || t.purpose,
+                  labelForPurpose(ui, t.purpose),
                   t.amount,
                   t.currency || currency,
-                  STATUS_LABELS[t.payment_status]?.label || t.payment_status,
+                  labelForStatus(ui, t.payment_status),
                   t.description || ''
                 ]);
                 const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.setAttribute('download', `islemler_${new Date().toISOString().slice(0, 10)}.csv`);
+                link.setAttribute('download', `transactions_${new Date().toISOString().slice(0, 10)}.csv`);
                 link.click();
               }}
               className="px-3 py-1 rounded-full border border-[var(--gm-border-soft)] text-[9px] font-bold uppercase tracking-widest text-[var(--gm-text-dim)] hover:text-[var(--gm-text)] hover:border-[var(--gm-gold)]/40 transition-all"
             >
-              CSV İndir
+              {ui('ui_consultantpanel_wallet_csvDownload', 'Download CSV')}
             </button>
           </div>
         </div>
         {transactions.length === 0 ? (
           <div className="text-center py-12 text-[var(--gm-muted)] font-serif italic">
-            Henüz işlem yok. İlk seansınızı tamamladığınızda kazanç burada görünecek.
+            {ui('ui_consultantpanel_wallet_noTransactions', 'No transactions yet. Earnings will appear here after your first completed session.')}
           </div>
         ) : (
           <div className="divide-y divide-[var(--gm-border-soft)]">
             {transactions.map((t) => {
               const isCredit = t.type === 'credit';
-              const stat = STATUS_LABELS[t.payment_status] || { label: t.payment_status, cls: 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]' };
+              const stat = STATUS_LABELS[t.payment_status] || { key: '', fallback: t.payment_status, cls: 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]' };
               return (
                 <div key={t.id} className="flex items-center gap-4 p-4 hover:bg-[var(--gm-gold)]/5 transition-colors">
                   <span
@@ -353,10 +371,10 @@ export default function WalletPanel() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-serif text-sm text-[var(--gm-text)] truncate">
-                        {PURPOSE_LABELS[t.purpose] || t.purpose}
+                        {labelForPurpose(ui, t.purpose)}
                       </span>
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${stat.cls}`}>
-                        {stat.label}
+                        {stat.key ? ui(stat.key, stat.fallback) : stat.fallback}
                       </span>
                     </div>
                     <div className="text-[11px] text-[var(--gm-text-dim)]">
@@ -385,20 +403,20 @@ export default function WalletPanel() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-5 border-b border-[var(--gm-border-soft)]">
-              <h3 className="font-serif text-lg text-[var(--gm-text)]">Para Çekme Talebi</h3>
+              <h3 className="font-serif text-lg text-[var(--gm-text)]">{ui('ui_consultantpanel_wallet_withdrawalRequestTitle', 'Withdrawal request')}</h3>
               <button onClick={() => setShowModal(false)} disabled={isWithdrawing} className="p-1 text-[var(--gm-muted)] hover:text-[var(--gm-text)]">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-5 space-y-4">
               <div className="text-[11px] text-[var(--gm-text-dim)] bg-[var(--gm-bg-deep)]/50 rounded-xl p-3">
-                Mevcut bakiye: <strong className="text-[var(--gm-gold)]">{formatMoney(balance, currency)}</strong>
+                {ui('ui_consultantpanel_wallet_currentBalanceLabel', 'Current balance:')} <strong className="text-[var(--gm-gold)]">{formatMoney(balance, currency)}</strong>
               </div>
               <div className="text-[11px] text-[var(--gm-text-dim)] bg-[var(--gm-gold)]/10 border border-[var(--gm-gold)]/20 rounded-xl p-3">
-                Ödeme, profilinizde kayıtlı banka hesabına gönderilir. IBAN değişikliği için Profil sekmesindeki banka bilgilerini güncelleyin.
+                {ui('ui_consultantpanel_wallet_bankInfoNote', 'Payment will be sent to the bank account saved in your profile. To change your IBAN, update the bank details in the Profile tab.')}
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">Tutar ({currency})</label>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">{ui('ui_consultantpanel_wallet_amountLabel', 'Amount')} ({currency})</label>
                 <input
                   type="number"
                   value={amount}
@@ -410,23 +428,23 @@ export default function WalletPanel() {
                   className={`w-full h-11 bg-[var(--gm-bg-deep)] border rounded-xl px-4 text-base text-[var(--gm-text)] transition-colors ${
                     errors.amount ? 'border-[var(--gm-error)]/60 focus:border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)] focus:border-[var(--gm-gold)]/50'
                   }`}
-                  placeholder="0,00"
+                  placeholder={ui('ui_consultantpanel_wallet_amountPlaceholder', '0,00')}
                 />
                 {errors.amount && <p className="mt-1.5 text-[10px] font-bold text-[var(--gm-error)] uppercase tracking-widest">{errors.amount}</p>}
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">Not (opsiyonel)</label>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] mb-2">{ui('ui_consultantpanel_wallet_noteLabel', 'Note (optional)')}</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={2}
                   maxLength={200}
                   className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)] resize-none outline-none focus:border-[var(--gm-gold)]/50"
-                  placeholder="Opsiyonel not..."
+                  placeholder={ui('ui_consultantpanel_wallet_notePlaceholder', 'Optional note...')}
                 />
               </div>
               <p className="text-[10px] text-[var(--gm-muted)] italic">
-                * Talebiniz admin onayından geçtikten sonra hesabınıza geçecektir.
+                {ui('ui_consultantpanel_wallet_adminApprovalNote', '* Your request will be credited after admin approval.')}
               </p>
             </div>
             <div className="px-5 pb-5 flex gap-2 justify-end">
@@ -435,7 +453,7 @@ export default function WalletPanel() {
                 disabled={isWithdrawing}
                 className="px-5 py-2.5 rounded-full border border-[var(--gm-border-soft)] text-[10px] font-bold uppercase tracking-widest"
               >
-                Vazgeç
+                {ui('ui_consultantpanel_wallet_cancel', 'Cancel')}
               </button>
               <button
                 onClick={handleWithdraw}
@@ -443,7 +461,7 @@ export default function WalletPanel() {
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
               >
                 {isWithdrawing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                Talep Oluştur
+                {ui('ui_consultantpanel_wallet_createRequest', 'Create request')}
               </button>
             </div>
           </div>
@@ -453,9 +471,8 @@ export default function WalletPanel() {
   );
 }
 
-/* ── C5: Aylık Gelir Bar Chart ── */
-
 function MonthlyEarningsChart({ data, currency }: { data: MonthlyEarningStat[]; currency: string }) {
+  const { ui } = useUiSection('ui_consultantpanel');
   const [hovered, setHovered] = useState<number | null>(null);
   // Show last 12 months max for readability
   const shown = data.slice(-12);
@@ -472,9 +489,9 @@ function MonthlyEarningsChart({ data, currency }: { data: MonthlyEarningStat[]; 
       <div className="flex items-center gap-2 mb-6">
         <BarChart3 className="w-4 h-4 text-[var(--gm-gold)]" />
         <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
-          Aylık Gelirleriniz
+          {ui('ui_consultantpanel_wallet_monthlyEarnings', 'Monthly earnings')}
         </span>
-        <span className="text-[10px] text-[var(--gm-muted)] ml-auto">Son {shown.length} ay</span>
+        <span className="text-[10px] text-[var(--gm-muted)] ml-auto">{ui('ui_consultantpanel_wallet_lastNMonthsPre', 'Last')} {shown.length} {ui('ui_consultantpanel_wallet_lastNMonthsPost', 'months')}</span>
       </div>
       <div className="flex items-end gap-1.5 h-32">
         {shown.map((d, i) => {
@@ -490,7 +507,7 @@ function MonthlyEarningsChart({ data, currency }: { data: MonthlyEarningStat[]; 
               {isHov && (
                 <div className="absolute -translate-y-full mb-1 bg-[var(--gm-surface)] border border-[var(--gm-gold)]/30 rounded-xl px-3 py-2 text-[10px] text-[var(--gm-text)] whitespace-nowrap z-10 shadow-lg">
                   <strong className="text-[var(--gm-gold)]">{formatMoney(d.earnings, currency)}</strong>
-                  <br />{d.sessions} seans
+                  <br />{d.sessions} {ui('ui_consultantpanel_wallet_sessions', 'sessions')}
                 </div>
               )}
               <div

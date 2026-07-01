@@ -13,6 +13,7 @@ import {
 } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 import type { Booking } from '@/types';
@@ -141,20 +142,21 @@ export function BookingCard({ booking, onPress, onJoinCall, onMessage }: Props) 
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return { color: colors.success, label: 'ONAYLANDI', icon: CheckCircle2 };
+        return { color: colors.success, label: t('bookingCard.statusConfirmed', 'ONAYLANDI'), icon: CheckCircle2 };
       case 'booked':
-        return { color: colors.gold, label: 'BEKLİYOR', icon: Clock3 };
+        return { color: colors.gold, label: t('bookingCard.statusPending', 'BEKLİYOR'), icon: Clock3 };
       case 'pending_payment':
-        return { color: colors.warning, label: 'ÖDEME BEKLİYOR', icon: AlertCircle };
+        return { color: colors.warning, label: t('bookingCard.statusPendingPayment', 'ÖDEME BEKLİYOR'), icon: AlertCircle };
       case 'completed':
-        return { color: colors.textMuted, label: 'TAMAMLANDI', icon: CheckCircle2 };
+        return { color: colors.textMuted, label: t('bookingCard.statusCompleted', 'TAMAMLANDI'), icon: CheckCircle2 };
       case 'cancelled':
       case 'no_show':
-        return { color: colors.danger, label: 'İPTAL EDİLDİ', icon: AlertCircle };
+        return { color: colors.danger, label: t('bookingCard.statusCancelled', 'İPTAL EDİLDİ'), icon: AlertCircle };
       default:
         return { color: colors.textMuted, label: status.toUpperCase(), icon: Clock3 };
     }
@@ -206,17 +208,17 @@ export function BookingCard({ booking, onPress, onJoinCall, onMessage }: Props) 
               onPress={() => onMessage?.()}
             >
               <MessageSquare size={14} color={colors.gold} />
-              <Text style={[styles.joinBtnText, { color: colors.gold }]}>Mesaj</Text>
+              <Text style={[styles.joinBtnText, { color: colors.gold }]}>{t('bookingCard.message', 'Mesaj')}</Text>
             </Pressable>
           ) : null}
           {isJoinable && onJoinCall ? (
             <Pressable style={styles.joinBtn} onPress={onJoinCall}>
               <PhoneCall size={14} color={colors.ink} />
-              <Text style={styles.joinBtnText}>Katıl</Text>
+              <Text style={styles.joinBtnText}>{t('bookingCard.join', 'Katıl')}</Text>
             </Pressable>
           ) : !canMessage ? (
             <View style={styles.priceWrap}>
-              <Text style={styles.priceLabel}>Ücret:</Text>
+              <Text style={styles.priceLabel}>{t('bookingCard.priceLabel', 'Ücret:')}</Text>
               <Text style={styles.priceVal}>₺{Math.round(Number(booking.session_price))}</Text>
             </View>
           ) : (

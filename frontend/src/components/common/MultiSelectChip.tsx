@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { X, Plus } from 'lucide-react';
+import { useUiSection } from '@/i18n';
 
 interface MultiSelectChipProps {
   label?: string;
@@ -18,10 +19,12 @@ export default function MultiSelectChip({
   selected,
   options = [],
   onSelectionChange,
-  placeholder = 'Eklemek için yazın ve Enter\'a basın...',
+  placeholder,
   error,
   maxItems,
 }: MultiSelectChipProps) {
+  const { ui } = useUiSection('ui_misc' as any);
+  const resolvedPlaceholder = placeholder ?? ui('ui_misc_multiselect_placeholder', 'Type to add and press Enter...');
   const [inputValue, setInputValue] = useState('');
   const normalizedOptions = options.map((option) =>
     typeof option === 'string' ? { value: option, label: option } : option,
@@ -92,7 +95,7 @@ export default function MultiSelectChip({
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={() => handleAdd(inputValue)}
-          placeholder={selected.length === 0 ? placeholder : ''}
+          placeholder={selected.length === 0 ? resolvedPlaceholder : ''}
           className="flex-1 bg-transparent border-0 outline-none text-sm text-[var(--gm-text)] min-w-[120px]"
         />
       </div>

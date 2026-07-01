@@ -125,10 +125,21 @@ export function chatService(app: FastifyInstance) {
       context_id: string;
       created_by: AuthedUser;
     }) {
-      const existing = await repo.getThreadByContext({
-        context_type: args.context_type,
-        context_id: args.context_id,
-      });
+      // 1:1 sohbet context'leri için thread'ler müşteri başına ayrı olmalı.
+      // booking + job + request: context_id zaten 1 müşteriye ait, paylaşılır.
+      const isPerCreatorContext =
+        args.context_type === "consultant_lead" || args.context_type === "support";
+
+      const existing = isPerCreatorContext
+        ? await repo.getThreadByContextAndCreator({
+            context_type: args.context_type,
+            context_id: args.context_id,
+            created_by_user_id: args.created_by.id,
+          })
+        : await repo.getThreadByContext({
+            context_type: args.context_type,
+            context_id: args.context_id,
+          });
 
       if (existing) {
         await repo.upsertParticipant({

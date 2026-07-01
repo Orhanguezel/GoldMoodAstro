@@ -225,10 +225,10 @@ export default function UserDetailClient({ id }: { id: string }) {
       <Tabs defaultValue="profile" className="w-full space-y-8">
         <TabsList className="bg-gm-surface/30 border border-gm-border-soft p-1.5 rounded-full h-auto backdrop-blur-sm">
           <TabsTrigger value="profile" className="rounded-full px-8 py-2.5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg transition-all text-[10px] font-bold tracking-widest uppercase">
-            Profil & Ayarlar
+            {t('tabs.profile')}
           </TabsTrigger>
           <TabsTrigger value="activity" className="rounded-full px-8 py-2.5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg transition-all text-[10px] font-bold tracking-widest uppercase">
-            Aktivite Geçmişi
+            {t('tabs.activity')}
           </TabsTrigger>
         </TabsList>
 

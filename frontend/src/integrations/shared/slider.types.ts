@@ -1,10 +1,10 @@
 // =============================================================
 // FILE: src/integrations/types/slider.types.ts
-// goldmoodastro – Slider tipleri + normalizer'lar
-// Parent + i18n (slider + slider_i18n) backend ile uyumlu
+// goldmoodastro - Slider types + normalizers
+// Parent + i18n (slider + slider_i18n) compatible with backend
 // =============================================================
 
-/* -------------------- Helper'lar -------------------- */
+/* -------------------- Helpers -------------------- */
 
 const asStr = (v: unknown): string => (typeof v === 'string' ? v : String(v ?? ''));
 
@@ -16,11 +16,11 @@ const asNum = (v: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
-/* -------------------- API tipleri (RAW) -------------------- */
+/* -------------------- API types (RAW) -------------------- */
 
 /**
- * Admin controller'ın döndürdüğü şekil
- * toAdminView() ile oluşan obje (parent + i18n join edilmiş)
+ * Shape returned by the admin controller.
+ * Object produced by toAdminView() (parent + joined i18n).
  */
 export interface ApiSliderAdmin {
   /** Parent slider.id */
@@ -37,11 +37,11 @@ export interface ApiSliderAdmin {
   /** i18n.description */
   description: string | null;
 
-  /** Parent image_url (veya publicUrlOf ile hesaplanmış) */
+  /** Parent image_url (or computed through publicUrlOf) */
   image_url: string | null;
   /** Parent image_asset_id (storage_assets.id) */
   image_asset_id: string | null;
-  /** storage üzerinden efektif URL (asset_url || image_url) */
+  /** Effective URL through storage (asset_url || image_url) */
   image_effective_url: string | null;
 
   /** i18n.alt */
@@ -59,16 +59,16 @@ export interface ApiSliderAdmin {
   created_at: string;
   updated_at: string;
 
-  /** Esnek JSON alan (çok dilli ayarlar, flags vs.) */
+  /** Flexible JSON field (localized settings, flags, etc.) */
   meta?: Record<string, unknown> | null;
 }
 
 /**
- * Public controller'daki SlideData tipi
- * rowToPublic() ile dönen obje (i18n + parent)
+ * SlideData type from the public controller.
+ * Object returned by rowToPublic() (i18n + parent).
  */
 export interface ApiSliderPublic {
-  /** Parent slider.id (string'e çevrilmiş) */
+  /** Parent slider.id (converted to string) */
   id: string;
   title: string;
   description: string;
@@ -84,11 +84,11 @@ export interface ApiSliderPublic {
   locale: string;
 }
 
-/* -------------------- FE DTO tipleri -------------------- */
+/* -------------------- FE DTO types -------------------- */
 
 /**
- * Admin tarafında kullanılacak normalize DTO
- * (id'yi string'e çeviriyoruz, diğer alanlar korunuyor)
+ * Normalized DTO used on the admin side.
+ * (id is converted to string, other fields are preserved)
  */
 export interface SliderAdminDto {
   id: string;
@@ -114,13 +114,13 @@ export interface SliderAdminDto {
   created_at: string;
   updated_at: string;
 
-  /** Esnek JSON alan – FE & BE ortak (şu an zorunlu değil) */
+  /** Flexible JSON field shared by FE & BE (not required right now) */
   meta: Record<string, unknown> | null;
 }
 
 /**
- * Public tarafında (Hero slider vs) kullanılacak DTO
- * API ile neredeyse aynı, sadece type safety için normalize ediyoruz.
+ * DTO used on the public side (hero slider, etc.).
+ * Almost identical to the API shape, normalized only for type safety.
  */
 export interface SliderPublicDto {
   id: string;
@@ -145,8 +145,8 @@ export type SliderSortField = 'display_order' | 'name' | 'created_at' | 'updated
 export type SliderSortOrder = 'asc' | 'desc';
 
 /**
- * Admin list query (adminListQuerySchema ile uyumlu)
- * - locale opsiyonel (verilmezse tüm diller)
+ * Admin list query (compatible with adminListQuerySchema)
+ * - locale is optional (all languages when omitted)
  */
 export interface SliderAdminListQueryParams {
   q?: string;
@@ -159,8 +159,8 @@ export interface SliderAdminListQueryParams {
 }
 
 /**
- * Public list query (publicListQuerySchema ile uyumlu)
- * - locale verilmezse backend default 'de'
+ * Public list query (compatible with publicListQuerySchema)
+ * - backend defaults to 'de' when locale is omitted
  */
 export interface SliderPublicListQueryParams {
   locale?: string;
@@ -180,17 +180,17 @@ export interface SliderPublicDetailQuery {
   locale?: string;
 }
 
-/* -------------------- Create / Update payload'ları -------------------- */
+/* -------------------- Create / Update payloads -------------------- */
 
 /**
- * CreateBody (createSchema) ile uyumlu payload
- * - Hem parent hem i18n alanlarını içerir
+ * Payload compatible with CreateBody (createSchema)
+ * - Contains both parent and i18n fields
  */
 export interface SliderCreatePayload {
-  /** i18n.locale; verilmezse backend default 'de' kullanır */
+  /** i18n.locale; backend defaults to 'de' when omitted */
   locale?: string;
 
-  /** i18n alanları */
+  /** i18n fields */
   name: string;
   slug?: string;
   description?: string | null;
@@ -198,20 +198,20 @@ export interface SliderCreatePayload {
   buttonText?: string | null;
   buttonLink?: string | null;
 
-  /** Parent alanları */
+  /** Parent fields */
   image_url?: string | null;
   image_asset_id?: string | null;
   featured?: boolean;
   is_active?: boolean;
   display_order?: number;
 
-  /** Esnek JSON meta – backend şu an ignore edebilir */
+  /** Flexible JSON meta - backend may ignore it for now */
   meta?: Record<string, unknown> | null;
 }
 
 /**
- * UpdateBody (updateSchema.partial) ile uyumlu payload
- * - Hem parent hem i18n alanlarını opsiyonel olarak günceller
+ * Payload compatible with UpdateBody (updateSchema.partial)
+ * - Optionally updates both parent and i18n fields
  */
 export interface SliderUpdatePayload {
   locale?: string;
@@ -233,8 +233,8 @@ export interface SliderUpdatePayload {
 }
 
 /**
- * Reorder body – reorderSchema (ids: number[])
- * - ids: parent slider.id listesi
+ * Reorder body - reorderSchema (ids: number[])
+ * - ids: parent slider.id list
  */
 export interface SliderReorderPayload {
   ids: number[];
@@ -249,14 +249,14 @@ export interface SliderSetStatusPayload {
 }
 
 /**
- * Image set – setImageSchema (asset_id null ise image temizlenir)
- * - Parent image_url / image_asset_id ayarlanır
+ * Image set - setImageSchema (image is cleared when asset_id is null)
+ * - Parent image_url / image_asset_id are set
  */
 export interface SliderSetImagePayload {
   asset_id: string | null;
 }
 
-/* -------------------- Normalizer'lar -------------------- */
+/* -------------------- Normalizers -------------------- */
 
 export const normalizeSliderAdmin = (api: ApiSliderAdmin): SliderAdminDto => ({
   id: asStr(api.id),
@@ -290,7 +290,7 @@ export const normalizeSliderPublic = (api: ApiSliderPublic): SliderPublicDto => 
   description: asStr(api.description ?? ''),
   image: asStr(api.image ?? ''),
   alt: api.alt ?? undefined,
-  buttonText: asStr(api.buttonText ?? 'İncele'),
+  buttonText: asStr(api.buttonText ?? 'View'),
   buttonLink: asStr(api.buttonLink ?? ''),
 
   isActive: asBool(api.isActive),

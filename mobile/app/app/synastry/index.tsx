@@ -159,6 +159,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
+import { useTranslation } from 'react-i18next';
 
 
 import { synastryApi, userApi } from '@/lib/api';
@@ -173,6 +174,7 @@ const SIGNS = [
 ];
 
 export default function SynastryScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -204,7 +206,7 @@ export default function SynastryScreen() {
     try {
       await Share.share({
         message: `Aşk Uyumu Analizimiz: ${result.title || 'Uyum Analizi'} ✨\n\nAşk: %${result.love_score || result.score || '??'}\nÇekim: %${result.sexual_score || '??'}\n\nGoldMoodAstro ile uyumunuzu keşfedin!\n\nKeşfet: https://goldmoodastro.com/tr/sinastri/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=synastry`,
-        title: 'GoldMoodAstro Aşk Uyumu',
+        title: t('synastry.shareTitle'),
       });
     } catch (e) {
       console.error(e);
@@ -245,10 +247,10 @@ export default function SynastryScreen() {
   const handleSendInvite = async (partnerId: string) => {
     try {
       await synastryApi.createInvite(partnerId);
-      Alert.alert('Başarılı', 'Davet gönderildi!');
+      Alert.alert(t('synastry.successTitle'), t('synastry.inviteSent'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e: any) {
-      Alert.alert('Hata', e.message || 'Davet gönderilemedi');
+      Alert.alert(t('common.errorTitle'), e.message || t('synastry.inviteFailed'));
     }
   };
 
@@ -262,7 +264,7 @@ export default function SynastryScreen() {
       fetchInvites();
       fetchReports();
     } catch (e: any) {
-      Alert.alert('Hata', e.message || 'Davet kabul edilemedi');
+      Alert.alert(t('common.errorTitle'), e.message || t('synastry.inviteAcceptFailed'));
       setStep('mode');
       setLoading(false);
     }
@@ -298,7 +300,7 @@ export default function SynastryScreen() {
       fetchReports();
     } catch (e: any) {
       if (e.status === 402) {
-        Alert.alert('Bakiye Yetersiz', 'Krediniz yetersiz.');
+        Alert.alert(t('synastry.insufficientBalanceTitle'), t('synastry.insufficientBalanceBody'));
       }
       setStep('mode');
       setLoading(false);
@@ -318,7 +320,7 @@ export default function SynastryScreen() {
           <Pressable onPress={() => step === 'mode' ? safeRouterBack() : setStep('mode')} style={styles.backBtn}>
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
-          <Text style={styles.headerTitle}>Sinastri & Uyum</Text>
+          <Text style={styles.headerTitle}>{t('synastry.headerTitle')}</Text>
           <Pressable onPress={() => setStep('history')} style={styles.historyBtn}>
             <History size={20} color={colors.gold} />
           </Pressable>
@@ -332,8 +334,8 @@ export default function SynastryScreen() {
               refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
             >
                <View style={styles.hero}>
-                  <Text style={styles.heroTitle}>Kozmik Bağınızı Keşfedin</Text>
-                  <Text style={styles.heroSubtitle}>Yıldızların aşkınız üzerindeki etkisini bilimsel astroloji ile analiz edin.</Text>
+                  <Text style={styles.heroTitle}>{t('synastry.heroTitle')}</Text>
+                  <Text style={styles.heroSubtitle}>{t('synastry.heroSubtitle')}</Text>
                </View>
 
                {invites.length > 0 && (
@@ -341,14 +343,14 @@ export default function SynastryScreen() {
                     <BlurView intensity={20} tint="light" style={styles.inviteBlur}>
                        <View style={styles.inviteHeader}>
                           <Sparkles size={16} color={colors.gold} />
-                          <Text style={styles.inviteAlertTitle}>{invites.length} Yeni Davet!</Text>
+                          <Text style={styles.inviteAlertTitle}>{t('synastry.newInvites', { count: invites.length })}</Text>
                        </View>
                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.inviteScroll}>
                           {invites.map((inv) => (
                             <View key={inv.id} style={styles.inviteItem}>
                                <View style={styles.inviteInfo}>
-                                  <Text style={styles.inviteUser}>{inv.user?.name || 'Bir Kullanıcı'}</Text>
-                                  <Text style={styles.inviteAction}>seni analizine davet etti</Text>
+                                  <Text style={styles.inviteUser}>{inv.user?.name || t('synastry.someUser')}</Text>
+                                  <Text style={styles.inviteAction}>{t('synastry.invitedYou')}</Text>
                                </View>
                                <View style={styles.inviteBtns}>
                                   <Pressable style={styles.acceptBtn} onPress={() => handleAcceptInvite(inv.id)}>
@@ -371,9 +373,9 @@ export default function SynastryScreen() {
                         <Zap size={28} color={colors.gold} />
                      </View>
                      <View style={styles.modeInfo}>
-                        <Text style={styles.modeTitle}>Hızlı Uyum</Text>
-                        <Text style={styles.modeDesc}>Sadece burç seçerek anında temel uyum yorumu al.</Text>
-                        <View style={styles.freeBadge}><Text style={styles.freeText}>ÜCRETSİZ</Text></View>
+                        <Text style={styles.modeTitle}>{t('synastry.quickTitle')}</Text>
+                        <Text style={styles.modeDesc}>{t('synastry.quickDesc')}</Text>
+                        <View style={styles.freeBadge}><Text style={styles.freeText}>{t('synastry.freeBadge')}</Text></View>
                      </View>
                      <ChevronRight size={20} color={colors.textMuted} />
                   </Pressable>
@@ -383,11 +385,11 @@ export default function SynastryScreen() {
                         <Star size={28} color={colors.goldLight} />
                      </View>
                      <View style={styles.modeInfo}>
-                        <Text style={styles.modeTitle}>Manuel Analiz</Text>
-                        <Text style={styles.modeDesc}>Partner bilgilerini girerek derinlemesine rapor oluştur.</Text>
+                        <Text style={styles.modeTitle}>{t('synastry.manualTitle')}</Text>
+                        <Text style={styles.modeDesc}>{t('synastry.manualDesc')}</Text>
                         <View style={styles.priceBadge}>
                            <CreditCard size={10} color={colors.gold} />
-                           <Text style={styles.priceText}>250 KREDİ</Text>
+                           <Text style={styles.priceText}>{t('synastry.creditsBadge', { count: 250 })}</Text>
                         </View>
                      </View>
                      <ChevronRight size={20} color={colors.textMuted} />
@@ -398,9 +400,9 @@ export default function SynastryScreen() {
                         <User size={28} color={colors.goldLight} />
                      </View>
                      <View style={styles.modeInfo}>
-                        <Text style={styles.modeTitle}>Partnerini Davet Et</Text>
-                        <Text style={styles.modeDesc}>Gerçek harita verileriyle ortak analiz yapın.</Text>
-                        <View style={styles.socialBadge}><Text style={styles.socialText}>SOSYAL</Text></View>
+                        <Text style={styles.modeTitle}>{t('synastry.inviteTitle')}</Text>
+                        <Text style={styles.modeDesc}>{t('synastry.inviteDesc')}</Text>
+                        <View style={styles.socialBadge}><Text style={styles.socialText}>{t('synastry.socialBadge')}</Text></View>
                      </View>
                      <ChevronRight size={20} color={colors.textMuted} />
                   </Pressable>
@@ -408,11 +410,11 @@ export default function SynastryScreen() {
 
                {reports.length > 0 && (
                  <View style={styles.recentSection}>
-                    <Text style={styles.sectionLabel}>SON ANALİZLERİN</Text>
+                    <Text style={styles.sectionLabel}>{t('synastry.recentAnalyses')}</Text>
                     {reports.slice(0, 3).map((rep) => (
                       <Pressable key={rep.id} style={styles.recentItem} onPress={() => { setResult(rep); setStep('result'); }}>
                          <Heart size={16} color={colors.gold} fill={rep.result?.score > 70 ? colors.gold : 'transparent'} />
-                         <Text style={styles.recentName}>{rep.partner_data?.name || rep.partner_user?.name || 'İsimsiz'}</Text>
+                         <Text style={styles.recentName}>{rep.partner_data?.name || rep.partner_user?.name || t('synastry.unnamed')}</Text>
                          <Text style={styles.recentScore}>%{rep.result?.score || '??'}</Text>
                          <ChevronRight size={16} color={colors.textMuted} />
                       </Pressable>
@@ -425,14 +427,14 @@ export default function SynastryScreen() {
           {step === 'quick' && (
             <View style={styles.content}>
                <View style={styles.formSection}>
-                  <Text style={styles.sectionTitle}>Burç Uyumu</Text>
+                  <Text style={styles.sectionTitle}>{t('synastry.signCompatTitle')}</Text>
                   
                   <View style={styles.quickForm}>
                      <Pressable
                        style={styles.pickerBox}
                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setQuickData((prev) => ({ ...prev, sign_a: nextSign(prev.sign_a) })); }}
                      >
-                        <Text style={styles.pickerLabel}>SEN</Text>
+                        <Text style={styles.pickerLabel}>{t('synastry.pickerYou')}</Text>
                         <Text style={styles.pickerValue}>{quickData.sign_a}</Text>
                      </Pressable>
 
@@ -444,13 +446,13 @@ export default function SynastryScreen() {
                        style={styles.pickerBox}
                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setQuickData((prev) => ({ ...prev, sign_b: nextSign(prev.sign_b) })); }}
                      >
-                        <Text style={styles.pickerLabel}>O</Text>
+                        <Text style={styles.pickerLabel}>{t('synastry.pickerPartner')}</Text>
                         <Text style={styles.pickerValue}>{quickData.sign_b}</Text>
                      </Pressable>
                   </View>
 
                   <Pressable style={styles.submitBtn} onPress={handleQuick}>
-                     <Text style={styles.submitText}>UYUMU HESAPLA</Text>
+                     <Text style={styles.submitText}>{t('synastry.calcCompat')}</Text>
                   </Pressable>
                </View>
             </View>
@@ -460,21 +462,21 @@ export default function SynastryScreen() {
             <View style={styles.content}>
                <ScrollView showsVerticalScrollIndicator={false}>
                   <View style={styles.formSection}>
-                     <Text style={styles.sectionTitle}>Partner Bilgileri</Text>
-                     
+                     <Text style={styles.sectionTitle}>{t('synastry.partnerInfoTitle')}</Text>
+
                      <View style={styles.manualForm}>
                         <View style={styles.inputGroup}>
-                           <Text style={styles.label}>ADI</Text>
-                           <TextInput 
-                             style={styles.input} 
-                             placeholder="Örn: Mehmet" 
+                           <Text style={styles.label}>{t('synastry.nameLabel')}</Text>
+                           <TextInput
+                             style={styles.input}
+                             placeholder={t('synastry.namePlaceholder')}
                              placeholderTextColor={colors.textMuted + '66'}
                              value={manualData.name}
                              onChangeText={t => setManualData({ ...manualData, name: t })}
                            />
                         </View>
                         <View style={styles.inputGroup}>
-                           <Text style={styles.label}>DOĞUM TARİHİ</Text>
+                           <Text style={styles.label}>{t('synastry.dobLabel')}</Text>
                            <TextInput 
                              style={styles.input} 
                              placeholder="YYYY-MM-DD" 
@@ -484,7 +486,7 @@ export default function SynastryScreen() {
                            />
                         </View>
                         <View style={styles.inputGroup}>
-                           <Text style={styles.label}>DOĞUM SAATİ (OPSİYONEL)</Text>
+                           <Text style={styles.label}>{t('synastry.tobLabel')}</Text>
                            <TextInput 
                              style={styles.input} 
                              placeholder="HH:mm" 
@@ -496,11 +498,11 @@ export default function SynastryScreen() {
 
                         <View style={styles.warningBox}>
                            <ShieldCheck size={14} color={colors.gold} />
-                           <Text style={styles.warningText}>Analiz sonrası rapor geçmişinize kaydedilir.</Text>
+                           <Text style={styles.warningText}>{t('synastry.saveWarning')}</Text>
                         </View>
 
                         <Pressable style={[styles.submitBtn, { backgroundColor: colors.plumSoft }]} onPress={handleManual}>
-                           <Text style={[styles.submitText, { color: colors.ink }]}>ANALİZİ BAŞLAT (250 KREDİ)</Text>
+                           <Text style={[styles.submitText, { color: colors.ink }]}>{t('synastry.startAnalysisCredits', { count: 250 })}</Text>
                         </Pressable>
                      </View>
                   </View>
@@ -511,14 +513,14 @@ export default function SynastryScreen() {
           {step === 'invite' && (
             <View style={styles.content}>
                <View style={styles.formSection}>
-                  <Text style={styles.sectionTitle}>Partner Bul</Text>
-                  <Text style={styles.sectionSubtitle}>İsim veya e-posta ile arama yaparak davet gönderin.</Text>
+                  <Text style={styles.sectionTitle}>{t('synastry.findPartnerTitle')}</Text>
+                  <Text style={styles.sectionSubtitle}>{t('synastry.findPartnerSubtitle')}</Text>
                   
                   <View style={styles.searchBar}>
                      <Search size={20} color={colors.textMuted} />
                      <TextInput 
                         style={styles.searchInput}
-                        placeholder="İsim veya e-posta..."
+                        placeholder={t('synastry.searchPlaceholder')}
                         placeholderTextColor={colors.textMuted + '66'}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
@@ -528,7 +530,7 @@ export default function SynastryScreen() {
                        <ActivityIndicator size="small" color={colors.gold} />
                      ) : (
                        <Pressable onPress={handleSearch}>
-                          <Text style={styles.searchText}>ARA</Text>
+                          <Text style={styles.searchText}>{t('synastry.searchBtn')}</Text>
                        </Pressable>
                      )}
                   </View>
@@ -552,7 +554,7 @@ export default function SynastryScreen() {
                      )}
                      ListEmptyComponent={
                        !isSearching && searchQuery.length > 0 ? (
-                         <Text style={styles.emptyText}>Sonuç bulunamadı.</Text>
+                         <Text style={styles.emptyText}>{t('synastry.noResults')}</Text>
                        ) : null
                      }
                   />
@@ -566,7 +568,7 @@ export default function SynastryScreen() {
                   <Heart size={32} color={colors.gold} fill={colors.gold} />
                </View>
                <Text style={styles.loadingText}>
-                  Yıldızlar Konumlanıyor...
+                  {t('synastry.loadingText')}
                </Text>
             </View>
           )}
@@ -578,39 +580,39 @@ export default function SynastryScreen() {
                     <View style={styles.quickResult}>
                        <View style={styles.resultHeader}>
                           <Text style={styles.resultEmoji}>✨ ❤️ ✨</Text>
-                          <Text style={styles.resultTitle}>{result.title || 'Uyum Analizi'}</Text>
+                          <Text style={styles.resultTitle}>{result.title || t('synastry.compatAnalysis')}</Text>
                        </View>
 
                        <View style={styles.scoreGrid}>
                            <View style={styles.scoreItem}>
                               <LinearGradient colors={[colors.surface, colors.surfaceHigh]} style={styles.scoreInner}>
-                                 <Text style={styles.scoreLabel}>AŞK</Text>
+                                 <Text style={styles.scoreLabel}>{t('synastry.loveLabel')}</Text>
                                  <Text style={styles.scoreValue}>%{result.love_score || result.score || '??'}</Text>
                               </LinearGradient>
                            </View>
                            <View style={styles.scoreItem}>
                               <LinearGradient colors={[colors.surface, colors.surfaceHigh]} style={styles.scoreInner}>
-                                 <Text style={styles.scoreLabel}>ÇEKİM</Text>
+                                 <Text style={styles.scoreLabel}>{t('synastry.attractionLabel')}</Text>
                                  <Text style={styles.scoreValue}>%{result.sexual_score || '??'}</Text>
                               </LinearGradient>
                            </View>
                         </View>
 
                         <LinearGradient colors={[colors.surface + '88', colors.bgDeep + '88']} style={styles.resultCard}>
-                           <Text style={styles.resultText}>{result.content || result.reading || 'Analiz sonucu yüklenemedi.'}</Text>
+                           <Text style={styles.resultText}>{result.content || result.reading || t('synastry.resultLoadError')}</Text>
                         </LinearGradient>
                     </View>
                   ) : (
                     <View style={styles.manualResult}>
                        <View style={styles.scoreCircleBox}>
-                          <Text style={styles.scoreCircleLabel}>UYUM SKORU</Text>
+                          <Text style={styles.scoreCircleLabel}>{t('synastry.compatScore')}</Text>
                           <Text style={styles.scoreCircleValue}>%{result.result?.score || result.score}</Text>
                        </View>
 
                         <LinearGradient colors={[colors.surface + '88', colors.bgDeep + '88']} style={styles.reportCard}>
                            <View style={styles.reportHeader}>
                               <Sparkles size={20} color={colors.goldLight} />
-                              <Text style={styles.reportTitle}>Detaylı Analiz</Text>
+                              <Text style={styles.reportTitle}>{t('synastry.detailedAnalysis')}</Text>
                            </View>
                            <Text style={styles.reportText}>{result.result?.reading || result.reading}</Text>
                         </LinearGradient>
@@ -622,14 +624,14 @@ export default function SynastryScreen() {
                   <View style={styles.footerActions}>
                      <Pressable style={styles.footerBtn} onPress={() => setStep('mode')}>
                         <RefreshCcw size={18} color={colors.textMuted} />
-                        <Text style={styles.footerBtnText}>YENİ ANALİZ</Text>
+                        <Text style={styles.footerBtnText}>{t('synastry.newAnalysis')}</Text>
                      </Pressable>
                      <Pressable 
                         style={[styles.footerBtn, { borderColor: colors.gold + '44', backgroundColor: colors.gold + '08' }]}
                         onPress={handleShare}
                       >
                          <Share2 size={18} color={colors.gold} />
-                         <Text style={[styles.footerBtnText, { color: colors.gold }]}>PAYLAŞ</Text>
+                         <Text style={[styles.footerBtnText, { color: colors.gold }]}>{t('common.share')}</Text>
                       </Pressable>
                   </View>
                </ScrollView>
@@ -639,7 +641,7 @@ export default function SynastryScreen() {
           {step === 'history' && (
             <View style={styles.content}>
                <View style={styles.formSection}>
-                  <Text style={styles.sectionTitle}>Analiz Geçmişi</Text>
+                  <Text style={styles.sectionTitle}>{t('synastry.historyTitle')}</Text>
                   
                   <FlatList 
                      data={reports}
@@ -650,14 +652,14 @@ export default function SynastryScreen() {
                              <Heart size={20} color={colors.gold} fill={item.result?.score > 75 ? colors.gold : 'transparent'} />
                           </View>
                           <View style={styles.historyInfo}>
-                             <Text style={styles.historyName}>{item.partner_data?.name || item.partner_user?.name || 'İsimsiz'}</Text>
+                             <Text style={styles.historyName}>{item.partner_data?.name || item.partner_user?.name || t('synastry.unnamed')}</Text>
                              <Text style={styles.historyDate}>{new Date(item.created_at).toLocaleDateString('tr-TR')}</Text>
                           </View>
                           <Text style={styles.historyScore}>%{item.result?.score || '??'}</Text>
                           <ChevronRight size={16} color={colors.textMuted} />
                        </Pressable>
                      )}
-                     ListEmptyComponent={<Text style={styles.emptyText}>Henüz bir analiziniz yok.</Text>}
+                     ListEmptyComponent={<Text style={styles.emptyText}>{t('synastry.historyEmpty')}</Text>}
                      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
                   />
                </View>

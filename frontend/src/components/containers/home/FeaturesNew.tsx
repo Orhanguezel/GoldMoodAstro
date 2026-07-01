@@ -4,30 +4,6 @@ import { useUiSection } from '@/i18n';
 import { useMemo } from 'react';
 
 const COPY_FALLBACK = {
-  tr: {
-    eyebrow: 'Deneyim',
-    title: 'Sade ve <em>derin</em> bir<br/>astroloji rehberi.',
-    features: [
-      {
-        num: '— I —',
-        title: 'Kendi <em>doğum haritanızı</em><br/>her zaman cebinizde taşıyın.',
-        body: 'Swiss Ephemeris altyapısıyla saniye hassasiyetinde hesaplanmış natal harita. Gezegenler, evler, açılar ve transit etkiler — yorumlanmış, görselleştirilmiş, paylaşılabilir.',
-        meta: ['Natal Harita', 'Transitler', 'Açı Yorumları'],
-      },
-      {
-        num: '— II —',
-        title: 'Sabah ışığında size özel<br/><em>bir paragraf.</em>',
-        body: 'Bugünün gezegen geçişleri, sizin haritanızla nasıl konuşuyor? Yapay zeka ile yazılmış ama astrolog tarafından kalibre edilmiş bir günlük rehber. Aynı cümleyi iki kez okumazsınız.',
-        meta: ['Günlük', 'Haftalık', 'Aylık Öngörü'],
-      },
-      {
-        num: '— III —',
-        title: 'İki ruhun <em>haritası</em><br/>üst üste gelince.',
-        body: 'Sinastri, sadece "uyumlu mu?" sorusunun cevabı değil — iki insanın hangi alanda birbirini güçlendireceğini, hangisinde sınanacağını gösteren bir derinlik aracıdır. Partnerinizle haritalarınızı paylaşın.',
-        meta: ['Sinastri', 'Kompozit Harita', 'Ortak Transit'],
-      }
-    ]
-  },
   en: {
     eyebrow: 'Experience',
     title: 'A simple yet <em>deep</em><br/>astrology guide.',
@@ -55,18 +31,49 @@ const COPY_FALLBACK = {
 };
 
 export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
-  const isTr = locale === 'tr';
   const { brand } = useBrand();
   const { ui } = useUiSection('ui_home', locale as any);
-  
+  const { ui: uiD } = useUiSection('ui_daily', locale as any);
+
   const copy = useMemo(() => {
-    const f = isTr ? COPY_FALLBACK.tr : COPY_FALLBACK.en;
+    const f = COPY_FALLBACK.en;
     return {
       eyebrow: ui('ui_home_features_eyebrow', f.eyebrow),
       title: ui('ui_home_features_title', f.title),
-      features: f.features // keeping features array fallback for now to avoid massive individual ui keys unless specifically requested
+      features: [
+        {
+          num: f.features[0].num,
+          title: uiD('ui_daily_feature_natal_title', f.features[0].title),
+          body: uiD('ui_daily_feature_natal_body', f.features[0].body),
+          meta: [
+            uiD('ui_daily_feature_natal_meta_1', f.features[0].meta[0]),
+            uiD('ui_daily_feature_natal_meta_2', f.features[0].meta[1]),
+            uiD('ui_daily_feature_natal_meta_3', f.features[0].meta[2]),
+          ],
+        },
+        {
+          num: f.features[1].num,
+          title: uiD('ui_daily_feature_daily_title', f.features[1].title),
+          body: uiD('ui_daily_feature_daily_body', f.features[1].body),
+          meta: [
+            uiD('ui_daily_feature_daily_meta_1', f.features[1].meta[0]),
+            uiD('ui_daily_feature_daily_meta_2', f.features[1].meta[1]),
+            uiD('ui_daily_feature_daily_meta_3', f.features[1].meta[2]),
+          ],
+        },
+        {
+          num: f.features[2].num,
+          title: uiD('ui_daily_feature_synastry_title', f.features[2].title),
+          body: uiD('ui_daily_feature_synastry_body', f.features[2].body),
+          meta: [
+            uiD('ui_daily_feature_synastry_meta_1', f.features[2].meta[0]),
+            uiD('ui_daily_feature_synastry_meta_2', f.features[2].meta[1]),
+            uiD('ui_daily_feature_synastry_meta_3', f.features[2].meta[2]),
+          ],
+        },
+      ],
     };
-  }, [isTr, ui]);
+  }, [ui, uiD]);
 
   const natalPath = brand.assets['img_natal_chart'] || '/img/natal_chart.png';
   const dailyPath = brand.assets['img_daily_reading'] || '/img/daily_reading.png';
@@ -123,7 +130,7 @@ export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
                   <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[var(--gm-text)]/90 via-[var(--gm-text)]/40 to-transparent">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-[var(--gm-gold)] animate-pulse shadow-[0_0_10px_var(--gm-gold)]" />
-                      <span className="font-display text-[10px] tracking-[0.25em] text-[var(--gm-gold)] uppercase font-medium">Canlı Transit Takibi</span>
+                      <span className="font-display text-[10px] tracking-[0.25em] text-[var(--gm-gold)] uppercase font-medium">{uiD('ui_daily_feature_live_transit_badge', 'Live Transit Tracking')}</span>
                     </div>
                   </div>
                 </div>
@@ -206,7 +213,7 @@ export default function FeaturesNew({ locale = 'tr' }: { locale?: string }) {
                   
                   {/* Overlay Interaction Badge */}
                   <div className="absolute top-4 right-4 px-4 py-1.5 bg-[var(--gm-text)]/90 backdrop-blur-md border border-[var(--gm-gold)]/30 rounded-full shadow-xl">
-                    <span className="font-display text-[9px] tracking-[0.25em] text-[var(--gm-gold)] uppercase font-medium">Uyum Oranı: %85</span>
+                    <span className="font-display text-[9px] tracking-[0.25em] text-[var(--gm-gold)] uppercase font-medium">{uiD('ui_daily_feature_compatibility_badge', 'Compatibility Rate: %85')}</span>
                   </div>
                 </div>
               </div>

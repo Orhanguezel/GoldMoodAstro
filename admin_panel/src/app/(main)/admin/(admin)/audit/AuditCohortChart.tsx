@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetCohortsAdminQuery } from '@/integrations/endpoints/admin/audit_admin.endpoints';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,6 +9,7 @@ import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function AuditCohortChart({ range }: { range: string }) {
+  const t = useAdminT('admin.audit');
   const { data, isLoading, isError } = useGetCohortsAdminQuery({ range: `${range}w` });
 
   if (isLoading) {
@@ -19,7 +21,7 @@ export function AuditCohortChart({ range }: { range: string }) {
   }
 
   if (isError || !data || !data.data) {
-    return <div className="p-8 text-center text-gm-muted italic">Veri yüklenemedi.</div>;
+    return <div className="p-8 text-center text-gm-muted italic">{t('common.loadFailed')}</div>;
   }
 
   const { cohorts, retention } = data.data;
@@ -39,21 +41,21 @@ export function AuditCohortChart({ range }: { range: string }) {
     <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
       <CardHeader className="p-8 pb-4 border-b border-gm-border-soft bg-gm-surface/40">
         <CardTitle className="font-serif text-2xl flex items-center gap-3">
-          <Calendar className="h-5 w-5 text-gm-gold" /> Kohort Analizi
+          <Calendar className="h-5 w-5 text-gm-gold" /> {t('cohort.title')}
         </CardTitle>
         <CardDescription className="font-serif italic opacity-70 text-gm-muted">
-          Kullanıcı sadakati ve geri dönüş oranları
+          {t('cohort.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-8 overflow-x-auto">
         <table className="w-full text-sm text-left border-collapse">
           <thead>
             <tr>
-              <th className="p-3 font-bold text-gm-muted whitespace-nowrap border-b border-gm-border-soft">Kohort</th>
-              <th className="p-3 font-bold text-gm-muted text-center border-b border-gm-border-soft">Kullanıcı</th>
+              <th className="p-3 font-bold text-gm-muted whitespace-nowrap border-b border-gm-border-soft">{t('cohort.cohortColumn')}</th>
+              <th className="p-3 font-bold text-gm-muted text-center border-b border-gm-border-soft">{t('columns.user')}</th>
               {Array.from({ length: maxWeeks + 1 }).map((_, i) => (
                 <th key={i} className="p-3 font-bold text-gm-muted text-center border-b border-gm-border-soft w-12">
-                  Hfta {i}
+                  {t('cohort.weekShort', { n: String(i) })}
                 </th>
               ))}
             </tr>

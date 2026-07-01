@@ -26,7 +26,15 @@ export const chat_threads = mysqlTable(
     updated_at: datetime("updated_at", { mode: "date" }).notNull(),
   },
   (t) => ({
-    uq_ctx: uniqueIndex("uq_chat_threads_ctx").on(t.context_type, t.context_id),
+    // 1:1 sohbet context'leri (consultant_lead, support) için thread müşteri başına ayrı.
+    // booking/job/request: created_by_user_id zaten her birinin doğal sahibidir.
+    // Bu unique key, "aynı consultant'a iki müşteri mesaj attığında tek thread'e
+    // birleşme" hatasını engeller.
+    uq_ctx_creator: uniqueIndex("uq_chat_threads_ctx_creator").on(
+      t.context_type,
+      t.context_id,
+      t.created_by_user_id,
+    ),
     ix_ctx: index("ix_chat_threads_ctx").on(t.context_type, t.context_id),
     ix_updated: index("ix_chat_threads_updated").on(t.updated_at),
   }),

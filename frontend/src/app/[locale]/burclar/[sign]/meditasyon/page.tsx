@@ -21,10 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'burclar-meditasyon',
     pathname: `/burclar/${sign}/meditasyon`,
     fallback: {
-      title: meta ? `${meta.label} Meditasyonu ve Affirmasyonları` : 'Burç Meditasyonu',
+      title: meta ? `${meta.label} Meditation and Affirmations` : 'Zodiac Meditation',
       description: meta
-        ? `${meta.label} burcu için kısa sesli meditasyon, günlük affirmasyonlar ve element odaklı sakinleşme pratiği.`
-        : 'Burç odaklı sesli meditasyon ve günlük affirmasyonlar.',
+        ? `Short audio meditation, daily affirmations and element-focused calming practice for ${meta.label}.`
+        : 'Zodiac-focused audio meditation and daily affirmations.',
     },
   });
 }

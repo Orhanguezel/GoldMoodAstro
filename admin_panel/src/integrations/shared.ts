@@ -29,7 +29,6 @@ export * from '@/integrations/shared/emailTemplates';
 export * from '@/integrations/shared/newsletter';
 export * from '@/integrations/shared/notifications';
 export * from '@/integrations/shared/normalizers';
-export * from '@/integrations/shared/offers.types';
 export * from '@/integrations/shared/popups';
 export * from '@/integrations/shared/locales';
 export * from '@/integrations/shared/menu_items.types';

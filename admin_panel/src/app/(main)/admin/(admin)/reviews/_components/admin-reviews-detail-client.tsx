@@ -304,7 +304,7 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
             </div>
             <div className="space-y-2">
               <h2 className="font-serif text-3xl text-gm-text">{t('messages.error')}</h2>
-              <p className="text-gm-muted font-serif italic text-lg">{getErrMsg(loadError, "Veri yüklenemedi")}</p>
+              <p className="text-gm-muted font-serif italic text-lg">{getErrMsg(loadError, t('messages.loadError'))}</p>
             </div>
             <Button variant="outline" onClick={() => router.push('/admin/reviews')} className="rounded-full px-10 h-12 border-gm-border-soft hover:bg-gm-surface font-bold tracking-widest uppercase text-[10px]">
               <ArrowLeft className="mr-2 size-4" /> {t('actions.backToList')}
@@ -395,7 +395,7 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
                     <Input
                       value={formData.name}
                       onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
-                      placeholder="Ad Soyad"
+                      placeholder={t('form.userNamePlaceholder')}
                       className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 text-sm transition-all"
                       disabled={busy}
                     />
@@ -439,7 +439,7 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
                   <Input
                     value={formData.title}
                     onChange={(e) => setFormData(p => ({ ...p, title: e.target.value }))}
-                    placeholder="Kısa bir özet..."
+                    placeholder={t('form.commentTitlePlaceholder')}
                     className="bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 focus:ring-gm-gold/50 text-sm transition-all"
                     disabled={busy}
                   />
@@ -449,7 +449,7 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
                   <Textarea
                     value={formData.comment}
                     onChange={(e) => setFormData(p => ({ ...p, comment: e.target.value }))}
-                    placeholder="Danışan neler yazdı?"
+                    placeholder={t('form.commentTextPlaceholder')}
                     className="bg-gm-surface/40 border-gm-border-soft rounded-3xl min-h-[200px] p-6 focus:ring-gm-gold/50 font-serif italic text-xl leading-relaxed text-gm-text/90 shadow-inner"
                     disabled={busy}
                   />
@@ -469,7 +469,7 @@ export default function AdminReviewsDetailClient({ id }: { id: string }) {
                   <Textarea
                     value={formData.admin_reply}
                     onChange={(e) => setFormData(p => ({ ...p, admin_reply: e.target.value }))}
-                    placeholder="Danışana yanıt verin..."
+                    placeholder={t('form.adminReplyPlaceholder')}
                     className="bg-gm-surface/40 border-gm-border-soft rounded-3xl min-h-[140px] p-6 focus:ring-gm-gold/50 font-serif italic text-lg text-gm-text/80 shadow-inner"
                     disabled={busy}
                   />

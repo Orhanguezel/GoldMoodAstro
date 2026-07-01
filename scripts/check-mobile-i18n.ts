@@ -28,25 +28,37 @@ function parseSeedSnapshot(): unknown {
   return JSON.parse(match[1].replace(/''/g, "'"));
 }
 
-const trKeys = flatten(MOBILE_I18N_FALLBACK.tr).sort();
-const enKeys = flatten(MOBILE_I18N_FALLBACK.en).sort();
-const missingEn = diff(trKeys, enKeys);
-const missingTr = diff(enKeys, trKeys);
+const locales = Object.keys(MOBILE_I18N_FALLBACK) as Array<keyof typeof MOBILE_I18N_FALLBACK>;
+const baseLocale = 'tr' as const;
+const baseKeys = flatten(MOBILE_I18N_FALLBACK[baseLocale]).sort();
+let hasDrift = false;
 
-if (missingEn.length || missingTr.length) {
+for (const locale of locales) {
+  const keys = flatten(MOBILE_I18N_FALLBACK[locale]).sort();
+  const missing = diff(baseKeys, keys);
+  const extra = diff(keys, baseKeys);
+  if (missing.length || extra.length) {
+    hasDrift = true;
+    console.error(`Mobile i18n locale drift detected for ${locale}.`);
+    if (missing.length) console.error(`Missing in ${locale}:`, missing.join(', '));
+    if (extra.length) console.error(`Extra in ${locale}:`, extra.join(', '));
+  }
+}
+
+if (hasDrift) {
   console.error('Mobile i18n locale drift detected.');
-  if (missingEn.length) console.error('Missing in en:', missingEn.join(', '));
-  if (missingTr.length) console.error('Missing in tr:', missingTr.join(', '));
   process.exit(1);
 }
 
-const seed = parseSeedSnapshot() as { tr?: Tree; en?: Tree };
-const seedTrKeys = flatten(seed.tr).sort();
-const seedEnKeys = flatten(seed.en).sort();
+const seed = parseSeedSnapshot() as Partial<Record<keyof typeof MOBILE_I18N_FALLBACK, Tree>>;
 
-if (diff(trKeys, seedTrKeys).length || diff(enKeys, seedEnKeys).length) {
-  console.error('Mobile i18n seed snapshot drift detected.');
-  process.exit(1);
+for (const locale of locales) {
+  const expectedKeys = flatten(MOBILE_I18N_FALLBACK[locale]).sort();
+  const seedKeys = flatten(seed[locale]).sort();
+  if (diff(expectedKeys, seedKeys).length || diff(seedKeys, expectedKeys).length) {
+    console.error(`Mobile i18n seed snapshot drift detected for ${locale}.`);
+    process.exit(1);
+  }
 }
 
-console.log(`Mobile i18n OK (${trKeys.length} keys per locale).`);
+console.log(`Mobile i18n OK (${baseKeys.length} keys per locale; locales: ${locales.join(', ')}).`);

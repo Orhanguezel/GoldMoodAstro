@@ -4,9 +4,13 @@
 -- Eski chat_rooms/chat_messages farklı tablo isimleriydi; bu modül üç-tablolu thread/participant/message yapısı kullanır.
 -- =============================================================
 
--- Eski chat_messages tablosu (rooms ile bağlı) farklı kolonlara sahip.
--- Drizzle schema ile uyumsuz olduğu için drop + recreate.
-DROP TABLE IF EXISTS chat_messages;
+-- NOT: Eskiden burada `DROP TABLE IF EXISTS chat_messages;` vardı (eski
+-- chat_rooms şemasından bu modüle göç sırasında konmuştu). Ancak --seed her
+-- çalıştığında bu DROP, KULLANICI MESAJLARINI SİLİYORDU (idempotent değil!).
+-- 2026-05-21 itibariyle DROP kaldırıldı. Yeni temiz kurulum yapıyorsanız ve
+-- eski chat_messages tablosu Drizzle şemasıyla uyumsuzsa, tek seferlik
+-- manuel migration yapılmalıdır (bu seed her seferinde koşar, idempotent
+-- olmalı).
 
 CREATE TABLE IF NOT EXISTS chat_threads (
   id VARCHAR(36) PRIMARY KEY,
@@ -15,7 +19,7 @@ CREATE TABLE IF NOT EXISTS chat_threads (
   created_by_user_id VARCHAR(36),
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY uq_chat_threads_ctx (context_type, context_id),
+  UNIQUE KEY uq_chat_threads_ctx_creator (context_type, context_id, created_by_user_id),
   KEY ix_chat_threads_ctx (context_type, context_id),
   KEY ix_chat_threads_updated (updated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

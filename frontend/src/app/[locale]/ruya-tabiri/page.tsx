@@ -12,8 +12,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'ruya-tabiri',
     pathname: '/ruya-tabiri',
     fallback: {
-      title: 'Ücretsiz Rüya Tabiri — Bilinçaltınızın Gizli Dili — GoldMoodAstro',
-      description: 'Gördüğünüz rüyaları anlatın, yapay zeka psikolojik arketipler ve kadim sembolojiyle rüyanızı analiz etsin. Derinlemesine rüya yorumları.',
+      title: 'Free Dream Interpretation — Hidden Language of the Subconscious — GoldMoodAstro',
+      description: 'Describe your dreams and let AI analyze them with psychological archetypes and ancient symbolism. In-depth dream readings.',
     },
   });
 }
@@ -22,11 +22,11 @@ import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 
 export default async function DreamsPage({ params }: Props) {
-  const { locale } = await params;
+  await params;
 
   return (
     <>
-      <Banner title={locale === 'tr' ? 'Rüya Tabiri' : 'Dream Interpretation'} />
+      <Banner title="Dream Interpretation" />
       <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
         <DreamHub />
       </PageContainer>

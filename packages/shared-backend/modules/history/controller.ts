@@ -6,6 +6,7 @@ import { sql } from 'drizzle-orm';
 import { hasAnyRole } from '../../middleware/roles';
 import * as repo from './repository';
 import { READING_TYPES, type ReadingType } from './repository';
+import { apiMessage } from '../_shared/api-i18n';
 
 function getUser(req: FastifyRequest): { id: string } | null {
   const u = (req as any).user;
@@ -15,7 +16,7 @@ function getUser(req: FastifyRequest): { id: string } | null {
 
 export async function handleGetHistory(req: FastifyRequest, reply: FastifyReply) {
   const user = getUser(req);
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const limitRaw = (req.query as any)?.limit;
   const limit = Math.min(Math.max(Number(limitRaw) || 50, 1), 200);
@@ -25,13 +26,13 @@ export async function handleGetHistory(req: FastifyRequest, reply: FastifyReply)
     return reply.send({ data: history });
   } catch (err) {
     console.error('history_fetch_failed', err);
-    return reply.status(500).send({ error: 'Geçmiş yüklenirken bir hata oluştu.' });
+    return reply.status(500).send({ error: apiMessage(req, 'history_failed') });
   }
 }
 
 export async function handleGetRecent(req: FastifyRequest, reply: FastifyReply) {
   const user = getUser(req);
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const limitRaw = (req.query as any)?.limit;
   const limit = Math.min(Math.max(Number(limitRaw) || 10, 1), 50);
@@ -42,22 +43,22 @@ export async function handleGetRecent(req: FastifyRequest, reply: FastifyReply) 
 
 export async function handleDeleteReading(req: FastifyRequest, reply: FastifyReply) {
   const user = getUser(req);
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const { type, id } = req.params as { type: string; id: string };
   if (!READING_TYPES.includes(type as ReadingType)) {
-    return reply.status(400).send({ error: 'Geçersiz tip.' });
+    return reply.status(400).send({ error: apiMessage(req, 'invalid_type') });
   }
-  if (!id) return reply.status(400).send({ error: 'ID gerekli.' });
+  if (!id) return reply.status(400).send({ error: apiMessage(req, 'id_required') });
 
   const ok = await repo.deleteReading(user.id, type as ReadingType, id);
-  if (!ok) return reply.status(404).send({ error: 'Kayıt bulunamadı veya size ait değil.' });
+  if (!ok) return reply.status(404).send({ error: apiMessage(req, 'record_not_found_or_forbidden') });
   return reply.send({ ok: true });
 }
 
 export async function handleDeleteAllReadings(req: FastifyRequest, reply: FastifyReply) {
   const user = getUser(req);
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const result = await repo.deleteAllReadings(user.id);
   return reply.send({ ok: true, ...result });
@@ -74,14 +75,14 @@ export async function handleGetCustomerReadingsForConsultant(
   reply: FastifyReply,
 ) {
   const consultantUser = getUser(req);
-  if (!consultantUser) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!consultantUser) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   if (!hasAnyRole(req, ['consultant', 'admin'])) {
-    return reply.status(403).send({ error: 'Sadece danışmanlar erişebilir.' });
+    return reply.status(403).send({ error: apiMessage(req, 'consultants_only') });
   }
 
   const { userId: customerUserId } = req.params as { userId: string };
-  if (!customerUserId) return reply.status(400).send({ error: 'userId gerekli.' });
+  if (!customerUserId) return reply.status(400).send({ error: apiMessage(req, 'user_id_required') });
 
   const limitRaw = (req.query as any)?.limit;
   const limit = Math.min(Math.max(Number(limitRaw) || 10, 1), 50);
@@ -99,7 +100,7 @@ export async function handleGetCustomerReadingsForConsultant(
     `);
     const arr = Array.isArray(rows?.[0]) ? rows[0] : rows;
     if (!arr || (arr as unknown[]).length === 0) {
-      return reply.status(403).send({ error: 'Bu danışanla bir randevu ilişkiniz yok.' });
+      return reply.status(403).send({ error: apiMessage(req, 'consultant_customer_relation_missing') });
     }
   }
 

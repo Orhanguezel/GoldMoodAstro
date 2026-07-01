@@ -8,15 +8,15 @@ type Props = {
 };
 
 const labels: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık'
+  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces'
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sign, locale } = await params;
   const label = labels[sign] || sign;
-  const today = new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
   const ogImageUrl = `https://goldmoodastro.com/${locale}/burclar/${sign}/bugun/opengraph-image`;
 
   return buildPageMetadata({
@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'burclar-bugun',
     pathname: `/burclar/${sign}/bugun`,
     fallback: {
-      title: `${today} ${label} Burcu Günlük Yorumu`,
-      description: `${label} burcu için ${today} tarihli günlük yorum. Bugün sizi neler bekliyor? Aşk, para ve sağlık tavsiyeleri.`,
+      title: `${today} ${label} Daily Horoscope`,
+      description: `${today} daily horoscope for ${label}. What awaits you today? Love, money and wellness guidance.`,
       ogImage: ogImageUrl,
     },
   });

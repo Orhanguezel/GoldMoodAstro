@@ -90,12 +90,13 @@ export const storage = {
     await AsyncStorage.setItem(KEYS.onboarded, '1');
   },
 
-  async getLanguage(): Promise<'tr' | 'en'> {
+  async getLanguage(): Promise<'tr' | 'en' | 'de'> {
     const raw = await AsyncStorage.getItem(KEYS.language);
+    if (raw === 'de') return 'de';
     return raw === 'en' ? 'en' : 'tr';
   },
 
-  async setLanguage(lang: 'tr' | 'en'): Promise<void> {
+  async setLanguage(lang: 'tr' | 'en' | 'de'): Promise<void> {
     await AsyncStorage.setItem(KEYS.language, lang);
   },
 

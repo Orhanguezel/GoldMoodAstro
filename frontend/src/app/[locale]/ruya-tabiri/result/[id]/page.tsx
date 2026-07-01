@@ -17,8 +17,8 @@ export async function generateMetadata({
     const { data } = await res.json();
 
     const symbols = data.symbols.map((s: any) => s.name).join(', ');
-    const title = `Rüya Tabiri — ${symbols} — GoldMoodAstro`;
-    const description = `Rüyanızdaki ${data.symbols.length} sembol ve detaylı yapay zeka yorumu. ${symbols} ve daha fazlası.`;
+    const title = `Dream Interpretation — ${symbols} — GoldMoodAstro`;
+    const description = `${data.symbols.length} symbols in your dream with detailed AI interpretation. ${symbols} and more.`;
     const ogImageUrl = `https://goldmoodastro.com/${locale}/ruya-tabiri/result/${id}/opengraph-image`;
 
     return {
@@ -40,8 +40,8 @@ export async function generateMetadata({
     };
   } catch (err) {
     return {
-      title: 'Rüya Tabiri — GoldMoodAstro',
-      description: 'Detaylı rüya tabiri yorumu.',
+      title: 'Dream Interpretation — GoldMoodAstro',
+      description: 'Detailed dream interpretation.',
     };
   }
 }

@@ -45,6 +45,19 @@ CREATE TABLE IF NOT EXISTS campaign_redemptions (
   CONSTRAINT fk_campaign_red_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS campaign_i18n (
+  id CHAR(36) PRIMARY KEY,
+  campaign_id CHAR(36) NOT NULL,
+  locale CHAR(8) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  UNIQUE KEY campaign_i18n_uq (campaign_id, locale),
+  KEY campaign_i18n_locale_idx (locale),
+  CONSTRAINT fk_campaign_i18n_campaign FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ────────────────────────────────────────────────────────────────────────────
 -- Seed: 1 örnek welcome kampanyası (yeni kullanıcılar için %20 indirim, 100 kullanım)
 -- ────────────────────────────────────────────────────────────────────────────
@@ -59,3 +72,11 @@ ON DUPLICATE KEY UPDATE
   description_tr = VALUES(description_tr),
   value = VALUES(value),
   is_active = VALUES(is_active);
+
+INSERT INTO campaign_i18n (id, campaign_id, locale, name, description) VALUES
+('c0010000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001', 'tr', 'Hoş Geldin İndirimi', 'İlk aboneliğinizde %20 indirim.'),
+('c0010000-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000001', 'en', 'Welcome Discount', '20% off your first subscription.'),
+('c0010000-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000001', 'de', 'Willkommensrabatt', '20 % Rabatt auf dein erstes Abonnement.')
+ON DUPLICATE KEY UPDATE
+  name = VALUES(name),
+  description = VALUES(description);

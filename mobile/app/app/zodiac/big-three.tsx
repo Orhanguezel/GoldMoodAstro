@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { Calendar, ChevronLeft, Clock, MapPin, Sparkles } from 'lucide-react-native';
 
@@ -21,6 +22,7 @@ import { birthChartsApi, geocodeApi } from '@/lib/api';
 import type { BigThreePreviewResponse, BigThreeSlotPayload } from '@/types';
 
 export default function BigThreeScreen() {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -42,7 +44,7 @@ export default function BigThreeScreen() {
 
   const submit = async () => {
     if (!date.trim() || !time.trim() || !city.trim()) {
-      Alert.alert('Eksik bilgi', 'Doğum tarihi, saati ve yeri girin.');
+      Alert.alert(t('bigThree.missingInfoTitle'), t('bigThree.missingInfoBody'));
       return;
     }
     try {
@@ -50,7 +52,7 @@ export default function BigThreeScreen() {
       const resolved = place?.label === city ? place : await geocodeApi.search(city.trim());
 
       const payload = {
-        name: name.trim() || 'Önizleme',
+        name: name.trim() || t('bigThree.previewName'),
         dob: normalizeDate(date),
         tob: normalizeTime(time),
         pob_lat: resolved.lat,
@@ -61,8 +63,8 @@ export default function BigThreeScreen() {
       const data = await birthChartsApi.previewBigThree(payload);
       setResult(data);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Hesaplanamadı';
-      Alert.alert('Hata', msg);
+      const msg = e instanceof Error ? e.message : t('bigThree.calcError');
+      Alert.alert(t('common.error'), msg);
     } finally {
       setLoading(false);
     }
@@ -90,12 +92,12 @@ export default function BigThreeScreen() {
 
             <View style={styles.form}>
               <Field
-                label="İSİM (OPSİYONEL)"
+                label={t('bigThree.fieldNameLabel')}
                 icon={<Sparkles size={18} color={colors.goldDim} />}
                 input={
                   <TextInput
                     style={styles.input}
-                    placeholder="Haritada görünecek isim"
+                    placeholder={t('bigThree.fieldNamePlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={name}
                     onChangeText={setName}
@@ -103,7 +105,7 @@ export default function BigThreeScreen() {
                 }
               />
               <Field
-                label="DOĞUM TARİHİ"
+                label={t('bigThree.fieldDateLabel')}
                 icon={<Calendar size={18} color={colors.goldDim} />}
                 input={
                   <TextInput
@@ -117,7 +119,7 @@ export default function BigThreeScreen() {
                 }
               />
               <Field
-                label="DOĞUM SAATİ"
+                label={t('bigThree.fieldTimeLabel')}
                 icon={<Clock size={18} color={colors.goldDim} />}
                 input={
                   <TextInput
@@ -131,12 +133,12 @@ export default function BigThreeScreen() {
                 }
               />
               <Field
-                label="DOĞUM YERİ"
+                label={t('bigThree.fieldPlaceLabel')}
                 icon={<MapPin size={18} color={colors.goldDim} />}
                 input={
                   <TextInput
                     style={styles.input}
-                    placeholder="Şehir / ilçe"
+                    placeholder={t('bigThree.fieldPlacePlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={city}
                     onChangeText={(v) => {
@@ -165,9 +167,9 @@ export default function BigThreeScreen() {
             {result ? (
               <View style={styles.resultBlock}>
                 <Text style={styles.resultKicker}>SONUÇ</Text>
-                <SlotCard title="Güneş" slot={result.big_three.sun} />
-                <SlotCard title="Ay" slot={result.big_three.moon} />
-                <SlotCard title="Yükselen" slot={result.big_three.ascendant} />
+                <SlotCard title={t('bigThree.sun')} slot={result.big_three.sun} />
+                <SlotCard title={t('bigThree.moon')} slot={result.big_three.moon} />
+                <SlotCard title={t('bigThree.ascendant')} slot={result.big_three.ascendant} />
 
                 <Pressable
                   style={styles.secondaryBtn}

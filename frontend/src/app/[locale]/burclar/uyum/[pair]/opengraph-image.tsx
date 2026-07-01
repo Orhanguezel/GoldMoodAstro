@@ -13,9 +13,9 @@ const SIGN_SYMBOLS: Record<string, string> = {
 };
 
 const SIGN_LABELS: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
 };
 
 export default async function OG({ params }: { params: { signA: string; signB: string; locale: string } }) {
@@ -61,7 +61,7 @@ export default async function OG({ params }: { params: { signA: string; signB: s
       }}>
         {/* Header */}
         <div style={{ fontSize: 24, color: theme.primary, letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          {theme.brandUpper} · BURÇ UYUMU
+          {theme.brandUpper} · ZODIAC COMPATIBILITY
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 30, alignItems: 'center' }}>
@@ -82,7 +82,7 @@ export default async function OG({ params }: { params: { signA: string; signB: s
           {score > 0 && (
              <div style={{ display: 'flex', alignItems: 'baseline', gap: 20, marginTop: 20 }}>
                <span style={{ fontSize: 140, fontWeight: 'bold', color: theme.primary }}>%{score}</span>
-               <span style={{ fontSize: 32, fontFamily: 'Fraunces', fontStyle: 'italic', color: theme.text }}>Aşk Uyumu</span>
+               <span style={{ fontSize: 32, fontFamily: 'Fraunces', fontStyle: 'italic', color: theme.text }}>Love Compatibility</span>
              </div>
           )}
         </div>

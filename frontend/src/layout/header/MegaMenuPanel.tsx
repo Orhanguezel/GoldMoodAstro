@@ -2,9 +2,9 @@
 
 // =============================================================
 // FILE: src/layout/header/MegaMenuPanel.tsx
-// Premium mega menu — geniş dropdown panel.
+// Premium mega menu with wide dropdown panel.
 // Sol: kategori link'leri (mevcut child menu items)
-// Sağ: ilgili expertise astrologları (canlı fetch)
+// Right side: related expertise consultants fetched live.
 // =============================================================
 
 import React from 'react';
@@ -23,17 +23,17 @@ type ChildLink = {
 interface Props {
   /** Soldaki link listesi — mevcut menu children */
   links: ChildLink[];
-  /** Astrolog filtresi — örn. "astrology" veya "tarot,numerology" */
+  /** Consultant filter, for example "astrology" or "tarot,numerology". */
   expertise?: string;
-  /** Sağ panel başlığı — örn. "Astroloji Uzmanları" */
+  /** Right panel heading, for example "Astrology Experts". */
   consultantsHeading?: string;
-  /** Görüntülenecek astrolog sayısı */
+  /** Number of consultants to display. */
   limit?: number;
   locale: string;
-  /** "Tüm danışmanlar" linkine yönlendirme — örn. ?expertise=astrology */
+  /** Optional redirect query for the all consultants link, for example ?expertise=astrology. */
   allConsultantsLabel?: string;
   allConsultantsExpertise?: string;
-  /** Panel başlığı — örn. "Astroloji" */
+  /** Panel eyebrow, for example "Astrology". */
   panelEyebrow?: string;
 }
 
@@ -51,10 +51,10 @@ const cleanHashLink = (href: string) => {
 export default function MegaMenuPanel({
   links,
   expertise,
-  consultantsHeading = 'Uzman Danışmanlar',
+  consultantsHeading = 'Featured Consultants',
   limit = 4,
   locale,
-  allConsultantsLabel = 'Tümünü Gör',
+  allConsultantsLabel = 'See All',
   allConsultantsExpertise,
   panelEyebrow,
 }: Props) {
@@ -66,7 +66,7 @@ export default function MegaMenuPanel({
   }, []);
 
   const { data: consultants = [], isLoading } = useListConsultantsPublicQuery(
-    expertise ? { expertise, limit, sort: 'featured' as const } : { limit, sort: 'featured' as const },
+    expertise ? { expertise, limit, sort: 'featured' as const, locale } : { limit, sort: 'featured' as const, locale },
     { skip: !hydrated || !hasConsultantsPanel },
   );
 
@@ -108,12 +108,12 @@ export default function MegaMenuPanel({
                 </li>
               );
             }) : (
-              <li className="px-5 py-4 text-sm text-[var(--gm-muted)] italic">Henüz kategori bulunmuyor.</li>
+              <li className="px-5 py-4 text-sm text-[var(--gm-muted)] italic">No categories yet.</li>
             )}
           </ul>
         </div>
 
-        {/* SAĞ: Öne Çıkan Uzmanlar */}
+        {/* Right: featured consultants */}
         {hasConsultantsPanel && (
           <div className="p-8 md:p-10 bg-gradient-to-br from-[var(--gm-bg-deep)]/60 to-transparent">
             <div className="flex items-center justify-between mb-8">
@@ -146,7 +146,7 @@ export default function MegaMenuPanel({
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center bg-[var(--gm-surface)]/20 rounded-3xl border border-dashed border-[var(--gm-border-soft)]">
                 <Sparkles className="w-8 h-8 text-[var(--gm-muted)] mb-3 opacity-20" />
                 <p className="text-sm text-[var(--gm-text-dim)] italic font-serif">
-                  Yakında uzmanlar eklenecek.
+                  Experts will be added soon.
                 </p>
               </div>
             ) : (

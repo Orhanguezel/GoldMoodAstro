@@ -7,7 +7,7 @@ import {
   useConfirmEmailVerificationMutation,
   useSendEmailVerificationMutation,
 } from '@/integrations/rtk/hooks';
-import { useLocaleShort } from '@/i18n';
+import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 
 import PageContainer from '@/components/common/PageContainer';
@@ -18,12 +18,12 @@ export default function VerifyEmailPage() {
   const mode = searchParams.get('mode');
   const email = searchParams.get('email');
   const locale = useLocaleShort();
+  const { ui } = useUiSection('ui_extra' as any, locale as any);
 
-  // H4: signup sonrası ?next=... ile geldiği sayfaya dön. Yoksa ana sayfa.
+  // Return to the ?next=... page after signup, otherwise home.
   const nextRaw = searchParams.get('next') || '';
   const nextHref = nextRaw.startsWith('/') ? nextRaw : localizePath(locale, '/');
-  const continueLabel =
-    locale === 'de' ? 'Weiter' : locale === 'tr' ? 'Devam Et' : 'Continue';
+  const continueLabel = ui('ui_extra_b1_continue', 'Continue');
 
   const [confirm, { isLoading }] = useConfirmEmailVerificationMutation();
   const [sendVerification, sendState] = useSendEmailVerificationMutation();
@@ -58,18 +58,8 @@ export default function VerifyEmailPage() {
       });
   }, [token, confirm]);
 
-  const titleText =
-    locale === 'de'
-      ? 'E-Mail bestätigen'
-      : locale === 'tr'
-        ? 'E-postayı Doğrula'
-        : 'Verify Email';
-  const resendLabel =
-    locale === 'de'
-      ? 'Bestätigungs-E-Mail erneut senden'
-      : locale === 'tr'
-        ? 'Doğrulama e-postasını yeniden gönder'
-        : 'Resend verification email';
+  const titleText = ui('ui_extra_b1_verify_email_title', 'Verify Email');
+  const resendLabel = ui('ui_extra_b1_resend_verification', 'Resend verification email');
 
   return (
     <PageContainer width="narrow" center className="bg-(--gm-bg) min-h-screen">
@@ -83,11 +73,7 @@ export default function VerifyEmailPage() {
             </div>
             <h2 className="text-2xl font-serif text-(--gm-text) mb-3">{titleText}</h2>
             <p className="text-(--gm-text-dim) mb-2">
-              {locale === 'de'
-                ? 'Wir haben Ihnen eine Bestätigungs-E-Mail gesendet.'
-                : locale === 'tr'
-                  ? 'Size bir doğrulama e-postası gönderdik.'
-                  : 'We sent you a verification email.'}
+              {ui('ui_extra_b1_verification_email_sent', 'We sent you a verification email.')}
             </p>
             {email ? (
               <p className="text-sm font-medium text-(--gm-text) mb-6">{email}</p>
@@ -125,11 +111,7 @@ export default function VerifyEmailPage() {
           <>
             <div className="w-12 h-12 border-4 border-(--gm-gold) border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <p className="text-(--gm-text-dim)">
-              {locale === 'de'
-                ? 'E-Mail wird verifiziert...'
-                : locale === 'tr'
-                  ? 'E-posta doğrulanıyor...'
-                  : 'Verifying your email...'}
+              {ui('ui_extra_b1_verifying_email', 'Email is being verified...')}
             </p>
           </>
         ) : status === 'success' ? (
@@ -140,18 +122,10 @@ export default function VerifyEmailPage() {
               </svg>
             </div>
             <h2 className="text-2xl font-serif text-(--gm-text) mb-3">
-              {locale === 'de'
-                ? 'E-Mail bestätigt!'
-                : locale === 'tr'
-                  ? 'E-posta doğrulandı!'
-                  : 'Email Verified!'}
+              {ui('ui_extra_b1_email_verified_title', 'Email verified!')}
             </h2>
             <p className="text-(--gm-text-dim) mb-6">
-              {locale === 'de'
-                ? 'Ihre E-Mail-Adresse wurde erfolgreich verifiziert.'
-                : locale === 'tr'
-                  ? 'E-posta adresiniz başarıyla doğrulandı.'
-                  : 'Your email address has been successfully verified.'}
+              {ui('ui_extra_b1_email_verified_body', 'Your email address has been verified successfully.')}
             </p>
             <Link
               href={nextHref}
@@ -168,24 +142,16 @@ export default function VerifyEmailPage() {
               </svg>
             </div>
             <h2 className="text-2xl font-serif text-(--gm-text) mb-3">
-              {locale === 'de'
-                ? 'Ungültiger Link'
-                : locale === 'tr'
-                  ? 'Geçersiz Bağlantı'
-                  : 'Invalid Link'}
+              {ui('ui_extra_b1_invalid_link', 'Invalid Link')}
             </h2>
             <p className="text-(--gm-text-dim) mb-6">
-              {locale === 'de'
-                ? 'Kein Verifizierungstoken gefunden.'
-                : locale === 'tr'
-                  ? 'Doğrulama tokeni bulunamadı.'
-                  : 'No verification token found.'}
+              {ui('ui_extra_b1_no_verification_token', 'Verification token was not found.')}
             </p>
             <Link
               href={localizePath(locale, '/register')}
               className="btn-premium py-3 px-8 text-xs inline-block"
             >
-              {locale === 'de' ? 'Zur Registrierung' : locale === 'tr' ? 'Kayıta Dön' : 'Back to Register'}
+              {ui('ui_extra_b1_back_to_register', 'Back to Register')}
             </Link>
           </>
         ) : (
@@ -196,25 +162,17 @@ export default function VerifyEmailPage() {
               </svg>
             </div>
             <h2 className="text-2xl font-serif text-(--gm-text) mb-3">
-              {locale === 'de'
-                ? 'Verifizierung fehlgeschlagen'
-                : locale === 'tr'
-                  ? 'Doğrulama Başarısız'
-                  : 'Verification Failed'}
+              {ui('ui_extra_b1_verification_failed_title', 'Verification Failed')}
             </h2>
             <p className="text-(--gm-text-dim) mb-6">
               {message ||
-                (locale === 'de'
-                  ? 'Der Link ist ungültig oder abgelaufen.'
-                  : locale === 'tr'
-                    ? 'Bağlantı geçersiz veya süresi dolmuş.'
-                    : 'The link is invalid or has expired.')}
+                ui('ui_extra_b1_verification_failed_body', 'The link is invalid or expired.')}
             </p>
             <Link
               href={localizePath(locale, '/profile')}
               className="btn-premium py-3 px-8 text-xs inline-block"
             >
-              {locale === 'de' ? 'Zum Profil' : locale === 'tr' ? 'Profile Git' : 'Go to Profile'}
+              {ui('ui_extra_b1_go_to_profile', 'Go to Profile')}
             </Link>
           </>
         )}

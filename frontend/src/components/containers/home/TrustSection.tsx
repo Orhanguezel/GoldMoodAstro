@@ -1,28 +1,7 @@
 import React from 'react';
+import { useUiSection } from '@/i18n';
 
 const TRUST_ITEMS = {
-  tr: [
-    {
-      num: 'i.',
-      title: 'Telefon numarası istemiyoruz.',
-      desc: 'Kayıt için sadece e-posta. Apple ve Google girişiyle bunu da atlayabilirsiniz. Numaranız bizde yok — satılmasının yolu yok.'
-    },
-    {
-      num: 'ii.',
-      title: 'Hesabınızı silerseniz, gerçekten silinir.',
-      desc: '7 gün içinde tüm veriniz veritabanından kalıcı olarak kalkar. "Soft delete" yok, arka planda saklanan bir kopya yok.'
-    },
-    {
-      num: 'iii.',
-      title: 'Verinizi indirme hakkınız vardır.',
-      desc: 'Tek tıkla tüm verinizi JSON olarak indirebilirsiniz. KVKK ve GDPR uyumu birinci günden mimaride.'
-    },
-    {
-      num: 'iv.',
-      title: 'Üçüncü tarafa veri satışı yok.',
-      desc: 'Reklam gelirimiz yok, veri ortaklığımız yok. Tek gelir kalemimiz açık fiyatlı aboneliğinizdir — başka bir yerden para kazanma derdimiz yok.'
-    }
-  ],
   en: [
     {
       num: 'i.',
@@ -48,17 +27,39 @@ const TRUST_ITEMS = {
 };
 
 export default function TrustSection({ locale = 'tr' }: { locale?: string }) {
-  const isTr = locale === 'tr';
-  const items = TRUST_ITEMS[isTr ? 'tr' : 'en'];
+  const { ui } = useUiSection('ui_home', locale as any);
+  const fb = TRUST_ITEMS.en;
+  const items = [
+    {
+      num: fb[0].num,
+      title: ui('ui_home_trust_1_title', fb[0].title),
+      desc: ui('ui_home_trust_1_desc', fb[0].desc),
+    },
+    {
+      num: fb[1].num,
+      title: ui('ui_home_trust_2_title', fb[1].title),
+      desc: ui('ui_home_trust_2_desc', fb[1].desc),
+    },
+    {
+      num: fb[2].num,
+      title: ui('ui_home_trust_3_title', fb[2].title),
+      desc: ui('ui_home_trust_3_desc', fb[2].desc),
+    },
+    {
+      num: fb[3].num,
+      title: ui('ui_home_trust_4_title', fb[3].title),
+      desc: ui('ui_home_trust_4_desc', fb[3].desc),
+    },
+  ];
 
   return (
     <section className="py-32 bg-[var(--gm-bg-deep)] border-t border-[var(--gm-border-soft)]">
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-24 reveal">
-          <span className="section-label">{isTr ? 'Güven İlkelerimiz' : 'Our Trust Principles'}</span>
+          <span className="section-label">{ui('ui_home_trust_eyebrow', 'Our Trust Principles')}</span>
           <h2 className="font-serif text-[clamp(2.5rem,5vw,4rem)] font-light leading-tight text-[var(--gm-text)]">
-            {isTr ? 'Veriniz,' : 'Your data,'}<br/>
-            <em className="text-[var(--gm-gold)] italic">{isTr ? 'sadece sizin.' : 'is only yours.'}</em>
+            {ui('ui_home_trust_title_1', 'Your data,')}<br/>
+            <em className="text-[var(--gm-gold)] italic">{ui('ui_home_trust_title_2', 'is only yours.')}</em>
           </h2>
         </div>
 

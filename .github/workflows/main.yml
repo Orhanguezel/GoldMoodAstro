@@ -142,6 +142,9 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Check theme snapshot drift
+        run: bun run check:theme
+
       - name: Install & build frontend
         working-directory: frontend
         env:

@@ -9,12 +9,31 @@ import { db } from '../../db/client';
 import { generate as llmGenerate } from '../llm';
 import { hasActiveSubscription, consumeCredits } from '../credits/consume';
 import { appConfig } from '@goldmood/shared-config/appConfig';
+import { apiMessage } from '../_shared/api-i18n';
 
-const SIGN_LABEL_TR: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+const SIGN_LABELS: Record<string, Record<string, string>> = {
+  tr: {
+    aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
+    leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
+    sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+  },
+  en: {
+    aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+    leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+    sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
+  },
+  de: {
+    aries: 'Widder', taurus: 'Stier', gemini: 'Zwillinge', cancer: 'Krebs',
+    leo: 'Löwe', virgo: 'Jungfrau', libra: 'Waage', scorpio: 'Skorpion',
+    sagittarius: 'Schütze', capricorn: 'Steinbock', aquarius: 'Wassermann', pisces: 'Fische',
+  },
 };
+
+function signLabel(sign: string | undefined, locale: string): string {
+  if (!sign) return '?';
+  const normalized = locale.toLowerCase().split('-')[0];
+  return SIGN_LABELS[normalized]?.[sign] ?? SIGN_LABELS.tr[sign] ?? sign;
+}
 
 function userIdFromReq(req: FastifyRequest): string | null {
   const u = (req as any).user;
@@ -33,11 +52,11 @@ export async function handleRead(req: FastifyRequest, reply: FastifyReply) {
   });
   const menzilNo = menzilNumberOf(ebcedTotal);
 
-  // 2) Menzil yorumunu çek
-  const result = await repo.getResultByMenzil(menzilNo);
+  // 2) Menzil yorumunu çek (locale'e göre en/de çeviri, yoksa tr)
+  const result = await repo.getResultByMenzil(menzilNo, body.locale);
   if (!result) {
     return reply.status(500).send({
-      error: 'Yıldızname menzili bulunamadı; seed eksik olabilir.',
+      error: apiMessage(req, 'yildizname_result_missing'),
     });
   }
 
@@ -73,7 +92,7 @@ export async function handleRead(req: FastifyRequest, reply: FastifyReply) {
 
 export async function handleGetMyReadings(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
   const rows = await repo.getReadingsByUser(user.id);
   return reply.send({ data: rows });
 }
@@ -81,7 +100,7 @@ export async function handleGetMyReadings(req: FastifyRequest, reply: FastifyRep
 export async function handleGetReading(req: FastifyRequest, reply: FastifyReply) {
   const { id } = req.params as { id: string };
   const row = await repo.getReadingById(id);
-  if (!row) return reply.status(404).send({ error: 'Yıldızname bulunamadı.' });
+  if (!row) return reply.status(404).send({ error: apiMessage(req, 'yildizname_not_found') });
 
   // Drizzle camelCase → frontend snake_case eşlemesi
   return reply.send({
@@ -121,12 +140,12 @@ export async function handleListMenzils(_req: FastifyRequest, reply: FastifyRepl
  */
 export async function handleChartExtra(req: FastifyRequest, reply: FastifyReply) {
   const userId = userIdFromReq(req);
-  if (!userId) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!userId) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const { id } = req.params as { id: string };
   const reading = await repo.getReadingById(id);
   if (!reading || reading.userId !== userId) {
-    return reply.status(404).send({ error: 'Yıldızname bulunamadı.' });
+    return reply.status(404).send({ error: apiMessage(req, 'yildizname_not_found') });
   }
 
   // Eğer zaten llm_extra varsa direkt döndür (idempotent)
@@ -148,7 +167,7 @@ export async function handleChartExtra(req: FastifyRequest, reply: FastifyReply)
     });
     if (consume.status === 'insufficient') {
       return reply.status(402).send({
-        error: 'Yetersiz kredi.',
+        error: apiMessage(req, 'insufficient_credits'),
         required: appConfig.credits.yildiznameExtraCost,
         available: consume.available,
         hint_action_path: '/pricing',
@@ -164,7 +183,7 @@ export async function handleChartExtra(req: FastifyRequest, reply: FastifyReply)
   const chartRow = (chartRows as any[])[0];
   if (!chartRow) {
     return reply.status(404).send({
-      error: 'Doğum haritan bulunamadı; önce harita oluşturmalısın.',
+      error: apiMessage(req, 'birth_chart_required'),
       hint_action_path: '/birth-chart',
     });
   }
@@ -180,7 +199,7 @@ export async function handleChartExtra(req: FastifyRequest, reply: FastifyReply)
   // Menzil yorumu (zaten kayıtlı)
   const menzil = await repo.getResultByMenzil(reading.menzilNo);
   if (!menzil) {
-    return reply.status(500).send({ error: 'Menzil yorumu bulunamadı.' });
+    return reply.status(500).send({ error: apiMessage(req, 'menzil_not_found') });
   }
 
   // LLM hibrit
@@ -194,15 +213,15 @@ export async function handleChartExtra(req: FastifyRequest, reply: FastifyReply)
         menzil_name_tr: menzil.nameTr,
         menzil_name_ar: menzil.nameAr,
         menzil_content: menzil.content,
-        sun_sign_label: SIGN_LABEL_TR[sunSign] ?? sunSign ?? '?',
-        moon_sign_label: SIGN_LABEL_TR[moonSign] ?? moonSign ?? '?',
-        asc_sign_label: SIGN_LABEL_TR[ascSign] ?? ascSign ?? '?',
+        sun_sign_label: signLabel(sunSign, reading.locale ?? 'tr'),
+        moon_sign_label: signLabel(moonSign, reading.locale ?? 'tr'),
+        asc_sign_label: signLabel(ascSign, reading.locale ?? 'tr'),
       },
     });
     llmExtra = result.content.trim();
   } catch (err) {
     console.warn('[yildizname] chart_extra_llm_failed', err);
-    return reply.status(500).send({ error: 'LLM yorum üretilemedi, tekrar dene.' });
+    return reply.status(500).send({ error: apiMessage(req, 'llm_failed') });
   }
 
   // DB güncelle

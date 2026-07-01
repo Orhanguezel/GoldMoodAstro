@@ -17,18 +17,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'burclar',
     pathname: '/burclar',
     fallback: {
-      title: 'Burçlar ve Özellikleri — GoldMoodAstro',
-      description: '12 burcun detaylı özellikleri, karakter analizleri, elementleri ve yönetici gezegenleri. Burcunuzun gizli dünyasını keşfedin.',
+      title: 'Zodiac Signs and Traits — GoldMoodAstro',
+      description: 'Detailed traits, character analyses, elements and ruling planets of the 12 zodiac signs. Discover the hidden world of your sign.',
     },
   });
 }
 
 export default async function BurclarPage({ params }: Props) {
-  const { locale } = await params;
+  await params;
 
   return (
     <>
-      <Banner title={locale === 'tr' ? 'Burçlar' : 'Zodiac Signs'} />
+      <Banner title="Zodiac Signs" />
       <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
         <ZodiacHub />
       </PageContainer>

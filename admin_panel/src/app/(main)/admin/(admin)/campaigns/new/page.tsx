@@ -12,13 +12,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { 
-  useCreateCampaignAdminMutation, 
-  useGetCampaignAdminQuery, 
-  useUpdateCampaignAdminMutation 
+import {
+  useCreateCampaignAdminMutation,
+  useGetCampaignAdminQuery,
+  useUpdateCampaignAdminMutation
 } from '@/integrations/hooks';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 export default function CampaignFormPage() {
+  const t = useAdminT('admin.campaigns');
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
@@ -67,7 +69,7 @@ export default function CampaignFormPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.code || !formData.name_tr || !formData.type) {
-      toast.error('Code, Name and Type are required.');
+      toast.error(t('toast.requiredFields'));
       return;
     }
 
@@ -81,18 +83,18 @@ export default function CampaignFormPage() {
     try {
       if (isEdit) {
         await update({ id, body: payload }).unwrap();
-        toast.success('Campaign updated.');
+        toast.success(t('toast.updated'));
       } else {
         await create(payload).unwrap();
-        toast.success('Campaign created.');
+        toast.success(t('toast.created'));
       }
       router.push('/admin/campaigns');
     } catch {
-      toast.error('Operation failed.');
+      toast.error(t('toast.operationFailed'));
     }
   };
 
-  if (isEdit && isFetching) return <div className="p-8 text-center">Loading...</div>;
+  if (isEdit && isFetching) return <div className="p-8 text-center">{t('loading')}</div>;
 
   return (
     <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-5xl mx-auto">
@@ -101,7 +103,7 @@ export default function CampaignFormPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-gm-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">KAMPANYA YÖNETİMİ</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">{t('eyebrow')}</span>
           </div>
           <div className="flex items-center gap-4">
             <Button 
@@ -112,9 +114,9 @@ export default function CampaignFormPage() {
             >
               <ArrowLeft className="size-5" />
             </Button>
-            <h1 className="font-serif text-4xl text-gm-text">{isEdit ? 'Kampanya Düzenle' : 'Yeni Kampanya Tanımı'}</h1>
+            <h1 className="font-serif text-4xl text-gm-text">{isEdit ? t('form.titleEdit') : t('form.titleNew')}</h1>
           </div>
-          <p className="text-sm italic text-gm-muted">Promosyon kurallarını, kampanya tiplerini ve geçerlilik sürelerini yapılandırın.</p>
+          <p className="text-sm italic text-gm-muted">{t('form.subtitle')}</p>
         </div>
       </div>
 
@@ -125,39 +127,39 @@ export default function CampaignFormPage() {
             <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8">
               <CardTitle className="font-serif text-xl text-gm-text flex items-center gap-2">
                 <Ticket className="size-5 text-gm-gold" />
-                Kampanya Kimliği
+                {t('form.identity.title')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-8">
               <div className="space-y-2">
-                <Label htmlFor="code" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Promosyon Kodu (Eşsiz)</Label>
-                <Input 
-                  id="code" 
-                  value={formData.code} 
+                <Label htmlFor="code" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.code')}</Label>
+                <Input
+                  id="code"
+                  value={formData.code}
                   onChange={(e) => setFormData(p => ({ ...p, code: e.target.value.toUpperCase().replace(/\s/g, '_') }))}
-                  placeholder="örn: GOLDEN20"
+                  placeholder={t('form.placeholders.code')}
                   className="h-11 rounded-full border-gm-border-soft bg-gm-bg-deep/30 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 font-mono font-bold text-gm-gold"
                 />
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2 pt-2">
                 <div className="space-y-2">
-                  <Label htmlFor="name_tr" className="text-[10px] font-bold uppercase tracking-widest text-gm-gold">Görünen Ad (TR)</Label>
-                  <Input 
-                    id="name_tr" 
-                    value={formData.name_tr} 
+                  <Label htmlFor="name_tr" className="text-[10px] font-bold uppercase tracking-widest text-gm-gold">{t('form.fields.nameTr')}</Label>
+                  <Input
+                    id="name_tr"
+                    value={formData.name_tr}
                     onChange={(e) => setFormData(p => ({ ...p, name_tr: e.target.value }))}
-                    placeholder="TR Kampanya Adı"
+                    placeholder={t('form.placeholders.nameTr')}
                     className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="name_en" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Görünen Ad (EN)</Label>
-                  <Input 
-                    id="name_en" 
-                    value={formData.name_en} 
+                  <Label htmlFor="name_en" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.nameEn')}</Label>
+                  <Input
+                    id="name_en"
+                    value={formData.name_en}
                     onChange={(e) => setFormData(p => ({ ...p, name_en: e.target.value }))}
-                    placeholder="EN Campaign Name"
+                    placeholder={t('form.placeholders.nameEn')}
                     className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
@@ -165,22 +167,22 @@ export default function CampaignFormPage() {
 
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="description_tr" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Açıklama (TR)</Label>
-                  <Textarea 
-                    id="description_tr" 
-                    value={formData.description_tr} 
+                  <Label htmlFor="description_tr" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.descriptionTr')}</Label>
+                  <Textarea
+                    id="description_tr"
+                    value={formData.description_tr}
                     onChange={(e) => setFormData(p => ({ ...p, description_tr: e.target.value }))}
-                    placeholder="TR Açıklama"
+                    placeholder={t('form.placeholders.descriptionTr')}
                     className="border-gm-border-soft bg-gm-bg-deep/10 rounded-2xl p-4 font-sans text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description_en" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Açıklama (EN)</Label>
-                  <Textarea 
-                    id="description_en" 
-                    value={formData.description_en} 
+                  <Label htmlFor="description_en" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.descriptionEn')}</Label>
+                  <Textarea
+                    id="description_en"
+                    value={formData.description_en}
                     onChange={(e) => setFormData(p => ({ ...p, description_en: e.target.value }))}
-                    placeholder="EN Description"
+                    placeholder={t('form.placeholders.descriptionEn')}
                     className="border-gm-border-soft bg-gm-bg-deep/10 rounded-2xl p-4 font-sans text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
@@ -193,13 +195,13 @@ export default function CampaignFormPage() {
             <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8">
               <CardTitle className="font-serif text-xl text-gm-text flex items-center gap-2">
                 <Percent className="size-5 text-gm-gold" />
-                Avantaj Kuralları
+                {t('form.benefit.title')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-8">
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="type" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Kampanya Türü</Label>
+                  <Label htmlFor="type" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.type')}</Label>
                   <Select 
                     value={formData.type} 
                     onValueChange={(v) => setFormData(p => ({ ...p, type: v as any }))}
@@ -208,15 +210,15 @@ export default function CampaignFormPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border-gm-border-soft bg-gm-surface text-gm-text rounded-2xl">
-                      <SelectItem value="discount_percentage">Yüzdesel İndirim (%)</SelectItem>
-                      <SelectItem value="discount_fixed">Sabit Tutar İndirimi (₺)</SelectItem>
-                      <SelectItem value="bonus_credits">Hediye Kredi (Bonus)</SelectItem>
-                      <SelectItem value="free_trial_days">Ücretsiz Deneme Günleri</SelectItem>
+                      <SelectItem value="discount_percentage">{t('form.types.discountPercentage')}</SelectItem>
+                      <SelectItem value="discount_fixed">{t('form.types.discountFixed')}</SelectItem>
+                      <SelectItem value="bonus_credits">{t('form.types.bonusCredits')}</SelectItem>
+                      <SelectItem value="free_trial_days">{t('form.types.freeTrialDays')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="value" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Avantaj Değeri</Label>
+                  <Label htmlFor="value" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.value')}</Label>
                   <Input 
                     id="value" 
                     type="number"
@@ -225,12 +227,12 @@ export default function CampaignFormPage() {
                     onChange={(e) => setFormData(p => ({ ...p, value: parseFloat(e.target.value) }))}
                     className="h-11 rounded-full border-gm-border-soft bg-gm-bg-deep/30 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
                   />
-                  <p className="text-[10px] text-gm-muted/80 italic pl-1">Değer türe göre yorumlanır (örn. %20 indirim için 20).</p>
+                  <p className="text-[10px] text-gm-muted/80 italic pl-1">{t('form.hints.value')}</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="applies_to" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Kampanya Kapsamı</Label>
+                <Label htmlFor="applies_to" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.appliesTo')}</Label>
                 <Select 
                   value={formData.applies_to} 
                   onValueChange={(v) => setFormData(p => ({ ...p, applies_to: v as any }))}
@@ -239,10 +241,10 @@ export default function CampaignFormPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="border-gm-border-soft bg-gm-surface text-gm-text rounded-2xl">
-                    <SelectItem value="all">Tüm İşlemler</SelectItem>
-                    <SelectItem value="subscription">Yalnızca Abonelikler</SelectItem>
-                    <SelectItem value="credit_package">Yalnızca Kredi Paketleri</SelectItem>
-                    <SelectItem value="consultant_booking">Yalnızca Danışman Randevuları</SelectItem>
+                    <SelectItem value="all">{t('form.scope.all')}</SelectItem>
+                    <SelectItem value="subscription">{t('form.scope.subscription')}</SelectItem>
+                    <SelectItem value="credit_package">{t('form.scope.creditPackage')}</SelectItem>
+                    <SelectItem value="consultant_booking">{t('form.scope.consultantBooking')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -256,12 +258,12 @@ export default function CampaignFormPage() {
             <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8">
               <CardTitle className="font-serif text-xl text-gm-text flex items-center gap-2">
                 <Clock className="size-5 text-gm-gold" />
-                Kullanım Sınırları
+                {t('form.limits.title')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-8">
               <div className="flex items-center justify-between">
-                <Label htmlFor="is_active" className="text-sm font-medium text-gm-text">Kampanya Aktif mi?</Label>
+                <Label htmlFor="is_active" className="text-sm font-medium text-gm-text">{t('form.fields.isActive')}</Label>
                 <Switch 
                   id="is_active" 
                   checked={formData.is_active} 
@@ -271,7 +273,7 @@ export default function CampaignFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="max_uses" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Global Kullanım Sınırı (0 = Sınırsız)</Label>
+                <Label htmlFor="max_uses" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.maxUses')}</Label>
                 <Input 
                   id="max_uses" 
                   type="number"
@@ -282,7 +284,7 @@ export default function CampaignFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="max_uses_per_user" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Kullanıcı Başına Sınır</Label>
+                <Label htmlFor="max_uses_per_user" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.maxUsesPerUser')}</Label>
                 <Input 
                   id="max_uses_per_user" 
                   type="number"
@@ -299,12 +301,12 @@ export default function CampaignFormPage() {
             <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8">
               <CardTitle className="font-serif text-xl text-gm-text flex items-center gap-2">
                 <Calendar className="size-5 text-gm-gold" />
-                Geçerlilik Süresi
+                {t('form.schedule.title')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-8">
               <div className="space-y-2">
-                <Label htmlFor="starts_at" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Başlangıç Tarihi</Label>
+                <Label htmlFor="starts_at" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.startsAt')}</Label>
                 <Input 
                   id="starts_at" 
                   type="datetime-local" 
@@ -314,7 +316,7 @@ export default function CampaignFormPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ends_at" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Bitiş Tarihi</Label>
+                <Label htmlFor="ends_at" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.endsAt')}</Label>
                 <Input 
                   id="ends_at" 
                   type="datetime-local" 
@@ -328,9 +330,9 @@ export default function CampaignFormPage() {
 
           <Button type="submit" disabled={isCreating || isUpdating} className="w-full bg-gm-gold hover:bg-gm-gold/80 text-gm-bg h-12 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-gm-gold/10 border-transparent">
             <Save className="mr-2 size-5" />
-            {isEdit ? 'Kampanyayı Güncelle' : 'Kampanyayı Oluştur'}
+            {isEdit ? t('form.submitEdit') : t('form.submitNew')}
           </Button>
-          <Button type="button" variant="ghost" onClick={() => router.back()} className="w-full h-11 rounded-full text-gm-muted hover:bg-gm-surface/20">İptal Et</Button>
+          <Button type="button" variant="ghost" onClick={() => router.back()} className="w-full h-11 rounded-full text-gm-muted hover:bg-gm-surface/20">{t('form.cancel')}</Button>
         </div>
       </form>
     </div>

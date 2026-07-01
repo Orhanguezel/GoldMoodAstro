@@ -161,7 +161,10 @@
       "Bash(curl -sL \"https://goldmoodastro.com/tr\" --max-time 20 -o /tmp/gm_home.html)",
       "Bash(curl -sL \"https://goldmoodastro.com/tr\" --max-time 25 -o /tmp/gm_home2.html)",
       "Bash(awk '/<footer/,/<\\\\/footer>/' /tmp/gm_home4.html)",
-      "Bash(grep -n \"^const ConsultantDashboard\\\\|^function \\\\|^export default\\\\|^};$\\\\|^}$\" /home/orhan/Documents/Projeler/goldmoodastro/frontend/src/components/containers/consultant-dashboard/ConsultantDashboard.tsx)"
+      "Bash(grep -n \"^const ConsultantDashboard\\\\|^function \\\\|^export default\\\\|^};$\\\\|^}$\" /home/orhan/Documents/Projeler/goldmoodastro/frontend/src/components/containers/consultant-dashboard/ConsultantDashboard.tsx)",
+      "Bash(curl -s -o /tmp/cu_resp.json -w \"HTTP %{http_code}\\\\n\" \"https://www.goldmoodastro.com/api/me/customer/threads\" --max-time 10)",
+      "Bash(awk '/\"notifications\": \\\\{/,/^  \\\\},/' /home/orhan/Documents/Projeler/goldmoodastro/admin_panel/src/locale/tr.json)",
+      "Bash(python3 -c \"import json; json.load\\(open\\('src/locale/tr.json'\\)\\)\")"
     ],
     "defaultMode": "bypassPermissions",
     "additionalDirectories": [

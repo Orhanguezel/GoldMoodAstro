@@ -495,6 +495,40 @@ export const listMyBookingsHandler: RouteHandler = async (req, reply) => {
       { limit: 100, offset: 0 },
     );
 
+    // Booking kartında "Consultant 10000000" gibi resource_title yerine gerçek
+    // danışman ismini + avatar + slug göstermek için bookings → consultants → users
+    // join'ini ek bir IN query ile yapıp item'lere ekliyoruz.
+    const consultantIds = Array.from(
+      new Set(
+        items
+          .map((b: any) => b.consultant_id)
+          .filter((id: unknown): id is string => typeof id === 'string' && id.length > 0),
+      ),
+    );
+
+    if (consultantIds.length > 0) {
+      const rows: any = await db.execute(
+        sql`SELECT c.id AS consultant_id, c.slug AS consultant_slug,
+                   COALESCE(c.display_name, u.full_name) AS consultant_name,
+                   u.avatar_url AS consultant_avatar
+            FROM consultants c
+            LEFT JOIN users u ON u.id = c.user_id
+            WHERE c.id IN (${sql.join(consultantIds.map((id) => sql`${id}`), sql`, `)})`,
+      );
+      const arr: any[] = Array.isArray(rows?.[0]) ? rows[0] : rows;
+      const byId = new Map<string, any>();
+      for (const r of arr ?? []) byId.set(String(r.consultant_id), r);
+
+      for (const b of items as any[]) {
+        const info = b.consultant_id ? byId.get(String(b.consultant_id)) : null;
+        if (info) {
+          b.consultant_name = info.consultant_name ?? null;
+          b.consultant_slug = info.consultant_slug ?? null;
+          b.consultant_avatar = info.consultant_avatar ?? null;
+        }
+      }
+    }
+
     return reply.send({ items });
   } catch (e: any) {
     req.log.error(e);

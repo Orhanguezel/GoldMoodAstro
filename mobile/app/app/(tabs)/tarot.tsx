@@ -112,6 +112,8 @@ import {
 import { router } from 'expo-router';
 
 
+import { useTranslation } from 'react-i18next';
+
 import { tarotApi, getAssetUrl } from '@/lib/api';
 import { MenuHeaderButton } from '@/components/MenuHeaderButton';
 import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
@@ -119,13 +121,14 @@ import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
 const { width } = Dimensions.get('window');
 
 const SPREADS = [
-  { id: 'one_card', title: 'Tek Kart', desc: 'Hızlı rehberlik', count: 1 },
-  { id: 'three_card_general', title: 'Üç Kart', desc: 'Geçmiş-Şimdi-Gelecek', count: 3 },
-  { id: 'three_card_decision', title: 'Karar', desc: 'Seçenek Analizi', count: 3 },
-  { id: 'celtic_cross', title: 'Kelt Haçı', desc: 'Derin Analiz', count: 10 },
+  { id: 'one_card', titleKey: 'tarot.spreadOneTitle', descKey: 'tarot.spreadOneDesc', count: 1 },
+  { id: 'three_card_general', titleKey: 'tarot.spreadThreeTitle', descKey: 'tarot.spreadThreeDesc', count: 3 },
+  { id: 'three_card_decision', titleKey: 'tarot.spreadDecisionTitle', descKey: 'tarot.spreadDecisionDesc', count: 3 },
+  { id: 'celtic_cross', titleKey: 'tarot.spreadCelticTitle', descKey: 'tarot.spreadCelticDesc', count: 10 },
 ];
 
 export default function TarotScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -141,8 +144,8 @@ export default function TarotScreen() {
     const cards = result.cards?.map((c: any) => c.name).join(', ');
     try {
       await Share.share({
-        message: `Tarot Açılımım: ${selectedSpread.title} ✨\n\nKartlarım: ${cards}\n\nGoldMoodAstro ile kartların rehberliğini keşfedin!\n\nKeşfet: https://goldmoodastro.com/tr/tarot/reading/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=tarot`,
-        title: 'GoldMoodAstro Tarot',
+        message: `Tarot Açılımım: ${t(selectedSpread.titleKey)} ✨\n\nKartlarım: ${cards}\n\nGoldMoodAstro ile kartların rehberliğini keşfedin!\n\nKeşfet: https://goldmoodastro.com/tr/tarot/reading/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=tarot`,
+        title: t('tarot.shareTitle'),
       });
     } catch (e) {
       console.error(e);
@@ -185,13 +188,13 @@ export default function TarotScreen() {
             <View style={styles.headerRow}>
               <MenuHeaderButton />
               <View style={styles.headerTextCol}>
-                <Text style={styles.headerTitle}>Tarot Rehberi</Text>
-                <Text style={styles.headerSubtitle}>Kartların gizemli dünyasına hoş geldiniz.</Text>
+                <Text style={styles.headerTitle}>{t('tarot.headerTitle')}</Text>
+                <Text style={styles.headerSubtitle}>{t('tarot.headerSubtitle')}</Text>
               </View>
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>AÇILIM TİPİ SEÇİN</Text>
+              <Text style={styles.sectionTitle}>{t('tarot.selectSpreadType')}</Text>
               <View style={styles.spreadGrid}>
                 {SPREADS.map(s => (
                   <Pressable 
@@ -205,18 +208,18 @@ export default function TarotScreen() {
                     <View style={[styles.spreadIcon, selectedSpread.id === s.id && styles.spreadIconActive]}>
                       <Layers size={20} color={selectedSpread.id === s.id ? colors.bg : colors.gold} />
                     </View>
-                    <Text style={[styles.spreadLabel, selectedSpread.id === s.id && styles.spreadLabelActive]}>{s.title}</Text>
-                    <Text style={styles.spreadDesc}>{s.desc}</Text>
+                    <Text style={[styles.spreadLabel, selectedSpread.id === s.id && styles.spreadLabelActive]}>{t(s.titleKey)}</Text>
+                    <Text style={styles.spreadDesc}>{t(s.descKey)}</Text>
                   </Pressable>
                 ))}
               </View>
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>SORUNUZ (OPSİYONEL)</Text>
+              <Text style={styles.sectionTitle}>{t('tarot.questionLabel')}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Neye odaklanmak istersiniz?"
+                placeholder={t('tarot.questionPlaceholder')}
                 placeholderTextColor={colors.textMuted + '66'}
                 value={question}
                 onChangeText={setQuestion}
@@ -226,7 +229,7 @@ export default function TarotScreen() {
 
             <Pressable style={styles.primaryBtn} onPress={handleStartPick}>
               <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
-                <Text style={styles.primaryBtnText}>KART SEÇİMİNE GEÇ</Text>
+                <Text style={styles.primaryBtnText}>{t('tarot.goToPick')}</Text>
                 <ChevronRight size={18} color={colors.ink} />
               </LinearGradient>
             </Pressable>
@@ -244,11 +247,11 @@ export default function TarotScreen() {
             <MenuHeaderButton />
           </View>
           <View style={styles.pickHeader}>
-            <Text style={styles.pickTitle}>{selectedSpread.count} Kart Seçin</Text>
+            <Text style={styles.pickTitle}>{t('tarot.pickCards', { count: selectedSpread.count })}</Text>
             <View style={styles.progressContainer}>
               <View style={[styles.progressBar, { width: `${(pickedCount / selectedSpread.count) * 100}%` }]} />
             </View>
-            <Text style={styles.progressText}>{pickedCount} / {selectedSpread.count} seçildi</Text>
+            <Text style={styles.progressText}>{t('tarot.pickedProgress', { picked: pickedCount, total: selectedSpread.count })}</Text>
           </View>
 
           <View style={styles.deckContainer}>
@@ -271,7 +274,7 @@ export default function TarotScreen() {
           {loading && (
             <View style={styles.loadingOverlay}>
               <ActivityIndicator size="large" color={colors.gold} />
-              <Text style={styles.loadingText}>Kartlar yorumlanıyor...</Text>
+              <Text style={styles.loadingText}>{t('tarot.interpreting')}</Text>
             </View>
           )}
         </SafeAreaView>
@@ -288,7 +291,7 @@ export default function TarotScreen() {
           </View>
           <View style={styles.resultHeader}>
              <Sparkles size={24} color={colors.gold} style={{ marginBottom: 12 }} />
-             <Text style={styles.resultTitle}>Kozmik Yanıt</Text>
+             <Text style={styles.resultTitle}>{t('tarot.resultTitle')}</Text>
              {question ? (
                <View style={styles.questionBox}>
                  <HelpCircle size={14} color={colors.textMuted} />
@@ -310,7 +313,7 @@ export default function TarotScreen() {
                     <Text style={styles.cardNameText}>{card.name}</Text>
                   </LinearGradient>
                 </View>
-                {card.is_reversed && <Text style={styles.reversedBadge}>TERS</Text>}
+                {card.is_reversed && <Text style={styles.reversedBadge}>{t('tarot.reversed')}</Text>}
               </View>
             ))}
           </ScrollView>
@@ -318,7 +321,7 @@ export default function TarotScreen() {
           <View style={styles.interpretationSection}>
             <View style={styles.interHeader}>
               <Info size={16} color={colors.gold} />
-              <Text style={styles.interTitle}>Yorumunuz</Text>
+              <Text style={styles.interTitle}>{t('tarot.yourReading')}</Text>
             </View>
             <View style={styles.interCard}>
                <Text style={styles.interText}>{result?.interpretation}</Text>
@@ -333,7 +336,7 @@ export default function TarotScreen() {
               onPress={handleShare}
             >
               <Share2 size={18} color={colors.gold} />
-              <Text style={[styles.actionBtnText, { color: colors.gold }]}>PAYLAŞ</Text>
+              <Text style={[styles.actionBtnText, { color: colors.gold }]}>{t('common.share')}</Text>
             </Pressable>
 
             <Pressable 
@@ -346,7 +349,7 @@ export default function TarotScreen() {
               }}
             >
               <RotateCcw size={16} color={colors.textMuted} />
-              <Text style={styles.actionBtnText}>YENİ AÇILIM</Text>
+              <Text style={styles.actionBtnText}>{t('tarot.newSpread')}</Text>
             </Pressable>
           </View>
         </ScrollView>

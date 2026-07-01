@@ -6,7 +6,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Sparkles, UserPlus, Crown } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/auth.store';
-import { useLocaleShort } from '@/i18n';
+import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 import { getFunnelConfig, type FunnelFeature } from './funnel.config';
 
@@ -15,11 +15,11 @@ type Intensity = 'heavy' | 'light' | 'none';
 
 type Props = {
   feature: FunnelFeature;
-  /** Yönlendirme yoğunluğu — 'none' verilirse hiç render edilmez */
+  /** Funnel intensity; 'none' skips rendering. */
   intensity?: Intensity;
-  /** Okuma bağlamı (örn. menzil adı, kart isimleri) — danışmana topic param ile geçer */
+  /** Reading context passed to consultants via the topic parameter. */
   context?: Record<string, string | number | undefined>;
-  /** Override — auth state'e bakmadan tier zorla */
+  /** Override the detected tier without reading auth state. */
   tier?: Tier;
   /** Backward-compatible alias */
   tierOverride?: Tier;
@@ -58,46 +58,41 @@ export default function ConsultantFunnelCTA({
   const locale = useLocaleShort();
   const isTr = locale === 'tr';
   const { isAuthenticated, user } = useAuthStore();
+  const { ui } = useUiSection('ui_extra' as any);
 
   if (intensity === 'none') return null;
 
-  // Premium kontrol — FAZ 41 T41-1
+  // Premium check — FAZ 41 T41-1
   const isPremium = user?.is_premium === true;
   const resolvedTier: Tier = tier ?? tierOverride ?? detectTier({ isAuthenticated, isPremium });
   const cfg = getFunnelConfig(feature);
   const href = buildHref(locale, feature, context);
 
-  // Tier × intensity'e göre copy
+  // Copy by tier and intensity.
   const headline = (() => {
-    if (resolvedTier === 'guest') return isTr ? 'Üye ol — ilk yorum %50 indirimli' : 'Sign up — 50% off first reading';
-    if (resolvedTier === 'free') return isTr ? 'Derin analiz ister misin?' : 'Want a deeper analysis?';
-    return isTr ? 'Bir uzmanla görüş' : 'Talk to an expert';
+    if (resolvedTier === 'guest') return ui('ui_extra_b2_funnel_headline_guest', 'Sign up — 50% off your first reading');
+    if (resolvedTier === 'free') return ui('ui_extra_b2_funnel_headline_free', 'Would you like a deeper analysis?');
+    return ui('ui_extra_b2_funnel_headline_premium', 'Talk to an expert');
   })();
 
   const description = (() => {
     if (resolvedTier === 'guest') {
-      return isTr
-        ? `Hesabını aç, ${isTr ? cfg.headlineTr.toLowerCase() : cfg.headlineEn.toLowerCase()} ile birebir görüş. İlk seansa özel %50 indirim.`
-        : 'Create an account and meet our experts one-on-one. 50% off your first session.';
+      return ui('ui_extra_b2_funnel_desc_guest', 'Create an account and meet our experts one-on-one. 50% off your first session.');
     }
     if (resolvedTier === 'free') {
-      return isTr
-        ? `Yapay zeka yorumun yeterli mi? Onaylı ${cfg.headlineTr.toLowerCase()} ile sesli/görüntülü görüş — kişisel ve doğrudan.`
-        : `Is the AI reading enough? Connect with verified ${cfg.headlineEn.toLowerCase()} via voice/video — personal and direct.`;
+      return ui('ui_extra_b2_funnel_desc_free', 'Is the AI reading enough? Connect with verified experts via voice/video — personal and direct.');
     }
-    return isTr
-      ? 'Premium üyeliğinle ek seans avantajların var.'
-      : 'You have additional session perks with your premium plan.';
+    return ui('ui_extra_b2_funnel_desc_premium', 'Your premium membership includes extra session benefits.');
   })();
 
   const ctaLabel = (() => {
-    if (resolvedTier === 'guest') return isTr ? 'Üye Ol' : 'Sign Up';
-    return isTr ? 'Danışman Seç' : 'Choose a Consultant';
+    if (resolvedTier === 'guest') return ui('ui_extra_b2_funnel_cta_signup', 'Sign Up');
+    return ui('ui_extra_b2_funnel_cta_choose', 'Choose a Consultant');
   })();
 
   const ctaHref = resolvedTier === 'guest' ? localizePath(locale, `/register?next=${encodeURIComponent(href)}`) : href;
 
-  // INTENSITY: light → minimal satır, heavy → dolu kart
+  // INTENSITY: light -> minimal row, heavy -> full card.
   if (intensity === 'light') {
     return (
       <div className="flex items-center justify-center gap-3 text-sm text-(--gm-text-dim) py-6 border-t border-(--gm-border-soft)">

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Compass, Stars } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUiSection } from '@/i18n';
 
 /**
  * WelcomePremiumBanner component.
@@ -12,11 +13,12 @@ import { cn } from '@/lib/utils';
  */
 export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: string }) {
   const isTr = locale === 'tr';
-  
+  const { ui } = useUiSection('ui_extra' as any);
+
   const content = {
-    title: isTr ? "GoldMoodAstro'ya Hoş Geldiniz" : "Welcome to GoldMoodAstro",
-    subtitle: isTr ? "Yıldızlarla tanışan modern astroloji." : "Modern astrology meets the stars.",
-    cta: isTr ? "Danışmanları Keşfet" : "Discover Consultants"
+    title: ui('ui_extra_b4_welcome_banner_title', 'Welcome to GoldMoodAstro'),
+    subtitle: ui('ui_extra_b4_welcome_banner_subtitle', 'Modern astrology guided by the stars.'),
+    cta: ui('ui_extra_b4_welcome_banner_cta', 'Explore Consultants')
   };
 
   return (
@@ -27,7 +29,7 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
           "min-h-[450px] md:min-h-[400px] lg:min-h-[420px] border border-(--gm-border-soft)"
         )}
       >
-        {/* Grand Background Image — image önce, overlay üstüne (image görünür kalır) */}
+        {/* Grand background image with readable overlay. */}
         <div className="absolute inset-0 z-0">
           <Image
             src="/assets/images/banners/welcome-premium-banner-bg.png"
@@ -37,9 +39,9 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
             sizes="100vw"
             className="object-cover object-center transition-transform duration-[10s] group-hover:scale-110"
           />
-          {/* Sol → sağ tema-aware gradient overlay (text okunsun ama image kaybolmasın) */}
+          {/* Left-to-right theme-aware gradient overlay. */}
           <div className="absolute inset-0 z-10 bg-linear-to-r from-(--gm-bg-deep)/85 via-(--gm-bg-deep)/30 to-transparent" />
-          {/* Alt vignette — text bölgesinde extra kontrast */}
+          {/* Bottom vignette for extra text contrast. */}
           <div className="absolute bottom-0 left-0 w-full h-1/3 bg-linear-to-t from-(--gm-bg-deep)/60 to-transparent z-15" />
         </div>
 
@@ -53,7 +55,7 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
             <div className="w-12 h-[1px] bg-(--gm-gold-deep)" />
             <Compass size={16} className="text-(--gm-gold) animate-spin-slow" />
             <span className="font-display text-[12px] tracking-[0.5em] uppercase text-(--gm-gold-light)">
-              {isTr ? 'Geleceği Keşfet' : 'Explore the Future'}
+              {ui('ui_extra_b4_welcome_banner_badge', 'Explore the Future')}
             </span>
             <div className="w-12 h-[1px] bg-(--gm-gold-deep)" />
           </div>
@@ -87,7 +89,7 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
               href="/about" 
               className="inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full border border-[var(--gm-text)]/20 text-[var(--gm-text)]/90 backdrop-blur-md hover:bg-[var(--gm-text)]/10 transition-all duration-300 text-sm tracking-[0.15em] uppercase font-medium"
             >
-              {isTr ? 'Hikayemiz' : 'Our Story'}
+              {ui('ui_extra_b4_welcome_banner_story', 'Hikayemiz')}
             </Link>
           </div>
         </div>

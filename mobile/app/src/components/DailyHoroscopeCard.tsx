@@ -152,12 +152,12 @@ function buildScreenStyles(t: AppTheme) {
 const { width } = Dimensions.get('window');
 
 const SIGNS = [
-  { key: 'aries', label: '♈︎', name: 'Koç' }, { key: 'taurus', label: '♉︎', name: 'Boğa' }, 
-  { key: 'gemini', label: '♊︎', name: 'İkizler' }, { key: 'cancer', label: '♋︎', name: 'Yengeç' },
-  { key: 'leo', label: '♌︎', name: 'Aslan' }, { key: 'virgo', label: '♍︎', name: 'Başak' }, 
-  { key: 'libra', label: '♎︎', name: 'Terazi' }, { key: 'scorpio', label: '♏︎', name: 'Akrep' },
-  { key: 'sagittarius', label: '♐︎', name: 'Yay' }, { key: 'capricorn', label: '♑︎', name: 'Oğlak' }, 
-  { key: 'aquarius', label: '♒︎', name: 'Kova' }, { key: 'pisces', label: '♓︎', name: 'Balık' },
+  { key: 'aries', label: '♈︎' }, { key: 'taurus', label: '♉︎' },
+  { key: 'gemini', label: '♊︎' }, { key: 'cancer', label: '♋︎' },
+  { key: 'leo', label: '♌︎' }, { key: 'virgo', label: '♍︎' },
+  { key: 'libra', label: '♎︎' }, { key: 'scorpio', label: '♏︎' },
+  { key: 'sagittarius', label: '♐︎' }, { key: 'capricorn', label: '♑︎' },
+  { key: 'aquarius', label: '♒︎' }, { key: 'pisces', label: '♓︎' },
 ];
 
 export default function DailyHoroscopeCard() {
@@ -165,7 +165,7 @@ export default function DailyHoroscopeCard() {
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [selectedSign, setSelectedSign] = useState('aries');
   const [loading, setLoading] = useState(false);
   const [horoscope, setHoroscope] = useState<any>(null);
@@ -217,7 +217,7 @@ export default function DailyHoroscopeCard() {
             onPress={() => setSelectedSign(s.key)}
           >
             <Text style={[styles.signIcon, selectedSign === s.key && styles.signIconActive]}>{s.label}</Text>
-            <Text style={[styles.signName, selectedSign === s.key && styles.signNameActive]}>{s.name}</Text>
+            <Text style={[styles.signName, selectedSign === s.key && styles.signNameActive]}>{t(`zodiacSign.${s.key}.name`)}</Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -229,7 +229,7 @@ export default function DailyHoroscopeCard() {
           <View>
             <View style={styles.cardHeader}>
               <View style={styles.signMeta}>
-                <Text style={styles.signTitle}>{selectedSignData?.name.toUpperCase()}</Text>
+                <Text style={styles.signTitle}>{selectedSignData ? t(`zodiacSign.${selectedSignData.key}.name`).toUpperCase() : ''}</Text>
                 <Text style={styles.date}>
                   {(() => {
                     const ymd =

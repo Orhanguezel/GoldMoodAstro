@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import * as repo from './repository';
 import * as llm from '../llm';
 import { interpretDreamSchema } from './validation';
+import { apiMessage } from '../_shared/api-i18n';
 
 export async function handleInterpret(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
@@ -31,10 +32,14 @@ export async function handleInterpret(req: FastifyRequest, reply: FastifyReply) 
     }
 
     // 2) KB Context
-    const allKbSymbols = await repo.getSymbols();
+    const allKbSymbols = await repo.getSymbols(locale);
     const lookup = new Map<string, string>();
     for (const s of allKbSymbols as any[]) {
-      lookup.set(String(s.nameTr || '').toLowerCase(), String(s.meaning || ''));
+      const localizedName = String(s.name || s.nameTr || '').toLowerCase().trim();
+      const trName = String(s.nameTr || '').toLowerCase().trim();
+      const meaning = String(s.meaning || '');
+      if (localizedName) lookup.set(localizedName, meaning);
+      if (trName) lookup.set(trName, meaning);
     }
 
     const kbLines: string[] = [];
@@ -77,13 +82,13 @@ export async function handleInterpret(req: FastifyRequest, reply: FastifyReply) 
 
   } catch (err) {
     console.error('Dream Interpretation Error:', err);
-    return reply.status(500).send({ error: 'Rüya yorumlanırken bir hata oluştu.' });
+    return reply.status(500).send({ error: apiMessage(req, 'dream_failed') });
   }
 }
 
 export async function handleGetMyInterpretations(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
   const rows = await repo.getInterpretationsByUser(user.id);
   return reply.send({ data: rows });
 }
@@ -91,6 +96,6 @@ export async function handleGetMyInterpretations(req: FastifyRequest, reply: Fas
 export async function handleGetInterpretation(req: FastifyRequest, reply: FastifyReply) {
   const { id } = req.params as { id: string };
   const row = await repo.getInterpretationById(id);
-  if (!row) return reply.status(404).send({ error: 'Rüya yorumu bulunamadı.' });
+  if (!row) return reply.status(404).send({ error: apiMessage(req, 'dream_not_found') });
   return reply.send({ data: row });
 }

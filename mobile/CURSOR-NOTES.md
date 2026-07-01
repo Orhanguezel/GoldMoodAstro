@@ -87,15 +87,22 @@ Backend'de olmayan bir API çağrısına ihtiyacın olursa:
 | Katman | Seçim | Versiyon |
 |--------|-------|----------|
 | Runtime | Expo | SDK 54 |
-| Routing | Expo Router (file-based) | latest |
-| State | React state + AsyncStorage | — (global store yok, basit tut) |
+| Routing | Expo Router (file-based) | 6.x |
+| React Native | React Native | 0.81 |
+| React | React | 19 |
+| State | React state + AsyncStorage | mevcut store/hook yapısını bozma |
 | API | fetch tabanlı (`src/lib/api.ts`) | — |
 | Storage | AsyncStorage wrapper (`src/lib/storage.ts`) | — |
 | i18n | i18next, TR + EN + DE | — |
 | Sesli görüşme | LiveKit (`@livekit/react-native`) | 2.10+ |
 | Ödeme | WebView ile Iyzipay checkout | — |
+| Abonelik/IAP | `src/lib/iap.ts` adapter | RevenueCat veya react-native-iap planlanacak |
 | Push | `expo-notifications` + Firebase FCM | — |
 | Apple Sign In | `expo-apple-authentication` | — |
+| Motion | `react-native-reanimated` veya RN `Animated` | — |
+| Haptics | `expo-haptics` | — |
+| Gradient | `expo-linear-gradient` | — |
+| Icons | `lucide-react-native` | — |
 | Fontlar | Cinzel + Fraunces + Manrope (Google Fonts) | — |
 
 **Tema:** `mobile/app/src/theme/tokens.ts`
@@ -106,6 +113,39 @@ Backend'de olmayan bir API çağrısına ihtiyacın olursa:
 
 Yeni paket eklemek istediğinde önce buradaki listeyi kontrol et — alternatifi
 varsa yenisini ekleme.
+
+---
+
+## 3.1. Premium Mobile QA standardı
+
+Bu mobile repo artık `app-printer-main` içindeki App Printer yaklaşımını **SwiftUI olarak değil**, React Native/Expo premium kalite standardı olarak kullanır.
+
+Yapılacak karşılıklar:
+
+- SwiftUI `Theme.swift` yerine `src/theme/tokens.ts` + `useAppTheme()`
+- SF Symbols yerine `lucide-react-native`
+- StoreKit 2 direkt kodu yerine `src/lib/iap.ts` adapter + RevenueCat veya `react-native-iap`
+- SwiftUI button style yerine ortak `PrimaryButton`
+- SwiftUI card/surface yerine `PremiumCard` + `expo-linear-gradient`
+- SwiftUI haptic/sensory feedback yerine `expo-haptics`
+- SwiftUI transitions yerine Reanimated veya RN `Animated`
+
+Yeni veya yenilenen ekranlarda şunlar aranır:
+
+- `PrimaryButton`, `PremiumCard`, `ScreenShell`, `EmptyState`, `LoadingState` kullanımı
+- CTA press scale + haptic feedback
+- En az bir kontrollü giriş animasyonu
+- Düz spinner-only veya "Veri yok" ekranı olmaması
+- `accessibilityRole` ve `accessibilityLabel` bulunan kritik Pressable'lar
+- i18n TR + EN + DE metinleri
+
+Premiumlaştırma sırası:
+
+1. Ortak bileşenleri çıkar
+2. Onboarding'i 3 aşamalı premium akışa taşı
+3. Paywall/subscription production planını netleştir
+4. Tab bar, modal/sheet, accessibility, motion ve haptic audit yap
+5. Onboarding -> auth -> consultant -> booking -> payment -> call -> review smoke test
 
 ---
 

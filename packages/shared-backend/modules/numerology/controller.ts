@@ -5,6 +5,7 @@ import * as repo from './repository';
 import * as llm from '../llm';
 import { calculateNumerology } from './logic';
 import { calculateNumerologySchema } from './validation';
+import { apiMessage } from '../_shared/api-i18n';
 
 export async function handleCalculate(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
@@ -51,13 +52,13 @@ export async function handleCalculate(req: FastifyRequest, reply: FastifyReply) 
 
   } catch (err) {
     console.error('Numerology Calculation Error:', err);
-    return reply.status(500).send({ error: 'Numeroloji hesaplanırken bir hata oluştu.' });
+    return reply.status(500).send({ error: apiMessage(req, 'numerology_failed') });
   }
 }
 
 export async function handleGetMyReadings(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
   const rows = await repo.getReadingsByUser(user.id);
   return reply.send({ data: rows });
 }
@@ -65,6 +66,6 @@ export async function handleGetMyReadings(req: FastifyRequest, reply: FastifyRep
 export async function handleGetReading(req: FastifyRequest, reply: FastifyReply) {
   const { id } = req.params as { id: string };
   const row = await repo.getReadingById(id);
-  if (!row) return reply.status(404).send({ error: 'Numeroloji raporu bulunamadı.' });
+  if (!row) return reply.status(404).send({ error: apiMessage(req, 'numerology_not_found') });
   return reply.send({ data: row });
 }

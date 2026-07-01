@@ -8,6 +8,7 @@
 import React from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useUiSection } from '@/i18n';
 
 export type ActionsProps = {
   onEdit?: () => void;
@@ -22,6 +23,8 @@ const Actions: React.FC<ActionsProps> = ({
   compact = false,
   disableDelete = false,
 }) => {
+  const { ui } = useUiSection('ui_misc' as any);
+
   // Hiç action yoksa hiçbir şey render etme
   if (!onEdit && !onDelete) return null;
 
@@ -37,7 +40,7 @@ const Actions: React.FC<ActionsProps> = ({
           onClick={onEdit}
         >
           <Pencil size={14} />
-          <span className="d-none d-sm-inline">Düzenle</span>
+          <span className="d-none d-sm-inline">{ui('ui_misc_edit', 'Düzenle')}</span>
         </Button>
       )}
       {onDelete && (
@@ -49,7 +52,7 @@ const Actions: React.FC<ActionsProps> = ({
           disabled={disableDelete}
         >
           <Trash2 size={14} />
-          <span className="d-none d-sm-inline">Sil</span>
+          <span className="d-none d-sm-inline">{ui('ui_misc_delete', 'Sil')}</span>
         </Button>
       )}
     </div>

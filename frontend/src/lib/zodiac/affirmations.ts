@@ -9,25 +9,25 @@ type ZodiacAffirmationContent = {
 };
 
 const focusBySign: Record<ZodiacSign, string> = {
-  aries: 'cesaretini dengeli bir başlangıca dönüştürmek',
-  taurus: 'bedenini sakinleştirip güven duygunu güçlendirmek',
-  gemini: 'zihnindeki dağınıklığı merak ve netlikle toplamak',
-  cancer: 'duygusal alanını koruyarak iç sesini duymak',
-  leo: 'kalbini görünür kılıp yaratıcı gücünü hatırlamak',
-  virgo: 'detayları yumuşatıp faydalı olana odaklanmak',
-  libra: 'denge, ilişki ve iç uyumu aynı merkezde buluşturmak',
-  scorpio: 'yoğun duyguyu dönüşüm ve iç güçle taşımak',
-  sagittarius: 'ufkunu genişletirken bugünkü adımını seçmek',
-  capricorn: 'sorumluluğu sakin bir kararlılıkla yapılandırmak',
-  aquarius: 'özgün fikrini topluluk bilinciyle dengelemek',
-  pisces: 'sezgini toparlayıp şefkatli sınırlar kurmak',
+  aries: 'turning courage into a balanced beginning',
+  taurus: 'calming the body and strengthening trust',
+  gemini: 'gathering scattered thoughts with curiosity and clarity',
+  cancer: 'protecting emotional space while hearing the inner voice',
+  leo: 'letting the heart be seen and remembering creative power',
+  virgo: 'softening details and focusing on what is useful',
+  libra: 'bringing balance, relationship and inner harmony together',
+  scorpio: 'holding intense emotion with transformation and inner strength',
+  sagittarius: 'expanding the horizon while choosing today step',
+  capricorn: 'structuring responsibility with calm determination',
+  aquarius: 'balancing original ideas with community awareness',
+  pisces: 'organizing intuition and setting compassionate boundaries',
 };
 
 const elementBreath = {
-  Ateş: 'Nefes alırken göğsünde sıcak, canlı bir ışık büyüsün; verirken aceleyi bırak.',
-  Toprak: 'Nefes alırken ayaklarının zemine yerleştiğini hisset; verirken bedendeki ağırlığı yumuşat.',
-  Hava: 'Nefes alırken zihnine ferah bir açıklık gelsin; verirken düşüncelerin arasındaki gerginliği bırak.',
-  Su: 'Nefes alırken duygularına nazikçe alan aç; verirken tuttuğun yüklerin akmasına izin ver.',
+  Ate\u015f: 'As you inhale, let a warm living light expand in your chest; as you exhale, release urgency.',
+  Toprak: 'As you inhale, feel your feet settle into the ground; as you exhale, soften heaviness in the body.',
+  Hava: 'As you inhale, invite spacious clarity into the mind; as you exhale, release tension between thoughts.',
+  Su: 'As you inhale, make gentle room for your feelings; as you exhale, let what you hold begin to flow.',
 } as const;
 
 export function getZodiacAffirmationContent(sign: ZodiacSign): ZodiacAffirmationContent {
@@ -35,19 +35,19 @@ export function getZodiacAffirmationContent(sign: ZodiacSign): ZodiacAffirmation
   const focus = focusBySign[sign];
 
   return {
-    title: `${meta.label} burcu için kısa meditasyon`,
+    title: `Short meditation for ${meta.label}`,
     focus,
     meditation: [
-      `Rahat bir pozisyon al ve üç yavaş nefesle ${meta.label} enerjine dön.`,
+      `Find a comfortable position and return to your ${meta.label} energy with three slow breaths.`,
       elementBreath[meta.element],
-      `${meta.ruler} sembolünün temsil ettiği yönü hatırla ve bugün ${focus} için küçük bir niyet belirle.`,
-      'Son nefeste omuzlarını serbest bırak; seçtiğin niyeti günün içinde bir davranışa dönüştür.',
+      `Remember the quality represented by ${meta.ruler} and set a small intention today for ${focus}.`,
+      'On the final breath, release your shoulders and turn the chosen intention into one action during the day.',
     ].join(' '),
     affirmations: [
-      `${meta.label} enerjimi bilinçli ve dengeli şekilde kullanıyorum.`,
-      `${meta.element} elementimin gücü bana bugün netlik ve destek veriyor.`,
-      `${meta.modality} niteliğimle doğru zamanda doğru adımı seçiyorum.`,
-      `Kendi ritmime saygı duyuyor, iç sesimi sakinlikle dinliyorum.`,
+      `I use my ${meta.label} energy with awareness and balance.`,
+      `The strength of my ${meta.element} element gives me clarity and support today.`,
+      `With my ${meta.modality} quality, I choose the right step at the right time.`,
+      `I respect my own rhythm and listen calmly to my inner voice.`,
     ],
   };
 }

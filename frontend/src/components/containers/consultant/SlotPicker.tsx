@@ -21,6 +21,7 @@ export default function SlotPicker({ consultantId, locale, onSelect, selectedSlo
   const { data: slots = [], isFetching } = useGetConsultantSlotsPublicQuery({
     id: consultantId,
     date: dateStr,
+    locale,
   });
 
   return (

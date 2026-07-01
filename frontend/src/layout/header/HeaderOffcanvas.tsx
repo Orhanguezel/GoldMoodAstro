@@ -198,7 +198,7 @@ const HeaderOffcanvas: React.FC<HeaderOffcanvasProps> = ({ open, onClose, brand,
             <div className="flex flex-col gap-2 mb-8">
               <label htmlFor="lang-offcanvas" className="flex items-center gap-2 text-[0.72rem] tracking-[0.15em] uppercase text-brand-primary font-normal">
                 <IconGlobe size={14} />
-                <span>{ui('ui_header_language', 'Sprache')}</span>
+                <span>{ui('ui_header_language', 'Language')}</span>
               </label>
               <div className="relative">
                 <select id="lang-offcanvas" value={resolvedLocale} onChange={onLangChange} disabled={localesLoading}
@@ -225,14 +225,13 @@ const HeaderOffcanvas: React.FC<HeaderOffcanvasProps> = ({ open, onClose, brand,
               </ul>
             </nav>
 
-            {/* Danışman Paneli kısayolu (mobile menüde de erişilebilir) */}
             {isAuthenticated && isConsultant && (
               <Link
                 href={consultantPanelHref}
                 onClick={onClose}
                 className="mb-4 flex items-center justify-center gap-2 px-4 py-3 border border-[var(--gm-gold)]/40 text-sm font-bold uppercase tracking-[0.18em] text-[var(--gm-gold)] hover:bg-[var(--gm-gold)]/5 transition-all"
               >
-                {ui('ui_header_consultant_panel', resolvedLocale === 'tr' ? 'Danışman Paneli' : 'Consultant Panel')}
+                {ui('ui_header_consultant_panel', 'Consultant Panel')}
               </Link>
             )}
             {/* Auth */}
@@ -242,7 +241,7 @@ const HeaderOffcanvas: React.FC<HeaderOffcanvasProps> = ({ open, onClose, brand,
                   <Link href={profileHref} onClick={onClose}
                     className="flex items-center justify-center gap-2 px-4 py-3 border border-border-light text-sm font-normal text-text-primary hover:text-brand-primary hover:border-brand-primary transition-all">
                     <IconUserPlus size={16} />
-                    <span>{ui('ui_header_profile', 'Profil')}</span>
+                    <span>{ui('ui_header_profile', 'Profile')}</span>
                   </Link>
                   <Link href={logoutHref} onClick={onClose}
                     className="flex items-center justify-center gap-2 px-4 py-3 bg-brand-primary text-bg-primary text-sm font-medium hover:bg-brand-hover transition-all">
@@ -260,7 +259,7 @@ const HeaderOffcanvas: React.FC<HeaderOffcanvasProps> = ({ open, onClose, brand,
                   <Link href={registerHref} onClick={onClose}
                     className="flex items-center justify-center gap-2 px-4 py-3 bg-brand-primary text-bg-primary text-sm font-medium hover:bg-brand-hover transition-all">
                     <IconUserPlus size={16} />
-                    <span>{ui('ui_header_register', 'Registrieren')}</span>
+                    <span>{ui('ui_header_register', 'Register')}</span>
                   </Link>
                 </>
               )}
@@ -269,7 +268,7 @@ const HeaderOffcanvas: React.FC<HeaderOffcanvasProps> = ({ open, onClose, brand,
             {/* Contact */}
             <div className="mt-auto pt-6 border-t border-border-light">
               <p className="text-[0.72rem] tracking-[0.15em] uppercase text-brand-primary mb-4">
-                {ui('ui_header_contact_info', 'Kontakt')}
+                {ui('ui_header_contact_info', 'Contact')}
               </p>
               <ul className="space-y-4">
                 {effectiveBrand.website && (

@@ -12,11 +12,9 @@ import Link from 'next/link';
 
 import CookieSettingsModal, { type ConsentState } from './CookieSettingsModal';
 
-// i18n + UI (STANDARD)
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 
-// DB
 import { useGetSiteSettingByKeyQuery } from '@/integrations/rtk/hooks';
 
 type CookieConsentDb = {
@@ -243,31 +241,29 @@ export default function CookieConsentBanner() {
   }
 
   const titleText =
-    (consentSetting?.texts?.title ?? '').trim() || ui('cc_banner_title', locale === 'tr' ? 'Çerez Tercihleri' : 'Cookie Preferences');
+    (consentSetting?.texts?.title ?? '').trim() || ui('ui_cookie_banner_title', 'Cookie Preferences');
 
   const descText =
     (consentSetting?.texts?.description ?? '').trim() ||
     ui(
-      'cc_banner_desc',
-      locale === 'tr' 
-        ? 'Sitenin düzgün çalışmasını sağlamak ve trafiği analiz etmek için çerezler kullanıyoruz. Tercihlerinizi yönetebilirsiniz.'
-        : 'We use cookies to ensure the site works properly and to optionally analyze traffic. You can manage your preferences.',
+      'ui_cookie_banner_description',
+      'We use cookies to ensure the site works properly and to optionally analyze traffic. You can manage your preferences.',
     );
 
-  const policyLabel = ui('cc_banner_link_policy', locale === 'tr' ? 'Çerez Politikası' : 'Cookie Policy');
+  const policyLabel = ui('ui_cookie_banner_link_policy', 'Cookie Policy');
 
-  const btnSettings = ui('cc_banner_btn_settings', locale === 'tr' ? 'Çerez Ayarları' : 'Cookie Settings');
-  const btnReject = ui('cc_banner_btn_reject', locale === 'tr' ? 'Tümünü Reddet' : 'Reject All');
-  const btnAccept = ui('cc_banner_btn_accept', locale === 'tr' ? 'Tümünü Kabul Et' : 'Accept All');
+  const btnSettings = ui('ui_cookie_banner_btn_settings', 'Cookie Settings');
+  const btnReject = ui('ui_cookie_banner_btn_reject', 'Reject All');
+  const btnAccept = ui('ui_cookie_banner_btn_accept', 'Accept All');
 
-  const ariaClose = ui('cc_banner_aria_close', locale === 'tr' ? 'Kapat' : 'Close');
+  const ariaClose = ui('ui_cookie_banner_aria_close', 'Close');
 
   return (
     <>
       <div
         className={`fixed ${position === 'top' ? 'top-0' : 'bottom-0'} left-0 right-0 z-[10040] p-4`}
         role="region"
-        aria-label={ui('cc_banner_aria_region', 'Cookie consent')}
+        aria-label={ui('ui_cookie_banner_aria_region', 'Cookie consent')}
       >
         <div className="mx-auto max-w-5xl rounded-2xl bg-bg-card/95 backdrop-blur-md border border-border-light shadow-medium p-5 sm:p-6 relative">
           <button

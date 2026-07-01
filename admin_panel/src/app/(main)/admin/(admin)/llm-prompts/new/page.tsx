@@ -26,8 +26,10 @@ import {
   useTestLlmPromptMutation,
 } from '@/integrations/hooks';
 import type { LlmProviderId, LlmPromptTestResult } from '@/integrations/shared';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 export default function LlmPromptFormPage() {
+  const t = useAdminT('admin.llmPrompts');
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
@@ -82,25 +84,25 @@ export default function LlmPromptFormPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.key || !formData.system_prompt) {
-      toast.error('Key and System Prompt are required.');
+      toast.error(t('toastValidationRequired', undefined, 'Key and System Prompt are required.'));
       return;
     }
 
     try {
       if (isEdit) {
         await update({ id, body: formData }).unwrap();
-        toast.success('Prompt updated.');
+        toast.success(t('toastUpdated', undefined, 'Prompt updated.'));
       } else {
         await create(formData).unwrap();
-        toast.success('Prompt created.');
+        toast.success(t('toastCreated', undefined, 'Prompt created.'));
       }
       router.push('/admin/llm-prompts');
     } catch {
-      toast.error('Operation failed.');
+      toast.error(t('toastOperationFailed', undefined, 'Operation failed.'));
     }
   };
 
-  if (isEdit && isFetching) return <div className="p-8 text-center text-gm-muted">Loading prompt data...</div>;
+  if (isEdit && isFetching) return <div className="p-8 text-center text-gm-muted">{t('loadingPromptData', undefined, 'Loading prompt data...')}</div>;
 
   return (
     <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-5xl mx-auto">
@@ -109,7 +111,7 @@ export default function LlmPromptFormPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-gm-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">YAPAY ZEKA YÖNETİMİ</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">{t('eyebrow', undefined, 'YAPAY ZEKA YÖNETİMİ')}</span>
           </div>
           <div className="flex items-center gap-4">
             <Button 
@@ -120,9 +122,9 @@ export default function LlmPromptFormPage() {
             >
               <ArrowLeft className="size-5" />
             </Button>
-            <h1 className="font-serif text-4xl text-gm-text">{isEdit ? 'Prompt Düzenle' : 'Yeni Prompt Tanımı'}</h1>
+            <h1 className="font-serif text-4xl text-gm-text">{isEdit ? t('formTitleEdit', undefined, 'Prompt Düzenle') : t('formTitleNew', undefined, 'Yeni Prompt Tanımı')}</h1>
           </div>
-          <p className="text-sm italic text-gm-muted">Yapay zeka model davranışını ve şablonunu yapılandırın.</p>
+          <p className="text-sm italic text-gm-muted">{t('formSubtitle', undefined, 'Yapay zeka model davranışını ve şablonunu yapılandırın.')}</p>
         </div>
       </div>
 
@@ -132,16 +134,15 @@ export default function LlmPromptFormPage() {
           <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8">
             <CardTitle className="font-serif text-xl text-gm-text flex items-center gap-2">
               <PlayCircle className="size-5 text-gm-gold" />
-              Sandbox Test Modülü
+              {t('sandboxTitle', undefined, 'Sandbox Test Modülü')}
             </CardTitle>
             <CardDescription className="text-xs text-gm-muted mt-1">
-              Prompt'u sandbox'ta çalıştır. Hiçbir veri kaydedilmez.
-              Variables nesnesini JSON formatında girin (örn: <code className="bg-gm-bg-deep/40 px-1.5 rounded text-[11px]">{'{ "full_name": "Ahmet", "dob": "1990-05-12" }'}</code>).
+              {t('sandboxDescription', undefined, "Prompt'u sandbox'ta çalıştır. Hiçbir veri kaydedilmez. Variables nesnesini JSON formatında girin (örn:")} <code className="bg-gm-bg-deep/40 px-1.5 rounded text-[11px]">{'{ "full_name": "Ahmet", "dob": "1990-05-12" }'}</code>).
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6 lg:grid-cols-2 p-8">
             <div className="space-y-4">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Değişkenler (JSON)</Label>
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('sandboxVarsLabel', undefined, 'Değişkenler (JSON)')}</Label>
               <Textarea
                 rows={8}
                 value={testVarsRaw}
@@ -158,30 +159,30 @@ export default function LlmPromptFormPage() {
                   try {
                     const parsed = JSON.parse(testVarsRaw || '{}');
                     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-                      throw new Error('JSON object beklenir');
+                      throw new Error(t('errorExpectJsonObject', undefined, 'JSON object beklenir'));
                     }
                     vars = parsed as Record<string, unknown>;
                   } catch (e: any) {
-                    setTestError(`JSON parse hatası: ${e?.message ?? e}`);
+                    setTestError(t('errorJsonParse', { message: String(e?.message ?? e) }, 'JSON parse hatası: {message}'));
                     return;
                   }
                   try {
                     const res = await testPrompt({ id, body: { vars } }).unwrap();
                     setTestResult(res);
-                    if (!res.ok) toast.error(res.error || 'Test başarısız');
+                    if (!res.ok) toast.error(res.error || t('testFailed', undefined, 'Test başarısız'));
                   } catch (err: any) {
-                    setTestError(err?.data?.error?.message || err?.message || 'Test başarısız');
+                    setTestError(err?.data?.error?.message || err?.message || t('testFailed', undefined, 'Test başarısız'));
                   }
                 }}
                 disabled={isTesting}
                 className="w-full h-11 rounded-full bg-gm-gold hover:bg-gm-gold/80 text-gm-bg text-xs font-bold uppercase tracking-widest"
               >
                 <PlayCircle className="mr-2 size-4" />
-                {isTesting ? 'Çalışıyor...' : 'Test Et'}
+                {isTesting ? t('testRunning', undefined, 'Çalışıyor...') : t('testRun', undefined, 'Test Et')}
               </Button>
             </div>
             <div className="space-y-4 flex flex-col justify-between">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Test Çıktısı</Label>
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('sandboxOutputLabel', undefined, 'Test Çıktısı')}</Label>
               <div className="flex-1 min-h-[200px] flex flex-col justify-center">
                 {testError && (
                   <div className="border border-gm-error/30 bg-gm-error/10 rounded-2xl p-4 text-sm text-gm-error flex gap-2">
@@ -193,7 +194,7 @@ export default function LlmPromptFormPage() {
                   <div className="space-y-3 h-full flex flex-col justify-between">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline" className="rounded-full border-gm-success/30 text-gm-success bg-gm-success/5 text-[9px] uppercase tracking-widest px-2.5 py-0.5">
-                        {testResult.attempts} deneme
+                        {t('badgeAttempts', { count: String(testResult.attempts) }, '{count} deneme')}
                       </Badge>
                       <Badge variant="outline" className="rounded-full border-gm-primary/30 text-gm-primary bg-gm-primary/5 text-[9px] uppercase tracking-widest px-2.5 py-0.5">
                         {testResult.provider}
@@ -204,12 +205,12 @@ export default function LlmPromptFormPage() {
                     </div>
                     {testResult.safety_flags && testResult.safety_flags.length > 0 && (
                       <div className="text-[9px] text-gm-warning border border-gm-warning/20 bg-gm-warning/5 rounded-full px-3 py-1 inline-flex items-center gap-1 w-fit uppercase tracking-widest">
-                        <AlertTriangle size={10} /> Safety: {testResult.safety_flags.join(', ')}
+                        <AlertTriangle size={10} /> {t('safetyLabel', undefined, 'Safety')}: {testResult.safety_flags.join(', ')}
                       </div>
                     )}
                     {typeof testResult.max_similarity === 'number' && (
                       <div className="text-[10px] text-gm-text-dim px-1 font-light italic">
-                        Max similarity: {testResult.max_similarity.toFixed(3)}
+                        {t('maxSimilarity', undefined, 'Max similarity')}: {testResult.max_similarity.toFixed(3)}
                       </div>
                     )}
                     <pre className="border border-gm-border-soft bg-gm-bg-deep/30 rounded-2xl p-4 text-xs font-mono whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto flex-1">
@@ -220,12 +221,12 @@ export default function LlmPromptFormPage() {
                 {testResult && !testResult.ok && (
                   <div className="border border-gm-error/30 bg-gm-error/10 rounded-2xl p-4 text-sm text-gm-error flex gap-2">
                     <XCircle className="size-4 mt-0.5 shrink-0" />
-                    <span>{testResult.error ?? 'Bilinmeyen hata'}</span>
+                    <span>{testResult.error ?? t('unknownError', undefined, 'Bilinmeyen hata')}</span>
                   </div>
                 )}
                 {!testResult && !testError && (
                   <div className="text-xs text-gm-muted italic border border-dashed border-gm-border-soft rounded-2xl p-6 text-center">
-                    Test çıktısı burada görünecek.
+                    {t('sandboxOutputPlaceholder', undefined, 'Test çıktısı burada görünecek.')}
                   </div>
                 )}
               </div>
@@ -241,13 +242,13 @@ export default function LlmPromptFormPage() {
             <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8">
               <CardTitle className="font-serif text-xl text-gm-text flex items-center gap-2">
                 <Database className="size-5 text-gm-gold" />
-                Prompt Tanımlama
+                {t('cardDefinition', undefined, 'Prompt Tanımlama')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-8">
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="key" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Prompt Benzersiz Anahtarı</Label>
+                  <Label htmlFor="key" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('fieldKey', undefined, 'Prompt Benzersiz Anahtarı')}</Label>
                   <Input 
                     id="key" 
                     value={formData.key} 
@@ -255,10 +256,10 @@ export default function LlmPromptFormPage() {
                     placeholder="DAILY_HOROSCOPE_V1"
                     className="h-11 rounded-full border-gm-border-soft bg-gm-bg-deep/30 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 font-mono"
                   />
-                  <p className="text-[10px] text-gm-muted/80 italic pl-1">Kod içerisinde çağrılacak eşsiz anahtar.</p>
+                  <p className="text-[10px] text-gm-muted/80 italic pl-1">{t('fieldKeyHint', undefined, 'Kod içerisinde çağrılacak eşsiz anahtar.')}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="locale" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Dil (Locale)</Label>
+                  <Label htmlFor="locale" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('fieldLocale', undefined, 'Dil (Locale)')}</Label>
                   <Select 
                     value={formData.locale} 
                     onValueChange={(v) => setFormData(p => ({ ...p, locale: v }))}
@@ -267,22 +268,22 @@ export default function LlmPromptFormPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border-gm-border-soft bg-gm-surface text-gm-text rounded-2xl">
-                      <SelectItem value="tr">Türkçe (TR)</SelectItem>
-                      <SelectItem value="en">İngilizce (EN)</SelectItem>
-                      <SelectItem value="de">Almanca (DE)</SelectItem>
-                      <SelectItem value="*">Tümü (*)</SelectItem>
+                      <SelectItem value="tr">{t('localeTr', undefined, 'Türkçe (TR)')}</SelectItem>
+                      <SelectItem value="en">{t('localeEn', undefined, 'İngilizce (EN)')}</SelectItem>
+                      <SelectItem value="de">{t('localeDe', undefined, 'Almanca (DE)')}</SelectItem>
+                      <SelectItem value="*">{t('localeAll', undefined, 'Tümü (*)')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Açıklama / Amacı</Label>
-                <Input 
-                  id="notes" 
-                  value={formData.notes} 
+                <Label htmlFor="notes" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('fieldNotes', undefined, 'Açıklama / Amacı')}</Label>
+                <Input
+                  id="notes"
+                  value={formData.notes}
                   onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}
-                  placeholder="örn: Günlük astroloji ve mood yorumlamaları için kullanılan şablon."
+                  placeholder={t('fieldNotesPlaceholder', undefined, 'örn: Günlük astroloji ve mood yorumlamaları için kullanılan şablon.')}
                   className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
               </div>
@@ -294,13 +295,13 @@ export default function LlmPromptFormPage() {
             <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8">
               <CardTitle className="font-serif text-xl text-gm-text flex items-center gap-2">
                 <Code2 className="size-5 text-gm-gold" />
-                Prompt Şablonları
+                {t('cardTemplates', undefined, 'Prompt Şablonları')}
               </CardTitle>
-              <CardDescription className="text-xs text-gm-muted mt-1">Dinamik değerler için {'{{degisken}}'} sözdizimini kullanın.</CardDescription>
+              <CardDescription className="text-xs text-gm-muted mt-1">{t('cardTemplatesDescPrefix', undefined, 'Dinamik değerler için')} {'{{degisken}}'} {t('cardTemplatesDescSuffix', undefined, 'sözdizimini kullanın.')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 p-8">
               <div className="space-y-2">
-                <Label htmlFor="system_prompt" className="text-[10px] font-bold uppercase tracking-widest text-gm-gold">Sistem Promptu (System Message)</Label>
+                <Label htmlFor="system_prompt" className="text-[10px] font-bold uppercase tracking-widest text-gm-gold">{t('fieldSystemPrompt', undefined, 'Sistem Promptu (System Message)')}</Label>
                 <Textarea 
                   id="system_prompt" 
                   rows={10}
@@ -311,7 +312,7 @@ export default function LlmPromptFormPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="user_template" className="text-[10px] font-bold uppercase tracking-widest text-gm-gold">Kullanıcı Şablonu (User Message Template)</Label>
+                <Label htmlFor="user_template" className="text-[10px] font-bold uppercase tracking-widest text-gm-gold">{t('fieldUserTemplate', undefined, 'Kullanıcı Şablonu (User Message Template)')}</Label>
                 <Textarea 
                   id="user_template" 
                   rows={6}
@@ -331,12 +332,12 @@ export default function LlmPromptFormPage() {
             <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8">
               <CardTitle className="font-serif text-xl text-gm-text flex items-center gap-2">
                 <BrainCircuit className="size-5 text-gm-gold" />
-                Model & Parametreler
+                {t('cardModel', undefined, 'Model & Parametreler')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-8">
               <div className="space-y-2">
-                <Label htmlFor="provider" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Sağlayıcı (Provider)</Label>
+                <Label htmlFor="provider" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('fieldProvider', undefined, 'Sağlayıcı (Provider)')}</Label>
                 <Select
                   value={formData.provider}
                   onValueChange={(v) => setFormData(p => ({ ...p, provider: v as LlmProviderId }))}
@@ -355,7 +356,7 @@ export default function LlmPromptFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="model" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Model ID</Label>
+                <Label htmlFor="model" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('fieldModelId', undefined, 'Model ID')}</Label>
                 <Input 
                   id="model" 
                   value={formData.model} 
@@ -367,7 +368,7 @@ export default function LlmPromptFormPage() {
 
               <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Sıcaklık (Temperature): <span className="text-gm-gold font-bold">{formData.temperature}</span></Label>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('fieldTemperature', undefined, 'Sıcaklık (Temperature)')}: <span className="text-gm-gold font-bold">{formData.temperature}</span></Label>
                 </div>
                 <Slider 
                   value={[formData.temperature]} 
@@ -376,11 +377,11 @@ export default function LlmPromptFormPage() {
                   step={0.05} 
                   onValueChange={([v]) => setFormData(p => ({ ...p, temperature: v }))}
                 />
-                <p className="text-[10px] text-gm-muted/70 italic text-center">Düşük = Tutarlı, Yüksek = Yaratıcı/Rastgele</p>
+                <p className="text-[10px] text-gm-muted/70 italic text-center">{t('temperatureHint', undefined, 'Düşük = Tutarlı, Yüksek = Yaratıcı/Rastgele')}</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="max_tokens" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Maksimum Token</Label>
+                <Label htmlFor="max_tokens" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('fieldMaxTokens', undefined, 'Maksimum Token')}</Label>
                 <Input 
                   id="max_tokens" 
                   type="number"
@@ -397,12 +398,12 @@ export default function LlmPromptFormPage() {
             <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8">
               <CardTitle className="font-serif text-xl text-gm-text flex items-center gap-2">
                 <Zap className="size-5 text-gm-gold" />
-                İşlem Ayarları
+                {t('cardProcessing', undefined, 'İşlem Ayarları')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-8">
               <div className="flex items-center justify-between">
-                <Label htmlFor="safety_check" className="text-sm font-medium text-gm-text">Güvenlik Kontrolü (Safety Check)</Label>
+                <Label htmlFor="safety_check" className="text-sm font-medium text-gm-text">{t('fieldSafetyCheck', undefined, 'Güvenlik Kontrolü (Safety Check)')}</Label>
                 <Switch 
                   id="safety_check" 
                   checked={formData.safety_check} 
@@ -413,7 +414,7 @@ export default function LlmPromptFormPage() {
 
               <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Önbellek Eşiği (Cache Threshold): <span className="text-gm-gold font-bold">{formData.similarity_threshold}</span></Label>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('fieldCacheThreshold', undefined, 'Önbellek Eşiği (Cache Threshold)')}: <span className="text-gm-gold font-bold">{formData.similarity_threshold}</span></Label>
                 </div>
                 <Slider 
                   value={[formData.similarity_threshold]} 
@@ -425,7 +426,7 @@ export default function LlmPromptFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="max_attempts" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Maksimum Deneme Sayısı</Label>
+                <Label htmlFor="max_attempts" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('fieldMaxAttempts', undefined, 'Maksimum Deneme Sayısı')}</Label>
                 <Input 
                   id="max_attempts" 
                   type="number"
@@ -436,7 +437,7 @@ export default function LlmPromptFormPage() {
               </div>
 
               <div className="flex items-center justify-between pt-4 border-t border-gm-border-soft/50">
-                <Label htmlFor="is_active" className="text-sm font-medium text-gm-text">Durum (Aktif mi?)</Label>
+                <Label htmlFor="is_active" className="text-sm font-medium text-gm-text">{t('fieldIsActive', undefined, 'Durum (Aktif mi?)')}</Label>
                 <Switch 
                   id="is_active" 
                   checked={formData.is_active} 
@@ -449,9 +450,9 @@ export default function LlmPromptFormPage() {
 
           <Button type="submit" disabled={isCreating || isUpdating} className="w-full bg-gm-gold hover:bg-gm-gold/80 text-gm-bg h-12 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-gm-gold/10 border-transparent">
             <Save className="mr-2 size-5" />
-            {isEdit ? 'Değişiklikleri Kaydet' : 'Prompt Yapılandırmasını Kaydet'}
+            {isEdit ? t('submitSave', undefined, 'Değişiklikleri Kaydet') : t('submitCreate', undefined, 'Prompt Yapılandırmasını Kaydet')}
           </Button>
-          <Button type="button" variant="ghost" onClick={() => router.back()} className="w-full h-11 rounded-full text-gm-muted hover:bg-gm-surface/20">İptal Et</Button>
+          <Button type="button" variant="ghost" onClick={() => router.back()} className="w-full h-11 rounded-full text-gm-muted hover:bg-gm-surface/20">{t('cancel', undefined, 'İptal Et')}</Button>
         </div>
       </form>
     </div>

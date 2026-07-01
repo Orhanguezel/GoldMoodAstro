@@ -15,18 +15,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'kahve-fali',
     pathname: '/kahve-fali',
     fallback: {
-      title: 'Ücretsiz Kahve Falı — Vision AI ile Gerçekçi Yorumlar — GoldMoodAstro',
-      description: 'Fincanınızın fotoğrafını çekin, yapay zeka sembolleri saniyeler içinde analiz etsin. Geleneksel kahve falı deneyimi modern teknolojiyle buluşuyor.',
+      title: 'Free Coffee Reading — Realistic Interpretations with Vision AI — GoldMoodAstro',
+      description: 'Take a photo of your cup and let AI analyze the symbols in seconds. Traditional coffee reading meets modern technology.',
     },
   });
 }
 
 export default async function CoffeePage({ params }: Props) {
-  const { locale } = await params;
+  await params;
 
   return (
     <>
-      <Banner title={locale === 'tr' ? 'Kahve Falı' : 'Coffee Reading'} />
+      <Banner title="Coffee Reading" />
       <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
         <CoffeeHub />
       </PageContainer>

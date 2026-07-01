@@ -35,8 +35,10 @@ import {
   useUpdateServiceCategoryAdminMutation,
   useDeleteServiceCategoryAdminMutation,
 } from '@/integrations/hooks';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 export default function ServiceCategoriesClient() {
+  const t = useAdminT('admin.services');
   const { data: categories = [], isLoading, isFetching, refetch } = useListServiceCategoriesAdminQuery();
   const [createCategory, { isLoading: isCreating }] = useCreateServiceCategoryAdminMutation();
   const [updateCategory, { isLoading: isUpdating }] = useUpdateServiceCategoryAdminMutation();
@@ -84,7 +86,7 @@ export default function ServiceCategoriesClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!slug.trim() || !name.trim()) {
-      toast.error('Slug ve Ad alanları zorunludur.');
+      toast.error(t('categories.toast.slugNameRequired'));
       return;
     }
 
@@ -100,30 +102,30 @@ export default function ServiceCategoriesClient() {
     try {
       if (editingCategory) {
         await updateCategory({ id: editingCategory.id, patch: payload }).unwrap();
-        toast.success('Kategori başarıyla güncellendi.');
+        toast.success(t('categories.toast.updated'));
       } else {
         await createCategory(payload).unwrap();
-        toast.success('Kategori başarıyla oluşturuldu.');
+        toast.success(t('categories.toast.created'));
       }
       setIsOpen(false);
     } catch (err: any) {
-      const message = err?.data?.error?.message || 'Bir hata oluştu.';
+      const message = err?.data?.error?.message || t('categories.toast.error');
       toast.error(message);
     }
   };
 
   const handleDelete = async (id: string, catName: string) => {
-    const ok = window.confirm(`"${catName}" kategorisini silmek istediğinize emin misiniz?`);
+    const ok = window.confirm(t('categories.toast.deleteConfirm', { name: catName }));
     if (!ok) return;
 
     try {
       await deleteCategory({ id }).unwrap();
-      toast.success('Kategori başarıyla silindi.');
+      toast.success(t('categories.toast.deleted'));
     } catch (err: any) {
       if (err?.status === 409 || err?.data?.error?.code === 'category_has_templates') {
-        toast.error('Bu kategoride şablon var, önce şablonları taşı/sil.');
+        toast.error(t('categories.toast.hasTemplates'));
       } else {
-        toast.error(err?.data?.error?.message || 'Silme işlemi sırasında bir hata oluştu.');
+        toast.error(err?.data?.error?.message || t('categories.toast.deleteError'));
       }
     }
   };
@@ -138,12 +140,12 @@ export default function ServiceCategoriesClient() {
           <div className="flex items-center gap-3">
             <span className="w-8 h-px bg-gm-gold" />
             <span className="text-gm-gold font-bold text-[10px] tracking-[0.2em] uppercase">
-              Sistem & Ayarlar
+              {t('categories.eyebrow')}
             </span>
           </div>
-          <h1 className="font-serif text-4xl text-gm-text text-foreground">Hizmet Kategorileri</h1>
+          <h1 className="font-serif text-4xl text-gm-text text-foreground">{t('categories.title')}</h1>
           <p className="text-gm-muted text-sm font-serif italic opacity-70">
-            Hizmet şablonlarının gruplandırılacağı ana uzmanlık kategorilerini yönetin.
+            {t('categories.description')}
           </p>
         </div>
 
@@ -156,7 +158,7 @@ export default function ServiceCategoriesClient() {
             className="rounded-full border-gm-border-soft bg-gm-surface/50 px-8 h-12 text-[10px] font-bold tracking-widest uppercase transition-all hover:bg-gm-primary/5 shadow-lg backdrop-blur-sm"
           >
             <RefreshCcw className={cn('mr-2 size-4', busy && 'animate-spin')} />
-            Yenile
+            {t('categories.refresh')}
           </Button>
 
           <Button
@@ -165,7 +167,7 @@ export default function ServiceCategoriesClient() {
             className="rounded-full bg-gm-gold text-white px-8 h-12 text-[10px] font-bold tracking-widest uppercase transition-all hover:opacity-90 shadow-lg"
           >
             <Plus className="mr-2 size-4" />
-            Yeni Kategori
+            {t('categories.newButton')}
           </Button>
         </div>
       </div>
@@ -176,12 +178,12 @@ export default function ServiceCategoriesClient() {
           <Table>
             <TableHeader className="bg-gm-surface/40">
               <TableRow className="border-gm-border-soft hover:bg-transparent">
-                <TableHead className="py-6 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Kategori</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Slug</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">İkon</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Sıra</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Durum</TableHead>
-                <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">İşlemler</TableHead>
+                <TableHead className="py-6 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('categories.col.category')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('categories.col.slug')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('categories.col.icon')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('categories.col.order')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('categories.col.status')}</TableHead>
+                <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('categories.col.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -202,7 +204,7 @@ export default function ServiceCategoriesClient() {
                     <div className="flex flex-col items-center gap-6 opacity-30">
                       <FolderTree className="w-20 h-20 text-gm-gold/50" />
                       <span className="font-serif italic text-xl text-gm-muted">
-                        Henüz hiç kategori eklenmemiş.
+                        {t('categories.empty')}
                       </span>
                     </div>
                   </TableCell>
@@ -236,7 +238,7 @@ export default function ServiceCategoriesClient() {
                           'w-1.5 h-1.5 rounded-full animate-pulse',
                           item.is_active ? 'bg-gm-success' : 'bg-gm-error'
                         )} />
-                        {item.is_active ? 'Aktif' : 'Pasif'}
+                        {item.is_active ? t('categories.active') : t('categories.inactive')}
                       </div>
                     </TableCell>
                     <TableCell className="py-6 px-8 text-right">
@@ -272,34 +274,34 @@ export default function ServiceCategoriesClient() {
         <DialogContent className="max-h-[86vh] max-w-lg overflow-y-auto border-gm-border-soft bg-gm-bg-deep text-gm-text text-foreground">
           <DialogHeader>
             <DialogTitle className="font-serif text-2xl">
-              {editingCategory ? 'Kategoriyi Düzenle' : 'Yeni Kategori Ekle'}
+              {editingCategory ? t('categories.dialog.editTitle') : t('categories.dialog.createTitle')}
             </DialogTitle>
             <DialogDescription className="text-gm-muted">
-              Kategori bilgilerini eksiksiz doldurun. Slug benzersiz olmalıdır.
+              {t('categories.dialog.description')}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Kategori Adı</Label>
+                <Label htmlFor="name" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.name')}</Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Astroloji, Tarot vb."
+                  placeholder={t('categories.field.namePlaceholder')}
                   className="border-gm-border-soft bg-gm-surface/40"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="slug" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Slug</Label>
+                <Label htmlFor="slug" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.slug')}</Label>
                 <Input
                   id="slug"
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
-                  placeholder="astrology, tarot"
+                  placeholder={t('categories.field.slugPlaceholder')}
                   className="border-gm-border-soft bg-gm-surface/40"
                   required
                   disabled={!!editingCategory} // Editing slug is generally dangerous or locked in backend
@@ -307,12 +309,12 @@ export default function ServiceCategoriesClient() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Açıklama</Label>
+                <Label htmlFor="description" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.description')}</Label>
                 <Textarea
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Kategori hakkında kısa açıklama..."
+                  placeholder={t('categories.field.descriptionPlaceholder')}
                   className="border-gm-border-soft bg-gm-surface/40"
                   rows={3}
                 />
@@ -320,18 +322,18 @@ export default function ServiceCategoriesClient() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="icon" className="text-sm font-bold uppercase tracking-widest text-gm-muted">İkon (Lucide adı)</Label>
+                  <Label htmlFor="icon" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.icon')}</Label>
                   <Input
                     id="icon"
                     value={icon}
                     onChange={(e) => setIcon(e.target.value)}
-                    placeholder="Star, Sparkles, Moon"
+                    placeholder={t('categories.field.iconPlaceholder')}
                     className="border-gm-border-soft bg-gm-surface/40"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sortOrder" className="text-sm font-bold uppercase tracking-widest text-gm-muted">Sıralama</Label>
+                  <Label htmlFor="sortOrder" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.sortOrder')}</Label>
                   <Input
                     id="sortOrder"
                     type="number"
@@ -345,8 +347,8 @@ export default function ServiceCategoriesClient() {
 
               <div className="flex items-center justify-between p-4 rounded-2xl border border-gm-border-soft bg-gm-surface/40">
                 <div className="space-y-0.5">
-                  <Label className="text-sm font-bold uppercase tracking-widest text-gm-text text-foreground">Kategori Aktif mi?</Label>
-                  <p className="text-xs text-gm-muted">Pasif kategoriler danışmanlara veya kullanıcılara görünmez.</p>
+                  <Label className="text-sm font-bold uppercase tracking-widest text-gm-text text-foreground">{t('categories.field.isActive')}</Label>
+                  <p className="text-xs text-gm-muted">{t('categories.field.isActiveHelp')}</p>
                 </div>
                 <Switch
                   checked={isActive}
@@ -357,10 +359,10 @@ export default function ServiceCategoriesClient() {
 
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
-                Vazgeç
+                {t('categories.cancel')}
               </Button>
               <Button type="submit" disabled={busy} className="bg-gm-gold text-white px-6">
-                Kaydet
+                {t('categories.save')}
               </Button>
             </DialogFooter>
           </form>

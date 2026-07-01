@@ -76,5 +76,33 @@ export const consultants = mysqlTable(
   ],
 );
 
+export const consultantI18n = mysqlTable(
+  'consultant_i18n',
+  {
+    id: char('id', { length: 36 }).primaryKey().notNull(),
+    consultant_id: char('consultant_id', { length: 36 }).notNull(),
+    locale: char('locale', { length: 8 }).notNull(),
+    headline: varchar('headline', { length: 255 }),
+    bio: text('bio'),
+    created_at: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+    updated_at: datetime('updated_at')
+      .default(sql`CURRENT_TIMESTAMP`)
+      .$onUpdateFn(() => new Date()),
+  },
+  (t) => [
+    uniqueIndex('ux_consultant_i18n_consultant_locale').on(t.consultant_id, t.locale),
+    index('consultant_i18n_locale_idx').on(t.locale),
+    foreignKey({
+      columns: [t.consultant_id],
+      foreignColumns: [consultants.id],
+      name: 'fk_consultant_i18n_consultant',
+    })
+      .onDelete('cascade')
+      .onUpdate('cascade'),
+  ],
+);
+
 export type ConsultantRow = typeof consultants.$inferSelect;
 export type NewConsultantRow = typeof consultants.$inferInsert;
+export type ConsultantI18nRow = typeof consultantI18n.$inferSelect;
+export type NewConsultantI18nRow = typeof consultantI18n.$inferInsert;

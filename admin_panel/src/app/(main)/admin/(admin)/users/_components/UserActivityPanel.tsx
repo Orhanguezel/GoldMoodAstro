@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetUserActivityAdminQuery } from '@/integrations/hooks';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Activity, Clock, CreditCard, Calendar, ArrowRight } from 'lucide-react';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 export function UserActivityPanel({ userId }: { userId: string }) {
+  const t = useAdminT('admin.users.detail');
   const { data, isLoading, isError } = useGetUserActivityAdminQuery({ id: userId, range: '30d' });
 
   if (isLoading) {
@@ -19,7 +21,7 @@ export function UserActivityPanel({ userId }: { userId: string }) {
   }
 
   if (isError || !data || !data.data) {
-    return <div className="text-center text-gm-error p-8">Aktivite bilgileri yüklenemedi.</div>;
+    return <div className="text-center text-gm-error p-8">{t('activity.loadError')}</div>;
   }
 
   const { summary, events } = data.data;
@@ -34,7 +36,7 @@ export function UserActivityPanel({ userId }: { userId: string }) {
               <CreditCard className="size-5" />
             </div>
             <div>
-              <div className="text-[10px] font-bold text-gm-muted uppercase tracking-widest">Toplam Harcama</div>
+              <div className="text-[10px] font-bold text-gm-muted uppercase tracking-widest">{t('activity.totalSpend')}</div>
               <div className="text-2xl font-serif text-gm-text">₺{summary?.total_spend || '0.00'}</div>
             </div>
           </CardContent>
@@ -46,7 +48,7 @@ export function UserActivityPanel({ userId }: { userId: string }) {
               <Calendar className="size-5" />
             </div>
             <div>
-              <div className="text-[10px] font-bold text-gm-muted uppercase tracking-widest">Randevular</div>
+              <div className="text-[10px] font-bold text-gm-muted uppercase tracking-widest">{t('activity.bookings')}</div>
               <div className="text-2xl font-serif text-gm-text">{summary?.booking_count || 0}</div>
             </div>
           </CardContent>
@@ -58,9 +60,9 @@ export function UserActivityPanel({ userId }: { userId: string }) {
               <Clock className="size-5" />
             </div>
             <div>
-              <div className="text-[10px] font-bold text-gm-muted uppercase tracking-widest">Son Aktif</div>
+              <div className="text-[10px] font-bold text-gm-muted uppercase tracking-widest">{t('activity.lastActive')}</div>
               <div className="text-sm font-medium text-gm-text mt-1">
-                {summary?.last_active ? new Date(summary.last_active).toLocaleString('tr-TR') : 'Hiç'}
+                {summary?.last_active ? new Date(summary.last_active).toLocaleString('tr-TR') : t('activity.never')}
               </div>
             </div>
           </CardContent>
@@ -71,7 +73,7 @@ export function UserActivityPanel({ userId }: { userId: string }) {
       <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden shadow-xl">
         <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">
           <CardTitle className="font-serif text-2xl flex items-center gap-3">
-            <Activity className="h-5 w-5 text-gm-gold" /> Aktivite Geçmişi (Son 30 Gün)
+            <Activity className="h-5 w-5 text-gm-gold" /> {t('activity.timelineTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-8">
@@ -86,7 +88,7 @@ export function UserActivityPanel({ userId }: { userId: string }) {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
                         <span className="font-bold text-sm text-gm-text">
-                          {isEvent ? topic : 'Sayfa Görüntüleme / İşlem'}
+                          {isEvent ? topic : t('activity.pageViewAction')}
                         </span>
                         <span className="ml-3 text-xs text-gm-muted/80 break-all">
                           {evt.message}
@@ -101,7 +103,7 @@ export function UserActivityPanel({ userId }: { userId: string }) {
               })}
             </div>
           ) : (
-            <div className="text-center text-gm-muted italic p-4">Kayıtlı aktivite bulunamadı.</div>
+            <div className="text-center text-gm-muted italic p-4">{t('activity.noEvents')}</div>
           )}
         </CardContent>
       </Card>

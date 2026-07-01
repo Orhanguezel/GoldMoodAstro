@@ -33,6 +33,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 -- ServiceBoostModal
 ('01000000-0000-4000-8000-0000000005c1', 'ui_boost_title', '*', '{"label":{"tr":"Hizmetini Öne Çıkart","en":"Boost Your Service","de":"Deinen Dienst hervorheben"}}'),
 ('01000000-0000-4000-8000-0000000005c2', 'ui_boost_desc', '*', '{"label":{"tr":"hizmetini listede üst sıralara taşı, daha fazla danışana ulaş.","en":"move your service to the top of the list, reach more clients.","de":"Deinen Dienst an die Spitze der Liste zu setzen, mehr Kunden zu erreichen."}}'),
+('5e4938b0-9a24-a71d-b22c-dcf380aca2c9', 'ui_boost_days_short', '*', '{"label":{"tr":"{days} gün","en":"{days} days","de":"{days} Tage"}}'),
 ('01000000-0000-4000-8000-0000000005c3', 'ui_boost_days_label', '*', '{"label":{"tr":"{days} gün boyunca üstte","en":"Featured for {days} days","de":"{days} Tage lang hervorgehoben"}}'),
 ('01000000-0000-4000-8000-0000000005c4', 'ui_boost_one_time', '*', '{"label":{"tr":"tek seferlik","en":"one-time","de":"einmalig"}}'),
 ('01000000-0000-4000-8000-0000000005c5', 'ui_boost_note', '*', '{"label":{"tr":"Satın alma onaylandıktan sonra hizmetiniz anında öne çıkarılır.","en":"Your service will be boosted immediately after purchase is confirmed.","de":"Ihr Dienst wird sofort nach Kaufbestätigung hervorgehoben."}}'),

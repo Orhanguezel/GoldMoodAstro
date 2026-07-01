@@ -20,6 +20,20 @@ CREATE TABLE IF NOT EXISTS yildizname_results (
   KEY yildizname_results_active_idx (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Menzil içeriğinin dil çevirileri (en/de). tr = yildizname_results ana tablo.
+CREATE TABLE IF NOT EXISTS yildizname_results_i18n (
+  id CHAR(36) PRIMARY KEY,
+  menzil_no TINYINT NOT NULL,             -- 1..28 (yildizname_results.menzil_no)
+  locale VARCHAR(8) NOT NULL,             -- 'en' | 'de' (tr ana tabloda)
+  name VARCHAR(80) NOT NULL,              -- menzil adının çevirisi
+  short_summary VARCHAR(255),
+  content TEXT NOT NULL,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  UNIQUE KEY yildizname_results_i18n_uq (menzil_no, locale),
+  KEY yildizname_results_i18n_locale_idx (locale)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS yildizname_readings (
   id CHAR(36) PRIMARY KEY,
   user_id CHAR(36),                                -- nullable (misafir)

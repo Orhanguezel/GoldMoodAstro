@@ -30,7 +30,7 @@ const FaqsPageContent: React.FC = () => {
 
   // UI Strings
   const kickerPrefix = safeStr(t('ui_faqs_kicker_prefix', 'GoldMoodAstro'));
-  const kickerLabel = safeStr(t('ui_faqs_kicker_label', 'Sıkça Sorulan Sorular'));
+  const kickerLabel = safeStr(t('ui_faqs_kicker_label', 'Frequently Asked Questions'));
 
   const titlePrefix = safeStr(t('ui_faqs_page_title_prefix', 'Common'));
   const titleMark = safeStr(t('ui_faqs_page_title_mark', 'Questions'));
@@ -38,7 +38,7 @@ const FaqsPageContent: React.FC = () => {
   const intro = safeStr(
     t(
       'ui_faqs_intro',
-      'GoldMoodAstro danışmanlık seansları, randevu süreci ve genel işleyiş hakkında merak ettiğiniz cevapları bulun.',
+      'Find answers about GoldMoodAstro consulting sessions, booking flow and general platform usage.',
     ),
   );
 

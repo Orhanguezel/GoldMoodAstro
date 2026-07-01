@@ -17,6 +17,21 @@ CREATE TABLE IF NOT EXISTS tarot_cards (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS tarot_card_i18n (
+  id CHAR(36) PRIMARY KEY,
+  card_id CHAR(36) NOT NULL,
+  locale CHAR(8) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  upright_meaning TEXT NOT NULL,
+  reversed_meaning TEXT NOT NULL,
+  keywords JSON,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY tarot_card_i18n_uq (card_id, locale),
+  KEY tarot_card_i18n_locale_idx (locale),
+  CONSTRAINT fk_tarot_card_i18n_card FOREIGN KEY (card_id) REFERENCES tarot_cards(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS tarot_readings (
   id CHAR(36) PRIMARY KEY,
   user_id CHAR(36),

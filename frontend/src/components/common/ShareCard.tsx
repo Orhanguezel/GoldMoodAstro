@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import { useBrand } from '@/hooks/useBrand';
+import { useUiSection } from '@/i18n';
 
 interface ShareCardProps {
   title: string;
@@ -37,6 +38,7 @@ export default function ShareCard({
   trigger,
 }: ShareCardProps) {
   const { brand } = useBrand();
+  const { ui: uiS } = useUiSection('ui_share');
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
@@ -86,7 +88,7 @@ export default function ShareCard({
     try {
       const result = await generatePng();
       if (!result) {
-        toast.error('Görsel oluşturulamadı');
+        toast.error(uiS('ui_share_toast_image_failed', 'Image could not be created'));
         return;
       }
       const link = document.createElement('a');
@@ -94,7 +96,7 @@ export default function ShareCard({
       link.download = result.file.name;
       link.click();
       URL.revokeObjectURL(link.href);
-      toast.success('Görsel indirildi');
+      toast.success(uiS('ui_share_toast_image_downloaded', 'Image downloaded'));
     } finally {
       setBusy(false);
     }
@@ -103,9 +105,9 @@ export default function ShareCard({
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(`${shareText}\n${url}`);
-      toast.success('Link kopyalandı');
+      toast.success(uiS('ui_share_toast_link_copied', 'Link copied'));
     } catch {
-      toast.error('Kopyalanamadı');
+      toast.error(uiS('ui_share_toast_copy_failed', 'Could not copy'));
     }
   }
 
@@ -136,7 +138,7 @@ export default function ShareCard({
           className="inline-flex items-center justify-center gap-2 rounded-full border border-(--gm-gold) bg-(--gm-gold)/10 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.18em] text-(--gm-gold-deep) transition-colors hover:bg-(--gm-gold) hover:text-(--gm-bg-deep)"
         >
           <Share2 size={14} />
-          Paylaş
+          {uiS('ui_share_button_share', 'Share')}
         </button>
       )}
 
@@ -172,14 +174,14 @@ export default function ShareCard({
                 {brand.name}
               </div>
               <div style={{ fontFamily: 'Fraunces, Georgia, serif', fontSize: 64, fontStyle: 'italic', lineHeight: 1.05, marginBottom: 16, color: brand.colors.text_primary }}>
-                {variant === 'birth-chart' && 'Doğum Haritam'}
-                {variant === 'tarot' && 'Tarot Falım'}
-                {variant === 'coffee' && 'Kahve Falım'}
-                {variant === 'yildizname' && 'Yıldıznamem'}
-                {variant === 'synastry' && 'Aşk Uyumumuz'}
-                {variant === 'dream' && 'Rüya Analizim'}
-                {variant === 'horoscope' && 'Günlük Burç Yorumum'}
-                {variant === 'numerology' && 'Numeroloji Analizim'}
+                {variant === 'birth-chart' && uiS('ui_share_card_title_birth_chart', 'My Birth Chart')}
+                {variant === 'tarot' && uiS('ui_share_card_title_tarot', 'My Tarot Reading')}
+                {variant === 'coffee' && uiS('ui_share_card_title_coffee', 'My Coffee Reading')}
+                {variant === 'yildizname' && uiS('ui_share_card_title_yildizname', 'My Yildizname')}
+                {variant === 'synastry' && uiS('ui_share_card_title_synastry', 'Our Love Compatibility')}
+                {variant === 'dream' && uiS('ui_share_card_title_dream', 'My Dream Analysis')}
+                {variant === 'horoscope' && uiS('ui_share_card_title_horoscope', 'My Daily Horoscope')}
+                {variant === 'numerology' && uiS('ui_share_card_title_numerology', 'My Numerology Analysis')}
               </div>
             </div>
  
@@ -225,7 +227,7 @@ export default function ShareCard({
 
             <div className="mb-6">
               <div className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold-deep) uppercase">
-                Paylaş
+                {uiS('ui_share_button_share', 'Share')}
               </div>
               <h3 className="mt-1 font-serif text-2xl text-(--gm-text)">
                 {title}
@@ -245,7 +247,7 @@ export default function ShareCard({
                 className="inline-flex flex-col items-center gap-2 rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) p-4 text-(--gm-text) transition-colors hover:border-(--gm-gold)/50 disabled:opacity-50"
               >
                 <Share2 size={20} className="text-(--gm-gold-deep)" />
-                <span className="text-xs font-medium">Hızlı paylaş</span>
+                <span className="text-xs font-medium">{uiS('ui_share_button_quick_share', 'Quick share')}</span>
               </button>
               <button
                 type="button"
@@ -254,7 +256,7 @@ export default function ShareCard({
                 className="inline-flex flex-col items-center gap-2 rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) p-4 text-(--gm-text) transition-colors hover:border-(--gm-gold)/50 disabled:opacity-50"
               >
                 <Download size={20} className="text-(--gm-gold-deep)" />
-                <span className="text-xs font-medium">Görseli indir</span>
+                <span className="text-xs font-medium">{uiS('ui_share_button_download_image', 'Download image')}</span>
               </button>
             </div>
 
@@ -268,7 +270,7 @@ export default function ShareCard({
               <a href={whatsappUrl}   target="_blank" rel="noopener noreferrer" className={iconBtn} title="WhatsApp">
                 <MessageCircle size={18} />
               </a>
-              <button type="button" onClick={() => { downloadImage(); toast.info('Görseli indirip Instagram\'a yükleyebilirsin'); }} className={iconBtn} title="Instagram">
+              <button type="button" onClick={() => { downloadImage(); toast.info(uiS('ui_share_toast_instagram_hint', 'Download the image and upload it to Instagram')); }} className={iconBtn} title="Instagram">
                 <Instagram size={18} />
               </button>
             </div>
@@ -279,7 +281,7 @@ export default function ShareCard({
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) px-4 py-3 text-sm text-(--gm-text-dim) transition-colors hover:text-(--gm-text)"
             >
               <Copy size={14} />
-              Linki kopyala
+              {uiS('ui_share_button_copy_link', 'Copy link')}
             </button>
           </div>
         </div>
@@ -293,11 +295,12 @@ const iconBtn = 'inline-flex items-center justify-center rounded-xl border borde
 // ─── Sub-Components for PNG Card ─────────────────────────────────────
 
 function BirthChartContent({ data, colors }: { data: any; colors: any }) {
+  const { ui: uiS } = useUiSection('ui_share');
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-      <SignRow label="Güneş" symbol="☀️" sign={data.sun} colors={colors} />
-      <SignRow label="Ay"    symbol="🌙" sign={data.moon} colors={colors} />
-      <SignRow label="Yükselen" symbol="↑" sign={data.rising} colors={colors} />
+      <SignRow label={uiS('ui_share_label_sun', 'Sun')} symbol="☀️" sign={data.sun} colors={colors} />
+      <SignRow label={uiS('ui_share_label_moon', 'Moon')}    symbol="🌙" sign={data.moon} colors={colors} />
+      <SignRow label={uiS('ui_share_label_rising', 'Rising')} symbol="↑" sign={data.rising} colors={colors} />
     </div>
   );
 }
@@ -342,18 +345,20 @@ function CoffeeContent({ data, colors }: { data: any; colors: any }) {
 }
 
 function YildiznameContent({ data, colors }: { data: any; colors: any }) {
+  const { ui: uiS } = useUiSection('ui_share');
   return (
     <div style={{ gap: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
        <div style={{ fontSize: 80, color: colors.brand_primary }}>{data.number}</div>
-       <div style={{ fontSize: 24, letterSpacing: 4, textTransform: 'uppercase' }}>Senin Sayın</div>
+       <div style={{ fontSize: 24, letterSpacing: 4, textTransform: 'uppercase' }}>{uiS('ui_share_yildizname_your_number', 'Your Number')}</div>
        <div style={{ fontSize: 48, fontFamily: 'Fraunces', fontStyle: 'italic', textAlign: 'center', color: colors.text_primary }}>
-          Menzilin: {data.menzil}
+          {uiS('ui_share_yildizname_menzil', 'Your Mansion')}: {data.menzil}
        </div>
     </div>
   );
 }
 
 function SynastryContent({ data, colors }: { data: any; colors: any }) {
+  const { ui: uiS } = useUiSection('ui_share');
   return (
     <div style={{ gap: 60, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
        <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
@@ -364,11 +369,11 @@ function SynastryContent({ data, colors }: { data: any; colors: any }) {
        <div style={{ display: 'flex', gap: 80 }}>
           <div style={{ textAlign: 'center' }}>
              <div style={{ fontSize: 64, color: colors.brand_primary }}>%{data.scoreLove}</div>
-             <div style={{ fontSize: 18, textTransform: 'uppercase', letterSpacing: 2 }}>Aşk Uyumu</div>
+             <div style={{ fontSize: 18, textTransform: 'uppercase', letterSpacing: 2 }}>{uiS('ui_share_synastry_love_score', 'Love Compatibility')}</div>
           </div>
           <div style={{ textAlign: 'center' }}>
              <div style={{ fontSize: 64, color: colors.brand_primary }}>%{data.scoreAttraction}</div>
-             <div style={{ fontSize: 18, textTransform: 'uppercase', letterSpacing: 2 }}>Çekim</div>
+             <div style={{ fontSize: 18, textTransform: 'uppercase', letterSpacing: 2 }}>{uiS('ui_share_synastry_attraction', 'Attraction')}</div>
           </div>
        </div>
     </div>
@@ -393,6 +398,7 @@ function DreamContent({ data, colors }: { data: any; colors: any }) {
 }
 
 function HoroscopeContent({ data, colors }: { data: any; colors: any }) {
+  const { ui: uiS } = useUiSection('ui_share');
   return (
     <div style={{ gap: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
        <div style={{ 
@@ -411,7 +417,7 @@ function HoroscopeContent({ data, colors }: { data: any; colors: any }) {
        </div>
        <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 24, letterSpacing: 4, textTransform: 'uppercase', color: colors.brand_primary, marginBottom: 8 }}>{data.date}</div>
-          <div style={{ fontSize: 48, fontFamily: 'Fraunces', fontStyle: 'italic', color: colors.text_primary }}>{data.sign} Burcu</div>
+          <div style={{ fontSize: 48, fontFamily: 'Fraunces', fontStyle: 'italic', color: colors.text_primary }}>{data.sign} {uiS('ui_share_horoscope_zodiac_suffix', 'Zodiac')}</div>
        </div>
        <div style={{ fontSize: 28, fontFamily: 'Fraunces', fontStyle: 'italic', textAlign: 'center', lineHeight: 1.4, color: colors.text_secondary, maxWidth: 800 }}>
           "{data.content.length > 200 ? data.content.substring(0, 200) + '...' : data.content}"
@@ -421,13 +427,14 @@ function HoroscopeContent({ data, colors }: { data: any; colors: any }) {
 }
 
 function NumerologyContent({ data, colors }: { data: any; colors: any }) {
+  const { ui: uiS } = useUiSection('ui_share');
   return (
     <div style={{ gap: 40, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
        <div style={{ display: 'flex', gap: 30, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <NumBox label="Hayat Yolu" value={data.lifePath} color={colors.info} colors={colors} />
-          <NumBox label="Kader" value={data.destiny} color={colors.brand_primary} colors={colors} />
-          <NumBox label="Ruh Güdüsü" value={data.soulUrge} color={colors.error} colors={colors} />
-          <NumBox label="Kişilik" value={data.personality} color={colors.success} colors={colors} />
+          <NumBox label={uiS('ui_share_numerology_life_path', 'Life Path')} value={data.lifePath} color={colors.info} colors={colors} />
+          <NumBox label={uiS('ui_share_numerology_destiny', 'Destiny')} value={data.destiny} color={colors.brand_primary} colors={colors} />
+          <NumBox label={uiS('ui_share_numerology_soul_urge', 'Soul Urge')} value={data.soulUrge} color={colors.error} colors={colors} />
+          <NumBox label={uiS('ui_share_numerology_personality', 'Personality')} value={data.personality} color={colors.success} colors={colors} />
        </div>
     </div>
   );

@@ -13,8 +13,8 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
     pageKey: 'sinastri',
     pathname: '/sinastri',
     fallback: {
-      title: 'Sinastri Analizi — İlişki Uyumu Raporu — GoldMoodAstro',
-      description: 'İki doğum haritasının uyumunu Swiss Ephemeris ile hesapla, yapay zeka ile romantik, dürüst ve perspektif veren bir analiz al. Hızlı uyum + manuel rapor + davet modu.',
+      title: 'Synastry Analysis — Relationship Compatibility Report — GoldMoodAstro',
+      description: 'Calculate compatibility between two birth charts with Swiss Ephemeris and get a romantic, honest and perspective-giving AI analysis. Quick match, manual report and invite mode.',
     },
   });
 }

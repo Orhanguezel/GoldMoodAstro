@@ -9,17 +9,18 @@ import {
   useOverrideMyConsultantAvailabilityDayMutation,
   useUpdateMyConsultantAvailabilityMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
+import { useUiSection } from '@/i18n';
 
 type Dow = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
-const DAYS: Array<{ dow: Dow; label: string; short: string }> = [
-  { dow: 1, label: 'Pazartesi', short: 'Pzt' },
-  { dow: 2, label: 'Salı', short: 'Sal' },
-  { dow: 3, label: 'Çarşamba', short: 'Çar' },
-  { dow: 4, label: 'Perşembe', short: 'Per' },
-  { dow: 5, label: 'Cuma', short: 'Cum' },
-  { dow: 6, label: 'Cumartesi', short: 'Cmt' },
-  { dow: 7, label: 'Pazar', short: 'Paz' },
+const DAYS: Array<{ dow: Dow; labelKey: string; labelFallback: string; shortKey: string; shortFallback: string }> = [
+  { dow: 1, labelKey: 'ui_consultantpanel_availability_dayMonday', labelFallback: 'Monday', shortKey: 'ui_consultantpanel_availability_dayMondayShort', shortFallback: 'Mon' },
+  { dow: 2, labelKey: 'ui_consultantpanel_availability_dayTuesday', labelFallback: 'Tuesday', shortKey: 'ui_consultantpanel_availability_dayTuesdayShort', shortFallback: 'Tue' },
+  { dow: 3, labelKey: 'ui_consultantpanel_availability_dayWednesday', labelFallback: 'Wednesday', shortKey: 'ui_consultantpanel_availability_dayWednesdayShort', shortFallback: 'Wed' },
+  { dow: 4, labelKey: 'ui_consultantpanel_availability_dayThursday', labelFallback: 'Thursday', shortKey: 'ui_consultantpanel_availability_dayThursdayShort', shortFallback: 'Thu' },
+  { dow: 5, labelKey: 'ui_consultantpanel_availability_dayFriday', labelFallback: 'Friday', shortKey: 'ui_consultantpanel_availability_dayFridayShort', shortFallback: 'Fri' },
+  { dow: 6, labelKey: 'ui_consultantpanel_availability_daySaturday', labelFallback: 'Saturday', shortKey: 'ui_consultantpanel_availability_daySaturdayShort', shortFallback: 'Sat' },
+  { dow: 7, labelKey: 'ui_consultantpanel_availability_daySunday', labelFallback: 'Sunday', shortKey: 'ui_consultantpanel_availability_daySundayShort', shortFallback: 'Sun' },
 ];
 
 interface HourRow {
@@ -33,9 +34,9 @@ interface HourRow {
 }
 
 const PRESETS = [
-  { label: 'Hafta içi 09-18', hours: [1, 2, 3, 4, 5].map((d) => ({ dow: d as Dow, start_time: '09:00', end_time: '18:00', slot_minutes: 30, capacity: 1, is_active: 1 })) },
-  { label: 'Tam zaman 09-22', hours: [1, 2, 3, 4, 5, 6, 7].map((d) => ({ dow: d as Dow, start_time: '09:00', end_time: '22:00', slot_minutes: 30, capacity: 1, is_active: 1 })) },
-  { label: 'Akşam 18-22', hours: [1, 2, 3, 4, 5].map((d) => ({ dow: d as Dow, start_time: '18:00', end_time: '22:00', slot_minutes: 30, capacity: 1, is_active: 1 })) },
+  { labelKey: 'ui_consultantpanel_availability_presetWeekday', labelFallback: 'Weekdays 09-18', hours: [1, 2, 3, 4, 5].map((d) => ({ dow: d as Dow, start_time: '09:00', end_time: '18:00', slot_minutes: 30, capacity: 1, is_active: 1 })) },
+  { labelKey: 'ui_consultantpanel_availability_presetFullTime', labelFallback: 'Full time 09-22', hours: [1, 2, 3, 4, 5, 6, 7].map((d) => ({ dow: d as Dow, start_time: '09:00', end_time: '22:00', slot_minutes: 30, capacity: 1, is_active: 1 })) },
+  { labelKey: 'ui_consultantpanel_availability_presetEvening', labelFallback: 'Evening 18-22', hours: [1, 2, 3, 4, 5].map((d) => ({ dow: d as Dow, start_time: '18:00', end_time: '22:00', slot_minutes: 30, capacity: 1, is_active: 1 })) },
 ];
 
 function normalizeTime(t: string) {
@@ -53,6 +54,15 @@ function timeToMinutes(time: string) {
 }
 
 export default function AvailabilityPanel() {
+  const { ui } = useUiSection('ui_consultantpanel');
+  const dayLabel = (dow: Dow) => {
+    const day = DAYS.find((d) => d.dow === dow);
+    return day ? ui(day.labelKey, day.labelFallback) : '';
+  };
+  const dayShortLabel = (dow: Dow) => {
+    const day = DAYS.find((d) => d.dow === dow);
+    return day ? ui(day.shortKey, day.shortFallback) : '';
+  };
   const { data, isLoading, refetch } = useGetMyConsultantAvailabilityQuery();
   const [update, { isLoading: isSaving }] = useUpdateMyConsultantAvailabilityMutation();
   const [overrideDay, { isLoading: isOverridingDay }] = useOverrideMyConsultantAvailabilityDayMutation();
@@ -98,26 +108,25 @@ export default function AvailabilityPanel() {
   };
 
   const handleSave = async () => {
-    // 1. Basic validation (start < end)
     const invalidOrder = hours.find((h) => timeToMinutes(h.end_time) <= timeToMinutes(h.start_time));
     if (invalidOrder) {
-      const day = DAYS.find((d) => d.dow === invalidOrder.dow)?.label ?? 'Seçili gün';
-      toast.error(`${day} için bitiş saati başlangıçtan sonra olmalı.`);
+      const found = DAYS.find((d) => d.dow === invalidOrder.dow);
+      const day = found ? dayLabel(found.dow) : ui('ui_consultantpanel_availability_selectedDay', 'Selected day');
+      toast.error(`${day} ${ui('ui_consultantpanel_availability_endAfterStart', ': the end time must be after the start time.')}`);
       return;
     }
 
-    // 2. Divisibility validation (slot_minutes should divide duration)
     const invalidDiv = hours.find((h) => {
       const duration = timeToMinutes(h.end_time) - timeToMinutes(h.start_time);
       return duration % h.slot_minutes !== 0;
     });
     if (invalidDiv) {
-      const day = DAYS.find((d) => d.dow === invalidDiv.dow)?.label ?? 'Seçili gün';
-      toast.error(`${day} için seans süresi (${invalidDiv.slot_minutes} dk) toplam aralığa tam bölünmeli.`);
+      const found = DAYS.find((d) => d.dow === invalidDiv.dow);
+      const day = found ? dayLabel(found.dow) : ui('ui_consultantpanel_availability_selectedDay', 'Selected day');
+      toast.error(`${day} ${ui('ui_consultantpanel_availability_slotDivisiblePre', ': the session duration')} (${invalidDiv.slot_minutes} ${ui('ui_consultantpanel_availability_minuteAbbr', 'min')}) ${ui('ui_consultantpanel_availability_slotDivisiblePost', 'must divide the total range evenly.')}`);
       return;
     }
 
-    // 3. Overlap validation
     for (const day of DAYS) {
       const dayHours = hours.filter((h) => h.dow === day.dow);
       for (let i = 0; i < dayHours.length; i++) {
@@ -130,7 +139,7 @@ export default function AvailabilityPanel() {
           const e2 = timeToMinutes(h2.end_time);
 
           if ((s1 < e2 && e1 > s2)) {
-            toast.error(`${day.label} için saat aralıkları çakışıyor: ${h1.start_time}-${h1.end_time} ve ${h2.start_time}-${h2.end_time}`);
+            toast.error(`${dayLabel(day.dow)} ${ui('ui_consultantpanel_availability_overlapPre', ': the time ranges overlap:')} ${h1.start_time}-${h1.end_time} ${ui('ui_consultantpanel_availability_overlapAnd', 'and')} ${h2.start_time}-${h2.end_time}`);
             return;
           }
         }
@@ -139,29 +148,31 @@ export default function AvailabilityPanel() {
 
     try {
       await update({ hours }).unwrap();
-      toast.success(`${hours.length} saat aralığı kaydedildi`);
+      toast.success(`${hours.length} ${ui('ui_consultantpanel_availability_hoursSaved', 'time ranges saved')}`);
       setDirty(false);
       refetch();
     } catch (e: any) {
-      toast.error(extractApiError(e, 'Kaydedilemedi'));
+      toast.error(extractApiError(e, ui('ui_consultantpanel_availability_saveFailed', 'Could not be saved')));
     }
   };
 
   const handleOverrideDay = async (isActive: 0 | 1) => {
     if (!overrideDate) {
-      toast.error('Önce bir tarih seç.');
+      toast.error(ui('ui_consultantpanel_availability_selectDateFirst', 'Select a date first.'));
       return;
     }
 
     try {
       const out = await overrideDay({ date: overrideDate, is_active: isActive }).unwrap();
-      const action = isActive === 1 ? 'açıldı' : 'kapatıldı';
-      toast.success(`${overrideDate} ${action}. Etkilenen slot: ${out.updated}/${out.planned}`);
+      const action = isActive === 1
+        ? ui('ui_consultantpanel_availability_opened', 'opened')
+        : ui('ui_consultantpanel_availability_closed', 'closed');
+      toast.success(`${overrideDate} ${action}. ${ui('ui_consultantpanel_availability_affectedSlots', 'Affected slots:')} ${out.updated}/${out.planned}`);
     } catch (e: any) {
       if (e?.data?.error?.message === 'slot_has_reservations') {
-        toast.error('Bu tarihte rezervasyonlu slot var; gün tamamen kapatılamaz.');
+        toast.error(ui('ui_consultantpanel_availability_hasReservations', 'There are booked slots on this date; the day cannot be fully closed.'));
       } else {
-        toast.error(extractApiError(e, 'Tarih güncellenemedi'));
+        toast.error(extractApiError(e, ui('ui_consultantpanel_availability_dateUpdateFailed', 'Date could not be updated')));
       }
     }
   };
@@ -179,7 +190,7 @@ export default function AvailabilityPanel() {
       <div className="text-center py-16 px-4">
         <CalendarIcon className="w-12 h-12 text-[var(--gm-gold)]/30 mx-auto mb-4" />
         <p className="text-[var(--gm-text-dim)] font-serif italic">
-          Çalışma saatlerini görmek için önce admin onayı gerekiyor.
+          {ui('ui_consultantpanel_availability_needsApproval', 'Admin approval is required before you can view your working hours.')}
         </p>
       </div>
     );
@@ -197,9 +208,9 @@ export default function AvailabilityPanel() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="font-serif text-lg text-[var(--gm-text)]">Haftalık Çalışma Saatleri</h2>
+          <h2 className="font-serif text-lg text-[var(--gm-text)]">{ui('ui_consultantpanel_availability_weeklyHoursTitle', 'Weekly working hours')}</h2>
           <p className="text-[12px] text-[var(--gm-text-dim)] font-serif italic">
-            Danışanlar bu saatlere göre randevu alabilir. Her gün için birden fazla aralık ekleyebilirsin.
+            {ui('ui_consultantpanel_availability_weeklyHoursHint', 'Clients can book appointments based on these hours. You can add multiple ranges for each day.')}
           </p>
         </div>
         <button
@@ -208,21 +219,21 @@ export default function AvailabilityPanel() {
           className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
         >
           {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-          {dirty ? 'Değişiklikleri Kaydet' : 'Kaydedildi'}
+          {dirty ? ui('ui_consultantpanel_availability_saveChanges', 'Save changes') : ui('ui_consultantpanel_availability_saved', 'Saved')}
         </button>
       </div>
 
       {/* Preset shortcuts */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] uppercase tracking-widest text-[var(--gm-muted)] font-bold">Hızlı Ayarla:</span>
+        <span className="text-[10px] uppercase tracking-widest text-[var(--gm-muted)] font-bold">{ui('ui_consultantpanel_availability_quickSet', 'Quick set:')}</span>
         {PRESETS.map((p) => (
           <button
-            key={p.label}
+            key={p.labelKey}
             onClick={() => applyPreset(p.hours)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)]/30 text-[10px] font-bold uppercase tracking-widest text-[var(--gm-text)] hover:border-[var(--gm-gold)]/40 hover:text-[var(--gm-gold)]"
           >
             <Power className="w-3 h-3" />
-            {p.label}
+            {ui(p.labelKey, p.labelFallback)}
           </button>
         ))}
         <button
@@ -230,16 +241,16 @@ export default function AvailabilityPanel() {
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--gm-error)]/30 bg-[var(--gm-error)]/10 text-[10px] font-bold uppercase tracking-widest text-[var(--gm-error)] hover:bg-[var(--gm-error)]/15"
         >
           <Trash2 className="w-3 h-3" />
-          Hepsini Temizle
+          {ui('ui_consultantpanel_availability_clearAll', 'Clear all')}
         </button>
       </div>
 
       {/* One-off day override */}
       <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">Tek Seferlik Gün</h3>
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">{ui('ui_consultantpanel_availability_oneOffDay', 'One-off day')}</h3>
           <p className="text-[12px] text-[var(--gm-text-dim)] mt-1 font-serif italic">
-            Tatil, yoğunluk veya özel durum için seçili tarihin tüm slotlarını kapatıp tekrar açabilirsin.
+            {ui('ui_consultantpanel_availability_oneOffDayHint', 'For holidays, busy periods, or special cases, you can close and reopen all slots for the selected date.')}
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -256,7 +267,7 @@ export default function AvailabilityPanel() {
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-[var(--gm-error)]/30 bg-[var(--gm-error)]/10 text-[var(--gm-error)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
           >
             {isOverridingDay ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-            Günü Kapat
+            {ui('ui_consultantpanel_availability_closeDay', 'Close day')}
           </button>
           <button
             type="button"
@@ -265,7 +276,7 @@ export default function AvailabilityPanel() {
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-[var(--gm-gold)]/40 text-[var(--gm-gold)] text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--gm-gold)]/10 disabled:opacity-50"
           >
             <Power className="w-3.5 h-3.5" />
-            Günü Aç
+            {ui('ui_consultantpanel_availability_openDay', 'Open day')}
           </button>
         </div>
       </div>
@@ -279,11 +290,11 @@ export default function AvailabilityPanel() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <span className="w-10 h-10 rounded-full bg-[var(--gm-gold)]/10 text-[var(--gm-gold)] flex items-center justify-center font-serif text-sm font-bold">
-                    {day.short}
+                    {dayShortLabel(day.dow)}
                   </span>
-                  <span className="font-serif text-base text-[var(--gm-text)]">{day.label}</span>
+                  <span className="font-serif text-base text-[var(--gm-text)]">{dayLabel(day.dow)}</span>
                   {items.length === 0 && (
-                    <span className="text-[10px] text-[var(--gm-muted)] italic">— kapalı —</span>
+                    <span className="text-[10px] text-[var(--gm-muted)] italic">{ui('ui_consultantpanel_availability_closedMarker', '- closed -')}</span>
                   )}
                 </div>
                 <button
@@ -291,7 +302,7 @@ export default function AvailabilityPanel() {
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--gm-gold)]/40 text-[var(--gm-gold)] text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--gm-gold)]/10"
                 >
                   <Plus className="w-3 h-3" />
-                  Saat Ekle
+                  {ui('ui_consultantpanel_availability_addHour', 'Add hour')}
                 </button>
               </div>
               {items.length > 0 && (
@@ -311,18 +322,18 @@ export default function AvailabilityPanel() {
                         onChange={(e) => patchRow(idx, { end_time: e.target.value })}
                         className="h-9 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-lg px-2 text-sm text-[var(--gm-text)]"
                       />
-                      <span className="text-[10px] text-[var(--gm-muted)] uppercase tracking-widest ml-2">Slot:</span>
+                      <span className="text-[10px] text-[var(--gm-muted)] uppercase tracking-widest ml-2">{ui('ui_consultantpanel_availability_slotLabel', 'Slot:')}</span>
                       <select
                         value={row.slot_minutes}
                         onChange={(e) => patchRow(idx, { slot_minutes: Number(e.target.value) })}
                         className="h-9 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-lg px-2 text-sm text-[var(--gm-text)]"
                       >
-                        <option value={15}>15 dk</option>
-                        <option value={30}>30 dk</option>
-                        <option value={45}>45 dk</option>
-                        <option value={60}>60 dk</option>
-                        <option value={90}>90 dk</option>
-                        <option value={120}>120 dk</option>
+                        <option value={15}>15 {ui('ui_consultantpanel_availability_minuteAbbr', 'min')}</option>
+                        <option value={30}>30 {ui('ui_consultantpanel_availability_minuteAbbr', 'min')}</option>
+                        <option value={45}>45 {ui('ui_consultantpanel_availability_minuteAbbr', 'min')}</option>
+                        <option value={60}>60 {ui('ui_consultantpanel_availability_minuteAbbr', 'min')}</option>
+                        <option value={90}>90 {ui('ui_consultantpanel_availability_minuteAbbr', 'min')}</option>
+                        <option value={120}>120 {ui('ui_consultantpanel_availability_minuteAbbr', 'min')}</option>
                       </select>
                       <label className="inline-flex items-center gap-1.5 text-[11px] text-[var(--gm-text)] ml-2">
                         <input
@@ -331,9 +342,9 @@ export default function AvailabilityPanel() {
                           onChange={(e) => patchRow(idx, { is_active: e.target.checked ? 1 : 0 })}
                           className="w-4 h-4 accent-[var(--gm-gold)]"
                         />
-                        Aktif
+                        {ui('ui_consultantpanel_availability_active', 'Active')}
                       </label>
-                      <span className="text-[10px] text-[var(--gm-muted)] uppercase tracking-widest ml-2">Kapasite:</span>
+                      <span className="text-[10px] text-[var(--gm-muted)] uppercase tracking-widest ml-2">{ui('ui_consultantpanel_availability_capacity', 'Capacity:')}</span>
                       <input
                         type="number"
                         min={1}
@@ -345,7 +356,7 @@ export default function AvailabilityPanel() {
                       <button
                         onClick={() => removeRow(idx)}
                         className="ml-auto p-2 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-lg"
-                        title="Sil"
+                        title={ui('ui_consultantpanel_availability_delete', 'Delete')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -360,14 +371,14 @@ export default function AvailabilityPanel() {
 
       {dirty && (
         <div className="sticky bottom-4 mx-auto max-w-[var(--gm-w-form)] p-4 rounded-2xl bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] shadow-2xl flex items-center justify-between gap-4">
-          <span className="text-[11px] font-bold">Kaydedilmemiş değişiklikler var.</span>
+          <span className="text-[11px] font-bold">{ui('ui_consultantpanel_availability_unsavedChanges', 'You have unsaved changes.')}</span>
           <button
             onClick={handleSave}
             disabled={isSaving}
             className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--gm-bg-deep)] text-[var(--gm-gold)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
           >
             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            Kaydet
+            {ui('ui_consultantpanel_availability_save', 'Save')}
           </button>
         </div>
       )}

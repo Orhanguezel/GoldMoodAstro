@@ -38,7 +38,7 @@ const Login: React.FC = () => {
   const { brand } = useBrand();
   const { ui } = useUiSection('ui_auth', locale as any);
 
-  // Login sonrası dönüş URL'i: ?next=/tr/booking?... → kullanıcı orijinal sayfasına döner
+  // After login, ?next=/tr/booking?... returns the user to the original page.
   const nextHref = useMemo(() => {
     const raw = searchParams.get('next') || '';
     if (raw && raw.startsWith('/')) return raw;
@@ -72,7 +72,7 @@ const Login: React.FC = () => {
 
     if (!email.trim() || !password) {
       setFormError(
-        ui('login_error_required', 'E-posta ve şifre zorunludur.'),
+        ui('login_error_required', 'Email and password are required.'),
       );
       return;
     }
@@ -124,15 +124,15 @@ const Login: React.FC = () => {
         
         <div className="text-center mb-8">
           <h3 className="text-3xl font-serif text-(--gm-text) mb-3">
-            {ui('login_title', 'Giriş Yap')}
+            {ui('login_title', 'Sign In')}
           </h3>
           <p className="text-(--gm-text-dim) leading-relaxed">
-            {ui('login_lead', 'Hesabınıza giriş yapın veya yeni bir hesap oluşturun.')}{' '}
+            {ui('login_lead', 'Sign in to your account or create a new one.')}{' '}
             <Link
               href={registerHref}
               className="text-(--gm-gold) font-bold hover:text-(--gm-gold-light) transition-colors"
             >
-              {ui('login_register_link', 'Hesap oluştur')}
+              {ui('login_register_link', 'Create an account')}
             </Link>
             .
           </p>
@@ -152,13 +152,13 @@ const Login: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="login-email" className="block text-[10px] font-bold text-(--gm-gold-dim) mb-2 uppercase tracking-[0.2em]">
-              {ui('login_email_label', 'E-posta')}
+              {ui('login_email_label', 'Email')}
             </label>
             <input
               id="login-email"
               type="email"
               className="w-full px-4 py-3 border border-(--gm-border-soft) rounded-xl focus:outline-none focus:border-(--gm-gold)/50 transition-all bg-(--gm-bg-deep) placeholder:text-(--gm-muted) text-(--gm-text)"
-              placeholder={ui('login_email_placeholder', `ornek@${brand.domain || 'goldmoodastro.com'}`)}
+              placeholder={ui('login_email_placeholder', `example@${brand.domain || 'goldmoodastro.com'}`)}
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -169,13 +169,13 @@ const Login: React.FC = () => {
 
           <div>
             <label htmlFor="login-password" className="block text-[10px] font-bold text-(--gm-gold-dim) mb-2 uppercase tracking-[0.2em]">
-              {ui('login_password_label', 'Şifre')}
+              {ui('login_password_label', 'Password')}
             </label>
             <input
               id="login-password"
               type="password"
               className="w-full px-4 py-3 border border-(--gm-border-soft) rounded-xl focus:outline-none focus:border-(--gm-gold)/50 transition-all bg-(--gm-bg-deep) placeholder:text-(--gm-muted) text-(--gm-text)"
-              placeholder={ui('login_password_placeholder', 'Şifreniz')}
+              placeholder={ui('login_password_placeholder', 'Your password')}
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -196,14 +196,14 @@ const Login: React.FC = () => {
                 className="ml-2 block text-xs font-bold uppercase tracking-widest text-(--gm-text-muted) cursor-pointer select-none"
                 htmlFor="remember-me"
               >
-                {ui('login_remember_me', 'Beni hatırla')}
+                {ui('login_remember_me', 'Remember me')}
               </label>
             </div>
             <Link
               href={forgotPasswordHref}
               className="text-xs font-bold uppercase tracking-widest text-(--gm-gold) hover:text-(--gm-gold-light) transition-all"
             >
-              {ui('login_forgot_password', 'Şifremi unuttum?')}
+              {ui('login_forgot_password', 'Forgot password?')}
             </Link>
           </div>
 
@@ -213,8 +213,8 @@ const Login: React.FC = () => {
             disabled={isLoading}
           >
             {loginState.isLoading
-              ? ui('login_loading', 'Giriş yapılıyor...')
-              : ui('login_submit', 'Giriş Yap')}
+              ? ui('login_loading', 'Signing in...')
+              : ui('login_submit', 'Sign In')}
           </button>
         </form>
 
@@ -224,7 +224,7 @@ const Login: React.FC = () => {
           </div>
           <div className="relative">
             <span className="px-3 bg-(--gm-surface) text-(--gm-text-muted) text-[10px] uppercase tracking-[0.2em] font-bold">
-              {ui('login_or', 'veya')}
+              {ui('login_or', 'or')}
             </span>
           </div>
         </div>
@@ -233,12 +233,12 @@ const Login: React.FC = () => {
 
         <div className="mt-8 text-center">
            <p className="text-xs text-(--gm-text-muted) tracking-wide">
-             {ui('login_no_account', 'Hesabınız yok mu?')}{' '}
+             {ui('login_no_account', "Don't have an account?")}{' '}
              <Link
                href={registerHref}
                className="text-(--gm-gold) font-bold hover:text-(--gm-gold-light) transition-all"
              >
-               {ui('login_register_cta', 'Buradan kayıt olun')}
+               {ui('login_register_cta', 'Sign up here')}
              </Link>
            </p>
         </div>

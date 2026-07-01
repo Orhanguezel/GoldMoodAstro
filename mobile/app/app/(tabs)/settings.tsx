@@ -111,7 +111,7 @@ export default function SettingsScreen() {
             </Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.userName}>{user?.full_name || 'Misafir'}</Text>
+            <Text style={styles.userName}>{user?.full_name || t('profile.noName', 'Misafir')}</Text>
             <Text style={styles.userEmail}>{user?.email || ''}</Text>
           </View>
         </View>
@@ -137,17 +137,17 @@ export default function SettingsScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings.about')}</Text>
-          <SettingRow label="Hakkında & Destek" onPress={() => router.push('/info' as any)} />
-          <SettingRow label="İletişim" onPress={() => router.push('/contact' as any)} />
-          <SettingRow label="Blog" onPress={() => router.push('/blog' as any)} />
-          <SettingRow label="Danışman Ol" onPress={() => router.push('/become-consultant' as any)} />
-          <SettingRow label="Yasal & Gizlilik" onPress={() => router.push('/legal' as any)} />
+          <SettingRow label={t('settings.aboutSupport', 'Hakkında & Destek')} onPress={() => router.push('/info' as any)} />
+          <SettingRow label={t('settings.contact', 'İletişim')} onPress={() => router.push('/contact' as any)} />
+          <SettingRow label={t('settings.blog', 'Blog')} onPress={() => router.push('/blog' as any)} />
+          <SettingRow label={t('settings.becomeConsultant', 'Danışman Ol')} onPress={() => router.push('/become-consultant' as any)} />
+          <SettingRow label={t('settings.legalPrivacy', 'Yasal & Gizlilik')} onPress={() => router.push('/legal' as any)} />
           <SettingRow
             label={t('settings.privacy', 'Gizlilik & Veri')}
             onPress={() => router.push('/(tabs)/profile/privacy' as any)}
           />
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Versiyon</Text>
+            <Text style={styles.rowLabel}>{t('settings.versionLabel', 'Versiyon')}</Text>
             <Text style={styles.rowValue}>1.0.0 (Gold)</Text>
           </View>
         </View>
@@ -158,7 +158,7 @@ export default function SettingsScreen() {
 
         <View style={styles.footer}>
           <Text style={styles.footerBrand}>GoldMoodAstro</Text>
-          <Text style={styles.footerText}>© 2026 GoldMoodAstro. Tüm hakları saklıdır.</Text>
+          <Text style={styles.footerText}>{t('settings.copyright', '© 2026 GoldMoodAstro. Tüm hakları saklıdır.')}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

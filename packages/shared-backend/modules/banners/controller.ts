@@ -19,6 +19,53 @@ const PLACEMENTS = [
 type Placement = (typeof PLACEMENTS)[number];
 type TargetSegment = "all" | "free" | "paid";
 
+function normalizeLocale(locale?: string | null): string {
+  const normalized = String(locale || "tr").trim().toLowerCase().split("-")[0];
+  return normalized || "tr";
+}
+
+function fallbackByLocale<T>(locale: string, tr: T, en: T): T {
+  return locale === "en" ? (en ?? tr) : tr;
+}
+
+async function localizeBanners<T extends {
+  id: string;
+  title_tr?: string | null;
+  title_en?: string | null;
+  subtitle_tr?: string | null;
+  subtitle_en?: string | null;
+  cta_label_tr?: string | null;
+  cta_label_en?: string | null;
+}>(rows: T[], locale: string) {
+  if (rows.length === 0) return rows;
+
+  const normalized = normalizeLocale(locale);
+  const placeholders = rows.map(() => "?").join(",");
+  const [i18nRows] = await (db as any).session.client.query(
+    `SELECT banner_id, locale, title, subtitle, cta_label
+     FROM banner_i18n
+     WHERE banner_id IN (${placeholders}) AND locale IN (?, 'tr')`,
+    [...rows.map((row) => row.id), normalized],
+  );
+  const byBanner = new Map<string, Record<string, any>>();
+  for (const row of i18nRows as any[]) {
+    const entry = byBanner.get(row.banner_id) ?? {};
+    entry[row.locale] = row;
+    byBanner.set(row.banner_id, entry);
+  }
+
+  return rows.map((row) => {
+    const translations = byBanner.get(row.id) ?? {};
+    const resolved = translations[normalized] ?? translations.tr;
+    return {
+      ...row,
+      title: resolved?.title ?? fallbackByLocale(normalized, row.title_tr ?? null, row.title_en ?? null),
+      subtitle: resolved?.subtitle ?? fallbackByLocale(normalized, row.subtitle_tr ?? null, row.subtitle_en ?? null),
+      cta_label: resolved?.cta_label ?? fallbackByLocale(normalized, row.cta_label_tr ?? null, row.cta_label_en ?? null),
+    };
+  });
+}
+
 export function resolveBannerTargetSegments(subscription: unknown): TargetSegment[] {
   return ["all", subscription ? "paid" : "free"];
 }
@@ -41,7 +88,7 @@ async function resolveBannerSegments(req: Parameters<RouteHandler>[0]): Promise<
 export const listActive: RouteHandler = async (req, reply) => {
   const q = req.query as Record<string, string | undefined>;
   const placement = (q.placement || "") as Placement;
-  const locale = q.locale || "*";
+  const locale = normalizeLocale(q.locale || (req as any).locale || "tr");
 
   if (!placement || !PLACEMENTS.includes(placement)) {
     return reply.code(400).send({ error: { message: "invalid_placement" } });
@@ -74,7 +121,7 @@ export const listActive: RouteHandler = async (req, reply) => {
       .where(inArray(banners.id, rows.map(r => r.id)));
   }
 
-  return reply.send({ data: rows });
+  return reply.send({ data: await localizeBanners(rows, locale) });
 };
 
 /** POST /banners/:id/click — counter (anonim, no auth) */

@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import {
   useCreateSubscriptionPlanAdminMutation,
   useDeleteSubscriptionPlanAdminMutation,
@@ -115,6 +116,7 @@ function formatPriceMinor(value: string) {
 }
 
 export default function AdminSubscriptionPlansClient() {
+  const t = useAdminT('admin.subscriptions');
   const list = useListSubscriptionPlansAdminQuery({ limit: 200 });
   const [createPlan] = useCreateSubscriptionPlanAdminMutation();
   const [updatePlan] = useUpdateSubscriptionPlanAdminMutation();
@@ -143,31 +145,31 @@ export default function AdminSubscriptionPlansClient() {
     e.preventDefault();
     try {
       if (!form.code.trim() || !form.name_tr.trim() || !form.name_en.trim()) {
-        toast.error('Code and names are required.');
+        toast.error(t('plans.toasts.validation'));
         return;
       }
       if (!editingId) {
         await createPlan(toPayload(form)).unwrap();
-        toast.success('Plan created.');
+        toast.success(t('plans.toasts.created'));
       } else {
         await updatePlan({ id: editingId, body: toPatchPayload(form) }).unwrap();
-        toast.success('Plan updated.');
+        toast.success(t('plans.toasts.updated'));
       }
       resetForm();
     } catch (err) {
-      toast.error('Failed to save plan.');
+      toast.error(t('plans.toasts.saveFailed'));
       console.error(err);
     }
   }
 
   async function removePlan(id: string) {
-    if (!window.confirm('Delete this plan? This action cannot be undone.')) return;
+    if (!window.confirm(t('plans.confirmDelete'))) return;
     try {
       await deletePlan({ id }).unwrap();
-      toast.success('Plan deleted.');
+      toast.success(t('plans.toasts.deleted'));
       if (editingId === id) resetForm();
     } catch {
-      toast.error('Could not delete plan. It may be in use.');
+      toast.error(t('plans.toasts.deleteFailed'));
     }
   }
 
@@ -180,10 +182,10 @@ export default function AdminSubscriptionPlansClient() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-gm-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">SİSTEM AYARLARI</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">{t('plans.eyebrow')}</span>
           </div>
-          <h1 className="font-serif text-4xl text-gm-text">Abonelik Planları</h1>
-          <p className="text-sm italic text-gm-muted">Kullanıcılar için sunulan VIP ve premium paket planlarını tanımlayın ve güncelleyin.</p>
+          <h1 className="font-serif text-4xl text-gm-text">{t('plans.title')}</h1>
+          <p className="text-sm italic text-gm-muted">{t('plans.description')}</p>
         </div>
         <div>
           <Button
@@ -194,7 +196,7 @@ export default function AdminSubscriptionPlansClient() {
             className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-text hover:bg-gm-surface/80"
           >
             <RefreshCcw className={cn("mr-2 size-4 text-gm-gold", list.isFetching && "animate-spin")} />
-            Yenile
+            {t('actions.refresh')}
           </Button>
         </div>
       </div>
@@ -205,41 +207,41 @@ export default function AdminSubscriptionPlansClient() {
           <Card className="overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-surface/20 shadow-xl backdrop-blur-sm">
             <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8">
               <CardTitle className="font-serif text-xl text-gm-text">
-                {editingId ? 'Planı Düzenle' : 'Yeni Plan Tanımla'}
+                {editingId ? t('plans.form.editTitle') : t('plans.form.createTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
               <form className="space-y-5" onSubmit={onSubmit}>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-gold">Eşsiz Plan Kodu</Label>
-                  <Input 
-                    value={form.code} 
-                    onChange={(e) => setField('code', e.target.value)} 
-                    placeholder="örn: gold_monthly" 
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-gold">{t('plans.form.code')}</Label>
+                  <Input
+                    value={form.code}
+                    onChange={(e) => setField('code', e.target.value)}
+                    placeholder={t('plans.form.codePlaceholder')}
                     className="h-11 rounded-full border-gm-border-soft bg-gm-bg-deep/30 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Plan İsmi (TR)</Label>
-                  <Input 
-                    value={form.name_tr} 
-                    onChange={(e) => setField('name_tr', e.target.value)} 
-                    placeholder="Aylık Abonelik" 
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.nameTr')}</Label>
+                  <Input
+                    value={form.name_tr}
+                    onChange={(e) => setField('name_tr', e.target.value)}
+                    placeholder={t('plans.form.nameTrPlaceholder')}
                     className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Plan İsmi (EN)</Label>
-                  <Input 
-                    value={form.name_en} 
-                    onChange={(e) => setField('name_en', e.target.value)} 
-                    placeholder="Monthly Plan" 
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.nameEn')}</Label>
+                  <Input
+                    value={form.name_en}
+                    onChange={(e) => setField('name_en', e.target.value)}
+                    placeholder={t('plans.form.nameEnPlaceholder')}
                     className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Açıklama (TR)</Label>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.descriptionTr')}</Label>
                   <Textarea 
                     rows={2} 
                     value={form.description_tr} 
@@ -248,7 +250,7 @@ export default function AdminSubscriptionPlansClient() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Açıklama (EN)</Label>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.descriptionEn')}</Label>
                   <Textarea 
                     rows={2} 
                     value={form.description_en} 
@@ -259,7 +261,7 @@ export default function AdminSubscriptionPlansClient() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Para Birimi</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.currency')}</Label>
                     <Input 
                       value={form.currency} 
                       onChange={(e) => setField('currency', e.target.value.toUpperCase())} 
@@ -267,7 +269,7 @@ export default function AdminSubscriptionPlansClient() {
                     />
                   </div>
                   <div className="space-y-2 flex flex-col justify-end">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted mb-2">Dönem (Period)</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted mb-2">{t('plans.form.period')}</Label>
                     <select
                       value={form.period}
                       onChange={(e) => setField('period', e.target.value as SubscriptionPlanPeriod)}
@@ -275,7 +277,7 @@ export default function AdminSubscriptionPlansClient() {
                     >
                       {PERIODS.map((p) => (
                         <option key={p} value={p} className="bg-gm-surface text-gm-text">
-                          {p === 'monthly' ? 'Aylık' : p === 'yearly' ? 'Yıllık' : 'Ömür Boyu'}
+                          {t(`plans.periods.${p}`)}
                         </option>
                       ))}
                     </select>
@@ -284,7 +286,7 @@ export default function AdminSubscriptionPlansClient() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Fiyat (Minor)</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.priceMinor')}</Label>
                     <Input
                       type="number"
                       value={form.price_minor}
@@ -295,7 +297,7 @@ export default function AdminSubscriptionPlansClient() {
                     <p className="text-[10px] text-gm-muted/80 italic pl-2">{formatPriceMinor(form.price_minor)}</p>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Deneme Gün</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.trialDays')}</Label>
                     <Input
                       type="number"
                       value={form.trial_days}
@@ -307,7 +309,7 @@ export default function AdminSubscriptionPlansClient() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Sıralama</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.displayOrder')}</Label>
                     <Input
                       type="number"
                       value={form.display_order}
@@ -322,16 +324,16 @@ export default function AdminSubscriptionPlansClient() {
                       onCheckedChange={(value) => setField('is_active', Boolean(value))}
                       className="data-[state=checked]:bg-gm-gold rounded"
                     />
-                    <Label htmlFor="is_active" className="text-sm font-semibold text-gm-text cursor-pointer">Plan Aktif</Label>
+                    <Label htmlFor="is_active" className="text-sm font-semibold text-gm-text cursor-pointer">{t('plans.form.isActive')}</Label>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">Özellikler (Virgülle Ayrılmış)</Label>
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.features')}</Label>
                   <Input
                     value={form.features}
                     onChange={(e) => setField('features', e.target.value)}
-                    placeholder="sohbet, sesli, limitsiz-ai"
+                    placeholder={t('plans.form.featuresPlaceholder')}
                     className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
@@ -339,17 +341,17 @@ export default function AdminSubscriptionPlansClient() {
                 <div className="flex flex-col gap-2.5 pt-4">
                   <Button type="submit" className="w-full bg-gm-gold hover:bg-gm-gold/80 text-gm-bg h-12 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-gm-gold/10 border-transparent">
                     <Save className="mr-2 size-5" />
-                    {editingId ? 'Planı Güncelle' : 'Planı Oluştur'}
+                    {editingId ? t('plans.form.submitUpdate') : t('plans.form.submitCreate')}
                   </Button>
 
                   {editingId ? (
-                    <Button 
-                      variant="ghost" 
-                      type="button" 
+                    <Button
+                      variant="ghost"
+                      type="button"
                       onClick={resetForm}
                       className="w-full h-11 rounded-full text-gm-muted hover:bg-gm-surface/20"
                     >
-                      Yeni Plan Tanımı
+                      {t('plans.form.newPlan')}
                     </Button>
                   ) : null}
                 </div>
@@ -363,7 +365,7 @@ export default function AdminSubscriptionPlansClient() {
           <Card className="overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-surface/20 shadow-xl backdrop-blur-sm">
             <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8 flex flex-row items-center justify-between">
               <CardTitle className="font-serif text-xl text-gm-text flex items-center gap-3">
-                Kayıtlı Plan Listesi
+                {t('plans.listTitle')}
                 <Badge variant="outline" className="rounded-full border-gm-gold/30 text-gm-gold bg-gm-gold/5 text-[11px] font-mono px-2.5 py-0.5">
                   {plans.length}
                 </Badge>
@@ -374,19 +376,19 @@ export default function AdminSubscriptionPlansClient() {
                 <Table>
                   <TableHeader className="bg-gm-surface/40">
                     <TableRow className="border-gm-border-soft hover:bg-transparent">
-                      <TableHead className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Kod (Code)</TableHead>
-                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Plan İsmi</TableHead>
-                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Dönem</TableHead>
-                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Fiyat</TableHead>
-                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Durum</TableHead>
-                      <TableHead className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">İşlem</TableHead>
+                      <TableHead className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.code')}</TableHead>
+                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.name')}</TableHead>
+                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.period')}</TableHead>
+                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.price')}</TableHead>
+                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.status')}</TableHead>
+                      <TableHead className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {plans.length === 0 ? (
                       <TableRow className="border-gm-border-soft">
                         <TableCell colSpan={6} className="py-16 text-center text-sm text-gm-muted italic font-serif">
-                          Tanımlı abonelik planı bulunamadı.
+                          {t('plans.table.noRecords')}
                         </TableCell>
                       </TableRow>
                     ) : null}
@@ -406,7 +408,7 @@ export default function AdminSubscriptionPlansClient() {
                         </TableCell>
                         <TableCell className="py-4">
                           <Badge variant={plan.is_active ? 'default' : 'secondary'} className="rounded-full text-[9px] uppercase tracking-widest px-2.5 py-0.5">
-                            {plan.is_active ? 'Aktif' : 'Pasif'}
+                            {plan.is_active ? t('plans.statuses.active') : t('plans.statuses.inactive')}
                           </Badge>
                         </TableCell>
                         <TableCell className="px-6 py-4 text-right">

@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ChevronLeft, CheckCircle2, Sparkles, XCircle, HelpCircle } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,13 +26,13 @@ import {
 
 const RESPONSES: {
   value: ReviewOutcomeResponse;
-  label: string;
+  labelKey: string;
   Icon: typeof CheckCircle2;
 }[] = [
-  { value: 'happened', label: 'Evet, gerçekleşti', Icon: CheckCircle2 },
-  { value: 'partially', label: 'Kısmen gerçekleşti', Icon: Sparkles },
-  { value: 'did_not_happen', label: 'Gerçekleşmedi', Icon: XCircle },
-  { value: 'no_answer', label: 'Cevap vermek istemiyorum', Icon: HelpCircle },
+  { value: 'happened', labelKey: 'karne.happened', Icon: CheckCircle2 },
+  { value: 'partially', labelKey: 'karne.partially', Icon: Sparkles },
+  { value: 'did_not_happen', labelKey: 'karne.didNotHappen', Icon: XCircle },
+  { value: 'no_answer', labelKey: 'karne.noAnswer', Icon: HelpCircle },
 ];
 
 function buildStyles(t: AppTheme) {
@@ -141,15 +142,16 @@ function OutcomeCard({
   styles: ReturnType<typeof buildStyles>;
   colors: AppTheme['colors'];
 }) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<ReviewOutcomeResponse | null>(null);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
-  const name = outcome.consultant_name || 'Danışman';
+  const name = outcome.consultant_name || t('karne.consultant');
   const avatar = getAssetUrl(outcome.consultant_avatar);
 
   const handleSubmit = async () => {
     if (!selected) {
-      Alert.alert('Eksik', 'Lütfen bir seçenek işaretleyin.');
+      Alert.alert(t('karne.missingTitle'), t('karne.selectOption'));
       return;
     }
     setSaving(true);
@@ -157,7 +159,7 @@ function OutcomeCard({
       await reviewOutcomesApi.submit(outcome.review_id, selected, notes.trim() || undefined);
       onDone();
     } catch (err: unknown) {
-      Alert.alert('Hata', err instanceof Error ? err.message : 'Kaydedilemedi.');
+      Alert.alert(t('common.errorTitle'), err instanceof Error ? err.message : t('karne.saveError'));
     } finally {
       setSaving(false);
     }
@@ -177,12 +179,12 @@ function OutcomeCard({
           <Text style={styles.cardTitle}>{name}</Text>
           <Text style={styles.cardMeta}>
             {outcome.review_rating != null ? `★ ${outcome.review_rating} · ` : ''}
-            Takip tarihi: {new Date(outcome.follow_up_at).toLocaleDateString('tr-TR')}
+            {t('karne.followUpDate', { date: new Date(outcome.follow_up_at).toLocaleDateString('tr-TR') })}
           </Text>
         </View>
       </View>
-      <Text style={styles.cardMeta}>6 ay önce aldığınız yorum gerçekleşti mi?</Text>
-      {RESPONSES.map(({ value, label, Icon }) => {
+      <Text style={styles.cardMeta}>{t('karne.question')}</Text>
+      {RESPONSES.map(({ value, labelKey, Icon }) => {
         const active = selected === value;
         return (
           <Pressable
@@ -191,13 +193,13 @@ function OutcomeCard({
             onPress={() => setSelected(value)}
           >
             <Icon size={18} color={active ? colors.gold : colors.textMuted} />
-            <Text style={[styles.optionText, active && { color: colors.gold }]}>{label}</Text>
+            <Text style={[styles.optionText, active && { color: colors.gold }]}>{t(labelKey)}</Text>
           </Pressable>
         );
       })}
       <TextInput
         style={styles.notes}
-        placeholder="İsteğe bağlı not..."
+        placeholder={t('karne.notesPlaceholder')}
         placeholderTextColor={colors.textMuted}
         value={notes}
         onChangeText={setNotes}
@@ -207,7 +209,7 @@ function OutcomeCard({
         {saving ? (
           <ActivityIndicator color={colors.ink} />
         ) : (
-          <Text style={styles.submitText}>Gönder</Text>
+          <Text style={styles.submitText}>{t('karne.submit')}</Text>
         )}
       </Pressable>
     </View>
@@ -215,6 +217,7 @@ function OutcomeCard({
 }
 
 export default function KarneScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { colors } = theme;
@@ -258,15 +261,15 @@ export default function KarneScreen() {
             <Pressable style={styles.backBtn} onPress={() => safeRouterBack()}>
               <ChevronLeft size={24} color={colors.text} />
             </Pressable>
-            <Text style={styles.title}>Astrolog Karnesi</Text>
+            <Text style={styles.title}>{t('karne.title')}</Text>
           </View>
           <View style={styles.guestWrap}>
             <Sparkles size={48} color={colors.gold} />
             <Text style={styles.emptyText}>
-              6 ay önce aldığınız yorumlar için geri bildirim vermek üzere giriş yapın.
+              {t('karne.guestPrompt')}
             </Text>
             <Pressable style={styles.guestBtn} onPress={() => router.push('/auth/login' as any)}>
-              <Text style={styles.guestBtnText}>Giriş Yap</Text>
+              <Text style={styles.guestBtnText}>{t('karne.login')}</Text>
             </Pressable>
           </View>
         </SafeAreaView>
@@ -281,18 +284,16 @@ export default function KarneScreen() {
           <Pressable style={styles.backBtn} onPress={() => safeRouterBack()}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>Astrolog Karnesi</Text>
+          <Text style={styles.title}>{t('karne.title')}</Text>
         </View>
         <Text style={styles.intro}>
-          Cevaplarınız danışmanların karnesini şekillendirir; diğer kullanıcılar danışman seçerken bu
-          skorları görür.
+          {t('karne.intro')}
         </Text>
         <ScrollView contentContainerStyle={styles.scroll}>
           {items.length === 0 ? (
             <View style={styles.empty}>
               <Text style={styles.emptyText}>
-                Şimdilik bekleyen bir karne sorusu yok. Bir danışmandan yorum aldıktan 6 ay sonra burada
-                görürsünüz.
+                {t('karne.empty')}
               </Text>
             </View>
           ) : (

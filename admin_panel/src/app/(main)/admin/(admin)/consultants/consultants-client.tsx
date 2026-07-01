@@ -150,21 +150,21 @@ export default function ConsultantsClient() {
 
   async function removeConsultant(id: string, name?: string | null) {
     const ok = window.confirm(
-      `${name || 'Bu danışman'} reddedilmiş kaydı kalıcı olarak silinecek. Onaylıyor musunuz?`,
+      t('actions.delete_confirm', { name: name || t('detail.defaultName') }),
     );
     if (!ok) return;
     try {
       await deleteConsultant(id).unwrap();
-      toast.success('Reddedilen danışman silindi');
+      toast.success(t('actions.delete_success'));
       consultantsQuery.refetch();
     } catch (error) {
       const code = (error as { data?: { error?: { message?: string } } })?.data?.error?.message;
       toast.error(
         code === 'consultant_has_dependencies'
-          ? 'Bu danışmana bağlı kayıtlar (randevu vb.) olduğu için silinemiyor.'
+          ? t('actions.delete_has_deps')
           : code === 'only_rejected_can_be_deleted'
-            ? 'Yalnızca reddedilmiş danışman kaydı silinebilir.'
-            : 'Danışman silinemedi',
+            ? t('actions.delete_only_rejected')
+            : t('actions.delete_failed'),
       );
     }
   }
@@ -172,7 +172,7 @@ export default function ConsultantsClient() {
   async function handleApproveApp(item: ConsultantApplicationAdmin) {
     try {
       await approveApp(item.id).unwrap();
-      toast.success('Başvuru onaylandı — kullanıcı hesabı ve davet maili işleniyor.');
+      toast.success(t('actions.approve_success_detail'));
       // Modal'ı kapat ki kullanıcı işlemin tamamlandığını net görsün.
       setSelected(null);
       appsQuery.refetch();
@@ -181,8 +181,8 @@ export default function ConsultantsClient() {
     } catch (error) {
       const message =
         (error as { data?: { error?: string } })?.data?.error === 'user_required_for_approval'
-          ? 'Bu başvuruyu onaylamak için aynı e-postayla kayıtlı bir kullanıcı gerekiyor.'
-          : 'Başvuru onaylanamadı';
+          ? t('actions.approve_needs_user')
+          : t('actions.approve_failed_generic');
       toast.error(message);
     }
   }
@@ -190,19 +190,19 @@ export default function ConsultantsClient() {
   async function handleRejectApp() {
     if (!rejectTarget) return;
     if (reason.trim().length < 10) {
-      toast.error('Red sebebi en az 10 karakter olmalı');
+      toast.error(t('actions.reject_reason_min'));
       return;
     }
     try {
       await rejectApp({ id: rejectTarget.id, rejection_reason: reason.trim() }).unwrap();
-      toast.success('Başvuru reddedildi');
+      toast.success(t('actions.reject_success'));
       // Hem reddet modal'ını hem de detay modal'ını kapat.
       setRejectTarget(null);
       setSelected(null);
       setReason('');
       appsQuery.refetch();
     } catch {
-      toast.error('Başvuru reddedilemedi');
+      toast.error(t('actions.reject_failed'));
     }
   }
 
@@ -460,7 +460,7 @@ export default function ConsultantsClient() {
                             className="rounded-full hover:bg-gm-error/10 text-gm-error/60 hover:text-gm-error transition-all disabled:opacity-10"
                             disabled={deleteState.isLoading}
                             onClick={() => removeConsultant(item.id, item.full_name)}
-                            title="Reddedilen kaydı sil"
+                            title={t('actions.delete_title')}
                           >
                             <Trash2 className="size-5" />
                           </Button>
@@ -479,47 +479,47 @@ export default function ConsultantsClient() {
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent className="max-h-[86vh] max-w-3xl overflow-y-auto border-gm-border-soft bg-gm-bg-deep text-gm-text">
           <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">Başvuru Detayı</DialogTitle>
-            <DialogDescription className="text-gm-muted">Form alanları salt okunur görüntülenir.</DialogDescription>
+            <DialogTitle className="font-serif text-2xl">{t('detail.applicationTitle')}</DialogTitle>
+            <DialogDescription className="text-gm-muted">{t('detail.readonlyNote')}</DialogDescription>
           </DialogHeader>
           {selected && (
             <div className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
-                <DetailBlock label="Ad Soyad" value={selected.full_name} />
-                <DetailBlock label="E-posta" value={selected.email} />
-                <DetailBlock label="Telefon" value={selected.phone} />
+                <DetailBlock label={t('detail.fullName')} value={selected.full_name} />
+                <DetailBlock label={t('detail.email')} value={selected.email} />
+                <DetailBlock label={t('detail.phone')} value={selected.phone} />
                 <DetailBlock
-                  label="Deneyim"
-                  value={selected.experience_years != null ? `${selected.experience_years} yıl` : undefined}
+                  label={t('detail.experience')}
+                  value={selected.experience_years != null ? t('detail.experienceYears', { years: selected.experience_years }) : undefined}
                 />
-                <DetailBlock label="Uzmanlık" value={<Chips items={selected.expertise} slugToName={slugToName} />} />
-                <DetailBlock label="Diller" value={<Chips items={selected.languages} />} />
+                <DetailBlock label={t('detail.expertise')} value={<Chips items={selected.expertise} slugToName={slugToName} />} />
+                <DetailBlock label={t('detail.languages')} value={<Chips items={selected.languages} />} />
               </div>
-              <DetailBlock label="Biyografi" value={selected.bio} />
-              <DetailBlock label="Sertifikalar" value={selected.certifications} />
+              <DetailBlock label={t('detail.bio')} value={selected.bio} />
+              <DetailBlock label={t('detail.certifications')} value={selected.certifications} />
               <div className="grid gap-4 md:grid-cols-2">
                 <DetailBlock
                   label="CV"
                   value={
                     selected.cv_url ? (
                       <a className="text-gm-gold underline" href={selected.cv_url} target="_blank" rel="noreferrer">
-                        Dosyayı aç
+                        {t('detail.openFile')}
                       </a>
                     ) : undefined
                   }
                 />
                 <DetailBlock
-                  label="Örnek Harita"
+                  label={t('detail.sampleChart')}
                   value={
                     selected.sample_chart_url ? (
                       <a className="text-gm-gold underline" href={selected.sample_chart_url} target="_blank" rel="noreferrer">
-                        Dosyayı aç
+                        {t('detail.openFile')}
                       </a>
                     ) : undefined
                   }
                 />
               </div>
-              {selected.rejection_reason && <DetailBlock label="Red Sebebi" value={selected.rejection_reason} />}
+              {selected.rejection_reason && <DetailBlock label={t('detail.rejectionReasonLabel')} value={selected.rejection_reason} />}
               <div className="flex flex-wrap justify-end gap-3">
                 <Button
                   variant="outline"
@@ -527,7 +527,7 @@ export default function ConsultantsClient() {
                   disabled={busy || selected.status === 'approved'}
                   onClick={() => handleApproveApp(selected)}
                 >
-                  <UserCheck className="mr-2 size-4" /> Onayla
+                  <UserCheck className="mr-2 size-4" /> {t('actions.approve')}
                 </Button>
                 <Button
                   variant="outline"
@@ -538,7 +538,7 @@ export default function ConsultantsClient() {
                     setReason('');
                   }}
                 >
-                  <FileText className="mr-2 size-4" /> Reddet
+                  <FileText className="mr-2 size-4" /> {t('actions.reject')}
                 </Button>
               </div>
             </div>
@@ -550,8 +550,8 @@ export default function ConsultantsClient() {
       <Dialog open={!!rejectTarget} onOpenChange={(open) => !open && setRejectTarget(null)}>
         <DialogContent className="border-gm-border-soft bg-gm-bg-deep text-gm-text">
           <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">Başvuruyu Reddet</DialogTitle>
-            <DialogDescription className="text-gm-muted">Adaya gönderilecek red sebebini yazın.</DialogDescription>
+            <DialogTitle className="font-serif text-2xl">{t('rejectDialog.title')}</DialogTitle>
+            <DialogDescription className="text-gm-muted">{t('rejectDialog.desc')}</DialogDescription>
           </DialogHeader>
           <Textarea
             value={reason}
@@ -559,14 +559,14 @@ export default function ConsultantsClient() {
             minLength={10}
             rows={5}
             className="border-gm-border-soft bg-gm-surface/40"
-            placeholder="En az 10 karakter..."
+            placeholder={t('rejectDialog.placeholder')}
           />
           <DialogFooter>
             <Button variant="ghost" onClick={() => setRejectTarget(null)}>
-              Vazgeç
+              {t('rejectDialog.cancel')}
             </Button>
             <Button onClick={handleRejectApp} disabled={rejectAppState.isLoading || reason.trim().length < 10}>
-              <Send className="mr-2 size-4" /> Reddet
+              <Send className="mr-2 size-4" /> {t('rejectDialog.submit')}
             </Button>
           </DialogFooter>
         </DialogContent>

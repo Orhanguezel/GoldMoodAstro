@@ -40,3 +40,16 @@ CREATE TABLE IF NOT EXISTS consultants (
   KEY consultants_slug_idx (slug),
   CONSTRAINT fk_consultants_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS consultant_i18n (
+  id CHAR(36) PRIMARY KEY,
+  consultant_id CHAR(36) NOT NULL,
+  locale CHAR(8) NOT NULL,
+  headline VARCHAR(255) NULL,
+  bio TEXT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY ux_consultant_i18n_consultant_locale (consultant_id, locale),
+  KEY consultant_i18n_locale_idx (locale),
+  CONSTRAINT fk_consultant_i18n_consultant FOREIGN KEY (consultant_id) REFERENCES consultants(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

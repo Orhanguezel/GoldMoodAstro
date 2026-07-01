@@ -4,11 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./admin/ui/*": "./admin/components/ui/*.tsx",
-    "./admin/data-table/*": "./admin/components/data-table/*.tsx",
-    "./admin/stores/*": "./admin/stores/*/*.ts",
-    "./admin/lib/*": "./admin/lib/*.ts",
-    "./public/seo/*": "./public/components/seo/*.tsx",
     "./public/lib/*": "./public/lib/*.ts",
     "./content/*": "./components/content/*.tsx"
   },

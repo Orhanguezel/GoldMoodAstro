@@ -1,8 +1,8 @@
 // =============================================================
 // FILE: src/components/containers/blog/BlogDetails.tsx
-// FINAL – Blog Details (Single)
+// FINAL - Blog Details (Single)
 // - App Router: reads slug from useParams()
-// - ✅ Locale-prefixed internal links via localizePath()
+// - Locale-prefixed internal links via localizePath()
 // - Prose content + Lightbox gallery
 // =============================================================
 
@@ -95,53 +95,8 @@ export default function BlogDetails() {
   const locale = useLocaleShort(); // "de" | "en" | "tr" short
   const { ui } = useUiSection('ui_blog', locale as any);
 
-  const fb = useMemo(() => {
-    if (locale === 'tr') {
-      return {
-        backToList: 'Tüm yazılara dön',
-        otherBlogsTitle: 'Diğer yazılar',
-        loading: 'Yükleniyor...',
-        notFound: 'Blog içeriği bulunamadı.',
-        galleryTitle: 'Galeriyi aç',
-        like: 'Beğen',
-        liked: 'Beğenildi',
-        share: 'Paylaş',
-        commentsTitle: 'Yorumlar',
-        leaveComment: 'Yorum bırak',
-        commentLabel: 'Yorumunuz',
-        commentSubmit: 'Yorum gönder',
-        contactCtaTitle: 'Sorunuz mu var?',
-        contactCtaDesc: 'Seanslar veya randevu ile ilgili sorularınız için bize ulaşabilirsiniz.',
-        contactPhone: 'Telefon',
-        contactWhatsapp: 'WhatsApp',
-        contactForm: 'İletişim formu',
-      };
-    }
-
-    if (locale === 'de') {
-      return {
-        backToList: 'Zur Übersicht',
-        otherBlogsTitle: 'Weitere Beiträge',
-        loading: 'Wird geladen...',
-        notFound: 'Blogbeitrag nicht gefunden.',
-        galleryTitle: 'Galerie öffnen',
-        like: 'Gefällt mir',
-        liked: 'Gefällt mir',
-        share: 'Teilen',
-        commentsTitle: 'Kommentare',
-        leaveComment: 'Kommentar hinterlassen',
-        commentLabel: 'Ihr Kommentar',
-        commentSubmit: 'Kommentar senden',
-        contactCtaTitle: 'Noch Fragen?',
-        contactCtaDesc:
-          'Wenn Sie Fragen zur Sitzung oder zur Terminvereinbarung haben, kontaktieren Sie uns gern.',
-        contactPhone: 'Telefon',
-        contactWhatsapp: 'WhatsApp',
-        contactForm: 'Kontaktformular',
-      };
-    }
-
-    return {
+  const fb = useMemo(
+    () => ({
       backToList: 'Back to all posts',
       otherBlogsTitle: 'Other posts',
       loading: 'Loading...',
@@ -160,8 +115,9 @@ export default function BlogDetails() {
       contactPhone: 'Phone',
       contactWhatsapp: 'WhatsApp',
       contactForm: 'Contact form',
-    };
-  }, [locale]);
+    }),
+    [],
+  );
 
   const params = useParams<{ slug?: string | string[] }>();
   const slug = useMemo(() => {
@@ -194,7 +150,7 @@ export default function BlogDetails() {
     [ui, fb],
   );
 
-  // ✅ Locale-prefixed URLs
+  // Locale-prefixed URLs.
   const blogListHref = useMemo(() => localizePath(locale, '/blog'), [locale]);
 
   const { data, isLoading, isError } = useGetCustomPageBySlugPublicQuery({ slug, locale } as any, {

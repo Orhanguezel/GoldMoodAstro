@@ -23,12 +23,6 @@ export const pathnames = {
   "/references": "/references",
   "/references/[slug]": "/references/[slug]",
 
-  "/products": "/products",
-  "/products/[slug]": "/products/[slug]",
-
-  "/spare-parts": "/spare-parts",
-  "/spare-parts/[slug]": "/spare-parts/[slug]",
-
   "/blog": "/blog",
   "/blog/[slug]": "/blog/[slug]",
 

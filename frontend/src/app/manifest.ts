@@ -24,7 +24,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   return {
     name: brandFallback.name || 'GoldMoodAstro',
     short_name: brandFallback.name?.split(' ')[0] || 'GoldMood',
-    description: brandFallback.tagline || 'Astroloji, tarot ve yaşam koçluğu için uzman danışmanlarla bağlantı platformu.',
+    description: brandFallback.tagline || 'Platform for expert consultants in astrology, tarot and life coaching.',
     start_url: '/tr',
     display: 'standalone',
     background_color: bg,

@@ -53,8 +53,7 @@ function buildStyles(t: AppTheme) {
 
 /** FAZ 41 T41-4 — Free kullanıcıya reklamsız deneyim upsell (house-promo tamamlayıcı) */
 export function BannerUpsell() {
-  const { i18n } = useTranslation();
-  const isTr = i18n.language === 'tr';
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { colors } = theme;
@@ -70,12 +69,10 @@ export function BannerUpsell() {
         </View>
         <View style={styles.body}>
           <Text style={styles.title}>
-            {isTr ? 'Reklamsız deneyim' : 'Ad-free experience'}
+            {t('banner.adFreeTitle')}
           </Text>
           <Text style={styles.desc}>
-            {isTr
-              ? 'Premium ile tanıtım banner’ları olmadan gezin; özel içerik ve seans avantajları.'
-              : 'Go Premium for a cleaner app without promo banners, plus exclusive perks.'}
+            {t('banner.adFreeDesc')}
           </Text>
         </View>
       </View>
@@ -83,7 +80,7 @@ export function BannerUpsell() {
         style={styles.cta}
         onPress={() => router.push('/(tabs)/profile/subscription' as any)}
       >
-        <Text style={styles.ctaText}>{isTr ? 'Premium’a Geç' : 'Go Premium'}</Text>
+        <Text style={styles.ctaText}>{t('banner.goPremium')}</Text>
         <ArrowRight size={16} color={colors.ink} />
       </Pressable>
     </View>

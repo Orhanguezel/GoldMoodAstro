@@ -2,7 +2,7 @@
 // FILE: src/components/common/ReviewList.tsx
 // Ortak yorum listesi (public) + reaction/like butonu
 // i18n: site_settings.ui_feedback (list_* ve reaction_* key'leri)
-// Tailwind v4 + GoldMood tema değişkenleri (--gm-*).
+// Tailwind v4 + GoldMood theme variables (--gm-*).
 // =============================================================
 
 'use client';
@@ -32,7 +32,7 @@ type ReviewListProps = {
 
   /** Display mode */
   variant?: 'reviews' | 'comments';
-  /** Compact tek satır liste (kart yerine inline). Sticky sidebar yanında dar kolonlar için. */
+  /** Compact single-line list for narrow sticky sidebar columns. */
   compact?: boolean;
 };
 
@@ -88,26 +88,26 @@ const ReviewList: React.FC<ReviewListProps> = ({
 
   const title = useMemo(() => {
     const t = String(titleOverride || '').trim();
-    return t || ui('ui_feedback_list_title', 'Değerlendirmeler');
+    return t || ui('ui_feedback_list_title', 'Reviews');
   }, [titleOverride, ui]);
 
   const noReviewsText = useMemo(() => {
     const t = String(emptyTextOverride || '').trim();
-    return t || ui('ui_feedback_list_no_reviews', 'Henüz bu danışman için yorum bulunmuyor.');
+    return t || ui('ui_feedback_list_no_reviews', 'No reviews found for this consultant yet.');
   }, [emptyTextOverride, ui]);
-  const avgRatingLabel = ui('ui_feedback_list_avg_rating', 'Ortalama puan');
+  const avgRatingLabel = ui('ui_feedback_list_avg_rating', 'Average rating');
   const reviewsSuffix = ui('ui_feedback_list_reviews_suffix', 'yorum');
 
-  const helpfulLabel = ui('ui_feedback_list_helpful', 'Faydalı');
-  const likedLabel = ui('ui_feedback_list_liked', 'Teşekkürler');
-  const verifiedLabel = ui('ui_feedback_list_verified', 'Doğrulanmış görüşme');
-  const consultantReplyLabel = ui('ui_feedback_list_consultant_reply', 'Astrolog cevabı');
+  const helpfulLabel = ui('ui_feedback_list_helpful', 'Helpful');
+  const likedLabel = ui('ui_feedback_list_liked', 'Thank you');
+  const verifiedLabel = ui('ui_feedback_list_verified', 'Verified session');
+  const consultantReplyLabel = ui('ui_feedback_list_consultant_reply', 'Astrologer reply');
 
   const errorText = ui(
     'ui_feedback_list_error',
-    'İşlem sırasında bir hata oluştu.',
+    'An error occurred during the operation.',
   );
-  const loadingText = ui('ui_feedback_list_loading', 'Yorumlar yükleniyor...');
+  const loadingText = ui('ui_feedback_list_loading', 'Loading reviews...');
 
   const { data, isLoading, isError } = useListReviewsPublicQuery({
     target_type: targetType,

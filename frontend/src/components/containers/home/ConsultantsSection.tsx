@@ -39,6 +39,7 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
   const { data, isLoading } = useListConsultantsPublicQuery({
     sort,
     limit,
+    locale,
     ...(onlineOnly ? { onlineOnly: true } : {}),
   });
 
@@ -77,7 +78,7 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
   const scrollByCard = (dir: 1 | -1) => {
     const el = scrollerRef.current;
     if (!el) return;
-    // Bir kart genişliği kadar kaydır (ilk child'ın offsetWidth + gap)
+    // Scroll by one card width using the first child's offsetWidth plus the gap.
     const firstCard = el.querySelector<HTMLElement>('[data-carousel-item]');
     const cardW = firstCard ? firstCard.offsetWidth + 24 /* gap-6 */ : el.clientWidth * 0.8;
     el.scrollBy({ left: dir * cardW, behavior: 'smooth' });
@@ -88,14 +89,14 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
   const subtitle =
     config?.subtitle ||
     (sort === 'popular'
-      ? 'En çok seans veren, deneyimli isimler'
+      ? 'Experienced experts with the most completed sessions'
       : sort === 'new'
-        ? 'Platforma yeni katılan astrologlar'
+        ? 'Astrologers who recently joined the platform'
         : sort === 'online'
-          ? 'Şu an müsait, hemen bağlanabilirsiniz'
-          : 'En yüksek puan ve seans sayısına sahip uzmanlar');
+          ? 'Available now, ready to connect'
+          : 'Experts with the highest ratings and session counts');
 
-  const title = label || 'Danışmanlar';
+  const title = label || 'Consultants';
 
   return (
     <section className="container mx-auto px-4 py-16 md:py-20">
@@ -113,13 +114,13 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Carousel oklar — sadece desktop'ta */}
+          {/* Carousel arrows, desktop only. */}
           <div className="hidden md:flex items-center gap-2">
             <button
               type="button"
               onClick={() => scrollByCard(-1)}
               disabled={!canPrev}
-              aria-label="Önceki"
+              aria-label="Previous"
               className="w-10 h-10 rounded-full border border-[var(--gm-border-soft)] flex items-center justify-center text-[var(--gm-text)] hover:border-[var(--gm-gold)] hover:bg-[var(--gm-gold)]/10 hover:text-[var(--gm-gold)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -128,7 +129,7 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
               type="button"
               onClick={() => scrollByCard(1)}
               disabled={!canNext}
-              aria-label="Sonraki"
+              aria-label="Next"
               className="w-10 h-10 rounded-full border border-[var(--gm-border-soft)] flex items-center justify-center text-[var(--gm-text)] hover:border-[var(--gm-gold)] hover:bg-[var(--gm-gold)]/10 hover:text-[var(--gm-gold)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
               <ChevronRight className="w-5 h-5" />
@@ -139,7 +140,7 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
             href={`/${locale}/consultants?sort=${sort}`}
             className="group inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] uppercase text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)] transition-colors"
           >
-            Tümünü Gör
+            View All
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>

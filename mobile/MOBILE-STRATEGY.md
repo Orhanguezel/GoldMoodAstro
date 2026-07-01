@@ -1,183 +1,205 @@
 # GoldMoodAstro Mobile - Strategy
 
-Date: 2026-04-24
-Platform: Expo (React Native) + TypeScript
-Source of execution rules: AGENTS.md
+Date: 2026-05-23  
+Platform: Expo SDK 54 + React Native 0.81 + TypeScript  
+Source of execution rules: `AGENTS.md`
 
 ## 1) Product Goal
 
-Mobilde uc uca seans akisini calistirmak:
+Mobil uygulama GoldMoodAstro'nun premium kanalidir. Hedef, kullanıcının mobilde şu akışı güvenilir ve şık biçimde tamamlamasıdır:
 
-1. User onboarding
-2. Auth (login/register)
-3. Consultant discovery
-4. Slot secimi ve booking
-5. Payment (Iyzipay WebView)
-6. Voice session (Agora)
-7. Rating/review
+1. Premium onboarding
+2. Auth veya hesap oluşturma
+3. Danışman keşfi
+4. Slot seçimi ve booking
+5. Iyzipay ödeme WebView
+6. LiveKit sesli görüşme
+7. Seans değerlendirme
 
-Ana hedef: ilk MVP surumunde guvenilir ve sade bir booking + call deneyimi.
+Başarı ölçütü yalnızca "akış çalışıyor" değildir. Uygulama, App Store/Play Store'da premium astroloji markası gibi görünmeli ve her kritik durumda kullanıcıya net feedback vermelidir.
 
 ## 2) Strategic Principles
 
-1. Single codebase: iOS + Android birlikte ilerler
-2. Scope discipline: MVP disi ozellikler ertelenir
-3. API-first execution: backend kontratlariyla paralel ilerleme
-4. Reliability first: call ve payment adimlari kritik yol
-5. Measurable delivery: her milestone icin olculebilir KPI
+1. **Single codebase:** iOS + Android birlikte ilerler.
+2. **Premium first:** yeni ekranlar token, motion, haptic ve accessibility standardıyla yazılır.
+3. **Reliability first:** payment ve call akışları görsel polish için bozulmaz.
+4. **Reuse before rebuild:** ortak bileşenler çıkarılır, ekranlar bu bileşenlere taşınır.
+5. **API-first:** backend kontratı değişirse `REQUESTS.md` ile istenir.
+6. **Scope discipline:** premiumlaştırma işi alakasız backend/frontend refactor'a dönüşmez.
 
 ## 3) Target Users
 
-1. Danisman arayan son kullanici
-2. Randevu satin alip sesli seansa katilan kullanici
-3. Seans sonrasi puanlama yapan geri donus odakli kullanici
+1. Günlük astroloji ve kişisel içgörü arayan kullanıcı
+2. Doğum haritası, tarot, kahve, rüya ve sinastri gibi feature'ları kullanan mobil kullanıcı
+3. Danışmanla ücretli sesli seans almak isteyen kullanıcı
+4. Premium üyelik/credit satın alma potansiyeli olan kullanıcı
 
-## 4) MVP Scope (In)
+## 4) MVP Scope
 
-- Onboarding
-- Login/Register
+- 3 aşamalı onboarding
+- Login/Register + Apple Sign In
 - Consultant list + detail + slots
-- Booking olusturma
-- Iyzipay odeme ekrani (WebView)
-- Agora sesli gorusme
-- Randevu gecmisi ve basic status goruntuleme
-- Rating/review gonderme
-- Push token kaydi ve temel booking hatirlatma akisi
+- Booking oluşturma
+- Iyzipay ödeme ekranı
+- LiveKit sesli görüşme
+- Booking history + status görüntüleme
+- Rating/review gönderme
+- Push token kaydı ve booking deep link
+- Profile, credits, subscription ve privacy ekranları
 
-## 5) Out of Scope (Now)
+## 5) Premium Upgrade Scope
 
-- In-app chat'in gelismis versiyonu
-- Abonelik/paywall urunlestirmesi
-- Native iOS/Android ayri kod tabani
-- Gelismis analytics paneli
-- A/B test altyapisi
+### P0 - Shared Premium Components
 
-## 6) Milestone Plan (Execution)
-
-Milestone detaylari AGENTS.md ile birebir uyumludur.
-
-### M0 - Foundation
-
-- Onboarding flow
-- Entry routing (onboarded control)
-- Push token alma ve backend'e kayit
+- `PrimaryButton`
+- `PremiumCard`
+- `ScreenShell`
+- `EmptyState`
+- `LoadingState`
 
 Exit criteria:
 
-- Uygulama ilk acilista onboarding veya tabs'e dogru yonlenir
-- Push token storage + backend register endpoint cagrisi calisir
+- Yeni ekranlar ortak temel bileşenleri kullanır.
+- CTA basışında scale + haptic vardır.
+- Loading ve empty durumları marka hissi taşır.
 
-### M1 - Authentication
+### P1 - Premium Onboarding
 
-- Login/Register ekranlari
-- Session persistence
-- useAuth hook ve logout
-
-Exit criteria:
-
-- Login sonrasi token saklanir ve protected ekranlara erisim olur
-- 401 durumunda oturum temizlenir
-
-### M2 - Discovery and Booking Visibility
-
-- Consultant listing
-- Consultant detail + slot list
-- Bookings tab (upcoming/past)
-- Favorites
+- 3 aşamalı akış:
+  1. Welcome / brand signal
+  2. Personalization / birth data value
+  3. Trust + conversion / register-login handoff
+- `expo-linear-gradient`
+- `expo-haptics`
+- `Animated` veya Reanimated
+- i18n: TR + EN + DE
 
 Exit criteria:
 
-- User consultant secip slot gorebilir
-- Bookings ekraninda temel statusler dogru gorunur
+- İlk açılış premium onboarding'e gider.
+- Devam/login/register yönlendirmeleri bozulmaz.
+- Motion düşük güçlü cihazlarda abartılı veya yorucu değildir.
 
-### M3 - Checkout and Payment
+### P2 - Paywall and Subscription Production Plan
 
-- Checkout summary
-- Booking create + order create
-- Iyzipay WebView payment
-
-Exit criteria:
-
-- Basarili odeme sonrasi bookings ekranina donus
-- Payment failure senaryosu kontrollu hata mesaji ile yonetilir
-
-### M4 - Voice Session
-
-- Agora token alma
-- Join/leave call flow
-- Session end
-- Rate screen
+- `src/lib/iap.ts` stub durumundan çıkış planı:
+  - Tercih A: RevenueCat
+  - Tercih B: `react-native-iap` + backend receipt validation
+- iOS anti-steering kurallarına uyum
+- Android/Web Iyzipay opsiyonunun policy uyumlu ayrımı
+- `usePremium` ve `/auth/me` subscription özetiyle tutarlı entitlement
 
 Exit criteria:
 
-- Kullanici booking zamaninda cagriya katilabilir
-- Cagri sonu review ekranina yonlenir
+- Uygulama IAP stratejisini doküman ve kod seviyesinde bilir.
+- Purchase/restore/error/loading durumları UI'da tasarlanmıştır.
 
-### M5 - Profile and Settings
+### P3 - HIG Navigation and Interaction Audit
 
-- Settings ekrani
-- Language switch (TR/EN)
-- Notification preferences (basic)
-- Logout
+- Tab bar
+- Modal/sheet sunumları
+- Header/back davranışı
+- Accessibility labels
+- 44x44 tap target
+- Haptic feedback matrix
+- Reduced motion hassasiyeti
 
 Exit criteria:
 
-- Profil ve ayarlar ekrani production-ready minimum seviyeye gelir
+- iOS'ta native hissi bozan bariz navigation/modal davranışı kalmaz.
+- Android davranışı iOS polish uğruna bozulmaz.
+
+### P4 - Critical Flow QA
+
+Smoke sırası:
+
+1. Onboarding
+2. Auth
+3. Consultant discovery
+4. Booking checkout
+5. Payment WebView
+6. Call join/leave
+7. Review submit
+
+Exit criteria:
+
+- Happy path çalışır.
+- Loading/empty/error/offline/auth-expired durumları kontrol edilir.
+- `bun run lint` geçer.
+
+## 6) Out of Scope
+
+- Native SwiftUI/Swift ekran yazımı
+- XcodeGen veya App Printer proje scaffold'u
+- Backend schema değişikliği
+- Admin/frontend refactor
+- App Store submit işlemi onaysız
+- Production IAP vendor seçimini kodda gizlice yapmak
 
 ## 7) Backend Dependency Map
 
-Mobil MVP icin kritik backend modulleri:
+Kritik backend modülleri:
 
 1. auth
-2. consultants
-3. availability
-4. bookings
-5. orders/payments (Iyzipay)
-6. agora
-7. review
-8. firebase push token endpoint
+2. profiles
+3. consultants
+4. availability
+5. bookings
+6. orders/payments
+7. subscriptions/credits
+8. LiveKit token
+9. review
+10. push token
 
 Dev API base:
 
-- http://localhost:8094/api/v1
+- `http://localhost:8094/api/v1`
 
 Prod API base:
 
-- https://www.goldmoodastro.com/api/v1
+- `https://www.goldmoodastro.com/api/v1`
 
-## 8) KPI and Success Metrics (MVP)
+## 8) KPI and Success Metrics
 
-Launch sonrasi ilk 30 gun hedef metrikleri:
+Launch sonrası ilk 30 gün:
 
-1. Activation rate >= 40% (install -> register/login)
-2. Booking conversion >= 15% (active user -> booking create)
-3. Payment success >= 90% (checkout -> paid)
-4. Call join success >= 95% (eligible booking -> joined)
-5. Review submit rate >= 25% (completed session -> review)
+1. Activation rate >= 40%
+2. Booking conversion >= 15%
+3. Payment success >= 90%
+4. Call join success >= 95%
+5. Review submit rate >= 25%
+6. Onboarding completion >= 65%
+7. Subscription/credit CTA tap-through ölçülebilir hale gelir
 
-## 9) QA and Release Checklist
+## 9) QA Checklist
 
-1. iOS/Android basic smoke test
-2. Auth + payment + call end-to-end smoke
-3. Offline/timeout hata mesajlari dogrulama
-4. Token refresh/logout edge-case kontrolu
-5. Push notification click deep link kontrolu
+- iOS simulator smoke
+- Android emulator smoke
+- Real-device payment/call smoke
+- Auth token refresh/logout edge cases
+- Push notification deep link
+- Accessibility labels for CTA/header/tab buttons
+- Reduced text overflow check on small devices
+- Dark mode theme consistency
+- `bun run lint`
 
 ## 10) Risks and Mitigation
 
-Risk: Payment callback uyumsuzlugu
-Mitigation: Success/failure URL patternlerini backend ile sabitlemek
+Risk: Payment callback uyumsuzluğu  
+Mitigation: Success/failure URL patternlerini backend ile sabitlemek.
 
-Risk: Agora token timing ve yetki sorunlari
-Mitigation: Booking ownership + time-window kontrollerini backend tarafinda zorunlu kilmak
+Risk: LiveKit token timing ve yetki sorunları  
+Mitigation: Booking ownership + time-window kontrollerini backend tarafında zorunlu kılmak.
 
-Risk: Push izin reddi
-Mitigation: Sessiz fallback + ayarlardan tekrar etkinlestirme yonlendirmesi
+Risk: IAP vendor kararının gecikmesi  
+Mitigation: `src/lib/iap.ts` interface'ini koru, RevenueCat ve `react-native-iap` için adapter planı yaz.
 
-Risk: Scope creep
-Mitigation: M0-M5 disi talepleri backlog etiketleyip MVP sonrasina tasimak
+Risk: Premium UI çalışması scope creep'e dönüşür  
+Mitigation: Önce ortak bileşenler, sonra onboarding, sonra paywall, sonra audit.
+
+Risk: App Printer kurallarının yanlışlıkla SwiftUI olarak uygulanması  
+Mitigation: Sadece HIG ve premium QA yaklaşımı alınır; kod React Native/Expo kalır.
 
 ## 11) Ownership
 
-Bu dokuman urun yonu ve teslimat stratejisini tanimlar.
-Kod seviyesinde gercek uygulama adimlari icin AGENTS.md tek kaynak olarak kullanilir.
+Bu doküman ürün ve kalite yönünü tanımlar. Kod seviyesinde yürütme için `AGENTS.md`, skill çalışmaları için `skills/expo-factory/SKILL.md` tek kaynak kabul edilir.

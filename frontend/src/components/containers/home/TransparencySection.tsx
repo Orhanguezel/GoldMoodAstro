@@ -2,16 +2,14 @@ import React from 'react';
 import Link from 'next/link';
 
 export default function TransparencySection({ locale = 'tr' }: { locale?: string }) {
-  const isTr = locale === 'tr';
-
   return (
     <section className="py-32 bg-(--gm-bg) border-t border-(--gm-border-soft)">
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-16 reveal">
-          <span className="section-label">{isTr ? 'Üyelik' : 'Membership'}</span>
+          <span className="section-label">Membership</span>
           <h2 className="font-serif text-[clamp(2.5rem,5vw,4rem)] font-light leading-tight text-(--gm-text)">
-            {isTr ? 'Şeffaf fiyat,' : 'Transparent pricing,'}<br/>
-            <em className="text-(--gm-gold) italic">{isTr ? 'saklı koşul yok.' : 'no hidden terms.'}</em>
+            Transparent pricing,<br/>
+            <em className="text-(--gm-gold) italic">no hidden terms.</em>
           </h2>
         </div>
 
@@ -19,30 +17,30 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
           {/* Free Card */}
           <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-2xl p-10 relative transition-all duration-500 hover:-translate-y-2 hover:shadow-(--gm-shadow-card) hover:border-(--gm-gold)/40 group flex flex-col">
             <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-(--gm-gold)/30 text-(--gm-gold-dim) rounded-full">
-              {isTr ? 'Ücretsiz' : 'Free'}
+              Free
             </div>
             <div className="font-display text-[14px] tracking-[0.32em] text-(--gm-gold-dim) uppercase mb-6">
-              {isTr ? 'Misafir' : 'Guest'}
+              Guest
             </div>
             <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-(--gm-text)">
-              <sup className="text-2xl font-normal text-(--gm-gold-dim) mr-1 -top-7 relative">₺</sup>0<small className="text-base text-(--gm-muted) font-normal tracking-wide ml-1">{isTr ? '/ ay' : '/ mo'}</small>
+              <sup className="text-2xl font-normal text-(--gm-gold-dim) mr-1 -top-7 relative">₺</sup>0<small className="text-base text-(--gm-muted) font-normal tracking-wide ml-1">/ mo</small>
             </div>
             <p className="italic text-(--gm-text-dim) mb-8 text-sm leading-relaxed">
-              {isTr ? 'Yıldızlarla tanışın, taahhüt aramayın.' : 'Meet the stars, no commitment.'}
+              Meet the stars, no commitment.
             </p>
             <ul className="space-y-4 mb-10 text-sm text-(--gm-text-dim) flex-grow">
               <li className="flex items-start gap-3">
-                <span className="text-(--gm-gold)/50 mt-1">✦</span> {isTr ? 'Doğum haritası temel görünümü' : 'Basic birth chart view'}
+                <span className="text-(--gm-gold)/50 mt-1">✦</span> Basic birth chart view
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-(--gm-gold)/50 mt-1">✦</span> {isTr ? 'Günlük kısa yorum' : 'Short daily reading'}
+                <span className="text-(--gm-gold)/50 mt-1">✦</span> Short daily reading
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-(--gm-gold)/50 mt-1">✦</span> {isTr ? 'Burç uyumu (özet)' : 'Sign compatibility (summary)'}
+                <span className="text-(--gm-gold)/50 mt-1">✦</span> Sign compatibility (summary)
               </li>
             </ul>
             <Link href={`/${locale}/register`} className="w-full py-4 text-center rounded-full border border-(--gm-border) text-(--gm-text) text-xs font-bold uppercase tracking-[0.2em] hover:bg-(--gm-surface-high) transition-all mt-auto">
-              {isTr ? 'Ücretsiz Başla' : 'Start for Free'}
+              Start for Free
             </Link>
           </div>
 
@@ -55,66 +53,66 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
             }}
           >
             <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-(--gm-gold) text-(--gm-bg-deep) font-bold bg-(--gm-gold) rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)]">
-              {isTr ? 'Önerilen' : 'Recommended'}
+              Recommended
             </div>
             <div className="font-display text-[14px] tracking-[0.32em] text-(--gm-gold) uppercase mb-6 font-bold">
-              {isTr ? 'Premium Aylık' : 'Premium Monthly'}
+              Premium Monthly
             </div>
             <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-(--gm-gold) drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]">
-              <sup className="text-2xl font-normal text-(--gm-gold) mr-1 -top-7 relative">₺</sup>149<small className="text-base font-normal tracking-wide ml-1 text-(--gm-gold)/60">{isTr ? '/ ay' : '/ mo'}</small>
+              <sup className="text-2xl font-normal text-(--gm-gold) mr-1 -top-7 relative">₺</sup>149<small className="text-base font-normal tracking-wide ml-1 text-(--gm-gold)/60">/ mo</small>
             </div>
             <p className="italic mb-8 text-sm leading-relaxed text-(--gm-text-dim)">
-              {isTr ? 'Sınırsız derinlik, esnek ödeme.' : 'Limitless depth, flexible payment.'}
+              Limitless depth, flexible payment.
             </p>
             <ul className="space-y-4 mb-10 text-sm text-(--gm-text) flex-grow">
               <li className="flex items-start gap-3">
-                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> {isTr ? 'Detaylı doğum haritası analizi' : 'Detailed birth chart analysis'}
+                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> Detailed birth chart analysis
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> {isTr ? 'Günlük · haftalık · aylık öngörü' : 'Daily · weekly · monthly forecast'}
+                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> Daily · weekly · monthly forecast
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> {isTr ? 'Sinastri & kompozit haritalar' : 'Synastry & composite charts'}
+                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> Synastry & composite charts
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> {isTr ? 'Tarot okuması (Kelt Haçı dahil)' : 'Tarot reading (inc. Celtic Cross)'}
+                <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> Tarot reading (inc. Celtic Cross)
               </li>
             </ul>
             <Link href={`/${locale}/pricing`} className="w-full py-4 text-center rounded-full bg-(--gm-gold) text-(--gm-bg-deep) text-xs font-bold uppercase tracking-[0.25em] hover:scale-[1.02] transition-transform mt-auto shadow-(--gm-shadow-gold)">
-              {isTr ? 'Hemen Seç' : 'Select Now'}
+              Select Now
             </Link>
           </div>
 
           {/* Premium Yearly Card */}
           <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-2xl p-10 relative transition-all duration-500 hover:-translate-y-2 hover:shadow-(--gm-shadow-card) hover:border-(--gm-gold)/40 group flex flex-col">
             <div className="absolute top-6 right-6 font-display text-[9px] tracking-[0.3em] uppercase py-1.5 px-3 border border-(--gm-gold)/30 text-(--gm-gold) bg-(--gm-gold)/10 rounded-full">
-              {isTr ? 'Avantajlı' : 'Best Value'}
+              Best Value
             </div>
             <div className="font-display text-[14px] tracking-[0.32em] text-(--gm-gold-dim) uppercase mb-6">
-              {isTr ? 'Premium Yıllık' : 'Premium Yearly'}
+              Premium Yearly
             </div>
             <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-(--gm-text) flex items-baseline">
-              <sup className="text-2xl font-normal text-(--gm-gold-dim) mr-1 -top-7 relative">₺</sup>1499<small className="text-base text-(--gm-muted) font-normal tracking-wide ml-1">{isTr ? '/ yıl' : '/ yr'}</small>
+              <sup className="text-2xl font-normal text-(--gm-gold-dim) mr-1 -top-7 relative">₺</sup>1499<small className="text-base text-(--gm-muted) font-normal tracking-wide ml-1">/ yr</small>
             </div>
             <p className="italic text-(--gm-text-dim) mb-8 text-sm leading-relaxed">
-              {isTr ? '2 ay bizden hediye. Kesintisiz deneyim.' : '2 months free. Uninterrupted experience.'}
+              2 months free. Uninterrupted experience.
             </p>
             <ul className="space-y-4 mb-10 text-sm text-(--gm-text-dim) flex-grow">
               <li className="flex items-start gap-3">
-                <span className="text-(--gm-gold)/80 mt-1">✦</span> {isTr ? 'Aylık plandaki tüm özellikler' : 'All features in Monthly'}
+                <span className="text-(--gm-gold)/80 mt-1">✦</span> All features in Monthly
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-(--gm-gold)/80 mt-1">✦</span> {isTr ? 'Astrolog görüşmesi için %20 indirim' : '20% Discount for astrologer sessions'}
+                <span className="text-(--gm-gold)/80 mt-1">✦</span> 20% discount for astrologer sessions
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-(--gm-gold)/80 mt-1">✦</span> {isTr ? 'VIP Öncelikli danışan desteği' : 'VIP Priority support'}
+                <span className="text-(--gm-gold)/80 mt-1">✦</span> VIP priority support
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-(--gm-gold)/80 mt-1">✦</span> {isTr ? 'Kapsamlı Yıllık genel değerlendirme' : 'Comprehensive Year-ahead overview'}
+                <span className="text-(--gm-gold)/80 mt-1">✦</span> Comprehensive year-ahead overview
               </li>
             </ul>
             <Link href={`/${locale}/pricing`} className="w-full py-4 text-center rounded-full border border-(--gm-gold) text-(--gm-gold) text-xs font-bold uppercase tracking-[0.2em] hover:bg-(--gm-gold) hover:text-(--gm-bg-deep) transition-all mt-auto shadow-[0_0_15px_rgba(212,175,55,0.1)] hover:shadow-(--gm-shadow-gold)">
-              {isTr ? 'Ön Kayıt Ol' : 'Pre-Register'}
+              Pre-Register
             </Link>
           </div>
         </div>
@@ -128,12 +126,10 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
           </div>
           <div>
             <div className="font-display text-[11px] tracking-[0.2em] text-(--gm-gold) uppercase mb-2 font-bold">
-              {isTr ? 'Şeffaflık Garantisi' : 'Transparency Guarantee'}
+              Transparency Guarantee
             </div>
             <p className="text-(--gm-text-dim) text-sm font-light leading-relaxed">
-              {isTr 
-                ? "Ücretsiz deneme süresi kart bilgisi istemeden başlar. Premium'a geçişi siz manuel onaylarsınız — kimse sizden habersiz para çekmez. İptal etmek sadece bir tık uzağınızdadır." 
-                : "Free trial starts without asking for a credit card. You manually approve the transition to Premium — no one charges you without your knowledge. Canceling is just a click away."}
+              Free trial starts without asking for a credit card. You manually approve the transition to Premium — no one charges you without your knowledge. Canceling is just a click away.
             </p>
           </div>
         </div>

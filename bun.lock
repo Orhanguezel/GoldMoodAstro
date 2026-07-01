@@ -239,13 +239,6 @@
         "typescript": "~5.9.2",
       },
     },
-    "packages/core": {
-      "name": "@goldmood/core",
-      "version": "0.1.0",
-      "devDependencies": {
-        "typescript": "^5.8.0",
-      },
-    },
     "packages/shared-backend": {
       "name": "@goldmood/shared-backend",
       "version": "0.1.0",
@@ -294,10 +287,6 @@
       "dependencies": {
         "zod": "^3.25.76",
       },
-    },
-    "packages/shared-types": {
-      "name": "@goldmood/shared-types",
-      "version": "0.1.0",
     },
     "packages/shared-ui": {
       "name": "@goldmood/shared-ui",
@@ -757,13 +746,9 @@
 
     "@fortawesome/fontawesome-free": ["@fortawesome/fontawesome-free@6.7.2", "", {}, "sha512-JUOtgFW6k9u4Y+xeIaEiLr3+cjoUPiAuLXoyKOJSia6Duzb7pq+A76P9ZdPDoAoxHdHzq6gE9/jKBGXlZT8FbA=="],
 
-    "@goldmood/core": ["@goldmood/core@workspace:packages/core"],
-
     "@goldmood/shared-backend": ["@goldmood/shared-backend@workspace:packages/shared-backend"],
 
     "@goldmood/shared-config": ["@goldmood/shared-config@workspace:packages/shared-config"],
-
-    "@goldmood/shared-types": ["@goldmood/shared-types@workspace:packages/shared-types"],
 
     "@goldmood/shared-ui": ["@goldmood/shared-ui@workspace:packages/shared-ui"],
 

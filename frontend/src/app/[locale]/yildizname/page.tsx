@@ -19,25 +19,27 @@ import { useParams, useRouter } from 'next/navigation';
 
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
+import { useUiSection } from '@/i18n';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 const fraunces = Fraunces({ subsets: ['latin'], style: 'italic' });
-
-const LOADING_PHASES = [
-  'Yıldızlar diziliyor...',
-  'Ebced değerleri hesaplanıyor...',
-  'Harfler sayıya dönüşüyor...',
-  'Menzilin belirleniyor...',
-  'Kadim sırlar açılıyor...'
-];
 
 export default function YildiznamePage() {
   const router = useRouter();
   const params = useParams<{ locale?: string }>();
   const locale = typeof params?.locale === 'string' ? params.locale : 'tr';
+  const { ui } = useUiSection('ui_yildizname', locale as any);
   const [step, setStep] = useState<'intro' | 'name' | 'mother' | 'year' | 'loading'>('intro');
   const [formData, setFormData] = useState({ name: '', mother_name: '', birth_year: '' });
   const [loadingPhase, setLoadingPhase] = useState(0);
+
+  const LOADING_PHASES = [
+    ui('ui_yildizname_loading_phase_1', 'Stars are aligning...'),
+    ui('ui_yildizname_loading_phase_2', 'Ebced values are being calculated...'),
+    ui('ui_yildizname_loading_phase_3', 'Letters are turning into numbers...'),
+    ui('ui_yildizname_loading_phase_4', 'Your mansion is being determined...'),
+    ui('ui_yildizname_loading_phase_5', 'Ancient secrets are opening...')
+  ];
 
   const [readYildizname, { isLoading }] = useReadYildiznameMutation();
 
@@ -52,9 +54,9 @@ export default function YildiznamePage() {
   }, [step]);
 
   const handleNext = () => {
-    if (step === 'name' && !formData.name) return toast.error('Lütfen adınızı girin');
-    if (step === 'mother' && !formData.mother_name) return toast.error('Lütfen annenizin adını girin');
-    if (step === 'year' && (!formData.birth_year || parseInt(formData.birth_year) < 1900)) return toast.error('Lütfen geçerli bir yıl girin');
+    if (step === 'name' && !formData.name) return toast.error(ui('ui_yildizname_error_name_required', 'Please enter your name'));
+    if (step === 'mother' && !formData.mother_name) return toast.error(ui('ui_yildizname_error_mother_required', 'Please enter your mother’s name'));
+    if (step === 'year' && (!formData.birth_year || parseInt(formData.birth_year) < 1900)) return toast.error(ui('ui_yildizname_error_year_invalid', 'Please enter a valid year'));
 
     if (step === 'name') setStep('mother');
     else if (step === 'mother') setStep('year');
@@ -76,19 +78,18 @@ export default function YildiznamePage() {
         birth_year: parseInt(formData.birth_year)
       }).unwrap();
       
-      // Artificial delay for mysticism
       setTimeout(() => {
         router.push(`/tr/yildizname/result/${res.id}`);
       }, 4000);
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Analiz başarısız oldu');
+      toast.error(err?.data?.message || ui('ui_yildizname_error_analysis_failed', 'Analysis failed'));
       setStep('year');
     }
   };
 
   return (
     <>
-    <Banner title={locale === 'tr' ? 'Yıldızname' : 'Yildizname'} />
+    <Banner title={ui('ui_yildizname_banner_title', 'Yildizname')} />
     <PageContainer className="min-h-screen bg-(--gm-bg-deep) relative overflow-hidden" verticalPadding="large">
       {/* Mystic Background */}
       <div className="absolute inset-0 pointer-events-none">
@@ -113,19 +114,19 @@ export default function YildiznamePage() {
                    <Moon className="w-12 h-12" />
                 </div>
                 <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tighter`}>
-                  Yıldızname <br />
-                  <span className="text-(--gm-gold)">Ebced Sırrı</span>
+                  {ui('ui_yildizname_intro_title_line1', 'Yildizname')} <br />
+                  <span className="text-(--gm-gold)">{ui('ui_yildizname_intro_title_line2', 'Ebced Secret')}</span>
                 </h2>
                 <p className={`${fraunces.className} text-(--gm-text-dim) text-xl max-w-[var(--gm-w-form)] mx-auto leading-relaxed`}>
-                  İsmin ve anne adın, evrendeki sayısal titreşimindir. Kadim Ebced hesabı ile 28 Ay Menzili'ndeki yerini keşfet.
+                  {ui('ui_yildizname_intro_desc', "Your name and your mother’s name form your numerical vibration in the universe. Discover your place among the 28 lunar mansions with ancient Ebced calculation.")}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left max-w-[var(--gm-w-narrow)] mx-auto">
                 {[
-                  { t: 'Kadim Hesap', d: 'Binlerce yıllık Ebced sistemi.' },
-                  { t: 'Ay Menzilleri', d: '28 farklı enerji duraklarından birisin.' },
-                  { t: 'Ruhsal Rehber', d: 'Mizaç ve yolculuk haritan.' }
+                  { t: ui('ui_yildizname_feature_1_title', 'Ancient Calculation'), d: ui('ui_yildizname_feature_1_desc', 'A thousand-year-old Ebced system.') },
+                  { t: ui('ui_yildizname_feature_2_title', 'Lunar Mansions'), d: ui('ui_yildizname_feature_2_desc', 'You are one of 28 different energy stations.') },
+                  { t: ui('ui_yildizname_feature_3_title', 'Spiritual Guide'), d: ui('ui_yildizname_feature_3_desc', 'Your temperament and journey map.') }
                 ].map((x, i) => (
                   <div key={i} className="p-6 bg-(--gm-surface)/20 border border-(--gm-border-soft) rounded-3xl">
                     <h4 className="font-bold text-(--gm-gold) mb-1 text-sm uppercase tracking-widest">{x.t}</h4>
@@ -138,7 +139,7 @@ export default function YildiznamePage() {
                 onClick={() => setStep('name')}
                 className="px-12 py-6 bg-(--gm-gold) text-(--gm-bg) font-bold rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl shadow-(--gm-gold)/20 flex items-center gap-3 mx-auto group"
               >
-                BAŞLA <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                {ui('ui_yildizname_intro_start_button', 'START')} <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </motion.div>
           )}
@@ -167,10 +168,18 @@ export default function YildiznamePage() {
               <div className="space-y-8 bg-(--gm-surface)/30 backdrop-blur-2xl border border-(--gm-border-soft) p-10 rounded-[3rem] shadow-2xl">
                 <div className="space-y-2">
                   <h2 className={`${cinzel.className} text-3xl text-(--gm-text)`}>
-                    {step === 'name' ? 'Senin İsmin' : step === 'mother' ? 'Annenin İsmi' : 'Doğum Yılın'}
+                    {step === 'name'
+                      ? ui('ui_yildizname_step_name_title', 'Your Name')
+                      : step === 'mother'
+                      ? ui('ui_yildizname_step_mother_title', 'Your Mother’s Name')
+                      : ui('ui_yildizname_step_year_title', 'Your Birth Year')}
                   </h2>
                   <p className="text-sm text-(--gm-text-dim) font-serif italic">
-                    {step === 'name' ? 'Seni çağıran asıl titreşim.' : step === 'mother' ? 'Soy bağını taşıyan manevi kökün.' : 'Dünyaya adım attığın zamanın imzası.'}
+                    {step === 'name'
+                      ? ui('ui_yildizname_step_name_subtitle', 'The core vibration that calls you.')
+                      : step === 'mother'
+                      ? ui('ui_yildizname_step_mother_subtitle', 'The spiritual root that carries your lineage.')
+                      : ui('ui_yildizname_step_year_subtitle', 'The signature of the time you stepped into the world.')}
                   </p>
                 </div>
 
@@ -184,7 +193,7 @@ export default function YildiznamePage() {
                     value={step === 'name' ? formData.name : step === 'mother' ? formData.mother_name : formData.birth_year}
                     onChange={(e) => setFormData({ ...formData, [step === 'year' ? 'birth_year' : step === 'name' ? 'name' : 'mother_name']: e.target.value })}
                     onKeyDown={(e) => e.key === 'Enter' && handleNext()}
-                    placeholder={step === 'name' ? 'Örn: Orhan' : step === 'mother' ? 'Örn: Fatma' : '1990'}
+                    placeholder={step === 'name' ? ui('ui_yildizname_step_name_placeholder', 'Example: Orhan') : step === 'mother' ? ui('ui_yildizname_step_mother_placeholder', 'Example: Fatma') : '1990'}
                     className="w-full bg-(--gm-surface-high)/50 border border-(--gm-border-soft) rounded-[2rem] py-6 pl-16 pr-8 text-2xl font-serif text-(--gm-text) outline-none focus:ring-2 focus:ring-(--gm-gold)/20 focus:border-(--gm-gold)/40 transition-all placeholder:text-(--gm-text-dim)/30"
                   />
                 </div>
@@ -193,7 +202,7 @@ export default function YildiznamePage() {
                   onClick={handleNext}
                   className="w-full py-6 bg-(--gm-gold) text-(--gm-bg) font-bold rounded-full shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                 >
-                  {step === 'year' ? 'YILDIZNAMEMİ AÇ' : 'DEVAM ET'} <ChevronRight className="w-5 h-5" />
+                  {step === 'year' ? ui('ui_yildizname_step_submit_button', 'OPEN MY YILDIZNAME') : ui('ui_yildizname_step_continue_button', 'CONTINUE')} <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
             </motion.div>
@@ -261,7 +270,7 @@ export default function YildiznamePage() {
                   </motion.h2>
                 </AnimatePresence>
                 <p className="text-(--gm-text-dim) italic font-serif text-lg opacity-60">
-                  Kadim ebced hesaplaması yapılıyor...
+                  {ui('ui_yildizname_loading_footer', 'Ancient Ebced calculation is running...')}
                 </p>
               </div>
             </motion.div>

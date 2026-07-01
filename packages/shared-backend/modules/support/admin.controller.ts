@@ -14,6 +14,7 @@ import {
   adminActionSchema,
 } from "./validation";
 import { fireTicketRepliedEventsForTicket } from "./controller";
+import { apiMessage } from "../_shared/api-i18n";
 
 export const SupportAdminController = {
   /** GET /admin/support_tickets */
@@ -26,7 +27,7 @@ export const SupportAdminController = {
     } catch (err) {
       req.log.error({ err }, "admin_support_tickets_list_failed");
       reply.code(400);
-      return { message: "Geçersiz istek." };
+      return { message: apiMessage(req, "invalid_request") };
     }
   },
 
@@ -37,13 +38,13 @@ export const SupportAdminController = {
       const row = await SupportRepo.getById(id);
       if (!row) {
         reply.code(404);
-        return { message: "Kayıt bulunamadı." };
+        return { message: apiMessage(req, "record_not_found") };
       }
       return row;
     } catch (err) {
       req.log.error({ err }, "admin_support_tickets_get_failed");
       reply.code(500);
-      return { message: "İşlem gerçekleştirilemedi." };
+      return { message: apiMessage(req, "action_failed") };
     }
   },
 
@@ -60,13 +61,13 @@ export const SupportAdminController = {
       });
       if (!updated) {
         reply.code(404);
-        return { message: "Kayıt bulunamadı." };
+        return { message: apiMessage(req, "record_not_found") };
       }
       return updated;
     } catch (err) {
       req.log.error({ err }, "admin_support_tickets_update_failed");
       reply.code(400);
-      return { message: "Güncelleme başarısız." };
+      return { message: apiMessage(req, "update_failed") };
     }
   },
 
@@ -83,7 +84,7 @@ export const SupportAdminController = {
     } catch (err) {
       req.log.error({ err }, "admin_support_tickets_delete_failed");
       reply.code(500);
-      return { message: "Silme işlemi başarısız." };
+      return { message: apiMessage(req, "delete_failed") };
     }
   },
 
@@ -98,13 +99,13 @@ export const SupportAdminController = {
       });
       if (!updated) {
         reply.code(404);
-        return { message: "Kayıt bulunamadı." };
+        return { message: apiMessage(req, "record_not_found") };
       }
       return updated;
     } catch (err) {
       req.log.error({ err }, "admin_support_tickets_toggle_failed");
       reply.code(500);
-      return { message: "İşlem gerçekleştirilemedi." };
+      return { message: apiMessage(req, "action_failed") };
     }
   },
 
@@ -117,7 +118,7 @@ export const SupportAdminController = {
     } catch (err) {
       req.log.error({ err }, "admin_ticket_replies_list_failed");
       reply.code(500);
-      return { message: "İşlem gerçekleştirilemedi." };
+      return { message: apiMessage(req, "action_failed") };
     }
   },
 
@@ -156,7 +157,7 @@ export const SupportAdminController = {
     } catch (err) {
       req.log.error({ err }, "admin_ticket_replies_create_failed");
       reply.code(400);
-      return { message: "Yanıt oluşturulamadı." };
+      return { message: apiMessage(req, "reply_create_failed") };
     }
   },
 
@@ -170,7 +171,7 @@ export const SupportAdminController = {
     } catch (err) {
       req.log.error({ err }, "admin_ticket_replies_delete_failed");
       reply.code(500);
-      return { message: "Silme işlemi başarısız." };
+      return { message: apiMessage(req, "delete_failed") };
     }
   },
 };

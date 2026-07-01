@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Crown, ArrowRight, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUiSection } from '@/i18n';
 
 /**
  * Premium Membership Banner component.
@@ -12,11 +13,12 @@ import { cn } from '@/lib/utils';
  */
 export default function PremiumMembershipBanner({ locale = 'tr' }: { locale?: string }) {
   const isTr = locale === 'tr';
-  
+  const { ui } = useUiSection('ui_extra' as any);
+
   const content = {
-    title: isTr ? 'Premium ile Sınırsız' : 'Unlimited with Premium',
-    subtitle: isTr ? 'Aylık ₺149 — istediğin zaman iptal.' : 'TRY 149/mo — cancel anytime.',
-    cta: isTr ? 'Önerilen Plan' : 'Recommended Plan'
+    title: ui('ui_extra_b4_premium_banner_title', 'Unlimited with Premium'),
+    subtitle: ui('ui_extra_b4_premium_banner_subtitle', 'Monthly TRY 149, cancel anytime.'),
+    cta: ui('ui_extra_b4_premium_banner_cta', 'Recommended Plan')
   };
 
   return (
@@ -52,7 +54,7 @@ export default function PremiumMembershipBanner({ locale = 'tr' }: { locale?: st
               <Crown size={12} fill="currentColor" />
             </div>
             <span className="font-display text-[10px] tracking-[0.4em] uppercase text-[var(--gm-gold-deep)] font-bold">
-              {isTr ? 'Ayrıcalıklı Deneyim' : 'Exclusive Experience'}
+              {ui('ui_extra_b4_premium_banner_badge', 'Premium Experience')}
             </span>
           </div>
 

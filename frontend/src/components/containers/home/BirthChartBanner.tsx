@@ -6,19 +6,20 @@ import Image from 'next/image';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBrand } from '@/hooks/useBrand';
+import { useUiSection } from '@/i18n';
 
 /**
  * Premium BirthChartBanner component.
  * Replaces the generic banner with a high-end, realistic visual experience.
  */
 export default function BirthChartBanner({ locale = 'tr' }: { locale?: string }) {
-  const isTr = locale === 'tr';
   const { brand } = useBrand();
-  
+  const { ui } = useUiSection('ui_extra' as any);
+
   const content = {
-    title: isTr ? 'Doğum Haritan Hazır' : 'Your Birth Chart is Ready',
-    subtitle: isTr ? 'Saniyeler içinde detaylı analiz.' : 'Detailed analysis in seconds.',
-    cta: isTr ? 'Haritamı Oluştur' : 'Generate My Chart'
+    title: ui('ui_extra_b3_birth_chart_title', 'Your Birth Chart is Ready'),
+    subtitle: ui('ui_extra_b3_birth_chart_subtitle', 'Detailed analysis in seconds.'),
+    cta: ui('ui_extra_b3_birth_chart_cta', 'Generate My Chart')
   };
 
   return (
@@ -50,7 +51,7 @@ export default function BirthChartBanner({ locale = 'tr' }: { locale?: string })
           <div className="flex items-center gap-2 mb-4 animate-[fadeIn_0.8s_ease-out_forwards]">
             <Sparkles size={14} className="text-(--gm-gold) animate-pulse" />
             <span className="font-display text-[10px] tracking-[0.4em] uppercase text-(--gm-gold-deep)">
-              {isTr ? 'Kişisel Analiz' : 'Personal Analysis'}
+              {ui('ui_extra_b3_birth_chart_eyebrow', 'Personal Analysis')}
             </span>
           </div>
 

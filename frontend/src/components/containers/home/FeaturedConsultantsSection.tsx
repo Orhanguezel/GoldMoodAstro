@@ -9,24 +9,13 @@ import { localizePath } from '@/integrations/shared';
 import { useLocaleShort, useUiSection } from '@/i18n';
 
 const COPY_FALLBACK = {
-  tr: {
-    label: 'Öne Çıkan Danışmanlar',
-    title: 'En yüksek puanlı uzmanlar',
-    desc: 'Alanında kanıtlanmış deneyim, gerçek kullanıcı yorumları ile sıralanmış danışmanlarımız.',
-    cta: 'Tüm Danışmanları Gör',
-    min: 'dk',
-    from: 'itibaren',
-    noData: 'Danışman bulunamadı.',
-  },
-  en: {
-    label: 'Featured Consultants',
-    title: 'Our highest-rated experts',
-    desc: 'Consultants ranked by proven experience in their field and authentic user reviews.',
-    cta: 'View All Consultants',
-    min: 'min',
-    from: 'from',
-    noData: 'No consultants found.',
-  },
+  label: 'Featured Consultants',
+  title: 'Our highest-rated experts',
+  desc: 'Consultants ranked by proven experience in their field and authentic user reviews.',
+  cta: 'View All Consultants',
+  min: 'min',
+  from: 'from',
+  noData: 'No consultants found.',
 };
 
 function StarRow({ rating }: { rating: number }) {
@@ -47,19 +36,18 @@ export default function FeaturedConsultantsSection({ locale: explicitLocale }: {
   const locale = useLocaleShort(explicitLocale) || 'tr';
   const { ui } = useUiSection('ui_home', locale as any);
   
-  const f = COPY_FALLBACK[locale as keyof typeof COPY_FALLBACK] ?? COPY_FALLBACK.tr;
   const copy = React.useMemo(() => ({
-    label: ui('ui_home_featured_label', f.label),
-    title: ui('ui_home_featured_title', f.title),
-    desc: ui('ui_home_featured_desc', f.desc),
-    cta: ui('ui_home_featured_cta', f.cta),
-    min: ui('ui_home_featured_min', f.min),
-    from: ui('ui_home_featured_from', f.from),
-    noData: ui('ui_home_featured_no_data', f.noData),
-  }), [ui, f]);
+    label: ui('ui_home_featured_label', COPY_FALLBACK.label),
+    title: ui('ui_home_featured_title', COPY_FALLBACK.title),
+    desc: ui('ui_home_featured_desc', COPY_FALLBACK.desc),
+    cta: ui('ui_home_featured_cta', COPY_FALLBACK.cta),
+    min: ui('ui_home_featured_min', COPY_FALLBACK.min),
+    from: ui('ui_home_featured_from', COPY_FALLBACK.from),
+    noData: ui('ui_home_featured_no_data', COPY_FALLBACK.noData),
+  }), [ui]);
 
   const { data: consultants = [], isLoading } = useListConsultantsPublicQuery(
-    { limit: 6, sort: 'popular' },
+    { limit: 6, sort: 'popular', locale },
   );
   const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
   const expertiseLabels = React.useMemo<Record<string, string>>(
@@ -123,7 +111,7 @@ export default function FeaturedConsultantsSection({ locale: explicitLocale }: {
                       <StarRow rating={Number(c.rating_avg) || 0} />
                       <span className="text-xs text-text-muted">
                         {Number(c.rating_avg || 0).toFixed(1)}
-                        {Number(c.rating_count || 0) > 0 && ` (${c.rating_count} yorum)`}
+                        {Number(c.rating_count || 0) > 0 && ` (${c.rating_count} reviews)`}
                       </span>
                     </div>
                     {c.session_duration && (

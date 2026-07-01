@@ -102,7 +102,7 @@ export default function AnnouncementFormPage() {
             </div>
             <div className="space-y-2">
               <h2 className="font-serif text-3xl text-gm-text">{t('messages.error')}</h2>
-              <p className="text-gm-muted font-serif italic text-lg">Duyuru verisi yüklenemedi.</p>
+              <p className="text-gm-muted font-serif italic text-lg">{t('messages.loadError')}</p>
             </div>
             <Button variant="outline" onClick={() => router.push('/admin/announcements')} className="rounded-full px-10 h-12 border-gm-border-soft hover:bg-gm-surface font-bold tracking-widest uppercase text-[10px]">
               <ArrowLeft className="mr-2 size-4" /> {t('admin.common.back', null, 'Geri')}
@@ -252,7 +252,7 @@ export default function AnnouncementFormPage() {
                 <div className="flex items-center justify-between group">
                   <div className="space-y-1">
                     <Label className="text-[11px] font-bold tracking-widest uppercase text-gm-text">{t('form.active')}</Label>
-                    <p className="text-[10px] text-gm-muted uppercase tracking-[0.15em] font-bold opacity-60">Sistem üzerinde göster</p>
+                    <p className="text-[10px] text-gm-muted uppercase tracking-[0.15em] font-bold opacity-60">{t('form.activeHint')}</p>
                   </div>
                   <Switch 
                     checked={formData.is_active} 
@@ -306,12 +306,12 @@ export default function AnnouncementFormPage() {
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between text-[10px] text-gm-muted/60">
-                        <span>Oluşturulma</span>
+                        <span>{t('history.created')}</span>
                         <span className="font-mono">24.04.2024</span>
                       </div>
                       <div className="flex justify-between text-[10px] text-gm-muted/60">
-                        <span>Son Güncelleme</span>
-                        <span className="font-mono">Bugün</span>
+                        <span>{t('history.updated')}</span>
+                        <span className="font-mono">{t('history.today')}</span>
                       </div>
                     </div>
                   </div>

@@ -18,18 +18,18 @@ export default async function OG({ params }: { params: { id: string; locale: str
     const json = await res.json();
     data = json.data;
   } catch (e) {
-    data = { cards: [], spread_type: 'Tarot Açılımı', question: '' };
+    data = { cards: [], spread_type: 'Tarot Spread', question: '' };
   }
 
   const fonts = await getOgFonts().catch(() => undefined);
   const theme = await getOgTheme();
   
   // Format spread type
-  let spreadLabel = 'Tarot Açılımı';
-  if (data.spread_type === 'one_card') spreadLabel = 'Tek Kart Açılımı';
-  if (data.spread_type === 'three_card_general') spreadLabel = 'Üç Kart (Genel) Açılımı';
-  if (data.spread_type === 'three_card_decision') spreadLabel = 'Karar Açılımı';
-  if (data.spread_type === 'celtic_cross') spreadLabel = 'Kelt Haçı Açılımı';
+  let spreadLabel = 'Tarot Spread';
+  if (data.spread_type === 'one_card') spreadLabel = 'One Card Spread';
+  if (data.spread_type === 'three_card_general') spreadLabel = 'Three Card General Spread';
+  if (data.spread_type === 'three_card_decision') spreadLabel = 'Decision Spread';
+  if (data.spread_type === 'celtic_cross') spreadLabel = 'Celtic Cross Spread';
 
   const displayCards = data.cards.slice(0, 3); // Max 3 cards for preview
 

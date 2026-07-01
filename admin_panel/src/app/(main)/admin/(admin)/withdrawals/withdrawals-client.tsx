@@ -19,8 +19,10 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 export function WithdrawalsClient() {
+  const t = useAdminT('admin.withdrawals');
   const [statusFilter, setStatusFilter] = useState<WithdrawalStatus | 'all'>('pending');
   const [page, setPage] = useState(1);
   const limit = 20;
@@ -52,10 +54,10 @@ export function WithdrawalsClient() {
     setActionLoading(true);
     try {
       await approveMw(actionModal.id).unwrap();
-      toast.success('Talep başarıyla onaylandı.');
+      toast.success(t('toast.approveSuccess', undefined, 'Talep başarıyla onaylandı.'));
       setActionModal(null);
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Onaylama başarısız.');
+      toast.error(err?.data?.message || t('toast.approveError', undefined, 'Onaylama başarısız.'));
     } finally {
       setActionLoading(false);
     }
@@ -64,17 +66,17 @@ export function WithdrawalsClient() {
   const handleReject = async () => {
     if (!actionModal) return;
     if (!rejectionReason.trim()) {
-      toast.error('Lütfen bir ret sebebi girin.');
+      toast.error(t('toast.rejectReasonRequired', undefined, 'Lütfen bir ret sebebi girin.'));
       return;
     }
     setActionLoading(true);
     try {
       await rejectMw({ id: actionModal.id, rejection_reason: rejectionReason }).unwrap();
-      toast.success('Talep reddedildi ve bakiye iade edildi.');
+      toast.success(t('toast.rejectSuccess', undefined, 'Talep reddedildi ve bakiye iade edildi.'));
       setActionModal(null);
       setRejectionReason('');
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Red işlemi başarısız.');
+      toast.error(err?.data?.message || t('toast.rejectError', undefined, 'Red işlemi başarısız.'));
     } finally {
       setActionLoading(false);
     }
@@ -83,17 +85,17 @@ export function WithdrawalsClient() {
   const handleMarkPaid = async () => {
     if (!actionModal) return;
     if (!transferReference.trim()) {
-      toast.error('Lütfen banka transfer referansı girin.');
+      toast.error(t('toast.transferRefRequired', undefined, 'Lütfen banka transfer referansı girin.'));
       return;
     }
     setActionLoading(true);
     try {
       await markPaidMw({ id: actionModal.id, transfer_reference: transferReference }).unwrap();
-      toast.success('Talep ödendi olarak işaretlendi.');
+      toast.success(t('toast.markPaidSuccess', undefined, 'Talep ödendi olarak işaretlendi.'));
       setActionModal(null);
       setTransferReference('');
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Ödeme kaydı başarısız.');
+      toast.error(err?.data?.message || t('toast.markPaidError', undefined, 'Ödeme kaydı başarısız.'));
     } finally {
       setActionLoading(false);
     }
@@ -113,19 +115,19 @@ export function WithdrawalsClient() {
         <div className="w-[200px]">
           <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
             <SelectTrigger>
-              <SelectValue placeholder="Durum Seç" />
+              <SelectValue placeholder={t('filter.placeholder', undefined, 'Durum Seç')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="pending">Bekleyen</SelectItem>
-              <SelectItem value="approved">Onaylanan (Ödenecek)</SelectItem>
-              <SelectItem value="paid">Ödenen</SelectItem>
-              <SelectItem value="rejected">Reddedilen</SelectItem>
-              <SelectItem value="cancelled">İptal Edilen</SelectItem>
+              <SelectItem value="all">{t('filter.all', undefined, 'Tümü')}</SelectItem>
+              <SelectItem value="pending">{t('filter.pending', undefined, 'Bekleyen')}</SelectItem>
+              <SelectItem value="approved">{t('filter.approved', undefined, 'Onaylanan (Ödenecek)')}</SelectItem>
+              <SelectItem value="paid">{t('filter.paid', undefined, 'Ödenen')}</SelectItem>
+              <SelectItem value="rejected">{t('filter.rejected', undefined, 'Reddedilen')}</SelectItem>
+              <SelectItem value="cancelled">{t('filter.cancelled', undefined, 'İptal Edilen')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <Button variant="outline" onClick={() => refetch()}>Yenile</Button>
+        <Button variant="outline" onClick={() => refetch()}>{t('actions.refresh', undefined, 'Yenile')}</Button>
       </div>
 
       <Card className="bg-gm-surface p-0 overflow-hidden border-gm-border-soft">
@@ -133,12 +135,12 @@ export function WithdrawalsClient() {
           <table className="w-full text-left text-sm text-gm-text-primary whitespace-nowrap">
             <thead className="bg-gm-deep/50 text-gm-muted uppercase text-xs tracking-wider">
               <tr>
-                <th className="px-6 py-4 font-medium">Tarih</th>
-                <th className="px-6 py-4 font-medium">Danışman</th>
-                <th className="px-6 py-4 font-medium">Tutar</th>
-                <th className="px-6 py-4 font-medium">Banka Bilgisi</th>
-                <th className="px-6 py-4 font-medium">Durum</th>
-                <th className="px-6 py-4 font-medium text-right">İşlem</th>
+                <th className="px-6 py-4 font-medium">{t('table.date', undefined, 'Tarih')}</th>
+                <th className="px-6 py-4 font-medium">{t('table.consultant', undefined, 'Danışman')}</th>
+                <th className="px-6 py-4 font-medium">{t('table.amount', undefined, 'Tutar')}</th>
+                <th className="px-6 py-4 font-medium">{t('table.bankInfo', undefined, 'Banka Bilgisi')}</th>
+                <th className="px-6 py-4 font-medium">{t('table.status', undefined, 'Durum')}</th>
+                <th className="px-6 py-4 font-medium text-right">{t('table.action', undefined, 'İşlem')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gm-border-soft">
@@ -146,13 +148,13 @@ export function WithdrawalsClient() {
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-gm-muted">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                    Yükleniyor...
+                    {t('state.loading', undefined, 'Yükleniyor...')}
                   </td>
                 </tr>
               ) : data?.items?.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-gm-muted">
-                    Kayıt bulunamadı.
+                    {t('state.empty', undefined, 'Kayıt bulunamadı.')}
                   </td>
                 </tr>
               ) : (
@@ -161,7 +163,7 @@ export function WithdrawalsClient() {
                     <td className="px-6 py-4">{fmtDate(row.requested_at)}</td>
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-medium">{row.consultant_name || 'Bilinmiyor'}</p>
+                        <p className="font-medium">{row.consultant_name || t('table.unknown', undefined, 'Bilinmiyor')}</p>
                         <p className="text-xs text-gm-muted">{row.consultant_email}</p>
                       </div>
                     </td>
@@ -177,27 +179,27 @@ export function WithdrawalsClient() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {row.status === 'pending' && <Badge variant="secondary" className="bg-amber-500/15 text-amber-600 border-amber-500/30">Bekliyor</Badge>}
-                      {row.status === 'approved' && <Badge variant="secondary" className="bg-sky-500/15 text-sky-600 border-sky-500/30">Onaylandı (Bekliyor)</Badge>}
-                      {row.status === 'paid' && <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">Ödendi</Badge>}
-                      {row.status === 'rejected' && <Badge variant="destructive">Reddedildi</Badge>}
-                      {row.status === 'cancelled' && <Badge variant="secondary">İptal</Badge>}
+                      {row.status === 'pending' && <Badge variant="secondary" className="bg-amber-500/15 text-amber-600 border-amber-500/30">{t('status.pending', undefined, 'Bekliyor')}</Badge>}
+                      {row.status === 'approved' && <Badge variant="secondary" className="bg-sky-500/15 text-sky-600 border-sky-500/30">{t('status.approved', undefined, 'Onaylandı (Bekliyor)')}</Badge>}
+                      {row.status === 'paid' && <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">{t('status.paid', undefined, 'Ödendi')}</Badge>}
+                      {row.status === 'rejected' && <Badge variant="destructive">{t('status.rejected', undefined, 'Reddedildi')}</Badge>}
+                      {row.status === 'cancelled' && <Badge variant="secondary">{t('status.cancelled', undefined, 'İptal')}</Badge>}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {row.status === 'pending' && (
                           <>
                             <Button size="sm" variant="default" onClick={() => setActionModal({ type: 'approve', id: row.id, amount: row.amount, iban: row.bank_iban, holder: row.bank_holder })}>
-                              Onayla
+                              {t('actions.approve', undefined, 'Onayla')}
                             </Button>
                             <Button size="sm" variant="destructive" onClick={() => setActionModal({ type: 'reject', id: row.id })}>
-                              Reddet
+                              {t('actions.reject', undefined, 'Reddet')}
                             </Button>
                           </>
                         )}
                         {row.status === 'approved' && (
                           <Button size="sm" variant="default" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setActionModal({ type: 'mark-paid', id: row.id, amount: row.amount, iban: row.bank_iban, holder: row.bank_holder })}>
-                            Ödendi İşaretle
+                            {t('actions.markPaid', undefined, 'Ödendi İşaretle')}
                           </Button>
                         )}
                       </div>
@@ -211,65 +213,65 @@ export function WithdrawalsClient() {
       </Card>
 
       {/* Action Modals */}
-      <Modal open={actionModal?.type === 'approve'} onOpenChange={(o) => !o && setActionModal(null)} title="Talebi Onayla">
+      <Modal open={actionModal?.type === 'approve'} onOpenChange={(o) => !o && setActionModal(null)} title={t('approveModal.title', undefined, 'Talebi Onayla')}>
         <div className="space-y-4 pt-4">
-          <p className="text-sm text-gm-muted">Bu para çekme talebini onaylamak istiyor musunuz? Onayladıktan sonra banka transferini gerçekleştirmeniz ve 'Ödendi' olarak işaretlemeniz gerekecektir.</p>
+          <p className="text-sm text-gm-muted">{t('approveModal.description', undefined, "Bu para çekme talebini onaylamak istiyor musunuz? Onayladıktan sonra banka transferini gerçekleştirmeniz ve 'Ödendi' olarak işaretlemeniz gerekecektir.")}</p>
           <div className="bg-gm-deep p-4 rounded-xl space-y-2 text-sm border border-gm-border-soft">
-            <div className="flex justify-between"><span className="text-gm-muted">Tutar:</span> <span className="font-mono text-gm-gold">{actionModal?.amount} TRY</span></div>
-            <div className="flex justify-between"><span className="text-gm-muted">Hesap Sahibi:</span> <span>{actionModal?.holder}</span></div>
-            <div className="flex justify-between"><span className="text-gm-muted">IBAN:</span> <span className="font-mono text-gm-text-secondary">{actionModal?.iban}</span></div>
+            <div className="flex justify-between"><span className="text-gm-muted">{t('detail.amount', undefined, 'Tutar:')}</span> <span className="font-mono text-gm-gold">{actionModal?.amount} TRY</span></div>
+            <div className="flex justify-between"><span className="text-gm-muted">{t('detail.accountHolder', undefined, 'Hesap Sahibi:')}</span> <span>{actionModal?.holder}</span></div>
+            <div className="flex justify-between"><span className="text-gm-muted">{t('detail.iban', undefined, 'IBAN:')}</span> <span className="font-mono text-gm-text-secondary">{actionModal?.iban}</span></div>
           </div>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="ghost" onClick={() => setActionModal(null)}>İptal</Button>
+            <Button variant="ghost" onClick={() => setActionModal(null)}>{t('actions.cancel', undefined, 'İptal')}</Button>
             <Button variant="default" onClick={handleApprove} disabled={actionLoading}>
               {actionLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Onayla
+              {t('actions.approve', undefined, 'Onayla')}
             </Button>
           </div>
         </div>
       </Modal>
 
-      <Modal open={actionModal?.type === 'reject'} onOpenChange={(o) => !o && setActionModal(null)} title="Talebi Reddet">
+      <Modal open={actionModal?.type === 'reject'} onOpenChange={(o) => !o && setActionModal(null)} title={t('rejectModal.title', undefined, 'Talebi Reddet')}>
         <div className="space-y-4 pt-4">
-          <p className="text-sm text-gm-muted">Talebi reddettiğinizde bakiye danışmanın cüzdanına iade edilecektir. Lütfen red sebebi girin (danışmana e-posta ile bildirilecek).</p>
-          <Textarea 
-            placeholder="Reddetme sebebi..."
+          <p className="text-sm text-gm-muted">{t('rejectModal.description', undefined, 'Talebi reddettiğinizde bakiye danışmanın cüzdanına iade edilecektir. Lütfen red sebebi girin (danışmana e-posta ile bildirilecek).')}</p>
+          <Textarea
+            placeholder={t('rejectModal.reasonPlaceholder', undefined, 'Reddetme sebebi...')}
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
             className="w-full"
             rows={3}
           />
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="ghost" onClick={() => setActionModal(null)}>İptal</Button>
+            <Button variant="ghost" onClick={() => setActionModal(null)}>{t('actions.cancel', undefined, 'İptal')}</Button>
             <Button variant="destructive" onClick={handleReject} disabled={actionLoading || !rejectionReason.trim()}>
               {actionLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Reddet
+              {t('actions.reject', undefined, 'Reddet')}
             </Button>
           </div>
         </div>
       </Modal>
 
-      <Modal open={actionModal?.type === 'mark-paid'} onOpenChange={(o) => !o && setActionModal(null)} title="Ödendi Olarak İşaretle">
+      <Modal open={actionModal?.type === 'mark-paid'} onOpenChange={(o) => !o && setActionModal(null)} title={t('markPaidModal.title', undefined, 'Ödendi Olarak İşaretle')}>
         <div className="space-y-4 pt-4">
-          <p className="text-sm text-gm-muted">Banka transferini gerçekleştirdikten sonra referans/dekont numarasını girin.</p>
+          <p className="text-sm text-gm-muted">{t('markPaidModal.description', undefined, 'Banka transferini gerçekleştirdikten sonra referans/dekont numarasını girin.')}</p>
           <div className="bg-gm-deep p-4 rounded-xl space-y-2 text-sm border border-gm-border-soft mb-4">
-            <div className="flex justify-between"><span className="text-gm-muted">Tutar:</span> <span className="font-mono text-gm-gold">{actionModal?.amount} TRY</span></div>
-            <div className="flex justify-between"><span className="text-gm-muted">Hesap Sahibi:</span> <span>{actionModal?.holder}</span></div>
-            <div className="flex justify-between"><span className="text-gm-muted">IBAN:</span> <span className="font-mono text-gm-text-secondary">{actionModal?.iban}</span></div>
+            <div className="flex justify-between"><span className="text-gm-muted">{t('detail.amount', undefined, 'Tutar:')}</span> <span className="font-mono text-gm-gold">{actionModal?.amount} TRY</span></div>
+            <div className="flex justify-between"><span className="text-gm-muted">{t('detail.accountHolder', undefined, 'Hesap Sahibi:')}</span> <span>{actionModal?.holder}</span></div>
+            <div className="flex justify-between"><span className="text-gm-muted">{t('detail.iban', undefined, 'IBAN:')}</span> <span className="font-mono text-gm-text-secondary">{actionModal?.iban}</span></div>
           </div>
           <div>
-            <label className="text-xs text-gm-muted mb-1 block">Transfer Referansı / Açıklama</label>
-            <Input 
-              placeholder="Dekont No veya Referans (Zorunlu)"
+            <label className="text-xs text-gm-muted mb-1 block">{t('markPaidModal.refLabel', undefined, 'Transfer Referansı / Açıklama')}</label>
+            <Input
+              placeholder={t('markPaidModal.refPlaceholder', undefined, 'Dekont No veya Referans (Zorunlu)')}
               value={transferReference}
               onChange={(e) => setTransferReference(e.target.value)}
             />
           </div>
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="ghost" onClick={() => setActionModal(null)}>İptal</Button>
+            <Button variant="ghost" onClick={() => setActionModal(null)}>{t('actions.cancel', undefined, 'İptal')}</Button>
             <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleMarkPaid} disabled={actionLoading || !transferReference.trim()}>
               {actionLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Ödendi Olarak Kaydet
+              {t('markPaidModal.confirm', undefined, 'Ödendi Olarak Kaydet')}
             </Button>
           </div>
         </div>

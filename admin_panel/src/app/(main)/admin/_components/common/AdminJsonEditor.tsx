@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { useAdminT } from './useAdminT';
 
 type AdminJsonEditorProps = {
   label?: React.ReactNode;
@@ -43,6 +44,7 @@ export const AdminJsonEditor: React.FC<AdminJsonEditorProps> = ({
   helperText,
   height = 260,
 }) => {
+  const t = useAdminT('admin.common');
   const [text, setText] = useState<string>(() => safeStringify(value));
   const [internalError, setInternalError] = useState<string | null>(null);
 
@@ -67,7 +69,7 @@ export const AdminJsonEditor: React.FC<AdminJsonEditorProps> = ({
       setInternalError(null);
       onErrorChange?.(null);
     } catch (err: any) {
-      const msg = err?.message ? String(err.message) : 'Geçersiz JSON';
+      const msg = err?.message ? String(err.message) : t('jsonEditor.invalidJson');
       setInternalError(msg);
       onErrorChange?.(msg);
     }
@@ -111,7 +113,7 @@ export const AdminJsonEditor: React.FC<AdminJsonEditorProps> = ({
 
       {error ? (
         <div className="text-xs text-destructive">
-          JSON hatası: <span className="font-medium">{error}</span>
+          {t('jsonEditor.jsonError')} <span className="font-medium">{error}</span>
         </div>
       ) : null}
     </div>

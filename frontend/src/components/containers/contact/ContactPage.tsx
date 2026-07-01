@@ -48,50 +48,50 @@ export default function ContactPage() {
   const t = useMemo(
     () => ({
       subprefix: safeStr(ui('ui_contact_subprefix', brand.name || 'GoldMoodAstro')),
-      sublabel: safeStr(ui('ui_contact_sublabel', 'İletişim')),
-      titleLeft: safeStr(ui('ui_contact_title_left', 'Bize Ulaşın')),
+      sublabel: safeStr(ui('ui_contact_sublabel', 'Contact')),
+      titleLeft: safeStr(ui('ui_contact_title_left', 'Contact Us')),
       tagline: safeStr(
         ui(
           'ui_contact_tagline',
-          'Sorularınız ve seans rezervasyon talepleriniz için mesaj gönderin. Ekibimiz kısa süre içinde size dönüş yapacaktır.',
+          'Send us a message for questions and session booking requests. Our team will get back to you shortly.',
         ),
       ),
 
-      formTitle: safeStr(ui('ui_contact_form_title', 'Mesaj gönder')),
+      formTitle: safeStr(ui('ui_contact_form_title', 'Send a message')),
       firstName: safeStr(ui('ui_contact_first_name', 'Ad*')),
       lastName: safeStr(ui('ui_contact_last_name', 'Soyad')),
       phone: safeStr(ui('ui_contact_phone', 'Telefon*')),
       email: safeStr(ui('ui_contact_email', 'E-posta*')),
       subject: safeStr(ui('ui_contact_subject_label', 'Konu*')),
       message: safeStr(ui('ui_contact_message_label', 'Mesaj*')),
-      messagePh: safeStr(ui('ui_contact_message_placeholder', 'Mesajınızı yazın...')),
+      messagePh: safeStr(ui('ui_contact_message_placeholder', 'Write your message...')),
 
       topicLabel: safeStr(ui('ui_contact_select_label', 'Konu')),
-      topicAppointment: safeStr(ui('ui_contact_service_cooling_towers', 'Randevu talebi')),
+      topicAppointment: safeStr(ui('ui_contact_service_cooling_towers', 'Booking request')),
       topicQuestion: safeStr(ui('ui_contact_service_maintenance', 'Soru / bilgi')),
-      topicCollab: safeStr(ui('ui_contact_service_modernization', 'İşbirliği')),
-      topicOther: safeStr(ui('ui_contact_service_other', 'Diğer')),
+      topicCollab: safeStr(ui('ui_contact_service_modernization', 'Collaboration')),
+      topicOther: safeStr(ui('ui_contact_service_other', 'Other')),
 
       termsPrefix: safeStr(ui('ui_contact_terms_prefix', 'Kabul ediyorum:')),
-      terms: safeStr(ui('ui_contact_terms', 'Gizlilik Politikası')),
-      conditions: safeStr(ui('ui_contact_conditions', 'Kullanım Koşulları')),
+      terms: safeStr(ui('ui_contact_terms', 'Privacy Policy')),
+      conditions: safeStr(ui('ui_contact_conditions', 'Terms of Use')),
 
-      submit: safeStr(ui('ui_contact_submit', 'Gönder')),
-      sending: safeStr(ui('ui_contact_sending', 'Gönderiliyor...')),
-      success: safeStr(ui('ui_contact_success', 'Teşekkürler! Mesajınız iletildi.')),
-      errorGeneric: safeStr(ui('ui_contact_error_generic', 'Gönderilemedi. Lütfen tekrar deneyin.')),
+      submit: safeStr(ui('ui_contact_submit', 'Send')),
+      sending: safeStr(ui('ui_contact_sending', 'Sending...')),
+      success: safeStr(ui('ui_contact_success', 'Thank you. Your message has been sent.')),
+      errorGeneric: safeStr(ui('ui_contact_error_generic', 'Could not send. Please try again.')),
 
       errRequired: safeStr(ui('ui_contact_error_required', 'Bu alan zorunludur.')),
-      errEmail: safeStr(ui('ui_contact_error_email', 'Geçerli bir e-posta adresi girin.')),
-      errPhone: safeStr(ui('ui_contact_error_phone', 'Geçerli bir telefon numarası girin.')),
+      errEmail: safeStr(ui('ui_contact_error_email', 'Enter a valid email address.')),
+      errPhone: safeStr(ui('ui_contact_error_phone', 'Enter a valid phone number.')),
       errMinMessage: safeStr(
-        ui('ui_contact_error_message', 'En az 10 karakterlik bir mesaj yazın.'),
+        ui('ui_contact_error_message', 'Write a message with at least 10 characters.'),
       ),
 
-      subjectBase: safeStr(ui('ui_contact_subject_base', 'İletişim Mesajı')),
+      subjectBase: safeStr(ui('ui_contact_subject_base', 'Contact Message')),
       addressLabel: safeStr(ui('ui_contact_address_label', 'Adres')),
       mapTitle: safeStr(ui('ui_contact_map_title', 'Konum')),
-      infoTitle: safeStr(ui('ui_contact_info_title', 'İletişim bilgileri')),
+      infoTitle: safeStr(ui('ui_contact_info_title', 'Contact information')),
       infoNoteTitle: safeStr(ui('ui_contact_info_note_title', 'Not')),
     }),
     [ui, brand.name],
@@ -130,7 +130,7 @@ export default function ContactPage() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
-      {/* Sol: Bilgi + Harita */}
+      {/* Left: info + map */}
       <div className="lg:col-span-5 space-y-12">
         <div className="space-y-6">
           <div className="text-[10px] font-bold uppercase tracking-[0.4em] text-(--gm-gold) mb-3">
@@ -143,7 +143,7 @@ export default function ContactPage() {
           <p className="text-(--gm-text-dim) leading-relaxed text-lg font-serif italic opacity-80">{t.tagline}</p>
         </div>
 
-        {/* İletişim bilgileri */}
+        {/* Contact information */}
         <div className="bg-(--gm-surface) shadow-(--gm-shadow-card) border border-(--gm-border-soft) p-10 rounded-[2.5rem] relative overflow-hidden group">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-(--gm-gold)/5 rounded-full blur-3xl group-hover:bg-(--gm-gold)/10 transition-colors" />
           <h3 className={`${cinzel.className} text-xl text-(--gm-text) mb-8`}>
@@ -202,7 +202,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        {/* Harita */}
+        {/* Map */}
         {mapCfg.embed_url && (
           <div className="bg-(--gm-surface) shadow-(--gm-shadow-soft) border border-(--gm-border-soft) overflow-hidden rounded-[2.5rem]">
             <div className="px-8 py-5 border-b border-(--gm-border-soft) flex items-center justify-between">
@@ -221,7 +221,7 @@ export default function ContactPage() {
         )}
       </div>
 
-      {/* Sağ: Form */}
+      {/* Right: form */}
       <div className="lg:col-span-7">
         <ContactForm locale={locale} t={t} />
       </div>

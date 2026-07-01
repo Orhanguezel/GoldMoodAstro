@@ -7,6 +7,7 @@ import {
   MOBILE_I18N_SECTION_KEY,
   type MobileI18nLocale,
 } from '@goldmood/shared-config/mobileI18n';
+import { storage } from './storage';
 
 type TranslationTree = Record<string, unknown>;
 type LocaleResourceMap = Partial<Record<MobileI18nLocale, TranslationTree>>;
@@ -48,9 +49,10 @@ function parseSettingValue(value: unknown): LocaleResourceMap | null {
   const maybeValue = isRecord(value.value) ? value.value : value;
   const tr = isRecord(maybeValue.tr) ? maybeValue.tr : undefined;
   const en = isRecord(maybeValue.en) ? maybeValue.en : undefined;
-  if (!tr && !en) return null;
+  const de = isRecord(maybeValue.de) ? maybeValue.de : undefined;
+  if (!tr && !en && !de) return null;
 
-  return { tr, en };
+  return { tr, en, de };
 }
 
 async function fetchRemoteMobileI18n(): Promise<LocaleResourceMap | null> {
@@ -73,6 +75,9 @@ function buildResources(remote?: LocaleResourceMap | null) {
     en: {
       translation: mergeDeep({ ...MOBILE_I18N_FALLBACK.en }, remote?.en),
     },
+    de: {
+      translation: mergeDeep({ ...MOBILE_I18N_FALLBACK.de }, remote?.de),
+    },
   };
 }
 
@@ -80,7 +85,7 @@ export function initI18n(): void {
   if (i18n.isInitialized) return;
 
   const device = Localization.getLocales()[0]?.languageCode ?? 'tr';
-  const initial = device === 'tr' ? 'tr' : 'en';
+  const initial: MobileI18nLocale = device === 'tr' || device === 'de' ? device : 'en';
 
   i18n.use(initReactI18next).init({
     resources: buildResources(),
@@ -96,10 +101,19 @@ export function initI18n(): void {
       const resources = buildResources(remote);
       i18n.addResourceBundle('tr', 'translation', resources.tr.translation, true, true);
       i18n.addResourceBundle('en', 'translation', resources.en.translation, true, true);
+      i18n.addResourceBundle('de', 'translation', resources.de.translation, true, true);
     })
     .catch(() => {
       // Bundle fallback keeps the app fully translated offline.
     });
+
+  storage.getLanguage()
+    .then((saved) => {
+      if (saved && saved !== i18n.language) {
+        void i18n.changeLanguage(saved);
+      }
+    })
+    .catch(() => {});
 }
 
 export { i18n };

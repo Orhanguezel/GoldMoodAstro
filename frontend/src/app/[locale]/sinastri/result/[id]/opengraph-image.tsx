@@ -36,25 +36,25 @@ export default async function OG({ params }: { params: { id: string; locale: str
       }}>
         {/* Header */}
         <div style={{ fontSize: 28, color: theme.primary, letterSpacing: 4 }}>
-          {theme.brandUpper} · SİNASTRİ
+          {theme.brandUpper} · SYNASTRY
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Score */}
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 20 }}>
             <span style={{ fontSize: 180, fontWeight: 'bold', color: theme.primary }}>{data.result?.score ?? 0}</span>
-            <span style={{ fontSize: 32, color: theme.text }}>/ 100 uyum</span>
+            <span style={{ fontSize: 32, color: theme.text }}>/ 100 match</span>
           </div>
 
           {/* Subtitle */}
           <div style={{ fontSize: 42, fontFamily: 'Fraunces', fontStyle: 'italic', color: theme.text }}>
-            Sen × {data.partner_data?.name ?? 'Partner'}
+            You x {data.partner_data?.name ?? 'Partner'}
           </div>
         </div>
 
         {/* Footer */}
         <div style={{ fontSize: 24, color: theme.primary, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>Kendi raporunu oluştur</span>
+          <span>Create your own report</span>
           <span style={{ fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.8 }}>{theme.domain}</span>
         </div>
       </div>

@@ -10,20 +10,55 @@ import { sql, and, eq } from 'drizzle-orm';
 import { dailyHoroscopes, ALL_SIGNS, getPeriodStartDate, type HoroscopePeriod, type SignKey } from './schema';
 import { generate, LlmError } from '@goldmood/shared-backend/modules/llm';
 
-const SIGN_LABELS_TR: Record<SignKey, string> = {
-  aries: 'Koç',
-  taurus: 'Boğa',
-  gemini: 'İkizler',
-  cancer: 'Yengeç',
-  leo: 'Aslan',
-  virgo: 'Başak',
-  libra: 'Terazi',
-  scorpio: 'Akrep',
-  sagittarius: 'Yay',
-  capricorn: 'Oğlak',
-  aquarius: 'Kova',
-  pisces: 'Balık',
+const SIGN_LABELS: Record<string, Record<SignKey, string>> = {
+  tr: {
+    aries: 'Koç',
+    taurus: 'Boğa',
+    gemini: 'İkizler',
+    cancer: 'Yengeç',
+    leo: 'Aslan',
+    virgo: 'Başak',
+    libra: 'Terazi',
+    scorpio: 'Akrep',
+    sagittarius: 'Yay',
+    capricorn: 'Oğlak',
+    aquarius: 'Kova',
+    pisces: 'Balık',
+  },
+  en: {
+    aries: 'Aries',
+    taurus: 'Taurus',
+    gemini: 'Gemini',
+    cancer: 'Cancer',
+    leo: 'Leo',
+    virgo: 'Virgo',
+    libra: 'Libra',
+    scorpio: 'Scorpio',
+    sagittarius: 'Sagittarius',
+    capricorn: 'Capricorn',
+    aquarius: 'Aquarius',
+    pisces: 'Pisces',
+  },
+  de: {
+    aries: 'Widder',
+    taurus: 'Stier',
+    gemini: 'Zwillinge',
+    cancer: 'Krebs',
+    leo: 'Löwe',
+    virgo: 'Jungfrau',
+    libra: 'Waage',
+    scorpio: 'Skorpion',
+    sagittarius: 'Schütze',
+    capricorn: 'Steinbock',
+    aquarius: 'Wassermann',
+    pisces: 'Fische',
+  },
 };
+
+function signLabel(sign: SignKey, locale: string): string {
+  const normalized = locale.toLowerCase().split('-')[0];
+  return SIGN_LABELS[normalized]?.[sign] ?? SIGN_LABELS.tr[sign] ?? sign;
+}
 
 const PROMPT_KEYS: Record<HoroscopePeriod, string> = {
   daily: 'horoscope_daily_general',
@@ -123,7 +158,7 @@ export async function generateHoroscope(args: {
     locale,
     vars: {
       sign_key: args.sign,
-      sign_label: SIGN_LABELS_TR[args.sign],
+      sign_label: signLabel(args.sign, locale),
       kb_sign_profile: kbProfile,
       today,
       week_start: periodStart,

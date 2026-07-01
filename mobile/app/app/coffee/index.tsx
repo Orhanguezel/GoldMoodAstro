@@ -99,12 +99,15 @@ import { router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 
 
+import { useTranslation } from 'react-i18next';
+
 import { coffeeApi, storageApi } from '@/lib/api';
 import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
 
 const { width } = Dimensions.get('window');
 
 export default function CoffeeScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -123,7 +126,7 @@ export default function CoffeeScreen() {
     try {
       await Share.share({
         message: `Kahve Falım: ${result?.interpretation?.substring(0, 200)}... \n\nGoldMoodAstro ile geleceğini keşfet!\n\nKeşfet: https://goldmoodastro.com/tr/kahve-fali/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=coffee`,
-        title: 'GoldMoodAstro Kahve Falı',
+        title: t('coffee.shareTitle'),
       });
     } catch (e) {
       console.error(e);
@@ -153,7 +156,7 @@ export default function CoffeeScreen() {
   const takePhoto = async (index: number) => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('İzin Gerekli', 'Kamera erişimine izin vermeniz gerekiyor.');
+      Alert.alert(t('coffee.permissionTitle'), t('coffee.permissionBody'));
       return;
     }
 
@@ -187,7 +190,7 @@ export default function CoffeeScreen() {
         setImageIds(newIds);
       } catch (e) {
         console.error('Upload error:', e);
-        Alert.alert('Hata', 'Fotoğraf yüklenemedi.');
+        Alert.alert(t('common.errorTitle'), t('coffee.uploadError'));
       } finally {
         setLoading(false);
       }
@@ -209,7 +212,7 @@ export default function CoffeeScreen() {
       setStep('result');
     } catch (e) {
       console.error('Coffee read error:', e);
-      Alert.alert('Hata', 'Fal yorumlanırken bir hata oluştu.');
+      Alert.alert(t('common.errorTitle'), t('coffee.readError'));
       setStep('upload');
     }
   };
@@ -229,15 +232,15 @@ export default function CoffeeScreen() {
               <View style={styles.iconCircle}>
                 <Coffee size={40} color={colors.gold} />
               </View>
-              <Text style={styles.headerTitle}>Geleneksel Kahve Falı</Text>
-              <Text style={styles.headerSubtitle}>Geleceğin izleri fincanınızda gizli.</Text>
+              <Text style={styles.headerTitle}>{t('coffee.introTitle')}</Text>
+              <Text style={styles.headerSubtitle}>{t('coffee.introSubtitle')}</Text>
             </View>
 
             <View style={styles.guideSection}>
               {[
-                { title: 'Fincanı Kapat', desc: 'Kahveni içtikten sonra dilek tutup kapat.' },
-                { title: '5 Dakika Bekle', desc: 'Sembollerin netleşmesi için fincanın soğumasını bekleyin.' },
-                { title: 'Fotoğrafları Çek', desc: 'Fincan içi (2) ve tabak (1) net olmalı.' },
+                { title: t('coffee.guide1Title'), desc: t('coffee.guide1Desc') },
+                { title: t('coffee.guide2Title'), desc: t('coffee.guide2Desc') },
+                { title: t('coffee.guide3Title'), desc: t('coffee.guide3Desc') },
               ].map((item, i) => (
                 <View key={i} style={styles.guideItem}>
                   <View style={styles.guideNumber}><Text style={styles.guideNumberText}>{i+1}</Text></View>
@@ -257,7 +260,7 @@ export default function CoffeeScreen() {
               }}
             >
               <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
-                <Text style={styles.primaryBtnText}>FİNCANI KAPATTIM</Text>
+                <Text style={styles.primaryBtnText}>{t('coffee.closedCupBtn')}</Text>
                 <ChevronRight size={18} color={colors.ink} />
               </LinearGradient>
             </Pressable>
@@ -282,9 +285,9 @@ export default function CoffeeScreen() {
                 <Timer size={40} color={colors.gold} style={{ marginBottom: 10 }} />
                 <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
              </View>
-             <Text style={styles.waitTitle}>Telveler Süzülüyor...</Text>
+             <Text style={styles.waitTitle}>{t('coffee.waitTitle')}</Text>
              <Text style={styles.waitSubtitle}>
-               Sembollerin netleşmesi için fincanın tamamen soğuması gerekir. Bu sırada niyetinize odaklanın.
+               {t('coffee.waitSubtitle')}
              </Text>
 
              <Pressable 
@@ -296,7 +299,7 @@ export default function CoffeeScreen() {
                  style={styles.btnGradient}
                >
                  <Text style={[styles.primaryBtnText, timeLeft > 0 && { color: colors.textMuted }]}>
-                   {timeLeft === 0 ? 'DEVAM ET' : 'BEKLEMEDEN GEÇ'}
+                   {timeLeft === 0 ? t('coffee.continueBtn') : t('coffee.skipWaitBtn')}
                  </Text>
                </LinearGradient>
              </Pressable>
@@ -317,15 +320,15 @@ export default function CoffeeScreen() {
           </View>
           
           <View style={styles.header}>
-            <Text style={styles.stepTitle}>Fotoğrafları Hazırla</Text>
-            <Text style={styles.stepSubtitle}>Analiz için 3 adet net fotoğraf çekin.</Text>
+            <Text style={styles.stepTitle}>{t('coffee.uploadTitle')}</Text>
+            <Text style={styles.stepSubtitle}>{t('coffee.uploadSubtitle')}</Text>
           </View>
 
           <View style={styles.uploadGrid}>
             {[
-              { label: 'İÇ 1', desc: 'Duvarlar' },
-              { label: 'İÇ 2', desc: 'Taban' },
-              { label: 'TABAK', desc: 'İzler' }
+              { label: t('coffee.slotInside1'), desc: t('coffee.slotWalls') },
+              { label: t('coffee.slotInside2'), desc: t('coffee.slotBottom') },
+              { label: t('coffee.slotPlate'), desc: t('coffee.slotTraces') }
             ].map((slot, idx) => (
               <Pressable 
                 key={idx} 
@@ -353,7 +356,7 @@ export default function CoffeeScreen() {
           {loading && (
             <View style={styles.miniLoader}>
               <ActivityIndicator size="small" color={colors.gold} />
-              <Text style={styles.miniLoaderText}>Yükleniyor...</Text>
+              <Text style={styles.miniLoaderText}>{t('common.loading')}</Text>
             </View>
           )}
 
@@ -365,7 +368,7 @@ export default function CoffeeScreen() {
             disabled={imageIds.filter(Boolean).length < 3 || loading}
           >
             <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
-              <Text style={styles.primaryBtnText}>FALIMI YORUMLA</Text>
+              <Text style={styles.primaryBtnText}>{t('coffee.interpretBtn')}</Text>
               <Sparkles size={18} color={colors.ink} />
             </LinearGradient>
           </Pressable>
@@ -379,8 +382,8 @@ export default function CoffeeScreen() {
       <View style={styles.container}>
         <View style={styles.processingCenter}>
           <ActivityIndicator size="large" color={colors.gold} />
-          <Text style={styles.processingTitle}>Semboller Okunuyor...</Text>
-          <Text style={styles.processingSubtitle}>Fincanınızdaki izler kadim sembollerle eşleşiyor.</Text>
+          <Text style={styles.processingTitle}>{t('coffee.processingTitle')}</Text>
+          <Text style={styles.processingSubtitle}>{t('coffee.processingSubtitle')}</Text>
         </View>
       </View>
     );
@@ -392,7 +395,7 @@ export default function CoffeeScreen() {
         <ScrollView contentContainerStyle={styles.resultContent}>
           <View style={styles.resultHeader}>
              <Sparkles size={24} color={colors.gold} style={{ marginBottom: 12 }} />
-             <Text style={styles.resultTitle}>Fincanın Dili</Text>
+             <Text style={styles.resultTitle}>{t('coffee.resultTitle')}</Text>
           </View>
 
           <View style={styles.symbolGrid}>
@@ -421,7 +424,7 @@ export default function CoffeeScreen() {
               onPress={handleShare}
             >
               <Share2 size={18} color={colors.gold} />
-              <Text style={[styles.actionBtnText, { color: colors.gold }]}>PAYLAŞ</Text>
+              <Text style={[styles.actionBtnText, { color: colors.gold }]}>{t('common.share')}</Text>
             </Pressable>
 
             <Pressable 
@@ -436,7 +439,7 @@ export default function CoffeeScreen() {
               }}
             >
               <RotateCcw size={16} color={colors.textMuted} />
-              <Text style={styles.actionBtnText}>YENİ FAL</Text>
+              <Text style={styles.actionBtnText}>{t('coffee.newReading')}</Text>
             </Pressable>
           </View>
         </ScrollView>

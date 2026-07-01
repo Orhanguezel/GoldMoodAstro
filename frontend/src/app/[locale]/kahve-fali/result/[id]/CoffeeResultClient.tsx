@@ -13,6 +13,7 @@ import ShareCard from '@/components/common/ShareCard';
 import ConsultantFunnelCTA from '@/components/common/ConsultantFunnelCTA';
 import { useGetCoffeeReadingQuery } from '@/integrations/rtk/public/coffee.public.endpoints';
 import { useParams, useRouter } from 'next/navigation';
+import { useUiSection, type UiSectionKey } from '@/i18n';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 const manrope = Manrope({ subsets: ['latin'] });
@@ -20,13 +21,14 @@ const manrope = Manrope({ subsets: ['latin'] });
 export default function CoffeeResultClient() {
   const { id, locale } = useParams();
   const router = useRouter();
+  const { ui } = useUiSection('ui_results' as UiSectionKey);
   const { data: res, isLoading, error } = useGetCoffeeReadingQuery(id as string);
 
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-40 space-y-8">
         <div className="w-20 h-20 border-2 border-brand-gold/20 border-t-brand-gold rounded-full animate-spin" />
-        <p className="text-muted-foreground font-serif italic tracking-widest animate-pulse">Fincandaki Sırlar Okunuyor...</p>
+        <p className="text-muted-foreground font-serif italic tracking-widest animate-pulse">{ui('ui_results_coffee_loading', 'Reading the cup secrets...')}</p>
       </div>
     );
   }
@@ -34,13 +36,13 @@ export default function CoffeeResultClient() {
   if (error || !res) {
     return (
       <div className="text-center py-40 space-y-8">
-        <h2 className={`${cinzel.className} text-3xl text-foreground`}>Sonuç Bulunamadı</h2>
-        <p className="text-muted-foreground">Aradığınız kahve falı kaydı mevcut değil veya bir hata oluştu.</p>
-        <button 
+        <h2 className={`${cinzel.className} text-3xl text-foreground`}>{ui('ui_results_not_found_title', 'Result Not Found')}</h2>
+        <p className="text-muted-foreground">{ui('ui_results_coffee_not_found_desc', 'The coffee reading record you are looking for does not exist or an error occurred.')}</p>
+        <button
           onClick={() => router.push(`/${locale}/kahve-fali`)}
           className="inline-flex items-center gap-2 text-brand-gold font-bold"
         >
-          YENİ FAL BAK
+          {ui('ui_results_coffee_new_long', 'START NEW READING')}
         </button>
       </div>
     );
@@ -56,7 +58,7 @@ export default function CoffeeResultClient() {
         className="space-y-16"
       >
         <div className="text-center space-y-8">
-          <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight leading-tight`}>Fincanın Dili</h1>
+          <h1 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight leading-tight`}>{ui('ui_results_coffee_title', 'The Language of the Cup')}</h1>
           <div className="flex flex-wrap justify-center gap-4">
             {result.symbols.map((s: any, i: number) => (
               <span key={i} className="px-6 py-2 bg-(--gm-gold)/10 border border-(--gm-gold)/20 rounded-full text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase backdrop-blur-sm">
@@ -89,12 +91,12 @@ export default function CoffeeResultClient() {
 
           <div className="mt-20 pt-12 border-t border-(--gm-border-soft) flex flex-col lg:flex-row items-center justify-between gap-12">
             <div className="text-[11px] text-(--gm-muted) italic font-serif leading-relaxed max-w-[var(--gm-w-form)] uppercase tracking-widest opacity-60">
-              * Bu analiz Vision AI ve astrolojik semboloji veritabanımız tarafından hazırlanmıştır.
+              {ui('ui_results_coffee_disclaimer', '* This analysis is prepared by Vision AI and our astrological symbolism database.')}
             </div>
             <div className="flex flex-wrap items-center justify-center gap-10">
-              <ShareCard 
-                title="Kahve Falımı Paylaş"
-                shareText={`GoldMoodAstro'da kahve falıma baktırdım ✨\nSembollerim: ${result.symbols.map((s: any) => s.name).join(', ')}\nSen de fincanındaki sırları keşfet:`}
+              <ShareCard
+                title={ui('ui_results_coffee_share_title', 'Share My Coffee Reading')}
+                shareText={`I had my coffee cup read on GoldMoodAstro\nMy symbols: ${result.symbols.map((s: any) => s.name).join(', ')}\nDiscover the secrets in your cup too:`}
                 variant="coffee"
                 data={{
                   symbols: result.symbols.map((s: any) => s.name),
@@ -105,7 +107,7 @@ export default function CoffeeResultClient() {
                 onClick={() => router.push(`/${locale}/kahve-fali`)}
                 className="flex items-center gap-4 text-(--gm-gold) font-bold uppercase tracking-[0.2em] text-xs hover:text-(--gm-gold-dim) transition-colors"
               >
-                YENİ FAL <RotateCcw className="w-4 h-4" />
+                {ui('ui_results_coffee_new', 'NEW READING')} <RotateCcw className="w-4 h-4" />
               </button>
             </div>
           </div>

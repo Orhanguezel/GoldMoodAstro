@@ -1,12 +1,14 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Home, Sparkles, MessageSquare, Calendar, User } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useAppTheme } from '@/theme';
 
 import { Platform } from 'react-native';
 
 /** Web HeaderClient FALLBACK_MENU (tr) ile aynı sıra / isimler: Ana Sayfa → Doğum Haritası → Danışmanlar → Günlük Yorum → Profil */
 export default function TabsLayout() {
+  const { t } = useTranslation();
   const { colors, font } = useAppTheme();
 
   return (
@@ -35,35 +37,35 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="today"
         options={{
-          title: 'Ana Sayfa',
+          title: t('tabs.today'),
           tabBarIcon: ({ color, size }) => <Home color={color} size={size} strokeWidth={2} />,
         }}
       />
       <Tabs.Screen
         name="birth-chart"
         options={{
-          title: 'Doğum Haritası',
+          title: t('tabs.birthChart'),
           tabBarIcon: ({ color, size }) => <Sparkles color={color} size={size} strokeWidth={2} />,
         }}
       />
       <Tabs.Screen 
-        name="connect" 
-        options={{ 
-          title: 'Danışmanlar',
+        name="connect"
+        options={{
+          title: t('tabs.connect'),
           tabBarIcon: ({ color, size }) => <MessageSquare color={color} size={size} strokeWidth={2} /> 
         }} 
       />
       <Tabs.Screen
         name="daily"
         options={{
-          title: 'Günlük Yorum',
+          title: t('tabs.daily'),
           tabBarIcon: ({ color, size }) => <Calendar color={color} size={size} strokeWidth={2} />,
         }}
       />
       <Tabs.Screen 
-        name="profile" 
-        options={{ 
-          title: 'Profil',
+        name="profile"
+        options={{
+          title: t('tabs.profile'),
           tabBarIcon: ({ color, size }) => <User color={color} size={size} strokeWidth={2} /> 
         }} 
       />

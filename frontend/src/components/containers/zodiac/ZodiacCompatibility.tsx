@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Heart, Zap, Briefcase, Star, Info, Share2 } from 'lucide-react';
 import ShareCard from '@/components/common/ShareCard';
 import { getZodiacMeta } from '@/lib/zodiac/signs';
+import { useUiSection } from '@/i18n';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -20,8 +21,9 @@ interface Props {
 }
 
 export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp }: Props = {}) {
+  const { ui } = useUiSection('ui_zodiacx' as any);
   const params = useParams();
-  // Önce props (server-side route'tan), yoksa params'tan
+  // Prefer props from the server-side route, then fall back to params.
   const sA = (signAProp ?? (params?.signA as string)) || '';
   const sB = (signBProp ?? (params?.signB as string)) || '';
   const locale = params?.locale;
@@ -36,7 +38,7 @@ export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp
     { skip: !sA || !sB }
   );
 
-  // Component yanlışlıkla başka bir route'tan mount edilmişse (signA/signB eksik) hiç render etme.
+  // If mounted from another route without signA/signB, render nothing.
   if (!sA || !sB) return null;
 
   if (isLoading) {
@@ -55,8 +57,8 @@ export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp
   if (!reading) {
     return (
       <div className="py-40 text-center">
-        <h2 className="text-2xl font-bold">Uyumluluk yorumu bulunamadı.</h2>
-        <p className="text-muted-foreground mt-2">Bu kombinasyon için henüz bir analiz üretilmedi.</p>
+        <h2 className="text-2xl font-bold">{ui('ui_zodiacx_compat_not_found', 'Compatibility reading not found.')}</h2>
+        <p className="text-muted-foreground mt-2">{ui('ui_zodiacx_compat_not_found_text', 'No analysis has been generated for this combination yet.')}</p>
       </div>
     );
   }
@@ -85,7 +87,7 @@ export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp
               <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-(--gm-gold)/10 flex items-center justify-center border border-(--gm-gold)/20 mb-6 shadow-gold">
                 <Zap className="w-6 h-6 md:w-8 md:h-8 text-(--gm-gold)" />
               </div>
-              <span className="text-[10px] font-bold tracking-[0.3em] text-(--gm-gold)/60 uppercase">UYUMU</span>
+              <span className="text-[10px] font-bold tracking-[0.3em] text-(--gm-gold)/60 uppercase">{ui('ui_zodiacx_compat_match_label', 'UYUMU')}</span>
             </div>
 
             <div className="flex flex-col items-center">
@@ -116,9 +118,9 @@ export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp
           </p>
 
           <div className="mt-12 flex justify-center">
-            <ShareCard 
-              title={`${labelA} & ${labelB} Uyumu`}
-              shareText={`${labelA} ve ${labelB} burçlarının uyumuna baktım ✨\nLove Score: %${reading.love_score}\nSenin uyumun ne?`}
+            <ShareCard
+              title={`${labelA} & ${labelB} ${ui('ui_zodiacx_compat_share_title_suffix', 'Compatibility')}`}
+              shareText={`${labelA} ${ui('ui_zodiacx_compat_share_text_p1', 'and')} ${labelB} ${ui('ui_zodiacx_compat_share_text_p2', 'compatibility checked\nLove Score: %')}${reading.love_score}\n${ui('ui_zodiacx_compat_share_text_p3', 'What is your compatibility?')}`}
               variant="synastry"
               data={{
                 partnerA: labelA,
@@ -134,10 +136,10 @@ export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp
       {/* Score Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
         {[
-          { label: 'Aşk', score: reading.love_score, icon: Heart, color: 'text-[var(--gm-error)]' },
-          { label: 'Arkadaşlık', score: reading.friendship_score, icon: Star, color: 'text-[var(--gm-warning)]' },
-          { label: 'Kariyer', score: reading.career_score, icon: Briefcase, color: 'text-[var(--gm-info)]' },
-          { label: 'Tutku', score: reading.sexual_score, icon: Zap, color: 'text-[var(--gm-primary)]' },
+          { label: ui('ui_zodiacx_compat_score_love', 'Love'), score: reading.love_score, icon: Heart, color: 'text-[var(--gm-error)]' },
+          { label: ui('ui_zodiacx_compat_score_friendship', 'Friendship'), score: reading.friendship_score, icon: Star, color: 'text-[var(--gm-warning)]' },
+          { label: ui('ui_zodiacx_compat_score_career', 'Career'), score: reading.career_score, icon: Briefcase, color: 'text-[var(--gm-info)]' },
+          { label: ui('ui_zodiacx_compat_score_passion', 'Passion'), score: reading.sexual_score, icon: Zap, color: 'text-[var(--gm-primary)]' },
         ].map((item, idx) => (
           <motion.div
             key={item.label}
@@ -172,7 +174,7 @@ export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp
             <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 flex items-center justify-center">
               <Info className="w-5 h-5 text-(--gm-gold)" />
             </div>
-            <h2 className={`${cinzel.className} text-3xl text-(--gm-gold)`}>Derinlemesine Analiz</h2>
+            <h2 className={`${cinzel.className} text-3xl text-(--gm-gold)`}>{ui('ui_zodiacx_compat_deep_analysis', 'In-depth Analysis')}</h2>
           </div>
           
           <div className="text-xl leading-relaxed whitespace-pre-wrap text-(--gm-text) font-serif opacity-90 max-w-none">
@@ -182,16 +184,16 @@ export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp
 
         {/* CTA */}
         <div className="bg-gradient-to-br from-(--gm-primary)/10 to-transparent border border-(--gm-gold)/20 p-12 md:p-20 rounded-[3rem] text-center shadow-(--gm-shadow-soft)">
-          <h3 className={`${cinzel.className} text-3xl md:text-4xl mb-6 text-(--gm-text)`}>Gerçek uyum sinastri raporundan çıkar.</h3>
+          <h3 className={`${cinzel.className} text-3xl md:text-4xl mb-6 text-(--gm-text)`}>{ui('ui_zodiacx_compat_cta_title', 'True compatibility comes from a synastry report.')}</h3>
           <p className="text-(--gm-text-dim) mb-12 max-w-3xl mx-auto text-lg leading-relaxed font-serif italic">
-            Burç uyumu sadece Güneş burçlarıyla sınırlı değildir. Venüs ve Mars yerleşimleriniz asıl hikayeyi anlatır. Kişiye özel sinastri (ilişki haritası) analizi için uzmanlarımıza danışın.
+            {ui('ui_zodiacx_compat_cta_text', 'Zodiac compatibility is not limited to Sun signs. Venus and Mars placements tell the deeper story. Ask our experts for a personal synastry relationship chart analysis.')}
           </p>
           <div className="flex flex-wrap justify-center gap-6">
             <Link href={`/${localePath}/sinastri?mode=manual`} className="rounded-full bg-(--gm-primary) px-10 py-5 text-xs font-bold uppercase tracking-[0.25em] text-(--gm-bg) hover:bg-(--gm-primary-dark) transition-all shadow-lg hover:scale-105 flex items-center gap-3">
-              Sinastri raporu için <Zap className="w-4 h-4" />
+              {ui('ui_zodiacx_compat_cta_synastry', 'Get a synastry report')} <Zap className="w-4 h-4" />
             </Link>
             <Link href={`/${localePath}/birth-chart`} className="rounded-full border border-(--gm-border-soft) px-10 py-5 text-xs font-bold uppercase tracking-[0.25em] text-(--gm-text) hover:bg-(--gm-surface) transition-all">
-              Doğum Haritası Çıkar
+              {ui('ui_zodiacx_compat_cta_birth_chart', 'Create Birth Chart')}
             </Link>
           </div>
         </div>

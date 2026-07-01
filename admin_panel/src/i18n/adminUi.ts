@@ -132,7 +132,10 @@ export function getAdminTranslations(locale: AdminLocale = 'tr'): TranslateFn {
   const normalized = normLocaleTag(locale);
   const activeLocale: AdminLocale = isAdminLocale(normalized) ? normalized : 'tr';
 
-  const fallbackChain = ['tr', activeLocale, 'en', 'de'].filter((v, i, a) => a.indexOf(v) === i) as AdminLocale[];
+  // Aktif dil ÖNCE denenir; eksik anahtarlar için sırasıyla tr → en → de'ye düşülür.
+  // (Eski sıralama 'tr' ile başlıyordu → aktif dil ne olursa olsun TR değeri dönüyordu;
+  //  bu yüzden EN/DE panelde Türkçe görünüyordu.)
+  const fallbackChain = [activeLocale, 'tr', 'en', 'de'].filter((v, i, a) => a.indexOf(v) === i) as AdminLocale[];
 
   return buildTranslator<AdminLocale>({
     translations,

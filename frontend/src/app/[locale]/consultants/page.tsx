@@ -24,15 +24,19 @@ function absoluteUrl(url?: string | null): string | undefined {
   return `${SITE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
-async function getConsultants(params: { expertise?: string; limit?: number }): Promise<ConsultantPublic[]> {
+async function getConsultants(params: { expertise?: string; limit?: number; locale?: string }): Promise<ConsultantPublic[]> {
   const qs = new URLSearchParams();
   qs.set('light', '1');
   qs.set('limit', String(params.limit ?? 12));
+  if (params.locale) qs.set('locale', params.locale);
   if (params.expertise) qs.set('expertise', params.expertise);
 
   try {
     const res = await fetch(`${API_BASE}/consultants?${qs.toString()}`, {
       next: { revalidate: 300 },
+      headers: params.locale
+        ? { 'Accept-Language': params.locale, 'x-locale': params.locale }
+        : undefined,
     });
     if (!res.ok) return [];
     const json = await res.json();
@@ -56,28 +60,28 @@ export default async function ConsultantsPage({ params, searchParams }: Props) {
   const sp = searchParams ? await searchParams : {};
   const isTr = locale === 'tr';
 
-  // T28-4 — topic → expertise mapping (funnel'dan gelen yönlendirmeler)
+  // T28-4 — topic -> expertise mapping for funnel redirects.
   const topic = (sp.topic || '').trim() as FunnelFeature;
   const topicCfg = topic && topic in FUNNEL_CONFIG ? FUNNEL_CONFIG[topic] : null;
   const initialExpertise = (sp.expertise || topicCfg?.expertise || '').trim();
 
   const headline = topicCfg
     ? (isTr ? topicCfg.headlineTr : topicCfg.headlineEn)
-    : (isTr ? 'Danışmanları Keşfet' : 'Explore Consultants');
-  const consultants = await getConsultants({ expertise: initialExpertise, limit: 12 });
+    : 'Explore Consultants';
+  const consultants = await getConsultants({ expertise: initialExpertise, limit: 12, locale });
   const listUrl = `${SITE_URL}/${locale}/consultants`;
   const graphItems = [
     breadcrumbSchema([
       { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },
-      { name: isTr ? 'Danışmanlar' : 'Consultants', item: listUrl },
+      { name: 'Consultants', item: listUrl },
     ]),
   ];
   const itemListSchema = consultants.length
     ? itemList({
         url: listUrl,
-        name: isTr ? 'GoldMoodAstro Danışmanları' : 'GoldMoodAstro Consultants',
+        name: 'GoldMoodAstro Consultants',
         items: consultants.map((consultant, index) => ({
-          name: consultant.full_name || (isTr ? 'GoldMoodAstro Danışmanı' : 'GoldMoodAstro Consultant'),
+          name: consultant.full_name || 'GoldMoodAstro Consultant',
           url: `${listUrl}/${encodeURIComponent(consultant.slug || consultant.id)}`,
           image: absoluteUrl(consultant.avatar_url),
           position: index + 1,

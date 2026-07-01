@@ -271,6 +271,7 @@ function buildScreenStyles(t: AppTheme) {
 }
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation, Trans } from 'react-i18next';
 import { useFocusEffect, router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 import { ChevronLeft, Crown, Check, AlertCircle, Calendar } from 'lucide-react-native';
@@ -288,6 +289,7 @@ function formatCurrencyMinor(value: number | string, currency = 'TRY'): string {
 }
 
 export default function SubscriptionScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -342,7 +344,7 @@ export default function SubscriptionScreen() {
       if (plan.price_minor <= 0) {
         await subscriptionsApi.start(plan.id, 'iyzipay');
         await load();
-        Alert.alert('Başarılı', 'Aboneliğiniz aktif edildi.');
+        Alert.alert(t('common.success', 'Başarılı'), t('subscription.activatedBody', 'Aboneliğiniz aktif edildi.'));
         return;
       }
 
@@ -360,7 +362,7 @@ export default function SubscriptionScreen() {
             product_id: purchase.productId,
           });
           await load();
-          Alert.alert('Başarılı', 'Premium üyeliğiniz hayırlı olsun!');
+          Alert.alert(t('common.success', 'Başarılı'), t('subscription.premiumWelcomeBody', 'Premium üyeliğiniz hayırlı olsun!'));
           return;
         }
       }
@@ -374,7 +376,7 @@ export default function SubscriptionScreen() {
         await load();
       }
     } catch (err: any) {
-      Alert.alert('Hata', err.message || 'İşlem başarısız.');
+      Alert.alert(t('common.error', 'Bir hata oluştu'), err.message || t('common.actionFailed', 'İşlem başarısız.'));
     } finally {
       setActionId(null);
     }
@@ -382,21 +384,21 @@ export default function SubscriptionScreen() {
 
   const onCancel = async () => {
     Alert.alert(
-      'Aboneliği İptal Et',
-      'Premium avantajlarını kaybetmek istediğinize emin misiniz? Dönem sonuna kadar erişiminiz devam eder.',
+      t('subscription.cancelTitle', 'Aboneliği İptal Et'),
+      t('subscription.cancelConfirm', 'Premium avantajlarını kaybetmek istediğinize emin misiniz? Dönem sonuna kadar erişiminiz devam eder.'),
       [
-        { text: 'Vazgeç', style: 'cancel' },
+        { text: t('common.giveUp', 'Vazgeç'), style: 'cancel' },
         {
-          text: 'İptal Et',
+          text: t('subscription.cancelBtn', 'İptal Et'),
           style: 'destructive',
           onPress: async () => {
             setIsCancelling(true);
             try {
               await subscriptionsApi.cancel();
               await load();
-              Alert.alert('İptal Edildi', 'Abonelik yenilemesi durduruldu.');
+              Alert.alert(t('subscription.cancelledTitle', 'İptal Edildi'), t('subscription.cancelledBody', 'Abonelik yenilemesi durduruldu.'));
             } catch (err: any) {
-              Alert.alert('Hata', err.message || 'İşlem başarısız.');
+              Alert.alert(t('common.error', 'Bir hata oluştu'), err.message || t('common.actionFailed', 'İşlem başarısız.'));
             } finally {
               setIsCancelling(false);
             }
@@ -425,7 +427,7 @@ export default function SubscriptionScreen() {
           <Pressable onPress={() => safeRouterBack('/(tabs)/profile')} style={styles.headerBtn}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
-          <Text style={styles.headerTitle}>Premium Üyelik</Text>
+          <Text style={styles.headerTitle}>{t('subscription.title', 'Premium Üyelik')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -442,10 +444,10 @@ export default function SubscriptionScreen() {
                   <Crown size={24} color={colors.ink} />
                 </View>
                 <View>
-                  <Text style={styles.activeTitle}>{activePlan?.name_tr || 'Premium Plan'}</Text>
+                  <Text style={styles.activeTitle}>{activePlan?.name_tr || t('subscription.defaultPlanName', 'Premium Plan')}</Text>
                   <View style={styles.statusRow}>
                     <View style={styles.statusDot} />
-                    <Text style={styles.statusText}>Abonelik Aktif</Text>
+                    <Text style={styles.statusText}>{t('subscription.statusActive', 'Abonelik Aktif')}</Text>
                   </View>
                 </View>
               </View>
@@ -455,24 +457,24 @@ export default function SubscriptionScreen() {
               <View style={styles.expiryRow}>
                 <Calendar size={14} color={colors.textMuted} />
                 <Text style={styles.expiryText}>
-                  Yenileme Tarihi: <Text style={styles.bold}>{active.ends_at ? new Date(active.ends_at).toLocaleDateString('tr-TR') : 'Belirlenmedi'}</Text>
+                  <Trans i18nKey="subscription.renewalDate" defaults="Yenileme Tarihi: <b>{{date}}</b>" values={{ date: active.ends_at ? new Date(active.ends_at).toLocaleDateString() : t('subscription.notSet', 'Belirlenmedi') }} components={{ b: <Text style={styles.bold} /> }} />
                 </Text>
               </View>
 
               <Pressable style={styles.cancelLink} onPress={onCancel} disabled={isCancelling}>
-                {isCancelling ? <ActivityIndicator size="small" color={colors.textMuted} /> : <Text style={styles.cancelLinkText}>Aboneliği Yönet veya İptal Et</Text>}
+                {isCancelling ? <ActivityIndicator size="small" color={colors.textMuted} /> : <Text style={styles.cancelLinkText}>{t('subscription.manageOrCancel', 'Aboneliği Yönet veya İptal Et')}</Text>}
               </Pressable>
             </View>
           ) : (
             <View style={styles.promoArea}>
-              <Text style={styles.promoKicker}>GOLDMOOD PREMIUM</Text>
-              <Text style={styles.promoTitle}>Yıldızların rehberliğini{'\n'}kesintisiz deneyimleyin.</Text>
+              <Text style={styles.promoKicker}>{t('subscription.promoKicker', 'GOLDMOOD PREMIUM')}</Text>
+              <Text style={styles.promoTitle}>{t('subscription.promoTitle', 'Yıldızların rehberliğini kesintisiz deneyimleyin.')}</Text>
               <View style={styles.benefitsList}>
                 {[
-                  'Günlük detaylı astroloji analizleri',
-                  'Doğum haritası transit etkileri',
-                  'Seanslarda %10 kredi indirimi',
-                  'Öncelikli destek hattı',
+                  t('subscription.benefitDailyAnalysis', 'Günlük detaylı astroloji analizleri'),
+                  t('subscription.benefitTransits', 'Doğum haritası transit etkileri'),
+                  t('subscription.benefitCreditDiscount', 'Seanslarda %10 kredi indirimi'),
+                  t('subscription.benefitPrioritySupport', 'Öncelikli destek hattı'),
                 ].map((b, i) => (
                   <View key={i} style={styles.benefitItem}>
                     <Check size={16} color={colors.gold} />
@@ -485,7 +487,7 @@ export default function SubscriptionScreen() {
 
           {/* Plans Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>PLAN SEÇİN</Text>
+            <Text style={styles.sectionTitle}>{t('subscription.choosePlan', 'PLAN SEÇİN')}</Text>
             {plans.map((plan) => {
               const isCurrent = active?.plan_id === plan.id;
               return (
@@ -493,11 +495,11 @@ export default function SubscriptionScreen() {
                   <View style={styles.planHeader}>
                     <View>
                       <Text style={styles.planName}>{plan.name_tr}</Text>
-                      <Text style={styles.planInterval}>Aylık ödeme</Text>
+                      <Text style={styles.planInterval}>{t('subscription.monthlyBilling', 'Aylık ödeme')}</Text>
                     </View>
                     <View style={styles.planPriceArea}>
                       <Text style={styles.planPrice}>{formatCurrencyMinor(plan.price_minor, plan.currency)}</Text>
-                      <Text style={styles.planPriceLabel}>/ay</Text>
+                      <Text style={styles.planPriceLabel}>{t('subscription.perMonth', '/ay')}</Text>
                     </View>
                   </View>
                   
@@ -512,7 +514,7 @@ export default function SubscriptionScreen() {
                       <ActivityIndicator size="small" color={colors.ink} />
                     ) : (
                       <Text style={[styles.planBtnText, isCurrent && styles.planBtnTextCurrent]}>
-                        {isCurrent ? 'Mevcut Planınız' : 'Hemen Başlat'}
+                        {isCurrent ? t('subscription.currentPlanBtn', 'Mevcut Planınız') : t('subscription.startNowBtn', 'Hemen Başlat')}
                       </Text>
                     )}
                   </Pressable>
@@ -524,7 +526,7 @@ export default function SubscriptionScreen() {
           <View style={styles.infoBox}>
             <AlertCircle size={14} color={colors.textMuted} />
             <Text style={styles.infoBoxText}>
-              Abonelikler otomatik olarak yenilenir. İstediğiniz zaman iptal edebilirsiniz.
+              {t('subscription.autoRenewInfo', 'Abonelikler otomatik olarak yenilenir. İstediğiniz zaman iptal edebilirsiniz.')}
             </Text>
           </View>
 

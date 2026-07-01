@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Smartphone, Apple, Play, QrCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBrand } from '@/hooks/useBrand';
+import { useUiSection } from '@/i18n';
 
 /**
  * AppDownloadSection component.
@@ -13,13 +14,14 @@ import { useBrand } from '@/hooks/useBrand';
 export default function AppDownloadSection({ locale = 'tr' }: { locale?: string }) {
   const isTr = locale === 'tr';
   const { brand } = useBrand();
-  
+  const { ui } = useUiSection('ui_extra' as any);
+
   const content = {
-    title: isTr ? 'Cebinizdeki Yıldız Rehberi' : 'Your Star Guide in Your Pocket',
-    subtitle: isTr ? 'GoldMoodAstro mobil uygulamasıyla dilediğiniz her yerden canlı danışmanlık alın, bildirimlerle hiçbir gökyüzü olayını kaçırmayın.' : 'Get live consultancy from anywhere with the GoldMoodAstro mobile app, and never miss any celestial events with instant notifications.',
-    appleText: isTr ? "App Store'dan İndir" : "Download on App Store",
+    title: ui('ui_extra_b3_app_download_title', 'Your Star Guide in Your Pocket'),
+    subtitle: ui('ui_extra_b3_app_download_subtitle', 'Get live consulting from anywhere with the GoldMoodAstro mobile app and never miss a celestial event with notifications.'),
+    appleText: 'Download on App Store',
     googleText: isTr ? "Google Play'den Al" : "Get it on Google Play",
-    qrLabel: isTr ? 'Hemen Tara' : 'Scan Now'
+    qrLabel: ui('ui_extra_b3_app_download_qr_label', isTr ? 'Hemen Tara' : 'Scan Now')
   };
 
   return (
@@ -52,7 +54,7 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
               <Smartphone size={18} className="animate-bounce" />
             </div>
             <span className="font-display text-[11px] tracking-[0.4em] uppercase text-(--gm-gold-light)">
-              {isTr ? 'Mobil Uygulama' : 'Mobile App'}
+              {ui('ui_extra_b3_app_download_eyebrow', isTr ? 'Mobil Uygulama' : 'Mobile App')}
             </span>
           </div>
 
@@ -100,7 +102,7 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
             </div>
             <div className="flex flex-col">
               <span className="font-display text-[10px] tracking-[0.2em] uppercase text-[var(--gm-text)]/60">{content.qrLabel}</span>
-              <span className="text-xs text-[var(--gm-text)]/40">{isTr ? 'Kameranı aç ve okut' : 'Open camera to scan'}</span>
+              <span className="text-xs text-[var(--gm-text)]/40">{ui('ui_extra_b3_app_download_qr_hint', 'Open your camera and scan')}</span>
             </div>
           </div>
         </div>

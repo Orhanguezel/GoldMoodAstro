@@ -5,7 +5,7 @@ import { getOgTheme } from '@/seo/ogTheme';
 export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
-export const alt = 'GoldMoodAstro Yıldızname';
+export const alt = 'GoldMoodAstro Yildizname';
 
 export default async function OG({ params }: { params: { id: string; locale: string } }) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://goldmoodastro.com/api';
@@ -16,7 +16,7 @@ export default async function OG({ params }: { params: { id: string; locale: str
     const json = await res.json();
     data = json.data;
   } catch (e) {
-    data = { name: 'Kullanıcı', ebced_total: 0, menzil: { name_tr: 'Bilinmiyor', name_ar: '' } };
+    data = { name: 'User', ebced_total: 0, menzil: { name_tr: 'Unknown', name_ar: '' } };
   }
 
   const fonts = await getOgFonts().catch(() => undefined);
@@ -46,12 +46,12 @@ export default async function OG({ params }: { params: { id: string; locale: str
             {data.ebced_total}
           </div>
           <div style={{ fontSize: 24, letterSpacing: 4, textTransform: 'uppercase', color: theme.text, opacity: 0.8 }}>
-            {data.name} İçin Sayı
+            Number for {data.name}
           </div>
 
           {/* Menzil */}
           <div style={{ fontSize: 56, fontFamily: 'Fraunces', fontStyle: 'italic', color: theme.text, textAlign: 'center' }}>
-            Menzilin: <span style={{ color: theme.primary }}>{data.menzil?.name_tr}</span>
+            Mansion: <span style={{ color: theme.primary }}>{data.menzil?.name_tr}</span>
           </div>
           {data.menzil?.name_ar && (
             <div style={{ fontSize: 32, fontFamily: 'Fraunces', fontStyle: 'italic', opacity: 0.6 }}>

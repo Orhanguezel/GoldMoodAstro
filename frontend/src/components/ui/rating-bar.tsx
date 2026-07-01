@@ -101,10 +101,10 @@ export function DetailedRating({
 }: DetailedRatingProps) {
   const criteriaLabels = {
     performance: 'Performans',
-    stability: 'İstikrar & Ping',
-    coverage: 'Kapsama & Çekim',
-    software: 'Yazılım & Arayüz',
-    price: 'Fiyat & Değer'
+    stability: 'Stability & Ping',
+    coverage: 'Coverage & Reception',
+    software: 'Software & Interface',
+    price: 'Price & Value'
   }
 
   const calculateWeightedScore = () => {

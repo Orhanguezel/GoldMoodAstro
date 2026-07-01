@@ -3,6 +3,7 @@
 
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import * as repo from './repository';
+import { apiMessage } from '@goldmood/shared-backend/modules/_shared/api-i18n';
 
 /**
  * GET /horoscopes/today?sign=aries&locale=tr
@@ -11,7 +12,7 @@ import * as repo from './repository';
 export async function handleGetDaily(req: FastifyRequest, reply: FastifyReply) {
   const { sign, date, locale } = req.query as { sign?: string; date?: string; locale?: string };
   if (!sign) {
-    return reply.status(400).send({ error: 'Burç parametresi (sign) eksik.' });
+    return reply.status(400).send({ error: apiMessage(req, 'sign_required') });
   }
   const horoscope = await repo.getHoroscopeByPeriod({
     sign,
@@ -20,7 +21,7 @@ export async function handleGetDaily(req: FastifyRequest, reply: FastifyReply) {
     locale: locale || 'tr',
   });
   if (!horoscope) {
-    return reply.status(404).send({ error: 'İlgili tarih için yorum bulunamadı.' });
+    return reply.status(404).send({ error: apiMessage(req, 'horoscope_not_found') });
   }
   return reply.send({ data: horoscope });
 }
@@ -44,7 +45,7 @@ export async function handleGetSign(req: FastifyRequest, reply: FastifyReply) {
   if (!period) {
     const info = await repo.getSignInfo(sign, lc);
     if (!info) {
-      return reply.status(404).send({ error: 'Burç bilgisi bulunamadı.' });
+      return reply.status(404).send({ error: apiMessage(req, 'sign_info_not_found') });
     }
     return reply.send({ data: info });
   }
@@ -58,7 +59,7 @@ export async function handleGetSign(req: FastifyRequest, reply: FastifyReply) {
   });
   if (!horoscope) {
     return reply.status(404).send({
-      error: 'Bu burç-periyot için henüz yorum hazırlanmadı.',
+      error: apiMessage(req, 'horoscope_not_found'),
       hint: 'Cron her gece 02:00 üretir; manuel tetiklemek için admin panel.',
     });
   }
@@ -80,13 +81,13 @@ export async function handleGetCompatibility(req: FastifyRequest, reply: Fastify
   };
 
   if (!signA || !signB) {
-    return reply.status(400).send({ error: 'signA ve signB parametreleri zorunludur.' });
+    return reply.status(400).send({ error: apiMessage(req, 'compatibility_params_required') });
   }
 
   const reading = await repo.getCompatibilityReading(signA, signB, locale || 'tr');
   if (!reading) {
     // TODO T20-6: Eksik kombinasyonu LLM ile üret
-    return reply.status(404).send({ error: 'Uyumluluk yorumu henüz mevcut değil.' });
+    return reply.status(404).send({ error: apiMessage(req, 'compatibility_not_found') });
   }
   return reply.send({ data: reading });
 }
@@ -95,7 +96,7 @@ export async function handleGetTransit(req: FastifyRequest, reply: FastifyReply)
   const { month, locale } = req.query as { month?: string; locale?: string };
   
   if (!month) {
-    return reply.status(400).send({ error: 'month parametresi (YYYY-MM) zorunludur.' });
+    return reply.status(400).send({ error: apiMessage(req, 'month_required') });
   }
 
   const horoscopes = await repo.getHoroscopesForTransit(month, locale || 'tr');

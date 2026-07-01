@@ -46,11 +46,12 @@ function buildScreenStyles(t: AppTheme) {
 }
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
-import { 
-  Zap, 
-  ChevronLeft, 
+import {
+  Zap,
+  ChevronLeft,
   ChevronRight,
   TrendingUp,
   Award,
@@ -64,6 +65,7 @@ import { creditsApi } from '@/lib/api';
 const { width } = Dimensions.get('window');
 
 export default function CreditsScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -100,11 +102,11 @@ export default function CreditsScreen() {
       if (res.checkout_url) {
         router.push({
           pathname: '/webview/index',
-          params: { url: res.checkout_url, title: 'Kredi Yükle' }
+          params: { url: res.checkout_url, title: t('credits.topUpTitle', 'Kredi Yükle') }
         } as any);
       }
     } catch (e) {
-      Alert.alert('Hata', 'Ödeme başlatılamadı.');
+      Alert.alert(t('common.error', 'Bir hata oluştu'), t('credits.paymentStartError', 'Ödeme başlatılamadı.'));
     } finally {
       setBuyLoading(false);
     }
@@ -117,7 +119,7 @@ export default function CreditsScreen() {
           <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
-          <Text style={styles.navTitle}>Kredi Yükle</Text>
+          <Text style={styles.navTitle}>{t('credits.topUpTitle', 'Kredi Yükle')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -128,7 +130,7 @@ export default function CreditsScreen() {
           {/* Balance Card */}
           <LinearGradient colors={[colors.surface, colors.inkDeep]} style={styles.balanceCard}>
              <View style={styles.balanceInfo}>
-                <Text style={styles.balanceLabel}>MEVCUT BAKİYE</Text>
+                <Text style={styles.balanceLabel}>{t('credits.currentBalance', 'MEVCUT BAKİYE')}</Text>
                 <View style={styles.balanceRow}>
                    <Zap size={20} color={colors.gold} fill={colors.gold} />
                    <Text style={styles.balanceValue}>{balance.toLocaleString()}</Text>
@@ -138,7 +140,7 @@ export default function CreditsScreen() {
              <TrendingUp size={40} color={colors.gold + '15'} style={styles.balanceIcon} />
           </LinearGradient>
 
-          <Text style={styles.sectionTitle}>Paket Seçin</Text>
+          <Text style={styles.sectionTitle}>{t('credits.choosePackage', 'Paket Seçin')}</Text>
 
           {loading && !refreshing ? (
             <ActivityIndicator color={colors.gold} style={{ marginTop: 40 }} />
@@ -154,7 +156,7 @@ export default function CreditsScreen() {
                   {pkg.isFeatured && (
                     <View style={styles.featuredBadge}>
                        <Award size={10} color={colors.ink} />
-                       <Text style={styles.featuredText}>POPÜLER</Text>
+                       <Text style={styles.featuredText}>{t('credits.popular', 'POPÜLER')}</Text>
                     </View>
                   )}
                   
@@ -175,7 +177,7 @@ export default function CreditsScreen() {
 
           <View style={styles.footerInfo}>
              <ShieldCheck size={16} color={colors.textMuted} />
-             <Text style={styles.footerText}>Ödemeleriniz iyzico güvencesiyle korunmaktadır.</Text>
+             <Text style={styles.footerText}>{t('credits.iyzicoSecure', 'Ödemeleriniz iyzico güvencesiyle korunmaktadır.')}</Text>
           </View>
         </ScrollView>
       </SafeAreaView>

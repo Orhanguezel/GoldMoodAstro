@@ -25,32 +25,32 @@ const ICONS = {
 } as const;
 
 const CATEGORIES_FALLBACK = [
-  { id: 'astrology', label: 'Astroloji', icon: Compass, desc: 'Doğum haritası ve gezegen etkileriyle rehberlik.' },
-  { id: 'tarot', label: 'Tarot', icon: Layers, desc: 'Kartların sembolizmiyle rehberlik.' },
-  { id: 'numerology', label: 'Numeroloji', icon: Hash, desc: 'Sayıların diliyle yaşam yolu yorumu.' },
-  { id: 'mood', label: 'Ruhsal Rehberlik', icon: Moon, desc: 'İçsel denge ve farkındalık desteği.' },
-  { id: 'career', label: 'Kariyer & Para', icon: Briefcase, desc: 'İş hayatı ve finansal akış rehberliği.' },
-  { id: 'relationship', label: 'İlişki & Aşk', icon: Heart, desc: 'İlişki dinamikleri ve uyum rehberliği.' },
+  { id: 'astrology', icon: Compass },
+  { id: 'tarot', icon: Layers },
+  { id: 'numerology', icon: Hash },
+  { id: 'mood', icon: Moon },
+  { id: 'career', icon: Briefcase },
+  { id: 'relationship', icon: Heart },
 ];
 
-const CATEGORY_COPY_TR: Record<string, { label: string; desc: string }> = {
-  astrology: { label: 'Astroloji', desc: 'Doğum haritası ve gezegen etkileriyle rehberlik.' },
-  birth_chart: { label: 'Doğum Haritası', desc: 'Detaylı natal harita analizi.' },
-  tarot: { label: 'Tarot', desc: 'Kartların sembolizmiyle rehberlik.' },
-  numerology: { label: 'Numeroloji', desc: 'Sayıların diliyle yaşam yolu yorumu.' },
-  coffee: { label: 'Kahve Falı', desc: 'Fincan sembollerinin geleneksel yorumu.' },
-  relationship: { label: 'İlişki & Aşk', desc: 'İlişki dinamikleri ve sinastri.' },
-  mood: { label: 'Ruhsal Rehberlik', desc: 'İçsel denge ve farkındalık desteği.' },
-  career: { label: 'Kariyer & Para', desc: 'İş hayatı ve finansal akış rehberliği.' },
-  dream_interpretation: { label: 'Rüya Tabiri', desc: 'Rüya sembollerinin yorumu.' },
-  energy_healing: { label: 'Enerji Şifası', desc: 'Enerji dengeleme ve şifa çalışması.' },
-  spiritual_guidance: { label: 'Manevi Rehberlik', desc: 'Manevi yolculukta destek.' },
-  nefes_terapisi: { label: 'Nefes Terapisi', desc: 'Bilinçli nefes teknikleriyle stres azaltma ve içsel denge.' },
-  bioenerji: { label: 'Bioenerji', desc: 'Bedendeki enerji akışını dengeleme ve şifa çalışması.' },
-  reiki: { label: 'Reiki', desc: 'Evrensel yaşam enerjisiyle şifa seansı.' },
-  yasam_koclugu: { label: 'Yaşam Koçluğu', desc: 'Hedef belirleme, motivasyon ve kişisel gelişim rehberliği.' },
-  bilincalti_donusum: { label: 'Bilinçaltı Dönüşüm', desc: 'Bilinçaltı kalıplarını fark etme ve dönüştürme çalışmaları.' },
-  psikoloji: { label: 'Psikoloji', desc: 'Lisanslı psikolog desteğiyle bireysel danışmanlık.' },
+const CATEGORY_COPY_FALLBACK: Record<string, { label: string; desc: string }> = {
+  astrology: { label: 'Astrology', desc: 'Guidance through birth charts and planetary influences.' },
+  birth_chart: { label: 'Birth Chart', desc: 'Detailed natal chart analysis.' },
+  tarot: { label: 'Tarot', desc: 'Guidance through the symbolism of the cards.' },
+  numerology: { label: 'Numerology', desc: 'Life path insight through the language of numbers.' },
+  coffee: { label: 'Coffee Reading', desc: 'Traditional interpretation of cup symbols.' },
+  relationship: { label: 'Relationship & Love', desc: 'Relationship dynamics and synastry guidance.' },
+  mood: { label: 'Spiritual Guidance', desc: 'Support for inner balance and awareness.' },
+  career: { label: 'Career & Money', desc: 'Guidance for work life and financial flow.' },
+  dream_interpretation: { label: 'Dream Interpretation', desc: 'Interpretation of dream symbols.' },
+  energy_healing: { label: 'Energy Healing', desc: 'Energy balancing and healing work.' },
+  spiritual_guidance: { label: 'Spiritual Guidance', desc: 'Support on the spiritual journey.' },
+  nefes_terapisi: { label: 'Breath Therapy', desc: 'Stress relief and inner balance through conscious breathing techniques.' },
+  bioenerji: { label: 'Bioenergy', desc: 'Balancing the body’s energy flow and healing work.' },
+  reiki: { label: 'Reiki', desc: 'Healing sessions with universal life energy.' },
+  yasam_koclugu: { label: 'Life Coaching', desc: 'Guidance for goal setting, motivation, and personal growth.' },
+  bilincalti_donusum: { label: 'Subconscious Transformation', desc: 'Noticing and transforming subconscious patterns.' },
+  psikoloji: { label: 'Psychology', desc: 'Individual counseling with licensed psychologist support.' },
 };
 
 export default function ExpertiseCategoriesSection({ locale = 'tr' }: { locale?: string }) {
@@ -58,28 +58,26 @@ export default function ExpertiseCategoriesSection({ locale = 'tr' }: { locale?:
   const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
   
   const copy = useMemo(() => ({
-    label: ui('ui_home_expertise_label', 'Kategoriler'),
-    title: ui('ui_home_expertise_title', 'Uzmanlık Alanlarını <span class="text-[var(--gm-gold)]">Keşfedin</span>'),
-    desc: ui('ui_home_expertise_desc', 'Hangi alanda rehberliğe ihtiyacınız varsa, o alanın en deneyimli danışmanları burada sizi bekliyor.'),
-    cta: ui('ui_home_expertise_cta', 'Danışmanları İncele')
+    label: ui('ui_home_expertise_label', 'Categories'),
+    title: ui('ui_home_expertise_title', 'Explore <span class="text-[var(--gm-gold)]">Areas of Expertise</span>'),
+    desc: ui('ui_home_expertise_desc', 'Whatever kind of guidance you need, the most experienced consultants in that field are waiting here.'),
+    cta: ui('ui_home_expertise_cta', 'View Consultants')
   }), [ui]);
 
   const categories = useMemo(() => {
     const source = serviceCategories.length
       ? serviceCategories.slice(0, 6).map((cat) => ({
           id: cat.slug,
-          label: locale === 'tr' ? (CATEGORY_COPY_TR[cat.slug]?.label ?? cat.name) : cat.name,
-          desc: locale === 'tr' ? (CATEGORY_COPY_TR[cat.slug]?.desc ?? cat.description ?? '') : (cat.description || ''),
           icon: ICONS[cat.slug as keyof typeof ICONS] ?? Sparkles,
         }))
       : CATEGORIES_FALLBACK;
 
     return source.map(cat => ({
       ...cat,
-      label: cat.label,
-      desc: cat.desc
+      label: ui(`ui_home_expertise_cat_${cat.id}_label`, CATEGORY_COPY_FALLBACK[cat.id]?.label ?? cat.id),
+      desc: ui(`ui_home_expertise_cat_${cat.id}_desc`, CATEGORY_COPY_FALLBACK[cat.id]?.desc ?? ''),
     }));
-  }, [locale, serviceCategories]);
+  }, [serviceCategories, ui]);
 
   return (
     <section className="py-24 bg-[var(--gm-bg)] relative overflow-hidden">

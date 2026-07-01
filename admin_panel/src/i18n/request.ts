@@ -24,8 +24,6 @@ const NAMESPACES = [
   "home","about","contact",
   "library","libraryDetail",
   "references","referenceDetail",
-  "products","productDetail",
-  "spareParts","sparePartDetail",
   "news","newsDetail",
   "blog","blogDetail",
   "search",

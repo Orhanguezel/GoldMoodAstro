@@ -59,7 +59,7 @@ export default function BlogListScreen() {
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { colors } = theme;
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [posts, setPosts] = useState<CustomPageRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,7 +109,7 @@ export default function BlogListScreen() {
               <View style={styles.empty}>
                 <BookOpen size={32} color={colors.textMuted} />
                 <Text style={[styles.emptyText, { marginTop: 12 }]}>
-                  Henüz yayınlanmış blog yazısı yok.
+                  {t('blog.empty')}
                 </Text>
               </View>
             }
@@ -124,7 +124,7 @@ export default function BlogListScreen() {
                   });
                 }}
               >
-                <Text style={styles.cardTitle}>{item.title ?? 'Yazı'}</Text>
+                <Text style={styles.cardTitle}>{item.title ?? t('blog.untitled')}</Text>
                 {item.summary ? (
                   <Text style={styles.cardSummary} numberOfLines={3}>
                     {item.summary}

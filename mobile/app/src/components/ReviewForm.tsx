@@ -3,6 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { reviewsApi } from '@/lib/api';
 
 import { useAppTheme, type AppTheme } from '@/theme';
@@ -85,6 +86,7 @@ type Props = {
 };
 
 export default function ReviewForm({ bookingId, consultantId, consultantName, onSubmitted, onCancel }: Props) {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
@@ -95,11 +97,11 @@ export default function ReviewForm({ bookingId, consultantId, consultantName, on
 
   const submit = async () => {
     if (rating < 1) {
-      Alert.alert('Puan zorunlu', 'Lütfen 1-5 arası bir yıldız puanı seçin.');
+      Alert.alert(t('review.ratingRequiredTitle'), t('review.ratingRequiredBody'));
       return;
     }
     if (comment.trim().length < 5) {
-      Alert.alert('Yorum kısa', 'Lütfen en az 5 karakter yazın.');
+      Alert.alert(t('review.commentShortTitle'), t('review.commentShortBody'));
       return;
     }
     setLoading(true);
@@ -112,8 +114,8 @@ export default function ReviewForm({ bookingId, consultantId, consultantName, on
       });
       onSubmitted?.();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Hata';
-      Alert.alert('Yorum gönderilemedi', msg);
+      const msg = err instanceof Error ? err.message : t('common.error');
+      Alert.alert(t('review.submitFailed'), msg);
     } finally {
       setLoading(false);
     }
@@ -121,7 +123,7 @@ export default function ReviewForm({ bookingId, consultantId, consultantName, on
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Astroloğunu Değerlendir</Text>
+      <Text style={styles.title}>{t('review.formTitle')}</Text>
       {consultantName ? <Text style={styles.subtitle}>{consultantName}</Text> : null}
 
       <View style={styles.starsRow}>
@@ -139,21 +141,21 @@ export default function ReviewForm({ bookingId, consultantId, consultantName, on
         ))}
       </View>
 
-      <Text style={styles.label}>Yorumunuz</Text>
+      <Text style={styles.label}>{t('review.commentLabel')}</Text>
       <TextInput
         style={styles.textarea}
         value={comment}
         onChangeText={setComment}
         multiline
         numberOfLines={5}
-        placeholder="Görüşme nasıldı? Tahminler net miydi? Genel deneyiminizi anlatın..."
+        placeholder={t('review.commentPlaceholder')}
         placeholderTextColor={colors.textMuted}
         editable={!loading}
       />
 
       <View style={styles.actions}>
         <Pressable style={styles.cancelBtn} onPress={onCancel} disabled={loading}>
-          <Text style={styles.cancelBtnText}>Sonra</Text>
+          <Text style={styles.cancelBtnText}>{t('call.rateLater')}</Text>
         </Pressable>
         <Pressable
           style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
@@ -163,13 +165,13 @@ export default function ReviewForm({ bookingId, consultantId, consultantName, on
           {loading ? (
             <ActivityIndicator color={colors.bg} />
           ) : (
-            <Text style={styles.submitBtnText}>Gönder</Text>
+            <Text style={styles.submitBtnText}>{t('review.submit')}</Text>
           )}
         </Pressable>
       </View>
 
       <Text style={styles.notice}>
-        Yorumunuz, görüşmeniz tamamlandığı için "Doğrulanmış görüşme" rozetiyle yayınlanacaktır.
+        {t('review.verifiedNotice')}
       </Text>
     </View>
   );

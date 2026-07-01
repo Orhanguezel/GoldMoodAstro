@@ -1,25 +1,21 @@
+'use client';
+
 /**
- * BecomeConsultantHero — "Danışman Ol" sayfası için premium hero banner.
- * Server Component — no 'use client' needed.
- *
- * Kontrast stratejisi:
- *   • Arka plan görseli her zaman koyu (gece uzayı).
- *   • Tüm metin renkleri theme değişkenlerine BAĞLI DEĞİL — sabit white/amber
- *     kullanılıyor. Böylece light/dark her iki temada da garanti okunur.
- *   • Header alanı (üst ~96px) için ekstra top-to-transparent siyah gradient
- *     katmanı var; header nav linkleri transparan modda bile görünür.
+ * BecomeConsultantHero - premium hero banner for the consultant application page.
+ * The image is intentionally dark, so white/amber text stays readable in every theme.
  */
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Sparkles, ChevronRight, ShieldCheck, Star } from 'lucide-react';
+import { useUiSection } from '@/i18n';
 
 interface Props {
   locale?: string;
 }
 
 export default function BecomeConsultantHero({ locale = 'tr' }: Props) {
-  const isTr = locale === 'tr';
+  const { ui } = useUiSection('ui_become_consultant', locale as any);
 
   return (
     <section
@@ -30,21 +26,17 @@ export default function BecomeConsultantHero({ locale = 'tr' }: Props) {
       {/* Background image */}
       <Image
         src="/images/banner-become-consultant-bg.png"
-        alt={isTr ? 'Danışman Ol' : 'Become a Consultant'}
+        alt={ui('ui_become_consultant_hero_alt', 'Become a Consultant')}
         fill
         sizes="100vw"
         className="object-cover object-right-center"
         priority
       />
 
-      {/* ── Kontrast katmanları ─────────────────────────────────────────── */}
-      {/* 1. Genel gradient sol → sağ: metin alanını karartır */}
+      {/* Contrast layers for text readability on the dark image. */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/20" />
-      {/* 2. Header overlay için üst kenar: nav linkleri (light modda da) okunur */}
       <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/70 to-transparent" />
-      {/* 3. Alt kenar: alttaki sayfa içeriğiyle yumuşak geçiş */}
       <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
-      {/* ────────────────────────────────────────────────────────────────── */}
 
       {/* Decorative golden glow */}
       <div
@@ -60,57 +52,43 @@ export default function BecomeConsultantHero({ locale = 'tr' }: Props) {
       {/* Gold accent line top */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
 
-      {/* ── Content ────────────────────────────────────────────────────── */}
       <div className="relative z-10 w-full max-w-[1300px] mx-auto px-6 py-24 md:py-32 lg:py-36">
         <div className="max-w-2xl">
-          {/* Breadcrumb — always white for contrast on dark hero */}
+          {/* Breadcrumb stays white for contrast on the dark hero. */}
           <div className="flex items-center gap-2 mb-8 text-[10px] font-bold uppercase tracking-[0.24em]">
             <Link
               href={`/${locale}`}
               className="text-white/40 hover:text-amber-300/90 transition-colors no-underline"
             >
-              {isTr ? 'Ana Sayfa' : 'Home'}
+              {ui('ui_become_consultant_hero_home', 'Home')}
             </Link>
             <span className="text-white/20">/</span>
-            <span className="text-amber-400/90">{isTr ? 'Danışman Ol' : 'Become a Consultant'}</span>
+            <span className="text-amber-400/90">{ui('ui_become_consultant_hero_current', 'Become a Consultant')}</span>
           </div>
 
           {/* Badge */}
           <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.3em] text-amber-300 mb-8 backdrop-blur-sm">
             <Sparkles size={10} />
-            {isTr ? 'KARİYER FIRSATI' : 'CAREER OPPORTUNITY'}
+            {ui('ui_become_consultant_hero_badge', 'CAREER OPPORTUNITY')}
           </span>
 
-          {/* Headline — white, not theme-variable */}
           <h1 className="font-display text-4xl font-light leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl mb-6">
-            {isTr ? (
-              <>
-                Uzmanlığınla{' '}
-                <span className="text-amber-400 italic font-serif">Danışman Ol,</span>
-                <br />
-                Dünyayı Aydınlat
-              </>
-            ) : (
-              <>
-                Share Your Wisdom,{' '}
-                <span className="text-amber-400 italic font-serif">Become a Consultant</span>
-              </>
-            )}
+            {ui('ui_become_consultant_hero_h1_prefix', 'Share Your Wisdom,')}{' '}
+            <span className="text-amber-400 italic font-serif">
+              {ui('ui_become_consultant_hero_h1_accent', 'Become a Consultant')}
+            </span>
           </h1>
 
-          {/* Subtitle — always light on dark */}
           <p className="font-serif italic text-white/65 text-lg leading-relaxed mb-10 max-w-xl">
-            {isTr
-              ? 'Binlerce ruhsal yolculuğa rehberlik edin. Kendi takviminizi oluşturun, kazancınızı büyütün.'
-              : 'Guide thousands on their spiritual journey. Set your own schedule and grow your income.'}
+            {ui('ui_become_consultant_hero_subtitle', 'Guide thousands on their spiritual journey. Set your own schedule and grow your income.')}
           </p>
 
           {/* Stats row */}
           <div className="flex flex-wrap gap-8 mb-10">
             {[
-              { val: '500+', label: isTr ? 'Aktif Kullanıcı' : 'Active Users' },
-              { val: '%70', label: isTr ? 'Gelir Payı' : 'Revenue Share' },
-              { val: '48s', label: isTr ? 'Hızlı Onay' : 'Fast Approval' },
+              { val: '500+', label: ui('ui_become_consultant_hero_stat_users', 'Active Users') },
+              { val: '%70', label: ui('ui_become_consultant_hero_stat_share', 'Revenue Share') },
+              { val: '48h', label: ui('ui_become_consultant_hero_stat_approval', 'Fast Approval') },
             ].map(({ val, label }) => (
               <div key={label} className="flex flex-col gap-0.5">
                 <span className="font-display text-2xl font-semibold text-amber-400">{val}</span>
@@ -125,12 +103,12 @@ export default function BecomeConsultantHero({ locale = 'tr' }: Props) {
               href="#basvuru-formu"
               className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-8 py-3.5 text-xs font-bold uppercase tracking-[0.22em] text-[#0D0B1E] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(212,175,55,0.5)]"
             >
-              {isTr ? 'Hemen Başvur' : 'Apply Now'}
+              {ui('ui_become_consultant_hero_apply', 'Apply Now')}
               <ChevronRight size={14} />
             </Link>
             <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/40">
               <ShieldCheck size={13} className="text-emerald-400/70" />
-              {isTr ? 'Başvurular 48s içinde değerlendirilir' : 'Applications reviewed within 48h'}
+              {ui('ui_become_consultant_hero_review_note', 'Applications reviewed within 48h')}
             </span>
           </div>
         </div>

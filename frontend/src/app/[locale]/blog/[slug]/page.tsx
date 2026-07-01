@@ -80,16 +80,12 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   const image = safeStr(page?.featured_image) || (Array.isArray(page?.images) ? safeStr(page.images[0]) : '');
   const faqItems = [
     {
-      question: locale === 'tr' ? 'Bu içerik nasıl hazırlanıyor?' : 'How is this content prepared?',
-      answer: locale === 'tr'
-        ? 'GoldMoodAstro blog içerikleri editoryal kontrol, konu araştırması ve ruhsal danışmanlık ilkeleriyle hazırlanır.'
-        : 'GoldMoodAstro blog content is prepared with editorial review, topic research and spiritual guidance principles.',
+      question: 'How is this content prepared?',
+      answer: 'GoldMoodAstro blog content is prepared with editorial review, topic research and spiritual guidance principles.',
     },
     {
-      question: locale === 'tr' ? 'Bu yazı kişisel danışmanlık yerine geçer mi?' : 'Does this article replace a personal consultation?',
-      answer: locale === 'tr'
-        ? 'Hayır. Blog yazıları genel bilgilendirme sunar; kişisel harita, ilişki veya yaşam soruları için uzman danışmanlık daha uygundur.'
-        : 'No. Blog articles provide general information; expert consultation is better for personal chart, relationship or life questions.',
+      question: 'Does this article replace a personal consultation?',
+      answer: 'No. Blog articles provide general information; expert consultation is better for personal chart, relationship or life questions.',
     },
   ];
 
@@ -127,17 +123,15 @@ export default async function BlogDetailsPage({ params }: PageProps) {
           <div className="max-w-[var(--gm-w-readable)] mx-auto space-y-12">
             <FaqAccordion
               items={faqItems}
-              title={locale === 'tr' ? 'Bu Yazı Hakkında Sorular' : 'Questions About This Article'}
+              title="Questions About This Article"
             />
 
             <div className="rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-10 shadow-(--gm-shadow-soft)">
               <AuthorBio
                 name="GoldMoodAstro Editorial Team"
-                title={locale === 'tr' ? 'Ruhsal danışmanlık ve astroloji editörleri' : 'Spiritual guidance and astrology editors'}
-                bio={locale === 'tr'
-                  ? 'GoldMoodAstro editörleri; astroloji, tarot, numeroloji ve ruhsal farkındalık konularını sade, sorumlu ve uygulanabilir bir dille hazırlar.'
-                  : 'GoldMoodAstro editors prepare astrology, tarot, numerology and spiritual awareness topics in clear, responsible and practical language.'}
-                expertise={['Astroloji', 'Tarot', 'Numeroloji', 'Ruhsal Farkındalık']}
+                title="Spiritual guidance and astrology editors"
+                bio="GoldMoodAstro editors prepare astrology, tarot, numerology and spiritual awareness topics in clear, responsible and practical language."
+                expertise={['Astrology', 'Tarot', 'Numerology', 'Spiritual Awareness']}
               />
             </div>
           </div>

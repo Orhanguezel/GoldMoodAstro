@@ -12,8 +12,8 @@ type Props = {
   params: Promise<{ locale: string; id: string }>;
 };
 
-// id (UUID) → slug kalıcı yönlendirmesinin her istekte çalışması için:
-// ISR/Full Route Cache devre dışı (aksi halde redirect statik 200'e takılıyor).
+// Keep UUID -> slug permanent redirects evaluated on every request.
+// ISR/Full Route Cache is disabled so redirects do not get stuck as static 200s.
 export const dynamic = 'force-dynamic';
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
@@ -62,10 +62,14 @@ function absoluteUrl(url?: string | null): string | undefined {
   return `${SITE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
-async function fetchConsultantForMeta(id: string) {
+async function fetchConsultantForMeta(id: string, locale?: string) {
   try {
-    const res = await fetch(`${API_BASE}/consultants/${encodeURIComponent(id)}`, {
+    const qs = locale ? `?locale=${encodeURIComponent(locale)}` : '';
+    const res = await fetch(`${API_BASE}/consultants/${encodeURIComponent(id)}${qs}`, {
       next: { revalidate: 300 },
+      headers: locale
+        ? { 'Accept-Language': locale, 'x-locale': locale }
+        : undefined,
     });
     if (!res.ok) return null;
     const json = await res.json();
@@ -91,12 +95,10 @@ async function fetchConsultantServicesForSchema(id: string): Promise<ConsultantS
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id, locale } = await params;
-  const consultant = await fetchConsultantForMeta(id);
-  const name = consultant?.full_name || (locale === 'tr' ? 'Danışman Detayı' : 'Consultant Detail');
+  const consultant = await fetchConsultantForMeta(id, locale);
+  const name = consultant?.full_name || 'Consultant Detail';
   const bio = consultant?.bio || (
-    locale === 'tr'
-      ? 'Danışman profilini inceleyin, müsait slotlardan randevu alın.'
-      : 'View consultant details and book an available session.'
+    'View consultant details and book an available session.'
   );
 
   let seo = await fetchSeoObject(locale);
@@ -118,14 +120,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ConsultantDetailPage({ params }: Props) {
   const { id, locale } = await params;
   const [consultant, services] = await Promise.all([
-    fetchConsultantForMeta(id) as Promise<ConsultantForSchema | null>,
+    fetchConsultantForMeta(id, locale) as Promise<ConsultantForSchema | null>,
     fetchConsultantServicesForSchema(id),
   ]);
 
-  // URL her zaman isim-slug olsun: param slug değilse (id/eski slug) slug'a yönlendir.
-  // UUID_RE'ye bağlı değil — slug varsa ve param slug'a eşit değilse koşulsuz yönlendir.
-  // Canonical id→slug yönlendirmesi middleware'de (gerçek HTTP 308; Next 16
-  // streaming içinde server-component redirect yutuluyor). Burası fallback:
+  // Keep the URL on the name slug: redirect id/old slug params to the current slug.
+  // This does not depend on UUID_RE; when a slug exists and differs, redirect.
+  // Canonical id->slug redirects live in middleware as real HTTP 308s. This is a fallback
+  // because Next 16 streaming can swallow server-component redirects.
   const slug = consultant?.slug?.trim();
   if (slug && decodeURIComponent(id) !== slug) {
     permanentRedirect(`/${locale}/consultants/${slug}`);
@@ -133,14 +135,14 @@ export default async function ConsultantDetailPage({ params }: Props) {
 
   const canonicalParam = slug || id;
   const pageUrl = `${SITE_URL}/${locale}/consultants/${encodeURIComponent(canonicalParam)}`;
-  const consultantName = consultant?.full_name?.trim() || 'GoldMoodAstro Danışmanı';
+  const consultantName = consultant?.full_name?.trim() || 'GoldMoodAstro Consultant';
   const ratingValue = Number(consultant?.rating_avg ?? 0);
   const ratingCount = Number(consultant?.rating_count ?? 0);
 
   const graphItems = [
     breadcrumbSchema([
       { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },
-      { name: locale === 'tr' ? 'Danışmanlar' : 'Consultants', item: `${SITE_URL}/${locale}/consultants` },
+      { name: 'Consultants', item: `${SITE_URL}/${locale}/consultants` },
       { name: consultantName, item: pageUrl },
     ]),
   ];
@@ -152,7 +154,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
         name: consultantName,
         url: pageUrl,
         image: absoluteUrl(consultant.avatar_url),
-        jobTitle: locale === 'tr' ? 'Ruhsal Danışman' : 'Spiritual Consultant',
+        jobTitle: 'Spiritual Consultant',
         description: consultant.bio || undefined,
         knowsAbout: asStringArray(consultant.expertise),
         knowsLanguage: asStringArray(consultant.languages),

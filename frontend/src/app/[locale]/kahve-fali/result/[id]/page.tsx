@@ -18,8 +18,8 @@ export async function generateMetadata({
     const { data } = await res.json();
 
     const symbols = data.symbols.map((s: any) => s.name).join(', ');
-    const title = `Kahve Falı — ${symbols} — GoldMoodAstro`;
-    const description = `Fincanınızdaki ${data.symbols.length} sembol ve detaylı yapay zeka yorumu. ${symbols} ve daha fazlası.`;
+    const title = `Coffee Reading — ${symbols} — GoldMoodAstro`;
+    const description = `${data.symbols.length} symbols in your cup with detailed AI interpretation. ${symbols} and more.`;
     const ogImageUrl = `https://goldmoodastro.com/${locale}/kahve-fali/result/${id}/opengraph-image`;
 
     return {
@@ -41,8 +41,8 @@ export async function generateMetadata({
     };
   } catch (err) {
     return {
-      title: 'Kahve Falı — GoldMoodAstro',
-      description: 'Detaylı kahve falı yorumu.',
+      title: 'Coffee Reading — GoldMoodAstro',
+      description: 'Detailed coffee reading interpretation.',
     };
   }
 }

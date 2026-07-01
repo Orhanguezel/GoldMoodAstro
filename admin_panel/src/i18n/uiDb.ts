@@ -34,12 +34,8 @@ export type UiSectionKey =
   | 'ui_feedback'
   | 'ui_references'
   | 'ui_news'
-  | 'ui_products'
-  | 'ui_spareparts'
   | 'ui_faqs'
   | 'ui_team'
-  | 'ui_offer'
-  | 'ui_catalog'
   | 'ui_errors'
   | 'ui_cookie'
   | 'ui_cookie_policy'
@@ -66,8 +62,6 @@ const SECTION_KEYS: Record<UiSectionKey, readonly string[]> = {
     'ui_header_nav_home',
     'ui_header_nav_about',
     'ui_header_nav_services',
-    'ui_header_nav_product',
-    'ui_header_nav_sparepart',
     'ui_header_nav_references',
     'ui_header_nav_library',
     'ui_header_nav_news',
@@ -104,18 +98,9 @@ const SECTION_KEYS: Record<UiSectionKey, readonly string[]> = {
     'ui_footer_resources',
     'ui_footer_free_tools',
     'ui_footer_contact_us',
-    'ui_footer_services',
-    'ui_footer_service_seo',
-    'ui_footer_service_ppc',
-    'ui_footer_service_smm',
-    'ui_footer_service_link_building',
-    'ui_footer_service_cro',
     'ui_footer_explore',
     'ui_footer_account',
     'ui_footer_privacy',
-    'ui_footer_affiliate',
-    'ui_footer_product_design',
-    'ui_footer_web_design',
     'ui_footer_contact',
     'ui_footer_phone_aria',
     'ui_footer_email_aria',
@@ -287,34 +272,8 @@ const SECTION_KEYS: Record<UiSectionKey, readonly string[]> = {
     'ui_news_sample_two',
   ],
 
-  ui_products: [
-    'ui_products_kicker_prefix',
-    'ui_products_kicker_label',
-    'ui_products_title_prefix',
-    'ui_products_title_mark',
-    'ui_products_read_more',
-    'ui_products_read_more_aria',
-    'ui_products_price_label',
-    'ui_products_view_all',
-    'ui_products_empty',
-  ],
-
-  ui_spareparts: [
-    'ui_spareparts_kicker_prefix',
-    'ui_spareparts_kicker_label',
-    'ui_spareparts_title_prefix',
-    'ui_spareparts_title_mark',
-    'ui_spareparts_read_more',
-    'ui_spareparts_read_more_aria',
-    'ui_spareparts_price_label',
-    'ui_spareparts_view_all',
-    'ui_spareparts_empty',
-  ],
-
   ui_faqs: ['ui_faqs_page_title'],
   ui_team: ['ui_team_page_title'],
-  ui_offer: ['ui_offer_page_title'],
-  ui_catalog: ['ui_catalog_page_title'],
 
   ui_cookie: [
     'ui_cookie_title',

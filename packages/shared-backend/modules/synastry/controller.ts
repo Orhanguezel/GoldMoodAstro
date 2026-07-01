@@ -12,6 +12,7 @@ import {
   synastryInviteSchema,
 } from './validation';
 import { hasActiveSubscription, consumeCredits } from '../credits/consume';
+import { apiMessage } from '../_shared/api-i18n';
 
 // birthCharts tablosu backend/src/modules/birthCharts/'da (project-specific) — shared
 // modülden import edilemez. Bu yüzden raw SQL ile çekiyoruz.
@@ -31,11 +32,28 @@ async function fetchUserChart(userId: string, chartId?: string) {
   return { id: String(r.id), name: r.name as string | null, chart_data: chart };
 }
 
-const SIGN_LABEL_TR: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+const SIGN_LABELS: Record<string, Record<string, string>> = {
+  tr: {
+    aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
+    leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
+    sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+  },
+  en: {
+    aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+    leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+    sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
+  },
+  de: {
+    aries: 'Widder', taurus: 'Stier', gemini: 'Zwillinge', cancer: 'Krebs',
+    leo: 'Löwe', virgo: 'Jungfrau', libra: 'Waage', scorpio: 'Skorpion',
+    sagittarius: 'Schütze', capricorn: 'Steinbock', aquarius: 'Wassermann', pisces: 'Fische',
+  },
 };
+
+function signLabel(sign: string, locale: string): string {
+  const normalized = locale.toLowerCase().split('-')[0];
+  return SIGN_LABELS[normalized]?.[sign] ?? SIGN_LABELS.tr[sign] ?? sign;
+}
 
 function userIdFromReq(req: FastifyRequest): string | null {
   const u = (req as any).user;
@@ -49,7 +67,7 @@ function userIdFromReq(req: FastifyRequest): string | null {
  */
 export async function handleSynastryManual(req: FastifyRequest, reply: FastifyReply) {
   const userId = userIdFromReq(req);
-  if (!userId) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!userId) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const body = synastryManualSchema.parse(req.body);
 
@@ -57,7 +75,7 @@ export async function handleSynastryManual(req: FastifyRequest, reply: FastifyRe
   const userChart = await fetchUserChart(userId, body.chart_id);
   if (!userChart) {
     return reply.status(404).send({
-      error: 'Önce kendi doğum haritanızı oluşturmalısınız.',
+      error: apiMessage(req, 'own_chart_required'),
       hint_action_path: '/birth-chart',
     });
   }
@@ -78,7 +96,7 @@ export async function handleSynastryManual(req: FastifyRequest, reply: FastifyRe
 
     if (consume.status === 'insufficient') {
       return reply.status(402).send({
-        error: 'Yetersiz kredi.',
+        error: apiMessage(req, 'insufficient_credits'),
         required: 250,
         available: consume.available,
         hint_action_path: '/pricing'
@@ -144,13 +162,13 @@ export async function handleSynastryManual(req: FastifyRequest, reply: FastifyRe
  */
 export async function handleCreateSynastryInvite(req: FastifyRequest, reply: FastifyReply) {
   const userId = userIdFromReq(req);
-  if (!userId) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!userId) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const body = synastryInviteSchema.parse(req.body);
 
   // Kendine davet atamaz
   if (body.partner_user_id === userId) {
-    return reply.status(400).send({ error: 'Kendinize davet gönderemezsiniz.' });
+    return reply.status(400).send({ error: apiMessage(req, 'self_invite_forbidden') });
   }
 
   // Rapor oluştur (invite modunda)
@@ -181,7 +199,7 @@ export async function handleCreateSynastryInvite(req: FastifyRequest, reply: Fas
 /** Kullanıcıya gelen davetleri listele */
 export async function handleGetMyInvites(req: FastifyRequest, reply: FastifyReply) {
   const userId = userIdFromReq(req);
-  if (!userId) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!userId) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
   const invites = await repo.getPendingInvites(userId);
   return reply.send({ data: invites });
 }
@@ -189,24 +207,24 @@ export async function handleGetMyInvites(req: FastifyRequest, reply: FastifyRepl
 /** Daveti onayla → Raporu oluştur */
 export async function handleAcceptInvite(req: FastifyRequest, reply: FastifyReply) {
   const userId = userIdFromReq(req);
-  if (!userId) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!userId) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const { id } = req.params as { id: string };
   const invite = await repo.getSynastryReportById(id);
 
   if (!invite || invite.partnerUserId !== userId || invite.inviteStatus !== 'pending') {
-    return reply.status(404).send({ error: 'Davet bulunamadı veya geçersiz.' });
+    return reply.status(404).send({ error: apiMessage(req, 'invite_invalid') });
   }
 
   // 1) Her iki kullanıcının chart'larını bul
   if (!invite.userId) {
-    return reply.status(400).send({ error: 'Davet eden kullanıcı bulunamadı.' });
+    return reply.status(400).send({ error: apiMessage(req, 'inviter_not_found') });
   }
   const userAChart = await fetchUserChart(invite.userId); // Davet eden
   const userBChart = await fetchUserChart(userId);        // Onaylayan (partner)
 
   if (!userAChart || !userBChart) {
-    return reply.status(400).send({ error: 'Her iki kullanıcının da doğum haritası olmalı.' });
+    return reply.status(400).send({ error: apiMessage(req, 'both_charts_required') });
   }
 
   // 2) Compute Synastry
@@ -222,7 +240,7 @@ export async function handleAcceptInvite(req: FastifyRequest, reply: FastifyRepl
 
     const llm = await llmGenerate({
       promptKey: 'synastry_report',
-      locale: 'tr',
+      locale: String((req as any).locale || (req.headers['x-locale'] as string) || 'tr'),
       vars: {
         user_name: userAChart.name ?? 'Kullanıcı 1',
         partner_name: userBChart.name ?? 'Kullanıcı 2',
@@ -247,13 +265,13 @@ export async function handleAcceptInvite(req: FastifyRequest, reply: FastifyRepl
 /** Daveti reddet */
 export async function handleDeclineInvite(req: FastifyRequest, reply: FastifyReply) {
   const userId = userIdFromReq(req);
-  if (!userId) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!userId) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const { id } = req.params as { id: string };
   const invite = await repo.getSynastryReportById(id);
 
   if (!invite || invite.partnerUserId !== userId) {
-    return reply.status(404).send({ error: 'Davet bulunamadı.' });
+    return reply.status(404).send({ error: apiMessage(req, 'invite_not_found') });
   }
 
   await repo.updateSynastryReport(id, { inviteStatus: 'declined' });
@@ -271,8 +289,8 @@ export async function handleSynastryQuick(req: FastifyRequest, reply: FastifyRep
     promptKey: 'compatibility_signs',
     locale: body.locale,
     vars: {
-      sign_a_label: SIGN_LABEL_TR[body.sign_a] ?? body.sign_a,
-      sign_b_label: SIGN_LABEL_TR[body.sign_b] ?? body.sign_b,
+      sign_a_label: signLabel(body.sign_a, body.locale),
+      sign_b_label: signLabel(body.sign_b, body.locale),
     },
   });
 
@@ -296,7 +314,7 @@ export async function handleSynastryQuick(req: FastifyRequest, reply: FastifyRep
 /** Geçmiş raporlar (auth) */
 export async function handleGetMySynastry(req: FastifyRequest, reply: FastifyReply) {
   const userId = userIdFromReq(req);
-  if (!userId) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!userId) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
   const reports = await repo.getMySynastryReports(userId);
   return reply.send({ data: reports });
 }
@@ -310,7 +328,7 @@ export async function handleGetMySynastry(req: FastifyRequest, reply: FastifyRep
 export async function handleGetSynastryReport(req: FastifyRequest, reply: FastifyReply) {
   const { id } = req.params as { id: string };
   const report = await repo.getSynastryReportById(id);
-  if (!report) return reply.status(404).send({ error: 'Rapor bulunamadı.' });
+  if (!report) return reply.status(404).send({ error: apiMessage(req, 'report_not_found') });
 
   // Public görünüm: partner_data'dan PII'yi çıkar (sadece isim kalır)
   const partnerData = report.partnerData as any;

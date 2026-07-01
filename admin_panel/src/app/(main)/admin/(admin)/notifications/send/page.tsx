@@ -17,9 +17,11 @@ import {
   useSendManualPushMutation,
   useSendPushCampaignMutation,
 } from '@/integrations/hooks';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 export default function SendPushNotificationPage() {
   const router = useRouter();
+  const t = useAdminT('admin.notifications');
   const [sendPush, { isLoading }] = useSendManualPushMutation();
   const { data: campaigns = [], isLoading: campaignsLoading } = useListPushCampaignsQuery();
   const [sendCampaign, { isLoading: isSendingCampaign }] = useSendPushCampaignMutation();
@@ -39,12 +41,12 @@ export default function SendPushNotificationPage() {
 
   const handleSend = async () => {
     if (!title.trim() || !body.trim()) {
-      toast.error('Title and message are required.');
+      toast.error(t('push.errors.titleAndMessageRequired'));
       return;
     }
 
     if (target === 'specific' && !userId.trim()) {
-      toast.error('User ID is required for specific target.');
+      toast.error(t('push.errors.userIdRequired'));
       return;
     }
 
@@ -56,29 +58,33 @@ export default function SendPushNotificationPage() {
         user_id: target === 'specific' ? userId.trim() : undefined,
       }).unwrap();
 
-      toast.success(res.sent_count 
-        ? `${res.sent_count} notifications sent successfully.` 
-        : 'Push notification sent successfully.'
+      toast.success(res.sent_count
+        ? t('push.messages.sentCount', { count: res.sent_count })
+        : t('push.messages.sent')
       );
       router.back();
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || 'Failed to send notification.');
+      toast.error(err?.data?.error?.message || t('push.errors.sendFailed'));
     }
   };
 
   const handleSendCampaign = async () => {
     if (!selectedCampaignSlug) {
-      toast.error('Please select a campaign.');
+      toast.error(t('push.errors.selectCampaign'));
       return;
     }
 
     try {
       const res = await sendCampaign(selectedCampaignSlug).unwrap();
       toast.success(
-        `${res.sent_count}/${res.target_count} campaign notifications sent. Failed: ${res.failed_count}.`,
+        t('push.messages.campaignSent', {
+          sent: res.sent_count,
+          target: res.target_count,
+          failed: res.failed_count,
+        }),
       );
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || 'Failed to send campaign.');
+      toast.error(err?.data?.error?.message || t('push.errors.campaignFailed'));
     }
   };
 
@@ -89,8 +95,8 @@ export default function SendPushNotificationPage() {
           <ArrowLeft className="size-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Send Push Notification</h1>
-          <p className="text-sm text-muted-foreground">Send real-time mobile notifications to your users.</p>
+          <h1 className="text-2xl font-bold">{t('push.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('push.subtitle')}</p>
         </div>
       </div>
 
@@ -98,20 +104,20 @@ export default function SendPushNotificationPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Megaphone className="size-4" />
-            Push Campaign
+            {t('push.campaign.title')}
           </CardTitle>
-          <CardDescription>Send a preconfigured campaign to its saved audience segment.</CardDescription>
+          <CardDescription>{t('push.campaign.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="campaign">Campaign</Label>
+            <Label htmlFor="campaign">{t('push.campaign.label')}</Label>
             <Select
               value={selectedCampaignSlug}
               onValueChange={setSelectedCampaignSlug}
               disabled={campaignsLoading || campaigns.length === 0}
             >
               <SelectTrigger id="campaign">
-                <SelectValue placeholder={campaignsLoading ? 'Loading campaigns...' : 'Select campaign'} />
+                <SelectValue placeholder={campaignsLoading ? t('push.campaign.loading') : t('push.campaign.select')} />
               </SelectTrigger>
               <SelectContent>
                 {campaigns.map((campaign) => (
@@ -139,7 +145,7 @@ export default function SendPushNotificationPage() {
               <p className="mt-2 text-muted-foreground">{selectedCampaign.body}</p>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No active push campaigns found.</p>
+            <p className="text-sm text-muted-foreground">{t('push.campaign.empty')}</p>
           )}
         </CardContent>
         <CardFooter className="justify-end border-t pt-6">
@@ -149,32 +155,32 @@ export default function SendPushNotificationPage() {
             className="bg-amethyst hover:bg-amethyst/90"
           >
             <Send className="mr-2 size-4" />
-            {isSendingCampaign ? 'Sending...' : 'Send Campaign'}
+            {isSendingCampaign ? t('push.campaign.sending') : t('push.campaign.send')}
           </Button>
         </CardFooter>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Notification Content</CardTitle>
-          <CardDescription>This will be displayed as a push notification on the user's device.</CardDescription>
+          <CardTitle className="text-base">{t('push.content.title')}</CardTitle>
+          <CardDescription>{t('push.content.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input 
-              id="title" 
-              placeholder="e.g. Special Offer!" 
+            <Label htmlFor="title">{t('push.content.titleLabel')}</Label>
+            <Input
+              id="title"
+              placeholder={t('push.content.titlePlaceholder')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="body">Message Body</Label>
-            <Textarea 
-              id="body" 
-              placeholder="e.g. Check out our new astrology reading slots..." 
+            <Label htmlFor="body">{t('push.content.bodyLabel')}</Label>
+            <Textarea
+              id="body"
+              placeholder={t('push.content.bodyPlaceholder')}
               className="min-h-[100px]"
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -182,7 +188,7 @@ export default function SendPushNotificationPage() {
           </div>
 
           <div className="space-y-3 pt-4 border-t">
-            <Label>Target Audience</Label>
+            <Label>{t('push.content.targetAudience')}</Label>
             <RadioGroup value={target} onValueChange={(v) => setTarget(v as any)} className="grid grid-cols-2 gap-4">
               <div>
                 <RadioGroupItem value="all" id="target-all" className="peer sr-only" />
@@ -191,7 +197,7 @@ export default function SendPushNotificationPage() {
                   className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-amethyst [&:has([data-state=checked])]:border-amethyst"
                 >
                   <Users className="mb-3 size-6" />
-                  All Users
+                  {t('push.content.allUsers')}
                 </Label>
               </div>
               <div>
@@ -201,7 +207,7 @@ export default function SendPushNotificationPage() {
                   className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-amethyst [&:has([data-state=checked])]:border-amethyst"
                 >
                   <User className="mb-3 size-6" />
-                  Specific User
+                  {t('push.content.specificUser')}
                 </Label>
               </div>
             </RadioGroup>
@@ -209,10 +215,10 @@ export default function SendPushNotificationPage() {
 
           {target === 'specific' && (
             <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-              <Label htmlFor="userId">User ID</Label>
-              <Input 
-                id="userId" 
-                placeholder="Enter user UUID" 
+              <Label htmlFor="userId">{t('push.content.userIdLabel')}</Label>
+              <Input
+                id="userId"
+                placeholder={t('push.content.userIdPlaceholder')}
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
               />
@@ -220,10 +226,10 @@ export default function SendPushNotificationPage() {
           )}
         </CardContent>
         <CardFooter className="justify-end border-t pt-6">
-          <Button variant="outline" onClick={() => router.back()} className="mr-2">Cancel</Button>
+          <Button variant="outline" onClick={() => router.back()} className="mr-2">{t('push.content.cancel')}</Button>
           <Button onClick={handleSend} disabled={isLoading} className="bg-amethyst hover:bg-amethyst/90">
             <Send className="mr-2 size-4" />
-            {isLoading ? 'Sending...' : 'Send Notification'}
+            {isLoading ? t('push.content.sending') : t('push.content.send')}
           </Button>
         </CardFooter>
       </Card>
@@ -231,7 +237,7 @@ export default function SendPushNotificationPage() {
       {/* Preview */}
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h3 className="mb-4 text-sm font-semibold text-muted-foreground flex items-center gap-2">
-          <Bell className="size-4" /> Device Preview
+          <Bell className="size-4" /> {t('push.preview.title')}
         </h3>
         <div className="mx-auto w-64 rounded-2xl bg-slate-100 p-3 dark:bg-slate-900 border-4 border-slate-200 dark:border-slate-800">
           <div className="mb-2 h-1 w-8 self-center rounded-full bg-slate-300 dark:bg-slate-700 mx-auto" />
@@ -239,11 +245,11 @@ export default function SendPushNotificationPage() {
             <div className="flex items-center gap-2 mb-1">
               <div className="size-4 rounded bg-amethyst" />
               <span className="text-[10px] font-bold">GOLDMOOD ASTRO</span>
-              <span className="ml-auto text-[8px] text-muted-foreground">now</span>
+              <span className="ml-auto text-[8px] text-muted-foreground">{t('push.preview.now')}</span>
             </div>
-            <p className="text-[11px] font-bold line-clamp-1">{title || 'Notification Title'}</p>
+            <p className="text-[11px] font-bold line-clamp-1">{title || t('push.preview.titlePlaceholder')}</p>
             <p className="text-[10px] text-muted-foreground line-clamp-2 leading-tight">
-              {body || 'Your notification message will appear here...'}
+              {body || t('push.preview.bodyPlaceholder')}
             </p>
           </div>
         </div>

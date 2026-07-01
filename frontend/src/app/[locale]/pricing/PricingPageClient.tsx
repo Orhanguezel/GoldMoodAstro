@@ -20,9 +20,9 @@ const FALLBACK_PLANS: SubscriptionPlanPublicUi[] = [
   {
     id: 'fallback-free',
     code: 'free',
-    name_tr: 'Ücretsiz',
+    name_tr: 'Free',
     name_en: 'Free',
-    description_tr: 'Temel özelliklerle platformu keşfetmeye başlayın.',
+    description_tr: 'Start exploring the platform with core features.',
     description_en: 'Start using core features of the platform.',
     price_minor: 0,
     currency: 'TRY',
@@ -35,9 +35,9 @@ const FALLBACK_PLANS: SubscriptionPlanPublicUi[] = [
   {
     id: 'fallback-monthly',
     code: 'monthly',
-    name_tr: 'Aylık',
+    name_tr: 'Monthly',
     name_en: 'Monthly',
-    description_tr: 'Sınırsız AI yorumlar ve premium danışman araçları.',
+    description_tr: 'Unlimited AI readings and premium consultant tools.',
     description_en: 'Unlimited AI readings and premium consultant tools.',
     price_minor: 14900,
     currency: 'TRY',
@@ -57,9 +57,9 @@ const FALLBACK_PLANS: SubscriptionPlanPublicUi[] = [
   {
     id: 'fallback-yearly',
     code: 'yearly',
-    name_tr: 'Yıllık',
+    name_tr: 'Yearly',
     name_en: 'Yearly',
-    description_tr: 'Yıllık ödeme avantajı ve kalıcı premium erişim.',
+    description_tr: 'Premium access with yearly pricing advantage.',
     description_en: 'Premium access with yearly pricing advantage.',
     price_minor: 149900,
     currency: 'TRY',
@@ -81,20 +81,20 @@ const FALLBACK_PLANS: SubscriptionPlanPublicUi[] = [
 
 const featureCopy = {
   tr: {
-    daily: 'Günlük Okuma',
-    daily_desc: 'Önceden planlanan günlük astroloji yorumları',
-    transit: 'Günlük Transit',
-    transit_desc: 'Kişisel evre ve hareket takibi',
+    daily: 'Daily Reading',
+    daily_desc: 'Scheduled daily astrology reading',
+    transit: 'Daily Transit',
+    transit_desc: 'Personal planetary motion tracking',
     synastry: 'Sinastri',
-    synastry_desc: 'İlişki uyumu analizleri',
-    chart: 'Temel Doğum Haritası',
-    chart_desc: 'Doğum haritanızla temel danışmanlık',
-    support: 'Öncelikli Destek',
-    support_desc: 'Öncelikli görüşme ve yorum desteği',
-    video: 'Görüntülü Görüşme',
-    video_desc: 'Danışmanla kamera destekli görüşme',
-    ad: 'Reklamsız Deneyim',
-    ad_desc: 'Reklam içeriğinden arındırılmış arayüz',
+    synastry_desc: 'Relationship compatibility insights',
+    chart: 'Basic Birth Chart',
+    chart_desc: 'Core astrology session setup',
+    support: 'Priority Support',
+    support_desc: 'Priority support and responses',
+    video: 'Video Session',
+    video_desc: 'Live camera-based consultation',
+    ad: 'Ad-free',
+    ad_desc: 'Cleaner experience without promotional clutter',
   },
   en: {
     daily: 'Daily Reading',
@@ -197,35 +197,35 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
 
   const copy = locale === 'tr'
     ? {
-        title: 'Fiyatlandırma',
-        subtitle: 'Sesli ve görüntülü danışmanlık farkını netleştirdik',
+        title: 'Pricing',
+        subtitle: 'Clear comparison for voice vs video consultations',
         lead:
-          'Hedefimiz, danışmanlık deneyimini şeffaf fiyatlandırma ile sunmak. Ücretsiz ve abonelik planları ile premium özelliklere erişim sağlar.',
+          'Transparent pricing for every stage. Start free, then upgrade when you need premium consultation features.',
         footerInfo:
-          'İptal etmek, üye olmaktan her zaman daha kolaydır. KVKK ve iade politikamızla güvenle başlayın.',
-        transparencyTitle: 'Şeffaf Fiyatlandırma',
-        transparencySubtitle: 'Şeffaflık ve iptal koşulları net biçimde belirtilmiştir.',
-        policyTitle: 'Şeffaflık',
+          'You can cancel anytime. Cancellation is intentionally simple and clear.',
+        transparencyTitle: 'Transparent Pricing',
+        transparencySubtitle: 'Pricing and cancellation terms are clearly published.',
+        policyTitle: 'Transparency',
         policyBody:
-          'Şeffaf fiyat, saklı koşul yok. İptal etmek, üye olmaktan her zaman daha kolaydır.',
-        cancel: 'İptal Etmek Üye Olmaktan Kolaydır',
-        cancellationPolicy: 'İptal Politikası',
-        kvkk: 'KVKK',
-        returnPolicy: 'İade Politikası',
-        perMinuteVoice: `Sesli: ${VOICE_RATE_TRY}₺ / 15 dk`,
-        perMinuteVideo: `Görüntülü: ${VIDEO_RATE_TRY}₺ / 15 dk`,
-        modeHeadline: 'Sesli ve Görüntülü Danışmanlık Karşılaştırması',
-        modeLead: 'Tüm kullanıcılar sesli seansa erişir; görüntülü seanslar premium katmanda aktif.',
-        freeLabel: 'Ücretsiz',
+          'Clear pricing. No hidden conditions. Cancellation is easy and refund conditions are explained.',
+        cancel: 'Cancel Is Easier Than Joining',
+        cancellationPolicy: 'Cancellation Policy',
+        kvkk: 'Privacy',
+        returnPolicy: 'Refund Policy',
+        perMinuteVoice: `Voice: ${VOICE_RATE_TRY}₺ / 15 min`,
+        perMinuteVideo: `Video: ${VIDEO_RATE_TRY}₺ / 15 min`,
+        modeHeadline: 'Voice vs Video Consultation',
+        modeLead: 'All users can use voice sessions. Video sessions are included with premium plans.',
+        freeLabel: 'Free',
         premiumLabel: 'Premium',
-        cta: 'Kullanıma Başla',
-        cta2: 'Danışman Bul',
-        couponTitle: 'Kupon kodun var mı?',
-        couponLead: 'Abonelik kampanyaları için kodunu gir, indirim koşulunu hemen gör.',
+        cta: 'Start Now',
+        cta2: 'Find a Consultant',
+        couponTitle: 'Have a coupon code?',
+        couponLead: 'Enter a subscription campaign code to check the discount.',
         couponPlaceholder: 'WELCOME20',
-        couponApply: 'Uygula',
-        couponSuccess: 'Kupon uygulanabilir. Ödeme adımında indirim yansıtılır.',
-        couponError: 'Kupon uygulanamadı. Giriş yapmanız veya farklı bir kod denemeniz gerekebilir.',
+        couponApply: 'Apply',
+        couponSuccess: 'Coupon is eligible. The discount is applied during checkout.',
+        couponError: 'Coupon could not be applied. You may need to sign in or try another code.',
       }
     : {
         title: 'Pricing',
@@ -273,32 +273,30 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
 
   const voiceFeatures = [
     {
-      text: locale === 'tr' ? 'Ses kalitesi + gürültü filtresi' : 'Noise-filtered audio quality',
+      text: 'Noise-filtered audio quality',
       included: true,
     },
     {
-      text: locale === 'tr' ? 'Düşük maliyetli seans' : 'Lower-cost sessions',
+      text: 'Lower-cost sessions',
       included: true,
     },
     {
-      text: locale === 'tr' ? 'Görüntü kullanımı yok' : 'No camera usage',
+      text: 'No camera usage',
       included: true,
     },
   ];
 
   const videoFeatures = [
     {
-      text: locale === 'tr' ? 'Yüz ifadeleri ve göz teması' : 'Facial expression and eye contact',
+      text: 'Facial expression and eye contact',
       included: true,
     },
     {
-      text: locale === 'tr'
-        ? 'Danışmanla daha detaylı enerji okuması'
-        : 'Richer communication for in-depth reading',
+      text: 'Richer communication for in-depth reading',
       included: true,
     },
     {
-      text: locale === 'tr' ? `${copy.perMinuteVideo} ${locale === 'tr' ? '(Premium plan)' : '(Premium plan)'}` : copy.perMinuteVideo,
+      text: `${copy.perMinuteVideo} (Premium plan)`,
       included: true,
     },
   ];
@@ -388,16 +386,11 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
             const name = locale === 'tr' ? plan.name_tr : plan.name_en;
             const description = locale === 'tr' ? plan.description_tr : plan.description_en;
             const price = toMoney(plan.price_minor, plan.currency, locale);
-            const periodLabel =
-              locale === 'tr'
-                ? plan.period === 'yearly'
-                  ? 'yıllık'
-                  : 'aylık'
-                : plan.period;
+            const periodLabel = plan.period;
 
             const isHighlighted = plan.code === 'monthly' || plan.code === 'yearly';
             const badgeLabel = locale === 'tr' ? (plan.code === 'free' ? copy.freeLabel : copy.premiumLabel) : (plan.code === 'free' ? 'Free' : 'Premium');
-            const trialText = plan.trial_days > 0 ? `${plan.trial_days} ${locale === 'tr' ? 'gün deneme' : 'day trial'}` : null;
+            const trialText = plan.trial_days > 0 ? `${plan.trial_days} day trial` : null;
 
             return (
               <article
@@ -415,14 +408,12 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
                   <p className="mt-2 text-sm text-(--gm-text-dim) min-h-[44px]">{description || ''}</p>
                   <div className="mt-5">
                     <p className="text-[1.85rem] font-semibold text-(--gm-gold) leading-none">
-                      {plan.price_minor === 0 ? (locale === 'tr' ? 'Ücretsiz' : 'Free') : price}
+                      {plan.price_minor === 0 ? 'Free' : price}
                     </p>
                     <p className="mt-1 text-xs text-(--gm-text-muted)">
                       {plan.code === 'free'
-                        ? locale === 'tr'
-                          ? 'Başlamak için kart bilgisi gerekmez'
-                          : 'No card required to start'
-                        : `${plan.price_minor === 0 ? '' : `${locale === 'tr' ? ' / ' : ' / '}${periodLabel}`}${trialText ? ` · ${trialText}` : ''}`}
+                        ? 'No card required to start'
+                        : `${plan.price_minor === 0 ? '' : ` / ${periodLabel}`}${trialText ? ` · ${trialText}` : ''}`}
                     </p>
                   </div>
                 </div>
@@ -510,7 +501,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
               <div className="flex items-center gap-3 mb-4">
                 <Mic className="text-(--gm-gold)" size={20} />
                 <h4 className="font-serif text-xl text-(--gm-text)">
-                  {locale === 'tr' ? 'Sesli Görüşme (Standart)' : 'Audio Session (Standard)'}
+                  Audio Session (Standard)
                 </h4>
               </div>
               <p className="text-(--gm-text-dim) text-sm mb-3">
@@ -533,7 +524,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
               <div className="flex items-center gap-3 mb-4">
                 <Video className="text-(--gm-gold)" size={20} />
                 <h4 className="font-serif text-xl text-(--gm-text)">
-                  {locale === 'tr' ? 'Görüntülü Görüşme (Premium)' : 'Video Session (Premium)'}
+                  Video Session (Premium)
                 </h4>
               </div>
               <p className="text-(--gm-text-dim) text-sm mb-3">
@@ -554,15 +545,15 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
             <table className="w-full min-w-[680px] text-sm">
               <thead>
                 <tr className="text-(--gm-text-muted) border-b border-(--gm-border)">
-                  <th className="py-3 text-left font-medium pr-4">{locale === 'tr' ? 'Özellik' : 'Feature'}</th>
+                  <th className="py-3 text-left font-medium pr-4">Feature</th>
                   <th className="py-3 text-center font-medium px-3">
-                    {getPlanLabel(freePlan, locale === 'tr' ? 'Ücretsiz' : 'Free')}
+                    {getPlanLabel(freePlan, 'Free')}
                   </th>
                   <th className="py-3 text-center font-medium px-3">
-                    {getPlanLabel(planToShow, locale === 'tr' ? 'Aylık' : 'Monthly')}
+                    {getPlanLabel(planToShow, 'Monthly')}
                   </th>
                   <th className="py-3 text-center font-medium px-3">
-                    {getPlanLabel(activeYear, locale === 'tr' ? 'Yıllık' : 'Yearly')}
+                    {getPlanLabel(activeYear, 'Yearly')}
                   </th>
                 </tr>
               </thead>
@@ -609,7 +600,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
             </div>
             <Link href={localizePath(locale, '/terms')} className="inline-flex items-center gap-2 rounded-full border border-(--gm-border) px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-text) hover:bg-(--gm-surface) transition-all">
               <CreditCard size={16} />
-              <span>{locale === 'tr' ? 'Şeffaf Kural Kitabı' : 'See policy details'}</span>
+              <span>See policy details</span>
             </Link>
           </div>
           <div className="mt-6 grid sm:grid-cols-3 gap-4 text-sm text-(--gm-text-muted)">
@@ -633,12 +624,12 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
 
         {(isLoading || isFetching) && (
           <div className="mt-8 text-sm text-(--gm-text-muted)">
-            {locale === 'tr' ? 'Fiyat planları güncelleniyor…' : 'Updating pricing plans…'}
+            Updating pricing plans...
           </div>
         )}
         {isError && (
           <div className="mt-8 text-sm text-(--gm-error)">
-            {locale === 'tr' ? 'Planlar sunucudan alınamadı, yedek veriler gösteriliyor.' : 'Could not load plans, showing fallback data.'}
+            Could not load plans, showing fallback data.
           </div>
         )}
       </div>

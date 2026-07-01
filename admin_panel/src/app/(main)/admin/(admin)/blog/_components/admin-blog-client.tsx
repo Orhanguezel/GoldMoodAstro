@@ -34,6 +34,7 @@ import {
   useListCustomPagesAdminQuery,
   useUpdateCustomPageAdminMutation,
 } from '@/integrations/hooks';
+import { useLocaleContext } from '@/i18n';
 import { cn } from '@/lib/utils';
 
 type BlogForm = {
@@ -99,16 +100,22 @@ function toForm(post: CustomPageDto): BlogForm {
   };
 }
 
-function formatDate(value: string): string {
+function formatDate(value: string, locale: string): string {
   if (!value) return '-';
   try {
-    return new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+    const tag = locale === 'de' ? 'de-DE' : locale === 'en' ? 'en-US' : 'tr-TR';
+    return new Intl.DateTimeFormat(tag, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
   } catch {
     return value;
   }
 }
 
 export default function AdminBlogClient() {
+  const { t, locale: uiLocale } = useLocaleContext();
+  const b = React.useCallback(
+    (key: string, fallback: string, vars?: Record<string, string | number>) => t(`admin.blog.${key}`, vars, fallback),
+    [t],
+  );
   const [q, setQ] = React.useState('');
   const [locale, setLocale] = React.useState('tr');
   const [form, setForm] = React.useState<BlogForm | null>(null);
@@ -149,11 +156,11 @@ export default function AdminBlogClient() {
     const title = form.title.trim();
     const slug = slugify(form.slug || form.title);
     if (!title) {
-      toast.error('Başlık zorunlu.');
+      toast.error(b('validation.titleRequired', 'Başlık zorunlu.'));
       return;
     }
     if (!slug) {
-      toast.error('URL slug zorunlu.');
+      toast.error(b('validation.slugRequired', 'URL slug zorunlu.'));
       return;
     }
 
@@ -177,33 +184,33 @@ export default function AdminBlogClient() {
     try {
       if (form.id) {
         await updatePost({ id: form.id, patch: payload }).unwrap();
-        toast.success('Blog yazısı kaydedildi.');
+        toast.success(b('toast.saved', 'Blog yazısı kaydedildi.'));
       } else {
         await createPost(payload).unwrap();
-        toast.success('Blog yazısı oluşturuldu.');
+        toast.success(b('toast.created', 'Blog yazısı oluşturuldu.'));
       }
       setForm(null);
     } catch (error) {
-      toast.error(errorMessage(error, 'Blog yazısı kaydedilemedi.'));
+      toast.error(errorMessage(error, b('toast.saveError', 'Blog yazısı kaydedilemedi.')));
     }
   };
 
   const togglePublished = async (post: CustomPageDto) => {
     try {
       await updatePost({ id: post.id, patch: { is_published: !post.is_published } }).unwrap();
-      toast.success(post.is_published ? 'Yazı taslağa alındı.' : 'Yazı yayına alındı.');
+      toast.success(post.is_published ? b('toast.unpublished', 'Yazı taslağa alındı.') : b('toast.published', 'Yazı yayına alındı.'));
     } catch (error) {
-      toast.error(errorMessage(error, 'Durum güncellenemedi.'));
+      toast.error(errorMessage(error, b('toast.statusError', 'Durum güncellenemedi.')));
     }
   };
 
   const remove = async (post: CustomPageDto) => {
-    if (!confirm(`"${post.title || post.slug || post.id}" silinsin mi?`)) return;
+    if (!confirm(b('confirmDelete', '"{title}" silinsin mi?', { title: post.title || post.slug || post.id }))) return;
     try {
       await deletePost(post.id).unwrap();
-      toast.success('Blog yazısı silindi.');
+      toast.success(b('toast.deleted', 'Blog yazısı silindi.'));
     } catch (error) {
-      toast.error(errorMessage(error, 'Blog yazısı silinemedi.'));
+      toast.error(errorMessage(error, b('toast.deleteError', 'Blog yazısı silinemedi.')));
     }
   };
 
@@ -213,21 +220,21 @@ export default function AdminBlogClient() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-gm-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">İçerik Yönetimi</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">{b('eyebrow', 'İçerik Yönetimi')}</span>
           </div>
-          <h1 className="font-serif text-4xl text-gm-text">Blog Yönetimi</h1>
+          <h1 className="font-serif text-4xl text-gm-text">{b('title', 'Blog Yönetimi')}</h1>
           <p className="max-w-2xl text-sm italic text-gm-muted">
-            Web ve mobil blog sayfası buradaki yayınlanmış yazıları okur. Danışman taslakları da burada onaylanıp yayına alınır.
+            {b('description', 'Web ve mobil blog sayfası buradaki yayınlanmış yazıları okur. Danışman taslakları da burada onaylanıp yayına alınır.')}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" onClick={() => query.refetch()} disabled={busy} className="h-11 rounded-full border-gm-border-soft">
             <RefreshCcw className={cn('mr-2 size-4', query.isFetching && 'animate-spin')} />
-            Yenile
+            {b('refresh', 'Yenile')}
           </Button>
           <Button onClick={startNew} disabled={busy} className="h-11 rounded-full bg-gm-gold px-7 text-gm-bg hover:bg-gm-gold/80">
             <Plus className="mr-2 size-4" />
-            Yeni Yazı
+            {b('newPost', 'Yeni Yazı')}
           </Button>
         </div>
       </div>
@@ -240,7 +247,7 @@ export default function AdminBlogClient() {
               <Input
                 value={q}
                 onChange={(event) => setQ(event.target.value)}
-                placeholder="Başlık veya slug ara"
+                placeholder={b('searchPlaceholder', 'Başlık veya slug ara')}
                 className="h-11 rounded-full border-gm-border-soft bg-gm-bg-deep pl-10"
               />
             </div>
@@ -262,8 +269,8 @@ export default function AdminBlogClient() {
           <CardContent className="space-y-5 p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h2 className="font-serif text-2xl text-gm-text">{editing ? 'Yazıyı Düzenle' : 'Yeni Blog Yazısı'}</h2>
-                <p className="text-xs text-gm-muted">İçerik HTML kabul eder; düz metin de kullanılabilir.</p>
+                <h2 className="font-serif text-2xl text-gm-text">{editing ? b('form.editTitle', 'Yazıyı Düzenle') : b('form.newTitle', 'Yeni Blog Yazısı')}</h2>
+                <p className="text-xs text-gm-muted">{b('form.help', 'İçerik HTML kabul eder; düz metin de kullanılabilir.')}</p>
               </div>
               <Button variant="ghost" size="icon" onClick={closeForm} className="rounded-full">
                 <X className="size-4" />
@@ -271,49 +278,49 @@ export default function AdminBlogClient() {
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
-              <Field label="Başlık">
+              <Field label={b('form.fields.title', 'Başlık')}>
                 <Input value={form.title} onChange={(event) => patchForm({ title: event.target.value })} />
               </Field>
               <Field label="Slug">
                 <Input value={form.slug} onChange={(event) => patchForm({ slug: slugify(event.target.value) })} />
               </Field>
-              <Field label="Özet">
+              <Field label={b('form.fields.summary', 'Özet')}>
                 <Textarea value={form.summary} onChange={(event) => patchForm({ summary: event.target.value })} className="min-h-24" />
               </Field>
               <div className="grid gap-4">
-                <Field label="Kapak Görsel URL">
+                <Field label={b('form.fields.imageUrl', 'Kapak Görsel URL')}>
                   <Input value={form.featured_image} onChange={(event) => patchForm({ featured_image: event.target.value })} />
                 </Field>
-                <Field label="Görsel Alt Metni">
+                <Field label={b('form.fields.imageAlt', 'Görsel Alt Metni')}>
                   <Input value={form.featured_image_alt} onChange={(event) => patchForm({ featured_image_alt: event.target.value })} />
                 </Field>
               </div>
-              <Field label="Meta Başlık">
+              <Field label={b('form.fields.metaTitle', 'Meta Başlık')}>
                 <Input value={form.meta_title} onChange={(event) => patchForm({ meta_title: event.target.value })} />
               </Field>
-              <Field label="Meta Açıklama">
+              <Field label={b('form.fields.metaDescription', 'Meta Açıklama')}>
                 <Input value={form.meta_description} onChange={(event) => patchForm({ meta_description: event.target.value })} />
               </Field>
-              <Field label="Etiketler">
-                <Input value={form.tags} onChange={(event) => patchForm({ tags: event.target.value })} placeholder="astroloji, tarot" />
+              <Field label={b('form.fields.tags', 'Etiketler')}>
+                <Input value={form.tags} onChange={(event) => patchForm({ tags: event.target.value })} placeholder={b('form.tagsPlaceholder', 'astroloji, tarot')} />
               </Field>
               <div className="grid grid-cols-2 gap-4">
-                <ToggleField label="Yayında" checked={form.is_published} onChange={(v) => patchForm({ is_published: v })} />
-                <ToggleField label="Öne çıkar" checked={form.featured} onChange={(v) => patchForm({ featured: v })} />
+                <ToggleField label={b('form.fields.published', 'Yayında')} checked={form.is_published} onChange={(v) => patchForm({ is_published: v })} />
+                <ToggleField label={b('form.fields.featured', 'Öne çıkar')} checked={form.featured} onChange={(v) => patchForm({ featured: v })} />
               </div>
             </div>
 
-            <Field label="İçerik">
+            <Field label={b('form.fields.content', 'İçerik')}>
               <Textarea value={form.content} onChange={(event) => patchForm({ content: event.target.value })} className="min-h-[320px] font-mono text-sm" />
             </Field>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={closeForm} className="rounded-full border-gm-border-soft">
-                Vazgeç
+                {b('form.cancel', 'Vazgeç')}
               </Button>
               <Button onClick={save} disabled={busy} className="rounded-full bg-gm-gold px-8 text-gm-bg hover:bg-gm-gold/80">
                 <Save className="mr-2 size-4" />
-                Kaydet
+                {b('form.save', 'Kaydet')}
               </Button>
             </div>
           </CardContent>
@@ -325,33 +332,33 @@ export default function AdminBlogClient() {
           <Table>
             <TableHeader className="bg-gm-surface/40">
               <TableRow className="border-gm-border-soft hover:bg-transparent">
-                <TableHead className="px-7 py-5 text-[10px] uppercase tracking-widest text-gm-muted">Durum</TableHead>
-                <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">Yazı</TableHead>
-                <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">Tarih</TableHead>
-                <TableHead className="px-7 py-5 text-right text-[10px] uppercase tracking-widest text-gm-muted">İşlem</TableHead>
+                <TableHead className="px-7 py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.status', 'Durum')}</TableHead>
+                <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.post', 'Yazı')}</TableHead>
+                <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.date', 'Tarih')}</TableHead>
+                <TableHead className="px-7 py-5 text-right text-[10px] uppercase tracking-widest text-gm-muted">{b('table.actions', 'İşlem')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {query.isLoading ? (
-                <TableRow><TableCell colSpan={4} className="py-20 text-center text-sm italic text-gm-muted">Yükleniyor...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={4} className="py-20 text-center text-sm italic text-gm-muted">{b('loading', 'Yükleniyor...')}</TableCell></TableRow>
               ) : posts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="py-24 text-center">
                     <div className="flex flex-col items-center gap-3 text-gm-muted">
                       <BookOpen className="size-12 opacity-40" />
-                      <span className="font-serif italic">Henüz blog yazısı yok.</span>
+                      <span className="font-serif italic">{b('empty', 'Henüz blog yazısı yok.')}</span>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : posts.map((post) => {
-                const title = post.title || post.slug || 'Başlıksız yazı';
+                const title = post.title || post.slug || b('untitled', 'Başlıksız yazı');
                 return (
                   <TableRow key={post.id} className="border-gm-border-soft hover:bg-gm-surface/40">
                     <TableCell className="px-7 py-5">
                       <div className="flex items-center gap-3">
                         <Switch checked={post.is_published} onCheckedChange={() => togglePublished(post)} disabled={busy} />
                         <Badge className={post.is_published ? 'bg-gm-success/15 text-gm-success' : 'bg-gm-muted/10 text-gm-muted'}>
-                          {post.is_published ? 'Yayında' : 'Taslak'}
+                          {post.is_published ? b('status.published', 'Yayında') : b('status.draft', 'Taslak')}
                         </Badge>
                       </div>
                     </TableCell>
@@ -364,13 +371,13 @@ export default function AdminBlogClient() {
                           <div className="font-serif text-lg text-gm-text">{title}</div>
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-gm-muted">
                             <code className="rounded-full border border-gm-border-soft bg-gm-bg-deep px-2 py-0.5">{post.slug}</code>
-                            {post.featured && <Badge variant="outline" className="border-gm-gold/30 text-gm-gold">Öne çıkan</Badge>}
+                            {post.featured && <Badge variant="outline" className="border-gm-gold/30 text-gm-gold">{b('status.featured', 'Öne çıkan')}</Badge>}
                           </div>
                           {post.summary && <p className="mt-2 max-w-2xl truncate text-xs text-gm-muted">{post.summary}</p>}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="py-5 text-xs text-gm-muted">{formatDate(post.updated_at || post.created_at)}</TableCell>
+                    <TableCell className="py-5 text-xs text-gm-muted">{formatDate(post.updated_at || post.created_at, uiLocale)}</TableCell>
                     <TableCell className="px-7 py-5 text-right">
                       <div className="flex justify-end gap-2">
                         {post.slug && (

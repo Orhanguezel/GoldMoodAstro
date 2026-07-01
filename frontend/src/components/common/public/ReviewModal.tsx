@@ -9,6 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import ReviewForm from './ReviewForm';
+import { useUiSection } from '@/i18n';
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -27,17 +28,16 @@ export default function ReviewModal({
   consultantName,
   locale,
 }: ReviewModalProps) {
+  const { ui } = useUiSection('ui_extra' as any);
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px] bg-(--gm-surface) border-(--gm-border-soft) text-(--gm-text)">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl">
-            {locale === 'tr' ? `${consultantName} için Yorum Yap` : `Review ${consultantName}`}
+            {ui('ui_extra_b2_review_modal_title', 'Review {name}').replace('{name}', consultantName)}
           </DialogTitle>
           <DialogDescription className="text-(--gm-text-dim)">
-            {locale === 'tr' 
-              ? 'Deneyiminizi paylaşarak diğer kullanıcılara yardımcı olun.' 
-              : 'Share your experience to help other users.'}
+            {ui('ui_extra_b2_review_modal_desc', 'Share your experience and help other users.')}
           </DialogDescription>
         </DialogHeader>
 

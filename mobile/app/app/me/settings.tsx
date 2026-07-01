@@ -45,6 +45,7 @@ function buildScreenStyles(t: AppTheme) {
 }
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 import { 
@@ -73,6 +74,7 @@ function initialsFromName(name?: string | null) {
 }
 
 export default function SettingsScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -119,9 +121,9 @@ export default function SettingsScreen() {
           email_notifications: formData.email_notifications ? 1 : 0
         }
       });
-      Alert.alert('Başarılı', 'Ayarlarınız güncellendi.');
+      Alert.alert(t('common.success', 'Başarılı'), t('profile.settingsUpdated', 'Ayarlarınız güncellendi.'));
     } catch (e) {
-      Alert.alert('Hata', 'Güncelleme yapılamadı.');
+      Alert.alert(t('common.error', 'Bir hata oluştu'), t('profile.settingsUpdateError', 'Güncelleme yapılamadı.'));
     }
   };
 
@@ -140,7 +142,7 @@ export default function SettingsScreen() {
           <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
-          <Text style={styles.navTitle}>Profil Ayarları</Text>
+          <Text style={styles.navTitle}>{t('profile.settingsTitle', 'Profil Ayarları')}</Text>
           <Pressable onPress={handleSave} style={styles.saveBtn}>
             <Save size={20} color={colors.gold} />
           </Pressable>
@@ -151,7 +153,7 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <User size={18} color={colors.gold} />
-              <Text style={styles.sectionTitle}>Kişisel Bilgiler</Text>
+              <Text style={styles.sectionTitle}>{t('profile.personalInfo', 'Kişisel Bilgiler')}</Text>
             </View>
 
             <View style={{ alignItems: 'center', marginVertical: 10 }}>
@@ -162,17 +164,17 @@ export default function SettingsScreen() {
                 size={90}
               />
               <Text style={[styles.rowDesc, { textAlign: 'center', marginTop: 8, paddingHorizontal: 20 }]}>
-                Net bir yüz fotoğrafı yükleyin. Yüzünüzün açıkça görünmesi profil onayınızı kolaylaştırır.
+                {t('profile.avatarHint', 'Net bir yüz fotoğrafı yükleyin. Yüzünüzün açıkça görünmesi profil onayınızı kolaylaştırır.')}
               </Text>
             </View>
 
             <View style={styles.inputGroup}>
-               <Text style={styles.label}>AD SOYAD</Text>
+               <Text style={styles.label}>{t('profile.fullNameLabel', 'AD SOYAD')}</Text>
                <TextInput
                  style={styles.input}
                  value={formData.full_name}
                  onChangeText={(val) => setFormData(prev => ({ ...prev, full_name: val }))}
-                 placeholder="Ad Soyad"
+                 placeholder={t('profile.fullNamePlaceholder', 'Ad Soyad')}
                  placeholderTextColor={colors.textMuted + '66'}
                />
             </View>
@@ -180,12 +182,12 @@ export default function SettingsScreen() {
             {primaryChart && (
               <View style={styles.chartCard}>
                 <View style={styles.chartHeader}>
-                  <Text style={styles.chartTitle}>DOĞUM BİLGİLERİ</Text>
+                  <Text style={styles.chartTitle}>{t('profile.birthInfo', 'DOĞUM BİLGİLERİ')}</Text>
                 </View>
                 <View style={styles.chartGrid}>
                   <View style={styles.chartItem}>
                     <Calendar size={14} color={colors.textMuted} />
-                    <Text style={styles.chartValue}>{new Date(primaryChart.dob).toLocaleDateString('tr-TR')}</Text>
+                    <Text style={styles.chartValue}>{new Date(primaryChart.dob).toLocaleDateString()}</Text>
                   </View>
                   <View style={styles.chartItem}>
                     <Clock size={14} color={colors.textMuted} />
@@ -204,13 +206,13 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Bell size={18} color={colors.gold} />
-              <Text style={styles.sectionTitle}>Bildirimler</Text>
+              <Text style={styles.sectionTitle}>{t('settings.notifications', 'Bildirimler')}</Text>
             </View>
 
             <View style={styles.row}>
                <View style={styles.rowBody}>
-                  <Text style={styles.rowTitle}>Anlık Bildirimler</Text>
-                  <Text style={styles.rowDesc}>Günlük yorum ve duyurular</Text>
+                  <Text style={styles.rowTitle}>{t('profile.pushNotifications', 'Anlık Bildirimler')}</Text>
+                  <Text style={styles.rowDesc}>{t('profile.pushNotificationsDesc', 'Günlük yorum ve duyurular')}</Text>
                </View>
                <Switch
                  value={formData.push_notifications}
@@ -222,8 +224,8 @@ export default function SettingsScreen() {
 
             <View style={styles.row}>
                <View style={styles.rowBody}>
-                  <Text style={styles.rowTitle}>E-posta Bildirimleri</Text>
-                  <Text style={styles.rowDesc}>Randevu hatırlatmaları</Text>
+                  <Text style={styles.rowTitle}>{t('profile.emailNotifications', 'E-posta Bildirimleri')}</Text>
+                  <Text style={styles.rowDesc}>{t('profile.emailNotificationsDesc', 'Randevu hatırlatmaları')}</Text>
                </View>
                <Switch
                  value={formData.email_notifications}
@@ -238,20 +240,20 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <ShieldAlert size={18} color={colors.danger} />
-              <Text style={[styles.sectionTitle, { color: colors.danger }]}>Tehlikeli Bölge</Text>
+              <Text style={[styles.sectionTitle, { color: colors.danger }]}>{t('profile.dangerZone', 'Tehlikeli Bölge')}</Text>
             </View>
 
-            <Pressable 
+            <Pressable
                style={styles.dangerBtn}
                onPress={() => {
-                 Alert.alert('Emin misiniz?', 'Hesabınız 7 gün sonra kalıcı olarak silinecektir. Bu işlemi 7 gün içinde iptal edebilirsiniz.', [
-                   { text: 'Vazgeç', style: 'cancel' },
-                   { text: 'Hesabımı Sil', style: 'destructive' }
+                 Alert.alert(t('profile.deleteConfirmTitle', 'Emin misiniz?'), t('profile.deleteAccountBody', 'Hesabınız 7 gün sonra kalıcı olarak silinecektir. Bu işlemi 7 gün içinde iptal edebilirsiniz.'), [
+                   { text: t('common.giveUp', 'Vazgeç'), style: 'cancel' },
+                   { text: t('profile.deleteAccountBtn', 'Hesabımı Sil'), style: 'destructive' }
                  ]);
                }}
             >
                <Trash2 size={16} color={colors.danger} />
-               <Text style={styles.dangerBtnText}>HESABI SİL</Text>
+               <Text style={styles.dangerBtnText}>{t('profile.deleteAccountUpper', 'HESABI SİL')}</Text>
             </Pressable>
           </View>
 

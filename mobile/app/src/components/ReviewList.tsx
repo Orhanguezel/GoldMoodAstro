@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { format, parseISO } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import type { Review } from '@/types';
 
 import { useAppTheme, type AppTheme } from '@/theme';
@@ -166,10 +167,12 @@ function buildSummary(reviews: Review[]) {
   };
 }
 
-export default function ReviewList({ reviews, loading, emptyText = 'Henüz değerlendirme yok.' }: Props) {
+export default function ReviewList({ reviews, loading, emptyText }: Props) {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const resolvedEmptyText = emptyText ?? t('review.empty');
 
   function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
     return (
@@ -196,19 +199,19 @@ export default function ReviewList({ reviews, loading, emptyText = 'Henüz değe
   if (!reviews.length) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyText}>{emptyText}</Text>
+        <Text style={styles.emptyText}>{resolvedEmptyText}</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Değerlendirmeler</Text>
+      <Text style={styles.sectionTitle}>{t('consultant.reviews')}</Text>
       <View style={styles.summary}>
         <Text style={styles.avgText}>{ratingLabel(summary.avg)}</Text>
         <StarRow rating={Math.round(summary.avg)} size={16} />
         <Text style={styles.countText}>
-          {summary.count} değerlendirme
+          {t('consultant.rating', { count: summary.count })}
         </Text>
       </View>
 
@@ -219,7 +222,7 @@ export default function ReviewList({ reviews, loading, emptyText = 'Henüz değe
             <View style={styles.headerRow}>
               <View>
                 <Text style={styles.author}>
-                  {review.name ? `${review.name}` : 'Danışan'}
+                  {review.name ? `${review.name}` : t('review.client')}
                 </Text>
                 <Text style={styles.date}>{formatDate(review.created_at)}</Text>
               </View>
@@ -227,7 +230,7 @@ export default function ReviewList({ reviews, loading, emptyText = 'Henüz değe
                 <StarRow rating={Number(review.rating)} />
                 {isTrueBoolean(review.is_verified) ? (
                   <View style={styles.verifiedBadge}>
-                    <Text style={styles.verifiedText}>✓ Doğrulanmış görüşme</Text>
+                    <Text style={styles.verifiedText}>{t('review.verifiedBadge')}</Text>
                   </View>
                 ) : null}
               </View>
@@ -237,7 +240,7 @@ export default function ReviewList({ reviews, loading, emptyText = 'Henüz değe
             {!!reply ? (
               <View style={styles.replyBox}>
                 <Text style={styles.replyTitle}>
-                  {review.consultant_reply ? 'Astrologun Cevabı' : 'Admin Cevabı'}
+                  {review.consultant_reply ? t('review.consultantReply') : t('review.adminReply')}
                 </Text>
                 <Text style={styles.replyText}>{reply}</Text>
               </View>

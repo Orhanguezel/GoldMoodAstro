@@ -59,7 +59,7 @@ function labelForBucket(v: string): string {
 
 export default function AdminDashboardClient() {
   const { copy } = useAdminUiCopy();
-  const t = useAdminT();
+  const t = useAdminT('admin.dashboard');
   const page = copy.pages?.dashboard ?? {};
   const { pageMeta } = useAdminSettings();
 
@@ -72,12 +72,12 @@ export default function AdminDashboardClient() {
     const totals = analytics?.totals;
     if (!totals) return [];
     return [
-      { key: 'revenue_total', label: 'Toplam Ciro', value: formatMoney(totals.revenue_total), icon: Wallet, color: 'var(--gm-gold)' },
-      { key: 'today_bookings', label: 'Bugünkü Randevular', value: String(totals.today_bookings), icon: Calendar, color: 'var(--gm-primary)' },
-      { key: 'consultants_active', label: 'Aktif Danışmanlar', value: String(totals.consultants_active), icon: ShieldCheck, color: 'var(--gm-success)' },
-      { key: 'users_total', label: 'Toplam Üye', value: String(totals.users_total), icon: Users, color: 'var(--gm-info)' },
+      { key: 'revenue_total', label: t('kpis.revenue', undefined, 'Toplam Ciro'), value: formatMoney(totals.revenue_total), icon: Wallet, color: 'var(--gm-gold)' },
+      { key: 'today_bookings', label: t('kpis.todayBookings', undefined, 'Bugünkü Randevular'), value: String(totals.today_bookings), icon: Calendar, color: 'var(--gm-primary)' },
+      { key: 'consultants_active', label: t('kpis.consultants', undefined, 'Aktif Danışmanlar'), value: String(totals.consultants_active), icon: ShieldCheck, color: 'var(--gm-success)' },
+      { key: 'users_total', label: t('kpis.users', undefined, 'Toplam Üye'), value: String(totals.users_total), icon: Users, color: 'var(--gm-info)' },
     ];
-  }, [analytics?.totals]);
+  }, [analytics?.totals, t]);
 
   return (
     <div className="space-y-12 pb-24">
@@ -86,11 +86,11 @@ export default function AdminDashboardClient() {
         <div>
           <div className="flex items-center gap-3 mb-4">
             <span className="w-12 h-px bg-gm-gold" />
-            <span className="text-gm-gold font-bold text-[10px] tracking-[0.3em] uppercase">Sistem Özeti</span>
+            <span className="text-gm-gold font-bold text-[10px] tracking-[0.3em] uppercase">{t('eyebrow', undefined, 'Sistem Özeti')}</span>
           </div>
-          <h1 className="font-serif text-5xl text-foreground leading-tight tracking-tight">Dashboard</h1>
+          <h1 className="font-serif text-5xl text-foreground leading-tight tracking-tight">{t('title', undefined, 'Dashboard')}</h1>
           <p className="text-gm-muted text-lg mt-3 font-serif italic max-w-2xl leading-relaxed">
-            Platform performansını ve büyüme verilerini anlık takip edin. Editorial bakış açısıyla verilerinizi yorumlayın.
+            {t('intro', undefined, 'Platform performansını ve büyüme verilerini anlık takip edin. Editorial bakış açısıyla verilerinizi yorumlayın.')}
           </p>
         </div>
 
@@ -103,7 +103,11 @@ export default function AdminDashboardClient() {
                 range === key ? 'bg-gm-gold text-gm-bg shadow-lg shadow-gm-gold/20' : 'text-gm-muted hover:text-foreground hover:bg-gm-gold/5'
               }`}
             >
-              {key === '7d' ? 'Haftalık' : key === '30d' ? 'Aylık' : '3 Aylık'}
+              {key === '7d'
+                ? t('ranges.weekly', undefined, 'Haftalık')
+                : key === '30d'
+                  ? t('ranges.monthly', undefined, 'Aylık')
+                  : t('ranges.quarterly', undefined, '3 Aylık')}
             </button>
           ))}
           <div className="w-px h-5 bg-gm-border-soft mx-2" />
@@ -151,9 +155,9 @@ export default function AdminDashboardClient() {
           <CardHeader className="p-10 pb-6 border-b border-gm-border-soft bg-gm-surface/40">
             <div className="flex items-center gap-4 mb-3">
               <TrendingUp className="w-5 h-5 text-gm-gold" />
-              <CardTitle className="font-serif text-3xl tracking-tight">Gelir Analizi</CardTitle>
+              <CardTitle className="font-serif text-3xl tracking-tight">{t('revenueChart.title', undefined, 'Gelir Analizi')}</CardTitle>
             </div>
-            <CardDescription className="font-serif italic text-base opacity-70 text-gm-muted">Seçili dönemdeki toplam ciro değişimi.</CardDescription>
+            <CardDescription className="font-serif italic text-base opacity-70 text-gm-muted">{t('revenueChart.description', undefined, 'Seçili dönemdeki toplam ciro değişimi.')}</CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-8">
             {q.isLoading ? (
@@ -182,7 +186,7 @@ export default function AdminDashboardClient() {
                 </ResponsiveContainer>
               </ChartContainer>
             ) : (
-              <div className="h-[340px] flex items-center justify-center text-base text-gm-muted font-serif italic opacity-40">Henüz grafik verisi bulunamadı.</div>
+              <div className="h-[340px] flex items-center justify-center text-base text-gm-muted font-serif italic opacity-40">{t('revenueChart.empty', undefined, 'Henüz grafik verisi bulunamadı.')}</div>
             )}
           </CardContent>
         </Card>
@@ -191,9 +195,9 @@ export default function AdminDashboardClient() {
           <CardHeader className="p-10 pb-6 border-b border-gm-border-soft bg-gm-surface/40">
             <div className="flex items-center gap-4 mb-3">
               <Activity className="w-5 h-5 text-gm-primary" />
-              <CardTitle className="font-serif text-3xl tracking-tight">Randevu Yoğunluğu</CardTitle>
+              <CardTitle className="font-serif text-3xl tracking-tight">{t('servicesChart.title', undefined, 'Randevu Yoğunluğu')}</CardTitle>
             </div>
-            <CardDescription className="font-serif italic text-base opacity-70 text-gm-muted">Kategori bazlı randevu dağılımı.</CardDescription>
+            <CardDescription className="font-serif italic text-base opacity-70 text-gm-muted">{t('servicesChart.description', undefined, 'Kategori bazlı randevu dağılımı.')}</CardDescription>
           </CardHeader>
           <CardContent className="p-10 pt-8">
             {q.isLoading ? (
@@ -211,7 +215,7 @@ export default function AdminDashboardClient() {
                 </ResponsiveContainer>
               </ChartContainer>
             ) : (
-              <div className="h-[340px] flex items-center justify-center text-base text-gm-muted font-serif italic opacity-40">Henüz randevu verisi bulunamadı.</div>
+              <div className="h-[340px] flex items-center justify-center text-base text-gm-muted font-serif italic opacity-40">{t('servicesChart.empty', undefined, 'Henüz randevu verisi bulunamadı.')}</div>
             )}
           </CardContent>
         </Card>
@@ -221,13 +225,13 @@ export default function AdminDashboardClient() {
       <div className="grid gap-8 xl:grid-cols-2">
         <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[40px] overflow-hidden backdrop-blur-sm shadow-xl">
           <CardHeader className="p-10 pb-6 border-b border-gm-border-soft bg-gm-surface/40">
-            <CardTitle className="font-serif text-2xl tracking-tight">Hızlı Erişim</CardTitle>
-            <CardDescription className="font-serif italic text-base opacity-70 text-gm-muted">Yönetim modüllerine anında ulaşın.</CardDescription>
+            <CardTitle className="font-serif text-2xl tracking-tight">{t('quickAccess.title', undefined, 'Hızlı Erişim')}</CardTitle>
+            <CardDescription className="font-serif italic text-base opacity-70 text-gm-muted">{t('quickAccess.description', undefined, 'Yönetim modüllerine anında ulaşın.')}</CardDescription>
           </CardHeader>
           <CardContent className="p-10 grid grid-cols-2 gap-4">
             {Object.entries(ROUTE_MAP).map(([key, href]) => (
               <Link key={key} href={href} className="flex items-center justify-between p-5 rounded-3xl bg-gm-surface/40 border border-gm-border-soft hover:border-gm-gold/40 hover:bg-gm-surface/80 transition-all duration-300 group">
-                <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-gm-muted group-hover:text-gm-gold transition-colors">{key.replace('_', ' ')}</span>
+                <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-gm-muted group-hover:text-gm-gold transition-colors">{t(`items.${key}`, undefined, key.replace('_', ' '))}</span>
                 <ArrowRight className="w-4 h-4 text-gm-gold opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300" />
               </Link>
             ))}
@@ -236,8 +240,8 @@ export default function AdminDashboardClient() {
 
         <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[40px] overflow-hidden backdrop-blur-sm shadow-xl">
           <CardHeader className="p-10 pb-6 border-b border-gm-border-soft bg-gm-surface/40">
-            <CardTitle className="font-serif text-2xl tracking-tight">Performans Özeti</CardTitle>
-            <CardDescription className="font-serif italic text-base opacity-70 text-gm-muted">Uzmanlık bazlı ciro verileri.</CardDescription>
+            <CardTitle className="font-serif text-2xl tracking-tight">{t('performance.title', undefined, 'Performans Özeti')}</CardTitle>
+            <CardDescription className="font-serif italic text-base opacity-70 text-gm-muted">{t('performance.description', undefined, 'Uzmanlık bazlı ciro verileri.')}</CardDescription>
           </CardHeader>
           <CardContent className="p-10 space-y-4 max-h-[340px] overflow-y-auto custom-scrollbar">
             {analytics?.services.length ? analytics.services.map((svc) => (
@@ -248,14 +252,14 @@ export default function AdminDashboardClient() {
                     <div className="font-serif text-xl text-foreground group-hover:text-gm-gold transition-colors">{svc.service_name}</div>
                     <div className="text-[9px] font-bold text-gm-muted uppercase tracking-[0.2em] mt-1.5 flex items-center gap-2">
                       <Calendar size={10} className="text-gm-primary" />
-                      {svc.bookings_total} Randevu
+                      {t('performance.bookingsCount', { count: String(svc.bookings_total) }, `${svc.bookings_total} Randevu`)}
                     </div>
                   </div>
                 </div>
                 <div className="text-2xl font-serif text-gm-gold drop-shadow-sm">{formatMoney(svc.revenue_total)}</div>
               </div>
             )) : (
-              <div className="text-base text-gm-muted font-serif italic text-center py-16 opacity-40">Yeterli performans verisi yok.</div>
+              <div className="text-base text-gm-muted font-serif italic text-center py-16 opacity-40">{t('performance.empty', undefined, 'Yeterli performans verisi yok.')}</div>
             )}
           </CardContent>
         </Card>

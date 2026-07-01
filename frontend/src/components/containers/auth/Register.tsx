@@ -21,6 +21,7 @@ import { useLocaleShort, useUiSection } from '@/i18n';
 import { useBrand } from '@/hooks/useBrand';
 import { localizePath } from '@/integrations/shared';
 import { trackEvent } from '@/integrations/telemetry';
+import { gaEvent } from '@/lib/ga';
 
 import PageContainer from '@/components/common/PageContainer';
 
@@ -31,8 +32,8 @@ const Register: React.FC = () => {
   const { brand } = useBrand();
   const { ui } = useUiSection('ui_auth', locale as any);
 
-  // H4: signup sonrası `?next=/tr/booking?...` → kullanıcı geldiği sayfaya döner.
-  // Yoksa ana sayfa. Sadece path başlayan değerler kabul edilir (open redirect koruması).
+  // H4: after signup, `?next=/tr/booking?...` returns the user to the source page.
+  // Otherwise use the home page. Only path-like values are accepted to prevent open redirects.
   const nextParam = useMemo(() => {
     const raw = searchParams.get('next') || '';
     return raw.startsWith('/') ? raw : '';
@@ -65,19 +66,19 @@ const Register: React.FC = () => {
     setFormError(null);
 
     if (!email.trim() || !password) {
-      setFormError(ui('register_error_required', 'E-posta ve şifre zorunludur.'));
+      setFormError(ui('register_error_required', 'Email and password are required.'));
       return;
     }
     if (password.length < 6) {
-      setFormError(ui('register_error_password_length', 'Şifre en az 6 karakter olmalıdır.'));
+      setFormError(ui('register_error_password_length', 'Password must be at least 6 characters.'));
       return;
     }
     if (password !== passwordAgain) {
-      setFormError(ui('register_error_password_mismatch', 'Şifreler eşleşmiyor.'));
+      setFormError(ui('register_error_password_mismatch', 'Passwords do not match.'));
       return;
     }
     if (!rulesAccepted) {
-      setFormError(ui('register_error_rules_required', 'Kullanım koşullarını ve KVKK metnini kabul etmelisiniz.'));
+      setFormError(ui('register_error_rules_required', 'You must accept the terms of use and KVKK notice.'));
       return;
     }
 
@@ -99,6 +100,7 @@ const Register: React.FC = () => {
       const resp = await signup(payload).unwrap();
       if (resp.access_token) tokenStore.set(resp.access_token);
       trackEvent('signup_complete', { method: 'email' }).catch(() => {});
+      gaEvent('sign_up', { method: 'email' });
       const verifyUrl = new URL(
         `${localizePath(locale, '/verify-email')}?mode=pending&email=${encodeURIComponent(email.trim())}`,
         'http://x',
@@ -124,15 +126,15 @@ const Register: React.FC = () => {
         
         <div className="text-center mb-8">
           <h3 className="text-3xl font-serif text-(--gm-text) mb-3">
-            {ui('register_title', 'Kayıt Ol')}
+            {ui('register_title', 'Sign Up')}
           </h3>
           <p className="text-(--gm-text-dim) leading-relaxed">
-            {ui('register_lead_has_account', 'Zaten hesabınız var mı?')}{' '}
+            {ui('register_lead_has_account', 'Already have an account?')}{' '}
             <Link
               href={loginHref}
               className="text-(--gm-gold) font-bold hover:text-(--gm-gold-light) transition-colors"
             >
-              {ui('register_login_link', 'Giriş yap')}
+              {ui('register_login_link', 'Sign in')}
             </Link>
             .
           </p>
@@ -152,13 +154,13 @@ const Register: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="reg-fullname" className="block text-[10px] font-bold text-(--gm-gold-dim) mb-1 uppercase tracking-[0.2em]">
-              {ui('register_fullname_label', 'Ad Soyad')}
+              {ui('register_fullname_label', 'Full Name')}
             </label>
             <input
               id="reg-fullname"
               type="text"
               className="w-full px-4 py-3 border border-(--gm-border-soft) rounded-xl focus:outline-none focus:border-(--gm-gold)/50 transition-all bg-(--gm-bg-deep) placeholder:text-(--gm-muted) text-(--gm-text)"
-              placeholder={ui('register_fullname_placeholder', 'Adınız ve soyadınız')}
+              placeholder={ui('register_fullname_placeholder', 'Your full name')}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               disabled={isLoading}
@@ -167,7 +169,7 @@ const Register: React.FC = () => {
 
           <div>
             <label htmlFor="reg-phone" className="block text-[10px] font-bold text-(--gm-gold-dim) mb-1 uppercase tracking-[0.2em]">
-              {ui('register_phone_label', 'Telefon')}
+              {ui('register_phone_label', 'Phone')}
             </label>
             <input
               id="reg-phone"
@@ -182,13 +184,13 @@ const Register: React.FC = () => {
 
           <div>
             <label htmlFor="reg-email" className="block text-[10px] font-bold text-(--gm-gold-dim) mb-1 uppercase tracking-[0.2em]">
-              {ui('register_email_label', 'E-posta')}
+              {ui('register_email_label', 'Email')}
             </label>
             <input
               id="reg-email"
               type="email"
               className="w-full px-4 py-3 border border-(--gm-border-soft) rounded-xl focus:outline-none focus:border-(--gm-gold)/50 transition-all bg-(--gm-bg-deep) placeholder:text-(--gm-muted) text-(--gm-text)"
-              placeholder={ui('register_email_placeholder', `ornek@${brand.domain || 'goldmoodastro.com'}`)}
+              placeholder={ui('register_email_placeholder', `example@${brand.domain || 'goldmoodastro.com'}`)}
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -200,13 +202,13 @@ const Register: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="reg-password" className="block text-[10px] font-bold text-(--gm-gold-dim) mb-1 uppercase tracking-[0.2em]">
-                {ui('register_password_label', 'Şifre')}
+                {ui('register_password_label', 'Password')}
               </label>
               <input
                 id="reg-password"
                 type="password"
                 className="w-full px-4 py-3 border border-(--gm-border-soft) rounded-xl focus:outline-none focus:border-(--gm-gold)/50 transition-all bg-(--gm-bg-deep) placeholder:text-(--gm-muted) text-(--gm-text)"
-                placeholder={ui('register_password_placeholder', 'Şifre')}
+                placeholder={ui('register_password_placeholder', 'Password')}
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -217,13 +219,13 @@ const Register: React.FC = () => {
 
             <div>
               <label htmlFor="reg-password-again" className="block text-[10px] font-bold text-(--gm-gold-dim) mb-1 uppercase tracking-[0.2em]">
-                {ui('register_password_again_label', 'Tekrar')}
+                {ui('register_password_again_label', 'Again')}
               </label>
               <input
                 id="reg-password-again"
                 type="password"
                 className="w-full px-4 py-3 border border-(--gm-border-soft) rounded-xl focus:outline-none focus:border-(--gm-gold)/50 transition-all bg-(--gm-bg-deep) placeholder:text-(--gm-muted) text-(--gm-text)"
-                placeholder={ui('register_password_again_placeholder', 'Şifreyi tekrar girin')}
+                placeholder={ui('register_password_again_placeholder', 'Repeat password')}
                 autoComplete="new-password"
                 value={passwordAgain}
                 onChange={(e) => setPasswordAgain(e.target.value)}
@@ -243,8 +245,14 @@ const Register: React.FC = () => {
               required
             />
             <label htmlFor="reg-rules" className="text-xs text-(--gm-text-muted) leading-snug">
-              <Link href={localizePath(locale, '/terms')} target="_blank" className="text-(--gm-gold) font-bold hover:underline">Kullanım Koşullarını</Link> ve{' '}
-              <Link href={localizePath(locale, '/kvkk')} target="_blank" className="text-(--gm-gold) font-bold hover:underline">KVKK Aydınlatma Metnini</Link> okudum, kabul ediyorum.
+              <Link href={localizePath(locale, '/terms')} target="_blank" className="text-(--gm-gold) font-bold hover:underline">
+                {ui('register_terms_link', 'Terms of Use')}
+              </Link>{' '}
+              {ui('register_terms_and', 'and')}{' '}
+              <Link href={localizePath(locale, '/kvkk')} target="_blank" className="text-(--gm-gold) font-bold hover:underline">
+                {ui('register_kvkk_link', 'KVKK Notice')}
+              </Link>{' '}
+              {ui('register_terms_accept_suffix', 'read and accept.')}
             </label>
           </div>
 
@@ -255,8 +263,8 @@ const Register: React.FC = () => {
               disabled={isLoading}
             >
               {signupState.isLoading
-                ? ui('register_loading', 'Hesap oluşturuluyor...')
-                : ui('register_submit', 'Kayıt Ol')}
+                ? ui('register_loading', 'Creating account...')
+                : ui('register_submit', 'Sign Up')}
             </button>
           </div>
         </form>
@@ -267,7 +275,7 @@ const Register: React.FC = () => {
           </div>
           <div className="relative">
             <span className="px-3 bg-(--gm-surface) text-(--gm-text-muted) text-[10px] font-bold uppercase tracking-[0.2em]">
-              {ui('register_or', 'veya')}
+              {ui('register_or', 'or')}
             </span>
           </div>
         </div>

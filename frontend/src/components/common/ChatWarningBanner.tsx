@@ -1,30 +1,30 @@
 'use client';
 
-// T29-6 — Sohbet uyarı banner'ı (cross-cutting)
-// Danışan↔danışman mesajlaşma alanlarında kullanılır:
-//  - ConsultantDetail "Mesaj Gönder" modalı
+// T29-6 - Chat warning banner (cross-cutting)
+// Used in client-consultant messaging areas:
+//  - ConsultantDetail message modal
 //  - Consultant Dashboard "Mesajlar" sekmesi
-//  - Booking detail sayfası (T29-5)
+//  - Booking detail page (T29-5)
 //
-// Mesaj: "Bu alan kısa not içindir, uzun sohbet için randevu önerin"
+// Message: this area is for short notes; suggest booking for long conversations.
 
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 
 interface Props {
-  /** Sıkışık alanlarda küçük variant (chat panel header üstü) */
+  /** Small variant for tight areas above chat panel headers. */
   compact?: boolean;
   /** Locale (default 'tr') */
   locale?: 'tr' | 'en' | 'de';
-  /** Custom mesaj override (varsayılan locale-spesifik metni ezer) */
+  /** Custom message override. */
   message?: string;
   className?: string;
 }
 
 const MESSAGES: Record<'tr' | 'en' | 'de', string> = {
-  tr: 'Bu alan kısa notlar/sorular içindir. Uzun sohbet için canlı görüşme rezervasyonu yapın. Aşırı kullanım otomatik kapatılabilir.',
+  tr: 'This area is for short notes or questions. Book a live session for longer conversations. Excessive use may be disabled automatically.',
   en: 'This space is for short notes/questions only. Book a live session for longer conversations. Excessive use may be auto-restricted.',
-  de: 'Dieser Bereich ist für kurze Notizen/Fragen. Buche eine Live-Sitzung für längere Gespräche. Übermäßige Nutzung kann automatisch eingeschränkt werden.',
+  de: 'This area is for short notes or questions. Book a live session for longer conversations. Excessive use may be disabled automatically.',
 };
 
 export default function ChatWarningBanner({

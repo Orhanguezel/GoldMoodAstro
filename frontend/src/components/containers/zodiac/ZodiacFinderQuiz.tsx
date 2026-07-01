@@ -5,31 +5,33 @@ import Link from 'next/link';
 import { ArrowRight, CalendarDays, Sparkles } from 'lucide-react';
 import { ZODIAC_META, ZODIAC_SIGNS, type ZodiacElement, type ZodiacModality } from '@/lib/zodiac/signs';
 import type { ZodiacSign } from '@/types/common';
-import { useLocaleShort } from '@/i18n';
+import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 
 type QuizAnswer = 'calm' | 'bold' | 'curious' | 'deep';
 
 const MONTHS = [
   { value: 1, label: 'Ocak', days: 31 },
-  { value: 2, label: 'Şubat', days: 29 },
+  { value: 2, label: 'February', days: 29 },
   { value: 3, label: 'Mart', days: 31 },
   { value: 4, label: 'Nisan', days: 30 },
-  { value: 5, label: 'Mayıs', days: 31 },
+  { value: 5, label: 'May', days: 31 },
   { value: 6, label: 'Haziran', days: 30 },
   { value: 7, label: 'Temmuz', days: 31 },
-  { value: 8, label: 'Ağustos', days: 31 },
-  { value: 9, label: 'Eylül', days: 30 },
+  { value: 8, label: 'August', days: 31 },
+  { value: 9, label: 'September', days: 30 },
   { value: 10, label: 'Ekim', days: 31 },
-  { value: 11, label: 'Kasım', days: 30 },
-  { value: 12, label: 'Aralık', days: 31 },
+  { value: 11, label: 'November', days: 30 },
+  { value: 12, label: 'December', days: 31 },
 ];
 
-const ANSWERS: Array<{ key: QuizAnswer; label: string; element: ZodiacElement; modality: ZodiacModality }> = [
-  { key: 'bold', label: 'Hızlı karar alır, yeni başlangıçları severim', element: 'Ateş', modality: 'Öncü' },
-  { key: 'calm', label: 'Güven, düzen ve somut sonuçlar bana iyi gelir', element: 'Toprak', modality: 'Sabit' },
-  { key: 'curious', label: 'Fikirler, sohbet ve öğrenme beni canlı tutar', element: 'Hava', modality: 'Değişken' },
-  { key: 'deep', label: 'Sezgilerim güçlüdür, duygusal bağ benim için önemlidir', element: 'Su', modality: 'Sabit' },
+type UiFn = (key: string, fallback: string) => string;
+
+const ANSWERS: Array<{ key: QuizAnswer; labelKey: string; labelTr: string; element: ZodiacElement; modality: ZodiacModality }> = [
+  { key: 'bold', labelKey: 'ui_zodiacx_quiz_answer_bold', labelTr: 'I make quick decisions and love new beginnings', element: ZODIAC_META.aries.element, modality: ZODIAC_META.aries.modality },
+  { key: 'calm', labelKey: 'ui_zodiacx_quiz_answer_calm', labelTr: 'Trust, order and concrete results feel good to me', element: ZODIAC_META.taurus.element, modality: ZODIAC_META.taurus.modality },
+  { key: 'curious', labelKey: 'ui_zodiacx_quiz_answer_curious', labelTr: 'Ideas, conversation and learning keep me alive', element: ZODIAC_META.gemini.element, modality: ZODIAC_META.gemini.modality },
+  { key: 'deep', labelKey: 'ui_zodiacx_quiz_answer_deep', labelTr: 'My intuition is strong and emotional connection matters to me', element: ZODIAC_META.scorpio.element, modality: ZODIAC_META.scorpio.modality },
 ];
 
 function getSunSign(month: number, day: number): ZodiacSign {
@@ -48,29 +50,30 @@ function getSunSign(month: number, day: number): ZodiacSign {
   return 'pisces';
 }
 
-function getQuizNote(sign: ZodiacSign, answer: QuizAnswer) {
+function getQuizNote(sign: ZodiacSign, answer: QuizAnswer, ui: UiFn) {
   const meta = ZODIAC_META[sign];
   const selected = ANSWERS.find((item) => item.key === answer);
   if (!selected) {
-    return `${meta.label} enerjin ${meta.element} elementi ve ${meta.modality.toLowerCase()} niteliğiyle çalışır.`;
+    return `${meta.label} ${ui('ui_zodiacx_quiz_note_default', 'energy')} ${meta.element} ${ui('ui_zodiacx_quiz_note_element_works', 'element and')} ${meta.modality.toLowerCase()} ${ui('ui_zodiacx_quiz_note_modality_works', 'modality work together.')}`;
   }
 
   const elementMatch = selected.element === meta.element;
   const modalityMatch = selected.modality === meta.modality;
   if (elementMatch && modalityMatch) {
-    return `Seçimin ${meta.label} doğanla güçlü biçimde örtüşüyor: ${meta.element} elementi ve ${meta.modality.toLowerCase()} nitelik aynı anda vurgulanıyor.`;
+    return `${ui('ui_zodiacx_quiz_note_both_p1', 'Your choice')} ${meta.label} ${ui('ui_zodiacx_quiz_note_both_p2', 'strongly overlaps with your birth sign:')} ${meta.element} ${ui('ui_zodiacx_quiz_note_both_p3', 'element and')} ${meta.modality.toLowerCase()} ${ui('ui_zodiacx_quiz_note_both_p4', 'modality are emphasized together.')}`;
   }
   if (elementMatch) {
-    return `${meta.element} elementin belirgin; günlük ritminde ${meta.label} burcunun temel motivasyonu kolayca görünür olabilir.`;
+    return `${meta.element} ${ui('ui_zodiacx_quiz_note_element_p1', 'element is prominent; in your daily rhythm,')} ${meta.label} ${ui('ui_zodiacx_quiz_note_element_p2', 'sign motivation may be easily visible.')}`;
   }
   if (modalityMatch) {
-    return `${meta.modality} niteliğin öne çıkıyor; ${meta.label} burcunun olaylara yaklaşım tarzıyla benzer bir tempo taşıyorsun.`;
+    return `${meta.modality} ${ui('ui_zodiacx_quiz_note_modality_p1', 'modality stands out;')} ${meta.label} ${ui('ui_zodiacx_quiz_note_modality_p2', 'you carry a tempo similar to how your sign approaches events.')}`;
   }
-  return `Güneş burcun ${meta.label}; seçtiğin tema ise haritanda Ay, yükselen veya Venüs gibi başka bir yerleşimin güçlü olabileceğini düşündürür.`;
+  return `${ui('ui_zodiacx_quiz_note_none_p1', 'Your Sun sign is')} ${meta.label}; ${ui('ui_zodiacx_quiz_note_none_p2', 'the theme you chose may suggest another strong placement in your chart, such as Moon, Rising or Venus.')}`;
 }
 
 export default function ZodiacFinderQuiz() {
   const locale = useLocaleShort();
+  const { ui } = useUiSection('ui_zodiacx' as any);
   const [month, setMonth] = React.useState(3);
   const [day, setDay] = React.useState(21);
   const [answer, setAnswer] = React.useState<QuizAnswer>('bold');
@@ -92,13 +95,13 @@ export default function ZodiacFinderQuiz() {
       <div className="mb-10 max-w-3xl">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-gold/20 bg-brand-gold/10 px-4 py-2 text-sm text-brand-gold">
           <Sparkles className="size-4" />
-          İnteraktif burç keşfi
+          {ui('ui_zodiacx_quiz_badge', 'Interactive sign discovery')}
         </div>
         <h2 className="text-4xl font-semibold tracking-normal text-foreground md:text-6xl">
-          Burcunu öğren, enerjini hızlıca yorumla
+          {ui('ui_zodiacx_quiz_title', 'Find your sign and quickly interpret your energy')}
         </h2>
         <p className="mt-5 text-base leading-7 text-muted-foreground md:text-lg">
-          Doğum gününü seç; güneş burcunu, elementini ve sana yakın temaları anında gör.
+          {ui('ui_zodiacx_quiz_subtitle', 'Choose your birthday and instantly see your Sun sign, element and nearby themes.')}
         </p>
       </div>
 
@@ -106,12 +109,12 @@ export default function ZodiacFinderQuiz() {
         <div className="rounded-2xl border border-border/50 bg-surface p-5 shadow-soft md:p-7">
           <div className="mb-6 flex items-center gap-3">
             <CalendarDays className="size-5 text-brand-gold" />
-            <h2 className="text-xl font-semibold">Doğum günün</h2>
+            <h2 className="text-xl font-semibold">{ui('ui_zodiacx_quiz_birthday', 'Your birthday')}</h2>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-sm font-medium text-muted-foreground">Ay</span>
+              <span className="text-sm font-medium text-muted-foreground">{ui('ui_zodiacx_quiz_month', 'Ay')}</span>
               <select
                 value={month}
                 onChange={(event) => setMonth(Number(event.target.value))}
@@ -119,14 +122,14 @@ export default function ZodiacFinderQuiz() {
               >
                 {MONTHS.map((item) => (
                   <option key={item.value} value={item.value}>
-                    {item.label}
+                    {ui(`ui_zodiacx_month_${item.value}`, item.label)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="space-y-2">
-              <span className="text-sm font-medium text-muted-foreground">Gün</span>
+              <span className="text-sm font-medium text-muted-foreground">{ui('ui_zodiacx_quiz_day', 'Day')}</span>
               <select
                 value={normalizedDay}
                 onChange={(event) => setDay(Number(event.target.value))}
@@ -142,7 +145,7 @@ export default function ZodiacFinderQuiz() {
           </div>
 
           <div className="mt-8 space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-brand-gold">Sana en yakın ifade</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-widest text-brand-gold">{ui('ui_zodiacx_quiz_closest_expression', 'Closest expression to you')}</h3>
             <div className="grid gap-3">
               {ANSWERS.map((item) => (
                 <button
@@ -155,7 +158,7 @@ export default function ZodiacFinderQuiz() {
                       : 'border-border/60 bg-background/40 text-muted-foreground hover:border-brand-gold/50'
                   }`}
                 >
-                  {item.label}
+                  {ui(item.labelKey, item.labelTr)}
                 </button>
               ))}
             </div>
@@ -173,12 +176,12 @@ export default function ZodiacFinderQuiz() {
             <p className="text-sm uppercase tracking-widest text-brand-gold">{sign.date}</p>
             <h2 className="mt-2 text-4xl font-semibold">{sign.label}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              {sign.element} elementi · {sign.modality} nitelik · Yönetici: {sign.ruler}
+              {sign.element} {ui('ui_zodiacx_quiz_element_label', 'element ·')} {sign.modality} {ui('ui_zodiacx_quiz_modality_label', 'modality · Ruler:')} {sign.ruler}
             </p>
           </div>
 
           <p className="mt-6 rounded-xl border border-border/50 bg-background/35 p-4 text-sm leading-6 text-muted-foreground">
-            {getQuizNote(signKey, answer)}
+            {getQuizNote(signKey, answer, ui)}
           </p>
 
           <div className="mt-6 grid gap-3">
@@ -186,21 +189,21 @@ export default function ZodiacFinderQuiz() {
               href={localizePath(locale, `/burclar/${sign.key}`)}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-gold px-4 py-3 text-sm font-semibold text-background transition hover:bg-brand-gold/90"
             >
-              {sign.label} profilini aç
+              {sign.label} {ui('ui_zodiacx_open_profile_suffix', 'open profile')}
               <ArrowRight className="size-4" />
             </Link>
             <Link
               href={localizePath(locale, `/burclar/${sign.key}/bugun`)}
               className="inline-flex items-center justify-center rounded-xl border border-border/60 px-4 py-3 text-sm font-semibold text-foreground transition hover:border-brand-gold/50"
             >
-              Günlük yorumunu oku
+              {ui('ui_zodiacx_read_daily', 'Read daily interpretation')}
             </Link>
           </div>
         </aside>
       </div>
 
       <div className="mt-10 rounded-2xl border border-border/50 bg-surface/70 p-5">
-        <h2 className="mb-4 text-lg font-semibold">Yakın temalar</h2>
+        <h2 className="mb-4 text-lg font-semibold">{ui('ui_zodiacx_close_themes', 'Nearby themes')}</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           {closeSigns.map((item) => (
             <Link

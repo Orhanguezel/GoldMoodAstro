@@ -1,47 +1,65 @@
 # GoldMoodAstro Mobile
 
-GoldMoodAstro mobil uygulamasi Expo (React Native) + TypeScript ile iOS ve Android icin gelistirilir.
+GoldMoodAstro mobil uygulaması Expo + React Native + TypeScript ile iOS ve Android için geliştirilir.
 
-## Temel Dokumanlar
+Bu klasördeki ana standart: **GoldMoodAstro Expo Premium Mobile QA**. `app-printer-main` SwiftUI/Xcode projesi olarak kullanılmaz; oradaki premium uygulama üretim disiplini bu repoda React Native/Expo Router karşılıklarıyla uygulanır.
 
-- [MOBILE-STRATEGY.md](MOBILE-STRATEGY.md): Mobil strateji ozeti
-- [AGENTS.md](AGENTS.md): Copilot/Codex uygulama kurallari ve gorev listesi
-- [app/README.md](app/README.md): Uygulama klasoru gelistirici rehberi
+## Temel Dokümanlar
+
+- [AGENTS.md](AGENTS.md): Codex/Cursor uygulama kuralları ve premium QA standardı
+- [MOBILE-STRATEGY.md](MOBILE-STRATEGY.md): ürün stratejisi ve premiumlaştırma yol haritası
+- [app/README.md](app/README.md): Expo uygulama klasörü geliştirici rehberi
+- [skills/expo-factory/SKILL.md](skills/expo-factory/SKILL.md): GoldMoodAstro'ya uyarlanmış Expo premium skill
 
 ## Mobil Hedef
 
-Kullanici akisinin mobilde tam calismasi:
+Kullanıcı akışının mobilde premium ve güvenilir çalışması:
 
-1. Onboarding
-2. Login/Register
-3. Danisman kesfetme
-4. Slot secimi ve booking
-5. Iyzipay odeme (WebView)
-6. Agora ile sesli gorusme
-7. Seans degerlendirme
+1. 3 aşamalı premium onboarding
+2. Login/Register + session persistence
+3. Danışman keşfetme
+4. Slot seçimi ve booking
+5. Iyzipay ödeme WebView
+6. LiveKit ile sesli görüşme
+7. Seans değerlendirme
 
-## Teknoloji Kararlari
+## Stack
 
-- Expo + React Native + TypeScript
-- Expo Router (file-based routing)
-- AsyncStorage tabanli local state/session
-- API istemcisi: `mobile/app/src/lib/api.ts`
-- i18n: TR + EN
-- Push: expo-notifications
-- Sesli gorusme: react-native-agora
-- Odeme: react-native-webview (Iyzipay checkout)
+- Expo SDK 54
+- React Native 0.81
+- React 19
+- Expo Router 6
+- TypeScript strict
+- AsyncStorage + SecureStore
+- `src/lib/api.ts` API istemcisi
+- i18next: TR + EN + DE
+- `expo-notifications`
+- LiveKit voice call
+- `react-native-webview` ile Iyzipay checkout
+- `expo-haptics`
+- `expo-linear-gradient`
+- `react-native-reanimated` / RN Animated
+- `lucide-react-native`
 
-Detaylar icin: [AGENTS.md](AGENTS.md)
+## Premium UI Kuralları
 
-## Dizin Yapisi
+- Renk/font/spacing/radius hardcoded yazılmaz; `useAppTheme()` ve tokenlar kullanılır.
+- Yeni ekranlar `ScreenShell`, `PrimaryButton`, `PremiumCard`, `EmptyState`, `LoadingState` standardına göre yazılır.
+- Düz kart, spinner-only loading, tek satır empty state ve generic tutorial görünümü kabul edilmez.
+- CTA'larda press scale + haptic feedback gerekir.
+- Liste ve kartlarda hafif giriş animasyonu veya stagger kullanılır.
+- Kritik Pressable alanlarında accessibility label/role bulunur.
+
+## Dizin Yapısı
 
 ```text
 mobile/
 ├── AGENTS.md
 ├── MOBILE-STRATEGY.md
 ├── README.md
-├── app/                     # Expo projesi (gelistirme burada)
-│   ├── app/
+├── REQUESTS.md
+├── app/                     # Expo projesi
+│   ├── app/                 # Expo Router route dosyaları
 │   ├── src/
 │   ├── package.json
 │   ├── app.json
@@ -49,9 +67,10 @@ mobile/
 ├── ios/
 ├── android/
 └── skills/
+    └── expo-factory/        # GoldMoodAstro Expo premium skill
 ```
 
-## Hızlı Baslangic
+## Hızlı Başlangıç
 
 ```bash
 cd mobile/app
@@ -71,21 +90,24 @@ Android:
 bun run android
 ```
 
-## API Ortamlari
+## API Ortamları
 
-- Dev API: http://localhost:8094/api/v1
-- Prod API: https://www.goldmoodastro.com/api/v1
+- Dev API: `http://localhost:8094/api/v1`
+- Prod API: `https://www.goldmoodastro.com/api/v1`
 
-Not: Android emulator icin localhost yerine 10.0.2.2 kullanilir.
+Android emulator için localhost yerine `10.0.2.2` gerekebilir.
 
-## Gelistirme Notlari
+## Öncelikli Parlatma Sırası
 
-- Renk ve font degerleri dogrudan yazilmaz, tema tokenlari kullanilir
-- Auth gerektiren ekranlarda token yoksa login ekranina yonlendirilir
-- Tum stringler i18n uzerinden yonetilir (TR + EN birlikte)
-- TypeScript strict kuraliyla any kullanimi engellenir
+1. Ortak premium bileşenler: `PrimaryButton`, `PremiumCard`, `ScreenShell`, `EmptyState`, `LoadingState`
+2. Onboarding'i 3 aşamalı premium akışa çevir
+3. Paywall/subscription tarafını RevenueCat veya `react-native-iap` production planına taşı
+4. iOS HIG'e göre tab bar, modal/sheet, accessibility, motion ve haptic audit yap
+5. Kritik akışları test et: onboarding -> auth -> consultant -> booking -> payment -> call -> review
 
-## Durum
+## Geliştirme Notları
 
-Mobil proje GoldMoodAstro yol haritasina gore asamali ilerletilir.
-Milestone detaylari ve dosya bazli TODO listesi icin [AGENTS.md](AGENTS.md) dosyasini referans alin.
+- Mobile dışındaki backend/frontend/admin/shared dosyalara mobil işi kapsamında dokunma.
+- Yeni backend ihtiyacı `REQUESTS.md` içine tarihli yazılır.
+- `bun run lint` TypeScript doğrulaması için ana komuttur.
+- Store submit ve EAS production işlemleri açık onayla yapılır.

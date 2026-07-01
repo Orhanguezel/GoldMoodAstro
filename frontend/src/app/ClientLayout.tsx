@@ -28,6 +28,7 @@ const SupportBotWidget = dynamic(() => import('../components/containers/chat/Sup
 
 import { SplashScreen } from '../layout/SplashScreen';
 import { useBrand } from '@/hooks/useBrand';
+import { useUiSection } from '@/i18n';
 
 export default function ClientLayout({
   children,
@@ -43,7 +44,8 @@ export default function ClientLayout({
   initialFooterMenuItems?: PublicMenuItemDto[];
 }) {
   const { brand } = useBrand();
-  
+  const { ui } = useUiSection('ui_extra' as any);
+
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [deferWidgets, setDeferWidgets] = useState(false);
@@ -54,6 +56,39 @@ export default function ClientLayout({
      // Track page view
      trackEvent('page_view').catch(() => {});
   }, [pathname, searchParams]);
+
+  // ChunkLoadError global handler: after a deploy, stale cached HTML may point to
+  // old chunk hashes. Catch it once and hard reload to fetch fresh HTML.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const KEY = 'gm_chunk_reload_at';
+    const isChunkError = (msg: string) =>
+      /ChunkLoadError|Loading chunk|chunks\/.*\.js.*(failed|404)|Failed to fetch dynamically imported module/i.test(msg);
+    const reloadOnce = () => {
+      try {
+        const last = Number(sessionStorage.getItem(KEY) || 0);
+        if (Date.now() - last < 10_000) return;
+        sessionStorage.setItem(KEY, String(Date.now()));
+      } catch {}
+      const url = new URL(window.location.href);
+      url.searchParams.set('_r', String(Date.now()));
+      window.location.replace(url.toString());
+    };
+    const onError = (e: ErrorEvent) => {
+      if (isChunkError(`${e.message} ${e.filename}`)) reloadOnce();
+    };
+    const onRejection = (e: PromiseRejectionEvent) => {
+      const reason: any = e.reason;
+      const msg = `${reason?.name || ''} ${reason?.message || ''} ${reason?.request || ''}`;
+      if (isChunkError(msg)) reloadOnce();
+    };
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onRejection);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -75,10 +110,8 @@ export default function ClientLayout({
   }, [locale]);
 
   // Global scroll reveal observer.
-  // Hydration-safe: Önce body'ye `scroll-reveal-ready` class eklenir
-  // (CSS `.reveal` opacity/transform geçişini bu noktadan sonra aktive eder).
-  // Sonra observer kurulur ve `.visible` class eklenmesi başlar — hydration
-  // çoktan tamamlanmış olduğu için SSR/CSR class mismatch oluşmaz.
+  // Hydration-safe: add `scroll-reveal-ready` after hydration, then observe and
+  // apply `.visible` without SSR/CSR class mismatch.
   useEffect(() => {
     let io: IntersectionObserver | null = null;
     let mo: MutationObserver | null = null;
@@ -89,7 +122,7 @@ export default function ClientLayout({
 
     const init = () => {
       if (cancelled) return;
-      // 1) Reveal CSS'i aktive et (hydration tamamlandı)
+      // Activate reveal CSS after hydration.
       document.body.classList.add('scroll-reveal-ready');
 
       // 2) Observer kur
@@ -117,7 +150,7 @@ export default function ClientLayout({
       mo.observe(document.body, { childList: true, subtree: true });
     };
 
-    // Çift rAF: hydration commit + ilk paint sonrasına garantili erteleme
+    // Double rAF defers until after hydration commit and first paint.
     raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(init);
     });
@@ -139,7 +172,7 @@ export default function ClientLayout({
       <AnalyticsScripts />
       <GAViewPages />
       <a href="#main-content" className="skip-link">
-        {locale === 'tr' ? 'Ana içeriğe geç' : 'Skip to main content'}
+        {ui('ui_extra_b0_skip_to_main', 'Skip to main content')}
       </a>
       
       <Header brand={brand} locale={locale} initialMenuItems={initialMenuItems} />

@@ -6,18 +6,8 @@ import Link from 'next/link';
 import { ChevronRight, Sparkles, Star, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/features/auth/auth.store';
+import { useUiSection } from '@/i18n';
 
-/**
- * Kontrast stratejisi (her iki banner):
- *   Banner görselleri her zaman koyu uzay/astroloji temalıdır.
- *   Bu yüzden metin renkleri theme değişkenine BAĞLANMAZ — sabit white/amber.
- *   Böylece light ve dark temada KESİN okunabilirlik sağlanır.
- */
-
-/* ─────────────────────────────────────────────────────────────────
-   1. DiscountPromoBanner — "İlk Seansa %20 İndirim"
-   Kullanım: ConsultantList içinde filtre+grid arasına
-───────────────────────────────────────────────────────────────── */
 export function DiscountPromoBanner({
   className,
   locale = 'tr',
@@ -26,9 +16,9 @@ export function DiscountPromoBanner({
   locale?: string;
 }) {
   const { isAuthenticated, user } = useAuthStore();
+  const { ui } = useUiSection('ui_extra' as any);
   if (user?.is_premium) return null;
 
-  const isTr = locale === 'tr';
   const consultantsHref = `/${locale}/consultants`;
   const ctaHref = isAuthenticated
     ? `${consultantsHref}#consultants-results`
@@ -45,7 +35,7 @@ export function DiscountPromoBanner({
       {/* Background image */}
       <Image
         src="/images/banner-consultants-bg.png"
-        alt="Reklam"
+        alt={ui('ui_extra_b2_promo_ad_alt', 'Advertisement')}
         fill
         sizes="(max-width: 768px) 100vw, 1200px"
         className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
@@ -64,23 +54,17 @@ export function DiscountPromoBanner({
         {/* Label chip */}
         <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.28em] text-amber-300 backdrop-blur-sm">
           <Zap size={9} />
-          {isTr ? 'ÖZEL TEKLİF' : 'SPECIAL OFFER'}
+          {ui('ui_extra_b2_promo_discount_chip', 'SPECIAL OFFER')}
         </span>
 
         {/* Headline — fixed white, not --gm-text */}
         <h3 className="font-display text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl md:text-4xl">
-          {isTr ? (
-            <>İlk Seansa <span className="text-amber-400">Özel İndirim</span></>
-          ) : (
-            <>First Session <span className="text-amber-400">Special Discount</span></>
-          )}
+          {ui('ui_extra_b2_promo_discount_title', 'First Session Special Discount')}
         </h3>
 
         {/* Subtitle — fixed white/muted */}
         <p className="font-serif italic text-sm text-white/65 sm:text-base">
-          {isTr
-            ? 'Yeni üyelere %20 indirim — danışmanını seç, yolculuğuna başla.'
-            : 'New members get 20% off — choose your consultant and begin.'}
+          {ui('ui_extra_b2_promo_discount_sub', '20% off for new members. Choose your consultant and begin your journey.')}
         </p>
 
         {/* CTA */}
@@ -88,23 +72,19 @@ export function DiscountPromoBanner({
           href={ctaHref}
           className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-amber-400 px-6 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#0D0B1E] transition-all duration-300 hover:shadow-[0_0_28px_rgba(212,175,55,0.55)] hover:scale-105"
         >
-          {isTr ? 'Hemen Başla' : 'Get Started'}
+          {ui('ui_extra_b2_promo_discount_cta', 'Get Started')}
           <ChevronRight size={14} />
         </Link>
       </div>
 
       {/* AD badge */}
       <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[9px] font-medium uppercase tracking-widest text-white/60 backdrop-blur-sm">
-        © Reklam
+        © {ui('ui_extra_b2_promo_ad_badge', 'Ad')}
       </span>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   2. BecomeConsultantBanner — "Danışman Ol" CTA banner
-   Kullanım: ConsultantList altında
-───────────────────────────────────────────────────────────────── */
 export function BecomeConsultantBanner({
   className,
   locale = 'tr',
@@ -114,7 +94,7 @@ export function BecomeConsultantBanner({
   locale?: string;
   compact?: boolean;
 }) {
-  const isTr = locale === 'tr';
+  const { ui } = useUiSection('ui_extra' as any);
 
   return (
     <div
@@ -128,7 +108,7 @@ export function BecomeConsultantBanner({
       {/* Background image */}
       <Image
         src="/images/banner-become-consultant-bg.png"
-        alt="Danışman Ol"
+        alt={ui('ui_extra_b2_promo_become_alt', 'Become a Consultant')}
         fill
         sizes="(max-width: 768px) 100vw, 1200px"
         className="object-cover object-right-center transition-transform duration-700 group-hover:scale-105"
@@ -153,7 +133,7 @@ export function BecomeConsultantBanner({
         {/* Badge */}
         <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-purple-300/30 bg-purple-500/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.28em] text-purple-200 backdrop-blur-sm">
           <Sparkles size={9} />
-          {isTr ? 'KARİYER FIRSATI' : 'CAREER OPPORTUNITY'}
+          {ui('ui_extra_b2_promo_career_chip', 'CAREER OPPORTUNITY')}
         </span>
 
         {/* Headline — fixed white */}
@@ -161,19 +141,13 @@ export function BecomeConsultantBanner({
           'font-display font-semibold leading-tight tracking-tight text-white',
           compact ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl md:text-5xl',
         )}>
-          {isTr ? (
-            <>Uzmanlığınla <span className="text-amber-400 italic">Danışman Ol</span></>
-          ) : (
-            <>Share Your Wisdom, <span className="text-amber-400 italic">Become a Consultant</span></>
-          )}
+          {ui('ui_extra_b2_promo_career_title', 'Share Your Wisdom, Become a Consultant')}
         </h3>
 
         {/* Subtitle */}
         {!compact && (
           <p className="font-serif italic text-base text-white/65 leading-relaxed sm:text-lg max-w-md">
-            {isTr
-              ? 'Binlerce kullanıcıya rehberlik edin. Kendi zamanınızı yönetin, kazancınızı artırın.'
-              : 'Guide thousands of users. Manage your own schedule and grow your income.'}
+            {ui('ui_extra_b2_promo_career_sub', 'Guide thousands of users. Manage your own time and increase your earnings.')}
           </p>
         )}
 
@@ -181,9 +155,9 @@ export function BecomeConsultantBanner({
         {!compact && (
           <div className="flex flex-wrap gap-6 text-[11px] font-bold uppercase tracking-widest">
             {[
-              { val: '500+', label: isTr ? 'Aktif Kullanıcı' : 'Active Users' },
-              { val: '%70', label: isTr ? 'Kazanç Payı' : 'Revenue Share' },
-              { val: '48h', label: isTr ? 'Onay Süreci' : 'Approval Process' },
+              { val: '500+', label: ui('ui_extra_b2_promo_stat_users', 'Active Users') },
+              { val: '%70', label: ui('ui_extra_b2_promo_stat_revenue', 'Revenue Share') },
+              { val: '48h', label: ui('ui_extra_b2_promo_stat_approval', 'Approval Time') },
             ].map(({ val, label }) => (
               <div key={label} className="flex flex-col gap-0.5">
                 <span className="text-xl font-display text-amber-400">{val}</span>
@@ -203,7 +177,7 @@ export function BecomeConsultantBanner({
               : 'bg-amber-400 px-8 py-3.5 text-xs text-[#0D0B1E] hover:shadow-[0_0_36px_rgba(212,175,55,0.6)]',
           )}
         >
-          {isTr ? 'Başvur' : 'Apply Now'}
+          {ui('ui_extra_b2_promo_career_cta', 'Apply')}
           <ChevronRight size={14} />
         </Link>
       </div>

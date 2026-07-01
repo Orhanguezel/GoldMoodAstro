@@ -43,7 +43,6 @@ export * from '@/integrations/endpoints/admin/email_templates_admin.endpoints';
 export * from '@/integrations/endpoints/admin/mail_admin.endpoints';
 export * from '@/integrations/endpoints/admin/newsletter_admin.endpoints';
 export * from '@/integrations/endpoints/admin/notifications_admin.endpoints';
-export * from '@/integrations/endpoints/admin/offers_admin.endpoints';
 export * from '@/integrations/endpoints/admin/reports_admin.endpoints';
 export * from '@/integrations/endpoints/admin/bookings_admin.endpoints';
 export * from '@/integrations/endpoints/admin/consultants_admin.endpoints';

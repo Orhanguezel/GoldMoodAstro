@@ -1,12 +1,8 @@
 'use client';
 
-/**
- * HeroStats — Hero alt satırındaki istatistik kartları.
- * API'den canlı: toplam kullanıcı (rating_count toplamı), onaylı danışman sayısı, ort. puan.
- */
-
 import React from 'react';
 import { useListConsultantsPublicQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
+import { useUiSection } from '@/i18n';
 
 function Skeleton({ className }: { className?: string }) {
   return <div className={`animate-pulse rounded bg-white/15 ${className ?? ''}`} />;
@@ -17,9 +13,9 @@ interface Props {
 }
 
 export default function HeroStats({ locale = 'tr' }: Props) {
-  const isTr = locale === 'tr';
+  const { ui } = useUiSection('ui_extra' as any);
 
-  const { data: consultants = [], isLoading } = useListConsultantsPublicQuery({ limit: 100 });
+  const { data: consultants = [], isLoading } = useListConsultantsPublicQuery({ limit: 100, locale });
   const approved = consultants.filter((c) => c.approval_status === 'approved');
 
   const totalSessions = approved.reduce((sum, c) => sum + (c.total_sessions ?? 0), 0);
@@ -31,15 +27,15 @@ export default function HeroStats({ locale = 'tr' }: Props) {
   const stats = [
     {
       val: isLoading ? null : totalSessions > 0 ? `${totalSessions > 999 ? Math.floor(totalSessions / 100) / 10 + 'K' : totalSessions}+` : '500+',
-      label: isTr ? 'Tamamlanan Seans' : 'Sessions Completed',
+      label: ui('ui_extra_b3_hero_stat_sessions', 'Sessions Completed'),
     },
     {
       val: isLoading ? null : consultantCount > 0 ? `${consultantCount}+` : '20+',
-      label: isTr ? 'Uzman Danışman' : 'Expert Consultants',
+      label: ui('ui_extra_b3_hero_stat_consultants', 'Expert Consultants'),
     },
     {
       val: isLoading ? null : `${avgRating}★`,
-      label: isTr ? 'Ortalama Puan' : 'Average Rating',
+      label: ui('ui_extra_b3_hero_stat_rating', 'Average Rating'),
     },
   ];
 

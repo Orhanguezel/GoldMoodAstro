@@ -29,7 +29,6 @@ export type ModuleKey =
   | 'reviews'
   | 'support'
   | 'users'
-  | 'offers'
   | 'storage';
 
 export type ModuleManifest = {
@@ -249,16 +248,6 @@ export const MODULES: Record<ModuleKey, ModuleManifest> = {
     truncateInOrder: ['user_roles', 'profiles', 'refresh_tokens', 'users'],
     allowSchema: false,
     note: 'Users/Auth: users + refresh_tokens + profiles + user_roles.',
-  },
-
-  // -------------------------------------------------------------------
-  // OFFERS (şemaya birebir: offers + offer_number_counters)
-  // -------------------------------------------------------------------
-  offers: {
-    tablesInOrder: ['offers', 'offer_number_counters'],
-    truncateInOrder: ['offer_number_counters', 'offers'],
-    allowSchema: false,
-    note: 'Offers: offers + offer_number_counters.',
   },
 
   // -------------------------------------------------------------------

@@ -122,6 +122,7 @@ function buildScreenStyles(t: AppTheme) {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { safeRouterBack } from '@/lib/navigation';
 import { Mail, ChevronLeft, Send } from 'lucide-react-native';
 
@@ -130,6 +131,7 @@ import { Mail, ChevronLeft, Send } from 'lucide-react-native';
 export default function ForgotPasswordScreen() {
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -141,12 +143,12 @@ export default function ForgotPasswordScreen() {
       // Mock API delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       Alert.alert(
-        'Şifre Sıfırlama',
-        'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.',
-        [{ text: 'Tamam', onPress: () => safeRouterBack() }]
+        t('auth.resetTitle'),
+        t('auth.resetSentBody'),
+        [{ text: t('common.ok'), onPress: () => safeRouterBack() }]
       );
     } catch (err) {
-      Alert.alert('Hata', 'Bir hata oluştu. Lütfen tekrar deneyin.');
+      Alert.alert(t('common.error'), t('common.genericError'));
     } finally {
       setLoading(false);
     }
@@ -169,16 +171,16 @@ export default function ForgotPasswordScreen() {
           <ScrollView contentContainerStyle={styles.scroll}>
             
             <View style={styles.titleArea}>
-              <Text style={styles.kicker}>ŞİFRE KURTARMA</Text>
-              <Text style={styles.title}>Şifrenizi mi{'\n'}unuttunuz?</Text>
+              <Text style={styles.kicker}>{t('auth.forgotKicker')}</Text>
+              <Text style={styles.title}>{t('auth.forgotHeadline')}</Text>
               <Text style={styles.subtitle}>
-                E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.
+                {t('auth.forgotSubtitle')}
               </Text>
             </View>
 
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>E-POSTA ADRESİ</Text>
+                <Text style={styles.label}>{t('auth.emailLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <Mail size={20} color={colors.goldDim} />
                   <TextInput
@@ -202,7 +204,7 @@ export default function ForgotPasswordScreen() {
                   <ActivityIndicator color={colors.ink} />
                 ) : (
                   <>
-                    <Text style={styles.resetBtnText}>Bağlantı Gönder</Text>
+                    <Text style={styles.resetBtnText}>{t('auth.resetSendBtn')}</Text>
                     <Send size={18} color={colors.ink} />
                   </>
                 )}

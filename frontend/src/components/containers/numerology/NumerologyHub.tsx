@@ -17,10 +17,12 @@ import {
 import { useCalculateNumerologyMutation } from '@/integrations/rtk/public/numerology.public.endpoints';
 import ShareCard from '@/components/common/ShareCard';
 import ConsultantFunnelCTA from '@/components/common/ConsultantFunnelCTA';
+import { useUiSection } from '@/i18n';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
 export default function NumerologyHub() {
+  const { ui } = useUiSection('ui_numerology');
   const [formData, setFormData] = useState({ full_name: '', birth_date: '' });
   const [step, setStep] = useState<'input' | 'processing' | 'result'>('input');
   const [result, setResult] = useState<any>(null);
@@ -61,9 +63,9 @@ export default function NumerologyHub() {
               <div className="w-24 h-24 bg-(--gm-gold)/10 rounded-full flex items-center justify-center mx-auto text-(--gm-gold) border border-(--gm-gold)/20 shadow-(--gm-shadow-glow)">
                 <Binary className="w-12 h-12" />
               </div>
-              <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight`}>Numeroloji Analizi</h2>
+              <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tight`}>{ui('ui_numerology_hero_title', 'Numerology Analysis')}</h2>
               <p className="text-(--gm-text-dim) text-xl max-w-2xl mx-auto italic font-serif leading-relaxed opacity-80">
-                İsminiz ve doğum tarihiniz, ruhunuzun bu hayattaki planını sayılarla fısıldar.
+                {ui('ui_numerology_hero_subtitle', 'Your name and birth date whisper the plan of your soul through numbers.')}
               </p>
             </div>
 
@@ -71,7 +73,7 @@ export default function NumerologyHub() {
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-(--gm-gold)/5 rounded-full blur-3xl pointer-events-none" />
               
               <div className="space-y-4 relative">
-                <label htmlFor="numerology-full-name" className="text-[10px] font-bold text-(--gm-muted) tracking-[0.3em] uppercase ml-4">Tam İsim (Doğumdaki)</label>
+                <label htmlFor="numerology-full-name" className="text-[10px] font-bold text-(--gm-muted) tracking-[0.3em] uppercase ml-4">{ui('ui_numerology_label_full_name', 'Full Name (at birth)')}</label>
                 <div className="relative">
                   <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-(--gm-gold)/50" />
                   <input
@@ -80,14 +82,14 @@ export default function NumerologyHub() {
                     type="text"
                     value={formData.full_name}
                     onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                    placeholder="Adınız ve Soyadınız"
+                    placeholder={ui('ui_numerology_placeholder_full_name', 'Your first and last name')}
                     className="w-full bg-(--gm-bg-deep)/50 border border-(--gm-border-soft) rounded-[1.5rem] py-5 pl-16 pr-6 focus:ring-2 focus:ring-(--gm-gold)/20 focus:border-(--gm-gold)/50 transition-all text-(--gm-text) outline-none font-serif text-lg"
                   />
                 </div>
               </div>
 
               <div className="space-y-4 relative">
-                <label htmlFor="numerology-birth-date" className="text-[10px] font-bold text-(--gm-muted) tracking-[0.3em] uppercase ml-4">Doğum Tarihi</label>
+                <label htmlFor="numerology-birth-date" className="text-[10px] font-bold text-(--gm-muted) tracking-[0.3em] uppercase ml-4">{ui('ui_numerology_label_birth_date', 'Birth Date')}</label>
                 <div className="relative">
                   <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-(--gm-gold)/50" />
                   <input
@@ -106,7 +108,7 @@ export default function NumerologyHub() {
                 disabled={isLoading}
                 className="w-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold py-6 rounded-full shadow-(--gm-shadow-gold) hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 group tracking-[0.2em] text-xs"
               >
-                HESAPLA & YORUMLA <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                {ui('ui_numerology_submit', 'CALCULATE & INTERPRET')} <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </form>
           </motion.div>
@@ -144,8 +146,8 @@ export default function NumerologyHub() {
               </div>
             </div>
             <div className="mt-20 text-center space-y-6">
-              <h2 className={`${cinzel.className} text-4xl text-(--gm-gold) tracking-widest`}>Sayılar Diziliyor...</h2>
-              <p className="text-(--gm-text-dim) italic font-serif text-xl opacity-70">Kader çarkınızdaki numerolojik kodlar analiz ediliyor.</p>
+              <h2 className={`${cinzel.className} text-4xl text-(--gm-gold) tracking-widest`}>{ui('ui_numerology_processing_title', 'Numbers Are Aligning...')}</h2>
+              <p className="text-(--gm-text-dim) italic font-serif text-xl opacity-70">{ui('ui_numerology_processing_subtitle', 'The numerological codes in your destiny wheel are being analyzed.')}</p>
             </div>
           </motion.div>
         )}
@@ -158,16 +160,16 @@ export default function NumerologyHub() {
             className="space-y-16 py-10"
           >
              <div className="text-center space-y-4">
-              <h2 className={`${cinzel.className} text-5xl md:text-6xl text-(--gm-text) tracking-tight`}>Sayılarınızın Gücü</h2>
+              <h2 className={`${cinzel.className} text-5xl md:text-6xl text-(--gm-text) tracking-tight`}>{ui('ui_numerology_result_title', 'The Power of Your Numbers')}</h2>
               <p className="text-(--gm-text-dim) font-serif italic text-2xl opacity-60">{formData.full_name}</p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
                {[
-                 { label: 'HAYAT YOLU', value: result.calculation.lifePath, icon: Target, color: 'text-[var(--gm-info)]' },
-                 { label: 'KADER SAYISI', value: result.calculation.destiny, icon: Zap, color: 'text-(--gm-gold)' },
-                 { label: 'RUH GÜDÜSÜ', value: result.calculation.soulUrge, icon: Heart, color: 'text-[var(--gm-error)]' },
-                 { label: 'KİŞİLİK', value: result.calculation.personality, icon: Hash, color: 'text-[var(--gm-success)]' },
+                 { label: ui('ui_numerology_card_life_path', 'LIFE PATH'), value: result.calculation.lifePath, icon: Target, color: 'text-[var(--gm-info)]' },
+                 { label: ui('ui_numerology_card_destiny', 'DESTINY NUMBER'), value: result.calculation.destiny, icon: Zap, color: 'text-(--gm-gold)' },
+                 { label: ui('ui_numerology_card_soul_urge', 'SOUL URGE'), value: result.calculation.soulUrge, icon: Heart, color: 'text-[var(--gm-error)]' },
+                 { label: ui('ui_numerology_card_personality', 'PERSONALITY'), value: result.calculation.personality, icon: Hash, color: 'text-[var(--gm-success)]' },
                ].map((item, i) => (
                  <div key={i} className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-[2.5rem] p-10 text-center space-y-4 shadow-(--gm-shadow-soft) hover:border-(--gm-gold)/40 transition-colors group">
                     <item.icon className={`w-8 h-8 mx-auto ${item.color} group-hover:scale-110 transition-transform`} />
@@ -205,12 +207,12 @@ export default function NumerologyHub() {
 
                   <div className="mt-20 pt-12 border-t border-(--gm-border-soft) flex flex-col lg:flex-row items-center justify-between gap-12">
                     <p className="text-[11px] text-(--gm-muted) italic font-serif leading-relaxed max-w-md uppercase tracking-widest opacity-60">
-                      * Pisagor numeroloji sistemi temel alınarak yapay zeka tarafından analiz edilmiştir.
+                      {ui('ui_numerology_disclaimer', '* This was analyzed by AI based on the Pythagorean numerology system.')}
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-10">
                       <ShareCard 
-                        title="Numeroloji Analizimi Paylaş"
-                        shareText={`GoldMoodAstro'da numeroloji analizimi yaptım ✨\nHayat Yolu: ${result.calculation.lifePath} • Kader: ${result.calculation.destiny}\nSenin sayıların ne diyor?`}
+                        title={ui('ui_numerology_share_title', 'Share My Numerology Analysis')}
+                        shareText={`${ui('ui_numerology_share_line1', 'I did my numerology analysis on GoldMoodAstro ✨')}\n${ui('ui_numerology_share_line2', 'Life Path')}: ${result.calculation.lifePath} • ${ui('ui_numerology_share_destiny', 'Destiny')}: ${result.calculation.destiny}\n${ui('ui_numerology_share_line3', 'What do your numbers say?')}`}
                         variant="numerology"
                         data={{
                           lifePath: result.calculation.lifePath,
@@ -227,7 +229,7 @@ export default function NumerologyHub() {
                         }}
                         className="flex items-center gap-4 text-(--gm-gold) font-bold uppercase tracking-[0.2em] text-xs hover:text-(--gm-gold-dim) transition-colors"
                       >
-                        YENİ HESAPLAMA <RotateCcw className="w-4 h-4" />
+                        {ui('ui_numerology_reset', 'NEW CALCULATION')} <RotateCcw className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

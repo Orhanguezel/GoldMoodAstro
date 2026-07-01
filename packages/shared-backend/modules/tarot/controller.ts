@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as repo from './repository';
 import * as llm from '../llm';
 import { drawCardsSchema } from './validation';
+import { apiMessage } from '../_shared/api-i18n';
 
 export async function handleDraw(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user; // if authenticated
@@ -11,31 +12,54 @@ export async function handleDraw(req: FastifyRequest, reply: FastifyReply) {
   const { spread_type, question, locale } = body;
 
   // 1) All cards fetch
-  const allCards = await repo.getCards();
+  const allCards = await repo.getCards(locale);
   if (!allCards.length) {
-    return reply.status(404).send({ error: 'Tarot destesi bulunamadı.' });
+    return reply.status(404).send({ error: apiMessage(req, 'tarot_deck_not_found') });
   }
 
   // 2) Shuffle and pick
   const shuffled = [...allCards].sort(() => Math.random() - 0.5);
   let count = 1;
-  let positions: string[] = ['Genel'];
+  const localeBase = String(locale || 'tr').toLowerCase().split('-')[0];
+  const positionLabels: Record<string, Record<string, string[]>> = {
+    one_card: {
+      tr: ['Genel'],
+      en: ['General'],
+      de: ['Allgemein'],
+    },
+    three_card_general: {
+      tr: ['Geçmiş', 'Şimdi', 'Gelecek'],
+      en: ['Past', 'Present', 'Future'],
+      de: ['Vergangenheit', 'Gegenwart', 'Zukunft'],
+    },
+    three_card_decision: {
+      tr: ['Seçenek A', 'Seçenek B', 'Tavsiye'],
+      en: ['Option A', 'Option B', 'Advice'],
+      de: ['Option A', 'Option B', 'Rat'],
+    },
+    celtic_cross: {
+      tr: ['Merkez', 'Engel', 'Hedef', 'Temel', 'Geçmiş', 'Gelecek', 'Benlik', 'Çevre', 'Umut/Korku', 'Sonuç'],
+      en: ['Center', 'Challenge', 'Goal', 'Foundation', 'Past', 'Future', 'Self', 'Environment', 'Hope/Fear', 'Outcome'],
+      de: ['Zentrum', 'Herausforderung', 'Ziel', 'Basis', 'Vergangenheit', 'Zukunft', 'Selbst', 'Umfeld', 'Hoffnung/Angst', 'Ergebnis'],
+    },
+  };
+  let positions: string[] = positionLabels.one_card[localeBase] ?? positionLabels.one_card.tr;
 
   if (spread_type === 'three_card_general') {
     count = 3;
-    positions = ['Geçmiş', 'Şimdi', 'Gelecek'];
+    positions = positionLabels.three_card_general[localeBase] ?? positionLabels.three_card_general.tr;
   } else if (spread_type === 'three_card_decision') {
     count = 3;
-    positions = ['Seçenek A', 'Seçenek B', 'Tavsiye'];
+    positions = positionLabels.three_card_decision[localeBase] ?? positionLabels.three_card_decision.tr;
   } else if (spread_type === 'celtic_cross') {
     count = 10;
-    positions = ['Merkez', 'Engel', 'Hedef', 'Temel', 'Geçmiş', 'Gelecek', 'Benlik', 'Çevre', 'Umut/Korku', 'Sonuç'];
+    positions = positionLabels.celtic_cross[localeBase] ?? positionLabels.celtic_cross.tr;
   }
 
   const picked = shuffled.slice(0, count).map((card, idx) => ({
     card_id: card.id,
     slug: card.slug,
-    name: card.nameTr,
+    name: (card as any).name ?? card.nameTr,
     is_reversed: Math.random() > 0.8, // %20 ters gelme olasılığı
     position_name: positions[idx],
     meanings: {
@@ -51,7 +75,7 @@ export async function handleDraw(req: FastifyRequest, reply: FastifyReply) {
 
   try {
     const cardDescriptions = picked.map(p => 
-      `${p.position_name}: ${p.name} (${p.is_reversed ? 'Ters' : 'Düz'}). Anlam: ${p.is_reversed ? p.meanings.reversed : p.meanings.upright}`
+      `${p.position_name}: ${p.name} (${p.is_reversed ? (localeBase === 'de' ? 'umgekehrt' : localeBase === 'en' ? 'reversed' : 'Ters') : (localeBase === 'de' ? 'aufrecht' : localeBase === 'en' ? 'upright' : 'Düz')}). ${localeBase === 'de' ? 'Bedeutung' : localeBase === 'en' ? 'Meaning' : 'Anlam'}: ${p.is_reversed ? p.meanings.reversed : p.meanings.upright}`
     ).join('\n');
 
     const result = await llm.generate({
@@ -59,7 +83,7 @@ export async function handleDraw(req: FastifyRequest, reply: FastifyReply) {
       locale,
       vars: {
         spread_label: spread_type,
-        question: question || 'Genel rehberlik',
+        question: question || (localeBase === 'de' ? 'Allgemeine Orientierung' : localeBase === 'en' ? 'General guidance' : 'Genel rehberlik'),
         cards_context: cardDescriptions,
       },
     });
@@ -67,7 +91,11 @@ export async function handleDraw(req: FastifyRequest, reply: FastifyReply) {
     promptId = result.promptId;
   } catch (err) {
     console.error('Tarot LLM Error:', err);
-    interpretation = 'Yorum şu an oluşturulamadı, ancak kartlarınız yukarıdadır.';
+    interpretation = localeBase === 'de'
+      ? 'Die Deutung konnte gerade nicht erstellt werden, aber deine Karten stehen oben.'
+      : localeBase === 'en'
+        ? 'The interpretation could not be generated right now, but your cards are shown above.'
+        : 'Yorum şu an oluşturulamadı, ancak kartlarınız yukarıdadır.';
   }
 
   // 4) Save to DB
@@ -96,7 +124,7 @@ export async function handleDraw(req: FastifyRequest, reply: FastifyReply) {
 
 export async function handleGetMyReadings(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const readings = await repo.getReadingsByUser(user.id);
   return reply.send({ data: readings });
@@ -105,7 +133,7 @@ export async function handleGetMyReadings(req: FastifyRequest, reply: FastifyRep
 export async function handleGetReading(req: FastifyRequest, reply: FastifyReply) {
   const { id } = req.params as { id: string };
   const reading = await repo.getReadingById(id);
-  if (!reading) return reply.status(404).send({ error: 'Açılım bulunamadı.' });
+  if (!reading) return reply.status(404).send({ error: apiMessage(req, 'tarot_reading_not_found') });
 
   return reply.send({ data: reading });
 }

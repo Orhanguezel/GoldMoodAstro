@@ -8,6 +8,7 @@ import { db } from '../../db/client';
 import { storageAssets } from '../storage/schema';
 import { inArray } from 'drizzle-orm';
 import { createReadingSchema } from './validation';
+import { apiMessage } from '../_shared/api-i18n';
 
 type DetectedSymbol = {
   name: string;
@@ -45,23 +46,26 @@ function parseSymbolsJson(raw: string): DetectedSymbol[] {
 }
 
 /** KB'den tespit edilen sembol isimlerine karşılık gelen anlam metinlerini topla. */
-async function buildSymbolsKbContext(symbols: DetectedSymbol[]): Promise<string> {
+async function buildSymbolsKbContext(symbols: DetectedSymbol[], locale: string): Promise<string> {
   if (!symbols.length) return '(Tespit edilen sembol yok)';
   const names = [...new Set(symbols.map((s) => s.name))];
-  const all = await repo.getSymbols();
-  // case-insensitive eşleşme name_tr üzerinden
-  const lookup = new Map<string, { name_tr: string; meaning: string }>();
+  const all = await repo.getSymbols(locale);
+  const lookup = new Map<string, { name: string; meaning: string }>();
   for (const row of all as any[]) {
-    lookup.set(String(row.nameTr ?? row.name_tr ?? '').toLowerCase().trim(), {
-      name_tr: String(row.nameTr ?? row.name_tr ?? ''),
+    const localizedName = String(row.name ?? row.nameTr ?? row.name_tr ?? '').toLowerCase().trim();
+    const trName = String(row.nameTr ?? row.name_tr ?? '').toLowerCase().trim();
+    const value = {
+      name: String(row.name ?? row.nameTr ?? row.name_tr ?? ''),
       meaning: String(row.meaning ?? ''),
-    });
+    };
+    if (localizedName) lookup.set(localizedName, value);
+    if (trName) lookup.set(trName, value);
   }
   const lines: string[] = [];
   for (const n of names) {
     const found = lookup.get(n.toLowerCase().trim());
     if (found) {
-      lines.push(`- **${found.name_tr}**: ${found.meaning}`);
+      lines.push(`- **${found.name}**: ${found.meaning}`);
     } else {
       lines.push(`- **${n}**: (KB'de yok — geleneksel anlamı LLM kendi bilgisinden çıkarsın)`);
     }
@@ -82,7 +86,7 @@ export async function handleRead(req: FastifyRequest, reply: FastifyReply) {
     .from(storageAssets)
     .where(inArray(storageAssets.id, image_ids));
   if (images.length < 3) {
-    return reply.status(400).send({ error: '3 adet geçerli görsel gereklidir.' });
+    return reply.status(400).send({ error: apiMessage(req, 'coffee_images_required') });
   }
 
   // 2) Pending kayıt
@@ -107,7 +111,7 @@ export async function handleRead(req: FastifyRequest, reply: FastifyReply) {
     const symbols = parseSymbolsJson(detection.content);
 
     // 4) KB harmanlama (sembol → klasik anlam)
-    const symbolsKb = await buildSymbolsKbContext(symbols);
+    const symbolsKb = await buildSymbolsKbContext(symbols, locale);
     const symbolsContext = symbols.length
       ? symbols
           .map(
@@ -145,14 +149,14 @@ export async function handleRead(req: FastifyRequest, reply: FastifyReply) {
     console.error('[coffee] reading_failed', err);
     await repo.updateReading(readingId, { status: 'failed' });
     return reply.status(500).send({
-      error: 'Fal yorumlanırken bir hata oluştu. Lütfen tekrar deneyin.',
+      error: apiMessage(req, 'coffee_failed'),
     });
   }
 }
 
 export async function handleGetMyReadings(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
   const readings = await repo.getReadingsByUser(user.id);
   return reply.send({ data: readings });
 }
@@ -160,6 +164,6 @@ export async function handleGetMyReadings(req: FastifyRequest, reply: FastifyRep
 export async function handleGetReading(req: FastifyRequest, reply: FastifyReply) {
   const { id } = req.params as { id: string };
   const reading = await repo.getReadingById(id);
-  if (!reading) return reply.status(404).send({ error: 'Fal bulunamadı.' });
+  if (!reading) return reply.status(404).send({ error: apiMessage(req, 'coffee_not_found') });
   return reply.send({ data: reading });
 }

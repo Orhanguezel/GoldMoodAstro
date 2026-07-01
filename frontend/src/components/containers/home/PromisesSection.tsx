@@ -1,30 +1,7 @@
 import React from 'react';
+import { useUiSection } from '@/i18n';
 
 const COPY = {
-  tr: {
-    eyebrow: 'BİZİM SÖZÜMÜZ',
-    title: 'Neden <em>Gold Mood</em>?',
-    promises: [
-      {
-        num: '01',
-        title: 'İptal etmek üye olmaktan kolay',
-        text: 'Aboneliğinizi tek tıkla, hiçbir form doldurmadan veya bekleme süresi olmadan anında iptal edebilirsiniz. Şeffaflık ana ilkemizdir.',
-        target: 'ŞEFFAFLIK'
-      },
-      {
-        num: '02',
-        title: 'Her yorum size özel',
-        text: 'Genel geçer yorumlar yerine, doğum haritanızın saniye hassasiyetindeki verilerinden beslenen kişisel rehberlik sunuyoruz.',
-        target: 'DERİNLİK'
-      },
-      {
-        num: '03',
-        title: 'Telefon numaranız bizde yok',
-        text: 'Mahremiyetinize saygı duyuyoruz. Kayıt sırasında telefon numaranızı istemiyoruz, tüm iletişim uygulama içinden sağlanır.',
-        target: 'GİZLİLİK'
-      }
-    ]
-  },
   en: {
     eyebrow: 'OUR PROMISE',
     title: 'Why <em>Gold Mood</em>?',
@@ -52,7 +29,32 @@ const COPY = {
 };
 
 export default function PromisesSection({ locale = 'tr' }: { locale?: string }) {
-  const copy = COPY[locale as keyof typeof COPY] || COPY.tr;
+  const { ui } = useUiSection('ui_home', locale as any);
+  const fb = COPY.en;
+  const copy = {
+    eyebrow: ui('ui_home_promises_eyebrow', fb.eyebrow),
+    title: ui('ui_home_promises_title', fb.title),
+    promises: [
+      {
+        num: fb.promises[0].num,
+        title: ui('ui_home_promises_1_title', fb.promises[0].title),
+        text: ui('ui_home_promises_1_text', fb.promises[0].text),
+        target: ui('ui_home_promises_1_target', fb.promises[0].target),
+      },
+      {
+        num: fb.promises[1].num,
+        title: ui('ui_home_promises_2_title', fb.promises[1].title),
+        text: ui('ui_home_promises_2_text', fb.promises[1].text),
+        target: ui('ui_home_promises_2_target', fb.promises[1].target),
+      },
+      {
+        num: fb.promises[2].num,
+        title: ui('ui_home_promises_3_title', fb.promises[2].title),
+        text: ui('ui_home_promises_3_text', fb.promises[2].text),
+        target: ui('ui_home_promises_3_target', fb.promises[2].target),
+      },
+    ],
+  };
 
   return (
     <section className="py-32 px-6 bg-[var(--gm-bg)]">

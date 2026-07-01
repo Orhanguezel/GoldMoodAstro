@@ -22,6 +22,8 @@ export function CustomCssTab() {
     }
   }, [settingRow?.value]);
 
+  const t = useAdminT('admin.siteSettings');
+
   const busy = isLoading || isFetching || isSaving;
 
   const purgeFrontendThemeCache = async (): Promise<boolean> => {
@@ -47,16 +49,14 @@ export function CustomCssTab() {
       const revalidated = await purgeFrontendThemeCache();
       toast.success(
         revalidated
-          ? 'Özel CSS kaydedildi ve frontend cache temizlendi.'
-          : 'Özel CSS kaydedildi (cache kısa süre içinde yenilenecek).',
+          ? t('customCss.savedWithCache', null, 'Özel CSS kaydedildi ve frontend cache temizlendi.')
+          : t('customCss.savedNoCache', null, 'Özel CSS kaydedildi (cache kısa süre içinde yenilenecek).'),
       );
     } catch (err) {
-      toast.error('Kaydetme hatası.');
+      toast.error(t('customCss.saveError', null, 'Kaydetme hatası.'));
     }
   };
 
-  const t = useAdminT('admin.siteSettings');
-  
   return (
     <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
       <CardHeader className="bg-gm-surface/40 p-8 border-b border-gm-border-soft gap-6">

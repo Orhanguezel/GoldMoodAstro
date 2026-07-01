@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGetTrafficSourcesAdminQuery } from '@/integrations/endpoints/admin/audit_admin.endpoints';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,6 +9,7 @@ import { Share2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export function AuditTrafficChart({ range }: { range: string }) {
+  const t = useAdminT('admin.audit');
   const { data, isLoading, isError } = useGetTrafficSourcesAdminQuery({ range: `${range}d` });
 
   if (isLoading) {
@@ -19,7 +21,7 @@ export function AuditTrafficChart({ range }: { range: string }) {
   }
 
   if (isError || !data || !data.data) {
-    return <div className="p-8 text-center text-gm-muted italic">Veri yüklenemedi.</div>;
+    return <div className="p-8 text-center text-gm-muted italic">{t('common.loadFailed')}</div>;
   }
 
   const sources = data.data || [];
@@ -28,21 +30,21 @@ export function AuditTrafficChart({ range }: { range: string }) {
     <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
       <CardHeader className="p-8 pb-4 border-b border-gm-border-soft bg-gm-surface/40">
         <CardTitle className="font-serif text-2xl flex items-center gap-3">
-          <Share2 className="h-5 w-5 text-gm-gold" /> Trafik Kaynakları
+          <Share2 className="h-5 w-5 text-gm-gold" /> {t('traffic.title')}
         </CardTitle>
         <CardDescription className="font-serif italic opacity-70 text-gm-muted">
-          Kullanıcı edinim kaynakları ve dönüşüm oranları
+          {t('traffic.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         <table className="w-full text-sm text-left border-collapse">
           <thead>
             <tr className="bg-gm-surface/30">
-              <th className="p-4 font-bold text-gm-muted">Kaynak / UTM</th>
-              <th className="p-4 font-bold text-gm-muted text-right">Ziyaretçi</th>
-              <th className="p-4 font-bold text-gm-muted text-right">Kayıt (%)</th>
-              <th className="p-4 font-bold text-gm-muted text-right">Randevu (%)</th>
-              <th className="p-4 font-bold text-gm-muted text-right">Gelir (₺)</th>
+              <th className="p-4 font-bold text-gm-muted">{t('traffic.sourceColumn')}</th>
+              <th className="p-4 font-bold text-gm-muted text-right">{t('traffic.visitors')}</th>
+              <th className="p-4 font-bold text-gm-muted text-right">{t('traffic.signups')}</th>
+              <th className="p-4 font-bold text-gm-muted text-right">{t('traffic.bookings')}</th>
+              <th className="p-4 font-bold text-gm-muted text-right">{t('traffic.revenue')}</th>
             </tr>
           </thead>
           <tbody>
@@ -56,7 +58,7 @@ export function AuditTrafficChart({ range }: { range: string }) {
                       <span className="font-mono font-medium text-gm-text">{src.source}</span>
                       {isDirect && (
                         <Badge variant="outline" className="text-[10px] tracking-widest text-gm-muted border-gm-border-soft bg-gm-surface/20">
-                          DOĞRUDAN
+                          {t('traffic.direct')}
                         </Badge>
                       )}
                     </div>
@@ -83,7 +85,7 @@ export function AuditTrafficChart({ range }: { range: string }) {
             {sources.length === 0 && (
               <tr>
                 <td colSpan={5} className="p-8 text-center text-gm-muted italic">
-                  Trafik kaynağı verisi bulunamadı.
+                  {t('traffic.noData')}
                 </td>
               </tr>
             )}

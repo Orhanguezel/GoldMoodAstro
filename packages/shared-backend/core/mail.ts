@@ -22,26 +22,6 @@ type ContactMailContext = {
   locale?: string | null;
 };
 
-type OfferMailContext = {
-  customer_name: string;
-  company_name?: string | null;
-  offer_no?: string | null;
-  email: string;
-  phone?: string | null;
-  currency?: string | null;
-  net_total?: string | number | null;
-  vat_rate?: string | number | null;
-  vat_total?: string | number | null;
-  shipping_total?: string | number | null;
-  gross_total?: string | number | null;
-  valid_until?: string | null;
-  pdf_url?: string | null;
-  locale?: string | null;
-  offer_id?: string | null;
-  country_code?: string | null;
-  message?: string | null;
-};
-
 type WelcomeMailContext = {
   to: string;
   user_name?: string | null;
@@ -209,86 +189,4 @@ export async function sendBereketContactAutoReplyMail(input: ContactMailContext)
   `;
 
   await sendBereketMail({ to: input.email, subject, html });
-}
-
-function renderPricingBlock(input: OfferMailContext): string {
-  const rows = [
-    ['Para Birimi', input.currency ?? '-'],
-    ['Net Toplam', input.net_total ?? '-'],
-    ['KDV Orani', input.vat_rate ?? '-'],
-    ['KDV Toplami', input.vat_total ?? '-'],
-    ['Sevkiyat', input.shipping_total ?? '-'],
-    ['Genel Toplam', input.gross_total ?? '-'],
-    ['Gecerlilik', input.valid_until ?? '-'],
-  ]
-    .map(([label, value]) => `<tr><td style="padding:6px 10px;font-weight:600">${label}</td><td style="padding:6px 10px">${escapeHtml(String(value))}</td></tr>`)
-    .join('');
-
-  return `<table style="border-collapse:collapse;width:100%">${rows}</table>`;
-}
-
-export async function sendBereketOfferCustomerMail(input: OfferMailContext) {
-  const siteName = await getSiteName();
-  const subject = `${siteName} teklifiniz hazir`;
-  const html = `
-    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827">
-      <h2>Teklifiniz hazir</h2>
-      <p>Merhaba ${escapeHtml(input.customer_name)},</p>
-      <p>${escapeHtml(siteName)} ekibi teklif kaydinizi hazirladi.</p>
-      ${renderPricingBlock(input)}
-      ${
-        input.pdf_url
-          ? `<p style="margin-top:16px"><a href="${escapeHtml(input.pdf_url)}">Teklif dosyasini goruntule</a></p>`
-          : ''
-      }
-    </div>
-  `;
-
-  await sendBereketMail({ to: input.email, subject, html });
-}
-
-export async function sendBereketOfferAdminMail(input: OfferMailContext, to: string) {
-  const siteName = await getSiteName();
-  const subject = `[${siteName}] Teklif gonderildi`;
-  const html = `
-    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827">
-      <h2>Musteriye teklif gonderildi</h2>
-      <p><strong>Musteri:</strong> ${escapeHtml(input.customer_name)}</p>
-      <p><strong>E-posta:</strong> ${escapeHtml(input.email)}</p>
-      <p><strong>Teklif No:</strong> ${escapeHtml(input.offer_no || input.offer_id || '-')}</p>
-      ${renderPricingBlock(input)}
-      ${
-        input.pdf_url
-          ? `<p style="margin-top:16px"><a href="${escapeHtml(input.pdf_url)}">PDF baglantisi</a></p>`
-          : ''
-      }
-    </div>
-  `;
-
-  await sendBereketMail({ to, subject, html });
-}
-
-export async function sendBereketOfferRequestAdminMail(input: OfferMailContext, to: string) {
-  const siteName = await getSiteName();
-  const subject = `[${siteName}] Yeni teklif talebi`;
-  const rows = [
-    ['Musteri', input.customer_name],
-    ['Firma', input.company_name ?? '-'],
-    ['E-posta', input.email],
-    ['Telefon', input.phone ?? '-'],
-    ['Ulke', input.country_code ?? '-'],
-    ['Mesaj', input.message ?? '-'],
-    ['Teklif ID', input.offer_id ?? '-'],
-  ]
-    .map(([label, value]) => `<tr><td style="padding:6px 10px;font-weight:600">${label}</td><td style="padding:6px 10px">${escapeHtml(String(value))}</td></tr>`)
-    .join('');
-
-  const html = `
-    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827">
-      <h2>Yeni teklif talebi</h2>
-      <table style="border-collapse:collapse;width:100%">${rows}</table>
-    </div>
-  `;
-
-  await sendBereketMail({ to, subject, html });
 }

@@ -188,7 +188,7 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
         <div className="space-y-6">
           <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gm-gold border-b border-gm-border-soft pb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-gm-gold/50" />
-            Google OAuth & Analytics
+            {t('admin.siteSettings.api.sectionGoogle', null, 'Google OAuth & Analytics')}
           </h3>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
@@ -252,10 +252,10 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
           <div className="border-b border-gm-border-soft pb-3 space-y-1">
             <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gm-gold flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-gm-gold/50" />
-              LiveKit (Sesli / Görüntülü Görüşme)
+              {t('admin.siteSettings.api.sectionLivekit', null, 'LiveKit (Sesli / Görüntülü Görüşme)')}
             </h3>
             <p className="text-[10px] font-serif italic text-gm-muted ml-4 opacity-80">
-              Sunucu tarafı .env dosyasından okunur — bu alanlar referans amaçlı kayıt tutar.
+              {t('admin.siteSettings.api.sectionLivekitNote', null, 'Sunucu tarafı .env dosyasından okunur — bu alanlar referans amaçlı kayıt tutar.')}
             </p>
           </div>
           <div className="grid gap-6 md:grid-cols-2">
@@ -307,10 +307,10 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
           <div className="border-b border-gm-border-soft pb-3 space-y-1">
             <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gm-gold flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-gm-gold/50" />
-              Firebase (Push Bildirim)
+              {t('admin.siteSettings.api.sectionFirebase', null, 'Firebase (Push Bildirim)')}
             </h3>
             <p className="text-[10px] font-serif italic text-gm-muted ml-4 opacity-80">
-              Service account credentials .env dosyasından okunur — bu alanlar referans içindir.
+              {t('admin.siteSettings.api.sectionFirebaseNote', null, 'Service account credentials .env dosyasından okunur — bu alanlar referans içindir.')}
             </p>
           </div>
           <div className="grid gap-6 md:grid-cols-2">
@@ -361,7 +361,7 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
         <div className="space-y-6">
           <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gm-gold border-b border-gm-border-soft pb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-gm-gold/50" />
-            Iyzipay (Ödeme)
+            {t('admin.siteSettings.api.sectionIyzipay', null, 'Iyzipay (Ödeme)')}
           </h3>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
@@ -411,7 +411,7 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
         <div className="space-y-6 pt-4">
           <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gm-gold border-b border-gm-border-soft pb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-gm-gold/50" />
-            Diğer Ayarlar
+            {t('admin.siteSettings.api.sectionOther', null, 'Diğer Ayarlar')}
           </h3>
           <div className="space-y-2">
             <div className="flex items-center gap-2 ml-1">

@@ -21,7 +21,7 @@ export default async function BirthChartPage({ params }: { params: Promise<{ loc
 
   return (
     <>
-      <Banner title={locale === 'tr' ? 'Doğum Haritası' : 'Birth Chart'} />
+      <Banner title="Birth Chart" />
       <PageContainer width="wide" pad="none">
         <BirthChartPageClient />
       </PageContainer>

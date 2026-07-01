@@ -7,9 +7,9 @@ import { useLocaleShort } from '@/i18n';
 
 const COPY = {
   tr: {
-    title: "GOLDMOODASTRO'YA HOŞ GELDİNİZ",
-    subtitle: 'Yıldızlarla tanışan <em>modern</em> astroloji.',
-    cta: 'DANIŞMANLARI KEŞFET',
+    title: 'WELCOME TO GOLDMOODASTRO',
+    subtitle: 'Modern astrology <em>guided</em> by the stars.',
+    cta: 'EXPLORE CONSULTANTS',
     link: '/tr/consultants',
   },
   en: {

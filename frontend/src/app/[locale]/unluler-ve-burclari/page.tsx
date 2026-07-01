@@ -14,8 +14,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'unluler-ve-burclari',
     pathname: '/unluler-ve-burclari',
     fallback: {
-      title: 'Ünlüler ve Burçları — GoldMoodAstro',
-      description: 'Sanat, müzik, bilim ve liderlik alanından tanıdık isimlerin burçlarını ve astrolojik temalarını keşfet.',
+      title: 'Celebrities and Zodiac Signs — GoldMoodAstro',
+      description: 'Discover zodiac signs and astrological themes of familiar names from art, music, science and leadership.',
     },
   });
 }
@@ -24,11 +24,11 @@ import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 
 export default async function UnlulerVeBurclariPage({ params }: Props) {
-  const { locale } = await params;
+  await params;
 
   return (
     <>
-      <Banner title={locale === 'tr' ? 'Ünlüler ve Burçları' : 'Celebrities and Zodiac Signs'} />
+      <Banner title="Celebrities and Zodiac Signs" />
       <PageContainer width="full" pad="none" className="bg-(--gm-bg)">
         <CelebrityZodiacPage />
       </PageContainer>

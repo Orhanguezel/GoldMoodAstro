@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowRight, UserPlus } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { trackEvent } from '@/integrations/telemetry';
+import { useUiSection } from '@/i18n';
 
 type HeroCTAsProps = {
   locale: string;
@@ -15,6 +16,7 @@ type HeroCTAsProps = {
 
 export default function HeroCTAs({ locale, primaryCTA, secondaryCTA, ctaHref, secondaryHref }: HeroCTAsProps) {
   const { isAuthenticated } = useAuthStore();
+  const { ui } = useUiSection('ui_extra' as any);
   const registerHref = `/${locale}/register`;
   
   return (
@@ -43,7 +45,7 @@ export default function HeroCTAs({ locale, primaryCTA, secondaryCTA, ctaHref, se
             onClick={() => trackEvent('signup_start').catch(() => {})}
           >
             <UserPlus size={16} className="transition-transform group-hover:scale-110" />
-            {locale === 'tr' ? 'Hesap Aç' : 'Sign Up'}
+            {ui('ui_extra_b3_hero_cta_signup', 'Sign Up')}
           </Link>
           <Link
             href={ctaHref}

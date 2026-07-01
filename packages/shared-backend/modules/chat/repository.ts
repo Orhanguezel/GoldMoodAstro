@@ -22,6 +22,31 @@ export function chatRepo(db: MySql2Database<Record<string, never>>) {
       return rows[0] ?? null;
     },
 
+    /**
+     * 1:1 sohbet context'leri için (consultant_lead, support) thread'i
+     * (context_type, context_id, created_by_user_id) üçlüsüne göre arar.
+     * Bu sayede farklı müşteriler aynı danışmana mesaj attıklarında her
+     * birine ayrı thread düşer; mesajlar karışmaz.
+     */
+    async getThreadByContextAndCreator(ctx: {
+      context_type: string;
+      context_id: string;
+      created_by_user_id: string;
+    }) {
+      const rows = await db
+        .select()
+        .from(chat_threads)
+        .where(
+          and(
+            eq(chat_threads.context_type, ctx.context_type),
+            eq(chat_threads.context_id, ctx.context_id),
+            eq(chat_threads.created_by_user_id, ctx.created_by_user_id),
+          ),
+        )
+        .limit(1);
+      return rows[0] ?? null;
+    },
+
     async getThreadById(id: string) {
       const rows = await db
         .select()

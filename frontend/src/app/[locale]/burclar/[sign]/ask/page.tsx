@@ -8,9 +8,9 @@ type Props = {
 };
 
 const labels: Record<string, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık'
+  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces'
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -21,8 +21,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'burclar-ask',
     pathname: `/burclar/${sign}/ask`,
     fallback: {
-      title: `${label} Burcu Aşk Uyumu ve İlişkileri`,
-      description: `${label} burcunun aşk hayatı, romantik uyumu ve ilişkilerdeki karakteri.`,
+      title: `${label} Love Compatibility and Relationships`,
+      description: `${label} love life, romantic compatibility and relationship character.`,
     },
   });
 }

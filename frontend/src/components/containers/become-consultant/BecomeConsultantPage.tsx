@@ -33,12 +33,12 @@ import Link from 'next/link';
 
 
 function getApiErrorMessage(error: unknown) {
-  if (typeof error !== 'object' || error === null) return 'Başvuru sırasında bir hata oluştu.';
+  if (typeof error !== 'object' || error === null) return 'An error occurred during the application.';
   const data = 'data' in error ? (error as { data?: unknown }).data : undefined;
-  if (typeof data !== 'object' || data === null) return 'Başvuru sırasında bir hata oluştu.';
+  if (typeof data !== 'object' || data === null) return 'An error occurred during the application.';
   const directMessage = 'message' in data ? (data as { message?: unknown }).message : undefined;
   if (typeof directMessage === 'string' && directMessage.trim()) return directMessage;
-  return 'Başvuru sırasında bir hata oluştu.';
+  return 'An error occurred during the application.';
 }
 
 import { useUiSection, useLocaleShort } from '@/i18n';
@@ -101,15 +101,15 @@ export default function BecomeConsultantPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.expertise.length === 0) {
-      toast.error(ui('ui_become_consultant_error_expertise', 'Lütfen en az bir uzmanlık alanı seçin'));
+      toast.error(ui('ui_become_consultant_error_expertise', 'Please select at least one area of expertise'));
       return;
     }
     if (formData.languages.length === 0) {
-      toast.error(ui('ui_become_consultant_error_language', 'Lütfen en az bir dil seçin'));
+      toast.error(ui('ui_become_consultant_error_language', 'Please select at least one language'));
       return;
     }
     if (!agreementAccepted) {
-      toast.error(ui('ui_become_consultant_error_terms', 'Lütfen danışmanlık sözleşmesini kabul edin'));
+      toast.error(ui('ui_become_consultant_error_terms', 'Please accept the consultant agreement'));
       return;
     }
     try {
@@ -126,10 +126,10 @@ export default function BecomeConsultantPage() {
         ...(formData.sample_chart_url.trim() ? { sample_chart_url: formData.sample_chart_url.trim() } : {}),
       };
       await apply(payload).unwrap();
-      toast.success(ui('ui_become_consultant_success_toast', 'Başvurunuz başarıyla alındı!'));
+      toast.success(ui('ui_become_consultant_success_toast', 'Your application has been received successfully!'));
       setStep(3); // Success step
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err) || ui('ui_become_consultant_error_generic', 'Başvuru sırasında bir hata oluştu.'));
+      toast.error(getApiErrorMessage(err) || ui('ui_become_consultant_error_generic', 'An error occurred during the application.'));
     }
   };
 
@@ -139,8 +139,7 @@ export default function BecomeConsultantPage() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-(--gm-gold)/5 blur-[120px] rounded-full -mr-64 -mt-32 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-(--gm-primary)/5 blur-[100px] rounded-full -ml-48 -mb-24 pointer-events-none" />
 
-      {/* Hero'daki "Hemen Başvur" (#basvuru-formu) buraya kayar.
-          scroll-mt: sabit header altında kalmasın. */}
+      {/* Anchor target for the hero CTA, offset below the fixed header. */}
       <div id="basvuru-formu" className="relative z-10 scroll-mt-28">
         <AnimatePresence mode="wait">
           {step === 1 && (
@@ -159,31 +158,31 @@ export default function BecomeConsultantPage() {
                   className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-(--gm-gold)/20 bg-(--gm-gold)/5 text-(--gm-gold) text-[11px] font-bold uppercase tracking-[0.3em] mb-10"
                 >
                   <Sparkles size={12} />
-                  {ui('ui_become_consultant_sparkle', 'BİLGELİĞİNİZİ PAYLAŞIN')}
+                  {ui('ui_become_consultant_sparkle', 'SHARE YOUR WISDOM')}
                 </motion.span>
                 <h1 className="font-serif text-5xl md:text-8xl text-(--gm-text) mb-10 leading-[1.1] tracking-tight">
-                  {ui('ui_become_consultant_h1_part1', 'GoldMoodAstro Ailesine')} <br /> <span className="text-(--gm-gold) italic">{ui('ui_become_consultant_h1_part2', 'Görkemli Bir Giriş Yapın')}</span>
+                  {ui('ui_become_consultant_h1_part1', 'Join the GoldMoodAstro Family')} <br /> <span className="text-(--gm-gold) italic">{ui('ui_become_consultant_h1_part2', 'Make a Radiant Entrance')}</span>
                 </h1>
                 <p className="max-w-3xl mx-auto text-(--gm-text-dim) font-serif italic text-2xl leading-relaxed opacity-90">
-                  {ui('ui_become_consultant_lead', 'Binlerce ruhsal yolculuğa rehberlik edin, uzmanlığınızı markalaştırın ve kendi kutsal çalışma alanınızı yönetin.')}
+                  {ui('ui_become_consultant_lead', 'Guide thousands of spiritual journeys, build your expert brand, and manage your own sacred workspace.')}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
                 <BenefitCard 
                   icon={Users} 
-                  title={ui('ui_become_consultant_benefit1_title', 'Seçkin Kitle')}
-                  desc={ui('ui_become_consultant_benefit1_desc', 'Bilinçli ve derinlik arayan binlerce aktif kullanıcıya anında erişim sağlayın.')}
+                  title={ui('ui_become_consultant_benefit1_title', 'Curated Audience')}
+                  desc={ui('ui_become_consultant_benefit1_desc', 'Reach thousands of active users seeking conscious and deeper guidance.')}
                 />
                 <BenefitCard 
                   icon={Calendar} 
-                  title={ui('ui_become_consultant_benefit2_title', 'Özgür Takvim')}
-                  desc={ui('ui_become_consultant_benefit2_desc', 'Kendi zamanınızı siz belirleyin; dilediğiniz yerden, dilediğiniz vakitte danışmanlık verin.')}
+                  title={ui('ui_become_consultant_benefit2_title', 'Flexible Calendar')}
+                  desc={ui('ui_become_consultant_benefit2_desc', 'Set your own time and consult from wherever and whenever you choose.')}
                 />
                 <BenefitCard 
                   icon={Award} 
-                  title={ui('ui_become_consultant_benefit3_title', 'Lider Konum')}
-                  desc={ui('ui_become_consultant_benefit3_desc', 'Modern astrolojinin öncü platformunda uzmanlığınızı elit bir marka altında tescilleyin.')}
+                  title={ui('ui_become_consultant_benefit3_title', 'Leading Position')}
+                  desc={ui('ui_become_consultant_benefit3_desc', 'Position your expertise under an elite brand on a leading modern astrology platform.')}
                 />
               </div>
 
@@ -193,14 +192,14 @@ export default function BecomeConsultantPage() {
                   className="group relative px-20 py-6 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold uppercase tracking-[0.25em] text-xs transition-all duration-500 hover:scale-105 hover:shadow-(--gm-shadow-gold) overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center gap-3">
-                    {ui('ui_become_consultant_start_btn', 'Hemen Başvuruyu Başlat')}
+                    {ui('ui_become_consultant_start_btn', 'Start Application Now')}
                     <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </span>
                   <div className="absolute inset-0 bg-[var(--gm-text)]/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                 </button>
                 <div className="flex items-center gap-2 text-[10px] text-(--gm-muted) uppercase tracking-widest font-bold">
                   <ShieldCheck size={14} className="text-(--gm-success)" />
-                  {ui('ui_become_consultant_eval_note', 'Başvurular 48 saat içinde değerlendirilir')}
+                  {ui('ui_become_consultant_eval_note', 'Applications are reviewed within 48 hours')}
                 </div>
               </div>
             </motion.div>
@@ -221,10 +220,10 @@ export default function BecomeConsultantPage() {
                   className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-(--gm-muted) hover:text-(--gm-text) transition-colors"
                 >
                   <ArrowLeft size={16} />
-                  {ui('ui_become_consultant_back', 'Geri Dön')}
+                  {ui('ui_become_consultant_back', 'Go Back')}
                 </button>
                 <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-(--gm-gold)">
-                  {ui('ui_become_consultant_step2_title', 'Başvuru Formu — Adım 2/2')}
+                  {ui('ui_become_consultant_step2_title', 'Application Form - Step 2/2')}
                 </div>
               </div>
 
@@ -234,9 +233,9 @@ export default function BecomeConsultantPage() {
 
                 <form onSubmit={handleSubmit} className="relative z-10 space-y-16">
                   <div className="space-y-10">
-                    <h2 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-tight`}>{ui('ui_become_consultant_form_section1', 'Kişisel Bilgiler & Deneyim')}</h2>
+                    <h2 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-tight`}>{ui('ui_become_consultant_form_section1', 'Personal Information & Experience')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                      <InputGroup label={ui('ui_become_consultant_form_name', 'Ad Soyad')} required>
+                      <InputGroup label={ui('ui_become_consultant_form_name', 'Full Name')} required>
                         <input 
                           type="text" 
                           required
@@ -246,7 +245,7 @@ export default function BecomeConsultantPage() {
                           placeholder="John Doe"
                         />
                       </InputGroup>
-                      <InputGroup label={ui('ui_become_consultant_form_email', 'E-posta Adresi')} required>
+                      <InputGroup label={ui('ui_become_consultant_form_email', 'Email Address')} required>
                         <input 
                           type="email" 
                           required
@@ -256,7 +255,7 @@ export default function BecomeConsultantPage() {
                           placeholder="john@example.com"
                         />
                       </InputGroup>
-                      <InputGroup label={ui('ui_become_consultant_form_phone', 'Telefon Numarası')}>
+                      <InputGroup label={ui('ui_become_consultant_form_phone', 'Phone Number')}>
                         <input 
                           type="tel" 
                           value={formData.phone}
@@ -265,7 +264,7 @@ export default function BecomeConsultantPage() {
                           placeholder="+90 5XX XXX XX XX"
                         />
                       </InputGroup>
-                      <InputGroup label={ui('ui_become_consultant_form_experience', 'Deneyim (Yıl)')}>
+                      <InputGroup label={ui('ui_become_consultant_form_experience', 'Experience (Years)')}>
                         <input 
                           type="number" 
                           min={0}
@@ -278,10 +277,10 @@ export default function BecomeConsultantPage() {
                   </div>
 
                   <div className="space-y-10">
-                    <h2 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-tight`}>{ui('ui_become_consultant_form_section2', 'Uzmanlık & Diller')}</h2>
-                    <InputGroup label={ui('ui_become_consultant_form_expertise', 'Uzmanlık Alanları')} required>
+                    <h2 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-tight`}>{ui('ui_become_consultant_form_section2', 'Expertise & Languages')}</h2>
+                    <InputGroup label={ui('ui_become_consultant_form_expertise', 'Expertise Areas')} required>
                       {isLoadingCategories ? (
-                        <div className="text-[12px] text-(--gm-text-dim) py-2">{uiErrors('ui_loading', 'Yükleniyor...')}</div>
+                        <div className="text-[12px] text-(--gm-text-dim) py-2">{uiErrors('ui_loading', 'Loading...')}</div>
                       ) : (
                         <div className="flex flex-wrap gap-4">
                           {expertiseOptions.map(opt => (
@@ -296,9 +295,9 @@ export default function BecomeConsultantPage() {
                       )}
                     </InputGroup>
 
-                    <InputGroup label={ui('ui_become_consultant_form_languages', 'Danışmanlık Dilleri')} required>
+                    <InputGroup label={ui('ui_become_consultant_form_languages', 'Consulting Languages')} required>
                       {isLoadingLanguages ? (
-                        <div className="text-[12px] text-(--gm-text-dim) py-2">{uiErrors('ui_loading', 'Yükleniyor...')}</div>
+                        <div className="text-[12px] text-(--gm-text-dim) py-2">{uiErrors('ui_loading', 'Loading...')}</div>
                       ) : (
                         <div className="flex flex-wrap gap-4">
                           {languageOptions.map(opt => (
@@ -315,11 +314,11 @@ export default function BecomeConsultantPage() {
                   </div>
 
                   <div className="space-y-10">
-                    <h2 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-tight`}>{ui('ui_become_consultant_form_section3', 'Anlatım & Belgeler')}</h2>
+                    <h2 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-tight`}>{ui('ui_become_consultant_form_section3', 'Story & Documents')}</h2>
                     <InputGroup 
-                      label={ui('ui_become_consultant_form_bio', 'Kısa Biyografi')}
+                      label={ui('ui_become_consultant_form_bio', 'Short Biography')}
                       required
-                      hint={ui('ui_become_consultant_form_bio_hint', 'Kendinizi, yaklaşımınızı ve danışana ne sunduğunuzu anlatın. İletişim bilgisi/dış link yazmayın. En az 150 karakter önerilir.')}
+                      hint={ui('ui_become_consultant_form_bio_hint', 'Tell us about yourself, your approach, and what you offer clients. Do not include contact details or external links. At least 150 characters is recommended.')}
                     >
                       <textarea 
                         required
@@ -327,34 +326,34 @@ export default function BecomeConsultantPage() {
                         value={formData.bio}
                         onChange={e => setFormData({...formData, bio: e.target.value})}
                         className="gm-input-premium py-6 min-h-[200px] resize-none font-serif italic" 
-                        placeholder={ui('ui_become_consultant_form_bio_placeholder', 'Uzmanlığınız, yaklaşımınız ve ruhsal rehberlik tarzınızdan bahsedin...')}
+                        placeholder={ui('ui_become_consultant_form_bio_placeholder', 'Tell us about your expertise, approach, and spiritual guidance style...')}
                       />
                       <p className="text-[10px] text-(--gm-muted) font-bold uppercase tracking-[0.2em] mt-4 opacity-70">
-                        {ui('ui_become_consultant_form_avatar_note', '* Profil fotoğrafınızı başvurunuz onaylandıktan sonra panel üzerinden ekleyeceksiniz.')}
+                        {ui('ui_become_consultant_form_avatar_note', '* You will add your profile photo from the panel after your application is approved.')}
                       </p>
                     </InputGroup>
 
-                    <InputGroup label={ui('ui_become_consultant_form_certs', 'Sertifikalar & Eğitimler')}>
+                    <InputGroup label={ui('ui_become_consultant_form_certs', 'Certificates & Training')}>
                       <textarea 
                         rows={3}
                         value={formData.certifications}
                         onChange={e => setFormData({...formData, certifications: e.target.value})}
                         className="gm-input-premium py-6 min-h-[120px] resize-none font-serif italic" 
-                        placeholder={ui('ui_become_consultant_form_certs_placeholder', 'Aldığınız eğitimler, sertifikalar ve referans kurumlar...')}
+                        placeholder={ui('ui_become_consultant_form_certs_placeholder', 'Training, certificates, and reference institutions...')}
                       />
                     </InputGroup>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <FileUploadBox 
-                        label={ui('ui_become_consultant_form_cv', 'CV / Özgeçmiş')}
+                        label={ui('ui_become_consultant_form_cv', 'CV / Resume')}
                         desc={ui('ui_become_consultant_form_cv_desc', 'PDF, JPG veya PNG (Max 5MB)')}
                         onUpload={(url) => setFormData({...formData, cv_url: url})}
                         ui={ui}
                         uiErrors={uiErrors}
                       />
                       <FileUploadBox 
-                        label={ui('ui_become_consultant_form_sample', 'Örnek Yorum')}
-                        desc={ui('ui_become_consultant_form_sample_desc', 'Danışmanlık tarzınızı yansıtan örnek bir yorum')}
+                        label={ui('ui_become_consultant_form_sample', 'Sample Reading')}
+                        desc={ui('ui_become_consultant_form_sample_desc', 'A sample reading that reflects your consulting style')}
                         onUpload={(url) => setFormData({...formData, sample_chart_url: url})} 
                         ui={ui}
                         uiErrors={uiErrors}
@@ -366,9 +365,9 @@ export default function BecomeConsultantPage() {
                     <div className="flex flex-col gap-4 max-w-md w-full">
                       {commissionRate !== null ? (
                         <div className="p-4 bg-(--gm-gold)/5 border border-(--gm-gold)/20 rounded-xl text-[11px] text-(--gm-text-dim) leading-relaxed">
-                          <strong className="text-(--gm-gold)">{ui('ui_become_consultant_form_commission', 'Platform Komisyonu: %{rate}').replace('{rate}', String(commissionRate))}</strong>
+                          <strong className="text-(--gm-gold)">{ui('ui_become_consultant_form_commission', 'Platform Commission: %{rate}').replace('{rate}', String(commissionRate))}</strong>
                           <br />
-                          {ui('ui_become_consultant_form_commission_desc', 'Hizmet ücretinizin %{rate}i platform tarafından kesilir, kalan tutar cüzdanınıza eklenir.').replace('{rate}', String(commissionRate))}
+                          {ui('ui_become_consultant_form_commission_desc', '%{rate} of your service fee is deducted by the platform; the remaining amount is added to your wallet.').replace('{rate}', String(commissionRate))}
                         </div>
                       ) : (
                         <div className="p-4 flex items-center justify-center">
@@ -387,15 +386,15 @@ export default function BecomeConsultantPage() {
                           <CheckCircle2 size={14} className="absolute text-(--gm-bg-deep) opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
                         </div>
                         <p className="text-[11px] text-(--gm-text-dim) leading-relaxed font-serif italic flex-1 group-hover:text-(--gm-text) transition-colors">
-                          {ui('ui_become_consultant_form_terms_pre', 'Platform komisyon oranını ve')}{' '}
+                          {ui('ui_become_consultant_form_terms_pre', 'I have read and accept the platform commission rate and')}{' '}
                           <Link
                             href={localizePath(locale, locale === 'tr' ? '/legal/danisman-sozlesmesi' : '/legal/consultant-agreement')}
                             target="_blank"
                             className="text-(--gm-gold) font-bold hover:underline transition-all"
                           >
-                            {ui('ui_become_consultant_form_terms_link', 'Danışman Kullanım Sözleşmesi')}
+                            {ui('ui_become_consultant_form_terms_link', 'Consultant Terms of Use')}
                           </Link>{' '}
-                          {ui('ui_become_consultant_form_terms_post', "'ni okudum, kabul ediyorum.")}
+                          {ui('ui_become_consultant_form_terms_post', '.')}
                         </p>
                       </label>
                     </div>
@@ -408,7 +407,7 @@ export default function BecomeConsultantPage() {
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
                         <>
-                          {ui('ui_become_consultant_submit', 'Başvuruyu Gönder')}
+                          {ui('ui_become_consultant_submit', 'Submit Application')}
                           <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                         </>
                       )}
@@ -434,9 +433,9 @@ export default function BecomeConsultantPage() {
                 </div>
               </div>
               
-              <h2 className={`${cinzel.className} text-4xl md:text-6xl text-(--gm-text) mb-8 tracking-tight`}>{ui('ui_become_consultant_success_title', 'Başvurunuz Gökyüzüne Ulaştı!')}</h2>
+              <h2 className={`${cinzel.className} text-4xl md:text-6xl text-(--gm-text) mb-8 tracking-tight`}>{ui('ui_become_consultant_success_title', 'Your Application Has Reached the Sky!')}</h2>
               <p className="text-(--gm-text-dim) font-serif italic text-2xl mb-16 leading-relaxed opacity-90">
-                {ui('ui_become_consultant_success_desc', 'Değerli vaktinizi ayırdığınız için teşekkür ederiz. Başvurunuz uzman küratör ekibimiz tarafından özenle incelenecek ve en kısa sürede sizinle iletişime geçeceğiz.')}
+                {ui('ui_become_consultant_success_desc', 'Thank you for your valuable time. Your application will be carefully reviewed by our expert curation team, and we will contact you as soon as possible.')}
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -444,7 +443,7 @@ export default function BecomeConsultantPage() {
                   onClick={() => window.location.href = '/'}
                   className="px-16 py-5 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold uppercase tracking-[0.25em] text-[11px] hover:scale-105 transition-all shadow-(--gm-shadow-gold)"
                 >
-                  {ui('ui_become_consultant_success_back', 'Anasayfaya Dön')}
+                  {ui('ui_become_consultant_success_back', 'Back to Home')}
                 </button>
               </div>
             </motion.div>
@@ -538,7 +537,7 @@ function FileUploadBox({ label, desc, onUpload, ui, uiErrors }: { label: string,
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error(ui('ui_become_consultant_error_size', 'Dosya boyutu 5MB altında olmalıdır.'));
+      toast.error(ui('ui_become_consultant_error_size', 'File size must be under 5MB.'));
       return;
     }
 
@@ -547,9 +546,9 @@ function FileUploadBox({ label, desc, onUpload, ui, uiErrors }: { label: string,
       const url = res.items?.[0]?.url || '';
       onUpload(url);
       setFileName(file.name);
-      toast.success(`${label} ${ui('ui_become_consultant_success_upload', 'yüklendi.')}`);
+      toast.success(`${label} ${ui('ui_become_consultant_success_upload', 'uploaded.')}`);
     } catch {
-      toast.error(ui('ui_become_consultant_error_upload', 'Yükleme başarısız oldu.'));
+      toast.error(ui('ui_become_consultant_error_upload', 'Upload failed.'));
     }
   };
 
@@ -569,7 +568,7 @@ function FileUploadBox({ label, desc, onUpload, ui, uiErrors }: { label: string,
       </div>
       <div>
         <p className="text-xs font-bold text-[var(--gm-text)] uppercase tracking-widest">{fileName || label}</p>
-        <p className="text-[10px] text-[var(--gm-muted)] mt-1">{fileName ? ui('ui_become_consultant_upload_ok', 'Başarıyla yüklendi') : desc}</p>
+        <p className="text-[10px] text-[var(--gm-muted)] mt-1">{fileName ? ui('ui_become_consultant_upload_ok', 'Uploaded successfully') : desc}</p>
       </div>
       <input 
         ref={inputRef}

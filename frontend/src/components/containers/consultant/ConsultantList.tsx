@@ -11,6 +11,7 @@ import ConsultantCard from './ConsultantCard';
 import ConsultantFilters, { type FilterState } from './ConsultantFilters';
 import Banner from '@/components/common/public/Banner';
 import { DiscountPromoBanner, BecomeConsultantBanner } from '@/components/common/public/PromoBanners';
+import { useUiSection } from '@/i18n';
 
 
 type Props = {
@@ -20,6 +21,7 @@ type Props = {
 };
 
 export default function ConsultantList({ locale, initialExpertise = '', initialData = [] }: Props) {
+  const { ui } = useUiSection('ui_consultantbrowse' as any, locale);
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     expertise: initialExpertise,
@@ -36,7 +38,7 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
   };
 
   const { data: consultants = [], isFetching, isError } = useListConsultantsQuery(
-    Object.keys(queryParams).length ? queryParams : undefined,
+    { ...queryParams, locale },
   );
   const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
   const expertiseLabels = useMemo(
@@ -72,7 +74,7 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
       <div className="bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-[32px] p-6 md:p-8">
         <div className="flex items-center gap-3 mb-8">
           <Search className="w-5 h-5 text-[var(--gm-gold)]" />
-          <h2 className="font-serif text-xl text-[var(--gm-text)]">Arama & Filtreleme</h2>
+          <h2 className="font-serif text-xl text-[var(--gm-text)]">{ui('ui_consultantbrowse_search_filter_title', 'Search & Filters')}</h2>
         </div>
         <ConsultantFilters filters={filters} onChange={handleFilterChange} />
       </div>
@@ -86,9 +88,9 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
             <div className="w-16 h-16 rounded-full bg-[var(--gm-error)]/10 flex items-center justify-center">
               <span className="text-[var(--gm-error)] text-2xl">!</span>
             </div>
-            <h3 className="font-serif text-2xl text-[var(--gm-text)]">Hata Oluştu</h3>
+            <h3 className="font-serif text-2xl text-[var(--gm-text)]">{ui('ui_consultantbrowse_error_title', 'An Error Occurred')}</h3>
             <p className="text-[var(--gm-text-dim)] max-w-xs">
-              {locale === 'tr' ? 'Danışmanlar şu an yüklenemiyor.' : 'Could not load consultants.'}
+              {ui('ui_consultantbrowse_error_load', 'Consultants cannot be loaded right now.')}
             </p>
           </div>
         ) : showSkeleton ? (
@@ -111,17 +113,15 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
             <div className="w-20 h-20 rounded-full bg-[var(--gm-surface)] flex items-center justify-center border border-[var(--gm-border-soft)]">
               <Users size={32} className="text-[var(--gm-gold)] opacity-30" />
             </div>
-            <h3 className="font-serif text-2xl text-[var(--gm-text)]">Sonuç Bulunamadı</h3>
+            <h3 className="font-serif text-2xl text-[var(--gm-text)]">{ui('ui_consultantbrowse_empty_title', 'No Results Found')}</h3>
             <p className="text-[var(--gm-text-dim)] max-w-sm">
-              {locale === 'tr' 
-                ? 'Seçtiğiniz kriterlere uygun danışman bulunmuyor. Farklı filtreler deneyebilirsiniz.' 
-                : 'No consultants match your criteria.'}
+              {ui('ui_consultantbrowse_empty_desc', 'No consultants match your selected criteria. You can try different filters.')}
             </p>
-            <button 
+            <button
               onClick={() => handleFilterChange({ expertise: '', minPrice: 0, minRating: 0, maxPrice: 0 })}
               className="text-[var(--gm-gold)] font-bold text-xs uppercase tracking-widest border-b border-[var(--gm-gold)] pb-1"
             >
-              Filtreleri Temizle
+              {ui('ui_consultantbrowse_clear_filters', 'Clear Filters')}
             </button>
           </div>
         ) : (

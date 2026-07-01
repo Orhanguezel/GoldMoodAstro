@@ -14,7 +14,36 @@ import type {
   RegisterConsultantBody,
 } from './validation';
 
-function withUserSelect() {
+const SUPPORTED_LOCALES = new Set(['tr', 'en', 'de']);
+
+function normalizeLocale(locale?: string | null) {
+  const short = String(locale ?? 'tr').trim().toLowerCase().split(/[-_]/)[0];
+  return SUPPORTED_LOCALES.has(short) ? short : 'tr';
+}
+
+function localizedBioSelect(locale?: string | null) {
+  const loc = normalizeLocale(locale);
+  return sql<string | null>`
+    COALESCE(
+      NULLIF((SELECT ci.bio FROM consultant_i18n ci WHERE ci.consultant_id = ${consultants.id} AND ci.locale = ${loc} LIMIT 1), ''),
+      NULLIF((SELECT ci_tr.bio FROM consultant_i18n ci_tr WHERE ci_tr.consultant_id = ${consultants.id} AND ci_tr.locale = 'tr' LIMIT 1), ''),
+      ${consultants.bio}
+    )
+  `;
+}
+
+function localizedHeadlineSelect(locale?: string | null) {
+  const loc = normalizeLocale(locale);
+  return sql<string | null>`
+    COALESCE(
+      NULLIF((SELECT ci.headline FROM consultant_i18n ci WHERE ci.consultant_id = ${consultants.id} AND ci.locale = ${loc} LIMIT 1), ''),
+      NULLIF((SELECT ci_tr.headline FROM consultant_i18n ci_tr WHERE ci_tr.consultant_id = ${consultants.id} AND ci_tr.locale = 'tr' LIMIT 1), ''),
+      NULL
+    )
+  `;
+}
+
+function withUserSelect(locale?: string | null) {
   return {
     id: consultants.id,
     user_id: consultants.user_id,
@@ -23,7 +52,8 @@ function withUserSelect() {
     email: users.email,
     phone: users.phone,
     avatar_url: users.avatar_url,
-    bio: consultants.bio,
+    headline: localizedHeadlineSelect(locale),
+    bio: localizedBioSelect(locale),
     expertise: consultants.expertise,
     languages: consultants.languages,
     session_price: consultants.session_price,
@@ -41,14 +71,15 @@ function withUserSelect() {
   };
 }
 
-function lightSelect() {
+function lightSelect(locale?: string | null) {
   return {
     id: consultants.id,
     user_id: consultants.user_id,
     slug: consultants.slug,
     full_name: users.full_name,
     avatar_url: users.avatar_url,
-    bio: consultants.bio,
+    headline: localizedHeadlineSelect(locale),
+    bio: localizedBioSelect(locale),
     expertise: consultants.expertise,
     languages: consultants.languages,
     session_price: consultants.session_price,
@@ -70,7 +101,7 @@ function expertisePredicate(expertise?: string): SQL | undefined {
   return sql`JSON_CONTAINS(${consultants.expertise}, JSON_QUOTE(${value}))`;
 }
 
-export async function listApprovedConsultants(filters: ListConsultantsQuery) {
+export async function listApprovedConsultants(filters: ListConsultantsQuery, locale?: string | null) {
   const sort = filters.sort ?? 'featured';
   const onlineOnly = filters.onlineOnly === true || sort === 'online';
 
@@ -98,7 +129,7 @@ export async function listApprovedConsultants(filters: ListConsultantsQuery) {
   })();
 
   const q = db
-    .select(filters.light ? lightSelect() : withUserSelect())
+    .select(filters.light ? lightSelect(locale) : withUserSelect(locale))
     .from(consultants)
     .innerJoin(users, eq(users.id, consultants.user_id))
     .where(and(...where))
@@ -112,7 +143,7 @@ export async function listConsultantsAdmin(filters: AdminListConsultantsQuery) {
     ? eq(consultants.approval_status, filters.approval_status)
     : undefined;
 
-  const query = db.select(withUserSelect()).from(consultants).innerJoin(users, eq(users.id, consultants.user_id));
+  const query = db.select(withUserSelect('tr')).from(consultants).innerJoin(users, eq(users.id, consultants.user_id));
 
   return where
     ? query.where(where).orderBy(desc(consultants.created_at))
@@ -122,14 +153,14 @@ export async function listConsultantsAdmin(filters: AdminListConsultantsQuery) {
 // UUID v4 formatı: 8-4-4-4-12 hex blokları. Slug'lar bu kalıba uymaz.
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-export async function getConsultantById(idOrSlug: string) {
+export async function getConsultantById(idOrSlug: string, locale?: string | null) {
   const where = UUID_RE.test(idOrSlug)
     ? or(eq(consultants.id, idOrSlug), eq(consultants.slug, idOrSlug))
     : eq(consultants.slug, idOrSlug);
 
   const [row] = await db
     .select({
-      ...withUserSelect(),
+      ...withUserSelect(locale),
       resource_id: resources.id,
       resource_title: resources.title,
     })
@@ -142,14 +173,14 @@ export async function getConsultantById(idOrSlug: string) {
   return row ?? null;
 }
 
-export async function getApprovedConsultantById(id: string) {
-  const row = await getConsultantById(id);
+export async function getApprovedConsultantById(id: string, locale?: string | null) {
+  const row = await getConsultantById(id, locale);
   if (!row || row.approval_status !== 'approved') return null;
   return row;
 }
 
-export async function getConsultantSlots(id: string, date: string) {
-  const consultant = await getApprovedConsultantById(id);
+export async function getConsultantSlots(id: string, date: string, locale?: string | null) {
+  const consultant = await getApprovedConsultantById(id, locale);
   if (!consultant?.resource_id) return { consultant, slots: [] };
 
   const slots = await db

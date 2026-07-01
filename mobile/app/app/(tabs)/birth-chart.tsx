@@ -10,6 +10,7 @@ import {
   Dimensions,
   RefreshControl
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 
 function buildScreenStyles(t: AppTheme) {
@@ -152,19 +153,19 @@ const PLANET_ORDER: PlanetKey[] = [
 
 const SIGN_SYMBOLS = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
 
-const HOUSE_DESCS: Record<number, string> = {
-  1: 'Kişilik, dış görünüş ve hayata yaklaşım.',
-  2: 'Maddi değerler, özgüven ve kaynaklar.',
-  3: 'İletişim, yakın çevre ve zihinsel yapı.',
-  4: 'Yuva, aile, kökler ve içsel dünya.',
-  5: 'Aşk, yaratıcılık, çocuklar ve hobiler.',
-  6: 'Günlük rutin, sağlık ve hizmet alanı.',
-  7: 'İkili ilişkiler, ortaklıklar ve evlilik.',
-  8: 'Dönüşüm, derinlik ve ortak paylaşımlar.',
-  9: 'Yüksek öğrenim, inançlar ve keşifler.',
-  10: 'Kariyer, toplumsal statü ve hedefler.',
-  11: 'Sosyal çevre, idealler ve arkadaşlıklar.',
-  12: 'Bilinçaltı, mahremiyet ve spiritüellik.',
+const HOUSE_DESC_KEYS: Record<number, string> = {
+  1: 'birthChart.house1',
+  2: 'birthChart.house2',
+  3: 'birthChart.house3',
+  4: 'birthChart.house4',
+  5: 'birthChart.house5',
+  6: 'birthChart.house6',
+  7: 'birthChart.house7',
+  8: 'birthChart.house8',
+  9: 'birthChart.house9',
+  10: 'birthChart.house10',
+  11: 'birthChart.house11',
+  12: 'birthChart.house12',
 };
 
 function point(longitude: number, radiusValue: number, center = 150) {
@@ -257,6 +258,7 @@ function ChartWheel({ chart }: { chart: NatalChart }) {
 }
 
 export default function BirthChartScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
@@ -315,8 +317,8 @@ export default function BirthChartScreen() {
           <View style={styles.header}>
             <MenuHeaderButton />
             <View style={styles.headerTitles}>
-              <Text style={styles.headerKicker}>GÖKYÜZÜ ANALİZİ</Text>
-              <Text style={styles.headerTitle}>Natal Harita</Text>
+              <Text style={styles.headerKicker}>{t('birthChart.kicker')}</Text>
+              <Text style={styles.headerTitle}>{t('birthChart.title')}</Text>
             </View>
             <Pressable style={styles.addBtn} onPress={() => router.push('/onboarding/birthdata' as any)}>
               <Plus size={20} color={colors.gold} />
@@ -350,7 +352,7 @@ export default function BirthChartScreen() {
                   <>
               <LinearGradient colors={[colors.inkDeep, colors.surface]} style={styles.heroCard}>
                 <View style={styles.heroInfo}>
-                  <Text style={styles.headerKicker}>HARİTA SAHİBİ</Text>
+                  <Text style={styles.headerKicker}>{t('birthChart.chartOwner')}</Text>
                   <Text style={styles.heroName}>{selected.name}</Text>
                   <View style={styles.heroRow}>
                     <MapPin size={10} color={colors.goldDim} />
@@ -373,7 +375,7 @@ export default function BirthChartScreen() {
               ) : (
                 <View style={[styles.wheelWrap, { paddingHorizontal: 20 }]}>
                   <Text style={{ fontFamily: theme.font.sans, fontSize: 14, color: colors.textMuted, textAlign: 'center' }}>
-                    Harita çarkı için veri eksik. Haritayı yeniden oluşturmayı deneyin.
+                    {t('birthChart.wheelMissing')}
                   </Text>
                 </View>
               )}
@@ -381,7 +383,7 @@ export default function BirthChartScreen() {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Sparkles size={16} color={colors.gold} />
-                  <Text style={styles.sectionTitle}>GEZEGEN KONUMLARI</Text>
+                  <Text style={styles.sectionTitle}>{t('birthChart.planetPositions')}</Text>
                 </View>
                 <View style={styles.planetGrid}>
                   {PLANET_ORDER.map(key => {
@@ -396,7 +398,7 @@ export default function BirthChartScreen() {
                         <Text style={styles.planetSign}>{p.sign_label}</Text>
                         <View style={styles.planetBottom}>
                           <Text style={styles.planetDegree}>{formatDegree(p)}</Text>
-                          <Text style={styles.planetHouse}>{p.house}. Ev</Text>
+                          <Text style={styles.planetHouse}>{t('birthChart.houseLabel', { n: p.house })}</Text>
                         </View>
                       </View>
                     );
@@ -407,7 +409,7 @@ export default function BirthChartScreen() {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Info size={16} color={colors.gold} />
-                  <Text style={styles.sectionTitle}>EV ANALİZLERİ</Text>
+                  <Text style={styles.sectionTitle}>{t('birthChart.houseAnalysis')}</Text>
                 </View>
                 {(chartOk ? cd.houses : []).filter(Boolean).map((h) => (
                   <LinearGradient 
@@ -420,9 +422,9 @@ export default function BirthChartScreen() {
                     </View>
                     <View style={styles.houseBody}>
                       <Text style={styles.houseHeader}>
-                        {(h.sign_label ?? '—')} Burcu Kesen
+                        {t('birthChart.cuspLabel', { sign: h.sign_label ?? '—' })}
                       </Text>
-                      <Text style={styles.houseInfo}>{HOUSE_DESCS[h.house] ?? ''}</Text>
+                      <Text style={styles.houseInfo}>{HOUSE_DESC_KEYS[h.house] ? t(HOUSE_DESC_KEYS[h.house]) : ''}</Text>
                     </View>
                   </LinearGradient>
                 ))}
@@ -433,9 +435,9 @@ export default function BirthChartScreen() {
             </View>
           ) : (
             <View style={styles.emptyWrap}>
-              <Text style={styles.emptyTitle}>Henüz haritanız yok.</Text>
+              <Text style={styles.emptyTitle}>{t('birthChart.empty')}</Text>
               <Pressable style={styles.primaryBtn} onPress={() => router.push('/onboarding/birthdata' as any)}>
-                <Text style={styles.primaryBtnText}>Yeni Harita Oluştur</Text>
+                <Text style={styles.primaryBtnText}>{t('birthChart.createNew')}</Text>
               </Pressable>
             </View>
           )}

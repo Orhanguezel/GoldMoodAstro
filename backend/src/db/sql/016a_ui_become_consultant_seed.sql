@@ -51,5 +51,18 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('01000000-0000-4000-8000-0000000004f0', 'ui_become_consultant_error_expertise', '*', '{"label":{"tr":"Lütfen en az bir uzmanlık alanı seçin","en":"Please select at least one area of expertise","de":"Bitte wählen Sie mindestens ein Fachgebiet aus"}}'),
 ('01000000-0000-4000-8000-0000000004f1', 'ui_become_consultant_error_language', '*', '{"label":{"tr":"Lütfen en az bir dil seçin","en":"Please select at least one language","de":"Bitte wählen Sie mindestens eine Sprache aus"}}'),
 ('01000000-0000-4000-8000-0000000004f2', 'ui_become_consultant_error_terms', '*', '{"label":{"tr":"Lütfen danışmanlık sözleşmesini kabul edin","en":"Please accept the consultant agreement","de":"Bitte akzeptieren Sie die Beratervereinbarung"}}'),
-('01000000-0000-4000-8000-0000000004f3', 'ui_become_consultant_success_toast', '*', '{"label":{"tr":"Başvurunuz başarıyla alındı!","en":"Your application was successfully received!","de":"Ihre Bewerbung wurde erfolgreich empfangen!"}}')
+('01000000-0000-4000-8000-0000000004f3', 'ui_become_consultant_success_toast', '*', '{"label":{"tr":"Başvurunuz başarıyla alındı!","en":"Your application was successfully received!","de":"Ihre Bewerbung wurde erfolgreich empfangen!"}}'),
+('01000000-0000-4000-8000-0000000004f4', 'ui_become_consultant_image_alt', '*', '{"label":{"tr":"Danışmanımız olun","en":"Become our consultant","de":"Werden Sie unser Berater"}}'),
+('01000000-0000-4000-8000-0000000004f5', 'ui_become_consultant_hero_alt', '*', '{"label":{"tr":"Danışman ol","en":"Become a Consultant","de":"Berater werden"}}'),
+('01000000-0000-4000-8000-0000000004f6', 'ui_become_consultant_hero_home', '*', '{"label":{"tr":"Ana Sayfa","en":"Home","de":"Startseite"}}'),
+('01000000-0000-4000-8000-0000000004f7', 'ui_become_consultant_hero_current', '*', '{"label":{"tr":"Danışman Ol","en":"Become a Consultant","de":"Berater werden"}}'),
+('01000000-0000-4000-8000-0000000004f8', 'ui_become_consultant_hero_badge', '*', '{"label":{"tr":"KARİYER FIRSATI","en":"CAREER OPPORTUNITY","de":"KARRIERECHANCE"}}'),
+('01000000-0000-4000-8000-0000000004f9', 'ui_become_consultant_hero_h1_prefix', '*', '{"label":{"tr":"Uzmanlığınla","en":"Share Your Wisdom,","de":"Teilen Sie Ihre Weisheit,"}}'),
+('01000000-0000-4000-8000-0000000004fa', 'ui_become_consultant_hero_h1_accent', '*', '{"label":{"tr":"Danışman Ol","en":"Become a Consultant","de":"Berater werden"}}'),
+('01000000-0000-4000-8000-0000000004fb', 'ui_become_consultant_hero_subtitle', '*', '{"label":{"tr":"Binlerce ruhsal yolculuğa rehberlik edin. Kendi takviminizi oluşturun, kazancınızı büyütün.","en":"Guide thousands on their spiritual journey. Set your own schedule and grow your income.","de":"Begleiten Sie Tausende auf ihrer spirituellen Reise. Gestalten Sie Ihren eigenen Kalender und steigern Sie Ihr Einkommen."}}'),
+('01000000-0000-4000-8000-0000000004fc', 'ui_become_consultant_hero_stat_users', '*', '{"label":{"tr":"Aktif Kullanıcı","en":"Active Users","de":"Aktive Nutzer"}}'),
+('01000000-0000-4000-8000-0000000004fd', 'ui_become_consultant_hero_stat_share', '*', '{"label":{"tr":"Gelir Payı","en":"Revenue Share","de":"Umsatzanteil"}}'),
+('01000000-0000-4000-8000-0000000004fe', 'ui_become_consultant_hero_stat_approval', '*', '{"label":{"tr":"Hızlı Onay","en":"Fast Approval","de":"Schnelle Prüfung"}}'),
+('01000000-0000-4000-8000-0000000004ff', 'ui_become_consultant_hero_apply', '*', '{"label":{"tr":"Hemen Başvur","en":"Apply Now","de":"Jetzt bewerben"}}'),
+('01000000-0000-4000-8000-000000000500', 'ui_become_consultant_hero_review_note', '*', '{"label":{"tr":"Başvurular 48 saat içinde değerlendirilir","en":"Applications reviewed within 48h","de":"Bewerbungen werden innerhalb von 48 Stunden geprüft"}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);

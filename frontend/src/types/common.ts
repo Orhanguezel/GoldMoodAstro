@@ -4,7 +4,7 @@
 
 export type SupportedLocale = string;
 
-/** Çok dilli alan: locale -> text */
+/** Multilingual field: locale -> text */
 export type TranslatedLabel = Record<string, string>;
 export type StrictTranslatedLabel = Record<string, string>;
 
@@ -20,20 +20,20 @@ function short(v: unknown): string {
 
 /**
  * Display-only (best-effort) label map.
- * Bu liste karar mekanizması değildir; DB’den gelen label varsa onu kullanın.
+ * This list is not a decision source; prefer labels from DB when available.
  */
 const DISPLAY_LABELS: Record<string, string> = {
-  tr: 'Türkçe',
+  tr: 'Turkish',
   en: 'English',
   de: 'Deutsch',
-  fr: 'Français',
-  es: 'Español',
+  fr: 'French',
+  es: 'Spanish',
   it: 'Italiano',
 };
 
 /**
- * Display-only date format hints (opsiyonel).
- * Bilinmeyen locale => ISO benzeri güvenli format.
+ * Display-only date format hints.
+ * Unknown locale => ISO-like safe format.
  */
 const DISPLAY_DATE_FORMATS: Record<string, string> = {
   tr: 'dd.MM.yyyy',
@@ -43,9 +43,7 @@ const DISPLAY_DATE_FORMATS: Record<string, string> = {
 
 /**
  * Intl locale mapping (best-effort).
- * Bilinmeyen locale: önce full tag'ı dene (örn "pt-br"),
- * yoksa kısa tag üstünden üret (örn "pt"),
- * yine yoksa "en-US".
+ * Unknown locale: try the full tag first, then the short tag, then "en-US".
  */
 const DISPLAY_INTL_MAP: Record<string, string> = {
   tr: 'tr-TR',
@@ -72,24 +70,24 @@ export function getIntlLocale(locale: SupportedLocale, fallback = 'en-US'): stri
   const lFull = norm(locale);
   const l = short(lFull);
 
-  // önce tam eşleşme, sonra kısa eşleşme
+  // Try exact match first, then short match.
   const mapped = DISPLAY_INTL_MAP[lFull] || DISPLAY_INTL_MAP[l];
   if (mapped) return mapped;
 
-  // hiç map yoksa: full tag’ı Intl’e verilebilir durumda ise onu kullan
+  // If no map exists, pass the full tag to Intl when possible.
   if (lFull) return lFull;
 
   return fallback;
 }
 
 /**
- * Çok dilli alanlarda fallback okuma
- * Fallback sırası:
- *  1) istenen lang (full)
- *  2) istenen lang (short)
+ * Read fallback from multilingual fields.
+ * Fallback order:
+ *  1) requested lang (full)
+ *  2) requested lang (short)
  *  3) tr
  *  4) en
- *  5) ilk değer
+ *  5) first value
  */
 export function getMultiLang(
   obj?: Record<string, string> | null,

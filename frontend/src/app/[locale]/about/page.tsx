@@ -14,8 +14,8 @@ export default function AboutPage() {
   const { ui } = useUiSection('ui_about', locale as any);
 
   const routeTitle = useMemo(() => {
-    if (locale === 'de') return 'Über uns';
-    if (locale === 'tr') return 'Hakkımızda';
+    if (locale === 'de') return 'About';
+    if (locale === 'tr') return 'About';
     return 'About';
   }, [locale]);
 
@@ -42,9 +42,9 @@ export default function AboutPage() {
     if (isValidUiText(d, key2)) return d;
 
     if (locale === 'de')
-      return 'Erfahren Sie mehr über GoldMoodAstro — die Plattform für Astrologie, Tarot und Life-Coaching mit erfahrenen Beratern.';
+      return 'Learn more about GoldMoodAstro, the platform for astrology, tarot and life coaching with experienced consultants.';
     if (locale === 'tr')
-      return 'GoldMoodAstro hakkında bilgi edinin — astroloji, tarot ve yaşam koçluğu için uzman danışmanlarla bağlantı platformu.';
+      return 'Learn more about GoldMoodAstro, the platform for astrology, tarot and life coaching with expert consultants.';
     return 'Learn about GoldMoodAstro — the platform connecting you with expert astrologers, tarot readers and life coaches.';
   }, [ui, locale]);
 

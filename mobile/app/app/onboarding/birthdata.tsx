@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, MapPin, Calendar, Clock, Sparkles } from 'lucide-react-native';
 
 import { useAppTheme, type AppTheme } from '@/theme';
@@ -157,6 +158,7 @@ export default function BirthdataScreen() {
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -167,7 +169,7 @@ export default function BirthdataScreen() {
 
   const handleCalculate = async () => {
     if (!date || !time || !city) {
-      Alert.alert('Eksik Bilgi', 'Lütfen tüm alanları doldurun.');
+      Alert.alert(t('common.missingInfo'), t('common.fillAllFields'));
       return;
     }
 
@@ -177,12 +179,12 @@ export default function BirthdataScreen() {
       const token = await hydrateAuthTokenFromStorage();
       if (!token) {
         Alert.alert(
-          'Hesap gerekli',
-          'Doğum haritanı kaydetmek için önce hesap oluşturman veya giriş yapman gerekir.',
+          t('birthdata.accountRequiredTitle'),
+          t('birthdata.accountRequiredBody'),
           [
-            { text: 'İptal', style: 'cancel' },
+            { text: t('common.cancel'), style: 'cancel' },
             {
-              text: 'Kayıt ol',
+              text: t('auth.registerBtn'),
               onPress: () =>
                 router.push({
                   pathname: '/auth/register',
@@ -190,7 +192,7 @@ export default function BirthdataScreen() {
                 } as any),
             },
             {
-              text: 'Giriş',
+              text: t('auth.loginShort'),
               onPress: () =>
                 router.push({
                   pathname: '/auth/login',
@@ -218,12 +220,12 @@ export default function BirthdataScreen() {
       const msg = err?.message ?? String(err);
       if (/no_token|Unauthorized|401/i.test(msg)) {
         Alert.alert(
-          'Oturum gerekli',
-          'İstek yetkisiz görünüyor. Lütfen tekrar giriş yapın.',
+          t('birthdata.sessionRequiredTitle'),
+          t('birthdata.sessionRequiredBody'),
           [
-            { text: 'İptal', style: 'cancel' },
+            { text: t('common.cancel'), style: 'cancel' },
             {
-              text: 'Giriş',
+              text: t('auth.loginShort'),
               onPress: () =>
                 router.push({
                   pathname: '/auth/login',
@@ -233,7 +235,7 @@ export default function BirthdataScreen() {
           ],
         );
       } else {
-        Alert.alert('Hata', msg || 'Harita hesaplanırken bir sorun oluştu.');
+        Alert.alert(t('common.error'), msg || t('birthdata.calcError'));
       }
     } finally {
       setLoading(false);
@@ -266,21 +268,21 @@ export default function BirthdataScreen() {
         >
           <ScrollView contentContainerStyle={styles.scroll}>
             <View style={styles.titleArea}>
-              <Text style={styles.kicker}>ADIM 1 / 2</Text>
-              <Text style={styles.title}>Kaderinizin haritasını{'\n'}çizelim.</Text>
+              <Text style={styles.kicker}>{t('birthdata.step')}</Text>
+              <Text style={styles.title}>{t('birthdata.title')}</Text>
               <Text style={styles.subtitle}>
-                Doğduğunuz andaki gökyüzü konumlarını hesaplamak için kesin bilgilerinize ihtiyacımız var.
+                {t('birthdata.subtitle')}
               </Text>
             </View>
 
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>DOĞUM TARİHİ</Text>
+                <Text style={styles.label}>{t('birthdata.dateLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <Calendar size={20} color={colors.goldDim} />
                   <TextInput
                     style={styles.input}
-                    placeholder="YYYY-AA-GG"
+                    placeholder={t('birthdata.datePlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={date}
                     onChangeText={setDate}
@@ -290,28 +292,28 @@ export default function BirthdataScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>DOĞUM SAATİ</Text>
+                <Text style={styles.label}>{t('birthdata.timeLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <Clock size={20} color={colors.goldDim} />
                   <TextInput
                     style={styles.input}
-                    placeholder="SS : DD (Örn: 14:30)"
+                    placeholder={t('birthdata.timePlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={time}
                     onChangeText={setTime}
                     keyboardType="numbers-and-punctuation"
                   />
                 </View>
-                <Text style={styles.hint}>Tam saati bilmiyorsanız yaklaşık bir değer girin.</Text>
+                <Text style={styles.hint}>{t('birthdata.timeHint')}</Text>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>DOĞUM YERİ</Text>
+                <Text style={styles.label}>{t('birthdata.placeLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <MapPin size={20} color={colors.goldDim} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Şehir ve Ülke"
+                    placeholder={t('birthdata.placePlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={city}
                     onChangeText={(value) => {
@@ -321,7 +323,7 @@ export default function BirthdataScreen() {
                     onBlur={resolvePlace}
                   />
                 </View>
-                {place ? <Text style={styles.hint}>Konum bulundu: {place.label}</Text> : null}
+                {place ? <Text style={styles.hint}>{t('birthdata.locationFound', { label: place.label })}</Text> : null}
               </View>
             </View>
 
@@ -335,7 +337,7 @@ export default function BirthdataScreen() {
                   <ActivityIndicator color={colors.ink} />
                 ) : (
                   <>
-                    <Text style={styles.calculateBtnText}>Haritamı Hesapla</Text>
+                    <Text style={styles.calculateBtnText}>{t('birthdata.calculate')}</Text>
                     <Sparkles size={18} color={colors.ink} />
                   </>
                 )}

@@ -45,6 +45,7 @@ function buildScreenStyles(t: AppTheme) {
 }
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useLocalSearchParams } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -64,19 +65,19 @@ import SkeletonView from '@/components/SkeletonView';
 
 const { width } = Dimensions.get('window');
 
-const SIGNS_MAP: Record<string, { label: string; date: string; emoji: string }> = {
-  aries: { label: 'Koç', date: '21 Mart - 19 Nisan', emoji: '♈' },
-  taurus: { label: 'Boğa', date: '20 Nisan - 20 Mayıs', emoji: '♉' },
-  gemini: { label: 'İkizler', date: '21 Mayıs - 20 Haziran', emoji: '♊' },
-  cancer: { label: 'Yengeç', date: '21 Haziran - 22 Temmuz', emoji: '♋' },
-  leo: { label: 'Aslan', date: '23 Temmuz - 22 Ağustos', emoji: '♌' },
-  virgo: { label: 'Başak', date: '23 Ağustos - 22 Eylül', emoji: '♍' },
-  libra: { label: 'Terazi', date: '23 Eylül - 22 Ekim', emoji: '♎' },
-  scorpio: { label: 'Akrep', date: '23 Ekim - 21 Kasım', emoji: '♏' },
-  sagittarius: { label: 'Yay', date: '22 Kasım - 21 Aralık', emoji: '♐' },
-  capricorn: { label: 'Oğlak', date: '22 Aralık - 19 Ocak', emoji: '♑' },
-  aquarius: { label: 'Kova', date: '20 Ocak - 18 Şubat', emoji: '♒' },
-  pisces: { label: 'Balık', date: '19 Şubat - 20 Mart', emoji: '♓' },
+const SIGN_EMOJIS: Record<string, string> = {
+  aries: '♈',
+  taurus: '♉',
+  gemini: '♊',
+  cancer: '♋',
+  leo: '♌',
+  virgo: '♍',
+  libra: '♎',
+  scorpio: '♏',
+  sagittarius: '♐',
+  capricorn: '♑',
+  aquarius: '♒',
+  pisces: '♓',
 };
 
 const ZODIAC_IMAGES: Record<string, ImageSourcePropType> = {
@@ -98,10 +99,16 @@ export default function ZodiacDetailScreen() {
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const { sign: signParam } = useLocalSearchParams<{ sign?: string | string[] }>();
   const signKey = (Array.isArray(signParam) ? signParam[0] : signParam)?.toLowerCase?.() ?? '';
-  const meta = SIGNS_MAP[signKey] || { label: signKey, date: '', emoji: '' };
+  const emoji = SIGN_EMOJIS[signKey] ?? '';
+  const meta = {
+    label: SIGN_EMOJIS[signKey] ? t(`zodiacSign.${signKey}.name`) : signKey,
+    date: SIGN_EMOJIS[signKey] ? t(`zodiacSign.${signKey}.dates`) : '',
+    emoji,
+  };
 
   const [info, setInfo] = useState<any>(null);
   const [today, setToday] = useState<any>(null);
@@ -235,7 +242,7 @@ export default function ZodiacDetailScreen() {
                 );
               })()}
               <Text style={styles.readingText}>
-                {today?.content || 'Bugün için henüz yorum hazırlanmadı.'}
+                {today?.content || t('zodiacSign.noReadingToday')}
               </Text>
               <View style={styles.cardDivider} />
               <View style={styles.dailyStats}>

@@ -12,49 +12,6 @@ type Props = { params: Promise<{ locale: string }> };
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
 
 const COPY = {
-  tr: {
-    title: 'Editoryal Politika ve Metodoloji',
-    description:
-      'GoldMoodAstro içeriklerinin nasıl hazırlandığını, AI destekli üretimin nasıl kullanıldığını ve danışmanlık metodolojimizi açıkça anlatıyoruz.',
-    back: 'Hakkımızda sayfasına dön',
-    sections: [
-      {
-        title: 'İçerik ilkemiz',
-        paragraphs: [
-          'GoldMoodAstro’da yayınlanan içerikler, kullanıcıya kesin hükümler vermek için değil, daha bilinçli soru sormasına ve danışman görüşmesine daha hazırlıklı gelmesine yardımcı olmak için hazırlanır. Astroloji, tarot ve numeroloji sembolik dillerdir; kişisel sorumluluğun, tıbbi ya da hukuki kararların yerine geçmez.',
-          'Her içerikte sade dil, korku üretmeyen anlatım ve uygulanabilir farkındalık önceliklidir. Kullanıcıyı bağımlı hale getiren, kesin felaket ya da kesin mucize vadeden ifadeleri editoryal olarak uygun bulmayız.',
-        ],
-      },
-      {
-        title: 'AI destekli üretim şeffaflığı',
-        paragraphs: [
-          'Bazı genel bilgilendirme içeriklerinde LLM destekli taslaklama kullanılabilir. Bu kullanımın amacı otorite taklidi yapmak değil; konu başlıklarını düzenlemek, metni daha okunabilir hale getirmek ve çok dilli yayın akışını hızlandırmaktır.',
-          'AI destekli taslaklar GoldMoodAstro editoryal ekibi tarafından kontrol edilir. Astroloji, tarot, numeroloji ve ilişki danışmanlığı gibi hassas başlıklarda nihai metin; sorumlu dil, bağlam, etik sınırlar ve platform metodolojisi açısından gözden geçirilir.',
-        ],
-      },
-      {
-        title: 'Astroloji metodolojisi',
-        paragraphs: [
-          'Doğum haritası ve gezegen hesaplamalarında Swiss Ephemeris temelli teknik yaklaşım referans alınır. Gezegen konumları, evler, açılar ve yükselen burç gibi veriler yorumun altyapısını oluşturur; ancak kişisel değerlendirme danışmanın yorum emeğiyle tamamlanır.',
-          'Güneş burcu içerikleri genel rehber niteliğindedir. Daha hassas yorum için doğum saati, doğum yeri, Ay burcu, yükselen burç, evler ve açılar birlikte ele alınmalıdır.',
-        ],
-      },
-      {
-        title: 'Tarot ve numeroloji yaklaşımı',
-        paragraphs: [
-          'Tarot içeriklerinde Rider-Waite-Smith sembolizmi ana referanslardan biridir. Kartlar sabit kader cümleleri olarak değil; soru, duygu ve olasılıkları konuşulabilir hale getiren sembolik araçlar olarak yorumlanır.',
-          'Numeroloji içerikleri isim ve doğum tarihi üzerinden hayat yolu, kader sayısı ve kişisel döngüleri anlamaya yardımcı olur. Bu yorumlar kişisel kararların yerine geçmez; farkındalık ve öz değerlendirme için kullanılır.',
-        ],
-      },
-      {
-        title: 'Kim gözden geçirir?',
-        paragraphs: [
-          'GoldMoodAstro içerikleri editoryal ekip tarafından hazırlanır ve yayın öncesinde platformun sorumlu rehberlik ilkeleriyle uyumu kontrol edilir. Danışman profilleri, hizmet paketleri ve kullanıcıya temas eden içeriklerde açıklık, doğruluk ve güvenli dil önceliklidir.',
-          'Danışmanlık seanslarında verilen yorumlar, ilgili danışmanın uzmanlık alanı ve kullanıcının paylaştığı bağlamla şekillenir. Platform içerikleri genel bilgilendirme; bire bir seanslar ise kişisel değerlendirme alanıdır.',
-        ],
-      },
-    ],
-  },
   en: {
     title: 'Editorial Policy and Methodology',
     description:
@@ -68,24 +25,10 @@ const COPY = {
       { title: 'Review process', paragraphs: ['GoldMoodAstro content is reviewed by the editorial team before publishing.', 'Platform content is general information; one-to-one sessions provide personal context.'] },
     ],
   },
-  de: {
-    title: 'Redaktionelle Richtlinie und Methodik',
-    description:
-      'Wie GoldMoodAstro Inhalte erstellt, KI-gestützte Entwürfe nutzt und verantwortungsvolle spirituelle Beratung einordnet.',
-    back: 'Zurück zu Über uns',
-    sections: [
-      { title: 'Inhaltsprinzip', paragraphs: ['GoldMoodAstro Inhalte sollen klarere Fragen und bessere Vorbereitung auf Beratungen ermöglichen, nicht feste Lebensentscheidungen ersetzen.', 'Wir vermeiden Angstkommunikation, Abhängigkeitssprache und absolute Vorhersagen.'] },
-      { title: 'Transparenz zu KI-Unterstützung', paragraphs: ['Einige allgemeine Inhalte können LLM-gestützte Entwürfe nutzen, um Themen zu strukturieren und Lesbarkeit zu verbessern.', 'Entwürfe werden redaktionell auf verantwortungsvolle Sprache, Kontext und ethische Grenzen geprüft.'] },
-      { title: 'Astrologische Methodik', paragraphs: ['Berechnungen folgen einem Swiss-Ephemeris-basierten Ansatz. Planetenstände, Häuser, Aspekte und Aszendent bilden die technische Grundlage.', 'Sonnenzeichen-Seiten sind allgemeine Leitfäden; genaue Deutung braucht Geburtszeit, Ort, Mond, Aszendent, Häuser und Aspekte.'] },
-      { title: 'Tarot und Numerologie', paragraphs: ['Tarot orientiert sich an Rider-Waite-Smith-Symbolik und versteht Karten als symbolische Beratung, nicht als festes Schicksal.', 'Numerologie deutet Namen und Geburtsdaten zur Selbstreflexion, nicht als Ersatz für persönliche Entscheidungen.'] },
-      { title: 'Prüfprozess', paragraphs: ['GoldMoodAstro Inhalte werden vor Veröffentlichung redaktionell geprüft.', 'Plattforminhalte sind allgemeine Information; persönliche Sitzungen liefern individuellen Kontext.'] },
-    ],
-  },
 };
 
-function getCopy(locale: string) {
-  if (locale === 'en' || locale === 'de') return COPY[locale];
-  return COPY.tr;
+function getCopy(_locale: string) {
+  return COPY.en;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -111,7 +54,7 @@ export default async function EditorialPolicyPage({ params }: Props) {
         data={graph([
           breadcrumbSchema([
             { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },
-            { name: locale === 'tr' ? 'Hakkımızda' : 'About', item: `${SITE_URL}/${locale}/about` },
+            { name: 'About', item: `${SITE_URL}/${locale}/about` },
             { name: copy.title, item: pageUrl },
           ]),
           articleSchema({
@@ -165,7 +108,7 @@ export default async function EditorialPolicyPage({ params }: Props) {
         <div className="mt-12 rounded-[2rem] border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-12 shadow-(--gm-shadow-soft)">
           <AuthorBio
             name="GoldMoodAstro Editorial Team"
-            title={locale === 'tr' ? 'Editoryal ve metodoloji ekibi' : 'Editorial and methodology team'}
+            title="Editorial and methodology team"
             bio={copy.description}
             expertise={['Astrology', 'Tarot', 'Numerology', 'Editorial Review']}
             certificates={['Swiss Ephemeris', 'Rider-Waite-Smith']}

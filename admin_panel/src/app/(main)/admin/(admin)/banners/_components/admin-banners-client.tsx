@@ -21,8 +21,10 @@ import {
   useDeleteBannerAdminMutation,
 } from '@/integrations/hooks';
 import { cn } from '@/lib/utils';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 export default function AdminBannersClient() {
+  const t = useAdminT('admin.banners');
   const query = useListBannersAdminQuery(undefined);
   const [update] = useUpdateBannerAdminMutation();
   const [remove] = useDeleteBannerAdminMutation();
@@ -30,19 +32,19 @@ export default function AdminBannersClient() {
   const handleToggleActive = async (id: string, current: boolean) => {
     try {
       await update({ id, body: { is_active: !current } }).unwrap();
-      toast.success('Status updated.');
+      toast.success(t('list.toast.statusUpdated'));
     } catch {
-      toast.error('Update failed.');
+      toast.error(t('list.toast.updateFailed'));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this banner?')) return;
+    if (!confirm(t('list.confirmDelete'))) return;
     try {
       await remove(id).unwrap();
-      toast.success('Banner deleted.');
+      toast.success(t('list.toast.deleted'));
     } catch {
-      toast.error('Delete failed.');
+      toast.error(t('list.toast.deleteFailed'));
     }
   };
 
@@ -55,10 +57,10 @@ export default function AdminBannersClient() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-gm-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">REKLAM & BANNER YÖNETİMİ</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">{t('eyebrow')}</span>
           </div>
-          <h1 className="font-serif text-4xl text-gm-text">Banner Yönetimi</h1>
-          <p className="text-sm italic text-gm-muted">Mobil ve web platformlarındaki reklam ve promosyon banner'larını yönetin.</p>
+          <h1 className="font-serif text-4xl text-gm-text">{t('list.title')}</h1>
+          <p className="text-sm italic text-gm-muted">{t('list.subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <Button
@@ -69,7 +71,7 @@ export default function AdminBannersClient() {
             className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-text hover:bg-gm-surface/80"
           >
             <RefreshCcw className={cn("mr-2 size-4 text-gm-gold", query.isFetching && "animate-spin")} />
-            Yenile
+            {t('list.refresh')}
           </Button>
           <Button 
             size="sm" 
@@ -78,7 +80,7 @@ export default function AdminBannersClient() {
           >
             <Link href="/admin/banners/new">
               <Plus className="mr-2 size-4" />
-              Yeni Banner
+              {t('list.newBanner')}
             </Link>
           </Button>
         </div>
@@ -90,25 +92,25 @@ export default function AdminBannersClient() {
           <Table>
             <TableHeader className="bg-gm-surface/40">
               <TableRow className="border-gm-border-soft hover:bg-transparent">
-                <TableHead className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Aktif</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Banner Detayı</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Konum (Placement)</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">İstatistikler</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Planlama</TableHead>
-                <TableHead className="px-8 py-6 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">İşlem</TableHead>
+                <TableHead className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.columns.active')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.columns.detail')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.columns.placement')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.columns.stats')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.columns.schedule')}</TableHead>
+                <TableHead className="px-8 py-6 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.columns.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {query.isLoading ? (
                 <TableRow className="border-gm-border-soft">
                   <TableCell colSpan={6} className="py-16 text-center text-sm text-gm-muted italic font-serif">
-                    Yükleniyor...
+                    {t('list.loading')}
                   </TableCell>
                 </TableRow>
               ) : query.data?.length === 0 ? (
                 <TableRow className="border-gm-border-soft">
                   <TableCell colSpan={6} className="py-16 text-center text-sm text-gm-muted italic font-serif">
-                    Kayıtlı banner bulunamadı.
+                    {t('list.empty')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -158,22 +160,22 @@ export default function AdminBannersClient() {
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-1.5 text-xs text-gm-text-dim font-light">
                           <Eye className="size-3.5 text-gm-info" />
-                          <span>{item.view_count.toLocaleString()} görüntülenme</span>
+                          <span>{t('list.stats.views', { count: item.view_count.toLocaleString() })}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-gm-text-dim font-light">
                           <MousePointerClick className="size-3.5 text-gm-success" />
-                          <span>{item.click_count.toLocaleString()} tıklama</span>
+                          <span>{t('list.stats.clicks', { count: item.click_count.toLocaleString() })}</span>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-5 text-xs text-gm-text-dim">
                       {item.starts_at ? (
                         <div className="space-y-1 font-light">
-                          <div className="text-gm-success">Başl: {format(new Date(item.starts_at), 'dd MMM yy')}</div>
-                          {item.ends_at && <div className="text-gm-error">Bitiş: {format(new Date(item.ends_at), 'dd MMM yy')}</div>}
+                          <div className="text-gm-success">{t('list.schedule.starts', { date: format(new Date(item.starts_at), 'dd MMM yy') })}</div>
+                          {item.ends_at && <div className="text-gm-error">{t('list.schedule.ends', { date: format(new Date(item.ends_at), 'dd MMM yy') })}</div>}
                         </div>
                       ) : (
-                        <span className="italic font-light text-gm-muted">Planlama Yok</span>
+                        <span className="italic font-light text-gm-muted">{t('list.schedule.none')}</span>
                       )}
                     </TableCell>
                     <TableCell className="px-8 py-5 text-right">

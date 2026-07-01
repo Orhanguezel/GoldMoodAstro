@@ -167,11 +167,11 @@ export const SiteSettingsList: React.FC<SiteSettingsListProps> = ({
         <Table>
           <TableHeader className="bg-gm-surface/40">
             <TableRow className="border-gm-border-soft hover:bg-transparent">
-              <TableHead className="w-[25%] py-6 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Ayar Anahtarı</TableHead>
-              <TableHead className="w-[8%] py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Dil</TableHead>
-              <TableHead className="w-[35%] py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Değer Özeti</TableHead>
-              <TableHead className="w-[15%] py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Son Güncelleme</TableHead>
-              <TableHead className="w-[17%] py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">İşlemler</TableHead>
+              <TableHead className="w-[25%] py-6 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.columns.key', null, 'Ayar Anahtarı')}</TableHead>
+              <TableHead className="w-[8%] py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.columns.locale', null, 'Dil')}</TableHead>
+              <TableHead className="w-[35%] py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.columns.value', null, 'Değer Özeti')}</TableHead>
+              <TableHead className="w-[15%] py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.columns.updatedAt', null, 'Son Güncelleme')}</TableHead>
+              <TableHead className="w-[17%] py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('list.columns.actions', null, 'İşlemler')}</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -226,7 +226,7 @@ export const SiteSettingsList: React.FC<SiteSettingsListProps> = ({
                 <TableCell colSpan={5} className="py-32 text-center">
                   <div className="flex flex-col items-center gap-6 opacity-30 animate-pulse">
                     <Database className="w-20 h-20 text-gm-gold/50" />
-                    <span className="font-serif italic text-xl text-gm-muted">{loading ? 'Yükleniyor...' : 'Kayıt bulunamadı.'}</span>
+                    <span className="font-serif italic text-xl text-gm-muted">{loading ? t('messages.loading', null, 'Yükleniyor...') : t('list.noRecords', null, 'Kayıt bulunamadı.')}</span>
                   </div>
                 </TableCell>
               </TableRow>

@@ -54,15 +54,15 @@ function readUploadError(err: unknown): string {
   const code = String(error.code || error.message || payload.message || '');
 
   if (status === 401 || status === 403) {
-    return 'Oturum dogrulanamadi. Lutfen tekrar giris yapip yeniden deneyin.';
+    return 'Session could not be verified. Please sign in again and retry.';
   }
   if (code === 'storage_not_configured') {
-    return 'Dosya yukleme servisi su anda yapilandirilmamis. Destek ekibiyle iletisime gecin.';
+    return 'The file upload service is not configured at the moment. Please contact support.';
   }
   if (code === 'multipart_parse_error' || code === 'invalid_multipart_body') {
-    return 'Resim dosyasi okunamadi. Farkli bir dosya ile tekrar deneyin.';
+    return 'The image file could not be read. Please try again with a different file.';
   }
-  return 'Resim yuklenemedi. Dosya boyutunu ve formatini kontrol edip tekrar deneyin.';
+  return 'The image could not be uploaded. Check the file size and format, then try again.';
 }
 
 const TOOLBAR_BTN =
@@ -149,7 +149,7 @@ export default function RichTextEditor({
     e.target.value = '';
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast.error('Lutfen bir resim dosyasi secin.');
+      toast.error('Please select an image file.');
       return;
     }
     try {
@@ -166,7 +166,7 @@ export default function RichTextEditor({
 
   const promptLink = () => {
     const previous = editor.getAttributes('link').href as string | undefined;
-    const input = typeof window !== 'undefined' ? window.prompt('Bag URL', previous || 'https://') : null;
+    const input = typeof window !== 'undefined' ? window.prompt('Link URL', previous || 'https://') : null;
     if (input === null) return;
     const trimmed = input.trim();
     if (!trimmed) {
@@ -214,14 +214,14 @@ export default function RichTextEditor({
         <Btn
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive('bold')}
-          title="Kalin"
+          title="Bold"
         >
           <BoldIcon className="h-4 w-4" />
         </Btn>
         <Btn
           onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive('italic')}
-          title="Italik"
+          title="Italic"
         >
           <ItalicIcon className="h-4 w-4" />
         </Btn>
@@ -231,14 +231,14 @@ export default function RichTextEditor({
         <Btn
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           active={editor.isActive('heading', { level: 2 })}
-          title="Baslik (H2)"
+          title="Heading (H2)"
         >
           <Heading2 className="h-4 w-4" />
         </Btn>
         <Btn
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
           active={editor.isActive('heading', { level: 3 })}
-          title="Alt baslik (H3)"
+          title="Subheading (H3)"
         >
           <Heading3 className="h-4 w-4" />
         </Btn>
@@ -248,31 +248,31 @@ export default function RichTextEditor({
         <Btn
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive('bulletList')}
-          title="Madde isaretli liste"
+          title="Bullet list"
         >
           <ListIcon className="h-4 w-4" />
         </Btn>
         <Btn
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           active={editor.isActive('orderedList')}
-          title="Numarali liste"
+          title="Numbered list"
         >
           <ListOrdered className="h-4 w-4" />
         </Btn>
         <Btn
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive('blockquote')}
-          title="Alinti"
+          title="Quote"
         >
           <Quote className="h-4 w-4" />
         </Btn>
 
         <span className={TOOLBAR_SEP} />
 
-        <Btn onClick={promptLink} active={editor.isActive('link')} title="Bag ekle/duzenle">
+        <Btn onClick={promptLink} active={editor.isActive('link')} title="Add/edit link">
           <LinkIcon className="h-4 w-4" />
         </Btn>
-        <Btn onClick={triggerImagePicker} disabled={isUploading} title="Resim yukle">
+        <Btn onClick={triggerImagePicker} disabled={isUploading} title="Upload image">
           {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
         </Btn>
 
@@ -281,14 +281,14 @@ export default function RichTextEditor({
         <Btn
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
-          title="Geri al"
+          title="Undo"
         >
           <Undo2 className="h-4 w-4" />
         </Btn>
         <Btn
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
-          title="Yeniden yap"
+          title="Redo"
         >
           <Redo2 className="h-4 w-4" />
         </Btn>

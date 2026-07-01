@@ -72,6 +72,8 @@ import { router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 
 
+import { useTranslation } from 'react-i18next';
+
 import { numerologyApi } from '@/lib/api';
 import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
 
@@ -110,6 +112,7 @@ function normalizeBirthDateInput(raw: string): string | null {
 }
 
 export default function NumerologyScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -123,8 +126,8 @@ export default function NumerologyScreen() {
     const birthIso = normalizeBirthDateInput(formData.birth_date);
     if (!birthIso) {
       Alert.alert(
-        'Tarih',
-        'Doğum tarihini şu biçimlerden biriyle girin:\n• 1990-05-24\n• 15.05.1990\n• Sadece yıl: 1990',
+        t('numerology.dateTitle'),
+        t('numerology.dateFormatError'),
       );
       return;
     }
@@ -142,8 +145,8 @@ export default function NumerologyScreen() {
       setStep('result');
     } catch (e) {
       console.error('Numerology error:', e);
-      const msg = e instanceof Error ? e.message : 'Hesaplama yapılırken bir hata oluştu.';
-      Alert.alert('Hata', msg);
+      const msg = e instanceof Error ? e.message : t('numerology.calcError');
+      Alert.alert(t('common.errorTitle'), msg);
       setStep('input');
     }
   };
@@ -163,34 +166,34 @@ export default function NumerologyScreen() {
               <View style={styles.iconCircle}>
                 <Binary size={40} color={colors.gold} />
               </View>
-              <Text style={styles.headerTitle}>Numeroloji</Text>
-              <Text style={styles.headerSubtitle}>İsminizdeki sayısal kodları çözün.</Text>
+              <Text style={styles.headerTitle}>{t('numerology.headerTitle')}</Text>
+              <Text style={styles.headerSubtitle}>{t('numerology.headerSubtitle')}</Text>
             </View>
 
             <View style={styles.formCard}>
                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>AD SOYAD (DOĞUMDAKİ)</Text>
+                  <Text style={styles.label}>{t('numerology.nameLabel')}</Text>
                   <View style={styles.inputWrap}>
                     <User size={18} color={colors.goldDim} />
                     <TextInput
                       style={styles.input}
                       value={formData.full_name}
                       onChangeText={(val) => setFormData(prev => ({ ...prev, full_name: val }))}
-                      placeholder="Örn: Ali Yılmaz"
+                      placeholder={t('numerology.namePlaceholder')}
                       placeholderTextColor={colors.textMuted + '66'}
                     />
                   </View>
                </View>
 
                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>DOĞUM TARİHİ</Text>
+                  <Text style={styles.label}>{t('numerology.dobLabel')}</Text>
                   <View style={styles.inputWrap}>
                     <Calendar size={18} color={colors.goldDim} />
                     <TextInput
                       style={styles.input}
                       value={formData.birth_date}
                       onChangeText={(val) => setFormData(prev => ({ ...prev, birth_date: val }))}
-                      placeholder="1990-05-24 veya 1983"
+                      placeholder={t('numerology.dobPlaceholder')}
                       placeholderTextColor={colors.textMuted + '66'}
                       keyboardType="default"
                     />
@@ -204,7 +207,7 @@ export default function NumerologyScreen() {
               disabled={!formData.full_name.trim() || !formData.birth_date.trim()}
             >
               <LinearGradient colors={[colors.goldDeep, colors.gold]} style={styles.btnGradient}>
-                <Text style={styles.primaryBtnText}>HESAPLA & YORUMLA</Text>
+                <Text style={styles.primaryBtnText}>{t('numerology.calcBtn')}</Text>
                 <ChevronRight size={18} color={colors.ink} />
               </LinearGradient>
             </Pressable>
@@ -219,8 +222,8 @@ export default function NumerologyScreen() {
       <View style={styles.container}>
         <View style={styles.processingCenter}>
           <ActivityIndicator size="large" color={colors.gold} />
-          <Text style={styles.processingTitle}>Sayılar Analiz Ediliyor...</Text>
-          <Text style={styles.processingSubtitle}>İsminizin ve tarihinizin titreşimi kadim kodlarla eşleşiyor.</Text>
+          <Text style={styles.processingTitle}>{t('numerology.processingTitle')}</Text>
+          <Text style={styles.processingSubtitle}>{t('numerology.processingSubtitle')}</Text>
         </View>
       </View>
     );
@@ -238,16 +241,16 @@ export default function NumerologyScreen() {
 
           <View style={styles.resultHeader}>
              <Sparkles size={24} color={colors.gold} style={{ marginBottom: 12 }} />
-             <Text style={styles.resultTitle}>Sayıların Gücü</Text>
+             <Text style={styles.resultTitle}>{t('numerology.resultTitle')}</Text>
              <Text style={styles.resultName}>{formData.full_name}</Text>
           </View>
 
           <View style={styles.numbersGrid}>
             {[
-              { label: 'Hayat Yolu', value: result?.calculation?.lifePath, icon: Target, color: colors.info },
-              { label: 'Kader', value: result?.calculation?.destiny, icon: Zap, color: colors.gold },
-              { label: 'Ruh Güdüsü', value: result?.calculation?.soulUrge, icon: Heart, color: colors.danger },
-              { label: 'Kişilik', value: result?.calculation?.personality, icon: Hash, color: colors.success },
+              { label: t('numerology.lifePath'), value: result?.calculation?.lifePath, icon: Target, color: colors.info },
+              { label: t('numerology.destiny'), value: result?.calculation?.destiny, icon: Zap, color: colors.gold },
+              { label: t('numerology.soulUrge'), value: result?.calculation?.soulUrge, icon: Heart, color: colors.danger },
+              { label: t('numerology.personality'), value: result?.calculation?.personality, icon: Hash, color: colors.success },
             ].map((item, i) => (
               <LinearGradient
                 key={i}
@@ -281,7 +284,7 @@ export default function NumerologyScreen() {
             }}
           >
             <RotateCcw size={16} color={colors.gold} />
-            <Text style={styles.resetBtnText}>YENİ ANALİZ</Text>
+            <Text style={styles.resetBtnText}>{t('numerology.newAnalysis')}</Text>
           </Pressable>
         </ScrollView>
       </SafeAreaView>

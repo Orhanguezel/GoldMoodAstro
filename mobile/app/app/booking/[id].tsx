@@ -142,7 +142,7 @@ export default function BookingDetailScreen() {
               Alert.alert(t('common.success'), t('booking.cancelSuccess', 'Randevunuz iptal edildi.'));
               safeRouterBack();
             } catch (err: any) {
-              Alert.alert(t('common.error'), err.message || 'İptal edilemedi.');
+              Alert.alert(t('common.error'), err.message || t('booking.cancelFailed', 'İptal edilemedi.'));
             }
           } 
         },
@@ -285,7 +285,7 @@ export default function BookingDetailScreen() {
               })
             }
           >
-            <Text style={styles.reviewBtnText}>Değerlendir</Text>
+            <Text style={styles.reviewBtnText}>{t('booking.review', 'Değerlendir')}</Text>
           </Pressable>
         )}
         

@@ -1,8 +1,5 @@
 'use client';
 
-// Kullanıcı (danışan) mesaj kutusu — danışmandan gelen cevapları görür ve cevap gönderir.
-// Backend: /me/customer/threads*  (mirrors consultant'ın MessagesPanel'ini).
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Send, MessageCircle, Loader2, User as UserIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,6 +13,7 @@ import {
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { extractApiError } from '@/integrations/shared';
 import ChatWarningBanner from '@/components/common/ChatWarningBanner';
+import { useUiSection } from '@/i18n';
 
 function formatTime(iso: string) {
   try {
@@ -30,8 +28,7 @@ function initialsOf(name: string | null | undefined) {
   return (name || '?').split(/\s+/).map((w) => w[0] || '').join('').slice(0, 2).toUpperCase();
 }
 
-function threadTitle(t: CustomerThread, isTr: boolean): string {
-  const fallback = isTr ? 'Danışman' : 'Consultant';
+function threadTitle(t: CustomerThread, fallback: string): string {
   return t.consultant?.display_name || t.consultant?.full_name || fallback;
 }
 
@@ -40,6 +37,7 @@ interface Props {
 }
 
 export default function UserMessagesPanel({ isTr }: Props) {
+  const { ui } = useUiSection('ui_account');
   const { data: threads = [], isLoading: threadsLoading } = useListMyCustomerThreadsQuery();
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -75,7 +73,7 @@ export default function UserMessagesPanel({ isTr }: Props) {
       await reply({ id: activeId, text: draft.trim() }).unwrap();
       setDraft('');
     } catch (e) {
-      toast.error(extractApiError(e, isTr ? 'Gönderilemedi' : 'Send failed'));
+      toast.error(extractApiError(e, ui('ui_account_msg_send_failed', 'Could not send')));
     }
   };
 
@@ -92,9 +90,7 @@ export default function UserMessagesPanel({ isTr }: Props) {
       <div className="text-center py-16 px-4">
         <MessageCircle className="w-12 h-12 text-(--gm-gold)/30 mx-auto mb-4" />
         <p className="text-(--gm-text-dim) font-serif italic">
-          {isTr
-            ? 'Henüz mesajınız yok. Bir danışmana mesaj gönderdiğinizde sohbet burada görünür.'
-            : 'No messages yet. Conversations appear here after you message a consultant.'}
+          {ui('ui_account_customer_msg_empty_threads', 'No messages yet. Conversations appear here after you message a consultant.')}
         </p>
       </div>
     );
@@ -112,13 +108,13 @@ export default function UserMessagesPanel({ isTr }: Props) {
       <div className="border border-(--gm-border-soft) rounded-2xl bg-(--gm-surface)/30 overflow-hidden flex flex-col">
         <div className="px-4 py-3 border-b border-(--gm-border-soft) flex items-center justify-between">
           <span className="text-[10px] font-bold uppercase tracking-widest text-(--gm-gold-dim)">
-            {isTr ? `Sohbetler (${threads.length})` : `Chats (${threads.length})`}
+            {ui('ui_account_msg_chats', 'Chats')} ({threads.length})
           </span>
         </div>
         <div className="flex-1 overflow-y-auto">
           {threads.map((t) => {
             const isActive = t.thread_id === activeId;
-            const title = threadTitle(t, isTr);
+            const title = threadTitle(t, ui('ui_account_msg_consultant_fallback', 'Consultant'));
             return (
               <button
                 key={t.thread_id}
@@ -148,12 +144,12 @@ export default function UserMessagesPanel({ isTr }: Props) {
                   </div>
                   {t.last_message ? (
                     <p className="mt-0.5 text-xs text-(--gm-text-dim) truncate">
-                      {t.last_message.from_self ? (isTr ? 'Sen: ' : 'You: ') : ''}
+                      {t.last_message.from_self ? `${ui('ui_account_msg_you_prefix', 'You:')} ` : ''}
                       {t.last_message.text}
                     </p>
                   ) : (
                     <p className="mt-0.5 text-xs text-(--gm-text-dim) italic">
-                      {isTr ? 'Henüz mesaj yok' : 'No messages yet'}
+                      {ui('ui_account_msg_no_messages_yet', 'No messages yet')}
                     </p>
                   )}
                 </div>
@@ -167,7 +163,7 @@ export default function UserMessagesPanel({ isTr }: Props) {
       <div className="border border-(--gm-border-soft) rounded-2xl bg-(--gm-surface)/30 flex flex-col overflow-hidden">
         {!active ? (
           <div className="flex-1 flex items-center justify-center text-(--gm-text-dim) text-sm">
-            {isTr ? 'Bir sohbet seçin' : 'Select a chat'}
+            {ui('ui_account_msg_select_chat', 'Select a chat')}
           </div>
         ) : (
           <>
@@ -180,12 +176,12 @@ export default function UserMessagesPanel({ isTr }: Props) {
                 )}
               </div>
               <div>
-                <h3 className="text-(--gm-text) font-serif text-base leading-tight">{threadTitle(active, isTr)}</h3>
+                <h3 className="text-(--gm-text) font-serif text-base leading-tight">{threadTitle(active, ui('ui_account_msg_consultant_fallback', 'Consultant'))}</h3>
                 <p className="text-[10px] text-(--gm-text-dim) uppercase tracking-widest">
                   {active.context_type === 'booking'
-                    ? (isTr ? 'Randevu sohbeti' : 'Booking chat')
+                    ? ui('ui_account_msg_booking_chat', 'Booking chat')
                     : active.context_type === 'consultant_lead'
-                    ? (isTr ? 'Genel mesaj' : 'General')
+                    ? ui('ui_account_msg_general_chat', 'General')
                     : active.context_type}
                 </p>
               </div>
@@ -202,13 +198,11 @@ export default function UserMessagesPanel({ isTr }: Props) {
                 </div>
               ) : messages.length === 0 ? (
                 <p className="text-center text-(--gm-text-dim) font-serif italic py-6">
-                  {isTr ? 'Henüz mesaj yok. İlk mesajı yaz.' : 'No messages yet. Start the conversation.'}
+                  {ui('ui_account_msg_start_conversation', 'No messages yet. Start the conversation.')}
                 </p>
               ) : (
                 messages.map((m) => {
-                  // Eğer aktif user'ın id'sini bilirsek mine sınıfı veririz; yoksa sender_user_id eşleşmesi yeterli.
-                  // active.last_message.from_self bilgisi son mesaj için doğru; tek tek mesajlar için sender_user_id karşılaştırmak en sağlıklısı.
-                  // Backend her mesaj için from_self göndermiyor → fallback: aktif son mesajdaki sender match ile bizim user_id'mizi bulup eşitleriz.
+                  // Infer the current user from the active thread when message rows do not include from_self.
                   const mine = myUserId ? m.sender_user_id === myUserId : false;
                   return (
                     <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
@@ -242,7 +236,7 @@ export default function UserMessagesPanel({ isTr }: Props) {
                   }
                 }}
                 rows={2}
-                placeholder={isTr ? 'Mesajını yaz…' : 'Type your message…'}
+                placeholder={ui('ui_account_msg_input_placeholder', 'Type your message...')}
                 disabled={replying}
                 className="flex-1 bg-(--gm-bg-deep) border border-(--gm-border-soft) rounded-xl p-3 text-sm text-(--gm-text) resize-none focus:ring-2 focus:ring-(--gm-gold)/30 focus:border-(--gm-gold)/40 outline-none"
               />
@@ -252,7 +246,7 @@ export default function UserMessagesPanel({ isTr }: Props) {
                 className="h-11 px-4 rounded-xl bg-(--gm-gold) text-(--gm-bg-deep) disabled:opacity-50 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
               >
                 {replying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                {isTr ? 'Gönder' : 'Send'}
+                {ui('ui_account_msg_send_button', 'Send')}
               </button>
             </div>
           </>

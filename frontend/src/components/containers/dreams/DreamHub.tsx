@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useInterpretDreamMutation } from '@/integrations/rtk/public/dreams.public.endpoints';
+import { useUiSection } from '@/i18n';
 import ShareCard from '@/components/common/ShareCard';
 import ConsultantFunnelCTA from '@/components/common/ConsultantFunnelCTA';
 import { toast } from 'sonner';
@@ -23,19 +24,20 @@ import Link from 'next/link';
 const cinzel = Cinzel({ subsets: ['latin'] });
 const fraunces = Fraunces({ subsets: ['latin'], weight: ['400', '700'], style: ['normal', 'italic'] });
 
-const LOADING_PHASES = [
-  'Rüyandaki sembolleri okuyorum...',
-  'Bilinçaltının derinliklerine iniyorum...',
-  'Anlamlarıyla harmanlıyorum...',
-  'Arketipleri analiz ediyorum...',
-  'Kişisel yorumunu hazırlıyorum...'
-];
-
 export default function DreamHub() {
+  const { ui } = useUiSection('ui_dreams');
   const [dreamText, setDreamText] = useState('');
   const [step, setStep] = useState<'input' | 'processing' | 'result'>('input');
   const [result, setResult] = useState<any>(null);
   const [loadingPhase, setLoadingPhase] = useState(0);
+
+  const LOADING_PHASES = [
+    ui('ui_dreams_phase1', 'Reading the symbols in your dream...'),
+    ui('ui_dreams_phase2', 'Diving into the depths of the subconscious...'),
+    ui('ui_dreams_phase3', 'Blending the meanings together...'),
+    ui('ui_dreams_phase4', 'Analyzing archetypes...'),
+    ui('ui_dreams_phase5', 'Preparing your personal interpretation...')
+  ];
 
   const [interpretDream, { isLoading }] = useInterpretDreamMutation();
 
@@ -51,7 +53,7 @@ export default function DreamHub() {
 
   const handleInterpret = async () => {
     if (dreamText.length < 50) {
-      toast.error('Lütfen rüyanızı biraz daha detaylı anlatın (en az 50 karakter).');
+      toast.error(ui('ui_dreams_too_short', 'Please describe your dream in a little more detail (at least 50 characters).'));
       return;
     }
     
@@ -65,14 +67,14 @@ export default function DreamHub() {
       setStep('result');
     } catch (err: any) {
       console.error('Dream interpretation failed:', err);
-      toast.error(err?.data?.message || 'Rüyanız yorumlanırken bir hata oluştu. Lütfen tekrar deneyin.');
+      toast.error(err?.data?.message || ui('ui_dreams_interpret_failed', 'An error occurred while interpreting your dream. Please try again.'));
       setStep('input');
     }
   };
 
-  const textStatus = dreamText.length === 0 ? '' : 
-                   dreamText.length < 50 ? 'Yetersiz' :
-                   dreamText.length < 200 ? 'İyi' : 'Harika Detay!';
+  const textStatus = dreamText.length === 0 ? '' :
+                   dreamText.length < 50 ? ui('ui_dreams_status_insufficient', 'Not enough') :
+                   dreamText.length < 200 ? ui('ui_dreams_status_good', 'Good') : ui('ui_dreams_status_great', 'Great detail!');
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12 md:py-20 min-h-[80vh] flex flex-col">
@@ -89,16 +91,16 @@ export default function DreamHub() {
             <div className="relative w-full max-w-4xl mx-auto rounded-[3rem] overflow-hidden shadow-2xl" style={{ height: 360 }}>
               <Image
                 src="/images/ruya-tabiri-hero.png"
-                alt="Rüya Tabiri"
+                alt={ui('ui_dreams_hero_alt', 'Dream Interpretation')}
                 fill
                 className="object-cover object-top"
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/15" />
               <div className="absolute inset-x-0 bottom-0 p-10 text-center">
-                <h2 className={`${cinzel.className} text-4xl md:text-6xl text-white tracking-tight drop-shadow-lg`}>Bilinçaltının Dili</h2>
+                <h2 className={`${cinzel.className} text-4xl md:text-6xl text-white tracking-tight drop-shadow-lg`}>{ui('ui_dreams_hero_title', 'The Language of the Subconscious')}</h2>
                 <p className={`${fraunces.className} text-white/70 text-lg mt-3 italic`}>
-                  Rüyalar, ruhun uyanıkken söyleyemedikleridir. Bilinçaltının gizli dilini keşfedin.
+                  {ui('ui_dreams_hero_subtitle', 'Dreams say what the soul cannot say while awake. Explore the hidden language of the subconscious.')}
                 </p>
               </div>
               {/* Floating crescent badge */}
@@ -113,20 +115,20 @@ export default function DreamHub() {
                 <textarea
                   value={dreamText}
                   onChange={(e) => setDreamText(e.target.value)}
-                  placeholder="Rüyanızda neler gördünüz? Mekanlar, kişiler, renkler ve hissettiklerinizi en az 50 karakterle anlatın..."
+                  placeholder={ui('ui_dreams_textarea_placeholder', 'What did you see in your dream? Describe places, people, colors and feelings in at least 50 characters...')}
                   className="w-full h-72 rounded-2xl bg-bg-primary border border-border-light focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-xl font-serif leading-relaxed text-text-primary placeholder:text-text-muted/60 resize-none p-5 outline-none transition-colors"
                 />
                 <div className="flex flex-col md:flex-row items-center justify-between mt-6 pt-6 border-t border-[var(--gm-text)]/5 gap-4">
                   <div className="flex items-center gap-4">
                     <div className="flex flex-col">
-                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1">Karakter</span>
+                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1">{ui('ui_dreams_label_character', 'Characters')}</span>
                       <span className={`text-sm font-bold ${dreamText.length < 50 ? 'text-[var(--gm-warning)]' : 'text-brand-primary'}`}>
                         {dreamText.length} / 2000
                       </span>
                     </div>
                     {textStatus && (
                       <div className="flex flex-col border-l border-[var(--gm-text)]/10 pl-4">
-                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1">Durum</span>
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1">{ui('ui_dreams_label_status', 'Status')}</span>
                         <span className="text-sm font-bold text-foreground">{textStatus}</span>
                       </div>
                     )}
@@ -142,7 +144,7 @@ export default function DreamHub() {
                     }`}
                   >
                     <span className="relative z-10 flex items-center gap-2">
-                      RÜYAMI YORUMLA <Send className={`w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1`} />
+                      {ui('ui_dreams_submit', 'INTERPRET MY DREAM')} <Send className={`w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1`} />
                     </span>
                     {dreamText.length >= 50 && (
                       <motion.div 
@@ -159,9 +161,9 @@ export default function DreamHub() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               {[
-                { img: '/images/ruya-tabiri-archetype.png', title: 'Arketip Analizi', desc: 'Rüyanızdaki figürlerin psikolojik karşılıkları.' },
-                { img: '/images/ruya-tabiri-symbols.png',   title: 'Sembol Rehberi', desc: '100+ kadim rüya sembolü ile eşleştirme.' },
-                { img: '/images/ruya-tabiri-hero.png',      title: 'Ruhsal Rehberlik', desc: 'Geleceğe dair sezgisel ipuçları ve tavsiyeler.' },
+                { img: '/images/ruya-tabiri-archetype.png', title: ui('ui_dreams_card1_title', 'Archetype Analysis'), desc: ui('ui_dreams_card1_desc', 'Psychological reflections of the figures in your dream.') },
+                { img: '/images/ruya-tabiri-symbols.png',   title: ui('ui_dreams_card2_title', 'Symbol Guide'), desc: ui('ui_dreams_card2_desc', 'Matched with 100+ ancient dream symbols.') },
+                { img: '/images/ruya-tabiri-hero.png',      title: ui('ui_dreams_card3_title', 'Spiritual Guidance'), desc: ui('ui_dreams_card3_desc', 'Intuitive clues and guidance for what comes next.') },
               ].map((item, i) => (
                 <div key={i} className="group relative rounded-[2rem] overflow-hidden shadow-lg hover:scale-[1.02] transition-transform duration-300" style={{ minHeight: 220 }}>
                   <Image src={item.img} alt={item.title} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -244,7 +246,7 @@ export default function DreamHub() {
                 </motion.h2>
               </AnimatePresence>
               <p className={`${fraunces.className} text-muted-foreground italic text-lg opacity-60`}>
-                Lütfen pencereyi kapatmayın, ruhunuzun mesajı hazırlanıyor...
+                {ui('ui_dreams_processing_note', 'Please do not close the window, your message is being prepared...')}
               </p>
             </div>
           </motion.div>
@@ -258,8 +260,8 @@ export default function DreamHub() {
             className="space-y-16 py-10"
           >
              <div className="text-center space-y-4">
-              <span className="text-xs font-bold tracking-[0.3em] text-brand-primary uppercase opacity-60">Rüyanın Bilinçaltı Yansıması</span>
-              <h2 className={`${cinzel.className} text-5xl md:text-7xl text-foreground`}>Rüya Analizi</h2>
+              <span className="text-xs font-bold tracking-[0.3em] text-brand-primary uppercase opacity-60">{ui('ui_dreams_result_eyebrow', 'Subconscious Reflection of Your Dream')}</span>
+              <h2 className={`${cinzel.className} text-5xl md:text-7xl text-foreground`}>{ui('ui_dreams_result_title', 'Dream Analysis')}</h2>
             </div>
 
             <div className="flex flex-wrap justify-center gap-4 md:gap-6">
@@ -306,16 +308,16 @@ export default function DreamHub() {
                     </div>
                     <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                       <div className="space-y-3 text-center md:text-left">
-                        <h4 className={`${cinzel.className} text-2xl text-brand-primary`}>🌙 Bu Rüyanın Bugünkü Yansıması</h4>
+                        <h4 className={`${cinzel.className} text-2xl text-brand-primary`}>{ui('ui_dreams_tarot_cta_title', 'Today’s Reflection of This Dream')}</h4>
                         <p className="text-muted-foreground text-lg">
-                          Rüyanın enerjisini bugüne taşımak için 1 tarot kartı çek — kartlar genelde aynı temayı yansıtır.
+                          {ui('ui_dreams_tarot_cta_desc', 'Draw one tarot card to carry the energy of your dream into today; cards often reflect the same theme.')}
                         </p>
                       </div>
                       <Link 
                         href="/tr/tarot?spread=one_card"
                         className="px-8 py-4 bg-brand-primary text-(--gm-bg) rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 whitespace-nowrap"
                       >
-                        1 KART ÇEK <ArrowRight className="w-5 h-5" />
+                        {ui('ui_dreams_draw_one_card', 'DRAW 1 CARD')} <ArrowRight className="w-5 h-5" />
                       </Link>
                     </div>
                   </motion.div>
@@ -331,14 +333,14 @@ export default function DreamHub() {
                   <div className="mt-20 pt-10 border-t border-[var(--gm-text)]/5 flex flex-col lg:flex-row items-center justify-between gap-10">
                     <div className="flex flex-col gap-2 text-center lg:text-left">
                       <p className="text-sm text-muted-foreground italic font-serif opacity-50">
-                        * Bu yorum Jung arketipleri ve kadim semboloji ile harmanlanarak yapay zeka tarafından üretilmiştir.
+                        {ui('ui_dreams_ai_disclaimer', '* This interpretation was generated by AI using Jungian archetypes and ancient symbolism.')}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-6">
-                      <ShareCard 
-                        title="Rüya Yorumumu Paylaş"
-                        shareText={`GoldMoodAstro'da rüyamı yorumlattım ✨\nSembollerim: ${result.symbols.map((s: any) => s.name).join(', ')}\nBilinçaltının gizli mesajını keşfet:`}
+                      <ShareCard
+                        title={ui('ui_dreams_share_title', 'Share My Dream Reading')}
+                        shareText={`${ui('ui_dreams_share_text_line1', 'I interpreted my dream on GoldMoodAstro ✨')}\n${ui('ui_dreams_share_text_symbols', 'My symbols:')} ${result.symbols.map((s: any) => s.name).join(', ')}\n${ui('ui_dreams_share_text_line3', 'Discover the hidden message of the subconscious:')}`}
                         variant="dream"
                         data={{
                           symbols: result.symbols.map((s: any) => s.name),
@@ -353,7 +355,7 @@ export default function DreamHub() {
                         }}
                         className="flex items-center gap-2 px-6 py-3 rounded-full bg-surface-high hover:bg-surface transition-colors font-bold text-xs uppercase tracking-widest text-brand-primary"
                       >
-                        TEKRAR YORUMLA <RotateCcw className="w-4 h-4" />
+                        {ui('ui_dreams_interpret_again', 'INTERPRET AGAIN')} <RotateCcw className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

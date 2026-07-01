@@ -15,9 +15,9 @@ import type { FooterSectionDto, PublicMenuItemDto } from '@/integrations/shared'
 
 export type FooterProps = {
   locale?: string;
-  /** SSR'da fetch edilen footer sections — RTK Query loading flicker'ını önler. */
+  /** Footer sections fetched on SSR to prevent RTK Query loading flicker. */
   initialFooterSections?: FooterSectionDto[];
-  /** SSR'da fetch edilen footer menu items (location='footer'). */
+  /** Footer menu items fetched on SSR (location='footer'). */
   initialFooterMenuItems?: PublicMenuItemDto[];
 };
 import { useLocaleShort, useUiSection } from '@/i18n';
@@ -37,10 +37,8 @@ const cleanHashLink = (href: string) => {
   return href;
 };
 
-// Footer sadece DB'den gelir (footer_sections + menu_items location='footer').
-// Hardcoded fallback YOK — RTK Query loading sırasında footer link bölümü boş kalır,
-// veri gelince doğrulanmış DB içerik tek seferde render edilir. "Düzgün menu → hardcoded"
-// flicker'ı bu sayede tetiklenmez.
+// Footer links come only from DB (footer_sections + menu_items location='footer').
+// There is no hardcoded link fallback; while data loads, the link area stays empty.
 
 type FooterRenderSection = {
   id: string;
@@ -54,7 +52,7 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
   const { ui } = useUiSection('ui_footer', locale);
   const { isAuthenticated } = useAuthStore();
 
-  // SSR initial data varsa RTK Query'yi atla → flicker yok. Aksi halde RTK Query çağrılır.
+  // Skip RTK Query when SSR initial data is present to avoid flicker.
   const hasInitialSections = Array.isArray(initialFooterSections) && initialFooterSections.length > 0;
   const hasInitialMenuItems = Array.isArray(initialFooterMenuItems) && initialFooterMenuItems.length > 0;
 
@@ -98,7 +96,7 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
     return m;
   }, [footerMenuItems]);
 
-  // Footer sadece DB'den render edilir. Veri gelene kadar boş; hardcoded fallback YOK.
+  // Render footer links only from DB data.
   const renderSections: FooterRenderSection[] = useMemo(() => {
     return sections
       .map<FooterRenderSection>((sec) => ({
@@ -130,16 +128,16 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
               </span>
             </Link>
             <p className="text-[var(--gm-text-dim)] font-light text-[15px] leading-relaxed mb-8 max-w-[260px]">
-              {ui('ui_footer_tagline', 'Doğum haritanızdan beslenen kişisel rehberlik ve modern astroloji deneyimi.')}
+              {ui('ui_footer_tagline', 'Personal guidance and a modern astrology experience powered by your birth chart.')}
             </p>
             <div className="mb-8">
               <SocialLinks socials={socials} size="sm" />
             </div>
 
-            {/* Hızlı Erişim / Auth CTA */}
+            {/* Quick access / auth CTA */}
             <div className="mb-8 flex flex-col gap-3">
               <span className="font-display text-[9px] tracking-[0.3em] text-[var(--gm-gold-deep)] uppercase mb-1">
-                {locale === 'tr' ? 'Hesabınız' : 'Your Account'}
+                {ui('ui_footer_account_label', 'Your Account')}
               </span>
               {!isAuthenticated ? (
                 <Link 
@@ -147,14 +145,14 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
                   className="inline-flex items-center gap-2 text-[var(--gm-text)] hover:text-[var(--gm-gold)] transition-colors text-[13px] font-bold tracking-wider uppercase border border-[var(--gm-border-soft)] rounded-full px-5 py-2 w-fit bg-[var(--gm-surface)]/20 hover:border-[var(--gm-gold)]/40"
                   onClick={() => trackEvent('signup_start').catch(() => {})}
                 >
-                  {locale === 'tr' ? 'Hesap Aç' : 'Create Account'}
+                  {ui('ui_footer_create_account', 'Create Account')}
                 </Link>
               ) : (
                 <Link 
                   href={localizePath(locale, '/dashboard')} 
                   className="inline-flex items-center gap-2 text-[var(--gm-text)] hover:text-[var(--gm-gold)] transition-colors text-[13px] font-bold tracking-wider uppercase border border-[var(--gm-border-soft)] rounded-full px-5 py-2 w-fit bg-[var(--gm-surface)]/20 hover:border-[var(--gm-gold)]/40"
                 >
-                  {locale === 'tr' ? 'Panelime Git' : 'Go to Dashboard'}
+                  {ui('ui_footer_go_dashboard', 'Go to Dashboard')}
                 </Link>
               )}
             </div>
@@ -162,7 +160,7 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
             {/* App Download Links */}
             <div className="flex flex-col gap-3">
               <span className="font-display text-[9px] tracking-[0.3em] text-[var(--gm-gold-deep)] uppercase mb-1">
-                {locale === 'tr' ? 'Mobil Uygulamamız' : 'Our Mobile App'}
+                {ui('ui_footer_mobile_app', 'Our Mobile App')}
               </span>
               <div className="flex gap-4">
                 <a 
@@ -219,13 +217,13 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
             <div className="flex items-center gap-3">
               <ShieldCheck size={20} className="text-[var(--gm-gold)]" />
               <span className="font-display text-[10px] tracking-[0.2em] text-[var(--gm-text-dim)] uppercase">
-                {locale === 'tr' ? '256-bit SSL Güvenlik' : '256-bit SSL Security'}
+                {ui('ui_footer_ssl_security', '256-bit SSL Security')}
               </span>
             </div>
             <div className="flex items-center gap-3">
               <Lock size={18} className="text-[var(--gm-gold)]" />
               <span className="font-display text-[10px] tracking-[0.2em] text-[var(--gm-text-dim)] uppercase">
-                {locale === 'tr' ? 'Güvenli Ödeme Altyapısı' : 'Secure Payment Gateway'}
+                {ui('ui_footer_secure_payment', 'Secure Payment Gateway')}
               </span>
             </div>
           </div>
@@ -240,11 +238,11 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
 
         <div className="pt-8 border-t border-[var(--gm-border-soft)] flex flex-col md:flex-row justify-between items-center gap-8 text-[11px] tracking-[0.1em] text-[var(--gm-muted)] uppercase">
           <p>
-            &copy; {new Date().getFullYear()} GOLD MOOD ASTROLOGY. {ui('ui_footer_rights', 'TÜM HAKLARI SAKLIDIR.')}
+            &copy; {new Date().getFullYear()} GOLD MOOD ASTROLOGY. {ui('ui_footer_rights', 'ALL RIGHTS RESERVED.')}
           </p>
           <div className="flex gap-6">
             <Link href={localizePath(locale, '/editorial-policy')} className="hover:text-[var(--gm-gold)] transition-colors">
-              {locale === 'tr' ? 'EDİTORYAL POLİTİKA' : locale === 'de' ? 'REDAKTIONELLE RICHTLINIE' : 'EDITORIAL POLICY'}
+              {ui('ui_footer_editorial_policy', 'EDITORIAL POLICY')}
             </Link>
             <a href="https://guezelwebdesign.com" target="_blank" rel="noopener" className="hover:text-[var(--gm-gold)] transition-colors">
               DESIGNED BY GUEZELEWEB

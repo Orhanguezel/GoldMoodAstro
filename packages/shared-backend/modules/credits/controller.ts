@@ -7,15 +7,18 @@ import { db } from '../../db/client';
 import { paymentGateways, orders, payments } from '../orders/schema';
 import { eq, and } from 'drizzle-orm';
 import { profiles } from '../profiles/schema';
+import { apiMessage } from '../_shared/api-i18n';
 
 export async function handleListPackages(req: FastifyRequest, reply: FastifyReply) {
-  const packages = await repo.listActivePackages();
+  const q = req.query as Record<string, string | undefined>;
+  const locale = q?.locale || (req as any).locale || 'tr';
+  const packages = await repo.listActivePackages(locale);
   return reply.send({ data: packages });
 }
 
 export async function handleGetBalance(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
   const balance = await repo.getUserBalance(user.id);
   return reply.send({ data: balance });
 }
@@ -39,16 +42,16 @@ function resolveIyzicoConfig(gateway?: { config: string | null }) {
 
 export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: 'Yetkisiz erişim.' });
+  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const { package_id, locale = 'tr' } = req.body as { package_id: string, locale?: string };
   
-  const pkg = await repo.getPackageById(package_id);
-  if (!pkg) return reply.status(404).send({ error: 'Paket bulunamadı.' });
+  const pkg = await repo.getPackageById(package_id, locale);
+  if (!pkg) return reply.status(404).send({ error: apiMessage(req, 'package_not_found') });
 
   // 1. Resolve Iyzico Gateway
   const [gateway] = await db.select().from(paymentGateways).where(and(eq(paymentGateways.slug, 'iyzico'), eq(paymentGateways.is_active, 1))).limit(1);
-  if (!gateway) return reply.status(400).send({ error: 'Ödeme sistemi yapılandırılmamış.' });
+  if (!gateway) return reply.status(400).send({ error: apiMessage(req, 'payment_not_configured') });
 
   const iyzico = new IyzicoService(resolveIyzicoConfig(gateway));
 
@@ -68,7 +71,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
     currency: 'TRY',
     payment_gateway_id: gateway.id,
     payment_status: 'unpaid',
-    notes: `Kredi Yükleme: ${pkg.nameTr}`,
+    notes: `Kredi Yükleme: ${pkg.name ?? pkg.nameTr ?? pkg.name_tr}`,
   });
 
   const iyzicoLocale = resolveIyzicoLocale(locale);
@@ -113,7 +116,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
       },
       basketItems: [{
         id: pkg.id,
-        name: pkg.nameTr,
+        name: pkg.name ?? pkg.nameTr ?? pkg.name_tr,
         category1: 'Credits',
         itemType: 'VIRTUAL',
         price: amount,
@@ -132,7 +135,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
     }
   } catch (err) {
     console.error('Iyzico Init Error:', err);
-    return reply.status(500).send({ error: 'Ödeme başlatılamadı.' });
+    return reply.status(500).send({ error: apiMessage(req, 'payment_init_failed') });
   }
 }
 
@@ -167,7 +170,7 @@ export async function handleIyzicoCallback(req: FastifyRequest, reply: FastifyRe
           type: 'package',
           id: pkg.id,
           orderId: order.id,
-          description: `${pkg.nameTr} paketi satın alındı.`
+          description: `${pkg.name ?? pkg.nameTr ?? pkg.name_tr} paketi satın alındı.`
         });
         
         // 3. Log payment

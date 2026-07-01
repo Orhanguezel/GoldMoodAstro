@@ -5,7 +5,7 @@ export type FaqAccordionItem = {
   answer: string;
 };
 
-export default function FaqAccordion({ items, title = 'Sıkça Sorulan Sorular' }: { items: FaqAccordionItem[]; title?: string }) {
+export default function FaqAccordion({ items, title = 'Frequently Asked Questions' }: { items: FaqAccordionItem[]; title?: string }) {
   if (!items.length) return null;
 
   return (

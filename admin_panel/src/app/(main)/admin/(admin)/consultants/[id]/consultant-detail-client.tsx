@@ -130,11 +130,11 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
   async function createServiceCurrent() {
     const name = serviceForm.name.trim();
     if (!name) {
-      toast.error('Hizmet adı zorunlu');
+      toast.error(t('services.name_required'));
       return;
     }
     if (!serviceForm.is_free && serviceForm.price <= 0) {
-      toast.error('Ücretli hizmette fiyat 0’dan büyük olmalı');
+      toast.error(t('services.price_positive'));
       return;
     }
     try {
@@ -152,29 +152,29 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
           sort_order: services.length,
         },
       }).unwrap();
-      toast.success('Hizmet eklendi');
+      toast.success(t('services.created'));
       setServiceForm(EMPTY_SERVICE_FORM);
     } catch {
-      toast.error('Hizmet eklenemedi');
+      toast.error(t('services.create_failed'));
     }
   }
 
   async function updateServiceCurrent(serviceId: string, body: { media_type?: 'audio' | 'video'; is_active?: number }) {
     try {
       await updateService({ consultantId: id, id: serviceId, body }).unwrap();
-      toast.success('Hizmet güncellendi');
+      toast.success(t('services.updated'));
     } catch {
-      toast.error('Hizmet güncellenemedi');
+      toast.error(t('services.update_failed'));
     }
   }
 
   async function deleteServiceCurrent(serviceId: string) {
-    if (!window.confirm('Hizmet silinsin mi?')) return;
+    if (!window.confirm(t('services.delete_confirm'))) return;
     try {
       await deleteService({ consultantId: id, id: serviceId }).unwrap();
-      toast.success('Hizmet silindi');
+      toast.success(t('services.deleted'));
     } catch {
-      toast.error('Hizmet silinemedi');
+      toast.error(t('services.delete_failed'));
     }
   }
 
@@ -331,9 +331,9 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
           <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
             <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">
               <CardTitle className="font-serif text-2xl flex items-center gap-3">
-                <CreditCard className="h-5 w-5 text-gm-gold" /> Hizmet Paketleri
+                <CreditCard className="h-5 w-5 text-gm-gold" /> {t('services.title')}
               </CardTitle>
-              <CardDescription>Danışmanın sesli/görüntülü hizmet paketlerini yönetin.</CardDescription>
+              <CardDescription>{t('services.description')}</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <div className="grid gap-3 md:grid-cols-[1.2fr_0.8fr_0.7fr_0.7fr]">
@@ -343,14 +343,14 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                     const name = e.target.value;
                     setServiceForm((prev) => ({ ...prev, name, slug: prev.slug || mediaSlug(name, prev.media_type) }));
                   }}
-                  placeholder="Hizmet adı"
+                  placeholder={t('services.namePlaceholder')}
                   className="h-11 rounded-xl border border-gm-border-soft bg-gm-bg-deep px-4 text-sm text-gm-text"
                 />
                 <input
                   type="number"
                   value={serviceForm.duration_minutes}
                   onChange={(e) => setServiceForm((prev) => ({ ...prev, duration_minutes: Number(e.target.value) || 45 }))}
-                  placeholder="Süre"
+                  placeholder={t('services.durationPlaceholder')}
                   className="h-11 rounded-xl border border-gm-border-soft bg-gm-bg-deep px-4 text-sm text-gm-text"
                 />
                 <input
@@ -358,7 +358,7 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                   value={serviceForm.price}
                   onChange={(e) => setServiceForm((prev) => ({ ...prev, price: Number(e.target.value) || 0 }))}
                   disabled={serviceForm.is_free}
-                  placeholder="Fiyat"
+                  placeholder={t('services.pricePlaceholder')}
                   className="h-11 rounded-xl border border-gm-border-soft bg-gm-bg-deep px-4 text-sm text-gm-text disabled:opacity-50"
                 />
                 <select
@@ -369,8 +369,8 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                   }}
                   className="h-11 rounded-xl border border-gm-border-soft bg-gm-bg-deep px-4 text-sm text-gm-text"
                 >
-                  <option value="audio">Sesli</option>
-                  <option value="video">Görüntülü</option>
+                  <option value="audio">{t('services.audio')}</option>
+                  <option value="video">{t('services.video')}</option>
                 </select>
               </div>
 
@@ -383,7 +383,7 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                       onChange={(e) => setServiceForm((prev) => ({ ...prev, is_free: e.target.checked, price: e.target.checked ? 0 : prev.price }))}
                       className="accent-gm-success"
                     />
-                    Ücretsiz
+                    {t('services.free')}
                   </label>
                   <label className="inline-flex items-center gap-2 text-sm text-gm-muted">
                     <input
@@ -392,7 +392,7 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                       onChange={(e) => setServiceForm((prev) => ({ ...prev, is_active: e.target.checked }))}
                       className="accent-gm-gold"
                     />
-                    Aktif
+                    {t('services.active')}
                   </label>
                 </div>
                 <Button
@@ -401,7 +401,7 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                   className="rounded-full bg-gm-gold text-gm-bg hover:bg-gm-gold-dim px-6 h-11 font-bold tracking-widest uppercase text-[10px]"
                 >
                   <Plus className="mr-2 size-4" />
-                  Hizmet Ekle
+                  {t('services.add')}
                 </Button>
               </div>
 
@@ -410,7 +410,7 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
               {servicesQuery.isLoading ? (
                 <Skeleton className="h-24 w-full rounded-2xl bg-gm-surface/20" />
               ) : services.length === 0 ? (
-                <p className="text-sm text-gm-muted italic">Henüz hizmet paketi yok.</p>
+                <p className="text-sm text-gm-muted italic">{t('services.empty')}</p>
               ) : (
                 <div className="space-y-3">
                   {services.map((service) => (
@@ -423,13 +423,13 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                           <p className="font-serif text-lg text-gm-text">{service.name}</p>
                           <Badge variant="outline" className="rounded-full border-gm-border-soft text-[10px] uppercase tracking-widest">
                             {service.media_type === 'video' ? <Video className="mr-1 size-3" /> : <Mic className="mr-1 size-3" />}
-                            {service.media_type === 'video' ? 'Görüntülü' : 'Sesli'}
+                            {service.media_type === 'video' ? t('services.video') : t('services.audio')}
                           </Badge>
-                          {service.is_free === 1 && <Badge className="rounded-full bg-gm-success/10 text-gm-success">Ücretsiz</Badge>}
-                          {service.is_active !== 1 && <Badge className="rounded-full bg-gm-muted/10 text-gm-muted">Pasif</Badge>}
+                          {service.is_free === 1 && <Badge className="rounded-full bg-gm-success/10 text-gm-success">{t('services.free')}</Badge>}
+                          {service.is_active !== 1 && <Badge className="rounded-full bg-gm-muted/10 text-gm-muted">{t('services.inactive')}</Badge>}
                         </div>
                         <p className="mt-1 font-mono text-[11px] text-gm-muted">
-                          {service.slug} · {service.duration_minutes} dk · {service.is_free === 1 ? 'Ücretsiz' : `${service.price} ${service.currency}`}
+                          {service.slug} · {service.duration_minutes} {t('services.minutesShort')} · {service.is_free === 1 ? t('services.free') : `${service.price} ${service.currency}`}
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -439,8 +439,8 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                           disabled={updateServiceState.isLoading}
                           className="h-10 rounded-xl border border-gm-border-soft bg-gm-bg-deep px-3 text-xs text-gm-text"
                         >
-                          <option value="audio">Sesli</option>
-                          <option value="video">Görüntülü</option>
+                          <option value="audio">{t('services.audio')}</option>
+                          <option value="video">{t('services.video')}</option>
                         </select>
                         <Button
                           variant="outline"
@@ -449,7 +449,7 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                           className="h-10 rounded-full border-gm-border-soft text-[10px] uppercase tracking-widest"
                         >
                           <Save className="mr-2 size-3" />
-                          {service.is_active === 1 ? 'Pasifleştir' : 'Aktifleştir'}
+                          {service.is_active === 1 ? t('services.deactivate') : t('services.activate')}
                         </Button>
                         <Button
                           variant="outline"
@@ -520,7 +520,7 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                       ))}
                     </div>
                   </div>
-                  <p className="text-[10px] text-gm-muted italic">({item.rating_count || 0} reviews)</p>
+                  <p className="text-[10px] text-gm-muted italic">{t('detail.reviewsCount', { count: item.rating_count || 0 })}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-gm-gold/10 flex items-center justify-center text-gm-gold">
                   <Star size={20} />

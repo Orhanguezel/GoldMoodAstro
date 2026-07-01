@@ -1,25 +1,34 @@
 import React from 'react';
 import { UserSearch, CalendarCheck, PhoneCall } from 'lucide-react';
+import { useUiSection } from '@/i18n';
 
 const STEPS = [
   {
     icon: UserSearch,
-    title: 'Danışmanını Seç',
-    desc: 'Uzmanlık alanlarına ve gerçek kullanıcı yorumlarına göre sana en uygun rehberi bul.',
+    titleKey: 'ui_home_intro_step1_title',
+    descKey: 'ui_home_intro_step1_desc',
+    title: 'Choose Your Consultant',
+    desc: 'Find the guide that fits you best by expertise area and authentic user reviews.',
   },
   {
     icon: CalendarCheck,
-    title: 'Randevu Al',
-    desc: 'Danışmanın takviminden sana uygun zamanı seç ve güvenli ödemeni tamamla.',
+    titleKey: 'ui_home_intro_step2_title',
+    descKey: 'ui_home_intro_step2_desc',
+    title: 'Book an Appointment',
+    desc: 'Choose a time from the consultant calendar and complete your secure payment.',
   },
   {
     icon: PhoneCall,
-    title: 'Görüşmeyi Başlat',
-    desc: 'Randevu saatinde uygulama içinden sesli görüşmeye katıl, rehberliğin tadını çıkar.',
+    titleKey: 'ui_home_intro_step3_title',
+    descKey: 'ui_home_intro_step3_desc',
+    title: 'Start the Session',
+    desc: 'Join the in-app voice session at appointment time and receive your guidance.',
   },
 ];
 
-export default function HomeIntroSection() {
+export default function HomeIntroSection({ locale = 'tr' }: { locale?: string }) {
+  const { ui } = useUiSection('ui_home', locale as any);
+
   return (
     <section className="py-32 bg-[var(--gm-bg-deep)] border-y border-[var(--gm-border-soft)] relative overflow-hidden">
       {/* Decorative Aura */}
@@ -28,13 +37,14 @@ export default function HomeIntroSection() {
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-20">
           <span className="font-display text-[10px] tracking-[0.5em] text-[var(--gm-gold-deep)] uppercase mb-4 block">
-            Süreç
+            {ui('ui_home_intro_eyebrow', 'Process')}
           </span>
           <h2 className="font-display text-3xl md:text-5xl text-[var(--gm-text)] mb-6">
-            Yolculuğunuz Nasıl <span className="text-[var(--gm-gold)]">İşler?</span>
+            {ui('ui_home_intro_title_1', 'How Does Your Journey')}{' '}
+            <span className="text-[var(--gm-gold)]">{ui('ui_home_intro_title_2', 'Work?')}</span>
           </h2>
           <p className="font-serif italic text-[var(--gm-text-dim)] max-w-2xl mx-auto">
-            Sadece üç adımda, aradığınız ruhsal rehberliğe ve içsel huzura kavuşun.
+            {ui('ui_home_intro_desc', 'Reach the spiritual guidance and inner calm you are looking for in just three steps.')}
           </p>
         </div>
 
@@ -62,11 +72,11 @@ export default function HomeIntroSection() {
                 </div>
 
                 <h3 className="font-serif text-2xl text-[var(--gm-text)] mb-4 group-hover:text-[var(--gm-gold)] transition-colors">
-                  {step.title}
+                  {ui(step.titleKey, step.title)}
                 </h3>
 
                 <p className="text-[var(--gm-text-dim)] text-sm leading-relaxed max-w-[280px]">
-                  {step.desc}
+                  {ui(step.descKey, step.desc)}
                 </p>
               </div>
             ))}

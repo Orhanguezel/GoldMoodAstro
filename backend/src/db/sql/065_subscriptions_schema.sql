@@ -49,6 +49,19 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   CONSTRAINT fk_subscriptions_plan FOREIGN KEY (plan_id) REFERENCES subscription_plans(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS subscription_plan_i18n (
+  id CHAR(36) PRIMARY KEY,
+  plan_id CHAR(36) NOT NULL,
+  locale CHAR(8) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  UNIQUE KEY subscription_plan_i18n_uq (plan_id, locale),
+  KEY subscription_plan_i18n_locale_idx (locale),
+  CONSTRAINT fk_subscription_plan_i18n_plan FOREIGN KEY (plan_id) REFERENCES subscription_plans(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ────────────────────────────────────────────────────────────────────────────
 -- Seed: 3 plan
 -- Strateji: free (0₺) — temel, monthly (149₺/ay) — Ms Astro'nun altı,
@@ -68,3 +81,17 @@ ON DUPLICATE KEY UPDATE
   features = VALUES(features),
   is_active = VALUES(is_active),
   display_order = VALUES(display_order);
+
+INSERT INTO subscription_plan_i18n (id, plan_id, locale, name, description) VALUES
+('70010000-0000-4000-8000-000000000001', '70000000-0000-4000-8000-000000000001', 'tr', 'Ücretsiz', 'Günlük yorum ve temel doğum haritası.'),
+('70010000-0000-4000-8000-000000000002', '70000000-0000-4000-8000-000000000001', 'en', 'Free', 'Daily reading and basic birth chart.'),
+('70010000-0000-4000-8000-000000000003', '70000000-0000-4000-8000-000000000001', 'de', 'Kostenlos', 'Tägliche Deutung und einfache Geburtshoroskop-Analyse.'),
+('70010000-0000-4000-8000-000000000004', '70000000-0000-4000-8000-000000000002', 'tr', 'Aylık', 'Sınırsız AI yorum, sinastri, transit takvimi.'),
+('70010000-0000-4000-8000-000000000005', '70000000-0000-4000-8000-000000000002', 'en', 'Monthly', 'Unlimited AI readings, synastry, transit calendar.'),
+('70010000-0000-4000-8000-000000000006', '70000000-0000-4000-8000-000000000002', 'de', 'Monatlich', 'Unbegrenzte KI-Deutungen, Synastrie und Transitkalender.'),
+('70010000-0000-4000-8000-000000000007', '70000000-0000-4000-8000-000000000003', 'tr', 'Yıllık', 'Aylık tüm özellikler + %16 indirim, yıllık fatura.'),
+('70010000-0000-4000-8000-000000000008', '70000000-0000-4000-8000-000000000003', 'en', 'Yearly', 'All monthly features + 16% off, yearly billing.'),
+('70010000-0000-4000-8000-000000000009', '70000000-0000-4000-8000-000000000003', 'de', 'Jährlich', 'Alle monatlichen Funktionen + 16 % Rabatt bei jährlicher Abrechnung.')
+ON DUPLICATE KEY UPDATE
+  name = VALUES(name),
+  description = VALUES(description);

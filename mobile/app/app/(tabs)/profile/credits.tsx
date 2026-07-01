@@ -11,6 +11,7 @@ import {
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useFocusEffect, router } from 'expo-router';
 import { ChevronLeft, Wallet, Gift, ArrowUpRight, ArrowDownLeft, Zap } from 'lucide-react-native';
 
@@ -255,6 +256,7 @@ function formatMoneyMinor(value: number, currency: string): string {
 }
 
 export default function CreditsScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
@@ -314,10 +316,10 @@ export default function CreditsScreen() {
         await Linking.openURL(checkout);
       } else {
         await load();
-        Alert.alert('İşlem Başlatıldı', 'Ödeme akışını tamamlamak için yönlendirileceksiniz.');
+        Alert.alert(t('credits.purchaseStartedTitle', 'İşlem Başlatıldı'), t('credits.purchaseStartedBody', 'Ödeme akışını tamamlamak için yönlendirileceksiniz.'));
       }
     } catch (err: any) {
-      Alert.alert('Hata', err.message || 'Kredi paketi alınamadı.');
+      Alert.alert(t('common.error', 'Bir hata oluştu'), err.message || t('credits.purchaseError', 'Kredi paketi alınamadı.'));
     } finally {
       setPurchasingId(null);
     }
@@ -342,7 +344,7 @@ export default function CreditsScreen() {
           <Pressable onPress={() => safeRouterBack('/(tabs)/profile')} style={styles.headerBtn}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
-          <Text style={styles.headerTitle}>Kredi & Cüzdan</Text>
+          <Text style={styles.headerTitle}>{t('credits.title', 'Kredi & Cüzdan')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -355,21 +357,21 @@ export default function CreditsScreen() {
           <View style={styles.balanceCard}>
             <View style={styles.balanceHeader}>
               <Wallet size={20} color={colors.gold} />
-              <Text style={styles.balanceLabel}>MEVCUT BAKİYE</Text>
+              <Text style={styles.balanceLabel}>{t('credits.currentBalance', 'MEVCUT BAKİYE')}</Text>
             </View>
             <Text style={styles.balanceValue}>
-              {creditMe?.balance || 0} <Text style={styles.currency}>KREDİ</Text>
+              {creditMe?.balance || 0} <Text style={styles.currency}>{t('credits.unit', 'KREDİ')}</Text>
             </Text>
             <View style={styles.balanceFooter}>
               <Zap size={14} color={colors.success} />
-              <Text style={styles.balanceInfo}>Anında kullanılabilir bakiyeniz.</Text>
+              <Text style={styles.balanceInfo}>{t('credits.instantInfo', 'Anında kullanılabilir bakiyeniz.')}</Text>
             </View>
           </View>
 
           {/* Packages Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>KREDİ YÜKLE</Text>
+              <Text style={styles.sectionTitle}>{t('credits.topUpSection', 'KREDİ YÜKLE')}</Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pkgScroll}>
               <View style={styles.pkgContainer}>
@@ -377,12 +379,12 @@ export default function CreditsScreen() {
                   <View key={pkg.id} style={styles.pkgCard}>
                     <View style={styles.pkgTop}>
                       <Text style={styles.pkgCredits}>{pkg.credits}</Text>
-                      <Text style={styles.pkgCreditsLabel}>KREDİ</Text>
+                      <Text style={styles.pkgCreditsLabel}>{t('credits.unit', 'KREDİ')}</Text>
                     </View>
                     {pkg.bonus_credits > 0 && (
                       <View style={styles.bonusBadge}>
                         <Gift size={10} color={colors.ink} />
-                        <Text style={styles.bonusText}>+{pkg.bonus_credits} BONUS</Text>
+                        <Text style={styles.bonusText}>{t('credits.bonusBadge', { defaultValue: '+{{count}} BONUS', count: pkg.bonus_credits })}</Text>
                       </View>
                     )}
                     <Text style={styles.pkgPrice}>{formatMoneyMinor(pkg.price_minor, pkg.currency)}</Text>
@@ -391,7 +393,7 @@ export default function CreditsScreen() {
                       onPress={() => onPurchase(pkg)}
                       disabled={purchasingId === pkg.id}
                     >
-                      {purchasingId === pkg.id ? <ActivityIndicator size="small" color={colors.ink} /> : <Text style={styles.buyBtnText}>Satın Al</Text>}
+                      {purchasingId === pkg.id ? <ActivityIndicator size="small" color={colors.ink} /> : <Text style={styles.buyBtnText}>{t('credits.buyBtn', 'Satın Al')}</Text>}
                     </Pressable>
                   </View>
                 ))}
@@ -402,7 +404,7 @@ export default function CreditsScreen() {
           {/* Transactions Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>SON İŞLEMLER</Text>
+              <Text style={styles.sectionTitle}>{t('credits.recentTransactions', 'SON İŞLEMLER')}</Text>
             </View>
             {transactions.length > 0 ? (
               transactions.map((tx) => (
@@ -411,7 +413,7 @@ export default function CreditsScreen() {
                     {tx.amount > 0 ? <ArrowDownLeft size={16} color={colors.success} /> : <ArrowUpRight size={16} color={colors.danger} />}
                   </View>
                   <View style={styles.txBody}>
-                    <Text style={styles.txTitle}>{tx.description || (tx.amount > 0 ? 'Kredi Yükleme' : 'Kredi Harcaması')}</Text>
+                    <Text style={styles.txTitle}>{tx.description || (tx.amount > 0 ? t('credits.txTopUp', 'Kredi Yükleme') : t('credits.txSpend', 'Kredi Harcaması'))}</Text>
                     <Text style={styles.txDate}>{new Date(tx.created_at).toLocaleDateString('tr-TR')}</Text>
                   </View>
                   <Text style={[styles.txAmount, tx.amount > 0 ? styles.txPlus : styles.txMinus]}>
@@ -421,7 +423,7 @@ export default function CreditsScreen() {
               ))
             ) : (
               <View style={styles.emptyBox}>
-                <Text style={styles.emptyText}>Henüz bir işlem bulunmuyor.</Text>
+                <Text style={styles.emptyText}>{t('credits.noTransactions', 'Henüz bir işlem bulunmuyor.')}</Text>
               </View>
             )}
           </View>

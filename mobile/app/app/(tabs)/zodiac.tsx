@@ -63,6 +63,7 @@ function buildScreenStyles(t: AppTheme) {
 }
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { Cinzel_700Bold } from '@expo-google-fonts/cinzel';
 import { Sparkles, Zap, Star } from 'lucide-react-native';
@@ -72,19 +73,19 @@ import { MenuHeaderButton } from '@/components/MenuHeaderButton';
 
 const { width } = Dimensions.get('window');
 
-const SIGNS = [
-  { id: 'aries', label: 'Koç', date: '21 Mar - 19 Nis' },
-  { id: 'taurus', label: 'Boğa', date: '20 Nis - 20 May' },
-  { id: 'gemini', label: 'İkizler', date: '21 May - 20 Haz' },
-  { id: 'cancer', label: 'Yengeç', date: '21 Haz - 22 Tem' },
-  { id: 'leo', label: 'Aslan', date: '23 Tem - 22 Ağu' },
-  { id: 'virgo', label: 'Başak', date: '23 Ağu - 22 Eyl' },
-  { id: 'libra', label: 'Terazi', date: '23 Eyl - 22 Eki' },
-  { id: 'scorpio', label: 'Akrep', date: '23 Eki - 21 Kas' },
-  { id: 'sagittarius', label: 'Yay', date: '22 Kas - 21 Ara' },
-  { id: 'capricorn', label: 'Oğlak', date: '22 Ara - 19 Oca' },
-  { id: 'aquarius', label: 'Kova', date: '20 Oca - 18 Şub' },
-  { id: 'pisces', label: 'Balık', date: '19 Şub - 20 Mar' },
+const SIGN_IDS = [
+  'aries',
+  'taurus',
+  'gemini',
+  'cancer',
+  'leo',
+  'virgo',
+  'libra',
+  'scorpio',
+  'sagittarius',
+  'capricorn',
+  'aquarius',
+  'pisces',
 ];
 
 const ZODIAC_IMAGES: Record<string, ImageSourcePropType> = {
@@ -106,6 +107,7 @@ export default function ZodiacHubScreen() {
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -120,21 +122,21 @@ export default function ZodiacHubScreen() {
           </View>
 
           <View style={styles.grid}>
-            {SIGNS.map((sign) => (
-              <Pressable 
-                key={sign.id} 
+            {SIGN_IDS.map((signId) => (
+              <Pressable
+                key={signId}
                 style={styles.gridItem}
-                onPress={() => router.push(`/zodiac/${sign.id}` as any)}
+                onPress={() => router.push(`/zodiac/${signId}` as any)}
               >
                 <View style={styles.imageContainer}>
-                  <Image 
-                    source={ZODIAC_IMAGES[sign.id]} 
+                  <Image
+                    source={ZODIAC_IMAGES[signId]}
                     style={styles.signImage}
                     resizeMode="contain"
                   />
                 </View>
-                <Text style={styles.signLabel}>{sign.label}</Text>
-                <Text style={styles.signDate}>{sign.date}</Text>
+                <Text style={styles.signLabel}>{t(`zodiacSign.${signId}.name`)}</Text>
+                <Text style={styles.signDate}>{t(`zodiacSign.${signId}.datesShort`)}</Text>
               </Pressable>
             ))}
           </View>

@@ -1,14 +1,15 @@
 'use client';
 
-// T29-5 — Booking-bağlı mesajlaşma
-// Booking detay/listesinde "Mesaj Gönder" butonu → chat thread (context_type='booking')
-// Danışan ↔ danışman async mesajlaşma (görüşme öncesi/sonrası notlar).
+// T29-5 - booking-linked messaging.
+// Booking detail/list button opens a chat thread (context_type='booking').
+// Customer and consultant can exchange async notes before or after a session.
 
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import ChatWarningBanner from './ChatWarningBanner';
 import { getPublicApiBase } from '@/i18n/publicMetaApi';
+import { useUiSection } from '@/i18n';
 
 const API_BASE = getPublicApiBase() || '/api';
 
@@ -22,11 +23,11 @@ interface Message {
 
 interface Props {
   bookingId: string;
-  /** Buton metni (default: "Mesaj") */
+  /** Button text (default: "Message") */
   label?: string;
-  /** Compact icon-only buton */
+  /** Compact icon-only button */
   iconOnly?: boolean;
-  /** Buton stili: 'primary' (gold) ya da 'secondary' (outline) */
+  /** Button style: 'primary' (gold) or 'secondary' (outline) */
   variant?: 'primary' | 'secondary';
   className?: string;
 }
@@ -39,7 +40,9 @@ function formatTime(iso: string) {
   }
 }
 
-export default function BookingMessageButton({ bookingId, label = 'Mesaj', iconOnly, variant = 'secondary', className = '' }: Props) {
+export default function BookingMessageButton({ bookingId, label, iconOnly, variant = 'secondary', className = '' }: Props) {
+  const { ui } = useUiSection('ui_account');
+  const resolvedLabel = label ?? ui('ui_account_msg_button_label', 'Message');
   const [open, setOpen] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -73,7 +76,7 @@ export default function BookingMessageButton({ bookingId, label = 'Mesaj', iconO
       if (!tRes.ok) {
         const err = await tRes.json().catch(() => ({}));
         if (tRes.status === 401) {
-          toast.error('Giriş yapmalısınız');
+          toast.error(ui('ui_account_msg_login_required', 'You need to sign in'));
           setOpen(false);
           return;
         }
@@ -82,7 +85,7 @@ export default function BookingMessageButton({ bookingId, label = 'Mesaj', iconO
       const { thread } = await tRes.json();
       setThreadId(thread.id);
 
-      // 3) Mesajları yükle
+      // 3) Load messages
       const mRes = await fetch(`${API_BASE}/chat/threads/${encodeURIComponent(thread.id)}/messages?limit=100`, {
         credentials: 'include',
       });
@@ -91,7 +94,7 @@ export default function BookingMessageButton({ bookingId, label = 'Mesaj', iconO
         setMessages(mJson?.items ?? []);
       }
     } catch (e: any) {
-      toast.error(e?.message || 'Mesajlar yüklenemedi');
+      toast.error(e?.message || ui('ui_account_msg_load_failed', 'Messages could not be loaded'));
     } finally {
       setLoading(false);
     }
@@ -112,7 +115,7 @@ export default function BookingMessageButton({ bookingId, label = 'Mesaj', iconO
       setMessages((prev) => [...prev, message]);
       setDraft('');
     } catch {
-      toast.error('Gönderilemedi');
+      toast.error(ui('ui_account_msg_send_failed', 'Could not send'));
     } finally {
       setSending(false);
     }
@@ -127,11 +130,11 @@ export default function BookingMessageButton({ bookingId, label = 'Mesaj', iconO
       <button
         onClick={openModal}
         className={`inline-flex items-center justify-center gap-1.5 ${iconOnly ? 'w-9 h-9 rounded-full' : 'px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest'} ${buttonCls} transition-all ${className}`}
-        title="Bu randevu için mesaj gönder"
-        aria-label="Mesaj"
+        title={ui('ui_account_msg_button_title', 'Send a message for this booking')}
+        aria-label={ui('ui_account_msg_button_label', 'Message')}
       >
         <MessageCircle className={iconOnly ? 'w-4 h-4' : 'w-3.5 h-3.5'} />
-        {!iconOnly && label}
+        {!iconOnly && resolvedLabel}
       </button>
 
       {open && (
@@ -150,8 +153,8 @@ export default function BookingMessageButton({ bookingId, label = 'Mesaj', iconO
                   <MessageCircle className="w-5 h-5" />
                 </span>
                 <div>
-                  <h3 className="font-serif text-lg text-[var(--gm-text)]">Randevu Mesajları</h3>
-                  <p className="text-[11px] text-[var(--gm-muted)]">Booking #{bookingId.slice(0, 8)}</p>
+                  <h3 className="font-serif text-lg text-[var(--gm-text)]">{ui('ui_account_msg_modal_title', 'Booking Messages')}</h3>
+                  <p className="text-[11px] text-[var(--gm-muted)]">{ui('ui_account_msg_booking_ref', 'Booking')} #{bookingId.slice(0, 8)}</p>
                 </div>
               </div>
               <button onClick={() => setOpen(false)} disabled={sending} className="p-2 text-[var(--gm-muted)] hover:text-[var(--gm-text)]">
@@ -172,7 +175,7 @@ export default function BookingMessageButton({ bookingId, label = 'Mesaj', iconO
                 </div>
               ) : messages.length === 0 ? (
                 <div className="text-center py-8 text-[var(--gm-muted)] font-serif italic text-sm">
-                  Henüz mesaj yok. İlk mesajı sen yaz.
+                  {ui('ui_account_msg_empty', 'No messages yet. Write the first message.')}
                 </div>
               ) : (
                 messages.map((m) => {
@@ -210,7 +213,7 @@ export default function BookingMessageButton({ bookingId, label = 'Mesaj', iconO
                   }
                 }}
                 rows={2}
-                placeholder="Mesajını yaz..."
+                placeholder={ui('ui_account_msg_input_placeholder', 'Write your message...')}
                 disabled={sending}
                 className="flex-1 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)] resize-none focus:ring-2 focus:ring-[var(--gm-gold)]/30 focus:border-[var(--gm-gold)]/40 outline-none"
               />
@@ -220,7 +223,7 @@ export default function BookingMessageButton({ bookingId, label = 'Mesaj', iconO
                 className="h-11 px-4 rounded-xl bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] disabled:opacity-50 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
               >
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                Gönder
+                {ui('ui_account_msg_send_button', 'Send')}
               </button>
             </div>
           </div>

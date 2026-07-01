@@ -22,8 +22,10 @@ import {
   useDeleteLlmPromptMutation,
 } from '@/integrations/hooks';
 import { cn } from '@/lib/utils';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 export default function LlmPromptsClient() {
+  const t = useAdminT('admin.llmPrompts');
   const [searchTerm, setSearchTerm] = React.useState('');
   const query = useListLlmPromptsQuery({ search: searchTerm });
   const [update] = useUpdateLlmPromptMutation();
@@ -32,19 +34,19 @@ export default function LlmPromptsClient() {
   const handleToggleActive = async (id: string, current: boolean) => {
     try {
       await update({ id, body: { is_active: !current } }).unwrap();
-      toast.success('Prompt status updated.');
+      toast.success(t('toastStatusUpdated', undefined, 'Prompt status updated.'));
     } catch {
-      toast.error('Update failed.');
+      toast.error(t('toastUpdateFailed', undefined, 'Update failed.'));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this prompt configuration?')) return;
+    if (!confirm(t('confirmDelete', undefined, 'Are you sure you want to delete this prompt configuration?'))) return;
     try {
       await remove(id).unwrap();
-      toast.success('Prompt deleted.');
+      toast.success(t('toastDeleted', undefined, 'Prompt deleted.'));
     } catch {
-      toast.error('Delete failed.');
+      toast.error(t('toastDeleteFailed', undefined, 'Delete failed.'));
     }
   };
 
@@ -57,10 +59,10 @@ export default function LlmPromptsClient() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-gm-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">YAPAY ZEKA YÖNETİMİ</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">{t('eyebrow', undefined, 'YAPAY ZEKA YÖNETİMİ')}</span>
           </div>
-          <h1 className="font-serif text-4xl text-gm-text">LLM Prompts</h1>
-          <p className="text-sm italic text-gm-muted">Yapay zeka model yapılandırmalarını, prompt şablonlarını ve parametreleri yönetin.</p>
+          <h1 className="font-serif text-4xl text-gm-text">{t('listTitle', undefined, 'LLM Prompts')}</h1>
+          <p className="text-sm italic text-gm-muted">{t('listSubtitle', undefined, 'Yapay zeka model yapılandırmalarını, prompt şablonlarını ve parametreleri yönetin.')}</p>
         </div>
         <div className="flex gap-3">
           <Button
@@ -71,7 +73,7 @@ export default function LlmPromptsClient() {
             className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-text hover:bg-gm-surface/80"
           >
             <RefreshCcw className={cn("mr-2 size-4 text-gm-gold", query.isFetching && "animate-spin")} />
-            Yenile
+            {t('refresh', undefined, 'Yenile')}
           </Button>
           <Button 
             size="sm" 
@@ -80,7 +82,7 @@ export default function LlmPromptsClient() {
           >
             <Link href="/admin/llm-prompts/new">
               <Plus className="mr-2 size-4" />
-              Yeni Prompt
+              {t('newPrompt', undefined, 'Yeni Prompt')}
             </Link>
           </Button>
         </div>
@@ -90,8 +92,8 @@ export default function LlmPromptsClient() {
       <div className="flex items-center gap-2 max-w-sm">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-gm-muted" />
-          <Input 
-            placeholder="Prompt anahtarı veya içeriğe göre ara..." 
+          <Input
+            placeholder={t('searchPlaceholder', undefined, 'Prompt anahtarı veya içeriğe göre ara...')}
             className="pl-11 h-11 rounded-full border-gm-border-soft bg-gm-surface/20 text-sm text-gm-text placeholder:text-gm-muted/60 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -105,25 +107,25 @@ export default function LlmPromptsClient() {
           <Table>
             <TableHeader className="bg-gm-surface/40">
               <TableRow className="border-gm-border-soft hover:bg-transparent">
-                <TableHead className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Aktif</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Anahtar / Dil</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Model / Sağlayıcı</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Parametreler</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Son Güncelleme</TableHead>
-                <TableHead className="px-8 py-6 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">İşlem</TableHead>
+                <TableHead className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('colActive', undefined, 'Aktif')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('colKeyLocale', undefined, 'Anahtar / Dil')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('colModelProvider', undefined, 'Model / Sağlayıcı')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('colParams', undefined, 'Parametreler')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('colUpdated', undefined, 'Son Güncelleme')}</TableHead>
+                <TableHead className="px-8 py-6 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('colActions', undefined, 'İşlem')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {query.isLoading ? (
                 <TableRow className="border-gm-border-soft">
                   <TableCell colSpan={6} className="py-16 text-center text-sm text-gm-muted italic font-serif">
-                    Yükleniyor...
+                    {t('loading', undefined, 'Yükleniyor...')}
                   </TableCell>
                 </TableRow>
               ) : query.data?.items.length === 0 ? (
                 <TableRow className="border-gm-border-soft">
                   <TableCell colSpan={6} className="py-16 text-center text-sm text-gm-muted italic font-serif">
-                    Prompt yapılandırması bulunamadı.
+                    {t('empty', undefined, 'Prompt yapılandırması bulunamadı.')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -145,7 +147,7 @@ export default function LlmPromptsClient() {
                           </Badge>
                         </div>
                         <div className="text-xs text-gm-muted truncate max-w-[240px]">
-                          {item.notes || 'Açıklama belirtilmedi'}
+                          {item.notes || t('noDescription', undefined, 'Açıklama belirtilmedi')}
                         </div>
                       </div>
                     </TableCell>

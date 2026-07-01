@@ -21,12 +21,12 @@ import HeroCTAs from './HeroCTAs';
 const COPY = {
   tr: {
     eyebrow: 'Ruhsal Rehberlik',
-    headline: ['Yıldızlarla tanışan', 'modern astroloji'],
+    headline: ['Meet the stars through', 'modern astrology'],
     tagline:
-      'Doğum haritanızdan beslenen kişisel yorumlar ve gerçek bir astrologa bağlanma seçeneği.',
-    primaryCTA: 'Danışmanları Keşfet',
-    secondaryCTA: 'Haritanı Çıkar',
-    scrollHint: 'Aşağı Kaydır',
+      'Personal readings shaped by your birth chart and the option to connect with a real astrologer.',
+    primaryCTA: 'Explore Consultants',
+    secondaryCTA: 'Create Your Chart',
+    scrollHint: 'Scroll Down',
   },
   en: {
     eyebrow: 'Spiritual Guidance',

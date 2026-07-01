@@ -6,18 +6,18 @@ import Image from 'next/image';
 const cinzel = Cinzel({ subsets: ['latin'] });
 
 const shortSigns = [
-  { key: 'aries', label: 'Koç' },
-  { key: 'taurus', label: 'Boğa' },
-  { key: 'gemini', label: 'İkizler' },
-  { key: 'cancer', label: 'Yengeç' },
-  { key: 'leo', label: 'Aslan' },
-  { key: 'virgo', label: 'Başak' },
+  { key: 'aries', label: 'Aries' },
+  { key: 'taurus', label: 'Taurus' },
+  { key: 'gemini', label: 'Gemini' },
+  { key: 'cancer', label: 'Cancer' },
+  { key: 'leo', label: 'Leo' },
+  { key: 'virgo', label: 'Virgo' },
   { key: 'libra', label: 'Terazi' },
   { key: 'scorpio', label: 'Akrep' },
-  { key: 'sagittarius', label: 'Yay' },
-  { key: 'capricorn', label: 'Oğlak' },
-  { key: 'aquarius', label: 'Kova' },
-  { key: 'pisces', label: 'Balık' },
+  { key: 'sagittarius', label: 'Sagittarius' },
+  { key: 'capricorn', label: 'Capricorn' },
+  { key: 'aquarius', label: 'Aquarius' },
+  { key: 'pisces', label: 'Pisces' },
 ];
 
 export default function ZodiacGridSection() {
@@ -30,10 +30,10 @@ export default function ZodiacGridSection() {
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
           <h2 className={`${cinzel.className} text-3xl md:text-5xl mb-4 text-[var(--gm-gold)]`}>
-            Burcunuzu Keşfedin
+            Discover Your Sign
           </h2>
           <p className="text-[var(--gm-text-dim)] font-serif italic max-w-2xl mx-auto">
-            Kişiliğinizin derinliklerine inin, günlük yorumlarınızı okuyun ve kozmik yolculuğunuzda rehberlik alın.
+            Explore your personality, read daily guidance and follow your cosmic journey.
           </p>
         </div>
 
@@ -69,7 +69,7 @@ export default function ZodiacGridSection() {
             href="/burclar" 
             className="text-[var(--gm-gold)] font-bold text-xs uppercase tracking-[0.3em] hover:text-[var(--gm-gold-light)] transition-colors inline-flex items-center gap-2 group"
           >
-            TÜM BURÇLAR VE ARAÇLAR
+            ALL SIGNS AND TOOLS
             <span className="w-8 h-px bg-[var(--gm-gold)] group-hover:w-12 transition-all" />
           </Link>
         </div>

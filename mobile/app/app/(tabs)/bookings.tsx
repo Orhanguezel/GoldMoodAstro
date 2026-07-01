@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ChevronLeft, CalendarDays, History } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
@@ -168,6 +169,7 @@ function buildScreenStyles(t: AppTheme) {
 }
 
 export default function BookingsScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
@@ -210,7 +212,7 @@ export default function BookingsScreen() {
       const { id: threadId } = await chatApi.createThreadForBooking(bookingId);
       router.push(`/chat/${threadId}`);
     } catch (err: unknown) {
-      Alert.alert('Hata', err instanceof Error ? err.message : 'Mesaj başlatılamadı.');
+      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('chat.startFailed'));
     }
   }, []);
 

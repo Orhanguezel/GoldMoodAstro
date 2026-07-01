@@ -14,14 +14,17 @@ import Link from 'next/link';
 
 import PageContainer from '@/components/common/PageContainer';
 import { useGetSiteSettingByKeyQuery } from '@/integrations/rtk/public/site_settings.endpoints';
+import { gaEvent } from '@/lib/ga';
 import { cn } from '@/lib/utils';
 import { Mic, Video as VideoIcon } from 'lucide-react';
+import { useUiSection } from '@/i18n';
 
 export default function BookingPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
   const locale = (params?.locale as string) || 'tr';
+  const { ui } = useUiSection('ui_account');
 
   const { isAuthenticated, isReady } = useAuthStore();
   useEffect(() => {
@@ -55,7 +58,7 @@ export default function BookingPage() {
   const [initIyzico] = useInitIyzicoPaymentMutation();
   const [redeemCampaign] = useRedeemCampaignMutation();
 
-  const { data: consultant } = useGetConsultantPublicQuery(consultantId, {
+  const { data: consultant } = useGetConsultantPublicQuery({ id: consultantId, locale }, {
     skip: !consultantId,
   });
   
@@ -113,7 +116,7 @@ export default function BookingPage() {
       }).unwrap();
       setAppliedCampaign(res.campaign);
     } catch (err: any) {
-      setCouponError(locale === 'tr' ? 'Geçersiz kupon kodu.' : 'Invalid coupon code.');
+      setCouponError(ui('ui_account_booking_invalid_coupon', 'Invalid coupon code.'));
     } finally {
       setCouponLoading(false);
     }
@@ -125,7 +128,7 @@ export default function BookingPage() {
 
   const handleCheckout = async () => {
     if (!consultantId || !resourceId || !slotId || !date || !time) {
-      setError(locale === 'tr' ? 'Eksik randevu bilgisi.' : 'Missing booking information.');
+      setError(ui('ui_account_booking_missing_info', 'Missing booking information.'));
       return;
     }
 
@@ -149,6 +152,23 @@ export default function BookingPage() {
         source_id: sourceMatch?.[1],
       } as any).unwrap();
 
+      // GA4 conversion (key event): paid session -> purchase + value
+      const bookingId = (booking as any).id ?? (booking as any).booking?.id;
+      gaEvent('purchase', {
+        value: finalPrice,
+        currency: 'TRY',
+        transaction_id: bookingId,
+        items: [
+          {
+            item_id: consultantId,
+            item_name: consultantName || 'Consultation Session',
+            item_category: 'consultation',
+            price: finalPrice,
+            quantity: 1,
+          },
+        ],
+      });
+
       const order = await createOrder({
         booking_id: (booking as any).id ?? (booking as any).booking?.id,
         payment_gateway_slug: 'iyzico',
@@ -157,7 +177,7 @@ export default function BookingPage() {
       const iyzico = await initIyzico({ orderId: order.order_id, locale }).unwrap();
       window.location.href = iyzico.checkout_url;
     } catch (err: any) {
-      const msg = err?.data?.error?.message || err?.message || 'Hata oluştu.';
+      const msg = err?.data?.error?.message || err?.message || ui('ui_account_booking_error_generic', 'An error occurred.');
       setError(msg);
       setLoading(false);
     }
@@ -171,11 +191,11 @@ export default function BookingPage() {
         <div className="space-y-10">
           <div>
             <Link href={`/${locale}/consultants/${consultantId}`} className="inline-flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-gold) transition-colors text-sm font-bold uppercase tracking-widest mb-10">
-              <ArrowLeft className="w-4 h-4" /> Geri Dön
+              <ArrowLeft className="w-4 h-4" /> {ui('ui_account_booking_back', 'Go Back')}
             </Link>
-            <h1 className="font-serif text-5xl text-(--gm-text) leading-tight mb-4">Seansınızı <br />Tamamlayın</h1>
+            <h1 className="font-serif text-5xl text-(--gm-text) leading-tight mb-4">{ui('ui_account_booking_title_line1', 'Complete')} <br />{ui('ui_account_booking_title_line2', 'Your Session')}</h1>
             <p className="text-(--gm-text-dim) font-serif italic text-lg leading-relaxed">
-              Uzman rehberliğinde kozmik bir yolculuğa başlamadan önceki son adım.
+              {ui('ui_account_booking_subtitle', 'The final step before starting a guided cosmic journey with your expert.')}
             </p>
           </div>
 
@@ -189,7 +209,7 @@ export default function BookingPage() {
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
-                    alt={consultantName || 'Danışman'}
+                    alt={consultantName || ui('ui_account_booking_consultant', 'Consultant')}
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
@@ -199,7 +219,7 @@ export default function BookingPage() {
                 )}
               </div>
               <div>
-                <p className="text-(--gm-gold-dim) text-[10px] font-bold tracking-[0.2em] uppercase mb-1">Danışman</p>
+                <p className="text-(--gm-gold-dim) text-[10px] font-bold tracking-[0.2em] uppercase mb-1">{ui('ui_account_booking_consultant', 'Consultant')}</p>
                 <p className="text-(--gm-text) font-serif text-2xl">{consultantName || '—'}</p>
               </div>
             </div>
@@ -208,36 +228,36 @@ export default function BookingPage() {
               <div className="flex items-start gap-4">
                 <Calendar className="w-5 h-5 text-(--gm-gold) mt-1" />
                 <div>
-                  <p className="text-(--gm-gold-dim) text-[9px] font-bold tracking-[0.2em] uppercase mb-1">Tarih</p>
+                  <p className="text-(--gm-gold-dim) text-[9px] font-bold tracking-[0.2em] uppercase mb-1">{ui('ui_account_booking_date_label', 'Date')}</p>
                   <p className="text-(--gm-text) font-serif text-lg">{formattedDate}</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <Clock className="w-5 h-5 text-(--gm-gold) mt-1" />
                 <div>
-                  <p className="text-(--gm-gold-dim) text-[9px] font-bold tracking-[0.2em] uppercase mb-1">Saat & Süre</p>
-                  <p className="text-(--gm-text) font-serif text-lg">{time} · {duration}dk</p>
+                  <p className="text-(--gm-gold-dim) text-[9px] font-bold tracking-[0.2em] uppercase mb-1">{ui('ui_account_booking_time_label', 'Time & Duration')}</p>
+                  <p className="text-(--gm-text) font-serif text-lg">{time} · {duration}{ui('ui_account_booking_minutes_suffix', 'min')}</p>
                 </div>
               </div>
             </div>
 
             <div className="pt-8 border-t border-(--gm-border-soft) space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-(--gm-text-dim) font-serif text-lg italic">Seans Ücreti</span>
+                <span className="text-(--gm-text-dim) font-serif text-lg italic">{ui('ui_account_booking_session_fee', 'Session Fee')}</span>
                 <span className="text-(--gm-text) font-serif text-xl">₺{Math.round(originalPrice)}</span>
               </div>
               
               {appliedCampaign && (
                 <div className="flex items-center justify-between">
                   <span className="text-(--gm-success) font-serif text-lg italic flex items-center gap-2">
-                    <Tag className="w-4 h-4" /> İndirim ({appliedCampaign.code})
+                    <Tag className="w-4 h-4" /> {ui('ui_account_booking_discount', 'Discount')} ({appliedCampaign.code})
                   </span>
                   <span className="text-(--gm-success) font-serif text-xl">-₺{Math.round(discountAmount)}</span>
                 </div>
               )}
 
               <div className="flex items-center justify-between pt-6 border-t border-(--gm-border-soft)">
-                <span className="text-(--gm-text) font-serif text-2xl italic">Toplam</span>
+                <span className="text-(--gm-text) font-serif text-2xl italic">{ui('ui_account_booking_total', 'Total')}</span>
                 <span className="text-(--gm-gold) font-serif text-4xl">₺{Math.round(finalPrice)}</span>
               </div>
             </div>
@@ -249,7 +269,7 @@ export default function BookingPage() {
           {/* Coupon */}
           <div className="bg-(--gm-bg-deep)/50 border border-(--gm-border-soft) rounded-[24px] p-8">
             <label className="block text-[10px] font-bold text-(--gm-gold-dim) tracking-[0.2em] uppercase mb-4 ml-1">
-              Kupon Kodunuz
+              {ui('ui_account_booking_coupon_label', 'Your Coupon Code')}
             </label>
             <div className="relative">
               <input
@@ -257,7 +277,7 @@ export default function BookingPage() {
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                 disabled={!!appliedCampaign || couponLoading}
-                placeholder="Kupon girin..."
+                placeholder={ui('ui_account_booking_coupon_placeholder', 'Enter coupon...')}
                 className="w-full bg-(--gm-surface) border border-(--gm-border-soft) rounded-2xl px-6 py-4 text-sm text-(--gm-text) placeholder:text-(--gm-text-muted) focus:outline-none focus:border-(--gm-gold)/50 transition-colors uppercase font-mono tracking-wider"
               />
               {!appliedCampaign ? (
@@ -266,7 +286,7 @@ export default function BookingPage() {
                   disabled={!couponCode || couponLoading}
                   className="absolute right-2 top-2 bottom-2 px-6 rounded-xl bg-(--gm-gold) text-(--gm-bg-deep) text-xs font-bold hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                 >
-                  {couponLoading ? '...' : 'UYGULA'}
+                  {couponLoading ? '...' : ui('ui_account_booking_coupon_apply', 'APPLY')}
                 </button>
               ) : (
                 <div className="absolute right-4 top-4 text-(--gm-success)">
@@ -280,7 +300,7 @@ export default function BookingPage() {
                 onClick={() => { setAppliedCampaign(null); setCouponCode(''); }}
                 className="text-[10px] font-bold text-(--gm-text-dim) mt-3 ml-2 hover:text-(--gm-error) flex items-center gap-2 transition-colors uppercase tracking-widest"
               >
-                <X className="w-3 h-3" /> İndirimi Kaldır
+                <X className="w-3 h-3" /> {ui('ui_account_booking_coupon_remove', 'Remove Discount')}
               </button>
             )}
           </div>
@@ -289,7 +309,7 @@ export default function BookingPage() {
           {canShowVideoOption && (
             <div className="bg-(--gm-bg-deep)/50 border border-(--gm-border-soft) rounded-[24px] p-8">
               <label className="block text-[10px] font-bold text-(--gm-gold-dim) tracking-[0.2em] uppercase mb-6 ml-1">
-                Görüşme Türü Seçin
+                {ui('ui_account_booking_media_type_label', 'Select Session Type')}
               </label>
               <div className="grid grid-cols-2 gap-4">
                 <button
@@ -308,7 +328,7 @@ export default function BookingPage() {
                   )}>
                     <Mic className="w-5 h-5" />
                   </div>
-                  <span className="text-sm font-bold uppercase tracking-widest">Sesli</span>
+                  <span className="text-sm font-bold uppercase tracking-widest">{ui('ui_account_booking_audio', 'Audio')}</span>
                 </button>
 
                 <button
@@ -327,11 +347,11 @@ export default function BookingPage() {
                   )}>
                     <VideoIcon className="w-5 h-5" />
                   </div>
-                  <span className="text-sm font-bold uppercase tracking-widest">Görüntülü</span>
+                  <span className="text-sm font-bold uppercase tracking-widest">{ui('ui_account_booking_video', 'Video')}</span>
                 </button>
               </div>
               <p className="mt-4 ml-2 text-[10px] text-(--gm-text-muted) italic font-serif leading-relaxed">
-                * Görüntülü görüşme için kamera erişimine izin vermeniz gerekecektir.
+                {ui('ui_account_booking_video_camera_note', '* You will need to allow camera access for a video session.')}
               </p>
             </div>
           )}
@@ -339,13 +359,13 @@ export default function BookingPage() {
           {/* Note */}
           <div className="bg-(--gm-bg-deep)/50 border border-(--gm-border-soft) rounded-[24px] p-8">
             <label className="block text-[10px] font-bold text-(--gm-gold-dim) tracking-[0.2em] uppercase mb-4 ml-1">
-              Danışmana Not (Opsiyonel)
+              {ui('ui_account_booking_note_label', 'Note to Consultant (Optional)')}
             </label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={4}
-              placeholder="Görüşme öncesi iletmek istediğiniz detaylar..."
+              placeholder={ui('ui_account_booking_note_placeholder', 'Details you would like to share before the session...')}
               className="w-full bg-(--gm-surface) border border-(--gm-border-soft) rounded-2xl px-6 py-4 text-sm text-(--gm-text) placeholder:text-(--gm-text-muted) resize-none focus:outline-none focus:border-(--gm-gold)/50 transition-colors font-serif italic"
             />
           </div>
@@ -364,9 +384,9 @@ export default function BookingPage() {
             className="w-full group relative py-6 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold text-lg tracking-widest uppercase overflow-hidden hover:shadow-(--gm-shadow-glow) transition-all disabled:opacity-50"
           >
             <span className="relative z-10 flex items-center justify-center gap-3">
-              {loading ? 'İŞLENİYOR...' : (
+              {loading ? ui('ui_account_booking_processing', 'PROCESSING...') : (
                 <>
-                  <Lock className="w-5 h-5" /> GÜVENLİ ÖDEME
+                  <Lock className="w-5 h-5" /> {ui('ui_account_booking_secure_pay', 'SECURE PAYMENT')}
                 </>
               )}
             </span>
@@ -377,7 +397,7 @@ export default function BookingPage() {
           <div className="flex flex-col items-center gap-6 pt-4">
             <div className="flex items-center gap-3 text-(--gm-text-dim) text-xs font-bold tracking-[0.2em] uppercase">
               <ShieldCheck className="w-4 h-4 text-(--gm-success)" />
-              <span>Güvenli Altyapı</span>
+              <span>{ui('ui_account_booking_secure_infra', 'Secure Infrastructure')}</span>
               <span className="opacity-20">|</span>
               <span className="text-(--gm-gold-dim)">Iyzico</span>
             </div>

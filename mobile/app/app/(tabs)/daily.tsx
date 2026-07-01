@@ -274,6 +274,7 @@ import {
   MessageSquare
 } from 'lucide-react-native';
 import { router, useFocusEffect } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { birthChartsApi, readingsApi } from '@/lib/api';
 import { MenuHeaderButton } from '@/components/MenuHeaderButton';
@@ -290,16 +291,27 @@ function addCalendarMonths(date: Date, delta: number): Date {
 }
 
 const MOODS = [
-  { id: 'happy', icon: Smile, label: 'Mutlu' },
-  { id: 'calm', icon: Heart, label: 'Huzurlu' },
-  { id: 'neutral', icon: Meh, label: 'Nötr' },
-  { id: 'sad', icon: CloudRain, label: 'Hüzünlü' },
-  { id: 'stressed', icon: Frown, label: 'Gergin' },
+  { id: 'happy', icon: Smile, labelKey: 'dailyScreen.moodHappy' },
+  { id: 'calm', icon: Heart, labelKey: 'dailyScreen.moodCalm' },
+  { id: 'neutral', icon: Meh, labelKey: 'dailyScreen.moodNeutral' },
+  { id: 'sad', icon: CloudRain, labelKey: 'dailyScreen.moodSad' },
+  { id: 'stressed', icon: Frown, labelKey: 'dailyScreen.moodStressed' },
+];
+
+const DAY_KEYS = [
+  'dailyScreen.dayMon',
+  'dailyScreen.dayTue',
+  'dailyScreen.dayWed',
+  'dailyScreen.dayThu',
+  'dailyScreen.dayFri',
+  'dailyScreen.daySat',
+  'dailyScreen.daySun',
 ];
 
 export default function DailyReadingScreen() {
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [reading, setReading] = useState<any>(null);
@@ -308,7 +320,7 @@ export default function DailyReadingScreen() {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
-  const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+  const days = DAY_KEYS.map((k) => t(k));
 
   const monthLabel = useMemo(
     () =>
@@ -394,7 +406,7 @@ export default function DailyReadingScreen() {
               <Pressable
                 style={styles.navBtn}
                 accessibilityRole="button"
-                accessibilityLabel="Önceki ay"
+                accessibilityLabel={t('dailyScreen.prevMonth')}
                 onPress={() => setCurrentDate((d) => addCalendarMonths(d, -1))}
               >
                 <ChevronLeft size={20} color={colors.gold} />
@@ -403,7 +415,7 @@ export default function DailyReadingScreen() {
               <Pressable
                 style={styles.navBtn}
                 accessibilityRole="button"
-                accessibilityLabel="Sonraki ay"
+                accessibilityLabel={t('dailyScreen.nextMonth')}
                 onPress={() => setCurrentDate((d) => addCalendarMonths(d, 1))}
               >
                 <ChevronRight size={20} color={colors.gold} />
@@ -440,18 +452,18 @@ export default function DailyReadingScreen() {
             </View>
 
             <Text style={styles.readingTitle}>
-              {reading?.title || 'İçsel dengeni bulmak için sessizliğe odaklan.'}
+              {reading?.title || t('dailyScreen.fallbackTitle')}
             </Text>
 
             <View style={styles.readingBodyWrapper}>
               <Text style={styles.readingBody}>
-                {reading?.content || 'Bugün Ay\'ın Boğa burcundaki seyri, seni daha köklü ve güvenli hissetmeye davet ediyor. Maddi konular veya ev hayatınla ilgili yarım kalmış işleri tamamlamak için mükemmel bir zaman.\n\nVenüs\'ün uyumlu açısı, ikili ilişkilerde beklediğin o yumuşak geçişi sağlayabilir. Ancak Merkür\'ün konumu, imza gerektiren işlerde iki kez kontrol etmen gerektiğini hatırlatıyor.'}
+                {reading?.content || t('dailyScreen.fallbackContent')}
               </Text>
             </View>
 
             <View style={styles.quoteBox}>
               <Text style={styles.quoteText}>
-                "Gerçek güç, sakinlikte gizlidir."
+                {t('dailyScreen.fallbackQuote')}
               </Text>
             </View>
           </View>
@@ -470,7 +482,7 @@ export default function DailyReadingScreen() {
                     <View style={[styles.moodCircle, selectedMood === m.id && styles.moodCircleSelected]}>
                       <m.icon size={24} color={selectedMood === m.id ? colors.ink : colors.goldDim} />
                     </View>
-                    <Text style={[styles.moodLabel, selectedMood === m.id && styles.moodLabelSelected]}>{m.label}</Text>
+                    <Text style={[styles.moodLabel, selectedMood === m.id && styles.moodLabelSelected]}>{t(m.labelKey)}</Text>
                   </Pressable>
                 ))}
               </View>

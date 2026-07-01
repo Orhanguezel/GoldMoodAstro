@@ -16,7 +16,7 @@ export default function ContactRoutePage() {
   const { ui } = useUiSection('ui_contact', locale as any);
 
   const fbTitle = useMemo(() => {
-    if (locale === 'tr') return 'İletişim';
+    if (locale === 'tr') return 'Contact';
     if (locale === 'de') return 'Kontakt';
     return 'Contact';
   }, [locale]);
@@ -40,7 +40,7 @@ export default function ContactRoutePage() {
     if (isValidUiText(v, key)) return v;
 
     if (locale === 'tr')
-      return 'GoldMoodAstro ile iletişime geçin: danışmanlık seansları ve sorularınız için bize ulaşın.';
+      return 'Contact GoldMoodAstro for consulting sessions and questions.';
     if (locale === 'de')
       return 'Kontaktieren Sie GoldMoodAstro: Anfragen und Fragen zu unseren Beratungsangeboten.';
     return 'Contact GoldMoodAstro: reach us with questions about our consultation services.';

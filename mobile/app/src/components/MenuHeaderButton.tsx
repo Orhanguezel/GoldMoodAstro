@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Menu } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 
@@ -22,6 +23,7 @@ function buildScreenStyles(t: AppTheme) {
 }
 
 export function MenuHeaderButton() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
@@ -32,7 +34,7 @@ export function MenuHeaderButton() {
       onPress={() => router.push('/menu/index' as any)}
       hitSlop={12}
       accessibilityRole="button"
-      accessibilityLabel="Menü"
+      accessibilityLabel={t('navigation.menuTitle')}
     >
       <Menu size={22} color={colors.gold} strokeWidth={2} />
     </Pressable>

@@ -13,10 +13,60 @@ function getUser(req: { user?: unknown }) {
   return { id };
 }
 
+function normalizeLocale(locale?: string | null): string {
+  const normalized = String(locale || "tr").trim().toLowerCase().split("-")[0];
+  return normalized || "tr";
+}
+
+function fallbackByLocale<T>(locale: string, tr: T, en: T): T {
+  return locale === "en" ? (en ?? tr) : tr;
+}
+
+async function localizeCampaigns<T extends {
+  id?: string;
+  campaign_id?: string | null;
+  name_tr?: string | null;
+  name_en?: string | null;
+  description_tr?: string | null;
+  description_en?: string | null;
+}>(rows: T[], locale: string) {
+  if (rows.length === 0) return rows;
+
+  const normalized = normalizeLocale(locale);
+  const campaignIds = [...new Set(rows.map((row) => row.campaign_id || row.id).filter(Boolean) as string[])];
+  if (campaignIds.length === 0) return rows;
+
+  const placeholders = campaignIds.map(() => "?").join(",");
+  const [i18nRows] = await (db as any).session.client.query(
+    `SELECT campaign_id, locale, name, description
+     FROM campaign_i18n
+     WHERE campaign_id IN (${placeholders}) AND locale IN (?, 'tr')`,
+    [...campaignIds, normalized],
+  );
+  const byCampaign = new Map<string, Record<string, any>>();
+  for (const row of i18nRows as any[]) {
+    const entry = byCampaign.get(row.campaign_id) ?? {};
+    entry[row.locale] = row;
+    byCampaign.set(row.campaign_id, entry);
+  }
+
+  return rows.map((row) => {
+    const campaignId = row.campaign_id || row.id || "";
+    const translations = byCampaign.get(campaignId) ?? {};
+    const resolved = translations[normalized] ?? translations.tr;
+    return {
+      ...row,
+      name: resolved?.name ?? fallbackByLocale(normalized, row.name_tr ?? null, row.name_en ?? null),
+      description: resolved?.description ?? fallbackByLocale(normalized, row.description_tr ?? null, row.description_en ?? null),
+    };
+  });
+}
+
 /** GET /campaigns/active?applies_to=subscription — public, aktif kampanyalar */
 export const listActive: RouteHandler = async (req, reply) => {
   const q = req.query as Record<string, string | undefined>;
   const appliesTo = q.applies_to;
+  const locale = normalizeLocale(q.locale || (req as any).locale || "tr");
   const now = new Date();
 
   const conds = [
@@ -47,13 +97,14 @@ export const listActive: RouteHandler = async (req, reply) => {
     .orderBy(desc(campaigns.created_at))
     .limit(50);
 
-  return reply.send({ data: rows });
+  return reply.send({ data: await localizeCampaigns(rows, locale) });
 };
 
 /** GET /campaigns/me — auth, kullanıcının geçerli ve kullanılmış kampanyaları */
 export const listMine: RouteHandler = async (req, reply) => {
   const { id: userId } = getUser(req);
   if (!userId) return reply.code(401).send({ error: { message: "unauthorized" } });
+  const locale = normalizeLocale(((req.query as Record<string, string | undefined>)?.locale) || (req as any).locale || "tr");
 
   const now = new Date();
 
@@ -102,7 +153,12 @@ export const listMine: RouteHandler = async (req, reply) => {
     .orderBy(desc(campaignRedemptions.redeemed_at))
     .limit(50);
 
-  return reply.send({ data: { active: activeRows, redeemed: redeemedRows } });
+  return reply.send({
+    data: {
+      active: await localizeCampaigns(activeRows, locale),
+      redeemed: await localizeCampaigns(redeemedRows, locale),
+    },
+  });
 };
 
 /**

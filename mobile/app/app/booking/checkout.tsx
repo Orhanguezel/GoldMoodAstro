@@ -69,7 +69,8 @@ function buildScreenStyles(t: AppTheme) {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
-import { 
+import { useTranslation } from 'react-i18next';
+import {
   ChevronLeft, 
   CreditCard, 
   Calendar, 
@@ -94,6 +95,7 @@ import type { Campaign } from '@/types';
 export default function BookingCheckoutScreen() {
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const params = useLocalSearchParams<{
     consultantId: string;
@@ -145,10 +147,10 @@ export default function BookingCheckoutScreen() {
       if (res.valid) {
         setAppliedCampaign(res.campaign);
       } else {
-        Alert.alert('Hata', res.message || 'Geçersiz kupon kodu.');
+        Alert.alert(t('common.error'), res.message || t('checkout.couponInvalid', 'Geçersiz kupon kodu.'));
       }
     } catch (err: any) {
-      Alert.alert('Hata', 'Kupon uygulanırken bir sorun oluştu.');
+      Alert.alert(t('common.error'), t('checkout.couponError', 'Kupon uygulanırken bir sorun oluştu.'));
     } finally {
       setCouponLoading(false);
     }
@@ -193,7 +195,7 @@ export default function BookingCheckoutScreen() {
         },
       });
     } catch (err: any) {
-      Alert.alert('Hata', err.message || 'Randevu oluşturulamadı. Lütfen tekrar deneyin.');
+      Alert.alert(t('common.error'), err.message || t('checkout.bookingCreateFailed', 'Randevu oluşturulamadı. Lütfen tekrar deneyin.'));
     } finally {
       setLoading(false);
     }
@@ -208,7 +210,7 @@ export default function BookingCheckoutScreen() {
           <Pressable onPress={() => safeRouterBack()} style={styles.headerBtn}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
-          <Text style={styles.headerTitle}>Randevu Onayı</Text>
+          <Text style={styles.headerTitle}>{t('checkout.title', 'Randevu Onayı')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -254,7 +256,7 @@ export default function BookingCheckoutScreen() {
                 <View style={styles.infoTextCol}>
                   <Text style={styles.infoLabel}>GÖRÜŞME TÜRÜ</Text>
                   <Text style={styles.infoValue}>
-                    {sessionMedia === 'video' ? 'Görüntülü' : 'Sesli'}
+                    {sessionMedia === 'video' ? t('booking.mediaVideo', 'Görüntülü') : t('booking.mediaAudio', 'Sesli')}
                   </Text>
                 </View>
               </View>
@@ -353,8 +355,8 @@ export default function BookingCheckoutScreen() {
             </View>
             <Text style={styles.trustText}>
               {isFreeService
-                ? 'Ücretsiz tanışma görüşmeniz onaylandığında randevularım sekmesinden takip edebilirsiniz.'
-                : 'Ödemeniz Iyzipay güvencesiyle 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz hiçbir şekilde kaydedilmez.'}
+                ? t('checkout.trustFree', 'Ücretsiz tanışma görüşmeniz onaylandığında randevularım sekmesinden takip edebilirsiniz.')
+                : t('checkout.trustPaid', 'Ödemeniz Iyzipay güvencesiyle 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz hiçbir şekilde kaydedilmez.')}
             </Text>
           </View>
 
@@ -388,7 +390,7 @@ export default function BookingCheckoutScreen() {
                   <CreditCard size={20} color={colors.ink} />
                 )}
                 <Text style={styles.payBtnText}>
-                  {isFreeService ? 'Randevuyu Onayla' : 'Ödemeyi Tamamla'}
+                  {isFreeService ? t('booking.confirm') : t('checkout.completePayment', 'Ödemeyi Tamamla')}
                 </Text>
               </>
             )}

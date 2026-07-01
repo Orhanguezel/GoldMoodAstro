@@ -285,12 +285,12 @@ export default function ConsultantDetailScreen() {
     if (authHydrating) return;
     if (!isAuthenticated) {
       Alert.alert(
-        'Giriş gerekli',
-        'Danışmana mesaj göndermek için giriş yapın veya hesap oluşturun.',
+        t('auth.loginRequired', 'Giriş gerekli'),
+        t('consultantDetail.messageLoginPrompt', 'Danışmana mesaj göndermek için giriş yapın veya hesap oluşturun.'),
         [
-          { text: 'İptal', style: 'cancel' },
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'Kayıt ol',
+            text: t('auth.registerBtn'),
             onPress: () =>
               router.push({
                 pathname: '/auth/register',
@@ -298,7 +298,7 @@ export default function ConsultantDetailScreen() {
               } as any),
           },
           {
-            text: 'Giriş',
+            text: t('auth.login', 'Giriş'),
             onPress: () =>
               router.push({
                 pathname: '/auth/login',
@@ -313,22 +313,22 @@ export default function ConsultantDetailScreen() {
       .createThreadForConsultant(consultant.id)
       .then(({ id: tid }) => router.push(`/chat/${tid}`))
       .catch((err: unknown) => {
-        const msg = err instanceof Error ? err.message : 'Mesaj başlatılamadı.';
-        Alert.alert('Hata', msg);
+        const msg = err instanceof Error ? err.message : t('booking.messageFailed', 'Mesaj başlatılamadı.');
+        Alert.alert(t('common.error'), msg);
       });
   };
 
   const handleRequestNow = async () => {
     if (!consultant) return;
     if (!isAuthenticated) {
-      Alert.alert('Giriş gerekli', 'Anlık görüşme talebi için giriş yapmalısınız.', [
-        { text: 'İptal', style: 'cancel' },
-        { text: 'Giriş', onPress: () => router.push('/auth/login' as any) },
+      Alert.alert(t('auth.loginRequired', 'Giriş gerekli'), t('consultantDetail.instantLoginPrompt', 'Anlık görüşme talebi için giriş yapmalısınız.'), [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('auth.login', 'Giriş'), onPress: () => router.push('/auth/login' as any) },
       ]);
       return;
     }
     if (!consultant.is_available) {
-      Alert.alert('Müsait değil', 'Danışman şu an çevrimiçi görünmüyor.');
+      Alert.alert(t('consultantDetail.unavailableTitle', 'Müsait değil'), t('consultantDetail.unavailableBody', 'Danışman şu an çevrimiçi görünmüyor.'));
       return;
     }
     setRequestNowLoading(true);
@@ -338,12 +338,12 @@ export default function ConsultantDetailScreen() {
         ...(selectedServiceId ? { service_id: selectedServiceId } : {}),
       });
       Alert.alert(
-        'Talep gönderildi',
-        res.message ?? 'Danışman onayladığında bildirim alacaksınız.',
-        [{ text: 'Tamam', onPress: () => router.push('/(tabs)/bookings' as any) }],
+        t('consultantDetail.requestSentTitle', 'Talep gönderildi'),
+        res.message ?? t('consultantDetail.requestSentBody', 'Danışman onayladığında bildirim alacaksınız.'),
+        [{ text: t('common.ok', 'Tamam'), onPress: () => router.push('/(tabs)/bookings' as any) }],
       );
     } catch (err: unknown) {
-      Alert.alert('Hata', err instanceof Error ? err.message : 'Talep gönderilemedi.');
+      Alert.alert(t('common.error'), err instanceof Error ? err.message : t('consultantDetail.requestFailed', 'Talep gönderilemedi.'));
     } finally {
       setRequestNowLoading(false);
     }
@@ -455,8 +455,8 @@ export default function ConsultantDetailScreen() {
 
         {/* About */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hakkında</Text>
-          <Text style={styles.bio}>{consultant.bio || 'Bu danışman henüz bir açıklama eklememiş.'}</Text>
+          <Text style={styles.sectionTitle}>{t('consultant.about')}</Text>
+          <Text style={styles.bio}>{consultant.bio || t('consultantDetail.noBio', 'Bu danışman henüz bir açıklama eklememiş.')}</Text>
         </View>
 
         {/* Services (FAZ 29) */}
@@ -482,7 +482,7 @@ export default function ConsultantDetailScreen() {
                   <View style={styles.serviceCardHeader}>
                     <Text style={styles.serviceName}>{svc.name}</Text>
                     <Text style={styles.servicePrice}>
-                      {isFree ? 'Ücretsiz' : `₺${Math.round(Number(svc.price))}`}
+                      {isFree ? t('common.free', 'Ücretsiz') : `₺${Math.round(Number(svc.price))}`}
                     </Text>
                   </View>
                   <Text style={styles.serviceMeta}>{svc.duration_minutes} dakika</Text>
@@ -636,10 +636,10 @@ export default function ConsultantDetailScreen() {
       <View style={styles.footer}>
         <View style={styles.footerPrice}>
           <Text style={styles.footerPriceLabel}>
-            {selectedService ? selectedService.name : 'Seans Ücreti'}
+            {selectedService ? selectedService.name : t('consultantDetail.sessionFeeLabel', 'Seans Ücreti')}
           </Text>
           <Text style={styles.footerPriceVal}>
-            {footerIsFree ? 'Ücretsiz' : `₺${Math.round(footerPrice)}`}
+            {footerIsFree ? t('common.free', 'Ücretsiz') : `₺${Math.round(footerPrice)}`}
           </Text>
         </View>
         <Pressable 
@@ -648,7 +648,7 @@ export default function ConsultantDetailScreen() {
           disabled={!selectedSlot}
         >
           <Zap size={18} color={colors.ink} />
-          <Text style={styles.bookBtnText}>Randevu Al</Text>
+          <Text style={styles.bookBtnText}>{t('consultant.bookNow')}</Text>
         </Pressable>
       </View>
     </View>

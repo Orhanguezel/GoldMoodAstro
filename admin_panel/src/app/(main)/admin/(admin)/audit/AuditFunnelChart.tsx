@@ -21,7 +21,7 @@ export function AuditFunnelChart({ range }: { range: string }) {
   }
 
   if (isError || !data || !data.data) {
-    return <div className="p-8 text-center text-gm-muted italic">Veri yüklenemedi.</div>;
+    return <div className="p-8 text-center text-gm-muted italic">{t('common.loadFailed')}</div>;
   }
 
   const steps = data.data.steps || [];
@@ -31,10 +31,10 @@ export function AuditFunnelChart({ range }: { range: string }) {
     <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
       <CardHeader className="p-8 pb-4 border-b border-gm-border-soft bg-gm-surface/40">
         <CardTitle className="font-serif text-2xl flex items-center gap-3">
-          <Filter className="h-5 w-5 text-gm-gold" /> Dönüşüm Hunisi
+          <Filter className="h-5 w-5 text-gm-gold" /> {t('funnel.title')}
         </CardTitle>
         <CardDescription className="font-serif italic opacity-70 text-gm-muted">
-          Ziyaretten satışa kullanıcı yolculuğu
+          {t('funnel.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-8">
@@ -47,7 +47,7 @@ export function AuditFunnelChart({ range }: { range: string }) {
                   <span className="font-bold text-gm-text">{step.step}</span>
                   <span className="text-gm-muted">
                     {step.count} ({step.conversion_from_start}%)
-                    {index > 0 && <span className="ml-2 text-gm-error">Düşüş: {step.drop_off_rate}%</span>}
+                    {index > 0 && <span className="ml-2 text-gm-error">{t('funnel.dropOff', { rate: String(step.drop_off_rate) })}</span>}
                   </span>
                 </div>
                 <div className="h-6 w-full bg-gm-bg-deep rounded-full overflow-hidden">

@@ -15,6 +15,7 @@ import {
 import type { HistoryItem, ReadingType } from '@/integrations/rtk/public/history.public.endpoints';
 import BookingMessageButton from '@/components/common/BookingMessageButton';
 import { trackEvent } from '@/integrations/telemetry';
+import { useUiSection } from '@/i18n';
 
 type LiveKitTokenResponse = {
   token: string;
@@ -25,14 +26,24 @@ type LiveKitTokenResponse = {
 
 type ConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'error';
 
-const READING_LABELS: Record<ReadingType, string> = {
+const READING_LABEL_KEYS: Record<ReadingType, string> = {
+  tarot: 'ui_extra_b0_call_reading_tarot',
+  coffee: 'ui_extra_b0_call_reading_coffee',
+  dream: 'ui_extra_b0_call_reading_dream',
+  numerology: 'ui_extra_b0_call_reading_numerology',
+  yildizname: 'ui_extra_b0_call_reading_yildizname',
+  synastry: 'ui_extra_b0_call_reading_synastry',
+  birth_chart: 'ui_extra_b0_call_reading_birth_chart',
+};
+
+const READING_LABEL_FALLBACKS: Record<ReadingType, string> = {
   tarot: 'Tarot',
-  coffee: 'Kahve',
-  dream: 'Rüya',
-  numerology: 'Numeroloji',
-  yildizname: 'Yıldızname',
-  synastry: 'Sinastri',
-  birth_chart: 'Doğum Haritası',
+  coffee: 'Coffee reading',
+  dream: 'Dream',
+  numerology: 'Numerology',
+  yildizname: 'Yildizname',
+  synastry: 'Synastry',
+  birth_chart: 'Birth chart',
 };
 
 const READING_ICONS: Record<ReadingType, string> = {
@@ -101,6 +112,7 @@ export default function BookingCallPage() {
   const params = useParams<{ locale: string; id: string }>();
   const bookingId = String(params.id || '');
   const locale = String(params.locale || 'tr');
+  const { ui } = useUiSection('ui_extra' as any);
 
   const roomRef = useRef<Room | null>(null);
   const endingRef = useRef(false);
@@ -116,15 +128,27 @@ export default function BookingCallPage() {
   const [error, setError] = useState('');
   const [historyOpen, setHistoryOpen] = useState(true);
 
-  const { data: booking, isLoading: bookingLoading } = useGetMyBookingQuery(bookingId, { skip: !bookingId });
+  // Instant request flow: poll until the consultant approves, then connect in place.
+  const { data: booking, isLoading: bookingLoading } = useGetMyBookingQuery(bookingId, {
+    skip: !bookingId,
+    pollingInterval: 5000,
+  });
   const { data: customerReadings = [], isFetching: readingsLoading } =
     useGetCustomerReadingsForConsultantQuery({ bookingId, limit: 10 }, { skip: !bookingId });
 
   const isVideo = booking?.media_type === 'video';
+  const bookingStatus = (booking as any)?.status as string | undefined;
+  const isWaitingApproval = bookingStatus === 'requested_now' || bookingStatus === 'pending';
+  const isCancelledOrTimedOut =
+    bookingStatus === 'requested_now_timeout' ||
+    bookingStatus === 'cancelled' ||
+    bookingStatus === 'rejected';
 
   useEffect(() => {
     let cancelled = false;
     if (!booking) return;
+    // Wait for approval before starting the LiveKit connection.
+    if (isWaitingApproval || isCancelledOrTimedOut) return;
 
     async function connect() {
       setState('connecting');
@@ -199,7 +223,7 @@ export default function BookingCallPage() {
       } catch (err) {
         if (!cancelled) {
           setState('error');
-          setError(err instanceof Error ? err.message : 'Görüşme başlatılamadı.');
+          setError(err instanceof Error ? err.message : ui('ui_extra_b0_call_start_failed', 'Could not start the session.'));
         }
       }
     }
@@ -259,6 +283,63 @@ export default function BookingCallPage() {
     );
   }
 
+  // Instant session request: keep polling while consultant approval is pending.
+  if (isWaitingApproval) {
+    return (
+      <PageContainer center className="bg-(--gm-bg) min-h-screen">
+        <div className="max-w-md text-center space-y-6">
+          <div className="mx-auto w-20 h-20 rounded-full border-2 border-(--gm-gold)/40 flex items-center justify-center">
+            <div className="w-12 h-12 border-2 border-(--gm-gold) border-t-transparent rounded-full animate-spin" />
+          </div>
+          <h1 className="font-serif text-3xl text-(--gm-text)">
+            {ui('ui_extra_b0_call_waiting_approval_title', 'Waiting for consultant approval')}
+          </h1>
+          <p className="text-sm text-(--gm-text-dim) leading-relaxed">
+            {ui('ui_extra_b0_call_waiting_approval_desc', 'Your instant session request has been sent to the consultant. When approved, this page will automatically switch to the session. Keep it open.')}
+          </p>
+          <Link
+            href={`/${(params as any)?.locale || 'tr'}/profile/bookings`}
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-(--gm-text-dim) hover:text-(--gm-gold) transition-colors"
+          >
+            <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+            {ui('ui_extra_b0_call_back_to_bookings', 'Back to my bookings')}
+          </Link>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  if (isCancelledOrTimedOut) {
+    return (
+      <PageContainer center className="bg-(--gm-bg) min-h-screen">
+        <div className="max-w-md text-center space-y-6">
+          <div className="mx-auto w-20 h-20 rounded-full border-2 border-(--gm-error)/40 flex items-center justify-center">
+            <PhoneOff className="w-8 h-8 text-(--gm-error)" />
+          </div>
+          <h1 className="font-serif text-3xl text-(--gm-text)">
+            {bookingStatus === 'requested_now_timeout'
+              ? ui('ui_extra_b0_call_request_timeout', 'Request timed out')
+              : bookingStatus === 'rejected'
+              ? ui('ui_extra_b0_call_request_rejected', 'Request declined')
+              : ui('ui_extra_b0_call_cancelled', 'Session cancelled')}
+          </h1>
+          <p className="text-sm text-(--gm-text-dim) leading-relaxed">
+            {bookingStatus === 'requested_now_timeout'
+              ? ui('ui_extra_b0_call_timeout_desc', 'The consultant did not respond in time. You can try another consultant or create the request again.')
+              : ui('ui_extra_b0_call_cancelled_desc', 'This session cannot take place right now. You can view the details on the bookings page.')}
+          </p>
+          <Link
+            href={`/${(params as any)?.locale || 'tr'}/consultants`}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) text-xs font-bold uppercase tracking-widest"
+          >
+            {ui('ui_extra_b0_call_explore_consultants', 'Explore consultants')}
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer width="full" className="bg-(--gm-bg) min-h-screen pt-32 lg:pt-40 pb-20 relative overflow-hidden">
       
@@ -312,7 +393,7 @@ export default function BookingCallPage() {
               <div className="absolute top-6 left-6 flex items-center gap-3 z-20">
                 <div className={cn("w-2 h-2 rounded-full", state === 'connected' ? 'bg-(--gm-success) animate-pulse' : 'bg-(--gm-error)')} />
                 <span className="font-display text-[10px] tracking-[0.2em] text-(--gm-text) uppercase bg-(--gm-bg-deep)/40 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                  {state === 'connected' ? `${mm}:${ss} • CANLI` : 'BAĞLANIYOR...'}
+                  {state === 'connected' ? `${mm}:${ss} • ${ui('ui_extra_b0_call_live', 'LIVE')}` : ui('ui_extra_b0_call_connecting', 'CONNECTING...')}
                 </span>
               </div>
             </div>
@@ -323,13 +404,13 @@ export default function BookingCallPage() {
                   <div className={cn("w-2 h-2 rounded-full", state === 'connected' ? 'bg-(--gm-success) animate-pulse' : 'bg-(--gm-muted)')} />
                   <p className="text-[10px] font-bold text-(--gm-gold-dim) tracking-[0.2em] uppercase mb-0">GoldMoodAstro Live</p>
                 </div>
-                <h1 className="font-serif text-4xl lg:text-5xl text-(--gm-text) tracking-tight">Sesli Görüşme</h1>
+                <h1 className="font-serif text-4xl lg:text-5xl text-(--gm-text) tracking-tight">{ui('ui_extra_b0_call_voice_call', 'Voice session')}</h1>
                 <p className="mt-4 text-sm font-serif italic text-(--gm-muted)">
-                  {state === 'connecting' && 'Yıldızlarla bağlantı kuruluyor...'}
-                  {state === 'connected' && 'Bağlantı güvenli ve aktif.'}
-                  {state === 'reconnecting' && 'Bağlantı tazeleniyor...'}
-                  {state === 'disconnected' && 'Görüşme sonlandı.'}
-                  {state === 'error' && 'Bir enerji kesintisi oluştu.'}
+                  {state === 'connecting' && ui('ui_extra_b0_call_connecting_stars', 'Connecting your session...')}
+                  {state === 'connected' && ui('ui_extra_b0_call_secure_active', 'Connection is secure and active.')}
+                  {state === 'reconnecting' && ui('ui_extra_b0_call_refreshing', 'Refreshing the connection...')}
+                  {state === 'disconnected' && ui('ui_extra_b0_call_ended', 'Session ended.')}
+                  {state === 'error' && ui('ui_extra_b0_call_energy_disruption', 'A connection issue occurred.')}
                 </p>
                 {error ? <p className="mt-4 text-sm text-(--gm-error) font-medium bg-(--gm-error)/5 py-2 px-4 rounded-lg">{error}</p> : null}
               </div>
@@ -364,7 +445,7 @@ export default function BookingCallPage() {
                   ? "bg-(--gm-error) text-(--gm-text) border-(--gm-error)" 
                   : "bg-(--gm-text)/10 border-(--gm-border-soft) text-(--gm-text) hover:bg-(--gm-text)/20"
               )}
-              title={muted ? 'Sesi Aç' : 'Sesi Kapat'}
+              title={muted ? ui('ui_extra_b0_call_unmute', 'Unmute') : ui('ui_extra_b0_call_mute', 'Mute')}
             >
               {muted ? <MicOff size={20} /> : <Mic size={20} />}
             </button>
@@ -380,7 +461,7 @@ export default function BookingCallPage() {
                     ? "bg-(--gm-error) text-(--gm-text) border-(--gm-error)" 
                     : "bg-(--gm-text)/10 border-(--gm-border-soft) text-(--gm-text) hover:bg-(--gm-text)/20"
                 )}
-                title={cameraEnabled ? 'Kamerayı Kapat' : 'Kamerayı Aç'}
+                title={cameraEnabled ? ui('ui_extra_b0_call_camera_off', 'Turn camera off') : ui('ui_extra_b0_call_camera_on', 'Turn camera on')}
               >
                 {!cameraEnabled ? <CameraOff size={20} /> : <Video size={20} />}
               </button>
@@ -390,17 +471,17 @@ export default function BookingCallPage() {
               type="button"
               onClick={hangup}
               className="w-14 h-14 rounded-full bg-(--gm-error) border border-(--gm-error) flex items-center justify-center text-(--gm-text) hover:bg-(--gm-error)/80 transition-all shadow-lg"
-              title="Görüşmeyi Bitir"
+              title={ui('ui_extra_b0_call_end_call', 'End session')}
             >
               <PhoneOff size={24} />
             </button>
 
-            {!isVideo && <BookingMessageButton bookingId={bookingId} variant="secondary" label="Mesaj" />}
+            {!isVideo && <BookingMessageButton bookingId={bookingId} variant="secondary" label={ui('ui_extra_b0_call_message', 'Message')} />}
           </div>
 
           {!isVideo && (
             <Link href={`/${locale}/dashboard?tab=bookings`} className="mb-12 text-[10px] font-bold tracking-[0.3em] text-(--gm-muted) uppercase hover:text-(--gm-gold) transition-colors">
-              ← Randevularıma dön
+              ← {ui('ui_extra_b0_call_back_to_bookings', 'Back to my bookings')}
             </Link>
           )}
         </div>
@@ -414,14 +495,14 @@ export default function BookingCallPage() {
           >
             <span>
               <span className="block text-[10px] font-bold uppercase tracking-[0.3em] text-(--gm-gold) mb-1">
-                Danışan Geçmişi
+                {ui('ui_extra_b0_call_client_history', 'Client history')}
               </span>
               <span className="block font-serif text-2xl text-(--gm-text)">
-                Son Okumalar
+                {ui('ui_extra_b0_call_recent_readings', 'Recent readings')}
               </span>
             </span>
             <span className="text-[10px] uppercase tracking-widest text-(--gm-muted) group-hover:text-(--gm-gold) transition-colors">
-              {historyOpen ? 'Kapat' : 'Aç'}
+              {historyOpen ? ui('ui_extra_b0_call_close', 'Close') : ui('ui_extra_b0_call_open', 'Open')}
             </span>
           </button>
 
@@ -433,7 +514,7 @@ export default function BookingCallPage() {
                 ))
               ) : customerReadings.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-(--gm-border-soft) p-8 text-center text-sm italic text-(--gm-muted)">
-                  Henüz bir geçmiş bulunamadı.
+                  {ui('ui_extra_b0_call_no_history', 'No history found yet.')}
                 </div>
               ) : (
                 customerReadings.map((item) => (
@@ -448,7 +529,7 @@ export default function BookingCallPage() {
                       <div className="min-w-0 flex-1">
                         <div className="mb-2 flex items-center justify-between gap-2">
                           <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-(--gm-gold-deep)">
-                            {READING_LABELS[item.type]}
+                            {ui(READING_LABEL_KEYS[item.type] as any, READING_LABEL_FALLBACKS[item.type])}
                           </span>
                           <span className="shrink-0 text-[10px] font-serif italic text-(--gm-muted)">
                             {shortDate(item.created_at)}
@@ -458,14 +539,14 @@ export default function BookingCallPage() {
                           {item.title}
                         </h2>
                         <p className="line-clamp-2 text-xs leading-relaxed text-(--gm-text-dim) opacity-80">
-                          {item.snippet || 'Detaylı yorum içeriği...'}
+                          {item.snippet || ui('ui_extra_b0_call_detail_placeholder', 'Detailed reading content...')}
                         </p>
                         <Link
                           href={readingHref(locale, item)}
                           target="_blank"
                           className="mt-4 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-(--gm-gold) hover:text-(--gm-gold-light) transition-colors"
                         >
-                          İncele <ArrowRight size={10} />
+                          {ui('ui_extra_b0_call_review', 'Review')} <ArrowRight size={10} />
                         </Link>
                       </div>
                     </div>

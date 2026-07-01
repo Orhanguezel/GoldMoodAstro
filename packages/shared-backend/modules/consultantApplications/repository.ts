@@ -7,6 +7,7 @@ import { users } from '../auth/schema';
 import { consultants } from '../consultants/schema';
 import { userRoles } from '../userRoles/schema';
 import { createUserNotification } from '../notifications/service';
+import { resources } from '../resources/schema';
 import { consultantApplications, type ConsultantApplication } from './schema';
 import type {
   CreateConsultantApplicationInput,
@@ -143,9 +144,11 @@ export async function approveApplication(
       .where(eq(consultants.user_id, userId))
       .limit(1);
 
+    let consultantId: string;
     if (!existingConsultant) {
+      consultantId = randomUUID();
       await tx.insert(consultants).values({
-        id: randomUUID(),
+        id: consultantId,
         user_id: userId,
         bio: app.bio,
         expertise: app.expertise ?? [],
@@ -158,10 +161,11 @@ export async function approveApplication(
         is_available: 1,
       });
     } else {
+      consultantId = existingConsultant.id;
       await tx
         .update(consultants)
         .set({ agreement_accepted_at: app.created_at ?? new Date(), updated_at: new Date() } as any)
-        .where(eq(consultants.id, existingConsultant.id));
+        .where(eq(consultants.id, consultantId));
     }
 
     await tx.update(users).set({ role: 'consultant', updated_at: new Date() }).where(eq(users.id, userId));
@@ -173,6 +177,25 @@ export async function approveApplication(
       .limit(1);
     if (!existingRole) {
       await tx.insert(userRoles).values({ id: randomUUID(), user_id: userId, role: 'consultant' });
+    }
+
+    // Yeni: her consultant'a kendi resource'unu garanti et. Booking + müsaitlik
+    // akışları resources tablosu üzerinden ilerliyor; onaylanan danışmanın orada
+    // yoksa otomatik olarak eklenir. Title kullanıcının full_name'i; yoksa fallback.
+    const [existingResource] = await tx
+      .select({ id: resources.id })
+      .from(resources)
+      .where(and(eq(resources.external_ref_id, consultantId), eq(resources.type, 'consultant')))
+      .limit(1);
+    if (!existingResource) {
+      await tx.insert(resources).values({
+        id: randomUUID(),
+        type: 'consultant',
+        title: (app.full_name || '').trim() || `Danışman ${consultantId.slice(0, 8)}`,
+        capacity: 1,
+        external_ref_id: consultantId,
+        is_active: 1,
+      } as any);
     }
 
     await tx

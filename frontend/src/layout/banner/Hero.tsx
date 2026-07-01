@@ -9,12 +9,12 @@ const Hero: React.FC<{ locale?: string }> = ({ locale: explicitLocale }) => {
   const locale = useResolvedLocale(explicitLocale);
   const { ui } = useUiSection('ui_hero', locale);
 
-  const heroSub = ui('ui_hero_subtitle', 'ASTROLOJİ • TAROT • ŞİFA');
-  const heroHeadline = ui('ui_hero_headline', 'Yıldızlarla Tanışan <em>Modern</em> Astroloji Deneyimi');
-  const heroTagline = ui('ui_hero_tagline', 'Doğum haritanızdan beslenen kişisel rehberlik. Telefon numarası istemeyen kayıt, şeffaf abonelik ve gerçek uzmanlara bağlanma seçeneği.');
+  const heroSub = ui('ui_hero_subtitle', 'ASTROLOGY • TAROT • HEALING');
+  const heroHeadline = ui('ui_hero_headline', 'A <em>Modern</em> Astrology Experience Guided by the Stars');
+  const heroTagline = ui('ui_hero_tagline', 'Personal guidance shaped by your birth chart. Registration without phone number, transparent subscriptions and access to real experts.');
   
-  const ctaText = ui('ui_hero_cta', 'Danışmanları Keşfet');
-  const secondaryText = ui('ui_hero_cta_secondary', 'Haritanı Oluştur');
+  const ctaText = ui('ui_hero_cta', 'Explore Consultants');
+  const secondaryText = ui('ui_hero_cta_secondary', 'Create Your Chart');
 
   const ctaHref = localizePath(locale, '/consultants');
   const secondaryHref = localizePath(locale, '/booking');

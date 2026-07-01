@@ -20,8 +20,10 @@ import {
   useDeleteCampaignAdminMutation,
 } from '@/integrations/hooks';
 import { cn } from '@/lib/utils';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 export default function AdminCampaignsClient() {
+  const t = useAdminT('admin.campaigns');
   const query = useListCampaignsAdminQuery(undefined);
   const [update] = useUpdateCampaignAdminMutation();
   const [remove] = useDeleteCampaignAdminMutation();
@@ -29,19 +31,19 @@ export default function AdminCampaignsClient() {
   const handleToggleActive = async (id: string, current: boolean) => {
     try {
       await update({ id, body: { is_active: !current } }).unwrap();
-      toast.success('Status updated.');
+      toast.success(t('toast.statusUpdated'));
     } catch {
-      toast.error('Update failed.');
+      toast.error(t('toast.updateFailed'));
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this campaign?')) return;
+    if (!confirm(t('confirmDelete'))) return;
     try {
       await remove(id).unwrap();
-      toast.success('Campaign deleted.');
+      toast.success(t('toast.deleted'));
     } catch {
-      toast.error('Delete failed.');
+      toast.error(t('toast.deleteFailed'));
     }
   };
 
@@ -54,10 +56,10 @@ export default function AdminCampaignsClient() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-gm-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">KAMPANYA YÖNETİMİ</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">{t('eyebrow')}</span>
           </div>
-          <h1 className="font-serif text-4xl text-gm-text">Kampanyalar & Promolar</h1>
-          <p className="text-sm italic text-gm-muted">İndirim kodlarını, hediye kredileri ve özel teklifleri yönetin.</p>
+          <h1 className="font-serif text-4xl text-gm-text">{t('title')}</h1>
+          <p className="text-sm italic text-gm-muted">{t('subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <Button
@@ -68,7 +70,7 @@ export default function AdminCampaignsClient() {
             className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-text hover:bg-gm-surface/80"
           >
             <RefreshCcw className={cn("mr-2 size-4 text-gm-gold", query.isFetching && "animate-spin")} />
-            Yenile
+            {t('actions.refresh')}
           </Button>
           <Button 
             size="sm" 
@@ -77,7 +79,7 @@ export default function AdminCampaignsClient() {
           >
             <Link href="/admin/campaigns/new">
               <Plus className="mr-2 size-4" />
-              Yeni Kampanya
+              {t('actions.new')}
             </Link>
           </Button>
         </div>
@@ -89,25 +91,25 @@ export default function AdminCampaignsClient() {
           <Table>
             <TableHeader className="bg-gm-surface/40">
               <TableRow className="border-gm-border-soft hover:bg-transparent">
-                <TableHead className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Aktif</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Kampanya Tanımı</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Tip & Değer</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Kullanım Durumu</TableHead>
-                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Kapsam</TableHead>
-                <TableHead className="px-8 py-6 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">İşlem</TableHead>
+                <TableHead className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.active')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.campaign')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.typeValue')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.usage')}</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.scope')}</TableHead>
+                <TableHead className="px-8 py-6 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {query.isLoading ? (
                 <TableRow className="border-gm-border-soft">
                   <TableCell colSpan={6} className="py-16 text-center text-sm text-gm-muted italic font-serif">
-                    Yükleniyor...
+                    {t('loading')}
                   </TableCell>
                 </TableRow>
               ) : query.data?.length === 0 ? (
                 <TableRow className="border-gm-border-soft">
                   <TableCell colSpan={6} className="py-16 text-center text-sm text-gm-muted italic font-serif">
-                    Kayıtlı kampanya bulunamadı.
+                    {t('empty')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -128,7 +130,7 @@ export default function AdminCampaignsClient() {
                         <div>
                           <div className="font-bold text-gm-text">{item.name_tr}</div>
                           <div className="text-[11px] text-gm-muted/80 flex items-center gap-1 mt-1">
-                            Kod: <code className="bg-gm-bg-deep px-2 py-0.5 rounded text-gm-gold font-bold uppercase tracking-wider text-[10px] border border-gm-border-soft">{item.code}</code>
+                            {t('codeLabel')} <code className="bg-gm-bg-deep px-2 py-0.5 rounded text-gm-gold font-bold uppercase tracking-wider text-[10px] border border-gm-border-soft">{item.code}</code>
                           </div>
                         </div>
                       </div>
@@ -141,15 +143,15 @@ export default function AdminCampaignsClient() {
                         <div className="font-bold text-gm-text text-sm">
                           {item.type === 'discount_percentage' && `%${item.value}`}
                           {item.type === 'discount_fixed' && `₺${item.value}`}
-                          {item.type === 'bonus_credits' && `${item.value} Kredi`}
-                          {item.type === 'free_trial_days' && `${item.value} Gün Ücretsiz`}
+                          {item.type === 'bonus_credits' && t('valueFormat.bonusCredits', { value: item.value }, `${item.value} Kredi`)}
+                          {item.type === 'free_trial_days' && t('valueFormat.freeTrialDays', { value: item.value }, `${item.value} Gün Ücretsiz`)}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-5">
                       <div className="flex flex-col gap-1.5">
                         <div className="text-xs text-gm-text-dim font-light">
-                          Kullanım: <span className="font-bold text-gm-text">{item.used_count}</span>
+                          {t('usageLabel')} <span className="font-bold text-gm-text">{item.used_count}</span>
                           {item.max_uses ? ` / ${item.max_uses}` : ' / ∞'}
                         </div>
                         {item.max_uses && (

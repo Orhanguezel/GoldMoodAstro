@@ -14,7 +14,7 @@ export default function Skeleton() {
       <div className="container">
         <div className="row">
           <div className="col-12">
-            {/* "skeleton-line" class'ının mevcut SCSS'deki default yüksekliğine güveniyoruz */}
+            {/* Rely on the default height from the existing skeleton-line SCSS class. */}
             <div className="skeleton-line" />
             <div className="skeleton-line mt-10" />
             <div className="skeleton-line mt-10" />

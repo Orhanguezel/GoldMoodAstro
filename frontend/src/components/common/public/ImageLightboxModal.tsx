@@ -4,6 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
+import { useUiSection } from '@/i18n';
 
 export type LightboxImage = {
   raw: string; // full image
@@ -38,6 +39,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
   onIndexChange,
   showThumbs = true,
 }) => {
+  const { ui } = useUiSection('ui_misc' as any);
   const len = images?.length ?? 0;
   const safeIndex = useMemo(() => clampIndex(index, len), [index, len]);
 
@@ -94,7 +96,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
       className="ens-lightbox"
       role="dialog"
       aria-modal="true"
-      aria-label={title ? `${title} – Görsel görüntüleyici` : 'Görsel görüntüleyici'}
+      aria-label={title ? `${title} - ${ui('ui_misc_image_viewer', 'Image viewer')}` : ui('ui_misc_image_viewer', 'Image viewer')}
       onMouseDown={(e) => {
         // backdrop click closes
         if (e.target === e.currentTarget) onClose();
@@ -104,7 +106,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
         {/* Header */}
         <div className="ens-lightbox__head">
           <div className="ens-lightbox__meta">
-            <div className="ens-lightbox__title">{title || 'Görsel'}</div>
+            <div className="ens-lightbox__title">{title || ui('ui_misc_image', 'Image')}</div>
             <div className="ens-lightbox__counter">
               {safeIndex + 1} / {len}
             </div>
@@ -116,8 +118,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
               href={activeSrc}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Görseli yeni sekmede aç"
-              title="Yeni sekmede aç"
+              aria-label={ui('ui_misc_open_image_new_tab', 'Open image in a new tab')}
+              title={ui('ui_misc_open_new_tab', 'Open in a new tab')}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -132,8 +134,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
               className="ens-lightbox__iconBtn"
               type="button"
               onClick={onClose}
-              aria-label="Kapat"
-              title="Kapat (Esc)"
+              aria-label={ui('ui_misc_close', 'Close')}
+              title={ui('ui_misc_close_esc', 'Close (Esc)')}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -152,8 +154,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
             className="ens-lightbox__nav ens-lightbox__nav--left"
             onClick={goPrev}
             disabled={len <= 1}
-            aria-label="Önceki (Sol ok)"
-            title="Önceki"
+            aria-label={ui('ui_misc_prev_left_arrow', 'Previous (Left arrow)')}
+            title={ui('ui_misc_prev', 'Previous')}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -168,8 +170,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
             className="ens-lightbox__nav ens-lightbox__nav--right"
             onClick={goNext}
             disabled={len <= 1}
-            aria-label="Sonraki (Sağ ok)"
-            title="Sonraki"
+            aria-label={ui('ui_misc_next_right_arrow', 'Next (Right arrow)')}
+            title={ui('ui_misc_next', 'Next')}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -193,7 +195,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           </div>
 
           {showThumbs && len > 1 ? (
-            <div className="ens-lightbox__thumbs" aria-label="Küçük önizlemeler">
+            <div className="ens-lightbox__thumbs" aria-label={ui('ui_misc_thumbnails', 'Thumbnails')}>
               {images.map((it, i) => {
                 const src = String(it.thumb || it.raw || '').trim();
                 if (!src) return null;
@@ -205,8 +207,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
                     type="button"
                     className={`ens-lightbox__thumb ${isActive ? 'is-active' : ''}`}
                     onClick={() => onIndexChange(i)}
-                    aria-label={`Görsel ${i + 1}`}
-                    title={`Görsel ${i + 1}`}
+                    aria-label={`${ui('ui_misc_image', 'Image')} ${i + 1}`}
+                    title={`${ui('ui_misc_image', 'Image')} ${i + 1}`}
                   >
                     <span className="ens-lightbox__thumbImg">
                       <Image

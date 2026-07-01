@@ -19,8 +19,10 @@ import {
 } from '@/integrations/hooks';
 import { useParams, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
 export default function SupportTicketDetailPage() {
+  const t = useAdminT('admin.support');
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
@@ -37,9 +39,9 @@ export default function SupportTicketDetailPage() {
     try {
       await createReply({ ticket_id: id, message: message.trim() }).unwrap();
       setMessage('');
-      toast.success('Yanıt gönderildi.');
+      toast.success(t('detail.replySent'));
     } catch {
-      toast.error('Hata oluştu.');
+      toast.error(t('actions.error'));
     }
   };
 
@@ -47,9 +49,9 @@ export default function SupportTicketDetailPage() {
     const action = ticket?.status === 'closed' ? 'reopen' : 'close';
     try {
       await toggleStatus({ id, action }).unwrap();
-      toast.success(`Talep ${action === 'close' ? 'kapatıldı' : 'yeniden açıldı'}.`);
+      toast.success(action === 'close' ? t('actions.close') : t('actions.reopen'));
     } catch {
-      toast.error('Hata oluştu.');
+      toast.error(t('actions.error'));
     }
   };
 
@@ -61,7 +63,7 @@ export default function SupportTicketDetailPage() {
   
   if (!ticket) return (
     <div className="p-20 text-center font-serif italic text-muted-foreground opacity-50">
-      Destek talebi bulunamadı.
+      {t('detail.notFound')}
     </div>
   );
 
@@ -95,7 +97,7 @@ export default function SupportTicketDetailPage() {
               ticket.status === 'closed' ? "border-[#C9A961]/30 text-[#C9A961]" : "border-muted text-muted-foreground"
             )}
           >
-            {ticket.status === 'closed' ? 'TALEBİ YENİDEN AÇ' : 'TALEBİ KAPAT'}
+            {ticket.status === 'closed' ? t('detail.reopenTicket') : t('detail.closeTicket')}
           </Button>
         </div>
       </div>
@@ -111,7 +113,7 @@ export default function SupportTicketDetailPage() {
                   <User size={18} />
                 </div>
                 <div>
-                  <div className="font-serif text-lg text-foreground">Talep Mesajı</div>
+                  <div className="font-serif text-lg text-foreground">{t('detail.ticketMessage')}</div>
                   <div className="text-[10px] text-muted-foreground font-mono opacity-50">{format(new Date(ticket.created_at), 'dd MMM yyyy, HH:mm', { locale: tr })}</div>
                 </div>
               </div>
@@ -127,12 +129,12 @@ export default function SupportTicketDetailPage() {
           <div className="space-y-6">
             <div className="flex items-center gap-4 px-6">
               <MessageSquare className="text-[#C9A961]" size={16} />
-              <span className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase">Konuşma Geçmişi</span>
+              <span className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase">{t('detail.conversationHistory')}</span>
             </div>
 
             {replies.length === 0 ? (
               <div className="p-12 text-center border-2 border-dashed border-border/20 rounded-[32px] font-serif italic text-muted-foreground opacity-30">
-                Henüz yanıt verilmemiş.
+                {t('detail.noReplies')}
               </div>
             ) : (
               replies.map((reply) => (
@@ -154,7 +156,7 @@ export default function SupportTicketDetailPage() {
                         {reply.is_admin ? <Shield size={14} /> : <User size={14} />}
                       </div>
                       <div className="font-serif text-base font-bold text-foreground">
-                        {reply.is_admin ? 'Destek Ekibi' : 'Kullanıcı'}
+                        {reply.is_admin ? t('detail.supportTeam') : t('detail.user')}
                       </div>
                     </div>
                     <div className="text-[9px] text-muted-foreground font-mono opacity-50">
@@ -176,11 +178,11 @@ export default function SupportTicketDetailPage() {
             <Card className="bg-card border-[#C9A961]/30 rounded-[32px] overflow-hidden shadow-[0_20px_50px_rgba(201,169,97,0.05)]">
               <div className="p-6 border-b border-[#C9A961]/10 bg-[#C9A961]/5 flex items-center gap-3">
                 <ShieldCheck className="text-[#C9A961]" size={16} />
-                <span className="text-[10px] font-bold text-[#C9A961] tracking-[0.2em] uppercase">Resmi Yanıt Oluştur</span>
+                <span className="text-[10px] font-bold text-[#C9A961] tracking-[0.2em] uppercase">{t('detail.createOfficialReply')}</span>
               </div>
               <CardContent className="p-8">
                 <Textarea 
-                  placeholder="Kullanıcıya iletilecek yanıtı buraya yazın..." 
+                  placeholder={t('detail.replyPlaceholder')}
                   className="min-h-[160px] bg-transparent border-none p-0 focus-visible:ring-0 text-base font-serif italic leading-relaxed placeholder:text-muted-foreground/30"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -193,7 +195,7 @@ export default function SupportTicketDetailPage() {
                   className="bg-[#C9A961] text-[#1A1715] hover:bg-[#C9A961]/90 rounded-full px-10 h-11 font-bold tracking-widest uppercase shadow-[0_10px_20px_rgba(201,169,97,0.2)]"
                 >
                   <Send className="mr-2 size-4" />
-                  YANITI GÖNDER
+                  {t('detail.sendReply')}
                 </Button>
               </div>
             </Card>
@@ -209,8 +211,8 @@ export default function SupportTicketDetailPage() {
                   <User size={14} />
                 </div>
                 <div>
-                  <div className="text-[9px] font-bold text-muted-foreground tracking-widest uppercase mb-0.5">Kullanıcı</div>
-                  <div className="font-serif text-lg text-foreground truncate max-w-[200px]">{ticket.user_display_name || 'İsimsiz'}</div>
+                  <div className="text-[9px] font-bold text-muted-foreground tracking-widest uppercase mb-0.5">{t('detail.user')}</div>
+                  <div className="font-serif text-lg text-foreground truncate max-w-[200px]">{ticket.user_display_name || t('detail.unnamed')}</div>
                 </div>
               </div>
 
@@ -219,7 +221,7 @@ export default function SupportTicketDetailPage() {
                   <Mail size={14} />
                 </div>
                 <div>
-                  <div className="text-[9px] font-bold text-muted-foreground tracking-widest uppercase mb-0.5">E-posta</div>
+                  <div className="text-[9px] font-bold text-muted-foreground tracking-widest uppercase mb-0.5">{t('detail.email')}</div>
                   <div className="text-xs font-mono text-foreground truncate max-w-[200px]">{ticket.user_email || '-'}</div>
                 </div>
               </div>
@@ -229,7 +231,7 @@ export default function SupportTicketDetailPage() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase flex items-center gap-2">
-                    <AlertCircle size={12} className="text-[#C9A961]" /> Öncelik
+                    <AlertCircle size={12} className="text-[#C9A961]" /> {t('detail.priority')}
                   </span>
                   <Badge variant="outline" className={cn(
                     "rounded-full px-4 border-none font-bold text-[9px] tracking-widest uppercase",
@@ -243,14 +245,14 @@ export default function SupportTicketDetailPage() {
 
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase flex items-center gap-2">
-                    <Calendar size={12} className="text-[#C9A961]" /> Oluşturulma
+                    <Calendar size={12} className="text-[#C9A961]" /> {t('detail.createdAt')}
                   </span>
                   <span className="font-mono text-xs">{format(new Date(ticket.created_at), 'dd.MM.yyyy')}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase flex items-center gap-2">
-                    <Clock size={12} className="text-[#C9A961]" /> Son Güncelleme
+                    <Clock size={12} className="text-[#C9A961]" /> {t('detail.lastUpdate')}
                   </span>
                   <span className="font-mono text-xs">{format(new Date(ticket.updated_at), 'dd.MM.yyyy')}</span>
                 </div>
@@ -259,9 +261,9 @@ export default function SupportTicketDetailPage() {
           </Card>
 
           <div className="p-8 rounded-[32px] bg-[#C9A961]/5 border border-[#C9A961]/20">
-            <h4 className="font-serif text-lg mb-2 italic text-[#C9A961]">Moderatör Notu</h4>
+            <h4 className="font-serif text-lg mb-2 italic text-[#C9A961]">{t('detail.moderatorNote')}</h4>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Bu talep üzerinden yapılan tüm yazışmalar kullanıcıya anlık bildirim olarak gönderilmektedir. Lütfen yanıtlarınızda GoldMoodAstro marka dilini koruyun.
+              {t('detail.moderatorNoteBody')}
             </p>
           </div>
         </div>

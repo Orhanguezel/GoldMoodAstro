@@ -2,26 +2,27 @@
 
 import React, { useState } from 'react';
 import { useGetDailyHoroscopeQuery } from '@/integrations/rtk/public/horoscopes.endpoints';
-import { useLocaleShort } from '@/i18n';
+import { useLocaleShort, useUiSection } from '@/i18n';
 import { Sparkles, Star, Zap, Info } from 'lucide-react';
 
 const SIGNS = [
-  { key: 'aries', label: 'Koç', symbol: '♈' },
-  { key: 'taurus', label: 'Boğa', symbol: '♉' },
-  { key: 'gemini', label: 'İkizler', symbol: '♊' },
-  { key: 'cancer', label: 'Yengeç', symbol: '♋' },
+  { key: 'aries', label: 'Aries', symbol: '♈' },
+  { key: 'taurus', label: 'Taurus', symbol: '♉' },
+  { key: 'gemini', label: 'Gemini', symbol: '♊' },
+  { key: 'cancer', label: 'Cancer', symbol: '♋' },
   { key: 'leo', label: 'Aslan', symbol: '♌' },
-  { key: 'virgo', label: 'Başak', symbol: '♍' },
-  { key: 'libra', label: 'Terazi', symbol: '♎' },
-  { key: 'scorpio', label: 'Akrep', symbol: '♏' },
-  { key: 'sagittarius', label: 'Yay', symbol: '♐' },
-  { key: 'capricorn', label: 'Oğlak', symbol: '♑' },
-  { key: 'aquarius', label: 'Kova', symbol: '♒' },
-  { key: 'pisces', label: 'Balık', symbol: '♓' },
+  { key: 'virgo', label: 'Virgo', symbol: '♍' },
+  { key: 'libra', label: 'Libra', symbol: '♎' },
+  { key: 'scorpio', label: 'Scorpio', symbol: '♏' },
+  { key: 'sagittarius', label: 'Sagittarius', symbol: '♐' },
+  { key: 'capricorn', label: 'Capricorn', symbol: '♑' },
+  { key: 'aquarius', label: 'Aquarius', symbol: '♒' },
+  { key: 'pisces', label: 'Pisces', symbol: '♓' },
 ];
 
 export default function DailyHoroscopeSection() {
   const locale = useLocaleShort();
+  const { ui } = useUiSection('ui_daily');
   const [selectedSign, setSelectedSign] = useState('aries');
   const { data: horoscope, isFetching } = useGetDailyHoroscopeQuery({ sign: selectedSign });
 
@@ -40,15 +41,16 @@ export default function DailyHoroscopeSection() {
           <div className="w-full lg:w-5/12">
             <div className="flex items-center gap-3 mb-8">
               <span className="w-8 h-px bg-[var(--gm-gold)]" />
-              <span className="text-[var(--gm-gold)] font-bold text-xs uppercase tracking-[0.2em]">Gökyüzü Hareketleri</span>
+              <span className="text-[var(--gm-gold)] font-bold text-xs uppercase tracking-[0.2em]">{ui('ui_daily_horoscope_eyebrow', 'Sky Movements')}</span>
             </div>
-            
-            <h2 className="font-serif text-[clamp(2.5rem,5vw,4rem)] leading-[1.1] text-[var(--gm-text)] mb-8">
-              Yıldızlar bugün <br /><em>sizin için</em> ne söylüyor?
-            </h2>
-            
+
+            <h2
+              className="font-serif text-[clamp(2.5rem,5vw,4rem)] leading-[1.1] text-[var(--gm-text)] mb-8"
+              dangerouslySetInnerHTML={{ __html: ui('ui_daily_horoscope_heading', 'What do the stars <br /><em>say for you</em> today?') }}
+            />
+
             <p className="text-[var(--gm-text-dim)] text-lg mb-12 max-w-md font-serif italic">
-              Burcunuzun günlük enerjisini ve kozmik uyarılarını keşfedin.
+              {ui('ui_daily_horoscope_subheading', 'Discover your sign daily energy and cosmic guidance.')}
             </p>
 
             <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-3">
@@ -84,7 +86,7 @@ export default function DailyHoroscopeSection() {
                 {isFetching ? (
                   <div className="py-24 text-center">
                     <div className="w-12 h-12 border-2 border-[var(--gm-gold)] border-t-transparent rounded-full mx-auto mb-6 animate-spin" />
-                    <p className="font-serif text-[var(--gm-text-dim)] italic tracking-widest">Gezegenler diziliyor...</p>
+                    <p className="font-serif text-[var(--gm-text-dim)] italic tracking-widest">{ui('ui_daily_horoscope_loading', 'The planets are aligning...')}</p>
                   </div>
                 ) : horoscope ? (
                   <div className="relative z-10">
@@ -95,7 +97,7 @@ export default function DailyHoroscopeSection() {
                         </span>
                         <div>
                           <h3 className="font-serif text-4xl text-[var(--gm-text)]">{currentSign?.label}</h3>
-                          <p className="text-[var(--gm-gold-dim)] text-xs font-bold tracking-[0.2em] uppercase mt-1">Bugünün Yorumu</p>
+                          <p className="text-[var(--gm-gold-dim)] text-xs font-bold tracking-[0.2em] uppercase mt-1">{ui('ui_daily_horoscope_today_label', 'Today Reading')}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-[var(--gm-text-dim)] font-serif italic text-sm">
@@ -112,7 +114,7 @@ export default function DailyHoroscopeSection() {
                       <div>
                         <div className="flex items-center gap-2 mb-3">
                           <Zap className="w-3 h-3 text-[var(--gm-gold)]" />
-                          <span className="font-bold text-[10px] tracking-widest text-[var(--gm-gold)] uppercase">Ruh Hali</span>
+                          <span className="font-bold text-[10px] tracking-widest text-[var(--gm-gold)] uppercase">{ui('ui_daily_horoscope_mood_label', 'Mood')}</span>
                         </div>
                         <div className="flex gap-1.5">
                           {[...Array(5)].map((_, i) => (
@@ -123,14 +125,14 @@ export default function DailyHoroscopeSection() {
                       <div className="md:border-l border-[var(--gm-border-soft)] md:pl-8">
                         <div className="flex items-center gap-2 mb-2">
                           <Star className="w-3 h-3 text-[var(--gm-gold)]" />
-                          <span className="font-bold text-[10px] tracking-widest text-[var(--gm-gold)] uppercase">Şanslı Sayı</span>
+                          <span className="font-bold text-[10px] tracking-widest text-[var(--gm-gold)] uppercase">{ui('ui_daily_horoscope_lucky_number_label', 'Lucky Number')}</span>
                         </div>
                         <span className="font-serif text-2xl text-[var(--gm-text)]">{horoscope.luckyNumber}</span>
                       </div>
                       <div className="md:border-l border-[var(--gm-border-soft)] md:pl-8">
                         <div className="flex items-center gap-2 mb-2">
                           <Sparkles className="w-3 h-3 text-[var(--gm-gold)]" />
-                          <span className="font-bold text-[10px] tracking-widest text-[var(--gm-gold)] uppercase">Uğurlu Renk</span>
+                          <span className="font-bold text-[10px] tracking-widest text-[var(--gm-gold)] uppercase">{ui('ui_daily_horoscope_lucky_color_label', 'Lucky Color')}</span>
                         </div>
                         <span className="font-serif text-lg text-[var(--gm-text)] italic capitalize">{horoscope.luckyColor}</span>
                       </div>
@@ -139,7 +141,7 @@ export default function DailyHoroscopeSection() {
                 ) : (
                   <div className="py-24 text-center">
                     <Info className="w-12 h-12 text-[var(--gm-text-dim)] opacity-20 mx-auto mb-4" />
-                    <p className="text-[var(--gm-text-dim)] font-light italic">Kozmik veriler şu an erişilemez durumda.</p>
+                    <p className="text-[var(--gm-text-dim)] font-light italic">{ui('ui_daily_horoscope_unavailable', 'Cosmic data is currently unavailable.')}</p>
                   </div>
                 )}
               </div>

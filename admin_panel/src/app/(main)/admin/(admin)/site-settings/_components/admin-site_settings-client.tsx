@@ -177,7 +177,7 @@ export default function AdminSiteSettingsClient() {
                 "bg-gm-surface/40 border-gm-border-soft rounded-2xl h-12 text-sm focus:ring-gm-gold/50 transition-all",
                 isGlobalTab && "opacity-50 grayscale"
               )}>
-                <SelectValue placeholder="Dil Seçin" />
+                <SelectValue placeholder={t('filters.selectLanguage', null, 'Dil Seçin')} />
               </SelectTrigger>
               <SelectContent className="bg-gm-bg-deep border-gm-border-soft rounded-2xl shadow-2xl">
                 {localeOptions.map((o) => (
@@ -226,7 +226,7 @@ export default function AdminSiteSettingsClient() {
             </div>
             <h4 className="font-serif text-lg text-gm-text">{t('admin.common.globalSettings', null, 'Global Ayarlar')}</h4>
             <p className="text-[10px] text-gm-muted leading-relaxed uppercase tracking-[0.15em] opacity-80">
-              Bazı ayarlar tüm diller için ortaktır ve "Global" olarak işaretlenmiştir.
+              {t('management.globalNote', null, 'Bazı ayarlar tüm diller için ortaktır ve "Global" olarak işaretlenmiştir.')}
             </p>
           </Card>
         </aside>
@@ -246,7 +246,7 @@ export default function AdminSiteSettingsClient() {
                   {menuItems.find(m => m.value === tab)?.label}
                 </CardTitle>
                 <CardDescription className="font-serif italic text-lg text-gm-muted opacity-70 mt-2">
-                  Yapılandırma detaylarını güncelleyin.
+                  {t('management.contentSubtitle', null, 'Yapılandırma detaylarını güncelleyin.')}
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">

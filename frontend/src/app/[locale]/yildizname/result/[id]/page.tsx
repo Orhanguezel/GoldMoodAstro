@@ -15,7 +15,7 @@ export async function generateMetadata(
 
   if (!result) {
     return {
-      title: 'Yıldızname Sonucu — GoldMoodAstro',
+      title: 'Yildizname Result — GoldMoodAstro',
     };
   }
 
@@ -25,18 +25,18 @@ export async function generateMetadata(
   const ogImageUrl = `https://goldmoodastro.com/${locale}/yildizname/result/${id}/opengraph-image`;
 
   return {
-    title: `${name} İçin Yıldızname Analizi: ${menzil} — GoldMoodAstro`,
+    title: `Yildizname Analysis for ${name}: ${menzil} — GoldMoodAstro`,
     description: result.result_text?.substring(0, 160) + '...',
     openGraph: {
-      title: `${name}'in Yıldızname Menzili: ${menzil}`,
-      description: `Ebced hesabı ile ${name} için hazırlanan özel yıldızname analizi.`,
+      title: `${name} Yildizname Mansion: ${menzil}`,
+      description: `Private yildizname analysis prepared for ${name} with ebced calculation.`,
       images: [{ url: ogImageUrl, width: 1200, height: 630, alt: name }],
       type: 'article',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${name} İçin Yıldızname Analizi`,
-      description: `${menzil} menzili analizi.`,
+      title: `Yildizname Analysis for ${name}`,
+      description: `${menzil} mansion analysis.`,
       images: [ogImageUrl],
     },
   };

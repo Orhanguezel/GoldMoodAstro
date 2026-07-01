@@ -10,11 +10,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { month } = await params;
   const [year, monthNum] = month.split('-');
   const dateObj = new Date(parseInt(year), parseInt(monthNum) - 1);
-  const monthLabel = dateObj.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+  const monthLabel = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return {
-    title: `${monthLabel} Burç Geçişleri ve Gökyüzü Raporu — GoldMoodAstro`,
-    description: `${monthLabel} ayında burçları neler bekliyor? Gezegen geçişleri, yeniay ve dolunay etkileri. 12 burç için aylık gökyüzü raporu.`,
+    title: `${monthLabel} Zodiac Transits and Sky Report — GoldMoodAstro`,
+    description: `What awaits the zodiac signs in ${monthLabel}? Planetary transits, new moon and full moon effects. Monthly sky report for all 12 signs.`,
   };
 }
 

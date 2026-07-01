@@ -19,6 +19,7 @@ import {
 } from "@goldmood/shared-backend/modules/notifications/schema";
 import { randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
+import { apiMessage } from "../_shared/api-i18n";
 
 // yeni email template sistemi
 import { sendTemplatedEmail } from "@goldmood/shared-backend/modules/emailTemplates/mailer";
@@ -137,7 +138,7 @@ export const SupportController = {
     } catch (err) {
       req.log.error({ err }, "support_tickets_list_failed");
       reply.code(400);
-      return { message: "Geçersiz istek." };
+      return { message: apiMessage(req, "invalid_request") };
     }
   },
 
@@ -148,13 +149,13 @@ export const SupportController = {
       const row = await SupportRepo.getById(id);
       if (!row) {
         reply.code(404);
-        return { message: "Kayıt bulunamadı." };
+        return { message: apiMessage(req, "record_not_found") };
       }
       return row;
     } catch (err) {
       req.log.error({ err }, "support_tickets_get_failed");
       reply.code(500);
-      return { message: "İşlem gerçekleştirilemedi." };
+      return { message: apiMessage(req, "action_failed") };
     }
   },
 
@@ -173,7 +174,7 @@ export const SupportController = {
     } catch (err) {
       req.log.error({ err }, "support_tickets_create_failed");
       reply.code(400);
-      return { message: "Kayıt oluşturulamadı." };
+      return { message: apiMessage(req, "create_failed") };
     }
   },
 
@@ -188,7 +189,7 @@ export const SupportController = {
 
       if (role !== "admin" && ("status" in patch || "priority" in patch)) {
         reply.code(403);
-        return { message: "Bu alanları güncelleme yetkiniz yok." };
+        return { message: apiMessage(req, "update_forbidden") };
       }
 
       const updated = await SupportRepo.updateTicket(id, {
@@ -200,13 +201,13 @@ export const SupportController = {
 
       if (!updated) {
         reply.code(404);
-        return { message: "Kayıt bulunamadı." };
+        return { message: apiMessage(req, "record_not_found") };
       }
       return updated;
     } catch (err) {
       req.log.error({ err }, "support_tickets_update_failed");
       reply.code(400);
-      return { message: "Güncelleme başarısız." };
+      return { message: apiMessage(req, "update_failed") };
     }
   },
 
@@ -219,7 +220,7 @@ export const SupportController = {
     } catch (err) {
       req.log.error({ err }, "ticket_replies_list_failed");
       reply.code(500);
-      return { message: "İşlem gerçekleştirilemedi." };
+      return { message: apiMessage(req, "action_failed") };
     }
   },
 
@@ -265,7 +266,7 @@ export const SupportController = {
     } catch (err) {
       req.log.error({ err }, "ticket_replies_create_failed");
       reply.code(400);
-      return { message: "Yanıt oluşturulamadı." };
+      return { message: apiMessage(req, "reply_create_failed") };
     }
   },
 };

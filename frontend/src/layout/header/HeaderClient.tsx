@@ -17,9 +17,9 @@ import { IconUser } from '@/components/ui/icons';
 import ThemeToggle from '@/components/system/ThemeToggle';
 import { trackEvent } from '@/integrations/telemetry';
 
-// Menü sadece DB'den gelir (menu_items). Hardcoded fallback YOK — istemci
-// "düzgün menu → hardcoded" flicker'ı yaşamasın. SSR fetch başarısızsa header
-// menü kısmı boş kalır; brand + sağ blok CTA'lar görünür kalmaya devam eder.
+// Menu comes only from DB (menu_items). There is no hardcoded fallback, so the
+// client does not flicker from a correct menu to a stale local menu. If SSR fetch
+// fails, the menu area stays empty while brand and right-side CTAs remain visible.
 
 type MenuItemWithChildren = PublicMenuItemDto & {
   children?: MenuItemWithChildren[];
@@ -131,7 +131,7 @@ function hasUserRole(user: User | null, roleName: string) {
 type HeaderClientProps = {
   brand?: HeaderClientBrand;
   locale?: string;
-  /** SSR'da fetch edilen menu items — RTK Query'nin SSR/client farkından kaynaklanan hidrasyon mismatch'i önler. */
+  /** Menu items fetched on SSR to prevent RTK Query hydration mismatch. */
   initialMenuItems?: PublicMenuItemDto[];
 };
 
@@ -144,10 +144,10 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
   const { isAuthenticated, user } = useAuthStore();
   const isConsultant = hasUserRole(user, 'consultant');
 
-  // T29-4: Consultant rolündeki kullanıcının bekleyen anlık talep sayısı (header rozet için)
+  // T29-4: pending instant request count for consultant badge in the header.
   const { data: consultantStats } = useGetMyConsultantStatsQuery(undefined, {
     skip: !isAuthenticated || !isConsultant,
-    pollingInterval: 30_000, // 30sn'de bir taze say
+    pollingInterval: 30_000,
   });
   const pendingRequestNow = consultantStats?.requested_now_count ?? 0;
 
@@ -166,11 +166,9 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
     return { name };
   }, [brand?.name, contactInfoSetting?.value, companyBrandSetting?.value]);
 
-  // HİDRASYON STRATEJİSİ: SSR'da Header.tsx pre-fetch eder, client'ta initialMenuItems
-  // kullanılır. RTK Query çağrısı yok — server/client farkını tamamen ortadan kaldırır.
-  // Hardcoded fallback YOK: SSR fetch başarısız ise menü boş kalır (yanlış hardcoded
-  // menü göstermek yerine boş gösterip flicker'ı önler). Admin menu_items'i güncellerse
-  // revalidate: 60sn sonra otomatik yenilenir.
+  // Hydration strategy: Header.tsx prefetches on SSR and the client consumes
+  // initialMenuItems. There is no RTK Query call here, which removes server/client
+  // drift and avoids stale hardcoded menu flicker.
   const headerMenuItems: MenuItemWithChildren[] = useMemo(() => {
     if (initialMenuItems && initialMenuItems.length > 0) {
       return initialMenuItems.slice().sort((a, b) => ((a as any)?.order_num ?? 0) - ((b as any)?.order_num ?? 0)) as MenuItemWithChildren[];
@@ -194,9 +192,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  // Sayfada koyu (dark) bir hero/banner var mı? — transparent header'da
-  // metin beyaz/kontrastlı olsun. Anasayfa hero'su koyu ay/gece görseli
-  // kullanıyor → nav metni beyaz olmalı (yoksa koyu zeminde okunmuyor).
+  // Detect dark hero/banner pages so the transparent header keeps enough contrast.
   const isHome = !pathname || pathname === '/' || /^\/(tr|en|de)\/?$/.test(pathname);
   const hasHeroOverlay = !scrolled && (
     isHome ||
@@ -247,7 +243,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                 if (hasChildren) {
                   let expertiseFilter: string | undefined;
                   let panelEyebrow: string | undefined;
-                  const consultantsHeading = locale === 'tr' ? 'Uzman Danışmanlar' : locale === 'de' ? 'Beraterinnen & Berater' : 'Featured Consultants';
+                  const consultantsHeading = ui('ui_header_mega_consultants_heading', 'Featured Consultants');
                   let allConsultantsExpertise: string | undefined;
                   const megaMenuKind = resolveHeaderMegaMenuKind(item, children);
 
@@ -281,7 +277,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                             expertise={expertiseFilter}
                             locale={locale}
                             consultantsHeading={consultantsHeading}
-                            allConsultantsLabel={locale === 'tr' ? 'Tümünü Gör' : locale === 'de' ? 'Alle ansehen' : 'See All'}
+                            allConsultantsLabel={ui('ui_header_mega_see_all', 'See All')}
                             allConsultantsExpertise={allConsultantsExpertise}
                             panelEyebrow={panelEyebrow || label}
                             limit={expertiseFilter ? 4 : 0}
@@ -312,9 +308,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
 
             <div className="flex items-center gap-6">
               <ThemeToggle />
-              {/* Consultant ise yalnız "Danışman Paneli" göster — "Panel" (kullanıcı
-                  paneli /dashboard) ile karışmasın. Non-consultant authenticated
-                  kullanıcı için "Panel" gösterilir. */}
+              {/* Consultants see their own panel; regular authenticated users see dashboard. */}
               {isAuthenticated && !isConsultant && (
                 <Link
                   href={localizePath(locale, '/dashboard')}
@@ -323,10 +317,10 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                       ? 'text-white hover:text-amber-200 drop-shadow-md'
                       : 'text-[var(--gm-gold-deep)] hover:text-[var(--gm-gold)]'
                   }`}
-                  title={locale === 'tr' ? 'Panelim' : 'Dashboard'}
+                  title={ui('ui_header_dashboard_title', 'Dashboard')}
                 >
                   <IconUser className="w-4 h-4" />
-                  {locale === 'tr' ? 'Panel' : 'Dashboard'}
+                  {ui('ui_header_dashboard', 'Dashboard')}
                 </Link>
               )}
               {isConsultant && (
@@ -337,9 +331,9 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                       ? 'text-amber-300 hover:text-white drop-shadow-md'
                       : 'text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)]'
                   }`}
-                  title={locale === 'tr' ? 'Danışman Paneli' : 'Consultant Panel'}
+                  title={ui('ui_header_consultant_panel', 'Consultant Panel')}
                 >
-                  {locale === 'tr' ? 'Danışman Paneli' : 'Consultant Panel'}
+                  {ui('ui_header_consultant_panel', 'Consultant Panel')}
                   {pendingRequestNow > 0 && (
                     <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-[var(--gm-error)] text-[var(--gm-text)] text-[10px] font-bold animate-pulse">
                       ⚡{pendingRequestNow}
@@ -347,7 +341,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                   )}
                 </Link>
               )}
-              {/* H1: Üye Ol / Giriş Yap */}
+              {/* Auth links */}
               {!isAuthenticated && (
                 <div className="flex items-center gap-3">
                   <Link 
@@ -358,19 +352,19 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                         : 'border-[var(--gm-gold)]/40 text-[var(--gm-gold)] hover:border-[var(--gm-gold)] hover:text-[var(--gm-gold-light)]'
                     }`}
                   >
-                    {locale === 'tr' ? 'Giriş Yap' : 'Login'}
+                    {ui('ui_header_login', 'Login')}
                   </Link>
                   <Link 
                     href={`${localizePath(locale, '/register')}${authNextQuery}`}
                     onClick={() => trackEvent('signup_start').catch(() => {})}
                     className="text-[11px] font-bold tracking-[0.15em] uppercase text-white bg-[var(--gm-primary)] hover:bg-[var(--gm-primary-light)] transition-colors px-4 py-2 rounded-full shadow-[var(--gm-glow-primary)] hover:shadow-lg"
                   >
-                    {locale === 'tr' ? 'Üye Ol' : 'Sign Up'}
+                    {ui('ui_header_signup', 'Sign Up')}
                   </Link>
                 </div>
               )}
 
-              {/* H2: Danışman mısın? CTA */}
+              {/* Consultant CTA */}
               {!isConsultant && (
                 <Link
                   href={localizePath(locale, '/become-consultant')}
@@ -380,22 +374,21 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                       : 'text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] decoration-[var(--gm-border-soft)] hover:decoration-[var(--gm-gold)]'
                   }`}
                 >
-                  {locale === 'tr' ? 'Danışman mısın?' : 'Join as Consultant'}
+                  {ui('ui_header_join_consultant', 'Join as Consultant')}
                 </Link>
               )}
 
-              {/* "DANIŞMAN BUL" public listeye gider — consultant zaten danışmandır, gizle.
-                  "Danışman Paneli" ile karışmasın. */}
+              {/* Public consultant list CTA; hidden for consultant accounts. */}
               {!isConsultant && (
                 <Link href={consultantsHref} className="btn-premium py-2.5 px-6 text-[12px]">
-                  {ui('ui_header_cta', 'DANIŞMAN BUL')}
+                  {ui('ui_header_cta', 'Find a Consultant')}
                 </Link>
               )}
 
               {/* Hamburger Toggle */}
               <button
                 type="button"
-                aria-label={locale === 'tr' ? 'Menüyü aç' : 'Open menu'}
+                aria-label={ui('ui_header_open_menu', 'Open menu')}
                 className="flex flex-col gap-1.5 cursor-pointer group"
                 onClick={() => setOpen(true)}
               >
@@ -425,8 +418,8 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
               type="button"
               aria-label={
                 mobileOpen
-                  ? (locale === 'tr' ? 'Mobil menüyü kapat' : 'Close mobile menu')
-                  : (locale === 'tr' ? 'Mobil menüyü aç' : 'Open mobile menu')
+                  ? ui('ui_header_close_mobile_menu', 'Close mobile menu')
+                  : ui('ui_header_open_mobile_menu', 'Open mobile menu')
               }
               aria-expanded={mobileOpen}
               className="flex flex-col gap-1.5"
@@ -489,7 +482,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
           </ul>
           {!isConsultant && (
             <Link href={consultantsHref} className="btn-premium w-full max-w-xs text-center mb-4" onClick={() => setMobileOpen(false)}>
-              {ui('ui_header_cta', 'DANIŞMAN BUL')}
+              {ui('ui_header_cta', 'Find a Consultant')}
             </Link>
           )}
 
@@ -503,14 +496,14 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
                 }}
                 className="w-full flex items-center justify-center rounded-full bg-[var(--gm-primary)] px-5 py-3 text-[12px] font-bold uppercase tracking-[0.15em] text-white transition-colors hover:bg-[var(--gm-primary-light)]"
               >
-                {locale === 'tr' ? 'Üye Ol' : 'Sign Up'}
+                {ui('ui_header_signup', 'Sign Up')}
               </Link>
               <Link 
                 href={`${localizePath(locale, '/login')}${authNextQuery}`}
                 onClick={() => setMobileOpen(false)}
                 className="w-full flex items-center justify-center rounded-full border border-[var(--gm-gold)]/40 px-5 py-3 text-[12px] font-bold uppercase tracking-[0.15em] text-[var(--gm-gold)] transition-colors hover:border-[var(--gm-gold)]"
               >
-                {locale === 'tr' ? 'Giriş Yap' : 'Login'}
+                {ui('ui_header_login', 'Login')}
               </Link>
             </div>
           )}
@@ -521,7 +514,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
               className="mt-6 text-[11px] uppercase tracking-[0.15em] text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] transition-colors underline decoration-[var(--gm-border-soft)] underline-offset-4"
               onClick={() => setMobileOpen(false)}
             >
-              {locale === 'tr' ? 'Danışman mısın? Platforma Katıl' : 'Join as Consultant'}
+              {ui('ui_header_join_consultant_long', 'Join as Consultant')}
             </Link>
           )}
           {isConsultant && (
@@ -530,7 +523,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
               className="mt-4 inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-full border border-[var(--gm-gold)]/40 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--gm-gold)]"
               onClick={() => setMobileOpen(false)}
             >
-              {locale === 'tr' ? 'Danışman Paneli' : 'Consultant Panel'}
+              {ui('ui_header_consultant_panel', 'Consultant Panel')}
               {pendingRequestNow > 0 && (
                 <span className="inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full bg-[var(--gm-error)] text-[var(--gm-text)] text-[10px] font-bold animate-pulse">
                   ⚡{pendingRequestNow}

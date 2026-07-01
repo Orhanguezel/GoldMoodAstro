@@ -4,16 +4,59 @@ import { eq, and, desc, sql as drizzleSql } from 'drizzle-orm';
 import { creditPackages, userCredits, creditTransactions } from './schema';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function listActivePackages() {
-  return db.select()
-    .from(creditPackages)
-    .where(eq(creditPackages.isActive, 1))
-    .orderBy(creditPackages.displayOrder);
+function normalizeLocale(locale?: string | null): string {
+  const normalized = String(locale || 'tr').trim().toLowerCase().split('-')[0];
+  return normalized || 'tr';
 }
 
-export async function getPackageById(id: string) {
-  const rows = await db.select().from(creditPackages).where(eq(creditPackages.id, id)).limit(1);
-  return rows[0] || null;
+function mapCreditPackage(row: any) {
+  if (!row) return row;
+  return {
+    ...row,
+    nameTr: row.nameTr ?? row.name_tr,
+    nameEn: row.nameEn ?? row.name_en,
+    descriptionTr: row.descriptionTr ?? row.description_tr,
+    descriptionEn: row.descriptionEn ?? row.description_en,
+    priceMinor: row.priceMinor ?? row.price_minor,
+    bonusCredits: row.bonusCredits ?? row.bonus_credits,
+    isActive: row.isActive ?? row.is_active,
+    isFeatured: row.isFeatured ?? row.is_featured,
+    displayOrder: row.displayOrder ?? row.display_order,
+    createdAt: row.createdAt ?? row.created_at,
+    updatedAt: row.updatedAt ?? row.updated_at,
+  };
+}
+
+export async function listActivePackages(locale = 'tr') {
+  const normalized = normalizeLocale(locale);
+  const [rows] = await (db as any).session.client.query(
+    `SELECT p.*,
+      COALESCE(req_i18n.name, tr_i18n.name, IF(? = 'en', p.name_en, p.name_tr)) AS name,
+      COALESCE(req_i18n.description, tr_i18n.description, IF(? = 'en', p.description_en, p.description_tr)) AS description
+     FROM credit_packages p
+     LEFT JOIN credit_package_i18n req_i18n ON req_i18n.package_id = p.id AND req_i18n.locale = ?
+     LEFT JOIN credit_package_i18n tr_i18n ON tr_i18n.package_id = p.id AND tr_i18n.locale = 'tr'
+     WHERE p.is_active = 1
+     ORDER BY p.display_order`,
+    [normalized, normalized, normalized],
+  );
+  return (rows as any[]).map(mapCreditPackage);
+}
+
+export async function getPackageById(id: string, locale = 'tr') {
+  const normalized = normalizeLocale(locale);
+  const [rows] = await (db as any).session.client.query(
+    `SELECT p.*,
+      COALESCE(req_i18n.name, tr_i18n.name, IF(? = 'en', p.name_en, p.name_tr)) AS name,
+      COALESCE(req_i18n.description, tr_i18n.description, IF(? = 'en', p.description_en, p.description_tr)) AS description
+     FROM credit_packages p
+     LEFT JOIN credit_package_i18n req_i18n ON req_i18n.package_id = p.id AND req_i18n.locale = ?
+     LEFT JOIN credit_package_i18n tr_i18n ON tr_i18n.package_id = p.id AND tr_i18n.locale = 'tr'
+     WHERE p.id = ?
+     LIMIT 1`,
+    [normalized, normalized, normalized, id],
+  );
+  return mapCreditPackage((rows as any[])[0]) || null;
 }
 
 export async function getUserBalance(userId: string) {

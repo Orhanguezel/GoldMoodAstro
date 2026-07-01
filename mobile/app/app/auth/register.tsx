@@ -144,6 +144,7 @@ function buildScreenStyles(t: AppTheme) {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams, Link } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { safeRouterBack } from '@/lib/navigation';
 import { User, Mail, Lock, ChevronLeft, CheckCircle2, Circle } from 'lucide-react-native';
 
@@ -154,6 +155,7 @@ import { storage } from '@/lib/storage';
 export default function RegisterScreen() {
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
   const { next } = useLocalSearchParams<{ next?: string }>();
 
   const [fullName, setFullName] = useState('');
@@ -164,12 +166,12 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!fullName || !email || !password) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
+      Alert.alert(t('common.error'), t('common.fillAllFields'));
       return;
     }
 
     if (!rulesAccepted) {
-      Alert.alert('Hata', 'Lütfen kullanım koşullarını kabul edin.');
+      Alert.alert(t('common.error'), t('auth.acceptTermsError'));
       return;
     }
     
@@ -193,7 +195,7 @@ export default function RegisterScreen() {
       const dest = typeof next === 'string' && next.startsWith('/') ? next : '/onboarding';
       router.replace(dest as any);
     } catch (err: any) {
-      Alert.alert('Kayıt Başarısız', err.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+      Alert.alert(t('auth.registerFailed'), err.message || t('common.genericError'));
     } finally {
       setLoading(false);
     }
@@ -216,19 +218,19 @@ export default function RegisterScreen() {
           <ScrollView contentContainerStyle={styles.scroll}>
             
             <View style={styles.welcomeArea}>
-              <Text style={styles.welcomeKicker}>YENİ BAŞLANGIÇ</Text>
-              <Text style={styles.title}>Ruhsal yolculuğunuza{'\n'}bugün başlayın.</Text>
+              <Text style={styles.welcomeKicker}>{t('auth.registerKicker')}</Text>
+              <Text style={styles.title}>{t('auth.registerHeadline')}</Text>
             </View>
 
             <View style={styles.form}>
               
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>AD SOYAD</Text>
+                <Text style={styles.label}>{t('auth.fullNameLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <User size={20} color={colors.goldDim} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Adınız Soyadınız"
+                    placeholder={t('auth.fullNamePlaceholder')}
                     placeholderTextColor={colors.textMuted}
                     value={fullName}
                     onChangeText={setFullName}
@@ -237,7 +239,7 @@ export default function RegisterScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>E-POSTA ADRESİ</Text>
+                <Text style={styles.label}>{t('auth.emailLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <Mail size={20} color={colors.goldDim} />
                   <TextInput
@@ -253,7 +255,7 @@ export default function RegisterScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>ŞİFRE</Text>
+                <Text style={styles.label}>{t('auth.passwordLabel')}</Text>
                 <View style={styles.inputContainer}>
                   <Lock size={20} color={colors.goldDim} />
                   <TextInput
@@ -277,7 +279,7 @@ export default function RegisterScreen() {
                   <Circle size={20} color={colors.line} />
                 )}
                 <Text style={styles.checkboxText}>
-                  Kullanım Koşullarını ve KVKK metnini okudum, kabul ediyorum.
+                  {t('auth.acceptTermsLabel')}
                 </Text>
               </Pressable>
 
@@ -289,16 +291,16 @@ export default function RegisterScreen() {
                 {loading ? (
                   <ActivityIndicator color={colors.ink} />
                 ) : (
-                  <Text style={styles.registerBtnText}>Hesap Oluştur</Text>
+                  <Text style={styles.registerBtnText}>{t('auth.registerTitle')}</Text>
                 )}
               </Pressable>
             </View>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Zaten hesabınız var mı?</Text>
+              <Text style={styles.footerText}>{t('auth.hasAccount')}</Text>
               <Link href="/auth/login" asChild>
                 <Pressable>
-                  <Text style={styles.loginLink}>Giriş Yap</Text>
+                  <Text style={styles.loginLink}>{t('auth.loginBtn')}</Text>
                 </Pressable>
               </Link>
             </View>

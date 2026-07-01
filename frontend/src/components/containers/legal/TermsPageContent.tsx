@@ -13,6 +13,7 @@ import { useLocaleShort, useUiSection } from '@/i18n';
 const TermsPageContent: React.FC = () => {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_terms', locale as any);
+  const { ui: uiX } = useUiSection('ui_extra' as any);
   const isTr = locale === 'tr';
 
   const { data, isLoading, isError } = useListCustomPagesPublicQuery({
@@ -29,8 +30,8 @@ const TermsPageContent: React.FC = () => {
     const t = String((page as any)?.title ?? '').trim();
     return (
       t ||
-      String(ui('ui_terms_fallback_title', 'Kullanım Koşulları') || '').trim() ||
-      'Kullanım Koşulları'
+      String(ui('ui_terms_fallback_title', 'Terms of Use') || '').trim() ||
+      'Terms of Use'
     );
   }, [page, ui]);
 
@@ -67,7 +68,7 @@ const TermsPageContent: React.FC = () => {
               className="inline-block bg-(--gm-surface) border border-(--gm-border-soft) text-(--gm-text-dim) px-8 py-4 rounded-2xl font-serif italic"
               role="alert"
             >
-              {ui('ui_terms_empty', 'İçerik henüz hazırlanmadı.')}
+              {ui('ui_terms_empty', 'Content is not ready yet.')}
             </div>
           </div>
         )}
@@ -88,13 +89,13 @@ const TermsPageContent: React.FC = () => {
                 className="bg-(--gm-surface) border border-(--gm-border-soft) text-(--gm-text-dim) px-8 py-6 rounded-2xl text-center italic font-serif"
                 role="alert"
               >
-                {ui('ui_terms_empty_text', 'Bu bölümün içeriği yakında eklenecektir.')}
+                {ui('ui_terms_empty_text', 'This section content will be added soon.')}
               </div>
             )}
 
             <footer className="mt-16 text-center">
               <p className="text-(--gm-muted) text-sm font-light">
-                {isTr ? 'Son güncelleme:' : 'Last updated:'} {new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US')}
+                {uiX('ui_extra_b4_last_updated', 'Last updated:')} {new Date().toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US')}
               </p>
             </footer>
           </div>

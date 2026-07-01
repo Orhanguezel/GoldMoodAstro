@@ -24,6 +24,7 @@ import {
   Trash2,
   ExternalLink,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
 import { historyApi, type ReadingHistoryItem, type ReadingHistoryType } from '@/lib/api';
@@ -167,28 +168,29 @@ function buildScreenStyles(t: AppTheme) {
   });
 }
 
-const FILTERS: { id: FilterId; label: string }[] = [
-  { id: 'all', label: 'Tümü' },
-  { id: 'tarot', label: 'Tarot' },
-  { id: 'coffee', label: 'Kahve' },
-  { id: 'dream', label: 'Rüya' },
-  { id: 'synastry', label: 'Sinastri' },
-  { id: 'yildizname', label: 'Yıldızname' },
-  { id: 'numerology', label: 'Numeroloji' },
+const FILTERS: { id: FilterId; labelKey: string }[] = [
+  { id: 'all', labelKey: 'readings.filterAll' },
+  { id: 'tarot', labelKey: 'readings.filterTarot' },
+  { id: 'coffee', labelKey: 'readings.filterCoffee' },
+  { id: 'dream', labelKey: 'readings.filterDream' },
+  { id: 'synastry', labelKey: 'readings.filterSynastry' },
+  { id: 'yildizname', labelKey: 'readings.filterYildizname' },
+  { id: 'numerology', labelKey: 'readings.filterNumerology' },
 ];
 
 function typeConfig(colors: AppTheme['colors']) {
   return {
-    tarot: { label: 'TAROT', icon: Star, color: colors.gold },
-    coffee: { label: 'KAHVE', icon: Coffee, color: colors.goldDim },
-    dream: { label: 'RÜYA', icon: Moon, color: colors.goldDeep },
-    numerology: { label: 'NUMEROLOJİ', icon: Binary, color: colors.gold },
-    yildizname: { label: 'YILDIZNAME', icon: Sparkles, color: colors.goldLight },
-    synastry: { label: 'SİNASTRİ', icon: Heart, color: colors.gold },
+    tarot: { labelKey: 'readings.typeTarot', icon: Star, color: colors.gold },
+    coffee: { labelKey: 'readings.typeCoffee', icon: Coffee, color: colors.goldDim },
+    dream: { labelKey: 'readings.typeDream', icon: Moon, color: colors.goldDeep },
+    numerology: { labelKey: 'readings.typeNumerology', icon: Binary, color: colors.gold },
+    yildizname: { labelKey: 'readings.typeYildizname', icon: Sparkles, color: colors.goldLight },
+    synastry: { labelKey: 'readings.typeSynastry', icon: Heart, color: colors.gold },
   } as const;
 }
 
 export default function HistoryScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
@@ -228,10 +230,10 @@ export default function HistoryScreen() {
   );
 
   const confirmDeleteOne = (item: ReadingHistoryItem) => {
-    Alert.alert('Yorumu sil', 'Bu kayıt kalıcı olarak silinecek. Emin misiniz?', [
-      { text: 'İptal', style: 'cancel' },
+    Alert.alert(t('readings.deleteOneTitle'), t('readings.deleteOneConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Sil',
+        text: t('readings.delete'),
         style: 'destructive',
         onPress: async () => {
           const key = `${item.type}:${item.id}`;
@@ -240,7 +242,7 @@ export default function HistoryScreen() {
             await historyApi.deleteReading(item.type, item.id);
             setHistory((prev) => prev.filter((h) => !(h.type === item.type && h.id === item.id)));
           } catch (e: unknown) {
-            Alert.alert('Hata', e instanceof Error ? e.message : 'Silinemedi.');
+            Alert.alert(t('common.error'), e instanceof Error ? e.message : t('readings.deleteFailed'));
           } finally {
             setDeletingId(null);
           }
@@ -251,19 +253,19 @@ export default function HistoryScreen() {
 
   const confirmDeleteAll = () => {
     Alert.alert(
-      'Tümünü sil',
-      'Tüm kayıtlı yorumlarınız kalıcı olarak silinecek. Bu işlem geri alınamaz.',
+      t('readings.deleteAllTitle'),
+      t('readings.deleteAllConfirm'),
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Tümünü Sil',
+          text: t('readings.deleteAll'),
           style: 'destructive',
           onPress: async () => {
             try {
               await historyApi.deleteAll();
               setHistory([]);
             } catch (e: unknown) {
-              Alert.alert('Hata', e instanceof Error ? e.message : 'Silinemedi.');
+              Alert.alert(t('common.error'), e instanceof Error ? e.message : t('readings.deleteFailed'));
             }
           },
         },
@@ -298,17 +300,17 @@ export default function HistoryScreen() {
             <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
               <ChevronLeft size={24} color={colors.gold} />
             </Pressable>
-            <Text style={styles.navTitle}>Geçmiş Yorumlar</Text>
+            <Text style={styles.navTitle}>{t('readings.title')}</Text>
             <View style={{ width: 40 }} />
           </View>
           <View style={styles.guestWrap}>
             <Clock size={48} color={colors.gold} />
-            <Text style={styles.guestTitle}>Giriş gerekli</Text>
+            <Text style={styles.guestTitle}>{t('readings.guestTitle')}</Text>
             <Text style={styles.guestDesc}>
-              Kayıtlı tarot, kahve, rüya ve diğer yorumlarınızı görmek için giriş yapın.
+              {t('readings.guestDesc')}
             </Text>
             <Pressable style={styles.guestBtn} onPress={() => router.push('/auth/login' as any)}>
-              <Text style={styles.guestBtnText}>Giriş Yap</Text>
+              <Text style={styles.guestBtnText}>{t('readings.guestLogin')}</Text>
             </Pressable>
           </View>
         </SafeAreaView>
@@ -323,10 +325,10 @@ export default function HistoryScreen() {
           <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
-          <Text style={styles.navTitle}>Geçmiş Yorumlar</Text>
+          <Text style={styles.navTitle}>{t('readings.title')}</Text>
           {history.length > 0 ? (
             <Pressable onPress={confirmDeleteAll} style={styles.deleteAllBtn}>
-              <Text style={styles.deleteAllText}>Tümünü Sil</Text>
+              <Text style={styles.deleteAllText}>{t('readings.deleteAll')}</Text>
             </Pressable>
           ) : (
             <View style={{ width: 40 }} />
@@ -347,7 +349,7 @@ export default function HistoryScreen() {
                 style={[styles.filterChip, active && styles.filterChipActive]}
                 onPress={() => setFilter(f.id)}
               >
-                <Text style={[styles.filterText, active && styles.filterTextActive]}>{f.label}</Text>
+                <Text style={[styles.filterText, active && styles.filterTextActive]}>{t(f.labelKey)}</Text>
               </Pressable>
             );
           })}
@@ -394,7 +396,7 @@ export default function HistoryScreen() {
                     <View style={styles.cardBody}>
                       <View style={styles.cardHeader}>
                         <Text style={[styles.typeLabel, { color: config.color }]}>
-                          {config.label}
+                          {t(config.labelKey)}
                         </Text>
                         <View style={styles.dot} />
                         <Text style={styles.dateText}>
@@ -419,7 +421,7 @@ export default function HistoryScreen() {
                       onPress={() => openReading(item)}
                     >
                       <ExternalLink size={14} color={colors.ink} />
-                      <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>Aç</Text>
+                      <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>{t('readings.open')}</Text>
                     </Pressable>
                     <Pressable
                       style={[styles.actionBtn, styles.actionBtnDanger]}
@@ -431,7 +433,7 @@ export default function HistoryScreen() {
                       ) : (
                         <>
                           <Trash2 size={14} color={colors.danger} />
-                          <Text style={[styles.actionBtnText, styles.actionBtnTextDanger]}>Sil</Text>
+                          <Text style={[styles.actionBtnText, styles.actionBtnTextDanger]}>{t('readings.delete')}</Text>
                         </>
                       )}
                     </Pressable>
@@ -443,10 +445,10 @@ export default function HistoryScreen() {
             <View style={styles.emptyWrap}>
               <Clock size={48} color={colors.line} />
               <Text style={styles.emptyTitle}>
-                {filter === 'all' ? 'Henüz kayıtlı yorumun yok' : 'Bu kategoride yorum yok'}
+                {filter === 'all' ? t('readings.emptyAll') : t('readings.emptyCategory')}
               </Text>
               <Text style={styles.emptyDesc}>
-                Tarot, kahve falı veya rüya yorumu yaptığınızda kayıtlar burada görünür.
+                {t('readings.emptyDesc')}
               </Text>
             </View>
           )}

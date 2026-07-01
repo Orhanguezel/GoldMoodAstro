@@ -15,7 +15,7 @@ export default function KullanimSartlariPage() {
   const bannerTitle = useMemo(() => {
     const key = 'ui_terms_fallback_title';
     const v = safeStr(ui(key, ''));
-    return isValidUiText(v, key) ? v : 'Kullanım Şartları';
+    return isValidUiText(v, key) ? v : 'Terms of Use';
   }, [ui]);
 
   return (

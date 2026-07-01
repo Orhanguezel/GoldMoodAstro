@@ -1,27 +1,32 @@
-# GoldMoodAstro Mobile App (Expo)
+# GoldMoodAstro Mobile App
 
-Bu klasor, GoldMoodAstro mobil uygulamasinin Expo projesidir.
-Hedef platformlar iOS ve Android'dir.
+Bu klasör GoldMoodAstro Expo uygulamasıdır. Hedef platformlar iOS ve Android'dir.
 
-## Referans Dokumanlar
+## Referans Dokümanlar
 
-- [../AGENTS.md](../AGENTS.md): Mobil kodlama kurallari ve milestone gorevleri
-- [../MOBILE-STRATEGY.md](../MOBILE-STRATEGY.md): Mobil strateji ozeti
-- [../README.md](../README.md): Mobile klasoru genel dokumani
+- [../AGENTS.md](../AGENTS.md): mobil kodlama kuralları ve premium QA standardı
+- [../MOBILE-STRATEGY.md](../MOBILE-STRATEGY.md): ürün stratejisi
+- [../skills/expo-factory/SKILL.md](../skills/expo-factory/SKILL.md): Expo premium skill
+- [../README.md](../README.md): mobile klasörü genel dokümanı
 
 ## Stack
 
-- Expo ~52
-- React Native 0.76
+- Expo SDK 54
+- React Native 0.81
+- React 19
 - TypeScript strict
-- Expo Router (file-based routing)
-- AsyncStorage
+- Expo Router 6
+- AsyncStorage + SecureStore
 - expo-notifications
-- react-native-agora
+- LiveKit voice call
 - react-native-webview
-- i18next (TR + EN)
+- i18next: TR + EN + DE
+- expo-haptics
+- expo-linear-gradient
+- react-native-reanimated / RN Animated
+- lucide-react-native
 
-## Hızlı Baslangic
+## Hızlı Başlangıç
 
 ```bash
 cd mobile/app
@@ -29,7 +34,7 @@ bun install
 bun run start
 ```
 
-iOS simulator (macOS):
+iOS simulator:
 
 ```bash
 bun run ios
@@ -41,62 +46,80 @@ Android emulator:
 bun run android
 ```
 
-## Build (EAS)
+## Build
 
 ```bash
 bun run build:android
 bun run build:ios
 ```
 
-## Uygulama Yapisi
+## Uygulama Yapısı
 
 ```text
 app/
   _layout.tsx
   index.tsx
-  (tabs)/
   onboarding/
   auth/
+  (tabs)/
+    today.tsx
+    birth-chart.tsx
+    connect.tsx
+    daily.tsx
+    profile/
   consultant/
   booking/
   call/
 
 src/
+  components/
+  hooks/
   lib/
     api.ts
     storage.ts
     i18n.ts
     notifications.ts
-  components/
-  hooks/
+    iap.ts
   theme/
     tokens.ts
+    appTheme.ts
+    ThemeContext.tsx
   types/
-    index.ts
 ```
 
-## API Ortami
+## Premium Bileşen Standardı
 
-- Dev: http://localhost:8094/api/v1
-- Prod: https://www.goldmoodastro.com/api/v1
+Yeni veya yenilenen ekranlarda şu bileşenler öncelikli olmalıdır:
 
-Not: Android emulator'de localhost yerine 10.0.2.2 kullanilir.
+- `PrimaryButton`: press scale, haptic feedback, token renkleri
+- `PremiumCard`: gradient/surface, radius, border, shadow
+- `ScreenShell`: safe area, background, keyboard/scroll davranışı
+- `EmptyState`: ikon + başlık + açıklama + CTA
+- `LoadingState`: skeleton veya markalı yüklenme paneli
 
-## Gelistirme Kurallari
+Mevcut bileşenler bu standarda taşınırken kapsam küçük tutulur. Aynı iş içinde alakasız refactor yapılmaz.
 
-- Hardcoded renk/font yerine tema tokenlarini kullan
-- Auth gerektiren ekranlarda token yoksa login'e yonlendir
-- Tum metinleri i18n anahtari ile yonet (TR + EN birlikte)
-- TypeScript strict modda any kullanmaktan kac
-- API token yonetimini `src/lib/api.ts` ve `src/lib/storage.ts` uzerinden yurut
+## API Ortamı
 
-## Milestone Akisi
+- Dev: `http://localhost:8094/api/v1`
+- Prod: `https://www.goldmoodastro.com/api/v1`
 
-Kodlama sirasi [../AGENTS.md](../AGENTS.md) dosyasindaki milestone'lara gore ilerler:
+Android emulator'de localhost yerine `10.0.2.2` gerekebilir. Token yönetimi `src/lib/api.ts` ve `src/lib/storage.ts` üzerinden yürür.
 
-1. M0: Onboarding + app entry + notifications
-2. M1: Auth akisi
-3. M2: Danisman kesfetme + booking listesi + favoriler
-4. M3: Checkout + Iyzipay WebView
-5. M4: Agora call + degerlendirme
-6. M5: Ayarlar + profil
+## Geliştirme Kuralları
+
+- Hardcoded renk/font yerine `useAppTheme()` kullan.
+- Kullanıcı metinlerini i18n'e ekle.
+- Auth gereken ekranlarda token yoksa login'e yönlendir.
+- `any` kullanma.
+- Yeni API çağrılarını `src/lib/api.ts` içinde grupla.
+- `lucide-react-native` dışında ikon paketi ekleme.
+- `expo-haptics` ve motion davranışlarını kritik CTA'larda unutma.
+
+## Premiumlaştırma Milestone'u
+
+1. Foundation components
+2. 3 aşamalı onboarding
+3. Paywall/subscription production plan
+4. HIG tab/modal/accessibility audit
+5. Critical flow smoke: onboarding -> auth -> consultant -> booking -> payment -> call -> review

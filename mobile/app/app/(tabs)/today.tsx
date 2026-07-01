@@ -67,6 +67,7 @@ function buildScreenStyles(t: AppTheme) {
 }
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { router, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
@@ -101,6 +102,7 @@ const { width } = Dimensions.get('window');
 export default function TodayScreen() {
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t } = useTranslation();
 
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [charts, setCharts] = useState<BirthChart[]>([]);
@@ -136,20 +138,20 @@ export default function TodayScreen() {
   );
 
   const mainChart = charts[0];
-  const sunSign = mainChart?.chart_data?.planets?.sun?.sign_label || 'Aslan';
-  const moonSign = mainChart?.chart_data?.planets?.moon?.sign_label || 'Boğa';
+  const sunSign = mainChart?.chart_data?.planets?.sun?.sign_label || t('zodiacSign.leo.name');
+  const moonSign = mainChart?.chart_data?.planets?.moon?.sign_label || t('zodiacSign.taurus.name');
   const sunSignKey = (mainChart?.chart_data?.planets?.sun?.sign ?? 'aries') as ZodiacSignKey;
 
   const QUICK_ACTIONS = [
-    { id: 'birth-chart', label: 'Doğum Haritası', icon: LayoutGrid, route: '/(tabs)/birth-chart', color: colors.gold },
-    { id: 'daily', label: 'Günlük Yorum', icon: Calendar, route: '/(tabs)/daily', color: colors.info },
-    { id: 'connect', label: 'Danışmanlar', icon: MessageSquare, route: '/(tabs)/connect', color: colors.goldLight },
-    { id: 'profile', label: 'Profil', icon: User, route: '/(tabs)/profile', color: colors.textDim },
-    { id: 'coffee', label: 'Kahve Falı', icon: Coffee, route: '/coffee', color: colors.goldDim },
-    { id: 'ruya', label: 'Rüya Tabiri', icon: Moon, route: '/dreams', color: colors.plumSoft },
-  { id: 'yildizname', label: 'Yıldızname', icon: Sparkles, route: '/yildizname', color: colors.gold },
-  { id: 'sinastri', label: 'Aşk Uyumu', icon: Heart, route: '/synastry', color: colors.goldLight },
-  { id: 'numerology', label: 'Numeroloji', icon: Hash, route: '/numerology', color: colors.info },
+    { id: 'birth-chart', label: t('home.expertise.birth_chart'), icon: LayoutGrid, route: '/(tabs)/birth-chart', color: colors.gold },
+    { id: 'daily', label: t('todayScreen.actionDaily'), icon: Calendar, route: '/(tabs)/daily', color: colors.info },
+    { id: 'connect', label: t('tabs.home'), icon: MessageSquare, route: '/(tabs)/connect', color: colors.goldLight },
+    { id: 'profile', label: t('profile.title'), icon: User, route: '/(tabs)/profile', color: colors.textDim },
+    { id: 'coffee', label: t('todayScreen.actionCoffee'), icon: Coffee, route: '/coffee', color: colors.goldDim },
+    { id: 'ruya', label: t('todayScreen.actionDream'), icon: Moon, route: '/dreams', color: colors.plumSoft },
+  { id: 'yildizname', label: t('todayScreen.actionStarname'), icon: Sparkles, route: '/yildizname', color: colors.gold },
+  { id: 'sinastri', label: t('todayScreen.actionLoveMatch'), icon: Heart, route: '/synastry', color: colors.goldLight },
+  { id: 'numerology', label: t('home.expertise.numerology'), icon: Hash, route: '/numerology', color: colors.info },
   ];
 
   if (authLoading || (loading && !refreshing)) {

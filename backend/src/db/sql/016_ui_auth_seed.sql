@@ -48,9 +48,14 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     'register_or',                  'veya',
     'register_google_loading',      'Google ile yönlendiriliyor...',
     'register_google_button',       'Google ile devam et',
+    'register_terms_link',          'Kullanım Koşullarını',
+    'register_terms_and',           've',
+    'register_kvkk_link',           'KVKK Aydınlatma Metnini',
+    'register_terms_accept_suffix', 'okudum, kabul ediyorum.',
     'register_error_required',      'E-posta ve şifre zorunludur.',
     'register_error_password_length','Şifre en az 6 karakter olmalıdır.',
     'register_error_password_mismatch','Şifreler eşleşmiyor.',
+    'register_error_rules_required','Kullanım koşullarını ve KVKK metnini kabul etmelisiniz.',
     'register_error_google_generic','Google ile kayıt başlatılırken bir hata oluştu.'
   )
 ),
@@ -95,9 +100,14 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     'register_or',                  'or',
     'register_google_loading',      'Redirecting to Google...',
     'register_google_button',       'Continue with Google',
+    'register_terms_link',          'Terms of Use',
+    'register_terms_and',           'and',
+    'register_kvkk_link',           'KVKK Notice',
+    'register_terms_accept_suffix', 'read and accept.',
     'register_error_required',      'Email and password are required.',
     'register_error_password_length','Password must be at least 6 characters.',
     'register_error_password_mismatch','Passwords do not match.',
+    'register_error_rules_required','You must accept the terms of use and KVKK notice.',
     'register_error_google_generic','An error occurred while starting Google signup.'
   )
 ),
@@ -142,9 +152,14 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     'register_or',                  'oder',
     'register_google_loading',      'Weiterleitung zu Google...',
     'register_google_button',       'Mit Google fortfahren',
+    'register_terms_link',          'Nutzungsbedingungen',
+    'register_terms_and',           'und',
+    'register_kvkk_link',           'KVKK-Hinweis',
+    'register_terms_accept_suffix', 'gelesen und akzeptiert.',
     'register_error_required',      'E-Mail und Passwort sind erforderlich.',
     'register_error_password_length','Passwort muss mindestens 6 Zeichen lang sein.',
     'register_error_password_mismatch','Passwörter stimmen nicht überein.',
+    'register_error_rules_required','Sie müssen die Nutzungsbedingungen und den KVKK-Hinweis akzeptieren.',
     'register_error_google_generic','Beim Starten der Google-Registrierung ist ein Fehler aufgetreten.'
   )
 )

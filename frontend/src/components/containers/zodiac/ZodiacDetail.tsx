@@ -18,6 +18,7 @@ import { getCelebritiesBySign } from '@/lib/zodiac/celebrities';
 import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import { useBrand } from '@/hooks/useBrand';
+import { useUiSection } from '@/i18n';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 interface ZodiacDetailProps {
@@ -36,21 +37,21 @@ type ZodiacSection = {
 export default function ZodiacDetail({ initialTab = 'overview', initialInfo = null, initialToday = null }: ZodiacDetailProps) {
   const { sign, locale } = useParams();
   const { brand } = useBrand();
+  const { ui } = useUiSection('ui_zodiac');
   const signKey = sign as ZodiacSign;
   const meta = getZodiacMeta(signKey) || {
     key: signKey,
     label: signKey,
     date: '',
     symbol: '',
-    element: 'Ateş' as const,
-    modality: 'Öncü' as const,
+    element: 'Fire' as const,
+    modality: 'Cardinal' as const,
     polarity: 'Yang' as const,
     ruler: '',
     accent: brand.colors.brand_secondary || 'var(--gm-gold)',
     image: `/uploads/zodiac/${signKey}.png`,
   };
 
-  // Server-side initial data varsa RTK fetch'i atla — SSR'da hemen render olur.
   const { data: infoFromQuery, isLoading: isInfoLoading } = useGetSignInfoQuery(
     { sign: signKey, locale: locale as string },
     { skip: !!initialInfo }
@@ -62,23 +63,23 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
 
   const info = infoFromQuery ?? initialInfo;
   const today = todayFromQuery ?? initialToday;
-  const summaryText = `${meta.label} burcu ${meta.element} elementi, ${meta.modality} nitelik ve ${meta.ruler} yönetimiyle okunur. Bu profil; karakter, ilişki, kariyer ve ruhsal bakım başlıklarında ${meta.label} enerjisinin güçlü yanlarını ve dikkat edilmesi gereken gölge alanlarını anlaşılır şekilde özetler.`;
+  const summaryText = `${meta.label} ${ui('ui_zodiac_summary_p1', 'sign')} ${meta.element} ${ui('ui_zodiac_summary_p2', 'element,')} ${meta.modality} ${ui('ui_zodiac_summary_p3', 'modality and')} ${meta.ruler} ${ui('ui_zodiac_summary_p4', 'rulership. This profile summarizes')} ${meta.label} ${ui('ui_zodiac_summary_p5', 'energy strengths and shadow areas in character, relationships, career and spiritual care.')}`;
   const personalitySection = info?.sections?.find((section: ZodiacSection) => section.key2 === 'personality');
   const loveSection = info?.sections?.find((section: ZodiacSection) => section.key2 === 'love');
   const celebrities = getCelebritiesBySign(signKey, 3);
   const localePrefix = typeof locale === 'string' ? locale : 'tr';
   const faqItems = [
     {
-      question: `${meta.label} burcu nedir?`,
-      answer: `${meta.label} burcu, güneşin ${meta.label} arketipinden geçtiği dönemde doğan kişilerin temel enerji, motivasyon ve davranış eğilimlerini anlatan astrolojik profildir.`,
+      question: `${meta.label} ${ui('ui_zodiac_faq_q1', 'sign meaning')}`,
+      answer: `${meta.label} ${ui('ui_zodiac_faq_a1_p1', 'sign describes')} ${meta.label} ${ui('ui_zodiac_faq_a1_p2', 'as an astrological profile of core energy, motivation and behavioral tendencies.')}`,
     },
     {
-      question: `${meta.label} burcu özellikleri nelerdir?`,
-      answer: info?.short_summary || `${meta.label} burcu karakter, ilişki, kariyer ve gündelik motivasyon alanlarında kendine özgü güçlü yanlar ve gelişim alanları taşır.`,
+      question: `${meta.label} ${ui('ui_zodiac_faq_q2', 'sign traits')}`,
+      answer: info?.short_summary || `${meta.label} ${ui('ui_zodiac_faq_a2', 'sign carries distinctive strengths and growth areas in character, relationships, career and daily motivation.')}`,
     },
     {
-      question: `${meta.label} burcu uyumu nasıl yorumlanır?`,
-      answer: `${meta.label} burcu uyumu yalnızca güneş burcuyla değil; Ay, Venüs, Mars, yükselen burç ve haritadaki ilişki evleriyle birlikte değerlendirilmelidir.`,
+      question: `${meta.label} ${ui('ui_zodiac_faq_q3', 'compatibility interpretation')}`,
+      answer: `${meta.label} ${ui('ui_zodiac_faq_a3', 'compatibility should be read with the Moon, Venus, Mars, rising sign and relationship houses, not only the Sun sign.')}`,
     },
   ];
 
@@ -100,7 +101,7 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
   if (!info) {
     return (
       <div className="py-40 text-center">
-        <h2 className="text-2xl font-bold">Burç bilgisi bulunamadı.</h2>
+        <h2 className="text-2xl font-bold">{ui('ui_zodiac_not_found', 'Zodiac information could not be found.')}</h2>
       </div>
     );
   }
@@ -161,31 +162,31 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
         data-speakable
         className="mb-12 rounded-[2rem] border border-(--gm-gold)/20 bg-(--gm-gold)/5 p-8 md:p-12 backdrop-blur-sm"
       >
-        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-(--gm-gold) mb-4">Özetle</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-(--gm-gold) mb-4">{ui('ui_zodiac_summary_label', 'Summary')}</p>
         <p className="text-xl md:text-2xl leading-relaxed text-(--gm-text) font-serif italic opacity-90">{summaryText}</p>
       </section>
 
       <section className="mb-16 grid gap-8 md:grid-cols-2 lg:grid-cols-2">
         <article className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow) transition-shadow">
-          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} burcu nedir?</h2>
+          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} {ui('ui_zodiac_q_what_is', 'sign meaning')}</h2>
           <p className="text-base leading-relaxed text-(--gm-text-dim) font-serif">
             {info.short_summary || summaryText}
           </p>
         </article>
         <article className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow) transition-shadow">
-          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} burcu özellikleri nelerdir?</h2>
+          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} {ui('ui_zodiac_q_traits', 'traits')}</h2>
           <p className="text-base leading-relaxed text-(--gm-text-dim) font-serif">
             {personalitySection?.content || info.content}
           </p>
         </article>
         <article className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow) transition-shadow">
-          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} burcu uyumu</h2>
+          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} {ui('ui_zodiac_q_compat', 'compatibility')}</h2>
           <p className="text-base leading-relaxed text-(--gm-text-dim) font-serif">
-            {loveSection?.content || `${meta.label} burcu uyumu, ilişkide sevgi dili, güven ihtiyacı ve iki kişinin harita bütünlüğü üzerinden okunur.`}
+            {loveSection?.content || `${meta.label} ${ui('ui_zodiac_compat_fallback', 'compatibility is read through love language, trust needs and both complete charts.')}`}
           </p>
         </article>
         <article className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow) transition-shadow">
-          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} burçlu ünlüler</h2>
+          <h2 className={`${cinzel.className} text-2xl text-(--gm-gold) mb-4`}>{meta.label} {ui('ui_zodiac_q_celebrities', 'celebrities')}</h2>
           {celebrities.length ? (
             <div className="mt-4 grid gap-4">
               {celebrities.map((celebrity) => (
@@ -203,14 +204,14 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
             </div>
           ) : (
             <p className="mt-3 text-sm leading-relaxed text-(--gm-text-dim)">
-              {meta.label} burçlu ünlüler listesi hazırlanırken doğum tarihi doğrulanmış kişiler dikkate alınmalıdır.
+              {meta.label} {ui('ui_zodiac_celebrities_empty', 'celebrity lists should include people with verified birth dates.')}
             </p>
           )}
           <Link
             href={localizePath(localePrefix, '/unluler-ve-burclari')}
             className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-(--gm-gold) hover:text-(--gm-gold-light) transition-colors"
           >
-            Tüm ünlü burç arşivi
+            {ui('ui_zodiac_all_celebrities_link', 'All celebrity zodiac archive')}
             <ArrowRight className="size-4" />
           </Link>
         </article>
@@ -220,10 +221,10 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
       <Tabs defaultValue={initialTab} className="space-y-8 mb-20">
         <TabsList className="w-full bg-(--gm-bg-deep) p-1.5 rounded-full border border-(--gm-border-soft)">
           <TabsTrigger value="overview" className="rounded-full px-6 data-[state=active]:bg-(--gm-surface) data-[state=active]:text-(--gm-gold) data-[state=active]:shadow-sm">
-            <Info className="w-4 h-4 mr-2" /> Genel Bakış
+            <Info className="w-4 h-4 mr-2" /> {ui('ui_zodiac_tab_overview', 'Overview')}
           </TabsTrigger>
           <TabsTrigger value="daily" className="rounded-full px-6 data-[state=active]:bg-(--gm-surface) data-[state=active]:text-(--gm-gold) data-[state=active]:shadow-sm">
-            <Sparkles className="w-4 h-4 mr-2" /> Günlük Yorum
+            <Sparkles className="w-4 h-4 mr-2" /> {ui('ui_zodiac_tab_daily', 'Daily Reading')}
           </TabsTrigger>
           {info.sections?.map((s: ZodiacSection) => (
             <TabsTrigger key={s.id} value={s.key2} className="rounded-full px-6 data-[state=active]:bg-(--gm-surface) data-[state=active]:text-(--gm-gold) data-[state=active]:shadow-sm">
@@ -252,23 +253,23 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
             <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-[2rem] p-16 text-center shadow-(--gm-shadow-soft)">
               <Sparkles className="w-16 h-16 text-(--gm-gold) mx-auto mb-6 opacity-40 animate-pulse" />
               <h3 className={`${cinzel.className} text-3xl text-(--gm-text) mb-4`}>
-                Günlük yorum hazırlanıyor
+                {ui('ui_zodiac_daily_empty_title', 'Daily reading is being prepared')}
               </h3>
               <p className="text-(--gm-text-dim) max-w-lg mx-auto leading-relaxed font-serif italic text-lg">
-                {meta.label} burcu için bugünün yorumu henüz yayınlanmadı. Astrolog ekibimiz hazırlıyor — yarın tekrar göz at ya da kişiye özel doğum haritası analizi al.
+                {meta.label} {ui('ui_zodiac_daily_empty_text', 'daily reading is not published yet. Our astrology team is preparing it; check again tomorrow or get a personal birth chart analysis.')}
               </p>
               <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href={`/${locale}/birth-chart`}
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-(--gm-primary) hover:bg-(--gm-primary-dark) text-(--gm-bg) text-xs font-bold uppercase tracking-[0.25em] transition-all hover:scale-105 shadow-md"
                 >
-                  Doğum Haritamı Çıkar
+                  {ui('ui_zodiac_cta_birth_chart', 'Create My Birth Chart')}
                 </Link>
                 <Link
                   href={`/${locale}/consultants?expertise=astrology`}
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-(--gm-gold)/40 hover:border-(--gm-gold) text-(--gm-gold) text-xs font-bold uppercase tracking-[0.25em] transition-all"
                 >
-                  Astrologa Danış
+                  {ui('ui_zodiac_cta_ask_astrologer', 'Ask an Astrologer')}
                 </Link>
               </div>
             </div>
@@ -306,8 +307,8 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
 
                 <div className="flex justify-center mb-16">
                   <ShareCard
-                    title={`${meta.label} Burcu Günlük Yorumu`}
-                    shareText={`${meta.label} burcu için bugünkü yorumum ✨\n"${todayContent.slice(0, 100)}..."\nSenin burcun bugün ne diyor?`}
+                    title={`${meta.label} ${ui('ui_zodiac_share_title_suffix', 'Daily Reading')}`}
+                    shareText={`${meta.label} ${ui('ui_zodiac_share_text_intro', 'daily reading for today')}\n"${todayContent.slice(0, 100)}..."\n${ui('ui_zodiac_share_text_outro', 'What does your sign say today?')}`}
                     variant="horoscope"
                     data={{
                       sign: meta.label,
@@ -322,19 +323,19 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {todayMood != null && (
                       <div className="p-8 rounded-2xl bg-(--gm-bg-deep)/40 border border-(--gm-border-soft) text-center backdrop-blur-sm">
-                        <div className="text-(--gm-gold) text-xs font-bold mb-4 uppercase tracking-[0.2em] opacity-80">Günün Modu</div>
+                        <div className="text-(--gm-gold) text-xs font-bold mb-4 uppercase tracking-[0.2em] opacity-80">{ui('ui_zodiac_mood_label', 'Mood of the Day')}</div>
                         <div className={`${cinzel.className} text-4xl text-(--gm-text)`}>{String(todayMood)}/10</div>
                       </div>
                     )}
                     {todayLuckyNumber != null && (
                       <div className="p-8 rounded-2xl bg-(--gm-bg-deep)/40 border border-(--gm-border-soft) text-center backdrop-blur-sm">
-                        <div className="text-(--gm-gold) text-xs font-bold mb-4 uppercase tracking-[0.2em] opacity-80">Şanslı Sayı</div>
+                        <div className="text-(--gm-gold) text-xs font-bold mb-4 uppercase tracking-[0.2em] opacity-80">{ui('ui_zodiac_lucky_number_label', 'Lucky Number')}</div>
                         <div className={`${cinzel.className} text-4xl text-(--gm-text)`}>{String(todayLuckyNumber)}</div>
                       </div>
                     )}
                     {todayLuckyColor != null && (
                       <div className="p-8 rounded-2xl bg-(--gm-bg-deep)/40 border border-(--gm-border-soft) text-center backdrop-blur-sm">
-                        <div className="text-(--gm-gold) text-xs font-bold mb-4 uppercase tracking-[0.2em] opacity-80">Şanslı Renk</div>
+                        <div className="text-(--gm-gold) text-xs font-bold mb-4 uppercase tracking-[0.2em] opacity-80">{ui('ui_zodiac_lucky_color_label', 'Lucky Color')}</div>
                         <div className={`${cinzel.className} text-xl font-bold text-(--gm-text) uppercase tracking-widest`}>{String(todayLuckyColor)}</div>
                       </div>
                     )}
@@ -363,16 +364,16 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
       </Tabs>
 
       <div className="mb-20">
-        <FaqAccordion items={faqItems} title={`${meta.label} Burcu Hakkında Sorular`} />
+        <FaqAccordion items={faqItems} title={`${meta.label} ${ui('ui_zodiac_faq_title_suffix', 'Questions')}`} />
       </div>
 
       <div className="mb-20">
         <AuthorBio
           name={`${brand.name} Editorial Team`}
-          title="Astroloji ve ruhsal danışmanlık editörleri"
-          bio={`${brand.name} içerikleri, kullanıcıların danışman görüşmelerine daha hazırlıklı gelmesi için astrolojik sembolizm, pratik öz farkındalık ve anlaşılır rehberlik ilkeleriyle hazırlanır.`}
-          expertise={['Astroloji', 'Zodyak', 'Ruhsal Danışmanlık']}
-          certificates={['Swiss Ephemeris metodolojisi']}
+          title={ui('ui_zodiac_author_title', 'Astrology and spiritual guidance editors')}
+          bio={`${brand.name} ${ui('ui_zodiac_author_bio', 'content is prepared with astrological symbolism, practical self-awareness and clear guidance principles so users can arrive better prepared for consultant sessions.')}`}
+          expertise={[ui('ui_zodiac_author_exp_astrology', 'Astrology'), ui('ui_zodiac_author_exp_zodiac', 'Zodiac'), ui('ui_zodiac_author_exp_spiritual', 'Spiritual Guidance')]}
+          certificates={[ui('ui_zodiac_author_cert', 'Swiss Ephemeris metodolojisi')]}
         />
       </div>
 
@@ -386,13 +387,13 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
             <div className="w-12 h-12 rounded-full bg-(--gm-error)/10 flex items-center justify-center">
               <Heart className="w-6 h-6 text-[var(--gm-error)]" />
             </div>
-            <h4 className={`${cinzel.className} text-xl text-(--gm-text)`}>Burç Uyumu</h4>
+            <h4 className={`${cinzel.className} text-xl text-(--gm-text)`}>{ui('ui_zodiac_card_compat_title', 'Zodiac Compatibility')}</h4>
           </div>
           <p className="text-(--gm-text-dim) text-sm mb-8 leading-relaxed font-serif italic">
-            {meta.label} burcunun diğer burçlarla olan aşk ve karakter uyumunu detaylıca inceleyin.
+            {meta.label} {ui('ui_zodiac_card_compat_text', 'love and character compatibility with other signs in detail.')}
           </p>
           <div className="text-(--gm-gold) text-[10px] font-bold tracking-[0.3em] uppercase flex items-center gap-2">
-            UYUMU KEŞFET <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {ui('ui_zodiac_card_compat_action', 'EXPLORE COMPATIBILITY')} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </Link>
 
@@ -404,13 +405,13 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
             <div className="w-12 h-12 rounded-full bg-(--gm-gold)/10 flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-(--gm-gold)" />
             </div>
-            <h4 className={`${cinzel.className} text-xl text-(--gm-text)`}>Doğum Haritası</h4>
+            <h4 className={`${cinzel.className} text-xl text-(--gm-text)`}>{ui('ui_zodiac_card_chart_title', 'Birth Chart')}</h4>
           </div>
           <p className="text-(--gm-text-dim) text-sm mb-8 leading-relaxed font-serif italic">
-            Sadece Güneş burcunuzdan ibaret değilsiniz. Tüm gezegen yerleşimlerinizi ücretsiz hesaplayın.
+            {ui('ui_zodiac_card_chart_text', 'You are more than your Sun sign. Calculate all your planet placements for free.')}
           </p>
           <div className="text-(--gm-gold) text-[10px] font-bold tracking-[0.3em] uppercase flex items-center gap-2">
-            HARİTANI ÇIKAR <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {ui('ui_zodiac_card_chart_action', 'CREATE CHART')} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </Link>
 
@@ -422,13 +423,13 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
             <div className="w-12 h-12 rounded-full bg-(--gm-gold)/10 flex items-center justify-center">
               <Volume2 className="w-6 h-6 text-(--gm-gold)" />
             </div>
-            <h4 className={`${cinzel.className} text-xl text-(--gm-text)`}>Meditasyon</h4>
+            <h4 className={`${cinzel.className} text-xl text-(--gm-text)`}>{ui('ui_zodiac_card_meditation_title', 'Meditasyon')}</h4>
           </div>
           <p className="text-(--gm-text-dim) text-sm mb-8 leading-relaxed font-serif italic">
-            {meta.label} burcuna özel kısa meditasyon ve günlük affirmasyonları sesli dinleyin.
+            {meta.label} {ui('ui_zodiac_card_meditation_text', 'short meditation and daily affirmations in audio form.')}
           </p>
           <div className="text-(--gm-gold) text-[10px] font-bold tracking-[0.3em] uppercase flex items-center gap-2">
-            DİNLE <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {ui('ui_zodiac_card_meditation_action', 'LISTEN')} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </div>
         </Link>
       </div>

@@ -5,7 +5,7 @@ import { getOgTheme } from '@/seo/ogTheme';
 export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
-export const alt = 'GoldMoodAstro Rüya Tabiri';
+export const alt = 'GoldMoodAstro Dream Interpretation';
 
 export default async function OG({ params }: { params: { id: string; locale: string } }) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://goldmoodastro.com/api';
@@ -16,7 +16,7 @@ export default async function OG({ params }: { params: { id: string; locale: str
     const json = await res.json();
     data = json.data;
   } catch (e) {
-    data = { symbols: [], interpretation: 'Bilinçaltının sırları...' };
+    data = { symbols: [], interpretation: 'Secrets of the subconscious...' };
   }
 
   const fonts = await getOgFonts().catch(() => undefined);
@@ -40,7 +40,7 @@ export default async function OG({ params }: { params: { id: string; locale: str
       }}>
         {/* Header */}
         <div style={{ fontSize: 24, color: theme.primary, letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          {theme.brandUpper} · RÜYA TABİRİ
+          {theme.brandUpper} · DREAM INTERPRETATION
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 30, alignItems: 'center', width: '100%', flex: 1, justifyContent: 'center' }}>
@@ -67,7 +67,7 @@ export default async function OG({ params }: { params: { id: string; locale: str
                   {s.name}
                 </div>
                 <div style={{ color: theme.text, fontSize: 16, fontFamily: 'Inter', opacity: 0.8 }}>
-                  %{Math.round((s.confidence || 0.9) * 100)} Güven
+                  %{Math.round((s.confidence || 0.9) * 100)} Confidence
                 </div>
               </div>
             ))}

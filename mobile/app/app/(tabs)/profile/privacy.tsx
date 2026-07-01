@@ -225,6 +225,7 @@ function buildScreenStyles(t: AppTheme) {
 }
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation, Trans } from 'react-i18next';
 import { useFocusEffect, router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 import { ChevronLeft, Download, Trash2, AlertTriangle, ShieldCheck, History } from 'lucide-react-native';
@@ -248,6 +249,7 @@ function formatDate(value?: string | null) {
 }
 
 export default function PrivacyScreen() {
+  const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
@@ -298,12 +300,12 @@ export default function PrivacyScreen() {
       const jsonText = JSON.stringify(payload, null, 2);
       
       await Share.share({
-        message: `GoldMoodAstro Veri İndirme (${new Date().toLocaleString('tr-TR')})\n\n${jsonText}`,
+        message: `${t('privacy.exportShareHeader', { defaultValue: 'GoldMoodAstro Veri İndirme ({{date}})', date: new Date().toLocaleString() })}\n\n${jsonText}`,
       });
-      
-      Alert.alert('Başarılı', 'Veri paketiniz dışa aktarıldı.');
+
+      Alert.alert(t('common.success', 'Başarılı'), t('privacy.exportSuccessBody', 'Veri paketiniz dışa aktarıldı.'));
     } catch (err: any) {
-      Alert.alert('Hata', err.message || 'Veri indirilemedi.');
+      Alert.alert(t('common.error', 'Bir hata oluştu'), err.message || t('privacy.exportError', 'Veri indirilemedi.'));
     } finally {
       setIsExporting(false);
     }
@@ -311,17 +313,17 @@ export default function PrivacyScreen() {
 
   const onRequestDeletion = async () => {
     if (status?.status === 'pending') {
-      Alert.alert('Talep aktif', 'Zaten beklemede bir hesap silme talebiniz var.');
+      Alert.alert(t('privacy.requestActiveTitle', 'Talep aktif'), t('privacy.requestActiveBody', 'Zaten beklemede bir hesap silme talebiniz var.'));
       return;
     }
-    
+
     Alert.alert(
-      'Hesabı Sil',
-      'Hesabınızı 7 gün sonra kalıcı silmek üzere işleme alalım mı? Bu süre içinde vazgeçebilirsiniz.',
+      t('privacy.deleteAccount', 'Hesabı Sil'),
+      t('privacy.deleteConfirmBody', 'Hesabınızı 7 gün sonra kalıcı silmek üzere işleme alalım mı? Bu süre içinde vazgeçebilirsiniz.'),
       [
-        { text: 'Vazgeç', style: 'cancel' },
+        { text: t('common.giveUp', 'Vazgeç'), style: 'cancel' },
         {
-          text: 'Talebi Başlat',
+          text: t('privacy.startRequest', 'Talebi Başlat'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -329,9 +331,9 @@ export default function PrivacyScreen() {
               const { data } = await kvkkApi.requestDeletion(deletionReason);
               setStatus(data);
               setDeletionReason('');
-              Alert.alert('Talep Alındı', 'Hesabınız 7 gün içinde kalıcı olarak silinecek.');
+              Alert.alert(t('privacy.requestReceivedTitle', 'Talep Alındı'), t('privacy.requestReceivedBody', 'Hesabınız 7 gün içinde kalıcı olarak silinecek.'));
             } catch (err: any) {
-              Alert.alert('Hata', err.message || 'Talep oluşturulamadı.');
+              Alert.alert(t('common.error', 'Bir hata oluştu'), err.message || t('privacy.requestError', 'Talep oluşturulamadı.'));
             } finally {
               setIsRequesting(false);
             }
@@ -343,21 +345,21 @@ export default function PrivacyScreen() {
 
   const onCancelDeletion = async () => {
     Alert.alert(
-      'Talebi İptal Et',
-      'Hesap silme talebini iptal etmek istediğinize emin misiniz?',
+      t('privacy.cancelRequestTitle', 'Talebi İptal Et'),
+      t('privacy.cancelRequestBody', 'Hesap silme talebini iptal etmek istediğinize emin misiniz?'),
       [
-        { text: 'Vazgeç', style: 'cancel' },
+        { text: t('common.giveUp', 'Vazgeç'), style: 'cancel' },
         {
-          text: 'Vazgeç ve İptal Et',
+          text: t('privacy.cancelRequestConfirm', 'Vazgeç ve İptal Et'),
           style: 'default',
           onPress: async () => {
             try {
               setIsCancelling(true);
               await kvkkApi.cancelDeletion();
               await loadDeletionStatus();
-              Alert.alert('İptal Edildi', 'Hesap silme talebiniz durduruldu.');
+              Alert.alert(t('privacy.cancelledTitle', 'İptal Edildi'), t('privacy.cancelledBody', 'Hesap silme talebiniz durduruldu.'));
             } catch (err: any) {
-              Alert.alert('Hata', err.message || 'Talep iptal edilemedi.');
+              Alert.alert(t('common.error', 'Bir hata oluştu'), err.message || t('privacy.cancelError', 'Talep iptal edilemedi.'));
             } finally {
               setIsCancelling(false);
             }
@@ -384,7 +386,7 @@ export default function PrivacyScreen() {
           <Pressable onPress={() => safeRouterBack('/(tabs)/profile')} style={styles.headerBtn}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
-          <Text style={styles.headerTitle}>Gizlilik & Veri</Text>
+          <Text style={styles.headerTitle}>{t('privacy.title', 'Gizlilik & Veri')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -395,9 +397,9 @@ export default function PrivacyScreen() {
           
           <View style={styles.introArea}>
             <ShieldCheck size={40} color={colors.gold} />
-            <Text style={styles.introTitle}>Veri Haklarınız</Text>
+            <Text style={styles.introTitle}>{t('privacy.introTitle', 'Veri Haklarınız')}</Text>
             <Text style={styles.introSubtitle}>
-              KVKK kapsamında verilerinizi yönetebilir, indirebilir veya hesabınızın silinmesini talep edebilirsiniz.
+              {t('privacy.introSubtitle', 'KVKK kapsamında verilerinizi yönetebilir, indirebilir veya hesabınızın silinmesini talep edebilirsiniz.')}
             </Text>
           </View>
 
@@ -405,17 +407,17 @@ export default function PrivacyScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Download size={20} color={colors.gold} />
-              <Text style={styles.sectionTitle}>Verilerimi İndir</Text>
+              <Text style={styles.sectionTitle}>{t('privacy.exportSectionTitle', 'Verilerimi İndir')}</Text>
             </View>
             <Text style={styles.sectionText}>
-              Hesabınıza ait tüm verileri (profil, randevular, haritalar) JSON formatında dışa aktarabilirsiniz.
+              {t('privacy.exportSectionText', 'Hesabınıza ait tüm verileri (profil, randevular, haritalar) JSON formatında dışa aktarabilirsiniz.')}
             </Text>
             <Pressable
               style={[styles.exportBtn, isExporting && styles.btnDisabled]}
               onPress={onExport}
               disabled={isExporting}
             >
-              {isExporting ? <ActivityIndicator size="small" color={colors.ink} /> : <Text style={styles.exportBtnText}>Veri Paketini Hazırla</Text>}
+              {isExporting ? <ActivityIndicator size="small" color={colors.ink} /> : <Text style={styles.exportBtnText}>{t('privacy.exportBtn', 'Veri Paketini Hazırla')}</Text>}
             </Pressable>
           </View>
 
@@ -423,35 +425,35 @@ export default function PrivacyScreen() {
           <View style={[styles.section, styles.dangerBorder]}>
             <View style={styles.sectionHeader}>
               <AlertTriangle size={20} color={colors.danger} />
-              <Text style={[styles.sectionTitle, { color: colors.danger }]}>Hesabı Kalıcı Olarak Sil</Text>
+              <Text style={[styles.sectionTitle, { color: colors.danger }]}>{t('privacy.deleteSectionTitle', 'Hesabı Kalıcı Olarak Sil')}</Text>
             </View>
-            
+
             {status?.status === 'pending' ? (
               <View style={styles.pendingArea}>
                 <View style={styles.pendingHeader}>
                   <History size={16} color={colors.warning} />
-                  <Text style={styles.pendingTitle}>Silme Talebi Beklemede</Text>
+                  <Text style={styles.pendingTitle}>{t('privacy.pendingTitle', 'Silme Talebi Beklemede')}</Text>
                 </View>
                 <Text style={styles.pendingText}>
-                  Hesabınız <Text style={styles.bold}>{formatDate(status.scheduled_for)}</Text> tarihinde kalıcı olarak silinecektir.
+                  <Trans i18nKey="privacy.pendingBody" defaults="Hesabınız <b>{{date}}</b> tarihinde kalıcı olarak silinecektir." values={{ date: formatDate(status.scheduled_for) }} components={{ b: <Text style={styles.bold} /> }} />
                 </Text>
                 <Pressable
                   style={styles.cancelBtn}
                   onPress={onCancelDeletion}
                   disabled={isCancelling}
                 >
-                  {isCancelling ? <ActivityIndicator size="small" color={colors.text} /> : <Text style={styles.cancelBtnText}>Talebi İptal Et</Text>}
+                  {isCancelling ? <ActivityIndicator size="small" color={colors.text} /> : <Text style={styles.cancelBtnText}>{t('privacy.cancelRequestTitle', 'Talebi İptal Et')}</Text>}
                 </Pressable>
               </View>
             ) : (
               <>
                 <Text style={styles.sectionText}>
-                  Hesabınızı sildiğinizde tüm geçmişiniz, kredileriniz ve verileriniz kalıcı olarak yok edilir. Bu işlem geri alınamaz.
+                  {t('privacy.deleteWarning', 'Hesabınızı sildiğinizde tüm geçmişiniz, kredileriniz ve verileriniz kalıcı olarak yok edilir. Bu işlem geri alınamaz.')}
                 </Text>
                 <TextInput
                   value={deletionReason}
                   onChangeText={setDeletionReason}
-                  placeholder="Silme nedeni (isteğe bağlı)"
+                  placeholder={t('privacy.reasonPlaceholder', 'Silme nedeni (isteğe bağlı)')}
                   placeholderTextColor={colors.textMuted}
                   style={styles.reasonInput}
                   multiline
@@ -465,7 +467,7 @@ export default function PrivacyScreen() {
                   {isRequesting ? <ActivityIndicator size="small" color={colors.text} /> : (
                     <>
                       <Trash2 size={18} color={colors.text} />
-                      <Text style={styles.deleteBtnText}>Hesabımı Silmeyi Talep Et</Text>
+                      <Text style={styles.deleteBtnText}>{t('privacy.requestDeleteBtn', 'Hesabımı Silmeyi Talep Et')}</Text>
                     </>
                   )}
                 </Pressable>
@@ -475,7 +477,7 @@ export default function PrivacyScreen() {
 
           <View style={styles.footerInfo}>
             <Text style={styles.footerText}>
-              Sorularınız için <Text style={styles.goldLink}>destek@goldmoodastro.com</Text> adresinden bize ulaşabilirsiniz.
+              <Trans i18nKey="privacy.footerContact" defaults="Sorularınız için <link>destek@goldmoodastro.com</link> adresinden bize ulaşabilirsiniz." components={{ link: <Text style={styles.goldLink} /> }} />
             </Text>
           </View>
 

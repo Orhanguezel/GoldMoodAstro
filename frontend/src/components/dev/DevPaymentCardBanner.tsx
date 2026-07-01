@@ -1,7 +1,7 @@
 // =============================================================
-// DEV ONLY — Iyzipay sandbox test kartı bilgileri.
-// Sadece NODE_ENV=development'ta render olur. Prod build'da tree-shake edilir.
-// Kaldırma: bu dosyayı sil + ClientLayout.tsx'teki import + usage satırını sil.
+// DEV ONLY — Iyzipay sandbox test card details.
+// Renders only in NODE_ENV=development. Production builds tree-shake it away.
+// Removal: delete this file plus the import and usage lines in ClientLayout.tsx.
 // =============================================================
 'use client';
 
@@ -13,11 +13,11 @@ const TEST_CARD = {
   number: '5528790000000008',
   cvc: '123',
   expiry: '12/30',
-  holder: 'Test Kullanici',
+  holder: 'Test User',
 };
 
-// Ödeme akışı sayfalarında göster — kullanıcı Iyzipay'e yönlendirilmeden ÖNCE
-// kart bilgilerini görsün (Iyzipay 3rd party sayfasında widget görünmez).
+// Show on payment-flow pages before the user is redirected to Iyzipay.
+// The widget is not visible on Iyzipay's third-party page.
 const PAYMENT_PATH_RE = /\/(booking|checkout|odeme|pricing|me\/credits|profile\/bookings)(?:\/|$|\?)/i;
 
 export default function DevPaymentCardBanner() {
@@ -26,10 +26,10 @@ export default function DevPaymentCardBanner() {
   const [copied, setCopied] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  // Client-only render — SSR'da pathname boş, mismatch'i önle
+  // Client-only render; pathname is empty during SSR, so avoid mismatches.
   useEffect(() => setMounted(true), []);
 
-  // Hook order korumak için TÜM hook'lar üstte; guard'lar burada.
+  // Keep all hooks above this point to preserve hook order.
   if (!mounted) return null;
   if (process.env.NODE_ENV !== 'development') return null;
   if (!PAYMENT_PATH_RE.test(pathname)) return null;
@@ -39,7 +39,7 @@ export default function DevPaymentCardBanner() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        title="Test kart bilgilerini göster"
+        title="Show test card details"
         className="fixed bottom-4 right-4 z-[9999] w-12 h-12 rounded-full bg-[var(--gm-warning)] hover:bg-[var(--gm-gold-dim)] text-[var(--gm-bg)] shadow-2xl flex items-center justify-center transition-colors"
       >
         <CreditCard size={20} />
@@ -64,7 +64,7 @@ export default function DevPaymentCardBanner() {
         type="button"
         onClick={() => copy(label, value)}
         className="flex items-center gap-1.5 font-mono text-[var(--gm-text)] hover:text-[var(--gm-gold-light)] transition-colors"
-        title={`${label} kopyala`}
+        title={`Copy ${label}`}
       >
         <span>{value}</span>
         {copied === label ? (
@@ -89,21 +89,21 @@ export default function DevPaymentCardBanner() {
           type="button"
           onClick={() => setOpen(false)}
           className="text-[var(--gm-gold-light)]/70 hover:text-[var(--gm-text)] transition-colors"
-          title="Gizle"
+          title="Hide"
         >
           <X size={16} />
         </button>
       </div>
 
       <div className="space-y-2">
-        <Row label="Kart" value={TEST_CARD.number} />
+        <Row label="Card" value={TEST_CARD.number} />
         <Row label="CVC" value={TEST_CARD.cvc} />
-        <Row label="Tarih" value={TEST_CARD.expiry} />
-        <Row label="Sahip" value={TEST_CARD.holder} />
+        <Row label="Expiry" value={TEST_CARD.expiry} />
+        <Row label="Holder" value={TEST_CARD.holder} />
       </div>
 
       <p className="mt-3 pt-3 border-t border-[var(--gm-warning)]/30 text-[10px] text-[var(--gm-gold-light)]/70 leading-relaxed">
-        Sadece dev build'da görünür. Prod'a çıkmadan bu component'i kaldır.
+        Visible only in dev builds. Remove this component before production.
       </p>
     </div>
   );

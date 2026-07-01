@@ -29,6 +29,7 @@ import {
   useDeclineSynastryInviteMutation
 } from '@/integrations/rtk/hooks';
 import { useAuthStore } from '@/features/auth/auth.store';
+import { useUiSection } from '@/i18n';
 import { toast } from 'sonner';
 import ShareCard from '@/components/common/ShareCard';
 import JsonLd from '@/seo/JsonLd';
@@ -47,72 +48,34 @@ const ZODIAC_SIGNS = [
 ];
 
 export default function SynastryPage() {
+  const { ui } = useUiSection('ui_synastry');
   const params = useParams<{ locale?: string }>();
   const locale = typeof params?.locale === 'string' ? params.locale : 'tr';
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
   const pageUrl = `${siteUrl}/${locale}/sinastri`;
   const faqItems = [
     {
-      question: locale === 'tr' ? 'Sinastri nedir?' : 'What is synastry?',
-      answer: locale === 'tr'
-        ? 'Sinastri, iki kişinin doğum haritalarını karşılaştırarak ilişki dinamiklerini, çekimi ve gelişim alanlarını inceleyen astroloji yöntemidir.'
-        : 'Synastry is an astrology method that compares two birth charts to explore relationship dynamics, attraction and growth areas.',
+      question: 'What is synastry?',
+      answer: 'Synastry is an astrology method that compares two birth charts to explore relationship dynamics, attraction and growth areas.',
     },
     {
-      question: locale === 'tr' ? 'Sinastri uyumu kesin sonuç verir mi?' : 'Does synastry give a guaranteed result?',
-      answer: locale === 'tr'
-        ? 'Sinastri kesin ilişki sonucu vermez; güçlü temaları, zorlayıcı alanları ve bilinçli iletişim fırsatlarını gösterir.'
-        : 'Synastry does not guarantee relationship outcomes; it shows strong themes, challenges and opportunities for conscious communication.',
+      question: 'Does synastry give a guaranteed result?',
+      answer: 'Synastry does not guarantee relationship outcomes; it shows strong themes, challenges and opportunities for conscious communication.',
     },
   ];
-  const intro =
-    locale === 'tr'
-      ? {
-          eyebrow: 'Sinastri Rehberi',
-          title: 'Sinastri nedir, nasıl yapılır ve ilişkide neyi gösterir?',
-          lead:
-            'Sinastri, iki kişinin doğum haritasını karşılaştırarak ilişkinin çekim, iletişim, duygu güvenliği ve gelişim alanlarını anlamaya çalışan astrolojik uyum analizidir.',
-          summary:
-            'Sinastri kesin ilişki sonucu vermez; iki haritanın nasıl konuştuğunu, hangi temaların kolay aktığını ve hangi alanların daha bilinçli iletişim istediğini gösterir. GoldMoodAstro’da sinastri, ilişkiyi yargılamak yerine farkındalık ve diyalog alanı açmak için kullanılır.',
-          sections: [
-            {
-              title: 'Sinastri nasıl yapılır?',
-              paragraphs: [
-                'Sinastri analizinde iki kişinin doğum tarihi, doğum saati ve doğum yeri kullanılarak haritaları karşılaştırılır. Güneş, Ay, Venüs, Mars, Merkür ve yükselen burç gibi temel yerleşimler; iki kişinin birbirini nasıl gördüğünü, nasıl sevgi verdiğini, nasıl çatıştığını ve hangi alanlarda birbirini büyütebileceğini anlamak için birlikte okunur.',
-                'GoldMoodAstro’da hızlı uyum modu iki burç üzerinden genel bir başlangıç sunar. Manuel analiz ise doğum verileriyle daha kişisel bir karşılaştırma yapar. Davet modu, iki kullanıcının kendi verileriyle daha güvenli ve izinli bir analiz oluşturmasına yardımcı olur.',
-              ],
-            },
-            {
-              title: 'Sinastri ne öğrenmene yardımcı olur?',
-              paragraphs: [
-                'Sinastri bir ilişkinin yalnızca “uyumlu” ya da “uyumsuz” olduğunu söylemek için kullanılmamalıdır. Daha değerli olan, ilişkinin hangi dili konuştuğunu anlamaktır. Bazı haritalarda güçlü çekim vardır ama iletişim zorlayıcıdır. Bazılarında duygusal güven güçlüdür ama romantik ifade daha fazla emek ister.',
-                'Bu analiz; çekim, güven, zihinsel uyum, çatışma biçimi, yakınlık ihtiyacı ve ortak gelişim alanlarını görünür kılabilir. Böylece kişi ilişkide neyi büyütmek, neyi konuşmak ve hangi sınırı daha net tutmak istediğini fark edebilir.',
-              ],
-            },
-            {
-              title: 'GoldMoodAstro sinastri yaklaşımı',
-              paragraphs: [
-                'GoldMoodAstro sinastriyi kesin kader ya da ilişki hükmü olarak kullanmaz. Haritalar ilişkinin potansiyellerini ve zorlanma alanlarını gösterir; karar, iletişim ve emek yine iki kişiye aittir. Bu yüzden yorum dili yargılayıcı değil, açıklayıcı ve ilişkiyi daha bilinçli yaşama odaklıdır.',
-                'Sinastri analizinden en iyi sonucu almak için doğum saati ve yerini mümkün olduğunca doğru girmek, soruyu netleştirmek ve sonucu partneri suçlamak için değil, ilişki dinamiğini anlamak için okumak önemlidir.',
-                'Bir sinastri sonucunda güçlü çekim görünüyor diye ilişkinin kendiliğinden sağlıklı olacağı varsayılmamalıdır. Aynı şekilde zorlayıcı açılar da ilişkinin imkansız olduğu anlamına gelmez. Bazı zor açılar iki kişiye sabır, açıklık ve sınır çalışması öğretir; bazı uyumlu açılar ise ilişkinin doğal akışını ve birbirini destekleme biçimini güçlendirir.',
-                'GoldMoodAstro’da sinastri, özellikle konuşulamayan ilişki temalarını görünür kılmak için kullanılır. “Neden aynı konuda tartışıyoruz?”, “Bu ilişkide güven ihtiyacımız nasıl farklı?”, “Yakınlık ve özgürlük dengesini nasıl kuruyoruz?” gibi sorular, harita karşılaştırmasıyla daha somut hale gelebilir. Kullanıcı ister hızlı burç uyumu ister detaylı doğum verisiyle analiz kullansın, amaç ilişkiyi etiketlemek değil, daha bilinçli bir diyalog alanı açmaktır.',
-              ],
-            },
-          ],
-        }
-      : {
-          eyebrow: 'Synastry Guide',
-          title: 'What is synastry, how does it work and what can it show in a relationship?',
-          lead:
-            'Synastry compares two birth charts to understand attraction, communication, emotional safety and growth areas in a relationship.',
-          summary:
-            'Synastry does not guarantee relationship outcomes. It shows how two charts interact, which themes flow easily and which areas require more conscious communication.',
-          sections: [
-            { title: 'How synastry works', paragraphs: ['Synastry compares two birth charts using birth date, time and place. Sun, Moon, Venus, Mars, Mercury and rising signs are read together to understand connection and friction.', 'GoldMoodAstro offers quick sign compatibility, manual birth data analysis and invite-based comparison for safer shared readings.'] },
-            { title: 'What synastry can reveal', paragraphs: ['Synastry should not reduce a relationship to compatible or incompatible. It helps reveal attraction, trust, communication style, conflict patterns and growth areas.', 'The goal is to understand what needs care, what flows naturally and where clearer boundaries or conversation may help.'] },
-            { title: 'GoldMoodAstro synastry approach', paragraphs: ['We do not use synastry as a fixed fate judgment. Charts show potentials and challenges, while choices and communication remain human.', 'For the best reading, enter birth data carefully and read the result as a tool for awareness rather than blame.'] },
-          ],
-        };
+  const intro = {
+    eyebrow: 'Synastry Guide',
+    title: 'What is synastry, how does it work and what can it show in a relationship?',
+    lead:
+      'Synastry compares two birth charts to understand attraction, communication, emotional safety and growth areas in a relationship.',
+    summary:
+      'Synastry does not guarantee relationship outcomes. It shows how two charts interact, which themes flow easily and which areas require more conscious communication.',
+    sections: [
+      { title: 'How synastry works', paragraphs: ['Synastry compares two birth charts using birth date, time and place. Sun, Moon, Venus, Mars, Mercury and rising signs are read together to understand connection and friction.', 'GoldMoodAstro offers quick sign compatibility, manual birth data analysis and invite-based comparison for safer shared readings.'] },
+      { title: 'What synastry can reveal', paragraphs: ['Synastry should not reduce a relationship to compatible or incompatible. It helps reveal attraction, trust, communication style, conflict patterns and growth areas.', 'The goal is to understand what needs care, what flows naturally and where clearer boundaries or conversation may help.'] },
+      { title: 'GoldMoodAstro synastry approach', paragraphs: ['We do not use synastry as a fixed fate judgment. Charts show potentials and challenges, while choices and communication remain human.', 'For the best reading, enter birth data carefully and read the result as a tool for awareness rather than blame.'] },
+    ],
+  };
   const searchParams = useSearchParams();
   const initialMode = searchParams.get('mode') as any;
   const [step, setStep] = useState<'mode' | 'quick' | 'manual' | 'invite' | 'loading' | 'result'>(
@@ -140,7 +103,7 @@ export default function SynastryPage() {
       setResult({ type: 'quick', ...res });
       setTimeout(() => setStep('result'), 2500);
     } catch (err) {
-      toast.error('Uyum analizi başarısız oldu');
+      toast.error(ui('ui_synastry_quick_failed', 'Compatibility analysis failed'));
       setStep('mode');
     }
   };
@@ -154,10 +117,10 @@ export default function SynastryPage() {
       setTimeout(() => setStep('result'), 3000);
     } catch (err: any) {
       if (err.status === 402) {
-        toast.error('Yetersiz kredi! Lütfen kredi paketi alınız.');
+        toast.error(ui('ui_synastry_insufficient_credits', 'Insufficient credits. Please purchase a credit package.'));
         setStep('manual');
       } else {
-        toast.error('Detaylı analiz için önce kendi doğum haritanızı oluşturmalısınız.');
+        toast.error(ui('ui_synastry_need_own_chart', 'Create your own birth chart before requesting a detailed analysis.'));
         setStep('mode');
       }
     }
@@ -166,10 +129,10 @@ export default function SynastryPage() {
   const handleSendInvite = async (partnerId: string) => {
     try {
       await createInvite({ partner_user_id: partnerId }).unwrap();
-      toast.success('Davet başarıyla gönderildi!');
+      toast.success(ui('ui_synastry_invite_sent', 'Invite sent successfully.'));
       setUserSearch('');
     } catch (err) {
-      toast.error('Davet gönderilemedi.');
+      toast.error(ui('ui_synastry_invite_failed', 'Invite could not be sent.'));
     }
   };
 
@@ -179,30 +142,28 @@ export default function SynastryPage() {
       const res = await acceptInvite(id).unwrap();
       setResult({ type: 'manual', ...res });
       setStep('result');
-      toast.success('Davet kabul edildi ve analiz üretildi!');
+      toast.success(ui('ui_synastry_invite_accepted', 'Invite accepted and analysis generated.'));
     } catch (err) {
-      toast.error('Hata oluştu.');
+      toast.error(ui('ui_synastry_generic_error', 'Something went wrong.'));
       setStep('mode');
     }
   };
 
   return (
     <>
-      <Banner title={locale === 'tr' ? 'Sinastri' : 'Synastry'} />
+      <Banner title="Synastry" />
       <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <JsonLd
         id="sinastri-schema"
         data={graph([
           breadcrumbSchema([
             { name: 'GoldMoodAstro', item: `${siteUrl}/${locale}` },
-            { name: locale === 'tr' ? 'Sinastri' : 'Synastry', item: pageUrl },
+            { name: 'Synastry', item: pageUrl },
           ]),
           articleSchema({
-            headline: locale === 'tr' ? 'Sinastri ve Aşk Uyumu Analizi' : 'Synastry and Love Compatibility Analysis',
+            headline: 'Synastry and Love Compatibility Analysis',
             description:
-              locale === 'tr'
-                ? 'Sinastri analizi ile iki doğum haritası arasındaki ilişki dinamiklerini, çekimi ve gelişim alanlarını keşfedin.'
-                : 'Discover relationship dynamics, attraction and growth areas between two birth charts with synastry analysis.',
+              'Discover relationship dynamics, attraction and growth areas between two birth charts with synastry analysis.',
             image: `${siteUrl}/img/synastry_chart.png`,
             datePublished: '2026-04-30T00:00:00.000Z',
             dateModified: '2026-04-30T00:00:00.000Z',
@@ -228,10 +189,10 @@ export default function SynastryPage() {
             >
               <div className="space-y-4">
                 <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tighter`}>
-                  Aşk <span className="text-(--gm-gold)">Uyumu</span>
+                  {ui('ui_synastry_love_word', 'Love')} <span className="text-(--gm-gold)">{ui('ui_synastry_compat_word', 'Compatibility')}</span>
                 </h2>
                 <p className="text-(--gm-text-dim) text-lg max-w-[var(--gm-w-narrow)] mx-auto font-serif italic">
-                  Yıldızların aşkınıza ne dediğini keşfedin. Hangi yöntemi tercih edersiniz?
+                  {ui('ui_synastry_mode_lead', 'Discover what the stars say about your connection. Which method do you prefer?')}
                 </p>
               </div>
 
@@ -243,14 +204,14 @@ export default function SynastryPage() {
                 >
                   <div className="flex items-center justify-center gap-2 text-(--gm-gold)">
                     <Heart className="w-5 h-5 fill-(--gm-gold)" />
-                    <span className="text-xs font-bold tracking-widest uppercase">BEKLEYEN DAVETLERİN VAR</span>
+                    <span className="text-xs font-bold tracking-widest uppercase">{ui('ui_synastry_pending_invites', 'YOU HAVE PENDING INVITES')}</span>
                   </div>
                   <div className="space-y-3">
                     {pendingInvites.map((inv: any) => (
                       <div key={inv.id} className="flex items-center justify-between bg-(--gm-surface)/50 p-4 rounded-2xl border border-(--gm-border-soft)">
                         <div className="text-left">
-                          <p className="text-sm font-bold text-(--gm-text)">Bir kullanıcı seninle uyumuna bakmak istiyor</p>
-                          <p className="text-[10px] text-(--gm-text-dim) uppercase tracking-widest">{new Date(inv.created_at).toLocaleDateString('tr-TR')}</p>
+                          <p className="text-sm font-bold text-(--gm-text)">{ui('ui_synastry_invite_card_text', 'A user wants to check compatibility with you')}</p>
+                          <p className="text-[10px] text-(--gm-text-dim) uppercase tracking-widest">{new Date(inv.created_at).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US')}</p>
                         </div>
                         <div className="flex gap-2">
                           <button onClick={() => handleAccept(inv.id)} className="w-10 h-10 bg-success/20 text-success rounded-full flex items-center justify-center hover:bg-success hover:text-(--gm-text) transition-all"><Check className="w-5 h-5" /></button>
@@ -271,11 +232,11 @@ export default function SynastryPage() {
                     <Zap className="w-7 h-7 text-(--gm-gold)" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className={`${cinzel.className} text-xl text-(--gm-text)`}>Hızlı Uyum</h3>
-                    <p className="text-(--gm-text-dim) text-xs leading-relaxed">2 Burç seçimi. Anında yorum. Ücretsiz!</p>
+                    <h3 className={`${cinzel.className} text-xl text-(--gm-text)`}>{ui('ui_synastry_quick_title', 'Quick Compatibility')}</h3>
+                    <p className="text-(--gm-text-dim) text-xs leading-relaxed">{ui('ui_synastry_quick_desc', 'Choose two signs. Instant reading. Free.')}</p>
                   </div>
                   <div className="flex items-center text-(--gm-gold) text-[10px] font-bold tracking-widest gap-2">
-                    DENEMEK ÜCRETSİZ <ChevronRight className="w-4 h-4" />
+                    {ui('ui_synastry_quick_cta', 'TRY FOR FREE')} <ChevronRight className="w-4 h-4" />
                   </div>
                 </button>
 
@@ -287,11 +248,11 @@ export default function SynastryPage() {
                     <Star className="w-7 h-7 text-(--gm-primary)" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className={`${cinzel.className} text-xl text-(--gm-text)`}>Manuel Rapor</h3>
-                    <p className="text-(--gm-text-dim) text-xs leading-relaxed">Partner bilgilerini sen gir, tam raporu hemen al.</p>
+                    <h3 className={`${cinzel.className} text-xl text-(--gm-text)`}>{ui('ui_synastry_manual_title', 'Manual Report')}</h3>
+                    <p className="text-(--gm-text-dim) text-xs leading-relaxed">{ui('ui_synastry_manual_desc', 'Enter partner details and get the full report immediately.')}</p>
                   </div>
                   <div className="flex items-center text-(--gm-primary) text-[10px] font-bold tracking-widest gap-2">
-                    250 KREDİ <ChevronRight className="w-4 h-4" />
+                    {ui('ui_synastry_manual_cost', '250 CREDITS')} <ChevronRight className="w-4 h-4" />
                   </div>
                 </button>
 
@@ -303,11 +264,11 @@ export default function SynastryPage() {
                     <Users className="w-7 h-7 text-(--gm-accent)" />
                   </div>
                   <div className="space-y-2">
-                    <h3 className={`${cinzel.className} text-xl text-(--gm-text)`}>Davet Et</h3>
-                    <p className="text-(--gm-text-dim) text-xs leading-relaxed">Partnerine davet gönder, o da onaylayınca uyuma bakın.</p>
+                    <h3 className={`${cinzel.className} text-xl text-(--gm-text)`}>{ui('ui_synastry_invite_title', 'Send Invite')}</h3>
+                    <p className="text-(--gm-text-dim) text-xs leading-relaxed">{ui('ui_synastry_invite_desc', 'Send your partner an invite and view compatibility after approval.')}</p>
                   </div>
                   <div className="flex items-center text-(--gm-accent) text-[10px] font-bold tracking-widest gap-2">
-                    PREMİUM / ÜCRETSİZ <ChevronRight className="w-4 h-4" />
+                    {ui('ui_synastry_invite_cost', 'PREMIUM / FREE')} <ChevronRight className="w-4 h-4" />
                   </div>
                 </button>
               </div>
@@ -322,11 +283,11 @@ export default function SynastryPage() {
               className="max-w-[var(--gm-w-narrow)] mx-auto space-y-12"
             >
                <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-text) transition-colors text-xs font-bold tracking-widest">
-                  <ChevronLeft className="w-4 h-4" /> GERİ DÖN
+                  <ChevronLeft className="w-4 h-4" /> {ui('ui_synastry_back', 'GO BACK')}
                </button>
                <div className="text-center space-y-4">
-                  <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>Partnerini Davet Et</h2>
-                  <p className="text-(--gm-text-dim) italic font-serif">Birlikte kozmik uyumunuza bakmak istediğiniz kullanıcıyı arayın.</p>
+                  <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>{ui('ui_synastry_invite_heading', 'Invite Your Partner')}</h2>
+                  <p className="text-(--gm-text-dim) italic font-serif">{ui('ui_synastry_invite_subtitle', 'Search for the user you want to compare cosmic compatibility with.')}</p>
                </div>
 
                <div className="space-y-8">
@@ -334,7 +295,7 @@ export default function SynastryPage() {
                     <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-(--gm-text-dim)" />
                     <input 
                       type="text"
-                      placeholder="İsim veya e-posta ile ara..."
+                      placeholder={ui('ui_synastry_search_placeholder', 'Search by name or email...')}
                       value={userSearch}
                       onChange={e => setUserSearch(e.target.value)}
                       className="w-full bg-(--gm-surface)/30 border border-(--gm-border-soft) rounded-full py-6 pl-14 pr-8 outline-none focus:ring-2 focus:ring-(--gm-accent)/30 text-lg"
@@ -343,7 +304,7 @@ export default function SynastryPage() {
 
                   <div className="space-y-4">
                     {isSearching ? (
-                      <div className="text-center py-10 opacity-50 italic">Aranıyor...</div>
+                      <div className="text-center py-10 opacity-50 italic">{ui('ui_synastry_searching', 'Searching...')}</div>
                     ) : searchResults && searchResults.length > 0 ? (
                       searchResults.map((u: any) => (
                         <motion.div 
@@ -365,12 +326,12 @@ export default function SynastryPage() {
                             onClick={() => handleSendInvite(u.id)}
                             className="bg-(--gm-accent)/20 text-(--gm-accent) px-6 py-2 rounded-full text-xs font-bold tracking-widest hover:bg-(--gm-accent) hover:text-(--gm-text) transition-all flex items-center gap-2"
                           >
-                            DAVET ET <Send className="w-3 h-3" />
+                            {ui('ui_synastry_send_invite_btn', 'SEND INVITE')} <Send className="w-3 h-3" />
                           </button>
                         </motion.div>
                       ))
                     ) : userSearch.length >= 3 && (
-                      <div className="text-center py-10 opacity-50 italic">Kullanıcı bulunamadı.</div>
+                      <div className="text-center py-10 opacity-50 italic">{ui('ui_synastry_no_users', 'No users found.')}</div>
                     )}
                   </div>
                </div>
@@ -386,11 +347,11 @@ export default function SynastryPage() {
               className="max-w-[var(--gm-w-narrow)] mx-auto space-y-12"
             >
                <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-text) transition-colors text-xs font-bold tracking-widest">
-                  <ChevronLeft className="w-4 h-4" /> GERİ DÖN
+                  <ChevronLeft className="w-4 h-4" /> {ui('ui_synastry_back', 'GO BACK')}
                </button>
                <div className="text-center space-y-4">
-                  <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>Hızlı Aşk Analizi</h2>
-                  <p className="text-(--gm-text-dim) italic font-serif">Siz ve o... Burçlarınızın enerjisi nasıl bir harmoni yaratıyor?</p>
+                  <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>{ui('ui_synastry_quick_heading', 'Quick Love Analysis')}</h2>
+                  <p className="text-(--gm-text-dim) italic font-serif">{ui('ui_synastry_quick_subtitle', 'You and them... What harmony do your signs create?')}</p>
                </div>
 
                <form onSubmit={handleQuickSubmit} className="bg-(--gm-surface)/30 border border-(--gm-border-soft) p-10 rounded-[2.5rem] space-y-10 backdrop-blur-xl">
@@ -402,7 +363,7 @@ export default function SynastryPage() {
                      </div>
 
                      <div className="space-y-4">
-                        <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-2 text-center block">SENİN BURCUN</label>
+                        <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-2 text-center block">{ui('ui_synastry_your_sign', 'YOUR SIGN')}</label>
                         <select 
                            value={quickData.sign_a}
                            onChange={(e) => setQuickData({ ...quickData, sign_a: e.target.value })}
@@ -413,7 +374,7 @@ export default function SynastryPage() {
                      </div>
 
                      <div className="space-y-4 text-right">
-                        <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase mr-2 text-center block">ONUN BURCU</label>
+                        <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase mr-2 text-center block">{ui('ui_synastry_their_sign', 'THEIR SIGN')}</label>
                         <select 
                            value={quickData.sign_b}
                            onChange={(e) => setQuickData({ ...quickData, sign_b: e.target.value })}
@@ -428,7 +389,7 @@ export default function SynastryPage() {
                     type="submit"
                     className="w-full bg-(--gm-gold) text-(--gm-bg) font-bold py-5 rounded-2xl tracking-[0.1em] shadow-xl shadow-(--gm-gold)/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
-                    UYUMU GÖR
+                    {ui('ui_synastry_see_compat', 'SEE COMPATIBILITY')}
                   </button>
                </form>
             </motion.div>
@@ -442,25 +403,25 @@ export default function SynastryPage() {
               className="max-w-[var(--gm-w-form)] mx-auto space-y-10"
             >
                <button onClick={() => setStep('mode')} className="flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-text) transition-colors text-xs font-bold tracking-widest">
-                  <ChevronLeft className="w-4 h-4" /> GERİ DÖN
+                  <ChevronLeft className="w-4 h-4" /> {ui('ui_synastry_back', 'GO BACK')}
                </button>
                <div className="text-center space-y-4">
-                  <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>Sinastri Analizi</h2>
-                  <p className="text-(--gm-text-dim) italic font-serif leading-relaxed">Partnerinizin doğum bilgilerini girerek 100 farklı astrolojik açıdan derin uyumunuzu keşfedin.</p>
+                  <h2 className={`${cinzel.className} text-4xl text-(--gm-text)`}>{ui('ui_synastry_manual_heading', 'Synastry Analysis')}</h2>
+                  <p className="text-(--gm-text-dim) italic font-serif leading-relaxed">{ui('ui_synastry_manual_subtitle', 'Enter your partner birth details and discover deep compatibility from 100 astrological aspects.')}</p>
                </div>
 
                <form onSubmit={handleManualSubmit} className="bg-(--gm-surface)/30 border border-(--gm-border-soft) p-10 rounded-[2.5rem] space-y-8 shadow-2xl backdrop-blur-xl">
                   <div className="space-y-6">
                     <div className="space-y-2">
-                       <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-4">PARTNERİN ADI</label>
-                       <input 
-                         type="text" required placeholder="Örn: Mehmet"
+                       <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-4">{ui('ui_synastry_partner_name', 'PARTNER NAME')}</label>
+                       <input
+                         type="text" required placeholder={ui('ui_synastry_partner_name_placeholder', 'Example: Alex')}
                          value={manualData.name} onChange={e => setManualData({ ...manualData, name: e.target.value })}
                          className="w-full bg-(--gm-surface-high)/50 border border-(--gm-border-soft) rounded-2xl p-4 pl-6 text-(--gm-text) outline-none focus:ring-2 focus:ring-(--gm-primary)/20"
                        />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-4">DOĞUM TARİHİ</label>
+                       <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-4">{ui('ui_synastry_dob', 'BIRTH DATE')}</label>
                        <input 
                          type="date" required
                          value={manualData.dob} onChange={e => setManualData({ ...manualData, dob: e.target.value })}
@@ -468,7 +429,7 @@ export default function SynastryPage() {
                        />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-4">DOĞUM SAATİ (OPSİYONEL)</label>
+                       <label className="text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase ml-4">{ui('ui_synastry_tob', 'BIRTH TIME (OPTIONAL)')}</label>
                        <input 
                          type="time"
                          value={manualData.tob} onChange={e => setManualData({ ...manualData, tob: e.target.value })}
@@ -479,10 +440,10 @@ export default function SynastryPage() {
 
                   <div className="p-4 bg-(--gm-gold)/5 border border-(--gm-gold)/10 rounded-2xl space-y-2">
                      <p className="text-[10px] text-(--gm-gold) leading-relaxed italic uppercase tracking-wider text-center font-bold">
-                        MALİYET: 250 KREDİ
+                        {ui('ui_synastry_cost_label', 'COST: 250 CREDITS')}
                      </p>
                      <p className="text-[10px] text-(--gm-text-dim) leading-relaxed italic text-center">
-                        * Bu veriler sadece rapor üretimi için kullanılır ve sistemimizde saklanmaz.
+                        {ui('ui_synastry_privacy_note', '* This data is used only for report generation and is not stored in our system.')}
                      </p>
                   </div>
 
@@ -490,7 +451,7 @@ export default function SynastryPage() {
                     type="submit"
                     className="w-full bg-(--gm-primary) text-(--gm-bg) font-bold py-5 rounded-2xl tracking-[0.1em] shadow-xl shadow-(--gm-primary)/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
-                    ANALİZİ BAŞLAT
+                    {ui('ui_synastry_start_analysis', 'START ANALYSIS')}
                   </button>
                </form>
             </motion.div>
@@ -514,8 +475,8 @@ export default function SynastryPage() {
                   </div>
                </div>
                <div className="text-center space-y-4">
-                  <h3 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-widest`}>Kader Ağları Örülüyor</h3>
-                  <p className="text-(--gm-text-dim) font-serif italic">Yıldızların birbirine dokunduğu o an analiz ediliyor...</p>
+                  <h3 className={`${cinzel.className} text-3xl text-(--gm-text) tracking-widest`}>{ui('ui_synastry_loading_title', 'Weaving the Threads')}</h3>
+                  <p className="text-(--gm-text-dim) font-serif italic">{ui('ui_synastry_loading_subtitle', 'Analyzing the moment where your stars touch...')}</p>
                </div>
             </motion.div>
           )}
@@ -537,12 +498,12 @@ export default function SynastryPage() {
                        <div className="flex items-center justify-center gap-12">
                           <div className="text-center space-y-2">
                              <div className="text-4xl">{quickData.sign_a}</div>
-                             <div className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-widest">SEN</div>
+                             <div className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-widest">{ui('ui_synastry_you', 'YOU')}</div>
                           </div>
                           <Heart className="w-8 h-8 text-(--gm-gold) fill-(--gm-gold)" />
                           <div className="text-center space-y-2">
                              <div className="text-4xl">{quickData.sign_b}</div>
-                             <div className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-widest">O</div>
+                             <div className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-widest">{ui('ui_synastry_them', 'THEM')}</div>
                           </div>
                        </div>
                        <h2 className={`${cinzel.className} text-4xl text-(--gm-text) tracking-tight`}>{result.title}</h2>
@@ -551,10 +512,10 @@ export default function SynastryPage() {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                        {[
-                         { label: 'AŞK', val: result.love_score },
-                         { label: 'DOSTLUK', val: result.friendship_score },
-                         { label: 'KARİYER', val: result.career_score },
-                         { label: 'ÇEKİM', val: result.sexual_score }
+                         { label: ui('ui_synastry_score_love', 'LOVE'), val: result.love_score },
+                         { label: ui('ui_synastry_score_friendship', 'FRIENDSHIP'), val: result.friendship_score },
+                         { label: ui('ui_synastry_score_career', 'CAREER'), val: result.career_score },
+                         { label: ui('ui_synastry_score_attraction', 'ATTRACTION'), val: result.sexual_score }
                        ].map(s => (
                          <div key={s.label} className="bg-(--gm-surface-high)/30 p-4 rounded-2xl text-center border border-(--gm-border-soft)">
                             <div className="text-[10px] font-bold text-(--gm-text-dim) uppercase mb-1 tracking-widest">{s.label}</div>
@@ -572,11 +533,11 @@ export default function SynastryPage() {
                           onClick={() => setStep('mode')}
                           className="flex-1 py-4 rounded-2xl border border-(--gm-border-soft) text-(--gm-text-dim) text-xs font-bold tracking-widest hover:bg-(--gm-surface-high) transition-all"
                         >
-                          BAŞTAN BAŞLA
+                          {ui('ui_synastry_restart', 'START OVER')}
                         </button>
                         <ShareCard 
-                          title="Aşk Uyumunu Paylaş"
-                          shareText={`GoldMoodAstro'da aşk uyumumuzu ölçtüm ✨\n❤️ Aşk: %${result.love_score}  •  🔥 Çekim: %${result.sexual_score}\nSen de uyumunu keşfet:`}
+                          title={ui('ui_synastry_share_title', 'Share Love Compatibility')}
+                          shareText={`${ui('ui_synastry_share_line1', "I measured our love compatibility on GoldMoodAstro.")}\n${ui('ui_synastry_share_line2_love', 'Love:')} %${result.love_score}  •  ${ui('ui_synastry_share_line2_attraction', 'Attraction:')} %${result.sexual_score}\n${ui('ui_synastry_share_line3', 'Discover your compatibility too:')}`}
                           variant="synastry"
                           data={{
                             partnerA: quickData.sign_a,
@@ -591,7 +552,7 @@ export default function SynastryPage() {
                  <div className="flex flex-col lg:flex-row gap-10">
                     <div className="w-full lg:w-1/3 space-y-6">
                        <div className="bg-(--gm-surface)/30 border border-(--gm-border-soft) rounded-[2.5rem] p-8 text-center space-y-6">
-                          <h3 className={`${cinzel.className} text-xl text-(--gm-text) tracking-widest`}>Uyum Skoru</h3>
+                          <h3 className={`${cinzel.className} text-xl text-(--gm-text) tracking-widest`}>{ui('ui_synastry_compat_score', 'Compatibility Score')}</h3>
                           <div className="relative inline-block">
                              <svg className="w-40 h-40 transform -rotate-90">
                                 <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-(--gm-border-soft)/10" />
@@ -602,7 +563,7 @@ export default function SynastryPage() {
                        </div>
                        
                        <div className="bg-(--gm-surface)/30 border border-(--gm-border-soft) rounded-[2.5rem] p-8 space-y-6">
-                          <h4 className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-[0.3em] mb-4">ÖNEMLİ AÇILAR</h4>
+                          <h4 className="text-[10px] font-bold text-(--gm-gold) uppercase tracking-[0.3em] mb-4">{ui('ui_synastry_important_aspects', 'IMPORTANT ASPECTS')}</h4>
                           <div className="space-y-4">
                              {(result.result?.aspects ?? result.aspects)?.slice(0, 5).map((a: any, i: number) => (
                                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-(--gm-surface-high)/30 border border-(--gm-border-soft)">
@@ -622,13 +583,13 @@ export default function SynastryPage() {
                        <div className="space-y-6 relative">
                           <div className="flex items-center gap-2 text-(--gm-primary)">
                              <Star className="w-5 h-5 fill-(--gm-primary)" />
-                             <span className="text-[10px] font-bold tracking-[0.4em] uppercase">Derin Analiz</span>
+                             <span className="text-[10px] font-bold tracking-[0.4em] uppercase">{ui('ui_synastry_deep_analysis', 'Deep Analysis')}</span>
                           </div>
                           <h2 className={`${cinzel.className} text-4xl text-(--gm-text) leading-tight`}>
-                             Kozmik <span className="text-(--gm-primary)">Bağlantı</span> Raporu
+                             {ui('ui_synastry_report_title_p1', 'Cosmic')} <span className="text-(--gm-primary)">{ui('ui_synastry_report_title_p2', 'Connection')}</span> {ui('ui_synastry_report_title_p3', 'Report')}
                           </h2>
                           <p className="text-(--gm-text-dim) font-serif italic text-lg leading-relaxed">
-                             {result.mode === 'invite' ? 'Partneriniz' : manualData.name} ile olan enerjiniz, gökyüzündeki planetlerin etkileşimiyle bu şekilde yorumlanıyor:
+                             {result.mode === 'invite' ? ui('ui_synastry_your_partner', 'Your partner') : manualData.name} {ui('ui_synastry_report_lead', 'and your energy are interpreted through the interaction of the planets like this:')}
                           </p>
                        </div>
 
@@ -641,10 +602,10 @@ export default function SynastryPage() {
                        <div className="pt-10 border-t border-(--gm-border-soft) flex items-center justify-between">
                           <div className="flex items-center gap-3 text-(--gm-text-dim)/60">
                              <ShieldCheck className="w-4 h-4" />
-                             <span className="text-[10px] font-bold tracking-widest uppercase">Güvenli ve Gizli Analiz</span>
+                             <span className="text-[10px] font-bold tracking-widest uppercase">{ui('ui_synastry_secure_private', 'Secure and Private Analysis')}</span>
                           </div>
                           <button onClick={() => setStep('mode')} className="text-(--gm-primary) text-xs font-bold tracking-widest border-b border-(--gm-primary)/30 pb-1">
-                             YENİ BİRİNE BAK
+                             {ui('ui_synastry_new_person', 'CHECK SOMEONE NEW')}
                           </button>
                        </div>
                     </div>
@@ -654,14 +615,12 @@ export default function SynastryPage() {
           )}
         </AnimatePresence>
       </div>
-      <FaqAccordion items={faqItems} title={locale === 'tr' ? 'Sinastri Hakkında Sorular' : 'Synastry Questions'} />
+      <FaqAccordion items={faqItems} title="Synastry Questions" />
       <AuthorBio
         name="GoldMoodAstro Editorial Team"
-        title={locale === 'tr' ? 'Astroloji ve ilişki dinamikleri editörleri' : 'Astrology and relationship dynamics editors'}
-        bio={locale === 'tr'
-          ? 'GoldMoodAstro sinastri içerikleri, ilişki astrolojisini kesin hüküm yerine farkındalık, iletişim ve gelişim odağıyla ele alır.'
-          : 'GoldMoodAstro synastry content treats relationship astrology as awareness, communication and growth guidance rather than fixed judgment.'}
-        expertise={['Sinastri', 'İlişki Astrolojisi', 'Doğum Haritası']}
+        title="Astrology and relationship dynamics editors"
+        bio="GoldMoodAstro synastry content treats relationship astrology as awareness, communication and growth guidance rather than fixed judgment."
+        expertise={['Synastry', 'Relationship Astrology', 'Birth Chart']}
       />
       </PageContainer>
     </>

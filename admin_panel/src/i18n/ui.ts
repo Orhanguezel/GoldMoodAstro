@@ -15,8 +15,6 @@ export const UI_FALLBACK_EN = {
   ui_header_nav_home: 'Home',
   ui_header_nav_about: 'About Us',
   ui_header_nav_services: 'Services',
-  ui_header_nav_product: 'Products',
-  ui_header_nav_sparepart: 'Spare Parts',
   ui_header_nav_references: 'References',
   ui_header_nav_library: 'Library',
   ui_header_nav_blog: 'Blog',

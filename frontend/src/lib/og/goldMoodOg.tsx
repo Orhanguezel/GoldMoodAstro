@@ -172,16 +172,16 @@ export function createGoldMoodOgImage({
 }
 
 export const zodiacLabels: Record<string, string> = {
-  aries: 'Koç',
-  taurus: 'Boğa',
-  gemini: 'İkizler',
-  cancer: 'Yengeç',
-  leo: 'Aslan',
-  virgo: 'Başak',
-  libra: 'Terazi',
-  scorpio: 'Akrep',
-  sagittarius: 'Yay',
-  capricorn: 'Oğlak',
-  aquarius: 'Kova',
-  pisces: 'Balık',
+  aries: 'Aries',
+  taurus: 'Taurus',
+  gemini: 'Gemini',
+  cancer: 'Cancer',
+  leo: 'Leo',
+  virgo: 'Virgo',
+  libra: 'Libra',
+  scorpio: 'Scorpio',
+  sagittarius: 'Sagittarius',
+  capricorn: 'Capricorn',
+  aquarius: 'Aquarius',
+  pisces: 'Pisces',
 };

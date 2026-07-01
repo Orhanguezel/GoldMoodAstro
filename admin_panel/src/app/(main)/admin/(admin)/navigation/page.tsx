@@ -4,6 +4,7 @@ import * as React from 'react';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, ChevronRight, Search, Save } from 'lucide-react';
 
+import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -99,6 +100,7 @@ function MenuItemDialog({
   parents: AdminMenuItemDto[];
   sections: FooterSectionDto[];
 }) {
+  const t = useAdminT('admin.navigation');
   const [form, setForm] = React.useState<MenuFormState>(emptyMenuForm);
   const [create, { isLoading: creating }] = useCreateMenuItemAdminMutation();
   const [update, { isLoading: updating }] = useUpdateMenuItemAdminMutation();
@@ -127,7 +129,7 @@ function MenuItemDialog({
 
   const handleSave = async () => {
     if (!form.title.trim()) {
-      toast.error('Başlık zorunlu');
+      toast.error(t('toast.titleRequired', undefined, 'Başlık zorunlu'));
       return;
     }
     const payload: AdminMenuItemCreatePayload = {
@@ -145,14 +147,14 @@ function MenuItemDialog({
     try {
       if (editing) {
         await update({ id: editing.id, data: payload }).unwrap();
-        toast.success('Menü öğesi güncellendi');
+        toast.success(t('toast.itemUpdated', undefined, 'Menü öğesi güncellendi'));
       } else {
         await create(payload).unwrap();
-        toast.success('Menü öğesi oluşturuldu');
+        toast.success(t('toast.itemCreated', undefined, 'Menü öğesi oluşturuldu'));
       }
       onOpenChange(false);
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || 'Kayıt başarısız');
+      toast.error(err?.data?.error?.message || t('toast.saveFailed', undefined, 'Kayıt başarısız'));
     }
   };
 
@@ -160,51 +162,51 @@ function MenuItemDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>{editing ? 'Menü Öğesi Düzenle' : 'Yeni Menü Öğesi'}</DialogTitle>
+          <DialogTitle>{editing ? t('itemDialog.editTitle', undefined, 'Menü Öğesi Düzenle') : t('itemDialog.createTitle', undefined, 'Yeni Menü Öğesi')}</DialogTitle>
           <DialogDescription>
-            Konum: {form.location === 'header' ? 'Üst Menü' : 'Footer'} · Dil:{' '}
+            {t('itemDialog.locationLabel', undefined, 'Konum')}: {form.location === 'header' ? t('location.header', undefined, 'Üst Menü') : t('location.footer', undefined, 'Footer')} · {t('itemDialog.localeLabel', undefined, 'Dil')}:{' '}
             {LOCALES.find((l) => l.value === locale)?.label}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="title">Başlık *</Label>
+            <Label htmlFor="title">{t('fields.title', undefined, 'Başlık')} *</Label>
             <Input
               id="title"
               value={form.title}
               onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-              placeholder="Doğum Haritası"
+              placeholder={t('placeholders.titleExample', undefined, 'Doğum Haritası')}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="url">URL</Label>
+              <Label htmlFor="url">{t('fields.url', undefined, 'URL')}</Label>
               <Input
                 id="url"
                 value={form.url}
                 onChange={(e) => setForm((p) => ({ ...p, url: e.target.value }))}
-                placeholder="/birth-chart veya https://…"
+                placeholder={t('placeholders.url', undefined, '/birth-chart veya https://…')}
               />
               <p className="text-[10px] text-muted-foreground italic">
-                Dropdown ana başlık ise boş bırak
+                {t('hints.urlEmptyForDropdown', undefined, 'Dropdown ana başlık ise boş bırak')}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="icon">İkon (opsiyonel)</Label>
+              <Label htmlFor="icon">{t('fields.iconOptional', undefined, 'İkon (opsiyonel)')}</Label>
               <Input
                 id="icon"
                 value={form.icon}
                 onChange={(e) => setForm((p) => ({ ...p, icon: e.target.value }))}
-                placeholder="lucide ikon adı"
+                placeholder={t('placeholders.icon', undefined, 'lucide ikon adı')}
               />
             </div>
           </div>
 
           {form.location === 'header' && (
             <div className="space-y-2">
-              <Label htmlFor="parent">Üst Menü (Dropdown için)</Label>
+              <Label htmlFor="parent">{t('fields.parentMenu', undefined, 'Üst Menü (Dropdown için)')}</Label>
               <Select
                 value={form.parent_id || 'none'}
                 onValueChange={(v) =>
@@ -215,7 +217,7 @@ function MenuItemDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">— Top-level (kök) —</SelectItem>
+                  <SelectItem value="none">{t('options.topLevel', undefined, '— Top-level (kök) —')}</SelectItem>
                   {parents
                     .filter((p) => !p.parent_id && p.id !== editing?.id)
                     .map((p) => (
@@ -230,7 +232,7 @@ function MenuItemDialog({
 
           {form.location === 'footer' && (
             <div className="space-y-2">
-              <Label htmlFor="section">Footer Bölümü *</Label>
+              <Label htmlFor="section">{t('fields.footerSection', undefined, 'Footer Bölümü')} *</Label>
               <Select
                 value={form.section_id || 'none'}
                 onValueChange={(v) =>
@@ -238,10 +240,10 @@ function MenuItemDialog({
                 }
               >
                 <SelectTrigger id="section">
-                  <SelectValue placeholder="Bölüm seç" />
+                  <SelectValue placeholder={t('placeholders.selectSection', undefined, 'Bölüm seç')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">— Bölümsüz —</SelectItem>
+                  <SelectItem value="none">{t('options.noSection', undefined, '— Bölümsüz —')}</SelectItem>
                   {sections.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.title || s.slug}
@@ -254,7 +256,7 @@ function MenuItemDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="order">Sıra</Label>
+              <Label htmlFor="order">{t('fields.order', undefined, 'Sıra')}</Label>
               <Input
                 id="order"
                 type="number"
@@ -265,7 +267,7 @@ function MenuItemDialog({
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="active">Aktif</Label>
+              <Label htmlFor="active">{t('fields.active', undefined, 'Aktif')}</Label>
               <Switch
                 id="active"
                 checked={form.is_active}
@@ -277,11 +279,11 @@ function MenuItemDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            İptal
+            {t('actions.cancel', undefined, 'İptal')}
           </Button>
           <Button onClick={handleSave} disabled={creating || updating}>
             <Save className="mr-2 size-4" />
-            {editing ? 'Güncelle' : 'Oluştur'}
+            {editing ? t('actions.update', undefined, 'Güncelle') : t('actions.create', undefined, 'Oluştur')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -320,6 +322,7 @@ function SectionDialog({
   editing: FooterSectionDto | null;
   locale: string;
 }) {
+  const t = useAdminT('admin.navigation');
   const [form, setForm] = React.useState<SectionFormState>(emptySectionForm);
   const [create, { isLoading: creating }] = useCreateFooterSectionAdminMutation();
   const [update, { isLoading: updating }] = useUpdateFooterSectionAdminMutation();
@@ -340,7 +343,7 @@ function SectionDialog({
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.slug.trim()) {
-      toast.error('Başlık ve slug zorunlu');
+      toast.error(t('toast.titleSlugRequired', undefined, 'Başlık ve slug zorunlu'));
       return;
     }
     const payload: FooterSectionCreatePayload = {
@@ -354,14 +357,14 @@ function SectionDialog({
     try {
       if (editing) {
         await update({ id: editing.id, data: payload }).unwrap();
-        toast.success('Bölüm güncellendi');
+        toast.success(t('toast.sectionUpdated', undefined, 'Bölüm güncellendi'));
       } else {
         await create(payload).unwrap();
-        toast.success('Bölüm oluşturuldu');
+        toast.success(t('toast.sectionCreated', undefined, 'Bölüm oluşturuldu'));
       }
       onOpenChange(false);
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || 'Kayıt başarısız');
+      toast.error(err?.data?.error?.message || t('toast.saveFailed', undefined, 'Kayıt başarısız'));
     }
   };
 
@@ -369,24 +372,24 @@ function SectionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{editing ? 'Footer Bölümü Düzenle' : 'Yeni Footer Bölümü'}</DialogTitle>
+          <DialogTitle>{editing ? t('sectionDialog.editTitle', undefined, 'Footer Bölümü Düzenle') : t('sectionDialog.createTitle', undefined, 'Yeni Footer Bölümü')}</DialogTitle>
           <DialogDescription>
-            Dil: {LOCALES.find((l) => l.value === locale)?.label}
+            {t('itemDialog.localeLabel', undefined, 'Dil')}: {LOCALES.find((l) => l.value === locale)?.label}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="s_title">Başlık *</Label>
+            <Label htmlFor="s_title">{t('fields.title', undefined, 'Başlık')} *</Label>
             <Input
               id="s_title"
               value={form.title}
               onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-              placeholder="Astroloji"
+              placeholder={t('placeholders.sectionTitleExample', undefined, 'Astroloji')}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="s_slug">Slug * (yalnızca yeni kayıtta etkili)</Label>
+            <Label htmlFor="s_slug">{t('fields.slug', undefined, 'Slug * (yalnızca yeni kayıtta etkili)')}</Label>
             <Input
               id="s_slug"
               value={form.slug}
@@ -401,7 +404,7 @@ function SectionDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="s_desc">Açıklama (opsiyonel)</Label>
+            <Label htmlFor="s_desc">{t('fields.descriptionOptional', undefined, 'Açıklama (opsiyonel)')}</Label>
             <Textarea
               id="s_desc"
               rows={2}
@@ -411,7 +414,7 @@ function SectionDialog({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="s_order">Sıra</Label>
+              <Label htmlFor="s_order">{t('fields.order', undefined, 'Sıra')}</Label>
               <Input
                 id="s_order"
                 type="number"
@@ -422,7 +425,7 @@ function SectionDialog({
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="s_active">Aktif</Label>
+              <Label htmlFor="s_active">{t('fields.active', undefined, 'Aktif')}</Label>
               <Switch
                 id="s_active"
                 checked={form.is_active}
@@ -434,11 +437,11 @@ function SectionDialog({
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            İptal
+            {t('actions.cancel', undefined, 'İptal')}
           </Button>
           <Button onClick={handleSave} disabled={creating || updating}>
             <Save className="mr-2 size-4" />
-            {editing ? 'Güncelle' : 'Oluştur'}
+            {editing ? t('actions.update', undefined, 'Güncelle') : t('actions.create', undefined, 'Oluştur')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -451,6 +454,7 @@ function SectionDialog({
 // =============================================================
 
 function HeaderMenuTab({ locale }: { locale: string }) {
+  const t = useAdminT('admin.navigation');
   const [search, setSearch] = React.useState('');
   const [editing, setEditing] = React.useState<AdminMenuItemDto | null>(null);
   const [defaultParent, setDefaultParent] = React.useState<string | undefined>();
@@ -476,12 +480,12 @@ function HeaderMenuTab({ locale }: { locale: string }) {
   const [del] = useDeleteMenuItemAdminMutation();
 
   const handleDelete = async (item: AdminMenuItemDto) => {
-    if (!confirm(`"${item.title}" silinsin mi? Alt menüler de silinir.`)) return;
+    if (!confirm(t('confirm.deleteItemWithChildren', { title: item.title }, `"${item.title}" silinsin mi? Alt menüler de silinir.`))) return;
     try {
       await del({ id: item.id }).unwrap();
-      toast.success('Silindi');
+      toast.success(t('toast.deleted', undefined, 'Silindi'));
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || 'Silinemedi');
+      toast.error(err?.data?.error?.message || t('toast.deleteFailed', undefined, 'Silinemedi'));
     }
   };
 
@@ -497,7 +501,7 @@ function HeaderMenuTab({ locale }: { locale: string }) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Başlık ara…"
+            placeholder={t('placeholders.searchTitle', undefined, 'Başlık ara…')}
             className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-6 pl-12 text-sm text-gm-text"
           />
         </div>
@@ -510,15 +514,15 @@ function HeaderMenuTab({ locale }: { locale: string }) {
           className="ml-auto h-12 rounded-full bg-gm-gold text-gm-bg hover:bg-gm-gold-light px-8 text-[10px] font-bold uppercase tracking-widest"
         >
           <Plus className="mr-2 size-4" />
-          Yeni Top-Level
+          {t('header.newTopLevel', undefined, 'Yeni Top-Level')}
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-gm-muted text-sm">Yükleniyor…</div>
+        <div className="text-center py-12 text-gm-muted text-sm">{t('common.loading', undefined, 'Yükleniyor…')}</div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 text-gm-muted text-sm">
-          Henüz menü öğesi yok. Üstten "Yeni" ile başla.
+          {t('header.empty', undefined, 'Henüz menü öğesi yok. Üstten "Yeni" ile başla.')}
         </div>
       ) : (
         <div className="space-y-4">
@@ -533,16 +537,16 @@ function HeaderMenuTab({ locale }: { locale: string }) {
                     </span>
                     <div className="flex-1">
                       <div className="font-medium text-gm-text">
-                        {parent.title || <em className="text-gm-muted">başlıksız</em>}
+                        {parent.title || <em className="text-gm-muted">{t('common.untitled', undefined, 'başlıksız')}</em>}
                         {!parent.is_active && (
                           <span className="ml-2 text-[10px] uppercase bg-gm-bg-deep border border-gm-border-soft text-gm-muted px-2 py-0.5 rounded-full">
-                            pasif
+                            {t('common.inactive', undefined, 'pasif')}
                           </span>
                         )}
                       </div>
                       <div className="text-xs text-gm-muted mt-1">
                         {parent.url || (
-                          <em className="italic">dropdown kök ({kids.length} alt öğe)</em>
+                          <em className="italic">{t('header.dropdownRoot', { count: kids.length }, `dropdown kök (${kids.length} alt öğe)`)}</em>
                         )}
                       </div>
                     </div>
@@ -555,7 +559,7 @@ function HeaderMenuTab({ locale }: { locale: string }) {
                         setDefaultParent(parent.id);
                         setOpen(true);
                       }}
-                      title="Alt menü ekle"
+                      title={t('header.addSubItem', undefined, 'Alt menü ekle')}
                     >
                       <Plus className="size-4" />
                     </Button>
@@ -592,7 +596,7 @@ function HeaderMenuTab({ locale }: { locale: string }) {
                             {kid.title}
                             {!kid.is_active && (
                               <span className="ml-2 text-[10px] uppercase bg-gm-bg-deep border border-gm-border-soft text-gm-muted px-2 py-0.5 rounded-full">
-                                pasif
+                                {t('common.inactive', undefined, 'pasif')}
                               </span>
                             )}
                           </span>
@@ -642,6 +646,7 @@ function HeaderMenuTab({ locale }: { locale: string }) {
 }
 
 function FooterTab({ locale }: { locale: string }) {
+  const t = useAdminT('admin.navigation');
   const [editingSection, setEditingSection] = React.useState<FooterSectionDto | null>(null);
   const [sectionOpen, setSectionOpen] = React.useState(false);
   const [editingItem, setEditingItem] = React.useState<AdminMenuItemDto | null>(null);
@@ -677,22 +682,22 @@ function FooterTab({ locale }: { locale: string }) {
   const [delItem] = useDeleteMenuItemAdminMutation();
 
   const handleDeleteSection = async (s: FooterSectionDto) => {
-    if (!confirm(`"${s.title}" bölümü silinsin mi? Bölüme bağlı linkler bölümsüz olur.`)) return;
+    if (!confirm(t('confirm.deleteSection', { title: s.title }, `"${s.title}" bölümü silinsin mi? Bölüme bağlı linkler bölümsüz olur.`))) return;
     try {
       await delSection(s.id).unwrap();
-      toast.success('Bölüm silindi');
+      toast.success(t('toast.sectionDeleted', undefined, 'Bölüm silindi'));
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || 'Silinemedi');
+      toast.error(err?.data?.error?.message || t('toast.deleteFailed', undefined, 'Silinemedi'));
     }
   };
 
   const handleDeleteItem = async (it: AdminMenuItemDto) => {
-    if (!confirm(`"${it.title}" silinsin mi?`)) return;
+    if (!confirm(t('confirm.deleteItem', { title: it.title }, `"${it.title}" silinsin mi?`))) return;
     try {
       await delItem({ id: it.id }).unwrap();
-      toast.success('Silindi');
+      toast.success(t('toast.deleted', undefined, 'Silindi'));
     } catch (err: any) {
-      toast.error(err?.data?.error?.message || 'Silinemedi');
+      toast.error(err?.data?.error?.message || t('toast.deleteFailed', undefined, 'Silinemedi'));
     }
   };
 
@@ -707,15 +712,15 @@ function FooterTab({ locale }: { locale: string }) {
           className="h-12 rounded-full bg-gm-gold text-gm-bg hover:bg-gm-gold-light px-8 text-[10px] font-bold uppercase tracking-widest"
         >
           <Plus className="mr-2 size-4" />
-          Yeni Bölüm
+          {t('footer.newSection', undefined, 'Yeni Bölüm')}
         </Button>
       </div>
 
       {secLoading ? (
-        <div className="text-center py-12 text-gm-muted text-sm">Yükleniyor…</div>
+        <div className="text-center py-12 text-gm-muted text-sm">{t('common.loading', undefined, 'Yükleniyor…')}</div>
       ) : sections.length === 0 ? (
         <div className="text-center py-12 text-gm-muted text-sm">
-          Henüz bölüm yok. Üstten "Yeni Bölüm" ile başla.
+          {t('footer.empty', undefined, 'Henüz bölüm yok. Üstten "Yeni Bölüm" ile başla.')}
         </div>
       ) : (
         <div className="space-y-6">
@@ -729,14 +734,14 @@ function FooterTab({ locale }: { locale: string }) {
                   </span>
                   <div className="flex-1">
                     <CardTitle className="text-base text-gm-text font-serif">
-                      {sec.title || <em className="text-gm-muted">başlıksız</em>}
+                      {sec.title || <em className="text-gm-muted">{t('common.untitled', undefined, 'başlıksız')}</em>}
                       {!sec.is_active && (
                         <span className="ml-2 text-[10px] uppercase bg-gm-bg-deep border border-gm-border-soft text-gm-muted px-2 py-0.5 rounded-full">
-                          pasif
+                          {t('common.inactive', undefined, 'pasif')}
                         </span>
                       )}
                     </CardTitle>
-                    <p className="text-xs text-gm-muted mt-1">slug: {sec.slug}</p>
+                    <p className="text-xs text-gm-muted mt-1">{t('footer.slugLabel', undefined, 'slug')}: {sec.slug}</p>
                   </div>
                   <Button
                     variant="ghost"
@@ -747,7 +752,7 @@ function FooterTab({ locale }: { locale: string }) {
                       setDefaultSection(sec.id);
                       setItemOpen(true);
                     }}
-                    title="Link ekle"
+                    title={t('footer.addLink', undefined, 'Link ekle')}
                   >
                     <Plus className="size-4" />
                   </Button>
@@ -784,7 +789,7 @@ function FooterTab({ locale }: { locale: string }) {
                             {link.title}
                             {!link.is_active && (
                               <span className="ml-2 text-[10px] uppercase bg-gm-bg-deep border border-gm-border-soft text-gm-muted px-2 py-0.5 rounded-full">
-                                pasif
+                                {t('common.inactive', undefined, 'pasif')}
                               </span>
                             )}
                           </span>
@@ -821,7 +826,7 @@ function FooterTab({ locale }: { locale: string }) {
             <Card className="overflow-hidden rounded-[24px] border-dashed border-gm-border-soft bg-gm-surface/10">
               <CardHeader className="pb-3 border-b border-gm-border-soft/50 bg-gm-surface/5 px-6 py-4">
                 <CardTitle className="text-sm text-gm-muted font-serif">
-                  Bölümsüz Linkler ({itemsBySection.get('__none__')!.length})
+                  {t('footer.uncategorizedLinks', { count: itemsBySection.get('__none__')!.length }, `Bölümsüz Linkler (${itemsBySection.get('__none__')!.length})`)}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -883,6 +888,7 @@ function FooterTab({ locale }: { locale: string }) {
 // =============================================================
 
 export default function NavigationAdminPage() {
+  const t = useAdminT('admin.navigation');
   const [locale, setLocale] = React.useState<string>('tr');
 
   return (
@@ -891,10 +897,10 @@ export default function NavigationAdminPage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-gm-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">Navigasyon & Menü</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">{t('page.eyebrow', undefined, 'Navigasyon & Menü')}</span>
           </div>
-          <h1 className="font-serif text-4xl text-gm-text">Navigasyon Yönetimi</h1>
-          <p className="text-sm italic text-gm-muted">Üst menü (header) ve footer linklerini buradan yönet. Dropdown desteği var.</p>
+          <h1 className="font-serif text-4xl text-gm-text">{t('page.title', undefined, 'Navigasyon Yönetimi')}</h1>
+          <p className="text-sm italic text-gm-muted">{t('page.subtitle', undefined, 'Üst menü (header) ve footer linklerini buradan yönet. Dropdown desteği var.')}</p>
         </div>
         <div className="w-44">
           <Select value={locale} onValueChange={setLocale}>
@@ -918,13 +924,13 @@ export default function NavigationAdminPage() {
             value="header"
             className="rounded-full px-7 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg data-[state=active]:shadow-gm-gold/20 text-gm-muted hover:text-gm-text"
           >
-            Header Menü
+            {t('tabs.header', undefined, 'Header Menü')}
           </TabsTrigger>
           <TabsTrigger
             value="footer"
             className="rounded-full px-7 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg data-[state=active]:shadow-lg data-[state=active]:shadow-gm-gold/20 text-gm-muted hover:text-gm-text"
           >
-            Footer Düzeni
+            {t('tabs.footer', undefined, 'Footer Düzeni')}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="header" className="mt-0 outline-none">

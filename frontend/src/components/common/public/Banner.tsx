@@ -10,10 +10,10 @@ import { useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/features/auth/auth.store';
 
-/** Banner görsel varyantları:
- *  - hero: 21/9 büyük üst banner (home_hero için)
- *  - slim: 6/1 ince content-arası banner ("fal diyari" tarzı reklam alanı)
- *  - card: 16/9 dengeli, sidebar/blog için
+/** Banner visual variants:
+ *  - hero: 21/9 large top banner
+ *  - slim: 6/1 thin in-content banner
+ *  - card: 16/9 balanced banner for sidebar/blog
  */
 type Variant = 'hero' | 'slim' | 'card';
 
@@ -22,7 +22,7 @@ interface BannerProps {
   className?: string;
   count?: number;
   variant?: Variant;
-  /** True ise X butonu ile kapatılabilir (localStorage hatırlar). */
+  /** When true, the X button can dismiss it and localStorage remembers it. */
   dismissable?: boolean;
 }
 
@@ -59,11 +59,11 @@ export default function Banner({
   const [trackClick] = useTrackBannerClickMutation();
   const { user } = useAuthStore();
 
-  // Premium Gating — FAZ 41 T41-3: Pro kullanıcı reklam görmez
+  // Premium gating - FAZ 41 T41-3: pro users do not see ads.
   const isPremium = user?.is_premium === true;
   if (isPremium) return null;
 
-  // Dismiss state — placement bazında localStorage
+  // Dismiss state stored per placement in localStorage.
   const dismissKey = `banner-dismissed:${placement}`;
   const [dismissed, setDismissed] = React.useState(false);
   React.useEffect(() => {
@@ -167,7 +167,7 @@ export default function Banner({
               </div>
             )}
 
-            {/* Reklam göstergesi (info ikonu) — şeffaflık */}
+            {/* Ad indicator for transparency. */}
             <span
               className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-(--gm-bg-deep)/60 px-2 py-0.5 text-[9px] font-medium uppercase tracking-widest text-(--gm-bg) backdrop-blur-sm"
               aria-label="reklam"
@@ -182,7 +182,7 @@ export default function Banner({
               <button
                 type="button"
                 onClick={dismiss}
-                aria-label="Banner'ı kapat"
+                aria-label="Close banner"
                 className="absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-(--gm-bg-deep)/60 text-(--gm-bg) backdrop-blur-sm transition-colors hover:bg-(--gm-bg-deep)/85"
               >
                 <X size={12} />

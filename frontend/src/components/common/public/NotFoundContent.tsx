@@ -32,17 +32,12 @@ export function NotFoundContent({ locale, homePath }: Props) {
   const getRedirectText = () => {
     const raw = ui(
       'ui_404_redirect_info',
-      '{seconds} saniye içinde ana sayfaya yönlendirileceksiniz.',
+      'You will be redirected to the homepage in {seconds} seconds.',
     );
     return raw.replace('{seconds}', countdown.toString());
   };
 
   return (
-    /*
-     * Kontrast stratejisi: tüm sayfa kendi koyu arka planına sahip.
-     * Metin renkleri sabit white/amber — tema değişkenine BAĞIMLI DEĞİL.
-     * Böylece hem light hem dark temada garantili okunur.
-     */
     <div
       className="relative flex flex-col items-center justify-center min-h-screen px-6 py-20 text-center overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #0D0B1E 0%, #1A1630 50%, #120825 100%)' }}
@@ -99,7 +94,7 @@ export function NotFoundContent({ locale, homePath }: Props) {
           className="text-3xl md:text-5xl font-serif font-light text-white mb-4 px-4"
           style={{ animation: 'fadeUp 0.6s ease-out 0.3s both' }}
         >
-          {ui('ui_404_title', 'Sayfa Bulunamadı')}
+          {ui('ui_404_title', 'Page Not Found')}
         </h1>
 
         {/* Subtitle */}
@@ -109,7 +104,7 @@ export function NotFoundContent({ locale, homePath }: Props) {
         >
           {ui(
             'ui_404_subtitle',
-            'Aradığınız sayfa taşınmış, silinmiş veya hiç var olmamış olabilir.',
+            'The page you are looking for may have moved, been deleted, or never existed.',
           )}
         </p>
 
@@ -132,7 +127,7 @@ export function NotFoundContent({ locale, homePath }: Props) {
             className="inline-flex items-center justify-center gap-2 min-w-52 px-8 py-4 rounded-full bg-amber-400 text-[#0D0B1E] font-bold text-sm uppercase tracking-[0.18em] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_36px_rgba(212,175,55,0.5)] active:scale-95"
           >
             <Home className="w-4 h-4" />
-            {ui('ui_404_back_home', 'Ana Sayfaya Dön')}
+            {ui('ui_404_back_home', 'Back to Home')}
           </button>
 
           <button

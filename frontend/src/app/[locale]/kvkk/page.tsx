@@ -15,7 +15,7 @@ export default function KvkkPage() {
   const bannerTitle = useMemo(() => {
     const key = 'ui_kvkk_page_title';
     const v = safeStr(ui(key, ''));
-    return isValidUiText(v, key) ? v : 'KVKK Aydınlatma Metni';
+    return isValidUiText(v, key) ? v : 'KVKK Disclosure Text';
   }, [ui]);
 
   return (

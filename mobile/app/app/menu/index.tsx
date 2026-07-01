@@ -316,9 +316,9 @@ export default function MenuScreen() {
             {headerItems.length > 0 ? renderBranch(headerItems, 0) : null}
             {renderFooter()}
             <View style={styles.footerDivider} />
-            <Text style={styles.footerSectionLabel}>{t('navigation.appLinks', 'Uygulama')}</Text>
+            <Text style={styles.footerSectionLabel}>{t('menu.appSection')}</Text>
             <MenuRow
-              title="Hakkında & Destek"
+              title={t('menu.aboutSupport')}
               depth={0}
               hasChildren={false}
               expanded={false}
@@ -326,7 +326,7 @@ export default function MenuScreen() {
               onPress={() => router.push('/info' as any)}
             />
             <MenuRow
-              title="Astrolog Karnesi"
+              title={t('menu.astrologerReport')}
               depth={0}
               hasChildren={false}
               expanded={false}
@@ -334,7 +334,7 @@ export default function MenuScreen() {
               onPress={() => router.push('/karne' as any)}
             />
             <MenuRow
-              title="Ünlüler ve Burçları"
+              title={t('menu.celebrities')}
               depth={0}
               hasChildren={false}
               expanded={false}
@@ -342,7 +342,7 @@ export default function MenuScreen() {
               onPress={() => router.push('/unluler' as any)}
             />
             <MenuRow
-              title="Blog"
+              title={t('menu.blog')}
               depth={0}
               hasChildren={false}
               expanded={false}
@@ -350,7 +350,7 @@ export default function MenuScreen() {
               onPress={() => router.push('/blog' as any)}
             />
             <MenuRow
-              title="Danışman Ol"
+              title={t('menu.becomeConsultant')}
               depth={0}
               hasChildren={false}
               expanded={false}
@@ -358,7 +358,7 @@ export default function MenuScreen() {
               onPress={() => router.push('/become-consultant' as any)}
             />
             <MenuRow
-              title="Yasal & Gizlilik"
+              title={t('menu.legalPrivacy')}
               depth={0}
               hasChildren={false}
               expanded={false}

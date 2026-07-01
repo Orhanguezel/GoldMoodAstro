@@ -19,61 +19,61 @@ import { useLocaleShort } from "@/i18n/useLocaleShort";
 import { useUiSection } from "@/i18n/uiDb";
 import { useCreateContactPublicMutation, useGetSiteSettingByKeyQuery } from "@/integrations/rtk/hooks";
 
-/* ─── Theme tokens — design-token tabanli, dark/light otomatik ────────── */
-// CSS var'lar globals.css + tokensToCSS uretir; [data-theme="dark"] override eder.
+/* Theme tokens from design tokens, with automatic dark/light behavior. */
+// CSS vars come from globals.css + tokensToCSS; [data-theme="dark"] overrides them.
 const C = {
-  // brand (light/dark'ta ayni — gold)
-  rose900: "var(--gm-primary)",                                              // brand primary
-  rose800: "var(--gm-primary-dark)",                                         // brand primary dark
-  rose700: "var(--gm-primary-light)",                                        // brand primary light
-  rose600: "var(--gm-gold-deep)",                                            // gold deep aksent
+  // brand
+  rose900: "var(--gm-primary)",
+  rose800: "var(--gm-primary-dark)",
+  rose700: "var(--gm-primary-light)",
+  rose600: "var(--gm-gold-deep)",
   rose200: "color-mix(in srgb, var(--gm-primary) 28%, transparent)",         // soft border (gold)
-  rose100: "var(--gm-gold-100)",                                             // gold tint (light arka)
+  rose100: "var(--gm-gold-100)",
   rose50:  "color-mix(in srgb, var(--gm-primary) 8%, transparent)",          // very soft gold
-  // surface / text — dark/light otomatik
-  sand900: "var(--gm-text)",                                                 // birincil text
-  sand800: "var(--gm-text-dim)",                                             // ikincil text
+  // surface / text
+  sand900: "var(--gm-text)",
+  sand800: "var(--gm-text-dim)",
   sand600: "var(--gm-muted)",                                                // muted text
-  sand300: "var(--gm-border)",                                               // standart kenarlik
-  sand200: "var(--gm-border-soft)",                                          // yumusak kenarlik
-  sand100: "var(--gm-surface-high)",                                         // panel ust yuzey
-  sand50:  "var(--gm-bg-deep)",                                              // panel derin yuzey
-  white:   "var(--gm-surface)",                                              // ana panel zemin (light: beyaz, dark: koyu)
-  charcoal: "var(--gm-sand-900)",                                            // koyu kontrast (admin gradient)
-  primaryFg: "var(--gm-bg)",                                                 // gold zemin uzerine sabit kontrast
+  sand300: "var(--gm-border)",
+  sand200: "var(--gm-border-soft)",
+  sand100: "var(--gm-surface-high)",
+  sand50:  "var(--gm-bg-deep)",
+  white:   "var(--gm-surface)",
+  charcoal: "var(--gm-sand-900)",
+  primaryFg: "var(--gm-bg)",
 } as const;
 
-/* ─── Locale fallbacks (DB ui_chat.* yoksa devreye girer) ────────── */
+/* Locale fallbacks used when DB ui_chat.* values are missing. */
 const CHAT_FALLBACKS: Record<string, Record<string, string>> = {
   tr: {
-    ui_chat_title: "Destek",
-    ui_chat_subtitle: "Yapay zeka destekli yardım",
-    ui_chat_placeholder: "Mesajınızı yazın...",
-    ui_chat_send: "Gönder",
-    ui_chat_loading: "Hazırlanıyor...",
-    ui_chat_empty: "Merhaba, size nasıl yardımcı olabilirim?",
-    ui_chat_ai_mode: "Yapay zeka aktif",
-    ui_chat_admin_mode: "Canlı destek istendi",
-    ui_chat_admin_inbox: "Canlı destek gelen kutusu",
-    ui_chat_no_admin_threads: "Henüz canlı destek talebi yok.",
-    ui_chat_thread_label: "Talep",
-    ui_chat_queue_pending: "Atanmamış",
-    ui_chat_queue_mine: "Bana atananlar",
-    ui_chat_queue_all: "Tümü",
-    ui_chat_unread_label: "yeni mesaj",
-    ui_chat_connect_admin: "Canlı destek ile görüş",
-    ui_chat_connecting: "Bağlanıyor...",
-    ui_chat_login_button: "Giriş yap",
-    ui_chat_guest_intro: "Giriş yapmadan da mesaj bırakabilirsiniz. Doğrudan sohbet için giriş yapın.",
-    ui_chat_guest_name: "Adınız",
-    ui_chat_guest_email: "E-posta adresiniz",
-    ui_chat_guest_phone: "Telefon numaranız",
-    ui_chat_guest_message: "Konunuz nedir?",
-    ui_chat_guest_submit: "Mesajı gönder",
-    ui_chat_guest_sending: "Gönderiliyor...",
-    ui_chat_guest_wait: "Lütfen daha sonra tekrar deneyin",
-    ui_chat_guest_success: "Teşekkürler. Mesajınız iletildi, en kısa sürede dönüş yapacağız.",
-    ui_chat_guest_error: "Gönderilemedi. Lütfen tekrar deneyin veya iletişim sayfasını kullanın.",
+    ui_chat_title: "Support",
+    ui_chat_subtitle: "AI-powered help",
+    ui_chat_placeholder: "Type your message...",
+    ui_chat_send: "Send",
+    ui_chat_loading: "Preparing...",
+    ui_chat_empty: "Hello, how can I help you?",
+    ui_chat_ai_mode: "AI active",
+    ui_chat_admin_mode: "Live support requested",
+    ui_chat_admin_inbox: "Live support inbox",
+    ui_chat_no_admin_threads: "No live support requests yet.",
+    ui_chat_thread_label: "Request",
+    ui_chat_queue_pending: "Unassigned",
+    ui_chat_queue_mine: "Assigned to me",
+    ui_chat_queue_all: "All",
+    ui_chat_unread_label: "new messages",
+    ui_chat_connect_admin: "Connect with live support",
+    ui_chat_connecting: "Connecting...",
+    ui_chat_login_button: "Sign in",
+    ui_chat_guest_intro: "You can leave a message without logging in. Sign in for direct chat.",
+    ui_chat_guest_name: "Your name",
+    ui_chat_guest_email: "Your email",
+    ui_chat_guest_phone: "Phone number",
+    ui_chat_guest_message: "What is it about?",
+    ui_chat_guest_submit: "Send message",
+    ui_chat_guest_sending: "Sending...",
+    ui_chat_guest_wait: "Please try again later",
+    ui_chat_guest_success: "Thanks. Your message has been sent, we will get back to you soon.",
+    ui_chat_guest_error: "Send failed. Please try again or use the contact page.",
   },
   en: {
     ui_chat_title: "Support",
@@ -124,15 +124,15 @@ const CHAT_FALLBACKS: Record<string, Record<string, string>> = {
     ui_chat_connect_admin: "Mit Live-Support verbinden",
     ui_chat_connecting: "Verbinde...",
     ui_chat_login_button: "Anmelden",
-    ui_chat_guest_intro: "Ohne Login können Sie eine Nachricht hinterlassen. Für den direkten Chat melden Sie sich bitte an.",
+    ui_chat_guest_intro: "You can leave a message without signing in. Please sign in for direct chat.",
     ui_chat_guest_name: "Ihr Name",
     ui_chat_guest_email: "Ihre E-Mail",
     ui_chat_guest_phone: "Telefonnummer",
     ui_chat_guest_message: "Worum geht es?",
     ui_chat_guest_submit: "Nachricht senden",
     ui_chat_guest_sending: "Wird gesendet...",
-    ui_chat_guest_wait: "Bitte später erneut versuchen",
-    ui_chat_guest_success: "Danke. Ihre Nachricht wurde gesendet. Wir melden uns so bald wie möglich.",
+    ui_chat_guest_wait: "Please try again later",
+    ui_chat_guest_success: "Thanks. Your message has been sent, we will get back to you soon.",
     ui_chat_guest_error: "Senden fehlgeschlagen. Bitte versuchen Sie es erneut oder nutzen Sie die Kontaktseite.",
   },
 };
@@ -214,9 +214,7 @@ function guestLeadCooldownKey(): string {
 }
 
 export default function SupportBotWidget() {
-  // Hidration safety — client-only render. SSR'da default state ile çakışan
-  // inline style'lar (border-radius 50% vs 14, longhand vs shorthand) hidration
-  // mismatch üretiyor; mount sonrasına ertele.
+  // Hydration safety: render only after mount because inline style defaults differ during SSR.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -541,7 +539,7 @@ export default function SupportBotWidget() {
   const btnSize = isMobile ? 56 : 62;
 
   if (!widgetEnabled) return null;
-  if (!mounted) return null; // SSR'da render etme — hidration mismatch'i önle
+  if (!mounted) return null; // Avoid SSR render to prevent hydration mismatch.
 
   return (
     <>
