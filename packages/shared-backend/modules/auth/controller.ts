@@ -28,6 +28,7 @@ import {
   repoUpdateUserEmail,
   repoUpdateUserPassword,
   repoUpdateLastSignIn,
+  repoUpdateUserAvatar,
   repoAssignRole,
   repoEnsureProfileRow,
   repoGetRefreshToken,
@@ -501,6 +502,14 @@ export async function socialLogin(req: FastifyRequest, reply: FastifyReply) {
 
     if (!user) {
       return reply.status(500).send({ error: { message: 'social_login_user_missing' } });
+    }
+
+    // Mevcut (email ile eşleşen) kullanıcıda avatar boşsa social profil fotoğrafını
+    // DB'ye kalıcı yaz. Önceden avatar sadece CREATE yolunda set ediliyordu; email ile
+    // eşleşen mevcut hesaplarda (ör. seed admin) Google fotoğrafı hiç kaydedilmiyordu.
+    if ((!user.avatar_url || String(user.avatar_url).trim() === '') && socialProfile.picture) {
+      await repoUpdateUserAvatar(user.id, socialProfile.picture);
+      user = (await repoGetUserById(user.id)) ?? user;
     }
 
     await repoUpdateLastSignIn(user.id);

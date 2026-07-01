@@ -69,6 +69,10 @@ export async function repoUpdateLastSignIn(userId: string) {
   await db.update(users).set({ last_sign_in_at: new Date(), updated_at: new Date() }).where(eq(users.id, userId));
 }
 
+export async function repoUpdateUserAvatar(userId: string, avatarUrl: string) {
+  await db.update(users).set({ avatar_url: avatarUrl, updated_at: new Date() }).where(eq(users.id, userId));
+}
+
 /* -------------------- Roles -------------------- */
 
 export async function repoAssignRole(userId: string, role: RoleName) {
