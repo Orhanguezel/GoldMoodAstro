@@ -709,10 +709,10 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
     if (!validate()) {
       toast.error(ui('ui_dashboard_error_fix_fields', 'Please fix the highlighted errors.'));
-      return;
+      return false;
     }
     try {
       const cleanIban = bankIban.replace(/\s/g, '').toUpperCase();
@@ -735,8 +735,10 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
         // kyc_documents burada gönderilmez — güvenli /kyc/documents endpoint'i DB'ye yazar.
       }).unwrap();
       toast.success(ui('ui_dashboard_profile_saved', 'Profile updated'));
+      return true;
     } catch (e) {
       toast.error(extractApiError(e, ui('ui_dashboard_profile_save_failed', 'Profile could not be updated')));
+      return false;
     }
   };
 
@@ -1035,7 +1037,10 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
                 <button
                   type="button"
                   onClick={async () => {
-                    await handleSave(); // save profile info first
+                    // Önce profil kaydını doğrula/kaydet; başarısızsa KYC submit etme
+                    // (eski/eksik veriyle başvuruyu önler).
+                    const saved = await handleSave();
+                    if (!saved) return;
                     try {
                       await submitKyc().unwrap();
                       toast.success(uiP('ui_consultantpanel_kyc_submit_success', 'KYC application submitted.'));

@@ -29,11 +29,14 @@ function initialsOf(name: string | null | undefined) {
 
 export default function MessagesPanel() {
   const { ui } = useUiSection('ui_consultantpanel');
-  const { data: threads = [], isLoading: threadsLoading } = useListMyConsultantThreadsQuery();
+  const { data: threads = [], isLoading: threadsLoading } = useListMyConsultantThreadsQuery(undefined, {
+    pollingInterval: 30000,
+  });
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const { data: convo, isFetching: convoLoading } = useGetMyConsultantThreadMessagesQuery(activeId || '', {
     skip: !activeId,
+    pollingInterval: 12000,
   });
   const [reply, { isLoading: replying }] = useReplyMyConsultantThreadMutation();
   const [markAsRead] = useMarkAsReadMutation();

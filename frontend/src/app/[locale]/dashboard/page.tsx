@@ -149,6 +149,18 @@ const HISTORY_META: Record<ReadingType, { icon: React.ReactNode; route: string }
 
 import PageContainer from '@/components/common/PageContainer';
 
+// Booking statü etiketleri (backend ham enum döndürüyor, status_label_* alanı yok).
+const BOOKING_STATUS_LABELS: Record<string, { tr: string; en: string; de: string }> = {
+  pending: { tr: 'Beklemede', en: 'Pending', de: 'Ausstehend' },
+  pending_payment: { tr: 'Ödeme Bekliyor', en: 'Awaiting Payment', de: 'Zahlung ausstehend' },
+  requested_now: { tr: 'Anlık Talep', en: 'Instant Request', de: 'Sofortanfrage' },
+  confirmed: { tr: 'Onaylandı', en: 'Confirmed', de: 'Bestätigt' },
+  booked: { tr: 'Onaylandı', en: 'Confirmed', de: 'Bestätigt' },
+  completed: { tr: 'Tamamlandı', en: 'Completed', de: 'Abgeschlossen' },
+  cancelled: { tr: 'İptal Edildi', en: 'Cancelled', de: 'Storniert' },
+  no_show: { tr: 'Gelinmedi', en: 'No Show', de: 'Nicht erschienen' },
+};
+
 export default function DashboardPage() {
   const params = useParams();
   const router = useRouter();
@@ -692,7 +704,7 @@ export default function DashboardPage() {
                               ? 'bg-(--gm-error)/10 text-(--gm-error)'
                               : 'bg-(--gm-gold)/10 text-(--gm-gold-deep)'
                           }`}>
-                            {isTr ? booking.status_label_tr || booking.status : booking.status_label_en || booking.status}
+                            {BOOKING_STATUS_LABELS[booking.status]?.[(locale as 'tr' | 'en' | 'de')] || booking.status}
                           </span>
                         </div>
                         <h4 className="text-(--gm-text) font-serif text-xl group-hover:text-(--gm-gold) transition-colors">

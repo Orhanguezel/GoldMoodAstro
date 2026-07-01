@@ -38,11 +38,14 @@ interface Props {
 
 export default function UserMessagesPanel({ isTr }: Props) {
   const { ui } = useUiSection('ui_account');
-  const { data: threads = [], isLoading: threadsLoading } = useListMyCustomerThreadsQuery();
+  const { data: threads = [], isLoading: threadsLoading } = useListMyCustomerThreadsQuery(undefined, {
+    pollingInterval: 30000,
+  });
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const { data: convo, isFetching: convoLoading } = useGetMyCustomerThreadMessagesQuery(activeId || '', {
     skip: !activeId,
+    pollingInterval: 12000,
   });
   const [reply, { isLoading: replying }] = useReplyMyCustomerThreadMutation();
   const [markAsRead] = useMarkCustomerThreadAsReadMutation();

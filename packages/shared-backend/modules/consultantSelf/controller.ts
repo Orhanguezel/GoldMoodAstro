@@ -28,7 +28,7 @@ import * as customPagesRepo from '../customPages/repository';
 
 const profilePatchSchema = z.object({
   bio: z.string().trim().max(5000).nullable().optional(),
-  expertise: z.array(z.string().trim().toLowerCase().min(1).max(64).regex(/^[a-z0-9_-]+$/, 'slug_format')).min(1).max(8).optional(),
+  expertise: z.array(z.string().trim().toLowerCase().min(1).max(64).regex(/^[a-z0-9_-]+$/, 'slug_format')).min(1).max(20).optional(),
   // Eski kayıtlardaki bozuk dil değerlerini (boş string, locale tag "tr-TR" vs.) sessizce
   // ele: trim+lowercase ve invalid olanları filtre. Geriye kalan dizi normal kurala uyar.
   languages: z.preprocess(
@@ -2064,9 +2064,9 @@ export async function replyToReview(req: FastifyRequest, reply: FastifyReply) {
   const ownArr = Array.isArray((ownCheck as any)?.[0]) ? (ownCheck as any)[0] : (ownCheck as any);
   if (!(ownArr as any[])?.[0]) return reply.code(404).send({ error: { message: 'not_found' } });
 
-  // review_i18n'a cevap yaz (varsa update, yoksa insert)
+  // review_i18n'a cevap yaz (varsa update, yoksa insert — sessiz kayıp fix)
   const now = new Date();
-  await db.execute(
+  const upd = await db.execute(
     sql`
       UPDATE review_i18n
       SET consultant_reply = ${parsed.data.reply},
@@ -2074,6 +2074,22 @@ export async function replyToReview(req: FastifyRequest, reply: FastifyReply) {
       WHERE review_id = ${id}
     `,
   );
+  const affected = Number(
+    (upd as any)?.affectedRows
+    ?? (Array.isArray(upd) ? (upd[0] as any)?.affectedRows : 0)
+    ?? 0,
+  );
+  if (affected < 1) {
+    // i18n satırı yok → review'ın submitted_locale'i ile ekle (comment NOT NULL → '').
+    const rev = await db.execute(sql`SELECT submitted_locale FROM reviews WHERE id = ${id} LIMIT 1`);
+    const revArr = Array.isArray((rev as any)?.[0]) ? (rev as any)[0] : (rev as any);
+    const loc = String((revArr as any[])?.[0]?.submitted_locale || 'tr');
+    await db.execute(
+      sql`INSERT INTO review_i18n (id, review_id, locale, comment, consultant_reply, consultant_replied_at)
+          VALUES (UUID(), ${id}, ${loc}, '', ${parsed.data.reply}, ${now})
+          ON DUPLICATE KEY UPDATE consultant_reply = VALUES(consultant_reply), consultant_replied_at = VALUES(consultant_replied_at)`,
+    );
+  }
 
   return reply.send({
     data: {
@@ -2184,15 +2200,17 @@ export async function updateMyAvailability(req: FastifyRequest, reply: FastifyRe
   const resource = (rArr as any[])?.[0];
   if (!resource) return reply.code(400).send({ error: { message: 'resource_not_found' } });
 
-  // Replace strategy: silib yeniden ekle (bulk update için en basit)
-  await db.execute(sql`DELETE FROM resource_working_hours WHERE resource_id = ${resource.id}`);
-
-  for (const h of parsed.data.hours) {
-    await db.execute(
-      sql`INSERT INTO resource_working_hours (id, resource_id, dow, start_time, end_time, slot_minutes, break_minutes, capacity, is_active)
-          VALUES (UUID(), ${resource.id}, ${h.dow}, ${h.start_time}, ${h.end_time}, ${h.slot_minutes}, 0, ${h.capacity}, ${h.is_active})`,
-    );
-  }
+  // Replace strategy: sil + yeniden ekle. Transaction içinde → ortada hata olursa
+  // danışmanın tüm çalışma saatleri kaybolmaz (atomik). capacity 1:1 seans → sabit 1.
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`DELETE FROM resource_working_hours WHERE resource_id = ${resource.id}`);
+    for (const h of parsed.data.hours) {
+      await tx.execute(
+        sql`INSERT INTO resource_working_hours (id, resource_id, dow, start_time, end_time, slot_minutes, break_minutes, capacity, is_active)
+            VALUES (UUID(), ${resource.id}, ${h.dow}, ${h.start_time}, ${h.end_time}, ${h.slot_minutes}, 0, 1, ${h.is_active})`,
+      );
+    }
+  });
 
   return reply.send({ data: { resource_id: resource.id, count: parsed.data.hours.length } });
 }

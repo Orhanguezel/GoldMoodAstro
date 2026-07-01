@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Cinzel } from 'next/font/google';
 import { 
@@ -24,13 +25,15 @@ const cinzel = Cinzel({ subsets: ['latin'] });
 
 export default function CreditsPage() {
   const { ui } = useUiSection('ui_account');
+  const params = useParams();
+  const locale = (params?.locale as string) || 'tr';
   const { data: balanceData } = useGetUserBalanceQuery();
   const { data: packages, isLoading: pkgLoading } = useListCreditPackagesQuery();
   const [buyCredits, { isLoading: buyLoading }] = useBuyCreditsMutation();
 
   const handleBuy = async (packageId: string) => {
     try {
-      const res = await buyCredits({ package_id: packageId, locale: 'tr' }).unwrap();
+      const res = await buyCredits({ package_id: packageId, locale }).unwrap();
       if (res.checkout_url) {
         window.location.href = res.checkout_url;
       }
@@ -90,7 +93,7 @@ export default function CreditsPage() {
                   )}
 
                   <div className="space-y-2">
-                    <h3 className={`${cinzel.className} text-2xl text-foreground`}>{pkg.nameTr}</h3>
+                    <h3 className={`${cinzel.className} text-2xl text-foreground`}>{(locale === 'en' || locale === 'de') ? (pkg.nameEn || pkg.nameTr) : pkg.nameTr}</h3>
                     <div className="text-4xl font-bold text-brand-gold tracking-tighter">
                        {(pkg.credits + pkg.bonusCredits).toLocaleString()} <span className="text-sm">{ui('ui_account_credits_short_unit', 'kr')}</span>
                     </div>

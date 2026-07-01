@@ -156,8 +156,11 @@ export default function MyReadingsPage() {
             {filtered.map((item, i) => {
               const config = TYPE_CONFIG[item.type] || TYPE_CONFIG.tarot;
               const Icon = config.icon;
+              // numerology + birth_chart detay sayfası yok → index'e yönlendir (404 fix).
               const itemHref = item.type === 'birth_chart'
                 ? localizePath(localeStr, '/birth-chart')
+                : item.type === 'numerology'
+                ? localizePath(localeStr, '/numeroloji')
                 : `/${localeStr}/${config.route}/${item.id}`;
               return (
                 <motion.div
