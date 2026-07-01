@@ -386,7 +386,7 @@ function OverviewPanel({
         />
         <BigStatCard
           icon={BarChart3}
-          label={ui('ui_dashboard_stat_month_earnings', 'Earnings This Month')}
+          label={`${ui('ui_dashboard_stat_month_earnings', 'Earnings This Month')} (${locale === 'de' ? 'Brutto' : locale === 'en' ? 'gross' : 'brüt'})`}
           value={`₺${Math.round(stats?.this_month_earnings ?? 0)}`}
           delta={earningsDelta}
           subLabel={ui('ui_dashboard_stat_last_month_money', 'Last month: ₺{value}').replace('{value}', String(Math.round(stats?.last_month_earnings ?? 0)))}

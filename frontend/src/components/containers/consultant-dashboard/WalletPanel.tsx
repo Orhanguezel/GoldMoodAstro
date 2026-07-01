@@ -337,7 +337,12 @@ export default function WalletPanel() {
                   labelForStatus(ui, t.payment_status),
                   t.description || ''
                 ]);
-                const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+                // Alanları escape et (virgül/tırnak/yeni satır kolonları bozmasın) + UTF-8 BOM (Excel Türkçe).
+                const esc = (v: unknown) => {
+                  const s = String(v ?? '');
+                  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+                };
+                const csv = '﻿' + [headers, ...rows].map(r => r.map(esc).join(',')).join('\r\n');
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);

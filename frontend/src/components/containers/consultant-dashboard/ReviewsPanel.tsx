@@ -229,6 +229,18 @@ function ReviewItem({ review, ui, locale }: { review: ConsultantSelfReview; ui: 
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--gm-muted)]">
               {formatDate(review.created_at, locale, ui('ui_reviews_no_date', 'No date'))}
             </p>
+            <div className="flex flex-wrap gap-1.5 mt-1 justify-end">
+              {review.is_verified ? (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[var(--gm-success)]/10 text-[var(--gm-success)]">
+                  ✓ {ui('ui_reviews_verified_badge', 'Verified session')}
+                </span>
+              ) : null}
+              {!review.is_approved ? (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[var(--gm-warning)]/10 text-[var(--gm-warning)]">
+                  {ui('ui_reviews_pending_badge', 'Pending approval')}
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
 
