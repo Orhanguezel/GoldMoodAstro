@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuthStore } from '@/features/auth/auth.store';
 import { motion } from 'framer-motion';
 import { Cinzel } from 'next/font/google';
 import { 
@@ -32,6 +33,11 @@ export default function SettingsPage() {
   const { ui } = useUiSection('ui_settings');
   const params = useParams();
   const locale = (params?.locale as string) || 'tr';
+  const router = useRouter();
+  const { isAuthenticated, isReady } = useAuthStore();
+  useEffect(() => {
+    if (isReady && !isAuthenticated) router.replace(`/${locale}/login?next=/${locale}/me/settings`);
+  }, [isReady, isAuthenticated, locale, router]);
   const { data: profile } = useGetMyProfileQuery();
   const { data: charts } = useListMyBirthChartsQuery();
   const [upsertProfile] = useUpsertMyProfileMutation();

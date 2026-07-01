@@ -745,14 +745,7 @@ export default function DashboardPage() {
                       )}
 
                       <BookingMessageButton bookingId={booking.id} variant="secondary" label={ui('ui_account_msg_button_label', 'MESSAGE')} />
-
-                      <Link
-                        href={localizePath(locale, `/booking/${booking.id}`)}
-                        className="p-2.5 rounded-xl border border-(--gm-border-soft) text-(--gm-text-muted) hover:text-(--gm-gold) hover:border-(--gm-gold)/40 transition-all"
-                        title={ui('ui_extra_b0_dash_details', 'Details')}
-                      >
-                        <Eye size={18} />
-                      </Link>
+                      {/* "Details" (göz) linki kaldırıldı: /booking/{id} → dashboard'a geri dönen ölü döngüydü. */}
                     </div>
                   </div>
                 ))}

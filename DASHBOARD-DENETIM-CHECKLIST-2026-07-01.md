@@ -15,13 +15,13 @@
 - [x] **me/settings "DELETE ACCOUNT" butonu ölü** — `me/settings/page.tsx:164-166`. `onClick` yok; backend (`/auth/account/delete`) + çalışan UI (`profile/privacy`) hazır. KVKK riski. **Fix:** privacy'ye linkle veya `useRequestAccountDeletionMutation` bağla.
 
 ### 🟠 Yüksek
-- [ ] **Booking status rozeti çevrilmiyor** — `dashboard/page.tsx:687`. `status_label_tr/en` backend'de yok; ham enum (confirmed/pending...) gösteriliyor. **Fix:** status → `ui()` anahtar map'i.
+- [x] **Booking status rozeti çevrilmiyor** — `dashboard/page.tsx:687`. `status_label_tr/en` backend'de yok; ham enum (confirmed/pending...) gösteriliyor. **Fix:** status → `ui()` anahtar map'i.
 - [ ] **Booking "Details" (göz) butonu kendine dönen ölü link** — `dashboard/page.tsx:729-735` → `/booking/{id}` → proxy → `/profile/bookings` → `/dashboard?tab=bookings`. **Fix:** butonu kaldır veya `?highlight` ile scroll+vurgu uygula.
-- [ ] **Kredi sayfası i18n bozuk** — `me/credits/page.tsx:33,93,101`. `pkg.nameTr` (locale yok sayılıyor) + `buyCredits` `locale:'tr'` hardcoded + sabit `₺`. **Fix:** locale'i packages query + buy body'sine geçir, `pkg.name` kullan, `currency` sembolü.
-- [ ] **me/readings numeroloji kaydı 404** — `me/readings/page.tsx:42,159`. `/numeroloji/<id>` sayfası yok; dashboard index'e yönlendiriyor (tutarsız). **Fix:** index'e yönlendir.
+- [x] **Kredi sayfası i18n bozuk** — `me/credits/page.tsx:33,93,101`. `pkg.nameTr` (locale yok sayılıyor) + `buyCredits` `locale:'tr'` hardcoded + sabit `₺`. **Fix:** locale'i packages query + buy body'sine geçir, `pkg.name` kullan, `currency` sembolü.
+- [x] **me/readings numeroloji kaydı 404** — `me/readings/page.tsx:42,159`. `/numeroloji/<id>` sayfası yok; dashboard index'e yönlendiriyor (tutarsız). **Fix:** index'e yönlendir.
 - [ ] **`me/readings`, `me/credits`, `me/settings` orphan + guard yok** — auth guard yok, hiçbir yerden link verilmiyor, dashboard sekmeleriyle duplike ve ayrışmış. **Fix:** ya guard+navigasyon, ya dashboard'ı kanonik kabul edip bunları redirect'e çevir/sil.
 - [ ] **Okuma detay endpoint'leri public + ownership yok** — `tarot/coffee/dreams/yildizname router.ts` `reading/:id` auth'suz; kişisel içerik UUID ile herkese açık (`synastry` tryAuth'lu — tutarsız). Paylaşım linki mi belirsiz (doğrulanmadı). **Fix:** `is_public` bayrağı + uyarı, ya da `tryAuth` + owner-veya-public.
-- [ ] **Mesajlarda canlı güncelleme yok** — `UserMessagesPanel.tsx:41-48`. polling/WS yok; danışman cevabı yenilemeden görünmez. **Fix:** `pollingInterval` (threads 30sn, mesajlar 10-15sn).
+- [x] **Mesajlarda canlı güncelleme yok** — `UserMessagesPanel.tsx:41-48`. polling/WS yok; danışman cevabı yenilemeden görünmez. **Fix:** `pollingInterval` (threads 30sn, mesajlar 10-15sn).
 - [ ] **me/readings büyük ölçüde çevrilmemiş/dil karışık** — `TYPE_CONFIG`/`FILTERS`/boş durum hardcoded. **Fix:** `ui()`'ye taşı; dashboard `HISTORY_TYPES/HISTORY_META` ile ortak modüle çıkar.
 
 ### 🟡 Orta / İyileştirme
@@ -51,12 +51,12 @@
 ### 🟠 Yüksek
 - [x] **Yayınlanmış blog düzenlemesi yayın durumunu koruyor — admin moderasyon bypass** — `controller.ts:571-593` + `BlogPanel.tsx:127-129`. `updateBlogPost` `is_published`'a dokunmuyor; danışman taslağı onaylatıp canlı içeriği serbestçe değiştirebilir; yayınlanmışı silebilir. **Fix:** consultant update'te `is_published:false`'a çek (yeniden onay) veya düzenlemeyi kilitle; silmeyi taslağa sınırla.
 - [x] **`/storage/:bucket/upload` tamamen auth'suz** — `storage/router.ts:9`, `controller.ts:98-204`. `preHandler` yok → anonim yükleme; MIME kontrolü sadece `consultant_avatars`+`coffee`'de; deterministik path + upsert ile başka danışmanın blog kapağı anonim ezilebilir. **Fix:** `requireAuth` + bucket-bazlı sahiplik/rol + `consultant_blog` image MIME zorunlu. *(Not: 2026-07-01 path→uuid fix'i uygulandı; auth hâlâ eksik.)*
-- [ ] **Expertise/languages limit çelişkisi save'i kırıyor** — FE max20 / backend `z.max(8)`; boş dizi backend `.min(1)`. **Fix:** limitleri tek kaynaktan eşitle; boş diziyi FE'de engelle/anlamlı hata.
+- [x] **Expertise/languages limit çelişkisi save'i kırıyor** — FE max20 / backend `z.max(8)`; boş dizi backend `.min(1)`. **Fix:** limitleri tek kaynaktan eşitle; boş diziyi FE'de engelle/anlamlı hata.
 - [x] **`rejectBooking`'de statü guard yok** — `controller.ts:716-783`. confirmed/completed reddedilebilir, iade/kazanç geri alma yok. **Fix:** `cancellable` liste kontrolü + ödenmişse refund.
 - [ ] **Overview kazanç BRÜT, Wallet NET (%30 düşük) — iki farklı rakam** — `controller.ts:868-890`. "This Month" aslında rolling 30 gün. **Fix:** stats'a net hesap/"brüt" etiketi + takvim ayı ya da "son 30 gün" etiketi.
-- [ ] **KYC submit `handleSave` başarısız olsa da gönderiliyor** — `ConsultantDashboard.tsx:1033-1041`. **Fix:** `handleSave` boolean dönsün, false'ta submit dur.
+- [x] **KYC submit `handleSave` başarısız olsa da gönderiliyor** — `ConsultantDashboard.tsx:1033-1041`. **Fix:** `handleSave` boolean dönsün, false'ta submit dur.
 - [ ] **Yorum yanıtı sessizce kaybolabilir + duplicate satır riski** — `controller.ts:2024-2032` (sadece UPDATE, satır yoksa 0 etkiler ama 200) ve `listMyReviews` `LEFT JOIN review_i18n` locale filtresiz → aynı yorum 2-3 kez listelenebilir (duplicate React key). İki farklı reply implementasyonu (consultantSelf vs review modülü). **Fix:** UPSERT'e delege; `listMyReviews`'a `i.locale=r.submitted_locale` / `GROUP BY r.id`; tek reply endpoint.
-- [ ] **Availability kaydı transaction'sız DELETE+INSERT** — `controller.ts:2144-2151`. Ortada hata olursa tüm çalışma saatleri kaybolur. **Fix:** `db.transaction`.
+- [x] **Availability kaydı transaction'sız DELETE+INSERT** — `controller.ts:2144-2151`. Ortada hata olursa tüm çalışma saatleri kaybolur. **Fix:** `db.transaction`.
 - [ ] **Chat mesajlarında bildirim yok + panel polling/WS yok** — `controller.ts:1430-1483,2404-2440`. reply'lar notification/push üretmiyor; MessagesPanel'de canlı güncelleme yok. **Fix:** reply'da karşı tarafa notification+push; panele `pollingInterval` veya WS.
 - [ ] **Boost paket fiyatları FE'de hardcoded** — `ServicesPanel.tsx:711-715` `{599,1099,1899}`, backend site-setting'ten okuyor → yanlış fiyat/checkout tutarsızlığı. **Fix:** API'den çek.
 - [ ] **ReviewsPanel filtre sayaçları 'unreplied' seçiliyken yanlış** — `ReviewsPanel.tsx:40-53`. Sayaçlar daraltılmış listeden hesaplanıyor. **Fix:** sayaçları filtresiz cache'ten hesapla.

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuthStore } from '@/features/auth/auth.store';
 import { motion } from 'framer-motion';
 import { Cinzel } from 'next/font/google';
 import { 
@@ -27,6 +28,11 @@ export default function CreditsPage() {
   const { ui } = useUiSection('ui_account');
   const params = useParams();
   const locale = (params?.locale as string) || 'tr';
+  const router = useRouter();
+  const { isAuthenticated, isReady } = useAuthStore();
+  React.useEffect(() => {
+    if (isReady && !isAuthenticated) router.replace(`/${locale}/login?next=/${locale}/me/credits`);
+  }, [isReady, isAuthenticated, locale, router]);
   const { data: balanceData } = useGetUserBalanceQuery();
   const { data: packages, isLoading: pkgLoading } = useListCreditPackagesQuery();
   const [buyCredits, { isLoading: buyLoading }] = useBuyCreditsMutation();

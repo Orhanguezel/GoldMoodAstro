@@ -25,7 +25,8 @@ import {
 } from '@/integrations/rtk/hooks';
 import PageContainer from '@/components/common/PageContainer';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuthStore } from '@/features/auth/auth.store';
 import { useBrand } from '@/hooks/useBrand';
 import { useUiSection } from '@/i18n';
 import { localizePath, normalizeError } from '@/integrations/shared';
@@ -59,6 +60,11 @@ const FILTERS: Array<{ key: 'all' | ReadingType; label: string }> = [
 export default function MyReadingsPage() {
   const { locale } = useParams();
   const localeStr = (locale as string) || 'tr';
+  const router = useRouter();
+  const { isAuthenticated, isReady } = useAuthStore();
+  React.useEffect(() => {
+    if (isReady && !isAuthenticated) router.replace(`/${localeStr}/login?next=/${localeStr}/me/readings`);
+  }, [isReady, isAuthenticated, localeStr, router]);
   const { ui } = useUiSection('ui_extra' as any, localeStr as any);
   const { data: history, isLoading } = useGetUserHistoryQuery();
   const [deleteOne, { isLoading: deletingOne }] = useDeleteReadingMutation();

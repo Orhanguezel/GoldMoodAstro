@@ -2030,7 +2030,7 @@ export async function listMyReviews(req: FastifyRequest, reply: FastifyReply) {
         i.consultant_replied_at,
         i.locale
       FROM reviews r
-      LEFT JOIN review_i18n i ON i.review_id = r.id
+      LEFT JOIN review_i18n i ON i.review_id = r.id AND i.locale = r.submitted_locale
       WHERE r.target_type = 'consultant'
         AND r.target_id COLLATE utf8mb4_unicode_ci = ${c.id} COLLATE utf8mb4_unicode_ci
         AND r.is_active = 1

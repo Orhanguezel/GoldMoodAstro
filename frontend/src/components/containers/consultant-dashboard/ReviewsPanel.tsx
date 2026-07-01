@@ -36,9 +36,9 @@ export default function ReviewsPanel() {
       ui('ui_reviews_filter_high', '4-5 stars'),
   }));
 
-  // D34-6: Server-side ?status= mapping
-  const statusParam = activeFilter === 'unreplied' ? 'unreplied' : undefined;
-  const { data: reviews = [], isLoading, isError } = useListMyConsultantReviewsQuery(statusParam ? { status: statusParam } : undefined);
+  // Her zaman filtresiz çek (≤200 kayıt) → sayaçlar ve filtreleme tutarlı; server-side
+  // status filtresi sayaçları bozuyordu (daraltılmış listeden hesap).
+  const { data: reviews = [], isLoading, isError } = useListMyConsultantReviewsQuery(undefined);
 
   const counts = useMemo(
     () =>
@@ -54,8 +54,6 @@ export default function ReviewsPanel() {
 
   const filteredReviews = useMemo(() => {
     const filter = FILTERS.find((item) => item.key === activeFilter) ?? FILTERS[0];
-    // If it's already filtered by server (unreplied), don't filter again with predicate
-    if (activeFilter === 'unreplied') return reviews;
     return reviews.filter(filter.predicate);
   }, [activeFilter, reviews]);
 
