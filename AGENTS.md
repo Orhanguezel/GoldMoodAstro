@@ -897,3 +897,18 @@ Amaç: içerik derinliği + meta + başlık + iç link + yazıya özel AI görse
 iyileştirerek yükselt). Task ID'leri **BLOG-T1…T8**. AI içerik endpoint (`/admin/ai/content`)
 zaten canlıda; yeni: AI görsel endpoint (gpt-image → storage) + toplu uplift script + recalc.
 Native-dil (çeviri değil), yayın/slug koru, deploy çakışmasına dikkat.
+
+---
+
+## T-LANDING-SEO-MODUL — Landing + Statik/Hukuki İçerik Yönetimi + Modül-içi SEO (2026-07-02)
+
+**Görev listesi:** [`LANDING-SEO-MODUL-CEKLIST-2026-07-02.md`](LANDING-SEO-MODUL-CEKLIST-2026-07-02.md)
+
+Landing sayfaları (statik `seo-landing-content.ts` → DB `custom_pages` module_key='landing')
++ mevcut statik/hukuki sayfalar (about/kvkk/privacy/terms/faq… zaten custom_pages) blog gibi
+admin'den AI + çok dilli düzenlenebilsin. SEO kalitesi HER modülde inline (SeoQualityPanel
+ortaklaştır); /admin/seo-quality → genel bakış rolüne insin. Task ID **LSM-T1…T10**.
+Blog editörü → genel `ContentModuleClient` (moduleKeys props). seoQuality landing skorlaması
+hardcoded şablondan (repository.ts LANDINGS/landingHtml) DB gerçek içeriğine geçsin.
+**Kurallar:** calculator formülü DEĞİŞMEZ; landing route sabit (slug read-only); hukuki metinde
+AI hüküm UYDURMAZ (yalnız biçim/açıklık); statik fallback korunur.
