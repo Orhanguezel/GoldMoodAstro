@@ -153,6 +153,54 @@ function toQS(next: Record<string, any>) {
   return qs ? `?${qs}` : '';
 }
 
+function auditQSForTab(merged: Record<string, any>) {
+  const targetTab = normalizeTab(merged.tab);
+  const base: Record<string, any> = {
+    tab: targetTab,
+    limit: merged.limit,
+    offset: merged.offset,
+  };
+
+  if (targetTab === 'requests') {
+    return toQS({
+      ...base,
+      q: merged.q || undefined,
+      method: merged.method || undefined,
+      status: merged.status || undefined,
+      from: merged.from || undefined,
+      to: merged.to || undefined,
+      only_admin: merged.only_admin || undefined,
+      req_user_id: merged.req_user_id || undefined,
+      req_ip: merged.req_ip || undefined,
+      sort: merged.sort !== 'created_at' ? merged.sort : undefined,
+      orderDir: merged.orderDir !== 'desc' ? merged.orderDir : undefined,
+    });
+  }
+
+  if (targetTab === 'auth') {
+    return toQS({
+      ...base,
+      event: merged.event && merged.event !== ALL ? merged.event : undefined,
+      email: merged.email || undefined,
+      user_id: merged.user_id || undefined,
+      ip: merged.ip || undefined,
+      from: merged.from || undefined,
+      to: merged.to || undefined,
+    });
+  }
+
+  if (targetTab === 'metrics' || targetTab === 'map' || targetTab === 'funnel' || targetTab === 'cohort') {
+    return toQS({
+      tab: targetTab,
+      days: merged.days || undefined,
+      path_prefix: merged.path_prefix || undefined,
+      only_admin: merged.only_admin || undefined,
+    });
+  }
+
+  return toQS({ tab: targetTab });
+}
+
 function getErrMessage(err: unknown, fallback: string): string {
   const anyErr = err as any;
   const m1 = anyErr?.data?.error?.message;
@@ -363,27 +411,7 @@ export default function AdminAuditClient() {
 
     if (next.offset == null) merged.offset = 0;
 
-    const qs = toQS({
-      tab: merged.tab,
-      q: merged.q || undefined,
-      method: merged.method || undefined,
-      status: merged.status || undefined,
-      from: merged.from || undefined,
-      to: merged.to || undefined,
-      only_admin: merged.only_admin || undefined,
-      req_user_id: merged.req_user_id || undefined,
-      req_ip: merged.req_ip || undefined,
-      sort: merged.sort !== 'created_at' ? merged.sort : undefined,
-      orderDir: merged.orderDir !== 'desc' ? merged.orderDir : undefined,
-      event: merged.event && merged.event !== ALL ? merged.event : undefined,
-      email: merged.email || undefined,
-      user_id: merged.user_id || undefined,
-      ip: merged.ip || undefined,
-      days: merged.days || undefined,
-      path_prefix: merged.path_prefix || undefined,
-      limit: merged.limit || undefined,
-      offset: merged.offset || undefined,
-    });
+    const qs = auditQSForTab(merged);
 
     router.push(`/admin/audit${qs}`);
   }

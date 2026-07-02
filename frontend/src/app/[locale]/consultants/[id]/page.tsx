@@ -25,6 +25,9 @@ type ConsultantForSchema = {
   full_name?: string | null;
   avatar_url?: string | null;
   bio?: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  og_image?: string | null;
   expertise?: string[] | string | null;
   languages?: string[] | string | null;
   session_price?: string | number | null;
@@ -96,8 +99,8 @@ async function fetchConsultantServicesForSchema(id: string): Promise<ConsultantS
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id, locale } = await params;
   const consultant = await fetchConsultantForMeta(id, locale);
-  const name = consultant?.full_name || 'Consultant Detail';
-  const bio = consultant?.bio || (
+  const name = consultant?.meta_title || consultant?.full_name || 'Consultant Detail';
+  const bio = consultant?.meta_description || consultant?.bio || (
     'View consultant details and book an available session.'
   );
 
@@ -111,6 +114,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   if (bio) {
     seo.description = String(bio).slice(0, 160);
+  }
+  if (consultant?.og_image) {
+    seo.open_graph = { ...(seo.open_graph || {}), image: consultant.og_image };
   }
 
   const canonicalParam = consultant?.slug?.trim() || id;

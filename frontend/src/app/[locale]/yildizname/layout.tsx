@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/seo/server';
+import PageContainer from '@/components/common/PageContainer';
+import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 
 type Props = {
   children: React.ReactNode;
@@ -19,6 +21,14 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
   });
 }
 
-export default function YildiznameLayout({ children }: Props) {
-  return <>{children}</>;
+export default async function YildiznameLayout({ children, params }: Props) {
+  const { locale } = await params;
+  return (
+    <>
+      {children}
+      <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
+        <SeoLandingArticle type="yildizname" locale={locale} />
+      </PageContainer>
+    </>
+  );
 }

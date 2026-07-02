@@ -7,6 +7,9 @@ export type ConsultantAdmin = {
   email: string | null;
   phone: string | null;
   bio: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  og_image?: string | null;
   expertise: string[] | null;
   languages: string[] | null;
   session_price: string;

@@ -284,6 +284,24 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                 </div>
               </div>
 
+              <div className="rounded-2xl border border-gm-border-soft bg-gm-surface/30 p-5 space-y-3">
+                <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">SEO</Label>
+                <div className="grid gap-3">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-widest text-gm-muted">Meta Title</div>
+                    <div className="mt-1 text-sm text-gm-text">{(item as any).meta_title || '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-widest text-gm-muted">Meta Description</div>
+                    <div className="mt-1 text-sm text-gm-text">{(item as any).meta_description || '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-widest text-gm-muted">OG Image</div>
+                    <div className="mt-1 truncate text-sm text-gm-text">{(item as any).og_image || '-'}</div>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid gap-8 md:grid-cols-2">
                 <div className="space-y-4">
                   <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('detail.expertise')}</Label>

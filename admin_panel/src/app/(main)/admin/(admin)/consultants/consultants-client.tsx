@@ -39,6 +39,7 @@ import {
   useDeleteConsultantAdminMutation,
   useListConsultantApplicationsAdminQuery,
   useListConsultantsAdminQuery,
+  useListSeoQualityQuery,
   useRejectConsultantAdminMutation,
   useRejectConsultantApplicationAdminMutation,
   useListServiceCategoriesAdminQuery,
@@ -79,6 +80,12 @@ function DetailBlock({ label, value }: { label: string; value?: React.ReactNode 
   );
 }
 
+function qualityVariant(score: number): 'default' | 'secondary' | 'destructive' {
+  if (score >= 75) return 'default';
+  if (score >= 40) return 'secondary';
+  return 'destructive';
+}
+
 export default function ConsultantsClient() {
   const t = useAdminT('admin.consultants');
 
@@ -92,6 +99,17 @@ export default function ConsultantsClient() {
   );
   // Başvuru sayacı rozeti için her zaman aktif (hafif liste).
   const appsQuery = useListConsultantApplicationsAdminQuery({ status: 'pending' });
+  const seoQuery = useListSeoQualityQuery(
+    { entity_type: 'consultant', locale: 'tr', page_size: 200 },
+    { skip: isPending },
+  );
+  const seoByConsultant = React.useMemo(() => {
+    const map = new Map<string, { overall_score: number }>();
+    for (const item of seoQuery.data?.items ?? []) {
+      map.set(item.entity_id, item);
+    }
+    return map;
+  }, [seoQuery.data?.items]);
 
   const categoriesQuery = useListServiceCategoriesAdminQuery();
   const slugToName = React.useMemo(() => {
@@ -290,6 +308,7 @@ export default function ConsultantsClient() {
                 <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
                   {isPending ? 'Tarih' : t('table.price')}
                 </TableHead>
+                {!isPending && <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">SEO</TableHead>}
                 <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.status')}</TableHead>
                 <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.actions')}</TableHead>
               </TableRow>
@@ -301,13 +320,14 @@ export default function ConsultantsClient() {
                     <TableCell className="py-6 px-8"><Skeleton className="h-12 w-48 rounded-full bg-gm-surface/20" /></TableCell>
                     <TableCell className="py-6"><Skeleton className="h-6 w-32 bg-gm-surface/20 rounded-full" /></TableCell>
                     <TableCell className="py-6"><Skeleton className="h-8 w-20 bg-gm-surface/20 rounded-lg" /></TableCell>
+                    {!isPending && <TableCell className="py-6"><Skeleton className="h-8 w-20 bg-gm-surface/20 rounded-full" /></TableCell>}
                     <TableCell className="py-6"><Skeleton className="h-8 w-24 bg-gm-surface/20 rounded-full" /></TableCell>
                     <TableCell className="py-6 px-8"><Skeleton className="h-10 w-24 ml-auto bg-gm-surface/20 rounded-full" /></TableCell>
                   </TableRow>
                 ))
               ) : isEmpty ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-32 text-center">
+                  <TableCell colSpan={isPending ? 5 : 6} className="py-32 text-center">
                     <div className="flex flex-col items-center gap-6 opacity-30">
                       <Users className="w-20 h-20 text-gm-gold/50" />
                       <span className="font-serif italic text-xl text-gm-muted">
@@ -374,7 +394,9 @@ export default function ConsultantsClient() {
                   </TableRow>
                 ))
               ) : (
-                consultantsQuery.data?.map((item) => (
+                consultantsQuery.data?.map((item) => {
+                  const seo = seoByConsultant.get(item.id);
+                  return (
                   <TableRow key={item.id} className="border-gm-border-soft hover:bg-gm-primary/[0.03] transition-colors group">
                     <TableCell className="py-6 px-8">
                       <div className="flex items-center gap-4">
@@ -411,6 +433,17 @@ export default function ConsultantsClient() {
                           {t('table.sessionMinutes', { minutes: item.session_duration })}
                         </span>
                       </div>
+                    </TableCell>
+                    <TableCell className="py-6">
+                      {seo ? (
+                        <Button asChild variant="ghost" size="sm" className="h-auto rounded-full px-0 hover:bg-transparent">
+                          <Link href={`/admin/seo-quality/consultant/${item.id}?locale=tr`}>
+                            <Badge variant={qualityVariant(Number(seo.overall_score))}>{seo.overall_score}/100</Badge>
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Badge variant="outline" className="text-gm-muted">Bekliyor</Badge>
+                      )}
                     </TableCell>
                     <TableCell className="py-6">
                       <div className={cn(
@@ -468,7 +501,8 @@ export default function ConsultantsClient() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
+                );
+                })
               )}
             </TableBody>
           </Table>

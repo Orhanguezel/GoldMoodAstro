@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
 import PricingPageClient from './PricingPageClient';
+import PageContainer from '@/components/common/PageContainer';
+import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -24,7 +26,10 @@ export default async function PricingPage({ params }: Props) {
 
   return (
     <Suspense fallback={null}>
-      <PricingPageClient locale={locale} />
+      <PageContainer verticalPadding="large">
+        <SeoLandingArticle type="pricing" locale={locale} />
+        <PricingPageClient locale={locale} />
+      </PageContainer>
     </Suspense>
   );
 }

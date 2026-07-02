@@ -1,0 +1,4 @@
+# GoldMoodAstro ads.txt
+# Add the AdSense publisher line after Google account approval.
+# Example:
+# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0

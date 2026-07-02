@@ -18,6 +18,7 @@ import {
   CreditCard,
   Database,
   FileSearch,
+  Gauge,
   HardDrive,
   LayoutDashboard,
   Mail,
@@ -79,6 +80,7 @@ export type AdminNavItemKey =
   | 'storage'
   | 'db'
   | 'audit'
+  | 'seo_quality'
   | 'availability'
   | 'support'
   | 'chat'
@@ -168,6 +170,7 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'storage', url: '/admin/storage', icon: HardDrive },
       { key: 'db', url: '/admin/db', icon: Database },
       { key: 'audit', url: '/admin/audit', icon: FileSearch },
+      { key: 'seo_quality', url: '/admin/seo-quality', icon: Gauge },
       { key: 'llm_prompts', url: '/admin/llm-prompts', icon: Bot },
       { key: 'astrology_kb', url: '/admin/astrology-kb', icon: BookOpen },
     ],
@@ -194,6 +197,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   storage: 'Dosya Yöneticisi',
   db: 'Veritabanı',
   audit: 'Denetim Kayıtları',
+  seo_quality: 'SEO Kalite',
   availability: 'Rezervasyon Saatleri',
   support: 'Destek',
   chat: 'Chat & AI',

@@ -30,6 +30,9 @@ import * as customPagesRepo from '../customPages/repository';
 
 const profilePatchSchema = z.object({
   bio: z.string().trim().max(5000).nullable().optional(),
+  meta_title: z.string().trim().max(255).nullable().optional(),
+  meta_description: z.string().trim().max(500).nullable().optional(),
+  og_image: z.string().trim().max(500).nullable().optional(),
   expertise: z.array(z.string().trim().toLowerCase().min(1).max(64).regex(/^[a-z0-9_-]+$/, 'slug_format')).min(1).max(20).optional(),
   // Eski kayıtlardaki bozuk dil değerlerini (boş string, locale tag "tr-TR" vs.) sessizce
   // ele: trim+lowercase ve invalid olanları filtre. Geriye kalan dizi normal kurala uyar.
@@ -119,6 +122,38 @@ async function getCallerConsultant(req: FastifyRequest) {
   if (!userId) return null;
   const [row] = await db.select().from(consultants).where(eq(consultants.user_id, userId)).limit(1);
   return row ?? null;
+}
+
+async function getConsultantSeoI18n(consultantId: string, locale = 'tr') {
+  const result = await db.execute(sql`
+    SELECT meta_title, meta_description, og_image
+    FROM consultant_i18n
+    WHERE consultant_id = ${consultantId} AND locale = ${locale}
+    LIMIT 1
+  `);
+  return rowsFromExecute<{ meta_title: string | null; meta_description: string | null; og_image: string | null }>(result)[0] ?? null;
+}
+
+async function upsertConsultantSeoI18n(consultantId: string, locale: string, patch: Record<string, unknown>) {
+  if (Object.keys(patch).length === 0) return;
+  await db.execute(sql`
+    INSERT INTO consultant_i18n (id, consultant_id, locale, meta_title, meta_description, og_image, created_at, updated_at)
+    VALUES (
+      ${randomUUID()},
+      ${consultantId},
+      ${locale},
+      ${patch.meta_title ?? null},
+      ${patch.meta_description ?? null},
+      ${patch.og_image ?? null},
+      NOW(),
+      NOW()
+    )
+    ON DUPLICATE KEY UPDATE
+      meta_title = VALUES(meta_title),
+      meta_description = VALUES(meta_description),
+      og_image = VALUES(og_image),
+      updated_at = NOW()
+  `);
 }
 
 function consultantBlogMarker(consultantId: string): string {
@@ -263,6 +298,8 @@ async function findInactiveOrMissingLanguageSlugs(slugs: string[]): Promise<stri
 export async function getProfile(req: FastifyRequest, reply: FastifyReply) {
   const c = await getCallerConsultant(req);
   if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+  const locale = String((req.query as any)?.locale || 'tr').slice(0, 8);
+  const seo = await getConsultantSeoI18n(c.id, locale);
 
   // user info de getir
   const [u] = await db
@@ -274,6 +311,9 @@ export async function getProfile(req: FastifyRequest, reply: FastifyReply) {
   return reply.send({
     data: {
       ...c,
+      meta_title: seo?.meta_title ?? null,
+      meta_description: seo?.meta_description ?? null,
+      og_image: seo?.og_image ?? null,
       user: u ?? null,
     },
   });
@@ -318,15 +358,20 @@ export async function updateProfile(req: FastifyRequest, reply: FastifyReply) {
 
   const patch: Record<string, unknown> = {};
   const userPatch: Record<string, unknown> = {};
+  const seoPatch: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(data)) {
     if (v === undefined) continue;
     if (k === 'avatar_url') {
       userPatch.avatar_url = v;
       continue;
     }
+    if (k === 'meta_title' || k === 'meta_description' || k === 'og_image') {
+      seoPatch[k] = v;
+      continue;
+    }
     patch[k] = v;
   }
-  if (Object.keys(patch).length === 0 && Object.keys(userPatch).length === 0) {
+  if (Object.keys(patch).length === 0 && Object.keys(userPatch).length === 0 && Object.keys(seoPatch).length === 0) {
     return reply.send({ data: { id: c.id, noop: true } });
   }
 
@@ -335,6 +380,10 @@ export async function updateProfile(req: FastifyRequest, reply: FastifyReply) {
   }
   if (Object.keys(userPatch).length > 0) {
     await db.update(users).set(userPatch as any).where(eq(users.id, c.user_id));
+  }
+  if (Object.keys(seoPatch).length > 0) {
+    const locale = String((req.query as any)?.locale || 'tr').slice(0, 8);
+    await upsertConsultantSeoI18n(c.id, locale, seoPatch);
   }
   return reply.send({ data: { id: c.id } });
 }

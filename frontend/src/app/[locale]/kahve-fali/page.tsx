@@ -5,6 +5,7 @@ import { buildPageMetadata } from '@/seo/server';
 
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
+import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -22,12 +23,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CoffeePage({ params }: Props) {
-  await params;
+  const { locale } = await params;
 
   return (
     <>
       <Banner title="Coffee Reading" />
       <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
+        <SeoLandingArticle type="kahve-fali" locale={locale} />
         <CoffeeHub />
       </PageContainer>
     </>

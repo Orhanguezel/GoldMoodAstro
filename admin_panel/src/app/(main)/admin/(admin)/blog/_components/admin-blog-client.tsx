@@ -31,6 +31,7 @@ import {
 import {
   useCreateCustomPageAdminMutation,
   useDeleteCustomPageAdminMutation,
+  useListSeoQualityQuery,
   useListCustomPagesAdminQuery,
   useUpdateCustomPageAdminMutation,
 } from '@/integrations/hooks';
@@ -110,6 +111,12 @@ function formatDate(value: string, locale: string): string {
   }
 }
 
+function qualityVariant(score: number): 'default' | 'secondary' | 'destructive' {
+  if (score >= 75) return 'default';
+  if (score >= 40) return 'secondary';
+  return 'destructive';
+}
+
 export default function AdminBlogClient() {
   const { t, locale: uiLocale } = useLocaleContext();
   const b = React.useCallback(
@@ -128,11 +135,23 @@ export default function AdminBlogClient() {
     orderDir: 'desc',
     limit: 200,
   });
+  const seoQuery = useListSeoQualityQuery({
+    entity_type: 'custom_page',
+    locale,
+    page_size: 200,
+  });
   const [createPost, createState] = useCreateCustomPageAdminMutation();
   const [updatePost, updateState] = useUpdateCustomPageAdminMutation();
   const [deletePost, deleteState] = useDeleteCustomPageAdminMutation();
 
   const posts = query.data?.items ?? [];
+  const seoByEntity = React.useMemo(() => {
+    const map = new Map<string, { overall_score: number; adsense_ready: unknown; word_count: number }>();
+    for (const item of seoQuery.data?.items ?? []) {
+      map.set(`${item.entity_id}:${item.locale}`, item);
+    }
+    return map;
+  }, [seoQuery.data?.items]);
   const busy = query.isFetching || createState.isLoading || updateState.isLoading || deleteState.isLoading;
   const editing = Boolean(form?.id);
 
@@ -334,16 +353,17 @@ export default function AdminBlogClient() {
               <TableRow className="border-gm-border-soft hover:bg-transparent">
                 <TableHead className="px-7 py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.status', 'Durum')}</TableHead>
                 <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.post', 'Yazı')}</TableHead>
+                <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">SEO</TableHead>
                 <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.date', 'Tarih')}</TableHead>
                 <TableHead className="px-7 py-5 text-right text-[10px] uppercase tracking-widest text-gm-muted">{b('table.actions', 'İşlem')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {query.isLoading ? (
-                <TableRow><TableCell colSpan={4} className="py-20 text-center text-sm italic text-gm-muted">{b('loading', 'Yükleniyor...')}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="py-20 text-center text-sm italic text-gm-muted">{b('loading', 'Yükleniyor...')}</TableCell></TableRow>
               ) : posts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-24 text-center">
+                  <TableCell colSpan={5} className="py-24 text-center">
                     <div className="flex flex-col items-center gap-3 text-gm-muted">
                       <BookOpen className="size-12 opacity-40" />
                       <span className="font-serif italic">{b('empty', 'Henüz blog yazısı yok.')}</span>
@@ -352,6 +372,7 @@ export default function AdminBlogClient() {
                 </TableRow>
               ) : posts.map((post) => {
                 const title = post.title || post.slug || b('untitled', 'Başlıksız yazı');
+                const score = seoByEntity.get(`${post.id}:${post.locale_resolved || locale}`);
                 return (
                   <TableRow key={post.id} className="border-gm-border-soft hover:bg-gm-surface/40">
                     <TableCell className="px-7 py-5">
@@ -376,6 +397,17 @@ export default function AdminBlogClient() {
                           {post.summary && <p className="mt-2 max-w-2xl truncate text-xs text-gm-muted">{post.summary}</p>}
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell className="py-5">
+                      {score ? (
+                        <Button asChild variant="ghost" size="sm" className="h-auto rounded-full px-0 hover:bg-transparent">
+                          <Link href={`/admin/seo-quality/custom_page/${post.id}?locale=${post.locale_resolved || locale}`}>
+                            <Badge variant={qualityVariant(Number(score.overall_score))}>{score.overall_score}/100</Badge>
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Badge variant="outline" className="text-gm-muted">Bekliyor</Badge>
+                      )}
                     </TableCell>
                     <TableCell className="py-5 text-xs text-gm-muted">{formatDate(post.updated_at || post.created_at, uiLocale)}</TableCell>
                     <TableCell className="px-7 py-5 text-right">

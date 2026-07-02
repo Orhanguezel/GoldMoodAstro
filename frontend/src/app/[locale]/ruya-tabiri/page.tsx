@@ -20,14 +20,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
+import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 
 export default async function DreamsPage({ params }: Props) {
-  await params;
+  const { locale } = await params;
 
   return (
     <>
       <Banner title="Dream Interpretation" />
       <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
+        <SeoLandingArticle type="ruya-tabiri" locale={locale} />
         <DreamHub />
       </PageContainer>
     </>

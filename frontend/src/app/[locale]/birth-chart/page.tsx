@@ -15,6 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
+import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 
 export default async function BirthChartPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -23,6 +24,7 @@ export default async function BirthChartPage({ params }: { params: Promise<{ loc
     <>
       <Banner title="Birth Chart" />
       <PageContainer width="wide" pad="none">
+        <SeoLandingArticle type="birth-chart" locale={locale} />
         <BirthChartPageClient />
       </PageContainer>
     </>

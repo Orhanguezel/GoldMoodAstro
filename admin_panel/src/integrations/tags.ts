@@ -34,6 +34,7 @@ export const tags = [
   'PaymentRequests',
   'SiteSettings',
   'Seo',
+  'SeoQuality',
   'PaymentProvider',
   'PaymentProviders',
   'PaymentSession',

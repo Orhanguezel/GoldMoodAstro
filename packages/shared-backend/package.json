@@ -86,6 +86,8 @@
     "./modules/readings/*": "./modules/readings/*.ts",
     "./modules/siteSettings": "./modules/siteSettings/index.ts",
     "./modules/siteSettings/*": "./modules/siteSettings/*.ts",
+    "./modules/seoQuality": "./modules/seoQuality/index.ts",
+    "./modules/seoQuality/*": "./modules/seoQuality/*.ts",
     "./modules/serviceCategories": "./modules/serviceCategories/index.ts",
     "./modules/serviceCategories/*": "./modules/serviceCategories/*.ts",
     "./modules/serviceTemplates": "./modules/serviceTemplates/index.ts",

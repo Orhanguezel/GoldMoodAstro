@@ -25,6 +25,7 @@ export const customPages = mysqlTable(
     // Danışman blog sahipliği — tag-marker yerine güvenilir kolon (spoof edilemez).
     author_consultant_id: char("author_consultant_id", { length: 36 }),
     is_published: tinyint("is_published").notNull().default(1),
+    seo_index: tinyint("seo_index").notNull().default(1),
     featured: tinyint("featured").notNull().default(0),
     featured_image: varchar("featured_image", { length: 500 }),
     featured_image_asset_id: char("featured_image_asset_id", { length: 36 }),

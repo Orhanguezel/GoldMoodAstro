@@ -84,6 +84,9 @@ export const consultantI18n = mysqlTable(
     locale: char('locale', { length: 8 }).notNull(),
     headline: varchar('headline', { length: 255 }),
     bio: text('bio'),
+    meta_title: varchar('meta_title', { length: 255 }),
+    meta_description: varchar('meta_description', { length: 500 }),
+    og_image: varchar('og_image', { length: 500 }),
     created_at: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
     updated_at: datetime('updated_at')
       .default(sql`CURRENT_TIMESTAMP`)

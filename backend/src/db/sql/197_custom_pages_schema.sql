@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS custom_pages (
   module_key               VARCHAR(64)   NOT NULL DEFAULT 'page',
   author_consultant_id     CHAR(36)      NULL,
   is_published             TINYINT(1)    NOT NULL DEFAULT 1,
+  seo_index                TINYINT(1)    NOT NULL DEFAULT 1,
   featured                 TINYINT(1)    NOT NULL DEFAULT 0,
   featured_image           VARCHAR(500)  NULL,
   featured_image_asset_id  CHAR(36)      NULL,

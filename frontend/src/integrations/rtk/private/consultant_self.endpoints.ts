@@ -10,6 +10,9 @@ export interface ConsultantSelfProfile {
   id: string;
   user_id: string;
   bio: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  og_image?: string | null;
   expertise: string[] | null;
   languages: string[] | null;
   meeting_platforms: string[] | null;
@@ -83,6 +86,9 @@ export interface ConsultantSelfBooking {
 
 export interface ProfilePatch {
   bio?: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  og_image?: string | null;
   expertise?: string[];
   languages?: string[];
   meeting_platforms?: string[];

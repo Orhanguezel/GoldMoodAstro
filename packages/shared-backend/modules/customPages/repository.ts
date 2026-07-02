@@ -42,6 +42,7 @@ export type CustomPageMergedRow = {
   module_key: string;
   author_consultant_id: string | null;
   is_published: 0 | 1;
+  seo_index: 0 | 1;
   featured: 0 | 1;
   featured_image: string | null;
   featured_image_asset_id: string | null;
@@ -70,6 +71,7 @@ function buildMerged(parent: typeof customPages.$inferSelect, i18n?: typeof cust
     module_key: parent.module_key,
     author_consultant_id: (parent as any).author_consultant_id ?? null,
     is_published: parent.is_published as 0 | 1,
+    seo_index: ((parent as any).seo_index ?? 1) as 0 | 1,
     featured: parent.featured as 0 | 1,
     featured_image: parent.featured_image ?? null,
     featured_image_asset_id: parent.featured_image_asset_id ?? null,
@@ -100,6 +102,7 @@ export async function listCustomPages(opts: {
   slug?: string;
   module_key?: string;
   is_published?: boolean;
+  seo_index?: boolean;
   featured?: boolean;
   locale?: string;
   default_locale?: string;
@@ -113,6 +116,7 @@ export async function listCustomPages(opts: {
 
   const where: WhereClause[] = [];
   if (typeof opts.is_published === "boolean") where.push(eq(customPages.is_published, opts.is_published ? 1 : 0));
+  if (typeof opts.seo_index === "boolean") where.push(eq(customPages.seo_index, opts.seo_index ? 1 : 0));
   if (typeof opts.featured === "boolean") where.push(eq(customPages.featured, opts.featured ? 1 : 0));
   if (opts.module_key) where.push(eq(customPages.module_key, opts.module_key));
 
@@ -228,6 +232,7 @@ export async function createCustomPage(input: {
   module_key?: string;
   author_consultant_id?: string | null;
   is_published?: boolean;
+  seo_index?: boolean;
   featured?: boolean;
   featured_image?: string | null;
   featured_image_asset_id?: string | null;
@@ -247,6 +252,7 @@ export async function createCustomPage(input: {
     module_key: input.module_key ?? "page",
     author_consultant_id: input.author_consultant_id ?? null,
     is_published: input.is_published === false ? 0 : 1,
+    seo_index: input.seo_index === false ? 0 : 1,
     featured: input.featured ? 1 : 0,
     featured_image: input.featured_image ?? null,
     featured_image_asset_id: input.featured_image_asset_id ?? null,
@@ -291,6 +297,7 @@ export async function updateCustomPage(
     tags: string | null;
     module_key: string;
     is_published: boolean;
+    seo_index: boolean;
     featured: boolean;
     featured_image: string | null;
     featured_image_asset_id: string | null;
@@ -305,6 +312,7 @@ export async function updateCustomPage(
   const parentUpdates: any = {};
   if (patch.module_key !== undefined) parentUpdates.module_key = patch.module_key;
   if (patch.is_published !== undefined) parentUpdates.is_published = patch.is_published ? 1 : 0;
+  if (patch.seo_index !== undefined) parentUpdates.seo_index = patch.seo_index ? 1 : 0;
   if (patch.featured !== undefined) parentUpdates.featured = patch.featured ? 1 : 0;
   if (patch.featured_image !== undefined) parentUpdates.featured_image = patch.featured_image;
   if (patch.featured_image_asset_id !== undefined)

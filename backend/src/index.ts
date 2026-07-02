@@ -11,6 +11,7 @@ import { registerRequestNowTimeoutCron } from '@/cron/request-now-timeout';
 import { registerConsultantAnalyticsCron } from '@/cron/consultant-analytics';
 import { registerConsultantEarningsCron } from '@/cron/consultant-earnings';
 import { registerConsultantWithdrawalCron } from '@/cron/consultant-withdrawals';
+import { registerSeoQualityRecalcCron } from '@/jobs/seo-quality-recalc.job';
 import { registerPushSender } from '@goldmood/shared-backend/modules/notifications';
 import { sendPushNotification } from '@/modules/firebase/service';
 
@@ -39,6 +40,7 @@ async function main() {
     registerConsultantAnalyticsCron();
     registerConsultantEarningsCron();
     registerConsultantWithdrawalCron();
+    registerSeoQualityRecalcCron();
   }
 
   console.log(`API listening ${host}:${env.PORT}`);

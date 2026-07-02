@@ -10,6 +10,13 @@ import {
   SlugParamSchema,
 } from "./validation";
 import * as repo from "./repository";
+import { recalculateScores } from "../seoQuality/repository";
+
+function recalcCustomPageScore(id: string, locale?: string) {
+  void recalculateScores({ type: "custom_page", id, locale }).catch((err) => {
+    console.error("[seo-quality] custom_page recalculation failed:", err);
+  });
+}
 
 function parseOrderArg(orderStr?: string, fallback: "asc" | "desc" = "asc"): "asc" | "desc" {
   if (!orderStr) return fallback;
@@ -33,6 +40,7 @@ export async function listPublic(req: FastifyRequest, reply: FastifyReply) {
     slug: q.slug,
     module_key: q.module_key,
     is_published: q.is_published ?? true,
+    seo_index: q.seo_index,
     featured: q.featured,
     locale: q.locale,
     default_locale: q.default_locale,
@@ -72,6 +80,7 @@ export async function listAdmin(req: FastifyRequest, reply: FastifyReply) {
     slug: q.slug,
     module_key: q.module_key,
     is_published: q.is_published,
+    seo_index: q.seo_index,
     featured: q.featured,
     locale: q.locale,
     default_locale: q.default_locale,
@@ -102,7 +111,9 @@ export async function getBySlugAdmin(req: FastifyRequest, reply: FastifyReply) {
 
 export async function create(req: FastifyRequest) {
   const body = CreateSchema.parse((req as any).body);
-  return await repo.createCustomPage(body);
+  const created = await repo.createCustomPage(body);
+  recalcCustomPageScore(created.id, created.locale_resolved ?? body.locale);
+  return created;
 }
 
 export async function update(req: FastifyRequest, reply: FastifyReply) {
@@ -110,6 +121,7 @@ export async function update(req: FastifyRequest, reply: FastifyReply) {
   const body = UpdateSchema.parse((req as any).body);
   const updated = await repo.updateCustomPage(id, body);
   if (!updated) return reply.code(404).send({ error: { message: "custom_page_not_found" } });
+  recalcCustomPageScore(id, updated.locale_resolved ?? body.locale);
   return updated;
 }
 

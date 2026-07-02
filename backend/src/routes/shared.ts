@@ -38,6 +38,7 @@ import { registerConsultantSelf, registerConsultantSelfAdmin } from '@goldmood/s
 import { registerConsultantApplications, registerConsultantApplicationsAdmin } from '@goldmood/shared-backend/modules/consultantApplications/router';
 import { registerKvkk } from '@goldmood/shared-backend/modules/kvkk/router';
 import { registerZodiac } from '@goldmood/shared-backend/modules/zodiac/router';
+import { registerSeoQualityAdmin } from '@goldmood/shared-backend/modules/seoQuality/router';
 
 // Admin routers
 import { registerUserAdmin } from '@goldmood/shared-backend/modules/auth/admin.routes';
@@ -137,6 +138,7 @@ export async function registerSharedAdmin(adminApi: FastifyInstance) {
     registerConsultantServicesAdmin,
     registerConsultantSelfAdmin,
     registerConsultantApplicationsAdmin,
+    registerSeoQualityAdmin,
   ]) {
     await adminApi.register(reg);
   }

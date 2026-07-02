@@ -36,6 +36,7 @@ export * from '@/integrations/endpoints/admin/services_admin.endpoints';
 
 // System / Infra / RBAC
 export * from '@/integrations/endpoints/admin/audit_admin.endpoints';
+export * from '@/integrations/endpoints/admin/seo_quality_admin.endpoints';
 export * from '@/integrations/endpoints/admin/site_settings_admin.endpoints';
 export * from '@/integrations/endpoints/admin/storage_admin.endpoints';
 export * from '@/integrations/endpoints/admin/users/roles_admin.endpoints';

@@ -10,6 +10,7 @@ export const ListQuerySchema = z.object({
   slug: z.string().optional(),
   module_key: z.string().optional(),
   is_published: boolish.optional(),
+  seo_index: boolish.optional(),
   featured: boolish.optional(),
   locale: z.string().min(2).max(8).optional(),
   default_locale: z.string().min(2).max(8).optional(),
@@ -39,6 +40,7 @@ export const CreateSchema = z.object({
   // parent
   module_key: z.string().max(64).optional(),
   is_published: boolish.optional(),
+  seo_index: boolish.optional(),
   featured: boolish.optional(),
   featured_image: z.string().nullable().optional(),
   featured_image_asset_id: z.string().nullable().optional(),

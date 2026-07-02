@@ -653,6 +653,9 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
   const { data: dbLanguages = [], isLoading: isLoadingLanguages } = useListLanguagesPublicQuery();
   const [updateProfile, { isLoading }] = useUpdateMyConsultantProfileMutation();
   const [bio, setBio] = useState<string>(profile.bio || '');
+  const [metaTitle, setMetaTitle] = useState<string>(profile.meta_title || '');
+  const [metaDescription, setMetaDescription] = useState<string>(profile.meta_description || '');
+  const [ogImage, setOgImage] = useState<string>(profile.og_image || '');
   const [expertise, setExpertise] = useState<string[]>(profile.expertise || []);
   const [languages, setLanguages] = useState<string[]>(profile.languages || []);
   const [meetingPlatforms, setMeetingPlatforms] = useState<string[]>(profile.meeting_platforms || []);
@@ -697,6 +700,8 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (bio.length > 5000) newErrors.bio = ui('ui_dashboard_error_bio_max', 'Bio can be up to 5000 characters.');
+    if (metaTitle.length > 255) newErrors.metaTitle = ui('ui_dashboard_error_meta_title_max', 'Meta title can be up to 255 characters.');
+    if (metaDescription.length > 500) newErrors.metaDescription = ui('ui_dashboard_error_meta_description_max', 'Meta description can be up to 500 characters.');
     if (expertise.length > 20) newErrors.expertise = ui('ui_dashboard_error_expertise_max', 'You can add up to 20 expertise areas.');
     if (languages.length > 10) newErrors.languages = ui('ui_dashboard_error_languages_max', 'You can add up to 10 languages.');
     const cleanIban = bankIban.replace(/\s/g, '').toUpperCase();
@@ -724,6 +729,9 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
       const cleanIban = bankIban.replace(/\s/g, '').toUpperCase();
       await updateProfile({
         bio: bio.trim() || null,
+        meta_title: metaTitle.trim() || null,
+        meta_description: metaDescription.trim() || null,
+        og_image: ogImage.trim() || null,
         expertise: expertise,
         languages: languages,
         meeting_platforms: meetingPlatforms,
@@ -810,6 +818,45 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
             </span>
           </div>
         </Field>
+
+        <div className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface)/30 p-5 space-y-4">
+          <div>
+            <h3 className="font-serif text-lg text-(--gm-text)">{ui('ui_dashboard_profile_seo_title', 'SEO Settings')}</h3>
+            <p className="text-[12px] text-(--gm-text-dim) mt-1">{ui('ui_dashboard_profile_seo_hint', 'These fields are used for your public profile page title, search description and social preview image.')}</p>
+          </div>
+          <Field
+            label={ui('ui_dashboard_profile_meta_title_label', 'Meta Title')}
+            hint={ui('ui_dashboard_profile_meta_title_hint', 'Aim for 30-60 characters.')}
+            error={errors.metaTitle}
+          >
+            <input
+              value={metaTitle}
+              onChange={(event) => setMetaTitle(event.target.value)}
+              className="w-full rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) px-4 py-3 text-sm text-(--gm-text)"
+              placeholder={profile.user?.full_name ? `${profile.user.full_name} | GoldMoodAstro` : 'GoldMoodAstro Consultant'}
+            />
+          </Field>
+          <Field
+            label={ui('ui_dashboard_profile_meta_description_label', 'Meta Description')}
+            hint={ui('ui_dashboard_profile_meta_description_hint', 'Aim for 120-160 characters.')}
+            error={errors.metaDescription}
+          >
+            <textarea
+              value={metaDescription}
+              onChange={(event) => setMetaDescription(event.target.value)}
+              rows={3}
+              className="w-full rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) px-4 py-3 text-sm text-(--gm-text)"
+            />
+          </Field>
+          <Field label={ui('ui_dashboard_profile_og_image_label', 'Social Preview Image URL')}>
+            <input
+              value={ogImage}
+              onChange={(event) => setOgImage(event.target.value)}
+              className="w-full rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) px-4 py-3 text-sm text-(--gm-text)"
+              placeholder="https://..."
+            />
+          </Field>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Field 
