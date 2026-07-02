@@ -6,6 +6,7 @@ import { buildPageMetadata } from '@/seo/server';
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
+import { getLanding } from '@/components/seo/seo-landing-content';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -27,7 +28,7 @@ export default async function CoffeePage({ params }: Props) {
 
   return (
     <>
-      <Banner title="Coffee Reading" />
+      <Banner title={getLanding('kahve-fali', locale).eyebrow} />
       <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
         <SeoLandingArticle type="kahve-fali" locale={locale} />
         <CoffeeHub />

@@ -21,13 +21,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
+import { getLanding } from '@/components/seo/seo-landing-content';
 
 export default async function DreamsPage({ params }: Props) {
   const { locale } = await params;
 
   return (
     <>
-      <Banner title="Dream Interpretation" />
+      <Banner title={getLanding('ruya-tabiri', locale).eyebrow} />
       <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
         <SeoLandingArticle type="ruya-tabiri" locale={locale} />
         <DreamHub />
