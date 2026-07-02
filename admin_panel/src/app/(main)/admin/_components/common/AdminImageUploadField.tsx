@@ -45,9 +45,11 @@ export type AdminImageUploadFieldProps = {
 
   value?: string;
   onChange?: (url: string) => void;
+  onChangeAsset?: (asset: { id: string; url: string }) => void;
 
   values?: string[];
   onChangeMultiple?: (urls: string[]) => void;
+  onChangeMultipleAssets?: (assets: Array<{ id: string; url: string }>) => void;
 
   onSelectAsCover?: (url: string) => void;
   coverValue?: string;
@@ -201,9 +203,11 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
 
   value,
   onChange,
+  onChangeAsset,
 
   values,
   onChangeMultiple,
+  onChangeMultipleAssets,
   onSelectAsCover,
   coverValue,
 
@@ -248,14 +252,17 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
     fileInputRef.current?.click();
   };
 
-  const handleSelectFromLibrary = (url: string) => {
+  const handleSelectFromLibrary = (asset: { id?: string; url?: string | null }) => {
+    const url = norm(asset.url);
     if (!url) return;
 
     if (multiple && onChangeMultiple) {
       onChangeMultiple(uniqAppend(gallery, [url]));
+      if (asset.id && onChangeMultipleAssets) onChangeMultipleAssets([{ id: asset.id, url }]);
       toast.success(t('imageUpload.imageAdded'));
     } else if (onChange) {
       onChange(url);
+      if (asset.id && onChangeAsset) onChangeAsset({ id: asset.id, url });
       toast.success(t('imageUpload.imageSelected'));
     }
 
@@ -296,6 +303,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
         const url = norm((res as any)?.url);
         if (!url) throw new Error(t('imageUpload.urlMissing'));
         onChange?.(url);
+        if ((res as any)?.id) onChangeAsset?.({ id: String((res as any).id), url });
         toast.success(t('imageUpload.imageUploaded'));
         setIsModalOpen(false);
       } catch (err: any) {
@@ -312,6 +320,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
     }
 
     const uploadedUrls: string[] = [];
+    const uploadedAssets: Array<{ id: string; url: string }> = [];
     let successCount = 0;
 
     for (const file of files) {
@@ -334,6 +343,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
         const url = norm((res as any)?.url);
         if (url) {
           uploadedUrls.push(url);
+          if ((res as any)?.id) uploadedAssets.push({ id: String((res as any).id), url });
           successCount += 1;
         }
       } catch (err: any) {
@@ -356,6 +366,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
       } else {
         onChange?.(uploadedUrls[0]);
       }
+      if (uploadedAssets.length && onChangeMultipleAssets) onChangeMultipleAssets(uploadedAssets);
       toast.success(
         successCount === 1
           ? t('imageUpload.imageUploaded')
@@ -699,7 +710,7 @@ export const AdminImageUploadField: React.FC<AdminImageUploadFieldProps> = ({
                         <button
                           key={asset.id}
                           type="button"
-                          onClick={() => handleSelectFromLibrary(url)}
+                          onClick={() => handleSelectFromLibrary({ id: asset.id, url })}
                           disabled={busy}
                           className={cn(
                             'group relative overflow-hidden rounded-lg border transition-all hover:border-primary',

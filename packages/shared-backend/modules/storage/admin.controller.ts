@@ -40,10 +40,11 @@ export async function adminListAssets(req: FastifyRequest, reply: FastifyReply) 
     if (!parsed.success) return reply.code(400).send({ error: { message: "invalid_query", issues: parsed.error.flatten() } });
 
     const { rows, total } = await repoListAndCount(parsed.data);
+    const cfg = await getCloudinaryConfig();
     reply.header("x-total-count", String(total));
     reply.header("content-range", `*/${total}`);
     reply.header("access-control-expose-headers", "x-total-count, content-range");
-    return reply.send(rows);
+    return reply.send(rows.map((row) => buildStorageAssetResponse(row, cfg)));
   } catch (e) {
     return handleRouteError(reply, req, e, "admin_list_assets");
   }

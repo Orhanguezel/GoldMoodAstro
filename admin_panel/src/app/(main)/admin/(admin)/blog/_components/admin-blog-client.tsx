@@ -49,8 +49,10 @@ type BlogForm = {
   summary: string;
   content: string;
   featured_image: string;
+  featured_image_asset_id: string;
   featured_image_alt: string;
   images: string[];
+  storage_image_ids: string[];
   meta_title: string;
   meta_description: string;
   tags: string;
@@ -65,8 +67,10 @@ const EMPTY_FORM: BlogForm = {
   summary: '',
   content: '',
   featured_image: '',
+  featured_image_asset_id: '',
   featured_image_alt: '',
   images: [],
+  storage_image_ids: [],
   meta_title: '',
   meta_description: '',
   tags: '',
@@ -96,9 +100,15 @@ function toForm(post: CustomPageDto): BlogForm {
     slug: safeStr(post.slug),
     summary: safeStr(post.summary),
     content: safeStr(post.content_html),
-    featured_image: safeStr(post.featured_image),
+    featured_image: safeStr(post.featured_image_effective_url || post.featured_image || post.image_url),
+    featured_image_asset_id: safeStr(post.featured_image_asset_id || post.storage_asset_id),
     featured_image_alt: safeStr(post.featured_image_alt),
-    images: Array.isArray(post.images) ? post.images.filter(Boolean) : [],
+    images: Array.isArray(post.images_effective_urls) && post.images_effective_urls.length
+      ? post.images_effective_urls.filter(Boolean)
+      : Array.isArray(post.images)
+        ? post.images.filter(Boolean)
+        : [],
+    storage_image_ids: Array.isArray(post.storage_image_ids) ? post.storage_image_ids.filter(Boolean) : [],
     meta_title: safeStr(post.meta_title),
     meta_description: safeStr(post.meta_description),
     tags: post.tags?.join(', ') || safeStr(post.tags_raw),
@@ -198,8 +208,11 @@ export default function AdminBlogClient() {
       content: form.content,
       featured_image: form.featured_image.trim() || null,
       image_url: form.featured_image.trim() || null,
+      featured_image_asset_id: form.featured_image_asset_id.trim() || null,
+      storage_asset_id: form.featured_image_asset_id.trim() || null,
       featured_image_alt: form.featured_image_alt.trim() || null,
       images: form.images.filter(Boolean),
+      storage_image_ids: form.storage_image_ids.filter(Boolean),
       meta_title: form.meta_title.trim() || null,
       meta_description: form.meta_description.trim() || null,
       tags: form.tags.trim() || null,
@@ -345,7 +358,8 @@ export default function AdminBlogClient() {
                     <AdminImageUploadField
                       label=""
                       value={form.featured_image}
-                      onChange={(url) => patchForm({ featured_image: url })}
+                      onChange={(url) => patchForm({ featured_image: url, featured_image_asset_id: '' })}
+                      onChangeAsset={(asset) => patchForm({ featured_image: asset.url, featured_image_asset_id: asset.id })}
                       bucket="public"
                       folder="blog"
                       previewAspect="16x9"
@@ -361,8 +375,13 @@ export default function AdminBlogClient() {
                     multiple
                     values={form.images}
                     onChangeMultiple={(urls) => patchForm({ images: urls })}
+                    onChangeMultipleAssets={(assets) => {
+                      const nextIds = new Set(form.storage_image_ids);
+                      for (const asset of assets) nextIds.add(asset.id);
+                      patchForm({ storage_image_ids: Array.from(nextIds) });
+                    }}
                     coverValue={form.featured_image}
-                    onSelectAsCover={(url) => patchForm({ featured_image: url })}
+                    onSelectAsCover={(url) => patchForm({ featured_image: url, featured_image_asset_id: '' })}
                     bucket="public"
                     folder="blog"
                     previewAspect="1x1"
@@ -444,6 +463,7 @@ export default function AdminBlogClient() {
               ) : posts.map((post) => {
                 const title = post.title || post.slug || b('untitled', 'Başlıksız yazı');
                 const score = seoByEntity.get(`${post.id}:${post.locale_resolved || locale}`);
+                const coverUrl = safeStr(post.featured_image_effective_url || post.featured_image || post.image_url);
                 return (
                   <TableRow key={post.id} className="border-gm-border-soft hover:bg-gm-surface/40">
                     <TableCell className="px-7 py-5">
@@ -456,9 +476,18 @@ export default function AdminBlogClient() {
                     </TableCell>
                     <TableCell className="py-5">
                       <div className="flex items-start gap-3">
-                        <div className="mt-1 rounded-xl border border-gm-border-soft bg-gm-bg-deep p-2 text-gm-gold">
-                          <FileText className="size-4" />
-                        </div>
+                        {coverUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={coverUrl}
+                            alt={post.featured_image_alt || title}
+                            className="mt-1 h-14 w-20 shrink-0 rounded-xl border border-gm-border-soft bg-gm-bg-deep object-cover"
+                          />
+                        ) : (
+                          <div className="mt-1 rounded-xl border border-gm-border-soft bg-gm-bg-deep p-2 text-gm-gold">
+                            <FileText className="size-4" />
+                          </div>
+                        )}
                         <div className="min-w-0">
                           <div className="font-serif text-lg text-gm-text">{title}</div>
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-gm-muted">

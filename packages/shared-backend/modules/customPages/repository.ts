@@ -3,6 +3,9 @@
 import { and, eq, sql, asc, desc, inArray, type SQL } from "drizzle-orm";
 import { db } from "../../db/client";
 import { customPages, customPagesI18n } from "./schema";
+import { storageAssets } from "../storage/schema";
+import { getCloudinaryConfig } from "../storage/cloudinary";
+import { buildPublicUrl } from "../storage/util";
 
 type WhereClause = SQL<unknown>;
 const FALLBACK_LOCALE = "tr";
@@ -63,6 +66,9 @@ export type CustomPageMergedRow = {
   meta_description: string | null;
   tags: string | null;
   locale_resolved: string | null;
+  featured_image_effective_url?: string | null;
+  image_effective_url?: string | null;
+  images_effective_urls?: string[];
 };
 
 function buildMerged(parent: typeof customPages.$inferSelect, i18n?: typeof customPagesI18n.$inferSelect): CustomPageMergedRow {
@@ -93,6 +99,58 @@ function buildMerged(parent: typeof customPages.$inferSelect, i18n?: typeof cust
     tags: i18n?.tags ?? null,
     locale_resolved: i18n?.locale ?? null,
   };
+}
+
+function uniqStrings(values: Array<string | null | undefined>) {
+  return [...new Set(values.map((v) => String(v ?? "").trim()).filter(Boolean))];
+}
+
+async function attachEffectiveMediaUrls(rows: CustomPageMergedRow[]): Promise<CustomPageMergedRow[]> {
+  if (!rows.length) return rows;
+
+  const ids = uniqStrings(
+    rows.flatMap((row) => [
+      row.featured_image_asset_id,
+      row.storage_asset_id,
+      ...(Array.isArray(row.storage_image_ids) ? row.storage_image_ids : []),
+    ]),
+  );
+
+  if (!ids.length) {
+    return rows.map((row) => ({
+      ...row,
+      featured_image_effective_url: row.featured_image ?? row.image_url ?? null,
+      image_effective_url: row.image_url ?? row.featured_image ?? null,
+      images_effective_urls: row.images ?? [],
+    }));
+  }
+
+  const [assets, cfg] = await Promise.all([
+    db.select().from(storageAssets).where(inArray(storageAssets.id, ids)),
+    getCloudinaryConfig(),
+  ]);
+  const byId = new Map(
+    assets.map((asset) => [
+      asset.id,
+      buildPublicUrl(asset.bucket, asset.path, asset.url, cfg ?? undefined),
+    ]),
+  );
+
+  return rows.map((row) => {
+    const featuredFromAsset =
+      (row.featured_image_asset_id && byId.get(row.featured_image_asset_id)) ||
+      (row.storage_asset_id && byId.get(row.storage_asset_id)) ||
+      null;
+    const galleryFromAssets = Array.isArray(row.storage_image_ids)
+      ? row.storage_image_ids.map((id) => byId.get(id)).filter((url): url is string => Boolean(url))
+      : [];
+    return {
+      ...row,
+      featured_image_effective_url: featuredFromAsset ?? row.featured_image ?? row.image_url ?? null,
+      image_effective_url: (row.storage_asset_id && byId.get(row.storage_asset_id)) || row.image_url || row.featured_image || null,
+      images_effective_urls: galleryFromAssets.length ? galleryFromAssets : row.images ?? [],
+    };
+  });
 }
 
 // ---------- LIST --------------------------------------------------------
@@ -170,7 +228,7 @@ export async function listCustomPages(opts: {
     );
   }
 
-  return result;
+  return attachEffectiveMediaUrls(result);
 }
 
 // ---------- BY ID -------------------------------------------------------
@@ -184,7 +242,8 @@ export async function getCustomPageById(
   if (!parent) return null;
   const i18nRows = await db.select().from(customPagesI18n).where(eq(customPagesI18n.custom_page_id, id));
   const tr = pickI18n(i18nRows, locale, defaultLocale);
-  return buildMerged(parent, tr);
+  const [row] = await attachEffectiveMediaUrls([buildMerged(parent, tr)]);
+  return row ?? null;
 }
 
 // ---------- BY SLUG -----------------------------------------------------
@@ -214,7 +273,8 @@ export async function getCustomPageBySlug(
     .where(eq(customPagesI18n.custom_page_id, pid));
 
   const tr = pickI18n(allI18n, locale, defaultLocale);
-  return buildMerged(parent, tr);
+  const [row] = await attachEffectiveMediaUrls([buildMerged(parent, tr)]);
+  return row ?? null;
 }
 
 // ---------- CREATE ------------------------------------------------------

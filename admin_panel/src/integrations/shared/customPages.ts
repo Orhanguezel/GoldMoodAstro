@@ -88,6 +88,10 @@ export interface ApiCustomPage {
   tags: string | null;
 
   locale_resolved: string | null;
+
+  featured_image_effective_url?: string | null;
+  image_effective_url?: string | null;
+  images_effective_urls?: string[] | string | null;
 }
 
 /* ------------------------------------------------------------------
@@ -214,6 +218,7 @@ export const normalizeCustomPage = (api: ApiCustomPage): CustomPageDto => {
 
   const images = normalizeStringArray(api.images);
   const storageImageIds = normalizeStringArray(api.storage_image_ids);
+  const imagesEffectiveUrls = normalizeStringArray((api as any).images_effective_urls);
 
   const tagsArray = parseTags(api.tags);
 
@@ -254,6 +259,10 @@ export const normalizeCustomPage = (api: ApiCustomPage): CustomPageDto => {
     tags: tagsArray,
 
     locale_resolved: api.locale_resolved ?? null,
+
+    featured_image_effective_url: (api as any).featured_image_effective_url ?? null,
+    image_effective_url: (api as any).image_effective_url ?? null,
+    images_effective_urls: imagesEffectiveUrls,
   };
 };
 
