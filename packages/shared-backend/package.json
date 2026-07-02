@@ -10,6 +10,8 @@
     "./middleware/*": "./middleware/*.ts",
     "./modules/_shared": "./modules/_shared/index.ts",
     "./modules/_shared/*": "./modules/_shared/*.ts",
+    "./modules/aiContent": "./modules/aiContent/index.ts",
+    "./modules/aiContent/*": "./modules/aiContent/*.ts",
     "./modules/announcements": "./modules/announcements/index.ts",
     "./modules/announcements/*": "./modules/announcements/*.ts",
     "./modules/astrology": "./modules/astrology/index.ts",

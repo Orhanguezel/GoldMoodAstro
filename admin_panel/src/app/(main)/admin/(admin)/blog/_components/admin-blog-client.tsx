@@ -7,12 +7,15 @@ import {
   Eye,
   EyeOff,
   FileText,
+  Loader2,
   Pencil,
   Plus,
   RefreshCcw,
   Save,
   Search,
+  Sparkles,
   Trash2,
+  Wand2,
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -35,8 +38,11 @@ import {
   useCreateCustomPageAdminMutation,
   useDeleteCustomPageAdminMutation,
   useListSeoQualityQuery,
+  useGetSeoQualityDetailQuery,
   useListCustomPagesAdminQuery,
   useUpdateCustomPageAdminMutation,
+  useAiContentAssistMutation,
+  type AiAction,
 } from '@/integrations/hooks';
 import { useLocaleContext } from '@/i18n';
 import { cn } from '@/lib/utils';
@@ -159,6 +165,8 @@ export default function AdminBlogClient() {
   const [createPost, createState] = useCreateCustomPageAdminMutation();
   const [updatePost, updateState] = useUpdateCustomPageAdminMutation();
   const [deletePost, deleteState] = useDeleteCustomPageAdminMutation();
+  const [aiAssist, aiState] = useAiContentAssistMutation();
+  const [aiAction, setAiAction] = React.useState<AiAction | null>(null);
 
   const posts = query.data?.items ?? [];
   const seoByEntity = React.useMemo(() => {
@@ -184,6 +192,45 @@ export default function AdminBlogClient() {
       }
       return next;
     });
+  };
+
+  // SEO kalite breakdown (düzenlenen yazı) — SEO tab'ında bileşen bazlı skor gösterimi.
+  const seoDetail = useGetSeoQualityDetailQuery(
+    { type: 'custom_page', id: form?.id || '', locale: form?.locale || 'tr' },
+    { skip: !form?.id },
+  );
+
+  // AI: içerik genişlet/iyileştir + SEO meta/özet üret (konuya göre — başlık/etiket/içerik context).
+  const runAi = async (action: AiAction) => {
+    if (!form) return;
+    setAiAction(action);
+    try {
+      const res = await aiAssist({
+        action,
+        locale: form.locale,
+        title: form.title,
+        category: form.tags,
+        summary: form.summary,
+        content: form.content,
+        tags: form.tags,
+      }).unwrap();
+      const patch: Partial<BlogForm> = {};
+      if (res.content) patch.content = res.content;
+      if (res.meta_title) patch.meta_title = res.meta_title;
+      if (res.meta_description) patch.meta_description = res.meta_description;
+      if (res.summary) patch.summary = res.summary;
+      if (res.tags) patch.tags = res.tags;
+      if (Object.keys(patch).length === 0) {
+        toast.error(b('ai.empty', 'AI sonuç üretemedi.'));
+      } else {
+        patchForm(patch);
+        toast.success(b('ai.applied', 'AI içeriği forma uygulandı.'));
+      }
+    } catch (error) {
+      toast.error(errorMessage(error, b('ai.error', 'AI isteği başarısız. Anahtar tanımlı mı?')));
+    } finally {
+      setAiAction(null);
+    }
   };
 
   const save = async () => {
@@ -331,6 +378,15 @@ export default function AdminBlogClient() {
 
               {/* — İçerik — */}
               <TabsContent value="content" className="mt-0 space-y-4 outline-none">
+                {editing && form.id && (
+                  <SeoQualityPanel
+                    listScore={seoByEntity.get(`${form.id}:${form.locale}`)}
+                    detail={seoDetail.data}
+                    entityId={form.id}
+                    locale={form.locale}
+                    b={b}
+                  />
+                )}
                 <div className="grid gap-4 lg:grid-cols-2">
                   <Field label={b('form.fields.title', 'Başlık')}>
                     <Input value={form.title} onChange={(event) => patchForm({ title: event.target.value })} />
@@ -342,6 +398,20 @@ export default function AdminBlogClient() {
                 <Field label={b('form.fields.summary', 'Özet')}>
                   <Textarea value={form.summary} onChange={(event) => patchForm({ summary: event.target.value })} className="min-h-24" />
                 </Field>
+                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-gm-primary/20 bg-gm-primary/5 px-4 py-3">
+                  <span className="mr-1 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-gm-primary">
+                    <Sparkles className="size-3.5" /> {b('ai.title', 'Yapay Zeka')}
+                  </span>
+                  <AiButton onClick={() => runAi('enhance')} loading={aiState.isLoading && aiAction === 'enhance'} disabled={aiState.isLoading || !form.title.trim()} icon={<Wand2 className="size-3.5" />}>
+                    {b('ai.enhance', 'İçeriği genişlet')}
+                  </AiButton>
+                  <AiButton onClick={() => runAi('improve')} loading={aiState.isLoading && aiAction === 'improve'} disabled={aiState.isLoading || !form.content.trim()} icon={<Wand2 className="size-3.5" />}>
+                    {b('ai.improve', 'İçeriği iyileştir')}
+                  </AiButton>
+                  <AiButton onClick={() => runAi('summary')} loading={aiState.isLoading && aiAction === 'summary'} disabled={aiState.isLoading || !form.content.trim()} icon={<Sparkles className="size-3.5" />}>
+                    {b('ai.summary', 'Özet üret')}
+                  </AiButton>
+                </div>
                 <Field label={b('form.fields.content', 'İçerik')}>
                   <RichContentEditor value={form.content} onChange={(value) => patchForm({ content: value })} height="360px" />
                 </Field>
@@ -391,26 +461,25 @@ export default function AdminBlogClient() {
 
               {/* — SEO — */}
               <TabsContent value="seo" className="mt-0 space-y-4 outline-none">
-                {editing && form.id && (() => {
-                  const s = seoByEntity.get(`${form.id}:${form.locale}`);
-                  return (
-                    <div className="flex items-center justify-between rounded-2xl border border-gm-border-soft bg-gm-bg-deep/40 px-5 py-4">
-                      <div>
-                        <div className="text-xs font-bold uppercase tracking-widest text-gm-muted">{b('form.seoScore', 'SEO Kalite Skoru')}</div>
-                        <p className="mt-1 text-[11px] text-gm-muted">{b('form.seoScoreHint', 'Kaydettikçe otomatik hesaplanır. Detay için skora tıkla.')}</p>
-                      </div>
-                      {s ? (
-                        <Button asChild variant="ghost" size="sm" className="h-auto rounded-full px-0 hover:bg-transparent">
-                          <Link href={`/admin/seo-quality/custom_page/${form.id}?locale=${form.locale}`}>
-                            <Badge variant={qualityVariant(Number(s.overall_score))}>{s.overall_score}/100</Badge>
-                          </Link>
-                        </Button>
-                      ) : (
-                        <Badge variant="outline" className="text-gm-muted">{b('form.seoScorePending', 'Bekliyor')}</Badge>
-                      )}
-                    </div>
-                  );
-                })()}
+                {editing && form.id && (
+                  <SeoQualityPanel
+                    listScore={seoByEntity.get(`${form.id}:${form.locale}`)}
+                    detail={seoDetail.data}
+                    entityId={form.id}
+                    locale={form.locale}
+                    b={b}
+                  />
+                )}
+
+                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-gm-primary/20 bg-gm-primary/5 px-4 py-3">
+                  <span className="mr-1 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-gm-primary">
+                    <Sparkles className="size-3.5" /> {b('ai.title', 'Yapay Zeka')}
+                  </span>
+                  <AiButton onClick={() => runAi('meta')} loading={aiState.isLoading && aiAction === 'meta'} disabled={aiState.isLoading || (!form.content.trim() && !form.title.trim())} icon={<Wand2 className="size-3.5" />}>
+                    {b('ai.meta', 'SEO meta üret')}
+                  </AiButton>
+                </div>
+
                 <Field label={b('form.fields.metaTitle', 'Meta Başlık')}>
                   <Input value={form.meta_title} onChange={(event) => patchForm({ meta_title: event.target.value })} placeholder={b('form.metaTitlePlaceholder', '50-60 karakter ideal')} />
                 </Field>
@@ -552,6 +621,99 @@ function ToggleField({ label, checked, onChange }: { label: string; checked: boo
     <div className="flex items-center justify-between rounded-2xl border border-gm-border-soft bg-gm-bg-deep p-4">
       <span className="text-xs font-bold uppercase tracking-widest text-gm-text">{label}</span>
       <Switch checked={checked} onCheckedChange={onChange} />
+    </div>
+  );
+}
+
+function AiButton({
+  onClick,
+  loading,
+  disabled,
+  icon,
+  children,
+}: {
+  onClick: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      className="h-9 rounded-full border-gm-primary/30 bg-gm-surface/40 px-4 text-[11px] font-bold text-gm-primary hover:bg-gm-primary/10"
+    >
+      {loading ? <Loader2 className="mr-1.5 size-3.5 animate-spin" /> : <span className="mr-1.5 inline-flex">{icon}</span>}
+      {children}
+    </Button>
+  );
+}
+
+// SEO + içerik kalite paneli: skor + AdSense/index durumu + bileşen breakdown (✓/✗ + eksik ipuçları).
+function SeoQualityPanel({
+  listScore,
+  detail,
+  entityId,
+  locale,
+  b,
+}: {
+  listScore?: { overall_score: number; adsense_ready?: unknown; word_count?: number; index_ready?: unknown } | undefined;
+  detail?: { breakdown?: unknown } | undefined;
+  entityId: string;
+  locale: string;
+  b: (key: string, fallback: string, vars?: Record<string, string | number>) => string;
+}) {
+  const raw = detail?.breakdown;
+  const items: any[] = Array.isArray(raw)
+    ? raw
+    : typeof raw === 'string'
+      ? (() => { try { return JSON.parse(raw); } catch { return []; } })()
+      : [];
+  const truthy = (v: unknown) => v === true || v === 1 || v === '1';
+  const score = listScore ? Number(listScore.overall_score) : undefined;
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-gm-border-soft bg-gm-bg-deep/30 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold uppercase tracking-widest text-gm-muted">{b('form.seoScore', 'SEO / İçerik Kalite Skoru')}</span>
+          {listScore ? (
+            <>
+              <Link href={`/admin/seo-quality/custom_page/${entityId}?locale=${locale}`}>
+                <Badge variant={qualityVariant(score ?? 0)}>{score}/100</Badge>
+              </Link>
+              {truthy(listScore.adsense_ready)
+                ? <Badge className="bg-gm-success/15 text-gm-success">{b('form.adsenseReady', 'AdSense hazır')}</Badge>
+                : <Badge className="bg-gm-error/15 text-gm-error">{b('form.adsenseRisk', 'AdSense riski')}</Badge>}
+              {truthy(listScore.index_ready)
+                ? <Badge className="bg-gm-success/15 text-gm-success">{b('form.indexReady', 'Index uygun')}</Badge>
+                : <Badge className="bg-gm-warning/15 text-gm-warning">{b('form.indexNotReady', 'Index eşiği altı')}</Badge>}
+            </>
+          ) : (
+            <Badge variant="outline" className="text-gm-muted">{b('form.seoScorePending', 'Kaydedince hesaplanır')}</Badge>
+          )}
+        </div>
+      </div>
+      {items.length > 0 && (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {items.map((it: any) => (
+            <div key={it.key} className="flex items-start justify-between gap-3 rounded-xl bg-gm-surface/30 px-3 py-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-gm-text">
+                  <span className={`inline-flex size-4 shrink-0 items-center justify-center rounded-full text-[10px] ${it.ok ? 'bg-gm-success/15 text-gm-success' : 'bg-gm-error/15 text-gm-error'}`}>{it.ok ? '✓' : '✕'}</span>
+                  {it.label}
+                </div>
+                {it.hint && <p className="mt-0.5 text-[10px] text-gm-muted">{it.hint}</p>}
+              </div>
+              <span className="shrink-0 text-[11px] font-bold text-gm-muted">{it.got}/{it.max}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
