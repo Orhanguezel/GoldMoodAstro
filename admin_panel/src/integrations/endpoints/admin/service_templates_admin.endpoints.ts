@@ -14,7 +14,7 @@ type ServiceTemplateApiRow = Omit<ServiceTemplateDto, 'is_active' | 'is_free'> &
   is_active: boolean | number;
   is_free: boolean | number;
 };
-type Envelope<T> = { data: T };
+type Envelope<T> = { data?: T; items?: T };
 
 function normalizeTemplate(row: ServiceTemplateApiRow): ServiceTemplateDto {
   return {
@@ -36,7 +36,10 @@ export const serviceTemplatesAdminApi = baseApi.injectEndpoints({
         params: params || {},
         credentials: 'include',
       }),
-      transformResponse: (res: Envelope<ServiceTemplateApiRow[]>) => (res.data ?? []).map(normalizeTemplate),
+      transformResponse: (res: Envelope<ServiceTemplateApiRow[]> | ServiceTemplateApiRow[]) => {
+        const rows = Array.isArray(res) ? res : res.data ?? res.items ?? [];
+        return rows.map(normalizeTemplate);
+      },
       providesTags: (result) =>
         result
           ? [
@@ -56,7 +59,7 @@ export const serviceTemplatesAdminApi = baseApi.injectEndpoints({
         body,
         credentials: 'include',
       }),
-      transformResponse: (res: Envelope<{ id: string }>) => res.data,
+      transformResponse: (res: Envelope<{ id: string }>) => res.data ?? ({ id: '' }),
       invalidatesTags: [{ type: 'ServiceTemplate', id: 'LIST' }],
     }),
 
@@ -73,7 +76,7 @@ export const serviceTemplatesAdminApi = baseApi.injectEndpoints({
         body: patch,
         credentials: 'include',
       }),
-      transformResponse: (res: Envelope<{ id: string }>) => res.data,
+      transformResponse: (res: Envelope<{ id: string }>) => res.data ?? ({ id: '' }),
       invalidatesTags: (result, error, { id }) => [
         { type: 'ServiceTemplate', id },
         { type: 'ServiceTemplate', id: 'LIST' },

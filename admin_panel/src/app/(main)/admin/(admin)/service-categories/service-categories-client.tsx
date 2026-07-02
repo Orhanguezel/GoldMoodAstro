@@ -7,22 +7,11 @@ import {
   Edit2,
   Trash2,
   RefreshCcw,
-  Check,
-  X,
-  Layers,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,6 +25,39 @@ import {
   useDeleteServiceCategoryAdminMutation,
 } from '@/integrations/hooks';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
+import { AdminLocaleSelect } from '@/app/(main)/admin/_components/common/AdminLocaleSelect';
+import { useAdminLocales } from '@/app/(main)/admin/_components/common/useAdminLocales';
+import type { ServiceCategoryDto, ServiceI18nMap } from '@/integrations/shared';
+
+const FALLBACK_LOCALES = ['tr', 'en', 'de'];
+
+function blankI18n(locales: string[]): ServiceI18nMap {
+  return Object.fromEntries(locales.map((locale) => [locale, { name: '', description: '' }]));
+}
+
+function normalizeI18n(item: ServiceCategoryDto | null, locales: string[]): ServiceI18nMap {
+  const base = blankI18n(locales);
+  const source = item?.i18n ?? {};
+  for (const locale of locales) {
+    const row = source[locale];
+    base[locale] = {
+      name: row?.name ?? (locale === 'tr' ? item?.name ?? '' : ''),
+      description: row?.description ?? (locale === 'tr' ? item?.description ?? '' : ''),
+    };
+  }
+  return base;
+}
+
+function cleanI18n(map: ServiceI18nMap): ServiceI18nMap {
+  return Object.fromEntries(
+    Object.entries(map)
+      .map(([locale, row]) => [
+        locale,
+        { name: row.name.trim(), description: row.description?.trim() || null },
+      ])
+      .filter(([, row]) => Boolean((row as { name: string }).name)),
+  ) as ServiceI18nMap;
+}
 
 export default function ServiceCategoriesClient() {
   const t = useAdminT('admin.services');
@@ -43,60 +65,85 @@ export default function ServiceCategoriesClient() {
   const [createCategory, { isLoading: isCreating }] = useCreateServiceCategoryAdminMutation();
   const [updateCategory, { isLoading: isUpdating }] = useUpdateServiceCategoryAdminMutation();
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteServiceCategoryAdminMutation();
+  const {
+    localeOptions,
+    activeLocaleCodes,
+    defaultLocaleFromDb,
+    loading: localesLoading,
+    coerceLocale,
+  } = useAdminLocales();
+  const formLocales = activeLocaleCodes.length ? activeLocaleCodes : FALLBACK_LOCALES;
+  const defaultLocale = defaultLocaleFromDb || formLocales[0] || 'tr';
 
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [editingCategory, setEditingCategory] = React.useState<any | null>(null);
+  const [formOpen, setFormOpen] = React.useState(false);
+  const [editingCategory, setEditingCategory] = React.useState<ServiceCategoryDto | null>(null);
+  const [selectedLocale, setSelectedLocale] = React.useState(defaultLocale);
 
   // Form states
   const [slug, setSlug] = React.useState('');
-  const [name, setName] = React.useState('');
-  const [description, setDescription] = React.useState('');
+  const [i18n, setI18n] = React.useState<ServiceI18nMap>(() => blankI18n(formLocales));
   const [icon, setIcon] = React.useState('');
   const [sortOrder, setSortOrder] = React.useState(0);
   const [isActive, setIsActive] = React.useState(true);
 
   React.useEffect(() => {
-    if (editingCategory) {
+    setSelectedLocale((prev) => coerceLocale(prev, defaultLocale));
+  }, [coerceLocale, defaultLocale]);
+
+  React.useEffect(() => {
+    if (editingCategory && formOpen) {
       setSlug(editingCategory.slug || '');
-      setName(editingCategory.name || '');
-      setDescription(editingCategory.description || '');
+      setI18n(normalizeI18n(editingCategory, formLocales));
       setIcon(editingCategory.icon || '');
       setSortOrder(editingCategory.sort_order || 0);
       setIsActive(editingCategory.is_active ?? true);
     } else {
       setSlug('');
-      setName('');
-      setDescription('');
+      setI18n(blankI18n(formLocales));
       setIcon('');
       setSortOrder(0);
       setIsActive(true);
     }
-  }, [editingCategory, isOpen]);
+  }, [editingCategory, formOpen, formLocales.join('|')]);
+
+  const currentText = i18n[selectedLocale] ?? { name: '', description: '' };
+  const setLocaleText = (patch: Partial<{ name: string; description: string }>) => {
+    setI18n((prev) => ({
+      ...prev,
+      [selectedLocale]: {
+        name: patch.name ?? prev[selectedLocale]?.name ?? '',
+        description: patch.description ?? prev[selectedLocale]?.description ?? '',
+      },
+    }));
+  };
 
   const handleOpenCreate = () => {
     setEditingCategory(null);
-    setIsOpen(true);
+    setFormOpen(true);
   };
 
-  const handleOpenEdit = (category: any) => {
+  const handleOpenEdit = (category: ServiceCategoryDto) => {
     setEditingCategory(category);
-    setIsOpen(true);
+    setFormOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!slug.trim() || !name.trim()) {
+    const nextI18n = cleanI18n(i18n);
+    const baseText = nextI18n[defaultLocale] ?? nextI18n.tr ?? Object.values(nextI18n)[0];
+    if (!slug.trim() || !baseText?.name?.trim()) {
       toast.error(t('categories.toast.slugNameRequired'));
       return;
     }
 
     const payload = {
       slug: slug.trim(),
-      name: name.trim(),
-      description: description.trim() || null,
+      name: baseText.name.trim(),
+      description: baseText.description?.trim() || null,
       icon: icon.trim() || null,
       sort_order: Number(sortOrder),
       is_active: isActive ? 1 : 0,
+      i18n: nextI18n,
     };
 
     try {
@@ -107,7 +154,8 @@ export default function ServiceCategoriesClient() {
         await createCategory(payload).unwrap();
         toast.success(t('categories.toast.created'));
       }
-      setIsOpen(false);
+      setFormOpen(false);
+      setEditingCategory(null);
     } catch (err: any) {
       const message = err?.data?.error?.message || t('categories.toast.error');
       toast.error(message);
@@ -269,105 +317,110 @@ export default function ServiceCategoriesClient() {
         </CardContent>
       </Card>
 
-      {/* Ekle/Düzenle Dialog */}
-      <Dialog open={isOpen} onOpenChange={(open) => !open && setIsOpen(false)}>
-        <DialogContent className="max-h-[86vh] max-w-lg overflow-y-auto border-gm-border-soft bg-gm-bg-deep text-gm-text text-foreground">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">
-              {editingCategory ? t('categories.dialog.editTitle') : t('categories.dialog.createTitle')}
-            </DialogTitle>
-            <DialogDescription className="text-gm-muted">
-              {t('categories.dialog.description')}
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.name')}</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t('categories.field.namePlaceholder')}
-                  className="border-gm-border-soft bg-gm-surface/40"
-                  required
-                />
+      {formOpen && (
+        <Card className="border-gm-border-soft bg-gm-bg-deep/80 text-gm-text text-foreground shadow-xl">
+          <CardContent className="p-8">
+            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <h2 className="font-serif text-2xl">
+                  {editingCategory ? t('categories.dialog.editTitle') : t('categories.dialog.createTitle')}
+                </h2>
+                <p className="text-sm text-gm-muted">{t('categories.dialog.description')}</p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="slug" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.slug')}</Label>
-                <Input
-                  id="slug"
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder={t('categories.field.slugPlaceholder')}
-                  className="border-gm-border-soft bg-gm-surface/40"
-                  required
-                  disabled={!!editingCategory} // Editing slug is generally dangerous or locked in backend
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.description')}</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder={t('categories.field.descriptionPlaceholder')}
-                  className="border-gm-border-soft bg-gm-surface/40"
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="icon" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.icon')}</Label>
-                  <Input
-                    id="icon"
-                    value={icon}
-                    onChange={(e) => setIcon(e.target.value)}
-                    placeholder={t('categories.field.iconPlaceholder')}
-                    className="border-gm-border-soft bg-gm-surface/40"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sortOrder" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.sortOrder')}</Label>
-                  <Input
-                    id="sortOrder"
-                    type="number"
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(Number(e.target.value))}
-                    placeholder="0"
-                    className="border-gm-border-soft bg-gm-surface/40"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-2xl border border-gm-border-soft bg-gm-surface/40">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-bold uppercase tracking-widest text-gm-text text-foreground">{t('categories.field.isActive')}</Label>
-                  <p className="text-xs text-gm-muted">{t('categories.field.isActiveHelp')}</p>
-                </div>
-                <Switch
-                  checked={isActive}
-                  onCheckedChange={setIsActive}
-                />
-              </div>
+              <AdminLocaleSelect
+                value={selectedLocale}
+                onChange={(locale) => setSelectedLocale(coerceLocale(locale, defaultLocale))}
+                options={localeOptions.length ? localeOptions : formLocales.map((locale) => ({ value: locale, label: locale.toUpperCase() }))}
+                loading={localesLoading}
+                className="border-gm-border-soft bg-gm-surface/40"
+              />
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setIsOpen(false)}>
-                {t('categories.cancel')}
-              </Button>
-              <Button type="submit" disabled={busy} className="bg-gm-gold text-white px-6">
-                {t('categories.save')}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.name')}</Label>
+                  <Input
+                    id="name"
+                    value={currentText.name}
+                    onChange={(e) => setLocaleText({ name: e.target.value })}
+                    placeholder={t('categories.field.namePlaceholder')}
+                    className="border-gm-border-soft bg-gm-surface/40"
+                    required={selectedLocale === defaultLocale}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="slug" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.slug')}</Label>
+                  <Input
+                    id="slug"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
+                    placeholder={t('categories.field.slugPlaceholder')}
+                    className="border-gm-border-soft bg-gm-surface/40"
+                    required
+                    disabled={!!editingCategory}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.description')}</Label>
+                  <Textarea
+                    id="description"
+                    value={currentText.description ?? ''}
+                    onChange={(e) => setLocaleText({ description: e.target.value })}
+                    placeholder={t('categories.field.descriptionPlaceholder')}
+                    className="border-gm-border-soft bg-gm-surface/40"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="icon" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.icon')}</Label>
+                    <Input
+                      id="icon"
+                      value={icon}
+                      onChange={(e) => setIcon(e.target.value)}
+                      placeholder={t('categories.field.iconPlaceholder')}
+                      className="border-gm-border-soft bg-gm-surface/40"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="sortOrder" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('categories.field.sortOrder')}</Label>
+                    <Input
+                      id="sortOrder"
+                      type="number"
+                      value={sortOrder}
+                      onChange={(e) => setSortOrder(Number(e.target.value))}
+                      placeholder="0"
+                      className="border-gm-border-soft bg-gm-surface/40"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-2xl border border-gm-border-soft bg-gm-surface/40">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-bold uppercase tracking-widest text-gm-text text-foreground">{t('categories.field.isActive')}</Label>
+                    <p className="text-xs text-gm-muted">{t('categories.field.isActiveHelp')}</p>
+                  </div>
+                  <Switch checked={isActive} onCheckedChange={setIsActive} />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button type="button" variant="ghost" onClick={() => { setFormOpen(false); setEditingCategory(null); }}>
+                  {t('categories.cancel')}
+                </Button>
+                <Button type="submit" disabled={busy} className="bg-gm-gold text-white px-6">
+                  {t('categories.save')}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

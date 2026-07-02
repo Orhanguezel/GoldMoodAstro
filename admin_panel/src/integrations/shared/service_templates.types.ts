@@ -4,6 +4,13 @@
 
 import type { BoolLike } from './common';
 
+export type ServiceLocaleText = {
+  name: string;
+  description?: string | null;
+};
+
+export type ServiceI18nMap = Record<string, ServiceLocaleText>;
+
 export interface ServiceCategoryDto {
   id: string;
   slug: string;
@@ -12,6 +19,7 @@ export interface ServiceCategoryDto {
   icon: string | null;
   sort_order: number;
   is_active: boolean;
+  i18n?: ServiceI18nMap;
   created_at?: string;
   updated_at?: string;
 }
@@ -23,6 +31,7 @@ export interface ServiceCategoryCreatePayload {
   icon?: string | null;
   sort_order?: number;
   is_active?: BoolLike;
+  i18n?: ServiceI18nMap;
 }
 
 export type ServiceCategoryUpdatePayload = Partial<ServiceCategoryCreatePayload>;
@@ -40,6 +49,7 @@ export interface ServiceTemplateDto {
   is_free: boolean;
   sort_order: number;
   is_active: boolean;
+  i18n?: ServiceI18nMap;
   created_at?: string;
   updated_at?: string;
 }
@@ -56,10 +66,12 @@ export interface ServiceTemplateCreatePayload {
   is_free?: BoolLike;
   sort_order?: number;
   is_active?: BoolLike;
+  i18n?: ServiceI18nMap;
 }
 
 export type ServiceTemplateUpdatePayload = Partial<ServiceTemplateCreatePayload>;
 
 export interface ServiceTemplateListQueryParams {
   category_slug?: string;
+  locale?: string;
 }

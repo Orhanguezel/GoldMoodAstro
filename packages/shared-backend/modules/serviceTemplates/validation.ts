@@ -12,9 +12,16 @@ export function validatePaidServicePrice(data: { is_free?: number; price?: numbe
   }
 }
 
+const localeText = z.object({
+  name: z.string().trim().min(1).max(160),
+  description: z.string().trim().max(2000).nullable().optional(),
+});
+
+const i18n = z.record(z.string().trim().min(2).max(8), localeText);
+
 const payloadSchema = z.object({
   category_slug: z.string().trim().min(1).max(64),
-  name: z.string().trim().min(1).max(160),
+  name: z.string().trim().min(1).max(160).optional(),
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/, 'slug_format'),
   description: z.string().trim().max(2000).nullable().optional(),
   duration_minutes: z.coerce.number().int().positive().max(appConfig.consultants.maxSessionDurationMinutes).default(45),
@@ -24,6 +31,7 @@ const payloadSchema = z.object({
   is_free: z.coerce.number().int().min(0).max(1).default(0),
   sort_order: z.coerce.number().int().default(0),
   is_active: z.coerce.number().int().min(0).max(1).default(1),
+  i18n: i18n.optional(),
 });
 
 export const createServiceTemplateSchema = payloadSchema.superRefine(validatePaidServicePrice);

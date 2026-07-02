@@ -10,7 +10,7 @@ import type {
 } from '@/integrations/shared';
 
 type ServiceCategoryApiRow = Omit<ServiceCategoryDto, 'is_active'> & { is_active: boolean | number };
-type Envelope<T> = { data: T };
+type Envelope<T> = { data?: T; items?: T };
 
 function normalizeCategory(row: ServiceCategoryApiRow): ServiceCategoryDto {
   return {
@@ -24,13 +24,17 @@ export const serviceCategoriesAdminApi = baseApi.injectEndpoints({
     // ---------------------------------------------------------
     // GET /admin/service-categories
     // ---------------------------------------------------------
-    listServiceCategoriesAdmin: build.query<ServiceCategoryDto[], void>({
-      query: () => ({
+    listServiceCategoriesAdmin: build.query<ServiceCategoryDto[], { locale?: string } | void>({
+      query: (params) => ({
         url: '/admin/service-categories',
         method: 'GET',
+        params: params || {},
         credentials: 'include',
       }),
-      transformResponse: (res: Envelope<ServiceCategoryApiRow[]>) => (res.data ?? []).map(normalizeCategory),
+      transformResponse: (res: Envelope<ServiceCategoryApiRow[]> | ServiceCategoryApiRow[]) => {
+        const rows = Array.isArray(res) ? res : res.data ?? res.items ?? [];
+        return rows.map(normalizeCategory);
+      },
       providesTags: (result) =>
         result
           ? [
@@ -50,7 +54,7 @@ export const serviceCategoriesAdminApi = baseApi.injectEndpoints({
         body,
         credentials: 'include',
       }),
-      transformResponse: (res: Envelope<{ id: string }>) => res.data,
+      transformResponse: (res: Envelope<{ id: string }>) => res.data ?? ({ id: '' }),
       invalidatesTags: [{ type: 'ServiceCategory', id: 'LIST' }],
     }),
 
@@ -67,7 +71,7 @@ export const serviceCategoriesAdminApi = baseApi.injectEndpoints({
         body: patch,
         credentials: 'include',
       }),
-      transformResponse: (res: Envelope<{ id: string }>) => res.data,
+      transformResponse: (res: Envelope<{ id: string }>) => res.data ?? ({ id: '' }),
       invalidatesTags: (result, error, { id }) => [
         { type: 'ServiceCategory', id },
         { type: 'ServiceCategory', id: 'LIST' },

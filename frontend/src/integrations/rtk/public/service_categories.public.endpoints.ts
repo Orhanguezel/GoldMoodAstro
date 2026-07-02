@@ -14,8 +14,8 @@ type Envelope<T> = { data: T };
 
 const serviceCategoriesPublicApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    listServiceCategoriesPublic: build.query<ServiceCategoryPublic[], void>({
-      query: () => '/service-categories',
+    listServiceCategoriesPublic: build.query<ServiceCategoryPublic[], { locale?: string } | void>({
+      query: (params) => ({ url: '/service-categories', params: params ?? undefined }),
       transformResponse: (res: Envelope<ServiceCategoryPublic[]> | ServiceCategoryPublic[]) =>
         Array.isArray(res) ? res : (res.data ?? []),
     }),

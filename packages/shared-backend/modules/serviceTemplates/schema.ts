@@ -25,5 +25,24 @@ export const serviceTemplates = mysqlTable(
   }),
 );
 
+export const serviceTemplatesI18n = mysqlTable(
+  'service_templates_i18n',
+  {
+    id: char('id', { length: 36 }).notNull().primaryKey(),
+    template_id: char('template_id', { length: 36 }).notNull(),
+    locale: char('locale', { length: 8 }).notNull(),
+    name: varchar('name', { length: 160 }).notNull(),
+    description: text('description'),
+    created_at: datetime('created_at', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
+    updated_at: datetime('updated_at', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)`),
+  },
+  (t) => ({
+    uniq_template_locale: uniqueIndex('service_templates_i18n_template_locale_uq').on(t.template_id, t.locale),
+    idx_locale: index('service_templates_i18n_locale_idx').on(t.locale),
+  }),
+);
+
 export type ServiceTemplate = typeof serviceTemplates.$inferSelect;
 export type NewServiceTemplate = typeof serviceTemplates.$inferInsert;
+export type ServiceTemplateI18n = typeof serviceTemplatesI18n.$inferSelect;
+export type NewServiceTemplateI18n = typeof serviceTemplatesI18n.$inferInsert;
