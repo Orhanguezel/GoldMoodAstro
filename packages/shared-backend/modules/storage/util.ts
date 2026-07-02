@@ -5,6 +5,16 @@
 const encSeg = (s: string) => encodeURIComponent(s);
 const encPath = (p: string) => p.split("/").map(encSeg).join("/");
 const decPath = (p: string) => decodeURIComponent(p);
+const stripSlashes = (s: string) => s.replace(/^\/+/, "");
+
+function normalizeLocalUploadUrl(bucket: string, path: string, providerUrl?: string | null) {
+  const direct = String(providerUrl ?? "").trim();
+  if (direct.startsWith("/uploads/")) return direct;
+  const cleanPath = stripSlashes(path);
+  if (cleanPath.startsWith("uploads/")) return `/${cleanPath}`;
+  if (bucket === "local" && cleanPath) return `/uploads/${cleanPath}`;
+  return "";
+}
 
 export type Cfg = {
   cdnPublicBase?: string | null;
@@ -24,6 +34,9 @@ export function buildPublicUrl(
   providerUrl?: string | null,
   cfg?: Cfg | null,
 ): string {
+  const localUploadUrl = normalizeLocalUploadUrl(bucket, path, providerUrl);
+  if (localUploadUrl) return localUploadUrl;
+
   if (providerUrl) {
     if (providerUrl.startsWith("/") && cfg?.publicApiBase) {
       return `${cfg.publicApiBase.replace(/\/+$/, "")}${providerUrl}`;
@@ -64,7 +77,7 @@ export function publicUrlForAsset(asset: {
   return publicUrlOf(asset.bucket, asset.path, asset.url ?? null);
 }
 
-export const stripLeadingSlashes = (s: string) => s.replace(/^\/+/, "");
+export const stripLeadingSlashes = stripSlashes;
 
 export const normalizeFolder = (s?: string | null) => {
   if (!s) return null;

@@ -15,6 +15,7 @@ import {
   makeCustomError,
   StorageListTags,
   optimizeImageFileForUpload,
+  normalizeStorageAsset,
 } from '@/integrations/shared';
 
 export const storageAdminApi = baseApi.injectEndpoints({
@@ -30,7 +31,7 @@ export const storageAdminApi = baseApi.injectEndpoints({
         const totalStr =
           headers?.get?.('x-total-count') ?? headers?.get?.('X-Total-Count') ?? undefined;
         const total = totalStr ? Number(totalStr) : (data?.length ?? 0);
-        return { items: data ?? [], total };
+        return { items: (data ?? []).map((item) => normalizeStorageAsset(item)), total };
       },
       providesTags: (res) => StorageListTags(res?.items),
     }),
@@ -40,6 +41,7 @@ export const storageAdminApi = baseApi.injectEndpoints({
         url: `/admin/storage/assets/${encodeURIComponent(id)}`,
         method: 'GET',
       }),
+      transformResponse: (data: StorageAsset) => normalizeStorageAsset(data),
       providesTags: (res) => (res ? [{ type: 'Storage', id: res.id }] : []),
     }),
 
@@ -74,7 +76,7 @@ export const storageAdminApi = baseApi.injectEndpoints({
             return { error: res.error as FetchBaseQueryError };
           }
 
-          return { data: res.data as StorageAsset };
+          return { data: normalizeStorageAsset(res.data as StorageAsset) };
         } catch (e) {
           const error = makeCustomError(
             'create_failed',
@@ -125,7 +127,15 @@ export const storageAdminApi = baseApi.injectEndpoints({
             return { error: res.error as FetchBaseQueryError };
           }
 
-          return { data: res.data as BulkCreateResponse };
+          const payload = res.data as BulkCreateResponse;
+          return {
+            data: {
+              ...payload,
+              items: payload.items.map((item) =>
+                'id' in item ? normalizeStorageAsset(item as StorageAsset) : item,
+              ),
+            },
+          };
         } catch (e) {
           const error = makeCustomError(
             'bulk_create_failed',
@@ -143,6 +153,7 @@ export const storageAdminApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body,
       }),
+      transformResponse: (data: StorageAsset) => normalizeStorageAsset(data),
       invalidatesTags: (_res, _err, arg) => [
         { type: 'Storage', id: arg.id },
         { type: 'Storage', id: 'LIST' },

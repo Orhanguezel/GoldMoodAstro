@@ -2,6 +2,7 @@
 // FILE: src/integrations/shared/storage.ts
 // =============================================================
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { BASE_URL } from '@/integrations/apiBase';
 export type StorageMeta = Record<string, string> | null;
 
 export type StorageAsset = {
@@ -191,6 +192,72 @@ export type BulkCreateResponse = {
   count: number;
   items: Array<StorageAsset | BulkCreateErrorItem>;
 };
+
+function trimRightSlash(value: string) {
+  return value.replace(/\/+$/, '');
+}
+
+function isAbsUrl(value: string) {
+  return /^https?:\/\//i.test(value);
+}
+
+function apiOrigin() {
+  const base = String(BASE_URL || '').trim();
+  if (isAbsUrl(base)) {
+    try {
+      return new URL(base).origin;
+    } catch {
+      return trimRightSlash(base);
+    }
+  }
+  if (typeof window !== 'undefined') return window.location.origin;
+  return '';
+}
+
+export function normalizeStorageUrl(raw?: string | null, asset?: Pick<StorageAsset, 'bucket' | 'path'> | null): string {
+  const value = String(raw ?? '').trim();
+  if (isAbsUrl(value)) return value;
+
+  const origin = apiOrigin();
+  const fromAssetPath = asset?.path ? String(asset.path).trim() : '';
+  const fromAssetBucket = asset?.bucket ? String(asset.bucket).trim() : '';
+
+  const localUploadPath = (() => {
+    if (value.startsWith('/storage/local/uploads/')) return value.replace(/^\/storage\/local\/uploads\//, '/uploads/');
+    if (value.startsWith('/storage/local//uploads/')) return value.replace(/^\/storage\/local\/+uploads\//, '/uploads/');
+    if (value.startsWith('/storage/local/')) return value.replace(/^\/storage\/local\/+/, '/uploads/');
+    if (value.startsWith('/uploads/')) return value;
+    const cleanPath = fromAssetPath.replace(/^\/+/, '');
+    if (cleanPath.startsWith('uploads/')) return `/${cleanPath}`;
+    if (fromAssetBucket === 'local' && cleanPath) return `/uploads/${cleanPath}`;
+    return '';
+  })();
+  if (localUploadPath) return origin ? `${origin}${localUploadPath}` : localUploadPath;
+
+  if (value.startsWith('/api/')) return origin ? `${origin}${value}` : value;
+  if (value.startsWith('/storage/')) {
+    const base = String(BASE_URL || '').trim() || '/api';
+    const prefix = isAbsUrl(base) ? trimRightSlash(base) : base.replace(/\/+$/, '');
+    return `${prefix}${value}`;
+  }
+  if (value.startsWith('/')) return origin ? `${origin}${value}` : value;
+  if (value) return origin ? `${origin}/${value}` : `/${value}`;
+
+  if (fromAssetBucket && fromAssetPath) {
+    const cleanPath = fromAssetPath.replace(/^\/+/, '');
+    if (cleanPath.startsWith('uploads/')) return origin ? `${origin}/${cleanPath}` : `/${cleanPath}`;
+    if (fromAssetBucket === 'local') return origin ? `${origin}/uploads/${cleanPath}` : `/uploads/${cleanPath}`;
+  }
+
+  return '';
+}
+
+export function normalizeStorageAsset<T extends StorageAsset>(asset: T): T {
+  return {
+    ...asset,
+    url: normalizeStorageUrl(asset.url, asset),
+  };
+}
 
 // NULL-güvenli tag helper
 export const StorageListTags = (items?: StorageAsset[]) =>
