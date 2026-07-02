@@ -16,6 +16,8 @@ import { createUserNotification } from '../notifications/service';
 import { dispatchPushToUser } from '../notifications/push';
 import { sendTemplatedEmail } from '../emailTemplates/mailer';
 import { getDefaultLocale } from '../_shared';
+import { notifyText } from '../_shared/notify-i18n';
+import { requestLocale } from '../_shared/api-i18n';
 import { overrideDaySlots } from '../availability/repository';
 import { releaseSlotTx } from '../bookings/repository';
 import { consultantServices } from '../consultantServices/schema';
@@ -693,10 +695,12 @@ export async function approveBooking(req: FastifyRequest, reply: FastifyReply) {
   // Danışana bildirim + email — fire-and-forget
   if (b.user_id) {
     const isInstant = b.status === 'requested_now';
-    const title = isInstant ? '✅ Anlık Görüşmeniz Onaylandı' : '✅ Randevunuz Onaylandı';
-    const message = isInstant
-      ? 'Danışman talebinizi kabul etti. Hemen görüşmeye geçebilirsiniz.'
-      : `${b.appointment_date} ${b.appointment_time?.slice(0, 5) ?? ''} için randevunuz onaylandı.`;
+    const locale = (b as any).locale || (await getDefaultLocale());
+    const { title, message } = notifyText(
+      locale,
+      isInstant ? 'booking_approved_instant' : 'booking_approved',
+      { date: b.appointment_date ?? '', time: b.appointment_time?.slice(0, 5) ?? '' },
+    );
 
     const [consultantUser] = await db
       .select({ full_name: users.full_name })
@@ -704,7 +708,6 @@ export async function approveBooking(req: FastifyRequest, reply: FastifyReply) {
       .where(eq(users.id, c.user_id))
       .limit(1);
     const consultantName = consultantUser?.full_name || 'Danışman';
-    const locale = (b as any).locale || (await getDefaultLocale());
 
     Promise.allSettled([
       createUserNotification({ userId: b.user_id, title, message, type: 'booking' }),
@@ -777,9 +780,10 @@ export async function rejectBooking(req: FastifyRequest, reply: FastifyReply) {
 
   // Danışana bildirim + email — fire-and-forget
   if (b.user_id) {
-    const title = '❌ Randevunuz Reddedildi';
-    const reason = parsed.data.reason ? ` Sebep: ${parsed.data.reason}` : '';
-    const message = `Danışman randevu talebinizi reddetti.${reason}`;
+    const locale = (b as any).locale || (await getDefaultLocale());
+    const { title, message } = parsed.data.reason
+      ? notifyText(locale, 'booking_rejected_reason', { reason: parsed.data.reason })
+      : notifyText(locale, 'booking_rejected');
 
     const [consultantUser] = await db
       .select({ full_name: users.full_name })
@@ -787,7 +791,6 @@ export async function rejectBooking(req: FastifyRequest, reply: FastifyReply) {
       .where(eq(users.id, c.user_id))
       .limit(1);
     const consultantName = consultantUser?.full_name || 'Danışman';
-    const locale = (b as any).locale || (await getDefaultLocale());
 
     Promise.allSettled([
       createUserNotification({ userId: b.user_id, title, message, type: 'booking' }),
@@ -853,8 +856,8 @@ export async function cancelBooking(req: FastifyRequest, reply: FastifyReply) {
   });
 
   if (b.user_id) {
-    const title = 'Randevunuz İptal Edildi';
-    const message = `Danışman randevunuzu iptal etti. Sebep: ${parsed.data.reason}`;
+    const locale = (b as any).locale || (await getDefaultLocale());
+    const { title, message } = notifyText(locale, 'booking_cancelled', { reason: parsed.data.reason });
     Promise.allSettled([
       createUserNotification({ userId: b.user_id, title, message, type: 'booking' }),
       dispatchPushToUser({
@@ -1857,7 +1860,7 @@ export async function requestWithdrawal(req: FastifyRequest, reply: FastifyReply
       status: 'pending',
       amount: parsed.data.amount,
       currency: w.currency,
-      message: 'Para çekme talebiniz alındı. Admin onayından sonra hesabınıza geçecektir.',
+      message: notifyText(requestLocale(req), 'withdrawal_received').message,
     },
   });
 }
