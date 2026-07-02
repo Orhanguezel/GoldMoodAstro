@@ -196,10 +196,13 @@ export default function DashboardPage() {
 
   function switchTab(next: TabKey) {
     setTab(next);
-    const url = new URL(window.location.href);
-    if (next === 'overview') url.searchParams.delete('tab');
-    else url.searchParams.set('tab', next);
-    window.history.replaceState({}, '', url.toString());
+    // Next router üzerinden (manuel history.replaceState yerine) — Link push ile tutarlı,
+    // router iç state'i desync olmaz. Scroll'u koru.
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === 'overview') params.delete('tab');
+    else params.set('tab', next);
+    const qs = params.toString();
+    router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false });
   }
 
   useEffect(() => {

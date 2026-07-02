@@ -27,7 +27,7 @@
 ### 🟡 Orta / İyileştirme
 - [x] "Member since" görünmüyor — `/auth/user` `created_at` dönmüyor (`dashboard/page.tsx:278-283`).
 - [x] `UserMessagesPanel` `isTr` ölü + tarih hep `tr-TR` (21,35-39); `BookingMessageButton.tsx:37` aynı.
-- [ ] Sekme geçişi `replaceState` vs kart `Link` push — history tutarsız.
+- [x] Sekme geçişi `replaceState` vs kart `Link` push — history tutarsız.
 - [x] Login redirect `?tab` kaybediyor (`dashboard/page.tsx:195`).
 - [x] Ölü `AlertDialog` importları (`dashboard/page.tsx:48-58`); `window.confirm`'e geçilmiş.
 - [x] Silme sonrası çift fetch (invalidate + manuel `refetchHistory`).
@@ -71,7 +71,7 @@
 - [x] `ClientsPanel` debounce yok + çifte filtre (44-53).
 - [x] Availability preset tüm haftayı REPLACE ediyor (onay yok) (`AvailabilityPanel.tsx:105-108`).
 - [x] Kapasite kalıntısı: backend `capacity max(100)` hâlâ kabul; eski `capacity>1` geri yazılıyor. **Fix:** backend'de 1'e sabitle.
-- [ ] Timezone: `toISOString().slice(0,10)` UTC (`AvailabilityPanel.tsx:71`); Wallet tarih filtresi UTC-midnight; RequestNow sayaç TZ riski; ProfileViews gün sınırı.
+- [x] Timezone: `toISOString().slice(0,10)` UTC (`AvailabilityPanel.tsx:71`); Wallet tarih filtresi UTC-midnight; RequestNow sayaç TZ riski; ProfileViews gün sınırı.
 - [x] Profil tamamlama "Go→" butonu ölü (backend item'da `tab` yok) + Türkçe hardcoded label (`controller.ts:1202-1212`).
 - [x] `CompletionScoreWidget` ring rengi çalışmıyor (`bg-*` yerine `text-*` olmalı) (`ConsultantDashboard.tsx:1466-1472`).
 - [x] `ConsultantCardPreview` kök div `relative` değil → "Preview" overlay tüm sidebar'ı kaplar (40,117). Ayrıca `₺` hardcoded, "Verified" rozeti approval'dan bağımsız hep görünür, `rating_avg` null → "NaN", video seans fiyatı önizlenmiyor.

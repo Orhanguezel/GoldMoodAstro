@@ -154,6 +154,11 @@ function formatDateKey(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+// Sunucu + DB UTC çalışıyor; danışman analitiği/filtreleri Türkiye yerel gününe göre
+// olmalı. Türkiye 2016'dan beri sabit UTC+3 (DST yok) → numerik offset güvenli
+// (MySQL tz tabloları gerekmez). Gün/ay bucket'ları ve tarih filtresi bununla yereller.
+const LOCAL_TZ_OFFSET = '+03:00';
+
 function formatYearMonth(date: Date): string {
   return date.toISOString().slice(0, 7);
 }
@@ -964,12 +969,12 @@ export async function getStats(req: FastifyRequest, reply: FastifyReply) {
   const sevenDaysAgo = new Date(now); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
   sevenDaysAgo.setHours(0, 0, 0, 0);
   const dailyRows = await db.execute(
-    sql`SELECT DATE(created_at) AS day, COUNT(*) AS count, COALESCE(SUM(session_price),0) AS earnings
+    sql`SELECT DATE(CONVERT_TZ(created_at, '+00:00', ${LOCAL_TZ_OFFSET})) AS day, COUNT(*) AS count, COALESCE(SUM(session_price),0) AS earnings
         FROM bookings
         WHERE consultant_id = ${c.id}
           AND created_at >= ${sevenDaysAgo}
           AND status IN ('confirmed','completed')
-        GROUP BY DATE(created_at)
+        GROUP BY DATE(CONVERT_TZ(created_at, '+00:00', ${LOCAL_TZ_OFFSET}))
         ORDER BY day ASC`,
   );
   const dailyArr = (Array.isArray((dailyRows as any)?.[0]) ? (dailyRows as any)[0] : (dailyRows as any)) as any[];
@@ -1081,14 +1086,14 @@ export async function getWalletMonthlyStats(req: FastifyRequest, reply: FastifyR
     if (w?.id) {
       const result = await db.execute(
         sql`
-          SELECT DATE_FORMAT(created_at, '%Y-%m') AS year_month,
+          SELECT DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', ${LOCAL_TZ_OFFSET}), '%Y-%m') AS year_month,
                  COALESCE(SUM(CASE WHEN type='credit' THEN amount ELSE 0 END), 0) AS earnings,
                  COALESCE(SUM(CASE WHEN type='credit' THEN 1 ELSE 0 END), 0) AS sessions
           FROM wallet_transactions
           WHERE wallet_id = ${w.id}
             AND created_at >= ${start}
             AND payment_status = 'completed'
-          GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+          GROUP BY DATE_FORMAT(CONVERT_TZ(created_at, '+00:00', ${LOCAL_TZ_OFFSET}), '%Y-%m')
           ORDER BY year_month ASC
         `,
       );
@@ -1127,11 +1132,11 @@ export async function getProfileViews(req: FastifyRequest, reply: FastifyReply) 
 
   const result = await db.execute(
     sql`
-      SELECT DATE(viewed_at) AS view_date, COUNT(*) AS count
+      SELECT DATE(CONVERT_TZ(viewed_at, '+00:00', ${LOCAL_TZ_OFFSET})) AS view_date, COUNT(*) AS count
       FROM consultant_profile_views
       WHERE consultant_id = ${c.id}
         AND viewed_at >= ${start}
-      GROUP BY DATE(viewed_at)
+      GROUP BY DATE(CONVERT_TZ(viewed_at, '+00:00', ${LOCAL_TZ_OFFSET}))
       ORDER BY view_date ASC
     `,
   );
@@ -1626,8 +1631,8 @@ export async function getMyWallet(req: FastifyRequest, reply: FastifyReply) {
       sql`SELECT id, wallet_id, user_id, amount, currency, type, purpose, description, payment_method, payment_status, transaction_ref, is_admin_created, created_at
           FROM wallet_transactions
           WHERE wallet_id = ${w.id}
-            AND (${from} IS NULL OR created_at >= ${from})
-            AND (${to} IS NULL OR created_at <= ${to})
+            AND (${from} IS NULL OR CONVERT_TZ(created_at, '+00:00', ${LOCAL_TZ_OFFSET}) >= ${from})
+            AND (${to} IS NULL OR CONVERT_TZ(created_at, '+00:00', ${LOCAL_TZ_OFFSET}) <= ${to})
             AND (${type} IS NULL OR type = ${type})
           ORDER BY created_at DESC
           LIMIT ${pageSize} OFFSET ${offset}`,
