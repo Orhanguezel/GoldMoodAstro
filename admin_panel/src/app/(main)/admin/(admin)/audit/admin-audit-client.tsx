@@ -279,7 +279,13 @@ export default function AdminAuditClient() {
   const sp = useSearchParams();
   const t = useAdminT('admin.audit');
 
-  const tab = normalizeTab(sp.get('tab'));
+  const urlTab = normalizeTab(sp.get('tab'));
+  const [tab, setTab] = React.useState<TabKey>(urlTab);
+  const [, startTabTransition] = React.useTransition();
+
+  React.useEffect(() => {
+    setTab(urlTab);
+  }, [urlTab]);
 
   const q = sp.get('q') ?? '';
   const method = sp.get('method') ?? '';
@@ -386,8 +392,9 @@ export default function AdminAuditClient() {
   }, [tab]);
 
   function apply(next: Partial<Record<string, any>>) {
+    const nextTab = normalizeTab(next.tab ?? tab);
     const merged = {
-      tab,
+      tab: nextTab,
       q,
       method,
       status,
@@ -413,7 +420,10 @@ export default function AdminAuditClient() {
 
     const qs = auditQSForTab(merged);
 
-    router.push(`/admin/audit${qs}`);
+    setTab(nextTab);
+    startTabTransition(() => {
+      router.replace(`/admin/audit${qs}`, { scroll: false });
+    });
   }
 
   function onTabChange(next: string) {
