@@ -252,7 +252,7 @@ AdSense hesabı açılınca `frontend/public/ads.txt`; privacy/terms meta tamlı
 
 ## FAZ 8 — Deploy & doğrulama
 
-### SEO-T24 — Deploy 🔴
+### [x] SEO-T24 — Deploy ✅
 1. `bun run typecheck` (backend + admin_panel) yeşil.
 2. Commit → push (deploy branch) → git-deploy.
 3. **Prod additive ALTER** (seed:nodrop yeni kolon eklemez):
@@ -261,7 +261,7 @@ AdSense hesabı açılınca `frontend/public/ads.txt`; privacy/terms meta tamlı
    (`seo_quality_scores` yeni tablo → `CREATE TABLE IF NOT EXISTS` seed ile gelir, ALTER gerekmez.)
 4. `POST /admin/seo/recalculate` ilk toplu hesaplama.
 5. Admin dashboard'da skor dağılımını doğrula; Playwright ile hydrated kontrol.
-**Durum:** local backend/admin/frontend typecheck ✅, backend/admin/frontend build ✅, local seed `213/214/215/216 --no-drop` ✅, local recalc ✅ (`count=102`). Canlı commit/push/deploy/PM2 reload yapılmadı.
+**Durum:** commit `a2ca30b` pushlandı ve clean worktree üzerinden `./deploy/deploy.sh all --seed` ile canlıya alındı. Backend/admin/frontend build ✅, prod no-drop seed + `216` guarded migration ✅, prod recalc ✅ (`count=111`), PM2 backend/admin/frontend online ✅. Canlı kontroller: landing sayfaları, `ads.txt`, `/admin/seo-quality`, `/admin/audit?tab=auth&days=14&limit=50` → HTTP 200 ✅.
 
 ---
 
