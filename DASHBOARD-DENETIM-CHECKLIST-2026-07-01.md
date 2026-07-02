@@ -80,7 +80,7 @@
 - [x] Para birimi format tutarsız (Wallet `1.234,56 TRY` vs `₺X`) — tek helper.
 - [x] "Deactivate" hızlı butonu kaydedilmemiş taslağı da persist ediyor (`ServicesPanel.tsx:587`).
 - [x] Boost rozeti metni bozuk birleşim (`{days}` çift) (`ServicesPanel.tsx:553`).
-- [ ] Blog: kapak kaldırınca `image_url` temizlenmiyor (`controller.ts:588`); sahiplik serbest-metin tag marker'ıyla (enjeksiyon/kayıp riski) — `author_user_id` kolonu ekle; taslak locale-bazlı görünürlük kafa karıştırıcı.
+- [x] Blog: kapak kaldırınca `image_url` temizlenmiyor (`controller.ts:588`); sahiplik serbest-metin tag marker'ıyla (enjeksiyon/kayıp riski) — `author_user_id` kolonu ekle; taslak locale-bazlı görünürlük kafa karıştırıcı.
 - [x] Tab state popstate ile senkron değil (`ConsultantDashboard.tsx:94-103`).
 - [x] Backend bildirim/e-posta/mesajları Türkçe hardcoded (çok dilli platform) (`controller.ts:666-669,743-745,819-820,1785`).
 - [x] Cüzdan seçimi `ORDER BY`'sız belirsiz + zorla `consultant_id` bağlama (`controller.ts:1493-1525`).

@@ -40,6 +40,7 @@ function arrayToJson(v: string[] | null | undefined): unknown {
 export type CustomPageMergedRow = {
   id: string;
   module_key: string;
+  author_consultant_id: string | null;
   is_published: 0 | 1;
   featured: 0 | 1;
   featured_image: string | null;
@@ -67,6 +68,7 @@ function buildMerged(parent: typeof customPages.$inferSelect, i18n?: typeof cust
   return {
     id: parent.id,
     module_key: parent.module_key,
+    author_consultant_id: (parent as any).author_consultant_id ?? null,
     is_published: parent.is_published as 0 | 1,
     featured: parent.featured as 0 | 1,
     featured_image: parent.featured_image ?? null,
@@ -224,6 +226,7 @@ export async function createCustomPage(input: {
   meta_description?: string | null;
   tags?: string | null;
   module_key?: string;
+  author_consultant_id?: string | null;
   is_published?: boolean;
   featured?: boolean;
   featured_image?: string | null;
@@ -242,6 +245,7 @@ export async function createCustomPage(input: {
   await db.insert(customPages).values({
     id,
     module_key: input.module_key ?? "page",
+    author_consultant_id: input.author_consultant_id ?? null,
     is_published: input.is_published === false ? 0 : 1,
     featured: input.featured ? 1 : 0,
     featured_image: input.featured_image ?? null,

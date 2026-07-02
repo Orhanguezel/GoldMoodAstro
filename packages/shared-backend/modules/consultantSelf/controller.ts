@@ -135,8 +135,15 @@ function mergeConsultantBlogTags(raw: string | null | undefined, consultantId: s
   return tags.join(', ');
 }
 
-function belongsToConsultantBlog(row: { module_key?: string | null; tags?: string | null }, consultantId: string): boolean {
-  return row.module_key === 'blog' && String(row.tags || '').split(/[;,]/).map((tag) => tag.trim()).includes(consultantBlogMarker(consultantId));
+function belongsToConsultantBlog(
+  row: { module_key?: string | null; tags?: string | null; author_consultant_id?: string | null },
+  consultantId: string,
+): boolean {
+  if (row.module_key !== 'blog') return false;
+  // Güvenilir kolon önce: set ise sadece ona güven (spoof edilemez).
+  if (row.author_consultant_id != null) return row.author_consultant_id === consultantId;
+  // Legacy (kolon NULL) satırlar için tag-marker fallback — backfill sonrası devre dışı kalır.
+  return String(row.tags || '').split(/[;,]/).map((tag) => tag.trim()).includes(consultantBlogMarker(consultantId));
 }
 
 function rowsFromExecute<T = any>(result: unknown): T[] {
@@ -566,6 +573,7 @@ export async function createBlogPost(req: FastifyRequest, reply: FastifyReply) {
   const created = await customPagesRepo.createCustomPage({
     ...input,
     module_key: 'blog',
+    author_consultant_id: c.id, // güvenilir sahiplik (tag-marker legacy fallback)
     is_published: false,
     featured: input.featured ?? false,
     image_url: input.featured_image ?? null,

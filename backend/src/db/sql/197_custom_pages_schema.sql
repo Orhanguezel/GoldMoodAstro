@@ -7,6 +7,7 @@
 CREATE TABLE IF NOT EXISTS custom_pages (
   id                       CHAR(36)      NOT NULL PRIMARY KEY,
   module_key               VARCHAR(64)   NOT NULL DEFAULT 'page',
+  author_consultant_id     CHAR(36)      NULL,
   is_published             TINYINT(1)    NOT NULL DEFAULT 1,
   featured                 TINYINT(1)    NOT NULL DEFAULT 0,
   featured_image           VARCHAR(500)  NULL,
@@ -20,7 +21,8 @@ CREATE TABLE IF NOT EXISTS custom_pages (
   created_at               DATETIME(3)   NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at               DATETIME(3)   NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   KEY custom_pages_module_idx     (module_key),
-  KEY custom_pages_pub_order_idx  (is_published, display_order)
+  KEY custom_pages_pub_order_idx  (is_published, display_order),
+  KEY custom_pages_author_idx     (author_consultant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS custom_pages_i18n (
