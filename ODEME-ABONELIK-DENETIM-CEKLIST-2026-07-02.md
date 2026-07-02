@@ -28,6 +28,7 @@
 ### [ ] PAY-T1 — Sızmış Iyzipay anahtarlarını rotate et 🔴
 - **Bulgu:** Denetimde gerçek `IYZIPAY_API_KEY`/`SECRET_KEY` .env'de görüldü (repo'da değil ama ortamda). Sızmış kabul et.
 - **Fix:** Iyzico panelinden anahtarları **yenile**; prod `.env` güncelle; git geçmişinde/loglarda sızıntı taraması. (Codex değil, **ops/kullanıcı** yapar — checklist'te işaretle.)
+- **Codex notu:** Canlı `.env` içinde `PAYMENT_MOCK_MODE=false` yapıldı ve backend reload edildi. Iyzipay API key/secret rotasyonu Iyzico panel erişimi gerektirdiği için kullanıcı/ops onayı bekliyor.
 
 ---
 
@@ -236,6 +237,7 @@ Ortak sorun: TÜM callback'lerde token↔order bağlaması + tutar doğrulaması
    > Unique eklemeden ÖNCE mevcut mükerrer kayıt var mı kontrol et; varsa migration script ile temizle.
 4. PAYMENT_MOCK_MODE=false doğrula; anahtar rotasyonu (PAY-T1) tamamlandı mı kontrol.
 5. Callback güvenlik testleri: token'sız serviceBoosts callback → red; ucuz token pahalı ürün → red; replay → tek teslim.
+- **Codex notu:** Kısmi tamamlandı: backend + shared-backend canlıya rsync edildi, prod `218_payment_kyc_additive_migrate.sql` karşılığı `user_addresses.identity_number` kolonu eklendi, mevcut unique indexler doğrulandı, backend sunucuda typecheck/build geçti ve PM2 reload edildi. Health OK; token'sız `POST /api/service-boosts/iyzico/callback` → `400 iyzico_token_required`. Tam kapatma için PAY-T1 anahtar rotasyonu ve gerçek/staging ödeme senaryoları (`ucuz token pahalı ürün`, replay) manuel doğrulanmalı. Canlıda `IAP_APPLE_ROOT_CERT_SHA256` ve `IAP_GOOGLE_RTDN_TOKEN` eksik görünüyor.
 
 ---
 
