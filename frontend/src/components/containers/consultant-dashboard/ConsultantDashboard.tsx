@@ -103,6 +103,12 @@ export default function ConsultantDashboard({ locale }: Props) {
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
+  // Back/forward (popstate) → URL değişince tab state'i senkronla.
+  useEffect(() => {
+    const t = searchParams.get('tab') as TabKey | null;
+    if (t && TABS.some((x) => x.key === t) && t !== tab) setTab(t);
+  }, [searchParams, tab]);
+
   const { isAuthenticated, isReady, isLoading: authLoading } = useAuthStore();
   const { ui } = useUiSection('ui_dashboard', locale as any);
 
@@ -1510,7 +1516,7 @@ function CompletionScoreWidget({
             >
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-3.5 h-3.5 text-(--gm-warning) shrink-0" />
-                <span className="text-sm text-(--gm-text) opacity-70">{item.label}</span>
+                <span className="text-sm text-(--gm-text) opacity-70">{item.labelKey ? uiP(item.labelKey, item.label) : item.label}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-[9px] font-bold text-(--gm-warning) opacity-70">+{item.weight}p</span>
@@ -1539,7 +1545,7 @@ function CompletionScoreWidget({
             {done.map((item) => (
               <div key={item.id} className="flex items-center gap-2 py-1.5 px-3">
                 <CheckCheck className="w-3.5 h-3.5 text-(--gm-success) shrink-0" />
-                <span className="text-sm text-(--gm-text) opacity-40 line-through">{item.label}</span>
+                <span className="text-sm text-(--gm-text) opacity-40 line-through">{item.labelKey ? uiP(item.labelKey, item.label) : item.label}</span>
               </div>
             ))}
           </div>

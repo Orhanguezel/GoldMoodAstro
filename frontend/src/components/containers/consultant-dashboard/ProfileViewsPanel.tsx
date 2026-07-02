@@ -5,13 +5,13 @@ import { Eye, TrendingUp, Loader2, Calendar } from 'lucide-react';
 import { useGetMyConsultantProfileViewsQuery } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { useUiSection } from '@/i18n';
 
-type RangeOption = { label: string; days: number };
+type RangeOption = { days: number };
 
 const RANGE_OPTIONS: RangeOption[] = [
-  { label: '30 Days', days: 30 },
-  { label: '90 Days', days: 90 },
-  { label: '180 Days', days: 180 },
-  { label: '365 Days', days: 365 },
+  { days: 30 },
+  { days: 90 },
+  { days: 180 },
+  { days: 365 },
 ];
 
 function formatMonthDay(date: string) {
@@ -28,11 +28,7 @@ export default function ProfileViewsPanel() {
 
   const { data: views = [], isLoading, isError } = useGetMyConsultantProfileViewsQuery(
     { range: `${selectedDays}d` },
-    { skip: false }
   );
-
-  // C7: the query already refreshes from backend on mount; there is no separate
-  // POST /refresh endpoint, so a manual refresh call would only produce a 404.
 
   const totalViews = views.reduce((sum, d) => sum + d.count, 0);
   const maxCount = Math.max(1, ...views.map((d) => d.count));
@@ -124,7 +120,7 @@ export default function ProfileViewsPanel() {
           <div className="py-16 text-center">
             <Eye className="w-10 h-10 text-(--gm-text) opacity-20 mx-auto mb-3" />
             <p className="text-sm text-(--gm-text) opacity-40 font-serif italic">
-              {ui('ui_consultantpanel_profileviews_load_error', 'View data could not be loaded. The backend endpoint will be added soon.')}
+              {ui('ui_consultantpanel_profileviews_load_error', 'View data could not be loaded. Please try again later.')}
             </p>
           </div>
         ) : views.length === 0 ? (

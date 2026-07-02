@@ -103,6 +103,13 @@ export default function AvailabilityPanel() {
   };
 
   const applyPreset = (presetHours: any[]) => {
+    // Mevcut saatler varsa preset tüm haftayı ezmeden önce onay iste.
+    if (hours.length > 0) {
+      const ok = window.confirm(
+        ui('ui_consultantpanel_availability_preset_confirm', 'This will replace your entire weekly schedule. Continue?'),
+      );
+      if (!ok) return;
+    }
     setHours(presetHours);
     setDirty(true);
   };

@@ -30,8 +30,8 @@
 - [ ] Sekme geçişi `replaceState` vs kart `Link` push — history tutarsız.
 - [x] Login redirect `?tab` kaybediyor (`dashboard/page.tsx:195`).
 - [x] Ölü `AlertDialog` importları (`dashboard/page.tsx:48-58`); `window.confirm`'e geçilmiş.
-- [ ] Silme sonrası çift fetch (invalidate + manuel `refetchHistory`).
-- [ ] `CityAutocomplete` EN kullanıcı `tr` şehirlerine hapsoluyor (`dashboard/page.tsx:607`).
+- [x] Silme sonrası çift fetch (invalidate + manuel `refetchHistory`).
+- [x] `CityAutocomplete` EN kullanıcı `tr` şehirlerine hapsoluyor (`dashboard/page.tsx:607`).
 - [x] Şifre inputlarında `autocomplete`/`required`/`minLength` yok.
 - [x] me/settings toggle anlık kayıt izlenimi + Save `isLoading`/disabled yok + `aria-checked` yok.
 - [x] me/credits balance hatası "0" olarak gizleniyor (`isError` göster).
@@ -69,23 +69,23 @@
 - [x] Paid servis `price 0` çelişkisi (FE≥0 / backend>0) → ham hata kodu (`ServicesPanel.tsx:125,510`).
 - [x] "Loyal" rozeti yanlış (`idx===0`=en son randevu) + iptal/red booking'ler sayılıyor (`ClientsPanel.tsx:128-133`).
 - [x] `ClientsPanel` debounce yok + çifte filtre (44-53).
-- [ ] Availability preset tüm haftayı REPLACE ediyor (onay yok) (`AvailabilityPanel.tsx:105-108`).
+- [x] Availability preset tüm haftayı REPLACE ediyor (onay yok) (`AvailabilityPanel.tsx:105-108`).
 - [x] Kapasite kalıntısı: backend `capacity max(100)` hâlâ kabul; eski `capacity>1` geri yazılıyor. **Fix:** backend'de 1'e sabitle.
 - [ ] Timezone: `toISOString().slice(0,10)` UTC (`AvailabilityPanel.tsx:71`); Wallet tarih filtresi UTC-midnight; RequestNow sayaç TZ riski; ProfileViews gün sınırı.
-- [ ] Profil tamamlama "Go→" butonu ölü (backend item'da `tab` yok) + Türkçe hardcoded label (`controller.ts:1202-1212`).
+- [x] Profil tamamlama "Go→" butonu ölü (backend item'da `tab` yok) + Türkçe hardcoded label (`controller.ts:1202-1212`).
 - [x] `CompletionScoreWidget` ring rengi çalışmıyor (`bg-*` yerine `text-*` olmalı) (`ConsultantDashboard.tsx:1466-1472`).
 - [x] `ConsultantCardPreview` kök div `relative` değil → "Preview" overlay tüm sidebar'ı kaplar (40,117). Ayrıca `₺` hardcoded, "Verified" rozeti approval'dan bağımsız hep görünür, `rating_avg` null → "NaN", video seans fiyatı önizlenmiyor.
 - [x] `MessagesPanel`: thread değişince taslak temizlenmiyor (yanlış kişiye gönderme riski) (41,109); `isError` yutuluyor; okundu çift-işaretleme (GET yan etkisi + `markAsRead`); `tr-TR` hardcoded.
 - [x] CSV escape + BOM yok (Excel Türkçe bozulur) (`WalletPanel.tsx:340`).
-- [ ] Para birimi format tutarsız (Wallet `1.234,56 TRY` vs `₺X`) — tek helper.
+- [x] Para birimi format tutarsız (Wallet `1.234,56 TRY` vs `₺X`) — tek helper.
 - [x] "Deactivate" hızlı butonu kaydedilmemiş taslağı da persist ediyor (`ServicesPanel.tsx:587`).
 - [x] Boost rozeti metni bozuk birleşim (`{days}` çift) (`ServicesPanel.tsx:553`).
 - [ ] Blog: kapak kaldırınca `image_url` temizlenmiyor (`controller.ts:588`); sahiplik serbest-metin tag marker'ıyla (enjeksiyon/kayıp riski) — `author_user_id` kolonu ekle; taslak locale-bazlı görünürlük kafa karıştırıcı.
-- [ ] Tab state popstate ile senkron değil (`ConsultantDashboard.tsx:94-103`).
+- [x] Tab state popstate ile senkron değil (`ConsultantDashboard.tsx:94-103`).
 - [ ] Backend bildirim/e-posta/mesajları Türkçe hardcoded (çok dilli platform) (`controller.ts:666-669,743-745,819-820,1785`).
 - [x] Cüzdan seçimi `ORDER BY`'sız belirsiz + zorla `consultant_id` bağlama (`controller.ts:1493-1525`).
 - [ ] Performans: `listMessageThreads` N+1 (thread başına 3-4 sorgu, LIMIT yok); `listBookings` LIMIT 200 sabit, sayfalama yok.
-- [ ] ProfileViews ölü kod (`RANGE_OPTIONS.label`, `{skip:false}`) + bayat "endpoint yakında" hata metni.
+- [x] ProfileViews ölü kod (`RANGE_OPTIONS.label`, `{skip:false}`) + bayat "endpoint yakında" hata metni.
 - [x] ReviewsPanel buton "Publish Review" (yanıt yayınlanıyor, yorum değil) + `aria-label`/`title` hardcoded İngilizce.
 
 ---

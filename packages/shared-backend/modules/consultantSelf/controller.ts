@@ -1241,16 +1241,17 @@ export async function getProfileCompletion(req: FastifyRequest, reply: FastifyRe
   const languages = Array.isArray(c.languages) ? c.languages : [];
   const bankIban = typeof (c as any).bank_iban === 'string' ? normalizeIban((c as any).bank_iban) : '';
 
+  // label = TR fallback; labelKey = FE ui() anahtarı (çok dilli); tab = deep-link.
   const items = [
-    { id: 'avatar', label: 'Profil fotoğrafı yüklenmiş', done: Boolean(u?.avatar_url), weight: 10 },
-    { id: 'bio_500', label: 'Kendinizi anlatın metni 500 karakter veya daha uzun', done: String(c.bio ?? '').trim().length >= 500, weight: 15 },
-    { id: 'multi_package', label: 'En az 2 hizmet paketi var', done: Number(stats?.service_count ?? 0) >= 2, weight: 20 },
-    { id: 'free_intro', label: 'Ücretsiz tanışma paketi var', done: Number(stats?.free_service_count ?? 0) >= 1, weight: 10 },
-    { id: 'expertise_3', label: 'En az 3 uzmanlık seçilmiş', done: expertise.length >= 3, weight: 10 },
-    { id: 'language_1', label: 'En az 1 dil seçilmiş', done: languages.length >= 1, weight: 5 },
-    { id: 'availability', label: 'Müsaitlik saatleri tanımlı', done: Number(stats?.availability_count ?? 0) >= 1, weight: 15 },
-    { id: 'bank_iban', label: 'Banka IBAN bilgisi tanımlı', done: /^TR\d{24}$/.test(bankIban), weight: 10 },
-    { id: 'approved_review', label: 'En az 1 onaylı yorum var', done: Number(stats?.review_count ?? 0) >= 1, weight: 5 },
+    { id: 'avatar', label: 'Profil fotoğrafı yüklenmiş', labelKey: 'ui_dashboard_completion_avatar', tab: 'profile', done: Boolean(u?.avatar_url), weight: 10 },
+    { id: 'bio_500', label: 'Kendinizi anlatın metni 500 karakter veya daha uzun', labelKey: 'ui_dashboard_completion_bio_500', tab: 'profile', done: String(c.bio ?? '').trim().length >= 500, weight: 15 },
+    { id: 'multi_package', label: 'En az 2 hizmet paketi var', labelKey: 'ui_dashboard_completion_multi_package', tab: 'services', done: Number(stats?.service_count ?? 0) >= 2, weight: 20 },
+    { id: 'free_intro', label: 'Ücretsiz tanışma paketi var', labelKey: 'ui_dashboard_completion_free_intro', tab: 'services', done: Number(stats?.free_service_count ?? 0) >= 1, weight: 10 },
+    { id: 'expertise_3', label: 'En az 3 uzmanlık seçilmiş', labelKey: 'ui_dashboard_completion_expertise_3', tab: 'profile', done: expertise.length >= 3, weight: 10 },
+    { id: 'language_1', label: 'En az 1 dil seçilmiş', labelKey: 'ui_dashboard_completion_language_1', tab: 'profile', done: languages.length >= 1, weight: 5 },
+    { id: 'availability', label: 'Müsaitlik saatleri tanımlı', labelKey: 'ui_dashboard_completion_availability', tab: 'availability', done: Number(stats?.availability_count ?? 0) >= 1, weight: 15 },
+    { id: 'bank_iban', label: 'Banka IBAN bilgisi tanımlı', labelKey: 'ui_dashboard_completion_bank_iban', tab: 'profile', done: /^TR\d{24}$/.test(bankIban), weight: 10 },
+    { id: 'approved_review', label: 'En az 1 onaylı yorum var', labelKey: 'ui_dashboard_completion_approved_review', tab: 'reviews', done: Number(stats?.review_count ?? 0) >= 1, weight: 5 },
   ];
   const score = items.reduce((sum, item) => sum + (item.done ? item.weight : 0), 0);
   const status = score >= 90 ? 'excellent' : score >= 70 ? 'improvable' : 'incomplete';

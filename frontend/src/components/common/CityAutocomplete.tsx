@@ -17,8 +17,10 @@ type Props = {
   onChange: (city: string) => void;
   className?: string;
   placeholder?: string;
-  /** ISO country code. Use values such as 'tr', 'us', 'de'. */
+  /** ISO country code. Use values such as 'tr', 'us', 'de'. Undefined = worldwide. */
   country?: string;
+  /** Sonuç dili (ISO). Belirtilmezse 'tr'. */
+  language?: string;
   disabled?: boolean;
 };
 
@@ -28,6 +30,7 @@ export default function CityAutocomplete({
   className,
   placeholder,
   country = 'tr',
+  language = 'tr',
   disabled,
 }: Props) {
   const { ui } = useUiSection('ui_misc' as any);
@@ -83,7 +86,7 @@ export default function CityAutocomplete({
         sessionToken: token,
         types: ['(cities)'],
         componentRestrictions: country ? { country } : undefined,
-        language: 'tr',
+        language,
       },
       (preds: any[] | null) => {
         setLoading(false);

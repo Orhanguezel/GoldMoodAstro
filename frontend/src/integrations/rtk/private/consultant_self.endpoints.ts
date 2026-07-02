@@ -330,6 +330,7 @@ export interface ConsultantClient {
 export interface ProfileCompletionItem {
   id: string;
   label: string;
+  labelKey?: string; // i18n anahtarı (label = TR fallback)
   done: boolean;
   weight: number;
   tab?: string; // deep-link to tab

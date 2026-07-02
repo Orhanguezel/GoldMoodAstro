@@ -14,11 +14,12 @@ import {
   useRequestMyConsultantWithdrawalMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { useListSiteSettingsQuery } from '@/integrations/rtk/public/site_settings.endpoints';
+import { formatCurrency } from '@/lib/currency';
 import { useUiSection } from '@/i18n';
 
+// Ortak helper'a delege — cüzdan da diğer ekranlarla aynı sembol formunu (₺1.234,56) kullanır.
 function formatMoney(v: string | number | null | undefined, currency = 'TRY') {
-  const n = Number(v ?? 0);
-  return `${n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+  return formatCurrency(v, currency);
 }
 
 function formatDate(iso?: string | null) {

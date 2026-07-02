@@ -213,7 +213,7 @@ export default function DashboardPage() {
   const { data: pendingOutcomes } = useListMyPendingOutcomesQuery(undefined, {
     skip: !isAuthenticated,
   });
-  const { data: history, isLoading: historyLoading, refetch: refetchHistory } = useGetUserHistoryQuery(
+  const { data: history, isLoading: historyLoading } = useGetUserHistoryQuery(
     { limit: 50 },
     { skip: !isAuthenticated },
   );
@@ -343,7 +343,7 @@ export default function DashboardPage() {
     try {
       await deleteReading({ type: item.type, id: item.id }).unwrap();
       toast.success(ui('ui_extra_b0_dash_record_deleted', 'Record deleted'));
-      refetchHistory();
+      // invalidatesTags (History/LIST) otomatik refetch tetikler — manuel refetch gereksizdi.
     } catch (err) {
       toast.error(normalizeError(err).message || ui('ui_extra_b0_dash_could_not_delete', 'Could not delete'));
     }
@@ -357,7 +357,6 @@ export default function DashboardPage() {
     try {
       await deleteAllReadings().unwrap();
       toast.success(ui('ui_extra_b0_dash_all_history_deleted', 'All history deleted'));
-      refetchHistory();
     } catch (err) {
       toast.error(normalizeError(err).message || ui('ui_extra_b0_dash_could_not_delete', 'Could not delete'));
     }
@@ -625,7 +624,8 @@ export default function DashboardPage() {
                   value={formData.city}
                   onChange={(city) => setFormData({ ...formData, city })}
                   placeholder={ui('ui_extra_b0_dash_city_ph', 'Search city...')}
-                  country={locale === 'de' ? 'de' : 'tr'}
+                  country={locale === 'de' ? 'de' : locale === 'tr' ? 'tr' : undefined}
+                  language={locale}
                 />
               </div>
 
