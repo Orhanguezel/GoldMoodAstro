@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="75%"><stop offset="0%" stop-color="#2c2150"/><stop offset="55%" stop-color="#1d1638"/><stop offset="100%" stop-color="#140f28"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e8cc8a"/><stop offset="55%" stop-color="#d4af6a"/><stop offset="100%" stop-color="#b98f4c"/></linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g fill="#f3ead6" opacity="0.55"><circle cx="150" cy="120" r="1.7"/><circle cx="1050" cy="110" r="2.1"/><circle cx="300" cy="530" r="1.6"/><circle cx="1120" cy="500" r="1.5"/><circle cx="120" cy="360" r="1.4"/><circle cx="620" cy="70" r="1.5"/><circle cx="980" cy="560" r="1.4"/></g>
+  <path d="M180,400 Q600,150 1020,400" fill="none" stroke="url(#gold)" stroke-width="1.2" opacity="0.35" stroke-dasharray="2 8"/>
+  <g filter="url(#glow)">
+    <circle cx="180" cy="400" r="26" fill="none" stroke="url(#gold)" stroke-width="2" opacity="0.7"/>
+    <path d="M356,300 a34,34 0 1,0 0.1,0 Z" fill="none" stroke="url(#gold)" stroke-width="2" opacity="0.85"/>
+    <path d="M356,266 a34,34 0 0,1 0,68 a20,34 0 0,0 0,-68 Z" fill="url(#gold)" opacity="0.85"/>
+    <circle cx="540" cy="232" r="38" fill="url(#gold)" opacity="0.35"/>
+    <path d="M540,194 a38,38 0 0,1 0,76 a24,38 0 0,1 0,-76 Z" fill="url(#gold)"/>
+    <circle cx="600" cy="215" r="52" fill="#f3ead6"/>
+    <circle cx="600" cy="215" r="52" fill="none" stroke="url(#gold)" stroke-width="2"/>
+    <path d="M660,232 a38,38 0 0,0 0,-76 a24,38 0 0,0 0,76 Z" fill="url(#gold)"/>
+    <path d="M844,300 a34,34 0 0,0 0,-68 a20,34 0 0,1 0,68 Z" fill="url(#gold)" opacity="0.85"/>
+    <circle cx="1020" cy="400" r="26" fill="none" stroke="url(#gold)" stroke-width="2" opacity="0.7"/>
+  </g>
+  <rect width="1200" height="630" fill="#0e0a1e" opacity="0.12"/>
+</svg>

@@ -837,3 +837,63 @@ hareketleri pagination, **profile views analytics** (yeni tablo + tracking),
 **danisanlarim** liste endpoint'i, **profil completion score** endpoint'i.
 Codex isleri: backend moduller + sema dosyalari (Claude yazar, sen Drizzle
 schema uydur). Antigravity ayri brief'lerden UI yapar.
+
+---
+
+## T-SEO-KALITE-PUANLAMA — SEO & AdSense Kalite Puanlama Sistemi (2026-07-02)
+
+**Görev listesi + kesin spec:** [`SEO-KALITE-PUANLAMA-CEKLIST-2026-07-02.md`](SEO-KALITE-PUANLAMA-CEKLIST-2026-07-02.md)
+
+Claude (mimar) hazırladı, **Codex uygular**. İndexlenen tüm sayfa içerikleri
+(blog + statik/hukuk + danışman profili + astroloji landing) için SEO+AdSense
+kalite puanı (0-100) + admin panel derecelendirme. Referans mimari: hal-fiyatlari
+`data_quality` sistemi (skor kolonu + cron calculator + admin liste rozeti/detay
+breakdown + GSC + seo_index).
+
+Task ID'leri **SEO-T1 … SEO-T24**, sıralı. Her görevin dosya yolu + spec + kabul
+kriteri çeklistte. Sıra: T1-T10 (backend) → T11-T15 (admin UI) → T16-T18 (içerik
+boşlukları) → T19-T23 (GSC/AdSense P2) → T24 (deploy). ALTER YASAK; prod additive
+ALTER FAZ 8'de. RTK `{data}` unwrap zorunlu. Belirsizlikte Claude'a sor.
+
+---
+
+## T-ODEME-ABONELIK-DENETIM — Ödeme & Abonelik Düzeltmeleri (2026-07-02)
+
+**Görev listesi + kesin spec:** [`ODEME-ABONELIK-DENETIM-CEKLIST-2026-07-02.md`](ODEME-ABONELIK-DENETIM-CEKLIST-2026-07-02.md)
+
+Claude + Fable 5 (3 paralel derin denetim) hazırladı, **Codex uygular**. Iyzipay
+entegrasyonu + kredi/cüzdan ledger + abonelik yaşam döngüsü + IAP güvenlik/bütünlük
+düzeltmeleri. Task ID'leri **PAY-T0 … PAY-T29**.
+
+⚠️ GELİR + GÜVENLİK sistemi. Kritik bulgular "ödeme yapmadan ürün/kredi/abonelik alma"
++ "çift harcama" + "ücretsiz premium" exploit'leri. Sıra: FAZ 0 (acil prod açığı) →
+FAZ 1 (callback güvenliği) → FAZ 2 (kredi/cüzdan atomiklik) → FAZ 3 (entitlement) →
+FAZ 4-7 (yaşam döngüsü/iade/IAP/mutabakat) → FAZ 8 (deploy+migration). ALTER YASAK;
+prod additive index FAZ 8. Kanıtlı doğru pattern: consultantSelf:1836 çekim akışı.
+PAY-T21 (recurring) mimari karar → Claude'a sor. Belirsizlikte Claude'a sor.
+
+---
+
+## T-ADMIN-I18N-BANNER — Admin Dil Desteği & Banner Görselleri (2026-07-02)
+
+**Görev listesi:** [`ADMIN-I18N-BANNER-CEKLIST-2026-07-02.md`](ADMIN-I18N-BANNER-CEKLIST-2026-07-02.md)
+
+Kullanıcı geri bildirimi: admin blog + banners dil destekli içerik göstermeli; dil seçimi
+tek ortak dosyadan (ZATEN VAR: `src/i18n/LocaleProvider.tsx` + `AdminLocaleSelect`/`useAdminLocales`);
+banner görselleri kırık (`/banners/*.svg` admin domaininde 404). Task ID'leri **AI18N-T1…T4**.
+T1 (banner görsel, storefront origin resolve) bağımsız/hızlı; T2 (blog seçici) SEO kolonu
+işinden SONRA (aynı dosya çakışması); T3/T4 (banner i18n, banner_i18n kanonik). Yeni locale
+dosyası OLUŞTURMA — mevcut ortak kaynakları kullan.
+
+---
+
+## T-BLOG-ICERIK-KALITE — Blog İçerik Kalite Yükseltme + Görsel (2026-07-02)
+
+**Görev listesi:** [`BLOG-ICERIK-KALITE-CEKLIST-2026-07-02.md`](BLOG-ICERIK-KALITE-CEKLIST-2026-07-02.md)
+
+24 blog yazısı (8 konu × tr/en/de) zaten çok dilli ama ince (~80 kelime, skor 41-47).
+Amaç: içerik derinliği + meta + başlık + iç link + yazıya özel AI görselleri ile skoru
+≥50 (mümkünse ≥75) yap — **seoQuality calculator'a DOKUNMADAN** (skoru gerçek içerik
+iyileştirerek yükselt). Task ID'leri **BLOG-T1…T8**. AI içerik endpoint (`/admin/ai/content`)
+zaten canlıda; yeni: AI görsel endpoint (gpt-image → storage) + toplu uplift script + recalc.
+Native-dil (çeviri değil), yayın/slug koru, deploy çakışmasına dikkat.

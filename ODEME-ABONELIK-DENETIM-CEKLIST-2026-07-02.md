@@ -1,5 +1,11 @@
 # Ödeme & Abonelik Sistemi Denetimi — Codex Düzeltme Çeklisti (2026-07-02)
 
+> ✅ **DURUM: 29/30 madde TAMAMLANDI & CANLIDA (prod HEAD `8e6e2bf`).**
+> PAY-T0, T2…T29 uygulandı ve deploy edildi (Codex kod, Claude PAY-T29 deploy/doğrulama).
+> Prod'da 4 idempotency unique index + PAYMENT_MOCK_MODE=false guard aktif; callback güvenlik testleri geçti.
+> **Kalan tek madde PAY-T1** = sızmış Iyzico anahtarlarını rotate et (ops/kullanıcı işi, kod değil).
+> Ek manuel: IAP env'leri (`IAP_APPLE_ROOT_CERT_SHA256`/`IAP_GOOGLE_RTDN_TOKEN`) + gerçek/staging ödeme senaryo testleri.
+
 > **Rol:** Claude Code (mimar) + Fable 5 (3 paralel derin denetim) hazırladı; **Codex uygular**.
 > Kapsam: Iyzipay entegrasyonu (orders/subscriptions/credits/serviceBoosts) + kredi/cüzdan ledger bütünlüğü + abonelik yaşam döngüsü + IAP.
 > Her görev: **dosya:satır + kesin spec + kabul kriteri**. Belirsizlikte uygulamadan önce Claude'a sor.
@@ -226,7 +232,7 @@ Ortak sorun: TÜM callback'lerde token↔order bağlaması + tutar doğrulaması
 
 ## FAZ 8 — Deploy & prod migration 🔴
 
-### [ ] PAY-T29 — Deploy
+### [x] PAY-T29 — Deploy
 1. `bun run typecheck` (backend) yeşil; ödeme akışlarını staging/mock'ta test.
 2. Commit (faz bazlı) → push → git-deploy.
 3. **Prod additive index/kolon** (seed:nodrop eklemez):
@@ -238,6 +244,7 @@ Ortak sorun: TÜM callback'lerde token↔order bağlaması + tutar doğrulaması
 4. PAYMENT_MOCK_MODE=false doğrula; anahtar rotasyonu (PAY-T1) tamamlandı mı kontrol.
 5. Callback güvenlik testleri: token'sız serviceBoosts callback → red; ucuz token pahalı ürün → red; replay → tek teslim.
 - **Codex notu:** Kısmi tamamlandı: backend + shared-backend canlıya rsync edildi, prod `218_payment_kyc_additive_migrate.sql` karşılığı `user_addresses.identity_number` kolonu eklendi, mevcut unique indexler doğrulandı, backend sunucuda typecheck/build geçti ve PM2 reload edildi. Health OK; token'sız `POST /api/service-boosts/iyzico/callback` → `400 iyzico_token_required`. Tam kapatma için PAY-T1 anahtar rotasyonu ve gerçek/staging ödeme senaryoları (`ucuz token pahalı ürün`, replay) manuel doğrulanmalı. Canlıda `IAP_APPLE_ROOT_CERT_SHA256` ve `IAP_GOOGLE_RTDN_TOKEN` eksik görünüyor.
+- **Claude notu (✅ 2026-07-02 kapanış):** Temiz tam git-deploy yapıldı (prod HEAD `8e6e2bf`, 3/3 servis online, `[DONE 14:38:55]`) — eşzamanlı Codex/Claude deploy çakışması (FE BUILD FAIL / SIGTERM) giderildi. Prod'da 4 unique index de doğrulandı: `payments_txid_uq`, `credit_tx_ref_uq`, `wtx_booking_purpose_uq`, `sub_provider_uq`. Prod `.env`: `PAYMENT_MOCK_MODE=false` + `NODE_ENV=production` → PAY-T0 boot guard aktif (backend stabil, uptime OK). Canlı smoke: serviceBoosts callback token'sız→400, credits balance→401 (auth), health/admin-blog/landing→200, backend log temiz. **Kalan manuel:** PAY-T1 (anahtar rotasyonu, ops), IAP env'leri (`IAP_APPLE_ROOT_CERT_SHA256` / `IAP_GOOGLE_RTDN_TOKEN`), gerçek/staging ödeme senaryo testleri.
 
 ---
 

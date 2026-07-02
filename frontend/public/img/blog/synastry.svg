@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="75%">
+      <stop offset="0%" stop-color="#2c2150"/><stop offset="55%" stop-color="#1d1638"/><stop offset="100%" stop-color="#140f28"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8cc8a"/><stop offset="55%" stop-color="#d4af6a"/><stop offset="100%" stop-color="#b98f4c"/>
+    </linearGradient>
+    <linearGradient id="rose" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c8a2d6"/><stop offset="100%" stop-color="#8f6bb0"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g fill="#f3ead6" opacity="0.5"><circle cx="150" cy="100" r="1.6"/><circle cx="1040" cy="130" r="2"/><circle cx="250" cy="510" r="1.7"/><circle cx="1110" cy="450" r="1.5"/><circle cx="95" cy="330" r="1.3"/><circle cx="900" cy="560" r="1.5"/></g>
+  <g fill="none" filter="url(#glow)">
+    <circle cx="470" cy="315" r="180" stroke="url(#gold)" stroke-width="2.4" opacity="0.9"/>
+    <circle cx="470" cy="315" r="120" stroke="url(#gold)" stroke-width="1.2" opacity="0.5"/>
+    <circle cx="730" cy="315" r="180" stroke="url(#rose)" stroke-width="2.4" opacity="0.9"/>
+    <circle cx="730" cy="315" r="120" stroke="url(#rose)" stroke-width="1.2" opacity="0.5"/>
+  </g>
+  <g stroke="#f3ead6" stroke-width="1" opacity="0.4" filter="url(#glow)">
+    <line x1="470" y1="315" x2="730" y2="315"/>
+    <line x1="500" y1="230" x2="700" y2="400"/><line x1="500" y1="400" x2="700" y2="230"/>
+  </g>
+  <g filter="url(#glow)">
+    <circle cx="470" cy="315" r="5.5" fill="url(#gold)"/><circle cx="730" cy="315" r="5.5" fill="url(#rose)"/>
+    <circle cx="600" cy="315" r="7" fill="#f3ead6"/>
+    <circle cx="560" cy="245" r="4" fill="url(#gold)"/><circle cx="650" cy="385" r="4" fill="url(#rose)"/>
+  </g>
+  <rect width="1200" height="630" fill="#0e0a1e" opacity="0.12"/>
+</svg>
