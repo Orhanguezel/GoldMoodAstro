@@ -28,7 +28,7 @@
 ### [ ] PAY-T1 — Sızmış Iyzipay anahtarlarını rotate et 🔴
 - **Bulgu:** Denetimde gerçek `IYZIPAY_API_KEY`/`SECRET_KEY` .env'de görüldü (repo'da değil ama ortamda). Sızmış kabul et.
 - **Fix:** Iyzico panelinden anahtarları **yenile**; prod `.env` güncelle; git geçmişinde/loglarda sızıntı taraması. (Codex değil, **ops/kullanıcı** yapar — checklist'te işaretle.)
-- **Codex notu:** Canlı `.env` içinde `PAYMENT_MOCK_MODE=false` yapıldı ve backend reload edildi. Iyzipay API key/secret rotasyonu Iyzico panel erişimi gerektirdiği için kullanıcı/ops onayı bekliyor.
+- **Codex notu:** Canlı `.env` içinde `PAYMENT_MOCK_MODE=false` yapıldı ve backend reload edildi. Repo/canlı dosya taramasında gerçek Iyzipay anahtar değeri bulunmadı; yalnız deploy scriptlerinde `${IYZIPAY_API_KEY}`/`${IYZIPAY_SECRET_KEY}` placeholder'ları var. Iyzipay API key/secret rotasyonu Iyzico panel erişimi gerektirdiği için kullanıcı/ops onayı bekliyor.
 
 ---
 
