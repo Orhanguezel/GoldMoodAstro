@@ -9,6 +9,7 @@ import {
   useOverrideMyConsultantAvailabilityDayMutation,
   useUpdateMyConsultantAvailabilityMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
+import { todayLocalISO } from '@/lib/localDate';
 import { useUiSection } from '@/i18n';
 
 type Dow = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -68,7 +69,7 @@ export default function AvailabilityPanel() {
   const [overrideDay, { isLoading: isOverridingDay }] = useOverrideMyConsultantAvailabilityDayMutation();
   const [hours, setHours] = useState<HourRow[]>([]);
   const [dirty, setDirty] = useState(false);
-  const [overrideDate, setOverrideDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [overrideDate, setOverrideDate] = useState(() => todayLocalISO());
 
   useEffect(() => {
     if (data?.working_hours) {

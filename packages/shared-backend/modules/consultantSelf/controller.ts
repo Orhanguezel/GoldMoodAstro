@@ -1290,7 +1290,8 @@ export async function listMessageThreads(req: FastifyRequest, reply: FastifyRepl
         )
       )`,
     )
-    .orderBy(desc(chat_threads.updated_at));
+    .orderBy(desc(chat_threads.updated_at))
+    .limit(100); // sınırsız büyümeyi önle (en güncel 100 thread)
 
   // Her thread için: son mesaj + danışan adı
   const enriched = await Promise.all(

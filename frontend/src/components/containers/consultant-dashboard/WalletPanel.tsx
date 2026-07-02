@@ -15,6 +15,7 @@ import {
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { useListSiteSettingsQuery } from '@/integrations/rtk/public/site_settings.endpoints';
 import { formatCurrency } from '@/lib/currency';
+import { todayLocalISO } from '@/lib/localDate';
 import { useUiSection } from '@/i18n';
 
 // Ortak helper'a delege — cüzdan da diğer ekranlarla aynı sembol formunu (₺1.234,56) kullanır.
@@ -347,7 +348,7 @@ export default function WalletPanel() {
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.setAttribute('download', `transactions_${new Date().toISOString().slice(0, 10)}.csv`);
+                link.setAttribute('download', `transactions_${todayLocalISO()}.csv`);
                 link.click();
               }}
               className="px-3 py-1 rounded-full border border-[var(--gm-border-soft)] text-[9px] font-bold uppercase tracking-widest text-[var(--gm-text-dim)] hover:text-[var(--gm-text)] hover:border-[var(--gm-gold)]/40 transition-all"

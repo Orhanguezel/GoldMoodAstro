@@ -22,7 +22,7 @@
 - [x] **`me/readings`, `me/credits`, `me/settings` orphan + guard yok** — auth guard yok, hiçbir yerden link verilmiyor, dashboard sekmeleriyle duplike ve ayrışmış. **Fix:** ya guard+navigasyon, ya dashboard'ı kanonik kabul edip bunları redirect'e çevir/sil.
 - [x] **Okuma detay endpoint'leri public + ownership yok** — `tarot/coffee/dreams/yildizname router.ts` `reading/:id` auth'suz; kişisel içerik UUID ile herkese açık (`synastry` tryAuth'lu — tutarsız). Paylaşım linki mi belirsiz (doğrulanmadı). **Fix:** `is_public` bayrağı + uyarı, ya da `tryAuth` + owner-veya-public.
 - [x] **Mesajlarda canlı güncelleme yok** — `UserMessagesPanel.tsx:41-48`. polling/WS yok; danışman cevabı yenilemeden görünmez. **Fix:** `pollingInterval` (threads 30sn, mesajlar 10-15sn).
-- [ ] **me/readings büyük ölçüde çevrilmemiş/dil karışık** — `TYPE_CONFIG`/`FILTERS`/boş durum hardcoded. **Fix:** `ui()`'ye taşı; dashboard `HISTORY_TYPES/HISTORY_META` ile ortak modüle çıkar.
+- [x] **me/readings büyük ölçüde çevrilmemiş/dil karışık** — `TYPE_CONFIG`/`FILTERS`/boş durum hardcoded. **Fix:** `ui()`'ye taşı; dashboard `HISTORY_TYPES/HISTORY_META` ile ortak modüle çıkar.
 
 ### 🟡 Orta / İyileştirme
 - [x] "Member since" görünmüyor — `/auth/user` `created_at` dönmüyor (`dashboard/page.tsx:278-283`).
