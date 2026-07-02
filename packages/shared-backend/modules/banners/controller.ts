@@ -24,18 +24,23 @@ function normalizeLocale(locale?: string | null): string {
   return normalized || "tr";
 }
 
-function fallbackByLocale<T>(locale: string, tr: T, en: T): T {
-  return locale === "en" ? (en ?? tr) : tr;
+function fallbackByLocale<T>(locale: string, tr: T, en: T, de?: T): T {
+  if (locale === "en") return (en ?? tr) as T;
+  if (locale === "de") return ((de ?? tr) ?? en) as T;
+  return tr;
 }
 
 async function localizeBanners<T extends {
   id: string;
   title_tr?: string | null;
   title_en?: string | null;
+  title_de?: string | null;
   subtitle_tr?: string | null;
   subtitle_en?: string | null;
+  subtitle_de?: string | null;
   cta_label_tr?: string | null;
   cta_label_en?: string | null;
+  cta_label_de?: string | null;
 }>(rows: T[], locale: string) {
   if (rows.length === 0) return rows;
 
@@ -59,9 +64,9 @@ async function localizeBanners<T extends {
     const resolved = translations[normalized] ?? translations.tr;
     return {
       ...row,
-      title: resolved?.title ?? fallbackByLocale(normalized, row.title_tr ?? null, row.title_en ?? null),
-      subtitle: resolved?.subtitle ?? fallbackByLocale(normalized, row.subtitle_tr ?? null, row.subtitle_en ?? null),
-      cta_label: resolved?.cta_label ?? fallbackByLocale(normalized, row.cta_label_tr ?? null, row.cta_label_en ?? null),
+      title: resolved?.title ?? fallbackByLocale(normalized, row.title_tr ?? null, row.title_en ?? null, row.title_de ?? null),
+      subtitle: resolved?.subtitle ?? fallbackByLocale(normalized, row.subtitle_tr ?? null, row.subtitle_en ?? null, row.subtitle_de ?? null),
+      cta_label: resolved?.cta_label ?? fallbackByLocale(normalized, row.cta_label_tr ?? null, row.cta_label_en ?? null, row.cta_label_de ?? null),
     };
   });
 }

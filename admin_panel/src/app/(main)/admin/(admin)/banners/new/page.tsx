@@ -18,6 +18,7 @@ import {
   useUpdateBannerAdminMutation
 } from '@/integrations/hooks';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
+import { resolvePublicAsset } from '@/lib/resolvePublicAsset';
 
 export default function BannerFormPage() {
   const t = useAdminT('admin.banners');
@@ -35,13 +36,16 @@ export default function BannerFormPage() {
     code: '',
     title_tr: '',
     title_en: '',
+    title_de: '',
     subtitle_tr: '',
     subtitle_en: '',
+    subtitle_de: '',
     image_url: '',
     image_url_mobile: '',
     link_url: '',
     cta_label_tr: '',
     cta_label_en: '',
+    cta_label_de: '',
     placement: 'home_hero' as any,
     locale: '*',
     target_segment: 'all' as any,
@@ -58,13 +62,16 @@ export default function BannerFormPage() {
         code: existing.code,
         title_tr: existing.title_tr || '',
         title_en: existing.title_en || '',
+        title_de: existing.title_de || '',
         subtitle_tr: existing.subtitle_tr || '',
         subtitle_en: existing.subtitle_en || '',
+        subtitle_de: existing.subtitle_de || '',
         image_url: existing.image_url || '',
         image_url_mobile: existing.image_url_mobile || '',
         link_url: existing.link_url || '',
         cta_label_tr: existing.cta_label_tr || '',
         cta_label_en: existing.cta_label_en || '',
+        cta_label_de: existing.cta_label_de || '',
         placement: existing.placement,
         locale: existing.locale,
         target_segment: existing.target_segment,
@@ -175,7 +182,7 @@ export default function BannerFormPage() {
                 </div>
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2 pt-2">
+              <div className="grid gap-6 sm:grid-cols-3 pt-2">
                 <div className="space-y-2">
                   <Label htmlFor="title_tr" className="text-[10px] font-bold uppercase tracking-widest text-gm-gold">{t('form.fields.titleTr')}</Label>
                   <Input
@@ -196,9 +203,19 @@ export default function BannerFormPage() {
                     className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="title_de" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.titleDe', undefined, 'Başlık (DE)')}</Label>
+                  <Input
+                    id="title_de"
+                    value={formData.title_de}
+                    onChange={(e) => setFormData(p => ({ ...p, title_de: e.target.value }))}
+                    placeholder={t('form.placeholders.titleDe', undefined, 'Titel (Deutsch)')}
+                    className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2">
+              <div className="grid gap-6 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="subtitle_tr" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.subtitleTr')}</Label>
                   <Input
@@ -219,6 +236,16 @@ export default function BannerFormPage() {
                     className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="subtitle_de" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.subtitleDe', undefined, 'Alt Başlık (DE)')}</Label>
+                  <Input
+                    id="subtitle_de"
+                    value={formData.subtitle_de}
+                    onChange={(e) => setFormData(p => ({ ...p, subtitle_de: e.target.value }))}
+                    placeholder={t('form.placeholders.subtitleDe', undefined, 'Untertitel (Deutsch)')}
+                    className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2 border-t pt-6 border-gm-border-soft/50 mt-2">
@@ -232,7 +259,7 @@ export default function BannerFormPage() {
                 />
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2">
+              <div className="grid gap-6 sm:grid-cols-3">
                 <div className="space-y-2">
                   <Label htmlFor="cta_label_tr" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.ctaTr')}</Label>
                   <Input
@@ -250,6 +277,16 @@ export default function BannerFormPage() {
                     value={formData.cta_label_en}
                     onChange={(e) => setFormData(p => ({ ...p, cta_label_en: e.target.value }))}
                     placeholder={t('form.placeholders.ctaEn')}
+                    className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cta_label_de" className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('form.fields.ctaDe', undefined, 'CTA (DE)')}</Label>
+                  <Input
+                    id="cta_label_de"
+                    value={formData.cta_label_de}
+                    onChange={(e) => setFormData(p => ({ ...p, cta_label_de: e.target.value }))}
+                    placeholder={t('form.placeholders.ctaDe', undefined, 'CTA (Deutsch)')}
                     className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
@@ -277,7 +314,7 @@ export default function BannerFormPage() {
                 />
                 {formData.image_url && (
                   <div className="mt-4 overflow-hidden rounded-2xl border border-gm-border-soft bg-gm-bg-deep p-2 flex items-center justify-center">
-                    <img src={formData.image_url} alt={t('form.preview')} className="max-h-48 rounded-xl object-contain" />
+                    <img src={resolvePublicAsset(formData.image_url)} alt={t('form.preview')} className="max-h-48 rounded-xl object-contain" />
                   </div>
                 )}
               </div>
@@ -292,7 +329,7 @@ export default function BannerFormPage() {
                 />
                 {formData.image_url_mobile && (
                   <div className="mt-4 overflow-hidden rounded-2xl border border-gm-border-soft bg-gm-bg-deep p-2 flex items-center justify-center">
-                    <img src={formData.image_url_mobile} alt={t('form.previewMobile')} className="max-h-48 rounded-xl object-contain" />
+                    <img src={resolvePublicAsset(formData.image_url_mobile)} alt={t('form.previewMobile')} className="max-h-48 rounded-xl object-contain" />
                   </div>
                 )}
               </div>
@@ -333,6 +370,7 @@ export default function BannerFormPage() {
                     <SelectItem value="*">{t('form.locales.all')}</SelectItem>
                     <SelectItem value="tr">{t('form.locales.tr')}</SelectItem>
                     <SelectItem value="en">{t('form.locales.en')}</SelectItem>
+                    <SelectItem value="de">{t('form.locales.de', undefined, 'Almanca')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

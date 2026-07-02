@@ -13,13 +13,16 @@ CREATE TABLE IF NOT EXISTS banners (
   code VARCHAR(50) NOT NULL UNIQUE,
   title_tr VARCHAR(255),
   title_en VARCHAR(255),
+  title_de VARCHAR(255),
   subtitle_tr VARCHAR(500),
   subtitle_en VARCHAR(500),
+  subtitle_de VARCHAR(500),
   image_url VARCHAR(500) NOT NULL,             -- desktop / default
   image_url_mobile VARCHAR(500),               -- opsiyonel mobil-spesifik
   link_url VARCHAR(500),
   cta_label_tr VARCHAR(100),
   cta_label_en VARCHAR(100),
+  cta_label_de VARCHAR(100),
   placement ENUM(
     'home_hero','home_sidebar','home_footer','consultant_list',
     'home_mid_1','home_mid_2','home_mid_3',

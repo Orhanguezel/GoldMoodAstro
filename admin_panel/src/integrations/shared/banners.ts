@@ -22,13 +22,16 @@ export interface BannerRow {
   code: string;
   title_tr?: string | null;
   title_en?: string | null;
+  title_de?: string | null;
   subtitle_tr?: string | null;
   subtitle_en?: string | null;
+  subtitle_de?: string | null;
   image_url: string;
   image_url_mobile?: string | null;
   link_url?: string | null;
   cta_label_tr?: string | null;
   cta_label_en?: string | null;
+  cta_label_de?: string | null;
   placement: BannerPlacement;
   locale: string;
   starts_at?: string | null;
@@ -55,13 +58,16 @@ export interface BannerCreatePayload {
   code: string;
   title_tr?: string;
   title_en?: string;
+  title_de?: string;
   subtitle_tr?: string;
   subtitle_en?: string;
+  subtitle_de?: string;
   image_url: string;
   image_url_mobile?: string;
   link_url?: string;
   cta_label_tr?: string;
   cta_label_en?: string;
+  cta_label_de?: string;
   placement: BannerPlacement;
   locale?: string;
   starts_at?: string | null;
@@ -82,13 +88,16 @@ export function normalizeBannerRow(row: unknown): BannerRow {
     code: trimStr(r.code),
     title_tr: r.title_tr ? trimStr(r.title_tr) : null,
     title_en: r.title_en ? trimStr(r.title_en) : null,
+    title_de: r.title_de ? trimStr(r.title_de) : null,
     subtitle_tr: r.subtitle_tr ? trimStr(r.subtitle_tr) : null,
     subtitle_en: r.subtitle_en ? trimStr(r.subtitle_en) : null,
+    subtitle_de: r.subtitle_de ? trimStr(r.subtitle_de) : null,
     image_url: parseMediaUrl(r.image_url),
     image_url_mobile: r.image_url_mobile ? parseMediaUrl(r.image_url_mobile) : null,
     link_url: r.link_url ? trimStr(r.link_url) : null,
     cta_label_tr: r.cta_label_tr ? trimStr(r.cta_label_tr) : null,
     cta_label_en: r.cta_label_en ? trimStr(r.cta_label_en) : null,
+    cta_label_de: r.cta_label_de ? trimStr(r.cta_label_de) : null,
     placement: (r.placement || 'home_hero') as BannerPlacement,
     locale: trimStr(r.locale || '*'),
     starts_at: r.starts_at ? trimStr(r.starts_at) : null,

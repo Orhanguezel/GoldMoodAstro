@@ -21,13 +21,21 @@ import {
   useDeleteBannerAdminMutation,
 } from '@/integrations/hooks';
 import { cn } from '@/lib/utils';
+import { resolvePublicAsset } from '@/lib/resolvePublicAsset';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
+
+type ContentLocale = 'tr' | 'en' | 'de';
 
 export default function AdminBannersClient() {
   const t = useAdminT('admin.banners');
   const query = useListBannersAdminQuery(undefined);
   const [update] = useUpdateBannerAdminMutation();
   const [remove] = useDeleteBannerAdminMutation();
+  // İçerik önizleme dili (banner satırında hangi dilin başlığı gösterilsin).
+  const [locale, setLocale] = React.useState<ContentLocale>('tr');
+
+  const titleForLocale = (item: { title_tr?: string | null; title_en?: string | null; title_de?: string | null; code: string }) =>
+    item[`title_${locale}` as const] || item.title_tr || item.code;
 
   const handleToggleActive = async (id: string, current: boolean) => {
     try {
@@ -62,7 +70,17 @@ export default function AdminBannersClient() {
           <h1 className="font-serif text-4xl text-gm-text">{t('list.title')}</h1>
           <p className="text-sm italic text-gm-muted">{t('list.subtitle')}</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <select
+            value={locale}
+            onChange={(e) => setLocale(e.target.value as ContentLocale)}
+            aria-label={t('list.localeLabel', undefined, 'Önizleme dili')}
+            className="h-12 rounded-full border border-gm-border-soft bg-gm-surface/50 px-5 text-[11px] font-bold uppercase tracking-widest text-gm-text"
+          >
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+          </select>
           <Button
             variant="outline"
             size="sm"
@@ -127,9 +145,9 @@ export default function AdminBannersClient() {
                       <div className="flex items-center gap-3">
                         <div className="relative h-12 w-20 shrink-0 overflow-hidden rounded-[12px] border border-gm-border-soft bg-gm-bg-deep shadow-inner flex items-center justify-center">
                           {item.image_url ? (
-                            <img 
-                              src={item.image_url} 
-                              alt={item.code} 
+                            <img
+                              src={resolvePublicAsset(item.image_url)}
+                              alt={item.code}
                               className="h-full w-full object-cover"
                             />
                           ) : (
@@ -139,7 +157,7 @@ export default function AdminBannersClient() {
                           )}
                         </div>
                         <div>
-                          <div className="font-bold text-gm-text">{item.title_tr || item.code}</div>
+                          <div className="font-bold text-gm-text">{titleForLocale(item)}</div>
                           <div className="text-[11px] text-gm-muted/80 flex items-center gap-1.5 mt-1">
                             <code className="bg-gm-bg-deep px-1.5 py-0.5 rounded text-gm-gold border border-gm-border-soft/60 text-[9px] font-bold uppercase tracking-wider">{item.code}</code>
                             {item.locale !== '*' && (
