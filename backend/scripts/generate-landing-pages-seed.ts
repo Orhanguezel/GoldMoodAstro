@@ -50,7 +50,7 @@ function idFor(index: number): string {
 
 function i18nIdFor(index: number, locale: LandingLocale): string {
   const n = String(index + 1).padStart(2, '0');
-  const loc = locale.padEnd(3, '0').slice(0, 3);
+  const loc = locale.slice(0, 2);
   return `91${loc}${n}00-0000-4000-8000-0000000000${n}`;
 }
 
