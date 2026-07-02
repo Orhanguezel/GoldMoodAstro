@@ -12,7 +12,6 @@
 -- TermsPageContent → 'terms', CookiePolicyPageContent → 'cookies'
 INSERT INTO custom_pages (id, module_key, is_published, featured, display_order, order_num) VALUES
   ('cp-about',       'about',   1, 1, 10, 10),
-  ('cp-blog',        'blog',    1, 1, 20, 20),
   ('cp-kvkk',        'kvkk',    1, 0, 30, 30),
   ('cp-gizlilik',    'privacy', 1, 0, 40, 40),
   ('cp-terms',       'terms',   1, 0, 50, 50),
@@ -86,19 +85,6 @@ INSERT INTO custom_pages_i18n (id, custom_page_id, locale, title, slug, content,
   ('cpi-faq-de', 'cp-faq', 'de', 'Häufige Fragen', 'faq',
    '{"html":"<h2>Häufige Fragen</h2><h3>Was bietet GoldMoodAstro?</h3><p>Geburtshoroskope, Tagesdeutungen, Tarot, Kaffeesatzlesen, Synastrie und Live-Sitzungen mit geprüften Beratern.</p><h3>Sind astrologische Deutungen sichere Vorhersagen?</h3><p>Nein. Die Inhalte dienen Selbstreflexion und Unterhaltung; sie ersetzen keine medizinische, rechtliche oder finanzielle Beratung.</p><h3>Kann ich mein Konto löschen?</h3><p>Ja. Löschanfragen werden mit einer 7-tägigen Bedenkzeit verarbeitet.</p>"}',
    'Häufige Fragen zu GoldMoodAstro.', 'FAQ — GoldMoodAstro', 'Häufige Fragen zu GoldMoodAstro, Premium und Kontoverwaltung.')
-ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content);
-
--- ---- BLOG LANDING -------------------------------------------------------
-INSERT INTO custom_pages_i18n (id, custom_page_id, locale, title, slug, content, summary, meta_title, meta_description) VALUES
-  ('cpi-blog-tr', 'cp-blog', 'tr', 'Blog', 'blog',
-   '{"html":"<h2>Astroloji Notları</h2><p>Burada sezonun astrolojik temalarını, yeni-tam ay ritmini, transit yorumlarını ve uygulamalı içgörüleri paylaşıyoruz. Yazılarımız uzman astrologlar ve içerik ekibi tarafından titizlikle hazırlanır.</p>"}',
-   'GoldMoodAstro blog ana sayfası.', 'Blog — GoldMoodAstro', 'Sezonun astrolojik temaları, transit yorumları ve uygulamalı içgörüler.'),
-  ('cpi-blog-en', 'cp-blog', 'en', 'Blog', 'blog',
-   '{"html":"<h2>Astrology Notes</h2><p>Seasonal astrological themes, new/full moon rhythms, transit interpretations and applied insights — curated by our expert astrologers and editorial team.</p>"}',
-   'GoldMoodAstro blog landing.', 'Blog — GoldMoodAstro', 'Seasonal astrological themes, transits and applied insights from our team.'),
-  ('cpi-blog-de', 'cp-blog', 'de', 'Blog', 'blog',
-   '{"html":"<h2>Astrologische Notizen</h2><p>Saisonale Themen, Neumond/Vollmond, Transitdeutungen und praktische Einsichten — kuratiert von unseren Astrologen.</p>"}',
-   'GoldMoodAstro Blog.', 'Blog — GoldMoodAstro', 'Saisonale Themen, Transite und Einsichten unseres Teams.')
 ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content);
 
 -- ---- KVKK ---------------------------------------------------------------
