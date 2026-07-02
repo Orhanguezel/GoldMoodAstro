@@ -78,6 +78,8 @@ export default function ServiceCategoriesClient() {
   const [formOpen, setFormOpen] = React.useState(false);
   const [editingCategory, setEditingCategory] = React.useState<ServiceCategoryDto | null>(null);
   const [selectedLocale, setSelectedLocale] = React.useState(defaultLocale);
+  const [listLocale, setListLocale] = React.useState(defaultLocale);
+  const formRef = React.useRef<HTMLDivElement>(null);
 
   // Form states
   const [slug, setSlug] = React.useState('');
@@ -87,8 +89,17 @@ export default function ServiceCategoriesClient() {
   const [isActive, setIsActive] = React.useState(true);
 
   React.useEffect(() => {
-    setSelectedLocale((prev) => coerceLocale(prev, defaultLocale));
+    const safe = (prev: string) => coerceLocale(prev, defaultLocale) || defaultLocale || FALLBACK_LOCALES[0];
+    setSelectedLocale(safe);
+    setListLocale(safe);
   }, [coerceLocale, defaultLocale]);
+
+  // Düzenleme/oluşturma formu açılınca kullanıcı farketsin diye forma kaydır.
+  React.useEffect(() => {
+    if (!formOpen) return;
+    const raf = requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    return () => cancelAnimationFrame(raf);
+  }, [formOpen, editingCategory]);
 
   React.useEffect(() => {
     if (editingCategory && formOpen) {
@@ -197,7 +208,14 @@ export default function ServiceCategoriesClient() {
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <AdminLocaleSelect
+            value={listLocale}
+            onChange={(locale) => setListLocale(coerceLocale(locale, defaultLocale) || defaultLocale)}
+            options={localeOptions.length ? localeOptions : FALLBACK_LOCALES.map((locale) => ({ value: locale, label: locale.toUpperCase() }))}
+            loading={localesLoading}
+            className="border-gm-border-soft bg-gm-surface/40"
+          />
           <Button
             variant="outline"
             size="sm"
@@ -262,9 +280,9 @@ export default function ServiceCategoriesClient() {
                   <TableRow key={item.id} className="border-gm-border-soft hover:bg-gm-primary/[0.03] transition-colors group">
                     <TableCell className="py-6 px-8">
                       <div>
-                        <div className="font-serif text-xl text-gm-text text-foreground">{item.name}</div>
-                        {item.description && (
-                          <div className="text-xs text-gm-muted max-w-xs truncate mt-1">{item.description}</div>
+                        <div className="font-serif text-xl text-gm-text">{item.i18n?.[listLocale]?.name || item.name}</div>
+                        {(item.i18n?.[listLocale]?.description || item.description) && (
+                          <div className="text-xs text-gm-muted max-w-xs truncate mt-1">{item.i18n?.[listLocale]?.description || item.description}</div>
                         )}
                       </div>
                     </TableCell>
@@ -318,7 +336,7 @@ export default function ServiceCategoriesClient() {
       </Card>
 
       {formOpen && (
-        <Card className="border-gm-border-soft bg-gm-bg-deep/80 text-gm-text text-foreground shadow-xl">
+        <Card ref={formRef} className="scroll-mt-24 border-2 border-gm-gold/40 bg-gm-bg-deep/80 text-gm-text shadow-xl ring-2 ring-gm-gold/10">
           <CardContent className="p-8">
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>

@@ -97,6 +97,8 @@ export default function ServiceTemplatesClient() {
   const [formOpen, setFormOpen] = React.useState(false);
   const [editingTemplate, setEditingTemplate] = React.useState<ServiceTemplateDto | null>(null);
   const [selectedLocale, setSelectedLocale] = React.useState(defaultLocale);
+  const [listLocale, setListLocale] = React.useState(defaultLocale);
+  const formRef = React.useRef<HTMLDivElement>(null);
 
   const [categorySlug, setCategorySlug] = React.useState('');
   const [i18n, setI18n] = React.useState<ServiceI18nMap>(() => blankI18n(formLocales));
@@ -110,8 +112,17 @@ export default function ServiceTemplatesClient() {
   const [isActive, setIsActive] = React.useState(true);
 
   React.useEffect(() => {
-    setSelectedLocale((prev) => coerceLocale(prev, defaultLocale));
+    const safe = (prev: string) => coerceLocale(prev, defaultLocale) || defaultLocale || FALLBACK_LOCALES[0];
+    setSelectedLocale(safe);
+    setListLocale(safe);
   }, [coerceLocale, defaultLocale]);
+
+  // Form açılınca forma kaydır (kullanıcı sayfanın altında açıldığını farketsin).
+  React.useEffect(() => {
+    if (!formOpen) return;
+    const raf = requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    return () => cancelAnimationFrame(raf);
+  }, [formOpen, editingTemplate]);
 
   React.useEffect(() => {
     if (editingTemplate && formOpen) {
@@ -243,7 +254,14 @@ export default function ServiceTemplatesClient() {
           <p className="text-gm-muted font-serif text-sm italic opacity-70">{t('templates.description')}</p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <AdminLocaleSelect
+            value={listLocale}
+            onChange={(locale) => setListLocale(coerceLocale(locale, defaultLocale) || defaultLocale)}
+            options={localeOptions.length ? localeOptions : FALLBACK_LOCALES.map((locale) => ({ value: locale, label: locale.toUpperCase() }))}
+            loading={localesLoading}
+            className="border-gm-border-soft bg-gm-surface/40"
+          />
           <Button
             variant="outline"
             size="sm"
@@ -323,20 +341,23 @@ export default function ServiceTemplatesClient() {
                 ) : (
                   templates.map((item) => {
                     const category = categories.find((c) => c.slug === item.category_slug);
+                    const rowName = item.i18n?.[listLocale]?.name || item.name;
+                    const rowDesc = item.i18n?.[listLocale]?.description || item.description;
+                    const catName = category?.i18n?.[listLocale]?.name || category?.name || item.category_slug;
                     return (
                       <TableRow key={item.id} className="group border-gm-border-soft transition-colors hover:bg-gm-primary/[0.03]">
                         <TableCell className="px-8 py-6">
                           <div>
-                            <div className="font-serif text-xl text-gm-text text-foreground">{item.name}</div>
+                            <div className="font-serif text-xl text-gm-text">{rowName}</div>
                             <div className="text-gm-muted mt-1 font-mono text-[10px] opacity-50">{item.slug}</div>
-                            {item.description ? (
-                              <div className="text-gm-muted mt-1 max-w-sm truncate text-xs">{item.description}</div>
+                            {rowDesc ? (
+                              <div className="text-gm-muted mt-1 max-w-sm truncate text-xs">{rowDesc}</div>
                             ) : null}
                           </div>
                         </TableCell>
                         <TableCell className="py-6">
-                          <span className="rounded-full border border-gm-border-soft bg-gm-surface/40 px-3 py-1 text-xs text-gm-text text-foreground">
-                            {category?.name || item.category_slug}
+                          <span className="rounded-full border border-gm-border-soft bg-gm-surface/40 px-3 py-1 text-xs text-gm-text">
+                            {catName}
                           </span>
                         </TableCell>
                         <TableCell className="py-6">
@@ -389,7 +410,7 @@ export default function ServiceTemplatesClient() {
       </div>
 
       {formOpen && (
-        <Card className="border-gm-border-soft bg-gm-bg-deep/80 text-gm-text text-foreground shadow-xl">
+        <Card ref={formRef} className="scroll-mt-24 border-2 border-gm-gold/40 bg-gm-bg-deep/80 text-gm-text shadow-xl ring-2 ring-gm-gold/10">
           <CardContent className="p-8">
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
