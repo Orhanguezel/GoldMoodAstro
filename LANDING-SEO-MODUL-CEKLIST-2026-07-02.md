@@ -99,7 +99,8 @@
 - `apply-blog-uplift` benzeri veya admin AI butonuyla; **native-dil**, konuya sadık.
 - **Kabul:** landing'ler ≥90, AdSense/index hazır.
 
-### [ ] LSM-T10 — Deploy + doğrula 🔴
+### [x] LSM-T10 — Deploy + doğrula 🔴
+- **Codex notu (2026-07-02):** backend/admin/frontend typecheck ve build geçti; canlıya rsync ile dağıtıldı, backend/admin/frontend PM2 reload edildi. Prod seed + SEO recalc çalıştı (`custom_page` count=84); 24 landing için minimum skor 95, AdSense/index hazır 24/24. Canlı doğrulama: `/admin/landing`, `/admin/pages`, `/tr/ruya-tabiri` HTTP 200; landing API DB içeriği döndürüyor.
 - typecheck (backend+admin+frontend) → commit → git-deploy (⚠️ eşzamanlı deploy çakışmasına dikkat).
 - Prod: landing seed/ALTER, recalc.
 - Canlı: /tr/ruya-tabiri DB içeriği + admin'den düzenlenebilir + skor gerçek + her modülde SEO paneli.
