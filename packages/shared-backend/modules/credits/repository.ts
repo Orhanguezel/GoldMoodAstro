@@ -122,6 +122,49 @@ export async function addCredits(userId: string, amount: number, type: any, refe
   });
 }
 
+export async function clawbackCredits(userId: string, amount: number, reference: { type: string; id: string; orderId?: string; description?: string }) {
+  if (amount <= 0) return { balance: (await getUserBalance(userId)).balance, skipped: true };
+
+  return db.transaction(async (tx) => {
+    const txId = uuidv4();
+    try {
+      await tx.insert(creditTransactions).values({
+        id: txId,
+        userId,
+        type: 'adjustment',
+        amount: -amount,
+        balanceAfter: 0,
+        referenceType: reference.type,
+        referenceId: reference.id,
+        orderId: reference.orderId,
+        description: reference.description ?? 'Refund clawback',
+      });
+    } catch (err) {
+      if (!isDuplicate(err)) throw err;
+      const current = await tx.select().from(userCredits).where(eq(userCredits.userId, userId)).limit(1);
+      return { balance: current[0]?.balance ?? 0, idempotent: true };
+    }
+
+    await tx.execute(drizzleSql`
+      INSERT INTO user_credits (id, user_id, balance, currency, created_at, updated_at)
+      VALUES (${uuidv4()}, ${userId}, 0, 'TRY-CREDIT', NOW(3), NOW(3))
+      ON DUPLICATE KEY UPDATE updated_at = updated_at
+    `);
+
+    const updateResult = await tx.execute(drizzleSql`
+      UPDATE user_credits
+      SET balance = balance - ${amount}, updated_at = NOW(3)
+      WHERE user_id = ${userId}
+    `);
+    if (affectedRows(updateResult) < 1) throw new Error('credit_clawback_failed');
+
+    const current = await tx.select().from(userCredits).where(eq(userCredits.userId, userId)).limit(1);
+    const newBalance = current[0]?.balance ?? 0;
+    await tx.update(creditTransactions).set({ balanceAfter: newBalance }).where(eq(creditTransactions.id, txId));
+    return { balance: newBalance };
+  });
+}
+
 export async function getTransactionHistory(userId: string) {
   return db.select()
     .from(creditTransactions)

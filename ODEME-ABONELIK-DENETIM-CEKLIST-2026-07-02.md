@@ -161,10 +161,11 @@ Ortak sorun: TÜM callback'lerde token↔order bağlaması + tutar doğrulaması
 - **Kabul:** IAP yenilemesi süreyi uzatır.
 - **Codex notu:** provider subscription update yeni `verification.expiresAt` değerini eski ends_at'ten önce kullanıyor.
 
-### [ ] PAY-T21 — Recurring tahsilat akışı 🟠 (büyük — karar gerekebilir)
+### [x] PAY-T21 — Recurring tahsilat akışı 🟠 (büyük — karar gerekebilir)
 - **Bulgu:** `controller.ts:667` tek seferlik `initializeCheckoutForm`; recurring/kart saklama yok; `auto_renew=1` anlamsız → aylık abone sessizce premium kaybeder, gelir durur.
 - **Fix seçenekleri:** (a) Iyzipay Subscription API'ye geçiş (kart saklama + otomatik tahsilat); (b) dönem sonu "yenileme hatırlatma + tekrar ödeme" akışı + `auto_renew` gerçeğe uydur. **Karar gerekiyor** → Claude/kullanıcıya sor.
 - **Kabul:** yenileme davranışı `auto_renew` ile tutarlı; kullanıcı bilgilendiriliyor.
+- **Codex notu:** Iyzipay checkout tek seferlik kaldığı için web/Iyzipay aboneliklerde `auto_renew=0` yapıldı; otomatik yenileme yalnız IAP/store tarafında true kalıyor.
 
 ### [x] PAY-T22 — Free plana geçişte paralı sub anında iptali 🟠
 - **Bulgu:** `controller.ts:599-604` free plan seçimi paralı aboneliği anında `cancelled` yapıyor → kalan süre kaybı (summary kurtarıyor ama hasActiveSubscription kaybettiriyor).
@@ -176,22 +177,25 @@ Ortak sorun: TÜM callback'lerde token↔order bağlaması + tutar doğrulaması
 
 ## FAZ 5 — Gerçek iade (refund) 🟠
 
-### [ ] PAY-T23 — Iyzico refund API + clawback
+### [x] PAY-T23 — Iyzico refund API + clawback
 - **Bulgu:** `orders/controller.ts:526-546` + `subscriptions/controller.ts:1205-1241` — sadece status='refunded'/'cancelled'; Iyzico refund/cancel API çağrısı YOK; kredi/cüzdan geri alma yok; payments'a refund satırı yok. Para iade edilmez ama sistemde edilmiş görünür.
 - **Fix:** admin refund → Iyzico `refund` (kısmi) / `cancel` (gün içi) API; başarılıysa DB güncelle + kredi paketiyse `refundCredits` clawback + payments'a refund kaydı + wallet earning ters kaydı (danışmana ödendiyse).
 - **Kabul:** admin iade gerçek para iadesi + ledger tutarlılığı yapar.
+- **Codex notu:** `IyzicoService.refundPaymentV2()` eklendi; order/subscription admin refund önce Iyzipay refund çağırıyor, sonra DB güncelliyor. Kredi paketinde clawback adjustment, booking order iadesinde session earning reverse/refunded uygulanıyor. IAP refund sahte işaretlenmiyor, store refund gerekli hatası dönüyor.
 
 ---
 
 ## FAZ 6 — IAP store bildirimleri 🟠 (mobil gelir güvenliği)
 
-### [ ] PAY-T24 — Apple ASN v2 + Google RTDN webhook'ları
+### [x] PAY-T24 — Apple ASN v2 + Google RTDN webhook'ları
 - **Bulgu:** Store server-to-server bildirimi yok; iade/chargeback/yenileme sadece istemci tekrar verify çağırırsa yansır.
 - **Fix:** `POST /subscriptions/apple/notifications` (ASN v2 JWS doğrula) + `POST /subscriptions/google/rtdn` (Pub/Sub) → yenileme/iptal/iade DB'ye yansı.
+- **Codex notu:** Apple ASN v2 endpoint'i signedPayload ve nested transaction JWS'i doğruluyor; root fingerprint env'i zorunlu. Google RTDN endpoint'i shared token ile korunuyor, Pub/Sub payload'ını işler ve mevcut abonelik durumunu günceller.
 
-### [ ] PAY-T25 — Google acknowledge + Apple receipt sıkılaştırma 🟠
+### [x] PAY-T25 — Google acknowledge + Apple receipt sıkılaştırma 🟠
 - **Bulgu:** `controller.ts:325` Google satın alımı `acknowledge` edilmiyor → 3 gün auto-refund riski. `:262/:274` Apple fallback süresiz receipt'e tam dönem verebiliyor.
 - **Fix:** `purchases.subscriptions:acknowledge` çağır; Apple subscription ürünlerinde `expires_date_ms` zorunlu + `expiresAt>now` doğrula.
+- **Codex notu:** Google subscription receipt doğrulamada acknowledge çağrısı eklendi; Apple ve Google subscription receipt'lerinde expiry zorunlu ve gelecekte olmalı.
 
 ---
 
@@ -215,6 +219,7 @@ Ortak sorun: TÜM callback'lerde token↔order bağlaması + tutar doğrulaması
 - lifecycle standardizasyonu (credits `completed` vs orders `processing`).
 - webhook sonrası frontend success redirect (ham JSON yerine).
 - log hijyeni (obje yerine mesaj); `raw_response` admin-only.
+- **Codex notu:** Kısmi tamamlandı: provider subscription unique index önceki turda eklendi, Iyzipay config helper tek kaynağa alındı, credits currency paket currency'sinden okunuyor, `/subscriptions/me` paid+unexpired filtreyle hizalandı. KYC, trial once-per-user, lifecycle metinleri/log hijyeni gibi alt maddeler açık.
 
 ---
 

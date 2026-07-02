@@ -27,6 +27,30 @@ export interface IyzicoConfig {
   uri?: string;      // iyzipay SDK'nın beklediği alan adı (baseUrl ile eş değer)
 }
 
+export function resolveIyzicoConfigFromGateway(gateway?: {
+  config?: string | null;
+  is_test_mode?: number | boolean | null;
+}): IyzicoConfig {
+  let fromDb: Partial<{ apiKey: string; secretKey: string; baseUrl: string; uri: string }> = {};
+  try {
+    fromDb = JSON.parse(gateway?.config || '{}');
+  } catch {
+    fromDb = {};
+  }
+
+  const dbTestMode = gateway?.is_test_mode;
+  const useProd =
+    dbTestMode === 0 ||
+    dbTestMode === false ||
+    String(process.env.IYZICO_TEST_MODE || '').toLowerCase() === 'false';
+
+  return {
+    apiKey: fromDb.apiKey ?? process.env.IYZIPAY_API_KEY ?? process.env.IYZICO_API_KEY ?? '',
+    secretKey: fromDb.secretKey ?? process.env.IYZIPAY_SECRET_KEY ?? process.env.IYZICO_SECRET_KEY ?? '',
+    baseUrl: fromDb.baseUrl ?? fromDb.uri ?? (useProd ? 'https://api.iyzipay.com' : 'https://sandbox-api.iyzipay.com'),
+  };
+}
+
 export interface IyzicoBasketItem {
   id: string;
   name: string;
@@ -78,6 +102,24 @@ export interface IyzicoInitializeRequest {
   basketItems: IyzicoBasketItem[];
 }
 
+export interface IyzicoCancelRequest {
+  locale: IyzipayLocale;
+  conversationId: string;
+  paymentId: string;
+  ip: string;
+  reason?: string;
+  description?: string;
+}
+
+export interface IyzicoRefundV2Request {
+  locale: IyzipayLocale;
+  conversationId: string;
+  paymentId: string;
+  price: string;
+  currency: string;
+  ip: string;
+}
+
 export class IyzicoService {
   // iyzipay SDK'nın TypeScript tipleri uri bekliyor ama gerçekte apiKey/secretKey/baseUrl kullanıyor.
   // Tip uyumsuzluğunu unknown → any cast ile aşıyoruz.
@@ -123,6 +165,28 @@ export class IyzicoService {
       (this.iyzipay as unknown as Record<string, Record<string, Function>>)
         .checkoutForm
         .retrieve({ token }, (err: unknown, result: Record<string, unknown>) => {
+          if (err) reject(err);
+          else resolve(result);
+        });
+    });
+  }
+
+  cancelPayment(request: IyzicoCancelRequest): Promise<Record<string, unknown>> {
+    return new Promise((resolve, reject) => {
+      (this.iyzipay as unknown as Record<string, Record<string, Function>>)
+        .cancel
+        .create(request, (err: unknown, result: Record<string, unknown>) => {
+          if (err) reject(err);
+          else resolve(result);
+        });
+    });
+  }
+
+  refundPaymentV2(request: IyzicoRefundV2Request): Promise<Record<string, unknown>> {
+    return new Promise((resolve, reject) => {
+      (this.iyzipay as unknown as Record<string, Record<string, Function>>)
+        .refundV2
+        .create(request, (err: unknown, result: Record<string, unknown>) => {
           if (err) reject(err);
           else resolve(result);
         });

@@ -1,13 +1,19 @@
 // src/modules/subscriptions/controller.ts
 // FAZ 10 / T10-1 — minimal handlers (plans listele, me, cancel)
 
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID, X509Certificate } from 'crypto';
 import type { RouteHandler } from 'fastify';
 import { and, desc, eq, like, or, sql, type SQL } from 'drizzle-orm';
 import { GoogleAuth } from 'google-auth-library';
+import { importX509, jwtVerify } from 'jose';
 import { db } from '../../db/client';
 import { orders, paymentGateways, payments } from '../orders/schema';
-import { IyzicoService, resolveIyzicoLocale, verifyIyzicoCallback } from '../orders/iyzico.service';
+import {
+  IyzicoService,
+  resolveIyzicoConfigFromGateway,
+  resolveIyzicoLocale,
+  verifyIyzicoCallback,
+} from '../orders/iyzico.service';
 import { subscriptionPlans, subscriptions } from './schema';
 import { users } from '../auth/schema';
 
@@ -116,6 +122,23 @@ type IapVerificationResult = {
   expiresAt?: Date | null;
 };
 
+type AppleNotificationPayload = {
+  notificationType?: string;
+  subtype?: string;
+  data?: {
+    signedTransactionInfo?: string;
+    signedRenewalInfo?: string;
+  };
+};
+
+type AppleTransactionPayload = {
+  originalTransactionId?: string;
+  transactionId?: string;
+  productId?: string;
+  expiresDate?: number;
+  revocationDate?: number;
+};
+
 function asDateFromMs(value: unknown): Date | null {
   if (typeof value === 'number' && Number.isFinite(value)) {
     if (value <= 0) return null;
@@ -131,6 +154,60 @@ function asDateFromMs(value: unknown): Date | null {
   }
 
   return null;
+}
+
+function pemFromX5c(cert: string) {
+  const lines = cert.match(/.{1,64}/g)?.join('\n') ?? cert;
+  return `-----BEGIN CERTIFICATE-----\n${lines}\n-----END CERTIFICATE-----`;
+}
+
+function x5cSha256(cert: string) {
+  const der = Buffer.from(cert, 'base64');
+  return createHash('sha256').update(der).digest('hex').toLowerCase();
+}
+
+async function verifyAppleSignedPayload<T extends Record<string, unknown>>(signedPayload: string): Promise<T> {
+  const headerSegment = signedPayload.split('.')[0];
+  if (!headerSegment) throw new Error('apple_jws_header_missing');
+  const header = JSON.parse(Buffer.from(headerSegment, 'base64url').toString('utf8')) as { x5c?: string[]; alg?: string };
+  const chain = header.x5c ?? [];
+  const leaf = chain[0];
+  if (!leaf) throw new Error('apple_jws_certificate_missing');
+  const rootFingerprint = asString(process.env.IAP_APPLE_ROOT_CERT_SHA256).replace(/:/g, '').toLowerCase();
+  const root = chain[chain.length - 1];
+  if (!rootFingerprint || !root || x5cSha256(root) !== rootFingerprint) {
+    throw new Error('apple_jws_untrusted_root');
+  }
+  for (let i = 0; i < chain.length - 1; i += 1) {
+    const child = new X509Certificate(Buffer.from(chain[i], 'base64'));
+    const issuer = new X509Certificate(Buffer.from(chain[i + 1], 'base64'));
+    if (!child.verify(issuer.publicKey)) throw new Error('apple_jws_invalid_certificate_chain');
+  }
+
+  const key = await importX509(pemFromX5c(leaf), header.alg || 'ES256');
+  const verified = await jwtVerify(signedPayload, key);
+  return verified.payload as T;
+}
+
+function googleRtdnToken(req: Parameters<RouteHandler>[0]) {
+  const q = (req.query ?? {}) as Record<string, unknown>;
+  return asString(req.headers['x-goog-rtdn-token'] || req.headers['x-goldmood-rtdn-token'] || q.token);
+}
+
+function isIapTerminalNotification(type: string) {
+  return ['EXPIRED', 'REFUND', 'REFUND_DECLINED', 'CONSUMPTION_REQUEST', 'REVOKE'].includes(type);
+}
+
+function isIapPastDueNotification(type: string) {
+  return ['DID_FAIL_TO_RENEW', 'GRACE_PERIOD_EXPIRED'].includes(type);
+}
+
+function requestIp(req: Parameters<RouteHandler>[0]) {
+  return String(req.ip || req.headers['x-forwarded-for'] || '127.0.0.1').split(',')[0].trim() || '127.0.0.1';
+}
+
+function isIyzicoSuccess(result: Record<string, unknown>) {
+  return asString(result.status).toLowerCase() === 'success';
 }
 
 function asNum(value: unknown): number {
@@ -272,6 +349,12 @@ async function verifyAppleReceipt(params: {
     const providerSubscriptionId = asString(normalized?.original_transaction_id || normalized?.transaction_id || txId || params.receipt.slice(0, 240));
     const providerCustomerId = asString(normalized?.app_account_token || normalized?.web_order_line_item_id);
     const expiresAt = asDateFromMs(normalized?.expires_date_ms);
+    if (!expiresAt) {
+      return { valid: false, reason: 'apple_subscription_expiry_required' };
+    }
+    if (expiresAt.getTime() <= Date.now()) {
+      return { valid: false, reason: 'apple_subscription_expired' };
+    }
 
     return {
       valid: true,
@@ -301,8 +384,10 @@ async function verifyGoogleReceipt(params: {
 
   let response = await fetch(subscriptionEndpoint, { headers });
   let body = await response.json().catch(() => ({})) as Record<string, unknown>;
+  let isSubscriptionPurchase = true;
 
   if (response.status === 404) {
+    isSubscriptionPurchase = false;
     response = await fetch(productEndpoint, { headers });
     body = await response.json().catch(() => ({})) as Record<string, unknown>;
   }
@@ -322,19 +407,159 @@ async function verifyGoogleReceipt(params: {
   const paid = asNum(body.paymentState) === 1;
   const providerCustomerId = asString(body.obfuscatedExternalProfileId || body.obfuscatedAccountId || body.accountId);
   const expiresAt = asDateFromMs(expiryMillis);
-  const isValidState = purchaseState === 0 || paid || autoRenewing === 'true' || (expiresAt ? true : false);
+  if (isSubscriptionPurchase && !expiresAt) {
+    return { valid: false, reason: 'google_subscription_expiry_required' };
+  }
+  if (expiresAt && expiresAt.getTime() <= Date.now()) {
+    return { valid: false, reason: 'google_purchase_expired' };
+  }
+  const isValidState = purchaseState === 0 || paid || autoRenewing === 'true';
 
   if (!isValidState) {
     return { valid: false, reason: 'google_purchase_not_active' };
   }
 
+  const acknowledgementState = asNum(body.acknowledgementState);
+  if (isSubscriptionPurchase && acknowledgementState !== 1) {
+    const acknowledgeEndpoint = `${subscriptionEndpoint}:acknowledge`;
+    const acknowledgeResponse = await fetch(acknowledgeEndpoint, {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    if (!acknowledgeResponse.ok) {
+      return { valid: false, reason: `google_acknowledge_failed_${acknowledgeResponse.status}` };
+    }
+  }
+
   return {
     valid: true,
-    providerSubscriptionId: orderId || params.purchaseToken,
+    providerSubscriptionId: params.purchaseToken || orderId,
     providerCustomerId: providerCustomerId || null,
     expiresAt,
   };
 }
+
+export const appleNotifications: RouteHandler = async (req, reply) => {
+  const signedPayload = asString((req.body as { signedPayload?: string } | undefined)?.signedPayload);
+  if (!signedPayload) return reply.code(400).send({ error: { message: 'signed_payload_required' } });
+
+  let notification: AppleNotificationPayload;
+  try {
+    notification = await verifyAppleSignedPayload<AppleNotificationPayload>(signedPayload);
+  } catch (error) {
+    return reply.code(400).send({ error: { message: error instanceof Error ? error.message : 'apple_notification_invalid' } });
+  }
+
+  const notificationType = asString(notification.notificationType);
+  const signedTransactionInfo = asString(notification.data?.signedTransactionInfo);
+  if (!notificationType || !signedTransactionInfo) {
+    return reply.code(400).send({ error: { message: 'apple_notification_incomplete' } });
+  }
+
+  let transaction: AppleTransactionPayload;
+  try {
+    transaction = await verifyAppleSignedPayload<AppleTransactionPayload>(signedTransactionInfo);
+  } catch (error) {
+    return reply.code(400).send({ error: { message: error instanceof Error ? error.message : 'apple_transaction_invalid' } });
+  }
+
+  const providerSubscriptionId = asString(transaction.originalTransactionId || transaction.transactionId);
+  if (!providerSubscriptionId) return reply.code(400).send({ error: { message: 'apple_transaction_id_missing' } });
+
+  const now = new Date();
+  const expiresAt = asDateFromMs(transaction.expiresDate);
+  const patch: Record<string, unknown> = { updated_at: now };
+  if (isIapTerminalNotification(notificationType)) {
+    patch.status = notificationType === 'EXPIRED' ? 'expired' : 'cancelled';
+    patch.auto_renew = 0;
+    patch.cancelled_at = now;
+    patch.cancellation_reason = `apple_${notificationType.toLowerCase()}`;
+    patch.ends_at = now;
+  } else if (isIapPastDueNotification(notificationType)) {
+    patch.status = notificationType === 'GRACE_PERIOD_EXPIRED' ? 'past_due' : 'grace_period';
+    if (expiresAt) patch.ends_at = expiresAt;
+  } else if (expiresAt && expiresAt.getTime() > now.getTime()) {
+    patch.status = 'active';
+    patch.ends_at = expiresAt;
+    patch.auto_renew = 1;
+  }
+
+  await db
+    .update(subscriptions)
+    .set(patch as any)
+    .where(and(eq(subscriptions.provider, 'apple_iap'), eq(subscriptions.provider_subscription_id, providerSubscriptionId)));
+
+  return reply.send({ ok: true });
+};
+
+export const googleRtdn: RouteHandler = async (req, reply) => {
+  const expectedToken = asString(process.env.IAP_GOOGLE_RTDN_TOKEN);
+  if (!expectedToken || googleRtdnToken(req) !== expectedToken) {
+    return reply.code(401).send({ error: { message: 'invalid_rtdn_token' } });
+  }
+
+  const body = (req.body ?? {}) as { message?: { data?: string } };
+  const rawData = asString(body.message?.data);
+  if (!rawData) return reply.code(400).send({ error: { message: 'pubsub_message_data_required' } });
+
+  let payload: Record<string, any>;
+  try {
+    payload = JSON.parse(Buffer.from(rawData, 'base64').toString('utf8'));
+  } catch {
+    return reply.code(400).send({ error: { message: 'pubsub_message_invalid' } });
+  }
+
+  const packageName = asString(payload.packageName || process.env.IAP_GOOGLE_PACKAGE_NAME);
+  const notification = payload.subscriptionNotification as Record<string, unknown> | undefined;
+  const productId = asString(notification?.subscriptionId);
+  const purchaseToken = asString(notification?.purchaseToken);
+  const notificationType = Number(notification?.notificationType);
+  if (!packageName || !productId || !purchaseToken) {
+    return reply.code(400).send({ error: { message: 'google_subscription_notification_incomplete' } });
+  }
+
+  const now = new Date();
+  const terminal = notificationType === 12 || notificationType === 13;
+  const pastDue = notificationType === 5 || notificationType === 6;
+  if (terminal) {
+    await db
+      .update(subscriptions)
+      .set({
+        status: notificationType === 13 ? 'expired' : 'cancelled',
+        auto_renew: 0,
+        cancelled_at: now,
+        cancellation_reason: `google_rtdn_${notificationType}`,
+        ends_at: now,
+      } as any)
+      .where(and(eq(subscriptions.provider, 'google_iap'), eq(subscriptions.provider_subscription_id, purchaseToken)));
+    return reply.send({ ok: true });
+  }
+
+  if (pastDue) {
+    await db
+      .update(subscriptions)
+      .set({ status: notificationType === 6 ? 'grace_period' : 'past_due', updated_at: now } as any)
+      .where(and(eq(subscriptions.provider, 'google_iap'), eq(subscriptions.provider_subscription_id, purchaseToken)));
+    return reply.send({ ok: true });
+  }
+
+  const verification = await verifyGoogleReceipt({ packageName, productId, purchaseToken });
+  if (!verification.valid) return reply.code(400).send({ error: { message: verification.reason || 'google_rtdn_verify_failed' } });
+
+  await db
+    .update(subscriptions)
+    .set({
+      status: 'active',
+      ends_at: verification.expiresAt ?? undefined,
+      auto_renew: 1,
+      provider_customer_id: verification.providerCustomerId ?? undefined,
+      updated_at: now,
+    } as any)
+    .where(and(eq(subscriptions.provider, 'google_iap'), eq(subscriptions.provider_subscription_id, purchaseToken)));
+
+  return reply.send({ ok: true });
+};
 
 function toAdminWhereClause(
   query: Record<string, unknown>,
@@ -435,27 +660,6 @@ function resolveApiBase() {
   ).replace(/\/$/, '');
 }
 
-function getGatewayConfig(gateway: { config: string | null } | undefined, envFallbackBaseUrl?: string) {
-  const parsed = parseJSONNotes<Record<string, string>>(gateway?.config ?? null) ?? {};
-  const testMode = process.env.IYZICO_TEST_MODE;
-  const fallbackBase = envFallbackBaseUrl ??
-    (testMode === 'false' ? 'https://api.iyzipay.com' : 'https://sandbox-api.iyzipay.com');
-
-  return {
-    apiKey:
-      parsed.apiKey ??
-      process.env.IYZIPAY_API_KEY ??
-      process.env.IYZICO_API_KEY ??
-      '',
-    secretKey:
-      parsed.secretKey ??
-      process.env.IYZIPAY_SECRET_KEY ??
-      process.env.IYZICO_SECRET_KEY ??
-      '',
-    baseUrl: parsed.baseUrl ?? fallbackBase,
-  };
-}
-
 function resolveIyzicoResultPaymentId(result: Record<string, unknown>): string {
   const paymentId = result.paymentId;
   if (typeof paymentId === 'number') return String(paymentId);
@@ -496,9 +700,35 @@ export const getMySubscription: RouteHandler = async (req, reply) => {
   if (!userId) return reply.code(401).send({ error: { message: 'unauthorized' } });
 
   const rows = await db
-    .select()
+    .select({
+      id: subscriptions.id,
+      user_id: subscriptions.user_id,
+      plan_id: subscriptions.plan_id,
+      provider: subscriptions.provider,
+      provider_subscription_id: subscriptions.provider_subscription_id,
+      provider_customer_id: subscriptions.provider_customer_id,
+      status: subscriptions.status,
+      started_at: subscriptions.started_at,
+      ends_at: subscriptions.ends_at,
+      trial_ends_at: subscriptions.trial_ends_at,
+      cancelled_at: subscriptions.cancelled_at,
+      cancellation_reason: subscriptions.cancellation_reason,
+      auto_renew: subscriptions.auto_renew,
+      price_minor: subscriptions.price_minor,
+      currency: subscriptions.currency,
+      created_at: subscriptions.created_at,
+      updated_at: subscriptions.updated_at,
+      plan_code: subscriptionPlans.code,
+      plan_period: subscriptionPlans.period,
+    })
     .from(subscriptions)
-    .where(eq(subscriptions.user_id, userId))
+    .leftJoin(subscriptionPlans, eq(subscriptionPlans.id, subscriptions.plan_id))
+    .where(and(
+      eq(subscriptions.user_id, userId),
+      sql`${subscriptions.status} IN ('active','grace_period','cancelled')`,
+      sql`(${subscriptions.ends_at} IS NULL OR ${subscriptions.ends_at} > NOW())`,
+      sql`COALESCE(${subscriptionPlans.price_minor}, ${subscriptions.price_minor}, 0) > 0`,
+    ))
     .orderBy(desc(subscriptions.created_at))
     .limit(1);
 
@@ -612,7 +842,7 @@ export const startSubscription: RouteHandler = async (req, reply) => {
       started_at: startedAt,
       ends_at: endsAt,
       trial_ends_at: trialEndsAt,
-      auto_renew: plan.period === 'lifetime' ? 0 : 1,
+      auto_renew: 0,
       price_minor: plan.price_minor,
       currency,
     } as any);
@@ -656,7 +886,7 @@ export const startSubscription: RouteHandler = async (req, reply) => {
 
   const callbackUrl = `${resolveApiBase()}/api/subscriptions/webhook?order_id=${orderId}`;
   const iyzicoLocale = resolveIyzicoLocale(resolveLocale(req));
-  const iyzico = new IyzicoService(getGatewayConfig(gateway));
+  const iyzico = new IyzicoService(resolveIyzicoConfigFromGateway(gateway));
 
   const names = (full_name || 'Danışan').trim().split(/\s+/);
   const buyerName = names.shift() || 'Danışan';
@@ -778,7 +1008,7 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
     return reply.code(400).send({ error: { message: 'payment_gateway_not_found' } });
   }
 
-  const cfg = getGatewayConfig(gateway);
+  const cfg = resolveIyzicoConfigFromGateway(gateway);
   const iyzico = new IyzicoService(cfg);
 
   const notes = parseJSONNotes<{ context?: string; plan_id?: string }>(order.notes ?? null);
@@ -901,7 +1131,7 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
       started_at: now,
       ends_at: periodEnd,
       trial_ends_at: trialEndsAt,
-      auto_renew: 1,
+      auto_renew: 0,
       price_minor: plan.price_minor,
       currency: plan.currency || 'TRY',
     } as any);
@@ -1231,6 +1461,13 @@ export const refundSubscriptionAdmin: RouteHandler<{ Params: { id: string } }> =
   const [row] = await db.select().from(subscriptions).where(eq(subscriptions.id, id)).limit(1);
   if (!row) return reply.code(404).send({ error: { message: 'subscription_not_found' } });
 
+  if (row.provider === 'apple_iap' || row.provider === 'google_iap') {
+    return reply.code(409).send({
+      error: { message: 'store_refund_required' },
+      provider: row.provider,
+    });
+  }
+
   if (row.status === 'cancelled') {
     return reply.send({
       data: {
@@ -1242,6 +1479,48 @@ export const refundSubscriptionAdmin: RouteHandler<{ Params: { id: string } }> =
 
   const endsAt = asString(body.ended_at);
   const endDate = endsAt ? new Date(endsAt) : now;
+
+  if (row.provider === 'iyzipay') {
+    const [payment] = await db
+      .select()
+      .from(payments)
+      .where(and(eq(payments.transaction_id, row.provider_subscription_id || ''), eq(payments.status, 'success')))
+      .limit(1);
+    if (!payment?.transaction_id) {
+      return reply.code(409).send({ error: { message: 'subscription_payment_not_found' } });
+    }
+
+    const [gateway] = await db.select().from(paymentGateways).where(eq(paymentGateways.id, payment.gateway_id)).limit(1);
+    if (!gateway) return reply.code(400).send({ error: { message: 'payment_gateway_not_found' } });
+
+    const iyzico = new IyzicoService(resolveIyzicoConfigFromGateway(gateway));
+    const refundResult = await iyzico.refundPaymentV2({
+      locale: resolveIyzicoLocale(resolveLocale(req)),
+      conversationId: `sub_refund_${row.id}`,
+      paymentId: payment.transaction_id,
+      price: String(payment.amount),
+      currency: payment.currency || row.currency || 'TRY',
+      ip: requestIp(req),
+    });
+
+    if (!isIyzicoSuccess(refundResult)) {
+      return reply.code(502).send({
+        error: { message: String(refundResult.errorMessage || 'iyzico_refund_failed') },
+        gateway_response: refundResult,
+      });
+    }
+
+    await db.insert(payments).values({
+      id: randomUUID(),
+      order_id: payment.order_id,
+      gateway_id: payment.gateway_id,
+      transaction_id: `refund_${payment.transaction_id}`,
+      amount: `-${String(payment.amount)}`,
+      currency: payment.currency || row.currency || 'TRY',
+      status: 'refund',
+      raw_response: JSON.stringify(refundResult),
+    } as any);
+  }
 
   await db
     .update(subscriptions)

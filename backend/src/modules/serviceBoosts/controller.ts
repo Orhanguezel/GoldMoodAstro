@@ -3,7 +3,13 @@ import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
-import { IyzicoService, isPaymentMockEnabled, resolveIyzicoLocale, verifyIyzicoCallback } from '@goldmood/shared-backend/modules/orders/iyzico.service';
+import {
+  IyzicoService,
+  isPaymentMockEnabled,
+  resolveIyzicoConfigFromGateway,
+  resolveIyzicoLocale,
+  verifyIyzicoCallback,
+} from '@goldmood/shared-backend/modules/orders/iyzico.service';
 
 type BoostPackage = { id: string; days: number; price: number; currency?: string };
 
@@ -42,24 +48,6 @@ function splitName(fullName: string | null | undefined) {
   return {
     name: parts[0] || 'Danışman',
     surname: parts.slice(1).join(' ') || '.',
-  };
-}
-
-function resolveIyzicoConfig(gateway?: { config: string | null }) {
-  let fromDb = {} as Partial<{ apiKey: string; secretKey: string; baseUrl: string }>;
-  try {
-    fromDb = JSON.parse(gateway?.config || '{}');
-  } catch {
-    fromDb = {};
-  }
-  const testMode = process.env.IYZICO_TEST_MODE;
-  return {
-    apiKey: fromDb.apiKey ?? process.env.IYZIPAY_API_KEY ?? process.env.IYZICO_API_KEY ?? '',
-    secretKey: fromDb.secretKey ?? process.env.IYZIPAY_SECRET_KEY ?? process.env.IYZICO_SECRET_KEY ?? '',
-    baseUrl:
-      fromDb.baseUrl ??
-      process.env.IYZIPAY_BASE_URL ??
-      (testMode === 'false' ? 'https://api.iyzipay.com' : 'https://sandbox-api.iyzipay.com'),
   };
 }
 
@@ -172,7 +160,7 @@ export const createCheckout: RouteHandler = async (req, reply) => {
   const user = rowsFromExecute<{ id: string; full_name: string | null; email: string; phone: string | null }>(userResult)[0];
   if (!user?.email) return reply.code(400).send({ error: { message: 'consultant_email_required' } });
 
-  const iyzico = new IyzicoService(resolveIyzicoConfig(gateway));
+  const iyzico = new IyzicoService(resolveIyzicoConfigFromGateway(gateway));
   const name = splitName(user.full_name);
   const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
   const price = Number(selected.price).toFixed(2);
@@ -322,7 +310,7 @@ export const iyzicoCallback: RouteHandler = async (req, reply) => {
   if (!gateway) return reply.code(400).send({ error: { message: 'iyzico_gateway_not_configured' } });
 
   try {
-    const iyzico = new IyzicoService(resolveIyzicoConfig(gateway));
+    const iyzico = new IyzicoService(resolveIyzicoConfigFromGateway(gateway));
     const verified = await verifyIyzicoCallback({
       iyzico,
       token,
