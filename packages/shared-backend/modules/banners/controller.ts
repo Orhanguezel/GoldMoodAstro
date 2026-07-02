@@ -156,6 +156,14 @@ export const adminList: RouteHandler = async (req, reply) => {
   return reply.send({ data: rows });
 };
 
+/** GET /admin/banners/:id — detay */
+export const adminGet: RouteHandler = async (req, reply) => {
+  const { id } = req.params as { id: string };
+  const [row] = await db.select().from(banners).where(eq(banners.id, id)).limit(1);
+  if (!row) return reply.code(404).send({ error: { message: "not_found" } });
+  return reply.send({ data: row });
+};
+
 /** POST /admin/banners — yeni banner */
 export const adminCreate: RouteHandler = async (req, reply) => {
   const body = req.body as Partial<typeof banners.$inferInsert>;

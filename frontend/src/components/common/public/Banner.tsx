@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Info } from 'lucide-react';
+import { X, Info, Image as ImageIcon } from 'lucide-react';
 import { useListBannersQuery, useTrackBannerClickMutation } from '@/integrations/rtk/public/banners.endpoints';
 import { BannerPlacement, getMultiLang } from '@/types/common';
 import { useParams } from 'next/navigation';
@@ -59,18 +59,19 @@ export default function Banner({
   const [trackClick] = useTrackBannerClickMutation();
   const { user } = useAuthStore();
 
-  // Premium gating - FAZ 41 T41-3: pro users do not see ads.
-  const isPremium = user?.is_premium === true;
-  if (isPremium) return null;
-
   // Dismiss state stored per placement in localStorage.
   const dismissKey = `banner-dismissed:${placement}`;
   const [dismissed, setDismissed] = React.useState(false);
+  const [failedImages, setFailedImages] = React.useState<Record<string, true>>({});
   React.useEffect(() => {
     if (!dismissable) return;
     if (typeof window === 'undefined') return;
     setDismissed(window.localStorage.getItem(dismissKey) === '1');
   }, [dismissKey, dismissable]);
+
+  // Premium gating - FAZ 41 T41-3: pro users do not see ads.
+  const isPremium = user?.is_premium === true;
+  if (isPremium) return null;
 
   if (isLoading || !banners || banners.length === 0 || dismissed) return null;
 
@@ -88,20 +89,21 @@ export default function Banner({
   return (
     <div className={cn('grid gap-4', className)}>
       {items.map((banner) => {
-        const title = getMultiLang(
+        const title = (banner as any).title || getMultiLang(
           { tr: banner.title_tr || '', en: banner.title_en || '' },
           locale as string,
         );
-        const subtitle = getMultiLang(
+        const subtitle = (banner as any).subtitle || getMultiLang(
           { tr: banner.subtitle_tr || '', en: banner.subtitle_en || '' },
           locale as string,
         );
-        const cta = getMultiLang(
+        const cta = (banner as any).cta_label || getMultiLang(
           { tr: banner.cta_label_tr || '', en: banner.cta_label_en || '' },
           locale as string,
         );
 
         const isSlim = variant === 'slim';
+        const imageFailed = failedImages[banner.id] || !banner.image_url;
 
         const content = (
           <div
@@ -112,19 +114,26 @@ export default function Banner({
             onClick={() => trackClick(banner.id)}
           >
             <div className={cn('relative w-full', ASPECTS[variant])}>
-              <Image
-                src={banner.image_url}
-                alt={title || banner.code}
-                fill
-                sizes={
-                  variant === 'hero'
-                    ? '(max-width: 768px) 100vw, 1200px'
-                    : variant === 'slim'
-                      ? '(max-width: 768px) 100vw, 900px'
-                      : '(max-width: 768px) 100vw, 480px'
-                }
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
+              {imageFailed ? (
+                <div className="flex h-full w-full items-center justify-end bg-linear-to-br from-(--gm-bg-deep) via-(--gm-surface) to-(--gm-primary)/30 pr-10 text-(--gm-gold)/45">
+                  <ImageIcon className="size-14" />
+                </div>
+              ) : (
+                <Image
+                  src={banner.image_url}
+                  alt={title || banner.code}
+                  fill
+                  sizes={
+                    variant === 'hero'
+                      ? '(max-width: 768px) 100vw, 1200px'
+                      : variant === 'slim'
+                        ? '(max-width: 768px) 100vw, 900px'
+                        : '(max-width: 768px) 100vw, 480px'
+                  }
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  onError={() => setFailedImages((prev) => ({ ...prev, [banner.id]: true }))}
+                />
+              )}
               <div className="absolute inset-0 bg-linear-to-r from-(--gm-bg)/85 via-(--gm-bg)/35 to-transparent" />
             </div>
 

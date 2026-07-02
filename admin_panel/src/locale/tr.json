@@ -4655,15 +4655,25 @@
         "home_hero": "Ana Sayfa Hero",
         "home_sidebar": "Ana Sayfa Kenar Çubuğu",
         "home_footer": "Ana Sayfa Alt Alanı",
+        "home_mid_1": "Ana Sayfa Orta 1",
+        "home_mid_2": "Ana Sayfa Orta 2",
+        "home_mid_3": "Ana Sayfa Orta 3",
         "consultant_list": "Danışman Listesi",
+        "consultant_detail_top": "Danışman Detay Üst",
+        "consultant_detail_bottom": "Danışman Detay Alt",
+        "dashboard_top": "Panel Üst Alan",
+        "blog_sidebar": "Blog Kenar Alanı",
+        "blog_inline": "Blog İçerik İçi",
         "mobile_welcome": "Mobil Karşılama Ekranı",
         "mobile_home": "Mobil Ana Sayfa",
-        "mobile_call_end": "Mobil Arama Sonu"
+        "mobile_call_end": "Mobil Arama Sonu",
+        "admin_dashboard": "Admin Panel"
       },
       "locales": {
         "all": "Tüm Diller (*)",
         "tr": "Türkçe (TR)",
-        "en": "İngilizce (EN)"
+        "en": "İngilizce (EN)",
+        "de": "Almanca (DE)"
       },
       "segments": {
         "all": "Herkes",

@@ -4886,15 +4886,25 @@
         "home_hero": "Home Hero",
         "home_sidebar": "Home Sidebar",
         "home_footer": "Home Footer",
+        "home_mid_1": "Home Mid 1",
+        "home_mid_2": "Home Mid 2",
+        "home_mid_3": "Home Mid 3",
         "consultant_list": "Consultant List",
+        "consultant_detail_top": "Consultant Detail Top",
+        "consultant_detail_bottom": "Consultant Detail Bottom",
+        "dashboard_top": "Dashboard Top",
+        "blog_sidebar": "Blog Sidebar",
+        "blog_inline": "Blog Inline",
         "mobile_welcome": "Mobile Welcome Screen",
         "mobile_home": "Mobile Home",
-        "mobile_call_end": "Mobile Call End"
+        "mobile_call_end": "Mobile Call End",
+        "admin_dashboard": "Admin Dashboard"
       },
       "locales": {
         "all": "All Languages (*)",
         "tr": "Turkish (TR)",
-        "en": "English (EN)"
+        "en": "English (EN)",
+        "de": "German (DE)"
       },
       "segments": {
         "all": "Everyone",

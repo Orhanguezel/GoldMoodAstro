@@ -4772,15 +4772,25 @@
         "home_hero": "Startseite Hero",
         "home_sidebar": "Startseite Seitenleiste",
         "home_footer": "Startseite Fußbereich",
+        "home_mid_1": "Startseite Mitte 1",
+        "home_mid_2": "Startseite Mitte 2",
+        "home_mid_3": "Startseite Mitte 3",
         "consultant_list": "Beraterliste",
+        "consultant_detail_top": "Beraterdetail oben",
+        "consultant_detail_bottom": "Beraterdetail unten",
+        "dashboard_top": "Dashboard oben",
+        "blog_sidebar": "Blog-Seitenleiste",
+        "blog_inline": "Blog inline",
         "mobile_welcome": "Mobiler Willkommensbildschirm",
         "mobile_home": "Mobile Startseite",
-        "mobile_call_end": "Mobiles Anrufende"
+        "mobile_call_end": "Mobiles Anrufende",
+        "admin_dashboard": "Admin-Dashboard"
       },
       "locales": {
         "all": "Alle Sprachen (*)",
         "tr": "Türkisch (TR)",
-        "en": "Englisch (EN)"
+        "en": "Englisch (EN)",
+        "de": "Deutsch (DE)"
       },
       "segments": {
         "all": "Alle",

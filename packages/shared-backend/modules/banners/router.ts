@@ -18,6 +18,7 @@ export async function registerBannersAdmin(adminApi: FastifyInstance) {
   };
 
   adminApi.get(BASE, { preHandler: adminGuard }, controller.adminList);
+  adminApi.get(`${BASE}/:id`, { preHandler: adminGuard }, controller.adminGet);
   adminApi.post(BASE, { preHandler: adminGuard }, controller.adminCreate);
   adminApi.patch(`${BASE}/:id`, { preHandler: adminGuard }, controller.adminUpdate);
   adminApi.delete(`${BASE}/:id`, { preHandler: adminGuard }, controller.adminDelete);

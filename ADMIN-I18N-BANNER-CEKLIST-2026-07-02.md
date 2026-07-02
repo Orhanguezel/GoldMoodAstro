@@ -11,6 +11,12 @@
 >
 > ✅ AI18N-T2 (blog) SEO kolonu işinden sonra tamamlandı; aynı dosyada ortak
 > içerik-locale seçici kullanılıyor. Diğer görevler de canlıda doğrulandı.
+>
+> ✅ **2026-07-02 EK DÜZELTME (Codex):** Banner detay endpoint'i
+> `GET /admin/banners/:id` eklendi; admin placement listesi şemayla eşitlendi;
+> kırık `/banners/upsell_expert.svg` kaldırıldı; banner seed görselleri çalışan
+> `/assets/images/banners/*.png` dosyalarına taşındı; anasayfa banner section'ları
+> `BannerSlot` ile admin kontrollü hale getirildi. Canlı seed/build/reload yapıldı.
 
 ---
 

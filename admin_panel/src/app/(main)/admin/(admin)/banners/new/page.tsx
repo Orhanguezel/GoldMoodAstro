@@ -173,10 +173,19 @@ export default function BannerFormPage() {
                       <SelectItem value="home_hero">{t('form.placements.home_hero')}</SelectItem>
                       <SelectItem value="home_sidebar">{t('form.placements.home_sidebar')}</SelectItem>
                       <SelectItem value="home_footer">{t('form.placements.home_footer')}</SelectItem>
+                      <SelectItem value="home_mid_1">{t('form.placements.home_mid_1', undefined, 'Ana Sayfa Orta 1')}</SelectItem>
+                      <SelectItem value="home_mid_2">{t('form.placements.home_mid_2', undefined, 'Ana Sayfa Orta 2')}</SelectItem>
+                      <SelectItem value="home_mid_3">{t('form.placements.home_mid_3', undefined, 'Ana Sayfa Orta 3')}</SelectItem>
                       <SelectItem value="consultant_list">{t('form.placements.consultant_list')}</SelectItem>
+                      <SelectItem value="consultant_detail_top">{t('form.placements.consultant_detail_top', undefined, 'Danışman Detay Üst')}</SelectItem>
+                      <SelectItem value="consultant_detail_bottom">{t('form.placements.consultant_detail_bottom', undefined, 'Danışman Detay Alt')}</SelectItem>
+                      <SelectItem value="dashboard_top">{t('form.placements.dashboard_top', undefined, 'Panel Üst Alan')}</SelectItem>
+                      <SelectItem value="blog_sidebar">{t('form.placements.blog_sidebar', undefined, 'Blog Kenar Alanı')}</SelectItem>
+                      <SelectItem value="blog_inline">{t('form.placements.blog_inline', undefined, 'Blog İçerik İçi')}</SelectItem>
                       <SelectItem value="mobile_welcome">{t('form.placements.mobile_welcome')}</SelectItem>
                       <SelectItem value="mobile_home">{t('form.placements.mobile_home')}</SelectItem>
                       <SelectItem value="mobile_call_end">{t('form.placements.mobile_call_end')}</SelectItem>
+                      <SelectItem value="admin_dashboard">{t('form.placements.admin_dashboard', undefined, 'Admin Panel')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
