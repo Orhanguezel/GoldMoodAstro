@@ -30,6 +30,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import RichContentEditor from '@/app/(main)/admin/_components/common/RichContentEditor';
 import { AdminImageUploadField } from '@/app/(main)/admin/_components/common/AdminImageUploadField';
+import { AdminLocaleSelect } from '@/app/(main)/admin/_components/common/AdminLocaleSelect';
+import { useAdminLocales } from '@/app/(main)/admin/_components/common/useAdminLocales';
 import {
   type CustomPageDto,
   safeStr,
@@ -148,6 +150,18 @@ export default function AdminBlogClient() {
   const [q, setQ] = React.useState('');
   const [locale, setLocale] = React.useState('tr');
   const [form, setForm] = React.useState<BlogForm | null>(null);
+  const {
+    localeOptions,
+    defaultLocaleFromDb,
+    coerceLocale,
+    loading: localesLoading,
+    fetching: localesFetching,
+  } = useAdminLocales();
+
+  React.useEffect(() => {
+    const safeLocale = coerceLocale(locale, defaultLocaleFromDb || 'tr');
+    if (safeLocale && safeLocale !== locale) setLocale(safeLocale);
+  }, [coerceLocale, defaultLocaleFromDb, locale]);
 
   const query = useListCustomPagesAdminQuery({
     module_key: 'blog',
@@ -327,7 +341,7 @@ export default function AdminBlogClient() {
 
       <Card className="rounded-[28px] border-gm-border-soft bg-gm-surface/20 shadow-xl">
         <CardContent className="space-y-4 p-5">
-          <div className="grid gap-3 md:grid-cols-[1fr_160px]">
+          <div className="grid gap-3 md:grid-cols-[1fr_220px]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gm-muted" />
               <Input
@@ -337,15 +351,15 @@ export default function AdminBlogClient() {
                 className="h-11 rounded-full border-gm-border-soft bg-gm-bg-deep pl-10"
               />
             </div>
-            <select
+            <AdminLocaleSelect
               value={locale}
-              onChange={(event) => setLocale(event.target.value)}
-              className="h-11 rounded-full border border-gm-border-soft bg-gm-bg-deep px-4 text-sm text-gm-text"
-            >
-              <option value="tr">Türkçe</option>
-              <option value="en">English</option>
-              <option value="de">Deutsch</option>
-            </select>
+              onChange={setLocale}
+              options={localeOptions}
+              loading={localesLoading || localesFetching}
+              disabled={busy}
+              label={b('form.fields.locale', 'İçerik dili')}
+              className="h-11 rounded-full border-gm-border-soft bg-gm-bg-deep px-4 text-sm text-gm-text"
+            />
           </div>
         </CardContent>
       </Card>
