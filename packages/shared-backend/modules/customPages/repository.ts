@@ -43,6 +43,7 @@ function arrayToJson(v: string[] | null | undefined): unknown {
 export type CustomPageMergedRow = {
   id: string;
   module_key: string;
+  landing_key: string | null;
   author_consultant_id: string | null;
   is_published: 0 | 1;
   seo_index: 0 | 1;
@@ -75,6 +76,7 @@ function buildMerged(parent: typeof customPages.$inferSelect, i18n?: typeof cust
   return {
     id: parent.id,
     module_key: parent.module_key,
+    landing_key: (parent as any).landing_key ?? null,
     author_consultant_id: (parent as any).author_consultant_id ?? null,
     is_published: parent.is_published as 0 | 1,
     seo_index: ((parent as any).seo_index ?? 1) as 0 | 1,
@@ -159,6 +161,7 @@ export async function listCustomPages(opts: {
   q?: string;
   slug?: string;
   module_key?: string;
+  landing_key?: string;
   is_published?: boolean;
   seo_index?: boolean;
   featured?: boolean;
@@ -177,6 +180,7 @@ export async function listCustomPages(opts: {
   if (typeof opts.seo_index === "boolean") where.push(eq(customPages.seo_index, opts.seo_index ? 1 : 0));
   if (typeof opts.featured === "boolean") where.push(eq(customPages.featured, opts.featured ? 1 : 0));
   if (opts.module_key) where.push(eq(customPages.module_key, opts.module_key));
+  if (opts.landing_key) where.push(eq(customPages.landing_key, opts.landing_key));
 
   const sortCol =
     opts.sort === "created_at"
@@ -290,6 +294,7 @@ export async function createCustomPage(input: {
   meta_description?: string | null;
   tags?: string | null;
   module_key?: string;
+  landing_key?: string | null;
   author_consultant_id?: string | null;
   is_published?: boolean;
   seo_index?: boolean;
@@ -310,6 +315,7 @@ export async function createCustomPage(input: {
   await db.insert(customPages).values({
     id,
     module_key: input.module_key ?? "page",
+    landing_key: input.landing_key ?? null,
     author_consultant_id: input.author_consultant_id ?? null,
     is_published: input.is_published === false ? 0 : 1,
     seo_index: input.seo_index === false ? 0 : 1,
@@ -356,6 +362,7 @@ export async function updateCustomPage(
     meta_description: string | null;
     tags: string | null;
     module_key: string;
+    landing_key: string | null;
     is_published: boolean;
     seo_index: boolean;
     featured: boolean;
@@ -371,6 +378,7 @@ export async function updateCustomPage(
 ): Promise<CustomPageMergedRow | null> {
   const parentUpdates: any = {};
   if (patch.module_key !== undefined) parentUpdates.module_key = patch.module_key;
+  if (patch.landing_key !== undefined) parentUpdates.landing_key = patch.landing_key;
   if (patch.is_published !== undefined) parentUpdates.is_published = patch.is_published ? 1 : 0;
   if (patch.seo_index !== undefined) parentUpdates.seo_index = patch.seo_index ? 1 : 0;
   if (patch.featured !== undefined) parentUpdates.featured = patch.featured ? 1 : 0;

@@ -9,6 +9,7 @@ export const ListQuerySchema = z.object({
   q: z.string().optional(),
   slug: z.string().optional(),
   module_key: z.string().optional(),
+  landing_key: z.string().max(40).optional(),
   is_published: boolish.optional(),
   seo_index: boolish.optional(),
   featured: boolish.optional(),
@@ -39,6 +40,7 @@ export const CreateSchema = z.object({
   tags: z.string().nullable().optional(),
   // parent
   module_key: z.string().max(64).optional(),
+  landing_key: z.string().max(40).nullable().optional(),
   is_published: boolish.optional(),
   seo_index: boolish.optional(),
   featured: boolish.optional(),

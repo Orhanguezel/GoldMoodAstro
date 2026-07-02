@@ -33,8 +33,17 @@ function qualityVariant(score: number): 'default' | 'secondary' | 'destructive' 
 function typeLabel(type: string) {
   if (type === 'custom_page') return 'Sayfa/Blog';
   if (type === 'consultant') return 'Danışman';
-  if (type === 'astro_landing') return 'Landing';
   return type;
+}
+
+function editHref(item: SeoQualityListItem): string {
+  if (item.entity_type === 'consultant') return `/admin/consultants/${item.entity_id}`;
+  if (item.entity_type === 'custom_page') {
+    if (item.module_key === 'blog') return '/admin/blog';
+    if (item.module_key === 'landing') return '/admin/landing';
+    return '/admin/pages';
+  }
+  return `/admin/seo-quality/${item.entity_type}/${item.entity_id}?locale=${item.locale}`;
 }
 
 export default function SeoQualityClient() {
@@ -74,8 +83,8 @@ export default function SeoQualityClient() {
     <div className="space-y-6 pb-10">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="font-serif text-4xl text-gm-text">SEO Kalite</h1>
-          <p className="text-sm text-gm-muted">Indexlenen içerikler için SEO ve AdSense hazırlık puanları.</p>
+          <h1 className="font-serif text-4xl text-gm-text">SEO Genel Bakış</h1>
+          <p className="text-sm text-gm-muted">Skor dağılımı ve riskli içerikler burada izlenir; düzenleme ilgili içerik modülünde yapılır.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
@@ -114,7 +123,6 @@ export default function SeoQualityClient() {
                 <SelectItem value={ALL}>Tüm tipler</SelectItem>
                 <SelectItem value="custom_page">Sayfa/Blog</SelectItem>
                 <SelectItem value="consultant">Danışman</SelectItem>
-                <SelectItem value="astro_landing">Landing</SelectItem>
               </SelectContent>
             </Select>
             <Select value={locale} onValueChange={setLocale}>
@@ -176,7 +184,7 @@ export default function SeoQualityClient() {
                 <TableCell>{item.word_count}</TableCell>
                 <TableCell className="text-right">
                   <Button asChild size="sm" variant="outline">
-                    <Link href={`/admin/seo-quality/${item.entity_type}/${item.entity_id}?locale=${item.locale}`}>Detay</Link>
+                    <Link href={editHref(item)}>Modülde düzenle</Link>
                   </Button>
                 </TableCell>
               </TableRow>

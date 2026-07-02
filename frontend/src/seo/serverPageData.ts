@@ -56,3 +56,27 @@ export const fetchCustomPagePublicBySlug = cache(
     return raw ? mapApiCustomPageToDto(raw) : null;
   },
 );
+
+export const fetchCustomPagePublicByLandingKey = cache(
+  async (args: { landingKey: string; locale: string }): Promise<CustomPageDto | null> => {
+    const landingKey = String(args.landingKey || '').trim();
+    if (!landingKey) return null;
+
+    const defaultLocale = await getDefaultLocale();
+    const locale = normLocaleShort(args.locale, defaultLocale);
+
+    const qs = new URLSearchParams({
+      module_key: 'landing',
+      landing_key: landingKey,
+      locale,
+      default_locale: defaultLocale,
+      is_published: 'true',
+      limit: '1',
+    });
+
+    const raw = await fetchApiJson<ApiCustomPage[]>(`/custom-pages?${qs.toString()}`, { revalidate: 300 });
+    const first = Array.isArray(raw) ? raw[0] : null;
+
+    return first ? mapApiCustomPageToDto(first) : null;
+  },
+);

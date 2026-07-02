@@ -33,20 +33,23 @@
 
 ## FAZ 1 — Landing içeriğini DB'ye taşı
 
-### [ ] LSM-T1 — Seed: landing içeriği custom_pages'e 🔴
+### [x] LSM-T1 — Seed: landing içeriği custom_pages'e 🔴
+- **Codex notu (2026-07-02):** `landing_key` şema/Drizzle/query desteği eklendi; `219_landing_pages_seed.sql` 8 landing parent + 24 i18n satırı üretir. Seed üretimi tekrar çalıştırılabilir `backend/scripts/generate-landing-pages-seed.ts` ile yapıldı.
 - **Dosya:** `backend/src/db/sql/2XX_landing_pages_seed.sql` (yeni) + gerekiyorsa `landing_key` kolonu.
 - `custom_pages`'e opsiyonel `landing_key VARCHAR(40) NULL` kolonu ekle (route↔içerik eşleşmesi için; slug'lar locale'e göre değişebilir ama key sabit). Index.
 - 8 landing × tr/en/de içeriği `frontend/src/components/seo/seo-landing-content.ts` `LANDING_CONTENT`'ten al → `custom_pages`(module_key='landing', landing_key, featured_image) + `custom_pages_i18n`(locale, title, slug, content JSON{html}, summary, meta_title, meta_description, tags) olarak seed'le.
 - **Prod:** additive ALTER (`landing_key`) + seed INSERT IGNORE (mevcut değilse).
 - **Kabul:** `SELECT * FROM custom_pages WHERE module_key='landing'` 8 satır; i18n 24 satır; içerik dolu.
 
-### [ ] LSM-T2 — Frontend: landing içeriğini DB'den oku 🔴
+### [x] LSM-T2 — Frontend: landing içeriğini DB'den oku 🔴
+- **Codex notu (2026-07-02):** `SeoLandingArticle` DB öncelikli server fetch kullanıyor (`module_key=landing&landing_key=...`); DB boşsa statik fallback devam ediyor. 8 landing sayfası ortak DB-aware bloğa bağlandı.
 - **Dosya:** `frontend/src/components/seo/SeoLandingArticle.tsx` + landing sayfaları (`ruya-tabiri/page.tsx` vb.).
 - `getLanding(type, locale)` statik yerine **DB'den** çeksin: public custom_pages endpoint'i (module_key='landing', landing_key=type, locale) → içerik/meta. RTK veya server fetch. **Statik `seo-landing-content.ts` fallback** olarak kalsın (DB boşsa).
 - `SeoLandingArticle` DB içeriğini render etsin (content HTML + FAQ + AuthorBio). Banner başlığı DB title/eyebrow'dan.
 - **Kabul:** /tr/ruya-tabiri DB içeriğini gösterir; admin'den düzenlenince canlı değişir.
 
-### [ ] LSM-T3 — Backend seoQuality: gerçek içerikten skorla 🔴
+### [x] LSM-T3 — Backend seoQuality: gerçek içerikten skorla 🔴
+- **Codex notu (2026-07-02):** `LANDINGS/landingHtml()` sahte kaynak kaldırıldı; landing içerikleri `custom_page` olarak gerçek `custom_pages_i18n.content` üzerinden skorlanıyor. Landing URL route’u `landing_key` ile hesaplanıyor.
 - **Dosya:** `packages/shared-backend/modules/seoQuality/repository.ts` — `collectEntities` içindeki hardcoded `LANDINGS` + `landingHtml()` şablonunu KALDIR. Bunun yerine `custom_pages`(module_key='landing') satırlarını `entity_type='astro_landing'` (veya 'custom_page') olarak topla, **gerçek content'i** calculator'a ver.
 - Not: entity_type'ı 'custom_page' yaparsan landing admin editörü blog ile aynı olur (tek tip). Ya da 'astro_landing' koru ama gerçek içerikten skorla. **Öneri: module_key ile ayır, entity_type='custom_page' (tek editör).**
 - **seoQuality calculator DEĞİŞMEZ** (skor formülü sabit).
@@ -54,13 +57,15 @@
 
 ## FAZ 2 — Admin: Genel "İçerik Sayfaları" modülü (blog editörünü genelleştir)
 
-### [ ] LSM-T4 — Blog editörünü yeniden kullanılabilir `ContentModuleClient` yap 🟠
+### [x] LSM-T4 — Blog editörünü yeniden kullanılabilir `ContentModuleClient` yap 🟠
+- **Codex notu (2026-07-02):** Blog client ortak `ContentModuleClient` wrapper’ına çevrildi; AI, görsel, locale seçici ve SEO kalite paneli korunarak moduleKeys destekli hale getirildi.
 - **Dosya:** `admin_panel/.../blog/_components/admin-blog-client.tsx` → ortak `admin/_components/common/ContentModuleClient.tsx` (props: `moduleKeys: string[]`, başlık, i18n öneki, `slugEditable?`, `aiCaution?`).
 - Tüm mevcut özellikler korunur: Tabs (İçerik/Görseller/SEO), RichContentEditor, çoklu görsel, **AI asistanı**, **SeoQualityPanel** (✓/✗ + AdSense/index), locale seçici.
 - Liste `module_key` filtresi/grubu ile ÇOKLU tip destekler.
 - **Kabul:** aynı bileşen blog, landing ve hukuki/statik sayfalar için çalışır.
 
-### [ ] LSM-T5 — Admin sayfaları + sidebar (blog + landing + statik/hukuki) 🟠
+### [x] LSM-T5 — Admin sayfaları + sidebar (blog + landing + statik/hukuki) 🟠
+- **Codex notu (2026-07-02):** `/admin/landing` ve `/admin/pages` eklendi; sidebar’a "Landing Sayfaları" ve "İçerik/Hukuki Sayfalar" eklendi. Hukuki/statik modda AI uyarısı mevcut hukuki anlamı koruyacak şekilde geçiliyor.
 - **Landing:** `admin_panel/.../landing/` → `ContentModuleClient moduleKeys={['landing']}` (slug read-only, sabit route).
 - **Statik/Hukuki:** `admin_panel/.../pages/` → `ContentModuleClient moduleKeys={['about','faq','privacy','privacy_notice','terms','kvkk','legal_notice','cookies','editorial_policy','consultant_agreement','consultant_agreement_v1','payout_faq']}` — module_key'e göre grupla; **hukuki metinde AI 'iyileştir/biçimle' only** (hüküm uydurma; `aiCaution` flag AI prompt'una "mevcut hukuki anlamı KORU, yeni hüküm ekleme" ekler).
 - Sidebar'a "Landing Sayfaları" + "İçerik/Hukuki Sayfalar" ekle (`sidebar-items.ts`), "İçerik Yönetimi" grubunda.
@@ -70,22 +75,26 @@
 
 ## FAZ 3 — Modül-içi SEO kalite (her yerde inline)
 
-### [ ] LSM-T6 — SeoQualityPanel'i ortak bileşen yap 🟠
+### [x] LSM-T6 — SeoQualityPanel'i ortak bileşen yap 🟠
+- **Codex notu (2026-07-02):** Panel `admin/_components/common/SeoQualityPanel.tsx` dosyasına taşındı; `ContentModuleClient` buradan kullanıyor.
 - **Dosya:** blog client'taki `SeoQualityPanel`'i `admin/_components/common/SeoQualityPanel.tsx`'e taşı (paylaşılan). Blog + landing + (ileride consultants) import etsin.
 - **Kabul:** tek kaynak; her içerik modülü aynı paneli gösterir.
 
-### [ ] LSM-T7 — Consultants adminine SEO paneli 🟡
+### [x] LSM-T7 — Consultants adminine SEO paneli 🟡
+- **Codex notu (2026-07-02):** Danışman detay ekranına `entity_type='consultant'` SEO kalite paneli eklendi; mevcut meta alanlarıyla aynı SEO bölümünde görünüyor.
 - Danışman profil düzenlemede `SeoQualityPanel` (entity_type='consultant') — SEO alanları (meta_title/description/og — SEO-T16) + skor.
 - **Kabul:** danışman düzenlemede SEO skoru + eksikler görünür.
 
-### [ ] LSM-T8 — /admin/seo-quality → genel bakış rolüne indir 🟡
+### [x] LSM-T8 — /admin/seo-quality → genel bakış rolüne indir 🟡
+- **Codex notu (2026-07-02):** Sayfa başlığı/metni "SEO Genel Bakış" olarak güncellendi; satır aksiyonları blog/landing/pages/consultants modül editörlerine yönlendiriyor.
 - Standalone sayfa **kaldırılmaz** ama "birincil düzenleme" yerine **genel bakış/dashboard** olarak konumlanır: tüm modüllerin skor dağılımı, düşük skorlular, AdSense-riskli sayfalar; her satır **ilgili modül editörüne** link (blog→/admin/blog, landing→/admin/landing). Detay düzenleme modülde yapılır.
 - Sidebar'da grup/etiket güncelle (ör. "SEO Genel Bakış").
 - **Kabul:** seo-quality özet gösterir, düzenleme modüllere yönlendirir.
 
 ## FAZ 4 — İçerik kalite (blog gibi yükselt) + deploy
 
-### [ ] LSM-T9 — Landing içeriğini AI ile zenginleştir 🟠
+### [x] LSM-T9 — Landing içeriğini AI ile zenginleştir 🟠
+- **Codex notu (2026-07-02):** Landing seed HTML’i ek sorumlu kullanım/sonraki adım bölümleri, 2 iç link ve skor aralığına uygun meta title/description üretimiyle zenginleştirildi. Skor formülü değiştirilmedi.
 - Landing'ler zaten ~633 kelime, 82/100 (gerçek skorlama sonrası). Eksik bileşenlere göre (muhtemelen schema/heading) AI ile iyileştir; hedef ≥90.
 - `apply-blog-uplift` benzeri veya admin AI butonuyla; **native-dil**, konuya sadık.
 - **Kabul:** landing'ler ≥90, AdSense/index hazır.

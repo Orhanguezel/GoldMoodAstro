@@ -1,4 +1,12 @@
-export type LandingKey = 'kahve-fali' | 'ruya-tabiri' | 'birth-chart' | 'pricing' | 'yildizname';
+export type LandingKey =
+  | 'kahve-fali'
+  | 'ruya-tabiri'
+  | 'birth-chart'
+  | 'numeroloji'
+  | 'yildizname'
+  | 'tarot'
+  | 'sinastri'
+  | 'pricing';
 
 export type LandingLocale = 'tr' | 'en' | 'de';
 
@@ -201,6 +209,192 @@ export const LANDING_CONTENT: Record<LandingKey, Record<LandingLocale, LandingDa
       image: '/img/natal_chart.png',
       authorTitle: 'Redaktion für Geburtshoroskope',
       expertise: ['Geburtshoroskop', 'Astrologie', 'Natal-Analyse'],
+    },
+  },
+  numeroloji: {
+    en: {
+      slug: 'numerology',
+      title: 'Numerology Analysis Guide',
+      description: 'A practical guide to numerology, life path numbers, name symbolism, personal cycles and responsible interpretation.',
+      eyebrow: 'Numerology',
+      lead: 'Numerology reads numbers in names and birth dates as symbolic patterns for rhythm, motivation and repeating life themes.',
+      summary: 'Numerology does not define fixed fate. It supports self-awareness by interpreting name, birth date and number symbolism around strengths, decision style and personal cycles. GoldMoodAstro treats numbers as reflective language rather than absolute labels.',
+      sections: [
+        { title: 'How numerology works', paragraphs: ['Birth dates and letters are converted into number values such as life path, destiny number, soul urge and personal year. Each number carries symbolic themes, but those themes become useful only when they are read with context.', 'A good numerology reading explains the calculation, names the pattern and offers grounded reflection. It should help the person notice tendencies without reducing their whole identity to a number.'] },
+        { title: 'What numerology can show', paragraphs: ['Numerology can help users notice strengths, repeating patterns and themes that become more active in certain periods. It can clarify why some decisions feel aligned while others create friction.', 'It should not be the only source for decisions, but it can create a useful structure for self-observation, journaling and calmer planning.'] },
+        { title: 'GoldMoodAstro numerology approach', paragraphs: ['We avoid fear-based or deterministic language. Numbers are treated as symbols that widen awareness and choice, not as verdicts about personality or future.', 'For a better reading, enter birth data carefully and compare the result with recurring patterns in daily life. The most useful insight is the one that helps you act with more clarity.'] },
+      ],
+      faq: [
+        { question: 'What is numerology?', answer: 'Numerology interprets symbolic meanings such as life path, destiny number and personal cycles through name and birth date.' },
+        { question: 'What is numerology analysis useful for?', answer: 'It helps a person notice strengths, repeating patterns and themes to consider in decision-making.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'Numerology and personal cycles editors',
+      expertise: ['Numerology', 'Personal Cycles', 'Awareness'],
+    },
+    tr: {
+      slug: 'numeroloji',
+      title: 'Numeroloji Analizi Rehberi',
+      description: 'Numeroloji, hayat yolu sayısı, isim sembolizmi, kişisel döngüler ve sorumlu yorumlama üzerine pratik bir rehber.',
+      eyebrow: 'Numeroloji',
+      lead: 'Numeroloji; isimlerdeki ve doğum tarihlerindeki sayıları ritim, motivasyon ve tekrar eden yaşam temaları için sembolik örüntüler olarak okur.',
+      summary: 'Numeroloji değişmez bir kader tanımı yapmaz. İsim, doğum tarihi ve sayı sembolizmini güçlü yanlar, karar tarzı ve kişisel döngüler çevresinde yorumlayarak öz farkındalığı destekler. GoldMoodAstro sayıları mutlak etiketler değil, düşünmeye yardımcı bir dil olarak ele alır.',
+      sections: [
+        { title: 'Numeroloji nasıl çalışır', paragraphs: ['Doğum tarihleri ve harfler; hayat yolu, kader sayısı, ruh arzusu ve kişisel yıl gibi değerlere dönüştürülür. Her sayı sembolik temalar taşır; fakat bu temalar ancak bağlamla okunduğunda faydalı hale gelir.', 'İyi bir numeroloji yorumu hesaplamayı açıklar, örüntüyü adlandırır ve ayakları yere basan bir düşünme zemini sunar. Kişiyi yalnızca bir sayıya indirgemeden eğilimlerini fark etmesine yardımcı olmalıdır.'] },
+        { title: 'Numeroloji neleri gösterebilir', paragraphs: ['Numeroloji, kullanıcıların güçlü yanlarını, tekrar eden örüntülerini ve belirli dönemlerde daha görünür hale gelen temaları fark etmesine yardımcı olabilir. Bazı kararların neden uyumlu, bazılarının neden sürtünmeli hissettirdiğini açıklığa kavuşturabilir.', 'Kararlar için tek kaynak olmamalıdır; ancak kendini gözlemlemek, günlük tutmak ve daha sakin plan yapmak için yararlı bir yapı sunabilir.'] },
+        { title: 'GoldMoodAstro numeroloji yaklaşımı', paragraphs: ['Korku temelli ya da kaderci bir dilden kaçınırız. Sayılar; kişilik ya da gelecek hakkında hüküm değil, farkındalığı ve seçimi genişleten semboller olarak ele alınır.', 'Daha iyi bir okuma için doğum bilgilerini dikkatle girin ve sonucu günlük hayatta tekrar eden örüntülerle karşılaştırın. En yararlı içgörü, daha net hareket etmenize yardımcı olandır.'] },
+      ],
+      faq: [
+        { question: 'Numeroloji nedir?', answer: 'Numeroloji; hayat yolu, kader sayısı ve kişisel döngüler gibi sembolik anlamları isim ve doğum tarihi üzerinden yorumlar.' },
+        { question: 'Numeroloji analizi ne işe yarar?', answer: 'Kişinin güçlü yanlarını, tekrar eden örüntülerini ve karar süreçlerinde dikkate alabileceği temaları fark etmesine yardımcı olur.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'Numeroloji ve kişisel döngüler editörleri',
+      expertise: ['Numeroloji', 'Kişisel Döngüler', 'Farkındalık'],
+    },
+    de: {
+      slug: 'numerologie',
+      title: 'Leitfaden zur Numerologie-Analyse',
+      description: 'Ein praktischer Leitfaden zu Numerologie, Lebenswegzahl, Namenssymbolik, persönlichen Zyklen und verantwortungsvoller Deutung.',
+      eyebrow: 'Numerologie',
+      lead: 'Numerologie liest Zahlen in Namen und Geburtsdaten als symbolische Muster für Rhythmus, Motivation und wiederkehrende Lebensthemen.',
+      summary: 'Numerologie legt kein festes Schicksal fest. Sie unterstützt Selbstwahrnehmung, indem Name, Geburtsdatum und Zahlensymbolik rund um Stärken, Entscheidungsstil und persönliche Zyklen gedeutet werden. GoldMoodAstro versteht Zahlen als reflektierende Sprache, nicht als absolute Etiketten.',
+      sections: [
+        { title: 'Wie Numerologie funktioniert', paragraphs: ['Geburtsdaten und Buchstaben werden in Zahlenwerte wie Lebenswegzahl, Schicksalszahl, Seelenwunsch und persönliches Jahr übersetzt. Jede Zahl trägt symbolische Themen, doch nützlich werden sie erst im Kontext.', 'Eine gute numerologische Deutung erklärt die Berechnung, benennt das Muster und bietet geerdete Reflexion. Sie soll Tendenzen sichtbar machen, ohne die Person auf eine Zahl zu reduzieren.'] },
+        { title: 'Was Numerologie zeigen kann', paragraphs: ['Numerologie kann helfen, Stärken, wiederkehrende Muster und Themen zu erkennen, die in bestimmten Phasen aktiver werden. Sie kann verdeutlichen, warum manche Entscheidungen stimmig wirken und andere Reibung erzeugen.', 'Sie sollte nicht die einzige Entscheidungsgrundlage sein, kann aber eine hilfreiche Struktur für Selbstbeobachtung, Journaling und ruhigeres Planen bieten.'] },
+        { title: 'Der GoldMoodAstro-Ansatz', paragraphs: ['Wir vermeiden angstbasierte oder deterministische Sprache. Zahlen werden als Symbole behandelt, die Bewusstsein und Wahlmöglichkeiten erweitern, nicht als Urteile über Persönlichkeit oder Zukunft.', 'Für eine bessere Lesung geben Sie Geburtsdaten sorgfältig ein und vergleichen Sie das Ergebnis mit wiederkehrenden Mustern im Alltag. Die wertvollste Einsicht ist die, die klareres Handeln ermöglicht.'] },
+      ],
+      faq: [
+        { question: 'Was ist Numerologie?', answer: 'Numerologie deutet symbolische Bedeutungen wie Lebenswegzahl, Schicksalszahl und persönliche Zyklen über Name und Geburtsdatum.' },
+        { question: 'Wofür ist eine Numerologie-Analyse nützlich?', answer: 'Sie hilft, Stärken, wiederkehrende Muster und Themen für Entscheidungen bewusster wahrzunehmen.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'Redaktion für Numerologie und persönliche Zyklen',
+      expertise: ['Numerologie', 'Persönliche Zyklen', 'Bewusstsein'],
+    },
+  },
+  tarot: {
+    en: {
+      slug: 'tarot',
+      title: 'Tarot Reading and Card Meanings Guide',
+      description: 'A responsible guide to tarot spreads, card meanings, relationship questions, career decisions and symbolic spiritual guidance.',
+      eyebrow: 'Tarot Guidance',
+      lead: 'Tarot is a symbolic guidance method that helps reveal emotions, options and decision patterns through the language of cards.',
+      summary: 'Tarot does not give fixed future statements. It opens a symbolic space to reflect on current energy, questions and choices. On GoldMoodAstro, tarot is interpreted through responsible guidance for relationships, career, decisions and self-awareness.',
+      sections: [
+        { title: 'How tarot works', paragraphs: ['A tarot deck speaks through archetypes and symbols. A card is not read only by its dictionary meaning; the question, emotional context and the relationship between cards all matter.', 'Single card readings offer quick insight, three card spreads create a broader timeline, and deeper spreads help with layered questions about decisions, relationships and direction.'] },
+        { title: 'What tarot can help you learn', paragraphs: ['Tarot can clarify relationship dynamics, emotional confusion around a choice, career motivation or the quiet voice underneath a question. It does not say "this will happen"; it says "this theme is asking for attention."', 'After a reading, users often see the real question, the emotion influencing the decision and the option that requires more awareness.'] },
+        { title: 'GoldMoodAstro tarot approach', paragraphs: ['GoldMoodAstro tarot content is informed by Rider-Waite-Smith symbolism and written in clear modern language. We avoid fear, dependency and absolute fate claims.', 'A strong tarot question is specific and reflective. Instead of "what will happen?", ask "what do I need to see here?" or "which dynamic is active in this relationship?"'] },
+      ],
+      faq: [
+        { question: 'What is a tarot reading?', answer: 'A tarot reading interprets questions, emotions and possibilities through card symbols.' },
+        { question: 'Does tarot predict the future with certainty?', answer: 'No. Tarot is symbolic guidance that brings awareness to current energies and choices.' },
+      ],
+      image: '/img/tarot.png',
+      authorTitle: 'Tarot and symbolism editors',
+      expertise: ['Tarot', 'Symbolism', 'Spiritual Guidance'],
+    },
+    tr: {
+      slug: 'tarot',
+      title: 'Tarot Falı ve Kart Anlamları Rehberi',
+      description: 'Tarot açılımları, kart anlamları, ilişki soruları, kariyer kararları ve sembolik manevi rehberlik üzerine sorumlu bir rehber.',
+      eyebrow: 'Tarot Rehberliği',
+      lead: 'Tarot, kartların diliyle duyguları, seçenekleri ve karar örüntülerini görünür kılmaya yardımcı olan sembolik bir rehberlik yöntemidir.',
+      summary: 'Tarot değişmez gelecek cümleleri vermez. Mevcut enerji, soru ve seçimler üzerine düşünmek için sembolik bir alan açar. GoldMoodAstro’da tarot; ilişkiler, kariyer, kararlar ve öz farkındalık için sorumlu rehberlik anlayışıyla yorumlanır.',
+      sections: [
+        { title: 'Tarot nasıl çalışır', paragraphs: ['Bir tarot destesi arketipler ve semboller aracılığıyla konuşur. Bir kart yalnızca sözlük anlamıyla okunmaz; soru, duygusal bağlam ve kartlar arasındaki ilişki de önemlidir.', 'Tek kart açılımları hızlı içgörü sunar, üç kart açılımları daha geniş bir zaman çizgisi kurar, derin açılımlar ise kararlar, ilişkiler ve yön arayışı gibi katmanlı sorulara alan açar.'] },
+        { title: 'Tarot neyi fark ettirebilir', paragraphs: ['Tarot; ilişki dinamiklerini, bir seçim etrafındaki duygusal karışıklığı, kariyer motivasyonunu ya da sorunun altındaki daha sessiz sesi netleştirebilir. "Bu olacak" demez; "bu tema dikkat istiyor" der.', 'Okumadan sonra kullanıcı çoğu zaman asıl soruyu, kararı etkileyen duyguyu ve daha fazla farkındalık isteyen seçeneği görür.'] },
+        { title: 'GoldMoodAstro tarot yaklaşımı', paragraphs: ['GoldMoodAstro tarot içeriği Rider-Waite-Smith sembolizminden beslenir ve açık, modern bir dille yazılır. Korku, bağımlılık ve mutlak kader iddialarından kaçınırız.', 'Güçlü bir tarot sorusu belirli ve düşünmeye açıktır. "Ne olacak?" yerine "burada neyi görmem gerekiyor?" ya da "bu ilişkide hangi dinamik aktif?" diye sormak daha sağlıklıdır.'] },
+      ],
+      faq: [
+        { question: 'Tarot falı nedir?', answer: 'Tarot falı; soru, duygu ve olasılıkları kart sembolleri üzerinden yorumlayan bir rehberlik yöntemidir.' },
+        { question: 'Tarot geleceği kesin olarak söyler mi?', answer: 'Hayır. Tarot, mevcut enerji ve seçimlere farkındalık getiren sembolik bir rehberliktir.' },
+      ],
+      image: '/img/tarot.png',
+      authorTitle: 'Tarot ve sembolizm editörleri',
+      expertise: ['Tarot', 'Sembolizm', 'Manevi Rehberlik'],
+    },
+    de: {
+      slug: 'tarot',
+      title: 'Leitfaden zu Tarotlegung und Kartenbedeutungen',
+      description: 'Ein verantwortungsvoller Leitfaden zu Tarotlegungen, Kartenbedeutungen, Beziehungsfragen, Karriereentscheidungen und symbolischer spiritueller Orientierung.',
+      eyebrow: 'Tarot-Orientierung',
+      lead: 'Tarot ist eine symbolische Orientierungsmethode, die Gefühle, Optionen und Entscheidungsmuster durch die Sprache der Karten sichtbar macht.',
+      summary: 'Tarot gibt keine festen Zukunftsaussagen. Es öffnet einen symbolischen Raum, um über aktuelle Energie, Fragen und Entscheidungen nachzudenken. Auf GoldMoodAstro wird Tarot verantwortungsvoll für Beziehungen, Beruf, Entscheidungen und Selbstwahrnehmung gedeutet.',
+      sections: [
+        { title: 'Wie Tarot funktioniert', paragraphs: ['Ein Tarotdeck spricht durch Archetypen und Symbole. Eine Karte wird nicht nur nach ihrer Wörterbuchbedeutung gelesen; Frage, emotionaler Kontext und die Beziehung der Karten zueinander zählen ebenfalls.', 'Einzelkarten bieten schnelle Einsicht, Drei-Karten-Legungen schaffen einen weiteren Zeitrahmen, und tiefere Legungen helfen bei vielschichtigen Fragen zu Entscheidungen, Beziehungen und Richtung.'] },
+        { title: 'Was Tarot sichtbar machen kann', paragraphs: ['Tarot kann Beziehungsdynamiken, emotionale Verwirrung rund um eine Entscheidung, berufliche Motivation oder die leise Stimme unter einer Frage klären. Es sagt nicht "das wird passieren", sondern "dieses Thema braucht Aufmerksamkeit".', 'Nach einer Lesung erkennen Nutzerinnen und Nutzer oft die eigentliche Frage, die Emotion hinter der Entscheidung und die Option, die mehr Bewusstsein braucht.'] },
+        { title: 'Der GoldMoodAstro-Tarotansatz', paragraphs: ['GoldMoodAstro-Tarotinhalte orientieren sich an Rider-Waite-Smith-Symbolik und sind in klarer moderner Sprache verfasst. Wir vermeiden Angst, Abhängigkeit und absolute Schicksalsbehauptungen.', 'Eine starke Tarotfrage ist konkret und reflektierend. Fragen Sie statt "Was wird passieren?" lieber "Was muss ich hier sehen?" oder "Welche Dynamik ist in dieser Beziehung aktiv?"'] },
+      ],
+      faq: [
+        { question: 'Was ist eine Tarotlegung?', answer: 'Eine Tarotlegung deutet Fragen, Gefühle und Möglichkeiten über Kartensymbole.' },
+        { question: 'Sagt Tarot die Zukunft sicher voraus?', answer: 'Nein. Tarot ist symbolische Orientierung, die Bewusstsein für aktuelle Energien und Entscheidungen schafft.' },
+      ],
+      image: '/img/tarot.png',
+      authorTitle: 'Redaktion für Tarot und Symbolik',
+      expertise: ['Tarot', 'Symbolik', 'Spirituelle Orientierung'],
+    },
+  },
+  sinastri: {
+    en: {
+      slug: 'synastry',
+      title: 'Synastry and Love Compatibility Guide',
+      description: 'A guide to synastry, birth chart comparison, relationship astrology, attraction patterns and conscious communication.',
+      eyebrow: 'Synastry Guide',
+      lead: 'Synastry compares two birth charts to understand attraction, communication, emotional safety and growth areas in a relationship.',
+      summary: 'Synastry does not guarantee relationship outcomes. It shows how two charts interact, which themes flow easily and which areas require more conscious communication. GoldMoodAstro uses relationship astrology as a tool for awareness, not blame.',
+      sections: [
+        { title: 'How synastry works', paragraphs: ['Synastry compares two birth charts using birth date, time and place. Sun, Moon, Venus, Mars, Mercury and rising signs are read together to understand connection and friction.', 'The same aspect can feel different depending on maturity, timing and lived context. A strong attraction marker is not a promise, and a challenging aspect is not a sentence.'] },
+        { title: 'What synastry can reveal', paragraphs: ['Synastry should not reduce a relationship to compatible or incompatible. It helps reveal attraction, trust, communication style, conflict patterns and growth areas.', 'The goal is to understand what needs care, what flows naturally and where clearer boundaries or conversation may help.'] },
+        { title: 'Responsible relationship astrology', paragraphs: ['We do not use synastry as a fixed fate judgment. Charts show potentials and challenges, while choices and communication remain human.', 'For the best reading, enter birth data carefully and read the result as a tool for awareness rather than blame.'] },
+      ],
+      faq: [
+        { question: 'What is synastry?', answer: 'Synastry compares two birth charts to explore relationship dynamics, attraction and growth areas.' },
+        { question: 'Does synastry give a guaranteed result?', answer: 'No. It shows themes, challenges and opportunities for conscious communication.' },
+      ],
+      image: '/img/synastry_chart.png',
+      authorTitle: 'Astrology and relationship dynamics editors',
+      expertise: ['Synastry', 'Relationship Astrology', 'Birth Chart'],
+    },
+    tr: {
+      slug: 'sinastri',
+      title: 'Sinastri ve İlişki Uyumu Rehberi',
+      description: 'Sinastri, doğum haritası karşılaştırması, ilişki astrolojisi, çekim örüntüleri ve bilinçli iletişim üzerine rehber.',
+      eyebrow: 'Sinastri Rehberi',
+      lead: 'Sinastri, bir ilişkideki çekimi, iletişimi, duygusal güvenliği ve gelişim alanlarını anlamak için iki doğum haritasını karşılaştırır.',
+      summary: 'Sinastri ilişki sonucunu garanti etmez. İki haritanın nasıl etkileştiğini, hangi temaların kolay aktığını ve hangi alanların daha bilinçli iletişim istediğini gösterir. GoldMoodAstro ilişki astrolojisini suçlama değil farkındalık aracı olarak kullanır.',
+      sections: [
+        { title: 'Sinastri nasıl çalışır', paragraphs: ['Sinastri; doğum tarihi, saat ve yer bilgisiyle iki doğum haritasını karşılaştırır. Güneş, Ay, Venüs, Mars, Merkür ve yükselen burçlar bağlantı ve sürtünmeyi anlamak için birlikte okunur.', 'Aynı açı; olgunluk, zamanlama ve yaşanmış bağlama göre farklı hissedilebilir. Güçlü bir çekim göstergesi vaat değildir; zorlayıcı bir açı da hüküm değildir.'] },
+        { title: 'Sinastri neyi gösterebilir', paragraphs: ['Sinastri bir ilişkiyi uyumlu ya da uyumsuz diye basitleştirmemelidir. Çekimi, güveni, iletişim tarzını, çatışma örüntülerini ve gelişim alanlarını görünür kılar.', 'Amaç neyin özen istediğini, neyin doğal aktığını ve nerede daha açık sınır ya da konuşma gerekebileceğini anlamaktır.'] },
+        { title: 'Sorumlu ilişki astrolojisi', paragraphs: ['Sinastriyi sabit bir kader yargısı olarak kullanmayız. Haritalar potansiyelleri ve zorlukları gösterir; seçimler ve iletişim ise insana aittir.', 'En iyi okuma için doğum bilgilerini dikkatle girin ve sonucu suçlama değil farkındalık aracı olarak okuyun.'] },
+      ],
+      faq: [
+        { question: 'Sinastri nedir?', answer: 'Sinastri, ilişki dinamiklerini, çekimi ve gelişim alanlarını keşfetmek için iki doğum haritasını karşılaştırır.' },
+        { question: 'Sinastri kesin sonuç verir mi?', answer: 'Hayır. Bilinçli iletişim için temaları, zorlukları ve fırsatları gösterir.' },
+      ],
+      image: '/img/synastry_chart.png',
+      authorTitle: 'Astroloji ve ilişki dinamikleri editörleri',
+      expertise: ['Sinastri', 'İlişki Astrolojisi', 'Doğum Haritası'],
+    },
+    de: {
+      slug: 'synastrie',
+      title: 'Leitfaden zu Synastrie und Liebeskompatibilität',
+      description: 'Ein Leitfaden zu Synastrie, Geburtshoroskop-Vergleich, Beziehungsastrologie, Anziehungsmustern und bewusster Kommunikation.',
+      eyebrow: 'Synastrie-Leitfaden',
+      lead: 'Synastrie vergleicht zwei Geburtshoroskope, um Anziehung, Kommunikation, emotionale Sicherheit und Wachstumsfelder in einer Beziehung zu verstehen.',
+      summary: 'Synastrie garantiert keine Beziehungsergebnisse. Sie zeigt, wie zwei Horoskope interagieren, welche Themen leicht fließen und welche Bereiche bewusstere Kommunikation brauchen. GoldMoodAstro nutzt Beziehungsastrologie als Werkzeug für Bewusstsein, nicht für Schuldzuweisung.',
+      sections: [
+        { title: 'Wie Synastrie funktioniert', paragraphs: ['Synastrie vergleicht zwei Geburtshoroskope anhand von Geburtsdatum, Uhrzeit und Ort. Sonne, Mond, Venus, Mars, Merkur und Aszendenten werden gemeinsam gelesen, um Verbindung und Reibung zu verstehen.', 'Derselbe Aspekt kann je nach Reife, Timing und gelebtem Kontext anders wirken. Ein starkes Anziehungszeichen ist kein Versprechen, und ein herausfordernder Aspekt ist kein Urteil.'] },
+        { title: 'Was Synastrie zeigen kann', paragraphs: ['Synastrie sollte eine Beziehung nicht auf kompatibel oder inkompatibel reduzieren. Sie macht Anziehung, Vertrauen, Kommunikationsstil, Konfliktmuster und Wachstumsfelder sichtbar.', 'Ziel ist zu verstehen, was Fürsorge braucht, was natürlich fließt und wo klarere Grenzen oder Gespräche helfen können.'] },
+        { title: 'Verantwortungsvolle Beziehungsastrologie', paragraphs: ['Wir verwenden Synastrie nicht als festes Schicksalsurteil. Horoskope zeigen Potenziale und Herausforderungen, während Entscheidungen und Kommunikation menschlich bleiben.', 'Für die beste Lesung geben Sie Geburtsdaten sorgfältig ein und lesen Sie das Ergebnis als Werkzeug für Bewusstsein statt für Schuld.'] },
+      ],
+      faq: [
+        { question: 'Was ist Synastrie?', answer: 'Synastrie vergleicht zwei Geburtshoroskope, um Beziehungsdynamiken, Anziehung und Wachstumsfelder zu erkunden.' },
+        { question: 'Gibt Synastrie ein garantiertes Ergebnis?', answer: 'Nein. Sie zeigt Themen, Herausforderungen und Chancen für bewusste Kommunikation.' },
+      ],
+      image: '/img/synastry_chart.png',
+      authorTitle: 'Redaktion für Astrologie und Beziehungsdynamik',
+      expertise: ['Synastrie', 'Beziehungsastrologie', 'Geburtshoroskop'],
     },
   },
   pricing: {

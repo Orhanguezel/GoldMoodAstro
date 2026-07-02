@@ -28,6 +28,7 @@ export interface CustomPageListQueryParams {
   select?: string;
 
   module_key?: string;
+  landing_key?: string;
 
   /** Liste locale override (örn. "de") */
   locale?: string;
@@ -46,6 +47,7 @@ export interface ApiCustomPage {
 
   /** parent: custom_pages.module_key */
   module_key: string;
+  landing_key: string | null;
 
   is_published: 0 | 1;
   featured: 0 | 1;
@@ -100,6 +102,7 @@ export interface ApiCustomPage {
 export interface CustomPageDto {
   id: string;
   module_key: string;
+  landing_key: string | null;
 
   is_published: boolean;
   featured: boolean;
@@ -225,6 +228,7 @@ export const normalizeCustomPage = (api: ApiCustomPage): CustomPageDto => {
   return {
     id: api.id,
     module_key: String((api as any).module_key ?? (api as any).moduleKey ?? ''),
+    landing_key: (api as any).landing_key ?? null,
     is_published: toBoolFrom01(api.is_published),
     featured: toBoolFrom01(api.featured),
 
@@ -290,6 +294,7 @@ export interface CustomPageCreatePayload {
 
   // parent alanları
   module_key?: string;
+  landing_key?: string | null;
   is_published?: BoolLike;
   featured?: BoolLike;
 
@@ -310,6 +315,7 @@ export interface CustomPageUpdatePayload {
 
   // parent
   module_key?: string;
+  landing_key?: string | null;
   is_published?: BoolLike;
   featured?: BoolLike;
   featured_image?: string | null;

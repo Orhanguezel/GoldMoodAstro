@@ -25,6 +25,7 @@ import {
 import { toast } from 'sonner';
 
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
+import { SeoQualityPanel } from '@/app/(main)/admin/_components/common/SeoQualityPanel';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,8 @@ import {
   useRejectConsultantAdminMutation,
   useUpdateConsultantServiceAdminMutation,
   useListServiceCategoriesAdminQuery,
+  useGetSeoQualityDetailQuery,
+  useListSeoQualityQuery,
 } from '@/integrations/hooks';
 
 type ServiceForm = {
@@ -87,6 +90,8 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
   const t = useAdminT('admin.consultants');
   const query = useGetConsultantAdminQuery(id);
   const servicesQuery = useListConsultantServicesAdminQuery(id);
+  const seoListQuery = useListSeoQualityQuery({ entity_type: 'consultant', locale: 'tr', q: id, page_size: 200 });
+  const seoDetailQuery = useGetSeoQualityDetailQuery({ type: 'consultant', id, locale: 'tr' }, { skip: !id });
 
   const categoriesQuery = useListServiceCategoriesAdminQuery();
   const slugToName = React.useMemo(() => {
@@ -104,6 +109,14 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
   const [serviceForm, setServiceForm] = React.useState<ServiceForm>(EMPTY_SERVICE_FORM);
   const item = query.data;
   const services = servicesQuery.data ?? [];
+  const seoListScore = React.useMemo(
+    () => seoListQuery.data?.items?.find((score) => score.entity_id === id && score.locale === 'tr'),
+    [id, seoListQuery.data?.items],
+  );
+  const seoText = React.useCallback(
+    (_key: string, fallback: string) => fallback,
+    [],
+  );
 
   async function approveCurrent() {
     try {
@@ -286,6 +299,13 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
 
               <div className="rounded-2xl border border-gm-border-soft bg-gm-surface/30 p-5 space-y-3">
                 <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">SEO</Label>
+                <SeoQualityPanel
+                  listScore={seoListScore}
+                  detail={seoDetailQuery.data}
+                  entityId={id}
+                  locale="tr"
+                  b={seoText}
+                />
                 <div className="grid gap-3">
                   <div>
                     <div className="text-[10px] uppercase tracking-widest text-gm-muted">Meta Title</div>

@@ -15,6 +15,8 @@ export type SeoQualityListItem = {
   is_thin_content: 0 | 1 | boolean;
   index_ready: 0 | 1 | boolean;
   seo_index?: 0 | 1 | boolean;
+  module_key?: string | null;
+  landing_key?: string | null;
   word_count: number;
 };
 

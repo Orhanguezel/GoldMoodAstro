@@ -109,6 +109,8 @@ const emptyNav: AdminNavCopy = {
     service_categories: '',
     service_templates: '',
     blog: '',
+    landing: '',
+    pages: '',
     commission_change: '',
   },
 };
@@ -161,6 +163,8 @@ export function normalizeAdminUiCopy(raw: unknown): AdminUiCopy {
     service_categories: uiText(itemsRaw.service_categories),
     service_templates: uiText(itemsRaw.service_templates),
     blog: uiText(itemsRaw.blog),
+    landing: uiText(itemsRaw.landing),
+    pages: uiText(itemsRaw.pages),
     commission_change: uiText(itemsRaw.commission_change),
   };
 

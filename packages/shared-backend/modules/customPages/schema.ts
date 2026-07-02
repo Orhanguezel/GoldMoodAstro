@@ -22,6 +22,7 @@ export const customPages = mysqlTable(
   {
     id: char("id", { length: 36 }).primaryKey().notNull(),
     module_key: varchar("module_key", { length: 64 }).notNull().default("page"),
+    landing_key: varchar("landing_key", { length: 40 }),
     // Danışman blog sahipliği — tag-marker yerine güvenilir kolon (spoof edilemez).
     author_consultant_id: char("author_consultant_id", { length: 36 }),
     is_published: tinyint("is_published").notNull().default(1),
@@ -42,6 +43,7 @@ export const customPages = mysqlTable(
   },
   (t) => ({
     moduleIdx: index("custom_pages_module_idx").on(t.module_key),
+    landingKeyIdx: index("custom_pages_landing_key_idx").on(t.landing_key),
     pubOrderIdx: index("custom_pages_pub_order_idx").on(t.is_published, t.display_order),
     authorIdx: index("custom_pages_author_idx").on(t.author_consultant_id),
   }),

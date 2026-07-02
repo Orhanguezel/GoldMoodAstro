@@ -28,6 +28,7 @@ export interface CustomPageListQueryParams {
   select?: string;
 
   module_key?: string;
+  landing_key?: string;
 
   /** Liste locale override (örn. "de") */
   locale?: string;
@@ -46,6 +47,7 @@ export interface ApiCustomPage {
 
   /** parent: custom_pages.module_key */
   module_key: string;
+  landing_key: string | null;
 
   is_published: 0 | 1;
   featured: 0 | 1;
@@ -88,6 +90,10 @@ export interface ApiCustomPage {
   tags: string | null;
 
   locale_resolved: string | null;
+
+  featured_image_effective_url?: string | null;
+  image_effective_url?: string | null;
+  images_effective_urls?: string[] | string | null;
 }
 
 /* ------------------------------------------------------------------
@@ -96,6 +102,7 @@ export interface ApiCustomPage {
 export interface CustomPageDto {
   id: string;
   module_key: string;
+  landing_key: string | null;
 
   is_published: boolean;
   featured: boolean;
@@ -131,6 +138,10 @@ export interface CustomPageDto {
   tags: string[];
 
   locale_resolved: string | null;
+
+  featured_image_effective_url?: string | null;
+  image_effective_url?: string | null;
+  images_effective_urls?: string[];
 }
 
 /* ------------------------------------------------------------------
@@ -223,12 +234,14 @@ export const normalizeCustomPage = (api: ApiCustomPage): CustomPageDto => {
 
   const images = normalizeStringArray(api.images);
   const storageImageIds = normalizeStringArray(api.storage_image_ids);
+  const imagesEffectiveUrls = normalizeStringArray((api as any).images_effective_urls);
 
   const tagsArray = parseTags(api.tags);
 
   return {
     id: api.id,
     module_key: String((api as any).module_key ?? (api as any).moduleKey ?? ''),
+    landing_key: (api as any).landing_key ?? null,
     is_published: toBoolFrom01(api.is_published),
     featured: toBoolFrom01(api.featured),
 
@@ -263,6 +276,10 @@ export const normalizeCustomPage = (api: ApiCustomPage): CustomPageDto => {
     tags: tagsArray,
 
     locale_resolved: api.locale_resolved ?? null,
+
+    featured_image_effective_url: (api as any).featured_image_effective_url ?? null,
+    image_effective_url: (api as any).image_effective_url ?? null,
+    images_effective_urls: imagesEffectiveUrls,
   };
 };
 
@@ -290,6 +307,7 @@ export interface CustomPageCreatePayload {
 
   // parent alanları
   module_key?: string;
+  landing_key?: string | null;
   is_published?: BoolLike;
   featured?: BoolLike;
 
@@ -310,6 +328,7 @@ export interface CustomPageUpdatePayload {
 
   // parent
   module_key?: string;
+  landing_key?: string | null;
   is_published?: BoolLike;
   featured?: BoolLike;
   featured_image?: string | null;
@@ -343,6 +362,12 @@ export interface CustomPageUpdatePayload {
 
 export type CustomPageBySlugArgs = {
   slug: string;
+  locale?: string;
+  default_locale?: string;
+};
+
+export type CustomPageByLandingKeyArgs = {
+  landing_key: string;
   locale?: string;
   default_locale?: string;
 };

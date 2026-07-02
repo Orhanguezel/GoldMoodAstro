@@ -100,6 +100,8 @@ export type AdminNavItemKey =
   | 'service_categories'
   | 'service_templates'
   | 'blog'
+  | 'landing'
+  | 'pages'
   | 'commission_change';
 
 export type AdminNavGroupKey = 'general' | 'content' | 'marketing' | 'communication' | 'system';
@@ -149,6 +151,8 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
     items: [
       { key: 'banners', url: '/admin/banners', icon: ImageIcon },
       { key: 'blog', url: '/admin/blog', icon: Newspaper },
+      { key: 'landing', url: '/admin/landing', icon: Layers },
+      { key: 'pages', url: '/admin/pages', icon: BookOpen },
       { key: 'campaigns', url: '/admin/campaigns', icon: Tag },
     ],
   },
@@ -197,7 +201,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   storage: 'Dosya Yöneticisi',
   db: 'Veritabanı',
   audit: 'Denetim Kayıtları',
-  seo_quality: 'SEO Kalite',
+  seo_quality: 'SEO Genel Bakış',
   availability: 'Rezervasyon Saatleri',
   support: 'Destek',
   chat: 'Chat & AI',
@@ -217,6 +221,8 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   navigation: 'Menü & Footer',
   home_layout: 'Anasayfa Düzeni',
   blog: 'Blog',
+  landing: 'Landing Sayfaları',
+  pages: 'İçerik/Hukuki Sayfalar',
   commission_change: 'Komisyon Bildirimi',
 };
 
