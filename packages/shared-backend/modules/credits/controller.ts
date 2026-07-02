@@ -31,11 +31,35 @@ function resolveApiBase() {
   ).replace(/\/$/, '');
 }
 
+function requirePaymentField(value: unknown, message: string) {
+  const cleaned = String(value ?? '').trim();
+  if (!cleaned) {
+    const err = new Error(message);
+    (err as Error & { statusCode?: number }).statusCode = 400;
+    throw err;
+  }
+  return cleaned;
+}
+
+function requireIdentityNumber(value: unknown) {
+  const cleaned = requirePaymentField(value, 'billing_identity_number_required');
+  if (!/^\d{10,11}$/.test(cleaned)) {
+    const err = new Error('billing_identity_number_invalid');
+    (err as Error & { statusCode?: number }).statusCode = 400;
+    throw err;
+  }
+  return cleaned;
+}
+
+function errorMessage(err: unknown) {
+  return err instanceof Error ? err.message : String(err || 'unknown_error');
+}
+
 export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user;
   if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
-  const { package_id, locale = 'tr' } = req.body as { package_id: string, locale?: string };
+  const { package_id, locale = 'tr', identity_number } = req.body as { package_id: string, locale?: string; identity_number?: string };
   
   const pkg = await repo.getPackageById(package_id, locale);
   if (!pkg) return reply.status(404).send({ error: apiMessage(req, 'package_not_found') });
@@ -72,6 +96,24 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
   });
 
   const iyzicoLocale = resolveIyzicoLocale(locale);
+  let buyerPhone: string;
+  let buyerIdentity: string;
+  let buyerFullName: string;
+  let buyerAddress: string;
+  let buyerCity: string;
+  let buyerPostalCode: string;
+  try {
+    buyerPhone = requirePaymentField(profile?.phone, 'billing_phone_required');
+    buyerIdentity = requireIdentityNumber(identity_number);
+    buyerFullName = requirePaymentField(profile?.full_name, 'billing_full_name_required');
+    buyerAddress = requirePaymentField(profile?.address_line1, 'billing_address_required');
+    buyerCity = requirePaymentField(profile?.city, 'billing_city_required');
+    buyerPostalCode = requirePaymentField(profile?.postal_code, 'billing_postal_code_required');
+  } catch (error) {
+    const statusCode = Number((error as Error & { statusCode?: number })?.statusCode ?? 400);
+    return reply.status(statusCode).send({ error: error instanceof Error ? error.message : 'billing_kyc_required' });
+  }
+  const nameParts = buyerFullName.split(/\s+/).filter(Boolean);
 
   try {
     const result = await iyzico.initializeCheckoutForm({
@@ -84,32 +126,32 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
       callbackUrl: `${resolveApiBase()}/api/credits/iyzico/callback?order_id=${orderId}`,
       buyer: {
         id: user.id,
-        name: profile?.full_name?.split(' ')[0] || 'Danışan',
-        surname: profile?.full_name?.split(' ').slice(1).join(' ') || '.',
-        gsmNumber: profile?.phone || '+905000000000',
+        name: nameParts[0],
+        surname: nameParts.slice(1).join(' ') || '.',
+        gsmNumber: buyerPhone,
         email: user.email,
-        identityNumber: '11111111111',
+        identityNumber: buyerIdentity,
         lastLoginDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
         registrationDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
-        registrationAddress: profile?.address_line1 || 'İstanbul',
+        registrationAddress: buyerAddress,
         ip: req.ip,
-        city: profile?.city || 'İstanbul',
+        city: buyerCity,
         country: 'Turkey',
-        zipCode: profile?.postal_code || '34000',
+        zipCode: buyerPostalCode,
       },
       shippingAddress: {
-        contactName: profile?.full_name || 'Danışan',
-        city: profile?.city || 'İstanbul',
+        contactName: buyerFullName,
+        city: buyerCity,
         country: 'Turkey',
-        address: profile?.address_line1 || 'İstanbul',
-        zipCode: profile?.postal_code || '34000',
+        address: buyerAddress,
+        zipCode: buyerPostalCode,
       },
       billingAddress: {
-        contactName: profile?.full_name || 'Danışan',
-        city: profile?.city || 'İstanbul',
+        contactName: buyerFullName,
+        city: buyerCity,
         country: 'Turkey',
-        address: profile?.address_line1 || 'İstanbul',
-        zipCode: profile?.postal_code || '34000',
+        address: buyerAddress,
+        zipCode: buyerPostalCode,
       },
       basketItems: [{
         id: pkg.id,
@@ -131,7 +173,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
       return reply.status(400).send({ error: result['errorMessage'] });
     }
   } catch (err) {
-    console.error('Iyzico Init Error:', err);
+    req.log.error(`iyzico_credit_init_failed: ${errorMessage(err)}`);
     return reply.status(500).send({ error: apiMessage(req, 'payment_init_failed') });
   }
 }
@@ -207,7 +249,7 @@ export async function handleIyzicoCallback(req: FastifyRequest, reply: FastifyRe
 
     return reply.redirect(`${siteUrl}/me/credits?status=success`);
   } catch (err) {
-    console.error('Iyzico Callback Error:', err);
+    req.log.error(`iyzico_credit_callback_failed: ${errorMessage(err)}`);
     return reply.redirect(`${siteUrl}/me/credits?status=error`);
   }
 }

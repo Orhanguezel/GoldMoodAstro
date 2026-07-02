@@ -54,6 +54,30 @@ function isIyzicoSuccess(result: Record<string, unknown>) {
   return String(result.status || '').trim().toLowerCase() === 'success';
 }
 
+function requireIyzicoBuyerField(value: unknown, message: string) {
+  const cleaned = String(value ?? '').trim();
+  if (!cleaned) {
+    const err = new Error(message);
+    (err as Error & { statusCode?: number }).statusCode = 400;
+    throw err;
+  }
+  return cleaned;
+}
+
+function requireIdentityNumber(value: unknown) {
+  const cleaned = requireIyzicoBuyerField(value, 'billing_identity_number_required');
+  if (!/^\d{10,11}$/.test(cleaned)) {
+    const err = new Error('billing_identity_number_invalid');
+    (err as Error & { statusCode?: number }).statusCode = 400;
+    throw err;
+  }
+  return cleaned;
+}
+
+function logErrorMessage(err: unknown) {
+  return err instanceof Error ? err.message : String(err || "unknown_error");
+}
+
 /** List Payment Gateways */
 export const listGateways: RouteHandler = async (req, reply) => {
   const rows = await db.select().from(paymentGateways).where(eq(paymentGateways.is_active, 1));
@@ -88,6 +112,7 @@ export const createAddress: RouteHandler = async (req, reply) => {
     full_name: body.full_name,
     phone: body.phone,
     email: body.email ?? null,
+    identity_number: body.identity_number ?? null,
     address_line: body.address_line,
     city: body.city,
     district: body.district,
@@ -208,6 +233,23 @@ export const initIyzico: RouteHandler<{ Params: { id: string } }> = async (req, 
   const [address] = await db.select().from(userAddresses)
     .where(eq(userAddresses.id, order.billing_address_id || ""))
     .limit(1);
+  if (!address) return reply.code(400).send({ error: { message: "billing_address_required" } });
+
+  let buyerPhone: string;
+  let buyerIdentity: string;
+  let buyerAddress: string;
+  let buyerCity: string;
+  let buyerPostalCode: string;
+  try {
+    buyerPhone = requireIyzicoBuyerField(address.phone || user.phone, 'billing_phone_required');
+    buyerIdentity = requireIdentityNumber(address.identity_number);
+    buyerAddress = requireIyzicoBuyerField(address.address_line, 'billing_address_required');
+    buyerCity = requireIyzicoBuyerField(address.city, 'billing_city_required');
+    buyerPostalCode = requireIyzicoBuyerField(address.postal_code, 'billing_postal_code_required');
+  } catch (error) {
+    const statusCode = Number((error as Error & { statusCode?: number })?.statusCode ?? 400);
+    return reply.code(statusCode).send({ error: { message: error instanceof Error ? error.message : 'billing_kyc_required' } });
+  }
 
   const conversationId = `conv_${order.order_number}`;
   const amount = order.total_amount;
@@ -226,30 +268,30 @@ export const initIyzico: RouteHandler<{ Params: { id: string } }> = async (req, 
         id: user.id,
         name: user.full_name?.split(" ")[0] || "Danışan",
         surname: user.full_name?.split(" ").slice(1).join(" ") || ".",
-        gsmNumber: user.phone || address?.phone || "+905000000000",
+        gsmNumber: buyerPhone,
         email: user.email,
-        identityNumber: "11111111111",
+        identityNumber: buyerIdentity,
         lastLoginDate: new Date().toISOString().slice(0, 19).replace("T", " "),
         registrationDate: new Date().toISOString().slice(0, 19).replace("T", " "),
-        registrationAddress: address?.address_line || "Adres belirtilmedi",
+        registrationAddress: buyerAddress,
         ip: req.ip,
-        city: address?.city || "İstanbul",
+        city: buyerCity,
         country: "Turkey",
-        zipCode: address?.postal_code || "34000",
+        zipCode: buyerPostalCode,
       },
       shippingAddress: {
-        contactName: address?.full_name || user.full_name || "Danışan",
-        city: address?.city || "İstanbul",
+        contactName: address.full_name || user.full_name || "Danışan",
+        city: buyerCity,
         country: "Turkey",
-        address: address?.address_line || "Adres belirtilmedi",
-        zipCode: address?.postal_code || "34000",
+        address: buyerAddress,
+        zipCode: buyerPostalCode,
       },
       billingAddress: {
-        contactName: address?.full_name || user.full_name || "Danışan",
-        city: address?.city || "İstanbul",
+        contactName: address.full_name || user.full_name || "Danışan",
+        city: buyerCity,
         country: "Turkey",
-        address: address?.address_line || "Adres belirtilmedi",
-        zipCode: address?.postal_code || "34000",
+        address: buyerAddress,
+        zipCode: buyerPostalCode,
       },
       basketItems: [{
         id: orderId,
@@ -465,7 +507,7 @@ export const listOrdersAdmin: RouteHandler = async (req, reply) => {
       total: Number((countRows[0] as any)?.total ?? rows.length),
     });
   } catch (err) {
-    req.log.error(err);
+    req.log.error(`orders_list_failed: ${logErrorMessage(err)}`);
     return reply.code(500).send({ error: { message: "orders_list_failed" } });
   }
 };
@@ -497,7 +539,7 @@ export const getOrderAdmin: RouteHandler<{ Params: { id: string } }> = async (re
       payments: paymentRows,
     });
   } catch (err) {
-    req.log.error(err);
+    req.log.error(`order_get_failed: ${logErrorMessage(err)}`);
     return reply.code(500).send({ error: { message: "order_get_failed" } });
   }
 };
@@ -533,7 +575,7 @@ export const updateOrderAdmin: RouteHandler<{ Params: { id: string } }> = async 
     await db.update(orders).set(patch as any).where(eq(orders.id, id));
     return reply.send({ success: true });
   } catch (err) {
-    req.log.error(err);
+    req.log.error(`order_update_failed: ${logErrorMessage(err)}`);
     return reply.code(500).send({ error: { message: "order_update_failed" } });
   }
 };
@@ -655,7 +697,7 @@ export const refundOrderAdmin: RouteHandler<{ Params: { id: string } }> = async 
 
     return reply.send({ success: true });
   } catch (err) {
-    req.log.error(err);
+    req.log.error(`order_refund_failed: ${logErrorMessage(err)}`);
     return reply.code(500).send({ error: { message: "order_refund_failed" } });
   }
 };
@@ -686,7 +728,7 @@ export const createPaymentGatewayAdmin: RouteHandler = async (req, reply) => {
 
     return reply.code(201).send({ success: true, id });
   } catch (err) {
-    req.log.error(err);
+    req.log.error(`payment_gateway_create_failed: ${logErrorMessage(err)}`);
     return reply.code(500).send({ error: { message: "payment_gateway_create_failed" } });
   }
 };
@@ -707,7 +749,7 @@ export const updatePaymentGatewayAdmin: RouteHandler<{ Params: { id: string } }>
     await db.update(paymentGateways).set(patch as any).where(eq(paymentGateways.id, id));
     return reply.send({ success: true });
   } catch (err) {
-    req.log.error(err);
+    req.log.error(`payment_gateway_update_failed: ${logErrorMessage(err)}`);
     return reply.code(500).send({ error: { message: "payment_gateway_update_failed" } });
   }
 };

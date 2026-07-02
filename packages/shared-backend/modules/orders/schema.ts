@@ -30,6 +30,7 @@ export const userAddresses = mysqlTable(
     full_name: varchar("full_name", { length: 255 }).notNull(),
     phone: varchar("phone", { length: 50 }).notNull(),
     email: varchar("email", { length: 255 }),
+    identity_number: varchar("identity_number", { length: 32 }),
     address_line: text("address_line").notNull(),
     city: varchar("city", { length: 128 }).notNull(),
     district: varchar("district", { length: 128 }).notNull(),

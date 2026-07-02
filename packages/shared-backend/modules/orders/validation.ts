@@ -8,6 +8,7 @@ export const addressCreateSchema = z.object({
   full_name: z.string().min(1).max(255),
   phone: z.string().min(1).max(50),
   email: z.string().email().optional().nullish(),
+  identity_number: z.string().regex(/^\d{10,11}$/).optional().nullish(),
   address_line: z.string().min(1),
   city: z.string().min(1).max(128),
   district: z.string().min(1).max(128),

@@ -15,6 +15,8 @@ type BoostPackage = { id: string; days: number; price: number; currency?: string
 
 const checkoutSchema = z.object({
   package_id: z.string().trim().min(1).max(32),
+  billing_city: z.string().trim().min(1).max(128),
+  billing_postal_code: z.string().trim().min(1).max(32),
 });
 
 function rowsFromExecute<T = any>(result: unknown): T[] {
@@ -51,11 +53,45 @@ function splitName(fullName: string | null | undefined) {
   };
 }
 
+function requirePaymentField(value: unknown, message: string) {
+  const cleaned = String(value ?? '').trim();
+  if (!cleaned) {
+    const err = new Error(message);
+    (err as Error & { statusCode?: number }).statusCode = 400;
+    throw err;
+  }
+  return cleaned;
+}
+
+function requireIdentityNumber(value: unknown) {
+  const cleaned = requirePaymentField(value, 'billing_identity_number_required');
+  if (!/^\d{10,11}$/.test(cleaned)) {
+    const err = new Error('billing_identity_number_invalid');
+    (err as Error & { statusCode?: number }).statusCode = 400;
+    throw err;
+  }
+  return cleaned;
+}
+
 async function getCallerConsultant(req: Parameters<RouteHandler>[0]) {
   const userId = userIdFromRequest(req);
   if (!userId) return null;
-  const result = await db.execute(sql`SELECT id, user_id FROM consultants WHERE user_id = ${userId} LIMIT 1`);
-  return rowsFromExecute<{ id: string; user_id: string }>(result)[0] ?? null;
+  const result = await db.execute(sql`
+    SELECT c.id, c.user_id, c.identity_number, c.billing_address, u.phone, u.email, u.full_name
+    FROM consultants c
+    INNER JOIN users u ON u.id = c.user_id
+    WHERE c.user_id = ${userId}
+    LIMIT 1
+  `);
+  return rowsFromExecute<{
+    id: string;
+    user_id: string;
+    identity_number: string | null;
+    billing_address: string | null;
+    phone: string | null;
+    email: string | null;
+    full_name: string | null;
+  }>(result)[0] ?? null;
 }
 
 async function readPackages(): Promise<BoostPackage[]> {
@@ -162,6 +198,21 @@ export const createCheckout: RouteHandler = async (req, reply) => {
 
   const iyzico = new IyzicoService(resolveIyzicoConfigFromGateway(gateway));
   const name = splitName(user.full_name);
+  let buyerPhone: string;
+  let buyerIdentity: string;
+  let buyerAddress: string;
+  let buyerCity: string;
+  let buyerPostalCode: string;
+  try {
+    buyerPhone = requirePaymentField(c.phone || user.phone, 'billing_phone_required');
+    buyerIdentity = requireIdentityNumber(c.identity_number);
+    buyerAddress = requirePaymentField(c.billing_address, 'billing_address_required');
+    buyerCity = requirePaymentField(parsed.data.billing_city, 'billing_city_required');
+    buyerPostalCode = requirePaymentField(parsed.data.billing_postal_code, 'billing_postal_code_required');
+  } catch (error) {
+    const statusCode = Number((error as Error & { statusCode?: number })?.statusCode ?? 400);
+    return reply.code(statusCode).send({ error: { message: error instanceof Error ? error.message : 'billing_kyc_required' } });
+  }
   const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
   const price = Number(selected.price).toFixed(2);
 
@@ -178,30 +229,30 @@ export const createCheckout: RouteHandler = async (req, reply) => {
         id: user.id,
         name: name.name,
         surname: name.surname,
-        gsmNumber: user.phone || '+905000000000',
+        gsmNumber: buyerPhone,
         email: user.email,
-        identityNumber: '11111111111',
+        identityNumber: buyerIdentity,
         lastLoginDate: nowStr,
         registrationDate: nowStr,
-        registrationAddress: 'Adres belirtilmedi',
+        registrationAddress: buyerAddress,
         ip: req.ip,
-        city: 'İstanbul',
+        city: buyerCity,
         country: 'Turkey',
-        zipCode: '34000',
+        zipCode: buyerPostalCode,
       },
       shippingAddress: {
         contactName: user.full_name || 'GoldMoodAstro Danışmanı',
-        city: 'İstanbul',
+        city: buyerCity,
         country: 'Turkey',
-        address: 'Dijital hizmet',
-        zipCode: '34000',
+        address: buyerAddress,
+        zipCode: buyerPostalCode,
       },
       billingAddress: {
         contactName: user.full_name || 'GoldMoodAstro Danışmanı',
-        city: 'İstanbul',
+        city: buyerCity,
         country: 'Turkey',
-        address: 'Dijital hizmet',
-        zipCode: '34000',
+        address: buyerAddress,
+        zipCode: buyerPostalCode,
       },
       basketItems: [{
         id: boostId,

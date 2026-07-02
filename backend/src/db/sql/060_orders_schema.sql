@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS user_addresses (
   full_name VARCHAR(255) NOT NULL,
   phone VARCHAR(50) NOT NULL,
   email VARCHAR(255),
+  identity_number VARCHAR(32),
   address_line TEXT NOT NULL,
   city VARCHAR(128) NOT NULL,
   district VARCHAR(128) NOT NULL,

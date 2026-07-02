@@ -46,6 +46,16 @@ function resolveLocale(req: { query?: unknown; locale?: string }): string {
   return q || (req.locale ?? '').trim().toLowerCase() || 'tr';
 }
 
+function resolveSiteUrl() {
+  return (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+}
+
+function subscriptionReturnUrl(locale: string, status: 'success' | 'failed', orderId?: string) {
+  const params = new URLSearchParams({ subscription: status });
+  if (orderId) params.set('order_id', orderId);
+  return `${resolveSiteUrl()}/${encodeURIComponent(locale || 'tr')}/dashboard?${params.toString()}`;
+}
+
 const ADMIN_SUBSCRIPTION_STATUS = new Set<AdminSubscriptionStatus>([
   'pending',
   'active',
@@ -200,6 +210,36 @@ function isIapTerminalNotification(type: string) {
 
 function isIapPastDueNotification(type: string) {
   return ['DID_FAIL_TO_RENEW', 'GRACE_PERIOD_EXPIRED'].includes(type);
+}
+
+function requirePaymentField(value: unknown, message: string) {
+  const cleaned = asString(value);
+  if (!cleaned) {
+    const err = new Error(message);
+    (err as Error & { statusCode?: number }).statusCode = 400;
+    throw err;
+  }
+  return cleaned;
+}
+
+function requireIdentityNumber(value: unknown) {
+  const cleaned = requirePaymentField(value, 'billing_identity_number_required');
+  if (!/^\d{10,11}$/.test(cleaned)) {
+    const err = new Error('billing_identity_number_invalid');
+    (err as Error & { statusCode?: number }).statusCode = 400;
+    throw err;
+  }
+  return cleaned;
+}
+
+async function userUsedSubscriptionTrial(userId: string) {
+  const [rows] = await (db as any).session.client.query(
+    `SELECT 1 FROM subscriptions
+     WHERE user_id = ? AND trial_ends_at IS NOT NULL
+     LIMIT 1`,
+    [userId],
+  );
+  return Array.isArray(rows) && rows.length > 0;
 }
 
 function requestIp(req: Parameters<RouteHandler>[0]) {
@@ -775,6 +815,10 @@ export const startSubscription: RouteHandler = async (req, reply) => {
     plan_id?: string;
     plan_code?: string;
     payment_gateway_slug?: string;
+    identity_number?: string;
+    billing_address?: string;
+    billing_city?: string;
+    billing_postal_code?: string;
   };
 
   const selector = String((body.plan_id || body.plan_code || '').trim());
@@ -806,8 +850,9 @@ export const startSubscription: RouteHandler = async (req, reply) => {
 
   if (plan.price_minor <= 0) {
     const startedAt = new Date();
+    const trialAllowed = !(await userUsedSubscriptionTrial(userId));
     const trialEndsAt =
-      plan.trial_days > 0 ? new Date(startedAt.getTime() + plan.trial_days * 24 * 60 * 60 * 1000) : null;
+      trialAllowed && plan.trial_days > 0 ? new Date(startedAt.getTime() + plan.trial_days * 24 * 60 * 60 * 1000) : null;
 
     const endsAt =
       existing?.plan_id === plan.id ? existing.ends_at : computeSubscriptionEndAt(startedAt, plan.period);
@@ -884,11 +929,31 @@ export const startSubscription: RouteHandler = async (req, reply) => {
     }),
   } as any);
 
-  const callbackUrl = `${resolveApiBase()}/api/subscriptions/webhook?order_id=${orderId}`;
-  const iyzicoLocale = resolveIyzicoLocale(resolveLocale(req));
+  const locale = resolveLocale(req);
+  const callbackUrl = `${resolveApiBase()}/api/subscriptions/webhook?order_id=${orderId}&locale=${encodeURIComponent(locale)}`;
+  const iyzicoLocale = resolveIyzicoLocale(locale);
   const iyzico = new IyzicoService(resolveIyzicoConfigFromGateway(gateway));
 
-  const names = (full_name || 'Danışan').trim().split(/\s+/);
+  let buyerPhone: string;
+  let buyerIdentity: string;
+  let buyerFullName: string;
+  let buyerAddress: string;
+  let buyerCity: string;
+  let buyerPostalCode: string;
+  try {
+    buyerPhone = requirePaymentField(phone, 'billing_phone_required');
+    buyerIdentity = requireIdentityNumber(body.identity_number);
+    buyerFullName = requirePaymentField(full_name, 'billing_full_name_required');
+    buyerAddress = requirePaymentField(body.billing_address, 'billing_address_required');
+    buyerCity = requirePaymentField(body.billing_city, 'billing_city_required');
+    buyerPostalCode = requirePaymentField(body.billing_postal_code, 'billing_postal_code_required');
+    requirePaymentField(email, 'billing_email_required');
+  } catch (error) {
+    const statusCode = Number((error as Error & { statusCode?: number })?.statusCode ?? 400);
+    return reply.code(statusCode).send({ error: { message: error instanceof Error ? error.message : 'billing_kyc_required' } });
+  }
+
+  const names = buyerFullName.trim().split(/\s+/);
   const buyerName = names.shift() || 'Danışan';
   const buyerSurname = names.join(' ') || '.';
   const name = email || `${buyerName} ${buyerSurname}`.trim() || 'Danışan';
@@ -906,30 +971,30 @@ export const startSubscription: RouteHandler = async (req, reply) => {
         id: userId,
         name: buyerName,
         surname: buyerSurname,
-        gsmNumber: phone || '+905000000000',
-        email: email || 'customer@example.com',
-        identityNumber: '11111111111',
+        gsmNumber: buyerPhone,
+        email,
+        identityNumber: buyerIdentity,
         lastLoginDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
         registrationDate: new Date().toISOString().slice(0, 19).replace('T', ' '),
-        registrationAddress: 'Kayıt adresi belirtilmedi',
+        registrationAddress: buyerAddress,
         ip: req.ip,
-        city: 'İstanbul',
+        city: buyerCity,
         country: 'Turkey',
-        zipCode: '34000',
+        zipCode: buyerPostalCode,
       },
       shippingAddress: {
         contactName: name,
-        city: 'İstanbul',
+        city: buyerCity,
         country: 'Turkey',
-        address: 'Adres belirtilmedi',
-        zipCode: '34000',
+        address: buyerAddress,
+        zipCode: buyerPostalCode,
       },
       billingAddress: {
         contactName: name,
-        city: 'İstanbul',
+        city: buyerCity,
         country: 'Turkey',
-        address: 'Adres belirtilmedi',
-        zipCode: '34000',
+        address: buyerAddress,
+        zipCode: buyerPostalCode,
       },
       basketItems: [
         {
@@ -973,20 +1038,21 @@ export const startSubscription: RouteHandler = async (req, reply) => {
 export const subscriptionWebhook: RouteHandler = async (req, reply) => {
   const query = (req.query as Record<string, string | undefined>) ?? {};
   const body = (req.body ?? {}) as { token?: string; order_id?: string };
+  const locale = resolveLocale(req);
   const orderId = String(query.order_id || body.order_id || '').trim();
   const token = String(query.token || body.token || '').trim();
 
   if (!orderId || !token) {
-    return reply.code(400).send({ error: { message: 'order_id_and_token_required' } });
+    return reply.redirect(subscriptionReturnUrl(locale, 'failed', orderId || undefined));
   }
 
   const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
   if (!order) {
-    return reply.code(404).send({ error: { message: 'order_not_found' } });
+    return reply.redirect(subscriptionReturnUrl(locale, 'failed', orderId));
   }
 
-  if (order.payment_status === 'paid' && order.status === 'processing') {
-    return reply.send({ data: { order_id: orderId, status: order.payment_status } });
+  if (order.payment_status === 'paid' && ['processing', 'completed'].includes(String(order.status))) {
+    return reply.redirect(subscriptionReturnUrl(locale, 'success', orderId));
   }
 
   let [gateway] = await db
@@ -1005,7 +1071,7 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
   }
 
   if (!gateway) {
-    return reply.code(400).send({ error: { message: 'payment_gateway_not_found' } });
+    return reply.redirect(subscriptionReturnUrl(locale, 'failed', orderId));
   }
 
   const cfg = resolveIyzicoConfigFromGateway(gateway);
@@ -1014,22 +1080,27 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
   const notes = parseJSONNotes<{ context?: string; plan_id?: string }>(order.notes ?? null);
   const planIdForVerify = notes?.plan_id;
   if (!planIdForVerify) {
-    return reply.code(400).send({ error: { message: 'subscription_context_not_found' } });
+    return reply.redirect(subscriptionReturnUrl(locale, 'failed', orderId));
   }
 
   const [planForVerify] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, planIdForVerify)).limit(1);
   if (!planForVerify) {
-    return reply.code(404).send({ error: { message: 'subscription_plan_not_found' } });
+    return reply.redirect(subscriptionReturnUrl(locale, 'failed', orderId));
   }
 
-  const verified = await verifyIyzicoCallback({
-    iyzico,
-    token,
-    expectedAmountMinor: planForVerify.price_minor,
-    expectedCurrency: planForVerify.currency || order.currency || 'TRY',
-    expectedBasketId: order.order_number,
-    expectedConversationId: `sub-${order.order_number}`,
-  });
+  let verified: Awaited<ReturnType<typeof verifyIyzicoCallback>>;
+  try {
+    verified = await verifyIyzicoCallback({
+      iyzico,
+      token,
+      expectedAmountMinor: planForVerify.price_minor,
+      expectedCurrency: planForVerify.currency || order.currency || 'TRY',
+      expectedBasketId: order.order_number,
+      expectedConversationId: `sub-${order.order_number}`,
+    });
+  } catch {
+    return reply.redirect(subscriptionReturnUrl(locale, 'failed', orderId));
+  }
 
   const result = verified.raw;
   const paymentId = verified.paymentId;
@@ -1037,8 +1108,8 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
   const isPaid = true;
   const payStatus = 'success';
 
-  if (order.payment_status === 'paid' && order.status === 'processing') {
-    return reply.send({ data: { order_id: orderId, paid: true, status: order.payment_status } });
+  if (order.payment_status === 'paid' && ['processing', 'completed'].includes(String(order.status))) {
+    return reply.redirect(subscriptionReturnUrl(locale, 'success', orderId));
   }
 
   const [existingPayment] = await db
@@ -1064,7 +1135,7 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
     .update(orders)
     .set({
       payment_status: isPaid ? 'paid' : 'failed',
-      status: isPaid ? 'processing' : 'cancelled',
+      status: isPaid ? 'completed' : 'cancelled',
       transaction_id: paymentId || token,
       updated_at: new Date(),
     })
@@ -1073,17 +1144,17 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
   if (isPaid) {
     const planId = planIdForVerify;
     if (!planId) {
-      return reply.code(400).send({ error: { message: 'subscription_context_not_found' } });
+      return reply.redirect(subscriptionReturnUrl(locale, 'failed', orderId));
     }
 
     const plan = planForVerify;
     if (!plan) {
-      return reply.code(404).send({ error: { message: 'subscription_plan_not_found' } });
+      return reply.redirect(subscriptionReturnUrl(locale, 'failed', orderId));
     }
 
     const now = new Date();
     const periodEnd = computeSubscriptionEndAt(now, plan.period);
-    const trialDays = Number(plan.trial_days || 0);
+    const trialDays = (await userUsedSubscriptionTrial(order.user_id)) ? 0 : Number(plan.trial_days || 0);
     const trialEndsAt = trialDays > 0
       ? new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000)
       : null;
@@ -1105,7 +1176,7 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
       .limit(1);
 
     if (existingSub) {
-      return reply.send({ data: existingSub, order_id: orderId });
+      return reply.redirect(subscriptionReturnUrl(locale, 'success', orderId));
     }
 
     if (active) {
@@ -1136,16 +1207,10 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
       currency: plan.currency || 'TRY',
     } as any);
 
-    const [created] = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.id, subscriptionId))
-      .limit(1);
-
-    return reply.send({ data: created, order_id: orderId });
+    return reply.redirect(subscriptionReturnUrl(locale, 'success', orderId));
   }
 
-  return reply.send({ data: { order_id: orderId, paid: false } });
+  return reply.redirect(subscriptionReturnUrl(locale, 'failed', orderId));
 };
 
 /** POST /subscriptions/verify-receipt — Apple/Google IAP doğrulama hook */
@@ -1204,8 +1269,9 @@ export const verifyReceipt: RouteHandler = async (req, reply) => {
   }
 
   const now = new Date();
+  const trialDays = (await userUsedSubscriptionTrial(userId)) ? 0 : Number(plan.trial_days || 0);
   const trialEndsAt =
-    plan.trial_days > 0 ? new Date(now.getTime() + plan.trial_days * 24 * 60 * 60 * 1000) : null;
+    trialDays > 0 ? new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000) : null;
   let verification: IapVerificationResult;
 
   try {

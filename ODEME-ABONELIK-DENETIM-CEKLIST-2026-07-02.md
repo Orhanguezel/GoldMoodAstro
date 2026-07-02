@@ -209,7 +209,7 @@ Ortak sorun: TÜM callback'lerde token↔order bağlaması + tutar doğrulaması
 - **Fix:** cron: 24 saat `pending/unpaid` order → `cancelled` (replay saldırısına ham order kaynağını da kapatır).
 - **Codex notu:** `order-cleanup` cron eklendi; 24 saatten eski unpaid/pending order'ları failed+cancelled yapıyor.
 
-### [ ] PAY-T28 — Sertleştirme paketi
+### [x] PAY-T28 — Sertleştirme paketi
 - `(provider, provider_subscription_id)` UNIQUE (çift IAP sub yarışı).
 - Config helper birleştir (4 kopya: orders:42/subscriptions:438/credits:34/serviceBoosts:48) → tek `resolveIyzicoConfig`; test/prod kaynağı `gateway.is_test_mode` DB alanı.
 - Gerçek buyer KYC (dummy `11111111111`/`+905000000000` yerine kullanıcı verisi) — Iyzico fraud reddini azaltır.
@@ -219,7 +219,7 @@ Ortak sorun: TÜM callback'lerde token↔order bağlaması + tutar doğrulaması
 - lifecycle standardizasyonu (credits `completed` vs orders `processing`).
 - webhook sonrası frontend success redirect (ham JSON yerine).
 - log hijyeni (obje yerine mesaj); `raw_response` admin-only.
-- **Codex notu:** Kısmi tamamlandı: provider subscription unique index önceki turda eklendi, Iyzipay config helper tek kaynağa alındı, credits currency paket currency'sinden okunuyor, `/subscriptions/me` paid+unexpired filtreyle hizalandı. KYC, trial once-per-user, lifecycle metinleri/log hijyeni gibi alt maddeler açık.
+- **Codex notu:** Tamamlandı: provider subscription unique, ortak Iyzipay config helper, dinamik credits currency, `/subscriptions/me` paid+unexpired filtresi, gerçek KYC/fatura bilgisi zorunluluğu, trial once-per-user, subscription success/failed frontend redirect, lifecycle ayrımı (`completed` = anında teslim; `processing` = fulfillment bekleyen randevu) ve log/raw_response hijyeni kapatıldı.
 
 ---
 
