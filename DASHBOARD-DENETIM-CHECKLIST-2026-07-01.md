@@ -82,9 +82,9 @@
 - [x] Boost rozeti metni bozuk birleşim (`{days}` çift) (`ServicesPanel.tsx:553`).
 - [ ] Blog: kapak kaldırınca `image_url` temizlenmiyor (`controller.ts:588`); sahiplik serbest-metin tag marker'ıyla (enjeksiyon/kayıp riski) — `author_user_id` kolonu ekle; taslak locale-bazlı görünürlük kafa karıştırıcı.
 - [x] Tab state popstate ile senkron değil (`ConsultantDashboard.tsx:94-103`).
-- [ ] Backend bildirim/e-posta/mesajları Türkçe hardcoded (çok dilli platform) (`controller.ts:666-669,743-745,819-820,1785`).
+- [x] Backend bildirim/e-posta/mesajları Türkçe hardcoded (çok dilli platform) (`controller.ts:666-669,743-745,819-820,1785`).
 - [x] Cüzdan seçimi `ORDER BY`'sız belirsiz + zorla `consultant_id` bağlama (`controller.ts:1493-1525`).
-- [ ] Performans: `listMessageThreads` N+1 (thread başına 3-4 sorgu, LIMIT yok); `listBookings` LIMIT 200 sabit, sayfalama yok.
+- [x] Performans: `listMessageThreads` N+1 (thread başına 3-4 sorgu, LIMIT yok); `listBookings` LIMIT 200 sabit, sayfalama yok.
 - [x] ProfileViews ölü kod (`RANGE_OPTIONS.label`, `{skip:false}`) + bayat "endpoint yakında" hata metni.
 - [x] ReviewsPanel buton "Publish Review" (yanıt yayınlanıyor, yorum değil) + `aria-label`/`title` hardcoded İngilizce.
 

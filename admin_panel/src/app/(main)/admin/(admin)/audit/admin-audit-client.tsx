@@ -91,6 +91,8 @@ type TabKey = 'requests' | 'auth' | 'metrics' | 'map' | 'stream' | 'funnel' | 'c
 
 type StreamStatus = 'connecting' | 'open' | 'closed' | 'error';
 
+const ALL = '__all__' as const;
+
 type AuditStreamEvent = {
   id?: string;
   ts?: string;
@@ -387,7 +389,69 @@ export default function AdminAuditClient() {
   }
 
   function onTabChange(next: string) {
-    apply({ tab: next, offset: 0 });
+    const nextTab = normalizeTab(next);
+    const cleanPatch: Partial<Record<string, any>> = {
+      tab: nextTab,
+      offset: 0,
+    };
+
+    if (nextTab === 'requests') {
+      Object.assign(cleanPatch, {
+        event: '',
+        email: '',
+        user_id: '',
+        ip: '',
+        path_prefix: '',
+      });
+    } else if (nextTab === 'auth') {
+      Object.assign(cleanPatch, {
+        q: '',
+        method: '',
+        status: '',
+        only_admin: '',
+        req_user_id: '',
+        req_ip: '',
+        sort: 'created_at',
+        orderDir: 'desc',
+        path_prefix: '',
+      });
+    } else if (nextTab === 'metrics' || nextTab === 'map' || nextTab === 'funnel' || nextTab === 'cohort') {
+      Object.assign(cleanPatch, {
+        q: '',
+        method: '',
+        status: '',
+        from: '',
+        to: '',
+        req_user_id: '',
+        req_ip: '',
+        event: '',
+        email: '',
+        user_id: '',
+        ip: '',
+        sort: 'created_at',
+        orderDir: 'desc',
+      });
+    } else {
+      Object.assign(cleanPatch, {
+        q: '',
+        method: '',
+        status: '',
+        from: '',
+        to: '',
+        only_admin: '',
+        req_user_id: '',
+        req_ip: '',
+        sort: 'created_at',
+        orderDir: 'desc',
+        event: '',
+        email: '',
+        user_id: '',
+        ip: '',
+        path_prefix: '',
+      });
+    }
+
+    apply(cleanPatch);
   }
 
   function onSubmitRequests(e: React.FormEvent) {
@@ -473,7 +537,7 @@ export default function AdminAuditClient() {
     const d = String(safeInt(daysText, 14) || 14);
     setDaysText(d);
     apply({
-      tab: 'metrics',
+      tab: tab === 'funnel' || tab === 'cohort' || tab === 'map' ? tab : 'metrics',
       days: d,
       path_prefix: pathPrefixText.trim(),
       only_admin: onlyAdminFlag ? '1' : '',
@@ -485,7 +549,7 @@ export default function AdminAuditClient() {
     setPathPrefixText('');
     setOnlyAdminFlag(false);
     apply({
-      tab: 'metrics',
+      tab: tab === 'funnel' || tab === 'cohort' || tab === 'map' ? tab : 'metrics',
       days: '14',
       path_prefix: '',
       only_admin: '',
@@ -605,8 +669,6 @@ export default function AdminAuditClient() {
   const canPrev = offset > 0;
   const canNextReq = offset + limit < reqTotal;
   const canNextAuth = offset + limit < authTotal;
-
-  const ALL = '__all__' as const;
 
   const [clearAuditLogs, { isLoading: isClearing }] = useClearAuditLogsAdminMutation();
 

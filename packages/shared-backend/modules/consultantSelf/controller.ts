@@ -631,6 +631,11 @@ export async function listBookings(req: FastifyRequest, reply: FastifyReply) {
 
   const status = ((req.query as any)?.status as string | undefined)?.trim();
 
+  // Sayfalama (geriye uyumlu): parametre yoksa ilk 200 kayıt (eski davranış).
+  const q = req.query as any;
+  const limit = Math.min(200, Math.max(1, Number(q?.limit) || 200));
+  const offset = Math.max(0, Number(q?.offset) || 0);
+
   const where = status
     ? and(eq(bookings.consultant_id, c.id), eq(bookings.status, status))
     : eq(bookings.consultant_id, c.id);
@@ -662,7 +667,8 @@ export async function listBookings(req: FastifyRequest, reply: FastifyReply) {
     .leftJoin(consultantServices, eq(consultantServices.id, bookings.service_id))
     .where(where)
     .orderBy(desc(bookings.created_at))
-    .limit(200);
+    .limit(limit)
+    .offset(offset);
 
   return reply.send({ data: rows });
 }
@@ -1296,76 +1302,75 @@ export async function listMessageThreads(req: FastifyRequest, reply: FastifyRepl
     .orderBy(desc(chat_threads.updated_at))
     .limit(100); // sınırsız büyümeyi önle (en güncel 100 thread)
 
-  // Her thread için: son mesaj + danışan adı
-  const enriched = await Promise.all(
-    threads.map(async (t) => {
-      // Son mesaj
-      const [last] = await db
-        .select({
-          id: chat_messages.id,
-          text: chat_messages.text,
-          sender_user_id: chat_messages.sender_user_id,
-          created_at: chat_messages.created_at,
-        })
-        .from(chat_messages)
-        .where(eq(chat_messages.thread_id, t.id))
-        .orderBy(desc(chat_messages.created_at))
-        .limit(1);
+  if (threads.length === 0) return reply.send({ data: [] });
 
-      // Danışan adı (created_by_user_id'den)
-      let customer = null as null | { id: string; full_name: string | null; email: string | null; avatar_url: string | null };
-      if (t.created_by_user_id) {
-        const [u] = await db
-          .select({
-            id: users.id,
-            full_name: users.full_name,
-            email: users.email,
-            avatar_url: users.avatar_url,
-          })
-          .from(users)
-          .where(eq(users.id, t.created_by_user_id))
-          .limit(1);
-        if (u) customer = u;
-      }
-
-      const [participant] = await db
-        .select({ last_read_at: chat_participants.last_read_at })
-        .from(chat_participants)
-        .where(and(eq(chat_participants.thread_id, t.id), eq(chat_participants.user_id, c.user_id)))
-        .limit(1);
-
-      const unreadRows = await db.execute(
-        sql`
-          SELECT COUNT(*) AS cnt
-          FROM chat_messages
-          WHERE thread_id = ${t.id}
-            AND sender_user_id <> ${c.user_id}
-            AND (${participant?.last_read_at ?? null} IS NULL OR created_at > ${participant?.last_read_at ?? null})
-        `,
-      );
-      const unreadArr = Array.isArray((unreadRows as any)?.[0]) ? (unreadRows as any)[0] : (unreadRows as any);
-      const unreadCount = Number((unreadArr as any[])?.[0]?.cnt ?? 0);
-
-      return {
-        thread_id: t.id,
-        context_type: t.context_type,
-        context_id: t.context_id,
-        created_at: t.created_at,
-        updated_at: t.updated_at,
-        customer,
-        unread_count: unreadCount,
-        last_message: last
-          ? {
-              id: last.id,
-              text: last.text,
-              sender_user_id: last.sender_user_id,
-              created_at: last.created_at,
-              from_consultant: last.sender_user_id === c.user_id,
-            }
-          : null,
-      };
-    }),
+  // N+1 yerine 4 toplu sorgu (thread başına 4 sorgu değil).
+  const threadIds = threads.map((t) => t.id);
+  const customerIds = Array.from(
+    new Set(threads.map((t) => t.created_by_user_id).filter((x): x is string => Boolean(x))),
   );
+
+  // 1) Her thread'in son mesajı (latest-per-group).
+  const lastMsgResult = await db.execute(sql`
+    SELECT m.thread_id, m.id, m.text, m.sender_user_id, m.created_at
+    FROM chat_messages m
+    JOIN (
+      SELECT thread_id, MAX(created_at) AS mx
+      FROM chat_messages
+      WHERE thread_id IN (${sql.join(threadIds.map((id) => sql`${id}`), sql`, `)})
+      GROUP BY thread_id
+    ) latest ON latest.thread_id = m.thread_id AND m.created_at = latest.mx
+  `);
+  const lastMsgRows = (Array.isArray((lastMsgResult as any)?.[0]) ? (lastMsgResult as any)[0] : (lastMsgResult as any)) as any[];
+  const lastByThread = new Map<string, any>();
+  for (const r of lastMsgRows ?? []) {
+    if (!lastByThread.has(r.thread_id)) lastByThread.set(r.thread_id, r); // aynı created_at'te ilk kayıt
+  }
+
+  // 2) Danışan bilgileri.
+  const customerRows = customerIds.length
+    ? await db
+        .select({ id: users.id, full_name: users.full_name, email: users.email, avatar_url: users.avatar_url })
+        .from(users)
+        .where(inArray(users.id, customerIds))
+    : [];
+  const customerById = new Map(customerRows.map((u) => [u.id, u]));
+
+  // 3) Okunmamış sayıları (tek grouped sorgu; last_read_at LEFT JOIN ile).
+  const unreadResult = await db.execute(sql`
+    SELECT m.thread_id, COUNT(*) AS cnt
+    FROM chat_messages m
+    LEFT JOIN chat_participants p ON p.thread_id = m.thread_id AND p.user_id = ${c.user_id}
+    WHERE m.thread_id IN (${sql.join(threadIds.map((id) => sql`${id}`), sql`, `)})
+      AND m.sender_user_id <> ${c.user_id}
+      AND (p.last_read_at IS NULL OR m.created_at > p.last_read_at)
+    GROUP BY m.thread_id
+  `);
+  const unreadRows = (Array.isArray((unreadResult as any)?.[0]) ? (unreadResult as any)[0] : (unreadResult as any)) as any[];
+  const unreadByThread = new Map<string, number>();
+  for (const r of unreadRows ?? []) unreadByThread.set(r.thread_id, Number(r.cnt ?? 0));
+
+  const enriched = threads.map((t) => {
+    const last = lastByThread.get(t.id);
+    return {
+      thread_id: t.id,
+      context_type: t.context_type,
+      context_id: t.context_id,
+      created_at: t.created_at,
+      updated_at: t.updated_at,
+      customer: (t.created_by_user_id && customerById.get(t.created_by_user_id)) || null,
+      unread_count: unreadByThread.get(t.id) ?? 0,
+      last_message: last
+        ? {
+            id: last.id,
+            text: last.text,
+            sender_user_id: last.sender_user_id,
+            created_at: last.created_at,
+            from_consultant: last.sender_user_id === c.user_id,
+          }
+        : null,
+    };
+  });
 
   return reply.send({ data: enriched });
 }
