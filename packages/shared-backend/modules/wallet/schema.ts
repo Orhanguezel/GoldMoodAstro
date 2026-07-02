@@ -8,6 +8,7 @@ import {
   datetime,
   tinyint,
   index,
+  uniqueIndex,
   foreignKey,
   text,
 } from "drizzle-orm/mysql-core";
@@ -43,6 +44,7 @@ export const walletTransactions = mysqlTable(
     id: char("id", { length: 36 }).primaryKey().notNull(),
     wallet_id: char("wallet_id", { length: 36 }).notNull(),
     user_id: char("user_id", { length: 36 }).notNull(),
+    booking_id: char("booking_id", { length: 36 }),
     type: mysqlEnum("type", ["credit", "debit"]).notNull(),
     amount: decimal("amount", { precision: 14, scale: 2 }).notNull(),
     currency: varchar("currency", { length: 10 }).notNull().default("TRY"),
@@ -56,7 +58,9 @@ export const walletTransactions = mysqlTable(
   (t) => [
     index("wallet_tx_wallet_id_idx").on(t.wallet_id),
     index("wallet_tx_user_id_idx").on(t.user_id),
+    index("wallet_tx_booking_id_idx").on(t.booking_id),
     index("wallet_tx_created_idx").on(t.created_at),
+    uniqueIndex("wtx_booking_purpose_uq").on(t.booking_id, t.purpose),
     foreignKey({
       columns: [t.wallet_id],
       foreignColumns: [wallets.id],

@@ -7,7 +7,7 @@ import { and, desc, eq, like, or, sql, type SQL } from 'drizzle-orm';
 import { GoogleAuth } from 'google-auth-library';
 import { db } from '../../db/client';
 import { orders, paymentGateways, payments } from '../orders/schema';
-import { IyzicoService, resolveIyzicoLocale } from '../orders/iyzico.service';
+import { IyzicoService, resolveIyzicoLocale, verifyIyzicoCallback } from '../orders/iyzico.service';
 import { subscriptionPlans, subscriptions } from './schema';
 import { users } from '../auth/schema';
 
@@ -781,12 +781,31 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
   const cfg = getGatewayConfig(gateway);
   const iyzico = new IyzicoService(cfg);
 
-  const result = await iyzico.retrieveCheckoutResult(token);
+  const notes = parseJSONNotes<{ context?: string; plan_id?: string }>(order.notes ?? null);
+  const planIdForVerify = notes?.plan_id;
+  if (!planIdForVerify) {
+    return reply.code(400).send({ error: { message: 'subscription_context_not_found' } });
+  }
 
-  const paymentId = resolveIyzicoResultPaymentId(result);
-  const paidPrice = resolveIyzicoPaymentPrice(result);
-  const isPaid = String(result.status) === 'success' && String(result.paymentStatus).toUpperCase() === 'SUCCESS';
-  const payStatus = isPaid ? 'success' : 'failure';
+  const [planForVerify] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, planIdForVerify)).limit(1);
+  if (!planForVerify) {
+    return reply.code(404).send({ error: { message: 'subscription_plan_not_found' } });
+  }
+
+  const verified = await verifyIyzicoCallback({
+    iyzico,
+    token,
+    expectedAmountMinor: planForVerify.price_minor,
+    expectedCurrency: planForVerify.currency || order.currency || 'TRY',
+    expectedBasketId: order.order_number,
+    expectedConversationId: `sub-${order.order_number}`,
+  });
+
+  const result = verified.raw;
+  const paymentId = verified.paymentId;
+  const paidPrice = (verified.paidPriceMinor / 100).toFixed(2);
+  const isPaid = true;
+  const payStatus = 'success';
 
   if (order.payment_status === 'paid' && order.status === 'processing') {
     return reply.send({ data: { order_id: orderId, paid: true, status: order.payment_status } });
@@ -822,13 +841,12 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
     .where(eq(orders.id, orderId));
 
   if (isPaid) {
-    const notes = parseJSONNotes<{ context?: string; plan_id?: string }>(order.notes ?? null);
-    const planId = notes?.plan_id;
+    const planId = planIdForVerify;
     if (!planId) {
       return reply.code(400).send({ error: { message: 'subscription_context_not_found' } });
     }
 
-    const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, planId)).limit(1);
+    const plan = planForVerify;
     if (!plan) {
       return reply.code(404).send({ error: { message: 'subscription_plan_not_found' } });
     }
@@ -1016,7 +1034,7 @@ export const verifyReceipt: RouteHandler = async (req, reply) => {
       .set({
         status: 'active',
         started_at: existingByProvider.started_at ?? now,
-        ends_at: existingByProvider.ends_at ?? periodEnd,
+        ends_at: verification.expiresAt ?? existingByProvider.ends_at ?? periodEnd,
         trial_ends_at: existingByProvider.trial_ends_at ?? trialEndsAt,
         auto_renew: plan.period === 'lifetime' ? 0 : 1,
         price_minor: plan.price_minor,

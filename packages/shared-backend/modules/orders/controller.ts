@@ -5,7 +5,7 @@ import { db } from '../../db/client';
 import { orders, userAddresses, paymentGateways, payments } from "./schema";
 import { bookings } from "../bookings/schema";
 import { and, eq, desc, like, or, sql, type SQL } from "drizzle-orm";
-import { IyzicoService, resolveIyzicoLocale } from "./iyzico.service";
+import { IyzicoService, isPaymentMockEnabled, resolveIyzicoLocale, verifyIyzicoCallback } from "./iyzico.service";
 import { addressCreateSchema, orderCreateSchema } from "./validation";
 import { DEFAULT_LOCALE } from '../../core/i18n';
 import { users } from "../auth/schema";
@@ -167,7 +167,7 @@ export const initIyzico: RouteHandler<{ Params: { id: string } }> = async (req, 
 
   // PAYMENT_MOCK_MODE — Iyzipay'i bypass et, ödeme başarılı say (test için).
   // Prod'da MUTLAKA "false" olmalı.
-  if (process.env.PAYMENT_MOCK_MODE === 'true') {
+  if (isPaymentMockEnabled()) {
     const [iyzicoGw] = await db.select().from(paymentGateways).where(eq(paymentGateways.slug, 'iyzico')).limit(1);
     const txId = `mock_${Date.now()}`;
 
@@ -304,30 +304,51 @@ export const iyzicoCallback: RouteHandler = async (req, reply) => {
   const iyzico = new IyzicoService(resolveIyzicoConfig(gateway));
 
   try {
-    const result = await iyzico.retrieveCheckoutResult(token);
+    if (!order) return reply.redirect(landing("failed"));
+    if (order.payment_status === "paid") return reply.redirect(landing("success"));
 
-    const isPaid = result["status"] === "success" && result["paymentStatus"] === "SUCCESS";
-    const dbStatus  = isPaid ? "paid" : "failed";
-    const payStatus = isPaid ? "success" : "failure";
-
-    await db.update(orders).set({
-      payment_status: dbStatus,
-      status: isPaid ? "processing" : "pending",
-      transaction_id: (result["paymentId"] as string | undefined) || token,
-    }).where(eq(orders.id, order_id));
-
-    await db.insert(payments).values({
-      id: randomUUID(),
-      order_id,
-      gateway_id: gateway?.id || "",
-      amount: (result["paidPrice"] as string | undefined) || "0",
-      currency: (result["currency"] as string | undefined) || "TRY",
-      status: payStatus,
-      transaction_id: (result["paymentId"] as string | undefined) || token,
-      raw_response: JSON.stringify(result),
+    const verified = await verifyIyzicoCallback({
+      iyzico,
+      token,
+      expectedAmountMinor: Math.round(Number(order.total_amount) * 100),
+      expectedCurrency: order.currency || "TRY",
+      expectedBasketId: order.order_number,
+      expectedConversationId: `conv_${order.order_number}`,
     });
 
-    return reply.redirect(landing(isPaid ? "success" : "failed"));
+    await db.transaction(async (tx) => {
+      const updateResult = await tx.execute(sql`
+        UPDATE orders
+        SET payment_status = 'paid',
+            status = 'processing',
+            transaction_id = ${verified.paymentId},
+            updated_at = NOW(3)
+        WHERE id = ${order_id} AND payment_status <> 'paid'
+      `);
+      const affected = Number((updateResult as any)?.[0]?.affectedRows ?? (updateResult as any)?.affectedRows ?? 0);
+      if (affected < 1) return;
+
+      try {
+        await tx.insert(payments).values({
+          id: randomUUID(),
+          order_id,
+          gateway_id: gateway?.id || "",
+          amount: (verified.paidPriceMinor / 100).toFixed(2),
+          currency: verified.currency,
+          status: "success",
+          transaction_id: verified.paymentId,
+          raw_response: JSON.stringify(verified.raw),
+        });
+      } catch (err: any) {
+        if (!String(err?.message || '').includes('Duplicate')) throw err;
+      }
+
+      if (order.booking_id) {
+        await tx.update(bookings).set({ status: 'confirmed' } as any).where(eq(bookings.id, order.booking_id));
+      }
+    });
+
+    return reply.redirect(landing("success"));
   } catch {
     return reply.redirect(landing("failed"));
   }

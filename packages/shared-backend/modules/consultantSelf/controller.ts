@@ -2021,8 +2021,9 @@ export async function rejectWithdrawalAdmin(req: FastifyRequest, reply: FastifyR
     return reply.code(409).send({ error: { message: 'invalid_withdrawal_status' } });
   }
 
+  let rejected = false;
   await db.transaction(async (tx) => {
-    await tx.execute(sql`
+    const updateResult = await tx.execute(sql`
       UPDATE withdrawal_requests
       SET status = 'rejected',
           reviewed_at = NOW(3),
@@ -2030,8 +2031,12 @@ export async function rejectWithdrawalAdmin(req: FastifyRequest, reply: FastifyR
           rejection_reason = ${parsed.data.rejection_reason},
           admin_note = ${parsed.data.admin_note ?? null},
           updated_at = NOW(3)
-      WHERE id = ${id}
+      WHERE id = ${id} AND status IN ('pending', 'approved')
     `);
+    const affected = Number((updateResult as any)?.[0]?.affectedRows ?? (updateResult as any)?.affectedRows ?? 0);
+    if (affected < 1) return;
+    rejected = true;
+
     if ((row as any).wallet_id) {
       await tx.execute(sql`
         UPDATE wallets
@@ -2044,9 +2049,10 @@ export async function rejectWithdrawalAdmin(req: FastifyRequest, reply: FastifyR
     await tx.execute(sql`
       UPDATE wallet_transactions
       SET payment_status = 'failed', updated_at = NOW(3)
-      WHERE transaction_ref = ${id} AND purpose = 'withdrawal'
+      WHERE transaction_ref = ${id} AND purpose = 'withdrawal' AND payment_status = 'pending'
     `);
   });
+  if (!rejected) return reply.code(409).send({ error: { message: 'invalid_withdrawal_status' } });
   await logKycAudit({ req, topic: 'withdrawal.rejected', message: 'withdrawal_rejected', consultantId: String((row as any).consultant_id), meta: { withdrawal_id: id, rejection_reason: parsed.data.rejection_reason } });
   await emailWithdrawalStatus({ ...row, rejection_reason: parsed.data.rejection_reason }, 'rejected', parsed.data);
 

@@ -1,6 +1,6 @@
 // packages/shared-backend/modules/synastry/controller.ts
 // FAZ 25 / T25-1 — Sinastri (3 mod: manual, quick, invite)
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { computeNatalChart, computeSynastry } from '../astrology';
 import { generate as llmGenerate } from '../llm';
@@ -11,7 +11,7 @@ import {
   synastryQuickSchema,
   synastryInviteSchema,
 } from './validation';
-import { hasActiveSubscription, consumeCredits } from '../credits/consume';
+import { hasActiveSubscription, consumeCredits, refundCredits } from '../credits/consume';
 import { apiMessage } from '../_shared/api-i18n';
 
 // birthCharts tablosu backend/src/modules/birthCharts/'da (project-specific) — shared
@@ -83,6 +83,11 @@ export async function handleSynastryManual(req: FastifyRequest, reply: FastifyRe
 
   // 2) Pricing Guard (FAZ 25 / T25-3)
   const reportId = randomUUID();
+  const chargeReferenceId = createHash('sha256')
+    .update(JSON.stringify({ userId, chartId: userChart.id, partner: body.partner_data }))
+    .digest('hex')
+    .slice(0, 36);
+  let charged = false;
   const isPremium = await hasActiveSubscription(userId);
   
   if (!isPremium) {
@@ -90,7 +95,7 @@ export async function handleSynastryManual(req: FastifyRequest, reply: FastifyRe
       userId,
       amount: 250,
       referenceType: 'synastry_manual',
-      referenceId: reportId,
+      referenceId: chargeReferenceId,
       description: `Sinastri Analizi: ${userChart.name} & ${body.partner_data.name}`
     });
 
@@ -102,19 +107,21 @@ export async function handleSynastryManual(req: FastifyRequest, reply: FastifyRe
         hint_action_path: '/pricing'
       });
     }
+    charged = consume.status === 'consumed';
   }
 
-  // 3) Partner chart compute (Swiss Ephemeris)
-  const partnerInput = body.partner_data;
-  const tobKnown = !!partnerInput.tob;
-  const partnerChart = await computeNatalChart({
-    date: partnerInput.dob,
-    time: partnerInput.tob ?? '12:00:00',
-    tobKnown,
-    latitude: partnerInput.pob_lat,
-    longitude: partnerInput.pob_lng,
-    tzIana: partnerInput.tz_iana,
-  });
+  try {
+    // 3) Partner chart compute (Swiss Ephemeris)
+    const partnerInput = body.partner_data;
+    const tobKnown = !!partnerInput.tob;
+    const partnerChart = await computeNatalChart({
+      date: partnerInput.dob,
+      time: partnerInput.tob ?? '12:00:00',
+      tobKnown,
+      latitude: partnerInput.pob_lat,
+      longitude: partnerInput.pob_lng,
+      tzIana: partnerInput.tz_iana,
+    });
 
   // 4) Synastry compute
   const synastryResult = computeSynastry(userChartData, partnerChart);
@@ -154,7 +161,19 @@ export async function handleSynastryManual(req: FastifyRequest, reply: FastifyRe
     result: { ...synastryResult, interpretation, prompt_id: promptId },
   } as any);
 
-  return reply.send({ data: report });
+    return reply.send({ data: report });
+  } catch (err) {
+    if (charged) {
+      await refundCredits({
+        userId,
+        amount: 250,
+        referenceType: 'synastry_manual',
+        referenceId: chargeReferenceId,
+        description: 'Sinastri analizi hata nedeniyle iade edildi.',
+      });
+    }
+    throw err;
+  }
 }
 
 /**

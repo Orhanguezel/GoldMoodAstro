@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
   KEY wallet_tx_booking_id_idx (booking_id),
   KEY wallet_tx_created_idx (created_at),
   KEY wallet_tx_payment_status_idx (payment_status),
+  UNIQUE KEY wtx_booking_purpose_uq (booking_id, purpose),
   CONSTRAINT fk_wallet_tx_wallet FOREIGN KEY (wallet_id) REFERENCES wallets(id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT fk_wallet_tx_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT fk_wallet_tx_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL ON UPDATE CASCADE,

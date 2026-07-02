@@ -4,6 +4,15 @@ import { eq, and, desc, sql as drizzleSql } from 'drizzle-orm';
 import { creditPackages, userCredits, creditTransactions } from './schema';
 import { v4 as uuidv4 } from 'uuid';
 
+function affectedRows(result: unknown): number {
+  return Number((result as any)?.[0]?.affectedRows ?? (result as any)?.affectedRows ?? 0);
+}
+
+function isDuplicate(err: unknown): boolean {
+  const anyErr = err as any;
+  return anyErr?.code === 'ER_DUP_ENTRY' || String(anyErr?.message || '').includes('Duplicate');
+}
+
 function normalizeLocale(locale?: string | null): string {
   const normalized = String(locale || 'tr').trim().toLowerCase().split('-')[0];
   return normalized || 'tr';
@@ -72,38 +81,42 @@ export async function getUserBalance(userId: string) {
 
 export async function addCredits(userId: string, amount: number, type: any, reference: { type?: string, id?: string, orderId?: string, description?: string }) {
   return db.transaction(async (tx) => {
-    // 1) Get current balance
-    const rows = await tx.select().from(userCredits).where(eq(userCredits.userId, userId));
-    let currentBalance = 0;
-    let balanceId = uuidv4();
-
-    if (rows.length > 0) {
-      currentBalance = rows[0].balance;
-      balanceId = rows[0].id;
-    }
-
-    const newBalance = currentBalance + amount;
-
-    // 2) Update balance
-    if (rows.length > 0) {
-      await tx.update(userCredits).set({ balance: newBalance }).where(eq(userCredits.id, balanceId));
-    } else {
-      await tx.insert(userCredits).values({ id: balanceId, userId, balance: newBalance });
-    }
-
-    // 3) Log transaction
     const txId = uuidv4();
-    await tx.insert(creditTransactions).values({
-      id: txId,
-      userId,
-      type,
-      amount,
-      balanceAfter: newBalance,
-      referenceType: reference.type,
-      referenceId: reference.id,
-      orderId: reference.orderId,
-      description: reference.description
-    });
+    try {
+      await tx.insert(creditTransactions).values({
+        id: txId,
+        userId,
+        type,
+        amount,
+        balanceAfter: 0,
+        referenceType: reference.type,
+        referenceId: reference.id,
+        orderId: reference.orderId,
+        description: reference.description
+      });
+    } catch (err) {
+      if (!isDuplicate(err)) throw err;
+      const current = await tx.select().from(userCredits).where(eq(userCredits.userId, userId)).limit(1);
+      return { balance: current[0]?.balance ?? 0, idempotent: true };
+    }
+
+    await tx.execute(drizzleSql`
+      INSERT INTO user_credits (id, user_id, balance, currency, created_at, updated_at)
+      VALUES (${uuidv4()}, ${userId}, 0, 'TRY-CREDIT', NOW(3), NOW(3))
+      ON DUPLICATE KEY UPDATE updated_at = updated_at
+    `);
+
+    const result = await tx.execute(drizzleSql`
+      UPDATE user_credits
+      SET balance = balance + ${amount}, updated_at = NOW(3)
+      WHERE user_id = ${userId}
+    `);
+    if (affectedRows(result) < 1) throw new Error('credit_balance_update_failed');
+
+    const current = await tx.select().from(userCredits).where(eq(userCredits.userId, userId)).limit(1);
+    const newBalance = current[0]?.balance ?? 0;
+
+    await tx.update(creditTransactions).set({ balanceAfter: newBalance }).where(eq(creditTransactions.id, txId));
 
     return { balance: newBalance };
   });

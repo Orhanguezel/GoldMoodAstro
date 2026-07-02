@@ -4,9 +4,10 @@
 // (synastry, premium readings, video call top-up, vb.)
 // =============================================================
 import { randomUUID } from 'crypto';
-import { and, eq, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { userCredits, creditTransactions } from './schema';
+import { hasPremiumSubscription } from '../subscriptions/summary';
 
 export type ConsumeResult =
   | { status: 'consumed'; amount: number; balance_after: number }
@@ -22,20 +23,25 @@ export type ConsumeArgs = {
   description?: string;
 };
 
-/**
- * Aktif (status='active') ve süresi geçmemiş subscription var mı?
- * Bu helper'ı `consumeCredits`'in içinden çağırmıyoruz — caller karar versin
- * (bazı feature'lar subscription'a rağmen kredi tükettirebilir).
- */
+export type RefundArgs = {
+  userId: string;
+  amount: number;
+  referenceType: string;
+  referenceId: string;
+  description?: string;
+};
+
 export async function hasActiveSubscription(userId: string): Promise<boolean> {
-  const [rows] = await (db as any).session.client.query(
-    `SELECT 1 FROM subscriptions
-     WHERE user_id = ? AND status = 'active'
-       AND (ends_at IS NULL OR ends_at > NOW())
-     LIMIT 1`,
-    [userId],
-  );
-  return Array.isArray(rows) && rows.length > 0;
+  return hasPremiumSubscription(userId);
+}
+
+function affectedRows(result: unknown): number {
+  return Number((result as any)?.[0]?.affectedRows ?? (result as any)?.affectedRows ?? 0);
+}
+
+function isDuplicate(err: unknown): boolean {
+  const anyErr = err as any;
+  return anyErr?.code === 'ER_DUP_ENTRY' || String(anyErr?.message || '').includes('Duplicate');
 }
 
 /**
@@ -50,75 +56,102 @@ export async function consumeCredits(args: ConsumeArgs): Promise<ConsumeResult> 
   }
 
   return await db.transaction(async (tx) => {
-    // 1) Idempotency: aynı referans önceden consume edilmiş mi?
-    const [existing] = await tx
-      .select({ id: creditTransactions.id })
-      .from(creditTransactions)
-      .where(
-        and(
-          eq(creditTransactions.referenceType, args.referenceType),
-          eq(creditTransactions.referenceId, args.referenceId),
-          eq(creditTransactions.type, 'consumption'),
-        ),
-      )
-      .limit(1);
-    if (existing) {
-      return { status: 'already_consumed' as const, reference_id: args.referenceId };
-    }
+    await tx.execute(sql`
+      INSERT INTO user_credits (id, user_id, balance, currency, created_at, updated_at)
+      VALUES (${randomUUID()}, ${args.userId}, 0, 'TRY-CREDIT', NOW(3), NOW(3))
+      ON DUPLICATE KEY UPDATE updated_at = updated_at
+    `);
 
-    // 2) Wallet (yoksa oluştur, balance=0)
-    let [wallet] = await tx
-      .select()
-      .from(userCredits)
-      .where(eq(userCredits.userId, args.userId))
-      .limit(1);
+    const updateResult = await tx.execute(sql`
+      UPDATE user_credits
+      SET balance = balance - ${args.amount}, updated_at = NOW(3)
+      WHERE user_id = ${args.userId} AND balance >= ${args.amount}
+    `);
 
-    if (!wallet) {
-      const walletId = randomUUID();
-      await tx.insert(userCredits).values({
-        id: walletId,
-        userId: args.userId,
-        balance: 0,
-      } as any);
-      [wallet] = await tx
-        .select()
-        .from(userCredits)
-        .where(eq(userCredits.id, walletId))
-        .limit(1);
-    }
-
-    const currentBalance = Number(wallet?.balance ?? 0);
-    if (currentBalance < args.amount) {
+    if (affectedRows(updateResult) < 1) {
+      const [wallet] = await tx.select().from(userCredits).where(eq(userCredits.userId, args.userId)).limit(1);
       return {
         status: 'insufficient' as const,
         required: args.amount,
-        available: currentBalance,
+        available: Number(wallet?.balance ?? 0),
       };
     }
 
-    // 3) Düş + tx kaydı
-    const balanceAfter = currentBalance - args.amount;
-    await tx
-      .update(userCredits)
-      .set({ balance: balanceAfter, updatedAt: new Date() })
-      .where(eq(userCredits.id, wallet!.id));
+    const [wallet] = await tx.select().from(userCredits).where(eq(userCredits.userId, args.userId)).limit(1);
+    const balanceAfter = Number(wallet?.balance ?? 0);
 
-    await tx.insert(creditTransactions).values({
-      id: randomUUID(),
-      userId: args.userId,
-      type: 'consumption',
-      amount: -args.amount,
-      balanceAfter,
-      referenceType: args.referenceType,
-      referenceId: args.referenceId,
-      orderId: null,
-      description: args.description ?? null,
-    } as any);
+    try {
+      await tx.insert(creditTransactions).values({
+        id: randomUUID(),
+        userId: args.userId,
+        type: 'consumption',
+        amount: -args.amount,
+        balanceAfter,
+        referenceType: args.referenceType,
+        referenceId: args.referenceId,
+        orderId: null,
+        description: args.description ?? null,
+      } as any);
+    } catch (err) {
+      if (!isDuplicate(err)) throw err;
+      await tx.execute(sql`
+        UPDATE user_credits
+        SET balance = balance + ${args.amount}, updated_at = NOW(3)
+        WHERE user_id = ${args.userId}
+      `);
+      return { status: 'already_consumed' as const, reference_id: args.referenceId };
+    }
 
     return {
       status: 'consumed' as const,
       amount: args.amount,
       balance_after: balanceAfter,
     };
+  });
+}
+
+export async function refundCredits(args: RefundArgs) {
+  if (args.amount <= 0) return { status: 'free' as const };
+
+  return await db.transaction(async (tx) => {
+    try {
+      await tx.insert(creditTransactions).values({
+        id: randomUUID(),
+        userId: args.userId,
+        type: 'refund',
+        amount: args.amount,
+        balanceAfter: 0,
+        referenceType: args.referenceType,
+        referenceId: args.referenceId,
+        orderId: null,
+        description: args.description ?? null,
+      } as any);
+    } catch (err) {
+      if (!isDuplicate(err)) throw err;
+      const [wallet] = await tx.select().from(userCredits).where(eq(userCredits.userId, args.userId)).limit(1);
+      return { status: 'already_refunded' as const, balance: Number(wallet?.balance ?? 0) };
+    }
+
+    await tx.execute(sql`
+      INSERT INTO user_credits (id, user_id, balance, currency, created_at, updated_at)
+      VALUES (${randomUUID()}, ${args.userId}, 0, 'TRY-CREDIT', NOW(3), NOW(3))
+      ON DUPLICATE KEY UPDATE updated_at = updated_at
+    `);
+
+    const updateResult = await tx.execute(sql`
+      UPDATE user_credits
+      SET balance = balance + ${args.amount}, updated_at = NOW(3)
+      WHERE user_id = ${args.userId}
+    `);
+    if (affectedRows(updateResult) < 1) throw new Error('credit_refund_failed');
+
+    const [wallet] = await tx.select().from(userCredits).where(eq(userCredits.userId, args.userId)).limit(1);
+    const balanceAfter = Number(wallet?.balance ?? 0);
+    await tx
+      .update(creditTransactions)
+      .set({ balanceAfter })
+      .where(eq(creditTransactions.referenceId, args.referenceId));
+
+    return { status: 'refunded' as const, balance: balanceAfter };
   });
 }

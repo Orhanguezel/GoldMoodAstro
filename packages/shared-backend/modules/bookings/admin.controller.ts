@@ -197,8 +197,8 @@ async function createPendingSessionEarning(bookingId: string, completedAt?: Date
       net: Number(net.toFixed(2)),
     });
 
-    await tx.execute(sql`
-      INSERT INTO wallet_transactions (
+    const insertResult = await tx.execute(sql`
+      INSERT IGNORE INTO wallet_transactions (
         id, wallet_id, user_id, booking_id, type, amount, currency, purpose,
         description, payment_method, payment_status, transaction_ref, is_admin_created
       )
@@ -208,6 +208,8 @@ async function createPendingSessionEarning(bookingId: string, completedAt?: Date
         ${description}, 'admin_manual', 'pending', ${`booking:${booking.id}`}, 0
       )
     `);
+    const inserted = Number((insertResult as any)?.[0]?.affectedRows ?? (insertResult as any)?.affectedRows ?? 0);
+    if (inserted < 1) return;
 
     await tx.execute(sql`
       UPDATE wallets

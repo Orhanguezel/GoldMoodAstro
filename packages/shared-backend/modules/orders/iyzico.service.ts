@@ -129,3 +129,75 @@ export class IyzicoService {
     });
   }
 }
+
+function toMinor(value: unknown): number {
+  const n = Number(String(value ?? '0').replace(',', '.'));
+  if (!Number.isFinite(n)) return NaN;
+  return Math.round(n * 100);
+}
+
+function clean(value: unknown): string {
+  return String(value ?? '').trim();
+}
+
+export function isPaymentMockEnabled(): boolean {
+  if (process.env.NODE_ENV === 'production') return false;
+  return String(process.env.PAYMENT_MOCK_MODE || '').toLowerCase() === 'true';
+}
+
+export function assertPaymentMockSafe() {
+  if (process.env.NODE_ENV === 'production' && String(process.env.PAYMENT_MOCK_MODE || '').toLowerCase() === 'true') {
+    throw new Error('PAYMENT_MOCK_MODE cannot be enabled in production');
+  }
+}
+
+export type IyzicoCallbackVerification = {
+  raw: Record<string, unknown>;
+  paymentId: string;
+  paidPriceMinor: number;
+  currency: string;
+};
+
+export async function verifyIyzicoCallback(params: {
+  iyzico: IyzicoService;
+  token: string;
+  expectedAmountMinor: number;
+  expectedCurrency: string;
+  expectedBasketId?: string;
+  expectedConversationId?: string;
+}): Promise<IyzicoCallbackVerification> {
+  const token = clean(params.token);
+  if (!token) throw new Error('iyzico_token_required');
+
+  const result = await params.iyzico.retrieveCheckoutResult(token);
+  const status = clean(result.status).toLowerCase();
+  const paymentStatus = clean(result.paymentStatus).toUpperCase();
+  if (status !== 'success' || paymentStatus !== 'SUCCESS') {
+    throw new Error('iyzico_payment_not_successful');
+  }
+
+  const paidPriceMinor = toMinor(result.paidPrice);
+  if (!Number.isFinite(paidPriceMinor) || paidPriceMinor !== params.expectedAmountMinor) {
+    throw new Error('iyzico_amount_mismatch');
+  }
+
+  const currency = clean(result.currency).toUpperCase();
+  if (currency !== clean(params.expectedCurrency).toUpperCase()) {
+    throw new Error('iyzico_currency_mismatch');
+  }
+
+  if (params.expectedBasketId && clean(result.basketId) !== params.expectedBasketId) {
+    throw new Error('iyzico_basket_mismatch');
+  }
+
+  if (params.expectedConversationId && clean(result.conversationId) !== params.expectedConversationId) {
+    throw new Error('iyzico_conversation_mismatch');
+  }
+
+  return {
+    raw: result,
+    paymentId: clean(result.paymentId) || token,
+    paidPriceMinor,
+    currency,
+  };
+}

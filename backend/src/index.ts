@@ -11,8 +11,12 @@ import { registerRequestNowTimeoutCron } from '@/cron/request-now-timeout';
 import { registerConsultantAnalyticsCron } from '@/cron/consultant-analytics';
 import { registerConsultantEarningsCron } from '@/cron/consultant-earnings';
 import { registerConsultantWithdrawalCron } from '@/cron/consultant-withdrawals';
+import { registerSubscriptionExpireCron } from '@/cron/subscription-expire';
+import { registerOrderCleanupCron } from '@/cron/order-cleanup';
+import { registerPaymentReconciliationCron } from '@/cron/payment-reconciliation';
 import { registerSeoQualityRecalcCron } from '@/jobs/seo-quality-recalc.job';
 import { registerPushSender } from '@goldmood/shared-backend/modules/notifications';
+import { assertPaymentMockSafe } from '@goldmood/shared-backend/modules/orders/iyzico.service';
 import { sendPushNotification } from '@/modules/firebase/service';
 
 // shared-backend modülleri firebase-admin'i import edemediği için
@@ -22,6 +26,10 @@ registerPushSender(async (params) => {
 });
 
 async function main() {
+  assertPaymentMockSafe();
+  if (process.env.NODE_ENV === 'production' && process.env.DISABLE_AUTH === '1') {
+    throw new Error('DISABLE_AUTH cannot be enabled in production');
+  }
   const app: any = await createApp();
 
   // Bind to 0.0.0.0 to allow network access (phone etc.)
@@ -40,6 +48,9 @@ async function main() {
     registerConsultantAnalyticsCron();
     registerConsultantEarningsCron();
     registerConsultantWithdrawalCron();
+    registerSubscriptionExpireCron();
+    registerOrderCleanupCron();
+    registerPaymentReconciliationCron();
     registerSeoQualityRecalcCron();
   }
 

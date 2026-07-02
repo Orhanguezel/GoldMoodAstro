@@ -13,6 +13,7 @@ import {
   datetime,
   mysqlEnum,
   index,
+  uniqueIndex,
   foreignKey,
 } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
@@ -67,6 +68,7 @@ export const subscriptions = mysqlTable(
     index("subscriptions_user_idx").on(t.user_id, t.status),
     index("subscriptions_status_idx").on(t.status, t.ends_at),
     index("subscriptions_provider_idx").on(t.provider, t.provider_subscription_id),
+    uniqueIndex("sub_provider_uq").on(t.provider, t.provider_subscription_id),
     foreignKey({ columns: [t.user_id], foreignColumns: [users.id], name: "fk_subscriptions_user" }).onDelete("cascade").onUpdate("cascade"),
     foreignKey({ columns: [t.plan_id], foreignColumns: [subscriptionPlans.id], name: "fk_subscriptions_plan" }).onDelete("restrict").onUpdate("cascade"),
   ]

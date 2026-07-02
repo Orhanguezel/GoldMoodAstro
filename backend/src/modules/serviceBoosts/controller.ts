@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { z } from 'zod';
 import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
-import { IyzicoService, resolveIyzicoLocale } from '@goldmood/shared-backend/modules/orders/iyzico.service';
+import { IyzicoService, isPaymentMockEnabled, resolveIyzicoLocale, verifyIyzicoCallback } from '@goldmood/shared-backend/modules/orders/iyzico.service';
 
 type BoostPackage = { id: string; days: number; price: number; currency?: string };
 
@@ -133,7 +133,7 @@ export const createCheckout: RouteHandler = async (req, reply) => {
     )
   `);
 
-  if (process.env.PAYMENT_MOCK_MODE === 'true') {
+  if (isPaymentMockEnabled()) {
     const paymentId = `mock_boost_${Date.now()}`;
     await db.execute(sql`
       UPDATE service_boosts
@@ -299,46 +299,61 @@ export const iyzicoCallback: RouteHandler = async (req, reply) => {
   const body = (req.body ?? {}) as { boost_id?: string; status?: string; paymentId?: string; payment_id?: string; token?: string };
   const query = (req.query ?? {}) as { boost_id?: string; status?: string; paymentId?: string; payment_id?: string; token?: string; locale?: string };
   const boostId = String(body.boost_id ?? query.boost_id ?? '').trim();
-  const status = String(body.status ?? query.status ?? '').trim().toLowerCase();
   const token = String(body.token ?? query.token ?? '').trim();
-  let paymentId = String(body.paymentId ?? body.payment_id ?? query.paymentId ?? query.payment_id ?? '').trim() || null;
   if (!boostId) return reply.code(400).send({ error: { message: 'boost_id_required' } });
+  if (!token) return reply.code(400).send({ error: { message: 'iyzico_token_required' } });
   const locale = String(query.locale || 'tr').trim() || 'tr';
 
-  let paymentStatus = status;
-  if (token) {
-    const gatewayResult = await db.execute(sql`
-      SELECT id, config FROM payment_gateways
-      WHERE slug = 'iyzico' AND is_active = 1
-      LIMIT 1
-    `);
-    const gateway = rowsFromExecute<{ id: string; config: string | null }>(gatewayResult)[0];
-    if (gateway) {
-      const iyzico = new IyzicoService(resolveIyzicoConfig(gateway));
-      const result = await iyzico.retrieveCheckoutResult(token);
-      paymentStatus = String(result.paymentStatus ?? result.status ?? paymentStatus).toLowerCase();
-      paymentId = String(result.paymentId ?? result.conversationId ?? paymentId ?? '').trim() || null;
-    }
-  }
+  const boostResult = await db.execute(sql`
+    SELECT id, price, currency, status
+    FROM service_boosts
+    WHERE id = ${boostId}
+    LIMIT 1
+  `);
+  const boost = rowsFromExecute<{ id: string; price: string | number; currency: string; status: string }>(boostResult)[0];
+  if (!boost) return reply.code(404).send({ error: { message: 'boost_not_found' } });
 
-  if (paymentStatus && paymentStatus !== 'success') {
+  const gatewayResult = await db.execute(sql`
+    SELECT id, config FROM payment_gateways
+    WHERE slug = 'iyzico' AND is_active = 1
+    LIMIT 1
+  `);
+  const gateway = rowsFromExecute<{ id: string; config: string | null }>(gatewayResult)[0];
+  if (!gateway) return reply.code(400).send({ error: { message: 'iyzico_gateway_not_configured' } });
+
+  try {
+    const iyzico = new IyzicoService(resolveIyzicoConfig(gateway));
+    const verified = await verifyIyzicoCallback({
+      iyzico,
+      token,
+      expectedAmountMinor: Math.round(Number(boost.price) * 100),
+      expectedCurrency: boost.currency || 'TRY',
+      expectedBasketId: `BOOST-${boostId}`,
+      expectedConversationId: `boost_${boostId}`,
+    });
+
+    const updateResult = await db.execute(sql`
+      UPDATE service_boosts
+      SET status = 'active',
+          starts_at = NOW(3),
+          ends_at = DATE_ADD(NOW(3), INTERVAL duration_days DAY),
+          iyzipay_payment_id = ${verified.paymentId},
+          updated_at = NOW(3)
+      WHERE id = ${boostId} AND status = 'pending_payment'
+    `);
+    const affected = Number((updateResult as any)?.[0]?.affectedRows ?? (updateResult as any)?.affectedRows ?? 0);
+    if (affected < 1 && boost.status !== 'active') {
+      return reply.code(409).send({ error: { message: 'boost_not_pending' } });
+    }
+  } catch {
     await db.execute(sql`
       UPDATE service_boosts
-      SET status = 'cancelled', iyzipay_payment_id = ${paymentId}, updated_at = NOW(3)
+      SET status = 'cancelled', updated_at = NOW(3)
       WHERE id = ${boostId} AND status = 'pending_payment'
     `);
     return reply.redirect(`${resolveSiteUrl()}/${locale}/me/consultant?boost_id=${encodeURIComponent(boostId)}&checkout=failed`);
   }
 
-  await db.execute(sql`
-    UPDATE service_boosts
-    SET status = 'active',
-        starts_at = NOW(3),
-        ends_at = DATE_ADD(NOW(3), INTERVAL duration_days DAY),
-        iyzipay_payment_id = ${paymentId},
-        updated_at = NOW(3)
-    WHERE id = ${boostId} AND status = 'pending_payment'
-  `);
   const siteUrl = resolveSiteUrl();
   return reply.redirect(`${siteUrl}/${locale}/me/consultant?boost_id=${encodeURIComponent(boostId)}&checkout=success`);
 };

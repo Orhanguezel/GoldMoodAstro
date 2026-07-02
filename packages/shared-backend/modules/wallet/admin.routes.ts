@@ -19,6 +19,10 @@ function appendDesc(prev: string | null, note: string) {
   return prev && prev.trim() ? `${prev}\n${note}` : note;
 }
 
+function affectedRows(result: unknown): number {
+  return Number((result as any)?.[0]?.affectedRows ?? (result as any)?.affectedRows ?? 0);
+}
+
 /** Admin: list all wallets (with user email) */
 const listWalletsAdmin: RouteHandler = async (req, reply) => {
   const { page = "1", limit = "20" } = req.query as Record<string, string>;
@@ -95,38 +99,53 @@ const adjustWalletAdmin: RouteHandler = async (req, reply) => {
 
   const { user_id, type, amount, purpose, description, payment_status } = parsed.data;
 
-  // Get or create wallet
-  let [wallet] = await db.select().from(wallets).where(eq(wallets.user_id, user_id)).limit(1);
-  if (!wallet) {
-    const wid = randomUUID();
-    await db.insert(wallets).values({ id: wid, user_id });
-    [wallet] = await db.select().from(wallets).where(eq(wallets.id, wid)).limit(1);
-  }
-
   const txId = randomUUID();
-  await db.insert(walletTransactions).values({
-    id: txId,
-    wallet_id: wallet.id,
-    user_id,
-    type,
-    amount: amount.toString(),
-    purpose,
-    description: description ?? null,
-    payment_status,
-    is_admin_created: 1,
-  });
 
-  // Update wallet balance
-  if (payment_status === "completed") {
-    const current = parseFloat(wallet.balance);
-    const newBalance = type === "credit" ? current + amount : Math.max(0, current - amount);
-    const updates: Partial<typeof wallet> = { balance: newBalance.toFixed(2) };
-    if (type === "credit") {
-      updates.total_earnings = (parseFloat(wallet.total_earnings) + amount).toFixed(2) as any;
-    } else {
-      updates.total_withdrawn = (parseFloat(wallet.total_withdrawn) + amount).toFixed(2) as any;
+  try {
+    await db.transaction(async (trx) => {
+      let [wallet] = await trx.select().from(wallets).where(eq(wallets.user_id, user_id)).limit(1);
+      if (!wallet) {
+        const wid = randomUUID();
+        await trx.insert(wallets).values({ id: wid, user_id });
+        [wallet] = await trx.select().from(wallets).where(eq(wallets.id, wid)).limit(1);
+      }
+
+      await trx.insert(walletTransactions).values({
+        id: txId,
+        wallet_id: wallet.id,
+        user_id,
+        type,
+        amount: amount.toString(),
+        purpose,
+        description: description ?? null,
+        payment_status,
+        is_admin_created: 1,
+      });
+
+      if (payment_status !== "completed") return;
+
+      const updateResult = type === "credit"
+        ? await trx.execute(sql`
+            UPDATE wallets
+            SET balance = balance + ${amount},
+                total_earnings = total_earnings + ${amount},
+                updated_at = CURRENT_TIMESTAMP(3)
+            WHERE id = ${wallet.id}
+          `)
+        : await trx.execute(sql`
+            UPDATE wallets
+            SET balance = balance - ${amount},
+                total_withdrawn = total_withdrawn + ${amount},
+                updated_at = CURRENT_TIMESTAMP(3)
+            WHERE id = ${wallet.id} AND balance >= ${amount}
+          `);
+      if (affectedRows(updateResult) < 1) throw new Error("insufficient_wallet_balance");
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "insufficient_wallet_balance") {
+      return reply.code(400).send({ error: "insufficient_wallet_balance" });
     }
-    await db.update(wallets).set(updates).where(eq(wallets.id, wallet.id));
+    throw error;
   }
 
   return reply.send({ success: true, transaction_id: txId });
@@ -167,23 +186,42 @@ const updateTransactionStatusAdmin: RouteHandler<{ Params: { id: string } }> = a
   const prevStatus = tx.payment_status;
   const newStatus = parsed.data.payment_status;
 
-  await db.update(walletTransactions).set({ payment_status: newStatus }).where(eq(walletTransactions.id, req.params.id));
+  try {
+    await db.transaction(async (trx) => {
+      const statusUpdate = await trx
+        .update(walletTransactions)
+        .set({ payment_status: newStatus })
+        .where(and(eq(walletTransactions.id, req.params.id), eq(walletTransactions.payment_status, prevStatus)));
+      if (affectedRows(statusUpdate) < 1) throw new Error("transaction_status_race");
 
-  // Apply balance change if transitioning to completed
-  if (prevStatus !== "completed" && newStatus === "completed") {
-    const [wallet] = await db.select().from(wallets).where(eq(wallets.id, tx.wallet_id)).limit(1);
-    if (wallet) {
+      if (prevStatus === "completed" || newStatus !== "completed") return;
+
       const amount = parseFloat(tx.amount);
-      const current = parseFloat(wallet.balance);
-      const newBalance = tx.type === "credit" ? current + amount : Math.max(0, current - amount);
-      const updates: Partial<typeof wallet> = { balance: newBalance.toFixed(2) };
-      if (tx.type === "credit") {
-        updates.total_earnings = (parseFloat(wallet.total_earnings) + amount).toFixed(2) as any;
-      } else {
-        updates.total_withdrawn = (parseFloat(wallet.total_withdrawn) + amount).toFixed(2) as any;
-      }
-      await db.update(wallets).set(updates).where(eq(wallets.id, wallet.id));
+      const updateResult = tx.type === "credit"
+        ? await trx.execute(sql`
+            UPDATE wallets
+            SET balance = balance + ${amount},
+                total_earnings = total_earnings + ${amount},
+                updated_at = CURRENT_TIMESTAMP(3)
+            WHERE id = ${tx.wallet_id}
+          `)
+        : await trx.execute(sql`
+            UPDATE wallets
+            SET balance = balance - ${amount},
+                total_withdrawn = total_withdrawn + ${amount},
+                updated_at = CURRENT_TIMESTAMP(3)
+            WHERE id = ${tx.wallet_id} AND balance >= ${amount}
+          `);
+      if (affectedRows(updateResult) < 1) throw new Error("insufficient_wallet_balance");
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "transaction_status_race") {
+      return reply.code(409).send({ error: "transaction_status_changed" });
     }
+    if (error instanceof Error && error.message === "insufficient_wallet_balance") {
+      return reply.code(400).send({ error: "insufficient_wallet_balance" });
+    }
+    throw error;
   }
 
   return reply.send({ success: true });
@@ -251,21 +289,20 @@ const approveWalletDepositAdmin: RouteHandler<{ Params: { id: string } }> = asyn
   if (!Number.isFinite(amount) || amount <= 0) return reply.code(400).send({ error: "invalid_amount" });
 
   await db.transaction(async (trx) => {
-    // Re-read in-tx; yalnız hâlâ pending ise işle (çift kredi koruması)
-    const [cur] = await trx.select().from(walletTransactions).where(eq(walletTransactions.id, tx.id)).limit(1);
-    if (!cur || cur.payment_status !== "pending") return;
-    await trx
+    const updateResult = await trx
       .update(walletTransactions)
       .set({
         payment_status: "completed",
-        description: appendDesc(cur.description, `[approved by ${adminId} @ ${new Date().toISOString()}]`),
+        description: appendDesc(tx.description, `[approved by ${adminId} @ ${new Date().toISOString()}]`),
       })
-      .where(eq(walletTransactions.id, tx.id));
-    const [wallet] = await trx.select().from(wallets).where(eq(wallets.id, tx.wallet_id)).limit(1);
-    if (wallet) {
-      const newBalance = (parseFloat(wallet.balance) + amount).toFixed(2);
-      await trx.update(wallets).set({ balance: newBalance }).where(eq(wallets.id, wallet.id));
-    }
+      .where(and(eq(walletTransactions.id, tx.id), eq(walletTransactions.payment_status, "pending")));
+    if (affectedRows(updateResult) < 1) return;
+    await trx.execute(sql`
+      UPDATE wallets
+      SET balance = balance + ${amount},
+          updated_at = CURRENT_TIMESTAMP(3)
+      WHERE id = ${tx.wallet_id}
+    `);
   });
 
   return reply.send({ success: true });

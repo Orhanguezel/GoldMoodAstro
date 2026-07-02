@@ -17,6 +17,7 @@ export type SubscriptionSummaryRow = {
   trial_ends_at: Date | string | null;
   period: 'monthly' | 'yearly' | 'lifetime' | null;
   plan_code: string | null;
+  price_minor?: number | null;
 };
 
 export function toSubscriptionSummaryIso(value: Date | string | null): string | null {
@@ -52,6 +53,7 @@ export async function getSubscriptionSummary(userId: string): Promise<Subscripti
      WHERE s.user_id = ?
        AND s.status IN ('active','grace_period','cancelled')
        AND (s.ends_at IS NULL OR s.ends_at > NOW())
+       AND COALESCE(p.price_minor, s.price_minor, 0) > 0
      ORDER BY (s.ends_at IS NULL) DESC, s.ends_at DESC
      LIMIT 1`,
     [userId],

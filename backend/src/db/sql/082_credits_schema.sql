@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS credit_transactions (
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   KEY credit_tx_user_idx (user_id, created_at),
   KEY credit_tx_ref_idx (reference_type, reference_id),
+  UNIQUE KEY credit_tx_ref_uq (reference_type, reference_id, type),
   CONSTRAINT fk_credit_tx_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

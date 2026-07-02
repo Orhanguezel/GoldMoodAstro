@@ -1,5 +1,5 @@
 import {
-  mysqlTable, char, varchar, decimal, text, datetime, index, foreignKey, tinyint,
+  mysqlTable, char, varchar, decimal, text, datetime, index, uniqueIndex, foreignKey, tinyint,
 } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
 import { users } from "@goldmood/shared-backend/modules/auth/schema";
@@ -100,6 +100,7 @@ export const payments = mysqlTable(
   },
   (t) => [
     index("payments_order_id_idx").on(t.order_id),
+    uniqueIndex("payments_txid_uq").on(t.transaction_id),
     foreignKey({
       columns: [t.order_id],
       foreignColumns: [orders.id],

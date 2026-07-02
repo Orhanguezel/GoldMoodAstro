@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   KEY subscriptions_user_idx (user_id, status),
   KEY subscriptions_status_idx (status, ends_at),
   KEY subscriptions_provider_idx (provider, provider_subscription_id),
+  UNIQUE KEY sub_provider_uq (provider, provider_subscription_id),
   CONSTRAINT fk_subscriptions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT fk_subscriptions_plan FOREIGN KEY (plan_id) REFERENCES subscription_plans(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

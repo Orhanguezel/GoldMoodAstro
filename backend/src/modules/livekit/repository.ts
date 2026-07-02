@@ -6,7 +6,8 @@ import { db } from '@/db/client';
 import { users } from '@goldmood/shared-backend/modules/auth/schema';
 import { bookings } from '@goldmood/shared-backend/modules/bookings/schema';
 import { consultantServices } from '@goldmood/shared-backend/modules/consultantServices/schema';
-import { userCredits, creditTransactions } from '@goldmood/shared-backend/modules/credits/schema';
+import { consumeCredits } from '@goldmood/shared-backend/modules/credits/consume';
+import { isPaymentMockEnabled } from '@goldmood/shared-backend/modules/orders/iyzico.service';
 import { createUserNotification } from '@goldmood/shared-backend/modules/notifications/service';
 import { consultants } from '@/modules/consultants/schema';
 import { sendPushNotification } from '@/modules/firebase/service';
@@ -89,74 +90,36 @@ async function settleBookingCredits(args: {
     return { status: 'no_charge' as const, amount: 0, available_balance: 0 };
   }
 
-  return await db.transaction(async (tx) => {
-    const [alreadyConsumed] = await tx
-      .select({ id: creditTransactions.id })
-      .from(creditTransactions)
-      .where(
-        and(
-          eq(creditTransactions.referenceType, 'booking'),
-          eq(creditTransactions.referenceId, args.bookingId),
-          eq(creditTransactions.type, 'consumption'),
-        ),
-      )
-      .limit(1);
+  const result = await consumeCredits({
+    userId: context.user_id,
+    amount,
+    referenceType: 'booking',
+    referenceId: args.bookingId,
+    description: `Live görüşme ${durationSeconds} sn`,
+  });
 
-    if (alreadyConsumed) {
-      return { status: 'already_consumed' as const };
-    }
+  if (result.status === 'insufficient') {
+    return {
+      status: 'insufficient' as const,
+      amount,
+      available_balance: result.available,
+    };
+  }
 
-    let [wallet] = await tx
-      .select()
-      .from(userCredits)
-      .where(eq(userCredits.userId, context.user_id))
-      .limit(1);
+  if (result.status === 'already_consumed') {
+    return { status: 'already_consumed' as const };
+  }
 
-    if (!wallet) {
-      const walletId = randomUUID();
-      await tx.insert(userCredits).values({
-        id: walletId,
-        userId: context.user_id,
-        balance: 0,
-      } as any);
-      [wallet] = await tx
-        .select()
-        .from(userCredits)
-        .where(eq(userCredits.id, walletId))
-        .limit(1);
-    }
-
-    const currentBalance = toSafeNumber(wallet?.balance);
-    if (currentBalance < amount) {
-      return {
-        status: 'insufficient' as const,
-        amount,
-        available_balance: currentBalance,
-      };
-    }
-
-    const balanceAfter = currentBalance - amount;
-    await tx.update(userCredits).set({ balance: balanceAfter, updatedAt: new Date() }).where(eq(userCredits.id, wallet.id));
-
-    await tx.insert(creditTransactions).values({
-      id: randomUUID(),
-      userId: context.user_id,
-      type: 'consumption',
-      amount: -amount,
-      balanceAfter,
-      referenceType: 'booking',
-      referenceId: args.bookingId,
-      orderId: null,
-      description: `Live görüşme ${durationSeconds} sn`,
-    } as any);
-
+  if (result.status === 'consumed') {
     return {
       status: 'consumed' as const,
       amount,
-      available_balance: currentBalance,
-      balance_after: balanceAfter,
+      available_balance: result.balance_after + amount,
+      balance_after: result.balance_after,
     };
-  });
+  }
+
+  return { status: 'no_charge' as const, amount: 0, available_balance: 0 };
 }
 
 function parseAppointment(date: string, time?: string | null) {
@@ -170,7 +133,7 @@ function assertBookingWindow(booking: {
   session_duration: number;
 }) {
   // DEV: Mock payment / test akışında zaman penceresi kontrolünü bypass et.
-  if (process.env.PAYMENT_MOCK_MODE === 'true' || process.env.LIVEKIT_SKIP_WINDOW_CHECK === 'true') {
+  if (isPaymentMockEnabled() || process.env.LIVEKIT_SKIP_WINDOW_CHECK === 'true') {
     return;
   }
 

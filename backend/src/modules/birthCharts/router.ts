@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { requireAuth } from '@goldmood/shared-backend/middleware/auth';
+import { requirePremium } from '@goldmood/shared-backend/middleware/premium';
 import {
   birthChartReadingHandler,
   birthChartSynastryHandler,
@@ -20,10 +21,10 @@ export async function registerBirthCharts(app: FastifyInstance) {
   app.post(`${BASE}/preview-big-three`, previewBigThreeHandler);
   app.get(BASE, { preHandler: [requireAuth] }, listBirthChartsHandler);
   app.post(BASE, { preHandler: [requireAuth] }, createBirthChartHandler);
-  app.post(`${BASE}/synastry`, { preHandler: [requireAuth] }, birthChartSynastryHandler);
+  app.post(`${BASE}/synastry`, { preHandler: [requireAuth, requirePremium] }, birthChartSynastryHandler);
   app.get(`${BASE}/:id`, { preHandler: [requireAuth] }, getBirthChartHandler);
   app.patch(`${BASE}/:id`, { preHandler: [requireAuth] }, updateBirthChartHandler);
   app.delete(`${BASE}/:id`, { preHandler: [requireAuth] }, deleteBirthChartHandler);
-  app.post(`${BASE}/:id/transit`, { preHandler: [requireAuth] }, birthChartTransitHandler);
-  app.post(`${BASE}/:id/reading`, { preHandler: [requireAuth] }, birthChartReadingHandler);
+  app.post(`${BASE}/:id/transit`, { preHandler: [requireAuth, requirePremium] }, birthChartTransitHandler);
+  app.post(`${BASE}/:id/reading`, { preHandler: [requireAuth, requirePremium] }, birthChartReadingHandler);
 }

@@ -51,4 +51,5 @@ export const creditTransactions = mysqlTable('credit_transactions', {
 }, (t) => [
   index('credit_tx_user_idx').on(t.userId, t.createdAt),
   index('credit_tx_ref_idx').on(t.referenceType, t.referenceId),
+  uniqueIndex('credit_tx_ref_uq').on(t.referenceType, t.referenceId, t.type),
 ]);
