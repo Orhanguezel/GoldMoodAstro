@@ -22,8 +22,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import RichContentEditor from '@/app/(main)/admin/_components/common/RichContentEditor';
+import { AdminImageUploadField } from '@/app/(main)/admin/_components/common/AdminImageUploadField';
 import {
   type CustomPageDto,
   safeStr,
@@ -47,6 +50,7 @@ type BlogForm = {
   content: string;
   featured_image: string;
   featured_image_alt: string;
+  images: string[];
   meta_title: string;
   meta_description: string;
   tags: string;
@@ -62,6 +66,7 @@ const EMPTY_FORM: BlogForm = {
   content: '',
   featured_image: '',
   featured_image_alt: '',
+  images: [],
   meta_title: '',
   meta_description: '',
   tags: '',
@@ -93,6 +98,7 @@ function toForm(post: CustomPageDto): BlogForm {
     content: safeStr(post.content_html),
     featured_image: safeStr(post.featured_image),
     featured_image_alt: safeStr(post.featured_image_alt),
+    images: Array.isArray(post.images) ? post.images.filter(Boolean) : [],
     meta_title: safeStr(post.meta_title),
     meta_description: safeStr(post.meta_description),
     tags: post.tags?.join(', ') || safeStr(post.tags_raw),
@@ -193,6 +199,7 @@ export default function AdminBlogClient() {
       featured_image: form.featured_image.trim() || null,
       image_url: form.featured_image.trim() || null,
       featured_image_alt: form.featured_image_alt.trim() || null,
+      images: form.images.filter(Boolean),
       meta_title: form.meta_title.trim() || null,
       meta_description: form.meta_description.trim() || null,
       tags: form.tags.trim() || null,
@@ -296,42 +303,106 @@ export default function AdminBlogClient() {
               </Button>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-2">
-              <Field label={b('form.fields.title', 'Başlık')}>
-                <Input value={form.title} onChange={(event) => patchForm({ title: event.target.value })} />
-              </Field>
-              <Field label="Slug">
-                <Input value={form.slug} onChange={(event) => patchForm({ slug: slugify(event.target.value) })} />
-              </Field>
-              <Field label={b('form.fields.summary', 'Özet')}>
-                <Textarea value={form.summary} onChange={(event) => patchForm({ summary: event.target.value })} className="min-h-24" />
-              </Field>
-              <div className="grid gap-4">
-                <Field label={b('form.fields.imageUrl', 'Kapak Görsel URL')}>
-                  <Input value={form.featured_image} onChange={(event) => patchForm({ featured_image: event.target.value })} />
-                </Field>
-                <Field label={b('form.fields.imageAlt', 'Görsel Alt Metni')}>
-                  <Input value={form.featured_image_alt} onChange={(event) => patchForm({ featured_image_alt: event.target.value })} />
-                </Field>
-              </div>
-              <Field label={b('form.fields.metaTitle', 'Meta Başlık')}>
-                <Input value={form.meta_title} onChange={(event) => patchForm({ meta_title: event.target.value })} />
-              </Field>
-              <Field label={b('form.fields.metaDescription', 'Meta Açıklama')}>
-                <Input value={form.meta_description} onChange={(event) => patchForm({ meta_description: event.target.value })} />
-              </Field>
-              <Field label={b('form.fields.tags', 'Etiketler')}>
-                <Input value={form.tags} onChange={(event) => patchForm({ tags: event.target.value })} placeholder={b('form.tagsPlaceholder', 'astroloji, tarot')} />
-              </Field>
-              <div className="grid grid-cols-2 gap-4">
-                <ToggleField label={b('form.fields.published', 'Yayında')} checked={form.is_published} onChange={(v) => patchForm({ is_published: v })} />
-                <ToggleField label={b('form.fields.featured', 'Öne çıkar')} checked={form.featured} onChange={(v) => patchForm({ featured: v })} />
-              </div>
-            </div>
+            <Tabs defaultValue="content" className="space-y-5">
+              <TabsList className="flex w-fit flex-wrap gap-2 rounded-full border border-gm-border-soft bg-gm-surface/20 p-1.5 h-auto">
+                <TabsTrigger value="content" className="rounded-full px-5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg">
+                  {b('form.tabs.content', 'İçerik')}
+                </TabsTrigger>
+                <TabsTrigger value="media" className="rounded-full px-5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg">
+                  {b('form.tabs.media', 'Görseller')}
+                </TabsTrigger>
+                <TabsTrigger value="seo" className="rounded-full px-5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg">
+                  {b('form.tabs.seo', 'SEO')}
+                </TabsTrigger>
+              </TabsList>
 
-            <Field label={b('form.fields.content', 'İçerik')}>
-              <Textarea value={form.content} onChange={(event) => patchForm({ content: event.target.value })} className="min-h-[320px] font-mono text-sm" />
-            </Field>
+              {/* — İçerik — */}
+              <TabsContent value="content" className="mt-0 space-y-4 outline-none">
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <Field label={b('form.fields.title', 'Başlık')}>
+                    <Input value={form.title} onChange={(event) => patchForm({ title: event.target.value })} />
+                  </Field>
+                  <Field label="Slug">
+                    <Input value={form.slug} onChange={(event) => patchForm({ slug: slugify(event.target.value) })} />
+                  </Field>
+                </div>
+                <Field label={b('form.fields.summary', 'Özet')}>
+                  <Textarea value={form.summary} onChange={(event) => patchForm({ summary: event.target.value })} className="min-h-24" />
+                </Field>
+                <Field label={b('form.fields.content', 'İçerik')}>
+                  <RichContentEditor value={form.content} onChange={(value) => patchForm({ content: value })} height="360px" />
+                </Field>
+                <div className="grid grid-cols-2 gap-4">
+                  <ToggleField label={b('form.fields.published', 'Yayında')} checked={form.is_published} onChange={(v) => patchForm({ is_published: v })} />
+                  <ToggleField label={b('form.fields.featured', 'Öne çıkar')} checked={form.featured} onChange={(v) => patchForm({ featured: v })} />
+                </div>
+              </TabsContent>
+
+              {/* — Görseller — */}
+              <TabsContent value="media" className="mt-0 space-y-5 outline-none">
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <Field label={b('form.fields.cover', 'Kapak Görseli')}>
+                    <AdminImageUploadField
+                      label=""
+                      value={form.featured_image}
+                      onChange={(url) => patchForm({ featured_image: url })}
+                      bucket="public"
+                      folder="blog"
+                      previewAspect="16x9"
+                    />
+                  </Field>
+                  <Field label={b('form.fields.imageAlt', 'Kapak Alt Metni')}>
+                    <Input value={form.featured_image_alt} onChange={(event) => patchForm({ featured_image_alt: event.target.value })} placeholder={b('form.altPlaceholder', 'Görseli tarif eden kısa metin (SEO)')} />
+                  </Field>
+                </div>
+                <Field label={b('form.fields.gallery', 'Galeri (çoklu görsel)')}>
+                  <AdminImageUploadField
+                    label=""
+                    multiple
+                    values={form.images}
+                    onChangeMultiple={(urls) => patchForm({ images: urls })}
+                    coverValue={form.featured_image}
+                    onSelectAsCover={(url) => patchForm({ featured_image: url })}
+                    bucket="public"
+                    folder="blog"
+                    previewAspect="1x1"
+                  />
+                </Field>
+              </TabsContent>
+
+              {/* — SEO — */}
+              <TabsContent value="seo" className="mt-0 space-y-4 outline-none">
+                {editing && form.id && (() => {
+                  const s = seoByEntity.get(`${form.id}:${form.locale}`);
+                  return (
+                    <div className="flex items-center justify-between rounded-2xl border border-gm-border-soft bg-gm-bg-deep/40 px-5 py-4">
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-widest text-gm-muted">{b('form.seoScore', 'SEO Kalite Skoru')}</div>
+                        <p className="mt-1 text-[11px] text-gm-muted">{b('form.seoScoreHint', 'Kaydettikçe otomatik hesaplanır. Detay için skora tıkla.')}</p>
+                      </div>
+                      {s ? (
+                        <Button asChild variant="ghost" size="sm" className="h-auto rounded-full px-0 hover:bg-transparent">
+                          <Link href={`/admin/seo-quality/custom_page/${form.id}?locale=${form.locale}`}>
+                            <Badge variant={qualityVariant(Number(s.overall_score))}>{s.overall_score}/100</Badge>
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Badge variant="outline" className="text-gm-muted">{b('form.seoScorePending', 'Bekliyor')}</Badge>
+                      )}
+                    </div>
+                  );
+                })()}
+                <Field label={b('form.fields.metaTitle', 'Meta Başlık')}>
+                  <Input value={form.meta_title} onChange={(event) => patchForm({ meta_title: event.target.value })} placeholder={b('form.metaTitlePlaceholder', '50-60 karakter ideal')} />
+                </Field>
+                <Field label={b('form.fields.metaDescription', 'Meta Açıklama')}>
+                  <Textarea value={form.meta_description} onChange={(event) => patchForm({ meta_description: event.target.value })} className="min-h-24" placeholder={b('form.metaDescPlaceholder', '120-160 karakter ideal')} />
+                </Field>
+                <Field label={b('form.fields.tags', 'Etiketler')}>
+                  <Input value={form.tags} onChange={(event) => patchForm({ tags: event.target.value })} placeholder={b('form.tagsPlaceholder', 'astroloji, tarot')} />
+                </Field>
+              </TabsContent>
+            </Tabs>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={closeForm} className="rounded-full border-gm-border-soft">
