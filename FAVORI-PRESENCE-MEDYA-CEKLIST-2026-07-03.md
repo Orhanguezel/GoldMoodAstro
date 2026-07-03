@@ -196,10 +196,11 @@ CREATE TABLE IF NOT EXISTS media_messages (
 - Yeni notification tipleri: `favorite_online`, `media_message_received`, `media_message_replied`, `media_message_refunded` — notification helpers'a tr/en/de metinler; e-posta gerekmiyorsa yalnız in-app+push.
   - Not: `notifyText` sözlüğüne TR/EN/DE metinleri eklendi; favori-online cron'u, medya mesajı alma/yanıtlama ve SLA iade bildirimleri bu şablonları kullanıyor. Backend typecheck temiz.
 
-### [ ] FIN-T2 — Deploy + doğrulama 🔴
+### [x] FIN-T2 — Deploy + doğrulama 🔴
 - typecheck (backend+admin+frontend) → **commit+push** → git-deploy (tek kanal).
 - Prod: yeni tablolar seed'le oluştu mu; smoke: favori ekle→sayaç, heartbeat→online rozet, (mock) medya mesaj akışı.
 - Checklist maddeleri işaretlenip notlanır.
+  - Not: backend/admin/frontend typecheck temiz; commit `2617cca` pushlandı. Prod git checkout `2617cca`'ya resetlendi, backend/admin/frontend build geçti, `db:seed:nodrop` yeni `user_favorites`, `consultant_presence`, `consultant_media_settings`, `media_messages` tablolarını oluşturdu. PM2 üç servis online; canlı smoke: `/api/health` 200, `/tr/consultants` 200/redirect zinciri sağlıklı, `/admin/media-messages` 200, `/api/consultants?limit=1` favori/online alanlarıyla dönüyor, `/api/me/favorites/ids` auth'suz 401, medya ayarı endpoint'i default ayarlarla 200.
 
 ---
 
