@@ -927,3 +927,18 @@ Bugün bu desenden çıkan olaylar: contacts sayfası silindi, /me/customer/thre
 500 (mesajlar 'kayboldu'), chat banner İngilizce kaldı, banner_i18n fix'i az
 kalsın silindi, admin build fail. HER görev sonunda: typecheck → commit → push.
 Deploy YALNIZ git-deploy üzerinden; prod'a rsync/worktree kopyalama YASAK.
+
+---
+
+## T-FAVORI-PRESENCE-MEDYA — Favoriler + Çevrimiçi Bildirimi + Ücretli Kayıtlı Medya Mesajı (2026-07-03)
+
+**Görev listesi:** [`FAVORI-PRESENCE-MEDYA-CEKLIST-2026-07-03.md`](FAVORI-PRESENCE-MEDYA-CEKLIST-2026-07-03.md)
+
+Üç faz, sırayla: **FAV** (favorile + profilde favori sayısı) → **PRES** (heartbeat presence
++ favori danışman çevrimiçi olunca push bildirim, 6 saatte 1 spam koruması) →
+**VMSG** (ücretli KAYITLI sesli/görüntülü soru: MediaRecorder kayıt → kredi ödemesi →
+danışman kayıtlı yanıt → hakediş; 72 saat SLA aşımında otomatik iade).
+Task ID: FAV-T1..4, PRES-T1..3, VMSG-T1..6, FIN-T1..2.
+**Dikkat:** VMSG-T1 (özel bucket + auth'lu file endpoint) yapılmadan VMSG-T2'ye başlama —
+medya dosyaları publicServe ile HERKESE açılır. ALTER yasak (yeni tablolar CREATE IF NOT
+EXISTS). Her görev sonunda typecheck → COMMIT → PUSH.
