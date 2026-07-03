@@ -237,13 +237,16 @@ export interface Banner {
   code: string;
   title_tr?: string | null;
   title_en?: string | null;
+  title_de?: string | null;
   subtitle_tr?: string | null;
   subtitle_en?: string | null;
+  subtitle_de?: string | null;
   image_url: string;
   image_url_mobile?: string | null;
   link_url?: string | null;
   cta_label_tr?: string | null;
   cta_label_en?: string | null;
+  cta_label_de?: string | null;
   placement: BannerPlacement;
   locale: string;
   priority: number;

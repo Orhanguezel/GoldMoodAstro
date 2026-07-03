@@ -90,15 +90,15 @@ export default function Banner({
     <div className={cn('grid gap-4', className)}>
       {items.map((banner) => {
         const title = (banner as any).title || getMultiLang(
-          { tr: banner.title_tr || '', en: banner.title_en || '' },
+          { tr: banner.title_tr || '', en: banner.title_en || '', de: banner.title_de || '' },
           locale as string,
         );
         const subtitle = (banner as any).subtitle || getMultiLang(
-          { tr: banner.subtitle_tr || '', en: banner.subtitle_en || '' },
+          { tr: banner.subtitle_tr || '', en: banner.subtitle_en || '', de: banner.subtitle_de || '' },
           locale as string,
         );
         const cta = (banner as any).cta_label || getMultiLang(
-          { tr: banner.cta_label_tr || '', en: banner.cta_label_en || '' },
+          { tr: banner.cta_label_tr || '', en: banner.cta_label_en || '', de: banner.cta_label_de || '' },
           locale as string,
         );
 

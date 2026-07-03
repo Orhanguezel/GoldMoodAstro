@@ -26,6 +26,8 @@ type AdminSubscriptionStatus =
   | 'past_due';
 
 type SubscriptionPlanPeriod = 'monthly' | 'yearly' | 'lifetime';
+const PLAN_I18N_LOCALES = ['tr', 'en', 'de'] as const;
+type PlanI18nLocale = (typeof PLAN_I18N_LOCALES)[number];
 
 function getUser(req: { user?: unknown }) {
   const u = req.user as Record<string, unknown> | undefined;
@@ -78,6 +80,95 @@ function asBool(value: unknown): boolean {
     return v === '1' || v === 'true' || v === 'yes' || v === 'on';
   }
   return false;
+}
+
+function optionalString(value: unknown): string | null {
+  const s = asString(value);
+  return s || null;
+}
+
+function hasPlanI18nPayload(body: Record<string, unknown>) {
+  return PLAN_I18N_LOCALES.some((locale) =>
+    [`name_${locale}`, `description_${locale}`].some((key) => key in body),
+  );
+}
+
+function planI18nValue(
+  body: Record<string, unknown>,
+  field: 'name' | 'description',
+  locale: PlanI18nLocale,
+): string | null {
+  return optionalString(body[`${field}_${locale}`]);
+}
+
+async function syncSubscriptionPlanI18n(planId: string, body: Record<string, unknown>) {
+  if (!hasPlanI18nPayload(body)) return;
+
+  for (const locale of PLAN_I18N_LOCALES) {
+    const name =
+      planI18nValue(body, 'name', locale) ||
+      planI18nValue(body, 'name', 'tr') ||
+      planI18nValue(body, 'name', 'en');
+
+    if (!name) continue;
+
+    await (db as any).session.client.query(
+      `INSERT INTO subscription_plan_i18n (id, plan_id, locale, name, description)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         name = VALUES(name),
+         description = VALUES(description),
+         updated_at = NOW(3)`,
+      [
+        randomUUID(),
+        planId,
+        locale,
+        name,
+        planI18nValue(body, 'description', locale),
+      ],
+    );
+  }
+}
+
+async function mergeAdminSubscriptionPlanI18n<T extends {
+  id: string;
+  name_tr?: string | null;
+  name_en?: string | null;
+  description_tr?: string | null;
+  description_en?: string | null;
+}>(rows: T[]): Promise<Array<T & {
+  name_de: string | null;
+  description_de: string | null;
+}>> {
+  if (rows.length === 0) return rows.map((row) => ({ ...row, name_de: null, description_de: null }));
+
+  const placeholders = rows.map(() => '?').join(',');
+  const [i18nRows] = await (db as any).session.client.query(
+    `SELECT plan_id, locale, name, description
+     FROM subscription_plan_i18n
+     WHERE plan_id IN (${placeholders})`,
+    rows.map((row) => row.id),
+  );
+
+  const byPlan = new Map<string, Record<string, any>>();
+  for (const row of i18nRows as any[]) {
+    const entry = byPlan.get(row.plan_id) ?? {};
+    entry[row.locale] = row;
+    byPlan.set(row.plan_id, entry);
+  }
+
+  return rows.map((row) => {
+    const translations = byPlan.get(row.id) ?? {};
+    return {
+      ...row,
+      name_tr: translations.tr?.name ?? row.name_tr,
+      name_en: translations.en?.name ?? row.name_en,
+      name_de: translations.de?.name ?? null,
+      description_tr: translations.tr?.description ?? row.description_tr,
+      description_en: translations.en?.description ?? row.description_en,
+      description_de: translations.de?.description ?? null,
+    };
+  });
 }
 
 function asPositiveInt(value: unknown, fallback = 0, min = 0) {

@@ -19,6 +19,117 @@ const PLACEMENTS = [
 type Placement = (typeof PLACEMENTS)[number];
 type TargetSegment = "all" | "free" | "paid";
 
+const I18N_LOCALES = ["tr", "en", "de"] as const;
+type BannerI18nLocale = (typeof I18N_LOCALES)[number];
+
+type BannerAdminRow = typeof banners.$inferSelect & {
+  title?: string | null;
+  subtitle?: string | null;
+  cta_label?: string | null;
+};
+
+function cleanOptionalText(value: unknown) {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function cleanBannerBody(body: Partial<typeof banners.$inferInsert>) {
+  const next = { ...body } as Record<string, unknown>;
+  for (const key of [
+    "title_tr",
+    "title_en",
+    "title_de",
+    "subtitle_tr",
+    "subtitle_en",
+    "subtitle_de",
+    "cta_label_tr",
+    "cta_label_en",
+    "cta_label_de",
+    "image_url_mobile",
+    "link_url",
+    "campaign_id",
+  ]) {
+    if (key in next) next[key] = cleanOptionalText(next[key]);
+  }
+  if ("code" in next && typeof next.code === "string") next.code = next.code.trim();
+  if ("image_url" in next && typeof next.image_url === "string") next.image_url = next.image_url.trim();
+  return next as Partial<typeof banners.$inferInsert>;
+}
+
+function hasI18nPayload(body: Partial<typeof banners.$inferInsert>) {
+  return I18N_LOCALES.some((locale) =>
+    [`title_${locale}`, `subtitle_${locale}`, `cta_label_${locale}`].some((key) => key in body),
+  );
+}
+
+function i18nValue(
+  body: Partial<typeof banners.$inferInsert>,
+  field: "title" | "subtitle" | "cta_label",
+  locale: BannerI18nLocale,
+) {
+  return cleanOptionalText((body as Record<string, unknown>)[`${field}_${locale}`]) as string | null;
+}
+
+async function syncBannerI18n(bannerId: string, body: Partial<typeof banners.$inferInsert>) {
+  if (!hasI18nPayload(body)) return;
+
+  for (const locale of I18N_LOCALES) {
+    await (db as any).session.client.query(
+      `INSERT INTO banner_i18n (id, banner_id, locale, title, subtitle, cta_label)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         title = VALUES(title),
+         subtitle = VALUES(subtitle),
+         cta_label = VALUES(cta_label),
+         updated_at = NOW(3)`,
+      [
+        randomUUID(),
+        bannerId,
+        locale,
+        i18nValue(body, "title", locale),
+        i18nValue(body, "subtitle", locale),
+        i18nValue(body, "cta_label", locale),
+      ],
+    );
+  }
+}
+
+async function mergeAdminI18n<T extends BannerAdminRow>(rows: T[]): Promise<T[]> {
+  if (rows.length === 0) return rows;
+
+  const placeholders = rows.map(() => "?").join(",");
+  const [i18nRows] = await (db as any).session.client.query(
+    `SELECT banner_id, locale, title, subtitle, cta_label
+     FROM banner_i18n
+     WHERE banner_id IN (${placeholders})`,
+    rows.map((row) => row.id),
+  );
+
+  const byBanner = new Map<string, Record<string, any>>();
+  for (const row of i18nRows as any[]) {
+    const entry = byBanner.get(row.banner_id) ?? {};
+    entry[row.locale] = row;
+    byBanner.set(row.banner_id, entry);
+  }
+
+  return rows.map((row) => {
+    const translations = byBanner.get(row.id) ?? {};
+    return {
+      ...row,
+      title_tr: translations.tr?.title ?? row.title_tr,
+      title_en: translations.en?.title ?? row.title_en,
+      title_de: translations.de?.title ?? row.title_de,
+      subtitle_tr: translations.tr?.subtitle ?? row.subtitle_tr,
+      subtitle_en: translations.en?.subtitle ?? row.subtitle_en,
+      subtitle_de: translations.de?.subtitle ?? row.subtitle_de,
+      cta_label_tr: translations.tr?.cta_label ?? row.cta_label_tr,
+      cta_label_en: translations.en?.cta_label ?? row.cta_label_en,
+      cta_label_de: translations.de?.cta_label ?? row.cta_label_de,
+    };
+  });
+}
+
 function normalizeLocale(locale?: string | null): string {
   const normalized = String(locale || "tr").trim().toLowerCase().split("-")[0];
   return normalized || "tr";
@@ -145,15 +256,23 @@ export const trackClick: RouteHandler = async (req, reply) => {
 export const adminList: RouteHandler = async (req, reply) => {
   const q = req.query as Record<string, string | undefined>;
   const placement = q.placement as Placement | undefined;
+  const locale = q.locale ? normalizeLocale(q.locale) : undefined;
 
-  const where = placement ? eq(banners.placement, placement) : undefined;
+  const where =
+    placement && locale
+      ? and(eq(banners.placement, placement), or(eq(banners.locale, "*"), eq(banners.locale, locale)))
+      : placement
+        ? eq(banners.placement, placement)
+        : locale
+          ? or(eq(banners.locale, "*"), eq(banners.locale, locale))
+          : undefined;
   const rows = await db
     .select()
     .from(banners)
     .where(where)
     .orderBy(desc(banners.created_at))
     .limit(200);
-  return reply.send({ data: rows });
+  return reply.send({ data: await mergeAdminI18n(rows) });
 };
 
 /** GET /admin/banners/:id — detay */
@@ -161,29 +280,34 @@ export const adminGet: RouteHandler = async (req, reply) => {
   const { id } = req.params as { id: string };
   const [row] = await db.select().from(banners).where(eq(banners.id, id)).limit(1);
   if (!row) return reply.code(404).send({ error: { message: "not_found" } });
-  return reply.send({ data: row });
+  const [merged] = await mergeAdminI18n([row]);
+  return reply.send({ data: merged });
 };
 
 /** POST /admin/banners — yeni banner */
 export const adminCreate: RouteHandler = async (req, reply) => {
-  const body = req.body as Partial<typeof banners.$inferInsert>;
+  const body = cleanBannerBody(req.body as Partial<typeof banners.$inferInsert>);
   if (!body.code || !body.placement || !body.image_url) {
     return reply.code(400).send({ error: { message: "missing_required_fields" } });
   }
   const id = randomUUID();
   await db.insert(banners).values({ ...body, id } as typeof banners.$inferInsert);
+  await syncBannerI18n(id, body);
   const [created] = await db.select().from(banners).where(eq(banners.id, id)).limit(1);
-  return reply.code(201).send({ data: created });
+  const [merged] = await mergeAdminI18n([created]);
+  return reply.code(201).send({ data: merged });
 };
 
 /** PATCH /admin/banners/:id */
 export const adminUpdate: RouteHandler = async (req, reply) => {
   const { id } = req.params as { id: string };
-  const body = req.body as Partial<typeof banners.$inferInsert>;
+  const body = cleanBannerBody(req.body as Partial<typeof banners.$inferInsert>);
   await db.update(banners).set(body).where(eq(banners.id, id));
+  await syncBannerI18n(id, body);
   const [updated] = await db.select().from(banners).where(eq(banners.id, id)).limit(1);
   if (!updated) return reply.code(404).send({ error: { message: "not_found" } });
-  return reply.send({ data: updated });
+  const [merged] = await mergeAdminI18n([updated]);
+  return reply.send({ data: merged });
 };
 
 /** DELETE /admin/banners/:id */
