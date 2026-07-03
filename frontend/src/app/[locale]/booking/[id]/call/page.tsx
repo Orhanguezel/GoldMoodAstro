@@ -115,7 +115,10 @@ export default function BookingCallPage() {
   const { ui } = useUiSection('ui_extra' as any);
 
   const roomRef = useRef<Room | null>(null);
+  const connectingRef = useRef(false);
   const endingRef = useRef(false);
+  const micBusyRef = useRef(false);
+  const camBusyRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const trackedStartRef = useRef(false);
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -149,8 +152,10 @@ export default function BookingCallPage() {
     if (!booking) return;
     // Wait for approval before starting the LiveKit connection.
     if (isWaitingApproval || isCancelledOrTimedOut) return;
+    if (roomRef.current || connectingRef.current) return;
 
     async function connect() {
+      connectingRef.current = true;
       setState('connecting');
       setError('');
 
@@ -181,6 +186,19 @@ export default function BookingCallPage() {
         });
         room.on(RoomEvent.Reconnecting, () => setState('reconnecting'));
         room.on(RoomEvent.Reconnected, () => setState('connected'));
+
+        // Local mikrofon/kamera durumunu GERÇEK track event'lerinden senkronla —
+        // buton görseli ile yayın durumu asla ayrışmasın.
+        room.on(RoomEvent.TrackMuted, (pub, participant) => {
+          if (!participant.isLocal) return;
+          if (pub.kind === Track.Kind.Audio) setMuted(true);
+          if (pub.kind === Track.Kind.Video) setCameraEnabled(false);
+        });
+        room.on(RoomEvent.TrackUnmuted, (pub, participant) => {
+          if (!participant.isLocal) return;
+          if (pub.kind === Track.Kind.Audio) setMuted(false);
+          if (pub.kind === Track.Kind.Video) setCameraEnabled(true);
+        });
 
         room.on(RoomEvent.TrackSubscribed, (track) => {
           if (track.kind === Track.Kind.Video && remoteVideoRef.current) {
@@ -223,8 +241,11 @@ export default function BookingCallPage() {
       } catch (err) {
         if (!cancelled) {
           setState('error');
-          setError(err instanceof Error ? err.message : ui('ui_extra_b0_call_start_failed', 'Could not start the session.'));
+          setError(err instanceof Error ? err.message : 'Could not start the session.');
         }
+        roomRef.current = null;
+      } finally {
+        connectingRef.current = false;
       }
     }
 
@@ -232,11 +253,12 @@ export default function BookingCallPage() {
 
     return () => {
       cancelled = true;
+      connectingRef.current = false;
       stopTimer();
       roomRef.current?.disconnect();
       roomRef.current = null;
     };
-  }, [bookingId, booking, isVideo]);
+  }, [bookingId, bookingStatus, isVideo, isWaitingApproval, isCancelledOrTimedOut]);
 
   function startTimer() {
     if (timerRef.current) return;
@@ -250,15 +272,35 @@ export default function BookingCallPage() {
   }
 
   async function toggleMic() {
-    const nextMuted = !muted;
-    await roomRef.current?.localParticipant.setMicrophoneEnabled(!nextMuted);
-    setMuted(nextMuted);
+    const lp = roomRef.current?.localParticipant;
+    if (!lp || micBusyRef.current) return;
+    micBusyRef.current = true;
+    try {
+      // Hedefi UI state'inden değil GERÇEK track durumundan al (senkron kaybını önler).
+      await lp.setMicrophoneEnabled(!lp.isMicrophoneEnabled);
+    } catch {
+      // izin/cihaz hatası — finally'de gerçek durum yansıtılır
+    } finally {
+      setMuted(!lp.isMicrophoneEnabled);
+      micBusyRef.current = false;
+    }
   }
 
   async function toggleCamera() {
-    const nextEnabled = !cameraEnabled;
-    await roomRef.current?.localParticipant.setCameraEnabled(nextEnabled);
-    setCameraEnabled(nextEnabled);
+    const lp = roomRef.current?.localParticipant;
+    if (!lp || camBusyRef.current) return;
+    camBusyRef.current = true;
+    try {
+      await lp.setCameraEnabled(!lp.isCameraEnabled);
+      // Kamera yeni açıldıysa local önizlemeyi bağla.
+      const pub = lp.getTrackPublication(Track.Source.Camera);
+      if (pub?.videoTrack && localVideoRef.current) pub.videoTrack.attach(localVideoRef.current);
+    } catch {
+      // izin/cihaz hatası — finally'de gerçek durum yansıtılır
+    } finally {
+      setCameraEnabled(lp.isCameraEnabled);
+      camBusyRef.current = false;
+    }
   }
 
   async function hangup() {
