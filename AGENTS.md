@@ -942,3 +942,16 @@ Task ID: FAV-T1..4, PRES-T1..3, VMSG-T1..6, FIN-T1..2.
 **Dikkat:** VMSG-T1 (özel bucket + auth'lu file endpoint) yapılmadan VMSG-T2'ye başlama —
 medya dosyaları publicServe ile HERKESE açılır. ALTER yasak (yeni tablolar CREATE IF NOT
 EXISTS). Her görev sonunda typecheck → COMMIT → PUSH.
+
+---
+
+## T-ESNEK-RANDEVU — Aralık (Interval) Bazlı Slot Sistemi (2026-07-03)
+
+**Görev listesi:** [`ESNEK-RANDEVU-INTERVAL-CEKLIST-2026-07-03.md`](ESNEK-RANDEVU-INTERVAL-CEKLIST-2026-07-03.md)
+
+Sabit 30dk grid yerine süreye duyarlı aralık modeli: hizmet süresi (45/60/90dk) kadar
+[start, start+süre) kilitlenir; danışan günü TIMELINE (çizgi) olarak görür, 15dk adımlı
+başlangıç seçer. Availability dinamik hesaplanır (mesai − randevular − molalar);
+resource_slots grid'i yeni akışta kullanılmaz (INT-T8'e kadar eski endpoint yaşar).
+Task ID: INT-T1..T9. **INT-T3 (FOR UPDATE çakışma kilidi) pazarlıksız** — yoksa çifte
+rezervasyon olur. Sıra: T1→T2→T3 backend, sonra T5→T6 frontend, T4/T7 paralel, T8 en son.
