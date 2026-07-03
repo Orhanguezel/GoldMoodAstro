@@ -255,6 +255,14 @@ export async function approveConsultant(id: string) {
     .update(consultants)
     .set({ approval_status: 'approved', rejection_reason: null, updated_at: new Date() } as any)
     .where(eq(consultants.id, id));
+  // Onaylanan danışman cron'u beklemeden randevu alabilir olsun:
+  // resource + default mesai + 30 günlük slotları hemen üret (idempotent).
+  try {
+    const { runSlotGeneratorJob } = await import('@/cron/slot-generator');
+    await runSlotGeneratorJob();
+  } catch (e) {
+    console.error('[approveConsultant] slot generation failed:', e);
+  }
   return getConsultantById(id);
 }
 
