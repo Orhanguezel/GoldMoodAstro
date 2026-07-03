@@ -185,14 +185,16 @@ CREATE TABLE IF NOT EXISTS media_messages (
 - **Kabul:** danışman ayarlar, dinler, kayıtla yanıtlar; hakediş wallet'ta görünür.
   - Not: ConsultantDashboard'a "Medya Soruları" sekmesi eklendi; danışman ses/video fiyat+SLA ayarlarını kaydediyor, gelen soruyu auth'lu player'da dinleyip/görüp MediaRecorder veya dosya fallback ile yanıtlıyor; reply backend wallet hakedişini oluşturuyor; frontend+backend typecheck temiz.
 
-### [ ] VMSG-T6 — Admin görünürlük 🟡
+### [x] VMSG-T6 — Admin görünürlük 🟡
 - Admin'de basit liste: /admin/media-messages (durum filtreli; şikayet/uyuşmazlık inceleme için player admin'e de açık).
 - Dashboard metriklerine: toplam medya mesajı / yanıt oranı.
+  - Not: Backend admin liste/stats/file endpointleri ve admin panel `/admin/media-messages` sayfası eklendi; status filtresi, metrik kartları, soru/yanıt dosya linkleri ve sidebar menü bağlantısı hazır; backend+admin typecheck temiz.
 
 ## FAZ D — Bitirme
 
-### [ ] FIN-T1 — Bildirim şablonları + i18n 🟠
+### [x] FIN-T1 — Bildirim şablonları + i18n 🟠
 - Yeni notification tipleri: `favorite_online`, `media_message_received`, `media_message_replied`, `media_message_refunded` — notification helpers'a tr/en/de metinler; e-posta gerekmiyorsa yalnız in-app+push.
+  - Not: `notifyText` sözlüğüne TR/EN/DE metinleri eklendi; favori-online cron'u, medya mesajı alma/yanıtlama ve SLA iade bildirimleri bu şablonları kullanıyor. Backend typecheck temiz.
 
 ### [ ] FIN-T2 — Deploy + doğrulama 🔴
 - typecheck (backend+admin+frontend) → **commit+push** → git-deploy (tek kanal).

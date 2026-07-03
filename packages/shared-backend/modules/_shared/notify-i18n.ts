@@ -42,6 +42,26 @@ const TABLE: Record<string, Record<Locale, Entry>> = {
     en: { title: 'Withdrawal Request Received', message: 'Your withdrawal request has been received. It will be transferred after admin approval.' },
     de: { title: 'Auszahlungsanforderung erhalten', message: 'Deine Auszahlungsanforderung ist eingegangen. Sie wird nach der Admin-Freigabe überwiesen.' },
   },
+  favorite_online: {
+    tr: { title: '{name} şimdi çevrimiçi', message: '{name} şimdi çevrimiçi. Hemen görüşme başlatabilirsin.' },
+    en: { title: '{name} is online now', message: '{name} is online now. You can start an instant session.' },
+    de: { title: '{name} ist jetzt online', message: '{name} ist jetzt online. Du kannst eine Sofortsitzung starten.' },
+  },
+  media_message_received: {
+    tr: { title: 'Yeni medya sorusu', message: 'Bir danışandan kayıtlı ses/video sorusu aldınız.' },
+    en: { title: 'New media question', message: 'You received a recorded voice/video question from a client.' },
+    de: { title: 'Neue Medienfrage', message: 'Sie haben eine aufgezeichnete Sprach-/Videofrage von einem Klienten erhalten.' },
+  },
+  media_message_replied: {
+    tr: { title: 'Medya sorunuz yanıtlandı', message: 'Danışmanınız kayıtlı sorunuza yanıt verdi.' },
+    en: { title: 'Your media question was answered', message: 'Your consultant replied to your recorded question.' },
+    de: { title: 'Ihre Medienfrage wurde beantwortet', message: 'Ihr Berater hat auf Ihre aufgezeichnete Frage geantwortet.' },
+  },
+  media_message_refunded: {
+    tr: { title: 'Medya sorunuz iade edildi', message: 'Danışman süresi içinde yanıt vermediği için krediniz iade edildi.' },
+    en: { title: 'Your media question was refunded', message: 'Your credits were refunded because the consultant did not reply in time.' },
+    de: { title: 'Ihre Medienfrage wurde erstattet', message: 'Ihr Guthaben wurde erstattet, weil der Berater nicht rechtzeitig geantwortet hat.' },
+  },
 };
 
 export type NotifyKey = keyof typeof TABLE;

@@ -6,6 +6,7 @@ import { consultants } from '../consultants/schema';
 import { consumeCredits } from '../credits/consume';
 import { createUserNotification } from '../notifications/service';
 import { dispatchPushToUser } from '../notifications/push';
+import { notifyText } from '../_shared/notify-i18n';
 
 export type MediaKind = 'audio' | 'video';
 
@@ -200,16 +201,17 @@ export async function createQuestion(userId: string, input: {
   `);
   const consultant = rowsOf<any>(cRows)[0];
   if (consultant?.consultant_user_id) {
+    const text = notifyText('tr', 'media_message_received');
     await createUserNotification({
       userId: consultant.consultant_user_id,
       type: 'media_message_received',
-      title: 'Yeni medya sorusu',
-      message: 'Bir danışandan kayıtlı ses/video sorusu aldınız.',
+      title: text.title,
+      message: text.message,
     });
     await dispatchPushToUser({
       userId: consultant.consultant_user_id,
-      title: 'Yeni medya sorusu',
-      body: 'Bir danışandan kayıtlı ses/video sorusu aldınız.',
+      title: text.title,
+      body: text.message,
       data: { type: 'media_message_received', media_message_id: id },
     });
   }
@@ -344,16 +346,17 @@ export async function createReply(consultantId: string, consultantUserId: string
   `);
   await createWalletEarning(consultantId, consultantUserId, parent.id, Number(parent.price ?? 0));
 
+  const text = notifyText('tr', 'media_message_replied');
   await createUserNotification({
     userId: parent.user_id,
     type: 'media_message_replied',
-    title: 'Medya sorunuz yanıtlandı',
-    message: 'Danışmanınız kayıtlı sorunuza yanıt verdi.',
+    title: text.title,
+    message: text.message,
   });
   await dispatchPushToUser({
     userId: parent.user_id,
-    title: 'Medya sorunuz yanıtlandı',
-    body: 'Danışmanınız kayıtlı sorunuza yanıt verdi.',
+    title: text.title,
+    body: text.message,
     data: { type: 'media_message_replied', media_message_id: parent.id },
   });
 

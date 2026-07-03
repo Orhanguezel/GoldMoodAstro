@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { createUserNotification } from '@goldmood/shared-backend/modules/notifications/service';
 import { dispatchPushToUser } from '@goldmood/shared-backend/modules/notifications/push';
+import { notifyText } from '@goldmood/shared-backend/modules/_shared/notify-i18n';
 
 type OnlineConsultantRow = {
   consultant_id: string;
@@ -15,26 +16,6 @@ type FavoriteUserRow = {
 
 function rowsOf<T>(result: unknown): T[] {
   return Array.isArray((result as any)?.[0]) ? ((result as any)[0] as T[]) : (result as T[]);
-}
-
-function favoriteOnlineText(locale: string | null | undefined, consultantName: string) {
-  const lang = String(locale || 'tr').toLowerCase().split(/[-_]/)[0];
-  if (lang === 'en') {
-    return {
-      title: `${consultantName} is online now`,
-      message: `${consultantName} is online now. You can start an instant session.`,
-    };
-  }
-  if (lang === 'de') {
-    return {
-      title: `${consultantName} ist jetzt online`,
-      message: `${consultantName} ist jetzt online. Du kannst eine Sofortsitzung starten.`,
-    };
-  }
-  return {
-    title: `${consultantName} şimdi çevrimiçi`,
-    message: `${consultantName} şimdi çevrimiçi. Hemen görüşme başlatabilirsin.`,
-  };
 }
 
 async function listNewlyOnlineConsultants(): Promise<OnlineConsultantRow[]> {
@@ -82,7 +63,7 @@ export async function runFavoriteOnlineNotifySweep() {
     const favorites = await listFavoriteUsersToNotify(consultant.consultant_id);
 
     for (const favorite of favorites) {
-      const text = favoriteOnlineText('tr', consultantName);
+      const text = notifyText('tr', 'favorite_online', { name: consultantName });
       try {
         await createUserNotification({
           userId: favorite.user_id,
@@ -121,4 +102,3 @@ export function registerFavoriteOnlineNotifyCron() {
   setInterval(run, 60 * 1000);
   console.log('[cron] favorite-online-notify registered (every 60s)');
 }
-

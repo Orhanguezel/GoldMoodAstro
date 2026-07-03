@@ -4,6 +4,7 @@ import { db } from '@/db/client';
 import { refundCredits } from '@goldmood/shared-backend/modules/credits/consume';
 import { createUserNotification } from '@goldmood/shared-backend/modules/notifications/service';
 import { dispatchPushToUser } from '@goldmood/shared-backend/modules/notifications/push';
+import { notifyText } from '@goldmood/shared-backend/modules/_shared/notify-i18n';
 
 type ExpiredMediaMessageRow = {
   id: string;
@@ -45,16 +46,17 @@ async function refundExpiredMediaMessage(row: ExpiredMediaMessageRow) {
     WHERE id = ${row.id} AND status = 'sent'
   `);
 
+  const text = notifyText('tr', 'media_message_refunded');
   await createUserNotification({
     userId: row.user_id,
     type: 'media_message_refunded',
-    title: 'Medya sorunuz iade edildi',
-    message: 'Danışman süresi içinde yanıt vermediği için krediniz iade edildi.',
+    title: text.title,
+    message: text.message,
   });
   await dispatchPushToUser({
     userId: row.user_id,
-    title: 'Medya sorunuz iade edildi',
-    body: 'Danışman süresi içinde yanıt vermediği için krediniz iade edildi.',
+    title: text.title,
+    body: text.message,
     data: { type: 'media_message_refunded', media_message_id: row.id },
   });
 }
@@ -80,4 +82,3 @@ export function registerMediaMessageSlaCron() {
   setInterval(run, 60 * 60 * 1000);
   console.log('[cron] media-message-sla registered (hourly)');
 }
-
