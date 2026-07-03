@@ -112,7 +112,7 @@ jobs:
             sleep 10
           done
 
-      - name: PM2 reload — admin panel
+      - name: PM2 restart — admin panel
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -124,8 +124,8 @@ jobs:
             set -e
             cd /var/www/goldmoodastro/admin_panel
             bun install --frozen-lockfile || bun install
-            pm2 reload goldmoodastro-admin \
-              || pm2 start ecosystem.config.cjs --only goldmoodastro-admin
+            pm2 restart goldmoodastro-admin --update-env \
+              || (cd /var/www/goldmoodastro && pm2 start ecosystem.config.cjs --only goldmoodastro-admin --update-env)
             pm2 save
             ss -ltnp | grep ':3094' || (echo "Port 3094 açık değil!" && exit 1)
 

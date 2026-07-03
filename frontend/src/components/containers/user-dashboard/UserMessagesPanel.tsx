@@ -194,7 +194,7 @@ export default function UserMessagesPanel() {
             </div>
 
             <div className="m-3 mb-0">
-              <ChatWarningBanner compact />
+              <ChatWarningBanner compact locale={locale as 'tr' | 'en' | 'de'} />
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">

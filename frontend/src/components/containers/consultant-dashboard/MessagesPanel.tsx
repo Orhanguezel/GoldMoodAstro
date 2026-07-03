@@ -193,7 +193,7 @@ export default function MessagesPanel() {
 
             {/* T29-6: shared warning banner */}
             <div className="m-4 mb-0">
-              <ChatWarningBanner compact />
+              <ChatWarningBanner compact locale={locale as 'tr' | 'en' | 'de'} />
             </div>
 
             {/* Messages */}

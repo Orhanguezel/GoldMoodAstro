@@ -104,7 +104,7 @@ export default function ServiceTemplatesClient() {
   const [i18n, setI18n] = React.useState<ServiceI18nMap>(() => blankI18n(formLocales));
   const [slug, setSlug] = React.useState('');
   const [durationMinutes, setDurationMinutes] = React.useState(45);
-  const [price, setPrice] = React.useState<string | number>('0');
+  const [price, setPrice] = React.useState<string | number>('');
   const [currency, setCurrency] = React.useState('TRY');
   const [mediaType, setMediaType] = React.useState<'audio' | 'video'>('audio');
   const [isFree, setIsFree] = React.useState(false);
@@ -143,7 +143,7 @@ export default function ServiceTemplatesClient() {
     setI18n(blankI18n(formLocales));
     setSlug('');
     setDurationMinutes(45);
-    setPrice('0');
+    setPrice('');
     setCurrency('TRY');
     setMediaType('audio');
     setIsFree(false);
@@ -503,7 +503,16 @@ export default function ServiceTemplatesClient() {
 
                 <div className="space-y-2">
                   <Label htmlFor="tempPrice" className="text-sm font-bold uppercase tracking-widest text-gm-muted">{t('templates.field.price')}</Label>
-                  <Input id="tempPrice" type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="border-gm-border-soft bg-gm-surface/40" disabled={isFree} required={!isFree} />
+                  <Input
+                    id="tempPrice"
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder=""
+                    className="border-gm-border-soft bg-gm-surface/40"
+                    disabled={isFree}
+                    required={!isFree}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -518,7 +527,7 @@ export default function ServiceTemplatesClient() {
                     <Label className="text-sm font-bold uppercase tracking-widest text-gm-text text-foreground">{t('templates.field.isFree')}</Label>
                     <p className="text-[10px] text-gm-muted">{t('templates.field.isFreeHelp')}</p>
                   </div>
-                  <Switch checked={isFree} onCheckedChange={(checked) => { setIsFree(checked); if (checked) setPrice('0'); }} />
+                  <Switch checked={isFree} onCheckedChange={(checked) => { setIsFree(checked); setPrice(checked ? '0' : ''); }} />
                 </div>
 
                 <div className="space-y-2">

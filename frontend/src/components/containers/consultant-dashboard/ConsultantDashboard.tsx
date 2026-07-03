@@ -112,7 +112,7 @@ export default function ConsultantDashboard({ locale }: Props) {
   const { isAuthenticated, isReady, isLoading: authLoading } = useAuthStore();
   const { ui } = useUiSection('ui_dashboard', locale as any);
 
-  const { data: profile, isLoading: profileLoading, isError: profileError } = useGetMyConsultantProfileQuery(undefined, {
+  const { data: profile, isLoading: profileLoading, isError: profileError } = useGetMyConsultantProfileQuery({ locale }, {
     skip: !isReady || !isAuthenticated,
   });
   const { data: stats, isLoading: statsLoading } = useGetMyConsultantStatsQuery(undefined, { skip: !profile });
@@ -732,6 +732,7 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
         meta_title: metaTitle.trim() || null,
         meta_description: metaDescription.trim() || null,
         og_image: ogImage.trim() || null,
+        locale,
         expertise: expertise,
         languages: languages,
         meeting_platforms: meetingPlatforms,
@@ -833,7 +834,7 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
               value={metaTitle}
               onChange={(event) => setMetaTitle(event.target.value)}
               className="w-full rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) px-4 py-3 text-sm text-(--gm-text)"
-              placeholder={profile.user?.full_name ? `${profile.user.full_name} | GoldMoodAstro` : 'GoldMoodAstro Consultant'}
+              placeholder={ui('ui_dashboard_profile_meta_title_placeholder', 'Write a title for this language')}
             />
           </Field>
           <Field
@@ -846,6 +847,7 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
               onChange={(event) => setMetaDescription(event.target.value)}
               rows={3}
               className="w-full rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) px-4 py-3 text-sm text-(--gm-text)"
+              placeholder={ui('ui_dashboard_profile_meta_description_placeholder', 'Write a search description for this language')}
             />
           </Field>
           <Field label={ui('ui_dashboard_profile_og_image_label', 'Social Preview Image URL')}>

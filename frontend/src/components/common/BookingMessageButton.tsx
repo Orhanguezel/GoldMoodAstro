@@ -5,6 +5,7 @@
 // Customer and consultant can exchange async notes before or after a session.
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import ChatWarningBanner from './ChatWarningBanner';
@@ -19,6 +20,16 @@ interface Message {
   sender_user_id: string;
   text: string;
   created_at: string;
+}
+
+async function readErrorMessage(res: Response) {
+  const payload = await res.json().catch(() => null);
+  return (
+    payload?.error?.message ||
+    payload?.message ||
+    (typeof payload === 'string' ? payload : '') ||
+    `HTTP ${res.status}`
+  );
 }
 
 interface Props {
@@ -41,7 +52,9 @@ function formatTime(iso: string) {
 }
 
 export default function BookingMessageButton({ bookingId, label, iconOnly, variant = 'secondary', className = '' }: Props) {
-  const { ui } = useUiSection('ui_account');
+  const params = useParams();
+  const locale = ((params?.locale as string) || 'tr') as 'tr' | 'en' | 'de';
+  const { ui } = useUiSection('ui_account', locale);
   const resolvedLabel = label ?? ui('ui_account_msg_button_label', 'Message');
   const [open, setOpen] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
@@ -104,17 +117,45 @@ export default function BookingMessageButton({ bookingId, label, iconOnly, varia
     if (!threadId || !draft.trim()) return;
     setSending(true);
     try {
+      const text = draft.trim();
       const res = await fetch(`${API_BASE}/chat/threads/${encodeURIComponent(threadId)}/messages`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: draft.trim() }),
+        body: JSON.stringify({ text }),
       });
-      if (!res.ok) throw new Error('send_failed');
-      const { message } = await res.json();
+      let message: Message | null = null;
+
+      if (res.ok) {
+        const payload = await res.json();
+        message = payload?.message ?? null;
+      } else {
+        let lastError = await readErrorMessage(res);
+        for (const path of [
+          `/me/customer/threads/${encodeURIComponent(threadId)}/reply`,
+          `/me/consultant/threads/${encodeURIComponent(threadId)}/reply`,
+        ]) {
+          const fallbackRes = await fetch(`${API_BASE}${path}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text }),
+          });
+          if (fallbackRes.ok) {
+            const payload = await fallbackRes.json();
+            message = payload?.data ?? null;
+            break;
+          }
+          lastError = await readErrorMessage(fallbackRes);
+        }
+        if (!message) throw new Error(lastError || 'send_failed');
+      }
+
+      if (!message) throw new Error('send_failed');
       setMessages((prev) => [...prev, message]);
       setDraft('');
-    } catch {
+    } catch (error) {
+      console.error('[BookingMessageButton] send failed', error);
       toast.error(ui('ui_account_msg_send_failed', 'Could not send'));
     } finally {
       setSending(false);
@@ -164,7 +205,7 @@ export default function BookingMessageButton({ bookingId, label, iconOnly, varia
 
             {/* Warning */}
             <div className="m-4 mb-0">
-              <ChatWarningBanner compact />
+              <ChatWarningBanner compact locale={locale} />
             </div>
 
             {/* Messages */}

@@ -14,6 +14,9 @@ import { randomUUID } from "crypto";
 import { chatRepo } from "./repository";
 import type { ChatRole } from "./validation";
 import { db as sharedDb } from "../../db/client";
+import { consultants } from "../consultants/schema";
+import { bookings } from "../bookings/schema";
+import { eq } from "drizzle-orm";
 
 type AuthedUser = {
   id: string;
@@ -117,6 +120,55 @@ export function chatService(app: FastifyInstance) {
     return msg;
   }
 
+  async function getConsultantUserId(consultantId: string) {
+    const [row] = await db
+      .select({ user_id: consultants.user_id })
+      .from(consultants)
+      .where(eq(consultants.id, consultantId))
+      .limit(1);
+    return row?.user_id ? String(row.user_id) : null;
+  }
+
+  async function getBookingParticipantUserIds(bookingId: string) {
+    const [row] = await db
+      .select({
+        customer_user_id: bookings.user_id,
+        consultant_user_id: consultants.user_id,
+      })
+      .from(bookings)
+      .innerJoin(consultants, eq(consultants.id, bookings.consultant_id))
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+    return row
+      ? {
+          customerUserId: String(row.customer_user_id),
+          consultantUserId: String(row.consultant_user_id),
+        }
+      : null;
+  }
+
+  async function upsertBookingParticipants(threadId: string, bookingId: string, joinedAt: Date) {
+    const participants = await getBookingParticipantUserIds(bookingId);
+    if (!participants) return null;
+    await repo.upsertParticipant({
+      id: randomUUID(),
+      thread_id: threadId,
+      user_id: participants.customerUserId,
+      role: "buyer",
+      joined_at: joinedAt,
+      last_read_at: null,
+    });
+    await repo.upsertParticipant({
+      id: randomUUID(),
+      thread_id: threadId,
+      user_id: participants.consultantUserId,
+      role: "vendor",
+      joined_at: joinedAt,
+      last_read_at: null,
+    });
+    return participants;
+  }
+
   return {
     repo,
 
@@ -129,6 +181,23 @@ export function chatService(app: FastifyInstance) {
       // booking + job + request: context_id zaten 1 müşteriye ait, paylaşılır.
       const isPerCreatorContext =
         args.context_type === "consultant_lead" || args.context_type === "support";
+
+      if (args.context_type === "booking") {
+        const participants = await getBookingParticipantUserIds(args.context_id);
+        if (!participants) {
+          const err: any = new Error("booking_not_found");
+          err.statusCode = 404;
+          throw err;
+        }
+        if (
+          args.created_by.id !== participants.customerUserId &&
+          args.created_by.id !== participants.consultantUserId
+        ) {
+          const err: any = new Error("forbidden_booking_thread");
+          err.statusCode = 403;
+          throw err;
+        }
+      }
 
       const existing = isPerCreatorContext
         ? await repo.getThreadByContextAndCreator({
@@ -150,6 +219,22 @@ export function chatService(app: FastifyInstance) {
           joined_at: new Date(),
           last_read_at: null,
         });
+        if (args.context_type === "consultant_lead") {
+          const consultantUserId = await getConsultantUserId(args.context_id);
+          if (consultantUserId) {
+            await repo.upsertParticipant({
+              id: randomUUID(),
+              thread_id: existing.id,
+              user_id: consultantUserId,
+              role: "vendor",
+              joined_at: new Date(),
+              last_read_at: null,
+            });
+          }
+        }
+        if (args.context_type === "booking") {
+          await upsertBookingParticipants(existing.id, args.context_id, new Date());
+        }
         return existing;
       }
 
@@ -173,6 +258,24 @@ export function chatService(app: FastifyInstance) {
         joined_at: now,
         last_read_at: null,
       });
+
+      if (args.context_type === "consultant_lead") {
+        const consultantUserId = await getConsultantUserId(args.context_id);
+        if (consultantUserId) {
+          await repo.upsertParticipant({
+            id: randomUUID(),
+            thread_id: thread.id,
+            user_id: consultantUserId,
+            role: "vendor",
+            joined_at: now,
+            last_read_at: null,
+          });
+        }
+      }
+
+      if (args.context_type === "booking") {
+        await upsertBookingParticipants(thread.id, args.context_id, now);
+      }
 
       return thread;
     },

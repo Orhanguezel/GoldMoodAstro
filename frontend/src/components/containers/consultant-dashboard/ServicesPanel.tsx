@@ -26,7 +26,7 @@ interface ServiceForm {
   slug: string;
   description: string;
   duration_minutes: number;
-  price: number;
+  price: string;
   media_type: ServiceMediaType;
   is_free: boolean;
   is_active: boolean;
@@ -48,7 +48,7 @@ const EMPTY_FORM: ServiceForm = {
   slug: '',
   description: '',
   duration_minutes: 45,
-  price: 0,
+  price: '',
   media_type: 'audio',
   is_free: false,
   is_active: true,
@@ -123,9 +123,11 @@ export default function ServicesPanel() {
 
   const handleCreate = async () => {
     const errs: typeof newErrors = {};
+    const priceValue = Number(newForm.price);
     if (!newForm.name.trim()) errs.name = ui('ui_dashboard_service_error_name_required', 'Name is required');
-    if (newForm.price < 0 || newForm.price > 100000) errs.price = ui('ui_dashboard_service_error_price_range', 'Must be between 0 and 100,000');
-    else if (!newForm.is_free && newForm.price <= 0) errs.price = ui('ui_dashboard_service_error_price_paid', 'Paid service price must be greater than 0');
+    if (!newForm.is_free && (!newForm.price.trim() || Number.isNaN(priceValue))) errs.price = ui('ui_dashboard_service_error_price_paid', 'Paid service price must be greater than 0');
+    else if (!newForm.is_free && (priceValue < 0 || priceValue > 100000)) errs.price = ui('ui_dashboard_service_error_price_range', 'Must be between 0 and 100,000');
+    else if (!newForm.is_free && priceValue <= 0) errs.price = ui('ui_dashboard_service_error_price_paid', 'Paid service price must be greater than 0');
     if (newForm.duration_minutes < 15 || newForm.duration_minutes > 480) errs.duration = ui('ui_dashboard_service_error_duration_range', 'Must be between 15 and 480 minutes');
     
     if (Object.keys(errs).length > 0) {
@@ -139,7 +141,7 @@ export default function ServicesPanel() {
         slug: mediaSlug(newForm.slug.trim() || slugify(newForm.name), newForm.media_type),
         description: newForm.description.trim() || null,
         duration_minutes: newForm.duration_minutes,
-        price: newForm.is_free ? 0 : newForm.price,
+        price: newForm.is_free ? 0 : priceValue,
         media_type: newForm.media_type,
         is_free: newForm.is_free ? 1 : 0,
         is_active: newForm.is_active ? 1 : 0,
@@ -175,7 +177,7 @@ export default function ServicesPanel() {
       }
       if (patch.description !== undefined) body.description = patch.description;
       if (patch.duration_minutes !== undefined) body.duration_minutes = patch.duration_minutes;
-      if (patch.price !== undefined) body.price = patch.is_free === true ? 0 : patch.price;
+      if (patch.price !== undefined) body.price = patch.is_free === true ? 0 : Number(patch.price);
       if (patch.media_type !== undefined) body.media_type = patch.media_type;
       if (patch.is_free !== undefined) body.is_free = patch.is_free ? 1 : 0;
       if (patch.is_active !== undefined) body.is_active = patch.is_active ? 1 : 0;
@@ -239,38 +241,57 @@ export default function ServicesPanel() {
         <div className="p-5 rounded-2xl border border-[var(--gm-gold)]/40 bg-[var(--gm-gold)]/5 space-y-4">
           <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold)]">{ui('ui_dashboard_service_new', 'New Service')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <input
-              value={newForm.name}
-              maxLength={100}
-              onChange={(e) => {
-                const v = e.target.value;
-                setNewForm({ ...newForm, name: v, slug: newForm.slug || mediaSlug(slugify(v), newForm.media_type) });
-              }}
-              placeholder={ui('ui_dashboard_service_name_placeholder', 'Service name, e.g. Personal Session')}
-              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.name ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
-            />
-            <input
-              value={newForm.slug}
-              onChange={(e) => setNewForm({ ...newForm, slug: slugify(e.target.value) })}
-              placeholder={ui('ui_dashboard_service_slug_placeholder', 'slug, generated automatically')}
-              className="h-11 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-4 text-sm font-mono text-[var(--gm-muted)]"
-            />
-            <input
-              type="number"
-              value={newForm.duration_minutes}
-              onChange={(e) => setNewForm({ ...newForm, duration_minutes: Number(e.target.value) || 45 })}
-              placeholder={ui('ui_dashboard_service_duration_placeholder', 'Duration (min)')}
-              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.duration ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
-            />
-            <input
-              type="number"
-              value={newForm.price}
-              onChange={(e) => setNewForm({ ...newForm, price: Number(e.target.value) || 0 })}
-              placeholder={ui('ui_dashboard_service_price_placeholder', 'Price')}
-              disabled={newForm.is_free}
-              className={`h-11 bg-[var(--gm-bg-deep)] border ${newErrors.price ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)] disabled:opacity-50`}
-            />
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">{ui('ui_dashboard_service_name', 'Name')}</label>
+              <input
+                value={newForm.name}
+                maxLength={100}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setNewForm({ ...newForm, name: v, slug: newForm.slug || mediaSlug(slugify(v), newForm.media_type) });
+                }}
+                placeholder={ui('ui_dashboard_service_name_placeholder', 'Service name, e.g. Personal Session')}
+                className={`w-full h-11 bg-[var(--gm-bg-deep)] border ${newErrors.name ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">{ui('ui_dashboard_service_slug_admin', 'Slug (admin only)')}</label>
+              <input
+                value={newForm.slug}
+                onChange={(e) => setNewForm({ ...newForm, slug: slugify(e.target.value) })}
+                placeholder={ui('ui_dashboard_service_slug_placeholder', 'slug, generated automatically')}
+                className="w-full h-11 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-4 text-sm font-mono text-[var(--gm-muted)]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">{ui('ui_dashboard_service_duration_minutes', 'Duration (Minutes)')}</label>
+              <input
+                type="number"
+                value={newForm.duration_minutes}
+                onChange={(e) => setNewForm({ ...newForm, duration_minutes: Number(e.target.value) || 45 })}
+                placeholder={ui('ui_dashboard_service_duration_placeholder', 'Duration (min)')}
+                className={`w-full h-11 bg-[var(--gm-bg-deep)] border ${newErrors.duration ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)]`}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)] ml-1">{ui('ui_dashboard_service_price', 'Price')}</label>
+              <input
+                type="number"
+                value={newForm.price}
+                onChange={(e) => setNewForm({ ...newForm, price: e.target.value })}
+                placeholder={ui('ui_dashboard_service_price_placeholder', 'Price')}
+                disabled={newForm.is_free}
+                className={`w-full h-11 bg-[var(--gm-bg-deep)] border ${newErrors.price ? 'border-[var(--gm-error)]' : 'border-[var(--gm-border-soft)]'} rounded-xl px-4 text-sm text-[var(--gm-text)] disabled:opacity-50`}
+              />
+            </div>
           </div>
+          {(newErrors.name || newErrors.duration || newErrors.price) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {newErrors.name && <p className="text-[9px] text-[var(--gm-error)] font-bold uppercase tracking-widest">{newErrors.name}</p>}
+              {newErrors.duration && <p className="text-[9px] text-[var(--gm-error)] font-bold uppercase tracking-widest">{newErrors.duration}</p>}
+              {newErrors.price && <p className="text-[9px] text-[var(--gm-error)] font-bold uppercase tracking-widest">{newErrors.price}</p>}
+            </div>
+          )}
           <textarea
             value={newForm.description}
             onChange={(e) => setNewForm({ ...newForm, description: e.target.value })}
@@ -297,7 +318,7 @@ export default function ServicesPanel() {
               <input
                 type="checkbox"
                 checked={newForm.is_free}
-                onChange={(e) => setNewForm({ ...newForm, is_free: e.target.checked, price: 0 })}
+                onChange={(e) => setNewForm({ ...newForm, is_free: e.target.checked, price: e.target.checked ? '0' : '' })}
                 className="w-5 h-5 accent-[var(--gm-success)]"
               />
               <span className="text-sm text-[var(--gm-text)] inline-flex items-center gap-1">
@@ -485,7 +506,7 @@ function ServiceRow({
     slug: svc.slug,
     description: svc.description || '',
     duration_minutes: svc.duration_minutes,
-    price: Number(svc.price) || 0,
+    price: Number(svc.price) > 0 ? String(Number(svc.price)) : '',
     media_type: svc.media_type || 'audio',
     is_free: svc.is_free === 1,
     is_active: svc.is_active === 1,
@@ -496,7 +517,7 @@ function ServiceRow({
     form.name !== svc.name ||
     form.description !== (svc.description || '') ||
     form.duration_minutes !== svc.duration_minutes ||
-    form.price !== Number(svc.price) ||
+    Number(form.price || 0) !== Number(svc.price) ||
     form.media_type !== (svc.media_type || 'audio') ||
     form.is_free !== (svc.is_free === 1) ||
     form.is_active !== (svc.is_active === 1);
@@ -510,11 +531,16 @@ function ServiceRow({
       toast.error(ui('ui_dashboard_service_error_duration_range', 'Must be between 15 and 480 minutes'));
       return;
     }
-    if (!form.is_free && (form.price < 0 || form.price > 100000)) {
+    const priceValue = Number(form.price);
+    if (!form.is_free && (!form.price.trim() || Number.isNaN(priceValue))) {
+      toast.error(ui('ui_dashboard_service_error_price_paid', 'Paid service price must be greater than 0'));
+      return;
+    }
+    if (!form.is_free && (priceValue < 0 || priceValue > 100000)) {
       toast.error(ui('ui_dashboard_service_error_price_range', 'Must be between 0 and 100,000'));
       return;
     }
-    if (!form.is_free && form.price <= 0) {
+    if (!form.is_free && priceValue <= 0) {
       toast.error(ui('ui_dashboard_service_error_price_paid', 'Paid service price must be greater than 0'));
       return;
     }
@@ -667,7 +693,7 @@ function ServiceRow({
                 type="number"
                 value={form.price}
                 onChange={(e) => {
-                  setForm({ ...form, price: Number(e.target.value) || 0 });
+                  setForm({ ...form, price: e.target.value });
                   if (errors.price) setErrors({ ...errors, price: undefined });
                 }}
                 disabled={form.is_free}
@@ -694,7 +720,7 @@ function ServiceRow({
               <input
                 type="checkbox"
                 checked={form.is_free}
-                onChange={(e) => setForm({ ...form, is_free: e.target.checked, price: e.target.checked ? 0 : form.price })}
+                onChange={(e) => setForm({ ...form, is_free: e.target.checked, price: e.target.checked ? '0' : '' })}
                 className="w-5 h-5 accent-[var(--gm-success)]"
               />
               <span className="text-sm text-[var(--gm-text)]">{ui('ui_dashboard_service_free_intro', 'Free intro call')}</span>

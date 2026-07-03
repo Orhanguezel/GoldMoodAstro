@@ -33,7 +33,7 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
     }
     if (!isAuthenticated) {
       toast.error(ui('ui_consultantbrowse_msg_login_required', 'You must sign in to send a message'));
-      window.location.href = `/${locale}/auth/login?next=${encodeURIComponent(window.location.pathname)}`;
+      window.location.href = `/${locale}/login?next=${encodeURIComponent(window.location.pathname)}`;
       return;
     }
     setSending(true);

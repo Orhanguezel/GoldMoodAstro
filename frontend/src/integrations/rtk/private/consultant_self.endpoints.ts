@@ -85,6 +85,7 @@ export interface ConsultantSelfBooking {
 }
 
 export interface ProfilePatch {
+  locale?: string;
   bio?: string | null;
   meta_title?: string | null;
   meta_description?: string | null;
@@ -361,13 +362,21 @@ export interface ProfileViewStat {
 
 export const consultantSelfApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getMyConsultantProfile: build.query<ConsultantSelfProfile, void>({
-      query: () => '/me/consultant',
+    getMyConsultantProfile: build.query<ConsultantSelfProfile, { locale?: string } | void>({
+      query: (args) => ({
+        url: '/me/consultant',
+        params: args?.locale ? { locale: args.locale } : undefined,
+      }),
       transformResponse: (res: { data: ConsultantSelfProfile }) => res.data,
       providesTags: ['ConsultantSelf' as any],
     }),
     updateMyConsultantProfile: build.mutation<{ id: string }, ProfilePatch>({
-      query: (body) => ({ url: '/me/consultant', method: 'PATCH', body }),
+      query: ({ locale, ...body }) => ({
+        url: '/me/consultant',
+        method: 'PATCH',
+        params: locale ? { locale } : undefined,
+        body,
+      }),
       transformResponse: (res: { data: { id: string } }) => res.data,
       invalidatesTags: ['ConsultantSelf' as any],
     }),

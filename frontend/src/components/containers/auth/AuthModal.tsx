@@ -28,6 +28,20 @@ function trimSlash(x: string) {
   return String(x || '').replace(/\/+$/, '');
 }
 
+function invalidCredentialsFallback(locale: string) {
+  if (locale === 'en') return 'The email or password is incorrect.';
+  if (locale === 'de') return 'E-Mail oder Passwort ist falsch.';
+  return 'E-posta veya şifre hatalı.';
+}
+
+function authErrorMessage(raw: string | null, locale: string, ui: (key: string, hardFallback?: string) => string) {
+  if (!raw) return null;
+  if (raw === 'invalid_credentials') {
+    return ui('login_error_invalid_credentials', invalidCredentialsFallback(locale));
+  }
+  return raw;
+}
+
 interface AuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -79,7 +93,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
   }, [searchParams]);
 
   const apiErrorMessage = formError || (
-    activeTab === 'login' && loginState.error ? normalizeError(loginState.error).message :
+    activeTab === 'login' && loginState.error ? authErrorMessage(normalizeError(loginState.error).message, locale, ui) :
     activeTab === 'register' && signupState.error ? normalizeError(signupState.error).message :
     activeTab === 'forgot' && resetState.error ? normalizeError(resetState.error).message : null
   );

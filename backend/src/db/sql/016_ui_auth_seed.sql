@@ -28,6 +28,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     'login_no_account',             'Hesabınız yok mu?',
     'login_register_cta',           'Buradan kayıt olun',
     'login_error_required',         'E-posta ve şifre zorunludur.',
+    'login_error_invalid_credentials','E-posta veya şifre hatalı.',
     'login_error_google_generic',   'Google girişi başlatılırken bir hata oluştu.',
     -- Register
     'register_title',               'Kayıt Ol',
@@ -81,6 +82,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     'login_no_account',             'Don''t have an account?',
     'login_register_cta',           'Sign up here',
     'login_error_required',         'Email and password are required.',
+    'login_error_invalid_credentials','The email or password is incorrect.',
     'login_error_google_generic',   'An error occurred while starting Google login.',
     'register_title',               'Sign Up',
     'register_lead_has_account',    'Already have an account?',
@@ -133,6 +135,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     'login_no_account',             'Noch kein Konto?',
     'login_register_cta',           'Hier registrieren',
     'login_error_required',         'E-Mail und Passwort sind erforderlich.',
+    'login_error_invalid_credentials','E-Mail oder Passwort ist falsch.',
     'login_error_google_generic',   'Beim Starten der Google-Anmeldung ist ein Fehler aufgetreten.',
     'register_title',               'Registrieren',
     'register_lead_has_account',    'Sie haben bereits ein Konto?',
