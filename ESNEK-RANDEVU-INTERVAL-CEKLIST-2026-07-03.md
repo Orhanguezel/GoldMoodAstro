@@ -119,11 +119,12 @@ CREATE TABLE IF NOT EXISTS consultant_time_blocks (
 - **Kabul:** yeni akış tek kaynak; eski tablolar sadece tarihsel.
   **Not:** Bu turda bilinçli olarak açık bırakıldı; checklist geriye uyum için eski `/slots` endpoint'inin kalmasını ve mobil geçiş sonrası emekliliği şart koşuyor.
 
-### [ ] INT-T9 — Deploy + uçtan uca doğrulama 🔴
+### [x] INT-T9 — Deploy + uçtan uca doğrulama 🔴
 - typecheck ×3 → commit+push → git-deploy.
 - Canlı senaryolar: (1) 45dk hizmet 10:30 → 10:30-11:15 kilitli, 11:15 seçilebilir;
   (2) eşzamanlı çift rezervasyon → tek kazanan; (3) mola ekle → aralık kapalı;
   (4) eski mobil slots endpoint'i hâlâ 200.
+  **Tamamlandı:** backend/frontend/admin typecheck geçti; lokal ve canlı DB'de `--only=225,226` seed geçti; commit `be8af6a` pushlandı; canlıda pull+build+PM2 reload yapıldı. Smoke: `GET /api/consultants/:id/availability?duration=45` 200, 15dk başlangıçlar dönüyor; eski `/slots` endpoint'i 200; consultant detail ve consultant panel sayfaları 200.
 
 ---
 
