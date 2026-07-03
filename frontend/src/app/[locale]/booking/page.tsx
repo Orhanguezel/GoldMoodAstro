@@ -38,7 +38,6 @@ export default function BookingPage() {
 
   const consultantId = searchParams.get('consultantId') || '';
   const resourceId = searchParams.get('resourceId') || '';
-  const slotId = searchParams.get('slotId') || '';
   const date = searchParams.get('date') || '';
   const time = searchParams.get('time') || '';
   const price = searchParams.get('price') || '0';
@@ -127,7 +126,7 @@ export default function BookingPage() {
     : '—';
 
   const handleCheckout = async () => {
-    if (!consultantId || !resourceId || !slotId || !date || !time) {
+    if (!consultantId || !resourceId || !date || !time) {
       setError(ui('ui_account_booking_missing_info', 'Missing booking information.'));
       return;
     }
@@ -177,7 +176,13 @@ export default function BookingPage() {
       const iyzico = await initIyzico({ orderId: order.order_id, locale }).unwrap();
       window.location.href = iyzico.checkout_url;
     } catch (err: any) {
-      const msg = err?.data?.error?.message || err?.message || ui('ui_account_booking_error_generic', 'An error occurred.');
+      const code = err?.data?.error?.message || err?.message;
+      const msg =
+        code === 'slot_conflict'
+          ? ui('ui_account_booking_slot_conflict', 'Bu aralik az once doldu. Lutfen takvimden baska bir saat secin.')
+          : code === 'outside_working_hours'
+          ? ui('ui_account_booking_outside_hours', 'Secilen saat danismanin calisma saatleri disinda.')
+          : code || ui('ui_account_booking_error_generic', 'An error occurred.');
       setError(msg);
       setLoading(false);
     }

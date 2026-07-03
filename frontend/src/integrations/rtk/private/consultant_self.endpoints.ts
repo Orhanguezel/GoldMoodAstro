@@ -331,6 +331,31 @@ export interface ConsultantServiceTemplate {
   adopted_service_id: string | null;
 }
 
+export interface ConsultantTimeBlock {
+  id: string;
+  consultant_id: string;
+  block_date: string;
+  start_time: string;
+  end_time: string;
+  reason: string | null;
+  created_at?: string;
+}
+
+export interface ConsultantDayTimelineEvent {
+  id: string;
+  kind: 'booking' | 'block';
+  start: string;
+  end: string;
+  label?: string | null;
+  status?: string | null;
+}
+
+export interface ConsultantDayTimeline {
+  date: string;
+  windows: Array<{ start: string; end: string }>;
+  events: ConsultantDayTimelineEvent[];
+}
+
 // C8: Danışanlarım
 export interface ConsultantClient {
   user_id: string;
@@ -650,6 +675,26 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       transformResponse: (res: { data: any }) => res.data,
       invalidatesTags: ['ConsultantSelfAvailability' as any],
     }),
+    listMyConsultantTimeBlocks: build.query<ConsultantTimeBlock[], { date?: string } | void>({
+      query: (args) => ({ url: '/me/consultant/time-blocks', params: args?.date ? { date: args.date } : undefined }),
+      transformResponse: (res: { data: ConsultantTimeBlock[] }) => res.data ?? [],
+      providesTags: ['ConsultantSelfAvailability' as any],
+    }),
+    createMyConsultantTimeBlock: build.mutation<ConsultantTimeBlock, { block_date: string; start_time: string; end_time: string; reason?: string | null }>({
+      query: (body) => ({ url: '/me/consultant/time-blocks', method: 'POST', body }),
+      transformResponse: (res: { data: ConsultantTimeBlock }) => res.data,
+      invalidatesTags: ['ConsultantSelfAvailability' as any],
+    }),
+    deleteMyConsultantTimeBlock: build.mutation<{ id: string; ok: boolean }, string>({
+      query: (id) => ({ url: `/me/consultant/time-blocks/${encodeURIComponent(id)}`, method: 'DELETE' }),
+      transformResponse: (res: { data: { id: string; ok: boolean } }) => res.data,
+      invalidatesTags: ['ConsultantSelfAvailability' as any],
+    }),
+    getMyConsultantDayTimeline: build.query<ConsultantDayTimeline, { date: string }>({
+      query: ({ date }) => ({ url: '/me/consultant/day-timeline', params: { date } }),
+      transformResponse: (res: { data: ConsultantDayTimeline }) => res.data,
+      providesTags: ['ConsultantSelfAvailability' as any],
+    }),
     // T30-8: Reviews
     listMyConsultantReviews: build.query<ConsultantSelfReview[], { status?: string } | void>({
       query: (args) => ({ url: '/me/consultant/reviews', params: args?.status ? { status: args.status } : undefined }),
@@ -756,6 +801,10 @@ export const {
   useGetMyConsultantAvailabilityQuery,
   useUpdateMyConsultantAvailabilityMutation,
   useOverrideMyConsultantAvailabilityDayMutation,
+  useListMyConsultantTimeBlocksQuery,
+  useCreateMyConsultantTimeBlockMutation,
+  useDeleteMyConsultantTimeBlockMutation,
+  useGetMyConsultantDayTimelineQuery,
   useListMyServiceTemplatesQuery,
   useAdoptServiceTemplateMutation,
   useCreateServiceBoostCheckoutMutation,

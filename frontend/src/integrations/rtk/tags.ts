@@ -70,6 +70,7 @@ export const metahubTags = [
   'Consultants',
   'Consultant',
   'ConsultantSlots',
+  'ConsultantAvailability',
   'Favorites',
   'MediaMessages',
   'MediaSettings',

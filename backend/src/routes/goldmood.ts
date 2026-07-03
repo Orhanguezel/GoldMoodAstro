@@ -18,6 +18,7 @@ import { registerHistoryRoutes } from '@/modules/history/router';
 import { registerCreditsRoutes } from '@/modules/credits/router';
 import { registerServiceBoosts, registerServiceBoostsAdmin } from '@/modules/serviceBoosts/router';
 import { registerCommissionChangeAdmin } from '@/modules/commissionChange/admin.routes';
+import { registerConsultantTimeBlocks } from '@/modules/consultantTimeBlocks/router';
 import { registerStubs } from './stubs';
 
 import { registerFirebaseAdmin } from '@/modules/firebase/admin.routes';
@@ -44,6 +45,7 @@ export async function registerGoldmoodPublic(api: FastifyInstance) {
   await api.register(registerHistoryRoutes, { prefix: '/me' });
   await api.register(registerCreditsRoutes, { prefix: '/credits' });
   await api.register(registerServiceBoosts);
+  await api.register(registerConsultantTimeBlocks);
   await api.register(registerStubs);
 }
 

@@ -44,6 +44,26 @@ export interface ConsultantSlotPublic {
   is_active: number;
 }
 
+export interface ConsultantAvailabilityRange {
+  start: string;
+  end: string;
+}
+
+export interface ConsultantAvailabilityBusyRange extends ConsultantAvailabilityRange {
+  kind: 'booking' | 'block';
+  label?: string | null;
+}
+
+export interface ConsultantIntervalAvailability {
+  consultant_id: string;
+  resource_id: string | null;
+  windows: ConsultantAvailabilityRange[];
+  busy: ConsultantAvailabilityBusyRange[];
+  starts: string[];
+  step_minutes: number;
+  duration_minutes: number;
+}
+
 export type Consultant = ConsultantPublic;
 export type ConsultantSlot = ConsultantSlotPublic;
 
@@ -60,6 +80,13 @@ export interface ListConsultantsParams {
 
 type ConsultantArg = string | { id: string; locale?: string };
 type ConsultantSlotsArg = { id: string; date: string; locale?: string };
+type ConsultantAvailabilityArg = {
+  id: string;
+  date: string;
+  duration?: number;
+  service_id?: string;
+  locale?: string;
+};
 
 function consultantArgId(arg: ConsultantArg) {
   return typeof arg === 'string' ? arg : arg.id;
@@ -106,6 +133,19 @@ const consultantsPublicApi = baseApi.injectEndpoints({
       providesTags: (_r, _e, { id }) => [{ type: 'ConsultantSlots', id }],
     }),
 
+    getConsultantAvailabilityPublic: build.query<ConsultantIntervalAvailability, ConsultantAvailabilityArg>({
+      query: ({ id, date, duration, service_id, locale }) => ({
+        url: `/consultants/${encodeURIComponent(id)}/availability`,
+        params: cleanParams({ date, duration, service_id }),
+        headers: makeLocaleHeaders(locale),
+      }),
+      transformResponse: (res: { data: ConsultantIntervalAvailability } | ConsultantIntervalAvailability) =>
+        (res as any)?.data ?? res,
+      providesTags: (_r, _e, { id, date, duration, service_id }) => [
+        { type: 'ConsultantAvailability', id: `${id}:${date}:${service_id ?? duration ?? 'default'}` },
+      ],
+    }),
+
     trackConsultantView: build.mutation<{ tracked: boolean; reason?: string }, string>({
       query: (id) => ({ url: `/consultants/${encodeURIComponent(id)}/view`, method: 'POST' }),
       transformResponse: (res: { data: { tracked: boolean; reason?: string } }) => res.data,
@@ -117,6 +157,7 @@ const consultantsPublicApi = baseApi.injectEndpoints({
 export const {
   useListConsultantsPublicQuery,
   useGetConsultantPublicQuery,
+  useGetConsultantAvailabilityPublicQuery,
   useGetConsultantSlotsPublicQuery,
   useTrackConsultantViewMutation,
 } = consultantsPublicApi;
@@ -124,3 +165,4 @@ export const {
 export const useListConsultantsQuery = useListConsultantsPublicQuery;
 export const useGetConsultantQuery = useGetConsultantPublicQuery;
 export const useGetConsultantSlotsQuery = useGetConsultantSlotsPublicQuery;
+export const useGetConsultantAvailabilityQuery = useGetConsultantAvailabilityPublicQuery;

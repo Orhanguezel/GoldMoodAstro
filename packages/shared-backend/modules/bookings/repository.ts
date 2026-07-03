@@ -35,6 +35,33 @@ import { ymdToDateSql, hmToTimeSql, to01, resolveLocales } from '../_shared';
 
 type Executor = any;
 const safeTrim = (v: unknown) => String(v ?? '').trim();
+const INTERVAL_BLOCKING_STATUSES = ['pending_payment', 'booked', 'confirmed', 'active'];
+
+function rowsFromResult<T>(result: unknown): T[] {
+  return Array.isArray((result as any)?.[0]) ? (result as any)[0] : ((result as any) ?? []);
+}
+
+function normalizeHm(value: unknown): string {
+  const raw = safeTrim(value);
+  return raw.length >= 5 ? raw.slice(0, 5) : raw;
+}
+
+function timeToMinutes(value: unknown): number {
+  const [hRaw, mRaw] = normalizeHm(value).split(':');
+  const h = Number(hRaw);
+  const m = Number(mRaw);
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : NaN;
+}
+
+function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number) {
+  return aStart < bEnd && bStart < aEnd;
+}
+
+function errorWithCode(code: string) {
+  const err: any = new Error(code);
+  err.code = code;
+  return err;
+}
 
 
 function mergedSelect(sReq: any, sDef: any) {
@@ -390,9 +417,88 @@ export async function insertBookingWithSlotTx(
   return row as any;
 }
 
+async function validateIntervalBookingTx(ex: Executor, booking: NewBookingRow) {
+  const consultantId = safeTrim(booking.consultant_id);
+  const resourceId = safeTrim(booking.resource_id);
+  const dateYmd = safeTrim(booking.appointment_date);
+  const timeHm = safeTrim(booking.appointment_time);
+  const duration = Number((booking as any).session_duration ?? 30);
+  const start = timeToMinutes(timeHm);
+  const end = start + duration;
+
+  if (!consultantId || !resourceId || !dateYmd || !timeHm || !Number.isFinite(start) || duration <= 0) {
+    throw errorWithCode('outside_working_hours');
+  }
+
+  const windowsResult = await ex.execute(sql`
+    SELECT start_time, end_time
+    FROM resource_working_hours
+    WHERE resource_id = ${resourceId}
+      AND is_active = 1
+      AND dow = (((DAYOFWEEK(${dateYmd}) + 5) % 7) + 1)
+    FOR UPDATE
+  `);
+  const windows = rowsFromResult<{ start_time: unknown; end_time: unknown }>(windowsResult);
+  const insideWorkingHours = windows.some((row) => {
+    const ws = timeToMinutes(row.start_time);
+    const we = timeToMinutes(row.end_time);
+    return Number.isFinite(ws) && Number.isFinite(we) && start >= ws && end <= we;
+  });
+  if (!insideWorkingHours) throw errorWithCode('outside_working_hours');
+
+  const bookingRowsResult = await ex.execute(sql`
+    SELECT id, appointment_time, session_duration
+    FROM bookings
+    WHERE consultant_id = ${consultantId}
+      AND appointment_date = ${dateYmd}
+      AND status IN (${sql.join(INTERVAL_BLOCKING_STATUSES.map((status) => sql`${status}`), sql`, `)})
+      AND appointment_time IS NOT NULL
+    FOR UPDATE
+  `);
+  const bookingRows = rowsFromResult<{ id: string; appointment_time: unknown; session_duration: unknown }>(bookingRowsResult);
+  for (const row of bookingRows) {
+    const otherStart = timeToMinutes(row.appointment_time);
+    const otherEnd = otherStart + Number(row.session_duration ?? 30);
+    if (Number.isFinite(otherStart) && overlaps(start, end, otherStart, otherEnd)) {
+      throw errorWithCode('slot_conflict');
+    }
+  }
+
+  const blocksResult = await ex.execute(sql`
+    SELECT id, start_time, end_time
+    FROM consultant_time_blocks
+    WHERE consultant_id = ${consultantId}
+      AND block_date = ${dateYmd}
+    FOR UPDATE
+  `);
+  const blocks = rowsFromResult<{ id: string; start_time: unknown; end_time: unknown }>(blocksResult);
+  for (const row of blocks) {
+    const blockStart = timeToMinutes(row.start_time);
+    const blockEnd = timeToMinutes(row.end_time);
+    if (Number.isFinite(blockStart) && Number.isFinite(blockEnd) && overlaps(start, end, blockStart, blockEnd)) {
+      throw errorWithCode('slot_conflict');
+    }
+  }
+}
+
+export async function insertBookingWithIntervalTx(
+  ex: Executor,
+  args: { booking: NewBookingRow },
+): Promise<BookingRow> {
+  await validateIntervalBookingTx(ex, args.booking);
+  await ex.insert(bookings).values({ ...(args.booking as any), slot_id: null } as any);
+
+  const [row] = await ex.select().from(bookings).where(eq(bookings.id, args.booking.id)).limit(1);
+  if (!row) throw errorWithCode('booking_insert_failed');
+  return row as any;
+}
+
 export async function createBookingPublic(args: { booking: NewBookingRow }): Promise<BookingRow> {
   return await db.transaction(async (tx) => {
-    return await insertBookingWithSlotTx(tx, { booking: args.booking, reserveSlot: true });
+    if (safeTrim((args.booking as any).slot_id)) {
+      return await insertBookingWithSlotTx(tx, { booking: args.booking, reserveSlot: true });
+    }
+    return await insertBookingWithIntervalTx(tx, { booking: args.booking });
   });
 }
 

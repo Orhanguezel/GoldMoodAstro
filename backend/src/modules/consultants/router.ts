@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { requireAuth, tryAuth } from '@goldmood/shared-backend/middleware/auth';
 import {
   getConsultantHandler,
+  getConsultantAvailabilityHandler,
   getConsultantSlotsHandler,
   listConsultantsHandler,
   registerConsultantHandler,
@@ -15,5 +16,6 @@ export async function registerConsultants(app: FastifyInstance) {
   app.post(`${BASE}/register`, { preHandler: [requireAuth] }, registerConsultantHandler);
   app.get(`${BASE}/:id`, { preHandler: [tryAuth] }, getConsultantHandler);
   app.post(`${BASE}/:id/view`, trackConsultantViewHandler);
+  app.get(`${BASE}/:id/availability`, getConsultantAvailabilityHandler);
   app.get(`${BASE}/:id/slots`, getConsultantSlotsHandler);
 }

@@ -42,6 +42,12 @@ export const consultantSlotsQuerySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
+export const consultantAvailabilityQuerySchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  duration: z.coerce.number().int().min(15).max(appConfig.consultants.maxSessionDurationMinutes).optional(),
+  service_id: z.string().uuid().optional(),
+});
+
 export const rejectConsultantBodySchema = z.object({
   rejection_reason: z.string().trim().min(2).max(2000),
 });

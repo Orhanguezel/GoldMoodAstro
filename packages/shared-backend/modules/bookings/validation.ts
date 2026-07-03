@@ -76,6 +76,7 @@ export const publicCreateBookingSchema = z.object({
   appointment_time: timeHmSchema,
 
   resource_id: uuid36Schema,
+  slot_id: uuid36Schema.optional(),
 
   service_id: uuid36Schema.optional(),
   customer_message: z

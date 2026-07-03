@@ -6,8 +6,10 @@ import { hasAnyRole } from '@goldmood/shared-backend/middleware/roles';
 import { getUserHistory } from '@goldmood/shared-backend/modules/history/repository';
 import { serviceCategories } from '@goldmood/shared-backend/modules/serviceCategories/schema';
 import { languages } from '@goldmood/shared-backend/modules/languages/schema';
+import { consultantServices } from '@goldmood/shared-backend/modules/consultantServices/schema';
 import {
   adminListConsultantsQuerySchema,
+  consultantAvailabilityQuerySchema,
   consultantIdParamsSchema,
   consultantSlotsQuerySchema,
   listConsultantsQuerySchema,
@@ -25,6 +27,7 @@ import {
   listConsultantsAdmin,
   rejectConsultant,
 } from './repository';
+import { computeDayAvailability } from './interval-availability';
 
 function userIdFromRequest(req: Parameters<RouteHandler>[0]) {
   const user = req.user as { sub?: string; id?: string } | undefined;
@@ -92,6 +95,37 @@ export const getConsultantSlotsHandler: RouteHandler = async (req, reply) => {
     return reply.code(404).send({ error: { message: 'consultant_not_found' } });
   }
   return { data: result.slots };
+};
+
+export const getConsultantAvailabilityHandler: RouteHandler = async (req, reply) => {
+  const { id } = consultantIdParamsSchema.parse(req.params ?? {});
+  const query = consultantAvailabilityQuerySchema.parse(req.query ?? {});
+  const consultant = await getApprovedConsultantById(id, localeFromRequest(req));
+  if (!consultant) {
+    return reply.code(404).send({ error: { message: 'consultant_not_found' } });
+  }
+
+  let duration = query.duration ?? Number(consultant.session_duration || 30);
+  if (query.service_id) {
+    const [service] = await db
+      .select({ duration_minutes: consultantServices.duration_minutes })
+      .from(consultantServices)
+      .where(
+        and(
+          eq(consultantServices.id, query.service_id),
+          eq(consultantServices.consultant_id, consultant.id),
+          eq(consultantServices.is_active, 1),
+        ),
+      )
+      .limit(1);
+    if (!service) {
+      return reply.code(404).send({ error: { message: 'service_not_found' } });
+    }
+    duration = Number(service.duration_minutes || duration);
+  }
+
+  const availability = await computeDayAvailability(consultant.id, query.date, duration);
+  return { data: availability };
 };
 
 const BOT_UA_RE = /bot|crawl|spider|slurp|headless|lighthouse|preview|facebookexternalhit|whatsapp/i;

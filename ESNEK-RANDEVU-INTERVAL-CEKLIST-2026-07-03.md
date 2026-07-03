@@ -53,38 +53,38 @@ CREATE TABLE IF NOT EXISTS consultant_time_blocks (
 
 ## FAZ 1 — Backend aralık motoru
 
-### [ ] INT-T1 — Availability hesaplayıcı 🔴
+### [x] INT-T1 — Availability hesaplayıcı 🔴
 - **Yeni:** `backend/src/modules/consultants/interval-availability.ts`:
   `computeDayAvailability(consultantId, date, durationMinutes)` →
   `{ windows: [{start,end}], busy: [{start,end,kind:'booking'|'block'}], starts: ['09:00','09:15',...] }`
 - Kaynaklar: working_hours (dow konv: `((DAYOFWEEK+5)%7)+1`), aktif bookings (süreleriyle), time_blocks.
 - Adım 15dk (sabit const, ileride ayarlanabilir). Geçmiş saatler (bugünse) elenir; şimdi+30dk tampon.
-- **Kabul:** birim mantık: 09-21 mesai + 10:00-10:45 dolu + 60dk hizmet → starts 09:00 var, 09:15/09:30/09:45/10:00..10:30 yok (çakışır), 10:45 var.
+- **Kabul:** birim mantık: 09-21 mesai + 10:00-10:45 dolu + 60dk hizmet → starts 09:00 var, 09:15/09:30/09:45/10:00..10:30 yok (çakışır), 10:45 var. **Tamamlandı:** `interval-availability.ts` mesai, booking ve mola aralıklarını 15dk adımla hesaplıyor.
 
-### [ ] INT-T2 — Public API 🔴
+### [x] INT-T2 — Public API 🔴
 - `GET /consultants/:id/availability?date=YYYY-MM-DD&duration=60` (veya `service_id` → süre servis kaydından).
 - Response: `{ data: { windows, busy, starts, step_minutes, duration_minutes } }` — busy aralıkları
   timeline çizimi için (kimlik bilgisi SIZDIRMADAN: yalnız aralık, randevu sahibi yok).
 - Eski `GET /:id/slots` endpoint'i KALIR (mobil eski sürüm uyumu) ama frontend yenisine geçer.
-- **Kabul:** farklı duration'larda starts doğru daralıyor.
+- **Kabul:** farklı duration'larda starts doğru daralıyor. **Tamamlandı:** `GET /consultants/:id/availability` eklendi; `duration` ve `service_id` destekli, eski `/slots` endpoint'i korunuyor.
 
-### [ ] INT-T3 — Çakışma-güvenli booking create 🔴
+### [x] INT-T3 — Çakışma-güvenli booking create 🔴
 - Booking create (public + instant): `slot_id` OPSİYONEL olur; yeni akış `{appointment_date,
   appointment_time, service_id}` ile gelir; süre servis kaydından snapshot.
 - Transaction: `SELECT id FROM bookings WHERE consultant_id=? AND appointment_date=? AND status IN
   ('booked','confirmed','active') FOR UPDATE` → JS'te aralık çakışma kontrolü → çakışıyorsa 409
   `slot_conflict`; temizse INSERT. time_blocks + mesai içi doğrulaması da burada.
 - Eski slot_id'li istekler mevcut yoldan çalışmaya devam eder (geriye uyum).
-- **Kabul:** eşzamanlı iki istek aynı aralığı alamaz (tek kazanan, diğeri 409); mesai dışı istek 400.
+- **Kabul:** eşzamanlı iki istek aynı aralığı alamaz (tek kazanan, diğeri 409); mesai dışı istek 400. **Tamamlandı:** public booking `slot_id` opsiyonel; `slot_id` yoksa transaction içinde mesai/mola/randevu aralıkları kilitli kontrol ediliyor, çakışma `409 slot_conflict`.
 
-### [ ] INT-T4 — Danışman molaları (time blocks) 🟠
+### [x] INT-T4 — Danışman molaları (time blocks) 🟠
 - CRUD: `GET/POST/DELETE /me/consultant/time-blocks` (requireAuth, kendi consultant'ı).
 - Danışman paneli "Saatlerim" bölümüne "Mola/Blokaj ekle" (tarih + aralık + neden).
-- **Kabul:** eklenen mola availability'de busy görünür, o aralığa randevu alınamaz.
+- **Kabul:** eklenen mola availability'de busy görünür, o aralığa randevu alınamaz. **Tamamlandı:** `/me/consultant/time-blocks` CRUD, availability busy entegrasyonu ve danışman panelinde mola ekle/sil UI eklendi.
 
 ## FAZ 2 — Frontend timeline seçici
 
-### [ ] INT-T5 — TimelinePicker bileşeni 🔴
+### [x] INT-T5 — TimelinePicker bileşeni 🔴
 - **Yeni:** `frontend/src/components/containers/consultant/TimelinePicker.tsx` — SlotPicker'ın yerine
   (SlotPicker dosyası kalır, kullanım değişir):
   - Gün şeridi (mevcut tarih seçici korunur).
@@ -97,26 +97,27 @@ CREATE TABLE IF NOT EXISTS consultant_time_blocks (
   "SAAT SEÇİN" butonu seçim yapılınca aralık metniyle aktifleşir.
 - Booking sayfasına yeni paramlar: `date, time, duration, serviceId` (slotId yok — INT-T3 yeni yol).
 - ui_ metinleri tr/en/de (İngilizce placeholder YASAK).
-- **Kabul:** 45/60/90dk hizmetlerde çizgi + başlangıçlar doğru; dolu aralık görsel olarak izlenebilir.
+- **Kabul:** 45/60/90dk hizmetlerde çizgi + başlangıçlar doğru; dolu aralık görsel olarak izlenebilir. **Tamamlandı:** `TimelinePicker` yeni availability API'sini kullanıyor, busy aralıkları çiziyor, hizmet süresine göre başlangıç chipleri üretiyor.
 
-### [ ] INT-T6 — Booking akışı uyumu 🔴
+### [x] INT-T6 — Booking akışı uyumu 🔴
 - `frontend/src/app/[locale]/booking/page.tsx` (ödeme öncesi özet): slotId yerine date+time+duration
   ile çalışır; 409 slot_conflict gelirse kullanıcıya "bu aralık az önce doldu" + takvime geri dön.
 - Instant call ("hemen görüş") akışı etkilenmez (slot'suz zaten).
 - **Kabul:** uçtan uca: hizmet seç → aralık seç → ödeme → booking DB'de doğru süreyle; çakışan
-  ikinci deneme 409 mesajı gösterir.
+  ikinci deneme 409 mesajı gösterir. **Tamamlandı:** booking sayfası `slotId` zorunluluğunu kaldırdı; `slot_conflict` ve mesai dışı hataları kullanıcı dostu metne çevriliyor.
 
 ## FAZ 3 — Danışman görünümü + geçiş temizliği
 
-### [ ] INT-T7 — Danışman takvim görünümü 🟠
+### [x] INT-T7 — Danışman takvim görünümü 🟠
 - Danışman panelinde günlük timeline: randevuları + molaları çizgide görsün (müşteri adıyla).
-- **Kabul:** danışman gününü tek bakışta görür.
+- **Kabul:** danışman gününü tek bakışta görür. **Tamamlandı:** `/me/consultant/day-timeline` ve panelde günlük randevu+mola timeline görünümü eklendi.
 
 ### [ ] INT-T8 — Eski grid'in emekliliği 🟡 (tam geçiş DOĞRULANDIKTAN sonra)
 - Frontend tamamen yeni akışta + mobil sürüm güncellenince: slot-generator cron kaldır,
   `getConsultantSlots` eski endpoint'i deprecate işaretle (silme — mobil eski sürümler için 1-2 ay).
 - resource_slots büyümesin diye cron kaldırılana kadar HORIZON 30 günde kalır.
 - **Kabul:** yeni akış tek kaynak; eski tablolar sadece tarihsel.
+  **Not:** Bu turda bilinçli olarak açık bırakıldı; checklist geriye uyum için eski `/slots` endpoint'inin kalmasını ve mobil geçiş sonrası emekliliği şart koşuyor.
 
 ### [ ] INT-T9 — Deploy + uçtan uca doğrulama 🔴
 - typecheck ×3 → commit+push → git-deploy.

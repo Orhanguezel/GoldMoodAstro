@@ -8,7 +8,6 @@ import { ArrowLeft, Award, CheckCircle, Clock, Globe, Star, ShieldCheck, Sparkle
 import {
   useGetConsultantQuery,
   useTrackConsultantViewMutation,
-  type ConsultantSlotPublic,
 } from '@/integrations/rtk/public/consultants.public.endpoints';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { toast } from 'sonner';
@@ -21,7 +20,7 @@ import { useGetConsultantOutcomeScoreQuery } from '@/integrations/rtk/hooks';
 import { useAddFavoriteMutation, useRemoveFavoriteMutation } from '@/integrations/rtk/hooks';
 import { useGetConsultantMediaSettingsQuery, type MediaKind } from '@/integrations/rtk/public/media_messages.endpoints';
 import ReviewList from '@/components/common/public/ReviewList';
-import SlotPicker from './SlotPicker';
+import TimelinePicker, { type TimelineSelection } from './TimelinePicker';
 import ConsultantMessageModal from './ConsultantMessageModal';
 import MediaQuestionModal from './MediaQuestionModal';
 import { ChevronDown, MessageCircle, Phone, Check, Mic, Video } from 'lucide-react';
@@ -47,7 +46,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
     { consultantId: consultant?.id || '', locale },
     { skip: !consultant?.id },
   );
-  const [selectedSlot, setSelectedSlot] = useState<ConsultantSlotPublic | null>(null);
+  const [selectedInterval, setSelectedInterval] = useState<TimelineSelection | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
   const [messageOpen, setMessageOpen] = useState(false);
@@ -123,22 +122,26 @@ export default function ConsultantDetail({ id, locale }: Props) {
     );
 
   const handleBook = () => {
-    if (!selectedSlot) return;
+    if (!selectedInterval) return;
     const svc = selectedService;
+    const bookingResourceId = selectedInterval.resource_id || consultant.resource_id;
+    if (!bookingResourceId) {
+      toast.error(ui('ui_consultant_timeline_error', 'Uygunluk getirilemedi.'));
+      return;
+    }
     trackEvent('booking_start', {
       consultant_id: consultant.id,
       service_id: svc?.id,
-      slot_id: selectedSlot.id,
+      appointment_time: selectedInterval.time,
       media_type: svc?.media_type,
     }).catch(() => {});
     const q = new URLSearchParams({
       consultantId: consultant.id,
-      resourceId: selectedSlot.resource_id,
-      slotId: selectedSlot.id,
-      date: selectedSlot.slot_date,
-      time: selectedSlot.slot_time.slice(0, 5),
+      resourceId: bookingResourceId,
+      date: selectedInterval.date,
+      time: selectedInterval.time,
       price: String(svc?.price ?? consultant.session_price),
-      duration: String(svc?.duration_minutes ?? consultant.session_duration),
+      duration: String(selectedInterval.duration_minutes),
       name: consultant.full_name || '',
     });
     if (svc?.id) q.set('serviceId', svc.id);
@@ -464,7 +467,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                       onClick={() => {
                         setSelectedServiceId(svc.id);
                         setExpandedServiceId(isExpanded ? null : svc.id);
-                        setSelectedSlot(null);
+                        setSelectedInterval(null);
                         trackEvent('service_select', { service_id: svc.id }).catch(() => {});
                       }}
                       className="w-full flex items-center justify-between gap-3 p-4 text-left"
@@ -525,17 +528,19 @@ export default function ConsultantDetail({ id, locale }: Props) {
                 </div>
 
                 <div className="min-h-[160px]">
-                  <SlotPicker
+                  <TimelinePicker
                     consultantId={id}
                     locale={locale}
-                    onSelect={setSelectedSlot}
-                    selectedSlotId={selectedSlot?.id}
+                    durationMinutes={selectedService.duration_minutes ?? consultant.session_duration}
+                    serviceId={selectedService.id}
+                    selected={selectedInterval}
+                    onSelect={setSelectedInterval}
                   />
                 </div>
 
                 <button
                   onClick={handleBook}
-                  disabled={!selectedSlot}
+                  disabled={!selectedInterval || !(selectedInterval.resource_id || consultant.resource_id)}
                   className={`w-full group relative py-4 rounded-full font-bold text-sm tracking-widest uppercase overflow-hidden transition-all disabled:opacity-50 ${
                     selectedService.is_free === 1
                       ? 'bg-(--gm-success) text-(--gm-text) hover:shadow-(--gm-shadow-card)'
@@ -544,8 +549,8 @@ export default function ConsultantDetail({ id, locale }: Props) {
                 >
                   <span className="relative z-10 inline-flex items-center justify-center gap-2">
                     {selectedService.is_free === 1 && <Phone className="w-4 h-4" />}
-                    {!selectedSlot
-                      ? ui('ui_consultant_book_select_slot', 'SELECT A TIME')
+                    {!selectedInterval
+                      ? ui('ui_consultant_book_select_slot', 'SAAT SECIN')
                       : selectedService.is_free === 1
                       ? ui('ui_consultant_book_free', 'BOOK FREE SESSION')
                       : ui('ui_consultant_book_paid', 'BOOK SESSION')}

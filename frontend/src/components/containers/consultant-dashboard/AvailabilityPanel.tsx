@@ -5,7 +5,11 @@ import { Plus, Trash2, Save, Loader2, Calendar as CalendarIcon, Power } from 'lu
 import { toast } from 'sonner';
 import { extractApiError } from '@/integrations/shared';
 import {
+  useCreateMyConsultantTimeBlockMutation,
+  useDeleteMyConsultantTimeBlockMutation,
+  useGetMyConsultantDayTimelineQuery,
   useGetMyConsultantAvailabilityQuery,
+  useListMyConsultantTimeBlocksQuery,
   useOverrideMyConsultantAvailabilityDayMutation,
   useUpdateMyConsultantAvailabilityMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
@@ -54,6 +58,11 @@ function timeToMinutes(time: string) {
   return h * 60 + m;
 }
 
+function percent(value: number, min: number, max: number) {
+  if (max <= min) return 0;
+  return ((value - min) / (max - min)) * 100;
+}
+
 export default function AvailabilityPanel() {
   const { ui } = useUiSection('ui_consultantpanel');
   const dayLabel = (dow: Dow) => {
@@ -70,6 +79,13 @@ export default function AvailabilityPanel() {
   const [hours, setHours] = useState<HourRow[]>([]);
   const [dirty, setDirty] = useState(false);
   const [overrideDate, setOverrideDate] = useState(() => todayLocalISO());
+  const [blockStart, setBlockStart] = useState('12:00');
+  const [blockEnd, setBlockEnd] = useState('13:00');
+  const [blockReason, setBlockReason] = useState('');
+  const { data: timeBlocks = [] } = useListMyConsultantTimeBlocksQuery({ date: overrideDate }, { skip: !overrideDate });
+  const { data: dayTimeline } = useGetMyConsultantDayTimelineQuery({ date: overrideDate }, { skip: !overrideDate });
+  const [createTimeBlock, { isLoading: isCreatingBlock }] = useCreateMyConsultantTimeBlockMutation();
+  const [deleteTimeBlock, { isLoading: isDeletingBlock }] = useDeleteMyConsultantTimeBlockMutation();
 
   useEffect(() => {
     if (data?.working_hours) {
@@ -185,6 +201,33 @@ export default function AvailabilityPanel() {
     }
   };
 
+  const handleCreateBlock = async () => {
+    if (!overrideDate) {
+      toast.error(ui('ui_consultantpanel_availability_selectDateFirst', 'Once bir tarih sec.'));
+      return;
+    }
+    if (timeToMinutes(blockEnd) <= timeToMinutes(blockStart)) {
+      toast.error(ui('ui_consultantpanel_timeblock_invalid', 'Bitis saati baslangictan sonra olmali.'));
+      return;
+    }
+    try {
+      await createTimeBlock({
+        block_date: overrideDate,
+        start_time: blockStart,
+        end_time: blockEnd,
+        reason: blockReason.trim() || null,
+      }).unwrap();
+      setBlockReason('');
+      toast.success(ui('ui_consultantpanel_timeblock_created', 'Mola eklendi.'));
+    } catch (e: any) {
+      if (e?.data?.error?.message === 'time_block_conflict') {
+        toast.error(ui('ui_consultantpanel_timeblock_conflict', 'Bu mola mevcut bir blokla cakisiyor.'));
+      } else {
+        toast.error(extractApiError(e, ui('ui_consultantpanel_timeblock_create_failed', 'Mola eklenemedi.')));
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -286,6 +329,143 @@ export default function AvailabilityPanel() {
             <Power className="w-3.5 h-3.5" />
             {ui('ui_consultantpanel_availability_openDay', 'Open day')}
           </button>
+        </div>
+      </div>
+
+      {/* Time blocks and daily timeline */}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-4 space-y-4">
+          <div>
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
+              {ui('ui_consultantpanel_timeblock_title', 'Mola / Blokaj')}
+            </h3>
+            <p className="text-[12px] text-[var(--gm-text-dim)] mt-1 font-serif italic">
+              {ui('ui_consultantpanel_timeblock_hint', 'Secili gunde randevu alinmayacak araliklari ekleyin.')}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_1.5fr_auto] gap-2">
+            <input
+              type="time"
+              value={blockStart}
+              onChange={(e) => setBlockStart(e.target.value)}
+              className="h-10 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-3 text-sm text-[var(--gm-text)]"
+            />
+            <input
+              type="time"
+              value={blockEnd}
+              onChange={(e) => setBlockEnd(e.target.value)}
+              className="h-10 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-3 text-sm text-[var(--gm-text)]"
+            />
+            <input
+              value={blockReason}
+              onChange={(e) => setBlockReason(e.target.value)}
+              placeholder={ui('ui_consultantpanel_timeblock_reason_placeholder', 'Neden, istege bagli')}
+              className="col-span-2 sm:col-span-1 h-10 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl px-3 text-sm text-[var(--gm-text)]"
+            />
+            <button
+              type="button"
+              onClick={handleCreateBlock}
+              disabled={isCreatingBlock}
+              className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
+            >
+              {isCreatingBlock ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+              {ui('ui_consultantpanel_timeblock_add', 'Ekle')}
+            </button>
+          </div>
+          <div className="space-y-2">
+            {timeBlocks.length === 0 && (
+              <p className="text-[12px] text-[var(--gm-muted)] font-serif italic">
+                {ui('ui_consultantpanel_timeblock_empty', 'Bu gunde mola yok.')}
+              </p>
+            )}
+            {timeBlocks.map((block) => (
+              <div key={block.id} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--gm-bg-deep)]/30 p-3">
+                <div>
+                  <p className="text-sm font-bold text-[var(--gm-text)]">{block.start_time} - {block.end_time}</p>
+                  {block.reason && <p className="text-[12px] text-[var(--gm-text-dim)]">{block.reason}</p>}
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await deleteTimeBlock(block.id).unwrap();
+                      toast.success(ui('ui_consultantpanel_timeblock_deleted', 'Mola silindi.'));
+                    } catch (e: any) {
+                      toast.error(extractApiError(e, ui('ui_consultantpanel_timeblock_delete_failed', 'Mola silinemedi.')));
+                    }
+                  }}
+                  disabled={isDeletingBlock}
+                  className="p-2 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-lg disabled:opacity-50"
+                  title={ui('ui_consultantpanel_availability_delete', 'Sil')}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-4 space-y-4">
+          <div>
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold-dim)]">
+              {ui('ui_consultantpanel_daytimeline_title', 'Gunluk Timeline')}
+            </h3>
+            <p className="text-[12px] text-[var(--gm-text-dim)] mt-1 font-serif italic">
+              {ui('ui_consultantpanel_daytimeline_hint', 'Randevular ve molalar secili gun icin tek cizgide gorunur.')}
+            </p>
+          </div>
+          {dayTimeline?.windows?.length ? (() => {
+            const min = Math.min(...dayTimeline.windows.map((w) => timeToMinutes(w.start)));
+            const max = Math.max(...dayTimeline.windows.map((w) => timeToMinutes(w.end)));
+            return (
+              <div className="space-y-3">
+                <div className="relative h-12 overflow-hidden rounded-full border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)]">
+                  {dayTimeline.windows.map((w, idx) => (
+                    <div
+                      key={`${w.start}-${w.end}-${idx}`}
+                      className="absolute top-1 bottom-1 rounded-full bg-[var(--gm-success)]/15"
+                      style={{ left: `${percent(timeToMinutes(w.start), min, max)}%`, width: `${percent(timeToMinutes(w.end), min, max) - percent(timeToMinutes(w.start), min, max)}%` }}
+                    />
+                  ))}
+                  {dayTimeline.events.map((event) => {
+                    const left = percent(timeToMinutes(event.start), min, max);
+                    const width = Math.max(1, percent(timeToMinutes(event.end), min, max) - left);
+                    return (
+                      <div
+                        key={`${event.kind}-${event.id}`}
+                        className={`absolute top-1 bottom-1 rounded-full ${event.kind === 'booking' ? 'bg-[var(--gm-gold)]/55' : 'bg-[var(--gm-error)]/35'}`}
+                        style={{ left: `${left}%`, width: `${width}%` }}
+                        title={`${event.start} - ${event.end}`}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between text-[10px] text-[var(--gm-muted)]">
+                  <span>{dayTimeline.windows[0]?.start}</span>
+                  <span>{dayTimeline.windows[dayTimeline.windows.length - 1]?.end}</span>
+                </div>
+                <div className="space-y-2">
+                  {dayTimeline.events.length === 0 && (
+                    <p className="text-[12px] text-[var(--gm-muted)] font-serif italic">{ui('ui_consultantpanel_daytimeline_empty', 'Bu gun icin randevu veya mola yok.')}</p>
+                  )}
+                  {dayTimeline.events.map((event) => (
+                    <div key={`${event.kind}-row-${event.id}`} className="flex items-center justify-between rounded-xl bg-[var(--gm-bg-deep)]/30 p-3">
+                      <span className="text-sm font-bold text-[var(--gm-text)]">{event.start} - {event.end}</span>
+                      <span className="text-[12px] text-[var(--gm-text-dim)]">
+                        {event.kind === 'booking'
+                          ? (event.label || ui('ui_consultantpanel_daytimeline_booking', 'Randevu'))
+                          : (event.label || ui('ui_consultantpanel_daytimeline_block', 'Mola'))}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })() : (
+            <p className="text-[12px] text-[var(--gm-muted)] font-serif italic">
+              {ui('ui_consultantpanel_daytimeline_closed', 'Secili gun icin calisma saati yok.')}
+            </p>
+          )}
         </div>
       </div>
 

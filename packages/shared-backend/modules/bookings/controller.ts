@@ -290,6 +290,7 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
 
         service_id: input.service_id ? safeText(input.service_id) : null,
         resource_id: safeText(input.resource_id),
+        slot_id: input.slot_id ? safeText(input.slot_id) : null,
 
         appointment_date: safeText(input.appointment_date),
         appointment_time: safeText(input.appointment_time),
@@ -473,6 +474,12 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
     }
     if (String(e?.code || e?.message) === 'slot_not_available') {
       return reply.code(409).send({ error: { message: 'slot_not_available' } });
+    }
+    if (String(e?.code || e?.message) === 'slot_conflict') {
+      return reply.code(409).send({ error: { message: 'slot_conflict' } });
+    }
+    if (String(e?.code || e?.message) === 'outside_working_hours') {
+      return reply.code(400).send({ error: { message: 'outside_working_hours' } });
     }
     req.log.error(e);
     return reply.code(500).send({ error: { message: 'booking_create_failed' } });
