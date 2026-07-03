@@ -2404,7 +2404,7 @@ export async function listCustomerThreads(req: FastifyRequest, reply: FastifyRep
 
       if (t.context_type === 'booking') {
         const [b] = await db.execute(
-          sql`SELECT b.consultant_id, c.display_name, u.full_name, u.avatar_url
+          sql`SELECT b.consultant_id, u.full_name, u.avatar_url
               FROM bookings b
               INNER JOIN consultants c ON c.id = b.consultant_id
               INNER JOIN users u ON u.id = c.user_id
@@ -2415,14 +2415,14 @@ export async function listCustomerThreads(req: FastifyRequest, reply: FastifyRep
         if (row) {
           consultant = {
             id: row.consultant_id,
-            display_name: row.display_name ?? null,
+            display_name: row.full_name ?? null,
             full_name: row.full_name ?? null,
             avatar_url: row.avatar_url ?? null,
           };
         }
       } else if (t.context_type === 'consultant_lead') {
         const [c] = await db.execute(
-          sql`SELECT c.id AS consultant_id, c.display_name, u.full_name, u.avatar_url
+          sql`SELECT c.id AS consultant_id, u.full_name, u.avatar_url
               FROM consultants c
               INNER JOIN users u ON u.id = c.user_id
               WHERE c.id = ${t.context_id}
@@ -2432,7 +2432,7 @@ export async function listCustomerThreads(req: FastifyRequest, reply: FastifyRep
         if (row) {
           consultant = {
             id: row.consultant_id,
-            display_name: row.display_name ?? null,
+            display_name: row.full_name ?? null,
             full_name: row.full_name ?? null,
             avatar_url: row.avatar_url ?? null,
           };
