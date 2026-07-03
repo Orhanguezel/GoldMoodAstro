@@ -1713,7 +1713,7 @@ export const listSubscriptionPlansAdmin: RouteHandler = async (req, reply) => {
     : db.select({ total: sql<number>`COUNT(*)` }).from(subscriptionPlans));
 
   return reply.send({
-    data: rows,
+    data: await mergeAdminSubscriptionPlanI18n(rows),
     limit,
     offset,
     total: Number((countRows[0] as { total: number }).total),
@@ -1728,7 +1728,8 @@ export const getSubscriptionPlanAdmin: RouteHandler<{ Params: { id: string } }> 
   const [row] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id)).limit(1);
   if (!row) return reply.code(404).send({ error: { message: 'subscription_plan_not_found' } });
 
-  return reply.send({ data: row });
+  const [merged] = await mergeAdminSubscriptionPlanI18n([row]);
+  return reply.send({ data: merged });
 };
 
 /** POST /admin/subscription-plans */
@@ -1775,8 +1776,10 @@ export const createSubscriptionPlanAdmin: RouteHandler = async (req, reply) => {
     display_order: displayOrder,
   } as never);
 
+  await syncSubscriptionPlanI18n(id, body);
   const [created] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id)).limit(1);
-  return reply.send({ data: created });
+  const [merged] = await mergeAdminSubscriptionPlanI18n([created]);
+  return reply.send({ data: merged });
 };
 
 /** PATCH /admin/subscription-plans/:id */
@@ -1832,17 +1835,22 @@ export const updateSubscriptionPlanAdmin: RouteHandler<{ Params: { id: string } 
   if (body.is_active !== undefined) patch.is_active = asBool(body.is_active) ? 1 : 0;
   if (body.display_order !== undefined) patch.display_order = asPositiveInt(body.display_order, 0, 0);
 
-  if (Object.keys(patch).length === 0) {
+  const hasI18nOnlyPatch = hasPlanI18nPayload(body);
+  if (Object.keys(patch).length === 0 && !hasI18nOnlyPatch) {
     return reply.code(400).send({ error: { message: 'nothing_to_update' } });
   }
 
   const [existing] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id)).limit(1);
   if (!existing) return reply.code(404).send({ error: { message: 'subscription_plan_not_found' } });
 
-  await db.update(subscriptionPlans).set(patch as never).where(eq(subscriptionPlans.id, id));
+  if (Object.keys(patch).length > 0) {
+    await db.update(subscriptionPlans).set(patch as never).where(eq(subscriptionPlans.id, id));
+  }
+  await syncSubscriptionPlanI18n(id, body);
   const [updated] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id)).limit(1);
 
-  return reply.send({ data: updated });
+  const [merged] = await mergeAdminSubscriptionPlanI18n([updated]);
+  return reply.send({ data: merged });
 };
 
 /** DELETE /admin/subscription-plans/:id */

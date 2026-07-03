@@ -19,8 +19,10 @@ export type SubscriptionPlanAdmin = {
   code: string;
   name_tr: string;
   name_en: string;
+  name_de: string | null;
   description_tr: string | null;
   description_en: string | null;
+  description_de: string | null;
   price_minor: number;
   currency: string;
   period: SubscriptionPlanPeriod;
@@ -64,8 +66,10 @@ export type SubscriptionPlanAdminPayload = {
   code: string;
   name_tr: string;
   name_en: string;
+  name_de?: string | null;
   description_tr?: string | null;
   description_en?: string | null;
+  description_de?: string | null;
   price_minor: number;
   currency?: string;
   period: SubscriptionPlanPeriod;
@@ -228,8 +232,10 @@ export function normalizeSubscriptionPlanAdmin(raw: unknown): SubscriptionPlanAd
     code: asStr(r.code),
     name_tr: asStr(r.name_tr),
     name_en: asStr(r.name_en),
+    name_de: asNullStr(r.name_de),
     description_tr: asNullStr(r.description_tr),
     description_en: asNullStr(r.description_en),
+    description_de: asNullStr(r.description_de),
     price_minor: asNum(r.price_minor, 0),
     currency: asStr(r.currency || 'TRY') || 'TRY',
     period: normalizePlanPeriod(r.period),
@@ -254,4 +260,3 @@ export function normalizeSubscriptionPlanAdminList(
     total: asNum(r.total, data.length),
   };
 }
-

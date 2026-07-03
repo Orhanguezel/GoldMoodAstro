@@ -1,193 +1,116 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, RefreshCcw, Save, Trash2, Pencil } from 'lucide-react';
+import Link from 'next/link';
+import {
+  CalendarDays,
+  CheckCircle2,
+  CreditCard,
+  Pencil,
+  Plus,
+  RefreshCcw,
+  Search,
+  Trash2,
+  XCircle,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import {
-  useCreateSubscriptionPlanAdminMutation,
   useDeleteSubscriptionPlanAdminMutation,
   useListSubscriptionPlansAdminQuery,
-  useUpdateSubscriptionPlanAdminMutation,
 } from '@/integrations/hooks';
-import type {
-  SubscriptionPlanAdmin,
-  SubscriptionPlanAdminPayload,
-  SubscriptionPlanAdminUpdatePayload,
-  SubscriptionPlanPeriod,
-} from '@/integrations/shared';
+import type { SubscriptionPlanAdmin, SubscriptionPlanPeriod } from '@/integrations/shared';
 import { cn } from '@/lib/utils';
 
-type PlanFormValues = {
-  code: string;
-  name_tr: string;
-  name_en: string;
-  description_tr: string;
-  description_en: string;
-  currency: string;
-  period: SubscriptionPlanPeriod;
-  trial_days: string;
-  price_minor: string;
-  features: string;
-  is_active: boolean;
-  display_order: string;
-};
+type ContentLocale = 'tr' | 'en' | 'de';
 
-const PERIODS: SubscriptionPlanPeriod[] = ['monthly', 'yearly', 'lifetime'];
-
-function emptyForm(): PlanFormValues {
-  return {
-    code: '',
-    name_tr: '',
-    name_en: '',
-    description_tr: '',
-    description_en: '',
-    currency: 'TRY',
-    period: 'monthly',
-    trial_days: '0',
-    price_minor: '0',
-    features: '',
-    is_active: true,
-    display_order: '0',
-  };
+function planName(plan: SubscriptionPlanAdmin, locale: ContentLocale) {
+  if (locale === 'de') return plan.name_de || plan.name_en || plan.name_tr || plan.code;
+  if (locale === 'en') return plan.name_en || plan.name_tr || plan.name_de || plan.code;
+  return plan.name_tr || plan.name_en || plan.name_de || plan.code;
 }
 
-function toPayload(v: PlanFormValues): SubscriptionPlanAdminPayload {
-  return {
-    code: v.code.trim(),
-    name_tr: v.name_tr.trim(),
-    name_en: v.name_en.trim(),
-    description_tr: v.description_tr.trim() || null,
-    description_en: v.description_en.trim() || null,
-    currency: v.currency.trim() || 'TRY',
-    period: v.period,
-    trial_days: Number(v.trial_days || 0),
-    price_minor: Number(v.price_minor || 0),
-    features: v.features
-      .split(',')
-      .map((p) => p.trim())
-      .filter(Boolean),
-    is_active: v.is_active ? 1 : 0,
-    display_order: Number(v.display_order || 0),
-  };
+function planDescription(plan: SubscriptionPlanAdmin, locale: ContentLocale) {
+  if (locale === 'de') return plan.description_de || plan.description_en || plan.description_tr || '';
+  if (locale === 'en') return plan.description_en || plan.description_tr || plan.description_de || '';
+  return plan.description_tr || plan.description_en || plan.description_de || '';
 }
 
-function toPatchPayload(v: PlanFormValues): SubscriptionPlanAdminUpdatePayload {
-  return {
-    ...toPayload(v),
-    code: v.code.trim(),
-  };
+function periodLabel(period: SubscriptionPlanPeriod) {
+  if (period === 'yearly') return 'Yıllık';
+  if (period === 'lifetime') return 'Ömür Boyu';
+  return 'Aylık';
 }
 
-function hydrateForm(row: SubscriptionPlanAdmin): PlanFormValues {
-  return {
-    code: row.code,
-    name_tr: row.name_tr,
-    name_en: row.name_en,
-    description_tr: row.description_tr || '',
-    description_en: row.description_en || '',
-    currency: row.currency,
-    period: row.period,
-    trial_days: String(row.trial_days || 0),
-    price_minor: String(row.price_minor || 0),
-    features: Array.isArray(row.features)
-      ? row.features.join(', ')
-      : typeof row.features === 'string'
-        ? row.features
-        : '',
-    is_active: Boolean(row.is_active),
-    display_order: String(row.display_order || 0),
-  };
-}
-
-function formatPriceMinor(value: string) {
-  const n = Number(value || 0);
-  if (!Number.isFinite(n)) return '-';
-  return `${(n / 100).toFixed(2)} TL`;
+function formatPrice(value: number, currency: string) {
+  return `${(Number(value || 0) / 100).toLocaleString('tr-TR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} ${currency || 'TRY'}`;
 }
 
 export default function AdminSubscriptionPlansClient() {
   const t = useAdminT('admin.subscriptions');
-  const list = useListSubscriptionPlansAdminQuery({ limit: 200 });
-  const [createPlan] = useCreateSubscriptionPlanAdminMutation();
-  const [updatePlan] = useUpdateSubscriptionPlanAdminMutation();
-  const [deletePlan] = useDeleteSubscriptionPlanAdminMutation();
+  const [locale, setLocale] = React.useState<ContentLocale>('tr');
+  const [search, setSearch] = React.useState('');
 
-  const [form, setForm] = React.useState<PlanFormValues>(emptyForm);
-  const [editingId, setEditingId] = React.useState<string>('');
+  const list = useListSubscriptionPlansAdminQuery({
+    q: search.trim() || undefined,
+    limit: 200,
+  });
+  const [deletePlan, deleteState] = useDeleteSubscriptionPlanAdminMutation();
 
   const plans = list.data?.data ?? [];
+  const activeCount = plans.filter((plan) => Number(plan.is_active) === 1).length;
+  const inactiveCount = plans.length - activeCount;
 
-  function setField<K extends keyof PlanFormValues>(key: K, value: PlanFormValues[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }
-
-  function startEdit(row: SubscriptionPlanAdmin) {
-    setEditingId(row.id);
-    setForm(hydrateForm(row));
-  }
-
-  function resetForm() {
-    setEditingId('');
-    setForm(emptyForm());
-  }
-
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function removePlan(plan: SubscriptionPlanAdmin) {
+    if (!window.confirm(`${plan.code} planı silinsin mi?`)) return;
     try {
-      if (!form.code.trim() || !form.name_tr.trim() || !form.name_en.trim()) {
-        toast.error(t('plans.toasts.validation'));
-        return;
-      }
-      if (!editingId) {
-        await createPlan(toPayload(form)).unwrap();
-        toast.success(t('plans.toasts.created'));
-      } else {
-        await updatePlan({ id: editingId, body: toPatchPayload(form) }).unwrap();
-        toast.success(t('plans.toasts.updated'));
-      }
-      resetForm();
-    } catch (err) {
-      toast.error(t('plans.toasts.saveFailed'));
-      console.error(err);
+      await deletePlan({ id: plan.id }).unwrap();
+      toast.success(t('plans.toasts.deleted', null, 'Plan silindi.'));
+    } catch (err: any) {
+      toast.error(err?.data?.error?.message || t('plans.toasts.deleteFailed', null, 'Plan silinemedi.'));
     }
   }
 
-  async function removePlan(id: string) {
-    if (!window.confirm(t('plans.confirmDelete'))) return;
-    try {
-      await deletePlan({ id }).unwrap();
-      toast.success(t('plans.toasts.deleted'));
-      if (editingId === id) resetForm();
-    } catch {
-      toast.error(t('plans.toasts.deleteFailed'));
-    }
-  }
-
-  const busy = list.isFetching;
+  const busy = list.isFetching || deleteState.isLoading;
 
   return (
-    <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Outside Page Header */}
+    <div className="animate-in space-y-10 pb-12 duration-700 fade-in slide-in-from-bottom-4">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <span className="h-px w-8 bg-gm-gold" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">{t('plans.eyebrow')}</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">
+              {t('plans.eyebrow', null, 'Abonelikler')}
+            </span>
           </div>
-          <h1 className="font-serif text-4xl text-gm-text">{t('plans.title')}</h1>
-          <p className="text-sm italic text-gm-muted">{t('plans.description')}</p>
+          <h1 className="font-serif text-4xl text-gm-text">
+            {t('plans.title', null, 'Abonelik Planları')}
+          </h1>
+          <p className="max-w-3xl font-serif text-sm italic leading-relaxed text-gm-muted opacity-75">
+            Planları listeleyin, yeni plan oluşturun veya mevcut planları ayrı düzenleme sayfasında güncelleyin.
+          </p>
         </div>
-        <div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <select
+            value={locale}
+            onChange={(event) => setLocale(event.target.value as ContentLocale)}
+            aria-label="Önizleme dili"
+            className="h-12 rounded-full border border-gm-border-soft bg-gm-surface/50 px-5 text-[11px] font-bold uppercase tracking-widest text-gm-text"
+          >
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+          </select>
           <Button
             variant="outline"
             size="sm"
@@ -195,252 +118,162 @@ export default function AdminSubscriptionPlansClient() {
             disabled={busy}
             className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-text hover:bg-gm-surface/80"
           >
-            <RefreshCcw className={cn("mr-2 size-4 text-gm-gold", list.isFetching && "animate-spin")} />
-            {t('actions.refresh')}
+            <RefreshCcw className={cn('mr-2 size-4 text-gm-gold', list.isFetching && 'animate-spin')} />
+            {t('actions.refresh', null, 'Yenile')}
+          </Button>
+          <Button
+            size="sm"
+            asChild
+            className="h-12 rounded-full border border-transparent bg-gm-gold px-8 text-[10px] font-bold uppercase tracking-widest text-gm-bg shadow-lg shadow-gm-gold/10 hover:bg-gm-gold/80"
+          >
+            <Link href="/admin/subscription-plans/new">
+              <Plus className="mr-2 size-4" />
+              Yeni Plan
+            </Link>
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3 items-start">
-        {/* Plan Form Card */}
-        <div className="lg:col-span-1">
-          <Card className="overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-surface/20 shadow-xl backdrop-blur-sm">
-            <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8">
-              <CardTitle className="font-serif text-xl text-gm-text">
-                {editingId ? t('plans.form.editTitle') : t('plans.form.createTitle')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8">
-              <form className="space-y-5" onSubmit={onSubmit}>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-gold">{t('plans.form.code')}</Label>
-                  <Input
-                    value={form.code}
-                    onChange={(e) => setField('code', e.target.value)}
-                    placeholder={t('plans.form.codePlaceholder')}
-                    className="h-11 rounded-full border-gm-border-soft bg-gm-bg-deep/30 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 font-bold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.nameTr')}</Label>
-                  <Input
-                    value={form.name_tr}
-                    onChange={(e) => setField('name_tr', e.target.value)}
-                    placeholder={t('plans.form.nameTrPlaceholder')}
-                    className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.nameEn')}</Label>
-                  <Input
-                    value={form.name_en}
-                    onChange={(e) => setField('name_en', e.target.value)}
-                    placeholder={t('plans.form.nameEnPlaceholder')}
-                    className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.descriptionTr')}</Label>
-                  <Textarea 
-                    rows={2} 
-                    value={form.description_tr} 
-                    onChange={(e) => setField('description_tr', e.target.value)} 
-                    className="rounded-2xl border-gm-border-soft bg-gm-surface/10 p-4 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.descriptionEn')}</Label>
-                  <Textarea 
-                    rows={2} 
-                    value={form.description_en} 
-                    onChange={(e) => setField('description_en', e.target.value)} 
-                    className="rounded-2xl border-gm-border-soft bg-gm-surface/10 p-4 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.currency')}</Label>
-                    <Input 
-                      value={form.currency} 
-                      onChange={(e) => setField('currency', e.target.value.toUpperCase())} 
-                      className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-center font-semibold"
-                    />
-                  </div>
-                  <div className="space-y-2 flex flex-col justify-end">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted mb-2">{t('plans.form.period')}</Label>
-                    <select
-                      value={form.period}
-                      onChange={(e) => setField('period', e.target.value as SubscriptionPlanPeriod)}
-                      className="h-11 w-full rounded-full border border-gm-border-soft bg-gm-bg-deep/30 px-5 text-sm text-gm-text focus:border-gm-gold/50 focus:ring-0 focus:outline-none"
-                    >
-                      {PERIODS.map((p) => (
-                        <option key={p} value={p} className="bg-gm-surface text-gm-text">
-                          {t(`plans.periods.${p}`)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.priceMinor')}</Label>
-                    <Input
-                      type="number"
-                      value={form.price_minor}
-                      onChange={(e) => setField('price_minor', e.target.value)}
-                      placeholder="1999"
-                      className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                    />
-                    <p className="text-[10px] text-gm-muted/80 italic pl-2">{formatPriceMinor(form.price_minor)}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.trialDays')}</Label>
-                    <Input
-                      type="number"
-                      value={form.trial_days}
-                      onChange={(e) => setField('trial_days', e.target.value)}
-                      className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-center"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.displayOrder')}</Label>
-                    <Input
-                      type="number"
-                      value={form.display_order}
-                      onChange={(e) => setField('display_order', e.target.value)}
-                      className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-center"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2.5 pl-2 pt-6">
-                    <Checkbox
-                      id="is_active"
-                      checked={form.is_active}
-                      onCheckedChange={(value) => setField('is_active', Boolean(value))}
-                      className="data-[state=checked]:bg-gm-gold rounded"
-                    />
-                    <Label htmlFor="is_active" className="text-sm font-semibold text-gm-text cursor-pointer">{t('plans.form.isActive')}</Label>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.form.features')}</Label>
-                  <Input
-                    value={form.features}
-                    onChange={(e) => setField('features', e.target.value)}
-                    placeholder={t('plans.form.featuresPlaceholder')}
-                    className="h-11 rounded-full border-gm-border-soft bg-gm-surface/10 px-5 text-sm text-gm-text placeholder:text-gm-muted/50 focus:border-gm-gold/50 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2.5 pt-4">
-                  <Button type="submit" className="w-full bg-gm-gold hover:bg-gm-gold/80 text-gm-bg h-12 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-gm-gold/10 border-transparent">
-                    <Save className="mr-2 size-5" />
-                    {editingId ? t('plans.form.submitUpdate') : t('plans.form.submitCreate')}
-                  </Button>
-
-                  {editingId ? (
-                    <Button
-                      variant="ghost"
-                      type="button"
-                      onClick={resetForm}
-                      className="w-full h-11 rounded-full text-gm-muted hover:bg-gm-surface/20"
-                    >
-                      {t('plans.form.newPlan')}
-                    </Button>
-                  ) : null}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Plan List Card */}
-        <div className="lg:col-span-2">
-          <Card className="overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-surface/20 shadow-xl backdrop-blur-sm">
-            <CardHeader className="border-b border-gm-border-soft/50 pb-6 px-8 pt-8 flex flex-row items-center justify-between">
-              <CardTitle className="font-serif text-xl text-gm-text flex items-center gap-3">
-                {t('plans.listTitle')}
-                <Badge variant="outline" className="rounded-full border-gm-gold/30 text-gm-gold bg-gm-gold/5 text-[11px] font-mono px-2.5 py-0.5">
-                  {plans.length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8">
-              <div className="overflow-x-auto rounded-2xl border border-gm-border-soft/60 bg-gm-surface/10">
-                <Table>
-                  <TableHeader className="bg-gm-surface/40">
-                    <TableRow className="border-gm-border-soft hover:bg-transparent">
-                      <TableHead className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.code')}</TableHead>
-                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.name')}</TableHead>
-                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.period')}</TableHead>
-                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.price')}</TableHead>
-                      <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.status')}</TableHead>
-                      <TableHead className="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('plans.table.actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {plans.length === 0 ? (
-                      <TableRow className="border-gm-border-soft">
-                        <TableCell colSpan={6} className="py-16 text-center text-sm text-gm-muted italic font-serif">
-                          {t('plans.table.noRecords')}
-                        </TableCell>
-                      </TableRow>
-                    ) : null}
-
-                    {plans.map((plan) => (
-                      <TableRow key={plan.id} className="border-gm-border-soft hover:bg-gm-surface/40 transition-colors">
-                        <TableCell className="px-6 py-4">
-                          <code className="bg-gm-bg-deep px-2 py-0.5 rounded text-gm-gold border border-gm-border-soft/60 text-xs font-bold uppercase tracking-wider">{plan.code}</code>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="font-bold text-gm-text">{plan.name_tr}</div>
-                          <div className="text-[11px] text-gm-muted/80 mt-1 font-light">{plan.name_en}</div>
-                        </TableCell>
-                        <TableCell className="py-4 text-xs font-semibold text-gm-text-dim uppercase tracking-wider">{plan.period}</TableCell>
-                        <TableCell className="py-4 font-bold text-gm-text">
-                          {(Number(plan.price_minor || 0) / 100).toFixed(2)} {plan.currency}
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <Badge variant={plan.is_active ? 'default' : 'secondary'} className="rounded-full text-[9px] uppercase tracking-widest px-2.5 py-0.5">
-                            {plan.is_active ? t('plans.statuses.active') : t('plans.statuses.inactive')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-1.5">
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => startEdit(plan)}
-                              className="h-9 w-9 rounded-full hover:bg-gm-primary/10 hover:text-gm-primary text-gm-muted"
-                            >
-                              <Pencil className="size-4" />
-                            </Button>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => removePlan(plan.id)}
-                              className="h-9 w-9 rounded-full text-gm-error hover:bg-gm-error/10 hover:text-gm-error"
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <MetricCard icon={CreditCard} label="Toplam Plan" value={plans.length} />
+        <MetricCard icon={CheckCircle2} label="Aktif" value={activeCount} tone="success" />
+        <MetricCard icon={XCircle} label="Pasif" value={inactiveCount} tone="danger" />
       </div>
+
+      <Card className="overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-surface/20 shadow-xl backdrop-blur-sm">
+        <div className="flex flex-col gap-4 border-b border-gm-border-soft bg-gm-surface/40 p-8 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="font-serif text-2xl text-gm-text">Plan Listesi</h2>
+            <p className="mt-1 text-sm text-gm-muted">Seçili dil: {locale.toUpperCase()}</p>
+          </div>
+          <div className="group relative w-full md:w-80">
+            <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-gm-muted/50 group-focus-within:text-gm-gold" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Kod veya plan adı ara"
+              className="h-12 rounded-2xl border-gm-border-soft bg-gm-bg-deep/40 pl-12 text-sm text-gm-text focus:border-gm-gold/50 focus-visible:ring-gm-gold/30"
+            />
+          </div>
+        </div>
+
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-gm-surface/30">
+              <TableRow className="border-gm-border-soft hover:bg-transparent">
+                <TableHead className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Kod</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Plan</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Periyot</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Ücret</TableHead>
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Durum</TableHead>
+                <TableHead className="px-8 py-6 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">İşlem</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {list.isLoading ? (
+                <TableRow className="border-gm-border-soft">
+                  <TableCell colSpan={6} className="py-20 text-center font-serif text-sm italic text-gm-muted">
+                    Yükleniyor...
+                  </TableCell>
+                </TableRow>
+              ) : plans.length === 0 ? (
+                <TableRow className="border-gm-border-soft">
+                  <TableCell colSpan={6} className="py-20 text-center font-serif text-sm italic text-gm-muted">
+                    Henüz plan bulunamadı.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                plans.map((plan) => (
+                  <TableRow key={plan.id} className="border-gm-border-soft transition-colors hover:bg-gm-surface/40">
+                    <TableCell className="px-8 py-5">
+                      <code className="rounded border border-gm-border-soft/60 bg-gm-bg-deep px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-gm-gold">
+                        {plan.code}
+                      </code>
+                    </TableCell>
+                    <TableCell className="py-5">
+                      <div className="font-serif text-lg text-gm-text">{planName(plan, locale)}</div>
+                      <div className="mt-1 max-w-md truncate text-xs text-gm-muted/80">
+                        {planDescription(plan, locale) || '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-5">
+                      <Badge variant="outline" className="rounded-full border-gm-border-soft bg-gm-bg-deep text-[10px] uppercase tracking-widest text-gm-text-dim">
+                        {periodLabel(plan.period)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-5 font-bold text-gm-text">
+                      {formatPrice(plan.price_minor, plan.currency)}
+                    </TableCell>
+                    <TableCell className="py-5">
+                      <Badge
+                        className={cn(
+                          'rounded-full border-none px-3 py-1 text-[9px] font-bold uppercase tracking-widest',
+                          plan.is_active ? 'bg-gm-success/10 text-gm-success' : 'bg-gm-muted/10 text-gm-muted',
+                        )}
+                      >
+                        {plan.is_active ? 'Aktif' : 'Pasif'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-8 py-5 text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button asChild size="icon" variant="ghost" className="h-9 w-9 rounded-full text-gm-muted hover:bg-gm-primary/10 hover:text-gm-primary">
+                          <Link href={`/admin/subscription-plans/${plan.id}`}>
+                            <Pencil className="size-4" />
+                          </Link>
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => removePlan(plan)}
+                          disabled={deleteState.isLoading}
+                          className="h-9 w-9 rounded-full text-gm-error hover:bg-gm-error/10 hover:text-gm-error"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
+function MetricCard({
+  icon: Icon,
+  label,
+  value,
+  tone = 'neutral',
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+  tone?: 'neutral' | 'success' | 'danger';
+}) {
+  return (
+    <Card className="relative overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-bg-deep/40 p-8 shadow-xl backdrop-blur-md">
+      <Icon
+        className={cn(
+          'absolute -right-4 -top-4 size-24 opacity-5',
+          tone === 'success' && 'text-gm-success',
+          tone === 'danger' && 'text-gm-error',
+          tone === 'neutral' && 'text-gm-gold',
+        )}
+      />
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-muted">{label}</p>
+      <div
+        className={cn(
+          'mt-4 font-serif text-5xl text-gm-text',
+          tone === 'success' && 'text-gm-success',
+          tone === 'danger' && 'text-gm-error',
+        )}
+      >
+        {value}
+      </div>
+    </Card>
+  );
+}
