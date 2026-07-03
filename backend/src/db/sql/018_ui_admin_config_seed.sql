@@ -18,7 +18,7 @@
 INSERT INTO site_settings (id, `key`, locale, value) VALUES
 -- Admin panel branding (default'lar -- GoldMoodAstro tema)
 ('01800000-0000-4000-8000-000000000001', 'ui_admin_config', '*',
- '{"branding":{"app_name":"GoldMoodAstro Admin","app_copyright":"GoldMoodAstro","html_lang":"tr","theme_color":"#C9A961","favicon_16":"/favicon/favicon-16.svg","favicon_32":"/favicon/favicon-32.svg","apple_touch_icon":"/favicon/apple-touch-icon.svg","meta":{"title":"GoldMoodAstro Admin","description":"GoldMoodAstro yonetim paneli","og_url":"https://admin.goldmoodastro.com","og_title":"GoldMoodAstro Admin","og_description":"GoldMoodAstro yonetim paneli","og_image":"","twitter_card":"summary_large_image"}}}'),
+ '{"branding":{"app_name":"GoldMoodAstro Admin","app_copyright":"GoldMoodAstro","html_lang":"tr","theme_color":"#1f1535","favicon_16":"/favicon/favicon-16x16.png","favicon_32":"/favicon/favicon-32x32.png","favicon_url":"/favicon.ico","logo_url":"/brand/logo.png","apple_touch_icon":"/apple-touch-icon.png","meta":{"title":"GoldMoodAstro Admin","description":"GoldMoodAstro yonetim paneli","og_url":"https://admin.goldmoodastro.com","og_title":"GoldMoodAstro Admin","og_description":"GoldMoodAstro yonetim paneli","og_image":"/brand/og-image.png","twitter_card":"summary_large_image"}}}'),
 
 -- Public site media (brand-media-tab.tsx eksik key'leri)
 ('01800000-0000-4000-8000-000000000002', 'site_logo',                '*', '{"url":""}'),

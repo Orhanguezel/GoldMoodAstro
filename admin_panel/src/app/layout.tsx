@@ -36,8 +36,12 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: {
       icon: [
         { url: branding.favicon_url || '/favicon.ico', sizes: 'any' },
+        { url: branding.favicon_32 || '/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+        { url: branding.favicon_16 || '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       ],
-      apple: branding.apple_touch_icon,
+      apple: [
+        { url: branding.apple_touch_icon || '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      ],
     },
     openGraph: {
       type: 'website',
