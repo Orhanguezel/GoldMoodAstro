@@ -83,6 +83,7 @@ export type AdminNavItemKey =
   | 'seo_quality'
   | 'availability'
   | 'support'
+  | 'contacts'
   | 'chat'
   | 'wallet'
   | 'orders'
@@ -139,6 +140,7 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
     items: [
       { key: 'reviews', url: '/admin/reviews', icon: MessageSquare },
       { key: 'support', url: '/admin/support', icon: MessageCircle },
+      { key: 'contacts', url: '/admin/contacts', icon: Mail },
       { key: 'announcements', url: '/admin/announcements', icon: Megaphone },
       { key: 'notifications', url: '/admin/notifications', icon: Bell, badgeKey: 'notifications_unread' },
       { key: 'email_templates', url: '/admin/email-templates', icon: Mail },
@@ -204,6 +206,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   seo_quality: 'SEO Genel Bakış',
   availability: 'Rezervasyon Saatleri',
   support: 'Destek',
+  contacts: 'İletişim',
   chat: 'Chat & AI',
   orders: 'Siparişler',
   wallet: 'Cüzdan',
