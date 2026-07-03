@@ -82,6 +82,21 @@ SELECT
 FROM consultants c
 WHERE c.approval_status = 'approved' AND JSON_CONTAINS(c.expertise, '"birth_chart"');
 
+-- birth_chart → Rektifikasyon
+INSERT IGNORE INTO consultant_services
+  (id, consultant_id, template_id, category_slug, name, slug, description, duration_minutes, price, currency, media_type, is_free, is_active, sort_order)
+SELECT
+  CONCAT(SUBSTRING(MD5(CONCAT(c.id,'rektifikasyon')),1,8),'-',SUBSTRING(MD5(CONCAT(c.id,'rektifikasyon')),9,4),'-4',SUBSTRING(MD5(CONCAT(c.id,'rektifikasyon')),14,3),'-8',SUBSTRING(MD5(CONCAT(c.id,'rektifikasyon')),18,3),'-',SUBSTRING(MD5(CONCAT(c.id,'rektifikasyon')),21,12)),
+  c.id,
+  CONCAT(SUBSTRING(MD5('birth_chart|rektifikasyon'),1,8),'-',SUBSTRING(MD5('birth_chart|rektifikasyon'),9,4),'-4',SUBSTRING(MD5('birth_chart|rektifikasyon'),14,3),'-8',SUBSTRING(MD5('birth_chart|rektifikasyon'),18,3),'-',SUBSTRING(MD5('birth_chart|rektifikasyon'),21,12)),
+  'birth_chart',
+  'Rektifikasyon',
+  'rektifikasyon',
+  'Doğum saati bilinmeyen veya emin olunmayan danışanlar için yaşam olayları üzerinden doğum saati netleştirme çalışması.',
+  60, 1800.00, 'TRY', 'audio', 0, 1, 13
+FROM consultants c
+WHERE c.approval_status = 'approved' AND JSON_CONTAINS(c.expertise, '"birth_chart"');
+
 -- tarot → Tarot Açılımı
 INSERT IGNORE INTO consultant_services
   (id, consultant_id, name, slug, description, duration_minutes, price, currency, media_type, is_free, is_active, sort_order)
