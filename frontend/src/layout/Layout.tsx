@@ -79,7 +79,7 @@ type LayoutProps = {
   logoSrc?: StaticImageData | string;
 };
 
-const FALLBACK_FAVICON = '/favicon.svg';
+const FALLBACK_FAVICON = '/favicon.ico';
 
 function cleanString(v: unknown): string {
   if (typeof v === 'string') return v.trim();

@@ -143,7 +143,7 @@ export default async function RootLayout({
       id: `${SITE_URL}/#org`,
       name: brand.name || 'GoldMoodAstro',
       url: SITE_URL,
-      logo: brand.logo_light || `${SITE_URL}/favicon.svg`,
+      logo: brand.logo_light || `${SITE_URL}/logo/logo.png`,
       sameAs: socialLinks,
       description: brand.tagline || "Turkiye'nin astroloji, tarot ve numeroloji danismanlik platformu.",
       priceRange: '₺149-₺3500',

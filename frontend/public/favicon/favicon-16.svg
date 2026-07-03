@@ -1,12 +1,14 @@
-<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background -->
-  <rect width="16" height="16" rx="3" fill="#FFF5F3"/>
-  
-  <!-- Super simplified: Just 3 circles -->
-  <g transform="translate(8, 8)" stroke="#D88D7E" stroke-width="1.2" fill="none">
-    <circle cx="0" cy="0" r="6"/>
-    <circle cx="0" cy="0" r="3"/>
-    <circle cx="3" cy="0" r="3"/>
-    <circle cx="-3" cy="0" r="3"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="GoldMoodAstro GM">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0" stop-color="#35264f"/>
+      <stop offset="1" stop-color="#120d1c"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="194" fill="none" stroke="#d4af37" stroke-width="10"/>
+  <circle cx="256" cy="256" r="166" fill="none" stroke="#f6de96" stroke-opacity=".55" stroke-width="4"/>
+  <path d="M150 179c58-48 151-54 218-12M139 335c66 44 158 43 231-8" fill="none" stroke="#f6de96" stroke-width="9" stroke-linecap="round"/>
+  <text x="256" y="304" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="148" font-weight="700" letter-spacing="-10" fill="#f6de96" stroke="#241535" stroke-width="4">GM</text>
+  <path d="M256 58l11 31 33 5-24 22 6 32-26-16-27 16 7-32-24-22 33-5zM391 149l6 17 18 3-13 12 3 18-15-9-15 9 4-18-14-12 19-3zM122 363l6 18 19 3-14 12 4 18-15-9-16 9 4-18-14-12 19-3z" fill="#f6de96"/>
 </svg>

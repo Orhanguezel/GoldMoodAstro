@@ -1,9 +1,9 @@
-const VERSION = 'goldmoodastro-v2';
+const VERSION = 'goldmoodastro-v3';
 const SHELL = `${VERSION}-shell`;
 const STATIC = `${VERSION}-static`;
 const PAGE = `${VERSION}-page`;
 const OFFLINE = '/offline.html';
-const SHELL_ASSETS = [OFFLINE, '/favicon.svg', '/favicon/apple-touch-icon.svg', '/favicon/icon-192.png', '/favicon/icon-512.png'];
+const SHELL_ASSETS = [OFFLINE, '/favicon.ico', '/apple-touch-icon.png', '/favicon/icon-192.png', '/favicon/icon-512.png'];
 const STATIC_RE = /\.(?:avif|webp|png|jpe?g|svg|gif|ico|woff2?|ttf|otf)$/i;
 const SKIP_RE = /\/api\/|\/site_settings|\/_next\//;
 

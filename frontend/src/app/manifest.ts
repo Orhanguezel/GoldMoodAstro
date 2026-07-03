@@ -31,9 +31,9 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     theme_color: theme,
     icons: [
       {
-        src: '/favicon.svg',
-        sizes: 'any',
-        type: 'image/svg+xml',
+        src: '/favicon/favicon-32x32.png',
+        sizes: '32x32',
+        type: 'image/png',
       },
       {
         src: '/favicon/icon-192.png',
@@ -48,9 +48,9 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
         purpose: 'maskable',
       },
       {
-        src: '/favicon/apple-touch-icon.svg',
+        src: '/favicon/apple-touch-icon.png',
         sizes: '180x180',
-        type: 'image/svg+xml',
+        type: 'image/png',
       },
     ],
   };

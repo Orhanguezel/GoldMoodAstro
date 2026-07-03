@@ -21,14 +21,16 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
  '{"branding":{"app_name":"GoldMoodAstro Admin","app_copyright":"GoldMoodAstro","html_lang":"tr","theme_color":"#1f1535","favicon_16":"/favicon/favicon-16x16.png","favicon_32":"/favicon/favicon-32x32.png","favicon_url":"/favicon.ico","logo_url":"/brand/logo.png","apple_touch_icon":"/apple-touch-icon.png","meta":{"title":"GoldMoodAstro Admin","description":"GoldMoodAstro yonetim paneli","og_url":"https://admin.goldmoodastro.com","og_title":"GoldMoodAstro Admin","og_description":"GoldMoodAstro yonetim paneli","og_image":"/brand/og-image.png","twitter_card":"summary_large_image"}}}'),
 
 -- Public site media (brand-media-tab.tsx eksik key'leri)
-('01800000-0000-4000-8000-000000000002', 'site_logo',                '*', '{"url":""}'),
-('01800000-0000-4000-8000-000000000003', 'site_logo_light',          '*', '{"url":""}'),
-('01800000-0000-4000-8000-000000000004', 'site_og_default_image',    '*', '{"url":""}'),
+('01800000-0000-4000-8000-000000000002', 'site_logo',                '*', '{"url":"/logo/logo.png"}'),
+('01800000-0000-4000-8000-000000000003', 'site_logo_light',          '*', '{"url":"/logo/logo.png"}'),
+('01800000-0000-4000-8000-000000000004', 'site_og_default_image',    '*', '{"url":"/logo/og-image.png"}'),
 ('01800000-0000-4000-8000-000000000005', 'site_appointment_cover',   '*', '{"url":""}'),
 
 -- 010'daki bos string'leri JSON format'a normalize et
-('01800000-0000-4000-8000-000000000006', 'site_logo_dark',           '*', '{"url":""}'),
-('01800000-0000-4000-8000-000000000007', 'site_favicon',             '*', '{"url":""}'),
+('01800000-0000-4000-8000-000000000006', 'site_logo_dark',           '*', '{"url":"/logo/logo.png"}'),
+('01800000-0000-4000-8000-000000000007', 'site_favicon',             '*', '{"url":"/favicon.ico"}'),
+('01800000-0000-4000-8000-000000000008', 'site_apple_touch_icon',     '*', '{"url":"/apple-touch-icon.png"}'),
+('01800000-0000-4000-8000-000000000009', 'site_app_icon_512',         '*', '{"url":"/favicon/icon-512.png"}'),
 
 -- Admin Page Meta (ui_admin_pages) -- Sayfa basliklari ve aciklamalari (404 hatasi cozumu)
 -- Admin Page Meta (ui_admin_pages) -- Sayfa basliklari ve aciklamalari (404 hatasi cozumu)

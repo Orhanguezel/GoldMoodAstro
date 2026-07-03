@@ -51,7 +51,9 @@ async function resolveHtmlLang(): Promise<string> {
 
 export async function generateMetadata(): Promise<Metadata> {
   const favicon = await fetchSetting('site_favicon', '*');
-  const faviconUrl = extractUrl(favicon?.value) || '/favicon.svg';
+  const appleTouch = await fetchSetting('site_apple_touch_icon', '*');
+  const faviconUrl = extractUrl(favicon?.value) || '/favicon.ico';
+  const appleTouchUrl = extractUrl(appleTouch?.value) || '/apple-touch-icon.png';
 
   const gscVerification = await fetchSetting('google_site_verification', '*');
   const gscCode = String(gscVerification?.value || '').trim();
@@ -71,9 +73,15 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     manifest: '/manifest.webmanifest',
     icons: {
-      icon: faviconUrl,
+      icon: [
+        { url: faviconUrl, sizes: 'any' },
+        { url: '/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+        { url: '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      ],
       shortcut: faviconUrl,
-      apple: faviconUrl,
+      apple: [
+        { url: appleTouchUrl, sizes: '180x180', type: 'image/png' },
+      ],
     },
   };
 
