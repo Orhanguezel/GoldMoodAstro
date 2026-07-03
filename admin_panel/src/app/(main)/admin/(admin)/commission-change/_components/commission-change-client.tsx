@@ -1,19 +1,30 @@
 // =============================================================
 // FILE: commission-change-client.tsx
 // Komisyon orani degisikligi bildirim mailer paneli.
-// - Onizleme (dry-run): aday listesini ve sayilari gosterir, mail gondermez.
-// - Bildirim Gonder (gercek): "ONAYLA" yazimi gerektirir.
 // =============================================================
 'use client';
 
-import React from 'react';
+import * as React from 'react';
 import { toast } from 'sonner';
+import {
+  AlertTriangle,
+  CalendarDays,
+  CheckCircle2,
+  Eye,
+  MailCheck,
+  RefreshCcw,
+  Send,
+  ShieldAlert,
+  Users,
+  XCircle,
+} from 'lucide-react';
+
 import {
   useSendCommissionNoticeAdminMutation,
   type CommissionNoticeResult,
 } from '@/integrations/endpoints/admin/commission_change_admin.endpoints';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -22,8 +33,43 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 const CONFIRM_PHRASE = 'ONAYLA';
+
+function percent(value: number | null | undefined) {
+  return value == null ? '-' : `%${value}`;
+}
+
+function formatDate(value: string | null | undefined) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('tr-TR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function toastError(prefix: string, err: unknown) {
+  const message =
+    (err as any)?.data?.error?.message ||
+    (err as any)?.error?.message ||
+    (err instanceof Error ? err.message : '');
+  toast.error(message ? `${prefix}: ${message}` : prefix);
+}
 
 export default function CommissionChangeClient() {
   const [sendNotice, { isLoading }] = useSendCommissionNoticeAdminMutation();
@@ -38,199 +84,242 @@ export default function CommissionChangeClient() {
       const res = await sendNotice({ dry_run: true, force: forceResend }).unwrap();
       setPreview(res);
       setLastResult(null);
-      toast.success(`Onizleme tamam: ${res.total_candidates} aday`);
+      toast.success(`Onizleme tamam: ${res.total_candidates} aday bulundu.`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'preview_failed';
-      toast.error(`Onizleme hatasi: ${message}`);
+      toastError('Onizleme hatasi', err);
     }
   }
 
   async function runRealSend() {
     if (confirmText.trim() !== CONFIRM_PHRASE) {
-      toast.error(`Onaylamak icin "${CONFIRM_PHRASE}" yaziniz.`);
+      toast.error(`Onaylamak icin "${CONFIRM_PHRASE}" yazin.`);
       return;
     }
+
     try {
       const res = await sendNotice({ dry_run: false, force: forceResend }).unwrap();
       setLastResult(res);
       setConfirmOpen(false);
       setConfirmText('');
-      toast.success(
-        `Gonderim tamam: ${res.sent}/${res.total_candidates} basarili, ${res.errors.length} hata`,
-      );
+      toast.success(`Gonderim tamam: ${res.sent}/${res.total_candidates} basarili.`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'send_failed';
-      toast.error(`Gonderim hatasi: ${message}`);
+      toastError('Gonderim hatasi', err);
     }
   }
 
   const commission = preview?.commission ?? lastResult?.commission ?? null;
   const showResult = lastResult ?? preview;
+  const canSend = Boolean(preview && preview.total_candidates > 0);
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Komisyon Orani Degisikligi Bildirimi</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Onayli danismanlara komisyon orani degisikligini bildiren e-postayi gonderir.
-          Once <strong>Onizleme (dry-run)</strong> ile aday listesini kontrol edin, ardindan
-          gercek gonderimi onaylayin. Aktif kullanicilara (is_active=1) ve daha once bildirim
-          gonderilmemis kayitlara gonderilir.
-        </p>
-      </div>
-
-      {/* Komisyon durumu */}
-      <div className="rounded-lg border bg-card p-4">
-        <h2 className="font-medium mb-2">Mevcut Komisyon Ayarlari</h2>
-        {commission ? (
-          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-            <div>
-              <dt className="text-muted-foreground">Yeni Oran</dt>
-              <dd className="font-semibold">%{commission.new_percent}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Onceki Oran</dt>
-              <dd className="font-semibold">
-                {commission.previous_percent != null ? `%${commission.previous_percent}` : '-'}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Yururluk</dt>
-              <dd className="font-semibold">{commission.effective_from ?? '-'}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Bildirim Suresi</dt>
-              <dd className="font-semibold">{commission.notice_days} gun</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Onizleme calistirmaniz halinde komisyon durumu burada gozukur.
-          </p>
-        )}
-      </div>
-
-      {/* Action bar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={runDryRun} disabled={isLoading} variant="outline">
-          Onizleme (dry-run)
-        </Button>
-        <Button
-          onClick={() => setConfirmOpen(true)}
-          disabled={isLoading || !preview || preview.total_candidates === 0}
-        >
-          Bildirim Gonder (gercek)
-        </Button>
-        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={forceResend}
-            onChange={(e) => setForceResend(e.target.checked)}
-          />
-          <span>Force: zaten gonderilmis olanlara tekrar gonder</span>
-        </label>
-      </div>
-
-      {/* Sonuc ozeti */}
-      {showResult && (
-        <div className="rounded-lg border bg-card p-4 space-y-3">
-          <h2 className="font-medium">
-            {showResult.dry_run ? 'Onizleme Sonucu (mail GONDERILMEDI)' : 'Gercek Gonderim Sonucu'}
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-            <Stat label="Toplam aday" value={showResult.total_candidates} />
-            <Stat label="Gonderildi" value={showResult.sent} />
-            <Stat label="Atlandi" value={showResult.skipped} />
-            <Stat label="Hata" value={showResult.errors.length} tone={showResult.errors.length ? 'danger' : 'neutral'} />
+    <div className="animate-in space-y-10 pb-12 duration-700 fade-in slide-in-from-bottom-4">
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-gm-gold" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">
+              Finans
+            </span>
           </div>
+          <h1 className="font-serif text-4xl text-gm-text">Komisyon Bildirimi</h1>
+          <p className="max-w-3xl font-serif text-sm italic leading-relaxed text-gm-muted opacity-75">
+            Onayli danismanlara komisyon orani degisikligi e-postasini gondermeden once aday
+            listesini onizleyin. Gercek gonderim icin ayrica onay gerekir.
+          </p>
+        </div>
 
-          {showResult.errors.length > 0 && (
-            <div className="rounded border border-destructive/30 bg-destructive/5 p-3">
-              <p className="font-medium text-destructive mb-2">Hatalar</p>
-              <ul className="text-xs text-destructive space-y-1 max-h-40 overflow-auto">
-                {showResult.errors.slice(0, 30).map((e) => (
-                  <li key={`${e.consultant_id}:${e.error}`}>
-                    <span className="font-mono">{e.email ?? e.user_id}</span> — {e.error}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={runDryRun}
+            disabled={isLoading}
+            className="h-12 rounded-full border-gm-border-soft bg-gm-surface/50 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-muted shadow-lg backdrop-blur-sm transition-all hover:bg-gm-primary/5 hover:text-gm-text"
+          >
+            <Eye className={cn('mr-2 size-4', isLoading && 'animate-pulse')} />
+            Onizleme
+          </Button>
+          <Button
+            type="button"
+            onClick={() => setConfirmOpen(true)}
+            disabled={isLoading || !canSend}
+            className="h-12 rounded-full bg-gm-gold px-8 text-[10px] font-bold uppercase tracking-widest text-gm-bg-deep shadow-lg hover:bg-gm-gold/90"
+          >
+            <Send className="mr-2 size-4" />
+            Bildirim Gonder
+          </Button>
+        </div>
+      </div>
 
-          {showResult.candidates_preview && showResult.candidates_preview.length > 0 && (
-            <div>
-              <p className="font-medium mb-2 text-sm">Aday Onizleme (ilk 50)</p>
-              <div className="border rounded overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-muted">
-                    <tr>
-                      <th className="text-left p-2">Ad</th>
-                      <th className="text-left p-2">E-posta</th>
-                      <th className="text-left p-2">Locale</th>
-                      <th className="text-left p-2">Daha Once Gonderildi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {showResult.candidates_preview.map((c) => (
-                      <tr key={c.consultant_id} className="border-t">
-                        <td className="p-2">{c.full_name ?? '-'}</td>
-                        <td className="p-2 font-mono">{c.email ?? '-'}</td>
-                        <td className="p-2">{c.locale}</td>
-                        <td className="p-2">{c.already_sent_at ? new Date(c.already_sent_at).toLocaleString() : '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
+        <div className="space-y-8 xl:col-span-8">
+          <Card className="overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-surface/20 shadow-xl backdrop-blur-sm">
+            <div className="border-b border-gm-border-soft bg-gm-surface/40 p-8">
+              <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div className="mb-2 flex items-center gap-3">
+                    <MailCheck className="size-5 text-gm-gold" />
+                    <h2 className="font-serif text-2xl text-gm-text">Gonderim Akisi</h2>
+                  </div>
+                  <p className="max-w-2xl text-sm leading-relaxed text-gm-muted">
+                    Onizleme mail gondermez. Aday listesini kontrol ettikten sonra gercek
+                    gonderimi baslatin.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4 rounded-2xl border border-gm-border-soft bg-gm-bg-deep/50 px-5 py-4">
+                  <div>
+                    <Label
+                      htmlFor="force-resend"
+                      className="block text-[10px] font-bold uppercase tracking-[0.15em] text-gm-muted"
+                    >
+                      Tekrar gonder
+                    </Label>
+                    <p className="mt-1 text-xs text-gm-muted/70">
+                      Daha once bildirilenlere de gonderir.
+                    </p>
+                  </div>
+                  <Switch
+                    id="force-resend"
+                    checked={forceResend}
+                    onCheckedChange={setForceResend}
+                    disabled={isLoading}
+                    className="data-[state=checked]:bg-gm-gold"
+                  />
+                </div>
               </div>
             </div>
-          )}
-        </div>
-      )}
 
-      {/* Confirmation modal */}
+            <CardContent className="space-y-8 p-8">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                <Metric
+                  icon={Users}
+                  label="Toplam aday"
+                  value={showResult?.total_candidates ?? 0}
+                />
+                <Metric
+                  icon={CheckCircle2}
+                  label="Gonderildi"
+                  value={showResult?.sent ?? 0}
+                  tone="success"
+                />
+                <Metric
+                  icon={RefreshCcw}
+                  label="Atlandi"
+                  value={showResult?.skipped ?? 0}
+                />
+                <Metric
+                  icon={XCircle}
+                  label="Hata"
+                  value={showResult?.errors.length ?? 0}
+                  tone={(showResult?.errors.length ?? 0) > 0 ? 'danger' : 'neutral'}
+                />
+              </div>
+
+              {!showResult ? (
+                <div className="rounded-[28px] border-2 border-dashed border-gm-border-soft p-12 text-center">
+                  <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-full bg-gm-gold/10 text-gm-gold">
+                    <Eye className="size-6" />
+                  </div>
+                  <p className="font-serif text-lg italic text-gm-muted">
+                    Once onizleme calistirin; adaylar ve komisyon bilgileri burada gorunur.
+                  </p>
+                </div>
+              ) : (
+                <ResultPanel result={showResult} />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6 xl:col-span-4">
+          <Card className="overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-bg-deep/40 shadow-xl backdrop-blur-md">
+            <div className="border-b border-gm-border-soft bg-gm-surface/30 p-6">
+              <div className="flex items-center gap-3">
+                <CalendarDays className="size-5 text-gm-gold" />
+                <h2 className="font-serif text-xl text-gm-text">Mevcut Ayar</h2>
+              </div>
+            </div>
+            <CardContent className="space-y-5 p-6">
+              {commission ? (
+                <>
+                  <InfoRow label="Onceki oran" value={percent(commission.previous_percent)} />
+                  <InfoRow label="Yeni oran" value={percent(commission.new_percent)} highlight />
+                  <InfoRow label="Yururluk" value={formatDate(commission.effective_from)} />
+                  <InfoRow label="Bildirim suresi" value={`${commission.notice_days} gun`} />
+                </>
+              ) : (
+                <p className="font-serif text-sm italic leading-relaxed text-gm-muted">
+                  Komisyon bilgisi onizleme sonucuyla birlikte yuklenir.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="rounded-[32px] border border-gm-warning/20 bg-gm-warning/5 p-8">
+            <div className="mb-3 flex items-center gap-3">
+              <ShieldAlert className="size-5 text-gm-warning" />
+              <h3 className="font-serif text-lg text-gm-warning">Dikkat</h3>
+            </div>
+            <p className="text-sm leading-relaxed text-gm-muted">
+              Gercek gonderim danismanlara e-posta yollar ve geri alinamaz. Bu yuzden sistem
+              onizleme ve "{CONFIRM_PHRASE}" onayi ister.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Bildirim Gonderimini Onayla</DialogTitle>
-            <DialogDescription>
-              Onayli danismanlara <strong>gercek</strong> e-posta gonderilecek. Bu islem geri
-              alinamaz.
+        <DialogContent className="rounded-[32px] border-gm-border-soft bg-gm-bg-deep p-0 text-gm-text shadow-2xl sm:max-w-xl">
+          <DialogHeader className="border-b border-gm-border-soft bg-gm-surface/40 p-8">
+            <DialogTitle className="flex items-center gap-3 font-serif text-2xl">
+              <AlertTriangle className="size-6 text-gm-warning" />
+              Bildirim Gonderimini Onayla
+            </DialogTitle>
+            <DialogDescription className="font-serif text-sm italic text-gm-muted">
+              Onayli danismanlara gercek e-posta gonderilecek.
             </DialogDescription>
           </DialogHeader>
 
-          {preview && commission && (
-            <div className="text-sm space-y-2">
-              <p>
-                <strong>{preview.total_candidates}</strong> danismana gonderilecek.
-              </p>
-              <p>
-                Oran: {commission.previous_percent != null ? `%${commission.previous_percent}` : '-'} -&gt; %{commission.new_percent}
-              </p>
-              <p>
-                Yururluk: <strong>{commission.effective_from ?? '-'}</strong>
-              </p>
-              {forceResend && (
-                <p className="text-amber-700 dark:text-amber-400">
-                  Force aktif: daha once bildirim gonderilen danismanlara da yeniden gonderilecek.
+          <div className="space-y-6 p-8">
+            {preview && commission ? (
+              <div className="rounded-2xl border border-gm-border-soft bg-gm-surface/30 p-5 text-sm text-gm-muted">
+                <p>
+                  <strong className="text-gm-text">{preview.total_candidates}</strong> danismana
+                  gonderilecek.
                 </p>
-              )}
-            </div>
-          )}
+                <p className="mt-2">
+                  Oran: {percent(commission.previous_percent)} -&gt;{' '}
+                  <strong className="text-gm-gold">{percent(commission.new_percent)}</strong>
+                </p>
+                <p className="mt-2">Yururluk: {formatDate(commission.effective_from)}</p>
+                {forceResend ? (
+                  <p className="mt-3 text-gm-warning">
+                    Tekrar gonderim aktif: daha once bildirilen danismanlara da gonderilecek.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
-          <div className="space-y-2">
-            <label htmlFor="confirm-input" className="text-sm font-medium">
-              Onaylamak icin "{CONFIRM_PHRASE}" yazin
-            </label>
-            <Input
-              id="confirm-input"
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              placeholder={CONFIRM_PHRASE}
-              autoComplete="off"
-            />
+            <div className="space-y-2">
+              <Label
+                htmlFor="confirm-input"
+                className="ml-1 block text-[10px] font-bold uppercase tracking-[0.15em] text-gm-muted"
+              >
+                Onaylamak icin "{CONFIRM_PHRASE}" yazin
+              </Label>
+              <Input
+                id="confirm-input"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder={CONFIRM_PHRASE}
+                autoComplete="off"
+                className="h-12 rounded-2xl border-gm-border-soft bg-gm-surface/50 font-mono text-gm-text focus:border-gm-gold/50 focus:ring-gm-gold/40"
+              />
+            </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="border-t border-gm-border-soft bg-gm-surface/20 p-6">
             <Button
               variant="outline"
               onClick={() => {
@@ -238,12 +327,14 @@ export default function CommissionChangeClient() {
                 setConfirmText('');
               }}
               disabled={isLoading}
+              className="rounded-full border-gm-border-soft px-6"
             >
               Vazgec
             </Button>
             <Button
               onClick={runRealSend}
               disabled={isLoading || confirmText.trim() !== CONFIRM_PHRASE}
+              className="rounded-full bg-gm-gold px-8 font-bold text-gm-bg-deep hover:bg-gm-gold/90"
             >
               {isLoading ? 'Gonderiliyor...' : 'Onayla ve Gonder'}
             </Button>
@@ -254,23 +345,149 @@ export default function CommissionChangeClient() {
   );
 }
 
-function Stat({
+function Metric({
+  icon: Icon,
   label,
   value,
   tone = 'neutral',
 }: {
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: number;
-  tone?: 'neutral' | 'danger';
+  tone?: 'neutral' | 'success' | 'danger';
 }) {
   return (
-    <div className="rounded border bg-background p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
+    <div className="relative overflow-hidden rounded-[28px] border border-gm-border-soft bg-gm-bg-deep/45 p-6">
+      <Icon
+        className={cn(
+          'absolute -right-3 -top-3 size-20 opacity-5',
+          tone === 'success' && 'text-gm-success',
+          tone === 'danger' && 'text-gm-error',
+          tone === 'neutral' && 'text-gm-gold',
+        )}
+      />
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-muted">{label}</p>
       <div
-        className={`text-lg font-semibold ${tone === 'danger' ? 'text-destructive' : ''}`}
+        className={cn(
+          'mt-3 font-serif text-4xl text-gm-text',
+          tone === 'success' && 'text-gm-success',
+          tone === 'danger' && 'text-gm-error',
+        )}
       >
         {value}
       </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-gm-border-soft bg-gm-surface/25 px-4 py-3">
+      <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-gm-muted">
+        {label}
+      </span>
+      <span className={cn('font-mono text-sm text-gm-text', highlight && 'text-gm-gold')}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function ResultPanel({ result }: { result: CommissionNoticeResult }) {
+  return (
+    <div className="space-y-6">
+      <div
+        className={cn(
+          'rounded-[28px] border p-6',
+          result.dry_run
+            ? 'border-gm-gold/20 bg-gm-gold/5'
+            : 'border-gm-success/20 bg-gm-success/5',
+        )}
+      >
+        <div className="flex items-start gap-4">
+          <div
+            className={cn(
+              'flex size-10 shrink-0 items-center justify-center rounded-full',
+              result.dry_run ? 'bg-gm-gold/10 text-gm-gold' : 'bg-gm-success/10 text-gm-success',
+            )}
+          >
+            {result.dry_run ? <Eye className="size-5" /> : <MailCheck className="size-5" />}
+          </div>
+          <div>
+            <h3 className="font-serif text-xl text-gm-text">
+              {result.dry_run ? 'Onizleme Sonucu' : 'Gercek Gonderim Sonucu'}
+            </h3>
+            <p className="mt-1 text-sm text-gm-muted">
+              {result.dry_run
+                ? 'Mail gonderilmedi; sadece adaylar listelendi.'
+                : 'Bildirim gonderimi tamamlandi.'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {result.errors.length > 0 ? (
+        <div className="rounded-[28px] border border-gm-error/30 bg-gm-error/5 p-6">
+          <p className="mb-3 font-serif text-lg text-gm-error">Hatalar</p>
+          <ul className="max-h-44 space-y-2 overflow-auto text-xs text-gm-error">
+            {result.errors.slice(0, 30).map((error) => (
+              <li key={`${error.consultant_id}:${error.error}`} className="break-all">
+                <span className="font-mono">{error.email ?? error.user_id}</span> - {error.error}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {result.candidates_preview && result.candidates_preview.length > 0 ? (
+        <div className="overflow-hidden rounded-[28px] border border-gm-border-soft">
+          <div className="border-b border-gm-border-soft bg-gm-surface/40 px-6 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-muted">
+              Aday Onizleme - ilk 50
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-gm-surface/30">
+                <TableRow className="border-gm-border-soft hover:bg-transparent">
+                  <TableHead className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
+                    Ad
+                  </TableHead>
+                  <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
+                    E-posta
+                  </TableHead>
+                  <TableHead className="py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
+                    Dil
+                  </TableHead>
+                  <TableHead className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
+                    Onceki Bildirim
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {result.candidates_preview.map((candidate) => (
+                  <TableRow key={candidate.consultant_id} className="border-gm-border-soft hover:bg-gm-primary/[0.03]">
+                    <TableCell className="px-6 py-4 font-serif text-base text-gm-text">
+                      {candidate.full_name ?? '-'}
+                    </TableCell>
+                    <TableCell className="py-4 font-mono text-xs text-gm-muted">
+                      {candidate.email ?? '-'}
+                    </TableCell>
+                    <TableCell className="py-4 text-xs uppercase tracking-widest text-gm-muted">
+                      {candidate.locale}
+                    </TableCell>
+                    <TableCell className="px-6 py-4 font-mono text-xs text-gm-muted">
+                      {candidate.already_sent_at
+                        ? new Date(candidate.already_sent_at).toLocaleString('tr-TR')
+                        : '-'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
