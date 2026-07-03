@@ -81,20 +81,36 @@ const FALLBACK_PLANS: SubscriptionPlanPublicUi[] = [
 
 const featureCopy = {
   tr: {
-    daily: 'Daily Reading',
-    daily_desc: 'Scheduled daily astrology reading',
-    transit: 'Daily Transit',
-    transit_desc: 'Personal planetary motion tracking',
+    daily: 'Günlük Yorum',
+    daily_desc: 'Her gün planlanmış astroloji yorumu',
+    transit: 'Günlük Transit',
+    transit_desc: 'Kişisel gezegen hareketi takibi',
     synastry: 'Sinastri',
-    synastry_desc: 'Relationship compatibility insights',
-    chart: 'Basic Birth Chart',
-    chart_desc: 'Core astrology session setup',
-    support: 'Priority Support',
-    support_desc: 'Priority support and responses',
-    video: 'Video Session',
-    video_desc: 'Live camera-based consultation',
-    ad: 'Ad-free',
-    ad_desc: 'Cleaner experience without promotional clutter',
+    synastry_desc: 'İlişki uyumu analizi',
+    chart: 'Temel Doğum Haritası',
+    chart_desc: 'Temel astroloji seans kurulumu',
+    support: 'Öncelikli Destek',
+    support_desc: 'Öncelikli destek ve yanıtlar',
+    video: 'Görüntülü Seans',
+    video_desc: 'Canlı kameralı danışmanlık',
+    ad: 'Reklamsız',
+    ad_desc: 'Tanıtım öğeleri olmadan temiz deneyim',
+  },
+  de: {
+    daily: 'Tägliche Deutung',
+    daily_desc: 'Geplante tägliche Astrologie-Deutung',
+    transit: 'Täglicher Transit',
+    transit_desc: 'Persönliche Verfolgung der Planetenbewegung',
+    synastry: 'Synastrie',
+    synastry_desc: 'Einblicke in die Beziehungskompatibilität',
+    chart: 'Basis-Geburtshoroskop',
+    chart_desc: 'Grundlegende Astrologie-Sitzung',
+    support: 'Priorisierter Support',
+    support_desc: 'Bevorzugter Support und Antworten',
+    video: 'Video-Sitzung',
+    video_desc: 'Live-Beratung mit Kamera',
+    ad: 'Werbefrei',
+    ad_desc: 'Sauberes Erlebnis ohne Werbeelemente',
   },
   en: {
     daily: 'Daily Reading',
@@ -226,6 +242,8 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         couponApply: 'Uygula',
         couponSuccess: 'Kupon geçerli. İndirim ödeme sırasında uygulanır.',
         couponError: 'Kupon uygulanamadı. Giriş yapmanız veya başka bir kod denemeniz gerekebilir.',
+        featureHeader: 'Özellik',
+        seePolicy: 'Politika detaylarını gör',
       }
     : locale === 'de'
     ? {
@@ -258,6 +276,8 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         couponApply: 'Anwenden',
         couponSuccess: 'Gutschein ist gültig. Der Rabatt wird beim Bezahlen angewendet.',
         couponError: 'Gutschein konnte nicht angewendet werden. Melden Sie sich an oder versuchen Sie einen anderen Code.',
+        featureHeader: 'Funktion',
+        seePolicy: 'Richtliniendetails ansehen',
       }
     : {
         title: 'Pricing',
@@ -288,6 +308,8 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         couponApply: 'Apply',
         couponSuccess: 'Coupon is eligible. The discount is applied during checkout.',
         couponError: 'Coupon could not be applied. You may need to sign in or try another code.',
+        featureHeader: 'Feature',
+        seePolicy: 'See policy details',
       };
 
   const applyCoupon = async () => {
@@ -333,62 +355,63 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
     },
   ];
 
+  const fc = featureCopy[locale as keyof typeof featureCopy] ?? featureCopy.en;
   const featureMatrix = [
     {
       key: 'daily',
-      feature: featureCopy[locale === 'tr' ? 'tr' : 'en'].daily,
-      desc: featureCopy[locale === 'tr' ? 'tr' : 'en'].daily_desc,
+      feature: fc.daily,
+      desc: fc.daily_desc,
       freeValue: featureHas(freePlan, 'daily_reading_basic') || isPremiumPlan(freePlan),
       premiumValue: true,
-      valueLabel: featureCopy[locale === 'tr' ? 'tr' : 'en'].daily,
+      valueLabel: fc.daily,
     },
     {
       key: 'chart',
-      feature: featureCopy[locale === 'tr' ? 'tr' : 'en'].chart,
-      desc: featureCopy[locale === 'tr' ? 'tr' : 'en'].chart_desc,
+      feature: fc.chart,
+      desc: fc.chart_desc,
       freeValue: featureHas(freePlan, 'birth_chart_basic'),
       premiumValue: true,
-      valueLabel: featureCopy[locale === 'tr' ? 'tr' : 'en'].chart,
+      valueLabel: fc.chart,
     },
     {
       key: 'synastry',
-      feature: featureCopy[locale === 'tr' ? 'tr' : 'en'].synastry,
-      desc: featureCopy[locale === 'tr' ? 'tr' : 'en'].synastry_desc,
+      feature: fc.synastry,
+      desc: fc.synastry_desc,
       freeValue: featureHas(freePlan, 'synastry'),
       premiumValue: featureHas(monthlyPlan, 'synastry') || featureHas(yearlyPlan, 'synastry'),
-      valueLabel: featureCopy[locale === 'tr' ? 'tr' : 'en'].synastry,
+      valueLabel: fc.synastry,
     },
     {
       key: 'transit',
-      feature: featureCopy[locale === 'tr' ? 'tr' : 'en'].transit,
-      desc: featureCopy[locale === 'tr' ? 'tr' : 'en'].transit_desc,
+      feature: fc.transit,
+      desc: fc.transit_desc,
       freeValue: featureHas(freePlan, 'transit_calendar'),
       premiumValue: featureHas(monthlyPlan, 'transit_calendar') || featureHas(yearlyPlan, 'transit_calendar'),
-      valueLabel: featureCopy[locale === 'tr' ? 'tr' : 'en'].transit,
+      valueLabel: fc.transit,
     },
     {
       key: 'support',
-      feature: featureCopy[locale === 'tr' ? 'tr' : 'en'].support,
-      desc: featureCopy[locale === 'tr' ? 'tr' : 'en'].support_desc,
+      feature: fc.support,
+      desc: fc.support_desc,
       freeValue: false,
       premiumValue: featureHas(monthlyPlan, 'priority_support') || featureHas(yearlyPlan, 'priority_support'),
-      valueLabel: featureCopy[locale === 'tr' ? 'tr' : 'en'].support,
+      valueLabel: fc.support,
     },
     {
       key: 'video',
-      feature: featureCopy[locale === 'tr' ? 'tr' : 'en'].video,
-      desc: featureCopy[locale === 'tr' ? 'tr' : 'en'].video_desc,
+      feature: fc.video,
+      desc: fc.video_desc,
       freeValue: false,
       premiumValue: true,
-      valueLabel: featureCopy[locale === 'tr' ? 'tr' : 'en'].video,
+      valueLabel: fc.video,
     },
     {
       key: 'ad',
-      feature: featureCopy[locale === 'tr' ? 'tr' : 'en'].ad,
-      desc: featureCopy[locale === 'tr' ? 'tr' : 'en'].ad_desc,
+      feature: fc.ad,
+      desc: fc.ad_desc,
       freeValue: false,
       premiumValue: featureHas(monthlyPlan, 'ad_free') || featureHas(yearlyPlan, 'ad_free'),
-      valueLabel: featureCopy[locale === 'tr' ? 'tr' : 'en'].ad,
+      valueLabel: fc.ad,
     },
   ];
 
@@ -451,18 +474,18 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
                 </div>
                 <ul className="divide-y divide-(--gm-border-soft)">
                   {[
-                    { key: 'daily', label: featureCopy[locale === 'tr' ? 'tr' : 'en'].daily },
+                    { key: 'daily', label: fc.daily },
                     {
                       key: 'chart',
-                      label: featureCopy[locale === 'tr' ? 'tr' : 'en'].chart,
+                      label: fc.chart,
                     },
                     {
                       key: 'video',
-                      label: featureCopy[locale === 'tr' ? 'tr' : 'en'].video,
+                      label: fc.video,
                     },
                     {
                       key: 'support',
-                      label: featureCopy[locale === 'tr' ? 'tr' : 'en'].support,
+                      label: fc.support,
                     },
                   ].map((item) => {
                     const isIncluded =
@@ -577,7 +600,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
             <table className="w-full min-w-[680px] text-sm">
               <thead>
                 <tr className="text-(--gm-text-muted) border-b border-(--gm-border)">
-                  <th className="py-3 text-left font-medium pr-4">Feature</th>
+                  <th className="py-3 text-left font-medium pr-4">{copy.featureHeader}</th>
                   <th className="py-3 text-center font-medium px-3">
                     {getPlanLabel(freePlan, 'Free')}
                   </th>
@@ -632,7 +655,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
             </div>
             <Link href={localizePath(locale, '/terms')} className="inline-flex items-center gap-2 rounded-full border border-(--gm-border) px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-(--gm-text) hover:bg-(--gm-surface) transition-all">
               <CreditCard size={16} />
-              <span>See policy details</span>
+              <span>{copy.seePolicy}</span>
             </Link>
           </div>
           <div className="mt-6 grid sm:grid-cols-3 gap-4 text-sm text-(--gm-text-muted)">
