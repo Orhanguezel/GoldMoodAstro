@@ -38,9 +38,10 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const { data: dbLanguages = [] } = useListLanguagesPublicQuery();
   const [trackConsultantView] = useTrackConsultantViewMutation();
   const { data: karne } = useGetConsultantOutcomeScoreQuery(id, { skip: !id });
-  const { data: services = [], isLoading: servicesLoading } = useListConsultantServicesPublicQuery(consultant?.id || '', {
-    skip: !consultant?.id,
-  });
+  const { data: services = [], isLoading: servicesLoading } = useListConsultantServicesPublicQuery(
+    { consultantId: consultant?.id || '', locale },
+    { skip: !consultant?.id },
+  );
   const [selectedSlot, setSelectedSlot] = useState<ConsultantSlotPublic | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);

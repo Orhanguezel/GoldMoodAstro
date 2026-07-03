@@ -21,8 +21,18 @@ export interface ConsultantServicePublic {
 
 const consultantServicesPublicApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    listConsultantServicesPublic: build.query<ConsultantServicePublic[], string>({
-      query: (consultantId) => `/consultants/${encodeURIComponent(consultantId)}/services`,
+    listConsultantServicesPublic: build.query<
+      ConsultantServicePublic[],
+      string | { consultantId: string; locale?: string }
+    >({
+      // Geriye uyum: düz string (consultantId) da kabul edilir; locale verilirse
+      // şablondan türeyen servis adları/açıklamaları o dilde döner (tr=danışman metni).
+      query: (arg) => {
+        const consultantId = typeof arg === 'string' ? arg : arg.consultantId;
+        const locale = typeof arg === 'string' ? '' : (arg.locale ?? '');
+        const qs = locale ? `?locale=${encodeURIComponent(locale)}` : '';
+        return `/consultants/${encodeURIComponent(consultantId)}/services${qs}`;
+      },
       transformResponse: (res: { data: ConsultantServicePublic[] } | ConsultantServicePublic[]) =>
         Array.isArray(res) ? res : ((res as any)?.data ?? []),
     }),

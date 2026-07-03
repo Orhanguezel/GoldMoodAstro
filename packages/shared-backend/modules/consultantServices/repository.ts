@@ -8,19 +8,32 @@ import { serviceTemplates, type ServiceTemplate } from '../serviceTemplates/sche
 
 export async function listByConsultant(
   consultantId: string,
-  opts?: { activeOnly?: boolean },
+  opts?: { activeOnly?: boolean; locale?: string },
 ): Promise<Array<ConsultantService & { is_boosted?: number; boost_ends_at?: Date | null }>> {
+  // Locale çözümü: tr (default) danışmanın kendi metnini kullanır (özelleştirme korunur);
+  // en/de gibi dillerde şablondan türetilen servisler service_templates_i18n'den çevrilir,
+  // çeviri yoksa danışman metnine düşülür. (cs.* sonrası aynı adlı alias override eder.)
+  const locale = (opts?.locale || '').trim().toLowerCase();
+  const useI18n = Boolean(locale && locale !== 'tr');
+  const localeJoin = useI18n
+    ? sql`LEFT JOIN service_templates_i18n sti ON sti.template_id = cs.template_id AND sti.locale = ${locale}`
+    : sql``;
+  const localeSelect = useI18n
+    ? sql`, COALESCE(sti.name, cs.name) AS name, COALESCE(sti.description, cs.description) AS description`
+    : sql``;
   const result = await db.execute(
     opts?.activeOnly
       ? sql`
           SELECT cs.*,
                  CASE WHEN sb.id IS NULL THEN 0 ELSE 1 END AS is_boosted,
                  sb.ends_at AS boost_ends_at
+                 ${localeSelect}
           FROM consultant_services cs
           LEFT JOIN service_boosts sb
             ON sb.consultant_service_id = cs.id
            AND sb.status = 'active'
            AND sb.ends_at > NOW(3)
+          ${localeJoin}
           WHERE cs.consultant_id = ${consultantId}
             AND cs.is_active = 1
           ORDER BY is_boosted DESC, cs.sort_order ASC, cs.created_at ASC
@@ -29,11 +42,13 @@ export async function listByConsultant(
           SELECT cs.*,
                  CASE WHEN sb.id IS NULL THEN 0 ELSE 1 END AS is_boosted,
                  sb.ends_at AS boost_ends_at
+                 ${localeSelect}
           FROM consultant_services cs
           LEFT JOIN service_boosts sb
             ON sb.consultant_service_id = cs.id
            AND sb.status = 'active'
            AND sb.ends_at > NOW(3)
+          ${localeJoin}
           WHERE cs.consultant_id = ${consultantId}
           ORDER BY is_boosted DESC, cs.sort_order ASC, cs.created_at ASC
         `,

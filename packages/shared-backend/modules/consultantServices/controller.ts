@@ -72,7 +72,8 @@ function normalizeServicePayload<T extends { price?: number; is_free?: number }>
 // GET /consultants/:consultantId/services
 export async function listPublic(req: FastifyRequest, reply: FastifyReply) {
   const { consultantId } = req.params as { consultantId: string };
-  const rows = await repo.listByConsultant(consultantId, { activeOnly: true });
+  const { locale } = req.query as { locale?: string };
+  const rows = await repo.listByConsultant(consultantId, { activeOnly: true, locale });
   return reply.send({ data: rows });
 }
 
