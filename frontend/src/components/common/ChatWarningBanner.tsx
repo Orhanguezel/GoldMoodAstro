@@ -22,9 +22,9 @@ interface Props {
 }
 
 const MESSAGES: Record<'tr' | 'en' | 'de', string> = {
-  tr: 'This area is for short notes or questions. Book a live session for longer conversations. Excessive use may be disabled automatically.',
+  tr: 'Bu alan kısa notlar ve sorular içindir. Daha uzun görüşmeler için canlı seans oluşturun. Aşırı kullanım otomatik olarak sınırlandırılabilir.',
   en: 'This space is for short notes/questions only. Book a live session for longer conversations. Excessive use may be auto-restricted.',
-  de: 'This area is for short notes or questions. Book a live session for longer conversations. Excessive use may be disabled automatically.',
+  de: 'Dieser Bereich ist nur für kurze Notizen oder Fragen gedacht. Buchen Sie für längere Gespräche bitte eine Live-Sitzung. Übermäßige Nutzung kann automatisch eingeschränkt werden.',
 };
 
 export default function ChatWarningBanner({
