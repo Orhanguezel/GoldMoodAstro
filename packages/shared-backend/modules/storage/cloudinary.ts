@@ -118,6 +118,7 @@ function guessExt(mime?: string): string {
   if (m === "image/png") return ".png";
   if (m === "image/webp") return ".webp";
   if (m === "image/gif") return ".gif";
+  if (m === "application/pdf") return ".pdf";
   return "";
 }
 
@@ -144,8 +145,9 @@ async function uploadLocal(cfg: Cfg, buffer: Buffer, opts: UpOpts): Promise<Uplo
     (opts.publicId && opts.publicId.replace(/^\/+/, "")) ||
     `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-  // opts.publicId genelde ext'siz geliyor; local dosyada ext olsun
-  if (ext && !baseName.includes(".")) baseName += ext;
+  // opts.publicId genelde ext'siz geliyor; dosya adındaki tarih noktaları
+  // ("16.39.04") uzantı sanılmasın diye mime uzantısını açıkça kontrol et.
+  if (ext && !baseName.toLowerCase().endsWith(ext)) baseName += ext;
 
   const relativePath = folder ? `${folder}/${baseName}` : baseName;
 

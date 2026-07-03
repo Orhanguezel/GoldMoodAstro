@@ -67,7 +67,7 @@ export default function AdminAvailabilityClient() {
   }, [listQ.isError, listQ.error]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <AvailabilityHeader
         filters={filters}
         total={total}

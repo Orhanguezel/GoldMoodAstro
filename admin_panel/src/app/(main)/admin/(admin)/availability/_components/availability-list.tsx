@@ -1,18 +1,12 @@
-// =============================================================
-// FILE: src/app/(main)/admin/(admin)/availability/AvailabilityList.tsx
-// guezelwebdesign – Admin Availability List (resources)
-// FINAL — shadcn/ui layout + responsive cards/table
-// =============================================================
-
 import React, { useMemo } from 'react';
 import Link from 'next/link';
+import { CalendarDays, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -21,10 +15,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-
+import { useDeleteResourceAdminMutation } from '@/integrations/hooks';
 import type { ResourceAdminListItemDto } from '@/integrations/shared';
 import { resourceTypeLabel, toActiveBool } from '@/integrations/shared';
-import { useDeleteResourceAdminMutation } from '@/integrations/hooks';
+import { cn } from '@/lib/utils';
 
 export type AvailabilityListProps = {
   items?: ResourceAdminListItemDto[];
@@ -37,7 +31,7 @@ const formatDate = (value: string | Date | null | undefined): string => {
   if (!value) return '-';
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return safeText(value);
-  return d.toLocaleString();
+  return d.toLocaleString('tr-TR');
 };
 
 const shortRef = (v: string, head = 8, tail = 4) => {
@@ -71,17 +65,20 @@ export const AvailabilityList: React.FC<AvailabilityListProps> = ({ items, loadi
     }
   };
 
-  const renderEmptyOrLoading = () => {
-    if (loading) return <div className="text-sm text-muted-foreground">{t('availability.list.loading')}</div>;
-    return <div className="text-sm text-muted-foreground">{t('availability.list.empty')}</div>;
-  };
-
   const statusBadge = (r: ResourceAdminListItemDto) => {
     const active = toActiveBool((r as any).is_active);
-    return active ? (
-      <Badge className="bg-emerald-100 text-emerald-700">{t('availability.filters.statusActive')}</Badge>
-    ) : (
-      <Badge variant="secondary">{t('availability.filters.statusInactive')}</Badge>
+    return (
+      <Badge
+        variant="outline"
+        className={cn(
+          'rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider',
+          active
+            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600'
+            : 'border-slate-500/30 bg-slate-500/10 text-slate-500',
+        )}
+      >
+        {active ? t('availability.filters.statusActive') : t('availability.filters.statusInactive')}
+      </Badge>
     );
   };
 
@@ -99,68 +96,83 @@ export const AvailabilityList: React.FC<AvailabilityListProps> = ({ items, loadi
   );
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">{t('availability.list.title')}</CardTitle>
-        <div className="flex items-center gap-2">
-          {busy ? (
-            <Badge variant="secondary" className="text-xs">
-              {t('availability.list.loading')}
-            </Badge>
-          ) : null}
-          <Badge variant="outline">{t('availability.list.total').replace('{count}', String(rows.length))}</Badge>
+    <Card className="overflow-hidden rounded-[32px] border-gm-border-soft bg-gm-surface/20 shadow-xl backdrop-blur-sm">
+      <div className="flex flex-col gap-2 border-b border-gm-border-soft bg-gm-surface/30 px-8 py-6 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="font-serif text-2xl text-gm-text">{t('availability.list.title')}</h2>
+          <p className="mt-1 text-sm text-gm-muted">
+            {t('availability.list.total').replace('{count}', String(rows.length))}
+          </p>
         </div>
-      </CardHeader>
+        {busy ? (
+          <Badge variant="outline" className="w-fit rounded-full border-gm-border-soft px-4 py-2 text-gm-muted">
+            <Loader2 className="mr-2 size-3 animate-spin text-gm-gold" />
+            {t('availability.list.loading')}
+          </Badge>
+        ) : null}
+      </div>
 
-      <CardContent className="space-y-4">
+      <CardContent className="p-0">
         {!hasData ? (
-          <div className="rounded-md border border-muted bg-muted/40 px-3 py-2">
-            {renderEmptyOrLoading()}
+          <div className="flex min-h-[260px] flex-col items-center justify-center gap-4 px-8 py-16 text-center">
+            {loading ? (
+              <Loader2 className="size-9 animate-spin text-gm-gold" />
+            ) : (
+              <CalendarDays className="size-12 text-gm-gold/40" />
+            )}
+            <p className="font-serif text-lg italic text-gm-muted">
+              {loading ? t('availability.list.loading') : t('availability.list.empty')}
+            </p>
           </div>
         ) : null}
 
-        {/* Mobile cards */}
         {hasData ? (
-          <div className="space-y-3 md:hidden">
+          <div className="space-y-4 p-4 md:hidden">
             {normalized.map((r, idx) => (
-              <div key={r.id} className="rounded-md border p-3">
-                <div className="flex items-start justify-between gap-3">
+              <div key={r.id} className="rounded-[24px] border border-gm-border-soft bg-gm-bg-deep/35 p-5 shadow-lg">
+                <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <div className="text-xs text-muted-foreground">#{idx + 1}</div>
-                    <div className="text-sm font-semibold truncate" title={safeText(r.title)}>
-                      {r.title || <span className="text-muted-foreground">{t('availability.common.noName')}</span>}
-                    </div>
-
-                    {r._refFull ? (
-                      <div className="text-xs text-muted-foreground truncate" title={r._refFull}>
-                        {t('availability.list.columns.ref')}: <code>{r._refShort}</code>
-                      </div>
-                    ) : (
-                      <div className="text-xs text-muted-foreground">{t('availability.common.noRef')}</div>
-                    )}
-
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <Badge variant="outline">{r._typeLabel}</Badge>
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-gm-gold/20 bg-gm-gold/10 font-serif text-sm text-gm-gold">
+                        {idx + 1}
+                      </span>
                       {statusBadge(r)}
                     </div>
-
-                    <div className="mt-2 text-xs text-muted-foreground">
+                    <div className="truncate font-semibold text-gm-text" title={safeText(r.title)}>
+                      {r.title || <span className="text-gm-muted">{t('availability.common.noName')}</span>}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <Badge variant="outline" className="rounded-full border-gm-border-soft px-3 py-1 text-gm-muted">
+                        {r._typeLabel}
+                      </Badge>
+                      {r._refFull ? (
+                        <Badge variant="outline" className="rounded-full border-gm-border-soft px-3 py-1 font-mono text-[10px] text-gm-muted" title={r._refFull}>
+                          {t('availability.list.columns.ref')}: {r._refShort}
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <div className="mt-4 space-y-1 text-xs text-gm-muted">
                       <div>{t('availability.list.columns.updated')}: {r._updated}</div>
                       <div>{t('availability.list.columns.created')}: {r._created}</div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/admin/availability/${encodeURIComponent(r.id)}`}>{t('availability.list.actions.manage')}</Link>
+                  <div className="flex shrink-0 flex-col gap-2">
+                    <Button asChild variant="outline" size="sm" className="rounded-full border-gm-border-soft">
+                      <Link href={`/admin/availability/${encodeURIComponent(r.id)}`}>
+                        <Pencil className="mr-2 size-4" />
+                        {t('availability.list.actions.manage')}
+                      </Link>
                     </Button>
                     <Button
                       type="button"
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
                       disabled={busy}
                       onClick={() => handleDelete(r)}
+                      className="rounded-full border-red-500/30 text-red-600 hover:bg-red-500/10"
                     >
+                      <Trash2 className="mr-2 size-4" />
                       {t('availability.list.actions.delete')}
                     </Button>
                   </div>
@@ -170,59 +182,84 @@ export const AvailabilityList: React.FC<AvailabilityListProps> = ({ items, loadi
           </div>
         ) : null}
 
-        {/* Desktop table */}
         {hasData ? (
-          <div className="hidden md:block">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[56px]">#</TableHead>
-                    <TableHead>{t('availability.list.columns.name')}</TableHead>
-                    <TableHead>{t('availability.list.columns.type')}</TableHead>
-                    <TableHead>{t('availability.list.columns.status')}</TableHead>
-                    <TableHead>{t('availability.list.columns.updated')}</TableHead>
-                    <TableHead className="text-right">{t('availability.list.columns.actions')}</TableHead>
+          <div className="hidden overflow-x-auto md:block">
+            <Table>
+              <TableHeader className="bg-gm-surface/40">
+                <TableRow className="border-gm-border-soft hover:bg-transparent">
+                  <TableHead className="w-[72px] px-8 py-5 text-[10px] font-bold uppercase tracking-widest text-gm-muted">#</TableHead>
+                  <TableHead className="py-5 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
+                    {t('availability.list.columns.name')}
+                  </TableHead>
+                  <TableHead className="py-5 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
+                    {t('availability.list.columns.type')}
+                  </TableHead>
+                  <TableHead className="py-5 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
+                    {t('availability.list.columns.status')}
+                  </TableHead>
+                  <TableHead className="py-5 text-[10px] font-bold uppercase tracking-widest text-gm-muted">
+                    {t('availability.list.columns.updated')}
+                  </TableHead>
+                  <TableHead className="px-8 py-5 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">
+                    {t('availability.list.columns.actions')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {normalized.map((r, idx) => (
+                  <TableRow key={r.id} className="border-gm-border-soft transition-colors hover:bg-gm-primary/[0.03]">
+                    <TableCell className="px-8 py-5">
+                      <span className="flex size-9 items-center justify-center rounded-full border border-gm-gold/20 bg-gm-gold/10 font-serif text-sm text-gm-gold">
+                        {idx + 1}
+                      </span>
+                    </TableCell>
+                    <TableCell className="min-w-[260px] py-5">
+                      <div className="truncate font-semibold text-gm-text" title={safeText(r.title)}>
+                        {r.title || <span className="text-gm-muted">{t('availability.common.noName')}</span>}
+                      </div>
+                      {r._refFull ? (
+                        <div className="mt-1 truncate font-mono text-[11px] text-gm-muted" title={r._refFull}>
+                          {t('availability.list.columns.ref')}: {r._refShort}
+                        </div>
+                      ) : (
+                        <div className="mt-1 text-xs text-gm-muted">{t('availability.common.noRef')}</div>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-5">
+                      <Badge variant="outline" className="rounded-full border-gm-border-soft px-3 py-1 text-gm-muted">
+                        {r._typeLabel}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-5">{statusBadge(r)}</TableCell>
+                    <TableCell className="py-5 text-xs text-gm-muted">
+                      <div title={r._updated}>{r._updated}</div>
+                      <div title={r._created}>{t('availability.list.columns.created')}: {r._created}</div>
+                    </TableCell>
+                    <TableCell className="px-8 py-5 text-right">
+                      <div className="inline-flex gap-2">
+                        <Button asChild variant="outline" size="sm" className="rounded-full border-gm-border-soft">
+                          <Link href={`/admin/availability/${encodeURIComponent(r.id)}`}>
+                            <Pencil className="mr-2 size-4" />
+                            {t('availability.list.actions.manage')}
+                          </Link>
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => handleDelete(r)}
+                          className="rounded-full border-red-500/30 text-red-600 hover:bg-red-500/10"
+                        >
+                          <Trash2 className="mr-2 size-4" />
+                          {t('availability.list.actions.delete')}
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {normalized.map((r, idx) => (
-                    <TableRow key={r.id}>
-                      <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
-                      <TableCell className="min-w-[220px]">
-                        <div className="text-sm font-semibold truncate" title={safeText(r.title)}>
-                          {r.title || <span className="text-muted-foreground">{t('availability.common.noName')}</span>}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{r._typeLabel}</Badge>
-                      </TableCell>
-                      <TableCell>{statusBadge(r)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        <div title={r._updated}>{r._updated}</div>
-                        <div title={r._created}>{t('availability.list.columns.created')}: {r._created}</div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="inline-flex gap-2">
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/admin/availability/${encodeURIComponent(r.id)}`}>{t('availability.list.actions.manage')}</Link>
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            disabled={busy}
-                            onClick={() => handleDelete(r)}
-                          >
-                            {t('availability.list.actions.delete')}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         ) : null}
       </CardContent>

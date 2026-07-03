@@ -223,11 +223,23 @@ export function normalizeStorageUrl(raw?: string | null, asset?: Pick<StorageAss
   const fromAssetBucket = asset?.bucket ? String(asset.bucket).trim() : '';
 
   const localUploadPath = (() => {
+    const cleanPath = fromAssetPath.replace(/^\/+/, '');
+    const pathUploadUrl = cleanPath
+      ? cleanPath.startsWith('uploads/')
+        ? `/${cleanPath}`
+        : `/uploads/${cleanPath}`
+      : '';
+    const preferPathForLocalUrl = (candidate: string) => {
+      if (!pathUploadUrl) return candidate;
+      const candidateLeaf = candidate.split('/').pop() || '';
+      const pathLeaf = pathUploadUrl.split('/').pop() || '';
+      return candidateLeaf !== pathLeaf ? pathUploadUrl : candidate;
+    };
+
     if (value.startsWith('/storage/local/uploads/')) return value.replace(/^\/storage\/local\/uploads\//, '/uploads/');
     if (value.startsWith('/storage/local//uploads/')) return value.replace(/^\/storage\/local\/+uploads\//, '/uploads/');
     if (value.startsWith('/storage/local/')) return value.replace(/^\/storage\/local\/+/, '/uploads/');
-    if (value.startsWith('/uploads/')) return value;
-    const cleanPath = fromAssetPath.replace(/^\/+/, '');
+    if (value.startsWith('/uploads/')) return preferPathForLocalUrl(value);
     if (cleanPath.startsWith('uploads/')) return `/${cleanPath}`;
     if (fromAssetBucket === 'local' && cleanPath) return `/uploads/${cleanPath}`;
     return '';

@@ -130,6 +130,43 @@ function isImageMime(mime: string | null | undefined) {
   return String(mime ?? '').startsWith('image/');
 }
 
+function StoragePreview({
+  item,
+  size = 'sm',
+}: {
+  item: StorageAsset;
+  size?: 'sm' | 'lg';
+}) {
+  const [failed, setFailed] = React.useState(false);
+  const Icon = getMimeIcon(item.mime);
+  const colorClass = getMimeColor(item.mime);
+  const className =
+    size === 'lg'
+      ? 'size-20 rounded-xl object-cover border border-gm-border-soft shadow'
+      : 'size-11 rounded-xl object-cover border border-gm-border-soft/60 bg-gm-bg-deep/50 shadow-md';
+  const fallbackClassName =
+    size === 'lg'
+      ? 'flex size-20 items-center justify-center rounded-xl bg-gm-bg-deep border border-gm-border-soft shadow-inner'
+      : 'flex size-11 items-center justify-center rounded-xl bg-gm-bg-deep/50 border border-gm-border-soft/60 shadow-inner';
+
+  if (item.url && isImageMime(item.mime) && !failed) {
+    return (
+      <img
+        src={item.url}
+        alt={item.name}
+        onError={() => setFailed(true)}
+        className={className}
+      />
+    );
+  }
+
+  return (
+    <div className={fallbackClassName} title={failed ? item.url || item.path : undefined}>
+      <Icon className={cn(size === 'lg' ? 'size-8' : 'size-5', colorClass)} />
+    </div>
+  );
+}
+
 export default function AdminStorageClient() {
   const router = useRouter();
   const t = useAdminT('admin.storage');
@@ -489,8 +526,6 @@ export default function AdminStorageClient() {
                     </TableRow>
                   ) : (
                     items.map((item) => {
-                      const Icon = getMimeIcon(item.mime);
-                      const colorClass = getMimeColor(item.mime);
                       const isSelected = selectedIds.has(item.id);
 
                       return (
@@ -511,17 +546,7 @@ export default function AdminStorageClient() {
                             </Button>
                           </TableCell>
                           <TableCell className="py-4">
-                            {item.url && isImageMime(item.mime) ? (
-                              <img
-                                src={item.url}
-                                alt={item.name}
-                                className="size-11 rounded-xl object-cover border border-gm-border-soft/60 bg-gm-bg-deep/50 shadow-md"
-                              />
-                            ) : (
-                              <div className="flex size-11 items-center justify-center rounded-xl bg-gm-bg-deep/50 border border-gm-border-soft/60 shadow-inner">
-                                <Icon className={cn('size-5', colorClass)} />
-                              </div>
-                            )}
+                            <StoragePreview item={item} />
                           </TableCell>
                           <TableCell className="py-4">
                             <div className="space-y-1 pr-4">
@@ -623,8 +648,6 @@ export default function AdminStorageClient() {
             </Card>
           ) : (
             items.map((item) => {
-              const Icon = getMimeIcon(item.mime);
-              const colorClass = getMimeColor(item.mime);
               const isSelected = selectedIds.has(item.id);
 
               return (
@@ -646,17 +669,7 @@ export default function AdminStorageClient() {
                         )}
                       </Button>
 
-                      {item.url && isImageMime(item.mime) ? (
-                        <img
-                          src={item.url}
-                          alt={item.name}
-                          className="size-20 rounded-xl object-cover border border-gm-border-soft shadow"
-                        />
-                      ) : (
-                        <div className="flex size-20 items-center justify-center rounded-xl bg-gm-bg-deep border border-gm-border-soft shadow-inner">
-                          <Icon className={cn('size-8', colorClass)} />
-                        </div>
-                      )}
+                      <StoragePreview item={item} size="lg" />
 
                       <div className="flex-1 space-y-1">
                         <h3 className="font-bold text-gm-text text-sm">{item.name}</h3>

@@ -912,3 +912,18 @@ Blog editörü → genel `ContentModuleClient` (moduleKeys props). seoQuality la
 hardcoded şablondan (repository.ts LANDINGS/landingHtml) DB gerçek içeriğine geçsin.
 **Kurallar:** calculator formülü DEĞİŞMEZ; landing route sabit (slug read-only); hukuki metinde
 AI hüküm UYDURMAZ (yalnız biçim/açıklık); statik fallback korunur.
+
+---
+
+## KURAL: İş bitince COMMIT + PUSH zorunlu (2026-07-03)
+
+"Canlıya aldım" ≠ bitti. Prod deploy `git reset --hard origin/...` yapar:
+- **Tracked** dosyadaki uncommitted değişiklik → deploy'da SİLİNİR
+- **Untracked** yeni dosya kalır ama tracked bağımlılıkları reset'lenir → BUILD FAIL
+  (örn. 2026-07-03: subscription form untracked + tip dosyası reset → 'name_de
+  does not exist' → ADMIN BUILD FAIL, pipeline kilitlendi)
+
+Bugün bu desenden çıkan olaylar: contacts sayfası silindi, /me/customer/threads
+500 (mesajlar 'kayboldu'), chat banner İngilizce kaldı, banner_i18n fix'i az
+kalsın silindi, admin build fail. HER görev sonunda: typecheck → commit → push.
+Deploy YALNIZ git-deploy üzerinden; prod'a rsync/worktree kopyalama YASAK.
