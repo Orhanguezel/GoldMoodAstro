@@ -24,6 +24,7 @@ import {
   Eye,
   Clock,
   MessageCircle,
+  Mic,
 } from 'lucide-react';
 
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -38,7 +39,11 @@ import {
   useDeleteReadingMutation,
   useDeleteAllReadingsMutation,
   useListMyBookingsQuery,
+  useListFavoritesQuery,
+  useRemoveFavoriteMutation,
+  useListMyMediaMessagesQuery,
 } from '@/integrations/rtk/hooks';
+import { BASE_URL } from '@/integrations/rtk/constants';
 import type { HistoryItem, ReadingType } from '@/integrations/rtk/public/history.public.endpoints';
 import AvatarUpload from '@/components/common/AvatarUpload';
 import CityAutocomplete from '@/components/common/CityAutocomplete';
@@ -46,9 +51,9 @@ import ReviewModal from '@/components/common/public/ReviewModal';
 import BookingMessageButton from '@/components/common/BookingMessageButton';
 import UserMessagesPanel from '@/components/containers/user-dashboard/UserMessagesPanel';
 
-type TabKey = 'overview' | 'profile' | 'bookings' | 'messages' | 'history' | 'security';
+type TabKey = 'overview' | 'profile' | 'bookings' | 'messages' | 'media' | 'favorites' | 'history' | 'security';
 type HistoryFilter = 'all' | ReadingType;
-const VALID_TABS: TabKey[] = ['overview', 'profile', 'bookings', 'messages', 'history', 'security'];
+const VALID_TABS: TabKey[] = ['overview', 'profile', 'bookings', 'messages', 'media', 'favorites', 'history', 'security'];
 
 type DashCardProps = {
   href: string;
@@ -228,6 +233,13 @@ export default function DashboardPage() {
   const { data: myBookings, isLoading: bookingsLoading } = useListMyBookingsQuery(undefined, {
     skip: !isAuthenticated,
   });
+  const { data: favorites = [], isLoading: favoritesLoading } = useListFavoritesQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  const { data: mediaMessages = [], isLoading: mediaMessagesLoading } = useListMyMediaMessagesQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+  const [removeFavorite, removeFavoriteState] = useRemoveFavoriteMutation();
 
   const [reviewModal, setReviewModal] = useState<{
     isOpen: boolean;
@@ -365,6 +377,15 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleRemoveFavorite(consultantId: string) {
+    try {
+      await removeFavorite(consultantId).unwrap();
+      toast.success(ui('ui_extra_b0_dash_favorite_removed', 'Removed from favorites'));
+    } catch (err) {
+      toast.error(normalizeError(err).message || ui('ui_extra_b0_dash_favorite_remove_failed', 'Could not remove favorite'));
+    }
+  }
+
   const filteredHistory =
     historyFilter === 'all'
       ? history ?? []
@@ -394,6 +415,22 @@ export default function DashboardPage() {
       title: ui('ui_extra_b0_dash_card_my_messages', 'My Messages'),
       description: ui('ui_extra_b0_dash_card_messages_desc', 'Read replies from your consultants and send new messages.'),
       cta: ui('ui_extra_b0_dash_card_view_messages', 'View messages'),
+    },
+    {
+      href: `?tab=favorites`,
+      icon: <Heart size={22} />,
+      eyebrow: ui('ui_extra_b0_dash_card_favorites', 'Favorites'),
+      title: ui('ui_extra_b0_dash_card_my_favorites', 'My Favorites'),
+      description: ui('ui_extra_b0_dash_card_favorites_desc', 'Keep your favorite consultants close and return when they are online.'),
+      cta: ui('ui_extra_b0_dash_card_view_favorites', 'View favorites'),
+    },
+    {
+      href: `?tab=media`,
+      icon: <Mic size={22} />,
+      eyebrow: ui('ui_extra_b0_dash_card_media', 'Media Questions'),
+      title: ui('ui_extra_b0_dash_card_my_media', 'My Media Questions'),
+      description: ui('ui_extra_b0_dash_card_media_desc', 'Track recorded voice and video questions and listen to consultant replies.'),
+      cta: ui('ui_extra_b0_dash_card_view_media', 'View media questions'),
     },
     {
       href: localizePath(locale, '/birth-chart'),
@@ -454,6 +491,8 @@ export default function DashboardPage() {
     { key: 'profile', label: ui('ui_extra_b0_dash_tab_profile', 'Profile'), icon: <UserIcon size={14} /> },
     { key: 'bookings', label: ui('ui_extra_b0_dash_tab_bookings', 'Bookings'), icon: <ShoppingBag size={14} /> },
     { key: 'messages', label: ui('ui_extra_b0_dash_tab_messages', 'Messages'), icon: <MessageCircle size={14} /> },
+    { key: 'media', label: ui('ui_extra_b0_dash_tab_media', 'Media Questions'), icon: <Mic size={14} /> },
+    { key: 'favorites', label: ui('ui_extra_b0_dash_tab_favorites', 'Favorites'), icon: <Heart size={14} /> },
     { key: 'history', label: ui('ui_extra_b0_dash_tab_history', 'My Past Readings'), icon: <Sparkles size={14} /> },
     { key: 'security', label: ui('ui_extra_b0_dash_tab_security', 'Security'), icon: <Lock size={14} /> },
   ];
@@ -769,6 +808,172 @@ export default function DashboardPage() {
               </h2>
             </div>
             <UserMessagesPanel />
+          </section>
+        )}
+
+        {tab === 'media' && (
+          <section>
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold-deep)">
+                <Mic size={18} />
+              </div>
+              <h2 className="font-serif text-2xl md:text-3xl font-light text-(--gm-text)">
+                {ui('ui_extra_b0_dash_my_media', 'My Media Questions')}
+              </h2>
+            </div>
+
+            {mediaMessagesLoading ? (
+              <div className="grid gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-28 rounded-2xl bg-(--gm-bg-deep) animate-pulse" />
+                ))}
+              </div>
+            ) : mediaMessages.length === 0 ? (
+              <div className="py-20 text-center space-y-6 rounded-2xl border border-dashed border-(--gm-border-soft)">
+                <Mic className="w-8 h-8 mx-auto text-(--gm-text-muted)" />
+                <p className="text-(--gm-text-dim) font-serif italic">
+                  {ui('ui_extra_b0_dash_no_media', 'You have not sent a media question yet.')}
+                </p>
+                <Link href={localizePath(locale, '/consultants')} className="btn-premium inline-flex py-3 px-8">
+                  {ui('ui_extra_b0_dash_find_consultants', 'Find Consultants')}
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {mediaMessages.map((item: any) => {
+                  const replyFileUrl = item.reply_id ? `${BASE_URL}/me/media-messages/${encodeURIComponent(item.reply_id)}/file` : null;
+                  const statusLabel =
+                    item.status === 'answered'
+                      ? ui('ui_extra_b0_dash_media_status_answered', 'Answered')
+                      : item.status === 'expired' || item.status === 'refunded'
+                        ? ui('ui_extra_b0_dash_media_status_refunded', 'Refunded')
+                        : ui('ui_extra_b0_dash_media_status_waiting', 'Waiting for reply');
+                  return (
+                    <div key={item.id} className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-6 space-y-4">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--gm-gold-deep)">
+                            {item.kind === 'video' ? ui('ui_extra_b0_dash_media_video', 'Video') : ui('ui_extra_b0_dash_media_audio', 'Voice')}
+                          </span>
+                          <h4 className="mt-1 font-serif text-xl text-(--gm-text)">
+                            {item.consultant_name || ui('ui_account_msg_consultant_fallback', 'Consultant')}
+                          </h4>
+                          {item.note && <p className="mt-2 text-sm text-(--gm-text-dim)">{item.note}</p>}
+                        </div>
+                        <span className="rounded-full bg-(--gm-bg-deep) px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-(--gm-text-dim)">
+                          {statusLabel}
+                        </span>
+                      </div>
+
+                      {replyFileUrl ? (
+                        item.reply_kind === 'video' ? (
+                          <video src={replyFileUrl} controls crossOrigin="use-credentials" className="aspect-video w-full rounded-2xl bg-black object-cover" />
+                        ) : (
+                          <audio src={replyFileUrl} controls crossOrigin="use-credentials" className="w-full" />
+                        )
+                      ) : (
+                        <p className="text-xs text-(--gm-text-muted)">
+                          {ui('ui_extra_b0_dash_media_waiting_desc', 'Your consultant reply will appear here.')}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
+        {tab === 'favorites' && (
+          <section>
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 rounded-full bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold-deep)">
+                <Heart size={18} />
+              </div>
+              <h2 className="font-serif text-2xl md:text-3xl font-light text-(--gm-text)">
+                {ui('ui_extra_b0_dash_my_favorites', 'My Favorites')}
+              </h2>
+            </div>
+
+            {favoritesLoading ? (
+              <div className="grid gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-24 rounded-2xl bg-(--gm-bg-deep) animate-pulse" />
+                ))}
+              </div>
+            ) : favorites.length === 0 ? (
+              <div className="py-20 text-center space-y-6 rounded-2xl border border-dashed border-(--gm-border-soft)">
+                <div className="w-16 h-16 rounded-full bg-(--gm-bg-deep) flex items-center justify-center mx-auto border border-(--gm-border-soft)">
+                  <Heart className="w-6 h-6 text-(--gm-text-muted)" />
+                </div>
+                <p className="text-(--gm-text-dim) font-serif italic">
+                  {ui('ui_extra_b0_dash_no_favorites', 'You have not added any favorites yet.')}
+                </p>
+                <Link href={localizePath(locale, '/consultants')} className="btn-premium inline-flex py-3 px-8">
+                  {ui('ui_extra_b0_dash_find_consultants', 'Find Consultants')}
+                </Link>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {favorites.map((favorite: any) => (
+                  <div
+                    key={favorite.id}
+                    className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-(--gm-gold)/40 transition-all duration-300 shadow-(--gm-shadow-soft)"
+                  >
+                    <div className="flex items-center gap-5">
+                      <div className="relative">
+                        <div className="w-14 h-14 rounded-full bg-(--gm-gold)/10 flex items-center justify-center text-(--gm-gold-deep) shrink-0 border border-(--gm-gold)/20 overflow-hidden">
+                          {favorite.avatar_url ? (
+                            <img src={favorite.avatar_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <UserIcon className="w-6 h-6 opacity-40" />
+                          )}
+                        </div>
+                        {favorite.is_online && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-(--gm-success) rounded-full border-2 border-(--gm-surface) animate-pulse" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3 mb-1.5">
+                          <span className="text-[10px] font-bold text-(--gm-gold-deep) tracking-[0.2em] uppercase">
+                            {favorite.is_online
+                              ? ui('ui_extra_b0_dash_favorite_online', 'Online')
+                              : ui('ui_extra_b0_dash_favorite_saved', 'Saved')}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] text-(--gm-text-dim)">
+                            <Heart className="w-3 h-3 text-(--gm-gold)" />
+                            {Number(favorite.favorite_count || 0)}
+                          </span>
+                        </div>
+                        <h4 className="text-(--gm-text) font-serif text-xl">
+                          {favorite.full_name || ui('ui_account_msg_consultant_fallback', 'Consultant')}
+                        </h4>
+                        {favorite.headline && (
+                          <p className="text-xs text-(--gm-text-dim) mt-1 line-clamp-1">{favorite.headline}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={localizePath(locale, `/consultants/${favorite.slug || favorite.id}`)}
+                        className="btn-premium px-6 py-2.5 text-[10px]"
+                      >
+                        {ui('ui_extra_b0_dash_open_consultant', 'OPEN')}
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={removeFavoriteState.isLoading}
+                        onClick={() => handleRemoveFavorite(favorite.id)}
+                        className="btn-outline-premium px-5 py-2.5 text-[10px] disabled:opacity-50"
+                      >
+                        {ui('ui_extra_b0_dash_remove_favorite', 'REMOVE')}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
 

@@ -2,9 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Star, Clock, ShieldCheck, Phone, Calendar } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Star, Clock, ShieldCheck, Phone, Calendar, Heart } from 'lucide-react';
 import type { ConsultantPublic } from '@/integrations/rtk/public/consultants.public.endpoints';
+import { useAddFavoriteMutation, useRemoveFavoriteMutation } from '@/integrations/rtk/hooks';
+import { useAuthStore } from '@/features/auth/auth.store';
 import { useUiSection } from '@/i18n';
+import { toast } from 'sonner';
 
 interface Props {
   consultant: ConsultantPublic;
@@ -13,18 +17,57 @@ interface Props {
 }
 
 export default function ConsultantCard({ consultant, locale, expertiseLabels = {} }: Props) {
+  const router = useRouter();
   const { ui } = useUiSection('ui_consultantbrowse' as any, locale);
   const [imageFailed, setImageFailed] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(Boolean(consultant.is_favorited));
+  const [favoriteCount, setFavoriteCount] = useState(Number(consultant.favorite_count || 0));
+  const { isAuthenticated } = useAuthStore();
+  const [addFavorite, addFavoriteState] = useAddFavoriteMutation();
+  const [removeFavorite, removeFavoriteState] = useRemoveFavoriteMutation();
   const rating = parseFloat(consultant.rating_avg || '0');
   const price = Math.round(Number(consultant.session_price));
-  const isOnline = !!consultant.is_available;
+  const isOnline = Boolean(consultant.is_online);
   const detailHref = `/${locale}/consultants/${consultant.slug || consultant.id}`;
+  const favoriteBusy = addFavoriteState.isLoading || removeFavoriteState.isLoading;
   const initials = (consultant.full_name || 'GS')
     .split(' ')
     .map((w) => w[0])
     .join('')
     .slice(0, 2)
     .toUpperCase();
+
+  React.useEffect(() => {
+    setIsFavorited(Boolean(consultant.is_favorited));
+    setFavoriteCount(Number(consultant.favorite_count || 0));
+  }, [consultant.is_favorited, consultant.favorite_count]);
+
+  async function handleFavoriteToggle() {
+    if (!isAuthenticated) {
+      router.push(`/${locale}/login?next=${encodeURIComponent(detailHref)}`);
+      return;
+    }
+
+    const nextFavorited = !isFavorited;
+    const previousFavorited = isFavorited;
+    const previousCount = favoriteCount;
+    setIsFavorited(nextFavorited);
+    setFavoriteCount((count) => Math.max(0, count + (nextFavorited ? 1 : -1)));
+
+    try {
+      if (nextFavorited) {
+        await addFavorite(consultant.id).unwrap();
+        toast.success(ui('ui_consultantbrowse_favorite_added', 'Added to favorites'));
+      } else {
+        await removeFavorite(consultant.id).unwrap();
+        toast.success(ui('ui_consultantbrowse_favorite_removed', 'Removed from favorites'));
+      }
+    } catch {
+      setIsFavorited(previousFavorited);
+      setFavoriteCount(previousCount);
+      toast.error(ui('ui_consultantbrowse_favorite_failed', 'Favorite could not be updated'));
+    }
+  }
 
   return (
     <div className="consultant-card group relative flex flex-col bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] rounded-3xl overflow-hidden hover:border-[var(--gm-gold)]/40 hover:shadow-[0_0_50px_rgba(201,169,97,0.08)] transition-all duration-500">
@@ -60,6 +103,18 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
           {ui('ui_consultantbrowse_verified', 'Verified')}
         </span>
       </Link>
+
+      <button
+        type="button"
+        onClick={handleFavoriteToggle}
+        disabled={favoriteBusy}
+        aria-pressed={isFavorited}
+        aria-label={isFavorited ? ui('ui_consultantbrowse_favorite_remove', 'Remove from favorites') : ui('ui_consultantbrowse_favorite_add', 'Add to favorites')}
+        className="absolute left-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-[var(--gm-bg-deep)]/55 px-3 py-1.5 text-[10px] font-bold text-[var(--gm-text)] shadow-lg backdrop-blur-md transition hover:bg-[var(--gm-bg-deep)]/75 disabled:opacity-60"
+      >
+        <Heart className={`h-3.5 w-3.5 ${isFavorited ? 'fill-[var(--gm-gold)] text-[var(--gm-gold)]' : 'text-[var(--gm-gold)]'}`} />
+        <span>{favoriteCount}</span>
+      </button>
 
       {/* Info */}
       <div className="flex-1 p-6 pb-4 flex flex-col">

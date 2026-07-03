@@ -14,6 +14,8 @@ import { registerConsultantWithdrawalCron } from '@/cron/consultant-withdrawals'
 import { registerSubscriptionExpireCron } from '@/cron/subscription-expire';
 import { registerOrderCleanupCron } from '@/cron/order-cleanup';
 import { registerPaymentReconciliationCron } from '@/cron/payment-reconciliation';
+import { registerFavoriteOnlineNotifyCron } from '@/cron/favorite-online-notify';
+import { registerMediaMessageSlaCron } from '@/cron/media-message-sla';
 import { registerSeoQualityRecalcCron } from '@/jobs/seo-quality-recalc.job';
 import { registerPushSender } from '@goldmood/shared-backend/modules/notifications';
 import { assertPaymentMockSafe } from '@goldmood/shared-backend/modules/orders/iyzico.service';
@@ -51,6 +53,8 @@ async function main() {
     registerSubscriptionExpireCron();
     registerOrderCleanupCron();
     registerPaymentReconciliationCron();
+    registerFavoriteOnlineNotifyCron();
+    registerMediaMessageSlaCron();
     registerSeoQualityRecalcCron();
   }
 

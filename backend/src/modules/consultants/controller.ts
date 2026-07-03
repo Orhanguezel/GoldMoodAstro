@@ -36,6 +36,15 @@ function localeFromRequest(req: Parameters<RouteHandler>[0]) {
   return queryLocale || (req as any).locale || 'tr';
 }
 
+function normalizeFavoriteFields<T extends Record<string, any>>(row: T): T {
+  return {
+    ...row,
+    favorite_count: Number(row.favorite_count || 0),
+    is_favorited: Boolean(row.is_favorited),
+    is_online: Boolean(row.is_online),
+  };
+}
+
 function uniqueSlugs(values: string[]): string[] {
   return Array.from(new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean)));
 }
@@ -64,14 +73,15 @@ async function findInactiveOrMissingLanguageSlugs(slugs: string[]): Promise<stri
 
 export const listConsultantsHandler: RouteHandler = async (req) => {
   const query = listConsultantsQuerySchema.parse(req.query ?? {});
-  return { data: await listApprovedConsultants(query, localeFromRequest(req)) };
+  const rows = await listApprovedConsultants(query, localeFromRequest(req), userIdFromRequest(req));
+  return { data: rows.map((row: any) => normalizeFavoriteFields(row)) };
 };
 
 export const getConsultantHandler: RouteHandler = async (req, reply) => {
   const { id } = consultantIdParamsSchema.parse(req.params ?? {});
-  const row = await getApprovedConsultantById(id, localeFromRequest(req));
+  const row = await getApprovedConsultantById(id, localeFromRequest(req), userIdFromRequest(req));
   if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
-  return { data: row };
+  return { data: normalizeFavoriteFields(row as any) };
 };
 
 export const getConsultantSlotsHandler: RouteHandler = async (req, reply) => {

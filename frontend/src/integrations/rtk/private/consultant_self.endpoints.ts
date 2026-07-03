@@ -58,8 +58,16 @@ export interface ConsultantSelfStats {
   rating_avg: number;
   rating_count: number;
   total_sessions: number;
+  favorite_count: number;
   is_available: number;
   last_7_days: Array<{ date: string; count: number; earnings: number }>;
+}
+
+export interface ConsultantHeartbeatResponse {
+  consultant_id: string;
+  last_heartbeat_at: string | null;
+  became_online_at: string | null;
+  is_online: boolean;
 }
 
 export interface ConsultantSelfBooking {
@@ -437,6 +445,10 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       transformResponse: (res: { data: ConsultantSelfStats }) => res.data,
       providesTags: ['ConsultantSelfStats' as any],
     }),
+    sendMyConsultantHeartbeat: build.mutation<ConsultantHeartbeatResponse, void>({
+      query: () => ({ url: '/me/consultant/heartbeat', method: 'POST' }),
+      transformResponse: (res: { data: ConsultantHeartbeatResponse }) => res.data,
+    }),
     getMyConsultantBookings: build.query<ConsultantSelfBooking[], { status?: string } | void>({
       query: (args) => ({ url: '/me/consultant/bookings', params: args?.status ? { status: args.status } : undefined }),
       transformResponse: (res: { data: ConsultantSelfBooking[] }) => res.data ?? [],
@@ -717,6 +729,7 @@ export const {
   useUpdateMyConsultantBlogPostMutation,
   useDeleteMyConsultantBlogPostMutation,
   useGetMyConsultantStatsQuery,
+  useSendMyConsultantHeartbeatMutation,
   useGetMyConsultantBookingsQuery,
   useApproveBookingMutation,
   useRejectBookingMutation,

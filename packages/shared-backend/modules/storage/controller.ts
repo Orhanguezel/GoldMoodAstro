@@ -97,6 +97,21 @@ function readImageDimensions(buf: Buffer, mime: string): ImageDimensions | null 
 
 function validateBucketFile(bucket: string, mime: string, buf: Buffer): { code: string; message: string } | null {
   const normalizedMime = mime.toLowerCase();
+
+  if (bucket === "media_messages") {
+    const audioMimes = new Set(["audio/webm", "audio/mp4", "audio/mpeg"]);
+    const videoMimes = new Set(["video/webm", "video/mp4"]);
+    if (!audioMimes.has(normalizedMime) && !videoMimes.has(normalizedMime)) {
+      return { code: "invalid_media_message_mime", message: "media_message_invalid_mime" };
+    }
+    const maxBytes = audioMimes.has(normalizedMime) ? 15 * 1024 * 1024 : 60 * 1024 * 1024;
+    if (buf.length > maxBytes) {
+      return {
+        code: "media_message_too_large",
+        message: audioMimes.has(normalizedMime) ? "media_message_audio_max_15mb" : "media_message_video_max_60mb",
+      };
+    }
+  }
   
   // Rule for consultant_avatars (T37-4)
   if (bucket === "consultant_avatars") {
@@ -134,6 +149,10 @@ export async function publicServe(req: FastifyRequest, reply: FastifyReply) {
     const raw = (req as WildcardParamsRequest).params["*"] || "";
     const path = normalizePath(bucket, raw);
 
+    if (bucket === "media_messages") {
+      return reply.code(403).send({ error: { message: "private_bucket" } });
+    }
+
     const row = await repoGetByBucketPath(bucket, path);
     if (!row) return reply.code(404).send({ message: "not_found" });
 
@@ -146,7 +165,7 @@ export async function publicServe(req: FastifyRequest, reply: FastifyReply) {
 }
 
 /** POST /storage/:bucket/upload (FormData) — server-side upload */
-const AUTH_REQUIRED_BUCKETS = new Set(['consultant_blog', 'consultant_avatars', 'consultant_kyc']);
+const AUTH_REQUIRED_BUCKETS = new Set(['consultant_blog', 'consultant_avatars', 'consultant_kyc', 'media_messages']);
 
 export async function uploadToBucket(req: FastifyRequest, reply: FastifyReply) {
   try {

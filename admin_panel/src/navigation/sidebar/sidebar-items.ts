@@ -23,6 +23,7 @@ import {
   LayoutDashboard,
   Mail,
   Megaphone,
+  Mic,
   MessageCircle,
   MessageSquare,
   Package,
@@ -84,6 +85,7 @@ export type AdminNavItemKey =
   | 'availability'
   | 'support'
   | 'contacts'
+  | 'media_messages'
   | 'chat'
   | 'wallet'
   | 'orders'
@@ -141,6 +143,7 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'reviews', url: '/admin/reviews', icon: MessageSquare },
       { key: 'support', url: '/admin/support', icon: MessageCircle },
       { key: 'contacts', url: '/admin/contacts', icon: Mail },
+      { key: 'media_messages', url: '/admin/media-messages', icon: Mic },
       { key: 'announcements', url: '/admin/announcements', icon: Megaphone },
       { key: 'notifications', url: '/admin/notifications', icon: Bell, badgeKey: 'notifications_unread' },
       { key: 'email_templates', url: '/admin/email-templates', icon: Mail },
@@ -207,6 +210,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   availability: 'Rezervasyon Saatleri',
   support: 'Destek',
   contacts: 'İletişim',
+  media_messages: 'Medya Mesajları',
   chat: 'Chat & AI',
   orders: 'Siparişler',
   wallet: 'Cüzdan',

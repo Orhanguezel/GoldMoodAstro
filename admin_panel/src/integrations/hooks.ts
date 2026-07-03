@@ -90,3 +90,4 @@ export * from '@/integrations/endpoints/admin/consultant_applications_admin.endp
 export * from '@/integrations/endpoints/admin/service_categories_admin.endpoints';
 export * from '@/integrations/endpoints/admin/service_templates_admin.endpoints';
 export * from '@/integrations/endpoints/admin/commission_change_admin.endpoints';
+export * from '@/integrations/endpoints/admin/media_messages_admin.endpoints';

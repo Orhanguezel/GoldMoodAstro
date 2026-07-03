@@ -43,6 +43,13 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('01000000-0000-4000-8000-0000000006c5', 'ui_consultant_note_free', '*', '{"label":{"tr":"* Ücretsiz tanışma görüşmesidir.","en":"* This is a free introductory session.","de":"* Dies ist eine kostenlose Einführungssitzung."}}'),
 ('01000000-0000-4000-8000-0000000006c6', 'ui_consultant_note_paid', '*', '{"label":{"tr":"* Ödeme bir sonraki adımda Iyzico üzerinden alınacaktır.","en":"* Payment will be processed via Iyzico in the next step.","de":"* Die Zahlung wird im nächsten Schritt über Iyzico abgewickelt."}}'),
 ('01000000-0000-4000-8000-0000000006c7', 'ui_consultant_verified_profile', '*', '{"label":{"tr":"Onaylı Uzman Profil","en":"Verified Expert Profile","de":"Verifiziertes Expertenprofil"}}'),
+('01000000-0000-4000-8000-0000000006c9', 'ui_consultant_favorite_added', '*', '{"label":{"tr":"Favorilere eklendi","en":"Added to favorites","de":"Zu Favoriten hinzugefügt"}}'),
+('01000000-0000-4000-8000-0000000006ca', 'ui_consultant_favorite_removed', '*', '{"label":{"tr":"Favorilerden çıkarıldı","en":"Removed from favorites","de":"Aus Favoriten entfernt"}}'),
+('01000000-0000-4000-8000-0000000006cb', 'ui_consultant_favorite_failed', '*', '{"label":{"tr":"Favori güncellenemedi","en":"Favorite could not be updated","de":"Favorit konnte nicht aktualisiert werden"}}'),
+('01000000-0000-4000-8000-0000000006cc', 'ui_consultant_favorite_add', '*', '{"label":{"tr":"Favorilere ekle","en":"Add to favorites","de":"Zu Favoriten hinzufügen"}}'),
+('01000000-0000-4000-8000-0000000006cd', 'ui_consultant_favorite_remove', '*', '{"label":{"tr":"Favorilerden çıkar","en":"Remove from favorites","de":"Aus Favoriten entfernen"}}'),
+('01000000-0000-4000-8000-0000000006ce', 'ui_consultant_favorite_count_label', '*', '{"label":{"tr":"danışan favoriledi","en":"people favorited","de":"Personen favorisierten"}}'),
+('01000000-0000-4000-8000-0000000006cf', 'ui_consultant_online', '*', '{"label":{"tr":"Çevrimiçi","en":"Online","de":"Online"}}'),
 -- AvailabilityPanel
 ('01000000-0000-4000-8000-0000000007a1', 'ui_availability_day_mon', '*', '{"label":{"tr":"Pazartesi","en":"Monday","de":"Montag"}}'),
 ('01000000-0000-4000-8000-0000000007a2', 'ui_availability_day_tue', '*', '{"label":{"tr":"Salı","en":"Tuesday","de":"Dienstag"}}'),

@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS consultant_presence (
+  consultant_id CHAR(36) PRIMARY KEY,
+  last_heartbeat_at DATETIME(3) NOT NULL,
+  became_online_at DATETIME(3) NULL,
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

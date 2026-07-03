@@ -11,6 +11,7 @@ type Props = {
   searchParams?: Promise<{ expertise?: string; topic?: string }>;
 };
 import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
+import { fetchSetting } from '@/i18n/server';
 import { normPath } from '@/integrations/shared';
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
@@ -46,6 +47,42 @@ async function getConsultants(params: { expertise?: string; limit?: number; loca
   }
 }
 
+function localeFallbackTitle(locale: string) {
+  if (locale === 'tr') return 'Danışmanları Keşfet';
+  if (locale === 'de') return 'Berater entdecken';
+  return 'Explore Consultants';
+}
+
+function readSettingLabel(value: unknown, locale: string): string {
+  const parsed = (() => {
+    if (typeof value !== 'string') return value;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  })();
+
+  if (typeof parsed === 'string') return parsed.trim();
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return '';
+
+  const label = (parsed as any).label;
+  if (label && typeof label === 'object' && !Array.isArray(label)) {
+    return (
+      String(label[locale] || label.en || label.tr || Object.values(label)[0] || '')
+        .trim()
+    );
+  }
+
+  return String((parsed as any)[locale] || (parsed as any).en || (parsed as any).tr || '').trim();
+}
+
+async function getConsultantsPageTitle(locale: string) {
+  const fallback = localeFallbackTitle(locale);
+  const row = await fetchSetting('ui_consultantbrowse_page_title', locale, { revalidate: 600 });
+  return readSettingLabel(row?.value, locale) || fallback;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   let seo = await fetchSeoObject(locale);
@@ -58,22 +95,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ConsultantsPage({ params, searchParams }: Props) {
   const { locale } = await params;
   const sp = searchParams ? await searchParams : {};
-  const isTr = locale === 'tr';
-
   // T28-4 — topic -> expertise mapping for funnel redirects.
   const topic = (sp.topic || '').trim() as FunnelFeature;
   const topicCfg = topic && topic in FUNNEL_CONFIG ? FUNNEL_CONFIG[topic] : null;
   const initialExpertise = (sp.expertise || topicCfg?.expertise || '').trim();
 
   const headline = topicCfg
-    ? (isTr ? topicCfg.headlineTr : topicCfg.headlineEn)
-    : 'Explore Consultants';
+    ? (locale === 'tr' ? topicCfg.headlineTr : topicCfg.headlineEn)
+    : await getConsultantsPageTitle(locale);
   const consultants = await getConsultants({ expertise: initialExpertise, limit: 12, locale });
   const listUrl = `${SITE_URL}/${locale}/consultants`;
   const graphItems = [
     breadcrumbSchema([
       { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },
-      { name: 'Consultants', item: listUrl },
+      { name: headline, item: listUrl },
     ]),
   ];
   const itemListSchema = consultants.length

@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS user_favorites (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-### [ ] FAV-T1 — Backend modül: favorites 🔴
+### [x] FAV-T1 — Backend modül: favorites 🔴
 - **Yeni:** `packages/shared-backend/modules/favorites/` (schema, repository, controller, router, index) + package.json exports (`./modules/favorites` — unutma, modül çözülmez yoksa).
 - **API kontratı:**
   - `POST /me/favorites/:consultantId` (requireAuth) → ekle (idempotent; varsa 200)
@@ -43,22 +43,26 @@ CREATE TABLE IF NOT EXISTS user_favorites (
   - `GET /me/favorites/ids` → hafif: sadece consultant_id[] (kart listelerinde kalp durumu için)
 - Route kaydı `backend/src/routes/shared.ts`.
 - **Kabul:** ekle/çıkar/idempotent; typecheck 0.
+  - Not: `favorites` shared modülü, route kaydı ve `221_user_favorites_schema.sql` eklendi; backend typecheck temiz.
 
-### [ ] FAV-T2 — Public sayaç: danışman profillerinde favori sayısı 🔴
+### [x] FAV-T2 — Public sayaç: danışman profillerinde favori sayısı 🔴
 - `GET /consultants/:id` (public detail) response'una `favorite_count` ekle (COUNT subquery/LEFT JOIN).
 - Danışman public LIST response'una da `favorite_count` (kartlarda rozet).
 - Auth'lu istekte `is_favorited: boolean` (cookie/Bearer varsa tryAuth ile).
 - **Kabul:** `/api/consultants/:id` favorite_count döner; auth'luysa is_favorited doğru.
+  - Not: public consultant list/detail response'una `favorite_count` ve optional auth ile `is_favorited` eklendi; backend typecheck temiz.
 
-### [ ] FAV-T3 — Frontend: kalp butonu + favori sayısı + Favorilerim 🟠
+### [x] FAV-T3 — Frontend: kalp butonu + favori sayısı + Favorilerim 🟠
 - **ConsultantDetail** + danışman kartları (browse listesi): kalp toggle (optimistic; girişsizse login'e yönlendir `?next=`), yanında `favorite_count` rozeti ("♥ 12").
 - **Danışman profil başlığında** favori sayısı görünür ("12 danışan favoriledi").
 - **Kullanıcı dashboard'ına "Favorilerim" sekmesi:** GET /me/favorites listesi, karttan kaldırma, danışmana git.
 - Tüm metinler `ui_` anahtarlarıyla tr/en/de (İngilizce fallback bırakma — bugünkü placeholder vakaları!). Yeni ui_ anahtarları seed'e eklenmeli.
 - **Kabul:** favorile/çıkar canlı çalışır, sayaç anlık güncellenir (RTK invalidatesTags), 3 dilde metinler.
+  - Not: ConsultantCard/ConsultantDetail kalp toggle, dashboard Favorilerim sekmesi, RTK favorite endpointleri ve TR/EN/DE ui seedleri eklendi; frontend+backend typecheck temiz.
 
-### [ ] FAV-T4 — Danışman panelinde kendi favori istatistiği 🟡
+### [x] FAV-T4 — Danışman panelinde kendi favori istatistiği 🟡
 - `/me/consultant/stats` response'una `favorite_count` ekle; ConsultantDashboard istatistik kartlarında göster.
+  - Not: `/me/consultant/stats` favori sayısını korumalı count ile döndürüyor; ConsultantDashboard toplam favori kartı ve TR/EN/DE ui seed eklendi; frontend+backend typecheck temiz.
 
 ## FAZ B — Presence + "favorin çevrimiçi" bildirimi (PRES)
 
@@ -74,17 +78,19 @@ CREATE TABLE IF NOT EXISTS consultant_presence (
 ```
 > `is_online` = `last_heartbeat_at > NOW() - INTERVAL 2 MINUTE` (kolon değil, sorguda hesap).
 
-### [ ] PRES-T1 — Heartbeat + is_online 🔴
+### [x] PRES-T1 — Heartbeat + is_online 🔴
 - `POST /me/consultant/heartbeat` (requireAuth, danışman): consultant_presence upsert. `became_online_at`: önceki heartbeat >2dk eskiyse ŞİMDİ'ye set (offline→online geçişi).
 - Danışman paneli (web) açıkken 60 sn'de bir heartbeat (visibility API ile sekme gizliyken durdur). Mobil tarafı ayrı görev (FAZ dışı, not düş).
 - Public danışman list/detail'e `is_online` (presence LEFT JOIN).
 - **Kabul:** panel açık danışman 2dk içinde online görünür; kapatınca ~2dk'da düşer.
+  - Not: `consultant_presence` seed ve shared presence modülü eklendi; `/me/consultant/heartbeat` panelden 60 sn'de bir visibility-aware çalışıyor; public consultant list/detail ve favoriler listesi `is_online` hesaplıyor; frontend+backend typecheck temiz.
 
-### [ ] PRES-T2 — Frontend online rozeti 🟠
+### [x] PRES-T2 — Frontend online rozeti 🟠
 - Danışman kartı + detayında yeşil "Çevrimiçi" noktası/rozeti (tr/en/de ui_ anahtarı).
 - Favorilerim listesinde online olanlar üstte.
+  - Not: Kart/detail online rozetleri gerçek `is_online` heartbeat alanına bağlandı; anlık görüş butonu da aynı durumu kullanıyor; Favorilerim backend sıralaması online önce; TR/EN/DE ui seed eklendi; frontend+backend typecheck temiz.
 
-### [ ] PRES-T3 — Favori-online bildirimi (cron) 🔴
+### [x] PRES-T3 — Favori-online bildirimi (cron) 🔴
 - **Yeni cron** `backend/src/cron/favorite-online-notify.ts` (1 dk):
   - Son 2dk'da `became_online_at` güncellenen danışmanları bul.
   - Her biri için `user_favorites`'tan (o danışmanı favorileyen ve `online_notified_at` NULL veya >6 saat eski) kullanıcıları çek.
@@ -92,6 +98,7 @@ CREATE TABLE IF NOT EXISTS consultant_presence (
   - `online_notified_at = NOW()` işaretle (spam koruması: 6 saatte en fazla 1).
 - Cron kaydı mevcut cron register desenine (booking-sla gibi).
 - **Kabul:** danışman online olunca favorileyen kullanıcıya 1 bildirim + push; 6 saat içinde tekrar etmez.
+  - Not: `favorite-online-notify` cron eklendi ve startup'a bağlandı; son 2 dk içinde online olan danışmanlar için favorileyen kullanıcılara `favorite_online` in-app+push bildirimi gönderiyor, `online_notified_at` ile 6 saat spam koruması uyguluyor; backend typecheck temiz.
 
 ## FAZ C — Ücretli kayıtlı sesli/görüntülü mesaj (VMSG)
 
@@ -136,14 +143,15 @@ CREATE TABLE IF NOT EXISTS media_messages (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-### [ ] VMSG-T1 — Storage: media_messages bucket'ı (ÖZEL/auth'lu) 🔴
+### [x] VMSG-T1 — Storage: media_messages bucket'ı (ÖZEL/auth'lu) 🔴
 - `AUTH_REQUIRED_BUCKETS`'a `media_messages` ekle + `validateBucketFile` kuralları:
   - audio: `audio/webm|audio/mp4|audio/mpeg`, ≤ 15MB
   - video: `video/webm|video/mp4`, ≤ 60MB
 - **KRİTİK GİZLİLİK:** mevcut `publicServe` 302 ile HERKESE açar — `media_messages` bucket'ı için publicServe **reddetmeli**; yeni `GET /me/media-messages/:id/file` endpoint'i yalnız mesajın müşterisi VEYA danışmanına stream/redirect vermeli (yetki: media_messages satırından).
 - **Kabul:** yetkisiz kullanıcı dosya URL'sine erişemez (403/404); taraflar erişir.
+  - Not: `media_messages` storage bucket auth-required yapıldı, audio/video MIME+boyut validasyonu eklendi, public `/storage/media_messages/*` 403 döndürüyor; yetkili `GET /me/media-messages/:id/file` endpoint'i media_messages taraf kontrolüyle redirect veriyor; backend typecheck temiz.
 
-### [ ] VMSG-T2 — Backend modül: mediaMessages 🔴
+### [x] VMSG-T2 — Backend modül: mediaMessages 🔴
 - **Yeni:** `packages/shared-backend/modules/mediaMessages/` (+ exports).
 - **API kontratı:**
   - `GET /consultants/:id/media-settings` (public): audio/video enabled + fiyatlar (danışman detayında butonları göstermek için).
@@ -155,23 +163,27 @@ CREATE TABLE IF NOT EXISTS media_messages (
   - `GET /me/media-messages` (müşteri) / `GET /me/consultant/media-messages` (danışman, gelen kutusu; unanswered üstte).
   - `POST /me/consultant/media-messages/:id/reply` (danışman): {storage_path, kind, duration_seconds, note?} → reply satırı (direction=reply, parent_id) + parent status=answered + **wallet'a hakediş** (mevcut komisyon oranı `platform_commission_rate` düşülerek; wallet ledger'a referansla) + müşteriye notification+push.
 - **Kabul:** uçtan uca soru→ödeme→yanıt→hakediş akışı; çift charge yok (charge_ref idempotency).
+  - Not: `mediaMessages` shared modülü, `223_media_messages_schema.sql`, settings/public/customer/consultant/reply/file route'ları eklendi; soru oluşturma kredi tüketiyor, yanıt parent'ı answered yapıp wallet hakedişi ve bildirim/push oluşturuyor; backend typecheck temiz.
 
-### [ ] VMSG-T3 — SLA iadesi (cron) 🔴
+### [x] VMSG-T3 — SLA iadesi (cron) 🔴
 - `backend/src/cron/media-message-sla.ts` (saatlik): `status='sent' AND reply_due_at < NOW()` → status=expired + **kredi iadesi** (consumeCredits'in iade karşılığı / refund helper; yoksa credits modülüne `refundCredits` ekle) + müşteriye "yanıt gelmedi, ücret iade edildi" bildirimi.
 - booking-sla.ts deseni referans.
 - **Kabul:** SLA aşımında otomatik iade + bildirim; danışman yanıtlarsa cron dokunmaz.
+  - Not: `media-message-sla` cron saatlik startup'a bağlandı; süresi geçmiş `sent` soruları `expired` yapıp `refundCredits` ile idempotent kredi iadesi ve `media_message_refunded` bildirim/push gönderiyor; backend typecheck temiz.
 
-### [ ] VMSG-T4 — Frontend müşteri akışı 🟠
+### [x] VMSG-T4 — Frontend müşteri akışı 🟠
 - **ConsultantDetail:** media-settings'e göre "🎙 Sesli Soru (X₺)" / "🎥 Görüntülü Soru (Y₺)" butonları.
 - **Kayıt modalı:** MediaRecorder (audio: webm/opus; video: webm, ön kamera) — süre limiti (audio 5dk, video 3dk) + önizleme/yeniden kayıt + upload (`/storage/media_messages/upload`) + not alanı + fiyat onayı → POST /me/media-messages. Tarayıcı desteği yoksa dosya seçici fallback.
 - **Dashboard "Medya Sorularım":** durum (Yanıt bekliyor/Yanıtlandı/İade), yanıt player'ı (auth'lu file endpoint'ten).
 - Tüm metinler ui_ tr/en/de.
 - **Kabul:** kayıt→öde→gönder→yanıtı dinle/izle akışı 3 dilde.
+  - Not: ConsultantDetail medya settings'e göre ses/video soru butonları gösteriyor; MediaRecorder + dosya fallback modalı upload edip krediyle soru oluşturuyor; dashboard "Medya Sorularım" yanıt player'ı auth'lu file endpoint'ten oynatıyor; TR/EN/DE ui seed eklendi; frontend+backend typecheck temiz.
 
-### [ ] VMSG-T5 — Danışman paneli akışı 🟠
+### [x] VMSG-T5 — Danışman paneli akışı 🟠
 - **Ayarlar:** ServicesPanel'e (veya profil ayarlarına) "Kayıtlı Mesaj" bölümü: audio/video aç-kapa + fiyat + SLA.
 - **Gelen kutusu:** yeni sekme "Medya Soruları" — bekleyenler (kalan SLA süresi göstergesi), player, **yanıt kaydı** (aynı kayıt modalı) → reply POST.
 - **Kabul:** danışman ayarlar, dinler, kayıtla yanıtlar; hakediş wallet'ta görünür.
+  - Not: ConsultantDashboard'a "Medya Soruları" sekmesi eklendi; danışman ses/video fiyat+SLA ayarlarını kaydediyor, gelen soruyu auth'lu player'da dinleyip/görüp MediaRecorder veya dosya fallback ile yanıtlıyor; reply backend wallet hakedişini oluşturuyor; frontend+backend typecheck temiz.
 
 ### [ ] VMSG-T6 — Admin görünürlük 🟡
 - Admin'de basit liste: /admin/media-messages (durum filtreli; şikayet/uyuşmazlık inceleme için player admin'e de açık).

@@ -171,6 +171,7 @@ export const tags = [
   'KycPending',
   'Withdrawal',
   'Withdrawals',
+  'MediaMessages',
 ] as const;
 
 export type tag = typeof tags[number];

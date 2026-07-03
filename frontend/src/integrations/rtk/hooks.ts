@@ -37,6 +37,8 @@ export * from './public/popups.endpoints';
 export * from './public/wallet.endpoints';
 export * from './public/orders.endpoints';
 export * from './public/consultants.public.endpoints';
+export * from './public/favorites.public.endpoints';
+export * from './public/media_messages.endpoints';
 export * from './public/consultant_services.public.endpoints';
 export * from './public/service_categories.public.endpoints';
 export * from './public/birth_charts.endpoints';

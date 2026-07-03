@@ -30,6 +30,8 @@ import {
   AlertCircle,
   ShieldCheck,
   Upload,
+  Heart,
+  Mic,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -43,6 +45,7 @@ import {
   useGetMyConsultantProfileQuery,
   useUpdateMyConsultantProfileMutation,
   useGetMyConsultantStatsQuery,
+  useSendMyConsultantHeartbeatMutation,
   useGetMyConsultantBookingsQuery,
   useApproveBookingMutation,
   useRejectBookingMutation,
@@ -62,6 +65,7 @@ import AvailabilityPanel from './AvailabilityPanel';
 import BlogPanel from './BlogPanel';
 import ClientsPanel from './ClientsPanel'; // C8
 import ProfileViewsPanel from './ProfileViewsPanel'; // C7
+import MediaMessagesPanel from './MediaMessagesPanel';
 import BookingMessageButton from '@/components/common/BookingMessageButton';
 import RichContentEditor from '@/components/common/RichContentEditor';
 import MultiSelectChip from '@/components/common/MultiSelectChip';
@@ -69,7 +73,7 @@ import ConsultantCardPreview from './ConsultantCardPreview';
 import PageContainer from '@/components/common/PageContainer';
 import { useUploadToBucketMutation } from '@/integrations/rtk/public/storage_public.endpoints';
 
-type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'blog' | 'wallet' | 'reviews' | 'clients' | 'analytics';
+type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'media' | 'blog' | 'wallet' | 'reviews' | 'clients' | 'analytics';
 
 const TABS: Array<{ key: TabKey; labelKey: string; fallback: string; icon: React.ElementType }> = [
   { key: 'overview', labelKey: 'ui_dashboard_tab_overview', fallback: 'Overview', icon: LayoutDashboard },
@@ -79,6 +83,7 @@ const TABS: Array<{ key: TabKey; labelKey: string; fallback: string; icon: React
   { key: 'bookings', labelKey: 'ui_dashboard_tab_bookings', fallback: 'Bookings', icon: CheckCircle2 },
   { key: 'clients', labelKey: 'ui_dashboard_tab_clients', fallback: 'My clients', icon: Users },
   { key: 'messages', labelKey: 'ui_dashboard_tab_messages', fallback: 'Messages', icon: MessageCircle },
+  { key: 'media', labelKey: 'ui_dashboard_tab_media', fallback: 'Media Questions', icon: Mic },
   { key: 'wallet', labelKey: 'ui_dashboard_tab_wallet', fallback: 'Wallet', icon: Wallet },
   { key: 'analytics', labelKey: 'ui_dashboard_tab_analytics', fallback: 'Analytics', icon: BarChart3 },
   { key: 'reviews', labelKey: 'ui_dashboard_tab_reviews', fallback: 'Reviews', icon: Star },
@@ -116,6 +121,25 @@ export default function ConsultantDashboard({ locale }: Props) {
     skip: !isReady || !isAuthenticated,
   });
   const { data: stats, isLoading: statsLoading } = useGetMyConsultantStatsQuery(undefined, { skip: !profile });
+  const [sendHeartbeat] = useSendMyConsultantHeartbeatMutation();
+
+  useEffect(() => {
+    if (!profile?.id || profile.approval_status !== 'approved') return;
+
+    const ping = () => {
+      if (document.visibilityState !== 'visible') return;
+      sendHeartbeat().unwrap().catch(() => {});
+    };
+
+    ping();
+    const timer = window.setInterval(ping, 60_000);
+    document.addEventListener('visibilitychange', ping);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', ping);
+    };
+  }, [profile?.id, profile?.approval_status, sendHeartbeat]);
 
   if (!isReady || authLoading || profileLoading) {
     return (
@@ -302,6 +326,7 @@ function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabCha
         {tab === 'bookings' && <BookingsPanel locale={locale} />}
         {tab === 'clients' && <ClientsPanel />}
         {tab === 'messages' && <MessagesPanel />}
+        {tab === 'media' && <MediaMessagesPanel locale={locale} consultantId={profile.id} />}
         {tab === 'blog' && <BlogPanel locale={locale} consultantId={profile.id} />}
         {tab === 'wallet' && <WalletPanel />}
         {tab === 'analytics' && <ProfileViewsPanel />}
@@ -517,6 +542,7 @@ function OverviewPanel({
         </div>
         <StatCardSmall icon={CheckCircle2} label={ui('ui_dashboard_total_sessions', 'Total Sessions')} value={stats?.total_sessions ?? 0} />
         <StatCardSmall icon={Star} label={ui('ui_dashboard_total_reviews', 'Total Reviews')} value={stats?.rating_count ?? 0} />
+        <StatCardSmall icon={Heart} label={ui('ui_dashboard_total_favorites', 'Total Favorites')} value={stats?.favorite_count ?? 0} />
       </div>
 
       {/* C9: Profile completion score */}

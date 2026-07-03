@@ -54,7 +54,26 @@ function localizedMetaSelect(column: 'meta_title' | 'meta_description' | 'og_ima
   `;
 }
 
-function withUserSelect(locale?: string | null) {
+function favoriteCountSelect() {
+  return sql<number>`(SELECT COUNT(*) FROM user_favorites uf_count WHERE uf_count.consultant_id = ${consultants.id})`;
+}
+
+function isFavoritedSelect(userId?: string | null) {
+  return userId
+    ? sql<number>`EXISTS(SELECT 1 FROM user_favorites uf_me WHERE uf_me.consultant_id = ${consultants.id} AND uf_me.user_id = ${userId})`
+    : sql<number>`0`;
+}
+
+function isOnlineSelect() {
+  return sql<number>`EXISTS(
+    SELECT 1
+    FROM consultant_presence cp
+    WHERE cp.consultant_id = ${consultants.id}
+      AND cp.last_heartbeat_at > (NOW(3) - INTERVAL 2 MINUTE)
+  )`;
+}
+
+function withUserSelect(locale?: string | null, userId?: string | null) {
   return {
     id: consultants.id,
     user_id: consultants.user_id,
@@ -80,12 +99,15 @@ function withUserSelect(locale?: string | null) {
     rating_avg: consultants.rating_avg,
     rating_count: consultants.rating_count,
     total_sessions: consultants.total_sessions,
+    favorite_count: favoriteCountSelect(),
+    is_favorited: isFavoritedSelect(userId),
+    is_online: isOnlineSelect(),
     created_at: consultants.created_at,
     updated_at: consultants.updated_at,
   };
 }
 
-function lightSelect(locale?: string | null) {
+function lightSelect(locale?: string | null, userId?: string | null) {
   return {
     id: consultants.id,
     user_id: consultants.user_id,
@@ -108,6 +130,9 @@ function lightSelect(locale?: string | null) {
     rating_avg: consultants.rating_avg,
     rating_count: consultants.rating_count,
     total_sessions: consultants.total_sessions,
+    favorite_count: favoriteCountSelect(),
+    is_favorited: isFavoritedSelect(userId),
+    is_online: isOnlineSelect(),
     created_at: consultants.created_at,
   };
 }
@@ -118,13 +143,13 @@ function expertisePredicate(expertise?: string): SQL | undefined {
   return sql`JSON_CONTAINS(${consultants.expertise}, JSON_QUOTE(${value}))`;
 }
 
-export async function listApprovedConsultants(filters: ListConsultantsQuery, locale?: string | null) {
+export async function listApprovedConsultants(filters: ListConsultantsQuery, locale?: string | null, userId?: string | null) {
   const sort = filters.sort ?? 'featured';
   const onlineOnly = filters.onlineOnly === true || sort === 'online';
 
   const where = [
     eq(consultants.approval_status, 'approved'),
-    onlineOnly ? eq(consultants.is_available, 1) : undefined,
+    onlineOnly ? sql`${isOnlineSelect()} = 1` : undefined,
     expertisePredicate(filters.expertise),
     filters.minPrice != null ? gte(consultants.session_price, String(filters.minPrice)) : undefined,
     filters.maxPrice != null ? lte(consultants.session_price, String(filters.maxPrice)) : undefined,
@@ -138,7 +163,7 @@ export async function listApprovedConsultants(filters: ListConsultantsQuery, loc
       case 'new':
         return [desc(consultants.created_at), desc(consultants.rating_avg)];
       case 'online':
-        return [desc(consultants.rating_avg), desc(consultants.total_sessions)];
+        return [desc(isOnlineSelect()), desc(consultants.rating_avg), desc(consultants.total_sessions)];
       case 'featured':
       default:
         return [desc(consultants.rating_avg), desc(consultants.total_sessions), asc(users.full_name)];
@@ -146,7 +171,7 @@ export async function listApprovedConsultants(filters: ListConsultantsQuery, loc
   })();
 
   const q = db
-    .select(filters.light ? lightSelect(locale) : withUserSelect(locale))
+    .select(filters.light ? lightSelect(locale, userId) : withUserSelect(locale, userId))
     .from(consultants)
     .innerJoin(users, eq(users.id, consultants.user_id))
     .where(and(...where))
@@ -170,14 +195,14 @@ export async function listConsultantsAdmin(filters: AdminListConsultantsQuery) {
 // UUID v4 formatı: 8-4-4-4-12 hex blokları. Slug'lar bu kalıba uymaz.
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-export async function getConsultantById(idOrSlug: string, locale?: string | null) {
+export async function getConsultantById(idOrSlug: string, locale?: string | null, userId?: string | null) {
   const where = UUID_RE.test(idOrSlug)
     ? or(eq(consultants.id, idOrSlug), eq(consultants.slug, idOrSlug))
     : eq(consultants.slug, idOrSlug);
 
   const [row] = await db
     .select({
-      ...withUserSelect(locale),
+      ...withUserSelect(locale, userId),
       resource_id: resources.id,
       resource_title: resources.title,
     })
@@ -190,8 +215,8 @@ export async function getConsultantById(idOrSlug: string, locale?: string | null
   return row ?? null;
 }
 
-export async function getApprovedConsultantById(id: string, locale?: string | null) {
-  const row = await getConsultantById(id, locale);
+export async function getApprovedConsultantById(id: string, locale?: string | null, userId?: string | null) {
+  const row = await getConsultantById(id, locale, userId);
   if (!row || row.approval_status !== 'approved') return null;
   return row;
 }

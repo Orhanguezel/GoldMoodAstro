@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Award, CheckCircle, Clock, Globe, Star, ShieldCheck, Sparkles, Calendar } from 'lucide-react';
+import { ArrowLeft, Award, CheckCircle, Clock, Globe, Star, ShieldCheck, Sparkles, Calendar, Heart } from 'lucide-react';
 
 import {
   useGetConsultantQuery,
@@ -18,9 +18,12 @@ import { useListConsultantServicesPublicQuery, type ConsultantServicePublic } fr
 import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 import { useListLanguagesPublicQuery } from '@/integrations/rtk/public/languages.public.endpoints';
 import { useGetConsultantOutcomeScoreQuery } from '@/integrations/rtk/hooks';
+import { useAddFavoriteMutation, useRemoveFavoriteMutation } from '@/integrations/rtk/hooks';
+import { useGetConsultantMediaSettingsQuery, type MediaKind } from '@/integrations/rtk/public/media_messages.endpoints';
 import ReviewList from '@/components/common/public/ReviewList';
 import SlotPicker from './SlotPicker';
 import ConsultantMessageModal from './ConsultantMessageModal';
+import MediaQuestionModal from './MediaQuestionModal';
 import { ChevronDown, MessageCircle, Phone, Check, Mic, Video } from 'lucide-react';
 import { useUiSection } from '@/i18n';
 
@@ -34,6 +37,8 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: consultant, isFetching, isError } = useGetConsultantQuery({ id, locale }, { skip: !id });
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteCount, setFavoriteCount] = useState(0);
   const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
   const { data: dbLanguages = [] } = useListLanguagesPublicQuery();
   const [trackConsultantView] = useTrackConsultantViewMutation();
@@ -46,8 +51,12 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
   const [messageOpen, setMessageOpen] = useState(false);
+  const [mediaQuestionKind, setMediaQuestionKind] = useState<MediaKind | null>(null);
   const [requestNowBooking, { isLoading: isRequestingNow }] = useRequestNowBookingMutation();
+  const [addFavorite, addFavoriteState] = useAddFavoriteMutation();
+  const [removeFavorite, removeFavoriteState] = useRemoveFavoriteMutation();
   const { isAuthenticated } = useAuthStore();
+  const { data: mediaSettings } = useGetConsultantMediaSettingsQuery(consultant?.id || id, { skip: !consultant?.id && !id });
   const expertiseLabels = React.useMemo(
     () => Object.fromEntries(serviceCategories.map((category) => [category.slug, category.name])),
     [serviceCategories],
@@ -75,6 +84,11 @@ export default function ConsultantDetail({ id, locale }: Props) {
     trackEvent('consultant_view', { consultant_id: targetId, slug: consultant?.slug }).catch(() => {});
   }, [consultant?.id, consultant?.slug, id, trackConsultantView]);
 
+  useEffect(() => {
+    setIsFavorited(Boolean(consultant?.is_favorited));
+    setFavoriteCount(Number(consultant?.favorite_count || 0));
+  }, [consultant?.is_favorited, consultant?.favorite_count]);
+
   const selectedService: ConsultantServicePublic | undefined = services.find((s) => s.id === selectedServiceId);
 
   if (isFetching) {
@@ -100,6 +114,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
   }
 
   const rating = parseFloat(consultant.rating_avg || '0');
+  const isOnline = Boolean(consultant.is_online);
   const initials = (consultant.full_name || 'GS').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
   const format = (key: string, fallback: string, vars: Record<string, string | number>) =>
     Object.entries(vars).reduce(
@@ -138,13 +153,21 @@ export default function ConsultantDetail({ id, locale }: Props) {
     setMessageOpen(true);
   };
 
+  const openMediaQuestion = (kind: MediaKind) => {
+    if (!isAuthenticated) {
+      router.push(`/${locale}/login?next=${encodeURIComponent(`/${locale}/consultants/${id}`)}`);
+      return;
+    }
+    setMediaQuestionKind(kind);
+  };
+
   const handleRequestNow = async () => {
     if (!isAuthenticated) {
       toast.error(ui('ui_consultant_error_login_required', 'You must be logged in'));
       router.push(`/${locale}/login?next=${encodeURIComponent(`/${locale}/consultants/${id}`)}`);
       return;
     }
-    if (!consultant.is_available) {
+    if (!isOnline) {
       toast.error(ui('ui_consultant_error_not_online', 'Consultant is not online right now'));
       return;
     }
@@ -161,6 +184,34 @@ export default function ConsultantDetail({ id, locale }: Props) {
       const msg = e?.data?.error?.message;
       if (msg === 'consultant_not_online') toast.error(ui('ui_consultant_error_offline', 'Consultant is currently offline'));
       else toast.error(msg || ui('ui_consultant_request_failed', 'Could not create request'));
+    }
+  };
+
+  const handleFavoriteToggle = async () => {
+    if (!consultant) return;
+    if (!isAuthenticated) {
+      router.push(`/${locale}/login?next=${encodeURIComponent(`/${locale}/consultants/${id}`)}`);
+      return;
+    }
+
+    const nextFavorited = !isFavorited;
+    const previousFavorited = isFavorited;
+    const previousCount = favoriteCount;
+    setIsFavorited(nextFavorited);
+    setFavoriteCount((count) => Math.max(0, count + (nextFavorited ? 1 : -1)));
+
+    try {
+      if (nextFavorited) {
+        await addFavorite(consultant.id).unwrap();
+        toast.success(ui('ui_consultant_favorite_added', 'Added to favorites'));
+      } else {
+        await removeFavorite(consultant.id).unwrap();
+        toast.success(ui('ui_consultant_favorite_removed', 'Removed from favorites'));
+      }
+    } catch {
+      setIsFavorited(previousFavorited);
+      setFavoriteCount(previousCount);
+      toast.error(ui('ui_consultant_favorite_failed', 'Favorite could not be updated'));
     }
   };
 
@@ -192,7 +243,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                   </div>
                 )}
               </div>
-              {consultant.is_available && (
+              {isOnline && (
                 <div className="absolute bottom-4 right-4 w-6 h-6 bg-(--gm-success) border-4 border-(--gm-bg) rounded-full" />
               )}
             </div>
@@ -203,6 +254,23 @@ export default function ConsultantDetail({ id, locale }: Props) {
                   {consultant.full_name}
                 </h1>
                 <ShieldCheck className="w-8 h-8 text-(--gm-gold)" />
+                {isOnline && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-(--gm-success)/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-(--gm-success)">
+                    <span className="h-1.5 w-1.5 rounded-full bg-(--gm-success) animate-pulse" />
+                    {ui('ui_consultant_online', 'Online')}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleFavoriteToggle}
+                  disabled={addFavoriteState.isLoading || removeFavoriteState.isLoading}
+                  aria-pressed={isFavorited}
+                  aria-label={isFavorited ? ui('ui_consultant_favorite_remove', 'Remove from favorites') : ui('ui_consultant_favorite_add', 'Add to favorites')}
+                  className="inline-flex items-center gap-2 rounded-full border border-(--gm-border-soft) bg-(--gm-surface) px-4 py-2 text-sm font-bold text-(--gm-text) transition hover:border-(--gm-gold) disabled:opacity-60"
+                >
+                  <Heart className={`h-5 w-5 ${isFavorited ? 'fill-(--gm-gold) text-(--gm-gold)' : 'text-(--gm-gold)'}`} />
+                  <span>{favoriteCount}</span>
+                </button>
               </div>
 
               <div className="flex flex-wrap justify-center md:justify-start items-center gap-8">
@@ -222,6 +290,11 @@ export default function ConsultantDetail({ id, locale }: Props) {
                   <Clock className="w-5 h-5 text-(--gm-gold)" />
                   <span className="font-bold">{consultant.session_duration}</span>
                   <span>{ui('ui_consultant_minutes_label', 'Minutes')}</span>
+                </div>
+                <div className="flex items-center gap-2 text-(--gm-text-dim) text-sm">
+                  <Heart className="w-5 h-5 text-(--gm-gold)" />
+                  <span className="font-bold">{favoriteCount}</span>
+                  <span>{ui('ui_consultant_favorite_count_label', 'people favorited')}</span>
                 </div>
                 {consultant.supports_video && (
                   <div className="flex items-center gap-2 text-(--gm-text-dim) text-sm">
@@ -319,7 +392,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
               <MessageCircle className="w-4 h-4" />
               {ui('ui_consultant_send_message', 'Send Message')}
             </button>
-            {consultant.is_available === 1 && (
+            {isOnline && (
               <button
                 onClick={handleRequestNow}
                 disabled={isRequestingNow}
@@ -331,6 +404,26 @@ export default function ConsultantDetail({ id, locale }: Props) {
                 </span>
                 <Phone className="w-4 h-4" />
                 {isRequestingNow ? ui('ui_consultant_request_now_loading', 'Sending Request...') : ui('ui_consultant_request_now', 'Talk Now (5 min)')}
+              </button>
+            )}
+            {mediaSettings?.audio_enabled && (
+              <button
+                type="button"
+                onClick={() => openMediaQuestion('audio')}
+                className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-full border border-(--gm-gold)/40 hover:border-(--gm-gold) hover:bg-(--gm-gold)/10 text-(--gm-gold) text-[11px] font-bold uppercase tracking-widest transition-all"
+              >
+                <Mic className="w-4 h-4" />
+                {ui('ui_consultant_media_audio_cta', 'Voice Question')} - ₺{mediaSettings.audio_price}
+              </button>
+            )}
+            {mediaSettings?.video_enabled && (
+              <button
+                type="button"
+                onClick={() => openMediaQuestion('video')}
+                className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-full border border-(--gm-gold)/40 hover:border-(--gm-gold) hover:bg-(--gm-gold)/10 text-(--gm-gold) text-[11px] font-bold uppercase tracking-widest transition-all"
+              >
+                <Video className="w-4 h-4" />
+                {ui('ui_consultant_media_video_cta', 'Video Question')} - ₺{mediaSettings.video_price}
               </button>
             )}
           </div>
@@ -485,6 +578,18 @@ export default function ConsultantDetail({ id, locale }: Props) {
         consultantName={consultant.full_name || ''}
         locale={locale}
       />
+      {mediaQuestionKind && mediaSettings && (
+        <MediaQuestionModal
+          open={Boolean(mediaQuestionKind)}
+          locale={locale}
+          consultantId={consultant.id}
+          kind={mediaQuestionKind}
+          price={mediaQuestionKind === 'audio' ? mediaSettings.audio_price : mediaSettings.video_price}
+          currency={mediaSettings.currency}
+          onClose={() => setMediaQuestionKind(null)}
+          onInsufficientCredits={() => router.push(`/${locale}/me/credits`)}
+        />
+      )}
     </div>
   );
 }

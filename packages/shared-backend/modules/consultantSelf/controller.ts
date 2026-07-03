@@ -1014,6 +1014,16 @@ export async function getStats(req: FastifyRequest, reply: FastifyReply) {
       gte(bookings.created_at, fiveMinAgo),
     ));
 
+  let favoriteCount = 0;
+  try {
+    const favoriteRows = await db.execute(
+      sql`SELECT COUNT(*) AS cnt FROM user_favorites WHERE consultant_id = ${c.id}`,
+    );
+    favoriteCount = Number(rowsFromExecute<{ cnt: number }>(favoriteRows)?.[0]?.cnt ?? 0);
+  } catch {
+    favoriteCount = 0;
+  }
+
   // 7-günlük trend (her gün için seans sayısı)
   const sevenDaysAgo = new Date(now); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
   sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -1106,6 +1116,7 @@ export async function getStats(req: FastifyRequest, reply: FastifyReply) {
       rating_avg: Number(c.rating_avg ?? 0),
       rating_count: Number(c.rating_count ?? 0),
       total_sessions: Number(c.total_sessions ?? 0),
+      favorite_count: favoriteCount,
       is_available: Number(c.is_available ?? 0),
       last_7_days: last7Days,
     },

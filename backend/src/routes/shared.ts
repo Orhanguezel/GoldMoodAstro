@@ -13,6 +13,9 @@ import { registerContacts } from '@goldmood/shared-backend/modules/contact/route
 import { registerTelegram } from '@goldmood/shared-backend/modules/telegram/router';
 import { registerMail } from '@goldmood/shared-backend/modules/mail/router';
 import { registerEmailTemplates } from '@goldmood/shared-backend/modules/emailTemplates/router';
+import { registerFavorites } from '@goldmood/shared-backend/modules/favorites/router';
+import { registerPresence } from '@goldmood/shared-backend/modules/presence/router';
+import { registerMediaMessages, registerMediaMessagesAdmin } from '@goldmood/shared-backend/modules/mediaMessages/router';
 import { registerReviews } from '@goldmood/shared-backend/modules/review/router';
 import { registerBookings } from '@goldmood/shared-backend/modules/bookings/router';
 import { registerAvailability } from '@goldmood/shared-backend/modules/availability/router';
@@ -78,6 +81,9 @@ export async function registerSharedPublic(api: FastifyInstance) {
   await registerTelegram(api);
   await registerMail(api);
   await registerEmailTemplates(api);
+  await registerFavorites(api);
+  await registerPresence(api);
+  await registerMediaMessages(api);
   await registerReviews(api);
   await registerBookings(api);
   await registerAvailability(api);
@@ -141,6 +147,7 @@ export async function registerSharedAdmin(adminApi: FastifyInstance) {
     registerConsultantApplicationsAdmin,
     registerSeoQualityAdmin,
     registerAiContentAdmin,
+    registerMediaMessagesAdmin,
   ]) {
     await adminApi.register(reg);
   }

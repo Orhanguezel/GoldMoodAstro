@@ -744,6 +744,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   ('159130fb-b07f-4b84-828a-3373a71ba97f', 'ui_dashboard_toast_update_failed', '*', '{"label": {"tr": "Güncelleme başarısız.", "en": "Update failed.", "de": "Aktualisierung fehlgeschlagen."}}'),
   ('3b9778c4-2bde-48c3-8426-e82979daea27', 'ui_dashboard_total_reviews', '*', '{"label": {"tr": "Toplam Yorum", "en": "Total Reviews", "de": "Gesamtbewertungen"}}'),
   ('de97024b-fdc9-4288-8602-2b279fb4c07b', 'ui_dashboard_total_sessions', '*', '{"label": {"tr": "Toplam Seans", "en": "Total Sessions", "de": "Gesamtsitzungen"}}'),
+  ('ae931f2e-6ae2-43f7-9ea3-f4d36a18e04a', 'ui_dashboard_total_favorites', '*', '{"label": {"tr": "Toplam Favori", "en": "Total Favorites", "de": "Favoriten gesamt"}}'),
   ('257ff506-0430-4f3e-8908-93198d867201', 'ui_dashboard_total_sessions_inline', '*', '{"label": {"tr": "{count} seans", "en": "{count} sessions", "de": "{count} Sitzungen"}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);
 
@@ -1156,6 +1157,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('e58336c0-6a27-429a-8901-aaf2882f711e','ui_editor_basic_btn_heading1','*','{"label":{"tr":"Başlık 1","en":"Heading 1","de":"Überschrift 1"}}'),
 ('7766447a-ea5b-45a3-8248-4b0105a54c8b','ui_editor_basic_btn_heading2','*','{"label":{"tr":"Başlık 2","en":"Heading 2","de":"Überschrift 2"}}'),
 ('3c15f96f-d8e6-49d8-b63f-12fc7830878a','ui_editor_basic_btn_clear_label','*','{"label":{"tr":"Temizle","en":"Clear","de":"Löschen"}}'),
+('2a12ad1f-9c4b-4cbf-91b2-6b2287b8d9d4','ui_consultantbrowse_page_title','*','{"label":{"tr":"Danışmanları Keşfet","en":"Explore Consultants","de":"Berater entdecken"}}'),
 ('41a4a3b2-1266-4f44-98fd-43684cff9a85','ui_consultantbrowse_search_filter_title','*','{"label":{"tr":"Arama & Filtreleme","en":"Search & Filter","de":"Suche & Filter"}}'),
 ('d2049b51-a391-46b7-9acd-bfbfa6a3d393','ui_consultantbrowse_error_title','*','{"label":{"tr":"Hata Oluştu","en":"An Error Occurred","de":"Ein Fehler ist aufgetreten"}}'),
 ('467731d8-4ed4-4618-9c37-43d2ae873325','ui_consultantbrowse_error_load','*','{"label":{"tr":"Danışmanlar şu an yüklenemiyor.","en":"Consultants cannot be loaded right now.","de":"Berater können derzeit nicht geladen werden."}}'),
@@ -1191,6 +1193,11 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('b9775c78-5f8e-4e93-82b0-06a247022825','ui_consultantbrowse_book_appointment','*','{"label":{"tr":"Randevu Al","en":"Book Appointment","de":"Termin buchen"}}'),
 ('341d9d6f-296e-4fbb-8a4f-0fbd21b45c89','ui_consultantbrowse_talk_now','*','{"label":{"tr":"Hemen Görüş","en":"Talk Now","de":"Jetzt sprechen"}}'),
 ('eff17a50-a618-439e-8b1f-70f27f9fe98e','ui_consultantbrowse_no_slots','*','{"label":{"tr":"Bu tarihte müsait slot yok.","en":"No available slots on this date.","de":"An diesem Datum sind keine Termine verfügbar."}}'),
+('8b0849f9-4f2d-49fa-9a13-17469aa016d1','ui_consultantbrowse_favorite_added','*','{"label":{"tr":"Favorilere eklendi","en":"Added to favorites","de":"Zu Favoriten hinzugefügt"}}'),
+('78b9b665-8c19-468d-86d5-6d2fca0e8247','ui_consultantbrowse_favorite_removed','*','{"label":{"tr":"Favorilerden çıkarıldı","en":"Removed from favorites","de":"Aus Favoriten entfernt"}}'),
+('6fd36c2c-b8d7-4767-b4ca-4c23d64efc07','ui_consultantbrowse_favorite_failed','*','{"label":{"tr":"Favori güncellenemedi","en":"Favorite could not be updated","de":"Favorit konnte nicht aktualisiert werden"}}'),
+('499fdd43-75eb-4ad8-a008-7a5d889c5e98','ui_consultantbrowse_favorite_add','*','{"label":{"tr":"Favorilere ekle","en":"Add to favorites","de":"Zu Favoriten hinzufügen"}}'),
+('443d1204-2a8a-4d75-b5db-aadfb7e57ab4','ui_consultantbrowse_favorite_remove','*','{"label":{"tr":"Favorilerden çıkar","en":"Remove from favorites","de":"Aus Favoriten entfernen"}}'),
 ('cac332e5-240d-4cf9-9ac4-e3e863420a1d','ui_misc_edit','*','{"label":{"tr":"Düzenle","en":"Edit","de":"Bearbeiten"}}'),
 ('96188a35-ce29-469b-ae91-da076ce33e18','ui_misc_delete','*','{"label":{"tr":"Sil","en":"Delete","de":"Löschen"}}'),
 ('1ef698fb-5f76-40be-b580-7272e733c7cc','ui_misc_image_viewer','*','{"label":{"tr":"Görsel görüntüleyici","en":"Image viewer","de":"Bildbetrachter"}}'),

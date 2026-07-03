@@ -27,6 +27,9 @@ export interface ConsultantPublic {
   rating_avg: string;
   rating_count: number;
   total_sessions: number;
+  favorite_count?: number;
+  is_favorited?: boolean;
+  is_online?: boolean;
   resource_id?: string;
   created_at?: string;
 }
