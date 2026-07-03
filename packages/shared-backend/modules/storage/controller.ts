@@ -155,7 +155,9 @@ export async function uploadToBucket(req: FastifyRequest, reply: FastifyReply) {
 
     // Hassas bucket'lara yükleme kimlik doğrulaması ister (anonim overwrite/istismar önleme);
     // anonim akışlar (uploads=başvuru CV, coffee=fal foto) açık kalır.
-    const callerId = (req as FileRequest).user?.id ? String((req as FileRequest).user?.id) : null;
+    // NOT: JWT payload'ında kullanıcı kimliği `sub` alanındadır (`id` değil) — auth jwt.sign({sub: u.id}).
+    const jwtUser = (req as FileRequest).user as { id?: string; sub?: string } | undefined;
+    const callerId = (jwtUser?.id ?? jwtUser?.sub) ? String(jwtUser?.id ?? jwtUser?.sub) : null;
     if (AUTH_REQUIRED_BUCKETS.has(bucket) && !callerId) {
       return reply.code(401).send({ error: { message: 'unauthenticated' } });
     }
@@ -210,7 +212,7 @@ export async function uploadToBucket(req: FastifyRequest, reply: FastifyReply) {
 
     const recordBase: NewStorageAsset = {
       id: recId,
-      user_id: (req as FileRequest).user?.id ? String((req as FileRequest).user?.id) : null,
+      user_id: callerId,
       name: cleanName, bucket, path, folder: folder ?? null,
       mime: mp.mimetype,
       size: typeof up.bytes === "number" ? up.bytes : buf.length,
