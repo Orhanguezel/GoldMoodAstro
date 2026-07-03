@@ -40,6 +40,10 @@ const safeTrim = (v: unknown) => String(v ?? '').trim();
 function mergedSelect(sReq: any, sDef: any) {
   return {
     id: bookings.id,
+    // Yetki/katılımcı alanları — getMyBooking auth (müşteri/danışman) + görüşme sayfası bunlara bağlı.
+    user_id: bookings.user_id,
+    consultant_id: bookings.consultant_id,
+    order_id: bookings.order_id,
     name: bookings.name,
     email: bookings.email,
     phone: bookings.phone,
@@ -52,6 +56,8 @@ function mergedSelect(sReq: any, sDef: any) {
 
     appointment_date: bookings.appointment_date,
     appointment_time: bookings.appointment_time,
+    session_duration: bookings.session_duration,
+    session_price: bookings.session_price,
 
     status: bookings.status,
     is_read: bookings.is_read,

@@ -548,7 +548,20 @@ export const getMyBookingHandler: RouteHandler = async (req, reply) => {
     const booking = await getBookingMergedById({ id, locale: defaultLocale });
 
     if (!booking) return reply.code(404).send({ error: { message: 'booking_not_found' } });
-    if ((booking as any).user_id !== userId)
+
+    // Erişim: müşteri (booking.user_id) VEYA bu booking'in danışmanı (consultant.user_id).
+    // Görüşme sayfası her iki tarafça da açılır; danışman aksi halde 403 alıp katılamaz.
+    const isCustomer = (booking as any).user_id === userId;
+    let isConsultant = false;
+    if (!isCustomer && (booking as any).consultant_id) {
+      const [c] = await db
+        .select({ uid: consultants.user_id })
+        .from(consultants)
+        .where(and(eq(consultants.id, (booking as any).consultant_id), eq(consultants.user_id, userId)))
+        .limit(1);
+      isConsultant = Boolean(c);
+    }
+    if (!isCustomer && !isConsultant)
       return reply.code(403).send({ error: { message: 'forbidden' } });
 
     return reply.send(booking);
