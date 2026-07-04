@@ -55,6 +55,8 @@ export const LEGAL_CMS_PAGES = [
   { module_key: 'distance_sales', title: 'Mesafeli Satış Sözleşmesi' },
   { module_key: 'cancellation_refund', title: 'İptal ve İade Politikası' },
   { module_key: 'pre_information', title: 'Ön Bilgilendirme Formu' },
+  { module_key: 'prohibited_services', title: 'Yasaklı Hizmetler Politikası' },
+  { module_key: 'consultant_rules', title: 'Danışman Kuralları ve Etik İlkeler' },
 ] as const;
 
 export const LEGAL_CMS_MODULE_KEYS = [

@@ -49,7 +49,10 @@ export default function BookingPage() {
 
   const [note, setNote] = useState('');
   const [mediaType, setMediaType] = useState<'audio' | 'video'>('audio');
-  const [consent, setConsent] = useState(false);
+  const [consent1, setConsent1] = useState(false);
+  const [consent2, setConsent2] = useState(false);
+  const [consent3, setConsent3] = useState(false);
+  const allConsent = consent1 && consent2 && consent3;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -135,8 +138,8 @@ export default function BookingPage() {
       setError(ui('ui_account_booking_missing_info', 'Missing booking information.'));
       return;
     }
-    if (!consent) {
-      setError(ui('ui_account_booking_consent_required', 'Devam etmek için ön bilgilendirme ve mesafeli satış koşullarını onaylayın.'));
+    if (!allConsent) {
+      setError(ui('ui_account_booking_consent_required', 'Devam etmek için tüm onay kutularını işaretleyin.'));
       return;
     }
 
@@ -385,25 +388,39 @@ export default function BookingPage() {
             />
           </div>
 
-          {/* Distance-sales / pre-information consent (Mesafeli Söz. Yön. m.15/1-ğ) */}
-          <label className="flex items-start gap-3 px-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={consent}
-              onChange={(e) => setConsent(e.target.checked)}
-              className="mt-1 w-5 h-5 shrink-0 accent-(--gm-gold)"
-            />
-            <span className="text-xs text-(--gm-text-dim) leading-relaxed">
-              <Link href={`/${locale}/legal/${preInfoSlug}`} target="_blank" className="text-(--gm-gold) underline underline-offset-2">
-                {ui('ui_account_booking_preinfo_link', 'Ön Bilgilendirme Formu')}
-              </Link>
-              {ui('ui_account_booking_consent_mid', ' ve ')}
-              <Link href={`/${locale}/legal/${distanceSlug}`} target="_blank" className="text-(--gm-gold) underline underline-offset-2">
-                {ui('ui_account_booking_distance_link', 'Mesafeli Satış Sözleşmesi')}
-              </Link>
-              {ui('ui_account_booking_consent_text', '’ni okudum; hizmetin ifasına derhal başlanmasını onaylıyor ve bu kapsamda cayma hakkımı kaybedeceğimi kabul ediyorum.')}
-            </span>
-          </label>
+          {/* Feragat metni */}
+          <p className="px-2 text-[11px] text-(--gm-text-muted) italic leading-relaxed">
+            {ui('ui_account_booking_disclaimer', 'Bu hizmet; eğlence, kişisel farkındalık ve kişisel değerlendirme amacıyla sunulan çevrim içi danışmanlık hizmetidir. Kesin gelecek tahmini, garanti sonuç, sağlık teşhisi, tedavi önerisi, hukuki danışmanlık, yatırım tavsiyesi, bahis tahmini, büyü, ritüel veya benzeri vaatler içermez. Hizmet başladıktan sonra cayma hakkı kullanılamaz.')}
+          </p>
+
+          {/* Mesafeli satış onay kutuları — 3 ayrı, hepsi zorunlu (Mesafeli Söz. Yön. m.15/1-ğ) */}
+          <div className="space-y-4 px-2">
+            <label className="flex items-start gap-3 cursor-pointer select-none">
+              <input type="checkbox" checked={consent1} onChange={(e) => setConsent1(e.target.checked)} className="mt-1 w-5 h-5 shrink-0 accent-(--gm-gold)" />
+              <span className="text-xs text-(--gm-text-dim) leading-relaxed">
+                <Link href={`/${locale}/legal/${preInfoSlug}`} target="_blank" className="text-(--gm-gold) underline underline-offset-2">
+                  {ui('ui_account_booking_preinfo_link', 'Ön Bilgilendirme Formu')}
+                </Link>
+                {ui('ui_account_booking_consent_mid', '’nu ve ')}
+                <Link href={`/${locale}/legal/${distanceSlug}`} target="_blank" className="text-(--gm-gold) underline underline-offset-2">
+                  {ui('ui_account_booking_distance_link', 'Mesafeli Hizmet Sözleşmesi')}
+                </Link>
+                {ui('ui_account_booking_consent1', '’ni okudum, anladım ve kabul ediyorum.')}
+              </span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer select-none">
+              <input type="checkbox" checked={consent2} onChange={(e) => setConsent2(e.target.checked)} className="mt-1 w-5 h-5 shrink-0 accent-(--gm-gold)" />
+              <span className="text-xs text-(--gm-text-dim) leading-relaxed">
+                {ui('ui_account_booking_consent2', 'Satın aldığım hizmetin çevrim içi danışmanlık hizmeti olduğunu; eğlence, kişisel farkındalık ve kişisel değerlendirme amacı taşıdığını; kesin sonuç, sağlık, hukuk, finans, yatırım veya gelecek garantisi içermediğini kabul ediyorum.')}
+              </span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer select-none">
+              <input type="checkbox" checked={consent3} onChange={(e) => setConsent3(e.target.checked)} className="mt-1 w-5 h-5 shrink-0 accent-(--gm-gold)" />
+              <span className="text-xs text-(--gm-text-dim) leading-relaxed">
+                {ui('ui_account_booking_consent3', 'Hizmetin ifasına randevu saatinde başlanmasını açıkça onaylıyorum. Hizmet başladıktan sonra Mesafeli Sözleşmeler Yönetmeliği kapsamında cayma hakkımı kullanamayacağımı bildiğimi kabul ediyorum.')}
+              </span>
+            </label>
+          </div>
 
           {/* Error */}
           {error && (
@@ -415,7 +432,7 @@ export default function BookingPage() {
           {/* Checkout Button */}
           <button
             onClick={handleCheckout}
-            disabled={loading || !consent}
+            disabled={loading || !allConsent}
             className="w-full group relative py-6 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold text-lg tracking-widest uppercase overflow-hidden hover:shadow-(--gm-shadow-glow) transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="relative z-10 flex items-center justify-center gap-3">

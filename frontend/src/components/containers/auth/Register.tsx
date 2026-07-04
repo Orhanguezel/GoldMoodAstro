@@ -252,7 +252,7 @@ const Register: React.FC = () => {
               <Link href={localizePath(locale, '/kvkk')} target="_blank" className="text-(--gm-gold) font-bold hover:underline">
                 {ui('register_kvkk_link', 'KVKK Notice')}
               </Link>{' '}
-              {ui('register_terms_accept_suffix', 'read and accept.')}
+              {ui('register_terms_accept_suffix', 'metinlerini okudum; 18 yaşını doldurduğumu ve kabul ettiğimi beyan ederim.')}
             </label>
           </div>
 

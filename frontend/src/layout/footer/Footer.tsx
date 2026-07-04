@@ -66,6 +66,7 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
     const legalVal = {
       legal_name: brandVal.legal_name as string | undefined,
       mersis: brandVal.mersis as string | undefined,
+      tax_office: brandVal.tax_office as string | undefined,
       tax_no: brandVal.tax_no as string | undefined,
       trade_registry: brandVal.trade_registry as string | undefined,
       address: brandVal.address as string | undefined,
@@ -251,6 +252,7 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
             <p className="mt-1">
               {[
                 legal.mersis && `MERSİS: ${legal.mersis}`,
+                legal.tax_office && `${ui('ui_footer_tax_office', 'Vergi Dairesi')}: ${legal.tax_office}`,
                 legal.tax_no && `${ui('ui_footer_tax_no', 'Vergi No')}: ${legal.tax_no}`,
                 legal.trade_registry && `${ui('ui_footer_trade_registry', 'Ticaret Sicil No')}: ${legal.trade_registry}`,
               ].filter(Boolean).join(' · ')}

@@ -126,7 +126,7 @@ export default function CoffeeScreen() {
     if (!result) return;
     try {
       await Share.share({
-        message: `Kahve Falım: ${result?.interpretation?.substring(0, 200)}... \n\nGoldMoodAstro ile geleceğini keşfet!\n\nKeşfet: https://goldmoodastro.com/tr/kahve-fali/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=coffee`,
+        message: `Kahve Falım: ${result?.interpretation?.substring(0, 200)}... \n\nGoldMoodAstro ile eğlence amaçlı sembolik yorumunu keşfet!\n\nKeşfet: https://goldmoodastro.com/tr/kahve-fali/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=coffee`,
         title: t('coffee.shareTitle'),
       });
     } catch (e) {

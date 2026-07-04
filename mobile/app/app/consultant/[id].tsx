@@ -54,6 +54,7 @@ function buildScreenStyles(t: AppTheme) {
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
   sectionTitle: { fontFamily: font.sansBold, fontSize: 15, color: colors.text, marginBottom: 12 },
   bio: { fontFamily: font.sans, fontSize: 14, color: colors.textDim, lineHeight: 22 },
+  disclaimer: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted, lineHeight: 16, marginTop: 12 },
   datesScroll: { gap: 10 },
   dateBtn: { width: 64, height: 74, borderRadius: radius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.line },
   dateBtnActive: { backgroundColor: colors.gold, borderColor: colors.gold },
@@ -701,6 +702,7 @@ export default function ConsultantDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('consultant.about')}</Text>
           <Text style={styles.bio}>{consultant.bio || t('consultantDetail.noBio', 'Bu danışman henüz bir açıklama eklememiş.')}</Text>
+          <Text style={styles.disclaimer}>{t('consultantDetail.disclaimer', 'Bu danışmanlık hizmeti eğlence, kişisel farkındalık ve kişisel değerlendirme amacıyla sunulur. Kesin sonuç, gelecek garantisi, sağlık, hukuk, finans, yatırım, büyü veya ritüel vaadi içermez.')}</Text>
         </View>
 
         {mediaSettings?.audio_enabled || mediaSettings?.video_enabled ? (

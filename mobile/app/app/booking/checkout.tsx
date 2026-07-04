@@ -59,7 +59,8 @@ function buildScreenStyles(t: AppTheme) {
   policyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
   policyTitle: { fontFamily: font.sansBold, fontSize: 11, color: colors.goldDeep, letterSpacing: 1.5 },
   policyText: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted, lineHeight: 20 },
-  consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 4, marginTop: 20 },
+  disclaimerText: { fontFamily: font.sans, fontSize: 11, fontStyle: 'italic', color: colors.textMuted, lineHeight: 16, paddingHorizontal: 4, marginTop: 20 },
+  consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 4, marginTop: 14 },
   consentCheckbox: { width: 24, height: 24, borderRadius: 7, borderWidth: 1.5, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   consentCheckboxOn: { backgroundColor: colors.gold, borderColor: colors.gold },
   consentText: { flex: 1, fontFamily: font.sans, fontSize: 12, color: colors.textDim, lineHeight: 18 },
@@ -124,7 +125,10 @@ export default function BookingCheckoutScreen() {
   const isFreeService = params.free === '1' || Number(params.price || 0) === 0;
   
   const [loading, setLoading] = useState(false);
-  const [consent, setConsent] = useState(false);
+  const [consent1, setConsent1] = useState(false);
+  const [consent2, setConsent2] = useState(false);
+  const [consent3, setConsent3] = useState(false);
+  const allConsent = consent1 && consent2 && consent3;
   const [couponCode, setCouponCode] = useState('');
   const [appliedCampaign, setAppliedCampaign] = useState<Campaign | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
@@ -163,10 +167,10 @@ export default function BookingCheckoutScreen() {
   };
 
   const handleCheckout = async () => {
-    if (!consent) {
+    if (!allConsent) {
       Alert.alert(
         t('common.error'),
-        t('checkout.consentRequired', 'Devam etmek için ön bilgilendirme ve mesafeli satış koşullarını onaylayın.'),
+        t('checkout.consentRequired', 'Devam etmek için tüm onay kutularını işaretleyin.'),
       );
       return;
     }
@@ -385,20 +389,41 @@ export default function BookingCheckoutScreen() {
             </Text>
           </View>
 
-          {/* Cayma hakkı istisnası ön onayı (Mesafeli Söz. Yön. m.15/1-ğ) */}
-          <Pressable style={styles.consentRow} onPress={() => setConsent((v) => !v)}>
-            <View style={[styles.consentCheckbox, consent && styles.consentCheckboxOn]}>
-              {consent ? <Check size={16} color={colors.ink} /> : null}
+          {/* Feragat metni */}
+          <Text style={styles.disclaimerText}>
+            {t('checkout.disclaimer', 'Bu hizmet; eğlence, kişisel farkındalık ve kişisel değerlendirme amacıyla sunulan çevrim içi danışmanlık hizmetidir. Kesin gelecek tahmini, garanti sonuç, sağlık teşhisi, tedavi önerisi, hukuki danışmanlık, yatırım tavsiyesi, bahis tahmini, büyü, ritüel veya benzeri vaatler içermez. Hizmet başladıktan sonra cayma hakkı kullanılamaz.')}
+          </Text>
+
+          {/* Mesafeli satış onay kutuları — 3 ayrı, hepsi zorunlu (Mesafeli Söz. Yön. m.15/1-ğ) */}
+          <Pressable style={styles.consentRow} onPress={() => setConsent1((v) => !v)}>
+            <View style={[styles.consentCheckbox, consent1 && styles.consentCheckboxOn]}>
+              {consent1 ? <Check size={16} color={colors.ink} /> : null}
             </View>
             <Text style={styles.consentText}>
               <Text style={styles.consentLink} onPress={() => router.push('/cms/pre_information' as any)}>
                 {t('checkout.preInfoLink', 'Ön Bilgilendirme Formu')}
               </Text>
-              {t('checkout.consentMid', ' ve ')}
+              {t('checkout.consentMid', '’nu ve ')}
               <Text style={styles.consentLink} onPress={() => router.push('/cms/distance_sales' as any)}>
-                {t('checkout.distanceLink', 'Mesafeli Satış Sözleşmesi')}
+                {t('checkout.distanceLink', 'Mesafeli Hizmet Sözleşmesi')}
               </Text>
-              {t('checkout.consentText', '’ni okudum; hizmetin ifasına derhal başlanmasını onaylıyor ve cayma hakkımı kaybedeceğimi kabul ediyorum.')}
+              {t('checkout.consent1', '’ni okudum, anladım ve kabul ediyorum.')}
+            </Text>
+          </Pressable>
+          <Pressable style={styles.consentRow} onPress={() => setConsent2((v) => !v)}>
+            <View style={[styles.consentCheckbox, consent2 && styles.consentCheckboxOn]}>
+              {consent2 ? <Check size={16} color={colors.ink} /> : null}
+            </View>
+            <Text style={styles.consentText}>
+              {t('checkout.consent2', 'Satın aldığım hizmetin çevrim içi danışmanlık hizmeti olduğunu; eğlence, kişisel farkındalık ve kişisel değerlendirme amacı taşıdığını; kesin sonuç, sağlık, hukuk, finans, yatırım veya gelecek garantisi içermediğini kabul ediyorum.')}
+            </Text>
+          </Pressable>
+          <Pressable style={styles.consentRow} onPress={() => setConsent3((v) => !v)}>
+            <View style={[styles.consentCheckbox, consent3 && styles.consentCheckboxOn]}>
+              {consent3 ? <Check size={16} color={colors.ink} /> : null}
+            </View>
+            <Text style={styles.consentText}>
+              {t('checkout.consent3', 'Hizmetin ifasına randevu saatinde başlanmasını açıkça onaylıyorum. Hizmet başladıktan sonra Mesafeli Sözleşmeler Yönetmeliği kapsamında cayma hakkımı kullanamayacağımı bildiğimi kabul ediyorum.')}
             </Text>
           </Pressable>
 
@@ -407,9 +432,9 @@ export default function BookingCheckoutScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <Pressable
-            style={[styles.payBtn, (loading || !consent) && styles.payBtnDisabled]}
+            style={[styles.payBtn, (loading || !allConsent) && styles.payBtnDisabled]}
             onPress={handleCheckout}
-            disabled={loading || !consent}
+            disabled={loading || !allConsent}
           >
             {loading ? (
               <ActivityIndicator color={colors.ink} />

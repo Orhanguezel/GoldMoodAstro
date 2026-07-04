@@ -172,7 +172,11 @@ INSERT INTO menu_items (id, location, section_id, type, url, is_active, display_
   ('mi-f-leg-kvkk',    'footer', 'fs-legal', 'custom', '/kvkk',                1, 10),
   ('mi-f-leg-privacy', 'footer', 'fs-legal', 'custom', '/gizlilik',            1, 20),
   ('mi-f-leg-terms',   'footer', 'fs-legal', 'custom', '/kullanim-sartlari',   1, 30),
-  ('mi-f-leg-cookie',  'footer', 'fs-legal', 'custom', '/cerez-politikasi',    1, 40)
+  ('mi-f-leg-cookie',  'footer', 'fs-legal', 'custom', '/cerez-politikasi',    1, 40),
+  ('mi-f-leg-distance','footer', 'fs-legal', 'custom', '/legal/mesafeli-satis-sozlesmesi', 1, 50),
+  ('mi-f-leg-preinfo', 'footer', 'fs-legal', 'custom', '/legal/on-bilgilendirme-formu',    1, 60),
+  ('mi-f-leg-refund',  'footer', 'fs-legal', 'custom', '/legal/iptal-iade-politikasi',     1, 70),
+  ('mi-f-leg-prohib',  'footer', 'fs-legal', 'custom', '/legal/yasakli-hizmetler',         1, 80)
 ON DUPLICATE KEY UPDATE url = VALUES(url), is_active = VALUES(is_active), display_order = VALUES(display_order);
 
 -- Footer menu i18n
@@ -237,7 +241,19 @@ INSERT INTO menu_items_i18n (id, menu_item_id, locale, title) VALUES
   ('mi-fi-ltrm-de',  'mi-f-leg-terms',  @loc_de, 'Nutzungsbedingungen'),
   ('mi-fi-lcok-tr',  'mi-f-leg-cookie', @loc_tr, 'Çerez Politikası'),
   ('mi-fi-lcok-en',  'mi-f-leg-cookie', @loc_en, 'Cookie Policy'),
-  ('mi-fi-lcok-de',  'mi-f-leg-cookie', @loc_de, 'Cookie-Richtlinie')
+  ('mi-fi-lcok-de',  'mi-f-leg-cookie', @loc_de, 'Cookie-Richtlinie'),
+  ('mi-fi-ldist-tr', 'mi-f-leg-distance', @loc_tr, 'Mesafeli Hizmet Sözleşmesi'),
+  ('mi-fi-ldist-en', 'mi-f-leg-distance', @loc_en, 'Distance Service Agreement'),
+  ('mi-fi-ldist-de', 'mi-f-leg-distance', @loc_de, 'Fernabsatzvertrag'),
+  ('mi-fi-lpre-tr',  'mi-f-leg-preinfo',  @loc_tr, 'Ön Bilgilendirme Formu'),
+  ('mi-fi-lpre-en',  'mi-f-leg-preinfo',  @loc_en, 'Pre-Contract Information'),
+  ('mi-fi-lpre-de',  'mi-f-leg-preinfo',  @loc_de, 'Vorvertragliche Informationen'),
+  ('mi-fi-lref-tr',  'mi-f-leg-refund',   @loc_tr, 'İptal ve İade Politikası'),
+  ('mi-fi-lref-en',  'mi-f-leg-refund',   @loc_en, 'Cancellation & Refund Policy'),
+  ('mi-fi-lref-de',  'mi-f-leg-refund',   @loc_de, 'Stornierung & Erstattung'),
+  ('mi-fi-lproh-tr', 'mi-f-leg-prohib',   @loc_tr, 'Yasaklı Hizmetler Politikası'),
+  ('mi-fi-lproh-en', 'mi-f-leg-prohib',   @loc_en, 'Prohibited Services Policy'),
+  ('mi-fi-lproh-de', 'mi-f-leg-prohib',   @loc_de, 'Richtlinie zu verbotenen Leistungen')
 ON DUPLICATE KEY UPDATE title = VALUES(title);
 -- NOT: Eski Nisan seed'inden kalan stale 'Big Three' /big-three footer kaydı
 -- (id=mi-f-astro-big) otomatik düzeltilir: menu_items PK=id + menu_items_i18n
