@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -129,7 +130,7 @@ export default function CoffeeScreen() {
         title: t('coffee.shareTitle'),
       });
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   };
 
@@ -189,7 +190,7 @@ export default function CoffeeScreen() {
         newIds[index] = res.id;
         setImageIds(newIds);
       } catch (e) {
-        console.error('Upload error:', e);
+        logger.error('Upload error:', e);
         Alert.alert(t('common.errorTitle'), t('coffee.uploadError'));
       } finally {
         setLoading(false);
@@ -211,7 +212,7 @@ export default function CoffeeScreen() {
       setResult(res);
       setStep('result');
     } catch (e) {
-      console.error('Coffee read error:', e);
+      logger.error('Coffee read error:', e);
       Alert.alert(t('common.errorTitle'), t('coffee.readError'));
       setStep('upload');
     }

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -148,7 +149,7 @@ export default function TarotScreen() {
         title: t('tarot.shareTitle'),
       });
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   };
 
@@ -173,7 +174,7 @@ export default function TarotScreen() {
         setResult(res);
         setStep('result');
       } catch (e) {
-        console.error('Tarot draw error:', e);
+        logger.error('Tarot draw error:', e);
       } finally {
         setLoading(false);
       }

@@ -4,17 +4,17 @@
 
 Danışman & kullanıcı eşleştirme platformu. Kullanıcı danışman seçiyor → randevu alıyor → ödeme yapıyor → uygulama içi sesli görüşme yapıyor. Astroloji / mood danışmanlığı odaklı.
 
-**Müşteri:** Murat Kısıkçılar  
-**Bütçe:** 30.000 TL | **Süre:** 30 gün | **Başlangıç:** 2026-04-24  
+**Müşteri:** Murat Kısıkçılar
+**Bütçe:** 35.000 TL | **Süre:** 30 gün | **Başlangıç:** 2026-04-24
 **Lisans:** MIT — Orhan Güzel
 
 ## Mimari
 
-| Bileşen | Stack | Port (prod) | PM2 Adı |
-|---------|-------|-------------|---------|
-| **Backend** | Fastify 5, Drizzle ORM, MySQL, Bun, Zod | 8094 | goldmoodastro-backend |
-| **Admin Panel** | Next.js 16, React 19, Tailwind v4, Radix UI, React Query, Zustand | 3094 | goldmoodastro-admin |
-| **Mobile** | Expo (React Native 0.81), TypeScript, expo-router, Zustand, React Query, @livekit/react-native, expo-notifications | — | iOS + Android |
+| Bileşen              | Stack                                                                                                              | Port (prod) | PM2 Adı              |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------- | --------------------- |
+| **Backend**     | Fastify 5, Drizzle ORM, MySQL, Bun, Zod                                                                            | 8094        | goldmoodastro-backend |
+| **Admin Panel** | Next.js 16, React 19, Tailwind v4, Radix UI, React Query, Zustand                                                  | 3094        | goldmoodastro-admin   |
+| **Mobile**      | Expo (React Native 0.81), TypeScript, expo-router, Zustand, React Query, @livekit/react-native, expo-notifications | —          | iOS + Android         |
 
 **Entegrasyonlar:** LiveKit (sesli + görüntülü görüşme — Agora yerine), Firebase FCM (push), Iyzipay (ödeme)
 
@@ -51,12 +51,12 @@ cd admin_panel && bun run dev
 
 ## Ajan Görev Dağılımı
 
-| Ajan | Sorumluluk |
-|------|-----------|
-| **Claude Code** | Mimari, DB şema tasarımı, API kontratları, kod review |
-| **Codex** | Backend modülleri, SQL seed'ler, admin panel sayfaları, cron |
+| Ajan                  | Sorumluluk                                                                                    |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| **Claude Code** | Mimari, DB şema tasarımı, API kontratları, kod review                                     |
+| **Codex**       | Backend modülleri, SQL seed'ler, admin panel sayfaları, cron                                |
 | **Antigravity** | UI implementasyon (web sayfaları, mobile ekranlar, admin formları), görsel doğrulama, e2e |
-| **Copilot** | Autocomplete, boilerplate, RN/Expo tamamlama |
+| **Copilot**     | Autocomplete, boilerplate, RN/Expo tamamlama                                                  |
 
 > **2026-04-27 orchestrasyon revize:** Codex token tasarrufu — UI ağırlıklı görevler
 > Antigravity'e devredildi (FAZ 15 web tema, FAZ 16 mobile ekranlar, banner/campaign UI).
@@ -72,6 +72,7 @@ cd admin_panel && bun run dev
 ## Backend Modülleri
 
 ### packages/shared-backend — paylaşılan modüller (FAZ 6+ sonrası)
+
 **Auth/User:** `auth`, `profiles`, `userRoles`
 **Booking/Order:** `bookings`, `availability`, `resources`, `orders`, `wallet`
 **Communication:** `chat`, `notifications`, `mail`, `telegram`
@@ -84,6 +85,7 @@ cd admin_panel && bun run dev
 **Diğer:** `dashboard`, `db_admin`, `health`, `audit`, `_shared` (içerik moderation)
 
 ### backend/src/modules — proje-özel
+
 - `consultants` — profil, uzmanlık, onay, supports_video
 - `livekit` — token üretimi, room webhook (T7) ← **Agora yerine**
 - `firebase` — FCM push
@@ -92,15 +94,18 @@ cd admin_panel && bun run dev
 - `horoscopes`, `numerology`, `tarot` — astroloji içerik modülleri
 
 ### Route kayıt
+
 - Shared modüller: `backend/src/routes/shared.ts`
 - Proje-özel: `backend/src/routes/goldmood.ts`
 
 ## Veritabanı
 
 ### DB Şema Kuralı — KESİN
+
 **`ALTER TABLE` YASAK.** Değişiklik: seed dosyasını düzenle → `bun run db:seed`
 
 ### Kritik Tablolar
+
 ```
 users              ← Tüm roller: user/consultant/admin + fcm_token
 consultants        ← Danışman profili (uzmanlık, fiyat, onay, supports_video, video_session_price)
@@ -124,6 +129,7 @@ reviews + review_i18n                ← + is_verified (T17-1), consultant_reply
 ```
 
 ### Seed Dosya Sıralaması (FAZ 6+ sonrası)
+
 ```
 001-003: Auth + roller
 010-012: Site settings + custom CSS + chat widget
@@ -152,6 +158,7 @@ reviews + review_i18n                ← + is_verified (T17-1), consultant_reply
 ## Ortam Değişkenleri
 
 ### Backend (.env)
+
 ```
 PORT=8094
 DB_HOST, DB_PORT=3306, DB_USER, DB_PASSWORD, DB_NAME=goldmoodastro
@@ -167,6 +174,7 @@ CORS_ORIGIN, PUBLIC_URL
 ```
 
 ### Admin Panel (.env)
+
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8094/api
 NEXT_PUBLIC_SITE_URL=http://localhost:3094
@@ -184,6 +192,7 @@ jobs:
 ## Bekleyen Temizlikler (Codex T0)
 
 Proje konigsmassage'den kopyalandı. Codex'in T0 görevi:
+
 - `frontend/` sil
 - `packages/shared-backend/modules/_shared/` içi temizle
 - `backend/src/db/sql/` 87 dosyayı sil + yeniden yaz

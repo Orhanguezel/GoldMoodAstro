@@ -34,6 +34,7 @@ import {
   normalizeFunnelTopic,
 } from '@/lib/funnel.config';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -176,7 +177,7 @@ export default function ConnectScreen() {
       const data = await consultantsApi.list();
       setConsultants(data);
     } catch (error) {
-      console.error('Load consultants error:', error);
+      logger.error('Load consultants error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

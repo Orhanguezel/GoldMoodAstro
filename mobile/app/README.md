@@ -16,7 +16,7 @@ Bu klasör GoldMoodAstro Expo uygulamasıdır. Hedef platformlar iOS ve Android'
 - React 19
 - TypeScript strict
 - Expo Router 6
-- AsyncStorage + SecureStore
+- SecureStore auth token + AsyncStorage non-sensitive app state
 - expo-notifications
 - LiveKit voice call
 - react-native-webview
@@ -101,8 +101,8 @@ Mevcut bileşenler bu standarda taşınırken kapsam küçük tutulur. Aynı iş
 
 ## API Ortamı
 
-- Dev: `http://localhost:8094/api/v1`
-- Prod: `https://www.goldmoodastro.com/api/v1`
+- Dev: `http://localhost:8094/api`
+- Prod: `https://goldmoodastro.com/api`
 
 Android emulator'de localhost yerine `10.0.2.2` gerekebilir. Token yönetimi `src/lib/api.ts` ve `src/lib/storage.ts` üzerinden yürür.
 

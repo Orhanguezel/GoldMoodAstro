@@ -69,6 +69,9 @@ export async function registerConsultantSelf(app: FastifyInstance) {
   app.put('/me/consultant/availability', { preHandler: guard }, controller.updateMyAvailability);
   app.patch('/me/consultant/availability', { preHandler: guard }, controller.updateMyAvailability);
   app.post('/me/consultant/availability/day', { preHandler: guard }, controller.overrideMyAvailabilityDay);
+  app.get('/me/consultant/time-blocks', { preHandler: guard }, controller.listTimeBlocks);
+  app.post('/me/consultant/time-blocks', { preHandler: guard }, controller.createTimeBlock);
+  app.delete('/me/consultant/time-blocks/:id', { preHandler: guard }, controller.deleteTimeBlock);
 }
 
 export async function registerConsultantSelfAdmin(app: FastifyInstance) {

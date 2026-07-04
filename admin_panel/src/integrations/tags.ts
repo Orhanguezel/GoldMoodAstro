@@ -172,6 +172,8 @@ export const tags = [
   'Withdrawal',
   'Withdrawals',
   'MediaMessages',
+  'AccountDeletionRequests',
+  'CreditPackages',
 ] as const;
 
 export type tag = typeof tags[number];

@@ -61,7 +61,7 @@ Backend'de olmayan bir API çağrısına ihtiyacın olursa:
 2. Şu formatta yaz:
    ```
    ## YYYY-MM-DD — Yeni endpoint isteği
-   - Method + Path: POST /api/v1/me/preferences
+   - Method + Path: POST /api/me/preferences
    - Body: { theme: 'dark' | 'light', notifications: boolean }
    - Response: { ok: true }
    - Neden: Mobil settings ekranında preferences kaydı için
@@ -92,7 +92,7 @@ Backend'de olmayan bir API çağrısına ihtiyacın olursa:
 | React | React | 19 |
 | State | React state + AsyncStorage | mevcut store/hook yapısını bozma |
 | API | fetch tabanlı (`src/lib/api.ts`) | — |
-| Storage | AsyncStorage wrapper (`src/lib/storage.ts`) | — |
+| Storage | SecureStore auth token + AsyncStorage wrapper (`src/lib/storage.ts`) | hassas token SecureStore'da tutulur |
 | i18n | i18next, TR + EN + DE | — |
 | Sesli görüşme | LiveKit (`@livekit/react-native`) | 2.10+ |
 | Ödeme | WebView ile Iyzipay checkout | — |
@@ -182,11 +182,11 @@ mobile/app/
 
 ## 5. Backend API kontratı
 
-Backend dev: `http://localhost:8094/api/v1`
-Backend prod: `https://www.goldmoodastro.com/api/v1`
+Backend dev: `http://localhost:8094/api`
+Backend prod: `https://goldmoodastro.com/api`
 
 Auth header: `Authorization: Bearer <access_token>`
-Token storage: `AsyncStorage` key `mh_access_token`
+Token storage: `expo-secure-store` key `gma.auth.token.v1` (`gma.auth.refresh.v1` refresh token için). Eski AsyncStorage token'ı ilk okumada SecureStore'a migrate edilir.
 
 **Endpoint listesi:** `mobile/AGENTS.md` Section "Backend API"
 **Detaylı endpoint dokümanı:** `doc/mvp-checklist.md` (sadece referans, **dokunma**)

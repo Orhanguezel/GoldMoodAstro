@@ -2,6 +2,7 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import cookie from '@fastify/cookie';
 import multipart from '@fastify/multipart';
+import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import authPlugin from './plugins/authPlugin';
@@ -22,6 +23,7 @@ export async function createApp() {
 
   const app = buildFastify({
     logger: env.NODE_ENV !== 'production',
+    trustProxy: true,
   }) as FastifyInstance;
 
   if (env.NODE_ENV !== 'production') {
@@ -77,6 +79,20 @@ export async function createApp() {
   await app.register(jwt, {
     secret: env.JWT_SECRET,
     cookie: { cookieName: 'access_token', signed: false },
+  });
+
+  await app.register(rateLimit, {
+    global: true,
+    max: 300,
+    timeWindow: '1 minute',
+    hook: 'onRequest',
+    errorResponseBuilder: (_req, context) => ({
+      success: false,
+      error: {
+        message: 'rate_limit_exceeded',
+        retry_after: Math.ceil(context.ttl / 1000),
+      },
+    }),
   });
 
   app.addHook('onRequest', localeMiddleware);

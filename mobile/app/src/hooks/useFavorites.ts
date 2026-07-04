@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { favoritesApi } from '@/lib/api';
 
+import { logger } from '@/lib/logger';
 const FAVORITES_KEY = 'gma.favorites.v1';
 
 export function useFavorites() {
@@ -13,26 +15,48 @@ export function useFavorites() {
   const loadFavorites = async () => {
     try {
       const stored = await AsyncStorage.getItem(FAVORITES_KEY);
-      if (stored) {
-        setFavorites(JSON.parse(stored));
+      const legacyIds = stored ? (JSON.parse(stored) as unknown) : null;
+      const localIds = Array.isArray(legacyIds)
+        ? legacyIds.filter((id): id is string => typeof id === 'string' && id.length > 0)
+        : [];
+
+      try {
+        if (localIds.length > 0) {
+          await Promise.all(localIds.map((id) => favoritesApi.add(id).catch(() => null)));
+          await AsyncStorage.removeItem(FAVORITES_KEY);
+        }
+
+        const remoteIds = await favoritesApi.ids();
+        setFavorites(remoteIds);
+        return remoteIds;
+      } catch {
+        setFavorites(localIds);
+        return localIds;
       }
     } catch (err) {
-      console.error('Failed to load favorites:', err);
+      logger.error('Failed to load favorites:', err);
+      return [];
     }
   };
 
   const toggleFavorite = async (id: string) => {
     try {
-      let next: string[];
-      if (favorites.includes(id)) {
-        next = favorites.filter(fid => fid !== id);
-      } else {
-        next = [...favorites, id];
-      }
+      const wasFavorite = favorites.includes(id);
+      const next = wasFavorite ? favorites.filter(fid => fid !== id) : [...favorites, id];
       setFavorites(next);
-      await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+
+      try {
+        if (wasFavorite) {
+          await favoritesApi.remove(id);
+        } else {
+          await favoritesApi.add(id);
+        }
+        await AsyncStorage.removeItem(FAVORITES_KEY);
+      } catch {
+        await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+      }
     } catch (err) {
-      console.error('Failed to toggle favorite:', err);
+      logger.error('Failed to toggle favorite:', err);
     }
   };
 

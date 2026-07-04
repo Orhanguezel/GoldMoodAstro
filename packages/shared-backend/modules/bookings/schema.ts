@@ -69,6 +69,9 @@ export const bookings = mysqlTable(
 
     decided_at: datetime('decided_at', { fsp: 3 }),
 
+    // Mesafeli Sözleşmeler Yön. m.15/1-ğ — cayma hakkı istisnası ön onayı (zaman damgalı)
+    withdrawal_consent_at: datetime('withdrawal_consent_at', { fsp: 3 }),
+
     created_at: datetime('created_at', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`),
     updated_at: datetime('updated_at', { fsp: 3 }).notNull().default(sql`CURRENT_TIMESTAMP(3)`).$onUpdateFn(() => new Date()),
   },

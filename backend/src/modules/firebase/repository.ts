@@ -16,3 +16,18 @@ export async function saveFcmToken(userId: string, token: string) {
 
   return row ?? null;
 }
+
+export async function clearFcmToken(userId: string) {
+  await db
+    .update(users)
+    .set({ fcm_token: null, updated_at: new Date() } as any)
+    .where(eq(users.id, userId));
+
+  const [row] = await db
+    .select({ id: users.id, fcm_token: users.fcm_token })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  return row ?? null;
+}

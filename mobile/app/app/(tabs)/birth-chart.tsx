@@ -13,6 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -285,7 +286,7 @@ export default function BirthChartScreen() {
       setCharts(rows);
       if (rows[0] && !selectedId) setSelectedId(rows[0].id);
     } catch (err) {
-      console.error('Birth charts error:', err);
+      logger.error('Birth charts error:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);

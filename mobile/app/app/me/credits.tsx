@@ -8,10 +8,12 @@ import {
   ActivityIndicator,
   Dimensions,
   RefreshControl,
-  Alert
+  Alert,
+  Platform
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -61,6 +63,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 
 import { creditsApi } from '@/lib/api';
+import { finishCreditPurchase, getIapProvider, purchaseCreditPackage } from '@/lib/iap';
+import type { CreditPackage } from '@/types';
 
 const { width } = Dimensions.get('window');
 
@@ -84,7 +88,7 @@ export default function CreditsScreen() {
       setBalance(b.balance);
       setPackages(p);
     } catch (e) {
-      console.error('Credits load error:', e);
+      logger.error('Credits load error:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -95,10 +99,40 @@ export default function CreditsScreen() {
     loadData();
   }, []);
 
-  const handleBuy = async (packageId: string) => {
+  const handleBuy = async (pkg: CreditPackage) => {
     setBuyLoading(true);
     try {
-      const res = await creditsApi.buy({ package_id: packageId, locale: 'tr' });
+      if (Platform.OS !== 'web') {
+        const provider = getIapProvider();
+        if (!provider) {
+          Alert.alert(t('common.error', 'Bir hata oluştu'), t('credits.iapUnsupported', 'Bu platformda mağaza satın alımı desteklenmiyor.'));
+          return;
+        }
+
+        const purchase = await purchaseCreditPackage(pkg);
+        const hasReceiptPayload = provider === 'apple_iap'
+          ? Boolean(purchase.receipt)
+          : Boolean(purchase.purchaseToken && purchase.productId);
+        if (!purchase.ok || !hasReceiptPayload) {
+          Alert.alert(t('common.error', 'Bir hata oluştu'), purchase.message || t('credits.purchaseError', 'Kredi paketi alınamadı.'));
+          return;
+        }
+
+        await creditsApi.verifyReceipt({
+          package_id: pkg.id,
+          platform: provider,
+          receipt: purchase.receipt ?? '',
+          transaction_id: purchase.transactionId,
+          purchase_token: purchase.purchaseToken,
+          product_id: purchase.productId,
+        });
+        await finishCreditPurchase(purchase);
+        await loadData();
+        Alert.alert(t('common.success', 'Başarılı'), t('credits.iapSuccessBody', 'Krediler hesabınıza eklendi.'));
+        return;
+      }
+
+      const res = await creditsApi.buy({ package_id: pkg.id, locale: 'tr' });
       if (res.checkout_url) {
         router.push({
           pathname: '/webview/index',
@@ -150,7 +184,7 @@ export default function CreditsScreen() {
                 <Pressable 
                   key={pkg.id} 
                   style={[styles.pkgCard, pkg.isFeatured && styles.featuredCard]}
-                  onPress={() => handleBuy(pkg.id)}
+                  onPress={() => handleBuy(pkg)}
                   disabled={buyLoading}
                 >
                   {pkg.isFeatured && (
@@ -184,4 +218,3 @@ export default function CreditsScreen() {
     </View>
   );
 }
-

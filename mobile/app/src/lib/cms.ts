@@ -52,6 +52,26 @@ export const LEGAL_CMS_PAGES = [
   { module_key: 'editorial_policy', title: 'Editoryal Politika' },
   { module_key: 'privacy_notice', title: 'Gizlilik Bildirimi' },
   { module_key: 'legal_notice', title: 'Yasal Uyarı' },
+  { module_key: 'distance_sales', title: 'Mesafeli Satış Sözleşmesi' },
+  { module_key: 'cancellation_refund', title: 'İptal ve İade Politikası' },
+  { module_key: 'pre_information', title: 'Ön Bilgilendirme Formu' },
+] as const;
+
+export const LEGAL_CMS_MODULE_KEYS = [
+  ...LEGAL_CMS_PAGES.map((p) => p.module_key),
+  'privacy_policy',
+  'privacy-policy',
+  'terms_of_use',
+  'terms-of-use',
+  'cookie_policy',
+  'cookie-policy',
+  'editorial-policy',
+  'privacy-notice',
+  'legal-notice',
+  'distance-sales',
+  'mesafeli_satis',
+  'mesafeli-satis',
+  'cancellation-refund',
 ] as const;
 
 /** Admin customPages — hakkında / SSS */

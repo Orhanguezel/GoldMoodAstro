@@ -304,6 +304,8 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
         status: initialStatus,
         is_read: 0,
 
+        withdrawal_consent_at: input.withdrawal_consent ? now() : null,
+
         created_at: now(),
         updated_at: now(),
       } as any,

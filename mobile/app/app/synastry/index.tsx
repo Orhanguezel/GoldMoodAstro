@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing, shadows } = t;
   return StyleSheet.create({
@@ -209,7 +210,7 @@ export default function SynastryScreen() {
         title: t('synastry.shareTitle'),
       });
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   };
 
@@ -218,7 +219,7 @@ export default function SynastryScreen() {
       const data = await synastryApi.listInvites();
       setInvites(data);
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   };
 
@@ -227,7 +228,7 @@ export default function SynastryScreen() {
       const data = await synastryApi.list();
       setReports(data);
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   };
 
@@ -238,7 +239,7 @@ export default function SynastryScreen() {
       const data = await userApi.search(searchQuery);
       setSearchResults(data);
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     } finally {
       setIsSearching(false);
     }

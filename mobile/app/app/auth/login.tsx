@@ -190,6 +190,13 @@ export default function LoginScreen() {
     }
   }, []);
 
+  const resolvePostLoginRoute = async (role: string): Promise<string> => {
+    if (typeof next === 'string' && next.startsWith('/')) return next;
+    if (role === 'consultant') return '/consultant';
+    const onboarded = await storage.isOnboarded();
+    return onboarded ? '/(tabs)/today' : '/onboarding/birthdata';
+  };
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert(t('common.error'), t('common.fillAllFields'));
@@ -202,19 +209,13 @@ export default function LoginScreen() {
 
       await storage.setUserSession({
         token: res.access_token,
+        refreshToken: res.refresh_token,
         userId: res.user.id,
         role: res.user.role
       });
 
       setAuthToken(res.access_token);
-      const onboarded = await storage.isOnboarded();
-      if (onboarded) {
-        router.replace('/(tabs)/today' as any);
-      } else if (typeof next === 'string' && next.startsWith('/')) {
-        router.replace(next as any);
-      } else {
-        router.replace('/onboarding/birthdata' as any);
-      }
+      router.replace((await resolvePostLoginRoute(res.user.role)) as any);
     } catch (err: any) {
       Alert.alert(t('auth.loginFailed'), err.message || t('auth.invalidCredentials'));
     } finally {
@@ -246,19 +247,13 @@ export default function LoginScreen() {
 
       await storage.setUserSession({
         token: res.access_token,
+        refreshToken: res.refresh_token,
         userId: res.user.id,
         role: res.user.role
       });
 
       setAuthToken(res.access_token);
-      const onboarded = await storage.isOnboarded();
-      if (onboarded) {
-        router.replace('/(tabs)/today' as any);
-      } else if (typeof next === 'string' && next.startsWith('/')) {
-        router.replace(next as any);
-      } else {
-        router.replace('/onboarding/birthdata' as any);
-      }
+      router.replace((await resolvePostLoginRoute(res.user.role)) as any);
     } catch (err: any) {
       if (err.code === 'ERR_CANCELED') return;
       Alert.alert(t('common.error'), t('auth.appleLoginFailed'));
@@ -384,4 +379,3 @@ export default function LoginScreen() {
     </View>
   );
 }
-

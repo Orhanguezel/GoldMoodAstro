@@ -63,3 +63,5 @@ export * from '@/integrations/shared/wallet';
 export * from '@/integrations/shared/orders';
 export * from '@/integrations/shared/service_templates.types';
 export * from '@/integrations/shared/withdrawals';
+export * from '@/integrations/shared/accountDeletion';
+export * from '@/integrations/shared/creditPackages';

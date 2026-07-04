@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 
 import { defaultAppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 type Props = { children: ReactNode; onReset?: () => void };
 type State = { hasError: boolean };
 
@@ -36,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error) {
-    console.error('ErrorBoundary:', error);
+    logger.error('ErrorBoundary:', error);
   }
 
   private handleReset = () => {

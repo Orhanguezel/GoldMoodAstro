@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
 import {
@@ -69,6 +70,7 @@ function buildStyles(t: AppTheme) {
 
 export default function CelebritiesScreen() {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { colors } = theme;
   const [filter, setFilter] = useState<ZodiacSignId | 'all'>('all');
@@ -85,14 +87,16 @@ export default function CelebritiesScreen() {
           <Pressable style={styles.backBtn} onPress={() => safeRouterBack('/(tabs)/zodiac' as any)}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>Ünlüler ve Burçları</Text>
+          <Text style={styles.title}>{t('menu.celebrities')}</Text>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           <Pressable
             style={[styles.chip, filter === 'all' && styles.chipActive]}
             onPress={() => setFilter('all')}
           >
-            <Text style={[styles.chipText, filter === 'all' && styles.chipTextActive]}>Tümü</Text>
+            <Text style={[styles.chipText, filter === 'all' && styles.chipTextActive]}>
+              {t('readings.filterAll')}
+            </Text>
           </Pressable>
           {ALL_SIGNS.map((sign) => (
             <Pressable

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -129,6 +130,21 @@ function buildScreenStyles(t: AppTheme) {
     fontSize: 12,
     color: colors.textMuted,
     textDecorationLine: 'underline',
+  },
+  secondaryBtn: {
+    minHeight: 44,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.md,
+  },
+  secondaryBtnText: {
+    fontFamily: font.sansBold,
+    fontSize: 13,
+    color: colors.textDim,
   },
 
   // Promo Area
@@ -279,7 +295,14 @@ import { ChevronLeft, Crown, Check, AlertCircle, Calendar } from 'lucide-react-n
 
 import { useAuth } from '@/hooks/useAuth';
 import { subscriptionsApi } from '@/lib/api';
-import { getIapProvider, purchaseSubscriptionPlan } from '@/lib/iap';
+import {
+  finishSubscriptionPurchase,
+  getIapProductId,
+  getIapProvider,
+  openStoreSubscriptionManagement,
+  purchaseSubscriptionPlan,
+  restoreSubscriptionPurchases,
+} from '@/lib/iap';
 import type { Subscription, SubscriptionPlan } from '@/types';
 
 function formatCurrencyMinor(value: number | string, currency = 'TRY'): string {
@@ -300,6 +323,8 @@ export default function SubscriptionScreen() {
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isManagingStore, setIsManagingStore] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
@@ -313,7 +338,7 @@ export default function SubscriptionScreen() {
       setPlans(planList);
       setActive(me);
     } catch (err: any) {
-      console.error('Subscription load error:', err);
+      logger.error('Subscription load error:', err);
       setPlans([]);
       setActive(null);
     } finally {
@@ -353,6 +378,14 @@ export default function SubscriptionScreen() {
         const provider = getIapProvider();
         if (provider) {
           const purchase = await purchaseSubscriptionPlan(plan);
+          const hasReceiptPayload = provider === 'apple_iap' ? Boolean(purchase.receipt) : Boolean(purchase.purchaseToken && purchase.productId);
+          if (!purchase.ok || !hasReceiptPayload) {
+            Alert.alert(
+              t('common.error', 'Bir hata oluştu'),
+              purchase.message || t('subscription.purchaseFailed', 'Satın alma tamamlanamadı. Lütfen tekrar deneyin.'),
+            );
+            return;
+          }
           await subscriptionsApi.verifyReceipt({
             plan_id: plan.id,
             platform: provider,
@@ -360,6 +393,9 @@ export default function SubscriptionScreen() {
             transaction_id: purchase.transactionId,
             purchase_token: purchase.purchaseToken,
             product_id: purchase.productId,
+          });
+          await finishSubscriptionPurchase(purchase).catch((err) => {
+            logger.warn('IAP finish transaction failed:', err);
           });
           await load();
           Alert.alert(t('common.success', 'Başarılı'), t('subscription.premiumWelcomeBody', 'Premium üyeliğiniz hayırlı olsun!'));
@@ -406,6 +442,73 @@ export default function SubscriptionScreen() {
         },
       ]
     );
+  };
+
+  const onManageOrCancel = async () => {
+    const activePlanForStore = plans.find(p => p.id === active?.plan_id);
+    const isIap = active?.provider === 'apple_iap' || active?.provider === 'google_iap';
+    if (!isIap || Platform.OS === 'web') {
+      onCancel();
+      return;
+    }
+
+    setIsManagingStore(true);
+    try {
+      await openStoreSubscriptionManagement(activePlanForStore ? getIapProductId(activePlanForStore) : undefined);
+    } catch (err: any) {
+      Alert.alert(
+        t('common.error', 'Bir hata oluştu'),
+        err.message || t('subscription.manageFailed', 'Abonelik yönetimi açılamadı.'),
+      );
+    } finally {
+      setIsManagingStore(false);
+    }
+  };
+
+  const onRestorePurchases = async () => {
+    const provider = getIapProvider();
+    if (!provider) {
+      Alert.alert(t('common.error', 'Bir hata oluştu'), t('subscription.restoreUnsupported', 'Bu platformda geri yükleme desteklenmiyor.'));
+      return;
+    }
+
+    setIsRestoring(true);
+    try {
+      const restored = await restoreSubscriptionPurchases();
+      let restoredCount = 0;
+      for (const purchase of restored) {
+        const plan = plans.find((item) => getIapProductId(item) === purchase.productId);
+        if (!plan) continue;
+        const hasReceiptPayload = provider === 'apple_iap' ? Boolean(purchase.receipt) : Boolean(purchase.purchaseToken && purchase.productId);
+        if (!purchase.ok || !hasReceiptPayload) continue;
+        await subscriptionsApi.verifyReceipt({
+          plan_id: plan.id,
+          platform: provider,
+          receipt: purchase.receipt ?? '',
+          transaction_id: purchase.transactionId,
+          purchase_token: purchase.purchaseToken,
+          product_id: purchase.productId,
+        });
+        await finishSubscriptionPurchase(purchase).catch((err) => {
+          logger.warn('IAP restore finish transaction failed:', err);
+        });
+        restoredCount += 1;
+      }
+      await load();
+      Alert.alert(
+        restoredCount > 0 ? t('subscription.restoreSuccessTitle', 'Satın alımlar geri yüklendi') : t('subscription.restoreEmptyTitle', 'Geri yüklenecek abonelik yok'),
+        restoredCount > 0
+          ? t('subscription.restoreSuccessBody', 'Aktif aboneliğiniz hesabınıza bağlandı.')
+          : t('subscription.restoreEmptyBody', 'Bu mağaza hesabında aktif GoldMoodAstro aboneliği bulunamadı.'),
+      );
+    } catch (err: any) {
+      Alert.alert(
+        t('common.error', 'Bir hata oluştu'),
+        err.message || t('subscription.restoreFailed', 'Satın alımlar geri yüklenemedi.'),
+      );
+    } finally {
+      setIsRestoring(false);
+    }
   };
 
   if (authLoading || (loading && !refreshing)) {
@@ -461,8 +564,8 @@ export default function SubscriptionScreen() {
                 </Text>
               </View>
 
-              <Pressable style={styles.cancelLink} onPress={onCancel} disabled={isCancelling}>
-                {isCancelling ? <ActivityIndicator size="small" color={colors.textMuted} /> : <Text style={styles.cancelLinkText}>{t('subscription.manageOrCancel', 'Aboneliği Yönet veya İptal Et')}</Text>}
+              <Pressable style={styles.cancelLink} onPress={onManageOrCancel} disabled={isCancelling || isManagingStore}>
+                {isCancelling || isManagingStore ? <ActivityIndicator size="small" color={colors.textMuted} /> : <Text style={styles.cancelLinkText}>{t('subscription.manageOrCancel', 'Aboneliği Yönet veya İptal Et')}</Text>}
               </Pressable>
             </View>
           ) : (
@@ -530,9 +633,18 @@ export default function SubscriptionScreen() {
             </Text>
           </View>
 
+          {Platform.OS !== 'web' ? (
+            <Pressable style={styles.secondaryBtn} onPress={onRestorePurchases} disabled={isRestoring}>
+              {isRestoring ? (
+                <ActivityIndicator size="small" color={colors.textMuted} />
+              ) : (
+                <Text style={styles.secondaryBtnText}>{t('subscription.restorePurchases', 'Satın Alımları Geri Yükle')}</Text>
+              )}
+            </Pressable>
+          ) : null}
+
         </ScrollView>
       </SafeAreaView>
     </View>
   );
 }
-

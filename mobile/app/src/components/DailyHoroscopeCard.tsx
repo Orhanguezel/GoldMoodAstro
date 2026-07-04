@@ -6,6 +6,7 @@ import { Sparkles, Star, Heart } from 'lucide-react-native';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -191,7 +192,7 @@ export default function DailyHoroscopeCard() {
       }
       setHoroscope(res);
     } catch (e) {
-      console.error('Horoscope load error:', e);
+      logger.error('Horoscope load error:', e);
       setHoroscope(null);
     } finally {
       setLoading(false);

@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { storageApi, getAssetUrl } from '@/lib/api';
 
+import { logger } from '@/lib/logger';
 interface AvatarUploadProps {
   uri?: string | null;
   initials?: string;
@@ -83,7 +84,7 @@ export default function AvatarUpload({
         upload(imageUri);
       }
     } catch (e) {
-      console.error('Pick image error:', e);
+      logger.error('Pick image error:', e);
       Alert.alert(t('common.error'), t('avatar.pickFailed'));
     }
   };
@@ -105,7 +106,7 @@ export default function AvatarUpload({
         onUploaded(res.path);
       }
     } catch (e) {
-      console.error('Upload error:', e);
+      logger.error('Upload error:', e);
       Alert.alert(t('common.error'), t('avatar.uploadFailed'));
       setPreview(null);
     } finally {

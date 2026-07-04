@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -91,7 +92,7 @@ export default function ChatScreen() {
       const res = await chatApi.listMessages(id!);
       setMessages(res.items);
     } catch (err) {
-      console.error('Chat load error:', err);
+      logger.error('Chat load error:', err);
     } finally {
       setLoading(false);
     }
@@ -106,7 +107,7 @@ export default function ChatScreen() {
       const msg = await chatApi.postMessage(id, text);
       setMessages((prev) => [...prev, msg]);
     } catch (err) {
-      console.error('Send error:', err);
+      logger.error('Send error:', err);
     } finally {
       setSending(false);
     }

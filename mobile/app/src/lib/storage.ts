@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 const KEYS = {
   // Auth
@@ -36,23 +37,68 @@ async function writeJson(key: string, value: unknown): Promise<void> {
   }
 }
 
+async function isSecureStoreAvailable(): Promise<boolean> {
+  try {
+    return await SecureStore.isAvailableAsync();
+  } catch {
+    return false;
+  }
+}
+
+async function secureGetItem(key: string): Promise<string | null> {
+  try {
+    if (await isSecureStoreAvailable()) {
+      const secureValue = await SecureStore.getItemAsync(key);
+      if (secureValue != null) return secureValue;
+    }
+
+    const legacyValue = await AsyncStorage.getItem(key);
+    if (legacyValue != null && await isSecureStoreAvailable()) {
+      await SecureStore.setItemAsync(key, legacyValue);
+      await AsyncStorage.removeItem(key);
+    }
+    return legacyValue;
+  } catch {
+    return AsyncStorage.getItem(key);
+  }
+}
+
+async function secureSetItem(key: string, value: string): Promise<void> {
+  if (await isSecureStoreAvailable()) {
+    await SecureStore.setItemAsync(key, value);
+    await AsyncStorage.removeItem(key);
+    return;
+  }
+  await AsyncStorage.setItem(key, value);
+}
+
+async function secureDeleteItem(key: string): Promise<void> {
+  try {
+    if (await isSecureStoreAvailable()) {
+      await SecureStore.deleteItemAsync(key);
+    }
+  } finally {
+    await AsyncStorage.removeItem(key);
+  }
+}
+
 export const storage = {
   // --- Auth ---
 
   async getAuthToken(): Promise<string | null> {
-    return AsyncStorage.getItem(KEYS.authToken);
+    return secureGetItem(KEYS.authToken);
   },
 
   async setAuthToken(token: string): Promise<void> {
-    await AsyncStorage.setItem(KEYS.authToken, token);
+    await secureSetItem(KEYS.authToken, token);
   },
 
   async getRefreshToken(): Promise<string | null> {
-    return AsyncStorage.getItem(KEYS.refreshToken);
+    return secureGetItem(KEYS.refreshToken);
   },
 
   async setRefreshToken(token: string): Promise<void> {
-    await AsyncStorage.setItem(KEYS.refreshToken, token);
+    await secureSetItem(KEYS.refreshToken, token);
   },
 
   async getUserId(): Promise<string | null> {
@@ -66,17 +112,19 @@ export const storage = {
   },
 
   async setUserSession(data: { token: string; refreshToken?: string; userId: string; role: string }): Promise<void> {
+    await secureSetItem(KEYS.authToken, data.token);
+    if (data.refreshToken) await secureSetItem(KEYS.refreshToken, data.refreshToken);
     await AsyncStorage.multiSet([
-      [KEYS.authToken, data.token],
       [KEYS.userId, data.userId],
       [KEYS.userRole, data.role],
-      ...(data.refreshToken ? [[KEYS.refreshToken, data.refreshToken] as [string, string]] : []),
     ]);
   },
 
   async clearSession(): Promise<void> {
-    await AsyncStorage.multiRemove([
-      KEYS.authToken, KEYS.refreshToken, KEYS.userId, KEYS.userRole,
+    await Promise.all([
+      secureDeleteItem(KEYS.authToken),
+      secureDeleteItem(KEYS.refreshToken),
+      AsyncStorage.multiRemove([KEYS.userId, KEYS.userRole]),
     ]);
   },
 
@@ -108,6 +156,10 @@ export const storage = {
 
   async setPushToken(token: string): Promise<void> {
     await AsyncStorage.setItem(KEYS.pushToken, token);
+  },
+
+  async clearPushToken(): Promise<void> {
+    await AsyncStorage.removeItem(KEYS.pushToken);
   },
 
   // --- Data ---

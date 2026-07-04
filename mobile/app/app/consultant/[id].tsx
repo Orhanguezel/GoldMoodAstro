@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,16 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import {
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  useAudioRecorder,
+} from 'expo-audio';
+import * as ImagePicker from 'expo-image-picker';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -99,6 +107,16 @@ function buildScreenStyles(t: AppTheme) {
   },
   requestNowText: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold },
 
+  mediaQuestionCard: { padding: 16, borderRadius: radius.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, gap: 10 },
+  mediaQuestionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  mediaQuestionTitle: { fontFamily: font.sansBold, fontSize: 15, color: colors.text, flex: 1 },
+  mediaQuestionPrice: { fontFamily: font.display, fontSize: 18, color: colors.gold },
+  mediaQuestionText: { fontFamily: font.sans, fontSize: 13, color: colors.textDim, lineHeight: 20 },
+  mediaQuestionBtn: { height: 44, borderRadius: radius.pill, backgroundColor: colors.gold, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
+  mediaQuestionBtnRecording: { backgroundColor: colors.danger },
+  mediaQuestionBtnDisabled: { opacity: 0.6 },
+  mediaQuestionBtnText: { fontFamily: font.sansBold, fontSize: 13, color: colors.ink },
+
   mediaRow: { flexDirection: 'row', gap: 10 },
   mediaChip: {
     flex: 1,
@@ -147,8 +165,8 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 import { useTranslation } from 'react-i18next';
 
-import { consultantsApi, chatApi, reviewsApi, bookingsApi, siteSettingsApi } from '@/lib/api';
-import type { Consultant, ConsultantSlot, ConsultantService, Review } from '@/types';
+import { consultantsApi, chatApi, reviewsApi, bookingsApi, siteSettingsApi, mediaMessagesApi, storageApi } from '@/lib/api';
+import type { Consultant, ConsultantMediaSettings, ConsultantSlot, ConsultantService, Review } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { format, addDays, isSameDay } from 'date-fns';
 import { tr, enUS } from 'date-fns/locale';
@@ -193,6 +211,11 @@ export default function ConsultantDetailScreen() {
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [videoFeatureEnabled, setVideoFeatureEnabled] = useState(false);
   const [mediaType, setMediaType] = useState<'audio' | 'video'>('audio');
+  const [mediaSettings, setMediaSettings] = useState<ConsultantMediaSettings | null>(null);
+  const [mediaQuestionLoading, setMediaQuestionLoading] = useState(false);
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const [recording, setRecording] = useState(false);
+  const recordingStartedAtRef = useRef<number | null>(null);
 
   const selectedService = useMemo(
     () => services.find((s) => s.id === selectedServiceId) ?? null,
@@ -238,10 +261,22 @@ export default function ConsultantDetailScreen() {
   }, []);
 
   useEffect(() => {
+    if (!id) return;
+    mediaMessagesApi
+      .getConsultantSettings(id)
+      .then(setMediaSettings)
+      .catch(() => setMediaSettings(null));
+  }, [id]);
+
+  useEffect(() => {
     if (!canShowVideoOption && mediaType === 'video') {
       setMediaType('audio');
     }
   }, [canShowVideoOption, mediaType]);
+
+  useEffect(() => {
+    setSelectedSlot(null);
+  }, [selectedServiceId]);
 
   useEffect(() => {
     if (!id) return;
@@ -261,7 +296,7 @@ export default function ConsultantDetailScreen() {
           setSelectedServiceId(serviceList[0].id);
         }
       })
-      .catch(console.error)
+      .catch(logger.error)
       .finally(() => {
         setLoading(false);
         setReviewsLoading(false);
@@ -273,12 +308,214 @@ export default function ConsultantDetailScreen() {
     if (id && selectedDate) {
       setSlotsLoading(true);
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      consultantsApi.slots(id, dateStr)
-        .then(setSlots)
-        .catch(console.error)
+      const duration = selectedService?.duration_minutes ?? consultant?.session_duration ?? 30;
+      consultantsApi.availability(id, {
+        date: dateStr,
+        duration,
+        ...(selectedServiceId ? { service_id: selectedServiceId } : {}),
+      })
+        .then((availability) => {
+          const resourceId = availability.resource_id ?? '';
+          setSlots(
+            availability.starts.map((time) => ({
+              id: `${dateStr}-${time}`,
+              resource_id: resourceId,
+              slot_date: dateStr,
+              slot_time: time,
+              capacity: 1,
+              is_active: 1,
+              reserved_count: 0,
+            })),
+          );
+        })
+        .catch(logger.error)
         .finally(() => setSlotsLoading(false));
     }
-  }, [id, selectedDate]);
+  }, [id, selectedDate, selectedServiceId, selectedService?.duration_minutes, consultant?.session_duration]);
+
+  const submitAudioQuestion = async (uri: string, durationSeconds: number) => {
+    if (!consultant) return;
+    setMediaQuestionLoading(true);
+    try {
+      const form = new FormData();
+      form.append('file', {
+        uri,
+        name: `audio-question-${Date.now()}.m4a`,
+        type: 'audio/mp4',
+      } as unknown as Blob);
+      const upload = await storageApi.upload(form, {
+        bucket: 'media_messages',
+        path: `${consultant.id}/${Date.now()}`,
+      });
+      if (!upload.path) throw new Error('upload_failed');
+      await mediaMessagesApi.create({
+        consultant_id: consultant.id,
+        kind: 'audio',
+        storage_path: upload.path,
+        duration_seconds: Math.max(1, durationSeconds),
+        note: topic ? String(topic) : null,
+      });
+      Alert.alert(
+        t('mediaMessages.sentTitle', 'Sorunuz gönderildi'),
+        t('mediaMessages.sentBody', 'Danışman yanıtı geldiğinde bildirim alacaksınız.'),
+        [{ text: t('common.ok', 'Tamam'), onPress: () => router.push('/media-messages' as any) }],
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      Alert.alert(
+        t('common.error', 'Hata'),
+        message.includes('insufficient_credits')
+          ? t('mediaMessages.insufficientCredits', 'Bu soru için yeterli krediniz yok.')
+          : t('mediaMessages.sendError', 'Medya sorusu gönderilemedi. Lütfen tekrar deneyin.'),
+      );
+    } finally {
+      setMediaQuestionLoading(false);
+    }
+  };
+
+  const startAudioQuestion = async () => {
+    if (!consultant || !mediaSettings?.audio_enabled || mediaQuestionLoading) return;
+    if (!isAuthenticated) {
+      router.push({ pathname: '/auth/login', params: { next: `/consultant/${consultant.id}` } } as any);
+      return;
+    }
+
+    try {
+      const permission = await requestRecordingPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(
+          t('mediaMessages.microphonePermissionTitle', 'Mikrofon izni gerekli'),
+          t('mediaMessages.microphonePermissionBody', 'Sesli soru kaydetmek için mikrofon izni vermeniz gerekiyor.'),
+        );
+        return;
+      }
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
+      });
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
+      recordingStartedAtRef.current = Date.now();
+      setRecording(true);
+    } catch (err) {
+      logger.error('Audio question recording start error:', err);
+      Alert.alert(t('common.error', 'Hata'), t('mediaMessages.recordError', 'Kayıt başlatılamadı.'));
+    }
+  };
+
+  const stopAudioQuestion = async () => {
+    if (!recording) return;
+    const startedAt = recordingStartedAtRef.current ?? Date.now();
+    try {
+      await audioRecorder.stop();
+      const uri = audioRecorder.uri;
+      setRecording(false);
+      recordingStartedAtRef.current = null;
+      await setAudioModeAsync({ allowsRecording: false });
+      if (!uri) throw new Error('recording_uri_missing');
+      await submitAudioQuestion(uri, Math.round((Date.now() - startedAt) / 1000));
+    } catch (err) {
+      setRecording(false);
+      recordingStartedAtRef.current = null;
+      logger.error('Audio question recording stop error:', err);
+      Alert.alert(t('common.error', 'Hata'), t('mediaMessages.recordError', 'Kayıt tamamlanamadı.'));
+    }
+  };
+
+  const handleAudioQuestionPress = () => {
+    if (recording) {
+      stopAudioQuestion();
+      return;
+    }
+    Alert.alert(
+      t('mediaMessages.audioQuestionTitle', 'Sesli soru gönder'),
+      t('mediaMessages.audioQuestionConfirm', '{{price}} {{currency}} karşılığı kısa bir sesli soru kaydedilecek. Hazır olduğunuzda kaydı başlatın.', {
+        price: Math.ceil(mediaSettings?.audio_price ?? 0),
+        currency: mediaSettings?.currency ?? 'TRY',
+      }),
+      [
+        { text: t('common.cancel', 'Vazgeç'), style: 'cancel' },
+        { text: t('mediaMessages.startRecording', 'Kaydı Başlat'), onPress: startAudioQuestion },
+      ],
+    );
+  };
+
+  const handleVideoQuestionPress = async () => {
+    if (!consultant || !mediaSettings?.video_enabled || mediaQuestionLoading) return;
+    if (!isAuthenticated) {
+      router.push({ pathname: '/auth/login', params: { next: `/consultant/${consultant.id}` } } as any);
+      return;
+    }
+
+    Alert.alert(
+      t('mediaMessages.videoQuestionTitle', 'Görüntülü soru gönder'),
+      t('mediaMessages.videoQuestionConfirm', '{{price}} {{currency}} karşılığı kısa bir video soru kaydedilecek.', {
+        price: Math.ceil(mediaSettings.video_price),
+        currency: mediaSettings.currency ?? 'TRY',
+      }),
+      [
+        { text: t('common.cancel', 'Vazgeç'), style: 'cancel' },
+        {
+          text: t('mediaMessages.startRecording', 'Kaydı Başlat'),
+          onPress: async () => {
+            try {
+              const permission = await ImagePicker.requestCameraPermissionsAsync();
+              if (!permission.granted) {
+                Alert.alert(
+                  t('mediaMessages.cameraPermissionTitle', 'Kamera izni gerekli'),
+                  t('mediaMessages.cameraPermissionBody', 'Görüntülü soru kaydetmek için kamera izni vermeniz gerekiyor.'),
+                );
+                return;
+              }
+              const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+                allowsEditing: false,
+                quality: 0.8,
+                videoMaxDuration: 180,
+              });
+              if (result.canceled || !result.assets?.[0]?.uri) return;
+
+              setMediaQuestionLoading(true);
+              const asset = result.assets[0];
+              const form = new FormData();
+              form.append('file', {
+                uri: asset.uri,
+                name: `video-question-${Date.now()}.mp4`,
+                type: asset.mimeType ?? 'video/mp4',
+              } as unknown as Blob);
+              const upload = await storageApi.upload(form, {
+                bucket: 'media_messages',
+                path: `${consultant.id}/${Date.now()}`,
+              });
+              if (!upload.path) throw new Error('upload_failed');
+              await mediaMessagesApi.create({
+                consultant_id: consultant.id,
+                kind: 'video',
+                storage_path: upload.path,
+                duration_seconds: asset.duration ? Math.max(1, Math.round(asset.duration / 1000)) : undefined,
+                note: topic ? String(topic) : null,
+              });
+              Alert.alert(
+                t('mediaMessages.sentTitle', 'Sorunuz gönderildi'),
+                t('mediaMessages.sentBody', 'Danışman yanıtı geldiğinde bildirim alacaksınız.'),
+                [{ text: t('common.ok', 'Tamam'), onPress: () => router.push('/media-messages' as any) }],
+              );
+            } catch (err) {
+              const message = err instanceof Error ? err.message : String(err);
+              Alert.alert(
+                t('common.error', 'Hata'),
+                message.includes('insufficient_credits')
+                  ? t('mediaMessages.insufficientCredits', 'Bu soru için yeterli krediniz yok.')
+                  : t('mediaMessages.sendError', 'Medya sorusu gönderilemedi. Lütfen tekrar deneyin.'),
+              );
+            } finally {
+              setMediaQuestionLoading(false);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const handleMessage = () => {
     if (!consultant) return;
@@ -327,7 +564,10 @@ export default function ConsultantDetailScreen() {
       ]);
       return;
     }
-    if (!consultant.is_available) {
+    const isOnline = typeof consultant.is_online === 'boolean'
+      ? consultant.is_online
+      : Number(consultant.is_online ?? consultant.is_available) === 1;
+    if (!isOnline) {
       Alert.alert(t('consultantDetail.unavailableTitle', 'Müsait değil'), t('consultantDetail.unavailableBody', 'Danışman şu an çevrimiçi görünmüyor.'));
       return;
     }
@@ -391,6 +631,10 @@ export default function ConsultantDetailScreen() {
     );
   }
 
+  const isOnline = typeof consultant.is_online === 'boolean'
+    ? consultant.is_online
+    : Number(consultant.is_online ?? consultant.is_available) === 1;
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -423,7 +667,7 @@ export default function ConsultantDetailScreen() {
                 ) : (
                   <View style={styles.avatarFallback}><Text style={styles.avatarInitial}>{consultant.full_name?.[0]}</Text></View>
                 )}
-                {consultant.is_available && <View style={styles.onlineDot} />}
+                {isOnline && <View style={styles.onlineDot} />}
               </View>
 
               <View style={styles.nameRow}>
@@ -458,6 +702,74 @@ export default function ConsultantDetailScreen() {
           <Text style={styles.sectionTitle}>{t('consultant.about')}</Text>
           <Text style={styles.bio}>{consultant.bio || t('consultantDetail.noBio', 'Bu danışman henüz bir açıklama eklememiş.')}</Text>
         </View>
+
+        {mediaSettings?.audio_enabled || mediaSettings?.video_enabled ? (
+          <View style={styles.section}>
+            {mediaSettings.audio_enabled ? (
+              <View style={styles.mediaQuestionCard}>
+                <View style={styles.mediaQuestionHeader}>
+                  <Text style={styles.mediaQuestionTitle}>
+                    {t('mediaMessages.audioQuestionTitle', 'Sesli soru gönder')}
+                  </Text>
+                  <Text style={styles.mediaQuestionPrice}>
+                    {Math.ceil(mediaSettings.audio_price)} {mediaSettings.currency}
+                  </Text>
+                </View>
+                <Text style={styles.mediaQuestionText}>
+                  {t('mediaMessages.audioQuestionDesc', 'Kısa bir ses kaydı gönderin; danışman yanıtladığında bildirim alırsınız.')}
+                </Text>
+                <Pressable
+                  style={[
+                    styles.mediaQuestionBtn,
+                    recording && styles.mediaQuestionBtnRecording,
+                    mediaQuestionLoading && styles.mediaQuestionBtnDisabled,
+                  ]}
+                  onPress={handleAudioQuestionPress}
+                  disabled={mediaQuestionLoading}
+                >
+                  {mediaQuestionLoading ? (
+                    <ActivityIndicator color={colors.ink} />
+                  ) : (
+                    <Mic size={16} color={colors.ink} />
+                  )}
+                  <Text style={styles.mediaQuestionBtnText}>
+                    {recording
+                      ? t('mediaMessages.stopAndSend', 'Durdur ve Gönder')
+                      : t('mediaMessages.recordAudio', 'Sesli Soru Kaydet')}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
+
+            {mediaSettings.video_enabled ? (
+              <View style={[styles.mediaQuestionCard, { marginTop: mediaSettings.audio_enabled ? 12 : 0 }]}>
+                <View style={styles.mediaQuestionHeader}>
+                  <Text style={styles.mediaQuestionTitle}>
+                    {t('mediaMessages.videoQuestionTitle', 'Görüntülü soru gönder')}
+                  </Text>
+                  <Text style={styles.mediaQuestionPrice}>
+                    {Math.ceil(mediaSettings.video_price)} {mediaSettings.currency}
+                  </Text>
+                </View>
+                <Text style={styles.mediaQuestionText}>
+                  {t('mediaMessages.videoQuestionDesc', 'Kısa bir video kaydı gönderin; danışman video veya sesli yanıt verebilir.')}
+                </Text>
+                <Pressable
+                  style={[styles.mediaQuestionBtn, mediaQuestionLoading && styles.mediaQuestionBtnDisabled]}
+                  onPress={handleVideoQuestionPress}
+                  disabled={mediaQuestionLoading || Boolean(recording)}
+                >
+                  {mediaQuestionLoading ? (
+                    <ActivityIndicator color={colors.ink} />
+                  ) : (
+                    <Video size={16} color={colors.ink} />
+                  )}
+                  <Text style={styles.mediaQuestionBtnText}>{t('mediaMessages.recordVideo', 'Video Soru Kaydet')}</Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
 
         {/* Services (FAZ 29) */}
         {servicesLoading ? (
@@ -606,7 +918,7 @@ export default function ConsultantDetailScreen() {
             </View>
           )}
 
-          {consultant.is_available ? (
+          {isOnline ? (
             <Pressable
               style={[styles.requestNowBtn, requestNowLoading && { opacity: 0.6 }]}
               onPress={handleRequestNow}
@@ -654,4 +966,3 @@ export default function ConsultantDetailScreen() {
     </View>
   );
 }
-

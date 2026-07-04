@@ -8,10 +8,29 @@ type PushCampaignRow = {
   slug: string;
   title: string;
   body: string;
-  target_segment: 'all' | 'users' | 'consultants' | 'users_without_booking' | 'inactive_7d';
+  target_segment: PushTargetSegment;
   deep_link: string | null;
   is_active: number;
 };
+
+type PushTargetSegment =
+  | 'all'
+  | 'users'
+  | 'consultants'
+  | 'premium_users'
+  | 'free_users'
+  | 'users_without_booking'
+  | 'inactive_7d';
+
+const PUSH_TARGET_SEGMENTS = new Set<PushTargetSegment>([
+  'all',
+  'users',
+  'consultants',
+  'premium_users',
+  'free_users',
+  'users_without_booking',
+  'inactive_7d',
+]);
 
 function rowsOf<T>(result: unknown): T[] {
   if (Array.isArray(result) && Array.isArray(result[0])) return result[0] as T[];
@@ -50,6 +69,36 @@ async function queryTargetUsers(segment: PushCampaignRow['target_segment']) {
     );
   }
 
+  if (segment === 'premium_users') {
+    return rowsOf<{ id: string; fcm_token: string }>(
+      await db.execute(sql`
+        ${base}
+        AND EXISTS (
+          SELECT 1
+          FROM subscriptions s
+          WHERE s.user_id = users.id
+            AND s.status IN ('active', 'grace_period', 'cancelled')
+            AND (s.ends_at IS NULL OR s.ends_at > NOW(3))
+        )
+      `),
+    );
+  }
+
+  if (segment === 'free_users') {
+    return rowsOf<{ id: string; fcm_token: string }>(
+      await db.execute(sql`
+        ${base}
+        AND NOT EXISTS (
+          SELECT 1
+          FROM subscriptions s
+          WHERE s.user_id = users.id
+            AND s.status IN ('active', 'grace_period', 'cancelled')
+            AND (s.ends_at IS NULL OR s.ends_at > NOW(3))
+        )
+      `),
+    );
+  }
+
   if (segment === 'inactive_7d') {
     return rowsOf<{ id: string; fcm_token: string }>(
       await db.execute(sql`
@@ -75,11 +124,12 @@ async function createInAppNotification(params: {
 }
 
 export const sendManualPushHandler: RouteHandler = async (req, reply) => {
-  const { title, body, user_id, target_all } = req.body as {
+  const { title, body, user_id, target_all, target_segment } = req.body as {
     title: string;
     body: string;
     user_id?: string;
     target_all?: boolean;
+    target_segment?: PushTargetSegment;
   };
 
   if (!title || !body) {
@@ -88,11 +138,10 @@ export const sendManualPushHandler: RouteHandler = async (req, reply) => {
 
   try {
     if (target_all) {
-      const rows = await db.execute(sql`SELECT fcm_token FROM users WHERE fcm_token IS NOT NULL`);
-      const tokens = rowsOf<{ fcm_token: string }>(rows);
+      const tokens = await queryTargetUsers('all');
       
       let successCount = 0;
-      for (const row of (tokens as any[])) {
+      for (const row of tokens) {
         try {
           await sendPushNotification({ token: row.fcm_token, title, body });
           successCount++;
@@ -102,6 +151,36 @@ export const sendManualPushHandler: RouteHandler = async (req, reply) => {
       }
       return { success: true, sent_count: successCount };
     } 
+
+    if (target_segment) {
+      if (!PUSH_TARGET_SEGMENTS.has(target_segment)) {
+        return reply.code(400).send({ error: { message: 'invalid_target_segment' } });
+      }
+      const targets = await queryTargetUsers(target_segment);
+      let successCount = 0;
+      let failedCount = 0;
+      for (const target of targets) {
+        try {
+          await sendPushNotification({
+            token: target.fcm_token,
+            title,
+            body,
+            data: { type: 'manual_push', target_segment },
+          });
+          successCount++;
+        } catch (e) {
+          failedCount++;
+          console.error('Failed to send to segment target', target.id, e);
+        }
+      }
+      return {
+        success: true,
+        target_segment,
+        target_count: targets.length,
+        sent_count: successCount,
+        failed_count: failedCount,
+      };
+    }
     
     if (user_id) {
       const [row] = await db.execute(sql`SELECT fcm_token FROM users WHERE id = ${user_id}`);

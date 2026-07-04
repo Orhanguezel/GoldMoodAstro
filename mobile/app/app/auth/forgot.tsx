@@ -125,6 +125,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { safeRouterBack } from '@/lib/navigation';
 import { Mail, ChevronLeft, Send } from 'lucide-react-native';
+import { authApi } from '@/lib/api';
 
 
 
@@ -138,14 +139,21 @@ export default function ForgotPasswordScreen() {
 
   const handleReset = async () => {
     if (!email) return;
+    const normalizedEmail = email.trim().toLowerCase();
     setLoading(true);
     try {
-      // Mock API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const res = await authApi.requestPasswordReset(normalizedEmail);
+      if (res.token) {
+        router.push({
+          pathname: '/auth/reset',
+          params: { email: normalizedEmail, token: res.token, code: res.reset_code ?? '' },
+        } as any);
+        return;
+      }
       Alert.alert(
         t('auth.resetTitle'),
         t('auth.resetSentBody'),
-        [{ text: t('common.ok'), onPress: () => safeRouterBack() }]
+        [{ text: t('common.ok'), onPress: () => router.push({ pathname: '/auth/reset', params: { email: normalizedEmail } } as any) }]
       );
     } catch (err) {
       Alert.alert(t('common.error'), t('common.genericError'));
@@ -217,4 +225,3 @@ export default function ForgotPasswordScreen() {
     </View>
   );
 }
-

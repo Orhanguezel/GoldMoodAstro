@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, Bell, Megaphone, Send, User, Users } from 'lucide-react';
+import { ArrowLeft, Bell, Megaphone, Send, Target, User, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,17 @@ import {
   useSendPushCampaignMutation,
 } from '@/integrations/hooks';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
+import type { PushCampaignTargetSegment } from '@/integrations/shared';
+
+const SEGMENT_OPTIONS: Array<{ value: PushCampaignTargetSegment; label: string }> = [
+  { value: 'all', label: 'Tüm cihazlar' },
+  { value: 'users', label: 'Danışanlar' },
+  { value: 'consultants', label: 'Danışmanlar' },
+  { value: 'premium_users', label: 'Premium kullanıcılar' },
+  { value: 'free_users', label: 'Ücretsiz kullanıcılar' },
+  { value: 'users_without_booking', label: 'Randevusuz kullanıcılar' },
+  { value: 'inactive_7d', label: '7 gün pasif' },
+];
 
 export default function SendPushNotificationPage() {
   const router = useRouter();
@@ -28,7 +39,8 @@ export default function SendPushNotificationPage() {
 
   const [title, setTitle] = React.useState('');
   const [body, setBody] = React.useState('');
-  const [target, setTarget] = React.useState<'all' | 'specific'>('all');
+  const [target, setTarget] = React.useState<'all' | 'specific' | 'segment'>('all');
+  const [targetSegment, setTargetSegment] = React.useState<PushCampaignTargetSegment>('users');
   const [userId, setUserId] = React.useState('');
   const [selectedCampaignSlug, setSelectedCampaignSlug] = React.useState('');
   const selectedCampaign = campaigns.find((campaign) => campaign.slug === selectedCampaignSlug);
@@ -56,6 +68,7 @@ export default function SendPushNotificationPage() {
         body: body.trim(),
         target_all: target === 'all',
         user_id: target === 'specific' ? userId.trim() : undefined,
+        target_segment: target === 'segment' ? targetSegment : undefined,
       }).unwrap();
 
       toast.success(res.sent_count
@@ -189,7 +202,7 @@ export default function SendPushNotificationPage() {
 
           <div className="space-y-3 pt-4 border-t">
             <Label>{t('push.content.targetAudience')}</Label>
-            <RadioGroup value={target} onValueChange={(v) => setTarget(v as any)} className="grid grid-cols-2 gap-4">
+            <RadioGroup value={target} onValueChange={(v) => setTarget(v as any)} className="grid grid-cols-3 gap-4">
               <div>
                 <RadioGroupItem value="all" id="target-all" className="peer sr-only" />
                 <Label
@@ -210,8 +223,36 @@ export default function SendPushNotificationPage() {
                   {t('push.content.specificUser')}
                 </Label>
               </div>
+              <div>
+                <RadioGroupItem value="segment" id="target-segment" className="peer sr-only" />
+                <Label
+                  htmlFor="target-segment"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-amethyst [&:has([data-state=checked])]:border-amethyst"
+                >
+                  <Target className="mb-3 size-6" />
+                  Segment
+                </Label>
+              </div>
             </RadioGroup>
           </div>
+
+          {target === 'segment' && (
+            <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+              <Label htmlFor="targetSegment">Segment</Label>
+              <Select value={targetSegment} onValueChange={(value) => setTargetSegment(value as PushCampaignTargetSegment)}>
+                <SelectTrigger id="targetSegment">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SEGMENT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {target === 'specific' && (
             <div className="space-y-2 animate-in fade-in slide-in-from-top-2">

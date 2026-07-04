@@ -62,7 +62,12 @@ export async function repoUpdateUserEmail(userId: string, email: string) {
 
 export async function repoUpdateUserPassword(userId: string, password: string) {
   const password_hash = await argonHash(password);
-  await db.update(users).set({ password_hash, updated_at: new Date() }).where(eq(users.id, userId));
+  await db.update(users).set({
+    password_hash,
+    reset_token: null,
+    reset_token_expires: null,
+    updated_at: new Date(),
+  }).where(eq(users.id, userId));
 }
 
 export async function repoUpdateLastSignIn(userId: string) {
@@ -71,6 +76,14 @@ export async function repoUpdateLastSignIn(userId: string) {
 
 export async function repoUpdateUserAvatar(userId: string, avatarUrl: string) {
   await db.update(users).set({ avatar_url: avatarUrl, updated_at: new Date() }).where(eq(users.id, userId));
+}
+
+export async function repoSetPasswordResetCode(userId: string, codeHash: string, expiresAt: Date) {
+  await db.update(users).set({
+    reset_token: `code:${codeHash}`,
+    reset_token_expires: expiresAt,
+    updated_at: new Date(),
+  }).where(eq(users.id, userId));
 }
 
 /* -------------------- Roles -------------------- */

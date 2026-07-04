@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius, shadows } = t;
   return StyleSheet.create({
@@ -95,7 +96,7 @@ export default function BookingDetailScreen() {
     if (id) {
       bookingsApi.get(id)
         .then(setBooking)
-        .catch(console.error)
+        .catch(logger.error)
         .finally(() => setLoading(false));
     }
   }, [id]);

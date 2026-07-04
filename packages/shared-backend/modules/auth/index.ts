@@ -49,6 +49,7 @@ export {
   repoCreateUser,
   repoUpdateUserEmail,
   repoUpdateUserPassword,
+  repoSetPasswordResetCode,
   repoUpdateLastSignIn,
   repoAssignRole,
   repoEnsureProfileRow,

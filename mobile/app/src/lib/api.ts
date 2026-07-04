@@ -8,11 +8,34 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { storage } from '@/lib/storage';
 import type { CustomPageRow } from '@/lib/cms';
+import { cacheKey, messageFromApiErrorBody, normalizeListResponse } from '@/lib/apiUtils';
+import {
+  buildBookingCreateRequest,
+  buildLoginRequest,
+  buildMobilePasswordResetRequest,
+  buildOrderForBookingRequest,
+  buildRegisterRequest,
+  apiPaths,
+} from '@/lib/apiContracts';
 import type {
-  Consultant, ConsultantSlot, ConsultantService,
+  Consultant, ConsultantAvailability, ConsultantService,
   Booking, BookingCreateInput, BookingCreateResult,
   Review,
   Subscription, SubscriptionPlan, CreditMe, CreditPackage,
+  MediaMessage, MediaMessageCreateInput, ConsultantMediaSettings, MediaMessageKind,
+  ConsultantSelfStats,
+  ConsultantSelfBooking,
+  ConsultantSelfAvailability,
+  ConsultantTimeBlock,
+  ConsultantWalletResponse,
+  ConsultantWithdrawalRequest,
+  ConsultantSelfProfile,
+  ConsultantKycDocument,
+  ConsultantSelfThread,
+  ConsultantSelfThreadMessage,
+  ConsultantSelfService,
+  ConsultantSelfServicePayload,
+  ConsultantSelfReview,
   KvkkAccountDeletionStatus,
   Order, OrderCreateResponse, IyzipayInitResponse,
   LiveKitTokenResponse,
@@ -24,8 +47,10 @@ import type {
   Campaign, RedeemCampaignResponse,
   PublicMenuItemDto,
   FooterSectionPublic,
+  Banner,
 } from '@/types';
 
+import { logger } from '@/lib/logger';
 const API_URL =
   process.env.EXPO_PUBLIC_API_URL ??
   (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ??
@@ -80,6 +105,112 @@ export function getPublicWebUrl(): string {
 // HTTP core
 // -------------------------------------------------------------------
 
+type ApiEnvelope<T> = { data: T };
+type JsonRecord = Record<string, unknown>;
+
+export interface MobileProfile extends JsonRecord {
+  full_name?: string;
+  avatar_url?: string | null;
+  push_notifications?: boolean | number;
+  email_notifications?: boolean | number;
+}
+
+export interface AppNotification extends JsonRecord {
+  id: string;
+  type?: string;
+  title?: string;
+  body?: string;
+  is_read?: boolean | number;
+  created_at?: string;
+  data?: JsonRecord | null;
+}
+
+export interface HoroscopeToday extends JsonRecord {
+  id?: string;
+  sign?: string;
+  date?: string;
+  period_start_date?: string;
+  periodStartDate?: string;
+  short_summary?: string;
+  content?: string;
+}
+
+export interface HoroscopeSignInfo extends JsonRecord {
+  sign?: string;
+  label?: string;
+  short_summary?: string;
+  element?: string;
+  modality?: string;
+}
+
+export interface HoroscopeCompatibility extends JsonRecord {
+  signA?: string;
+  signB?: string;
+  score?: number;
+  content?: string;
+}
+
+export interface ReadingCard extends JsonRecord {
+  name?: string;
+  image_url?: string | null;
+}
+
+export interface ReadingResult extends JsonRecord {
+  id?: string;
+  title?: string;
+  interpretation?: string;
+  reading?: string;
+  result_text?: string;
+  readingText?: string;
+  dream_text?: string;
+  content?: string;
+  raw?: string;
+  cards?: ReadingCard[];
+  data?: ReadingResult;
+  result?: JsonRecord & {
+    reading?: string;
+    love_score?: number;
+    sexual_score?: number;
+  };
+}
+
+export interface YildiznameReading extends ReadingResult {
+  id: string;
+  ebced_total: number;
+  menzil_no: number;
+  interpretation: string;
+  menzil?: { name_tr?: string };
+  ebcedValue: number;
+  signNumber: number;
+  readingText: string;
+}
+
+export interface SynastryResult extends ReadingResult {
+  love_score?: number;
+  sexual_score?: number;
+  score?: number;
+}
+
+export interface SynastryInvite extends JsonRecord {
+  id: string;
+  status?: string;
+  partner_user_id?: string;
+}
+
+export interface UserSearchResult extends JsonRecord {
+  id: string;
+  full_name?: string;
+  email?: string;
+  avatar_url?: string | null;
+}
+
+export interface RedeemedCampaign extends JsonRecord {
+  id?: string;
+  campaign_id?: string;
+  code?: string;
+  redeemed_at?: string;
+}
+
 let _authToken: string | null = null;
 
 /** Bu uçlarda 401 = kimlik bilgisi hatası; global oturum temizliği yapılmaz. */
@@ -87,6 +218,7 @@ const UNAUTHORIZED_NO_GLOBAL_SIGNOUT = new Set([
   '/auth/login',
   '/auth/register',
   '/auth/social-login',
+  '/auth/token/refresh',
 ]);
 
 export function setAuthToken(token: string | null) {
@@ -101,16 +233,41 @@ export async function hydrateAuthTokenFromStorage(): Promise<string | null> {
   return _authToken;
 }
 
-function messageFromApiErrorBody(err: unknown): string | undefined {
-  if (!err || typeof err !== 'object') return undefined;
-  const o = err as Record<string, unknown>;
-  if (typeof o.message === 'string') return o.message;
-  const nested = o.error;
-  if (typeof nested === 'string') return nested;
-  if (nested && typeof nested === 'object' && typeof (nested as { message?: string }).message === 'string') {
-    return (nested as { message: string }).message;
-  }
-  return undefined;
+let _refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  if (_refreshPromise) return _refreshPromise;
+
+  _refreshPromise = (async () => {
+    const refreshToken = await storage.getRefreshToken();
+    if (!refreshToken) return null;
+
+    try {
+      const res = await fetch(`${API_URL}/auth/token/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (!res.ok) return null;
+
+      const data = (await res.json()) as {
+        access_token?: string;
+        refresh_token?: string;
+      };
+      if (!data.access_token) return null;
+
+      await storage.setAuthToken(data.access_token);
+      if (data.refresh_token) await storage.setRefreshToken(data.refresh_token);
+      setAuthToken(data.access_token);
+      return data.access_token;
+    } catch {
+      return null;
+    }
+  })().finally(() => {
+    _refreshPromise = null;
+  });
+
+  return _refreshPromise;
 }
 
 async function handleSessionExpired(path: string) {
@@ -126,16 +283,6 @@ async function handleSessionExpired(path: string) {
 
 const GET_CACHE_TTL_MS = 5 * 60 * 1000;
 const getResponseCache = new Map<string, { at: number; data: unknown }>();
-
-function cacheKey(method: string, path: string, params?: Record<string, string | number>) {
-  const qs = params
-    ? Object.entries(params)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([k, v]) => `${k}=${v}`)
-        .join('&')
-    : '';
-  return `${method}:${path}?${qs}`;
-}
 
 function readGetCache<T>(key: string): T | null {
   const hit = getResponseCache.get(key);
@@ -189,15 +336,27 @@ async function request<T>(
   const cached = method === 'GET' ? readGetCache<T>(key) : null;
 
   try {
-    const res = await fetchWithRetry(url.toString(), {
+    let res = await fetchWithRetry(url.toString(), {
       method,
       headers,
       body: body != null ? JSON.stringify(body) : undefined,
     });
 
+    if (res.status === 401 && !UNAUTHORIZED_NO_GLOBAL_SIGNOUT.has(path)) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        headers.Authorization = `Bearer ${refreshed}`;
+        res = await fetchWithRetry(url.toString(), {
+          method,
+          headers,
+          body: body != null ? JSON.stringify(body) : undefined,
+        }, 0);
+      }
+    }
+
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      console.error(`[API ERROR] ${method} ${path} | Status: ${res.status}`, err);
+      logger.error(`[API ERROR] ${method} ${path} | Status: ${res.status}`, err);
       if (res.status === 401) {
         await handleSessionExpired(path);
       }
@@ -206,7 +365,10 @@ async function request<T>(
         (typeof (err as { error?: unknown }).error === 'object'
           ? JSON.stringify((err as { error: object }).error)
           : undefined);
-      throw new Error(msg ?? `HTTP ${res.status}`);
+      const apiError = new Error(msg ?? `HTTP ${res.status}`) as Error & { status?: number; body?: unknown };
+      apiError.status = res.status;
+      apiError.body = err;
+      throw apiError;
     }
 
     const data = (await res.json()) as T;
@@ -214,11 +376,11 @@ async function request<T>(
     return data;
   } catch (e: unknown) {
     if (method === 'GET' && cached != null) {
-      if (__DEV__) console.warn(`[GoldMood] GET ${path} — önbellekten gösteriliyor`);
+      if (__DEV__) logger.warn(`[GoldMood] GET ${path} — önbellekten gösteriliyor`);
       return cached;
     }
     const msg = e instanceof Error ? e.message : String(e);
-    console.error(`[NETWORK ERROR] ${method} ${path} | ${msg}`);
+    logger.error(`[NETWORK ERROR] ${method} ${path} | ${msg}`);
     throw e;
   }
 }
@@ -245,14 +407,14 @@ async function getAllow404<T>(
     if (!res.ok) {
       if (__DEV__) {
         const err = await res.json().catch(() => ({}));
-        console.warn(`[GoldMood] GET ${path} → ${res.status}`, err);
+        logger.warn(`[GoldMood] GET ${path} → ${res.status}`, err);
       }
       return null;
     }
     return (await res.json()) as T;
   } catch {
     if (__DEV__) {
-      console.warn(
+      logger.warn(
         `[GoldMood] GET ${path} — ağ hatası (backend çalışıyor mu? iOS simülatör: localhost; gerçek cihaz: Mac LAN IP + EXPO_PUBLIC_API_URL)`,
       );
     }
@@ -265,35 +427,40 @@ const post = <T>(path: string, body: unknown) => request<T>('POST', path, body);
 const patch = <T>(path: string, body: unknown) => request<T>('PATCH', path, body);
 const del = <T>(path: string) => request<T>('DELETE', path);
 
-function normalizeListResponse<T>(value: unknown): T[] {
-  if (Array.isArray(value)) return value as T[];
-
-  const res = value as { items?: unknown; data?: unknown };
-  const candidate = (res?.data as unknown) ?? res?.items;
-  const nested = candidate as { items?: unknown } | null | undefined;
-  const fallback = (nested && Array.isArray(nested.items)) ? nested.items : null;
-  if (Array.isArray(candidate)) return candidate as T[];
-  if (Array.isArray(fallback)) return fallback as T[];
-
-  return [];
-}
-
 // -------------------------------------------------------------------
 // Auth
 // -------------------------------------------------------------------
 
 export const authApi = {
-  login: (data: LoginInput) =>
-    post<LoginResponse>('/auth/login', data),
+  login: (data: LoginInput) => {
+    const req = buildLoginRequest(data);
+    return post<LoginResponse>(req.path, req.body);
+  },
 
-  register: (data: RegisterInput) =>
-    post<RegisterResponse>('/auth/register', data),
+  register: (data: RegisterInput) => {
+    const req = buildRegisterRequest(data);
+    return post<RegisterResponse>(req.path, req.body);
+  },
+
+  requestPasswordReset: (email: string) => {
+    const req = buildMobilePasswordResetRequest(email);
+    return post<{ success: boolean; message?: string; token?: string; reset_code?: string; delivery?: string }>(
+      req.path,
+      req.body,
+    );
+  },
+
+  confirmPasswordReset: (data: { token?: string; email?: string; code?: string; password: string }) =>
+    post<{ success: boolean; message?: string }>(apiPaths.auth.passwordResetConfirm, data),
 
   me: () =>
-    get<MeResponse>('/auth/me'),
+    get<MeResponse>(apiPaths.auth.me),
 
   registerFcmToken: (fcm_token: string) =>
     post<void>('/push/register-token', { token: fcm_token }),
+
+  unregisterFcmToken: () =>
+    post<void>('/push/unregister-token', {}),
 
   socialLogin: (data: {
     type: 'apple' | 'google' | 'facebook';
@@ -320,9 +487,19 @@ export const consultantsApi = {
     return res.data;
   },
 
-  slots: async (consultantId: string, date: string): Promise<ConsultantSlot[]> => {
-    const res = await get<{ data: ConsultantSlot[] }>(`/consultants/${consultantId}/slots`, { date });
-    return Array.isArray(res?.data) ? res.data : [];
+  availability: async (
+    consultantId: string,
+    params: { date: string; duration?: number; service_id?: string },
+  ): Promise<ConsultantAvailability> => {
+    const res = await get<{ data: ConsultantAvailability }>(
+      `/consultants/${consultantId}/availability`,
+      {
+        date: params.date,
+        ...(params.duration ? { duration: params.duration } : {}),
+        ...(params.service_id ? { service_id: params.service_id } : {}),
+      },
+    );
+    return res.data;
   },
 
   services: async (consultantId: string): Promise<ConsultantService[]> => {
@@ -336,8 +513,10 @@ export const consultantsApi = {
 // -------------------------------------------------------------------
 
 export const bookingsApi = {
-  create: (data: BookingCreateInput) =>
-    post<BookingCreateResult>('/bookings', data),
+  create: (data: BookingCreateInput) => {
+    const req = buildBookingCreateRequest(data);
+    return post<BookingCreateResult>(req.path, req.body);
+  },
 
   requestNow: (data: {
     consultant_id: string;
@@ -345,12 +524,12 @@ export const bookingsApi = {
     customer_message?: string;
   }) =>
     post<{ ok: boolean; id: string; status: string; message?: string; timeout_at?: string }>(
-      '/bookings/request-now',
+      apiPaths.bookings.requestNow,
       data,
     ),
 
   list: (params?: { status?: string }) =>
-    get<{ items: Booking[] }>('/bookings/me', params as Record<string, string>),
+    get<{ items: Booking[] }>(apiPaths.bookings.mine, params as Record<string, string>),
 
   get: (id: string) =>
     get<Booking>(`/bookings/${id}`),
@@ -364,11 +543,13 @@ export const bookingsApi = {
 // -------------------------------------------------------------------
 
 export const ordersApi = {
-  createForBooking: (bookingId: string) =>
-    post<OrderCreateResponse>('/orders', { booking_id: bookingId, payment_gateway_slug: 'iyzipay' }),
+  createForBooking: (bookingId: string) => {
+    const req = buildOrderForBookingRequest(bookingId);
+    return post<OrderCreateResponse>(req.path, req.body);
+  },
 
   initIyzipay: (orderId: string) =>
-    post<IyzipayInitResponse>(`/orders/${orderId}/init-iyzico`, {}),
+    post<IyzipayInitResponse>(apiPaths.orders.initIyzipay(orderId), {}),
 
   get: (id: string) =>
     get<Order>(`/orders/${id}`),
@@ -457,6 +638,286 @@ export const creditsApi = {
     const res = await post<{ data: { checkout_url: string; token: string } }>('/credits/buy', data);
     return res.data;
   },
+
+  verifyReceipt: (payload: {
+    package_id?: string;
+    package_code?: string;
+    platform: 'apple' | 'google' | 'apple_iap' | 'google_iap';
+    receipt: string;
+    transaction_id?: string;
+    purchase_token?: string;
+    product_id?: string;
+  }) => post<{
+    data: {
+      platform: string;
+      valid: boolean;
+      order_id?: string;
+      package_id?: string;
+      credits_added?: number;
+      balance?: number;
+      idempotent?: boolean;
+    };
+  }>('/credits/verify-receipt', payload),
+};
+
+export const mediaMessagesApi = {
+  getConsultantSettings: async (consultantId: string): Promise<ConsultantMediaSettings | null> => {
+    const res = await get<{ data: ConsultantMediaSettings }>(`/consultants/${consultantId}/media-settings`);
+    return res?.data ?? null;
+  },
+
+  listMine: async (): Promise<MediaMessage[]> => {
+    const res = await get<{ data: MediaMessage[] }>('/me/media-messages');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  create: async (data: MediaMessageCreateInput): Promise<MediaMessage> => {
+    const res = await post<{ data: MediaMessage }>('/me/media-messages', data);
+    return res.data;
+  },
+
+  listConsultant: async (): Promise<MediaMessage[]> => {
+    const res = await get<{ data: MediaMessage[] }>('/me/consultant/media-messages');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  reply: async (id: string, data: {
+    kind: MediaMessageKind;
+    storage_path: string;
+    duration_seconds?: number;
+    note?: string | null;
+  }): Promise<MediaMessage> => {
+    const res = await post<{ data: MediaMessage }>(`/me/consultant/media-messages/${encodeURIComponent(id)}/reply`, data);
+    return res.data;
+  },
+
+  fileUrl: (id: string): string =>
+    `${API_URL}/me/media-messages/${encodeURIComponent(id)}/file`,
+};
+
+export const consultantSelfApi = {
+  profile: async (): Promise<ConsultantSelfProfile> => {
+    const res = await get<{ data: ConsultantSelfProfile }>('/me/consultant');
+    return res.data;
+  },
+
+  updateProfile: async (payload: Partial<ConsultantSelfProfile>): Promise<{ id: string }> => {
+    const res = await patch<{ data: { id: string } }>('/me/consultant', payload);
+    return res.data;
+  },
+
+  stats: async (): Promise<ConsultantSelfStats> => {
+    const res = await get<{ data: ConsultantSelfStats }>('/me/consultant/stats');
+    return res.data;
+  },
+
+  bookings: async (params?: { status?: string }): Promise<ConsultantSelfBooking[]> => {
+    const res = await get<{ data: ConsultantSelfBooking[] }>('/me/consultant/bookings', params);
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  approveBooking: async (id: string): Promise<{ id: string; status: string }> => {
+    const res = await post<{ data: { id: string; status: string } }>(`/me/consultant/bookings/${encodeURIComponent(id)}/approve`, {});
+    return res.data;
+  },
+
+  rejectBooking: async (id: string, reason?: string): Promise<{ id: string; status: string }> => {
+    const res = await post<{ data: { id: string; status: string } }>(
+      `/me/consultant/bookings/${encodeURIComponent(id)}/reject`,
+      reason ? { reason } : {},
+    );
+    return res.data;
+  },
+
+  availability: async (): Promise<ConsultantSelfAvailability> => {
+    const res = await get<{ data: ConsultantSelfAvailability }>('/me/consultant/availability');
+    return res.data;
+  },
+
+  updateAvailability: async (hours: ConsultantSelfAvailability['working_hours']): Promise<{ resource_id: string; count: number }> => {
+    const res = await patch<{ data: { resource_id: string; count: number } }>(
+      '/me/consultant/availability',
+      { hours },
+    );
+    return res.data;
+  },
+
+  overrideAvailabilityDay: async (payload: { date: string; is_active: 0 | 1 }): Promise<{
+    resource_id: string;
+    date: string;
+    is_active: 0 | 1;
+    updated: number;
+    planned: number;
+  }> => {
+    const res = await post<{ data: { resource_id: string; date: string; is_active: 0 | 1; updated: number; planned: number } }>(
+      '/me/consultant/availability/day',
+      payload,
+    );
+    return res.data;
+  },
+
+  timeBlocks: async (date?: string): Promise<ConsultantTimeBlock[]> => {
+    const res = await get<{ data: ConsultantTimeBlock[] }>('/me/consultant/time-blocks', date ? { date } : undefined);
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  createTimeBlock: async (payload: { block_date: string; start_time: string; end_time: string; reason?: string | null }): Promise<ConsultantTimeBlock> => {
+    const res = await post<{ data: ConsultantTimeBlock }>('/me/consultant/time-blocks', payload);
+    return res.data;
+  },
+
+  deleteTimeBlock: async (id: string): Promise<{ id: string; ok: boolean }> => {
+    const res = await del<{ data: { id: string; ok: boolean } }>(`/me/consultant/time-blocks/${encodeURIComponent(id)}`);
+    return res.data;
+  },
+
+  wallet: async (): Promise<ConsultantWalletResponse> => {
+    const res = await get<{ data: ConsultantWalletResponse }>('/me/consultant/wallet');
+    return res.data;
+  },
+
+  withdrawals: async (): Promise<ConsultantWithdrawalRequest[]> => {
+    const res = await get<{ data: ConsultantWithdrawalRequest[] }>('/me/consultant/withdrawals');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  requestWithdrawal: async (payload: { amount: number; notes?: string }): Promise<{
+    id: string;
+    status: 'pending';
+    amount: number;
+    currency: string;
+    message: string;
+  }> => {
+    const res = await post<{ data: { id: string; status: 'pending'; amount: number; currency: string; message: string } }>(
+      '/me/consultant/wallet/withdraw',
+      payload,
+    );
+    return res.data;
+  },
+
+  uploadKycDocument: async (payload: {
+    type: ConsultantKycDocument['type'];
+    uri: string;
+    name?: string;
+    mime?: string;
+  }): Promise<ConsultantKycDocument> => {
+    await hydrateAuthTokenFromStorage();
+    const form = new FormData();
+    form.append('file', {
+      uri: payload.uri,
+      name: payload.name ?? `${payload.type}-${Date.now()}.jpg`,
+      type: payload.mime ?? 'image/jpeg',
+    } as unknown as Blob);
+    const res = await fetch(`${API_URL}/me/consultant/kyc/documents?type=${encodeURIComponent(payload.type)}`, {
+      method: 'POST',
+      headers: _authToken ? { Authorization: `Bearer ${_authToken}` } : undefined,
+      body: form,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = messageFromApiErrorBody(err) ?? `HTTP ${res.status}`;
+      const apiError = new Error(msg) as Error & { status?: number; body?: unknown };
+      apiError.status = res.status;
+      apiError.body = err;
+      throw apiError;
+    }
+    const data = await res.json() as { data: ConsultantKycDocument };
+    return data.data;
+  },
+
+  submitKyc: async (): Promise<{ id: string; kyc_status: 'pending' }> => {
+    const res = await post<{ data: { id: string; kyc_status: 'pending' } }>('/me/consultant/kyc/submit', {});
+    return res.data;
+  },
+
+  threads: async (): Promise<ConsultantSelfThread[]> => {
+    const res = await get<{ data: ConsultantSelfThread[] }>('/me/consultant/threads');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  threadMessages: async (id: string): Promise<{ thread_id: string; messages: ConsultantSelfThreadMessage[] }> => {
+    const res = await get<{ data: { thread_id: string; messages: ConsultantSelfThreadMessage[] } }>(
+      `/me/consultant/threads/${encodeURIComponent(id)}/messages`,
+    );
+    return res.data;
+  },
+
+  replyThread: async (id: string, text: string): Promise<ConsultantSelfThreadMessage> => {
+    const res = await post<{ data: ConsultantSelfThreadMessage }>(
+      `/me/consultant/threads/${encodeURIComponent(id)}/reply`,
+      { text },
+    );
+    return res.data;
+  },
+
+  markThreadRead: async (id: string): Promise<{ ok: boolean }> => {
+    const res = await post<{ data: { ok: boolean } }>(`/me/consultant/threads/${encodeURIComponent(id)}/read`, {});
+    return res.data;
+  },
+
+  services: async (): Promise<ConsultantSelfService[]> => {
+    const res = await get<{ data: ConsultantSelfService[] }>('/me/consultant/services');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  createService: async (payload: ConsultantSelfServicePayload): Promise<{ id: string }> => {
+    const res = await post<{ data: { id: string } }>('/me/consultant/services', payload);
+    return res.data;
+  },
+
+  updateService: async (id: string, payload: Partial<ConsultantSelfServicePayload>): Promise<{ id: string }> => {
+    const res = await patch<{ data: { id: string } }>(`/me/consultant/services/${encodeURIComponent(id)}`, payload);
+    return res.data;
+  },
+
+  deleteService: async (id: string): Promise<{ id: string; ok: boolean }> => {
+    const res = await del<{ data: { id: string; ok: boolean } }>(`/me/consultant/services/${encodeURIComponent(id)}`);
+    return res.data;
+  },
+
+  reviews: async (status?: 'approved' | 'pending' | 'replied' | 'unreplied'): Promise<ConsultantSelfReview[]> => {
+    const res = await get<{ data: ConsultantSelfReview[] }>('/me/consultant/reviews', status ? { status } : undefined);
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  replyReview: async (id: string, reply: string): Promise<{ id: string; consultant_reply: string }> => {
+    const res = await post<{ data: { id: string; consultant_reply: string } }>(
+      `/me/consultant/reviews/${encodeURIComponent(id)}/reply`,
+      { reply },
+    );
+    return res.data;
+  },
+
+  heartbeat: async (): Promise<{
+    consultant_id: string;
+    last_heartbeat_at: string | null;
+    became_online_at: string | null;
+    is_online: boolean;
+  }> => {
+    const res = await post<{ data: { consultant_id: string; last_heartbeat_at: string | null; became_online_at: string | null; is_online: boolean } }>(
+      '/me/consultant/heartbeat',
+      {},
+    );
+    return res.data;
+  },
+};
+
+export const favoritesApi = {
+  list: async (): Promise<Consultant[]> => {
+    const res = await get<{ data: Consultant[] }>('/me/favorites');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  ids: async (): Promise<string[]> => {
+    const res = await get<{ data: string[] }>('/me/favorites/ids');
+    return Array.isArray(res?.data) ? res.data : [];
+  },
+
+  add: (consultantId: string) =>
+    post<{ data: { consultant_id: string; is_favorited: true } }>(`/me/favorites/${consultantId}`, {}),
+
+  remove: (consultantId: string) =>
+    del<{ data: { consultant_id: string; is_favorited: false } }>(`/me/favorites/${consultantId}`),
 };
 
 // -------------------------------------------------------------------
@@ -511,13 +972,13 @@ export const birthChartsApi = {
 };
 
 export const profilesApi = {
-  getMyProfile: async () => {
-    const res = await get<{ data: any }>('/profiles/me');
+  getMyProfile: async (): Promise<MobileProfile> => {
+    const res = await get<ApiEnvelope<MobileProfile>>('/profiles/me');
     return res.data;
   },
 
-  upsertMyProfile: async (payload: { profile: Record<string, unknown> }) => {
-    const res = await patch<{ data: any }>('/profiles/me', payload);
+  upsertMyProfile: async (payload: { profile: Record<string, unknown> }): Promise<MobileProfile> => {
+    const res = await patch<ApiEnvelope<MobileProfile>>('/profiles/me', payload);
     return res.data;
   },
 };
@@ -610,7 +1071,7 @@ export const chatApi = {
 
 export const notificationsApi = {
   list: () =>
-    get<{ items: any[] }>('/notifications/me'),
+    get<{ items: AppNotification[] }>('/notifications/me'),
 
   markAsRead: (id: string) =>
     patch<void>(`/notifications/${id}/read`, {}),
@@ -652,7 +1113,7 @@ export const horoscopesApi = {
     /** YYYY-MM-DD; verilmezse cihazın yerel günü kullanılır (TR’de doğru “bugün”). */
     date?: string;
     locale?: string;
-  }): Promise<any | null> => {
+  }): Promise<HoroscopeToday | null> => {
     const date = params.date ?? formatLocalYmd(new Date());
     const url = new URL(`${API_URL}/horoscopes/today`);
     url.searchParams.set('sign', params.sign);
@@ -676,48 +1137,48 @@ export const horoscopesApi = {
       if (!res.ok) {
         if (__DEV__) {
           const err = await res.json().catch(() => ({}));
-          console.warn(`[GoldMood] GET /horoscopes/today → ${res.status}`, err);
+          logger.warn(`[GoldMood] GET /horoscopes/today → ${res.status}`, err);
         }
         return null;
       }
-      const json = (await res.json()) as { data: any };
+      const json = (await res.json()) as ApiEnvelope<HoroscopeToday>;
       const row = json?.data;
       if (!row) return null;
       const periodStart = row.period_start_date ?? row.periodStartDate ?? row.date;
       return { ...row, date: periodStart };
     } catch {
-      if (__DEV__) console.warn('[GoldMood] GET /horoscopes/today network error');
+      if (__DEV__) logger.warn('[GoldMood] GET /horoscopes/today network error');
       return null;
     }
   },
-  getSignInfo: async (sign: string): Promise<any> => {
-    const res = await get<{ data: any }>(`/horoscopes/${sign}`);
+  getSignInfo: async (sign: string): Promise<HoroscopeSignInfo> => {
+    const res = await get<ApiEnvelope<HoroscopeSignInfo>>(`/horoscopes/${sign}`);
     return res.data;
   },
-  getCompatibility: async (params: { signA: string; signB: string }): Promise<any> => {
-    const res = await get<{ data: any }>('/horoscopes/compatibility', params);
+  getCompatibility: async (params: { signA: string; signB: string }): Promise<HoroscopeCompatibility> => {
+    const res = await get<ApiEnvelope<HoroscopeCompatibility>>('/horoscopes/compatibility', params);
     return res.data;
   },
 };
 
 export const tarotApi = {
-  draw: async (data: { spread_type: string; question?: string; locale?: string }) => {
-    const res = await post<{ data: any }>('/tarot/draw', data);
+  draw: async (data: { spread_type: string; question?: string; locale?: string }): Promise<ReadingResult> => {
+    const res = await post<ApiEnvelope<ReadingResult>>('/tarot/draw', data);
     return res.data;
   },
-  getReading: async (id: string) => {
-    const res = await get<{ data: any }>(`/tarot/reading/${id}`);
+  getReading: async (id: string): Promise<ReadingResult> => {
+    const res = await get<ApiEnvelope<ReadingResult>>(`/tarot/reading/${id}`);
     return res.data;
   },
 };
 
 export const coffeeApi = {
-  read: async (data: { image_ids: string[]; locale?: string }) => {
-    const res = await post<{ data: any }>('/coffee/read', data);
+  read: async (data: { image_ids: string[]; locale?: string }): Promise<ReadingResult> => {
+    const res = await post<ApiEnvelope<ReadingResult>>('/coffee/read', data);
     return res.data;
   },
-  getReading: async (id: string) => {
-    const res = await get<{ data: any }>(`/coffee/reading/${id}`);
+  getReading: async (id: string): Promise<ReadingResult> => {
+    const res = await get<ApiEnvelope<ReadingResult>>(`/coffee/reading/${id}`);
     return res.data;
   },
 };
@@ -727,6 +1188,7 @@ export const storageApi = {
     formData: FormData,
     options: { bucket?: string; path?: string; upsert?: boolean } = {}
   ): Promise<{ id: string; url?: string | null; path?: string }> => {
+    await hydrateAuthTokenFromStorage();
     const bucket = options.bucket ?? 'coffee';
     const params = new URLSearchParams();
     if (options.path) params.set('path', options.path);
@@ -753,23 +1215,23 @@ export const storageApi = {
 };
 
 export const dreamsApi = {
-  interpret: async (data: { dream_text: string; locale?: string }) => {
-    const res = await post<{ data: any }>('/dreams/interpret', data);
+  interpret: async (data: { dream_text: string; locale?: string }): Promise<ReadingResult> => {
+    const res = await post<ApiEnvelope<ReadingResult>>('/dreams/interpret', data);
     return res.data;
   },
-  getReading: async (id: string) => {
-    const res = await get<{ data: any }>(`/dreams/reading/${id}`);
+  getReading: async (id: string): Promise<ReadingResult> => {
+    const res = await get<ApiEnvelope<ReadingResult>>(`/dreams/reading/${id}`);
     return res.data;
   },
 };
 
 export const numerologyApi = {
-  calculate: async (data: { full_name: string; birth_date: string; locale?: string }) => {
-    const res = await post<{ data: any }>('/numerology/calculate', data);
+  calculate: async (data: { full_name: string; birth_date: string; locale?: string }): Promise<ReadingResult> => {
+    const res = await post<ApiEnvelope<ReadingResult>>('/numerology/calculate', data);
     return res.data;
   },
-  getReading: async (id: string) => {
-    const res = await get<{ data: any }>(`/numerology/reading/${id}`);
+  getReading: async (id: string): Promise<ReadingResult> => {
+    const res = await get<ApiEnvelope<ReadingResult>>(`/numerology/reading/${id}`);
     return res.data;
   },
 };
@@ -828,8 +1290,8 @@ export const yildiznameApi = {
     };
   },
 
-  getReading: async (id: string) => {
-    const res = await get<{ data: any }>(`/yildizname/reading/${id}`);
+  getReading: async (id: string): Promise<ReadingResult> => {
+    const res = await get<ApiEnvelope<ReadingResult>>(`/yildizname/reading/${id}`);
     const d = res.data;
     return {
       ...d,
@@ -839,8 +1301,8 @@ export const yildiznameApi = {
 };
 
 export const synastryApi = {
-  quick: async (data: { sign_a: string; sign_b: string }) => {
-    const res = await post<{ data: any }>('/synastry/quick', data);
+  quick: async (data: { sign_a: string; sign_b: string }): Promise<SynastryResult> => {
+    const res = await post<ApiEnvelope<ReadingResult>>('/synastry/quick', data);
     const d = res.data?.data || res.data;
     return {
       title: `${data.sign_a} & ${data.sign_b}`,
@@ -850,46 +1312,46 @@ export const synastryApi = {
     };
   },
 
-  manual: async (data: { partner_data: Record<string, unknown> }) => {
-    const res = await post<{ data: any }>('/synastry/manual', data);
+  manual: async (data: { partner_data: Record<string, unknown> }): Promise<SynastryResult> => {
+    const res = await post<ApiEnvelope<ReadingResult>>('/synastry/manual', data);
     const d = res.data?.data || res.data;
-    return d;
+    return d as SynastryResult;
   },
 
-  list: async () => {
-    const res = await get<{ data: any[] }>('/synastry/me');
+  list: async (): Promise<SynastryResult[]> => {
+    const res = await get<ApiEnvelope<SynastryResult[]>>('/synastry/me');
     return res.data;
   },
 
-  getReading: async (id: string) => {
-    const res = await get<{ data: any }>(`/synastry/reading/${id}`);
+  getReading: async (id: string): Promise<SynastryResult> => {
+    const res = await get<ApiEnvelope<ReadingResult>>(`/synastry/reading/${id}`);
     return res.data?.data ?? res.data;
   },
 
-  listInvites: async () => {
-    const res = await get<{ data: any[] }>('/synastry/invites/me');
+  listInvites: async (): Promise<SynastryInvite[]> => {
+    const res = await get<ApiEnvelope<SynastryInvite[]>>('/synastry/invites/me');
     return res.data;
   },
 
-  createInvite: async (partnerUserId: string) => {
-    const res = await post<{ data: any }>('/synastry/invite', { partner_user_id: partnerUserId });
+  createInvite: async (partnerUserId: string): Promise<SynastryInvite> => {
+    const res = await post<ApiEnvelope<SynastryInvite>>('/synastry/invite', { partner_user_id: partnerUserId });
     return res.data;
   },
 
-  acceptInvite: async (id: string) => {
-    const res = await post<{ data: any }>(`/synastry/invite/${id}/accept`, {});
+  acceptInvite: async (id: string): Promise<SynastryResult> => {
+    const res = await post<ApiEnvelope<SynastryResult>>(`/synastry/invite/${id}/accept`, {});
     return res.data;
   },
 
-  declineInvite: async (id: string) => {
-    const res = await post<{ data: any }>(`/synastry/invite/${id}/decline`, {});
+  declineInvite: async (id: string): Promise<SynastryInvite> => {
+    const res = await post<ApiEnvelope<SynastryInvite>>(`/synastry/invite/${id}/decline`, {});
     return res.data;
   },
 };
 
 export const userApi = {
-  search: async (q: string) => {
-    const res = await get<{ data: any[] }>(`/auth/search?q=${encodeURIComponent(q)}`);
+  search: async (q: string): Promise<UserSearchResult[]> => {
+    const res = await get<ApiEnvelope<UserSearchResult[]>>(`/auth/search?q=${encodeURIComponent(q)}`);
     return res.data;
   }
 };
@@ -905,6 +1367,24 @@ function parseSettingBool(value: unknown): boolean {
     return v === '1' || v === 'true' || v === 'yes';
   }
   return false;
+}
+
+function parseSettingStringArray(value: unknown, fallback: string[]): string[] {
+  const normalize = (candidate: unknown): string[] | null => {
+    if (Array.isArray(candidate)) {
+      const items = candidate.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+      return items.length ? items : null;
+    }
+    if (typeof candidate === 'string' && candidate.trim()) {
+      try {
+        return normalize(JSON.parse(candidate));
+      } catch {
+        return [candidate.trim()];
+      }
+    }
+    return null;
+  };
+  return normalize(value) ?? fallback;
 }
 
 export const siteSettingsApi = {
@@ -923,6 +1403,40 @@ export const siteSettingsApi = {
     if (!row) return null;
     return row.value;
   },
+
+  getMobileVersionPolicy: async (): Promise<{
+    minVersion: string | null;
+    latestVersion: string | null;
+    updateUrl: string | null;
+  }> => {
+    const [minVersion, latestVersion, updateUrl] = await Promise.all([
+      siteSettingsApi.getSettingValue('mobile_min_version'),
+      siteSettingsApi.getSettingValue('mobile_latest_version'),
+      siteSettingsApi.getSettingValue('mobile_update_url'),
+    ]);
+    const asString = (value: unknown) => (typeof value === 'string' && value.trim() ? value.trim() : null);
+    return {
+      minVersion: asString(minVersion),
+      latestVersion: asString(latestVersion),
+      updateUrl: asString(updateUrl),
+    };
+  },
+
+  getMobilePaymentReturnPatterns: async (): Promise<{
+    success: string[];
+    failure: string[];
+  }> => {
+    const fallbackSuccess = ['/siparis/basarili', '/booking/success', 'checkout=success', 'payment=success', 'status=success'];
+    const fallbackFailure = ['/sepet?payment=failed', '/sepet?payment=error', 'checkout=failed', 'payment=failed', 'payment=error', 'status=failure', 'status=failed'];
+    const [success, failure] = await Promise.all([
+      siteSettingsApi.getSettingValue('mobile_payment_success_patterns'),
+      siteSettingsApi.getSettingValue('mobile_payment_failure_patterns'),
+    ]);
+    return {
+      success: parseSettingStringArray(success, fallbackSuccess),
+      failure: parseSettingStringArray(failure, fallbackFailure),
+    };
+  },
 };
 
 // -------------------------------------------------------------------
@@ -930,9 +1444,9 @@ export const siteSettingsApi = {
 // -------------------------------------------------------------------
 
 export const bannersApi = {
-  list: async (params: { placement: string; locale?: string }): Promise<any[]> => {
+  list: async (params: { placement: string; locale?: string }): Promise<Banner[]> => {
     try {
-      const res = await get<{ data: any[] }>('/banners', params);
+      const res = await get<ApiEnvelope<Banner[]>>('/banners', params);
       return Array.isArray(res?.data) ? res.data : [];
     } catch {
       return [];
@@ -997,8 +1511,8 @@ export const campaignsApi = {
     return Array.isArray(res?.data) ? res.data : [];
   },
 
-  mine: async (): Promise<{ active: Campaign[]; redeemed: any[] }> => {
-    const res = await get<{ data: { active: Campaign[]; redeemed: any[] } }>('/campaigns/me');
+  mine: async (): Promise<{ active: Campaign[]; redeemed: RedeemedCampaign[] }> => {
+    const res = await get<ApiEnvelope<{ active: Campaign[]; redeemed: RedeemedCampaign[] }>>('/campaigns/me');
     return {
       active: Array.isArray(res?.data?.active) ? res.data.active : [],
       redeemed: Array.isArray(res?.data?.redeemed) ? res.data.redeemed : [],

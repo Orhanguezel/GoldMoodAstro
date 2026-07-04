@@ -30,6 +30,7 @@ import { safeRouterBack } from '@/lib/navigation';
 import { historyApi, type ReadingHistoryItem, type ReadingHistoryType } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
+import { logger } from '@/lib/logger';
 type FilterId = 'all' | ReadingHistoryType;
 
 function buildScreenStyles(t: AppTheme) {
@@ -208,7 +209,7 @@ export default function HistoryScreen() {
       const data = await historyApi.getUserHistory(50);
       setHistory(data);
     } catch (e) {
-      console.error('Load history error:', e);
+      logger.error('Load history error:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);

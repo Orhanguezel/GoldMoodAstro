@@ -34,6 +34,7 @@ import { safeRouterBack } from '@/lib/navigation';
 import { yildiznameApi } from '@/lib/api';
 import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing, shadows } = t;
   return StyleSheet.create({
@@ -193,7 +194,7 @@ export default function YildiznameScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }, 4000);
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       setStep('year');
     }
   };
@@ -206,7 +207,7 @@ export default function YildiznameScreen() {
         title: t('yildizname.shareTitle'),
       });
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   };
 

@@ -21,6 +21,7 @@ import { BookingCard } from '@/components/BookingCard';
 import { useAuth } from '@/hooks/useAuth';
 import type { Booking } from '@/types';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -187,7 +188,7 @@ export default function BookingsScreen() {
       const res = await bookingsApi.list();
       setBookings(res?.items || []);
     } catch (err) {
-      console.error('Failed to fetch bookings:', err);
+      logger.error('Failed to fetch bookings:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -241,20 +242,20 @@ export default function BookingsScreen() {
             <Pressable onPress={() => safeRouterBack('/(tabs)/profile')} style={styles.headerBtn}>
               <ChevronLeft size={24} color={colors.text} />
             </Pressable>
-            <Text style={styles.headerTitle}>Randevularım</Text>
+            <Text style={styles.headerTitle}>{t('bookings.title', 'Randevularım')}</Text>
             <View style={{ width: 40 }} />
           </View>
           <View style={styles.guestWrap}>
             <CalendarDays size={48} color={colors.gold} />
-            <Text style={styles.guestTitle}>Giriş gerekli</Text>
+            <Text style={styles.guestTitle}>{t('auth.loginRequired', 'Giriş gerekli')}</Text>
             <Text style={styles.guestDesc}>
-              Yaklaşan ve geçmiş randevularınızı görmek için giriş yapın veya yeni bir danışman seçin.
+              {t('bookings.guestDesc', 'Yaklaşan ve geçmiş randevularınızı görmek için giriş yapın veya yeni bir danışman seçin.')}
             </Text>
             <Pressable style={styles.guestBtn} onPress={() => router.push('/auth/login' as any)}>
-              <Text style={styles.guestBtnText}>Giriş Yap</Text>
+              <Text style={styles.guestBtnText}>{t('auth.loginBtn', 'Giriş Yap')}</Text>
             </Pressable>
             <Pressable style={styles.guestBtnOutline} onPress={() => router.push('/connect' as any)}>
-              <Text style={styles.guestBtnOutlineText}>Danışmanları İncele</Text>
+              <Text style={styles.guestBtnOutlineText}>{t('bookings.browseConsultants', 'Danışmanları İncele')}</Text>
             </Pressable>
           </View>
         </SafeAreaView>
@@ -271,7 +272,7 @@ export default function BookingsScreen() {
           <Pressable onPress={() => safeRouterBack('/(tabs)/profile')} style={styles.headerBtn}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
-          <Text style={styles.headerTitle}>Randevularım</Text>
+          <Text style={styles.headerTitle}>{t('bookings.title', 'Randevularım')}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -284,7 +285,7 @@ export default function BookingsScreen() {
             >
               <CalendarDays size={16} color={activeTab === 'upcoming' ? colors.ink : colors.textMuted} />
               <Text style={[styles.tabText, activeTab === 'upcoming' && styles.tabTextActive]}>
-                Yaklaşan
+                {t('bookings.upcoming', 'Yaklaşan')}
               </Text>
             </Pressable>
             <Pressable 
@@ -293,7 +294,7 @@ export default function BookingsScreen() {
             >
               <History size={16} color={activeTab === 'past' ? colors.ink : colors.textMuted} />
               <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>
-                Geçmiş
+                {t('bookings.past', 'Geçmiş')}
               </Text>
             </Pressable>
           </View>
@@ -316,9 +317,9 @@ export default function BookingsScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Henüz bir randevunuz bulunmuyor.</Text>
+              <Text style={styles.emptyText}>{t('bookings.empty', 'Henüz bir randevunuz bulunmuyor.')}</Text>
               <Pressable style={styles.emptyBtn} onPress={() => router.push('/connect' as any)}>
-                <Text style={styles.emptyBtnText}>Danışmanları İncele</Text>
+                <Text style={styles.emptyBtnText}>{t('bookings.browseConsultants', 'Danışmanları İncele')}</Text>
               </Pressable>
             </View>
           }
@@ -328,4 +329,3 @@ export default function BookingsScreen() {
     </View>
   );
 }
-

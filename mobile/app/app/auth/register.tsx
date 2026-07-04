@@ -186,6 +186,7 @@ export default function RegisterScreen() {
       
       await storage.setUserSession({
         token: res.access_token,
+        refreshToken: res.refresh_token,
         userId: res.user.id,
         role: res.user.role
       });
@@ -311,4 +312,3 @@ export default function RegisterScreen() {
     </View>
   );
 }
-

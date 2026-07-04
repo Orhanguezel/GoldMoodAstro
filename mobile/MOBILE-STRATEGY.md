@@ -86,7 +86,10 @@ Exit criteria:
   - Tercih A: RevenueCat
   - Tercih B: `react-native-iap` + backend receipt validation
 - iOS anti-steering kurallarına uyum
-- Android/Web Iyzipay opsiyonunun policy uyumlu ayrımı
+- Ödeme kapsam ayrımı:
+  - Dijital içerik, premium abonelik ve kredi paketleri iOS'ta Apple IAP, Android'de Play Billing/RevenueCat üzerinden satılır.
+  - Canlı birebir danışmanlık seansı gerçek zamanlı kişisel hizmettir; Iyzipay WebView bu akışta kalabilir.
+  - Kredi paketleri dijital tüketilebilir ürün sayıldığı için iOS/Android store build'lerinde Iyzipay ile satılmaz; IAP consumable entegrasyonu tamamlanana kadar gizlenir veya pasif gösterilir.
 - `usePremium` ve `/auth/me` subscription özetiyle tutarlı entitlement
 
 Exit criteria:
@@ -153,11 +156,11 @@ Kritik backend modülleri:
 
 Dev API base:
 
-- `http://localhost:8094/api/v1`
+- `http://localhost:8094/api`
 
 Prod API base:
 
-- `https://www.goldmoodastro.com/api/v1`
+- `https://goldmoodastro.com/api`
 
 ## 8) KPI and Success Metrics
 

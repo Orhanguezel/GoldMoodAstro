@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import { storage } from './storage';
 import { authApi } from './api';
 
+import { logger } from '@/lib/logger';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -49,7 +50,7 @@ export async function registerPushToken(): Promise<string | null> {
     
     return token;
   } catch (err) {
-    console.warn('Push token registration failed:', err);
+    logger.warn('Push token registration failed:', err);
     return null;
   }
 }

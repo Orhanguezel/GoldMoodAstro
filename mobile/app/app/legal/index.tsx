@@ -7,8 +7,9 @@ import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
 import { customPagesApi } from '@/lib/api';
-import type { CustomPageRow } from '@/lib/cms';
+import { LEGAL_CMS_MODULE_KEYS, type CustomPageRow } from '@/lib/cms';
 
+import { logger } from '@/lib/logger';
 function buildStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -56,7 +57,7 @@ export default function LegalIndexScreen() {
   const theme = useAppTheme();
   const styles = useMemo(() => buildStyles(theme), [theme]);
   const { colors } = theme;
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const locale = i18n.language?.slice(0, 2) ?? 'tr';
 
   const [pages, setPages] = React.useState<CustomPageRow[]>([]);
@@ -66,22 +67,13 @@ export default function LegalIndexScreen() {
     const fetchPages = async () => {
       try {
         const allPages = await customPagesApi.list({ locale });
-        const legalKeys = [
-          'privacy',
-          'terms',
-          'cookies',
-          'kvkk',
-          'editorial_policy',
-          'privacy_notice',
-          'legal_notice',
-        ];
-        // Sadece legal sayfalar (yeni eklenenler de buraya düşebilir eğer 'page' değil de başka bir mantık varsa)
-        // Ama şimdilik db'de olanları dinamik alıyoruz, başlıklar db'den gelsin.
-        const filtered = allPages.filter((p) => legalKeys.includes(p.module_key));
+        const filtered = allPages.filter((p) =>
+          LEGAL_CMS_MODULE_KEYS.includes(p.module_key as (typeof LEGAL_CMS_MODULE_KEYS)[number]),
+        );
         // Sıralama display_order'a göre
         setPages(filtered.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)));
       } catch (err) {
-        console.error(err);
+        logger.error(err);
       } finally {
         setLoading(false);
       }
@@ -94,14 +86,20 @@ export default function LegalIndexScreen() {
           <Pressable style={styles.backBtn} onPress={() => safeRouterBack()}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>Yasal & Gizlilik</Text>
+          <Text style={styles.title}>{t('legal.title', 'Yasal & Gizlilik')}</Text>
         </View>
         <Text style={styles.intro}>
-          Mağaza yayını için zorunlu metinler. İçerikler admin panelinden güncellenir.
+          {t('legal.intro', 'Mağaza yayını için zorunlu metinler. İçerikler admin panelinden güncellenir.')}
         </Text>
         <ScrollView>
           {loading ? (
-             <View style={{ padding: 20 }}><Text style={styles.intro}>Yükleniyor...</Text></View>
+             <View style={{ padding: 20 }}><Text style={styles.intro}>{t('common.loading', 'Yükleniyor...')}</Text></View>
+          ) : pages.length === 0 ? (
+            <View style={{ padding: 20 }}>
+              <Text style={styles.intro}>
+                {t('legal.empty', 'Yasal içerikler henüz hazırlanmadı. Lütfen daha sonra tekrar kontrol edin.')}
+              </Text>
+            </View>
           ) : (
             pages.map((page) => (
               <Pressable

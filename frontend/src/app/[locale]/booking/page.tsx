@@ -49,8 +49,13 @@ export default function BookingPage() {
 
   const [note, setNote] = useState('');
   const [mediaType, setMediaType] = useState<'audio' | 'video'>('audio');
+  const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Locale-aware legal page slugs (custom_pages i18n slugs)
+  const preInfoSlug = locale === 'en' ? 'pre-contract-information' : locale === 'de' ? 'vorvertragliche-informationen' : 'on-bilgilendirme-formu';
+  const distanceSlug = locale === 'en' ? 'distance-sales-agreement' : locale === 'de' ? 'fernabsatzvertrag' : 'mesafeli-satis-sozlesmesi';
 
   const [createBooking] = useCreateBookingPublicMutation();
   const [createOrder] = useCreateForBookingMutation();
@@ -130,6 +135,10 @@ export default function BookingPage() {
       setError(ui('ui_account_booking_missing_info', 'Missing booking information.'));
       return;
     }
+    if (!consent) {
+      setError(ui('ui_account_booking_consent_required', 'Devam etmek için ön bilgilendirme ve mesafeli satış koşullarını onaylayın.'));
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -145,6 +154,7 @@ export default function BookingPage() {
         session_duration: Number(duration),
         session_price: String(originalPrice),
         media_type: resolvedMediaType,
+        withdrawal_consent: true,
         service_id: serviceId || undefined,
         customer_message: note || undefined,
         source_type: sourceMatch ? 'daily_reading' : undefined,
@@ -375,6 +385,26 @@ export default function BookingPage() {
             />
           </div>
 
+          {/* Distance-sales / pre-information consent (Mesafeli Söz. Yön. m.15/1-ğ) */}
+          <label className="flex items-start gap-3 px-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-1 w-5 h-5 shrink-0 accent-(--gm-gold)"
+            />
+            <span className="text-xs text-(--gm-text-dim) leading-relaxed">
+              <Link href={`/${locale}/legal/${preInfoSlug}`} target="_blank" className="text-(--gm-gold) underline underline-offset-2">
+                {ui('ui_account_booking_preinfo_link', 'Ön Bilgilendirme Formu')}
+              </Link>
+              {ui('ui_account_booking_consent_mid', ' ve ')}
+              <Link href={`/${locale}/legal/${distanceSlug}`} target="_blank" className="text-(--gm-gold) underline underline-offset-2">
+                {ui('ui_account_booking_distance_link', 'Mesafeli Satış Sözleşmesi')}
+              </Link>
+              {ui('ui_account_booking_consent_text', '’ni okudum; hizmetin ifasına derhal başlanmasını onaylıyor ve bu kapsamda cayma hakkımı kaybedeceğimi kabul ediyorum.')}
+            </span>
+          </label>
+
           {/* Error */}
           {error && (
             <div className="p-6 rounded-2xl bg-(--gm-error)/5 border border-(--gm-error)/20 text-(--gm-error) text-sm italic font-serif">
@@ -385,8 +415,8 @@ export default function BookingPage() {
           {/* Checkout Button */}
           <button
             onClick={handleCheckout}
-            disabled={loading}
-            className="w-full group relative py-6 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold text-lg tracking-widest uppercase overflow-hidden hover:shadow-(--gm-shadow-glow) transition-all disabled:opacity-50"
+            disabled={loading || !consent}
+            className="w-full group relative py-6 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold text-lg tracking-widest uppercase overflow-hidden hover:shadow-(--gm-shadow-glow) transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="relative z-10 flex items-center justify-center gap-3">
               {loading ? ui('ui_account_booking_processing', 'PROCESSING...') : (

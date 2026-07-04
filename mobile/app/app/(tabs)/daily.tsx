@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -359,7 +360,7 @@ export default function DailyReadingScreen() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg !== 'no_token' && !msg.includes('401')) {
-        console.error('Reading load error:', err);
+        logger.error('Reading load error:', err);
       }
     } finally {
       setLoading(false);

@@ -26,7 +26,7 @@ import { registerWallet } from '@goldmood/shared-backend/modules/wallet/router';
 import { registerAnnouncements } from '@goldmood/shared-backend/modules/announcements/router';
 import { registerSubscriptions } from '@goldmood/shared-backend/modules/subscriptions/router';
 import { registerSubscriptionsAdmin } from '@goldmood/shared-backend/modules/subscriptions';
-import { registerCredits } from '@goldmood/shared-backend/modules/credits/router';
+import { registerCredits, registerCreditsAdmin } from '@goldmood/shared-backend/modules/credits/router';
 import { registerBanners, registerBannersAdmin } from '@goldmood/shared-backend/modules/banners/router';
 import { registerCampaigns, registerCampaignsAdmin } from '@goldmood/shared-backend/modules/campaigns/router';
 import { registerReviewOutcomes } from '@goldmood/shared-backend/modules/reviewOutcomes/router';
@@ -40,6 +40,7 @@ import { registerLanguages, registerLanguagesAdmin } from '@goldmood/shared-back
 import { registerConsultantSelf, registerConsultantSelfAdmin } from '@goldmood/shared-backend/modules/consultantSelf/router';
 import { registerConsultantApplications, registerConsultantApplicationsAdmin } from '@goldmood/shared-backend/modules/consultantApplications/router';
 import { registerKvkk } from '@goldmood/shared-backend/modules/kvkk/router';
+import { registerKvkkAdmin } from '@goldmood/shared-backend/modules/kvkk/admin.routes';
 import { registerZodiac } from '@goldmood/shared-backend/modules/zodiac/router';
 import { registerSeoQualityAdmin } from '@goldmood/shared-backend/modules/seoQuality/router';
 import { registerAiContentAdmin } from '@goldmood/shared-backend/modules/aiContent/router';
@@ -133,6 +134,7 @@ export async function registerSharedAdmin(adminApi: FastifyInstance) {
     registerBannersAdmin,
     registerCampaignsAdmin,
     registerSubscriptionsAdmin,
+    registerCreditsAdmin,
     registerLlmPromptsAdmin,
     registerAstrologyKbAdmin,
     registerLlmAdmin,
@@ -148,6 +150,7 @@ export async function registerSharedAdmin(adminApi: FastifyInstance) {
     registerSeoQualityAdmin,
     registerAiContentAdmin,
     registerMediaMessagesAdmin,
+    registerKvkkAdmin,
   ]) {
     await adminApi.register(reg);
   }

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -144,7 +145,7 @@ export default function NumerologyScreen() {
       setResult(res);
       setStep('result');
     } catch (e) {
-      console.error('Numerology error:', e);
+      logger.error('Numerology error:', e);
       const msg = e instanceof Error ? e.message : t('numerology.calcError');
       Alert.alert(t('common.errorTitle'), msg);
       setStep('input');

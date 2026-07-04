@@ -59,6 +59,11 @@ function buildScreenStyles(t: AppTheme) {
   policyHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
   policyTitle: { fontFamily: font.sansBold, fontSize: 11, color: colors.goldDeep, letterSpacing: 1.5 },
   policyText: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted, lineHeight: 20 },
+  consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 4, marginTop: 20 },
+  consentCheckbox: { width: 24, height: 24, borderRadius: 7, borderWidth: 1.5, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  consentCheckboxOn: { backgroundColor: colors.gold, borderColor: colors.gold },
+  consentText: { flex: 1, fontFamily: font.sans, fontSize: 12, color: colors.textDim, lineHeight: 18 },
+  consentLink: { color: colors.gold, textDecorationLine: 'underline' },
   footer: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.surface, padding: spacing.lg, paddingBottom: Platform.OS === 'ios' ? 40 : spacing.lg, borderTopWidth: 1, borderColor: colors.line },
   payBtn: { backgroundColor: colors.gold, flexDirection: 'row', height: 60, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', gap: 12 },
   payBtnDisabled: { opacity: 0.6 },
@@ -119,6 +124,7 @@ export default function BookingCheckoutScreen() {
   const isFreeService = params.free === '1' || Number(params.price || 0) === 0;
   
   const [loading, setLoading] = useState(false);
+  const [consent, setConsent] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCampaign, setAppliedCampaign] = useState<Campaign | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
@@ -157,6 +163,13 @@ export default function BookingCheckoutScreen() {
   };
 
   const handleCheckout = async () => {
+    if (!consent) {
+      Alert.alert(
+        t('common.error'),
+        t('checkout.consentRequired', 'Devam etmek için ön bilgilendirme ve mesafeli satış koşullarını onaylayın.'),
+      );
+      return;
+    }
     setLoading(true);
     try {
       // 1. Create Booking
@@ -170,6 +183,7 @@ export default function BookingCheckoutScreen() {
         appointment_time: params.time!,
         session_duration: Number(params.duration),
         session_price: params.price!,
+        withdrawal_consent: true,
         ...(params.mediaType ? { media_type: sessionMedia } : {}),
         ...(params.serviceId ? { service_id: params.serviceId } : {}),
         source_type: sourceMatch ? 'daily_reading' : undefined,
@@ -371,14 +385,31 @@ export default function BookingCheckoutScreen() {
             </Text>
           </View>
 
+          {/* Cayma hakkı istisnası ön onayı (Mesafeli Söz. Yön. m.15/1-ğ) */}
+          <Pressable style={styles.consentRow} onPress={() => setConsent((v) => !v)}>
+            <View style={[styles.consentCheckbox, consent && styles.consentCheckboxOn]}>
+              {consent ? <Check size={16} color={colors.ink} /> : null}
+            </View>
+            <Text style={styles.consentText}>
+              <Text style={styles.consentLink} onPress={() => router.push('/cms/pre_information' as any)}>
+                {t('checkout.preInfoLink', 'Ön Bilgilendirme Formu')}
+              </Text>
+              {t('checkout.consentMid', ' ve ')}
+              <Text style={styles.consentLink} onPress={() => router.push('/cms/distance_sales' as any)}>
+                {t('checkout.distanceLink', 'Mesafeli Satış Sözleşmesi')}
+              </Text>
+              {t('checkout.consentText', '’ni okudum; hizmetin ifasına derhal başlanmasını onaylıyor ve cayma hakkımı kaybedeceğimi kabul ediyorum.')}
+            </Text>
+          </Pressable>
+
         </ScrollView>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Pressable 
-            style={[styles.payBtn, loading && styles.payBtnDisabled]}
+          <Pressable
+            style={[styles.payBtn, (loading || !consent) && styles.payBtnDisabled]}
             onPress={handleCheckout}
-            disabled={loading}
+            disabled={loading || !consent}
           >
             {loading ? (
               <ActivityIndicator color={colors.ink} />

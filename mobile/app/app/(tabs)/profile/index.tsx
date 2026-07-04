@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -91,6 +92,7 @@ import {
   Bell,
   MessageSquare,
   Star,
+  BriefcaseBusiness,
 } from 'lucide-react-native';
 
 
@@ -125,7 +127,7 @@ export default function ProfileScreen() {
       setCampaigns(campaignsData);
     } catch (err) {
       const msg = err instanceof Error ? err.message : JSON.stringify(err);
-      console.error('Profile data error:', msg);
+      logger.error('Profile data error:', msg);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -232,10 +234,28 @@ export default function ProfileScreen() {
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
 
+            {user?.role === 'consultant' ? (
+              <Pressable style={styles.menuItem} onPress={() => router.push('/consultant' as any)}>
+                <View style={styles.menuLeft}>
+                  <BriefcaseBusiness size={20} color={colors.goldDim} />
+                  <Text style={styles.menuText}>{t('profile.menuConsultantPanel', 'Danışman Paneli')}</Text>
+                </View>
+                <ChevronRight size={18} color={colors.line} />
+              </Pressable>
+            ) : null}
+
             <Pressable style={styles.menuItem} onPress={() => router.push('/notifications' as any)}>
               <View style={styles.menuLeft}>
                 <Bell size={20} color={colors.goldDim} />
                 <Text style={styles.menuText}>{t('profile.menuNotifications', 'Bildirimler')}</Text>
+              </View>
+              <ChevronRight size={18} color={colors.line} />
+            </Pressable>
+
+            <Pressable style={styles.menuItem} onPress={() => router.push('/media-messages' as any)}>
+              <View style={styles.menuLeft}>
+                <MessageSquare size={20} color={colors.goldDim} />
+                <Text style={styles.menuText}>{t('profile.menuMediaMessages', 'Medya Sorularım')}</Text>
               </View>
               <ChevronRight size={18} color={colors.line} />
             </Pressable>
@@ -324,4 +344,3 @@ export default function ProfileScreen() {
     </View>
   );
 }
-

@@ -39,6 +39,19 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "bundleIdentifier": "com.goldmoodastro.app",
+        "appName": "GoldMoodAstro",
+        "sku": "goldmoodastro-ios",
+        "language": "tr-TR"
+      },
+      "android": {
+        "applicationId": "com.goldmoodastro.app",
+        "track": "production",
+        "releaseStatus": "draft",
+        "changesNotSentForReview": true
+      }
+    }
   }
 }

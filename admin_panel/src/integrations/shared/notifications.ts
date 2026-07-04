@@ -88,6 +88,8 @@ export type PushCampaignTargetSegment =
   | 'all'
   | 'users'
   | 'consultants'
+  | 'premium_users'
+  | 'free_users'
   | 'users_without_booking'
   | 'inactive_7d';
 

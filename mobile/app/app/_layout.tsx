@@ -27,9 +27,11 @@ import {
 
 import { initI18n } from '@/lib/i18n';
 import { registerPushToken } from '@/lib/notifications';
+import { routeFromNotificationData } from '@/lib/notificationRoutes';
 import { ThemeProvider, useAppTheme } from '@/theme';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
+import { logger } from '@/lib/logger';
 initI18n();
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -57,19 +59,15 @@ function RootLayoutInner() {
   useEffect(() => {
     if (!lastNotification || !ready) return;
     const data = lastNotification.notification.request.content.data as Record<string, unknown>;
-    const bookingId = data?.booking_id ?? data?.bookingId;
-    if (typeof bookingId === 'string' && bookingId) {
-      router.push(`/booking/${bookingId}` as any);
-    } else if (data?.screen === 'bookings') {
-      router.push('/(tabs)/bookings' as any);
-    }
+    const target = routeFromNotificationData(data);
+    if (target) router.push(target as any);
   }, [lastNotification, ready]);
 
   useEffect(() => {
     if (fontsReady) {
       SplashScreen.hideAsync().catch(() => {});
       setReady(true);
-      registerPushToken().catch((err) => console.warn('Push init error:', err));
+      registerPushToken().catch((err) => logger.warn('Push init error:', err));
     }
   }, [fontsReady]);
 
@@ -80,6 +78,7 @@ function RootLayoutInner() {
       <StatusBar style={statusBar.default} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(consultant)" />
 
         <Stack.Screen name="onboarding/index" options={{ presentation: 'fullScreenModal' }} />
 
@@ -114,6 +113,7 @@ function RootLayoutInner() {
         <Stack.Screen name="unluler/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="info/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="contact/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="media-messages/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
 
         <Stack.Screen name="booking/[id]/review" options={{ presentation: 'modal' }} />
       </Stack>

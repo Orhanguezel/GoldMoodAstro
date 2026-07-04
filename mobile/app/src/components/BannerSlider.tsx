@@ -22,6 +22,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight } from 'lucide-react-native';
 
+import { logger } from '@/lib/logger';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 function buildScreenStyles(t: AppTheme, sliderWidth: number) {
@@ -151,7 +152,7 @@ export function BannerSlider({ placement, style }: Props) {
       });
       setBanners(data);
     } catch (e) {
-      console.error('BannerSlider error:', e);
+      logger.error('BannerSlider error:', e);
     } finally {
       setLoading(false);
     }
@@ -161,11 +162,11 @@ export function BannerSlider({ placement, style }: Props) {
     try {
       await bannersApi.trackClick(banner.id);
     } catch (e) {
-      console.error('Track click error:', e);
+      logger.error('Track click error:', e);
     }
 
     if (banner.link_url) {
-      Linking.openURL(banner.link_url).catch((err) => console.error("Couldn't load page", err));
+      Linking.openURL(banner.link_url).catch((err) => logger.error("Couldn't load page", err));
     }
   };
 

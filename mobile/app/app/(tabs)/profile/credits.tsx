@@ -9,6 +9,7 @@ import {
   RefreshControl,
   Alert,
   Linking,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -19,8 +20,10 @@ import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { creditsApi } from '@/lib/api';
+import { finishCreditPurchase, getIapProvider, purchaseCreditPackage } from '@/lib/iap';
 import type { CreditMe, CreditPackage, CreditTransaction } from '@/types';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -280,7 +283,7 @@ export default function CreditsScreen() {
       setCreditMe(me);
       setPackages(pkgList);
     } catch (err: any) {
-      console.error('Credits load error:', err);
+      logger.error('Credits load error:', err);
       setCreditMe(null);
       setPackages([]);
     } finally {
@@ -308,8 +311,40 @@ export default function CreditsScreen() {
   const onPurchase = async (pkg: CreditPackage) => {
     setPurchasingId(pkg.id);
     try {
-      const result = await creditsApi.purchase(pkg.id, 'iyzipay');
-      const data = (result as any).data || result;
+      if (Platform.OS !== 'web') {
+        const provider = getIapProvider();
+        if (!provider) {
+          Alert.alert(t('common.error', 'Bir hata oluştu'), t('credits.iapUnsupported', 'Bu platformda mağaza satın alımı desteklenmiyor.'));
+          return;
+        }
+
+        const purchase = await purchaseCreditPackage(pkg);
+        const hasReceiptPayload = provider === 'apple_iap'
+          ? Boolean(purchase.receipt)
+          : Boolean(purchase.purchaseToken && purchase.productId);
+        if (!purchase.ok || !hasReceiptPayload) {
+          Alert.alert(
+            t('common.error', 'Bir hata oluştu'),
+            purchase.message || t('credits.purchaseError', 'Kredi paketi alınamadı.'),
+          );
+          return;
+        }
+
+        await creditsApi.verifyReceipt({
+          package_id: pkg.id,
+          platform: provider,
+          receipt: purchase.receipt ?? '',
+          transaction_id: purchase.transactionId,
+          purchase_token: purchase.purchaseToken,
+          product_id: purchase.productId,
+        });
+        await finishCreditPurchase(purchase);
+        await load();
+        Alert.alert(t('common.success', 'Başarılı'), t('credits.iapSuccessBody', 'Krediler hesabınıza eklendi.'));
+        return;
+      }
+
+      const data = await creditsApi.buy({ package_id: pkg.id, locale: 'tr' });
       const checkout = data?.checkout_url;
 
       if (checkout) {
@@ -433,4 +468,3 @@ export default function CreditsScreen() {
     </View>
   );
 }
-

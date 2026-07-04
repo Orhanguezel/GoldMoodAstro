@@ -30,7 +30,7 @@ Kullanıcı akışının mobilde premium ve güvenilir çalışması:
 - React 19
 - Expo Router 6
 - TypeScript strict
-- AsyncStorage + SecureStore
+- SecureStore auth token + AsyncStorage non-sensitive app state
 - `src/lib/api.ts` API istemcisi
 - i18next: TR + EN + DE
 - `expo-notifications`
@@ -92,8 +92,8 @@ bun run android
 
 ## API Ortamları
 
-- Dev API: `http://localhost:8094/api/v1`
-- Prod API: `https://www.goldmoodastro.com/api/v1`
+- Dev API: `http://localhost:8094/api`
+- Prod API: `https://goldmoodastro.com/api`
 
 Android emulator için localhost yerine `10.0.2.2` gerekebilir.
 

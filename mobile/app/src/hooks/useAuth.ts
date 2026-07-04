@@ -5,6 +5,7 @@ import { authApi, setAuthToken } from '@/lib/api';
 import { registerPushToken } from '@/lib/notifications';
 import type { User } from '@/types';
 
+import { logger } from '@/lib/logger';
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +26,7 @@ export function useAuth() {
         }
       }
     } catch (err) {
-      console.warn('Auth initialization failed:', err);
+      logger.warn('Auth initialization failed:', err);
     } finally {
       setLoading(false);
     }
@@ -36,6 +37,8 @@ export function useAuth() {
   }, []);
 
   const logout = async () => {
+    await authApi.unregisterFcmToken().catch(() => {});
+    await storage.clearPushToken();
     await storage.clearSession();
     setAuthToken(null);
     setUser(null);

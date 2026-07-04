@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -42,7 +43,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { consultantsApi } from '@/lib/api';
+import { favoritesApi } from '@/lib/api';
 import { ConsultantCard } from '@/components/ConsultantCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/hooks/useAuth';
@@ -55,30 +56,18 @@ export default function FavoritesScreen() {
 
   const { t } = useTranslation();
   const { isAuthenticated, authHydrating } = useAuth();
-  const { favorites, refresh: refreshFavorites } = useFavorites();
+  const { refresh: refreshFavorites } = useFavorites();
   
   const [consultants, setConsultants] = useState<Consultant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchFavoriteConsultants = async () => {
-    if (favorites.length === 0) {
-      setConsultants([]);
-      setLoading(false);
-      setRefreshing(false);
-      return;
-    }
-
     try {
-      // API currently doesn't support multiple IDs in list, 
-      // so we fetch them one by one or fetch all and filter.
-      // For now, let's fetch all and filter for simplicity if count is small,
-      // or just fetch by ID if possible.
-      const items = await consultantsApi.list();
-      const filtered = items.filter(c => (favorites || []).includes(c.id));
-      setConsultants(filtered);
+      const items = await favoritesApi.list();
+      setConsultants(items);
     } catch (err) {
-      console.error('Failed to fetch favorite consultants:', err);
+      logger.error('Failed to fetch favorite consultants:', err);
       setConsultants([]);
     } finally {
       setLoading(false);
@@ -89,13 +78,13 @@ export default function FavoritesScreen() {
   useFocusEffect(
     useCallback(() => {
       refreshFavorites().then(fetchFavoriteConsultants);
-    }, [favorites.length])
+    }, [])
   );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchFavoriteConsultants();
-  }, [favorites.length]);
+  }, []);
 
   if (authHydrating || (loading && !refreshing)) {
     return (
@@ -160,4 +149,3 @@ export default function FavoritesScreen() {
     </SafeAreaView>
   );
 }
-

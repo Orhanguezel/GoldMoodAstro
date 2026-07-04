@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -122,7 +123,7 @@ export default function ZodiacDetailScreen() {
         title: `GoldMoodAstro ${meta.label} Burcu`,
       });
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   };
 
@@ -146,7 +147,7 @@ export default function ZodiacDetailScreen() {
           setToday(todayData);
         }
       } catch (error) {
-        if (!cancelled) console.error('ZodiacDetailScreen load error:', error);
+        if (!cancelled) logger.error('ZodiacDetailScreen load error:', error);
       } finally {
         if (!cancelled) setLoading(false);
       }

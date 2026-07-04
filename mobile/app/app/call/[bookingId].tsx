@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -18,6 +19,9 @@ function buildScreenStyles(t: AppTheme) {
   safe: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.deep },
   loaderText: { fontFamily: font.sans, fontSize: 14, color: 'rgba(250,246,239,0.6)', marginTop: 16 },
+  errorTitle: { fontFamily: font.display, fontSize: 24, color: colors.cream, textAlign: 'center', marginTop: 16 },
+  errorBody: { fontFamily: font.sans, fontSize: 14, lineHeight: 22, color: 'rgba(250,246,239,0.68)', textAlign: 'center', marginTop: 10, paddingHorizontal: spacing.xl },
+  errorBtnRow: { flexDirection: 'row', gap: 10, marginTop: 24 },
   loaderMsgBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -80,11 +84,13 @@ import {
   SwitchCamera,
   Clock,
   MessageCircle,
+  RefreshCcw,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 
 import { bookingsApi, chatApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 import {
   connectLiveKitAudio,
   endLiveKitSession,
@@ -111,9 +117,11 @@ export default function CallScreen() {
 
   const { bookingId: rawId } = useLocalSearchParams<{ bookingId: string }>();
   const bookingId = Array.isArray(rawId) ? rawId[0] : rawId;
+  const { user } = useAuth();
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
+  const [setupError, setSetupError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(true);
@@ -122,12 +130,19 @@ export default function CallScreen() {
   const [durationSeconds, setDurationSeconds] = useState(0);
   const [localVideoTrack, setLocalVideoTrack] = useState<VideoTrack | null>(null);
   const [remoteVideoTrack, setRemoteVideoTrack] = useState<VideoTrack | null>(null);
+  const [callAttempt, setCallAttempt] = useState(0);
 
   const roomRef = useRef<LiveKitRoom | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isVideoCall = booking?.media_type === 'video';
-  const remoteName = booking?.consultant?.full_name || t('call.consultantFallback', 'Danışman');
+  const isConsultantCaller = user?.role === 'consultant';
+  const remoteName = isConsultantCaller
+    ? (booking?.name || booking?.email || t('call.customerFallback', 'Danışan'))
+    : (booking?.consultant?.full_name || booking?.consultant_name || t('call.consultantFallback', 'Danışman'));
+  const remoteAvatar = isConsultantCaller
+    ? null
+    : (booking?.consultant?.avatar_url || booking?.consultant_avatar || null);
 
   const refreshTrackState = (room: LiveKitRoom | null) => {
     if (!room) return;
@@ -150,6 +165,10 @@ export default function CallScreen() {
     if (!bookingId) return;
     let cancelled = false;
     const bootstrap = async () => {
+      setLoading(true);
+      setSetupError(null);
+      setConnected(false);
+      setDurationSeconds(0);
       try {
         const data = await bookingsApi.get(bookingId);
         if (cancelled) return;
@@ -187,13 +206,17 @@ export default function CallScreen() {
         }
         setLoading(false);
       } catch (err) {
-        console.error('Call setup error:', err);
+        logger.error('Call setup error:', err);
+        const message = err instanceof Error ? err.message : String(err);
+        if (!cancelled) {
+          setSetupError(message || 'call_setup_failed');
+        }
         setLoading(false);
       }
     };
     bootstrap();
     return () => { cancelled = true; cleanup(); };
-  }, [bookingId]);
+  }, [bookingId, callAttempt]);
 
   const handleHangup = async () => {
     await cleanup();
@@ -211,7 +234,7 @@ export default function CallScreen() {
       const { id: threadId } = await chatApi.createThreadForBooking(bookingId);
       router.push(`/chat/${threadId}` as any);
     } catch (err: unknown) {
-      console.error('Call chat open failed:', err);
+      logger.error('Call chat open failed:', err);
     }
   };
 
@@ -226,6 +249,26 @@ export default function CallScreen() {
             <Text style={styles.loaderMsgText}>{t('booking.sendMessage', 'Mesaj Gönder')}</Text>
           </Pressable>
         ) : null}
+      </View>
+    );
+  }
+
+  if (setupError) {
+    return (
+      <View style={styles.center}>
+        <PhoneOff size={36} color={colors.danger} />
+        <Text style={styles.errorTitle}>{t('call.connectError', 'Çağrıya bağlanılamadı')}</Text>
+        <Text style={styles.errorBody}>{t(`call.errors.${setupError}`, t('call.errorFallback', 'Görüşme henüz hazır değil veya erişim penceresi dışında.'))}</Text>
+        <View style={styles.errorBtnRow}>
+          <Pressable style={styles.loaderMsgBtn} onPress={() => setCallAttempt((value) => value + 1)}>
+            <RefreshCcw size={18} color={colors.gold} />
+            <Text style={styles.loaderMsgText}>{t('common.retry', 'Tekrar Dene')}</Text>
+          </Pressable>
+          <Pressable style={styles.loaderMsgBtn} onPress={openBookingChat}>
+            <MessageCircle size={18} color={colors.gold} />
+            <Text style={styles.loaderMsgText}>{t('booking.sendMessage', 'Mesaj Gönder')}</Text>
+          </Pressable>
+        </View>
       </View>
     );
   }
@@ -267,8 +310,8 @@ export default function CallScreen() {
               <View style={styles.audioStage}>
                 <View style={styles.avatarWrap}>
                   <View style={styles.avatarBorder}>
-                    {booking?.consultant?.avatar_url ? (
-                      <Image source={{ uri: booking.consultant.avatar_url }} style={styles.avatar} />
+                    {remoteAvatar ? (
+                      <Image source={{ uri: remoteAvatar }} style={styles.avatar} />
                     ) : (
                       <View style={styles.avatarFallback}><Text style={styles.avatarInitial}>{remoteName[0]}</Text></View>
                     )}
@@ -327,4 +370,3 @@ export default function CallScreen() {
     </View>
   );
 }
-

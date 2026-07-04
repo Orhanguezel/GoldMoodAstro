@@ -34,16 +34,6 @@ export interface ConsultantPublic {
   created_at?: string;
 }
 
-export interface ConsultantSlotPublic {
-  id: string;
-  resource_id: string;
-  slot_date: string;
-  slot_time: string;
-  capacity: number;
-  reserved_count: number;
-  is_active: number;
-}
-
 export interface ConsultantAvailabilityRange {
   start: string;
   end: string;
@@ -65,7 +55,6 @@ export interface ConsultantIntervalAvailability {
 }
 
 export type Consultant = ConsultantPublic;
-export type ConsultantSlot = ConsultantSlotPublic;
 
 export interface ListConsultantsParams {
   expertise?: string;
@@ -79,7 +68,6 @@ export interface ListConsultantsParams {
 }
 
 type ConsultantArg = string | { id: string; locale?: string };
-type ConsultantSlotsArg = { id: string; date: string; locale?: string };
 type ConsultantAvailabilityArg = {
   id: string;
   date: string;
@@ -122,17 +110,6 @@ const consultantsPublicApi = baseApi.injectEndpoints({
       providesTags: (_r, _e, arg) => [{ type: 'Consultant', id: consultantArgId(arg) }],
     }),
 
-    getConsultantSlotsPublic: build.query<ConsultantSlotPublic[], ConsultantSlotsArg>({
-      query: ({ id, date, locale }) => ({
-        url: `/consultants/${encodeURIComponent(id)}/slots`,
-        params: { date },
-        headers: makeLocaleHeaders(locale),
-      }),
-      transformResponse: (res: { data: ConsultantSlotPublic[] } | ConsultantSlotPublic[]) =>
-        Array.isArray(res) ? res : ((res as any)?.data ?? []),
-      providesTags: (_r, _e, { id }) => [{ type: 'ConsultantSlots', id }],
-    }),
-
     getConsultantAvailabilityPublic: build.query<ConsultantIntervalAvailability, ConsultantAvailabilityArg>({
       query: ({ id, date, duration, service_id, locale }) => ({
         url: `/consultants/${encodeURIComponent(id)}/availability`,
@@ -158,11 +135,9 @@ export const {
   useListConsultantsPublicQuery,
   useGetConsultantPublicQuery,
   useGetConsultantAvailabilityPublicQuery,
-  useGetConsultantSlotsPublicQuery,
   useTrackConsultantViewMutation,
 } = consultantsPublicApi;
 
 export const useListConsultantsQuery = useListConsultantsPublicQuery;
 export const useGetConsultantQuery = useGetConsultantPublicQuery;
-export const useGetConsultantSlotsQuery = useGetConsultantSlotsPublicQuery;
 export const useGetConsultantAvailabilityQuery = useGetConsultantAvailabilityPublicQuery;

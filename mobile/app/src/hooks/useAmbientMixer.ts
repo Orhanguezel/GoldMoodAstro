@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import type { AudioPlayer } from 'expo-audio';
 import { getMasterGain, resolveSeedMix } from '@/lib/relax/resolveMix';
 import { loadPersistedMix, savePersistedMix } from '@/lib/relax/storage';
 import { getStemAsset, hasRelaxStemAssets } from '@/lib/relax/stemAssets';
 import { RELAX_STEM_IDS } from '@/lib/relax/resolveMix';
 import type { MixGains, StemId, ZodiacSignKey } from '@/lib/relax/types';
 
+import { logger } from '@/lib/logger';
 export function useAmbientMixer(sign: ZodiacSignKey) {
   const [gains, setGains] = useState<MixGains>(() => resolveSeedMix(sign));
   const [playing, setPlaying] = useState(false);
   const [busy, setBusy] = useState(false);
-  const soundsRef = useRef<Map<StemId, Audio.Sound>>(new Map());
+  const soundsRef = useRef<Map<StemId, AudioPlayer>>(new Map());
   const stemsAvailable = hasRelaxStemAssets();
 
   useEffect(() => {
@@ -28,8 +30,9 @@ export function useAmbientMixer(sign: ZodiacSignKey) {
   const unloadAll = useCallback(async () => {
     for (const sound of soundsRef.current.values()) {
       try {
-        await sound.stopAsync();
-        await sound.unloadAsync();
+        sound.pause();
+        await sound.seekTo(0);
+        sound.remove();
       } catch {
         /* ignore */
       }
@@ -50,7 +53,7 @@ export function useAmbientMixer(sign: ZodiacSignKey) {
       if (!sound) continue;
       const gain = (gains[stem] ?? 0) * master;
       try {
-        await sound.setVolumeAsync(gain);
+        sound.volume = gain;
       } catch {
         /* ignore */
       }
@@ -82,10 +85,10 @@ export function useAmbientMixer(sign: ZodiacSignKey) {
     if (!stemsAvailable) return;
     setBusy(true);
     try {
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        shouldDuckAndroid: true,
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: true,
+        interruptionMode: 'duckOthers',
       });
       await unloadAll();
 
@@ -94,12 +97,11 @@ export function useAmbientMixer(sign: ZodiacSignKey) {
         const asset = getStemAsset(stem);
         const gain = (gains[stem] ?? 0) * master;
         if (!asset || gain < 0.02) continue;
-        const { sound } = await Audio.Sound.createAsync(asset, {
-          isLooping: true,
-          volume: gain,
-          shouldPlay: true,
-        });
-        soundsRef.current.set(stem, sound);
+        const player = createAudioPlayer(asset, { keepAudioSessionActive: true });
+        player.loop = true;
+        player.volume = gain;
+        player.play();
+        soundsRef.current.set(stem, player);
       }
 
       if (soundsRef.current.size === 0) {
@@ -108,7 +110,7 @@ export function useAmbientMixer(sign: ZodiacSignKey) {
       }
       setPlaying(true);
     } catch (e) {
-      console.error('AmbientMixer start:', e);
+      logger.error('AmbientMixer start:', e);
       await unloadAll();
       setPlaying(false);
     } finally {

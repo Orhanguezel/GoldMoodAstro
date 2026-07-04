@@ -79,9 +79,21 @@ export const socialLoginBody = z.object({
 
 export const passwordResetRequestBody = z.object({
   email: z.string().trim().email(),
+  client: z.enum(['web', 'mobile']).optional(),
+  locale: z.string().trim().min(2).max(8).optional(),
 });
 
 export const passwordResetConfirmBody = z.object({
-  token: z.string().min(10),
+  token: z.string().min(10).optional(),
+  email: z.string().trim().email().optional(),
+  code: z.string().trim().regex(/^\d{6}$/).optional(),
   password: z.string().min(6),
+}).superRefine((value, ctx) => {
+  if (value.token) return;
+  if (value.email && value.code) return;
+  ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    path: ['token'],
+    message: 'token_or_email_code_required',
+  });
 });

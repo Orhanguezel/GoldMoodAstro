@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -101,7 +102,7 @@ export default function SettingsScreen() {
         email_notifications: !!p?.email_notifications
       });
     } catch (e) {
-      console.error('Settings load error:', e);
+      logger.error('Settings load error:', e);
     } finally {
       setLoading(false);
     }

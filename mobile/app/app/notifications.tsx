@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -146,7 +147,8 @@ import { router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 import { ChevronLeft, Bell, CheckCircle2, Info, AlertTriangle, MessageCircle } from 'lucide-react-native';
 import { format, parseISO } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { de, enUS, tr } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 
 import { notificationsApi } from '@/lib/api';
@@ -155,6 +157,8 @@ import { useAuth } from '@/hooks/useAuth';
 export default function NotificationsScreen() {
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language?.startsWith('de') ? de : i18n.language?.startsWith('en') ? enUS : tr;
 
   const { isAuthenticated } = useAuth();
   
@@ -168,7 +172,7 @@ export default function NotificationsScreen() {
       const res = await notificationsApi.list();
       setNotifications(res?.items || []);
     } catch (err) {
-      console.error('Failed to fetch notifications:', err);
+      logger.error('Failed to fetch notifications:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -189,7 +193,7 @@ export default function NotificationsScreen() {
       await notificationsApi.markAsRead(id);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
     } catch (err) {
-      console.error('Mark as read error:', err);
+      logger.error('Mark as read error:', err);
     }
   };
 
@@ -220,9 +224,9 @@ export default function NotificationsScreen() {
           <Pressable onPress={() => safeRouterBack()} style={styles.headerBtn}>
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
-          <Text style={styles.headerTitle}>Bildirimler</Text>
+          <Text style={styles.headerTitle}>{t('notifications.title', 'Bildirimler')}</Text>
           <Pressable onPress={() => notificationsApi.markAllAsRead().then(fetchNotifications)} style={styles.markAllBtn}>
-            <Text style={styles.markAllText}>Hepsini Oku</Text>
+            <Text style={styles.markAllText}>{t('notifications.markAllRead', 'Hepsini Oku')}</Text>
           </Pressable>
         </View>
 
@@ -247,7 +251,7 @@ export default function NotificationsScreen() {
                 </Text>
                 <Text style={styles.notifText}>{item.body}</Text>
                 <Text style={styles.notifTime}>
-                  {format(parseISO(item.created_at), 'd MMM, HH:mm', { locale: tr })}
+                  {format(parseISO(item.created_at), 'd MMM, HH:mm', { locale: dateLocale })}
                 </Text>
               </View>
               {!item.is_read && <View style={styles.unreadDot} />}
@@ -258,7 +262,7 @@ export default function NotificationsScreen() {
               <View style={styles.emptyIconWrap}>
                 <Bell size={40} color={colors.inkDeep} />
               </View>
-              <Text style={styles.emptyText}>Henüz bir bildiriminiz bulunmuyor.</Text>
+              <Text style={styles.emptyText}>{t('notifications.empty', 'Henüz bir bildiriminiz bulunmuyor.')}</Text>
             </View>
           }
         />
@@ -267,4 +271,3 @@ export default function NotificationsScreen() {
     </View>
   );
 }
-

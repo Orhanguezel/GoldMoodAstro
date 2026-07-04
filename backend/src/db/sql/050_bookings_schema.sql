@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   reminder_2h_sent TINYINT NOT NULL DEFAULT 0,
   reminder_15m_sent TINYINT NOT NULL DEFAULT 0,
   decided_at DATETIME(3),
+  withdrawal_consent_at DATETIME(3),
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   KEY bookings_user_idx (user_id),

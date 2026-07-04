@@ -76,6 +76,7 @@ export type AdminNavItemKey =
   | 'bookings'
   | 'mail'
   | 'users'
+  | 'account_deletions'
   | 'email_templates'
   | 'notifications'
   | 'storage'
@@ -93,6 +94,7 @@ export type AdminNavItemKey =
   | 'announcements'
   | 'subscriptions'
   | 'subscription_plans'
+  | 'credit_packages'
   | 'cache'
   | 'llm_prompts'
   | 'astrology_kb'
@@ -130,10 +132,12 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
       { key: 'consultants', url: '/admin/consultants', icon: Star },
       { key: 'users', url: '/admin/users', icon: Users },
+      { key: 'account_deletions', url: '/admin/account-deletions', icon: Trash2 },
       { key: 'bookings', url: '/admin/bookings', icon: Calendar },
       { key: 'orders', url: '/admin/orders', icon: Package },
       { key: 'subscriptions', url: '/admin/subscriptions', icon: CreditCard },
       { key: 'subscription_plans', url: '/admin/subscription-plans', icon: Receipt },
+      { key: 'credit_packages', url: '/admin/credit-packages', icon: Receipt },
     ],
   },
   {
@@ -201,6 +205,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   bookings: 'Randevular',
   mail: 'E-Posta',
   users: 'Kullanıcılar',
+  account_deletions: 'Hesap Silme Talepleri',
   email_templates: 'E-posta Şablonları',
   notifications: 'Bildirimler',
   storage: 'Dosya Yöneticisi',
@@ -218,6 +223,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   announcements: 'Duyurular',
   subscriptions: 'Abonelikler',
   subscription_plans: 'Abonelik Planları',
+  credit_packages: 'Kredi Paketleri',
   cache: 'Cache Yönetimi',
   llm_prompts: 'AI Promptları',
   astrology_kb: 'Astroloji Bilgi Bankası',

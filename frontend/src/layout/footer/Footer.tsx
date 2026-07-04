@@ -59,11 +59,20 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
   const { data: companyBrandSetting } = useGetSiteSettingByKeyQuery({ key: 'company_brand', locale });
   const { data: socialsSetting } = useGetSiteSettingByKeyQuery({ key: 'socials', locale });
 
-  const { socials } = useMemo(() => {
+  const { socials, legal } = useMemo(() => {
     const brandVal = (companyBrandSetting?.value ?? {}) as any;
     const socialsVal = (socialsSetting?.value ?? {}) as Record<string, string>;
     const mergedSocials: Record<string, string> = { ...(brandVal.socials as Record<string, string> | undefined), ...socialsVal };
-    return { socials: mergedSocials };
+    const legalVal = {
+      legal_name: brandVal.legal_name as string | undefined,
+      mersis: brandVal.mersis as string | undefined,
+      tax_no: brandVal.tax_no as string | undefined,
+      trade_registry: brandVal.trade_registry as string | undefined,
+      address: brandVal.address as string | undefined,
+      phone: brandVal.phone as string | undefined,
+      email: brandVal.email as string | undefined,
+    };
+    return { socials: mergedSocials, legal: legalVal };
   }, [companyBrandSetting?.value, socialsSetting?.value]);
 
   const { data: footerSections } = useListFooterSectionsQuery(
@@ -236,6 +245,22 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
           </div>
         </div>
 
+        {legal?.legal_name && (
+          <div className="pt-8 border-t border-[var(--gm-border-soft)] text-[11px] leading-relaxed text-[var(--gm-muted)] normal-case">
+            <p className="font-semibold text-[var(--gm-text-dim)]">{legal.legal_name}</p>
+            <p className="mt-1">
+              {[
+                legal.mersis && `MERSİS: ${legal.mersis}`,
+                legal.tax_no && `${ui('ui_footer_tax_no', 'Vergi No')}: ${legal.tax_no}`,
+                legal.trade_registry && `${ui('ui_footer_trade_registry', 'Ticaret Sicil No')}: ${legal.trade_registry}`,
+              ].filter(Boolean).join(' · ')}
+            </p>
+            <p className="mt-1">
+              {[legal.address, legal.phone && `Tel: ${legal.phone}`, legal.email]
+                .filter(Boolean).join(' · ')}
+            </p>
+          </div>
+        )}
         <div className="pt-8 border-t border-[var(--gm-border-soft)] flex flex-col md:flex-row justify-between items-center gap-8 text-[11px] tracking-[0.1em] text-[var(--gm-muted)] uppercase">
           <p>
             &copy; {new Date().getFullYear()} GOLD MOOD ASTROLOGY. {ui('ui_footer_rights', 'ALL RIGHTS RESERVED.')}

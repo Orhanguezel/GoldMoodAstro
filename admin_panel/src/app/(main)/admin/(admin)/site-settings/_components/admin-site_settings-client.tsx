@@ -13,6 +13,7 @@ import {
   Sliders, 
   Database, 
   Activity,
+  Languages,
   ChevronRight
 } from 'lucide-react';
 
@@ -45,6 +46,7 @@ import { BrandingSettingsTab } from '../tabs/branding-settings-tab';
 import { DesignTokensTab } from '../tabs/design-tokens-tab';
 import { CustomCssTab } from '../tabs/custom-css-tab';
 import { LiveKitTab } from '../tabs/livekit-tab';
+import { MobileI18nTab } from '../tabs/mobile-i18n-tab';
 
 import type { SiteSetting } from '@/integrations/shared';
 import {
@@ -66,6 +68,7 @@ type SettingsTab =
   | 'locales'
   | 'branding'
   | 'design_tokens'
+  | 'mobile_i18n'
   | 'custom_css'
   | 'livekit';
 
@@ -136,10 +139,11 @@ export default function AdminSiteSettingsClient() {
     }
   };
 
-  const isGlobalTab = ['global_list', 'smtp', 'brand_media', 'locales', 'branding', 'design_tokens', 'custom_css', 'livekit'].includes(tab);
+  const isGlobalTab = ['global_list', 'smtp', 'brand_media', 'locales', 'branding', 'design_tokens', 'mobile_i18n', 'custom_css', 'livekit'].includes(tab);
 
   const menuItems = [
     { value: 'design_tokens', label: t('tabs.design_tokens', null, 'Tasarım Tokenları'), icon: Palette },
+    { value: 'mobile_i18n', label: t('tabs.mobile_i18n', null, 'Mobil i18n'), icon: Languages },
     { value: 'branding', label: t('tabs.branding', null, 'Marka & Kimlik'), icon: ShieldCheck },
     { value: 'general', label: t('tabs.general', null, 'Genel Ayarlar'), icon: Settings },
     { value: 'seo', label: t('tabs.seo', null, 'SEO & Meta'), icon: Globe },
@@ -267,6 +271,7 @@ export default function AdminSiteSettingsClient() {
           <CardContent className="p-10">
             <div className="relative z-10 animate-in fade-in zoom-in-95 duration-500">
               {tab === 'design_tokens' && <DesignTokensTab />}
+              {tab === 'mobile_i18n' && <MobileI18nTab />}
               {tab === 'branding' && <BrandingSettingsTab />}
               {tab === 'general' && <GeneralSettingsTab locale={locale} />}
               {tab === 'seo' && <SeoSettingsTab locale={locale} />}

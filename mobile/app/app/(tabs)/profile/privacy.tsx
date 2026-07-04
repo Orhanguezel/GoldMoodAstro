@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -268,7 +269,7 @@ export default function PrivacyScreen() {
       const data = await kvkkApi.getDeletionStatus();
       setStatus(data);
     } catch (err) {
-      console.error('KVKK status fetch failed:', err);
+      logger.error('KVKK status fetch failed:', err);
       setStatus(null);
     } finally {
       setStatusLoading(false);

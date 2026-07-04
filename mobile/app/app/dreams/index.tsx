@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -175,7 +176,7 @@ export default function DreamsScreen() {
       setResult(res.data || res);
       setStep('result');
     } catch (e: any) {
-      console.error('Dream interpretation error:', e);
+      logger.error('Dream interpretation error:', e);
       Alert.alert(t('common.errorTitle'), e?.message || t('dream.interpretError'));
       setStep('input');
     }
@@ -187,7 +188,7 @@ export default function DreamsScreen() {
         message: `Rüya Yorumum ✨\n\n${result?.interpretation?.substring(0, 200)}... \n\nGoldMoodAstro ile rüyanı keşfet!\n\nKeşfet: https://goldmoodastro.com/tr/ruya-tabiri/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=dream`,
       });
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     }
   };
 

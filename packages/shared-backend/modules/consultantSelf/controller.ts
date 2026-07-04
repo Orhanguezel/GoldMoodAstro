@@ -789,6 +789,18 @@ export async function approveBooking(req: FastifyRequest, reply: FastifyReply) {
           url: isInstant ? `/booking/${id}/call` : '/dashboard?tab=bookings',
         },
       }),
+      isInstant
+        ? dispatchPushToUser({
+            userId: b.user_id,
+            title: 'Görüşme başlıyor',
+            body: `${consultantName} görüşmeye katılmaya hazır.`,
+            data: {
+              type: 'incoming_call',
+              booking_id: id,
+              url: `/call/${id}`,
+            },
+          })
+        : Promise.resolve(null),
       b.email
         ? sendTemplatedEmail({
             to: b.email,
@@ -2377,6 +2389,102 @@ export async function overrideMyAvailabilityDay(req: FastifyRequest, reply: Fast
     }
     throw e;
   }
+}
+
+/* ─── GET /me/consultant/time-blocks ─── */
+const timeBlockSchema = z.object({
+  block_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  start_time: hhMmSchema,
+  end_time: hhMmSchema,
+  reason: z.string().trim().max(160).optional().nullable(),
+}).superRefine((data, ctx) => {
+  if (toMinutes(data.end_time) <= toMinutes(data.start_time)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'end_time_must_be_after_start_time',
+      path: ['end_time'],
+    });
+  }
+});
+
+export async function listTimeBlocks(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const date = typeof (req.query as any)?.date === 'string' ? String((req.query as any).date).trim() : '';
+  const result = date
+    ? await db.execute(sql`
+        SELECT id, consultant_id, DATE_FORMAT(block_date, '%Y-%m-%d') AS block_date,
+               TIME_FORMAT(start_time, '%H:%i') AS start_time,
+               TIME_FORMAT(end_time, '%H:%i') AS end_time,
+               reason, created_at
+        FROM consultant_time_blocks
+        WHERE consultant_id = ${c.id} AND block_date = ${date}
+        ORDER BY block_date ASC, start_time ASC
+      `)
+    : await db.execute(sql`
+        SELECT id, consultant_id, DATE_FORMAT(block_date, '%Y-%m-%d') AS block_date,
+               TIME_FORMAT(start_time, '%H:%i') AS start_time,
+               TIME_FORMAT(end_time, '%H:%i') AS end_time,
+               reason, created_at
+        FROM consultant_time_blocks
+        WHERE consultant_id = ${c.id} AND block_date >= CURDATE()
+        ORDER BY block_date ASC, start_time ASC
+        LIMIT 200
+      `);
+
+  return reply.send({ data: rowsFromExecute(result) });
+}
+
+/* ─── POST /me/consultant/time-blocks ─── */
+export async function createTimeBlock(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const parsed = timeBlockSchema.safeParse(req.body);
+  if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
+
+  const result = await db.execute(sql`
+    SELECT id, start_time, end_time
+    FROM consultant_time_blocks
+    WHERE consultant_id = ${c.id}
+      AND block_date = ${parsed.data.block_date}
+      AND start_time < ${parsed.data.end_time}
+      AND end_time > ${parsed.data.start_time}
+    LIMIT 1
+  `);
+  if (rowsFromExecute(result).length > 0) {
+    return reply.code(409).send({ error: { message: 'time_block_overlap' } });
+  }
+
+  const id = randomUUID();
+  await db.execute(sql`
+    INSERT INTO consultant_time_blocks (id, consultant_id, block_date, start_time, end_time, reason)
+    VALUES (${id}, ${c.id}, ${parsed.data.block_date}, ${parsed.data.start_time}, ${parsed.data.end_time}, ${parsed.data.reason ?? null})
+  `);
+
+  return reply.send({
+    data: {
+      id,
+      consultant_id: c.id,
+      block_date: parsed.data.block_date,
+      start_time: parsed.data.start_time,
+      end_time: parsed.data.end_time,
+      reason: parsed.data.reason ?? null,
+    },
+  });
+}
+
+/* ─── DELETE /me/consultant/time-blocks/:id ─── */
+export async function deleteTimeBlock(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+
+  const id = String((req.params as { id?: string })?.id ?? '').trim();
+  if (!id) return reply.code(400).send({ error: { message: 'id_required' } });
+
+  await db.execute(sql`DELETE FROM consultant_time_blocks WHERE id = ${id} AND consultant_id = ${c.id}`);
+  return reply.send({ data: { id, ok: true } });
 }
 
 /* =============================================================================

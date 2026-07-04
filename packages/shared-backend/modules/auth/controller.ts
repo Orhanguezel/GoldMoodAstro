@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import { createHash, createHmac, randomUUID } from 'crypto';
+import { createHash, createHmac, randomInt, randomUUID } from 'crypto';
 import { hash as argonHash } from 'argon2';
 import { OAuth2Client } from 'google-auth-library';
 import { eq } from 'drizzle-orm';
@@ -8,7 +8,7 @@ import { env } from '../../core/env';
 import { db } from '../../db/client';
 import { handleRouteError } from '../_shared';
 import { getPrimaryRole, repoListUserRoles } from '../userRoles';
-import { sendWelcomeMail, sendPasswordChangedMail, sendEmailVerificationMail } from '../mail';
+import { sendWelcomeMail, sendPasswordChangedMail, sendEmailVerificationMail, sendPasswordResetMail } from '../mail';
 import { telegramNotify } from '../telegram';
 import { getGoogleSettings } from '../siteSettings/service';
 import { getSubscriptionSummary } from '../subscriptions';
@@ -27,6 +27,7 @@ import {
   repoCreateUser,
   repoUpdateUserEmail,
   repoUpdateUserPassword,
+  repoSetPasswordResetCode,
   repoUpdateLastSignIn,
   repoUpdateUserAvatar,
   repoAssignRole,
@@ -56,6 +57,18 @@ const googleClientCache = new Map<string, OAuth2Client>();
 const emailVerificationBody = z.object({
   token: z.string().min(20).max(500),
 });
+const PASSWORD_RESET_CODE_TTL_MINUTES = 15;
+
+function sha256Hex(value: string) {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+function buildPasswordResetLink(token: string, client?: 'web' | 'mobile', locale?: string) {
+  const encoded = encodeURIComponent(token);
+  if (client === 'mobile') return `goldmoodastro://auth/reset?token=${encoded}`;
+  const safeLocale = locale && /^[a-z]{2}(-[A-Z]{2})?$/.test(locale) ? locale.slice(0, 2).toLowerCase() : 'tr';
+  return `${env.FRONTEND_URL.replace(/\/+$/, '')}/${safeLocale}/password-reset?token=${encoded}`;
+}
 
 async function getUserRoles(userId: string): Promise<Role[]> {
   const rows = await repoListUserRoles({ user_id: userId, limit: 10, offset: 0, direction: 'asc' });
@@ -375,6 +388,7 @@ export async function signup(req: FastifyRequest, reply: FastifyReply) {
 
     return reply.send({
       access_token: access,
+      refresh_token: refresh,
       token_type: 'bearer',
       user: {
         id,
@@ -414,6 +428,7 @@ export async function token(req: FastifyRequest, reply: FastifyReply) {
 
     return reply.send({
       access_token: access,
+      refresh_token: refresh,
       token_type: 'bearer',
       user: {
         id: u.id,
@@ -526,6 +541,7 @@ export async function socialLogin(req: FastifyRequest, reply: FastifyReply) {
 
     return reply.send({
       access_token: access,
+      refresh_token: refresh,
       token_type: 'bearer',
       user: {
         id: user.id,
@@ -549,7 +565,11 @@ export async function socialLogin(req: FastifyRequest, reply: FastifyReply) {
 export async function refresh(req: FastifyRequest, reply: FastifyReply) {
   try {
     const jwt = getJWTFromReq(req);
-    const raw = ((req.cookies as Record<string, string | undefined> | undefined)?.refresh_token ?? '').trim();
+    const bodyRefresh =
+      req.body && typeof req.body === 'object' && typeof (req.body as { refresh_token?: unknown }).refresh_token === 'string'
+        ? (req.body as { refresh_token: string }).refresh_token
+        : '';
+    const raw = (((req.cookies as Record<string, string | undefined> | undefined)?.refresh_token ?? bodyRefresh) ?? '').trim();
     if (!raw.includes('.')) return reply.status(401).send({ error: { message: 'no_refresh' } });
 
     const jti = raw.split('.', 1)[0] ?? '';
@@ -571,7 +591,7 @@ export async function refresh(req: FastifyRequest, reply: FastifyReply) {
     setAccessCookie(reply, access);
     setRefreshCookie(reply, newRaw);
 
-    return reply.send({ access_token: access, token_type: 'bearer' });
+    return reply.send({ access_token: access, refresh_token: newRaw, token_type: 'bearer' });
   } catch (e) {
     return handleRouteError(reply, req, e, 'auth_refresh');
   }
@@ -588,7 +608,29 @@ export async function passwordResetRequest(req: FastifyRequest, reply: FastifyRe
     if (!u) return reply.send({ success: true, message: 'Eğer bu e-posta ile bir hesap varsa, şifre sıfırlama bağlantısı gönderildi.' });
 
     const resetToken = jwt.sign({ sub: u.id, email: u.email ?? undefined, purpose: 'password_reset' as const }, { expiresIn: '1h' });
-    return reply.send({ success: true, token: resetToken });
+    const resetCode = String(randomInt(0, 1_000_000)).padStart(6, '0');
+    await repoSetPasswordResetCode(
+      u.id,
+      sha256Hex(`${u.id}:${resetCode}`),
+      new Date(Date.now() + PASSWORD_RESET_CODE_TTL_MINUTES * 60 * 1000),
+    );
+
+    if (u.email) {
+      const resetLink = buildPasswordResetLink(resetToken, parsed.data.client, parsed.data.locale);
+      void sendPasswordResetMail({
+        to: u.email,
+        reset_link: resetLink,
+        site_name: env.SITE_NAME,
+        locale: parsed.data.locale,
+      }).catch((err) => req.log.error({ err }, 'password_reset_mail_failed'));
+    }
+
+    return reply.send({
+      success: true,
+      delivery: parsed.data.client === 'mobile' ? 'mobile_deep_link' : 'email_link',
+      token: env.NODE_ENV === 'production' ? undefined : resetToken,
+      reset_code: env.NODE_ENV === 'production' ? undefined : resetCode,
+    });
   } catch (e) {
     return handleRouteError(reply, req, e, 'auth_password_reset_request');
   }
@@ -600,19 +642,30 @@ export async function passwordResetConfirm(req: FastifyRequest, reply: FastifyRe
     const parsed = passwordResetConfirmBody.safeParse(req.body);
     if (!parsed.success) return reply.status(400).send({ success: false, error: 'invalid_body' });
 
-    const jwt = getJWTFromReq(req);
-    let payload: JWTPayload;
-    try {
-      payload = jwt.verify(parsed.data.token);
-    } catch {
-      return reply.status(400).send({ success: false, error: 'invalid_or_expired_token' });
-    }
+    let u: Awaited<ReturnType<typeof repoGetUserById>> | null = null;
+    if (parsed.data.token) {
+      const jwt = getJWTFromReq(req);
+      let payload: JWTPayload;
+      try {
+        payload = jwt.verify(parsed.data.token);
+      } catch {
+        return reply.status(400).send({ success: false, error: 'invalid_or_expired_token' });
+      }
 
-    if (payload.purpose !== 'password_reset' || !payload.sub) {
-      return reply.status(400).send({ success: false, error: 'invalid_token_payload' });
-    }
+      if (payload.purpose !== 'password_reset' || !payload.sub) {
+        return reply.status(400).send({ success: false, error: 'invalid_token_payload' });
+      }
 
-    const u = await repoGetUserById(payload.sub);
+      u = await repoGetUserById(payload.sub);
+    } else if (parsed.data.email && parsed.data.code) {
+      const candidate = await repoGetUserByEmail(parsed.data.email.toLowerCase());
+      const expected = candidate ? `code:${sha256Hex(`${candidate.id}:${parsed.data.code}`)}` : null;
+      const expiresAt = candidate?.reset_token_expires ? new Date(candidate.reset_token_expires).getTime() : 0;
+      if (!candidate || candidate.reset_token !== expected || expiresAt <= Date.now()) {
+        return reply.status(400).send({ success: false, error: 'invalid_or_expired_code' });
+      }
+      u = candidate;
+    }
     if (!u) return reply.status(404).send({ success: false, error: 'user_not_found' });
 
     await repoRevokeAllUserRefreshTokens(u.id);

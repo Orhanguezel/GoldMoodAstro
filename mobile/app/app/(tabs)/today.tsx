@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -124,7 +125,7 @@ export default function TodayScreen() {
         setReading(daily);
       }
     } catch (error) {
-      console.error('TodayScreen load error:', error);
+      logger.error('TodayScreen load error:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

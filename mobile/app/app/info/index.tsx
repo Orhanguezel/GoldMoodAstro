@@ -9,6 +9,7 @@ import { safeRouterBack } from '@/lib/navigation';
 import { customPagesApi } from '@/lib/api';
 import type { CustomPageRow } from '@/lib/cms';
 
+import { logger } from '@/lib/logger';
 function buildStyles(t: AppTheme) {
   const { colors, spacing, font } = t;
   return StyleSheet.create({
@@ -71,7 +72,7 @@ export default function InfoIndexScreen() {
         const filtered = allPages.filter((p) => infoKeys.includes(p.module_key));
         setPages(filtered.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)));
       } catch (err) {
-        console.error(err);
+        logger.error(err);
       } finally {
         setLoading(false);
       }

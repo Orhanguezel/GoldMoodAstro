@@ -42,6 +42,17 @@ function buildScreenStyles(t: AppTheme) {
       borderColor: colors.surface,
     },
     badgeIcon: { color: colors.midnight, fontSize: 10, fontWeight: 'bold' },
+    onlineDot: {
+      position: 'absolute',
+      top: -2,
+      right: -2,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: colors.success,
+      borderWidth: 2,
+      borderColor: colors.surface,
+    },
     info: { flex: 1, gap: 4 },
     name: { fontSize: 18, fontFamily: font.display, color: colors.stardust },
     expertiseRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
@@ -74,6 +85,9 @@ export function ConsultantCard({ consultant, onPress }: Props) {
   const { t } = useTranslation();
   const theme = useAppTheme();
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const isOnline = typeof consultant.is_online === 'boolean'
+    ? consultant.is_online
+    : Number(consultant.is_online ?? consultant.is_available) === 1;
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
@@ -93,6 +107,7 @@ export function ConsultantCard({ consultant, onPress }: Props) {
               <Text style={styles.badgeIcon}>✓</Text>
             </View>
           )}
+          {isOnline && <View style={styles.onlineDot} />}
         </View>
 
         <View style={styles.info}>

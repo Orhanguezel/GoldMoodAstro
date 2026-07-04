@@ -124,7 +124,7 @@ export const notificationsApi = baseApi.injectEndpoints({
     }),
 
     /** POST /admin/push/send */
-    sendManualPush: b.mutation<any, { title: string; body: string; user_id?: string; target_all?: boolean }>({
+    sendManualPush: b.mutation<any, { title: string; body: string; user_id?: string; target_all?: boolean; target_segment?: import('@/integrations/shared').PushCampaignTargetSegment }>({
       query: (body) => ({
         url: '/admin/push/send',
         method: 'POST',

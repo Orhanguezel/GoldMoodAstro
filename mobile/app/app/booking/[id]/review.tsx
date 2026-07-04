@@ -8,6 +8,7 @@ import { bookingsApi } from '@/lib/api';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font } = t;
   return StyleSheet.create({
@@ -63,7 +64,7 @@ export default function BookingReviewScreen() {
         setConsultantName(booking.consultant?.full_name ?? '');
       })
       .catch((err) => {
-        console.error('[booking-review] cannot resolve consultant from booking', err);
+        logger.error('[booking-review] cannot resolve consultant from booking', err);
       })
       .finally(() => setLoading(false));
   }, [bookingId, consultantId]);

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useAppTheme, type AppTheme } from '@/theme';
 
+import { logger } from '@/lib/logger';
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -90,7 +91,7 @@ export default function HomeScreen() {
       });
       setConsultants(res || []);
     } catch (err) {
-      console.error('Failed to fetch consultants:', err);
+      logger.error('Failed to fetch consultants:', err);
       setConsultants([]);
     } finally {
       setLoading(false);
