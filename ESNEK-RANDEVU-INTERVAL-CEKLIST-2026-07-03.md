@@ -113,6 +113,7 @@ CREATE TABLE IF NOT EXISTS consultant_time_blocks (
 - **Kabul:** danışman gününü tek bakışta görür. **Tamamlandı:** `/me/consultant/day-timeline` ve panelde günlük randevu+mola timeline görünümü eklendi.
 
 ### [ ] INT-T8 — Eski grid'in emekliliği 🟡 (tam geçiş DOĞRULANDIKTAN sonra)
+- **BLOKLU (2026-07-03, Claude):** Mobil uygulama hâlâ eski endpoint'i kullanıyor (`mobile/app/src/lib/api.ts:324` → `GET /consultants/:id/slots`). Cron/endpoint şimdi kaldırılırsa mobil randevu takvimi 30 gün içinde boşalır. Mobil interval API'ye geçirilip store'da yayınlanana kadar AÇIK KALACAK — bilinçli karar, unutulmuş iş değil.
 - Frontend tamamen yeni akışta + mobil sürüm güncellenince: slot-generator cron kaldır,
   `getConsultantSlots` eski endpoint'i deprecate işaretle (silme — mobil eski sürümler için 1-2 ay).
 - resource_slots büyümesin diye cron kaldırılana kadar HORIZON 30 günde kalır.
@@ -120,6 +121,7 @@ CREATE TABLE IF NOT EXISTS consultant_time_blocks (
   **Not:** Bu turda bilinçli olarak açık bırakıldı; checklist geriye uyum için eski `/slots` endpoint'inin kalmasını ve mobil geçiş sonrası emekliliği şart koşuyor.
 
 ### [x] INT-T9 — Deploy + uçtan uca doğrulama 🔴
+- **Claude canlı doğrulama (2026-07-03):** 45/60/90dk son start 20:15/20:00/19:30 (mesai 21:00 — matematik doğru); busy gerçek randevularla eşleşti; çakışan create 409 slot_conflict, bitişik 15:00 → 201; timeline bundle canlıda. GEÇTİ.
 - typecheck ×3 → commit+push → git-deploy.
 - Canlı senaryolar: (1) 45dk hizmet 10:30 → 10:30-11:15 kilitli, 11:15 seçilebilir;
   (2) eşzamanlı çift rezervasyon → tek kazanan; (3) mola ekle → aralık kapalı;

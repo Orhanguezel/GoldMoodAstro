@@ -21,6 +21,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 
+const STATUS_LABELS_TR: Record<string, string> = {
+  open: 'Açık',
+  in_progress: 'İşlemde',
+  waiting_response: 'Yanıt Bekliyor',
+  resolved: 'Çözüldü',
+  closed: 'Kapalı',
+};
+
 export default function SupportTicketDetailPage() {
   const t = useAdminT('admin.support');
   const params = useParams();
@@ -80,7 +88,7 @@ export default function SupportTicketDetailPage() {
               <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
                 ticket.status === 'closed' ? 'bg-muted text-muted-foreground' : 'bg-[#C9A961]/10 text-[#C9A961]'
               }`}>
-                {ticket.status.replace('_', ' ').toUpperCase()}
+                {t(`status.${ticket.status}`, undefined, STATUS_LABELS_TR[ticket.status] ?? ticket.status)}
               </div>
               <span className="text-[10px] text-muted-foreground font-mono opacity-50 uppercase tracking-tighter">ID: {ticket.id.slice(0, 8)}</span>
             </div>

@@ -32,6 +32,16 @@ import {
   useToggleSupportTicketAdminMutation,
 } from '@/integrations/hooks';
 
+// status.* çevirisi locale'de yoksa ham anahtar ("ADMİN.SUPPORT.STATUS.İN_PROGRESS")
+// görünüyordu — sayfanın geri kalanındaki inline-Türkçe-fallback desenine bağlandı.
+const STATUS_LABELS_TR: Record<string, string> = {
+  open: 'Açık',
+  in_progress: 'İşlemde',
+  waiting_response: 'Yanıt Bekliyor',
+  resolved: 'Çözüldü',
+  closed: 'Kapalı',
+};
+
 export default function AdminSupportClient() {
   const t = useAdminT('admin.support');
   const [search, setSearch] = React.useState('');
@@ -187,7 +197,7 @@ export default function AdminSupportClient() {
                           ticket.status === 'waiting_response' ? "bg-gm-warning animate-pulse" :
                           "bg-gm-gold"
                         )} />
-                        {t(`status.${ticket.status}`)}
+                        {t(`status.${ticket.status}`, undefined, STATUS_LABELS_TR[ticket.status] ?? ticket.status)}
                       </div>
                     </TableCell>
                     <TableCell className="py-6">

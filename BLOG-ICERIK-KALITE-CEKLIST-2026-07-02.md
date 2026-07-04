@@ -1,3 +1,10 @@
+> **⚠️ SUPERSEDED (2026-07-03):** Bu checklist uygulanmadan hedefe FARKLI yoldan ulaşıldı.
+> Kullanıcı kararıyla AI görsel üretimi (BLOG-T1/T2) İPTAL edildi ("api kodu kullanma");
+> görseller lokal SVG olarak üretildi, içerik Fable ajanlarıyla zenginleştirildi.
+> SONUÇ: 24 blog yazısı (8 konu × tr/en/de) 95/100, AdSense/index hazır; seed kalıcı
+> (199_blog_posts_seed.sql INSERT IGNORE). İlgili commitler: 78b4f8e, 5653f23.
+> Aşağıdaki açık maddeler tarihsel referanstır — YAPILMAYACAK.
+
 # Blog İçerik Kalite Yükseltme (çok dilli + görsel) — Codex Çeklisti (2026-07-02)
 
 > Claude Code (mimar) hazırladı, **Codex uygular**. Amaç: mevcut 24 blog yazısını (8 konu × tr/en/de)
