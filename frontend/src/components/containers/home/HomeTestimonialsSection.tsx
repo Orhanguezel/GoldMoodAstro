@@ -24,10 +24,10 @@ export default function HomeTestimonialsSection() {
             {ui('ui_extra_b3_testimonials_label', 'Deneyimler')}
           </span>
           <h2 className="font-display text-3xl md:text-5xl text-[var(--gm-text)] mb-6">
-            {ui('ui_extra_b3_testimonials_title_a', 'Client')} <span className="text-[var(--gm-gold)]">{ui('ui_extra_b3_testimonials_title_b', 'Reviews')}</span>
+            {ui('ui_extra_b3_testimonials_title_a', 'Danışan')} <span className="text-[var(--gm-gold)]">{ui('ui_extra_b3_testimonials_title_b', 'Yorumları')}</span>
           </h2>
           <p className="font-serif italic text-[var(--gm-text-dim)] max-w-2xl mx-auto">
-            {ui('ui_extra_b3_testimonials_desc', 'A few of the thousands of users whose lives GoldMoodAstro has touched.')}
+            {ui('ui_extra_b3_testimonials_desc', 'GoldMoodAstro deneyimini paylaşan danışanlardan bazı yorumlar.')}
           </p>
         </div>
 
@@ -39,8 +39,8 @@ export default function HomeTestimonialsSection() {
           ) : (
             reviews.map((review, idx) => (
               (() => {
-                const reviewerName = review.name || ui('ui_extra_b3_testimonials_anon', 'Anonymous User');
-                const targetName = review.target_type === 'consultant' ? ui('ui_extra_b3_testimonials_consulting', 'Consulting') : review.target_type || ui('ui_extra_b3_testimonials_consulting', 'Consulting');
+                const reviewerName = review.name || ui('ui_extra_b3_testimonials_anon', 'Anonim Kullanıcı');
+                const targetName = review.target_type === 'consultant' ? ui('ui_extra_b3_testimonials_consulting', 'Danışmanlık') : review.target_type || ui('ui_extra_b3_testimonials_consulting', 'Danışmanlık');
 
                 return (
               <div

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { Cinzel, Fraunces, Manrope, Outfit, Gabriela } from 'next/font/google';
+import { Cinzel, Fraunces, Manrope } from 'next/font/google';
 
 import { Providers } from '../providers';
 import ClientLayout from '../ClientLayout';
@@ -53,34 +53,33 @@ async function fetchFooterMenuItems(locale: string): Promise<PublicMenuItemDto[]
   }
 }
 
+async function fetchCompanyBrand() {
+  try {
+    const res = await fetch(`${API_BASE}/site_settings/company_brand`, {
+      next: { revalidate: 300, tags: ['site-settings', 'company_brand'] },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.value && typeof json.value === 'object' ? json.value : null;
+  } catch {
+    return null;
+  }
+}
+
 // 2026-04-27 vizyon revize: Cinzel (display) + Fraunces (editorial body) + Manrope (UI sans)
 const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['400', '600', '700'],
   fallback: ['system-ui', '-apple-system', 'sans-serif'],
-});
-
-const outfit = Outfit({
-  subsets: ['latin'],
-  variable: '--font-outfit',
-  display: 'swap',
-  weight: ['300', '400', '500', '600', '700'],
-});
-
-const gabriela = Gabriela({
-  subsets: ['latin'],
-  variable: '--font-gabriela',
-  display: 'swap',
-  weight: ['400'],
 });
 
 const fraunces = Fraunces({
   subsets: ['latin'],
   variable: '--font-serif',
   display: 'swap',
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['400', '600'],
   style: ['normal', 'italic'],
   fallback: ['Georgia', 'serif'],
 });
@@ -89,7 +88,7 @@ const cinzel = Cinzel({
   subsets: ['latin'],
   variable: '--font-display',
   display: 'swap',
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '600'],
   fallback: ['Georgia', 'serif'],
 });
 
@@ -128,15 +127,19 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
   // SSR fetch: header + footer menu items + brand settings (paralel)
-  const [initialMenuItems, initialFooterSections, initialFooterMenuItems, brand] = await Promise.all([
+  const [initialMenuItems, initialFooterSections, initialFooterMenuItems, brand, companyBrand] = await Promise.all([
     fetchHeaderMenuItems(locale),
     fetchFooterSections(locale),
     fetchFooterMenuItems(locale),
     getBrandServer(),
+    fetchCompanyBrand(),
   ]);
 
-  const SITE_URL = brand.public_url || 'https://www.goldmoodastro.com';
+  const SITE_URL = brand.public_url || 'https://goldmoodastro.com';
   const socialLinks = brand.social ? Object.values(brand.social).filter(Boolean) : [];
+  const companyPhone = typeof companyBrand?.phone === 'string' ? companyBrand.phone : undefined;
+  const companyEmail = typeof companyBrand?.email === 'string' ? companyBrand.email : undefined;
+  const companyAddress = typeof companyBrand?.address === 'string' ? companyBrand.address : undefined;
 
   const jsonLdData = graph([
     org({
@@ -148,6 +151,25 @@ export default async function RootLayout({
       description: brand.tagline || "Turkiye'nin astroloji, tarot ve numeroloji danismanlik platformu.",
       priceRange: '₺149-₺3500',
       areaServed: 'TR',
+      telephone: companyPhone,
+      email: companyEmail,
+      address: companyAddress
+        ? {
+            streetAddress: companyAddress,
+            addressLocality: 'İstanbul',
+            addressRegion: 'İstanbul',
+            addressCountry: 'TR',
+          }
+        : undefined,
+      contactPoint: companyPhone || companyEmail
+        ? [{
+            telephone: companyPhone,
+            email: companyEmail,
+            contactType: 'customer support',
+            areaServed: 'TR',
+            availableLanguage: ['tr', 'en'],
+          }]
+        : undefined,
     }),
     website({
       id: `${SITE_URL}/#website`,
@@ -160,39 +182,7 @@ export default async function RootLayout({
 
   return (
     <ThemeProvider>
-      <div className={`font-sans antialiased text-(--gm-text) bg-(--gm-bg) ${manrope.variable} ${fraunces.variable} ${cinzel.variable} ${outfit.variable} ${gabriela.variable}`}>
-        {/* SSR Splash Screen Overlay */}
-        <div
-          id="gm-splash-ssr"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 99998,
-            background: 'var(--splash-bg)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'opacity 0.4s ease',
-          }}
-          aria-hidden="true"
-          suppressHydrationWarning
-        >
-          <div style={{
-            color: 'var(--splash-text)',
-            fontSize: '1.5rem',
-            letterSpacing: '0.2em',
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            fontFamily: 'var(--font-display), Cinzel, serif'
-          }}>
-            {brand.name || 'GoldMoodAstro'}
-          </div>
-        </div>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(sessionStorage.getItem('gm_splash_seen')){var el=document.getElementById('gm-splash-ssr');if(el)el.style.display='none'}}catch(e){}})()`
-          }}
-        />
+      <div className={`font-sans antialiased text-(--gm-text) bg-(--gm-bg) ${manrope.variable} ${fraunces.variable} ${cinzel.variable}`}>
         <JsonLd data={jsonLdData} id="site-graph" />
         <ScrollAnchorFixer />
         <Providers>

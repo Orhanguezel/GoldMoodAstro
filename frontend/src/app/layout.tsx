@@ -113,7 +113,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={lang} data-theme={themeMode} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <meta name="description" content="GoldMoodAstro - platform for expert consultants in astrology, tarot, numerology and spiritual coaching." />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />

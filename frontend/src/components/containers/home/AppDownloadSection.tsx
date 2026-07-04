@@ -17,8 +17,8 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
   const { ui } = useUiSection('ui_extra' as any);
 
   const content = {
-    title: ui('ui_extra_b3_app_download_title', 'Your Star Guide in Your Pocket'),
-    subtitle: ui('ui_extra_b3_app_download_subtitle', 'Get live consulting from anywhere with the GoldMoodAstro mobile app and never miss a celestial event with notifications.'),
+    title: ui('ui_extra_b3_app_download_title', isTr ? 'Yıldız Rehberiniz Cebinizde' : 'Your Star Guide in Your Pocket'),
+    subtitle: ui('ui_extra_b3_app_download_subtitle', isTr ? 'GoldMoodAstro mobil uygulamasıyla dilediğiniz yerden canlı danışmanlık alın ve önemli gökyüzü etkilerini bildirimlerle kaçırmayın.' : 'Get live consulting from anywhere with the GoldMoodAstro mobile app and never miss a celestial event with notifications.'),
     appleText: 'Download on App Store',
     googleText: isTr ? "Google Play'den Al" : "Get it on Google Play",
     qrLabel: ui('ui_extra_b3_app_download_qr_label', isTr ? 'Hemen Tara' : 'Scan Now')
@@ -77,7 +77,7 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
             >
               <Apple size={32} className="text-[var(--gm-text)]" />
               <div className="flex flex-col text-left">
-                <span className="text-[10px] uppercase tracking-wider text-[var(--gm-text)]/50 leading-none mb-1">Download on</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--gm-text)]/50 leading-none mb-1">{isTr ? 'İndir' : 'Download on'}</span>
                 <span className="text-lg font-semibold text-[var(--gm-text)] leading-none">App Store</span>
               </div>
             </a>
@@ -89,7 +89,7 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
             >
               <Play size={28} fill="var(--gm-text)" className="text-[var(--gm-text)]" />
               <div className="flex flex-col text-left">
-                <span className="text-[10px] uppercase tracking-wider text-[var(--gm-text)]/50 leading-none mb-1">Get it on</span>
+                <span className="text-[10px] uppercase tracking-wider text-[var(--gm-text)]/50 leading-none mb-1">{isTr ? 'Al' : 'Get it on'}</span>
                 <span className="text-lg font-semibold text-[var(--gm-text)] leading-none">Google Play</span>
               </div>
             </a>
@@ -102,7 +102,7 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
             </div>
             <div className="flex flex-col">
               <span className="font-display text-[10px] tracking-[0.2em] uppercase text-[var(--gm-text)]/60">{content.qrLabel}</span>
-              <span className="text-xs text-[var(--gm-text)]/40">{ui('ui_extra_b3_app_download_qr_hint', 'Open your camera and scan')}</span>
+              <span className="text-xs text-[var(--gm-text)]/40">{ui('ui_extra_b3_app_download_qr_hint', isTr ? 'Kameranızı açıp tarayın' : 'Open your camera and scan')}</span>
             </div>
           </div>
         </div>

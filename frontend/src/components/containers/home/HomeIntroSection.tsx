@@ -7,22 +7,22 @@ const STEPS = [
     icon: UserSearch,
     titleKey: 'ui_home_intro_step1_title',
     descKey: 'ui_home_intro_step1_desc',
-    title: 'Choose Your Consultant',
-    desc: 'Find the guide that fits you best by expertise area and authentic user reviews.',
+    title: 'Danışman Seç',
+    desc: 'Uzmanlık alanı ve gerçek kullanıcı yorumlarına göre size en uygun rehberi bulun.',
   },
   {
     icon: CalendarCheck,
     titleKey: 'ui_home_intro_step2_title',
     descKey: 'ui_home_intro_step2_desc',
-    title: 'Book an Appointment',
-    desc: 'Choose a time from the consultant calendar and complete your secure payment.',
+    title: 'Randevu Al',
+    desc: 'Danışmanın takviminden size uygun zamanı seçin ve güvenli ödemenizi tamamlayın.',
   },
   {
     icon: PhoneCall,
     titleKey: 'ui_home_intro_step3_title',
     descKey: 'ui_home_intro_step3_desc',
-    title: 'Start the Session',
-    desc: 'Join the in-app voice session at appointment time and receive your guidance.',
+    title: 'Görüşmeyi Başlat',
+    desc: 'Randevu saatinde uygulama içi sesli seansa katılın ve rehberliğinizi alın.',
   },
 ];
 
@@ -37,14 +37,14 @@ export default function HomeIntroSection({ locale = 'tr' }: { locale?: string })
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-20">
           <span className="font-display text-[10px] tracking-[0.5em] text-[var(--gm-gold-deep)] uppercase mb-4 block">
-            {ui('ui_home_intro_eyebrow', 'Process')}
+            {ui('ui_home_intro_eyebrow', 'Süreç')}
           </span>
           <h2 className="font-display text-3xl md:text-5xl text-[var(--gm-text)] mb-6">
-            {ui('ui_home_intro_title_1', 'How Does Your Journey')}{' '}
-            <span className="text-[var(--gm-gold)]">{ui('ui_home_intro_title_2', 'Work?')}</span>
+            {ui('ui_home_intro_title_1', 'Yolculuğunuz Nasıl')}{' '}
+            <span className="text-[var(--gm-gold)]">{ui('ui_home_intro_title_2', 'İşler?')}</span>
           </h2>
           <p className="font-serif italic text-[var(--gm-text-dim)] max-w-2xl mx-auto">
-            {ui('ui_home_intro_desc', 'Reach the spiritual guidance and inner calm you are looking for in just three steps.')}
+            {ui('ui_home_intro_desc', 'Aradığınız ruhsal rehberliğe ve iç sakinliğe üç adımda ulaşın.')}
           </p>
         </div>
 

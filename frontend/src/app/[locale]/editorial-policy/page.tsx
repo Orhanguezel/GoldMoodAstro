@@ -12,11 +12,60 @@ type Props = { params: Promise<{ locale: string }> };
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
 
 const COPY = {
+  tr: {
+    title: 'Editoryal Politika ve Yöntem',
+    description:
+      'GoldMoodAstro içeriklerinin nasıl hazırlandığını, yapay zeka destekli taslakların nasıl kontrol edildiğini ve sorumlu manevi rehberlik yaklaşımımızı açıklar.',
+    back: 'Hakkımızda sayfasına dön',
+    about: 'Hakkımızda',
+    authorTitle: 'Editoryal ve yöntem ekibi',
+    expertise: ['Astroloji', 'Tarot', 'Numeroloji', 'Editoryal İnceleme'],
+    sections: [
+      {
+        title: 'İçerik ilkesi',
+        paragraphs: [
+          'GoldMoodAstro içerikleri, kullanıcıların daha net sorular sormasına ve danışmanlık seanslarına daha bilinçli hazırlanmasına yardımcı olmak için yazılır.',
+          'Korku uyandıran iddialardan, bağımlılık yaratan dilden ve kesin gelecek vaatlerinden kaçınırız.',
+        ],
+      },
+      {
+        title: 'Yapay zeka destekli üretimde şeffaflık',
+        paragraphs: [
+          'Bazı genel eğitim içeriklerinde konu yapısını kurmak ve okunabilirliği artırmak için yapay zeka destekli taslaklardan yararlanılabilir.',
+          'Bu taslaklar, yayımlanmadan önce GoldMoodAstro editoryal ekibi tarafından sorumlu dil, bağlam ve etik sınırlar açısından gözden geçirilir.',
+        ],
+      },
+      {
+        title: 'Astroloji yöntemi',
+        paragraphs: [
+          'Doğum haritası hesaplamalarında Swiss Ephemeris tabanlı teknik yaklaşım esas alınır. Gezegen konumları, evler, açılar ve yükselen burç hesaplama katmanını oluşturur.',
+          'Güneş burcu sayfaları genel rehber niteliğindedir; kişisel yorum için doğum saati, doğum yeri, Ay burcu, yükselen, evler ve açılar birlikte değerlendirilmelidir.',
+        ],
+      },
+      {
+        title: 'Tarot ve numeroloji',
+        paragraphs: [
+          'Tarot içerikleri Rider-Waite-Smith sembolizmini temel alır ve kartları değişmez kader bildirimi değil, sembolik rehberlik aracı olarak ele alır.',
+          'Numeroloji yorumları isim ve doğum tarihi üzerinden kişisel farkındalık sağlar; tıbbi, hukuki, finansal veya kişisel kararların yerine geçmez.',
+        ],
+      },
+      {
+        title: 'İnceleme süreci',
+        paragraphs: [
+          'GoldMoodAstro içerikleri yayımlanmadan önce editoryal ekip tarafından kontrol edilir ve gerektiğinde güncellenir.',
+          'Platform içerikleri genel bilgilendirme sağlar; bire bir seanslar kişinin kendi bağlamını ve sorusunu merkeze alır.',
+        ],
+      },
+    ],
+  },
   en: {
     title: 'Editorial Policy and Methodology',
     description:
       'How GoldMoodAstro prepares content, uses AI-assisted drafting and applies responsible spiritual guidance methodology.',
     back: 'Back to About',
+    about: 'About',
+    authorTitle: 'Editorial and methodology team',
+    expertise: ['Astrology', 'Tarot', 'Numerology', 'Editorial Review'],
     sections: [
       { title: 'Content principle', paragraphs: ['GoldMoodAstro content is written to help users ask clearer questions and prepare for consultations, not to give fixed life decisions.', 'We avoid fear-based claims, dependency language and absolute predictions.'] },
       { title: 'AI-assisted transparency', paragraphs: ['Some general educational content may use LLM-assisted drafting to structure topics and improve readability.', 'Drafts are reviewed by the GoldMoodAstro editorial team for responsible language, context and ethical boundaries.'] },
@@ -28,7 +77,7 @@ const COPY = {
 };
 
 function getCopy(_locale: string) {
-  return COPY.en;
+  return _locale === 'tr' ? COPY.tr : COPY.en;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -37,6 +86,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${copy.title} | GoldMoodAstro`,
     description: copy.description,
+    alternates: {
+      canonical: `${SITE_URL}/${locale}/editorial-policy`,
+      languages: {
+        tr: `${SITE_URL}/tr/editorial-policy`,
+        en: `${SITE_URL}/en/editorial-policy`,
+        de: `${SITE_URL}/de/editorial-policy`,
+        'x-default': `${SITE_URL}/tr/editorial-policy`,
+      },
+    },
+    openGraph: {
+      title: copy.title,
+      description: copy.description,
+      url: `${SITE_URL}/${locale}/editorial-policy`,
+      siteName: 'GoldMoodAstro',
+      type: 'article',
+    },
   };
 }
 
@@ -54,7 +119,7 @@ export default async function EditorialPolicyPage({ params }: Props) {
         data={graph([
           breadcrumbSchema([
             { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },
-            { name: 'About', item: `${SITE_URL}/${locale}/about` },
+            { name: copy.about, item: `${SITE_URL}/${locale}/about` },
             { name: copy.title, item: pageUrl },
           ]),
           articleSchema({
@@ -108,9 +173,9 @@ export default async function EditorialPolicyPage({ params }: Props) {
         <div className="mt-12 rounded-[2rem] border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-12 shadow-(--gm-shadow-soft)">
           <AuthorBio
             name="GoldMoodAstro Editorial Team"
-            title="Editorial and methodology team"
+            title={copy.authorTitle}
             bio={copy.description}
-            expertise={['Astrology', 'Tarot', 'Numerology', 'Editorial Review']}
+            expertise={copy.expertise}
             certificates={['Swiss Ephemeris', 'Rider-Waite-Smith']}
           />
         </div>

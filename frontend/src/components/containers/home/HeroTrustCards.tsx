@@ -113,12 +113,12 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-amber-400">
-              {ui('ui_extra_b3_trust_verified_title', 'Verified Consultants')}
+              {ui('ui_extra_b3_trust_verified_title', 'Onaylı Danışmanlar')}
             </p>
             <p className="text-[10px] text-white/40 mt-0.5">
               {isLoading
                 ? '...'
-                : ui('ui_extra_b3_trust_expert_profiles', '{count} expert profiles').replace('{count}', String(totalCount))}
+                : ui('ui_extra_b3_trust_expert_profiles', '{count} uzman profil').replace('{count}', String(totalCount))}
             </p>
           </div>
         </div>

@@ -1,6 +1,3 @@
-// src/seo/JsonLd.tsx
-import Script from 'next/script';
-
 type Props = {
   data: unknown; // Thing | Thing[] | graph object; intentionally flexible
   id?: string;
@@ -19,9 +16,8 @@ export default function JsonLd({ data, id }: Props) {
   const scriptId = id ? `jsonld:${id}` : undefined;
 
   return (
-    <Script
+    <script
       type="application/ld+json"
-      strategy="afterInteractive"
       {...(scriptId ? { id: scriptId } : {})}
       dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(data) }}
     />

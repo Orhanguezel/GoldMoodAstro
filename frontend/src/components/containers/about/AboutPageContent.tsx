@@ -29,6 +29,35 @@ type AboutCopy = {
 };
 
 const ABOUT_COPY: Record<string, AboutCopy> = {
+  tr: {
+    eyebrow: 'GoldMoodAstro Manifestosu',
+    title: 'Ruhsal rehberliği daha anlaşılır, güvenli ve erişilebilir hale getiriyoruz.',
+    lead:
+      'GoldMoodAstro; astroloji, tarot, numeroloji ve ilişki içgörüsünü tek bir danışmanlık platformunda buluşturur. Amacımız sabit cevaplar vermek değil; seçimlerin daha sakin, bağlamlı ve öz güvenli görülmesine alan açmaktır.',
+    founderTitle: 'Kurucu Hikayesi',
+    founderParagraphs: [
+      'GoldMoodAstro, kurucu Pınar Demircioğlu’nun ruhsal rehberliği daha güvenli ve modern bir deneyime dönüştürme vizyonuyla şekillendi. İnsanlar hassas anlarda rehberlik arar; iyi bir platform doğru danışmanı bulmayı, seansı anlamayı, güvenli ödeme yapmayı ve görüşmeye teknik sürtünme olmadan başlamayı kolaylaştırmalıdır.',
+      'Bu yüzden GoldMoodAstro’da teknoloji gösterinin yıldızı değil, danışmanlığı koruyan sessiz yapıdır. Kullanıcılar profilleri, uzmanlıkları, yorumları, seans süresini ve fiyatları karşılaştırabilir. Danışmanlar ise müsaitlik, hizmet, mesaj ve görüşme akışlarını profesyonel bir düzende yönetir.',
+    ],
+    methodologyTitle: 'Yöntem',
+    methodologyParagraphs: [
+      'Astroloji hesaplamalarında Swiss Ephemeris tabanlı teknik yaklaşım kullanılır. Doğum haritası, gezegen konumları, evler, açılar ve yükselen burç yorum için güvenilir bir zemin oluşturur.',
+      'Tarot içerikleri Rider-Waite-Smith sembolizmini temel alır. Kartlar değişmez kader cümleleri değil; soru, duygu ve olasılıkları anlamaya yardım eden sembolik bir dil olarak ele alınır. Numeroloji isim ve doğum tarihini yaşam yolu, kader sayısı ve kişisel döngüler üzerinden yorumlar.',
+    ],
+    experienceTitle: 'Ekip ve Deneyim',
+    experienceParagraphs: [
+      'GoldMoodAstro ekibi yazılım, ürün tasarımı, astroloji, tarot, editoryal çalışma ve kullanıcı deneyimini bir araya getirir. Deneyimi yalnızca içerikle değil; danışman seçimi, randevu, ödeme, hatırlatma, canlı sesli görüşme, mesajlaşma ve yorum sonrası bütün yolculukla ölçeriz.',
+      'Danışmanlarımız doğum haritası analizi, ilişki astrolojisi, tarot, numeroloji, mood rehberliği, kariyer ve ilişki odaklı destek gibi farklı uzmanlıklar sunar. Güven; uzmanlık, dil, hizmet, müsaitlik ve yorumların görünür olmasıyla başlar.',
+    ],
+    differentiatorsTitle: 'GoldMood’u farklı kılan ne?',
+    differentiators: [
+      { title: 'Şeffaf danışman seçimi', body: 'Profil, uzmanlık, paket, puan ve müsaitlik bilgileri randevu öncesinde görünür.' },
+      { title: 'Bütünleşik seans akışı', body: 'Randevu, ödeme, hatırlatma, mesajlaşma ve uygulama içi sesli görüşme tek sakin deneyim olarak tasarlanır.' },
+      { title: 'Sorumlu rehberlik dili', body: 'Korku temelli veya manipülatif iddialardan kaçınır; farkındalık, seçenekler ve duygusal güvenliğe odaklanırız.' },
+    ],
+    authorBio:
+      'GoldMoodAstro içerikleri astroloji, tarot, numeroloji ve ruhsal rehberliği daha anlaşılır ve sorumlu kullanılır hale getirmek için hazırlanır.',
+  },
   en: {
     eyebrow: 'GoldMoodAstro Manifesto',
     title: 'We make spiritual guidance clearer, safer and easier to access.',
@@ -36,7 +65,7 @@ const ABOUT_COPY: Record<string, AboutCopy> = {
       'GoldMoodAstro brings astrology, tarot, numerology and relationship insight into one consultation platform. We do not aim to hand people fixed answers; we create a guided space where choices can be seen with more calm, context and self-trust.',
     founderTitle: 'Founder Story',
     founderParagraphs: [
-      'GoldMoodAstro was shaped by founder P\u0131nar Demircio\u011flu’s vision for spiritual guidance and by a simple observation: people look for guidance at sensitive moments, but the digital experience around that guidance is often scattered. A good platform should help users find the right consultant, understand the session clearly, pay safely and start the conversation without technical friction.',
+      'GoldMoodAstro was shaped by founder Pınar Demircioğlu’s vision for spiritual guidance and by a simple observation: people look for guidance at sensitive moments, but the digital experience around that guidance is often scattered. A good platform should help users find the right consultant, understand the session clearly, pay safely and start the conversation without technical friction.',
       'Technology is therefore not the hero of GoldMoodAstro. It is the quiet structure that protects the consultation. Users can compare profiles, expertise, reviews, session duration and pricing. Consultants can manage availability, services, messages and calls through a professional workflow. The founding principle is practical: spiritual guidance can be thoughtful, ethical and modern at the same time.',
     ],
     methodologyTitle: 'Methodology',
@@ -64,7 +93,7 @@ const AboutPageContent: React.FC = () => {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_about', locale as any);
   const { ui: uiX } = useUiSection('ui_extra' as any);
-  const copyFallback = useMemo(() => ABOUT_COPY.en, []);
+  const copyFallback = useMemo(() => (locale === 'tr' ? ABOUT_COPY.tr : ABOUT_COPY.en), [locale]);
 
   const readUi = useCallback(
     (key: string, fallback: any) => {
@@ -169,7 +198,7 @@ const AboutPageContent: React.FC = () => {
 
           <div className="mt-12 rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-10 shadow-(--gm-shadow-soft)">
             <AuthorBio
-              name="P\u0131nar Demircio\u011flu"
+              name="Pınar Demircioğlu"
               title={uiX('ui_extra_b2_about_founder_title', 'GoldMoodAstro Founder')}
               bio={copy.authorBio}
               expertise={['Product', 'Astrology Platform', 'Spiritual Guidance']}

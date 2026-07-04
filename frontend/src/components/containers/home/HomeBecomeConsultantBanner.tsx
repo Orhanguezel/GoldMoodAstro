@@ -8,6 +8,7 @@ import { useUiSection } from '@/i18n';
 
 export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?: string }) {
   const { ui } = useUiSection('ui_become_consultant', locale);
+  const isTr = locale === 'tr';
   return (
     <section className="py-24 container mx-auto px-6">
       <div className="relative rounded-[3rem] overflow-hidden bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] shadow-2xl">
@@ -28,7 +29,7 @@ export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?:
               className="inline-flex items-center justify-center lg:justify-start gap-2 px-4 py-1.5 rounded-full border border-(--gm-gold)/30 bg-(--gm-gold)/5 text-(--gm-gold) text-[10px] font-bold uppercase tracking-widest mb-8 self-center lg:self-start"
             >
               <Sparkles size={12} />
-              {ui('ui_become_consultant_sparkle', 'Share Your Wisdom')}
+              {ui('ui_become_consultant_sparkle', isTr ? 'Bilgeliğinizi Paylaşın' : 'Share Your Wisdom')}
             </motion.div>
             
             <motion.h2 
@@ -38,8 +39,8 @@ export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?:
               transition={{ duration: 0.8, delay: 0.1 }}
               className="font-display text-4xl md:text-5xl lg:text-6xl text-(--gm-text) mb-6 leading-tight tracking-tight"
             >
-              {ui('ui_become_consultant_h1_part1', 'Share Your Wisdom,')}<br className="hidden lg:block" /> 
-              <span className="text-(--gm-gold) italic"> {ui('ui_become_consultant_h1_part2', 'Become Our Consultant')}</span>
+              {ui('ui_become_consultant_h1_part1', isTr ? 'Bilgeliğinizi Paylaşın,' : 'Share Your Wisdom,')}<br className="hidden lg:block" /> 
+              <span className="text-(--gm-gold) italic"> {ui('ui_become_consultant_h1_part2', isTr ? 'Danışmanımız Olun' : 'Become Our Consultant')}</span>
             </motion.h2>
             
             <motion.p 
@@ -49,7 +50,7 @@ export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?:
               transition={{ duration: 0.8, delay: 0.2 }}
               className="font-serif italic text-(--gm-text-dim) text-lg md:text-xl mb-12 max-w-xl mx-auto lg:mx-0 leading-relaxed"
             >
-              {ui('ui_become_consultant_lead', 'If you are an expert in astrology, tarot or spiritual guidance, join GoldMoodAstro and guide thousands of people.')}
+              {ui('ui_become_consultant_lead', isTr ? 'Astroloji, tarot veya ruhsal rehberlik alanında uzmansanız GoldMoodAstro’ya katılın ve danışanlara güvenli bir deneyimde rehberlik edin.' : 'If you are an expert in astrology, tarot or spiritual guidance, join GoldMoodAstro and guide thousands of people.')}
             </motion.p>
 
             <motion.div 
@@ -64,7 +65,7 @@ export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?:
                 className="group relative px-10 py-5 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) font-bold uppercase tracking-[0.25em] text-[11px] transition-all duration-500 hover:scale-105 hover:shadow-(--gm-shadow-gold) overflow-hidden flex items-center gap-3"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  {ui('ui_become_consultant_start_btn', 'Apply Now')}
+                  {ui('ui_become_consultant_start_btn', isTr ? 'Başvur' : 'Apply Now')}
                   <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </span>
                 <div className="absolute inset-0 bg-[var(--gm-text)]/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
@@ -73,7 +74,7 @@ export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?:
                 href={localizePath(locale, '/about')}
                 className="text-(--gm-text-dim) hover:text-(--gm-gold) font-bold text-[10px] uppercase tracking-widest transition-colors px-6 flex items-center gap-2"
               >
-                {ui('ui_become_consultant_eval_note', 'Learn About the Process')}
+                {ui('ui_become_consultant_eval_note', isTr ? 'Süreci İncele' : 'Learn About the Process')}
               </Link>
             </motion.div>
           </div>
@@ -89,7 +90,7 @@ export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?:
             <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-l from-(--gm-surface)/80 via-transparent to-transparent z-10 pointer-events-none" />
             <Image 
               src="/images/become-consultant.png" 
-              alt={ui('ui_become_consultant_image_alt', 'Become our consultant')} 
+              alt={ui('ui_become_consultant_image_alt', isTr ? 'Danışmanımız olun' : 'Become our consultant')} 
               fill
               className="object-cover object-center transform hover:scale-105 transition-transform duration-[2000ms] ease-out"
             />

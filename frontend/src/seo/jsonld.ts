@@ -37,6 +37,23 @@ export function org(input: {
   description?: string;
   priceRange?: string;
   areaServed?: string | string[];
+  telephone?: string;
+  email?: string;
+  address?: {
+    streetAddress?: string;
+    addressLocality?: string;
+    addressRegion?: string;
+    postalCode?: string;
+    addressCountry: string;
+  };
+  contactPoint?: Array<{
+    telephone?: string;
+    email?: string;
+    contactType: string;
+    areaServed?: string;
+    availableLanguage?: string[];
+  }>;
+  foundingDate?: string;
 }): Thing {
   return {
     '@type': ['Organization', 'ProfessionalService'],
@@ -47,6 +64,18 @@ export function org(input: {
     ...(input.sameAs?.length ? { sameAs: input.sameAs } : {}),
     ...(input.description ? { description: input.description } : {}),
     ...(input.priceRange ? { priceRange: input.priceRange } : {}),
+    ...(input.telephone ? { telephone: input.telephone } : {}),
+    ...(input.email ? { email: input.email } : {}),
+    ...(input.address ? { address: { '@type': 'PostalAddress', ...input.address } } : {}),
+    ...(input.contactPoint?.length
+      ? {
+          contactPoint: input.contactPoint.map((point) => ({
+            '@type': 'ContactPoint',
+            ...point,
+          })),
+        }
+      : {}),
+    ...(input.foundingDate ? { foundingDate: input.foundingDate } : {}),
     ...(input.areaServed
       ? {
           areaServed: (Array.isArray(input.areaServed) ? input.areaServed : [input.areaServed]).map((name) => ({

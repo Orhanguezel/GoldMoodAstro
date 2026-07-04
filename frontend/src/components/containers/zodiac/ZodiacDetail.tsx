@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, Heart, Briefcase, Info, Sparkles, ArrowRight, Volume2 } from 'lucide-react';
 import ShareCard from '@/components/common/ShareCard';
 import { getZodiacMeta } from '@/lib/zodiac/signs';
+import { buildZodiacFaq } from '@/lib/zodiac/faq';
 import { getCelebritiesBySign } from '@/lib/zodiac/celebrities';
 import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
@@ -44,8 +45,8 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
     label: signKey,
     date: '',
     symbol: '',
-    element: 'Fire' as const,
-    modality: 'Cardinal' as const,
+    element: 'Ateş' as const,
+    modality: 'Öncü' as const,
     polarity: 'Yang' as const,
     ruler: '',
     accent: brand.colors.brand_secondary || 'var(--gm-gold)',
@@ -68,20 +69,7 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
   const loveSection = info?.sections?.find((section: ZodiacSection) => section.key2 === 'love');
   const celebrities = getCelebritiesBySign(signKey, 3);
   const localePrefix = typeof locale === 'string' ? locale : 'tr';
-  const faqItems = [
-    {
-      question: `${meta.label} ${ui('ui_zodiac_faq_q1', 'sign meaning')}`,
-      answer: `${meta.label} ${ui('ui_zodiac_faq_a1_p1', 'sign describes')} ${meta.label} ${ui('ui_zodiac_faq_a1_p2', 'as an astrological profile of core energy, motivation and behavioral tendencies.')}`,
-    },
-    {
-      question: `${meta.label} ${ui('ui_zodiac_faq_q2', 'sign traits')}`,
-      answer: info?.short_summary || `${meta.label} ${ui('ui_zodiac_faq_a2', 'sign carries distinctive strengths and growth areas in character, relationships, career and daily motivation.')}`,
-    },
-    {
-      question: `${meta.label} ${ui('ui_zodiac_faq_q3', 'compatibility interpretation')}`,
-      answer: `${meta.label} ${ui('ui_zodiac_faq_a3', 'compatibility should be read with the Moon, Venus, Mars, rising sign and relationship houses, not only the Sun sign.')}`,
-    },
-  ];
+  const zodiacFaq = buildZodiacFaq(meta, localePrefix, info?.short_summary);
 
   if (!info && (isInfoLoading || isTodayLoading)) {
     return (
@@ -364,7 +352,7 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
       </Tabs>
 
       <div className="mb-20">
-        <FaqAccordion items={faqItems} title={`${meta.label} ${ui('ui_zodiac_faq_title_suffix', 'Questions')}`} />
+        <FaqAccordion items={zodiacFaq.items} title={zodiacFaq.title} />
       </div>
 
       <div className="mb-20">

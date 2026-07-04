@@ -16,7 +16,13 @@ export async function generateMetadata({
   const pageSeo = await fetchSeoPageObject(locale, 'home');
   seo = mergeSeoPageIntoSeo(seo, pageSeo);
 
-  return buildMetadataFromSeo(seo, { locale, pathname: normPath('/') });
+  const metadata = await buildMetadataFromSeo(seo, { locale, pathname: normPath('/') });
+  if (locale === 'tr') {
+    metadata.title = 'GoldMoodAstro | Astroloji, Tarot ve Ruhsal Danışmanlık';
+    metadata.description =
+      'GoldMoodAstro’da onaylı danışmanlarla astroloji, tarot, numeroloji ve ruhsal rehberlik seansları alın; randevu, ödeme ve canlı görüşmeyi güvenle yönetin.';
+  }
+  return metadata;
 }
 
 export default async function HomePage({

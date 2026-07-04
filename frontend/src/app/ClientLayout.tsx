@@ -8,8 +8,6 @@ import type { FooterSectionDto, PublicMenuItemDto } from '@/integrations/shared'
 import FooterTwo from '../layout/footer/Footer';
 import ScrollProgress from '../layout/ScrollProgress';
 
-import AnalyticsScripts from '../features/analytics/AnalyticsScripts';
-import GAViewPages from '../features/analytics/GAViewPages';
 import CookieConsentBanner from '../layout/banner/CookieConsentBanner';
 import PwaRegistration from '../components/system/PwaRegistration';
 import DevPaymentCardBanner from '../components/dev/DevPaymentCardBanner';
@@ -24,9 +22,16 @@ const SupportBotWidget = dynamic(() => import('../components/containers/chat/Sup
   ssr: false,
   loading: () => null,
 });
+const AnalyticsScripts = dynamic(() => import('../features/analytics/AnalyticsScripts'), {
+  ssr: false,
+  loading: () => null,
+});
+const GAViewPages = dynamic(() => import('../features/analytics/GAViewPages'), {
+  ssr: false,
+  loading: () => null,
+});
 
 
-import { SplashScreen } from '../layout/SplashScreen';
 import { useBrand } from '@/hooks/useBrand';
 import { useUiSection } from '@/i18n';
 
@@ -167,10 +172,13 @@ export default function ClientLayout({
 
   return (
     <Fragment>
-      <SplashScreen companyName={brand.name} tagline={brand.tagline} />
       <PwaRegistration />
-      <AnalyticsScripts />
-      <GAViewPages />
+      {deferWidgets && (
+        <>
+          <AnalyticsScripts />
+          <GAViewPages />
+        </>
+      )}
       <a href="#main-content" className="skip-link">
         {ui('ui_extra_b0_skip_to_main', 'Skip to main content')}
       </a>

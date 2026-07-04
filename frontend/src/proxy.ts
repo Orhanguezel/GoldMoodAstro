@@ -56,6 +56,12 @@ async function consultantSlugRedirect(req: NextRequest): Promise<NextResponse | 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  if (pathname === '/') {
+    const url = req.nextUrl.clone();
+    url.pathname = `/${DEFAULT_LOCALE}`;
+    return NextResponse.redirect(url, 308);
+  }
+
   // Next.js internals + static dosyalar — atla
   if (
     pathname.startsWith('/_next/') ||
@@ -107,7 +113,7 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // _next/static, _next/image hariç her şeyde çalış
-    '/((?!_next/static|_next/image).*)',
+    // Static asset uzantıları ve Next internals hariç her şeyde çalış.
+    '/((?!_next/static|_next/image|.*\\..*).*)',
   ],
 };

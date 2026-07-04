@@ -7,10 +7,10 @@ import { localizePath } from '@/integrations/shared';
 
 const COPY_FALLBACK = {
   tr: {
-    title: 'Ready to take the first step?',
-    desc: 'Meet your consultant today. Booking takes only a few minutes.',
-    cta: 'Find a Consultant',
-    secondary: 'How does it work?',
+    title: 'İlk adımı atmaya hazır mısınız?',
+    desc: 'Bugün danışmanınızla tanışın. Randevu almak yalnızca birkaç dakika sürer.',
+    cta: 'Danışman Bul',
+    secondary: 'Nasıl çalışır?',
   },
   en: {
     title: 'Ready to take the first step?',

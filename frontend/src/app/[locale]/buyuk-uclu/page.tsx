@@ -4,6 +4,9 @@ import PageContainer from '@/components/common/PageContainer';
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/seo/server';
 import Banner from '@/layout/banner/Breadcrum';
+import JsonLd from '@/seo/JsonLd';
+import { graph } from '@/seo/jsonld';
+import { webApplicationSchema } from '@/seo/toolSchemas';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -25,11 +28,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BuyukUcluPage({ params }: Props) {
   const { locale } = await params;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
 
   return (
     <>
       <Banner title="Big Three" />
       <PageContainer as="main" width="full" pad="none" className="min-h-screen bg-[var(--gm-bg)]">
+        <JsonLd
+          id="big-three-webapp"
+          data={graph([
+            webApplicationSchema({
+              siteUrl,
+              locale,
+              path: '/buyuk-uclu',
+              name: locale === 'tr' ? 'Büyük Üçlü Hesaplayıcı' : 'Big Three Calculator',
+              description:
+                locale === 'tr'
+                  ? 'Güneş, Ay ve yükselen burç üçlüsünü birlikte yorumlamaya yardımcı olan web aracı.'
+                  : 'A web tool for exploring Sun, Moon and Rising sign themes together.',
+              featureList: ['Sun sign', 'Moon sign', 'Rising sign'],
+            }),
+          ])}
+        />
         <BigThree />
       </PageContainer>
     </>

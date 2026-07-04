@@ -17,8 +17,7 @@ INSERT IGNORE INTO user_roles (id, user_id, role) VALUES
 ('aaaaaaaa-0000-4000-8000-000000000103','10000000-0000-4000-8000-000000000003','consultant'),
 ('aaaaaaaa-0000-4000-8000-000000000104','10000000-0000-4000-8000-0000000000b1','consultant'),
 ('aaaaaaaa-0000-4000-8000-000000000105','10000000-0000-4000-8000-0000000000b2','consultant'),
-('aaaaaaaa-0000-4000-8000-000000000106','10000000-0000-4000-8000-0000000000b3','consultant'),
-('aaaaaaaa-0000-4000-8000-000000000107','10000000-0000-4000-8000-0000000000b4','consultant');
+('aaaaaaaa-0000-4000-8000-000000000106','10000000-0000-4000-8000-0000000000b3','consultant');
 
 -- INSERT IGNORE: consultant row YALNIZ yoksa (id+slug+user_id UNIQUE'lerinden hiçbiri
 -- çakışmıyorsa) ekler. Mevcut row varsa hiçbir alanı (bio, expertise, languages, fiyat
@@ -28,17 +27,15 @@ INSERT IGNORE INTO consultants (
   session_price, session_duration, supports_video, video_session_price,
   currency, approval_status, is_available, rating_avg, rating_count, total_sessions
 ) VALUES
--- TEST FİYATLARI: ücretli danışmanlar 5₺ (Iyzipay sandbox + UI test için).
--- Prod'a geçerken admin panelden gerçek fiyatlara çekilecek.
-('20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','zeynep-yildiz','20 yıllık astroloji deneyimiyle doğum haritası, yıllık öngörüler ve ilişki analizi konularında uzmanlaşmış kıdemli danışman.','["astrology","birth_chart","relationship"]','["tr","en"]',5.00,30,1,5.00,'TRY','approved',1,4.90,42,126),
-('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','omer-toprak','Sayıların gizemli dünyasında rehberiniz. Hayat yolu analizi ve isim enerjisi üzerine derinleşen numeroloji ve tarot uzmanı.','["tarot","numerology"]','["tr"]',5.00,30,0,NULL,'TRY','approved',1,4.75,31,88),
-('20000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000003','selin-ay','Modern spiritualite ile kadim bilgeliği birleştiren ruhsal rehber. Sezgisel astroloji ve yaşam koçluğu seansları sunmaktadır.','["astrology","mood","career"]','["tr","en"]',5.00,45,1,5.00,'TRY','approved',1,4.85,27,64),
--- Proje ortakları (admin + consultant) — ücretsiz
-('20000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-0000000000b1','murat-kisikcilar','Proje ortağı ve stratejik danışman. Detaylı bio admin panelden eklenecek.','["astrology"]','["tr"]',0.00,30,1,0.00,'TRY','approved',1,5.00,0,0),
-('20000000-0000-4000-8000-000000000005','10000000-0000-4000-8000-0000000000b2','pinar-demircioglu','Proje ortağı ve danışman. Detaylı bio admin panelden eklenecek.','["psikoloji","bilincalti_donusum","yasam_koclugu"]','["tr"]',0.00,30,1,0.00,'TRY','approved',1,5.00,0,0),
-('20000000-0000-4000-8000-000000000006','10000000-0000-4000-8000-0000000000b3','fatma-guclu','Hayatım boyunca yaşadığım döngüleri ve zorlukları anlamak için bir yol aradım. Bu yolda astroloji bana rehberlik etti. Doğum haritası analizi, ilişki danışmanlığı, horary astroloji ve rektifikasyon hizmetlerinde uzmanım.','["astrology","birth_chart","relationship"]','["tr"]',5.00,45,1,5.00,'TRY','approved',1,4.95,25,0),
--- Test danışmanı (ücretsiz görüşme)
-('20000000-0000-4000-8000-000000000007','10000000-0000-4000-8000-0000000000b4','test-danisman','Test danışmanı — sistem testleri için ücretsiz görüşme yapar. Gerçek bir profil değildir, geliştirme/QA amaçlıdır.','["astrology","tarot","numerology","mood"]','["tr","en"]',0.00,15,1,0.00,'TRY','approved',1,5.00,0,0);
+-- Yayın seed'i: canlı listede görünen danışmanlar gerçekçi ücret/rating değerleriyle gelir.
+-- Ücretsiz test profili üretmeyin; QA profilleri gerekiyorsa ayrı local-only seed kullanılmalı.
+('20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','zeynep-yildiz','20 yıllık astroloji deneyimiyle doğum haritası, yıllık öngörüler ve ilişki analizi konularında uzmanlaşmış kıdemli danışman.','["astrology","birth_chart","relationship"]','["tr","en"]',900.00,30,1,1200.00,'TRY','approved',1,4.90,42,126),
+('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','omer-toprak','Sayıların gizemli dünyasında rehberiniz. Hayat yolu analizi ve isim enerjisi üzerine derinleşen numeroloji ve tarot uzmanı.','["tarot","numerology"]','["tr"]',650.00,30,0,NULL,'TRY','approved',1,4.75,31,88),
+('20000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000003','selin-ay','Modern spiritualite ile kadim bilgeliği birleştiren ruhsal rehber. Sezgisel astroloji ve yaşam koçluğu seansları sunmaktadır.','["astrology","mood","career"]','["tr","en"]',1100.00,45,1,1400.00,'TRY','approved',1,4.85,27,64),
+-- Proje ortakları danışman yetkisine sahip olabilir; public listeye çıkmaları için admin panelden ücret ve müsaitlik tamamlanmalı.
+('20000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-0000000000b1','murat-kisikcilar','Proje ortağı ve stratejik danışman. Detaylı bio admin panelden eklenecek.','["astrology"]','["tr"]',0.00,30,1,0.00,'TRY','pending',0,0.00,0,0),
+('20000000-0000-4000-8000-000000000005','10000000-0000-4000-8000-0000000000b2','pinar-demircioglu','Proje ortağı ve danışman. Detaylı bio admin panelden eklenecek.','["psikoloji","bilincalti_donusum","yasam_koclugu"]','["tr"]',0.00,30,1,0.00,'TRY','pending',0,0.00,0,0),
+('20000000-0000-4000-8000-000000000006','10000000-0000-4000-8000-0000000000b3','fatma-guclu','Hayatım boyunca yaşadığım döngüleri ve zorlukları anlamak için bir yol aradım. Bu yolda astroloji bana rehberlik etti. Doğum haritası analizi, ilişki danışmanlığı, horary astroloji ve rektifikasyon hizmetlerinde uzmanım.','["astrology","birth_chart","relationship"]','["tr"]',1800.00,45,1,2200.00,'TRY','approved',1,4.95,25,0);
 
 -- Danışman bio/headline i18n seed'i. INSERT IGNORE canlıda/admin panelde
 -- düzenlenmiş çeviri içeriğini ezmez; eksik satırları tamamlar.
@@ -60,7 +57,4 @@ INSERT IGNORE INTO consultant_i18n (id, consultant_id, locale, headline, bio) VA
 ('23000000-0000-4000-8000-00000000000f','20000000-0000-4000-8000-000000000005','de','Beraterin und Projektpartnerin','Projektpartnerin und Beraterin. Eine ausführliche Bio wird im Admin-Panel ergänzt.'),
 ('23000000-0000-4000-8000-000000000010','20000000-0000-4000-8000-000000000006','tr','Doğum Haritası ve İlişki Astrolojisi Uzmanı','Hayatım boyunca yaşadığım döngüleri ve zorlukları anlamak için bir yol aradım. Bu yolda astroloji bana rehberlik etti. Doğum haritası analizi, ilişki danışmanlığı, horary astroloji ve rektifikasyon hizmetlerinde uzmanım.'),
 ('23000000-0000-4000-8000-000000000011','20000000-0000-4000-8000-000000000006','en','Birth Chart and Relationship Astrology Expert','Throughout my life, I searched for a way to understand the cycles and challenges I experienced. Astrology guided me on that path. I specialize in birth chart analysis, relationship consulting, horary astrology and rectification.'),
-('23000000-0000-4000-8000-000000000012','20000000-0000-4000-8000-000000000006','de','Expertin für Geburtshoroskop und Beziehungsastrologie','Mein Leben lang suchte ich nach einem Weg, die Zyklen und Herausforderungen zu verstehen, die ich erlebt habe. Auf diesem Weg wurde Astrologie zu meiner Begleitung. Ich bin spezialisiert auf Geburtshoroskop-Analyse, Beziehungsberatung, Stundenastrologie und Rektifikation.'),
-('23000000-0000-4000-8000-000000000013','20000000-0000-4000-8000-000000000007','tr','Test Danışmanı','Test danışmanı: sistem testleri için ücretsiz görüşme yapar. Gerçek bir profil değildir, geliştirme/QA amaçlıdır.'),
-('23000000-0000-4000-8000-000000000014','20000000-0000-4000-8000-000000000007','en','Test Consultant','Test consultant: provides free sessions for system testing. This is not a real profile and is intended for development/QA.'),
-('23000000-0000-4000-8000-000000000015','20000000-0000-4000-8000-000000000007','de','Testberater','Testberater: führt kostenlose Gespräche für Systemtests durch. Dies ist kein echtes Profil und dient Entwicklungs- und QA-Zwecken.');
+('23000000-0000-4000-8000-000000000012','20000000-0000-4000-8000-000000000006','de','Expertin für Geburtshoroskop und Beziehungsastrologie','Mein Leben lang suchte ich nach einem Weg, die Zyklen und Herausforderungen zu verstehen, die ich erlebt habe. Auf diesem Weg wurde Astrologie zu meiner Begleitung. Ich bin spezialisiert auf Geburtshoroskop-Analyse, Beziehungsberatung, Stundenastrologie und Rektifikation.');

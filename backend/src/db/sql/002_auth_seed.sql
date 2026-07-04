@@ -8,9 +8,7 @@ VALUES
 -- Proje ortakları (admin + consultant kapasitesi — consultants kaydı 031'de)
 ('10000000-0000-4000-8000-0000000000b1', 'muratkisikcilar@gmail.com', @ADMIN_PASSWORD_HASH, 'Murat Kısıkçılar',   NULL, 'admin', 1, 1, NOW(3)),
 ('10000000-0000-4000-8000-0000000000b2', 'dan.pinardem@gmail.com',    @ADMIN_PASSWORD_HASH, 'Pınar Demircioğlu',  NULL, 'admin', 1, 1, NOW(3)),
-('10000000-0000-4000-8000-0000000000b3', 'fatma.guclu@goldmoodastro.com', @ADMIN_PASSWORD_HASH, 'Fatma Güçlü',     NULL, 'admin', 1, 1, NOW(3)),
--- Test danışmanı (ücretsiz, sistem testleri için)
-('10000000-0000-4000-8000-0000000000b4', 'test.danisman@goldmoodastro.com', @ADMIN_PASSWORD_HASH, 'Test Danışman', NULL, 'consultant', 1, 1, NOW(3))
+('10000000-0000-4000-8000-0000000000b3', 'fatma.guclu@goldmoodastro.com', @ADMIN_PASSWORD_HASH, 'Fatma Güçlü',     NULL, 'admin', 1, 1, NOW(3))
 -- NOT: password_hash ve full_name kasıtlı OLARAK güncellenmez — kullanıcı bunları
 -- değiştirebilir; her deploy'da db:seed bunları ezmemeli (manuel şifre/ad korunur).
 -- Yalnızca sistem flag'leri (rol, aktiflik) idempotent güncellenir.

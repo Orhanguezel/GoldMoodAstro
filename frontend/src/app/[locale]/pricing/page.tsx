@@ -4,6 +4,9 @@ import { Suspense } from 'react';
 import PricingPageClient from './PricingPageClient';
 import PageContainer from '@/components/common/PageContainer';
 import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
+import JsonLd from '@/seo/JsonLd';
+import { graph } from '@/seo/jsonld';
+import { pricingOfferCatalogSchema } from '@/seo/toolSchemas';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -23,10 +26,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PricingPage({ params }: Props) {
   const { locale } = await params;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
 
   return (
     <Suspense fallback={null}>
       <PageContainer verticalPadding="large">
+        <JsonLd id="pricing-offer-catalog" data={graph([pricingOfferCatalogSchema(siteUrl, locale)])} />
         <SeoLandingArticle type="pricing" locale={locale} />
         <PricingPageClient locale={locale} />
       </PageContainer>

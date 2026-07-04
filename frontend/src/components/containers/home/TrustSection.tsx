@@ -2,6 +2,28 @@ import React from 'react';
 import { useUiSection } from '@/i18n';
 
 const TRUST_ITEMS = {
+  tr: [
+    {
+      num: 'i.',
+      title: 'Telefon numaranızı istemiyoruz.',
+      desc: 'Kayıt için yalnızca e-posta yeterlidir. Apple veya Google ile girişte bunu da hızla geçebilirsiniz. Numaranız bizde olmadığı için satılması da mümkün değildir.'
+    },
+    {
+      num: 'ii.',
+      title: 'Hesabınızı silerseniz gerçekten silinir.',
+      desc: '7 gün içinde verileriniz veritabanından kalıcı olarak kaldırılır. Arka planda saklanan gizli bir kopya tutulmaz.'
+    },
+    {
+      num: 'iii.',
+      title: 'Verilerinizi indirme hakkınız var.',
+      desc: 'Tüm verilerinizi tek tıkla JSON olarak indirebilirsiniz. KVKK ve GDPR uyumu ilk günden itibaren tasarımın parçasıdır.'
+    },
+    {
+      num: 'iv.',
+      title: 'Üçüncü taraflara veri satışı yok.',
+      desc: 'Reklam geliri veya veri ortaklığı modelimiz yoktur. Gelirimiz şeffaf abonelik ve hizmet akışından gelir.'
+    }
+  ],
   en: [
     {
       num: 'i.',
@@ -28,7 +50,7 @@ const TRUST_ITEMS = {
 
 export default function TrustSection({ locale = 'tr' }: { locale?: string }) {
   const { ui } = useUiSection('ui_home', locale as any);
-  const fb = TRUST_ITEMS.en;
+  const fb = locale === 'tr' ? TRUST_ITEMS.tr : TRUST_ITEMS.en;
   const items = [
     {
       num: fb[0].num,
@@ -56,10 +78,10 @@ export default function TrustSection({ locale = 'tr' }: { locale?: string }) {
     <section className="py-32 bg-[var(--gm-bg-deep)] border-t border-[var(--gm-border-soft)]">
       <div className="max-w-5xl mx-auto px-6">
         <div className="text-center mb-24 reveal">
-          <span className="section-label">{ui('ui_home_trust_eyebrow', 'Our Trust Principles')}</span>
+          <span className="section-label">{ui('ui_home_trust_eyebrow', locale === 'tr' ? 'Güven İlkelerimiz' : 'Our Trust Principles')}</span>
           <h2 className="font-serif text-[clamp(2.5rem,5vw,4rem)] font-light leading-tight text-[var(--gm-text)]">
-            {ui('ui_home_trust_title_1', 'Your data,')}<br/>
-            <em className="text-[var(--gm-gold)] italic">{ui('ui_home_trust_title_2', 'is only yours.')}</em>
+            {ui('ui_home_trust_title_1', locale === 'tr' ? 'Verileriniz,' : 'Your data,')}<br/>
+            <em className="text-[var(--gm-gold)] italic">{ui('ui_home_trust_title_2', locale === 'tr' ? 'yalnızca sizindir.' : 'is only yours.')}</em>
           </h2>
         </div>
 

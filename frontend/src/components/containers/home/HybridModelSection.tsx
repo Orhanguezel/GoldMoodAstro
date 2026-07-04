@@ -3,6 +3,25 @@ import { Sparkles, Users } from 'lucide-react';
 import { useUiSection } from '@/i18n';
 
 const COPY = {
+  tr: {
+    eyebrow: 'HİBRİT MODELİMİZ',
+    title: 'Yapay Zeka Hızı, <em>İnsan</em> Sezgisi',
+    description: 'GoldMoodAstro modern teknolojiyi kadim sembolik rehberlikle birleştirir. Yapay zeka haritanızı hızlıca analiz eder; gerçek danışmanlar ise kişisel bağlamınızı derinleştirir.',
+    ai: {
+      title: 'Hızlı ve Analitik',
+      text: 'Yapay zeka motoru astrolojik verileri saniyeler içinde işler ve günlük yorumunuz için zemin hazırlar.'
+    },
+    human: {
+      title: 'Derin ve Sezgisel',
+      text: 'Gerçek danışmanlar hayatınızdaki benzersiz düğümleri anlamak için yapay zekanın ötesine geçer.'
+    },
+    bridge: 'UYUM',
+    stats: [
+      { num: '100%', label: 'GİZLİLİK' },
+      { num: '24/7', label: 'ERİŞİM' },
+      { num: '50+', label: 'UZMAN' }
+    ]
+  },
   en: {
     eyebrow: 'OUR HYBRID MODEL',
     title: 'AI Intelligence, <em>Human</em> Intuition',
@@ -26,7 +45,7 @@ const COPY = {
 
 export default function HybridModelSection({ locale = 'tr' }: { locale?: string }) {
   const { ui } = useUiSection('ui_home', locale as any);
-  const fb = COPY.en;
+  const fb = locale === 'tr' ? COPY.tr : COPY.en;
   const copy = {
     eyebrow: ui('ui_home_hybrid_eyebrow', fb.eyebrow),
     title: ui('ui_home_hybrid_title', fb.title),

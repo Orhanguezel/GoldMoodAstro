@@ -25,6 +25,8 @@
     "i18n:guard": "node scripts/scan-hardcoded-tr.mjs",
     "theme:parity-qa": "node scripts/theme-parity-qa.mjs",
     "indexnow:ping": "bun scripts/indexnow-ping.ts",
+    "indexnow:ping:daily-zodiac": "bun scripts/indexnow-ping.ts daily-zodiac",
+    "indexnow:ping:all": "bun scripts/indexnow-ping.ts all",
     "relax:drift-check": "node scripts/check-relax-drift.mjs",
     "relax:asset-guard": "node scripts/check-relax-assets.mjs"
   },

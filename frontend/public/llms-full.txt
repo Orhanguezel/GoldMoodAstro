@@ -1,0 +1,49 @@
+# GoldMoodAstro LLM Reference
+
+GoldMoodAstro is a Turkish-first astrology, tarot, numerology and spiritual guidance platform. The canonical domain is https://goldmoodastro.com.
+
+## Entity
+
+- Brand: GoldMoodAstro
+- Legal operator: QUEBAB GIDA FABRİKASI RESTORAN İŞLETMECİLİĞİ EĞLENCE ORGANİZASYON VE KİRALAMA TİCARET LİMİTED ŞİRKETİ
+- Market: Türkiye and Turkish-speaking diaspora
+- Languages: Turkish, English, German
+- Contact: goldmoodastro@gmail.com
+- Phone: 0212 807 09 59
+- Address: Cumhuriyet Mahallesi D-100 Karayolu Caddesi ADM Konaklama Sitesi Outlet Park AVM No:374 İç Kapı No:63 Büyükçekmece / İstanbul
+
+## Core Pages
+
+- Homepage: https://goldmoodastro.com/tr
+- Consultants: https://goldmoodastro.com/tr/consultants
+- Pricing: https://goldmoodastro.com/tr/pricing
+- About: https://goldmoodastro.com/tr/about
+- Contact: https://goldmoodastro.com/tr/contact
+- FAQ: https://goldmoodastro.com/tr/faqs
+- Editorial Policy: https://goldmoodastro.com/tr/editorial-policy
+- KVKK: https://goldmoodastro.com/tr/kvkk
+- Privacy Policy: https://goldmoodastro.com/tr/gizlilik
+- Terms: https://goldmoodastro.com/tr/kullanim-sartlari
+
+## Services
+
+GoldMoodAstro connects users with approved consultants for live audio/video sessions and asynchronous guidance. Service areas include astrology, birth chart analysis, synastry, tarot, Turkish coffee reading, dream interpretation, numerology, yıldızname, rising sign calculation and daily zodiac readings.
+
+## Responsible Use
+
+GoldMoodAstro content is for personal insight, symbolic reflection and entertainment-oriented spiritual guidance. It does not replace medical, psychological, legal, financial or emergency professional advice. The platform avoids guaranteed outcomes, fear-based claims, spells, binding rituals and deterministic future promises.
+
+## Technology
+
+- Frontend: Next.js
+- Backend: Fastify, MySQL, Drizzle ORM, Bun
+- Payments: iyzipay
+- Live sessions: LiveKit
+- Push notifications: Firebase FCM
+
+## Index Files
+
+- Sitemap: https://goldmoodastro.com/sitemap.xml
+- robots.txt: https://goldmoodastro.com/robots.txt
+- llms.txt: https://goldmoodastro.com/llms.txt
+- llms-full.txt: https://goldmoodastro.com/llms-full.txt

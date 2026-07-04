@@ -244,6 +244,8 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         couponError: 'Kupon uygulanamadı. Giriş yapmanız veya başka bir kod denemeniz gerekebilir.',
         featureHeader: 'Özellik',
         seePolicy: 'Politika detaylarını gör',
+        loadingPlans: 'Fiyat planları güncelleniyor...',
+        fallbackPlans: 'Planlar yüklenemedi; yedek fiyatlandırma gösteriliyor.',
       }
     : locale === 'de'
     ? {
@@ -278,6 +280,8 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         couponError: 'Gutschein konnte nicht angewendet werden. Melden Sie sich an oder versuchen Sie einen anderen Code.',
         featureHeader: 'Funktion',
         seePolicy: 'Richtliniendetails ansehen',
+        loadingPlans: 'Preispläne werden aktualisiert...',
+        fallbackPlans: 'Pläne konnten nicht geladen werden; Ersatzpreise werden angezeigt.',
       }
     : {
         title: 'Pricing',
@@ -310,6 +314,8 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         couponError: 'Coupon could not be applied. You may need to sign in or try another code.',
         featureHeader: 'Feature',
         seePolicy: 'See policy details',
+        loadingPlans: 'Pricing plans are being updated...',
+        fallbackPlans: 'Could not load plans; showing fallback pricing.',
       };
 
   const applyCoupon = async () => {
@@ -679,12 +685,12 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
 
         {(isLoading || isFetching) && (
           <div className="mt-8 text-sm text-(--gm-text-muted)">
-            Updating pricing plans...
+            {copy.loadingPlans}
           </div>
         )}
         {isError && (
           <div className="mt-8 text-sm text-(--gm-error)">
-            Could not load plans, showing fallback data.
+            {copy.fallbackPlans}
           </div>
         )}
       </div>

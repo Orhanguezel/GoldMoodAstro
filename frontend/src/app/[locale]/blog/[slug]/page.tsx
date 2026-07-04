@@ -1,8 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import BlogDetails from '@/components/containers/blog/BlogDetails';
 import Banner from '@/layout/banner/Breadcrum';
-import { safeStr, titleFromSlug, excerpt } from '@/integrations/shared';
+import { CMS_FALLBACK_CSS, downgradeH1ToH2, extractHtmlFromAny, safeStr, titleFromSlug, excerpt } from '@/integrations/shared';
 import { normPath, absUrlJoin } from '@/integrations/shared';
 import { buildMetadataFromSeo, fetchSeoObject, fetchCustomPagePublicBySlug } from '@/seo/server';
 import JsonLd from '@/seo/JsonLd';
@@ -71,23 +70,35 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   const slug = safeStr(p?.slug);
   const page = slug ? await fetchCustomPagePublicBySlug({ slug, locale }) : null;
   const title = safeStr(page?.title) || titleFromSlug(slug, 'Blog Detail');
+  const html = page ? downgradeH1ToH2(extractHtmlFromAny(page)) : '';
   const description = excerpt(
-    safeStr(page?.summary) || safeStr(page?.content_html) || safeStr(page?.content) || title,
+    safeStr(page?.summary) || html || title,
     180,
   );
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
   const pageUrl = `${siteUrl}/${locale}/blog/${encodeURIComponent(slug)}`;
   const image = safeStr(page?.featured_image) || (Array.isArray(page?.images) ? safeStr(page.images[0]) : '');
-  const faqItems = [
-    {
-      question: 'How is this content prepared?',
-      answer: 'GoldMoodAstro blog content is prepared with editorial review, topic research and spiritual guidance principles.',
-    },
-    {
-      question: 'Does this article replace a personal consultation?',
-      answer: 'No. Blog articles provide general information; expert consultation is better for personal chart, relationship or life questions.',
-    },
-  ];
+  const faqItems = locale === 'tr'
+    ? [
+        {
+          question: 'Bu içerik nasıl hazırlanır?',
+          answer: 'GoldMoodAstro blog içerikleri editoryal inceleme, konu araştırması ve sorumlu ruhsal rehberlik ilkeleriyle hazırlanır.',
+        },
+        {
+          question: 'Bu yazı kişisel danışmanlığın yerine geçer mi?',
+          answer: 'Hayır. Blog yazıları genel bilgi sağlar; kişisel harita, ilişki veya yaşam soruları için uzman danışmanlık daha uygundur.',
+        },
+      ]
+    : [
+        {
+          question: 'How is this content prepared?',
+          answer: 'GoldMoodAstro blog content is prepared with editorial review, topic research and spiritual guidance principles.',
+        },
+        {
+          question: 'Does this article replace a personal consultation?',
+          answer: 'No. Blog articles provide general information; expert consultation is better for personal chart, relationship or life questions.',
+        },
+      ];
 
   return (
     <>
@@ -118,20 +129,35 @@ export default async function BlogDetailsPage({ params }: PageProps) {
 
       <PageContainer className="bg-(--gm-bg) text-(--gm-text)" verticalPadding="large">
         <div className="space-y-12">
-          <BlogDetails />
+          <div className="max-w-[var(--gm-w-readable)] mx-auto">
+            <style>{CMS_FALLBACK_CSS}</style>
+            {html ? (
+              <article
+                data-speakable
+                className="prose prose-lg max-w-none bg-(--gm-surface) p-8 md:p-14 rounded-[2rem] shadow-(--gm-shadow-card) border border-(--gm-border-soft) cms-html prose-headings:font-serif prose-headings:font-light prose-headings:text-(--gm-text) prose-a:text-(--gm-primary) prose-p:text-(--gm-text-dim) prose-p:font-light prose-p:text-base prose-p:leading-[1.8] prose-li:text-(--gm-text-dim) prose-li:font-light prose-li:text-base prose-li:leading-[1.8] prose-p:mb-6 prose-strong:text-(--gm-text)"
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+            ) : (
+              <div className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 text-center text-(--gm-text-dim)">
+                Blog yazısı bulunamadı.
+              </div>
+            )}
+          </div>
 
           <div className="max-w-[var(--gm-w-readable)] mx-auto space-y-12">
             <FaqAccordion
               items={faqItems}
-              title="Questions About This Article"
+              title={locale === 'tr' ? 'Bu Yazı Hakkında Sorular' : 'Questions About This Article'}
             />
 
             <div className="rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-10 shadow-(--gm-shadow-soft)">
               <AuthorBio
-                name="GoldMoodAstro Editorial Team"
-                title="Spiritual guidance and astrology editors"
-                bio="GoldMoodAstro editors prepare astrology, tarot, numerology and spiritual awareness topics in clear, responsible and practical language."
-                expertise={['Astrology', 'Tarot', 'Numerology', 'Spiritual Awareness']}
+                name="GoldMoodAstro Editoryal Ekibi"
+                title={locale === 'tr' ? 'Astroloji ve ruhsal rehberlik editörleri' : 'Spiritual guidance and astrology editors'}
+                bio={locale === 'tr'
+                  ? 'GoldMoodAstro editörleri astroloji, tarot, numeroloji ve ruhsal farkındalık konularını açık, sorumlu ve pratik bir dille hazırlar.'
+                  : 'GoldMoodAstro editors prepare astrology, tarot, numerology and spiritual awareness topics in clear, responsible and practical language.'}
+                expertise={locale === 'tr' ? ['Astroloji', 'Tarot', 'Numeroloji', 'Ruhsal Farkındalık'] : ['Astrology', 'Tarot', 'Numerology', 'Spiritual Awareness']}
               />
             </div>
           </div>

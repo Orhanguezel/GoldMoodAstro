@@ -10,7 +10,7 @@ import type {
   CustomPageDto,
   ApiCustomPage,
 } from '@/integrations/shared';
-import { mapApiCustomPageToDto } from '@/integrations/shared';
+import { mapApiCustomPageToDto, normalizeArrayResponse } from '@/integrations/shared';
 import { getDefaultLocale } from '@/i18n/server';
 import { getServerApiBase } from '@/i18n/apiBase.server';
 import { normLocaleShort } from '@/integrations/shared';
@@ -78,5 +78,28 @@ export const fetchCustomPagePublicByLandingKey = cache(
     const first = Array.isArray(raw) ? raw[0] : null;
 
     return first ? mapApiCustomPageToDto(first) : null;
+  },
+);
+
+export const fetchCustomPagesPublicByModule = cache(
+  async (args: { moduleKey: string; locale: string; limit?: number }): Promise<CustomPageDto[]> => {
+    const moduleKey = String(args.moduleKey || '').trim();
+    if (!moduleKey) return [];
+
+    const defaultLocale = await getDefaultLocale();
+    const locale = normLocaleShort(args.locale, defaultLocale);
+
+    const qs = new URLSearchParams({
+      module_key: moduleKey,
+      locale,
+      default_locale: defaultLocale,
+      is_published: 'true',
+      limit: String(args.limit ?? 10),
+      sort: 'created_at',
+      orderDir: 'asc',
+    });
+
+    const raw = await fetchApiJson<unknown>(`/custom-pages?${qs.toString()}`, { revalidate: 300 });
+    return normalizeArrayResponse<ApiCustomPage>(raw).map(mapApiCustomPageToDto);
   },
 );

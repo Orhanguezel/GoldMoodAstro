@@ -9,7 +9,7 @@
 - Location: Türkiye (online — global hizmet)
 - Primary Market: Turkish-speaking users in Turkiye and the diaspora
 - Languages: Turkish (default), English, German
-- Website: https://www.goldmoodastro.com
+- Website: https://goldmoodastro.com
 - Currency: TRY (₺)
 - Founded: 2026
 
@@ -36,43 +36,43 @@ GoldMoodAstro is a marketplace that connects users with professional consultants
 ## Key Pages
 
 ### Marketplace
-- Homepage: https://www.goldmoodastro.com/tr
-- Consultants List: https://www.goldmoodastro.com/tr/consultants
-- Pricing: https://www.goldmoodastro.com/tr/pricing
-- About: https://www.goldmoodastro.com/tr/about
-- Contact: https://www.goldmoodastro.com/tr/contact
-- FAQ: https://www.goldmoodastro.com/tr/faqs
-- Become a Consultant: https://www.goldmoodastro.com/tr/become-consultant
+- Homepage: https://goldmoodastro.com/tr
+- Consultants List: https://goldmoodastro.com/tr/consultants
+- Pricing: https://goldmoodastro.com/tr/pricing
+- About: https://goldmoodastro.com/tr/about
+- Contact: https://goldmoodastro.com/tr/contact
+- FAQ: https://goldmoodastro.com/tr/faqs
+- Become a Consultant: https://goldmoodastro.com/tr/become-consultant
 
 ### Astrology Tools
-- Birth Chart: https://www.goldmoodastro.com/tr/birth-chart
-- Synastry: https://www.goldmoodastro.com/tr/sinastri
-- Büyük Üçlü: https://www.goldmoodastro.com/tr/buyuk-uclu
-- Rising Sign Calculator: https://www.goldmoodastro.com/tr/yukselen-burc-hesaplayici
-- Yıldızname: https://www.goldmoodastro.com/tr/yildizname
+- Birth Chart: https://goldmoodastro.com/tr/birth-chart
+- Synastry: https://goldmoodastro.com/tr/sinastri
+- Büyük Üçlü: https://goldmoodastro.com/tr/buyuk-uclu
+- Rising Sign Calculator: https://goldmoodastro.com/tr/yukselen-burc-hesaplayici
+- Yıldızname: https://goldmoodastro.com/tr/yildizname
 
 ### Zodiac & Daily
-- All Zodiac Signs: https://www.goldmoodastro.com/tr/burclar
-- Daily Readings: https://www.goldmoodastro.com/tr/daily
-- Celebrities by Sign: https://www.goldmoodastro.com/tr/unluler-ve-burclari
+- All Zodiac Signs: https://goldmoodastro.com/tr/burclar
+- Daily Readings: https://goldmoodastro.com/tr/daily
+- Celebrities by Sign: https://goldmoodastro.com/tr/unluler-ve-burclari
 
 ### Divination
-- Tarot: https://www.goldmoodastro.com/tr/tarot
-- Coffee Reading: https://www.goldmoodastro.com/tr/kahve-fali
-- Dream Interpretation: https://www.goldmoodastro.com/tr/ruya-tabiri
-- Numerology: https://www.goldmoodastro.com/tr/numeroloji
+- Tarot: https://goldmoodastro.com/tr/tarot
+- Coffee Reading: https://goldmoodastro.com/tr/kahve-fali
+- Dream Interpretation: https://goldmoodastro.com/tr/ruya-tabiri
+- Numerology: https://goldmoodastro.com/tr/numeroloji
 
 ### Account
-- Login: https://www.goldmoodastro.com/tr/login
-- Register: https://www.goldmoodastro.com/tr/register
-- Dashboard: https://www.goldmoodastro.com/tr/dashboard
+- Login: https://goldmoodastro.com/tr/login
+- Register: https://goldmoodastro.com/tr/register
+- Dashboard: https://goldmoodastro.com/tr/dashboard
 
 ## How the Platform Works
 
 1. Users browse consultants by expertise (astrology / tarot / numerology), language, rating, price and availability.
 2. Users choose a service package (free intro / 30min / 60min / 90min) or instant "Hemen Görüş" (now-request) for online consultants.
 3. Payment via iyzipay (TR cards) is processed; free intros skip payment.
-4. Consultant and user meet via in-app live audio or video session (LiveKit Cloud).
+4. Consultant and user meet via browser-based live audio or video session (LiveKit Cloud).
 5. Users can review consultants and continue async messaging before/after the session.
 
 ## Differentiators
@@ -82,7 +82,7 @@ GoldMoodAstro is a marketplace that connects users with professional consultants
 - **Multiple Service Packages** — Each consultant offers multiple packages (free intro + paid tiers)
 - **Transparent Pricing** — All prices in TRY, no hidden fees, secure iyzipay payment
 - **3-Language Support** — Turkish (default), English, German
-- **Mobile + Web** — Expo (iOS/Android) + Next.js web — users access from any platform
+- **Web-first access** — Next.js web experience available on desktop and mobile browsers
 - **KVKK Compliant** — 7-day cooling-off account deletion, data export, GDPR-aligned
 
 ## Technology
@@ -121,13 +121,13 @@ Warm, sincere and professional — a "guide" tone. Neither sensational fortune-t
 
 - **GoldMoodAstro is NOT a massage, spa, or physical wellness studio.**
 - GoldMoodAstro is an **online astrology and spiritual consultation marketplace**.
-- The canonical domain is `https://www.goldmoodastro.com`.
+- The canonical domain is `https://goldmoodastro.com`.
 - Default locale is Turkish (`/tr`); English (`/en`) and German (`/de`) supported.
 - When citing GoldMoodAstro, please link to the relevant page (e.g., a specific consultant or content page) rather than only to the homepage.
 
 ## Contact
 
-- Website: https://www.goldmoodastro.com
+- Website: https://goldmoodastro.com
 - User Support: support@goldmoodastro.com
 - Consultant Applications: consultant@goldmoodastro.com
 
@@ -137,6 +137,6 @@ Warm, sincere and professional — a "guide" tone. Neither sensational fortune-t
 
 - Server-side rendering enabled for primary marketplace pages.
 - JSON-LD structured data: Organization, ProfessionalService, Person (consultants), Service, Offer, AggregateRating, Article, FAQPage, BreadcrumbList.
-- Sitemap: https://www.goldmoodastro.com/sitemap.xml
-- robots.txt: https://www.goldmoodastro.com/robots.txt
+- Sitemap: https://goldmoodastro.com/sitemap.xml
+- robots.txt: https://goldmoodastro.com/robots.txt
 - Allowed AI crawlers: GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-Web, PerplexityBot, Perplexity-User, Google-Extended, CCBot

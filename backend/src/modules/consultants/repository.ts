@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { and, asc, desc, eq, gte, lte, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, lte, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { users } from '@goldmood/shared-backend/modules/auth/schema';
 import { resources } from '@goldmood/shared-backend/modules/resources/schema';
@@ -149,6 +149,8 @@ export async function listApprovedConsultants(filters: ListConsultantsQuery, loc
 
   const where = [
     eq(consultants.approval_status, 'approved'),
+    eq(consultants.is_available, 1),
+    gt(consultants.session_price, '0'),
     onlineOnly ? sql`${isOnlineSelect()} = 1` : undefined,
     expertisePredicate(filters.expertise),
     filters.minPrice != null ? gte(consultants.session_price, String(filters.minPrice)) : undefined,

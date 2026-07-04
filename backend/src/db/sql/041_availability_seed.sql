@@ -1,6 +1,6 @@
 -- =============================================================
 -- 041_availability_seed.sql
--- TEST setup — tüm 7 danışman için bol slot.
+-- Demo setup — yayına çıkabilen 6 danışman için bol slot.
 -- Working hours her gün 09:00-22:00 (30 dk slot, capacity 1)
 -- Frontend slot picker bunlardan dinamik olarak günlük plan üretir.
 -- =============================================================
@@ -11,11 +11,10 @@ INSERT IGNORE INTO resources (id, type, title, capacity, external_ref_id, is_act
 ('30000000-0000-4000-8000-000000000003','consultant','Selin Ay',     1,'20000000-0000-4000-8000-000000000003',1),
 ('30000000-0000-4000-8000-000000000004','consultant','Murat Kısıkçılar', 1,'20000000-0000-4000-8000-000000000004',1),
 ('30000000-0000-4000-8000-000000000005','consultant','Pınar Demircioğlu',1,'20000000-0000-4000-8000-000000000005',1),
-('30000000-0000-4000-8000-000000000006','consultant','Fatma Güçlü',  1,'20000000-0000-4000-8000-000000000006',1),
-('30000000-0000-4000-8000-000000000007','consultant','Test Danışman',1,'20000000-0000-4000-8000-000000000007',1)
+('30000000-0000-4000-8000-000000000006','consultant','Fatma Güçlü',  1,'20000000-0000-4000-8000-000000000006',1)
 ON DUPLICATE KEY UPDATE title = VALUES(title), external_ref_id = VALUES(external_ref_id), is_active = VALUES(is_active);
 
--- Working hours: 7 danışman × 7 gün (1=Mon..7=Sun) × 09:00-22:00 / 30dk
+-- Working hours: 6 danışman × 7 gün (1=Mon..7=Sun) × 09:00-22:00 / 30dk
 -- INSERT IGNORE — id PK olduğu için drop+create sonrası temiz, nodrop'ta çakışan satırları atlar.
 -- ID deterministic: 31000000-...-{seq}{dow padded} (seq: 1..7, dow: 01..07)
 INSERT IGNORE INTO resource_working_hours (id, resource_id, dow, start_time, end_time, slot_minutes, capacity)
@@ -34,7 +33,6 @@ FROM (
   UNION ALL SELECT 4,        '30000000-0000-4000-8000-000000000004'
   UNION ALL SELECT 5,        '30000000-0000-4000-8000-000000000005'
   UNION ALL SELECT 6,        '30000000-0000-4000-8000-000000000006'
-  UNION ALL SELECT 7,        '30000000-0000-4000-8000-000000000007'
 ) r
 CROSS JOIN (
             SELECT 1 AS dow
@@ -54,7 +52,7 @@ INSERT IGNORE INTO resource_slots (id, resource_id, slot_date, slot_time, capaci
 
 -- =============================================================
 -- TEST SLOT GENERATION
--- 7 danışman × bugünden itibaren 30 gün × 09:00-22:00 / 30dk = 5460 slot.
+-- 6 danışman × bugünden itibaren 30 gün × 09:00-22:00 / 30dk = 4680 slot.
 -- consultants/repository.ts getConsultantSlots resource_slots tablosundan okur,
 -- working_hours sadece display için. Bu yüzden satırları manuel üretiyoruz.
 -- Prod'da bu satırları cron veya admin UI üretmeli.
@@ -74,7 +72,6 @@ FROM (
   UNION ALL SELECT '30000000-0000-4000-8000-000000000004'
   UNION ALL SELECT '30000000-0000-4000-8000-000000000005'
   UNION ALL SELECT '30000000-0000-4000-8000-000000000006'
-  UNION ALL SELECT '30000000-0000-4000-8000-000000000007'
 ) r
 CROSS JOIN (
   -- 0..29 gün (bugün dahil 30 gün)

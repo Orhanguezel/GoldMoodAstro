@@ -11,7 +11,6 @@
  * Works in both light and dark themes because the dark image fills the section.
  */
 import React, { Suspense } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useUiSection } from '@/i18n';
@@ -60,19 +59,19 @@ export default function HeroNew({ locale = 'tr' }: { locale?: string }) {
   const secondaryHref = `/${locale}/birth-chart`;
 
   return (
+    <>
+    <link rel="preload" as="image" href="/images/hero-bg-main.webp" fetchPriority="high" />
     <section
       data-header-overlay="true"
       className="relative min-h-screen flex flex-col overflow-hidden"
     >
       {/* ── Background Image ──────────────────────────────────────── */}
-      <Image
-        src="/images/hero-bg-main.png"
+      <img
+        src="/images/hero-bg-main.webp"
         alt="GoldMoodAstro hero"
-        fill
-        sizes="100vw"
-        className="object-cover object-center"
-        priority
-        quality={90}
+        className="absolute inset-0 h-full w-full object-cover object-center"
+        fetchPriority="high"
+        decoding="async"
       />
 
       {/* ── Gradient Overlays ─────────────────────────────────────── */}
@@ -206,5 +205,6 @@ export default function HeroNew({ locale = 'tr' }: { locale?: string }) {
       {/* ── Bottom accent line ────────────────────────────────────── */}
       <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-400/20 to-transparent" />
     </section>
+    </>
   );
 }

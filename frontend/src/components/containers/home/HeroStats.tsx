@@ -27,15 +27,15 @@ export default function HeroStats({ locale = 'tr' }: Props) {
   const stats = [
     {
       val: isLoading ? null : totalSessions > 0 ? `${totalSessions > 999 ? Math.floor(totalSessions / 100) / 10 + 'K' : totalSessions}+` : '500+',
-      label: ui('ui_extra_b3_hero_stat_sessions', 'Sessions Completed'),
+      label: ui('ui_extra_b3_hero_stat_sessions', locale === 'tr' ? 'Tamamlanan Seans' : 'Sessions Completed'),
     },
     {
       val: isLoading ? null : consultantCount > 0 ? `${consultantCount}+` : '20+',
-      label: ui('ui_extra_b3_hero_stat_consultants', 'Expert Consultants'),
+      label: ui('ui_extra_b3_hero_stat_consultants', locale === 'tr' ? 'Uzman Danışman' : 'Expert Consultants'),
     },
     {
       val: isLoading ? null : `${avgRating}★`,
-      label: ui('ui_extra_b3_hero_stat_rating', 'Average Rating'),
+      label: ui('ui_extra_b3_hero_stat_rating', locale === 'tr' ? 'Ortalama Puan' : 'Average Rating'),
     },
   ];
 

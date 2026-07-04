@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/seo/server';
 import JsonLd from '@/seo/JsonLd';
 import { articleSchema, graph } from '@/seo/jsonld';
+import { webApplicationSchema } from '@/seo/toolSchemas';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -33,6 +34,17 @@ export default async function RisingCalculatorPage({ params }: Props) {
       <JsonLd
         id="rising-sign-speakable-schema"
         data={graph([
+          webApplicationSchema({
+            siteUrl,
+            locale,
+            path: '/yukselen-burc-hesaplayici',
+            name: locale === 'tr' ? 'Yükselen Burç Hesaplayıcı' : 'Rising Sign Calculator',
+            description:
+              locale === 'tr'
+                ? 'Doğum saati ve doğum yerine göre yükselen burcu hesaplayan web aracı.'
+                : 'A web tool that calculates the rising sign from birth time and birthplace.',
+            featureList: ['Rising sign calculation', 'Birth time', 'Birthplace'],
+          }),
           articleSchema({
             headline: 'Rising Sign Calculator Guide',
             description: 'The rising sign is the zodiac sign on the eastern horizon at birth and describes how a person approaches the outer world.',

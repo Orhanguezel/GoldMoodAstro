@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import JsonLd from '@/seo/JsonLd';
 import { articleSchema, breadcrumbSchema, faqSchema, graph } from '@/seo/jsonld';
 import { buildPageMetadata } from '@/seo/server';
+import { buildZodiacFaq } from '@/lib/zodiac/faq';
+import { getZodiacMeta } from '@/lib/zodiac/signs';
 
 export const revalidate = 86400; // 24 hours
 
@@ -35,6 +37,12 @@ const labels: Record<string, string> = {
   aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
   leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
   sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces'
+};
+
+const labelsTr: Record<string, string> = {
+  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
+  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
+  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık'
 };
 
 function buildFallbackInfo(sign: string, label: string): ZodiacPageInfo {
@@ -94,6 +102,7 @@ async function fetchTodayServer(sign: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sign, locale } = await params;
   const label = labels[sign] || sign;
+  const localizedLabel = locale === 'tr' ? (labelsTr[sign] || label) : label;
 
   // Admin `burclar-sign` SEO settings win; fallback is used only when empty.
   // If the title template contains "{sign}", it is replaced with the sign label.
@@ -119,13 +128,16 @@ export default async function SignDetailPage({ params }: Props) {
     fetchTodayServer(sign),
   ]);
   const label = labels[sign] || sign;
+  const localizedLabel = locale === 'tr' ? (labelsTr[sign] || label) : label;
   const renderedInfo = info ?? buildFallbackInfo(sign, label);
   const pageUrl = `${SITE_URL}/${locale}/burclar/${sign}`;
+  const meta = getZodiacMeta(sign);
+  const zodiacFaq = meta ? buildZodiacFaq(meta, locale, renderedInfo.short_summary) : null;
   const schema = graph([
     breadcrumbSchema([
       { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },
-      { name: 'Zodiac Signs', item: `${SITE_URL}/${locale}/burclar` },
-      { name: `${label} Zodiac`, item: pageUrl },
+      { name: locale === 'tr' ? 'Burçlar' : 'Zodiac Signs', item: `${SITE_URL}/${locale}/burclar` },
+      { name: locale === 'tr' ? `${localizedLabel} Burcu` : `${label} Zodiac`, item: pageUrl },
     ]),
     articleSchema({
       headline: renderedInfo.title,
@@ -139,20 +151,7 @@ export default async function SignDetailPage({ params }: Props) {
       speakableSelectors: ['h1', '[data-speakable]'],
       inLanguage: locale,
     }),
-    faqSchema([
-      {
-        question: `What is ${label}?`,
-        answer: `${label} is an astrological profile describing core energy, motivation and behavioral tendencies for people born while the Sun moves through this archetype.`,
-      },
-      {
-        question: `What are ${label} traits?`,
-        answer: renderedInfo.short_summary || `${label} carries distinctive strengths and growth areas in love, career, relationships, emotional regulation and daily motivation.`,
-      },
-      {
-        question: `Is a ${label} reading enough by itself?`,
-        answer: 'The Sun sign is a useful starting point; for a more accurate reading, the rising sign, Moon sign, houses, planet placements and aspects should be considered together.',
-      },
-    ]),
+    ...(zodiacFaq ? [faqSchema(zodiacFaq.items)] : []),
   ]);
 
   return (

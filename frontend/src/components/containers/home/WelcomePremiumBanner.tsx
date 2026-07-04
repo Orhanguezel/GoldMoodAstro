@@ -16,9 +16,9 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
   const { ui } = useUiSection('ui_extra' as any);
 
   const content = {
-    title: ui('ui_extra_b4_welcome_banner_title', 'Welcome to GoldMoodAstro'),
-    subtitle: ui('ui_extra_b4_welcome_banner_subtitle', 'Modern astrology guided by the stars.'),
-    cta: ui('ui_extra_b4_welcome_banner_cta', 'Explore Consultants')
+    title: ui('ui_extra_b4_welcome_banner_title', isTr ? 'GoldMoodAstro’ya Hoş Geldiniz' : 'Welcome to GoldMoodAstro'),
+    subtitle: ui('ui_extra_b4_welcome_banner_subtitle', isTr ? 'Yıldızların rehberliğinde modern astroloji deneyimi.' : 'Modern astrology guided by the stars.'),
+    cta: ui('ui_extra_b4_welcome_banner_cta', isTr ? 'Danışmanları Keşfet' : 'Explore Consultants')
   };
 
   return (
@@ -55,7 +55,7 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
             <div className="w-12 h-[1px] bg-(--gm-gold-deep)" />
             <Compass size={16} className="text-(--gm-gold) animate-spin-slow" />
             <span className="font-display text-[12px] tracking-[0.5em] uppercase text-(--gm-gold-light)">
-              {ui('ui_extra_b4_welcome_banner_badge', 'Explore the Future')}
+              {ui('ui_extra_b4_welcome_banner_badge', isTr ? 'Geleceği Keşfet' : 'Explore the Future')}
             </span>
             <div className="w-12 h-[1px] bg-(--gm-gold-deep)" />
           </div>

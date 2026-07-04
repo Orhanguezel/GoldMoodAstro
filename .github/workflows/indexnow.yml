@@ -1,0 +1,36 @@
+name: IndexNow Daily Zodiac Ping
+
+on:
+  schedule:
+    - cron: '20 4 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'IndexNow URL set'
+        required: true
+        default: daily-zodiac
+        type: choice
+        options:
+          - daily-zodiac
+          - core
+          - all
+
+jobs:
+  ping:
+    name: Ping IndexNow
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      NEXT_PUBLIC_SITE_URL: https://goldmoodastro.com
+      INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Ping daily zodiac pages
+        working-directory: frontend
+        run: bun scripts/indexnow-ping.ts "${{ github.event.inputs.mode || 'daily-zodiac' }}"

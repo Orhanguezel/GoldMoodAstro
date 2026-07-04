@@ -34,23 +34,23 @@ const CATEGORIES_FALLBACK = [
 ];
 
 const CATEGORY_COPY_FALLBACK: Record<string, { label: string; desc: string }> = {
-  astrology: { label: 'Astrology', desc: 'Guidance through birth charts and planetary influences.' },
-  birth_chart: { label: 'Birth Chart', desc: 'Detailed natal chart analysis.' },
-  tarot: { label: 'Tarot', desc: 'Guidance through the symbolism of the cards.' },
-  numerology: { label: 'Numerology', desc: 'Life path insight through the language of numbers.' },
-  coffee: { label: 'Coffee Reading', desc: 'Traditional interpretation of cup symbols.' },
-  relationship: { label: 'Relationship & Love', desc: 'Relationship dynamics and synastry guidance.' },
-  mood: { label: 'Spiritual Guidance', desc: 'Support for inner balance and awareness.' },
-  career: { label: 'Career & Money', desc: 'Guidance for work life and financial flow.' },
-  dream_interpretation: { label: 'Dream Interpretation', desc: 'Interpretation of dream symbols.' },
-  energy_healing: { label: 'Energy Healing', desc: 'Energy balancing and healing work.' },
-  spiritual_guidance: { label: 'Spiritual Guidance', desc: 'Support on the spiritual journey.' },
-  nefes_terapisi: { label: 'Breath Therapy', desc: 'Stress relief and inner balance through conscious breathing techniques.' },
-  bioenerji: { label: 'Bioenergy', desc: 'Balancing the body’s energy flow and healing work.' },
-  reiki: { label: 'Reiki', desc: 'Healing sessions with universal life energy.' },
-  yasam_koclugu: { label: 'Life Coaching', desc: 'Guidance for goal setting, motivation, and personal growth.' },
-  bilincalti_donusum: { label: 'Subconscious Transformation', desc: 'Noticing and transforming subconscious patterns.' },
-  psikoloji: { label: 'Psychology', desc: 'Individual counseling with licensed psychologist support.' },
+  astrology: { label: 'Astroloji', desc: 'Doğum haritası ve gezegen etkileriyle rehberlik.' },
+  birth_chart: { label: 'Doğum Haritası', desc: 'Detaylı natal harita analizi.' },
+  tarot: { label: 'Tarot', desc: 'Kart sembolleri üzerinden farkındalık rehberliği.' },
+  numerology: { label: 'Numeroloji', desc: 'Sayıların diliyle yaşam yolu içgörüsü.' },
+  coffee: { label: 'Kahve Falı', desc: 'Fincan sembollerinin geleneksel yorumu.' },
+  relationship: { label: 'İlişki ve Aşk', desc: 'İlişki dinamikleri ve sinastri rehberliği.' },
+  mood: { label: 'Ruhsal Rehberlik', desc: 'İç denge ve farkındalık için destek.' },
+  career: { label: 'Kariyer ve Para', desc: 'İş yaşamı ve maddi akış için rehberlik.' },
+  dream_interpretation: { label: 'Rüya Tabiri', desc: 'Rüya sembollerinin yorumu.' },
+  energy_healing: { label: 'Enerji Şifası', desc: 'Enerji dengeleme ve şifa çalışmaları.' },
+  spiritual_guidance: { label: 'Ruhsal Rehberlik', desc: 'Spiritüel yolculukta destek.' },
+  nefes_terapisi: { label: 'Nefes Terapisi', desc: 'Bilinçli nefes teknikleriyle stres azaltma ve iç denge.' },
+  bioenerji: { label: 'Bioenerji', desc: 'Bedenin enerji akışını dengeleme çalışmaları.' },
+  reiki: { label: 'Reiki', desc: 'Evrensel yaşam enerjisiyle şifa seansları.' },
+  yasam_koclugu: { label: 'Yaşam Koçluğu', desc: 'Hedef belirleme, motivasyon ve kişisel gelişim rehberliği.' },
+  bilincalti_donusum: { label: 'Bilinçaltı Dönüşüm', desc: 'Bilinçaltı kalıpları fark etme ve dönüştürme.' },
+  psikoloji: { label: 'Psikoloji', desc: 'Lisanslı psikolog desteğiyle bireysel danışmanlık.' },
 };
 
 export default function ExpertiseCategoriesSection({ locale = 'tr' }: { locale?: string }) {
@@ -58,10 +58,10 @@ export default function ExpertiseCategoriesSection({ locale = 'tr' }: { locale?:
   const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
   
   const copy = useMemo(() => ({
-    label: ui('ui_home_expertise_label', 'Categories'),
-    title: ui('ui_home_expertise_title', 'Explore <span class="text-[var(--gm-gold)]">Areas of Expertise</span>'),
-    desc: ui('ui_home_expertise_desc', 'Whatever kind of guidance you need, the most experienced consultants in that field are waiting here.'),
-    cta: ui('ui_home_expertise_cta', 'View Consultants')
+    label: ui('ui_home_expertise_label', 'Kategoriler'),
+    title: ui('ui_home_expertise_title', 'Uzmanlık <span class="text-[var(--gm-gold)]">Alanlarını Keşfet</span>'),
+    desc: ui('ui_home_expertise_desc', 'Hangi rehberliğe ihtiyacınız varsa, o alandaki deneyimli danışmanlar burada sizi bekliyor.'),
+    cta: ui('ui_home_expertise_cta', 'Danışmanları Gör')
   }), [ui]);
 
   const categories = useMemo(() => {
