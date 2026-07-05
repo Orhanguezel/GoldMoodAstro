@@ -21,6 +21,7 @@ import {
   Moon,
   Binary,
   Trash2,
+  Download,
   Eye,
   Clock,
   MessageCircle,
@@ -606,13 +607,29 @@ export default function DashboardPage() {
               <div className="shrink-0 text-(--gm-gold-deep)">
                 <ShieldCheck size={36} strokeWidth={1.4} />
               </div>
-              <div>
+              <div className="flex-1">
                 <div className="font-display text-[11px] tracking-[0.2em] text-(--gm-gold-deep) uppercase mb-2">
                   {ui('ui_extra_b0_dash_privacy_promise', 'Privacy Promise')}
                 </div>
                 <p className="text-(--gm-text-dim) font-light leading-relaxed text-sm">
                   {ui('ui_extra_b0_dash_privacy_desc', 'Your birth data and session notes are stored encrypted in compliance with KVKK. You can delete your account or download your data at any time.')}
                 </p>
+                <div className="mt-5 flex flex-col sm:flex-row gap-3">
+                  <Link
+                    href={localizePath(locale, '/profile/privacy')}
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-(--gm-gold)/40 bg-(--gm-surface) px-5 py-2.5 text-xs font-bold uppercase tracking-[0.18em] text-(--gm-gold-deep) transition-colors hover:bg-(--gm-gold)/10 no-underline"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    {locale === 'tr' ? 'Verilerim ve Gizlilik' : locale === 'de' ? 'Meine Daten & Datenschutz' : 'My Data & Privacy'}
+                  </Link>
+                  <Link
+                    href={localizePath(locale, '/profile/privacy')}
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-(--gm-error)/40 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.18em] text-(--gm-error) transition-colors hover:bg-(--gm-error)/10 no-underline"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    {locale === 'tr' ? 'Hesabımı Sil' : locale === 'de' ? 'Konto löschen' : 'Delete Account'}
+                  </Link>
+                </div>
               </div>
             </section>
           </>
