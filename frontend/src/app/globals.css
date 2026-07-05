@@ -458,3 +458,67 @@
   padding-inline: 1rem;
   max-width: 1300px;
 }
+
+/* =============================================================
+   İçerik (CMS/HTML) tipografisi — blog, landing, hukuki sayfalar
+   @tailwindcss/typography plugin'i YOK; prose/prose-* sınıfları ölü kalıyordu
+   → preflight p/h/ul margin'lerini sıfırlayınca içerik cramped görünüyordu.
+   Bu blok dangerouslySetInnerHTML içeriğini plugin'siz stillendirir.
+   Hem .prose (blog/landing) hem .cms-html (legal) hedeflenir; renkler
+   token'lardan gelir → light/dark + tüm tema uyumlu.
+   ============================================================= */
+.prose, .cms-html {
+  color: var(--gm-text-dim);
+  font-weight: 300;
+  line-height: 1.8;
+  font-size: 1rem;
+}
+.prose > :first-child, .cms-html > :first-child { margin-top: 0; }
+.prose > :last-child, .cms-html > :last-child { margin-bottom: 0; }
+
+.prose p, .cms-html p { margin: 0 0 1.25rem; }
+
+.prose h1, .cms-html h1,
+.prose h2, .cms-html h2,
+.prose h3, .cms-html h3,
+.prose h4, .cms-html h4 {
+  font-family: var(--font-serif, 'Gabriela', serif);
+  font-weight: 400;
+  color: var(--gm-text);
+  line-height: 1.25;
+}
+.prose h1, .cms-html h1 { font-size: clamp(1.8rem, 3.5vw, 2.4rem); margin: 2.2rem 0 1rem; }
+.prose h2, .cms-html h2 { font-size: clamp(1.45rem, 3vw, 1.85rem); margin: 2rem 0 0.9rem; }
+.prose h3, .cms-html h3 { font-size: clamp(1.2rem, 2.4vw, 1.4rem); margin: 1.7rem 0 0.7rem; }
+.prose h4, .cms-html h4 { font-size: 1.1rem; margin: 1.5rem 0 0.6rem; }
+
+.prose ul, .cms-html ul { list-style: disc; padding-left: 1.6rem; margin: 0 0 1.25rem; }
+.prose ol, .cms-html ol { list-style: decimal; padding-left: 1.6rem; margin: 0 0 1.25rem; }
+.prose li, .cms-html li { margin: 0 0 0.5rem; padding-left: 0.25rem; }
+.prose li::marker, .cms-html li::marker { color: var(--gm-gold); }
+
+.prose a, .cms-html a {
+  color: var(--gm-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color .2s;
+}
+.prose a:hover, .cms-html a:hover { color: var(--gm-gold); }
+
+.prose strong, .cms-html strong { color: var(--gm-text); font-weight: 600; }
+.prose em, .cms-html em { font-style: italic; color: color-mix(in srgb, var(--gm-primary) 80%, transparent); }
+
+.prose blockquote, .cms-html blockquote {
+  border-left: 3px solid var(--gm-gold);
+  padding: 0.25rem 0 0.25rem 1.1rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: var(--gm-text-dim);
+}
+.prose img, .cms-html img { max-width: 100%; height: auto; border-radius: 1rem; margin: 1.5rem 0; }
+.prose hr, .cms-html hr { border: 0; border-top: 1px solid var(--gm-border-soft); margin: 2.2rem 0; }
+.prose table, .cms-html table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+.prose th, .cms-html th, .prose td, .cms-html td {
+  border: 1px solid var(--gm-border-soft); padding: 0.6rem 0.9rem; text-align: left;
+}
+.prose th, .cms-html th { color: var(--gm-text); font-weight: 600; }
