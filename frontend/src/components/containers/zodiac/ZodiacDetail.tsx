@@ -69,6 +69,8 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
   const L = localizeSign(meta, localePrefix);
   const pick = (tr: string, en: string, de: string) =>
     localePrefix === 'tr' ? tr : localePrefix === 'de' ? de : en;
+  // Tarih formatı locale'e göre — 'tr-TR' hardcode Almanca sayfada "5 Temmuz" gösteriyordu.
+  const intlLocale = localePrefix === 'tr' ? 'tr-TR' : localePrefix === 'de' ? 'de-DE' : 'en-US';
   const summaryText = `${L.label} ${ui('ui_zodiac_summary_p1', 'sign')} ${L.element} ${ui('ui_zodiac_summary_p2', 'element,')} ${L.modality} ${ui('ui_zodiac_summary_p3', 'modality and')} ${L.ruler} ${ui('ui_zodiac_summary_p4', 'rulership. This profile summarizes')} ${L.label} ${ui('ui_zodiac_summary_p5', 'energy strengths and shadow areas in character, relationships, career and spiritual care.')}`;
   const sectionFallbacks: Record<string, { title: string; content: string }> = {
     personality: {
@@ -474,7 +476,7 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
                   <div className="flex items-center gap-6 mb-12">
                     <div className="h-px flex-1 bg-(--gm-gold)/20" />
                     <span className={`${cinzel.className} text-(--gm-gold) text-xl tracking-[0.3em] uppercase backdrop-blur-md px-4`}>
-                      {new Date(todayDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      {new Date(todayDate).toLocaleDateString(intlLocale, { day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
                     <div className="h-px flex-1 bg-(--gm-gold)/20" />
                   </div>
@@ -491,7 +493,7 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
                     variant="horoscope"
                     data={{
                       sign: L.label,
-                      date: todayDate ? new Date(todayDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : '',
+                      date: todayDate ? new Date(todayDate).toLocaleDateString(intlLocale, { day: 'numeric', month: 'long' }) : '',
                       symbol: meta.symbol,
                       content: todayContent,
                     }}

@@ -39,7 +39,8 @@ export default function ZodiacTransit() {
 
   const [year, monthNum] = monthStr.split('-');
   const dateObj = new Date(parseInt(year), parseInt(monthNum) - 1);
-  const monthLabel = dateObj.toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { month: 'long', year: 'numeric' });
+  const intlLocale = locale === 'tr' ? 'tr-TR' : locale === 'de' ? 'de-DE' : 'en-US';
+  const monthLabel = dateObj.toLocaleDateString(intlLocale, { month: 'long', year: 'numeric' });
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4 md:py-20">

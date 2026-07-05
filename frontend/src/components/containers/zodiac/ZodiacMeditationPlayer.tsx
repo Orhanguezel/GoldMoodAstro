@@ -57,7 +57,7 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
     }
 
     const utterance = new SpeechSynthesisUtterance(speechText);
-    utterance.lang = locale === 'tr' ? 'tr-TR' : 'en-US';
+    utterance.lang = locale === 'tr' ? 'tr-TR' : locale === 'de' ? 'de-DE' : 'en-US';
     utterance.rate = 0.88;
     utterance.pitch = 0.95;
     
