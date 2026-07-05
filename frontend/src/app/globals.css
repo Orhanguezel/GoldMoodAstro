@@ -19,7 +19,7 @@
   --color-gold-300: var(--gm-gold-light, #E5C868);
   --color-gold-400: var(--gm-gold, #DCB02D);          /* PRIMARY GOLD */
   --color-gold-500: var(--gm-gold-dim, #B89230);
-  --color-gold-600: var(--gm-gold-deep, #544315);     /* deep gold */
+  --color-gold-600: var(--gm-gold-deep, #A8862A);     /* deep gold */
   --color-gold-700: #7C631F;
   --color-gold-800: #544315;
   --color-gold-900: #2E250B;
@@ -69,8 +69,8 @@
   --color-brand-dark:      var(--gm-primary-dark, #7C4FBF);
   --color-brand-light:     color-mix(in srgb, var(--gm-primary, #9B6FD9) 14%, transparent);
 
-  --color-brand-gold:      var(--gm-gold-deep, #544315);
-  --color-brand-gold-deep: var(--gm-gold-deep, #544315);
+  --color-brand-gold:      var(--gm-gold-deep, #A8862A);
+  --color-brand-gold-deep: var(--gm-gold-deep, #A8862A);
   --color-brand-gold-dim:  var(--gm-gold-dim, #B89230);
 
   --color-bg-base:         var(--gm-bg, #F5EFFF);

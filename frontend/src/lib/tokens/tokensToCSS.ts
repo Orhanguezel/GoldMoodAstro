@@ -92,7 +92,7 @@ export function tokensToCSS(tokens: DesignTokens): string {
 --gm-gold:${cssValue(c.brand_secondary)};
 --gm-gold-dim:${cssValue(c.brand_secondary_dim)};
 --gm-gold-light:${cssValue(c.brand_secondary_light)};
---gm-gold-deep:${cssValue(c.gold_800 || c.brand_primary_dark)};
+--gm-gold-deep:${cssValue(c.gold_600 || c.brand_secondary_dim || c.gold_800 || c.brand_primary_dark)};
 --gm-accent:${cssValue(c.brand_accent)};
 --gm-gold-50:${pickScale(c.gold_50, goldScale, 0)};
 --gm-gold-100:${pickScale(c.gold_100, goldScale, 1)};
