@@ -129,6 +129,21 @@ export default async function BlogDetailsPage({ params }: PageProps) {
 
       <PageContainer className="bg-(--gm-bg) text-(--gm-text)" verticalPadding="large">
         <div className="space-y-12">
+          {image ? (
+            <div className="max-w-[var(--gm-w-readable)] mx-auto">
+              <div className="aspect-video w-full overflow-hidden rounded-[2rem] border border-(--gm-border-soft) shadow-(--gm-shadow-card) bg-(--gm-bg-deep)">
+                {/* Server component: plain <img> — next/image optimizer + SVG/cache
+                    sorunlarını bypass eder; admin'de çalışan yöntemle aynı. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={absUrlJoin(siteUrl, image)}
+                  alt={safeStr(page?.featured_image_alt) || title}
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                />
+              </div>
+            </div>
+          ) : null}
           <div className="max-w-[var(--gm-w-readable)] mx-auto">
             <style>{CMS_FALLBACK_CSS}</style>
             {html ? (
