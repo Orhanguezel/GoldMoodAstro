@@ -200,7 +200,13 @@ export default function BlogDetails() {
   const galleryImages = useMemo(() => buildGalleryImages(post, title), [post, title]);
   const [activeIdx, setActiveIdx] = useState(0);
   const activeImage = galleryImages.length ? galleryImages[activeIdx % galleryImages.length] : null;
-  const heroSrc = activeImage ? activeImage.raw || activeImage.thumb : '';
+  // Fallback: gallery boşsa bile featured_image/image_url'den hero göster.
+  const heroSrc =
+    (activeImage ? activeImage.raw || activeImage.thumb : '') ||
+    safeStr((post as any)?.featured_image) ||
+    safeStr((post as any)?.featured_image_effective_url) ||
+    safeStr((post as any)?.image_url) ||
+    '';
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -343,7 +349,8 @@ export default function BlogDetails() {
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                   priority
-                  unoptimized={String(heroSrc).toLowerCase().endsWith('.svg')}
+                  unoptimized
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
                 <div className="absolute inset-0 bg-[var(--gm-bg-deep)]/0 group-hover:bg-[var(--gm-bg-deep)]/10 transition-colors flex items-center justify-center">
                   <span className="text-[var(--gm-bg)] opacity-0 group-hover:opacity-100 bg-[var(--gm-bg-deep)]/50 px-3 py-1 rounded text-sm transition-opacity">
