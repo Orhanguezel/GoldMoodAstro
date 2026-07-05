@@ -15,6 +15,10 @@ import type { HoroscopePeriod } from '@/modules/horoscopes/schema';
 
 const HOUR_MS = 60 * 60 * 1000;
 const TARGET_HOUR = 2; // 02:00 local
+const HOROSCOPE_LOCALES = (process.env.HOROSCOPE_LOCALES || 'tr,en,de')
+  .split(',')
+  .map((locale) => locale.trim().toLowerCase())
+  .filter(Boolean);
 
 let lastRunBucket: Record<HoroscopePeriod, string> = {
   daily: '',
@@ -52,7 +56,10 @@ async function runIfNeeded(period: HoroscopePeriod, ref: Date) {
 
   console.log(`[horoscope-cron] ${period} üretim başlıyor (bucket=${bucket})`);
   try {
-    const stats = await generateAllForPeriod(period, 'tr');
+    const stats: Record<string, unknown> = {};
+    for (const locale of HOROSCOPE_LOCALES) {
+      stats[locale] = await generateAllForPeriod(period, locale);
+    }
     console.log(`[horoscope-cron] ${period} stats:`, stats);
     lastRunBucket[period] = bucket;
   } catch (err) {

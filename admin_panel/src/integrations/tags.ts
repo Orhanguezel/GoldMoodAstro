@@ -164,6 +164,7 @@ export const tags = [
   'LlmPrompt',
   'LlmPrompts',
   'AstrologyKb',
+  'Horoscopes',
   'HomeSection',
   'HomeSections',
   'ConsultantApplication',

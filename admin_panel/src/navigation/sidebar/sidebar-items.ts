@@ -98,6 +98,8 @@ export type AdminNavItemKey =
   | 'cache'
   | 'llm_prompts'
   | 'astrology_kb'
+  | 'zodiac_content'
+  | 'horoscopes'
   | 'banners'
   | 'campaigns'
   | 'navigation'
@@ -160,6 +162,8 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
     items: [
       { key: 'banners', url: '/admin/banners', icon: ImageIcon },
       { key: 'blog', url: '/admin/blog', icon: Newspaper },
+      { key: 'zodiac_content', url: '/admin/astrology-kb?kind=sign', icon: Star },
+      { key: 'horoscopes', url: '/admin/horoscopes', icon: Calendar },
       { key: 'landing', url: '/admin/landing', icon: Layers },
       { key: 'pages', url: '/admin/pages', icon: BookOpen },
       { key: 'campaigns', url: '/admin/campaigns', icon: Tag },
@@ -227,6 +231,8 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   cache: 'Cache Yönetimi',
   llm_prompts: 'AI Promptları',
   astrology_kb: 'Astroloji Bilgi Bankası',
+  zodiac_content: 'Burç İçerikleri',
+  horoscopes: 'Günlük Yorumlar',
   banners: 'Banner Yönetimi',
   campaigns: 'Kampanyalar',
   service_categories: 'Hizmet Kategorileri',

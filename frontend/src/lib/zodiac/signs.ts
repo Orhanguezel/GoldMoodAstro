@@ -77,13 +77,48 @@ const MODALITY_I18N: Record<ZodiacModality, EnDe> = {
   'Değişken': { en: 'Mutable', de: 'Veränderlich' },
 };
 
-export type LocalizedSign = { label: string; date: string; element: string; modality: string };
+const POLARITY_I18N: Record<ZodiacPolarity, EnDe> = {
+  'Yang': { en: 'Yang', de: 'Yang' },
+  'Yin': { en: 'Yin', de: 'Yin' },
+};
 
-/** ZodiacSignMeta'nın label/date/element/modality alanlarını locale'e göre döndürür (tr fallback). */
+const RULER_I18N: Record<string, EnDe> = {
+  'Merkür': { en: 'Mercury', de: 'Merkur' },
+  'Venüs': { en: 'Venus', de: 'Venus' },
+  'Mars': { en: 'Mars', de: 'Mars' },
+  'Ay': { en: 'Moon', de: 'Mond' },
+  'Güneş': { en: 'Sun', de: 'Sonne' },
+  'Jüpiter': { en: 'Jupiter', de: 'Jupiter' },
+  'Satürn': { en: 'Saturn', de: 'Saturn' },
+  'Plüton': { en: 'Pluto', de: 'Pluto' },
+  'Uranüs': { en: 'Uranus', de: 'Uranus' },
+  'Neptün': { en: 'Neptune', de: 'Neptun' },
+  'Mars / Plüton': { en: 'Mars / Pluto', de: 'Mars / Pluto' },
+  'Satürn / Uranüs': { en: 'Saturn / Uranus', de: 'Saturn / Uranus' },
+  'Jüpiter / Neptün': { en: 'Jupiter / Neptune', de: 'Jupiter / Neptun' },
+};
+
+export type LocalizedSign = {
+  label: string;
+  date: string;
+  element: string;
+  modality: string;
+  polarity: string;
+  ruler: string;
+};
+
+/** ZodiacSignMeta'nın gösterim alanlarını locale'e göre döndürür (tr fallback). */
 export function localizeSign(meta: ZodiacSignMeta, locale?: string): LocalizedSign {
   const l = String(locale ?? 'tr').toLowerCase().split(/[-_]/)[0];
   if (l !== 'en' && l !== 'de') {
-    return { label: meta.label, date: meta.date, element: meta.element, modality: meta.modality };
+    return {
+      label: meta.label,
+      date: meta.date,
+      element: meta.element,
+      modality: meta.modality,
+      polarity: meta.polarity,
+      ruler: meta.ruler,
+    };
   }
   const s = SIGN_I18N[meta.key];
   return {
@@ -91,5 +126,7 @@ export function localizeSign(meta: ZodiacSignMeta, locale?: string): LocalizedSi
     date: s?.date[l] ?? meta.date,
     element: ELEMENT_I18N[meta.element]?.[l] ?? meta.element,
     modality: MODALITY_I18N[meta.modality]?.[l] ?? meta.modality,
+    polarity: POLARITY_I18N[meta.polarity]?.[l] ?? meta.polarity,
+    ruler: RULER_I18N[meta.ruler]?.[l] ?? meta.ruler,
   };
 }

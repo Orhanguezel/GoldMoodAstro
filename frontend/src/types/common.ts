@@ -255,11 +255,19 @@ export interface Banner {
 export interface DailyHoroscope {
   id: string;
   date: string;
+  period_start_date?: string;
   sign: ZodiacSign;
+  locale?: string;
+  content?: string;
+  content_locale?: string;
+  is_fallback?: boolean;
   contentTr: string;
   contentEn?: string | null;
+  mood_score?: number | null;
   moodScore: number;
+  lucky_number?: number | null;
   luckyNumber: number;
+  lucky_color?: string | null;
   luckyColor: string;
 }
 

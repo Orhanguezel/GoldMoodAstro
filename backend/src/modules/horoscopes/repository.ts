@@ -33,12 +33,56 @@ export type SignSection = {
   short_summary: string | null;
 };
 
+export type HoroscopeAdminDto = {
+  id: string;
+  period: HoroscopePeriod;
+  period_start_date: string;
+  sign: SignKey;
+  locale: string;
+  content: string;
+  mood_score: number | null;
+  lucky_number: number | null;
+  lucky_color: string | null;
+  source: 'llm' | 'astrolog_manual' | 'seed';
+  prompt_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type HoroscopeListFilters = {
+  sign?: string;
+  period?: string;
+  date?: string;
+  locale?: string;
+  source?: string;
+  limit?: number;
+  offset?: number;
+};
+
 function isValidSign(s: string): s is SignKey {
   return (ALL_SIGNS as string[]).includes(s);
 }
 
 function isValidPeriod(p: string): p is HoroscopePeriod {
   return p === 'daily' || p === 'weekly' || p === 'monthly' || p === 'transit';
+}
+
+function normalizeHoroscopeRow(row: any): HoroscopeAdminDto {
+  return {
+    id: String(row.id),
+    period: row.period as HoroscopePeriod,
+    period_start_date: String(row.period_start_date ?? row.periodStartDate),
+    sign: row.sign as SignKey,
+    locale: String(row.locale),
+    content: String(row.content ?? ''),
+    mood_score: row.mood_score ?? row.moodScore ?? null,
+    lucky_number: row.lucky_number ?? row.luckyNumber ?? null,
+    lucky_color: row.lucky_color ?? row.luckyColor ?? null,
+    source: row.source as HoroscopeAdminDto['source'],
+    prompt_id: row.prompt_id ?? row.promptId ?? null,
+    created_at: String(row.created_at ?? row.createdAt),
+    updated_at: String(row.updated_at ?? row.updatedAt),
+  };
 }
 
 /**
@@ -103,6 +147,8 @@ export async function getHoroscopeByPeriod(args: {
   period_start_date: string;
   sign: SignKey;
   locale: string;
+  content_locale: string;
+  is_fallback: boolean;
   content: string;
   mood_score: number | null;
   lucky_number: number | null;
@@ -136,6 +182,7 @@ export async function getHoroscopeByPeriod(args: {
   let row = await tryFetch(locale);
   if (!row && locale !== 'tr') row = await tryFetch('tr');
   if (!row) return null;
+  const contentLocale = String(row.locale);
 
   return {
     id: String(row.id),
@@ -143,6 +190,8 @@ export async function getHoroscopeByPeriod(args: {
     period_start_date: String(row.periodStartDate),
     sign: row.sign as SignKey,
     locale: row.locale,
+    content_locale: contentLocale,
+    is_fallback: contentLocale !== locale,
     content: row.content,
     mood_score: row.moodScore ?? null,
     lucky_number: row.luckyNumber ?? null,
@@ -165,6 +214,112 @@ export async function getRecentHoroscopes(limit: number = 12) {
     .orderBy(desc(dailyHoroscopes.createdAt))
     .limit(limit);
   return rows;
+}
+
+export async function listHoroscopesAdmin(filters: HoroscopeListFilters = {}): Promise<{
+  items: HoroscopeAdminDto[];
+  total: number;
+}> {
+  const where: string[] = [];
+  const params: unknown[] = [];
+
+  if (filters.sign && isValidSign(filters.sign.toLowerCase())) {
+    where.push('sign = ?');
+    params.push(filters.sign.toLowerCase());
+  }
+  if (filters.period && isValidPeriod(filters.period.toLowerCase())) {
+    where.push('period = ?');
+    params.push(filters.period.toLowerCase());
+  }
+  if (filters.date && /^\d{4}-\d{2}-\d{2}$/.test(filters.date)) {
+    where.push('period_start_date = ?');
+    params.push(filters.date);
+  }
+  if (filters.locale) {
+    where.push('locale = ?');
+    params.push(filters.locale.toLowerCase().slice(0, 8));
+  }
+  if (filters.source && ['llm', 'astrolog_manual', 'seed'].includes(filters.source)) {
+    where.push('source = ?');
+    params.push(filters.source);
+  }
+
+  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const limit = Math.min(Math.max(Number(filters.limit ?? 50) || 50, 1), 200);
+  const offset = Math.max(Number(filters.offset ?? 0) || 0, 0);
+
+  const [countRows] = await (db as any).session.client.query(
+    `SELECT COUNT(*) AS total FROM daily_horoscopes ${whereSql}`,
+    params,
+  );
+  const [rows] = await (db as any).session.client.query(
+    `SELECT id, period, period_start_date, sign, locale, content, mood_score, lucky_number,
+            lucky_color, source, prompt_id, created_at, updated_at
+     FROM daily_horoscopes
+     ${whereSql}
+     ORDER BY period_start_date DESC, created_at DESC
+     LIMIT ? OFFSET ?`,
+    [...params, limit, offset],
+  );
+
+  return {
+    items: (rows as any[]).map(normalizeHoroscopeRow),
+    total: Number((countRows as any[])[0]?.total ?? 0),
+  };
+}
+
+export async function getHoroscopeAdmin(id: string): Promise<HoroscopeAdminDto | null> {
+  const [rows] = await (db as any).session.client.query(
+    `SELECT id, period, period_start_date, sign, locale, content, mood_score, lucky_number,
+            lucky_color, source, prompt_id, created_at, updated_at
+     FROM daily_horoscopes
+     WHERE id = ?
+     LIMIT 1`,
+    [id],
+  );
+  const row = (rows as any[])[0];
+  return row ? normalizeHoroscopeRow(row) : null;
+}
+
+export async function updateHoroscopeAdmin(
+  id: string,
+  patch: {
+    content?: string;
+    mood_score?: number | null;
+    lucky_number?: number | null;
+    lucky_color?: string | null;
+  },
+): Promise<HoroscopeAdminDto | null> {
+  const fields: string[] = [];
+  const params: unknown[] = [];
+
+  if (typeof patch.content === 'string') {
+    fields.push('content = ?');
+    params.push(patch.content);
+  }
+  if (patch.mood_score !== undefined) {
+    fields.push('mood_score = ?');
+    params.push(patch.mood_score);
+  }
+  if (patch.lucky_number !== undefined) {
+    fields.push('lucky_number = ?');
+    params.push(patch.lucky_number);
+  }
+  if (patch.lucky_color !== undefined) {
+    fields.push('lucky_color = ?');
+    params.push(patch.lucky_color);
+  }
+
+  if (!fields.length) return getHoroscopeAdmin(id);
+
+  await (db as any).session.client.query(
+    `UPDATE daily_horoscopes
+     SET ${fields.join(', ')}, source = 'astrolog_manual', updated_at = CURRENT_TIMESTAMP(3)
+     WHERE id = ?`,
+    [...params, id],
+  );
+
+  return getHoroscopeAdmin(id);
 }
 
 export async function getCompatibilityReading(signA: string, signB: string, locale: string = 'tr') {

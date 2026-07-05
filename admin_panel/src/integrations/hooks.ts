@@ -69,6 +69,7 @@ export * from '@/integrations/endpoints/admin/livekit_admin.endpoints';
 export * from '@/integrations/endpoints/admin/chat_admin.endpoints';
 export * from '@/integrations/endpoints/admin/llm_prompts_admin.endpoints';
 export * from '@/integrations/endpoints/admin/astrology_kb_admin.endpoints';
+export * from '@/integrations/endpoints/admin/horoscopes_admin.endpoints';
 
 
 // Orders / Payments

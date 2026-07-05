@@ -4,6 +4,22 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import * as repo from './repository';
 import { apiMessage } from '@goldmood/shared-backend/modules/_shared/api-i18n';
+import { generateHoroscope } from './generator';
+import { ALL_SIGNS, type HoroscopePeriod, type SignKey } from './schema';
+
+const PERIODS: HoroscopePeriod[] = ['daily', 'weekly', 'monthly', 'transit'];
+
+function isSign(value: string): value is SignKey {
+  return (ALL_SIGNS as string[]).includes(value);
+}
+
+function isPeriod(value: string): value is HoroscopePeriod {
+  return (PERIODS as string[]).includes(value);
+}
+
+function isIsoDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
 
 /**
  * GET /horoscopes/today?sign=aries&locale=tr
@@ -101,4 +117,95 @@ export async function handleGetTransit(req: FastifyRequest, reply: FastifyReply)
 
   const horoscopes = await repo.getHoroscopesForTransit(month, locale || 'tr');
   return reply.send({ data: horoscopes });
+}
+
+export async function handleAdminListHoroscopes(req: FastifyRequest, reply: FastifyReply) {
+  const { sign, period, date, locale, source, limit, offset } = req.query as {
+    sign?: string;
+    period?: string;
+    date?: string;
+    locale?: string;
+    source?: string;
+    limit?: string;
+    offset?: string;
+  };
+
+  const result = await repo.listHoroscopesAdmin({
+    sign,
+    period,
+    date,
+    locale,
+    source,
+    limit: limit ? Number(limit) : undefined,
+    offset: offset ? Number(offset) : undefined,
+  });
+  return reply.send({ data: result.items, meta: { total: result.total } });
+}
+
+export async function handleAdminUpdateHoroscope(req: FastifyRequest, reply: FastifyReply) {
+  const { id } = req.params as { id: string };
+  const body = req.body as {
+    content?: string;
+    mood_score?: number | null;
+    lucky_number?: number | null;
+    lucky_color?: string | null;
+  };
+
+  if (body.content !== undefined && !body.content.trim()) {
+    return reply.status(400).send({ error: 'content_required' });
+  }
+
+  const updated = await repo.updateHoroscopeAdmin(id, {
+    content: body.content,
+    mood_score: body.mood_score,
+    lucky_number: body.lucky_number,
+    lucky_color: body.lucky_color,
+  });
+
+  if (!updated) {
+    return reply.status(404).send({ error: apiMessage(req, 'horoscope_not_found') });
+  }
+  return reply.send({ data: updated });
+}
+
+export async function handleAdminGenerateHoroscope(req: FastifyRequest, reply: FastifyReply) {
+  const body = req.body as {
+    sign?: string;
+    period?: string;
+    locale?: string;
+    date?: string;
+    force?: boolean;
+  };
+
+  const sign = String(body.sign || '').toLowerCase();
+  const period = String(body.period || 'daily').toLowerCase();
+  const locale = String(body.locale || 'tr').toLowerCase().slice(0, 8);
+  const date = body.date ? String(body.date) : undefined;
+
+  if (!isSign(sign)) {
+    return reply.status(400).send({ error: 'invalid_sign' });
+  }
+  if (!isPeriod(period)) {
+    return reply.status(400).send({ error: 'invalid_period' });
+  }
+  if (date && !isIsoDate(date)) {
+    return reply.status(400).send({ error: 'invalid_date' });
+  }
+
+  const result = await generateHoroscope({
+    sign,
+    period,
+    locale,
+    date,
+    force: body.force ?? true,
+  });
+  const periodStart = date || undefined;
+  const horoscope = await repo.getHoroscopeByPeriod({
+    sign,
+    period,
+    locale,
+    date: periodStart,
+  });
+
+  return reply.send({ data: { ...result, horoscope } });
 }

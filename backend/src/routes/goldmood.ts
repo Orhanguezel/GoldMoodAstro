@@ -7,7 +7,7 @@ import { registerLiveKitAdmin } from '@/modules/livekit/admin.routes';
 import { registerLiveKit } from '@/modules/livekit/router';
 import { registerGeocodeRoutes } from '@/modules/geocode/router';
 import { registerReadings } from '@/modules/readings/router';
-import { registerHoroscopeRoutes } from '@/modules/horoscopes/router';
+import { registerHoroscopeAdminRoutes, registerHoroscopeRoutes } from '@/modules/horoscopes/router';
 import { registerTarotRoutes } from '@/modules/tarot/router';
 import { registerCoffeeRoutes } from '@/modules/coffee/router';
 import { registerDreamsRoutes } from '@/modules/dreams/router';
@@ -55,4 +55,5 @@ export async function registerGoldmoodAdmin(adminApi: FastifyInstance) {
   await adminApi.register(registerLiveKitAdmin);
   await adminApi.register(registerServiceBoostsAdmin);
   await adminApi.register(registerCommissionChangeAdmin);
+  await adminApi.register(registerHoroscopeAdminRoutes);
 }

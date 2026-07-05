@@ -7,6 +7,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import {
@@ -84,13 +85,25 @@ const EMPTY_FORM: AstrologyKbCreatePayload = {
 
 export default function AstrologyKbClient() {
   const t = useAdminT('admin.astrologyKb');
+  const searchParams = useSearchParams();
+  const urlKind = searchParams.get('kind');
+  const initialKind = KIND_OPTIONS.includes(urlKind as AstrologyKbKind)
+    ? (urlKind as AstrologyKbKind)
+    : 'all';
   const [filters, setFilters] = React.useState({
     search: '',
-    kind: 'all' as AstrologyKbKind | 'all',
+    kind: initialKind as AstrologyKbKind | 'all',
     locale: 'all' as string,
     review_status: 'all' as 'all' | 'pending' | 'approved' | 'rejected',
     is_active: 'all' as 'all' | 'active' | 'inactive',
   });
+
+  React.useEffect(() => {
+    const nextKind = KIND_OPTIONS.includes(urlKind as AstrologyKbKind)
+      ? (urlKind as AstrologyKbKind)
+      : 'all';
+    setFilters((prev) => (prev.kind === nextKind ? prev : { ...prev, kind: nextKind }));
+  }, [urlKind]);
 
   // Selection state
   const [selected, setSelected] = React.useState<Set<string>>(new Set());

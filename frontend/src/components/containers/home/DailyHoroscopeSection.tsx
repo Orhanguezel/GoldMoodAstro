@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { useGetDailyHoroscopeQuery } from '@/integrations/rtk/public/horoscopes.endpoints';
 import { useLocaleShort, useUiSection } from '@/i18n';
-import { Sparkles, Star, Zap, Info } from 'lucide-react';
+import { Sparkles, Star, Zap, Info, Calendar } from 'lucide-react';
+import { getZodiacMeta, localizeSign } from '@/lib/zodiac/signs';
 
 const SIGNS = [
   { key: 'aries', label: 'Aries', symbol: '♈' },
@@ -24,9 +25,22 @@ export default function DailyHoroscopeSection() {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_daily');
   const [selectedSign, setSelectedSign] = useState('aries');
-  const { data: horoscope, isFetching } = useGetDailyHoroscopeQuery({ sign: selectedSign });
+  const { data: horoscope, isFetching } = useGetDailyHoroscopeQuery({ sign: selectedSign, locale });
 
-  const currentSign = SIGNS.find(s => s.key === selectedSign);
+  const signs = React.useMemo(() => SIGNS.map((sign) => {
+    const meta = getZodiacMeta(sign.key);
+    return {
+      ...sign,
+      label: meta ? localizeSign(meta, locale).label : sign.label,
+    };
+  }), [locale]);
+  const currentSign = signs.find(s => s.key === selectedSign);
+  const localeTag = locale === 'tr' ? 'tr-TR' : locale === 'de' ? 'de-DE' : 'en-US';
+  const horoscopeDate = horoscope?.date ?? horoscope?.period_start_date;
+  const horoscopeContent = horoscope?.content ?? horoscope?.contentTr ?? horoscope?.contentEn ?? '';
+  const moodScore = Number(horoscope?.mood_score ?? horoscope?.moodScore ?? 0);
+  const luckyNumber = horoscope?.lucky_number ?? horoscope?.luckyNumber ?? '-';
+  const luckyColor = horoscope?.lucky_color ?? horoscope?.luckyColor ?? '-';
 
   return (
     <section className="py-24 lg:py-40 bg-[var(--gm-bg)] overflow-hidden relative">
@@ -54,7 +68,7 @@ export default function DailyHoroscopeSection() {
             </p>
 
             <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-4 gap-3">
-              {SIGNS.map((sign) => (
+              {signs.map((sign) => (
                 <button
                   key={sign.key}
                   onClick={() => setSelectedSign(sign.key)}
@@ -102,12 +116,12 @@ export default function DailyHoroscopeSection() {
                       </div>
                       <div className="flex items-center gap-2 text-[var(--gm-text-dim)] font-serif italic text-sm">
                         <Calendar className="w-4 h-4 text-[var(--gm-gold)]" />
-                        {new Date(horoscope.date).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        {horoscopeDate ? new Date(horoscopeDate).toLocaleDateString(localeTag, { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
                       </div>
                     </div>
 
                     <p className="text-[var(--gm-text)] font-serif text-[1.35rem] leading-[1.8] mb-12 italic opacity-90 first-letter:text-5xl first-letter:float-left first-letter:mr-3 first-letter:font-serif first-letter:text-[var(--gm-gold)]">
-                      {locale === 'tr' ? horoscope.contentTr : horoscope.contentEn || horoscope.contentTr}
+                      {horoscopeContent}
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 rounded-2xl bg-[var(--gm-bg-deep)]/50 border border-[var(--gm-border-soft)]">
@@ -118,7 +132,7 @@ export default function DailyHoroscopeSection() {
                         </div>
                         <div className="flex gap-1.5">
                           {[...Array(5)].map((_, i) => (
-                            <div key={i} className={`h-1.5 flex-1 rounded-full ${i < (horoscope.moodScore / 2) ? 'bg-[var(--gm-gold)]' : 'bg-[var(--gm-surface-high)]'}`} />
+                            <div key={i} className={`h-1.5 flex-1 rounded-full ${i < (moodScore / 2) ? 'bg-[var(--gm-gold)]' : 'bg-[var(--gm-surface-high)]'}`} />
                           ))}
                         </div>
                       </div>
@@ -127,14 +141,14 @@ export default function DailyHoroscopeSection() {
                           <Star className="w-3 h-3 text-[var(--gm-gold)]" />
                           <span className="font-bold text-[10px] tracking-widest text-[var(--gm-gold)] uppercase">{ui('ui_daily_horoscope_lucky_number_label', 'Lucky Number')}</span>
                         </div>
-                        <span className="font-serif text-2xl text-[var(--gm-text)]">{horoscope.luckyNumber}</span>
+                        <span className="font-serif text-2xl text-[var(--gm-text)]">{luckyNumber}</span>
                       </div>
                       <div className="md:border-l border-[var(--gm-border-soft)] md:pl-8">
                         <div className="flex items-center gap-2 mb-2">
                           <Sparkles className="w-3 h-3 text-[var(--gm-gold)]" />
                           <span className="font-bold text-[10px] tracking-widest text-[var(--gm-gold)] uppercase">{ui('ui_daily_horoscope_lucky_color_label', 'Lucky Color')}</span>
                         </div>
-                        <span className="font-serif text-lg text-[var(--gm-text)] italic capitalize">{horoscope.luckyColor}</span>
+                        <span className="font-serif text-lg text-[var(--gm-text)] italic capitalize">{luckyColor}</span>
                       </div>
                     </div>
                   </div>
@@ -153,5 +167,3 @@ export default function DailyHoroscopeSection() {
     </section>
   );
 }
-
-import { Calendar } from 'lucide-react';

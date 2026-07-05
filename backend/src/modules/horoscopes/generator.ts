@@ -133,11 +133,12 @@ export async function generateHoroscope(args: {
   sign: SignKey;
   period: HoroscopePeriod;
   locale?: string;
+  date?: string;
   /** Override: override edilmişse mevcut row üzerine yazar; yoksa skip */
   force?: boolean;
 }): Promise<{ generated: boolean; reason?: string }> {
   const locale = args.locale || 'tr';
-  const periodStart = getPeriodStartDate(args.period);
+  const periodStart = args.date || getPeriodStartDate(args.period);
 
   if (!args.force) {
     const exists = await existsHoroscope({

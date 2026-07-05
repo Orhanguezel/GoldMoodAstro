@@ -47,6 +47,27 @@ export const zodiacLabelsTr: Record<string, string> = {
   pisces: 'Balık',
 };
 
+export const zodiacLabelsDe: Record<string, string> = {
+  aries: 'Widder',
+  taurus: 'Stier',
+  gemini: 'Zwillinge',
+  cancer: 'Krebs',
+  leo: 'Löwe',
+  virgo: 'Jungfrau',
+  libra: 'Waage',
+  scorpio: 'Skorpion',
+  sagittarius: 'Schütze',
+  capricorn: 'Steinbock',
+  aquarius: 'Wassermann',
+  pisces: 'Fische',
+};
+
+export function getZodiacLabelForLocale(sign: string, locale = 'en') {
+  if (locale === 'tr') return zodiacLabelsTr[sign] || zodiacLabels[sign] || sign;
+  if (locale === 'de') return zodiacLabelsDe[sign] || zodiacLabels[sign] || sign;
+  return zodiacLabels[sign] || sign;
+}
+
 export type ZodiacPageInfo = {
   title: string;
   short_summary: string;
@@ -61,45 +82,58 @@ export type ZodiacPageInfo = {
 
 export function buildZodiacFallbackInfo(sign: string, label: string, locale = 'en'): ZodiacPageInfo {
   const isTr = locale === 'tr';
+  const isDe = locale === 'de';
   return {
-    title: isTr ? `${label} Burcu Rehberi` : `${label} Zodiac Traits`,
+    title: isTr ? `${label} Burcu Rehberi` : isDe ? `${label} Sternzeichen-Guide` : `${label} Zodiac Traits`,
     short_summary: isTr
       ? `${label} burcu karakter, ilişki, kariyer ve yaşam ritmi alanlarında kendine özgü güçlü yanlar ve gelişim alanları taşır.`
+      : isDe
+        ? `${label} trägt eigene Stärken und Entwicklungsfelder in Charakter, Beziehungen, Karriere und Lebensrhythmus.`
       : `${label} is a strong astrological archetype with its own motivations across character, relationships, career and spiritual care.`,
     content: isTr
       ? `${label} burcu temel motivasyonları, ilişki dilini, karar alma kalıplarını ve gündelik enerji ritmini anlamak için bir başlangıç sunar. Bu okuma sabit bir kişilik tanımı değildir; yükselen, Ay, Venüs, Mars ve ev yerleşimleriyle birlikte daha kişisel hale gelir.`
+      : isDe
+        ? `${label} ist ein hilfreicher Ausgangspunkt, um Grundmotivation, Beziehungsstil, Entscheidungsmuster und täglichen Energierhythmus zu verstehen. Diese Deutung ist keine feste Persönlichkeitsdefinition; sie wird persönlicher, wenn Aszendent, Mond, Venus, Mars und Häuser gemeinsam betrachtet werden.`
       : `${label} helps explain core life motivations, relationship style, decision patterns and daily energy rhythm through the Sun sign. This reading is not a fixed personality definition; it becomes deeper and more personal when read with the rising sign, Moon sign, Venus, Mars and house placements in the birth chart.`,
     sections: [
       {
         id: `${sign}-personality-fallback`,
         key2: 'personality',
-        title: isTr ? `${label} Karakteri` : `${label} Personality`,
+        title: isTr ? `${label} Karakteri` : isDe ? `${label} Persönlichkeit` : `${label} Personality`,
         content: isTr
           ? `${label} karakteri kişinin enerjisini nasıl kullandığını, hangi ihtiyaçların bağ kurma biçimini etkilediğini ve gölge tarafların hangi farkındalıkla yumuşayabileceğini anlatır.`
+          : isDe
+            ? `${label} Persönlichkeit zeigt, wie Energie eingesetzt wird, welche Bedürfnisse Beziehungen prägen und welche Schattenmuster mit mehr Bewusstsein weicher werden können.`
           : `${label} personality highlights how someone uses their energy and which needs shape their connections. When strengths are used consciously, they bring clarity, productivity and inner direction; shadow patterns can be explored with more awareness.`,
       },
       {
         id: `${sign}-love-fallback`,
         key2: 'love',
-        title: isTr ? `${label} Aşk ve Uyum` : `${label} Love and Compatibility`,
+        title: isTr ? `${label} Aşk ve Uyum` : isDe ? `${label} Liebe & Kompatibilität` : `${label} Love and Compatibility`,
         content: isTr
           ? `${label} ilişkilerde yalnızca Güneş burcuyla değerlendirilmez. Ay duygusal güveni, Venüs sevgi dilini, Mars arzu ve çatışma stilini, yükselen burç ise ilk teması gösterir. En sağlıklı ilişki okuması iki doğum haritasının birlikte incelenmesiyle yapılır.`
+          : isDe
+            ? `${label} sollte in Beziehungen nicht nur über das Sonnenzeichen bewertet werden. Der Mond zeigt emotionale Sicherheit, Venus die Liebessprache, Mars Wunsch und Konfliktstil, der Aszendent den ersten Kontakt. Am stimmigsten ist der Vergleich beider vollständiger Geburtshoroskope.`
           : `${label} compatibility should not be judged by Sun sign alone. In relationships, the Moon shows emotional safety, Venus shows love language, Mars shows desire and conflict style, and the rising sign shows first contact. The healthiest reading compares both complete birth charts.`,
       },
       {
         id: `${sign}-career-fallback`,
         key2: 'career',
-        title: isTr ? `${label} Kariyer ve Yön` : `${label} Career and Direction`,
+        title: isTr ? `${label} Kariyer ve Yön` : isDe ? `${label} Karriere & Richtung` : `${label} Career and Direction`,
         content: isTr
           ? `${label} kariyer okuması motivasyon, odak ve çalışma ritmini anlamak için kullanışlıdır. Doğru ortam bu burcun güçlü yanlarını görünür kılar; zorlayıcı dönemler plan, sınır ve tempo ayarı ihtiyacını gösterebilir.`
+          : isDe
+            ? `${label} ist ein nützlicher Einstieg, um Motivation, Fokus und Arbeitsstil zu verstehen. Das passende Umfeld macht Stärken sichtbar; herausfordernde Phasen können Planung, Grenzen und Rhythmusanpassung anzeigen.`
           : `${label} is a useful starting point for understanding motivation, focus and working style. The right environment makes this sign strengths visible, while challenging cycles can point to planning, boundaries and rhythm adjustments.`,
       },
       {
         id: `${sign}-health-fallback`,
         key2: 'health',
-        title: isTr ? `${label} Sağlık ve Yaşam Ritmi` : `${label} Wellness and Life Rhythm`,
+        title: isTr ? `${label} Sağlık ve Yaşam Ritmi` : isDe ? `${label} Wohlbefinden & Lebensrhythmus` : `${label} Wellness and Life Rhythm`,
         content: isTr
           ? `${label} için sağlık ve yaşam ritmi yorumu tıbbi tavsiye yerine farkındalık sağlar. Dinlenme, stres yönetimi, beden sinyallerini dinleme ve günlük ritmi sadeleştirme bu bölümün ana odağıdır.`
+          : isDe
+            ? `${label} im Wohlbefinden bietet Achtsamkeit statt medizinischem Rat. Ruhe, Stressregulation, Körpersignale und ein vereinfachter Tagesrhythmus stehen im Mittelpunkt.`
           : `${label} wellness guidance is framed as self-awareness, not medical advice. Rest, stress regulation, listening to body signals and simplifying daily rhythm are the main focus of this section.`,
       },
     ],
