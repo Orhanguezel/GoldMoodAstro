@@ -69,9 +69,9 @@ export async function registerConsultantSelf(app: FastifyInstance) {
   app.put('/me/consultant/availability', { preHandler: guard }, controller.updateMyAvailability);
   app.patch('/me/consultant/availability', { preHandler: guard }, controller.updateMyAvailability);
   app.post('/me/consultant/availability/day', { preHandler: guard }, controller.overrideMyAvailabilityDay);
-  app.get('/me/consultant/time-blocks', { preHandler: guard }, controller.listTimeBlocks);
-  app.post('/me/consultant/time-blocks', { preHandler: guard }, controller.createTimeBlock);
-  app.delete('/me/consultant/time-blocks/:id', { preHandler: guard }, controller.deleteTimeBlock);
+  // NOT: /me/consultant/time-blocks rotaları backend/src/modules/consultantTimeBlocks/router.ts'te
+  // (day-timeline dahil) tek kaynak olarak tanımlı. Burada tekrar tanımlamak FST_ERR_DUPLICATED_ROUTE
+  // ile backend'i boot ettirmiyordu (2026-07-05 crash-loop). Bu yüzden buradan kaldırıldı.
 }
 
 export async function registerConsultantSelfAdmin(app: FastifyInstance) {
