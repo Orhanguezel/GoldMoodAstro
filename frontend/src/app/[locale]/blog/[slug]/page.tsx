@@ -4,10 +4,13 @@ import Banner from '@/layout/banner/Breadcrum';
 import { CMS_FALLBACK_CSS, downgradeH1ToH2, extractHtmlFromAny, safeStr, titleFromSlug, excerpt } from '@/integrations/shared';
 import { normPath, absUrlJoin } from '@/integrations/shared';
 import { buildMetadataFromSeo, fetchSeoObject, fetchCustomPagePublicBySlug } from '@/seo/server';
+import { fetchCustomPagesPublicByModule } from '@/seo/serverPageData';
 import JsonLd from '@/seo/JsonLd';
 import { articleSchema, breadcrumbSchema, faqSchema, graph } from '@/seo/jsonld';
 import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
+import BlogShareBar from '@/components/containers/blog/BlogShareBar';
+import BlogRelatedPosts from '@/components/containers/blog/BlogRelatedPosts';
 
 type PageProps = {
   params: Promise<{ locale: string; slug: string }>;
@@ -68,7 +71,14 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   const p = (await params) as { locale: string; slug: string };
   const locale = safeStr(p?.locale) || 'tr';
   const slug = safeStr(p?.slug);
-  const page = slug ? await fetchCustomPagePublicBySlug({ slug, locale }) : null;
+  const [page, allPosts] = await Promise.all([
+    slug ? fetchCustomPagePublicBySlug({ slug, locale }) : Promise.resolve(null),
+    fetchCustomPagesPublicByModule({ moduleKey: 'blog', locale, limit: 7 }).catch(() => []),
+  ]);
+  // Aynı yazıyı listeden çıkar, en fazla 5 tane göster.
+  const relatedPosts = (Array.isArray(allPosts) ? allPosts : [])
+    .filter((post) => safeStr(post?.slug) && safeStr(post?.slug) !== slug)
+    .slice(0, 5);
   const title = safeStr(page?.title) || titleFromSlug(slug, 'Blog Detail');
   const html = page ? downgradeH1ToH2(extractHtmlFromAny(page)) : '';
   const description = excerpt(
@@ -128,38 +138,40 @@ export default async function BlogDetailsPage({ params }: PageProps) {
       <Banner title={title} />
 
       <PageContainer className="bg-(--gm-bg) text-(--gm-text)" verticalPadding="large">
-        <div className="space-y-12">
-          {image ? (
-            <div className="max-w-[var(--gm-w-readable)] mx-auto">
-              <div className="aspect-video w-full overflow-hidden rounded-[2rem] border border-(--gm-border-soft) shadow-(--gm-shadow-card) bg-(--gm-bg-deep)">
-                {/* Server component: plain <img> — next/image optimizer + SVG/cache
-                    sorunlarını bypass eder; admin'de çalışan yöntemle aynı. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={absUrlJoin(siteUrl, image)}
-                  alt={safeStr(page?.featured_image_alt) || title}
-                  className="w-full h-full object-cover"
-                  loading="eager"
-                />
-              </div>
-            </div>
-          ) : null}
-          <div className="max-w-[var(--gm-w-readable)] mx-auto">
-            <style>{CMS_FALLBACK_CSS}</style>
-            {html ? (
-              <article
-                data-speakable
-                className="prose prose-lg max-w-none bg-(--gm-surface) p-8 md:p-14 rounded-[2rem] shadow-(--gm-shadow-card) border border-(--gm-border-soft) cms-html prose-headings:font-serif prose-headings:font-light prose-headings:text-(--gm-text) prose-a:text-(--gm-primary) prose-p:text-(--gm-text-dim) prose-p:font-light prose-p:text-base prose-p:leading-[1.8] prose-li:text-(--gm-text-dim) prose-li:font-light prose-li:text-base prose-li:leading-[1.8] prose-p:mb-6 prose-strong:text-(--gm-text)"
-                dangerouslySetInnerHTML={{ __html: html }}
+        {image ? (
+          <div className="max-w-6xl mx-auto mb-12">
+            <div className="aspect-video w-full overflow-hidden rounded-[2rem] border border-(--gm-border-soft) shadow-(--gm-shadow-card) bg-(--gm-bg-deep)">
+              {/* Server component: plain <img> — next/image optimizer + SVG/cache
+                  sorunlarını bypass eder; admin'de çalışan yöntemle aynı. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={absUrlJoin(siteUrl, image)}
+                alt={safeStr(page?.featured_image_alt) || title}
+                className="w-full h-full object-cover"
+                loading="eager"
               />
-            ) : (
-              <div className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 text-center text-(--gm-text-dim)">
-                Blog yazısı bulunamadı.
-              </div>
-            )}
+            </div>
           </div>
+        ) : null}
 
-          <div className="max-w-[var(--gm-w-readable)] mx-auto space-y-12">
+        {/* İçerik solda, sağda sabit (sticky) sidebar: paylaş + diğer yazılar */}
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-10">
+          <div className="min-w-0 space-y-12">
+            <div>
+              <style>{CMS_FALLBACK_CSS}</style>
+              {html ? (
+                <article
+                  data-speakable
+                  className="prose prose-lg max-w-none bg-(--gm-surface) p-8 md:p-14 rounded-[2rem] shadow-(--gm-shadow-card) border border-(--gm-border-soft) cms-html prose-headings:font-serif prose-headings:font-light prose-headings:text-(--gm-text) prose-a:text-(--gm-primary) prose-p:text-(--gm-text-dim) prose-p:font-light prose-p:text-base prose-p:leading-[1.8] prose-li:text-(--gm-text-dim) prose-li:font-light prose-li:text-base prose-li:leading-[1.8] prose-p:mb-6 prose-strong:text-(--gm-text)"
+                  dangerouslySetInnerHTML={{ __html: html }}
+                />
+              ) : (
+                <div className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 text-center text-(--gm-text-dim)">
+                  Blog yazısı bulunamadı.
+                </div>
+              )}
+            </div>
+
             <FaqAccordion
               items={faqItems}
               title={locale === 'tr' ? 'Bu Yazı Hakkında Sorular' : 'Questions About This Article'}
@@ -176,6 +188,12 @@ export default async function BlogDetailsPage({ params }: PageProps) {
               />
             </div>
           </div>
+
+          {/* Sağ sidebar — masaüstünde sabit kalır (sticky) */}
+          <aside className="lg:sticky lg:top-24 h-fit space-y-6">
+            <BlogShareBar url={pageUrl} title={title} locale={locale} />
+            <BlogRelatedPosts posts={relatedPosts} locale={locale} />
+          </aside>
         </div>
       </PageContainer>
     </>
