@@ -11,7 +11,7 @@ import { ZodiacSign } from '@/types/common';
 import { localizePath } from '@/integrations/shared';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Heart, Briefcase, Info, Sparkles, ArrowRight, Volume2 } from 'lucide-react';
+import { Star, Heart, Briefcase, Info, Sparkles, ArrowRight, Volume2, HeartPulse } from 'lucide-react';
 import ShareCard from '@/components/common/ShareCard';
 import { getZodiacMeta } from '@/lib/zodiac/signs';
 import { buildZodiacFaq } from '@/lib/zodiac/faq';
@@ -26,6 +26,7 @@ interface ZodiacDetailProps {
   initialTab?: string;
   initialInfo?: any | null;
   initialToday?: any | null;
+  sectionFocus?: 'love' | 'career' | 'health';
 }
 
 type ZodiacSection = {
@@ -35,7 +36,7 @@ type ZodiacSection = {
   content: string;
 };
 
-export default function ZodiacDetail({ initialTab = 'overview', initialInfo = null, initialToday = null }: ZodiacDetailProps) {
+export default function ZodiacDetail({ initialTab = 'overview', initialInfo = null, initialToday = null, sectionFocus }: ZodiacDetailProps) {
   const { sign, locale } = useParams();
   const { brand } = useBrand();
   const { ui } = useUiSection('ui_zodiac');
@@ -64,11 +65,107 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
 
   const info = infoFromQuery ?? initialInfo;
   const today = todayFromQuery ?? initialToday;
-  const summaryText = `${meta.label} ${ui('ui_zodiac_summary_p1', 'sign')} ${meta.element} ${ui('ui_zodiac_summary_p2', 'element,')} ${meta.modality} ${ui('ui_zodiac_summary_p3', 'modality and')} ${meta.ruler} ${ui('ui_zodiac_summary_p4', 'rulership. This profile summarizes')} ${meta.label} ${ui('ui_zodiac_summary_p5', 'energy strengths and shadow areas in character, relationships, career and spiritual care.')}`;
-  const personalitySection = info?.sections?.find((section: ZodiacSection) => section.key2 === 'personality');
-  const loveSection = info?.sections?.find((section: ZodiacSection) => section.key2 === 'love');
-  const celebrities = getCelebritiesBySign(signKey, 3);
   const localePrefix = typeof locale === 'string' ? locale : 'tr';
+  const summaryText = `${meta.label} ${ui('ui_zodiac_summary_p1', 'sign')} ${meta.element} ${ui('ui_zodiac_summary_p2', 'element,')} ${meta.modality} ${ui('ui_zodiac_summary_p3', 'modality and')} ${meta.ruler} ${ui('ui_zodiac_summary_p4', 'rulership. This profile summarizes')} ${meta.label} ${ui('ui_zodiac_summary_p5', 'energy strengths and shadow areas in character, relationships, career and spiritual care.')}`;
+  const sectionFallbacks: Record<string, { title: string; content: string }> = {
+    personality: {
+      title: `${meta.label} ${localePrefix === 'tr' ? 'Karakteri' : 'Personality'}`,
+      content: info?.content || info?.short_summary || summaryText,
+    },
+    love: {
+      title: `${meta.label} ${localePrefix === 'tr' ? 'Aşk ve Uyum' : 'Love and Compatibility'}`,
+      content: `${meta.label} ${ui('ui_zodiac_compat_fallback', 'compatibility is read through love language, trust needs and both complete charts.')}`,
+    },
+    career: {
+      title: `${meta.label} ${localePrefix === 'tr' ? 'Kariyer ve Yön' : 'Career and Direction'}`,
+      content: `${meta.label} ${localePrefix === 'tr'
+        ? 'için kariyer okuması motivasyon, odak, çalışma ritmi ve sorumluluk alma biçimini birlikte değerlendirir. En verimli alanlar yalnızca meslek adıyla değil, kişinin doğum haritasındaki bütün yerleşimlerle netleşir.'
+        : 'career readings look at motivation, focus, working rhythm and responsibility style together. The most supportive fields become clearer when the whole birth chart is considered, not only the Sun sign.'}`,
+    },
+    health: {
+      title: `${meta.label} ${localePrefix === 'tr' ? 'Sağlık ve Yaşam Ritmi' : 'Wellness and Life Rhythm'}`,
+      content: `${meta.label} ${localePrefix === 'tr'
+        ? 'için sağlık ve yaşam ritmi yorumu tıbbi tavsiye yerine farkındalık diliyle ele alınır. Dinlenme, stres yönetimi, beden sinyallerini dinleme ve günlük ritmi sadeleştirme bu bölümün ana odağıdır.'
+        : 'wellness guidance is framed as self-awareness, not medical advice. Rest, stress regulation, listening to body signals and simplifying daily rhythm are the main focus of this section.'}`,
+    },
+  };
+  const getSection = (key: string): ZodiacSection => {
+    const existing = info?.sections?.find((section: ZodiacSection) => section.key2 === key);
+    if (existing) return existing;
+    const fallback = sectionFallbacks[key] || sectionFallbacks.personality;
+    return {
+      id: `${signKey}-${key}-fallback`,
+      key2: key,
+      title: fallback.title,
+      content: fallback.content,
+    };
+  };
+  const displaySections = ['personality', 'love', 'career', 'health'].map(getSection);
+  const personalitySection = getSection('personality');
+  const loveSection = getSection('love');
+  const focusedSection = sectionFocus ? getSection(sectionFocus) : null;
+  const focusConfig = sectionFocus
+    ? {
+        love: {
+          eyebrow: localePrefix === 'tr' ? 'İlişki Odağı' : 'Relationship Focus',
+          subtitle: localePrefix === 'tr'
+            ? `${meta.label} için ilişki odağı; yakınlık kurma, güven ihtiyacı, sevgi dili ve uyum dinamiklerini daha özel bir çerçevede okur.`
+            : `${meta.label} relationship focus reads closeness, trust needs, love language and compatibility dynamics through a more specific lens.`,
+          href: localizePath(localePrefix, `/burclar/${signKey}/ask`),
+          icon: Heart,
+        },
+        career: {
+          eyebrow: localePrefix === 'tr' ? 'Kariyer Odağı' : 'Career Focus',
+          subtitle: localePrefix === 'tr'
+            ? `${meta.label} için kariyer odağı; çalışma ritmi, sorumluluk alma biçimi, motivasyon kaynakları ve sürdürülebilir başarı alışkanlıklarını öne çıkarır.`
+            : `${meta.label} career focus highlights working rhythm, responsibility style, motivation sources and sustainable success habits.`,
+          href: localizePath(localePrefix, `/burclar/${signKey}/kariyer`),
+          icon: Briefcase,
+        },
+        health: {
+          eyebrow: localePrefix === 'tr' ? 'Yaşam Ritmi Odağı' : 'Wellness Focus',
+          subtitle: localePrefix === 'tr'
+            ? `${meta.label} için yaşam ritmi odağı; dinlenme, stres farkındalığı, beden sinyalleri ve günlük denge ihtiyacını sembolik dille ele alır.`
+            : `${meta.label} wellness focus explores rest, stress awareness, body signals and daily balance through symbolic language.`,
+          href: localizePath(localePrefix, `/burclar/${signKey}/saglik`),
+          icon: HeartPulse,
+        },
+      }[sectionFocus]
+    : null;
+  const focusNarratives: Record<string, string[]> = {
+    love: localePrefix === 'tr'
+      ? [
+          `${meta.label} ilişki sayfası, yalnız romantik çekimi değil, güven kurma hızını, kırılganlıkla temas etme biçimini ve tartışma sonrasında yeniden yakınlaşma kapasitesini de merkeze alır. Bu nedenle burada okuduğun yorum, partner seçimini kesinleştiren bir hüküm değil; ilişkide hangi ihtiyaçların daha görünür hale geldiğini anlamaya yarayan bir pusuladır.`,
+          `Uyum okumasını kullanırken sadece "hangi burçla olur" sorusuna sıkışmak yerine, kendi sevgi dilini, beklenti ritmini ve sınır ihtiyacını da gözlemle. Böylece ${meta.label} enerjisi bir etiket olmaktan çıkar; ilişki içinde daha açık konuşmayı, daha iyi dinlemeyi ve benzer döngüleri daha erken fark etmeyi destekleyen pratik bir rehbere dönüşür.`,
+          `Bir danışmanla ilişki temasını konuşurken yakınlık beklentin, iletişimde hassaslaştığın anlar ve tekrar eden seçim kalıpların ayrı ayrı ele alınabilir. Bu sayfa bu soruları hazırlamak için tasarlandı; karar vermek yerine ilişkinin içinde hangi ihtiyacın duyulmak istediğini fark ettirir.`,
+        ]
+      : [
+          `${meta.label} relationship guidance looks beyond attraction. It focuses on trust rhythm, emotional availability, repair after conflict and the way closeness is built over time. This is not a fixed verdict about who you should choose; it is a lens for noticing which needs become louder in love.`,
+          `Use this reading to observe your love language, boundary needs and expectation patterns instead of reducing compatibility to a single sign match. In that way, ${meta.label} energy becomes a practical guide for clearer conversations, better listening and earlier awareness of repeated relationship cycles.`,
+          `When you bring relationship questions to a consultant, your need for closeness, sensitive communication moments and repeated choice patterns can be explored separately. This page helps prepare those questions without turning them into a fixed decision.`,
+        ],
+    career: localePrefix === 'tr'
+      ? [
+          `${meta.label} kariyer sayfası, meslek listesinden çok çalışma ortamı, karar alma temposu ve başarıyı sürdürülebilir kılan alışkanlıklarla ilgilenir. Buradaki yorum, tek bir doğru iş alanı vadetmez; hangi koşullarda motivasyonun arttığını, hangi görevlerde odağının dağıldığını ve sorumluluk aldığında nasıl bir iz bıraktığını anlamaya yardımcı olur.`,
+          `Bu odağı okurken gündelik iş ritmini, ekip içindeki rolünü ve uzun vadeli hedeflere yaklaşımını birlikte düşün. ${meta.label} enerjisi bazen hızlı başlangıç, bazen sabır, bazen de daha net sınır ihtiyacı olarak görünür. Kariyer farkındalığı, potansiyeli gerçekçi adımlara bölmekle güçlenir.`,
+          `Danışman görüşmesine hazırlanırken hangi işlerde zamanın daha hızlı aktığını, hangi sorumlulukların seni tükettiğini ve görünür olmakla güvenli kalmak arasındaki dengeyi not alabilirsin. Kariyer sayfası bu gözlemleri düzenler ve daha bilinçli soru sormana alan açar.`,
+        ]
+      : [
+          `${meta.label} career guidance is less about a fixed profession list and more about work environment, decision rhythm and habits that make success sustainable. It does not promise one perfect path; it helps you notice where motivation rises, where focus scatters and what kind of contribution you make when responsibility grows.`,
+          `As you read this focus, consider your daily work rhythm, your role inside teams and your relationship with long-term goals. ${meta.label} energy may show up as quick initiation, patience, clearer boundaries or a need for better pacing. Career awareness becomes useful when potential is translated into realistic steps.`,
+          `Before a consultation, note which tasks make time move faster, which responsibilities drain you and how you balance visibility with emotional safety. This career page organizes those observations so your questions become more precise.`,
+        ],
+    health: localePrefix === 'tr'
+      ? [
+          `${meta.label} sağlık ve yaşam ritmi sayfası tıbbi teşhis veya tedavi önerisi vermez; bedenle kurulan ilişkiyi daha dikkatli dinlemeye çağırır. Burada amaç, stresin hangi anlarda yükseldiğini, dinlenmenin neden ertelendiğini ve günlük düzenin ruh halini nasıl etkilediğini fark etmektir.`,
+          `Bu odağı kişisel bakım listesi gibi değil, tempo ayarı daveti gibi oku. Uyku, hareket, beslenme, nefes ve sessizlik ihtiyacı herkes için farklıdır; ${meta.label} enerjisi bu farklılığın hangi ritimde daha dengeli hissedilebileceğini anlamaya yardımcı bir sembol dili sunar.`,
+        ]
+      : [
+          `${meta.label} wellness guidance is not medical diagnosis or treatment advice. It invites a more attentive relationship with the body: when stress rises, why rest gets postponed and how daily structure influences mood, energy and emotional steadiness.`,
+          `Read this focus as an invitation to adjust pace rather than as a checklist. Sleep, movement, nourishment, breath and quiet time are personal. ${meta.label} energy offers symbolic language for noticing which rhythm may feel more balanced and sustainable for you.`,
+        ],
+  };
+  const celebrities = getCelebritiesBySign(signKey, 3);
   const zodiacFaq = buildZodiacFaq(meta, localePrefix, info?.short_summary);
 
   if (!info && (isInfoLoading || isTodayLoading)) {
@@ -140,12 +237,77 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
               ))}
             </div>
             <p className="text-lg md:text-2xl text-(--gm-text-dim) font-serif italic leading-relaxed opacity-80">
-              &quot;{info.short_summary}&quot;
+              &quot;{focusConfig?.subtitle || info.short_summary}&quot;
             </p>
           </div>
         </div>
       </motion.div>
 
+      {focusedSection && focusConfig && (
+        <section
+          data-speakable
+          className="mb-16 rounded-[2rem] border border-(--gm-gold)/20 bg-(--gm-surface) p-8 shadow-(--gm-shadow-soft) md:p-12"
+        >
+          <div className="mb-6 flex flex-wrap items-center gap-4">
+            <div className="flex size-12 items-center justify-center rounded-full bg-(--gm-gold)/10 text-(--gm-gold)">
+              <focusConfig.icon className="size-6" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-(--gm-gold)">
+                {focusConfig.eyebrow}
+              </p>
+              <h2 className={`${cinzel.className} mt-2 text-3xl text-(--gm-text) md:text-5xl`}>
+                {focusedSection.title}
+              </h2>
+            </div>
+          </div>
+
+          <div className="max-w-4xl text-xl leading-relaxed text-(--gm-text) opacity-90 whitespace-pre-wrap font-serif">
+            {focusedSection.content}
+          </div>
+
+          <div className="mt-8 grid gap-5 text-base leading-relaxed text-(--gm-text-dim) md:grid-cols-2">
+            {(focusNarratives[focusedSection.key2] || []).map((paragraph) => (
+              <p key={paragraph} className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-bg-deep)/25 p-5 font-serif">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {displaySections
+              .filter((section) => section.key2 !== focusedSection.key2)
+              .slice(0, 3)
+              .map((section) => {
+                const href =
+                  section.key2 === 'love'
+                    ? localizePath(localePrefix, `/burclar/${signKey}/ask`)
+                    : section.key2 === 'career'
+                      ? localizePath(localePrefix, `/burclar/${signKey}/kariyer`)
+                      : section.key2 === 'health'
+                        ? localizePath(localePrefix, `/burclar/${signKey}/saglik`)
+                        : localizePath(localePrefix, `/burclar/${signKey}`);
+                return (
+                  <Link
+                    key={section.key2}
+                    href={href}
+                    className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-bg-deep)/30 p-5 transition-colors hover:border-(--gm-gold)/40"
+                  >
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-(--gm-gold)">
+                      {section.title}
+                    </p>
+                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-(--gm-text-dim)">
+                      {localePrefix === 'tr' ? 'Bu odağı ayrı sayfada oku.' : 'Open this focus in its dedicated page.'}
+                    </p>
+                  </Link>
+                );
+              })}
+          </div>
+        </section>
+      )}
+
+      {!sectionFocus && (
+      <>
       <section
         data-speakable
         className="mb-12 rounded-[2rem] border border-(--gm-gold)/20 bg-(--gm-gold)/5 p-8 md:p-12 backdrop-blur-sm"
@@ -214,11 +376,12 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
           <TabsTrigger value="daily" className="rounded-full px-6 data-[state=active]:bg-(--gm-surface) data-[state=active]:text-(--gm-gold) data-[state=active]:shadow-sm">
             <Sparkles className="w-4 h-4 mr-2" /> {ui('ui_zodiac_tab_daily', 'Daily Reading')}
           </TabsTrigger>
-          {info.sections?.map((s: ZodiacSection) => (
+          {displaySections.map((s: ZodiacSection) => (
             <TabsTrigger key={s.id} value={s.key2} className="rounded-full px-6 data-[state=active]:bg-(--gm-surface) data-[state=active]:text-(--gm-gold) data-[state=active]:shadow-sm">
               {s.key2 === 'love' && <Heart className="w-4 h-4 mr-2" />}
               {s.key2 === 'career' && <Briefcase className="w-4 h-4 mr-2" />}
               {s.key2 === 'personality' && <Star className="w-4 h-4 mr-2" />}
+              {s.key2 === 'health' && <HeartPulse className="w-4 h-4 mr-2" />}
               {s.title}
             </TabsTrigger>
           ))}
@@ -335,7 +498,7 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
           })()}
         </TabsContent>
 
-        {info.sections?.map((s: ZodiacSection) => (
+        {displaySections.map((s: ZodiacSection) => (
           <TabsContent key={s.id} value={s.key2} className="mt-0">
             <motion.div
               initial={{ opacity: 0, x: 10 }}
@@ -350,7 +513,11 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
           </TabsContent>
         ))}
       </Tabs>
+      </>
+      )}
 
+      {!sectionFocus && (
+      <>
       <div className="mb-20">
         <FaqAccordion items={zodiacFaq.items} title={zodiacFaq.title} />
       </div>
@@ -421,6 +588,8 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
           </div>
         </Link>
       </div>
+      </>
+      )}
     </div>
   );
 }

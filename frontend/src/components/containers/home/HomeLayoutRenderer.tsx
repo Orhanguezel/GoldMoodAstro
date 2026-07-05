@@ -1,47 +1,31 @@
 'use client';
 
 import React, { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import HeroNew from './HeroNew';
-import BannerSlot from './BannerSlot';
 import type { HomeSection } from './fetchHomeLayout.server';
-
-import FeaturesNew from './FeaturesNew';
-import HybridModelSection from './HybridModelSection';
-import TransparencySection from './TransparencySection';
-import TrustSection from './TrustSection';
-import ConsultantsSection from './ConsultantsSection';
-import WelcomeBannerSection from './WelcomeBannerSection';
-import ExpertiseCategoriesSection from './ExpertiseCategoriesSection';
-import HomeIntroSection from './HomeIntroSection';
-import HomeTestimonialsSection from './HomeTestimonialsSection';
-import HomeBecomeConsultantBanner from './HomeBecomeConsultantBanner';
-import BirthChartBanner from './BirthChartBanner';
-import PremiumMembershipBanner from './PremiumMembershipBanner';
-import FirstSessionDiscountBanner from './FirstSessionDiscountBanner';
-import WelcomePremiumBanner from './WelcomePremiumBanner';
-import AppDownloadSection from './AppDownloadSection';
 
 // Yeni component eklemek için: import + bu map'e key ekle.
 const REGISTRY: Record<string, any> = {
   HeroNew,
-  BannerSlot,
-  PromisesSection: HomeIntroSection,
-  FeaturesNew,
-  HybridModelSection,
-  TransparencySection,
-  TrustSection,
-  WaitlistSection: HomeBecomeConsultantBanner,
-  ZodiacGridSection: ExpertiseCategoriesSection,
-  ConsultantsSection,
-  HomeIntroSection,
-  WelcomeBannerSection,
-  HomeTestimonialsSection,
-  HomeBecomeConsultantBanner,
-  BirthChartBanner,
-  PremiumMembershipBanner,
-  FirstSessionDiscountBanner,
-  WelcomePremiumBanner,
-  AppDownloadSection,
+  BannerSlot: dynamic(() => import('./BannerSlot'), { loading: () => null }),
+  PromisesSection: dynamic(() => import('./HomeIntroSection'), { loading: () => null }),
+  FeaturesNew: dynamic(() => import('./FeaturesNew'), { loading: () => null }),
+  HybridModelSection: dynamic(() => import('./HybridModelSection'), { loading: () => null }),
+  TransparencySection: dynamic(() => import('./TransparencySection'), { loading: () => null }),
+  TrustSection: dynamic(() => import('./TrustSection'), { loading: () => null }),
+  WaitlistSection: dynamic(() => import('./HomeBecomeConsultantBanner'), { loading: () => null }),
+  ZodiacGridSection: dynamic(() => import('./ExpertiseCategoriesSection'), { loading: () => null }),
+  ConsultantsSection: dynamic(() => import('./ConsultantsSection'), { loading: () => null }),
+  HomeIntroSection: dynamic(() => import('./HomeIntroSection'), { loading: () => null }),
+  WelcomeBannerSection: dynamic(() => import('./WelcomeBannerSection'), { loading: () => null }),
+  HomeTestimonialsSection: dynamic(() => import('./HomeTestimonialsSection'), { loading: () => null }),
+  HomeBecomeConsultantBanner: dynamic(() => import('./HomeBecomeConsultantBanner'), { loading: () => null }),
+  BirthChartBanner: dynamic(() => import('./BirthChartBanner'), { loading: () => null }),
+  PremiumMembershipBanner: dynamic(() => import('./PremiumMembershipBanner'), { loading: () => null }),
+  FirstSessionDiscountBanner: dynamic(() => import('./FirstSessionDiscountBanner'), { loading: () => null }),
+  WelcomePremiumBanner: dynamic(() => import('./WelcomePremiumBanner'), { loading: () => null }),
+  AppDownloadSection: dynamic(() => import('./AppDownloadSection'), { loading: () => null }),
 };
 
 import { useSearchParams } from 'next/navigation';

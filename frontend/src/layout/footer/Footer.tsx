@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 
 import SocialLinks from '@/components/common/public/SocialLinks';
-import { Apple, Play, ShieldCheck, Lock } from 'lucide-react';
+import { ShieldCheck, Lock } from 'lucide-react';
 import {
   useGetSiteSettingByKeyQuery,
   useListFooterSectionsQuery,
@@ -56,25 +56,12 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
   const hasInitialSections = Array.isArray(initialFooterSections) && initialFooterSections.length > 0;
   const hasInitialMenuItems = Array.isArray(initialFooterMenuItems) && initialFooterMenuItems.length > 0;
 
-  const { data: companyBrandSetting } = useGetSiteSettingByKeyQuery({ key: 'company_brand', locale });
   const { data: socialsSetting } = useGetSiteSettingByKeyQuery({ key: 'socials', locale });
 
-  const { socials, legal } = useMemo(() => {
-    const brandVal = (companyBrandSetting?.value ?? {}) as any;
+  const socials = useMemo(() => {
     const socialsVal = (socialsSetting?.value ?? {}) as Record<string, string>;
-    const mergedSocials: Record<string, string> = { ...(brandVal.socials as Record<string, string> | undefined), ...socialsVal };
-    const legalVal = {
-      legal_name: brandVal.legal_name as string | undefined,
-      mersis: brandVal.mersis as string | undefined,
-      tax_office: brandVal.tax_office as string | undefined,
-      tax_no: brandVal.tax_no as string | undefined,
-      trade_registry: brandVal.trade_registry as string | undefined,
-      address: brandVal.address as string | undefined,
-      phone: brandVal.phone as string | undefined,
-      email: brandVal.email as string | undefined,
-    };
-    return { socials: mergedSocials, legal: legalVal };
-  }, [companyBrandSetting?.value, socialsSetting?.value]);
+    return { ...socialsVal };
+  }, [socialsSetting?.value]);
 
   const { data: footerSections } = useListFooterSectionsQuery(
     { is_active: true, order: 'display_order.asc', locale },
@@ -166,37 +153,6 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
                 </Link>
               )}
             </div>
-
-            {/* App Download Links */}
-            <div className="flex flex-col gap-3">
-              <span className="font-display text-[9px] tracking-[0.3em] text-[var(--gm-gold-deep)] uppercase mb-1">
-                {ui('ui_footer_mobile_app', 'Our Mobile App')}
-              </span>
-              <div className="flex gap-4">
-                <a 
-                  href="#" 
-                  className="flex items-center gap-3 text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] hover:border-[var(--gm-gold)/30] transition-all duration-300 border border-[var(--gm-border-soft)] rounded-xl px-4 py-2 bg-[var(--gm-bg-surface)]/40 backdrop-blur-md shadow-sm group/store"
-                  title="App Store"
-                >
-                  <Apple size={20} className="group-hover/store:scale-110 transition-transform" />
-                  <div className="flex flex-col items-start leading-none">
-                    <span className="text-[8px] uppercase tracking-wider opacity-60 mb-0.5">App Store</span>
-                    <span className="text-[13px] font-semibold">iOS</span>
-                  </div>
-                </a>
-                <a 
-                  href="#" 
-                  className="flex items-center gap-3 text-[var(--gm-text-dim)] hover:text-[var(--gm-gold)] hover:border-[var(--gm-gold)/30] transition-all duration-300 border border-[var(--gm-border-soft)] rounded-xl px-4 py-2 bg-[var(--gm-bg-surface)]/40 backdrop-blur-md shadow-sm group/store"
-                  title="Google Play"
-                >
-                  <Play size={18} fill="currentColor" className="group-hover/store:scale-110 transition-transform" />
-                  <div className="flex flex-col items-start leading-none">
-                    <span className="text-[8px] uppercase tracking-wider opacity-60 mb-0.5">Google Play</span>
-                    <span className="text-[13px] font-semibold">Android</span>
-                  </div>
-                </a>
-              </div>
-            </div>
           </div>
 
           {/* Columns */}
@@ -246,23 +202,6 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
           </div>
         </div>
 
-        {legal?.legal_name && (
-          <div className="pt-8 border-t border-[var(--gm-border-soft)] text-[11px] leading-relaxed text-[var(--gm-muted)] normal-case">
-            <p className="font-semibold text-[var(--gm-text-dim)]">{legal.legal_name}</p>
-            <p className="mt-1">
-              {[
-                legal.mersis && `MERSİS: ${legal.mersis}`,
-                legal.tax_office && `${ui('ui_footer_tax_office', 'Vergi Dairesi')}: ${legal.tax_office}`,
-                legal.tax_no && `${ui('ui_footer_tax_no', 'Vergi No')}: ${legal.tax_no}`,
-                legal.trade_registry && `${ui('ui_footer_trade_registry', 'Ticaret Sicil No')}: ${legal.trade_registry}`,
-              ].filter(Boolean).join(' · ')}
-            </p>
-            <p className="mt-1">
-              {[legal.address, legal.phone && `Tel: ${legal.phone}`, legal.email]
-                .filter(Boolean).join(' · ')}
-            </p>
-          </div>
-        )}
         <div className="pt-8 border-t border-[var(--gm-border-soft)] flex flex-col md:flex-row justify-between items-center gap-8 text-[11px] tracking-[0.1em] text-[var(--gm-muted)] uppercase">
           <p>
             &copy; {new Date().getFullYear()} GOLD MOOD ASTROLOGY. {ui('ui_footer_rights', 'ALL RIGHTS RESERVED.')}

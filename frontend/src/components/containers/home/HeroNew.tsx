@@ -60,7 +60,14 @@ export default function HeroNew({ locale = 'tr' }: { locale?: string }) {
 
   return (
     <>
-    <link rel="preload" as="image" href="/images/hero-bg-main.webp" fetchPriority="high" />
+    <link
+      rel="preload"
+      as="image"
+      href="/images/hero-bg-main.webp"
+      imageSrcSet="/images/hero-bg-main-640.webp 640w, /images/hero-bg-main.webp 900w"
+      imageSizes="100vw"
+      fetchPriority="high"
+    />
     <section
       data-header-overlay="true"
       className="relative min-h-screen flex flex-col overflow-hidden"
@@ -68,7 +75,11 @@ export default function HeroNew({ locale = 'tr' }: { locale?: string }) {
       {/* ── Background Image ──────────────────────────────────────── */}
       <img
         src="/images/hero-bg-main.webp"
+        srcSet="/images/hero-bg-main-640.webp 640w, /images/hero-bg-main.webp 900w"
+        sizes="100vw"
         alt="GoldMoodAstro hero"
+        width={900}
+        height={900}
         className="absolute inset-0 h-full w-full object-cover object-center"
         fetchPriority="high"
         decoding="async"

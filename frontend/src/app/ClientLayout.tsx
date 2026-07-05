@@ -98,13 +98,56 @@ export default function ClientLayout({
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    if ('requestIdleCallback' in window) {
-      const id = window.requestIdleCallback(() => setDeferWidgets(true), { timeout: 2500 });
-      return () => window.cancelIdleCallback(id);
+    let done = false;
+    let idleId: number | undefined;
+    let timerId: ReturnType<typeof setTimeout> | undefined;
+
+    const loadDeferred = () => {
+      if (done) return;
+      done = true;
+      setDeferWidgets(true);
+      removeInteractionListeners();
+      if (idleId !== undefined && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timerId) {
+        globalThis.clearTimeout(timerId);
+      }
+    };
+
+    const interactionEvents: Array<keyof WindowEventMap> = [
+      'pointerdown',
+      'keydown',
+      'touchstart',
+      'scroll',
+    ];
+
+    function removeInteractionListeners() {
+      interactionEvents.forEach((eventName) => {
+        window.removeEventListener(eventName, loadDeferred);
+      });
     }
 
-    const id = globalThis.setTimeout(() => setDeferWidgets(true), 1800);
-    return () => globalThis.clearTimeout(id);
+    interactionEvents.forEach((eventName) => {
+      window.addEventListener(eventName, loadDeferred, { once: true, passive: true });
+    });
+
+    if ('requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(loadDeferred, { timeout: 3500 });
+    } else {
+      timerId = globalThis.setTimeout(loadDeferred, 3500);
+    }
+
+    return () => {
+      done = true;
+      removeInteractionListeners();
+      if (idleId !== undefined && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timerId) {
+        globalThis.clearTimeout(timerId);
+      }
+    };
   }, []);
 
   // Sync <html lang="..."> with current locale

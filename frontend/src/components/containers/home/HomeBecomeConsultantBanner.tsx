@@ -3,7 +3,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { localizePath } from '@/integrations/shared';
-import { motion } from 'framer-motion';
 import { useUiSection } from '@/i18n';
 
 export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?: string }) {
@@ -21,43 +20,27 @@ export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?:
         <div className="flex flex-col lg:flex-row items-center relative z-10">
           {/* Content Side */}
           <div className="flex-1 p-10 md:p-16 lg:p-20 flex flex-col justify-center text-center lg:text-left">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="inline-flex items-center justify-center lg:justify-start gap-2 px-4 py-1.5 rounded-full border border-(--gm-gold)/30 bg-(--gm-gold)/5 text-(--gm-gold) text-[10px] font-bold uppercase tracking-widest mb-8 self-center lg:self-start"
+            <div 
+              className="inline-flex items-center justify-center lg:justify-start gap-2 px-4 py-1.5 rounded-full border border-(--gm-gold)/30 bg-(--gm-gold)/5 text-(--gm-gold) text-[10px] font-bold uppercase tracking-widest mb-8 self-center lg:self-start transition-[opacity,transform] duration-700 ease-out"
             >
               <Sparkles size={12} />
               {ui('ui_become_consultant_sparkle', isTr ? 'Bilgeliğinizi Paylaşın' : 'Share Your Wisdom')}
-            </motion.div>
+            </div>
             
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.1 }}
+            <h2 
               className="font-display text-4xl md:text-5xl lg:text-6xl text-(--gm-text) mb-6 leading-tight tracking-tight"
             >
               {ui('ui_become_consultant_h1_part1', isTr ? 'Bilgeliğinizi Paylaşın,' : 'Share Your Wisdom,')}<br className="hidden lg:block" /> 
               <span className="text-(--gm-gold) italic"> {ui('ui_become_consultant_h1_part2', isTr ? 'Danışmanımız Olun' : 'Become Our Consultant')}</span>
-            </motion.h2>
+            </h2>
             
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+            <p 
               className="font-serif italic text-(--gm-text-dim) text-lg md:text-xl mb-12 max-w-xl mx-auto lg:mx-0 leading-relaxed"
             >
               {ui('ui_become_consultant_lead', isTr ? 'Astroloji, tarot veya ruhsal rehberlik alanında uzmansanız GoldMoodAstro’ya katılın ve danışanlara güvenli bir deneyimde rehberlik edin.' : 'If you are an expert in astrology, tarot or spiritual guidance, join GoldMoodAstro and guide thousands of people.')}
-            </motion.p>
+            </p>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.3 }}
+            <div 
               className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start items-center"
             >
               <Link 
@@ -76,15 +59,11 @@ export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?:
               >
                 {ui('ui_become_consultant_eval_note', isTr ? 'Süreci İncele' : 'Learn About the Process')}
               </Link>
-            </motion.div>
+            </div>
           </div>
 
           {/* Image Side */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2 }}
+          <div 
             className="w-full lg:w-1/2 relative h-[400px] lg:h-[600px] overflow-hidden border-t lg:border-t-0 lg:border-l border-(--gm-border-soft)"
           >
             <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-l from-(--gm-surface)/80 via-transparent to-transparent z-10 pointer-events-none" />
@@ -94,7 +73,7 @@ export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?:
               fill
               className="object-cover object-center transform hover:scale-105 transition-transform duration-[2000ms] ease-out"
             />
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
