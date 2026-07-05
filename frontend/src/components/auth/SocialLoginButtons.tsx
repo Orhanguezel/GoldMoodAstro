@@ -279,8 +279,10 @@ function WithGoogle({ nextHref, layout, className }: Props) {
   return (
     <SocialButtonsInner
       canUseGoogle
-      canUseFacebook={Boolean(process.env.NEXT_PUBLIC_FACEBOOK_APP_ID)}
-      canUseApple={Boolean(process.env.NEXT_PUBLIC_APPLE_CLIENT_ID)}
+      // Şimdilik sadece Google. Facebook/Apple geçici olarak kapalı — env varsa bile
+      // gösterme (kod korunuyor, ileride bu iki satırı geri açmak yeterli).
+      canUseFacebook={false}
+      canUseApple={false}
       layout={layout}
       className={className}
       isLoading={isLoading}
@@ -361,8 +363,9 @@ function FacebookOnly({ nextHref, layout, className }: Props) {
   return (
     <SocialButtonsInner
       canUseGoogle={false}
-      canUseFacebook={Boolean(process.env.NEXT_PUBLIC_FACEBOOK_APP_ID)}
-      canUseApple={Boolean(process.env.NEXT_PUBLIC_APPLE_CLIENT_ID)}
+      // Şimdilik sadece Google — Facebook/Apple geçici kapalı.
+      canUseFacebook={false}
+      canUseApple={false}
       layout={layout}
       className={className}
       isLoading={isLoading}

@@ -26,8 +26,9 @@ export const exportMyData: RouteHandler = async (req, reply) => {
   if (!userId) return reply.code(401).send({ error: { message: 'unauthorized' } });
 
   // Tüm bağlı veri tablolarından kullanıcı verilerini çek (raw SQL — flexibility)
+  // NOT: users tablosunda 'locale' kolonu yok — eklenirse patlıyordu (export 500).
   const [user] = (await db.execute(sql`
-    SELECT id, email, full_name, phone, role, locale, created_at, updated_at
+    SELECT id, email, full_name, phone, role, avatar_url, created_at, updated_at
     FROM users WHERE id = ${userId}
   `) as unknown as Record<string, unknown>[][])[0] ?? [];
 
