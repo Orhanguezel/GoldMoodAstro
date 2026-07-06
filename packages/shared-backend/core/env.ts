@@ -59,8 +59,8 @@ export const env = {
   },
 
   // Auth
-  JWT_SECRET: process.env.JWT_SECRET || "change-me",
-  COOKIE_SECRET: process.env.COOKIE_SECRET || "cookie-secret",
+  JWT_SECRET: process.env.JWT_SECRET || (() => { throw new Error("Missing required env: JWT_SECRET"); })(),
+  COOKIE_SECRET: process.env.COOKIE_SECRET || (() => { throw new Error("Missing required env: COOKIE_SECRET"); })(),
   ALLOW_TEMP_LOGIN: process.env.ALLOW_TEMP_LOGIN || '',
   TEMP_PASSWORD: process.env.TEMP_PASSWORD || '',
   AUTH_ADMIN_EMAILS: process.env.AUTH_ADMIN_EMAILS || '',
