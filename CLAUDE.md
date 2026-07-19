@@ -197,3 +197,37 @@ Proje konigsmassage'den kopyalandı. Codex'in T0 görevi:
 - `packages/shared-backend/modules/_shared/` içi temizle
 - `backend/src/db/sql/` 87 dosyayı sil + yeniden yaz
 - `backend/.env.example` oluştur
+
+---
+
+## GÜVENLİK DURUMU (2026-07-19 taraması)
+
+> Workspace güvenlik sistemi taraması. Kural tabanı: `../.claude/security/rules.py`.
+> Bu repoda dosya düzenlerken hook bu özeti oturumda bir kez hatırlatır.
+
+**Durum: HEPSİ KAPATILDI** (2026-07-19, commit `f4f28a8` — canlıda doğrulandı).
+Açık kalan bulgu yok (1 medium false-positive elendi).
+
+### Kapatıldı — revalidate secret zinciri (aynı kök neden: şablon türevi)
+1. ~~`frontend/src/app/api/revalidate/route.ts:4`~~ — `REVALIDATE_SECRET || 'goldmood-revalidate-2026'`
+   sabit fallback'i ve `undefined !== undefined` auth bypass'ı kaldırıldı; secret yoksa 500.
+2. ~~`admin_panel/src/app/api/revalidate-proxy/route.ts:9`~~ [SEC-001] — aynı fallback kaldırıldı + guard.
+3. ~~aynı dosya~~ [SEC-006] — `NEXT_PUBLIC_REVALIDATE_SECRET` kaldırıldı (client bundle sızıntısı).
+
+Prod `frontend/.env` + `admin_panel/.env`'e AYNI 80-char `REVALIDATE_SECRET` yazıldı.
+**Canlı doğrulama:** eski sabit secret → 401, boş secret → 401, doğru secret → 200.
+**Fail-closed:** yeni bir kuruluma deploy ederken önce env, sonra build — yoksa revalidate 500.
+
+### Kapatıldı — .env.example zayıf placeholder
+- ~~`backend/.env.example:13-14`~~ — `change-me-in-production` satırları boşaltıldı.
+  `frontend/.env.example` + `admin_panel/.env.example`'a boş `REVALIDATE_SECRET=` eklendi.
+
+> Not: prod'da `env.ts`/`app.ts` için elle uygulanmış, commit'le birebir aynı bir hotfix vardı;
+> pull öncesi stash'lendi (`prod-envts-hotfix-yedek-2026-07-19`, `prod-appts-hotfix-yedek-...`).
+
+### Elendi (false-positive)
+- `mobile/app/src/lib/notifications.ts:53` — `logger.warn('Push token registration failed:', err)`
+  sadece hata objesi loglanıyor, gerçek token değil. Bulgu değil.
+
+_Detay tarama: `python3 ../.claude/security/scan.py --repo goldmoodastro --min low`_
+_Kök neden ve tüm portföy: `../.claude/loop-raporlari/guvenlik-baseline-2026-07-19.md`_
