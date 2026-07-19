@@ -138,7 +138,26 @@ const nextConfig = {
       { source: '/:locale/services', destination: '/:locale/consultants', permanent: true },
       { source: '/:locale/appointment', destination: '/:locale/consultants', permanent: true },
       { source: '/:locale/big-three', destination: '/:locale/buyuk-uclu', permanent: true },
+      // ─── Yerelleştirilmiş landing slug'ları → kanonik route klasörü ───────────
+      // DB'de (custom_pages_i18n) her landing sayfasının tr/en/de slug'ı var, ancak
+      // uygulamada sayfa başına TEK fiziksel klasör bulunuyor ve klasör adları karışık
+      // dilde (birth-chart EN, kahve-fali TR...). Eşlemesi olmayan her slug 404 veriyordu:
+      // /de/geburtshoroskop, /en/coffee-reading, /tr/fiyatlandirma ... (2026-07-19 tespiti).
+      // Sitemap ve hreflang zaten kanonik klasör adreslerini kullanıyor; bu kurallar
+      // yalnızca yerelleştirilmiş slug'ları kanonik adrese taşır.
       { source: '/:locale/dogum-haritasi', destination: '/:locale/birth-chart', permanent: true },
+      { source: '/:locale/geburtshoroskop', destination: '/:locale/birth-chart', permanent: true },
+      { source: '/:locale/coffee-reading', destination: '/:locale/kahve-fali', permanent: true },
+      { source: '/:locale/kaffeesatzlesen', destination: '/:locale/kahve-fali', permanent: true },
+      { source: '/:locale/dream-interpretation', destination: '/:locale/ruya-tabiri', permanent: true },
+      { source: '/:locale/traumdeutung', destination: '/:locale/ruya-tabiri', permanent: true },
+      { source: '/:locale/numerology', destination: '/:locale/numeroloji', permanent: true },
+      { source: '/:locale/numerologie', destination: '/:locale/numeroloji', permanent: true },
+      { source: '/:locale/synastry', destination: '/:locale/sinastri', permanent: true },
+      { source: '/:locale/synastrie', destination: '/:locale/sinastri', permanent: true },
+      { source: '/:locale/fiyatlandirma', destination: '/:locale/pricing', permanent: true },
+      { source: '/:locale/preise', destination: '/:locale/pricing', permanent: true },
+      // tarot ve yildizname üç dilde de aynı slug — kurala gerek yok.
       // /:locale/consultant → /:locale/me/consultant (danışman paneli) proxy.ts'de
       // yapılır. Eski konigsmassage kuralı yanlışlıkla public /consultants listesine
       // yönlendirip paneli "kaçırıyordu" — kaldırıldı.
