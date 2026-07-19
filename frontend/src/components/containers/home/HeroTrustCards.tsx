@@ -19,7 +19,7 @@ function AvatarStack({ consultants }: { consultants: Array<{ id: string; full_na
   }, [show.length]);
 
   return (
-    <div className="flex -space-x-2.5 items-center">
+    <div className="flex -space-x-3 items-center">
       {show.map((c, i) => {
         const initials = (c.full_name || 'GS')
           .split(' ')
@@ -38,20 +38,20 @@ function AvatarStack({ consultants }: { consultants: Array<{ id: string; full_na
             style={{ zIndex: isActive ? 10 : 4 - i }}
           >
             <div
-              className="w-9 h-9 rounded-full border-2 overflow-hidden transition-all duration-500 flex items-center justify-center text-[10px] font-bold text-white"
+              className="w-14 h-14 rounded-full border-2 overflow-hidden transition-all duration-500 flex items-center justify-center text-sm font-bold text-white"
               style={{
                 borderColor: isActive ? '#D4AF37' : 'rgba(0,0,0,0.4)',
                 transform: isActive ? 'scale(1.15)' : 'scale(1)',
                 background: COLORS[i % COLORS.length],
-                boxShadow: isActive ? `0 0 12px rgba(212,175,55,0.6)` : 'none',
+                boxShadow: isActive ? `0 0 18px rgba(212,175,55,0.7)` : 'none',
               }}
             >
               {c.avatar_url ? (
                 <Image
                   src={c.avatar_url}
                   alt={c.full_name || 'Consultant'}
-                  width={36}
-                  height={36}
+                  width={56}
+                  height={56}
                   className="object-cover w-full h-full"
                   unoptimized
                 />
@@ -60,7 +60,7 @@ function AvatarStack({ consultants }: { consultants: Array<{ id: string; full_na
               )}
             </div>
             {isActive && c.full_name && (
-              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] font-bold text-amber-300 tracking-wide animate-fade-in pointer-events-none">
+              <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-bold text-amber-300 tracking-wide animate-fade-in pointer-events-none">
                 {c.full_name.split(' ')[0]}
               </div>
             )}
@@ -68,7 +68,7 @@ function AvatarStack({ consultants }: { consultants: Array<{ id: string; full_na
         );
       })}
       {remaining > 0 && (
-        <div className="w-9 h-9 rounded-full border-2 border-black/40 bg-white/10 flex items-center justify-center text-[9px] font-bold text-white/60 backdrop-blur-sm">
+        <div className="w-14 h-14 rounded-full border-2 border-black/40 bg-white/10 flex items-center justify-center text-xs font-bold text-white/70 backdrop-blur-sm">
           +{remaining}
         </div>
       )}
@@ -105,7 +105,7 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
     : '4.9';
 
   return (
-    <div className="flex flex-col gap-4 w-64">
+    <div className="flex flex-col gap-4 w-72">
       <div className="rounded-2xl border border-white/10 bg-black/45 p-5 backdrop-blur-xl shadow-2xl">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center shrink-0">
@@ -115,7 +115,7 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
             <p className="text-xs font-bold uppercase tracking-widest text-amber-400">
               {ui('ui_extra_b3_trust_verified_title', 'Onaylı Danışmanlar')}
             </p>
-            <p className="text-[10px] text-white/40 mt-0.5">
+            <p className="text-xs text-white/55 mt-0.5">
               {isLoading
                 ? '...'
                 : ui('ui_extra_b3_trust_expert_profiles', '{count} uzman profil').replace('{count}', String(totalCount))}
@@ -123,11 +123,11 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
           </div>
         </div>
 
-        <div className="mb-4 min-h-[44px]">
+        <div className="mb-6 min-h-[68px]">
           {isLoading ? (
             <div className="flex -space-x-2">
               {[0, 1, 2, 3].map((i) => (
-                <Skeleton key={i} className="w-9 h-9 rounded-full" />
+                <Skeleton key={i} className="w-14 h-14 rounded-full" />
               ))}
             </div>
           ) : (
@@ -176,15 +176,15 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
               return (
                 <div
                   key={c.id}
-                  className="w-6 h-6 rounded-full border border-emerald-400/30 overflow-hidden flex items-center justify-center text-[8px] font-bold text-white bg-emerald-800/60"
+                  className="w-9 h-9 rounded-full border border-emerald-400/30 overflow-hidden flex items-center justify-center text-[10px] font-bold text-white bg-emerald-800/60"
                   title={c.full_name}
                 >
                   {c.avatar_url ? (
                     <Image
                       src={c.avatar_url}
                       alt={c.full_name || ''}
-                      width={24}
-                      height={24}
+                      width={36}
+                      height={36}
                       className="object-cover w-full h-full"
                       unoptimized
                     />
@@ -195,7 +195,7 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
               );
             })}
             {online.length > 5 && (
-              <div className="w-6 h-6 rounded-full border border-emerald-400/30 bg-emerald-800/40 flex items-center justify-center text-[7px] font-bold text-emerald-300">
+              <div className="w-9 h-9 rounded-full border border-emerald-400/30 bg-emerald-800/40 flex items-center justify-center text-[9px] font-bold text-emerald-300">
                 +{online.length - 5}
               </div>
             )}

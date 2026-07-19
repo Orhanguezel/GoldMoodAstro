@@ -21,9 +21,11 @@ import HeroCTAs from './HeroCTAs';
 /* Fallback skeletons for Suspense boundaries */
 function TrustCardsSkeleton() {
   return (
-    <div className="flex flex-col gap-4 w-64">
-      <div className="h-40 rounded-2xl bg-white/5 animate-pulse backdrop-blur-xl border border-white/10" />
-      <div className="h-20 rounded-2xl bg-white/5 animate-pulse backdrop-blur-xl border border-white/10" />
+    {/* Ölçüler HeroTrustCards ile eşit tutulmalı (w-72 / büyütülmüş avatarlar),
+        aksi hâlde kartlar yüklenince layout kayar. */}
+    <div className="flex flex-col gap-4 w-72">
+      <div className="h-52 rounded-2xl bg-white/5 animate-pulse backdrop-blur-xl border border-white/10" />
+      <div className="h-28 rounded-2xl bg-white/5 animate-pulse backdrop-blur-xl border border-white/10" />
     </div>
   );
 }
@@ -192,8 +194,11 @@ export default function HeroNew({ locale = 'tr' }: { locale?: string }) {
           </Suspense>
         </div>
 
-        {/* Right: floating dynamic trust cards — only on xl screens */}
-        <div className="hidden xl:block shrink-0">
+        {/* Right: floating dynamic trust cards.
+            2026-07-19 (M8): müşteri "hero'da danışmanları daha büyük gösterelim" dedi.
+            Avatarlar büyütüldü + eşik xl(1280px) → lg(1024px): dizüstü ve yatay tablette de
+            danışmanlar hero'da görünüyor. Mobilde hâlâ gizli — ayrı tasarım kararı. */}
+        <div className="hidden lg:block shrink-0">
           <Suspense fallback={<TrustCardsSkeleton />}>
             <HeroTrustCards locale={locale} />
           </Suspense>
