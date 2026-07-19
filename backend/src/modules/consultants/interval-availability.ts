@@ -1,7 +1,14 @@
 import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 
-export const INTERVAL_STEP_MINUTES = 15;
+// Randevu ızgarasının adımı: danışana gösterilen başlangıç saatleri bu aralıkla üretilir.
+// 2026-07-19: müşteri talebiyle 15 -> 30 (site düzeltme notları M1).
+export const INTERVAL_STEP_MINUTES = 30;
+
+// Hizmet süresi tabanı. Izgara adımından AYRI tutulur: danışman panelinde 15 dakikalık
+// hizmet tanımlanabiliyor; bu değer ızgaraya bağlanırsa 15 dk'lık hizmet sessizce
+// 30 dk gibi hesaplanır ve uygunluk yanlış çıkar.
+const MIN_SERVICE_DURATION_MINUTES = 15;
 export const TODAY_BOOKING_BUFFER_MINUTES = 30;
 
 type QueryRows<T> = T[];
@@ -80,7 +87,7 @@ export async function computeDayAvailability(
   date: string,
   durationMinutes: number,
 ): Promise<DayAvailability> {
-  const duration = Math.max(INTERVAL_STEP_MINUTES, Math.min(480, Number(durationMinutes) || 30));
+  const duration = Math.max(MIN_SERVICE_DURATION_MINUTES, Math.min(480, Number(durationMinutes) || 30));
 
   const consultantResult = await db.execute(sql`
     SELECT c.id AS consultant_id, r.id AS resource_id
