@@ -49,8 +49,8 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('01000000-0000-4000-8000-000000000025', 'contact_info',             '*', '{"email":"goldmoodastro@gmail.com","phone":"0212 807 09 59","address":"Cumhuriyet Mahallesi D-100 Karayolu Caddesi ADM Konaklama Sitesi Outlet Park AVM No:374 İç Kapı No:63 Büyükçekmece / İstanbul"}'),
 ('01000000-0000-4000-8000-000000000026', 'company_brand',            '*', '{"name":"GoldMoodAstro","slogan":"Yıldızlarla tanışan modern astroloji","legal_name":"QUEBAB GIDA FABRİKASI RESTORAN İŞLETMECİLİĞİ EĞLENCE ORGANİZASYON VE KİRALAMA TİCARET LİMİTED ŞİRKETİ","mersis":"0632143381600001","tax_office":"Büyükçekmece Vergi Dairesi","tax_no":"6321433816","trade_registry":"491688-5","address":"Cumhuriyet Mahallesi D-100 Karayolu Caddesi ADM Konaklama Sitesi Outlet Park AVM No:374 İç Kapı No:63 Büyükçekmece / İstanbul","phone":"0212 807 09 59","email":"goldmoodastro@gmail.com"}'),
 ('01000000-0000-4000-8000-000000000027', 'cookie_consent',           '*', '{"enabled":false}'),
--- 2026-07-19: resmi hesaplar baglandi (IG @goldmood_astro, FB sayfa 1354790577707171).
-('01000000-0000-4000-8000-000000000028', 'socials',                  '*', '{"instagram":"https://www.instagram.com/goldmood_astro","twitter":"","facebook":"https://www.facebook.com/1354790577707171","linkedin":""}'),
+-- 2026-07-19: resmi hesaplar baglandi (IG @goldmood_astro, FB sayfa 61592256352179).
+('01000000-0000-4000-8000-000000000028', 'socials',                  '*', '{"instagram":"https://www.instagram.com/goldmood_astro","twitter":"","facebook":"https://www.facebook.com/profile.php?id=61592256352179","linkedin":""}'),
 ('01000000-0000-4000-8000-000000000029', 'chat_ai_welcome_message',  '*', ''),
 ('01000000-0000-4000-8000-00000000002a', 'site_seo',                 '*', '{"title":"GoldMoodAstro","description":"Yıldızlarla tanışan modern astroloji"}'),
 ('01000000-0000-4000-8000-00000000002b', 'ui_about',                 '*', '{}'),

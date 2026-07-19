@@ -16,7 +16,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('01000000-0000-4000-8000-000000000038', 'brand.theme_color',   '*', '#C9A961'),
 ('01000000-0000-4000-8000-000000000039', 'brand.contact',       '*', '{"email":"","phone":"","address":""}'),
 -- 2026-07-19: resmi hesaplar. layout.tsx bunu schema.org sameAs olarak da yayinliyor.
-('01000000-0000-4000-8000-00000000003a', 'brand.social',        '*', '{"instagram":"https://www.instagram.com/goldmood_astro","twitter":"","facebook":"https://www.facebook.com/1354790577707171","linkedin":"","youtube":""}'),
+('01000000-0000-4000-8000-00000000003a', 'brand.social',        '*', '{"instagram":"https://www.instagram.com/goldmood_astro","twitter":"","facebook":"https://www.facebook.com/profile.php?id=61592256352179","linkedin":"","youtube":""}'),
 ('01000000-0000-4000-8000-00000000003b', 'brand.assets',        '*', '{}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);
 
