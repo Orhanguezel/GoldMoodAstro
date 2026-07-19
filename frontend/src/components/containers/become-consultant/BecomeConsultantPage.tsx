@@ -76,6 +76,7 @@ export default function BecomeConsultantPage() {
     languages: [] as string[],
     experience_years: 1,
     certifications: '',
+    work_experience: '',
     cv_url: '',
     sample_review: '',
   });
@@ -122,6 +123,7 @@ export default function BecomeConsultantPage() {
         experience_years: formData.experience_years,
         ...(formData.phone.trim() ? { phone: formData.phone.trim() } : {}),
         ...(formData.certifications.trim() ? { certifications: formData.certifications.trim() } : {}),
+        ...(formData.work_experience.trim() ? { work_experience: formData.work_experience.trim() } : {}),
         ...(formData.cv_url.trim() ? { cv_url: formData.cv_url.trim() } : {}),
         ...(formData.sample_review.trim() ? { sample_review: formData.sample_review.trim() } : {}),
       };
@@ -340,6 +342,16 @@ export default function BecomeConsultantPage() {
                         onChange={e => setFormData({...formData, certifications: e.target.value})}
                         className="gm-input-premium py-6 min-h-[120px] resize-none font-serif italic" 
                         placeholder={ui('ui_become_consultant_form_certs_placeholder', 'Training, certificates, and reference institutions...')}
+                      />
+                    </InputGroup>
+
+                    <InputGroup label={ui('ui_become_consultant_form_work_experience', 'Work Experience')}>
+                      <textarea
+                        rows={3}
+                        value={formData.work_experience}
+                        onChange={e => setFormData({...formData, work_experience: e.target.value})}
+                        className="gm-input-premium py-6 min-h-[120px] resize-none font-serif italic"
+                        placeholder={ui('ui_become_consultant_form_work_experience_placeholder', 'Where and for how long have you worked, which institutions have you served?')}
                       />
                     </InputGroup>
 

@@ -30,6 +30,7 @@ export async function createApplication(
     languages: input.languages,
     experience_years: input.experience_years ?? null,
     certifications: input.certifications ?? null,
+    work_experience: input.work_experience ?? null,
     cv_url: input.cv_url ?? null,
     sample_chart_url: input.sample_chart_url ?? null,
     sample_review: input.sample_review ?? null,

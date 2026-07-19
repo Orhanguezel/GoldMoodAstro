@@ -320,6 +320,7 @@ export default function ConsultantApplicationsList() {
               </div>
               <DetailBlock label={ca("detail.bio", "Biyografi")} value={selected.bio} />
               <DetailBlock label={ca("detail.certifications", "Sertifikalar")} value={selected.certifications} />
+              <DetailBlock label={ca("detail.work_experience", "İş Deneyimi")} value={selected.work_experience} />
               <div className="grid gap-4 md:grid-cols-2">
                 <DetailBlock
                   label={ca("detail.cv", "CV")}

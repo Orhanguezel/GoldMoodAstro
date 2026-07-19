@@ -13,6 +13,7 @@ export type ConsultantApplicationAdmin = {
   languages: string[] | null;
   experience_years: number | null;
   certifications: string | null;
+  work_experience: string | null;
   cv_url: string | null;
   sample_chart_url: string | null;
   sample_review: string | null;

@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS consultant_applications (
   languages JSON,
   experience_years INT,
   certifications TEXT,
+  work_experience TEXT,
   cv_url VARCHAR(500),
   sample_chart_url VARCHAR(500),
   sample_review TEXT,

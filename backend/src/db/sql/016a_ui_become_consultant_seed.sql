@@ -64,5 +64,8 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('01000000-0000-4000-8000-0000000004fd', 'ui_become_consultant_hero_stat_share', '*', '{"label":{"tr":"Gelir Payı","en":"Revenue Share","de":"Umsatzanteil"}}'),
 ('01000000-0000-4000-8000-0000000004fe', 'ui_become_consultant_hero_stat_approval', '*', '{"label":{"tr":"Hızlı Onay","en":"Fast Approval","de":"Schnelle Prüfung"}}'),
 ('01000000-0000-4000-8000-0000000004ff', 'ui_become_consultant_hero_apply', '*', '{"label":{"tr":"Hemen Başvur","en":"Apply Now","de":"Jetzt bewerben"}}'),
-('01000000-0000-4000-8000-000000000500', 'ui_become_consultant_hero_review_note', '*', '{"label":{"tr":"Başvurular 48 saat içinde değerlendirilir","en":"Applications reviewed within 48h","de":"Bewerbungen werden innerhalb von 48 Stunden geprüft"}}')
+('01000000-0000-4000-8000-000000000500', 'ui_become_consultant_hero_review_note', '*', '{"label":{"tr":"Başvurular 48 saat içinde değerlendirilir","en":"Applications reviewed within 48h","de":"Bewerbungen werden innerhalb von 48 Stunden geprüft"}}'),
+-- 2026-07-19: müşteri talebi (site düzeltme notları M4) — iş deneyimi alanı.
+('01000000-0000-4000-8000-000000000501', 'ui_become_consultant_form_work_experience', '*', '{"label":{"tr":"İş Deneyimi","en":"Work Experience","de":"Berufserfahrung"}}'),
+('01000000-0000-4000-8000-000000000502', 'ui_become_consultant_form_work_experience_placeholder', '*', '{"label":{"tr":"Nerede, ne kadar süre çalıştınız; hangi kurumlarda hizmet verdiniz?","en":"Where and for how long have you worked, which institutions have you served?","de":"Wo und wie lange haben Sie gearbeitet, welchen Einrichtungen haben Sie gedient?"}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);

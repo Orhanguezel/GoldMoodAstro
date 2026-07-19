@@ -26,6 +26,7 @@ export const consultantApplications = mysqlTable(
     languages: json('languages').$type<string[]>(),
     experience_years: int('experience_years'),
     certifications: text('certifications'),
+    work_experience: text('work_experience'),
     cv_url: varchar('cv_url', { length: 500 }),
     sample_chart_url: varchar('sample_chart_url', { length: 500 }),
     sample_review: text('sample_review'),
