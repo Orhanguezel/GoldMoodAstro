@@ -58,7 +58,7 @@ const DEFAULTS_BY_KEY: Record<GeneralKey, SettingValue> = {
     nav_contact: 'İletişim',
     cta_label: 'Randevu Al',
   },
-  platform_commission_rate: { percent: 30, effective_from: '2026-06-20' },
+  platform_commission_rate: { percent: 40, effective_from: '2026-07-19' },
   payout_cycle: {
     mode: 'monthly',
     interval_days: 30,

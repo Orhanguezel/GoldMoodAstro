@@ -1,7 +1,8 @@
 -- =============================================================
 -- 198b_consultant_agreement_v1_archive.sql
 -- Danışman sözleşmesi v1 arşivi.
--- Aktif sözleşme cp-consultant-agreement (v2 / %30) olarak kalır.
+-- Aktif sözleşme cp-consultant-agreement (v3 / %40) olarak kalır.
+-- %30 dönemi arşivi: 198c_consultant_agreement_v2_archive.sql
 -- Bu sayfa eski %15 komisyon metnini ALTER gerektirmeden saklar.
 -- =============================================================
 

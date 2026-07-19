@@ -56,8 +56,8 @@ export interface SendNoticeResult {
 
 function parseCommissionValue(raw: unknown): CommissionState {
   const fallback: CommissionState = {
-    new_percent: 30,
-    previous_percent: 15,
+    new_percent: 40,
+    previous_percent: 30,
     effective_from: null,
     notice_days: 30,
   };
