@@ -1,7 +1,7 @@
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
-const SECRET = process.env.REVALIDATE_SECRET || 'goldmood-revalidate-2026';
+const SECRET = process.env.REVALIDATE_SECRET;
 
 const ALLOWED_ORIGINS = [
   process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3094',
@@ -35,6 +35,13 @@ export async function OPTIONS(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const origin = request.headers.get('origin');
   const headers = corsHeaders(origin);
+
+  if (!SECRET) {
+    return NextResponse.json(
+      { error: 'revalidate_secret_not_configured' },
+      { status: 500, headers },
+    );
+  }
 
   const body = await request.json().catch(() => ({}));
   const { secret, path, all, tags } = body as {

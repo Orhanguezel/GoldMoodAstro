@@ -4,13 +4,17 @@ const FRONTEND_INTERNAL_URL =
   process.env.PANEL_FRONTEND_URL ||
   process.env.NEXT_PUBLIC_FRONTEND_URL ||
   'http://127.0.0.1:3095';
-const REVALIDATE_SECRET =
-  process.env.REVALIDATE_SECRET ||
-  process.env.NEXT_PUBLIC_REVALIDATE_SECRET ||
-  'goldmood-revalidate-2026';
+const REVALIDATE_SECRET = process.env.REVALIDATE_SECRET;
 
 export async function POST(req: NextRequest) {
   try {
+    if (!REVALIDATE_SECRET) {
+      return NextResponse.json(
+        { error: 'revalidate_secret_not_configured' },
+        { status: 500 },
+      );
+    }
+
     const body = await req.json();
 
     const res = await fetch(`${FRONTEND_INTERNAL_URL}/api/revalidate`, {
