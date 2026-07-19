@@ -59,4 +59,7 @@ VALUES
   (CONCAT(SUBSTRING(MD5('bilincalti_donusum'),1,8),'-',SUBSTRING(MD5('bilincalti_donusum'),9,4),'-4',SUBSTRING(MD5('bilincalti_donusum'),14,3),'-8',SUBSTRING(MD5('bilincalti_donusum'),18,3),'-',SUBSTRING(MD5('bilincalti_donusum'),21,12)),
    'bilincalti_donusum','Bilinçaltı Dönüşüm','Bilinçaltı kalıplarını fark etme ve dönüştürme çalışmaları.','Brain',160,1),
   (CONCAT(SUBSTRING(MD5('psikoloji'),1,8),'-',SUBSTRING(MD5('psikoloji'),9,4),'-4',SUBSTRING(MD5('psikoloji'),14,3),'-8',SUBSTRING(MD5('psikoloji'),18,3),'-',SUBSTRING(MD5('psikoloji'),21,12)),
-   'psikoloji','Psikoloji','Lisanslı psikolog desteğiyle bireysel danışmanlık.','HeartPulse',170,1);
+   'psikoloji','Psikoloji','Lisanslı psikolog desteğiyle bireysel danışmanlık.','HeartPulse',170,1),
+  -- 2026-07-19: müşteri talebi (site düzeltme notları M5).
+  (CONCAT(SUBSTRING(MD5('fizyonomi'),1,8),'-',SUBSTRING(MD5('fizyonomi'),9,4),'-4',SUBSTRING(MD5('fizyonomi'),14,3),'-8',SUBSTRING(MD5('fizyonomi'),18,3),'-',SUBSTRING(MD5('fizyonomi'),21,12)),
+   'fizyonomi','Fizyonomi','Yüz hatlarının geleneksel yorumuyla karakter okuması.','ScanFace',180,1);

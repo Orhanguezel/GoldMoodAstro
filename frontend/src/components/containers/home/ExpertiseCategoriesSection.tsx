@@ -51,6 +51,7 @@ const CATEGORY_COPY_FALLBACK: Record<string, { label: string; desc: string }> = 
   yasam_koclugu: { label: 'Yaşam Koçluğu', desc: 'Hedef belirleme, motivasyon ve kişisel gelişim rehberliği.' },
   bilincalti_donusum: { label: 'Bilinçaltı Dönüşüm', desc: 'Bilinçaltı kalıpları fark etme ve dönüştürme.' },
   psikoloji: { label: 'Psikoloji', desc: 'Lisanslı psikolog desteğiyle bireysel danışmanlık.' },
+  fizyonomi: { label: 'Fizyonomi', desc: 'Yüz hatlarının geleneksel yorumuyla karakter okuması.' },
 };
 
 export default function ExpertiseCategoriesSection({ locale = 'tr' }: { locale?: string }) {

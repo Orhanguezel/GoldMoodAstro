@@ -64,6 +64,7 @@ SELECT
     WHEN 'yasam_koclugu' THEN 'Life Coaching'
     WHEN 'bilincalti_donusum' THEN 'Subconscious Transformation'
     WHEN 'psikoloji' THEN 'Psychology'
+    WHEN 'fizyonomi' THEN 'Physiognomy'
     ELSE name
   END,
   CASE slug
@@ -84,13 +85,14 @@ SELECT
     WHEN 'yasam_koclugu' THEN 'Goal setting, motivation, and personal development guidance.'
     WHEN 'bilincalti_donusum' THEN 'Awareness and transformation of subconscious patterns.'
     WHEN 'psikoloji' THEN 'Individual counselling with licensed psychology support.'
+    WHEN 'fizyonomi' THEN 'Character reading through the traditional interpretation of facial features.'
     ELSE description
   END
 FROM service_categories
 WHERE slug IN (
   'astrology','birth_chart','tarot','numerology','coffee','relationship','mood','career',
   'dream_interpretation','energy_healing','spiritual_guidance','nefes_terapisi','bioenerji',
-  'reiki','yasam_koclugu','bilincalti_donusum','psikoloji'
+  'reiki','yasam_koclugu','bilincalti_donusum','psikoloji','fizyonomi'
 );
 
 INSERT IGNORE INTO service_categories_i18n
@@ -123,6 +125,7 @@ SELECT
     WHEN 'yasam_koclugu' THEN 'Life Coaching'
     WHEN 'bilincalti_donusum' THEN 'Unterbewusste Transformation'
     WHEN 'psikoloji' THEN 'Psychologie'
+    WHEN 'fizyonomi' THEN 'Physiognomie'
     ELSE name
   END,
   CASE slug
@@ -143,11 +146,12 @@ SELECT
     WHEN 'yasam_koclugu' THEN 'Zielsetzung, Motivation und persoenliche Entwicklung.'
     WHEN 'bilincalti_donusum' THEN 'Bewusstwerden und Transformation unterbewusster Muster.'
     WHEN 'psikoloji' THEN 'Individuelle Beratung mit psychologischer Unterstuetzung.'
+    WHEN 'fizyonomi' THEN 'Charakterlesung durch traditionelle Deutung der Gesichtszuege.'
     ELSE description
   END
 FROM service_categories
 WHERE slug IN (
   'astrology','birth_chart','tarot','numerology','coffee','relationship','mood','career',
   'dream_interpretation','energy_healing','spiritual_guidance','nefes_terapisi','bioenerji',
-  'reiki','yasam_koclugu','bilincalti_donusum','psikoloji'
+  'reiki','yasam_koclugu','bilincalti_donusum','psikoloji','fizyonomi'
 );
