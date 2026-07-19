@@ -20,9 +20,9 @@ import HeroCTAs from './HeroCTAs';
 
 /* Fallback skeletons for Suspense boundaries */
 function TrustCardsSkeleton() {
+  // Ölçüler HeroTrustCards ile eşit tutulmalı (w-72 / büyütülmüş avatarlar),
+  // aksi hâlde kartlar yüklenince layout kayar.
   return (
-    {/* Ölçüler HeroTrustCards ile eşit tutulmalı (w-72 / büyütülmüş avatarlar),
-        aksi hâlde kartlar yüklenince layout kayar. */}
     <div className="flex flex-col gap-4 w-72">
       <div className="h-52 rounded-2xl bg-white/5 animate-pulse backdrop-blur-xl border border-white/10" />
       <div className="h-28 rounded-2xl bg-white/5 animate-pulse backdrop-blur-xl border border-white/10" />
