@@ -25,7 +25,7 @@ export default async function OG() {
       }}>
         {/* Header */}
         <div style={{ fontSize: 24, color: theme.primary, letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          {theme.brandUpper} · BIG THREE
+          {`${theme.brandUpper} · BIG THREE`}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 40, alignItems: 'center' }}>

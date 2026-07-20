@@ -322,6 +322,23 @@ export async function updateHoroscopeAdmin(
   return getHoroscopeAdmin(id);
 }
 
+
+/**
+ * Carousel kareleri icin burc basina tek satir (kind='carousel_line').
+ * Uretim: backend/scripts/generate-carousel-lines.ts
+ */
+export async function getCarouselLines(topic: string, locale = 'tr') {
+  const [rows] = await (db as any).session.client.query(
+    `SELECT key1 AS sign, content AS line, title
+       FROM astrology_kb
+      WHERE kind = 'carousel_line' AND key2 = ? AND locale = ? AND is_active = 1
+      ORDER BY FIELD(key1,'aries','taurus','gemini','cancer','leo','virgo',
+                          'libra','scorpio','sagittarius','capricorn','aquarius','pisces')`,
+    [topic, locale],
+  );
+  return rows as Array<{ sign: string; line: string; title: string }>;
+}
+
 export async function getCompatibilityReading(signA: string, signB: string, locale: string = 'tr') {
   const a = signA.toLowerCase();
   const b = signB.toLowerCase();

@@ -172,3 +172,16 @@ export async function handleGetReading(req: FastifyRequest, reply: FastifyReply)
   }
   return reply.send({ data: reading });
 }
+
+/**
+ * Tum sembolleri listeler — PUBLIC, auth yok.
+ *
+ * Sosyal medya otomasyonu (ekosistem-sosyal-medya) gunluk seri icerikleri bu listeden
+ * uretir; ayrica her sembol icin ayri SEO sayfasi acmayi mumkun kilar. Sadece POST
+ * (cekme) uclari vardi, listeleme yoktu.
+ */
+export async function handleListSymbols(req: FastifyRequest, reply: FastifyReply) {
+  const locale = ((req.query as any)?.locale as string) || 'tr';
+  const items = await repo.getSymbols(locale);
+  return reply.send({ data: items, count: items.length });
+}

@@ -4,6 +4,26 @@ Bu dosya Codex'in okuyup çalıştığı talimat dosyasıdır.
 
 ---
 
+## 🔴 AKTIF GOREV — Sosyal medya & site gorselleri uretimi
+
+**Brief:** [`CODEX-GORSEL-URETIM-BRIEF.md`](./CODEX-GORSEL-URETIM-BRIEF.md)
+
+Kahve fali, ruya tabiri, numeroloji, sinastri ve yildizname konulari icin **hic gorsel yok**;
+sosyal medya otomasyonu bu konulara alakasiz burc resmi koyuyordu (kahve fali -> yengec).
+
+- **Faz A (oncelikli):** 5 hero gorsel — bunlar bitmeden sosyal medya motoru genisletilemiyor
+- Faz B: numeroloji 1-9, kahve falı 50 sembol, ruya 101 sembol
+- Stil mevcut `backend/uploads/zodiac/*.png` setinden cikarildi; yeni gorseller onlarla
+  ayni aileden gorunmeli
+- ⚠️ **Gorselin icine YAZI KOYMA** — mevcut zodyak setindeki gomulu Ingilizce baslik
+  sosyal medya sablonundaki Turkce baslikla ust uste biniyor
+- ⚠️ Uretim sonrasi **gozle bak** — placeholder/kesik gorseller daha once fark edilmeden
+  yayinlandi (bkz. `EKSIK-GORSELLER.md`)
+
+**Kapsam disi:** tarot kartlarinin yeniden uretimi (kullanici kendisi yapiyor).
+
+---
+
 ## Canli Erisim Notu
 
 Canli server `goldmoodastro` SSH kisa yolundadir. Key ile sifresiz erisim: `ssh goldmoodastro`.

@@ -210,3 +210,6 @@ doc/
 
 # Playwright test çıktıları (commit edilmez)
 frontend/test-results/
+
+# Uretilmis gecici gorseller (imagegen, blog-generated) — 53MB, versiyonlanmaz
+tmp/

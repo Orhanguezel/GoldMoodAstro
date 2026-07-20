@@ -7,11 +7,12 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 export const alt = 'GoldMoodAstro Sinastri';
 
-export default async function OG({ params }: { params: { id: string; locale: string } }) {
+export default async function OG({ params }: { params: Promise<{ id: string; locale: string }> }) {
+  const { id } = await params;
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://goldmoodastro.com/api';
   let data;
   try {
-    const res = await fetch(`${apiUrl}/synastry/reading/${params.id}`);
+    const res = await fetch(`${apiUrl}/synastry/reading/${id}`);
     if (!res.ok) throw new Error('API Error');
     const json = await res.json();
     data = json.data;
@@ -36,7 +37,7 @@ export default async function OG({ params }: { params: { id: string; locale: str
       }}>
         {/* Header */}
         <div style={{ fontSize: 28, color: theme.primary, letterSpacing: 4 }}>
-          {theme.brandUpper} · SYNASTRY
+          {`${theme.brandUpper} · SYNASTRY`}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

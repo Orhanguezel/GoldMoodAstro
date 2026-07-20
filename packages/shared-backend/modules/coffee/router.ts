@@ -4,6 +4,7 @@ import * as controller from './controller';
 import { tryAuth } from '../../middleware/auth';
 
 export function registerCoffeePublic(fastify: FastifyInstance) {
+  fastify.get('/coffee/symbols', controller.handleListSymbols);
   fastify.post('/coffee/read', { preHandler: [tryAuth] }, controller.handleRead);
   fastify.get('/coffee/reading/:id', { preHandler: [tryAuth] }, controller.handleGetReading);
 }

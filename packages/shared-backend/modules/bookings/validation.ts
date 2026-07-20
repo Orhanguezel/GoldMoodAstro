@@ -74,6 +74,16 @@ export const publicCreateBookingSchema = z.object({
   source_type: z.enum(['daily_reading']).optional(),
   source_id: uuid36Schema.optional(),
 
+  // FIRST-TOUCH pazarlama atfi (frontend localStorage'dan gonderir, 90 gun).
+  // Opsiyoneldir: gelmezse randevu normal olusur — olcum eksigi akisi BOZMAMALI.
+  attr_utm_source: z.string().trim().max(64).optional(),
+  attr_utm_medium: z.string().trim().max(64).optional(),
+  attr_utm_campaign: z.string().trim().max(128).optional(),
+  attr_utm_content: z.string().trim().max(128).optional(),
+  attr_click_id: z.string().trim().max(255).optional(),
+  attr_referrer: z.string().trim().max(512).optional(),
+  attr_first_seen_at: z.string().trim().max(40).optional(),
+
   appointment_date: dateYmdSchema,
   appointment_time: timeHmSchema,
 

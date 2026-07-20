@@ -24,11 +24,12 @@ import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 
 export default async function UnlulerVeBurclariPage({ params }: Props) {
-  await params;
+  const { locale } = await params;
 
+  const BANNER: Record<string, string> = { tr: 'Ünlüler ve Burçları', en: 'Celebrities and Zodiac Signs', de: 'Prominente und Sternzeichen' };
   return (
     <>
-      <Banner title="Celebrities and Zodiac Signs" />
+      <Banner title={BANNER[locale] ?? BANNER.en} />
       <PageContainer width="full" pad="none" className="bg-(--gm-bg)">
         <CelebrityZodiacPage />
       </PageContainer>

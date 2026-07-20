@@ -12,16 +12,16 @@ import mysql from 'mysql2/promise';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(HERE, 'blog-uplift-data');
 
-// page_id son hane → tema SVG'si (frontend/public/img/blog/)
+// page_id son hane → GoldMoodAstro tema WebP'si (frontend/public/img/blog/)
 const SVG_BY_TAIL: Record<string, string> = {
-  '1': '/img/blog/birth-chart.svg',
-  '2': '/img/blog/synastry.svg',
-  '3': '/img/blog/tarot.svg',
-  '4': '/img/blog/numerology.svg',
-  '5': '/img/blog/moon-sign.svg',
-  '6': '/img/blog/retrograde.svg',
-  '7': '/img/blog/consultant.svg',
-  '8': '/img/blog/daily-ritual.svg',
+  '1': '/img/blog/birth-chart.webp',
+  '2': '/img/blog/synastry.webp',
+  '3': '/img/blog/tarot.webp',
+  '4': '/img/blog/numerology.webp',
+  '5': '/img/blog/moon-sign.webp',
+  '6': '/img/blog/retrograde.webp',
+  '7': '/img/blog/consultant.webp',
+  '8': '/img/blog/daily-ritual.webp',
 };
 
 function contentOf(loc: any): string {

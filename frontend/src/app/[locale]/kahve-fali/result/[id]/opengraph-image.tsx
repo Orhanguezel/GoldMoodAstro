@@ -7,11 +7,12 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 export const alt = 'GoldMoodAstro Coffee Reading';
 
-export default async function OG({ params }: { params: { id: string; locale: string } }) {
+export default async function OG({ params }: { params: Promise<{ id: string; locale: string }> }) {
+  const { id } = await params;
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://goldmoodastro.com/api';
   let data;
   try {
-    const res = await fetch(`${apiUrl}/coffee/reading/${params.id}`);
+    const res = await fetch(`${apiUrl}/coffee/reading/${id}`);
     if (!res.ok) throw new Error('API Error');
     const json = await res.json();
     data = json.data;
@@ -40,7 +41,7 @@ export default async function OG({ params }: { params: { id: string; locale: str
       }}>
         {/* Header */}
         <div style={{ fontSize: 24, color: theme.primary, letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          {theme.brandUpper} · COFFEE READING
+          {`${theme.brandUpper} · COFFEE READING`}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 40, alignItems: 'center', width: '100%' }}>

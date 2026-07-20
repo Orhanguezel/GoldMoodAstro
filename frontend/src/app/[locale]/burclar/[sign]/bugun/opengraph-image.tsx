@@ -12,17 +12,46 @@ const SIGN_SYMBOLS: Record<string, string> = {
   sagittarius: '♐', capricorn: '♑', aquarius: '♒', pisces: '♓',
 };
 
-const SIGN_LABELS: Record<string, string> = {
-  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
-  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
-  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
+const SIGN_LABELS: Record<string, Record<string, string>> = {
+  en: {
+    aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
+    leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
+    sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
+  },
+  tr: {
+    aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
+    leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
+    sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+  },
+  de: {
+    aries: 'Widder', taurus: 'Stier', gemini: 'Zwillinge', cancer: 'Krebs',
+    leo: 'Löwe', virgo: 'Jungfrau', libra: 'Waage', scorpio: 'Skorpion',
+    sagittarius: 'Schütze', capricorn: 'Steinbock', aquarius: 'Wassermann', pisces: 'Fische',
+  },
 };
 
-export default async function OG({ params }: { params: { sign: string; locale: string } }) {
-  const sign = params.sign.toLowerCase();
+/** Baslik kalibi dile gore degisir: "Koç Burcu" / "Aries Zodiac" / "Sternzeichen Widder". */
+const TITLE: Record<string, (label: string) => string> = {
+  en: (l) => `${l} Zodiac`,
+  tr: (l) => `${l} Burcu`,
+  de: (l) => `Sternzeichen ${l}`,
+};
+
+const EYEBROW: Record<string, string> = {
+  en: 'DAILY READING',
+  tr: 'GÜNLÜK YORUM',
+  de: 'TAGESHOROSKOP',
+};
+
+const DATE_LOCALE: Record<string, string> = { en: 'en-US', tr: 'tr-TR', de: 'de-DE' };
+
+export default async function OG({ params }: { params: Promise<{ sign: string; locale: string }> }) {
+  const { sign: signParam, locale: localeParam } = await params;
+  const sign = (signParam ?? '').toLowerCase();
+  const locale = SIGN_LABELS[localeParam ?? ''] ? (localeParam as string) : 'tr';
   const symbol = SIGN_SYMBOLS[sign] || '✨';
-  const label = SIGN_LABELS[sign] || sign;
-  const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+  const label = SIGN_LABELS[locale][sign] || sign;
+  const today = new Date().toLocaleDateString(DATE_LOCALE[locale], { day: 'numeric', month: 'long', year: 'numeric' });
 
   const fonts = await getOgFonts().catch(() => undefined);
   const theme = await getOgTheme();
@@ -42,7 +71,7 @@ export default async function OG({ params }: { params: { sign: string; locale: s
       }}>
         {/* Header */}
         <div style={{ fontSize: 24, color: theme.primary, letterSpacing: 4, width: '100%', textAlign: 'center' }}>
-          {theme.brandUpper} · DAILY READING
+          {`${theme.brandUpper} · ${EYEBROW[locale]}`}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center' }}>
@@ -65,7 +94,7 @@ export default async function OG({ params }: { params: { sign: string; locale: s
 
           {/* Label & Date */}
           <div style={{ fontSize: 64, fontFamily: 'Fraunces', fontStyle: 'italic', color: theme.text }}>
-            {label} Zodiac
+            {TITLE[locale](label)}
           </div>
           <div style={{ fontSize: 32, color: theme.primary, letterSpacing: 2 }}>
             {today}

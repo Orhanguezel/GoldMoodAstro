@@ -209,3 +209,11 @@ export async function handleAdminGenerateHoroscope(req: FastifyRequest, reply: F
 
   return reply.send({ data: { ...result, horoscope } });
 }
+
+/** GET /horoscopes/carousel-lines?topic=...&locale=tr — PUBLIC, auth yok. */
+export async function handleCarouselLines(req: FastifyRequest, reply: FastifyReply) {
+  const q = req.query as { topic?: string; locale?: string };
+  if (!q.topic) return reply.code(400).send({ error: 'topic gerekli' });
+  const data = await repo.getCarouselLines(q.topic, q.locale || 'tr');
+  return reply.send({ data, count: data.length });
+}

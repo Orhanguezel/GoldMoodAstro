@@ -5,9 +5,17 @@ import Link from 'next/link';
 import { useResolvedLocale, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 
-type Props = { title: string };
+type Props = {
+  title: string;
+  /**
+   * Buyuk h1 basligi gosterilsin mi. Sayfanin KENDI hero basligi varsa false ver —
+   * aksi halde ayni metin breadcrumb + h1 + hero olarak uc kez tekrar ediyor ve
+   * sayfada iki h1 olusuyor. Varsayilan true (mevcut sayfalar etkilenmez).
+   */
+  showTitle?: boolean;
+};
 
-const Banner: React.FC<Props> = ({ title }) => {
+const Banner: React.FC<Props> = ({ title, showTitle = true }) => {
   const locale = useResolvedLocale();
   const { ui } = useUiSection('ui_banner', locale);
   const homeHref = localizePath(locale, '/');
@@ -43,9 +51,11 @@ const Banner: React.FC<Props> = ({ title }) => {
           </div>
 
           {/* Title — theme-aware (dark/light contrast) */}
-          <h1 className="font-serif text-[clamp(2.4rem,5vw,4rem)] font-light leading-[1.1] tracking-[-0.01em] text-(--gm-text)">
-            {title}
-          </h1>
+          {showTitle ? (
+            <h1 className="font-serif text-[clamp(2.4rem,5vw,4rem)] font-light leading-[1.1] tracking-[-0.01em] text-(--gm-text)">
+              {title}
+            </h1>
+          ) : null}
         </div>
       </div>
 

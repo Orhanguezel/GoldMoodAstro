@@ -48,6 +48,18 @@ export async function registerHoroscopeRoutes(fastify: FastifyInstance) {
     }
   }, controller.handleGetCompatibility);
 
+  // ⚠️ '/:sign' catch-all'dan ONCE kayitli olmali, yoksa sign='carousel-lines' diye yutulur.
+  fastify.get('/carousel-lines', {
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: { topic: { type: 'string' }, locale: { type: 'string' } },
+        required: ['topic'],
+      },
+      tags: ['Horoscopes'],
+    },
+  }, controller.handleCarouselLines);
+
   fastify.get('/:sign', {
     schema: {
       params: {

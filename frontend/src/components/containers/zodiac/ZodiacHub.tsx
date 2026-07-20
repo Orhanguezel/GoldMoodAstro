@@ -11,6 +11,28 @@ import { ZODIAC_SIGNS, localizeSign } from '@/lib/zodiac/signs';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
+/**
+ * SSR fallback'leri DILE DUYARLI olmali.
+ *
+ * useUiSection sozlugu ISTEMCIDE yukleniyor; sunucu render'inda ui() ikinci
+ * argumani (fallback) doner. Fallback tek bir Ingilizce string oldugunda /tr
+ * sayfasi once "Zodiac Circle" basiyor, hidrasyondan sonra Turkcesine donuyordu
+ * — kullaniciya "sayfa ilk acilista hatali, yenileyince duzeliyor" olarak
+ * gorunen sey buydu. Locale SSR'da zaten biliniyor (linkler dogru uretiliyor).
+ */
+const FALLBACK = {
+  title: {
+    tr: 'Zodyak Kuşağı',
+    en: 'Zodiac Circle',
+    de: 'Tierkreis',
+  } as Record<string, string>,
+  subtitle: {
+    tr: 'Gökyüzünün rehberliğinde burçların derinliklerini keşfedin. Karakter analizlerinden günlük yorumlara kadar her şey burada.',
+    en: 'Explore the depths of the signs with guidance from the sky. From character analysis to daily readings, everything is here.',
+    de: 'Entdecken Sie die Tiefen der Sternzeichen unter der Führung des Himmels — von Charakteranalysen bis zu täglichen Horoskopen.',
+  } as Record<string, string>,
+};
+
 export default function ZodiacHub() {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_zodiacx' as any);
@@ -18,11 +40,12 @@ export default function ZodiacHub() {
   return (
     <section className="reveal">
       <div className="text-center mb-16">
-        <h2 className={`${cinzel.className} text-4xl md:text-5xl lg:text-6xl mb-6 text-(--gm-gold)`}>
-          {ui('ui_zodiacx_hub_title', 'Zodiac Circle')}
-        </h2>
+        {/* Sayfanin tek h1'i — Banner artik baslik basmiyor (showTitle=false). */}
+        <h1 className={`${cinzel.className} text-4xl md:text-5xl lg:text-6xl mb-6 text-(--gm-gold)`}>
+          {ui('ui_zodiacx_hub_title', FALLBACK.title[locale] ?? FALLBACK.title.en)}
+        </h1>
         <p className="text-lg text-(--gm-text-dim) max-w-2xl mx-auto italic">
-          {ui('ui_zodiacx_hub_subtitle', 'Explore the depths of the signs with guidance from the sky. From character analysis to daily readings, everything is here.')}
+          {ui('ui_zodiacx_hub_subtitle', FALLBACK.subtitle[locale] ?? FALLBACK.subtitle.en)}
         </p>
         <div className="mt-8 flex items-center justify-center gap-4">
           <Link

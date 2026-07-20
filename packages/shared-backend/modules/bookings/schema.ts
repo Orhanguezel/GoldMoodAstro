@@ -43,6 +43,13 @@ export const bookings = mysqlTable(
     session_price: varchar('session_price', { length: 12 }).notNull(),   // snapshot
     media_type: mysqlEnum('media_type', ['audio', 'video']).default('audio'),
     source_type: varchar('source_type', { length: 50 }),
+    // Pazarlama atfi — 228_bookings_attribution_additive_migrate.sql
+    attr_utm_source: varchar('attr_utm_source', { length: 64 }),
+    attr_utm_medium: varchar('attr_utm_medium', { length: 64 }),
+    attr_utm_campaign: varchar('attr_utm_campaign', { length: 128 }),
+    attr_utm_content: varchar('attr_utm_content', { length: 128 }),
+    attr_click_id: varchar('attr_click_id', { length: 255 }),
+    attr_referrer: varchar('attr_referrer', { length: 512 }),
     source_id: char('source_id', { length: 36 }),
 
     // Randevu durumu

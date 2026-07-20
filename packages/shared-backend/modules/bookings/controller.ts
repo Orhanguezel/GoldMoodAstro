@@ -301,6 +301,16 @@ export const createBookingPublicHandler: RouteHandler = async (req, reply) => {
         source_type: input.source_type ?? null,
         source_id: input.source_id ?? null,
 
+        // FIRST-TOUCH pazarlama atfi — hangi icerik/kanal bu randevuyu getirdi?
+        // Gelmezse null; olcum eksigi randevu olusturmayi ENGELLEMEZ.
+        attr_utm_source: input.attr_utm_source ?? null,
+        attr_utm_medium: input.attr_utm_medium ?? null,
+        attr_utm_campaign: input.attr_utm_campaign ?? null,
+        attr_utm_content: input.attr_utm_content ?? null,
+        attr_click_id: input.attr_click_id ?? null,
+        attr_referrer: input.attr_referrer ?? null,
+        attr_first_seen_at: input.attr_first_seen_at ? new Date(input.attr_first_seen_at) : null,
+
         status: initialStatus,
         is_read: 0,
 
