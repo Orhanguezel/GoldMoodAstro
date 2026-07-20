@@ -8,6 +8,7 @@ import { registerHoroscopeCron } from '@/cron/horoscope-job';
 import { registerReviewFollowupCron } from '@/cron/review-followup';
 import { registerAccountDeletionCron } from '@/cron/account-deletion';
 import { registerRequestNowTimeoutCron } from '@/cron/request-now-timeout';
+import { registerSessionAutoCloseCron } from '@/cron/session-auto-close';
 import { registerConsultantAnalyticsCron } from '@/cron/consultant-analytics';
 import { registerConsultantEarningsCron } from '@/cron/consultant-earnings';
 import { registerConsultantWithdrawalCron } from '@/cron/consultant-withdrawals';
@@ -48,6 +49,7 @@ async function main() {
     registerReviewFollowupCron();
     registerAccountDeletionCron();
     registerRequestNowTimeoutCron();
+    registerSessionAutoCloseCron();
     registerConsultantAnalyticsCron();
     registerConsultantEarningsCron();
     registerConsultantWithdrawalCron();

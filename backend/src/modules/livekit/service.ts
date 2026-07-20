@@ -1,4 +1,10 @@
-import { AccessToken, WebhookReceiver, type VideoGrant, type WebhookEvent } from 'livekit-server-sdk';
+import {
+  AccessToken,
+  RoomServiceClient,
+  WebhookReceiver,
+  type VideoGrant,
+  type WebhookEvent,
+} from 'livekit-server-sdk';
 import { appConfig } from '@goldmood/shared-config/appConfig';
 import { env } from '@/core/env';
 
@@ -42,6 +48,26 @@ export async function buildLiveKitToken(params: {
 export function getLiveKitUrl() {
   assertLiveKitConfigured();
   return env.LIVEKIT_URL;
+}
+
+/**
+ * Odayı sunucu tarafında kapatır: içerideki tüm katılımcılar anında düşer.
+ * Süresi dolan seansları otomatik sonlandıran cron kullanır (M1-b).
+ *
+ * Oda zaten yoksa LiveKit 404 döner; bu bir hata değil (görüşme kendiliğinden
+ * bitmiş demektir), o yüzden sessizce başarı sayılır.
+ */
+export async function closeLiveKitRoom(roomName: string): Promise<'closed' | 'already_gone'> {
+  assertLiveKitConfigured();
+  const client = new RoomServiceClient(env.LIVEKIT_URL, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET);
+  try {
+    await client.deleteRoom(roomName);
+    return 'closed';
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (/not found|404|does not exist/i.test(message)) return 'already_gone';
+    throw err;
+  }
 }
 
 export async function receiveLiveKitWebhook(body: string, authHeader?: string) {

@@ -29,6 +29,10 @@ export const appConfigSchema = z.object({
     defaultSessionDurationMinutes: z.number().int().positive(),
     bookingWindowBufferMinutes: z.number().int().positive(),
     roomPrefix: z.string().min(1),
+    // Seans süresi dolunca odayı otomatik kapatma (M1-b).
+    autoCloseGraceMinutes: z.number().int().nonnegative(),
+    autoCloseFirstRunDelayMs: z.number().int().nonnegative(),
+    autoCloseIntervalMs: z.number().int().positive(),
   }),
   requestNow: z.object({
     timeoutMinutes: z.number().int().positive(),
@@ -78,6 +82,11 @@ export const appConfig = appConfigSchema.parse({
     defaultSessionDurationMinutes: 30,
     bookingWindowBufferMinutes: 15,
     roomPrefix: 'goldmood',
+    // Planlanan bitişin üstüne tanınan pay: ağ kopması/geç başlama gibi durumlarda
+    // görüşmeyi saniyesinde kesmemek için. 0 yapılırsa tam bitişte kapanır.
+    autoCloseGraceMinutes: 2,
+    autoCloseFirstRunDelayMs: 20_000,
+    autoCloseIntervalMs: 60_000,
   },
   requestNow: {
     timeoutMinutes: 5,
