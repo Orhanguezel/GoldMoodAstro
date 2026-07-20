@@ -174,16 +174,20 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
           SSH_OPTS="-o ConnectTimeout=30 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
+          ssh $SSH_OPTS "${VPS_USER}@${VPS_HOST}" \
+            'rm -rf /var/www/goldmoodastro/frontend.next && mkdir -p /var/www/goldmoodastro/frontend.next'
+          synced=false
           for i in 1 2 3; do
             rsync -avz --delete \
               --exclude=node_modules --exclude=.git --exclude=.env \
               --exclude=.DS_Store \
               -e "ssh $SSH_OPTS" \
-              frontend/ "${VPS_USER}@${VPS_HOST}:/var/www/goldmoodastro/frontend" \
-              && break
+              frontend/ "${VPS_USER}@${VPS_HOST}:/var/www/goldmoodastro/frontend.next" \
+              && synced=true && break
             echo "⚠ Attempt $i failed, retrying in 10s..."
             sleep 10
           done
+          $synced || { echo "Frontend sync failed after 3 attempts"; exit 1; }
 
       - name: PM2 reload — frontend
         uses: appleboy/ssh-action@v1.0.0
@@ -195,9 +199,37 @@ jobs:
           command_timeout: 90s
           script: |
             set -e
-            cd /var/www/goldmoodastro/frontend
+            ROOT=/var/www/goldmoodastro
+            RELEASE="$ROOT/frontend.next"
+            CURRENT="$ROOT/frontend"
+            PREVIOUS="$ROOT/frontend.previous"
+
+            test -s "$RELEASE/.next/BUILD_ID"
+            test -s "$RELEASE/.next/routes-manifest.json"
+            test -s "$RELEASE/.next/server/app-paths-manifest.json"
+            [ ! -f "$CURRENT/.env" ] || cp "$CURRENT/.env" "$RELEASE/.env"
+
+            cd "$RELEASE"
             bun install --frozen-lockfile || bun install
+
+            rm -rf "$PREVIOUS"
+            mv "$CURRENT" "$PREVIOUS"
+            mv "$RELEASE" "$CURRENT"
+            cd "$CURRENT"
             pm2 reload goldmoodastro-frontend \
               || pm2 start ecosystem.config.cjs --only goldmoodastro-frontend
             pm2 save
-            ss -ltnp | grep ':3095' || (echo "Port 3095 açık değil!" && exit 1)
+            for i in 1 2 3 4 5; do
+              curl --fail --silent --output /dev/null http://127.0.0.1:3095/tr && break
+              [ "$i" -lt 5 ] || {
+                pm2 stop goldmoodastro-frontend || true
+                rm -rf "$CURRENT"
+                mv "$PREVIOUS" "$CURRENT"
+                cd "$CURRENT"
+                pm2 restart goldmoodastro-frontend --update-env
+                echo "Frontend health check failed; previous release restored"
+                exit 1
+              }
+              sleep 2
+            done
+            rm -rf "$PREVIOUS"
