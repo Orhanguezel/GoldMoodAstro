@@ -23,13 +23,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
+import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 
 export default async function RisingCalculatorPage({ params }: Props) {
   const { locale } = await params;
+  const BANNER: Record<string, string> = {
+    tr: 'Yükselen Burç Hesaplayıcı',
+    en: 'Rising Sign Calculator',
+    de: 'Aszendent-Rechner',
+  };
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
   return (
     <>
-      <Banner title="Rising Sign Calculator" />
+      {/* 2026-07-20: baslik Turkce sayfada bile Ingilizce sabitti. */}
+      <Banner title={BANNER[locale] ?? BANNER.en} />
       <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <JsonLd
         id="rising-sign-speakable-schema"
@@ -75,6 +82,9 @@ export default async function RisingCalculatorPage({ params }: Props) {
         </p>
       </section>
       <RisingSignCalculator />
+      {/* 2026-07-20: sayfada yukselen burc hakkinda hic bilgi yoktu (248 kelime).
+          Diger landing sayfalariyla ayni kalip: arac once, dil destekli icerik altinda. */}
+      <SeoLandingArticle type="yukselen-burc" locale={locale} />
     </PageContainer>
     </>
   );

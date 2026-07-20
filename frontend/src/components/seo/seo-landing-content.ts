@@ -7,7 +7,8 @@ export type LandingKey =
   | 'tarot'
   | 'sinastri'
   | 'pricing'
-  | 'buyuk-uclu';
+  | 'buyuk-uclu'
+  | 'yukselen-burc';
 
 export type LandingLocale = 'tr' | 'en' | 'de';
 
@@ -594,6 +595,77 @@ export const LANDING_CONTENT: Record<LandingKey, Record<LandingLocale, LandingDa
       image: '/img/natal_chart.png',
       authorTitle: 'GoldMoodAstro Redaktion',
       expertise: ['Große Drei', 'Astrologie', 'Geburtshoroskop'],
+    },
+  },
+  'yukselen-burc': {
+    en: {
+      slug: 'rising-sign-calculator',
+      title: 'Rising Sign Guide (Calculation and Meaning)',
+      description: 'What the rising sign is, how it is calculated and why birth time is essential, plus its effect on the house system and first impressions.',
+      eyebrow: 'Rising Sign',
+      lead: 'The rising sign is the zodiac sign ascending on the horizon at the moment of your birth. It describes how you approach life and how others first perceive you.',
+      summary: 'The rising sign changes roughly every two hours, so two people born on the same day can have different ascendants. It also determines how the houses are arranged in the chart — a wrong ascendant shifts the entire chart.',
+      sections: [
+        { title: 'What the rising sign is', paragraphs: ['The rising sign, or ascendant, is the zodiac sign rising on the eastern horizon at the moment of your birth. It is the starting point of your chart: it marks the cusp of the first house and sets the order of the remaining eleven.', 'While the Sun describes who you are growing towards and the Moon what you feel inside, the rising sign describes how you appear outwardly and the manner in which you approach life. Together they form the big three.'] },
+        { title: 'Why birth time is essential', paragraphs: ['The rising sign changes roughly every two hours, which makes it the most time-sensitive element of a birth chart. Someone born in the morning and someone born at noon on the same day produce two different charts.', 'If the time is wrong or unknown, the ascendant shifts — and with it every house placement. The reading is then based on a chart that is not merely incomplete but incorrect. Rather than working from a guess, a rectification study that determines the time from documented life events is recommended.'] },
+        { title: 'Why the rising sign feels different from the Sun sign', paragraphs: ['One of the most common reasons behind "my sign does not fit me" is the rising sign. Others usually meet your ascendant first, while you describe yourself through your Sun sign.', 'Someone with a Sagittarius Sun and Capricorn rising may feel adventurous and optimistic inside while appearing measured, reserved and serious outwardly. That is not a contradiction but the gap between inner motivation and outer manner.'] },
+        { title: 'How the rising sign shapes the house system', paragraphs: ['The ascendant is not just a label; it is the skeleton of the chart. The first house begins at the rising sign and the remaining houses follow in order. Which planet falls into which area of life therefore depends directly on it.', 'The same planetary positions produce very different meanings under different ascendants. Because the rising sign decides where career, relationship and money themes sit, timing techniques depend on it too.'] },
+        { title: 'Using the result responsibly', paragraphs: ['The rising sign offers a language for understanding yourself and how others perceive you. It is a tool for awareness, not a verdict on personality.', 'GoldMoodAstro avoids fatalistic claims. Astrology can support reflection and planning, but important decisions should also take real-world information and, where needed, professional support into account.'] },
+      ],
+      faq: [
+        { question: 'Is birth time required for the rising sign?', answer: 'Yes. Because the ascendant changes roughly every two hours, it cannot be calculated reliably without a birth time. If you do not have it, a rectification study is recommended.' },
+        { question: 'My rising sign differs from my Sun sign — which is correct?', answer: 'Both are. They describe different layers: the Sun your life direction, the rising sign your outward manner and the arrangement of the houses.' },
+        { question: 'Is the birth place needed as well?', answer: 'Yes. The ascendant depends on the horizon at the moment of birth, which varies with latitude and longitude. Date and time alone are not enough.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Editorial Team',
+      expertise: ['Rising Sign', 'Astrology', 'Birth Chart'],
+    },
+    tr: {
+      slug: 'yukselen-burc-hesaplayici',
+      title: 'Yükselen Burç Rehberi (Hesaplama ve Yorum)',
+      description: 'Yükselen burç nedir, nasıl hesaplanır, doğum saati neden şart? Yükselen burcun ev sistemine ve ilk izlenime etkisini anlatan rehber.',
+      eyebrow: 'Yükselen Burç',
+      lead: 'Yükselen burç, doğduğunuz anda ufukta yükselen zodyak burcudur. Hayata yaklaşımınızı ve başkalarının sizi ilk anda nasıl algıladığını tarif eder.',
+      summary: 'Yükselen burç yaklaşık iki saatte bir değişir; bu yüzden aynı gün doğan iki kişinin yükseleni farklı olabilir. Doğum haritasındaki evlerin nasıl dizileceğini de yükselen belirler — yani yanlış bir yükselen, haritanın tamamını kaydırır.',
+      sections: [
+        { title: 'Yükselen burç nedir', paragraphs: ['Yükselen burç (ascendant), doğduğunuz anda doğu ufkunda yükselmekte olan zodyak burcudur. Doğum haritanızın başlangıç noktasıdır: birinci evin girişini işaretler ve diğer on bir evin sırasını belirler.', 'Güneş burcu "kim olmaya yöneldiğinizi", Ay burcu "içeride ne hissettiğinizi" anlatırken; yükselen "dışarıya nasıl göründüğünüzü" ve hayata hangi üslupla yaklaştığınızı tarif eder. Üçü birlikte büyük üçlüyü oluşturur.'] },
+        { title: 'Neden doğum saati şart', paragraphs: ['Yükselen burç ortalama iki saatte bir değişir. Bu, yükselenin doğum haritasındaki en saat-duyarlı unsur olduğu anlamına gelir: sabah doğan ile öğlen doğan aynı kişi değil, farklı yükselenlere sahip iki farklı harita üretir.', 'Saat yanlış ya da bilinmiyorsa yükselen kayar; yükselen kayınca tüm ev yerleşimleri de kayar. Bu durumda yapılan yorum eksik değil, doğrudan yanlış bir harita üzerinden yapılmış olur. Saatinizi bilmiyorsanız tahminle ilerlemek yerine, yaşam olaylarından yola çıkarak saati belirleyen rektifikasyon çalışması önerilir.'] },
+        { title: 'Yükselen ile Güneş burcu neden farklı hissettirir', paragraphs: ['"Burcum bana hiç uymuyor" cümlesinin en sık sebeplerinden biri yükselen burçtur. İnsanlar sizi çoğunlukla önce yükseleniniz üzerinden tanır; siz ise kendinizi Güneş burcunuzla tarif edersiniz.', 'Örneğin Güneşi Yay, yükseleni Oğlak olan biri içeride maceracı ve iyimser hissedebilir ama dışarıya ölçülü, mesafeli ve ciddi görünebilir. Bu bir çelişki değil; aynı kişinin iç motivasyonu ile dış üslubu arasındaki farktır.'] },
+        { title: 'Yükselen burcun ev sistemine etkisi', paragraphs: ['Yükselen yalnızca bir etiket değildir; haritanın iskeletidir. Birinci ev yükselenle başlar, sonraki evler sırayla dizilir. Bu yüzden hangi gezegenin hangi yaşam alanına düştüğü doğrudan yükselene bağlıdır.', 'Aynı gezegen konumları, farklı yükselenlerle bambaşka anlamlar üretir. Kariyer, ilişki ve para gibi başlıkların haritada nereye oturduğunu yükselen belirlediği için, zamanlama teknikleri de ona bağımlıdır.'] },
+        { title: 'Sonucu sorumlu kullanmak', paragraphs: ['Yükselen burç, kendinizi ve başkalarının sizi nasıl algıladığını anlamak için bir dil sunar. Bir kişilik hükmü değil, farkındalık aracıdır.', 'GoldMoodAstro kaderci iddialardan kaçınır. Astroloji düşünmeyi ve planlamayı destekleyebilir; ancak önemli kararlarda gerçek dünya bilgileri ve gerektiğinde profesyonel destek de dikkate alınmalıdır.'] },
+      ],
+      faq: [
+        { question: 'Yükselen burç için doğum saati zorunlu mu?', answer: 'Evet. Yükselen yaklaşık iki saatte bir değiştiği için saat olmadan güvenilir şekilde hesaplanamaz. Saatiniz yoksa rektifikasyon çalışması önerilir.' },
+        { question: 'Yükselen burcum Güneş burcumdan farklı, hangisi doğru?', answer: 'İkisi de doğru; farklı katmanları anlatırlar. Güneş yaşam yönünüzü, yükselen dışa dönük üslubunuzu ve haritanın ev düzenini tarif eder.' },
+        { question: 'Doğum yeri de gerekli mi?', answer: 'Evet. Yükselen, doğum anındaki ufuk çizgisine bağlıdır; bu da enlem-boylama göre değişir. Bu yüzden tarih ve saatin yanında doğum yeri de gereklidir.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Editoryal Ekibi',
+      expertise: ['Yükselen Burç', 'Astroloji', 'Doğum Haritası'],
+    },
+    de: {
+      slug: 'rising-sign-calculator',
+      title: 'Aszendent-Leitfaden (Berechnung und Bedeutung)',
+      description: 'Was der Aszendent ist, wie er berechnet wird und warum die Geburtszeit unerlässlich ist — samt Wirkung auf Häusersystem und ersten Eindruck.',
+      eyebrow: 'Aszendent',
+      lead: 'Der Aszendent ist das Tierkreiszeichen, das im Moment Ihrer Geburt am Horizont aufsteigt. Er beschreibt, wie Sie das Leben angehen und wie andere Sie zuerst wahrnehmen.',
+      summary: 'Der Aszendent wechselt etwa alle zwei Stunden; zwei am selben Tag geborene Menschen können daher verschiedene Aszendenten haben. Er bestimmt auch die Anordnung der Häuser — ein falscher Aszendent verschiebt das gesamte Horoskop.',
+      sections: [
+        { title: 'Was der Aszendent ist', paragraphs: ['Der Aszendent ist das Tierkreiszeichen, das im Moment der Geburt am östlichen Horizont aufsteigt. Er ist der Ausgangspunkt des Horoskops: Er markiert die Spitze des ersten Hauses und legt die Reihenfolge der übrigen elf fest.', 'Während die Sonne beschreibt, worauf Sie zuwachsen, und der Mond, was Sie innerlich fühlen, beschreibt der Aszendent Ihr äußeres Auftreten und die Art, wie Sie das Leben angehen. Zusammen bilden sie die großen Drei.'] },
+        { title: 'Warum die Geburtszeit unerlässlich ist', paragraphs: ['Der Aszendent wechselt etwa alle zwei Stunden und ist damit das zeitempfindlichste Element eines Horoskops. Eine morgens und eine mittags geborene Person ergeben zwei verschiedene Horoskope.', 'Ist die Zeit falsch oder unbekannt, verschiebt sich der Aszendent und mit ihm jede Häuserstellung. Die Deutung beruht dann nicht auf einem unvollständigen, sondern auf einem falschen Horoskop. Statt einer Schätzung empfiehlt sich eine Rektifikation aus dokumentierten Lebensereignissen.'] },
+        { title: 'Warum sich der Aszendent anders anfühlt als das Sonnenzeichen', paragraphs: ['Einer der häufigsten Gründe für "mein Sternzeichen passt nicht zu mir" ist der Aszendent. Andere begegnen meist zuerst Ihrem Aszendenten, während Sie sich über Ihr Sonnenzeichen beschreiben.', 'Wer eine Schütze-Sonne und einen Steinbock-Aszendenten hat, kann sich innerlich abenteuerlustig fühlen, nach außen aber zurückhaltend und ernst wirken. Das ist kein Widerspruch, sondern der Unterschied zwischen innerer Motivation und äußerer Art.'] },
+        { title: 'Wie der Aszendent das Häusersystem prägt', paragraphs: ['Der Aszendent ist kein bloßes Etikett, sondern das Gerüst des Horoskops. Das erste Haus beginnt beim Aszendenten, die weiteren folgen der Reihe nach. Welcher Planet in welchen Lebensbereich fällt, hängt daher unmittelbar von ihm ab.', 'Dieselben Planetenstände ergeben unter verschiedenen Aszendenten sehr unterschiedliche Bedeutungen. Da der Aszendent bestimmt, wo Karriere-, Beziehungs- und Geldthemen liegen, hängen auch Timing-Techniken von ihm ab.'] },
+        { title: 'Das Ergebnis verantwortungsvoll nutzen', paragraphs: ['Der Aszendent bietet eine Sprache, um sich selbst und die Wahrnehmung anderer zu verstehen. Er ist ein Werkzeug für Bewusstheit, kein Urteil über die Persönlichkeit.', 'GoldMoodAstro vermeidet fatalistische Aussagen. Astrologie kann Reflexion und Planung unterstützen; wichtige Entscheidungen sollten jedoch auch reale Informationen und bei Bedarf professionelle Unterstützung einbeziehen.'] },
+      ],
+      faq: [
+        { question: 'Ist die Geburtszeit für den Aszendenten erforderlich?', answer: 'Ja. Da der Aszendent etwa alle zwei Stunden wechselt, lässt er sich ohne Geburtszeit nicht verlässlich berechnen. Fehlt sie, empfiehlt sich eine Rektifikation.' },
+        { question: 'Mein Aszendent unterscheidet sich vom Sonnenzeichen — was stimmt?', answer: 'Beides. Sie beschreiben verschiedene Ebenen: die Sonne die Lebensrichtung, der Aszendent das äußere Auftreten und die Häuseranordnung.' },
+        { question: 'Wird auch der Geburtsort benötigt?', answer: 'Ja. Der Aszendent hängt vom Horizont zum Geburtszeitpunkt ab, der mit Breiten- und Längengrad variiert. Datum und Uhrzeit allein genügen nicht.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Redaktion',
+      expertise: ['Aszendent', 'Astrologie', 'Geburtshoroskop'],
     },
   },
 };
