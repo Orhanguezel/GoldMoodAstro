@@ -61,6 +61,7 @@ export default async function SeoLandingArticle({ type, locale }: { type: Landin
           summary={data.summary}
           sections={data.sections}
           showHeader={false}
+          inShortLabel={ui.inShort}
         />
       )}
       <FaqAccordion items={data.faq} title={`${data.eyebrow} ${ui.questions}`} />

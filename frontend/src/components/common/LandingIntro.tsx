@@ -12,6 +12,7 @@ export default function LandingIntro({
   summary,
   sections,
   showHeader = true,
+  inShortLabel = 'In short',
 }: {
   eyebrow: string;
   title: string;
@@ -19,6 +20,7 @@ export default function LandingIntro({
   summary: string;
   sections: LandingIntroSection[];
   showHeader?: boolean;
+  inShortLabel?: string;
 }) {
   return (
     <section className="mb-12">
@@ -31,7 +33,7 @@ export default function LandingIntro({
       ) : null}
 
       <div data-speakable className={showHeader ? 'mt-6 rounded-2xl border border-[var(--gm-gold)]/20 bg-[var(--gm-gold)]/10 p-6' : 'rounded-2xl border border-[var(--gm-gold)]/20 bg-[var(--gm-gold)]/10 p-6'}>
-        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--gm-gold)]">In short</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--gm-gold)]">{inShortLabel}</p>
         <p className="mt-3 text-base leading-relaxed text-[var(--gm-text)]">{summary}</p>
       </div>
 
