@@ -8,14 +8,14 @@
 INSERT INTO custom_pages (
   id, module_key, is_published, featured, featured_image, display_order, order_num, created_at, updated_at
 ) VALUES
-  ('b1000000-0000-4000-8000-000000000001', 'blog', 1, 1, '/img/blog/birth-chart.svg', 101, 101, NOW(3), NOW(3)),
-  ('b1000000-0000-4000-8000-000000000002', 'blog', 1, 1, '/img/blog/synastry.svg', 102, 102, NOW(3), NOW(3)),
-  ('b1000000-0000-4000-8000-000000000003', 'blog', 1, 1, '/img/blog/tarot.svg', 103, 103, NOW(3), NOW(3)),
-  ('b1000000-0000-4000-8000-000000000004', 'blog', 1, 0, '/img/blog/numerology.svg', 104, 104, NOW(3), NOW(3)),
-  ('b1000000-0000-4000-8000-000000000005', 'blog', 1, 0, '/img/blog/moon-sign.svg', 105, 105, NOW(3), NOW(3)),
-  ('b1000000-0000-4000-8000-000000000006', 'blog', 1, 0, '/img/blog/retrograde.svg', 106, 106, NOW(3), NOW(3)),
-  ('b1000000-0000-4000-8000-000000000007', 'blog', 1, 0, '/img/blog/consultant.svg', 107, 107, NOW(3), NOW(3)),
-  ('b1000000-0000-4000-8000-000000000008', 'blog', 1, 0, '/img/blog/daily-ritual.svg', 108, 108, NOW(3), NOW(3))
+  ('b1000000-0000-4000-8000-000000000001', 'blog', 1, 1, '/img/blog/birth-chart.webp', 101, 101, NOW(3), NOW(3)),
+  ('b1000000-0000-4000-8000-000000000002', 'blog', 1, 1, '/img/blog/synastry.webp', 102, 102, NOW(3), NOW(3)),
+  ('b1000000-0000-4000-8000-000000000003', 'blog', 1, 1, '/img/blog/tarot.webp', 103, 103, NOW(3), NOW(3)),
+  ('b1000000-0000-4000-8000-000000000004', 'blog', 1, 0, '/img/blog/numerology.webp', 104, 104, NOW(3), NOW(3)),
+  ('b1000000-0000-4000-8000-000000000005', 'blog', 1, 0, '/img/blog/moon-sign.webp', 105, 105, NOW(3), NOW(3)),
+  ('b1000000-0000-4000-8000-000000000006', 'blog', 1, 0, '/img/blog/retrograde.webp', 106, 106, NOW(3), NOW(3)),
+  ('b1000000-0000-4000-8000-000000000007', 'blog', 1, 0, '/img/blog/consultant.webp', 107, 107, NOW(3), NOW(3)),
+  ('b1000000-0000-4000-8000-000000000008', 'blog', 1, 0, '/img/blog/daily-ritual.webp', 108, 108, NOW(3), NOW(3))
 ON DUPLICATE KEY UPDATE
   module_key = VALUES(module_key),
   is_published = VALUES(is_published),

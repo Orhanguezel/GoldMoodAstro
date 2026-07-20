@@ -10,14 +10,14 @@ OUT = os.path.join(HERE, '..', 'src', 'db', 'sql', '199_blog_posts_seed.sql')
 
 # page tail -> (featured_image svg, featured, order)
 PAGE = {
-    '1': ('/img/blog/birth-chart.svg', 1, 101),
-    '2': ('/img/blog/synastry.svg',    1, 102),
-    '3': ('/img/blog/tarot.svg',       1, 103),
-    '4': ('/img/blog/numerology.svg',  0, 104),
-    '5': ('/img/blog/moon-sign.svg',   0, 105),
-    '6': ('/img/blog/retrograde.svg',  0, 106),
-    '7': ('/img/blog/consultant.svg',  0, 107),
-    '8': ('/img/blog/daily-ritual.svg',0, 108),
+    '1': ('/img/blog/birth-chart.webp', 1, 101),
+    '2': ('/img/blog/synastry.webp',    1, 102),
+    '3': ('/img/blog/tarot.webp',       1, 103),
+    '4': ('/img/blog/numerology.webp',  0, 104),
+    '5': ('/img/blog/moon-sign.webp',   0, 105),
+    '6': ('/img/blog/retrograde.webp',  0, 106),
+    '7': ('/img/blog/consultant.webp',  0, 107),
+    '8': ('/img/blog/daily-ritual.webp',0, 108),
 }
 # (tail, locale) -> (title, slug)  — mevcut seed'den korunur (SEO sabit)
 TS = {
