@@ -16,6 +16,11 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sign, locale } = await params;
+
+  // 2026-07-20 (GSC): gecersiz burc slug'i -> noindex (bkz. [sign]/page.tsx notu).
+  if (!VALID_ZODIAC_SIGNS.has(sign)) {
+    return { title: 'Not found', robots: { index: false, follow: false } };
+  }
   const label = zodiacLabels[sign] || sign;
   return buildPageMetadata({
     locale,

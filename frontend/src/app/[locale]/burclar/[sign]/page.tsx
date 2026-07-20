@@ -48,6 +48,15 @@ async function fetchTodayServer(sign: string, locale: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sign, locale } = await params;
+
+  // 2026-07-20 (GSC kapsam analizi): gecersiz burc slug'lari 200 + bos govde
+  // donuyordu (notFound() ic not-found siniri yuzunden 404 uretmiyor).
+  // Google bunlari "tarandi ama indekslenmedi" olarak isaretliyordu.
+  // Durum kodu duzelene kadar kesin cozum: noindex.
+  if (!VALID_ZODIAC_SIGNS.has(sign)) {
+    return { title: 'Not found', robots: { index: false, follow: false } };
+  }
+
   const label = getZodiacLabelForLocale(sign, locale);
 
   // Admin `burclar-sign` SEO settings win; fallback is used only when empty.

@@ -8,7 +8,18 @@ import { MetadataRoute } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com';
 
-const COMMON_DISALLOW = ['/api/', '/admin/', '/_next/', '/dashboard', '/me/'];
+// 2026-07-20 (GSC kapsam analizi): kisiye ozel sonuc sayfalari taranmamali.
+// Bunlar oturum/kayit gerektirdigi icin bot'a bos govde donuyordu; Google
+// yuzlerce ozdes bos sayfa gorup "tarandi ama indekslenmedi" isaretliyordu.
+const RESULT_PATHS = [
+  '/tr/tarot/reading/', '/en/tarot/reading/', '/de/tarot/reading/',
+  '/tr/kahve-fali/result/', '/en/kahve-fali/result/', '/de/kahve-fali/result/',
+  '/tr/ruya-tabiri/result/', '/en/ruya-tabiri/result/', '/de/ruya-tabiri/result/',
+  '/tr/yildizname/result/', '/en/yildizname/result/', '/de/yildizname/result/',
+  '/tr/sinastri/result/', '/en/sinastri/result/', '/de/sinastri/result/',
+];
+
+const COMMON_DISALLOW = ['/api/', '/admin/', '/_next/', '/dashboard', '/me/', ...RESULT_PATHS];
 
 /** AI crawler bot listesi — explicit allow ile site içeriğine erişim onaylanır. */
 const AI_BOTS = [

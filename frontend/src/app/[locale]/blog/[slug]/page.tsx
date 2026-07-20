@@ -28,6 +28,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     slug ? fetchCustomPagePublicBySlug({ slug, locale }) : Promise.resolve(null),
   ]);
 
+  // 2026-07-20 (GSC kapsam analizi): olmayan blog slug'i 200 + bos govde donuyordu
+  // ve hicbir kontrol yoktu. Google bunlari ozdes bos sayfa olarak goruyordu.
+  if (!page) {
+    return { title: 'Not found', robots: { index: false, follow: false } };
+  }
+
   const base = await buildMetadataFromSeo(seo, { locale, pathname });
 
   const pageTitle =
