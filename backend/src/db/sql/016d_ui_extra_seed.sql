@@ -640,6 +640,9 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('c5a25886-fb17-a907-1392-49593bcf457f', 'ui_zodiacx_bigthree_download', '*', '{"label":{"tr":"Görsel Olarak İndir","en":"Download as Image","de":"Als Bild herunterladen"}}'),
 ('0afaed1f-d6e8-0d66-19b6-c14ce7d7735d', 'ui_zodiacx_bigthree_image_error', '*', '{"label":{"tr":"Görsel oluşturulurken bir hata oluştu.","en":"An error occurred while creating the image.","de":"Beim Erstellen des Bildes ist ein Fehler aufgetreten."}}'),
 ('569169cc-3f8e-f4cc-a3c6-c9301fd1c3d6', 'ui_zodiacx_bigthree_image_success', '*', '{"label":{"tr":"Görsel başarıyla oluşturuldu!","en":"Image created successfully!","de":"Bild erfolgreich erstellt!"}}'),
+-- 2026-07-20: buyuk-uclu hero basligi (sinastri deseni).
+('bb3c1a01-0000-4000-8000-b30000000001','ui_zodiacx_bigthree_hero_1','*','{"label": {"tr": "Kozmik", "en": "Cosmic", "de": "Kosmische"}}'),
+('bb3c1a02-0000-4000-8000-b30000000002','ui_zodiacx_bigthree_hero_2','*','{"label": {"tr": "Kimlik", "en": "Identity", "de": "Identität"}}'),
 ('4ccd8e0c-78ba-9c0f-a37e-75f380e6deae', 'ui_zodiacx_bigthree_intro', '*', '{"label":{"tr":"Güneş, Ay ve Yükselen burcunuzla kozmik kimlik kartınızı oluşturun ve paylaşın.","en":"Create and share your cosmic identity card with your Sun, Moon and Rising signs.","de":"Erstellen und teilen Sie Ihre kosmische Identitätskarte mit Sonne, Mond und Aszendent."}}'),
 ('8151c6b8-f4e7-54e3-47e2-3a604fc2b487', 'ui_zodiacx_bigthree_moon', '*', '{"label":{"tr":"AY","en":"ZODIACX BIGTHREE MOON","de":"ZODIACX BIGTHREE MOON"}}'),
 ('0be20f5a-15c2-afee-7999-e8abef890698', 'ui_zodiacx_bigthree_recalc', '*', '{"label":{"tr":"Yeniden Hesapla","en":"Recalculate","de":"Neu berechnen"}}'),

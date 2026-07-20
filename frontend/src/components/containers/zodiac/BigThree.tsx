@@ -93,8 +93,13 @@ export default function BigThree() {
     // 2026-07-20: ic ice PageContainer kaldirildi; sayfa (page.tsx) zaten
     // PageContainer sagliyor. Cift sarmalama layout bozuyordu (sinastri ile ayni yapi).
     <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-12">
-        <p className="text-lg text-muted-foreground italic max-w-2xl mx-auto">
+      {/* 2026-07-20: sinastri/yildizname ile ayni hero deseni (Cinzel, altin
+          vurgulu ikinci kelime + altinda italik lead). */}
+      <div className="mb-12 space-y-4 text-center">
+        <h2 className={`${cinzel.className} text-5xl md:text-7xl text-[var(--gm-text)] tracking-tighter`}>
+          {ui('ui_zodiacx_bigthree_hero_1', 'Cosmic')} <span className="text-[var(--gm-gold)]">{ui('ui_zodiacx_bigthree_hero_2', 'Identity')}</span>
+        </h2>
+        <p className="mx-auto max-w-2xl font-serif text-lg italic text-[var(--gm-text-dim)]">
           {ui('ui_zodiacx_bigthree_intro', 'Create and share your cosmic identity card with your Sun, Moon and Rising signs.')}
         </p>
       </div>
