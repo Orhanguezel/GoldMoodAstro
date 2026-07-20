@@ -113,14 +113,17 @@ const nextConfig = {
         source: '/:locale(tr|en|de)/:page(about|blog|burclar|sinastri|tarot|numeroloji|yildizname|birth-chart|buyuk-uclu|big-three|burcunu-ogren|yukselen-burc-hesaplayici|unluler-ve-burclari|faqs|editorial-policy|contact|pricing|gizlilik|kvkk|kullanim-sartlari|cerez-politikasi|privacy-policy|privacy-notice|terms|cookie-policy|legal-notice)',
         headers: staticContentCache,
       },
-      {
-        source: '/:locale(tr|en|de)/blog/:path*',
-        headers: staticContentCache,
-      },
-      {
-        source: '/:locale(tr|en|de)/burclar/:path*',
-        headers: staticContentCache,
-      },
+      // 2026-07-20: blog/:path* ve burclar/:path* KALDIRILDI.
+      // Bu blanket kural detay rotalarina da uygulaniyordu ve 404 yanitlarini
+      // da 'public, s-maxage=60' ile isaretliyordu — yani hata yanitlari da
+      // paylasimli onbellege alinabilir hale geliyordu. Detay sayfalari artik
+      // kendi onbellek semantigini kullaniyor: dinamik sayfa/404 -> no-store,
+      // ISR sayfasi (ornegin burclar/[sign], revalidate=86400) -> kendi
+      // s-maxage'i. Onbellek karari sayfanin kendisine ait olmali.
+      //
+      // Not: su an sunucuda paylasimli onbellek YOK (nginx'te proxy_cache zonu
+      // tanimli degil, CDN de yok), yani bu satirlar pratikte etkisizdi. CDN
+      // eklendiginde gercek soruna donusecekti; simdiden dogru birakiliyor.
     ];
   },
 

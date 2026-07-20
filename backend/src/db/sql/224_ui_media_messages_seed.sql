@@ -35,6 +35,11 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('22400000-0000-4000-8000-000000000020','ui_dashboard_media_reply_file_required','*','{"label":{"tr":"Lütfen yanıt dosyası seçin","en":"Please select a reply file","de":"Bitte Antwortdatei auswählen"}}'),
 ('22400000-0000-4000-8000-000000000021','ui_dashboard_media_reply_sent','*','{"label":{"tr":"Yanıt gönderildi","en":"Reply sent","de":"Antwort gesendet"}}'),
 ('22400000-0000-4000-8000-000000000022','ui_dashboard_media_reply_failed','*','{"label":{"tr":"Yanıt gönderilemedi","en":"Reply could not be sent","de":"Antwort konnte nicht gesendet werden"}}'),
+-- 2026-07-20 (M9): etiketsiz sayi alanlari icin eklendi.
+('22400000-0000-4000-8000-0000000000f1','ui_dashboard_media_audio_price','*','{"label": {"tr": "Sesli soru ücreti (₺)", "en": "Voice question price (₺)", "de": "Preis für Sprachfrage (₺)"}}'),
+('22400000-0000-4000-8000-0000000000f2','ui_dashboard_media_video_price','*','{"label": {"tr": "Görüntülü soru ücreti (₺)", "en": "Video question price (₺)", "de": "Preis für Videofrage (₺)"}}'),
+('22400000-0000-4000-8000-0000000000f3','ui_dashboard_media_sla_hours','*','{"label": {"tr": "Yanıt süresi (saat)", "en": "Reply time (hours)", "de": "Antwortzeit (Stunden)"}}'),
+('22400000-0000-4000-8000-0000000000f4','ui_dashboard_media_sla_hint','*','{"label": {"tr": "Kaç saat içinde yanıtlamayı taahhüt ettiğiniz. Örnek: 72 = 3 gün.", "en": "How many hours you commit to reply within. Example: 72 = 3 days.", "de": "Innerhalb wie vieler Stunden Sie antworten. Beispiel: 72 = 3 Tage."}}'),
 ('22400000-0000-4000-8000-000000000023','ui_dashboard_media_settings_title','*','{"label":{"tr":"Kayıtlı Mesaj Ayarları","en":"Recorded Message Settings","de":"Einstellungen für aufgezeichnete Nachrichten"}}'),
 ('22400000-0000-4000-8000-000000000024','ui_dashboard_media_audio_enabled','*','{"label":{"tr":"Sesli sorular","en":"Voice questions","de":"Sprachfragen"}}'),
 ('22400000-0000-4000-8000-000000000025','ui_dashboard_media_video_enabled','*','{"label":{"tr":"Görüntülü sorular","en":"Video questions","de":"Videofragen"}}'),

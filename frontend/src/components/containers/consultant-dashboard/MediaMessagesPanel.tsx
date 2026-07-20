@@ -136,13 +136,34 @@ export default function MediaMessagesPanel({ locale, consultantId }: Props) {
             <input type="checkbox" checked={form.audio_enabled} onChange={(e) => setForm((f) => ({ ...f, audio_enabled: e.target.checked }))} />
             <span className="text-sm text-[var(--gm-text)]">{ui('ui_dashboard_media_audio_enabled', 'Voice questions')}</span>
           </label>
-          <input className="input-premium" type="number" min="0" value={form.audio_price} onChange={(e) => setForm((f) => ({ ...f, audio_price: Number(e.target.value) }))} />
+          {/* 2026-07-20 (musteri notlari M9): bu uc sayi alaninin HIC etiketi yoktu.
+              Ekranda yalnizca iki "0" ve basibos bir "72" goruluyordu; ne oldugu
+              anlasilmiyordu. Etiket + birim eklendi. */}
+          <label className="block">
+            <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-primary)]">
+              {ui('ui_dashboard_media_audio_price', 'Voice question price')}
+            </span>
+            <input className="input-premium w-full" type="number" min="0" value={form.audio_price} onChange={(e) => setForm((f) => ({ ...f, audio_price: Number(e.target.value) }))} />
+          </label>
           <label className="flex items-center gap-3 rounded-xl border border-[var(--gm-border-soft)] p-4">
             <input type="checkbox" checked={form.video_enabled} onChange={(e) => setForm((f) => ({ ...f, video_enabled: e.target.checked }))} />
             <span className="text-sm text-[var(--gm-text)]">{ui('ui_dashboard_media_video_enabled', 'Video questions')}</span>
           </label>
-          <input className="input-premium" type="number" min="0" value={form.video_price} onChange={(e) => setForm((f) => ({ ...f, video_price: Number(e.target.value) }))} />
-          <input className="input-premium md:col-span-2" type="number" min="1" max="336" value={form.reply_sla_hours} onChange={(e) => setForm((f) => ({ ...f, reply_sla_hours: Number(e.target.value) }))} />
+          <label className="block">
+            <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-primary)]">
+              {ui('ui_dashboard_media_video_price', 'Video question price')}
+            </span>
+            <input className="input-premium w-full" type="number" min="0" value={form.video_price} onChange={(e) => setForm((f) => ({ ...f, video_price: Number(e.target.value) }))} />
+          </label>
+          <label className="block md:col-span-2">
+            <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-[var(--gm-primary)]">
+              {ui('ui_dashboard_media_sla_hours', 'Reply time (hours)')}
+            </span>
+            <input className="input-premium w-full" type="number" min="1" max="336" value={form.reply_sla_hours} onChange={(e) => setForm((f) => ({ ...f, reply_sla_hours: Number(e.target.value) }))} />
+            <span className="mt-1 block text-[11px] text-[var(--gm-text-dim)]">
+              {ui('ui_dashboard_media_sla_hint', 'How many hours you commit to reply within. Example: 72 = 3 days.')}
+            </span>
+          </label>
         </div>
         <button type="button" disabled={updateState.isLoading} onClick={saveSettings} className="btn-premium mt-5 inline-flex items-center gap-2 px-6 py-3 text-[10px] disabled:opacity-60">
           <Save className="h-4 w-4" />
