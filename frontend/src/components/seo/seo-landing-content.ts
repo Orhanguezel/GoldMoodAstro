@@ -882,10 +882,10 @@ export function getLanding(type: LandingKey, locale: string): LandingData {
 }
 
 // FAQ başlığı sonek + AuthorBio bio metni için basit i18n.
-export const LANDING_UI: Record<LandingLocale, { questions: string; bioSuffix: string; inShort: string }> = {
-  tr: { questions: 'Soruları', bioSuffix: 'içeriği; açıklık, sorumlu rehberlik ve pratik manevi okuryazarlık için gözden geçirilir.', inShort: 'Kısaca' },
-  en: { questions: 'Questions', bioSuffix: 'content is reviewed for clarity, responsible guidance and practical spiritual literacy.', inShort: 'In short' },
-  de: { questions: 'Fragen', bioSuffix: 'Inhalte werden auf Klarheit, verantwortungsvolle Orientierung und praktische spirituelle Kompetenz geprüft.', inShort: 'Kurz gesagt' },
+export const LANDING_UI: Record<LandingLocale, { questions: string; bioSuffix: string; inShort: string; faqEyebrow: string }> = {
+  tr: { questions: 'Soruları', bioSuffix: 'içeriği; açıklık, sorumlu rehberlik ve pratik manevi okuryazarlık için gözden geçirilir.', inShort: 'Kısaca', faqEyebrow: 'SSS' },
+  en: { questions: 'Questions', bioSuffix: 'content is reviewed for clarity, responsible guidance and practical spiritual literacy.', inShort: 'In short', faqEyebrow: 'FAQ' },
+  de: { questions: 'Fragen', bioSuffix: 'Inhalte werden auf Klarheit, verantwortungsvolle Orientierung und praktische spirituelle Kompetenz geprüft.', inShort: 'Kurz gesagt', faqEyebrow: 'FAQ' },
 };
 
 export function landingLocale(locale: string): LandingLocale {

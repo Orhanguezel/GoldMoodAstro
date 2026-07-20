@@ -64,7 +64,7 @@ export default async function SeoLandingArticle({ type, locale }: { type: Landin
           inShortLabel={ui.inShort}
         />
       )}
-      <FaqAccordion items={data.faq} title={`${data.eyebrow} ${ui.questions}`} />
+      <FaqAccordion items={data.faq} title={`${data.eyebrow} ${ui.questions}`} eyebrow={ui.faqEyebrow} />
       <AuthorBio
         name="GoldMoodAstro Editorial Team"
         title={data.authorTitle}

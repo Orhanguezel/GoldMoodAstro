@@ -5,12 +5,12 @@ export type FaqAccordionItem = {
   answer: string;
 };
 
-export default function FaqAccordion({ items, title = 'Frequently Asked Questions' }: { items: FaqAccordionItem[]; title?: string }) {
+export default function FaqAccordion({ items, title = 'Frequently Asked Questions', eyebrow = 'FAQ' }: { items: FaqAccordionItem[]; title?: string; eyebrow?: string }) {
   if (!items.length) return null;
 
   return (
     <section className="mx-auto mt-16 max-w-4xl rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/60 p-6 md:p-8">
-      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--gm-gold-dim)]">FAQ</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--gm-gold-dim)]">{eyebrow}</p>
       <h2 className="mt-2 text-2xl font-semibold text-[var(--gm-text)]">{title}</h2>
       <div className="mt-6 divide-y divide-[var(--gm-border-soft)]">
         {items.map((item) => (
