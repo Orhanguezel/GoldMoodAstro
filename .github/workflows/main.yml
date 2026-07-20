@@ -1,15 +1,51 @@
 name: GoldMoodAstro Deploy
 
+# =============================================================================
+# 2026-07-20 — rsync tabanlı dağıtım GIT PULL + SUNUCUDA BUILD akışına çevrildi.
+#
+# NEDEN:
+#   Eski akış `rsync --delete` ile doğrudan çalışan dizinlere yazıyordu.
+#     • Aktarım sırasında frontend/.next siliniyor, uygulama build'siz kalıyor,
+#       PM2 sürekli yeniden başlıyordu (52 restart, nginx connection refused).
+#     • /var/www/goldmoodastro bir GIT DEPOSU olduğu için rsync çalışma ağacını
+#       kirletiyordu; elle yapılan `git pull` sürekli "local changes / untracked
+#       files would be overwritten" ile kilitleniyordu. İki rakip dağıtım
+#       mekanizması (CI rsync + elle git pull) birbiriyle çakışıyordu.
+#
+# YENİ AKIŞ:
+#   1) build-check (CI)  — kod derleniyor mu? Kırıksa prod'a hiç dokunulmaz.
+#   2) deploy (TEK iş)   — sunucuda: git pull → build → pm2 reload → sağlık
+#                          kontrolü; herhangi bir adım düşerse önceki commit'e
+#                          geri dönülür ve yeniden derlenir.
+#
+# NEDEN TEK İŞ: üç ayrı iş paralel çalışıp aynı git deposunda `git pull`
+# yapsaydı birbirini kilitlerdi. Sıra: backend → admin → frontend.
+#
+# .env DOSYALARI: git tarafından yönetilmiyor (gitignore), dolayısıyla artık
+# dağıtım sırasında korunması gereken bir şey değil — rsync'teki en kırılgan
+# noktalardan biri kendiliğinden ortadan kalktı.
+#
+# SEED: bilinçli olarak otomatik ÇALIŞTIRILMIYOR. Şema/içerik değişiklikleri
+# elle uygulanır (`bun src/db/index.ts --no-drop --only=...`), çünkü tam seed
+# admin şifrelerini sıfırlıyor ve kullanıcı içeriğini ezebiliyor.
+# =============================================================================
+
+# TETIKLEYICI NOTU (2026-07-20): prod deposu su an `feat/mobile-nutuya-selective-merge`
+# branch'ini takip ediyor (main degil). Sunucu kendi upstream'ini cektigi icin
+# tetikleyiciye her ikisi de eklendi. Uzun vadede dogrusu tek branch'te (main)
+# birlesmek; bu bir merge karari oldugu icin burada zorlanmadi.
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - feat/mobile-nutuya-selective-merge
 
 jobs:
-  # ─── Backend ─────────────────────────────────────────────────────
-  deploy-backend:
-    name: Backend — build & deploy
+  # ─── 1) Derleme kapısı — prod'a dokunmaz ──────────────────────────
+  build-check:
+    name: Build check (gate)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@v4
@@ -18,69 +54,13 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install & build backend
+      - name: Backend build
         working-directory: backend
         run: |
-          rm -rf dist .tsbuildinfo || true
           bun install --frozen-lockfile || bun install
           bun run build
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -T 10 -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
-
-      - name: Sync backend → VPS
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-        run: |
-          SSH_OPTS="-o ConnectTimeout=30 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
-          for i in 1 2 3; do
-            rsync -avz --delete \
-              --exclude=node_modules --exclude=.git --exclude=.env \
-              --exclude=uploads --exclude=.DS_Store \
-              -e "ssh $SSH_OPTS" \
-              backend/ "${VPS_USER}@${VPS_HOST}:/var/www/goldmoodastro/backend" \
-              && break
-            echo "⚠ Attempt $i failed, retrying in 10s..."
-            sleep 10
-          done
-
-      - name: PM2 reload — backend
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_KEY }}
-          timeout: 60s
-          command_timeout: 90s
-          script: |
-            set -e
-            cd /var/www/goldmoodastro/backend
-            bun install --frozen-lockfile || bun install
-            pm2 reload goldmoodastro-backend \
-              || pm2 start ecosystem.config.cjs --only goldmoodastro-backend
-            pm2 save
-            # Bind kontrolü (port 8094)
-            ss -ltnp | grep ':8094' || (echo "Port 8094 açık değil!" && exit 1)
-
-  # ─── Admin Panel ─────────────────────────────────────────────────
-  deploy-admin:
-    name: Admin Panel — build & deploy
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install & build admin_panel
+      - name: Admin panel build
         working-directory: admin_panel
         env:
           NEXT_TELEMETRY_DISABLED: "1"
@@ -88,64 +68,10 @@ jobs:
           bun install --frozen-lockfile || bun install
           bun run build
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -T 10 -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
-
-      - name: Sync admin_panel → VPS
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-        run: |
-          SSH_OPTS="-o ConnectTimeout=30 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
-          for i in 1 2 3; do
-            rsync -avz --delete \
-              --exclude=node_modules --exclude=.git --exclude=.env \
-              --exclude=.DS_Store \
-              -e "ssh $SSH_OPTS" \
-              admin_panel/ "${VPS_USER}@${VPS_HOST}:/var/www/goldmoodastro/admin_panel" \
-              && break
-            echo "⚠ Attempt $i failed, retrying in 10s..."
-            sleep 10
-          done
-
-      - name: PM2 restart — admin panel
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_KEY }}
-          timeout: 60s
-          command_timeout: 90s
-          script: |
-            set -e
-            cd /var/www/goldmoodastro/admin_panel
-            bun install --frozen-lockfile || bun install
-            pm2 restart goldmoodastro-admin --update-env \
-              || (cd /var/www/goldmoodastro && pm2 start ecosystem.config.cjs --only goldmoodastro-admin --update-env)
-            pm2 save
-            ss -ltnp | grep ':3094' || (echo "Port 3094 açık değil!" && exit 1)
-
-  # ─── Frontend ────────────────────────────────────────────────────
-  deploy-frontend:
-    name: Frontend — build & deploy
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Check theme snapshot drift
+      - name: Theme snapshot drift
         run: bun run check:theme
 
-      - name: Install & build frontend
+      - name: Frontend build
         working-directory: frontend
         env:
           NEXT_TELEMETRY_DISABLED: "1"
@@ -161,75 +87,89 @@ jobs:
           bun run relax:asset-guard
           bun run build
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -T 10 -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+  # ─── 2) Dağıtım — sunucuda git pull + build ───────────────────────
+  deploy:
+    name: Deploy (git pull + build on server)
+    needs: build-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
 
-      - name: Sync frontend → VPS
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-        run: |
-          SSH_OPTS="-o ConnectTimeout=30 -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key"
-          ssh $SSH_OPTS "${VPS_USER}@${VPS_HOST}" \
-            'rm -rf /var/www/goldmoodastro/frontend.next && mkdir -p /var/www/goldmoodastro/frontend.next'
-          synced=false
-          for i in 1 2 3; do
-            rsync -avz --delete \
-              --exclude=node_modules --exclude=.git --exclude=.env \
-              --exclude=.DS_Store \
-              -e "ssh $SSH_OPTS" \
-              frontend/ "${VPS_USER}@${VPS_HOST}:/var/www/goldmoodastro/frontend.next" \
-              && synced=true && break
-            echo "⚠ Attempt $i failed, retrying in 10s..."
-            sleep 10
-          done
-          $synced || { echo "Frontend sync failed after 3 attempts"; exit 1; }
-
-      - name: PM2 reload — frontend
+    steps:
+      - name: Pull, build, reload, health-check
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           timeout: 60s
-          command_timeout: 90s
+          command_timeout: 25m
           script: |
-            set -e
+            set -euo pipefail
             ROOT=/var/www/goldmoodastro
-            RELEASE="$ROOT/frontend.next"
-            CURRENT="$ROOT/frontend"
-            PREVIOUS="$ROOT/frontend.previous"
+            cd "$ROOT"
 
-            test -s "$RELEASE/.next/BUILD_ID"
-            test -s "$RELEASE/.next/routes-manifest.json"
-            test -s "$RELEASE/.next/server/app-paths-manifest.json"
-            [ ! -f "$CURRENT/.env" ] || cp "$CURRENT/.env" "$RELEASE/.env"
+            # --- Çalışma ağacı temiz mi? -----------------------------------
+            # Git tabanlı dağıtımda sunucuda yerel değişiklik OLMAMALI.
+            # Sessizce `git checkout .` yapmıyoruz: birinin elle yaptığı bir
+            # düzeltmeyi habersiz silmek, kırık deploy'dan daha kötüdür.
+            if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+              echo "HATA: sunucuda commit'lenmemis degisiklik var:"
+              git status --short --untracked-files=no
+              echo "Once bunlari commit'le ya da stash'le, sonra tekrar deploy et."
+              exit 1
+            fi
 
-            cd "$RELEASE"
-            bun install --frozen-lockfile || bun install
+            PREV="$(git rev-parse HEAD)"
+            echo "Onceki surum: $PREV"
 
-            rm -rf "$PREVIOUS"
-            mv "$CURRENT" "$PREVIOUS"
-            mv "$RELEASE" "$CURRENT"
-            cd "$CURRENT"
-            pm2 reload goldmoodastro-frontend \
-              || pm2 start ecosystem.config.cjs --only goldmoodastro-frontend
-            pm2 save
-            for i in 1 2 3 4 5; do
-              curl --fail --silent --output /dev/null http://127.0.0.1:3095/tr && break
-              [ "$i" -lt 5 ] || {
-                pm2 stop goldmoodastro-frontend || true
-                rm -rf "$CURRENT"
-                mv "$PREVIOUS" "$CURRENT"
-                cd "$CURRENT"
-                pm2 restart goldmoodastro-frontend --update-env
-                echo "Frontend health check failed; previous release restored"
-                exit 1
-              }
-              sleep 2
-            done
-            rm -rf "$PREVIOUS"
+            build_all() {
+              cd "$ROOT/backend"     && { bun install --frozen-lockfile || bun install; } && bun run build
+              cd "$ROOT/admin_panel" && { bun install --frozen-lockfile || bun install; } && bun run build
+              cd "$ROOT/frontend"    && { bun install --frozen-lockfile || bun install; } && bun run build
+              cd "$ROOT"
+            }
+
+            reload_all() {
+              pm2 reload goldmoodastro-backend  || pm2 start "$ROOT/backend/ecosystem.config.cjs"     --only goldmoodastro-backend
+              pm2 reload goldmoodastro-admin    || pm2 start "$ROOT/admin_panel/ecosystem.config.cjs" --only goldmoodastro-admin
+              pm2 reload goldmoodastro-frontend || pm2 start "$ROOT/frontend/ecosystem.config.cjs"    --only goldmoodastro-frontend
+              pm2 save
+            }
+
+            # Sağlık: backend /api/health, frontend /tr, admin kök
+            # (admin 307 döndürür — login yönlendirmesi, sağlıklı sayılır).
+            health_ok() {
+              for i in 1 2 3 4 5; do
+                ok=1
+                curl -fsS -o /dev/null --max-time 10 http://127.0.0.1:8094/api/health || ok=0
+                curl -fsS -o /dev/null --max-time 10 http://127.0.0.1:3095/tr        || ok=0
+                curl -s  -o /dev/null --max-time 10 -w '%{http_code}' http://127.0.0.1:3094 \
+                  | grep -qE '^(200|301|302|307|308)$' || ok=0
+                [ "$ok" = "1" ] && return 0
+                sleep 3
+              done
+              return 1
+            }
+
+            rollback() {
+              echo "$1 — onceki surume donuluyor ($PREV)"
+              git reset --hard "$PREV"
+              build_all || echo "UYARI: geri donus build'i de basarisiz"
+              reload_all || true
+              exit 1
+            }
+
+            # --- Dağıtım ----------------------------------------------------
+            # Sunucu KENDI takip ettigi branch'i ceker. Tetikleyici branch ile
+            # sunucunun branch'i farkli olabilir; bu kasitli (yukaridaki nota bak).
+            BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+            echo "Sunucu branch: $BRANCH"
+            git pull --ff-only
+            echo "Yeni surum: $(git rev-parse HEAD)"
+
+            build_all  || rollback "BUILD BASARISIZ"
+            reload_all
+            health_ok  || rollback "SAGLIK KONTROLU BASARISIZ"
+
+            echo "Dagitim tamam: $(git rev-parse --short HEAD)"
+            pm2 list | grep goldmood || true
