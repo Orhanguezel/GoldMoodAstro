@@ -186,16 +186,19 @@ export default async function RootLayout({
         <JsonLd data={jsonLdData} id="site-graph" />
         <ScrollAnchorFixer />
         <Providers>
-          <Suspense fallback={null}>
-            <ClientLayout
-              locale={locale}
-              initialMenuItems={initialMenuItems}
-              initialFooterSections={initialFooterSections}
-              initialFooterMenuItems={initialFooterMenuItems}
-            >
-              {children}
-            </ClientLayout>
-          </Suspense>
+          {/* 2026-07-20: children BURADA <Suspense> icindeydi. Next kabugu hemen
+              gonderip HTTP 200'u kesinlestiriyordu; bu yuzden sayfalardaki
+              notFound() dogru ekrani render etse de 404 URETEMIYORDU.
+              Minimal test (senkron, dogrudan notFound() cagiran sayfa) da 200
+              donunce kaynak kesinlesti. Suspense kaldirildi. */}
+          <ClientLayout
+            locale={locale}
+            initialMenuItems={initialMenuItems}
+            initialFooterSections={initialFooterSections}
+            initialFooterMenuItems={initialFooterMenuItems}
+          >
+            {children}
+          </ClientLayout>
         </Providers>
       </div>
     </ThemeProvider>
