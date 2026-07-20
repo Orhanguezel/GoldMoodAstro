@@ -35,6 +35,26 @@ export default async function BurcunuOgrenPage({ params }: Props) {
     en: 'Find Your Zodiac Sign',
     de: 'Sternzeichen finden',
   };
+  // 2026-07-20: bu blok koda Ingilizce gomuluydu (data-speakable — sesli
+  // asistan/AI icin dogru dilde olmasi ayrica onemli).
+  const VOICE: Record<string, { label: string; q: string; a: string }> = {
+    tr: {
+      label: 'Kısa Cevap',
+      q: 'Burcumu nasıl bulurum?',
+      a: 'Güneş burcunuzu bulmak için doğum tarihiniz yeterlidir. Ana burcunuz, doğduğunuz tarihte Güneş\'in bulunduğu burç aralığıdır. Daha kişisel bir yorum için doğum haritasındaki Ay burcu, yükselen burç ve evler de birlikte değerlendirilmelidir.',
+    },
+    en: {
+      label: 'Short Answer',
+      q: 'How do I find my zodiac sign?',
+      a: 'Your birthday is enough to find your Sun sign. Your main zodiac sign is the sign range where the Sun was on your date of birth. For a more personal reading, the Moon sign, rising sign and houses in the birth chart should also be considered.',
+    },
+    de: {
+      label: 'Kurze Antwort',
+      q: 'Wie finde ich mein Sternzeichen?',
+      a: 'Für Ihr Sonnenzeichen genügt Ihr Geburtsdatum. Ihr Hauptsternzeichen ist der Zeichenbereich, in dem die Sonne an Ihrem Geburtstag stand. Für eine persönlichere Deutung sollten zusätzlich Mondzeichen, Aszendent und die Häuser des Geburtshoroskops betrachtet werden.',
+    },
+  };
+  const voice = VOICE[locale] ?? VOICE.en;
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || brand.public_url || 'https://goldmoodastro.com').replace(/\/$/, '');
   return (
     <>
@@ -64,13 +84,13 @@ export default async function BurcunuOgrenPage({ params }: Props) {
         aria-labelledby="zodiac-finder-voice-answer"
       >
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-(--gm-gold)">
-          Short Answer
+          {voice.label}
         </p>
         <h2 id="zodiac-finder-voice-answer" className="font-serif text-3xl text-(--gm-text) md:text-5xl">
-          How do I find my zodiac sign?
+          {voice.q}
         </h2>
         <p className="mx-auto mt-5 max-w-[var(--gm-w-narrow)] text-base leading-8 text-(--gm-text-dim) md:text-lg">
-          Your birthday is enough to find your Sun sign. Your main zodiac sign is the sign range where the Sun was on your date of birth. For a more personal reading, the Moon sign, rising sign and houses in the birth chart should also be considered.
+          {voice.a}
         </p>
       </section>
       <ZodiacFinderQuiz />

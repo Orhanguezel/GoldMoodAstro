@@ -95,6 +95,11 @@ const featureCopy = {
     video_desc: 'Canlı kameralı danışmanlık',
     ad: 'Reklamsız',
     ad_desc: 'Tanıtım öğeleri olmadan temiz deneyim',
+    audio_quality: 'Gürültü filtreli ses kalitesi',
+    audio_cost: 'Daha uygun maliyetli seans',
+    audio_nocam: 'Kamera kullanımı yok',
+    video_face: 'Yüz ifadesi ve göz teması',
+    video_rich: 'Derinlikli yorum için daha zengin iletişim',
   },
   de: {
     daily: 'Tägliche Deutung',
@@ -111,6 +116,11 @@ const featureCopy = {
     video_desc: 'Live-Beratung mit Kamera',
     ad: 'Werbefrei',
     ad_desc: 'Sauberes Erlebnis ohne Werbeelemente',
+    audio_quality: 'Rauschgefilterte Tonqualität',
+    audio_cost: 'Günstigere Sitzung',
+    audio_nocam: 'Keine Kameranutzung',
+    video_face: 'Mimik und Blickkontakt',
+    video_rich: 'Reichere Kommunikation für tiefere Deutung',
   },
   en: {
     daily: 'Daily Reading',
@@ -127,6 +137,11 @@ const featureCopy = {
     video_desc: 'Live camera-based consultation',
     ad: 'Ad-free',
     ad_desc: 'Cleaner experience without promotional clutter',
+    audio_quality: 'Noise-filtered audio quality',
+    audio_cost: 'Lower-cost sessions',
+    audio_nocam: 'No camera usage',
+    video_face: 'Facial expression and eye contact',
+    video_rich: 'Richer communication for in-depth reading',
   },
 };
 
@@ -333,26 +348,26 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
 
   const voiceFeatures = [
     {
-      text: 'Noise-filtered audio quality',
+      text: fc.audio_quality,
       included: true,
     },
     {
-      text: 'Lower-cost sessions',
+      text: fc.audio_cost,
       included: true,
     },
     {
-      text: 'No camera usage',
+      text: fc.audio_nocam,
       included: true,
     },
   ];
 
   const videoFeatures = [
     {
-      text: 'Facial expression and eye contact',
+      text: fc.video_face,
       included: true,
     },
     {
-      text: 'Richer communication for in-depth reading',
+      text: fc.video_rich,
       included: true,
     },
     {

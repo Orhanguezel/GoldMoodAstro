@@ -8,11 +8,17 @@ export const metadata: Metadata = {
 };
 
 export default async function DailyPage({ params }: { params: Promise<{ locale: string }> }) {
-  await params;
+  const { locale } = await params;
+  // 2026-07-20: baslik Turkce sayfada bile Ingilizce sabitti.
+  const BANNER: Record<string, string> = {
+    tr: 'Günlük Yorum',
+    en: 'Daily Reading',
+    de: 'Tagesdeutung',
+  };
 
   return (
     <>
-      <Banner title="Daily Reading" />
+      <Banner title={BANNER[locale] ?? BANNER.en} />
       <DailyPageClient />
     </>
   );

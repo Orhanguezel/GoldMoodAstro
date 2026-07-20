@@ -6,10 +6,10 @@ import { ArrowRight, Search, Star } from 'lucide-react';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 import { ZODIAC_META, ZODIAC_SIGNS } from '@/lib/zodiac/signs';
-import { CELEBRITY_ZODIAC } from '@/lib/zodiac/celebrities';
+import { CELEBRITY_ZODIAC, ct } from '@/lib/zodiac/celebrities';
 import type { ZodiacSign } from '@/types/common';
 
-const fields = Array.from(new Set(CELEBRITY_ZODIAC.map((item) => item.field))).sort();
+// 2026-07-20: field/note/birthday artik dil sozlugu; filtre de locale'e gore uretiliyor.
 
 export default function CelebrityZodiacPage() {
   const locale = useLocaleShort();
@@ -18,11 +18,17 @@ export default function CelebrityZodiacPage() {
   const [fieldFilter, setFieldFilter] = React.useState('all');
   const [query, setQuery] = React.useState('');
 
+  // Alan filtresi locale'e gore uretilir; dil degisince etiketler de degisir.
+  const fields = React.useMemo(
+    () => Array.from(new Set(CELEBRITY_ZODIAC.map((item) => ct(item.field, locale)))).sort(),
+    [locale],
+  );
+
   const filtered = CELEBRITY_ZODIAC.filter((item) => {
     const signMatches = signFilter === 'all' || item.sign === signFilter;
-    const fieldMatches = fieldFilter === 'all' || item.field === fieldFilter;
+    const fieldMatches = fieldFilter === 'all' || ct(item.field, locale) === fieldFilter;
     const q = query.trim().toLocaleLowerCase(locale === 'tr' ? 'tr-TR' : 'en-US');
-    const queryMatches = !q || `${item.name} ${item.field} ${ZODIAC_META[item.sign].label}`.toLocaleLowerCase(locale === 'tr' ? 'tr-TR' : 'en-US').includes(q);
+    const queryMatches = !q || `${item.name} ${ct(item.field, locale)} ${ZODIAC_META[item.sign].label}`.toLocaleLowerCase(locale === 'tr' ? 'tr-TR' : 'en-US').includes(q);
     return signMatches && fieldMatches && queryMatches;
   });
 
@@ -97,7 +103,7 @@ export default function CelebrityZodiacPage() {
                 <div>
                   <h2 className="text-xl font-semibold">{item.name}</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {item.birthday} · {item.field}
+                    {ct(item.birthday, locale)} · {ct(item.field, locale)}
                   </p>
                 </div>
               </div>
@@ -114,7 +120,7 @@ export default function CelebrityZodiacPage() {
                 </span>
               </div>
 
-              <p className="mt-4 text-sm leading-6 text-muted-foreground">{item.note}</p>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">{ct(item.note, locale)}</p>
 
               <Link
                 href={localizePath(locale, `/burclar/${sign.key}`)}
