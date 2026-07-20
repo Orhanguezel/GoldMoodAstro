@@ -105,7 +105,9 @@ export default async function FaqsPage({ params }: FaqPageProps) {
   return (
     <>
       {schema && <JsonLd data={schema} id="faq-page" />}
-      <Banner title={title} />
+      {/* Sayfanin kendi hero h1'i var; banner basligi gosterilirse ayni metin
+          breadcrumb + h1 + CMS basligi olarak uc kez tekrarlaniyor ve iki h1 olusuyor. */}
+      <Banner title={title} showTitle={false} />
       <PageContainer pad="large" className="bg-(--gm-bg) min-h-[50vh]">
         <div className="container mx-auto">
           <header className="text-center mb-14 max-w-3xl mx-auto">
