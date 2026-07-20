@@ -6,7 +6,8 @@ export type LandingKey =
   | 'yildizname'
   | 'tarot'
   | 'sinastri'
-  | 'pricing';
+  | 'pricing'
+  | 'buyuk-uclu';
 
 export type LandingLocale = 'tr' | 'en' | 'de';
 
@@ -522,6 +523,77 @@ export const LANDING_CONTENT: Record<LandingKey, Record<LandingLocale, LandingDa
       image: '/img/yildizname.png',
       authorTitle: 'Redaktion für traditionelle Symbolik',
       expertise: ['Yildizname', 'Ebced', 'Symbolische Orientierung'],
+    },
+  },
+  'buyuk-uclu': {
+    en: {
+      slug: 'big-three',
+      title: 'The Big Three Guide (Sun, Moon, Rising)',
+      description: 'A guide to what the Sun, Moon and rising sign say together, and how to read the big three responsibly.',
+      eyebrow: 'The Big Three',
+      lead: 'The big three is the combined view of your Sun, Moon and rising sign. It describes your identity, your emotional needs and your outward style together.',
+      summary: 'The big three is the most practical way to read yourself without being reduced to a single sign. The Sun describes your direction, the Moon your inner world, and the rising sign the manner you show to others. Reading all three explains why "my sign does not fit me at all" is such a common feeling.',
+      sections: [
+        { title: 'What the big three is', paragraphs: ['In astrology the "big three" refers to the three most discussed parts of a birth chart: the Sun sign, the Moon sign and the rising sign. Most people know only their Sun sign, yet reading all three produces a far more recognisable portrait.', 'This is not a personality test. It does not label you; it offers a symbolic language for your tendencies, needs and natural style. The aim is not to fit you into a box but to help you see yourself more clearly.'] },
+        { title: 'What Sun, Moon and rising describe', paragraphs: ['The Sun describes your life direction, your conscious identity and the self you are growing towards. It shows where you invest energy and what makes you feel alive.', 'The Moon describes emotional needs, how you feel safe and your instinctive reactions. The part of you that appears when you are tired, hurt or joyful is usually the Moon.', 'The rising sign shows how you approach life and how others first perceive you. Because it also determines how the houses are arranged in your chart, calculating it depends on your birth time.'] },
+        { title: 'Why your sign alone is not enough', paragraphs: ['"My sign does not fit me" is a common sentence and often a fair instinct, because the Sun sign alone is only one part of the picture.', 'Someone with a Leo Sun, Pisces Moon and Virgo rising may appear precise and measured, enjoy visibility during the day, and still need quiet and solitude in the evening. These are not contradictions but three layers of the same person.'] },
+        { title: 'Why birth time matters', paragraphs: ['The rising sign changes roughly every two hours and the Moon changes sign every two to two and a half days. An accurate big three therefore needs your birth time as well as your date and place of birth.', 'If the time is wrong or unknown, the ascendant and house placements shift, and the reading rests on a chart that is not merely incomplete but incorrect. Rather than working from a guess, a rectification study that determines the time from documented life events is recommended.'] },
+        { title: 'Using the result responsibly', paragraphs: ['The big three offers a language for looking at yourself and those close to you with more compassion. It is valuable when used to build empathy, not to excuse behaviour.', 'GoldMoodAstro avoids fatalistic claims. Astrology can support reflection, planning and emotional language, but important decisions should also take real-world information and, where needed, professional support into account.'] },
+      ],
+      faq: [
+        { question: 'Do I need my birth time for the big three?', answer: 'For the rising sign, yes — it changes roughly every two hours. Without a birth time your Sun and usually your Moon can still be calculated, but the ascendant and house placements will not be reliable.' },
+        { question: 'What if my Sun, Moon and rising contradict each other?', answer: 'They are layers rather than contradictions. An outgoing rising sign with an inward Moon explains feeling comfortable in a crowd and needing solitude afterwards.' },
+        { question: 'Does the big three describe my whole personality?', answer: 'No. These are the three most visible parts of a birth chart; planets, houses and aspects complete the picture. The big three is a good starting point, not the final word.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Editorial Team',
+      expertise: ['Big Three', 'Astrology', 'Birth Chart'],
+    },
+    tr: {
+      slug: 'buyuk-uclu',
+      title: 'Büyük Üçlü Rehberi (Güneş, Ay, Yükselen)',
+      description: 'Güneş, Ay ve yükselen burcun birlikte ne anlattığını; büyük üçlünün doğum haritasındaki yerini ve sorumlu yorumunu anlatan rehber.',
+      eyebrow: 'Büyük Üçlü',
+      lead: 'Büyük üçlü; Güneş, Ay ve yükselen burcunuzun oluşturduğu üçlü bakıştır. Kimliğinizi, duygusal ihtiyacınızı ve dışa dönük tarzınızı bir arada okur.',
+      summary: 'Büyük üçlü tek bir burca sıkışmadan kendinizi okumanın en pratik yoludur. Güneş yaşam yönünüzü, Ay iç dünyanızı, yükselen ise dışarıya yansıyan üslubunuzu tarif eder. Üçünü birlikte değerlendirmek, "burcum bana hiç uymuyor" hissinin neden bu kadar yaygın olduğunu da açıklar.',
+      sections: [
+        { title: 'Büyük üçlü nedir', paragraphs: ['Astrolojide "büyük üçlü", doğum haritanızın en çok konuşulan üç unsurudur: Güneş burcu, Ay burcu ve yükselen burç. Çoğu insan yalnızca Güneş burcunu bilir; oysa üçü bir arada okunduğunda ortaya çok daha tanıdık bir portre çıkar.', 'Bu üçlü bir kişilik testi değildir. Size etiket koymaz; eğilimlerinizi, ihtiyaçlarınızı ve doğal üslubunuzu tarif eden sembolik bir dil sunar. Amaç sizi bir kalıba sokmak değil, kendinizi daha net görmenize yardımcı olmaktır.'] },
+        { title: 'Güneş, Ay ve yükselen ne anlatır', paragraphs: ['Güneş burcu; yaşam yönünüzü, bilinçli kimliğinizi ve "olmak istediğiniz ben"i anlatır. Neye enerji verdiğinizi, neyin sizi canlandırdığını gösterir.', "Ay burcu; duygusal ihtiyaçlarınızı, güvende hissetme biçiminizi ve içgüdüsel tepkilerinizi tarif eder. Yorgunken, üzgünken ya da sevinçliyken ortaya çıkan taraf çoğunlukla Ay'ınızdır.", 'Yükselen burç; hayata nasıl yaklaştığınızı ve başkalarının sizi ilk anda nasıl algıladığını gösterir. Aynı zamanda haritanızdaki evlerin nasıl dizildiğini belirlediği için hesaplanması doğum saatine bağlıdır.'] },
+        { title: 'Neden yalnızca burcunuz yetmez', paragraphs: ['"Burcum bana hiç uymuyor" cümlesi çok yaygındır ve genellikle haklı bir sezgidir. Çünkü tek başına Güneş burcu, resmin yalnızca bir parçasıdır.', 'Güneşi Aslan, Ayı Balık, yükseleni Başak olan biri; dışarıdan titiz ve ölçülü görünebilir, gün içinde görünür olmaktan keyif alabilir, akşam ise sessizliğe ve yalnız kalabileceği bir alana ihtiyaç duyabilir. Bunlar çelişki değil, aynı insanın üç katmanıdır.'] },
+        { title: 'Doğum saati neden önemli', paragraphs: ['Yükselen burç yaklaşık iki saatte bir değişir; Ay ise iki-iki buçuk günde bir burç değiştirir. Bu yüzden büyük üçlünün doğru hesaplanması için doğum tarihi ve yeri kadar doğum saati de gereklidir.', 'Saat yanlış ya da bilinmiyorsa yükselen ve ev yerleşimleri kayar; bu durumda yorum eksik değil, doğrudan yanlış bir harita üzerinden yapılmış olur. Saatinizi bilmiyorsanız tahminle ilerlemek yerine, yaşam olaylarından yola çıkarak saati belirleyen rektifikasyon çalışması önerilir.'] },
+        { title: 'Sonucu sorumlu kullanmak', paragraphs: ['Büyük üçlü, kendinize ve yakınlarınıza daha şefkatli bakmak için bir dil sunar. Birinin "neden böyle davrandığını" mazur göstermek için değil, empati kurmak için kullanıldığında değerlidir.', 'GoldMoodAstro kaderci iddialardan kaçınır. Astroloji; düşünmeyi, planlamayı ve duygusal bir dil kurmayı destekleyebilir; ancak önemli kararlarda gerçek dünya bilgileri ve gerektiğinde profesyonel destek de dikkate alınmalıdır.'] },
+      ],
+      faq: [
+        { question: 'Büyük üçlü için doğum saatim gerekli mi?', answer: 'Yükselen burç için evet, gereklidir; yükselen yaklaşık iki saatte bir değişir. Doğum saatiniz olmadan Güneş burcunuz ve çoğu durumda Ay burcunuz hesaplanabilir, ancak yükselen ve ev yerleşimleri güvenilir olmaz.' },
+        { question: 'Güneş, Ay ve yükselen çelişirse ne olur?', answer: 'Çelişki değil, katmandır. Örneğin dışa dönük bir yükselenle içine kapanık bir Ay bir arada olabilir; bu, kalabalıkta rahat görünüp sonrasında yalnız kalmaya ihtiyaç duymayı açıklar.' },
+        { question: 'Büyük üçlü kişiliğimi tamamen anlatır mı?', answer: 'Hayır. Doğum haritasının en görünür üç unsurudur; gezegenler, evler ve açılar resmi tamamlar. Büyük üçlü iyi bir başlangıçtır, son söz değildir.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Editoryal Ekibi',
+      expertise: ['Büyük Üçlü', 'Astroloji', 'Doğum Haritası'],
+    },
+    de: {
+      slug: 'big-three',
+      title: 'Leitfaden zu den großen Drei (Sonne, Mond, Aszendent)',
+      description: 'Ein Leitfaden dazu, was Sonne, Mond und Aszendent gemeinsam aussagen und wie die großen Drei verantwortungsvoll gedeutet werden.',
+      eyebrow: 'Die großen Drei',
+      lead: 'Die großen Drei sind die gemeinsame Betrachtung von Sonne, Mond und Aszendent. Sie beschreiben Identität, emotionale Bedürfnisse und äußeren Stil zusammen.',
+      summary: 'Die großen Drei sind der praktischste Weg, sich selbst zu lesen, ohne auf ein einziges Zeichen reduziert zu werden. Die Sonne beschreibt die Richtung, der Mond die innere Welt und der Aszendent die Art, die man nach außen zeigt. Alle drei zusammen erklären, warum das Gefühl "mein Sternzeichen passt gar nicht zu mir" so verbreitet ist.',
+      sections: [
+        { title: 'Was die großen Drei sind', paragraphs: ['In der Astrologie bezeichnen die "großen Drei" die drei meistbesprochenen Teile eines Geburtshoroskops: Sonnenzeichen, Mondzeichen und Aszendent. Die meisten Menschen kennen nur ihr Sonnenzeichen; alle drei gemeinsam ergeben ein weit wiedererkennbareres Bild.', 'Das ist kein Persönlichkeitstest. Es etikettiert Sie nicht, sondern bietet eine symbolische Sprache für Neigungen, Bedürfnisse und natürlichen Stil. Ziel ist nicht, Sie in eine Schublade zu stecken, sondern Ihnen zu helfen, sich klarer zu sehen.'] },
+        { title: 'Was Sonne, Mond und Aszendent beschreiben', paragraphs: ['Die Sonne beschreibt Lebensrichtung, bewusste Identität und das Selbst, auf das Sie zuwachsen. Sie zeigt, wo Sie Energie investieren und was Sie lebendig macht.', 'Der Mond beschreibt emotionale Bedürfnisse, das Gefühl von Sicherheit und instinktive Reaktionen. Der Teil, der erscheint, wenn Sie müde, verletzt oder froh sind, ist meist der Mond.', 'Der Aszendent zeigt, wie Sie das Leben angehen und wie andere Sie zuerst wahrnehmen. Da er auch die Anordnung der Häuser bestimmt, hängt seine Berechnung von der Geburtszeit ab.'] },
+        { title: 'Warum das Sternzeichen allein nicht reicht', paragraphs: ['"Mein Sternzeichen passt nicht zu mir" ist ein häufiger Satz und oft eine berechtigte Intuition, denn das Sonnenzeichen allein ist nur ein Teil des Bildes.', 'Wer eine Löwe-Sonne, einen Fische-Mond und einen Jungfrau-Aszendenten hat, kann präzise und zurückhaltend wirken, tagsüber Sichtbarkeit genießen und abends dennoch Stille und Alleinsein brauchen. Das sind keine Widersprüche, sondern drei Schichten derselben Person.'] },
+        { title: 'Warum die Geburtszeit wichtig ist', paragraphs: ['Der Aszendent wechselt etwa alle zwei Stunden, der Mond alle zwei bis zweieinhalb Tage das Zeichen. Für korrekte große Drei braucht es daher neben Datum und Ort auch die Geburtszeit.', 'Ist die Zeit falsch oder unbekannt, verschieben sich Aszendent und Häuser; die Deutung beruht dann nicht auf einem unvollständigen, sondern auf einem falschen Horoskop. Statt einer Schätzung empfiehlt sich eine Rektifikation, die die Zeit aus dokumentierten Lebensereignissen ermittelt.'] },
+        { title: 'Das Ergebnis verantwortungsvoll nutzen', paragraphs: ['Die großen Drei bieten eine Sprache, um sich selbst und nahestehende Menschen mitfühlender zu betrachten. Wertvoll sind sie, wenn sie Empathie schaffen und nicht Verhalten entschuldigen.', 'GoldMoodAstro vermeidet fatalistische Aussagen. Astrologie kann Reflexion, Planung und emotionale Sprache unterstützen; wichtige Entscheidungen sollten jedoch auch reale Informationen und bei Bedarf professionelle Unterstützung einbeziehen.'] },
+      ],
+      faq: [
+        { question: 'Brauche ich für die großen Drei meine Geburtszeit?', answer: 'Für den Aszendenten ja — er wechselt etwa alle zwei Stunden. Ohne Geburtszeit lassen sich Sonne und meist auch Mond berechnen, Aszendent und Häuserstellungen jedoch nicht verlässlich.' },
+        { question: 'Was, wenn Sonne, Mond und Aszendent sich widersprechen?', answer: 'Es sind Schichten statt Widersprüche. Ein kontaktfreudiger Aszendent mit einem nach innen gewandten Mond erklärt, warum man sich in einer Gruppe wohlfühlt und danach Rückzug braucht.' },
+        { question: 'Beschreiben die großen Drei meine ganze Persönlichkeit?', answer: 'Nein. Sie sind die drei sichtbarsten Teile eines Horoskops; Planeten, Häuser und Aspekte vervollständigen das Bild. Die großen Drei sind ein guter Anfang, nicht das letzte Wort.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Redaktion',
+      expertise: ['Große Drei', 'Astrologie', 'Geburtshoroskop'],
     },
   },
 };

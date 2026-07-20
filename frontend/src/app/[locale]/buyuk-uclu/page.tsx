@@ -4,6 +4,7 @@ import PageContainer from '@/components/common/PageContainer';
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/seo/server';
 import Banner from '@/layout/banner/Breadcrum';
+import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 import JsonLd from '@/seo/JsonLd';
 import { graph } from '@/seo/jsonld';
 import { webApplicationSchema } from '@/seo/toolSchemas';
@@ -30,9 +31,10 @@ export default async function BuyukUcluPage({ params }: Props) {
   const { locale } = await params;
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
 
+  const BANNER: Record<string, string> = { tr: 'Büyük Üçlü', en: 'Big Three', de: 'Die großen Drei' };
   return (
     <>
-      <Banner title="Big Three" />
+      <Banner title={BANNER[locale] ?? BANNER.en} />
       <PageContainer as="main" width="full" pad="none" className="min-h-screen bg-[var(--gm-bg)]">
         <JsonLd
           id="big-three-webapp"
@@ -51,6 +53,10 @@ export default async function BuyukUcluPage({ params }: Props) {
           ])}
         />
         <BigThree />
+        {/* 2026-07-20: sayfada büyük üçlü hakkında hiç bilgi metni yoktu.
+            Diğer landing sayfalarıyla aynı kalıp: araç önce, dil destekli
+            editoryal içerik (tr/en/de) altında. */}
+        <SeoLandingArticle type="buyuk-uclu" locale={locale} />
       </PageContainer>
     </>
   );
