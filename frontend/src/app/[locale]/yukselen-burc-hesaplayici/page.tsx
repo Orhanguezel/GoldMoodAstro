@@ -32,6 +32,26 @@ export default async function RisingCalculatorPage({ params }: Props) {
     en: 'Rising Sign Calculator',
     de: 'Aszendent-Rechner',
   };
+  // 2026-07-20: bu blogun uc metni de koda Ingilizce gomuluydu; Turkce ve
+  // Almanca sayfalarda da Ingilizce gorunuyordu. Dil destegine alindi.
+  const VOICE: Record<string, { label: string; q: string; a: string }> = {
+    tr: {
+      label: 'Kısa Cevap',
+      q: 'Yükselen burç nasıl hesaplanır?',
+      a: 'Yükselen burç; doğum tarihi, doğum saati ve doğum yeri birlikte kullanılarak hesaplanır. Doğum anında doğu ufkunda yükselen burcu gösterir ve ilk izlenimi, davranış ritmini ve kişinin hayata yaklaşma biçimini tarif etmeye yardımcı olur.',
+    },
+    en: {
+      label: 'Short Answer',
+      q: 'How is the rising sign calculated?',
+      a: 'The rising sign is calculated from birth date, birth time and birthplace together. It shows the sign rising on the eastern horizon at birth and helps describe first impressions, behavior rhythm and the way someone approaches life.',
+    },
+    de: {
+      label: 'Kurze Antwort',
+      q: 'Wie wird der Aszendent berechnet?',
+      a: 'Der Aszendent wird aus Geburtsdatum, Geburtszeit und Geburtsort gemeinsam berechnet. Er zeigt das Zeichen, das bei der Geburt am östlichen Horizont aufsteigt, und hilft, den ersten Eindruck, den Verhaltensrhythmus und die Art, wie jemand das Leben angeht, zu beschreiben.',
+    },
+  };
+  const voice = VOICE[locale] ?? VOICE.en;
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
   return (
     <>
@@ -72,13 +92,13 @@ export default async function RisingCalculatorPage({ params }: Props) {
         aria-labelledby="rising-sign-voice-answer"
       >
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-(--gm-gold)">
-          Short Answer
+          {voice.label}
         </p>
         <h2 id="rising-sign-voice-answer" className="font-serif text-3xl text-(--gm-text) md:text-5xl">
-          How is the rising sign calculated?
+          {voice.q}
         </h2>
         <p className="mx-auto mt-5 max-w-[var(--gm-w-narrow)] text-base leading-8 text-(--gm-text-dim) md:text-lg">
-          The rising sign is calculated from birth date, birth time and birthplace together. It shows the sign rising on the eastern horizon at birth and helps describe first impressions, behavior rhythm and the way someone approaches life.
+          {voice.a}
         </p>
       </section>
       <RisingSignCalculator />
