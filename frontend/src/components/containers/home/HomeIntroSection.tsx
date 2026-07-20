@@ -1,3 +1,9 @@
+'use client';
+
+// 2026-07-20: useUiSection/useMemo gibi istemci hook'lari kullaniyor ama direktif yoktu.
+// Ana sayfada calisiyordu cunku HomeLayoutRenderer (istemci) icinden dynamic() ile
+// yukleniyor; /explore ise dogrudan sunucu bileseninden render edip COKUYORDU
+// ("Attempted to call useUiSection() from the server") -> sayfa 'Sunucu Hatasi' veriyordu.
 import React from 'react';
 import { UserSearch, CalendarCheck, PhoneCall } from 'lucide-react';
 import { useUiSection } from '@/i18n';
