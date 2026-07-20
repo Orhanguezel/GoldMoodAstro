@@ -189,6 +189,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
             <FaqAccordion
               items={faqItems}
               title={locale === 'tr' ? 'Bu Yazı Hakkında Sorular' : 'Questions About This Article'}
+              eyebrow={locale === 'tr' ? 'SSS' : 'FAQ'}
             />
 
             <div className="rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-10 shadow-(--gm-shadow-soft)">

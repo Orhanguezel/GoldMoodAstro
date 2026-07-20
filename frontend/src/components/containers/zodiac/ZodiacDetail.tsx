@@ -549,7 +549,7 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
       {!sectionFocus && (
       <>
       <div className="mb-20">
-        <FaqAccordion items={zodiacFaq.items} title={zodiacFaq.title} />
+        <FaqAccordion items={zodiacFaq.items} title={zodiacFaq.title} eyebrow={localePrefix === 'tr' ? 'SSS' : 'FAQ'} />
       </div>
 
       <div className="mb-20">
