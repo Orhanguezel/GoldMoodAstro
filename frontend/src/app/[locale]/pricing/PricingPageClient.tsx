@@ -346,6 +346,8 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
     }
   };
 
+  const fc = featureCopy[locale as keyof typeof featureCopy] ?? featureCopy.en;
+
   const voiceFeatures = [
     {
       text: fc.audio_quality,
@@ -376,7 +378,6 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
     },
   ];
 
-  const fc = featureCopy[locale as keyof typeof featureCopy] ?? featureCopy.en;
   const featureMatrix = [
     {
       key: 'daily',
