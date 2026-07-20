@@ -26,13 +26,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
+import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 
 export default async function BurcunuOgrenPage({ params }: Props) {
   const { locale } = await params;
+  const BANNER: Record<string, string> = {
+    tr: 'Burcunu Öğren',
+    en: 'Find Your Zodiac Sign',
+    de: 'Sternzeichen finden',
+  };
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || brand.public_url || 'https://goldmoodastro.com').replace(/\/$/, '');
   return (
     <>
-      <Banner title="Find Your Zodiac Sign" />
+      {/* 2026-07-20: baslik Turkce sayfada bile Ingilizce sabitti. */}
+      <Banner title={BANNER[locale] ?? BANNER.en} />
       <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
       <JsonLd
         id="zodiac-finder-speakable-schema"
@@ -67,6 +74,8 @@ export default async function BurcunuOgrenPage({ params }: Props) {
         </p>
       </section>
       <ZodiacFinderQuiz />
+      {/* 2026-07-20: sayfa 368 kelimeydi, burc bulma hakkinda aciklama yoktu. */}
+      <SeoLandingArticle type="burcunu-ogren" locale={locale} />
     </PageContainer>
     </>
   );

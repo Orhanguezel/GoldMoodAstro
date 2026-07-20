@@ -162,9 +162,11 @@ export default function BecomeConsultantPage() {
                   <Sparkles size={12} />
                   {ui('ui_become_consultant_sparkle', 'SHARE YOUR WISDOM')}
                 </motion.span>
-                <h1 className="font-serif text-5xl md:text-8xl text-(--gm-text) mb-10 leading-[1.1] tracking-tight">
+                {/* 2026-07-20: sayfada iki H1 vardi (BecomeConsultantHero + bu). Hero asil
+                    baslik; bu bolum h2 yapildi. Gorunum degismedi, yalnizca semantik. */}
+                <h2 className="font-serif text-5xl md:text-8xl text-(--gm-text) mb-10 leading-[1.1] tracking-tight">
                   {ui('ui_become_consultant_h1_part1', 'Join the GoldMoodAstro Family')} <br /> <span className="text-(--gm-gold) italic">{ui('ui_become_consultant_h1_part2', 'Make a Radiant Entrance')}</span>
-                </h1>
+                </h2>
                 <p className="max-w-3xl mx-auto text-(--gm-text-dim) font-serif italic text-2xl leading-relaxed opacity-90">
                   {ui('ui_become_consultant_lead', 'Guide thousands of spiritual journeys, build your expert brand, and manage your own sacred workspace.')}
                 </p>

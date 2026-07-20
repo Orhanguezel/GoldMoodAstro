@@ -5,6 +5,7 @@ import { buildPageMetadata } from '@/seo/server';
 
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
+import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 
 export const revalidate = 86400; // 24 hours
 
@@ -24,13 +25,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BurclarPage({ params }: Props) {
-  await params;
+  const { locale } = await params;
 
+  const BANNER: Record<string, string> = { tr: 'Burçlar', en: 'Zodiac Signs', de: 'Sternzeichen' };
   return (
     <>
-      <Banner title="Zodiac Signs" />
+      <Banner title={BANNER[locale] ?? BANNER.en} showTitle={false} />
       <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
         <ZodiacHub />
+        {/* 2026-07-20: sayfa 283 kelimeydi, burclar hakkinda hic aciklama yoktu. */}
+        <SeoLandingArticle type="burclar" locale={locale} />
       </PageContainer>
     </>
   );

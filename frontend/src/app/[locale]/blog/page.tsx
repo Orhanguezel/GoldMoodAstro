@@ -64,7 +64,8 @@ export default async function BlogPage({ params }: Props) {
 
   return (
     <>
-      <Banner title={copy.title} />
+      {/* Sayfanin kendi hero h1'i var; banner basligi da gosterilirse iki H1 olusuyor. */}
+      <Banner title={copy.title} showTitle={false} />
       <PageContainer className="bg-(--gm-bg) min-h-[50vh]" verticalPadding="large">
         <div className="space-y-16">
           <section className="relative" style={{ padding: '3rem 4% 7rem' }}>

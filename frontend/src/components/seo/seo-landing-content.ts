@@ -8,7 +8,9 @@ export type LandingKey =
   | 'sinastri'
   | 'pricing'
   | 'buyuk-uclu'
-  | 'yukselen-burc';
+  | 'yukselen-burc'
+  | 'burclar'
+  | 'burcunu-ogren';
 
 export type LandingLocale = 'tr' | 'en' | 'de';
 
@@ -666,6 +668,139 @@ export const LANDING_CONTENT: Record<LandingKey, Record<LandingLocale, LandingDa
       image: '/img/natal_chart.png',
       authorTitle: 'GoldMoodAstro Redaktion',
       expertise: ['Aszendent', 'Astrologie', 'Geburtshoroskop'],
+    },
+  },
+  burclar: {
+    en: {
+      slug: 'burclar',
+      title: 'The 12 Zodiac Signs (Elements, Modalities and Rulers)',
+      description: 'The elements, modalities and ruling planets of the twelve zodiac signs, and how to use sign readings responsibly.',
+      eyebrow: 'Zodiac Signs',
+      lead: 'The zodiac divides the sky into twelve equal parts. Each sign is defined by an element, a modality and a ruling planet.',
+      summary: 'Signs are a symbolic language rather than personality labels. Elements (fire, earth, air, water) describe basic temperament; modalities (cardinal, fixed, mutable) describe the response to change; ruling planets carry the sign theme. Read together, these three layers keep sign readings from becoming clichés.',
+      sections: [
+        { title: 'The four elements: the basis of temperament', paragraphs: ['Fire signs (Aries, Leo, Sagittarius) gather around movement, initiative and expression. Earth signs (Taurus, Virgo, Capricorn) look for substance, continuity and practical results. Air signs (Gemini, Libra, Aquarius) work through ideas, communication and connection. Water signs (Cancer, Scorpio, Pisces) make meaning through emotion, intuition and deep attachment.', 'The element describes what fuel a sign runs on. Signs of the same element understand each other easily; different elements may complement or challenge one another. This is better read as different ways of working than as a compatibility chart.'] },
+        { title: 'The three modalities: the response to change', paragraphs: ['Cardinal signs (Aries, Cancer, Libra, Capricorn) open a season and tend towards initiating and giving direction. Fixed signs (Taurus, Leo, Scorpio, Aquarius) sit mid-season and carry themes of sustaining, deepening and determination. Mutable signs (Gemini, Virgo, Sagittarius, Pisces) close a season and tend towards adapting, flexing and transforming.', 'Modality decides how the element behaves. Two fire signs run on the same fuel, yet one may initiate while the other sustains. This distinction explains the feeling of "we share an element but we are nothing alike".'] },
+        { title: 'Ruling planets', paragraphs: ['Each sign traditionally has a ruler: Aries–Mars, Taurus–Venus, Gemini–Mercury, Cancer–Moon, Leo–Sun, Virgo–Mercury, Libra–Venus, Scorpio–Mars/Pluto, Sagittarius–Jupiter, Capricorn–Saturn, Aquarius–Saturn/Uranus, Pisces–Jupiter/Neptune.', 'The ruling planet carries the core theme of the sign. To understand a sign properly you therefore need to look not only at its name but at where its ruler sits in your own chart. That is one reason two people of the same sign can look very different.'] },
+        { title: 'Using sign readings responsibly', paragraphs: ['Daily horoscopes describe general tendencies and are not personal. A reading based on the Sun sign alone uses one element out of dozens in a birth chart.', 'For a more accurate reading of yourself, consider your Sun, Moon and rising signs together. GoldMoodAstro offers sign content as a tool for awareness and self-reflection, never as a claim about a fixed future.'] },
+      ],
+      faq: [
+        { question: 'My sign does not fit me at all — why?', answer: 'Usually because you are looking only at your Sun sign. Your Moon and rising signs are equally visible parts of your identity; reading all three gives a far more recognisable portrait.' },
+        { question: 'What are elements and modalities for?', answer: 'The element describes the fuel of a temperament, the modality how that fuel is used. Together they help explain why people of the same sign behave differently.' },
+        { question: 'Are daily horoscopes personal?', answer: 'No. They describe general tendencies. A personal reading requires a birth chart calculated from your date, time and place of birth.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Editorial Team',
+      expertise: ['Zodiac Signs', 'Astrology', 'Horoscope'],
+    },
+    tr: {
+      slug: 'burclar',
+      title: '12 Burç Rehberi (Element, Nitelik ve Yönetici Gezegen)',
+      description: '12 burcun elementleri, nitelikleri ve yönetici gezegenleri; burç okumalarının nasıl sorumlu şekilde kullanılacağı.',
+      eyebrow: 'Burçlar',
+      lead: 'Zodyak kuşağı, gökyüzünü on iki eşit dilime ayıran sembolik bir haritadır. Her burç bir element, bir nitelik ve bir yönetici gezegenle tanımlanır.',
+      summary: 'Burçlar kişilik etiketi değil, sembolik bir dildir. Elementler (ateş, toprak, hava, su) temel mizacı; nitelikler (öncü, sabit, değişken) değişime verilen tepkiyi; yönetici gezegenler ise burcun temasını tarif eder. Bu üç katman birlikte okunduğunda burç yorumları basmakalıp olmaktan çıkar.',
+      sections: [
+        { title: 'Dört element: mizacın temeli', paragraphs: ['Ateş burçları (Koç, Aslan, Yay) hareket, girişim ve ifade etrafında toplanır. Toprak burçları (Boğa, Başak, Oğlak) somutluk, süreklilik ve pratik sonuç arar. Hava burçları (İkizler, Terazi, Kova) fikir, iletişim ve ilişki kurma diliyle çalışır. Su burçları (Yengeç, Akrep, Balık) duygu, sezgi ve derin bağ üzerinden anlam üretir.', 'Element, bir burcun "hangi yakıtla çalıştığını" anlatır. Aynı elementten burçlar birbirini kolay anlar; farklı elementler ise birbirini tamamlayabilir ya da zorlayabilir. Bunu bir uyum çizelgesi gibi değil, farklı çalışma biçimleri olarak okumak daha doğrudur.'] },
+        { title: 'Üç nitelik: değişime verilen tepki', paragraphs: ['Öncü burçlar (Koç, Yengeç, Terazi, Oğlak) bir mevsimi başlatır; başlatma, yön verme ve inisiyatif alma eğilimindedir. Sabit burçlar (Boğa, Aslan, Akrep, Kova) mevsimin ortasında durur; sürdürme, derinleştirme ve kararlılık temasını taşır. Değişken burçlar (İkizler, Başak, Yay, Balık) mevsimi kapatır; uyum sağlama, esneme ve dönüştürme eğilimindedir.', 'Nitelik, elementin nasıl davrandığını belirler. Örneğin iki ateş burcu aynı yakıtla çalışır ama biri başlatıcı, diğeri sürdürücü olabilir. Bu ayrım, "aynı elementteyiz ama hiç benzemiyoruz" hissini açıklar.'] },
+        { title: 'Yönetici gezegenler', paragraphs: ['Her burcun geleneksel olarak bir yönetici gezegeni vardır: Koç–Mars, Boğa–Venüs, İkizler–Merkür, Yengeç–Ay, Aslan–Güneş, Başak–Merkür, Terazi–Venüs, Akrep–Mars/Plüton, Yay–Jüpiter, Oğlak–Satürn, Kova–Satürn/Uranüs, Balık–Jüpiter/Neptün.', 'Yönetici gezegen, burcun temel temasını taşır. Bu yüzden bir burcu anlamak için yalnızca burç adına değil, yöneticisinin doğum haritanızda nerede durduğuna da bakmak gerekir. Aynı burçtan iki kişinin çok farklı görünmesinin sebeplerinden biri budur.'] },
+        { title: 'Burç okumalarını sorumlu kullanmak', paragraphs: ['Günlük burç yorumları genel eğilimler üzerine kuruludur; kişiye özel değildir. Yalnızca Güneş burcuna bakan bir yorum, doğum haritasının onlarca unsurundan yalnızca birini kullanır.', 'Kendinizi daha isabetli okumak isterseniz Güneş, Ay ve yükselen burcunuzu birlikte değerlendirin. GoldMoodAstro burç içeriklerini kesin gelecek iddiası olarak değil, farkındalık ve öz-düşünüm aracı olarak sunar.'] },
+      ],
+      faq: [
+        { question: 'Burcum bana hiç uymuyor, neden?', answer: 'Çoğunlukla yalnızca Güneş burcunuza baktığınız içindir. Ay burcunuz ve yükselen burcunuz da kimliğinizin görünür parçalarıdır; üçünü birlikte okumak çok daha tanıdık bir portre verir.' },
+        { question: 'Element ve nitelik ne işe yarar?', answer: 'Element mizacın yakıtını, nitelik ise o yakıtın nasıl kullanıldığını anlatır. İkisi birlikte, aynı burçtan insanların neden farklı davrandığını açıklamaya yardım eder.' },
+        { question: 'Günlük burç yorumları kişiye özel mi?', answer: 'Hayır. Genel eğilimlerdir. Kişiye özel yorum için doğum tarihi, saati ve yeriyle hesaplanan bir doğum haritası gerekir.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Editoryal Ekibi',
+      expertise: ['Burçlar', 'Astroloji', 'Zodyak'],
+    },
+    de: {
+      slug: 'burclar',
+      title: 'Die 12 Sternzeichen (Elemente, Qualitäten und Herrscher)',
+      description: 'Elemente, Qualitäten und Herrscherplaneten der zwölf Sternzeichen und wie Zeichendeutungen verantwortungsvoll genutzt werden.',
+      eyebrow: 'Sternzeichen',
+      lead: 'Der Tierkreis teilt den Himmel in zwölf gleiche Abschnitte. Jedes Zeichen ist durch ein Element, eine Qualität und einen Herrscherplaneten bestimmt.',
+      summary: 'Zeichen sind eine symbolische Sprache, keine Persönlichkeitsetiketten. Elemente (Feuer, Erde, Luft, Wasser) beschreiben das Grundtemperament, Qualitäten (kardinal, fix, veränderlich) die Reaktion auf Veränderung, Herrscherplaneten das Thema des Zeichens. Gemeinsam gelesen verhindern diese drei Ebenen Klischees.',
+      sections: [
+        { title: 'Die vier Elemente: Grundlage des Temperaments', paragraphs: ['Feuerzeichen (Widder, Löwe, Schütze) sammeln sich um Bewegung, Initiative und Ausdruck. Erdzeichen (Stier, Jungfrau, Steinbock) suchen Substanz, Beständigkeit und praktische Ergebnisse. Luftzeichen (Zwillinge, Waage, Wassermann) arbeiten über Ideen, Kommunikation und Verbindung. Wasserzeichen (Krebs, Skorpion, Fische) schaffen Sinn über Gefühl, Intuition und tiefe Bindung.', 'Das Element beschreibt, mit welchem Treibstoff ein Zeichen arbeitet. Zeichen desselben Elements verstehen einander leicht; verschiedene Elemente können sich ergänzen oder herausfordern. Das liest man besser als unterschiedliche Arbeitsweisen denn als Kompatibilitätstabelle.'] },
+        { title: 'Die drei Qualitäten: Reaktion auf Veränderung', paragraphs: ['Kardinale Zeichen (Widder, Krebs, Waage, Steinbock) eröffnen eine Jahreszeit und neigen zu Initiative und Richtungsgebung. Fixe Zeichen (Stier, Löwe, Skorpion, Wassermann) stehen in der Mitte der Jahreszeit und tragen Themen wie Erhalten, Vertiefen und Beharrlichkeit. Veränderliche Zeichen (Zwillinge, Jungfrau, Schütze, Fische) schließen eine Jahreszeit ab und neigen zu Anpassung und Wandlung.', 'Die Qualität entscheidet, wie sich das Element verhält. Zwei Feuerzeichen laufen mit demselben Treibstoff, doch eines beginnt, das andere erhält. Diese Unterscheidung erklärt das Gefühl "wir teilen ein Element, ähneln uns aber gar nicht".'] },
+        { title: 'Herrscherplaneten', paragraphs: ['Jedes Zeichen hat traditionell einen Herrscher: Widder–Mars, Stier–Venus, Zwillinge–Merkur, Krebs–Mond, Löwe–Sonne, Jungfrau–Merkur, Waage–Venus, Skorpion–Mars/Pluto, Schütze–Jupiter, Steinbock–Saturn, Wassermann–Saturn/Uranus, Fische–Jupiter/Neptun.', 'Der Herrscherplanet trägt das Kernthema des Zeichens. Um ein Zeichen zu verstehen, sollte man daher nicht nur auf den Namen achten, sondern darauf, wo sein Herrscher im eigenen Horoskop steht. Das ist ein Grund, warum zwei Menschen desselben Zeichens sehr verschieden wirken können.'] },
+        { title: 'Zeichendeutungen verantwortungsvoll nutzen', paragraphs: ['Tageshoroskope beschreiben allgemeine Tendenzen und sind nicht persönlich. Eine Deutung allein nach dem Sonnenzeichen nutzt eines von Dutzenden Elementen eines Horoskops.', 'Für ein treffenderes Bild betrachten Sie Sonne, Mond und Aszendent gemeinsam. GoldMoodAstro versteht Zeicheninhalte als Werkzeug für Bewusstheit und Selbstreflexion, nicht als Aussage über eine feststehende Zukunft.'] },
+      ],
+      faq: [
+        { question: 'Mein Sternzeichen passt gar nicht zu mir — warum?', answer: 'Meist, weil Sie nur auf das Sonnenzeichen schauen. Mond und Aszendent sind ebenso sichtbare Teile Ihrer Identität; alle drei zusammen ergeben ein weit wiedererkennbareres Bild.' },
+        { question: 'Wozu dienen Elemente und Qualitäten?', answer: 'Das Element beschreibt den Treibstoff des Temperaments, die Qualität dessen Verwendung. Zusammen erklären sie, warum Menschen desselben Zeichens unterschiedlich handeln.' },
+        { question: 'Sind Tageshoroskope persönlich?', answer: 'Nein, sie beschreiben allgemeine Tendenzen. Eine persönliche Deutung erfordert ein aus Datum, Zeit und Ort berechnetes Geburtshoroskop.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Redaktion',
+      expertise: ['Sternzeichen', 'Astrologie', 'Horoskop'],
+    },
+  },
+  'burcunu-ogren': {
+    en: {
+      slug: 'find-your-sign',
+      title: 'Find Your Zodiac Sign by Date of Birth',
+      description: 'Find your zodiac sign from your date of birth, and learn why a birth time is needed if you were born on a cusp.',
+      eyebrow: 'Find Your Sign',
+      lead: 'Your Sun sign is the zodiac sign the Sun occupied on the day you were born. For most people the date of birth alone is enough.',
+      summary: 'Finding your sign is usually simple: your birth date gives your Sun sign. But if you were born on a cusp — the day a sign changes — the date alone is not enough, because the exact hour the Sun changed sign matters.',
+      sections: [
+        { title: 'How the Sun sign is determined', paragraphs: ['The Sun completes the zodiac in one year and spends about a month in each sign. Whichever sign the Sun occupied on your birth day is your Sun sign, which is why the date alone is enough for most people.', 'The Sun sign describes your conscious identity and life direction. It is the usual answer to "what is your sign?", yet it is only one part of your birth chart.'] },
+        { title: 'The cusp problem', paragraphs: ['If you were born on a day when signs change — often around the 20th to 23rd — looking at the date alone can mislead you. The moment the Sun changes sign shifts by a few hours from year to year.', 'If you were born on such a day, your birth time is needed to settle the question. Otherwise it stays unclear which of two neighbouring signs is yours, and the whole reading rests on the wrong basis.'] },
+        { title: 'What comes after finding your sign', paragraphs: ['The Sun sign is a good start but incomplete on its own. Your Moon sign describes emotional needs, and your rising sign your outward manner and the arrangement of houses in your chart.', 'Together these are called the big three, and they explain why "my sign does not fit me" is such a common feeling. Moon and rising also require your birth time and place.'] },
+      ],
+      faq: [
+        { question: 'Do I need a birth time to find my sign?', answer: 'Usually not — the date is enough. But if you were born on a cusp day when the sign changes, the time is needed because the Sun may have changed sign during that day.' },
+        { question: 'I was born between two signs — which am I?', answer: 'This is called a cusp. A calculation with your birth time gives the definite answer; in astrology you are born into one sign, not a blend of two.' },
+        { question: 'I found my sign, what next?', answer: 'Look at your Moon and rising signs. All three together describe you far more accurately.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Editorial Team',
+      expertise: ['Zodiac Sign', 'Astrology', 'Sun Sign'],
+    },
+    tr: {
+      slug: 'burcunu-ogren',
+      title: 'Burcunu Öğren: Doğum Tarihine Göre Burç Bulma',
+      description: 'Doğum tarihinize göre burcunuzu öğrenin; burç geçiş günlerinde (kuspta) doğduysanız neden doğum saati gerekir?',
+      eyebrow: 'Burcunu Öğren',
+      lead: "Güneş burcunuz, doğduğunuz gün Güneş'in bulunduğu zodyak burcudur. Çoğu kişi için yalnızca doğum tarihi yeterlidir.",
+      summary: "Burç bulmak çoğu zaman basittir: doğum tarihiniz Güneş burcunuzu verir. Ancak burçların değiştiği geçiş günlerinde (kusp) doğduysanız tarih tek başına yetmez; o gün Güneş'in tam olarak ne zaman burç değiştirdiğine bakmak gerekir.",
+      sections: [
+        { title: 'Güneş burcu nasıl belirlenir', paragraphs: ['Güneş, zodyak kuşağını bir yılda tamamlar ve her burçta yaklaşık bir ay kalır. Doğduğunuz gün Güneş hangi burçtaysa, Güneş burcunuz odur. Bu yüzden çoğu kişi için doğum tarihi tek başına yeterlidir.', 'Güneş burcu, bilinçli kimliğinizi ve yaşam yönünüzü tarif eder. "Burcun ne?" sorusunun cevabı da genelde budur; ancak doğum haritanızın yalnızca bir parçasıdır.'] },
+        { title: 'Geçiş günü (kusp) sorunu', paragraphs: ["Burçların değiştiği günlerde doğduysanız — örneğin 20-23 arası tarihlerde — yalnızca güne bakmak yanıltıcı olabilir. Güneş'in burç değiştirdiği an yıldan yıla birkaç saat kayar.", 'Böyle bir günde doğduysanız burcunuzu kesinleştirmek için doğum saatiniz gerekir. Aksi hâlde iki komşu burçtan hangisine ait olduğunuz belirsiz kalır ve tüm yorum yanlış temele oturur.'] },
+        { title: 'Burcunuzu bulduktan sonraki adım', paragraphs: ['Güneş burcu iyi bir başlangıçtır ama tek başına eksik kalır. Ay burcunuz duygusal ihtiyaçlarınızı, yükselen burcunuz ise dışa dönük üslubunuzu ve haritanızın ev düzenini tarif eder.', 'Bu üçü birlikte "büyük üçlü" olarak anılır ve "burcum bana hiç uymuyor" hissinin neden bu kadar yaygın olduğunu açıklar. Ay ve yükselen için doğum saati ve yeri de gereklidir.'] },
+      ],
+      faq: [
+        { question: 'Burcumu öğrenmek için doğum saati gerekli mi?', answer: 'Genelde hayır; doğum tarihi yeterlidir. Ancak burçların değiştiği geçiş günlerinde doğduysanız saat gerekir, çünkü Güneş o gün içinde burç değiştirmiş olabilir.' },
+        { question: 'İki burç arasında doğdum, hangisiyim?', answer: 'Buna kusp denir. Kesin cevap için doğum saatinizle hesaplama yapılmalıdır; astrolojide kişi iki burcun karışımı değil, birinde doğmuş olur.' },
+        { question: 'Burcumu öğrendim, sırada ne var?', answer: 'Ay ve yükselen burcunuza bakın. Üçü birlikte sizi çok daha isabetli tarif eder.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Editoryal Ekibi',
+      expertise: ['Burç Bulma', 'Astroloji', 'Güneş Burcu'],
+    },
+    de: {
+      slug: 'find-your-sign',
+      title: 'Sternzeichen nach Geburtsdatum bestimmen',
+      description: 'Bestimmen Sie Ihr Sternzeichen nach dem Geburtsdatum und erfahren Sie, warum an Übergangstagen die Geburtszeit nötig ist.',
+      eyebrow: 'Sternzeichen finden',
+      lead: 'Ihr Sonnenzeichen ist das Tierkreiszeichen, in dem die Sonne an Ihrem Geburtstag stand. Für die meisten Menschen genügt dafür das Geburtsdatum.',
+      summary: 'Das Sternzeichen zu finden ist meist einfach: Das Geburtsdatum ergibt das Sonnenzeichen. Wer jedoch an einem Übergangstag geboren ist, braucht mehr als das Datum, denn es zählt die genaue Stunde des Zeichenwechsels.',
+      sections: [
+        { title: 'Wie das Sonnenzeichen bestimmt wird', paragraphs: ['Die Sonne durchläuft den Tierkreis in einem Jahr und verweilt etwa einen Monat je Zeichen. In welchem Zeichen die Sonne an Ihrem Geburtstag stand, das ist Ihr Sonnenzeichen — deshalb genügt für die meisten das Datum.', 'Das Sonnenzeichen beschreibt bewusste Identität und Lebensrichtung. Es ist die übliche Antwort auf "Welches Sternzeichen bist du?", aber nur ein Teil des Geburtshoroskops.'] },
+        { title: 'Das Problem der Übergangstage', paragraphs: ['Wer an einem Tag geboren ist, an dem die Zeichen wechseln — häufig zwischen dem 20. und 23. —, kann vom Datum allein in die Irre geführt werden. Der Moment des Zeichenwechsels verschiebt sich von Jahr zu Jahr um einige Stunden.', 'An einem solchen Tag wird die Geburtszeit benötigt. Sonst bleibt offen, welches der beiden benachbarten Zeichen Ihres ist, und die gesamte Deutung steht auf falscher Grundlage.'] },
+        { title: 'Was nach dem Sternzeichen kommt', paragraphs: ['Das Sonnenzeichen ist ein guter Anfang, allein jedoch unvollständig. Der Mond beschreibt emotionale Bedürfnisse, der Aszendent das äußere Auftreten und die Häuseranordnung.', 'Zusammen heißen sie die großen Drei und erklären, warum "mein Sternzeichen passt nicht zu mir" so verbreitet ist. Für Mond und Aszendent braucht es zusätzlich Geburtszeit und -ort.'] },
+      ],
+      faq: [
+        { question: 'Brauche ich für mein Sternzeichen die Geburtszeit?', answer: 'Meist nicht, das Datum genügt. An einem Übergangstag ist die Zeit jedoch nötig, weil die Sonne an diesem Tag das Zeichen gewechselt haben kann.' },
+        { question: 'Ich bin zwischen zwei Zeichen geboren — welches ist meines?', answer: 'Das nennt man Cusp. Eine Berechnung mit Geburtszeit gibt die klare Antwort; astrologisch wird man in ein Zeichen geboren, nicht in eine Mischung.' },
+        { question: 'Ich kenne mein Zeichen, was nun?', answer: 'Sehen Sie sich Mond und Aszendent an. Alle drei zusammen beschreiben Sie deutlich treffender.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Redaktion',
+      expertise: ['Sternzeichen', 'Astrologie', 'Sonnenzeichen'],
     },
   },
 };
