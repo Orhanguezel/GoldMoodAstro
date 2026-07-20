@@ -114,9 +114,6 @@ export async function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     // Static asset uzantıları ve Next internals hariç her şeyde çalış.
-    // DENEY 2026-07-20: notFound() neden 404 yerine 200 donuyor?
-    // Blog yolu gecici olarak middleware DISINDA. Eger /tr/blog/olmayan-yazi
-    // 404 donerse sucllu middleware; donmezse baska yerde aramaliyiz.
-    '/((?!_next/static|_next/image|[a-z]{2}/blog/|.*\\..*).*)',
+    '/((?!_next/static|_next/image|.*\\..*).*)',
   ],
 };
