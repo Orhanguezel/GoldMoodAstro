@@ -207,7 +207,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('8f1d6d12-529f-482e-a028-f2685be89584', 'ui_extra_b0_bc_delete_this', '*', '{"label": {"tr": "Bu haritayı sil", "en": "Delete this chart", "de": "Dieses Horoskop löschen"}}'),
 ('a4dd187c-8a88-23ae-f92d-9ee859efdaef', 'ui_extra_b0_bc_deleted', '*', '{"label": {"tr": "Harita silindi", "en": "Chart deleted", "de": "Horoskop gelöscht"}}'),
 ('42d47ef0-6dc3-36d9-addd-687ce412d48e', 'ui_extra_b0_bc_expert_analysis', '*', '{"label": {"tr": "Uzman Analizi Al", "en": "Get an Expert Analysis", "de": "Expertenanalyse anfordern"}}'),
-('abcad47c-1bc2-d27d-80ba-e5b09071970e', 'ui_extra_b0_bc_house_label', '*', '{"label":{"tr":"EV","en":"BC HOUSE LABEL","de":"BC HOUSE BEZEICHNUNG"}}'),
+('abcad47c-1bc2-d27d-80ba-e5b09071970e', 'ui_extra_b0_bc_house_label', '*', '{"label": {"tr": "EV", "en": "HOUSE", "de": "HAUS"}}'),
 ('726ba2dc-5615-420a-e836-358c1ae10fa1', 'ui_extra_b0_bc_new_chart', '*', '{"label": {"tr": "Yeni Harita Oluştur", "en": "Create New Chart", "de": "Neues Horoskop erstellen"}}'),
 ('48acd421-010f-9696-6210-fdb2993ae7d5', 'ui_extra_b0_bc_other_charts', '*', '{"label": {"tr": "Diğer haritalarım", "en": "My other charts", "de": "Meine anderen Horoskope"}}'),
 ('89d82d85-a456-ce53-c4d7-5e90667ddb0a', 'ui_extra_b0_bc_share_title', '*', '{"label": {"tr": "Doğum Haritamı Paylaş", "en": "Share My Birth Chart", "de": "Mein Geburtshoroskop teilen"}}'),
