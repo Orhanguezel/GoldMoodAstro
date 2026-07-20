@@ -15,7 +15,7 @@ import { Star, Heart, Briefcase, Info, Sparkles, ArrowRight, Volume2, HeartPulse
 import ShareCard from '@/components/common/ShareCard';
 import { getZodiacMeta, localizeSign } from '@/lib/zodiac/signs';
 import { buildZodiacFaq } from '@/lib/zodiac/faq';
-import { getCelebritiesBySign } from '@/lib/zodiac/celebrities';
+import { getCelebritiesBySign, ct } from '@/lib/zodiac/celebrities';
 import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import { useBrand } from '@/hooks/useBrand';
@@ -376,9 +376,9 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
                 >
                   <div>
                     <p className="font-bold text-(--gm-text) text-base">{celebrity.name}</p>
-                    <p className="text-xs text-(--gm-gold) font-bold uppercase tracking-widest mt-1">{celebrity.birthday} · {celebrity.field}</p>
+                    <p className="text-xs text-(--gm-gold) font-bold uppercase tracking-widest mt-1">{ct(celebrity.birthday, localePrefix)} · {ct(celebrity.field, localePrefix)}</p>
                   </div>
-                  <p className="text-xs italic text-(--gm-text-dim) max-w-[200px] text-right">{celebrity.note}</p>
+                  <p className="text-xs italic text-(--gm-text-dim) max-w-[200px] text-right">{ct(celebrity.note, localePrefix)}</p>
                 </div>
               ))}
             </div>
