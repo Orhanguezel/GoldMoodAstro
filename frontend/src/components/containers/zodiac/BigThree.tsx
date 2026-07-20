@@ -10,7 +10,6 @@ import { toPng } from 'html-to-image';
 import { Download, Share2, RefreshCcw, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import ShareCard from '@/components/common/ShareCard';
-import PageContainer from '@/components/common/PageContainer';
 
 import { useBrand } from '@/hooks/useBrand';
 import { useUiSection } from '@/i18n';
@@ -91,7 +90,9 @@ export default function BigThree() {
   };
 
   return (
-    <PageContainer className="max-w-4xl">
+    // 2026-07-20: ic ice PageContainer kaldirildi; sayfa (page.tsx) zaten
+    // PageContainer sagliyor. Cift sarmalama layout bozuyordu (sinastri ile ayni yapi).
+    <div className="max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <p className="text-lg text-muted-foreground italic max-w-2xl mx-auto">
           {ui('ui_zodiacx_bigthree_intro', 'Create and share your cosmic identity card with your Sun, Moon and Rising signs.')}
@@ -207,6 +208,6 @@ export default function BigThree() {
           </motion.div>
         )}
       </AnimatePresence>
-    </PageContainer>
+    </div>
   );
 }

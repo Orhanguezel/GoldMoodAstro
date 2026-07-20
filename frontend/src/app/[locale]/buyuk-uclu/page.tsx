@@ -35,7 +35,7 @@ export default async function BuyukUcluPage({ params }: Props) {
   return (
     <>
       <Banner title={BANNER[locale] ?? BANNER.en} />
-      <PageContainer as="main" width="full" pad="none" className="min-h-screen bg-[var(--gm-bg)]">
+      <PageContainer as="main" className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
         <JsonLd
           id="big-three-webapp"
           data={graph([
