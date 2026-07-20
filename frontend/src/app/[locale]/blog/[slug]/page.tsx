@@ -71,6 +71,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+import { notFound } from 'next/navigation';
 import PageContainer from '@/components/common/PageContainer';
 
 export default async function BlogDetailsPage({ params }: PageProps) {
@@ -81,6 +82,11 @@ export default async function BlogDetailsPage({ params }: PageProps) {
     slug ? fetchCustomPagePublicBySlug({ slug, locale }) : Promise.resolve(null),
     fetchCustomPagesPublicByModule({ moduleKey: 'blog', locale, limit: 7 }).catch(() => []),
   ]);
+  // 2026-07-20 (GSC): yazi yoksa slug'dan SAHTE bir yazi sayfasi uretiliyordu
+  // ("Olmayan Yazi" basligi + SSS + yazar kutusu). Google bunu gercek icerik
+  // sanip tarayip indekslemiyordu. Artik 404.
+  if (!page) notFound();
+
   // Aynı yazıyı listeden çıkar, en fazla 5 tane göster.
   const relatedPosts = (Array.isArray(allPosts) ? allPosts : [])
     .filter((post) => safeStr(post?.slug) && safeStr(post?.slug) !== slug)
