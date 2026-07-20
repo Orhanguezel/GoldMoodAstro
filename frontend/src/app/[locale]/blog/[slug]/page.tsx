@@ -74,7 +74,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-import { notFound } from 'next/navigation';
 import PageContainer from '@/components/common/PageContainer';
 
 export default async function BlogDetailsPage({ params }: PageProps) {
