@@ -29,8 +29,10 @@ export default async function NumerologyPage({ params }: Props) {
     <>
       <Banner title={getLanding('numeroloji', locale).eyebrow} />
       <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
-        <SeoLandingArticle type="numeroloji" locale={locale} />
+        {/* Araç önce, uzun editoryal içerik sonra (2026-07-20 müşteri talebi):
+            önceki sırada kullanıcı aracı görmek için ~4000px metin geçmek zorundaydı. */}
         <NumerologyHub />
+        <SeoLandingArticle type="numeroloji" locale={locale} />
       </PageContainer>
     </>
   );

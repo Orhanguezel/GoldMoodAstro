@@ -32,8 +32,10 @@ export default async function PricingPage({ params }: Props) {
     <Suspense fallback={null}>
       <PageContainer verticalPadding="large">
         <JsonLd id="pricing-offer-catalog" data={graph([pricingOfferCatalogSchema(siteUrl, locale)])} />
-        <SeoLandingArticle type="pricing" locale={locale} />
+        {/* Araç önce, uzun editoryal içerik sonra (2026-07-20 müşteri talebi):
+            önceki sırada kullanıcı aracı görmek için ~4000px metin geçmek zorundaydı. */}
         <PricingPageClient locale={locale} />
+        <SeoLandingArticle type="pricing" locale={locale} />
       </PageContainer>
     </Suspense>
   );

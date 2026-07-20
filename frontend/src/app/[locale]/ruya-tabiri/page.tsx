@@ -30,8 +30,10 @@ export default async function DreamsPage({ params }: Props) {
     <>
       <Banner title={getLanding('ruya-tabiri', locale).eyebrow} />
       <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
-        <SeoLandingArticle type="ruya-tabiri" locale={locale} />
+        {/* Araç önce, uzun editoryal içerik sonra (2026-07-20 müşteri talebi):
+            önceki sırada kullanıcı aracı görmek için ~4000px metin geçmek zorundaydı. */}
         <DreamHub />
+        <SeoLandingArticle type="ruya-tabiri" locale={locale} />
       </PageContainer>
     </>
   );

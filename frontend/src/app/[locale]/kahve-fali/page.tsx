@@ -30,8 +30,10 @@ export default async function CoffeePage({ params }: Props) {
     <>
       <Banner title={getLanding('kahve-fali', locale).eyebrow} />
       <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
-        <SeoLandingArticle type="kahve-fali" locale={locale} />
+        {/* Araç önce, uzun editoryal içerik sonra (2026-07-20 müşteri talebi):
+            önceki sırada kullanıcı aracı görmek için ~4000px metin geçmek zorundaydı. */}
         <CoffeeHub />
+        <SeoLandingArticle type="kahve-fali" locale={locale} />
       </PageContainer>
     </>
   );

@@ -49,8 +49,10 @@ export default async function SynastryPage({ params }: Props) {
             }),
           ])}
         />
-        <SeoLandingArticle type="sinastri" locale={locale} />
+        {/* Araç önce, uzun editoryal içerik sonra (2026-07-20 müşteri talebi):
+            önceki sırada kullanıcı aracı görmek için ~4000px metin geçmek zorundaydı. */}
         <SynastryPageClient />
+        <SeoLandingArticle type="sinastri" locale={locale} />
       </PageContainer>
     </>
   );

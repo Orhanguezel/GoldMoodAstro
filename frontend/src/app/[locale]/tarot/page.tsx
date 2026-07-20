@@ -31,8 +31,10 @@ export default async function TarotPage({ params }: Props) {
     <>
       <Banner title={getLanding('tarot', locale).eyebrow} />
       <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
-        <SeoLandingArticle type="tarot" locale={locale} />
+        {/* Araç önce, uzun editoryal içerik sonra (2026-07-20 müşteri talebi):
+            önceki sırada kullanıcı aracı görmek için ~4000px metin geçmek zorundaydı. */}
         <TarotHub />
+        <SeoLandingArticle type="tarot" locale={locale} />
       </PageContainer>
     </>
   );

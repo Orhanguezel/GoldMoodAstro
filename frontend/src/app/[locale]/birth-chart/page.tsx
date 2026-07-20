@@ -45,8 +45,10 @@ export default async function BirthChartPage({ params }: { params: Promise<{ loc
             }),
           ])}
         />
-        <SeoLandingArticle type="birth-chart" locale={locale} />
+        {/* Araç önce, uzun editoryal içerik sonra (2026-07-20 müşteri talebi):
+            önceki sırada kullanıcı aracı görmek için ~4000px metin geçmek zorundaydı. */}
         <BirthChartPageClient />
+        <SeoLandingArticle type="birth-chart" locale={locale} />
       </PageContainer>
     </>
   );
