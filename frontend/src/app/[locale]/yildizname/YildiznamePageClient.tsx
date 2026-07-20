@@ -95,7 +95,7 @@ export default function YildiznamePage() {
         </div>
       </div>
 
-      <div className="max-w-[var(--gm-w-narrow)] mx-auto relative z-10">
+      <div className="max-w-(--gm-w-narrow) mx-auto relative z-10">
         <AnimatePresence mode="wait">
           {step === 'intro' && (
             <motion.div
@@ -113,12 +113,12 @@ export default function YildiznamePage() {
                   {ui('ui_yildizname_intro_title_line1', 'Yildizname')} <br />
                   <span className="text-(--gm-gold)">{ui('ui_yildizname_intro_title_line2', 'Ebced Secret')}</span>
                 </h2>
-                <p className={`${fraunces.className} text-(--gm-text-dim) text-xl max-w-[var(--gm-w-form)] mx-auto leading-relaxed`}>
+                <p className={`${fraunces.className} text-(--gm-text-dim) text-xl max-w-(--gm-w-form) mx-auto leading-relaxed`}>
                   {ui('ui_yildizname_intro_desc', "Your name and your mother’s name form your numerical vibration in the universe. Discover your place among the 28 lunar mansions with ancient Ebced calculation.")}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left max-w-[var(--gm-w-narrow)] mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left max-w-(--gm-w-narrow) mx-auto">
                 {[
                   { t: ui('ui_yildizname_feature_1_title', 'Ancient Calculation'), d: ui('ui_yildizname_feature_1_desc', 'A thousand-year-old Ebced system.') },
                   { t: ui('ui_yildizname_feature_2_title', 'Lunar Mansions'), d: ui('ui_yildizname_feature_2_desc', 'You are one of 28 different energy stations.') },
@@ -146,7 +146,7 @@ export default function YildiznamePage() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
-              className="max-w-[var(--gm-w-form)] mx-auto space-y-12"
+              className="max-w-(--gm-w-form) mx-auto space-y-12"
             >
               <div className="flex items-center gap-4">
                 <button onClick={handleBack} className="w-12 h-12 rounded-full border border-(--gm-border-soft) flex items-center justify-center hover:bg-(--gm-surface-high) transition-colors">
@@ -179,20 +179,33 @@ export default function YildiznamePage() {
                   </p>
                 </div>
 
-                <div className="relative group">
-                  <div className="absolute left-6 top-1/2 -translate-y-1/2 text-(--gm-gold) opacity-50">
-                    {step === 'name' ? <User className="w-6 h-6" /> : step === 'mother' ? <Heart className="w-6 h-6" /> : <Calendar className="w-6 h-6" />}
+                {/* Alan etiketi + input, diğer landing sayfalarındaki ortak kalıpla aynı
+                    (bkz. BirthChartForm): küçük büyük-harf etiket + rounded-xl input.
+                    Öncesinde etiket hiç yoktu, yalnızca placeholder vardı ve input
+                    rounded-[2rem]/text-2xl ile diğer sayfalardan tamamen ayrışıyordu. */}
+                <label className="block">
+                  <span className="mb-2 block font-display text-[10px] uppercase tracking-[0.2em] text-(--gm-primary)">
+                    {step === 'name'
+                      ? ui('ui_yildizname_field_name_label', 'Name')
+                      : step === 'mother'
+                      ? ui('ui_yildizname_field_mother_label', 'Mother’s name')
+                      : ui('ui_yildizname_field_year_label', 'Birth year')}
+                  </span>
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-(--gm-gold) opacity-60">
+                      {step === 'name' ? <User className="w-5 h-5" /> : step === 'mother' ? <Heart className="w-5 h-5" /> : <Calendar className="w-5 h-5" />}
+                    </div>
+                    <input
+                      autoFocus
+                      type={step === 'year' ? 'number' : 'text'}
+                      value={step === 'name' ? formData.name : step === 'mother' ? formData.mother_name : formData.birth_year}
+                      onChange={(e) => setFormData({ ...formData, [step === 'year' ? 'birth_year' : step === 'name' ? 'name' : 'mother_name']: e.target.value })}
+                      onKeyDown={(e) => e.key === 'Enter' && handleNext()}
+                      placeholder={step === 'name' ? ui('ui_yildizname_step_name_placeholder', 'Example: Orhan') : step === 'mother' ? ui('ui_yildizname_step_mother_placeholder', 'Example: Fatma') : '1990'}
+                      className="w-full rounded-xl border border-(--gm-border-soft) bg-(--gm-surface-high) p-3 pl-12 text-(--gm-text) transition-colors focus:border-(--gm-primary) focus:outline-none focus:ring-2 focus:ring-(--gm-primary)/15"
+                    />
                   </div>
-                  <input
-                    autoFocus
-                    type={step === 'year' ? 'number' : 'text'}
-                    value={step === 'name' ? formData.name : step === 'mother' ? formData.mother_name : formData.birth_year}
-                    onChange={(e) => setFormData({ ...formData, [step === 'year' ? 'birth_year' : step === 'name' ? 'name' : 'mother_name']: e.target.value })}
-                    onKeyDown={(e) => e.key === 'Enter' && handleNext()}
-                    placeholder={step === 'name' ? ui('ui_yildizname_step_name_placeholder', 'Example: Orhan') : step === 'mother' ? ui('ui_yildizname_step_mother_placeholder', 'Example: Fatma') : '1990'}
-                    className="w-full bg-(--gm-surface-high)/50 border border-(--gm-border-soft) rounded-[2rem] py-6 pl-16 pr-8 text-2xl font-serif text-(--gm-text) outline-none focus:ring-2 focus:ring-(--gm-gold)/20 focus:border-(--gm-gold)/40 transition-all placeholder:text-(--gm-text-dim)/30"
-                  />
-                </div>
+                </label>
 
                 <button
                   onClick={handleNext}

@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/seo/server';
-import PageContainer from '@/components/common/PageContainer';
-import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 
 type Props = {
   children: React.ReactNode;
@@ -21,14 +19,10 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
   });
 }
 
-export default async function YildiznameLayout({ children, params }: Props) {
-  const { locale } = await params;
-  return (
-    <>
-      {children}
-      <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
-        <SeoLandingArticle type="yildizname" locale={locale} />
-      </PageContainer>
-    </>
-  );
+// 2026-07-20: layout hem children'ı hem SeoLandingArticle'ı basıyordu; page.tsx de
+// aynı bileşeni render ettiği için tüm editoryal içerik sayfada İKİ KEZ çıkıyordu
+// (sayfa 8576px, başlıklar mükerrer). Diğer 7 landing sayfasında layout yok ya da
+// içerik basmıyor — yıldızname de aynı yapıya getirildi: layout yalnızca metadata.
+export default async function YildiznameLayout({ children }: Props) {
+  return <>{children}</>;
 }

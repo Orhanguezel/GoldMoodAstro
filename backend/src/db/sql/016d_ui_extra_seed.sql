@@ -619,6 +619,12 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('bd80c502-e287-6794-15da-349b434c04d4', 'ui_yildizname_step_mother_title', '*', '{"label":{"tr":"Annenin İsmi","en":"Your Mother’s Name","de":"Name Ihrer Mutter"}}'),
 ('ffe23e89-e276-c501-4ac6-fa56b70ec8eb', 'ui_yildizname_step_name_placeholder', '*', '{"label":{"tr":"Örn: Orhan","en":"Example: Orhan","de":"Beispiel: Orhan"}}'),
 ('fc145b9d-1722-fb89-f571-ae56386b066f', 'ui_yildizname_step_name_subtitle', '*', '{"label":{"tr":"Seni çağıran asıl titreşim.","en":"The core vibration that calls you.","de":"Die eigentliche Schwingung, die Sie ruft."}}'),
+-- 2026-07-20: alan etiketleri (diğer landing sayfalarıyla aynı label stili).
+('d1a7f001-1111-4a01-9001-a10000000001', 'ui_yildizname_field_name_label', '*', '{"label": {"tr": "Adınız", "en": "Name", "de": "Name"}}'),
+-- 2026-07-20: alan etiketleri (diğer landing sayfalarıyla aynı label stili).
+('d1a7f002-1111-4a01-9001-a10000000002', 'ui_yildizname_field_mother_label', '*', '{"label": {"tr": "Anne Adı", "en": "Mother’s name", "de": "Name der Mutter"}}'),
+-- 2026-07-20: alan etiketleri (diğer landing sayfalarıyla aynı label stili).
+('d1a7f003-1111-4a01-9001-a10000000003', 'ui_yildizname_field_year_label', '*', '{"label": {"tr": "Doğum Yılı", "en": "Birth year", "de": "Geburtsjahr"}}'),
 ('614715ad-b279-2917-e5cd-51fb6c3696d9', 'ui_yildizname_step_name_title', '*', '{"label":{"tr":"Senin İsmin","en":"Your Name","de":"Ihr Name"}}'),
 ('6761af19-b57e-3964-f9f5-7fef07013ebc', 'ui_yildizname_step_submit_button', '*', '{"label":{"tr":"YILDIZNAMEMİ AÇ","en":"YILDIZNAME STEP SUBMIT BUTTON","de":"YILDIZNAME STEP SUBMIT BUTTON"}}'),
 ('1f09ab38-d626-ace9-d663-9af08cf62324', 'ui_yildizname_step_year_subtitle', '*', '{"label":{"tr":"Dünyaya adım attığın zamanın imzası.","en":"The signature of the time you stepped into the world.","de":"Die Signatur der Zeit, in der Sie die Welt betreten haben."}}'),
