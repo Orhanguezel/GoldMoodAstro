@@ -43,7 +43,7 @@ export const seoSchema = z
 
     open_graph: seoOpenGraphSchema.default({
       type: 'website',
-      images: ['/img/og-default.jpg'],
+      images: ['https://goldmoodastro.com/img/natal_chart.png'],
     }),
 
     twitter: seoTwitterSchema.default({
@@ -72,7 +72,9 @@ export const siteMetaDefaultSchema = z
 
 export type SiteMetaDefaultObject = z.infer<typeof siteMetaDefaultSchema>;
 
-export const DEFAULT_OG_IMAGE = '/img/og-default.jpg';
+// 2026-07-20: /img/og-default.jpg admin'de 404 veriyordu (relative + dosya yok).
+// Absolute, var olan gorsele cevrildi.
+export const DEFAULT_OG_IMAGE = 'https://goldmoodastro.com/img/natal_chart.png';
 
 const _appName = process.env.NEXT_PUBLIC_APP_NAME || 'Platform';
 
