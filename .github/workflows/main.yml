@@ -30,15 +30,12 @@ name: GoldMoodAstro Deploy
 # admin şifrelerini sıfırlıyor ve kullanıcı içeriğini ezebiliyor.
 # =============================================================================
 
-# TETIKLEYICI NOTU (2026-07-20): prod deposu su an `feat/mobile-nutuya-selective-merge`
-# branch'ini takip ediyor (main degil). Sunucu kendi upstream'ini cektigi icin
-# tetikleyiciye her ikisi de eklendi. Uzun vadede dogrusu tek branch'te (main)
-# birlesmek; bu bir merge karari oldugu icin burada zorlanmadi.
+# TEK BRANCH (2026-07-20): proje tek kisi tarafindan gelistiriliyor; feat
+# branch'i main'e birlestirildi ve prod da main'i takip ediyor. Tek kaynak
+# dogruluk: main.
 on:
   push:
-    branches:
-      - main
-      - feat/mobile-nutuya-selective-merge
+    branches: [main]
 
 jobs:
   # ─── 1) Derleme kapısı — prod'a dokunmaz ──────────────────────────
@@ -160,8 +157,7 @@ jobs:
             }
 
             # --- Dağıtım ----------------------------------------------------
-            # Sunucu KENDI takip ettigi branch'i ceker. Tetikleyici branch ile
-            # sunucunun branch'i farkli olabilir; bu kasitli (yukaridaki nota bak).
+            # Sunucu main'i takip eder (tek branch).
             BRANCH="$(git rev-parse --abbrev-ref HEAD)"
             echo "Sunucu branch: $BRANCH"
             git pull --ff-only
