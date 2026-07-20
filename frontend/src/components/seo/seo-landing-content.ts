@@ -10,7 +10,8 @@ export type LandingKey =
   | 'buyuk-uclu'
   | 'yukselen-burc'
   | 'burclar'
-  | 'burcunu-ogren';
+  | 'burcunu-ogren'
+  | 'consultants';
 
 export type LandingLocale = 'tr' | 'en' | 'de';
 
@@ -801,6 +802,74 @@ export const LANDING_CONTENT: Record<LandingKey, Record<LandingLocale, LandingDa
       image: '/img/natal_chart.png',
       authorTitle: 'GoldMoodAstro Redaktion',
       expertise: ['Sternzeichen', 'Astrologie', 'Sonnenzeichen'],
+    },
+  },
+  consultants: {
+    en: {
+      slug: 'consultants',
+      title: 'How to Choose a Consultant',
+      description: 'How GoldMoodAstro consultants are approved, how a session works, and what to look for when choosing the right person.',
+      eyebrow: 'Consultants',
+      lead: 'Choosing a consultant begins with asking the right question to the right person. This page explains what to look for.',
+      summary: 'Every consultant on the platform goes through an application, document and content review. When choosing, weigh expertise, experience, client reviews and session format together. The aim is not the most expensive or most reviewed person, but the one who fits your question.',
+      sections: [
+        { title: 'How consultants are approved', paragraphs: ['Every applicant submits a short biography, areas of expertise, training and certificates, work experience and a sample reading. This file is reviewed by hand before the profile goes live.', 'Identity verification (KYC) is also mandatory before any payout. This keeps the platform staffed by real, reachable people.'] },
+        { title: 'What to look for when choosing', paragraphs: ['Start by clarifying your question. Is it a relationship dynamic, career timing, or a general reading of your birth chart? The expertise filters exist for exactly this: astrology, birth chart, tarot, numerology, dream interpretation, coffee reading and more.', 'Then read the biography and client reviews. Look at the content of reviews rather than their number: has this person worked on questions similar to yours? Do the session length and price match your expectation?'] },
+        { title: 'How a session works', paragraphs: ['Once you have chosen, you pick a time from the calendar, complete payment and create your booking. The session takes place on the platform; you do not need to install another application.', 'Before the session it helps to note your main question, the relevant dates and the feeling that occupies you most. If you want a reading based on your birth chart, have your date, time and place of birth ready — a wrong time builds a wrong chart.'] },
+        { title: 'Expectations and responsibility', paragraphs: ['Astrology, tarot and similar methods are tools for awareness and reflection. They do not replace medical, legal, psychological or financial advice.', 'A good session leaves you more capable, not more dependent. If you meet an approach that promises a certain future, speaks through fear, or pushes you into a hurried decision, you can report it to the platform.'] },
+      ],
+      faq: [
+        { question: 'Are consultants verified?', answer: 'Yes. Every application is reviewed by hand through biography, training and certificates, work experience and a sample reading. Identity verification (KYC) is also required before any payout.' },
+        { question: 'How do I decide which consultant to choose?', answer: 'Clarify your question first, then filter by area of expertise. Look at the content of reviews rather than their count: someone who has worked on similar questions may suit you better.' },
+        { question: 'Do I need my birth time for a session?', answer: 'For birth chart, rising sign or timing-based readings, yes. If the time is wrong or unknown the chart is built incorrectly; in that case a rectification is recommended.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Editorial Team',
+      expertise: ['Choosing a Consultant', 'Astrology', 'Sessions'],
+    },
+    tr: {
+      slug: 'consultants',
+      title: 'Danışman Seçme Rehberi',
+      description: 'GoldMoodAstro danışmanları nasıl onaylanır, seans nasıl ilerler, doğru danışmanı seçerken nelere bakmalısınız?',
+      eyebrow: 'Danışmanlar',
+      lead: 'Danışman seçmek, doğru soruyu doğru kişiye sormakla başlar. Bu sayfa seçim yaparken nelere bakabileceğinizi anlatır.',
+      summary: 'Platformdaki her danışman başvuru, belge ve içerik incelemesinden geçer. Seçim yaparken uzmanlık alanı, deneyim, danışan yorumları ve seans biçimi birlikte değerlendirilmelidir. Amaç en pahalı ya da en çok yorumu olanı değil, sorunuza en uygun kişiyi bulmaktır.',
+      sections: [
+        { title: 'Danışmanlar nasıl onaylanıyor', paragraphs: ['Başvuran her danışman; kısa biyografi, uzmanlık alanları, aldığı eğitimler ve sertifikalar, iş deneyimi ve örnek bir yorum sunar. Bu dosya yayına alınmadan önce elle incelenir.', 'Para çekimi öncesinde ayrıca kimlik doğrulama (KYC) zorunludur. Bu, platformda gerçek ve ulaşılabilir kişilerin hizmet vermesini sağlar.'] },
+        { title: 'Doğru danışmanı seçerken nelere bakmalı', paragraphs: ['Önce sorunuzu netleştirin. İlişki dinamiği mi, kariyer zamanlaması mı, doğum haritanızın genel okuması mı? Uzmanlık alanı filtreleri tam da bunun içindir: astroloji, doğum haritası, tarot, numeroloji, rüya tabiri, kahve falı ve diğerleri.', 'Ardından danışmanın biyografisini ve danışan yorumlarını okuyun. Yorumların sayısından çok içeriğine bakın: kişi sizin sorduğunuza benzer konularda mı çalışmış? Seans süresi ve ücreti beklentinize uyuyor mu?'] },
+        { title: 'Seans nasıl ilerler', paragraphs: ['Uygun danışmanı seçtikten sonra takvimden size uygun saati seçer, ödemeyi yapar ve randevunuzu oluşturursunuz. Görüşme platform üzerinden gerçekleşir; ayrıca bir uygulama kurmanız gerekmez.', 'Seans öncesinde ana sorunuzu, ilgili tarihleri ve sizi en çok düşündüren duyguyu not almanız faydalı olur. Doğum haritası içeren bir okuma isteyecekseniz doğum tarihi, saati ve yerinizi hazır bulundurun; saat yanlışsa harita da yanlış kurulur.'] },
+        { title: 'Beklenti ve sorumluluk', paragraphs: ['Astroloji, tarot ve benzeri yöntemler birer farkındalık ve düşünme aracıdır. Tıbbi, hukuki, psikolojik ya da finansal tavsiyenin yerini almazlar.', 'İyi bir seans sizi bağımlı değil, daha yetkin hissettirir. Kesin gelecek vaadi veren, korku üzerinden konuşan ya da sizi acele karara iten bir yaklaşımla karşılaşırsanız bunu platforma bildirebilirsiniz.'] },
+      ],
+      faq: [
+        { question: 'Danışmanlar doğrulanıyor mu?', answer: 'Evet. Her başvuru; biyografi, eğitim/sertifika, iş deneyimi ve örnek yorum üzerinden elle incelenir. Para çekimi öncesinde kimlik doğrulama (KYC) da zorunludur.' },
+        { question: 'Hangi danışmanı seçeceğime nasıl karar veririm?', answer: 'Önce sorunuzu netleştirin, sonra uzmanlık alanına göre filtreleyin. Yorumların sayısından çok içeriğine bakın: benzer konularda çalışmış biri size daha uygun olabilir.' },
+        { question: 'Seans için doğum saatim gerekli mi?', answer: 'Doğum haritası, yükselen burç veya zamanlama içeren okumalarda evet. Saat yanlış ya da bilinmiyorsa harita yanlış kurulur; bu durumda rektifikasyon önerilir.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Editoryal Ekibi',
+      expertise: ['Danışman Seçimi', 'Astroloji', 'Seans'],
+    },
+    de: {
+      slug: 'consultants',
+      title: 'Die richtige Beratung auswählen',
+      description: 'Wie Beraterinnen und Berater bei GoldMoodAstro geprüft werden, wie eine Sitzung abläuft und worauf Sie bei der Auswahl achten sollten.',
+      eyebrow: 'Beratung',
+      lead: 'Die Auswahl beginnt damit, die richtige Frage der richtigen Person zu stellen. Diese Seite erklärt, worauf Sie achten können.',
+      summary: 'Jede Beraterin und jeder Berater durchläuft eine Prüfung von Bewerbung, Unterlagen und Inhalten. Bei der Auswahl zählen Fachgebiet, Erfahrung, Kundenbewertungen und Sitzungsformat gemeinsam. Ziel ist nicht die teuerste oder meistbewertete Person, sondern diejenige, die zu Ihrer Frage passt.',
+      sections: [
+        { title: 'Wie geprüft wird', paragraphs: ['Jede Bewerbung enthält eine kurze Biografie, Fachgebiete, Ausbildungen und Zertifikate, Berufserfahrung sowie eine Beispielberatung. Diese Unterlagen werden vor der Freischaltung manuell geprüft.', 'Vor jeder Auszahlung ist zudem eine Identitätsprüfung (KYC) verpflichtend. So stellen wir sicher, dass reale und erreichbare Personen beraten.'] },
+        { title: 'Worauf Sie bei der Auswahl achten sollten', paragraphs: ['Klären Sie zuerst Ihre Frage. Geht es um eine Beziehungsdynamik, um berufliches Timing oder um eine allgemeine Deutung Ihres Horoskops? Genau dafür gibt es die Fachgebiets-Filter: Astrologie, Geburtshoroskop, Tarot, Numerologie, Traumdeutung, Kaffeesatzlesen und weitere.', 'Lesen Sie anschließend Biografie und Bewertungen. Achten Sie eher auf den Inhalt der Bewertungen als auf deren Anzahl: Hat diese Person an ähnlichen Fragen gearbeitet? Passen Dauer und Preis zu Ihrer Erwartung?'] },
+        { title: 'Wie eine Sitzung abläuft', paragraphs: ['Nach der Auswahl wählen Sie eine Zeit im Kalender, schließen die Zahlung ab und erstellen Ihre Buchung. Die Sitzung findet auf der Plattform statt; eine zusätzliche App ist nicht nötig.', 'Vor der Sitzung hilft es, die Hauptfrage, relevante Daten und das vorherrschende Gefühl zu notieren. Für Deutungen auf Basis des Geburtshoroskops halten Sie Datum, Zeit und Ort der Geburt bereit — eine falsche Zeit ergibt ein falsches Horoskop.'] },
+        { title: 'Erwartungen und Verantwortung', paragraphs: ['Astrologie, Tarot und ähnliche Methoden sind Werkzeuge für Bewusstheit und Reflexion. Sie ersetzen keine medizinische, rechtliche, psychologische oder finanzielle Beratung.', 'Eine gute Sitzung macht Sie handlungsfähiger, nicht abhängiger. Begegnet Ihnen ein Ansatz, der eine sichere Zukunft verspricht, über Angst spricht oder Sie zu einer schnellen Entscheidung drängt, können Sie dies der Plattform melden.'] },
+      ],
+      faq: [
+        { question: 'Werden die Beraterinnen und Berater geprüft?', answer: 'Ja. Jede Bewerbung wird manuell anhand von Biografie, Ausbildung, Berufserfahrung und Beispielberatung geprüft. Vor Auszahlungen ist zusätzlich eine Identitätsprüfung (KYC) erforderlich.' },
+        { question: 'Wie entscheide ich mich für eine Person?', answer: 'Klären Sie zuerst Ihre Frage und filtern Sie dann nach Fachgebiet. Achten Sie auf den Inhalt der Bewertungen statt auf deren Anzahl.' },
+        { question: 'Brauche ich meine Geburtszeit für eine Sitzung?', answer: 'Für Horoskop-, Aszendenten- oder Timing-Deutungen ja. Ist die Zeit falsch oder unbekannt, wird das Horoskop falsch erstellt; dann empfiehlt sich eine Rektifikation.' },
+      ],
+      image: '/img/natal_chart.png',
+      authorTitle: 'GoldMoodAstro Redaktion',
+      expertise: ['Beraterauswahl', 'Astrologie', 'Sitzungen'],
     },
   },
 };

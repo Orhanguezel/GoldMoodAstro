@@ -15,6 +15,7 @@ import { fetchSetting } from '@/i18n/server';
 import { normPath } from '@/integrations/shared';
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
+import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
@@ -135,6 +136,9 @@ export default async function ConsultantsPage({ params, searchParams }: Props) {
       <PageContainer width="default" pad="large">
         <JsonLd id="consultants-schema" data={graph(graphItems)} />
         <ConsultantList locale={locale} initialExpertise={initialExpertise} initialData={consultants} />
+        {/* 2026-07-20: liste sayfasi 316 kelimeydi; danisman secme rehberi eklendi.
+            Liste once, editoryal icerik altinda (diger landing sayfalariyla ayni kalip). */}
+        <SeoLandingArticle type="consultants" locale={locale} />
       </PageContainer>
     </>
   );
