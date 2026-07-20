@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import Banner from '@/layout/banner/Breadcrum';
 import { CMS_FALLBACK_CSS, downgradeH1ToH2, extractHtmlFromAny, safeStr, titleFromSlug, excerpt } from '@/integrations/shared';
 import { normPath, absUrlJoin } from '@/integrations/shared';
@@ -28,11 +29,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     slug ? fetchCustomPagePublicBySlug({ slug, locale }) : Promise.resolve(null),
   ]);
 
-  // 2026-07-20 (GSC kapsam analizi): olmayan blog slug'i 200 + bos govde donuyordu
-  // ve hicbir kontrol yoktu. Google bunlari ozdes bos sayfa olarak goruyordu.
-  if (!page) {
-    return { title: 'Not found', robots: { index: false, follow: false } };
-  }
+  // 2026-07-20: kontrol generateMetadata'da YAPILMALI.
+  // [locale]/layout.tsx children'i <Suspense> icine sariyor; Next once kabugu
+  // gonderiyor ve HTTP 200 o anda kesinlesiyor. Sayfa govdesinde cagrilan
+  // notFound() bu yuzden 404 URETEMIYOR (yalnizca dogru ekrani render ediyor).
+  // generateMetadata streaming BASLAMADAN once calistigi icin buradaki
+  // notFound() gercek 404 dondurur.
+  if (!page) notFound();
 
   const base = await buildMetadataFromSeo(seo, { locale, pathname });
 
