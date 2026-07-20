@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS astrology_kb (
     'transit',
     'synastry',
     'sign_section',
+    -- Instagram carousel karesi icin burc basina tek satir (generate-carousel-lines.ts)
+    'carousel_line',
     'misc'
   ) NOT NULL,
 
