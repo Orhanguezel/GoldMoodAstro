@@ -53,6 +53,18 @@ function parseFirstIpFromXff(xff: string): string {
 }
 
 /* -------------------- shouldSkip -------------------- */
+function resolveIsAdmin(req: FastifyRequest): boolean {
+  const request = req as any;
+  const userCandidate =
+    request.user ?? request.auth?.user ?? request.requestContext?.get?.('user') ?? null;
+  const u = isRecord(userCandidate) ? userCandidate : null;
+  if (!u) return false;
+  if (u.is_admin === true || u.is_admin === 1 || u.is_admin === '1') return true;
+  if (String(u.role ?? '') === 'admin') return true;
+  const roles = Array.isArray(u.roles) ? u.roles.map(String) : [];
+  return roles.includes('admin');
+}
+
 export function shouldSkipAuditLog(req: FastifyRequest): boolean {
   const method = String(req.method || '').toUpperCase();
   if (method === 'OPTIONS') return true;
@@ -63,6 +75,11 @@ export function shouldSkipAuditLog(req: FastifyRequest): boolean {
   if (path === '/api/health' || path === '/health') return true;
   if (path.startsWith('/uploads/')) return true;
   if (path.startsWith('/api/admin/audit/stream')) return true;
+
+  // Admin panel trafiği HİÇ loglanmaz (kullanıcı kararı 2026-07-25:
+  // "admin loglarını takip etmeyelim"). Filtre en başta → istatistikler baştan admin-siz.
+  if (path.startsWith('/api/admin/')) return true;
+  if (resolveIsAdmin(req)) return true;
 
   const excludeIps = Array.isArray((env as { AUDIT_EXCLUDE_IPS?: unknown }).AUDIT_EXCLUDE_IPS)
     ? ((env as { AUDIT_EXCLUDE_IPS?: unknown[] }).AUDIT_EXCLUDE_IPS ?? [])
