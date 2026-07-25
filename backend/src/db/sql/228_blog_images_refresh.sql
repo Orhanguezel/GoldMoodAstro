@@ -25,3 +25,26 @@ WHERE id IN (
   'b1000000-0000-4000-8000-000000000007',
   'b1000000-0000-4000-8000-000000000008'
 );
+
+-- Admin panelde blog kapakları 404 veriyordu: admin listesi
+-- `featured_image_effective_url` alanını üretirken storage_asset'i kolona TERCİH
+-- ediyor (repository.ts: featuredFromAsset ?? row.featured_image). Bu bloglara
+-- eski sunucuda admin'den yüklenmiş storage_asset'ler bağlı; dosyalar
+-- (/uploads/blog/*.png) yeni sunucuya taşınmadığı için 404. Doğru kapak zaten
+-- yukarıda featured_image = /img/blog/*.webp olarak ayarlı. Stale asset
+-- bağlantılarını koparınca effective_url webp'e düşer ve admin kapağı düzgün gösterir.
+UPDATE custom_pages
+SET featured_image_asset_id = NULL,
+    storage_asset_id = NULL,
+    storage_image_ids = JSON_ARRAY(),
+    updated_at = NOW(3)
+WHERE id IN (
+  'b1000000-0000-4000-8000-000000000001',
+  'b1000000-0000-4000-8000-000000000002',
+  'b1000000-0000-4000-8000-000000000003',
+  'b1000000-0000-4000-8000-000000000004',
+  'b1000000-0000-4000-8000-000000000005',
+  'b1000000-0000-4000-8000-000000000006',
+  'b1000000-0000-4000-8000-000000000007',
+  'b1000000-0000-4000-8000-000000000008'
+);
