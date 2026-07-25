@@ -43,6 +43,8 @@ import {
   Share2,
   Youtube,
   Twitter,
+  Facebook,
+  Instagram,
   type LucideIcon,
 } from 'lucide-react';
 import type { TranslateFn } from '@/i18n';
@@ -122,6 +124,8 @@ export type AdminNavItemKey =
   | 'eko_search_console'
   | 'eko_google_ads'
   | 'eko_social'
+  | 'eko_facebook'
+  | 'eko_instagram'
   | 'eko_youtube'
   | 'eko_x_research';
 
@@ -198,6 +202,8 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'eko_search_console', url: '/admin/search-console', icon: Search },
       { key: 'eko_google_ads', url: '/admin/google-ads', icon: Target },
       { key: 'eko_social', url: '/admin/social', icon: Share2 },
+      { key: 'eko_facebook', url: '/admin/social/facebook', icon: Facebook },
+      { key: 'eko_instagram', url: '/admin/social/instagram', icon: Instagram },
       { key: 'eko_youtube', url: '/admin/youtube', icon: Youtube },
       { key: 'eko_x_research', url: '/admin/x-research', icon: Twitter },
     ],
@@ -281,6 +287,8 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   eko_search_console: 'Search Console',
   eko_google_ads: 'Google Ads',
   eko_social: 'Sosyal Medya',
+  eko_facebook: 'Facebook',
+  eko_instagram: 'Instagram',
   eko_youtube: 'YouTube',
   eko_x_research: 'X (Twitter) Araştırma',
 };

@@ -124,6 +124,8 @@ const emptyNav: AdminNavCopy = {
     eko_search_console: '',
     eko_google_ads: '',
     eko_social: '',
+    eko_facebook: '',
+    eko_instagram: '',
     eko_youtube: '',
     eko_x_research: '',
   },
@@ -192,6 +194,8 @@ export function normalizeAdminUiCopy(raw: unknown): AdminUiCopy {
     eko_search_console: uiText(itemsRaw.eko_search_console),
     eko_google_ads: uiText(itemsRaw.eko_google_ads),
     eko_social: uiText(itemsRaw.eko_social),
+    eko_facebook: uiText(itemsRaw.eko_facebook),
+    eko_instagram: uiText(itemsRaw.eko_instagram),
     eko_youtube: uiText(itemsRaw.eko_youtube),
     eko_x_research: uiText(itemsRaw.eko_x_research),
   };
