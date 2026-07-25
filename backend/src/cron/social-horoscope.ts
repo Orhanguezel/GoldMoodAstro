@@ -45,6 +45,14 @@ function dayOfYear(d = new Date()): number {
   const start = Date.UTC(d.getUTCFullYear(), 0, 0);
   return Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - start) / 86400000);
 }
+function cleanContent(raw: string): string {
+  return raw
+    .replace(/^#{1,6}\s.*$/gm, '')   // markdown basliklari (ör. "# 25 Temmuz ... Yorumu")
+    .replace(/\*\*/g, '')            // kalin
+    .replace(/[*_`>]/g, '')          // artik md isaretleri
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -139,7 +147,7 @@ export async function runDailyHoroscopePost(
 
   const sign = ALL_SIGNS[dayOfYear(new Date(dateStr + 'T00:00:00Z')) % ALL_SIGNS.length];
   const h = await getDailyHoroscope(sign, dateStr);
-  const content = (h?.content || '').trim();
+  const content = cleanContent(h?.content || '');
   if (!content) return { status: 'no-content', detail: `${sign} icin ${dateStr} yorumu yok (uretim beklenir)` };
 
   const { publicUrl } = await renderCard(sign, dateStr, content);
