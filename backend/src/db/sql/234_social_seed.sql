@@ -7,4 +7,9 @@ INSERT IGNORE INTO social_projects
   (uuid, project_key, name, website_url, ga4_measurement_id, gtm_container_id, search_console_site_url, is_active)
 VALUES
   (UUID(), 'goldmoodastro', 'GoldMoodAstro', 'https://goldmoodastro.com',
-   'G-M8FPZB5FFC', 'GTM-WDQ822LF', 'https://goldmoodastro.com/', 1);
+   'G-M8FPZB5FFC', 'GTM-WDQ822LF', 'sc-domain:goldmoodastro.com', 1);
+
+-- Search Console DOMAIN property: site adresi sc-domain: formatinda olmali (URL-prefix degil).
+-- Sistem alani (kullanici icerigi degil) — re-seed'de dogru degere cekilir.
+UPDATE social_projects SET search_console_site_url = 'sc-domain:goldmoodastro.com'
+WHERE project_key = 'goldmoodastro' AND (search_console_site_url IS NULL OR search_console_site_url LIKE 'http%');

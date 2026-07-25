@@ -213,3 +213,7 @@ frontend/test-results/
 
 # Uretilmis gecici gorseller (imagegen, blog-generated) — 53MB, versiyonlanmaz
 tmp/
+
+# Google service account keys (asla commit edilmez)
+*-service-account*.json
+goldmoodasto-*.json
