@@ -121,6 +121,7 @@ export type AdminNavItemKey =
   | 'landing'
   | 'pages'
   | 'commission_change'
+  | 'marketing'
   | 'eko_analytics'
   | 'eko_ga4'
   | 'eko_search_console'
@@ -201,6 +202,7 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
     id: 5,
     key: 'ekosistem',
     items: [
+      { key: 'marketing', url: '/admin/marketing', icon: TrendingUp },
       { key: 'eko_analytics', url: '/admin/analytics', icon: LineChart },
       { key: 'eko_ga4', url: '/admin/ga4', icon: TrendingUp },
       { key: 'eko_search_console', url: '/admin/search-console', icon: Search },
@@ -288,6 +290,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   landing: 'Landing Sayfaları',
   pages: 'İçerik/Hukuki Sayfalar',
   commission_change: 'Komisyon Bildirimi',
+  marketing: 'Pazarlama & Dönüşüm',
   eko_analytics: 'Analitik (Genel)',
   eko_ga4: 'Google Analytics (GA4)',
   eko_search_console: 'Search Console',

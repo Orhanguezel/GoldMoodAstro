@@ -6,11 +6,16 @@
 
 import type { FastifyInstance } from 'fastify';
 import { requireAuth } from '../../middleware/auth';
-import { getDashboardAnalyticsAdmin, getDashboardSummaryAdmin } from './admin.controller';
+import {
+  getDashboardAnalyticsAdmin,
+  getDashboardSummaryAdmin,
+  getMarketingDashboardAdmin,
+} from './admin.controller';
 
 const BASE = '/dashboard';
 
 export async function registerDashboardAdmin(app: FastifyInstance) {
   app.get(`${BASE}/summary`, { preHandler: [requireAuth] }, getDashboardSummaryAdmin);
   app.get(`${BASE}/analytics`, { preHandler: [requireAuth] }, getDashboardAnalyticsAdmin);
+  app.get(`${BASE}/marketing`, { preHandler: [requireAuth] }, getMarketingDashboardAdmin);
 }

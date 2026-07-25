@@ -5,6 +5,57 @@ import { baseApi } from "@/integrations/baseApi";
 import type { DashboardAnalytics, DashboardRangeKey } from "@/integrations/shared";
 import { normalizeDashboardAnalytics } from "@/integrations/shared";
 
+// ---- Pazarlama & Dönüşüm (birinci-taraf) tipleri --------------
+export type MarketingFunnel = {
+  totalUsers: number;
+  newUsers: number;
+  usersWithBooking: number;
+  usersPaid: number;
+  userToBookingRate: number;
+  bookingToPaidRate: number;
+};
+export type MarketingRevenue = {
+  total: number;
+  range: number;
+  paidOrders: number;
+  avgOrderValue: number;
+  consultationRevenue: number;
+  trend: Array<{ date: string; amount: number; orders: number }>;
+};
+export type MarketingDashboard = {
+  range: { days: number };
+  funnel: MarketingFunnel;
+  revenue: MarketingRevenue;
+  bookings: { range: number; paid: number };
+  sources: Array<{ key: string; count: number }>;
+  mediaSplit: Record<string, number>;
+  topConsultants: Array<{
+    id: string;
+    name: string;
+    bookings: number;
+    revenue: number;
+    rating: number;
+    ratingCount: number;
+  }>;
+};
+
+const EMPTY_MARKETING: MarketingDashboard = {
+  range: { days: 30 },
+  funnel: {
+    totalUsers: 0,
+    newUsers: 0,
+    usersWithBooking: 0,
+    usersPaid: 0,
+    userToBookingRate: 0,
+    bookingToPaidRate: 0,
+  },
+  revenue: { total: 0, range: 0, paidOrders: 0, avgOrderValue: 0, consultationRevenue: 0, trend: [] },
+  bookings: { range: 0, paid: 0 },
+  sources: [],
+  mediaSplit: { audio: 0, video: 0 },
+  topConsultants: [],
+};
+
 // ---- API -----------------------------------------------------
 export const dashboardAdminApi = baseApi.injectEndpoints({
   endpoints: (b) => ({
@@ -16,8 +67,22 @@ export const dashboardAdminApi = baseApi.injectEndpoints({
       transformResponse: (res: unknown) => normalizeDashboardAnalytics(res),
       providesTags: [{ type: "Dashboard" as const, id: "SUMMARY" }],
     }),
+
+    getMarketingDashboardAdmin: b.query<MarketingDashboard, { days?: number } | void>({
+      query: (params) => ({
+        url: "/admin/dashboard/marketing",
+        params: params?.days ? { days: params.days } : undefined,
+      }),
+      transformResponse: (res: unknown) => {
+        const d = ((res as any)?.data ?? res) as Partial<MarketingDashboard> | undefined;
+        if (!d || typeof d !== "object") return EMPTY_MARKETING;
+        return { ...EMPTY_MARKETING, ...d } as MarketingDashboard;
+      },
+      providesTags: [{ type: "Dashboard" as const, id: "MARKETING" }],
+    }),
   }),
   overrideExisting: true,
 });
 
-export const { useGetDashboardSummaryAdminQuery } = dashboardAdminApi;
+export const { useGetDashboardSummaryAdminQuery, useGetMarketingDashboardAdminQuery } =
+  dashboardAdminApi;

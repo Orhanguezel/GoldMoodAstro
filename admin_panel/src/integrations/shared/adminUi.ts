@@ -78,6 +78,7 @@ const emptyNav: AdminNavCopy = {
   },
   items: {
     dashboard: '',
+    marketing: '',
     consultants: '',
     site_settings: '',
     reviews: '',
@@ -150,6 +151,7 @@ export function normalizeAdminUiCopy(raw: unknown): AdminUiCopy {
 
   const items: AdminNavCopy['items'] = {
     dashboard: uiText(itemsRaw.dashboard),
+    marketing: uiText(itemsRaw.marketing),
     consultants: uiText(itemsRaw.consultants),
     site_settings: uiText(itemsRaw.site_settings),
     reviews: uiText(itemsRaw.reviews),
