@@ -5,6 +5,8 @@ import {
   Send,
   Twitter,
   Youtube,
+  Music2,
+  Bookmark,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -97,6 +99,26 @@ export const SOCIAL_PLATFORMS: SocialPlatformConfig[] = [
     icon: (size = 20) => <Send size={size} />,
     connectKind: "manual",
     canPublish: true,
+  },
+  {
+    key: "tiktok",
+    label: "TikTok",
+    title: "TikTok Yönetimi",
+    description: "Keşif odaklı kısa video. Hesap bağlama + otomatik yayın yakında (API entegrasyonu).",
+    accent: "text-teal-600",
+    icon: (size = 20) => <Music2 size={size} />,
+    connectKind: "manual",
+    canPublish: false,
+  },
+  {
+    key: "pinterest",
+    label: "Pinterest",
+    title: "Pinterest Yönetimi",
+    description: "Arama odaklı kalıcı trafik. Hesap bağlama + pin yayını yakında (API entegrasyonu).",
+    accent: "text-rose-600",
+    icon: (size = 20) => <Bookmark size={size} />,
+    connectKind: "manual",
+    canPublish: false,
   },
 ];
 

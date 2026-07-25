@@ -45,6 +45,8 @@ import {
   Twitter,
   Facebook,
   Instagram,
+  Music2,
+  Bookmark,
   type LucideIcon,
 } from 'lucide-react';
 import type { TranslateFn } from '@/i18n';
@@ -126,6 +128,8 @@ export type AdminNavItemKey =
   | 'eko_social'
   | 'eko_facebook'
   | 'eko_instagram'
+  | 'eko_tiktok'
+  | 'eko_pinterest'
   | 'eko_youtube'
   | 'eko_x_research';
 
@@ -204,6 +208,8 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'eko_social', url: '/admin/social', icon: Share2 },
       { key: 'eko_facebook', url: '/admin/social/facebook', icon: Facebook },
       { key: 'eko_instagram', url: '/admin/social/instagram', icon: Instagram },
+      { key: 'eko_tiktok', url: '/admin/social/tiktok', icon: Music2 },
+      { key: 'eko_pinterest', url: '/admin/social/pinterest', icon: Bookmark },
       { key: 'eko_youtube', url: '/admin/youtube', icon: Youtube },
       { key: 'eko_x_research', url: '/admin/social/x', icon: Twitter },
     ],
@@ -289,6 +295,8 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   eko_social: 'Sosyal Medya',
   eko_facebook: 'Facebook',
   eko_instagram: 'Instagram',
+  eko_tiktok: 'TikTok',
+  eko_pinterest: 'Pinterest',
   eko_youtube: 'YouTube',
   eko_x_research: 'X (Twitter)',
 };
