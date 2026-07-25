@@ -149,7 +149,7 @@ export default function AnalyticsPage() {
   const recentItems = items.slice(0, 5);
 
   return (
-    <div className="mx-auto max-w-screen-2xl space-y-8 animate-in fade-in duration-700">
+    <div className="mx-auto max-w-screen-2xl space-y-8">
       {/* Header — standart admin (/admin/consultants dili) */}
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div className="space-y-2">
@@ -718,7 +718,7 @@ function YouTubeAnalyticsView({
   const reports = stats.report || [];
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500">
+    <div className="space-y-10">
       <section className="bg-slate-950 rounded-[32px] overflow-hidden relative p-8 md:p-12 text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl shadow-slate-950/20">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-red-500 via-transparent to-transparent pointer-events-none" />
         <div className="flex items-center gap-6 z-10">

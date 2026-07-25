@@ -23,7 +23,7 @@ export default function GoogleAdsPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-screen-2xl space-y-8 animate-in fade-in duration-700">
+    <div className="mx-auto max-w-screen-2xl space-y-8">
       <GradientHero
         eyebrow="Ads"
         title="Google Ads"

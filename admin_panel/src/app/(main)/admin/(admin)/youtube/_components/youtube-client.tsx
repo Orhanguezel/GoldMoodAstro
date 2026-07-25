@@ -161,7 +161,7 @@ export default function YouTubeDashboardPage() {
       {isConnected ? (
         <>
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <StatCard
               label="Abone Sayısı"
               value={formatNumber(info.channel.statistics.subscriberCount)}
@@ -340,7 +340,7 @@ export default function YouTubeDashboardPage() {
         </>
       ) : (
         /* Not Connected State */
-        <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-2xl mx-auto space-y-8">
           <div className="bg-white p-8 rounded-[36px] border border-slate-100 shadow-sm text-center space-y-6">
             <div className="h-20 w-20 rounded-[28px] bg-red-50 text-red-600 flex items-center justify-center shadow-lg shadow-red-600/5 mx-auto">
               <Youtube size={36} className="animate-pulse" />

@@ -60,7 +60,7 @@ export default function SocialOverviewPage() {
   const draftCount = postItems.filter((p) => p.status === "draft").length;
 
   return (
-    <div className="space-y-7 animate-in fade-in duration-700">
+    <div className="space-y-7">
       <GradientHero
         eyebrow="Sosyal Medya"
         title="Sosyal Medya Merkezi"
