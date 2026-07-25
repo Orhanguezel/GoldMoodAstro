@@ -149,7 +149,7 @@ export default function AnalyticsPage() {
   const recentItems = items.slice(0, 5);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700">
+    <div className="mx-auto max-w-screen-2xl space-y-8 animate-in fade-in duration-700">
       {/* Header — standart admin (/admin/consultants dili) */}
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div className="space-y-2">
@@ -489,7 +489,7 @@ export default function AnalyticsPage() {
                      {overview.topPosts.map((p: any, i: number) => (
                         <div key={i} className="flex items-center justify-between p-5 bg-slate-50 rounded-[24px] border border-transparent hover:border-emerald-100 hover:bg-white hover:shadow-xl transition-all group">
                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-slate-400 group-hover:scale-110 transition-transform">
+                              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-slate-400">
                                  <Activity size={24} />
                               </div>
                               <div>

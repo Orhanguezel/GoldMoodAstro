@@ -121,7 +121,7 @@ export default function XResearchPage() {
   );
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 animate-in fade-in duration-700">
+    <div className="mx-auto max-w-screen-2xl space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-3">

@@ -218,7 +218,7 @@ export function MarketingPlatformPage({ platform }: { platform: PlatformKey }) {
   );
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 animate-in fade-in duration-700">
+    <div className="mx-auto max-w-screen-2xl space-y-8 animate-in fade-in duration-700">
       <GradientHero
         eyebrow={meta.eyebrow}
         title={meta.title}

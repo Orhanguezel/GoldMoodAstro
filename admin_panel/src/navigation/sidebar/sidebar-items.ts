@@ -205,7 +205,7 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'eko_facebook', url: '/admin/social/facebook', icon: Facebook },
       { key: 'eko_instagram', url: '/admin/social/instagram', icon: Instagram },
       { key: 'eko_youtube', url: '/admin/youtube', icon: Youtube },
-      { key: 'eko_x_research', url: '/admin/x-research', icon: Twitter },
+      { key: 'eko_x_research', url: '/admin/social/x', icon: Twitter },
     ],
   },
   {
@@ -290,7 +290,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   eko_facebook: 'Facebook',
   eko_instagram: 'Instagram',
   eko_youtube: 'YouTube',
-  eko_x_research: 'X (Twitter) Araştırma',
+  eko_x_research: 'X (Twitter)',
 };
 
 export function buildAdminSidebarItems(

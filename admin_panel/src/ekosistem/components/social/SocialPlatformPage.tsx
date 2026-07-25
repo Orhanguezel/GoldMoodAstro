@@ -502,7 +502,7 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
   }, [planItems]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-7 animate-in fade-in duration-700">
+    <div className="mx-auto max-w-screen-2xl space-y-8 animate-in fade-in duration-700">
       {/* Header */}
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
