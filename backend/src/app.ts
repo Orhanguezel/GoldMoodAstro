@@ -5,10 +5,12 @@ import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
+import fp from 'fastify-plugin';
 import authPlugin from './plugins/authPlugin';
 import mysqlPlugin from '@/plugins/mysql';
 import staticUploads from './plugins/staticUploads';
 import { localeMiddleware } from '@goldmood/shared-backend/middleware/locale';
+import { requestLoggerPlugin } from '@goldmood/shared-backend/modules/audit/requestLogger.plugin';
 
 import type { FastifyInstance } from 'fastify';
 import { env } from '@/core/env';
@@ -106,6 +108,12 @@ export async function createApp() {
   });
 
   await app.register(staticUploads);
+
+  // Audit request logger — onResponse hook TÜM route'larda çalışsın diye fp() ile
+  // kök instance'a bağlanır (fp yoksa hook encapsulate olur → audit_request_logs
+  // boş kalır → /admin/audit map/metrics/funnel/cohort hepsi boş). geoip-lite ile
+  // country doldurulur; nginx x-real-ip/x-forwarded-for iletmeli.
+  await app.register(fp(requestLoggerPlugin));
 
   // All routes: shared (@goldmood/shared-backend) + project-specific
   await registerAllRoutes(app);
