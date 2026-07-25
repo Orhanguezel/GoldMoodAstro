@@ -28,7 +28,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -60,8 +59,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
-import { AuditDailyChart } from './AuditDailyChart';
 import { AuditGeoMap } from './AuditGeoMap';
+import { AuditMonthlyStatusCharts } from './AuditMonthlyStatusCharts';
 import { AuditFunnelChart } from './AuditFunnelChart';
 import { AuditCohortChart } from './AuditCohortChart';
 import { AuditTrafficChart } from './AuditTrafficChart';
@@ -906,12 +905,7 @@ export default function AdminAuditClient() {
                 </div>
 
                 <div className="md:col-span-4 flex items-center justify-between pt-4">
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-3 bg-gm-surface/40 px-6 py-3 rounded-2xl border border-gm-border-soft">
-                      <Label className="text-xs font-bold tracking-wide cursor-pointer" htmlFor="only-admin-sw">{t('common.onlyAdmin')}</Label>
-                      <Switch id="only-admin-sw" checked={onlyAdminFlag} onCheckedChange={setOnlyAdminFlag} className="data-[state=checked]:bg-gm-gold" />
-                    </div>
-                  </div>
+                  <div />
 
                   <div className="flex gap-3">
                     <Button type="button" variant="outline" onClick={onResetRequests} className="rounded-full border-gm-border-soft px-8 h-12 hover:bg-gm-surface transition-all">
@@ -1286,19 +1280,21 @@ export default function AdminAuditClient() {
                 </div>
                 <div className="space-y-3">
                   <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('metrics.pathPrefix')}</Label>
-                  <Input 
-                    value={pathPrefixText} 
-                    onChange={(e) => setPathPrefixText(e.target.value)} 
-                    placeholder="/api" 
-                    className="bg-gm-surface border-gm-border-soft rounded-2xl h-12 focus:border-gm-gold/50"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">{t('common.onlyAdmin')}</Label>
-                  <div className="flex items-center gap-3 bg-gm-surface/40 px-6 py-3 rounded-2xl border border-gm-border-soft h-12">
-                    <Label className="text-xs font-bold tracking-wide cursor-pointer" htmlFor="metrics-only-admin-sw">{t('common.onlyAdmin')}</Label>
-                    <Switch id="metrics-only-admin-sw" checked={onlyAdminFlag} onCheckedChange={setOnlyAdminFlag} className="data-[state=checked]:bg-gm-gold" />
-                  </div>
+                  <Select value={pathPrefixText || '__all__'} onValueChange={(v) => setPathPrefixText(v === '__all__' ? '' : v)}>
+                    <SelectTrigger className="bg-gm-surface border-gm-border-soft rounded-2xl h-12 focus:border-gm-gold/50">
+                      <SelectValue placeholder="Tümü" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__all__">Tümü</SelectItem>
+                      <SelectItem value="/api/consultants">/api/consultants</SelectItem>
+                      <SelectItem value="/api/bookings">/api/bookings</SelectItem>
+                      <SelectItem value="/api/orders">/api/orders</SelectItem>
+                      <SelectItem value="/api/auth">/api/auth</SelectItem>
+                      <SelectItem value="/api/site_settings">/api/site_settings</SelectItem>
+                      <SelectItem value="/api/blog">/api/blog</SelectItem>
+                      <SelectItem value="/api/horoscopes">/api/horoscopes</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="md:col-span-3 flex justify-end gap-3 pt-4">
@@ -1316,8 +1312,8 @@ export default function AdminAuditClient() {
           <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
             <CardHeader className="p-8 pb-4 border-b border-gm-border-soft bg-gm-surface/40 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="font-serif text-2xl">{t('metrics.chartTitle')}</CardTitle>
-                <CardDescription className="font-serif italic opacity-70 text-gm-muted">{t('metrics.lastNDays', { n: String(metricsData.days?.length ?? 0) })}</CardDescription>
+                <CardTitle className="font-serif text-2xl">Aylık Trafik &amp; İstek Dağılımı</CardTitle>
+                <CardDescription className="font-serif italic opacity-70 text-gm-muted">Admin hariç — aylık istek/hata trendi ve durum kodu yüzdeleri</CardDescription>
               </div>
               {metricsLoading && (
                 <Badge className="bg-gm-gold/10 text-gm-gold border-gm-gold/20 rounded-full px-4 py-1 font-mono text-xs animate-pulse">
@@ -1331,9 +1327,7 @@ export default function AdminAuditClient() {
                   {getErrMessage(metricsQ.error, t('error'))}
                 </div>
               )}
-              <div className="bg-gm-surface/40 p-8 rounded-[24px] border border-gm-border-soft shadow-inner">
-                <AuditDailyChart rows={metricsData.days ?? []} loading={metricsLoading} />
-              </div>
+              <AuditMonthlyStatusCharts months={12} />
             </CardContent>
           </Card>
         </TabsContent>

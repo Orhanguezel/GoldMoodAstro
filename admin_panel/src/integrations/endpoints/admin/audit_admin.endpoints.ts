@@ -133,6 +133,49 @@ export const auditAdminApi = baseApi.injectEndpoints({
       }),
       providesTags: [{ type: 'AuditMetric' as const, id: 'COHORT' }],
     }),
+
+    // Aylık trafik (admin hariç, backend is_admin=0 filtreli)
+    getAuditMonthlyAdmin: build.query<
+      Array<{ month: string; requests: number; unique_ips: number; errors: number; avg_response_time: number }>,
+      { months?: number } | void
+    >({
+      query: (params) => ({
+        url: `${BASE}/analytics/monthly`,
+        method: 'GET',
+        params: params ?? undefined,
+      }),
+      transformResponse: (raw: any) => {
+        const arr = Array.isArray(raw) ? raw : (raw?.items ?? raw?.data ?? []);
+        return (Array.isArray(arr) ? arr : []).map((r: any) => ({
+          month: String(r.month ?? ''),
+          requests: Number(r.requests ?? 0),
+          unique_ips: Number(r.unique_ips ?? 0),
+          errors: Number(r.errors ?? 0),
+          avg_response_time: Number(r.avg_response_time ?? 0),
+        }));
+      },
+      providesTags: [{ type: 'AuditMetric' as const, id: 'MONTHLY' }],
+    }),
+
+    // Durum kodu dağılımı (2xx/3xx/4xx/5xx) — pasta grafik için
+    getAuditStatusDistributionAdmin: build.query<
+      Array<{ status_group: string; count: number }>,
+      { created_from?: string; created_to?: string } | void
+    >({
+      query: (params) => ({
+        url: `${BASE}/analytics/status-distribution`,
+        method: 'GET',
+        params: params ?? undefined,
+      }),
+      transformResponse: (raw: any) => {
+        const arr = Array.isArray(raw) ? raw : (raw?.items ?? raw?.data ?? []);
+        return (Array.isArray(arr) ? arr : []).map((r: any) => ({
+          status_group: String(r.status_group ?? 'other'),
+          count: Number(r.count ?? 0),
+        }));
+      },
+      providesTags: [{ type: 'AuditMetric' as const, id: 'STATUS' }],
+    }),
   }),
 });
 
@@ -145,4 +188,6 @@ export const {
   useGetFunnelReportAdminQuery,
   useGetTrafficSourcesAdminQuery,
   useGetCohortsAdminQuery,
+  useGetAuditMonthlyAdminQuery,
+  useGetAuditStatusDistributionAdminQuery,
 } = auditAdminApi;
