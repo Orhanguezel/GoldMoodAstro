@@ -43,13 +43,18 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('01000000-0000-4000-8000-00000000002f', 'ga4_measurement_id',       '*', 'G-M8FPZB5FFC'),
 ('01000000-0000-4000-8000-00000000002e', 'google_ads_id',            '*', 'AW-18346295670'),
 ('01000000-0000-4000-8000-000000000021', 'google_site_verification', '*', ''),
-('01000000-0000-4000-8000-0000000000fb', 'facebook_pixel_id',        '*', ''),
+('01000000-0000-4000-8000-0000000000fb', 'facebook_pixel_id',        '*', '1350932683810586'),
 ('01000000-0000-4000-8000-000000000022', 'site_logo_light',          '*', ''),
 ('01000000-0000-4000-8000-000000000023', 'site_logo_dark',           '*', ''),
 ('01000000-0000-4000-8000-000000000024', 'site_favicon',             '*', ''),
 ('01000000-0000-4000-8000-000000000025', 'contact_info',             '*', '{"email":"goldmoodastro@gmail.com","phone":"0212 807 09 59","address":"Cumhuriyet Mahallesi D-100 Karayolu Caddesi ADM Konaklama Sitesi Outlet Park AVM No:374 İç Kapı No:63 Büyükçekmece / İstanbul"}'),
 ('01000000-0000-4000-8000-000000000026', 'company_brand',            '*', '{"name":"GoldMoodAstro","slogan":"Yıldızlarla tanışan modern astroloji","legal_name":"QUEBAB GIDA FABRİKASI RESTORAN İŞLETMECİLİĞİ EĞLENCE ORGANİZASYON VE KİRALAMA TİCARET LİMİTED ŞİRKETİ","mersis":"0632143381600001","tax_office":"Büyükçekmece Vergi Dairesi","tax_no":"6321433816","trade_registry":"491688-5","address":"Cumhuriyet Mahallesi D-100 Karayolu Caddesi ADM Konaklama Sitesi Outlet Park AVM No:374 İç Kapı No:63 Büyükçekmece / İstanbul","phone":"0212 807 09 59","email":"goldmoodastro@gmail.com"}'),
-('01000000-0000-4000-8000-000000000027', 'cookie_consent',           '*', '{"enabled":false}'),
+-- KVKK opt-in cerez banner AKTIF: analytics varsayilan KAPALI; ziyaretci "Kabul Et"
+-- dedikce GA4 granted + Meta Pixel fbq consent grant + PageView tetiklenir. Banner metinleri
+-- ui_cookie_banner_* i18n anahtarlarindan (tr/en/de) gelir. NOT: kod ui.enabled okur; sadece
+-- {"enabled":false} yazmak banner'i KAPATMAZ (ui.enabled undefined -> acik sayilir) — bu yuzden
+-- kapatmak istenirse {"ui":{"enabled":false}} yazilmali.
+('01000000-0000-4000-8000-000000000027', 'cookie_consent',           '*', '{"ui":{"enabled":true,"show_reject_all":true,"position":"bottom"},"defaults":{"necessary":true,"analytics":false,"marketing":false},"consent_version":1}'),
 -- 2026-07-19: resmi hesaplar baglandi (IG @goldmood_astro, FB Sayfa 1354790577707171).
 ('01000000-0000-4000-8000-000000000028', 'socials',                  '*', '{"instagram":"https://www.instagram.com/goldmood_astro","twitter":"","facebook":"https://www.facebook.com/1354790577707171","linkedin":""}'),
 ('01000000-0000-4000-8000-000000000029', 'chat_ai_welcome_message',  '*', ''),
