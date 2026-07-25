@@ -171,7 +171,10 @@ export async function getSiteSettingByKey(req: FastifyRequest, reply: FastifyRep
       }
     }
 
-    return reply.code(404).send({ error: { message: 'not_found' } });
+    // Eksik anahtar = BOŞ ayar (404 DEĞİL). Opsiyonel ayarlar (bing/google verification,
+    // custom_css, public_base_url, icon vb.) tanımlı değilse frontend boş almalı; aksi halde
+    // SSR her render'da 404 spam'i üretir (2026-07-25 bing_site_verification/custom_css).
+    return reply.send({ key, locale: '*', value: '' });
   } catch (e) {
     return handleRouteError(reply, req, e, 'get_site_setting');
   }

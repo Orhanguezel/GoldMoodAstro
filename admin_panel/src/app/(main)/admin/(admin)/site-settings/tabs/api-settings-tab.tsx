@@ -39,6 +39,7 @@ const API_KEYS = [
   'google_ads_id',
   'facebook_pixel_id',
   'google_site_verification',
+  'bing_site_verification',
   'cookie_consent',
   'livekit_url',
   'livekit_api_key',
@@ -62,6 +63,7 @@ const EMPTY_FORM: ApiForm = {
   google_ads_id: '',
   facebook_pixel_id: '',
   google_site_verification: '',
+  bing_site_verification: '',
   cookie_consent: '',
   livekit_url: '',
   livekit_api_key: '',
@@ -285,6 +287,19 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
                 value={form.google_site_verification}
                 onChange={(e) => handleChange('google_site_verification', e.target.value)}
                 placeholder="google-site-verification=..."
+                disabled={busy}
+                className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bing_site_verification" className="text-[10px] font-bold text-gm-muted tracking-[0.15em] uppercase ml-1 block">
+                {t('admin.siteSettings.api.bingSiteVerification', null, 'Bing Site Doğrulama')}
+              </Label>
+              <Input
+                id="bing_site_verification"
+                value={form.bing_site_verification}
+                onChange={(e) => handleChange('bing_site_verification', e.target.value)}
+                placeholder="msvalidate.01 içeriği"
                 disabled={busy}
                 className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
               />
