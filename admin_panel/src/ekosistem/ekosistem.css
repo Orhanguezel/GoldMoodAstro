@@ -171,6 +171,48 @@
 .ui-v2-shell .border-brand-500,
 .ui-v2-shell .border-brand-600 { border-color: var(--brand-gold) !important; }
 
+/* Indigo/mor accent -> altin (butonlar, tab'lar, linkler, ring'ler) */
+.ui-v2-shell .bg-indigo-50,
+.ui-v2-shell .bg-indigo-100,
+.ui-v2-shell .bg-indigo-50\/40,
+.ui-v2-shell .bg-indigo-50\/60 { background-color: var(--brand-gold-soft) !important; }
+.ui-v2-shell .bg-indigo-500,
+.ui-v2-shell .bg-indigo-600,
+.ui-v2-shell .bg-indigo-700 { background-color: var(--brand-gold-strong) !important; color: #fff !important; }
+.ui-v2-shell .text-indigo-400,
+.ui-v2-shell .text-indigo-500,
+.ui-v2-shell .text-indigo-600,
+.ui-v2-shell .text-indigo-700,
+.ui-v2-shell .text-indigo-900 { color: var(--brand-gold-strong) !important; }
+.ui-v2-shell .border-indigo-100,
+.ui-v2-shell .border-indigo-200,
+.ui-v2-shell .border-indigo-400,
+.ui-v2-shell .border-indigo-500 { border-color: var(--brand-gold) !important; }
+.ui-v2-shell .ring-indigo-500\/10,
+.ui-v2-shell .ring-indigo-500\/20 { --tw-ring-color: var(--brand-gold-soft) !important; }
+
+/* Koyu slate kutular (icon cember, koyu panel, aktif durum) -> ink; icindeki
+   beyaz metin okunur kalir */
+.ui-v2-shell .bg-slate-800,
+.ui-v2-shell .bg-slate-900,
+.ui-v2-shell .bg-slate-950 { background-color: var(--brand-ink) !important; }
+.ui-v2-shell .shadow-slate-950\/20,
+.ui-v2-shell .shadow-slate-900\/20 { --tw-shadow-color: rgba(26, 23, 21, 0.2) !important; }
+
+/* Diger accent renkleri -> altin (tekil kullanimlar) */
+.ui-v2-shell .bg-blue-500,
+.ui-v2-shell .bg-blue-600,
+.ui-v2-shell .bg-sky-500,
+.ui-v2-shell .bg-cyan-500,
+.ui-v2-shell .bg-fuchsia-500,
+.ui-v2-shell .bg-violet-500,
+.ui-v2-shell .bg-purple-500 { background-color: var(--brand-gold-strong) !important; color: #fff !important; }
+.ui-v2-shell .text-sky-600,
+.ui-v2-shell .text-blue-600,
+.ui-v2-shell .text-fuchsia-600,
+.ui-v2-shell .text-violet-600,
+.ui-v2-shell .text-purple-600 { color: var(--brand-gold-strong) !important; }
+
 /* Form alanlari */
 .ui-v2-shell input,
 .ui-v2-shell textarea,
