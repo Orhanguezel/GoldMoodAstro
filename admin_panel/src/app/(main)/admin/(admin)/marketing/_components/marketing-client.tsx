@@ -155,7 +155,7 @@ export default function MarketingClient() {
   const sourceTotal = sources.reduce((a, s) => a + s.count, 0) || 1;
 
   return (
-    <div className="p-4 sm:p-8 space-y-8 max-w-[1400px] mx-auto">
+    <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-2">
