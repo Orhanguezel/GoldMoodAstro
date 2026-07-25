@@ -241,7 +241,8 @@
 
 /* Kart kose yuvarlakligi admin ile ayni his (rounded-2xl/3xl zaten var) */
 
-/* Standart admin disi surekli animasyonlar kaldirildi (.animate-float no-op).
-   Sayfa girisinde admin standardi olan `animate-in fade-in` korunur. */
-.ui-v2-shell .animate-float { animation: none !important; }
-.ui-v2-shell .animate-pulse { animation: none !important; }
+/* Tum ekosistem sayfa animasyonlari kapatildi (kullanici istegi: sayfalar
+   animasyonsuz gelsin). Yalnizca .animate-spin (yukleme gostergesi) korunur. */
+.ui-v2-shell .animate-float,
+.ui-v2-shell .animate-pulse,
+.ui-v2-shell .animate-in { animation: none !important; }

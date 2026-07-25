@@ -61,16 +61,11 @@ export const SOCIAL_PLATFORMS: SocialPlatformConfig[] = [
     key: "x",
     label: "X (Twitter)",
     title: "X (Twitter) Yönetimi",
-    description: "OAuth1 hesabı, yayın ve X araçları (gelen kutusu, research, performans).",
+    description: "Hesap bağlantısı, yayın durumu ve gönderiler.",
     accent: "text-slate-900",
     icon: (size = 20) => <Twitter size={size} />,
     connectKind: "oauth1-x",
     canPublish: true,
-    tools: [
-      { label: "X Gelen Kutusu", href: "/x-inbox" },
-      { label: "X Research", href: "/x-research" },
-      { label: "X Performans", href: "/x-own-tweets" },
-    ],
   },
   {
     key: "linkedin",

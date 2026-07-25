@@ -17,7 +17,7 @@ const platformMeta: Record<PlatformKey, { title: string; eyebrow: string; descri
   ga4: {
     title: "GA4 Analitiği",
     eyebrow: "Analytics",
-    description: "Trafik, aktif kullanıcılar ve dönüşüm ölçüm durumunu tenant bazında izleyin.",
+    description: "Trafik, aktif kullanıcılar ve dönüşüm ölçüm durumunu izleyin.",
     icon: <BarChart3 size={22} />,
   },
   gsc: {
@@ -47,7 +47,7 @@ const platformMeta: Record<PlatformKey, { title: string; eyebrow: string; descri
   meta: {
     title: "Meta Pixel & CAPI",
     eyebrow: "Meta",
-    description: "Pixel, CAPI ve test event yapılandırmasını tenant bazında kontrol edin.",
+    description: "Pixel, CAPI ve test event yapılandırmasını kontrol edin.",
     icon: <MousePointerClick size={22} />,
   },
 };
@@ -226,7 +226,7 @@ export function MarketingPlatformPage({ platform }: { platform: PlatformKey }) {
       />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <MetricCard label="Bağlantı" value={configured ? "Hazır" : "Eksik"} icon={meta.icon} description="Tenant ayarı" />
+        <MetricCard label="Bağlantı" value={configured ? "Hazır" : "Eksik"} icon={meta.icon} description="Bağlantı ayarı" />
         <MetricCard label="Change-set" value="Onaylı" icon={<ShieldCheck size={20} />} description="Draft → validate → apply" />
         <MetricCard label="Son Durum" value={analysis?.error ? "Hata" : loading ? "Yükleniyor" : "Ok"} icon={<RefreshCw size={20} />} description={analysis?.error || "Read endpoint aktif"} />
       </div>
@@ -380,7 +380,7 @@ export function MarketingPlatformPage({ platform }: { platform: PlatformKey }) {
             </div>
             <div>
               <h2 className="text-xl font-black text-slate-950">Ayarlar</h2>
-              <p className="text-sm font-medium text-slate-400">Kimlik ve OAuth ayarları Settings/Marketing ekranındaki tenant ayarlarıyla yönetilir.</p>
+              <p className="text-sm font-medium text-slate-400">Kimlik ve OAuth ayarları Ayarlar ekranından yönetilir.</p>
             </div>
           </div>
         </section>

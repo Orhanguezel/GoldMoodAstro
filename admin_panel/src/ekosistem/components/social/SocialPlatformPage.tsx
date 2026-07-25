@@ -523,7 +523,7 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
       {connected === false && (
         <div className="flex flex-col gap-3 rounded-2xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700 md:flex-row md:items-center md:justify-between">
           <span>
-            Bu tenant için {config.label} hesabı bağlı değil. Bağlantı/token girişi <b>Ayarlar → Sosyal Medya</b>'dan yapılır.
+            {config.label} hesabı henüz bağlı değil. Bağlantı/token girişi <b>Ayarlar → Sosyal Medya</b>'dan yapılır.
             Yayın denemeden önce bağlantıyı tamamlayın.
           </span>
           <a
@@ -592,12 +592,6 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                   <p className="text-xs font-semibold text-slate-400">{config.label} hesabında yayında olan gerçek gönderiler (canlı).</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {platformKey === "x" && (
-                    <>
-                      <a href="/x-own-tweets" className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-50">X Performans</a>
-                      <a href="/x-inbox" className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600 hover:bg-slate-50">Gelen Kutusu</a>
-                    </>
-                  )}
                   {hasLiveAccount && (
                     <button onClick={() => loadAccount()} disabled={accountState === "loading"} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
                       <RefreshCw size={14} className={accountState === "loading" ? "animate-spin" : ""} /> Yenile
@@ -613,7 +607,7 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
               ) : accountState === "error" ? (
                 <div className="rounded-2xl border border-rose-100 bg-rose-50 p-5 text-sm font-semibold text-rose-700">{accountError || "İçerik çekilemedi."}</div>
               ) : accountItems.length === 0 ? (
-                <Empty text={platformKey === "x" ? "Henüz tweet yok ya da senkronlanmadı. /x-own-tweets'ten metrikleri senkronla." : "Bu hesapta yayında gönderi bulunamadı."} />
+                <Empty text="Bu hesapta yayında gönderi bulunamadı." />
               ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {accountItems.map((m) => (
