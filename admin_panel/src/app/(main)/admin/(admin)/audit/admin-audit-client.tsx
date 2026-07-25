@@ -273,6 +273,48 @@ function normalizeSnapshotForCompare(v: string | null | undefined): string[] {
 
 /* ----------------------------- component ----------------------------- */
 
+// Canlı akış olay adları — Türkçe etiketler (bilinmeyenler otomatik güzelleştirilir).
+const STREAM_TOPIC_TR: Record<string, string> = {
+  'audit.request.logged': 'İstek kaydedildi',
+  'audit.stream.persist_failed': 'Akış kaydı başarısız',
+  'mail.sent': 'E-posta gönderildi',
+  'mail.failed': 'E-posta gönderilemedi',
+  'kyc.document_uploaded': 'KYC belgesi yüklendi',
+  'kyc.submitted': 'KYC başvurusu gönderildi',
+  'kyc.approved': 'KYC onaylandı',
+  'kyc.rejected': 'KYC reddedildi',
+  'withdrawal.approved': 'Para çekme onaylandı',
+  'withdrawal.rejected': 'Para çekme reddedildi',
+  'withdrawal.paid': 'Para çekme ödendi',
+  'commission_notice:sent': 'Komisyon bildirimi gönderildi',
+};
+const STREAM_MSG_TR: Record<string, string> = {
+  request_logged: 'İstek kaydedildi',
+  kyc_document_uploaded: 'KYC belgesi yüklendi',
+  kyc_submitted: 'KYC başvurusu gönderildi',
+  kyc_approved: 'KYC onaylandı',
+  kyc_rejected: 'KYC reddedildi',
+  withdrawal_approved: 'Para çekme onaylandı',
+  withdrawal_rejected: 'Para çekme reddedildi',
+  withdrawal_paid: 'Para çekme ödendi',
+};
+function prettifyKey(s: string): string {
+  return s
+    .replace(/[._:]+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (c) => c.toLocaleUpperCase('tr-TR'));
+}
+function topicLabelTr(s?: string | null): string | null {
+  const v = String(s ?? '').trim();
+  if (!v) return null;
+  return STREAM_TOPIC_TR[v] ?? prettifyKey(v);
+}
+function msgLabelTr(s?: string | null): string | null {
+  const v = String(s ?? '').trim();
+  if (!v) return null;
+  return STREAM_MSG_TR[v] ?? prettifyKey(v);
+}
+
 export default function AdminAuditClient() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -1503,11 +1545,11 @@ export default function AdminAuditClient() {
                         >
                           {safeText(evt.level, 'info')}
                         </Badge>
-                        <span className="text-xs font-bold text-gm-text tracking-wide uppercase">{safeText(evt.topic, t('stream.unknownTopic'))}</span>
+                        <span className="text-xs font-bold text-gm-text tracking-wide">{topicLabelTr(evt.topic) || t('stream.unknownTopic')}</span>
                         <span className="text-[10px] font-mono text-gm-muted ml-auto">{fmtWhen(evt.ts)}</span>
                       </div>
                       <div className="mt-3 text-sm text-gm-text leading-relaxed">
-                        {safeText(evt.message, t('stream.noMessage'))}
+                        {msgLabelTr(evt.message) || t('stream.noMessage')}
                       </div>
                       <div className="mt-3 text-[10px] font-mono text-gm-muted/60 flex gap-3">
                         {evt.actor_user_id && <span className="bg-gm-surface px-2 py-1 rounded">uid: {evt.actor_user_id}</span>}
