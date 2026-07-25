@@ -44,13 +44,21 @@ function isValidFbPixelId(v: unknown) {
   return !!s && /^\d+$/.test(s);
 }
 
+function isValidAdsId(v: unknown) {
+  const s = String(v ?? '').trim();
+  return !!s && s.startsWith('AW-');
+}
+
 export default function AnalyticsScripts() {
-  const { gtmId, ga4Id, facebookPixelId, isLoading } = useAnalyticsSettings();
+  const { gtmId, ga4Id, googleAdsId, facebookPixelId, isLoading } = useAnalyticsSettings();
   const isProd = isProdEnv();
 
   const hasGtm = useMemo(() => isValidGtmId(gtmId), [gtmId]);
   const hasGa = useMemo(() => isValidGa4Id(ga4Id), [ga4Id]);
+  const hasAds = useMemo(() => isValidAdsId(googleAdsId), [googleAdsId]);
   const hasFbPixel = useMemo(() => isValidFbPixelId(facebookPixelId), [facebookPixelId]);
+  // GA4 fallback dali gtag.js yukluyorsa Ads icin tekrar yuklemeyelim.
+  const ga4LoadsGtag = !hasGtm && hasGa;
 
   // GTM noscript (Document kullanılmıyorsa pratik)
   useEffect(() => {
@@ -78,7 +86,7 @@ export default function AnalyticsScripts() {
   // DB'den henüz gelmediyse: hiçbir şey basma (flicker/yanlış init olmasın)
   if (isLoading) return null;
 
-  if (!hasGtm && !hasGa && !hasFbPixel) return null;
+  if (!hasGtm && !hasGa && !hasFbPixel && !hasAds) return null;
 
   return (
     <>
@@ -188,6 +196,30 @@ export default function AnalyticsScripts() {
           ) : null}
         </>
       )}
+
+      {/* 3.5) Google Ads (AW-...) — donusum/etiket. GTM'den bagimsiz calisir;
+          gtag.js zaten GA4 fallback tarafindan yuklenmediyse burada bir kez yuklenir.
+          Consent Mode: ad_storage default 'denied' (pazarlama izni verilene dek modellenmis olcum). */}
+      {hasAds ? (
+        <>
+          {!ga4LoadsGtag ? (
+            <Script
+              id="gads-src"
+              src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(String(googleAdsId))}`}
+              strategy="lazyOnload"
+            />
+          ) : null}
+          <Script id="gads-config" strategy="lazyOnload">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){ window.dataLayer.push(arguments); }
+              window.gtag = window.gtag || gtag;
+              window.gtag('js', new Date());
+              window.gtag('config', '${String(googleAdsId)}');
+            `}
+          </Script>
+        </>
+      ) : null}
 
       {/* 4) Facebook Pixel */}
       {hasFbPixel ? (

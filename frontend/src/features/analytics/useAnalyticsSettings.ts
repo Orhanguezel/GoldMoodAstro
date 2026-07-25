@@ -43,6 +43,18 @@ export function useAnalyticsSettings() {
   }, [gtm]);
 
   const {
+    data: ads,
+    isLoading: adsLoading,
+    isFetching: adsFetching,
+  } = useGetSiteSettingByKeyQuery({ key: 'google_ads_id', locale } as any);
+
+  const googleAdsId = useMemo(() => {
+    const db = coerceId((ads as any)?.value);
+    const env = coerceId(process.env.NEXT_PUBLIC_GOOGLE_ADS_ID);
+    return db || env;
+  }, [ads]);
+
+  const {
     data: fbPixel,
     isLoading: fbPixelLoading,
     isFetching: fbPixelFetching,
@@ -64,7 +76,7 @@ export function useAnalyticsSettings() {
     return coerceId((gscVerification as any)?.value);
   }, [gscVerification]);
 
-  const isLoading = gaLoading || gtmLoading || gaFetching || gtmFetching || fbPixelLoading || fbPixelFetching || gscLoading || gscFetching;
+  const isLoading = gaLoading || gtmLoading || gaFetching || gtmFetching || fbPixelLoading || fbPixelFetching || gscLoading || gscFetching || adsLoading || adsFetching;
 
-  return { locale, ga4Id, gtmId, facebookPixelId, googleSiteVerification, isLoading };
+  return { locale, ga4Id, gtmId, googleAdsId, facebookPixelId, googleSiteVerification, isLoading };
 }

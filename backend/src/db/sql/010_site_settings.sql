@@ -41,6 +41,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 -- GA4'e veri gitmez. Direkt GA4 (gtag) kullanılıyor → boş bırakıldı (2026-06-20).
 ('01000000-0000-4000-8000-000000000020', 'gtm_container_id',         '*', ''),
 ('01000000-0000-4000-8000-00000000002f', 'ga4_measurement_id',       '*', 'G-M8FPZB5FFC'),
+('01000000-0000-4000-8000-00000000002e', 'google_ads_id',            '*', 'AW-18346295670'),
 ('01000000-0000-4000-8000-000000000021', 'google_site_verification', '*', ''),
 ('01000000-0000-4000-8000-0000000000fb', 'facebook_pixel_id',        '*', ''),
 ('01000000-0000-4000-8000-000000000022', 'site_logo_light',          '*', ''),
