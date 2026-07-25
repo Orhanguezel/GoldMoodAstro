@@ -278,8 +278,9 @@ export async function repoGetAuditGeoStats(
   conds.push(sql`DATE(${table.created_at}) >= ${startExpr}`);
   conds.push(sql`${table.country} IS NOT NULL AND ${table.country} != ''`);
 
-  if (!useAuth && typeof q.only_admin !== 'undefined' && isTruthyBoolLike(q.only_admin)) {
-    conds.push(eq(auditRequestLogs.is_admin, 1));
+  if (!useAuth) {
+    // Varsayılan: admin panel trafiği (kendi çalışmalarımız) hariç. only_admin=true → yalnızca admin.
+    conds.push(eq(auditRequestLogs.is_admin, isTruthyBoolLike(q.only_admin) ? 1 : 0));
   }
 
   if (typeof q.exclude_localhost !== 'undefined' && isTruthyBoolLike(q.exclude_localhost)) {

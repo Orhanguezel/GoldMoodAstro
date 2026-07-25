@@ -29,6 +29,8 @@ function dateRangeConds(opts: AnalyticsDateRangeOpts): SQL[] {
   if (typeof opts.exclude_localhost !== 'undefined' && isTruthyBoolLike(opts.exclude_localhost)) {
     conds.push(excludeLocalhostCond(auditRequestLogs));
   }
+  // Admin panel trafiği (kendi çalışmalarımız) site istatistiklerine sayılmaz.
+  conds.push(eq(auditRequestLogs.is_admin, 0));
   return conds;
 }
 
@@ -405,6 +407,8 @@ export async function repoGetAuditSummary(opts?: { exclude_localhost?: AuditBool
   if (opts?.exclude_localhost && isTruthyBoolLike(opts.exclude_localhost)) {
     baseConds.push(excludeLocalhostCond(auditRequestLogs));
   }
+  // Admin panel trafiği hariç (site istatistiği).
+  baseConds.push(eq(auditRequestLogs.is_admin, 0));
   const todayCond = and(...baseConds)!;
 
   const [totals] = await db
@@ -474,6 +478,8 @@ export async function repoGetMonthlyAggregation(opts: {
   if (typeof opts.exclude_localhost !== 'undefined' && isTruthyBoolLike(opts.exclude_localhost)) {
     conds.push(excludeLocalhostCond(auditRequestLogs));
   }
+  // Admin panel trafiği hariç (site istatistiği).
+  conds.push(eq(auditRequestLogs.is_admin, 0));
 
   const rows = await db
     .select({

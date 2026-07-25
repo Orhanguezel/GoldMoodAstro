@@ -35,9 +35,8 @@ export async function repoGetAuditMetricsDaily(
 
   const conds: SQL[] = [gte(auditRequestLogs.created_at, fromExpr)];
 
-  if (typeof input.only_admin === 'boolean') {
-    conds.push(eq(auditRequestLogs.is_admin, input.only_admin ? 1 : 0));
-  }
+  // Varsayılan: admin panel trafiği (kendi çalışmalarımız) hariç. only_admin=true → yalnızca admin.
+  conds.push(eq(auditRequestLogs.is_admin, input.only_admin === true ? 1 : 0));
 
   if (input.path_prefix && input.path_prefix.trim()) {
     const p = input.path_prefix.trim();
