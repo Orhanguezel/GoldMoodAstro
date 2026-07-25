@@ -24,6 +24,10 @@ import { registerStubs } from './stubs';
 import { registerFirebaseAdmin } from '@/modules/firebase/admin.routes';
 // Ekosistem pazarlama/analitik modulleri (Faz 1: GA4 + Search Console) — de-tenant, admin-only
 import { marketingRoutes } from '@/social/modules/marketing/routes';
+// Ekosistem sosyal medya modulleri (Faz 3: FB/IG/X + gonderiler + sablonlar) — de-tenant, admin-only
+import { platformsRoutes } from '@/social/modules/platforms/routes';
+import { postsRoutes } from '@/social/modules/posts/routes';
+import { templatesRoutes } from '@/social/modules/templates/routes';
 
 // Project-specific modules
 // Project-specific modules
@@ -60,4 +64,8 @@ export async function registerGoldmoodAdmin(adminApi: FastifyInstance) {
   await adminApi.register(registerHoroscopeAdminRoutes);
   // /api/admin/social/marketing/* — GA4, Search Console, (Faz 2: Google Ads)
   await adminApi.register(marketingRoutes, { prefix: '/social/marketing' });
+  // /api/admin/social/{platforms,posts,templates}/* — FB/IG/X hesaplar, gonderiler, sablonlar
+  await adminApi.register(platformsRoutes, { prefix: '/social/platforms' });
+  await adminApi.register(postsRoutes, { prefix: '/social/posts' });
+  await adminApi.register(templatesRoutes, { prefix: '/social/templates' });
 }

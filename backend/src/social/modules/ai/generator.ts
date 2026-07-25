@@ -24,3 +24,16 @@ export async function generateGoogleAdsRsaCopy(_input: {
     "AI Google Ads reklam metni uretimi bu surumde devre disi (Faz 2'de aktiflesecek).",
   );
 }
+
+// Faz 3 stub — X (Twitter) yorumlarina AI yanit taslagi. FB/IG odagi icin
+// gerekli degil; X etkilesim endpoint'leri cagirirsa net hata verir.
+export interface XReplyDraftResult {
+  reply: string;
+  model: string;
+  provider: string;
+}
+export async function generateXReplyDraft(
+  ..._args: unknown[]
+): Promise<XReplyDraftResult> {
+  throw new Error("AI X yanit taslagi bu surumde devre disi.");
+}
