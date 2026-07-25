@@ -1,5 +1,9 @@
 # EKSIK/BOZUK GORSELLER — URETILECEK
 
+> **Durum:** 2026-07-21 itibariyle `/backend/uploads/tarot` altındaki seed'de
+> beklenen 79 tarot PNG'nin tamami mevcut ve 1024x1024 olarak dogrulandi.
+> Gozle kontrol edilen bozuk/kesik/placeholder kartlar yeniden uretildi.
+
 > **Tarih:** 2026-07-19 · Tespit: sosyal medya otomasyonu icin gorsel kaynagi taranirken cikti.
 > **Etki:** `/tr/tarot` sayfasinda kartlar kirik/kesik goruntuleniyor; sosyal medya
 > gonderilerinde kullanilabilecek saglam kart sayisi cok az.

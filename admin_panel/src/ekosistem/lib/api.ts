@@ -1,9 +1,19 @@
-// goldmoodastro admin: ekosistem (sosial.tarvista.com) backend'ine baglanir.
-// NEXT_PUBLIC_API_URL admin'in KENDI backend'i icin kullanildigindan ayri bir
-// degisken (NEXT_PUBLIC_EKOSISTEM_API_URL) okunur.
-const API_URL =
-  process.env.NEXT_PUBLIC_EKOSISTEM_API_URL || "https://sosial.tarvista.com/api/v1";
-export const API_ORIGIN = API_URL.replace(/\/api\/v1\/?$/, "");
+// Ekosistem modulleri artik goldmoodastro'nun KENDI backend'ine entegre
+// (backend/src/social). Admin-only rotalar: /api/admin/social/*.
+// Auth: goldmoodastro admin JWT (Bearer, localStorage mh_access_token) — ekosistem
+// cookie auth'u DEGIL. Tek tenant (goldmoodastro), tenantKey backend'de sabit.
+const GM_API = (process.env.NEXT_PUBLIC_API_URL || "/api").replace(/\/$/, "");
+const API_URL = `${GM_API}/admin/social`;
+export const API_ORIGIN = GM_API.replace(/\/api$/, "");
+
+function authHeader(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const t =
+    window.localStorage.getItem("mh_access_token") ||
+    window.localStorage.getItem("access_token") ||
+    "";
+  return t ? { Authorization: `Bearer ${t}` } : {};
+}
 
 function normalizeApiError(err: unknown, status: number): string {
   if (typeof err === "string" && err.trim()) return err;
@@ -23,10 +33,10 @@ function normalizeApiError(err: unknown, status: number): string {
 async function fetcher<T>(path: string, options?: RequestInit): Promise<T> {
   const headers =
     options?.body instanceof FormData
-      ? { ...options?.headers }
+      ? { ...authHeader(), ...options?.headers }
       : options?.body
-        ? { "Content-Type": "application/json", ...options?.headers }
-        : { ...options?.headers };
+        ? { "Content-Type": "application/json", ...authHeader(), ...options?.headers }
+        : { ...authHeader(), ...options?.headers };
 
   const res = await fetch(`${API_URL}${path}`, {
     credentials: "include",
@@ -34,42 +44,13 @@ async function fetcher<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   });
 
-  // Auto-refresh on 401
-  if (res.status === 401 && !path.includes("/auth/")) {
-    const refreshRes = await fetch(`${API_URL}/auth/token/refresh`, {
-      method: "POST",
-      credentials: "include",
-    });
-
-    if (refreshRes.ok) {
-      // Retry original request
-      const retryRes = await fetch(`${API_URL}${path}`, {
-        credentials: "include",
-        headers,
-        ...options,
-      });
-      if (!retryRes.ok) {
-        const err = await retryRes.json().catch(() => ({ error: retryRes.statusText }));
-        throw new Error(normalizeApiError(err, retryRes.status));
-      }
-      return retryRes.json();
-    } else {
-      // Ekosistem (sosial.tarvista.com) oturumu yok/expired. Bu, goldmoodastro
-      // admin oturumundan AYRI bir sistem — bu yuzden admin'in /auth/login'ine
-      // yonlendirmiyoruz (yanlis backend'e giris olur). Sayfalar bu hatayi
-      // yakalayip "ekosistem baglantisi gerekli" uyarisi gosterir.
-      throw new Error(
-        "Ekosistem oturumu gerekli: sosial.tarvista.com hesabinizla giris yapin.",
-      );
-    }
-  }
-
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(normalizeApiError(err, res.status));
   }
   return res.json();
 }
+
 
 // ... existing auth, posts, templates, tenants ...
 // (I will use multi_replace if needed, but for now let's just append)
@@ -256,9 +237,18 @@ export const templates = {
     }),
 };
 
+// De-tenant: goldmoodastro tek tenant. Tenants modulu backend'e portlanmadi;
+// istemci tarafinda tek sabit tenant dondururuz (tenant switcher devre disi).
+const GOLDMOOD_TENANT_ROW = {
+  key: "goldmoodastro",
+  name: "GoldMoodAstro",
+  websiteUrl: "https://goldmoodastro.com",
+  isActive: 1,
+  branding: { appName: "GoldMoodAstro" },
+};
 export const tenants = {
-  list: () => fetcher<{ items: any[] }>("/tenants"),
-  get: (tenantKey: string) => fetcher<any>(`/tenants/${encodeURIComponent(tenantKey)}`),
+  list: async () => ({ items: [GOLDMOOD_TENANT_ROW] as any[] }),
+  get: async (_tenantKey: string) => GOLDMOOD_TENANT_ROW as any,
 };
 
 export const tenantAdmin = {

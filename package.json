@@ -28,5 +28,8 @@
     "withdrawals:auto": "bun run --cwd backend withdrawals:auto",
     "db:seed": "bun run --cwd backend db:seed",
     "typecheck": "bun run --cwd backend typecheck && bun run --cwd admin_panel typecheck"
+  },
+  "overrides": {
+    "google-auth-library": "10.5.0"
   }
 }

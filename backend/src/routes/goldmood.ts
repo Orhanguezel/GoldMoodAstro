@@ -22,6 +22,8 @@ import { registerConsultantTimeBlocks } from '@/modules/consultantTimeBlocks/rou
 import { registerStubs } from './stubs';
 
 import { registerFirebaseAdmin } from '@/modules/firebase/admin.routes';
+// Ekosistem pazarlama/analitik modulleri (Faz 1: GA4 + Search Console) — de-tenant, admin-only
+import { marketingRoutes } from '@/social/modules/marketing/routes';
 
 // Project-specific modules
 // Project-specific modules
@@ -56,4 +58,6 @@ export async function registerGoldmoodAdmin(adminApi: FastifyInstance) {
   await adminApi.register(registerServiceBoostsAdmin);
   await adminApi.register(registerCommissionChangeAdmin);
   await adminApi.register(registerHoroscopeAdminRoutes);
+  // /api/admin/social/marketing/* — GA4, Search Console, (Faz 2: Google Ads)
+  await adminApi.register(marketingRoutes, { prefix: '/social/marketing' });
 }
