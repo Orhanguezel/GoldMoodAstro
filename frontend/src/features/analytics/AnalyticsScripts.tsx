@@ -91,7 +91,7 @@ export default function AnalyticsScripts() {
   return (
     <>
       {/* 1) Consent Mode init (default denied) + external setter + queue flush */}
-      <Script id="analytics-consent-init" strategy="lazyOnload">
+      <Script id="analytics-consent-init" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
 
@@ -206,10 +206,10 @@ export default function AnalyticsScripts() {
             <Script
               id="gads-src"
               src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(String(googleAdsId))}`}
-              strategy="lazyOnload"
+              strategy="afterInteractive"
             />
           ) : null}
-          <Script id="gads-config" strategy="lazyOnload">
+          <Script id="gads-config" strategy="afterInteractive">
             {`
               window.dataLayer = window.dataLayer || [];
               function gtag(){ window.dataLayer.push(arguments); }
