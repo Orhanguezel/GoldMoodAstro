@@ -36,6 +36,13 @@ import {
   Menu as MenuIcon,
   Layers,
   FolderTree,
+  LineChart,
+  TrendingUp,
+  Search,
+  Target,
+  Share2,
+  Youtube,
+  Twitter,
   type LucideIcon,
 } from 'lucide-react';
 import type { TranslateFn } from '@/i18n';
@@ -109,9 +116,22 @@ export type AdminNavItemKey =
   | 'blog'
   | 'landing'
   | 'pages'
-  | 'commission_change';
+  | 'commission_change'
+  | 'eko_analytics'
+  | 'eko_ga4'
+  | 'eko_search_console'
+  | 'eko_google_ads'
+  | 'eko_social'
+  | 'eko_youtube'
+  | 'eko_x_research';
 
-export type AdminNavGroupKey = 'general' | 'content' | 'marketing' | 'communication' | 'system';
+export type AdminNavGroupKey =
+  | 'general'
+  | 'content'
+  | 'marketing'
+  | 'communication'
+  | 'system'
+  | 'ekosistem';
 
 export type AdminNavConfigItem = {
   key: AdminNavItemKey;
@@ -167,6 +187,19 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'landing', url: '/admin/landing', icon: Layers },
       { key: 'pages', url: '/admin/pages', icon: BookOpen },
       { key: 'campaigns', url: '/admin/campaigns', icon: Tag },
+    ],
+  },
+  {
+    id: 5,
+    key: 'ekosistem',
+    items: [
+      { key: 'eko_analytics', url: '/admin/analytics', icon: LineChart },
+      { key: 'eko_ga4', url: '/admin/ga4', icon: TrendingUp },
+      { key: 'eko_search_console', url: '/admin/search-console', icon: Search },
+      { key: 'eko_google_ads', url: '/admin/google-ads', icon: Target },
+      { key: 'eko_social', url: '/admin/social', icon: Share2 },
+      { key: 'eko_youtube', url: '/admin/youtube', icon: Youtube },
+      { key: 'eko_x_research', url: '/admin/x-research', icon: Twitter },
     ],
   },
   {
@@ -243,6 +276,13 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   landing: 'Landing Sayfaları',
   pages: 'İçerik/Hukuki Sayfalar',
   commission_change: 'Komisyon Bildirimi',
+  eko_analytics: 'Analitik (Genel)',
+  eko_ga4: 'Google Analytics (GA4)',
+  eko_search_console: 'Search Console',
+  eko_google_ads: 'Google Ads',
+  eko_social: 'Sosyal Medya',
+  eko_youtube: 'YouTube',
+  eko_x_research: 'X (Twitter) Araştırma',
 };
 
 export function buildAdminSidebarItems(

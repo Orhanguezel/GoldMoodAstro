@@ -8,6 +8,9 @@
 @import "../styles/presets/soft-pop.css";
 @import "../styles/presets/tangerine.css";
 
+/* Ekosistem (sosyal-medya/pazarlama) modul stilleri — sadece .ui-v2-shell altini etkiler */
+@import "../ekosistem/ekosistem.css";
+
 /* Brand colors */
 :root {
   /* Logo Primary Colors */

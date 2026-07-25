@@ -1,0 +1,226 @@
+/* ============================================================
+   Ekosistem (sosyal-medya / pazarlama) modul stilleri
+   ------------------------------------------------------------
+   Kaynak: ekosistem-sosyal-medya/dashboard (Tailwind v3) — buraya
+   Tailwind v4'e uyarlanarak tasindi. Yalnizca .ui-v2-shell altindaki
+   ported bilesenleri etkiler; goldmoodastro admin (gm-*) temasina
+   dokunmaz. globals.css icinden @import ile yuklenir.
+   ============================================================ */
+
+/* --- @theme: Tailwind v4 utility uretimi (bg-brand-500, text-surface-400,
+   shadow-card, ...). Bu aile isimleri goldmoodastro'da kullanilmaz,
+   sadece ekosistem bilesenleri tuketir. --- */
+@theme {
+  /* Brand (indigo-purple) */
+  --color-brand-50: #f5f3ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd6fe;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+  --color-brand-800: #5b21b6;
+  --color-brand-900: #4c1d95;
+
+  /* Legacy primary (kaynakta hala kullaniliyor) */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+
+  /* Accent */
+  --color-accent-pink: #ec4899;
+  --color-accent-indigo: #6366f1;
+  --color-accent-cyan: #06b6d4;
+
+  /* Surface (slate tabanli derinlik) */
+  --color-surface-0: #ffffff;
+  --color-surface-50: #f8fafc;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e2e8f0;
+  --color-surface-600: #334155;
+  --color-surface-700: #1e293b;
+  --color-surface-800: #111827;
+  --color-surface-900: #0f172a;
+
+  /* Status */
+  --color-status-success: #10b981;
+  --color-status-warning: #f59e0b;
+  --color-status-danger: #f43f5e;
+  --color-status-info: #3b82f6;
+
+  /* Shadow scale */
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
+  --shadow-card-hover: 0 4px 6px -1px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.06);
+  --shadow-float: 0 20px 25px -5px rgb(15 23 42 / 0.10), 0 8px 10px -6px rgb(15 23 42 / 0.05);
+  --shadow-brand-glow: 0 10px 30px -5px rgb(139 92 246 / 0.35);
+}
+
+/* --- Runtime/gradient token'lari (color-mix, gradient icin) --- */
+:root {
+  --brand-50: #f5f3ff;
+  --brand-100: #ede9fe;
+  --brand-200: #ddd6fe;
+  --brand-300: #c4b5fd;
+  --brand-400: #a78bfa;
+  --brand-500: #8b5cf6;
+  --brand-600: #7c3aed;
+  --brand-700: #6d28d9;
+  --brand-800: #5b21b6;
+  --brand-900: #4c1d95;
+
+  --accent-pink: #ec4899;
+  --accent-indigo: #6366f1;
+  --accent-cyan: #06b6d4;
+
+  --surface-0: #ffffff;
+  --surface-50: #f8fafc;
+  --surface-100: #f1f5f9;
+  --surface-200: #e2e8f0;
+  --surface-600: #334155;
+  --surface-700: #1e293b;
+  --surface-800: #111827;
+  --surface-900: #0f172a;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-danger: #f43f5e;
+  --status-info: #3b82f6;
+
+  --gradient-brand: linear-gradient(135deg, var(--brand-500) 0%, var(--accent-pink) 50%, var(--accent-indigo) 100%);
+  --gradient-brand-soft: linear-gradient(180deg, var(--brand-50) 0%, var(--surface-0) 100%);
+  --gradient-dark-hero: linear-gradient(135deg, var(--surface-900) 0%, var(--brand-900) 100%);
+  --gradient-mesh:
+    radial-gradient(at 20% 10%, var(--brand-400) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, var(--accent-pink) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, var(--accent-indigo) 0px, transparent 50%);
+}
+
+/* --- Gradient background utility'leri (v4 @theme'den uretilmez, elle) --- */
+.bg-brand-gradient { background-image: var(--gradient-brand); }
+.bg-brand-gradient-soft { background-image: var(--gradient-brand-soft); }
+.bg-dark-hero-gradient { background-image: var(--gradient-dark-hero); }
+.bg-mesh-gradient { background-image: var(--gradient-mesh); }
+
+/* --- Bilesen siniflari --- */
+.glass {
+  background: color-mix(in srgb, var(--surface-700) 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface-600) 72%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-float);
+}
+
+.premium-gradient { background: var(--gradient-brand); }
+
+.premium-card {
+  background: var(--surface-700);
+  border: 1px solid var(--surface-600);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+}
+.premium-card:hover { box-shadow: var(--shadow-card-hover); }
+
+.nav-link-active {
+  background: color-mix(in srgb, var(--brand-600) 20%, transparent);
+  color: var(--brand-300);
+  font-weight: 500;
+}
+
+/* --- UI v2 dark shell: ported bilesenler light Tailwind class'lariyla
+   yazildi; bu blok onlari dark yuzeye remap eder --- */
+.ui-v2-shell {
+  background: var(--surface-900);
+  color: var(--text-secondary);
+}
+
+.ui-v2-shell .bg-white,
+.ui-v2-shell .bg-slate-50,
+.ui-v2-shell .bg-slate-50\/30,
+.ui-v2-shell .bg-slate-50\/50,
+.ui-v2-shell .bg-slate-50\/60,
+.ui-v2-shell .bg-slate-100,
+.ui-v2-shell .bg-slate-100\/50,
+.ui-v2-shell .bg-slate-200,
+.ui-v2-shell .bg-white\/40,
+.ui-v2-shell .bg-white\/50,
+.ui-v2-shell .bg-white\/70 {
+  background-color: var(--surface-700) !important;
+}
+
+.ui-v2-shell .bg-emerald-50 { background-color: color-mix(in srgb, var(--status-success) 14%, var(--surface-700)) !important; }
+.ui-v2-shell .bg-rose-50 { background-color: color-mix(in srgb, var(--status-danger) 14%, var(--surface-700)) !important; }
+.ui-v2-shell .bg-amber-50 { background-color: color-mix(in srgb, var(--status-warning) 14%, var(--surface-700)) !important; }
+.ui-v2-shell .bg-brand-50 { background-color: color-mix(in srgb, var(--brand-500) 16%, var(--surface-700)) !important; }
+
+.ui-v2-shell .border-slate-50,
+.ui-v2-shell .border-slate-100,
+.ui-v2-shell .border-slate-200,
+.ui-v2-shell .border-emerald-100,
+.ui-v2-shell .border-rose-100,
+.ui-v2-shell .border-amber-100,
+.ui-v2-shell .border-brand-100,
+.ui-v2-shell .border-white\/20 {
+  border-color: var(--surface-600) !important;
+}
+
+.ui-v2-shell .text-slate-950,
+.ui-v2-shell .text-slate-900,
+.ui-v2-shell .text-slate-800,
+.ui-v2-shell .text-slate-700 { color: var(--text-primary) !important; }
+
+.ui-v2-shell .text-slate-600,
+.ui-v2-shell .text-slate-500 { color: var(--text-secondary) !important; }
+
+.ui-v2-shell .text-slate-400,
+.ui-v2-shell .text-slate-300 { color: var(--text-muted) !important; }
+
+.ui-v2-shell .text-emerald-600,
+.ui-v2-shell .text-emerald-700 { color: color-mix(in srgb, var(--status-success) 64%, white) !important; }
+
+.ui-v2-shell .text-rose-600,
+.ui-v2-shell .text-rose-700 { color: color-mix(in srgb, var(--status-danger) 58%, white) !important; }
+
+.ui-v2-shell .text-amber-600,
+.ui-v2-shell .text-amber-700 { color: color-mix(in srgb, var(--status-warning) 72%, white) !important; }
+
+.ui-v2-shell .text-brand-600,
+.ui-v2-shell .text-brand-700 { color: var(--brand-300) !important; }
+
+.ui-v2-shell input,
+.ui-v2-shell textarea,
+.ui-v2-shell select {
+  background-color: var(--surface-800) !important;
+  border-color: var(--surface-600) !important;
+  color: var(--text-primary) !important;
+}
+
+.ui-v2-shell input::placeholder,
+.ui-v2-shell textarea::placeholder { color: var(--text-faint); }
+
+.ui-v2-shell table thead tr,
+.ui-v2-shell .hover\:bg-slate-50:hover,
+.ui-v2-shell .hover\:bg-slate-50\/30:hover,
+.ui-v2-shell .hover\:bg-slate-100:hover,
+.ui-v2-shell .hover\:bg-rose-50:hover {
+  background-color: color-mix(in srgb, var(--surface-600) 42%, transparent) !important;
+}
+
+.ui-v2-shell .shadow-card,
+.ui-v2-shell .shadow-sm { box-shadow: 0 20px 40px -28px rgb(0 0 0 / 0.75); }
+
+/* --- Animasyon --- */
+@keyframes ekosistem-float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+.animate-float { animation: ekosistem-float 6s ease-in-out infinite; }

@@ -74,6 +74,7 @@ const emptyNav: AdminNavCopy = {
     marketing: '',
     communication: '',
     system: '',
+    ekosistem: '',
   },
   items: {
     dashboard: '',
@@ -118,6 +119,13 @@ const emptyNav: AdminNavCopy = {
     landing: '',
     pages: '',
     commission_change: '',
+    eko_analytics: '',
+    eko_ga4: '',
+    eko_search_console: '',
+    eko_google_ads: '',
+    eko_social: '',
+    eko_youtube: '',
+    eko_x_research: '',
   },
 };
 
@@ -133,6 +141,7 @@ export function normalizeAdminUiCopy(raw: unknown): AdminUiCopy {
     marketing: uiText(labelsRaw.marketing),
     communication: uiText(labelsRaw.communication),
     system: uiText(labelsRaw.system),
+    ekosistem: uiText(labelsRaw.ekosistem),
   };
 
   const items: AdminNavCopy['items'] = {
@@ -178,6 +187,13 @@ export function normalizeAdminUiCopy(raw: unknown): AdminUiCopy {
     landing: uiText(itemsRaw.landing),
     pages: uiText(itemsRaw.pages),
     commission_change: uiText(itemsRaw.commission_change),
+    eko_analytics: uiText(itemsRaw.eko_analytics),
+    eko_ga4: uiText(itemsRaw.eko_ga4),
+    eko_search_console: uiText(itemsRaw.eko_search_console),
+    eko_google_ads: uiText(itemsRaw.eko_google_ads),
+    eko_social: uiText(itemsRaw.eko_social),
+    eko_youtube: uiText(itemsRaw.eko_youtube),
+    eko_x_research: uiText(itemsRaw.eko_x_research),
   };
 
   const commonRaw = parseJsonObject(o.common);
