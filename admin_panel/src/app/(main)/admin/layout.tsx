@@ -74,13 +74,13 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
             </header>
 
             <div className="flex flex-1 flex-col overflow-hidden">
-              {/* ⚠️ ADMIN SAYFA LAYOUT KURALI — DEĞİŞTİRME/İHLAL ETME:
-                  Bu container TÜM admin sayfalarına padding (p-6/10/12) + genişlik
-                  (mx-auto max-w-screen-2xl) verir. Yeni bir admin sayfası (page/client)
-                  yazarken KENDİ p-*/px-*/py-*/max-w-*/mx-auto SARMALAYICINI EKLEME —
-                  çift padding + farklı genişlik = bozuk layout olur (2026-07-25 /admin/marketing).
-                  Kök wrapper deseni diğer sayfalarla AYNI olsun:
-                    <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700"> */}
+              {/* ADMIN SAYFA LAYOUT KURALI — DEGISTIRME/IHLAL ETME:
+                  Bu container TUM admin sayfalarina padding (p-6, md p-10, lg p-12) +
+                  genislik (mx-auto, max-w-screen-2xl) verir. Yeni bir admin sayfasi
+                  (page/client) yazarken KENDI padding, max-w veya mx-auto sarmalayicini
+                  EKLEME — cift padding + farkli genislik = bozuk layout olur
+                  (2026-07-25 admin/marketing bunu yasadi). Kok wrapper deseni diger
+                  sayfalarla AYNI olsun: space-y-10 pb-12 animate-in fade-in. */}
               <div className="flex-1 min-w-0 overflow-auto p-6 md:p-10 lg:p-12">
                 <div className="mx-auto max-w-screen-2xl">
                   {children}
