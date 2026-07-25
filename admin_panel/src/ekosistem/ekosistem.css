@@ -199,10 +199,7 @@
 
 /* Kart kose yuvarlakligi admin ile ayni his (rounded-2xl/3xl zaten var) */
 
-/* --- Animasyon --- */
-@keyframes ekosistem-float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-.animate-float { animation: ekosistem-float 6s ease-in-out infinite; }
+/* Standart admin disi surekli animasyonlar kaldirildi (.animate-float no-op).
+   Sayfa girisinde admin standardi olan `animate-in fade-in` korunur. */
+.ui-v2-shell .animate-float { animation: none !important; }
+.ui-v2-shell .animate-pulse { animation: none !important; }

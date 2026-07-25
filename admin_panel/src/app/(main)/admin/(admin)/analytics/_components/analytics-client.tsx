@@ -150,38 +150,22 @@ export default function AnalyticsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Performans Analitiği</h1>
-          <p className="text-slate-500 font-medium">Seçili projenin mevcut içeriklerini ve platform etkileşimlerini inceleyin.</p>
+      {/* Header — standart admin (/admin/consultants dili) */}
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-gm-gold" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">Pazarlama &amp; Analitik</span>
+          </div>
+          <h1 className="font-serif text-4xl text-gm-text">Performans Analitiği</h1>
+          <p className="max-w-2xl text-sm font-serif italic text-gm-muted opacity-70">Mevcut içerikleri ve platform etkileşimlerini inceleyin.</p>
         </div>
-        <div className="flex items-center gap-3">
-           <select
-            className="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm outline-none"
-            value={tenantKey}
-            onChange={(e) => {
-              setTenantKey(e.target.value);
-              setStoredTenantKey(e.target.value);
-            }}
-           >
-            {tenantItems.map((tenant: any) => (
-              <option key={tenant.key} value={tenant.key}>
-                {tenant.name}
-              </option>
-            ))}
-           </select>
-           <div className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-2xl text-xs font-bold border border-emerald-100 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-              Canlı Veri
-           </div>
-           <button
-            onClick={() => window.location.reload()}
-            className="p-2.5 bg-white border border-slate-200 text-slate-600 rounded-2xl hover:bg-slate-50 transition-all shadow-sm"
-           >
-              <RefreshCw size={18} />
-           </button>
-        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="inline-flex h-12 items-center gap-2 rounded-full border border-gm-border-soft bg-gm-surface/50 px-8 text-[10px] font-bold uppercase tracking-widest text-gm-text shadow-lg transition-all hover:bg-gm-primary/5"
+        >
+          <RefreshCw size={16} /> Yenile
+        </button>
       </div>
 
       <div className="flex border-b border-slate-200">

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+// goldmoodastro admin standart sayfa basligi (/admin/consultants dili):
+// gold eyebrow (h-px cizgi) + serif h1 + italic subtitle. Gradient/mesh/animasyon YOK.
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -22,33 +24,34 @@ export function GradientHero({
   className,
 }: GradientHeroProps) {
   return (
-    <section
+    <div
       className={cx(
-        "relative overflow-hidden rounded-3xl bg-dark-hero-gradient px-7 py-8 text-white shadow-float sm:px-8",
+        "flex flex-col gap-6 md:flex-row md:items-end md:justify-between",
         className,
       )}
     >
-      <div className="absolute inset-0 bg-mesh-gradient opacity-30" />
-      <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-      <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-        <div className="max-w-2xl">
-          {eyebrow && (
-            <p className="text-xs font-black uppercase tracking-widest text-brand-100">
+      <div className="space-y-2">
+        {eyebrow && (
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-gm-gold" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">
               {eyebrow}
-            </p>
-          )}
-          <h1 className="mt-3 text-3xl font-black tracking-normal sm:text-4xl">
-            {title}
-          </h1>
-          {description && (
-            <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-white/75 sm:text-base">
-              {description}
-            </p>
-          )}
-          {actions && <div className="mt-6 flex flex-wrap gap-3">{actions}</div>}
-        </div>
-        {aside && <div className="relative shrink-0">{aside}</div>}
+            </span>
+          </div>
+        )}
+        <h1 className="font-serif text-4xl text-gm-text">{title}</h1>
+        {description && (
+          <p className="max-w-2xl text-sm font-serif italic text-gm-muted opacity-70">
+            {description}
+          </p>
+        )}
       </div>
-    </section>
+      {(actions || aside) && (
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
+          {actions}
+          {aside}
+        </div>
+      )}
+    </div>
   );
 }

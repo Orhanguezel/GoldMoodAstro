@@ -122,23 +122,18 @@ export default function XResearchPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 animate-in fade-in duration-700">
-      <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">X Research</h1>
-          <p className="mt-2 text-sm font-medium text-slate-500">
-            Firma seç → sadece o firmanın tweetleri ve analiz notu gösterilir. Firmalar karışmaz.
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-gm-gold" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">Araştırma</span>
+          </div>
+          <h1 className="font-serif text-4xl text-gm-text">X (Twitter) Araştırma</h1>
+          <p className="max-w-2xl text-sm font-serif italic text-gm-muted opacity-70">
+            İzlenen hedeflerin tweet'lerini ve analiz notlarını görün.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <select
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500/20"
-            value={tenantKey}
-            onChange={(e) => { setTenantKey(e.target.value); setStoredTenantKey(e.target.value); load(e.target.value); }}
-          >
-            {tenantItems.map((t: any) => (
-              <option key={t.key} value={t.key}>{t.name}</option>
-            ))}
-          </select>
           <button
             onClick={syncSelected}
             disabled={syncing || !selectedId}

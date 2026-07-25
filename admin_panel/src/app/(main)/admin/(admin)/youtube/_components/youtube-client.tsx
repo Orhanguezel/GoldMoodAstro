@@ -156,42 +156,6 @@ export default function YouTubeDashboardPage() {
         eyebrow="YouTube"
         title="YouTube Stüdyosu"
         description="YouTube entegrasyonu, video yayınlama durumu ve kanal istatistikleriniz."
-        actions={
-          <>
-            <a
-              href="/posts/new"
-              className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-950 shadow-card transition-all hover:-translate-y-0.5"
-            >
-              <Plus size={17} />
-              Yeni Video
-            </a>
-            <a
-              href="/settings"
-              className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-3 text-sm font-black text-white ring-1 ring-white/20 transition-all hover:bg-white/15"
-            >
-              <Settings size={17} />
-              Ayarlar
-            </a>
-          </>
-        }
-        aside={
-          <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/15">
-            <select
-              className="min-w-48 bg-transparent text-sm font-bold text-white outline-none"
-              value={tenantKey}
-              onChange={(e) => {
-                setTenantKey(e.target.value);
-                setStoredTenantKey(e.target.value);
-              }}
-            >
-              {tenantItems.map((t: any) => (
-                <option key={t.key} value={t.key} className="text-slate-900">
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        }
       />
 
       {isConnected ? (

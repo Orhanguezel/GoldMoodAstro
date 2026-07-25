@@ -28,22 +28,6 @@ export default function GoogleAdsPage() {
         eyebrow="Ads"
         title="Google Ads"
         description="Kampanya, keyword ve asset analizlerini inceleyin; önerileri onaylı change-set taslaklarına dönüştürün."
-        aside={
-          <select
-            className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white outline-none"
-            value={tenantKey}
-            onChange={(e) => {
-              setTenantKey(e.target.value);
-              setStoredTenantKey(e.target.value);
-            }}
-          >
-            {tenantItems.map((tenant: any) => (
-              <option key={tenant.key} value={tenant.key} className="text-slate-900">
-                {tenant.name}
-              </option>
-            ))}
-          </select>
-        }
       />
 
       {tenantKey && <GoogleAdsManagementPanel tenantKey={tenantKey} />}

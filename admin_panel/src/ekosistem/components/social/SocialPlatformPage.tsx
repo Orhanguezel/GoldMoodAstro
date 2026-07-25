@@ -510,24 +510,11 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
             {config.icon(28)}
           </div>
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{config.title}</h1>
-            <p className="mt-1 text-sm font-medium text-slate-500">{config.description}</p>
+            <h1 className="font-serif text-4xl text-gm-text">{config.title}</h1>
+            <p className="mt-1 text-sm font-serif italic text-gm-muted opacity-70">{config.description}</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <select
-            className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm outline-none focus:ring-2 focus:ring-indigo-500/20"
-            value={tenantKey}
-            onChange={(e) => {
-              setTenantKey(e.target.value);
-              setStoredTenantKey(e.target.value);
-              loadAll(e.target.value);
-            }}
-          >
-            {tenantItems.map((t: any) => (
-              <option key={t.key} value={t.key}>{t.name}</option>
-            ))}
-          </select>
           <ConnBadge connected={connected} />
         </div>
       </div>

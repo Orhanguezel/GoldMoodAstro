@@ -65,26 +65,6 @@ export default function SocialOverviewPage() {
         eyebrow="Sosyal Medya"
         title="Sosyal Medya Merkezi"
         description="Tüm platform bağlantılarını ve içerik durumunu tek yerden görün. Bağlantı/token girişi Ayarlar → Sosyal Medya'dan yapılır."
-        actions={
-          <div className="flex flex-wrap items-center gap-3">
-            <select
-              className="rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-bold text-white outline-none backdrop-blur"
-              value={tenantKey}
-              onChange={(e) => {
-                setTenantKey(e.target.value);
-                setStoredTenantKey(e.target.value);
-                load(e.target.value);
-              }}
-            >
-              {tenantItems.map((t: any) => (
-                <option key={t.key} value={t.key} className="text-slate-900">{t.name}</option>
-              ))}
-            </select>
-            <a href="/settings" className="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-4 py-2.5 text-sm font-black text-white backdrop-blur transition hover:bg-white/25">
-              <Settings size={16} /> Bağlantı Ayarları
-            </a>
-          </div>
-        }
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

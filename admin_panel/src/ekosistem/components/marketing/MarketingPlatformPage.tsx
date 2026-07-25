@@ -223,22 +223,6 @@ export function MarketingPlatformPage({ platform }: { platform: PlatformKey }) {
         eyebrow={meta.eyebrow}
         title={meta.title}
         description={meta.description}
-        aside={
-          <select
-            className="rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white outline-none"
-            value={tenantKey}
-            onChange={(e) => {
-              setTenantKey(e.target.value);
-              setStoredTenantKey(e.target.value);
-            }}
-          >
-            {tenantItems.map((tenant: any) => (
-              <option key={tenant.key} value={tenant.key} className="text-slate-900">
-                {tenant.name}
-              </option>
-            ))}
-          </select>
-        }
       />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
