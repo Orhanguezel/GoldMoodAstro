@@ -7,6 +7,7 @@
 // =============================================================
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -224,6 +225,24 @@ export default function MarketingClient() {
                 <ExternalLink className="size-4 text-gm-muted group-hover:text-gm-gold shrink-0 ml-2" />
               </a>
             ))}
+          </div>
+
+          {/* İç panel — sunucu-log analitiği (audit) */}
+          <div className="mt-3">
+            <Link
+              href="/admin/audit?tab=metrics"
+              className="group flex items-center justify-between rounded-2xl border border-gm-gold/25 bg-gm-gold/5 px-4 py-3 hover:border-gm-gold/50 hover:bg-gm-gold/10 transition-all"
+            >
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-gm-text truncate">
+                  Denetim &amp; Trafik Logları (bu panel)
+                </div>
+                <div className="text-[11px] text-gm-muted truncate">
+                  Sunucu-log trafiği, coğrafya, huni & güvenlik/oturum olayları — izin gerektirmez
+                </div>
+              </div>
+              <TrendingUp className="size-4 text-gm-gold shrink-0 ml-2" />
+            </Link>
           </div>
         </CardContent>
       </Card>

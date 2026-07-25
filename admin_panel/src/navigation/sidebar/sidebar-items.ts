@@ -261,7 +261,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   notifications: 'Bildirimler',
   storage: 'Dosya Yöneticisi',
   db: 'Veritabanı',
-  audit: 'Denetim Kayıtları',
+  audit: 'Denetim & Trafik (Log)',
   seo_quality: 'SEO Genel Bakış',
   availability: 'Rezervasyon Saatleri',
   support: 'Destek',
