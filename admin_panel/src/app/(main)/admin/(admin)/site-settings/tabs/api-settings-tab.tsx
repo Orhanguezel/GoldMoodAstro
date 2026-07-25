@@ -36,6 +36,9 @@ const API_KEYS = [
   'google_client_secret',
   'gtm_container_id',
   'ga4_measurement_id',
+  'google_ads_id',
+  'facebook_pixel_id',
+  'google_site_verification',
   'cookie_consent',
   'livekit_url',
   'livekit_api_key',
@@ -56,6 +59,9 @@ const EMPTY_FORM: ApiForm = {
   google_client_secret: '',
   gtm_container_id: '',
   ga4_measurement_id: '',
+  google_ads_id: '',
+  facebook_pixel_id: '',
+  google_site_verification: '',
   cookie_consent: '',
   livekit_url: '',
   livekit_api_key: '',
@@ -188,7 +194,7 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
         <div className="space-y-6">
           <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gm-gold border-b border-gm-border-soft pb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-gm-gold/50" />
-            {t('admin.siteSettings.api.sectionGoogle', null, 'Google OAuth & Analytics')}
+            {t('admin.siteSettings.api.sectionGoogle', null, 'Google & Meta (Analytics & Pazarlama)')}
           </h3>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
@@ -240,6 +246,45 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
                 value={form.ga4_measurement_id}
                 onChange={(e) => handleChange('ga4_measurement_id', e.target.value)}
                 placeholder="G-XXXXXXXXXX"
+                disabled={busy}
+                className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="google_ads_id" className="text-[10px] font-bold text-gm-muted tracking-[0.15em] uppercase ml-1 block">
+                {t('admin.siteSettings.api.googleAdsId', null, 'Google Etiketi / Ads ID')}
+              </Label>
+              <Input
+                id="google_ads_id"
+                value={form.google_ads_id}
+                onChange={(e) => handleChange('google_ads_id', e.target.value)}
+                placeholder="AW-XXXXXXXXXX"
+                disabled={busy}
+                className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="facebook_pixel_id" className="text-[10px] font-bold text-gm-muted tracking-[0.15em] uppercase ml-1 block">
+                {t('admin.siteSettings.api.facebookPixelId', null, 'Meta Pixel ID')}
+              </Label>
+              <Input
+                id="facebook_pixel_id"
+                value={form.facebook_pixel_id}
+                onChange={(e) => handleChange('facebook_pixel_id', e.target.value)}
+                placeholder="1350932683810586"
+                disabled={busy}
+                className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="google_site_verification" className="text-[10px] font-bold text-gm-muted tracking-[0.15em] uppercase ml-1 block">
+                {t('admin.siteSettings.api.googleSiteVerification', null, 'Google Site Doğrulama')}
+              </Label>
+              <Input
+                id="google_site_verification"
+                value={form.google_site_verification}
+                onChange={(e) => handleChange('google_site_verification', e.target.value)}
+                placeholder="google-site-verification=..."
                 disabled={busy}
                 className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
               />
