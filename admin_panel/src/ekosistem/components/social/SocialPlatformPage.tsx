@@ -614,9 +614,9 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                     <article key={m.externalId} className="flex gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
                       {m.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={m.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover" />
+                        <img src={m.imageUrl} alt="" className="h-28 w-28 shrink-0 rounded-2xl object-cover ring-1 ring-slate-100 shadow-sm" />
                       ) : (
-                        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-300">{config.icon(24)}</div>
+                        <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-300 ring-1 ring-slate-100">{config.icon(40)}</div>
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="line-clamp-3 text-xs font-medium leading-5 text-slate-700">{m.message || "(açıklama yok)"}</p>
@@ -747,12 +747,12 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                         <span className={`text-xs font-black ${isToday ? "text-indigo-600" : "text-slate-600"}`}>{d}</span>
                         {items.length > 0 && (
                           <div className="flex flex-wrap gap-0.5">
-                            {items.slice(0, 4).map((it, idx) =>
+                            {items.slice(0, 3).map((it, idx) =>
                               it.imageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img key={idx} src={it.imageUrl} alt="" className="h-5 w-5 rounded object-cover ring-1 ring-slate-200" />
+                                <img key={idx} src={it.imageUrl} alt="" className="h-9 w-9 rounded-md object-cover ring-1 ring-slate-200" />
                               ) : (
-                                <div key={idx} className="flex h-5 w-5 items-center justify-center rounded bg-slate-200/70 text-slate-400">{config.icon(11)}</div>
+                                <div key={idx} className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-200/70 text-slate-400">{config.icon(16)}</div>
                               ),
                             )}
                             {items.length > 4 && (
@@ -805,9 +805,9 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                             <div key={p.id} className="flex items-center gap-3 py-3">
                               {p.imageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={p.imageUrl} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+                                <img src={p.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover ring-1 ring-slate-100 shadow-sm" />
                               ) : (
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-200/60 text-slate-300">{config.icon(18)}</div>
+                                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-slate-200/60 text-slate-300 ring-1 ring-slate-100">{config.icon(30)}</div>
                               )}
                               <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
@@ -860,7 +860,7 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                           <div className="flex min-w-0 gap-3">
                             {p.imageUrl && (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={p.imageUrl} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+                              <img src={p.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover ring-1 ring-slate-100 shadow-sm" />
                             )}
                             <div className="min-w-0">
                               <p className="text-sm font-semibold leading-6 text-slate-800">{p.caption || p.title || "(içerik yok)"}</p>
@@ -912,9 +912,9 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                           <div className="flex min-w-0 gap-3">
                             {thumb ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={thumb} alt="" className="h-14 w-14 shrink-0 rounded-lg border border-slate-100 object-cover" />
+                              <img src={thumb} alt="" className="h-20 w-20 shrink-0 rounded-xl border border-slate-100 object-cover ring-1 ring-slate-100 shadow-sm" />
                             ) : (
-                              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-300">{config.icon(18)}</div>
+                              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-300 ring-1 ring-slate-100">{config.icon(30)}</div>
                             )}
                             <div className="min-w-0">
                               <p className="line-clamp-2 text-sm font-semibold text-slate-800">{p.caption || p.title || "(içerik yok)"}</p>
