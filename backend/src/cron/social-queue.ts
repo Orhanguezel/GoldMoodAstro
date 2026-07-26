@@ -9,7 +9,11 @@
 // - SOCIAL_QUEUE_DRYRUN=1: yayinlamadan sadece ne yapacagini loglar (test).
 // - Yalniz FB/IG otomatik yayinlanir; diger platformlar 'failed' + not.
 // =============================================================
+import fs from 'fs';
+import path from 'path';
+import sharp from 'sharp';
 import { and, eq, lte, isNotNull, asc } from 'drizzle-orm';
+import { env } from '@/core/env';
 import { db as socialDb } from '@/social/db/client';
 import { platformAccounts, socialPosts } from '@/social/db/schema';
 import { publishPhotoPost as fbPublishPhoto } from '@/social/modules/platforms/facebook';
@@ -35,11 +39,34 @@ function absUrl(u?: string | null): string | null {
   return `${PUBLIC_BASE}${s.startsWith('/') ? '' : '/'}${s}`;
 }
 
+function uploadsDir(): string {
+  return env.LOCAL_STORAGE_ROOT ? path.resolve(env.LOCAL_STORAGE_ROOT) : path.resolve(process.cwd(), 'uploads');
+}
+
+// IG foto yayini JPEG ister (webp/png reddedilebilir). Gorseli indirip JPEG'e
+// cevirir, /uploads/social altina kaydeder. Zaten jpeg ise dokunmaz.
+async function ensureJpeg(url: string | null, postId: number | string): Promise<string | null> {
+  if (!url) return null;
+  if (/\.jpe?g($|\?)/i.test(url)) return url;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return url;
+    const buf = Buffer.from(await res.arrayBuffer());
+    const dir = path.join(uploadsDir(), 'social');
+    fs.mkdirSync(dir, { recursive: true });
+    const fileName = `queue-${postId}.jpg`;
+    await sharp(buf).jpeg({ quality: 88 }).toFile(path.join(dir, fileName));
+    return `${PUBLIC_BASE}/uploads/social/${fileName}`;
+  } catch {
+    return url;
+  }
+}
+
 async function publishOne(post: any, accounts: { fb: any; ig: any }, dryRun: boolean): Promise<void> {
   const platform = String(post.platform || 'both');
   const wantFb = platform === 'facebook' || platform === 'both' || platform === 'all';
   const wantIg = platform === 'instagram' || platform === 'both' || platform === 'all';
-  const image =
+  const rawImage =
     absUrl(post.imageUrl) || absUrl(Array.isArray(post.mediaUrls) ? post.mediaUrls[0] : null);
   const caption = [post.caption, post.hashtags].filter(Boolean).join('\n\n').trim();
 
@@ -54,10 +81,13 @@ async function publishOne(post: any, accounts: { fb: any; ig: any }, dryRun: boo
 
   if (dryRun) {
     console.log(
-      `[social-queue] DRYRUN #${post.id} platform=${platform} fb=${!!accounts.fb} ig=${!!accounts.ig} image=${image || 'YOK'}\n  caption: ${caption.slice(0, 120)}...`,
+      `[social-queue] DRYRUN #${post.id} platform=${platform} fb=${!!accounts.fb} ig=${!!accounts.ig} image=${rawImage || 'YOK'}\n  caption: ${caption.slice(0, 120)}...`,
     );
     return; // dryrun'da status degismez
   }
+
+  // IG JPEG ister — webp/png gorseli otomatik JPEG'e cevir.
+  const image = await ensureJpeg(rawImage, post.id);
 
   let fbId: string | null = post.fbPostId || null;
   let igId: string | null = post.igMediaId || null;
