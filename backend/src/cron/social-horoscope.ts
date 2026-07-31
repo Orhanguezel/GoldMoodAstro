@@ -43,6 +43,20 @@ const SIGN_LABEL: Record<SignKey, string> = {
   pisces: 'Balık',
 };
 
+// Zodyak sırası — "günün burcu" rotasyonu için (her gün farklı kapak).
+const SIGN_ORDER: SignKey[] = [
+  'aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo',
+  'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces',
+];
+
+// Güne göre deterministik burç seçimi. offset ile aynı gün iki farklı kapak
+// (part 1/2) üretilir; her gün tüm liste kaydığından kapak sürekli değişir.
+export function signOfDay(dateStr: string, offset = 0): SignKey {
+  const dayNumber = Math.floor(new Date(`${dateStr}T00:00:00Z`).getTime() / (24 * 60 * 60 * 1000));
+  const idx = (((dayNumber + offset) % SIGN_ORDER.length) + SIGN_ORDER.length) % SIGN_ORDER.length;
+  return SIGN_ORDER[idx]!;
+}
+
 const SIGN_ELEMENT: Record<SignKey, 'Ateş' | 'Toprak' | 'Hava' | 'Su'> = {
   aries: 'Ateş',
   leo: 'Ateş',
@@ -351,6 +365,77 @@ async function renderZodiacCard(sign: SignKey, dateStr: string, message: string)
   return { filePath, publicUrl };
 }
 
+export async function renderDailyCoverCard(sign: SignKey, dateStr: string, part: 1 | 2): Promise<{ filePath: string; publicUrl: string }> {
+  const dateLabel = prettyDate(dateStr);
+  const dir = path.join(uploadsDir(), 'social', 'daily-horoscope-all', dateStr);
+  fs.mkdirSync(dir, { recursive: true });
+
+  const fileName = `${dateStr}-cover-part${part}-${sign}.png`;
+  const filePath = path.join(dir, fileName);
+  const publicUrl = `${PUBLIC_BASE}/uploads/social/daily-horoscope-all/${dateStr}/${fileName}`;
+  if (fs.existsSync(filePath)) return { filePath, publicUrl };
+
+  const zodiacPath = path.resolve(uploadsDir(), 'zodiac', `${sign}.png`);
+  const repoFallbackPath = path.resolve(process.cwd(), 'uploads', 'zodiac', `${sign}.png`);
+  const sourcePath = fs.existsSync(zodiacPath) ? zodiacPath : repoFallbackPath;
+  if (!fs.existsSync(sourcePath)) throw new Error(`Zodyak görseli bulunamadı: ${sign}`);
+
+  const label = SIGN_LABEL[sign];
+  const element = SIGN_ELEMENT[sign];
+  const weekday = new Date(`${dateStr}T00:00:00Z`).toLocaleDateString('tr-TR', { weekday: 'long', timeZone: 'UTC' });
+
+  // Kapak: gövde kartından farklı — büyük merkezi hero + "GÜNÜN BURCU" vurgusu.
+  const base = await sharp(sourcePath)
+    .resize(1080, 1350, { fit: 'cover' })
+    .blur(26)
+    .modulate({ brightness: 0.42, saturation: 1.25 })
+    .png()
+    .toBuffer();
+  const hero = await sharp(sourcePath)
+    .resize(760, 760, { fit: 'cover' })
+    .composite([
+      {
+        input: Buffer.from(
+          `<svg width="760" height="760"><circle cx="380" cy="380" r="378" fill="none" stroke="#f5d978" stroke-width="6"/></svg>`,
+        ),
+        left: 0,
+        top: 0,
+      },
+    ])
+    .png()
+    .toBuffer();
+
+  const overlay = `<svg width="1080" height="1350" viewBox="0 0 1080 1350" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cov" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#090313" stop-opacity="0.55"/>
+      <stop offset="0.45" stop-color="#090313" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#090313" stop-opacity="0.90"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1350" fill="url(#cov)"/>
+  <rect x="42" y="42" width="996" height="1266" rx="34" fill="none" stroke="#e0bd68" stroke-opacity="0.85" stroke-width="3"/>
+  <text x="540" y="132" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-weight="900" letter-spacing="6" fill="#f5d978">GOLDMOODASTRO</text>
+  <text x="540" y="182" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="800" letter-spacing="6" fill="#e8ddff">GÜNLÜK BURÇ YORUMLARI</text>
+  <text x="540" y="248" text-anchor="middle" font-family="Georgia, serif" font-size="30" fill="#fffaf0">${esc(dateLabel)} • ${esc(weekday)}</text>
+  <rect x="300" y="1006" width="480" height="70" rx="35" fill="#10091f" fill-opacity="0.82" stroke="#e0bd68" stroke-opacity="0.85" stroke-width="2"/>
+  <text x="540" y="1052" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="900" letter-spacing="4" fill="#f5d978">GÜNÜN BURCU</text>
+  <text x="540" y="1168" text-anchor="middle" font-family="Georgia, serif" font-size="104" font-weight="900" fill="#fff8ee">${esc(label)}</text>
+  <text x="540" y="1226" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="900" fill="#f5d978">${esc(element)} enerjisi • 12 burç için kaydır →</text>
+  <text x="540" y="1284" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#d9bd74">goldmoodastro.com</text>
+</svg>`;
+
+  await sharp(base)
+    .composite([
+      { input: hero, left: 160, top: 250 },
+      { input: Buffer.from(overlay), left: 0, top: 0 },
+    ])
+    .png({ compressionLevel: 9 })
+    .toFile(filePath);
+
+  return { filePath, publicUrl };
+}
+
 function targetPublishTime(dateStr: string, part: 1 | 2): Date {
   const date = new Date(`${dateStr}T${String(TARGET_HOUR_UTC).padStart(2, '0')}:00:00.000Z`);
   if (part === 2) date.setUTCMinutes(date.getUTCMinutes() + PART_GAP_MINUTES);
@@ -393,6 +478,12 @@ async function buildPart(dateStr: string, part: 1 | 2): Promise<{
   const captionLines: string[] = [];
   let missing = 0;
   const planned = AUGUST_2026_DAILY_PLAN[dateStr];
+
+  // İlk slide: her gün dönen "günün burcu" kapağı (part 1 ve 2 farklı burç).
+  // Feed grid'inde artık her gün farklı görsel; sabit Koç/Terazi kalıbı kırılır.
+  const coverSign = signOfDay(dateStr, part === 1 ? 0 : 6);
+  const cover = await renderDailyCoverCard(coverSign, dateStr, part);
+  mediaUrls.push(cover.publicUrl);
 
   for (const sign of partConfig.signs) {
     const horoscope = await getDailyHoroscope(sign, dateStr);

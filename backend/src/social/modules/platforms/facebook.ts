@@ -82,6 +82,54 @@ export async function publishPhotoPost(
   return data as FBPostResult;
 }
 
+// ─── Carousel (cok fotolu tek gonderi) ─────────────────────
+/**
+ * Facebook Page carousel/albüm gönderisi. Her görsel önce `published:false` ile
+ * yüklenip photo id alınır, sonra tek feed gönderisine `attached_media` olarak
+ * bağlanır → tek gönderide çok görsel (IG carousel muadili). 2-10 görsel.
+ */
+export async function publishCarouselPost(
+  imageUrls: string[],
+  caption: string,
+  opts?: { pageId?: string; pageAccessToken?: string },
+): Promise<FBPostResult> {
+  const pageId = opts?.pageId || env.FB_PAGE_ID;
+  const token = opts?.pageAccessToken || env.FB_PAGE_ACCESS_TOKEN;
+  if (!pageId || !token) throw new Error("Facebook yapilandirmasi eksik");
+
+  const urls = imageUrls.filter((u) => typeof u === "string" && u.trim());
+  if (urls.length < 2) throw new Error("Facebook carousel icin en az 2 gorsel gerekli");
+  const limited = urls.slice(0, 10);
+
+  // 1) Her gorseli published:false olarak yukle, photo id topla.
+  const mediaFbids: string[] = [];
+  for (const url of limited) {
+    const res = await fetch(`${FB_GRAPH_URL}/${pageId}/photos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, published: false, access_token: token }),
+    });
+    const data = (await res.json()) as any;
+    if (!res.ok || !data?.id) {
+      throw new Error(`Facebook carousel foto hazirlama hatasi: ${graphError(data, res.statusText)}`);
+    }
+    mediaFbids.push(String(data.id));
+  }
+
+  // 2) Tek feed gonderisi + attached_media.
+  const attached_media = mediaFbids.map((mediaFbid) => ({ media_fbid: mediaFbid }));
+  const res = await fetch(`${FB_GRAPH_URL}/${pageId}/feed`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: caption, attached_media, access_token: token }),
+  });
+  const data = (await res.json()) as any;
+  if (!res.ok) {
+    throw new Error(`Facebook carousel yayinlama hatasi: ${graphError(data, res.statusText)}`);
+  }
+  return { id: String(data.id || data.post_id || "") };
+}
+
 // ─── Facebook Story (Foto) ──────────────────────────────────
 /**
  * Page Story yayını: önce unpublished photo oluşturur, sonra photo_stories endpoint'i

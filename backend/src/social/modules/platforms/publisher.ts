@@ -547,12 +547,21 @@ export async function publishPost(postId: number): Promise<PublishResult> {
           pageAccessToken: fbAccessToken,
         });
       } else if (post.imageUrl) {
-        const imageUrl = pickImageUrl(post);
-        if (!imageUrl) throw new Error("Facebook foto post icin gorsel URL gerekli");
-        fbResult = await facebook.publishPhotoPost(imageUrl, caption, {
-          pageId: fbAccount.pageId,
-          pageAccessToken: fbAccessToken,
-        });
+        // 2+ gorsel varsa FB'de de carousel (albüm) — IG ile ayni format.
+        const fbCarouselUrls = collectMediaUrls(post).filter((u) => !isProbablyVideoUrl(u));
+        if (fbCarouselUrls.length >= 2) {
+          fbResult = await facebook.publishCarouselPost(fbCarouselUrls.slice(0, 10), caption, {
+            pageId: fbAccount.pageId,
+            pageAccessToken: fbAccessToken,
+          });
+        } else {
+          const imageUrl = pickImageUrl(post);
+          if (!imageUrl) throw new Error("Facebook foto post icin gorsel URL gerekli");
+          fbResult = await facebook.publishPhotoPost(imageUrl, caption, {
+            pageId: fbAccount.pageId,
+            pageAccessToken: fbAccessToken,
+          });
+        }
       } else {
         fbResult = await facebook.publishTextPost(caption, post.linkUrl ?? undefined, {
           pageId: fbAccount.pageId,
