@@ -82,11 +82,11 @@
 - [x] Görünür metinde dil sızıntısı raporu üret: indekslenebilir 303 URL’de 0 uyarı.
 - [x] `bun run typecheck`, ilgili testler ve production build başarılı.
 - [x] Canlı deploy sonrası aynı crawler’ı yeniden çalıştır: 303 URL, 0 hata, 0 dil uyarısı.
-- [ ] GSC sitemap’i yeniden gönder ve öncelikli URL’lerde doğrulama başlat.
+- [x] GSC sitemap’i yeniden gönder ve öncelikli URL’lerde doğrulama başlat: API submit başarılı, sitemap listesinde kayıtlı, hata yok.
 
 ## H — GSC izleme
 
-- [ ] İlk gün: 7 bildirilen URL + duplicate canonical örneklerini yeniden denetle.
+- [x] İlk gün: 7 bildirilen URL + duplicate canonical örneklerini yeniden denetle. Başlangıç: 1 indexed, 6 crawled-not-indexed; son Google taramaları 2026-05-16–2026-07-30 aralığında ve deploy öncesi.
 - [ ] 7. gün: crawled/discovered/duplicate sayılarını kaydet.
 - [ ] 14. gün: indeks ve canonical değişimini karşılaştır.
 - [ ] 28. gün: gösterim, ortalama pozisyon, CTR ve indekslenen URL trendini raporla.
