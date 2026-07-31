@@ -120,7 +120,11 @@ jobs:
             echo "Onceki surum: $PREV"
 
             build_all() {
-              cd "$ROOT/backend"     && { bun install --frozen-lockfile || bun install; } && bun run build
+              # Backend tsc (googleapis) V8 varsayilan ~2GB heap limitini asip OOM
+              # (code 134) veriyordu → SSH oturumu dusuyor, deploy patliyordu.
+              # Sorun toplam RAM degil V8 heap; --max-old-space-size ile cozuluyor
+              # (bkz memory deploy_backend_tsc_oom, 2026-07-31 dogrulandi).
+              cd "$ROOT/backend"     && { bun install --frozen-lockfile || bun install; } && NODE_OPTIONS=--max-old-space-size=3072 bun run build
               cd "$ROOT/admin_panel" && { bun install --frozen-lockfile || bun install; } && bun run build
               cd "$ROOT/frontend"    && { bun install --frozen-lockfile || bun install; } && bun run build
               cd "$ROOT"
