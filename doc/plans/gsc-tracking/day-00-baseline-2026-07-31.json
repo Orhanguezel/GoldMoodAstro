@@ -1,0 +1,28 @@
+{
+  "note": "SEO i18n URL migration — GSC Gün-0 baseline. 7/14/28. gün karşılaştırmaları bununla yapılır. Kaynak: bun run scripts/gsc-snapshot.ts (prod).",
+  "day": 0,
+  "capturedAt": "2026-07-31T17:24:47.299Z",
+  "tenantKey": "goldmoodastro",
+  "siteUrl": "sc-domain:goldmoodastro.com",
+  "range": { "startDate": "2026-07-01", "endDate": "2026-07-28", "range": 28 },
+  "performance": {
+    "current": { "clicks": 5, "impressions": 665, "ctr": 0.0075, "position": 78.59 },
+    "previous": { "clicks": 2, "impressions": 252, "ctr": 0.0079, "position": 82.32 },
+    "deltaPct": { "clicks": 150, "impressions": 163.89, "ctr": -5.26, "position": -4.53 }
+  },
+  "index": {
+    "indexed": 167,
+    "not_indexed": 75,
+    "issue": 19,
+    "unknown": 42,
+    "totalUrls": 303,
+    "duplicateCanonical": 41
+  },
+  "beklenen_trend": {
+    "totalUrls": "303 -> ~159'a doğru düşmeli (sitemap küçültüldü, çöp/ince URL'ler noindex)",
+    "duplicateCanonical": "41 -> 0'a doğru düşmeli (locale-aware canonical + /index.html 308)",
+    "not_indexed": "75 -> düşmeli (noindex quarantine yapılanlar hariç)",
+    "impressions": "artış trendi sürmeli",
+    "position": "78.59 -> düşmeli (daha iyi sıralama)"
+  }
+}

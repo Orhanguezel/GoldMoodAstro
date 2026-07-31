@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/social/db/client";
 import { socialProjects } from "@/social/db/schema";
 import { refreshGscIndex } from "@/social/modules/marketing/gsc";
+import { buildGscSnapshot, appendGscSnapshot } from "@/social/modules/marketing/gsc-snapshot";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_LIMIT = 500;
@@ -39,6 +40,17 @@ async function tick() {
       console.log(
         `[gsc-index-refresh] ${tenantKey}: checked=${result.checked?.length ?? 0} refreshed=${result.refreshed ?? 0} limit=${limit}`,
       );
+      // Refresh sonrası günlük snapshot'ı history'ye ekle (SEO migration H bloğu:
+      // 7/14/28. gün karşılaştırması Gün-0 baseline'a göre otomatik birikir).
+      try {
+        const snapshot = await buildGscSnapshot(tenantKey, siteUrl);
+        appendGscSnapshot(snapshot);
+        console.log(
+          `[gsc-index-refresh] ${tenantKey}: snapshot impressions=${(snapshot.performance as any)?.current?.impressions ?? "?"} pos=${(snapshot.performance as any)?.current?.position ?? "?"} indexed=${snapshot.index?.indexed ?? "?"} dupCanonical=${snapshot.index?.duplicateCanonical ?? "?"}`,
+        );
+      } catch (snapErr) {
+        console.error(`[gsc-index-refresh] ${tenantKey} snapshot failed:`, (snapErr as Error).message);
+      }
     } catch (error) {
       console.error(`[gsc-index-refresh] ${tenantKey} failed:`, (error as Error).message);
     }

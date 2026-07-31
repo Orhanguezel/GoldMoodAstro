@@ -86,11 +86,18 @@
 
 ## H — GSC izleme
 
+> Otomasyon (2026-07-31): günlük `gsc-index-refresh` cron'u artık her koşuda
+> `backend/var/gsc-history.ndjson`'a snapshot (28g performans + verdict dağılımı +
+> duplicateCanonical) ekliyor. Gün-0 baseline kaydedildi. Detay + takvim:
+> [gsc-tracking/README.md](gsc-tracking/README.md). Elle: `bun run scripts/gsc-snapshot.ts`.
+
 - [x] İlk gün: 7 bildirilen URL + duplicate canonical örneklerini yeniden denetle. Başlangıç: 1 indexed, 6 crawled-not-indexed; son Google taramaları 2026-05-16–2026-07-30 aralığında ve deploy öncesi.
-- [ ] 7. gün: crawled/discovered/duplicate sayılarını kaydet.
-- [ ] 14. gün: indeks ve canonical değişimini karşılaştır.
-- [ ] 28. gün: gösterim, ortalama pozisyon, CTR ve indekslenen URL trendini raporla.
-- [ ] Teknik sinyaller stabil olduktan sonra pozisyon 5–17 sayfalarına iç link ve backlink çalışmasına geç.
+- [x] Gün-0 baseline sabitlendi: gösterim 665 (+164%), pozisyon 78.59, indexed 167, duplicateCanonical 41, totalUrls 303 ([day-00-baseline](gsc-tracking/day-00-baseline-2026-07-31.json)).
+- [x] Otomatik günlük snapshot toplama kuruldu (cron → NDJSON history); ölçüm artık elle hatırlamayı gerektirmiyor.
+- [ ] 7. gün (2026-08-07): crawled/discovered/duplicate sayılarını kaydet (baseline ile karşılaştır).
+- [ ] 14. gün (2026-08-14): indeks ve canonical değişimini karşılaştır (dupCanonical 41→?, totalUrls 303→?).
+- [ ] 28. gün (2026-08-28): gösterim, ortalama pozisyon, CTR ve indekslenen URL trendini raporla.
+- [ ] Teknik sinyaller stabil olduktan sonra (dupCanonical~0, totalUrls~159) pozisyon 5–17 sayfalarına iç link ve backlink çalışmasına geç.
 
 ## URL sözlüğü — hedef örnekler
 
