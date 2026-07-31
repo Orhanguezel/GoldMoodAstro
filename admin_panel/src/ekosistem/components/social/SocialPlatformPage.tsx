@@ -14,6 +14,7 @@ import {
   FileEdit,
   Heart,
   ImagePlus,
+  Images,
   LayoutTemplate,
   ListChecks,
   MessageCircle,
@@ -132,6 +133,35 @@ function isVideoUrl(url: string) {
 function hasVideoMedia(p: any) {
   const urls = [p?.imageUrl, ...(Array.isArray(p?.mediaUrls) ? p.mediaUrls : [])].filter(Boolean).map(String);
   return urls.some(isVideoUrl);
+}
+
+/** Benzersiz medya (görsel/video) sayısı — carousel tespiti için. */
+function mediaCount(p: any): number {
+  const urls = new Set<string>();
+  const push = (u: unknown) => { const s = String(u ?? "").trim(); if (s) urls.add(s); };
+  push(p?.imageUrl);
+  if (Array.isArray(p?.mediaUrls)) for (const u of p.mediaUrls) push(u);
+  return urls.size;
+}
+
+// ─── Hafta gruplama (yaklaşan içerikleri hafta hafta sayfalamak için) ───
+function weekStart(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  const mondayOffset = (x.getDay() + 6) % 7; // 0 = Pazartesi
+  x.setDate(x.getDate() - mondayOffset);
+  return x;
+}
+
+function weekLabel(d: Date): string {
+  const s = weekStart(d);
+  const e = new Date(s);
+  e.setDate(e.getDate() + 6);
+  const sm = MONTH_NAMES[s.getMonth()];
+  const em = MONTH_NAMES[e.getMonth()];
+  return sm === em
+    ? `${s.getDate()}–${e.getDate()} ${em}`
+    : `${s.getDate()} ${sm} – ${e.getDate()} ${em}`;
 }
 
 export default function SocialPlatformPage({ platformKey }: { platformKey: string }) {
@@ -687,6 +717,25 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
       .sort((a, b) => +new Date(planDate(a) || 0) - +new Date(planDate(b) || 0));
   }, [planItems]);
 
+  // Yaklasan icerikleri HAFTA HAFTA grupla (çok plan olunca sayfalama).
+  const upcomingWeeks = useMemo(() => {
+    const map = new Map<string, { start: Date; items: any[] }>();
+    for (const p of upcoming) {
+      const d = planDate(p);
+      if (!d) continue;
+      const ws = weekStart(d);
+      const key = dayKey(ws);
+      if (!map.has(key)) map.set(key, { start: ws, items: [] });
+      map.get(key)!.items.push(p);
+    }
+    return [...map.values()].sort((a, b) => +a.start - +b.start);
+  }, [upcoming]);
+  const [weekIdx, setWeekIdx] = useState(0);
+  useEffect(() => {
+    // Hafta listesi değişince aralık dışına düşmesin.
+    setWeekIdx((i) => Math.max(0, Math.min(i, Math.max(0, upcomingWeeks.length - 1))));
+  }, [upcomingWeeks.length]);
+
   // Yaklasan (gelecek) icerik yoksa, alan bos kalmasin diye SON icerikleri goster (en yeni once).
   const recent = useMemo(() => {
     return [...planItems]
@@ -1205,51 +1254,79 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                     )}
                   </div>
                   {(() => {
-                    const list = activeDay ? dayItems : upcoming.length > 0 ? upcoming : recent;
-                    if (list.length === 0) {
-                      return <Empty text={activeDay ? "Bu güne ait içerik yok. 'Bu güne içerik' ile ekleyin." : "Henüz içerik yok. 'Oluştur' ile ekleyin ya da haftalık otomasyon doldursun."} />;
-                    }
-                    return (
-                      <div className="divide-y divide-slate-200/70">
-                        {list.map((p) => {
-                          const isStory = (p.title || "").includes("[STORY]");
-                          if (editId === p.id) {
-                            return <div key={p.id} className="py-3">{renderEditor(p)}</div>;
-                          }
-                          return (
-                            <div key={p.id} className="flex items-center gap-3 py-3">
-                              {p.imageUrl ? (
-                                <PreviewImage src={p.imageUrl} className="h-40 w-32 shrink-0 rounded-xl bg-slate-950/5 object-contain ring-1 ring-slate-100 shadow-sm" />
-                              ) : (
-                                <div className="flex h-40 w-32 shrink-0 items-center justify-center rounded-xl bg-slate-200/60 text-slate-300 ring-1 ring-slate-100">{config.icon(34)}</div>
+                    const isUpcomingView = !activeDay && upcoming.length > 0;
+                    const wi = Math.max(0, Math.min(weekIdx, upcomingWeeks.length - 1));
+                    const list = activeDay ? dayItems : isUpcomingView ? (upcomingWeeks[wi]?.items ?? []) : recent;
+
+                    const renderRow = (p: any) => {
+                      const isStory = (p.title || "").includes("[STORY]");
+                      const mc = mediaCount(p);
+                      const isCarousel = mc > 1 && !isStory;
+                      if (editId === p.id) {
+                        return <div key={p.id} className="py-3">{renderEditor(p)}</div>;
+                      }
+                      return (
+                        <div key={p.id} className="flex items-center gap-3 py-3">
+                          {p.imageUrl ? (
+                            <div className="relative shrink-0">
+                              <PreviewImage src={p.imageUrl} className="h-40 w-32 rounded-xl bg-slate-950/5 object-contain ring-1 ring-slate-100 shadow-sm" />
+                              {isCarousel && (
+                                <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-1 rounded-md bg-slate-900/80 px-1.5 py-0.5 text-[9px] font-black text-white backdrop-blur">
+                                  <Images size={10} /> {mc}
+                                </span>
                               )}
-                              <div className="min-w-0 flex-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase ${isStory ? "bg-fuchsia-100 text-fuchsia-600" : "bg-sky-100 text-sky-600"}`}>{isStory ? "Story" : "Post"}</span>
-                                  <span className="rounded-md bg-slate-200/70 px-1.5 py-0.5 text-[9px] font-black uppercase text-slate-500">{p.platform === "both" ? "FB+IG" : p.platform}</span>
-                                  <span className="text-[11px] font-bold text-slate-400">{formatDate(p.scheduledAt || p.postedAt)}</span>
-                                </div>
-                                <p className="mt-0.5 line-clamp-1 text-sm font-semibold text-slate-800">{p.caption || p.title || "(içerik yok)"}</p>
-                              </div>
-                              <div className="flex shrink-0 items-center gap-2">
-                                <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${statusClass(p.status)}`}>{STATUS_LABEL[p.status] || p.status}</span>
-                                {p.status !== "posted" && p.status !== "sent" && (
-                                  <IconBtn onClick={() => openEdit(p)} title="Düzenle"><FileEdit size={13} /></IconBtn>
-                                )}
-                                {p.status === "draft" && p.scheduledAt && (
-                                  <IconBtn onClick={() => scheduleExisting(p.id)} title="Zamanla"><CalendarClock size={13} /></IconBtn>
-                                )}
-                                {p.status === "scheduled" && (
-                                  <>
-                                    <IconBtn onClick={() => publishNow(p.id)} title="Hemen Yayınla" tone="indigo"><Send size={13} /></IconBtn>
-                                    <IconBtn onClick={() => act(() => posts.cancel(p.id), "İptal edildi.")} title="İptal"><XCircle size={13} /></IconBtn>
-                                  </>
-                                )}
-                              </div>
                             </div>
-                          );
-                        })}
-                      </div>
+                          ) : (
+                            <div className="flex h-40 w-32 shrink-0 items-center justify-center rounded-xl bg-slate-200/60 text-slate-300 ring-1 ring-slate-100">{config.icon(34)}</div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase ${isStory ? "bg-fuchsia-100 text-fuchsia-600" : "bg-sky-100 text-sky-600"}`}>{isStory ? "Story" : "Post"}</span>
+                              {isCarousel && (
+                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase text-amber-700"><Images size={10} /> Carousel · {mc}</span>
+                              )}
+                              <span className="rounded-md bg-slate-200/70 px-1.5 py-0.5 text-[9px] font-black uppercase text-slate-500">{p.platform === "both" ? "FB+IG" : p.platform}</span>
+                              <span className="text-[11px] font-bold text-slate-400">{formatDate(p.scheduledAt || p.postedAt)}</span>
+                            </div>
+                            <p className="mt-0.5 line-clamp-1 text-sm font-semibold text-slate-800">{p.caption || p.title || "(içerik yok)"}</p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${statusClass(p.status)}`}>{STATUS_LABEL[p.status] || p.status}</span>
+                            {p.status !== "posted" && p.status !== "sent" && (
+                              <IconBtn onClick={() => openEdit(p)} title="Düzenle"><FileEdit size={13} /></IconBtn>
+                            )}
+                            {p.status === "draft" && p.scheduledAt && (
+                              <IconBtn onClick={() => scheduleExisting(p.id)} title="Zamanla"><CalendarClock size={13} /></IconBtn>
+                            )}
+                            {p.status === "scheduled" && (
+                              <>
+                                <IconBtn onClick={() => publishNow(p.id)} title="Hemen Yayınla" tone="indigo"><Send size={13} /></IconBtn>
+                                <IconBtn onClick={() => act(() => posts.cancel(p.id), "İptal edildi.")} title="İptal"><XCircle size={13} /></IconBtn>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    };
+
+                    return (
+                      <>
+                        {isUpcomingView && upcomingWeeks.length > 1 && (
+                          <div className="mb-3 flex items-center justify-between rounded-xl bg-white px-3 py-2 ring-1 ring-slate-100">
+                            <button onClick={() => setWeekIdx(Math.max(0, wi - 1))} disabled={wi === 0} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-30"><ChevronLeft size={14} /> Önceki</button>
+                            <div className="text-center">
+                              <div className="text-xs font-black text-slate-700">{weekLabel(upcomingWeeks[wi]!.start)}</div>
+                              <div className="text-[10px] font-bold text-slate-400">Hafta {wi + 1}/{upcomingWeeks.length} · {upcomingWeeks[wi]!.items.length} içerik</div>
+                            </div>
+                            <button onClick={() => setWeekIdx(Math.min(upcomingWeeks.length - 1, wi + 1))} disabled={wi >= upcomingWeeks.length - 1} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-30">Sonraki <ChevronRight size={14} /></button>
+                          </div>
+                        )}
+                        {list.length === 0 ? (
+                          <Empty text={activeDay ? "Bu güne ait içerik yok. 'Bu güne içerik' ile ekleyin." : "Henüz içerik yok. 'Oluştur' ile ekleyin ya da haftalık otomasyon doldursun."} />
+                        ) : (
+                          <div className="divide-y divide-slate-200/70">{list.map(renderRow)}</div>
+                        )}
+                      </>
                     );
                   })()}
                 </div>
@@ -1279,6 +1356,9 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                               <div className="mb-2 flex flex-wrap gap-2">
                                 {isStoryPostItem(p) && <span className="rounded-md bg-fuchsia-100 px-2 py-1 text-[10px] font-black uppercase text-fuchsia-700">Story</span>}
                                 {isReelPostItem(p) && <span className="rounded-md bg-violet-100 px-2 py-1 text-[10px] font-black uppercase text-violet-700">Reel Taslağı</span>}
+                                {!isStoryPostItem(p) && !isReelPostItem(p) && mediaCount(p) > 1 && (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-1 text-[10px] font-black uppercase text-amber-700"><Images size={11} /> Carousel · {mediaCount(p)}</span>
+                                )}
                               </div>
                               <p className="text-sm font-semibold leading-6 text-slate-800">{p.caption || p.title || "(içerik yok)"}</p>
                               <p className="mt-1 text-[11px] font-bold text-slate-400">{formatDate(p.createdAt)} · {p.postType}</p>
