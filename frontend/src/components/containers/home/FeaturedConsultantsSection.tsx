@@ -9,13 +9,13 @@ import { localizePath } from '@/integrations/shared';
 import { useLocaleShort, useUiSection } from '@/i18n';
 
 const COPY_FALLBACK = {
-  label: 'Öne Çıkan Danışmanlar',
-  title: 'En yüksek puanlı uzmanlarımız',
-  desc: 'Alanındaki deneyimi ve gerçek kullanıcı yorumlarıyla öne çıkan danışmanlar.',
-  cta: 'Tüm Danışmanları Gör',
-  min: 'dk',
-  from: 'itibaren',
-  noData: 'Danışman bulunamadı.',
+  label: 'Featured Consultants',
+  title: 'Our highest-rated experts',
+  desc: 'Consultants highlighted by their experience and authentic user reviews.',
+  cta: 'View All Consultants',
+  min: 'min',
+  from: 'from',
+  noData: 'No consultants found.',
 };
 
 function StarRow({ rating }: { rating: number }) {

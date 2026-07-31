@@ -36,6 +36,14 @@ const IGNORE_PATTERNS = [
   /\.test\.tsx?$/, /\.spec\.tsx?$/,
   /\/scripts\//,
   /integrations\/shared\/legal\.ts$/,   // legal düz metin (customPages'e taşınacak, ayrı iş)
+  // Locale-keyed editorial/SEO data is not UI chrome. These modules contain
+  // TR+EN+DE side by side and select by the resolved locale; the live crawler
+  // separately verifies that target pages never render Turkish by mistake.
+  /\/lib\/zodiac\//,
+  /\/components\/seo\/seo-landing-content\.ts$/,
+  /\/seo\//,
+  /\/opengraph-image\.tsx$/,
+  /\/social-image\/route\.tsx$/,
 ];
 
 // Satır UI metni TAŞIMAZ — eler (yanlış pozitif azalt)

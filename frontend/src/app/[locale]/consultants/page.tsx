@@ -49,7 +49,6 @@ async function getConsultants(params: { expertise?: string; limit?: number; loca
 }
 
 function localeFallbackTitle(locale: string) {
-  if (locale === 'tr') return 'Danışmanları Keşfet';
   if (locale === 'de') return 'Berater entdecken';
   return 'Explore Consultants';
 }
@@ -70,12 +69,12 @@ function readSettingLabel(value: unknown, locale: string): string {
   const label = (parsed as any).label;
   if (label && typeof label === 'object' && !Array.isArray(label)) {
     return (
-      String(label[locale] || label.en || label.tr || Object.values(label)[0] || '')
+      String(label[locale] || label.en || (locale === 'tr' ? label.tr : '') || '')
         .trim()
     );
   }
 
-  return String((parsed as any)[locale] || (parsed as any).en || (parsed as any).tr || '').trim();
+  return String((parsed as any)[locale] || (parsed as any).en || (locale === 'tr' ? (parsed as any).tr : '') || '').trim();
 }
 
 async function getConsultantsPageTitle(locale: string) {

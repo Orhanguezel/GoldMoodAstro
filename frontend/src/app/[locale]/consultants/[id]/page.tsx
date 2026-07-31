@@ -135,12 +135,12 @@ async function fetchConsultantReviewsForSchema(id: string, locale?: string): Pro
   }
 }
 
-function formatPrice(value: string | number | null | undefined, currency = 'TRY') {
+function formatPrice(value: string | number | null | undefined, currency = 'TRY', locale = 'en') {
   const price = Number(value ?? 0);
   if (!Number.isFinite(price)) return '';
-  if (price <= 0) return currency === 'TRY' ? 'Ücretsiz' : 'Free';
+  if (price <= 0) return locale === 'de' ? 'Kostenlos' : 'Free';
   try {
-    return new Intl.NumberFormat('tr-TR', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency,
       maximumFractionDigits: 0,
@@ -148,6 +148,24 @@ function formatPrice(value: string | number | null | undefined, currency = 'TRY'
   } catch {
     return `${Math.round(price)} ${currency}`;
   }
+}
+
+function consultantPageCopy(locale: string) {
+  if (locale === 'tr') return {
+    verified: 'Onaylı Danışman Profili', expertise: 'Uzmanlık Alanları', languages: 'Görüşme dilleri',
+    rating: 'Puan', newLabel: 'Yeni', reviews: 'Yorum', starting: 'Başlangıç',
+    services: 'Hizmetler ve Ücretler', testimonials: 'Danışan Yorumları', client: 'GoldMoodAstro danışanı',
+  };
+  if (locale === 'de') return {
+    verified: 'Verifiziertes Beraterprofil', expertise: 'Fachgebiete', languages: 'Gesprächssprachen',
+    rating: 'Bewertung', newLabel: 'Neu', reviews: 'Bewertungen', starting: 'Ab',
+    services: 'Leistungen und Preise', testimonials: 'Kundenbewertungen', client: 'GoldMoodAstro-Kunde',
+  };
+  return {
+    verified: 'Verified Consultant Profile', expertise: 'Areas of Expertise', languages: 'Session languages',
+    rating: 'Rating', newLabel: 'New', reviews: 'Reviews', starting: 'Starting at',
+    services: 'Services and Pricing', testimonials: 'Client Reviews', client: 'GoldMoodAstro client',
+  };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -179,6 +197,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ConsultantDetailPage({ params }: Props) {
   const { id, locale } = await params;
+  const copy = consultantPageCopy(locale);
   const consultant = await fetchConsultantForMeta(id, locale) as ConsultantForSchema | null;
   const consultantId = consultant?.id || id;
   const [services, reviews] = await Promise.all([
@@ -267,7 +286,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
         reviewSchema({
           itemReviewedId: personId,
           itemReviewedName: consultantName,
-          authorName: String(item.name || 'GoldMoodAstro danışanı').trim(),
+          authorName: String(item.name || (locale === 'de' ? 'GoldMoodAstro-Kunde' : 'GoldMoodAstro client')).trim(),
           reviewBody: body,
           ratingValue: rating,
           datePublished: item.created_at || undefined,
@@ -287,7 +306,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.8fr)]">
               <div>
                 <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-(--gm-gold-dim)">
-                  Onaylı Danışman Profili
+                  {copy.verified}
                 </p>
                 <h1 className="mb-4 font-serif text-4xl leading-tight text-(--gm-text) md:text-5xl">
                   {consultantName}
@@ -301,7 +320,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
                 {expertiseItems.length > 0 && (
                   <div className="mt-6">
                     <h2 className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-(--gm-gold)">
-                      Uzmanlık Alanları
+                      {copy.expertise}
                     </h2>
                     <div className="flex flex-wrap gap-2">
                       {expertiseItems.map((item) => (
@@ -315,26 +334,26 @@ export default async function ConsultantDetailPage({ params }: Props) {
 
                 {languageItems.length > 0 && (
                   <p className="mt-5 text-sm text-(--gm-text-dim)">
-                    Görüşme dilleri: {languageItems.map((item) => item.toUpperCase()).join(', ')}
+                    {copy.languages}: {languageItems.map((item) => item.toUpperCase()).join(', ')}
                   </p>
                 )}
               </div>
 
               <aside className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-bg-deep) p-6">
                 <div className="mb-5 flex items-center justify-between gap-4">
-                  <span className="text-sm text-(--gm-text-dim)">Puan</span>
+                  <span className="text-sm text-(--gm-text-dim)">{copy.rating}</span>
                   <strong className="text-2xl text-(--gm-gold)">
-                    {ratingValue > 0 ? ratingValue.toFixed(1) : 'Yeni'}
+                    {ratingValue > 0 ? ratingValue.toFixed(1) : copy.newLabel}
                   </strong>
                 </div>
                 <div className="mb-5 flex items-center justify-between gap-4">
-                  <span className="text-sm text-(--gm-text-dim)">Yorum</span>
+                  <span className="text-sm text-(--gm-text-dim)">{copy.reviews}</span>
                   <strong className="text-xl text-(--gm-text)">{ratingCount}</strong>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm text-(--gm-text-dim)">Başlangıç</span>
+                  <span className="text-sm text-(--gm-text-dim)">{copy.starting}</span>
                   <strong className="text-xl text-(--gm-text)">
-                    {formatPrice(consultant.session_price, consultant.currency || 'TRY')}
+                    {formatPrice(consultant.session_price, consultant.currency || 'TRY', locale)}
                   </strong>
                 </div>
               </aside>
@@ -343,7 +362,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
             {services.length > 0 && (
               <div className="mt-10">
                 <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-(--gm-gold)">
-                  Hizmetler ve Ücretler
+                  {copy.services}
                 </h2>
                 <div className="grid gap-4 md:grid-cols-2">
                   {services.slice(0, 6).map((service) => (
@@ -351,7 +370,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
                       <div className="mb-2 flex items-start justify-between gap-4">
                         <h3 className="font-serif text-xl text-(--gm-text)">{service.name}</h3>
                         <span className="shrink-0 rounded-full bg-(--gm-gold)/10 px-3 py-1 text-xs font-bold text-(--gm-gold)">
-                          {formatPrice(service.price, service.currency || consultant.currency || 'TRY')}
+                          {formatPrice(service.price, service.currency || consultant.currency || 'TRY', locale)}
                         </span>
                       </div>
                       {service.description && (
@@ -373,13 +392,13 @@ export default async function ConsultantDetailPage({ params }: Props) {
             {reviews.length > 0 && (
               <div className="mt-10">
                 <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-(--gm-gold)">
-                  Danışan Yorumları
+                  {copy.testimonials}
                 </h2>
                 <div className="grid gap-4 md:grid-cols-3">
                   {reviews.slice(0, 3).map((item) => (
                     <article key={item.id} className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-bg-deep) p-5">
                       <div className="mb-3 flex items-center justify-between gap-4">
-                        <strong className="text-sm text-(--gm-text)">{item.name || 'GoldMoodAstro danışanı'}</strong>
+                        <strong className="text-sm text-(--gm-text)">{item.name || copy.client}</strong>
                         <span className="text-sm font-bold text-(--gm-gold)">★ {Number(item.rating || 0).toFixed(0)}</span>
                       </div>
                       {item.comment && (

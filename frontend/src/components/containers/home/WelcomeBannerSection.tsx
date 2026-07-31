@@ -10,9 +10,9 @@ export default function WelcomeBannerSection({ locale: explicitLocale }: { local
   const { ui } = useUiSection('ui_home', locale as any);
 
   const copy = {
-    title: ui('ui_home_welcome_title', 'GOLDMOODASTRO\'YA HOŞ GELDİNİZ'),
-    subtitle: ui('ui_home_welcome_subtitle', 'Yıldızların <em>rehberliğinde</em> modern astroloji.'),
-    cta: ui('ui_home_welcome_cta', 'DANIŞMANLARI KEŞFET'),
+    title: ui("ui_home_welcome_title", "WELCOME TO GOLDMOODASTRO"),
+    subtitle: ui("ui_home_welcome_subtitle", "Modern astrology <em>guided</em> by the stars."),
+    cta: ui("ui_home_welcome_cta", "DISCOVER CONSULTANTS"),
     link: `/${locale}/consultants`,
   };
 

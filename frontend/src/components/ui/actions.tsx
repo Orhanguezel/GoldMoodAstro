@@ -40,7 +40,7 @@ const Actions: React.FC<ActionsProps> = ({
           onClick={onEdit}
         >
           <Pencil size={14} />
-          <span className="d-none d-sm-inline">{ui('ui_misc_edit', 'Düzenle')}</span>
+          <span className="d-none d-sm-inline">{ui("ui_misc_edit", "Edit")}</span>
         </Button>
       )}
       {onDelete && (

@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Not found', robots: { index: false, follow: false } };
   }
   const label = getZodiacLabelForLocale(sign, locale);
-  return buildPageMetadata({
+  const metadata = await buildPageMetadata({
     locale,
     pageKey: 'burclar-saglik',
     pathname: `/burclar/${sign}/saglik`,
@@ -31,6 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: `Sensitive areas, nutrition suggestions and spiritual balance tips for ${label}.`,
     },
   });
+  return { ...metadata, robots: { index: false, follow: true } };
 }
 
 import PageContainer from '@/components/common/PageContainer';

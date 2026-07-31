@@ -192,8 +192,7 @@ export function useUiSection(section: UiSectionKey, localeOverride?: string): Ui
       const val =
         (l && (label as any)[l]) ||
         (label as any).en ||
-        (label as any).tr ||
-        (Object.values(label || {})[0] as string) ||
+        (l === 'tr' ? (label as any).tr : '') ||
         '';
       const fromDb = (typeof val === 'string' ? val : '').trim();
       if (fromDb && fromDb !== k) return fromDb;

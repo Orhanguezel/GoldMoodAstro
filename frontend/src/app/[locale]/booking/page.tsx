@@ -140,7 +140,7 @@ export default function BookingPage() {
       return;
     }
     if (!allConsent) {
-      setError(ui('ui_account_booking_consent_required', 'Devam etmek için tüm onay kutularını işaretleyin.'));
+      setError(ui('ui_account_booking_consent_required', 'Select all consent checkboxes to continue.'));
       return;
     }
 
@@ -396,7 +396,7 @@ export default function BookingPage() {
 
           {/* Feragat metni */}
           <p className="px-2 text-[11px] text-(--gm-text-muted) italic leading-relaxed">
-            {ui('ui_account_booking_disclaimer', 'Bu hizmet; eğlence, kişisel farkındalık ve kişisel değerlendirme amacıyla sunulan çevrim içi danışmanlık hizmetidir. Kesin gelecek tahmini, garanti sonuç, sağlık teşhisi, tedavi önerisi, hukuki danışmanlık, yatırım tavsiyesi, bahis tahmini, büyü, ritüel veya benzeri vaatler içermez. Hizmet başladıktan sonra cayma hakkı kullanılamaz.')}
+            {ui('ui_account_booking_disclaimer', 'This online guidance service is for entertainment, personal awareness and self-reflection and does not provide guaranteed professional outcomes.')}
           </p>
 
           {/* Mesafeli satış onay kutuları — 3 ayrı, hepsi zorunlu (Mesafeli Söz. Yön. m.15/1-ğ) */}
@@ -405,25 +405,25 @@ export default function BookingPage() {
               <input type="checkbox" checked={consent1} onChange={(e) => setConsent1(e.target.checked)} className="mt-1 w-5 h-5 shrink-0 accent-(--gm-gold)" />
               <span className="text-xs text-(--gm-text-dim) leading-relaxed">
                 <Link href={`/${locale}/legal/${preInfoSlug}`} target="_blank" className="text-(--gm-gold) underline underline-offset-2">
-                  {ui('ui_account_booking_preinfo_link', 'Ön Bilgilendirme Formu')}
+                  {ui('ui_account_booking_preinfo_link', 'Preliminary Information Form')}
                 </Link>
                 {ui('ui_account_booking_consent_mid', '’nu ve ')}
                 <Link href={`/${locale}/legal/${distanceSlug}`} target="_blank" className="text-(--gm-gold) underline underline-offset-2">
-                  {ui('ui_account_booking_distance_link', 'Mesafeli Hizmet Sözleşmesi')}
+                  {ui('ui_account_booking_distance_link', 'Distance Service Agreement')}
                 </Link>
-                {ui('ui_account_booking_consent1', '’ni okudum, anladım ve kabul ediyorum.')}
+                {ui('ui_account_booking_consent1', '; I have read, understood and accept them.')}
               </span>
             </label>
             <label className="flex items-start gap-3 cursor-pointer select-none">
               <input type="checkbox" checked={consent2} onChange={(e) => setConsent2(e.target.checked)} className="mt-1 w-5 h-5 shrink-0 accent-(--gm-gold)" />
               <span className="text-xs text-(--gm-text-dim) leading-relaxed">
-                {ui('ui_account_booking_consent2', 'Satın aldığım hizmetin çevrim içi danışmanlık hizmeti olduğunu; eğlence, kişisel farkındalık ve kişisel değerlendirme amacı taşıdığını; kesin sonuç, sağlık, hukuk, finans, yatırım veya gelecek garantisi içermediğini kabul ediyorum.')}
+                {ui('ui_account_booking_consent2', 'I acknowledge that this online guidance service provides no guaranteed professional or future outcomes.')}
               </span>
             </label>
             <label className="flex items-start gap-3 cursor-pointer select-none">
               <input type="checkbox" checked={consent3} onChange={(e) => setConsent3(e.target.checked)} className="mt-1 w-5 h-5 shrink-0 accent-(--gm-gold)" />
               <span className="text-xs text-(--gm-text-dim) leading-relaxed">
-                {ui('ui_account_booking_consent3', 'Hizmetin ifasına randevu saatinde başlanmasını açıkça onaylıyorum. Hizmet başladıktan sonra Mesafeli Sözleşmeler Yönetmeliği kapsamında cayma hakkımı kullanamayacağımı bildiğimi kabul ediyorum.')}
+                {ui('ui_account_booking_consent3', 'I consent to the service beginning at the appointment time and acknowledge the resulting withdrawal terms.')}
               </span>
             </label>
           </div>

@@ -18,7 +18,9 @@ const ZODIAC_SIGNS = [
   'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces',
 ] as const;
 
-const SIGN_SUB_PAGES = ['/ask', '/kariyer', '/saglik', '/bugun', '/meditasyon'];
+// Template-heavy love/career/health/meditation pages stay noindex and outside
+// the sitemap until each sign has substantively unique editorial content.
+const SIGN_SUB_PAGES = ['/bugun'];
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
 const DEFAULT_LASTMOD = '2026-06-20T00:00:00.000Z';
 const TODAY_LASTMOD = `${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;

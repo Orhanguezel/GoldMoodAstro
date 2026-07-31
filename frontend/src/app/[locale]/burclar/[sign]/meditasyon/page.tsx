@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sign, locale } = await params;
   const meta = getZodiacMeta(sign);
   const localized = meta ? localizeSign(meta, locale) : null;
-  return buildPageMetadata({
+  const metadata = await buildPageMetadata({
     locale,
     pageKey: 'burclar-meditasyon',
     pathname: `/burclar/${sign}/meditasyon`,
@@ -28,6 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         : 'Zodiac-focused audio meditation and daily affirmations.',
     },
   });
+  return { ...metadata, robots: { index: false, follow: true } };
 }
 
 export default async function ZodiacMeditationPage({ params }: Props) {

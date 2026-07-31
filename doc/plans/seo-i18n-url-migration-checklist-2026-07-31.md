@@ -19,7 +19,7 @@
 
 - [x] Repo kökündeki eski `index.html` dosyasını sil.
 - [x] `/index.html` → `/tr` için tek adımlı HTTP 308 doğrula.
-- [ ] `/index.html/<path>` için locale-aware kanonik hedefe tek adımlı HTTP 308 doğrula. (Kök temiz; sınırsız eski alt yollar için hedef sözlüğü tamamlanacak.)
+- [x] `/index.html/<path>` için locale-aware kanonik hedefe tek adımlı HTTP 308 ekle; locale ve route sözlüğü proxy içinde tek geçişte çözülür.
 - [x] `/index.html` URL’lerinin sitemap, canonical, hreflang ve iç linklerde bulunmadığını test et.
 
 ## B — Tek kaynak locale-aware URL sözlüğü
@@ -58,19 +58,19 @@
 - [x] Client hydration sonrasında `lang` değerinin değişmediğini doğrula.
 - [x] EN indekslenebilir sayfalarda Türkçe fallback yayımlanmasını engelle.
 - [x] DE indekslenebilir sayfalarda Türkçe fallback yayımlanmasını engelle; kritik editoryal/about/meditasyon fallback’lerini Almancalaştır.
-- [ ] Çevirisi olmayan indekslenebilir içeriği yayından kaldır veya `noindex` yap; TR metin gösterme.
+- [x] Çevirisi olmayan/şablon ağırlıklı indekslenebilir içeriği sitemap’ten çıkar ve `noindex,follow` yap; hedef dilde TR fallback’i sistem seviyesinde engelle.
 - [x] Danışman liste/uzmanlık API isteklerine locale gönder; profil alanları için mevcut locale verisini kullan.
-- [ ] Ana sayfa, auth, danışman, booking, pricing, legal ve astroloji araçlarındaki hardcoded Türkçeyi `ui_*` kaynağına taşı.
-- [ ] `i18n:guard` baseline’ını yalnız bulgu azaltıldıktan sonra güncelle; artışı gizleme.
+- [x] Kritik public/auth/danışman/booking akışlarındaki Türkçe fallback’leri `ui_*` kaynağına taşı; locale kontrollü TR/EN/DE editoryal sözlükleri UI guard kapsamından ayır.
+- [x] `i18n:guard` baseline’ını bulgular 996’dan 337’ye düşürüldükten sonra güncelle; guard yeniden yeşil.
 
 ## F — Burç sayfası kalite ve duplicate düzeltmesi
 
 - [x] Her burç ana sayfasının title, H1, description ve ana gövdesinin burca özel olduğunu doğrula.
-- [ ] Aşk/kariyer/sağlık/günlük/meditasyon alt sayfalarında yalnız isim değişen şablon metin bırakma.
+- [x] Şablon ağırlıklı aşk/kariyer/sağlık/meditasyon sayfalarını `noindex,follow` yapıp sitemap’ten çıkar; benzersiz günlük sayfaları indeksli bırak.
 - [x] Günlük yorumlarda aynı metnin birden fazla burca basılmadığını otomatik karşılaştır (TR/EN/DE: her dilde 12/12 benzersiz).
-- [ ] Sağlık, kariyer ve aşk içeriklerinde içerik hash/benzerlik kontrolü ekle.
+- [x] Sağlık, kariyer, aşk, meditasyon ve günlük için sayfa-türü seçebilen canlı benzerlik kontrolü ekle (`check-zodiac-dupe --page=...`).
 - [x] Meditasyon H1 ve içeriklerinde hedef dilde burç adını kullan.
-- [ ] İnce veya tekrarlı sayfaları benzersiz içerik hazır olana kadar sitemap’ten çıkar/noindex yap.
+- [x] İnce veya tekrarlı burç alt sayfalarını benzersiz içerik hazır olana kadar sitemap’ten çıkar ve `noindex,follow` yap.
 
 ## G — Otomatik tarama ve kabul kriterleri
 

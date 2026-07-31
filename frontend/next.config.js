@@ -142,8 +142,6 @@ const nextConfig = {
       // ONLARCA çöp alt-URL üretmişti (Search Console'da tüm site ikinci kez indexli).
       // Nokta içerdiği için proxy.ts matcher'ı bu path'i atlıyor; burada 301 ile
       // temiz adrese taşınıyor. Google birleştirip çöp URL'leri düşürür.
-      { source: '/index.html', destination: '/tr', permanent: true },
-      { source: '/index.html/:path*', destination: '/tr/:path*', permanent: true },
       // Silinen konigsmassage sayfaları → goldmoodastro karşılıkları
       { source: '/:locale/gutschein', destination: '/:locale', permanent: true },
       { source: '/:locale/services', destination: '/:locale/consultants', permanent: true },

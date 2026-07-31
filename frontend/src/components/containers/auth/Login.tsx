@@ -29,16 +29,14 @@ function trimSlash(x: string) {
   return String(x || '').replace(/\/+$/, '');
 }
 
-function invalidCredentialsFallback(locale: string) {
-  if (locale === 'en') return 'The email or password is incorrect.';
-  if (locale === 'de') return 'E-Mail oder Passwort ist falsch.';
-  return 'E-posta veya şifre hatalı.';
+function invalidCredentialsFallback() {
+  return 'The email or password is incorrect.';
 }
 
-function authErrorMessage(raw: string | null, locale: string, ui: (key: string, hardFallback?: string) => string) {
+function authErrorMessage(raw: string | null, ui: (key: string, hardFallback?: string) => string) {
   if (!raw) return null;
   if (raw === 'invalid_credentials') {
-    return ui('login_error_invalid_credentials', invalidCredentialsFallback(locale));
+    return ui('login_error_invalid_credentials', invalidCredentialsFallback());
   }
   return raw;
 }
@@ -77,7 +75,7 @@ const Login: React.FC = () => {
 
   const apiErrorMessage = useMemo(() => {
     if (!loginState.error) return null;
-    return authErrorMessage(normalizeError(loginState.error).message, locale, ui);
+    return authErrorMessage(normalizeError(loginState.error).message, ui);
   }, [loginState.error, locale, ui]);
 
   const handleSubmit = async (e: FormEvent) => {

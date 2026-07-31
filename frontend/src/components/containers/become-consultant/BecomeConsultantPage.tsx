@@ -373,7 +373,7 @@ export default function BecomeConsultantPage() {
                         value={formData.sample_review}
                         onChange={e => setFormData({...formData, sample_review: e.target.value})}
                         className="gm-input-premium py-6 min-h-[140px] resize-none font-serif italic"
-                        placeholder={ui('ui_become_consultant_form_sample_desc', 'Danışmanlık tarzınızı yansıtan örnek bir yorum yazın...')}
+                        placeholder={ui("ui_become_consultant_form_sample_desc", "A sample reading that reflects your consulting style")}
                       />
                     </InputGroup>
                   </div>

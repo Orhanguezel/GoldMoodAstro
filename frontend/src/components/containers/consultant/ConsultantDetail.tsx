@@ -338,7 +338,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
               {consultant.bio || ui('ui_consultant_no_bio', 'This consultant has not added a description yet.')}
             </p>
             <p className="mt-6 text-[11px] text-(--gm-text-muted) leading-relaxed border-t border-(--gm-border-soft) pt-4">
-              {ui('ui_consultant_disclaimer', 'Bu danışmanlık hizmeti eğlence, kişisel farkındalık ve kişisel değerlendirme amacıyla sunulur. Kesin sonuç, gelecek garantisi, sağlık, hukuk, finans, yatırım, büyü veya ritüel vaadi içermez.')}
+              {ui('ui_consultant_disclaimer', 'This guidance service is for entertainment, personal awareness and self-reflection and does not promise guaranteed outcomes.')}
             </p>
           </div>
 

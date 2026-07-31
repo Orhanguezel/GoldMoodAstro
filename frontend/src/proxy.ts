@@ -57,6 +57,21 @@ async function consultantSlugRedirect(req: NextRequest): Promise<NextResponse | 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Legacy standalone HTML mirror. Resolve the optional locale and public
+  // route in one pass so even nested garbage URLs have a single 308 hop.
+  if (pathname === '/index.html' || pathname.startsWith('/index.html/')) {
+    const legacyPath = pathname.slice('/index.html'.length) || '/';
+    const segments = legacyPath.split('/').filter(Boolean);
+    const candidate = segments[0];
+    const hasLocale = candidate && (SUPPORTED_LOCALES as readonly string[]).includes(candidate);
+    const locale = (hasLocale ? candidate : DEFAULT_LOCALE) as PublicLocale;
+    const pathWithoutLocale = hasLocale ? `/${segments.slice(1).join('/')}` : legacyPath;
+    const { publicPath } = canonicalPublicPath(locale, pathWithoutLocale || '/');
+    const url = req.nextUrl.clone();
+    url.pathname = `/${locale}${publicPath === '/' ? '' : publicPath}`;
+    return NextResponse.redirect(url, 308);
+  }
+
   if (pathname === '/') {
     const url = req.nextUrl.clone();
     url.pathname = `/${DEFAULT_LOCALE}`;
@@ -139,6 +154,7 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
+    '/index.html/:path*',
     // Static asset uzantıları ve Next internals hariç her şeyde çalış.
     '/((?!_next/static|_next/image|.*\\..*).*)',
   ],

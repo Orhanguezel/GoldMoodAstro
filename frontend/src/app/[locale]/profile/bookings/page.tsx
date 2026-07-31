@@ -17,7 +17,7 @@ export default function ProfileBookingsPage() {
 
   return (
     <PageContainer center className="min-h-screen bg-(--gm-bg)">
-      <p className="text-(--gm-muted) animate-pulse">{ui('ui_extra_b1_redirecting', 'Yönlendiriliyorsunuz...')}</p>
+      <p className="text-(--gm-muted) animate-pulse">{ui("ui_extra_b1_redirecting", "Redirecting...")}</p>
     </PageContainer>
   );
 }

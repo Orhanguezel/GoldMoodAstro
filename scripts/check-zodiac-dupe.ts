@@ -3,6 +3,7 @@
 type Locale = "tr" | "en" | "de";
 type Source = "live" | "files" | "seed";
 type Format = "text" | "markdown";
+type PageKind = "main" | "love" | "career" | "health" | "meditation" | "today";
 
 type Sign = {
   key: string;
@@ -45,6 +46,7 @@ const args = parseArgs(process.argv.slice(2));
 const source = getArg<Source>("source", "live", ["live", "files", "seed"]);
 const locale = getArg<Locale>("locale", "tr", ["tr", "en", "de"]);
 const format = getArg<Format>("format", "text", ["text", "markdown"]);
+const page = getArg<PageKind>("page", "main", ["main", "love", "career", "health", "meditation", "today"]);
 const baseUrl = String(args.baseUrl ?? "https://goldmoodastro.com").replace(/\/$/, "");
 const filesDir = String(args.dir ?? "doc/zodiac-content-2026-07");
 const threshold = Number(args.threshold ?? 0.4);
@@ -76,14 +78,22 @@ async function loadDocuments(src: Source, loc: Locale): Promise<Record<string, s
 }
 
 async function loadLiveDocuments(loc: Locale): Promise<Record<string, string>> {
+  const suffix: Record<PageKind, string> = {
+    main: "",
+    love: "/ask",
+    career: "/kariyer",
+    health: "/saglik",
+    meditation: "/meditasyon",
+    today: "/bugun",
+  };
   const entries = await Promise.all(
     SIGNS.map(async (sign) => {
-      const res = await fetch(`${baseUrl}/${loc}/burclar/${sign.key}`, {
+      const res = await fetch(`${baseUrl}/${loc}/burclar/${sign.key}${suffix[page]}`, {
         headers: { "user-agent": "GoldMoodAstro zodiac duplicate audit" },
       });
       if (!res.ok) throw new Error(`Live fetch failed for ${sign.key}: ${res.status}`);
       const html = await res.text();
-      return [sign.key, htmlToText(html)] as const;
+      return [sign.key, htmlToText(extractMainHtml(html))] as const;
     }),
   );
   return Object.fromEntries(entries);
@@ -313,6 +323,11 @@ function htmlToText(html: string): string {
     .trim();
 }
 
+function extractMainHtml(html: string): string {
+  const match = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i);
+  return match?.[1] ?? html;
+}
+
 function markdownToText(markdown: string): string {
   return markdown
     .replace(/^---[\s\S]*?---/m, " ")
@@ -356,6 +371,7 @@ function printReport(result: ReturnType<typeof analyze>): void {
     console.log("");
     console.log(`- source: \`${result.source}\``);
     console.log(`- locale: \`${result.locale}\``);
+    console.log(`- page: \`${page}\``);
     console.log(`- metric: sentence 3/4-gram Jaccard after zodiac term normalization`);
     console.log(`- threshold: \`${pct(result.threshold)}\``);
     console.log("");
@@ -386,7 +402,7 @@ function printReport(result: ReturnType<typeof analyze>): void {
     return;
   }
 
-  console.log(`Zodiac duplicate audit (${result.source}, ${result.locale}, ${result.generatedAt})`);
+  console.log(`Zodiac duplicate audit (${result.source}, ${result.locale}, ${page}, ${result.generatedAt})`);
   console.log(`Metric: sentence 3/4-gram Jaccard after zodiac term normalization`);
   console.log("");
   console.log(["sign", ...SIGNS.map((s) => s.key.padStart(11))].join(" "));

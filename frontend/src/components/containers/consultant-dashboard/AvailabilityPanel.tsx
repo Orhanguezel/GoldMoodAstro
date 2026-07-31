@@ -369,7 +369,7 @@ export default function AvailabilityPanel() {
               className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
             >
               {isCreatingBlock ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-              {ui('ui_consultantpanel_timeblock_add', 'Ekle')}
+              {ui('ui_consultantpanel_timeblock_add', 'Add')}
             </button>
           </div>
           <div className="space-y-2">
@@ -396,7 +396,7 @@ export default function AvailabilityPanel() {
                   }}
                   disabled={isDeletingBlock}
                   className="p-2 text-[var(--gm-error)] hover:bg-[var(--gm-error)]/10 rounded-lg disabled:opacity-50"
-                  title={ui('ui_consultantpanel_availability_delete', 'Sil')}
+                  title={ui('ui_consultantpanel_availability_delete', 'Delete')}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -453,8 +453,8 @@ export default function AvailabilityPanel() {
                       <span className="text-sm font-bold text-[var(--gm-text)]">{event.start} - {event.end}</span>
                       <span className="text-[12px] text-[var(--gm-text-dim)]">
                         {event.kind === 'booking'
-                          ? (event.label || ui('ui_consultantpanel_daytimeline_booking', 'Randevu'))
-                          : (event.label || ui('ui_consultantpanel_daytimeline_block', 'Mola'))}
+                          ? (event.label || ui('ui_consultantpanel_daytimeline_booking', 'Booking'))
+                          : (event.label || ui('ui_consultantpanel_daytimeline_block', 'Break'))}
                       </span>
                     </div>
                   ))}
