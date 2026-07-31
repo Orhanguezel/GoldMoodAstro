@@ -9,6 +9,7 @@ import { trackEvent } from '@/integrations/telemetry';
 import { useUiSection } from '@/i18n';
 
 import PageContainer from '@/components/common/PageContainer';
+import { fbEvent, metaEventId } from '@/lib/fbpixel';
 
 export default function BookingPaymentCallbackPage() {
   const params = useParams();
@@ -18,12 +19,35 @@ export default function BookingPaymentCallbackPage() {
 
   const status = searchParams.get('status');
   const isSuccess = status === 'success';
+  const orderId = searchParams.get('order_id')?.trim() || '';
+  const bookingId = searchParams.get('booking_id')?.trim() || '';
+  const valueRaw = searchParams.get('value');
+  const value = valueRaw == null ? null : Number(valueRaw);
 
   useEffect(() => {
     if (isSuccess) {
       trackEvent('booking_completed', { status: 'success' }).catch(() => {});
+      if (orderId) {
+        fbEvent(
+          'Purchase',
+          {
+            currency: 'TRY',
+            ...(value !== null && Number.isFinite(value) ? { value } : {}),
+          },
+          metaEventId.purchase(orderId),
+        );
+      }
+    } else if (!status && bookingId) {
+      fbEvent(
+        'InitiateCheckout',
+        {
+          currency: 'TRY',
+          ...(value !== null && Number.isFinite(value) ? { value } : {}),
+        },
+        metaEventId.checkout(bookingId),
+      );
     }
-  }, [isSuccess]);
+  }, [bookingId, isSuccess, orderId, status, value]);
 
   return (
     <PageContainer width="narrow" center className="bg-(--gm-bg) min-h-screen">

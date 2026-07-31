@@ -11,6 +11,18 @@ export function registerErrorHandlers(app: any) {
 
   // Genel hata yakalayıcı
   app.setErrorHandler((err: any, req: any, reply: any) => {
+    const path = String(req?.url ?? '').split('?')[0] || '/';
+    const isEmptyJsonBody = err?.code === 'FST_ERR_CTP_EMPTY_JSON_BODY';
+    const isFireAndForgetTelemetry =
+      path === '/api/track' || /^\/api\/consultants\/[^/]+\/view$/.test(path);
+
+    // Telemetry/profile-view endpoints do not need a request body. Some crawlers or
+    // clients send `content-type: application/json` with an empty body; Fastify rejects
+    // it before the handler. Treat that as ignored telemetry instead of a real 4xx.
+    if (isEmptyJsonBody && isFireAndForgetTelemetry) {
+      return reply.code(202).send({ ok: true, ignored: true, reason: 'empty_body' });
+    }
+
     const status = err?.statusCode ?? err?.status ?? (err?.validation ? 400 : 500);
 
     const payload: Record<string, any> = {

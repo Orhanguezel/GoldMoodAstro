@@ -16,6 +16,12 @@ export const STORAGE_KEYS = [
 
 export const GOOGLE_KEYS = ['google_client_id', 'google_client_secret'] as const;
 
+export const META_KEYS = [
+  'facebook_pixel_id',
+  'facebook_capi_token',
+  'facebook_test_event_code',
+] as const;
+
 export const TELEGRAM_KEYS = [
   'telegram_notifications_enabled',
   'telegram_webhook_enabled',

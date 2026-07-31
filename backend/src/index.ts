@@ -20,6 +20,7 @@ import { registerPaymentReconciliationCron } from '@/cron/payment-reconciliation
 import { registerFavoriteOnlineNotifyCron } from '@/cron/favorite-online-notify';
 import { registerMediaMessageSlaCron } from '@/cron/media-message-sla';
 import { registerSlotGeneratorCron } from '@/cron/slot-generator';
+import { registerGscIndexRefreshCron } from '@/cron/gsc-index-refresh';
 import { registerSeoQualityRecalcCron } from '@/jobs/seo-quality-recalc.job';
 import { registerPushSender } from '@goldmood/shared-backend/modules/notifications';
 import { assertPaymentMockSafe } from '@goldmood/shared-backend/modules/orders/iyzico.service';
@@ -63,6 +64,7 @@ async function main() {
     registerFavoriteOnlineNotifyCron();
     registerMediaMessageSlaCron();
     registerSlotGeneratorCron();
+    registerGscIndexRefreshCron();
     registerSeoQualityRecalcCron();
   }
 

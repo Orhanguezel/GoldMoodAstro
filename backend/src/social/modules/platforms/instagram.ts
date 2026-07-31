@@ -14,6 +14,11 @@ interface IGError {
   };
 }
 
+function graphError(data: unknown, fallback: string) {
+  const message = (data as { error?: { message?: unknown } } | null)?.error?.message;
+  return typeof message === "string" && message.trim() ? message : fallback;
+}
+
 // ─── Gorsel Postu Yayinla (2 Adim) ─────────────────────────
 export async function publishPhotoPost(
   imageUrl: string,
@@ -104,6 +109,54 @@ export async function publishStory(
   const publishData = (await publishRes.json()) as any;
   if (!publishRes.ok) {
     throw new Error(`Instagram story yayinlama hatasi: ${publishData?.error?.message || publishRes.statusText}`);
+  }
+  return publishData as IGMediaResult;
+}
+
+// ─── Reel (Video) ───────────────────────────────────────────
+/**
+ * IG Reel yayını. Graph API video_url ister; görsel URL reel kapağı değildir.
+ * `videoUrl` public erişilebilir bir MP4/MOV olmalıdır.
+ */
+export async function publishReel(
+  videoUrl: string,
+  caption: string,
+  opts?: { accountId?: string; accessToken?: string; coverUrl?: string; shareToFeed?: boolean },
+): Promise<IGMediaResult> {
+  const accountId = opts?.accountId || env.IG_ACCOUNT_ID;
+  const token = opts?.accessToken || env.IG_ACCESS_TOKEN;
+  if (!accountId || !token) throw new Error("Instagram yapilandirmasi eksik");
+
+  const body: Record<string, unknown> = {
+    media_type: "REELS",
+    video_url: videoUrl,
+    caption,
+    share_to_feed: opts?.shareToFeed ?? true,
+    access_token: token,
+  };
+  if (opts?.coverUrl) body.cover_url = opts.coverUrl;
+
+  const containerRes = await fetch(`${FB_GRAPH_URL}/${accountId}/media`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const containerData = (await containerRes.json()) as any;
+  if (!containerRes.ok) {
+    throw new Error(`Instagram reel container hatasi: ${containerData?.error?.message || containerRes.statusText}`);
+  }
+  const containerId = (containerData as IGMediaResult).id;
+
+  await waitForContainer(containerId, token, 120_000);
+
+  const publishRes = await fetch(`${FB_GRAPH_URL}/${accountId}/media_publish`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ creation_id: containerId, access_token: token }),
+  });
+  const publishData = (await publishRes.json()) as any;
+  if (!publishRes.ok) {
+    throw new Error(`Instagram reel yayinlama hatasi: ${publishData?.error?.message || publishRes.statusText}`);
   }
   return publishData as IGMediaResult;
 }
@@ -270,6 +323,94 @@ export async function getRecentMedia(
   }));
 
   return { items };
+}
+
+// ─── Gonderi Detayi + Yorumlar ──────────────────────────────
+export async function getMediaDetails(
+  mediaId: string,
+  opts?: { accessToken?: string },
+) {
+  const token = opts?.accessToken || env.IG_ACCESS_TOKEN;
+  if (!mediaId || !token) throw new Error("Instagram medya ID/token eksik");
+
+  const fieldsWithComments = [
+    "id",
+    "caption",
+    "media_type",
+    "media_url",
+    "thumbnail_url",
+    "permalink",
+    "timestamp",
+    "like_count",
+    "comments_count",
+    "comments.limit(50){id,text,timestamp,username,like_count,replies.limit(20){id,text,timestamp,username,like_count}}",
+  ].join(",");
+
+  let data: any;
+  let commentsReadable = true;
+  const res = await fetch(
+    `${FB_GRAPH_URL}/${encodeURIComponent(mediaId)}?fields=${encodeURIComponent(fieldsWithComments)}&access_token=${token}`,
+  );
+  data = await res.json();
+  if (!res.ok) {
+    commentsReadable = false;
+    const fallbackFields = "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count";
+    const fallbackRes = await fetch(
+      `${FB_GRAPH_URL}/${encodeURIComponent(mediaId)}?fields=${encodeURIComponent(fallbackFields)}&access_token=${token}`,
+    );
+    data = await fallbackRes.json();
+    if (!fallbackRes.ok) throw new Error(`Instagram detay hatasi: ${graphError(data, fallbackRes.statusText)}`);
+  }
+
+  const normalizeComment = (comment: any) => ({
+    id: String(comment?.id || ""),
+    authorName: typeof comment?.username === "string" ? comment.username : null,
+    message: typeof comment?.text === "string" ? comment.text : "",
+    likeCount: Number(comment?.like_count ?? 0),
+    createdTime: comment?.timestamp || null,
+    replies: Array.isArray(comment?.replies?.data)
+      ? comment.replies.data.map((reply: any) => ({
+          id: String(reply?.id || ""),
+          authorName: typeof reply?.username === "string" ? reply.username : null,
+          message: typeof reply?.text === "string" ? reply.text : "",
+          likeCount: Number(reply?.like_count ?? 0),
+          createdTime: reply?.timestamp || null,
+        }))
+      : [],
+  });
+
+  return {
+    externalId: data.id,
+    message: data.caption || "",
+    mediaType: data.media_type || null,
+    createdTime: data.timestamp || null,
+    permalink: data.permalink || null,
+    imageUrl: data.media_type === "VIDEO" ? data.thumbnail_url || data.media_url || null : data.media_url || null,
+    likes: Number(data.like_count ?? 0),
+    comments: Number(data.comments_count ?? 0),
+    commentsReadable,
+    commentItems: Array.isArray(data.comments?.data) ? data.comments.data.map(normalizeComment) : [],
+  };
+}
+
+export async function replyToComment(
+  commentId: string,
+  message: string,
+  opts?: { accessToken?: string },
+) {
+  const token = opts?.accessToken || env.IG_ACCESS_TOKEN;
+  const text = message.trim();
+  if (!commentId || !token) throw new Error("Instagram yorum ID/token eksik");
+  if (!text) throw new Error("Cevap metni gerekli");
+
+  const res = await fetch(`${FB_GRAPH_URL}/${encodeURIComponent(commentId)}/replies`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: text, access_token: token }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`Instagram yorum cevap hatasi: ${graphError(data, res.statusText)}`);
+  return data as IGMediaResult;
 }
 
 // ─── Hesap Bilgilerini Al ───────────────────────────────────

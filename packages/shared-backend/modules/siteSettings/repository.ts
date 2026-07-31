@@ -26,12 +26,14 @@ function stringifyValue(v: JsonLike): string {
   return JSON.stringify(v);
 }
 
+const RESPONSE_MASKED_KEYS = new Set(['facebook_capi_token']);
+
 export function rowToDto(r: SiteSettingRow) {
   return {
     id: r.id,
     key: r.key,
     locale: r.locale,
-    value: parseDbValue(r.value),
+    value: RESPONSE_MASKED_KEYS.has(r.key) && String(parseDbValue(r.value) ?? '').trim() ? '***' : parseDbValue(r.value),
     created_at: r.created_at ? new Date(r.created_at).toISOString() : undefined,
     updated_at: r.updated_at ? new Date(r.updated_at).toISOString() : undefined,
   };

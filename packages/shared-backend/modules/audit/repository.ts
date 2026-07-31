@@ -4,7 +4,7 @@
 // =============================================================
 
 import { db } from '../../db/client';
-import { and, asc, desc, eq, like, or, sql, type SQL, gte, lte } from 'drizzle-orm';
+import { and, asc, desc, eq, like, notInArray, or, sql, type SQL, gte, lte } from 'drizzle-orm';
 
 import {
   auditRequestLogs,
@@ -16,6 +16,7 @@ import {
 
 import { auditEvents, type NewAuditEventRow } from './audit_events.schema';
 import { users } from '../auth';
+import { env } from '../../core/env';
 
 import type {
   AuditRequestLogsListQuery,
@@ -53,8 +54,56 @@ function parseDateTime3(s: string) {
 }
 
 /* ---- Localhost exclusion helper ---- */
+function auditExcludedIps(): string[] {
+  const raw = (env as { AUDIT_EXCLUDE_IPS?: unknown }).AUDIT_EXCLUDE_IPS ?? process.env.AUDIT_EXCLUDE_IPS;
+  const values = Array.isArray(raw)
+    ? raw
+    : typeof raw === 'string'
+      ? raw.split(',')
+      : [];
+
+  return Array.from(
+    new Set(
+      [
+        '127.0.0.1',
+        '::1',
+        '::ffff:127.0.0.1',
+        'localhost',
+        ...values.map((v) => String(v ?? '').trim()).filter(Boolean),
+      ],
+    ),
+  );
+}
+
 export function excludeLocalhostCond(table: AuditIpTable): SQL {
-  return sql`${table.ip} NOT IN ('127.0.0.1', '::1', '::ffff:127.0.0.1')`;
+  const excludedIps = auditExcludedIps();
+  return or(
+    sql`${table.ip} IS NULL`,
+    sql`${table.ip} = ''`,
+    and(
+      notInArray(table.ip, excludedIps),
+      sql`${table.ip} NOT REGEXP '^(10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[0-1])\\.|::ffff:10\\.|::ffff:192\\.168\\.|::ffff:172\\.(1[6-9]|2[0-9]|3[0-1])\\.)'`,
+    ),
+  ) as SQL;
+}
+
+function shouldExcludeLocalTraffic(v: AuditGeoStatsBool): boolean {
+  return typeof v === 'undefined' || isTruthyBoolLike(v);
+}
+
+function requestSiteTrafficConds(onlyAdmin?: AuditGeoStatsBool): SQL[] {
+  if (isTruthyBoolLike(onlyAdmin)) {
+    return [eq(auditRequestLogs.is_admin, 1)];
+  }
+
+  return [
+    eq(auditRequestLogs.is_admin, 0),
+    sql`${auditRequestLogs.path} NOT LIKE '/api/admin/%'`,
+    sql`${auditRequestLogs.path} NOT LIKE '/admin/%'`,
+    sql`${auditRequestLogs.path} NOT LIKE '/_next/%'`,
+    sql`${auditRequestLogs.path} NOT LIKE '/favicon%'`,
+    sql`${auditRequestLogs.path} NOT LIKE '/api/site_settings/ui_admin%'`,
+  ];
 }
 
 /* ---- Enriched types (with user info) ---- */
@@ -91,11 +140,9 @@ export async function repoListAuditRequestLogs(
   if (q.user_id) conds.push(eq(auditRequestLogs.user_id, q.user_id));
   if (q.ip) conds.push(eq(auditRequestLogs.ip, q.ip));
 
-  if (typeof q.only_admin !== 'undefined' && isTruthyBoolLike(q.only_admin)) {
-    conds.push(eq(auditRequestLogs.is_admin, 1));
-  }
+  conds.push(...requestSiteTrafficConds(q.only_admin));
 
-  if (typeof q.exclude_localhost !== 'undefined' && isTruthyBoolLike(q.exclude_localhost)) {
+  if (shouldExcludeLocalTraffic(q.exclude_localhost)) {
     conds.push(excludeLocalhostCond(auditRequestLogs));
   }
 
@@ -190,7 +237,7 @@ export async function repoListAuditAuthEvents(
   if (q.email) conds.push(eq(auditAuthEvents.email, q.email));
   if (q.ip) conds.push(eq(auditAuthEvents.ip, q.ip));
 
-  if (typeof q.exclude_localhost !== 'undefined' && isTruthyBoolLike(q.exclude_localhost)) {
+  if (shouldExcludeLocalTraffic(q.exclude_localhost)) {
     conds.push(excludeLocalhostCond(auditAuthEvents));
   }
 
@@ -279,11 +326,11 @@ export async function repoGetAuditGeoStats(
   conds.push(sql`${table.country} IS NOT NULL AND ${table.country} != ''`);
 
   if (!useAuth) {
-    // Varsayılan: admin panel trafiği (kendi çalışmalarımız) hariç. only_admin=true → yalnızca admin.
-    conds.push(eq(auditRequestLogs.is_admin, isTruthyBoolLike(q.only_admin) ? 1 : 0));
+    // Varsayılan: admin panel / iç trafik hariç. only_admin=true → yalnızca admin.
+    conds.push(...requestSiteTrafficConds(q.only_admin));
   }
 
-  if (typeof q.exclude_localhost !== 'undefined' && isTruthyBoolLike(q.exclude_localhost)) {
+  if (shouldExcludeLocalTraffic(q.exclude_localhost)) {
     conds.push(excludeLocalhostCond(table));
   }
 
@@ -354,11 +401,9 @@ export async function repoGetAuditMetricsDaily(
 
   conds.push(sql`DATE(${auditRequestLogs.created_at}) >= ${startExpr}`);
 
-  if (typeof q.only_admin !== 'undefined' && isTruthyBoolLike(q.only_admin)) {
-    conds.push(eq(auditRequestLogs.is_admin, 1));
-  }
+  conds.push(...requestSiteTrafficConds(q.only_admin));
 
-  if (typeof q.exclude_localhost !== 'undefined' && isTruthyBoolLike(q.exclude_localhost)) {
+  if (shouldExcludeLocalTraffic(q.exclude_localhost)) {
     conds.push(excludeLocalhostCond(auditRequestLogs));
   }
 
@@ -560,10 +605,8 @@ export function buildRequestLogExportConds(q: ExportRequestLogQuery): SQL[] {
   if (typeof q.status_code === 'number') conds.push(eq(auditRequestLogs.status_code, q.status_code));
   if (q.user_id) conds.push(eq(auditRequestLogs.user_id, q.user_id));
   if (q.ip) conds.push(eq(auditRequestLogs.ip, q.ip));
-  if (typeof q.only_admin !== 'undefined' && isTruthyBoolLike(q.only_admin)) {
-    conds.push(eq(auditRequestLogs.is_admin, 1));
-  }
-  if (typeof q.exclude_localhost !== 'undefined' && isTruthyBoolLike(q.exclude_localhost)) {
+  conds.push(...requestSiteTrafficConds(q.only_admin));
+  if (shouldExcludeLocalTraffic(q.exclude_localhost)) {
     conds.push(excludeLocalhostCond(auditRequestLogs));
   }
   if (q.created_from?.trim()) conds.push(gte(auditRequestLogs.created_at, parseDateTime3(q.created_from.trim())));
@@ -579,7 +622,7 @@ export function buildAuthEventExportConds(q: ExportAuthEventQuery): SQL[] {
   if (q.user_id) conds.push(eq(auditAuthEvents.user_id, q.user_id));
   if (q.email) conds.push(eq(auditAuthEvents.email, q.email));
   if (q.ip) conds.push(eq(auditAuthEvents.ip, q.ip));
-  if (typeof q.exclude_localhost !== 'undefined' && isTruthyBoolLike(q.exclude_localhost)) {
+  if (shouldExcludeLocalTraffic(q.exclude_localhost)) {
     conds.push(excludeLocalhostCond(auditAuthEvents));
   }
   if (q.created_from?.trim()) conds.push(gte(auditAuthEvents.created_at, parseDateTime3(q.created_from.trim())));

@@ -43,6 +43,7 @@ function getApiErrorMessage(error: unknown) {
 
 import { useUiSection, useLocaleShort } from '@/i18n';
 import PageContainer from '@/components/common/PageContainer';
+import { fbEvent, metaEventId } from '@/lib/fbpixel';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -127,7 +128,8 @@ export default function BecomeConsultantPage() {
         ...(formData.cv_url.trim() ? { cv_url: formData.cv_url.trim() } : {}),
         ...(formData.sample_review.trim() ? { sample_review: formData.sample_review.trim() } : {}),
       };
-      await apply(payload).unwrap();
+      const application = await apply(payload).unwrap();
+      fbEvent('Lead', { content_name: 'consultant_application' }, metaEventId.lead(application.id));
       toast.success(ui('ui_become_consultant_success_toast', 'Your application has been received successfully!'));
       setStep(3); // Success step
     } catch (err: unknown) {

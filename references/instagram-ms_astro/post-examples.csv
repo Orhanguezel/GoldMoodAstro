@@ -1,0 +1,6 @@
+platform,username,post_url,observed_from,observed_metric,content_type,topic,format,notes,goldmood_adaptation
+instagram,ms_astro,https://www.instagram.com/ms_astro/p/DYmyB52jXw1/?hl=en,google_index,"1,117 likes",post/carousel,astroloji,part-series,"Part 2 geldi; seri devamlılığı var.","12 yükseleni 2 carousel'e bölüp diğer parçaya yönlendirme."
+instagram,ms_astro,https://www.instagram.com/p/DYpdLp7jb41/?img_index=5,google_index,"33 comments",carousel,burç-listesi,zodiac-list,"Burçlar bir çiçek olsaydı; OCR'da burcuna göre yaz çiçeğin görünüyor.","GoldMood için burçlara göre yaz enerjisi / ay fazı / ilişki dili serisi."
+instagram,ms_astro,https://www.instagram.com/reel/DTd20nFCKIT/,google_index,unknown,reel,uygulama/astroloji,personal-founder,"Profil linkinden indirme CTA'sı görünen örnek.","GoldMood danışman/profil/yükselen öğrenme CTA'lı reel."
+instagram,ms_astro,https://www.instagram.com/reel/DN0sUzv2Nug/,google_index,unknown,reel,burç-uyumu,comment-trigger,"Burçlar bir araya geldiğinde uyum mu kaos mu doğar?","Sinastri ve partner uyumu içerik serisi."
+

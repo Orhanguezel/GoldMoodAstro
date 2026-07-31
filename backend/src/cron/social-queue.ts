@@ -7,131 +7,15 @@
 // - Her 5 dk kontrol (setInterval; mevcut cron deseniyle ayni, node-cron yok).
 // - Env kapisi: SOCIAL_QUEUE_ENABLED=1 (kapaliysa hic calismaz).
 // - SOCIAL_QUEUE_DRYRUN=1: yayinlamadan sadece ne yapacagini loglar (test).
-// - Yalniz FB/IG otomatik yayinlanir; diger platformlar 'failed' + not.
+// - Yayinlama merkezi publisher'a delege edilir (FB/IG Story/Reel/Carousel dahil).
 // =============================================================
-import fs from 'fs';
-import path from 'path';
-import sharp from 'sharp';
 import { and, eq, lte, isNotNull, asc } from 'drizzle-orm';
-import { env } from '@/core/env';
 import { db as socialDb } from '@/social/db/client';
-import { platformAccounts, socialPosts } from '@/social/db/schema';
-import { publishPhotoPost as fbPublishPhoto } from '@/social/modules/platforms/facebook';
-import { publishPhotoPost as igPublishPhoto } from '@/social/modules/platforms/instagram';
+import { socialPosts } from '@/social/db/schema';
+import { publishPost } from '@/social/modules/platforms/publisher';
 
-const TENANT = 'goldmoodastro';
-const PUBLIC_BASE = (process.env.SOCIAL_PUBLIC_BASE || 'https://goldmoodastro.com').replace(/\/$/, '');
 const TICK_MS = 5 * 60 * 1000; // 5 dk
 const BATCH = 10;
-
-async function getAccounts() {
-  const rows = await socialDb.select().from(platformAccounts).where(eq(platformAccounts.tenantKey, TENANT));
-  return {
-    fb: rows.find((r) => r.platform === 'facebook') || null,
-    ig: rows.find((r) => r.platform === 'instagram') || null,
-  };
-}
-
-function absUrl(u?: string | null): string | null {
-  const s = String(u || '').trim();
-  if (!s) return null;
-  if (/^https?:\/\//i.test(s)) return s;
-  return `${PUBLIC_BASE}${s.startsWith('/') ? '' : '/'}${s}`;
-}
-
-function uploadsDir(): string {
-  return env.LOCAL_STORAGE_ROOT ? path.resolve(env.LOCAL_STORAGE_ROOT) : path.resolve(process.cwd(), 'uploads');
-}
-
-// IG foto yayini JPEG ister (webp/png reddedilebilir). Gorseli indirip JPEG'e
-// cevirir, /uploads/social altina kaydeder. Zaten jpeg ise dokunmaz.
-async function ensureJpeg(url: string | null, postId: number | string): Promise<string | null> {
-  if (!url) return null;
-  if (/\.jpe?g($|\?)/i.test(url)) return url;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return url;
-    const buf = Buffer.from(await res.arrayBuffer());
-    const dir = path.join(uploadsDir(), 'social');
-    fs.mkdirSync(dir, { recursive: true });
-    const fileName = `queue-${postId}.jpg`;
-    await sharp(buf).jpeg({ quality: 88 }).toFile(path.join(dir, fileName));
-    return `${PUBLIC_BASE}/uploads/social/${fileName}`;
-  } catch {
-    return url;
-  }
-}
-
-async function publishOne(post: any, accounts: { fb: any; ig: any }, dryRun: boolean): Promise<void> {
-  const platform = String(post.platform || 'both');
-  const wantFb = platform === 'facebook' || platform === 'both' || platform === 'all';
-  const wantIg = platform === 'instagram' || platform === 'both' || platform === 'all';
-  const rawImage =
-    absUrl(post.imageUrl) || absUrl(Array.isArray(post.mediaUrls) ? post.mediaUrls[0] : null);
-  const caption = [post.caption, post.hashtags].filter(Boolean).join('\n\n').trim();
-
-  if (!wantFb && !wantIg) {
-    await socialDb
-      .update(socialPosts)
-      .set({ status: 'failed', errorMessage: `desteklenmeyen platform: ${platform} (yalniz FB/IG otomatik)` })
-      .where(eq(socialPosts.id, post.id));
-    console.log(`[social-queue] #${post.id} atlandi — platform ${platform} otomatik desteklenmiyor`);
-    return;
-  }
-
-  if (dryRun) {
-    console.log(
-      `[social-queue] DRYRUN #${post.id} platform=${platform} fb=${!!accounts.fb} ig=${!!accounts.ig} image=${rawImage || 'YOK'}\n  caption: ${caption.slice(0, 120)}...`,
-    );
-    return; // dryrun'da status degismez
-  }
-
-  // IG JPEG ister — webp/png gorseli otomatik JPEG'e cevir.
-  const image = await ensureJpeg(rawImage, post.id);
-
-  let fbId: string | null = post.fbPostId || null;
-  let igId: string | null = post.igMediaId || null;
-  const errors: string[] = [];
-
-  if (wantFb && accounts.fb && !fbId) {
-    try {
-      if (!image) throw new Error('gorsel yok (FB foto gonderisi icin zorunlu)');
-      const r = await fbPublishPhoto(image, caption, {
-        pageId: accounts.fb.pageId || undefined,
-        pageAccessToken: accounts.fb.pageToken || accounts.fb.accessToken || undefined,
-      });
-      fbId = (r as any)?.id || (r as any)?.postId || null;
-    } catch (e) {
-      errors.push('FB: ' + (e as Error).message);
-    }
-  }
-  if (wantIg && accounts.ig && !igId) {
-    try {
-      if (!image) throw new Error('IG icin gorsel zorunlu');
-      const r = await igPublishPhoto(image, caption, {
-        accountId: accounts.ig.accountId || undefined,
-        accessToken: accounts.ig.accessToken || accounts.ig.pageToken || undefined,
-      });
-      igId = (r as any)?.id || (r as any)?.mediaId || null;
-    } catch (e) {
-      errors.push('IG: ' + (e as Error).message);
-    }
-  }
-
-  const posted = Boolean(fbId || igId);
-  await socialDb
-    .update(socialPosts)
-    .set({
-      status: posted ? 'posted' : 'failed',
-      postedAt: posted ? new Date() : null,
-      fbPostId: fbId,
-      igMediaId: igId,
-      errorMessage: errors.length ? errors.join(' | ').slice(0, 990) : null,
-    })
-    .where(eq(socialPosts.id, post.id));
-
-  console.log(`[social-queue] #${post.id} ${platform} -> FB:${fbId ? 'OK' : 'x'} IG:${igId ? 'OK' : 'x'} ${errors.join('; ')}`);
-}
 
 async function tick(opts: { dryRun?: boolean } = {}) {
   const dryRun = opts.dryRun ?? process.env.SOCIAL_QUEUE_DRYRUN === '1';
@@ -151,19 +35,13 @@ async function tick(opts: { dryRun?: boolean } = {}) {
 
     if (!due.length) return;
     console.log(`[social-queue] ${due.length} zamanlanmis gonderi hazir${dryRun ? ' (DRYRUN)' : ''}`);
-    const accounts = await getAccounts();
 
     for (const post of due) {
-      if (!dryRun) {
-        // optimistic lock: baska bir tick ayni gonderiyi almasin
-        const locked = await socialDb
-          .update(socialPosts)
-          .set({ status: 'publishing' })
-          .where(and(eq(socialPosts.id, post.id), eq(socialPosts.status, 'scheduled')));
-        const affected = (locked as any)?.[0]?.affectedRows ?? (locked as any)?.rowsAffected ?? 1;
-        if (affected === 0) continue; // baskasi aldi
+      if (dryRun) {
+        console.log(`[social-queue] DRYRUN #${post.id} platform=${post.platform} title=${post.title || ''}`);
+        continue;
       }
-      await publishOne(post, accounts, dryRun);
+      await publishPost(post.id);
     }
   } catch (e) {
     console.error('[social-queue] tick hatasi:', (e as Error).message);

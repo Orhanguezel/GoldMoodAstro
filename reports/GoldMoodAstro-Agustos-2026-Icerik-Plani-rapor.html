@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GoldMoodAstro — Ağustos 2026 İçerik Planı</title>
+  <style>
+    @page { size: A4; margin: 12mm; }
+    :root {
+      --ink: #171225;
+      --muted: #6f6680;
+      --deep: #110d22;
+      --purple: #332052;
+      --violet: #7b55c7;
+      --gold: #c59b3d;
+      --gold2: #f4d987;
+      --cream: #fffaf1;
+      --soft: #f8f1e4;
+      --line: rgba(197,155,61,.30);
+      --pink: #e44991;
+      --green: #0aa66a;
+      --blue: #4c78ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #fff;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .page {
+      min-height: 273mm;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      border: 1px solid rgba(197,155,61,.22);
+      background: linear-gradient(180deg, #fffdf8 0%, #fff8ed 100%);
+      padding: 24px;
+    }
+    .page:last-child { page-break-after: auto; }
+    .cover {
+      color: white;
+      background:
+        radial-gradient(circle at 76% 18%, rgba(244,217,135,.55), transparent 22%),
+        radial-gradient(circle at 24% 82%, rgba(123,85,199,.55), transparent 28%),
+        linear-gradient(145deg, #0c0718 0%, #17112b 45%, #2d1d48 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .cover:before, .cover:after {
+      content: "";
+      position: absolute;
+      border: 1px solid rgba(244,217,135,.42);
+      border-radius: 999px;
+      width: 520px; height: 520px;
+      right: -190px; top: -155px;
+    }
+    .cover:after {
+      width: 340px; height: 340px;
+      right: auto; top: auto; left: -150px; bottom: -130px;
+      border-color: rgba(123,85,199,.50);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
+    .brand img { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; }
+    .brand-name { font-family: Georgia, serif; font-size: 20px; letter-spacing: .03em; font-weight: 800; }
+    .brand-sub { color: var(--gold2); letter-spacing: .34em; font-size: 8px; margin-top: 2px; }
+    h1, h2, h3 { margin: 0; font-family: Georgia, "Times New Roman", serif; }
+    h1 { font-size: 52px; line-height: .98; letter-spacing: -.04em; position: relative; z-index: 1; max-width: 720px; }
+    h2 { font-size: 27px; color: var(--deep); margin-bottom: 12px; }
+    h3 { font-size: 18px; color: var(--purple); margin-bottom: 7px; }
+    .gold { color: var(--gold2); }
+    .cover-copy { position: relative; z-index: 1; max-width: 620px; }
+    .cover-copy p { font-size: 16px; color: rgba(255,255,255,.78); margin: 14px 0 0; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid rgba(244,217,135,.38);
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      color: #fff;
+      padding: 8px 11px;
+      font-weight: 800;
+      font-size: 11px;
+    }
+    .cover-footer {
+      position: relative; z-index: 1;
+      display: flex; justify-content: space-between; align-items: end;
+      color: rgba(255,255,255,.72);
+      border-top: 1px solid rgba(244,217,135,.30);
+      padding-top: 16px;
+    }
+    .section-kicker {
+      text-transform: uppercase;
+      color: var(--gold);
+      letter-spacing: .22em;
+      font-weight: 900;
+      font-size: 10px;
+      margin-bottom: 8px;
+    }
+    .grid { display: grid; gap: 12px; }
+    .cols-2 { grid-template-columns: 1fr 1fr; }
+    .cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .card {
+      border: 1px solid rgba(197,155,61,.28);
+      background: rgba(255,255,255,.72);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 12px 34px rgba(35,22,9,.06);
+    }
+    .dark-card {
+      color: white;
+      background:
+        radial-gradient(circle at 90% 10%, rgba(244,217,135,.35), transparent 30%),
+        linear-gradient(135deg, #151024, #2f214d);
+      border-color: rgba(244,217,135,.35);
+    }
+    .dark-card h3 { color: var(--gold2); }
+    .big-num { font-size: 34px; font-family: Georgia, serif; color: var(--gold); font-weight: 900; }
+    .muted { color: var(--muted); }
+    ul { margin: 7px 0 0 17px; padding: 0; }
+    li { margin: 4px 0; }
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .event {
+      min-height: 118px;
+      border-radius: 18px;
+      padding: 14px;
+      border: 1px solid rgba(197,155,61,.30);
+      background: #fff;
+    }
+    .event .date { font-size: 22px; font-family: Georgia, serif; font-weight: 900; color: var(--purple); }
+    .event .tag {
+      display: inline-block; margin-top: 8px; padding: 5px 8px;
+      border-radius: 999px; background: rgba(197,155,61,.14);
+      color: #8d6615; font-size: 10px; font-weight: 900;
+    }
+    .week {
+      border: 1px solid rgba(197,155,61,.26);
+      border-radius: 18px;
+      overflow: hidden;
+      background: white;
+      margin-top: 12px;
+    }
+    .week-head {
+      display: flex; justify-content: space-between; gap: 12px; align-items: center;
+      color: white; padding: 11px 14px;
+      background: linear-gradient(90deg, var(--deep), var(--purple));
+    }
+    .week-head strong { font-size: 14px; }
+    .week-head span { color: var(--gold2); font-weight: 900; font-size: 11px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid rgba(197,155,61,.16); }
+    th { color: var(--muted); text-transform: uppercase; font-size: 9px; letter-spacing: .12em; }
+    tr:last-child td { border-bottom: 0; }
+    .badge {
+      display: inline-block; border-radius: 999px; padding: 3px 7px; font-size: 9px;
+      font-weight: 900; color: white; background: var(--violet); white-space: nowrap;
+    }
+    .badge.gold { background: var(--gold); color: #21170a; }
+    .badge.pink { background: var(--pink); }
+    .badge.green { background: var(--green); }
+    .rule { height: 1px; background: rgba(197,155,61,.24); margin: 14px 0; }
+    .checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .check {
+      padding: 12px 12px 12px 38px; border: 1px solid rgba(197,155,61,.25);
+      border-radius: 15px; background: white; position: relative; min-height: 58px;
+    }
+    .check:before {
+      content: "✓"; position: absolute; left: 12px; top: 12px; width: 18px; height: 18px;
+      border-radius: 50%; background: var(--gold); color: white; display: grid; place-items: center;
+      font-size: 12px; font-weight: 900;
+    }
+    .footer-note {
+      position: absolute; bottom: 12px; left: 24px; right: 24px;
+      display: flex; justify-content: space-between; color: #9a8b6d; font-size: 9px;
+      border-top: 1px solid rgba(197,155,61,.18); padding-top: 7px;
+    }
+    a { color: var(--purple); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <section class="page cover">
+    <div class="brand">
+      <img src="../admin_panel/public/brand/logo.png" alt="GoldMoodAstro logo" />
+      <div>
+        <div class="brand-name">GOLDMOODASTRO</div>
+        <div class="brand-sub">ASTRO MANAGEMENT</div>
+      </div>
+    </div>
+    <div class="cover-copy">
+      <div class="section-kicker">Ağustos 2026 yayın disiplini</div>
+      <h1>Bir aylık <span class="gold">içerik planı</span></h1>
+      <p>Bu rapor Ağustos boyunca uygulanacak günlük paylaşım omurgasını, yeniay/dolunay özel kampanyalarını, haftalık tema akışını ve ölçüm disiplinini belirler.</p>
+      <div class="pill-row">
+        <span class="pill">Her gün günlük burç carousel</span>
+        <span class="pill">Yeniay + Güneş Tutulması</span>
+        <span class="pill">Dolunay + Ay Tutulması</span>
+        <span class="pill">Tarot • Numeroloji • Rüya • Sembol</span>
+      </div>
+    </div>
+    <div class="cover-footer">
+      <div>Hazırlanma: 30 Temmuz 2026</div>
+      <div>goldmoodastro.com</div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="section-kicker">Yönetici özeti</div>
+    <h2>Ağustos’un ana kuralı: düzen + merak + dönüşüm</h2>
+    <div class="grid cols-3">
+      <div class="card">
+        <div class="big-num">31</div>
+        <h3>Günlük ritim</h3>
+        <p>Her gün 12 burçluk günlük yorum carousel’i paylaşılır. Bu içerik hesabın “her gün bakılır” alışkanlığını kurar.</p>
+      </div>
+      <div class="card">
+        <div class="big-num">2</div>
+        <h3>Ana gökyüzü paketi</h3>
+        <p>12 Ağustos Yeniay/Güneş Tutulması ve 28 Ağustos Dolunay/Ay Tutulması özel paket olarak işlenir.</p>
+      </div>
+      <div class="card">
+        <div class="big-num">5</div>
+        <h3>İçerik sütunu</h3>
+        <p>Burç, tarot, numeroloji, rüya tabiri, spiritüel sembol ve mizah/gündem içerikleri dönüşümlü yürür.</p>
+      </div>
+    </div>
+    <div class="rule"></div>
+    <div class="grid cols-2">
+      <div class="card dark-card">
+        <h3>Operasyon standardı</h3>
+        <ul>
+          <li>Her gün 1 günlük burç carousel.</li>
+          <li>Her gün 3–5 story: anket, soru, link, mini hatırlatma.</li>
+          <li>Haftada minimum 3 reel; mümkünse günlük kısa reel varyasyonu.</li>
+          <li>Her içerikte tek net çağrı: yorum, kaydet, paylaş veya danışman profili.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Takipçi kazanma yaklaşımı</h3>
+        <p>Toplu takip, satın alma veya agresif davet yok. Büyüme; kaydedilen carousel, yorum isteyen interaktif formatlar, paylaşılabilir mizah ve çevreye doğal tanıtımla ilerler.</p>
+        <p class="muted">Hedef takipçi sayısından önce güven, süreklilik ve danışmanlık dönüşümüdür.</p>
+      </div>
+    </div>
+    <div class="timeline">
+      <div class="event"><div class="date">6 Ağu</div><strong>Son dördün</strong><br><span class="tag">bırakma</span></div>
+      <div class="event"><div class="date">12 Ağu</div><strong>Yeniay + Güneş Tutulması</strong><br><span class="tag">ana kampanya</span></div>
+      <div class="event"><div class="date">20 Ağu</div><strong>İlk dördün</strong><br><span class="tag">eylem</span></div>
+      <div class="event"><div class="date">28 Ağu</div><strong>Dolunay + Ay Tutulması</strong><br><span class="tag">ana kampanya</span></div>
+    </div>
+    <div class="footer-note"><span>GoldMoodAstro — Ağustos 2026 İçerik Planı</span><span>1</span></div>
+  </section>
+
+  <section class="page">
+    <div class="section-kicker">Sabit günlük format</div>
+    <h2>Her gün paylaşılacak günlük burç carousel’i</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Slide yapısı</h3>
+        <ul>
+          <li>1. Kapak: günün ana enerjisi</li>
+          <li>2–13. Koç’tan Balık’a 12 burç</li>
+          <li>14. CTA: “Yükselenini kaydet, yorumlara yaz, profilden danışmanını incele.”</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Metin standardı</h3>
+        <ul>
+          <li>Her burç için 2–3 kısa cümle.</li>
+          <li>Gündelik, sıcak, fazla teknik olmayan dil.</li>
+          <li>Yükselen burç vurgusu: “Yükselenini de oku.”</li>
+          <li>Kapakta az yazı; görsel premium ve ferah.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="rule"></div>
+    <div class="checklist">
+      <div class="check"><strong>Story 1:</strong> Günün enerjisi + anket.</div>
+      <div class="check"><strong>Story 2:</strong> “Yükselenini biliyor musun?” hatırlatması.</div>
+      <div class="check"><strong>Story 3:</strong> Günün en güçlü burçları / mini liste.</div>
+      <div class="check"><strong>Story 4:</strong> Danışman profili veya site linki.</div>
+      <div class="check"><strong>Story 5:</strong> Yorumlardan gelen soru/cevap.</div>
+      <div class="check"><strong>Arşiv:</strong> Günlük yorum kapakları tema ile uyumlu saklanır.</div>
+    </div>
+    <div class="footer-note"><span>Günlük içerik omurgası</span><span>2</span></div>
+  </section>
+
+  <section class="page">
+    <div class="section-kicker">1. hafta</div>
+    <h2>1–9 Ağustos: ayı aç, merakı başlat</h2>
+    <div class="week">
+      <div class="week-head"><strong>1–2 Ağustos</strong><span>aylık ritme giriş</span></div>
+      <table>
+        <thead><tr><th>Tarih</th><th>Sabit</th><th>Ek ana içerik</th><th>CTA</th></tr></thead>
+        <tbody>
+          <tr><td>1 Ağu Cmt</td><td><span class="badge gold">Carousel</span> Günlük burç</td><td>Ayın enerjisi: “Ağustos’ta seni bekleyen ana tema”</td><td>İlk gördüğün kelime anketi</td></tr>
+          <tr><td>2 Ağu Paz</td><td><span class="badge gold">Carousel</span> Günlük burç</td><td>“Bu ay kapısı açılan yükselenler”</td><td>Yükselenini yaz</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="week">
+      <div class="week-head"><strong>3–9 Ağustos</strong><span>tarot • numeroloji • sembol • rüya</span></div>
+      <table>
+        <thead><tr><th>Tarih</th><th>Sabit</th><th>Ek ana içerik</th><th>CTA</th></tr></thead>
+        <tbody>
+          <tr><td>3 Ağu Pzt</td><td>Günlük burç carousel</td><td><span class="badge pink">Reel</span> Haftanın enerjisi</td><td>Kaydet, hafta sonu tekrar bak</td></tr>
+          <tr><td>4 Ağu Sal</td><td>Günlük burç carousel</td><td>Tarot: 4 kart seç</td><td>Kart numaranı yorumlara yaz</td></tr>
+          <tr><td>5 Ağu Çar</td><td>Günlük burç carousel</td><td>Numeroloji: Ağustos 2026 yaşam yolu mesajı</td><td>Doğum tarihini yaz</td></tr>
+          <tr><td>6 Ağu Per</td><td>Günlük burç carousel</td><td><span class="badge green">Ay fazı</span> Son dördün: “Bırakman gereken yük ne?”</td><td>Soru kutusu: neyi bırakıyorsun?</td></tr>
+          <tr><td>7 Ağu Cum</td><td>Günlük burç carousel</td><td><span class="badge pink">Mizah</span> “Terazi karar verirken...”</td><td>Arkadaşını etiketle</td></tr>
+          <tr><td>8 Ağu Cmt</td><td>Günlük burç carousel</td><td>Spiritüel sembol: Ay</td><td>Bugün hangi sembol dikkatini çekti?</td></tr>
+          <tr><td>9 Ağu Paz</td><td>Günlük burç carousel</td><td>Rüya tabiri: rüyada su / deniz</td><td>Rüyanı yaz</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="footer-note"><span>Hafta 1–2 planı</span><span>3</span></div>
+  </section>
+
+  <section class="page">
+    <div class="section-kicker">2. hafta — ana kampanya</div>
+    <h2>10–16 Ağustos: Yeniay + Güneş Tutulması</h2>
+    <div class="card dark-card">
+      <h3>Haftanın hedefi</h3>
+      <p>Yeni başlangıç, niyet, yön değiştirme ve “hayatımda hangi kapı açılıyor?” temalarıyla kaydetme/yorum oranını yükseltmek. 12–16 Ağustos arasında danışman profili CTA’sı daha görünür kullanılır.</p>
+    </div>
+    <div class="week">
+      <div class="week-head"><strong>10–16 Ağustos</strong><span>yeni döngü ve danışman yönlendirmesi</span></div>
+      <table>
+        <thead><tr><th>Tarih</th><th>Sabit</th><th>Ek ana içerik</th><th>CTA</th></tr></thead>
+        <tbody>
+          <tr><td>10 Ağu Pzt</td><td>Günlük burç carousel</td><td>Yeniay ön hazırlık: “Yeni döngüye hazırlan”</td><td>Niyetini seç: aşk / para / huzur / kariyer</td></tr>
+          <tr><td>11 Ağu Sal</td><td>Günlük burç carousel</td><td>“Kapısı açılacak yükselenler”</td><td>Yükselenini yorumlara yaz</td></tr>
+          <tr><td>12 Ağu Çar</td><td>Günlük burç carousel</td><td><span class="badge green">Ana paket</span> Yeniay + Güneş Tutulması carousel</td><td>Kaydet + goldmoodastro.com yönlendirmesi</td></tr>
+          <tr><td>13 Ağu Per</td><td>Günlük burç carousel</td><td>Yeniay sonrası reel: “Bu niyet sende çalışıyor olabilir”</td><td>Story: hangi niyeti seçtin?</td></tr>
+          <tr><td>14 Ağu Cum</td><td>Günlük burç carousel</td><td>Kahve falı sembolü: yol / kapı / anahtar</td><td>Fincanında çıkan sembolü yaz</td></tr>
+          <tr><td>15 Ağu Cmt</td><td>Günlük burç carousel</td><td>İletişim ve fırsat: “Sana gelen haber ne anlatıyor?”</td><td>Mesaj bekliyor musun?</td></tr>
+          <tr><td>16 Ağu Paz</td><td>Günlük burç carousel</td><td><span class="badge gold">Dönüşüm</span> Astrolog Fatma Güçlü tanıtımı</td><td>Profil linki / randevu CTA</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="footer-note"><span>Yeniay ve Güneş Tutulması haftası</span><span>4</span></div>
+  </section>
+
+  <section class="page">
+    <div class="section-kicker">3. hafta</div>
+    <h2>17–23 Ağustos: etkileşim ve ilişki haftası</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Bu haftanın karakteri</h3>
+        <p>Yorum, paylaşım ve kaydetme davranışını artıracak interaktif formatlar. Sinastri, kart seç, mizah ve sembol içerikleri öne çıkar.</p>
+      </div>
+      <div class="card">
+        <h3>Örnek yorum tetikleyicileri</h3>
+        <ul>
+          <li>“1, 2, 3 ya da 4? Kartını seç.”</li>
+          <li>“Aklındaki kişinin burcunu yaz.”</li>
+          <li>“Bu sembol bugün sana ne hatırlattı?”</li>
+        </ul>
+      </div>
+    </div>
+    <div class="week">
+      <div class="week-head"><strong>17–23 Ağustos</strong><span>kart seç • sinastri • mizah</span></div>
+      <table>
+        <thead><tr><th>Tarih</th><th>Sabit</th><th>Ek ana içerik</th><th>CTA</th></tr></thead>
+        <tbody>
+          <tr><td>17 Ağu Pzt</td><td>Günlük burç carousel</td><td>Haftanın yükselen mesajları</td><td>Kaydet, yükselenini oku</td></tr>
+          <tr><td>18 Ağu Sal</td><td>Günlük burç carousel</td><td>Tarot: “Ruhunun bugün duyması gereken mesaj”</td><td>Kartını seç</td></tr>
+          <tr><td>19 Ağu Çar</td><td>Günlük burç carousel</td><td>Spiritüel sembol: Nazar Boncuğu / enerji koruma</td><td>Bu sembolü birine gönder</td></tr>
+          <tr><td>20 Ağu Per</td><td>Günlük burç carousel</td><td><span class="badge green">Ay fazı</span> İlk dördün: “Niyeti eyleme çevirme zamanı”</td><td>Bu hafta hangi adımı atacaksın?</td></tr>
+          <tr><td>21 Ağu Cum</td><td>Günlük burç carousel</td><td><span class="badge pink">Mizah</span> “Balık iyiyim dediğinde...”</td><td>Emojiyle tepki ver</td></tr>
+          <tr><td>22 Ağu Cmt</td><td>Günlük burç carousel</td><td>Sinastri: “Aklındaki kişi seni nasıl görüyor?”</td><td>Burçlarınızı yazın</td></tr>
+          <tr><td>23 Ağu Paz</td><td>Günlük burç carousel</td><td>Rüya tabiri: eski ev / eski kişi</td><td>Soru kutusu</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="footer-note"><span>Etkileşim haftası</span><span>5</span></div>
+  </section>
+
+  <section class="page">
+    <div class="section-kicker">4. hafta — ana kampanya</div>
+    <h2>24–31 Ağustos: Dolunay + Ay Tutulması</h2>
+    <div class="card dark-card">
+      <h3>Haftanın hedefi</h3>
+      <p>Tamamlanma, bırakma, farkındalık, döngü kapatma ve hafifleme temalarıyla güçlü kaydetme/paylaşma davranışı oluşturmak. 28–31 Ağustos arası danışmanlık CTA’sı daha net verilir.</p>
+    </div>
+    <div class="week">
+      <div class="week-head"><strong>24–31 Ağustos</strong><span>dolunay, tutulma ve ay sonu değerlendirme</span></div>
+      <table>
+        <thead><tr><th>Tarih</th><th>Sabit</th><th>Ek ana içerik</th><th>CTA</th></tr></thead>
+        <tbody>
+          <tr><td>24 Ağu Pzt</td><td>Günlük burç carousel</td><td>Dolunay ön hazırlık: “Hangi konu görünür oluyor?”</td><td>Yükselenini yaz</td></tr>
+          <tr><td>25 Ağu Sal</td><td>Günlük burç carousel</td><td>Spiritüel sembol: Sonsuzluk / tekrar eden döngü</td><td>Hangi döngüyü kapatıyorsun?</td></tr>
+          <tr><td>26 Ağu Çar</td><td>Günlük burç carousel</td><td>“Rahat nefes alacak yükselenler”</td><td>Kaydet</td></tr>
+          <tr><td>27 Ağu Per</td><td>Günlük burç carousel</td><td>Dolunay arifesi: “Bırakma listesi”</td><td>Bırakıyorum / tutuyorum</td></tr>
+          <tr><td>28 Ağu Cum</td><td>Günlük burç carousel</td><td><span class="badge green">Ana paket</span> Dolunay + Ay Tutulması carousel/reel</td><td>Danışman yorumu CTA</td></tr>
+          <tr><td>29 Ağu Cmt</td><td>Günlük burç carousel</td><td>Dolunay sonrası: “Yükü hafifleyen yükselenler”</td><td>Yükselenini paylaş</td></tr>
+          <tr><td>30 Ağu Paz</td><td>Günlük burç carousel</td><td>Ay sonu değerlendirme: “Ağustos sana ne öğretti?”</td><td>İlk kelime / niyet kontrolü</td></tr>
+          <tr><td>31 Ağu Pzt</td><td>Günlük burç carousel</td><td>Eylül’e hazırlık: “Yeni ayın kapısı”</td><td>Eylül niyetini yaz</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="footer-note"><span>Dolunay ve Ay Tutulması haftası</span><span>6</span></div>
+  </section>
+
+  <section class="page">
+    <div class="section-kicker">Üretim ve kontrol</div>
+    <h2>Ağustos üretim öncelikleri</h2>
+    <div class="checklist">
+      <div class="check"><strong>1. Günlük burç carousel şablonu:</strong> 14 slide, kolay çoğaltılabilir.</div>
+      <div class="check"><strong>2. Yeniay/tutulma paketi:</strong> 10–13 Ağustos arasında kullanılacak kapak, carousel, reel ve story.</div>
+      <div class="check"><strong>3. Dolunay/tutulma paketi:</strong> 24–29 Ağustos arasında kullanılacak kapak, carousel, reel ve story.</div>
+      <div class="check"><strong>4. Kart seç serisi:</strong> 4 kartlık ve 2 kartlık iki farklı şablon.</div>
+      <div class="check"><strong>5. Sembol serisi:</strong> Ay, Nazar Boncuğu, Sonsuzluk, Anahtar, Kapı ilk set.</div>
+      <div class="check"><strong>6. Mizah/gündem:</strong> kısa, paylaşılabilir, marka logosu küçük ve temiz.</div>
+      <div class="check"><strong>7. Danışman dönüşümü:</strong> Genel içeriklerde site/hizmet CTA’sı; kişi profili yalnız açık danışman tanıtımı içeriklerinde.</div>
+      <div class="check"><strong>8. Haftalık rapor:</strong> Pazartesi sabah önceki haftanın kayıt/yorum/profil tıklaması kontrol edilir.</div>
+    </div>
+    <div class="rule"></div>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Görsel kalite standardı</h3>
+        <ul>
+          <li>GoldMood standardı: koyu mor, altın, mistik/premium hava.</li>
+          <li>Görselin içine fazla yazı koyma; ana mesaj kısa ve okunur olsun.</li>
+          <li>Story/Reel güvenli alanlarına dikkat et; alt/üst kırpma olmasın.</li>
+          <li>Her görsel paylaşmadan önce gerçek önizlemede kontrol edilsin.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Haftalık ölçüm panosu</h3>
+        <ul>
+          <li>En çok kaydedilen carousel</li>
+          <li>En çok yorum alan post</li>
+          <li>En çok paylaşılan reel</li>
+          <li>Profil ve site tıklaması</li>
+          <li>Danışman profili ve randevu dönüşümü</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-note"><span>Uygulama disiplini</span><span>7</span></div>
+  </section>
+
+  <section class="page">
+    <div class="section-kicker">Kaynak ve notlar</div>
+    <h2>Takvim doğrulama notları</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Gökyüzü tarihleri</h3>
+        <ul>
+          <li>12 Ağustos 2026: Yeniay ve Güneş Tutulması gündemi.</li>
+          <li>28 Ağustos 2026: Dolunay ve Ay Tutulması gündemi.</li>
+          <li>Sosyal medya dili tarih bazlı kullanılır; saat detayları gerekiyorsa ayrıca post metnine eklenir.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Uygulama prensibi</h3>
+        <p>Bu plan “her şeyi aynı anda yayınla” değil; her gün sabit bir omurga ve bir ana vurgu demektir. Performansa göre ikinci haftadan itibaren reel/story yoğunluğu artırılabilir.</p>
+      </div>
+    </div>
+    <div class="rule"></div>
+    <div class="card">
+      <h3>İç kaynak dosyaları</h3>
+      <ul>
+        <li>Strateji: <code>GOLDMOOD-SOSYAL-MEDYA-STRATEJISI.md</code></li>
+        <li>Plan markdown: <code>reports/GoldMoodAstro-Agustos-2026-Icerik-Plani.md</code></li>
+        <li>PDF: <code>reports/GoldMoodAstro-Agustos-2026-Icerik-Plani-RAPOR.pdf</code></li>
+      </ul>
+    </div>
+    <div class="footer-note"><span>GoldMoodAstro — Ağustos 2026</span><span>8</span></div>
+  </section>
+
+</body>
+</html>

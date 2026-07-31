@@ -641,6 +641,37 @@ export async function platformsRoutes(app: FastifyInstance) {
     }
   });
 
+  app.get("/facebook/posts/:postId/details", async (req, reply) => {
+    try {
+      const tenantKey = typeof (req.query as any)?.tenantKey === "string" ? (req.query as any).tenantKey.trim() : "";
+      const postId = (req.params as { postId: string }).postId;
+      if (!tenantKey) return reply.send(await facebook.getPagePostDetails(postId));
+      const accounts = await db.select().from(platformAccounts).where(eq(platformAccounts.tenantKey, tenantKey));
+      const acc = accounts.find((a) => a.platform === "facebook");
+      const token = acc?.pageToken || acc?.accessToken;
+      if (!token) return reply.status(404).send({ error: "Facebook hesabi yok veya token eksik" });
+      return reply.send(await facebook.getPagePostDetails(postId, { pageAccessToken: token }));
+    } catch (err) {
+      return reply.status(400).send({ error: (err as Error).message });
+    }
+  });
+
+  app.post("/facebook/comments/:commentId/reply", async (req, reply) => {
+    try {
+      const tenantKey = typeof (req.body as any)?.tenantKey === "string" ? (req.body as any).tenantKey.trim() : "";
+      const commentId = (req.params as { commentId: string }).commentId;
+      const message = typeof (req.body as any)?.message === "string" ? (req.body as any).message : "";
+      if (!tenantKey) return reply.send(await facebook.replyToComment(commentId, message));
+      const accounts = await db.select().from(platformAccounts).where(eq(platformAccounts.tenantKey, tenantKey));
+      const acc = accounts.find((a) => a.platform === "facebook");
+      const token = acc?.pageToken || acc?.accessToken;
+      if (!token) return reply.status(404).send({ error: "Facebook hesabi yok veya token eksik" });
+      return reply.send(await facebook.replyToComment(commentId, message, { pageAccessToken: token }));
+    } catch (err) {
+      return reply.status(400).send({ error: (err as Error).message });
+    }
+  });
+
   app.get("/instagram/media", async (req, reply) => {
     try {
       const tenantKey = typeof (req.query as any)?.tenantKey === "string" ? (req.query as any).tenantKey.trim() : "";
@@ -651,6 +682,37 @@ export async function platformsRoutes(app: FastifyInstance) {
       const token = acc?.accessToken || acc?.pageToken;
       if (!acc?.accountId || !token) return reply.status(404).send({ error: "Instagram hesabi yok veya token/accountId eksik" });
       return reply.send(await instagram.getRecentMedia({ accountId: acc.accountId, accessToken: token, limit }));
+    } catch (err) {
+      return reply.status(400).send({ error: (err as Error).message });
+    }
+  });
+
+  app.get("/instagram/media/:mediaId/details", async (req, reply) => {
+    try {
+      const tenantKey = typeof (req.query as any)?.tenantKey === "string" ? (req.query as any).tenantKey.trim() : "";
+      const mediaId = (req.params as { mediaId: string }).mediaId;
+      if (!tenantKey) return reply.send(await instagram.getMediaDetails(mediaId));
+      const accounts = await db.select().from(platformAccounts).where(eq(platformAccounts.tenantKey, tenantKey));
+      const acc = accounts.find((a) => a.platform === "instagram");
+      const token = acc?.accessToken || acc?.pageToken;
+      if (!token) return reply.status(404).send({ error: "Instagram hesabi yok veya token eksik" });
+      return reply.send(await instagram.getMediaDetails(mediaId, { accessToken: token }));
+    } catch (err) {
+      return reply.status(400).send({ error: (err as Error).message });
+    }
+  });
+
+  app.post("/instagram/comments/:commentId/reply", async (req, reply) => {
+    try {
+      const tenantKey = typeof (req.body as any)?.tenantKey === "string" ? (req.body as any).tenantKey.trim() : "";
+      const commentId = (req.params as { commentId: string }).commentId;
+      const message = typeof (req.body as any)?.message === "string" ? (req.body as any).message : "";
+      if (!tenantKey) return reply.send(await instagram.replyToComment(commentId, message));
+      const accounts = await db.select().from(platformAccounts).where(eq(platformAccounts.tenantKey, tenantKey));
+      const acc = accounts.find((a) => a.platform === "instagram");
+      const token = acc?.accessToken || acc?.pageToken;
+      if (!token) return reply.status(404).send({ error: "Instagram hesabi yok veya token eksik" });
+      return reply.send(await instagram.replyToComment(commentId, message, { accessToken: token }));
     } catch (err) {
       return reply.status(400).send({ error: (err as Error).message });
     }

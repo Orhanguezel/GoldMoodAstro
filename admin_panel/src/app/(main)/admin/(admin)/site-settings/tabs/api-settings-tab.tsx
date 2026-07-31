@@ -38,6 +38,8 @@ const API_KEYS = [
   'ga4_measurement_id',
   'google_ads_id',
   'facebook_pixel_id',
+  'facebook_capi_token',
+  'facebook_test_event_code',
   'google_site_verification',
   'bing_site_verification',
   'cookie_consent',
@@ -62,6 +64,8 @@ const EMPTY_FORM: ApiForm = {
   ga4_measurement_id: '',
   google_ads_id: '',
   facebook_pixel_id: '',
+  facebook_capi_token: '',
+  facebook_test_event_code: '',
   google_site_verification: '',
   bing_site_verification: '',
   cookie_consent: '',
@@ -126,6 +130,7 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
     API_KEYS.forEach((k) => {
       next[k] = valueToString(map.get(k)?.value);
     });
+    if (next.facebook_capi_token) next.facebook_capi_token = '__KEEP__';
     setForm(next);
   }, [settings]);
 
@@ -137,6 +142,7 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
   const handleSave = async () => {
     try {
       for (const key of API_KEYS) {
+        if (key === 'facebook_capi_token' && form[key] === '__KEEP__') continue;
         let value: SettingValue = form[key].trim();
         if (key === 'cookie_consent') {
           value = tryParseJsonOrString(form.cookie_consent);
@@ -208,6 +214,34 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
                 value={form.google_client_id}
                 onChange={(e) => handleChange('google_client_id', e.target.value)}
                 placeholder="Google OAuth Client ID"
+                disabled={busy}
+                className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="facebook_capi_token" className="text-[10px] font-bold text-gm-muted tracking-[0.15em] uppercase ml-1 block">
+                Meta CAPI Token
+              </Label>
+              <Input
+                id="facebook_capi_token"
+                type="password"
+                value={form.facebook_capi_token}
+                onChange={(e) => handleChange('facebook_capi_token', e.target.value)}
+                placeholder="Events Manager access token"
+                autoComplete="new-password"
+                disabled={busy}
+                className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="facebook_test_event_code" className="text-[10px] font-bold text-gm-muted tracking-[0.15em] uppercase ml-1 block">
+                Meta Test Event Code
+              </Label>
+              <Input
+                id="facebook_test_event_code"
+                value={form.facebook_test_event_code}
+                onChange={(e) => handleChange('facebook_test_event_code', e.target.value)}
+                placeholder="TEST12345"
                 disabled={busy}
                 className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
               />

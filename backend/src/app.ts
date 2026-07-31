@@ -28,6 +28,29 @@ export async function createApp() {
     trustProxy: true,
   }) as FastifyInstance;
 
+  // Fastify rejects `content-type: application/json` with an empty body before route
+  // handlers run. Fire-and-forget browser APIs and some crawlers occasionally do this;
+  // accepting it as `{}` keeps telemetry/view endpoints from polluting audit metrics
+  // with parser-level 400s while still rejecting malformed non-empty JSON.
+  app.removeContentTypeParser?.('application/json');
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
+    const raw = String(body ?? '');
+    if (!raw.trim()) return done(null, {});
+    try {
+      return done(null, JSON.parse(raw));
+    } catch (error) {
+      const path = String(req?.url ?? '').split('?')[0] || '/';
+      const isFireAndForgetTelemetry =
+        path === '/api/track' || /^\/api\/consultants\/[^/]+\/view$/.test(path);
+      if (isFireAndForgetTelemetry) return done(null, {});
+
+      const parseError = error as Error & { statusCode?: number; code?: string };
+      parseError.statusCode = 400;
+      parseError.code = 'FST_ERR_CTP_INVALID_JSON_BODY';
+      return done(parseError);
+    }
+  });
+
   if (env.NODE_ENV !== 'production') {
     await app.register(swagger, {
       openapi: {

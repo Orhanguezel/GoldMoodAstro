@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  BarChart3,
   ExternalLink,
   Eye,
   FileEdit,
@@ -22,14 +23,17 @@ import {
   Send,
   Settings,
   Share2,
+  Sparkles,
+  TrendingUp,
   Trash2,
+  Users,
   XCircle,
 } from "lucide-react";
 import { platforms, posts, templates, tenants } from "@/ekosistem/lib/api";
 import { getStoredTenantKey, resolveTenantKey, setStoredTenantKey } from "@/ekosistem/lib/tenant";
 import { getSocialPlatform } from "@/ekosistem/lib/social-platforms";
 
-type TabKey = "account" | "compose" | "plan" | "drafts" | "queue" | "templates";
+type TabKey = "analysis" | "account" | "compose" | "plan" | "drafts" | "queue" | "templates";
 
 const LIVE_CONTENT_PLATFORMS = ["facebook", "instagram"];
 
@@ -100,6 +104,36 @@ function num(v: unknown) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function pct(v: unknown) {
+  const n = Number(v ?? 0);
+  return Number.isFinite(n) ? `${n.toFixed(n >= 10 ? 1 : 2)}%` : "0%";
+}
+
+function isStoryPostItem(p: any) {
+  const title = String(p?.title || "").toUpperCase();
+  const ref = String(p?.sourceRef || "").toLowerCase();
+  return title.includes("[STORY]") || /(^|[-:_])story/.test(ref);
+}
+
+function isReelPostItem(p: any) {
+  const title = String(p?.title || "").toUpperCase();
+  const ref = String(p?.sourceRef || "").toLowerCase();
+  return title.includes("[REEL]") || /(^|[-:_])reel/.test(ref);
+}
+
+function isVideoUrl(url: string) {
+  try {
+    return [".mp4", ".mov", ".m4v", ".webm"].some((ext) => new URL(url, "https://dummy.local").pathname.toLowerCase().endsWith(ext));
+  } catch {
+    return [".mp4", ".mov", ".m4v", ".webm"].some((ext) => url.toLowerCase().endsWith(ext));
+  }
+}
+
+function hasVideoMedia(p: any) {
+  const urls = [p?.imageUrl, ...(Array.isArray(p?.mediaUrls) ? p.mediaUrls : [])].filter(Boolean).map(String);
+  return urls.some(isVideoUrl);
+}
+
 export default function SocialPlatformPage({ platformKey }: { platformKey: string }) {
   const config = getSocialPlatform(platformKey);
 
@@ -111,6 +145,7 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
 
   // Hesap icerigi (platformdan canli cekilen mevcut gonderiler)
   const [accountItems, setAccountItems] = useState<any[]>([]);
+  const [accountInfo, setAccountInfo] = useState<any | null>(null);
   const [accountState, setAccountState] = useState<"idle" | "loading" | "loaded" | "error">("idle");
   const [accountError, setAccountError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -125,6 +160,7 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
   const [caption, setCaption] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [postType, setPostType] = useState("tanitim");
+  const [composeFormat, setComposeFormat] = useState<"feed" | "story" | "reel" | "carousel">("feed");
   const [scheduledAt, setScheduledAt] = useState("");
   const [uploadingImg, setUploadingImg] = useState(false);
 
@@ -142,10 +178,30 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
   const [detailById, setDetailById] = useState<Record<number, any>>({});
   const [detailBusyId, setDetailBusyId] = useState<number | null>(null);
   const [openDetailId, setOpenDetailId] = useState<number | null>(null);
+  const [accountDetailById, setAccountDetailById] = useState<Record<string, any>>({});
+  const [accountDetailBusyId, setAccountDetailBusyId] = useState<string | null>(null);
+  const [openAccountDetailId, setOpenAccountDetailId] = useState<string | null>(null);
+  const [replyTextByCommentId, setReplyTextByCommentId] = useState<Record<string, string>>({});
+  const [replyBusyCommentId, setReplyBusyCommentId] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ src: string; alt: string } | null>(null);
 
   function notify(kind: "ok" | "err", text: string) {
     setMessage({ kind, text });
     setTimeout(() => setMessage(null), 6000);
+  }
+
+  function PreviewImage({ src, alt = "Görsel önizleme", className }: { src: string; alt?: string; className: string }) {
+    return (
+      <button
+        type="button"
+        onClick={() => setPreviewImage({ src, alt })}
+        className="shrink-0 cursor-zoom-in rounded-2xl outline-none transition hover:scale-[1.015] focus:ring-4 focus:ring-amber-300/30"
+        title="Büyüt"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={alt} className={className} />
+      </button>
+    );
   }
 
   async function loadAccount(tk = tenantKey) {
@@ -159,11 +215,16 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
         const res = await platforms.xAccountTweets(tk, 30);
         setAccountItems(res.items || []);
       } else {
-        const res =
+        const [res, info] = await Promise.all([
           platformKey === "facebook"
-            ? await platforms.facebookPosts(tk, 30)
-            : await platforms.instagramMedia(tk, 30);
+            ? platforms.facebookPosts(tk, 30)
+            : platforms.instagramMedia(tk, 30),
+          platformKey === "facebook"
+            ? platforms.facebookInfo(tk).catch(() => null)
+            : platforms.instagramInfo(tk).catch(() => null),
+        ]);
         setAccountItems(res.items || []);
+        setAccountInfo(info);
       }
       setAccountState("loaded");
     } catch (e) {
@@ -177,9 +238,12 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
     setLoading(true);
     setAccountState("idle");
     setAccountItems([]);
+    setAccountInfo(null);
+    setAccountDetailById({});
+    setOpenAccountDetailId(null);
     try {
       const live = LIVE_CONTENT_PLATFORMS.includes(platformKey);
-      const [st, createdPosts, scheduledPosts, tpl, livePosts] = await Promise.all([
+      const [st, createdPosts, scheduledPosts, tpl, livePosts, liveInfo] = await Promise.all([
         platforms.status(tk).catch(() => null),
         posts.list({ tenantKey: tk, platform: platformKey, limit: "200", sort: "created_at", order: "desc" }).catch(() => ({ items: [] })),
         posts.list({ tenantKey: tk, platform: platformKey, limit: "200", sort: "scheduled_at", order: "asc" }).catch(() => ({ items: [] })),
@@ -187,8 +251,12 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
         live
           ? (platformKey === "facebook" ? platforms.facebookPosts(tk, 50) : platforms.instagramMedia(tk, 50)).catch(() => ({ items: [] }))
           : Promise.resolve({ items: [] }),
+        live
+          ? (platformKey === "facebook" ? platforms.facebookInfo(tk) : platforms.instagramInfo(tk)).catch(() => null)
+          : Promise.resolve(null),
       ]);
       setConnected(!!st?.[platformKey]?.connected);
+      if (liveInfo) setAccountInfo(liveInfo);
       // Canli yayinlanmis gonderilerin gercek gorseli (FB full_picture / IG media_url) -> externalId ile esle.
       // Boylece link postu (FB) gibi gorseli DB'de saklanmayan gonderiler de kuyrukta dogru gorseli gosterir
       // (Instagram ile ayni mantik; OG scrape degil, platformdan gelen ilgili gorsel).
@@ -274,20 +342,36 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
       notify("err", "Zamanlama için tarih/saat seçin.");
       return;
     }
+    if (schedule && composeFormat === "reel" && !isVideoUrl(imageUrl.trim())) {
+      notify("err", "Reel zamanlamak için public MP4/MOV video URL gerekli.");
+      return;
+    }
     setBusy(true);
     try {
+      const formatTitle =
+        composeFormat === "story"
+          ? "[STORY] Story Taslağı"
+          : composeFormat === "reel"
+            ? "[REEL] Reel Taslağı"
+            : composeFormat === "carousel"
+              ? "Carousel Taslağı"
+              : undefined;
       await posts.create({
         tenantKey,
         platform: platformKey,
         postType,
+        ...(formatTitle ? { title: formatTitle } : {}),
         caption: caption.trim(),
         ...(imageUrl.trim() ? { mediaUrls: [imageUrl.trim()], imageUrl: imageUrl.trim() } : {}),
         ...(schedule ? { scheduledAt: localToIso(scheduledAt) } : {}),
         sourceType: "manual",
+        sourceRef: `manual:${composeFormat}:${Date.now()}`,
+        notes: composeFormat === "reel" && !isVideoUrl(imageUrl.trim()) ? "[reel_cover_only] Reel için video URL gerekli; bu kayıt kapak/senaryo taslağı." : undefined,
       });
       notify("ok", schedule ? "İçerik zamanlandı." : "Taslak kaydedildi.");
       setCaption("");
       setImageUrl("");
+      setComposeFormat("feed");
       setScheduledAt("");
       await loadAll();
       setTab(schedule ? "queue" : "drafts");
@@ -328,12 +412,21 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
   function useTemplate(t: any) {
     const base = t.captionTemplate || t.body || t.template || "";
     const hash = t.hashtags ? `\n\n${t.hashtags}` : "";
+    const templateName = String(t.name || "").toLowerCase();
+    const nextFormat = templateName.includes("story")
+      ? "story"
+      : templateName.includes("reel")
+        ? "reel"
+        : templateName.includes("carousel") || templateName.includes("karusel")
+          ? "carousel"
+          : "feed";
     setCaption(`${base}${hash}`.trim());
     if (t.postType) setPostType(t.postType);
+    setComposeFormat(nextFormat);
     setImageUrl("");
     setScheduledAt("");
     setTab("compose");
-    notify("ok", "Şablon 'Oluştur' sekmesine yüklendi — görsel ekleyip kaydedin.");
+    notify("ok", `Şablon 'Oluştur' sekmesine yüklendi (${nextFormat}) — görsel ekleyip kaydedin.`);
   }
 
   async function toggleDetail(id: number, refresh = false) {
@@ -351,6 +444,63 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
       notify("err", (e as Error).message);
     } finally {
       setDetailBusyId(null);
+    }
+  }
+
+  async function toggleAccountDetail(item: any, refresh = false) {
+    const externalId = String(item?.externalId || "");
+    if (!externalId) return notify("err", "Gönderi ID bulunamadı.");
+    if (openAccountDetailId === externalId && !refresh) {
+      setOpenAccountDetailId(null);
+      return;
+    }
+    setOpenAccountDetailId(externalId);
+    if (accountDetailById[externalId] && !refresh) return;
+    setAccountDetailBusyId(externalId);
+    try {
+      const detail =
+        platformKey === "facebook"
+          ? await platforms.facebookPostDetails(tenantKey, externalId)
+          : await platforms.instagramMediaDetails(tenantKey, externalId);
+      setAccountDetailById((s) => ({ ...s, [externalId]: detail }));
+      setAccountItems((items) =>
+        items.map((m) =>
+          String(m.externalId) === externalId
+            ? {
+                ...m,
+                likes: detail.likes ?? m.likes,
+                comments: detail.comments ?? m.comments,
+                shares: detail.shares ?? m.shares,
+                imageUrl: detail.imageUrl ?? m.imageUrl,
+                permalink: detail.permalink ?? m.permalink,
+              }
+            : m,
+        ),
+      );
+    } catch (e) {
+      notify("err", (e as Error).message);
+    } finally {
+      setAccountDetailBusyId(null);
+    }
+  }
+
+  async function replyToAccountComment(item: any, commentId: string) {
+    const text = (replyTextByCommentId[commentId] || "").trim();
+    if (!text) return notify("err", "Cevap metni yazın.");
+    setReplyBusyCommentId(commentId);
+    try {
+      if (platformKey === "facebook") {
+        await platforms.replyFacebookComment(tenantKey, commentId, text);
+      } else {
+        await platforms.replyInstagramComment(tenantKey, commentId, text);
+      }
+      setReplyTextByCommentId((s) => ({ ...s, [commentId]: "" }));
+      notify("ok", "Yorum cevabı gönderildi.");
+      await toggleAccountDetail(item, true);
+    } catch (e) {
+      notify("err", (e as Error).message);
+    } finally {
+      setReplyBusyCommentId(null);
     }
   }
 
@@ -384,8 +534,7 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           {editImageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={editImageUrl} alt="" className="h-14 w-14 rounded-lg border border-slate-200 object-cover" />
+            <PreviewImage src={editImageUrl} className="h-24 w-20 rounded-lg border border-slate-200 bg-white object-contain" />
           )}
           <label className="flex items-center gap-2 text-xs font-black text-slate-500">
             Zaman:
@@ -449,15 +598,70 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
     return [...byId.values()];
   }, [queueItems, plannedDraftItems]);
 
-  const scheduledCount = useMemo(
-    () => queueItems.filter((p) => p.status === "scheduled").length + plannedDraftItems.length,
-    [queueItems, plannedDraftItems],
-  );
+  const planCount = planItems.length;
 
   const supportsLive = LIVE_CONTENT_PLATFORMS.includes(platformKey);
   const hasLiveAccount = supportsLive || platformKey === "x";
+
+  const analysis = useMemo(() => {
+    const items = accountItems || [];
+    const followers = num(accountInfo?.followers_count ?? accountInfo?.fan_count);
+    const mediaCount = num(accountInfo?.media_count || items.length);
+    const totals = items.reduce(
+      (acc, item) => {
+        const likes = num(item.likes);
+        const comments = num(item.comments);
+        const shares = num(item.shares);
+        const views = num(item.impressions || item.views || item.reach);
+        acc.likes += likes;
+        acc.comments += comments;
+        acc.shares += shares;
+        acc.views += views;
+        acc.engagement += likes + comments + shares;
+        return acc;
+      },
+      { likes: 0, comments: 0, shares: 0, views: 0, engagement: 0 },
+    );
+    const engagementRate = followers > 0 ? (totals.engagement / followers) * 100 : 0;
+    const avgEngagement = items.length > 0 ? totals.engagement / items.length : 0;
+    const topPosts = [...items]
+      .map((item) => ({
+        ...item,
+        score: num(item.likes) + num(item.comments) * 2 + num(item.shares) * 3 + num(item.impressions || item.views || item.reach) * 0.01,
+        engagement: num(item.likes) + num(item.comments) + num(item.shares),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+    const byFormat = new Map<string, { label: string; count: number; likes: number; comments: number; shares: number; engagement: number }>();
+    for (const item of items) {
+      const key = String(item.mediaType || (item.imageUrl ? "IMAGE" : "TEXT")).toUpperCase();
+      const row = byFormat.get(key) || { label: key, count: 0, likes: 0, comments: 0, shares: 0, engagement: 0 };
+      row.count += 1;
+      row.likes += num(item.likes);
+      row.comments += num(item.comments);
+      row.shares += num(item.shares);
+      row.engagement += num(item.likes) + num(item.comments) + num(item.shares);
+      byFormat.set(key, row);
+    }
+    const formatRows = [...byFormat.values()].sort((a, b) => b.engagement - a.engagement);
+    const bestFormat = formatRows[0]?.label || "-";
+    const commentRate = totals.engagement > 0 ? (totals.comments / totals.engagement) * 100 : 0;
+    const strategy: string[] = [];
+    if (items.length === 0) {
+      strategy.push("Analiz için önce hesap içeriklerini yenileyin veya yeni içerik paylaşın.");
+    } else {
+      if (bestFormat !== "-") strategy.push(`Şu an en güçlü format: ${bestFormat}. Benzer görsel dili ve içerik yapısını tekrar deneyin.`);
+      if (commentRate < 10) strategy.push("Yorum oranı düşük: caption sonunda net soru/yorum çağrısı kullanın.");
+      if (totals.shares === 0) strategy.push("Paylaşım düşük: kaydedilebilir mini rehber, carousel ve checklist formatlarını artırın.");
+      if (engagementRate < 1) strategy.push("Etkileşim oranı düşük: daha kısa başlık, ilk görselde daha net vaad ve story destekli trafik deneyin.");
+      if (engagementRate >= 1) strategy.push("Etkileşim fena değil: iyi performans veren ilk 3 gönderiyi varyasyonlayıp tekrar planlayın.");
+    }
+    return { followers, mediaCount, totals, engagementRate, avgEngagement, topPosts, formatRows, strategy };
+  }, [accountInfo, accountItems]);
+
   const tabs: { key: TabKey; label: string; icon: any; count?: number }[] = [
-    { key: "plan", label: "Planlama", icon: CalendarDays, count: scheduledCount },
+    { key: "plan", label: "Planlama", icon: CalendarDays, count: planCount },
+    ...(supportsLive ? [{ key: "analysis" as TabKey, label: "Analiz", icon: BarChart3 }] : []),
     ...(supportsLive || platformKey === "x" ? [{ key: "account" as TabKey, label: "Hesap İçeriği", icon: Eye }] : []),
     { key: "compose", label: "Oluştur", icon: PenSquare },
     { key: "drafts", label: "Taslaklar", icon: FileEdit, count: draftItems.length },
@@ -583,6 +787,115 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
         </div>
       ) : (
         <>
+          {/* === Analiz === */}
+          {tab === "analysis" && (
+            <section className="space-y-5">
+              <div className="rounded-[28px] border border-slate-100 bg-white p-7 shadow-sm">
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">Sosyal Medya Analizi</h2>
+                    <p className="text-xs font-semibold text-slate-400">
+                      {config.label} için takipçi, izlenme ve etkileşim performansı. Strateji kararlarını buradan çıkaracağız.
+                    </p>
+                  </div>
+                  <button onClick={() => loadAccount()} disabled={accountState === "loading"} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
+                    <RefreshCw size={14} className={accountState === "loading" ? "animate-spin" : ""} /> Verileri Yenile
+                  </button>
+                </div>
+
+                {accountState === "error" ? (
+                  <div className="rounded-2xl border border-rose-100 bg-rose-50 p-5 text-sm font-semibold text-rose-700">{accountError || "Analiz verisi çekilemedi."}</div>
+                ) : accountState === "loading" ? (
+                  <div className="flex justify-center py-16 text-slate-400"><RefreshCw className="animate-spin" size={28} /></div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+                      <AnalysisCard label="Takipçi" value={analysis.followers} icon={<Users size={18} />} hint={platformKey === "facebook" ? "Sayfa takipçisi / fan" : "Instagram takipçisi"} />
+                      <AnalysisCard label="İçerik" value={analysis.mediaCount || accountItems.length} icon={<ImagePlus size={18} />} hint="Hesaptaki/çekilen içerik" />
+                      <AnalysisCard label="Beğeni" value={analysis.totals.likes} icon={<Heart size={18} />} hint="Son içerikler toplamı" />
+                      <AnalysisCard label="Yorum" value={analysis.totals.comments} icon={<MessageCircle size={18} />} hint="Topluluk sinyali" />
+                      <AnalysisCard label="Etkileşim Oranı" value={pct(analysis.engagementRate)} icon={<TrendingUp size={18} />} hint={`Ort. etkileşim: ${analysis.avgEngagement.toFixed(1)}`} />
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-[1fr_360px]">
+                      <div className="rounded-3xl border border-slate-100 bg-slate-50/50 p-5">
+                        <div className="mb-4 flex items-center justify-between">
+                          <h3 className="text-sm font-black text-slate-900">En İyi İçerikler</h3>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Son {accountItems.length} içerik</span>
+                        </div>
+                        {analysis.topPosts.length === 0 ? (
+                          <Empty text="Analiz için canlı içerik bulunamadı." />
+                        ) : (
+                          <div className="space-y-3">
+                            {analysis.topPosts.map((item: any, index: number) => (
+                              <div key={item.externalId || index} className="flex gap-3 rounded-2xl border border-slate-100 bg-white p-3">
+                                {item.imageUrl ? (
+                                  <PreviewImage src={item.imageUrl} className="h-24 w-24 rounded-xl bg-slate-950/5 object-contain ring-1 ring-slate-100" />
+                                ) : (
+                                  <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-300">{config.icon(28)}</div>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                  <div className="mb-1 flex items-center gap-2">
+                                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-700">#{index + 1}</span>
+                                    {item.mediaType && <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-black uppercase text-slate-500">{item.mediaType}</span>}
+                                  </div>
+                                  <p className="line-clamp-2 text-xs font-semibold leading-5 text-slate-700">{item.message || "(açıklama yok)"}</p>
+                                  <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-black text-slate-600">
+                                    <span className="inline-flex items-center gap-1"><Heart size={12} className="text-rose-500" /> {num(item.likes)}</span>
+                                    <span className="inline-flex items-center gap-1"><MessageCircle size={12} className="text-indigo-500" /> {num(item.comments)}</span>
+                                    <span className="inline-flex items-center gap-1"><Share2 size={12} className="text-emerald-500" /> {num(item.shares)}</span>
+                                    <span className="inline-flex items-center gap-1"><BarChart3 size={12} className="text-slate-400" /> {item.engagement}</span>
+                                    {item.permalink && <a href={item.permalink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-indigo-600"><ExternalLink size={12} /> Aç</a>}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-5">
+                        <div className="rounded-3xl border border-slate-100 bg-slate-50/50 p-5">
+                          <h3 className="mb-4 text-sm font-black text-slate-900">Format Performansı</h3>
+                          {analysis.formatRows.length === 0 ? (
+                            <p className="text-xs font-semibold text-slate-400">Henüz format verisi yok.</p>
+                          ) : (
+                            <div className="space-y-3">
+                              {analysis.formatRows.map((row) => (
+                                <div key={row.label}>
+                                  <div className="mb-1 flex items-center justify-between text-xs font-black text-slate-600">
+                                    <span>{row.label}</span>
+                                    <span>{row.engagement} etkileşim</span>
+                                  </div>
+                                  <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                                    <div className="h-full rounded-full bg-slate-900" style={{ width: `${Math.min(100, (row.engagement / Math.max(1, analysis.formatRows[0]?.engagement || 1)) * 100)}%` }} />
+                                  </div>
+                                  <p className="mt-1 text-[10px] font-semibold text-slate-400">{row.count} içerik · {row.likes} beğeni · {row.comments} yorum</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="rounded-3xl border border-amber-100 bg-amber-50/60 p-5">
+                          <div className="mb-3 flex items-center gap-2">
+                            <Sparkles size={16} className="text-amber-700" />
+                            <h3 className="text-sm font-black text-amber-900">Strateji Notları</h3>
+                          </div>
+                          <div className="space-y-2">
+                            {analysis.strategy.map((s, i) => (
+                              <p key={i} className="rounded-2xl bg-white/70 px-3 py-2 text-xs font-semibold leading-5 text-amber-900">{s}</p>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+          )}
+
           {/* === Hesap Icerigi (canli) === */}
           {tab === "account" && (
             <section className="rounded-[28px] border border-slate-100 bg-white p-7 shadow-sm">
@@ -592,6 +905,15 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                   <p className="text-xs font-semibold text-slate-400">{config.label} hesabında yayında olan gerçek gönderiler (canlı).</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  {accountInfo && (
+                    <div className="hidden items-center gap-2 rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-2 text-xs font-black text-amber-700 md:flex">
+                      <Users size={14} />
+                      {platformKey === "facebook"
+                        ? `${num(accountInfo.followers_count ?? accountInfo.fan_count)} takipçi`
+                        : `${num(accountInfo.followers_count)} takipçi`}
+                      {accountInfo.media_count != null && <span className="text-amber-500">· {num(accountInfo.media_count)} içerik</span>}
+                    </div>
+                  )}
                   {hasLiveAccount && (
                     <button onClick={() => loadAccount()} disabled={accountState === "loading"} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-50 disabled:opacity-50">
                       <RefreshCw size={14} className={accountState === "loading" ? "animate-spin" : ""} /> Yenile
@@ -610,32 +932,112 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                 <Empty text="Bu hesapta yayında gönderi bulunamadı." />
               ) : (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {accountItems.map((m) => (
-                    <article key={m.externalId} className="flex gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
-                      {m.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={m.imageUrl} alt="" className="h-28 w-28 shrink-0 rounded-2xl object-cover ring-1 ring-slate-100 shadow-sm" />
-                      ) : (
-                        <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-300 ring-1 ring-slate-100">{config.icon(40)}</div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="line-clamp-3 text-xs font-medium leading-5 text-slate-700">{m.message || "(açıklama yok)"}</p>
-                        <p className="mt-1 text-[10px] font-bold text-slate-400">{formatDate(m.createdTime)}</p>
-                        <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-black text-slate-600">
-                          {m.likes != null && <span className="inline-flex items-center gap-1"><Heart size={12} className="text-rose-500" /> {num(m.likes)}</span>}
-                          {m.comments != null && <span className="inline-flex items-center gap-1"><MessageCircle size={12} className="text-indigo-500" /> {num(m.comments)}</span>}
-                          {num(m.shares) > 0 && <span className="inline-flex items-center gap-1"><Share2 size={12} className="text-emerald-500" /> {num(m.shares)}</span>}
-                          {m.impressions != null && num(m.impressions) > 0 && <span className="inline-flex items-center gap-1"><Eye size={12} className="text-slate-400" /> {num(m.impressions)}</span>}
-                          {m.mediaType && <span className="rounded-md bg-slate-200/70 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-slate-500">{m.mediaType}</span>}
-                          {m.permalink && (
-                            <a href={m.permalink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-500">
-                              <ExternalLink size={12} /> Aç
-                            </a>
+                  {accountItems.map((m) => {
+                    const externalId = String(m.externalId || "");
+                    const detail = accountDetailById[externalId];
+                    const comments = detail?.commentItems || [];
+                    const isOpen = openAccountDetailId === externalId;
+                    const isBusy = accountDetailBusyId === externalId;
+                    return (
+                      <article key={externalId} className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                        <div className="flex gap-4">
+                          {m.imageUrl ? (
+                            <PreviewImage src={m.imageUrl} className="h-36 w-36 shrink-0 rounded-2xl bg-slate-950/5 object-contain ring-1 ring-slate-100 shadow-sm" />
+                          ) : (
+                            <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-300 ring-1 ring-slate-100">{config.icon(44)}</div>
                           )}
+                          <div className="min-w-0 flex-1">
+                            <p className="line-clamp-3 text-xs font-medium leading-5 text-slate-700">{m.message || "(açıklama yok)"}</p>
+                            <p className="mt-1 text-[10px] font-bold text-slate-400">{formatDate(m.createdTime)}</p>
+                            <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-black text-slate-600">
+                              {m.likes != null && <span className="inline-flex items-center gap-1"><Heart size={12} className="text-rose-500" /> {num(m.likes)}</span>}
+                              {m.comments != null && <span className="inline-flex items-center gap-1"><MessageCircle size={12} className="text-indigo-500" /> {num(m.comments)}</span>}
+                              {num(m.shares) > 0 && <span className="inline-flex items-center gap-1"><Share2 size={12} className="text-emerald-500" /> {num(m.shares)}</span>}
+                              {m.impressions != null && num(m.impressions) > 0 && <span className="inline-flex items-center gap-1"><Eye size={12} className="text-slate-400" /> {num(m.impressions)}</span>}
+                              {m.mediaType && <span className="rounded-md bg-slate-200/70 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-slate-500">{m.mediaType}</span>}
+                              {m.permalink && (
+                                <a href={m.permalink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-500">
+                                  <ExternalLink size={12} /> Aç
+                                </a>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => toggleAccountDetail(m)}
+                              className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-black text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                              disabled={isBusy}
+                            >
+                              {isBusy ? <RefreshCw size={12} className="animate-spin" /> : isOpen ? <ChevronDown size={12} /> : <Eye size={12} />}
+                              {isOpen ? "Kapat" : "Yorumlar"}
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    </article>
-                  ))}
+
+                        {isOpen && (
+                          <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-4">
+                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex flex-wrap gap-4 text-xs font-black text-slate-600">
+                                <span className="inline-flex items-center gap-1.5"><Heart size={13} className="text-rose-500" /> {num(detail?.likes ?? m.likes)}</span>
+                                <span className="inline-flex items-center gap-1.5"><MessageCircle size={13} className="text-indigo-500" /> {num(detail?.comments ?? m.comments)}</span>
+                                <span className="inline-flex items-center gap-1.5"><Share2 size={13} className="text-emerald-500" /> {num(detail?.shares ?? m.shares)}</span>
+                              </div>
+                              <button onClick={() => toggleAccountDetail(m, true)} disabled={isBusy} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-[11px] font-black text-slate-600 hover:bg-slate-50 disabled:opacity-50">
+                                <RefreshCw size={12} className={isBusy ? "animate-spin" : ""} /> Yenile
+                              </button>
+                            </div>
+                            {detail?.commentsReadable === false && (
+                              <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                                Yorum detayları için Meta izinleri eksik olabilir; temel metrikler gösteriliyor.
+                              </p>
+                            )}
+                            {!isBusy && comments.length === 0 && (
+                              <p className="text-xs font-semibold text-slate-400">Henüz yorum yok.</p>
+                            )}
+                            {comments.length > 0 && (
+                              <div className="space-y-3">
+                                {comments.map((c: any, i: number) => (
+                                  <div key={c.id || i} className="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div>
+                                        <p className="text-[11px] font-black text-slate-600">{c.authorName || "Kullanıcı"}</p>
+                                        <p className="mt-1 text-xs font-medium leading-5 text-slate-700">{c.message}</p>
+                                        <p className="mt-1 text-[10px] font-bold text-slate-400">{formatDate(c.createdTime)} · ❤ {num(c.likeCount)}</p>
+                                      </div>
+                                    </div>
+                                    {Array.isArray(c.replies) && c.replies.length > 0 && (
+                                      <div className="mt-2 space-y-2 border-l-2 border-indigo-100 pl-3">
+                                        {c.replies.map((r: any) => (
+                                          <div key={r.id} className="rounded-lg bg-white px-3 py-2">
+                                            <p className="text-[10px] font-black text-indigo-600">{r.authorName || "Cevap"}</p>
+                                            <p className="text-xs font-medium text-slate-700">{r.message}</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    <div className="mt-3 flex gap-2">
+                                      <input
+                                        value={replyTextByCommentId[c.id] || ""}
+                                        onChange={(e) => setReplyTextByCommentId((s) => ({ ...s, [c.id]: e.target.value }))}
+                                        placeholder="Yoruma cevap yaz..."
+                                        className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-400"
+                                      />
+                                      <button
+                                        onClick={() => replyToAccountComment(m, c.id)}
+                                        disabled={replyBusyCommentId === c.id}
+                                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-[11px] font-black text-white transition hover:bg-slate-700 disabled:opacity-50"
+                                      >
+                                        {replyBusyCommentId === c.id ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12} />} Cevapla
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
               )}
             </section>
@@ -664,6 +1066,20 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                     </select>
                   </label>
                   <label className="block space-y-1.5">
+                    <span className="block text-xs font-bold uppercase tracking-widest text-slate-400">Format</span>
+                    <select value={composeFormat} onChange={(e) => setComposeFormat(e.target.value as typeof composeFormat)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500">
+                      <option value="feed">Feed Post</option>
+                      <option value="story">Story</option>
+                      <option value="reel">Reel Taslağı</option>
+                      <option value="carousel">Carousel</option>
+                    </select>
+                    {composeFormat === "reel" && (
+                      <span className="block rounded-xl bg-violet-50 px-3 py-2 text-[11px] font-bold leading-5 text-violet-700">
+                        Reel için public MP4/MOV video URL girersen otomatik yayınlanabilir; sadece görsel girersen kapak/senaryo taslağı kalır.
+                      </span>
+                    )}
+                  </label>
+                  <label className="block space-y-1.5">
                     <span className="block text-xs font-bold uppercase tracking-widest text-slate-400">Zamanlama (ops.)</span>
                     <input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 outline-none focus:border-indigo-500" />
                   </label>
@@ -686,7 +1102,7 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
               {imageUrl && (
                 <div className="mt-3 flex items-center gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imageUrl} alt="önizleme" className="h-16 w-16 rounded-xl border border-slate-200 object-cover" />
+                  <PreviewImage src={imageUrl} alt="önizleme" className="h-40 w-32 rounded-xl border border-slate-200 bg-slate-50 object-contain" />
                   <button onClick={() => setImageUrl("")} className="text-xs font-black text-rose-600 hover:text-rose-500">Görseli kaldır</button>
                 </div>
               )}
@@ -749,8 +1165,7 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                           <div className="flex flex-wrap gap-0.5">
                             {items.slice(0, 3).map((it, idx) =>
                               it.imageUrl ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img key={idx} src={it.imageUrl} alt="" className="h-9 w-9 rounded-md object-cover ring-1 ring-slate-200" />
+                                <PreviewImage key={idx} src={it.imageUrl} className="h-9 w-9 rounded-md object-cover ring-1 ring-slate-200" />
                               ) : (
                                 <div key={idx} className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-200/70 text-slate-400">{config.icon(16)}</div>
                               ),
@@ -804,10 +1219,9 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                           return (
                             <div key={p.id} className="flex items-center gap-3 py-3">
                               {p.imageUrl ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={p.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover ring-1 ring-slate-100 shadow-sm" />
+                                <PreviewImage src={p.imageUrl} className="h-40 w-32 shrink-0 rounded-xl bg-slate-950/5 object-contain ring-1 ring-slate-100 shadow-sm" />
                               ) : (
-                                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-slate-200/60 text-slate-300 ring-1 ring-slate-100">{config.icon(30)}</div>
+                                <div className="flex h-40 w-32 shrink-0 items-center justify-center rounded-xl bg-slate-200/60 text-slate-300 ring-1 ring-slate-100">{config.icon(34)}</div>
                               )}
                               <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
@@ -857,20 +1271,36 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                         renderEditor(p)
                       ) : (
                         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                          <div className="flex min-w-0 gap-3">
+                          <div className="flex min-w-0 flex-1 gap-5">
                             {p.imageUrl && (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={p.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover ring-1 ring-slate-100 shadow-sm" />
+                              <PreviewImage src={p.imageUrl} className="h-56 w-40 shrink-0 rounded-2xl bg-slate-950/5 object-contain ring-1 ring-slate-100 shadow-md md:h-64 md:w-48" />
                             )}
-                            <div className="min-w-0">
+                            <div className="min-w-0 pt-1">
+                              <div className="mb-2 flex flex-wrap gap-2">
+                                {isStoryPostItem(p) && <span className="rounded-md bg-fuchsia-100 px-2 py-1 text-[10px] font-black uppercase text-fuchsia-700">Story</span>}
+                                {isReelPostItem(p) && <span className="rounded-md bg-violet-100 px-2 py-1 text-[10px] font-black uppercase text-violet-700">Reel Taslağı</span>}
+                              </div>
                               <p className="text-sm font-semibold leading-6 text-slate-800">{p.caption || p.title || "(içerik yok)"}</p>
                               <p className="mt-1 text-[11px] font-bold text-slate-400">{formatDate(p.createdAt)} · {p.postType}</p>
+                              {isReelPostItem(p) && !hasVideoMedia(p) && (
+                                <p className="mt-2 rounded-xl bg-violet-50 px-3 py-2 text-[11px] font-bold leading-5 text-violet-700">
+                                  Reel yayını için public MP4/MOV video URL ekle. Şu an bu kayıt kapak/senaryo taslağı.
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div className="flex shrink-0 flex-wrap gap-2">
                             <IconBtn onClick={() => openEdit(p)} title="Düzenle"><FileEdit size={14} /></IconBtn>
-                            <IconBtn onClick={() => scheduleExisting(p.id)} title="Zamanla"><CalendarClock size={14} /></IconBtn>
-                            <IconBtn onClick={() => publishNow(p.id)} title="Hemen Yayınla" tone="indigo"><Send size={14} /></IconBtn>
+                            {isReelPostItem(p) && !hasVideoMedia(p) ? (
+                              <span className="inline-flex min-h-9 items-center rounded-xl border border-violet-100 bg-violet-50 px-3 text-[10px] font-black uppercase tracking-wide text-violet-700">
+                                Video Gerekli
+                              </span>
+                            ) : (
+                              <>
+                                <IconBtn onClick={() => scheduleExisting(p.id)} title="Zamanla"><CalendarClock size={14} /></IconBtn>
+                                <IconBtn onClick={() => publishNow(p.id)} title="Hemen Yayınla" tone="indigo"><Send size={14} /></IconBtn>
+                              </>
+                            )}
                             <IconBtn onClick={() => act(() => posts.delete(p.id), "Silindi.")} title="Sil" tone="rose"><Trash2 size={14} /></IconBtn>
                           </div>
                         </div>
@@ -911,10 +1341,9 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                           <div className="flex min-w-0 gap-3">
                             {thumb ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={thumb} alt="" className="h-20 w-20 shrink-0 rounded-xl border border-slate-100 object-cover ring-1 ring-slate-100 shadow-sm" />
+                              <PreviewImage src={thumb} className="h-40 w-32 shrink-0 rounded-xl border border-slate-100 bg-slate-950/5 object-contain ring-1 ring-slate-100 shadow-sm" />
                             ) : (
-                              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-300 ring-1 ring-slate-100">{config.icon(30)}</div>
+                              <div className="flex h-40 w-32 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-300 ring-1 ring-slate-100">{config.icon(34)}</div>
                             )}
                             <div className="min-w-0">
                               <p className="line-clamp-2 text-sm font-semibold text-slate-800">{p.caption || p.title || "(içerik yok)"}</p>
@@ -933,7 +1362,15 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                             )}
                             {!isPosted && <IconBtn onClick={() => openEdit(p)} title="Düzenle"><FileEdit size={14} /></IconBtn>}
                             {p.status === "scheduled" && <IconBtn onClick={() => act(() => posts.cancel(p.id), "İptal edildi.")} title="İptal"><XCircle size={14} /></IconBtn>}
-                            {(p.status === "scheduled" || p.status === "failed") && <IconBtn onClick={() => publishNow(p.id)} title="Hemen Yayınla" tone="indigo"><Send size={14} /></IconBtn>}
+                            {(p.status === "scheduled" || p.status === "failed") && (
+                              isReelPostItem(p) && !hasVideoMedia(p) ? (
+                                <span className="inline-flex min-h-9 items-center rounded-xl border border-violet-100 bg-violet-50 px-3 text-[10px] font-black uppercase tracking-wide text-violet-700">
+                                  Video Gerekli
+                                </span>
+                              ) : (
+                                <IconBtn onClick={() => publishNow(p.id)} title="Hemen Yayınla" tone="indigo"><Send size={14} /></IconBtn>
+                              )
+                            )}
                             {!isPosted && <IconBtn onClick={() => act(() => posts.delete(p.id), "Silindi.")} title="Sil" tone="rose"><Trash2 size={14} /></IconBtn>}
                           </div>
                         </div>
@@ -1008,6 +1445,33 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
           )}
         </>
       )}
+
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm"
+          onClick={() => setPreviewImage(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Görsel önizleme"
+        >
+          <button
+            type="button"
+            onClick={() => setPreviewImage(null)}
+            className="absolute right-5 top-5 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-lg transition hover:bg-white"
+            title="Kapat"
+          >
+            <XCircle size={22} />
+          </button>
+          <div className="max-h-[92vh] max-w-[92vw]" onClick={(e) => e.stopPropagation()}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewImage.src}
+              alt={previewImage.alt}
+              className="max-h-[92vh] max-w-[92vw] rounded-3xl bg-white object-contain shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1037,4 +1501,19 @@ function IconBtn({ onClick, title, children, tone = "slate" }: { onClick: () => 
 
 function Empty({ text }: { text: string }) {
   return <p className="py-10 text-center text-sm font-bold text-slate-400">{text}</p>;
+}
+
+function AnalysisCard({ label, value, icon, hint }: { label: string; value: React.ReactNode; icon: React.ReactNode; hint?: string }) {
+  return (
+    <div className="rounded-3xl border border-slate-100 bg-slate-50/70 p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</span>
+        <span className="text-slate-400">{icon}</span>
+      </div>
+      <p className="text-2xl font-black text-slate-900">
+        {typeof value === "number" ? num(value).toLocaleString("tr-TR") : value}
+      </p>
+      {hint && <p className="mt-1 text-[11px] font-semibold text-slate-400">{hint}</p>}
+    </div>
+  );
 }

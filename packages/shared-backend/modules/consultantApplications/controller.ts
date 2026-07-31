@@ -15,6 +15,7 @@ import {
   listApplications,
   rejectApplication,
 } from './repository';
+import { hasAnalyticsConsent, sendCapiEvent } from '../marketing/meta-capi';
 
 function getOptionalUserId(req: FastifyRequest): string | null {
   const user = (req as FastifyRequest & { user?: { sub?: string; id?: string } }).user;
@@ -51,6 +52,25 @@ export async function createConsultantApplication(req: FastifyRequest, reply: Fa
   try {
     const body = createConsultantApplicationSchema.parse(req.body ?? {});
     const row = await createApplication({ ...body, user_id: getOptionalUserId(req) });
+    const names = body.full_name.trim().split(/\s+/).filter(Boolean);
+    await sendCapiEvent({
+      eventName: 'Lead',
+      eventId: `lead_${row.id}`,
+      consentGranted: hasAnalyticsConsent(req),
+      eventSourceUrl: String(req.headers.referer ?? ''),
+      userData: {
+        email: body.email,
+        phone: body.phone,
+        firstName: names[0],
+        lastName: names.length > 1 ? names.at(-1) : null,
+        externalId: row.user_id ?? row.id,
+        clientIpAddress: req.ip,
+        clientUserAgent: String(req.headers['user-agent'] ?? ''),
+        fbp: req.cookies?._fbp,
+        fbc: req.cookies?._fbc,
+      },
+      customData: { content_name: 'consultant_application' },
+    });
     return reply.code(201).send({ data: row });
   } catch (err) {
     return handleRouteError(reply, req, err, 'create_consultant_application');

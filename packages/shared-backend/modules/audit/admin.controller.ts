@@ -119,6 +119,7 @@ export async function getAuditMetricsDailyAdmin(req: FastifyRequest, reply: Fast
     const raw = await repoGetAuditMetricsDaily({
       days: q.days,
       only_admin: onlyAdmin,
+      exclude_localhost: q.exclude_localhost,
       path_prefix: q.path_prefix?.trim() ? q.path_prefix.trim() : undefined,
     });
 
@@ -168,6 +169,7 @@ export async function getAuditGeoStatsAdmin(req: FastifyRequest, reply: FastifyR
     const rows = await repoGetAuditGeoStats({
       days: q.days,
       only_admin: onlyAdmin,
+      exclude_localhost: q.exclude_localhost,
       source: q.source,
     });
 

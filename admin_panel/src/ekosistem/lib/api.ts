@@ -361,7 +361,7 @@ export const marketing = {
       method: "POST",
       body: JSON.stringify({ tenantKey, requestBody }),
     }),
-  gscIndex: (tenantKey: string, limit = 100) =>
+  gscIndex: (tenantKey: string, limit = 500) =>
     fetcher<any>(`/marketing/gsc/index?tenantKey=${encodeURIComponent(tenantKey)}&limit=${limit}`),
   refreshGscIndex: (tenantKey: string, data?: { force?: boolean; limit?: number }) =>
     fetcher<any>("/marketing/gsc/index/refresh", {
@@ -821,8 +821,26 @@ export const platforms = {
     fetcher<any>(`/platforms/${encodeURIComponent(String(id))}`, { method: "DELETE" }),
   facebookPosts: (tenantKey: string, limit = 25) =>
     fetcher<{ items: any[] }>(`/platforms/facebook/posts?tenantKey=${encodeURIComponent(tenantKey)}&limit=${limit}`),
+  facebookInfo: (tenantKey: string) =>
+    fetcher<any>(`/platforms/facebook/info?tenantKey=${encodeURIComponent(tenantKey)}`),
+  facebookPostDetails: (tenantKey: string, postId: string) =>
+    fetcher<any>(`/platforms/facebook/posts/${encodeURIComponent(postId)}/details?tenantKey=${encodeURIComponent(tenantKey)}`),
+  replyFacebookComment: (tenantKey: string, commentId: string, message: string) =>
+    fetcher<any>(`/platforms/facebook/comments/${encodeURIComponent(commentId)}/reply`, {
+      method: "POST",
+      body: JSON.stringify({ tenantKey, message }),
+    }),
   instagramMedia: (tenantKey: string, limit = 25) =>
     fetcher<{ items: any[] }>(`/platforms/instagram/media?tenantKey=${encodeURIComponent(tenantKey)}&limit=${limit}`),
+  instagramInfo: (tenantKey: string) =>
+    fetcher<any>(`/platforms/instagram/info?tenantKey=${encodeURIComponent(tenantKey)}`),
+  instagramMediaDetails: (tenantKey: string, mediaId: string) =>
+    fetcher<any>(`/platforms/instagram/media/${encodeURIComponent(mediaId)}/details?tenantKey=${encodeURIComponent(tenantKey)}`),
+  replyInstagramComment: (tenantKey: string, commentId: string, message: string) =>
+    fetcher<any>(`/platforms/instagram/comments/${encodeURIComponent(commentId)}/reply`, {
+      method: "POST",
+      body: JSON.stringify({ tenantKey, message }),
+    }),
   xAccountTweets: (tenantKey: string, limit = 25) =>
     fetcher<{ items: any[] }>(`/platforms/x/account-tweets?tenantKey=${encodeURIComponent(tenantKey)}&limit=${limit}`),
 };

@@ -646,6 +646,7 @@ export default function AdminAuditClient() {
       user_id: reqUserId || undefined,
       ip: reqIp || undefined,
       only_admin: onlyAdmin ? 1 : undefined,
+      exclude_localhost: 1,
       created_from: from || undefined,
       created_to: to || undefined,
       sort: sort as 'created_at' | 'response_time_ms' | 'status_code',
@@ -662,6 +663,7 @@ export default function AdminAuditClient() {
       email: email || undefined,
       user_id: user_id || undefined,
       ip: ip || undefined,
+      exclude_localhost: 1,
       created_from: from || undefined,
       created_to: to || undefined,
       sort: 'created_at' as const,
@@ -676,6 +678,7 @@ export default function AdminAuditClient() {
     return {
       days: d,
       only_admin: onlyAdmin ? 1 : undefined,
+      exclude_localhost: 1,
       path_prefix: path_prefix || undefined,
     };
   }, [days, onlyAdmin, path_prefix]);
@@ -700,6 +703,7 @@ export default function AdminAuditClient() {
     return {
       days: d,
       only_admin: onlyAdmin ? 1 : undefined,
+      exclude_localhost: 1,
       source: 'requests' as const,
     };
   }, [days, onlyAdmin]);

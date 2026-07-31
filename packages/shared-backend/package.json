@@ -70,6 +70,7 @@
     "./modules/customPages/*": "./modules/customPages/*.ts",
     "./modules/mail": "./modules/mail/index.ts",
     "./modules/mail/*": "./modules/mail/*.ts",
+    "./modules/marketing/*": "./modules/marketing/*.ts",
     "./modules/mediaMessages": "./modules/mediaMessages/index.ts",
     "./modules/mediaMessages/*": "./modules/mediaMessages/*.ts",
     "./modules/navigation": "./modules/navigation/index.ts",

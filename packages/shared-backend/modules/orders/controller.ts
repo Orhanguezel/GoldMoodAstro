@@ -16,6 +16,7 @@ import { addressCreateSchema, orderCreateSchema } from "./validation";
 import { DEFAULT_LOCALE } from '../../core/i18n';
 import { users } from "../auth/schema";
 import { clawbackCredits, getPackageById } from "../credits/repository";
+import { hasAnalyticsConsent, sendCapiEvent } from '../marketing/meta-capi';
 
 /** JWT payload'dan user bilgilerini normalize et.
  * Fastify-jwt sub → userId olarak map eder; id alanı payload'da olmayabilir.
@@ -332,7 +333,7 @@ export const iyzicoCallback: RouteHandler = async (req, reply) => {
   // Tutarlı yönlendirme yardımcısı: booking → /[locale]/booking/payment, diğer → e-ticaret rotaları.
   const landing = (status: "success" | "failed") =>
     isBooking
-      ? `${siteUrl}/${locale}/booking/payment?status=${status}&order_id=${order_id}`
+      ? `${siteUrl}/${locale}/booking/payment?status=${status}&order_id=${order_id}&booking_id=${encodeURIComponent(String(order?.booking_id ?? ''))}&value=${encodeURIComponent(String(order?.total_amount ?? ''))}`
       : status === "success"
         ? `${siteUrl}/${locale}/siparis/basarili?order_id=${order_id}`
         : `${siteUrl}/${locale}/sepet?payment=failed&order_id=${order_id}`;
@@ -383,6 +384,36 @@ export const iyzicoCallback: RouteHandler = async (req, reply) => {
       if (order.booking_id) {
         await tx.update(bookings).set({ status: 'confirmed' } as any).where(eq(bookings.id, order.booking_id));
       }
+    });
+
+    const [buyer] = await db.select({
+      id: users.id,
+      email: users.email,
+      phone: users.phone,
+      fullName: users.full_name,
+    }).from(users).where(eq(users.id, order.user_id)).limit(1);
+    const nameParts = String(buyer?.fullName ?? '').trim().split(/\s+/).filter(Boolean);
+    await sendCapiEvent({
+      eventName: 'Purchase',
+      eventId: `purchase_${order_id}`,
+      consentGranted: hasAnalyticsConsent(req),
+      eventSourceUrl: landing('success'),
+      userData: {
+        email: buyer?.email,
+        phone: buyer?.phone,
+        firstName: nameParts[0],
+        lastName: nameParts.length > 1 ? nameParts.at(-1) : null,
+        externalId: buyer?.id,
+        clientIpAddress: requestIp(req),
+        clientUserAgent: String(req.headers['user-agent'] ?? ''),
+        fbp: req.cookies?._fbp,
+        fbc: req.cookies?._fbc,
+      },
+      customData: {
+        value: verified.paidPriceMinor / 100,
+        currency: verified.currency,
+        order_id,
+      },
     });
 
     return reply.redirect(landing("success"));

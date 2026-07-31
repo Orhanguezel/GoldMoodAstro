@@ -27,14 +27,31 @@ import { ChartCard } from "@/ekosistem/components/ui/ChartCard";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 
 const platformChartColors: Record<string, string> = {
-  facebook: "var(--status-info)",
-  instagram: "var(--accent-pink)",
-  both: "var(--brand-500)",
-  x: "var(--text-primary)",
-  linkedin: "var(--status-info)",
-  telegram: "var(--accent-cyan)",
-  youtube: "var(--status-danger)",
+  facebook: "var(--brand-gold, #B89651)",
+  instagram: "var(--brand-gold-strong, #A8884A)",
+  both: "var(--brand-ink, #1A1715)",
+  x: "color-mix(in srgb, var(--brand-ink, #1A1715) 78%, var(--brand-gold, #B89651))",
+  linkedin: "color-mix(in srgb, var(--brand-gold, #B89651) 68%, #1d4ed8)",
+  telegram: "color-mix(in srgb, var(--brand-gold, #B89651) 58%, #06b6d4)",
+  youtube: "color-mix(in srgb, var(--brand-gold-strong, #A8884A) 55%, #ef4444)",
 };
+
+const statusChartColors: Record<string, string> = {
+  draft: "color-mix(in srgb, var(--brand-ink, #1A1715) 24%, var(--brand-cream, #FAF6EF))",
+  scheduled: "var(--brand-gold, #B89651)",
+  posted: "color-mix(in srgb, var(--brand-gold, #B89651) 72%, #10b981)",
+  failed: "color-mix(in srgb, var(--brand-gold-strong, #A8884A) 44%, #ef4444)",
+  cancelled: "color-mix(in srgb, var(--brand-ink, #1A1715) 38%, var(--brand-cream, #FAF6EF))",
+  publishing: "color-mix(in srgb, var(--brand-gold, #B89651) 78%, #f59e0b)",
+};
+
+function platformLabel(name: string) {
+  if (name === "both") return "FB + IG";
+  if (name === "facebook") return "Facebook";
+  if (name === "instagram") return "Instagram";
+  if (name === "x") return "X";
+  return name.toUpperCase();
+}
 
 export default function AnalyticsPage() {
   const [overview, setOverview] = useState<any>(null);
@@ -168,13 +185,13 @@ export default function AnalyticsPage() {
         </button>
       </div>
 
-      <div className="flex border-b border-slate-200">
+      <div className="flex border-b border-gm-border-soft">
         <button
           onClick={() => setActiveTab("general")}
           className={`px-6 py-3 text-sm font-bold border-b-2 transition-all ${
             activeTab === "general"
-              ? "border-brand-600 text-brand-600"
-              : "border-transparent text-slate-500 hover:text-slate-900"
+              ? "border-gm-gold text-gm-gold"
+              : "border-transparent text-gm-muted hover:text-gm-text"
           }`}
         >
           Genel Bakış
@@ -183,11 +200,11 @@ export default function AnalyticsPage() {
           onClick={() => setActiveTab("youtube")}
           className={`flex items-center gap-2 px-6 py-3 text-sm font-bold border-b-2 transition-all ${
             activeTab === "youtube"
-              ? "border-red-600 text-red-600"
-              : "border-transparent text-slate-500 hover:text-slate-900"
+              ? "border-gm-gold text-gm-text"
+              : "border-transparent text-gm-muted hover:text-gm-text"
           }`}
         >
-          <span className="h-2 w-2 rounded-full bg-red-500" />
+          <span className="h-2 w-2 rounded-full bg-gm-gold" />
           YouTube Analitiği
         </button>
       </div>
@@ -227,15 +244,15 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Breakdowns section */}
-      <section className="bg-white rounded-[32px] border border-slate-100 shadow-card overflow-hidden">
-        <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+      <section className="rounded-[32px] border border-gm-border-soft bg-white shadow-card overflow-hidden">
+        <div className="p-8 border-b border-gm-border-soft flex items-center justify-between bg-gm-surface/40">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-950 text-white flex items-center justify-center shadow-lg shadow-slate-950/20">
+            <div className="w-10 h-10 rounded-xl bg-gm-text text-gm-surface flex items-center justify-center shadow-lg shadow-gm-gold/20">
               <PieChartIcon size={20} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Mevcut Veri Analizi</h2>
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
+              <h2 className="text-xl font-bold text-gm-text">Mevcut Veri Analizi</h2>
+              <p className="text-xs text-gm-muted font-bold uppercase tracking-widest mt-1">
                 İçerik türü, kaynak ve platform dağılımı
               </p>
             </div>
@@ -246,12 +263,13 @@ export default function AnalyticsPage() {
           <BreakdownCard title="İçerik Türleri" data={typeCounts} />
 
           {/* Custom Platform Donut Chart Component */}
-          <ChartCard title="Platform Dağılımı" height={260} responsive={false} className="rounded-[24px] bg-slate-50/30">
+          <ChartCard title="Platform Dağılımı" height={285} responsive={false} className="rounded-[24px] border-gm-border-soft bg-gm-surface/30">
             <div className="flex h-40 items-center justify-center">
                 <PieChart width={220} height={160}>
                   <Pie
                     data={Object.entries(platformCounts).map(([name, val]) => ({
-                      name: name === "both" ? "FB + IG" : name.toUpperCase(),
+                      name: platformLabel(name),
+                      key: name,
                       value: val
                     })).filter(d => d.value > 0)}
                     cx="50%"
@@ -261,30 +279,42 @@ export default function AnalyticsPage() {
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {Object.entries(platformCounts).map(([name], index) => (
-                      <Cell key={`cell-${index}`} fill={platformChartColors[name] || "var(--text-muted)"} />
+                    {Object.entries(platformCounts).filter(([, value]) => value > 0).map(([name], index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={platformChartColors[name] || "var(--brand-gold, #B89651)"}
+                        stroke="var(--brand-cream, #FAF6EF)"
+                        strokeWidth={3}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ background: 'var(--surface-900)', border: '1px solid var(--surface-600)', borderRadius: '12px', color: 'var(--text-primary)', fontSize: '12px' }} />
+                  <Tooltip
+                    formatter={(value: any, _name: any, item: any) => [value, item?.payload?.name || "Platform"]}
+                    contentStyle={{
+                      background: 'var(--brand-ink, #1A1715)',
+                      border: '1px solid var(--brand-gold-border, rgba(184,150,81,.22))',
+                      borderRadius: '14px',
+                      color: 'var(--brand-cream, #FAF6EF)',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      boxShadow: '0 18px 45px rgba(26,23,21,.18)',
+                    }}
+                    itemStyle={{ color: 'var(--brand-cream, #FAF6EF)' }}
+                    labelStyle={{ color: 'var(--brand-gold, #B89651)' }}
+                  />
                 </PieChart>
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-4 border-t border-slate-100 pt-3">
+            <div className="grid grid-cols-2 gap-2 mt-4 border-t border-gm-border-soft pt-3">
               {Object.entries(platformCounts).map(([name, value]) => {
-                const colors: Record<string, string> = {
-                  facebook: "bg-blue-500",
-                  instagram: "bg-pink-500",
-                  both: "bg-brand-500",
-                  x: "bg-slate-900",
-                  linkedin: "bg-blue-700",
-                  telegram: "bg-cyan-500",
-                  youtube: "bg-red-500",
-                };
                 if (value === 0) return null;
                 return (
-                  <div key={name} className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 truncate">
-                    <span className={`w-2 h-2 rounded-full ${colors[name] || "bg-slate-400"} shrink-0`} />
-                    <span className="truncate">{name === "both" ? "FB + IG" : name}</span>
-                    <span className="text-slate-400 font-bold">({value})</span>
+                  <div key={name} className="flex items-center gap-1.5 text-[11px] font-semibold text-gm-text truncate">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                      style={{ background: platformChartColors[name] || "var(--brand-gold, #B89651)" }}
+                    />
+                    <span className="truncate">{platformLabel(name)}</span>
+                    <span className="text-gm-muted font-bold">({value})</span>
                   </div>
                 );
               })}
@@ -293,16 +323,16 @@ export default function AnalyticsPage() {
 
           <BreakdownCard title="Kaynaklar" data={sourceCounts} />
 
-          <div className="lg:col-span-1 rounded-[24px] border border-slate-100 bg-slate-50/50 p-5">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Son Eklenenler</p>
+          <div className="lg:col-span-1 rounded-[24px] border border-gm-border-soft bg-gm-surface/30 p-5">
+            <p className="text-[10px] font-black text-gm-muted uppercase tracking-widest mb-4">Son Eklenenler</p>
             <div className="space-y-3">
               {recentItems.length === 0 ? (
                 <EmptyState title="Henüz içerik yok." className="py-8" />
               ) : (
                 recentItems.map((item) => (
-                  <div key={item.id} className="rounded-2xl bg-white border border-slate-100 p-3">
-                    <p className="text-xs font-black text-slate-800 line-clamp-1">{item.title || "Başlıksız"}</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">
+                  <div key={item.id} className="rounded-2xl bg-white border border-gm-border-soft p-3 shadow-sm">
+                    <p className="text-xs font-black text-gm-text line-clamp-1">{item.title || "Başlıksız"}</p>
+                    <p className="text-[10px] font-bold text-gm-muted uppercase mt-1">
                       {item.postType} / {item.status}
                     </p>
                   </div>
@@ -314,20 +344,20 @@ export default function AnalyticsPage() {
       </section>
 
       {/* Best time section */}
-      <section className="bg-white rounded-[32px] border border-slate-100 shadow-card overflow-hidden">
-        <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+      <section className="bg-white rounded-[32px] border border-gm-border-soft shadow-card overflow-hidden">
+        <div className="p-8 border-b border-gm-border-soft flex items-center justify-between bg-gm-surface/40">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-950 text-white flex items-center justify-center shadow-lg shadow-slate-950/20">
+            <div className="w-10 h-10 rounded-xl bg-gm-text text-gm-surface flex items-center justify-center shadow-lg shadow-gm-gold/20">
               <Calendar size={20} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900">X İçin En İyi Saat</h2>
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
+              <h2 className="text-xl font-bold text-gm-text">X İçin En İyi Saat</h2>
+              <p className="text-xs text-gm-muted font-bold uppercase tracking-widest mt-1">
                 Sadece gerçek post metriklerinden hesaplanır
               </p>
             </div>
           </div>
-          <span className="rounded-xl bg-slate-100 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500">
+          <span className="rounded-xl bg-gm-surface px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gm-muted border border-gm-border-soft">
             {bestTime?.sampleSize || 0} örnek
           </span>
         </div>
@@ -362,35 +392,31 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Status Distribution */}
-        <section className="lg:col-span-2 bg-white rounded-[32px] border border-slate-100 shadow-card overflow-hidden flex flex-col">
-          <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+        <section className="lg:col-span-2 bg-white rounded-[32px] border border-gm-border-soft shadow-card overflow-hidden flex flex-col">
+          <div className="p-8 border-b border-gm-border-soft flex items-center justify-between bg-gm-surface/40">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-950 text-white flex items-center justify-center shadow-lg shadow-slate-950/20">
+              <div className="w-10 h-10 rounded-xl bg-gm-text text-gm-surface flex items-center justify-center shadow-lg shadow-gm-gold/20">
                 <BarChart3 size={20} />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">Gönderi Durum Dağılımı</h2>
+              <h2 className="text-xl font-bold text-gm-text">Gönderi Durum Dağılımı</h2>
             </div>
           </div>
           <div className="p-8 flex-1 flex flex-col justify-center space-y-10">
-             <div className="flex h-12 w-full rounded-2xl overflow-hidden shadow-inner bg-slate-50">
+             <div className="flex h-12 w-full rounded-2xl overflow-hidden shadow-inner bg-gm-surface border border-gm-border-soft">
                 {Object.entries(stats).map(([status, count]) => {
                   const percentage = totalPosts > 0 ? (count / totalPosts) * 100 : 0;
-                  const colors: Record<string, string> = {
-                    draft: "bg-slate-300",
-                    scheduled: "bg-brand-500",
-                    posted: "bg-emerald-500",
-                    failed: "bg-rose-500",
-                    cancelled: "bg-slate-400",
-                    publishing: "bg-amber-400",
-                  };
                   if (count === 0) return null;
                   return (
                     <div
                       key={status}
-                      className={`${colors[status] || "bg-slate-300"} transition-all duration-500 hover:brightness-110 relative group`}
+                      className="transition-all duration-500 hover:brightness-110 relative group"
                       style={{ width: `${Math.max(percentage, 1)}%` }}
                     >
-                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                       <div
+                         className="absolute inset-0"
+                         style={{ background: statusChartColors[status] || "var(--brand-gold, #B89651)" }}
+                       />
+                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gm-text text-gm-surface text-[10px] font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
                           {status.toUpperCase()}: {count} ({percentage.toFixed(1)}%)
                        </div>
                     </div>
@@ -400,20 +426,15 @@ export default function AnalyticsPage() {
 
              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {Object.entries(stats).map(([status, count]) => {
-                   const colors: Record<string, string> = {
-                    draft: "bg-slate-350",
-                    scheduled: "bg-brand-500",
-                    posted: "bg-emerald-500",
-                    failed: "bg-rose-500",
-                    cancelled: "bg-slate-400",
-                    publishing: "bg-amber-400",
-                  };
                   return (
-                    <div key={status} className="flex items-center gap-3 p-3 rounded-2xl border border-slate-50 hover:bg-slate-50 transition-colors">
-                       <div className={`w-3 h-3 rounded-full ${colors[status]}`}></div>
+                    <div key={status} className="flex items-center gap-3 p-3 rounded-2xl border border-gm-border-soft hover:bg-gm-surface/50 transition-colors">
+                       <div
+                         className="w-3 h-3 rounded-full shadow-sm"
+                         style={{ background: statusChartColors[status] || "var(--brand-gold, #B89651)" }}
+                       />
                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{status}</p>
-                          <p className="text-sm font-bold text-slate-800">{count}</p>
+                          <p className="text-[10px] font-bold text-gm-muted uppercase tracking-widest leading-none">{status}</p>
+                          <p className="text-sm font-bold text-gm-text">{count}</p>
                        </div>
                     </div>
                   );
@@ -423,12 +444,12 @@ export default function AnalyticsPage() {
         </section>
 
         {/* Weekly Performance */}
-        <section className="bg-white rounded-[32px] border border-slate-100 shadow-card overflow-hidden">
-          <div className="p-8 border-b border-slate-50 flex items-center gap-3 bg-slate-50/30">
-            <div className="w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center shadow-brand-glow">
+        <section className="bg-white rounded-[32px] border border-gm-border-soft shadow-card overflow-hidden">
+          <div className="p-8 border-b border-gm-border-soft flex items-center gap-3 bg-gm-surface/40">
+            <div className="w-10 h-10 rounded-xl bg-gm-gold text-gm-text flex items-center justify-center shadow-glow-primary">
               <TrendingUp size={20} />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Haftalık Özet</h2>
+            <h2 className="text-xl font-bold text-gm-text">Haftalık Özet</h2>
           </div>
           <div className="p-8 space-y-8">
              {overview ? (
@@ -436,37 +457,37 @@ export default function AnalyticsPage() {
                   <div className="space-y-6">
                      <div className="flex items-end justify-between">
                         <div>
-                           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Bu Hafta</p>
-                           <p className="text-4xl font-extrabold text-slate-900">{overview.postedThisWeek || 0}</p>
+                           <p className="text-xs font-bold text-gm-muted uppercase tracking-widest mb-1">Bu Hafta</p>
+                           <p className="text-4xl font-extrabold text-gm-text">{overview.postedThisWeek || 0}</p>
                         </div>
-                        <div className="flex items-center gap-1 text-emerald-500 font-bold text-sm bg-emerald-50 px-2 py-1 rounded-lg">
+                        <div className="flex items-center gap-1 text-gm-gold font-bold text-sm bg-gm-surface px-2 py-1 rounded-lg border border-gm-border-soft">
                            <ArrowUpRight size={16} /> 12%
                         </div>
                      </div>
-                     <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-brand-500 rounded-full" style={{ width: '65%' }}></div>
+                     <div className="h-2 w-full bg-gm-surface rounded-full overflow-hidden border border-gm-border-soft">
+                        <div className="h-full rounded-full" style={{ width: '65%', background: 'var(--brand-gold, #B89651)' }} />
                      </div>
                   </div>
 
                   <div className="space-y-4">
-                     <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                     <div className="flex items-center justify-between p-4 bg-gm-surface/50 rounded-2xl border border-gm-border-soft">
                         <div className="flex items-center gap-3">
-                           <Zap size={18} className="text-amber-500" />
-                           <span className="text-sm font-bold text-slate-700">Toplam Yayınlanan</span>
+                           <Zap size={18} className="text-gm-gold" />
+                           <span className="text-sm font-bold text-gm-text">Toplam Yayınlanan</span>
                         </div>
-                        <span className="text-lg font-extrabold text-slate-900">{overview.totalPosted || 0}</span>
+                        <span className="text-lg font-extrabold text-gm-text">{overview.totalPosted || 0}</span>
                      </div>
-                     <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                     <div className="flex items-center justify-between p-4 bg-gm-surface/50 rounded-2xl border border-gm-border-soft">
                         <div className="flex items-center gap-3">
-                           <Calendar size={18} className="text-brand-500" />
-                           <span className="text-sm font-bold text-slate-700">Paylaşım Sıklığı</span>
+                           <Calendar size={18} className="text-gm-gold" />
+                           <span className="text-sm font-bold text-gm-text">Paylaşım Sıklığı</span>
                         </div>
-                        <span className="text-sm font-bold text-slate-500">~2.4 / gün</span>
+                        <span className="text-sm font-bold text-gm-muted">~2.4 / gün</span>
                      </div>
                   </div>
                 </>
               ) : (
-                <div className="py-12 text-center text-slate-400 font-medium">Veri yüklenemedi.</div>
+                <div className="py-12 text-center text-gm-muted font-medium">Veri yüklenemedi.</div>
               )}
           </div>
         </section>
@@ -474,27 +495,27 @@ export default function AnalyticsPage() {
 
       {/* Interactions / Best Posts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         <section className="lg:col-span-2 bg-white rounded-[32px] border border-slate-100 shadow-card overflow-hidden">
-            <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+         <section className="lg:col-span-2 bg-white rounded-[32px] border border-gm-border-soft shadow-card overflow-hidden">
+            <div className="p-8 border-b border-gm-border-soft flex items-center justify-between bg-gm-surface/40">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-600/20">
+                <div className="w-10 h-10 rounded-xl bg-gm-gold text-gm-text flex items-center justify-center shadow-lg shadow-gm-gold/20">
                   <Zap size={20} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">En İyi Performans Gösterenler</h2>
+                <h2 className="text-xl font-bold text-gm-text">En İyi Performans Gösterenler</h2>
               </div>
             </div>
             <div className="p-8">
                {overview?.topPosts?.length > 0 ? (
                   <div className="space-y-4">
                      {overview.topPosts.map((p: any, i: number) => (
-                        <div key={i} className="flex items-center justify-between p-5 bg-slate-50 rounded-[24px] border border-transparent hover:border-emerald-100 hover:bg-white hover:shadow-xl transition-all group">
+                        <div key={i} className="flex items-center justify-between p-5 bg-gm-surface/40 rounded-[24px] border border-gm-border-soft hover:bg-white hover:shadow-xl transition-all group">
                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-slate-400">
+                              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-gm-gold">
                                  <Activity size={24} />
                               </div>
                               <div>
-                                 <p className="text-xs font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">Post ID: #{p.postId}</p>
-                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{p.platform}</p>
+                                 <p className="text-xs font-bold text-gm-text group-hover:text-gm-gold transition-colors">Post ID: #{p.postId}</p>
+                                 <p className="text-[10px] text-gm-muted font-bold uppercase tracking-widest">{p.platform}</p>
                               </div>
                            </div>
                            <div className="flex items-center gap-6">
@@ -502,30 +523,30 @@ export default function AnalyticsPage() {
                               <InteractionStat icon={<MessageCircle size={14}/>} value={p.comments} label="Yorum" />
                               <InteractionStat icon={<Share2 size={14}/>} value={p.shares} label="Paylaşım" />
                               <div className="hidden sm:flex flex-col items-end">
-                                 <p className="text-xs font-black text-emerald-600">%{p.engagementRate}</p>
-                                 <p className="text-[9px] font-bold text-slate-400 uppercase">Etkileşim</p>
+                                 <p className="text-xs font-black text-gm-gold">%{p.engagementRate}</p>
+                                 <p className="text-[9px] font-bold text-gm-muted uppercase">Etkileşim</p>
                               </div>
                            </div>
                         </div>
                      ))}
                   </div>
                ) : (
-                  <div className="flex flex-col items-center justify-center py-20 text-slate-300 space-y-4">
+                  <div className="flex flex-col items-center justify-center py-20 text-gm-muted space-y-4">
                      <Activity size={48} className="opacity-20" />
-                     <p className="font-bold text-slate-400 text-sm">Henüz yeterli etkileşim verisi toplanmadı.</p>
+                     <p className="font-bold text-gm-muted text-sm">Henüz yeterli etkileşim verisi toplanmadı.</p>
                   </div>
                )}
             </div>
          </section>
 
-         <section className="bg-brand-900 rounded-[32px] p-8 text-white relative overflow-hidden shadow-2xl shadow-brand-900/20">
+         <section className="bg-gm-text rounded-[32px] p-8 text-gm-surface relative overflow-hidden shadow-2xl shadow-gm-gold/20">
             <div className="absolute top-0 right-0 p-10 opacity-10">
                <TrendingUp size={200} />
             </div>
             <div className="relative z-10 space-y-8 h-full flex flex-col">
                <div className="space-y-2">
                   <h3 className="text-2xl font-black">Pro Analizler</h3>
-                  <p className="text-brand-200 text-sm font-medium">Platformlarınızı bağlayın, verileri derinlemesine inceleyin.</p>
+                  <p className="text-gm-surface/70 text-sm font-medium">Platformlarınızı bağlayın, verileri derinlemesine inceleyin.</p>
                </div>
 
                <div className="space-y-4 flex-1">
@@ -563,16 +584,16 @@ function BreakdownCard({ title, data }: { title: string; data: Record<string, nu
   const rows = Object.entries(data).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="rounded-[24px] border border-slate-100 bg-slate-50/50 p-5">
-      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">{title}</p>
+    <div className="rounded-[24px] border border-gm-border-soft bg-gm-surface/30 p-5">
+      <p className="text-[10px] font-black text-gm-muted uppercase tracking-widest mb-4">{title}</p>
       {rows.length === 0 ? (
-        <p className="text-sm font-medium text-slate-400">Veri yok.</p>
+        <p className="text-sm font-medium text-gm-muted">Veri yok.</p>
       ) : (
         <div className="space-y-3">
           {rows.map(([label, count]) => (
             <div key={label} className="flex items-center justify-between gap-3">
-              <span className="text-sm font-bold text-slate-700 capitalize truncate">{label}</span>
-              <span className="px-2 py-1 rounded-lg bg-white border border-slate-100 text-xs font-black text-slate-900">
+              <span className="text-sm font-bold text-gm-text capitalize truncate">{label}</span>
+              <span className="px-2 py-1 rounded-lg bg-white border border-gm-border-soft text-xs font-black text-gm-text">
                 {count}
               </span>
             </div>
@@ -591,23 +612,23 @@ function BestTimeHeatmap({ rows }: { rows: any[] }) {
   const bySlot = new Map(rows.map((row) => [`${row.day}:${row.hour}`, row]));
 
   return (
-    <div className="rounded-[24px] border border-slate-100 bg-white p-5">
+    <div className="rounded-[24px] border border-gm-border-soft bg-white p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Saat Dağılımı</p>
-        <p className="text-[10px] font-bold text-slate-400">Renk koyulaştıkça etkileşim artar</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-gm-muted">Saat Dağılımı</p>
+        <p className="text-[10px] font-bold text-gm-muted">Renk koyulaştıkça etkileşim artar</p>
       </div>
       <div className="overflow-x-auto">
         <div className="min-w-[560px]">
           <div className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))] gap-2">
             <div />
             {heatmapDayLabels.map((day) => (
-              <div key={day} className="text-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <div key={day} className="text-center text-[10px] font-black uppercase tracking-widest text-gm-muted">
                 {day}
               </div>
             ))}
             {heatmapHours.map((hour) => (
               <Fragment key={`row-${hour}`}>
-                <div key={`hour-${hour}`} className="flex h-11 items-center text-xs font-black text-slate-400">
+                <div key={`hour-${hour}`} className="flex h-11 items-center text-xs font-black text-gm-muted">
                   {String(hour).padStart(2, "0")}:00
                 </div>
                 {heatmapDayLabels.map((_, day) => {
@@ -617,8 +638,10 @@ function BestTimeHeatmap({ rows }: { rows: any[] }) {
                   return (
                     <div
                       key={`${day}-${hour}`}
-                      className="flex h-11 items-center justify-center rounded-xl border border-slate-100 text-[10px] font-black text-slate-700"
-                      style={{ backgroundColor: `rgba(139, 92, 246, ${opacity})` }}
+                      className="flex h-11 items-center justify-center rounded-xl border border-gm-border-soft text-[10px] font-black text-gm-text"
+                      style={{
+                        backgroundColor: `color-mix(in srgb, var(--brand-gold, #B89651) ${Math.round(opacity * 100)}%, white)`,
+                      }}
                       title={slot ? `${slot.dayLabel} ${hour}:00 - %${slot.avgEngagement}` : "Veri yok"}
                     >
                       {slot ? `%${slot.avgEngagement}` : "-"}
@@ -637,9 +660,9 @@ function BestTimeHeatmap({ rows }: { rows: any[] }) {
 function InteractionStat({ icon, value, label }: { icon: React.ReactNode, value: number | string, label: string }) {
   return (
     <div className="flex flex-col items-center gap-1 min-w-[50px]">
-       <div className="text-slate-400">{icon}</div>
-       <p className="text-[11px] font-bold text-slate-700">{value || 0}</p>
-       <p className="text-[8px] font-bold text-slate-400 uppercase">{label}</p>
+       <div className="text-gm-gold">{icon}</div>
+       <p className="text-[11px] font-bold text-gm-text">{value || 0}</p>
+       <p className="text-[8px] font-bold text-gm-muted uppercase">{label}</p>
     </div>
   );
 }
@@ -647,8 +670,8 @@ function InteractionStat({ icon, value, label }: { icon: React.ReactNode, value:
 function FeatureItem({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3">
-       <div className="w-1.5 h-1.5 bg-brand-400 rounded-full"></div>
-       <span className="text-sm font-bold text-brand-100">{label}</span>
+       <div className="w-1.5 h-1.5 bg-gm-gold rounded-full"></div>
+       <span className="text-sm font-bold text-gm-surface/85">{label}</span>
     </div>
   );
 }

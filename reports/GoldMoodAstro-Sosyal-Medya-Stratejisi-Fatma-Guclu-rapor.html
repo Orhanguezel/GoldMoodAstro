@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <title>GoldMoodAstro Sosyal Medya Stratejisi</title>
+  <style>
+    @page { size: A4; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: #171324;
+      background: #f7f1e8;
+      font-family: Inter, "DejaVu Sans", Arial, sans-serif;
+      line-height: 1.45;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page {
+      min-height: 250mm;
+      padding: 0;
+      page-break-after: always;
+      position: relative;
+    }
+    .page:last-child { page-break-after: auto; }
+    .cover {
+      min-height: 250mm;
+      border-radius: 28px;
+      padding: 36px;
+      overflow: hidden;
+      color: #fff8df;
+      background:
+        radial-gradient(circle at 78% 18%, rgba(212,175,55,.32), transparent 26%),
+        radial-gradient(circle at 18% 82%, rgba(140,96,255,.30), transparent 30%),
+        linear-gradient(145deg, #100b24 0%, #1b1238 47%, #070512 100%);
+      box-shadow: inset 0 0 0 1px rgba(212,175,55,.35);
+    }
+    .stars {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .65;
+      background-image:
+        radial-gradient(circle, rgba(255,228,148,.9) 0 1px, transparent 1.6px),
+        radial-gradient(circle, rgba(255,255,255,.55) 0 1px, transparent 1.8px);
+      background-size: 42px 42px, 73px 73px;
+      background-position: 5px 7px, 23px 31px;
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    .logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.08);
+      box-shadow: 0 0 0 1px rgba(212,175,55,.35), 0 18px 40px rgba(0,0,0,.28);
+      object-fit: contain;
+      padding: 4px;
+    }
+    .brand-title {
+      font-family: Georgia, "DejaVu Serif", serif;
+      font-size: 23px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+    .brand-sub {
+      color: #d4af37;
+      letter-spacing: .38em;
+      font-size: 9px;
+      margin-top: 4px;
+    }
+    .cover-main {
+      position: relative;
+      z-index: 1;
+      margin-top: 78px;
+      max-width: 680px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(212,175,55,.42);
+      border-radius: 999px;
+      padding: 8px 14px;
+      color: #f6d976;
+      background: rgba(255,255,255,.06);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 24px 0 18px;
+      font-family: Georgia, "DejaVu Serif", serif;
+      font-size: 54px;
+      line-height: 1.04;
+      letter-spacing: -.03em;
+    }
+    .lead {
+      font-size: 19px;
+      color: #ece3ff;
+      max-width: 610px;
+    }
+    .cover-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 44px;
+      max-width: 680px;
+    }
+    .cover-card {
+      border: 1px solid rgba(212,175,55,.28);
+      border-radius: 18px;
+      padding: 16px;
+      background: rgba(255,255,255,.07);
+      backdrop-filter: blur(8px);
+    }
+    .cover-card strong {
+      display: block;
+      color: #f7d96b;
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+    .cover-card span {
+      color: #e7ddff;
+      font-size: 12px;
+    }
+    .cover-footer {
+      position: absolute;
+      left: 36px;
+      right: 36px;
+      bottom: 34px;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      color: #d9cfff;
+      font-size: 12px;
+      border-top: 1px solid rgba(212,175,55,.25);
+      padding-top: 18px;
+    }
+    .sheet {
+      background: #fffaf2;
+      min-height: 250mm;
+      border: 1px solid #ead9b9;
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 12px 34px rgba(42,31,10,.08);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      border-bottom: 2px solid #d4af37;
+      padding-bottom: 14px;
+      margin-bottom: 22px;
+    }
+    .header h2 {
+      margin: 0;
+      font-family: Georgia, "DejaVu Serif", serif;
+      color: #201538;
+      font-size: 30px;
+    }
+    .section-kicker {
+      color: #b58a2d;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+    .pill {
+      display: inline-block;
+      background: #171324;
+      color: #f7d96b;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 18px;
+      margin: 18px 0 22px;
+    }
+    .box {
+      border: 1px solid #ead9b9;
+      background: #fffdf8;
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .box.dark {
+      color: #fff8df;
+      background: linear-gradient(145deg, #171324, #271948);
+      border-color: rgba(212,175,55,.42);
+    }
+    .box h3 {
+      margin: 0 0 10px;
+      font-family: Georgia, "DejaVu Serif", serif;
+      font-size: 21px;
+      color: #241735;
+    }
+    .box.dark h3 { color: #f7d96b; }
+    .box p { margin: 0 0 9px; }
+    ul { margin: 8px 0 0 18px; padding: 0; }
+    li { margin: 4px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 20px;
+      overflow: hidden;
+      border-radius: 14px;
+      font-size: 12px;
+    }
+    th {
+      text-align: left;
+      background: #211637;
+      color: #f7d96b;
+      padding: 10px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #efe2cb;
+      vertical-align: top;
+      background: #fffdf8;
+    }
+    tr:nth-child(even) td { background: #fbf3e6; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 14px 0 20px;
+    }
+    .mini-card {
+      border-radius: 16px;
+      padding: 15px;
+      min-height: 118px;
+      background: linear-gradient(180deg, #fffdf8, #f8ecd8);
+      border: 1px solid #ead9b9;
+    }
+    .mini-card b {
+      display: block;
+      color: #201538;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .mini-card span { color: #5e566e; font-size: 12px; }
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .day {
+      border-radius: 14px;
+      padding: 10px;
+      min-height: 94px;
+      color: #fff8df;
+      background: linear-gradient(160deg, #25183f, #4b2d7c);
+      border: 1px solid rgba(212,175,55,.35);
+      font-size: 11px;
+    }
+    .day strong {
+      display: block;
+      color: #f7d96b;
+      margin-bottom: 5px;
+      font-size: 12px;
+    }
+    .callout {
+      border-left: 5px solid #d4af37;
+      border-radius: 14px;
+      background: #fff5dc;
+      padding: 14px 16px;
+      margin: 14px 0 18px;
+    }
+    .quote {
+      font-family: Georgia, "DejaVu Serif", serif;
+      font-size: 22px;
+      color: #241735;
+      line-height: 1.25;
+      padding: 18px;
+      border-radius: 18px;
+      background: radial-gradient(circle at top right, rgba(212,175,55,.20), transparent 35%), #fffdf8;
+      border: 1px solid #ead9b9;
+    }
+    .footer-note {
+      position: absolute;
+      bottom: 5mm;
+      left: 14mm;
+      right: 14mm;
+      color: #8d7e69;
+      font-size: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .small { font-size: 11px; color: #695f75; }
+    .no-break { break-inside: avoid; }
+  </style>
+</head>
+<body>
+  <section class="page">
+    <div class="cover">
+      <div class="stars"></div>
+      <div class="brand-row">
+        <img class="logo" src="../admin_panel/public/brand/logo.png" alt="GoldMoodAstro" />
+        <div>
+          <div class="brand-title">GoldMoodAstro</div>
+          <div class="brand-sub">ASTRO MANAGEMENT</div>
+        </div>
+      </div>
+      <div class="cover-main">
+        <div class="eyebrow">Sosyal medya strateji raporu</div>
+        <h1>Merak uyandıran, paylaşılabilir ve dönüşüm odaklı içerik planı</h1>
+        <p class="lead">
+          GoldMoodAstro’yu sadece burç hesabı olarak değil; astroloji, tarot, numeroloji, kahve falı,
+          rüya tabiri, spiritüel semboller, sinastri ve danışmanlık ekseninde premium bir mistik rehberlik markası olarak büyütme planı.
+        </p>
+        <div class="cover-grid">
+          <div class="cover-card"><strong>30</strong><span>günlük burç carousel / ay</span></div>
+          <div class="cover-card"><strong>2</strong><span>ana ay fazı paketi: yeniay + dolunay</span></div>
+          <div class="cover-card"><strong>10</strong><span>içerik kolonu ile geniş marka alanı</span></div>
+        </div>
+      </div>
+      <div class="cover-footer">
+        <span>Hazırlayan: GoldMoodAstro içerik strateji çalışması</span>
+        <span>29 Temmuz 2026</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="sheet">
+      <div class="header">
+        <div>
+          <div class="section-kicker">Yönetici özeti</div>
+          <h2>Stratejik yön</h2>
+        </div>
+        <span class="pill">Fatma Güçlü için rapor</span>
+      </div>
+
+      <div class="summary">
+        <div class="box dark">
+          <h3>Ana fikir</h3>
+          <p>
+            GoldMoodAstro içerikleri kullanıcıyı pasif izleyici olmaktan çıkarıp içeriğin içine sokmalı:
+            “Ben listede miyim?”, “Hangi kartı seçtim?”, “İlk hangi kelimeyi gördüm?”, “Rüyam ne anlatıyor?”
+          </p>
+          <p>
+            Bu merak, yorum ve paylaşım üretir; daha kişisel cevap ihtiyacı ise danışman profillerine yönlendirilir.
+          </p>
+        </div>
+        <div class="box">
+          <h3>Öncelikli hedefler</h3>
+          <ul>
+            <li>Takipçi ve erişim büyümesi</li>
+            <li>Yorum, kaydetme ve paylaşım artışı</li>
+            <li>Danışman profillerine trafik</li>
+            <li>Yeniay/dolunay gibi dönemsel ilgiyi yakalama</li>
+            <li>GoldMood’u premium ama ulaşılabilir göstermek</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="quote">
+        “Merak ettir → küçük bir farkındalık ver → kişisel cevap için GoldMoodAstro’ya yönlendir.”
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Karar</th><th>Uygulama</th><th>Neden önemli?</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Günlük burç carousel</td>
+            <td>Her gün 12 burç + CTA slide</td>
+            <td>Düzenli alışkanlık, kaydırma ve paylaşım üretir.</td>
+          </tr>
+          <tr>
+            <td>Yeniay & dolunay paketleri</td>
+            <td>Her ay 2 büyük astrolojik kampanya</td>
+            <td>Ay fazları merak ve gündem etkisi yaratır.</td>
+          </tr>
+          <tr>
+            <td>Burç dışı alanlar</td>
+            <td>Tarot, numeroloji, kahve, rüya, sinastri</td>
+            <td>GoldMood’u tek konuya sıkıştırmaz; danışmanlık alanını büyütür.</td>
+          </tr>
+          <tr>
+            <td>Mizah / gündem</td>
+            <td>Haftada 1–2 kontrollü reel</td>
+            <td>Paylaşım, etiketleme ve takipçi kazanımı sağlar.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="footer-note"><span>GoldMoodAstro Sosyal Medya Stratejisi</span><span>2</span></div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="sheet">
+      <div class="header">
+        <div>
+          <div class="section-kicker">İçerik mimarisi</div>
+          <h2>GoldMood sadece burç değildir</h2>
+        </div>
+        <span class="pill">10 içerik kolonu</span>
+      </div>
+
+      <div class="cards">
+        <div class="mini-card"><b>Günlük burç</b><span>Her gün 12 burçluk carousel. Sabit trafik ve alışkanlık.</span></div>
+        <div class="mini-card"><b>Yeniay / Dolunay</b><span>Her ay iki büyük ana paket: niyet ve bırakma temaları.</span></div>
+        <div class="mini-card"><b>Tarot</b><span>Kart seç, 1/2/3/4, ruhun bugün ne duymalı?</span></div>
+        <div class="mini-card"><b>Numeroloji</b><span>Doğum tarihi ve yaşam yolu sayısı ile kişiselleştirme.</span></div>
+        <div class="mini-card"><b>Kahve Falı</b><span>Fincan sembolleri: kuş, yol, kalp, anahtar, dağ.</span></div>
+        <div class="mini-card"><b>Rüya Tabiri</b><span>Rüyadaki sembol ve duygu üzerinden merak.</span></div>
+        <div class="mini-card"><b>Spiritüel Semboller</b><span>Bir sembol seç, mesajını oku, sezgini yorumlara bırak.</span></div>
+        <div class="mini-card"><b>Sinastri</b><span>Aklındaki kişi, ilişki enerjisi, uyum ve çekim.</span></div>
+        <div class="mini-card"><b>Mizah / Gündem</b><span>Burç davranışlarını komik ama şık anlatan reel.</span></div>
+        <div class="mini-card"><b>Danışman CTA</b><span>Astrolog ve danışman profillerine organik yönlendirme.</span></div>
+      </div>
+
+      <div class="callout">
+        <strong>Marka çizgisi:</strong> Rakiplerde çalışan mekanizmayı alırız; görseli ve metni GoldMood’un premium mor-altın dilinde özgün üretiriz.
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Format</th><th>Çalışan psikoloji</th><th>GoldMood örneği</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Tarihli umut listesi</td><td>“Ben şanslı grupta mıyım?”</td><td>Bu Dolunaydan Sonra Kapısı Açılan Yükselenler</td></tr>
+          <tr><td>Dilek / manifest</td><td>Dua, umut, paylaşım</td><td>Yükselenin için bu hafta dilediğimiz 5 şey</td></tr>
+          <tr><td>Kelime bulmaca</td><td>Oyun + yorum</td><td>İlk gördüğün kelime Ağustos enerjini anlatıyor</td></tr>
+          <tr><td>Pick-a-card</td><td>Kişisel seçim hissi</td><td>Ruhunun bugün duymaya ihtiyacı olan kartı seç</td></tr>
+          <tr><td>İlişki merakı</td><td>Duygusal cevap arayışı</td><td>Aklındaki kişi seni hangi enerjide görüyor?</td></tr>
+          <tr><td>Mizah / meme</td><td>Etiketleme ve paylaşım</td><td>Terazi karar vermeye çalışırken...</td></tr>
+        </tbody>
+      </table>
+
+      <div class="footer-note"><span>GoldMoodAstro Sosyal Medya Stratejisi</span><span>3</span></div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="sheet">
+      <div class="header">
+        <div>
+          <div class="section-kicker">Aylık yayın ritmi</div>
+          <h2>Minimum plan ve haftalık akış</h2>
+        </div>
+        <span class="pill">Sabit + kampanya</span>
+      </div>
+
+      <div class="summary">
+        <div class="box">
+          <h3>Her ay</h3>
+          <ul>
+            <li>30 günlük burç carousel</li>
+            <li>1 yeniay ana içerik paketi</li>
+            <li>1 dolunay ana içerik paketi</li>
+            <li>4 tarot / kart seç içeriği</li>
+            <li>3–4 numeroloji içeriği</li>
+            <li>3–4 kahve falı sembolü</li>
+            <li>3–4 rüya tabiri içeriği</li>
+            <li>4 sinastri / ilişki içeriği</li>
+            <li>4–6 mizah / gündem içeriği</li>
+            <li>4–6 danışman / dönüşüm içeriği</li>
+          </ul>
+        </div>
+        <div class="box dark">
+          <h3>Her gün</h3>
+          <ul>
+            <li>1 sabit günlük burç carousel</li>
+            <li>3–5 story</li>
+            <li>Uygun günlerde 1 ek reel/carousel</li>
+            <li>Story’de anket, quiz veya soru kutusu</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div class="day"><strong>Pazartesi</strong>Günlük carousel + haftanın enerjisi</div>
+        <div class="day"><strong>Salı</strong>Günlük carousel + tarot kart seç</div>
+        <div class="day"><strong>Çarşamba</strong>Günlük carousel + numeroloji / rüya / kahve</div>
+        <div class="day"><strong>Perşembe</strong>Günlük carousel + sinastri / ilişki</div>
+        <div class="day"><strong>Cuma</strong>Günlük carousel + mizah / gündem reel</div>
+        <div class="day"><strong>Cumartesi</strong>Günlük carousel + merak listesi</div>
+        <div class="day"><strong>Pazar</strong>Günlük carousel + haftalık kapanış</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Paket</th><th>İçerikler</th><th>Dil</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Yeniay</td>
+            <td>Ana carousel, kısa reel, story anketi, danışman CTA</td>
+            <td>Niyet, başlangıç, yeni döngü, kapı açılması</td>
+          </tr>
+          <tr>
+            <td>Dolunay</td>
+            <td>Ana carousel, kısa reel, story soru kutusu, danışman CTA</td>
+            <td>Tamamlanma, bırakma, farkındalık, görünür olma</td>
+          </tr>
+          <tr>
+            <td>Günlük burç</td>
+            <td>Kapak + 12 burç + CTA slide</td>
+            <td>Kısa, okunur, kaydetmeye uygun</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="footer-note"><span>GoldMoodAstro Sosyal Medya Stratejisi</span><span>4</span></div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="sheet">
+      <div class="header">
+        <div>
+          <div class="section-kicker">Uygulama kararları</div>
+          <h2>Görsel dil, CTA ve sonraki adımlar</h2>
+        </div>
+        <span class="pill">Aksiyon planı</span>
+      </div>
+
+      <div class="summary">
+        <div class="box">
+          <h3>GoldMood görsel standardı</h3>
+          <ul>
+            <li>Koyu mor / lacivert mistik arka plan</li>
+            <li>Altın detaylar ve premium ışık dili</li>
+            <li>Görselde az metin, büyük başlık</li>
+            <li>Her slide’da tek ana fikir</li>
+            <li>Logo küçük ve şık</li>
+            <li>Danışman yönlendirmesi görseli boğmadan</li>
+          </ul>
+        </div>
+        <div class="box">
+          <h3>CTA havuzu</h3>
+          <ul>
+            <li>Yükselenini yorumlara yaz.</li>
+            <li>Kartını seç ve yorumlara bırak.</li>
+            <li>İlk gördüğün kelimeyi yaz.</li>
+            <li>Rüyanda en son ne gördün?</li>
+            <li>Fincanında hangi sembol çıktı?</li>
+            <li>Daha kişisel yorum için danışman profillerini incele.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Dil güvenliği:</strong> Kesin kader, garanti aşk/para/kariyer vaadi veya korkutucu söylem kullanılmaz.
+        GoldMood dili “olabilir, görünür olabilir, destekleniyor, fark ettirebilir” gibi güvenli ve farkındalık odaklı kalır.
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Öncelik</th><th>Aksiyon</th><th>Beklenen etki</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Günlük 12 burç carousel şablonunu üret</td><td>Düzenli günlük yayın altyapısı</td></tr>
+          <tr><td>2</td><td>Yeniay ve dolunay paket şablonlarını oluştur</td><td>Aylık ana kampanya ritmi</td></tr>
+          <tr><td>3</td><td>Kart seç, kelime bulmaca, dilek/manifest formatlarını tasarla</td><td>Yorum ve kaydetme artışı</td></tr>
+          <tr><td>4</td><td>Haftalık mizah/gündem reel serisini test et</td><td>Paylaşım ve takipçi kazanımı</td></tr>
+          <tr><td>5</td><td>Danışman profiline yönlendiren CTA’ları ölç</td><td>Dönüşüm ve profil trafiği</td></tr>
+        </tbody>
+      </table>
+
+      <div class="footer-note"><span>GoldMoodAstro Sosyal Medya Stratejisi</span><span>5</span></div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="sheet">
+      <div class="header">
+        <div>
+          <div class="section-kicker">Yeni içerik kolonu</div>
+          <h2>Spiritüel semboller serisi</h2>
+        </div>
+        <span class="pill">Fatma Hanım kaynak seti</span>
+      </div>
+
+      <div class="summary">
+        <div class="box dark">
+          <h3>Neden ekliyoruz?</h3>
+          <p>
+            Fatma Hanım’ın gönderdiği “Sembollerin Gizli Dünyası” seti GoldMood’un burç dışı alanını güçlendiren değerli
+            bir içerik bankasıdır. Semboller; rüya, kahve falı, tarot, yeniay/dolunay ve sezgi temalarıyla doğal bağ kurar.
+          </p>
+          <p>
+            Bu set doğrudan paylaşılmayacak; sosyal medya için sade, okunur ve GoldMood premium çizgisinde yeniden tasarlanacak.
+          </p>
+        </div>
+        <div class="box">
+          <h3>İlk 8 öncelikli sembol</h3>
+          <ul>
+            <li>Ay</li>
+            <li>Nazar Boncuğu</li>
+            <li>Hamsa Eli</li>
+            <li>Horus’un Gözü</li>
+            <li>Sonsuzluk</li>
+            <li>Yin Yang</li>
+            <li>Lotus</li>
+            <li>Ouroboros</li>
+          </ul>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Format</th><th>Hook</th><th>Kullanım</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Bir sembol seç</td>
+            <td>Bugün dikkatini çeken sembol ne anlatıyor?</td>
+            <td>Yorum ve story etkileşimi</td>
+          </tr>
+          <tr>
+            <td>Sembolün mesajı</td>
+            <td>Ay sembolü sezgin hakkında ne söylüyor?</td>
+            <td>Kaydedilebilir carousel</td>
+          </tr>
+          <tr>
+            <td>Rüyanda bu sembol</td>
+            <td>Rüyanda göz sembolü gördüysen...</td>
+            <td>Rüya tabiri içeriklerine köprü</td>
+          </tr>
+          <tr>
+            <td>Kahve falında sembol</td>
+            <td>Fincanında ağaç ya da göz çıktıysa...</td>
+            <td>Kahve falı alanını güçlendirme</td>
+          </tr>
+          <tr>
+            <td>Ay fazı sembolü</td>
+            <td>Bu yeniayın sembolü: Yaşam Tohumu</td>
+            <td>Yeniay/dolunay paketlerinde destek içerik</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="cards">
+        <div class="mini-card"><b>Yeniay sembolleri</b><span>Ay, Yaşam Tohumu, Lotus. Niyet ve başlangıç dili.</span></div>
+        <div class="mini-card"><b>Dolunay sembolleri</b><span>Ouroboros, Sonsuzluk, Triskele, Horus’un Gözü. Tamamlanma ve dönüşüm dili.</span></div>
+        <div class="mini-card"><b>SEO fırsatı</b><span>“Spiritüel Semboller Rehberi” landing/blog serisi oluşturulabilir.</span></div>
+      </div>
+
+      <div class="callout">
+        <strong>Aksiyon:</strong> İlk etapta 8 sembolden sade sosyal medya serisi üretilecek. Tüm 20 sembol daha sonra web rehberi ve içerik bankasına dönüştürülecek.
+      </div>
+
+      <div class="footer-note"><span>GoldMoodAstro Sosyal Medya Stratejisi</span><span>6</span></div>
+    </div>
+  </section>
+
+  <section class="page">
+    <div class="sheet">
+      <div class="header">
+        <div>
+          <div class="section-kicker">Organik büyüme</div>
+          <h2>Takipçi kazanma stratejisi</h2>
+        </div>
+        <span class="pill">Bot yok • satın alma yok</span>
+      </div>
+
+      <div class="summary">
+        <div class="box dark">
+          <h3>Ana prensip</h3>
+          <p>
+            GoldMoodAstro takipçi kazanımında toplu takipçi ekleme, bot, satın alma veya agresif paylaşım yöntemi kullanılmaz.
+            Önce profilin güven veren bir içerik arşivi oluşur; sonra kontrollü organik büyüme başlatılır.
+          </p>
+          <p>
+            Temel fikir: <strong>Önce sayfayı değerli göster, sonra insanları davet et.</strong>
+          </p>
+        </div>
+        <div class="box">
+          <h3>Neden yavaş başlamak doğru?</h3>
+          <ul>
+            <li>Boş veya dağınık profil yeni takipçiyi tutmaz.</li>
+            <li>İlk izlenim marka güveni için kritiktir.</li>
+            <li>Organik takipçi, sahte takipçiden daha değerlidir.</li>
+            <li>Algoritma gerçek yorum/paylaşım sinyalini daha sağlıklı okur.</li>
+          </ul>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Faz</th><th>Süre</th><th>Amaç</th><th>Yapılacaklar</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1. İçerik birikimi</td>
+            <td>2–4 hafta</td>
+            <td>Profilin dolu, kaliteli ve güvenilir görünmesi</td>
+            <td>Günlük burç carousel, haftalık reel, yeniay/dolunay, tarot, rüya, kahve, numeroloji, spiritüel semboller, danışman içerikleri</td>
+          </tr>
+          <tr>
+            <td>2. Yakın çevre tanıtımı</td>
+            <td>İçerik oturduktan sonra</td>
+            <td>İlk gerçek ve ilgili kitleyi toplamak</td>
+            <td>Tanıdık çevre, danışman çevresi, story repost, WhatsApp duyurusu, yumuşak takip çağrısı</td>
+          </tr>
+          <tr>
+            <td>3. Etkileşim büyümesi</td>
+            <td>Sürekli</td>
+            <td>Yorum, kaydetme ve paylaşım üzerinden keşfete çıkmak</td>
+            <td>Kart seç, ilk gördüğün kelime, rüyanı yaz, yükselenini yaz, mizah/gündem reel</td>
+          </tr>
+          <tr>
+            <td>4. Topluluk</td>
+            <td>Profil hareketlenince</td>
+            <td>Sayfayı sadece yayın yapan değil, cevap veren marka yapmak</td>
+            <td>Danışman soru-cevap, yorumlardan seçtik, canlı yayın duyurusu, haftanın danışmanı</td>
+          </tr>
+          <tr>
+            <td>5. Otomasyon</td>
+            <td>Strateji oturunca</td>
+            <td>Planlı ve ölçülebilir yayın düzeni</td>
+            <td>Otomatik taslak, günlük carousel üretimi, plan ekranı, performans analizi</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="cards">
+        <div class="mini-card"><b>Takip getiren içerik</b><span>Merak uyandırır, yorum yazdırır, paylaşılmak ister.</span></div>
+        <div class="mini-card"><b>Tutunduran içerik</b><span>Günlük yorum, ay fazı, öğretici ve kaydedilebilir içerik.</span></div>
+        <div class="mini-card"><b>Dönüştüren içerik</b><span>Danışman profiline, ücretsiz analize veya kişisel yoruma yönlendirir.</span></div>
+      </div>
+
+      <div class="callout">
+        <strong>Yayın disiplini:</strong> Plan dışına çıkılabilir; ancak ana ritim bozulmamalı. Gündem veya mizah içerikleri destekleyici olmalı,
+        günlük burç carousel ve yeniay/dolunay paketleri ana iskelet olarak devam etmelidir.
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Yapılacak</th><th>Yapılmayacak</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Gerçek yorum üreten içerik formatlarını artırmak</td>
+            <td>Takipçi satın almak veya bot kullanmak</td>
+          </tr>
+          <tr>
+            <td>Danışmanların kendi çevresinde doğal paylaşım yapması</td>
+            <td>Sayfayı hazır olmadan agresif şekilde yaymak</td>
+          </tr>
+          <tr>
+            <td>Haftalık performansa göre içerik formatlarını çoğaltmak</td>
+            <td>Sadece beğeniye bakıp dönüşümü ihmal etmek</td>
+          </tr>
+          <tr>
+            <td>Yorumlara cevap vererek topluluk hissi yaratmak</td>
+            <td>Yorumları cevapsız bırakmak</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="footer-note"><span>GoldMoodAstro Sosyal Medya Stratejisi</span><span>7</span></div>
+    </div>
+  </section>
+</body>
+</html>

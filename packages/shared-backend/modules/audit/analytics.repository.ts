@@ -17,6 +17,10 @@ type AnalyticsDateRangeOpts = {
   exclude_localhost?: AuditBoolLike;
 };
 
+function shouldExcludeLocalTraffic(v: AuditBoolLike): boolean {
+  return typeof v === 'undefined' || isTruthyBoolLike(v);
+}
+
 /* ---- helper: date range conditions ---- */
 function dateRangeConds(opts: AnalyticsDateRangeOpts): SQL[] {
   const conds: SQL[] = [];
@@ -26,7 +30,7 @@ function dateRangeConds(opts: AnalyticsDateRangeOpts): SQL[] {
   if (opts.created_to?.trim()) {
     conds.push(lte(auditRequestLogs.created_at, sql`CAST(${opts.created_to.trim()} AS DATETIME(3))`));
   }
-  if (typeof opts.exclude_localhost !== 'undefined' && isTruthyBoolLike(opts.exclude_localhost)) {
+  if (shouldExcludeLocalTraffic(opts.exclude_localhost)) {
     conds.push(excludeLocalhostCond(auditRequestLogs));
   }
   // Admin panel trafiği (kendi çalışmalarımız) site istatistiklerine sayılmaz.
@@ -404,7 +408,7 @@ export type AuditSummary = {
 
 export async function repoGetAuditSummary(opts?: { exclude_localhost?: AuditBoolLike }): Promise<AuditSummary> {
   const baseConds: SQL[] = [sql`DATE(${auditRequestLogs.created_at}) = CURDATE()`];
-  if (opts?.exclude_localhost && isTruthyBoolLike(opts.exclude_localhost)) {
+  if (shouldExcludeLocalTraffic(opts?.exclude_localhost)) {
     baseConds.push(excludeLocalhostCond(auditRequestLogs));
   }
   // Admin panel trafiği hariç (site istatistiği).
@@ -475,7 +479,7 @@ export async function repoGetMonthlyAggregation(opts: {
 }): Promise<MonthlyRow[]> {
   const monthCount = Math.min(Math.max(opts.months ?? 12, 1), 24);
   const conds: SQL[] = [sql`${auditRequestLogs.created_at} >= DATE_SUB(CURDATE(), INTERVAL ${sql.raw(String(monthCount))} MONTH)`];
-  if (typeof opts.exclude_localhost !== 'undefined' && isTruthyBoolLike(opts.exclude_localhost)) {
+  if (shouldExcludeLocalTraffic(opts.exclude_localhost)) {
     conds.push(excludeLocalhostCond(auditRequestLogs));
   }
   // Admin panel trafiği hariç (site istatistiği).

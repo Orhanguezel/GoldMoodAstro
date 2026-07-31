@@ -22,6 +22,7 @@ import { useBrand } from '@/hooks/useBrand';
 import { localizePath } from '@/integrations/shared';
 import { trackEvent } from '@/integrations/telemetry';
 import { gaEvent } from '@/lib/ga';
+import { fbEvent, metaEventId } from '@/lib/fbpixel';
 
 import PageContainer from '@/components/common/PageContainer';
 
@@ -101,6 +102,14 @@ const Register: React.FC = () => {
       if (resp.access_token) tokenStore.set(resp.access_token);
       trackEvent('signup_complete', { method: 'email' }).catch(() => {});
       gaEvent('sign_up', { method: 'email' });
+      const registeredUserId = String(
+        (resp as unknown as { user?: { id?: string }; user_id?: string }).user?.id ??
+        (resp as unknown as { user_id?: string }).user_id ??
+        '',
+      ).trim();
+      if (registeredUserId) {
+        fbEvent('CompleteRegistration', { content_name: 'email_registration', status: true }, metaEventId.registration(registeredUserId));
+      }
       const verifyUrl = new URL(
         `${localizePath(locale, '/verify-email')}?mode=pending&email=${encodeURIComponent(email.trim())}`,
         'http://x',

@@ -52,6 +52,16 @@ function parseFirstIpFromXff(xff: string): string {
   );
 }
 
+function parseAuditExcludeIps(): string[] {
+  const raw = (env as { AUDIT_EXCLUDE_IPS?: unknown }).AUDIT_EXCLUDE_IPS ?? process.env.AUDIT_EXCLUDE_IPS;
+  const values = Array.isArray(raw)
+    ? raw
+    : typeof raw === 'string'
+      ? raw.split(',')
+      : [];
+  return values.map((v) => String(v ?? '').trim()).filter(Boolean);
+}
+
 /* -------------------- shouldSkip -------------------- */
 function resolveIsAdmin(req: FastifyRequest): boolean {
   const request = req as any;
@@ -81,9 +91,7 @@ export function shouldSkipAuditLog(req: FastifyRequest): boolean {
   if (path.startsWith('/api/admin/')) return true;
   if (resolveIsAdmin(req)) return true;
 
-  const excludeIps = Array.isArray((env as { AUDIT_EXCLUDE_IPS?: unknown }).AUDIT_EXCLUDE_IPS)
-    ? ((env as { AUDIT_EXCLUDE_IPS?: unknown[] }).AUDIT_EXCLUDE_IPS ?? [])
-    : [];
+  const excludeIps = parseAuditExcludeIps();
   if (excludeIps.length > 0) {
     const ip = normalizeClientIp(req);
     if (ip && excludeIps.includes(ip)) return true;

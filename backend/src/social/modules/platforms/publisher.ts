@@ -43,6 +43,15 @@ export function isStoryPost(post: { title?: string | null; sourceRef?: string | 
   return title.includes("[STORY]") || /(^|[-:_])story/.test(ref);
 }
 
+/**
+ * Reel isareti: title "[REEL]" veya sourceRef "reel" geciyorsa video/reel yayini denenir.
+ */
+export function isReelPost(post: { title?: string | null; sourceRef?: string | null }): boolean {
+  const title = (post.title || "").toUpperCase();
+  const ref = (post.sourceRef || "").toLowerCase();
+  return title.includes("[REEL]") || /(^|[-:_])reel/.test(ref);
+}
+
 // Platform gruplari: hangi platform degerinde hangi kanallar yayinlanir
 function resolvePlatforms(platform: string) {
   return {
@@ -71,6 +80,7 @@ function canUseXEnvFallback(tenantKey: string): boolean {
 
 type PublishTargets = ReturnType<typeof resolvePlatforms>;
 type PostproxyPlatform = "facebook" | "instagram" | "twitter" | "linkedin";
+const PUBLIC_BASE = (process.env.SOCIAL_PUBLIC_BASE || process.env.PUBLIC_URL || "https://goldmoodastro.com").replace(/\/$/, "");
 
 const POSTPROXY_PLATFORM_MAP: Partial<Record<keyof PublishTargets, PostproxyPlatform>> = {
   facebook: "facebook",
@@ -96,9 +106,11 @@ function collectPostproxyMedia(post: typeof socialPosts.$inferSelect): string[] 
 
 function shouldUseNativeForSpecialPost(post: typeof socialPosts.$inferSelect, targets: PublishTargets): boolean {
   return Boolean(
-    targets.telegram ||
+      targets.telegram ||
       targets.youtube ||
       (targets.instagram && isStoryPost(post)) ||
+      ((targets.instagram || targets.facebook) && isReelPost(post)) ||
+      (targets.facebook && isStoryPost(post)) ||
       (targets.x && post.xThreadGroup),
   );
 }
@@ -189,6 +201,28 @@ function collectXMediaUrls(post: typeof socialPosts.$inferSelect): string[] {
     if (typeof url === "string" && url.trim()) urls.add(url.trim());
   }
   return [...urls];
+}
+
+function collectMediaUrls(post: typeof socialPosts.$inferSelect): string[] {
+  const urls = new Set<string>();
+  if (post.imageUrl?.trim()) urls.add(toPublicUrl(post.imageUrl.trim()));
+  for (const url of post.mediaUrls ?? []) {
+    if (typeof url === "string" && url.trim()) urls.add(toPublicUrl(url.trim()));
+  }
+  return [...urls];
+}
+
+function toPublicUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${PUBLIC_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
+function pickVideoUrl(post: typeof socialPosts.$inferSelect): string | null {
+  return collectMediaUrls(post).find(isProbablyVideoUrl) ?? null;
+}
+
+function pickImageUrl(post: typeof socialPosts.$inferSelect): string | null {
+  return collectMediaUrls(post).find((url) => !isProbablyVideoUrl(url)) ?? null;
 }
 
 async function uploadXMediaUrl(creds: OAuth1Creds, url: string): Promise<{ mediaId: string; mimeType: string }> {
@@ -498,8 +532,24 @@ export async function publishPost(postId: number): Promise<PublishResult> {
         throw new Error(`Tenant (${tenantKey}) icin Facebook hesabi bagli degil`);
       }
       let fbResult;
-      if (post.imageUrl) {
-        fbResult = await facebook.publishPhotoPost(post.imageUrl, caption, {
+      if (isReelPost(post)) {
+        const videoUrl = pickVideoUrl(post);
+        if (!videoUrl) throw new Error("Reel icin public video URL gerekli (.mp4/.mov/.m4v/.webm)");
+        fbResult = await facebook.publishReel(videoUrl, caption, {
+          pageId: fbAccount.pageId,
+          pageAccessToken: fbAccessToken,
+        });
+      } else if (isStoryPost(post)) {
+        const imageUrl = pickImageUrl(post);
+        if (!imageUrl) throw new Error("Facebook Story icin gorsel URL gerekli");
+        fbResult = await facebook.publishPhotoStory(imageUrl, {
+          pageId: fbAccount.pageId,
+          pageAccessToken: fbAccessToken,
+        });
+      } else if (post.imageUrl) {
+        const imageUrl = pickImageUrl(post);
+        if (!imageUrl) throw new Error("Facebook foto post icin gorsel URL gerekli");
+        fbResult = await facebook.publishPhotoPost(imageUrl, caption, {
           pageId: fbAccount.pageId,
           pageAccessToken: fbAccessToken,
         });
@@ -521,7 +571,7 @@ export async function publishPost(postId: number): Promise<PublishResult> {
   // ─── Instagram ──────────────────────────────────────────
   if (targets.instagram) {
     try {
-      if (!post.imageUrl) {
+      if (!post.imageUrl && !pickVideoUrl(post)) {
         result.errors.push("Instagram: Gorsel olmadan post paylasilamaz");
         if (!targets.facebook) result.success = false;
       } else {
@@ -533,11 +583,26 @@ export async function publishPost(postId: number): Promise<PublishResult> {
         }
         // Story mu, feed postu mu? (sema degisikligi yok — title "[STORY]" veya sourceRef "story" isareti)
         const isStory = isStoryPost(post);
+        const isReel = isReelPost(post);
         // 2+ gorsel varsa CAROUSEL — kaydetme orani en yuksek format. Story haric.
-        const carouselUrls = (post.mediaUrls ?? []).filter((u): u is string => Boolean(u && u.trim()));
-        const useCarousel = !isStory && carouselUrls.length >= 2;
-        const igResult = isStory
-          ? await instagram.publishStory(post.imageUrl, {
+        const carouselUrls = collectMediaUrls(post).filter((u) => !isProbablyVideoUrl(u));
+        const useCarousel = !isStory && !isReel && carouselUrls.length >= 2;
+        const igResult = isReel
+          ? await instagram.publishReel((() => {
+              const videoUrl = pickVideoUrl(post);
+              if (!videoUrl) throw new Error("Reel icin public video URL gerekli (.mp4/.mov/.m4v/.webm)");
+              return videoUrl;
+            })(), caption, {
+              accountId: igAccount.accountId,
+              accessToken: igAccessToken,
+              coverUrl: pickImageUrl(post) ?? undefined,
+            })
+          : isStory
+          ? await instagram.publishStory((() => {
+              const imageUrl = pickImageUrl(post);
+              if (!imageUrl) throw new Error("Instagram Story icin gorsel URL gerekli");
+              return imageUrl;
+            })(), {
               accountId: igAccount.accountId,
               accessToken: igAccessToken,
             })
@@ -546,7 +611,11 @@ export async function publishPost(postId: number): Promise<PublishResult> {
                 accountId: igAccount.accountId,
                 accessToken: igAccessToken,
               })
-            : await instagram.publishPhotoPost(post.imageUrl, caption, {
+            : await instagram.publishPhotoPost((() => {
+                const imageUrl = pickImageUrl(post);
+                if (!imageUrl) throw new Error("Instagram foto post icin gorsel URL gerekli");
+                return imageUrl;
+              })(), caption, {
                 accountId: igAccount.accountId,
                 accessToken: igAccessToken,
               });

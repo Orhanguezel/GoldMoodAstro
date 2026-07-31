@@ -14,6 +14,11 @@ interface FBError {
   };
 }
 
+function graphError(data: unknown, fallback: string) {
+  const message = (data as { error?: { message?: unknown } } | null)?.error?.message;
+  return typeof message === "string" && message.trim() ? message : fallback;
+}
+
 // ─── Metin + Link Postu ─────────────────────────────────────
 export async function publishTextPost(
   message: string,
@@ -77,6 +82,110 @@ export async function publishPhotoPost(
   return data as FBPostResult;
 }
 
+// ─── Facebook Story (Foto) ──────────────────────────────────
+/**
+ * Page Story yayını: önce unpublished photo oluşturur, sonra photo_stories endpoint'i
+ * ile story olarak yayınlar. Story'de caption garantili görünmez; görsel ana içeriktir.
+ */
+export async function publishPhotoStory(
+  imageUrl: string,
+  opts?: { pageId?: string; pageAccessToken?: string },
+): Promise<FBPostResult> {
+  const pageId = opts?.pageId || env.FB_PAGE_ID;
+  const token = opts?.pageAccessToken || env.FB_PAGE_ACCESS_TOKEN;
+  if (!pageId || !token) throw new Error("Facebook yapilandirmasi eksik");
+
+  const photoRes = await fetch(`${FB_GRAPH_URL}/${pageId}/photos`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      url: imageUrl,
+      published: false,
+      access_token: token,
+    }),
+  });
+  const photoData = (await photoRes.json()) as any;
+  if (!photoRes.ok) {
+    throw new Error(`Facebook story foto hazirlama hatasi: ${photoData?.error?.message || photoRes.statusText}`);
+  }
+  const photoId = String(photoData.id || "");
+  if (!photoId) throw new Error("Facebook story icin photo_id donmedi");
+
+  const storyRes = await fetch(`${FB_GRAPH_URL}/${pageId}/photo_stories`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      photo_id: photoId,
+      access_token: token,
+    }),
+  });
+  const storyData = (await storyRes.json()) as any;
+  if (!storyRes.ok) {
+    throw new Error(`Facebook story yayinlama hatasi: ${storyData?.error?.message || storyRes.statusText}`);
+  }
+  return { id: String(storyData.id || storyData.post_id || photoId) };
+}
+
+// ─── Facebook Reel (Video) ──────────────────────────────────
+/**
+ * Facebook Page Reel yayını. `videoUrl` public erişilebilir MP4/MOV olmalıdır.
+ * Graph API'nin resumable upload akışını kullanır: start -> transfer -> finish.
+ */
+export async function publishReel(
+  videoUrl: string,
+  description: string,
+  opts?: { pageId?: string; pageAccessToken?: string },
+): Promise<FBPostResult> {
+  const pageId = opts?.pageId || env.FB_PAGE_ID;
+  const token = opts?.pageAccessToken || env.FB_PAGE_ACCESS_TOKEN;
+  if (!pageId || !token) throw new Error("Facebook yapilandirmasi eksik");
+
+  const startRes = await fetch(`${FB_GRAPH_URL}/${pageId}/video_reels`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      upload_phase: "start",
+      access_token: token,
+    }),
+  });
+  const startData = (await startRes.json()) as any;
+  if (!startRes.ok) {
+    throw new Error(`Facebook reel baslatma hatasi: ${startData?.error?.message || startRes.statusText}`);
+  }
+  const videoId = String(startData.video_id || startData.id || "");
+  const uploadUrl = String(startData.upload_url || "");
+  if (!videoId || !uploadUrl) throw new Error("Facebook reel upload bilgisi donmedi");
+
+  const transferRes = await fetch(uploadUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `OAuth ${token}`,
+      file_url: videoUrl,
+    },
+  });
+  const transferData = (await transferRes.json().catch(() => ({}))) as any;
+  if (!transferRes.ok) {
+    throw new Error(`Facebook reel video yukleme hatasi: ${transferData?.error?.message || transferRes.statusText}`);
+  }
+
+  const finishRes = await fetch(`${FB_GRAPH_URL}/${pageId}/video_reels`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      upload_phase: "finish",
+      video_id: videoId,
+      video_state: "PUBLISHED",
+      description,
+      access_token: token,
+    }),
+  });
+  const finishData = (await finishRes.json()) as any;
+  if (!finishRes.ok) {
+    throw new Error(`Facebook reel yayinlama hatasi: ${finishData?.error?.message || finishRes.statusText}`);
+  }
+  return { id: String(finishData.post_id || finishData.id || videoId) };
+}
+
 // ─── Post Metriklerini Cek ──────────────────────────────────
 export async function getPostInsights(postId: string) {
   const token = env.FB_PAGE_ACCESS_TOKEN;
@@ -115,7 +224,7 @@ export async function getPagePosts(
   // yoksa Graph #10 verir. Once zengin alanlarla dene, #10 alirsak guvenli alanlara dus.
   const richFields = [
     ...safeFields,
-    "reactions.summary(total_count).limit(0)",
+    "likes.summary(total_count).limit(0)",
     "comments.summary(total_count).limit(0)",
   ];
 
@@ -150,6 +259,94 @@ export async function getPagePosts(
   }));
 
   return { items, engagement: withEngagement };
+}
+
+// ─── Gonderi Detayi + Yorumlar ──────────────────────────────
+export async function getPagePostDetails(
+  postId: string,
+  opts?: { pageAccessToken?: string },
+) {
+  const token = opts?.pageAccessToken || env.FB_PAGE_ACCESS_TOKEN;
+  if (!postId || !token) throw new Error("Facebook post ID/token eksik");
+
+  const fields = [
+    "id",
+    "name",
+    "created_time",
+    "link",
+    "picture",
+    "images",
+    "likes.summary(total_count).limit(0)",
+    "comments.summary(total_count).limit(50){id,message,created_time,from,like_count,comments.limit(20){id,message,created_time,from,like_count}}",
+  ].join(",");
+
+  let data: any;
+  let commentsReadable = true;
+  const res = await fetch(
+    `${FB_GRAPH_URL}/${encodeURIComponent(postId)}?fields=${encodeURIComponent(fields)}&access_token=${token}`,
+  );
+  data = await res.json();
+  if (!res.ok) {
+    commentsReadable = false;
+    const fallbackFields = "id,name,created_time,link,picture,images";
+    const fallbackRes = await fetch(
+      `${FB_GRAPH_URL}/${encodeURIComponent(postId)}?fields=${encodeURIComponent(fallbackFields)}&access_token=${token}`,
+    );
+    data = await fallbackRes.json();
+    if (!fallbackRes.ok) throw new Error(`Facebook detay hatasi: ${graphError(data, fallbackRes.statusText)}`);
+  }
+
+  const normalizeComment = (comment: any) => ({
+    id: String(comment?.id || ""),
+    authorName: typeof comment?.from?.name === "string" ? comment.from.name : null,
+    authorId: typeof comment?.from?.id === "string" ? comment.from.id : null,
+    message: typeof comment?.message === "string" ? comment.message : "",
+    likeCount: Number(comment?.like_count ?? 0),
+    createdTime: comment?.created_time || null,
+    replies: Array.isArray(comment?.comments?.data)
+      ? comment.comments.data.map((reply: any) => ({
+          id: String(reply?.id || ""),
+          authorName: typeof reply?.from?.name === "string" ? reply.from.name : null,
+          authorId: typeof reply?.from?.id === "string" ? reply.from.id : null,
+          message: typeof reply?.message === "string" ? reply.message : "",
+          likeCount: Number(reply?.like_count ?? 0),
+          createdTime: reply?.created_time || null,
+        }))
+      : [],
+  });
+
+  return {
+    externalId: data.id,
+    message: data.message || data.name || "",
+    createdTime: data.created_time || null,
+    permalink: data.permalink_url || data.link || null,
+    imageUrl: data.full_picture || data.images?.[0]?.source || data.picture || null,
+    likes: data.likes?.summary?.total_count ?? null,
+    comments: data.comments?.summary?.total_count ?? null,
+    shares: data.shares?.count ?? 0,
+    commentsReadable,
+    commentItems: Array.isArray(data.comments?.data) ? data.comments.data.map(normalizeComment) : [],
+  };
+}
+
+export async function replyToComment(
+  commentId: string,
+  message: string,
+  opts?: { pageAccessToken?: string },
+) {
+  const token = opts?.pageAccessToken || env.FB_PAGE_ACCESS_TOKEN;
+  const text = message.trim();
+  if (!commentId || !token) throw new Error("Facebook yorum ID/token eksik");
+  if (!text) throw new Error("Cevap metni gerekli");
+
+  const res = await fetch(`${FB_GRAPH_URL}/${encodeURIComponent(commentId)}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: text, access_token: token }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`Facebook yorum cevap hatasi: ${graphError(data, res.statusText)}`);
+  return data as FBPostResult;
 }
 
 // ─── Sayfa Bilgilerini Al ───────────────────────────────────

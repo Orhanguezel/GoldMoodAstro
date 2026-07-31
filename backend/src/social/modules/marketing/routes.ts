@@ -305,7 +305,7 @@ export async function marketingRoutes(app: FastifyInstance) {
       const data = await refreshGscIndex(tenantKey, siteUrl, {
         websiteUrl: row.websiteUrl,
         force: body.force === true,
-        limit: Number(body.limit ?? 50),
+        limit: Number(body.limit ?? 500),
       });
       return reply.send({ configured: true, siteUrl, ...data });
     } catch (err) {

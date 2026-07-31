@@ -13,6 +13,69 @@ import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieCh
 type PlatformKey = "ga4" | "gsc" | "google_ads" | "gtm" | "merchant" | "meta";
 type TabKey = "analysis" | "changes" | "settings";
 
+const GM_CHART = {
+  gold: "var(--brand-gold, #B89651)",
+  goldStrong: "var(--brand-gold-strong, #A8884A)",
+  goldSoft: "var(--brand-gold-soft, rgba(184, 150, 81, 0.08))",
+  goldBorder: "var(--brand-gold-border, rgba(184, 150, 81, 0.22))",
+  ink: "var(--brand-ink, #1A1715)",
+  cream: "var(--brand-cream, #FAF6EF)",
+  success: "var(--color-gm-success, #4CAF6E)",
+  warning: "var(--color-gm-warning, #F0A030)",
+  error: "var(--color-gm-error, #E55B4D)",
+};
+
+const goldTooltipStyle = {
+  borderRadius: 14,
+  border: `1px solid ${GM_CHART.goldBorder}`,
+  background: GM_CHART.cream,
+  color: GM_CHART.ink,
+  fontSize: 12,
+  fontWeight: 800,
+  boxShadow: "0 18px 48px rgba(26, 23, 21, 0.12)",
+};
+
+const ga4ServiceFunnelLabels: Record<string, string> = {
+  session_start: "Site ziyareti",
+  view_item: "Danışman / hizmet inceleme",
+  add_to_cart: "Randevu seçimine geçiş",
+  begin_checkout: "Ödeme başlatma",
+  add_payment_info: "Ödeme bilgisi",
+  purchase: "Randevu / ödeme tamamlandı",
+};
+
+function ga4ServiceFunnelLabel(step: unknown): string {
+  const key = String(step ?? "");
+  return ga4ServiceFunnelLabels[key] ?? key.replaceAll("_", " ");
+}
+
+function humanizeGa4Warning(message: string): string {
+  return Object.entries(ga4ServiceFunnelLabels).reduce(
+    (text, [eventName, label]) => text.replaceAll(eventName, label),
+    message
+      .replaceAll("E-ticaret event'i", "Randevu dönüşüm event'i")
+      .replaceAll("e-ticaret funnel'i", "randevu dönüşüm hunisi")
+      .replaceAll("e-ticaret değilse normal; e-ticaret ise", "bu adımlar henüz kurulmadıysa normal; ölçmek istiyorsak")
+      .replaceAll("GTM/dataLayer kurulumu eksik", "GTM/dataLayer kurulumu tamamlanmalı"),
+  );
+}
+
+function humanizeGa4ConfigError(error?: string | null): string | null {
+  if (!error) return null;
+  const value = String(error);
+  if (
+    value.includes("analyticsadmin.googleapis.com") ||
+    value.includes("Google Analytics Admin API has not been used") ||
+    value.includes("it is disabled")
+  ) {
+    return "GA4 Admin API kapalı. Trafik raporları çalışır; veri akışları, key event, özel boyut ve audience yönetimi için Google Cloud Console’da Analytics Admin API etkinleştirilmeli.";
+  }
+  if (value.includes("insufficient") || value.includes("permission") || value.includes("Permission")) {
+    return "GA4 yönetim bilgileri için yetki eksik. Bağlı Google hesabına Analytics Admin görüntüleme/yönetim yetkisi verilmeli.";
+  }
+  return value;
+}
+
 const platformMeta: Record<PlatformKey, { title: string; eyebrow: string; description: string; icon: React.ReactNode }> = {
   ga4: {
     title: "GA4 Analitiği",
@@ -821,6 +884,7 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
   const [searchType, setSearchType] = useState("web");
   const [drilldown, setDrilldown] = useState<{ page: string; rows: any[]; error?: string } | null>(null);
   const [gscLoading, setGscLoading] = useState(false);
+  const [gscTab, setGscTab] = useState("not-indexed");
   const fallbackTotals = topQueries.reduce(
     (acc: { clicks: number; impressions: number }, row: any) => ({
       clicks: acc.clicks + Number(row?.clicks ?? 0),
@@ -878,8 +942,8 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
     if (!tenantKey) return;
     setGscLoading(true);
     try {
-      await marketing.refreshGscIndex(tenantKey, { force, limit: 100 });
-      const next = await marketing.gscIndex(tenantKey, 300);
+      await marketing.refreshGscIndex(tenantKey, { force, limit: 500 });
+      const next = await marketing.gscIndex(tenantKey, 500);
       setIndexState(next);
     } finally {
       setGscLoading(false);
@@ -893,7 +957,9 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
   const isIndexedRow = (row: any) => {
     const v = String(row?.verdict ?? "");
     const cs = String(row?.coverage_state ?? "").toLowerCase();
-    return v === "PASS" || cs.includes("indexed");
+    if (v === "PASS") return true;
+    if (cs.includes("currently not indexed") || cs.includes("not indexed")) return false;
+    return cs.includes("submitted and indexed") || cs.includes("indexed, not submitted");
   };
   const fixPath = (coverageState: string): { type: string; tone: string; hint: string } => {
     const s = String(coverageState ?? "").toLowerCase();
@@ -915,6 +981,18 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
       return acc;
     }, {}),
   ).sort((a: any, b: any) => b.urls.length - a.urls.length) as any[];
+  const gscTabs = [
+    { key: "not-indexed", label: "İndexlenmeyenler", count: notIndexedItems.length },
+    { key: "index-urls", label: "Index URL'leri", count: indexItems.length },
+    { key: "daily", label: "Günlük Seri", count: dateRows.length },
+    { key: "countries", label: "Ülke", count: countryRows.length },
+    { key: "opportunities", label: "CTR Fırsatları", count: opportunities.length },
+    { key: "queries", label: "Top Queries", count: topQueries.length },
+    { key: "pages", label: "Top Pages", count: topPages.length },
+    { key: "devices", label: "Cihaz", count: deviceRows.length },
+    { key: "query-pages", label: "Query + Page", count: queryPageRows.length },
+    { key: "sitemaps", label: "Sitemap", count: sitemaps.length },
+  ];
 
   return (
     <div className="space-y-6">
@@ -981,7 +1059,25 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
         </div>
       </div>
 
-      {/* İndexlenmeyen sayfalar — sebep + düzeltme yolu */}
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-2">
+        {gscTabs.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setGscTab(tab.key)}
+            className={`rounded-xl px-3 py-2 text-xs font-black transition-all ${
+              gscTab === tab.key ? "bg-slate-900 text-white shadow-card" : "bg-white text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            {tab.label}
+            <span className={`ml-2 rounded-full px-1.5 py-0.5 text-[10px] ${gscTab === tab.key ? "bg-white/15 text-white" : "bg-brand-50 text-brand-700"}`}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {gscTab === "not-indexed" && (
       <div className="space-y-3 rounded-2xl border border-rose-100 bg-rose-50/40 p-4">
         <div>
           <p className="text-sm font-black text-slate-900">İndexlenmeyen Sayfalar — Sebep & Düzeltme</p>
@@ -1023,9 +1119,10 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
           })
         )}
       </div>
+      )}
 
       <div className="space-y-4">
-        <GscTable
+        {gscTab === "index-urls" && <GscTable
           title="Index URL'leri"
           columns={["URL", "Durum", "Coverage", "Öneri", "Kontrol"]}
           widths={["minmax(0,2fr)", "110px", "minmax(0,1fr)", "minmax(0,1fr)", "120px"]}
@@ -1037,8 +1134,8 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
             row?.checked_at ? new Date(row.checked_at).toLocaleString("tr-TR") : "-",
           ])}
           error={indexState?.error}
-        />
-        <GscTable
+        />}
+        {gscTab === "daily" && <GscTable
           title="Günlük Seri"
           columns={["Tarih", "Tık", "Gösterim", "CTR", "Pozisyon"]}
           widths={["minmax(0,1fr)", "90px", "100px", "80px", "90px"]}
@@ -1049,8 +1146,8 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
             formatPercent(row?.ctr),
             formatPosition(row?.position),
           ])}
-        />
-        <GscTable
+        />}
+        {gscTab === "countries" && <GscTable
           title="Ülke Kırılımı"
           columns={["Ülke", "Tık", "Gösterim", "CTR", "Pozisyon"]}
           widths={["minmax(0,1fr)", "90px", "100px", "80px", "90px"]}
@@ -1061,8 +1158,8 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
             formatPercent(row?.ctr),
             formatPosition(row?.position),
           ])}
-        />
-        <GscTable
+        />}
+        {gscTab === "opportunities" && <GscTable
           title="CTR Fırsatları"
           columns={["Query / Page", "Tık", "Gösterim", "CTR", "Pozisyon"]}
           widths={["minmax(0,2.2fr)", "90px", "100px", "80px", "90px"]}
@@ -1073,8 +1170,8 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
             formatPercent(row?.ctr),
             formatPosition(row?.position),
           ])}
-        />
-        <GscTable
+        />}
+        {gscTab === "queries" && <GscTable
           title="Top Queries"
           columns={["Query", "Tık", "Gösterim", "CTR", "Pozisyon"]}
           widths={["minmax(0,2fr)", "90px", "100px", "80px", "90px"]}
@@ -1085,8 +1182,8 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
             formatPercent(row?.ctr),
             formatPosition(row?.position),
           ])}
-        />
-        <GscTable
+        />}
+        {gscTab === "pages" && <GscTable
           title="Top Pages"
           columns={["Page", "Tık", "Gösterim", "CTR", "Aksiyon"]}
           widths={["minmax(0,2.2fr)", "90px", "100px", "80px", "105px"]}
@@ -1099,8 +1196,8 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
               Sorgular
             </button>,
           ])}
-        />
-        {drilldown && (
+        />}
+        {gscTab === "pages" && drilldown && (
           <GscTable
             title={`Sayfa Sorguları: ${drilldown.page}`}
             columns={["Query", "Tık", "Gösterim", "CTR", "Pozisyon"]}
@@ -1115,7 +1212,7 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
             error={drilldown.error}
           />
         )}
-        <GscTable
+        {gscTab === "devices" && <GscTable
           title="Cihaz Kırılımı"
           columns={["Cihaz", "Tık", "Gösterim", "CTR", "Pozisyon"]}
           widths={["minmax(0,1fr)", "90px", "100px", "80px", "90px"]}
@@ -1126,8 +1223,8 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
             formatPercent(row?.ctr),
             formatPosition(row?.position),
           ])}
-        />
-        <GscTable
+        />}
+        {gscTab === "query-pages" && <GscTable
           title="Query + Page"
           columns={["Query", "Page", "Tık", "Gösterim", "Pozisyon"]}
           widths={["minmax(0,1.2fr)", "minmax(0,1.8fr)", "90px", "100px", "90px"]}
@@ -1138,14 +1235,14 @@ function GscAnalysis({ analysis, tenantKey }: { analysis: any; tenantKey: string
             row?.impressions ?? 0,
             formatPosition(row?.position),
           ])}
-        />
-        <GscTable
+        />}
+        {gscTab === "sitemaps" && <GscTable
           title="Coverage / Sitemap"
           columns={["Sitemap", "Tip", "Son Gönderim"]}
           widths={["minmax(0,2fr)", "120px", "140px"]}
           rows={sitemaps.map((row: any) => [row?.path ?? row?.sitemap ?? "-", row?.type ?? "-", row?.lastSubmitted ?? row?.lastDownloaded ?? "-"])}
           error={analysis?.coverage?.sitemapError}
-        />
+        />}
       </div>
     </div>
   );
@@ -1217,7 +1314,7 @@ function GscPerformanceCharts({ dateRows, deviceRows }: { dateRows: any[]; devic
     impressions: Number(row?.impressions ?? 0),
     ctr: Number(row?.ctr ?? 0) * 100,
   }));
-  const pieColors = ["var(--brand-600)", "var(--status-info)", "var(--status-success)", "var(--status-warning)"];
+  const pieColors = [GM_CHART.gold, GM_CHART.goldStrong, GM_CHART.success, GM_CHART.warning];
   const deviceChartRows = deviceRows
     .map((row) => ({
       name: String(getGscKey(row, 0) || "Bilinmiyor").toUpperCase(),
@@ -1239,18 +1336,18 @@ function GscPerformanceCharts({ dateRows, deviceRows }: { dateRows: any[]; devic
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendRows} margin={{ top: 10, right: 18, left: 0, bottom: 4 }}>
-                <CartesianGrid stroke="var(--surface-100)" vertical={false} />
+                <CartesianGrid stroke={GM_CHART.goldBorder} vertical={false} />
                 <XAxis
                   dataKey="date"
                   minTickGap={16}
-                  tick={{ fontSize: 11, fill: "var(--text-faint)", fontWeight: 700 }}
+                  tick={{ fontSize: 11, fill: GM_CHART.ink, fontWeight: 700 }}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
                   yAxisId="left"
                   allowDecimals={false}
-                  tick={{ fontSize: 11, fill: "var(--text-faint)", fontWeight: 700 }}
+                  tick={{ fontSize: 11, fill: GM_CHART.ink, fontWeight: 700 }}
                   tickLine={false}
                   axisLine={false}
                   width={42}
@@ -1259,18 +1356,18 @@ function GscPerformanceCharts({ dateRows, deviceRows }: { dateRows: any[]; devic
                   yAxisId="right"
                   orientation="right"
                   allowDecimals={false}
-                  tick={{ fontSize: 11, fill: "var(--text-faint)", fontWeight: 700 }}
+                  tick={{ fontSize: 11, fill: GM_CHART.ink, fontWeight: 700 }}
                   tickLine={false}
                   axisLine={false}
                   width={48}
                 />
                 <Tooltip
-                  contentStyle={{ borderRadius: 12, border: "1px solid var(--surface-100)", fontSize: 12, fontWeight: 700 }}
+                  contentStyle={goldTooltipStyle}
                   formatter={(value, name) => [Number(value).toLocaleString("tr-TR"), name === "clicks" ? "Tıklama" : "Gösterim"]}
                 />
                 <Legend wrapperStyle={{ fontSize: 12, fontWeight: 800, paddingTop: 8 }} />
-                <Line yAxisId="left" type="monotone" dataKey="clicks" name="Tıklama" stroke="var(--brand-600)" strokeWidth={3} dot={false} activeDot={{ r: 4 }} />
-                <Line yAxisId="right" type="monotone" dataKey="impressions" name="Gösterim" stroke="var(--status-info)" strokeWidth={3} dot={false} activeDot={{ r: 4 }} />
+                <Line yAxisId="left" type="monotone" dataKey="clicks" name="Tıklama" stroke={GM_CHART.gold} strokeWidth={3} dot={false} activeDot={{ r: 4 }} />
+                <Line yAxisId="right" type="monotone" dataKey="impressions" name="Gösterim" stroke={GM_CHART.goldStrong} strokeWidth={3} dot={false} activeDot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -1303,7 +1400,7 @@ function GscPerformanceCharts({ dateRows, deviceRows }: { dateRows: any[]; devic
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ borderRadius: 12, border: "1px solid var(--surface-100)", fontSize: 12, fontWeight: 700 }}
+                  contentStyle={goldTooltipStyle}
                   formatter={(value) => [Number(value).toLocaleString("tr-TR"), "Tıklama"]}
                 />
                 <Legend wrapperStyle={{ fontSize: 12, fontWeight: 800 }} />
@@ -1384,14 +1481,14 @@ function Ga4Analysis({
         {isLead ? (
           <MetricCard label="Toplam Lead" value={String(leadTotal)} icon={<Target size={18} />} description={`${leadConversions} dönüşüm · form/WhatsApp/tel`} />
         ) : (
-          <MetricCard label="Revenue" value={metricDelta("purchaseRevenue")} icon={<ShoppingBag size={18} />} description="E-ticaret" />
+          <MetricCard label="Ödeme Geliri" value={metricDelta("purchaseRevenue")} icon={<ShoppingBag size={18} />} description="Danışmanlık / randevu" />
         )}
         <MetricCard label="Realtime" value={String(activeRealtimeUsers)} icon={<RefreshCw size={18} />} description="Aktif kullanıcı" />
       </div>
 
       {!isLead && funnelWarnings.length > 0 && (
         <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
-          <p className="text-xs font-black text-amber-800">{funnelWarnings.join(" · ")}</p>
+          <p className="text-xs font-black text-amber-800">{funnelWarnings.map(humanizeGa4Warning).join(" · ")}</p>
         </div>
       )}
 
@@ -1413,10 +1510,10 @@ function Ga4Analysis({
           />
         ) : (
           <Ga4Table
-            title="E-ticaret Funnel"
-            columns={["Adım", "Sayı", "Önceki", "Drop-off"]}
+            title="Randevu Dönüşüm Hunisi"
+            columns={["Adım", "Sayı", "Önceki", "Kayıp"]}
             rows={funnelSteps.map((row: any) => [
-              row.step,
+              ga4ServiceFunnelLabel(row.step),
               row.count,
               row.previous,
               row.dropOffPct == null ? "-" : `%${row.dropOffPct.toFixed(1)}`,
@@ -1437,8 +1534,8 @@ function Ga4Analysis({
         />
         {!isLead && (
           <Ga4Table
-            title="Ürün Bazlı E-ticaret"
-            columns={["Ürün", "Revenue", "Satın Alma", "Purchase Revenue"]}
+            title="Danışmanlık / Hizmet Detayı"
+            columns={["Hizmet / Danışman", "Görüntüleme", "Randevu", "Ödeme Geliri"]}
             rows={(analysis?.deepReport?.ecommerce ?? []).map((row: any) => [
               getDimension(row, 0),
               getMetric(row, 0),
@@ -1493,18 +1590,18 @@ function Ga4Analysis({
           error={analysis?.realtimeError}
         />
         <Ga4Table
-          title="Data Streams"
-          columns={["Ad", "Measurement", "Platform"]}
+          title="GA4 Veri Akışları"
+          columns={["Ad", "Ölçüm ID", "Platform"]}
           rows={(config.dataStreams ?? []).map((row: any) => [
             row?.displayName ?? row?.name ?? "-",
             row?.webStreamData?.measurementId ?? "-",
             row?.type ?? "-",
           ])}
-          error={config?.errors?.dataStreams}
+          error={humanizeGa4ConfigError(config?.errors?.dataStreams || config?.error)}
         />
         <Ga4Table
-          title="Key Events"
-          columns={["Event", "Resource", "Aksiyon"]}
+          title="Önemli Dönüşüm Eventleri"
+          columns={["Event", "Kaynak", "Aksiyon"]}
           rows={(config.keyEvents ?? []).map((row: any) => [
             row?.eventName ?? "-",
             row?.name ?? "-",
@@ -1514,10 +1611,10 @@ function Ga4Analysis({
               </button>
             ) : "-",
           ])}
-          error={config?.errors?.keyEvents}
+          error={humanizeGa4ConfigError(config?.errors?.keyEvents || config?.error)}
         />
         <Ga4Table
-          title="Custom Dimensions"
+          title="Özel Ölçüm Alanları"
           columns={["Parametre", "Scope", "Aksiyon"]}
           rows={(config.customDimensions ?? []).map((row: any) => [
             row?.parameterName ?? row?.displayName ?? "-",
@@ -1528,16 +1625,16 @@ function Ga4Analysis({
               </button>
             ) : "-",
           ])}
-          error={config?.errors?.customDimensions}
+          error={humanizeGa4ConfigError(config?.errors?.customDimensions || config?.error)}
         />
         <Ga4Table
-          title="Audiences / Ads Links"
-          columns={["Tip", "Ad / Customer", "Resource"]}
+          title="Kitleler / Reklam Bağlantıları"
+          columns={["Tip", "Ad / Müşteri", "Kaynak"]}
           rows={[
-            ...(config.audiences ?? []).map((row: any) => ["Audience", row?.displayName ?? "-", row?.name ?? "-"]),
-            ...(config.googleAdsLinks ?? []).map((row: any) => ["Ads Link", row?.customerId ?? "-", row?.name ?? "-"]),
+            ...(config.audiences ?? []).map((row: any) => ["Kitle", row?.displayName ?? "-", row?.name ?? "-"]),
+            ...(config.googleAdsLinks ?? []).map((row: any) => ["Reklam bağlantısı", row?.customerId ?? "-", row?.name ?? "-"]),
           ]}
-          error={config?.errors?.audiences || config?.errors?.googleAdsLinks}
+          error={humanizeGa4ConfigError(config?.errors?.audiences || config?.errors?.googleAdsLinks || config?.error)}
         />
       </div>
     </div>
@@ -1546,37 +1643,37 @@ function Ga4Analysis({
 
 function Ga4FunnelChart({ steps }: { steps: any[] }) {
   const rows = steps.map((step) => ({
-    step: String(step.step ?? "-").replaceAll("_", " "),
+    step: ga4ServiceFunnelLabel(step.step),
     count: Number(step.count ?? 0),
   }));
 
   return (
     <section className="rounded-[28px] border border-slate-100 bg-white p-4">
       <div className="mb-3">
-        <h3 className="text-sm font-black text-slate-900">E-ticaret Funnel Grafiği</h3>
-        <p className="mt-1 text-xs font-bold text-slate-400">Adım bazlı event sayısı; drop-off yüzdeleri tabloda detaylı.</p>
+        <h3 className="text-sm font-black text-slate-900">Randevu Dönüşüm Hunisi Grafiği</h3>
+        <p className="mt-1 text-xs font-bold text-slate-400">Ziyaretten randevu/ödeme tamamlanmasına kadar adım bazlı hareket.</p>
       </div>
       {rows.length === 0 ? (
-        <p className="py-8 text-center text-sm font-bold text-slate-400">Funnel verisi yok.</p>
+        <p className="py-8 text-center text-sm font-bold text-slate-400">Dönüşüm hunisi verisi yok.</p>
       ) : (
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={rows} layout="vertical" margin={{ top: 4, right: 24, left: 24, bottom: 4 }}>
-              <CartesianGrid stroke="var(--surface-100)" horizontal={false} />
-              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: "var(--text-faint)", fontWeight: 700 }} tickLine={false} axisLine={false} />
+              <CartesianGrid stroke={GM_CHART.goldBorder} horizontal={false} />
+              <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: GM_CHART.ink, fontWeight: 700 }} tickLine={false} axisLine={false} />
               <YAxis
                 type="category"
                 dataKey="step"
                 width={128}
-                tick={{ fontSize: 11, fill: "var(--text-faint)", fontWeight: 800 }}
+                tick={{ fontSize: 11, fill: GM_CHART.ink, fontWeight: 800 }}
                 tickLine={false}
                 axisLine={false}
               />
               <Tooltip
-                cursor={{ fill: "color-mix(in srgb, var(--brand-100) 45%, transparent)" }}
-                contentStyle={{ borderRadius: 12, border: "1px solid var(--surface-100)", fontSize: 12, fontWeight: 700 }}
+                cursor={{ fill: GM_CHART.goldSoft }}
+                contentStyle={goldTooltipStyle}
               />
-              <Bar dataKey="count" name="Event sayısı" fill="var(--accent-cyan)" maxBarSize={22} radius={[0, 6, 6, 0]} />
+              <Bar dataKey="count" name="Event sayısı" fill={GM_CHART.gold} maxBarSize={22} radius={[0, 6, 6, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -1587,12 +1684,12 @@ function Ga4FunnelChart({ steps }: { steps: any[] }) {
 
 function Ga4FunnelTrendChart({ tenantKey }: { tenantKey: string }) {
   const STEP_META: { key: string; label: string; color: string }[] = [
-    { key: "session_start", label: "Oturum", color: "var(--accent-cyan)" },
-    { key: "view_item", label: "Ürün Görüntüleme", color: "#6366f1" },
-    { key: "add_to_cart", label: "Sepete Ekleme", color: "#f59e0b" },
-    { key: "begin_checkout", label: "Ödeme Başlatma", color: "#ec4899" },
-    { key: "add_payment_info", label: "Ödeme Bilgisi", color: "#8b5cf6" },
-    { key: "purchase", label: "Satın Alma", color: "#10b981" },
+    { key: "session_start", label: ga4ServiceFunnelLabel("session_start"), color: GM_CHART.gold },
+    { key: "view_item", label: ga4ServiceFunnelLabel("view_item"), color: GM_CHART.goldStrong },
+    { key: "add_to_cart", label: ga4ServiceFunnelLabel("add_to_cart"), color: GM_CHART.warning },
+    { key: "begin_checkout", label: ga4ServiceFunnelLabel("begin_checkout"), color: GM_CHART.ink },
+    { key: "add_payment_info", label: ga4ServiceFunnelLabel("add_payment_info"), color: "#D4BB7A" },
+    { key: "purchase", label: ga4ServiceFunnelLabel("purchase"), color: GM_CHART.success },
   ];
   const [granularity, setGranularity] = useState<"month" | "week">("week");
   const [trend, setTrend] = useState<any>(null);
@@ -1624,8 +1721,8 @@ function Ga4FunnelTrendChart({ tenantKey }: { tenantKey: string }) {
     <section className="rounded-[28px] border border-slate-100 bg-white p-4">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-black text-slate-900">Funnel Zaman Trendi</h3>
-          <p className="mt-1 text-xs font-bold text-slate-400">Her funnel adımının {granularity === "week" ? "haftaya" : "aya"} göre event sayısı.</p>
+          <h3 className="text-sm font-black text-slate-900">Randevu Hunisi Zaman Trendi</h3>
+          <p className="mt-1 text-xs font-bold text-slate-400">Her dönüşüm adımının {granularity === "week" ? "haftaya" : "aya"} göre event sayısı.</p>
         </div>
         <div className="flex gap-1.5">{tabBtn("week", "Haftalık")}{tabBtn("month", "Aylık")}</div>
       </div>
@@ -1634,7 +1731,7 @@ function Ga4FunnelTrendChart({ tenantKey }: { tenantKey: string }) {
       ) : trend?.error ? (
         <p className="py-8 text-center text-sm font-bold text-rose-400">{String(trend.error)}</p>
       ) : rows.length === 0 ? (
-        <p className="py-8 text-center text-sm font-bold text-slate-400">Trend verisi yok.</p>
+        <p className="py-8 text-center text-sm font-bold text-slate-400">Dönüşüm trendi verisi yok.</p>
       ) : rows.length === 1 ? (
         <p className="py-8 text-center text-sm font-bold text-slate-400">
           Çizgi trendi için en az 2 dönem gerekli; şu an tek dönem var ({rows[0].label}). {granularity === "month" ? "Haftalık görünümü deneyin veya" : ""} veriler biriktikçe grafik dolacak.
@@ -1643,10 +1740,10 @@ function Ga4FunnelTrendChart({ tenantKey }: { tenantKey: string }) {
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={rows} margin={{ top: 8, right: 18, left: 0, bottom: 4 }}>
-              <CartesianGrid stroke="var(--surface-100)" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--text-faint)", fontWeight: 700 }} tickLine={false} axisLine={false} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--text-faint)", fontWeight: 700 }} tickLine={false} axisLine={false} width={44} />
-              <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid var(--surface-100)", fontSize: 12, fontWeight: 700 }} />
+              <CartesianGrid stroke={GM_CHART.goldBorder} vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: GM_CHART.ink, fontWeight: 700 }} tickLine={false} axisLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: GM_CHART.ink, fontWeight: 700 }} tickLine={false} axisLine={false} width={44} />
+              <Tooltip contentStyle={goldTooltipStyle} />
               <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
               {STEP_META.map((s) => (
                 <Line key={s.key} type="monotone" dataKey={s.key} name={s.label} stroke={s.color} strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 4 }} />
@@ -1705,30 +1802,30 @@ function Ga4VisitStatsSection({ visitStats }: { visitStats: any }) {
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartRows} barGap={4} barCategoryGap="18%" margin={{ top: 12, right: 18, left: 0, bottom: 8 }}>
-                <CartesianGrid stroke="var(--surface-100)" vertical={false} />
+                <CartesianGrid stroke={GM_CHART.goldBorder} vertical={false} />
                 <XAxis
                   dataKey="date"
                   interval="preserveStartEnd"
                   minTickGap={16}
-                  tick={{ fontSize: 11, fill: "var(--text-faint)", fontWeight: 700 }}
+                  tick={{ fontSize: 11, fill: GM_CHART.ink, fontWeight: 700 }}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
                   allowDecimals={false}
-                  tick={{ fontSize: 11, fill: "var(--text-faint)", fontWeight: 700 }}
+                  tick={{ fontSize: 11, fill: GM_CHART.ink, fontWeight: 700 }}
                   tickLine={false}
                   axisLine={false}
                   width={42}
                 />
                 <Tooltip
-                  cursor={{ fill: "color-mix(in srgb, var(--brand-100) 45%, transparent)" }}
-                  contentStyle={{ borderRadius: 12, border: "1px solid var(--surface-100)", fontSize: 12, fontWeight: 700 }}
+                  cursor={{ fill: GM_CHART.goldSoft }}
+                  contentStyle={goldTooltipStyle}
                 />
                 <Legend wrapperStyle={{ fontSize: 12, fontWeight: 800, paddingTop: 8 }} />
-                <Bar dataKey="Kullanıcılar" fill="var(--brand-600)" maxBarSize={28} radius={[5, 5, 0, 0]} />
-                <Bar dataKey="Yeni Kullanıcılar" fill="var(--status-info)" maxBarSize={28} radius={[5, 5, 0, 0]} />
-                <Bar dataKey="Geri Dönen" fill="var(--status-success)" maxBarSize={28} radius={[5, 5, 0, 0]} />
+                <Bar dataKey="Kullanıcılar" fill={GM_CHART.gold} maxBarSize={28} radius={[5, 5, 0, 0]} />
+                <Bar dataKey="Yeni Kullanıcılar" fill={GM_CHART.goldStrong} maxBarSize={28} radius={[5, 5, 0, 0]} />
+                <Bar dataKey="Geri Dönen" fill={GM_CHART.success} maxBarSize={28} radius={[5, 5, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

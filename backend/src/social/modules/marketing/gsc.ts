@@ -362,9 +362,17 @@ export async function collectGscUrls(tenantKey: string, siteUrl: string, website
 function indexCategory(verdict?: string | null, coverageState?: string | null) {
   const joined = `${verdict ?? ""} ${coverageState ?? ""}`.toLowerCase();
   if (verdict === "PASS") return "indexed";
-  if (joined.includes("indexed")) return "indexed";
+  if (joined.includes("unknown to google")) return "unknown";
   if (joined.includes("duplicate") || joined.includes("noindex") || joined.includes("soft 404")) return "issue";
-  if (joined.includes("not") || joined.includes("discovered") || joined.includes("crawled")) return "not_indexed";
+  if (
+    joined.includes("currently not indexed") ||
+    joined.includes("not indexed") ||
+    joined.includes("alternate page") ||
+    joined.includes("proper canonical") ||
+    joined.includes("discovered") ||
+    joined.includes("crawled")
+  ) return "not_indexed";
+  if (joined.includes("submitted and indexed") || joined.includes("indexed, not submitted")) return "indexed";
   return "unknown";
 }
 
@@ -373,26 +381,32 @@ function statusForInspection(indexStatus: Record<string, any>) {
   const coverageState = indexStatus?.coverageState ?? null;
   const category = indexCategory(verdict, coverageState);
   if (category === "indexed") {
-    return { statusText: "Dizinde", recommendation: "Ek aksiyon gerekmiyor; sayfa Google dizininde gorunuyor." };
+    return { statusText: "Dizinde", recommendation: "Ek aksiyon gerekmiyor; sayfa Google dizininde görünüyor." };
   }
   const state = String(coverageState ?? "").toLowerCase();
+  if (state.includes("unknown to google")) {
+    return { statusText: "Google'da yok", recommendation: "Google bu URL'yi henüz tanımıyor; sitemap, iç link ve indeks isteği ile keşfi güçlendirin." };
+  }
+  if (state.includes("alternate page") || state.includes("proper canonical")) {
+    return { statusText: "Alternatif canonical", recommendation: "Bu URL yerine canonical sayfa dizine alınmış olabilir; canonical hedefi doğruysa sorun değil." };
+  }
   if (state.includes("duplicate")) {
-    return { statusText: "Kopya", recommendation: "Canonical URL ve yinelenen icerik sinyallerini kontrol edin." };
+    return { statusText: "Kopya", recommendation: "Canonical URL ve yinelenen içerik sinyallerini kontrol edin." };
   }
   if (state.includes("noindex")) {
-    return { statusText: "Noindex", recommendation: "Indexlenmesi isteniyorsa robots meta/header noindex ayarini kaldirin." };
+    return { statusText: "Noindex", recommendation: "İndexlenmesi isteniyorsa robots meta/header noindex ayarını kaldırın." };
   }
   if (state.includes("soft 404")) {
-    return { statusText: "Soft 404", recommendation: "Sayfanin gercek icerik, baslik ve HTTP durumunu kontrol edin." };
+    return { statusText: "Soft 404", recommendation: "Sayfanın gerçek içerik, başlık ve HTTP durumunu kontrol edin." };
   }
   if (state.includes("redirect")) {
     return { statusText: "Redirect", recommendation: "Hedef canonical ve sitemap URL'lerinin final URL ile uyumunu kontrol edin." };
   }
   if (state.includes("discovered")) {
-    return { statusText: "Kesfedildi", recommendation: "Ic link ve sitemap sinyallerini guclendirin; yeniden tarama istegi dusunulebilir." };
+    return { statusText: "Keşfedildi", recommendation: "İç link ve sitemap sinyallerini güçlendirin; yeniden tarama isteği düşünülebilir." };
   }
   if (state.includes("crawled")) {
-    return { statusText: "Tarandi", recommendation: "Indexlenmeme nedeni icin canonical, kalite ve robots sinyallerini kontrol edin." };
+    return { statusText: "Tarandı", recommendation: "İndexlenmeme nedeni için canonical, kalite ve robots sinyallerini kontrol edin." };
   }
   return { statusText: verdict ?? "Bilinmiyor", recommendation: "URL Inspection detaylarini kontrol edin." };
 }

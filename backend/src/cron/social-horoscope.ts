@@ -1,205 +1,514 @@
 // backend/src/cron/social-horoscope.ts
-// FAZ 3 — Günlük burç sosyal medya otomasyonu.
-// Her sabah 09:00 TR (06:00 UTC): o günün öne çıkan burcunu (gün sırasına göre
-// 12 burç dönüşümlü) daily_horoscopes'tan alır, altın/cream bir kart görseli
-// render eder (sharp), uploads'a kaydeder ve Facebook + Instagram'a paylaşır.
+// GoldMoodAstro — Günlük burç sosyal medya otomasyonu.
 //
-// - setInterval ile saatte bir kontrol (node-cron yok; mevcut cron deseniyle aynı).
-// - Idempotent: aynı gün ikinci kez paylaşmaz (source_ref = daily-horoscope-<tarih>).
-// - Env kapisi: SOCIAL_DAILY_HOROSCOPE_ENABLED=1 (kapaliysa hic calismaz).
-// - SOCIAL_DAILY_HOROSCOPE_DRYRUN=1: paylasmadan sadece gorsel+caption uretir (test).
+// Yeni politika (2026-07-30):
+// - Eski tek-burç döngüsü iptal edildi.
+// - Her gün TÜM burçlar paylaşılır.
+// - Instagram carousel limiti 10 medya olduğu için günlük yorum 2 carousel'e bölünür:
+//   1/2 = Koç, Boğa, İkizler, Yengeç, Aslan, Başak
+//   2/2 = Terazi, Akrep, Yay, Oğlak, Kova, Balık
+// - Görseller mevcut `backend/uploads/zodiac/*.png` setinden üretilir.
+// - Kapak/CTA slide yok; sadece kaliteli zodyak görseli + kısa okunaklı günlük yorum.
 
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import { randomUUID } from 'crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { env } from '@/core/env';
 import { getDailyHoroscope } from '@/modules/horoscopes/repository';
-import { ALL_SIGNS, type SignKey } from '@/modules/horoscopes/schema';
+import { type SignKey } from '@/modules/horoscopes/schema';
 import { db as socialDb } from '@/social/db/client';
-import { platformAccounts, socialPosts } from '@/social/db/schema';
-import { publishPhotoPost as fbPublishPhoto } from '@/social/modules/platforms/facebook';
-import { publishPhotoPost as igPublishPhoto } from '@/social/modules/platforms/instagram';
+import { socialPosts } from '@/social/db/schema';
 
 const TENANT = 'goldmoodastro';
 const TARGET_HOUR_UTC = 6; // 09:00 TR
+const PART_GAP_MINUTES = 10;
 const HOUR_MS = 60 * 60 * 1000;
-const PUBLIC_BASE = (process.env.SOCIAL_PUBLIC_BASE || 'https://goldmoodastro.com').replace(/\/$/, '');
-const HASHTAGS = '#goldmoodastro #astroloji #burc #astrolojiyorumlari #günlükburç #danismanlik';
+const PUBLIC_BASE = (process.env.SOCIAL_PUBLIC_BASE || process.env.PUBLIC_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
+const HASHTAGS = '#goldmoodastro #astroloji #burc #astrolojiyorumlari #günlükburç #yükselenburç';
 
 const SIGN_LABEL: Record<SignKey, string> = {
-  aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
-  leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
-  sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık',
+  aries: 'Koç',
+  taurus: 'Boğa',
+  gemini: 'İkizler',
+  cancer: 'Yengeç',
+  leo: 'Aslan',
+  virgo: 'Başak',
+  libra: 'Terazi',
+  scorpio: 'Akrep',
+  sagittarius: 'Yay',
+  capricorn: 'Oğlak',
+  aquarius: 'Kova',
+  pisces: 'Balık',
 };
-const SIGN_SYMBOL: Record<SignKey, string> = {
-  aries: '♈', taurus: '♉', gemini: '♊', cancer: '♋', leo: '♌', virgo: '♍',
-  libra: '♎', scorpio: '♏', sagittarius: '♐', capricorn: '♑', aquarius: '♒', pisces: '♓',
+
+const SIGN_ELEMENT: Record<SignKey, 'Ateş' | 'Toprak' | 'Hava' | 'Su'> = {
+  aries: 'Ateş',
+  leo: 'Ateş',
+  sagittarius: 'Ateş',
+  taurus: 'Toprak',
+  virgo: 'Toprak',
+  capricorn: 'Toprak',
+  gemini: 'Hava',
+  libra: 'Hava',
+  aquarius: 'Hava',
+  cancer: 'Su',
+  scorpio: 'Su',
+  pisces: 'Su',
 };
+
+const AUGUST_2026_DAILY_PLAN: Record<string, { theme: string; focus: string; angles: Record<SignKey, string> }> = {
+  '2026-08-01': {
+    theme: 'Ağustos ayına içini toparlayarak başla.',
+    focus: 'Ayın ana niyetini netleştir.',
+    angles: {
+      aries: 'cesaret',
+      taurus: 'güven',
+      gemini: 'iletişim',
+      cancer: 'aile',
+      leo: 'görünürlük',
+      virgo: 'düzen',
+      libra: 'ilişki',
+      scorpio: 'derinlik',
+      sagittarius: 'ufuk',
+      capricorn: 'hedef',
+      aquarius: 'fikir',
+      pisces: 'sezgi',
+    },
+  },
+  '2026-08-02': {
+    theme: 'Haftaya girerken iç sesin daha görünür.',
+    focus: 'Yükselenin hangi kapıyı açıyor?',
+    angles: {
+      aries: 'ilk adım',
+      taurus: 'para düzeni',
+      gemini: 'haber',
+      cancer: 'iç güven',
+      leo: 'yaratıcılık',
+      virgo: 'sağlık',
+      libra: 'denge',
+      scorpio: 'sezgi',
+      sagittarius: 'öğrenme',
+      capricorn: 'sorumluluk',
+      aquarius: 'arkadaşlık',
+      pisces: 'rüya',
+    },
+  },
+  '2026-08-03': {
+    theme: 'Haftanın ilk adımı sade ama güçlü olsun.',
+    focus: 'Planı küçült, devamlılığı büyüt.',
+    angles: {
+      aries: 'netlik',
+      taurus: 'ritim',
+      gemini: 'zihin',
+      cancer: 'ev',
+      leo: 'kalp',
+      virgo: 'iş',
+      libra: 'seçim',
+      scorpio: 'dönüşüm',
+      sagittarius: 'yol',
+      capricorn: 'kariyer',
+      aquarius: 'gelecek',
+      pisces: 'şefkat',
+    },
+  },
+  '2026-08-04': {
+    theme: 'Sezgi ve karar enerjisi birlikte çalışıyor.',
+    focus: 'İlk tepki yerine içindeki mesajı dinle.',
+    angles: {
+      aries: 'beden enerjisi',
+      taurus: 'beden',
+      gemini: 'merak',
+      cancer: 'duygu',
+      leo: 'özgüven',
+      virgo: 'detay',
+      libra: 'estetik',
+      scorpio: 'güven',
+      sagittarius: 'inanç',
+      capricorn: 'plan',
+      aquarius: 'özgünlük',
+      pisces: 'akış',
+    },
+  },
+  '2026-08-05': {
+    theme: 'Sayılar, ritimler ve tekrarlar yol gösteriyor.',
+    focus: 'Bugün aynı döngüye farklı cevap ver.',
+    angles: {
+      aries: 'aceleyi yumuşatma',
+      taurus: 'sadeleşme',
+      gemini: 'karar',
+      cancer: 'hatıra',
+      leo: 'sahne',
+      virgo: 'verim',
+      libra: 'uzlaşma',
+      scorpio: 'sır',
+      sagittarius: 'özgürlük',
+      capricorn: 'sabır',
+      aquarius: 'sistem',
+      pisces: 'yaratıcılık',
+    },
+  },
+  '2026-08-06': {
+    theme: 'Son dördün: bırakma ve hafifleme zamanı.',
+    focus: 'Seni yoran yükü isimlendir.',
+    angles: {
+      aries: 'bırakma',
+      taurus: 'konfor alanı',
+      gemini: 'düşünce temizliği',
+      cancer: 'geçmişi bırakma',
+      leo: 'gururu bırakma',
+      virgo: 'fazla kontrolü bırakma',
+      libra: 'onay ihtiyacını bırakma',
+      scorpio: 'yük bırakma',
+      sagittarius: 'abartıyı bırakma',
+      capricorn: 'ağır yükü bırakma',
+      aquarius: 'mesafeyi bırakma',
+      pisces: 'dağınıklığı bırakma',
+    },
+  },
+  '2026-08-07': {
+    theme: 'Haftayı hafiflet: mizah da farkındalıktır.',
+    focus: 'Kendini fazla ciddiye aldığın yeri gör.',
+    angles: {
+      aries: 'mizah',
+      taurus: 'keyif',
+      gemini: 'espri',
+      cancer: 'yakınlık',
+      leo: 'eğlence',
+      virgo: 'pratiklik',
+      libra: 'kararsızlık',
+      scorpio: 'kara mizah',
+      sagittarius: 'neşe',
+      capricorn: 'disiplin',
+      aquarius: 'tuhaflık',
+      pisces: 'tatlı kaçış',
+    },
+  },
+};
+
+const PARTS: Array<{ part: 1 | 2; signs: SignKey[]; label: string }> = [
+  {
+    part: 1,
+    signs: ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo'],
+    label: 'Koç, Boğa, İkizler, Yengeç, Aslan ve Başak',
+  },
+  {
+    part: 2,
+    signs: ['libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'],
+    label: 'Terazi, Akrep, Yay, Oğlak, Kova ve Balık',
+  },
+];
 
 function isoDate(d = new Date()): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
-function dayOfYear(d = new Date()): number {
-  const start = Date.UTC(d.getUTCFullYear(), 0, 0);
-  return Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - start) / 86400000);
+
+function prettyDate(dateStr: string): string {
+  return new Date(`${dateStr}T00:00:00Z`).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 }
+
 function cleanContent(raw: string): string {
   return raw
-    .replace(/^#{1,6}\s.*$/gm, '')   // markdown basliklari (ör. "# 25 Temmuz ... Yorumu")
-    .replace(/\*\*/g, '')            // kalin
-    .replace(/[*_`>]/g, '')          // artik md isaretleri
+    .replace(/^#{1,6}\s.*$/gm, '')
+    .replace(/\*\*/g, '')
+    .replace(/[*_`>]/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
+
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
 function wrap(text: string, maxChars: number, maxLines: number): string[] {
-  const words = text.replace(/\s+/g, ' ').trim().split(' ');
+  const words = text.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
   const lines: string[] = [];
   let cur = '';
-  for (const w of words) {
-    if ((cur + ' ' + w).trim().length > maxChars) {
-      if (cur) lines.push(cur.trim());
-      cur = w;
-      if (lines.length === maxLines - 1) break;
-    } else cur = (cur + ' ' + w).trim();
+  for (const word of words) {
+    const candidate = cur ? `${cur} ${word}` : word;
+    if (candidate.length > maxChars && cur) {
+      lines.push(cur);
+      cur = word;
+      if (lines.length >= maxLines - 1) break;
+    } else {
+      cur = candidate;
+    }
   }
-  if (cur && lines.length < maxLines) lines.push(cur.trim());
-  if (lines.length === maxLines) {
-    const last = lines[maxLines - 1];
-    if (last.length > maxChars - 1) lines[maxLines - 1] = last.slice(0, maxChars - 1).trim() + '…';
+  if (cur && lines.length < maxLines) lines.push(cur);
+  if (lines.length === maxLines && lines[maxLines - 1]!.length > maxChars) {
+    lines[maxLines - 1] = `${lines[maxLines - 1]!.slice(0, maxChars - 1).trim()}…`;
   }
   return lines;
+}
+
+function tspans(lines: string[], x: number, dy: number): string {
+  return lines.map((line, index) => `<tspan x="${x}" dy="${index === 0 ? 0 : dy}">${esc(line)}</tspan>`).join('');
 }
 
 function uploadsDir(): string {
   return env.LOCAL_STORAGE_ROOT ? path.resolve(env.LOCAL_STORAGE_ROOT) : path.resolve(process.cwd(), 'uploads');
 }
 
-/** Burç kartını 1080x1080 JPEG render eder, uploads/social altina kaydeder. */
-async function renderCard(sign: SignKey, dateStr: string, content: string): Promise<{ filePath: string; publicUrl: string }> {
-  const label = SIGN_LABEL[sign];
-  const symbol = SIGN_SYMBOL[sign];
-  const prettyDate = new Date(dateStr + 'T00:00:00Z').toLocaleDateString('tr-TR', {
-    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
-  });
-  const lines = wrap(content, 42, 6);
-  const bodyTspans = lines
-    .map((ln, i) => `<tspan x="540" dy="${i === 0 ? 0 : 58}">${esc(ln)}</tspan>`)
-    .join('');
+function fallbackMessage(sign: SignKey, dateStr: string): string {
+  const planned = AUGUST_2026_DAILY_PLAN[dateStr];
+  const element = SIGN_ELEMENT[sign];
+  const advice = {
+    Ateş: 'Küçük ama cesur bir adım yeter.',
+    Toprak: 'Planı somutlaştır, bedenini ihmal etme.',
+    Hava: 'Net cümleler seni karmaşadan korur.',
+    Su: 'Duygunu dinle; iç sesin ayrıntıda konuşur.',
+  }[element];
 
-  const svg = `<svg width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1a1512"/><stop offset="0.55" stop-color="#241d16"/><stop offset="1" stop-color="#3a2f22"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="30%" r="60%">
-      <stop offset="0" stop-color="#b8964f" stop-opacity="0.28"/><stop offset="1" stop-color="#b8964f" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="1080" height="1080" fill="url(#bg)"/>
-  <rect width="1080" height="1080" fill="url(#glow)"/>
-  <rect x="40" y="40" width="1000" height="1000" rx="28" fill="none" stroke="#b8964f" stroke-opacity="0.55" stroke-width="2"/>
-  <text x="540" y="150" text-anchor="middle" font-family="Georgia, serif" font-size="26" letter-spacing="8" fill="#d4bb7a">GOLDMOODASTRO</text>
-  <text x="540" y="188" text-anchor="middle" font-family="Georgia, serif" font-size="20" letter-spacing="6" fill="#9c8f79">GÜNÜN BURÇ YORUMU</text>
-  <text x="540" y="360" text-anchor="middle" font-family="serif" font-size="150" fill="#d4bb7a">${symbol}</text>
-  <text x="540" y="450" text-anchor="middle" font-family="Georgia, serif" font-size="64" font-weight="bold" fill="#faf6ef">${esc(label)}</text>
-  <text x="540" y="500" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#b8964f">${esc(prettyDate)}</text>
-  <line x1="380" y1="540" x2="700" y2="540" stroke="#b8964f" stroke-opacity="0.5" stroke-width="1.5"/>
-  <text x="540" y="620" text-anchor="middle" font-family="Georgia, serif" font-size="34" fill="#efe7d8" style="line-height:1.5">${bodyTspans}</text>
-  <text x="540" y="1000" text-anchor="middle" font-family="Georgia, serif" font-size="26" letter-spacing="2" fill="#d4bb7a">goldmoodastro.com</text>
-</svg>`;
+  if (planned) {
+    return `${SIGN_LABEL[sign]} için bugün ${planned.angles[sign]} alanı öne çıkıyor. ${advice}`;
+  }
 
-  const dir = path.join(uploadsDir(), 'social');
-  fs.mkdirSync(dir, { recursive: true });
-  const fileName = `horoscope-${dateStr}-${sign}.jpg`;
-  const filePath = path.join(dir, fileName);
-  await sharp(Buffer.from(svg)).jpeg({ quality: 88 }).toFile(filePath);
-  return { filePath, publicUrl: `${PUBLIC_BASE}/uploads/social/${fileName}` };
+  return `${SIGN_LABEL[sign]} için bugün iç ses ve günlük ritim öne çıkıyor. ${advice}`;
 }
 
-async function getAccounts() {
-  const rows = await socialDb.select().from(platformAccounts).where(eq(platformAccounts.tenantKey, TENANT));
+function socialCardMessage(sign: SignKey, raw: string, dateStr: string): string {
+  const cleaned = cleanContent(raw);
+  if (!cleaned) return fallbackMessage(sign, dateStr);
+
+  const paragraph = cleaned
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .find((line) => line.length > 25) ?? cleaned;
+  const sentences = paragraph
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const summary = sentences.slice(0, 2).join(' ');
+  const text = summary || paragraph;
+  return text.length > 145 ? `${text.slice(0, 142).trim()}…` : text;
+}
+
+async function renderZodiacCard(sign: SignKey, dateStr: string, message: string): Promise<{ filePath: string; publicUrl: string }> {
+  const dateLabel = prettyDate(dateStr);
+  const dir = path.join(uploadsDir(), 'social', 'daily-horoscope-all', dateStr);
+  fs.mkdirSync(dir, { recursive: true });
+
+  const fileName = `${dateStr}-${sign}.png`;
+  const filePath = path.join(dir, fileName);
+  const publicUrl = `${PUBLIC_BASE}/uploads/social/daily-horoscope-all/${dateStr}/${fileName}`;
+  if (fs.existsSync(filePath)) return { filePath, publicUrl };
+
+  const zodiacPath = path.resolve(uploadsDir(), 'zodiac', `${sign}.png`);
+  const repoFallbackPath = path.resolve(process.cwd(), 'uploads', 'zodiac', `${sign}.png`);
+  const sourcePath = fs.existsSync(zodiacPath) ? zodiacPath : repoFallbackPath;
+  if (!fs.existsSync(sourcePath)) throw new Error(`Zodyak görseli bulunamadı: ${sign}`);
+
+  const bodyLines = wrap(message, 42, 4);
+  const base = await sharp(sourcePath)
+    .resize(1080, 1350, { fit: 'cover' })
+    .blur(10)
+    .modulate({ brightness: 0.55, saturation: 1.18 })
+    .png()
+    .toBuffer();
+  const hero = await sharp(sourcePath)
+    .resize(1000, 1000, { fit: 'cover' })
+    .png()
+    .toBuffer();
+  const label = SIGN_LABEL[sign];
+  const element = SIGN_ELEMENT[sign];
+  const overlay = `<svg width="1080" height="1350" viewBox="0 0 1080 1350" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#090313" stop-opacity="0.10"/>
+      <stop offset="0.52" stop-color="#090313" stop-opacity="0.08"/>
+      <stop offset="0.70" stop-color="#090313" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#090313" stop-opacity="0.92"/>
+    </linearGradient>
+    <filter id="soft"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity="0.35"/></filter>
+  </defs>
+  <rect width="1080" height="1350" fill="url(#shade)"/>
+  <rect x="42" y="42" width="996" height="1266" rx="34" fill="none" stroke="#e0bd68" stroke-opacity="0.72" stroke-width="2.5"/>
+  <rect x="74" y="756" width="932" height="448" rx="34" fill="#10091f" fill-opacity="0.78" stroke="#e0bd68" stroke-opacity="0.72" stroke-width="2.2" filter="url(#soft)"/>
+  <text x="88" y="112" font-family="Georgia, serif" font-size="30" font-weight="900" letter-spacing="4" fill="#f5d978">GOLDMOODASTRO</text>
+  <text x="88" y="150" font-family="Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="4" fill="#e8ddff">${esc(dateLabel)} • GÜNLÜK YORUM</text>
+  <text x="540" y="840" text-anchor="middle" font-family="Georgia, serif" font-size="96" font-weight="900" fill="#fff8ee">${esc(label)}</text>
+  <text x="540" y="908" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="900" fill="#f5d978">${esc(element)} enerjisi</text>
+  <text x="540" y="985" text-anchor="middle" font-family="Georgia, serif" font-size="34" fill="#fffaf0">${tspans(bodyLines, 540, 46)}</text>
+  <rect x="230" y="1128" width="620" height="62" rx="22" fill="#07040c" fill-opacity=".55" stroke="#e0bd68" stroke-opacity=".70"/>
+  <text x="540" y="1168" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="900" fill="#f5d978">Yükselenini de oku • Kaydet</text>
+  <text x="540" y="1264" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#d9bd74">goldmoodastro.com</text>
+</svg>`;
+
+  await sharp(base)
+    .composite([
+      { input: hero, left: 40, top: 36 },
+      { input: Buffer.from(overlay), left: 0, top: 0 },
+    ])
+    .png({ compressionLevel: 9 })
+    .toFile(filePath);
+
+  return { filePath, publicUrl };
+}
+
+function targetPublishTime(dateStr: string, part: 1 | 2): Date {
+  const date = new Date(`${dateStr}T${String(TARGET_HOUR_UTC).padStart(2, '0')}:00:00.000Z`);
+  if (part === 2) date.setUTCMinutes(date.getUTCMinutes() + PART_GAP_MINUTES);
+  return date;
+}
+
+function sourceRef(dateStr: string, part: 1 | 2): string {
+  return `daily-horoscope-carousel-${dateStr}-part${part}`;
+}
+
+async function cancelLegacySingleSignPosts(): Promise<number> {
+  const result = await socialDb
+    .update(socialPosts)
+    .set({
+      status: 'cancelled',
+      notes: sql`CONCAT(COALESCE(${socialPosts.notes}, ''), '\n[auto] Eski tek-burç günlük cron iptal edildi; tüm burç carousel cron aktif.')`,
+    } as any)
+    .where(
+      and(
+        eq(socialPosts.subType, TENANT),
+        sql`${socialPosts.sourceRef} REGEXP '^daily-horoscope-[0-9]{4}-[0-9]{2}-[0-9]{2}$'`,
+        sql`${socialPosts.status} IN ('draft','scheduled')`,
+      ),
+    );
+  return Number((result as { rowsAffected?: number }).rowsAffected ?? 0);
+}
+
+async function buildPart(dateStr: string, part: 1 | 2): Promise<{
+  title: string;
+  caption: string;
+  mediaUrls: string[];
+  imageUrl: string;
+  scheduledAt: Date;
+  sourceRef: string;
+  missing: number;
+}> {
+  const partConfig = PARTS.find((item) => item.part === part)!;
+  const dateLabel = prettyDate(dateStr);
+  const mediaUrls: string[] = [];
+  const captionLines: string[] = [];
+  let missing = 0;
+  const planned = AUGUST_2026_DAILY_PLAN[dateStr];
+
+  for (const sign of partConfig.signs) {
+    const horoscope = await getDailyHoroscope(sign, dateStr);
+    if (!horoscope?.content) missing += 1;
+    const message = socialCardMessage(sign, horoscope?.content ?? '', dateStr);
+    const { publicUrl } = await renderZodiacCard(sign, dateStr, message);
+    mediaUrls.push(publicUrl);
+    captionLines.push(`${SIGN_LABEL[sign]}: ${message}`);
+  }
+
+  const title = `[CAROUSEL] ${dateLabel} Günlük Burç Yorumları ${part}/2`;
+  const planIntro = planned ? `\n\nBugünün teması: ${planned.theme}\nOdak: ${planned.focus}` : '';
+  const caption = `${dateLabel} günlük burç yorumları ${part}/2. 🌙${planIntro}\n\nBu bölüm: ${partConfig.label}.\n\nGüneş burcunu oku ama yükselenini de mutlaka kontrol et; günlük akış çoğu zaman yükselende daha net görünür.\n\n${captionLines.join('\n\n')}\n\nYükselenini yorumlara yaz, kaydet ve gün sonunda tekrar bak.\n\n${HASHTAGS}`;
+
   return {
-    fb: rows.find((r) => r.platform === 'facebook') || null,
-    ig: rows.find((r) => r.platform === 'instagram') || null,
+    title,
+    caption,
+    mediaUrls,
+    imageUrl: mediaUrls[0]!,
+    scheduledAt: targetPublishTime(dateStr, part),
+    sourceRef: sourceRef(dateStr, part),
+    missing,
   };
 }
 
-/** Bir gunun burc gonderisini uretir ve (dryRun degilse) paylasir. */
-export async function runDailyHoroscopePost(
-  dateStr = isoDate(),
-  opts: { dryRun?: boolean } = {},
-): Promise<{ status: string; detail?: string }> {
+async function ensurePartScheduled(dateStr: string, part: 1 | 2, opts: { dryRun?: boolean } = {}): Promise<{ status: string; detail?: string; missing: number }> {
   const dryRun = opts.dryRun ?? (process.env.SOCIAL_DAILY_HOROSCOPE_DRYRUN === '1');
-  const sourceRef = `daily-horoscope-${dateStr}`;
-
-  // Idempotency
+  const ref = sourceRef(dateStr, part);
   const existing = await socialDb
-    .select({ id: socialPosts.id })
+    .select({ id: socialPosts.id, status: socialPosts.status })
     .from(socialPosts)
-    .where(and(eq(socialPosts.subType, TENANT), eq(socialPosts.sourceRef, sourceRef)))
+    .where(and(eq(socialPosts.subType, TENANT), eq(socialPosts.sourceRef, ref)))
     .limit(1);
-  if (existing.length && !dryRun) return { status: 'skipped', detail: 'bugun zaten paylasildi' };
+  if (existing.length && !dryRun) {
+    return { status: 'skipped', detail: `zaten var (#${existing[0]!.id}, ${existing[0]!.status})`, missing: 0 };
+  }
 
-  const sign = ALL_SIGNS[dayOfYear(new Date(dateStr + 'T00:00:00Z')) % ALL_SIGNS.length];
-  const h = await getDailyHoroscope(sign, dateStr);
-  const content = cleanContent(h?.content || '');
-  if (!content) return { status: 'no-content', detail: `${sign} icin ${dateStr} yorumu yok (uretim beklenir)` };
-
-  const { publicUrl } = await renderCard(sign, dateStr, content);
-  const captionBody = content.length > 600 ? content.slice(0, 597).trim() + '…' : content;
-  const caption = `${SIGN_SYMBOL[sign]} ${SIGN_LABEL[sign]} — Günün Yorumu\n\n${captionBody}\n\nTüm burçlar 👉 goldmoodastro.com\n\n${HASHTAGS}`;
-
+  const built = await buildPart(dateStr, part);
   if (dryRun) {
-    console.log(`[social-horoscope] DRYRUN ${dateStr} ${sign} | image=${publicUrl}`);
-    console.log(`[social-horoscope] caption:\n${caption.slice(0, 200)}...`);
-    return { status: 'dryrun', detail: publicUrl };
+    console.log(`[social-horoscope] DRYRUN ${ref} | media=${built.mediaUrls.length} | first=${built.imageUrl}`);
+    return { status: 'dryrun', detail: built.imageUrl, missing: built.missing };
   }
 
-  const { fb, ig } = await getAccounts();
-  let fbId: string | null = null;
-  let igId: string | null = null;
-  const errors: string[] = [];
-
-  if (fb) {
-    try {
-      const r = await fbPublishPhoto(publicUrl, caption, { pageId: fb.pageId || undefined, pageAccessToken: fb.pageToken || fb.accessToken || undefined });
-      fbId = (r as any)?.id || (r as any)?.postId || null;
-    } catch (e) { errors.push('FB: ' + (e as Error).message); }
-  }
-  if (ig) {
-    try {
-      const r = await igPublishPhoto(publicUrl, caption, { accountId: ig.accountId || undefined, accessToken: ig.accessToken || ig.pageToken || undefined });
-      igId = (r as any)?.id || (r as any)?.mediaId || null;
-    } catch (e) { errors.push('IG: ' + (e as Error).message); }
+  if (built.scheduledAt.getTime() <= Date.now()) {
+    console.log(`[social-horoscope] ${built.sourceRef} atlandi — yayin saati gecmis (${built.scheduledAt.toISOString()})`);
+    return { status: 'skipped-past', detail: `${built.sourceRef} yayin saati gecmis`, missing: built.missing };
   }
 
-  const posted = Boolean(fbId || igId);
   await socialDb.insert(socialPosts).values({
     uuid: randomUUID(),
     postType: 'etkilesim',
     subType: TENANT,
-    caption,
+    title: built.title,
+    caption: built.caption,
     hashtags: HASHTAGS,
-    imageUrl: publicUrl,
+    imageUrl: built.imageUrl,
+    mediaUrls: built.mediaUrls,
     platform: 'both',
-    status: posted ? 'posted' : 'failed',
-    postedAt: posted ? new Date() : null,
-    errorMessage: errors.length ? errors.join(' | ').slice(0, 990) : null,
-    fbPostId: fbId,
-    igMediaId: igId,
+    status: 'scheduled',
+    scheduledAt: built.scheduledAt,
     sourceType: 'ai',
-    sourceRef,
+    sourceRef: built.sourceRef,
     aiGenerated: 1,
     createdBy: 'cron',
+    notes: `Otomatik günlük tüm burç carousel ${part}/2. Medya: ${built.mediaUrls.length}. Eksik DB yorumu: ${built.missing}.`,
   } as any);
 
-  console.log(`[social-horoscope] ${dateStr} ${sign} -> FB:${fbId ? 'OK' : 'x'} IG:${igId ? 'OK' : 'x'} ${errors.join('; ')}`);
-  return { status: posted ? 'posted' : 'failed', detail: errors.join('; ') || `${sign}` };
+  console.log(`[social-horoscope] ${built.sourceRef} planlandi -> ${built.scheduledAt.toISOString()}`);
+  return { status: 'scheduled', detail: `${built.sourceRef} @ ${built.scheduledAt.toISOString()}`, missing: built.missing };
+}
+
+/** Bir gün için iki carousel'i planlar. Eski tek-burç cron'u üretmez. */
+export async function ensureDailyHoroscopePostScheduled(
+  dateStr = isoDate(),
+  opts: { dryRun?: boolean } = {},
+): Promise<{ status: string; detail?: string }> {
+  await cancelLegacySingleSignPosts();
+  const p1 = await ensurePartScheduled(dateStr, 1, opts);
+  const p2 = await ensurePartScheduled(dateStr, 2, opts);
+  const statuses = [p1.status, p2.status];
+  const missing = p1.missing + p2.missing;
+  if (statuses.every((s) => s === 'skipped')) return { status: 'skipped', detail: `2 parça zaten var; missing=${missing}` };
+  if (statuses.some((s) => s === 'scheduled')) return { status: 'scheduled', detail: `parts=${statuses.join(',')}; missing=${missing}` };
+  if (statuses.some((s) => s === 'dryrun')) return { status: 'dryrun', detail: `parts=${statuses.join(',')}; missing=${missing}` };
+  return { status: statuses.join(','), detail: `missing=${missing}` };
+}
+
+/** Geriye uyumlu manuel/test çalıştırma: artık yayınlamaz; iki carousel'i planlar. */
+export async function runDailyHoroscopePost(
+  dateStr = isoDate(),
+  opts: { dryRun?: boolean } = {},
+): Promise<{ status: string; detail?: string }> {
+  return ensureDailyHoroscopePostScheduled(dateStr, opts);
+}
+
+export async function ensureDailyHoroscopePlan(daysAhead = 7): Promise<{ scheduled: number; skipped: number; missing: number; cancelledLegacy: number }> {
+  let scheduled = 0;
+  let skipped = 0;
+  let missing = 0;
+  const cancelledLegacy = await cancelLegacySingleSignPosts();
+  const base = new Date();
+
+  // Gün içinde cron geç çalışırsa bugünün sabah paylaşımını geçmiş saate
+  // yazıp kuyrukta anında yayınlatmayalım; ertesi günden devam edelim.
+  const todayStr = isoDate(base);
+  const startOffset = targetPublishTime(todayStr, 2).getTime() <= Date.now() ? 1 : 0;
+
+  for (let i = startOffset; i <= daysAhead + startOffset; i += 1) {
+    const d = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate() + i));
+    const dateStr = isoDate(d);
+    const res = await ensureDailyHoroscopePostScheduled(dateStr);
+    if (res.status === 'scheduled') scheduled += 1;
+    else if (res.status === 'skipped') skipped += 1;
+    else missing += 1;
+  }
+  return { scheduled, skipped, missing, cancelledLegacy };
 }
 
 export function registerSocialHoroscopeCron(_app?: unknown) {
@@ -210,18 +519,17 @@ export function registerSocialHoroscopeCron(_app?: unknown) {
   let lastBucket = '';
   const tick = async () => {
     const now = new Date();
-    if (now.getUTCHours() !== TARGET_HOUR_UTC) return;
-    const bucket = isoDate(now);
+    const bucket = `${isoDate(now)}-${now.getUTCHours()}`;
     if (bucket === lastBucket) return;
     lastBucket = bucket;
     try {
-      const res = await runDailyHoroscopePost(bucket);
-      console.log('[social-horoscope] gunluk calisma:', JSON.stringify(res));
+      const res = await ensureDailyHoroscopePlan(7);
+      console.log('[social-horoscope] tum-burclar plan kontrol:', JSON.stringify(res));
     } catch (e) {
       console.error('[social-horoscope] hata:', (e as Error).message);
     }
   };
   setInterval(tick, HOUR_MS);
   void tick();
-  console.log(`[social-horoscope] aktif — her gun ${TARGET_HOUR_UTC}:00 UTC (09:00 TR)`);
+  console.log(`[social-horoscope] aktif — tum burclar 2 carousel/gun, yayin ${TARGET_HOUR_UTC}:00 ve +${PART_GAP_MINUTES}dk UTC (09:00 TR)`);
 }

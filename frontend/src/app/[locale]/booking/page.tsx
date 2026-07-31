@@ -15,6 +15,7 @@ import Link from 'next/link';
 import PageContainer from '@/components/common/PageContainer';
 import { useGetSiteSettingByKeyQuery } from '@/integrations/rtk/public/site_settings.endpoints';
 import { gaEvent } from '@/lib/ga';
+import { fbEvent, metaEventId } from '@/lib/fbpixel';
 import { cn } from '@/lib/utils';
 import { Mic, Video as VideoIcon } from 'lucide-react';
 import { useUiSection } from '@/i18n';
@@ -185,6 +186,11 @@ export default function BookingPage() {
         booking_id: (booking as any).id ?? (booking as any).booking?.id,
         payment_gateway_slug: 'iyzico',
       }).unwrap();
+      fbEvent(
+        'InitiateCheckout',
+        { value: finalPrice, currency: 'TRY', content_ids: [consultantId], content_type: 'product' },
+        metaEventId.checkout(String(bookingId)),
+      );
 
       const iyzico = await initIyzico({ orderId: order.order_id, locale }).unwrap();
       window.location.href = iyzico.checkout_url;

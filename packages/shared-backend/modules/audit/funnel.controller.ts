@@ -67,7 +67,7 @@ export async function trackEventPublic(req: FastifyRequest, reply: FastifyReply)
   try {
     const parsed = trackEventSchema.safeParse(req.body ?? {});
     if (!parsed.success) {
-      return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
+      return reply.code(202).send({ ok: true, ignored: true, reason: 'invalid_body' });
     }
 
     const userId = userIdFromRequest(req);

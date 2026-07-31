@@ -73,6 +73,19 @@ async function optionalReport<T>(task: Promise<T>) {
   }
 }
 
+function normalizeGa4AdminError(error?: string | null) {
+  if (!error) return null;
+  const value = String(error);
+  if (
+    value.includes("analyticsadmin.googleapis.com") ||
+    value.includes("Google Analytics Admin API has not been used") ||
+    value.includes("it is disabled")
+  ) {
+    return "GA4_ADMIN_API_DISABLED: Google Analytics Admin API kapalı. Trafik raporları çalışır; yönetim verileri için Analytics Admin API etkinleştirilmeli.";
+  }
+  return value;
+}
+
 async function buildGa4Data(tenantKey: string, hostnames?: string[] | null) {
   const auth =
     (await createMarketingJwt(tenantKey)) ??
@@ -421,24 +434,21 @@ export async function fetchGa4Funnel(tenantKey: string, propertyId: string, rang
     const dropOffPct = index === 0 || previous <= 0 ? null : ((previous - count) / previous) * 100;
     return { step, count, previous, dropOffPct };
   });
-  // Akilli uyari: dogal yuksek dususleri (or. view_item -> add_to_cart) DEGIL,
+  // Akilli uyari: dogal yuksek dususleri (or. profil goruntuleme -> randevu secimi) DEGIL,
   // gercek OLCUM BOSLUGU'nu isaretle: onceki adimda hareket varken bu adim TAM 0 ise
-  // event muhtemelen hic gonderilmiyor (GTM/site tag eksik). Bu, e-ticaret funnel'inda
-  // begin_checkout/add_payment_info gibi adimlarin yanlislikla %100 "kayip" gorunmesini
-  // ayirt eder (false-alarm degil, tracking gap).
+  // event muhtemelen hic gonderilmiyor (GTM/site tag eksik). GoldMood icin bu, randevu
+  // donusum hunisinde begin_checkout/add_payment_info gibi adimlarin yanlislikla %100
+  // "kayip" gorunmesini ayirt eder (false-alarm degil, tracking gap).
   //
-  // Ozel durum — TUM e-ticaret adimlari 0 (sadece session_start var): bu bir "bosluk"
-  // degil, site'da e-ticaret funnel'i HIC YOK demektir (icerik/hizmet/hava-durumu sitesi
-  // gibi). Her adim icin ayri "olcum boslugu" spam'i yerine tek, sakin bir mesaj basariz;
-  // boylece tarimiklim gibi e-ticaret olmayan tenant'larda yaniltici alarm cikmaz, ama
-  // gercek bir e-ticaret sitesinde tum tracking koptuysa yine net uyari gorunur.
+  // Ozel durum — TUM randevu/odeme adimlari 0 (sadece session_start var): her adim icin
+  // ayri "olcum boslugu" spam'i yerine tek, sakin bir mesaj basariz.
   const ecommerceSteps = items.slice(1); // session_start haric
   const ecommerceTracked = ecommerceSteps.some((item) => item.count > 0);
   const warnings: string[] = [];
   if (!ecommerceTracked) {
     if ((items[0]?.count ?? 0) > 0) {
       warnings.push(
-        "E-ticaret event'i ölçülmüyor (view_item…purchase tümü 0). Bu site e-ticaret değilse normal; e-ticaret ise GTM/dataLayer kurulumu eksik.",
+        "Randevu dönüşüm event'i ölçülmüyor (danışman/hizmet inceleme → ödeme tamamlandı adımları 0). Bu adımlar henüz kurulmadıysa normal; ölçmek istiyorsak GTM/dataLayer kurulumu tamamlanmalı.",
       );
     }
   } else {
@@ -641,11 +651,11 @@ export async function fetchGa4Config(tenantKey: string, propertyId: string) {
     googleAdsLinks: unwrap(googleAdsLinks, "googleAdsLinks"),
     audiences: unwrap(audiences, "audiences"),
     errors: {
-      dataStreams: dataStreams.ok ? null : dataStreams.error,
-      customDimensions: customDimensions.ok ? null : customDimensions.error,
-      keyEvents: keyEvents.ok ? null : keyEvents.error,
-      googleAdsLinks: googleAdsLinks.ok ? null : googleAdsLinks.error,
-      audiences: audiences.ok ? null : audiences.error,
+      dataStreams: dataStreams.ok ? null : normalizeGa4AdminError(dataStreams.error),
+      customDimensions: customDimensions.ok ? null : normalizeGa4AdminError(customDimensions.error),
+      keyEvents: keyEvents.ok ? null : normalizeGa4AdminError(keyEvents.error),
+      googleAdsLinks: googleAdsLinks.ok ? null : normalizeGa4AdminError(googleAdsLinks.error),
+      audiences: audiences.ok ? null : normalizeGa4AdminError(audiences.error),
     },
   };
 }
