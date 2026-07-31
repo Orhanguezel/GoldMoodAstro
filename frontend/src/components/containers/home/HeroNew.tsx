@@ -17,6 +17,7 @@ import { useUiSection } from '@/i18n';
 import HeroTrustCards from './HeroTrustCards';
 import HeroStats from './HeroStats';
 import HeroCTAs from './HeroCTAs';
+import { localizePath } from '@/integrations/shared';
 
 /* Fallback skeletons for Suspense boundaries */
 function TrustCardsSkeleton() {
@@ -42,23 +43,36 @@ function StatsSkeleton() {
 
 export default function HeroNew({ locale = 'tr' }: { locale?: string }) {
   const { ui } = useUiSection('ui_home', locale as any);
+  const fallback = locale === 'tr' ? {
+    eyebrow: 'Ruhsal Rehberlik', headline1: 'Modern astroloji ile', headline2: 'yıldızlarla buluşun',
+    tagline: 'Doğum haritanıza göre şekillenen kişisel yorumlar ve dilediğiniz an gerçek bir astrologla görüşme imkânı.',
+    primary: 'Danışmanları Keşfet', secondary: 'Haritanı Oluştur', scroll: 'Aşağı Kaydır',
+  } : locale === 'de' ? {
+    eyebrow: 'Spirituelle Begleitung', headline1: 'Moderne Astrologie', headline2: 'trifft auf die Sterne',
+    tagline: 'Persönliche Deutungen auf Grundlage Ihres Geburtshoroskops und Gespräche mit echten Astrologinnen und Astrologen.',
+    primary: 'Beratung entdecken', secondary: 'Horoskop erstellen', scroll: 'Nach unten',
+  } : {
+    eyebrow: 'Spiritual Guidance', headline1: 'Modern astrology', headline2: 'meets the stars',
+    tagline: 'Personal readings shaped by your birth chart, with real astrologers available when you need them.',
+    primary: 'Explore Consultants', secondary: 'Create Your Chart', scroll: 'Scroll Down',
+  };
   const copy = {
-    eyebrow: ui('ui_home_hero_eyebrow', 'Ruhsal Rehberlik'),
+    eyebrow: ui('ui_home_hero_eyebrow', fallback.eyebrow),
     headline: [
-      ui('ui_home_hero_headline_1', 'Modern astroloji ile'),
-      ui('ui_home_hero_headline_2', 'yıldızlarla buluşun'),
+      ui('ui_home_hero_headline_1', fallback.headline1),
+      ui('ui_home_hero_headline_2', fallback.headline2),
     ],
     tagline: ui(
       'ui_home_hero_subtitle',
-      'Doğum haritanıza göre şekillenen kişisel yorumlar ve dilediğiniz an gerçek bir astrologla görüşme imkânı.',
+      fallback.tagline,
     ),
-    primaryCTA: ui('ui_home_hero_cta_primary', 'Danışmanları Keşfet'),
-    secondaryCTA: ui('ui_home_hero_cta_secondary', 'Haritanı Oluştur'),
-    scrollHint: ui('ui_home_hero_scroll_hint', 'Aşağı Kaydır'),
+    primaryCTA: ui('ui_home_hero_cta_primary', fallback.primary),
+    secondaryCTA: ui('ui_home_hero_cta_secondary', fallback.secondary),
+    scrollHint: ui('ui_home_hero_scroll_hint', fallback.scroll),
   };
 
-  const ctaHref = `/${locale}/consultants`;
-  const secondaryHref = `/${locale}/birth-chart`;
+  const ctaHref = localizePath(locale, '/consultants');
+  const secondaryHref = localizePath(locale, '/birth-chart');
 
   return (
     <>

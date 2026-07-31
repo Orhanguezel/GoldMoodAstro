@@ -103,6 +103,11 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
   const avgRating = approved.length > 0
     ? (approved.reduce((sum, c) => sum + parseFloat(c.rating_avg || '0'), 0) / approved.length).toFixed(1)
     : '4.9';
+  const fallback = locale === 'tr'
+    ? { verified: 'Onaylı Danışmanlar', profiles: '{count} uzman profil', live: 'Canlı Görüşme', online: '{count} danışman çevrimiçi', soon: 'Yakında müsait' }
+    : locale === 'de'
+      ? { verified: 'Geprüfte Beratung', profiles: '{count} Fachprofile', live: 'Live-Sitzung', online: '{count} Beratende online', soon: 'Bald verfügbar' }
+      : { verified: 'Verified Consultants', profiles: '{count} expert profiles', live: 'Live Session', online: '{count} consultants online', soon: 'Available soon' };
 
   return (
     <div className="flex flex-col gap-4 w-[340px]">
@@ -113,12 +118,12 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
           </div>
           <div>
             <p className="text-sm font-bold uppercase tracking-widest text-amber-400">
-              {ui('ui_extra_b3_trust_verified_title', 'Onaylı Danışmanlar')}
+              {ui('ui_extra_b3_trust_verified_title', fallback.verified)}
             </p>
             <p className="text-xs text-white/55 mt-0.5">
               {isLoading
                 ? '...'
-                : ui('ui_extra_b3_trust_expert_profiles', '{count} uzman profil').replace('{count}', String(totalCount))}
+                : ui('ui_extra_b3_trust_expert_profiles', fallback.profiles).replace('{count}', String(totalCount))}
             </p>
           </div>
         </div>
@@ -155,15 +160,15 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
           </span>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">
-              {ui('ui_extra_b3_trust_live_session', 'Live Session')}
+              {ui('ui_extra_b3_trust_live_session', fallback.live)}
             </p>
             {isLoading ? (
               <Skeleton className="w-24 h-2.5 mt-1" />
             ) : (
               <p className="text-[9px] text-white/40 mt-0.5">
                 {onlineCount > 0
-                  ? ui('ui_extra_b3_trust_consultants_online', '{count} consultants online').replace('{count}', String(onlineCount))
-                  : ui('ui_extra_b3_trust_available_soon', 'Available soon')}
+                  ? ui('ui_extra_b3_trust_consultants_online', fallback.online).replace('{count}', String(onlineCount))
+                  : ui('ui_extra_b3_trust_available_soon', fallback.soon)}
               </p>
             )}
           </div>

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ArrowRight, Gift, Sparkle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 /**
  * Premium FirstSessionDiscountBanner component.
@@ -75,7 +76,7 @@ export default function FirstSessionDiscountBanner({ locale = 'tr' }: { locale?:
 
           {/* CTA Button */}
           <Link 
-            href="/consultants" 
+            href={localizePath(locale, '/consultants')}
             className="inline-flex items-center gap-3 w-fit btn-premium px-10 py-4 shadow-soft group/btn"
           >
             <span className="font-semibold tracking-[0.12em] uppercase text-xs">{content.cta}</span>

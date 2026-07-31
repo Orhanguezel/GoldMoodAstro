@@ -7,6 +7,7 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBrand } from '@/hooks/useBrand';
 import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 /**
  * Premium BirthChartBanner component.
@@ -71,7 +72,7 @@ export default function BirthChartBanner({ locale = 'tr' }: { locale?: string })
 
           {/* CTA Button */}
           <Link 
-            href="/birth-chart" 
+            href={localizePath(locale, '/birth-chart')}
             className="inline-flex items-center gap-3 w-fit btn-premium px-8 py-4 shadow-gold group/btn"
           >
             <span className="font-semibold tracking-[0.15em]">{content.cta}</span>

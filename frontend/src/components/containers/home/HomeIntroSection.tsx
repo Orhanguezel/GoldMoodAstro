@@ -34,6 +34,24 @@ const STEPS = [
 
 export default function HomeIntroSection({ locale = 'tr' }: { locale?: string }) {
   const { ui } = useUiSection('ui_home', locale as any);
+  const fallback = locale === 'tr' ? {
+    eyebrow: 'Süreç', title1: 'Yolculuğunuz Nasıl', title2: 'İşler?', desc: 'Aradığınız ruhsal rehberliğe ve iç sakinliğe üç adımda ulaşın.',
+    steps: STEPS.map(({ title, desc }) => ({ title, desc })),
+  } : locale === 'de' ? {
+    eyebrow: 'Ablauf', title1: 'So funktioniert Ihre', title2: 'Reise', desc: 'In drei Schritten zu spiritueller Begleitung und mehr innerer Ruhe.',
+    steps: [
+      { title: 'Beratung wählen', desc: 'Finden Sie anhand von Fachgebiet und echten Bewertungen die passende Begleitung.' },
+      { title: 'Termin buchen', desc: 'Wählen Sie einen freien Termin und schließen Sie die sichere Zahlung ab.' },
+      { title: 'Gespräch starten', desc: 'Nehmen Sie zum Termin am integrierten Gespräch teil und erhalten Sie Ihre Begleitung.' },
+    ],
+  } : {
+    eyebrow: 'Process', title1: 'How Your Journey', title2: 'Works', desc: 'Reach the spiritual guidance and inner calm you seek in three steps.',
+    steps: [
+      { title: 'Choose a Consultant', desc: 'Find the right guide based on expertise and verified user reviews.' },
+      { title: 'Book a Session', desc: 'Choose an available time and complete your secure payment.' },
+      { title: 'Start the Call', desc: 'Join the in-app session at the scheduled time and receive your guidance.' },
+    ],
+  };
 
   return (
     <section className="py-32 bg-[var(--gm-bg-deep)] border-y border-[var(--gm-border-soft)] relative overflow-hidden">
@@ -43,14 +61,14 @@ export default function HomeIntroSection({ locale = 'tr' }: { locale?: string })
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-20">
           <span className="font-display text-[10px] tracking-[0.5em] text-[var(--gm-gold-deep)] uppercase mb-4 block">
-            {ui('ui_home_intro_eyebrow', 'Süreç')}
+            {ui('ui_home_intro_eyebrow', fallback.eyebrow)}
           </span>
           <h2 className="font-display text-3xl md:text-5xl text-[var(--gm-text)] mb-6">
-            {ui('ui_home_intro_title_1', 'Yolculuğunuz Nasıl')}{' '}
-            <span className="text-[var(--gm-gold)]">{ui('ui_home_intro_title_2', 'İşler?')}</span>
+            {ui('ui_home_intro_title_1', fallback.title1)}{' '}
+            <span className="text-[var(--gm-gold)]">{ui('ui_home_intro_title_2', fallback.title2)}</span>
           </h2>
           <p className="font-serif italic text-[var(--gm-text-dim)] max-w-2xl mx-auto">
-            {ui('ui_home_intro_desc', 'Aradığınız ruhsal rehberliğe ve iç sakinliğe üç adımda ulaşın.')}
+            {ui('ui_home_intro_desc', fallback.desc)}
           </p>
         </div>
 
@@ -78,11 +96,11 @@ export default function HomeIntroSection({ locale = 'tr' }: { locale?: string })
                 </div>
 
                 <h3 className="font-serif text-2xl text-[var(--gm-text)] mb-4 group-hover:text-[var(--gm-gold)] transition-colors">
-                  {ui(step.titleKey, step.title)}
+                  {ui(step.titleKey, fallback.steps[idx].title)}
                 </h3>
 
                 <p className="text-[var(--gm-text-dim)] text-sm leading-relaxed max-w-[280px]">
-                  {ui(step.descKey, step.desc)}
+                  {ui(step.descKey, fallback.steps[idx].desc)}
                 </p>
               </div>
             ))}

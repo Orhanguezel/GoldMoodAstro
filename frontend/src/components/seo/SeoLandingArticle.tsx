@@ -5,6 +5,7 @@ import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import { getLanding, landingLocale, LANDING_UI, type LandingKey } from './seo-landing-content';
 import { fetchCustomPagePublicByLandingKey } from '@/seo/server';
+import { localizedPath } from '@/integrations/shared';
 
 export default async function SeoLandingArticle({ type, locale }: { type: LandingKey; locale: string }) {
   const fallback = getLanding(type, locale);
@@ -20,7 +21,8 @@ export default async function SeoLandingArticle({ type, locale }: { type: Landin
   };
   const ui = LANDING_UI[landingLocale(locale)];
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
-  const pageUrl = `${siteUrl}/${locale}/${type}`;
+  const pageUrl = `${siteUrl}${localizedPath(locale, `/${type}`, 'tr')}`;
+  const aboutUrl = `${siteUrl}${localizedPath(locale, '/about', 'tr')}`;
   const image = data.image.startsWith('http') ? data.image : `${siteUrl}${data.image}`;
 
   return (
@@ -38,7 +40,7 @@ export default async function SeoLandingArticle({ type, locale }: { type: Landin
             image,
             datePublished: '2026-07-02T00:00:00.000Z',
             dateModified: '2026-07-02T00:00:00.000Z',
-            author: { name: 'GoldMoodAstro Editorial Team', url: `${siteUrl}/${locale}/about` },
+            author: { name: 'GoldMoodAstro Editorial Team', url: aboutUrl },
             publisherId: `${siteUrl}/#org`,
             url: pageUrl,
             speakableSelectors: ['h1', '[data-speakable]'],

@@ -6,6 +6,7 @@ import { articleSchema, breadcrumbSchema, faqSchema, graph } from '@/seo/jsonld'
 import { buildPageMetadata } from '@/seo/server';
 import { buildZodiacFaq } from '@/lib/zodiac/faq';
 import { getZodiacMeta } from '@/lib/zodiac/signs';
+import { localizedPath } from '@/integrations/shared';
 import {
   VALID_ZODIAC_SIGNS,
   buildZodiacFallbackInfo,
@@ -87,13 +88,15 @@ export default async function SignDetailPage({ params }: Props) {
   const label = zodiacLabels[sign] || sign;
   const localizedLabel = getZodiacLabelForLocale(sign, locale);
   const renderedInfo = info ?? buildZodiacFallbackInfo(sign, localizedLabel, locale);
-  const pageUrl = `${SITE_URL}/${locale}/burclar/${sign}`;
+  const pageUrl = `${SITE_URL}${localizedPath(locale, `/burclar/${sign}`, 'tr')}`;
+  const zodiacHubUrl = `${SITE_URL}${localizedPath(locale, '/burclar', 'tr')}`;
+  const aboutUrl = `${SITE_URL}${localizedPath(locale, '/about', 'tr')}`;
   const meta = getZodiacMeta(sign);
   const zodiacFaq = meta ? buildZodiacFaq(meta, locale, renderedInfo.short_summary) : null;
   const schema = graph([
     breadcrumbSchema([
       { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },
-      { name: locale === 'tr' ? 'Burçlar' : 'Zodiac Signs', item: `${SITE_URL}/${locale}/burclar` },
+      { name: locale === 'tr' ? 'Burçlar' : locale === 'de' ? 'Sternzeichen' : 'Zodiac Signs', item: zodiacHubUrl },
       { name: locale === 'tr' ? `${localizedLabel} Burcu` : locale === 'de' ? `${localizedLabel} Sternzeichen` : `${label} Zodiac`, item: pageUrl },
     ]),
     articleSchema({
@@ -102,7 +105,7 @@ export default async function SignDetailPage({ params }: Props) {
       image: `${SITE_URL}/uploads/zodiac/${sign}.png`,
       datePublished: '2026-04-30T00:00:00.000Z',
       dateModified: '2026-04-30T00:00:00.000Z',
-      author: { name: 'GoldMoodAstro Editorial Team', url: `${SITE_URL}/${locale}/about` },
+      author: { name: 'GoldMoodAstro Editorial Team', url: aboutUrl },
       publisherId: `${SITE_URL}/#org`,
       url: pageUrl,
       speakableSelectors: ['h1', '[data-speakable]'],

@@ -60,16 +60,41 @@ const CATEGORY_COPY_FALLBACK: Record<string, { label: string; desc: string }> = 
   fizyonomi: { label: 'Fizyonomi', desc: 'Yüz hatlarının geleneksel yorumuyla karakter okuması.' },
 };
 
+const CATEGORY_COPY_EN: Record<string, { label: string; desc: string }> = {
+  astrology: { label: 'Astrology', desc: 'Guidance through birth charts and planetary influences.' },
+  birth_chart: { label: 'Birth Chart', desc: 'Detailed natal chart analysis.' },
+  tarot: { label: 'Tarot', desc: 'Reflective guidance through card symbolism.' },
+  numerology: { label: 'Numerology', desc: 'Life-path insight through the language of numbers.' },
+  mood: { label: 'Spiritual Guidance', desc: 'Support for inner balance and awareness.' },
+  career: { label: 'Career and Money', desc: 'Guidance for work life and financial flow.' },
+  relationship: { label: 'Love and Relationships', desc: 'Relationship dynamics and synastry guidance.' },
+};
+
+const CATEGORY_COPY_DE: Record<string, { label: string; desc: string }> = {
+  astrology: { label: 'Astrologie', desc: 'Begleitung durch Geburtshoroskope und planetare Einflüsse.' },
+  birth_chart: { label: 'Geburtshoroskop', desc: 'Detaillierte Analyse des Geburtshoroskops.' },
+  tarot: { label: 'Tarot', desc: 'Reflektierende Begleitung durch Kartensymbolik.' },
+  numerology: { label: 'Numerologie', desc: 'Lebensweg-Impulse durch die Sprache der Zahlen.' },
+  mood: { label: 'Spirituelle Begleitung', desc: 'Unterstützung für innere Balance und Bewusstsein.' },
+  career: { label: 'Beruf und Finanzen', desc: 'Orientierung für Berufsleben und finanzielle Themen.' },
+  relationship: { label: 'Liebe und Beziehung', desc: 'Beziehungsdynamik und Synastrie-Begleitung.' },
+};
+
 export default function ExpertiseCategoriesSection({ locale = 'tr' }: { locale?: string }) {
   const { ui } = useUiSection('ui_home', locale as any);
-  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery({ locale });
   
+  const sectionFallback = locale === 'tr'
+    ? { label: 'Kategoriler', title: 'Uzmanlık <span class="text-[var(--gm-gold)]">Alanlarını Keşfet</span>', desc: 'Hangi rehberliğe ihtiyacınız varsa, o alandaki deneyimli danışmanlar burada sizi bekliyor.', cta: 'Danışmanları Gör' }
+    : locale === 'de'
+      ? { label: 'Kategorien', title: 'Entdecken Sie unsere <span class="text-[var(--gm-gold)]">Fachgebiete</span>', desc: 'Finden Sie erfahrene Beratung für das Thema, das Sie gerade beschäftigt.', cta: 'Beratung ansehen' }
+      : { label: 'Categories', title: 'Explore Our <span class="text-[var(--gm-gold)]">Expertise</span>', desc: 'Find experienced consultants for the kind of guidance you need.', cta: 'View Consultants' };
   const copy = useMemo(() => ({
-    label: ui('ui_home_expertise_label', 'Kategoriler'),
-    title: ui('ui_home_expertise_title', 'Uzmanlık <span class="text-[var(--gm-gold)]">Alanlarını Keşfet</span>'),
-    desc: ui('ui_home_expertise_desc', 'Hangi rehberliğe ihtiyacınız varsa, o alandaki deneyimli danışmanlar burada sizi bekliyor.'),
-    cta: ui('ui_home_expertise_cta', 'Danışmanları Gör')
-  }), [ui]);
+    label: ui('ui_home_expertise_label', sectionFallback.label),
+    title: ui('ui_home_expertise_title', sectionFallback.title),
+    desc: ui('ui_home_expertise_desc', sectionFallback.desc),
+    cta: ui('ui_home_expertise_cta', sectionFallback.cta)
+  }), [ui, sectionFallback.cta, sectionFallback.desc, sectionFallback.label, sectionFallback.title]);
 
   const categories = useMemo(() => {
     const source = serviceCategories.length
@@ -79,12 +104,13 @@ export default function ExpertiseCategoriesSection({ locale = 'tr' }: { locale?:
         }))
       : CATEGORIES_FALLBACK;
 
+    const localizedFallbacks = locale === 'tr' ? CATEGORY_COPY_FALLBACK : locale === 'de' ? CATEGORY_COPY_DE : CATEGORY_COPY_EN;
     return source.map(cat => ({
       ...cat,
-      label: ui(`ui_home_expertise_cat_${cat.id}_label`, CATEGORY_COPY_FALLBACK[cat.id]?.label ?? cat.id),
-      desc: ui(`ui_home_expertise_cat_${cat.id}_desc`, CATEGORY_COPY_FALLBACK[cat.id]?.desc ?? ''),
+      label: ui(`ui_home_expertise_cat_${cat.id}_label`, localizedFallbacks[cat.id]?.label ?? cat.id),
+      desc: ui(`ui_home_expertise_cat_${cat.id}_desc`, localizedFallbacks[cat.id]?.desc ?? ''),
     }));
-  }, [serviceCategories, ui]);
+  }, [locale, serviceCategories, ui]);
 
   return (
     <section className="py-24 bg-[var(--gm-bg)] relative overflow-hidden">

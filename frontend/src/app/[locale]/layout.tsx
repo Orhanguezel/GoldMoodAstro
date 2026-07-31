@@ -12,6 +12,7 @@ import JsonLd from '@/seo/JsonLd';
 import { graph, org, website } from '@/seo/jsonld';
 import type { PublicMenuItemDto } from '@/integrations/shared';
 import { getBrandServer } from '@/lib/brand.server';
+import { localizedPath } from '@/integrations/shared';
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
 
@@ -188,7 +189,7 @@ export default async function RootLayout({
       name: brand.name || 'GoldMoodAstro',
       url: SITE_URL,
       publisherId: `${SITE_URL}/#org`,
-      searchUrlTemplate: `${SITE_URL}/${locale}/consultants?q={q}`,
+      searchUrlTemplate: `${SITE_URL}${localizedPath(locale, '/consultants', 'tr')}?q={q}`,
     }),
   ]);
 

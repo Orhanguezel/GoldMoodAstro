@@ -2,25 +2,13 @@ import React from 'react';
 import Link from 'next/link';
 import { Cinzel } from 'next/font/google';
 import Image from 'next/image';
+import { localizePath } from '@/integrations/shared';
+import { ZODIAC_SIGNS, localizeSign } from '@/lib/zodiac/signs';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
-const shortSigns = [
-  { key: 'aries', label: 'Koç' },
-  { key: 'taurus', label: 'Boğa' },
-  { key: 'gemini', label: 'İkizler' },
-  { key: 'cancer', label: 'Yengeç' },
-  { key: 'leo', label: 'Aslan' },
-  { key: 'virgo', label: 'Başak' },
-  { key: 'libra', label: 'Terazi' },
-  { key: 'scorpio', label: 'Akrep' },
-  { key: 'sagittarius', label: 'Yay' },
-  { key: 'capricorn', label: 'Oğlak' },
-  { key: 'aquarius', label: 'Kova' },
-  { key: 'pisces', label: 'Balık' },
-];
-
-export default function ZodiacGridSection() {
+export default function ZodiacGridSection({ locale = 'tr' }: { locale?: string }) {
+  const shortSigns = ZODIAC_SIGNS.map((sign) => ({ ...sign, localized: localizeSign(sign, locale) }));
   return (
     <section className="py-24 relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none opacity-5">
@@ -45,19 +33,19 @@ export default function ZodiacGridSection() {
               style={{ transitionDelay: `${idx * 45}ms` }}
             >
               <Link
-                href={`/burclar/${sign.key}`}
+                href={localizePath(locale, `/burclar/${sign.key}`)}
                 className="group flex flex-col items-center p-4 rounded-2xl bg-[var(--gm-surface)] border border-[var(--gm-border-soft)] hover:border-[var(--gm-gold-dim)] transition-all duration-500 shadow-sm hover:shadow-glow"
               >
                 <div className="relative w-12 h-12 md:w-16 md:h-16 mb-3 transform group-hover:scale-110 transition-transform duration-500">
                   <Image
                     src={`/uploads/zodiac/${sign.key}.png`}
-                    alt={sign.label}
+                    alt={sign.localized.label}
                     fill
                     className="object-contain"
                   />
                 </div>
                 <span className={`${cinzel.className} text-sm md:text-base text-[var(--gm-text)] group-hover:text-[var(--gm-gold)] transition-colors`}>
-                  {sign.label}
+                  {sign.localized.label}
                 </span>
               </Link>
             </div>
@@ -66,7 +54,7 @@ export default function ZodiacGridSection() {
 
         <div className="mt-16 text-center">
           <Link 
-            href="/burclar" 
+            href={localizePath(locale, '/burclar')}
             className="text-[var(--gm-gold)] font-bold text-xs uppercase tracking-[0.3em] hover:text-[var(--gm-gold-light)] transition-colors inline-flex items-center gap-2 group"
           >
             TÜM BURÇLAR VE ARAÇLAR

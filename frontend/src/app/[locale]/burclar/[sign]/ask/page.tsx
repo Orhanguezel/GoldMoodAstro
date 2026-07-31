@@ -7,7 +7,7 @@ import {
   VALID_ZODIAC_SIGNS,
   buildZodiacFallbackInfo,
   fetchZodiacInfoServer,
-  zodiacLabels,
+  getZodiacLabelForLocale,
 } from '@/lib/zodiac/pageInfo.server';
 
 type Props = {
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!VALID_ZODIAC_SIGNS.has(sign)) {
     return { title: 'Not found', robots: { index: false, follow: false } };
   }
-  const label = zodiacLabels[sign] || sign;
+  const label = getZodiacLabelForLocale(sign, locale);
   return buildPageMetadata({
     locale,
     pageKey: 'burclar-ask',
@@ -38,7 +38,7 @@ import PageContainer from '@/components/common/PageContainer';
 export default async function SignLovePage({ params }: Props) {
   const { sign, locale } = await params;
   if (!VALID_ZODIAC_SIGNS.has(sign)) notFound();
-  const label = zodiacLabels[sign] || sign;
+  const label = getZodiacLabelForLocale(sign, locale);
   const info = (await fetchZodiacInfoServer(sign, locale)) ?? buildZodiacFallbackInfo(sign, label, locale);
 
   return (

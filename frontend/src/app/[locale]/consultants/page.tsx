@@ -12,7 +12,7 @@ type Props = {
 };
 import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
 import { fetchSetting } from '@/i18n/server';
-import { normPath } from '@/integrations/shared';
+import { localizedPath, normPath } from '@/integrations/shared';
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
@@ -105,7 +105,7 @@ export default async function ConsultantsPage({ params, searchParams }: Props) {
     ? (locale === 'tr' ? topicCfg.headlineTr : topicCfg.headlineEn)
     : await getConsultantsPageTitle(locale);
   const consultants = await getConsultants({ expertise: initialExpertise, limit: 12, locale });
-  const listUrl = `${SITE_URL}/${locale}/consultants`;
+  const listUrl = `${SITE_URL}${localizedPath(locale, '/consultants', 'tr')}`;
   const graphItems = [
     breadcrumbSchema([
       { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },

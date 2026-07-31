@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Crown, ArrowRight, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 /**
  * Premium Membership Banner component.
@@ -74,7 +75,7 @@ export default function PremiumMembershipBanner({ locale = 'tr' }: { locale?: st
 
           {/* CTA Button */}
           <Link 
-            href="/pricing" 
+            href={localizePath(locale, '/pricing')}
             className="inline-flex items-center gap-3 w-fit bg-[var(--gm-gold)] hover:bg-[var(--gm-gold-deep)] text-amber-950 px-10 py-4 rounded-full transition-all duration-300 transform group-hover:translate-y-[-2px] shadow-[0_10px_30px_-5px_rgba(201,169,97,0.4)] group/btn"
           >
             <Zap size={18} fill="currentColor" />

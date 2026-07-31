@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ArrowRight, Compass, Stars } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 /**
  * WelcomePremiumBanner component.
@@ -77,7 +78,7 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
           {/* CTA Buttons - Premium Dual Set */}
           <div className="flex flex-col sm:flex-row gap-6">
             <Link 
-              href="/consultants" 
+              href={localizePath(locale, '/consultants')}
               className="inline-flex items-center justify-center gap-3 btn-premium px-12 py-5 shadow-gold group/btn text-sm"
             >
               <Stars size={18} fill="currentColor" />
@@ -86,10 +87,10 @@ export default function WelcomePremiumBanner({ locale = 'tr' }: { locale?: strin
             </Link>
             
             <Link 
-              href="/about" 
+              href={localizePath(locale, '/about')}
               className="inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full border border-[var(--gm-text)]/20 text-[var(--gm-text)]/90 backdrop-blur-md hover:bg-[var(--gm-text)]/10 transition-all duration-300 text-sm tracking-[0.15em] uppercase font-medium"
             >
-              {ui('ui_extra_b4_welcome_banner_story', 'Hikayemiz')}
+              {ui('ui_extra_b4_welcome_banner_story', isTr ? 'Hikayemiz' : locale === 'de' ? 'Unsere Geschichte' : 'Our Story')}
             </Link>
           </div>
         </div>

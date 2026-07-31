@@ -6,7 +6,7 @@ import { Pause, Play, Sparkles, Volume2 } from 'lucide-react';
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 import { getZodiacAffirmationContent } from '@/lib/zodiac/affirmations';
-import { ZODIAC_META } from '@/lib/zodiac/signs';
+import { ZODIAC_META, localizeSign } from '@/lib/zodiac/signs';
 import type { ZodiacSign } from '@/types/common';
 import { useAmbientMixerContext } from '@/context/ambient-mixer';
 
@@ -15,7 +15,8 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
   const { ui } = useUiSection('ui_extra' as any);
   const { ui: uiZ } = useUiSection('ui_zodiacx' as any);
   const sign = ZODIAC_META[signKey];
-  const content = getZodiacAffirmationContent(signKey);
+  const localizedSign = localizeSign(sign, locale);
+  const content = getZodiacAffirmationContent(signKey, locale);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
   const [isAmbientOn, setIsAmbientOn] = React.useState(false);
   
@@ -107,7 +108,7 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
               {content.title}
             </h1>
             <p className="mt-4 text-base leading-7 text-muted-foreground">
-              {sign.element} {uiZ('ui_zodiacx_meditation_element_label', 'element and')} {sign.modality.toLowerCase()} {uiZ('ui_zodiacx_meditation_modality_label', 'modality')} {content.focus}.
+              {localizedSign.element} {uiZ('ui_zodiacx_meditation_element_label', 'element and')} {localizedSign.modality.toLowerCase()} {uiZ('ui_zodiacx_meditation_modality_label', 'modality')} {content.focus}.
             </p>
           </div>
         </div>
@@ -185,7 +186,7 @@ export default function ZodiacMeditationPlayer({ signKey }: { signKey: ZodiacSig
           href={localizePath(locale, `/burclar/${sign.key}`)}
           className="rounded-xl border border-border/60 px-4 py-3 text-sm font-semibold text-foreground transition hover:border-brand-gold/50 hover:text-brand-gold"
         >
-          {sign.label} {ui('ui_extra_b4_zodiac_open_profile', 'open profile')}
+          {localizedSign.label} {ui('ui_extra_b4_zodiac_open_profile', 'open profile')}
         </Link>
         <Link
           href={localizePath(locale, `/burclar/${sign.key}/bugun`)}

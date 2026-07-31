@@ -43,6 +43,8 @@ const SUPPORTED_LOCALES = ['tr', 'en', 'de'];
 /** Extract locale from the request URL pathname (e.g. /en/about → "en") */
 async function resolveHtmlLang(): Promise<string> {
   const h = await headers();
+  const localeHeader = h.get('x-gm-locale') || '';
+  if (SUPPORTED_LOCALES.includes(localeHeader)) return localeHeader;
   const pathname = h.get('x-next-url') || h.get('x-invoke-path') || '';
   const seg = pathname.split('/').filter(Boolean)[0] || '';
   if (SUPPORTED_LOCALES.includes(seg)) return seg;

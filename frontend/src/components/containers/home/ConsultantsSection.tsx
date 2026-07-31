@@ -7,6 +7,7 @@ import { useListConsultantsPublicQuery } from '@/integrations/rtk/public/consult
 import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 import { useUiSection } from '@/i18n';
 import ConsultantCard from '@/components/containers/consultant/ConsultantCard';
+import { localizePath } from '@/integrations/shared';
 
 type SortKey = 'featured' | 'popular' | 'new' | 'online';
 type IconKey = 'sparkles' | 'trending' | 'clock' | 'wifi' | 'star';
@@ -47,7 +48,7 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
 
   const items = data ?? [];
 
-  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery({ locale });
   const expertiseLabels = useMemo(
     () => Object.fromEntries(serviceCategories.map((category) => [category.slug, category.name])),
     [serviceCategories],
@@ -88,23 +89,24 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
 
   if (!isLoading && items.length === 0) return null;
 
-  const SUBTITLE_FALLBACK: Record<SortKey, string> = {
-    featured: 'En yüksek puana ve seans sayısına sahip uzmanlar',
-    popular: 'En çok seans tamamlamış deneyimli uzmanlar',
-    new: 'Platforma yeni katılan astrologlar',
-    online: 'Şu anda müsait, görüşmeye hazır',
-  };
-  const TITLE_FALLBACK: Record<SortKey, string> = {
-    featured: 'Öne Çıkan Danışmanlar',
-    popular: 'Popüler Danışmanlar',
-    new: 'Yeni Danışmanlar',
-    online: 'Çevrimiçi Danışmanlar',
+  const fallbackCopy = locale === 'tr' ? {
+    subtitles: { featured: 'En yüksek puana ve seans sayısına sahip uzmanlar', popular: 'En çok seans tamamlamış deneyimli uzmanlar', new: 'Platforma yeni katılan astrologlar', online: 'Şu anda müsait, görüşmeye hazır' },
+    titles: { featured: 'Öne Çıkan Danışmanlar', popular: 'Popüler Danışmanlar', new: 'Yeni Danışmanlar', online: 'Çevrimiçi Danışmanlar' },
+    all: 'Tümünü Gör', consultants: 'Danışmanlar',
+  } : locale === 'de' ? {
+    subtitles: { featured: 'Fachleute mit den besten Bewertungen und meisten Sitzungen', popular: 'Erfahrene Fachleute mit den meisten Sitzungen', new: 'Neu auf der Plattform', online: 'Jetzt verfügbar und bereit für ein Gespräch' },
+    titles: { featured: 'Empfohlene Beratung', popular: 'Beliebte Beratung', new: 'Neue Beratung', online: 'Online verfügbar' },
+    all: 'Alle ansehen', consultants: 'Beratung',
+  } : {
+    subtitles: { featured: 'Experts with the highest ratings and session counts', popular: 'Experienced experts with the most completed sessions', new: 'Astrologers who recently joined the platform', online: 'Available now and ready to talk' },
+    titles: { featured: 'Featured Consultants', popular: 'Popular Consultants', new: 'New Consultants', online: 'Online Consultants' },
+    all: 'View All', consultants: 'Consultants',
   };
 
   const subtitle =
-    config?.subtitle || ui(`ui_home_consultants_${sort}_subtitle`, SUBTITLE_FALLBACK[sort]);
+    config?.subtitle || ui(`ui_home_consultants_${sort}_subtitle`, fallbackCopy.subtitles[sort]);
 
-  const title = ui(`ui_home_consultants_${sort}_title`, TITLE_FALLBACK[sort] || label || 'Danışmanlar');
+  const title = ui(`ui_home_consultants_${sort}_title`, fallbackCopy.titles[sort] || label || fallbackCopy.consultants);
 
   return (
     <section className="container mx-auto px-4 py-16 md:py-20">
@@ -145,10 +147,10 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
           </div>
 
           <Link
-            href={`/${locale}/consultants?sort=${sort}`}
+            href={`${localizePath(locale, '/consultants')}?sort=${sort}`}
             className="group inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] uppercase text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)] transition-colors"
           >
-            View All
+            {ui('ui_home_consultants_view_all', fallbackCopy.all)}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>

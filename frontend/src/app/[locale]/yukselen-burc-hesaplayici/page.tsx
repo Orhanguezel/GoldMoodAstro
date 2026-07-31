@@ -101,7 +101,7 @@ export default async function RisingCalculatorPage({ params }: Props) {
           {voice.a}
         </p>
       </section>
-      <RisingSignCalculator />
+      <RisingSignCalculator locale={locale} />
       {/* 2026-07-20: sayfada yukselen burc hakkinda hic bilgi yoktu (248 kelime).
           Diger landing sayfalariyla ayni kalip: arac once, dil destekli icerik altinda. */}
       <SeoLandingArticle type="yukselen-burc" locale={locale} />

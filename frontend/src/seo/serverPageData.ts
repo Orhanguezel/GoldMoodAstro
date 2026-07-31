@@ -45,7 +45,8 @@ export const fetchCustomPagePublicBySlug = cache(
 
     const qs = new URLSearchParams({
       locale,
-      default_locale: defaultLocale,
+      // Indexed localized pages must never render another language as content.
+      default_locale: locale,
     });
 
     const raw = await fetchApiJson<ApiCustomPage>(
@@ -69,7 +70,7 @@ export const fetchCustomPagePublicByLandingKey = cache(
       module_key: 'landing',
       landing_key: landingKey,
       locale,
-      default_locale: defaultLocale,
+      default_locale: locale,
       is_published: 'true',
       limit: '1',
     });
@@ -92,7 +93,7 @@ export const fetchCustomPagesPublicByModule = cache(
     const qs = new URLSearchParams({
       module_key: moduleKey,
       locale,
-      default_locale: defaultLocale,
+      default_locale: locale,
       is_published: 'true',
       limit: String(args.limit ?? 10),
       sort: 'created_at',

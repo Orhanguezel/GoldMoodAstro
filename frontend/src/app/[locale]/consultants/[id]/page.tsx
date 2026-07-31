@@ -5,7 +5,7 @@ import ConsultantDetail from '@/components/containers/consultant/ConsultantDetai
 import JsonLd from '@/seo/JsonLd';
 import { breadcrumbSchema, consultantPersonSchema, graph, review as reviewSchema, service as serviceSchema } from '@/seo/jsonld';
 import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
-import { normPath } from '@/integrations/shared';
+import { localizedPath, normPath } from '@/integrations/shared';
 import PageContainer from '@/components/common/PageContainer';
 
 type Props = {
@@ -192,11 +192,12 @@ export default async function ConsultantDetailPage({ params }: Props) {
   // because Next 16 streaming can swallow server-component redirects.
   const slug = consultant?.slug?.trim();
   if (slug && decodeURIComponent(id) !== slug) {
-    permanentRedirect(`/${locale}/consultants/${slug}`);
+    permanentRedirect(localizedPath(locale, `/consultants/${slug}`, 'tr'));
   }
 
   const canonicalParam = slug || id;
-  const pageUrl = `${SITE_URL}/${locale}/consultants/${encodeURIComponent(canonicalParam)}`;
+  const pageUrl = `${SITE_URL}${localizedPath(locale, `/consultants/${encodeURIComponent(canonicalParam)}`, 'tr')}`;
+  const consultantsUrl = `${SITE_URL}${localizedPath(locale, '/consultants', 'tr')}`;
   const consultantName = consultant?.full_name?.trim() || 'GoldMoodAstro Consultant';
   const ratingValue = Number(consultant?.rating_avg ?? 0);
   const ratingCount = Number(consultant?.rating_count ?? 0);
@@ -207,7 +208,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
   const graphItems = [
     breadcrumbSchema([
       { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },
-      { name: 'Consultants', item: `${SITE_URL}/${locale}/consultants` },
+      { name: 'Consultants', item: consultantsUrl },
       { name: consultantName, item: pageUrl },
     ]),
   ];

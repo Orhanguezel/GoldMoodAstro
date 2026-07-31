@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import AboutPageContent from '@/components/containers/about/AboutPageContent';
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
+import { localizedPath } from '@/integrations/shared';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -38,22 +39,23 @@ function copyFor(locale: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const copy = copyFor(locale);
+  const canonical = `${SITE_URL}${localizedPath(locale, '/about', 'tr')}`;
   return {
     title: copy.title,
     description: copy.description,
     alternates: {
-      canonical: `${SITE_URL}/${locale}/about`,
+      canonical,
       languages: {
-        tr: `${SITE_URL}/tr/about`,
-        en: `${SITE_URL}/en/about`,
-        de: `${SITE_URL}/de/about`,
-        'x-default': `${SITE_URL}/tr/about`,
+        tr: `${SITE_URL}${localizedPath('tr', '/about', 'tr')}`,
+        en: `${SITE_URL}${localizedPath('en', '/about', 'tr')}`,
+        de: `${SITE_URL}${localizedPath('de', '/about', 'tr')}`,
+        'x-default': `${SITE_URL}${localizedPath('tr', '/about', 'tr')}`,
       },
     },
     openGraph: {
       title: copy.title,
       description: copy.description,
-      url: `${SITE_URL}/${locale}/about`,
+      url: canonical,
       siteName: 'GoldMoodAstro',
       type: 'website',
     },

@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Sparkles, ArrowRight, Share2 } from 'lucide-react';
 import { useListMyBirthChartsQuery } from '@/integrations/rtk/public/birth_charts.endpoints';
 import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -19,7 +20,7 @@ const SIGN_LABELS: Record<string, string> = {
   sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
 };
 
-export default function RisingSignCalculator() {
+export default function RisingSignCalculator({ locale = 'tr' }: { locale?: string }) {
   const { ui } = useUiSection('ui_extra' as any);
   const [result, setResult] = useState<BirthChart | null>(null);
   const { data: myCharts } = useListMyBirthChartsQuery();
@@ -124,7 +125,7 @@ export default function RisingSignCalculator() {
                   <button className="btn-secondary py-3 px-6 rounded-full flex items-center gap-2 text-sm">
                     <Share2 className="w-4 h-4" /> {ui('ui_extra_b4_rising_share', 'Share')}
                   </button>
-                  <Link href="/birth-chart" className="btn-premium py-3 px-8 rounded-full flex items-center gap-2 text-sm">
+                  <Link href={localizePath(locale, '/birth-chart')} className="btn-premium py-3 px-8 rounded-full flex items-center gap-2 text-sm">
                     {ui('ui_extra_b4_rising_full_chart', 'View Full Chart')} <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
@@ -137,7 +138,7 @@ export default function RisingSignCalculator() {
               <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
                 {ui('ui_extra_b4_rising_cta_desc', 'The placements of planets across the 12 houses and their aspects draw the roadmap of your potential. Explore your chart in depth with our expert astrologers.')}
               </p>
-              <Link href="/consultants" className="text-brand-gold font-bold uppercase tracking-[0.2em] text-sm hover:underline">
+              <Link href={localizePath(locale, '/consultants')} className="text-brand-gold font-bold uppercase tracking-[0.2em] text-sm hover:underline">
                 {ui('ui_extra_b4_rising_cta_link', 'Get Analysis From Experts →')}
               </Link>
             </div>

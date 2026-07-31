@@ -150,7 +150,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sign, locale } = await params;
   const label = signLabel(sign, locale);
   const today = formatDate(new Date(), locale);
-  const ogImageUrl = `https://goldmoodastro.com/${locale}/burclar/${sign}/bugun/opengraph-image`;
+  const ogImageUrl = `https://goldmoodastro.com${localizedPath(locale, `/burclar/${sign}/bugun/opengraph-image`, 'tr')}`;
 
   return buildPageMetadata({
     locale,
@@ -165,6 +165,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 import PageContainer from '@/components/common/PageContainer';
+import { localizedPath } from '@/integrations/shared';
 
 export default async function SignDailyPage({ params }: Props) {
   const { sign, locale } = await params;
@@ -176,7 +177,7 @@ export default async function SignDailyPage({ params }: Props) {
     fetchSignInfoServer(sign, locale),
     fetchTodayServer(sign, locale),
   ]);
-  const pagePath = `/${locale}/burclar/${sign}/bugun`;
+  const pagePath = localizedPath(locale, `/burclar/${sign}/bugun`, 'tr');
   const pageUrl = `${SITE_URL}${pagePath}`;
   const todayDate = today?.date ?? new Date().toISOString().slice(0, 10);
   const reviewDate = formatDate(new Date(todayDate), locale);
@@ -188,7 +189,7 @@ export default async function SignDailyPage({ params }: Props) {
         : localeKey === 'de'
           ? 'Gründerin und redaktionelle Prüferin'
           : 'Kurucu ve editoryal inceleme sorumlusu',
-    url: `${SITE_URL}/${locale}/about`,
+    url: `${SITE_URL}${localizedPath(locale, '/about', 'tr')}`,
   };
   const reviewLabels = {
     eyebrow:

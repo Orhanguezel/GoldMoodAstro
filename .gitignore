@@ -74,7 +74,6 @@ web_modules/
 .secrets/
 
 # Müşteri sunum demoları (VPS'te /1, /2 olarak servis edilir, repo'ya konmaz)
-/index.html
 /mobile-app.html
 /previews/
 
@@ -207,6 +206,11 @@ vite.config.ts.timestamp-*
 # Note: google-services.json (Android) and GoogleService-Info.plist (iOS) are
 # PUBLIC client configs and SHOULD be committed for EAS Build to pick them up.
 doc/
+!doc/
+doc/*
+!doc/plans/
+doc/plans/*
+!doc/plans/seo-i18n-url-migration-checklist-2026-07-31.md
 
 # Playwright test çıktıları (commit edilmez)
 frontend/test-results/

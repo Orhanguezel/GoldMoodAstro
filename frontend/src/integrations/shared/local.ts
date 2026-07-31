@@ -3,6 +3,12 @@
 // Shared Localization Utilities
 // =============================================================
 
+import {
+  canonicalPublicPath,
+  toLogicalPublicPathAnyLocale,
+  type PublicLocale,
+} from '@/i18n/localizedRoutes';
+
 export const FALLBACK_LOCALE = 'tr'; // Default fallback if config missing
 
 /** RTL set sabit olabilir (bu bir “dil listesi yönetimi” değil, yazım yönü bilgisidir) */
@@ -220,12 +226,17 @@ export function localizePath(
   const { pathname, query, hash } = splitPath(asPath);
 
   const clean = stripLocalePrefix(pathname, activeLocales);
-  const base = clean === '/' ? '' : clean;
 
   const target = toShortLocale(locale);
   const def = toShortLocale(opts?.defaultLocale) || toShortLocale(activeLocales?.[0]) || 'de';
 
   const lc = target || def;
+
+  // Normalize an already-localized source path before translating it to the
+  // target locale. Unknown/private paths keep their original segments.
+  const logical = toLogicalPublicPathAnyLocale(clean);
+  const localized = canonicalPublicPath(lc as PublicLocale, logical).publicPath;
+  const base = localized === '/' ? '' : localized;
 
   // ✅ ALWAYS prefix locale
   const path = `/${lc}${base || ''}` || `/${lc}`;
@@ -383,7 +394,8 @@ export function absoluteUrl(pathOrUrl: string): string {
 export function localizedPath(locale: string, pathname: string, defaultLocale: string): string {
   const def = normLocaleShort(defaultLocale, FALLBACK_LOCALE);
   const loc = normLocaleShort(locale, def);
-  const p = normPath(pathname);
+  const logical = normPath(pathname);
+  const p = canonicalPublicPath(loc as PublicLocale, logical).publicPath;
 
   if (DEFAULT_LOCALE_PREFIXLESS && loc === def) return p;
 

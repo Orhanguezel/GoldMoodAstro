@@ -4,6 +4,7 @@ import JsonLd from '@/seo/JsonLd';
 import { articleSchema, breadcrumbSchema, graph } from '@/seo/jsonld';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import { Cinzel } from 'next/font/google';
+import { localizedPath } from '@/integrations/shared';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -74,31 +75,47 @@ const COPY = {
       { title: 'Review process', paragraphs: ['GoldMoodAstro content is reviewed by the editorial team before publishing.', 'Platform content is general information; one-to-one sessions provide personal context.'] },
     ],
   },
+  de: {
+    title: 'Redaktionsrichtlinie und Methodik',
+    description: 'So erstellt GoldMoodAstro Inhalte, nutzt KI-gestützte Entwürfe und wendet verantwortungsvolle spirituelle Begleitung an.',
+    back: 'Zurück zu Über uns',
+    about: 'Über uns',
+    authorTitle: 'Redaktion und Methodik',
+    expertise: ['Astrologie', 'Tarot', 'Numerologie', 'Redaktionelle Prüfung'],
+    sections: [
+      { title: 'Inhaltsprinzip', paragraphs: ['GoldMoodAstro-Inhalte helfen dabei, klarere Fragen zu stellen und sich bewusst auf Beratungen vorzubereiten; sie treffen keine festen Lebensentscheidungen.', 'Wir vermeiden angstbasierte Aussagen, Abhängigkeit erzeugende Sprache und absolute Vorhersagen.'] },
+      { title: 'Transparenz bei KI-Unterstützung', paragraphs: ['Bei allgemeinen Bildungsinhalten können KI-gestützte Entwürfe helfen, Themen zu strukturieren und die Lesbarkeit zu verbessern.', 'Jeder Entwurf wird vor der Veröffentlichung von der GoldMoodAstro-Redaktion auf verantwortungsvolle Sprache, Kontext und ethische Grenzen geprüft.'] },
+      { title: 'Astrologische Methodik', paragraphs: ['Geburtshoroskope werden technisch auf Grundlage der Swiss Ephemeris berechnet. Planetenpositionen, Häuser, Aspekte und Aszendent bilden die Berechnungsebene.', 'Sonnenzeichen-Seiten sind allgemeine Orientierung. Eine persönliche Deutung berücksichtigt Geburtszeit und -ort, Mond, Aszendent, Häuser und Aspekte.'] },
+      { title: 'Tarot und Numerologie', paragraphs: ['Tarot-Inhalte orientieren sich an der Rider-Waite-Smith-Symbolik und verstehen Karten als symbolische Begleitung, nicht als festgelegtes Schicksal.', 'Numerologie deutet Namen und Geburtsdaten zur Selbstreflexion und ersetzt keine persönlichen oder professionellen Entscheidungen.'] },
+      { title: 'Prüfprozess', paragraphs: ['GoldMoodAstro-Inhalte werden vor der Veröffentlichung redaktionell geprüft und bei Bedarf aktualisiert.', 'Plattforminhalte bieten allgemeine Informationen; persönliche Sitzungen beziehen den individuellen Kontext ein.'] },
+    ],
+  },
 };
 
 function getCopy(_locale: string) {
-  return _locale === 'tr' ? COPY.tr : COPY.en;
+  return _locale === 'tr' || _locale === 'de' ? COPY[_locale] : COPY.en;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const copy = getCopy(locale);
+  const canonical = `${SITE_URL}${localizedPath(locale, '/editorial-policy', 'tr')}`;
   return {
     title: `${copy.title} | GoldMoodAstro`,
     description: copy.description,
     alternates: {
-      canonical: `${SITE_URL}/${locale}/editorial-policy`,
+      canonical,
       languages: {
-        tr: `${SITE_URL}/tr/editorial-policy`,
-        en: `${SITE_URL}/en/editorial-policy`,
-        de: `${SITE_URL}/de/editorial-policy`,
-        'x-default': `${SITE_URL}/tr/editorial-policy`,
+        tr: `${SITE_URL}${localizedPath('tr', '/editorial-policy', 'tr')}`,
+        en: `${SITE_URL}${localizedPath('en', '/editorial-policy', 'tr')}`,
+        de: `${SITE_URL}${localizedPath('de', '/editorial-policy', 'tr')}`,
+        'x-default': `${SITE_URL}${localizedPath('tr', '/editorial-policy', 'tr')}`,
       },
     },
     openGraph: {
       title: copy.title,
       description: copy.description,
-      url: `${SITE_URL}/${locale}/editorial-policy`,
+      url: canonical,
       siteName: 'GoldMoodAstro',
       type: 'article',
     },
@@ -110,7 +127,8 @@ import PageContainer from '@/components/common/PageContainer';
 export default async function EditorialPolicyPage({ params }: Props) {
   const { locale } = await params;
   const copy = getCopy(locale);
-  const pageUrl = `${SITE_URL}/${locale}/editorial-policy`;
+  const pageUrl = `${SITE_URL}${localizedPath(locale, '/editorial-policy', 'tr')}`;
+  const aboutUrl = `${SITE_URL}${localizedPath(locale, '/about', 'tr')}`;
 
   return (
     <PageContainer width="readable" pad="large">
@@ -119,7 +137,7 @@ export default async function EditorialPolicyPage({ params }: Props) {
         data={graph([
           breadcrumbSchema([
             { name: 'GoldMoodAstro', item: `${SITE_URL}/${locale}` },
-            { name: copy.about, item: `${SITE_URL}/${locale}/about` },
+            { name: copy.about, item: aboutUrl },
             { name: copy.title, item: pageUrl },
           ]),
           articleSchema({
@@ -127,7 +145,7 @@ export default async function EditorialPolicyPage({ params }: Props) {
             description: copy.description,
             datePublished: '2026-04-30T00:00:00.000Z',
             dateModified: '2026-04-30T00:00:00.000Z',
-            author: { name: 'GoldMoodAstro Editorial Team', url: `${SITE_URL}/${locale}/about` },
+            author: { name: 'GoldMoodAstro Editorial Team', url: aboutUrl },
             publisherId: `${SITE_URL}/#org`,
             url: pageUrl,
             speakableSelectors: ['h1', '[data-speakable]'],
@@ -137,7 +155,7 @@ export default async function EditorialPolicyPage({ params }: Props) {
       />
 
       <div className="mx-auto max-w-[var(--gm-w-readable)]">
-        <Link href={`/${locale}/about`} className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-(--gm-gold) hover:text-(--gm-gold-light) transition-colors">
+        <Link href={localizedPath(locale, '/about', 'tr')} className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-(--gm-gold) hover:text-(--gm-gold-light) transition-colors">
           <span aria-hidden>←</span> {copy.back}
         </Link>
         

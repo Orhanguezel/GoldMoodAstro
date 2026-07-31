@@ -87,13 +87,40 @@ const ABOUT_COPY: Record<string, AboutCopy> = {
     authorBio:
       'GoldMoodAstro content makes astrology, tarot, numerology and spiritual guidance easier to understand and use responsibly.',
   },
+  de: {
+    eyebrow: 'GoldMoodAstro Manifest',
+    title: 'Wir machen spirituelle Begleitung verständlicher, sicherer und leichter zugänglich.',
+    lead: 'GoldMoodAstro vereint Astrologie, Tarot, Numerologie und Beziehungsimpulse auf einer Beratungsplattform. Unser Ziel sind keine festen Antworten, sondern ein ruhiger, kontextbezogener Raum für selbstbestimmte Entscheidungen.',
+    founderTitle: 'Gründungsgeschichte',
+    founderParagraphs: [
+      'GoldMoodAstro entstand aus der Vision der Gründerin Pınar Demircioğlu, spirituelle Begleitung in eine sichere und moderne Erfahrung zu übersetzen. Gerade in sensiblen Momenten sollte eine gute Plattform helfen, die passende Beratung zu finden, Sitzungen zu verstehen, sicher zu bezahlen und ohne technische Hürden zu starten.',
+      'Technologie steht deshalb nicht im Mittelpunkt, sondern schützt als ruhige Struktur die Beratung. Profile, Fachgebiete, Bewertungen, Dauer und Preise lassen sich vergleichen; Beraterinnen und Berater verwalten Verfügbarkeit, Leistungen, Nachrichten und Gespräche professionell.',
+    ],
+    methodologyTitle: 'Methodik',
+    methodologyParagraphs: [
+      'Astrologische Berechnungen folgen einem Ansatz auf Grundlage der Swiss Ephemeris. Geburtshoroskop, Planetenpositionen, Häuser, Aspekte und Aszendent schaffen eine verlässliche technische Basis für die Deutung.',
+      'Tarot-Inhalte orientieren sich an der Rider-Waite-Smith-Symbolik. Karten gelten als symbolische Sprache für Fragen, Gefühle und Möglichkeiten, nicht als festes Schicksal. Numerologie betrachtet Namen und Geburtsdaten über Lebensweg, Schicksalszahl und persönliche Zyklen.',
+    ],
+    experienceTitle: 'Team und Erfahrung',
+    experienceParagraphs: [
+      'Das GoldMoodAstro-Team verbindet Software, Produktdesign, Astrologie, Tarot, redaktionelle Arbeit und Nutzererfahrung. Wir betrachten die gesamte Reise von der Auswahl über Buchung und Zahlung bis zu Erinnerung, Gespräch, Nachricht und Bewertung.',
+      'Unsere Beratenden decken unter anderem Geburtshoroskope, Beziehungsastrologie, Tarot, Numerologie sowie berufliche und persönliche Orientierung ab. Vertrauen beginnt mit sichtbaren Angaben zu Fachgebiet, Sprache, Leistung, Verfügbarkeit und Bewertungen.',
+    ],
+    differentiatorsTitle: 'Was unterscheidet GoldMood?',
+    differentiators: [
+      { title: 'Transparente Auswahl', body: 'Profile, Fachgebiete, Pakete, Bewertungen und Verfügbarkeit sind vor der Buchung sichtbar.' },
+      { title: 'Integrierter Sitzungsablauf', body: 'Buchung, Zahlung, Erinnerungen, Nachrichten und Gespräche bilden eine ruhige, zusammenhängende Erfahrung.' },
+      { title: 'Verantwortungsvolle Sprache', body: 'Wir vermeiden angstbasierte oder manipulative Aussagen und setzen auf Bewusstsein, Möglichkeiten und emotionale Sicherheit.' },
+    ],
+    authorBio: 'GoldMoodAstro macht Astrologie, Tarot, Numerologie und spirituelle Begleitung verständlicher und verantwortungsvoll nutzbar.',
+  },
 };
 
 const AboutPageContent: React.FC = () => {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_about', locale as any);
   const { ui: uiX } = useUiSection('ui_extra' as any);
-  const copyFallback = useMemo(() => (locale === 'tr' ? ABOUT_COPY.tr : ABOUT_COPY.en), [locale]);
+  const copyFallback = useMemo(() => (locale === 'tr' || locale === 'de' ? ABOUT_COPY[locale] : ABOUT_COPY.en), [locale]);
 
   const readUi = useCallback(
     (key: string, fallback: any) => {

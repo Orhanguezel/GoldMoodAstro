@@ -6,6 +6,7 @@
 
 import { MetadataRoute } from 'next';
 import brand from '../../../config/brand.json';
+import { toLocalizedPublicPath, type PublicLocale } from '@/i18n/localizedRoutes';
 
 const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL || brand.public_url || 'https://goldmoodastro.com').replace(/\/$/, '');
 
@@ -21,6 +22,11 @@ const SIGN_SUB_PAGES = ['/ask', '/kariyer', '/saglik', '/bugun', '/meditasyon'];
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
 const DEFAULT_LASTMOD = '2026-06-20T00:00:00.000Z';
 const TODAY_LASTMOD = `${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
+
+function localizedUrl(locale: PublicLocale, path: string): string {
+  const localized = toLocalizedPublicPath(locale, path);
+  return `${BASE_URL}/${locale}${localized === '/' ? '' : localized}`;
+}
 
 /** Statik üst seviye sayfalar — admin paneldeki seo_pages key'leriyle senkron. */
 const STATIC_PAGES = [
@@ -48,18 +54,26 @@ const STATIC_LASTMOD: Record<string, string> = {
 function buildAlternates(path: string): { languages: Record<string, string> } {
   const languages: Record<string, string> = {};
   for (const loc of LOCALES) {
-    languages[loc] = `${BASE_URL}/${loc}${path}`;
+    languages[loc] = localizedUrl(loc, path);
   }
-  languages['x-default'] = `${BASE_URL}/${DEFAULT_LOCALE}${path}`;
+  languages['x-default'] = localizedUrl(DEFAULT_LOCALE, path);
   return { languages };
 }
 
-async function fetchBlogRoutes(locale: string): Promise<MetadataRoute.Sitemap> {
+type BlogRouteItem = {
+  id: string;
+  locale: PublicLocale;
+  slug: string;
+  updatedAt?: string;
+  createdAt?: string;
+};
+
+async function fetchBlogItems(locale: PublicLocale): Promise<BlogRouteItem[]> {
   try {
     const qs = new URLSearchParams({
       module_key: 'blog',
       locale,
-      default_locale: DEFAULT_LOCALE,
+      default_locale: locale,
       is_published: 'true',
       limit: '100',
       sort: 'updated_at',
@@ -77,19 +91,15 @@ async function fetchBlogRoutes(locale: string): Promise<MetadataRoute.Sitemap> {
       .map((item: any) => {
         const slug = String(item?.slug ?? '').trim();
         if (!slug) return null;
-        const path = `/blog/${slug}`;
-        const lastModified = item?.updated_at || item?.created_at
-          ? new Date(item.updated_at || item.created_at)
-          : new Date();
         return {
-          url: `${BASE_URL}/${locale}${path}`,
-          lastModified,
-          changeFrequency: 'weekly' as const,
-          priority: 0.65,
-          alternates: buildAlternates(path),
+          id: String(item?.id ?? `${locale}:${slug}`),
+          locale,
+          slug,
+          updatedAt: item?.updated_at,
+          createdAt: item?.created_at,
         };
       })
-      .filter(Boolean) as MetadataRoute.Sitemap;
+      .filter(Boolean) as BlogRouteItem[];
   } catch {
     return [];
   }
@@ -99,7 +109,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Statik sayfalar × 3 locale
   const staticRoutes: MetadataRoute.Sitemap = LOCALES.flatMap((locale) =>
     STATIC_PAGES.map((page) => ({
-      url: `${BASE_URL}/${locale}${page}`,
+      url: localizedUrl(locale, page),
       lastModified: new Date(STATIC_LASTMOD[page] || DEFAULT_LASTMOD),
       changeFrequency: 'daily' as const,
       priority: page === '' ? 1 : 0.8,
@@ -112,7 +122,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ZODIAC_SIGNS.flatMap((sign) => {
       const mainPath = `/burclar/${sign}`;
       const main: MetadataRoute.Sitemap[number] = {
-        url: `${BASE_URL}/${locale}${mainPath}`,
+        url: localizedUrl(locale, mainPath),
         lastModified: new Date('2026-07-04T00:00:00.000Z'),
         changeFrequency: 'daily' as const,
         priority: 0.7,
@@ -122,7 +132,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const subs: MetadataRoute.Sitemap = SIGN_SUB_PAGES.map((sub) => {
         const subPath = `${mainPath}${sub}`;
         return {
-          url: `${BASE_URL}/${locale}${subPath}`,
+          url: localizedUrl(locale, subPath),
           lastModified: new Date(sub === '/bugun' ? TODAY_LASTMOD : '2026-06-20T00:00:00.000Z'),
           changeFrequency: 'daily' as const,
           priority: 0.6,
@@ -134,7 +144,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  const blogRoutes = (await Promise.all(LOCALES.map((locale) => fetchBlogRoutes(locale)))).flat();
+  const blogItems = (await Promise.all(LOCALES.map((locale) => fetchBlogItems(locale)))).flat();
+  const blogTranslations = new Map<string, Partial<Record<PublicLocale, string>>>();
+  for (const item of blogItems) {
+    const translations = blogTranslations.get(item.id) ?? {};
+    translations[item.locale] = item.slug;
+    blogTranslations.set(item.id, translations);
+  }
+  const blogRoutes: MetadataRoute.Sitemap = blogItems.map((item) => {
+    const translations = blogTranslations.get(item.id) ?? {};
+    const languages: Record<string, string> = {};
+    for (const locale of LOCALES) {
+      const slug = translations[locale];
+      if (slug) languages[locale] = localizedUrl(locale, `/blog/${slug}`);
+    }
+    const defaultSlug = translations[DEFAULT_LOCALE];
+    if (defaultSlug) languages['x-default'] = localizedUrl(DEFAULT_LOCALE, `/blog/${defaultSlug}`);
+    return {
+      url: localizedUrl(item.locale, `/blog/${item.slug}`),
+      lastModified: item.updatedAt || item.createdAt ? new Date(item.updatedAt || item.createdAt!) : new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.65,
+      alternates: { languages },
+    };
+  });
 
   return [...staticRoutes, ...signRoutes, ...blogRoutes];
 }

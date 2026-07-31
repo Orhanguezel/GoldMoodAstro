@@ -9,6 +9,7 @@
 // =============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
+import { canonicalPublicPath, type PublicLocale } from '@/i18n/localizedRoutes';
 
 const SUPPORTED_LOCALES = ['tr', 'en', 'de'] as const;
 const DEFAULT_LOCALE = 'tr';
@@ -83,6 +84,29 @@ export async function proxy(req: NextRequest) {
 
   // Locale prefix var ve destekli
   if (firstSeg && (SUPPORTED_LOCALES as readonly string[]).includes(firstSeg)) {
+    const locale = firstSeg as PublicLocale;
+    const pathWithoutLocale = pathname.slice(firstSeg.length + 1) || '/';
+    const { logicalPath, publicPath } = canonicalPublicPath(locale, pathWithoutLocale);
+    const canonicalPathname = `/${locale}${publicPath === '/' ? '' : publicPath}`;
+
+    // Legacy/mixed-language public URL -> locale-specific canonical URL.
+    if (pathname !== canonicalPathname) {
+      const url = req.nextUrl.clone();
+      url.pathname = canonicalPathname;
+      return NextResponse.redirect(url, 308);
+    }
+
+    // Public localized slug -> physical App Router route. The browser and all
+    // SEO signals keep the localized URL; only the internal render path changes.
+    const internalPathname = `/${locale}${logicalPath === '/' ? '' : logicalPath}`;
+    if (internalPathname !== pathname) {
+      const url = req.nextUrl.clone();
+      url.pathname = internalPathname;
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set('x-gm-locale', locale);
+      return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+    }
+
     // Sezgisel /:locale/consultant → danışman paneli /:locale/me/consultant (308)
     const panelMatch = pathname.match(CONSULTANT_PANEL_RE);
     if (panelMatch) {
@@ -102,7 +126,9 @@ export async function proxy(req: NextRequest) {
     // Danışman detay: id (UUID) → slug kanonik 308
     const redirect = await consultantSlugRedirect(req);
     if (redirect) return redirect;
-    return NextResponse.next();
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set('x-gm-locale', locale);
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   // Locale prefix YOK → default locale'e internal rewrite (URL bar'da `/` kalır)

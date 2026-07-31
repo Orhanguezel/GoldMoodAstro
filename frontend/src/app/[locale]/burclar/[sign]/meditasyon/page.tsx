@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import ZodiacMeditationPlayer from '@/components/containers/zodiac/ZodiacMeditationPlayer';
 import PageContainer from '@/components/common/PageContainer';
-import { getZodiacMeta } from '@/lib/zodiac/signs';
+import { getZodiacMeta, localizeSign } from '@/lib/zodiac/signs';
 import type { ZodiacSign } from '@/types/common';
 import { buildPageMetadata } from '@/seo/server';
 
@@ -16,14 +16,15 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sign, locale } = await params;
   const meta = getZodiacMeta(sign);
+  const localized = meta ? localizeSign(meta, locale) : null;
   return buildPageMetadata({
     locale,
     pageKey: 'burclar-meditasyon',
     pathname: `/burclar/${sign}/meditasyon`,
     fallback: {
-      title: meta ? `${meta.label} Meditation and Affirmations` : 'Zodiac Meditation',
-      description: meta
-        ? `Short audio meditation, daily affirmations and element-focused calming practice for ${meta.label}.`
+      title: localized ? `${localized.label} Meditation and Affirmations` : 'Zodiac Meditation',
+      description: localized
+        ? `Short audio meditation, daily affirmations and element-focused calming practice for ${localized.label}.`
         : 'Zodiac-focused audio meditation and daily affirmations.',
     },
   });
