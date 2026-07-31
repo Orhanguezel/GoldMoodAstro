@@ -3,7 +3,9 @@ type OAuth2Client = any; // dedupe: googleapis-common ile ayni gal kopyasi, tip 
 import { getTenantSecret, getTenantValue } from "../../core/tenant-settings";
 
 const SCOPES = [
-  "https://www.googleapis.com/auth/webmasters.readonly",
+  // GSC reporting and URL Inspection are read-only, but the same integration
+  // also supports explicit sitemap submit/delete change-sets.
+  "https://www.googleapis.com/auth/webmasters",
   "https://www.googleapis.com/auth/analytics.readonly",
   "https://www.googleapis.com/auth/tagmanager.readonly",
   "https://www.googleapis.com/auth/content",

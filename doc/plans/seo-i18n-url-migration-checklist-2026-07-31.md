@@ -81,7 +81,7 @@
 - [x] Redirect loop, redirect chain, 404 ve soft-404 raporu üret: 0 hata.
 - [x] Görünür metinde dil sızıntısı raporu üret: indekslenebilir 303 URL’de 0 uyarı.
 - [x] `bun run typecheck`, ilgili testler ve production build başarılı.
-- [ ] Canlı deploy sonrası aynı crawler’ı yeniden çalıştır.
+- [x] Canlı deploy sonrası aynı crawler’ı yeniden çalıştır: 303 URL, 0 hata, 0 dil uyarısı.
 - [ ] GSC sitemap’i yeniden gönder ve öncelikli URL’lerde doğrulama başlat.
 
 ## H — GSC izleme
