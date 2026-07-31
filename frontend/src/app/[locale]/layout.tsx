@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { notFound } from 'next/navigation';
 import { Cinzel, Fraunces, Manrope } from 'next/font/google';
 
 import { Providers } from '../providers';
@@ -13,6 +14,13 @@ import type { PublicMenuItemDto } from '@/integrations/shared';
 import { getBrandServer } from '@/lib/brand.server';
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
+
+// Desteklenen diller. proxy.ts locale'siz path'leri /tr'ye rewrite eder; buraya
+// yalnızca tr/en/de ile veya nokta içeren (proxy matcher'ının atladığı) çöp path'ler
+// ulaşır — örn. /index.html → [locale]="index.html". Bu tür geçersiz locale'ler
+// eskiden anasayfayı 200 render edip Search Console'u ikinci bir site kopyasıyla
+// kirletiyordu (2026-07-31). Geçersiz locale artık 404 döner.
+const SUPPORTED_LOCALES = ['tr', 'en', 'de'] as const;
 
 async function fetchHeaderMenuItems(locale: string): Promise<PublicMenuItemDto[]> {
   try {
@@ -126,6 +134,10 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  // Geçersiz locale (örn. /index.html, /favicon.x) → gerçek 404 (index kirliliğini önler)
+  if (!(SUPPORTED_LOCALES as readonly string[]).includes(locale)) {
+    notFound();
+  }
   // SSR fetch: header + footer menu items + brand settings (paralel)
   const [initialMenuItems, initialFooterSections, initialFooterMenuItems, brand, companyBrand] = await Promise.all([
     fetchHeaderMenuItems(locale),
