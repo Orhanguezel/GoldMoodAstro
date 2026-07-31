@@ -25,8 +25,10 @@ const archived = await socialDb
   .update(socialPosts)
   .set({
     status: 'cancelled',
-    sourceRef: sql`CONCAT(${socialPosts.sourceRef}, '-pre-cover')`,
-    notes: sql`CONCAT(COALESCE(${socialPosts.notes}, ''), '\n[arsiv] kapak oncesi surum; kapakli yeniden uretildi.')`,
+    // Benzersiz son-ek (UNIX_TIMESTAMP) — tekrar çalıştırıldığında eski arşivle
+    // sourceRef çakışması olmasın.
+    sourceRef: sql`CONCAT(${socialPosts.sourceRef}, '-old-', UNIX_TIMESTAMP())`,
+    notes: sql`CONCAT(COALESCE(${socialPosts.notes}, ''), '\n[arsiv] onceki surum; yeniden uretildi.')`,
   } as any)
   .where(
     and(

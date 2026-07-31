@@ -365,71 +365,88 @@ async function renderZodiacCard(sign: SignKey, dateStr: string, message: string)
   return { filePath, publicUrl };
 }
 
-export async function renderDailyCoverCard(sign: SignKey, dateStr: string, part: 1 | 2): Promise<{ filePath: string; publicUrl: string }> {
+// JENERİK günlük kapak — TEK burç değil, 12 burç tekerleği + ay + "GÜNLÜK BURÇ
+// YORUMLARI". Dışarıdan "bugün X burcunu paylaşmış" algısını kırar; her gün aynı
+// marka kapağı (tarih değişir), tüm burçlara hitap eder. Günde tek dosya (iki
+// carousel de aynı kapağı kullanır).
+export async function renderDailyCoverCard(dateStr: string): Promise<{ filePath: string; publicUrl: string }> {
   const dateLabel = prettyDate(dateStr);
+  const weekday = new Date(`${dateStr}T00:00:00Z`).toLocaleDateString('tr-TR', { weekday: 'long', timeZone: 'UTC' });
   const dir = path.join(uploadsDir(), 'social', 'daily-horoscope-all', dateStr);
   fs.mkdirSync(dir, { recursive: true });
 
-  const fileName = `${dateStr}-cover-part${part}-${sign}.png`;
+  const fileName = `${dateStr}-cover.png`;
   const filePath = path.join(dir, fileName);
   const publicUrl = `${PUBLIC_BASE}/uploads/social/daily-horoscope-all/${dateStr}/${fileName}`;
   if (fs.existsSync(filePath)) return { filePath, publicUrl };
 
-  const zodiacPath = path.resolve(uploadsDir(), 'zodiac', `${sign}.png`);
-  const repoFallbackPath = path.resolve(process.cwd(), 'uploads', 'zodiac', `${sign}.png`);
-  const sourcePath = fs.existsSync(zodiacPath) ? zodiacPath : repoFallbackPath;
-  if (!fs.existsSync(sourcePath)) throw new Error(`Zodyak görseli bulunamadı: ${sign}`);
+  const W = 1080, H = 1350;
+  // Zodyak tekerleği geometrisi
+  const cx = 540, cy = 610, R = 372, SIZE = 150;
 
-  const label = SIGN_LABEL[sign];
-  const element = SIGN_ELEMENT[sign];
-  const weekday = new Date(`${dateStr}T00:00:00Z`).toLocaleDateString('tr-TR', { weekday: 'long', timeZone: 'UTC' });
+  // Arka plan: gece gökyüzü + yıldızlar + çerçeve (sabit yıldız koordinatları).
+  const stars = [
+    [120, 200, 3], [980, 260, 2], [180, 980, 2.5], [900, 1040, 3], [520, 120, 2],
+    [300, 520, 2], [780, 560, 2.5], [160, 700, 2], [940, 720, 2], [420, 1180, 2.5],
+    [660, 1160, 2], [240, 340, 2], [860, 380, 2], [540, 1230, 2.5], [1000, 900, 2],
+  ].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#f5e6a8" opacity="0.7"/>`).join('');
 
-  // Kapak: gövde kartından farklı — büyük merkezi hero + "GÜNÜN BURCU" vurgusu.
-  const base = await sharp(sourcePath)
-    .resize(1080, 1350, { fit: 'cover' })
-    .blur(26)
-    .modulate({ brightness: 0.42, saturation: 1.25 })
-    .png()
-    .toBuffer();
-  const hero = await sharp(sourcePath)
-    .resize(760, 760, { fit: 'cover' })
-    .composite([
-      {
-        input: Buffer.from(
-          `<svg width="760" height="760"><circle cx="380" cy="380" r="378" fill="none" stroke="#f5d978" stroke-width="6"/></svg>`,
-        ),
-        left: 0,
-        top: 0,
-      },
-    ])
-    .png()
-    .toBuffer();
-
-  const overlay = `<svg width="1080" height="1350" viewBox="0 0 1080 1350" xmlns="http://www.w3.org/2000/svg">
+  const bgSvg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="cov" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#090313" stop-opacity="0.55"/>
-      <stop offset="0.45" stop-color="#090313" stop-opacity="0.20"/>
-      <stop offset="1" stop-color="#090313" stop-opacity="0.90"/>
-    </linearGradient>
+    <radialGradient id="sky" cx="50%" cy="42%" r="75%">
+      <stop offset="0" stop-color="#241143"/>
+      <stop offset="0.55" stop-color="#160a2c"/>
+      <stop offset="1" stop-color="#0a0418"/>
+    </radialGradient>
   </defs>
-  <rect width="1080" height="1350" fill="url(#cov)"/>
-  <rect x="42" y="42" width="996" height="1266" rx="34" fill="none" stroke="#e0bd68" stroke-opacity="0.85" stroke-width="3"/>
-  <text x="540" y="132" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-weight="900" letter-spacing="6" fill="#f5d978">GOLDMOODASTRO</text>
-  <text x="540" y="182" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="800" letter-spacing="6" fill="#e8ddff">GÜNLÜK BURÇ YORUMLARI</text>
-  <text x="540" y="248" text-anchor="middle" font-family="Georgia, serif" font-size="30" fill="#fffaf0">${esc(dateLabel)} • ${esc(weekday)}</text>
-  <rect x="300" y="1006" width="480" height="70" rx="35" fill="#10091f" fill-opacity="0.82" stroke="#e0bd68" stroke-opacity="0.85" stroke-width="2"/>
-  <text x="540" y="1052" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="900" letter-spacing="4" fill="#f5d978">GÜNÜN BURCU</text>
-  <text x="540" y="1168" text-anchor="middle" font-family="Georgia, serif" font-size="104" font-weight="900" fill="#fff8ee">${esc(label)}</text>
-  <text x="540" y="1226" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="900" fill="#f5d978">${esc(element)} enerjisi • 12 burç için kaydır →</text>
-  <text x="540" y="1284" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#d9bd74">goldmoodastro.com</text>
+  <rect width="${W}" height="${H}" fill="url(#sky)"/>
+  ${stars}
+  <rect x="40" y="40" width="${W - 80}" height="${H - 80}" rx="36" fill="none" stroke="#e0bd68" stroke-opacity="0.85" stroke-width="3"/>
+  <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#e0bd68" stroke-opacity="0.30" stroke-width="2"/>
+  <circle cx="${cx}" cy="${cy}" r="188" fill="#0d0620" fill-opacity="0.55" stroke="#e0bd68" stroke-opacity="0.5" stroke-width="2"/>
 </svg>`;
 
-  await sharp(base)
-    .composite([
-      { input: hero, left: 160, top: 250 },
-      { input: Buffer.from(overlay), left: 0, top: 0 },
-    ])
+  // 12 burcu daire şeklinde diz (üstten başla, saat yönü).
+  const symbolInputs: Array<{ input: Buffer; left: number; top: number }> = [];
+  for (let i = 0; i < SIGN_ORDER.length; i += 1) {
+    const sign = SIGN_ORDER[i]!;
+    const zp = path.resolve(uploadsDir(), 'zodiac', `${sign}.png`);
+    const fb = path.resolve(process.cwd(), 'uploads', 'zodiac', `${sign}.png`);
+    const src = fs.existsSync(zp) ? zp : fb;
+    if (!fs.existsSync(src)) continue;
+    const theta = (-90 + i * 30) * (Math.PI / 180);
+    const left = Math.round(cx + R * Math.cos(theta) - SIZE / 2);
+    const top = Math.round(cy + R * Math.sin(theta) - SIZE / 2);
+    const circ = await sharp(src)
+      .resize(SIZE, SIZE, { fit: 'cover' })
+      .composite([
+        { input: Buffer.from(`<svg width="${SIZE}" height="${SIZE}"><circle cx="${SIZE / 2}" cy="${SIZE / 2}" r="${SIZE / 2}" fill="#fff"/></svg>`), blend: 'dest-in' },
+        { input: Buffer.from(`<svg width="${SIZE}" height="${SIZE}"><circle cx="${SIZE / 2}" cy="${SIZE / 2}" r="${SIZE / 2 - 2}" fill="none" stroke="#e0bd68" stroke-width="3"/></svg>`), blend: 'over' },
+      ])
+      .png()
+      .toBuffer();
+    symbolInputs.push({ input: circ, left, top });
+  }
+
+  // Üst yazı + orta ay + alt tarih/CTA overlay.
+  const overlay = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <mask id="moon"><rect width="120" height="120" fill="black"/><circle cx="52" cy="60" r="42" fill="white"/><circle cx="72" cy="54" r="38" fill="black"/></mask>
+  </defs>
+  <text x="${cx}" y="120" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-weight="900" letter-spacing="7" fill="#f5d978">GOLDMOODASTRO</text>
+  <text x="${cx}" y="168" text-anchor="middle" font-family="Arial, sans-serif" font-size="21" font-weight="800" letter-spacing="6" fill="#c9b9ef">ASTROLOJİ · TAROT · NUMEROLOJİ</text>
+  <g transform="translate(${cx - 60}, ${cy - 150})"><rect width="120" height="120" fill="#f5d978" mask="url(#moon)"/></g>
+  <text x="${cx}" y="${cy + 8}" text-anchor="middle" font-family="Georgia, serif" font-size="46" font-weight="900" fill="#fff8ee">GÜNLÜK</text>
+  <text x="${cx}" y="${cy + 66}" text-anchor="middle" font-family="Georgia, serif" font-size="46" font-weight="900" fill="#fff8ee">BURÇ YORUMLARI</text>
+  <text x="${cx}" y="${cy + 116}" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="800" letter-spacing="3" fill="#f5d978">12 BURÇ · HER GÜN</text>
+  <rect x="240" y="1112" width="600" height="150" rx="30" fill="#0d0620" fill-opacity="0.72" stroke="#e0bd68" stroke-opacity="0.7" stroke-width="2"/>
+  <text x="${cx}" y="1170" text-anchor="middle" font-family="Georgia, serif" font-size="40" font-weight="900" fill="#fffaf0">${esc(dateLabel)}</text>
+  <text x="${cx}" y="1212" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="800" letter-spacing="2" fill="#c9b9ef">${esc(weekday)} · burcunu bul, kaydır →</text>
+  <text x="${cx}" y="1250" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="#d9bd74">goldmoodastro.com</text>
+</svg>`;
+
+  await sharp(Buffer.from(bgSvg))
+    .composite([...symbolInputs, { input: Buffer.from(overlay), left: 0, top: 0 }])
     .png({ compressionLevel: 9 })
     .toFile(filePath);
 
@@ -479,10 +496,10 @@ async function buildPart(dateStr: string, part: 1 | 2): Promise<{
   let missing = 0;
   const planned = AUGUST_2026_DAILY_PLAN[dateStr];
 
-  // İlk slide: her gün dönen "günün burcu" kapağı (part 1 ve 2 farklı burç).
-  // Feed grid'inde artık her gün farklı görsel; sabit Koç/Terazi kalıbı kırılır.
-  const coverSign = signOfDay(dateStr, part === 1 ? 0 : 6);
-  const cover = await renderDailyCoverCard(coverSign, dateStr, part);
+  // İlk slide: JENERİK günlük kapak (12 burç tekerleği + ay). Tek burç değil —
+  // "bugün X burcu" algısını kırar, her gün tüm burçlara hitap eder. İki carousel
+  // de aynı kapağı kullanır (günde tek dosya).
+  const cover = await renderDailyCoverCard(dateStr);
   mediaUrls.push(cover.publicUrl);
 
   for (const sign of partConfig.signs) {
