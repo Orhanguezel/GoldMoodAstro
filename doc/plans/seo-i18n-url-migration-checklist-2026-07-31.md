@@ -19,7 +19,7 @@
 
 - [x] Repo kökündeki eski `index.html` dosyasını sil.
 - [x] `/index.html` → `/tr` için tek adımlı HTTP 308 doğrula.
-- [x] `/index.html/<path>` için locale-aware kanonik hedefe tek adımlı HTTP 308 ekle; locale ve route sözlüğü proxy içinde tek geçişte çözülür.
+- [x] `/index.html/<path>` için locale-aware kanonik hedefe tek adımlı HTTP 308 doğrula; locale, route ve query string proxy içinde tek geçişte çözülür.
 - [x] `/index.html` URL’lerinin sitemap, canonical, hreflang ve iç linklerde bulunmadığını test et.
 
 ## B — Tek kaynak locale-aware URL sözlüğü
@@ -61,7 +61,7 @@
 - [x] Çevirisi olmayan/şablon ağırlıklı indekslenebilir içeriği sitemap’ten çıkar ve `noindex,follow` yap; hedef dilde TR fallback’i sistem seviyesinde engelle.
 - [x] Danışman liste/uzmanlık API isteklerine locale gönder; profil alanları için mevcut locale verisini kullan.
 - [x] Kritik public/auth/danışman/booking akışlarındaki Türkçe fallback’leri `ui_*` kaynağına taşı; locale kontrollü TR/EN/DE editoryal sözlükleri UI guard kapsamından ayır.
-- [x] `i18n:guard` baseline’ını bulgular 996’dan 337’ye düşürüldükten sonra güncelle; guard yeniden yeşil.
+- [x] `i18n:guard` baseline’ını bulgular 996’dan 334’e düşürüldükten sonra güncelle; guard yeniden yeşil.
 
 ## F — Burç sayfası kalite ve duplicate düzeltmesi
 
