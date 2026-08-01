@@ -135,13 +135,19 @@ function hasVideoMedia(p: any) {
   return urls.some(isVideoUrl);
 }
 
-/** Benzersiz medya (görsel/video) sayısı — carousel tespiti için. */
-function mediaCount(p: any): number {
-  const urls = new Set<string>();
-  const push = (u: unknown) => { const s = String(u ?? "").trim(); if (s) urls.add(s); };
+/** Benzersiz medya URL listesi (imageUrl + mediaUrls, sırayı korur). */
+function collectMedia(p: any): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  const push = (u: unknown) => { const s = String(u ?? "").trim(); if (s && !seen.has(s)) { seen.add(s); out.push(s); } };
   push(p?.imageUrl);
   if (Array.isArray(p?.mediaUrls)) for (const u of p.mediaUrls) push(u);
-  return urls.size;
+  return out;
+}
+
+/** Benzersiz medya (görsel/video) sayısı — carousel tespiti için. */
+function mediaCount(p: any): number {
+  return collectMedia(p).length;
 }
 
 // ─── Hafta gruplama (yaklaşan içerikleri hafta hafta sayfalamak için) ───
@@ -214,6 +220,7 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
   const [replyTextByCommentId, setReplyTextByCommentId] = useState<Record<string, string>>({});
   const [replyBusyCommentId, setReplyBusyCommentId] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<{ src: string; alt: string } | null>(null);
+  const [previewGallery, setPreviewGallery] = useState<{ urls: string[]; index: number; title: string } | null>(null);
 
   function notify(kind: "ok" | "err", text: string) {
     setMessage({ kind, text });
@@ -230,6 +237,33 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={alt} className={className} />
+      </button>
+    );
+  }
+
+  // Kapak + carousel: tıklayınca çok slaytlıysa TÜM slaytları galeri olarak açar.
+  function MediaPreview({ p, className }: { p: any; className: string }) {
+    const urls = collectMedia(p);
+    if (urls.length === 0) {
+      return <div className={`flex shrink-0 items-center justify-center bg-slate-200/60 text-slate-300 ${className}`}><ImagePlus size={30} /></div>;
+    }
+    const multi = urls.length > 1;
+    return (
+      <button
+        type="button"
+        onClick={() => multi
+          ? setPreviewGallery({ urls, index: 0, title: p.caption || p.title || "" })
+          : setPreviewImage({ src: urls[0]!, alt: p.title || "Görsel" })}
+        className="relative shrink-0 cursor-zoom-in rounded-2xl outline-none transition hover:scale-[1.015] focus:ring-4 focus:ring-amber-300/30"
+        title={multi ? `Carousel · ${urls.length} slayt — tümünü gör` : "Büyüt"}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={urls[0]} alt={p.title || "Görsel"} className={className} />
+        {multi && (
+          <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-1 rounded-md bg-slate-900/85 px-1.5 py-0.5 text-[10px] font-black text-white backdrop-blur">
+            <Images size={11} /> {urls.length}
+          </span>
+        )}
       </button>
     );
   }
@@ -1267,18 +1301,7 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                       }
                       return (
                         <div key={p.id} className="flex items-center gap-3 py-3">
-                          {p.imageUrl ? (
-                            <div className="relative shrink-0">
-                              <PreviewImage src={p.imageUrl} className="h-40 w-32 rounded-xl bg-slate-950/5 object-contain ring-1 ring-slate-100 shadow-sm" />
-                              {isCarousel && (
-                                <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-1 rounded-md bg-slate-900/80 px-1.5 py-0.5 text-[9px] font-black text-white backdrop-blur">
-                                  <Images size={10} /> {mc}
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="flex h-40 w-32 shrink-0 items-center justify-center rounded-xl bg-slate-200/60 text-slate-300 ring-1 ring-slate-100">{config.icon(34)}</div>
-                          )}
+                          <MediaPreview p={p} className="h-40 w-32 rounded-xl bg-slate-950/5 object-contain ring-1 ring-slate-100 shadow-sm" />
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-black uppercase ${isStory ? "bg-fuchsia-100 text-fuchsia-600" : "bg-sky-100 text-sky-600"}`}>{isStory ? "Story" : "Post"}</span>
@@ -1349,8 +1372,8 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                       ) : (
                         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                           <div className="flex min-w-0 flex-1 gap-5">
-                            {p.imageUrl && (
-                              <PreviewImage src={p.imageUrl} className="h-56 w-40 shrink-0 rounded-2xl bg-slate-950/5 object-contain ring-1 ring-slate-100 shadow-md md:h-64 md:w-48" />
+                            {collectMedia(p).length > 0 && (
+                              <MediaPreview p={p} className="h-56 w-40 shrink-0 rounded-2xl bg-slate-950/5 object-contain ring-1 ring-slate-100 shadow-md md:h-64 md:w-48" />
                             )}
                             <div className="min-w-0 pt-1">
                               <div className="mb-2 flex flex-wrap gap-2">
@@ -1552,6 +1575,63 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
           </div>
         </div>
       )}
+
+      {/* Carousel galeri: tüm slaytlar (ileri/geri + thumbnail şeridi) */}
+      {previewGallery && (() => {
+        const g = previewGallery;
+        const idx = Math.max(0, Math.min(g.index, g.urls.length - 1));
+        const go = (n: number) => setPreviewGallery({ ...g, index: (n + g.urls.length) % g.urls.length });
+        return (
+          <div
+            className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm"
+            onClick={() => setPreviewGallery(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Carousel önizleme"
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewGallery(null)}
+              className="absolute right-5 top-5 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-lg transition hover:bg-white"
+              title="Kapat"
+            >
+              <XCircle size={22} />
+            </button>
+            <div className="mb-3 text-center text-sm font-black text-white/90">
+              Slayt {idx + 1} / {g.urls.length}
+              {g.title && <span className="ml-2 font-semibold text-white/50">· {g.title.slice(0, 60)}</span>}
+            </div>
+            <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+              {g.urls.length > 1 && (
+                <button type="button" onClick={() => go(idx - 1)} className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-lg transition hover:bg-white" title="Önceki">
+                  <ChevronLeft size={24} />
+                </button>
+              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={g.urls[idx]} alt={`slayt ${idx + 1}`} className="max-h-[74vh] max-w-[80vw] rounded-3xl bg-white object-contain shadow-2xl" />
+              {g.urls.length > 1 && (
+                <button type="button" onClick={() => go(idx + 1)} className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-lg transition hover:bg-white" title="Sonraki">
+                  <ChevronRight size={24} />
+                </button>
+              )}
+            </div>
+            {g.urls.length > 1 && (
+              <div className="mt-4 flex max-w-[92vw] gap-2 overflow-x-auto p-1" onClick={(e) => e.stopPropagation()}>
+                {g.urls.map((u, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={i}
+                    src={u}
+                    alt={`küçük ${i + 1}`}
+                    onClick={() => setPreviewGallery({ ...g, index: i })}
+                    className={`h-16 w-16 shrink-0 cursor-pointer rounded-lg object-cover ring-2 transition ${i === idx ? "ring-amber-400" : "ring-white/20 hover:ring-white/50"}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
