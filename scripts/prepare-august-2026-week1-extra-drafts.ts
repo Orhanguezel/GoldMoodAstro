@@ -62,11 +62,20 @@ const assets = {
   natal: path.resolve(ROOT, "backend/uploads/features/natal_chart.png"),
   synastry: path.resolve(ROOT, "backend/uploads/features/synastry_chart.png"),
   tarotBack: path.resolve(ROOT, "backend/uploads/tarot_back.png"),
+  // Açılmış tarot yüz kartları — element eşlemesi (Ateş=Değnek, Su=Kupa, Toprak=Tılsım, Hava=Kılıç)
+  tarotFire: path.resolve(ROOT, "backend/uploads/tarot/ace-of-wands.png"),
+  tarotWater: path.resolve(ROOT, "backend/uploads/tarot/ace-of-cups.png"),
+  tarotEarth: path.resolve(ROOT, "backend/uploads/tarot/ace-of-pentacles.png"),
+  tarotAir: path.resolve(ROOT, "backend/uploads/tarot/ace-of-swords.png"),
   libra: path.resolve(ROOT, "backend/uploads/zodiac/libra.png"),
   moon: path.resolve(ROOT, "backend/uploads/symbols/dream/moon.png"),
   door: path.resolve(ROOT, "backend/uploads/symbols/dream/door.png"),
+  sun: path.resolve(ROOT, "backend/uploads/symbols/dream/sun.png"),
   key: path.resolve(ROOT, "backend/uploads/symbols/coffee/key.png"),
   candle: path.resolve(ROOT, "backend/uploads/symbols/coffee/candle.png"),
+  eye: path.resolve(ROOT, "backend/uploads/symbols/coffee/eye.png"),
+  heart: path.resolve(ROOT, "backend/uploads/symbols/coffee/heart.png"),
+  road: path.resolve(ROOT, "backend/uploads/symbols/coffee/road.png"),
   numerology: (n: number) => path.resolve(ROOT, `backend/uploads/symbols/numerology/${n}.png`),
 };
 
@@ -408,11 +417,11 @@ async function buildPosts(): Promise<DraftPost[]> {
   const posts: DraftPost[] = [];
 
   posts.push(await carousel(1, "monthly-energy", "Ağustos’ta Seni Bekleyen Ana Tema", [
-    { title: "Ağustos’ta seni bekleyen ana tema", subtitle: "Ayın enerjisini seç", body: "İçinden geçen ilk kapı bu ayın ipucunu verebilir.", asset: assets.natal, variant: "deep", footer: "Kaydır • İlk hissettiğini yorumla" },
+    { title: "Ağustos’ta seni bekleyen ana tema", subtitle: "Ayın enerjisini seç", body: "İçinden geçen ilk kapı bu ayın ipucunu verebilir.", asset: assets.moon, variant: "deep", footer: "Kaydır • İlk hissettiğini yorumla" },
     { title: "1. Kapı", subtitle: "Cesaret", body: "Ertelediğin bir adımı küçült. Büyük karar değil; devamlılığı başlatan küçük hamle önemli.", asset: assets.door, variant: "gold" },
     { title: "2. Kapı", subtitle: "Denge", body: "Aile, iş ve iç huzur arasında yeniden ayar yapman gerekebilir. Her şeye aynı anda yetişmek zorunda değilsin.", asset: assets.moon, variant: "deep" },
     { title: "3. Kapı", subtitle: "Bereket", body: "Para, emek ve zaman yönetiminde sadeleşme bereketi açar. Önce dağınıklığı toparla.", asset: assets.key, variant: "cream" },
-    { title: "4. Kapı", subtitle: "İç ses", body: "Bu ay sezgisel işaretler daha güçlü. Tekrar eden rüya, sembol ya da cümleleri not et.", asset: assets.daily, variant: "violet" },
+    { title: "4. Kapı", subtitle: "İç ses", body: "Bu ay sezgisel işaretler daha güçlü. Tekrar eden rüya, sembol ya da cümleleri not et.", asset: assets.eye, variant: "violet" },
   ], caption(
     "Ağustos’ta seni bekleyen ana tema ✨",
     "Bir kapı seç ve ay boyunca hangi temanın sende çalıştığını gözlemle: cesaret, denge, bereket veya iç ses.",
@@ -420,7 +429,7 @@ async function buildPosts(): Promise<DraftPost[]> {
   )));
 
   posts.push(await carousel(2, "rising-open-doors", "Bu Ay Kapısı Açılan Yükselenler", [
-    { title: "Bu ay kapısı açılan yükselenler", subtitle: "Ağustos 2026", body: "Bu bir garanti değil; hangi alanda fırsat kapısının aralanabileceğini gösteren kolektif bir okuma.", asset: assets.natal, variant: "deep" },
+    { title: "Bu ay kapısı açılan yükselenler", subtitle: "Ağustos 2026", body: "Bu bir garanti değil; hangi alanda fırsat kapısının aralanabileceğini gösteren kolektif bir okuma.", asset: assets.sun, variant: "deep" },
     { title: "Koç & Aslan", subtitle: "Görünürlük", body: "Kendini saklamadığın yerde yeni bir yol açılabilir. Cesaret bu ay sana alan kazandırır.", asset: path.resolve(ROOT, "backend/uploads/zodiac/leo.png"), variant: "gold" },
     { title: "Boğa & Başak", subtitle: "Düzen", body: "İş, para ve günlük ritimde toparlanma fırsatı var. Küçük sistemler büyük rahatlık getirir.", asset: path.resolve(ROOT, "backend/uploads/zodiac/taurus.png"), variant: "cream" },
     { title: "Yengeç & Terazi", subtitle: "İlişki", body: "Duygusal güven ve denge arayışı görünür. Net sınırlar ilişkileri hafifletebilir.", asset: path.resolve(ROOT, "backend/uploads/zodiac/libra.png"), variant: "deep" },
@@ -437,7 +446,7 @@ async function buildPosts(): Promise<DraftPost[]> {
     kicker: "REELS • HAFTANIN ENERJİSİ",
     subtitle: "3–9 Ağustos",
     body: "Daha az dağıl. Daha net seç. İç sesinle planını aynı masaya oturt.",
-    asset: assets.daily,
+    asset: assets.sun,
     variant: "violet",
     footer: "Kaydet • Hafta sonunda tekrar bak",
   }, caption(
@@ -448,10 +457,10 @@ async function buildPosts(): Promise<DraftPost[]> {
 
   posts.push(await carousel(4, "tarot-pick-4", "Tarot: 4 Kart Seç", [
     { title: "Evren şu an sana bir şey anlatmaya çalışıyor", body: "Bir kart seç: 1, 2, 3 ya da 4. İlk çekildiğin kartın açıklamasını kaydır.", asset: assets.tarotBack, layout: "four-tarot", variant: "violet", footer: "Kart numaranı yorumlara yaz" },
-    { title: "1. Kart", subtitle: "Ateş", body: "Beklettiğin karar hareket istiyor. Mükemmel anı beklemek yerine küçük bir başlangıç yap.", asset: assets.tarotBack, variant: "gold" },
-    { title: "2. Kart", subtitle: "Su", body: "Kalbin bir şeyi çoktan biliyor. Bugün cevabı zorlamadan, hissettiğini isimlendir.", asset: assets.moon, variant: "deep" },
-    { title: "3. Kart", subtitle: "Toprak", body: "Dağınık alanı toparladığında içindeki yük hafifler. Önce düzen, sonra karar.", asset: assets.key, variant: "cream" },
-    { title: "4. Kart", subtitle: "Hava", body: "Konuşulmayan bir cümle zihnini yoruyor olabilir. Net ama yumuşak ifade alan açar.", asset: assets.synastry, variant: "violet" },
+    { title: "1. Kart", subtitle: "Ateş", body: "Beklettiğin karar hareket istiyor. Mükemmel anı beklemek yerine küçük bir başlangıç yap.", asset: assets.tarotFire, variant: "gold" },
+    { title: "2. Kart", subtitle: "Su", body: "Kalbin bir şeyi çoktan biliyor. Bugün cevabı zorlamadan, hissettiğini isimlendir.", asset: assets.tarotWater, variant: "deep" },
+    { title: "3. Kart", subtitle: "Toprak", body: "Dağınık alanı toparladığında içindeki yük hafifler. Önce düzen, sonra karar.", asset: assets.tarotEarth, variant: "cream" },
+    { title: "4. Kart", subtitle: "Hava", body: "Konuşulmayan bir cümle zihnini yoruyor olabilir. Net ama yumuşak ifade alan açar.", asset: assets.tarotAir, variant: "violet" },
   ], caption(
     "Tarot: 4 kart seç ✨",
     "Aklından bir konu geçir, derin bir nefes al ve ilk çekildiğin kartı seç. Bu genel bir kolektif okumadır; daha derin yorumlar için GoldMoodAstro içeriklerini takip edebilirsin.",
@@ -459,7 +468,7 @@ async function buildPosts(): Promise<DraftPost[]> {
   )));
 
   const numerologySlides: Slide[] = [
-    { title: "Ağustos 2026 yaşam yolu mesajı", subtitle: "Doğum tarihini topla", body: "Yaşam yolu sayını bul: gün + ay + yıl rakamlarını tek haneye indir. Sonra mesajını kaydır.", asset: assets.natal, variant: "deep", footer: "Sayını yorumlara yaz" },
+    { title: "Ağustos 2026 yaşam yolu mesajı", subtitle: "Doğum tarihini topla", body: "Yaşam yolu sayını bul: gün + ay + yıl rakamlarını tek haneye indir. Sonra mesajını kaydır.", asset: assets.road, variant: "deep", footer: "Sayını yorumlara yaz" },
   ];
   const numerologyBodies = [
     "Başlatma cesareti. Bu ay kendini seçtiğin yerde yeni bir kapı açılır.",
@@ -485,8 +494,8 @@ async function buildPosts(): Promise<DraftPost[]> {
     { title: "Son dördün enerjisi", subtitle: "6 Ağustos", body: "Ay küçülürken biz de gereksiz yükleri azaltırız. Bugün soru şu: neyi artık taşımayacaksın?", asset: assets.moon, variant: "deep" },
     { title: "1. Kontrol", subtitle: "Her şeyi yönetme ihtiyacı", body: "Bırakman gereken şey bazen bir kişi değil, her sonucu kontrol etme yorgunluğudur.", asset: assets.candle, variant: "gold" },
     { title: "2. Eski hikâye", subtitle: "Kendine anlattığın tekrar", body: "Aynı cümleyi tekrar ediyorsan, bugün ona başka bir cevap verme zamanı.", asset: assets.key, variant: "cream" },
-    { title: "3. Duygusal yük", subtitle: "Senin olmayan sorumluluk", body: "Şefkat güzel; ama başkasının yükünü sürekli taşımak senin yolunu ağırlaştırır.", asset: assets.synastry, variant: "violet" },
-    { title: "Mini ritüel", subtitle: "Yaz ve azalt", body: "Bugün bir kâğıda 'artık taşımıyorum' diye başlayan 3 cümle yaz. Sonra küçük bir düzenleme yap.", asset: assets.daily, variant: "deep" },
+    { title: "3. Duygusal yük", subtitle: "Senin olmayan sorumluluk", body: "Şefkat güzel; ama başkasının yükünü sürekli taşımak senin yolunu ağırlaştırır.", asset: assets.heart, variant: "violet" },
+    { title: "Mini ritüel", subtitle: "Yaz ve azalt", body: "Bugün bir kâğıda 'artık taşımıyorum' diye başlayan 3 cümle yaz. Sonra küçük bir düzenleme yap.", asset: assets.candle, variant: "deep" },
   ], caption(
     "6 Ağustos Son Dördün: bırakman gereken yük ne? 🌘",
     "Bu dönem büyük karar baskısı değil; hafifleme ve iç düzen zamanı. Kendine şu soruyu sor: bunu taşımaya gerçekten devam etmeli miyim?",
@@ -507,9 +516,9 @@ async function buildPosts(): Promise<DraftPost[]> {
     "Terazi arkadaşını etiketle; kendini gördüyse sadece gülücük bıraksın."
   )));
 
-  posts.push(await story(1, "word-poll", "İlk gördüğün kelime", { title: "Ağustos için ilk niyetin ne?", kicker: "STORY • ANKET", subtitle: "Aşk • Para • Huzur • Kariyer", body: "İlk çekildiğin kelimeyi seç ve kendine küçük bir niyet yaz.", asset: assets.natal, variant: "deep", footer: "Anket: Aşk / Para / Huzur / Kariyer" }));
+  posts.push(await story(1, "word-poll", "İlk gördüğün kelime", { title: "Ağustos için ilk niyetin ne?", kicker: "STORY • ANKET", subtitle: "Aşk • Para • Huzur • Kariyer", body: "İlk çekildiğin kelimeyi seç ve kendine küçük bir niyet yaz.", asset: assets.moon, variant: "deep", footer: "Anket: Aşk / Para / Huzur / Kariyer" }));
   posts.push(await story(2, "rising-question", "Yükselenini yaz", { title: "Yükselen burcun ne?", kicker: "STORY • SORU", subtitle: "Bugünkü mesajını ona göre oku", body: "Güneş burcun kimliğini, yükselenin günlük akışı daha net gösterebilir.", asset: assets.door, variant: "gold", footer: "Soru kutusu: Yükselenini yaz" }));
-  posts.push(await story(3, "weekly-save", "Hafta sonu tekrar bak", { title: "Bu haftanın cümlesi", kicker: "STORY • HATIRLATMA", subtitle: "Net seç, küçük başla", body: "Bugün kaydet; hafta sonunda ne değiştiğini tekrar kontrol et.", asset: assets.daily, variant: "violet", footer: "Kaydet • Cuma tekrar bak" }));
+  posts.push(await story(3, "weekly-save", "Hafta sonu tekrar bak", { title: "Bu haftanın cümlesi", kicker: "STORY • HATIRLATMA", subtitle: "Net seç, küçük başla", body: "Bugün kaydet; hafta sonunda ne değiştiğini tekrar kontrol et.", asset: assets.moon, variant: "violet", footer: "Kaydet • Cuma tekrar bak" }));
   posts.push(await story(4, "tarot-number", "Kart numaranı yaz", { title: "Kartını seçtin mi?", kicker: "STORY • TAROT", body: "İlk çekildiğin kart çoğu zaman zihnin değil sezginin seçtiğidir.", asset: assets.tarotBack, layout: "four-tarot", variant: "deep", footer: "Soru: Kart numaran kaç?" }));
   posts.push(await story(5, "life-path", "Yaşam yolu sayın", { title: "Yaşam yolu sayın kaç?", kicker: "STORY • NUMEROLOJİ", subtitle: "1’den 9’a", body: "Sayını bul ve Ağustos mesajını posttan oku.", asset: assets.numerology(8), variant: "gold", footer: "Soru kutusu: Sayını yaz" }));
   posts.push(await story(6, "release-box", "Neyi bırakıyorsun?", { title: "Bugün neyi bırakıyorsun?", kicker: "STORY • SON DÖRDÜN", subtitle: "Bir kelime yeter", body: "Kontrol, korku, bekleyiş, yorgunluk… Hangisi?", asset: assets.moon, variant: "cream", footer: "Soru kutusu: Bırakıyorum..." }));
