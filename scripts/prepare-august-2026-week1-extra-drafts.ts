@@ -610,7 +610,9 @@ async function main() {
   }
   for (let n = 1; n <= 9; n += 1) mustExist(assets.numerology(n));
   const posts = await buildPosts();
-  await writeManifest(posts);
+  // Manifest (references/*) git-tracked; sadece --db veya --manifest ile yaz ki
+  // salt görsel yeniden üretimi prod git tree'sini kirletip deploy'u kırmasın.
+  if (WRITE_DB || process.argv.includes("--manifest")) await writeManifest(posts);
   if (WRITE_DB) await upsertDrafts(posts);
   console.log(`\nHazır: ${posts.length} ek taslak`);
   console.log(`Görseller/video: ${OUT_DIR}`);
