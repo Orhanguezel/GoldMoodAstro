@@ -110,16 +110,18 @@ function tspans(lines: string[], x: number, dy: number) {
 
 function palette(variant: Slide["variant"] = "deep") {
   if (variant === "cream") {
+    // Sıcak altın ama KOYU tema (diğer slaytlarla tutarlı, açık metin → okunur).
+    // Eski açık-tema koyu metni koyu asset üstünde okunmuyordu (kontrast bug'ı).
     return {
-      bg1: "#fff9ed",
-      bg2: "#f2dfba",
-      bg3: "#d7b668",
-      text: "#171022",
-      muted: "#715d83",
-      panel: "rgba(255,250,238,.82)",
-      panel2: "rgba(20,10,34,.08)",
-      gold: "#b9892d",
-      line: "#c9a150",
+      bg1: "#140d09",
+      bg2: "#2b2013",
+      bg3: "#6d5322",
+      text: "#fff7e8",
+      muted: "#e8d9bb",
+      panel: "rgba(14,9,4,.78)",
+      panel2: "rgba(240,214,140,.12)",
+      gold: "#f0cf80",
+      line: "#d8b660",
     };
   }
   if (variant === "gold") {
@@ -276,7 +278,7 @@ async function renderSlide(fileName: string, slide: Slide, size: "post" | "story
     base = await sharp(mustExist(slide.asset))
       .resize(width, height, { fit: "cover" })
       .blur(8)
-      .modulate({ brightness: slide.variant === "cream" ? 1.05 : 0.58, saturation: 1.15 })
+      .modulate({ brightness: 0.58, saturation: 1.15 })
       .png()
       .toBuffer();
   } else {
