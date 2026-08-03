@@ -1,0 +1,27 @@
+name: Canlı Site Sağlık Kontrolü
+
+# Kullanıcı cache'den bağladığı için kırık siteyi göremiyor. Bu iş, canlı siteyi
+# TAZE (cache'siz) periyodik yoklar; bir şey kırılırsa job FAIL olur ve GitHub
+# repo sahibine otomatik e-posta atar. Böylece hatayı biz değil, izleme yakalar.
+
+on:
+  schedule:
+    - cron: "*/20 * * * *" # her 20 dakikada
+  workflow_dispatch: {}
+  workflow_run:
+    workflows: ["GoldMoodAstro Deploy"]
+    types: [completed]
+
+concurrency:
+  group: health-check
+  cancel-in-progress: true
+
+jobs:
+  health:
+    name: Sağlık kontrolü (taze)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Canlı site sağlık kontrolü
+        run: bash scripts/site-health-check.sh
