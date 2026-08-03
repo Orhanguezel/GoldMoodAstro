@@ -138,9 +138,14 @@ export async function createApp() {
   // country doldurulur; nginx x-real-ip/x-forwarded-for iletmeli.
   await app.register(fp(requestLoggerPlugin));
 
+  // Hata/404 yakalayıcıları route'lardan ÖNCE kaydet. Fastify'da encapsulated
+  // route plugin'leri, register edildikleri ANDAKI error handler'ı devralır;
+  // handler sonra set edilirse önceden kaydolan route'lara ULAŞMAZ (ZodError'lar
+  // varsayılan 500'e düşüyordu). Bu yüzden önce handler, sonra route.
+  registerErrorHandlers(app);
+
   // All routes: shared (@goldmood/shared-backend) + project-specific
   await registerAllRoutes(app);
 
-  registerErrorHandlers(app);
   return app;
 }
