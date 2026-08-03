@@ -23,18 +23,25 @@ export function registerErrorHandlers(app: any) {
       return reply.code(202).send({ ok: true, ignored: true, reason: 'empty_body' });
     }
 
-    const status = err?.statusCode ?? err?.status ?? (err?.validation ? 400 : 500);
+    // Zod .parse() hatası (elle çağrılan; Fastify'ın err.validation'ı değil) →
+    // istemci girdisi geçersiz demektir, 400 olmalı. Aksi halde 500'e düşüyordu.
+    const isZod = err?.name === 'ZodError' || Array.isArray(err?.issues);
+    const isValidation = Boolean(err?.validation) || isZod;
+
+    const status = err?.statusCode ?? err?.status ?? (isValidation ? 400 : 500);
 
     const payload: Record<string, any> = {
       error: {
-        code: err?.validation
+        code: isValidation
           ? 'VALIDATION_ERROR'
           : err?.code ?? (status >= 500 ? 'INTERNAL_SERVER_ERROR' : 'BAD_REQUEST'),
-        message: err?.message ?? 'Server Error',
+        // Zod'un ham issue dökümünü message'a basma; temiz mesaj ver, detay ayrı alanda.
+        message: isZod ? 'Geçersiz istek parametreleri' : (err?.message ?? 'Server Error'),
       },
     };
 
     if (err?.validation) payload.error.details = err.validation;
+    else if (isZod) payload.error.details = err.issues;
     if (err?.errors) payload.error.details = err.errors;
 
     if (process.env.NODE_ENV !== 'production' && err?.stack) {

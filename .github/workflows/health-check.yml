@@ -24,4 +24,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Canlı site sağlık kontrolü
+        id: health
         run: bash scripts/site-health-check.sh
+
+      # Hata olursa Telegram'a bildir (mevcut bot). Secret yoksa atlar; GitHub
+      # e-posta bildirimi zaten fallback olarak çalışır.
+      - name: Telegram uyarısı (sadece hata)
+        if: failure()
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "${TG_TOKEN}" ] || [ -z "${TG_CHAT}" ]; then
+            echo "Telegram secret (TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID) tanımlı değil — atlanıyor."
+            exit 0
+          fi
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          MSG="🔴 GoldMoodAstro — canlı site sağlık kontrolü BAŞARISIZ · $(date -u '+%Y-%m-%d %H:%M UTC') · ${RUN_URL}"
+          curl -s --max-time 20 "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TG_CHAT}" \
+            --data-urlencode "text=${MSG}" \
+            -d disable_web_page_preview=true >/dev/null || echo "Telegram gönderimi başarısız (yoksayıldı)."
