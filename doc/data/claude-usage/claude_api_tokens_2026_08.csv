@@ -1,0 +1,3 @@
+usage_date_utc,model_version,api_key,workspace,usage_type,context_window,usage_input_tokens_no_cache,usage_input_tokens_cache_write_5m,usage_input_tokens_cache_write_1h,usage_input_tokens_cache_read,usage_output_tokens,web_search_count,inference_geo,speed
+2026-08-01,claude-haiku-4-5-20251001,Gold Mood Astro,Default,standard,≤ 200k,77409,0,0,0,17696,0,not_available,
+2026-08-04,claude-haiku-4-5-20251001,GoldMoodAstro Production,Default,standard,≤ 200k,9,0,0,0,4,0,not_available,

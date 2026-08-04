@@ -1,0 +1,4 @@
+usage_date_utc,model_version,api_key,workspace,usage_type,context_window,usage_input_tokens_no_cache,usage_input_tokens_cache_write_5m,usage_input_tokens_cache_write_1h,usage_input_tokens_cache_read,usage_output_tokens,web_search_count,inference_geo,speed
+2026-03-10,claude-opus-4-6,orhan,Default,standard,≤ 200k,62,186915,0,452710,3269,0,global,
+2026-03-11,claude-opus-4-6,orhan,Default,standard,≤ 200k,86,251219,0,2611182,18235,0,global,
+2026-03-12,claude-opus-4-6,orhan,Default,standard,≤ 200k,3,68135,0,0,93,0,global,

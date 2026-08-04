@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 type Summary = {
   vatRate: number;
   trackingStartedAt: string;
-  historical: { netCostUsd: number; grossCostUsd: number; source: string };
+  historical: { inputTokens: number; outputTokens: number; cacheWrite5mTokens: number; cacheWrite1hTokens: number; cacheReadTokens: number; rowCount: number; firstDate: string; lastDate: string; netCostUsd: number; grossCostUsd: number; source: string };
   tracked: { inputTokens: number; outputTokens: number; requestCount: number; netCostUsd: number; grossCostUsd: number };
   grandTotal: { netCostUsd: number; grossCostUsd: number };
   purchases: Array<{ date: string; creditsUsd: number; paidGrossUsd: number; expiresAt: string }>;
@@ -42,6 +42,7 @@ export function AiBillingTab() {
   if (!data) return <div className="rounded-2xl bg-red-500/10 p-5 text-sm text-red-400">{error}</div>;
 
   const purchaseGross = data.purchases.reduce((total, row) => total + row.paidGrossUsd, 0);
+  const historicalTokens = data.historical.inputTokens + data.historical.outputTokens + data.historical.cacheWrite5mTokens + data.historical.cacheWrite1hTokens + data.historical.cacheReadTokens;
   return <div className="space-y-6">
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div><h3 className="font-serif text-2xl text-gm-text">Claude API kullanımı</h3><p className="mt-2 text-sm text-gm-muted">Yalnız GoldMoodAstro backend çağrıları · KDV %{Math.round(data.vatRate * 100)}</p></div>
@@ -50,7 +51,7 @@ export function AiBillingTab() {
 
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <Metric icon={Activity} label="Takip edilen istek" value={integer.format(data.tracked.requestCount)} />
-      <Metric icon={Calculator} label="Toplam token" value={integer.format(data.tracked.inputTokens + data.tracked.outputTokens)} hint={`${integer.format(data.tracked.inputTokens)} giriş · ${integer.format(data.tracked.outputTokens)} çıkış`} />
+      <Metric icon={Calculator} label="Toplam token" value={integer.format(historicalTokens + data.tracked.inputTokens + data.tracked.outputTokens)} hint={`${integer.format(historicalTokens)} geçmiş · ${integer.format(data.tracked.inputTokens + data.tracked.outputTokens)} yeni`} />
       <Metric icon={ReceiptText} label="Site maliyeti (KDV dahil)" value={usd.format(data.grandTotal.grossCostUsd)} hint={`${usd.format(data.grandTotal.netCostUsd)} net`} />
       <Metric icon={Coins} label="Satın alınan kredi" value={usd.format(data.purchases.reduce((sum, row) => sum + row.creditsUsd, 0))} hint={`${usd.format(purchaseGross)} karttan çekilen`} />
     </div>
@@ -58,7 +59,7 @@ export function AiBillingTab() {
     <Card className="border-gm-border-soft bg-gm-surface/30">
       <CardHeader><CardTitle className="font-serif text-xl">Maliyet özeti</CardTitle></CardHeader>
       <CardContent className="grid gap-3 text-sm">
-        <Row label="Anthropic Console geçmiş GoldMoodAstro maliyeti" value={`${usd.format(data.historical.netCostUsd)} net · ${usd.format(data.historical.grossCostUsd)} KDV dahil`} />
+        <Row label={`CSV geçmişi (${data.historical.firstDate} – ${data.historical.lastDate}, ${data.historical.rowCount} satır)`} value={`${usd.format(data.historical.netCostUsd)} net · ${usd.format(data.historical.grossCostUsd)} KDV dahil`} />
         <Row label={`Yerel token takibi (${data.trackingStartedAt} sonrası)`} value={`${usd.format(data.tracked.netCostUsd)} net · ${usd.format(data.tracked.grossCostUsd)} KDV dahil`} />
         <Row label="Site sahibine yansıtılabilir toplam kullanım" value={usd.format(data.grandTotal.grossCostUsd)} strong />
         <Row label={`Bakiye anlık görüntüsü (${data.currentBalanceSnapshot.capturedAt})`} value={usd.format(data.currentBalanceSnapshot.amountUsd)} />
@@ -81,4 +82,3 @@ function Metric({ icon: Icon, label, value, hint }: { icon: React.ComponentType<
   return <Card className="border-gm-border-soft bg-gm-surface/30"><CardContent className="p-5"><Icon className="size-5 text-gm-gold" /><p className="mt-4 text-xs uppercase tracking-wider text-gm-muted">{label}</p><p className="mt-2 text-2xl font-bold text-gm-text">{value}</p>{hint ? <p className="mt-1 text-xs text-gm-muted">{hint}</p> : null}</CardContent></Card>;
 }
 function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) { return <div className="flex flex-wrap justify-between gap-2 border-b border-gm-border-soft py-3 last:border-0"><span className="text-gm-muted">{label}</span><span className={strong ? 'font-bold text-gm-gold' : 'font-semibold text-gm-text'}>{value}</span></div>; }
-
