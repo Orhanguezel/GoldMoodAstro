@@ -41,29 +41,47 @@ export function AiBillingTab() {
   if (loading) return <div className="grid min-h-72 place-items-center"><Loader2 className="animate-spin text-gm-gold" /></div>;
   if (!data) return <div className="rounded-2xl bg-red-500/10 p-5 text-sm text-red-400">{error}</div>;
 
-  const purchaseGross = data.purchases.reduce((total, row) => total + row.paidGrossUsd, 0);
   const historicalTokens = data.historical.inputTokens + data.historical.outputTokens + data.historical.cacheWrite5mTokens + data.historical.cacheWrite1hTokens + data.historical.cacheReadTokens;
+  const totalTokens = historicalTokens + data.tracked.inputTokens + data.tracked.outputTokens;
+  const monthly = Array.from(data.daily.reduce((months, row) => {
+    const month = String(row.date).slice(0, 7);
+    const current = months.get(month) ?? { month, inputTokens: 0, outputTokens: 0, netCostUsd: 0, grossCostUsd: 0 };
+    current.inputTokens += Number(row.input_tokens || 0);
+    current.outputTokens += Number(row.output_tokens || 0);
+    current.netCostUsd += Number(row.net_cost_usd || 0);
+    current.grossCostUsd += Number(row.gross_cost_usd || 0);
+    months.set(month, current);
+    return months;
+  }, new Map<string, { month: string; inputTokens: number; outputTokens: number; netCostUsd: number; grossCostUsd: number }>()).values())
+    .sort((a, b) => b.month.localeCompare(a.month));
+  const currentMonth = monthly[0];
   return <div className="space-y-6">
     <div className="flex flex-wrap items-start justify-between gap-4">
-      <div><h3 className="font-serif text-2xl text-gm-text">Claude API kullanımı</h3><p className="mt-2 text-sm text-gm-muted">Yalnız GoldMoodAstro backend çağrıları · KDV %{Math.round(data.vatRate * 100)}</p></div>
+      <div><h3 className="font-serif text-2xl text-gm-text">AI kullanım ve ücret raporu</h3><p className="mt-2 text-sm text-gm-muted">Aylık ve toplam token tüketimi · KDV %{Math.round(data.vatRate * 100)}</p></div>
       <Button variant="outline" onClick={() => void load()}><RefreshCw className="mr-2 size-4" />Yenile</Button>
     </div>
 
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <Metric icon={Activity} label="Takip edilen istek" value={integer.format(data.tracked.requestCount)} />
-      <Metric icon={Calculator} label="Toplam token" value={integer.format(historicalTokens + data.tracked.inputTokens + data.tracked.outputTokens)} hint={`${integer.format(historicalTokens)} geçmiş · ${integer.format(data.tracked.inputTokens + data.tracked.outputTokens)} yeni`} />
-      <Metric icon={ReceiptText} label="Site maliyeti (KDV dahil)" value={usd.format(data.grandTotal.grossCostUsd)} hint={`${usd.format(data.grandTotal.netCostUsd)} net`} />
-      <Metric icon={Coins} label="Satın alınan kredi" value={usd.format(data.purchases.reduce((sum, row) => sum + row.creditsUsd, 0))} hint={`${usd.format(purchaseGross)} karttan çekilen`} />
+      <Metric icon={Calculator} label="Toplam token" value={integer.format(totalTokens)} />
+      <Metric icon={ReceiptText} label="Toplam ücret (KDV dahil)" value={usd.format(data.grandTotal.grossCostUsd)} hint={`${usd.format(data.grandTotal.netCostUsd)} net`} />
+      <Metric icon={Activity} label={`${currentMonth?.month ?? 'Bu ay'} token`} value={integer.format((currentMonth?.inputTokens ?? 0) + (currentMonth?.outputTokens ?? 0))} />
+      <Metric icon={Coins} label={`${currentMonth?.month ?? 'Bu ay'} ücret`} value={usd.format(currentMonth?.grossCostUsd ?? 0)} hint="KDV dahil" />
     </div>
 
     <Card className="border-gm-border-soft bg-gm-surface/30">
-      <CardHeader><CardTitle className="font-serif text-xl">Maliyet özeti</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="font-serif text-xl">Toplam kullanım özeti</CardTitle></CardHeader>
       <CardContent className="grid gap-3 text-sm">
-        <Row label={`CSV geçmişi (${data.historical.firstDate} – ${data.historical.lastDate}, ${data.historical.rowCount} satır)`} value={`${usd.format(data.historical.netCostUsd)} net · ${usd.format(data.historical.grossCostUsd)} KDV dahil`} />
-        <Row label={`Yerel token takibi (${data.trackingStartedAt} sonrası)`} value={`${usd.format(data.tracked.netCostUsd)} net · ${usd.format(data.tracked.grossCostUsd)} KDV dahil`} />
-        <Row label="Site sahibine yansıtılabilir toplam kullanım" value={usd.format(data.grandTotal.grossCostUsd)} strong />
-        <Row label={`Bakiye anlık görüntüsü (${data.currentBalanceSnapshot.capturedAt})`} value={usd.format(data.currentBalanceSnapshot.amountUsd)} />
+        <Row label="Toplam token kullanımı" value={integer.format(totalTokens)} />
+        <Row label="Net kullanım ücreti" value={usd.format(data.grandTotal.netCostUsd)} />
+        <Row label={`KDV (%${Math.round(data.vatRate * 100)})`} value={usd.format(data.grandTotal.grossCostUsd - data.grandTotal.netCostUsd)} />
+        <Row label="KDV dahil toplam kullanım ücreti" value={usd.format(data.grandTotal.grossCostUsd)} strong />
+        <Row label={`Mevcut kredi bakiyesi (${data.currentBalanceSnapshot.capturedAt})`} value={usd.format(data.currentBalanceSnapshot.amountUsd)} />
       </CardContent>
+    </Card>
+
+    <Card className="border-gm-border-soft bg-gm-surface/30">
+      <CardHeader><CardTitle className="font-serif text-xl">Aylık kullanım ve ücretler</CardTitle></CardHeader>
+      <CardContent className="overflow-x-auto"><table className="w-full min-w-[680px] text-left text-sm"><thead className="text-xs uppercase tracking-wider text-gm-muted"><tr><th className="pb-3">Ay</th><th className="pb-3">Giriş token</th><th className="pb-3">Çıkış token</th><th className="pb-3">Net ücret</th><th className="pb-3">KDV dahil</th></tr></thead><tbody>{monthly.map((row) => <tr key={row.month} className="border-t border-gm-border-soft"><td className="py-3">{row.month}</td><td>{integer.format(row.inputTokens)}</td><td>{integer.format(row.outputTokens)}</td><td>{usd.format(row.netCostUsd)}</td><td className="font-semibold text-gm-text">{usd.format(row.grossCostUsd)}</td></tr>)}</tbody></table></CardContent>
     </Card>
 
     <Card className="border-gm-border-soft bg-gm-surface/30">
@@ -73,7 +91,7 @@ export function AiBillingTab() {
 
     <Card className="border-gm-border-soft bg-gm-surface/30">
       <CardHeader><CardTitle className="font-serif text-xl">Günlük token hareketleri</CardTitle></CardHeader>
-      <CardContent>{data.daily.length === 0 ? <p className="text-sm text-gm-muted">Takip başladı; ilk başarılı site çağrısından sonra hareketler burada görünecek.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="text-xs uppercase tracking-wider text-gm-muted"><tr><th className="pb-3">Tarih</th><th className="pb-3">Model</th><th className="pb-3">Giriş</th><th className="pb-3">Çıkış</th><th className="pb-3">KDV dahil</th></tr></thead><tbody>{data.daily.map((row) => <tr key={`${row.date}-${row.model}`} className="border-t border-gm-border-soft"><td className="py-3">{row.date}</td><td>{row.model}</td><td>{integer.format(Number(row.input_tokens))}</td><td>{integer.format(Number(row.output_tokens))}</td><td>{usd.format(Number(row.gross_cost_usd))}</td></tr>)}</tbody></table></div>}</CardContent>
+      <CardContent>{data.daily.length === 0 ? <p className="text-sm text-gm-muted">Henüz kullanım kaydı bulunmuyor.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="text-xs uppercase tracking-wider text-gm-muted"><tr><th className="pb-3">Tarih</th><th className="pb-3">Model</th><th className="pb-3">Giriş</th><th className="pb-3">Çıkış</th><th className="pb-3">KDV dahil</th></tr></thead><tbody>{data.daily.map((row) => <tr key={`${row.date}-${row.model}`} className="border-t border-gm-border-soft"><td className="py-3">{row.date}</td><td>{row.model}</td><td>{integer.format(Number(row.input_tokens))}</td><td>{integer.format(Number(row.output_tokens))}</td><td>{usd.format(Number(row.gross_cost_usd))}</td></tr>)}</tbody></table></div>}</CardContent>
     </Card>
   </div>;
 }
