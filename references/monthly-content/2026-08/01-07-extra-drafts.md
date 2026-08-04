@@ -1,6 +1,6 @@
 # GoldMoodAstro — 1–7 Ağustos 2026 Ek İçerik Paketi
 
-Üretim tarihi: 2026-07-30T21:08:58.563Z
+Üretim tarihi: 2026-08-01T08:39:12.085Z
 
 Görseller/video: `backend/uploads/social/august-2026-week1-extra/`
 

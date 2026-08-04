@@ -6,7 +6,7 @@ Bu dosya Codex'in okuyup çalıştığı talimat dosyasıdır.
 
 ## 🔴 AKTIF GOREV — Sosyal medya & site gorselleri uretimi
 
-**Brief:** [`CODEX-GORSEL-URETIM-BRIEF.md`](./CODEX-GORSEL-URETIM-BRIEF.md)
+**Brief:** [`CODEX-GORSEL-URETIM-BRIEF.md`](./doc/briefs/CODEX-GORSEL-URETIM-BRIEF.md)
 
 Kahve fali, ruya tabiri, numeroloji, sinastri ve yildizname konulari icin **hic gorsel yok**;
 sosyal medya otomasyonu bu konulara alakasiz burc resmi koyuyordu (kahve fali -> yengec).
@@ -18,7 +18,7 @@ sosyal medya otomasyonu bu konulara alakasiz burc resmi koyuyordu (kahve fali ->
 - ⚠️ **Gorselin icine YAZI KOYMA** — mevcut zodyak setindeki gomulu Ingilizce baslik
   sosyal medya sablonundaki Turkce baslikla ust uste biniyor
 - ⚠️ Uretim sonrasi **gozle bak** — placeholder/kesik gorseller daha once fark edilmeden
-  yayinlandi (bkz. `EKSIK-GORSELLER.md`)
+  yayinlandi (bkz. `doc/raporlar/EKSIK-GORSELLER.md`)
 
 **Kapsam disi:** tarot kartlarinin yeniden uretimi (kullanici kendisi yapiyor).
 

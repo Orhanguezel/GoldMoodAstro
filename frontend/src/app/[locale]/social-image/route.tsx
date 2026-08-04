@@ -37,7 +37,7 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com';
 const zodiacArt = (sign: string) => `${SITE}/uploads/zodiac/${sign}.png`;
 /** Tarot destesi gorselleri (/tr/tarot ile ayni kaynak). */
 const tarotArt = (card: string) => `${SITE}/uploads/tarot/${card}.png`;
-/** Seri sembolleri — Codex uretiyor (CODEX-GORSEL-URETIM-BRIEF.md). */
+/** Seri sembolleri — Codex uretiyor (doc/briefs/CODEX-GORSEL-URETIM-BRIEF.md). */
 const symbolArt = (set: string, slug: string) => `${SITE}/uploads/symbols/${set}/${slug}.png`;
 /** Konu hero gorselleri (Faz A, 2026-07-19). Burc resmi yerine KONUYA AIT gorsel. */
 const topicArt = (topic: string) => `${SITE}/uploads/topics/${topic}.png`;

@@ -33,8 +33,8 @@ const TENANT = "goldmoodastro";
 const HASHTAGS = "#goldmoodastro #astroloji #tarot #numeroloji #spirituelsemboller #ruhsaldanismanlik";
 const SITE_URL = "https://goldmoodastro.com";
 
-type PostType = "etkilesim" | "tanitim" | "kampanya";
-type DraftPost = {
+export type PostType = "etkilesim" | "tanitim" | "kampanya";
+export type DraftPost = {
   sourceRef: string;
   title: string;
   postType: PostType;
@@ -45,7 +45,7 @@ type DraftPost = {
   notes: string;
 };
 
-type Slide = {
+export type Slide = {
   title: string;
   kicker?: string;
   subtitle?: string;
@@ -57,7 +57,7 @@ type Slide = {
   accent?: string;
 };
 
-const assets = {
+export const assets = {
   daily: path.resolve(ROOT, "backend/uploads/features/daily_reading.png"),
   natal: path.resolve(ROOT, "backend/uploads/features/natal_chart.png"),
   synastry: path.resolve(ROOT, "backend/uploads/features/synastry_chart.png"),
@@ -364,7 +364,7 @@ function caption(title: string, body: string, cta: string, tags = HASHTAGS) {
   return `${title}\n\n${body}\n\n${cta}\n\n🔗 Daha fazla içerik ve danışmanlık seçenekleri için: ${SITE_URL}\n\n${tags}`;
 }
 
-async function carousel(day: number, slug: string, title: string, slides: Slide[], captionText: string, postType: PostType = "etkilesim"): Promise<DraftPost> {
+export async function carousel(day: number, slug: string, title: string, slides: Slide[], captionText: string, postType: PostType = "etkilesim"): Promise<DraftPost> {
   const code = String(day).padStart(2, "0");
   const mediaUrls: string[] = [];
   for (const [index, slide] of slides.entries()) {
@@ -382,7 +382,7 @@ async function carousel(day: number, slug: string, title: string, slides: Slide[
   };
 }
 
-async function reel(day: number, slug: string, title: string, cover: Slide, captionText: string): Promise<DraftPost> {
+export async function reel(day: number, slug: string, title: string, cover: Slide, captionText: string): Promise<DraftPost> {
   const code = String(day).padStart(2, "0");
   const coverUrl = await renderSlide(`2026-08-${code}-${slug}-cover.png`, cover, "story");
   const videoUrl = await renderReel(`2026-08-${code}-${slug}.mp4`, coverUrl);
@@ -398,7 +398,7 @@ async function reel(day: number, slug: string, title: string, cover: Slide, capt
   };
 }
 
-async function story(day: number, slug: string, title: string, slide: Slide): Promise<DraftPost> {
+export async function story(day: number, slug: string, title: string, slide: Slide): Promise<DraftPost> {
   const code = String(day).padStart(2, "0");
   const imageUrl = await renderSlide(`2026-08-${code}-story-${slug}.png`, slide, "story");
   return {
@@ -620,7 +620,9 @@ async function main() {
   console.log(WRITE_DB ? "DB: taslaklar yazıldı." : "DB: yazılmadı. Yazmak için --db kullan.");
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+if (import.meta.main) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

@@ -5,7 +5,7 @@ module.exports = {
       name: 'goldmoodastro-backend',
       cwd: '/var/www/goldmoodastro/backend',
 
-      interpreter: '/home/orhan/.bun/bin/bun',
+      interpreter: '/usr/local/bin/bun',
       script: 'dist/index.js',
 
       exec_mode: 'fork',
@@ -32,8 +32,8 @@ module.exports = {
         PORT: 8094,
       },
 
-      out_file: '/home/orhan/.pm2/logs/goldmoodastro-backend.out.log',
-      error_file: '/home/orhan/.pm2/logs/goldmoodastro-backend.err.log',
+      out_file: '/root/.pm2/logs/goldmoodastro-backend.out.log',
+      error_file: '/root/.pm2/logs/goldmoodastro-backend.err.log',
       combine_logs: true,
       time: true,
     },
