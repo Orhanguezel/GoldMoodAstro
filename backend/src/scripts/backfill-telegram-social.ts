@@ -19,7 +19,8 @@ for (const row of rows
 }
 
 let sent = 0;
-for (const row of unique.values()) {
+const skip = Math.max(0, Number.parseInt(process.env.TELEGRAM_BACKFILL_SKIP || "0", 10) || 0);
+for (const row of [...unique.values()].slice(skip)) {
   const text = adaptForPlatform("telegram", {
     caption: row.caption,
     hashtags: row.hashtags,
@@ -32,7 +33,7 @@ for (const row of unique.values()) {
     throw new Error(`Telegram backfill failed at social_posts.id=${row.id}`);
   }
   sent += 1;
-  console.log(`[telegram-backfill] ${sent}/${unique.size} id=${row.id}`);
+  console.log(`[telegram-backfill] ${skip + sent}/${unique.size} id=${row.id}`);
   await new Promise((resolve) => setTimeout(resolve, 1_100));
 }
 

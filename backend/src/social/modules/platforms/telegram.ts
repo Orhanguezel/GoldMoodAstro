@@ -72,7 +72,11 @@ export async function sendPost(
   const config = await resolveTelegramConfig(options.tenantKey, chatId);
   if (!config.token || !config.chatId) return false;
 
-  const media = mediaUrls.filter(Boolean).slice(0, 10);
+  const publicBase = (process.env.SOCIAL_PUBLIC_BASE || process.env.PUBLIC_URL || "https://goldmoodastro.com").replace(/\/$/, "");
+  const media = mediaUrls
+    .filter(Boolean)
+    .map((url) => /^https?:\/\//i.test(url) ? url : `${publicBase}/${url.replace(/^\//, "")}`)
+    .slice(0, 10);
   if (media.length === 0) return sendMessage(text, chatId, options);
 
   try {
