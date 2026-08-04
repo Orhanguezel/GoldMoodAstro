@@ -509,6 +509,11 @@ export async function publishPost(postId: number): Promise<PublishResult> {
 
   const byPlatform = new Map(accounts.map((a) => [a.platform, a] as const));
   const targets = resolvePlatforms(post.platform);
+  // GoldMoodAstro'nun ana FB+IG gönderilerini public Telegram akışına da taşı.
+  // Story içerikleri geçmiş/kalıcı grup akışını gereksiz doldurmasın.
+  if (tenantKey === "goldmoodastro" && post.platform === "both" && !isStoryPost(post)) {
+    targets.telegram = true;
+  }
   const linkedInPublishMode = targets.linkedin ? await getLinkedInPublishMode(tenantKey) : "api";
 
   if ((await getPublishProvider(tenantKey)) === "postproxy" && linkedInPublishMode !== "manual" && !shouldUseNativeForSpecialPost(post, targets)) {
@@ -765,7 +770,10 @@ export async function publishPost(postId: number): Promise<PublishResult> {
     try {
       const acc = byPlatform.get("telegram");
       const text = adaptForPlatform("telegram", { caption: post.caption, hashtags: post.hashtags, linkUrl: post.linkUrl });
-      const ok = await telegram.sendMessage(text, acc?.accountId ?? undefined, { tenantKey });
+      const mediaUrls = [post.imageUrl, ...(post.mediaUrls ?? [])]
+        .filter((url): url is string => typeof url === "string" && url.trim().length > 0)
+        .filter((url, index, all) => all.indexOf(url) === index);
+      const ok = await telegram.sendPost(text, mediaUrls, acc?.accountId ?? undefined, { tenantKey });
       if (!ok) {
         throw new Error(`Tenant (${tenantKey}) icin Telegram bot token/chat ayari eksik veya gecersiz`);
       }

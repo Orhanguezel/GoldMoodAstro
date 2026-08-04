@@ -63,6 +63,50 @@ export async function sendMessage(
   }
 }
 
+export async function sendPost(
+  text: string,
+  mediaUrls: string[] = [],
+  chatId?: string,
+  options: TelegramOptions = {},
+): Promise<boolean> {
+  const config = await resolveTelegramConfig(options.tenantKey, chatId);
+  if (!config.token || !config.chatId) return false;
+
+  const media = mediaUrls.filter(Boolean).slice(0, 10);
+  if (media.length === 0) return sendMessage(text, chatId, options);
+
+  try {
+    const isVideo = (url: string) => /\.(mp4|mov|m4v)(?:\?|$)/i.test(url);
+    const method = media.length === 1 ? (isVideo(media[0]) ? "sendVideo" : "sendPhoto") : "sendMediaGroup";
+    const body = media.length === 1
+      ? {
+          chat_id: config.chatId,
+          [isVideo(media[0]) ? "video" : "photo"]: media[0],
+          caption: text.slice(0, 1024),
+          parse_mode: "HTML",
+        }
+      : {
+          chat_id: config.chatId,
+          media: media.map((url, index) => ({
+            type: isVideo(url) ? "video" : "photo",
+            media: url,
+            ...(index === 0 ? { caption: text.slice(0, 1024), parse_mode: "HTML" } : {}),
+          })),
+        };
+
+    const res = await fetch(`${TG_API_URL}/bot${config.token}/${method}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) console.error("Telegram medya hatasi:", await res.json());
+    return res.ok;
+  } catch (err) {
+    console.error("Telegram medya gonderim hatasi:", err);
+    return false;
+  }
+}
+
 // ─── Post Yayinlandi Bildirimi ──────────────────────────────
 export async function notifyPostPublished(
   platform: string,
