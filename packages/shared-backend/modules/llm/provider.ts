@@ -31,6 +31,21 @@ export type ChatResult = {
   usage?: ChatUsage;
 };
 
+export type LlmUsageEvent = {
+  provider: LlmProvider;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+};
+
+type LlmUsageReporter = (event: LlmUsageEvent) => void | Promise<void>;
+let usageReporter: LlmUsageReporter | null = null;
+
+/** Backend uygulaması kullanım muhasebesini burada bağlar; paylaşılan paket DB bilmez. */
+export function registerLlmUsageReporter(reporter: LlmUsageReporter | null): void {
+  usageReporter = reporter;
+}
+
 export class LlmError extends Error {
   constructor(
     message: string,
@@ -212,17 +227,35 @@ async function chatGroq(args: ChatArgs): Promise<ChatResult> {
 
 // ─── Public chat() — provider'a göre dispatch ───────────────────
 export async function chat(args: ChatArgs): Promise<ChatResult> {
+  let result: ChatResult;
   switch (args.provider) {
     case 'anthropic':
-      return chatAnthropic(args);
+      result = await chatAnthropic(args);
+      break;
     case 'openai':
     case 'azure':
-      return chatOpenAI(args);
+      result = await chatOpenAI(args);
+      break;
     case 'groq':
-      return chatGroq(args);
+      result = await chatGroq(args);
+      break;
     case 'local':
       throw new LlmError('local provider not implemented', undefined, 'local');
     default:
       throw new LlmError(`unknown provider: ${args.provider}`);
   }
+
+  if (usageReporter && result.usage) {
+    try {
+      await usageReporter({
+        provider: result.provider,
+        model: result.model,
+        inputTokens: result.usage.input,
+        outputTokens: result.usage.output,
+      });
+    } catch (error) {
+      console.warn('[llm-usage] reporter_failed', error instanceof Error ? error.message : error);
+    }
+  }
+  return result;
 }

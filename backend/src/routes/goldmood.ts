@@ -18,6 +18,7 @@ import { registerHistoryRoutes } from '@/modules/history/router';
 import { registerCreditsRoutes } from '@/modules/credits/router';
 import { registerServiceBoosts, registerServiceBoostsAdmin } from '@/modules/serviceBoosts/router';
 import { registerCommissionChangeAdmin } from '@/modules/commissionChange/admin.routes';
+import { registerAiBillingAdmin } from '@/modules/aiBilling/admin.routes';
 import { registerConsultantTimeBlocks } from '@/modules/consultantTimeBlocks/router';
 import { registerStubs } from './stubs';
 
@@ -61,6 +62,7 @@ export async function registerGoldmoodAdmin(adminApi: FastifyInstance) {
   await adminApi.register(registerLiveKitAdmin);
   await adminApi.register(registerServiceBoostsAdmin);
   await adminApi.register(registerCommissionChangeAdmin);
+  await adminApi.register(registerAiBillingAdmin);
   await adminApi.register(registerHoroscopeAdminRoutes);
   // /api/admin/social/marketing/* — GA4, Search Console, (Faz 2: Google Ads)
   await adminApi.register(marketingRoutes, { prefix: '/social/marketing' });

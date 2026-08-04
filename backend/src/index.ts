@@ -25,12 +25,16 @@ import { registerSeoQualityRecalcCron } from '@/jobs/seo-quality-recalc.job';
 import { registerPushSender } from '@goldmood/shared-backend/modules/notifications';
 import { assertPaymentMockSafe } from '@goldmood/shared-backend/modules/orders/iyzico.service';
 import { sendPushNotification } from '@/modules/firebase/service';
+import { registerLlmUsageReporter } from '@goldmood/shared-backend/modules/llm/provider';
+import { recordLlmUsage } from '@/modules/aiBilling/service';
 
 // shared-backend modülleri firebase-admin'i import edemediği için
 // startup'ta concrete sender'ı register ediyoruz.
 registerPushSender(async (params) => {
   await sendPushNotification(params);
 });
+
+registerLlmUsageReporter(recordLlmUsage);
 
 async function main() {
   assertPaymentMockSafe();

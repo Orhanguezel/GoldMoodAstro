@@ -14,6 +14,7 @@ import {
   Database, 
   Activity,
   Languages,
+  BrainCircuit,
   ChevronRight
 } from 'lucide-react';
 
@@ -47,6 +48,7 @@ import { DesignTokensTab } from '../tabs/design-tokens-tab';
 import { CustomCssTab } from '../tabs/custom-css-tab';
 import { LiveKitTab } from '../tabs/livekit-tab';
 import { MobileI18nTab } from '../tabs/mobile-i18n-tab';
+import { AiBillingTab } from '../tabs/ai-billing-tab';
 
 import type { SiteSetting } from '@/integrations/shared';
 import {
@@ -70,7 +72,8 @@ type SettingsTab =
   | 'design_tokens'
   | 'mobile_i18n'
   | 'custom_css'
-  | 'livekit';
+  | 'livekit'
+  | 'ai_billing';
 
 function ListPanel({
   locale,
@@ -139,7 +142,7 @@ export default function AdminSiteSettingsClient() {
     }
   };
 
-  const isGlobalTab = ['global_list', 'smtp', 'brand_media', 'locales', 'branding', 'design_tokens', 'mobile_i18n', 'custom_css', 'livekit'].includes(tab);
+  const isGlobalTab = ['global_list', 'smtp', 'brand_media', 'locales', 'branding', 'design_tokens', 'mobile_i18n', 'custom_css', 'livekit', 'ai_billing'].includes(tab);
 
   const menuItems = [
     { value: 'design_tokens', label: t('tabs.design_tokens', null, 'Tasarım Tokenları'), icon: Palette },
@@ -148,6 +151,7 @@ export default function AdminSiteSettingsClient() {
     { value: 'general', label: t('tabs.general', null, 'Genel Ayarlar'), icon: Settings },
     { value: 'seo', label: t('tabs.seo', null, 'SEO & Meta'), icon: Globe },
     { value: 'api', label: t('tabs.api', null, 'API & Entegrasyon'), icon: Sliders },
+    { value: 'ai_billing', label: 'AI Kullanım & Maliyet', icon: BrainCircuit },
     { value: 'smtp', label: t('tabs.smtp', null, 'E-posta (SMTP)'), icon: Mail },
     { value: 'livekit', label: t('tabs.livekit', null, 'Görüntülü Altyapı'), icon: Activity },
     { value: 'custom_css', label: t('tabs.custom_css', null, 'Özel CSS'), icon: Code },
@@ -276,6 +280,7 @@ export default function AdminSiteSettingsClient() {
               {tab === 'general' && <GeneralSettingsTab locale={locale} />}
               {tab === 'seo' && <SeoSettingsTab locale={locale} />}
               {tab === 'api' && <ApiSettingsTab locale={locale} />}
+              {tab === 'ai_billing' && <AiBillingTab />}
               {tab === 'smtp' && <SmtpSettingsTab locale={locale} />}
               {tab === 'livekit' && <LiveKitTab />}
               {tab === 'custom_css' && <CustomCssTab />}

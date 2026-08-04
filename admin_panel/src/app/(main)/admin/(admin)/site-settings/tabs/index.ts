@@ -8,3 +8,4 @@ export * from './api-settings-tab';
 export * from './brand-media-tab';
 export * from './design-tokens-tab';
 export * from './livekit-tab';
+export * from './ai-billing-tab';
