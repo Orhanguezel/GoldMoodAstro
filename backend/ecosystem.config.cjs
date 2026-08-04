@@ -14,7 +14,10 @@ module.exports = {
       watch: false,
       autorestart: true,
 
-      max_memory_restart: '400M',
+      // Backend steady-state ~590MB (Fastify + googleapis). 400M limiti gerçek
+      // kullanımın ALTINDA kalıyordu → config'ten restart edilince PM2 sürekli
+      // restart döngüsüne girip kesinti yaratabilirdi. 768M güvenli tavan (VPS 3.9GB).
+      max_memory_restart: '768M',
 
       min_uptime: '30s',
       max_restarts: 10,
