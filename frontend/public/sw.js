@@ -1,4 +1,4 @@
-const VERSION = 'goldmoodastro-v3';
+const VERSION = 'goldmoodastro-v4';
 const SHELL = `${VERSION}-shell`;
 const STATIC = `${VERSION}-static`;
 const PAGE = `${VERSION}-page`;
@@ -36,14 +36,14 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== location.origin || SKIP_RE.test(url.pathname)) return;
 
   if (request.mode === 'navigate') {
+    // NETWORK-FIRST: her zaman taze sayfa; yalnız ağ hatasında (offline/VPS blip)
+    // önbellekteki son sürüme, o da yoksa offline sayfasına düş. Eski strateji
+    // (stale-while-revalidate) hep bir önceki sürümü gösterip "eski/gitmiş"
+    // algısı yaratıyordu.
     event.respondWith(
-      caches.open(PAGE).then(async (cache) => {
-        const cached = await cache.match(request);
-        const fresh = fetch(request)
-          .then((response) => put(PAGE, request, response))
-          .catch(() => cached || caches.match(OFFLINE));
-        return cached || fresh;
-      }),
+      fetch(request)
+        .then((response) => put(PAGE, request, response))
+        .catch(async () => (await caches.match(request)) || caches.match(OFFLINE)),
     );
     return;
   }
