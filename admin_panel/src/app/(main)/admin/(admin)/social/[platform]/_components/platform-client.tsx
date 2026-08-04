@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import SocialPlatformPage from "@/ekosistem/components/social/SocialPlatformPage";
 import { getSocialPlatform } from "@/ekosistem/lib/social-platforms";
+import TikTokSandboxPage from "@/ekosistem/components/social/TikTokSandboxPage";
 
 export default function SocialPlatformRoute() {
   const params = useParams();
@@ -19,6 +20,8 @@ export default function SocialPlatformRoute() {
   }, [config, router]);
 
   if (config?.externalHref) return null;
+
+  if (platformKey === "tiktok") return <TikTokSandboxPage />;
 
   return <SocialPlatformPage platformKey={platformKey} />;
 }

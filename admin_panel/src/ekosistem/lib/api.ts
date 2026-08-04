@@ -801,6 +801,17 @@ export const platforms = {
     }),
   youtubeInfo: (tenantKey: string) =>
     fetcher<any>(`/platforms/youtube/info?tenantKey=${encodeURIComponent(tenantKey)}`),
+  tiktokConfig: () =>
+    fetcher<{ item: { clientKey: string | null; redirectUri: string | null; hasClientSecret: boolean; connected: boolean; openId: string | null; displayName: string | null } }>("/platforms/tiktok/config"),
+  saveTikTokConfig: (data: { clientKey: string; clientSecret?: string; redirectUri: string }) =>
+    fetcher<{ ok: boolean }>("/platforms/tiktok/config", { method: "POST", body: JSON.stringify(data) }),
+  tiktokAuthUrl: () => fetcher<{ url: string }>("/platforms/tiktok/oauth/auth-url"),
+  tiktokUploadDraft: (file: File) => {
+    const formData = new FormData();
+    formData.append("video", file, file.name);
+    return fetcher<{ ok: boolean; publishId: string; message: string }>("/platforms/tiktok/upload-draft", { method: "POST", body: formData });
+  },
+  tiktokDisconnect: () => fetcher<{ ok: boolean }>("/platforms/tiktok/disconnect", { method: "POST" }),
   manualConnect: (data: {
     tenantKey: string;
     platform: string;

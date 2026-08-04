@@ -17,6 +17,7 @@ import { env } from '@/core/env';
 import { registerErrorHandlers } from '@/core/error';
 import { registerAllRoutes } from './routes';
 import { parseCorsOrigins } from './app.helpers';
+import * as tiktok from './social/modules/platforms/tiktok';
 
 export async function createApp() {
   const { default: buildFastify } = (await import('fastify')) as unknown as {
@@ -131,6 +132,24 @@ export async function createApp() {
   });
 
   await app.register(staticUploads);
+
+  // TikTok OAuth callback publictir; tenant kisa omurlu HMAC-imzali state ile dogrulanir.
+  app.get('/api/platforms/tiktok/oauth/callback/', async (req, reply) => {
+    try {
+      const query = req.query as Record<string, unknown>;
+      if (typeof query.error === 'string' && query.error) {
+        return reply.redirect(`https://admin.goldmoodastro.com/admin/social/tiktok?tiktok=error`);
+      }
+      const code = typeof query.code === 'string' ? query.code.trim() : '';
+      const state = typeof query.state === 'string' ? query.state.trim() : '';
+      if (!code || !state) return reply.status(400).send({ error: 'TikTok code ve state gerekli' });
+      tiktok.verifyState(state);
+      await tiktok.exchangeCode(code);
+      return reply.redirect('https://admin.goldmoodastro.com/admin/social/tiktok?tiktok=connected');
+    } catch (err) {
+      return reply.status(400).send({ error: (err as Error).message });
+    }
+  });
 
   // Audit request logger — onResponse hook TÜM route'larda çalışsın diye fp() ile
   // kök instance'a bağlanır (fp yoksa hook encapsulate olur → audit_request_logs

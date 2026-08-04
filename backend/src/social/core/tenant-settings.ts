@@ -24,6 +24,7 @@ export type TenantSettingNamespace =
   | "ga4"
   | "google_ads"
   | "telegram"
+  | "tiktok"
   | "meta"
   | "linkedin"
   | "pinterest"

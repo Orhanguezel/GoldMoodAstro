@@ -20,12 +20,13 @@ export default function SocialOverviewPage() {
     if (!tk) return;
     setLoading(true);
     try {
-      const [st, list, pl] = await Promise.all([
+      const [st, list, pl, tiktok] = await Promise.all([
         platforms.status(tk).catch(() => null),
         platforms.list(tk).catch(() => ({ items: [] })),
         posts.list({ tenantKey: tk, limit: "100", sort: "created_at", order: "desc" }).catch(() => ({ items: [] })),
+        platforms.tiktokConfig().catch(() => null),
       ]);
-      setStatus(st);
+      setStatus({ ...(st || {}), tiktok: { connected: !!tiktok?.item.connected } });
       setAccounts(list.items || []);
       setPostItems(pl.items || []);
     } finally {

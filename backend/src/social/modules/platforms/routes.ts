@@ -17,6 +17,7 @@ import { google } from "googleapis";
 import { type OAuth1Creds } from "./x-oauth1";
 import { getMetaHealth } from "./meta-health";
 import * as postRepo from "../posts/repository";
+import * as tiktok from "./tiktok";
 
 function isCompleteOauth1(meta: unknown): meta is { oauth1: OAuth1Creds } {
   const oauth1 = (meta as { oauth1?: Partial<OAuth1Creds> } | null | undefined)?.oauth1;
@@ -896,6 +897,46 @@ export async function platformsRoutes(app: FastifyInstance) {
     } catch (err) {
       return reply.status(400).send({ error: (err as Error).message });
     }
+  });
+
+  app.get("/tiktok/config", async (_req, reply) => {
+    try { return reply.send({ item: await tiktok.summary() }); }
+    catch (err) { return reply.status(400).send({ error: (err as Error).message }); }
+  });
+
+  app.post("/tiktok/config", async (req, reply) => {
+    try {
+      const body = req.body as any;
+      await tiktok.saveConfig(
+        String(body.clientKey || ""),
+        body.clientSecret === "__KEEP__" ? undefined : String(body.clientSecret || "") || undefined,
+        String(body.redirectUri || ""),
+      );
+      return reply.send({ ok: true });
+    } catch (err) { return reply.status(400).send({ error: (err as Error).message }); }
+  });
+
+  app.get("/tiktok/oauth/start", async (_req, reply) => {
+    try { return reply.redirect(await tiktok.authUrl()); }
+    catch (err) { return reply.status(400).send({ error: (err as Error).message }); }
+  });
+
+  app.get("/tiktok/oauth/auth-url", async (_req, reply) => {
+    try { return reply.send({ url: await tiktok.authUrl() }); }
+    catch (err) { return reply.status(400).send({ error: (err as Error).message }); }
+  });
+
+  app.post("/tiktok/upload-draft", async (req, reply) => {
+    try {
+      const file = await req.file();
+      if (!file || !file.mimetype.startsWith("video/")) return reply.status(400).send({ error: "Video dosyasi gerekli" });
+      return reply.send({ ok: true, ...(await tiktok.uploadDraft({ filename: file.filename, mimetype: file.mimetype, buffer: await file.toBuffer() })) });
+    } catch (err) { return reply.status(400).send({ error: (err as Error).message }); }
+  });
+
+  app.post("/tiktok/disconnect", async (_req, reply) => {
+    try { await tiktok.disconnect(); return reply.send({ ok: true }); }
+    catch (err) { return reply.status(400).send({ error: (err as Error).message }); }
   });
 
   app.delete("/:id", async (req, reply) => {
