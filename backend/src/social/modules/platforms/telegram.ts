@@ -103,8 +103,26 @@ export async function sendPost(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (!res.ok) console.error("Telegram medya hatasi:", await res.json());
-    return res.ok;
+    if (res.ok) return true;
+    console.error("Telegram medya hatasi:", await res.json());
+
+    // Telegram bazı eski/karma albüm URL'lerini uzaktan çekemiyor. Bu durumda
+    // Reels videosunu (yoksa ilk görseli) indirip multipart olarak doğrudan yükle.
+    const fallbackUrl = media.find(isVideo) || media[0];
+    const fileResponse = await fetch(fallbackUrl);
+    if (!fileResponse.ok) return false;
+    const video = isVideo(fallbackUrl);
+    const form = new FormData();
+    form.set("chat_id", config.chatId);
+    form.set("caption", text.slice(0, 1024));
+    form.set("parse_mode", "HTML");
+    form.set(video ? "video" : "photo", await fileResponse.blob(), fallbackUrl.split("/").pop() || (video ? "video.mp4" : "image.jpg"));
+    const fallback = await fetch(`${TG_API_URL}/bot${config.token}/${video ? "sendVideo" : "sendPhoto"}`, {
+      method: "POST",
+      body: form,
+    });
+    if (!fallback.ok) console.error("Telegram dosya yukleme hatasi:", await fallback.json());
+    return fallback.ok;
   } catch (err) {
     console.error("Telegram medya gonderim hatasi:", err);
     return false;
