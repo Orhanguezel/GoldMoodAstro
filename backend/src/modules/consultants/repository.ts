@@ -45,11 +45,14 @@ function localizedHeadlineSelect(locale?: string | null) {
 
 function localizedMetaSelect(column: 'meta_title' | 'meta_description' | 'og_image', locale?: string | null) {
   const loc = normalizeLocale(locale);
+  // og_image için son çare avatar (profil fotoğrafı): danışman ayrı kapak yüklemediyse
+  // sosyal önizleme/OG boş kalmasın, profil resmi kullanılsın.
+  const fallback = column === 'og_image' ? sql`NULLIF(${users.avatar_url}, '')` : sql`NULL`;
   return sql<string | null>`
     COALESCE(
       NULLIF((SELECT ${sql.raw(column)} FROM consultant_i18n ci WHERE ci.consultant_id = ${consultants.id} AND ci.locale = ${loc} LIMIT 1), ''),
       NULLIF((SELECT ${sql.raw(column)} FROM consultant_i18n ci_tr WHERE ci_tr.consultant_id = ${consultants.id} AND ci_tr.locale = 'tr' LIMIT 1), ''),
-      NULL
+      ${fallback}
     )
   `;
 }
