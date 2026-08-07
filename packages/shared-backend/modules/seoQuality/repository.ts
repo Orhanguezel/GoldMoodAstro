@@ -41,11 +41,30 @@ function htmlFromContent(content: unknown): string {
   }
 }
 
+const EXP_LABELS: Record<string, string> = {
+  birth_chart: 'Doğum Haritası', astrology: 'Astroloji', relationship: 'İlişki ve Aşk',
+  mood: 'Ruhsal Rehberlik', career: 'Kariyer ve Para', yasam_koclugu: 'Yaşam Koçluğu',
+  tarot: 'Tarot', numerology: 'Numeroloji', synastry: 'Sinastri', coffee: 'Kahve Falı',
+  dream: 'Rüya Tabiri', transit: 'Transit', mentorship: 'Mentorluk',
+};
+function parseArr(v: unknown): string[] {
+  if (Array.isArray(v)) return v as string[];
+  if (typeof v === 'string') { try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; } }
+  return [];
+}
+// Danışman sayfasının GERÇEK içeriğini yansıtan zengin HTML (bio + uzmanlık + danışan
+// yorumları). Eski sürüm sadece bio'yu sayıyordu → sayfa "ince içerik" görünüyordu.
 function consultantHtml(row: any): string {
   const name = row.full_name || row.name || 'Danışman';
-  const headline = row.headline || `${name} danışman profili`;
+  const headline = row.headline || `${name} — Astroloji ve Ruhsal Rehberlik Danışmanı`;
   const bio = row.i18n_bio || row.bio || '';
-  return `<h1>${name}</h1><h2>${headline}</h2><h2>Uzmanlık alanları</h2><p>${bio}</p><p><a href="/consultants">Tüm danışmanlar</a> <a href="/booking">Randevu al</a></p>`;
+  const exp = parseArr(row.expertise).map((e) => EXP_LABELS[e] || e);
+  const intro = `${name}, GoldMoodAstro üzerinde astroloji, doğum haritası ve ruhsal rehberlik alanlarında birebir online danışmanlık sunan deneyimli bir danışmandır. Randevu alarak kendi doğum haritanızı öğrenebilir; ilişki, kariyer, para ve yaşam yolu gibi konularda kişiye özel yorumlar edinebilirsiniz.`;
+  const expSection = exp.length
+    ? `<h2>Uzmanlık alanları</h2><p>${name}, ${exp.join(', ')} konularında danışmanlık verir. ${exp.map((x) => `${x} alanında kişiye özel seanslar sunar.`).join(' ')}</p>`
+    : '';
+  const reviewsText = row.reviews_text ? `<h2>Danışan yorumları</h2><p>${row.reviews_text}</p>` : '';
+  return `<h1>${name}</h1><h2>${headline}</h2><p>${intro}</p><p>${bio}</p>${expSection}${reviewsText}<p><a href="/consultants">Tüm danışmanlar</a> <a href="/booking">Randevu al</a></p>`;
 }
 
 export function gradeForScore(score: number): 'good' | 'medium' | 'weak' {
@@ -96,8 +115,12 @@ export async function collectEntities(filter?: { type?: SeoEntityType; id?: stri
 
   if (!filter?.type || filter.type === 'consultant') {
     const result = await db.execute(sql`
-      SELECT c.id, c.slug, c.bio, c.approval_status, c.rating_avg, u.full_name, u.email,
-             ci.locale, ci.headline, ci.bio AS i18n_bio
+      SELECT c.id, c.slug, c.bio, c.expertise, c.approval_status, c.rating_avg,
+             u.full_name, u.email, u.avatar_url,
+             ci.locale, ci.headline, ci.bio AS i18n_bio, ci.meta_title, ci.meta_description, ci.og_image,
+             (SELECT GROUP_CONCAT(CONCAT_WS(' ', ri.title, ri.comment) SEPARATOR ' ')
+                FROM reviews r JOIN review_i18n ri ON ri.review_id = r.id
+                WHERE r.target_id = c.id AND r.target_type = 'consultant' AND r.is_approved = 1) AS reviews_text
       FROM consultants c
       INNER JOIN users u ON u.id = c.user_id
       LEFT JOIN consultant_i18n ci ON ci.consultant_id = c.id
@@ -122,11 +145,15 @@ export async function collectEntities(filter?: { type?: SeoEntityType; id?: stri
           url: `${SITE_ORIGIN}/${locale}/consultants/${slug}`,
           seo_index: 1,
           input: {
-            meta_title: `${name} | GoldMoodAstro Danışman`,
-            meta_description: row.headline || row.i18n_bio || row.bio || `${name} GoldMoodAstro üzerinde ruhsal danışmanlık ve astroloji seansı sunar.`,
+            // Gerçek meta_title/description varsa onu KULLAN; yoksa 30-60 / 120-160
+            // hedefine uygun otomatik üret (skor gerçek/otomatik meta'yı yansıtsın).
+            meta_title: row.meta_title || `${name} · Astroloji ve Doğum Haritası Danışmanı`,
+            meta_description:
+              row.meta_description ||
+              `${name} ile astroloji, doğum haritası ve ruhsal rehberlik seansları. İlişki, kariyer ve yaşam yolunda kişiye özel online danışmanlık; GoldMoodAstro üzerinden randevu al.`,
             slug,
             html: consultantHtml(row),
-            featured_image: null,
+            featured_image: row.og_image || row.avatar_url || null,
             hasSchema: true,
             siteHost: SITE_HOST,
           },

@@ -45,9 +45,18 @@ function localizedHeadlineSelect(locale?: string | null) {
 
 function localizedMetaSelect(column: 'meta_title' | 'meta_description' | 'og_image', locale?: string | null) {
   const loc = normalizeLocale(locale);
-  // og_image için son çare avatar (profil fotoğrafı): danışman ayrı kapak yüklemediyse
-  // sosyal önizleme/OG boş kalmasın, profil resmi kullanılsın.
-  const fallback = column === 'og_image' ? sql`NULLIF(${users.avatar_url}, '')` : sql`NULL`;
+  // Meta alanları boşsa OTOMATİK doldur (danışman elle girmese de SEO boş kalmasın):
+  //  - og_image → profil fotoğrafı (avatar)
+  //  - meta_title → "İsim · Astroloji ve Doğum Haritası Danışmanı"
+  //  - meta_description → isim + hizmet özeti (120-160 karakter)
+  const fallback =
+    column === 'og_image'
+      ? sql`NULLIF(${users.avatar_url}, '')`
+      : column === 'meta_title'
+        ? sql`CONCAT(${users.full_name}, ' · Astroloji ve Doğum Haritası Danışmanı')`
+        : column === 'meta_description'
+          ? sql`CONCAT(${users.full_name}, ' ile astroloji, doğum haritası ve ruhsal rehberlik seansları. İlişki, kariyer ve yaşam yolunda kişiye özel online danışmanlık; GoldMoodAstro üzerinden randevu al.')`
+          : sql`NULL`;
   return sql<string | null>`
     COALESCE(
       NULLIF((SELECT ${sql.raw(column)} FROM consultant_i18n ci WHERE ci.consultant_id = ${consultants.id} AND ci.locale = ${loc} LIMIT 1), ''),
