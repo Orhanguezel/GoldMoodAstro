@@ -3,6 +3,7 @@ import { baseApi } from '@/integrations/baseApi';
 export type ConsultantAdmin = {
   id: string;
   user_id: string;
+  slug?: string | null;
   full_name: string | null;
   email: string | null;
   phone: string | null;
@@ -47,6 +48,18 @@ export function consultantCompletion(c: Record<string, any> | null | undefined):
   ];
   const filled = checks.filter(Boolean).length;
   return { percent: Math.round((filled / checks.length) * 100), filled, total: checks.length };
+}
+
+/** Danışman public'te YAYINDA mı? Değilse hangi şart eksik. */
+export function consultantPublishStatus(c: Record<string, any> | null | undefined): {
+  published: boolean; missing: string[];
+} {
+  const missing: string[] = [];
+  if (c?.approval_status !== 'approved') missing.push('onay');
+  if (!(Number(c?.session_price || 0) > 0)) missing.push('fiyat');
+  if (Number(c?.is_available || 0) !== 1) missing.push('müsaitlik');
+  if (!c?.slug) missing.push('slug');
+  return { published: missing.length === 0, missing };
 }
 
 export type ConsultantServiceAdmin = {

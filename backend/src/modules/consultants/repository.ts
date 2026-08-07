@@ -252,11 +252,51 @@ export async function getConsultantSlots(id: string, date: string, locale?: stri
   return { consultant, slots };
 }
 
+// Türkçe-uyumlu slug (ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u).
+function slugifyTr(input: string): string {
+  const map: Record<string, string> = { ç: 'c', ğ: 'g', ı: 'i', İ: 'i', ö: 'o', ş: 's', ü: 'u', Ç: 'c', Ğ: 'g', Ö: 'o', Ş: 's', Ü: 'u' };
+  return (input || '')
+    .replace(/[çğıİöşüÇĞÖŞÜ]/g, (m) => map[m] ?? m)
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 90);
+}
+
+// İsimden benzersiz slug üretir (çakışırsa -2, -3 ...).
+export async function generateUniqueConsultantSlug(name: string, excludeId?: string): Promise<string> {
+  const root = slugifyTr(name) || 'danisman';
+  let candidate = root;
+  for (let i = 2; i < 200; i += 1) {
+    const [existing] = await db.select({ id: consultants.id }).from(consultants).where(eq(consultants.slug, candidate)).limit(1);
+    if (!existing || existing.id === excludeId) return candidate;
+    candidate = `${root}-${i}`;
+  }
+  return `${root}-${randomUUID().slice(0, 6)}`;
+}
+
 export async function approveConsultant(id: string) {
   await db
     .update(consultants)
     .set({ approval_status: 'approved', rejection_reason: null, updated_at: new Date() } as any)
     .where(eq(consultants.id, id));
+  // Slug yoksa isimden üret — public URL (/consultants/<slug>) için gerekli;
+  // slug'sız danışman frontend'de düzgün görünmüyordu.
+  try {
+    const [c] = await db
+      .select({ slug: consultants.slug, name: users.full_name })
+      .from(consultants)
+      .innerJoin(users, eq(users.id, consultants.user_id))
+      .where(eq(consultants.id, id))
+      .limit(1);
+    if (c && !c.slug) {
+      const slug = await generateUniqueConsultantSlug(c.name || 'danisman', id);
+      await db.update(consultants).set({ slug } as any).where(eq(consultants.id, id));
+    }
+  } catch (e) {
+    console.error('[approveConsultant] slug generation failed:', e);
+  }
   // Onaylanan danışman cron'u beklemeden randevu alabilir olsun:
   // resource + default mesai + 30 günlük slotları hemen üret (idempotent).
   try {

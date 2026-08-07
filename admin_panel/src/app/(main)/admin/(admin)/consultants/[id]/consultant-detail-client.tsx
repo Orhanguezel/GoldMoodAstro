@@ -32,6 +32,7 @@ import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { SeoQualityPanel } from '@/app/(main)/admin/_components/common/SeoQualityPanel';
 import { cn } from '@/lib/utils';
 import { normalizeStorageUrl } from '@/integrations/shared/storage';
+import { consultantPublishStatus } from '@/integrations/endpoints/admin/consultants_admin.endpoints';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -245,6 +246,8 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
   const filledCount = profileChecks.filter((c) => c.done).length;
   const completionPct = Math.round((filledCount / profileChecks.length) * 100);
   const initials = (item.full_name || '?').split(' ').map((s) => s[0]).slice(0, 2).join('').toUpperCase();
+  const publish = consultantPublishStatus(item);
+  const missingLabels: Record<string, string> = { onay: 'onay', fiyat: 'seans ücreti', 'müsaitlik': 'müsaitlik', slug: 'public adres (slug)' };
 
   return (
     <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -316,6 +319,23 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
             <Check className="mr-2 size-4" />
             {approveState.isLoading ? t('admin.common.saving') : t('actions.approve')}
           </Button>
+        </div>
+      </div>
+
+      {/* Yayın durumu — sitede görünüyor mu, eksik ne */}
+      <div className={cn(
+        "rounded-2xl border px-6 py-4 flex items-center gap-3",
+        publish.published
+          ? "bg-gm-success/10 border-gm-success/20 text-gm-success"
+          : "bg-gm-error/10 border-gm-error/20 text-gm-error",
+      )}>
+        {publish.published ? <CheckCircle2 className="size-5 shrink-0" /> : <AlertCircle className="size-5 shrink-0" />}
+        <div className="text-sm font-bold">
+          {publish.published ? (
+            <>Bu danışman sitede <span className="uppercase">yayında</span> — profil eksiksiz.</>
+          ) : (
+            <>Sitede <span className="uppercase">yayında değil</span> — eksik: {publish.missing.map((m) => missingLabels[m] ?? m).join(', ')}.</>
+          )}
         </div>
       </div>
 

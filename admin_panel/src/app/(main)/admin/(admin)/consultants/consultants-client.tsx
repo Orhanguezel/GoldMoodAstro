@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { cn } from '@/lib/utils';
-import { consultantCompletion } from '@/integrations/endpoints/admin/consultants_admin.endpoints';
+import { consultantCompletion, consultantPublishStatus } from '@/integrations/endpoints/admin/consultants_admin.endpoints';
 import { normalizeStorageUrl } from '@/integrations/shared/storage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -400,6 +400,7 @@ export default function ConsultantsClient() {
                   const seo = seoByConsultant.get(item.id);
                   const avatarSrc = item.avatar_url ? (normalizeStorageUrl(item.avatar_url) || null) : null;
                   const completionPct = consultantCompletion(item).percent;
+                  const publish = consultantPublishStatus(item);
                   return (
                   <TableRow key={item.id} className="border-gm-border-soft hover:bg-gm-primary/[0.03] transition-colors group">
                     <TableCell className="py-6 px-8">
@@ -429,6 +430,12 @@ export default function ConsultantsClient() {
                             >
                               profil %{completionPct}
                             </span>
+                            {item.approval_status === 'approved' && !publish.published && (
+                              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest border bg-gm-error/10 text-gm-error border-gm-error/20"
+                                title={`Yayında değil — eksik: ${publish.missing.join(', ')}`}>
+                                yayında değil
+                              </span>
+                            )}
                             <span className="text-[10px] text-gm-muted font-mono opacity-50 tracking-tighter leading-none">{item.email}</span>
                           </div>
                         </div>
