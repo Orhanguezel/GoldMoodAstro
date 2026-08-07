@@ -20,13 +20,18 @@ import {
   Plus,
   Save,
   Trash2,
-  Video
+  Video,
+  UserRound,
+  CheckCircle2,
+  Circle,
+  ImageIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { SeoQualityPanel } from '@/app/(main)/admin/_components/common/SeoQualityPanel';
 import { cn } from '@/lib/utils';
+import { normalizeStorageUrl } from '@/integrations/shared/storage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -220,6 +225,27 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
     );
   }
 
+  // Profil doldurma yüzdesi — danışmanın profilinin ne kadar tam olduğunu gösterir.
+  // avatar_url / og_image relative (/uploads/...) gelebilir; admin subdomain'de
+  // 404 olmasın diye ana origin'e mutlak URL'e çevir.
+  const avatarUrl = item.avatar_url ? (normalizeStorageUrl(item.avatar_url) || null) : null;
+  const ogImage = (item as any).og_image ? (normalizeStorageUrl((item as any).og_image) || null) : null;
+  const profileChecks: Array<{ label: string; done: boolean }> = [
+    { label: 'Profil fotoğrafı', done: !!avatarUrl },
+    { label: 'Başlık', done: !!(item as any).headline },
+    { label: 'Biyografi', done: !!(item.bio && item.bio.trim().length >= 20) },
+    { label: 'Uzmanlık', done: !!item.expertise?.length },
+    { label: 'Diller', done: !!item.languages?.length },
+    { label: 'Seans ücreti', done: Number(item.session_price || 0) > 0 },
+    { label: 'Seans süresi', done: Number(item.session_duration || 0) > 0 },
+    { label: 'Kapak görseli', done: !!ogImage },
+    { label: 'Telefon', done: !!item.phone },
+    { label: 'Görüntülü görüşme', done: Number((item as any).supports_video || 0) === 1 },
+  ];
+  const filledCount = profileChecks.filter((c) => c.done).length;
+  const completionPct = Math.round((filledCount / profileChecks.length) * 100);
+  const initials = (item.full_name || '?').split(' ').map((s) => s[0]).slice(0, 2).join('').toUpperCase();
+
   return (
     <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
@@ -242,6 +268,19 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
             </span>
           </div>
           <div className="flex items-center gap-4">
+            <div className="relative shrink-0">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt={item.full_name || ''} className="h-16 w-16 rounded-2xl object-cover ring-2 ring-gm-gold/30 shadow-lg" />
+              ) : (
+                <div className="h-16 w-16 rounded-2xl bg-gm-surface/60 ring-2 ring-gm-border-soft flex items-center justify-center font-serif text-xl text-gm-gold">
+                  {initials || <UserRound className="size-7 opacity-50" />}
+                </div>
+              )}
+              {Number((item as any).is_online) === 1 && (
+                <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-gm-success ring-2 ring-gm-bg" title="Çevrimiçi" />
+              )}
+            </div>
             <h1 className="font-serif text-4xl text-gm-text">
               {item.full_name}
             </h1>
@@ -521,6 +560,70 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
         </div>
 
         <div className="space-y-8">
+          {/* Profil Doldurma % */}
+          <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+            <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">
+              <CardTitle className="font-serif text-2xl flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-gm-gold" /> Profil Doldurma
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-5">
+              <div className="flex items-end justify-between">
+                <span className="font-serif text-5xl font-bold text-gm-gold">%{completionPct}</span>
+                <span className="text-[10px] font-bold text-gm-muted tracking-widest uppercase">{filledCount}/{profileChecks.length} alan</span>
+              </div>
+              <div className="h-2.5 w-full rounded-full bg-gm-surface/60 overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full transition-all", completionPct >= 80 ? "bg-gm-success" : completionPct >= 50 ? "bg-gm-gold" : "bg-gm-error")}
+                  style={{ width: `${completionPct}%` }}
+                />
+              </div>
+              <div className="space-y-2 pt-2">
+                {profileChecks.map((c) => (
+                  <div key={c.label} className="flex items-center gap-2 text-sm">
+                    {c.done
+                      ? <CheckCircle2 className="size-4 text-gm-success shrink-0" />
+                      : <Circle className="size-4 text-gm-muted/40 shrink-0" />}
+                    <span className={cn(c.done ? "text-gm-text/80" : "text-gm-muted")}>{c.label}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Fotoğraflar */}
+          <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
+            <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">
+              <CardTitle className="font-serif text-2xl flex items-center gap-3">
+                <ImageIcon className="h-5 w-5 text-gm-gold" /> Fotoğraflar
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">Profil Fotoğrafı</Label>
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt={item.full_name || ''} className="h-40 w-40 rounded-2xl object-cover ring-1 ring-gm-border-soft shadow-md" />
+                ) : (
+                  <div className="flex h-40 w-40 items-center justify-center rounded-2xl bg-gm-surface/40 ring-1 ring-gm-border-soft text-gm-muted">
+                    <UserRound className="size-10 opacity-40" />
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">Kapak Görseli (OG)</Label>
+                {ogImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={ogImage} alt="OG" className="w-full aspect-[1200/630] rounded-2xl object-cover ring-1 ring-gm-border-soft shadow-md" />
+                ) : (
+                  <div className="flex w-full aspect-[1200/630] items-center justify-center rounded-2xl bg-gm-surface/40 ring-1 ring-gm-border-soft text-gm-muted text-sm italic">
+                    Yok
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Stats Card */}
           <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[32px] overflow-hidden backdrop-blur-sm shadow-xl">
             <CardHeader className="p-8 pb-4 bg-gm-surface/40 border-b border-gm-border-soft">

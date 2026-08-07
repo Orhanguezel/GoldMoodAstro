@@ -6,6 +6,7 @@ export type ConsultantAdmin = {
   full_name: string | null;
   email: string | null;
   phone: string | null;
+  avatar_url?: string | null;
   bio: string | null;
   meta_title?: string | null;
   meta_description?: string | null;
@@ -14,6 +15,9 @@ export type ConsultantAdmin = {
   languages: string[] | null;
   session_price: string;
   session_duration: number;
+  supports_video?: number | null;
+  video_session_price?: string | null;
+  is_online?: number | null;
   currency: string | null;
   approval_status: 'pending' | 'approved' | 'rejected';
   rejection_reason: string | null;
