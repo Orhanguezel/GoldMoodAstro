@@ -29,6 +29,26 @@ export type ConsultantAdmin = {
   updated_at: string | null;
 };
 
+/** Danışman profil doldurma yüzdesi — 10 alanlık kontrol (detay + liste ortak). */
+export function consultantCompletion(c: Record<string, any> | null | undefined): {
+  percent: number; filled: number; total: number;
+} {
+  const checks = [
+    !!c?.avatar_url,
+    !!c?.headline,
+    !!(c?.bio && String(c.bio).trim().length >= 20),
+    !!(Array.isArray(c?.expertise) && c.expertise.length),
+    !!(Array.isArray(c?.languages) && c.languages.length),
+    Number(c?.session_price || 0) > 0,
+    Number(c?.session_duration || 0) > 0,
+    !!c?.og_image,
+    !!c?.phone,
+    Number(c?.supports_video || 0) === 1,
+  ];
+  const filled = checks.filter(Boolean).length;
+  return { percent: Math.round((filled / checks.length) * 100), filled, total: checks.length };
+}
+
 export type ConsultantServiceAdmin = {
   id: string;
   consultant_id: string;

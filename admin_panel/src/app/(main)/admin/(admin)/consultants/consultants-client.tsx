@@ -18,6 +18,8 @@ import { toast } from 'sonner';
 
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { cn } from '@/lib/utils';
+import { consultantCompletion } from '@/integrations/endpoints/admin/consultants_admin.endpoints';
+import { normalizeStorageUrl } from '@/integrations/shared/storage';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -396,19 +398,39 @@ export default function ConsultantsClient() {
               ) : (
                 consultantsQuery.data?.map((item) => {
                   const seo = seoByConsultant.get(item.id);
+                  const avatarSrc = item.avatar_url ? (normalizeStorageUrl(item.avatar_url) || null) : null;
+                  const completionPct = consultantCompletion(item).percent;
                   return (
                   <TableRow key={item.id} className="border-gm-border-soft hover:bg-gm-primary/[0.03] transition-colors group">
                     <TableCell className="py-6 px-8">
                       <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-full bg-gm-surface border border-gm-border-soft flex items-center justify-center text-gm-gold font-serif text-2xl shadow-inner group-hover:border-gm-gold/50 transition-all duration-500">
-                          {item.full_name?.[0] || 'D'}
-                        </div>
+                        {avatarSrc ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={avatarSrc} alt={item.full_name || ''} className="w-14 h-14 rounded-full object-cover border border-gm-border-soft shadow-inner group-hover:border-gm-gold/50 transition-all duration-500" />
+                        ) : (
+                          <div className="w-14 h-14 rounded-full bg-gm-surface border border-gm-border-soft flex items-center justify-center text-gm-gold font-serif text-2xl shadow-inner group-hover:border-gm-gold/50 transition-all duration-500">
+                            {item.full_name?.[0] || 'D'}
+                          </div>
+                        )}
                         <div>
                           <div className="font-serif text-xl text-gm-text flex items-center gap-2 group-hover:text-gm-primary transition-colors">
                             {item.full_name}
                             {item.approval_status === 'approved' && <ShieldCheck className="w-4 h-4 text-gm-gold" />}
                           </div>
-                          <div className="text-[10px] text-gm-muted font-mono opacity-50 tracking-tighter leading-none mt-1">{item.email}</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span
+                              className={cn(
+                                "inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest border",
+                                completionPct >= 80 ? "bg-gm-success/10 text-gm-success border-gm-success/20"
+                                  : completionPct >= 50 ? "bg-gm-gold/10 text-gm-gold border-gm-gold/20"
+                                  : "bg-gm-error/10 text-gm-error border-gm-error/20",
+                              )}
+                              title="Profil doldurma yüzdesi"
+                            >
+                              profil %{completionPct}
+                            </span>
+                            <span className="text-[10px] text-gm-muted font-mono opacity-50 tracking-tighter leading-none">{item.email}</span>
+                          </div>
                         </div>
                       </div>
                     </TableCell>
