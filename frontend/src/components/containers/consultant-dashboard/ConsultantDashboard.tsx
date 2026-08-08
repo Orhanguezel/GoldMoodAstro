@@ -679,7 +679,9 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
   const handleToggle = async () => {
     try {
       await updateProfile({ is_available: isAvailable ? 0 : 1 }).unwrap();
-      toast.success(isAvailable ? ui('ui_dashboard_toast_offline', 'You are offline') : ui('ui_dashboard_toast_online', 'You are online'));
+      toast.success(isAvailable
+        ? ui('ui_dashboard_toast_unavailable', 'Müsait değilsiniz — profiliniz sitede GİZLİ, danışanlar sizi göremez.')
+        : ui('ui_dashboard_toast_available', 'Müsaitsiniz — profiliniz sitede görünür ve randevu alınabilir.'));
     } catch (e) {
       toast.error(extractApiError(e, ui('ui_dashboard_toast_update_failed', 'Could not update')));
     }
@@ -688,6 +690,7 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
     <button
       onClick={handleToggle}
       disabled={isLoading}
+      title={ui('ui_dashboard_available_hint', 'Bu düğme profilinizin sitede listelenip listelenmeyeceğini belirler. “Müsait değil” iken danışanlar sizi göremez.')}
       className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border text-xs font-bold uppercase tracking-[0.18em] transition-all ${
         isAvailable
           ? 'border-(--gm-success)/40 bg-(--gm-success)/10 text-(--gm-success) hover:bg-(--gm-success)/20'
@@ -695,7 +698,7 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
       }`}
     >
       {isAvailable ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-      {isAvailable ? ui('ui_dashboard_online', 'Online') : ui('ui_dashboard_offline', 'Offline')}
+      {isAvailable ? ui('ui_dashboard_available', 'Müsait · sitede görünür') : ui('ui_dashboard_unavailable', 'Müsait değil · gizli')}
     </button>
   );
 }
