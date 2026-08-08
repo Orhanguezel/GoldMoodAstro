@@ -15,6 +15,7 @@ import {
   Phone,
   RefreshCcw,
   Save,
+  Send,
   User,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -29,6 +30,7 @@ import type { ContactStatus } from '@/integrations/shared';
 import {
   useGetContactAdminQuery,
   useUpdateContactAdminMutation,
+  useReplyContactAdminMutation,
 } from '@/integrations/hooks';
 
 function formatDate(value: string | Date) {
@@ -96,6 +98,23 @@ export default function ContactDetailPage() {
       is_resolved: resolved,
       status: resolved ? 'closed' : 'in_progress',
     });
+  };
+
+  const [replyContact, replyState] = useReplyContactAdminMutation();
+  const [replyText, setReplyText] = React.useState('');
+  const handleSendReply = async () => {
+    if (!contact || !replyText.trim()) return;
+    try {
+      const res = await replyContact({ id: contact.id, message: replyText.trim() }).unwrap();
+      if (res.email === 'failed') {
+        toast.warning('Yanıt kaydedildi ama e-posta gönderilemedi. SMTP ayarlarını kontrol edin.');
+      } else {
+        toast.success('Yanıt gönderildi ve kullanıcıya e-posta olarak iletildi.');
+      }
+      setReplyText('');
+    } catch {
+      toast.error('Yanıt gönderilemedi.');
+    }
   };
 
   if (isLoading) {
@@ -182,6 +201,50 @@ export default function ContactDetailPage() {
                 </p>
               </div>
             </CardContent>
+          </Card>
+
+          {/* Yanıtla — kullanıcıya e-posta gider + thread olarak kaydedilir */}
+          <Card className="overflow-hidden rounded-[32px] border-gm-gold/30 bg-card shadow-[0_20px_50px_rgba(201,169,97,0.05)]">
+            <div className="flex items-center gap-3 border-b border-gm-gold/10 bg-gm-gold/5 p-6">
+              <Send className="size-4 text-gm-gold" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">
+                Yanıtla · kullanıcıya e-posta gönderilir
+              </span>
+            </div>
+            <CardContent className="space-y-5 p-8">
+              {(contact.replies?.length ?? 0) > 0 && (
+                <div className="space-y-3">
+                  {contact.replies!.map((r) => (
+                    <div key={r.id} className="rounded-2xl border border-gm-gold/20 bg-gm-gold/5 p-4">
+                      <div className="mb-1 flex items-center justify-between gap-2 text-[10px] uppercase tracking-widest">
+                        <span className="font-bold text-gm-gold">Yanıtınız</span>
+                        <span className="font-mono text-muted-foreground">
+                          {formatDate(r.created_at)} · {r.email_status === 'failed' ? 'e-posta ✗' : 'e-posta ✓'}
+                        </span>
+                      </div>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{r.message}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Textarea
+                value={replyText}
+                onChange={(event) => setReplyText(event.target.value)}
+                placeholder={`${contact.name || 'Kullanıcı'} kişisine yanıt yazın — ${contact.email} adresine e-posta olarak gönderilir.`}
+                className="min-h-[140px] rounded-2xl border border-border/40 bg-transparent p-4 font-serif text-base leading-relaxed placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-gm-gold/40"
+              />
+            </CardContent>
+            <div className="flex items-center justify-between border-t border-border/30 bg-muted/10 p-6">
+              <span className="text-[11px] text-muted-foreground">Gönderilen: <span className="font-mono">{contact.email}</span></span>
+              <Button
+                onClick={handleSendReply}
+                disabled={replyState.isLoading || !replyText.trim()}
+                className="h-11 rounded-full bg-gm-gold px-10 font-bold uppercase tracking-widest text-gm-bg hover:bg-gm-gold/90 disabled:opacity-50"
+              >
+                <Send className="mr-2 size-4" />
+                {replyState.isLoading ? 'Gönderiliyor…' : 'Yanıtı Gönder'}
+              </Button>
+            </div>
           </Card>
 
           <Card className="overflow-hidden rounded-[32px] border-gm-gold/30 bg-card shadow-[0_20px_50px_rgba(201,169,97,0.05)]">

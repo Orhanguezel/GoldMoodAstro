@@ -11,6 +11,18 @@ import type {
 
 const BASE = '/admin/contacts';
 
+export type ContactReplyDto = {
+  id: string;
+  contact_id: string;
+  message: string;
+  admin_user_id: string | null;
+  channel: string;
+  email_status: 'sent' | 'failed' | string;
+  created_at: string;
+};
+
+export type ContactWithReplies = ContactDto & { replies?: ContactReplyDto[] };
+
 export const contactsAdminApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     /**
@@ -37,7 +49,7 @@ export const contactsAdminApi = baseApi.injectEndpoints({
     /**
      * GET BY ID (admin) – GET /contacts/:id
      */
-    getContactAdmin: build.query<ContactDto, string>({
+    getContactAdmin: build.query<ContactWithReplies, string>({
       query: (id) => ({
         url: `${BASE}/${id}`,
         method: 'GET',
@@ -46,6 +58,22 @@ export const contactsAdminApi = baseApi.injectEndpoints({
         result
           ? [{ type: 'Contacts' as const, id: result.id }]
           : [{ type: 'Contacts' as const, id: 'LIST' }],
+    }),
+
+    /**
+     * REPLY (admin) – POST /contacts/:id/reply
+     * Kullanıcıya e-posta gönderir + yanıtı kaydeder (thread).
+     */
+    replyContactAdmin: build.mutation<{ reply: ContactReplyDto; email: 'sent' | 'failed' }, { id: string; message: string }>({
+      query: ({ id, message }) => ({
+        url: `${BASE}/${id}/reply`,
+        method: 'POST',
+        body: { message },
+      }),
+      invalidatesTags: (result, error, arg) => [
+        { type: 'Contacts' as const, id: arg.id },
+        { type: 'Contacts' as const, id: 'LIST' },
+      ],
     }),
 
     /**
@@ -85,5 +113,6 @@ export const {
   useListContactsAdminQuery,
   useGetContactAdminQuery,
   useUpdateContactAdminMutation,
+  useReplyContactAdminMutation,
   useDeleteContactAdminMutation,
 } = contactsAdminApi;

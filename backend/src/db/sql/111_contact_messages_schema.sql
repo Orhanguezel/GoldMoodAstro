@@ -17,3 +17,15 @@ CREATE TABLE IF NOT EXISTS contact_messages (
   KEY idx_contact_status (status),
   KEY idx_contact_resolved (is_resolved)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Admin yanıtları (iki yönlü mesajlaşma): admin cevabı kullanıcıya e-posta gider + burada kayıt.
+CREATE TABLE IF NOT EXISTS contact_replies (
+  id CHAR(36) PRIMARY KEY,
+  contact_id CHAR(36) NOT NULL,
+  message TEXT NOT NULL,
+  admin_user_id CHAR(36) NULL,
+  channel VARCHAR(20) NOT NULL DEFAULT 'email',
+  email_status VARCHAR(20) NOT NULL DEFAULT 'sent',
+  created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  KEY idx_contact_replies_contact (contact_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

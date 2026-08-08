@@ -48,3 +48,21 @@ export type ContactInsert = typeof contact_messages.$inferInsert;
 
 // Şimdilik ekstra projection yok, direkt row'u view gibi kullanıyoruz
 export type ContactView = ContactRow;
+
+// Admin'in iletişim mesajına gönderdiği yanıtlar (e-posta ile gider + burada kayıt).
+// Böylece admin "gönderdiğini sitede görür" ve mesajlaşma iki yönlü olur.
+export const contact_replies = mysqlTable(
+  "contact_replies",
+  {
+    id: char("id", { length: 36 }).primaryKey().notNull(),
+    contact_id: char("contact_id", { length: 36 }).notNull(),
+    message: text("message").notNull(),
+    admin_user_id: char("admin_user_id", { length: 36 }),
+    channel: varchar("channel", { length: 20 }).notNull().default("email"),
+    email_status: varchar("email_status", { length: 20 }).notNull().default("sent"), // sent | failed
+    created_at: timestamp("created_at", { fsp: 3 }).notNull().defaultNow(),
+  },
+  (t) => [index("idx_contact_replies_contact").on(t.contact_id)],
+);
+
+export type ContactReplyRow = typeof contact_replies.$inferSelect;
