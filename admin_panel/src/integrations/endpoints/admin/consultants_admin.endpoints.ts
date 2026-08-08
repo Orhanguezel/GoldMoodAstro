@@ -17,6 +17,7 @@ export type ConsultantAdmin = {
   gallery?: string[] | null;
   session_price: string;
   session_duration: number;
+  min_service_price?: string | number | null;
   supports_video?: number | null;
   video_session_price?: string | null;
   is_online?: number | null;
@@ -56,8 +57,10 @@ export function consultantPublishStatus(c: Record<string, any> | null | undefine
   published: boolean; missing: string[];
 } {
   const missing: string[] = [];
+  // Fiyat şartı: temel seans ücreti > 0 VEYA aktif fiyatlı hizmeti var (gate ile aynı).
+  const hasSellablePrice = Number(c?.session_price || 0) > 0 || Number(c?.min_service_price || 0) > 0;
   if (c?.approval_status !== 'approved') missing.push('onay');
-  if (!(Number(c?.session_price || 0) > 0)) missing.push('fiyat');
+  if (!hasSellablePrice) missing.push('fiyat');
   if (Number(c?.is_available || 0) !== 1) missing.push('müsaitlik');
   if (!c?.slug) missing.push('slug');
   return { published: missing.length === 0, missing };

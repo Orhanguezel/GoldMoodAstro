@@ -26,7 +26,11 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
   const [addFavorite, addFavoriteState] = useAddFavoriteMutation();
   const [removeFavorite, removeFavoriteState] = useRemoveFavoriteMutation();
   const rating = parseFloat(consultant.rating_avg || '0');
-  const price = Math.round(Number(consultant.session_price));
+  // Temel seans ücreti 0 ise aktif hizmetlerin en düşük fiyatını "…'den başlayan" göster.
+  const basePrice = Math.round(Number(consultant.session_price) || 0);
+  const minService = Math.round(Number(consultant.min_service_price) || 0);
+  const price = basePrice > 0 ? basePrice : minService;
+  const priceIsStarting = basePrice <= 0 && minService > 0;
   const isOnline = Boolean(consultant.is_online);
   const detailHref = `/${locale}/consultants/${consultant.slug || consultant.id}`;
   const favoriteBusy = addFavoriteState.isLoading || removeFavoriteState.isLoading;
@@ -158,7 +162,9 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
         </div>
 
         <div className="mt-auto pt-3 border-t border-[var(--gm-border-soft)] flex items-baseline justify-between gap-2 mb-4">
-          <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase">{ui('ui_consultantbrowse_session_label', 'Session')}</span>
+          <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase">
+            {priceIsStarting ? ui('ui_consultantbrowse_from_label', 'Başlangıç') : ui('ui_consultantbrowse_session_label', 'Session')}
+          </span>
           <span className="text-[var(--gm-gold)] font-serif text-2xl leading-none">₺{price}</span>
         </div>
 

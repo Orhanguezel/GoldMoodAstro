@@ -298,7 +298,8 @@ function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabCha
         {(() => {
           const miss: string[] = [];
           if (profile.approval_status !== 'approved') miss.push(ui('ui_dashboard_publish_miss_approval', 'onay'));
-          if (!(Number(profile.session_price || 0) > 0)) miss.push(ui('ui_dashboard_publish_miss_price', 'seans ücreti'));
+          // Fiyat şartı: temel seans ücreti > 0 VEYA aktif fiyatlı hizmeti var.
+          if (!(Number(profile.session_price || 0) > 0 || Number((profile as any).min_service_price || 0) > 0)) miss.push(ui('ui_dashboard_publish_miss_price', 'seans ücreti'));
           if (Number(profile.is_available || 0) !== 1) miss.push(ui('ui_dashboard_publish_miss_available', 'müsaitlik'));
           if (!profile.slug) miss.push(ui('ui_dashboard_publish_miss_slug', 'public adres'));
           if (miss.length === 0) {
@@ -825,7 +826,18 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
           <AvatarUpload
             src={avatarUrl}
             initials={initialsFromName(profile.user?.full_name)}
-            onUploaded={setAvatarUrl}
+            onUploaded={async (url) => {
+              // Profil fotoğrafını yükler yüklemez otomatik kaydet (header ile aynı
+              // davranış). Önceden yalnızca "Kaydet"e basınca kaydoluyordu; danışman
+              // fotoğrafı yükleyip kaydetmeyi atlayınca profil fotoğrafı değişmiyordu.
+              setAvatarUrl(url);
+              try {
+                await updateProfile({ avatar_url: url }).unwrap();
+                toast.success(uiP('ui_consultantpanel_avatar_saved', 'Profil fotoğrafınız kaydedildi'));
+              } catch {
+                // Otomatik kayıt olmazsa "Kaydet" ile yine kaydedilebilir.
+              }
+            }}
             bucket="consultant_avatars"
             folder={profile.id}
           />

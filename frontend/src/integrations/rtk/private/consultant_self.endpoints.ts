@@ -19,6 +19,7 @@ export interface ConsultantSelfProfile {
   social_links: Record<string, string> | null;
   session_price: string;
   session_duration: number;
+  min_service_price?: string | number | null;
   supports_video: number;
   video_session_price: string | null;
   currency: string;

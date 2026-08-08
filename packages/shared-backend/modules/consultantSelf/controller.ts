@@ -313,12 +313,23 @@ export async function getProfile(req: FastifyRequest, reply: FastifyReply) {
     .where(eq(users.id, c.user_id))
     .limit(1);
 
+  // Aktif ücretli hizmetlerin en düşük fiyatı — panelde yayın-durumu banner'ının
+  // "seans ücreti eksik"i yanlış göstermemesi için (gate ile aynı fiyat şartı).
+  const svcRows = rowsFromExecute<{ min_price: number | null }>(
+    await db.execute(
+      sql`SELECT MIN(price) AS min_price FROM consultant_services
+          WHERE consultant_id = ${c.id} AND is_active = 1 AND is_free = 0 AND price > 0`,
+    ),
+  );
+  const minServicePrice = svcRows?.[0]?.min_price ?? null;
+
   return reply.send({
     data: {
       ...c,
       meta_title: seo?.meta_title ?? null,
       meta_description: seo?.meta_description ?? null,
       og_image: seo?.og_image ?? null,
+      min_service_price: minServicePrice,
       user: u ?? null,
     },
   });

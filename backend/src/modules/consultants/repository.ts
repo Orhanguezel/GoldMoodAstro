@@ -85,6 +85,26 @@ function isOnlineSelect() {
   )`;
 }
 
+// Danışmanın aktif ÜCRETLİ hizmetlerinin en düşük fiyatı (yoksa null). Temel
+// session_price=0 olsa da kartta "…'den başlayan" fiyatı göstermek için kullanılır.
+function minServicePriceSelect() {
+  return sql<string | null>`(
+    SELECT MIN(cs.price)
+    FROM consultant_services cs
+    WHERE cs.consultant_id = ${consultants.id}
+      AND cs.is_active = 1 AND cs.is_free = 0 AND cs.price > 0
+  )`;
+}
+
+// Yayınlanabilirlik fiyat şartı: temel seans ücreti > 0 VEYA aktif fiyatlı hizmeti var.
+function hasSellablePricePredicate() {
+  return sql`(${consultants.session_price} > 0 OR EXISTS(
+    SELECT 1 FROM consultant_services cs
+    WHERE cs.consultant_id = ${consultants.id}
+      AND cs.is_active = 1 AND cs.is_free = 0 AND cs.price > 0
+  ))`;
+}
+
 function withUserSelect(locale?: string | null, userId?: string | null) {
   return {
     id: consultants.id,
@@ -115,6 +135,7 @@ function withUserSelect(locale?: string | null, userId?: string | null) {
     favorite_count: favoriteCountSelect(),
     is_favorited: isFavoritedSelect(userId),
     is_online: isOnlineSelect(),
+    min_service_price: minServicePriceSelect(),
     created_at: consultants.created_at,
     updated_at: consultants.updated_at,
   };
@@ -147,6 +168,7 @@ function lightSelect(locale?: string | null, userId?: string | null) {
     favorite_count: favoriteCountSelect(),
     is_favorited: isFavoritedSelect(userId),
     is_online: isOnlineSelect(),
+    min_service_price: minServicePriceSelect(),
     created_at: consultants.created_at,
   };
 }
@@ -164,7 +186,8 @@ export async function listApprovedConsultants(filters: ListConsultantsQuery, loc
   const where = [
     eq(consultants.approval_status, 'approved'),
     eq(consultants.is_available, 1),
-    gt(consultants.session_price, '0'),
+    // Temel seans ücreti > 0 VEYA aktif fiyatlı hizmeti olan danışmanlar yayınlanır.
+    hasSellablePricePredicate(),
     onlineOnly ? sql`${isOnlineSelect()} = 1` : undefined,
     expertisePredicate(filters.expertise),
     filters.minPrice != null ? gte(consultants.session_price, String(filters.minPrice)) : undefined,

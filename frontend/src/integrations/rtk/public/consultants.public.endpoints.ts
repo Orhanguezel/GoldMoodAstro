@@ -20,6 +20,7 @@ export interface ConsultantPublic {
   gallery?: string[] | null;
   session_price: string;
   session_duration: number;
+  min_service_price?: string | number | null;
   video_session_price?: string | null;
   supports_video?: number;
   currency: string;
