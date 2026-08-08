@@ -45,6 +45,10 @@ export type AdminUserRaw = {
   last_sign_in_at?: string | null;
   last_login_at?: string | null;
 
+  avatar_url?: string | null;
+  google_id?: string | null;
+  auth_provider?: string | null;
+
   role?: UserRoleName | string | null;
   roles?: Array<UserRoleName | string> | string | null;
 };
@@ -61,6 +65,10 @@ export type AdminUserView = {
 
   created_at: string | null;
   last_sign_in_at: string | null;
+
+  avatar_url: string | null;
+  google_id: string | null;
+  auth_provider: string | null;
 
   roles: UserRoleName[];
 };

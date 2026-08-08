@@ -90,9 +90,12 @@ export function UserActivityPanel({ userId }: { userId: string }) {
                         <span className="font-bold text-sm text-gm-text">
                           {isEvent ? topic : t('activity.pageViewAction')}
                         </span>
-                        <span className="ml-3 text-xs text-gm-muted/80 break-all">
-                          {evt.message}
-                        </span>
+                        {/* Hangi sayfa: event'lerde meta_json.properties.path, request'lerde path */}
+                        {evt.page_path ? (
+                          <span className="ml-3 text-xs font-mono text-gm-gold/80 break-all">{evt.page_path}</span>
+                        ) : (
+                          <span className="ml-3 text-xs text-gm-muted/80 break-all">{evt.message}</span>
+                        )}
                       </div>
                       <div className="text-[10px] font-medium text-gm-muted whitespace-nowrap">
                         {new Date(evt.occurred_at).toLocaleString('tr-TR')}

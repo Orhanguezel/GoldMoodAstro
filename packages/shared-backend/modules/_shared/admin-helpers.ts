@@ -15,7 +15,12 @@ export function formatAdminUserRow(user: Record<string, any>, role?: string | nu
     created_at: user.created_at,
     updated_at: user.updated_at ?? null,
     last_sign_in_at: user.last_sign_in_at ?? null,
-    profile_image: user.profile_image ?? null,
+    // Gerçek avatar users.avatar_url'de (Google ile kayıtta Google resmi buraya yazılır).
+    avatar_url: user.avatar_url ?? null,
+    google_id: user.google_id ?? null,
+    // Google ile kayıt olduysa auth_provider kolonu yok; google_id'den çıkarılır.
+    auth_provider: user.google_id ? 'google' : 'email',
+    profile_image: user.profile_image ?? user.avatar_url ?? null,
     profile_image_asset_id: user.profile_image_asset_id ?? null,
     profile_image_alt: user.profile_image_alt ?? null,
     role: role ?? user.role ?? null,

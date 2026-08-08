@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 
 import { Card, CardContent } from '@/components/ui/card';
+import { normalizeStorageUrl } from '@/integrations/shared/storage';
 import {
   Table,
   TableBody,
@@ -220,8 +221,28 @@ export default function UsersListClient() {
                 <TableRow key={u.id} className="border-gm-border-soft hover:bg-gm-primary/[0.03] transition-colors group">
                   <TableCell className="py-6 px-8">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gm-surface border border-gm-border-soft flex items-center justify-center text-gm-gold font-serif text-xl shadow-inner group-hover:border-gm-gold/50 transition-all">
-                        {u.full_name?.[0] || 'U'}
+                      <div className="relative shrink-0">
+                        {u.avatar_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={normalizeStorageUrl(u.avatar_url) || u.avatar_url}
+                            alt=""
+                            referrerPolicy="no-referrer"
+                            className="w-12 h-12 rounded-full object-cover border border-gm-border-soft group-hover:border-gm-gold/50 transition-all"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gm-surface border border-gm-border-soft flex items-center justify-center text-gm-gold font-serif text-xl shadow-inner group-hover:border-gm-gold/50 transition-all">
+                            {u.full_name?.[0] || 'U'}
+                          </div>
+                        )}
+                        {u.auth_provider === 'google' && (
+                          <span
+                            title="Google ile kayıt"
+                            className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-white flex items-center justify-center text-[9px] font-bold text-[#4285F4] ring-1 ring-gm-border-soft"
+                          >
+                            G
+                          </span>
+                        )}
                       </div>
                       <div>
                         <div className="font-serif text-lg text-gm-text flex items-center gap-2 group-hover:text-gm-primary transition-colors">

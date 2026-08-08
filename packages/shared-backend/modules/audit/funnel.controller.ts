@@ -140,12 +140,14 @@ export async function getUserActivityAdmin(req: FastifyRequest, reply: FastifyRe
     const days = rangeToDays(parsed.data.range);
 
     const events = rowsFromExecute(await db.execute(sql`
-      SELECT 'event' AS source, ts AS occurred_at, topic, message, entity_type, entity_id, meta_json
+      SELECT 'event' AS source, ts AS occurred_at, topic, message, entity_type, entity_id, meta_json,
+             JSON_UNQUOTE(JSON_EXTRACT(meta_json, '$.properties.path')) AS page_path
       FROM audit_events
       WHERE actor_user_id = ${userId}
         AND ts >= ${intervalExpr(days)}
       UNION ALL
-      SELECT 'request' AS source, created_at AS occurred_at, path AS topic, method AS message, NULL AS entity_type, NULL AS entity_id, request_body AS meta_json
+      SELECT 'request' AS source, created_at AS occurred_at, path AS topic, method AS message, NULL AS entity_type, NULL AS entity_id, request_body AS meta_json,
+             path AS page_path
       FROM audit_request_logs
       WHERE user_id = ${userId}
         AND created_at >= ${intervalExpr(days)}

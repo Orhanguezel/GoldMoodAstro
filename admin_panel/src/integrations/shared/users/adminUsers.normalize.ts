@@ -52,5 +52,9 @@ export const normalizeAdminUser = (u: AdminUserRaw): AdminUserView => ({
   created_at: (u as any).created_at ?? null,
   last_sign_in_at: pickLastSignIn(u),
 
+  avatar_url: (u as any).avatar_url ?? null,
+  google_id: (u as any).google_id ?? null,
+  auth_provider: (u as any).auth_provider ?? ((u as any).google_id ? 'google' : 'email'),
+
   roles: coerceRoles(u),
 });

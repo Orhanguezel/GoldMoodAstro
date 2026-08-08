@@ -40,6 +40,7 @@ import {
 } from '@/integrations/hooks';
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import { cn } from '@/lib/utils';
+import { normalizeStorageUrl } from '@/integrations/shared/storage';
 
 const ALL_ROLES: UserRoleName[] = ['admin', 'consultant', 'user'];
 
@@ -202,6 +203,29 @@ export default function UserDetailClient({ id }: { id: string }) {
             <span className="text-gm-gold font-bold text-[10px] tracking-[0.2em] uppercase">{t('title')}</span>
           </div>
           <div className="flex items-center gap-4">
+            <div className="relative shrink-0">
+              {u.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={normalizeStorageUrl(u.avatar_url) || u.avatar_url}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                  className="h-16 w-16 rounded-2xl object-cover ring-2 ring-gm-gold/30 shadow-lg"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-2xl bg-gm-surface/60 ring-2 ring-gm-border-soft flex items-center justify-center font-serif text-xl text-gm-gold">
+                  {(u.full_name || u.email || '?').slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              {u.auth_provider === 'google' && (
+                <span
+                  title="Google ile kayıt"
+                  className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-white flex items-center justify-center text-[10px] font-bold text-[#4285F4] ring-2 ring-gm-bg shadow"
+                >
+                  G
+                </span>
+              )}
+            </div>
             <h1 className="font-serif text-4xl text-gm-text">
               {u.full_name || t('unknownUser')}
             </h1>
