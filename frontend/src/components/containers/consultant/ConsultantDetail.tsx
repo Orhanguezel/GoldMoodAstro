@@ -342,6 +342,30 @@ export default function ConsultantDetail({ id, locale }: Props) {
             </p>
           </div>
 
+          {/* Galeri */}
+          {Array.isArray(consultant.gallery) && consultant.gallery.length > 0 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-(--gm-gold)" />
+                <h2 className="font-display text-2xl text-(--gm-text)">{ui('ui_consultant_section_gallery', 'Galeri')}</h2>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {consultant.gallery.map((url, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <a
+                    key={`${url}-${i}`}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block aspect-square rounded-2xl overflow-hidden border border-(--gm-border-soft) hover:border-(--gm-gold)/40 transition-all"
+                  >
+                    <img src={url} alt="" loading="lazy" className="w-full h-full object-cover" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Skills & Lang */}
           <div className="grid md:grid-cols-2 gap-12">
             <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-3xl p-8 shadow-(--gm-shadow-soft)">

@@ -38,6 +38,7 @@ import { useAuthStore } from '@/features/auth/auth.store';
 import { localizePath, extractApiError } from '@/integrations/shared';
 import { useUiSection } from '@/i18n';
 import AvatarUpload from '@/components/common/AvatarUpload';
+import GalleryUpload from '@/components/common/GalleryUpload';
 import {
   type ConsultantSelfProfile,
   type ConsultantSelfStats,
@@ -686,6 +687,7 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
   const [languages, setLanguages] = useState<string[]>(profile.languages || []);
   const [meetingPlatforms, setMeetingPlatforms] = useState<string[]>(profile.meeting_platforms || []);
   const [avatarUrl, setAvatarUrl] = useState<string>(profile.user?.avatar_url || '');
+  const [gallery, setGallery] = useState<string[]>(profile.gallery || []);
   const [bankIban, setBankIban] = useState<string>(profile.bank_iban || '');
   const [bankHolder, setBankHolder] = useState<string>(profile.bank_account_holder || '');
   const [bankName, setBankName] = useState<string>(profile.bank_name || '');
@@ -763,6 +765,7 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
         languages: languages,
         meeting_platforms: meetingPlatforms,
         avatar_url: avatarUrl || null,
+        gallery: gallery,
         bank_iban: cleanIban || null,
         bank_account_holder: bankHolder.trim() || null,
         bank_name: bankName.trim() || null,
@@ -824,7 +827,18 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
           </div>
         </div>
 
-        <Field 
+        {/* Galeri fotoğrafları — avatar/og dışında çoklu profil görseli */}
+        <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-5 space-y-3">
+          <div>
+            <h3 className="font-serif text-lg text-[var(--gm-text)]">{ui('ui_dashboard_gallery_title', 'Galeri Fotoğrafları')}</h3>
+            <p className="text-[11px] text-[var(--gm-text-dim)] mt-1">
+              {ui('ui_dashboard_gallery_desc', 'Profilinizde görünecek ek fotoğraflar ekleyin (çalışma alanınız, sertifikalar, sizden kareler). Değişiklikleri kaydetmeyi unutmayın.')}
+            </p>
+          </div>
+          <GalleryUpload value={gallery} onChange={setGallery} bucket="consultant_avatars" folder={profile.id} max={12} />
+        </div>
+
+        <Field
           label={ui('ui_dashboard_profile_bio_label', 'About Me (Rich Text)')}
           hint={ui('ui_dashboard_profile_bio_hint', 'Describe yourself, your approach and what you offer. Do not add contact details or external links here.')}
           error={errors.bio}

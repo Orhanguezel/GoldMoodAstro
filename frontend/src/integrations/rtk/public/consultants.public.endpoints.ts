@@ -17,6 +17,7 @@ export interface ConsultantPublic {
   bio?: string;
   expertise: string[];
   languages: string[];
+  gallery?: string[] | null;
   session_price: string;
   session_duration: number;
   video_session_price?: string | null;

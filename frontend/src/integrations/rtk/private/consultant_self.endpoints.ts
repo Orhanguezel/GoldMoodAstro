@@ -41,6 +41,7 @@ export interface ConsultantSelfProfile {
   kyc_status: 'none' | 'pending' | 'approved' | 'rejected';
   kyc_rejection_reason: string | null;
   kyc_documents?: Array<{ type: string; url: string }> | null;
+  gallery?: string[] | null;
   user?: { full_name: string | null; email: string | null; phone: string | null; avatar_url: string | null } | null;
 }
 
@@ -120,6 +121,8 @@ export interface ProfilePatch {
   company_name?: string | null;
   billing_address?: string | null;
   kyc_documents?: Array<{ type: string; url: string }> | null;
+  // Galeri fotoğrafları (avatar/og dışında ek görseller)
+  gallery?: string[] | null;
 }
 
 export interface ServicePayload {

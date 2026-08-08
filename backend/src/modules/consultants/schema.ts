@@ -27,6 +27,8 @@ export const consultants = mysqlTable(
     languages: json('languages').$type<string[]>(),
     meeting_platforms: json('meeting_platforms').$type<string[]>(),
     social_links: json('social_links').$type<Record<string, string>>(),
+    // Danışman galeri fotoğrafları (avatar + og_image dışında ek görseller).
+    gallery: json('gallery').$type<string[]>(),
     bank_name: varchar('bank_name', { length: 120 }),
     bank_iban: varchar('bank_iban', { length: 64 }),
     bank_account_holder: varchar('bank_account_holder', { length: 160 }),

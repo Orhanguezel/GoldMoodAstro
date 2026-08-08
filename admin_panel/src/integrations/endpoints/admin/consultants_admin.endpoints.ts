@@ -14,6 +14,7 @@ export type ConsultantAdmin = {
   og_image?: string | null;
   expertise: string[] | null;
   languages: string[] | null;
+  gallery?: string[] | null;
   session_price: string;
   session_duration: number;
   supports_video?: number | null;

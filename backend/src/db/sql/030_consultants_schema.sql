@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS consultants (
   languages JSON,
   meeting_platforms JSON,
   social_links JSON,
+  gallery JSON,
   bank_name VARCHAR(120) NULL,
   bank_iban VARCHAR(64) NULL,
   bank_account_holder VARCHAR(160) NULL,

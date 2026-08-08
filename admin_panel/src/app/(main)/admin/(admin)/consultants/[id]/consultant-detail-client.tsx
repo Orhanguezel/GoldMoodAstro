@@ -308,6 +308,9 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
   // 404 olmasın diye ana origin'e mutlak URL'e çevir.
   const avatarUrl = item.avatar_url ? (normalizeStorageUrl(item.avatar_url) || null) : null;
   const ogImage = (item as any).og_image ? (normalizeStorageUrl((item as any).og_image) || null) : null;
+  const galleryUrls: string[] = (item.gallery ?? [])
+    .map((u) => normalizeStorageUrl(u) || u)
+    .filter(Boolean) as string[];
   const profileChecks: Array<{ label: string; done: boolean }> = [
     { label: 'Profil fotoğrafı', done: !!avatarUrl },
     { label: 'Başlık', done: !!(item as any).headline },
@@ -725,6 +728,22 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
                   <div className="flex w-full aspect-[1200/630] items-center justify-center rounded-2xl bg-gm-surface/40 ring-1 ring-gm-border-soft text-gm-muted text-sm italic">
                     Yok
                   </div>
+                )}
+              </div>
+              {/* Galeri fotoğrafları */}
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-gm-muted tracking-[0.2em] uppercase ml-1">Galeri ({galleryUrls.length})</Label>
+                {galleryUrls.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {galleryUrls.map((u, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <a key={i} href={u} target="_blank" rel="noreferrer" className="block aspect-square rounded-xl overflow-hidden ring-1 ring-gm-border-soft hover:ring-gm-gold/40 transition-all">
+                        <img src={u} alt="" className="w-full h-full object-cover" />
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gm-muted italic">Galeri fotoğrafı yok</p>
                 )}
               </div>
             </CardContent>

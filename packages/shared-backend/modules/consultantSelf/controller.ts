@@ -73,6 +73,11 @@ const profilePatchSchema = z.object({
   company_name: z.string().trim().max(200).nullable().optional(),
   billing_address: z.string().trim().max(5000).nullable().optional(),
   avatar_url: z.string().trim().max(1000).nullable().optional(),
+  // Galeri: avatar/og dışında çoklu profil görseli (en fazla 12).
+  gallery: z.preprocess(
+    (v) => (Array.isArray(v) ? v.filter((s) => typeof s === 'string' && s.trim()).map((s) => String(s).trim()) : v),
+    z.array(z.string().trim().max(1000)).max(12),
+  ).nullable().optional(),
   is_available: z.coerce.number().int().min(0).max(1).optional(),
   supports_video: z.coerce.number().int().min(0).max(1).optional(),
   session_price: z.coerce.number().nonnegative().max(appConfig.consultants.maxSessionPrice).optional(),
