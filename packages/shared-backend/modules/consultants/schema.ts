@@ -26,6 +26,10 @@ export const consultants = mysqlTable(
     languages: json('languages').$type<string[]>(),
     meeting_platforms: json('meeting_platforms').$type<string[]>(),
     social_links: json('social_links').$type<Record<string, string>>(),
+    // Danışman galeri fotoğrafları. NOT: bu şema consultantSelf (danışmanın kendi
+    // profil PATCH/getProfile) tarafından kullanılır; app şemasıyla (backend/src)
+    // senkron tutulmalı, yoksa Drizzle gallery anahtarını sessizce düşürür.
+    gallery: json('gallery').$type<string[]>(),
     bank_name: varchar('bank_name', { length: 120 }),
     bank_iban: varchar('bank_iban', { length: 64 }),
     bank_account_holder: varchar('bank_account_holder', { length: 160 }),
