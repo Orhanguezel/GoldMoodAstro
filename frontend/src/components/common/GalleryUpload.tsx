@@ -92,7 +92,7 @@ export default function GalleryUpload({
               type="button"
               onClick={() => removeAt(i)}
               aria-label={ui('ui_gallery_remove', 'Kaldır')}
-              className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-1 right-1 h-6 w-6 rounded-full bg-(--gm-bg-deep)/80 text-(--gm-text) flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <X size={14} />
             </button>
