@@ -21,6 +21,9 @@ export const consultants = mysqlTable(
   {
     id: char('id', { length: 36 }).primaryKey().notNull(),
     user_id: char('user_id', { length: 36 }).notNull(),
+    // slug: consultantSelf getProfile'in döndürmesi için gerekli (app şemasıyla senkron;
+    // yoksa danışman panelinde "public adres eksik" yanlış uyarısı çıkıyordu).
+    slug: varchar('slug', { length: 100 }),
     bio: text('bio'),
     expertise: json('expertise').$type<string[]>(),
     languages: json('languages').$type<string[]>(),
