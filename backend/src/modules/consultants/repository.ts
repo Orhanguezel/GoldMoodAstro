@@ -434,7 +434,7 @@ export async function getConsultantOverview(id: string) {
       SELECT c.id, c.kyc_status, c.kyc_submitted_at, c.kyc_reviewed_at, c.kyc_rejection_reason, c.kyc_documents,
              c.account_type, c.identity_number, c.tax_number, c.tax_office, c.company_name, c.billing_address,
              c.bank_name, c.bank_iban, c.bank_account_holder, c.user_id,
-             c.rating_avg, c.rating_count, c.total_sessions, c.favorite_count, c.is_available, c.approval_status,
+             c.rating_avg, c.rating_count, c.total_sessions, c.is_available, c.approval_status,
              u.full_name, u.email, u.phone
       FROM consultants c
       INNER JOIN users u ON u.id = c.user_id
@@ -474,6 +474,16 @@ export async function getConsultantOverview(id: string) {
       };
     }
   } catch { wallet = null; }
+
+  // Favori sayısı — consultants tablosunda kolon YOK (prod'da da), user_favorites'tan
+  // sayılır. Tablo yoksa 0 (getStats ile aynı guard'lı kalıp).
+  let favoriteCount = 0;
+  try {
+    const [fav] = execRows<any>(
+      await db.execute(sql`SELECT COUNT(*) AS cnt FROM user_favorites WHERE consultant_id = ${id}`),
+    );
+    favoriteCount = Number(fav?.cnt ?? 0);
+  } catch { favoriteCount = 0; }
 
   // Randevu istatistikleri (getStats ile aynı 'confirmed'/'completed' kazanç kuralı).
   const monthAgo = new Date();
@@ -551,7 +561,7 @@ export async function getConsultantOverview(id: string) {
       total_sessions: Number(base.total_sessions ?? 0),
       rating_avg: Number(base.rating_avg ?? 0),
       rating_count: Number(base.rating_count ?? 0),
-      favorite_count: Number(base.favorite_count ?? 0),
+      favorite_count: favoriteCount,
     },
     withdrawals,
     withdrawal_summary: withdrawalSummary,
