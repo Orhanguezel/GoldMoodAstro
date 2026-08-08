@@ -30,6 +30,7 @@ import {
   repoSetPasswordResetCode,
   repoUpdateLastSignIn,
   repoUpdateUserAvatar,
+  repoUpdateUserGoogleId,
   repoAssignRole,
   repoEnsureProfileRow,
   repoGetRefreshToken,
@@ -81,6 +82,7 @@ type GoogleProfile = {
   name: string | null;
   picture: string | null;
   emailVerified: boolean;
+  sub: string | null;
 };
 
 type FacebookProfile = {
@@ -180,6 +182,7 @@ async function verifyGoogleIdentity(params: {
       name: payload?.name?.trim() || null,
       picture: (payload as any)?.picture || null,
       emailVerified: payload?.email_verified === true,
+      sub: payload?.sub || null,
     };
   }
 
@@ -202,6 +205,7 @@ async function verifyGoogleIdentity(params: {
     name?: string;
     picture?: string;
     email_verified?: boolean;
+    sub?: string;
   };
 
   const email = (data.email ?? params.fallbackEmail ?? '').trim().toLowerCase();
@@ -212,6 +216,7 @@ async function verifyGoogleIdentity(params: {
     name: data.name?.trim() || null,
     picture: data.picture || null,
     emailVerified: data.email_verified === true,
+    sub: data.sub || null,
   };
 }
 
@@ -490,6 +495,8 @@ export async function socialLogin(req: FastifyRequest, reply: FastifyReply) {
         password_hash,
         full_name: fullName,
         avatar_url: socialProfile.picture ?? undefined,
+        // Google ile kayıtta google_id'yi de yaz (auth_provider tespiti + admin rozet).
+        google_id: parsed.data.type === 'google' ? ((socialProfile as any).sub ?? undefined) : undefined,
         email_verified: socialProfile.emailVerified ? 1 : 0,
         is_active: 1,
       });
@@ -524,6 +531,16 @@ export async function socialLogin(req: FastifyRequest, reply: FastifyReply) {
     // eşleşen mevcut hesaplarda (ör. seed admin) Google fotoğrafı hiç kaydedilmiyordu.
     if ((!user.avatar_url || String(user.avatar_url).trim() === '') && socialProfile.picture) {
       await repoUpdateUserAvatar(user.id, socialProfile.picture);
+      user = (await repoGetUserById(user.id)) ?? user;
+    }
+
+    // Google ile giren mevcut kullanıcıda google_id boşsa geriye doldur (tanımlama için).
+    if (
+      parsed.data.type === 'google' &&
+      (socialProfile as any).sub &&
+      (!(user as any).google_id || String((user as any).google_id).trim() === '')
+    ) {
+      await repoUpdateUserGoogleId(user.id, String((socialProfile as any).sub));
       user = (await repoGetUserById(user.id)) ?? user;
     }
 

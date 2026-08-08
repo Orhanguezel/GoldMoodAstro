@@ -38,6 +38,7 @@ export async function repoCreateUser(data: {
   password_hash: string;
   full_name?: string;
   avatar_url?: string | null;
+  google_id?: string | null;
   phone?: string;
   email_verified?: number;
   is_active?: number;
@@ -49,11 +50,17 @@ export async function repoCreateUser(data: {
     password_hash: data.password_hash,
     full_name: data.full_name,
     avatar_url: data.avatar_url ?? null,
+    google_id: data.google_id ?? null,
     phone: data.phone,
     is_active: data.is_active ?? 1,
     email_verified: data.email_verified ?? 0,
     rules_accepted_at: data.rules_accepted_at,
   });
+}
+
+// Google ile giriş yapan mevcut kullanıcıda google_id boşsa geriye doldur.
+export async function repoUpdateUserGoogleId(userId: string, googleId: string) {
+  await db.update(users).set({ google_id: googleId }).where(eq(users.id, userId));
 }
 
 export async function repoUpdateUserEmail(userId: string, email: string) {
