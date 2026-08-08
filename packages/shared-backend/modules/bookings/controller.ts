@@ -528,7 +528,7 @@ export const listMyBookingsHandler: RouteHandler = async (req, reply) => {
     if (consultantIds.length > 0) {
       const rows: any = await db.execute(
         sql`SELECT c.id AS consultant_id, c.slug AS consultant_slug,
-                   COALESCE(c.display_name, u.full_name) AS consultant_name,
+                   u.full_name AS consultant_name,
                    u.avatar_url AS consultant_avatar
             FROM consultants c
             LEFT JOIN users u ON u.id = c.user_id
