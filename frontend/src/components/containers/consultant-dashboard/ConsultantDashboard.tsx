@@ -294,6 +294,38 @@ function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabCha
           </div>
         </header>
 
+        {/* ─── Yayın durumu — sitede görünüyor mu, eksik ne (admin ile aynı gate) ─── */}
+        {(() => {
+          const miss: string[] = [];
+          if (profile.approval_status !== 'approved') miss.push(ui('ui_dashboard_publish_miss_approval', 'onay'));
+          if (!(Number(profile.session_price || 0) > 0)) miss.push(ui('ui_dashboard_publish_miss_price', 'seans ücreti'));
+          if (Number(profile.is_available || 0) !== 1) miss.push(ui('ui_dashboard_publish_miss_available', 'müsaitlik'));
+          if (!profile.slug) miss.push(ui('ui_dashboard_publish_miss_slug', 'public adres'));
+          if (miss.length === 0) {
+            return (
+              <div className="mb-8 rounded-2xl border border-(--gm-success)/25 bg-(--gm-success)/10 px-5 py-4 flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-(--gm-success) shrink-0" />
+                <p className="text-sm font-semibold text-(--gm-success)">
+                  {ui('ui_dashboard_publish_live', 'Profiliniz sitede yayında — danışanlar sizi bulup randevu alabilir.')}
+                </p>
+              </div>
+            );
+          }
+          return (
+            <div className="mb-8 rounded-2xl border border-(--gm-error)/25 bg-(--gm-error)/10 px-5 py-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-(--gm-error) shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-(--gm-error)">
+                  {ui('ui_dashboard_publish_not_live', 'Profiliniz sitede YAYINDA DEĞİL')} — {ui('ui_dashboard_publish_missing_label', 'eksik')}: {miss.join(', ')}.
+                </p>
+                <p className="text-xs text-(--gm-text) opacity-60 mt-1">
+                  {ui('ui_dashboard_publish_hint', 'Bu alanları tamamladığınızda profiliniz otomatik olarak yayına girer.')}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ─── Tabs — matches user dashboard style ─── */}
         <nav className="mb-10 flex flex-wrap gap-1 border-b border-(--gm-border-soft) overflow-x-auto">
           {TABS.map((t) => {
