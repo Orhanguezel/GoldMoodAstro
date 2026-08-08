@@ -130,7 +130,9 @@ export async function collectEntities(filter?: { type?: SeoEntityType; id?: stri
     `);
     const seen = new Set<string>();
     for (const row of rows<any>(result)) {
-      const locales = row.locale ? [row.locale] : LOCALES;
+      // Her danışman için TÜM dilleri puanla (tek i18n satırı olsa bile). Aksi halde
+      // sadece tr i18n'i olan danışmanın de/en skoru bayat/eksik kalıyordu.
+      const locales = LOCALES;
       for (const locale of locales) {
         const key = `${row.id}:${locale}`;
         if (seen.has(key)) continue;
