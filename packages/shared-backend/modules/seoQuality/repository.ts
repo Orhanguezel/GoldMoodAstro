@@ -152,7 +152,7 @@ export async function collectEntities(filter?: { type?: SeoEntityType; id?: stri
             meta_title: row.meta_title || `${name} · Astroloji ve Doğum Haritası Danışmanı`,
             meta_description:
               row.meta_description ||
-              `${name} ile astroloji, doğum haritası ve ruhsal rehberlik seansları. İlişki, kariyer ve yaşam yolunda kişiye özel online danışmanlık; GoldMoodAstro üzerinden randevu al.`,
+              `${name} ile astroloji, doğum haritası ve ruhsal rehberlik seansları. İlişki, kariyer ve yaşam yolunda kişiye özel online danışmanlık.`,
             slug,
             html: consultantHtml(row),
             featured_image: row.og_image || row.avatar_url || null,

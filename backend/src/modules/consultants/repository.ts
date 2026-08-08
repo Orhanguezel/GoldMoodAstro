@@ -55,7 +55,7 @@ function localizedMetaSelect(column: 'meta_title' | 'meta_description' | 'og_ima
       : column === 'meta_title'
         ? sql`CONCAT(${users.full_name}, ' · Astroloji ve Doğum Haritası Danışmanı')`
         : column === 'meta_description'
-          ? sql`CONCAT(${users.full_name}, ' ile astroloji, doğum haritası ve ruhsal rehberlik seansları. İlişki, kariyer ve yaşam yolunda kişiye özel online danışmanlık; GoldMoodAstro üzerinden randevu al.')`
+          ? sql`CONCAT(${users.full_name}, ' ile astroloji, doğum haritası ve ruhsal rehberlik seansları. İlişki, kariyer ve yaşam yolunda kişiye özel online danışmanlık.')`
           : sql`NULL`;
   return sql<string | null>`
     COALESCE(
