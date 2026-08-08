@@ -25,8 +25,10 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: '3095',
-        HOST: '127.0.0.1',
-        HOSTNAME: '127.0.0.1',
+        // 0.0.0.0'a bind (127.0.0.1 Next rewrite+https-proxy'de 500 yapiyor — bkz
+        // pm2-start-frontend.sh notu). nginx zaten 127.0.0.1:3095'e proxy'liyor.
+        HOST: '0.0.0.0',
+        HOSTNAME: '0.0.0.0',
         NEXT_TELEMETRY_DISABLED: '1',
       },
 

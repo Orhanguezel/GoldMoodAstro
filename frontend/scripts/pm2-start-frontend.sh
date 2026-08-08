@@ -3,7 +3,11 @@ set -euo pipefail
 
 MANIFEST=".next/prerender-manifest.json"
 PORT="${PORT:-3095}"
-HOST="${HOST:-127.0.0.1}"
+# 0.0.0.0'a bind ET — 127.0.0.1'e bind edilince Next 16, X-Forwarded-Proto:https
+# arkasinda localized rewrite'lari (danismanlar→consultants) icin kendine
+# https://localhost:PORT self-fetch yapip SSL hatasiyla 500 veriyor. 0.0.0.0'da
+# rewrite in-process calisir. (nginx zaten 127.0.0.1'e proxy'liyor.)
+HOST="${HOST:-0.0.0.0}"
 
 # bun'u ortamdan çöz (prod /usr/local/bin, yerel ~/.bun); sabit kullanıcı-yolu
 # hardcode'u ortam değişince "bun: No such file" ile pm2 crash-loop'a sokuyordu.
