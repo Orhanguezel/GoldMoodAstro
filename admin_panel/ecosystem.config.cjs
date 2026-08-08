@@ -4,7 +4,7 @@ module.exports = {
     {
       name: 'goldmoodastro-admin',
       cwd: '/var/www/goldmoodastro/admin_panel',
-      script: '/home/orhan/.bun/bin/bun',
+      script: '/usr/local/bin/bun',
       args: 'run start -- -p 3094 -H 127.0.0.1',
       exec_mode: 'fork',
       instances: 1,
