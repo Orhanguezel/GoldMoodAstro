@@ -9,6 +9,7 @@ import { registerSocialHoroscopeCron } from '@/cron/social-horoscope';
 import { registerSocialQueueCron } from '@/cron/social-queue';
 import { registerReviewFollowupCron } from '@/cron/review-followup';
 import { registerAccountDeletionCron } from '@/cron/account-deletion';
+import { registerContactInboxCron } from '@/cron/contact-inbox-poll';
 import { registerRequestNowTimeoutCron } from '@/cron/request-now-timeout';
 import { registerSessionAutoCloseCron } from '@/cron/session-auto-close';
 import { registerConsultantAnalyticsCron } from '@/cron/consultant-analytics';
@@ -57,6 +58,7 @@ async function main() {
     registerSocialQueueCron();
     registerReviewFollowupCron();
     registerAccountDeletionCron();
+    registerContactInboxCron();
     registerRequestNowTimeoutCron();
     registerSessionAutoCloseCron();
     registerConsultantAnalyticsCron();

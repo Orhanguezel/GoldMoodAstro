@@ -61,11 +61,14 @@ export async function repoListContactReplies(contactId: string): Promise<Contact
     .orderBy(asc(contact_replies.created_at))) as ContactReplyRow[];
 }
 
-/** Admin yanıtını kaydet (e-posta gönderimi controller'da yapılır). */
+/** Yanıt kaydet — outbound (admin, e-posta gider) veya inbound (kullanıcı, IMAP ile alınan). */
 export async function repoCreateContactReply(data: {
   contact_id: string;
   message: string;
   admin_user_id?: string | null;
+  direction?: "outbound" | "inbound";
+  from_email?: string | null;
+  email_message_id?: string | null;
   email_status?: string;
 }): Promise<ContactReplyRow> {
   const id = randomUUID();
@@ -75,6 +78,9 @@ export async function repoCreateContactReply(data: {
     message: data.message,
     admin_user_id: data.admin_user_id ?? null,
     channel: "email",
+    direction: data.direction ?? "outbound",
+    from_email: data.from_email ?? null,
+    email_message_id: data.email_message_id ?? null,
     email_status: data.email_status ?? "sent",
   });
   const [row] = await db
@@ -83,6 +89,40 @@ export async function repoCreateContactReply(data: {
     .where(eq(contact_replies.id, id))
     .limit(1);
   return row as ContactReplyRow;
+}
+
+/** Bu e-posta Message-ID'si zaten kayıtlı mı (gelen e-posta dedup). */
+export async function repoContactReplyExistsByMessageId(messageId: string): Promise<boolean> {
+  if (!messageId) return false;
+  const [row] = await db
+    .select({ id: contact_replies.id })
+    .from(contact_replies)
+    .where(eq(contact_replies.email_message_id, messageId))
+    .limit(1);
+  return !!row;
+}
+
+/** Giden yanıtın messageId'sinden contact_id bul (gelen e-postanın In-Reply-To eşleşmesi). */
+export async function repoFindContactIdByOutboundMessageId(messageId: string): Promise<string | null> {
+  if (!messageId) return null;
+  const [row] = await db
+    .select({ contact_id: contact_replies.contact_id })
+    .from(contact_replies)
+    .where(eq(contact_replies.email_message_id, messageId))
+    .limit(1);
+  return row?.contact_id ?? null;
+}
+
+/** Bir e-posta adresine ait en güncel iletişim mesajını bul (gelen e-posta fallback eşleşmesi). */
+export async function repoFindLatestContactByEmail(email: string): Promise<ContactView | null> {
+  if (!email) return null;
+  const rows = await db
+    .select()
+    .from(contact_messages)
+    .where(eq(contact_messages.email, email.trim().toLowerCase()));
+  if (!rows.length) return null;
+  rows.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  return rows[0] as ContactView;
 }
 
 export async function repoListContacts(

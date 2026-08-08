@@ -17,8 +17,19 @@ export type ContactReplyDto = {
   message: string;
   admin_user_id: string | null;
   channel: string;
+  direction?: 'outbound' | 'inbound' | string;
+  from_email?: string | null;
+  email_message_id?: string | null;
   email_status: 'sent' | 'failed' | string;
   created_at: string;
+};
+
+export type InboxPollResult = {
+  ok: boolean;
+  imported: number;
+  scanned: number;
+  skipped: number;
+  reason?: string;
 };
 
 export type ContactWithReplies = ContactDto & { replies?: ContactReplyDto[] };
@@ -93,6 +104,15 @@ export const contactsAdminApi = baseApi.injectEndpoints({
     }),
 
     /**
+     * POLL INBOX (admin) – POST /contacts/inbox/poll
+     * IMAP gelen kutusunu tarar, kullanıcı yanıtlarını thread'lere düşürür.
+     */
+    pollContactInboxAdmin: build.mutation<InboxPollResult, void>({
+      query: () => ({ url: `${BASE}/inbox/poll`, method: 'POST' }),
+      invalidatesTags: [{ type: 'Contacts' as const, id: 'LIST' }],
+    }),
+
+    /**
      * DELETE (admin) – DELETE /contacts/:id
      */
     deleteContactAdmin: build.mutation<{ ok: boolean }, string>({
@@ -114,5 +134,6 @@ export const {
   useGetContactAdminQuery,
   useUpdateContactAdminMutation,
   useReplyContactAdminMutation,
+  usePollContactInboxAdminMutation,
   useDeleteContactAdminMutation,
 } = contactsAdminApi;

@@ -14,6 +14,7 @@ import {
   repoCreateContactReply,
 } from './repository';
 import { sendMail } from '../mail';
+import { pollContactInbox } from './inbox';
 
 const ContactReplyBodySchema = z.object({
   message: z.string().trim().min(1).max(5000),
@@ -40,6 +41,20 @@ export async function getContactAdmin(req: FastifyRequest, reply: FastifyReply) 
     return reply.send({ ...row, replies });
   } catch (e) {
     return handleRouteError(reply, req, e, 'admin_get_contact');
+  }
+}
+
+/** POST /admin/contacts/inbox/poll — gelen kutusunu elle tara (kullanıcı yanıtlarını çek) */
+export async function pollContactInboxAdmin(req: FastifyRequest, reply: FastifyReply) {
+  try {
+    const result = await pollContactInbox({ limit: 50 });
+    if (!result.ok) {
+      reply.code(502);
+      return result;
+    }
+    return reply.send(result);
+  } catch (e) {
+    return handleRouteError(reply, req, e, 'admin_poll_contact_inbox');
   }
 }
 
@@ -75,8 +90,10 @@ export async function replyContactAdmin(req: FastifyRequest, reply: FastifyReply
     const text = `Merhaba ${contact.name || ''},\n\n${message}\n\n—\nBu e-posta, GoldMoodAstro üzerinden gönderdiğiniz iletişim mesajına yanıttır.\nGoldMoodAstro`;
 
     let emailStatus: 'sent' | 'failed' = 'sent';
+    let outboundMessageId: string | null = null;
     try {
-      await sendMail({ to: contact.email, subject, html, text } as any);
+      const info: any = await sendMail({ to: contact.email, subject, html, text } as any);
+      outboundMessageId = info?.messageId ?? null;
     } catch (mailErr) {
       emailStatus = 'failed';
       req.log.error({ err: mailErr }, 'contact_reply_mail_failed');
@@ -86,6 +103,8 @@ export async function replyContactAdmin(req: FastifyRequest, reply: FastifyReply
       contact_id: id,
       message,
       admin_user_id: adminUserId,
+      direction: 'outbound',
+      email_message_id: outboundMessageId,
       email_status: emailStatus,
     });
 

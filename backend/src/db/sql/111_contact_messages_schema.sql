@@ -25,7 +25,11 @@ CREATE TABLE IF NOT EXISTS contact_replies (
   message TEXT NOT NULL,
   admin_user_id CHAR(36) NULL,
   channel VARCHAR(20) NOT NULL DEFAULT 'email',
+  direction VARCHAR(10) NOT NULL DEFAULT 'outbound',
+  from_email VARCHAR(255) NULL,
+  email_message_id VARCHAR(998) NULL,
   email_status VARCHAR(20) NOT NULL DEFAULT 'sent',
   created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  KEY idx_contact_replies_contact (contact_id)
+  KEY idx_contact_replies_contact (contact_id),
+  KEY idx_contact_replies_msgid (email_message_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

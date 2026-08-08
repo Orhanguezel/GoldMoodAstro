@@ -59,6 +59,11 @@ export const contact_replies = mysqlTable(
     message: text("message").notNull(),
     admin_user_id: char("admin_user_id", { length: 36 }),
     channel: varchar("channel", { length: 20 }).notNull().default("email"),
+    // 'outbound' = admin yanıtı (e-posta gönderildi), 'inbound' = kullanıcının e-posta yanıtı (IMAP ile alındı)
+    direction: varchar("direction", { length: 10 }).notNull().default("outbound"),
+    from_email: varchar("from_email", { length: 255 }),
+    // dedup + threading: giden yanıtta nodemailer messageId, gelen yanıtta e-posta Message-ID
+    email_message_id: varchar("email_message_id", { length: 998 }),
     email_status: varchar("email_status", { length: 20 }).notNull().default("sent"), // sent | failed
     created_at: timestamp("created_at", { fsp: 3 }).notNull().defaultNow(),
   },

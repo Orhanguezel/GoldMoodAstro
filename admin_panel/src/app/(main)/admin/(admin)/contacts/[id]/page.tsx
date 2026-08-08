@@ -31,6 +31,7 @@ import {
   useGetContactAdminQuery,
   useUpdateContactAdminMutation,
   useReplyContactAdminMutation,
+  usePollContactInboxAdminMutation,
 } from '@/integrations/hooks';
 
 function formatDate(value: string | Date) {
@@ -114,6 +115,22 @@ export default function ContactDetailPage() {
       setReplyText('');
     } catch {
       toast.error('Yanıt gönderilemedi.');
+    }
+  };
+
+  const [pollInbox, pollState] = usePollContactInboxAdminMutation();
+  const handlePollInbox = async () => {
+    try {
+      const res = await pollInbox().unwrap();
+      if (!res.ok) {
+        toast.error(res.reason === 'imap_not_configured' ? 'IMAP yapılandırılmamış (SMTP ayarlarını girin).' : `Gelen kutusu okunamadı: ${res.reason ?? ''}`);
+      } else if (res.imported > 0) {
+        toast.success(`${res.imported} yeni yanıt alındı.`);
+      } else {
+        toast.info('Yeni yanıt yok.');
+      }
+    } catch {
+      toast.error('Gelen kutusu kontrol edilemedi.');
     }
   };
 
@@ -205,26 +222,51 @@ export default function ContactDetailPage() {
 
           {/* Yanıtla — kullanıcıya e-posta gider + thread olarak kaydedilir */}
           <Card className="overflow-hidden rounded-[32px] border-gm-gold/30 bg-card shadow-[0_20px_50px_rgba(201,169,97,0.05)]">
-            <div className="flex items-center gap-3 border-b border-gm-gold/10 bg-gm-gold/5 p-6">
-              <Send className="size-4 text-gm-gold" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">
-                Yanıtla · kullanıcıya e-posta gönderilir
-              </span>
+            <div className="flex items-center justify-between gap-3 border-b border-gm-gold/10 bg-gm-gold/5 p-6">
+              <div className="flex items-center gap-3">
+                <Send className="size-4 text-gm-gold" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-gold">
+                  Mesajlaşma · e-posta
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePollInbox}
+                disabled={pollState.isLoading}
+                className="h-9 rounded-full px-4 text-[10px] font-bold uppercase tracking-widest"
+                title="IMAP gelen kutusunu tara — kullanıcının e-posta yanıtlarını buraya çek"
+              >
+                <RefreshCcw className={cn('mr-2 size-3.5', pollState.isLoading && 'animate-spin')} />
+                {pollState.isLoading ? 'Kontrol…' : 'Gelen kutusu'}
+              </Button>
             </div>
             <CardContent className="space-y-5 p-8">
               {(contact.replies?.length ?? 0) > 0 && (
                 <div className="space-y-3">
-                  {contact.replies!.map((r) => (
-                    <div key={r.id} className="rounded-2xl border border-gm-gold/20 bg-gm-gold/5 p-4">
-                      <div className="mb-1 flex items-center justify-between gap-2 text-[10px] uppercase tracking-widest">
-                        <span className="font-bold text-gm-gold">Yanıtınız</span>
-                        <span className="font-mono text-muted-foreground">
-                          {formatDate(r.created_at)} · {r.email_status === 'failed' ? 'e-posta ✗' : 'e-posta ✓'}
-                        </span>
+                  {contact.replies!.map((r) => {
+                    const inbound = r.direction === 'inbound';
+                    return (
+                      <div
+                        key={r.id}
+                        className={cn(
+                          'rounded-2xl border p-4',
+                          inbound ? 'mr-8 border-border/50 bg-muted/20' : 'ml-8 border-gm-gold/20 bg-gm-gold/5',
+                        )}
+                      >
+                        <div className="mb-1 flex items-center justify-between gap-2 text-[10px] uppercase tracking-widest">
+                          <span className={cn('font-bold', inbound ? 'text-foreground/70' : 'text-gm-gold')}>
+                            {inbound ? `${contact.name || 'Kullanıcı'} · yanıtladı` : 'Yanıtınız'}
+                          </span>
+                          <span className="font-mono text-muted-foreground">
+                            {formatDate(r.created_at)}
+                            {!inbound && (r.email_status === 'failed' ? ' · e-posta ✗' : ' · e-posta ✓')}
+                          </span>
+                        </div>
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{r.message}</p>
                       </div>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{r.message}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
               <Textarea
