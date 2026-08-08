@@ -39,6 +39,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { ConsultantKycTab, ConsultantPaymentsTab, ConsultantStatsTab } from './consultant-overview-tabs';
+import { useGetConsultantOverviewAdminQuery } from '@/integrations/endpoints/admin/consultant_overview_admin.endpoints';
+import { useApproveKycAdminMutation, useRejectKycAdminMutation } from '@/integrations/endpoints/admin/kyc_admin.endpoints';
+import {
+  useApproveWithdrawalAdminMutation,
+  useRejectWithdrawalAdminMutation,
+  useMarkPaidWithdrawalAdminMutation,
+} from '@/integrations/endpoints/admin/withdrawals_admin.endpoints';
 
 import {
   useApproveConsultantAdminMutation,
@@ -114,6 +123,74 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
   const [deleteService, deleteServiceState] = useDeleteConsultantServiceAdminMutation();
   const [serviceForm, setServiceForm] = React.useState<ServiceForm>(EMPTY_SERVICE_FORM);
   const item = query.data;
+
+  // KYC / Ödemeler / İstatistik tab'ları — overview yalnızca ilgili tab açılınca yüklenir.
+  const [tab, setTab] = React.useState('profil');
+  const overviewQuery = useGetConsultantOverviewAdminQuery(id, { skip: tab === 'profil' });
+  const overview = overviewQuery.data;
+  const [approveKyc, approveKycState] = useApproveKycAdminMutation();
+  const [rejectKyc, rejectKycState] = useRejectKycAdminMutation();
+  const [approveWithdrawal] = useApproveWithdrawalAdminMutation();
+  const [rejectWithdrawal] = useRejectWithdrawalAdminMutation();
+  const [markPaidWithdrawal] = useMarkPaidWithdrawalAdminMutation();
+  const [wdBusyId, setWdBusyId] = React.useState<string | null>(null);
+  const kycBusy = approveKycState.isLoading || rejectKycState.isLoading;
+
+  async function approveKycCurrent() {
+    try {
+      await approveKyc(id).unwrap();
+      toast.success('KYC onaylandı');
+    } catch {
+      toast.error('KYC onaylanamadı');
+    }
+  }
+  async function rejectKycCurrent() {
+    const reason = window.prompt('KYC red sebebi (danışmana e-posta ile iletilir):');
+    if (!reason?.trim() || reason.trim().length < 2) return;
+    try {
+      await rejectKyc({ id, reason: reason.trim() }).unwrap();
+      toast.success('KYC reddedildi');
+    } catch {
+      toast.error('KYC reddedilemedi');
+    }
+  }
+  async function approveWithdrawalCurrent(w: { id: string }) {
+    setWdBusyId(w.id);
+    try {
+      await approveWithdrawal(w.id).unwrap();
+      toast.success('Talep onaylandı');
+    } catch {
+      toast.error('Onaylanamadı');
+    } finally {
+      setWdBusyId(null);
+    }
+  }
+  async function rejectWithdrawalCurrent(w: { id: string }) {
+    const reason = window.prompt('Para çekme red sebebi (bakiye iade edilir):');
+    if (!reason?.trim()) return;
+    setWdBusyId(w.id);
+    try {
+      await rejectWithdrawal({ id: w.id, rejection_reason: reason.trim() }).unwrap();
+      toast.success('Talep reddedildi, bakiye iade edildi');
+    } catch {
+      toast.error('Reddedilemedi');
+    } finally {
+      setWdBusyId(null);
+    }
+  }
+  async function markPaidCurrent(w: { id: string }) {
+    const ref = window.prompt('Transfer referansı / dekont no:');
+    if (!ref?.trim()) return;
+    setWdBusyId(w.id);
+    try {
+      await markPaidWithdrawal({ id: w.id, transfer_reference: ref.trim() }).unwrap();
+      toast.success('Ödendi olarak işaretlendi');
+    } catch {
+      toast.error('İşaretlenemedi');
+    } finally {
+      setWdBusyId(null);
+    }
+  }
   const services = servicesQuery.data ?? [];
   const seoListScore = React.useMemo(
     () => seoListQuery.data?.items?.find((score) => score.entity_id === id && score.locale === 'tr'),
@@ -339,6 +416,15 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
         </div>
       </div>
 
+      <Tabs value={tab} onValueChange={setTab} className="w-full">
+        <TabsList className="flex flex-wrap gap-2 bg-transparent p-0 h-auto">
+          <TabsTrigger value="profil" className="rounded-full px-5 py-2 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg">Profil</TabsTrigger>
+          <TabsTrigger value="kyc" className="rounded-full px-5 py-2 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg">KYC</TabsTrigger>
+          <TabsTrigger value="odemeler" className="rounded-full px-5 py-2 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg">Ödemeler</TabsTrigger>
+          <TabsTrigger value="istatistik" className="rounded-full px-5 py-2 text-xs font-bold uppercase tracking-widest data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg">İstatistik</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="profil" className="mt-8">
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
           {/* Main Profile Card */}
@@ -710,6 +796,36 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
           </Card>
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="kyc" className="mt-8">
+          <ConsultantKycTab
+            data={overview}
+            isLoading={overviewQuery.isLoading || overviewQuery.isFetching}
+            onApprove={approveKycCurrent}
+            onReject={rejectKycCurrent}
+            busy={kycBusy}
+          />
+        </TabsContent>
+
+        <TabsContent value="odemeler" className="mt-8">
+          <ConsultantPaymentsTab
+            data={overview}
+            isLoading={overviewQuery.isLoading || overviewQuery.isFetching}
+            onApproveWithdrawal={approveWithdrawalCurrent}
+            onRejectWithdrawal={rejectWithdrawalCurrent}
+            onMarkPaid={markPaidCurrent}
+            busyId={wdBusyId}
+          />
+        </TabsContent>
+
+        <TabsContent value="istatistik" className="mt-8">
+          <ConsultantStatsTab
+            data={overview}
+            isLoading={overviewQuery.isLoading || overviewQuery.isFetching}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

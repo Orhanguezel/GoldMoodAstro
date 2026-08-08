@@ -35,6 +35,7 @@ export const withdrawalsAdminApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, id) => [
         { type: 'Withdrawal', id },
         { type: 'Withdrawal', id: 'LIST' },
+        'ConsultantOverview',
       ],
     }),
 
@@ -47,6 +48,7 @@ export const withdrawalsAdminApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [
         { type: 'Withdrawal', id },
         { type: 'Withdrawal', id: 'LIST' },
+        'ConsultantOverview',
       ],
     }),
 
@@ -59,6 +61,7 @@ export const withdrawalsAdminApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [
         { type: 'Withdrawal', id },
         { type: 'Withdrawal', id: 'LIST' },
+        'ConsultantOverview',
       ],
     }),
   }),

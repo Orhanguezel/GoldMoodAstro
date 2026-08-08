@@ -22,6 +22,7 @@ import {
   deleteConsultant,
   getApprovedConsultantById,
   getConsultantById,
+  getConsultantOverview,
   getConsultantSlots,
   listApprovedConsultants,
   listConsultantsAdmin,
@@ -200,6 +201,14 @@ export const listConsultantsAdminHandler: RouteHandler = async (req) => {
 export const getConsultantAdminHandler: RouteHandler = async (req, reply) => {
   const { id } = consultantIdParamsSchema.parse(req.params ?? {});
   const row = await getConsultantById(id);
+  if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
+  return { data: row };
+};
+
+// Admin danışman detay: KYC + cüzdan + istatistik + para çekme (tek tab veri kaynağı).
+export const getConsultantOverviewAdminHandler: RouteHandler = async (req, reply) => {
+  const { id } = consultantIdParamsSchema.parse(req.params ?? {});
+  const row = await getConsultantOverview(id);
   if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
   return { data: row };
 };

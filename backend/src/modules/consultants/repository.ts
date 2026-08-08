@@ -418,3 +418,142 @@ export async function createConsultantForUser(userId: string, input: RegisterCon
 
   return getConsultantById(id);
 }
+
+// db.execute sonucundan satırları çıkar (mysql2 [rows, fields] veya doğrudan dizi).
+function execRows<T = any>(result: unknown): T[] {
+  return (Array.isArray((result as any)?.[0]) ? (result as any)[0] : (result as any)) as T[];
+}
+
+// Admin danışman detay tab'ı: KYC + cüzdan + istatistik + son para çekme talepleri.
+// Hepsi tek yerde raw SQL — self-only getStats'ı ve shared wallet/withdrawal
+// controller'larını bozmadan. wallets/withdrawal_requests bu projede consultant_id
+// ile anahtarlı (Drizzle şeması user_id; canlıda ek kolonlar var), o yüzden raw.
+export async function getConsultantOverview(id: string) {
+  const [base] = execRows<any>(
+    await db.execute(sql`
+      SELECT c.id, c.kyc_status, c.kyc_submitted_at, c.kyc_reviewed_at, c.kyc_rejection_reason, c.kyc_documents,
+             c.account_type, c.identity_number, c.tax_number, c.tax_office, c.company_name, c.billing_address,
+             c.bank_name, c.bank_iban, c.bank_account_holder, c.user_id,
+             c.rating_avg, c.rating_count, c.total_sessions, c.favorite_count, c.is_available, c.approval_status,
+             u.full_name, u.email, u.phone
+      FROM consultants c
+      INNER JOIN users u ON u.id = c.user_id
+      WHERE c.id = ${id}
+      LIMIT 1
+    `),
+  );
+  if (!base) return null;
+
+  // kyc_documents JSON string olarak gelebilir → diziye çevir.
+  let kycDocs: Array<Record<string, unknown>> = [];
+  if (Array.isArray(base.kyc_documents)) kycDocs = base.kyc_documents;
+  else if (typeof base.kyc_documents === 'string' && base.kyc_documents.trim()) {
+    try {
+      const p = JSON.parse(base.kyc_documents);
+      if (Array.isArray(p)) kycDocs = p;
+    } catch { /* yok say */ }
+  }
+
+  // Cüzdan (consultant_id öncelikli, yoksa user_id).
+  let wallet: any = null;
+  try {
+    const [w] = execRows<any>(
+      await db.execute(sql`
+        SELECT id, balance, pending_balance, currency, created_at, updated_at
+        FROM wallets
+        WHERE consultant_id = ${id} OR user_id = ${base.user_id}
+        ORDER BY CASE WHEN consultant_id = ${id} THEN 0 ELSE 1 END, created_at ASC
+        LIMIT 1
+      `),
+    );
+    if (w) {
+      wallet = {
+        balance: Number(w.balance ?? 0),
+        pending_balance: Number(w.pending_balance ?? 0),
+        currency: w.currency ?? 'TRY',
+      };
+    }
+  } catch { wallet = null; }
+
+  // Randevu istatistikleri (getStats ile aynı 'confirmed'/'completed' kazanç kuralı).
+  const monthAgo = new Date();
+  monthAgo.setDate(monthAgo.getDate() - 30);
+  const [stat] = execRows<any>(
+    await db.execute(sql`
+      SELECT
+        COUNT(*) AS total_bookings,
+        SUM(status = 'completed') AS completed_count,
+        SUM(status IN ('pending_payment','pending','requested_now')) AS pending_count,
+        SUM(CASE WHEN status IN ('confirmed','completed') THEN session_price ELSE 0 END) AS lifetime_earnings,
+        SUM(CASE WHEN status IN ('confirmed','completed') AND created_at >= ${monthAgo} THEN session_price ELSE 0 END) AS month_earnings,
+        SUM(CASE WHEN status IN ('confirmed','completed') AND created_at >= ${monthAgo} THEN 1 ELSE 0 END) AS month_sessions
+      FROM bookings
+      WHERE consultant_id = ${id}
+    `),
+  );
+
+  // Para çekme talepleri (varsa) + özet.
+  let withdrawals: any[] = [];
+  let withdrawalSummary = { total_paid: 0, pending_amount: 0 };
+  try {
+    withdrawals = execRows<any>(
+      await db.execute(sql`
+        SELECT id, amount, currency, status, requested_at, reviewed_at, paid_at,
+               rejection_reason, bank_iban, bank_name, bank_holder, transfer_reference
+        FROM withdrawal_requests
+        WHERE consultant_id = ${id}
+        ORDER BY requested_at DESC
+        LIMIT 20
+      `),
+    ).map((w) => ({ ...w, amount: Number(w.amount ?? 0) }));
+    const [ws] = execRows<any>(
+      await db.execute(sql`
+        SELECT
+          COALESCE(SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END), 0) AS total_paid,
+          COALESCE(SUM(CASE WHEN status IN ('pending','approved') THEN amount ELSE 0 END), 0) AS pending_amount
+        FROM withdrawal_requests
+        WHERE consultant_id = ${id}
+      `),
+    );
+    if (ws) withdrawalSummary = { total_paid: Number(ws.total_paid ?? 0), pending_amount: Number(ws.pending_amount ?? 0) };
+  } catch { withdrawals = []; }
+
+  return {
+    id: base.id,
+    full_name: base.full_name,
+    email: base.email,
+    phone: base.phone,
+    approval_status: base.approval_status,
+    kyc: {
+      kyc_status: base.kyc_status ?? 'none',
+      kyc_submitted_at: base.kyc_submitted_at ?? null,
+      kyc_reviewed_at: base.kyc_reviewed_at ?? null,
+      kyc_rejection_reason: base.kyc_rejection_reason ?? null,
+      kyc_documents: kycDocs,
+      account_type: base.account_type ?? null,
+      identity_number: base.identity_number ?? null,
+      tax_number: base.tax_number ?? null,
+      tax_office: base.tax_office ?? null,
+      company_name: base.company_name ?? null,
+      billing_address: base.billing_address ?? null,
+      bank_name: base.bank_name ?? null,
+      bank_iban: base.bank_iban ?? null,
+      bank_account_holder: base.bank_account_holder ?? null,
+    },
+    wallet,
+    stats: {
+      total_bookings: Number(stat?.total_bookings ?? 0),
+      completed_count: Number(stat?.completed_count ?? 0),
+      pending_count: Number(stat?.pending_count ?? 0),
+      lifetime_earnings: Number(stat?.lifetime_earnings ?? 0),
+      month_earnings: Number(stat?.month_earnings ?? 0),
+      month_sessions: Number(stat?.month_sessions ?? 0),
+      total_sessions: Number(base.total_sessions ?? 0),
+      rating_avg: Number(base.rating_avg ?? 0),
+      rating_count: Number(base.rating_count ?? 0),
+      favorite_count: Number(base.favorite_count ?? 0),
+    },
+    withdrawals,
+    withdrawal_summary: withdrawalSummary,
+  };
+}

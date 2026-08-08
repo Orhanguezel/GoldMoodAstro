@@ -170,6 +170,7 @@ export const tags = [
   'ConsultantApplication',
   'ConsultantApplications',
   'KycPending',
+  'ConsultantOverview',
   'Withdrawal',
   'Withdrawals',
   'MediaMessages',

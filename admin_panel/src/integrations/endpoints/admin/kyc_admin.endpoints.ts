@@ -29,15 +29,16 @@ export const kycAdminApi = baseApi.injectEndpoints({
     }),
     approveKycAdmin: b.mutation<{ success: boolean }, string>({
       query: (id) => ({ url: `/admin/kyc/${encodeURIComponent(id)}/approve`, method: 'POST' }),
-      invalidatesTags: ['KycPending'],
+      invalidatesTags: ['KycPending', 'ConsultantOverview'],
     }),
     rejectKycAdmin: b.mutation<{ success: boolean }, { id: string; reason: string }>({
       query: ({ id, reason }) => ({
         url: `/admin/kyc/${encodeURIComponent(id)}/reject`,
         method: 'POST',
-        body: { reason },
+        // Backend kycRejectSchema `rejection_reason` bekliyor (2-2000 char); `reason` gönderirsek 400.
+        body: { rejection_reason: reason },
       }),
-      invalidatesTags: ['KycPending'],
+      invalidatesTags: ['KycPending', 'ConsultantOverview'],
     }),
   }),
   overrideExisting: false,

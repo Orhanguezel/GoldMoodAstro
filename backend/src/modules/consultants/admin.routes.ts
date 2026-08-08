@@ -3,6 +3,7 @@ import {
   approveConsultantAdminHandler,
   deleteConsultantAdminHandler,
   getConsultantAdminHandler,
+  getConsultantOverviewAdminHandler,
   getConsultantSessionUserReadingsAdminHandler,
   listConsultantsAdminHandler,
   rejectConsultantAdminHandler,
@@ -14,6 +15,7 @@ export async function registerConsultantsAdmin(app: FastifyInstance) {
   app.get(BASE, listConsultantsAdminHandler);
   app.get(`${BASE}/sessions/:bookingId/user-readings`, getConsultantSessionUserReadingsAdminHandler);
   app.get(`${BASE}/:id`, getConsultantAdminHandler);
+  app.get(`${BASE}/:id/overview`, getConsultantOverviewAdminHandler);
   app.patch(`${BASE}/:id/approve`, approveConsultantAdminHandler);
   app.patch(`${BASE}/:id/reject`, rejectConsultantAdminHandler);
   app.delete(`${BASE}/:id`, deleteConsultantAdminHandler);
