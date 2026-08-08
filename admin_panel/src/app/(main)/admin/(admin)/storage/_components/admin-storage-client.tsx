@@ -26,6 +26,9 @@ import {
   Download,
   CheckSquare,
   Square,
+  Eye,
+  ExternalLink,
+  FileText,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -63,6 +66,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 import type { StorageAsset, StorageListQuery } from '@/integrations/shared';
 import {
@@ -167,6 +177,118 @@ function StoragePreview({
   );
 }
 
+function PreviewMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <div className="text-[9px] uppercase tracking-widest text-gm-muted mb-0.5">{label}</div>
+      <div className="text-[11px] text-gm-text break-all font-medium">{value}</div>
+    </div>
+  );
+}
+
+// Dosya önizleme + büyütme modalı: resim/PDF/video/ses gömülü gösterilir,
+// diğer türler için ikon + indir. "Orijinali Aç" tam boyutu yeni sekmede açar.
+function StoragePreviewModal({
+  item,
+  onClose,
+  t,
+}: {
+  item: StorageAsset | null;
+  onClose: () => void;
+  t: (key: string, params?: any, fallback?: string) => string;
+}) {
+  const mime = String(item?.mime ?? '');
+  const isImage = isImageMime(mime);
+  const isPdf = mime.includes('pdf');
+  const isVideo = mime.startsWith('video/');
+  const isAudio = mime.startsWith('audio/');
+
+  return (
+    <Dialog open={!!item} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[92vh] overflow-hidden p-0 gap-0">
+        {item && (
+          <>
+            <DialogHeader className="p-5 pb-3 border-b border-gm-border-soft">
+              <DialogTitle className="text-base font-bold text-gm-text break-all pr-8 flex items-center gap-2">
+                {isImage ? (
+                  <ImageIcon className="size-4 text-blue-500 shrink-0" />
+                ) : (
+                  <FileText className={cn('size-4 shrink-0', getMimeColor(mime))} />
+                )}
+                {item.name}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="flex items-center justify-center bg-gm-bg-deep/40 p-4 max-h-[60vh] overflow-auto">
+              {isImage && item.url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={item.url}
+                  alt={item.name}
+                  className="max-w-full max-h-[56vh] object-contain rounded-lg shadow-lg"
+                />
+              ) : isPdf && item.url ? (
+                <iframe
+                  src={item.url}
+                  title={item.name}
+                  className="w-full h-[56vh] rounded-lg border border-gm-border-soft bg-white"
+                />
+              ) : isVideo && item.url ? (
+                <video src={item.url} controls className="max-w-full max-h-[56vh] rounded-lg" />
+              ) : isAudio && item.url ? (
+                <audio src={item.url} controls className="w-full" />
+              ) : (
+                <div className="flex flex-col items-center gap-3 py-16 text-gm-muted">
+                  {React.createElement(getMimeIcon(mime), { className: cn('size-16', getMimeColor(mime)) })}
+                  <span className="text-sm italic">{t('preview.notSupported', null, 'Bu dosya türü önizlenemiyor. İndirerek açabilirsiniz.')}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="p-5 border-t border-gm-border-soft space-y-3 bg-gm-surface/20">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <PreviewMeta label={t('list.bucketColumn', null, 'Kova')} value={item.bucket} />
+                <PreviewMeta label={t('list.folderColumn', null, 'Klasör')} value={item.folder || '-'} />
+                <PreviewMeta label={t('list.typeColumn', null, 'Tür')} value={mime} />
+                <PreviewMeta label={t('list.sizeColumn', null, 'Boyut')} value={formatBytes(item.size)} />
+                {item.width && item.height ? (
+                  <PreviewMeta label={t('preview.dimensions', null, 'Boyutlar')} value={`${item.width}×${item.height} px`} />
+                ) : null}
+                <PreviewMeta label={t('list.dateColumn', null, 'Tarih')} value={fmtDate(item.created_at)} />
+              </div>
+              <div className="rounded-lg bg-gm-bg-deep/40 border border-gm-border-soft/40 px-3 py-2 min-w-0">
+                <div className="text-[9px] uppercase tracking-widest text-gm-muted mb-0.5">{t('preview.path', null, 'Yol')}</div>
+                <div className="text-[11px] font-mono text-gm-text break-all">{item.path}</div>
+              </div>
+              {item.url && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    asChild
+                    className="rounded-full bg-gm-gold text-gm-bg hover:bg-gm-gold-dim h-10 px-5 text-[11px] font-bold uppercase tracking-widest"
+                  >
+                    <a href={item.url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="mr-2 size-4" /> {t('preview.openOriginal', null, 'Orijinali Aç')}
+                    </a>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="rounded-full h-10 px-5 text-[11px] font-bold uppercase tracking-widest border-gm-border-soft"
+                  >
+                    <a href={item.url} download target="_blank" rel="noopener noreferrer">
+                      <Download className="mr-2 size-4" /> {t('preview.download', null, 'İndir')}
+                    </a>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function AdminStorageClient() {
   const router = useRouter();
   const t = useAdminT('admin.storage');
@@ -227,6 +349,7 @@ export default function AdminStorageClient() {
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [itemToDelete, setItemToDelete] = React.useState<StorageAsset | null>(null);
+  const [previewItem, setPreviewItem] = React.useState<StorageAsset | null>(null);
 
   const handleSearch = (value: string) => {
     setFilters((prev) => ({ ...prev, search: value }));
@@ -546,14 +669,28 @@ export default function AdminStorageClient() {
                             </Button>
                           </TableCell>
                           <TableCell className="py-4">
-                            <StoragePreview item={item} />
+                            <button
+                              type="button"
+                              onClick={() => setPreviewItem(item)}
+                              title={t('preview.openTitle', null, 'Görüntüle')}
+                              className="rounded-xl transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-gm-gold"
+                            >
+                              <StoragePreview item={item} />
+                            </button>
                           </TableCell>
-                          <TableCell className="py-4">
-                            <div className="space-y-1 pr-4">
-                              <div className="font-bold text-gm-text text-sm break-all">{truncate(item.name, 35)}</div>
+                          <TableCell className="py-4 max-w-[280px]">
+                            <div className="space-y-1 pr-2 min-w-0">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewItem(item)}
+                                className="block w-full text-left font-bold text-gm-text text-sm truncate hover:text-gm-gold transition-colors"
+                                title={item.name}
+                              >
+                                {item.name}
+                              </button>
                               {item.path && (
-                                <div className="text-[11px] font-mono text-gm-muted break-all">
-                                  {truncate(item.path, 50)}
+                                <div className="text-[11px] font-mono text-gm-muted truncate" title={item.path}>
+                                  {item.path}
                                 </div>
                               )}
                             </div>
@@ -563,11 +700,11 @@ export default function AdminStorageClient() {
                               {item.bucket}
                             </Badge>
                           </TableCell>
-                          <TableCell className="py-4">
+                          <TableCell className="py-4 max-w-[160px]">
                             {item.folder ? (
-                              <div className="flex items-center gap-1.5 text-xs text-gm-text font-medium">
-                                <Folder className="size-3.5 text-gm-gold" />
-                                {item.folder}
+                              <div className="flex items-center gap-1.5 text-xs text-gm-text font-medium min-w-0" title={item.folder}>
+                                <Folder className="size-3.5 text-gm-gold shrink-0" />
+                                <span className="truncate">{item.folder}</span>
                               </div>
                             ) : (
                               <span className="text-gm-muted/65 italic text-xs">-</span>
@@ -586,6 +723,15 @@ export default function AdminStorageClient() {
                           </TableCell>
                           <TableCell className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-1.5">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setPreviewItem(item)}
+                                title={t('preview.openTitle', null, 'Görüntüle')}
+                                className="h-9 w-9 rounded-full hover:bg-gm-surface/20 text-gm-muted"
+                              >
+                                <Eye className="size-4 text-gm-gold" />
+                              </Button>
                               {item.url && (
                                 <Button
                                   variant="ghost"
@@ -669,18 +815,32 @@ export default function AdminStorageClient() {
                         )}
                       </Button>
 
-                      <StoragePreview item={item} size="lg" />
+                      <button
+                        type="button"
+                        onClick={() => setPreviewItem(item)}
+                        title={t('preview.openTitle', null, 'Görüntüle')}
+                        className="shrink-0 rounded-xl transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-gm-gold"
+                      >
+                        <StoragePreview item={item} size="lg" />
+                      </button>
 
-                      <div className="flex-1 space-y-1">
-                        <h3 className="font-bold text-gm-text text-sm">{item.name}</h3>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewItem(item)}
+                          className="block w-full text-left font-bold text-gm-text text-sm truncate hover:text-gm-gold transition-colors"
+                          title={item.name}
+                        >
+                          {item.name}
+                        </button>
                         <div className="flex flex-wrap gap-1.5 pt-1">
                           <Badge variant="outline" className="rounded-full px-2 py-0 border-gm-border-soft/60 text-[9px] text-gm-text bg-gm-surface/30">
                             {item.bucket}
                           </Badge>
                           {item.folder && (
-                            <Badge variant="secondary" className="rounded-full px-2 py-0 border-transparent text-[9px] bg-gm-gold/10 text-gm-gold">
-                              <Folder className="size-2.5 mr-1 inline" />
-                              {item.folder}
+                            <Badge variant="secondary" className="rounded-full px-2 py-0 border-transparent text-[9px] bg-gm-gold/10 text-gm-gold max-w-[160px]" title={item.folder}>
+                              <Folder className="size-2.5 mr-1 inline shrink-0" />
+                              <span className="truncate">{truncate(item.folder, 24)}</span>
                             </Badge>
                           )}
                         </div>
@@ -697,6 +857,15 @@ export default function AdminStorageClient() {
 
                     {/* Actions */}
                     <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPreviewItem(item)}
+                        title={t('preview.openTitle', null, 'Görüntüle')}
+                        className="h-10 w-10 rounded-full border-gm-border-soft bg-gm-surface/50 text-gm-gold hover:bg-gm-surface/80"
+                      >
+                        <Eye className="size-3.5" />
+                      </Button>
                       {item.url && (
                         <Button
                           variant="outline"
@@ -753,6 +922,9 @@ export default function AdminStorageClient() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dosya önizleme + büyütme modalı */}
+      <StoragePreviewModal item={previewItem} onClose={() => setPreviewItem(null)} t={t} />
     </>
   );
 }
