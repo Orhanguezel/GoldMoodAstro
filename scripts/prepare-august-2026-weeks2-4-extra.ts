@@ -16,7 +16,7 @@ const TENANT = "goldmoodastro";
 const TAGS = "#goldmoodastro #astroloji #tarot #ruyatabiri #spirituelsemboller #ruhsaldanismanlik";
 const SITE = "https://goldmoodastro.com";
 
-type Spec = { day: number; slug: string; title: string; subtitle: string; body: string; cta: string; asset: string; secondAsset?: string; reel?: boolean; campaign?: boolean };
+type Spec = { day: number; slug: string; title: string; subtitle: string; body: string; cta: string; asset: string; secondAsset?: string; bgAsset?: string; reel?: boolean; campaign?: boolean };
 const zodiac = (slug: string) => path.resolve(ROOT, `backend/uploads/zodiac/${slug}.png`);
 const dream = (slug: string) => path.resolve(ROOT, `backend/uploads/symbols/dream/${slug}.png`);
 const coffee = (slug: string) => path.resolve(ROOT, `backend/uploads/symbols/coffee/${slug}.png`);
@@ -31,7 +31,7 @@ const specs: Spec[] = [
   { day: 13, slug: "intention-working", title: "Bu Niyet Sende Çalışıyor Olabilir", subtitle: "Yeniay sonrası", body: "Tekrar eden düşünce, konuşma veya fırsat yeni döngünün ilk işareti olabilir.", cta: "Hangi niyeti seçtiğini yaz", asset: dream("door"), reel: true },
   { day: 14, slug: "coffee-road-key", title: "Fincandaki Yol, Kapı ve Anahtar", subtitle: "Kahve falı sembolleri", body: "Yol hareketi, kapı fırsatı, anahtar ise çözüm ve erişimi simgeler.", cta: "Fincanında çıkan sembolü yaz", asset: coffee("road"), secondAsset: coffee("key") },
   { day: 15, slug: "incoming-news", title: "Sana Gelen Haber Ne Anlatıyor?", subtitle: "İletişim ve fırsat", body: "Beklenen haber geldiğinde yalnız söze değil, sende uyandırdığı ilk duyguya da bak.", cta: "Mesaj bekliyor musun?", asset: coffee("bird"), secondAsset: coffee("bell") },
-  { day: 16, slug: "consultant-fatma", title: "Astrolog Fatma Güçlü ile Tanış", subtitle: "Astroloji danışmanlığı", body: "Doğum haritası ve ilişki dinamiklerini kişisel bağlamınla birlikte değerlendirmek için profilini incele.", cta: "Profili incele • randevunu seç", asset: path.resolve(ROOT, "backend/uploads/consultant_fatma.jpg"), campaign: true },
+  { day: 16, slug: "consultant-fatma", title: "Astrolog Fatma Güçlü ile Tanış", subtitle: "Astroloji danışmanlığı", body: "Doğum haritası ve ilişki dinamiklerini kişisel bağlamınla birlikte değerlendirmek için profilini incele.", cta: "Profili incele • randevunu seç", asset: path.resolve(ROOT, "backend/uploads/consultant_fatma.jpg"), bgAsset: dream("stars"), campaign: true },
   { day: 17, slug: "weekly-rising", title: "Haftanın Yükselen Mesajları", subtitle: "Ateş • toprak • hava • su", body: "Bu hafta yükselen burcun, enerjini hangi alanda daha bilinçli kullanacağını gösterebilir.", cta: "Kaydet • yükselenini oku", asset: zodiac("sagittarius"), secondAsset: zodiac("aquarius") },
   { day: 18, slug: "tarot-soul-message", title: "Ruhunun Duyması Gereken Mesaj", subtitle: "Bir kart seç", body: "İlk çekildiğin açık kartı seç. Mesajı kesin gelecek değil, farkındalık alanı olarak oku.", cta: "Kartını seç ve kaydet", asset: tarot("the-high-priestess"), secondAsset: tarot("the-hermit") },
   { day: 19, slug: "evil-eye", title: "Nazar Boncuğu ve Enerji Koruma", subtitle: "Sınır • niyet • farkındalık", body: "Korunma yalnız sembolle değil, net sınırlar ve dinlenme alanıyla da güçlenir.", cta: "Bu sembolü ihtiyacı olan birine gönder", asset: coffee("eye"), secondAsset: coffee("candle") },
@@ -53,9 +53,9 @@ function cap(s: Spec) { return `${s.title} ✨\n\n${s.body}\n\n${s.cta}\n\n🔗 
 async function build(): Promise<DraftPost[]> {
   const posts: DraftPost[] = [];
   for (const s of specs) {
-    const cover: Slide = { title: s.title, subtitle: s.subtitle, body: s.body, asset: s.asset, variant: s.campaign ? "gold" : "deep", footer: s.cta };
+    const cover: Slide = { title: s.title, subtitle: s.subtitle, body: s.body, asset: s.asset, bgAsset: s.bgAsset, variant: s.campaign ? "gold" : "deep", footer: s.cta };
     if (s.reel) posts.push(await reel(s.day, s.slug, s.title, cover, cap(s)));
-    else posts.push(await carousel(s.day, s.slug, s.title, [cover, { title: s.subtitle, body: s.body, asset: s.secondAsset ?? s.asset, variant: s.campaign ? "violet" : "gold", footer: s.cta }], cap(s), s.campaign ? "kampanya" : "etkilesim"));
+    else posts.push(await carousel(s.day, s.slug, s.title, [cover, { title: s.subtitle, body: s.body, asset: s.secondAsset ?? s.asset, bgAsset: s.bgAsset, variant: s.campaign ? "violet" : "gold", footer: s.cta }], cap(s), s.campaign ? "kampanya" : "etkilesim"));
     posts.push(await story(s.day, `${s.slug}-cta`, s.cta, { ...cover, kicker: "STORY • AĞUSTOS 2026", body: s.cta, footer: "Etkileşim aracını ekle" }));
   }
   return posts;

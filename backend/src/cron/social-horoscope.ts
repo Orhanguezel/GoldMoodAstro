@@ -1121,7 +1121,9 @@ export async function refreshHoroscopeCardsForDate(
     updated += 1;
   }
 
-  console.log(`[social-horoscope] ${dateStr} kartlari gercek yorumla yenilendi (${updated} post)`);
+  console.log(
+    `[social-horoscope] ${dateStr} kartlari ${allowFallback ? 'gun-ozel plan metniyle' : 'gercek gunluk yorumla'} yenilendi (${updated} post)`,
+  );
   return { status: 'refreshed', detail: `${dateStr}: ${updated} post` };
 }
 

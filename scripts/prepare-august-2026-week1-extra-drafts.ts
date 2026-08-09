@@ -52,6 +52,9 @@ export type Slide = {
   body?: string;
   footer?: string;
   asset?: string;
+  /** Arka planı asset yerine bundan üret. Portre/fotoğraf asset'lerinde şart:
+   *  fotoğrafın blur'u marka paletini bozup dev bulanık yüz bırakıyor. */
+  bgAsset?: string;
   layout?: "four-tarot";
   variant?: "deep" | "gold" | "cream" | "violet";
   accent?: string;
@@ -284,8 +287,9 @@ async function renderSlide(fileName: string, slide: Slide, size: "post" | "story
   if (!process.env.FORCE_REGEN && existsSync(filePath)) return `${PUBLIC_DIR}/${fileName}`;
 
   let base: Buffer;
-  if (slide.asset) {
-    base = await sharp(mustExist(slide.asset))
+  const bgSource = slide.bgAsset ?? slide.asset;
+  if (bgSource) {
+    base = await sharp(mustExist(bgSource))
       .resize(width, height, { fit: "cover" })
       .blur(8)
       .modulate({ brightness: 0.58, saturation: 1.15 })
