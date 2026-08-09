@@ -11,6 +11,7 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 
 import { Toaster } from '@/components/ui/sonner';
+import ChunkErrorReloader from '@/components/ChunkErrorReloader';
 import { fontVars } from '@/lib/fonts/registry';
 import { PREFERENCE_DEFAULTS } from '@/lib/preferences/preferences-config';
 import { fetchBrandingConfig } from '@/server/fetch-branding';
@@ -126,6 +127,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     >
       <body className={`${fontVars} min-h-screen antialiased`} suppressHydrationWarning>
         <ThemeBootInlineScript />
+        <ChunkErrorReloader />
 
         <StoreProvider>
           <PreferencesStoreProvider>
