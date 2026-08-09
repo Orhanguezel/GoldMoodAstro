@@ -41,6 +41,8 @@ type AuditablePost = {
   imageUrl?: string | null;
   mediaUrls?: unknown;
   postType?: string | null;
+  sourceRef?: string | null;
+  notes?: string | null;
 };
 
 const SIGN_NAMES_TR = [
@@ -97,8 +99,20 @@ export async function auditPost(post: AuditablePost): Promise<ComplianceResult> 
   const text = `${post.title || ""}\n${caption}`;
 
   // ── R1: astrolojik iddia hesaba bağlı mı? (en kritik kural)
+  //
+  // Provenance üç yoldan gelebilir; üçünü de tanımazsak gösterge gürültüye boğulur
+  // ve panelde ciddiye alınmaz (ilk denemede 167 postun 14'ü kırmızıydı, çoğu
+  // aslında meşru içerikti):
+  //   1. Caption'da hesaplanmış lunasyon bloğu (bizim üretimimiz)
+  //   2. Günlük burç postları — içerik daily_horoscopes'tan (LLM job) geliyor
+  //   3. Açık editöryel istisna (mizah postu vb.) — notes'ta [editorial] işareti
+  const sourceRef = (post.sourceRef || "").toLowerCase();
+  const notes = (post.notes || "").toLowerCase();
   const signs = mentionsSign(caption);
-  const hasAstroProvenance = ASTRO_PROVENANCE_MARKERS.some((m) => caption.includes(m));
+  const hasAstroProvenance =
+    ASTRO_PROVENANCE_MARKERS.some((m) => caption.includes(m)) ||
+    sourceRef.startsWith("daily-horoscope") ||
+    notes.includes("[editorial]");
   if (signs.length && !hasAstroProvenance) {
     findings.push({
       rule: "astro-claim-unverified",
@@ -109,7 +123,11 @@ export async function auditPost(post: AuditablePost): Promise<ComplianceResult> 
   }
 
   // ── R2: sembol/kart adı geçiyorsa anlamı sözlükle örtüşüyor mu?
-  const dict = await loadDictionary().catch(() => null);
+  // Sadece içerik gerçekten bir sembol/kart AÇIKLIYORSA bak. Sözlükte "Ay", "Su",
+  // "El", "Yol", "Kalp" gibi gündelik kelimeler var; bağlam süzgeci olmadan kural
+  // 167 postun 80'inde tetikleniyordu (çoğu sembolden hiç söz etmiyordu).
+  const explainsSymbol = /(sembol|falı|fali|kart|tarot|rüya|ruya)/i.test(text);
+  const dict = explainsSymbol ? await loadDictionary().catch(() => null) : null;
   if (dict) {
     // Bazı sembol adları burç adlarıyla ÇAKIŞIYOR (Aslan, Balık, Yay hem burç hem
     // kahve falı sembolü). Burç kullanımı R1'in işi; burada saymazsak "Yeniay Aslan"
