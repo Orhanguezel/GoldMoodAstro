@@ -1,64 +1,70 @@
-# CODEX BRIEF — Sosyal önizlemede caption BOŞ + içerik kalite gözden geçirme
+# CODEX BRIEF — Story-CTA kart görsellerinde metin BOŞ (baked) + içerik kalite
 
-> Hazırlayan: Claude (mimari/lokalizasyon). Uygulayan: Codex.
-> Bağlam: GoldMoodAstro admin sosyal medya modülü. Bu bileşen ekosistem-sosyal-medya
-> reposunda da KOPYA olarak var; aynı bug iki tarafta. Bu brief goldmood kopyası içindir.
+> Hazırlayan: Claude (mimari/lokalizasyon — kök neden GÖRSEL olarak teyit edildi).
+> Uygulayan: Codex. DÜZELTME: bu bir önizleme/render bug'ı DEĞİL; goldmood'un ürettiği
+> PNG'nin İÇİNE metin çizilmemiş. (İlk hipotez —SocialPlatformPage önizlemesi— YANLIŞTI;
+> ekosistem oturumu ham PNG'yi indirip kanıtladı, Claude de görseli açıp doğruladı.)
 
 ---
 
-## GÖREV 1 — /admin/social/[platform] önizlemesinde caption/içerik BOŞ
+## GÖREV 1 — story-cta kart görsellerinde başlık/CTA metni BOŞ
 
-### Semptom
-`admin.goldmoodastro.com/admin/social/instagram` (ve facebook) — bir post önizleme
-modalında **GÖRSEL geliyor ama caption/içerik metni BOŞ** (gold/mor kozmik temalı modal;
-üstte görsel = dream-sea altın dalga, altında boş metin kutuları). Kullanıcı 2 ekran
-görüntüsü verdi (biri ekosistem sosial.tarvista.com, biri goldmood admin — AYNI bileşen).
+### Semptom (GÖRSEL OLARAK DOĞRULANDI)
+`backend/uploads/social/august-2026-week1-extra-v3/2026-08-09-story-dream-sea-cta.png`
+(ve tüm `*story*-cta.png` serisi, 08-08..08-31) açıldığında: altın dalga art'ı VAR, ama
+**ortadaki metin kutusu ve alttaki CTA pill BOMBOŞ** — şekiller çizili, içleri metinsiz.
+Kullanıcı bunu admin.goldmoodastro.com/admin/social/instagram önizlemesinde gördü; önizleme
+DOĞRU çalışıyor (bozuk görseli olduğu gibi gösteriyor). Sorun görselin KENDİSİNDE.
 
-### KANITLANMIŞ — bu bir RENDER bug'ı, veri eksikliği DEĞİL (çok önemli)
-- Goldmood `social_posts` verisi %100 dolu: `/api/ext/social/content-catalog`'da 73 postun
-  caption'ı boş olan **0**; blog body/excerpt boş **0**. Yani caption verisi VAR.
-- Aynı içerik Telegram grubunda DOLU görünüyor ("Rüyada Su veya Deniz Görmek ✨...").
-- → Önizleme/render katmanında caption bind edilmiyor. Backend'de caption'ı doldurmaya çalışma;
-  veri zaten dolu.
+Karşılaştırma (bunlar SAĞLAM, metin baked): `/tr/social-image?type=sign&sign=aries`,
+`?type=tool&tool=numeroloji`, `?type=pair&pair=...` (satori/OG yolu) — çalışıyor.
+Kırık olan yalnız ön-üretilmiş `/uploads/social/august-2026-week1-extra-v3/*story*cta.png` serisi.
+Caption DATA'sı dolu (1a'da boş 0) — o ayrı temsil; kart GÖRSELİNE metin basılmamış. İki farklı şey.
 
-### Dosyalar
-- Route: `admin_panel/src/app/(main)/admin/(admin)/social/[platform]/_components/platform-client.tsx`
-  → instagram/facebook için `<SocialPlatformPage platformKey="..." />` render eder (tiktok → TikTokSandboxPage).
-- **Ana bileşen:** `admin_panel/src/ekosistem/components/social/SocialPlatformPage.tsx` (~1679 satır).
-  - Kendi postları: `posts.list(...)` → `createdPosts` + `scheduledPosts` (satır ~312-313). Bunlarda `p.caption` dolu.
-  - Canlı platform postları: `accountItems` (state ~183, render ~1018). Caption olarak `m.message` kullanıyor (satır ~1035: `{m.message || "(açıklama yok)"}`).
-  - Önizleme modalları: `previewImage` (satır ~1552, SADECE görsel, caption yok) ve `previewGallery` (satır ~1580, görsel + `g.title` + thumbnail). `g.title = p.caption || p.title` (satır ~255).
+### Üreten kod (izlendi)
+- `scripts/prepare-august-2026-weeks2-4-extra.ts:59`:
+  `posts.push(await story(s.day, \`${s.slug}-cta\`, s.cta, { ...cover, kicker, body: s.cta, footer: "Etkileşim aracını ekle" }))`
+  (cover = `{ title: s.title, subtitle, body: s.body, asset, footer: s.cta }` — yani slide title/body/footer DOLU).
+- `story()` — `scripts/prepare-august-2026-week1-extra-drafts.ts:401` → `renderSlide(...)`.
+- `renderSlide` — aynı dosya `:278`. Metni `overlaySvg()` (`:175`) + kutu/pill'i `artFrameSvg()` çiziyor.
+
+### KÖK NEDEN (smoking gun)
+`renderSlide` **satır 283**: `if (existsSync(filePath)) return ...` — dosya varsa üretimi ATLIYOR.
+Bozuk PNG'ler **4 Ağustos'ta** (eski/eksik bir sürümde, boş metinle) üretilmiş; slide tanımları
+ARTIK metin içeriyor ama existsSync yüzünden yeniden üretilmiyor → eski boş dosya kalıyor.
+(İkincil olasılık: `overlaySvg`/`artFrameSvg` story+asset layout'unda title/body metnini yanlış
+konuma/boş basıyor olabilir — regen sonrası hâlâ boşsa BU'dur.)
 
 ### Codex adımları
-1. **Modalı reprodüksiyon et:** uygulamayı çalıştır, `/admin/social/instagram`'a git, bir post önizlemesini aç. React DevTools ile HANGİ bileşen/state olduğunu belirle (previewImage / previewGallery / accountItems kartı / başka). NOT: ekran görüntüsündeki gold-temalı modal + boş metin kutuları yukarıdaki iki slate-temalı modalla TAM eşleşmiyor olabilir — gerçek DOM'u incele.
-2. **Caption neden boş, üç hipotez — hangisi olduğunu bul:**
-   - (a) **Canlı IG fetch `message` getirmiyor:** goldmood backend'in canlı-post/insights fetch'i Instagram Graph'tan `caption` alanını istemiyor olabilir → `m.message` boş → "(açıklama yok)". Backend: `backend/src/social/modules/platforms/instagram.ts` + `posts/insights.ts` (Graph `fields=` parametresine `caption` ekli mi?).
-   - (b) **Önizleme modalı caption bind etmiyor:** previewImage caption'ı hiç göstermiyor (tasarım); previewGallery yalnız `title` gösteriyor. Kullanıcının gördüğü boş kutular caption için ama modal onu render etmiyor olabilir.
-   - (c) **Alan adı uyuşmazlığı:** kendi postlarında `caption`, canlı postlarda `message`, API'de `content` — önizleme yanlış alanı okuyor olabilir.
-3. **Düzelt:** önizleme modalı caption'ı DOĞRU alandan (`caption ?? message ?? content`) okuyup GÖSTERSİN. Canlı IG için (a) doğrulanırsa Graph fetch'ine `caption` field'ını ekle.
+1. Bir bozuk dosyayı SİL (ör. `2026-08-09-story-dream-sea-cta.png`), sadece o slide'ı yeniden
+   üret (script'in image-only kısmını çalıştır), çıkan PNG'yi AÇ/GÖRÜNTÜLE.
+   - Metin geldiyse → sebep existsSync cache'iydi. Tüm `*story*cta.png` serisini sil + yeniden üret.
+   - Hâlâ boşsa → `overlaySvg`/`artFrameSvg` story-layout bug'ı; title/body text'inin bu layout'ta
+     doğru y konumunda ve DOLU basıldığını düzelt (satır 177-216 + artFrameSvg).
+2. **DB güvenliği:** weeks2-4 script'i social_posts'a taslak INSERT ediyorsa, yeniden çalıştırma
+   ÇİFT taslak yaratmasın — image-only regen yap VEYA insert'i idempotent (INSERT IGNORE / var olanı
+   update) tut. Prod DB içeriğini EZME (workspace kuralı).
+3. **Deploy:** regenerate edilen PNG'ler `backend/uploads/social/...` altında. **UYARI:** deploy
+   uploads/ dizinini otomatik SENKRONLAMAZ ([[deploy_uploads_gap]]) — yeni PNG'leri prod'a rsync'le.
+4. Bitince ekosistem oturumuna haber ver → o `content_catalog`'u re-sync eder, önizlemeler dolu gelir.
 
 ### Kabul kriteri
-- `/admin/social/instagram` + `/admin/social/facebook` önizlemesinde post caption'ı DOLU görünür (kendi postları için kesin; canlı IG postları için Graph `caption` döndürüyorsa).
-- Boş caption'da "(açıklama yok)" fallback'i kalır ama data dolu olduğu için görünmemeli.
+`*story*cta.png` serisi açıldığında title + body + CTA metni GÖRSELİN İÇİNDE görünür (dream-sea:
+"Rüyada Su veya Deniz Görmek" + "Rüyanı yorumlara yaz" + "Etkileşim aracını ekle"). Prod'daki
+/uploads dosyaları da güncel. Önizleme (admin + ekosistem) dolu metinli kart gösterir.
+
+### İlgili (opsiyonel, ayrı — Görev 1'in kapsamı DIŞI)
+- `SocialPlatformPage` accountItems canlı IG postlarında `m.message` boşsa "(açıklama yok)" gösteriyor;
+  IG Graph fetch `caption` alanını istemiyorsa ayrı bir eksik olabilir — ama kullanıcının ŞU ANKİ
+  semptomu bu DEĞİL. Karıştırma; ancak Görev 1 bitince kullanıcı isterse bakılır.
 
 ---
 
 ## GÖREV 2 — İçerik kalite gözden geçirme ("içeriklerde hatalar var")
-
-Kullanıcı üretilen sosyal içerikte (günlük burç + fal metinleri) hatalar olduğunu söyledi.
-- Kaynak: günlük burç `backend/src/cron/social-horoscope.ts` (caption üretimi) + `horoscope-job.ts`
-  (LLM burç yorumu) + fal içerikleri (`horoscopes/tarot/coffee/dreams` modül seed'leri).
-- İçerik kalite kuralları hafızada: asset tipi tutarlılığı, tarot açık-yüz+element, kontrast,
-  tek-burç kapak yasağı, üretimden sonra GÖRSEL doğrulama.
-- **Codex:** üretilen son ~20 postun caption'larını + tema metinlerini incele, somut hataları
-  (yazım, tekrar, tutarsızlık, yanlış burç/tarih) listele. Kullanıcıdan ÖRNEK hata istenmeli
-  (hangi tip hata: metin mi, görsel mi, eşleşme mi) — sonra düzelt. Prod DB içeriğini seed
-  ON DUPLICATE ile EZME (bkz workspace kuralı: kullanıcı içeriğini overwrite etme).
-
----
-
-## Notlar (Codex için)
-- Bu bileşen ekosistem reposunda da KOPYA → orada da aynı fix gerekebilir (ayrı oturum halleder).
-- Prod deploy: kapasite sınırında; admin build eksik çıkabiliyor → `scripts/vps-deploy.sh`
-  build doğrulaması yapıyor. Route dizini eklemedin/silmediysen incremental sorun yok.
-- Test: değişiklikten sonra `admin_panel` `bun run typecheck` + UI'da önizlemeyi görsel doğrula.
+Kullanıcı üretilen sosyal içerikte hatalar olduğunu söyledi (henüz örnek vermedi — İSTE).
+- Kaynaklar: günlük burç `backend/src/cron/social-horoscope.ts` (caption) + `horoscope-job.ts` (LLM)
+  + ağustos serisi metinleri `scripts/prepare-august-2026-*.ts` (title/body/cta spec'leri).
+- Kural (hafıza): asset tipi tutarlılığı, tarot açık-yüz+element, kontrast, tek-burç kapak yasağı,
+  üretimden sonra GÖRSEL doğrulama.
+- Codex: kullanıcıdan somut hata örneği/tipi al (metin/görsel/eşleşme) → o kategoriyi tara → düzelt.
+  Prod içeriğini seed ON DUPLICATE ile EZME.
