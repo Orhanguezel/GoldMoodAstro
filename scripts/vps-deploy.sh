@@ -33,8 +33,11 @@ build_all() {
   # Sorun toplam RAM degil V8 heap; --max-old-space-size ile cozuluyor
   # (bkz memory deploy_backend_tsc_oom, 2026-07-31 dogrulandi).
   cd "$ROOT/backend"     && { bun install --frozen-lockfile || bun install; } && NODE_OPTIONS=--max-old-space-size=3072 bun run build
-  cd "$ROOT/admin_panel" && { bun install --frozen-lockfile || bun install; } && bun run build
-  cd "$ROOT/frontend"    && { bun install --frozen-lockfile || bun install; } && bun run build
+  # Next .next TEMİZ build: route dizini SİLİNDİĞİNDE incremental build bozuk manifest
+  # birakiyor ("client reference manifest does not exist" → silinmeyen sayfalar da 500).
+  # rm -rf .next ile her deploy temiz uretir (bkz memory next_route_delete_clean_build).
+  cd "$ROOT/admin_panel" && { bun install --frozen-lockfile || bun install; } && rm -rf .next && bun run build
+  cd "$ROOT/frontend"    && { bun install --frozen-lockfile || bun install; } && rm -rf .next && bun run build
   cd "$ROOT"
 }
 
