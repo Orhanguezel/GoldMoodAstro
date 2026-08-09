@@ -123,6 +123,7 @@ export type AdminNavItemKey =
   | 'eko_instagram'
   | 'eko_tiktok'
   | 'eko_pinterest'
+  | 'eko_telegram'
   | 'eko_youtube'
   | 'eko_x_research';
 
@@ -199,6 +200,7 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'eko_instagram', url: '/admin/social/instagram', icon: Instagram },
       { key: 'eko_tiktok', url: '/admin/social/tiktok', icon: Music2 },
       { key: 'eko_pinterest', url: '/admin/social/pinterest', icon: Bookmark },
+      { key: 'eko_telegram', url: '/admin/social/telegram', icon: Send },
       { key: 'eko_youtube', url: '/admin/youtube', icon: Youtube },
       { key: 'eko_x_research', url: '/admin/social/x', icon: Twitter },
     ],
@@ -283,6 +285,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   eko_instagram: 'Instagram',
   eko_tiktok: 'TikTok',
   eko_pinterest: 'Pinterest',
+  eko_telegram: 'Telegram',
   eko_youtube: 'YouTube',
   eko_x_research: 'X (Twitter)',
 };

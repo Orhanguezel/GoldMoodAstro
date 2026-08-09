@@ -97,8 +97,10 @@ export const SOCIAL_PLATFORMS: SocialPlatformConfig[] = [
     description: "Bot token + chat ID bağlantısı ve bildirim yayını.",
     accent: "text-sky-500",
     icon: (size = 20) => <Send size={size} />,
-    connectKind: "manual",
+    connectKind: "external",
     canPublish: true,
+    // /admin/social/telegram → zengin özel sayfaya yönlendirir (youtube gibi).
+    externalHref: "/admin/telegram",
   },
   {
     key: "tiktok",
