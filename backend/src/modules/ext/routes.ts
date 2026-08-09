@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { contentCatalogHandler } from './content-catalog';
+import { articlesHandler, productsHandler } from './content';
 
 /**
  * Dış tüketici (ekosistem sosyal medya) için salt-okuma veri uçları.
@@ -25,4 +26,38 @@ export async function registerExtApi(api: FastifyInstance) {
       },
     },
   }, contentCatalogHandler);
+
+  // ─── B. İçerik kaynağı (Content Source API v1) — base /api/ext/content ───
+  // Ekosistem bunları çekip YENİ sosyal post üretir. Aynı X-Api-Key.
+  api.get('/content/articles', {
+    schema: {
+      tags: ['ext'],
+      summary: 'İçerik/blog/fal öğeleri (post üretimi için)',
+      querystring: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', description: 'blog (varsayılan) | horoscope | tarot (genişletilecek: coffee/dream/numerology/yildizname)' },
+          locale: { type: 'string', default: 'tr' },
+          limit: { type: 'integer', minimum: 1, maximum: 200, default: 50 },
+          period: { type: 'string', default: 'daily', description: 'type=horoscope için: daily|weekly|monthly|transit' },
+        },
+      },
+    },
+  }, articlesHandler);
+
+  api.get('/content/products', {
+    schema: {
+      tags: ['ext'],
+      summary: 'Danışman profilleri (öne çıkan) + ücretsiz araçlar',
+      querystring: {
+        type: 'object',
+        properties: {
+          locale: { type: 'string', default: 'tr' },
+          limit: { type: 'integer', minimum: 1, maximum: 200, default: 50 },
+          sort: { type: 'string', default: 'popular' },
+          include_tools: { type: 'string', description: "'0' → ücretsiz araçları hariç tut" },
+        },
+      },
+    },
+  }, productsHandler);
 }
