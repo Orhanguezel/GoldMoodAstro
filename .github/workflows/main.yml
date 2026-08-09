@@ -37,6 +37,17 @@ on:
   push:
     branches: [main]
 
+# 2026-08-09: art arda push'larda iki deploy AYNI ANDA sunucuda calisiyordu.
+# vps-deploy.sh her Next app icin `rm -rf .next && bun run build` yapiyor; iki kosu
+# ayni dizinde ayni anda build edince .next yarim kaliyor -> tum asset'ler 500,
+# admin/frontend komple aciliyor. Ayni anda TEK deploy calissin.
+# cancel-in-progress: false — calisan deploy'u ortadan kesmek pm2'yi ve .next'i
+# bozuk birakir (bkz memory deploy_pm2_hardcoded_bun_path_outage); sirada beklesin.
+# GitHub grup basina yalnizca EN YENI bekleyen kosuyu tutar, eskileri iptal eder.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   # ─── 1) Derleme kapısı — prod'a dokunmaz ──────────────────────────
   build-check:

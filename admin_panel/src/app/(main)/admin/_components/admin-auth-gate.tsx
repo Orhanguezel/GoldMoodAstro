@@ -20,26 +20,32 @@ export default function AdminAuthGate({ children }: { children: React.ReactNode 
   // RTK GET /auth/status
   const q = useStatusQuery();
 
-  React.useEffect(() => {
-    if (q.isFetching) return;
-    if (q.isUninitialized) return;
-
-    const data = q.data as AuthStatusResponse | undefined;
-    const me = normalizeMeFromStatus(data);
-
-    if (!me || me.isAdmin !== true) {
-      router.replace('/auth/login');
-    }
-  }, [q.isFetching, q.isUninitialized, q.data, router]);
-
-  // Loading state (blank or skeleton)
-  if (q.isFetching || q.isUninitialized) {
-    return null; // istersen burada spinner/skeleton bas
-  }
-
-  // If unauthorized, effect will redirect; avoid flashing UI
   const me = normalizeMeFromStatus(q.data as AuthStatusResponse | undefined);
-  if (!me || me.isAdmin !== true) return null;
+  const isAdmin = me?.isAdmin === true;
+
+  // SADECE ilk yükleme (henüz hiç veri yok). `isFetching` KULLANMA:
+  // authStatus providesTags ['User','Auth'] ve 6 mutation bunları invalidate ediyor
+  // → arka planda her tazelemede isFetching true oluyordu. Eskiden burada null
+  // dönülüyordu, yani TÜM admin layout'u (sidebar + header + içerik) unmount olup
+  // yeniden mount oluyordu: sidebar açık/kapalı durumu, scroll pozisyonu ve açık
+  // diyaloglar sıfırlanıyor, ekran "git-gel" yapıyordu.
+  const firstLoad = q.isUninitialized || q.isLoading;
+
+  // Tazeleme bitmeden yetki kararı verme; 401/403 dışındaki geçici hatada
+  // (ağ blip'i) kullanıcıyı login'e atma — elimizdeki son geçerli veriyle devam et.
+  const settled = !firstLoad && !q.isFetching;
+  const errStatus = (q.error as { status?: number } | undefined)?.status;
+  const unauthorized = q.isError ? errStatus === 401 || errStatus === 403 : !isAdmin;
+
+  React.useEffect(() => {
+    if (settled && unauthorized) router.replace('/auth/login');
+  }, [settled, unauthorized, router]);
+
+  if (firstLoad) return null; // istersen burada spinner/skeleton bas
+
+  // Yetkisizse yönlendirme efektini bekle, UI flash'ı olmasın. Arka plan
+  // tazelemesi sürerken elimizde geçerli admin verisi varsa çocukları KORU.
+  if (!isAdmin) return null;
 
   return <>{children}</>;
 }
