@@ -199,6 +199,438 @@ const AUGUST_2026_DAILY_PLAN: Record<string, { theme: string; focus: string; ang
       pisces: 'tatlı kaçış',
     },
   },
+  '2026-08-08': {
+    theme: 'Ay sembolü: duygunun sana gösterdiği yön.',
+    focus: 'Bugün dikkatini çeken sembolü not et.',
+    angles: {
+      aries: 'iç ritim',
+      taurus: 'güvenlik hissi',
+      gemini: 'sezgisel not',
+      cancer: 'duygu haritası',
+      leo: 'içsel ışık',
+      virgo: 'küçük ritüel',
+      libra: 'huzur alanı',
+      scorpio: 'gizli mesaj',
+      sagittarius: 'işaret',
+      capricorn: 'iç disiplin',
+      aquarius: 'farklı bakış',
+      pisces: 'rüya izi',
+    },
+  },
+  '2026-08-09': {
+    theme: 'Su ve deniz teması: duygular akmak istiyor.',
+    focus: 'Bastırdığın duyguya isim ver.',
+    angles: {
+      aries: 'öfkeyi akıtma',
+      taurus: 'rahatlama',
+      gemini: 'içini dökme',
+      cancer: 'derin duygu',
+      leo: 'kırgınlığı bırakma',
+      virgo: 'arınma',
+      libra: 'ilişkide dürüstlük',
+      scorpio: 'derinlik',
+      sagittarius: 'geniş nefes',
+      capricorn: 'yumuşama',
+      aquarius: 'duyguyu tanıma',
+      pisces: 'akış',
+    },
+  },
+  '2026-08-10': {
+    theme: 'Yeniay yaklaşıyor: alan aç, sadeleş.',
+    focus: 'Yeni niyetten önce eski yükü azalt.',
+    angles: {
+      aries: 'sadeleşme',
+      taurus: 'düzen',
+      gemini: 'zihin boşaltma',
+      cancer: 'ev temizliği',
+      leo: 'ego molası',
+      virgo: 'liste kısaltma',
+      libra: 'karar sadeliği',
+      scorpio: 'bırakma',
+      sagittarius: 'plan daraltma',
+      capricorn: 'öncelik',
+      aquarius: 'fazlalığı atma',
+      pisces: 'sessizlik',
+    },
+  },
+  '2026-08-11': {
+    theme: 'Yeniay arifesi: hangi kapı açılıyor?',
+    focus: 'Yükselenin işaret ettiği alana bak.',
+    angles: {
+      aries: 'görünürlük',
+      taurus: 'kaynak',
+      gemini: 'iletişim kapısı',
+      cancer: 'yuva',
+      leo: 'sahne',
+      virgo: 'düzen alanı',
+      libra: 'ortaklık',
+      scorpio: 'dönüşüm',
+      sagittarius: 'ufuk',
+      capricorn: 'kariyer',
+      aquarius: 'çevre',
+      pisces: 'içsel alan',
+    },
+  },
+  '2026-08-12': {
+    theme: 'Yeniay ve Güneş tutulması: yeni bir sayfa.',
+    focus: 'Hızlı karar yerine net niyet.',
+    angles: {
+      aries: 'net niyet',
+      taurus: 'sağlam temel',
+      gemini: 'doğru cümle',
+      cancer: 'duygusal başlangıç',
+      leo: 'yeni kimlik',
+      virgo: 'yeni sistem',
+      libra: 'yeni denge',
+      scorpio: 'yeni güç',
+      sagittarius: 'yeni yol',
+      capricorn: 'yeni hedef',
+      aquarius: 'yeni fikir',
+      pisces: 'yeni sezgi',
+    },
+  },
+  '2026-08-13': {
+    theme: 'Tutulma sonrası: niyetin ilk işaretleri.',
+    focus: 'Tekrar eden düşünce ve fırsatı fark et.',
+    angles: {
+      aries: 'ilk adım',
+      taurus: 'somut işaret',
+      gemini: 'gelen haber',
+      cancer: 'içsel onay',
+      leo: 'cesaret',
+      virgo: 'detaydaki ipucu',
+      libra: 'gelen teklif',
+      scorpio: 'sezgi teyidi',
+      sagittarius: 'yeni kapı',
+      capricorn: 'ilerleme',
+      aquarius: 'ani fikir',
+      pisces: 'rüya mesajı',
+    },
+  },
+  '2026-08-14': {
+    theme: 'Yol, kapı ve anahtar: sembollerin dili.',
+    focus: 'Önüne çıkan fırsatı küçümseme.',
+    angles: {
+      aries: 'hareket',
+      taurus: 'kalıcı adım',
+      gemini: 'bağlantı',
+      cancer: 'güvenli kapı',
+      leo: 'fırsat',
+      virgo: 'çözüm',
+      libra: 'seçim',
+      scorpio: 'erişim',
+      sagittarius: 'yolculuk',
+      capricorn: 'kapı aralama',
+      aquarius: 'yeni rota',
+      pisces: 'içsel anahtar',
+    },
+  },
+  '2026-08-15': {
+    theme: 'İletişim ve fırsat: gelen haberi oku.',
+    focus: 'Sözden çok uyandırdığı duyguya bak.',
+    angles: {
+      aries: 'doğrudan konuşma',
+      taurus: 'net talep',
+      gemini: 'haber',
+      cancer: 'kalpten mesaj',
+      leo: 'davet',
+      virgo: 'açıklık',
+      libra: 'uzlaşma',
+      scorpio: 'satır arası',
+      sagittarius: 'dürüstlük',
+      capricorn: 'resmi haber',
+      aquarius: 'sürpriz mesaj',
+      pisces: 'sezgisel duyum',
+    },
+  },
+  '2026-08-16': {
+    theme: 'Danışmanla bakmak: kendi haritanı tanı.',
+    focus: 'Genel yorumu kişisel bağlamınla birleştir.',
+    angles: {
+      aries: 'kendini tanıma',
+      taurus: 'değer',
+      gemini: 'soru sorma',
+      cancer: 'kök',
+      leo: 'öz ifade',
+      virgo: 'analiz',
+      libra: 'ilişki dinamiği',
+      scorpio: 'derin bakış',
+      sagittarius: 'anlam',
+      capricorn: 'yapı',
+      aquarius: 'özgünlük',
+      pisces: 'içsel rehber',
+    },
+  },
+  '2026-08-17': {
+    theme: 'Haftanın yükselen mesajları.',
+    focus: 'Enerjini hangi alanda bilinçli kullanacaksın?',
+    angles: {
+      aries: 'başlangıç',
+      taurus: 'istikrar',
+      gemini: 'esneklik',
+      cancer: 'koruma',
+      leo: 'liderlik',
+      virgo: 'düzen',
+      libra: 'işbirliği',
+      scorpio: 'odak',
+      sagittarius: 'genişleme',
+      capricorn: 'sorumluluk',
+      aquarius: 'yenilik',
+      pisces: 'sezgi',
+    },
+  },
+  '2026-08-18': {
+    theme: 'Ruhunun bugün duyması gereken mesaj.',
+    focus: 'İlk aklına gelen cümleyi ciddiye al.',
+    angles: {
+      aries: 'sabır',
+      taurus: 'değişim',
+      gemini: 'derinleşme',
+      cancer: 'sınır',
+      leo: 'alçakgönüllülük',
+      virgo: 'kendine şefkat',
+      libra: 'seçim cesareti',
+      scorpio: 'affetme',
+      sagittarius: 'köklenme',
+      capricorn: 'esneme',
+      aquarius: 'yakınlık',
+      pisces: 'gerçeklik',
+    },
+  },
+  '2026-08-19': {
+    theme: 'Enerji koruma: neyi içeri alıyorsun?',
+    focus: 'Seni yoran temasları azalt.',
+    angles: {
+      aries: 'enerji sınırı',
+      taurus: 'huzur alanı',
+      gemini: 'bilgi filtresi',
+      cancer: 'duygusal koruma',
+      leo: 'onay ihtiyacı',
+      virgo: 'aşırı yüklenme',
+      libra: 'hayır diyebilme',
+      scorpio: 'mesafe',
+      sagittarius: 'dağılmayı toplama',
+      capricorn: 'yük paylaşımı',
+      aquarius: 'kalabalıktan çıkma',
+      pisces: 'empati dengesi',
+    },
+  },
+  '2026-08-20': {
+    theme: 'İlk dördün: niyeti eyleme çevir.',
+    focus: 'Bu hafta atacağın somut adımı seç.',
+    angles: {
+      aries: 'aksiyon',
+      taurus: 'ilk yatırım',
+      gemini: 'mesaj atma',
+      cancer: 'konuşma',
+      leo: 'paylaşma',
+      virgo: 'plan uygulama',
+      libra: 'karar',
+      scorpio: 'kararlılık',
+      sagittarius: 'yola çıkma',
+      capricorn: 'ilerleme',
+      aquarius: 'deneme',
+      pisces: 'somutlaştırma',
+    },
+  },
+  '2026-08-21': {
+    theme: 'Hafifle: kendini fazla ciddiye alma.',
+    focus: '"İyiyim" derken gerçekten iyi misin?',
+    angles: {
+      aries: 'gevşeme',
+      taurus: 'keyif',
+      gemini: 'oyun',
+      cancer: 'içini dökme',
+      leo: 'kahkaha',
+      virgo: 'mükemmeliyetçilik molası',
+      libra: 'rahatlama',
+      scorpio: 'maskeyi indirme',
+      sagittarius: 'neşe',
+      capricorn: 'ara verme',
+      aquarius: 'tuhaflık',
+      pisces: 'dürüstlük',
+    },
+  },
+  '2026-08-22': {
+    theme: 'Sinastri: aklındaki kişi seni nasıl görüyor?',
+    focus: 'Karşı tarafın diline dikkat et.',
+    angles: {
+      aries: 'doğrudanlık',
+      taurus: 'güven',
+      gemini: 'anlaşılma',
+      cancer: 'yakınlık',
+      leo: 'takdir',
+      virgo: 'destek',
+      libra: 'uyum',
+      scorpio: 'derin bağ',
+      sagittarius: 'özgürlük',
+      capricorn: 'ciddiyet',
+      aquarius: 'arkadaşlık',
+      pisces: 'duygusal dil',
+    },
+  },
+  '2026-08-23': {
+    theme: 'Eski ev, eski kişi: geçmiş neden geliyor?',
+    focus: 'Kapanmamış bir cümleyi tamamla.',
+    angles: {
+      aries: 'geçmiş öfke',
+      taurus: 'eski alışkanlık',
+      gemini: 'söylenmemiş söz',
+      cancer: 'anı',
+      leo: 'eski gurur',
+      virgo: 'eski eleştiri',
+      libra: 'eski ilişki',
+      scorpio: 'kapanmamış hesap',
+      sagittarius: 'eski inanç',
+      capricorn: 'eski sorumluluk',
+      aquarius: 'eski çevre',
+      pisces: 'eski rüya',
+    },
+  },
+  '2026-08-24': {
+    theme: 'Dolunay yaklaşıyor: hangi konu görünür oluyor?',
+    focus: 'Görmezden geldiğin konuyu adlandır.',
+    angles: {
+      aries: 'görünen ihtiyaç',
+      taurus: 'para gerçeği',
+      gemini: 'net cümle',
+      cancer: 'aile konusu',
+      leo: 'ilgi ihtiyacı',
+      virgo: 'sağlık uyarısı',
+      libra: 'ilişki dengesi',
+      scorpio: 'gerçek duygu',
+      sagittarius: 'yön sorusu',
+      capricorn: 'iş yükü',
+      aquarius: 'aidiyet',
+      pisces: 'sınır ihtiyacı',
+    },
+  },
+  '2026-08-25': {
+    theme: 'Sonsuzluk sembolü: tekrar eden döngü.',
+    focus: 'Hangi döngüyü kapatmaya hazırsın?',
+    angles: {
+      aries: 'aynı tepkiyi kırma',
+      taurus: 'inatçı döngü',
+      gemini: 'aynı düşünce',
+      cancer: 'duygusal tekrar',
+      leo: 'aynı beklenti',
+      virgo: 'kontrol döngüsü',
+      libra: 'aynı kararsızlık',
+      scorpio: 'aynı bağ',
+      sagittarius: 'aynı kaçış',
+      capricorn: 'aynı yük',
+      aquarius: 'aynı mesafe',
+      pisces: 'aynı hayal',
+    },
+  },
+  '2026-08-26': {
+    theme: 'Dolunay ön hazırlık: nefes alacak alan.',
+    focus: 'Neyi bıraktığında rahatlarsın?',
+    angles: {
+      aries: 'acele',
+      taurus: 'katılık',
+      gemini: 'aşırı düşünme',
+      cancer: 'fazla sahiplenme',
+      leo: 'onay arayışı',
+      virgo: 'kusursuzluk',
+      libra: 'herkesi memnun etme',
+      scorpio: 'kontrol',
+      sagittarius: 'abartı',
+      capricorn: 'fazla yük',
+      aquarius: 'uzaklık',
+      pisces: 'kurtarıcılık',
+    },
+  },
+  '2026-08-27': {
+    theme: 'Dolunay arifesi: bırakma listesi.',
+    focus: 'Tutuyorum / bırakıyorum diye ikiye ayır.',
+    angles: {
+      aries: 'gereksiz savaş',
+      taurus: 'eski konfor',
+      gemini: 'gürültü',
+      cancer: 'eski kırgınlık',
+      leo: 'rol',
+      virgo: 'öz eleştiri',
+      libra: 'sahte denge',
+      scorpio: 'kin',
+      sagittarius: 'boş vaat',
+      capricorn: 'aşırı ciddiyet',
+      aquarius: 'yalnızlaşma',
+      pisces: 'belirsizlik',
+    },
+  },
+  '2026-08-28': {
+    theme: 'Dolunay ve Ay tutulması: kapanış anı.',
+    focus: 'Biten şeye teşekkür et, tutma.',
+    angles: {
+      aries: 'kapanış',
+      taurus: 'sonuç',
+      gemini: 'son söz',
+      cancer: 'duygusal kapanış',
+      leo: 'sahneden inme',
+      virgo: 'tamamlama',
+      libra: 'ayrışma',
+      scorpio: 'dönüşüm',
+      sagittarius: 'yön değişimi',
+      capricorn: 'hedef revizyonu',
+      aquarius: 'kopuş',
+      pisces: 'teslimiyet',
+    },
+  },
+  '2026-08-29': {
+    theme: 'Tutulma sonrası: yükü hafifleyen alan.',
+    focus: 'Rahatladığın yeri fark et ve orada kal.',
+    angles: {
+      aries: 'hafiflik',
+      taurus: 'rahatlama',
+      gemini: 'netlik',
+      cancer: 'huzur',
+      leo: 'özgüven',
+      virgo: 'sadelik',
+      libra: 'denge',
+      scorpio: 'boşalma',
+      sagittarius: 'genişleme',
+      capricorn: 'yük azalması',
+      aquarius: 'özgürlük',
+      pisces: 'akış',
+    },
+  },
+  '2026-08-30': {
+    theme: 'Ağustos sana ne öğretti?',
+    focus: 'Ay başındaki niyetini bugünle karşılaştır.',
+    angles: {
+      aries: 'öğrenilen sabır',
+      taurus: 'öğrenilen esneklik',
+      gemini: 'öğrenilen odak',
+      cancer: 'öğrenilen sınır',
+      leo: 'öğrenilen alçakgönüllülük',
+      virgo: 'öğrenilen şefkat',
+      libra: 'öğrenilen karar',
+      scorpio: 'öğrenilen güven',
+      sagittarius: 'öğrenilen köklenme',
+      capricorn: 'öğrenilen dinlenme',
+      aquarius: 'öğrenilen yakınlık',
+      pisces: 'öğrenilen gerçeklik',
+    },
+  },
+  '2026-08-31': {
+    theme: "Eylül'ün kapısı: yeni ayın niyeti.",
+    focus: 'Eylül için tek bir cümle kur.',
+    angles: {
+      aries: 'yeni hedef',
+      taurus: 'yeni düzen',
+      gemini: 'yeni bilgi',
+      cancer: 'yeni güven',
+      leo: 'yeni sahne',
+      virgo: 'yeni sistem',
+      libra: 'yeni denge',
+      scorpio: 'yeni derinlik',
+      sagittarius: 'yeni ufuk',
+      capricorn: 'yeni sorumluluk',
+      aquarius: 'yeni çevre',
+      pisces: 'yeni sezgi',
+    },
+  },
 };
 
 const PARTS: Array<{ part: 1 | 2; signs: SignKey[]; label: string }> = [
@@ -269,21 +701,59 @@ function uploadsDir(): string {
   return env.LOCAL_STORAGE_ROOT ? path.resolve(env.LOCAL_STORAGE_ROOT) : path.resolve(process.cwd(), 'uploads');
 }
 
+// Plan tablosu olmayan günler için: sabit tek cümle YERİNE tarihe göre dönen havuz.
+// Aksi halde her gün aynı metin basılır (Ağustos 8+ bu yüzden tekrar etmişti).
+const GENERIC_ANGLES: Record<'Ateş' | 'Toprak' | 'Hava' | 'Su', string[]> = {
+  Ateş: ['cesaret', 'ilk adım', 'görünürlük', 'enerji yönetimi', 'sabır', 'yeni başlangıç', 'odak'],
+  Toprak: ['düzen', 'somut adım', 'kaynak', 'beden', 'istikrar', 'öncelik', 'sadeleşme'],
+  Hava: ['iletişim', 'net cümle', 'karar', 'yeni fikir', 'çevre', 'öğrenme', 'zihin temizliği'],
+  Su: ['sezgi', 'duygusal sınır', 'yakınlık', 'iç ses', 'bırakma', 'huzur alanı', 'derinlik'],
+};
+
+const GENERIC_ADVICE: Record<'Ateş' | 'Toprak' | 'Hava' | 'Su', string[]> = {
+  Ateş: [
+    'Küçük ama cesur bir adım yeter.',
+    'Hızlanmadan önce yönünü netleştir.',
+    'Enerjini tek bir işe topla.',
+  ],
+  Toprak: [
+    'Planı somutlaştır, bedenini ihmal etme.',
+    'Bugün bir işi bitirmek, üç işe başlamaktan iyidir.',
+    'Sonucu değil, sürekliliği ölç.',
+  ],
+  Hava: [
+    'Net cümleler seni karmaşadan korur.',
+    'Söylemeden önce bir kez daha düşün, sonra söyle.',
+    'Bilgiyi azalt, anlamı artır.',
+  ],
+  Su: [
+    'Duygunu dinle; iç sesin ayrıntıda konuşur.',
+    'Hissettiğini bastırma, isimlendir.',
+    'Sınır koymak, uzaklaşmak değildir.',
+  ],
+};
+
+/** dateStr + burç için deterministik ama günden güne değişen indeks. */
+function rotationSeed(sign: SignKey, dateStr: string): number {
+  const dayNumber = Math.floor(Date.parse(`${dateStr}T00:00:00.000Z`) / 86_400_000);
+  const signIndex = Math.max(0, SIGN_ORDER.indexOf(sign));
+  return dayNumber * 7 + signIndex * 3;
+}
+
 function fallbackMessage(sign: SignKey, dateStr: string): string {
   const planned = AUGUST_2026_DAILY_PLAN[dateStr];
   const element = SIGN_ELEMENT[sign];
-  const advice = {
-    Ateş: 'Küçük ama cesur bir adım yeter.',
-    Toprak: 'Planı somutlaştır, bedenini ihmal etme.',
-    Hava: 'Net cümleler seni karmaşadan korur.',
-    Su: 'Duygunu dinle; iç sesin ayrıntıda konuşur.',
-  }[element];
+  const seed = rotationSeed(sign, dateStr);
+  const advicePool = GENERIC_ADVICE[element];
+  const advice = advicePool[seed % advicePool.length]!;
 
   if (planned) {
     return `${SIGN_LABEL[sign]} için bugün ${planned.angles[sign]} alanı öne çıkıyor. ${advice}`;
   }
 
-  return `${SIGN_LABEL[sign]} için bugün iç ses ve günlük ritim öne çıkıyor. ${advice}`;
+  const anglePool = GENERIC_ANGLES[element];
+  const angle = anglePool[seed % anglePool.length]!;
+  return `${SIGN_LABEL[sign]} için bugün ${angle} alanı öne çıkıyor. ${advice}`;
 }
 
 function socialCardMessage(sign: SignKey, raw: string, dateStr: string): string {
@@ -303,7 +773,12 @@ function socialCardMessage(sign: SignKey, raw: string, dateStr: string): string 
   return text.length > 145 ? `${text.slice(0, 142).trim()}…` : text;
 }
 
-async function renderZodiacCard(sign: SignKey, dateStr: string, message: string): Promise<{ filePath: string; publicUrl: string }> {
+async function renderZodiacCard(
+  sign: SignKey,
+  dateStr: string,
+  message: string,
+  force = false,
+): Promise<{ filePath: string; publicUrl: string }> {
   const dateLabel = prettyDate(dateStr);
   const dir = path.join(uploadsDir(), 'social', 'daily-horoscope-all', dateStr);
   fs.mkdirSync(dir, { recursive: true });
@@ -311,7 +786,8 @@ async function renderZodiacCard(sign: SignKey, dateStr: string, message: string)
   const fileName = `${dateStr}-${sign}.png`;
   const filePath = path.join(dir, fileName);
   const publicUrl = `${PUBLIC_BASE}/uploads/social/daily-horoscope-all/${dateStr}/${fileName}`;
-  if (fs.existsSync(filePath)) return { filePath, publicUrl };
+  // force=true → gerçek LLM yorumu geldiğinde bayat kartı yeniden bas (bkz. refreshHoroscopeCardsForDate)
+  if (!force && fs.existsSync(filePath)) return { filePath, publicUrl };
 
   const zodiacPath = path.resolve(uploadsDir(), 'zodiac', `${sign}.png`);
   const repoFallbackPath = path.resolve(process.cwd(), 'uploads', 'zodiac', `${sign}.png`);
@@ -480,7 +956,7 @@ async function cancelLegacySingleSignPosts(): Promise<number> {
   return Number((result as { rowsAffected?: number }).rowsAffected ?? 0);
 }
 
-async function buildPart(dateStr: string, part: 1 | 2): Promise<{
+async function buildPart(dateStr: string, part: 1 | 2, opts: { force?: boolean } = {}): Promise<{
   title: string;
   caption: string;
   mediaUrls: string[];
@@ -506,7 +982,7 @@ async function buildPart(dateStr: string, part: 1 | 2): Promise<{
     const horoscope = await getDailyHoroscope(sign, dateStr);
     if (!horoscope?.content) missing += 1;
     const message = socialCardMessage(sign, horoscope?.content ?? '', dateStr);
-    const { publicUrl } = await renderZodiacCard(sign, dateStr, message);
+    const { publicUrl } = await renderZodiacCard(sign, dateStr, message, opts.force ?? false);
     mediaUrls.push(publicUrl);
     captionLines.push(`${SIGN_LABEL[sign]}: ${message}`);
   }
@@ -572,6 +1048,83 @@ async function ensurePartScheduled(dateStr: string, part: 1 | 2, opts: { dryRun?
   return { status: 'scheduled', detail: `${built.sourceRef} @ ${built.scheduledAt.toISOString()}`, missing: built.missing };
 }
 
+const REFRESH_MARK = '[llm-refresh]';
+const PLAN_REFRESH_MARK = '[plan-refresh]';
+
+/**
+ * Kartlar yayından ~8 gün önce planlanır; o an `daily_horoscopes` henüz üretilmemiştir
+ * (LLM job her gün 02:00'de SADECE o günü yazar). Bu yüzden görsele + caption'a jenerik
+ * fallback metni basılır ve `existsSync` cache'i yüzünden bir daha güncellenmez.
+ *
+ * Bu fonksiyon yayın gününde gerçek yorum hazır olduğunda kartları YENİDEN basar ve
+ * hâlâ `scheduled` olan post satırlarının caption/media alanlarını günceller.
+ * Yayınlanmış (posted) veya iptal edilmiş satırlara dokunmaz.
+ */
+export async function refreshHoroscopeCardsForDate(
+  dateStr = isoDate(),
+  opts: { allowFallback?: boolean } = {},
+): Promise<{ status: string; detail?: string }> {
+  const refs = [sourceRef(dateStr, 1), sourceRef(dateStr, 2)];
+  const rows = await socialDb
+    .select({ id: socialPosts.id, sourceRef: socialPosts.sourceRef, notes: socialPosts.notes })
+    .from(socialPosts)
+    .where(
+      and(
+        eq(socialPosts.subType, TENANT),
+        eq(socialPosts.status, 'scheduled'),
+        sql`${socialPosts.sourceRef} IN (${refs[0]}, ${refs[1]})`,
+      ),
+    );
+  if (!rows.length) return { status: 'skipped', detail: `${dateStr}: guncellenecek scheduled kayit yok` };
+
+  // allowFallback: gelecek günleri elle tazelemek için (LLM yorumu henüz yok, plan
+  // tablosundaki güne özel metinle yeniden bas). Cron bunu KULLANMAZ.
+  const allowFallback = opts.allowFallback ?? false;
+  const pending = allowFallback ? rows : rows.filter((row) => !(row.notes ?? '').includes(REFRESH_MARK));
+  if (!pending.length) return { status: 'skipped', detail: `${dateStr}: zaten yenilenmis` };
+
+  // Tüm burçların gerçek yorumu hazır değilse dokunma — yarım yenileme yapma.
+  if (!allowFallback) {
+    for (const sign of SIGN_ORDER) {
+      const horoscope = await getDailyHoroscope(sign, dateStr);
+      if (!horoscope?.content) {
+        return { status: 'skipped', detail: `${dateStr}: LLM yorumu eksik (${sign})` };
+      }
+    }
+  }
+
+  const mark = allowFallback ? PLAN_REFRESH_MARK : REFRESH_MARK;
+  const markNote = allowFallback
+    ? `${PLAN_REFRESH_MARK} ${dateStr} gun-ozel plan metniyle yeniden basildi.`
+    : `${REFRESH_MARK} ${dateStr} gercek gunluk yorumla yeniden basildi.`;
+
+  let updated = 0;
+  for (const row of pending) {
+    const part: 1 | 2 = row.sourceRef === refs[1] ? 2 : 1;
+    const built = await buildPart(dateStr, part, { force: true });
+    // Aynı işaret satırını çoğaltma — her tazelemede tek satır kalsın.
+    const keptNotes = (row.notes ?? '')
+      .split('\n')
+      .filter((line) => !line.includes(mark))
+      .join('\n')
+      .trim();
+    await socialDb
+      .update(socialPosts)
+      .set({
+        title: built.title,
+        caption: built.caption,
+        imageUrl: built.imageUrl,
+        mediaUrls: built.mediaUrls,
+        notes: `${keptNotes}\n${markNote}`.trim(),
+      } as any)
+      .where(eq(socialPosts.id, row.id));
+    updated += 1;
+  }
+
+  console.log(`[social-horoscope] ${dateStr} kartlari gercek yorumla yenilendi (${updated} post)`);
+  return { status: 'refreshed', detail: `${dateStr}: ${updated} post` };
+}
+
 /** Bir gün için iki carousel'i planlar. Eski tek-burç cron'u üretmez. */
 export async function ensureDailyHoroscopePostScheduled(
   dateStr = isoDate(),
@@ -635,6 +1188,14 @@ export function registerSocialHoroscopeCron(_app?: unknown) {
       console.log('[social-horoscope] tum-burclar plan kontrol:', JSON.stringify(res));
     } catch (e) {
       console.error('[social-horoscope] hata:', (e as Error).message);
+    }
+    try {
+      // Yayın saatinden önce (LLM job 02:00, yayın 06:00 UTC) bugünün kartlarını
+      // gerçek günlük yorumla yeniden bas.
+      const refreshed = await refreshHoroscopeCardsForDate(isoDate(now));
+      console.log('[social-horoscope] kart yenileme:', JSON.stringify(refreshed));
+    } catch (e) {
+      console.error('[social-horoscope] kart yenileme hatasi:', (e as Error).message);
     }
   };
   setInterval(tick, HOUR_MS);
