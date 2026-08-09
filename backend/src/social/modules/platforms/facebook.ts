@@ -257,6 +257,32 @@ export async function getPostInsights(postId: string) {
   };
 }
 
+// ─── Gonderi Sil ────────────────────────────────────────────
+/**
+ * Yayinlanmis FB gonderisini siler (panel silmesi FB'den de silsin). Page token gerekli.
+ * `alreadyGone`: gonderi zaten yoksa (404 / code 100) — hata degil, DB kaydi silinebilir.
+ * Diger hatalarda httpStatus'lu Error firlatir (cagiran auth/gecici ayrimini yapar).
+ */
+export async function facebookPostDelete(
+  token: string,
+  postId: string
+): Promise<{ alreadyGone?: boolean }> {
+  const res = await fetch(
+    `${FB_GRAPH_URL}/${encodeURIComponent(postId)}?access_token=${encodeURIComponent(token)}`,
+    { method: "DELETE" }
+  );
+  if (res.ok) return {};
+  const data = (await res.json().catch(() => ({}))) as FBError;
+  const code = data.error?.code;
+  // Zaten silinmis / bulunamadi → sorun degil.
+  if (res.status === 404 || code === 100) return { alreadyGone: true };
+  const err = new Error(
+    `Facebook gonderi silinemedi: ${data.error?.message || res.statusText}`
+  ) as Error & { httpStatus?: number };
+  err.httpStatus = res.status;
+  throw err;
+}
+
 // ─── Sayfa Gonderilerini Al ─────────────────────────────────
 /** Sayfanin yayinlanmis gonderilerini ceker (begeni/yorum/paylasim sayilariyla). */
 export async function getPagePosts(

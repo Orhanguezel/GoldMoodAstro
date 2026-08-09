@@ -13,6 +13,7 @@ import {
 } from "./validation";
 import * as publisher from "../platforms/publisher";
 import * as xPlatform from "../platforms/x";
+import * as facebook from "../platforms/facebook";
 import { enqueueVideoEditJob, getVideoEditQueue } from "../../core/queue";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -220,8 +221,55 @@ export async function remove(
     }
   }
 
+  // ─── Facebook: yayinlanmis page postu varsa FB'den de sil ──────────────
+  // Ayni hibrit politika: 404/zaten-yok = sorun degil; 400/401/403 (auth/yetki) = kaydi
+  // KORU + 502; gecici hata (429/5xx/ag) = kaydi sil + uyari.
+  let fbDeleteWarning: string | undefined;
+  if (existing.fbPostId) {
+    const creds = await publisher.getFbCredsForTenant(existing.subType ?? "");
+    if (!creds) {
+      fbDeleteWarning = "Facebook hesabi bagli degil; gonderi FB'den silinemedi, panel kaydi silindi.";
+      req.log.warn({ postId: existing.id, tenant: existing.subType }, fbDeleteWarning);
+    } else {
+      try {
+        const result = await facebook.facebookPostDelete(creds.token, existing.fbPostId);
+        if (result.alreadyGone) {
+          req.log.info(
+            { postId: existing.id, fbPostId: existing.fbPostId },
+            "FB gonderi zaten yok (elle silinmis), DB kaydi siliniyor"
+          );
+        }
+      } catch (err) {
+        const status = (err as Error & { httpStatus?: number }).httpStatus;
+        const isHardFailure = status === 400 || status === 401 || status === 403;
+        req.log.error(
+          { err, postId: existing.id, fbPostId: existing.fbPostId, status, isHardFailure },
+          "FB gonderi silinemedi"
+        );
+        if (isHardFailure) {
+          return reply.status(502).send({
+            error: "Gonderi Facebook'tan silinemedi (kayit korundu, kontrol et): " + (err as Error).message,
+          });
+        }
+        fbDeleteWarning =
+          "Gonderi Facebook'tan silinemedi (gecici sorun); panel kaydi silindi ama gonderi hala canli olabilir: " +
+          (err as Error).message;
+      }
+    }
+  }
+
+  // ─── Instagram: Graph API yayinlanmis medyayi SILMEYE IZIN VERMIYOR ─────
+  // (Meta kisiti — kod degil.) Kullaniciyi bilgilendir: IG uygulamasindan elle silmeli.
+  let igDeleteWarning: string | undefined;
+  if (existing.igMediaId) {
+    igDeleteWarning =
+      "Instagram gonderisi API'den silinemez (Instagram kisiti); panel kaydi silindi ama IG'de kalir — IG uygulamasindan elle silin.";
+    req.log.info({ postId: existing.id, igMediaId: existing.igMediaId }, igDeleteWarning);
+  }
+
   await repo.deletePost(existing.id);
-  return reply.send({ ok: true, ...(xDeleteWarning ? { warning: xDeleteWarning } : {}) });
+  const warnings = [xDeleteWarning, fbDeleteWarning, igDeleteWarning].filter(Boolean);
+  return reply.send({ ok: true, ...(warnings.length ? { warning: warnings.join(" ") } : {}) });
 }
 
 export async function schedule(

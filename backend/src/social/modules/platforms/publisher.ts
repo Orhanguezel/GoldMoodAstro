@@ -184,6 +184,26 @@ export async function getXCredsForTenant(tenantKey: string): Promise<OAuth1Creds
   }
 }
 
+/** Tenant'in aktif Facebook page hesabi (pageId + token). Panel silmesi FB'den de silsin diye. */
+export async function getFbCredsForTenant(
+  tenantKey: string
+): Promise<{ pageId: string; token: string } | null> {
+  const rows = await db
+    .select()
+    .from(platformAccounts)
+    .where(
+      and(
+        eq(platformAccounts.tenantKey, tenantKey),
+        eq(platformAccounts.platform, "facebook"),
+        eq(platformAccounts.isActive, 1)
+      )
+    );
+  const acc = rows[0];
+  const token = acc?.pageToken || acc?.accessToken;
+  if (!acc?.pageId || !token) return null;
+  return { pageId: acc.pageId, token };
+}
+
 function inferMimeTypeFromUrl(url: string): string | null {
   const pathname = new URL(url).pathname.toLowerCase();
   if (pathname.endsWith(".jpg") || pathname.endsWith(".jpeg")) return "image/jpeg";
