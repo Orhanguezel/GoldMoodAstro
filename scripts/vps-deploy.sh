@@ -45,6 +45,11 @@ build_next() {
     echo "HATA: $d build TAMAMLANAMADI (.next/BUILD_ID yok) — kapasite/bellek bak"
     return 1
   fi
+  # Turbopack chunk adi noktayla biterse "<ad>..js" olur; Next static handler ".."yi
+  # path-traversal sanip 404 doner -> o chunk'a referans veren TUM sayfalar tarayicida
+  # ChunkLoadError. Dosya diskte durdugu icin "bayat chunk" gibi gorunur. Her build'de
+  # kura; bu yuzden build sonrasi otomatik duzeltiyoruz.
+  bash "$ROOT/scripts/fix-dotdot-chunks.sh" "$ROOT/$d" || return 1
 }
 
 build_all() {
