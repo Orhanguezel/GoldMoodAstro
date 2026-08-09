@@ -10,10 +10,31 @@ Bunun üzerine her gün bir ek büyüme/dönüşüm içeriği planlanır: reel, 
 
 ## Ağustos 2026 ana gökyüzü tarihleri
 
-- 6 Ağustos: Son dördün
-- 12 Ağustos: Yeniay ve Güneş Tutulması gündemi
-- 20 Ağustos: İlk dördün
-- 28 Ağustos: Dolunay ve Ay Tutulması gündemi
+> **Doğrulandı (9 Ağu 2026):** aşağıdaki dört tarih sitenin Swiss Ephemeris motoruyla
+> (`scripts/sky-report.ts`) kontrol edildi, dördü de doğru.
+
+| Tarih | Plan | Efemeris doğrulaması |
+|---|---|---|
+| 6 Ağustos | Son dördün | ✅ Son dördün — Boğa 18° |
+| 12 Ağustos | Yeniay ve Güneş Tutulması | ✅ Yeniay — Aslan 15° |
+| 20 Ağustos | İlk dördün | ✅ İlk dördün — Yay 0° |
+| 28 Ağustos | Dolunay ve Ay Tutulması | ✅ Dolunay — Balık 7° |
+
+## İçerik kaynağı kuralı (9 Ağustos 2026'da eklendi)
+
+İçerik metinleri başlangıçta üretim script'ine elle yazılmıştı. Denetimde iki post
+astrolojik olarak yanlış çıktı (burçlar elemente göre gruplanmış, oysa lunasyonun hangi
+eve düştüğü yükselene göre hesaplanır) ve bazı görsel/metin çiftleri birbirinden
+ayrışmıştı. Kural değişti:
+
+- **Olgu motordan gelir:** gezegen konumu ve ay fazı Swiss Ephemeris'ten; sembol ve kart
+  anlamları sitenin kendi sözlüğünden (`dream_symbols`, `coffee_symbols`, `tarot_cards`).
+- **Üslup editöryel kalır:** nasıl anlatıldığı, hangi soruyla açıldığı, CTA.
+- Lunasyon günlerinin caption'ına 12 yükselenin ev dağılımı **hesaplanarak** eklenir.
+- Sembol içeriklerinde metin ve görsel **aynı slug'dan** türer; ayrışma yapısal olarak
+  imkânsız.
+
+Detay ve rakip analizi: [İçerik Metodolojisi ve Rakip Analizi](GoldMoodAstro-Icerik-Metodolojisi-ve-Rakip-Analizi.md)
 
 ## Günlük sabit içerik formatı
 
