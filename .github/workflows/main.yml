@@ -111,16 +111,23 @@ jobs:
           # ConnectTimeout dusuk tutulur: baglanti kurulamazsa hizli fail edip retry'a gecsin.
           # ServerAlive*: uzun/sessiz build sirasinda oturum idle dusmesin.
           SSH_OPTS="-4 -i $KEYFILE -o ConnectTimeout=40 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR"
+          # GitHub runner -> VPS :22 zaman zaman dakikalarca timeout veriyor (runner agi
+          # / IP araligi flaky). 4 deneme/45s (~3dk) yetmiyordu; 8 denemeye + artan
+          # backoff'a cikardik (~10dk pencere) ki uzun blip'ler de yakalansin. Yine de
+          # basarisiz olursa lokalden manuel: ssh goldmoodastro 'bash -s' < scripts/vps-deploy.sh
+          MAX=8
+          BACKOFFS="45 60 60 90 90 120 120"
           code=1
-          for attempt in 1 2 3 4; do
-            echo "== Deploy denemesi $attempt/4 =="
+          for attempt in $(seq 1 $MAX); do
+            echo "== Deploy denemesi $attempt/$MAX =="
             ssh $SSH_OPTS "$VPS_USER@$VPS_HOST" 'bash -s' < scripts/vps-deploy.sh
             code=$?
             # ssh exit 255 = baglanti/auth hatasi (dial timeout dahil) -> retry.
             # Diger kodlar (0 basari, 1 rollback) remote script'ten gelir -> final, retry etme.
-            if [ "$code" -eq 255 ] && [ "$attempt" -lt 4 ]; then
-              echo "::warning::SSH baglanti hatasi (deneme $attempt/4) — 45s sonra tekrar"
-              sleep 45
+            if [ "$code" -eq 255 ] && [ "$attempt" -lt "$MAX" ]; then
+              wait_s=$(echo "$BACKOFFS" | cut -d' ' -f"$attempt"); wait_s="${wait_s:-120}"
+              echo "::warning::SSH baglanti hatasi (deneme $attempt/$MAX) — ${wait_s}s sonra tekrar"
+              sleep "$wait_s"
               continue
             fi
             break

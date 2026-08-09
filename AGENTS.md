@@ -2,6 +2,14 @@
 
 Bu dosya Codex'in okuyup çalıştığı talimat dosyasıdır.
 
+## Aktif Telegram Büyüme Görevi (2026-08-04)
+
+- Strateji: [`TELEGRAM-BUYUME-STRATEJISI.md`](./TELEGRAM-BUYUME-STRATEJISI.md)
+- Uygulama checklist'i: [`TELEGRAM-BUYUME-CHECKLIST.md`](./TELEGRAM-BUYUME-CHECKLIST.md)
+- Sonraki oturumlarda checklist kaldığı yerden sürdürülür; tamamlanan maddelere tarih ve kısa sonuç eklenir.
+- Public Telegram grubuna sağlık/deploy uyarısı gönderilmez; yalnız sosyal içerik ve topluluk paylaşımları gönderilir.
+- Bot token'ı veya başka secret hiçbir Markdown/Git dosyasına yazılmaz.
+
 ---
 
 ## 🔴 AKTIF GOREV — Sosyal medya & site gorselleri uretimi

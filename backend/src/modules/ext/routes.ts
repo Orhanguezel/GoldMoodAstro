@@ -32,13 +32,16 @@ export async function registerExtApi(api: FastifyInstance) {
   api.get('/content/articles', {
     schema: {
       tags: ['ext'],
-      summary: 'İçerik/blog/fal öğeleri (post üretimi için)',
+      summary: 'İçerik/blog/fal öğeleri (post üretimi için) — v1.1 {items,total,hasMore}',
       querystring: {
         type: 'object',
         properties: {
           type: { type: 'string', description: 'blog (varsayılan) | horoscope | tarot | coffee | dream' },
           locale: { type: 'string', default: 'tr' },
-          limit: { type: 'integer', minimum: 1, maximum: 200, default: 50 },
+          limit: { type: 'integer', minimum: 1, maximum: 60, default: 20 },
+          offset: { type: 'integer', minimum: 0, default: 0 },
+          q: { type: 'string', description: 'arama (başlık/içerik)' },
+          sort: { type: 'string' },
           period: { type: 'string', default: 'daily', description: 'type=horoscope için: daily|weekly|monthly|transit' },
         },
       },
@@ -48,12 +51,14 @@ export async function registerExtApi(api: FastifyInstance) {
   api.get('/content/products', {
     schema: {
       tags: ['ext'],
-      summary: 'Danışman profilleri (öne çıkan) + ücretsiz araçlar',
+      summary: 'Danışman profilleri (öne çıkan) + ücretsiz araçlar — v1.1 {items,total,hasMore}',
       querystring: {
         type: 'object',
         properties: {
           locale: { type: 'string', default: 'tr' },
-          limit: { type: 'integer', minimum: 1, maximum: 200, default: 50 },
+          limit: { type: 'integer', minimum: 1, maximum: 60, default: 20 },
+          offset: { type: 'integer', minimum: 0, default: 0 },
+          q: { type: 'string', description: 'arama (isim/uzmanlık)' },
           sort: { type: 'string', default: 'popular' },
           include_tools: { type: 'string', description: "'0' → ücretsiz araçları hariç tut" },
         },

@@ -1,17 +1,17 @@
 import type { RouteHandler } from 'fastify';
 import { z } from 'zod';
-import { sql } from 'drizzle-orm';
+import { sql, type SQL } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { listApprovedConsultants } from '@/modules/consultants/repository';
 
 /**
- * B — İÇERİK KAYNAĞI (dış tüketici: ekosistem sosyal medya, "Content Source API v1").
+ * B — İÇERİK KAYNAĞI (dış tüketici: ekosistem sosyal medya, "Content Source API v1.1").
  *
  * Ekosistem bu uçlardan goldmood'un içeriğini çekip YENİ sosyal post ÜRETİR
- * (1a analiz feed'inden AYRI yön). Standart adaptör şekli:
- *   GET {base}/articles?type=&locale=&limit=&is_published=1   → içerik/blog/fal
- *   GET {base}/products?sort=popular&limit=                   → danışman + ücretsiz araç
- * base = https://goldmoodastro.com/api/ext/content, auth = X-Api-Key (grup seviyesinde).
+ * (1a analiz feed'inden AYRI yön). Standart adaptör (v1.1):
+ *   GET {base}/articles?type=&locale=&limit=&offset=&q=&sort=  → içerik/blog/fal
+ *   GET {base}/products?limit=&offset=&q=&sort=popular         → danışman + ücretsiz araç
+ * Yanıt: { items, total, hasMore }. base = /api/ext/content, auth = X-Api-Key (grup).
  *
  * Kullanıcı isteği (2026-08-09): günlük fallar + tarot + fal içerikleri + danışman
  * profilleri paylaşılabilsin → /articles type registry ile genişletilir.
@@ -25,7 +25,6 @@ function storefrontBase(): string {
   ).replace(/\/$/, '');
 }
 
-// Göreli asset yolunu mutlak URL'ye çevir (zaten mutlaksa dokunma).
 function absUrl(pathOrUrl: string | null | undefined): string | null {
   if (!pathOrUrl) return null;
   if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
@@ -47,6 +46,19 @@ function rows<T = any>(result: unknown): T[] {
   return (Array.isArray((result as any)?.[0]) ? (result as any)[0] : (result as any)) as T[];
 }
 
+// COUNT(*) sorgusundan tek sayı çıkar.
+function countOf(result: unknown): number {
+  const r = rows<any>(result);
+  const first = r?.[0] ?? {};
+  const v = first.total ?? first.count ?? first['COUNT(*)'] ?? Object.values(first)[0];
+  return Number(v) || 0;
+}
+
+// q → LIKE kalıbı (özel karakterleri kaçır).
+function likePattern(q: string): string {
+  return `%${q.replace(/[%_\\]/g, (m) => '\\' + m)}%`;
+}
+
 const SIGN_TR: Record<string, string> = {
   aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
   leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
@@ -56,24 +68,36 @@ const PERIOD_TR: Record<string, string> = {
   daily: 'Günlük', weekly: 'Haftalık', monthly: 'Aylık', transit: 'Transit',
 };
 
+type FetchOpts = { locale: string; limit: number; offset: number; q: string | null; period: string };
+type FetchResult = { items: any[]; total: number };
+
 // ─────────────────────────────────────────────────────────────
 // /articles — içerik türleri (registry ile genişletilebilir)
 // ─────────────────────────────────────────────────────────────
 
-async function fetchBlog(locale: string, limit: number) {
+async function fetchBlog({ locale, limit, offset, q }: FetchOpts): Promise<FetchResult> {
+  const search = q ? sql`AND (i.title LIKE ${likePattern(q)} OR i.summary LIKE ${likePattern(q)})` : sql``;
+  const base = storefrontBase();
+  const total = countOf(
+    await db.execute(sql`
+      SELECT COUNT(*) AS total
+      FROM custom_pages cp
+      JOIN custom_pages_i18n i ON i.custom_page_id = cp.id AND i.locale = ${locale}
+      WHERE cp.module_key = 'blog' AND cp.is_published = 1 ${search}
+    `),
+  );
   const r = rows(
     await db.execute(sql`
       SELECT cp.id, cp.featured_image, cp.created_at, cp.updated_at,
              i.title, i.slug, i.summary, i.content, i.tags
       FROM custom_pages cp
       JOIN custom_pages_i18n i ON i.custom_page_id = cp.id AND i.locale = ${locale}
-      WHERE cp.module_key = 'blog' AND cp.is_published = 1
+      WHERE cp.module_key = 'blog' AND cp.is_published = 1 ${search}
       ORDER BY cp.display_order DESC, cp.created_at DESC
-      LIMIT ${limit}
+      LIMIT ${limit} OFFSET ${offset}
     `),
   );
-  const base = storefrontBase();
-  return r.map((p: any) => ({
+  const items = r.map((p: any) => ({
     id: `blog:${p.id}`,
     type: 'blog',
     category: 'blog',
@@ -88,21 +112,29 @@ async function fetchBlog(locale: string, limit: number) {
     updated_at: p.updated_at,
     tags: splitTags(p.tags),
   }));
+  return { items, total };
 }
 
-async function fetchHoroscopes(locale: string, limit: number, period: string) {
+async function fetchHoroscopes({ locale, limit, offset, q, period }: FetchOpts): Promise<FetchResult> {
+  const search = q ? sql`AND content LIKE ${likePattern(q)}` : sql``;
+  const base = storefrontBase();
+  const total = countOf(
+    await db.execute(sql`
+      SELECT COUNT(*) AS total FROM daily_horoscopes
+      WHERE locale = ${locale} AND period = ${period} ${search}
+    `),
+  );
   const r = rows(
     await db.execute(sql`
       SELECT id, sign, period, period_start_date, locale, content,
              mood_score, lucky_number, lucky_color, created_at, updated_at
       FROM daily_horoscopes
-      WHERE locale = ${locale} AND period = ${period}
+      WHERE locale = ${locale} AND period = ${period} ${search}
       ORDER BY period_start_date DESC, sign ASC
-      LIMIT ${limit}
+      LIMIT ${limit} OFFSET ${offset}
     `),
   );
-  const base = storefrontBase();
-  return r.map((h: any) => {
+  const items = r.map((h: any) => {
     const dateKey = h.period_start_date instanceof Date
       ? h.period_start_date.toISOString().slice(0, 10)
       : String(h.period_start_date).slice(0, 10);
@@ -124,20 +156,25 @@ async function fetchHoroscopes(locale: string, limit: number, period: string) {
       meta: { mood_score: h.mood_score, lucky_number: h.lucky_number, lucky_color: h.lucky_color },
     };
   });
+  return { items, total };
 }
 
-async function fetchTarot(locale: string, limit: number) {
+async function fetchTarot({ locale, limit, offset, q }: FetchOpts): Promise<FetchResult> {
+  const search = q
+    ? sql`WHERE (name_tr LIKE ${likePattern(q)} OR name_en LIKE ${likePattern(q)} OR upright_meaning LIKE ${likePattern(q)})`
+    : sql``;
+  const base = storefrontBase();
+  const total = countOf(await db.execute(sql`SELECT COUNT(*) AS total FROM tarot_cards ${search}`));
   const r = rows(
     await db.execute(sql`
       SELECT id, slug, name_tr, name_en, arcana, suit, number,
              upright_meaning, reversed_meaning, image_url, keywords, updated_at
-      FROM tarot_cards
+      FROM tarot_cards ${search}
       ORDER BY arcana ASC, number ASC
-      LIMIT ${limit}
+      LIMIT ${limit} OFFSET ${offset}
     `),
   );
-  const base = storefrontBase();
-  return r.map((c: any) => {
+  const items = r.map((c: any) => {
     const name = locale === 'tr' ? c.name_tr : (c.name_en || c.name_tr);
     let keywords: string[] = [];
     try {
@@ -159,32 +196,33 @@ async function fetchTarot(locale: string, limit: number) {
       tags: [...keywords, 'tarot', 'fal', c.arcana].filter(Boolean),
     };
   });
+  return { items, total };
 }
 
-// Sembol sözlüğü falları (coffee_symbols / dream_symbols aynı şekil: slug, name_tr,
-// meaning, category JSON). Post üretimi için "X sembolü ne anlama gelir" içeriği.
+// coffee_symbols / dream_symbols aynı şekil (slug, name_tr, meaning, category JSON).
 async function fetchSymbolFal(
   table: 'coffee_symbols' | 'dream_symbols',
   falType: 'coffee' | 'dream',
   toolPath: string,
-  locale: string,
-  limit: number,
-) {
+  { locale, limit, offset, q }: FetchOpts,
+): Promise<FetchResult> {
+  const search = q ? sql`WHERE (name_tr LIKE ${likePattern(q)} OR meaning LIKE ${likePattern(q)})` : sql``;
+  const base = storefrontBase();
+  const total = countOf(await db.execute(sql`SELECT COUNT(*) AS total FROM ${sql.raw(table)} ${search}`));
   const r = rows(
     await db.execute(sql`
       SELECT id, slug, name_tr, meaning, category, created_at
-      FROM ${sql.raw(table)}
+      FROM ${sql.raw(table)} ${search}
       ORDER BY name_tr ASC
-      LIMIT ${limit}
+      LIMIT ${limit} OFFSET ${offset}
     `),
   );
-  const base = storefrontBase();
-  return r.map((s: any) => {
+  const falLabel = falType === 'coffee' ? 'Kahve Falı' : 'Rüya';
+  const items = r.map((s: any) => {
     let category: string[] = [];
     try {
       category = Array.isArray(s.category) ? s.category : JSON.parse(s.category || '[]');
     } catch { category = []; }
-    const falLabel = falType === 'coffee' ? 'Kahve Falı' : 'Rüya';
     return {
       id: `${falType}:${s.id}`,
       type: falType,
@@ -201,43 +239,52 @@ async function fetchSymbolFal(
       tags: [...category, falType === 'coffee' ? 'kahve falı' : 'rüya tabiri', 'fal'].filter(Boolean),
     };
   });
+  return { items, total };
 }
 
 // type → fetcher. Yeni fal türü buraya eklenir (registry deseni).
-const ARTICLE_TYPES: Record<string, (locale: string, limit: number, opts: { period: string }) => Promise<any[]>> = {
-  blog: (l, n) => fetchBlog(l, n),
-  horoscope: (l, n, o) => fetchHoroscopes(l, n, o.period),
-  tarot: (l, n) => fetchTarot(l, n),
-  coffee: (l, n) => fetchSymbolFal('coffee_symbols', 'coffee', 'kahve-fali', l, n),
-  dream: (l, n) => fetchSymbolFal('dream_symbols', 'dream', 'ruya-tabiri', l, n),
+const ARTICLE_TYPES: Record<string, (opts: FetchOpts) => Promise<FetchResult>> = {
+  blog: fetchBlog,
+  horoscope: fetchHoroscopes,
+  tarot: fetchTarot,
+  coffee: (o) => fetchSymbolFal('coffee_symbols', 'coffee', 'kahve-fali', o),
+  dream: (o) => fetchSymbolFal('dream_symbols', 'dream', 'ruya-tabiri', o),
 };
 
 const articlesQuerySchema = z.object({
   type: z.string().optional(),
   locale: z.string().default('tr'),
-  limit: z.coerce.number().int().min(1).max(200).default(50),
+  limit: z.coerce.number().int().min(1).max(60).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+  q: z.string().trim().min(1).max(120).optional(),
   period: z.string().default('daily'),
-  is_published: z.string().optional(), // standart adaptör uyumu (blog zaten yalnız yayınlanmış)
+  sort: z.string().optional(), // v1.1 uyumu (şu an tür-içi sabit sıralama)
+  is_published: z.string().optional(),
 });
 
 export const articlesHandler: RouteHandler = async (req, reply) => {
-  const q = articlesQuerySchema.parse(req.query ?? {});
-  const type = (q.type || 'blog').toLowerCase();
+  const p = articlesQuerySchema.parse(req.query ?? {});
+  const type = (p.type || 'blog').toLowerCase();
   const fetcher = ARTICLE_TYPES[type];
   if (!fetcher) {
     return reply.code(400).send({
       error: { message: 'unknown_type', allowed: Object.keys(ARTICLE_TYPES) },
     });
   }
-  const items = await fetcher(q.locale, q.limit, { period: q.period });
-  return { items, count: items.length, type, locale: q.locale };
+  const { items, total } = await fetcher({
+    locale: p.locale,
+    limit: p.limit,
+    offset: p.offset,
+    q: p.q ?? null,
+    period: p.period,
+  });
+  return { items, total, hasMore: p.offset + items.length < total, type, locale: p.locale };
 };
 
 // ─────────────────────────────────────────────────────────────
 // /products — danışman profilleri (öne çıkan/popüler) + ücretsiz araçlar
 // ─────────────────────────────────────────────────────────────
 
-// Ücretsiz araçlar — post üretimi için CTA'lı "ürün" olarak sunulur (fiyat=0).
 function freeToolProducts(locale: string) {
   const base = storefrontBase();
   const tools = [
@@ -263,33 +310,35 @@ function freeToolProducts(locale: string) {
 
 const productsQuerySchema = z.object({
   locale: z.string().default('tr'),
-  limit: z.coerce.number().int().min(1).max(200).default(50),
+  limit: z.coerce.number().int().min(1).max(60).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+  q: z.string().trim().min(1).max(120).optional(),
   sort: z.string().default('popular'),
   include_tools: z.string().optional(), // '0' → araçları hariç tut
 });
 
 export const productsHandler: RouteHandler = async (req, reply) => {
-  const q = productsQuerySchema.parse(req.query ?? {});
+  const p = productsQuerySchema.parse(req.query ?? {});
   const base = storefrontBase();
 
+  // Danışman havuzu (küçük ölçek: gate'li tüm liste alınır, q/offset uygulamada dilimlenir).
   const consultants = (await listApprovedConsultants(
-    { sort: q.sort === 'popular' ? 'popular' : 'featured', limit: q.limit } as any,
-    q.locale,
+    { sort: p.sort === 'popular' ? 'popular' : 'featured' } as any,
+    p.locale,
     null,
   )) as any[];
 
-  const consultantProducts = consultants.map((c) => ({
+  let consultantProducts = consultants.map((c) => ({
     id: `consultant:${c.id}`,
     type: 'consultant',
     title: c.full_name,
     slug: c.slug,
-    url: `${base}/${q.locale}/consultants/${c.slug}`,
+    url: `${base}/${p.locale}/consultants/${c.slug}`,
     image_url: absUrl(c.avatar_url),
     price: Number(c.session_price ?? 0) || null,
     currency: c.currency ?? 'TRY',
     popularity: Number(c.favorite_count ?? c.total_sessions ?? c.rating_count ?? 0),
     in_stock: true,
-    // Profil zenginleştirme — "danışmanımızı tanıyın" postu üretimi için
     headline: c.headline ?? null,
     excerpt: excerptOf(c.bio),
     expertise: Array.isArray(c.expertise) ? c.expertise : [],
@@ -299,8 +348,20 @@ export const productsHandler: RouteHandler = async (req, reply) => {
     tags: Array.isArray(c.expertise) ? [...c.expertise, 'danışman', 'astrolog'] : ['danışman'],
   }));
 
-  const includeTools = q.include_tools !== '0';
-  const items = includeTools ? [...consultantProducts, ...freeToolProducts(q.locale)] : consultantProducts;
+  const includeTools = p.include_tools !== '0';
+  let all = includeTools ? [...consultantProducts, ...freeToolProducts(p.locale)] : consultantProducts;
 
-  return { items, count: items.length, locale: q.locale };
+  // q araması (başlık/uzmanlık/tag üzerinde)
+  if (p.q) {
+    const needle = p.q.toLocaleLowerCase('tr');
+    all = all.filter((it: any) => {
+      const hay = [it.title, it.headline, ...(it.tags || []), ...(it.expertise || [])]
+        .filter(Boolean).join(' ').toLocaleLowerCase('tr');
+      return hay.includes(needle);
+    });
+  }
+
+  const total = all.length;
+  const items = all.slice(p.offset, p.offset + p.limit);
+  return { items, total, hasMore: p.offset + items.length < total, locale: p.locale };
 };

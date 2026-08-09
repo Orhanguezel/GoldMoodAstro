@@ -24,7 +24,6 @@ import { registerStubs } from './stubs';
 
 import { registerFirebaseAdmin } from '@/modules/firebase/admin.routes';
 // Ekosistem pazarlama/analitik modulleri (Faz 1: GA4 + Search Console) — de-tenant, admin-only
-import { marketingRoutes } from '@/social/modules/marketing/routes';
 // Ekosistem sosyal medya modulleri (Faz 3: FB/IG/X + gonderiler + sablonlar) — de-tenant, admin-only
 import { platformsRoutes } from '@/social/modules/platforms/routes';
 import { postsRoutes } from '@/social/modules/posts/routes';
@@ -64,8 +63,8 @@ export async function registerGoldmoodAdmin(adminApi: FastifyInstance) {
   await adminApi.register(registerCommissionChangeAdmin);
   await adminApi.register(registerAiBillingAdmin);
   await adminApi.register(registerHoroscopeAdminRoutes);
-  // /api/admin/social/marketing/* — GA4, Search Console, (Faz 2: Google Ads)
-  await adminApi.register(marketingRoutes, { prefix: '/social/marketing' });
+  // GA4/Search Console/Google Ads analitiği ekosistem sosyal medyaya DEVREDİLDİ
+  // (goldmood sade tutuluyor). marketingRoutes kaldırıldı — bkz. [[ext_api_ecosystem_hybrid]].
   // /api/admin/social/{platforms,posts,templates}/* — FB/IG/X hesaplar, gonderiler, sablonlar
   await adminApi.register(platformsRoutes, { prefix: '/social/platforms' });
   await adminApi.register(postsRoutes, { prefix: '/social/posts' });

@@ -36,10 +36,6 @@ import {
   Menu as MenuIcon,
   Layers,
   FolderTree,
-  LineChart,
-  TrendingUp,
-  Search,
-  Target,
   Share2,
   Youtube,
   Twitter,
@@ -122,10 +118,6 @@ export type AdminNavItemKey =
   | 'pages'
   | 'commission_change'
   | 'marketing'
-  | 'eko_analytics'
-  | 'eko_ga4'
-  | 'eko_search_console'
-  | 'eko_google_ads'
   | 'eko_social'
   | 'eko_facebook'
   | 'eko_instagram'
@@ -202,11 +194,6 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
     id: 5,
     key: 'ekosistem',
     items: [
-      { key: 'marketing', url: '/admin/marketing', icon: TrendingUp },
-      { key: 'eko_analytics', url: '/admin/analytics', icon: LineChart },
-      { key: 'eko_ga4', url: '/admin/ga4', icon: TrendingUp },
-      { key: 'eko_search_console', url: '/admin/search-console', icon: Search },
-      { key: 'eko_google_ads', url: '/admin/google-ads', icon: Target },
       { key: 'eko_social', url: '/admin/social', icon: Share2 },
       { key: 'eko_facebook', url: '/admin/social/facebook', icon: Facebook },
       { key: 'eko_instagram', url: '/admin/social/instagram', icon: Instagram },
@@ -291,10 +278,6 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   pages: 'İçerik/Hukuki Sayfalar',
   commission_change: 'Komisyon Bildirimi',
   marketing: 'Pazarlama & Dönüşüm',
-  eko_analytics: 'Analitik (Genel)',
-  eko_ga4: 'Google Analytics (GA4)',
-  eko_search_console: 'Search Console',
-  eko_google_ads: 'Google Ads',
   eko_social: 'Sosyal Medya',
   eko_facebook: 'Facebook',
   eko_instagram: 'Instagram',
