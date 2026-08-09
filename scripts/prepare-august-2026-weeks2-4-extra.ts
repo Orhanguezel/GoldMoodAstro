@@ -296,9 +296,15 @@ async function syncScheduled(posts: DraftPost[], bust: string) {
 
 async function main() {
   const posts = await build();
-  const dir = path.resolve(ROOT, "references/monthly-content/2026-08");
-  await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(path.join(dir, "08-31-extra-drafts.json"), JSON.stringify(posts, null, 2));
+  // Manifest yalnız GELİŞTİRME tarafında yazılır (repoya commit'lenen bir artefakt).
+  // --sync-scheduled prod'da çalıştırılıyor; orada manifest yazmak çalışma ağacını
+  // kirletiyor ve bir sonraki deploy "commit'lenmemiş değişiklik var" diye DURUYOR
+  // (2026-08-09'da bir deploy tam olarak bu yüzden düştü).
+  if (!SYNC_SCHEDULED) {
+    const dir = path.resolve(ROOT, "references/monthly-content/2026-08");
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, "08-31-extra-drafts.json"), JSON.stringify(posts, null, 2));
+  }
   if (WRITE_DB) await persist(posts);
   if (SYNC_SCHEDULED) {
     const n = await syncScheduled(posts, BUST);
