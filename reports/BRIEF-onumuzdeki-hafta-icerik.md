@@ -1,5 +1,9 @@
 # BRIEF — Önümüzdeki hafta sosyal içerik: planla + oluştur + eksikleri tamamla
 
+> **DURUM: UYGULANDI (2026-08-09, temiz oturum).** Aşağıdaki prosedür bir kez çalıştırıldı;
+> sonuç ve bulunan bug için dosyanın sonundaki "UYGULAMA SONUCU" bölümüne bak.
+> Prosedür bölümleri (1–3) sonraki aylar için hâlâ geçerli referans.
+
 > Hazırlayan: Claude (2026-08-09 oturumu). Uygulayan: yeni temiz oturum.
 > Amaç: önümüzdeki haftanın (öncelik **Aug 10–16**, sonra Aug 17–24 / Eylül'e hazırlık)
 > sosyal medya içeriğinin TAM olduğunu doğrula, EKSİK/BOZUK olanı yeniden üret, prod'a
@@ -111,6 +115,52 @@
 - **Deploy notu:** admin build server RAM sınırında eksik çıkabiliyor; içerik işi çoğunlukla
   backend/scripts + uploads (admin build gerekmez). Backend değişirse manuel deploy
   (`git pull && bun run build && pm2 reload goldmoodastro-backend`).
+
+---
+
+## UYGULAMA SONUCU (2026-08-09)
+
+### Doğrulandı
+- **Zamanlama:** 10–17 Ağustos 4 post/gün (2 burç carousel + 1 ana + 1 story), 18–31 Ağustos
+  2 post/gün. Eksik olan günlük burç carousel'leri değil — cron her gün D+8'i planlıyor,
+  18 Ağustos yarın otomatik eklenecek. Elle müdahale gerekmiyor.
+- **Ana/story görselleri:** 10–17 Ağustos 23 PNG tek tek açıldı; başlık + alt başlık + gövde +
+  CTA hepsinde baked, boş kutu yok. Prod ↔ local md5 birebir aynı (24/24).
+- **Reel:** 13 Ağustos mp4 media_urls'te ve canlıda HTTP 200. 21 Ağustos mp4 de yerinde.
+- **18–31 Ağustos:** 110 PNG tam, örneklem (18, 22) doğrulandı.
+
+### Bulunan ve düzeltilen bug — günlük burç kartları her gün AYNI metni basıyordu
+Bu brief'in kontrol listesinde olmayan, daha ciddi bir sorun çıktı. 8 Ağustos'tan itibaren
+her günün burç kartı burç başına **birebir aynı cümleyi** taşıyordu
+("Koç için bugün iç ses ve günlük ritim öne çıkıyor."). Günde 2 post × 24 gün.
+
+Kök neden zinciri: kartlar yayından 8 gün önce üretiliyor → LLM günlük yorumu (`horoscope-job`,
+02:00, sadece o gün) henüz yok → `fallbackMessage` devreye giriyor → `AUGUST_2026_DAILY_PLAN`
+sadece 1–7 Ağustos'u kapsıyor → sabit tek cümle. Üstelik `renderZodiacCard` `existsSync` ile
+cache'lediği için gerçek yorum sonradan gelse de görsel güncellenmiyordu.
+
+Düzeltme (commit `7b6fa85`, canlı):
+- `refreshHoroscopeCardsForDate()` — yayın gününde gerçek yorum hazır olduğunda kartları
+  `force` ile yeniden basar + hâlâ `scheduled` postun caption/media'sını günceller. Saatlik
+  cron tick'ine bağlı (02:00 LLM → 06:00 UTC yayın arasında çalışır). Posted/cancelled'a dokunmaz.
+- Plan tablosu 8–31 Ağustos ile tamamlandı (temalar gerçek gök olaylarına bağlı).
+- Plan dışı günlerde fallback artık tarihe göre dönen havuzdan seçiyor (Eylül regresyonu yok).
+- 10–17 Ağustos kartları `scripts/refresh-horoscope-cards.ts` ile gün-özel metinle yeniden
+  basıldı (16 post güncellendi), doğrulandı.
+
+### Ayrıca düzeltildi — 16 Ağustos danışman kartı (commit `f65a3ff`)
+`renderSlide` arka planı hep `slide.asset`'in blur'undan üretiyordu; danışman tanıtımında asset
+Fatma'nın fotoğrafı olduğu için kart çamurlu kahve-turkuaz zemine ve dev bulanık yüze dönüşüyordu.
+`Slide.bgAsset` eklendi, 16 Ağustos kozmik arka plana geçti. 3 görsel yeniden basıldı,
+prod'a rsync'lendi, `?v=2 → ?v=3` cache-bust yapıldı, ekosistem re-sync edildi (210 item).
+
+### Sonraki oturuma
+- Eylül'e uzatma **yapılmadı** (kullanıcı istemedi). Yapılacaksa bölüm 2C hâlâ geçerli;
+  ek olarak `AUGUST_2026_DAILY_PLAN` deseninde bir Eylül plan tablosu da yazılmalı —
+  yoksa günlük kartlar dönen jenerik havuza düşer (metin tekrar etmez ama güne özel olmaz).
+- Doğrulama dersi: "görselde metin var mı" yetmiyor. **Farklı günleri yan yana koyup metin
+  değişiyor mu** diye bak. İpucu: aynı burcun farklı gün PNG'leri neredeyse aynı byte
+  boyutundaysa metin de aynıdır. Hafıza: [[social_daily_card_same_text_bug]].
 
 ---
 
