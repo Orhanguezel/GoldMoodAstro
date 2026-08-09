@@ -1,9 +1,20 @@
 import { google } from "googleapis";
 import * as platformRepo from "./repository";
 
+// DIKKAT — kapsam degisiklikleri YENIDEN YETKILENDIRME ister:
+// mevcut refresh token'lar verildikleri andaki kapsam setini tasir, listeye scope
+// eklemek eski baglantilari otomatik yukseltmez. Kanal /admin/youtube'dan yeniden
+// baglanana kadar yeni yetenekler 403 insufficientPermissions doner.
+//
+// force-ssl neden gerekli (2026-08-09'da eklendi):
+//   videos.delete    -> youtube | youtube.force-ssl  (youtube.upload YETMEZ)
+//   comments.insert  -> youtube.force-ssl
+// Okuma taraflari (videos.list, playlistItems.list, commentThreads.list) zaten
+// youtube.readonly ile calisiyor.
 const YOUTUBE_SCOPES = [
   "https://www.googleapis.com/auth/youtube.upload",
   "https://www.googleapis.com/auth/youtube.readonly",
+  "https://www.googleapis.com/auth/youtube.force-ssl",
   "https://www.googleapis.com/auth/yt-analytics.readonly",
 ];
 

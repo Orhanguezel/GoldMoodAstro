@@ -144,9 +144,23 @@ function httpStatusOf(err: unknown): number | undefined {
   return undefined;
 }
 
-function withHttpStatus(message: string, err: unknown): Error & { httpStatus?: number } {
-  const wrapped = new Error(message) as Error & { httpStatus?: number };
+/** googleapis hatasindaki ilk `reason` alani (ör. "insufficientPermissions"). */
+function reasonOf(err: unknown): string | undefined {
+  return (err as { errors?: Array<{ reason?: string }> })?.errors?.[0]?.reason;
+}
+
+function withHttpStatus(message: string, err: unknown): Error & { httpStatus?: number; reason?: string } {
+  const reason = reasonOf(err);
+  // Kapsam eksikligi en olasi tokenli hata: eski baglantilar force-ssl'siz
+  // yetkilendirilmis olabiliyor (bkz. youtube-oauth.ts YOUTUBE_SCOPES notu).
+  // Ham Google mesaji bunu anlatmadigi icin eylem cumlesi ekliyoruz.
+  const hint =
+    reason === "insufficientPermissions" || reason === "forbidden"
+      ? " — YouTube izinleri yetersiz olabilir; kanali Admin > YouTube ekranindan YENIDEN baglayin (yorum yazma/silme icin ek izin gerekiyor)."
+      : "";
+  const wrapped = new Error(`${message}${hint}`) as Error & { httpStatus?: number; reason?: string };
   wrapped.httpStatus = httpStatusOf(err);
+  wrapped.reason = reason;
   return wrapped;
 }
 
@@ -167,7 +181,7 @@ export async function deleteVideo(
   } catch (err) {
     const status = httpStatusOf(err);
     // 404 = zaten yok. YouTube silinmis/erisilemez videoda 403 videoNotFound da dondurebiliyor.
-    const reason = (err as { errors?: Array<{ reason?: string }> })?.errors?.[0]?.reason;
+    const reason = reasonOf(err);
     if (status === 404 || reason === "videoNotFound") return { alreadyGone: true };
     throw withHttpStatus(`YouTube video silinemedi: ${(err as Error).message}`, err);
   }

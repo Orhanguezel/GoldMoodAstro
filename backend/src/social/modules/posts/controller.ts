@@ -281,7 +281,11 @@ export async function remove(
         }
       } catch (err) {
         const status = (err as Error & { httpStatus?: number }).httpStatus;
-        const reason = (err as { errors?: Array<{ reason?: string }> }).errors?.[0]?.reason;
+        // deleteVideo hatayi sarmaliyor ve `reason`i wrapper'a tasiyor; ham Gaxios
+        // hatasi da gelebilir diye `errors[0].reason` fallback'i duruyor.
+        const reason =
+          (err as { reason?: string }).reason ??
+          (err as { errors?: Array<{ reason?: string }> }).errors?.[0]?.reason;
         const isQuota = reason === "quotaExceeded" || reason === "rateLimitExceeded";
         const isHardFailure = !isQuota && (status === 400 || status === 401 || status === 403);
         req.log.error(
