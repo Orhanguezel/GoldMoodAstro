@@ -27,17 +27,34 @@ fi
 PREV="$(git rev-parse HEAD)"
 echo "Onceki surum: $PREV"
 
+# Next app'i TEMIZ build eder + tamamlandigini DOGRULAR. Kapasite baskisinda (server
+# RAM sinirli) build worker'i dusup bir route'u atlayabiliyor: exit 0 doner AMA .next
+# eksik kalir (BUILD_ID yok veya bir route'un manifest'i yok) -> silinmeyen sayfalar da
+# 500. Bu yuzden BUILD_ID yoksa BIR KEZ daha temiz dener; yine yoksa hata dondurur
+# (rollback tetiklenir). Ayrica route SILINDIGINDE incremental cache bozulmasin diye
+# her build oncesi rm -rf .next. (bkz memory next_route_delete_clean_build)
+build_next() {
+  local d="$1"
+  cd "$ROOT/$d" && { bun install --frozen-lockfile || bun install; } || return 1
+  rm -rf .next && bun run build
+  if [ ! -f "$ROOT/$d/.next/BUILD_ID" ]; then
+    echo "UYARI: $d eksik build (.next/BUILD_ID yok) — temiz rebuild tekrar deneniyor"
+    ( cd "$ROOT/$d" && rm -rf .next && bun run build )
+  fi
+  if [ ! -f "$ROOT/$d/.next/BUILD_ID" ]; then
+    echo "HATA: $d build TAMAMLANAMADI (.next/BUILD_ID yok) — kapasite/bellek bak"
+    return 1
+  fi
+}
+
 build_all() {
   # Backend tsc (googleapis) V8 varsayilan ~2GB heap limitini asip OOM
   # (code 134) veriyordu → SSH oturumu dusuyor, deploy patliyordu.
   # Sorun toplam RAM degil V8 heap; --max-old-space-size ile cozuluyor
   # (bkz memory deploy_backend_tsc_oom, 2026-07-31 dogrulandi).
-  cd "$ROOT/backend"     && { bun install --frozen-lockfile || bun install; } && NODE_OPTIONS=--max-old-space-size=3072 bun run build
-  # Next .next TEMİZ build: route dizini SİLİNDİĞİNDE incremental build bozuk manifest
-  # birakiyor ("client reference manifest does not exist" → silinmeyen sayfalar da 500).
-  # rm -rf .next ile her deploy temiz uretir (bkz memory next_route_delete_clean_build).
-  cd "$ROOT/admin_panel" && { bun install --frozen-lockfile || bun install; } && rm -rf .next && bun run build
-  cd "$ROOT/frontend"    && { bun install --frozen-lockfile || bun install; } && rm -rf .next && bun run build
+  cd "$ROOT/backend" && { bun install --frozen-lockfile || bun install; } && NODE_OPTIONS=--max-old-space-size=3072 bun run build || return 1
+  build_next admin_panel || return 1
+  build_next frontend    || return 1
   cd "$ROOT"
 }
 
