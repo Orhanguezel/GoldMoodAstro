@@ -36,7 +36,10 @@ import { getSocialPlatform } from "@/ekosistem/lib/social-platforms";
 
 type TabKey = "analysis" | "account" | "compose" | "plan" | "drafts" | "queue" | "templates";
 
-const LIVE_CONTENT_PLATFORMS = ["facebook", "instagram"];
+// Platformdan CANLI içerik (gerçek gönderi listesi + detay + yorum cevabı) çekilebilenler.
+// YouTube 2026-08-09'da eklendi: backend /platforms/youtube/videos, .../details ve
+// .../comments/:id/reply uçları FB/IG ile AYNI şekli döndürüyor, ek dallanma gerekmiyor.
+const LIVE_CONTENT_PLATFORMS = ["facebook", "instagram", "youtube"];
 
 const POST_TYPES = [
   { value: "tanitim", label: "Tanıtım" },
@@ -268,6 +271,21 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
     );
   }
 
+  // Canlı içerik uçları platforma göre değişir ama DÖNEN ŞEKİL aynı (externalId,
+  // message, imageUrl, likes, comments, shares). Tek yerde eşle ki çağrı noktalarında
+  // üçlü ternary çoğalmasın (YouTube eklenirken bu dallanma 4 yere yayılacaktı).
+  function liveContentList(tk: string, limit: number): Promise<{ items: any[] }> {
+    if (platformKey === "facebook") return platforms.facebookPosts(tk, limit);
+    if (platformKey === "youtube") return platforms.youtubeVideos(tk, limit);
+    return platforms.instagramMedia(tk, limit);
+  }
+
+  function liveContentInfo(tk: string): Promise<any> {
+    if (platformKey === "facebook") return platforms.facebookInfo(tk).catch(() => null);
+    if (platformKey === "youtube") return platforms.youtubeInfo(tk).catch(() => null);
+    return platforms.instagramInfo(tk).catch(() => null);
+  }
+
   async function loadAccount(tk = tenantKey) {
     if (!tk || !(LIVE_CONTENT_PLATFORMS.includes(platformKey) || platformKey === "x")) return;
     setAccountState("loading");
@@ -280,12 +298,8 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
         setAccountItems(res.items || []);
       } else {
         const [res, info] = await Promise.all([
-          platformKey === "facebook"
-            ? platforms.facebookPosts(tk, 30)
-            : platforms.instagramMedia(tk, 30),
-          platformKey === "facebook"
-            ? platforms.facebookInfo(tk).catch(() => null)
-            : platforms.instagramInfo(tk).catch(() => null),
+          liveContentList(tk, 30),
+          liveContentInfo(tk),
         ]);
         setAccountItems(res.items || []);
         setAccountInfo(info);
@@ -312,12 +326,8 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
         posts.list({ tenantKey: tk, platform: platformKey, limit: "200", sort: "created_at", order: "desc" }).catch(() => ({ items: [] })),
         posts.list({ tenantKey: tk, platform: platformKey, limit: "200", sort: "scheduled_at", order: "asc" }).catch(() => ({ items: [] })),
         templates.list(tk).catch(() => ({ items: [] })),
-        live
-          ? (platformKey === "facebook" ? platforms.facebookPosts(tk, 50) : platforms.instagramMedia(tk, 50)).catch(() => ({ items: [] }))
-          : Promise.resolve({ items: [] }),
-        live
-          ? (platformKey === "facebook" ? platforms.facebookInfo(tk) : platforms.instagramInfo(tk)).catch(() => null)
-          : Promise.resolve(null),
+        live ? liveContentList(tk, 50).catch(() => ({ items: [] })) : Promise.resolve({ items: [] }),
+        live ? liveContentInfo(tk).catch(() => null) : Promise.resolve(null),
       ]);
       setConnected(!!st?.[platformKey]?.connected);
       if (liveInfo) setAccountInfo(liveInfo);
@@ -408,6 +418,12 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
     }
     if (schedule && composeFormat === "reel" && !isVideoUrl(imageUrl.trim())) {
       notify("err", "Reel zamanlamak için public MP4/MOV video URL gerekli.");
+      return;
+    }
+    // YouTube videos.insert video dosyası ister; videosuz zamanlanan post yayın
+    // anında "video dosyası bulunamadı" ile patlıyordu — burada yakala.
+    if (schedule && config!.requiresVideo && !isVideoUrl(imageUrl.trim())) {
+      notify("err", `${config!.label} zamanlamak için public MP4/MOV video URL gerekli.`);
       return;
     }
     setBusy(true);
@@ -525,7 +541,9 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
       const detail =
         platformKey === "facebook"
           ? await platforms.facebookPostDetails(tenantKey, externalId)
-          : await platforms.instagramMediaDetails(tenantKey, externalId);
+          : platformKey === "youtube"
+            ? await platforms.youtubeVideoDetails(tenantKey, externalId)
+            : await platforms.instagramMediaDetails(tenantKey, externalId);
       setAccountDetailById((s) => ({ ...s, [externalId]: detail }));
       setAccountItems((items) =>
         items.map((m) =>
@@ -555,6 +573,8 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
     try {
       if (platformKey === "facebook") {
         await platforms.replyFacebookComment(tenantKey, commentId, text);
+      } else if (platformKey === "youtube") {
+        await platforms.replyYoutubeComment(tenantKey, commentId, text);
       } else {
         await platforms.replyInstagramComment(tenantKey, commentId, text);
       }

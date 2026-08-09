@@ -201,7 +201,11 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'eko_tiktok', url: '/admin/social/tiktok', icon: Music2 },
       { key: 'eko_pinterest', url: '/admin/social/pinterest', icon: Bookmark },
       { key: 'eko_telegram', url: '/admin/social/telegram', icon: Send },
-      { key: 'eko_youtube', url: '/admin/youtube', icon: Youtube },
+      // Diğer platformlarla aynı çizgi: yönetim sayfası /admin/social/youtube
+      // (kuyruk, taslak, canlı video listesi + yorum cevabı). Kanal bağlama/OAuth
+      // ekranı /admin/youtube'da kaldı, oraya yönetim sayfasındaki araç kısayolundan
+      // gidilir — Telegram ile aynı desen.
+      { key: 'eko_youtube', url: '/admin/social/youtube', icon: Youtube },
       { key: 'eko_x_research', url: '/admin/social/x', icon: Twitter },
     ],
   },

@@ -14,6 +14,7 @@ import {
 import * as publisher from "../platforms/publisher";
 import * as xPlatform from "../platforms/x";
 import * as facebook from "../platforms/facebook";
+import * as youtubePlatform from "../platforms/youtube";
 import { enqueueVideoEditJob, getVideoEditQueue } from "../../core/queue";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -258,6 +259,47 @@ export async function remove(
     }
   }
 
+  // ─── YouTube: yayinlanmis video varsa YouTube'dan da sil ───────────────
+  // FB/X ile ayni hibrit politika: zaten yok = sorun degil; 401/403 (auth/yetki) =
+  // kaydi KORU + 502; gecici hata (429 kota / 5xx / ag) = kaydi sil + uyari.
+  // NOT: YouTube kota asimini 403 ile de bildirebiliyor; bu durumda reason
+  // "quotaExceeded" olur ve gecici sayilir (kullaniciyi bosuna kilitlemeyelim).
+  let ytDeleteWarning: string | undefined;
+  if (existing.youtubeVideoId) {
+    const yt = await publisher.getYouTubeAccountForTenant(existing.subType ?? "").catch(() => null);
+    if (!yt) {
+      ytDeleteWarning = "YouTube hesabi bagli degil; video YouTube'dan silinemedi, panel kaydi silindi.";
+      req.log.warn({ postId: existing.id, tenant: existing.subType }, ytDeleteWarning);
+    } else {
+      try {
+        const result = await youtubePlatform.deleteVideo(existing.youtubeVideoId, yt.account);
+        if (result.alreadyGone) {
+          req.log.info(
+            { postId: existing.id, videoId: existing.youtubeVideoId },
+            "YouTube video zaten yok (elle silinmis), DB kaydi siliniyor"
+          );
+        }
+      } catch (err) {
+        const status = (err as Error & { httpStatus?: number }).httpStatus;
+        const reason = (err as { errors?: Array<{ reason?: string }> }).errors?.[0]?.reason;
+        const isQuota = reason === "quotaExceeded" || reason === "rateLimitExceeded";
+        const isHardFailure = !isQuota && (status === 400 || status === 401 || status === 403);
+        req.log.error(
+          { err, postId: existing.id, videoId: existing.youtubeVideoId, status, reason, isHardFailure },
+          "YouTube video silinemedi"
+        );
+        if (isHardFailure) {
+          return reply.status(502).send({
+            error: "Video YouTube'dan silinemedi (kayit korundu, kontrol et): " + (err as Error).message,
+          });
+        }
+        ytDeleteWarning =
+          "Video YouTube'dan silinemedi (gecici/kota sorunu); panel kaydi silindi ama video hala yayinda olabilir: " +
+          (err as Error).message;
+      }
+    }
+  }
+
   // ─── Instagram: Graph API yayinlanmis medyayi SILMEYE IZIN VERMIYOR ─────
   // (Meta kisiti — kod degil.) Kullaniciyi bilgilendir: IG uygulamasindan elle silmeli.
   let igDeleteWarning: string | undefined;
@@ -268,7 +310,7 @@ export async function remove(
   }
 
   await repo.deletePost(existing.id);
-  const warnings = [xDeleteWarning, fbDeleteWarning, igDeleteWarning].filter(Boolean);
+  const warnings = [xDeleteWarning, fbDeleteWarning, ytDeleteWarning, igDeleteWarning].filter(Boolean);
   return reply.send({ ok: true, ...(warnings.length ? { warning: warnings.join(" ") } : {}) });
 }
 

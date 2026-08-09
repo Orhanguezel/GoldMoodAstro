@@ -12,6 +12,7 @@ import { getXCredsForTenant } from "./publisher";
 import * as telegram from "./telegram";
 import * as publisher from "./publisher";
 import * as ytOauth from "./youtube-oauth";
+import * as youtube from "./youtube";
 import * as platformRepo from "./repository";
 import { google } from "googleapis";
 import { type OAuth1Creds } from "./x-oauth1";
@@ -601,6 +602,62 @@ export async function platformsRoutes(app: FastifyInstance) {
       const tenantKey = tenantKeyFrom((req.body as any)?.tenantKey);
       const result = await publisher.publishXPost(tenantKey, "Ekosistem SaaS X test postu");
       return reply.send({ ok: true, postId: result.id });
+    } catch (err) {
+      return reply.status(400).send({ error: (err as Error).message });
+    }
+  });
+
+  // YouTube baglanti testi. FB/IG/X'te `/test` GERCEK bir test gonderisi yayinlar;
+  // YouTube'da bunun karsiligi kanala gercek bir video yuklemek olurdu. Bu yuzden
+  // burada yayin yapilmaz — token yenilenir ve kanal okunur (tahribatsiz dogrulama).
+  app.post("/youtube/test", async (req, reply) => {
+    try {
+      const tenantKey = tenantKeyFrom((req.body as any)?.tenantKey);
+      const yt = await publisher.getYouTubeAccountForTenant(tenantKey);
+      if (!yt) return reply.status(400).send({ error: "Tenant icin YouTube hesabi bulunamadi" });
+      const info = await youtube.getChannelInfo(yt.account);
+      return reply.send({ ok: true, channel: info });
+    } catch (err) {
+      return reply.status(400).send({ error: (err as Error).message });
+    }
+  });
+
+  // Kanalin son videolari — /facebook/posts ve /instagram/media ile ayni sekil.
+  app.get("/youtube/videos", async (req, reply) => {
+    try {
+      const tenantKey = tenantKeyFrom((req.query as any)?.tenantKey);
+      const limit = Number((req.query as any)?.limit) || 25;
+      const yt = await publisher.getYouTubeAccountForTenant(tenantKey);
+      if (!yt) return reply.status(404).send({ error: "YouTube hesabi bagli degil" });
+      return reply.send(
+        await youtube.getChannelVideos(yt.account, { limit, uploadsPlaylistId: yt.uploadsPlaylistId }),
+      );
+    } catch (err) {
+      return reply.status(400).send({ error: (err as Error).message });
+    }
+  });
+
+  // Video detayi + yorumlar — /facebook/posts/:postId/details ile ayni sekil.
+  app.get("/youtube/videos/:videoId/details", async (req, reply) => {
+    try {
+      const tenantKey = tenantKeyFrom((req.query as any)?.tenantKey);
+      const videoId = (req.params as { videoId: string }).videoId;
+      const yt = await publisher.getYouTubeAccountForTenant(tenantKey);
+      if (!yt) return reply.status(404).send({ error: "YouTube hesabi bagli degil" });
+      return reply.send(await youtube.getVideoDetails(videoId, yt.account));
+    } catch (err) {
+      return reply.status(400).send({ error: (err as Error).message });
+    }
+  });
+
+  app.post("/youtube/comments/:commentId/reply", async (req, reply) => {
+    try {
+      const tenantKey = tenantKeyFrom((req.body as any)?.tenantKey);
+      const commentId = (req.params as { commentId: string }).commentId;
+      const message = typeof (req.body as any)?.message === "string" ? (req.body as any).message : "";
+      const yt = await publisher.getYouTubeAccountForTenant(tenantKey);
+      if (!yt) return reply.status(404).send({ error: "YouTube hesabi bagli degil" });
+      return reply.send(await youtube.replyToComment(commentId, message, yt.account));
     } catch (err) {
       return reply.status(400).send({ error: (err as Error).message });
     }

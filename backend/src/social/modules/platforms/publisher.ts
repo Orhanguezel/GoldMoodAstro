@@ -204,6 +204,35 @@ export async function getFbCredsForTenant(
   return { pageId: acc.pageId, token };
 }
 
+/**
+ * Tenant icin kullanima hazir YouTube hesabi (token gerekiyorsa yenilenir).
+ * getFbCredsForTenant/getXCredsForTenant ile ayni sozlesme: bagli degilse null.
+ * Hem routes hem post silme cascade'i bunu kullanir — token yenileme tek yerde.
+ */
+export async function getYouTubeAccountForTenant(
+  tenantKey: string,
+): Promise<{ account: youtube.YouTubeAccount; uploadsPlaylistId: string | null } | null> {
+  const rows = await db
+    .select()
+    .from(platformAccounts)
+    .where(
+      and(
+        eq(platformAccounts.tenantKey, tenantKey),
+        eq(platformAccounts.platform, "youtube"),
+        eq(platformAccounts.isActive, 1),
+      ),
+    );
+  const acc = rows[0];
+  if (!acc?.accountId || !acc.refreshToken) return null;
+  const accessToken = await ensureFreshYouTubeToken(acc);
+  const meta = accountMeta(acc);
+  const uploadsPlaylistId =
+    typeof meta.uploadPlaylistId === "string" && meta.uploadPlaylistId.trim()
+      ? meta.uploadPlaylistId.trim()
+      : null;
+  return { account: makeYouTubeAccountFromDb(acc, accessToken), uploadsPlaylistId };
+}
+
 function inferMimeTypeFromUrl(url: string): string | null {
   const pathname = new URL(url).pathname.toLowerCase();
   if (pathname.endsWith(".jpg") || pathname.endsWith(".jpeg")) return "image/jpeg";
@@ -364,7 +393,7 @@ function youtubePostMeta(post: typeof socialPosts.$inferSelect): Record<string, 
   }
 }
 
-function makeYouTubeAccountFromDb(
+export function makeYouTubeAccountFromDb(
   account: typeof platformAccounts.$inferSelect,
   accessToken: string,
 ): youtube.YouTubeAccount {
@@ -380,7 +409,7 @@ function makeYouTubeAccountFromDb(
   };
 }
 
-async function ensureFreshYouTubeToken(account: typeof platformAccounts.$inferSelect): Promise<string> {
+export async function ensureFreshYouTubeToken(account: typeof platformAccounts.$inferSelect): Promise<string> {
   if (!account.accessToken || !account.refreshToken) {
     throw new Error("YouTube token bilgisi eksik");
   }

@@ -854,6 +854,21 @@ export const platforms = {
     }),
   xAccountTweets: (tenantKey: string, limit = 25) =>
     fetcher<{ items: any[] }>(`/platforms/x/account-tweets?tenantKey=${encodeURIComponent(tenantKey)}&limit=${limit}`),
+  // YouTube canli icerik — FB/IG ile ayni sekil (externalId/message/likes/comments/...).
+  youtubeVideos: (tenantKey: string, limit = 25) =>
+    fetcher<{ items: any[] }>(`/platforms/youtube/videos?tenantKey=${encodeURIComponent(tenantKey)}&limit=${limit}`),
+  youtubeVideoDetails: (tenantKey: string, videoId: string) =>
+    fetcher<any>(`/platforms/youtube/videos/${encodeURIComponent(videoId)}/details?tenantKey=${encodeURIComponent(tenantKey)}`),
+  replyYoutubeComment: (tenantKey: string, commentId: string, message: string) =>
+    fetcher<any>(`/platforms/youtube/comments/${encodeURIComponent(commentId)}/reply`, {
+      method: "POST",
+      body: JSON.stringify({ tenantKey, message }),
+    }),
+  youtubeTest: (tenantKey: string) =>
+    fetcher<{ ok: boolean; channel: any }>("/platforms/youtube/test", {
+      method: "POST",
+      body: JSON.stringify({ tenantKey }),
+    }),
 };
 
 // ─── E-posta (tenant bazli SMTP / IMAP) ─────────────────────

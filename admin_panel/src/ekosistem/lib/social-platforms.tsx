@@ -10,7 +10,12 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-export type SocialConnectKind = "manual" | "oauth-linkedin" | "oauth1-x" | "external";
+export type SocialConnectKind =
+  | "manual"
+  | "oauth-linkedin"
+  | "oauth1-x"
+  | "oauth-youtube"
+  | "external";
 
 export interface SocialPlatformConfig {
   /** route slug + platform_accounts.platform + posts.platform degeri */
@@ -31,6 +36,8 @@ export interface SocialPlatformConfig {
   canPublish: boolean;
   /** Yayin icin gorsel zorunlu mu (Instagram) */
   requiresImage?: boolean;
+  /** Yayin icin video zorunlu mu (YouTube: videos.insert video dosyasi ister) */
+  requiresVideo?: boolean;
   /** external => dedicated route disinda baska sayfaya gider (YouTube) */
   externalHref?: string;
   /** X gibi ek arac sayfalari */
@@ -83,12 +90,21 @@ export const SOCIAL_PLATFORMS: SocialPlatformConfig[] = [
     key: "youtube",
     label: "YouTube",
     title: "YouTube Yönetimi",
-    description: "Kanal bağlantısı, video yükleme ve analizler.",
+    description: "Kanal bağlantısı, video yükleme, canlı içerik ve analizler.",
     accent: "text-red-600",
     icon: (size = 20) => <Youtube size={size} />,
-    connectKind: "external",
-    canPublish: false,
-    externalHref: "/youtube",
+    connectKind: "oauth-youtube",
+    canPublish: true,
+    // publisher YouTube dalinda resolveVideoPath video dosyasi bulamazsa yayin patlar
+    // ("YouTube icin video dosyasi bulunamadi") — zamanlamadan once panelde yakala.
+    requiresVideo: true,
+    // NOT (2026-08-09): YouTube artık diğer platformlarla aynı çizgide —
+    // /admin/social/youtube SocialPlatformPage'i gösterir (kuyruk, taslak, canlı
+    // video listesi + yorum cevabı). Telegram ile aynı desen: kanal bağlama /
+    // OAuth ekranı ayrı sayfada kalır → /admin/youtube.
+    // externalHref BİLEREK kaldırıldı; geri koyarsan yönetim sayfası yine atlanır.
+    // OAuth ekranına buradan erişilsin (sidebar artık /admin/social/youtube'a gidiyor).
+    tools: [{ label: "Kanal bağlantısı (OAuth)", href: "/admin/youtube" }],
   },
   {
     key: "telegram",
