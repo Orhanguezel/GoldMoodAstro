@@ -369,7 +369,30 @@ function caption(title: string, body: string, cta: string, tags = HASHTAGS) {
   return `${title}\n\n${body}\n\n${cta}\n\n🔗 Daha fazla içerik ve danışmanlık seçenekleri için: ${SITE_URL}\n\n${tags}`;
 }
 
+/** Aynı gövde metnini iki slaytta birden basmayı üretim anında yakalar.
+ *
+ *  2026-08-09: weeks2-4 script'i 2. slaytı `{ title: subtitle, body: body }` ile
+ *  kuruyordu — görsel değişiyor, metin birebir aynı kalıyordu. Kaydırmanın karşılığı
+ *  yoktu ve TÜM carousel'lerde böyleydi; kimse fark etmeden yayına gitti.
+ *  Boş/kısa gövdeler (dekoratif slayt) muaf. */
+function assertSlidesDiffer(day: number, slug: string, slides: Slide[]) {
+  const seen = new Map<string, number>();
+  slides.forEach((slide, index) => {
+    const body = (slide.body ?? "").trim().toLowerCase();
+    if (body.length < 20) return;
+    const first = seen.get(body);
+    if (first !== undefined) {
+      throw new Error(
+        `Carousel ${day} (${slug}): ${first + 1}. ve ${index + 1}. slayt AYNI gövde metnini taşıyor. ` +
+          `Her slayt kendi içeriğini anlatmalı — sadece görseli değiştirmek yetmez.`,
+      );
+    }
+    seen.set(body, index);
+  });
+}
+
 export async function carousel(day: number, slug: string, title: string, slides: Slide[], captionText: string, postType: PostType = "etkilesim"): Promise<DraftPost> {
+  assertSlidesDiffer(day, slug, slides);
   const code = String(day).padStart(2, "0");
   const mediaUrls: string[] = [];
   for (const [index, slide] of slides.entries()) {
