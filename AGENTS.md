@@ -2,6 +2,29 @@
 
 Bu dosya Codex'in okuyup çalıştığı talimat dosyasıdır.
 
+## ⛔ İÇERİK ÜRETİM KURALI — MOTORU KULLAN (kullanıcı talimatı, 2026-08-09)
+
+**Sosyal medya içeriği / post üretirken astrolojik ve fal iddialarını ELLE YAZMA.**
+Sitenin kendi motorlarından hesapla:
+
+- Gezegen/ay fazı/lunasyon → `packages/shared-backend/modules/astrology/daySky.ts`
+  (`getDaySky`, `houseMapByRising` — Swiss Ephemeris)
+- Rüya sembolü → `dream_symbols` · Kahve falı → `coffee_symbols` · Tarot → `tarot_cards`
+- Numeroloji → `backend/src/modules/numerology/logic.ts` (`calculateLifePath`)
+
+Olgu motordan gelir, üslup editöryeldir. Plan yazmadan önce:
+`bun run scripts/sky-report.ts <baslangic> <bitis> --houses`
+
+**Neden:** 11 ve 26 Ağustos postlarında burçlar elemente göre gruplanmıştı; gerçek ev
+hesabına göre altı iddiadan yalnız biri doğruydu. 25 Ağustos'ta metin "sonsuzluk döngüsü"
+derken görsel yüzüktü (sözlükte Yüzük = evlilik/nişan/sözleşme).
+
+Bu kural üretim script'lerinde **kod seviyesinde zorlanıyor** — burç adı geçen ama hesaba
+bağlı olmayan içerikte üretim durur (`assertClaimsAreDerived`). Guard'ı devre dışı bırakma;
+gerçekten editöryel bir istisnaysa `editorial: true` yazıp gerekçesini yorumda belirt.
+
+Detay: [reports/GoldMoodAstro-Icerik-Metodolojisi-ve-Rakip-Analizi.md](reports/GoldMoodAstro-Icerik-Metodolojisi-ve-Rakip-Analizi.md)
+
 ## Aktif Telegram Büyüme Görevi (2026-08-04)
 
 - Strateji: [`TELEGRAM-BUYUME-STRATEJISI.md`](./TELEGRAM-BUYUME-STRATEJISI.md)

@@ -1,5 +1,52 @@
 # CLAUDE.md — GoldMoodAstro
 
+## İÇERİK ÜRETİM KURALI — MOTORU KULLAN (kullanıcı talimatı, 2026-08-09)
+
+**Sosyal medya içeriği / post üretirken astrolojik ve fal iddiaları ELLE YAZILMAZ,
+sitenin kendi motorlarından hesaplanır.** Bu kural pazarlığa açık değil.
+
+| İddia türü | Kaynak |
+|---|---|
+| Gezegen konumu, ay fazı, retro, açı, lunasyon burcu/derecesi | `packages/shared-backend/modules/astrology/daySky.ts` → `getDaySky()` (Swiss Ephemeris) |
+| "Hangi yükselen hangi alanı yaşar" | `houseMapByRising()` — whole-sign ev hesabı, doğum saati gerektirmez |
+| Rüya sembolü anlamı | `dream_symbols` tablosu (101 kayıt) |
+| Kahve falı sembolü anlamı | `coffee_symbols` tablosu (50 kayıt) |
+| Tarot kartı anlamı | `tarot_cards` tablosu (78 kart, + i18n) |
+| Numeroloji | `backend/src/modules/numerology/logic.ts` → `calculateLifePath()` |
+| Günlük burç yorumu | `daily_horoscopes` (LLM job üretir) |
+
+**İş bölümü:** *olgu* motordan gelir (hangi burç, hangi ev, sembol ne demek);
+*üslup* editöryeldir (nasıl anlatılır, hangi soru, hangi CTA).
+
+### Neden bu kural var
+
+11 ve 26 Ağustos 2026 postlarında burçlar **elemente göre gruplanmıştı**
+("Koç, Aslan, Yay yükselenler görünürlük"). Gerçekte yeniay Aslan 15°'deydi ve
+Koç için 5., Yay için 9. eve düşüyordu — **altı iddiadan biri doğruydu.** Metin
+"makul" göründüğü için gözden kaçtı. Ayrıca 25 Ağustos metni "sonsuzluk döngüsü"
+derken görsel `ring`'di; sitenin kendi sözlüğünde Yüzük = *"Evlilik, nişan,
+sözleşme, bağlılık"* — okuyucu sembolü sitede aratsa bambaşka cevap alacaktı.
+
+### Pratik akış
+
+1. **Plan yazmadan önce** ayın gökyüzünü çıkar:
+   `bun run scripts/sky-report.ts 2026-09-01 2026-09-30 --houses`
+2. Lunasyona dayanan içeriğe `lunationDate` ver → caption'a 12 yükselenin ev
+   dağılımı otomatik, hesaplanarak eklenir.
+3. Sembol/kart içeriğine `symbols: { source, slugs }` ver → **gövde metni de
+   görseller de** aynı slug'dan türer; ayrışma yapısal olarak imkânsız.
+4. Carousel'in 2. slaytı 1.'yi tekrar etmez (`secondTitle`/`secondBody` zorunlu).
+
+### Kod seviyesinde zorlanır — dokümana güvenilmiyor
+
+- `assertClaimsAreDerived()` — gövdede burç adı geçiyorsa `lunationDate`,
+  `symbols` veya açık `editorial: true` yoksa **üretim durur**.
+- `assertSlidesDiffer()` — iki slayt aynı gövdeyi taşıyorsa **üretim durur**.
+- `loadSymbols()` — sözlükte olmayan slug veya eksik görselde **üretim durur**
+  (sessizce jenerik metne düşmez).
+
+Detay ve rakip analizi: [reports/GoldMoodAstro-Icerik-Metodolojisi-ve-Rakip-Analizi.md](reports/GoldMoodAstro-Icerik-Metodolojisi-ve-Rakip-Analizi.md)
+
 ## Proje Özeti
 
 Danışman & kullanıcı eşleştirme platformu. Kullanıcı danışman seçiyor → randevu alıyor → ödeme yapıyor → uygulama içi sesli görüşme yapıyor. Astroloji / mood danışmanlığı odaklı.

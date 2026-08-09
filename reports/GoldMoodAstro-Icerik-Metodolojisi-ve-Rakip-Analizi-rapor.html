@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>GoldMoodAstro — İçerik Metodolojisi ve Rakip Analizi</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">@page { size: A4; margin: 16mm 14mm; }
+
+header#title-block-header { display: none; }
+body {
+color: #171324; background: #f7f1e8;
+font-family: "DejaVu Sans", Inter, Arial, sans-serif;
+line-height: 1.55; font-size: 10.5pt; margin: 0;
+}
+h1 {
+color: #4a2c72; font-size: 22pt; margin: 0 0 4mm;
+border-bottom: 2.5px solid #c9a227; padding-bottom: 3mm;
+}
+h2 {
+color: #4a2c72; font-size: 14pt; margin: 9mm 0 3mm;
+border-left: 4px solid #c9a227; padding-left: 3mm;
+page-break-after: avoid;
+}
+h3 { color: #6b4a91; font-size: 11.5pt; margin: 6mm 0 2mm; page-break-after: avoid; }
+p, li { orphans: 3; widows: 3; }
+strong { color: #3b2159; }
+code {
+background: #efe4d4; padding: 1px 4px; border-radius: 3px;
+font-family: "DejaVu Sans Mono", monospace; font-size: 9pt;
+}
+pre {
+background: #1b1230; color: #f4e8c8; padding: 4mm; border-radius: 6px;
+font-size: 8.5pt; overflow-wrap: break-word; white-space: pre-wrap;
+page-break-inside: avoid;
+}
+pre code { background: none; color: inherit; padding: 0; }
+table {
+border-collapse: collapse; width: 100%; margin: 3mm 0 5mm;
+font-size: 9.5pt; page-break-inside: avoid;
+}
+th {
+background: #4a2c72; color: #fff8df; text-align: left;
+padding: 2mm 2.5mm; font-weight: 700;
+}
+td { padding: 2mm 2.5mm; border-bottom: 1px solid #ddd0bb; vertical-align: top; }
+tr:nth-child(even) td { background: #f1e7d8; }
+blockquote {
+margin: 4mm 0; padding: 3mm 4mm; background: #f1e7d8;
+border-left: 4px solid #c9a227; page-break-inside: avoid;
+}
+blockquote p { margin: 0; }
+hr { border: none; border-top: 1px solid #d6c7ae; margin: 7mm 0; }
+a { color: #6b4a91; }
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">GoldMoodAstro — İçerik Metodolojisi ve Rakip
+Analizi</h1>
+</header>
+<h1 id="goldmoodastro--i̇çerik-metodolojisi-ve-rakip-analizi">GoldMoodAstro —
+İçerik Metodolojisi ve Rakip Analizi</h1>
+<p><strong>Hazırlanma tarihi:</strong> 9 Ağustos 2026
+<strong>Kapsam:</strong> Sosyal medya içeriğinin nereden türetildiği +
+rakip gözlemi + bundan çıkan kurallar <strong>Önceki raporlar:</strong>
+Ağustos 2026 İçerik Planı (30 Tem 2026), Sosyal Medya Stratejisi (Fatma
+Güçlü)</p>
+<hr />
+<h2 id="1-neden-bu-rapor">1. Neden bu rapor</h2>
+<p>Ağustos içeriği üretilirken şu soru soruldu: <em>bu metinleri sitenin
+motorlarından mı alıyoruz, yoksa elle mi yazıyoruz?</em></p>
+<p>Dürüst cevap: <strong>elle yazılıyordu.</strong> Günlük burç
+yorumları LLM üretimiydi ama ek içeriklerin (yeniay, dolunay, kahve
+falı, tarot, rüya) metinleri üretim script&#39;inin içine sabit metin olarak
+gömülüydü. Denetleyince iki tür hata çıktı:</p>
+<p><strong>a) Astrolojik olarak yanlış iddialar</strong></p>
+<p>11 Ağustos postu <em>&quot;Koç, Aslan ve Yay yükselenler görünürlük; Boğa,
+Başak ve Oğlak düzen alanında&quot;</em> diyordu. Burçlar <strong>elemente
+göre</strong> gruplanmıştı. Oysa bir yeniayın hangi yaşam alanını
+etkilediği yükselene göre <strong>hesaplanır</strong>:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Yükselen</th>
+<th>Metinde yazan</th>
+<th>Gerçek (Yeniay Aslan 15°)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Aslan</td>
+<td>görünürlük</td>
+<td>1. ev — kimlik ve görünürlük ✅</td>
+</tr>
+<tr class="even">
+<td>Koç</td>
+<td>görünürlük</td>
+<td><strong>5. ev — yaratıcılık, aşk, keyif</strong> ❌</td>
+</tr>
+<tr class="odd">
+<td>Yay</td>
+<td>görünürlük</td>
+<td><strong>9. ev — ufuk, öğrenme, yolculuk</strong> ❌</td>
+</tr>
+<tr class="even">
+<td>Boğa</td>
+<td>düzen</td>
+<td><strong>4. ev — ev, aile, kökler</strong> ❌</td>
+</tr>
+<tr class="odd">
+<td>Başak</td>
+<td>düzen</td>
+<td><strong>12. ev — içe dönüş, dinlenme</strong> ❌</td>
+</tr>
+<tr class="even">
+<td>Oğlak</td>
+<td>düzen</td>
+<td><strong>8. ev — derinleşme, ortak kaynaklar</strong> ❌</td>
+</tr>
+</tbody>
+</table>
+<p>Altıda biri doğruydu. 26 Ağustos postunda da aynı hata vardı. Her
+ikisi de yayına çıkmadan düzeltildi.</p>
+<p><strong>b) Metin ile görselin ayrışması</strong></p>
+<ul>
+<li>25 Ağustos: metin &quot;tekrar eden döngü / sonsuzluk&quot; diyordu, görsel
+<strong>yüzük</strong>. Sitenin kendi sözlüğünde Yüzük = <em>&quot;Evlilik,
+nişan, sözleşme, bağlılık&quot;</em>. Okuyucu sembolü sitede aratsa bambaşka
+cevap alacaktı.</li>
+<li>14 Ağustos: metin &quot;kapı&quot;dan söz ediyordu, görselde kapı yoktu (yol +
+anahtar vardı).</li>
+<li>18 Ağustos: iki tarot kartı gösteriliyordu, metin kartların adını
+bile anmıyordu.</li>
+</ul>
+<blockquote>
+<p><strong>Temel sorun:</strong> içerik &quot;makul&quot; görünüyordu ama
+<strong>doğrulanabilir değildi</strong>. Okuyucunun takip edebileceği
+bir mantık yoktu; bir astrolog incelese savunulamazdı.</p>
+</blockquote>
+<hr />
+<h2 id="2-yeni-kural-iddia-motordan-üslup-editörden">2. Yeni kural:
+iddia motordan, üslup editörden</h2>
+<p>Sitenin zaten sahip olduğu veri katmanları içerik üretimine
+bağlandı:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Katman</th>
+<th>Kaynak</th>
+<th>Hacim</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Gezegen konumları, ay fazı, retro, açılar</td>
+<td>Swiss Ephemeris (<code>computeNatalChart</code>)</td>
+<td>Herhangi bir tarih</td>
+</tr>
+<tr class="even">
+<td>Rüya sembolleri</td>
+<td><code>dream_symbols</code></td>
+<td>101 kayıt</td>
+</tr>
+<tr class="odd">
+<td>Kahve falı sembolleri</td>
+<td><code>coffee_symbols</code></td>
+<td>50 kayıt</td>
+</tr>
+<tr class="even">
+<td>Tarot kartları</td>
+<td><code>tarot_cards</code> (+ i18n)</td>
+<td>78 kart</td>
+</tr>
+<tr class="odd">
+<td>Günlük burç yorumu</td>
+<td><code>daily_horoscopes</code> (LLM)</td>
+<td>Günlük</td>
+</tr>
+</tbody>
+</table>
+<p><strong>İş bölümü net:</strong></p>
+<ul>
+<li><strong>Olgu</strong> (hangi burç, hangi ev, sembol ne anlama
+geliyor) → motordan gelir, elle yazılmaz.</li>
+<li><strong>Üslup</strong> (nasıl anlatılır, hangi soruyla açılır, CTA
+ne olur) → editöryel kalır.</li>
+</ul>
+<h3 id="nasıl-uygulandı">Nasıl uygulandı</h3>
+<p><strong>Astroloji:</strong>
+<code>packages/shared-backend/modules/astrology/daySky.ts</code>
+eklendi. Ay fazını, lunasyonun burcunu/derecesini, retroları ve en sıkı
+açıları döndürür. <code>houseMapByRising()</code> ise olayın 12 yükselen
+için hangi eve düştüğünü hesaplar (whole-sign — doğum saati gerektirmez,
+sosyal içerik için doğru araç).</p>
+<p>Lunasyon günlerinin caption&#39;ına artık şu blok
+<strong>hesaplanarak</strong> ekleniyor:</p>
+<pre><code>🌙 Yeniay • Aslan 15° (2026-08-12)
+
+Yükselenine göre hangi alanın öne çıktığı:
+• Aslan yükselen → 1. ev: kimlik ve görünürlük
+• Yengeç yükselen → 2. ev: para ve öz değer
+• Koç yükselen → 5. ev: yaratıcılık, aşk ve keyif
+  … (12&#39;sinin tamamı)</code></pre>
+<p><strong>Sembol/kart:</strong> üretim spec&#39;ine
+<code>symbols: { source, slugs }</code> eklendi. Verildiğinde
+<strong>gövde metni de görseller de aynı slug listesinden</strong>
+türer. Metin ile görselin ayrışması artık yapısal olarak imkânsız.
+Sözlükte olmayan slug veya eksik görsel → üretim durur (sessizce jenerik
+metne düşmez).</p>
+<p>Örnek — 25 Ağustos, sözlükten birebir:</p>
+<blockquote>
+<p>Dağ: zorluk, engel, sabır gerektiren durum. Köprü: zor bir dönemi
+atlatma, bağlantı kurma.</p>
+</blockquote>
+<h3 id="denetim-aracı">Denetim aracı</h3>
+<p><code>scripts/sky-report.ts</code> bir tarih aralığının efemeris
+raporunu verir (<code>--houses</code> ile ev dağılımı). <strong>Plan
+yazılmadan önce çalıştırılır</strong> — metin olgudan türesin, tersi
+değil.</p>
+<p>Ağustos 2026 planının gök tarihleri bu araçla doğrulandı,
+<strong>dördü de doğru</strong>:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Plan diyor</th>
+<th>Efemeris</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>6 Ağu — Son dördün</td>
+<td>✅ Son dördün, Boğa 18°</td>
+</tr>
+<tr class="even">
+<td>12 Ağu — Yeniay + Güneş tutulması</td>
+<td>✅ Yeniay, Aslan 15°</td>
+</tr>
+<tr class="odd">
+<td>20 Ağu — İlk dördün</td>
+<td>✅ İlk dördün, Yay 0°</td>
+</tr>
+<tr class="even">
+<td>28 Ağu — Dolunay + Ay tutulması</td>
+<td>✅ Dolunay, Balık 7°</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-rakip-analizi-89-ağustos-2026">3. Rakip analizi (8–9 Ağustos
+2026)</h2>
+<p>Ekosistem sosyal medya modülünün rakip analizi ile üretildi.</p>
+<p><strong>Gözlem tarihi:</strong> 8 Ağustos 2026 (ilk analiz), 9
+Ağustos&#39;ta tekrar çalıştırıldı — aynı public veri döndü.</p>
+<h3 id="️-yöntemin-kapsamı--neyi-ölçmedik">⚠️ Yöntemin kapsamı — neyi
+ölçmedik</h3>
+<p>Bu analiz <strong>public profil + LLM format çıkarımı</strong>dır,
+post-seviyesi scrape değildir.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Yakalanan</th>
+<th>Yakalanmayan (veri YOK)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Takipçi ve gönderi sayısı</td>
+<td>Yayın saatleri ve sıklığı</td>
+</tr>
+<tr class="even">
+<td>Bio dili ve ton</td>
+<td>Post başına etkileşim oranları</td>
+</tr>
+<tr class="odd">
+<td>Format prensipleri</td>
+<td>Caption uzunlukları</td>
+</tr>
+<tr class="even">
+<td>Örnek post başlıkları / format tipleri</td>
+<td>Hashtag deseni</td>
+</tr>
+</tbody>
+</table>
+<p>Sağdaki sütun için <strong>elimizde veri yok</strong> ve tahmin
+yazılmadı. Gerekirse post-seviyesi scraper taraması ayrıca
+planlanmalı.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Hesap</th>
+<th>Takipçi</th>
+<th>Gönderi</th>
+<th>Kaynak</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ms_astro</td>
+<td>184.000</td>
+<td>1.073</td>
+<td>instagram.com/ms_astro</td>
+</tr>
+<tr class="even">
+<td>advicemycom</td>
+<td>4.427</td>
+<td>760</td>
+<td>instagram.com/advicemycom</td>
+</tr>
+<tr class="odd">
+<td>betilojiapp</td>
+<td>135</td>
+<td>109</td>
+<td>instagram.com/betilojiapp</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ms_astro-184k--uygulama-funnellı-astroloji-markası">ms_astro
+(184K) — uygulama funnel&#39;lı astroloji markası</h3>
+<p>Bio: gökyüzü merakı + ücretsiz indirme CTA. Akış: içerik → danışman
+profili → ücretsiz analiz → üyelik.</p>
+<p><strong>1. Burç listeleri — en güçlü format.</strong> Gözlenen başlık
+tipleri: <em>&quot;Burçların en sevdiği şeyler&quot;</em>, <em>&quot;Burçların sinir
+uçları&quot;</em>, <em>&quot;En sadık burçlar sıralaması&quot;</em>, <em>&quot;En iyi dost
+burçlar&quot;</em>, <em>&quot;Burçlar bir çiçek olsaydı&quot;</em>. Mekanizma:
+<strong>insan kendini listede arıyor</strong> → yorum (&quot;tam ben&quot; / &quot;ben
+değilim&quot;) + etiketleme. GoldMood uyarlaması: <em>&quot;Yükselen burcuna göre
+bu hafta dikkat etmen gereken konu&quot;</em>, <em>&quot;Ay burcuna göre duygusal
+refleksin&quot;</em>, <em>&quot;Venüs burcuna göre ilişki dilin&quot;</em>.</p>
+<p><strong>2. Part 1 / Part 2 carousel.</strong> İlk içerik eksik
+bırakılır → ikinciye trafik, hesap içi dolaşım. Uyarlama: 12 yükseleni
+ikiye böl (&quot;Koç–Başak 1/2&quot;, &quot;Terazi–Balık 2/2&quot;), her parçada diğerine
+yönlendir.</p>
+<p><strong>3. Mizah + astroloji</strong> (&quot;sinir uçları&quot;,
+&quot;vazgeçilmezi&quot;) → paylaşılabilirlik. Premium çizgiyi bozmadan uyarlama:
+<em>&quot;Bu burcun kırmızı çizgisi&quot;</em>, <em>&quot;Bu yükselenin sessiz
+alarmı&quot;</em>.</p>
+<p><strong>4. Funnel CTA&#39;ları:</strong> &quot;Link bio&#39;da&quot;, &quot;Yükselenini
+öğren&quot;, &quot;Danışmanını seç&quot;, &quot;Ücretsiz numeroloji dene&quot;.</p>
+<h3 id="advicemycom-44k--platform-güveni-benchmarkı">advicemycom (4.4K)
+— platform güveni benchmark&#39;ı</h3>
+<p>Astroloji hesabı değil, geniş online <strong>danışmanlık
+platformu</strong>. Bizim için değeri: &quot;platform güveni + uzman havuzu +
+randevu&quot; anlatısı.</p>
+<ol type="1">
+<li><strong>Güven dili:</strong> &quot;Alanında uzman danışmanları keşfet&quot;,
+&quot;Randevunu seç&quot;, &quot;güvenli ve kolay görüşme&quot;.</li>
+<li><strong>Kategori genişliği:</strong> 35+ kategori, 1.000+ danışman
+iddiası. GoldMood bu ölçeği iddia etmemeli ama çeşitliliği anlatmalı:
+astroloji / tarot / numeroloji / kahve falı / rüya / sinastri / vedik /
+doğum haritası.</li>
+<li><strong>Danışman funnel&#39;ı:</strong> her danışman için ayrı içerik
+serisi + profil/randevu linki.</li>
+<li><strong>Düşük bariyer:</strong> ücretsiz numeroloji/burç/günlük
+yorum, ilk-soru kampanyası.</li>
+<li><strong>Uzman içerikleri:</strong> danışmandan haftalık mini yorum,
+&quot;haftanın gökyüzü notu&quot;, &quot;günün kartı&quot;, &quot;haftanın sembolü&quot;.</li>
+</ol>
+<h3 id="betilojiapp-135--biçim-ve-ton-dersi">betilojiapp (135) — biçim
+ve ton dersi</h3>
+<p>Bio dili mistik, kısa, merak uyandırıcı (&quot;cevap sende&quot;). Ton: kişisel
+farkındalık + astrolojik sezgi + sade çağrı.</p>
+<ul>
+<li>Tek ana duygu: <em>&quot;Bugün neyi fark edeceksin?&quot;</em></li>
+<li>Başlık <strong>3–6 kelime</strong>; görselde <strong>az
+metin</strong> (başlık + 1 cümle + CTA)</li>
+<li>Uzun açıklama caption&#39;da</li>
+<li>CTA&#39;lar: &quot;Kaydet&quot;, &quot;Yükselenini oku&quot;, &quot;Profildeki linkten danışman
+seç&quot;, &quot;Yorumlara burcunu yaz&quot;</li>
+<li>İçerik kolonları: günlük burç/yükselen, dolunay/yeniay, tarot,
+numeroloji, kahve falı, sinastri, danışman tanıtımı</li>
+</ul>
+<h3 id="konumlandırma-farkı">Konumlandırma farkı</h3>
+<p><strong>ms_astro = keşfet / viral / liste.</strong>
+<strong>advicemycom = güven / dönüşüm.</strong> GoldMood ikisini
+birlikte kullanmalı: büyüme için ms_astro tarzı merak formatları,
+dönüşüm için advicemy tarzı platform ve danışmanlık anlatısı.</p>
+<blockquote>
+<p><strong>Kural:</strong> birebir kopyalama yok. Format öğrenilir,
+içerik mor-altın premium mistik GoldMood dilinde özgün üretilir.</p>
+</blockquote>
+<hr />
+<h2 id="4-rakip-bulgularının-bizim-yöntemle-kesişimi">4. Rakip
+bulgularının bizim yöntemle kesişimi</h2>
+<p>En önemli bulgu, kurduğumuz yapıyı doğruluyor:</p>
+<p><strong>ms_astro&#39;nun en çok işe yarayan formatı &quot;burç listesi&quot; —
+bizim lunasyon caption&#39;ımız tam olarak bu.</strong> Fark şu: onlarınki
+editöryel bir liste, bizimki <strong>hesaplanmış</strong> bir liste.
+Okuyucu kendini listede buluyor (etkileşim mekanizması aynı) ama
+arkasında savunulabilir bir yöntem var (güven mekanizması ek).</p>
+<p>Bu, &quot;premium mistik&quot; konumlandırmayla da tutarlı: rakip eğlendiriyor,
+biz <strong>eğlendirip kanıtlıyoruz</strong>.</p>
+<hr />
+<h2 id="5-uygulanacak-içerik-kuralları">5. Uygulanacak içerik
+kuralları</h2>
+<p><strong>Hemen uygulanan:</strong></p>
+<ol type="1">
+<li>Lunasyon günlerinde caption&#39;a 12 yükselenin ev dağılımı
+(hesaplanmış) → <em>uygulandı</em></li>
+<li>Sembol/kart içeriklerinde metin ve görsel tek slug&#39;dan →
+<em>uygulandı</em></li>
+<li>Carousel&#39;in 2. slaytı 1.&#39;yi tekrar etmez; ilerletir → <em>uygulandı,
+üretimde guard var</em></li>
+<li>Plan yazılmadan önce <code>sky-report.ts</code> çalıştırılır →
+<em>araç hazır</em></li>
+</ol>
+<p><strong>Sırada (öneri):</strong></p>
+<ol start="5" type="1">
+<li><strong>Burç listesi formatını çoğalt.</strong> Şu an ayda 2
+lunasyon gününde var. Haftalık bir &quot;yükselenine göre bu hafta&quot; listesi
+eklenebilir — motor zaten hesaplıyor.</li>
+<li><strong>Görseldeki metni azalt.</strong> Şu anki kartlarda 3–4 satır
+gövde var; betilojiapp örneği 3–6 kelime başlık + tek cümle diyor. Uzun
+açıklama zaten caption&#39;da.</li>
+<li><strong>Part 1 / Part 2&#39;yi ek içeriğe de taşı.</strong> Günlük
+burçta var (12 burç ikiye bölünmüş), ek içerikte yok.</li>
+<li><strong>Danışman serisi.</strong> advicemycom her danışman için ayrı
+seri yapıyor; bizde tek danışman tanıtımı var (16 Ağustos). Danışman
+sayısı arttıkça seriye çevrilmeli.</li>
+</ol>
+<hr />
+<h2 id="6-açık-kalan--doğrulanmamış">6. Açık kalan / doğrulanmamış</h2>
+<h3 id="part-2-daha-çok-etkileşim-alıyor--zayif-si̇nyal-bulgu-değil">&quot;Part 2
+daha çok etkileşim alıyor&quot; — ZAYIF SİNYAL, bulgu değil</h3>
+<p>Ekosistem ölçümü (goldmoodastro <code>content_catalog</code>
+insights):</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th>n</th>
+<th>Ortalama etkileşim</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>series_part 1</td>
+<td>19</td>
+<td>0,58</td>
+</tr>
+<tr class="even">
+<td>series_part 2</td>
+<td>19</td>
+<td>0,89</td>
+</tr>
+</tbody>
+</table>
+<p>Oran 1,53× (~%53). Tarih aralığı: 31 Tem – 9 Ağu 2026 (~10 gün).</p>
+<p>⚠️ <strong>Örneklem 19+19 yeterli görünse de mutlak etkileşim post
+başına 1&#39;in altında</strong> (0,58 vs 0,89). Yüzde büyük duruyor ama
+sayılar minik — gürültüye sonuna kadar açık. Karar: buna
+<strong>eğilim</strong> denir, <strong>bulgu denmez</strong>. Erişim
+büyüdükçe yeniden ölçülmeli. Şu haliyle içerik stratejisinde tek başına
+dayanak yapılmamalı.</p>
+<h3 id="diğer-açıklar">Diğer açıklar</h3>
+<ul>
+<li><strong>Post-seviyesi rakip metrikleri yok</strong> (yayın saati,
+etkileşim oranı, caption uzunluğu, hashtag deseni). Mevcut analiz
+bunları ölçmüyor. Gerekirse scraper ile ayrı tarama.</li>
+<li><strong>Numeroloji motoru</strong> (<code>calculateLifePath</code>)
+henüz içeriğe bağlanmadı. Aylık &quot;yaşam yolu&quot; içeriği hesaplanabilir;
+Eylül planında uygulanmalı.</li>
+<li><strong>Rüya sembolü günleri</strong> (8, 9, 23 Ağustos) editöryel
+metinle kaldı — sözlükle çelişmiyor ama sözlükten türemiyor da.
+Yayınlanmış oldukları için dokunulmadı.</li>
+</ul>
+<hr />
+<h2 id="7-eylül-planı-için-kontrol-listesi">7. Eylül planı için kontrol
+listesi</h2>
+<ol type="1">
+<li><code>bun run scripts/sky-report.ts 2026-09-01 2026-09-30 --houses</code>
+→ planın omurgası</li>
+<li>Lunasyon günlerine <code>lunationDate</code> ver (caption&#39;a ev
+dağılımı otomatik gelir)</li>
+<li>Sembol/kart günlerine <code>symbols: { source, slugs }</code> ver
+(metin+görsel tek kaynak)</li>
+<li>Her carousel&#39;in 2. slaytına kendi içeriğini yaz (guard zaten zorunlu
+kılıyor)</li>
+<li>Eylül için <code>AUGUST_2026_DAILY_PLAN</code> muadili gün tablosunu
+yaz — yoksa günlük burç kartları jenerik havuza düşer</li>
+<li>Numeroloji içeriğini <code>calculateLifePath</code> ile hesapla</li>
+</ol>
+</body>
+</html>

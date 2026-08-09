@@ -58,6 +58,9 @@ type Spec = {
    * body/asset/secondAsset elle YAZILMAZ.
    */
   symbols?: { source: SymbolSource; slugs: string[] };
+  /** Bilinçli editöryel istisna: gövdede burç adı geçmesine rağmen hesaba bağlı
+   *  DEĞİL (ör. mizah postu). Gerekçesi yorumda yazılmalı. */
+  editorial?: boolean;
 };
 const zodiac = (slug: string) => path.resolve(ROOT, `backend/uploads/zodiac/${slug}.png`);
 const dream = (slug: string) => path.resolve(ROOT, `backend/uploads/symbols/dream/${slug}.png`);
@@ -179,6 +182,39 @@ async function risingHouseBlock(lunationDate: string): Promise<string> {
   ].join("\n");
 }
 
+const SIGN_NAMES_TR = ["Koç", "Boğa", "İkizler", "Yengeç", "Aslan", "Başak", "Terazi", "Akrep", "Yay", "Oğlak", "Kova", "Balık"];
+
+/**
+ * KURAL (2026-08-09, kullanıcı talimatı): astrolojik İDDİA elle yazılmaz, motordan gelir.
+ *
+ * Gövde metninde burç adı geçiyorsa o içerik bir hesaba dayanmak ZORUNDA:
+ *   - `lunationDate` → Swiss Ephemeris'ten ev dağılımı hesaplanır, veya
+ *   - `symbols`      → sitenin sözlüğünden türetilir, veya
+ *   - `editorial: true` → bilinçli editöryel istisna (mizah vb.), gerekçesiyle
+ *
+ * Neden guard: 11 ve 26 Ağustos'ta burçlar elemente göre gruplanmıştı ("Koç, Aslan, Yay
+ * görünürlük") ve altıda biri doğruydu. Metin "makul" göründüğü için gözden kaçtı.
+ * Bir daha gözle yakalamaya güvenmiyoruz — üretim durur.
+ */
+function assertClaimsAreDerived(s: Spec) {
+  const body = s.body ?? "";
+  if (!body) return; // symbols'tan türeyecek
+  // \b ASCII tabanlı: "Koç"un sonundaki ç word-char sayılmadığı için \bKoç\b güvenilmez.
+  // Unicode harf sınıfıyla lookaround kullan — "Yay" kelimesi "yayın" içinde eşleşmesin
+  // ama "Boğa", "Başak", "Oğlak" da kaçmasın.
+  const mentioned = SIGN_NAMES_TR.filter((sign) =>
+    new RegExp(`(?<!\\p{L})${sign}(?!\\p{L})`, "u").test(body),
+  );
+  if (!mentioned.length) return;
+  if (s.lunationDate || s.symbols || s.editorial) return;
+  throw new Error(
+    `Gün ${s.day} (${s.slug}): gövde metninde burç adı geçiyor (${mentioned.join(", ")}) ama ` +
+      `içerik bir hesaba bağlı değil. lunationDate ver (efemerisden ev dağılımı), symbols ver ` +
+      `(site sözlüğü) ya da bilinçli istisna ise editorial: true yaz. ` +
+      `Burçları elle gruplama — 11/26 Ağustos'ta bu yüzden yanlış içerik üretildi.`,
+  );
+}
+
 function cap(s: Spec, skyBlock = "") {
   const extra = skyBlock ? `\n\n${skyBlock}` : "";
   return `${s.title} ✨\n\n${s.body}${extra}\n\n${s.cta}\n\n🔗 ${SITE}\n\n${TAGS}`;
@@ -186,6 +222,7 @@ function cap(s: Spec, skyBlock = "") {
 async function build(): Promise<DraftPost[]> {
   const posts: DraftPost[] = [];
   for (const s of specs) {
+    assertClaimsAreDerived(s);
     // Lunasyona dayanan içerikte caption'a motordan hesaplanan ev dağılımını ekle.
     const skyBlock = s.lunationDate ? await risingHouseBlock(s.lunationDate) : "";
     // Sembol/kart günlerinde gövde ve görseller sözlükten türer (elle yazılmaz).
