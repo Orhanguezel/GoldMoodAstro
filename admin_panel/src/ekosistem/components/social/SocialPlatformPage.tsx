@@ -192,6 +192,10 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
   const [draftItems, setDraftItems] = useState<any[]>([]);
+  // İçerik uyumluluk denetimi: iddialar motordan mı geliyor? (kırmızı = yayın öncesi düzelt)
+  const [complianceById, setComplianceById] = useState<Record<number, any>>({});
+  const [complianceSummary, setComplianceSummary] = useState<{ total: number; ok: number; warn: number; fail: number } | null>(null);
+  const [openComplianceId, setOpenComplianceId] = useState<number | null>(null);
   const [queueItems, setQueueItems] = useState<any[]>([]);
   const [templateItems, setTemplateItems] = useState<any[]>([]);
 
@@ -319,16 +323,20 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
     setAccountInfo(null);
     setAccountDetailById({});
     setOpenAccountDetailId(null);
+    setOpenComplianceId(null);
     try {
       const live = LIVE_CONTENT_PLATFORMS.includes(platformKey);
-      const [st, createdPosts, scheduledPosts, tpl, livePosts, liveInfo] = await Promise.all([
+      const [st, createdPosts, scheduledPosts, tpl, complianceRes, livePosts, liveInfo] = await Promise.all([
         platforms.status(tk).catch(() => null),
         posts.list({ tenantKey: tk, platform: platformKey, limit: "200", sort: "created_at", order: "desc" }).catch(() => ({ items: [] })),
         posts.list({ tenantKey: tk, platform: platformKey, limit: "200", sort: "scheduled_at", order: "asc" }).catch(() => ({ items: [] })),
         templates.list(tk).catch(() => ({ items: [] })),
+        posts.compliance({ tenantKey: tk, platform: platformKey, limit: "200" }).catch(() => ({ items: {}, summary: null })),
         live ? liveContentList(tk, 50).catch(() => ({ items: [] })) : Promise.resolve({ items: [] }),
         live ? liveContentInfo(tk).catch(() => null) : Promise.resolve(null),
       ]);
+      setComplianceById((complianceRes as any)?.items ?? {});
+      setComplianceSummary((complianceRes as any)?.summary ?? null);
       setConnected(!!st?.[platformKey]?.connected);
       if (liveInfo) setAccountInfo(liveInfo);
       // Canli yayinlanmis gonderilerin gercek gorseli (FB full_picture / IG media_url) -> externalId ile esle.
@@ -846,6 +854,36 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
       {message && (
         <div className={`rounded-2xl px-5 py-3 text-sm font-bold ${message.kind === "ok" ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
           {message.text}
+        </div>
+      )}
+
+      {/* İçerik uyumluluk özeti — kırmızı varsa yayından önce görülsün. */}
+      {complianceSummary && complianceSummary.total > 0 && (
+        <div
+          className={`flex flex-wrap items-center gap-3 rounded-2xl border px-5 py-3 text-sm font-bold ${
+            complianceSummary.fail > 0
+              ? "border-rose-200 bg-rose-50 text-rose-700"
+              : "border-slate-200 bg-white text-slate-600"
+          }`}
+        >
+          <span className="inline-flex items-center gap-2">
+            {complianceSummary.fail > 0 ? <XCircle size={16} /> : <CheckCircle2 size={16} className="text-emerald-600" />}
+            İçerik uyumluluk
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-1 text-[11px] font-black text-emerald-700">
+            {complianceSummary.ok} uyumlu
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-1 text-[11px] font-black text-amber-700">
+            {complianceSummary.warn} iyileştir
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-md bg-rose-100 px-2 py-1 text-[11px] font-black text-rose-700">
+            {complianceSummary.fail} sorunlu
+          </span>
+          {complianceSummary.fail > 0 && (
+            <span className="text-[11px] font-semibold">
+              Kırmızı içerikler yayından önce düzeltilmeli — rozete tıklayıp gerekçeyi gör.
+            </span>
+          )}
         </div>
       )}
 
@@ -1402,7 +1440,13 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                                 {!isStoryPostItem(p) && !isReelPostItem(p) && mediaCount(p) > 1 && (
                                   <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-1 text-[10px] font-black uppercase text-amber-700"><Images size={11} /> Carousel · {mediaCount(p)}</span>
                                 )}
+                                <ComplianceBadge
+                                  audit={complianceById[p.id]}
+                                  open={openComplianceId === p.id}
+                                  onToggle={() => setOpenComplianceId(openComplianceId === p.id ? null : p.id)}
+                                />
                               </div>
+                              {openComplianceId === p.id && <ComplianceDetails audit={complianceById[p.id]} />}
                               <p className="text-sm font-semibold leading-6 text-slate-800">{p.caption || p.title || "(içerik yok)"}</p>
                               <p className="mt-1 text-[11px] font-bold text-slate-400">{formatDate(p.createdAt)} · {p.postType}</p>
                               {isReelPostItem(p) && !hasVideoMedia(p) && (
@@ -1474,6 +1518,16 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
                                 {p.status === "scheduled" ? `Zaman: ${formatDate(p.scheduledAt)}` : isPosted ? `Yayın: ${formatDate(p.postedAt)}` : formatDate(p.createdAt)}
                                 {p.lastError ? ` · ${p.lastError}` : ""}
                               </p>
+                              {/* Uyumluluk rozeti kuyrukta özellikle önemli: burada içerik
+                                  HENÜZ YAYINLANMADI, düzeltmek için son şans. */}
+                              <div className="mt-2">
+                                <ComplianceBadge
+                                  audit={complianceById[p.id]}
+                                  open={openComplianceId === p.id}
+                                  onToggle={() => setOpenComplianceId(openComplianceId === p.id ? null : p.id)}
+                                />
+                              </div>
+                              {openComplianceId === p.id && <ComplianceDetails audit={complianceById[p.id]} />}
                             </div>
                           </div>
                           <div className="flex shrink-0 items-center gap-2">
@@ -1652,6 +1706,54 @@ export default function SocialPlatformPage({ platformKey }: { platformKey: strin
           </div>
         );
       })()}
+    </div>
+  );
+}
+
+
+/**
+ * İçerik uyumluluk rozeti — "bu postun iddiaları kaynağına sadık mı?"
+ *
+ * Tasarım kararı: çıplak puan ne düzelteceğini söylemez. Rozet tıklanabilir;
+ * açılınca her bulgunun gerekçesi ve ÖNERİSİ görünür. Kırmızı = yayın öncesi düzelt.
+ */
+function ComplianceBadge({ audit, open, onToggle }: { audit: any; open: boolean; onToggle: () => void }) {
+  if (!audit) return null;
+  const style =
+    audit.level === "fail"
+      ? "bg-rose-100 text-rose-700 ring-rose-200"
+      : audit.level === "warn"
+        ? "bg-amber-100 text-amber-700 ring-amber-200"
+        : "bg-emerald-100 text-emerald-700 ring-emerald-200";
+  const label = audit.level === "fail" ? "Sorunlu" : audit.level === "warn" ? "İyileştir" : "Uyumlu";
+  const Icon = audit.level === "fail" ? XCircle : audit.level === "warn" ? Sparkles : CheckCircle2;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      title={audit.findings?.length ? "Gerekçeleri gör" : "Sorun yok"}
+      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-black uppercase tracking-wide ring-1 transition hover:brightness-95 ${style}`}
+    >
+      <Icon size={11} />
+      {label} · {audit.score}
+      {audit.findings?.length > 0 && <ChevronDown size={11} className={open ? "rotate-180 transition" : "transition"} />}
+    </button>
+  );
+}
+
+function ComplianceDetails({ audit }: { audit: any }) {
+  if (!audit?.findings?.length) return null;
+  return (
+    <div className="mt-2 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+      {audit.findings.map((f: any) => (
+        <div key={f.rule} className="text-[11px] leading-5">
+          <span className={`mr-2 rounded px-1.5 py-0.5 font-black uppercase ${f.level === "fail" ? "bg-rose-200 text-rose-800" : "bg-amber-200 text-amber-800"}`}>
+            {f.level === "fail" ? "Sorun" : "Uyarı"}
+          </span>
+          <span className="font-bold text-slate-800">{f.message}</span>
+          <div className="mt-0.5 pl-1 text-slate-500">↳ {f.hint}</div>
+        </div>
+      ))}
     </div>
   );
 }

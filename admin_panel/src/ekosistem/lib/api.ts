@@ -144,6 +144,14 @@ export const posts = {
     return fetcher<{ items: any[]; total: number }>(`/posts${qs}`);
   },
   get: (id: number) => fetcher<any>(`/posts/${id}`),
+  /** İçerik uyumluluk denetimi — iddialar motordan mı geliyor? (kırmızı = yayın öncesi düzelt) */
+  compliance: (params?: Record<string, string>) => {
+    const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+    return fetcher<{
+      items: Record<string, { postId: number; level: "ok" | "warn" | "fail"; score: number; findings: Array<{ rule: string; level: "warn" | "fail"; message: string; hint: string }> }>;
+      summary: { total: number; ok: number; warn: number; fail: number };
+    }>(`/posts/compliance${qs}`);
+  },
   details: (id: number, refresh = false) =>
     fetcher<any>(`/posts/${id}/details${refresh ? "?refresh=1" : ""}`),
   create: (data: any) =>
