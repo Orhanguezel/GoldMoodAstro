@@ -94,13 +94,13 @@ export const SOCIAL_PLATFORMS: SocialPlatformConfig[] = [
     key: "telegram",
     label: "Telegram",
     title: "Telegram Yönetimi",
-    description: "Bot token + chat ID bağlantısı ve bildirim yayını.",
+    description: "Bot token + chat ID bağlantısı ve sosyal paylaşım.",
     accent: "text-sky-500",
     icon: (size = 20) => <Send size={size} />,
-    connectKind: "external",
+    connectKind: "manual",
     canPublish: true,
-    // /admin/social/telegram → zengin özel sayfaya yönlendirir (youtube gibi).
-    externalHref: "/admin/telegram",
+    // NOT: /admin/social/telegram diğer platformlar gibi SocialPlatformPage'i gösterir
+    // (sosyal medya yönetimi). Bildirim/auto-reply ayrı sayfa: /admin/telegram (sidebar'da değil).
   },
   {
     key: "tiktok",
