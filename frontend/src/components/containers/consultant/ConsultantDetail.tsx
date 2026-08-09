@@ -113,7 +113,10 @@ export default function ConsultantDetail({ id, locale }: Props) {
   }
 
   const rating = parseFloat(consultant.rating_avg || '0');
-  const isOnline = Boolean(consultant.is_online);
+  // CANLI = danışman "canlı görüşme" toggle'ını (is_available) açtıysa. Backend anlık
+  // görüşme talebini de is_available ile kabul ediyor (bookings controller ~696), bu
+  // yüzden buton bu sinyale bağlı — is_online (heartbeat) değil.
+  const isLive = consultant.is_available === 1 || (consultant.is_available as unknown as boolean) === true;
   const initials = (consultant.full_name || 'GS').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
   const format = (key: string, fallback: string, vars: Record<string, string | number>) =>
     Object.entries(vars).reduce(
@@ -170,7 +173,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
       router.push(`/${locale}/login?next=${encodeURIComponent(`/${locale}/consultants/${id}`)}`);
       return;
     }
-    if (!isOnline) {
+    if (!isLive) {
       toast.error(ui('ui_consultant_error_not_online', 'Consultant is not online right now'));
       return;
     }
@@ -246,7 +249,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                   </div>
                 )}
               </div>
-              {isOnline && (
+              {isLive && (
                 <div className="absolute bottom-4 right-4 w-6 h-6 bg-(--gm-success) border-4 border-(--gm-bg) rounded-full" />
               )}
             </div>
@@ -257,10 +260,10 @@ export default function ConsultantDetail({ id, locale }: Props) {
                   {consultant.full_name}
                 </h1>
                 <ShieldCheck className="w-8 h-8 text-(--gm-gold)" />
-                {isOnline && (
+                {isLive && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-(--gm-success)/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-(--gm-success)">
                     <span className="h-1.5 w-1.5 rounded-full bg-(--gm-success) animate-pulse" />
-                    {ui('ui_consultant_online', 'Online')}
+                    {ui('ui_consultant_live', 'Canlı')}
                   </span>
                 )}
                 <button
@@ -422,7 +425,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
               <MessageCircle className="w-4 h-4" />
               {ui('ui_consultant_send_message', 'Send Message')}
             </button>
-            {isOnline && (
+            {isLive && (
               <button
                 onClick={handleRequestNow}
                 disabled={isRequestingNow}
@@ -433,7 +436,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--gm-text)]" />
                 </span>
                 <Phone className="w-4 h-4" />
-                {isRequestingNow ? ui('ui_consultant_request_now_loading', 'Sending Request...') : ui('ui_consultant_request_now', 'Talk Now (5 min)')}
+                {isRequestingNow ? ui('ui_consultant_request_now_loading', 'Talep gönderiliyor...') : ui('ui_consultant_talk_now', 'Hemen Görüş (5 dk)')}
               </button>
             )}
             {mediaSettings?.audio_enabled && (

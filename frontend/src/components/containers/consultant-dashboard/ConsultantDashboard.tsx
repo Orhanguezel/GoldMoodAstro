@@ -275,8 +275,8 @@ function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabCha
                   : 'bg-(--gm-border-soft) text-(--gm-text) opacity-50'
               }`}>
                 {profile.is_available
-                  ? ui('ui_dashboard_online', 'Online')
-                  : ui('ui_dashboard_offline', 'Offline')}
+                  ? ui('ui_dashboard_live_badge', 'Canlı')
+                  : ui('ui_dashboard_offline_badge', 'Çevrimdışı')}
               </span>
             </div>
           </div>
@@ -571,7 +571,7 @@ function OverviewPanel({
                   : 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]'
               }`}
             >
-              {profile.is_available ? ui('ui_dashboard_online', 'Online') : ui('ui_dashboard_offline', 'Offline')}
+              {profile.is_available ? ui('ui_dashboard_live_badge', 'Canlı') : ui('ui_dashboard_offline_badge', 'Çevrimdışı')}
             </span>
           </div>
         </div>
@@ -681,8 +681,8 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
     try {
       await updateProfile({ is_available: isAvailable ? 0 : 1 }).unwrap();
       toast.success(isAvailable
-        ? ui('ui_dashboard_toast_unavailable', 'Müsait değilsiniz — profiliniz sitede GİZLİ, danışanlar sizi göremez.')
-        : ui('ui_dashboard_toast_available', 'Müsaitsiniz — profiliniz sitede görünür ve randevu alınabilir.'));
+        ? ui('ui_dashboard_toast_live_off', 'Canlı görüşme KAPALI. Profiliniz sitede kalır ama anlık görüşme talebi almazsınız.')
+        : ui('ui_dashboard_toast_live_on', 'CANLI görüşmeye açıksınız — “Canlı Görüşme” bölümünde görünürsünüz ve anlık görüşme talebi alabilirsiniz.'));
     } catch (e) {
       toast.error(extractApiError(e, ui('ui_dashboard_toast_update_failed', 'Could not update')));
     }
@@ -691,7 +691,7 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
     <button
       onClick={handleToggle}
       disabled={isLoading}
-      title={ui('ui_dashboard_available_hint', 'Bu düğme profilinizin sitede listelenip listelenmeyeceğini belirler. “Müsait değil” iken danışanlar sizi göremez.')}
+      title={ui('ui_dashboard_live_hint', 'Şu an görüşme yapmak istiyorsanız açın: ana sayfadaki “Canlı Görüşme” bölümünde görünür, kartınızda CANLI rozeti çıkar ve anlık görüşme talebi alabilirsiniz. Profiliniz KAPALI iken de sitede listelenmeye devam eder.')}
       className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border text-xs font-bold uppercase tracking-[0.18em] transition-all ${
         isAvailable
           ? 'border-(--gm-success)/40 bg-(--gm-success)/10 text-(--gm-success) hover:bg-(--gm-success)/20'
@@ -699,7 +699,7 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
       }`}
     >
       {isAvailable ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-      {isAvailable ? ui('ui_dashboard_available', 'Müsait · sitede görünür') : ui('ui_dashboard_unavailable', 'Müsait değil · gizli')}
+      {isAvailable ? ui('ui_dashboard_live_on', 'Canlı · görüşmeye açık') : ui('ui_dashboard_live_off', 'Canlı görüşme kapalı')}
     </button>
   );
 }

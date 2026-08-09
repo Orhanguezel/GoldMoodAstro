@@ -31,7 +31,9 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
   const minService = Math.round(Number(consultant.min_service_price) || 0);
   const price = basePrice > 0 ? basePrice : minService;
   const priceIsStarting = basePrice <= 0 && minService > 0;
-  const isOnline = Boolean(consultant.is_online);
+  // CANLI = danışman "canlı görüşme" toggle'ını (is_available) açtıysa. Anlık görüşme +
+  // rozet + "Talk Now" bu sinyale bağlı ve ana sayfadaki "Canlı Görüşme" bölümüyle senkron.
+  const isLive = consultant.is_available === 1 || (consultant.is_available as unknown as boolean) === true;
   const detailHref = `/${locale}/consultants/${consultant.slug || consultant.id}`;
   const favoriteBusy = addFavoriteState.isLoading || removeFavoriteState.isLoading;
   const initials = (consultant.full_name || 'GS')
@@ -93,11 +95,11 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
           </div>
         )}
 
-        {/* Online badge */}
-        {isOnline && (
+        {/* CANLI badge — danışman canlı görüşmeye açık */}
+        {isLive && (
           <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 bg-[var(--gm-success)] text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-lg">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--gm-text)] animate-pulse" />
-            {ui('ui_consultantbrowse_online', 'Online')}
+            {ui('ui_consultantbrowse_live', 'Canlı')}
           </span>
         )}
 
@@ -173,19 +175,19 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
           <Link
             href={detailHref}
             className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-full border border-[var(--gm-gold)]/40 hover:border-[var(--gm-gold)] hover:bg-[var(--gm-gold)]/10 text-[var(--gm-gold)] text-[10px] font-bold uppercase tracking-widest py-2.5 transition-all ${
-              !isOnline ? 'col-span-2' : ''
+              !isLive ? 'col-span-2' : ''
             }`}
           >
             <Calendar className="w-3.5 h-3.5" />
             {ui('ui_consultantbrowse_book_appointment', 'Book Appointment')}
           </Link>
-          {isOnline && (
+          {isLive && (
             <Link
               href={`${detailHref}?action=instant`}
               className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[var(--gm-success)] hover:bg-[var(--gm-success)]/90 text-[var(--gm-text)] text-[10px] font-bold uppercase tracking-widest py-2.5 transition-all shadow-md"
             >
               <Phone className="w-3.5 h-3.5" />
-              {ui('ui_consultantbrowse_talk_now', 'Talk Now')}
+              {ui('ui_consultantbrowse_talk_now', 'Hemen Görüş')}
             </Link>
           )}
         </div>
