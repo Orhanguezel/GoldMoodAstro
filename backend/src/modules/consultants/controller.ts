@@ -24,6 +24,7 @@ import {
   getConsultantById,
   getConsultantOverview,
   getConsultantSlots,
+  setConsultantHidden,
   listApprovedConsultants,
   listConsultantsAdmin,
   rejectConsultant,
@@ -201,6 +202,16 @@ export const listConsultantsAdminHandler: RouteHandler = async (req) => {
 export const getConsultantAdminHandler: RouteHandler = async (req, reply) => {
   const { id } = consultantIdParamsSchema.parse(req.params ?? {});
   const row = await getConsultantById(id);
+  if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
+  return { data: row };
+};
+
+// Admin: danışmanı pasife çek / aktif et (silmeden gizle). Body: { is_hidden: boolean|0|1 }
+export const setConsultantVisibilityAdminHandler: RouteHandler = async (req, reply) => {
+  const { id } = consultantIdParamsSchema.parse(req.params ?? {});
+  const body = (req.body ?? {}) as { is_hidden?: unknown };
+  const hidden = body.is_hidden === true || body.is_hidden === 1 || body.is_hidden === '1';
+  const row = await setConsultantHidden(id, hidden);
   if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
   return { data: row };
 };

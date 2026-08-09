@@ -129,6 +129,7 @@ function withUserSelect(locale?: string | null, userId?: string | null) {
     approval_status: consultants.approval_status,
     rejection_reason: consultants.rejection_reason,
     is_available: consultants.is_available,
+    is_hidden: consultants.is_hidden,
     rating_avg: consultants.rating_avg,
     rating_count: consultants.rating_count,
     total_sessions: consultants.total_sessions,
@@ -162,6 +163,7 @@ function lightSelect(locale?: string | null, userId?: string | null) {
     currency: consultants.currency,
     approval_status: consultants.approval_status,
     is_available: consultants.is_available,
+    is_hidden: consultants.is_hidden,
     rating_avg: consultants.rating_avg,
     rating_count: consultants.rating_count,
     total_sessions: consultants.total_sessions,
@@ -185,10 +187,13 @@ export async function listApprovedConsultants(filters: ListConsultantsQuery, loc
 
   const where = [
     eq(consultants.approval_status, 'approved'),
+    // Pasif/gizli danışman listelenmez (admin/danışman profili silmeden gizleyebilir).
+    eq(consultants.is_hidden, 0),
+    // PROFİL FOTOĞRAFI ZORUNLU — avatar yoksa yayınlanmaz.
+    sql`NULLIF(TRIM(${users.avatar_url}), '') IS NOT NULL`,
     // NOT: is_available (Online/Offline toggle) ARTIK listelemeyi ENGELLEMEZ. Danışman
-    // onaylı + fiyatlı + slug'lı ise her zaman listede kalır; toggle yalnızca "şu an
-    // müsait/değil" rozetini etkiler (randevu gelecek slot'lara göre alınır). Danışmanlar
-    // toggle'ı yanlışlıkla kapatınca sitede kaybolmuyor artık. "Sadece online" filtresi
+    // onaylı + fiyatlı + slug'lı + FOTOĞRAFLI + gizli değil ise listede kalır; toggle
+    // yalnızca "canlı görüşme" rozetini/anlık görüşmeyi etkiler. "Sadece online" filtresi
     // is_online (heartbeat) üzerinden çalışır (aşağıdaki onlineOnly).
     // Temel seans ücreti > 0 VEYA aktif fiyatlı hizmeti olan danışmanlar yayınlanır.
     hasSellablePricePredicate(),
@@ -357,6 +362,15 @@ export async function rejectConsultant(id: string, rejectionReason: string) {
       rejection_reason: rejectionReason,
       updated_at: new Date(),
     } as any)
+    .where(eq(consultants.id, id));
+  return getConsultantById(id);
+}
+
+/** Danışmanı pasife çek / aktif et (silmeden gizle). is_hidden=1 → sitede görünmez. */
+export async function setConsultantHidden(id: string, hidden: boolean) {
+  await db
+    .update(consultants)
+    .set({ is_hidden: hidden ? 1 : 0, updated_at: new Date() } as any)
     .where(eq(consultants.id, id));
   return getConsultantById(id);
 }

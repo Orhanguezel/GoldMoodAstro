@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS consultants (
   approval_status ENUM('pending','approved','rejected') DEFAULT 'pending',
   rejection_reason TEXT,
   is_available TINYINT DEFAULT 1,
+  is_hidden TINYINT DEFAULT 0,
   rating_avg DECIMAL(3,2) DEFAULT 0.00,
   rating_count INT DEFAULT 0,
   total_sessions INT DEFAULT 0,

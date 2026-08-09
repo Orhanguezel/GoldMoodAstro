@@ -25,6 +25,7 @@ export type ConsultantAdmin = {
   approval_status: 'pending' | 'approved' | 'rejected';
   rejection_reason: string | null;
   is_available: number | null;
+  is_hidden?: number | null;
   rating_avg: string | null;
   rating_count: number | null;
   total_sessions: number | null;
@@ -54,16 +55,19 @@ export function consultantCompletion(c: Record<string, any> | null | undefined):
 
 /** Danışman public'te YAYINDA mı? Değilse hangi şart eksik. */
 export function consultantPublishStatus(c: Record<string, any> | null | undefined): {
-  published: boolean; missing: string[];
+  published: boolean; missing: string[]; hidden: boolean;
 } {
   const missing: string[] = [];
   // Fiyat şartı: temel seans ücreti > 0 VEYA aktif fiyatlı hizmeti var (gate ile aynı).
   const hasSellablePrice = Number(c?.session_price || 0) > 0 || Number(c?.min_service_price || 0) > 0;
   if (c?.approval_status !== 'approved') missing.push('onay');
   if (!hasSellablePrice) missing.push('fiyat');
-  // NOT: is_available (Online/Offline) ARTIK yayını engellemez — sadece rozet. Gate ile senkron.
+  // PROFİL FOTOĞRAFI ZORUNLU — avatar yoksa yayınlanmaz (gate ile aynı).
+  if (!c?.avatar_url) missing.push('profil fotoğrafı');
   if (!c?.slug) missing.push('slug');
-  return { published: missing.length === 0, missing };
+  // NOT: is_available (Online/Offline) yayını engellemez — sadece rozet.
+  const hidden = Number(c?.is_hidden || 0) === 1;
+  return { published: missing.length === 0 && !hidden, missing, hidden };
 }
 
 export type ConsultantServiceAdmin = {
@@ -150,6 +154,19 @@ export const consultantsAdminApi = baseApi.injectEndpoints({
         { type: 'Consultants' as const, id: 'LIST' },
       ],
     }),
+    // Pasife çek / aktif et (silmeden gizle). is_hidden=1 → sitede görünmez.
+    setConsultantVisibilityAdmin: b.mutation<ConsultantAdmin, { id: string; is_hidden: boolean }>({
+      query: ({ id, is_hidden }) => ({
+        url: `/admin/consultants/${encodeURIComponent(id)}/visibility`,
+        method: 'PATCH',
+        body: { is_hidden },
+      }),
+      transformResponse: unwrapOne,
+      invalidatesTags: (_r, _e, arg) => [
+        { type: 'Consultants' as const, id: arg.id },
+        { type: 'Consultants' as const, id: 'LIST' },
+      ],
+    }),
     listConsultantServicesAdmin: b.query<ConsultantServiceAdmin[], string>({
       query: (consultantId) => ({ url: `/admin/consultants/${encodeURIComponent(consultantId)}/services` }),
       transformResponse: unwrapServices,
@@ -203,6 +220,7 @@ export const {
   useGetConsultantAdminQuery,
   useApproveConsultantAdminMutation,
   useRejectConsultantAdminMutation,
+  useSetConsultantVisibilityAdminMutation,
   useListConsultantServicesAdminQuery,
   useCreateConsultantServiceAdminMutation,
   useUpdateConsultantServiceAdminMutation,

@@ -55,6 +55,9 @@ export const consultants = mysqlTable(
     ),
     rejection_reason: text('rejection_reason'),
     is_available: tinyint('is_available').default(1),
+    // Pasif/gizli: admin (veya danışman) profili SİLMEDEN geçici olarak sitede
+    // gizleyebilir. is_available (canlı görüşme toggle) ile KARIŞTIRILMAMALI.
+    is_hidden: tinyint('is_hidden').default(0),
     rating_avg: decimal('rating_avg', { precision: 3, scale: 2 }).default('0.00'),
     rating_count: int('rating_count').default(0),
     total_sessions: int('total_sessions').default(0),

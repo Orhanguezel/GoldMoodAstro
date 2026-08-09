@@ -24,7 +24,9 @@ import {
   UserRound,
   CheckCircle2,
   Circle,
-  ImageIcon
+  ImageIcon,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -56,6 +58,7 @@ import {
   useGetConsultantAdminQuery,
   useListConsultantServicesAdminQuery,
   useRejectConsultantAdminMutation,
+  useSetConsultantVisibilityAdminMutation,
   useUpdateConsultantServiceAdminMutation,
   useListServiceCategoriesAdminQuery,
   useGetSeoQualityDetailQuery,
@@ -118,6 +121,7 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
   }, [categoriesQuery.data]);
   const [approve, approveState] = useApproveConsultantAdminMutation();
   const [reject, rejectState] = useRejectConsultantAdminMutation();
+  const [setVisibility, visibilityState] = useSetConsultantVisibilityAdminMutation();
   const [createService, createServiceState] = useCreateConsultantServiceAdminMutation();
   const [updateService, updateServiceState] = useUpdateConsultantServiceAdminMutation();
   const [deleteService, deleteServiceState] = useDeleteConsultantServiceAdminMutation();
@@ -220,6 +224,18 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
       query.refetch();
     } catch {
       toast.error(t('actions.reject_failed'));
+    }
+  }
+
+  // Pasife çek / aktif et — profili silmeden sitede gizler (is_hidden).
+  async function toggleHiddenCurrent() {
+    const next = !(Number((item as any)?.is_hidden) === 1);
+    try {
+      await setVisibility({ id, is_hidden: next }).unwrap();
+      toast.success(next ? 'Danışman pasife alındı — sitede görünmüyor.' : 'Danışman yeniden aktif — sitede görünür.');
+      query.refetch();
+    } catch {
+      toast.error('İşlem başarısız.');
     }
   }
 
@@ -327,7 +343,7 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
   const completionPct = Math.round((filledCount / profileChecks.length) * 100);
   const initials = (item.full_name || '?').split(' ').map((s) => s[0]).slice(0, 2).join('').toUpperCase();
   const publish = consultantPublishStatus(item);
-  const missingLabels: Record<string, string> = { onay: 'onay', fiyat: 'seans ücreti', 'müsaitlik': 'müsaitlik', slug: 'public adres (slug)' };
+  const missingLabels: Record<string, string> = { onay: 'onay', fiyat: 'seans ücreti', 'profil fotoğrafı': 'profil fotoğrafı', 'müsaitlik': 'müsaitlik', slug: 'public adres (slug)' };
 
   return (
     <div className="space-y-10 pb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -384,6 +400,24 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
+            onClick={toggleHiddenCurrent}
+            disabled={visibilityState.isLoading}
+            title="Danışmanı silmeden sitede gizle / yeniden yayınla"
+            className={cn(
+              "rounded-full px-6 h-12 font-bold tracking-widest uppercase text-[10px] transition-all",
+              Number((item as any).is_hidden) === 1
+                ? "border-gm-gold/30 text-gm-gold hover:bg-gm-gold hover:text-gm-bg"
+                : "border-gm-border-soft text-gm-muted hover:bg-gm-surface",
+            )}
+          >
+            {Number((item as any).is_hidden) === 1 ? (
+              <><Eye className="mr-2 size-4" /> Aktif et</>
+            ) : (
+              <><EyeOff className="mr-2 size-4" /> Pasif yap</>
+            )}
+          </Button>
+          <Button
+            variant="outline"
             onClick={rejectCurrent}
             disabled={rejectState.isLoading || item.approval_status === 'rejected'}
             className="rounded-full border-gm-error/20 text-gm-error hover:bg-gm-error hover:text-white px-8 h-12 font-bold tracking-widest uppercase text-[10px] transition-all"
@@ -402,16 +436,20 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Yayın durumu — sitede görünüyor mu, eksik ne */}
+      {/* Yayın durumu — sitede görünüyor mu, eksik ne / pasif mi */}
       <div className={cn(
         "rounded-2xl border px-6 py-4 flex items-center gap-3",
-        publish.published
-          ? "bg-gm-success/10 border-gm-success/20 text-gm-success"
-          : "bg-gm-error/10 border-gm-error/20 text-gm-error",
+        publish.hidden
+          ? "bg-gm-gold/10 border-gm-gold/20 text-gm-gold"
+          : publish.published
+            ? "bg-gm-success/10 border-gm-success/20 text-gm-success"
+            : "bg-gm-error/10 border-gm-error/20 text-gm-error",
       )}>
-        {publish.published ? <CheckCircle2 className="size-5 shrink-0" /> : <AlertCircle className="size-5 shrink-0" />}
+        {publish.hidden ? <EyeOff className="size-5 shrink-0" /> : publish.published ? <CheckCircle2 className="size-5 shrink-0" /> : <AlertCircle className="size-5 shrink-0" />}
         <div className="text-sm font-bold">
-          {publish.published ? (
+          {publish.hidden ? (
+            <>Bu danışman <span className="uppercase">pasif</span> — profili silinmedi ama sitede görünmüyor. "Aktif et" ile yeniden yayınlanır.{publish.missing.length > 0 ? ` (Ayrıca eksik: ${publish.missing.map((m) => missingLabels[m] ?? m).join(', ')}.)` : ''}</>
+          ) : publish.published ? (
             <>Bu danışman sitede <span className="uppercase">yayında</span> — profil eksiksiz.</>
           ) : (
             <>Sitede <span className="uppercase">yayında değil</span> — eksik: {publish.missing.map((m) => missingLabels[m] ?? m).join(', ')}.</>

@@ -430,7 +430,13 @@ export default function ConsultantsClient() {
                             >
                               profil %{completionPct}
                             </span>
-                            {item.approval_status === 'approved' && !publish.published && (
+                            {item.approval_status === 'approved' && publish.hidden && (
+                              <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest border bg-gm-gold/10 text-gm-gold border-gm-gold/20"
+                                title="Pasif — profili silinmedi ama sitede görünmüyor">
+                                pasif
+                              </span>
+                            )}
+                            {item.approval_status === 'approved' && !publish.hidden && !publish.published && (
                               <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest border bg-gm-error/10 text-gm-error border-gm-error/20"
                                 title={`Yayında değil — eksik: ${publish.missing.join(', ')}`}>
                                 yayında değil
