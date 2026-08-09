@@ -36,7 +36,7 @@ export async function registerExtApi(api: FastifyInstance) {
       querystring: {
         type: 'object',
         properties: {
-          type: { type: 'string', description: 'blog (varsayılan) | horoscope | tarot (genişletilecek: coffee/dream/numerology/yildizname)' },
+          type: { type: 'string', description: 'blog (varsayılan) | horoscope | tarot | coffee | dream' },
           locale: { type: 'string', default: 'tr' },
           limit: { type: 'integer', minimum: 1, maximum: 200, default: 50 },
           period: { type: 'string', default: 'daily', description: 'type=horoscope için: daily|weekly|monthly|transit' },

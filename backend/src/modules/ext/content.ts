@@ -161,11 +161,55 @@ async function fetchTarot(locale: string, limit: number) {
   });
 }
 
-// type → fetcher. Yeni fal türü (coffee/dream/numerology/yildizname) buraya eklenir.
+// Sembol sözlüğü falları (coffee_symbols / dream_symbols aynı şekil: slug, name_tr,
+// meaning, category JSON). Post üretimi için "X sembolü ne anlama gelir" içeriği.
+async function fetchSymbolFal(
+  table: 'coffee_symbols' | 'dream_symbols',
+  falType: 'coffee' | 'dream',
+  toolPath: string,
+  locale: string,
+  limit: number,
+) {
+  const r = rows(
+    await db.execute(sql`
+      SELECT id, slug, name_tr, meaning, category, created_at
+      FROM ${sql.raw(table)}
+      ORDER BY name_tr ASC
+      LIMIT ${limit}
+    `),
+  );
+  const base = storefrontBase();
+  return r.map((s: any) => {
+    let category: string[] = [];
+    try {
+      category = Array.isArray(s.category) ? s.category : JSON.parse(s.category || '[]');
+    } catch { category = []; }
+    const falLabel = falType === 'coffee' ? 'Kahve Falı' : 'Rüya';
+    return {
+      id: `${falType}:${s.id}`,
+      type: falType,
+      category: category[0] ?? falType,
+      title: `${s.name_tr} — ${falLabel} Sembolü Anlamı`,
+      slug: s.slug,
+      url: `${base}/${locale}/${toolPath}`,
+      excerpt: excerptOf(s.meaning),
+      body: s.meaning ?? null,
+      image_url: null,
+      locale,
+      published_at: s.created_at,
+      updated_at: s.created_at,
+      tags: [...category, falType === 'coffee' ? 'kahve falı' : 'rüya tabiri', 'fal'].filter(Boolean),
+    };
+  });
+}
+
+// type → fetcher. Yeni fal türü buraya eklenir (registry deseni).
 const ARTICLE_TYPES: Record<string, (locale: string, limit: number, opts: { period: string }) => Promise<any[]>> = {
   blog: (l, n) => fetchBlog(l, n),
   horoscope: (l, n, o) => fetchHoroscopes(l, n, o.period),
   tarot: (l, n) => fetchTarot(l, n),
+  coffee: (l, n) => fetchSymbolFal('coffee_symbols', 'coffee', 'kahve-fali', l, n),
+  dream: (l, n) => fetchSymbolFal('dream_symbols', 'dream', 'ruya-tabiri', l, n),
 };
 
 const articlesQuerySchema = z.object({
