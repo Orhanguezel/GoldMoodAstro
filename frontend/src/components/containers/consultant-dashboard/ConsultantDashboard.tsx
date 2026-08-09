@@ -300,7 +300,8 @@ function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabCha
           if (profile.approval_status !== 'approved') miss.push(ui('ui_dashboard_publish_miss_approval', 'onay'));
           // Fiyat şartı: temel seans ücreti > 0 VEYA aktif fiyatlı hizmeti var.
           if (!(Number(profile.session_price || 0) > 0 || Number((profile as any).min_service_price || 0) > 0)) miss.push(ui('ui_dashboard_publish_miss_price', 'seans ücreti'));
-          if (Number(profile.is_available || 0) !== 1) miss.push(ui('ui_dashboard_publish_miss_available', 'müsaitlik'));
+          // NOT: müsaitlik (Online/Offline) ARTIK yayını engellemez — profil onaylı + fiyatlı
+          // + slug'lı ise her zaman yayında; toggle sadece "şu an müsait/değil" rozeti.
           if (!profile.slug) miss.push(ui('ui_dashboard_publish_miss_slug', 'public adres'));
           if (miss.length === 0) {
             return (

@@ -185,7 +185,11 @@ export async function listApprovedConsultants(filters: ListConsultantsQuery, loc
 
   const where = [
     eq(consultants.approval_status, 'approved'),
-    eq(consultants.is_available, 1),
+    // NOT: is_available (Online/Offline toggle) ARTIK listelemeyi ENGELLEMEZ. Danışman
+    // onaylı + fiyatlı + slug'lı ise her zaman listede kalır; toggle yalnızca "şu an
+    // müsait/değil" rozetini etkiler (randevu gelecek slot'lara göre alınır). Danışmanlar
+    // toggle'ı yanlışlıkla kapatınca sitede kaybolmuyor artık. "Sadece online" filtresi
+    // is_online (heartbeat) üzerinden çalışır (aşağıdaki onlineOnly).
     // Temel seans ücreti > 0 VEYA aktif fiyatlı hizmeti olan danışmanlar yayınlanır.
     hasSellablePricePredicate(),
     onlineOnly ? sql`${isOnlineSelect()} = 1` : undefined,

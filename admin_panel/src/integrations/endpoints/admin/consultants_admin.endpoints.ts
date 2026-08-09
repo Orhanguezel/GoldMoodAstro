@@ -61,7 +61,7 @@ export function consultantPublishStatus(c: Record<string, any> | null | undefine
   const hasSellablePrice = Number(c?.session_price || 0) > 0 || Number(c?.min_service_price || 0) > 0;
   if (c?.approval_status !== 'approved') missing.push('onay');
   if (!hasSellablePrice) missing.push('fiyat');
-  if (Number(c?.is_available || 0) !== 1) missing.push('müsaitlik');
+  // NOT: is_available (Online/Offline) ARTIK yayını engellemez — sadece rozet. Gate ile senkron.
   if (!c?.slug) missing.push('slug');
   return { published: missing.length === 0, missing };
 }
