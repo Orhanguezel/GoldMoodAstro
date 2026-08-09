@@ -12,6 +12,11 @@ export async function postsRoutes(app: FastifyInstance) {
   app.post("/x/own-tweets/sync", ctrl.syncXOwnTweets);
   app.patch("/x/comments/:commentId/draft", ctrl.updateXReplyDraft);
   app.post("/x/comments/:commentId/reply", ctrl.publishXReply);
+  // Uyumluluk denetimi — :id route'larından ÖNCE kayıtlı olmalı, yoksa
+  // "/compliance" bir id sanılır (Fastify statik segmenti önceler ama sıra
+  // netliği için burada; bkz. api_error_handler_order dersi).
+  app.get("/compliance", ctrl.complianceList);
+  app.get("/:id/compliance", ctrl.complianceOne);
   app.get("/:id/details", ctrl.details);
   app.get("/:id", ctrl.getById);
   app.post("/x/thread", ctrl.createXThread);

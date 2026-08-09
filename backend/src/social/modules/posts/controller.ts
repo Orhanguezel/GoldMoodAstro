@@ -15,6 +15,7 @@ import * as publisher from "../platforms/publisher";
 import * as xPlatform from "../platforms/x";
 import * as facebook from "../platforms/facebook";
 import * as youtubePlatform from "../platforms/youtube";
+import * as compliance from "./compliance";
 import { enqueueVideoEditJob, getVideoEditQueue } from "../../core/queue";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -84,6 +85,37 @@ export async function list(req: FastifyRequest, reply: FastifyReply) {
   const query = listPostsSchema.parse(req.query);
   const result = await repo.listPosts(query);
   return reply.send(result);
+}
+
+/**
+ * Uyumluluk denetimi — panelde "bu post kaynağına sadık mı?" göstergesi.
+ * Üretim script'lerindeki guard'lar sadece bizim ürettiğimizi korur; elle yazılan
+ * postlar oradan geçmez. Bu uç yayından ÖNCE aynı kuralları görünür kılar.
+ */
+export async function complianceList(req: FastifyRequest, reply: FastifyReply) {
+  const query = listPostsSchema.parse(req.query);
+  const result = await repo.listPosts(query);
+  const items = (result as { items?: unknown[] }).items ?? [];
+  const audits = await compliance.auditPosts(items as any[]);
+  const values = Object.values(audits);
+  return reply.send({
+    items: audits,
+    summary: {
+      total: values.length,
+      fail: values.filter((a) => a.level === "fail").length,
+      warn: values.filter((a) => a.level === "warn").length,
+      ok: values.filter((a) => a.level === "ok").length,
+    },
+  });
+}
+
+export async function complianceOne(
+  req: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply
+) {
+  const post = await repo.getPostById(Number(req.params.id));
+  if (!post) return reply.status(404).send({ error: "Post bulunamadi" });
+  return reply.send(await compliance.auditPost(post as any));
 }
 
 export async function getById(
