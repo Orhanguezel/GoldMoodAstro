@@ -1,9 +1,12 @@
 # CODEX BRIEF — Story-CTA kart görsellerinde metin BOŞ (baked) + içerik kalite
 
+> ✅ GÖREV 1 ÇÖZÜLDÜ (Claude, 2026-08-09): 24 bozuk `*story*cta.png` silinip generator
+> `--db`'siz yeniden çalıştırıldı → metin baked, prod'a rsync'lendi, prod URL'inden görsel
+> doğrulandı. Ekosistem re-sync edildi. **Kalan: GÖREV 2 (içerik kalite gözden geçirme).**
+>
 > Hazırlayan: Claude (mimari/lokalizasyon — kök neden GÖRSEL olarak teyit edildi).
-> Uygulayan: Codex. DÜZELTME: bu bir önizleme/render bug'ı DEĞİL; goldmood'un ürettiği
-> PNG'nin İÇİNE metin çizilmemiş. (İlk hipotez —SocialPlatformPage önizlemesi— YANLIŞTI;
-> ekosistem oturumu ham PNG'yi indirip kanıtladı, Claude de görseli açıp doğruladı.)
+> DÜZELTME: bu bir önizleme/render bug'ı DEĞİL; goldmood'un ürettiği PNG'nin İÇİNE metin
+> çizilmemişti. Kök: renderSlide existsSync guard'ı 4 Ağustos'taki boş dosyaları cache'liyordu.
 
 ---
 
