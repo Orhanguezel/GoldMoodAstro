@@ -4,6 +4,7 @@
 import "dotenv/config";
 import dotenv from "dotenv";
 import fs from "node:fs/promises";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import mysql from "mysql2/promise";
@@ -51,6 +52,12 @@ type Spec = {
    * Gövde metnindeki burç iddiaları da bu hesapla tutarlı olmalı (elle grupla YAZMA).
    */
   lunationDate?: string;
+  /**
+   * Sembol/kart içerikleri için TEK KAYNAK. Verilirse gövde metni de görseller de
+   * bu slug listesinden türer (sitenin kendi sözlüğünden) — metin/görsel ayrışamaz.
+   * body/asset/secondAsset elle YAZILMAZ.
+   */
+  symbols?: { source: SymbolSource; slugs: string[] };
 };
 const zodiac = (slug: string) => path.resolve(ROOT, `backend/uploads/zodiac/${slug}.png`);
 const dream = (slug: string) => path.resolve(ROOT, `backend/uploads/symbols/dream/${slug}.png`);
@@ -64,18 +71,18 @@ const specs: Spec[] = [
   { day: 11, slug: "new-moon-rising", title: "Kapısı Açılacak Yükselenler", subtitle: "Yeniay ön hazırlığı", body: "Yeniay Aslan burcunda. Aslan yükselen kimlik, Koç yaratıcılık, Yay ise ufuk alanında yeni bir kapı hissedebilir.", cta: "Yükselenini yorumlara yaz", secondTitle: "Yükselenini Bilmiyorsan", secondBody: "Yükselen doğum SAATİ olmadan hesaplanamaz. Nüfus kaydındaki saatle siteden doğum haritanı çıkarabilirsin.", asset: zodiac("leo"), secondAsset: zodiac("aries"), lunationDate: "2026-08-12" },
   { day: 12, slug: "solar-eclipse", title: "Yeniay ve Güneş Tutulması", subtitle: "Yeni bir sayfa açılıyor", body: "Yeniay Aslan burcunda: sahne, yaratıcılık ve kendini gösterme temaları öne çıkıyor. Hızlı karar yerine net niyet.", cta: "Kaydet • kişisel yorum için siteyi ziyaret et", secondTitle: "Tutulmada Ne Yapılmaz?", secondBody: "Tutulma günü geri dönüşü olmayan büyük kararlar için uygun değil. Niyeti bugün yaz, uygulamayı birkaç güne bırak.", asset: dream("sun"), secondAsset: dream("moon"), campaign: true, lunationDate: "2026-08-12" },
   { day: 13, slug: "intention-working", title: "Bu Niyet Sende Çalışıyor Olabilir", subtitle: "Yeniay sonrası", body: "Tekrar eden düşünce, konuşma veya fırsat yeni döngünün ilk işareti olabilir.", cta: "Hangi niyeti seçtiğini yaz", asset: dream("door"), reel: true },
-  { day: 14, slug: "coffee-road-key", title: "Fincandaki Yol, Kapı ve Anahtar", subtitle: "Kahve falı sembolleri", body: "Yol hareketi, kapı fırsatı, anahtar ise çözüm ve erişimi simgeler.", cta: "Fincanında çıkan sembolü yaz", secondTitle: "Sembol Nerede Çıktı?", secondBody: "Fincanın kenarı yakın zamanı, dibi uzağı anlatır. Aynı sembol, çıktığı yere göre farklı okunur.", asset: coffee("road"), secondAsset: coffee("key") },
+  { day: 14, slug: "coffee-road-key", title: "Fincanda Yol ve Anahtar", subtitle: "Kahve falı sembolleri", body: "", cta: "Fincanında çıkan sembolü yaz", secondTitle: "Sembol Nerede Çıktı?", secondBody: "Fincanın kenarı yakın zamanı, dibi uzağı anlatır. Aynı sembol, çıktığı yere göre farklı okunur.", asset: "", symbols: { source: "coffee", slugs: ["road", "key"] } },
   { day: 15, slug: "incoming-news", title: "Sana Gelen Haber Ne Anlatıyor?", subtitle: "İletişim ve fırsat", body: "Beklenen haber geldiğinde yalnız söze değil, sende uyandırdığı ilk duyguya da bak.", cta: "Mesaj bekliyor musun?", secondTitle: "Haber Gelmiyorsa", secondBody: "Sessizlik de bir cevaptır. Beklemek yerine kendi adımını netleştir; çoğu haber sen hareket ettikten sonra gelir.", asset: coffee("bird"), secondAsset: coffee("bell") },
   { day: 16, slug: "consultant-fatma", title: "Astrolog Fatma Güçlü ile Tanış", subtitle: "Astroloji danışmanlığı", body: "Doğum haritası ve ilişki dinamiklerini kişisel bağlamınla birlikte değerlendirmek için profilini incele.", cta: "Profili incele • randevunu seç", secondTitle: "Görüşmeye Ne Getirmelisin?", secondBody: "Doğum tarihi, saati ve yeri yeterli. Aklındaki tek net soruyla gelmen seansı çok daha verimli yapar.", asset: path.resolve(ROOT, "backend/uploads/consultant_fatma.jpg"), bgAsset: dream("stars"), campaign: true },
   { day: 17, slug: "weekly-rising", title: "Haftanın Yükselen Mesajları", subtitle: "Ateş • toprak • hava • su", body: "Bu hafta yükselen burcun, enerjini hangi alanda daha bilinçli kullanacağını gösterebilir.", cta: "Kaydet • yükselenini oku", secondTitle: "Güneş mi, Yükselen mi?", secondBody: "Güneş burcun kim olduğunu, yükselenin dünyaya nasıl göründüğünü anlatır. Haftalık akışta yükselen daha nettir.", asset: zodiac("sagittarius"), secondAsset: zodiac("aquarius") },
-  { day: 18, slug: "tarot-soul-message", title: "Ruhunun Duyması Gereken Mesaj", subtitle: "Bir kart seç", body: "İlk çekildiğin açık kartı seç. Mesajı kesin gelecek değil, farkındalık alanı olarak oku.", cta: "Kartını seç ve kaydet", secondTitle: "Kart Nasıl Okunur?", secondBody: "Kartı kehanet gibi değil ayna gibi oku. İlk hissettiğin şey, kitaptaki anlamdan daha çok şey söyler.", asset: tarot("the-high-priestess"), secondAsset: tarot("the-hermit") },
-  { day: 19, slug: "evil-eye", title: "Nazar Boncuğu ve Enerji Koruma", subtitle: "Sınır • niyet • farkındalık", body: "Korunma yalnız sembolle değil, net sınırlar ve dinlenme alanıyla da güçlenir.", cta: "Bu sembolü ihtiyacı olan birine gönder", secondTitle: "Sembolden Fazlası", secondBody: "Nazar boncuğu bir hatırlatıcı. Asıl koruma: uykunu düzenlemek, hayır diyebilmek ve yorulduğunda durmak.", asset: coffee("eye"), secondAsset: coffee("candle") },
+  { day: 18, slug: "tarot-soul-message", title: "Ruhunun Duyması Gereken Mesaj", subtitle: "İki kart açıkta", body: "", cta: "Hangi kart seni çağırdı, yaz", secondTitle: "Kart Nasıl Okunur?", secondBody: "Kartı kehanet gibi değil ayna gibi oku. İlk hissettiğin şey, kitaptaki anlamdan daha çok şey söyler.", asset: "", symbols: { source: "tarot", slugs: ["the-high-priestess", "the-hermit"] } },
+    { day: 19, slug: "evil-eye", title: "Nazar ve Enerji Koruma", subtitle: "Kahve falı sembolleri", body: "", cta: "Bu sembolü ihtiyacı olan birine gönder", secondTitle: "Sembolden Fazlası", secondBody: "Nazar boncuğu bir hatırlatıcı. Asıl koruma: uykunu düzenlemek, hayır diyebilmek ve yorulduğunda durmak.", asset: "", symbols: { source: "coffee", slugs: ["eye", "candle"] } },
   { day: 20, slug: "first-quarter-action", title: "Niyeti Eyleme Çevirme Zamanı", subtitle: "İlk dördün", body: "Niyetini destekleyen en küçük somut adımı bugün takvimine yerleştir.", cta: "Bu hafta atacağın adımı yaz", secondTitle: "Adımı Küçült", secondBody: "15 dakikada yapılabilecek kadar küçük olsun. Büyük adım ertelenir, küçük adım süreklilik kurar.", asset: dream("moon"), secondAsset: dream("road") },
   { day: 21, slug: "pisces-im-fine", title: "Balık ‘İyiyim’ Dediğinde...", subtitle: "Dışarıda sakin • içeride okyanus", body: "Bir şarkı, üç eski anı ve kimseye anlatılmayan bütün ihtimaller aynı anda çalışır.", cta: "Emojiyle tepki ver", asset: zodiac("pisces"), reel: true },
   { day: 22, slug: "synastry-view", title: "Aklındaki Kişi Seni Nasıl Görüyor?", subtitle: "Sinastri farkındalığı", body: "İki harita arasındaki bağ; çekim, iletişim ve güven dinamiklerini birlikte okumaya yardım eder.", cta: "İkinizin burcunu yazın", secondTitle: "Sinastri Ne Değildir?", secondBody: "Uyum oranı bir kader notu değil. Haritalar zorluğu gösterir; ilişkiyi kuran, o zorlukla ne yaptığınızdır.", asset: assets.synastry, secondAsset: assets.synastry },
   { day: 23, slug: "dream-old-house", title: "Rüyada Eski Ev veya Eski Kişi", subtitle: "Geçmişten gelen iz", body: "Eski ev iç dünyayı, eski kişi ise kapanmamış bir duygu ya da öğrenilmiş kalıbı gösterebilir.", cta: "Rüyanı soru kutusuna yaz", secondTitle: "Geri Dönen Kim?", secondBody: "Rüyadaki kişi çoğu zaman o kişi değil, sende bıraktığı histir. 'Bana neyi hatırlatıyor?' diye sor.", asset: dream("house"), secondAsset: dream("door") },
   { day: 24, slug: "full-moon-visible", title: "Hangi Konu Görünür Oluyor?", subtitle: "Dolunay ön hazırlığı", body: "Uzun süredir ertelediğin konu artık daha net bir karar ya da sınır isteyebilir.", cta: "Yükselenini yaz", secondTitle: "Yeni Değil, Görünür", secondBody: "Dolunay yeni bir şey getirmez; zaten orada olanı aydınlatır. Bu hafta önüne tekrar tekrar çıkan konuya bak.", asset: dream("moon"), secondAsset: dream("sun") },
-  { day: 25, slug: "infinity-cycle", title: "Tekrar Eden Döngü Sana Ne Söylüyor?", subtitle: "Sonsuzluk sembolü", body: "Aynı sonuç tekrar ediyorsa yalnız kişileri değil, verdiğin otomatik tepkiyi de gözlemle.", cta: "Kapatmak istediğin döngüyü yaz", secondTitle: "Döngüyü Kıran Soru", secondBody: "'Bu sefer ne farklı yaptım?' Cevap yoksa döngü kişilerde değil, verdiğin otomatik tepkidedir.", asset: coffee("ring"), secondAsset: coffee("road") },
+    { day: 25, slug: "infinity-cycle", title: "Aynı Engele mi Takılıyorsun?", subtitle: "Kahve falı sembolleri", body: "", cta: "Kapatmak istediğin döngüyü yaz", secondTitle: "Döngüyü Kıran Soru", secondBody: "'Bu sefer ne farklı yaptım?' Cevap yoksa döngü kişilerde değil, verdiğin otomatik tepkidedir.", asset: "", symbols: { source: "coffee", slugs: ["mountain", "bridge"] } },
   { day: 26, slug: "rising-relief", title: "Rahat Nefes Alacak Yükselenler", subtitle: "Dolunay ön hazırlığı", body: "Dolunay Balık burcunda. Balık yükselen kimlik, Başak yükselen ise ilişkiler alanında bir tamamlanma hissedebilir.", cta: "Kaydet • yükseleninle tekrar bak", secondTitle: "Rahatlama Nasıl Gelir?", secondBody: "Zorlamayla değil bırakmayla. Bu hafta bir sorumluluğu devret ya da verdiğin bir 'evet'i geri al.", asset: zodiac("pisces"), secondAsset: zodiac("virgo"), lunationDate: "2026-08-28" },
   { day: 27, slug: "release-list", title: "Dolunay Arifesi Bırakma Listesi", subtitle: "Bırak • koru • dönüştür", body: "Seni tüketen üç şeyi ve yanında tutmak istediğin üç desteği yaz.", cta: "Story’de bırakıyorum / tutuyorum seç", secondTitle: "Listeyi Nasıl Yazarsın?", secondBody: "Üç sütun: bırakıyorum, koruyorum, dönüştürüyorum. Dolunaydan sonra tekrar oku; çoğu madde yer değiştirir.", asset: dream("moon"), secondAsset: dream("fire") },
   { day: 28, slug: "lunar-eclipse", title: "Dolunay ve Ay Tutulması", subtitle: "Tamamlanma ve görünürlük", body: "Dolunay Balık burcunda: duyguyu bastırmadan, acele karar vermeden izle. Tamamlanan döngünün dersini adlandır.", cta: "Kaydet • danışman yorumunu incele", secondTitle: "Yerine Hemen Koyma", secondBody: "Bir şey biterken boşluğu acele doldurma. Ay tutulmasının etkisi haftalara yayılır, sonuç zamanla netleşir.", asset: dream("moon"), secondAsset: dream("stars"), campaign: true, lunationDate: "2026-08-28" },
@@ -83,6 +90,72 @@ const specs: Spec[] = [
   { day: 30, slug: "august-review", title: "Ağustos Sana Ne Öğretti?", subtitle: "Ay sonu değerlendirmesi", body: "Ayın başındaki niyetine dön: ne başladı, ne değişti, neyi geride bıraktın?", cta: "İlk kelimeni yeniden seç", secondTitle: "Üç Soruyla Kapat", secondBody: "Ne başladı? Ne bitti? Neyi tekrar edeceğim? Cevapları yaz — Eylül niyetin buradan çıkacak.", asset: dream("road"), secondAsset: dream("sun") },
   { day: 31, slug: "september-door", title: "Eylül’e Açılan Yeni Kapı", subtitle: "Yeni ayın eşiği", body: "Eylül için tek bir niyet ve onu destekleyecek tek bir alışkanlık seç.", cta: "Eylül niyetini yorumlara yaz", secondTitle: "Niyeti Alışkanlığa Bağla", secondBody: "Niyet tek başına unutulur. Ona her gün yapacağın 10 dakikalık somut bir eylem eşlik etsin.", asset: dream("door"), secondAsset: dream("key") },
 ];
+
+/**
+ * Sembol/kart OLGULARI sitenin kendi sözlüğünden (dream_symbols / coffee_symbols /
+ * tarot_cards) okunur — metin de görsel de AYNI slug listesinden türer.
+ *
+ * Neden: 25 Ağustos "tekrar eden döngü" metniyle `ring` görseli kullanıyordu, oysa
+ * sitenin sözlüğünde Yüzük = "Evlilik, nişan, sözleşme, bağlılık". Okuyucu sembolü
+ * sitede aratsa bambaşka cevap alacaktı. 14 Ağustos metni "kapı"dan söz ediyordu ama
+ * görselde kapı yoktu. Slug'ı tek kaynak yapınca bu ayrışma imkânsızlaşıyor.
+ */
+type SymbolSource = "dream" | "coffee" | "tarot";
+type SymbolFact = { slug: string; name: string; meaning: string; asset: string };
+
+const SYMBOL_QUERY: Record<SymbolSource, { table: string; nameCol: string; meaningCol: string; assetDir: string }> = {
+  dream: { table: "dream_symbols", nameCol: "name_tr", meaningCol: "meaning", assetDir: "backend/uploads/symbols/dream" },
+  coffee: { table: "coffee_symbols", nameCol: "name_tr", meaningCol: "meaning", assetDir: "backend/uploads/symbols/coffee" },
+  tarot: { table: "tarot_cards", nameCol: "name_tr", meaningCol: "upright_meaning", assetDir: "backend/uploads/tarot" },
+};
+
+// NOT: açık kalan bağlantı event loop'u canlı tutar ve script işini bitirse bile
+// process kapanmaz (10dk timeout'a kadar asılı kaldı). main() sonunda kapatılıyor.
+let symbolConn: mysql.Connection | null = null;
+async function closeSymbolDb() {
+  if (symbolConn) {
+    await symbolConn.end();
+    symbolConn = null;
+  }
+}
+async function symbolDb() {
+  if (!symbolConn) {
+    symbolConn = await mysql.createConnection({
+      host: process.env.DB_HOST || "localhost", port: Number(process.env.DB_PORT || 3306),
+      user: process.env.DB_USER || "root", password: process.env.DB_PASSWORD || "",
+      database: process.env.DB_NAME || "goldmoodastro", charset: "utf8mb4",
+    });
+  }
+  return symbolConn;
+}
+
+async function loadSymbols(source: SymbolSource, slugs: string[]): Promise<SymbolFact[]> {
+  const cfg = SYMBOL_QUERY[source];
+  const conn = await symbolDb();
+  const [rows] = await conn.execute(
+    `SELECT slug, ${cfg.nameCol} AS name, ${cfg.meaningCol} AS meaning FROM ${cfg.table} WHERE slug IN (${slugs.map(() => "?").join(",")})`,
+    slugs,
+  );
+  const bySlug = new Map((rows as Array<{ slug: string; name: string; meaning: string }>).map((r) => [r.slug, r]));
+  return slugs.map((slug) => {
+    const row = bySlug.get(slug);
+    // Sessizce jenerik metne düşme — sözlükte yoksa üretim DURSUN.
+    if (!row) throw new Error(`${source} sözlüğünde '${slug}' yok — içerik uydurulmasın diye üretim durduruldu.`);
+    const asset = path.resolve(ROOT, `${cfg.assetDir}/${slug}.png`);
+    if (!existsSync(asset)) throw new Error(`${source}/${slug} için görsel yok: ${asset}`);
+    return { slug, name: row.name, meaning: row.meaning, asset };
+  });
+}
+
+/** "Dağ: zorluk, engel, sabır gerektiren durum. Köprü: zor bir dönemi atlatma." */
+function symbolBody(facts: SymbolFact[]): string {
+  return facts
+    .map((f) => {
+      const m = f.meaning.trim().replace(/\.$/, "");
+      return `${f.name}: ${m.charAt(0).toLocaleLowerCase("tr")}${m.slice(1)}.`;
+    })
+    .join(" ");
+}
 
 /**
  * Lunasyonun 12 yükselen için ev dağılımı — sitenin astroloji motorundan (Swiss
@@ -115,8 +188,13 @@ async function build(): Promise<DraftPost[]> {
   for (const s of specs) {
     // Lunasyona dayanan içerikte caption'a motordan hesaplanan ev dağılımını ekle.
     const skyBlock = s.lunationDate ? await risingHouseBlock(s.lunationDate) : "";
-    const caption = cap(s, skyBlock);
-    const cover: Slide = { title: s.title, subtitle: s.subtitle, body: s.body, asset: s.asset, bgAsset: s.bgAsset, variant: s.campaign ? "gold" : "deep", footer: s.cta };
+    // Sembol/kart günlerinde gövde ve görseller sözlükten türer (elle yazılmaz).
+    const facts = s.symbols ? await loadSymbols(s.symbols.source, s.symbols.slugs) : null;
+    const body = facts ? symbolBody(facts) : s.body;
+    const asset = facts ? facts[0]!.asset : s.asset;
+    const secondAsset = facts ? (facts[1]?.asset ?? facts[0]!.asset) : (s.secondAsset ?? s.asset);
+    const caption = cap({ ...s, body }, skyBlock);
+    const cover: Slide = { title: s.title, subtitle: s.subtitle, body, asset, bgAsset: s.bgAsset, variant: s.campaign ? "gold" : "deep", footer: s.cta };
     if (s.reel) posts.push(await reel(s.day, s.slug, s.title, cover, caption));
     else {
       // 2. slayt: kendi başlığı + kendi gövdesi. secondTitle/secondBody yoksa eski
@@ -124,8 +202,8 @@ async function build(): Promise<DraftPost[]> {
       const second: Slide = {
         title: s.secondTitle ?? s.subtitle,
         subtitle: s.secondTitle ? s.subtitle : undefined,
-        body: s.secondBody ?? s.body,
-        asset: s.secondAsset ?? s.asset,
+        body: s.secondBody ?? body,
+        asset: secondAsset,
         bgAsset: s.bgAsset,
         variant: s.campaign ? "violet" : "gold",
         footer: s.cta,
@@ -191,4 +269,6 @@ async function main() {
   }
   console.log(`Hazır: ${posts.length} kayıt (${posts.length / 2} ana + ${posts.length / 2} story)${WRITE_DB ? ", DB zamanlandı" : ""}`);
 }
-main().catch((error) => { console.error(error); process.exit(1); });
+main()
+  .then(async () => { await closeSymbolDb(); process.exit(0); })
+  .catch(async (error) => { console.error(error); await closeSymbolDb().catch(() => {}); process.exit(1); });
