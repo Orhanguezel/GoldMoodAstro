@@ -280,7 +280,8 @@ async function renderSlide(fileName: string, slide: Slide, size: "post" | "story
   const width = 1080;
   const height = size === "story" ? 1920 : 1350;
   const filePath = path.join(OUT_DIR, fileName);
-  if (existsSync(filePath)) return `${PUBLIC_DIR}/${fileName}`;
+  // FORCE_REGEN=1 → var olan (ör. eski/eksik metinli) görseli de YENİDEN üret. Yoksa cache: atla.
+  if (!process.env.FORCE_REGEN && existsSync(filePath)) return `${PUBLIC_DIR}/${fileName}`;
 
   let base: Buffer;
   if (slide.asset) {
