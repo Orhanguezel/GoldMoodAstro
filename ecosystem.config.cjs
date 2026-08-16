@@ -5,6 +5,9 @@ module.exports = {
       script: 'dist/index.js',
       cwd: './backend',
       interpreter: '/usr/local/bin/bun',
+      // Canlıdaki tanımla hizalı (2026-08-16): 768M sınırı ~5 günde bir
+      // bellek-tavanı restart'ı üretiyordu, 1G'a çıkarıldı.
+      max_memory_restart: '1024M',
       env: {
         NODE_ENV: 'production',
         PORT: 8094

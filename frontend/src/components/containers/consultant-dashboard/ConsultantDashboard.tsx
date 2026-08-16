@@ -27,6 +27,7 @@ import {
   Users,
   CreditCard,
   CheckCheck,
+  ChevronDown,
   AlertCircle,
   ShieldCheck,
   Upload,
@@ -1655,10 +1656,53 @@ function CompletionScoreWidget({
 
   const incomplete = items.filter((i) => !i.done);
   const done = items.filter((i) => i.done);
+  // Mobil: kompakt tek satır (donut + skor + kalan); detaylar dokununca açılır.
+  // Masaüstü: tam görünüm her zaman açık (sm:block/sm:flex ile).
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <section className="overflow-hidden rounded-2xl border border-(--gm-gold)/25 bg-(--gm-surface) shadow-(--gm-shadow-soft)">
-      <div className="flex flex-col gap-5 bg-linear-to-br from-(--gm-gold)/10 via-transparent to-(--gm-primary)/10 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      {/* ── Mobil kompakt başlık — app benzeri, dokununca detay ── */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        aria-controls="completion-details"
+        className="flex w-full items-center gap-3 bg-linear-to-br from-(--gm-gold)/10 via-transparent to-(--gm-primary)/10 p-3 text-left sm:hidden"
+      >
+        <div className="relative h-12 w-12 shrink-0">
+          <svg className="h-full w-full -rotate-90" viewBox="0 0 64 64" aria-hidden="true">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="7" className="text-(--gm-border-soft)" />
+            <circle
+              cx="32" cy="32" r="28" fill="none" strokeWidth="7"
+              strokeDasharray={`${(score / 100) * 175.9} 175.9`}
+              strokeLinecap="round"
+              className={`${tier.color} opacity-80`}
+              style={{ stroke: 'currentColor' }}
+            />
+          </svg>
+          <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-(--gm-text)">
+            {score}%
+          </span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-medium text-(--gm-text)">
+            {uiP('ui_consultantpanel_completion_title', 'Profile completion score')}
+          </span>
+          <span className={`block text-[10px] font-bold uppercase tracking-widest ${tier.color}`}>
+            {tier.label}
+            {incomplete.length > 0 ? (
+              <span className="ml-1.5 font-normal normal-case tracking-normal text-(--gm-text-dim)">
+                {uiP('ui_consultantpanel_completion_remaining', '{count} steps remaining').replace('{count}', String(incomplete.length))}
+              </span>
+            ) : null}
+          </span>
+        </div>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-(--gm-gold) transition-transform ${expanded ? 'rotate-180' : ''}`} />
+      </button>
+
+      {/* ── Masaüstü tam başlık ── */}
+      <div className="hidden flex-col gap-5 bg-linear-to-br from-(--gm-gold)/10 via-transparent to-(--gm-primary)/10 p-5 sm:flex sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div className="min-w-0 sm:max-w-2xl">
           <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold) uppercase opacity-80">
             {uiP('ui_consultantpanel_completion_eyebrow', 'Strengthen your profile')}
@@ -1711,7 +1755,7 @@ function CompletionScoreWidget({
         />
       </div>
 
-      <div className="p-4 sm:p-6">
+      <div id="completion-details" className={`${expanded ? 'block' : 'hidden'} p-4 sm:block sm:p-6`}>
         {incomplete.length > 0 ? (
           <div>
             <div className="mb-3 flex items-center justify-between gap-3">

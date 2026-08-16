@@ -26,18 +26,22 @@ const widthClasses = {
   full: 'max-w-none',
 };
 
+// Site header `fixed top-0` (HeaderClient) — pad'lı her sayfa üst boşluğuyla
+// header'ı temizlemek zorunda; simetrik py-* değerleri header altına kayma
+// regresyonu üretir (2026-08-16, /danismanlar/[slug]). pad="none" kullanan
+// sayfalar kendi offset'ini verir (ör. ConsultantDashboard pt-24).
 const padClasses = {
   none: 'py-0',
-  tight: 'py-6 md:py-10',
-  page: 'py-10 md:py-16',
-  large: 'py-12 md:py-20',
+  tight: 'pt-24 pb-6 md:pt-28 md:pb-10',
+  page: 'pt-24 pb-10 md:pt-28 md:pb-16',
+  large: 'pt-28 pb-12 md:pt-32 md:pb-20',
 };
 
 const legacyPadMap = {
   none: 'none',
   small: 'tight',
   normal: 'page',
-  large: 'page',
+  large: 'large',
 } satisfies Record<NonNullable<PageContainerProps['verticalPadding']>, NonNullable<PageContainerProps['pad']>>;
 
 export default function PageContainer<T extends React.ElementType = 'div'>({
