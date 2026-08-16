@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { registerStripeWebhook } from '@/modules/stripe/webhook';
 import { registerBirthCharts } from '@/modules/birthCharts/router';
 import { registerConsultants } from '@/modules/consultants/router';
 import { registerConsultantsAdmin } from '@/modules/consultants/admin.routes';
@@ -33,6 +34,9 @@ import { templatesRoutes } from '@/social/modules/templates/routes';
 // Project-specific modules
 
 export async function registerGoldmoodPublic(api: FastifyInstance) {
+  // Stripe webhook — kendi encapsulated kapsamında (ham gövde parser'ı yalnız
+  // bu rotayı etkilesin diye api.register ile).
+  await api.register(registerStripeWebhook);
   await registerConsultants(api);
   await registerBirthCharts(api);
   await registerLiveKit(api);
