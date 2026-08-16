@@ -85,7 +85,17 @@ const profilePatchSchema = z.object({
   video_session_price: z.coerce.number().nonnegative().max(appConfig.consultants.maxSessionPrice).optional(),
 });
 
-const blogPostSchema = z.object({
+function hasBlogContent(value: string): boolean {
+  if (/<img\b/i.test(value)) return true;
+  return value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;|&#160;/gi, ' ')
+    .replace(/&[a-z0-9#]+;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim().length > 0;
+}
+
+const blogPostFieldsSchema = z.object({
   locale: z.string().min(2).max(8).default('tr'),
   title: z.string().trim().min(1).max(255),
   slug: z
@@ -94,7 +104,7 @@ const blogPostSchema = z.object({
     .min(1)
     .max(160)
     .regex(/^[a-z0-9-]+$/i, 'slug must be url-safe'),
-  content: z.string().max(200000).default(''),
+  content: z.string().max(200000).refine(hasBlogContent, 'content_required'),
   summary: z.string().trim().max(2000).nullable().optional(),
   featured_image: z.string().trim().max(500).nullable().optional(),
   featured_image_alt: z.string().trim().max(255).nullable().optional(),
@@ -104,7 +114,22 @@ const blogPostSchema = z.object({
   featured: z.coerce.boolean().optional(),
 });
 
-const blogPatchSchema = blogPostSchema.partial();
+// Danışman yazıları editoryal kontrolden geçer. Bu beyan yalnız arayüzde
+// gösterilmez; doğrudan API çağrılarında da zorunlu tutularak bypass önlenir.
+const editorialConsentSchema = z.literal(true, {
+  errorMap: () => ({ message: 'editorial_consent_required' }),
+});
+const socialMediaConsentSchema = z.literal(true, {
+  errorMap: () => ({ message: 'social_media_consent_required' }),
+});
+const blogPostSchema = blogPostFieldsSchema.extend({
+  editorial_consent: editorialConsentSchema,
+  social_media_consent: socialMediaConsentSchema,
+});
+const blogPatchSchema = blogPostFieldsSchema.partial().extend({
+  editorial_consent: editorialConsentSchema,
+  social_media_consent: socialMediaConsentSchema,
+});
 
 const hhMmSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'invalid_time_format');
 
@@ -322,6 +347,12 @@ export async function getProfile(req: FastifyRequest, reply: FastifyReply) {
     ),
   );
   const minServicePrice = svcRows?.[0]?.min_price ?? null;
+  const publicationMissing: Array<'approval' | 'hidden' | 'price' | 'photo' | 'slug'> = [];
+  if (c.approval_status !== 'approved') publicationMissing.push('approval');
+  if (Number((c as any).is_hidden ?? 0) === 1) publicationMissing.push('hidden');
+  if (!(Number(c.session_price ?? 0) > 0 || Number(minServicePrice ?? 0) > 0)) publicationMissing.push('price');
+  if (!String(u?.avatar_url ?? '').trim()) publicationMissing.push('photo');
+  if (!String((c as any).slug ?? '').trim()) publicationMissing.push('slug');
 
   return reply.send({
     data: {
@@ -330,6 +361,10 @@ export async function getProfile(req: FastifyRequest, reply: FastifyReply) {
       meta_description: seo?.meta_description ?? null,
       og_image: seo?.og_image ?? null,
       min_service_price: minServicePrice,
+      publication_status: {
+        is_published: publicationMissing.length === 0,
+        missing: publicationMissing,
+      },
       user: u ?? null,
     },
   });
@@ -639,7 +674,11 @@ export async function createBlogPost(req: FastifyRequest, reply: FastifyReply) {
   const parsed = blogPostSchema.safeParse(req.body);
   if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
 
-  const input = parsed.data;
+  const {
+    editorial_consent: _editorialConsent,
+    social_media_consent: _socialMediaConsent,
+    ...input
+  } = parsed.data;
   const created = await customPagesRepo.createCustomPage({
     ...input,
     module_key: 'blog',
@@ -666,7 +705,11 @@ export async function updateBlogPost(req: FastifyRequest, reply: FastifyReply) {
   const parsed = blogPatchSchema.safeParse(req.body);
   if (!parsed.success) return reply.code(400).send({ error: { message: 'invalid_body', issues: parsed.error.issues } });
 
-  const patch = parsed.data;
+  const {
+    editorial_consent: _editorialConsent,
+    social_media_consent: _socialMediaConsent,
+    ...patch
+  } = parsed.data;
   const updated = await customPagesRepo.updateCustomPage(id, {
     ...patch,
     module_key: 'blog',
@@ -997,30 +1040,29 @@ export async function getStats(req: FastifyRequest, reply: FastifyReply) {
   if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
 
   const now = new Date();
-  const monthAgo = new Date(now); monthAgo.setDate(monthAgo.getDate() - 30);
-  const twoMonthsAgo = new Date(now); twoMonthsAgo.setDate(twoMonthsAgo.getDate() - 60);
+  const localCreatedAt = sql`CONVERT_TZ(${bookings.created_at}, '+00:00', ${LOCAL_TZ_OFFSET})`;
+  const localNow = sql`CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', ${LOCAL_TZ_OFFSET})`;
 
-  // Bu ay seans + kazanç (confirmed/completed)
+  // Gerçek takvim ayı: Türkiye yerel saatine göre ayın 1'i → şimdi.
   const [thisMonthRow] = await db
     .select({ count: sql<number>`COUNT(*)`, total: sql<number>`COALESCE(SUM(${bookings.session_price}),0)` })
     .from(bookings)
     .where(
       and(
         eq(bookings.consultant_id, c.id),
-        gte(bookings.created_at, monthAgo),
+        sql`DATE_FORMAT(${localCreatedAt}, '%Y-%m') = DATE_FORMAT(${localNow}, '%Y-%m')`,
         sql`${bookings.status} IN ('confirmed','completed')`,
       ),
     );
 
-  // Geçen ay (60-30 gün arası) — % delta için
+  // Önceki gerçek takvim ayı — delta karşılaştırması için.
   const [lastMonthRow] = await db
     .select({ count: sql<number>`COUNT(*)`, total: sql<number>`COALESCE(SUM(${bookings.session_price}),0)` })
     .from(bookings)
     .where(
       and(
         eq(bookings.consultant_id, c.id),
-        gte(bookings.created_at, twoMonthsAgo),
-        sql`${bookings.created_at} < ${monthAgo}`,
+        sql`DATE_FORMAT(${localCreatedAt}, '%Y-%m') = DATE_FORMAT(DATE_SUB(${localNow}, INTERVAL 1 MONTH), '%Y-%m')`,
         sql`${bookings.status} IN ('confirmed','completed')`,
       ),
     );
@@ -1040,6 +1082,14 @@ export async function getStats(req: FastifyRequest, reply: FastifyReply) {
       eq(bookings.consultant_id, c.id),
       sql`${bookings.status} = 'requested_now'`,
       gte(bookings.created_at, fiveMinAgo),
+    ));
+
+  const [totalSessionsRow] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(bookings)
+    .where(and(
+      eq(bookings.consultant_id, c.id),
+      sql`${bookings.status} IN ('confirmed','completed')`,
     ));
 
   let favoriteCount = 0;
@@ -1143,7 +1193,7 @@ export async function getStats(req: FastifyRequest, reply: FastifyReply) {
       avg_response_minutes: Math.round(avgResponseMinutes),
       rating_avg: Number(c.rating_avg ?? 0),
       rating_count: Number(c.rating_count ?? 0),
-      total_sessions: Number(c.total_sessions ?? 0),
+      total_sessions: Number(totalSessionsRow?.count ?? 0),
       favorite_count: favoriteCount,
       is_available: Number(c.is_available ?? 0),
       last_7_days: last7Days,

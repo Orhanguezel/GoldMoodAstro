@@ -77,12 +77,12 @@ function isFavoritedSelect(userId?: string | null) {
 }
 
 function isOnlineSelect() {
-  return sql<number>`EXISTS(
+  return sql<number>`(${consultants.is_available} = 1 AND EXISTS(
     SELECT 1
     FROM consultant_presence cp
     WHERE cp.consultant_id = ${consultants.id}
       AND cp.last_heartbeat_at > (NOW(3) - INTERVAL 2 MINUTE)
-  )`;
+  ))`;
 }
 
 // Danışmanın aktif ÜCRETLİ hizmetlerinin en düşük fiyatı (yoksa null). Temel
@@ -191,6 +191,8 @@ export async function listApprovedConsultants(filters: ListConsultantsQuery, loc
     eq(consultants.is_hidden, 0),
     // PROFİL FOTOĞRAFI ZORUNLU — avatar yoksa yayınlanmaz.
     sql`NULLIF(TRIM(${users.avatar_url}), '') IS NOT NULL`,
+    // Public profil adresi zorunlu; panelde gösterilen yayın kontrolüyle aynı gate.
+    sql`NULLIF(TRIM(${consultants.slug}), '') IS NOT NULL`,
     // NOT: is_available (Online/Offline toggle) ARTIK listelemeyi ENGELLEMEZ. Danışman
     // onaylı + fiyatlı + slug'lı + FOTOĞRAFLI + gizli değil ise listede kalır; toggle
     // yalnızca "canlı görüşme" rozetini/anlık görüşmeyi etkiler. "Sadece online" filtresi

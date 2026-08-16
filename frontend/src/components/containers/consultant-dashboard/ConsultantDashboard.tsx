@@ -98,6 +98,7 @@ interface Props {
 export default function ConsultantDashboard({ locale }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
   const initialTab = (searchParams.get('tab') as TabKey | null) ?? 'overview';
   const [tab, setTab] = useState<TabKey>(TABS.some(t => t.key === initialTab) ? initialTab : 'overview');
 
@@ -107,6 +108,19 @@ export default function ConsultantDashboard({ locale }: Props) {
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', key);
     router.replace(`?${params.toString()}`, { scroll: false });
+    window.requestAnimationFrame(() => {
+      const tabs = document.getElementById('consultant-tabs');
+      const target = document.getElementById('consultant-tab-content');
+      tabs?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const activeTab = tabs?.querySelector<HTMLElement>(`[data-consultant-tab="${key}"]`);
+      if (tabs && activeTab) {
+        tabs.scrollTo({
+          left: activeTab.offsetLeft - (tabs.clientWidth - activeTab.clientWidth) / 2,
+          behavior: 'smooth',
+        });
+      }
+      target?.focus({ preventScroll: true });
+    });
   };
 
   // Back/forward (popstate) → URL değişince tab state'i senkronla.
@@ -122,10 +136,15 @@ export default function ConsultantDashboard({ locale }: Props) {
     skip: !isReady || !isAuthenticated,
   });
   const { data: stats, isLoading: statsLoading } = useGetMyConsultantStatsQuery(undefined, { skip: !profile });
+  const { data: completion, isLoading: completionLoading } = useGetMyConsultantProfileCompletionQuery(undefined, {
+    skip: !isReady || !isAuthenticated,
+  });
   const [sendHeartbeat] = useSendMyConsultantHeartbeatMutation();
 
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
-    if (!profile?.id || profile.approval_status !== 'approved') return;
+    if (!profile?.id || profile.approval_status !== 'approved' || profile.is_available !== 1) return;
 
     const ping = () => {
       if (document.visibilityState !== 'visible') return;
@@ -140,11 +159,11 @@ export default function ConsultantDashboard({ locale }: Props) {
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', ping);
     };
-  }, [profile?.id, profile?.approval_status, sendHeartbeat]);
+  }, [profile?.id, profile?.approval_status, profile?.is_available, sendHeartbeat]);
 
-  if (!isReady || authLoading || profileLoading) {
+  if (!mounted || !isReady || authLoading || profileLoading) {
     return (
-      <PageContainer width="wide" className="bg-(--gm-bg)" verticalPadding="large" center>
+      <PageContainer width="wide" pad="none" className="min-h-[55vh] bg-(--gm-bg) pb-10 pt-24 sm:pt-28 2xl:pt-32" center>
         <div className="w-8 h-8 rounded-full border-2 border-(--gm-gold)/30 border-t-(--gm-gold) animate-spin" />
       </PageContainer>
     );
@@ -186,6 +205,8 @@ export default function ConsultantDashboard({ locale }: Props) {
       profile={profile}
       stats={stats}
       statsLoading={statsLoading}
+      completion={completion}
+      completionLoading={completionLoading}
       locale={locale}
       tab={tab}
       handleTabChange={handleTabChange}
@@ -198,19 +219,21 @@ export default function ConsultantDashboard({ locale }: Props) {
 }
 
 type DashboardBodyProps = {
-  profile: any;
-  stats: any;
+  profile: ConsultantSelfProfile;
+  stats?: ConsultantSelfStats;
   statsLoading: boolean;
+  completion?: { score: number; items: ProfileCompletionItem[] };
+  completionLoading: boolean;
   locale: string;
-  tab: string;
-  handleTabChange: (key: any) => void;
-  ui: any;
+  tab: TabKey;
+  handleTabChange: (key: TabKey) => void;
+  ui: (key: string, fallback?: string) => string;
   serverAvatarUrl: string;
   fullName: string;
   initials: string;
 };
 
-function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabChange, ui, serverAvatarUrl, fullName, initials }: DashboardBodyProps) {
+function DashboardBody({ profile, stats, statsLoading, completion, completionLoading, locale, tab, handleTabChange, ui, serverAvatarUrl, fullName, initials }: DashboardBodyProps) {
   const [headerAvatarUrl, setHeaderAvatarUrl] = useState<string>(serverAvatarUrl);
   const [updateHeaderProfile] = useUpdateMyConsultantProfileMutation();
 
@@ -231,16 +254,16 @@ function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabCha
   const avatarUrl = headerAvatarUrl;
 
   return (
-    <PageContainer width="wide" className="bg-(--gm-bg)" verticalPadding="large">
+    <PageContainer width="wide" pad="none" className="bg-(--gm-bg) pb-40 pt-24 sm:pb-14 sm:pt-28 2xl:pb-16 2xl:pt-32">
       <div className="w-full">
         {/* ─── Header card — matches user dashboard ─── */}
-        <header className="mb-8 rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10 shadow-(--gm-shadow-soft)">
+        <header className="mb-4 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-4 rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-4 shadow-(--gm-shadow-soft) sm:gap-x-5 sm:p-6 md:grid-cols-[auto_minmax(0,1fr)_auto] md:gap-x-8 md:p-8">
           {/* Avatar — clickable for upload (consultant panel) */}
           <AvatarUpload
             src={avatarUrl}
             initials={initials}
             onUploaded={handleHeaderAvatarUploaded}
-            size={80}
+            size={72}
             bucket="consultant_avatars"
             folder={profile.id}
           />
@@ -250,12 +273,12 @@ function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabCha
             <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold) uppercase opacity-80">
               {ui('ui_dashboard_page_title', 'Consultant Panel')}
             </span>
-            <h1 className="font-serif text-3xl md:text-4xl font-light text-(--gm-text) mt-1 leading-tight">
+            <h1 className="mt-1 truncate font-serif text-2xl font-light leading-tight text-(--gm-text) sm:text-3xl md:text-4xl">
               {ui('ui_dashboard_greeting', 'Hello, {name}').replace('{name}', fullName.split(' ')[0])}
             </h1>
-            <p className="text-(--gm-text) opacity-55 text-sm mt-2 truncate">{profile.user?.email || ''}</p>
+            <p className="mt-1.5 truncate text-xs text-(--gm-text) opacity-55 sm:text-sm">{profile.user?.email || ''}</p>
             {/* Approval + online badges */}
-            <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
                 profile.approval_status === 'approved'
                   ? 'bg-(--gm-success)/15 text-(--gm-success)'
@@ -275,18 +298,18 @@ function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabCha
                   : 'bg-(--gm-border-soft) text-(--gm-text) opacity-50'
               }`}>
                 {profile.is_available
-                  ? ui('ui_dashboard_live_badge', 'Canlı')
-                  : ui('ui_dashboard_offline_badge', 'Çevrimdışı')}
+                  ? ui('ui_dashboard_live_badge', 'Live')
+                  : ui('ui_dashboard_offline_badge', 'Offline')}
               </span>
             </div>
           </div>
 
           {/* Right: Online toggle + profile link */}
-          <div className="flex flex-col gap-3 md:items-end shrink-0">
+          <div className="col-span-2 grid w-full grid-cols-1 gap-2 min-[380px]:grid-cols-2 md:col-span-1 md:flex md:w-auto md:shrink-0 md:flex-col md:items-end md:gap-3">
             <AvailabilityToggle isAvailable={profile.is_available === 1} />
             <Link
-              href={localizePath(locale, `/consultants/${profile.id}`)}
-              className="inline-flex items-center gap-2 text-xs font-medium tracking-widest text-(--gm-text) opacity-45 hover:opacity-70 transition-opacity"
+              href={localizePath(locale, `/consultants/${profile.slug || profile.id}`)}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-(--gm-border-soft) px-4 text-[11px] font-medium tracking-wider text-(--gm-text) opacity-60 transition-all hover:border-(--gm-gold)/30 hover:opacity-90 md:min-h-0 md:justify-end md:border-0 md:px-0 md:text-xs md:tracking-widest"
             >
             {ui('ui_dashboard_view_profile', 'View Profile')}
               <ArrowRight className="w-3.5 h-3.5" />
@@ -294,61 +317,47 @@ function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabCha
           </div>
         </header>
 
-        {/* ─── Yayın durumu — sitede görünüyor mu, eksik ne (admin ile aynı gate) ─── */}
-        {(() => {
-          const miss: string[] = [];
-          if (profile.approval_status !== 'approved') miss.push(ui('ui_dashboard_publish_miss_approval', 'onay'));
-          // Fiyat şartı: temel seans ücreti > 0 VEYA aktif fiyatlı hizmeti var.
-          if (!(Number(profile.session_price || 0) > 0 || Number((profile as any).min_service_price || 0) > 0)) miss.push(ui('ui_dashboard_publish_miss_price', 'seans ücreti'));
-          // PROFİL FOTOĞRAFI ZORUNLU — danışan gerçek bir yüz görmeden randevu almıyor.
-          if (!(profile.user?.avatar_url || '').trim()) miss.push(ui('ui_dashboard_publish_miss_photo', 'profil fotoğrafı'));
-          // NOT: müsaitlik (Online/Offline) ARTIK yayını engellemez — profil onaylı + fiyatlı
-          // + fotoğraflı + slug'lı ise her zaman yayında; toggle sadece "şu an müsait/değil" rozeti.
-          if (!profile.slug) miss.push(ui('ui_dashboard_publish_miss_slug', 'public adres'));
-          if (miss.length === 0) {
-            return (
-              <div className="mb-8 rounded-2xl border border-(--gm-success)/25 bg-(--gm-success)/10 px-5 py-4 flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-(--gm-success) shrink-0" />
-                <p className="text-sm font-semibold text-(--gm-success)">
-                  {ui('ui_dashboard_publish_live', 'Profiliniz sitede yayında — danışanlar sizi bulup randevu alabilir.')}
-                </p>
-              </div>
-            );
-          }
-          return (
-            <div className="mb-8 rounded-2xl border border-(--gm-error)/25 bg-(--gm-error)/10 px-5 py-4 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-(--gm-error) shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-bold text-(--gm-error)">
-                  {ui('ui_dashboard_publish_not_live', 'Profiliniz sitede YAYINDA DEĞİL')} — {ui('ui_dashboard_publish_missing_label', 'eksik')}: {miss.join(', ')}.
-                </p>
-                <p className="text-xs text-(--gm-text) opacity-60 mt-1">
-                  {ui('ui_dashboard_publish_hint', 'Bu alanları tamamladığınızda profiliniz otomatik olarak yayına girer.')}
-                </p>
-              </div>
-            </div>
-          );
-        })()}
+        <div className="mb-6">
+          {completionLoading ? (
+            <div className="h-48 animate-pulse rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface)" />
+          ) : completion ? (
+            <CompletionScoreWidget
+              locale={locale}
+              score={completion.score}
+              items={completion.items}
+              onTabChange={handleTabChange}
+            />
+          ) : null}
+        </div>
+
+        <PublicationStatusBanner status={profile.publication_status} ui={ui} />
 
         {/* ─── Tabs — matches user dashboard style ─── */}
-        <nav className="mb-10 flex flex-wrap gap-1 border-b border-(--gm-border-soft) overflow-x-auto">
+        <nav
+          id="consultant-tabs"
+          aria-label={ui('ui_dashboard_tabs_label', 'Consultant dashboard sections')}
+          className="sticky top-[72px] z-30 mb-5 -mx-4 flex scroll-mt-24 snap-x snap-mandatory flex-nowrap gap-1 overflow-x-auto border-y border-(--gm-border-soft) bg-(--gm-bg)/95 px-3 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.08)] backdrop-blur-xl [scrollbar-width:none] sm:mx-0 sm:rounded-xl sm:border sm:px-2 lg:top-[76px] 2xl:top-[88px] 2xl:gap-0 [&::-webkit-scrollbar]:hidden"
+        >
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.key;
             return (
               <button
                 key={t.key}
+                data-consultant-tab={t.key}
+                aria-current={active ? 'page' : undefined}
                 onClick={() => handleTabChange(t.key)}
-                className={`relative inline-flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-[0.18em] transition-all whitespace-nowrap ${
+                title={ui(t.labelKey, t.fallback)}
+                className={`relative inline-flex min-h-14 w-[76px] shrink-0 snap-center flex-col items-center justify-center gap-1 overflow-hidden rounded-lg px-1.5 py-2 text-[9px] font-bold uppercase tracking-[0.04em] transition-all sm:w-[88px] sm:text-[10px] lg:min-h-12 lg:w-auto lg:flex-row lg:gap-1.5 lg:px-3 lg:text-[10px] lg:tracking-[0.08em] 2xl:min-w-0 2xl:flex-1 2xl:px-2 ${
                   active
-                    ? 'text-(--gm-gold)'
-                    : 'text-(--gm-text) opacity-50 hover:opacity-80'
+                    ? 'bg-(--gm-gold)/10 text-(--gm-gold)'
+                    : 'text-(--gm-text) opacity-55 hover:bg-(--gm-surface) hover:opacity-85'
                 }`}
               >
-                <Icon className="w-4 h-4" />
-                {ui(t.labelKey, t.fallback)}
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="block max-w-full truncate leading-tight">{ui(t.labelKey, t.fallback)}</span>
                 {active && (
-                  <span className="absolute -bottom-px left-0 right-0 h-0.5 bg-(--gm-gold)" />
+                  <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-(--gm-gold)" />
                 )}
               </button>
             );
@@ -356,20 +365,64 @@ function DashboardBody({ profile, stats, statsLoading, locale, tab, handleTabCha
         </nav>
 
         {/* ─── Tab content ─── */}
-        {tab === 'overview' && <OverviewPanel locale={locale} stats={stats} profile={profile} isLoading={statsLoading} onTabChange={handleTabChange} />}
-        {tab === 'profile' && <ProfilePanel locale={locale} profile={profile} />}
-        {tab === 'services' && <ServicesPanel />}
-        {tab === 'availability' && <AvailabilityPanel />}
-        {tab === 'bookings' && <BookingsPanel locale={locale} />}
-        {tab === 'clients' && <ClientsPanel />}
-        {tab === 'messages' && <MessagesPanel />}
-        {tab === 'media' && <MediaMessagesPanel locale={locale} consultantId={profile.id} />}
-        {tab === 'blog' && <BlogPanel locale={locale} consultantId={profile.id} />}
-        {tab === 'wallet' && <WalletPanel />}
-        {tab === 'analytics' && <ProfileViewsPanel />}
-        {tab === 'reviews' && <ReviewsPanel />}
+        <section id="consultant-tab-content" tabIndex={-1} className="scroll-mt-24 outline-none">
+          {tab === 'overview' && <OverviewPanel locale={locale} stats={stats} profile={profile} isLoading={statsLoading} onTabChange={handleTabChange} />}
+          {tab === 'profile' && <ProfilePanel locale={locale} profile={profile} />}
+          {tab === 'services' && <ServicesPanel />}
+          {tab === 'availability' && <AvailabilityPanel />}
+          {tab === 'bookings' && <BookingsPanel locale={locale} />}
+          {tab === 'clients' && <ClientsPanel />}
+          {tab === 'messages' && <MessagesPanel />}
+          {tab === 'media' && <MediaMessagesPanel locale={locale} consultantId={profile.id} />}
+          {tab === 'blog' && <BlogPanel locale={locale} consultantId={profile.id} />}
+          {tab === 'wallet' && <WalletPanel />}
+          {tab === 'analytics' && <ProfileViewsPanel />}
+          {tab === 'reviews' && <ReviewsPanel />}
+        </section>
       </div>
     </PageContainer>
+  );
+}
+
+function PublicationStatusBanner({
+  status,
+  ui,
+}: {
+  status: ConsultantSelfProfile['publication_status'];
+  ui: (key: string, fallback?: string) => string;
+}) {
+  const missingLabels: Record<ConsultantSelfProfile['publication_status']['missing'][number], string> = {
+    approval: ui('ui_dashboard_publish_miss_approval', 'approval'),
+    hidden: ui('ui_dashboard_publish_miss_hidden', 'profile visibility'),
+    price: ui('ui_dashboard_publish_miss_price', 'session price'),
+    photo: ui('ui_dashboard_publish_miss_photo', 'profile photo'),
+    slug: ui('ui_dashboard_publish_miss_slug', 'public address'),
+  };
+
+  if (status.is_published) {
+    return (
+      <div className="mb-6 flex items-start gap-3 rounded-2xl border border-(--gm-success)/25 bg-(--gm-success)/10 px-4 py-4 sm:px-5">
+        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-(--gm-success)" />
+        <p className="text-sm font-semibold leading-6 text-(--gm-success)">
+          {ui('ui_dashboard_publish_live', 'Your profile is live — clients can find you and book a session.')}
+        </p>
+      </div>
+    );
+  }
+
+  const missing = status.missing.map((key) => missingLabels[key]).join(', ');
+  return (
+    <div className="mb-6 flex items-start gap-3 rounded-2xl border border-(--gm-error)/25 bg-(--gm-error)/10 px-4 py-4 sm:px-5">
+      <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-(--gm-error)" />
+      <div className="min-w-0">
+        <p className="text-sm font-bold leading-6 text-(--gm-error)">
+          {ui('ui_dashboard_publish_not_live', 'Your profile is not live')} — {ui('ui_dashboard_publish_missing_label', 'missing')}: {missing}.
+        </p>
+        <p className="mt-1 text-xs leading-5 text-(--gm-text) opacity-60">
+          {ui('ui_dashboard_publish_hint', 'Your profile will be published automatically when these fields are completed.')}
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -425,7 +478,6 @@ function OverviewPanel({
   onTabChange?: (k: TabKey) => void;
 }) {
   const { ui } = useUiSection('ui_dashboard', locale as any);
-  const { data: completion } = useGetMyConsultantProfileCompletionQuery();
   const days = stats?.last_7_days?.length ? stats.last_7_days : getEmptyLast7Days();
   const maxCount = Math.max(1, ...days.map((d) => d.count));
   const sessionDelta = stats?.session_delta_pct ?? 0;
@@ -454,7 +506,7 @@ function OverviewPanel({
         />
         <BigStatCard
           icon={BarChart3}
-          label={`${ui('ui_dashboard_stat_month_earnings', 'Earnings This Month')} (${locale === 'de' ? 'Brutto' : 'gross'})`}
+          label={`${ui('ui_dashboard_stat_month_earnings', 'Earnings This Month')} (${ui('ui_dashboard_stat_gross_suffix', 'gross')})`}
           value={`₺${Math.round(stats?.this_month_earnings ?? 0)}`}
           delta={earningsDelta}
           subLabel={ui('ui_dashboard_stat_last_month_money', 'Last month: ₺{value}').replace('{value}', String(Math.round(stats?.last_month_earnings ?? 0)))}
@@ -573,7 +625,7 @@ function OverviewPanel({
                   : 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]'
               }`}
             >
-              {profile.is_available ? ui('ui_dashboard_live_badge', 'Canlı') : ui('ui_dashboard_offline_badge', 'Çevrimdışı')}
+              {profile.is_available ? ui('ui_dashboard_live_badge', 'Live') : ui('ui_dashboard_offline_badge', 'Offline')}
             </span>
           </div>
         </div>
@@ -582,10 +634,6 @@ function OverviewPanel({
         <StatCardSmall icon={Heart} label={ui('ui_dashboard_total_favorites', 'Total Favorites')} value={stats?.favorite_count ?? 0} />
       </div>
 
-      {/* C9: Profile completion score */}
-      {completion && (
-        <CompletionScoreWidget score={completion.score} items={completion.items} onTabChange={onTabChange} />
-      )}
     </div>
   );
 }
@@ -683,8 +731,8 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
     try {
       await updateProfile({ is_available: isAvailable ? 0 : 1 }).unwrap();
       toast.success(isAvailable
-        ? ui('ui_dashboard_toast_live_off', 'Canlı görüşme KAPALI. Profiliniz sitede kalır ama anlık görüşme talebi almazsınız.')
-        : ui('ui_dashboard_toast_live_on', 'CANLI görüşmeye açıksınız — “Canlı Görüşme” bölümünde görünürsünüz ve anlık görüşme talebi alabilirsiniz.'));
+        ? ui('ui_dashboard_toast_live_off', 'Live sessions are off. Your profile stays listed, but you will not receive instant requests.')
+        : ui('ui_dashboard_toast_live_on', 'You are available for live sessions and can receive instant requests.'));
     } catch (e) {
       toast.error(extractApiError(e, ui('ui_dashboard_toast_update_failed', 'Could not update')));
     }
@@ -693,15 +741,17 @@ function AvailabilityToggle({ isAvailable }: { isAvailable: boolean }) {
     <button
       onClick={handleToggle}
       disabled={isLoading}
-      title={ui('ui_dashboard_live_hint', 'Şu an görüşme yapmak istiyorsanız açın: ana sayfadaki “Canlı Görüşme” bölümünde görünür, kartınızda CANLI rozeti çıkar ve anlık görüşme talebi alabilirsiniz. Profiliniz KAPALI iken de sitede listelenmeye devam eder.')}
-      className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border text-xs font-bold uppercase tracking-[0.18em] transition-all ${
+      title={ui('ui_dashboard_live_hint', 'Turn this on when you are ready for a live session. Your profile remains listed while it is off.')}
+      className={`inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-1.5 rounded-full border px-2.5 py-2.5 text-[9px] font-bold uppercase tracking-normal transition-all sm:gap-2 sm:px-5 sm:text-xs sm:tracking-[0.14em] md:w-auto ${
         isAvailable
           ? 'border-(--gm-success)/40 bg-(--gm-success)/10 text-(--gm-success) hover:bg-(--gm-success)/20'
           : 'border-(--gm-border-soft) bg-(--gm-surface) text-(--gm-text) opacity-60 hover:opacity-100'
       }`}
     >
-      {isAvailable ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-      {isAvailable ? ui('ui_dashboard_live_on', 'Canlı · görüşmeye açık') : ui('ui_dashboard_live_off', 'Canlı görüşme kapalı')}
+      {isAvailable ? <Power className="h-4 w-4 shrink-0" /> : <PowerOff className="h-4 w-4 shrink-0" />}
+      <span className="whitespace-nowrap">
+        {isAvailable ? ui('ui_dashboard_live_on', 'Live · available for sessions') : ui('ui_dashboard_live_off', 'Live sessions off')}
+      </span>
     </button>
   );
 }
@@ -839,7 +889,7 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
               setAvatarUrl(url);
               try {
                 await updateProfile({ avatar_url: url }).unwrap();
-                toast.success(uiP('ui_consultantpanel_avatar_saved', 'Profil fotoğrafınız kaydedildi'));
+                toast.success(uiP('ui_consultantpanel_avatar_saved', 'Your profile photo was saved'));
               } catch {
                 // Otomatik kayıt olmazsa "Kaydet" ile yine kaydedilebilir.
               }
@@ -880,9 +930,9 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
         {/* Galeri fotoğrafları — avatar/og dışında çoklu profil görseli */}
         <div className="rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/30 p-5 space-y-3">
           <div>
-            <h3 className="font-serif text-lg text-[var(--gm-text)]">{ui('ui_dashboard_gallery_title', 'Galeri Fotoğrafları')}</h3>
+            <h3 className="font-serif text-lg text-[var(--gm-text)]">{ui('ui_dashboard_gallery_title', 'Gallery photos')}</h3>
             <p className="text-[11px] text-[var(--gm-text-dim)] mt-1">
-              {ui('ui_dashboard_gallery_desc', 'Profilinizde görünecek ek fotoğraflar ekleyin (çalışma alanınız, sertifikalar, sizden kareler). Değişiklikleri kaydetmeyi unutmayın.')}
+              {ui('ui_dashboard_gallery_desc', 'Add extra photos for your profile, such as your workspace, certificates, or portraits. Remember to save your changes.')}
             </p>
           </div>
           <GalleryUpload value={gallery} onChange={setGallery} bucket="consultant_avatars" folder={profile.id} max={12} />
@@ -1585,15 +1635,17 @@ function RequestNowCountdown({ createdAt }: { createdAt: string }) {
 /* ────────── C9: Profile Completion Score Widget ────────── */
 
 function CompletionScoreWidget({
+  locale,
   score,
   items,
   onTabChange,
 }: {
+  locale: string;
   score: number;
   items: ProfileCompletionItem[];
   onTabChange?: (k: TabKey) => void;
 }) {
-  const { ui: uiP } = useUiSection('ui_consultantpanel');
+  const { ui: uiP } = useUiSection('ui_consultantpanel', locale as any);
   const tier =
     score >= 90
       ? { label: uiP('ui_consultantpanel_tier_excellent', 'Excellent'), color: 'text-(--gm-success)', bg: 'bg-(--gm-success)' }
@@ -1605,18 +1657,24 @@ function CompletionScoreWidget({
   const done = items.filter((i) => i.done);
 
   return (
-    <div className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-6">
-      <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
-        <div>
+    <section className="overflow-hidden rounded-2xl border border-(--gm-gold)/25 bg-(--gm-surface) shadow-(--gm-shadow-soft)">
+      <div className="flex flex-col gap-5 bg-linear-to-br from-(--gm-gold)/10 via-transparent to-(--gm-primary)/10 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="min-w-0 sm:max-w-2xl">
           <span className="font-display text-[10px] tracking-[0.32em] text-(--gm-gold) uppercase opacity-80">
             {uiP('ui_consultantpanel_completion_eyebrow', 'Strengthen your profile')}
           </span>
-          <h3 className="font-serif text-xl text-(--gm-text) mt-0.5">{uiP('ui_consultantpanel_completion_title', 'Profile completion score')}</h3>
+          <h2 className="mt-1 font-serif text-2xl leading-tight text-(--gm-text) sm:text-3xl">
+            {uiP('ui_consultantpanel_completion_title', 'Profile completion score')}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-(--gm-text-dim)">
+            {incomplete.length > 0
+              ? uiP('ui_consultantpanel_completion_description', 'Complete the missing steps to build trust and make your profile easier to discover.')
+              : uiP('ui_consultantpanel_completion_complete_description', 'Your profile is complete and ready to build client trust.')}
+          </p>
         </div>
-        {/* Score circle */}
-        <div className="flex items-center gap-3">
-          <div className="relative w-16 h-16">
-            <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+        <div className="flex items-center gap-4 self-start sm:self-auto">
+          <div className="relative h-20 w-20 shrink-0 sm:h-24 sm:w-24">
+            <svg className="h-full w-full -rotate-90" viewBox="0 0 64 64" aria-hidden="true">
               <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="6" className="text-(--gm-border-soft)" />
               <circle
                 cx="32" cy="32" r="28" fill="none" strokeWidth="6"
@@ -1626,71 +1684,88 @@ function CompletionScoreWidget({
                 style={{ stroke: 'currentColor' }}
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center font-bold text-sm text-(--gm-text)">
+            <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-(--gm-text) sm:text-xl">
               {score}%
             </span>
           </div>
-          <span className={`text-xs font-bold uppercase tracking-widest ${tier.color}`}>{tier.label}</span>
+          <div>
+            <span className={`block text-xs font-bold uppercase tracking-widest ${tier.color}`}>{tier.label}</span>
+            <span className="mt-1 block text-xs text-(--gm-text-dim)">
+              {uiP('ui_consultantpanel_completion_remaining', '{count} steps remaining').replace('{count}', String(incomplete.length))}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="w-full h-1.5 bg-(--gm-border-soft) rounded-full mb-6">
+      <div
+        className="h-1.5 w-full bg-(--gm-border-soft)"
+        role="progressbar"
+        aria-label={uiP('ui_consultantpanel_completion_title', 'Profile completion score')}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={score}
+      >
         <div
-          className={`h-full rounded-full transition-all duration-700 ${tier.bg} opacity-70`}
+          className={`h-full transition-all duration-700 ${tier.bg} opacity-80`}
           style={{ width: `${score}%` }}
         />
       </div>
 
-      {/* Incomplete items */}
-      {incomplete.length > 0 && (
-        <div className="space-y-2 mb-4">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-(--gm-text) opacity-40">
-            {uiP('ui_consultantpanel_completion_incomplete', 'Incomplete')} ({incomplete.length})
-          </span>
-          {incomplete.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between gap-3 p-3 rounded-xl border border-(--gm-border-soft) hover:border-(--gm-gold)/30 hover:bg-(--gm-gold)/5 transition-all"
-            >
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-3.5 h-3.5 text-(--gm-warning) shrink-0" />
-                <span className="text-sm text-(--gm-text) opacity-70">{item.labelKey ? uiP(item.labelKey, item.label) : item.label}</span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[9px] font-bold text-(--gm-warning) opacity-70">+{item.weight}p</span>
-                {item.tab && onTabChange && (
-                  <button
-                    onClick={() => onTabChange(item.tab as TabKey)}
-                    className="text-[9px] font-bold uppercase tracking-widest text-(--gm-gold) hover:opacity-100 opacity-70 transition-opacity"
-                  >
-                    {uiP('ui_consultantpanel_completion_goto', 'Go ->')}
-                  </button>
-                )}
-              </div>
+      <div className="p-4 sm:p-6">
+        {incomplete.length > 0 ? (
+          <div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-(--gm-text) opacity-50">
+                {uiP('ui_consultantpanel_completion_incomplete', 'Incomplete')} ({incomplete.length})
+              </span>
+              <span className="text-[10px] text-(--gm-text-dim)">
+                {uiP('ui_consultantpanel_completion_tap_hint', 'Tap a step to complete it')}
+              </span>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Completed items (collapsed summary) */}
-      {done.length > 0 && (
-        <details className="group">
-          <summary className="text-[9px] font-bold uppercase tracking-widest text-(--gm-text) opacity-40 cursor-pointer hover:opacity-60 transition-opacity list-none flex items-center gap-1">
-            <CheckCheck className="w-3.5 h-3.5 text-(--gm-success)" />
-            {uiP('ui_consultantpanel_completion_done', 'Completed')} ({done.length})
-          </summary>
-          <div className="mt-2 space-y-1.5">
-            {done.map((item) => (
-              <div key={item.id} className="flex items-center gap-2 py-1.5 px-3">
-                <CheckCheck className="w-3.5 h-3.5 text-(--gm-success) shrink-0" />
-                <span className="text-sm text-(--gm-text) opacity-40 line-through">{item.labelKey ? uiP(item.labelKey, item.label) : item.label}</span>
-              </div>
-            ))}
+            <div className="space-y-2">
+              {incomplete.map((item) => {
+                const canNavigate = Boolean(item.tab && onTabChange);
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    disabled={!canNavigate}
+                    onClick={() => canNavigate && onTabChange?.(item.tab as TabKey)}
+                    className="group flex w-full items-center gap-3 rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep)/25 p-3.5 text-left transition-all hover:border-(--gm-gold)/40 hover:bg-(--gm-gold)/7 focus-visible:border-(--gm-gold) focus-visible:outline-none disabled:cursor-default sm:p-4"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--gm-warning)/12 text-(--gm-warning)">
+                      <AlertCircle className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1 text-sm font-medium leading-5 text-(--gm-text)">
+                      {item.labelKey ? uiP(item.labelKey, item.label) : item.label}
+                    </span>
+                    <span className="shrink-0 text-[10px] font-bold text-(--gm-warning)">+{item.weight}</span>
+                    {canNavigate ? <ArrowRight className="h-4 w-4 shrink-0 text-(--gm-gold) transition-transform group-hover:translate-x-0.5" /> : null}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </details>
-      )}
-    </div>
+        ) : null}
+
+        {done.length > 0 ? (
+          <details className={`group ${incomplete.length > 0 ? 'mt-5 border-t border-(--gm-border-soft) pt-4' : ''}`}>
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-(--gm-text) opacity-45 transition-opacity hover:opacity-70">
+              <CheckCheck className="h-4 w-4 text-(--gm-success)" />
+              {uiP('ui_consultantpanel_completion_done', 'Completed')} ({done.length})
+            </summary>
+            <div className="mt-3 space-y-1.5">
+              {done.map((item) => (
+                <div key={item.id} className="flex items-center gap-2 px-2 py-1.5">
+                  <CheckCheck className="h-3.5 w-3.5 shrink-0 text-(--gm-success)" />
+                  <span className="text-sm text-(--gm-text) opacity-40 line-through">{item.labelKey ? uiP(item.labelKey, item.label) : item.label}</span>
+                </div>
+              ))}
+            </div>
+          </details>
+        ) : null}
+      </div>
+    </section>
   );
 }
 

@@ -28,9 +28,9 @@ const widthClasses = {
 
 const padClasses = {
   none: 'py-0',
-  tight: 'py-8 md:py-12',
-  page: 'py-12 md:py-20',
-  large: 'py-12 md:py-32',
+  tight: 'py-6 md:py-10',
+  page: 'py-10 md:py-16',
+  large: 'py-12 md:py-20',
 };
 
 const legacyPadMap = {
@@ -62,7 +62,6 @@ export default function PageContainer<T extends React.ElementType = 'div'>({
         'mx-auto w-full px-4 md:px-6',
         widthClasses[resolvedWidth],
         padClasses[resolvedPad],
-        verticalPadding === 'large' && 'md:py-32',
         withHeaderOffset && 'pt-32',
         center && 'flex items-center justify-center',
         className

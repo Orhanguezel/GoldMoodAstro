@@ -97,7 +97,6 @@ const cinzel = Cinzel({
   subsets: ['latin'],
   variable: '--font-display',
   display: 'swap',
-  weight: ['400', '600'],
   fallback: ['Georgia', 'serif'],
 });
 

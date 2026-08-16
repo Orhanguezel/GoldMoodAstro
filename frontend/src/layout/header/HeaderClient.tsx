@@ -229,7 +229,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-12">
+          <div className="hidden 2xl:flex items-center gap-10">
             <ul className="flex gap-8 list-none m-0 p-0 items-center">
               {headerMenuItems.map((item) => {
                 const rawUrl = (item.url || '') as string;
@@ -403,7 +403,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
           </div>
 
           {/* Mobile Right */}
-          <div className="flex lg:hidden items-center gap-3">
+          <div className="flex 2xl:hidden items-center gap-3">
             <ThemeToggle />
             {isAuthenticated ? (
               <Link href={localizePath(locale, '/profile')} className="p-2 text-[var(--gm-text)]">
@@ -437,7 +437,7 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
 
         {/* Mobile Menu Dropdown */}
         <div
-          className={`fixed inset-0 z-[40] bg-[var(--gm-bg)]/98 backdrop-blur-xl transition-all duration-500 lg:hidden flex flex-col items-center overflow-y-auto px-6 pb-10 pt-28 text-center
+          className={`fixed inset-0 z-[40] bg-[var(--gm-bg)]/98 backdrop-blur-xl transition-all duration-500 2xl:hidden flex flex-col items-center overflow-y-auto px-6 pb-10 pt-28 text-center
             ${mobileOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
         >
           <ul className="flex w-full max-w-sm flex-col gap-3 list-none m-0 p-0 mb-8">

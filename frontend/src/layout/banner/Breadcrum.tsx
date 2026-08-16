@@ -13,9 +13,11 @@ type Props = {
    * sayfada iki h1 olusuyor. Varsayilan true (mevcut sayfalar etkilenmez).
    */
   showTitle?: boolean;
+  /** Daha kısa içerik sayfalarında hero yüksekliğini azaltır. */
+  compact?: boolean;
 };
 
-const Banner: React.FC<Props> = ({ title, showTitle = true }) => {
+const Banner: React.FC<Props> = ({ title, showTitle = true, compact = false }) => {
   const locale = useResolvedLocale();
   const { ui } = useUiSection('ui_banner', locale);
   const homeHref = localizePath(locale, '/');
@@ -23,7 +25,11 @@ const Banner: React.FC<Props> = ({ title, showTitle = true }) => {
   return (
     <section
       data-header-overlay="true"
-      className="relative py-24 md:py-32 overflow-hidden bg-(--gm-bg)"
+      className={compact
+        ? 'relative overflow-hidden bg-(--gm-bg) pb-6 pt-24 md:pb-12 md:pt-28'
+        : showTitle
+          ? 'relative overflow-hidden bg-(--gm-bg) pb-10 pt-24 md:pb-14 md:pt-28'
+          : 'relative overflow-hidden bg-(--gm-bg) pb-8 pt-24 md:pb-10 md:pt-28'}
     >
       {/* Grain texture */}
       <div
@@ -39,7 +45,7 @@ const Banner: React.FC<Props> = ({ title, showTitle = true }) => {
       <div className="w-full max-w-[1300px] mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Section label */}
-          <div className="flex items-center justify-center gap-2 mb-6 text-[10px] font-bold uppercase tracking-[0.24em]">
+          <div className={`flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] ${compact ? 'mb-4' : 'mb-6'}`}>
             <Link
               href={homeHref}
               className="text-(--gm-text-dim) hover:text-(--gm-primary) transition-colors no-underline"
@@ -52,7 +58,7 @@ const Banner: React.FC<Props> = ({ title, showTitle = true }) => {
 
           {/* Title — theme-aware (dark/light contrast) */}
           {showTitle ? (
-            <h1 className="font-serif text-[clamp(2.4rem,5vw,4rem)] font-light leading-[1.1] tracking-[-0.01em] text-(--gm-text)">
+            <h1 className={`font-serif font-light leading-[1.1] tracking-[-0.01em] text-(--gm-text) ${compact ? 'text-[clamp(2rem,4vw,3.25rem)]' : 'text-[clamp(2.4rem,5vw,4rem)]'}`}>
               {title}
             </h1>
           ) : null}

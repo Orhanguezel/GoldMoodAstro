@@ -2428,6 +2428,8 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [x] Düşük puanlı yoruma önce cevap önerisi (kibar template)
 
 ### T30-9 — Stats / İstatistik Dashboard (üst overview)
+- [x] **2026-08-16 mobile-first revizyonu:** profil tamamlama skoru header altına taşındı; eksik satırların tamamı ilgili `tab` deep-link'ine bağlandı; mobil sekmeler tek satır yatay şerit oldu; publication status backend tek kaynağına bağlandı; takvim ayı/gerçek toplam seans ve `is_available` + heartbeat tutarlılığı düzeltildi. Frontend/backend typecheck + frontend production build ✅; 390x844, 768x1024 ve 1803x804 render/etkileşim QA ✅; support/back-to-top mobil çakışması kapatıldı; build `vH9m-ahPa2E3c4kzaOjLJ` canlıya alındı ve konsol 0 hata ile doğrulandı.
+- [x] **2026-08-16 devam turu (Claude):** çerez paneli FAB'ın üstüne alındı (`z-[10070]`, onay düğmeleri her zaman tıklanabilir); panel mobil alt boşluğu `pb-40`; PM2 sağlık incelemesi tamamlandı (backend 747MB/768MB `max_memory_restart` sınırında — izleme notu checklist'te); lokal fresh `db:seed` pipeline'ı onarıldı (Fatma seed'leri gate'lendi, `contact_replies` index prefix'i, 126→236 sıralama). Prod eksiği: Ağustos monthly burç yorumları 8/36 — `bun scripts/generate-horoscopes-now.ts monthly tr,en,de` (kullanıcı çalıştıracak).
 - [x] `/me/consultant` ana sayfası — hızlı bakış kartları:
   - [x] Bu ay seans sayısı + geçen ay karşılaştırma (% delta)
   - [x] Ortalama rating (son 30 gün)

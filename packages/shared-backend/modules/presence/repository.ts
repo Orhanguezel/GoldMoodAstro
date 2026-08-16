@@ -11,7 +11,11 @@ export async function findConsultantForUser(userId: string) {
   const [row] = await db
     .select({ id: consultants.id, user_id: consultants.user_id })
     .from(consultants)
-    .where(and(eq(consultants.user_id, userId), eq(consultants.approval_status, 'approved')))
+    .where(and(
+      eq(consultants.user_id, userId),
+      eq(consultants.approval_status, 'approved'),
+      eq(consultants.is_available, 1),
+    ))
     .limit(1);
 
   return row ?? null;
@@ -46,4 +50,3 @@ export async function upsertConsultantHeartbeat(consultantId: string) {
     is_online: Boolean(row?.is_online),
   };
 }
-

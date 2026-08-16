@@ -7,7 +7,8 @@ import { glob } from 'glob';
  * Scans for hex colors and hardcoded Tailwind color classes.
  */
 
-const HEX_REGEX = /#([0-9a-fA-F]{3,8})/g;
+// `(?<!&)` — HTML entity'leri (&#160; gibi) hex renk sanmasın.
+const HEX_REGEX = /(?<!&)#([0-9a-fA-F]{3,8})/g;
 const TW_COLOR_REGEX = /\b(bg|text|border|ring|from|to|via|fill|stroke)-(white|black|slate|gray|zinc|neutral|stone|amber|yellow|orange|red|rose|pink|purple|violet|indigo|blue|sky|cyan|teal|emerald|green|lime)(-?[0-9]{2,3})?\b/g;
 
 const cwd = process.cwd();

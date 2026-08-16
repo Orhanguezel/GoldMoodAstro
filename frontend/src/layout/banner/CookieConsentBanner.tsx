@@ -261,11 +261,11 @@ export default function CookieConsentBanner() {
   return (
     <>
       <div
-        className={`fixed ${position === 'top' ? 'top-0' : 'bottom-0'} left-0 right-0 z-[10040] p-4`}
+        className={`fixed ${position === 'top' ? 'top-0' : 'bottom-0'} left-0 right-0 z-[10070] p-2 sm:p-4`}
         role="region"
         aria-label={ui('ui_cookie_banner_aria_region', 'Cookie consent')}
       >
-        <div className="mx-auto max-w-5xl rounded-2xl bg-bg-card/95 backdrop-blur-md border border-border-light shadow-medium p-5 sm:p-6 relative">
+        <div className="relative mx-auto max-h-[calc(100dvh-1rem)] max-w-5xl overflow-y-auto rounded-2xl border border-border-light bg-bg-card/95 p-4 shadow-medium backdrop-blur-md sm:p-6">
           <button
             type="button"
             className="absolute right-3 top-3 w-9 h-9 rounded-full border border-border-light text-text-secondary hover:text-text-primary hover:bg-bg-card transition-colors"
@@ -276,12 +276,12 @@ export default function CookieConsentBanner() {
             <span aria-hidden="true">×</span>
           </button>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <div className="min-w-0 pr-10">
-              <p className="text-base sm:text-lg font-serif font-light text-text-primary leading-snug">
+              <p className="font-serif text-[15px] font-light leading-snug text-text-primary sm:text-lg">
                 {titleText}
               </p>
-              <p className="mt-2 text-sm text-text-secondary leading-relaxed">
+              <p className="mt-1.5 text-xs leading-relaxed text-text-secondary sm:mt-2 sm:text-sm">
                 {descText}{' '}
                 <Link className="text-brand-primary font-bold hover:underline" href={policyHref}>
                   {policyLabel}
@@ -289,10 +289,10 @@ export default function CookieConsentBanner() {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end sm:gap-3">
               <button
                 type="button"
-                className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg border border-border-light text-sm font-bold text-text-primary hover:bg-bg-card transition-colors"
+                className="col-span-2 inline-flex items-center justify-center rounded-lg border border-border-light px-4 py-2.5 text-xs font-bold text-text-primary transition-colors hover:bg-bg-card sm:col-span-1 sm:text-sm"
                 onClick={() => setOpenSettings(true)}
               >
                 {btnSettings}
@@ -301,7 +301,7 @@ export default function CookieConsentBanner() {
               {showRejectAll ? (
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg border border-brand-primary/30 text-sm font-bold text-brand-primary hover:bg-brand-primary/5 transition-colors"
+                  className="inline-flex items-center justify-center rounded-lg border border-brand-primary/30 px-3 py-2.5 text-xs font-bold text-brand-primary transition-colors hover:bg-brand-primary/5 sm:px-4 sm:text-sm"
                   onClick={onRejectAll}
                 >
                   {btnReject}
@@ -310,7 +310,7 @@ export default function CookieConsentBanner() {
 
               <button
                 type="button"
-                className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-brand-primary text-bg-primary text-sm font-bold hover:bg-brand-hover transition-colors shadow-sm"
+                className="inline-flex items-center justify-center rounded-lg bg-brand-primary px-3 py-2.5 text-xs font-bold text-bg-primary shadow-sm transition-colors hover:bg-brand-hover sm:px-4 sm:text-sm"
                 onClick={onAcceptAll}
               >
                 {btnAccept}

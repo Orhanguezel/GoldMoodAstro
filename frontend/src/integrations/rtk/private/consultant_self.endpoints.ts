@@ -9,6 +9,7 @@ import { mapApiCustomPageToDto } from '@/integrations/shared';
 export interface ConsultantSelfProfile {
   id: string;
   user_id: string;
+  slug: string | null;
   bio: string | null;
   meta_title?: string | null;
   meta_description?: string | null;
@@ -25,6 +26,11 @@ export interface ConsultantSelfProfile {
   currency: string;
   approval_status: 'pending' | 'approved' | 'rejected';
   is_available: number;
+  is_hidden: number;
+  publication_status: {
+    is_published: boolean;
+    missing: Array<'approval' | 'hidden' | 'price' | 'photo' | 'slug'>;
+  };
   rating_avg: string;
   rating_count: number;
   total_sessions: number;
