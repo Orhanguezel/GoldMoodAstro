@@ -16,6 +16,23 @@ uyumluluk süzgeci R0 kuralı olarak tarar (`[editorial]` bypass edemez);
 `checkContent()` review/reading/mesajda aynı listeyi kullanır. Yeni kalıp
 oraya eklenir — ayrı liste tutma.
 
+
+## ÖDEME SAĞLAYICI KURALI — STRIPE + PAYPAL (kullanıcı talimatı, 2026-08-16)
+
+**Ödeme sağlayıcısı Stripe'tır (kart) ve PayPal'dır. Iyzico KULLANILMAZ.**
+Iyzico başvurusu reddedildi; gateway satırı `is_active = 0`, kod yolu ölü.
+
+- Yeni ödeme akışı = `POST /orders/:id/checkout/stripe` (Stripe Checkout).
+  `init-iyzico` çağrısı yazma, yeni yerde kullanma.
+- PayPal ayrı entegrasyon DEĞİL: Stripe Checkout içinde bir ödeme yöntemi.
+  `createCheckoutSession()` uygun para biriminde `payment_method_types`e
+  `paypal` ekler; hesapta etkin değilse kart-only'ye düşer.
+  **PayPal TRY'de sunulamaz** — EUR/USD/GBP gibi bir para birimi gerekir.
+- Ödemenin tamamlanması TEK yerden: `orders/complete.service.ts` →
+  `completePaidOrder()` (randevu / kredi / abonelik bağlamlarını o çözer).
+- Secret'lar YALNIZ env'de: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+  DB'ye veya panele ödeme anahtarı yazılmaz (admin sayfası salt durum gösterir).
+
 ## İÇERİK ÜRETİM KURALI — MOTORU KULLAN (kullanıcı talimatı, 2026-08-09)
 
 **Sosyal medya içeriği / post üretirken astrolojik ve fal iddiaları ELLE YAZILMAZ,
@@ -79,7 +96,7 @@ Danışman & kullanıcı eşleştirme platformu. Kullanıcı danışman seçiyor
 | **Admin Panel** | Next.js 16, React 19, Tailwind v4, Radix UI, React Query, Zustand                                                  | 3094        | goldmoodastro-admin   |
 | **Mobile**      | Expo (React Native 0.81), TypeScript, expo-router, Zustand, React Query, @livekit/react-native, expo-notifications | —          | iOS + Android         |
 
-**Entegrasyonlar:** LiveKit (sesli + görüntülü görüşme — Agora yerine), Firebase FCM (push), Iyzipay (ödeme)
+**Entegrasyonlar:** LiveKit (sesli + görüntülü görüşme — Agora yerine), Firebase FCM (push), Stripe + PayPal (ödeme)
 
 ## Monorepo Yapısı
 
@@ -142,7 +159,7 @@ cd admin_panel && bun run dev
 **Content:** `siteSettings`, `emailTemplates`, `announcements`, `storage`, `contact`, `support`
 **Review:** `review`, `reviewOutcomes` (T17-6 astrolog karnesi)
 **Astroloji & İçerik:** `astrology` (Swiss Ephemeris compute/transit/synastry), `readings` (LLM yorum)
-**Ödeme:** `subscriptions` (T10-1, Iyzipay+IAP), `credits` (T10-2)
+**Ödeme:** `subscriptions` (T10-1, Stripe+IAP), `credits` (T10-2)
 **Pazarlama:** `banners` (T12), `campaigns` (T13)
 **KVKK:** `kvkk` (T18 — data export + 7gün account deletion)
 **Diğer:** `dashboard`, `db_admin`, `health`, `audit`, `_shared` (içerik moderation)
@@ -175,12 +192,12 @@ consultants        ← Danışman profili (uzmanlık, fiyat, onay, supports_vide
 live_sessions     ← LiveKit kanal + token + süre + media_type (audio/video) [eski voice_sessions]
 bookings           ← Randevular (consultant_id, media_type, session_price)
 availability       ← Danışman çalışma saatleri
-orders             ← Ödeme kayıtları (Iyzipay subscription/credit purchase)
+orders             ← Ödeme kayıtları (Stripe subscription/credit purchase)
 payments           ← Ödeme işlemleri
 wallet/wallets     ← Danışman kazanç ledger
 
 ## Yeni Tablolar (FAZ 6+ vizyon revize sonrası)
-subscription_plans + subscriptions   ← FAZ 10 abonelik (Iyzipay + IAP)
+subscription_plans + subscriptions   ← FAZ 10 abonelik (Stripe + IAP)
 credit_packages + user_credits + credit_transactions   ← FAZ 10 kredi sistemi
 banners                              ← FAZ 12 reklam banner placement + click tracking
 campaigns + campaign_redemptions     ← FAZ 13 promo kod, indirim, hedefli kampanya
@@ -232,7 +249,7 @@ SMTP_HOST, SMTP_PORT=465, SMTP_USER, SMTP_PASS, MAIL_FROM
 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 AGORA_APP_ID, AGORA_APP_CERTIFICATE
 FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY
-IYZIPAY_API_KEY, IYZIPAY_SECRET_KEY, IYZIPAY_BASE_URL
+STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_NOTIFY_EMAIL
 CORS_ORIGIN, PUBLIC_URL
 ```
 

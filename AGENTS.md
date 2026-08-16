@@ -25,6 +25,23 @@ gerçekten editöryel bir istisnaysa `editorial: true` yazıp gerekçesini yorum
 
 Detay: [reports/GoldMoodAstro-Icerik-Metodolojisi-ve-Rakip-Analizi.md](reports/GoldMoodAstro-Icerik-Metodolojisi-ve-Rakip-Analizi.md)
 
+
+## ÖDEME SAĞLAYICI KURALI — STRIPE + PAYPAL (kullanıcı talimatı, 2026-08-16)
+
+**Ödeme sağlayıcısı Stripe'tır (kart) ve PayPal'dır. Iyzico KULLANILMAZ.**
+Iyzico başvurusu reddedildi; gateway satırı `is_active = 0`, kod yolu ölü.
+
+- Yeni ödeme akışı = `POST /orders/:id/checkout/stripe` (Stripe Checkout).
+  `init-iyzico` çağrısı yazma, yeni yerde kullanma.
+- PayPal ayrı entegrasyon DEĞİL: Stripe Checkout içinde bir ödeme yöntemi.
+  `createCheckoutSession()` uygun para biriminde `payment_method_types`e
+  `paypal` ekler; hesapta etkin değilse kart-only'ye düşer.
+  **PayPal TRY'de sunulamaz** — EUR/USD/GBP gibi bir para birimi gerekir.
+- Ödemenin tamamlanması TEK yerden: `orders/complete.service.ts` →
+  `completePaidOrder()` (randevu / kredi / abonelik bağlamlarını o çözer).
+- Secret'lar YALNIZ env'de: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+  DB'ye veya panele ödeme anahtarı yazılmaz (admin sayfası salt durum gösterir).
+
 ## ⛔ YASAKLI İÇERİK KONULARI (kullanıcı talimatı, 2026-08-16)
 
 **Bu konularda HİÇBİR içerik üretilmez** — blog, sosyal post, günlük burç metni,
@@ -99,7 +116,7 @@ Odak: astroloji / mood danışmanlığı.
 
 **Platformlar:** Flutter (iOS + Android) + Web Admin Panel  
 **Backend:** Fastify 5, Drizzle ORM, MySQL, Bun  
-**Yeni entegrasyonlar:** Agora SDK (sesli görüşme), Firebase FCM (push), Iyzipay (ödeme)
+**Yeni entegrasyonlar:** LiveKit (sesli/görüntülü görüşme), Firebase FCM (push), Stripe + PayPal (ödeme)
 
 ---
 
@@ -256,7 +273,7 @@ Mevcut `backend/src/db/sql/` — 87 dosyanın tamamı konigsmassage-a özel.
 050_bookings_schema.sql      ← Randevu tablosu (booking_id → consultant_id eklenir)
 051_bookings_seed.sql        ← Test randevu
 060_orders_schema.sql        ← Ödeme sistemi (payment_gateways, orders, payments)
-061_orders_seed.sql          ← Iyzipay test gateway
+061_orders_seed.sql          ← gateway kayıtları (iyzico pasif; 061b Stripe aktif)
 070_voice_sessions_schema.sql← Agora sesli görüşme kayıtları (YENİ TABLO)
 080_wallet_schema.sql        ← Danışman kazanç takibi
 090_chat_schema.sql          ← Mesajlaşma
@@ -299,9 +316,9 @@ FIREBASE_PROJECT_ID=
 FIREBASE_CLIENT_EMAIL=
 FIREBASE_PRIVATE_KEY=
 
-IYZIPAY_API_KEY=
-IYZIPAY_SECRET_KEY=
-IYZIPAY_BASE_URL=https://sandbox-api.iyzipay.com
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_NOTIFY_EMAIL=
 
 FRONTEND_URL=http://localhost:3000
 CORS_ORIGIN=http://localhost:3000,http://localhost:3001
@@ -441,7 +458,7 @@ src/app/(main)/admin/(admin)/
   support/            ← Destek talepleri
   announcements/      ← Duyuru yönetimi
   notifications/      ← Bildirim gönder
-  settings/           ← Site ayarları (Agora app ID, Iyzipay keys vb.)
+  settings/           ← Site ayarları (LiveKit, analytics vb. — ödeme anahtarı YOK, env'de)
   email-templates/    ← Email şablonları
 ```
 
@@ -486,7 +503,7 @@ mobile/lib/
     auth/           ← Login, register, Google sign-in
     consultants/    ← Liste, profil, filtre
     booking/        ← Slot seçimi, onay
-    payment/        ← Iyzipay WebView akışı
+    payment/        ← Stripe Checkout WebView akışı
     call/           ← Agora sesli görüşme ekranı
     chat/           ← Mesajlaşma
     profile/        ← Kullanıcı profili
@@ -501,7 +518,7 @@ mobile/lib/
 3. `HomeScreen` — danışman listesi + arama
 4. `ConsultantProfileScreen` — profil + slot takvimi
 5. `BookingScreen` — slot seçimi + özet
-6. `PaymentScreen` — Iyzipay WebView
+6. `PaymentScreen` — Stripe Checkout WebView
 7. `AppointmentsScreen` — randevularım (upcoming + past)
 8. `CallScreen` — Agora sesli görüşme
 9. `ChatScreen` — mesajlaşma
@@ -787,8 +804,8 @@ Register form: KVKK checkbox zorunlu, `rules_accepted: true` gönder.
 
 Ödeme akışı:
 1. `POST /bookings` → booking.id al
-2. `POST /orders` `{ booking_id, payment_gateway_slug: 'iyzipay' }` → order.order_id al
-3. `POST /orders/:id/init-iyzico` → checkout_url al
+2. `POST /orders` `{ booking_id, payment_gateway_slug: 'stripe' }` → order.order_id al
+3. `POST /orders/:id/checkout/stripe` → checkout_url al
 4. `window.location.href = checkout_url`
 
 `frontend/src/app/[locale]/booking/payment/page.tsx`:
