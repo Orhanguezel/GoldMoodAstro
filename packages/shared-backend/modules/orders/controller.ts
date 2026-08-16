@@ -18,6 +18,7 @@ import { users } from "../auth/schema";
 import { clawbackCredits, getPackageById } from "../credits/repository";
 import { hasAnalyticsConsent, sendCapiEvent } from '../marketing/meta-capi';
 import { createCheckoutSession, isStripeConfigured, paypalSupportsCurrency, StripeNotConfiguredError } from "./stripe.service";
+import { convertFromBase, getBaseCurrency, resolveCheckoutCurrency } from "../_shared/currency";
 
 /** JWT payload'dan user bilgilerini normalize et.
  * Fastify-jwt sub → userId olarak map eder; id alanı payload'da olmayabilir.
@@ -99,13 +100,15 @@ export const listGateways: RouteHandler = async (req, reply) => {
  */
 export const getPaymentProviderStatusAdmin: RouteHandler = async (_req, reply) => {
   const gateways = await db.select().from(paymentGateways);
-  const [{ currency } = { currency: 'TRY' }] = await db
+  // Sipariş yoksa ayardaki defter para birimini göster.
+  const baseCurrency = await getBaseCurrency();
+  const [{ currency } = { currency: baseCurrency }] = await db
     .select({ currency: orders.currency })
     .from(orders)
     .orderBy(desc(orders.created_at))
     .limit(1);
 
-  const defaultCurrency = String(currency || 'TRY').toUpperCase();
+  const defaultCurrency = String(currency || baseCurrency).toUpperCase();
   return reply.send({
     data: {
       active_provider: isStripeConfigured() ? 'stripe' : null,
@@ -203,7 +206,8 @@ export const createOrder: RouteHandler = async (req, reply) => {
     order_number: orderNumber,
     status: "pending",
     total_amount: totalAmount.toFixed(2),
-    currency: "TRY",
+    // Defter para birimi ayardan gelir (TL kaldırıldı — bkz. _shared/currency.ts).
+    currency: await getBaseCurrency(),
     billing_address_id: body.billing_address_id ?? null,
     payment_gateway_id: gateway.id,
     payment_status: "unpaid",
@@ -258,12 +262,18 @@ export const initStripeCheckout: RouteHandler<{ Params: { id: string } }> = asyn
     } catch { /* ürün adı kozmetik; hata akışı durdurmasın */ }
   }
 
+  // Sipariş defterde base (EUR) tutulur; ödeme sayfası ziyaretçinin diline göre
+  // USD olabilir. Webhook, Stripe'ın gerçekten tahsil ettiği tutar/para birimini
+  // payments satırına yazar — defter ile tahsilat böyle ayrışır ama izlenebilir kalır.
+  const checkoutCurrency = await resolveCheckoutCurrency(requestLocale);
+  const presented = await convertFromBase(Number(order.total_amount), checkoutCurrency);
+
   try {
     const session = await createCheckoutSession({
       orderId: order.id,
       orderNumber: order.order_number,
-      amount: Number(order.total_amount),
-      currency: order.currency || 'TRY',
+      amount: presented.amount,
+      currency: presented.currency,
       productName,
       customerEmail: user.email || null,
       successUrl,
@@ -749,7 +759,7 @@ export const refundOrderAdmin: RouteHandler<{ Params: { id: string } }> = async 
       conversationId,
       paymentId: payment.transaction_id,
       price: String(payment.amount),
-      currency: payment.currency || order.currency || 'TRY',
+      currency: payment.currency || order.currency || 'EUR',
       ip: requestIp(req),
     });
 
@@ -766,7 +776,7 @@ export const refundOrderAdmin: RouteHandler<{ Params: { id: string } }> = async 
         order_id: id,
         gateway_id: gateway.id,
         amount: `-${String(payment.amount)}`,
-        currency: payment.currency || order.currency || 'TRY',
+        currency: payment.currency || order.currency || 'EUR',
         status: 'refund',
         transaction_id: `refund_${payment.transaction_id}`,
         raw_response: JSON.stringify(refundResult),

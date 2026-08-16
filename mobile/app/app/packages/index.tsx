@@ -47,7 +47,7 @@ function buildScreenStyles(t: AppTheme) {
 function formatMoney(priceMinor: number, currency: string) {
   return new Intl.NumberFormat('tr-TR', {
     style: 'currency',
-    currency: currency || 'TRY',
+    currency: currency || 'EUR',
     maximumFractionDigits: 0,
   }).format((priceMinor || 0) / 100);
 }

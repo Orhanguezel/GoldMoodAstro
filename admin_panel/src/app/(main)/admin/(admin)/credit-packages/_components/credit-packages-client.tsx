@@ -28,7 +28,7 @@ const EMPTY_FORM: CreditPackageAdminInput = {
   description_tr: '',
   description_en: '',
   price_minor: 0,
-  currency: 'TRY',
+  currency: 'EUR',
   credits: 0,
   bonus_credits: 0,
   is_active: 1,
@@ -44,7 +44,7 @@ function fromPackage(pkg: CreditPackageAdmin): CreditPackageAdminInput {
     description_tr: pkg.description_tr ?? '',
     description_en: pkg.description_en ?? '',
     price_minor: Number(pkg.price_minor ?? 0),
-    currency: pkg.currency || 'TRY',
+    currency: pkg.currency || 'EUR',
     credits: Number(pkg.credits ?? 0),
     bonus_credits: Number(pkg.bonus_credits ?? 0),
     is_active: Number(pkg.is_active) ? 1 : 0,
@@ -55,7 +55,7 @@ function fromPackage(pkg: CreditPackageAdmin): CreditPackageAdminInput {
 
 function priceLabel(pkg: CreditPackageAdmin) {
   const amount = Number(pkg.price_minor ?? 0) / 100;
-  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: pkg.currency || 'TRY' }).format(amount);
+  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: pkg.currency || 'EUR' }).format(amount);
 }
 
 export default function CreditPackagesClient() {
@@ -90,7 +90,7 @@ export default function CreditPackagesClient() {
       name_en: form.name_en.trim(),
       description_tr: form.description_tr?.trim() || null,
       description_en: form.description_en?.trim() || null,
-      currency: form.currency.trim().toUpperCase() || 'TRY',
+      currency: form.currency.trim().toUpperCase() || 'EUR',
       price_minor: Number(form.price_minor),
       credits: Number(form.credits),
       bonus_credits: Number(form.bonus_credits),

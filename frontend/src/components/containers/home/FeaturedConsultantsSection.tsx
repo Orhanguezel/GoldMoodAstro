@@ -7,6 +7,7 @@ import { useListConsultantsPublicQuery } from '@/integrations/rtk/public/consult
 import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
 import { localizePath } from '@/integrations/shared';
 import { useLocaleShort, useUiSection } from '@/i18n';
+import { formatCurrency } from '@/lib/currency';
 
 const COPY_FALLBACK = {
   label: 'Featured Consultants',
@@ -124,7 +125,7 @@ export default function FeaturedConsultantsSection({ locale: explicitLocale }: {
 
                   {c.session_price && (
                     <p className="text-brand-secondary font-serif text-lg">
-                      {copy.from} ₺{Math.round(Number(c.session_price))}
+                      {copy.from} {formatCurrency(c.session_price, (c as any).currency || 'EUR', { locale })}
                     </p>
                   )}
                 </Link>

@@ -18,8 +18,8 @@ import { formatCurrency } from '@/lib/currency';
 import { todayLocalISO } from '@/lib/localDate';
 import { useUiSection } from '@/i18n';
 
-// Ortak helper'a delege — cüzdan da diğer ekranlarla aynı sembol formunu (₺1.234,56) kullanır.
-function formatMoney(v: string | number | null | undefined, currency = 'TRY') {
+// Ortak helper'a delege — cüzdan da diğer ekranlarla aynı sembol formunu (€1.234,56) kullanır.
+function formatMoney(v: string | number | null | undefined, currency = 'EUR') {
   return formatCurrency(v, currency);
 }
 
@@ -126,7 +126,7 @@ export default function WalletPanel() {
 
   const monthly = data?.this_month ?? { credits: 0, debits: 0, net: 0 };
   const balance = Number(wallet?.balance ?? 0);
-  const currency = wallet?.currency || 'TRY';
+  const currency = wallet?.currency || 'EUR';
   const minWithdrawalAmount = Number(payoutCycle?.min_threshold ?? 100);
   const activeWithdrawals = withdrawals.filter((w) => ['approved', 'paid', 'pending'].includes(w.status));
   const lastWithdrawal = activeWithdrawals[0] ?? null;

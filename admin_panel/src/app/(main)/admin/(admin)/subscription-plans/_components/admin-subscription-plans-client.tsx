@@ -52,7 +52,7 @@ function formatPrice(value: number, currency: string) {
   return `${(Number(value || 0) / 100).toLocaleString('tr-TR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })} ${currency || 'TRY'}`;
+  })} ${currency || 'EUR'}`;
 }
 
 export default function AdminSubscriptionPlansClient() {

@@ -169,7 +169,7 @@ export function WithdrawalsClient() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="font-mono font-medium text-gm-gold">
-                        {Number(row.amount).toLocaleString('tr-TR', { style: 'currency', currency: row.currency || 'TRY' })}
+                        {Number(row.amount).toLocaleString('tr-TR', { style: 'currency', currency: row.currency || 'EUR' })}
                       </span>
                     </td>
                     <td className="px-6 py-4">

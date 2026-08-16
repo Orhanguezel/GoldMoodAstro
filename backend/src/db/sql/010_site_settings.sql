@@ -14,16 +14,19 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 -- LiveKit (url non-secret — mobil/web client'a iletilir; api key/secret .env'de kalır)
 ('01000000-0000-4000-8000-000000000002', 'livekit.url',            '*', 'wss://goldmoodastro-j03iq312.livekit.cloud'),
 ('01000000-0000-4000-8000-000000000003', 'livekit.enabled',        '*', '1'),
--- Iyzipay (api_key/secret .env'de kalır; bu key'ler çevre seçimi için)
-('01000000-0000-4000-8000-000000000004', 'iyzipay.base_url',       '*', 'https://sandbox-api.iyzipay.com'),
-('01000000-0000-4000-8000-000000000005', 'iyzipay.enabled',        '*', '1'),
+-- Iyzipay ARTIK KULLANILMIYOR (Stripe + PayPal) — satırlar tarihsel, is_active=0.
+('01000000-0000-4000-8000-000000000004', 'iyzipay.base_url',       '*', ''),
+('01000000-0000-4000-8000-000000000005', 'iyzipay.enabled',        '*', '0'),
+-- Para birimi: defter EUR, ödeme sayfasında İngilizce ziyaretçiye USD.
+-- Tek okuyucu: packages/shared-backend/modules/_shared/currency.ts
+('01000000-0000-4000-8000-00000000001c', 'platform_currency',      '*', '{"base":"EUR","supported":["EUR","USD"],"rates":{"USD":1.1564}}'),
 -- Firebase (proje ID non-secret; credentials .env'de kalır)
 ('01000000-0000-4000-8000-000000000006', 'firebase.project_id',    '*', ''),
 ('01000000-0000-4000-8000-000000000007', 'firebase.enabled',       '*', '1'),
 -- Storage
 ('01000000-0000-4000-8000-000000000008', 'storage.driver',         '*', 'cloudinary'),
 -- Session
-('01000000-0000-4000-8000-000000000009', 'session.price_currency', '*', 'TRY'),
+('01000000-0000-4000-8000-000000000009', 'session.price_currency', '*', 'EUR'),
 ('01000000-0000-4000-8000-000000000010', 'session.min_duration',   '*', '30'),
 ('01000000-0000-4000-8000-000000000011', 'session.max_duration',   '*', '120'),
 -- Feature flags (FAZ 11 video toggle, FAZ 8 birth chart, FAZ 9 daily reading)

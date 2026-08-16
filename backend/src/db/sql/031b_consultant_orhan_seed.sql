@@ -38,7 +38,7 @@ INSERT INTO consultants (
   '["chat"]',
   '{"website":"https://www.goldmoodastro.com","instagram":"https://instagram.com/orhanguzelastro","linkedin":"https://linkedin.com/in/orhan-guzel-astrology"}',
   0.00, 30, 0, 0.00,
-  'TRY', 'approved', 0, 5.00, 18, 0
+  'EUR', 'approved', 0, 5.00, 18, 0
 )
 ON DUPLICATE KEY UPDATE
   slug = VALUES(slug),

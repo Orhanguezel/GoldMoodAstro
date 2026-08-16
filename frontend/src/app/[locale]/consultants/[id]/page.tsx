@@ -175,7 +175,7 @@ async function fetchConsultantReviewsForSchema(id: string, locale?: string): Pro
   }
 }
 
-function formatPrice(value: string | number | null | undefined, currency = 'TRY', locale = 'en') {
+function formatPrice(value: string | number | null | undefined, currency = 'EUR', locale = 'en') {
   const price = Number(value ?? 0);
   if (!Number.isFinite(price)) return '';
   if (price <= 0) return locale === 'de' ? 'Kostenlos' : 'Free';
@@ -290,7 +290,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
           name: service.name,
           description: service.description || undefined,
           price: Number(service.price ?? consultant.session_price ?? 0),
-          priceCurrency: service.currency || consultant.currency || 'TRY',
+          priceCurrency: service.currency || consultant.currency || 'EUR',
           durationMinutes: Number(service.duration_minutes ?? consultant.session_duration ?? 0) || undefined,
           isFree: service.is_free === 1 || service.is_free === true,
           url: `${pageUrl}?serviceId=${encodeURIComponent(service.id)}`,
@@ -313,7 +313,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
           durationMinutes: Number(service.duration_minutes ?? 0) || undefined,
           offers: {
             price: Number(service.is_free ? 0 : service.price ?? consultant.session_price ?? 0),
-            priceCurrency: service.currency || consultant.currency || 'TRY',
+            priceCurrency: service.currency || consultant.currency || 'EUR',
             url: `${pageUrl}?serviceId=${encodeURIComponent(service.id)}`,
           },
         }),
@@ -395,7 +395,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-(--gm-text-dim)">{copy.starting}</span>
                   <strong className="text-xl text-(--gm-text)">
-                    {formatPrice(consultant.session_price, consultant.currency || 'TRY', locale)}
+                    {formatPrice(consultant.session_price, consultant.currency || 'EUR', locale)}
                   </strong>
                 </div>
               </aside>
@@ -412,7 +412,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
                       <div className="mb-2 flex items-start justify-between gap-4">
                         <h3 className="font-serif text-xl text-(--gm-text)">{service.name}</h3>
                         <span className="shrink-0 rounded-full bg-(--gm-gold)/10 px-3 py-1 text-xs font-bold text-(--gm-gold)">
-                          {formatPrice(service.price, service.currency || consultant.currency || 'TRY', locale)}
+                          {formatPrice(service.price, service.currency || consultant.currency || 'EUR', locale)}
                         </span>
                       </div>
                       {service.description && (

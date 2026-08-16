@@ -161,7 +161,7 @@ export default async function RootLayout({
       logo: brand.logo_light || `${SITE_URL}/logo/logo.png`,
       sameAs: socialLinks,
       description: brand.tagline || "Turkiye'nin astroloji, tarot ve numeroloji danismanlik platformu.",
-      priceRange: '₺149-₺3500',
+      priceRange: '€3-€65',
       areaServed: 'TR',
       telephone: companyPhone,
       email: companyEmail,

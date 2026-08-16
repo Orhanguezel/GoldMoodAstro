@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
   description_tr TEXT,
   description_en TEXT,
   price_minor INT NOT NULL,                     -- TRY kuruş (1 TL = 100)
-  currency CHAR(3) NOT NULL DEFAULT 'TRY',
+  currency CHAR(3) NOT NULL DEFAULT 'EUR',
   period ENUM('monthly','yearly','lifetime') NOT NULL,
   trial_days INT NOT NULL DEFAULT 0,
   features JSON,                                -- ["unlimited_readings", "ad_free", ...]
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   cancellation_reason VARCHAR(500),
   auto_renew TINYINT NOT NULL DEFAULT 1,
   price_minor INT NOT NULL,
-  currency CHAR(3) NOT NULL DEFAULT 'TRY',
+  currency CHAR(3) NOT NULL DEFAULT 'EUR',
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   KEY subscriptions_user_idx (user_id, status),
@@ -69,9 +69,9 @@ CREATE TABLE IF NOT EXISTS subscription_plan_i18n (
 --          yearly (1.499₺/yıl) — %16 indirim
 -- ────────────────────────────────────────────────────────────────────────────
 INSERT INTO subscription_plans (id, code, name_tr, name_en, description_tr, description_en, price_minor, currency, period, trial_days, features, is_active, display_order) VALUES
-('70000000-0000-4000-8000-000000000001', 'free',    'Ücretsiz',  'Free',    'Günlük yorum ve temel doğum haritası.', 'Daily reading and basic birth chart.',                  0,      'TRY', 'monthly', 0, '["daily_reading_basic","birth_chart_basic"]', 1, 0),
-('70000000-0000-4000-8000-000000000002', 'monthly', 'Aylık',     'Monthly', 'Sınırsız AI yorum, sinastri, transit takvimi.',  'Unlimited AI readings, synastry, transit calendar.',     14900,  'TRY', 'monthly', 7, '["daily_reading_premium","synastry","transit_calendar","ad_free","priority_support"]', 1, 1),
-('70000000-0000-4000-8000-000000000003', 'yearly',  'Yıllık',    'Yearly',  'Aylık tüm özellikler + %16 indirim, yıllık fatura.', 'All monthly features + 16% off, yearly billing.',     149900, 'TRY', 'yearly',  14, '["daily_reading_premium","synastry","transit_calendar","ad_free","priority_support","yearly_review"]', 1, 2)
+('70000000-0000-4000-8000-000000000001', 'free',    'Ücretsiz',  'Free',    'Günlük yorum ve temel doğum haritası.', 'Daily reading and basic birth chart.',                  0,      'EUR', 'monthly', 0, '["daily_reading_basic","birth_chart_basic"]', 1, 0),
+('70000000-0000-4000-8000-000000000002', 'monthly', 'Aylık',     'Monthly', 'Sınırsız AI yorum, sinastri, transit takvimi.',  'Unlimited AI readings, synastry, transit calendar.',     14900,  'EUR', 'monthly', 7, '["daily_reading_premium","synastry","transit_calendar","ad_free","priority_support"]', 1, 1),
+('70000000-0000-4000-8000-000000000003', 'yearly',  'Yıllık',    'Yearly',  'Aylık tüm özellikler + %16 indirim, yıllık fatura.', 'All monthly features + 16% off, yearly billing.',     149900, 'EUR', 'yearly',  14, '["daily_reading_premium","synastry","transit_calendar","ad_free","priority_support","yearly_review"]', 1, 2)
 ON DUPLICATE KEY UPDATE
   name_tr = VALUES(name_tr),
   name_en = VALUES(name_en),

@@ -18,6 +18,7 @@ import {
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { extractApiError } from '@/integrations/shared';
 import { useUiSection } from '@/i18n';
+import { formatCurrency } from '@/lib/currency';
 
 type ServiceMediaType = 'audio' | 'video';
 
@@ -447,7 +448,7 @@ function ServiceTemplatesSection({
                 <span>{t.duration_minutes} {uiP('ui_consultantpanel_services_minutes_abbr', 'dk')}</span>
                 <span>•</span>
                 <span className="text-[var(--gm-gold)] font-bold">
-                  {t.is_free === 1 ? ui('ui_dashboard_free', 'Free') : `₺${Math.round(Number(t.price))}`}
+                  {t.is_free === 1 ? ui('ui_dashboard_free', 'Free') : formatCurrency(t.price)}
                 </span>
               </div>
             </div>
@@ -594,7 +595,7 @@ function ServiceRow({
             <span>{svc.duration_minutes} {uiP('ui_consultantpanel_services_minutes_abbr', 'dk')}</span>
             <span>•</span>
             <span className="text-[var(--gm-gold)] font-bold">
-              {svc.is_free === 1 ? ui('ui_dashboard_free', 'Free') : `₺${Math.round(Number(svc.price))}`}
+              {svc.is_free === 1 ? ui('ui_dashboard_free', 'Free') : formatCurrency(svc.price)}
             </span>
           </div>
         </div>
@@ -836,7 +837,7 @@ function ServiceBoostModal({
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-bold text-(--gm-gold) text-lg">₺{pkg.price.toLocaleString('tr-TR')}</div>
+                  <div className="font-bold text-(--gm-gold) text-lg">{formatCurrency(pkg.price, pkg.currency || 'EUR')}</div>
                   <div className="text-[10px] text-(--gm-text) opacity-40">{ui('ui_boost_one_time', 'one-time')}</div>
                 </div>
               </button>
@@ -867,7 +868,7 @@ function ServiceBoostModal({
             ) : (
               <Zap className="w-4 h-4" />
             )}
-            ₺{chosen.price.toLocaleString('tr-TR')} — {ui('ui_boost_buy', 'Buy now')}
+            {formatCurrency(chosen.price, chosen.currency || 'EUR')} — {ui('ui_boost_buy', 'Buy now')}
           </button>
         </div>
       </div>

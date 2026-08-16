@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { and, desc, eq, gte, inArray, sql } from 'drizzle-orm';
 import { appConfig } from '@goldmood/shared-config/appConfig';
 import { db } from '../../db/client';
+import { getBaseCurrency } from '../_shared/currency';
 import { consultants } from '../consultants/schema';
 import { bookings } from '../bookings/schema';
 import { users } from '../auth/schema';
@@ -1769,9 +1770,10 @@ export async function getMyWallet(req: FastifyRequest, reply: FastifyReply) {
   if (!w) {
     // Cüzdan yoksa boş kaydı oluştur
     const newId = randomUUID();
+    const baseCurrency = await getBaseCurrency();
     await db.execute(
       sql`INSERT INTO wallets (id, user_id, consultant_id, balance, pending_balance, currency)
-          VALUES (${newId}, ${c.user_id}, ${c.id}, 0.00, 0.00, 'TRY')
+          VALUES (${newId}, ${c.user_id}, ${c.id}, 0.00, 0.00, ${baseCurrency})
           ON DUPLICATE KEY UPDATE updated_at = CURRENT_TIMESTAMP(3)`,
     );
     return reply.send({
@@ -1780,7 +1782,7 @@ export async function getMyWallet(req: FastifyRequest, reply: FastifyReply) {
           id: newId,
           balance: '0.00',
           pending_balance: '0.00',
-          currency: 'TRY',
+          currency: baseCurrency,
         },
         transactions: [],
         this_month: { credits: 0, debits: 0, net: 0 },
@@ -1905,8 +1907,8 @@ function addDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }
 
-function emailWithdrawalStatus(row: any, status: 'approved' | 'paid' | 'rejected', extra?: Record<string, unknown>) {
-  if (!row?.email) return Promise.resolve(null);
+async function emailWithdrawalStatus(row: any, status: 'approved' | 'paid' | 'rejected', extra?: Record<string, unknown>) {
+  if (!row?.email) return null;
   const key = `withdrawal_${status}_consultant`;
   return sendTemplatedEmail({
     to: String(row.email),
@@ -1916,7 +1918,7 @@ function emailWithdrawalStatus(row: any, status: 'approved' | 'paid' | 'rejected
     params: {
       consultant_name: String(row.full_name || 'Danışman'),
       amount: String(row.amount || ''),
-      currency: String(row.currency || 'TRY'),
+      currency: String(row.currency || (await getBaseCurrency())),
       bank_iban: String(row.bank_iban || ''),
       transfer_reference: String(row.transfer_reference || ''),
       rejection_reason: String(row.rejection_reason || ''),
@@ -2037,7 +2039,7 @@ export async function requestWithdrawal(req: FastifyRequest, reply: FastifyReply
           id, consultant_id, user_id, amount, currency, bank_iban, bank_holder, bank_name, status, requested_at, admin_note
         )
         VALUES (
-          ${withdrawalId}, ${c.id}, ${c.user_id}, ${String(parsed.data.amount)}, ${w.currency || 'TRY'},
+          ${withdrawalId}, ${c.id}, ${c.user_id}, ${String(parsed.data.amount)}, ${w.currency || 'EUR'},
           ${bankIban}, ${bankHolder}, ${bankName || null}, 'pending', NOW(3), ${parsed.data.notes ?? null}
         )
       `);

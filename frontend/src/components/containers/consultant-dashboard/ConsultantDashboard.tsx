@@ -74,6 +74,7 @@ import MultiSelectChip from '@/components/common/MultiSelectChip';
 import ConsultantCardPreview from './ConsultantCardPreview';
 import PageContainer from '@/components/common/PageContainer';
 import { useUploadToBucketMutation } from '@/integrations/rtk/public/storage_public.endpoints';
+import { formatCurrency } from '@/lib/currency';
 
 type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'media' | 'blog' | 'wallet' | 'reviews' | 'clients' | 'analytics';
 
@@ -508,9 +509,9 @@ function OverviewPanel({
         <BigStatCard
           icon={BarChart3}
           label={`${ui('ui_dashboard_stat_month_earnings', 'Earnings This Month')} (${ui('ui_dashboard_stat_gross_suffix', 'gross')})`}
-          value={`₺${Math.round(stats?.this_month_earnings ?? 0)}`}
+          value={formatCurrency(stats?.this_month_earnings ?? 0)}
           delta={earningsDelta}
-          subLabel={ui('ui_dashboard_stat_last_month_money', 'Last month: ₺{value}').replace('{value}', String(Math.round(stats?.last_month_earnings ?? 0)))}
+          subLabel={ui('ui_dashboard_stat_last_month_money', 'Last month: {value}').replace('{value}', formatCurrency(stats?.last_month_earnings ?? 0))}
         />
         <BigStatCard
           icon={Star}
@@ -545,7 +546,7 @@ function OverviewPanel({
               const dt = new Date(`${d.date}T12:00:00`);
               const dayLabel = dt.toLocaleDateString(locale === 'tr' ? 'tr-TR' : locale === 'de' ? 'de-DE' : 'en-US', { weekday: 'short' });
               return (
-                <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1.5 group" title={ui('ui_dashboard_chart_bar_title', '{date}: {count} sessions - ₺{earnings}').replace('{date}', d.date).replace('{count}', String(d.count)).replace('{earnings}', String(d.earnings))}>
+                <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1.5 group" title={ui('ui_dashboard_chart_bar_title', '{date}: {count} sessions - €{earnings}').replace('{date}', d.date).replace('{count}', String(d.count)).replace('{earnings}', String(d.earnings))}>
                   <span className="text-[10px] text-[var(--gm-muted)] font-bold">{d.count > 0 ? d.count : ''}</span>
                   <div
                     className="w-full rounded-t-md bg-[var(--gm-gold)] group-hover:bg-[var(--gm-gold-light)] transition-colors"
@@ -1428,7 +1429,7 @@ function BookingsPanel({ locale }: { locale: string }) {
                     <span>•</span>
                     <span>{b.session_duration} dk</span>
                     <span>•</span>
-                    <span className="text-[var(--gm-gold)] font-bold">₺{Math.round(Number(b.session_price))}</span>
+                    <span className="text-[var(--gm-gold)] font-bold">{formatCurrency(b.session_price)}</span>
                     <span>•</span>
                     <span>{b.media_type}</span>
                     {b.service_title && (

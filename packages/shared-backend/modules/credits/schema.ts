@@ -13,7 +13,7 @@ export const creditPackages = mysqlTable('credit_packages', {
   descriptionTr: text('description_tr'),
   descriptionEn: text('description_en'),
   priceMinor: int('price_minor').notNull(),
-  currency: char('currency', { length: 3 }).default('TRY').notNull(),
+  currency: char('currency', { length: 3 }).default('EUR').notNull(),
   credits: int('credits').notNull(),
   bonusCredits: int('bonus_credits').default(0).notNull(),
   isActive: int('is_active').default(1).notNull(),

@@ -31,7 +31,7 @@ import type {
   ConsultantWithdrawalRow,
 } from '@/integrations/endpoints/admin/consultant_overview_admin.endpoints';
 
-function money(value: number | null | undefined, currency = 'TRY'): string {
+function money(value: number | null | undefined, currency = 'EUR'): string {
   const n = Number(value ?? 0);
   try {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n);
@@ -236,7 +236,7 @@ export function ConsultantPaymentsTab({
   busyId: string | null;
 }) {
   if (isLoading || !data) return <TabSkeleton />;
-  const cur = data.wallet?.currency ?? 'TRY';
+  const cur = data.wallet?.currency ?? 'EUR';
 
   return (
     <div className="space-y-8">

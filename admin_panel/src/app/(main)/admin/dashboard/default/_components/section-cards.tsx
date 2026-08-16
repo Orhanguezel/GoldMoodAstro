@@ -19,7 +19,7 @@ export function SectionCards() {
             <DollarSign size={48} />
           </div>
           <CardDescription className="text-gm-muted font-serif italic text-base">Toplam Gelir</CardDescription>
-          <CardTitle className="font-serif text-3xl tabular-nums text-gm-gold mt-1">₺124,500.00</CardTitle>
+          <CardTitle className="font-serif text-3xl tabular-nums text-gm-gold mt-1">€124,500.00</CardTitle>
           <CardAction>
             <Badge className="bg-gm-success/10 text-gm-success border-gm-success/20 rounded-full px-3 py-1 text-[10px] font-bold">
               <TrendingUp className="mr-1 size-3" />

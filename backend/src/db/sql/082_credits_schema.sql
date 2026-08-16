@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS credit_packages (
   name_en VARCHAR(255) NOT NULL,
   description_tr TEXT,
   description_en TEXT,
-  price_minor INT NOT NULL,                     -- TRY kuruş
-  currency CHAR(3) NOT NULL DEFAULT 'TRY',
+  price_minor INT NOT NULL,                     -- EUR cent
+  currency CHAR(3) NOT NULL DEFAULT 'EUR',
   credits INT NOT NULL,                         -- ana kredi
   bonus_credits INT NOT NULL DEFAULT 0,         -- ekstra (>=500₺ paketlerde)
   is_active TINYINT NOT NULL DEFAULT 1,
@@ -74,9 +74,9 @@ CREATE TABLE IF NOT EXISTS credit_package_i18n (
 -- 950₺ → 10.000 + 1.000 bonus (10%) — ekonomik
 -- ────────────────────────────────────────────────────────────────────────────
 INSERT INTO credit_packages (id, code, name_tr, name_en, description_tr, description_en, price_minor, credits, bonus_credits, is_active, is_featured, display_order) VALUES
-('80000000-0000-4000-8000-000000000001', 'starter',  'Başlangıç',  'Starter',  '~10 dakika astrolog görüşmesi için.',           '~10 minutes of astrologer time.',           20000,  2000,    0,    1, 0, 0),
-('80000000-0000-4000-8000-000000000002', 'popular',  'Popüler',    'Popular',  '~25 dakika + %5 bonus kredi.',                  '~25 minutes + 5% bonus credits.',           50000,  5000,  250,    1, 1, 1),
-('80000000-0000-4000-8000-000000000003', 'value',    'Avantajlı',  'Value',    '~50 dakika + %10 bonus kredi.',                 '~50 minutes + 10% bonus credits.',          95000, 10000, 1000,    1, 0, 2)
+('80000000-0000-4000-8000-000000000001', 'starter',  'Başlangıç',  'Starter',  '~10 dakika astrolog görüşmesi için.',           '~10 minutes of astrologer time.',           350,  2000,    0,    1, 0, 0),
+('80000000-0000-4000-8000-000000000002', 'popular',  'Popüler',    'Popular',  '~25 dakika + %5 bonus kredi.',                  '~25 minutes + 5% bonus credits.',           900,  5000,  250,    1, 1, 1),
+('80000000-0000-4000-8000-000000000003', 'value',    'Avantajlı',  'Value',    '~50 dakika + %10 bonus kredi.',                 '~50 minutes + 10% bonus credits.',          1700, 10000, 1000,    1, 0, 2)
 ON DUPLICATE KEY UPDATE
   name_tr = VALUES(name_tr),
   name_en = VALUES(name_en),

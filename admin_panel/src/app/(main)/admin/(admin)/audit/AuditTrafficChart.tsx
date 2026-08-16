@@ -77,7 +77,7 @@ export function AuditTrafficChart({ range }: { range: string }) {
                     </div>
                   </td>
                   <td className="p-4 text-right">
-                    <span className="font-serif text-gm-gold font-bold">₺{src.revenue.toFixed(2)}</span>
+                    <span className="font-serif text-gm-gold font-bold">€{src.revenue.toFixed(2)}</span>
                   </td>
                 </tr>
               );

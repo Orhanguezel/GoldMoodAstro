@@ -51,7 +51,7 @@ function buildStyles(t: AppTheme) {
   });
 }
 
-function money(value: string | number | undefined, currency = 'TRY') {
+function money(value: string | number | undefined, currency = 'EUR') {
   const n = Number(value ?? 0);
   return new Intl.NumberFormat('tr-TR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(Number.isFinite(n) ? n : 0);
 }
@@ -139,7 +139,7 @@ export default function ConsultantWalletScreen() {
     );
   }
 
-  const currency = wallet?.wallet.currency ?? 'TRY';
+  const currency = wallet?.wallet.currency ?? 'EUR';
 
   return (
     <View style={styles.container}>

@@ -45,7 +45,7 @@ const RANGES: DashboardRangeKey[] = ['7d', '30d', '90d'];
 function formatMoney(v: number): string {
   return new Intl.NumberFormat('tr-TR', {
     style: 'currency',
-    currency: 'TRY',
+    currency: 'EUR',
     maximumFractionDigits: 0,
   }).format(v || 0);
 }
@@ -174,7 +174,7 @@ export default function AdminDashboardClient() {
                     </defs>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--gm-border-soft)" />
                     <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickFormatter={labelForBucket} tick={{ fontSize: 10, fill: 'var(--gm-muted)', fontWeight: 600 }} />
-                    <YAxis tickLine={false} axisLine={false} tickFormatter={(v) => `₺${v}`} tick={{ fontSize: 10, fill: 'var(--gm-muted)', fontWeight: 600 }} />
+                    <YAxis tickLine={false} axisLine={false} tickFormatter={(v) => `€${v}`} tick={{ fontSize: 10, fill: 'var(--gm-muted)', fontWeight: 600 }} />
                     <ChartTooltip 
                       content={<ChartTooltipContent 
                         labelFormatter={(l) => labelForBucket(String(l))} 

@@ -142,7 +142,7 @@ export default function AdminCampaignsClient() {
                         </Badge>
                         <div className="font-bold text-gm-text text-sm">
                           {item.type === 'discount_percentage' && `%${item.value}`}
-                          {item.type === 'discount_fixed' && `₺${item.value}`}
+                          {item.type === 'discount_fixed' && `€${item.value}`}
                           {item.type === 'bonus_credits' && t('valueFormat.bonusCredits', { value: item.value }, `${item.value} Kredi`)}
                           {item.type === 'free_trial_days' && t('valueFormat.freeTrialDays', { value: item.value }, `${item.value} Gün Ücretsiz`)}
                         </div>

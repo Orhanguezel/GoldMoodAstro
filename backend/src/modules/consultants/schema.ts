@@ -49,7 +49,7 @@ export const consultants = mysqlTable(
     session_duration: int('session_duration').notNull().default(30),
     supports_video: tinyint('supports_video').default(0),
     video_session_price: decimal('video_session_price', { precision: 10, scale: 2 }),
-    currency: char('currency', { length: 3 }).default('TRY'),
+    currency: char('currency', { length: 3 }).default('EUR'),
     approval_status: mysqlEnum('approval_status', ['pending', 'approved', 'rejected']).default(
       'pending',
     ),

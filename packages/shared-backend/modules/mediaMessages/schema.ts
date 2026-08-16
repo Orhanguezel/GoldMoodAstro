@@ -23,7 +23,7 @@ export const mediaMessages = mysqlTable('media_messages', {
   duration_seconds: int('duration_seconds'),
   note: text('note'),
   price: decimal('price', { precision: 10, scale: 2 }).notNull().default('0.00'),
-  currency: varchar('currency', { length: 3 }).notNull().default('TRY'),
+  currency: varchar('currency', { length: 3 }).notNull().default('EUR'),
   charge_ref: varchar('charge_ref', { length: 64 }),
   status: mysqlEnum('status', ['sent', 'answered', 'expired', 'refunded']).notNull().default('sent'),
   reply_due_at: datetime('reply_due_at', { fsp: 3 }),

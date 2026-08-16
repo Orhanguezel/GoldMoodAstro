@@ -515,7 +515,7 @@ export async function getConsultantOverview(id: string) {
       wallet = {
         balance: Number(w.balance ?? 0),
         pending_balance: Number(w.pending_balance ?? 0),
-        currency: w.currency ?? 'TRY',
+        currency: w.currency ?? 'EUR',
       };
     }
   } catch { wallet = null; }

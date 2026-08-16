@@ -12,7 +12,7 @@ export const consultantServices = mysqlTable(
     description: text('description'),
     duration_minutes: int('duration_minutes').notNull().default(45),
     price: decimal('price', { precision: 10, scale: 2 }).notNull().default('0'),
-    currency: varchar('currency', { length: 3 }).notNull().default('TRY'),
+    currency: varchar('currency', { length: 3 }).notNull().default('EUR'),
     media_type: mysqlEnum('media_type', ['audio', 'video']).notNull().default('audio'),
     is_free: tinyint('is_free').notNull().default(0),
     is_active: tinyint('is_active').notNull().default(1),

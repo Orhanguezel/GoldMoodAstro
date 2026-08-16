@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS withdrawal_requests (
   consultant_id CHAR(36) NOT NULL,
   user_id CHAR(36) NOT NULL,
   amount DECIMAL(14,2) NOT NULL,
-  currency VARCHAR(3) NOT NULL DEFAULT 'TRY',
+  currency VARCHAR(3) NOT NULL DEFAULT 'EUR',
   bank_iban VARCHAR(64) NOT NULL,
   bank_holder VARCHAR(160) NOT NULL,
   bank_name VARCHAR(120) NULL,

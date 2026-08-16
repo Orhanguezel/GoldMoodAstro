@@ -33,6 +33,7 @@ import { createUserNotification } from '@goldmood/shared-backend/modules/notific
 import { db } from '../../db/client';
 import { ensureLocalesLoadedFromSettings, getRuntimeDefaultLocale } from '../../core/i18n';
 import { siteSettings } from '@goldmood/shared-backend/modules/siteSettings/schema';
+import { getBaseCurrency } from '../_shared/currency';
 import { bookings as bookingsTable } from './schema';
 import { consultants } from '../consultants/schema';
 import { to01, getDefaultLocale } from '../_shared';
@@ -181,7 +182,7 @@ export async function createPendingSessionEarning(bookingId: string, completedAt
       const walletId = randomUUID();
       await tx.execute(sql`
         INSERT INTO wallets (id, user_id, consultant_id, balance, pending_balance, total_earnings, total_withdrawn, currency, status)
-        VALUES (${walletId}, ${booking.consultant_user_id}, ${booking.consultant_id}, 0.00, 0.00, 0.00, 0.00, 'TRY', 'active')
+        VALUES (${walletId}, ${booking.consultant_user_id}, ${booking.consultant_id}, 0.00, 0.00, 0.00, 0.00, 'EUR', 'active')
       `);
       wallet = { id: walletId, consultant_id: booking.consultant_id };
     } else if (!wallet.consultant_id) {
@@ -204,7 +205,7 @@ export async function createPendingSessionEarning(bookingId: string, completedAt
       )
       VALUES (
         ${randomUUID()}, ${wallet.id}, ${booking.consultant_user_id}, ${booking.id},
-        'credit', ${net.toFixed(2)}, 'TRY', 'session_earning',
+        'credit', ${net.toFixed(2)}, ${await getBaseCurrency()}, 'session_earning',
         ${description}, 'admin_manual', 'pending', ${`booking:${booking.id}`}, 0
       )
     `);

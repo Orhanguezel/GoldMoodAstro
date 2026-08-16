@@ -25,6 +25,7 @@ import ConsultantMessageModal from './ConsultantMessageModal';
 import MediaQuestionModal from './MediaQuestionModal';
 import { ChevronDown, MessageCircle, Phone, Check, Mic, Video } from 'lucide-react';
 import { useUiSection } from '@/i18n';
+import { formatCurrency } from '@/lib/currency';
 
 type Props = {
   id: string;
@@ -446,7 +447,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                 className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-full border border-(--gm-gold)/40 hover:border-(--gm-gold) hover:bg-(--gm-gold)/10 text-(--gm-gold) text-[11px] font-bold uppercase tracking-widest transition-all"
               >
                 <Mic className="w-4 h-4" />
-                {ui('ui_consultant_media_audio_cta', 'Voice Question')} - ₺{mediaSettings.audio_price}
+                {ui('ui_consultant_media_audio_cta', 'Voice Question')} - {formatCurrency(mediaSettings.audio_price, consultant.currency || 'EUR', { locale })}
               </button>
             )}
             {mediaSettings?.video_enabled && (
@@ -456,7 +457,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                 className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-full border border-(--gm-gold)/40 hover:border-(--gm-gold) hover:bg-(--gm-gold)/10 text-(--gm-gold) text-[11px] font-bold uppercase tracking-widest transition-all"
               >
                 <Video className="w-4 h-4" />
-                {ui('ui_consultant_media_video_cta', 'Video Question')} - ₺{mediaSettings.video_price}
+                {ui('ui_consultant_media_video_cta', 'Video Question')} - {formatCurrency(mediaSettings.video_price, consultant.currency || 'EUR', { locale })}
               </button>
             )}
           </div>
@@ -531,7 +532,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                             {svc.duration_minutes} {ui('ui_consultant_minutes_short', 'min')}
                           </span>
                           <span className="text-(--gm-gold) font-bold">
-                            {isFree ? ui('ui_consultant_free_badge', 'Free') : `₺${Math.round(Number(svc.price))}`}
+                            {isFree ? ui('ui_consultant_free_badge', 'Free') : formatCurrency(svc.price, svc.currency || 'EUR', { locale })}
                           </span>
                         </div>
                       </div>

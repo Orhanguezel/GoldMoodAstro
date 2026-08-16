@@ -110,10 +110,12 @@ async function readPackages(): Promise<BoostPackage[]> {
       // fall through to defaults
     }
   }
+  // TL kaldırıldı (2026-08-16): eski 599/1099/1899 TRY paketleri günün kuruyla
+  // EUR'ya çevrilip yuvarlandı. Ayardan (site_settings) gelen liste bunu ezer.
   return [
-    { id: 'wk1', days: 7, price: 599, currency: 'TRY' },
-    { id: 'wk2', days: 14, price: 1099, currency: 'TRY' },
-    { id: 'wk4', days: 28, price: 1899, currency: 'TRY' },
+    { id: 'wk1', days: 7, price: 10.9, currency: 'EUR' },
+    { id: 'wk2', days: 14, price: 19.9, currency: 'EUR' },
+    { id: 'wk4', days: 28, price: 34.9, currency: 'EUR' },
   ];
 }
 
@@ -152,7 +154,7 @@ export const createCheckout: RouteHandler = async (req, reply) => {
       starts_at, ends_at, status, created_at, updated_at
     ) VALUES (
       ${boostId}, ${service.id}, ${c.id}, ${selected.days}, ${String(selected.price)},
-      ${selected.currency ?? 'TRY'}, NOW(3), DATE_ADD(NOW(3), INTERVAL ${selected.days} DAY),
+      ${selected.currency ?? 'EUR'}, NOW(3), DATE_ADD(NOW(3), INTERVAL ${selected.days} DAY),
       'pending_payment', NOW(3), NOW(3)
     )
   `);
@@ -222,7 +224,7 @@ export const createCheckout: RouteHandler = async (req, reply) => {
       conversationId: `boost_${boostId}`,
       price,
       paidPrice: price,
-      currency: selected.currency ?? 'TRY',
+      currency: selected.currency ?? 'EUR',
       basketId: `BOOST-${boostId}`,
       callbackUrl: `${resolveApiBase()}/api/service-boosts/iyzico/callback?boost_id=${encodeURIComponent(boostId)}&locale=${encodeURIComponent(locale)}`,
       buyer: {
@@ -366,7 +368,7 @@ export const iyzicoCallback: RouteHandler = async (req, reply) => {
       iyzico,
       token,
       expectedAmountMinor: Math.round(Number(boost.price) * 100),
-      expectedCurrency: boost.currency || 'TRY',
+      expectedCurrency: boost.currency || 'EUR',
       expectedBasketId: `BOOST-${boostId}`,
       expectedConversationId: `boost_${boostId}`,
     });

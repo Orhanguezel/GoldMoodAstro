@@ -77,7 +77,7 @@ const subscriptionsPublicApi = baseApi.injectEndpoints({
             description_tr: r.description_tr == null ? null : String(r.description_tr),
             description_en: r.description_en == null ? null : String(r.description_en),
             price_minor: Number(r.price_minor ?? 0),
-            currency: String(r.currency || 'TRY'),
+            currency: String(r.currency || 'EUR'),
             period: String(r.period || 'monthly') as SubscriptionPeriod,
             trial_days: Number(r.trial_days ?? 0),
             is_active: Number(r.is_active ?? 0),

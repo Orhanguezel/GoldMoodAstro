@@ -31,7 +31,7 @@ export default function BookingPaymentCallbackPage() {
         fbEvent(
           'Purchase',
           {
-            currency: 'TRY',
+            currency: 'EUR',
             ...(value !== null && Number.isFinite(value) ? { value } : {}),
           },
           metaEventId.purchase(orderId),
@@ -41,7 +41,7 @@ export default function BookingPaymentCallbackPage() {
       fbEvent(
         'InitiateCheckout',
         {
-          currency: 'TRY',
+          currency: 'EUR',
           ...(value !== null && Number.isFinite(value) ? { value } : {}),
         },
         metaEventId.checkout(bookingId),

@@ -4,6 +4,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { consultants } from '../consultants/schema';
 import { consumeCredits } from '../credits/consume';
+import { getBaseCurrency } from '../_shared/currency';
 import { getPlatformCommissionPercent } from '../bookings/admin.controller';
 import { createUserNotification } from '../notifications/service';
 import { dispatchPushToUser } from '../notifications/push';
@@ -51,7 +52,7 @@ export async function getPublicMediaSettings(consultantId: string) {
     video_enabled: Boolean(row.video_enabled),
     video_price: Number(row.video_price ?? 0),
     reply_sla_hours: Number(row.reply_sla_hours ?? 72),
-    currency: 'TRY',
+    currency: await getBaseCurrency(),
   };
 }
 
@@ -116,7 +117,7 @@ async function createWalletEarning(consultantId: string, consultantUserId: strin
     const walletId = randomUUID();
     await db.execute(sql`
       INSERT INTO wallets (id, user_id, consultant_id, balance, pending_balance, total_earnings, total_withdrawn, currency, status)
-      VALUES (${walletId}, ${consultantUserId}, ${consultantId}, 0.00, 0.00, 0.00, 0.00, 'TRY', 'active')
+      VALUES (${walletId}, ${consultantUserId}, ${consultantId}, 0.00, 0.00, 0.00, 0.00, 'EUR', 'active')
     `);
     wallet = { id: walletId };
   } else if (!wallet.consultant_id) {
@@ -136,7 +137,7 @@ async function createWalletEarning(consultantId: string, consultantUserId: strin
     )
     VALUES (
       ${randomUUID()}, ${wallet.id}, ${consultantUserId}, NULL,
-      'credit', ${net.toFixed(2)}, 'TRY', 'media_message_earning',
+      'credit', ${net.toFixed(2)}, ${await getBaseCurrency()}, 'media_message_earning',
       ${description}, 'admin_manual', 'pending', ${`media_message:${mediaMessageId}`}, 0
     )
   `);
@@ -181,7 +182,7 @@ export async function createQuestion(userId: string, input: {
       duration_seconds, note, price, currency, charge_ref, status, reply_due_at, created_at, updated_at
     ) VALUES (
       ${id}, ${userId}, ${settings.consultant_id}, ${input.kind}, 'question', 'media_messages', ${input.storage_path},
-      ${input.duration_seconds ?? null}, ${input.note ?? null}, ${price.toFixed(2)}, 'TRY',
+      ${input.duration_seconds ?? null}, ${input.note ?? null}, ${price.toFixed(2)}, 'EUR',
       ${`media_message:${id}`}, 'sent', DATE_ADD(NOW(3), INTERVAL ${settings.reply_sla_hours} HOUR), NOW(3), NOW(3)
     )
   `);
@@ -329,7 +330,7 @@ export async function createReply(consultantId: string, consultantUserId: string
     ) VALUES (
       ${replyId}, ${parent.user_id}, ${consultantId}, ${parent.id}, ${input.kind}, 'reply',
       'media_messages', ${input.storage_path}, ${input.duration_seconds ?? null}, ${input.note ?? null},
-      0.00, 'TRY', 'answered', NOW(3), NOW(3)
+      0.00, ${await getBaseCurrency()}, 'answered', NOW(3), NOW(3)
     )
   `);
   await db.execute(sql`

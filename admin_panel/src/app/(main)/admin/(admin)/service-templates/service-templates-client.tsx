@@ -105,7 +105,7 @@ export default function ServiceTemplatesClient() {
   const [slug, setSlug] = React.useState('');
   const [durationMinutes, setDurationMinutes] = React.useState(45);
   const [price, setPrice] = React.useState<string | number>('');
-  const [currency, setCurrency] = React.useState('TRY');
+  const [currency, setCurrency] = React.useState('EUR');
   const [mediaType, setMediaType] = React.useState<'audio' | 'video'>('audio');
   const [isFree, setIsFree] = React.useState(false);
   const [sortOrder, setSortOrder] = React.useState(0);
@@ -131,7 +131,7 @@ export default function ServiceTemplatesClient() {
       setSlug(editingTemplate.slug || '');
       setDurationMinutes(editingTemplate.duration_minutes || 45);
       setPrice(editingTemplate.price ?? 0);
-      setCurrency(editingTemplate.currency || 'TRY');
+      setCurrency(editingTemplate.currency || 'EUR');
       setMediaType(editingTemplate.media_type || 'audio');
       setIsFree(editingTemplate.is_free ?? false);
       setSortOrder(editingTemplate.sort_order || 0);
@@ -144,7 +144,7 @@ export default function ServiceTemplatesClient() {
     setSlug('');
     setDurationMinutes(45);
     setPrice('');
-    setCurrency('TRY');
+    setCurrency('EUR');
     setMediaType('audio');
     setIsFree(false);
     setSortOrder(0);
@@ -204,7 +204,7 @@ export default function ServiceTemplatesClient() {
       description: baseText.description?.trim() || null,
       duration_minutes: Number(durationMinutes),
       price: isFree ? 0 : priceNum,
-      currency: currency.trim() || 'TRY',
+      currency: currency.trim() || 'EUR',
       media_type: mediaType,
       is_free: isFree ? 1 : 0,
       sort_order: Number(sortOrder),
