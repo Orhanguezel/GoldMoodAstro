@@ -85,16 +85,16 @@ Fatma kendi WalletPanel'inde, Murat admin Finans'ta aynı gerçeği görür.
 - [ ] Ölü `section-cards.tsx` (sahte ₺124.500) dosyasını sil
 
 ### Faz B — Stripe ledger entegrasyonu + kazanç otomasyonu (asıl iş)
-- [ ] `payment_gateways`'e `stripe` kaydı + `payments`/`orders`'a additive `provider` ayrımı
-      (seed'e kolon; ALTER yasak kuralına uygun biçimde şema dosyasında)
-- [ ] Checkout Session üretimini booking akışına bağla (`client_reference_id=booking_id`,
-      `STRIPE_SECRET_KEY` prod'a eklenecek)
-- [ ] Webhook `checkout.session.completed` → orders.paid + payments(provider=stripe) +
-      bookings.confirmed + `stripe_events.processed_at` doldur (idempotent)
-- [ ] **Otomatik completed:** session-auto-close cron'u LiveKit odası kapanınca booking'i
-      `completed` yapsın → `createPendingSessionEarning` çağrılsın (manuel admin adımı kalksın)
-- [ ] `consultant-earnings` cron'una `media_message_earning` release'i ekle (kalıcı-pending bug'ı)
-- [ ] Komisyon okumayı tek fonksiyona indir (`getPlatformCommissionPercent` her yerde; sabit-30 fallback kaldır)
+- [x] `payment_gateways`'e `stripe` kaydı (061b seed; prod'a uygulandı) — provider ayrımı
+      mevcut `gateway_id` üzerinden, ek kolon gerekmedi
+- [x] Checkout Session üretimini booking akışına bağla (072c9bd — `client_reference_id=order_id`;
+      `STRIPE_SECRET_KEY` prod'a eklenmesi bekleniyor)
+- [x] Webhook `checkout.session.completed` → orders.paid + payments(provider=stripe) +
+      bookings.confirmed + `stripe_events.processed_at` (072c9bd, completePaidOrder — idempotent, E2E'de doğrulandı)
+- [x] **Otomatik completed:** yeni `booking-auto-complete` cron'u (saatlik): seans saati+30dk geçen
+      confirmed randevu → completed → `createPendingSessionEarning` (072c9bd; E2E: 500→300 net)
+- [x] `consultant-earnings` cron'una `media_message_earning` release'i eklendi (072c9bd; E2E'de doğrulandı)
+- [x] Komisyon tek fonksiyondan: mediaMessages artık `getPlatformCommissionPercent` kullanıyor (072c9bd)
 - [ ] Refund akışını provider-aware yap (Stripe refund API'si; iyzico yolu korunur)
 - [ ] `charge.refunded` webhook'u → orders.refunded + negatif payment + wallet geri-sarma (mevcut refund mantığıyla)
 - [ ] Ödeme sonrası müşteri onay mailini backend'den tetikle (`sendOrderCreatedMail` — şu an ölü)
