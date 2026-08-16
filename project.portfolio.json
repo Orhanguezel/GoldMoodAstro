@@ -1,15 +1,31 @@
 {
-  "title": "GoldMoodAstro",
-  "slug": "goldmoodastro",
-  "summary": "Danışman & kullanıcı eşleştirme platformu. Uygulama içi sesli görüşme, randevu ve ödeme sistemi. Astroloji / mood danışmanlığı odaklı.",
-  "category": "MOBILE PLATFORM",
+  "schemaVersion": 2,
+  "project": {
+    "key": "goldmoodastro",
+    "title": "GoldMoodAstro",
+    "summary": "Danışman & kullanıcı eşleştirme platformu. Uygulama içi sesli görüşme, randevu ve ödeme sistemi. Astroloji / mood danışmanlığı odaklı.",
+    "description": "Danışman & kullanıcı eşleştirme platformu. Uygulama içi sesli görüşme, randevu ve ödeme sistemi. Astroloji / mood danışmanlığı odaklı.",
+    "category": "custom-software",
+    "status": "development",
+    "ownership": "client",
+    "owner": {
+      "id": "murat-kisikcilar",
+      "name": "Murat Kısıkçılar",
+      "kind": "company"
+    },
+    "group": {
+      "id": "independent",
+      "name": "Bağımsız Projeler"
+    },
+    "productType": "client-project"
+  },
   "services": [
     "Mobile Development (React Native / Expo)",
     "Backend Development",
     "Admin Panel",
     "Architecture & System Design"
   ],
-  "techs": [
+  "technologies": [
     "React Native",
     "Expo",
     "Fastify",
@@ -37,24 +53,46 @@
     "Text messaging between user and consultant",
     "Admin panel for platform management"
   ],
-  "designHighlights": [
-    "Mobile-first Expo (React Native) architecture (iOS + Android)",
-    "Payment-gated booking flow via Iyzipay WebView",
-    "Real-time voice session via Agora SDK"
+  "timeline": {
+    "startedAt": "2026-04-24",
+    "targetEndAt": null,
+    "completedAt": null,
+    "progressPercent": null
+  },
+  "links": {
+    "website": null,
+    "demo": null,
+    "repository": null
+  },
+  "media": [
+    {
+      "id": "cover",
+      "role": "cover",
+      "src": "docs/portfolio/crm-concept-goldmoodastro.svg",
+      "alt": "GoldMoodAstro panel konsept görseli",
+      "caption": "Kaynak: CRM içi özgün konsept. Dış yayın izni kapalı — onay bekliyor.",
+      "displayPermission": false,
+      "rightsConfirmed": true
+    }
   ],
-  "featured": false,
-  "displayOrder": 10,
-  "clientName": "Murat Kısıkçılar",
-  "status": "in-progress",
-  "startDate": "2026-04-24",
-  "completeDate": null,
-  "completionTimeLabel": "30 days",
-  "repoUrl": null,
-  "websiteUrl": null,
-  "demoUrl": null,
-  "featuredImage": null,
-  "featuredImageAlt": "GoldMoodAstro platform cover",
-  "resumeTitle": "GoldMoodAstro",
-  "resumeSubtitle": "Consultant Booking & Voice Call Platform",
-  "excludeFromPortfolio": true
+  "channels": {
+    "website": {
+      "enabled": false,
+      "disabledReason": "CRM v2 geçişinde web yayın içeriği ve izinleri kullanıcı onayı bekliyor"
+    },
+    "bionluk": {
+      "enabled": false,
+      "disabledReason": "CRM v2 geçişinde Bionluk içeriği ve ticari uygunluk kullanıcı onayı bekliyor"
+    }
+  },
+  "publication": {
+    "privacy": "internal",
+    "displayPermission": false
+  },
+  "management": {
+    "priority": "normal",
+    "controlPlane": "gzl-gelir-crm",
+    "lastChangedBy": "orhan"
+  },
+  "updatedAt": "2026-08-16T09:09:17.067Z"
 }
