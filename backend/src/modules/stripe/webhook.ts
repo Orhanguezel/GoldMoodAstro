@@ -51,7 +51,9 @@ async function notifyAdminCheckoutCompleted(event: any, log: FastifyRequest['log
     const name = s.customer_details?.name ?? '';
     const ref = s.client_reference_id ? `\nReferans: ${s.client_reference_id}` : '';
     await sendMail({
-      to: process.env.ADMIN_EMAIL || 'admin@goldmoodastro.com',
+      // Bildirim kutusu: kullanıcının gerçek okuduğu adres (2026-08-16 talimatı).
+      // ADMIN_EMAIL kullanılmıyor — o, seed admin hesabının login e-postası.
+      to: process.env.STRIPE_NOTIFY_EMAIL || 'goldmoodastro@gmail.com',
       subject: `Stripe ödemesi alındı — ${amount} ${currency}`,
       text:
         `Stripe Checkout ödemesi tamamlandı.\n\n` +
