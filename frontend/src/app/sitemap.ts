@@ -11,6 +11,8 @@ import { toLocalizedPublicPath, type PublicLocale } from '@/i18n/localizedRoutes
 const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL || brand.public_url || 'https://goldmoodastro.com').replace(/\/$/, '');
 
 const LOCALES = ['tr', 'en', 'de'] as const;
+import { allSignPairs } from '@/lib/zodiac/compatibility';
+
 const DEFAULT_LOCALE = 'tr';
 
 const ZODIAC_SIGNS = [
@@ -146,6 +148,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
+  // İkili burç uyumu — 66 tekrarsız çift × 3 dil. Sayfalar index,follow ve
+  // sunucuda çifte özgü içerik basıyor (bkz. lib/zodiac/compatibility.ts);
+  // sitemap'te olmadıkları için Google'ın keşfi tesadüfe kalmıştı.
+  const compatibilityRoutes: MetadataRoute.Sitemap = LOCALES.flatMap((locale) =>
+    allSignPairs().map(({ slug }) => {
+      const path = `/burclar/uyum/${slug}`;
+      return {
+        url: localizedUrl(locale, path),
+        lastModified: new Date('2026-08-17T00:00:00.000Z'),
+        changeFrequency: 'monthly' as const,
+        priority: 0.5,
+        alternates: buildAlternates(path),
+      };
+    }),
+  );
+
   const blogItems = (await Promise.all(LOCALES.map((locale) => fetchBlogItems(locale)))).flat();
   const blogTranslations = new Map<string, Partial<Record<PublicLocale, string>>>();
   for (const item of blogItems) {
@@ -171,5 +189,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     };
   });
 
-  return [...staticRoutes, ...signRoutes, ...blogRoutes];
+  return [...staticRoutes, ...signRoutes, ...compatibilityRoutes, ...blogRoutes];
 }

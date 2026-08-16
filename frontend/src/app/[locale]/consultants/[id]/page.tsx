@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { permanentRedirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 
 import ConsultantDetail from '@/components/containers/consultant/ConsultantDetail';
 import JsonLd from '@/seo/JsonLd';
@@ -76,7 +76,14 @@ function absoluteUrl(url?: string | null): string | undefined {
   return `${SITE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
-async function fetchConsultantForMeta(id: string, locale?: string) {
+// Danışman gerçekten yoksa (API 404) bunu geçici hatadan AYIRMAK gerekir:
+// olmayan slug 200 dönerse Google bunu soft-404 sayar (test-danisman böyle
+// indekslenmişti); geçici API hatasında 404 basmak ise geçerli sayfayı
+// dizinden düşürür. Bu yüzden ayrı bir bayrak taşıyoruz.
+async function fetchConsultantForMeta(
+  id: string,
+  locale?: string,
+): Promise<{ data: any; missing: boolean }> {
   try {
     const qs = locale ? `?locale=${encodeURIComponent(locale)}` : '';
     const res = await fetch(`${API_BASE}/consultants/${encodeURIComponent(id)}${qs}`, {
@@ -85,11 +92,12 @@ async function fetchConsultantForMeta(id: string, locale?: string) {
         ? { 'Accept-Language': locale, 'x-locale': locale }
         : undefined,
     });
-    if (!res.ok) return null;
+    if (res.status === 404 || res.status === 410) return { data: null, missing: true };
+    if (!res.ok) return { data: null, missing: false };
     const json = await res.json();
-    return json?.data ?? json;
+    return { data: json?.data ?? json, missing: false };
   } catch {
-    return null;
+    return { data: null, missing: false };
   }
 }
 
@@ -210,7 +218,7 @@ function consultantPageCopy(locale: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id, locale } = await params;
-  const consultant = await fetchConsultantForMeta(id, locale);
+  const { data: consultant } = await fetchConsultantForMeta(id, locale);
   const name = consultant?.meta_title || consultant?.full_name || 'Consultant Detail';
   const bio = consultant?.meta_description || consultant?.bio || (
     'View consultant details and book an available session.'
@@ -238,7 +246,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ConsultantDetailPage({ params }: Props) {
   const { id, locale } = await params;
   const copy = consultantPageCopy(locale);
-  const consultant = await fetchConsultantForMeta(id, locale) as ConsultantForSchema | null;
+  const { data: consultantData, missing: consultantMissing } = await fetchConsultantForMeta(id, locale);
+  // Olmayan slug → gerçek 404. Soft-404 (200 + boş içerik) Search Console'da
+  // "taranan ama dizine eklenmeyen" olarak birikiyordu.
+  if (consultantMissing) notFound();
+  const consultant = consultantData as ConsultantForSchema | null;
   const consultantId = consultant?.id || id;
   const [services, reviews, expertiseLabels, languageLabels] = await Promise.all([
     fetchConsultantServicesForSchema(consultantId),
