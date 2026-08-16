@@ -154,6 +154,44 @@ async function getCallerConsultant(req: FastifyRequest) {
   return row ?? null;
 }
 
+// ── Slug self-heal ──
+// approveConsultant onay anında slug üretir; ama o kod eklenmeden (veya başka
+// yoldan) onaylanmış danışmanlar slug'sız kalıp yayın gate'ine takılıyordu ve
+// bunu kendileri düzeltemiyordu (2026-08-16: 4 danışman bu durumdaydı).
+// Panel profilini her açışta onaylı+slug'sız kayıt kendiliğinden iyileşir.
+function slugifyTrSelf(input: string): string {
+  const map: Record<string, string> = { ç: 'c', ğ: 'g', ı: 'i', İ: 'i', ö: 'o', ş: 's', ü: 'u', Ç: 'c', Ğ: 'g', Ö: 'o', Ş: 's', Ü: 'u' };
+  return (input || '')
+    .replace(/[çğıİöşüÇĞÖŞÜ]/g, (m) => map[m] ?? m)
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 90);
+}
+
+async function healMissingConsultantSlug(c: { id: string; user_id: string; slug: string | null; approval_status: string | null }): Promise<string | null> {
+  if (c.slug || c.approval_status !== 'approved') return c.slug ?? null;
+  const [u] = await db
+    .select({ full_name: users.full_name })
+    .from(users)
+    .where(eq(users.id, c.user_id))
+    .limit(1);
+  const root = slugifyTrSelf(u?.full_name || '') || 'danisman';
+  let candidate = root;
+  for (let i = 2; i < 200; i += 1) {
+    const [existing] = await db
+      .select({ id: consultants.id })
+      .from(consultants)
+      .where(eq(consultants.slug, candidate))
+      .limit(1);
+    if (!existing || existing.id === c.id) break;
+    candidate = `${root}-${i}`;
+  }
+  await db.update(consultants).set({ slug: candidate, updated_at: new Date() } as any).where(eq(consultants.id, c.id));
+  return candidate;
+}
+
 async function getConsultantSeoI18n(consultantId: string, locale = 'tr') {
   const result = await db.execute(sql`
     SELECT meta_title, meta_description, og_image
@@ -328,6 +366,13 @@ async function findInactiveOrMissingLanguageSlugs(slugs: string[]): Promise<stri
 export async function getProfile(req: FastifyRequest, reply: FastifyReply) {
   const c = await getCallerConsultant(req);
   if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+  if (!c.slug && c.approval_status === 'approved') {
+    try {
+      (c as any).slug = await healMissingConsultantSlug(c as any);
+    } catch (e) {
+      req.log?.error({ err: e }, 'consultant_slug_selfheal_failed');
+    }
+  }
   const locale = String((req.query as any)?.locale || 'tr').slice(0, 8);
   const seo = await getConsultantSeoI18n(c.id, locale);
 

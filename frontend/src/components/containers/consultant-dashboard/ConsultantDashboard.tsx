@@ -961,45 +961,11 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
           </div>
         </Field>
 
-        <div className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface)/30 p-5 space-y-4">
-          <div>
-            <h3 className="font-serif text-lg text-(--gm-text)">{ui('ui_dashboard_profile_seo_title', 'SEO Settings')}</h3>
-            <p className="text-[12px] text-(--gm-text-dim) mt-1">{ui('ui_dashboard_profile_seo_hint', 'These fields are used for your public profile page title, search description and social preview image.')}</p>
-          </div>
-          <Field
-            label={ui('ui_dashboard_profile_meta_title_label', 'Meta Title')}
-            hint={ui('ui_dashboard_profile_meta_title_hint', 'Aim for 30-60 characters.')}
-            error={errors.metaTitle}
-          >
-            <input
-              value={metaTitle}
-              onChange={(event) => setMetaTitle(event.target.value)}
-              className="w-full rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) px-4 py-3 text-sm text-(--gm-text)"
-              placeholder={ui('ui_dashboard_profile_meta_title_placeholder', 'Write a title for this language')}
-            />
-          </Field>
-          <Field
-            label={ui('ui_dashboard_profile_meta_description_label', 'Meta Description')}
-            hint={ui('ui_dashboard_profile_meta_description_hint', 'Aim for 120-160 characters.')}
-            error={errors.metaDescription}
-          >
-            <textarea
-              value={metaDescription}
-              onChange={(event) => setMetaDescription(event.target.value)}
-              rows={3}
-              className="w-full rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) px-4 py-3 text-sm text-(--gm-text)"
-              placeholder={ui('ui_dashboard_profile_meta_description_placeholder', 'Write a search description for this language')}
-            />
-          </Field>
-          <Field label={ui('ui_dashboard_profile_og_image_label', 'Social Preview Image URL')}>
-            <input
-              value={ogImage}
-              onChange={(event) => setOgImage(event.target.value)}
-              className="w-full rounded-xl border border-(--gm-border-soft) bg-(--gm-bg-deep) px-4 py-3 text-sm text-(--gm-text)"
-              placeholder="https://..."
-            />
-          </Field>
-        </div>
+        {/* SEO alanları danışmandan kaldırıldı (2026-08-16 kararı): meta title/
+            description/og-image sunucu tarafında otomatik üretiliyor (repository
+            COALESCE fallback'leri) ve gerekirse admin panelden elle yönetiliyor.
+            metaTitle/metaDescription/ogImage state'i korunuyor — kayıtta mevcut
+            değerler değişmeden geri gönderilir. */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Field 
