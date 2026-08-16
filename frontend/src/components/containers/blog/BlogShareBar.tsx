@@ -9,9 +9,9 @@ type Props = {
 };
 
 const LABELS = {
-  tr: { share: 'Paylaş', copy: 'Bağlantıyı kopyala', copied: 'Kopyalandı' },
-  en: { share: 'Share', copy: 'Copy link', copied: 'Copied' },
-  de: { share: 'Teilen', copy: 'Link kopieren', copied: 'Kopiert' },
+  tr: { share: 'Paylaş', copy: 'Bağlantıyı kopyala', copied: 'Kopyalandı', instagramCopied: 'Bağlantı kopyalandı; Instagram açılıyor' },
+  en: { share: 'Share', copy: 'Copy link', copied: 'Copied', instagramCopied: 'Link copied; opening Instagram' },
+  de: { share: 'Teilen', copy: 'Link kopieren', copied: 'Kopiert', instagramCopied: 'Link kopiert; Instagram wird geöffnet' },
 } as const;
 
 function labelsFor(locale: string) {
@@ -26,6 +26,7 @@ function labelsFor(locale: string) {
 export default function BlogShareBar({ url, title, locale }: Props) {
   const t = labelsFor(locale);
   const [copied, setCopied] = React.useState(false);
+  const [instagramCopied, setInstagramCopied] = React.useState(false);
 
   const enc = encodeURIComponent(url);
   const encTitle = encodeURIComponent(title);
@@ -83,6 +84,17 @@ export default function BlogShareBar({ url, title, locale }: Props) {
     }
   };
 
+  const onInstagram = async () => {
+    try {
+      await navigator.clipboard.writeText(`${title}\n${url}`);
+      setInstagramCopied(true);
+      window.setTimeout(() => setInstagramCopied(false), 2400);
+    } catch {
+      // Clipboard izni yoksa Instagram yine açılır.
+    }
+    window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-5 shadow-(--gm-shadow-soft)">
       <p className="text-[11px] font-bold tracking-[0.28em] uppercase text-(--gm-gold-deep) mb-4">
@@ -104,6 +116,19 @@ export default function BlogShareBar({ url, title, locale }: Props) {
         ))}
         <button
           type="button"
+          onClick={onInstagram}
+          aria-label="Instagram"
+          title="Instagram"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-(--gm-border-soft) bg-(--gm-bg-deep) text-(--gm-text-dim) transition-all hover:border-(--gm-primary)/50 hover:text-(--gm-primary) hover:-translate-y-0.5"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="17.4" cy="6.6" r="1" fill="currentColor" stroke="none" />
+          </svg>
+        </button>
+        <button
+          type="button"
           onClick={onCopy}
           aria-label={t.copy}
           title={t.copy}
@@ -121,8 +146,8 @@ export default function BlogShareBar({ url, title, locale }: Props) {
           )}
         </button>
       </div>
-      {copied ? (
-        <p className="mt-3 text-xs text-(--gm-primary)">{t.copied}</p>
+      {copied || instagramCopied ? (
+        <p className="mt-3 text-xs text-(--gm-primary)">{instagramCopied ? t.instagramCopied : t.copied}</p>
       ) : null}
     </div>
   );

@@ -18,6 +18,7 @@ import {
   useGetCustomPageBySlugPublicQuery,
   useListCustomPagesPublicQuery,
 } from '@/integrations/rtk/hooks';
+import { useGetConsultantPublicQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
 import type { CustomPageDto } from '@/integrations/shared';
 import { safeStr,toCdnSrc, stripPresentationAttrs, extractImgSrcListFromHtml} from '@/integrations/shared';
 
@@ -115,6 +116,7 @@ export default function BlogDetails() {
       contactPhone: 'Phone',
       contactWhatsapp: 'WhatsApp',
       contactForm: 'Contact form',
+      authorLabel: 'Written by',
     }),
     [],
   );
@@ -146,6 +148,7 @@ export default function BlogDetails() {
       contactPhone: ui('ui_blog_contact_phone', fb.contactPhone),
       contactWhatsapp: ui('ui_blog_contact_whatsapp', fb.contactWhatsapp),
       contactForm: ui('ui_blog_contact_form', fb.contactForm),
+      authorLabel: ui('ui_blog_author_label', fb.authorLabel),
     }),
     [ui, fb],
   );
@@ -160,6 +163,11 @@ export default function BlogDetails() {
   const post = data as CustomPageDto | undefined;
   const hasPost = !!post && !!post.id && !isError;
   const title = safeStr(post?.title);
+  const authorConsultantId = safeStr(post?.author_consultant_id);
+  const { data: author } = useGetConsultantPublicQuery(
+    { id: authorConsultantId, locale },
+    { skip: !authorConsultantId },
+  );
 
   const rawHtml = useMemo(() => {
     const html = safeStr((post as any)?.content_html);
@@ -334,6 +342,23 @@ export default function BlogDetails() {
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-light text-(--gm-text) leading-tight mb-6">
               {title}
             </h1>
+            {authorConsultantId && author?.full_name ? (
+              <Link
+                href={localizePath(locale, `/consultants/${author.slug || author.id}`)}
+                className="inline-flex items-center gap-3 rounded-full border border-(--gm-border-soft) bg-(--gm-surface) py-2 pl-2 pr-4 text-sm text-(--gm-text-dim) transition-colors hover:border-(--gm-gold)/50 hover:text-(--gm-gold)"
+              >
+                <span className="relative h-9 w-9 overflow-hidden rounded-full bg-(--gm-bg-deep)">
+                  {author.avatar_url ? (
+                    <Image src={author.avatar_url} alt="" fill className="object-cover" sizes="36px" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center font-serif text-(--gm-gold)">
+                      {author.full_name.charAt(0)}
+                    </span>
+                  )}
+                </span>
+                <span><span className="text-(--gm-text-muted)">{t.authorLabel}</span> <strong className="font-semibold text-(--gm-text)">{author.full_name}</strong></span>
+              </Link>
+            ) : null}
           </div>
 
           {/* HERO */}

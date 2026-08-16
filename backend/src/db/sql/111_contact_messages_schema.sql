@@ -31,5 +31,6 @@ CREATE TABLE IF NOT EXISTS contact_replies (
   email_status VARCHAR(20) NOT NULL DEFAULT 'sent',
   created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   KEY idx_contact_replies_contact (contact_id),
-  KEY idx_contact_replies_msgid (email_message_id)
+  -- VARCHAR(998) utf8mb4 tam index 3072 bayt sınırını aşar; prefix zorunlu.
+  KEY idx_contact_replies_msgid (email_message_id(191))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

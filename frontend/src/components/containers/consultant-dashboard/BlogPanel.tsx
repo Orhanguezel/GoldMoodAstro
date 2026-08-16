@@ -27,6 +27,8 @@ type BlogForm = {
   tags: string;
   featured_image: string;
   featured_image_alt: string;
+  editorialConsent: boolean;
+  socialMediaConsent: boolean;
 };
 
 const EMPTY_FORM: BlogForm = {
@@ -37,6 +39,8 @@ const EMPTY_FORM: BlogForm = {
   tags: '',
   featured_image: '',
   featured_image_alt: '',
+  editorialConsent: false,
+  socialMediaConsent: false,
 };
 
 const SLUG_CHAR_MAP: Record<string, string> = {
@@ -57,6 +61,16 @@ function slugify(value: string): string {
     .replace(/^-|-$/g, '');
 }
 
+function hasRichTextContent(value: string): boolean {
+  if (/<img\b/i.test(value)) return true;
+  return value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;|&#160;/gi, ' ')
+    .replace(/&[a-z0-9#]+;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim().length > 0;
+}
+
 function toForm(post: CustomPageDto): BlogForm {
   return {
     id: post.id,
@@ -67,6 +81,8 @@ function toForm(post: CustomPageDto): BlogForm {
     tags: post.tags?.filter((tag) => !tag.startsWith('author_consultant:')).join(', ') || '',
     featured_image: safeStr(post.featured_image),
     featured_image_alt: safeStr(post.featured_image_alt),
+    editorialConsent: false,
+    socialMediaConsent: false,
   };
 }
 
@@ -84,6 +100,7 @@ export default function BlogPanel({ locale, consultantId }: BlogPanelProps) {
   const [deletePost, deleteState] = useDeleteMyConsultantBlogPostMutation();
   const [uploadCover, coverUploadState] = useUploadToBucketMutation();
   const coverInputRef = useRef<HTMLInputElement | null>(null);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
 
   const editorFolder = useMemo(() => {
     const slug = form?.slug?.trim();
@@ -107,10 +124,26 @@ export default function BlogPanel({ locale, consultantId }: BlogPanelProps) {
 
   const save = async () => {
     if (!form) return;
-    const title = form.title.trim();
-    const slug = slugify(form.slug || form.title);
-    if (!title || !slug) {
-      toast.error(ui('ui_dashboard_blog_error_required', 'Title and slug are required'));
+    // Mobil tarayıcıların otomatik doldurma/paste davranışı bazen React onChange'i
+    // tetiklemeden inputta görünür değer bırakabiliyor. Gönderimde DOM değerini de
+    // okuyarak ekranda dolu görünen başlığın yanlışlıkla boş sayılmasını önle.
+    const title = (titleInputRef.current?.value || form.title).trim();
+    if (!title) {
+      toast.error(ui('ui_dashboard_blog_title_required', 'Please enter a title.'));
+      titleInputRef.current?.focus();
+      return;
+    }
+    if (!hasRichTextContent(form.content)) {
+      toast.error(ui('ui_dashboard_blog_content_required', 'Please enter the post content.'));
+      return;
+    }
+    const slug = slugify(form.slug || title);
+    if (!form.editorialConsent) {
+      toast.error(ui('ui_dashboard_blog_editorial_consent_required', 'You must accept the editorial review terms before submitting.'));
+      return;
+    }
+    if (!form.socialMediaConsent) {
+      toast.error(ui('ui_dashboard_blog_social_consent_required', 'You must approve social media sharing before submitting.'));
       return;
     }
     const payload = {
@@ -122,6 +155,8 @@ export default function BlogPanel({ locale, consultantId }: BlogPanelProps) {
       tags: form.tags.trim() || null,
       featured_image: form.featured_image.trim() || null,
       featured_image_alt: form.featured_image_alt.trim() || null,
+      editorial_consent: true as const,
+      social_media_consent: true as const,
     };
     try {
       if (form.id) {
@@ -198,7 +233,7 @@ export default function BlogPanel({ locale, consultantId }: BlogPanelProps) {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label={ui('ui_dashboard_blog_title_label', 'Title')}>
-              <input value={form.title} onChange={(event) => patchForm({ title: event.target.value })} className="input" />
+              <input ref={titleInputRef} value={form.title} onChange={(event) => patchForm({ title: event.target.value })} className="input" />
             </Field>
             <Field label="Slug">
               <input value={form.slug} onChange={(event) => patchForm({ slug: slugify(event.target.value) })} className="input" />
@@ -266,6 +301,34 @@ export default function BlogPanel({ locale, consultantId }: BlogPanelProps) {
               minHeight="320px"
             />
           </Field>
+          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[var(--gm-gold)]/30 bg-[var(--gm-gold)]/5 p-4">
+            <input
+              type="checkbox"
+              checked={form.editorialConsent}
+              onChange={(event) => patchForm({ editorialConsent: event.target.checked })}
+              className="mt-1 h-4 w-4 shrink-0 accent-[var(--gm-gold)]"
+            />
+            <span className="text-sm leading-6 text-[var(--gm-text-dim)]">
+              {ui(
+                'ui_dashboard_blog_editorial_consent',
+                'I accept that GoldMoodAstro may edit my post to meet its publishing standards, including imagery, length, language, and content structure. The post will be published under my name, and I may request changes after publication.',
+              )}
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[var(--gm-primary)]/30 bg-[var(--gm-primary)]/5 p-4">
+            <input
+              type="checkbox"
+              checked={form.socialMediaConsent}
+              onChange={(event) => patchForm({ socialMediaConsent: event.target.checked })}
+              className="mt-1 h-4 w-4 shrink-0 accent-[var(--gm-primary)]"
+            />
+            <span className="text-sm leading-6 text-[var(--gm-text-dim)]">
+              {ui(
+                'ui_dashboard_blog_social_consent',
+                'I approve the promotion and sharing of my post, including its title, excerpts, visuals, link, and my name as the author, on GoldMoodAstro social media accounts.',
+              )}
+            </span>
+          </label>
           <div className="flex justify-end">
             <button onClick={save} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-[var(--gm-gold)] px-6 py-3 text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest">
               <Save className="h-4 w-4" />

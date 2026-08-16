@@ -1,0 +1,44 @@
+{
+  "checked_at": "2026-08-13",
+  "consultant": "Astrolog Fatma Güçlü",
+  "verified_sources": [
+    {
+      "source": "msastro.co",
+      "profile_url": "https://msastro.co/advisor/home",
+      "source_profile_id": 261429,
+      "review_count": 1278,
+      "rating": 5.0,
+      "imported_reviews": 1278,
+      "notes": "follow_count=717 is not a review metric and is not imported"
+    },
+    {
+      "source": "advicemy.com",
+      "profile_url": "https://www.advicemy.com/danisman/fatma-guclu",
+      "source_profile_id": 819361,
+      "review_count": 29,
+      "imported_reviews": 29,
+      "title": "Uzman Astrolog",
+      "languages": ["Türkçe"],
+      "meeting_options": ["Microsoft Teams", "WhatsApp", "Google Meet", "Skype"],
+      "services": ["Ücretsiz ön görüşme", "Horary Tek Soru Astrolojisi", "Rektifikasyon", "İlişki/6 Aylık AstroAnaliz", "Genel Doğum Haritası"]
+    },
+    {
+      "source": "armut.com",
+      "profile_urls": [
+        "https://armut.com/hizmetveren/fatma-guclu-karaman-karaman-dogum-haritasi-hesaplama_13250597",
+        "https://armut.com/hizmetveren/fatma-guclu-karaman-karaman-dogum-haritasi-yorumlama_22199573",
+        "https://armut.com/hizmetveren/fatma-guclu-karaman-karaman-rektifikasyon_13250596"
+      ],
+      "location": "Karaman, Karaman",
+      "member_since": "2023",
+      "business_start_year": 2019,
+      "imported_reviews": 0,
+      "notes": "Profile identity is verified by the matching biography. Profile-specific reviews are not publicly accessible without creating a quote request. Category-page reviews belong to multiple providers and were excluded."
+    }
+  ],
+  "excluded_results": [
+    "School, public-sector, obituary, LinkedIn and sports records belonging to other people named Fatma Güçlü",
+    "Category-level Armut reviews that cannot be attributed to this consultant",
+    "The @astrokartografi search result because identity could not be verified from public evidence"
+  ]
+}

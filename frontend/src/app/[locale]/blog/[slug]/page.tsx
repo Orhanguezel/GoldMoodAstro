@@ -12,9 +12,49 @@ import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import BlogShareBar from '@/components/containers/blog/BlogShareBar';
 import BlogRelatedPosts from '@/components/containers/blog/BlogRelatedPosts';
+import { getServerApiBase } from '@/i18n/apiBase.server';
 
 type PageProps = {
   params: Promise<{ locale: string; slug: string }>;
+};
+
+type BlogAuthor = {
+  id: string;
+  slug?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  headline?: string | null;
+  bio?: string | null;
+  expertise?: string[] | null;
+};
+
+async function fetchBlogAuthor(id: string, locale: string): Promise<BlogAuthor | null> {
+  const authorId = safeStr(id);
+  if (!authorId) return null;
+
+  try {
+    const apiBase = getServerApiBase().replace(/\/+$/, '');
+    const response = await fetch(
+      `${apiBase}/consultants/${encodeURIComponent(authorId)}`,
+      {
+        headers: { 'accept-language': locale },
+        next: { revalidate: 300 },
+      },
+    );
+    if (!response.ok) return null;
+    const payload = await response.json();
+    return (payload?.data ?? payload) as BlogAuthor;
+  } catch {
+    return null;
+  }
+}
+
+const EXPERTISE_LABELS: Record<string, string> = {
+  astrology: 'Astroloji',
+  birth_chart: 'Doğum Haritası',
+  energy_healing: 'Enerji Çalışmaları',
+  reiki: 'Reiki',
+  bilincalti_donusum: 'Bilinçaltı Dönüşüm',
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -89,6 +129,17 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   // sanip tarayip indekslemiyordu. Artik 404.
   if (!page) notFound();
 
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
+  const authorConsultantId = safeStr(page?.author_consultant_id);
+  const author = authorConsultantId
+    ? await fetchBlogAuthor(authorConsultantId, locale)
+    : null;
+  const authorName = safeStr(author?.full_name) || 'GoldMoodAstro Editoryal Ekibi';
+  const authorSlug = safeStr(author?.slug) || safeStr(author?.id);
+  const authorUrl = authorSlug
+    ? `${siteUrl}/${locale}/consultants/${encodeURIComponent(authorSlug)}`
+    : `${siteUrl}/${locale}/about`;
+
   // Aynı yazıyı listeden çıkar, en fazla 5 tane göster.
   const relatedPosts = (Array.isArray(allPosts) ? allPosts : [])
     .filter((post) => safeStr(post?.slug) && safeStr(post?.slug) !== slug)
@@ -99,7 +150,6 @@ export default async function BlogDetailsPage({ params }: PageProps) {
     safeStr(page?.summary) || html || title,
     180,
   );
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
   const pageUrl = `${siteUrl}/${locale}/blog/${encodeURIComponent(slug)}`;
   const image = safeStr(page?.featured_image) || (Array.isArray(page?.images) ? safeStr(page.images[0]) : '');
   const faqItems = locale === 'tr'
@@ -140,7 +190,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
             image: image ? absUrlJoin(siteUrl, image) : undefined,
             datePublished: page?.created_at || '2026-04-30T00:00:00.000Z',
             dateModified: page?.updated_at || page?.created_at || '2026-04-30T00:00:00.000Z',
-            author: { name: 'GoldMoodAstro Editorial Team', url: `${siteUrl}/${locale}/about` },
+            author: { name: authorName, url: authorUrl },
             publisherId: `${siteUrl}/#org`,
             url: pageUrl,
             speakableSelectors: ['h1', '[data-speakable]'],
@@ -149,11 +199,11 @@ export default async function BlogDetailsPage({ params }: PageProps) {
           faqSchema(faqItems),
         ])}
       />
-      <Banner title={title} />
+      <Banner title={title} compact />
 
-      <PageContainer className="bg-(--gm-bg) text-(--gm-text)" verticalPadding="large">
+      <PageContainer className="bg-(--gm-bg) pb-8 pt-4 text-(--gm-text) md:pb-12 md:pt-6" pad="none">
         {image ? (
-          <div className="max-w-6xl mx-auto mb-12">
+          <div className="max-w-6xl mx-auto mb-8 md:mb-10">
             <div className="aspect-video w-full overflow-hidden rounded-[2rem] border border-(--gm-border-soft) shadow-(--gm-shadow-card) bg-(--gm-bg-deep)">
               {/* Server component: plain <img> — next/image optimizer + SVG/cache
                   sorunlarını bypass eder; admin'de çalışan yöntemle aynı. */}
@@ -192,21 +242,26 @@ export default async function BlogDetailsPage({ params }: PageProps) {
               eyebrow={locale === 'tr' ? 'SSS' : 'FAQ'}
             />
 
-            <div className="rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-10 shadow-(--gm-shadow-soft)">
-              <AuthorBio
-                name="GoldMoodAstro Editoryal Ekibi"
-                title={locale === 'tr' ? 'Astroloji ve ruhsal rehberlik editörleri' : 'Spiritual guidance and astrology editors'}
-                bio={locale === 'tr'
-                  ? 'GoldMoodAstro editörleri astroloji, tarot, numeroloji ve ruhsal farkındalık konularını açık, sorumlu ve pratik bir dille hazırlar.'
-                  : 'GoldMoodAstro editors prepare astrology, tarot, numerology and spiritual awareness topics in clear, responsible and practical language.'}
-                expertise={locale === 'tr' ? ['Astroloji', 'Tarot', 'Numeroloji', 'Ruhsal Farkındalık'] : ['Astrology', 'Tarot', 'Numerology', 'Spiritual Awareness']}
-              />
-            </div>
           </div>
 
           {/* Sağ sidebar — masaüstünde sabit kalır (sticky) */}
           <aside className="lg:sticky lg:top-24 h-fit space-y-6">
             <BlogShareBar url={pageUrl} title={title} locale={locale} />
+            <AuthorBio
+              variant="compact"
+              name={authorName}
+              avatar={author?.avatar_url ? absUrlJoin(siteUrl, author.avatar_url) : null}
+              title={safeStr(author?.headline) || (author ? (locale === 'tr' ? 'Astrolog ve GoldMoodAstro Danışmanı' : 'Astrologer and GoldMoodAstro Consultant') : (locale === 'tr' ? 'Astroloji ve ruhsal rehberlik editörleri' : 'Spiritual guidance and astrology editors'))}
+              bio={safeStr(author?.bio) || (locale === 'tr'
+                ? 'GoldMoodAstro editörleri astroloji, tarot, numeroloji ve ruhsal farkındalık konularını açık, sorumlu ve pratik bir dille hazırlar.'
+                : 'GoldMoodAstro editors prepare astrology, tarot, numerology and spiritual awareness topics in clear, responsible and practical language.')}
+              expertise={Array.isArray(author?.expertise) && author.expertise.length > 0
+                ? author.expertise.map((item) => EXPERTISE_LABELS[item] || item.replaceAll('_', ' '))
+                : (locale === 'tr' ? ['Astroloji', 'Tarot', 'Numeroloji', 'Ruhsal Farkındalık'] : ['Astrology', 'Tarot', 'Numerology', 'Spiritual Awareness'])}
+              socials={authorSlug
+                ? [{ label: locale === 'tr' ? 'Danışman Profilini Gör' : 'View Consultant Profile', href: authorUrl }]
+                : []}
+            />
             <BlogRelatedPosts posts={relatedPosts} locale={locale} />
           </aside>
         </div>

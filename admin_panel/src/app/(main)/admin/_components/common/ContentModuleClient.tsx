@@ -15,6 +15,7 @@ import {
   Search,
   Sparkles,
   Trash2,
+  UserRound,
   Wand2,
   X,
 } from 'lucide-react';
@@ -28,6 +29,13 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import RichContentEditor from '@/app/(main)/admin/_components/common/RichContentEditor';
 import { AdminImageUploadField } from '@/app/(main)/admin/_components/common/AdminImageUploadField';
 import { AdminLocaleSelect } from '@/app/(main)/admin/_components/common/AdminLocaleSelect';
@@ -49,9 +57,14 @@ import {
 } from '@/integrations/hooks';
 import { useLocaleContext } from '@/i18n';
 import { cn } from '@/lib/utils';
+import {
+  useListConsultantsAdminQuery,
+  type ConsultantAdmin,
+} from '@/integrations/endpoints/admin/consultants_admin.endpoints';
 
 type BlogForm = {
   id?: string;
+  author_consultant_id: string;
   module_key: string;
   landing_key: string;
   locale: string;
@@ -72,6 +85,7 @@ type BlogForm = {
 };
 
 const EMPTY_FORM: BlogForm = {
+  author_consultant_id: '',
   module_key: 'blog',
   landing_key: '',
   locale: 'tr',
@@ -108,6 +122,7 @@ function errorMessage(error: unknown, fallback: string): string {
 function toForm(post: CustomPageDto): BlogForm {
   return {
     id: post.id,
+    author_consultant_id: post.author_consultant_id || '',
     module_key: post.module_key || 'page',
     landing_key: post.landing_key || '',
     locale: post.locale_resolved || 'tr',
@@ -197,6 +212,7 @@ export default function ContentModuleClient({
   const [q, setQ] = React.useState('');
   const [locale, setLocale] = React.useState('tr');
   const [form, setForm] = React.useState<BlogForm | null>(null);
+  const [previewPost, setPreviewPost] = React.useState<CustomPageDto | null>(null);
   const {
     localeOptions,
     defaultLocaleFromDb,
@@ -218,6 +234,8 @@ export default function ContentModuleClient({
     orderDir: 'desc',
     limit: 200,
   });
+  const isBlogModule = moduleKeySet.has('blog');
+  const consultantsQuery = useListConsultantsAdminQuery(undefined, { skip: !isBlogModule });
   const seoQuery = useListSeoQualityQuery({
     entity_type: 'custom_page',
     locale,
@@ -233,6 +251,11 @@ export default function ContentModuleClient({
     () => (query.data?.items ?? []).filter((item) => moduleKeySet.has(item.module_key)),
     [moduleKeySet, query.data?.items],
   );
+  const consultantsById = React.useMemo(() => {
+    const map = new Map<string, ConsultantAdmin>();
+    for (const consultant of consultantsQuery.data ?? []) map.set(consultant.id, consultant);
+    return map;
+  }, [consultantsQuery.data]);
   const seoByEntity = React.useMemo(() => {
     const map = new Map<string, { overall_score: number; adsense_ready: unknown; word_count: number }>();
     for (const item of seoQuery.data?.items ?? []) {
@@ -242,6 +265,9 @@ export default function ContentModuleClient({
   }, [seoQuery.data?.items]);
   const busy = query.isFetching || createState.isLoading || updateState.isLoading || deleteState.isLoading;
   const editing = Boolean(form?.id);
+  const formAuthor = form?.author_consultant_id
+    ? consultantsById.get(form.author_consultant_id)
+    : undefined;
 
   const startNew = () => setForm({ ...EMPTY_FORM, module_key: primaryModuleKey, locale });
   const startEdit = (post: CustomPageDto) => setForm(toForm(post));
@@ -430,6 +456,10 @@ export default function ContentModuleClient({
               </Button>
             </div>
 
+            {isBlogModule && form.author_consultant_id ? (
+              <AuthorProfileCard consultant={formAuthor} consultantId={form.author_consultant_id} compact={false} />
+            ) : null}
+
             <Tabs defaultValue="content" className="space-y-5">
               <TabsList className="flex w-fit flex-wrap gap-2 rounded-full border border-gm-border-soft bg-gm-surface/20 p-1.5 h-auto">
                 <TabsTrigger value="content" className="rounded-full px-5 data-[state=active]:bg-gm-gold data-[state=active]:text-gm-bg">
@@ -584,16 +614,17 @@ export default function ContentModuleClient({
                 <TableHead className="px-7 py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.status', 'Durum')}</TableHead>
                 <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.post', 'Yazı')}</TableHead>
                 <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">SEO</TableHead>
+                {isBlogModule ? <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">Yazar</TableHead> : null}
                 <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.date', 'Tarih')}</TableHead>
                 <TableHead className="px-7 py-5 text-right text-[10px] uppercase tracking-widest text-gm-muted">{b('table.actions', 'İşlem')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {query.isLoading ? (
-                <TableRow><TableCell colSpan={5} className="py-20 text-center text-sm italic text-gm-muted">{b('loading', 'Yükleniyor...')}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={isBlogModule ? 6 : 5} className="py-20 text-center text-sm italic text-gm-muted">{b('loading', 'Yükleniyor...')}</TableCell></TableRow>
               ) : posts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-24 text-center">
+                  <TableCell colSpan={isBlogModule ? 6 : 5} className="py-24 text-center">
                     <div className="flex flex-col items-center gap-3 text-gm-muted">
                       <BookOpen className="size-12 opacity-40" />
                     <span className="font-serif italic">{emptyLabel || b('empty', 'Henüz içerik yok.')}</span>
@@ -649,14 +680,31 @@ export default function ContentModuleClient({
                         <Badge variant="outline" className="text-gm-muted">Bekliyor</Badge>
                       )}
                     </TableCell>
+                    {isBlogModule ? (
+                      <TableCell className="py-5">
+                        {post.author_consultant_id ? (
+                          <AuthorProfileCard
+                            consultant={consultantsById.get(post.author_consultant_id)}
+                            consultantId={post.author_consultant_id}
+                          />
+                        ) : (
+                          <span className="text-xs text-gm-muted">GoldMoodAstro</span>
+                        )}
+                      </TableCell>
+                    ) : null}
                     <TableCell className="py-5 text-xs text-gm-muted">{formatDate(post.updated_at || post.created_at, uiLocale)}</TableCell>
                     <TableCell className="px-7 py-5 text-right">
                       <div className="flex justify-end gap-2">
                         {previewPath(post, post.locale_resolved || locale) && (
-                          <Button asChild variant="ghost" size="icon" className="rounded-full">
-                            <Link href={previewPath(post, post.locale_resolved || locale)!} target="_blank">
-                              {post.is_published ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-                            </Link>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-full"
+                            title={b('preview', 'Panel içinde önizle')}
+                            onClick={() => setPreviewPost(post)}
+                          >
+                            {post.is_published ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
                           </Button>
                         )}
                         <Button variant="ghost" size="icon" onClick={() => startEdit(post)} className="rounded-full">
@@ -674,7 +722,113 @@ export default function ContentModuleClient({
           </Table>
         </CardContent>
       </Card>
+
+      <BlogPreviewDialog
+        post={previewPost}
+        consultant={previewPost?.author_consultant_id ? consultantsById.get(previewPost.author_consultant_id) : undefined}
+        onClose={() => setPreviewPost(null)}
+        locale={uiLocale}
+      />
     </div>
+  );
+}
+
+function BlogPreviewDialog({
+  post,
+  consultant,
+  onClose,
+  locale,
+}: {
+  post: CustomPageDto | null;
+  consultant?: ConsultantAdmin;
+  onClose: () => void;
+  locale: string;
+}) {
+  if (!post) return null;
+  const title = safeStr(post.title || post.slug) || 'Başlıksız yazı';
+  const coverUrl = safeStr(post.featured_image_effective_url || post.featured_image || post.image_url);
+  const authorName = consultant?.full_name || 'GoldMoodAstro Editöryal Ekibi';
+  const content = safeStr(post.content_html || post.content);
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="flex h-[92vh] w-[min(1180px,96vw)] max-w-none flex-col overflow-hidden rounded-[28px] border-gm-border-soft bg-gm-bg-deep p-0 shadow-2xl">
+        <DialogHeader className="shrink-0 border-b border-gm-border-soft bg-gm-surface/40 px-7 py-5 text-left">
+          <div className="flex flex-wrap items-center gap-3">
+            <Badge className={post.is_published ? 'bg-gm-success/15 text-gm-success' : 'bg-gm-muted/10 text-gm-muted'}>
+              {post.is_published ? 'Yayındaki sayfa önizlemesi' : 'Taslak önizlemesi'}
+            </Badge>
+            <code className="text-xs text-gm-muted">/{post.locale_resolved || 'tr'}/blog/{post.slug}</code>
+          </div>
+          <DialogTitle className="font-serif text-xl text-gm-text">Panel İçi Blog Önizlemesi</DialogTitle>
+          <DialogDescription className="text-gm-muted">Bu görünüm yalnızca panel içinde açılır; ana siteye yönlendirme yapmaz.</DialogDescription>
+        </DialogHeader>
+
+        <div className="min-h-0 flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(123,94,167,0.18),transparent_45%)] px-4 py-8 md:px-10">
+          <article className="mx-auto max-w-4xl overflow-hidden rounded-[32px] border border-gm-border-soft bg-gm-surface/70 shadow-2xl backdrop-blur-sm">
+            {coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={coverUrl} alt={post.featured_image_alt || title} className="aspect-[16/7] w-full bg-gm-bg object-cover" />
+            ) : null}
+            <div className="space-y-7 px-6 py-8 md:px-12 md:py-12">
+              <div className="space-y-4 border-b border-gm-border-soft pb-7">
+                <div className="flex flex-wrap gap-2">
+                  {(post.tags || []).map((tag) => <Badge key={tag} variant="outline" className="border-gm-gold/30 text-gm-gold">{tag}</Badge>)}
+                </div>
+                <h1 className="font-serif text-3xl leading-tight text-gm-text md:text-5xl">{title}</h1>
+                {post.summary ? <p className="max-w-3xl text-base italic leading-7 text-gm-muted md:text-lg">{post.summary}</p> : null}
+                <div className="flex flex-wrap items-center gap-3 text-xs text-gm-muted">
+                  <span className="font-semibold text-gm-text">{authorName}</span>
+                  <span>•</span>
+                  <span>{formatDate(post.updated_at || post.created_at, locale)}</span>
+                </div>
+              </div>
+              <div
+                className="prose prose-invert max-w-none font-serif leading-8 text-gm-text prose-headings:font-serif prose-headings:text-gm-gold prose-a:text-gm-gold prose-strong:text-gm-text"
+                dangerouslySetInnerHTML={{ __html: content }}
+              />
+            </div>
+          </article>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AuthorProfileCard({
+  consultant,
+  consultantId,
+  compact = true,
+}: {
+  consultant?: ConsultantAdmin;
+  consultantId: string;
+  compact?: boolean;
+}) {
+  const name = consultant?.full_name || 'Danışman';
+  return (
+    <Link
+      href={`/admin/consultants/${encodeURIComponent(consultantId)}`}
+      className={cn(
+        'inline-flex items-center gap-3 rounded-2xl border border-gm-border-soft bg-gm-bg-deep/60 transition-colors hover:border-gm-gold/40 hover:bg-gm-surface/60',
+        compact ? 'p-2 pr-3' : 'w-full p-4',
+      )}
+    >
+      <span className={cn('relative shrink-0 overflow-hidden rounded-full border border-gm-border-soft bg-gm-surface', compact ? 'size-9' : 'size-12')}>
+        {consultant?.avatar_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={consultant.avatar_url} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center text-gm-gold">
+            <UserRound className={compact ? 'size-4' : 'size-5'} />
+          </span>
+        )}
+      </span>
+      <span className="min-w-0">
+        {!compact ? <span className="block text-[10px] font-bold uppercase tracking-widest text-gm-muted">Yazar profili</span> : null}
+        <span className="block truncate text-sm font-semibold text-gm-text">{name}</span>
+        {consultant?.email ? <span className="block truncate text-[11px] text-gm-muted">{consultant.email}</span> : null}
+      </span>
+    </Link>
   );
 }
 

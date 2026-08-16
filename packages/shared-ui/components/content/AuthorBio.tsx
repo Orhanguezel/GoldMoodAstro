@@ -8,6 +8,7 @@ export type AuthorBioProps = {
   expertise?: string[];
   socials?: Array<{ label: string; href: string }>;
   certificates?: string[];
+  variant?: 'default' | 'compact';
 };
 
 export function AuthorBio({
@@ -18,7 +19,9 @@ export function AuthorBio({
   expertise = [],
   socials = [],
   certificates = [],
+  variant = 'default',
 }: AuthorBioProps) {
+  const compact = variant === 'compact';
   const initials = name
     .split(/\s+/)
     .map((part) => part[0])
@@ -27,9 +30,13 @@ export function AuthorBio({
     .toUpperCase();
 
   return (
-    <aside className="mx-auto mt-16 max-w-4xl rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/70 p-6 md:p-8">
-      <div className="flex flex-col gap-6 md:flex-row md:items-center">
-        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border border-[var(--gm-gold)]/40 bg-[var(--gm-bg-deep)]">
+    <aside className={compact
+      ? 'rounded-3xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)] p-5 shadow-[var(--gm-shadow-soft)]'
+      : 'mx-auto mt-16 max-w-4xl rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/70 p-6 md:p-8'}>
+      <div className={compact ? 'flex flex-col gap-4' : 'flex flex-col gap-6 md:flex-row md:items-center'}>
+        <div className={compact
+          ? 'h-16 w-16 shrink-0 overflow-hidden rounded-full border border-[var(--gm-gold)]/40 bg-[var(--gm-bg-deep)]'
+          : 'h-20 w-20 shrink-0 overflow-hidden rounded-full border border-[var(--gm-gold)]/40 bg-[var(--gm-bg-deep)]'}>
           {avatar ? (
             <img src={avatar} alt={name} className="h-full w-full object-cover" />
           ) : (
@@ -43,16 +50,22 @@ export function AuthorBio({
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--gm-gold-dim)]">
             İçerik Yazarı
           </p>
-          <h2 className="mt-2 text-2xl font-semibold text-[var(--gm-text)]">{name}</h2>
+          <h2 className={compact
+            ? 'mt-2 text-xl font-semibold leading-tight text-[var(--gm-text)]'
+            : 'mt-2 text-2xl font-semibold text-[var(--gm-text)]'}>{name}</h2>
           {title && <p className="mt-1 text-sm font-medium text-[var(--gm-text-dim)]">{title}</p>}
-          {bio && <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--gm-text-dim)]">{bio}</p>}
+          {bio && <p className={compact
+            ? 'mt-3 line-clamp-4 text-xs leading-relaxed text-[var(--gm-text-dim)]'
+            : 'mt-4 max-w-3xl text-sm leading-relaxed text-[var(--gm-text-dim)]'}>{bio}</p>}
 
           {(expertise.length > 0 || certificates.length > 0) && (
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className={compact ? 'mt-4 flex flex-wrap gap-1.5' : 'mt-5 flex flex-wrap gap-2'}>
               {[...expertise, ...certificates].map((item) => (
                 <span
                   key={item}
-                  className="rounded-full border border-[var(--gm-gold)]/25 bg-[var(--gm-gold)]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold)]"
+                  className={compact
+                    ? 'rounded-full border border-[var(--gm-gold)]/25 bg-[var(--gm-gold)]/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-[var(--gm-gold)]'
+                    : 'rounded-full border border-[var(--gm-gold)]/25 bg-[var(--gm-gold)]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[var(--gm-gold)]'}
                 >
                   {item}
                 </span>
@@ -61,7 +74,7 @@ export function AuthorBio({
           )}
 
           {socials.length > 0 && (
-            <div className="mt-5 flex flex-wrap gap-4">
+            <div className={compact ? 'mt-4 flex flex-wrap gap-3' : 'mt-5 flex flex-wrap gap-4'}>
               {socials.map((social) => (
                 <a
                   key={social.href}

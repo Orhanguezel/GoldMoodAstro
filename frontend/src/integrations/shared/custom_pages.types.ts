@@ -48,6 +48,7 @@ export interface ApiCustomPage {
   /** parent: custom_pages.module_key */
   module_key: string;
   landing_key: string | null;
+  author_consultant_id?: string | null;
 
   is_published: 0 | 1;
   featured: 0 | 1;
@@ -103,6 +104,7 @@ export interface CustomPageDto {
   id: string;
   module_key: string;
   landing_key: string | null;
+  author_consultant_id: string | null;
 
   is_published: boolean;
   featured: boolean;
@@ -242,6 +244,7 @@ export const normalizeCustomPage = (api: ApiCustomPage): CustomPageDto => {
     id: api.id,
     module_key: String((api as any).module_key ?? (api as any).moduleKey ?? ''),
     landing_key: (api as any).landing_key ?? null,
+    author_consultant_id: (api as any).author_consultant_id ?? null,
     is_published: toBoolFrom01(api.is_published),
     featured: toBoolFrom01(api.featured),
 
@@ -296,6 +299,10 @@ export interface CustomPageCreatePayload {
   title: string;
   slug: string;
   content: string; // düz HTML – backend packContent ile {"html":"..."} yapar
+  /** Danışman blog endpoint'lerinde editoryal düzenleme onayı zorunludur. */
+  editorial_consent?: true;
+  /** Yazının ve yazar adının marka sosyal medya hesaplarında paylaşım onayı. */
+  social_media_consent?: true;
 
   summary?: string | null;
 
@@ -325,6 +332,10 @@ export interface CustomPageCreatePayload {
 
 export interface CustomPageUpdatePayload {
   locale?: string;
+  /** Danışman blog endpoint'lerinde editoryal düzenleme onayı zorunludur. */
+  editorial_consent?: true;
+  /** Yazının ve yazar adının marka sosyal medya hesaplarında paylaşım onayı. */
+  social_media_consent?: true;
 
   // parent
   module_key?: string;
