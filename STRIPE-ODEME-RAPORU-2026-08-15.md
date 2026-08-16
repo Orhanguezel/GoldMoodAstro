@@ -72,6 +72,23 @@ Gerekçeler:
 > yayın öncesi Orhan'ın (gerekirse hukukçunun) son okuması önerilir. Prod'a seed
 > uygulanınca canlıya çıkar.
 
+### 4.1b TEK KİMLİK KARARI (2026-08-16, Stripe kaydı sonrası) — UYGULANDI
+
+Stripe hesabı "Orhan Güzel – Softwareentwicklung" adına açıldığı için sitede
+müşteriye görünen satıcı/işletmeci kimliği de aynı işletmeye tekilleştirildi.
+Gerekçe: kartı çeken hesap ≠ sitedeki satıcı görünümü, Stripe'ta "üçüncü şahıs
+adına tahsilat" şüphesi doğurur → manuel inceleme, payout bekletme ve hesap
+kapatma riskinin ana kaynağı. **Şirket devri GEREKMEDİ** — yalnız sitedeki
+kimlik değişti; QUEBAB↔Orhan iç anlaşması sitede gösterilmez.
+
+- [x] `company_brand` (footer/iletişim künyesi) → Orhan Güzel – Softwareentwicklung,
+      Grevenbroich adresi, DE463832419 (seed `010e`; MERSİS/vergi-TR alanları boş →
+      frontend koşullu render, kod değişikliği gerekmedi)
+- [x] Mesafeli sözleşme + ön bilgilendirme + iptal/iade (198c, 9 i18n satırı) →
+      satıcı Orhan Güzel; TR tüketici hukuku içeriği korundu (TR'ye satışta geçerli)
+- [x] Impressum/Datenschutz (198d) → tek kimlik; "Plattformbetreiber QUEBAB" blokları kaldırıldı
+- [x] Prod'a admin import-sql ile uygulandı; canlıda doğrulandı (0 QUEBAB, künye DE)
+
 ### 4.2 Ödeme entegrasyonu (yasal sayfalar bitince)
 
 - [ ] Başlangıç: **Stripe Payment Link** (kodsuz, manuel satış hemen başlar)
