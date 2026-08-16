@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { db } from '../../db/client';
 import { orders, userAddresses, paymentGateways, payments } from "./schema";
 import { bookings } from "../bookings/schema";
+import { consultants } from "../consultants/schema";
 import { and, eq, desc, like, or, sql, type SQL } from "drizzle-orm";
 import {
   IyzicoService,
@@ -193,6 +194,26 @@ export const createOrder: RouteHandler = async (req, reply) => {
   const [booking] = await db.select().from(bookings).where(eq(bookings.id, body.booking_id)).limit(1);
   if (!booking || booking.user_id !== user.id) {
     return reply.code(404).send({ error: "Booking not found" });
+  }
+
+  // GÜVENLİK KİLİDİ — para birimi geçişi yarım kaldıysa sipariş açma.
+  // Danışman satırı hâlâ eski para biriminde (TRY) ise fiyat büyüklüğü defter
+  // para biriminden (EUR) 55 kat farklıdır; sessizce sipariş açmak müşteriden
+  // 55 katı tahsil etmek demektir. Dönüşüm (242 migrate) uygulanınca kendiliğinden
+  // açılır; kalıcı bir kısıt değil.
+  const baseForOrder = await getBaseCurrency();
+  const [consultantRow] = await db
+    .select({ currency: consultants.currency })
+    .from(consultants)
+    .where(eq(consultants.id, booking.consultant_id))
+    .limit(1);
+  const rowCurrency = String(consultantRow?.currency || baseForOrder).toUpperCase();
+  if (Number(booking.session_price || 0) > 0 && rowCurrency !== baseForOrder) {
+    req.log.error(
+      { bookingId: booking.id, rowCurrency, baseForOrder },
+      'currency_migration_pending_order_blocked',
+    );
+    return reply.code(409).send({ error: { message: 'currency_migration_pending' } });
   }
 
   const orderId = randomUUID();
