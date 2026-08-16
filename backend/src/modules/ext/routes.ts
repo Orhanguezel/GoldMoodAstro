@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { contentCatalogHandler } from './content-catalog';
 import { articlesHandler, productsHandler } from './content';
+import { crmInboxHandler, crmContactReplyHandler } from './crm-inbox';
 
 /**
  * Dış tüketici (ekosistem sosyal medya) için salt-okuma veri uçları.
@@ -47,6 +48,39 @@ export async function registerExtApi(api: FastifyInstance) {
       },
     },
   }, articlesHandler);
+
+  // ─── C. CRM köprüsü (gzl-gelir-crm) — admin gelen kutusu + yanıt ───
+  api.get('/crm/inbox', {
+    schema: {
+      tags: ['ext'],
+      summary: 'Admin gelen kutusu: iletişim + bekleyen randevu + başvuru + canlı destek (CRM için)',
+      querystring: {
+        type: 'object',
+        properties: {
+          updatedSince: { type: 'string', format: 'date-time', description: 'ISO — yalnız iletişim mesajlarını filtreler' },
+          contactLimit: { type: 'integer', minimum: 1, maximum: 200, default: 50 },
+        },
+      },
+    },
+  }, crmInboxHandler);
+
+  api.post('/crm/contacts/:id/reply', {
+    schema: {
+      tags: ['ext'],
+      summary: 'İletişim mesajına CRM üzerinden yanıt (e-posta gönderir + thread kaydeder)',
+      params: {
+        type: 'object',
+        properties: { id: { type: 'string' } },
+        required: ['id'],
+      },
+      body: {
+        type: 'object',
+        properties: { message: { type: 'string', minLength: 1, maxLength: 5000 } },
+        required: ['message'],
+        additionalProperties: false,
+      },
+    },
+  }, crmContactReplyHandler);
 
   api.get('/content/products', {
     schema: {
