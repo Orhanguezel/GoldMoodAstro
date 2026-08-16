@@ -98,9 +98,12 @@ kimlik değişti; QUEBAB↔Orhan iç anlaşması sitede gösterilmez.
 > riski böyle çözüldü). Webhook alıcısı canlı ve yeni hesabın secret'ıyla
 > imza-doğrulamalı çalışıyor; footer yasal linkleri eklendi.
 
+- [x] **Küçük gerçek test ödemesi YAPILDI** (2026-08-16 15:19): 2,00 € canlı
+      Checkout oturumu → ödeme `paid/complete` → webhook imza doğrulamalı
+      teslim → `stripe_events` kaydı (evt_1U55qi...). Kalan tek doğrulama:
+      Sparkasse payout'u (haftalık pazartesi + 7 gün gecikme → ~26 Ağustos).
 - [ ] Başlangıç: **Stripe Payment Link** (kodsuz, manuel satış hemen başlar)
-      — site hazır; Product catalog'da ürün + link oluşturup küçük gerçek test
-      ödemesiyle payout zinciri doğrulanacak
+      — Product catalog'da gerçek hizmet ürünleri + linkler oluşturulacak
 - [x] Webhook alıcısı: `POST /api/webhooks/stripe` — imza doğrulama (SDK'sız
       HMAC, 5dk tolerans), fail-closed, `stripe_events` idempotent kayıt,
       `checkout.session.completed` → admin e-posta bildirimi (78cc9d6)
