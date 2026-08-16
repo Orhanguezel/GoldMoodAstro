@@ -107,6 +107,46 @@ async function fetchConsultantServicesForSchema(id: string): Promise<ConsultantS
   }
 }
 
+// Uzmanlık ve dil rozetleri DB'den çevrilir; ham slug göstermek 3 dil desteğini
+// bozuyordu (BİRTH_CHART / "Görüşme dilleri: TR" gibi). Kaynak: aynı listeleri
+// kullanan istemci bileşeni ConsultantDetail.tsx.
+async function fetchExpertiseLabels(locale: string): Promise<Record<string, string>> {
+  try {
+    const res = await fetch(`${API_BASE}/service-categories?locale=${encodeURIComponent(locale)}`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return {};
+    const json = await res.json();
+    const data = json?.data ?? json;
+    if (!Array.isArray(data)) return {};
+    return Object.fromEntries(
+      data
+        .filter((c: any) => c?.slug && c?.name)
+        .map((c: any) => [String(c.slug), String(c.name)]),
+    );
+  } catch {
+    return {};
+  }
+}
+
+async function fetchLanguageLabels(locale: string): Promise<Record<string, string>> {
+  try {
+    const res = await fetch(`${API_BASE}/languages`, { next: { revalidate: 3600 } });
+    if (!res.ok) return {};
+    const json = await res.json();
+    const data = json?.data ?? json;
+    if (!Array.isArray(data)) return {};
+    const key = locale === 'tr' ? 'name_tr' : locale === 'de' ? 'name_de' : 'name_en';
+    return Object.fromEntries(
+      data
+        .filter((l: any) => l?.slug)
+        .map((l: any) => [String(l.slug), String(l[key] || l.name_en || l.slug)]),
+    );
+  } catch {
+    return {};
+  }
+}
+
 async function fetchConsultantReviewsForSchema(id: string, locale?: string): Promise<ConsultantReviewForSchema[]> {
   try {
     const qs = new URLSearchParams({
@@ -200,9 +240,11 @@ export default async function ConsultantDetailPage({ params }: Props) {
   const copy = consultantPageCopy(locale);
   const consultant = await fetchConsultantForMeta(id, locale) as ConsultantForSchema | null;
   const consultantId = consultant?.id || id;
-  const [services, reviews] = await Promise.all([
+  const [services, reviews, expertiseLabels, languageLabels] = await Promise.all([
     fetchConsultantServicesForSchema(consultantId),
     fetchConsultantReviewsForSchema(consultantId, locale),
+    fetchExpertiseLabels(locale),
+    fetchLanguageLabels(locale),
   ]);
 
   // Keep the URL on the name slug: redirect id/old slug params to the current slug.
@@ -325,7 +367,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
                     <div className="flex flex-wrap gap-2">
                       {expertiseItems.map((item) => (
                         <span key={item} className="rounded-full border border-(--gm-gold)/30 px-3 py-1 text-xs font-bold uppercase tracking-wider text-(--gm-gold)">
-                          {item}
+                          {expertiseLabels[item] || item.replace(/_/g, ' ')}
                         </span>
                       ))}
                     </div>
@@ -334,7 +376,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
 
                 {languageItems.length > 0 && (
                   <p className="mt-5 text-sm text-(--gm-text-dim)">
-                    {copy.languages}: {languageItems.map((item) => item.toUpperCase()).join(', ')}
+                    {copy.languages}: {languageItems.map((item) => languageLabels[item] || item.toUpperCase()).join(', ')}
                   </p>
                 )}
               </div>

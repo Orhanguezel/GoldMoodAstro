@@ -49,7 +49,7 @@ export default function FeaturedConsultantsSection({ locale: explicitLocale }: {
   const { data: consultants = [], isLoading } = useListConsultantsPublicQuery(
     { limit: 6, sort: 'popular', locale },
   );
-  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery({ locale });
   const expertiseLabels = React.useMemo<Record<string, string>>(
     () => Object.fromEntries(serviceCategories.map((category) => [category.slug, category.name])),
     [serviceCategories],

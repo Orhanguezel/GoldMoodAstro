@@ -54,7 +54,7 @@ export default function BecomeConsultantPage() {
 
   const [step, setStep] = useState(1);
   const [apply, { isLoading }] = useApplyConsultantMutation();
-  const { data: serviceCategories = [], isLoading: isLoadingCategories } = useListServiceCategoriesPublicQuery();
+  const { data: serviceCategories = [], isLoading: isLoadingCategories } = useListServiceCategoriesPublicQuery({ locale });
   const expertiseOptions = serviceCategories.map((category) => ({ id: category.slug, label: category.name }));
 
   const { data: dbLanguages = [], isLoading: isLoadingLanguages } = useListLanguagesPublicQuery();

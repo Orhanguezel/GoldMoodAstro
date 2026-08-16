@@ -766,7 +766,7 @@ const PLATFORM_OPTIONS: Array<{ slug: string; label: string }> = [
 function ProfilePanel({ locale, profile }: { locale: string; profile: ConsultantSelfProfile }) {
   const { ui } = useUiSection('ui_dashboard', locale as any);
   const { ui: uiP } = useUiSection('ui_consultantpanel');
-  const { data: serviceCategories = [], isLoading: isLoadingCategories } = useListServiceCategoriesPublicQuery();
+  const { data: serviceCategories = [], isLoading: isLoadingCategories } = useListServiceCategoriesPublicQuery({ locale });
   const { data: dbLanguages = [], isLoading: isLoadingLanguages } = useListLanguagesPublicQuery();
   const [updateProfile, { isLoading }] = useUpdateMyConsultantProfileMutation();
   const [bio, setBio] = useState<string>(profile.bio || '');

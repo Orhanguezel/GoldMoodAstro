@@ -15,12 +15,16 @@ export interface FilterState {
 interface Props {
   filters: FilterState;
   onChange: (filters: FilterState) => void;
+  /** Uzmanlık adları DB'den dile göre gelir; locale geçilmezse TR isimler düşer. */
+  locale?: string;
 }
 
-export default function ConsultantFilters({ filters, onChange }: Props) {
-  const { ui } = useUiSection('ui_consultantbrowse' as any);
+export default function ConsultantFilters({ filters, onChange, locale }: Props) {
+  const { ui } = useUiSection('ui_consultantbrowse' as any, locale);
   const [open, setOpen] = useState(false);
-  const { data: serviceCategories = [], isLoading: isLoadingCategories } = useListServiceCategoriesPublicQuery();
+  const { data: serviceCategories = [], isLoading: isLoadingCategories } = useListServiceCategoriesPublicQuery(
+    locale ? { locale } : undefined,
+  );
   const expertiseOptions = serviceCategories.length
     ? [{ value: '', label: ui('ui_consultantbrowse_filter_all_option', 'All') }, ...serviceCategories.map((category) => ({ value: category.slug, label: category.name }))]
     : [];

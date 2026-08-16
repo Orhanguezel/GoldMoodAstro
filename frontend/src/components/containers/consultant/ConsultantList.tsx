@@ -18,9 +18,16 @@ type Props = {
   locale: string;
   initialExpertise?: string;
   initialData?: ConsultantPublic[];
+  /** Sunucuda çözülmüş uzmanlık adları — ilk boyamada ham slug görünmesin. */
+  initialExpertiseLabels?: Record<string, string>;
 };
 
-export default function ConsultantList({ locale, initialExpertise = '', initialData = [] }: Props) {
+export default function ConsultantList({
+  locale,
+  initialExpertise = '',
+  initialData = [],
+  initialExpertiseLabels = {},
+}: Props) {
   const { ui } = useUiSection('ui_consultantbrowse' as any, locale);
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const [filters, setFilters] = useState<FilterState>({
@@ -40,10 +47,13 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
   const { data: consultants = [], isFetching, isError } = useListConsultantsQuery(
     { ...queryParams, locale },
   );
-  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery({ locale });
   const expertiseLabels = useMemo(
-    () => Object.fromEntries(serviceCategories.map((category) => [category.slug, category.name])),
-    [serviceCategories],
+    () => ({
+      ...initialExpertiseLabels,
+      ...Object.fromEntries(serviceCategories.map((category) => [category.slug, category.name])),
+    }),
+    [serviceCategories, initialExpertiseLabels],
   );
   const isInitialFilterState =
     filters.expertise === initialExpertise &&
@@ -76,7 +86,7 @@ export default function ConsultantList({ locale, initialExpertise = '', initialD
           <Search className="w-5 h-5 text-[var(--gm-gold)]" />
           <h2 className="font-serif text-xl text-[var(--gm-text)]">{ui('ui_consultantbrowse_search_filter_title', 'Search & Filters')}</h2>
         </div>
-        <ConsultantFilters filters={filters} onChange={handleFilterChange} />
+        <ConsultantFilters filters={filters} onChange={handleFilterChange} locale={locale} />
       </div>
 
       <DiscountPromoBanner locale={locale} />

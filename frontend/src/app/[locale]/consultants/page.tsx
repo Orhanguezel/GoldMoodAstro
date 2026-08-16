@@ -48,6 +48,25 @@ async function getConsultants(params: { expertise?: string; limit?: number; loca
   }
 }
 
+// Kart rozetleri ilk boyamada ham slug ("birth_chart") görünüyordu: etiketler
+// yalnız istemci sorgusundan geliyordu. SSR'da da çöz — SEO ve ilk paint doğru olsun.
+async function getExpertiseLabels(locale: string): Promise<Record<string, string>> {
+  try {
+    const res = await fetch(`${API_BASE}/service-categories?locale=${encodeURIComponent(locale)}`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return {};
+    const json = await res.json();
+    const data = json?.data ?? json;
+    if (!Array.isArray(data)) return {};
+    return Object.fromEntries(
+      data.filter((c: any) => c?.slug && c?.name).map((c: any) => [String(c.slug), String(c.name)]),
+    );
+  } catch {
+    return {};
+  }
+}
+
 function localeFallbackTitle(locale: string) {
   if (locale === 'de') return 'Berater entdecken';
   return 'Explore Consultants';
@@ -103,7 +122,10 @@ export default async function ConsultantsPage({ params, searchParams }: Props) {
   const headline = topicCfg
     ? (locale === 'tr' ? topicCfg.headlineTr : topicCfg.headlineEn)
     : await getConsultantsPageTitle(locale);
-  const consultants = await getConsultants({ expertise: initialExpertise, limit: 12, locale });
+  const [consultants, expertiseLabels] = await Promise.all([
+    getConsultants({ expertise: initialExpertise, limit: 12, locale }),
+    getExpertiseLabels(locale),
+  ]);
   const listUrl = `${SITE_URL}${localizedPath(locale, '/consultants', 'tr')}`;
   const graphItems = [
     breadcrumbSchema([
@@ -134,7 +156,12 @@ export default async function ConsultantsPage({ params, searchParams }: Props) {
       <Banner title={headline} />
       <PageContainer width="default" pad="large">
         <JsonLd id="consultants-schema" data={graph(graphItems)} />
-        <ConsultantList locale={locale} initialExpertise={initialExpertise} initialData={consultants} />
+        <ConsultantList
+          locale={locale}
+          initialExpertise={initialExpertise}
+          initialData={consultants}
+          initialExpertiseLabels={expertiseLabels}
+        />
         {/* 2026-07-20: liste sayfasi 316 kelimeydi; danisman secme rehberi eklendi.
             Liste once, editoryal icerik altinda (diger landing sayfalariyla ayni kalip). */}
         <SeoLandingArticle type="consultants" locale={locale} />

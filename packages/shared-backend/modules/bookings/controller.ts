@@ -749,14 +749,17 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
       const publicUrl = (process.env.PUBLIC_URL || process.env.FRONTEND_URL || '').replace(/\/$/, '');
       const panelUrl = publicUrl ? `${publicUrl}/${locale}/me/consultant` : `/${locale}/me/consultant`;
 
-      Promise.allSettled([
-        createUserNotification({
+      // Danışman genelde sitede değil telefonunda; üç kanal birden denenir.
+      // Sonuçlar LOGLANIR — eskiden hepsi `.catch(() => undefined)` ile yutuluyordu,
+      // yani "mail gitti mi" sorusunun cevabı hiçbir yerde yoktu.
+      const channels: Array<[string, Promise<unknown>]> = [
+        ['inapp', createUserNotification({
           userId: c.user_id,
           title: notifyTitle,
           message: notifyBody,
           type: 'booking',
-        }),
-        dispatchPushToUser({
+        })],
+        ['push', dispatchPushToUser({
           userId: c.user_id,
           title: notifyTitle,
           body: notifyBody,
@@ -765,23 +768,41 @@ export const requestNowBookingHandler: RouteHandler = async (req, reply) => {
             booking_id: id,
             url: `/${locale}/me/consultant`,
           },
-        }),
-        consultantUser?.email
-          ? sendTemplatedEmail({
-              to: consultantUser.email,
-              key: 'booking_request_now_consultant',
-              locale,
-              defaultLocale,
-              params: {
-                consultant_name: safeText(consultantUser.full_name) || 'Danışman',
-                customer_name: userName || 'Bir kullanıcı',
-                customer_message: customerMessage,
-                panel_url: panelUrl,
-              },
-              allowMissing: true,
-            })
-          : Promise.resolve(null),
-      ]).catch(() => undefined);
+        })],
+      ];
+
+      if (consultantUser?.email) {
+        channels.push(['email', sendTemplatedEmail({
+          to: consultantUser.email,
+          key: 'booking_request_now_consultant',
+          locale,
+          defaultLocale,
+          params: {
+            consultant_name: safeText(consultantUser.full_name) || 'Danışman',
+            customer_name: userName || 'Bir kullanıcı',
+            customer_message: customerMessage,
+            panel_url: panelUrl,
+          },
+          allowMissing: true,
+        })]);
+      } else {
+        req.log.error({ bookingId: id, consultantId }, 'request_now_consultant_has_no_email');
+      }
+
+      void Promise.allSettled(channels.map(([, p]) => p)).then((results) => {
+        results.forEach((result, i) => {
+          const name = channels[i][0];
+          if (result.status === 'rejected') {
+            req.log.error({ bookingId: id, channel: name, err: result.reason }, 'request_now_notify_failed');
+          } else if (name === 'email' && result.value == null) {
+            // Şablon bulunamazsa sendTemplatedEmail zaten fırlatır (yukarıdaki dal);
+            // burası beklenmeyen "gönderdim ama sonuç yok" durumunu görünür kılar.
+            req.log.error({ bookingId: id, key: 'booking_request_now_consultant' }, 'request_now_email_no_result');
+          } else {
+            req.log.info({ bookingId: id, channel: name }, 'request_now_notify_ok');
+          }
+        });
+      });
     }
 
     return reply.code(201).send({

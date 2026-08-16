@@ -38,7 +38,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const { data: consultant, isFetching, isError } = useGetConsultantQuery({ id, locale }, { skip: !id });
   const [isFavorited, setIsFavorited] = useState(false);
   const [favoriteCount, setFavoriteCount] = useState(0);
-  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery();
+  const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery({ locale });
   const { data: dbLanguages = [] } = useListLanguagesPublicQuery();
   const [trackConsultantView] = useTrackConsultantViewMutation();
   const { data: karne } = useGetConsultantOutcomeScoreQuery(id, { skip: !id });

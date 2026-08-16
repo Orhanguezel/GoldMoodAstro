@@ -41,7 +41,7 @@ export const sendTestMail: RouteHandler = async (req, reply) => {
 
     await sendMailRaw({
       to,
-      subject: "SMTP Test – Ensotek",
+      subject: "SMTP Test",
       text: "Bu bir test mailidir. SMTP ayarlarınız başarılı görünüyor.",
       html: "<p>Bu bir <strong>test mailidir</strong>. SMTP ayarlarınız başarılı görünüyor.</p>",
     });
