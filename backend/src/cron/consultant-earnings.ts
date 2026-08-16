@@ -35,7 +35,7 @@ export async function runConsultantEarningsRelease() {
       INNER JOIN (
         SELECT wallet_id, SUM(amount) AS amount
         FROM wallet_transactions
-        WHERE purpose = 'session_earning'
+        WHERE purpose IN ('session_earning', 'media_message_earning')
           AND payment_status = 'pending'
           AND created_at <= DATE_SUB(NOW(3), INTERVAL ${holdDays} DAY)
         GROUP BY wallet_id
@@ -49,7 +49,7 @@ export async function runConsultantEarningsRelease() {
       UPDATE wallet_transactions
       SET payment_status = 'completed',
           updated_at = NOW(3)
-      WHERE purpose = 'session_earning'
+      WHERE purpose IN ('session_earning', 'media_message_earning')
         AND payment_status = 'pending'
         AND created_at <= DATE_SUB(NOW(3), INTERVAL ${holdDays} DAY)
     `));

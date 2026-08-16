@@ -6,7 +6,7 @@ import { format, parseISO } from 'date-fns';
 import { tr as dateFnsTr } from 'date-fns/locale';
 import { ShieldCheck, Clock, Calendar, User, Tag, Check, X, ArrowLeft, Lock, Sparkles } from 'lucide-react';
 import { useCreateBookingPublicMutation } from '@/integrations/rtk/public/bookings_public.endpoints';
-import { useCreateForBookingMutation, useInitIyzicoPaymentMutation } from '@/integrations/rtk/public/orders.endpoints';
+import { useCreateForBookingMutation, useInitStripeCheckoutMutation } from '@/integrations/rtk/public/orders.endpoints';
 import { useRedeemCampaignMutation } from '@/integrations/rtk/public/campaigns.endpoints';
 import { useGetConsultantPublicQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -63,7 +63,7 @@ export default function BookingPage() {
 
   const [createBooking] = useCreateBookingPublicMutation();
   const [createOrder] = useCreateForBookingMutation();
-  const [initIyzico] = useInitIyzicoPaymentMutation();
+  const [initStripe] = useInitStripeCheckoutMutation();
   const [redeemCampaign] = useRedeemCampaignMutation();
 
   const { data: consultant } = useGetConsultantPublicQuery({ id: consultantId, locale }, {
@@ -184,7 +184,7 @@ export default function BookingPage() {
 
       const order = await createOrder({
         booking_id: (booking as any).id ?? (booking as any).booking?.id,
-        payment_gateway_slug: 'iyzico',
+        payment_gateway_slug: 'stripe',
       }).unwrap();
       fbEvent(
         'InitiateCheckout',
@@ -192,8 +192,8 @@ export default function BookingPage() {
         metaEventId.checkout(String(bookingId)),
       );
 
-      const iyzico = await initIyzico({ orderId: order.order_id, locale }).unwrap();
-      window.location.href = iyzico.checkout_url;
+      const stripe = await initStripe({ orderId: order.order_id, locale }).unwrap();
+      window.location.href = stripe.checkout_url;
     } catch (err: any) {
       const code = err?.data?.error?.message || err?.message;
       const msg =

@@ -40,6 +40,18 @@ export const ordersPublicApi = baseApi.injectEndpoints({
         params: locale ? { locale } : undefined,
       }),
     }),
+
+    // Stripe Checkout (aktif ödeme sağlayıcısı) — ödeme onayı webhook'ta tamamlanır.
+    initStripeCheckout: build.mutation<
+      { success: boolean; checkout_url: string; session_id: string },
+      { orderId: string; locale?: string }
+    >({
+      query: ({ orderId, locale }) => ({
+        url: `${BASE}/${encodeURIComponent(orderId)}/checkout/stripe`,
+        method: 'POST',
+        params: locale ? { locale } : undefined,
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -50,4 +62,5 @@ export const {
   useListPaymentGatewaysQuery,
   useCreateForBookingMutation,
   useInitIyzicoPaymentMutation,
+  useInitStripeCheckoutMutation,
 } = ordersPublicApi;

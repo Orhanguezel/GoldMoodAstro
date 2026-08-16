@@ -116,7 +116,7 @@ function parseCommissionConfig(raw: unknown): {
  *           "now" is used, which is appropriate for fresh earnings created at
  *           the moment a booking transitions to `completed`.
  */
-async function getPlatformCommissionPercent(at?: Date): Promise<number> {
+export async function getPlatformCommissionPercent(at?: Date): Promise<number> {
   const [row] = await db
     .select({ value: siteSettings.value })
     .from(siteSettings)
@@ -135,7 +135,7 @@ async function getPlatformCommissionPercent(at?: Date): Promise<number> {
   return config.percent;
 }
 
-async function createPendingSessionEarning(bookingId: string, completedAt?: Date) {
+export async function createPendingSessionEarning(bookingId: string, completedAt?: Date) {
   // Earnings are created at the moment a booking transitions to `completed`,
   // so the completion timestamp is effectively "now" — but accept an override
   // (for backfills/replays against historical rates).

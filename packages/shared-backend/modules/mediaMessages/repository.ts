@@ -4,6 +4,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { consultants } from '../consultants/schema';
 import { consumeCredits } from '../credits/consume';
+import { getPlatformCommissionPercent } from '../bookings/admin.controller';
 import { createUserNotification } from '../notifications/service';
 import { dispatchPushToUser } from '../notifications/push';
 import { notifyText } from '../_shared/notify-i18n';
@@ -88,19 +89,11 @@ function normalizeMediaMessage(row: any) {
   };
 }
 
+// Komisyon TEK kaynaktan okunur (bookings/admin.controller — date-aware,
+// effective_from destekli). Eski yerel kopya date-aware değildi ve hata
+// fallback'i sabit %30'du (gerçek oran %40 iken danışmana fazla ödeme riski).
 async function getCommissionPercent(): Promise<number> {
-  try {
-    const result = await db.execute(sql`
-      SELECT value FROM site_settings WHERE \`key\` = 'platform_commission_rate' ORDER BY locale = '*' DESC LIMIT 1
-    `);
-    const value = rowsOf<any>(result)[0]?.value;
-    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
-    const raw = typeof parsed === 'object' && parsed ? parsed.new_percent ?? parsed.percent : parsed;
-    const n = Number(raw);
-    return Number.isFinite(n) ? Math.min(Math.max(n, 0), 100) : 30;
-  } catch {
-    return 30;
-  }
+  return getPlatformCommissionPercent(new Date());
 }
 
 async function createWalletEarning(consultantId: string, consultantUserId: string, mediaMessageId: string, gross: number) {

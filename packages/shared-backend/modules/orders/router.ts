@@ -27,6 +27,8 @@ export async function registerOrders(app: FastifyInstance) {
 
   // ── Dinamik parametreli path'ler EN SONDA ──
   app.post<{ Params: { id: string } }>(`${BASE}/:id/init-iyzico`, { preHandler: [requireAuth], config: { rateLimit: checkoutRateLimit } }, controller.initIyzico);
+  // Stripe Checkout (aktif ödeme sağlayıcısı) — randevu ve kredi siparişleri için ortak.
+  app.post<{ Params: { id: string } }>(`${BASE}/:id/checkout/stripe`, { preHandler: [requireAuth], config: { rateLimit: checkoutRateLimit } }, controller.initStripeCheckout);
   app.get<{ Params: { id: string } }>(`${BASE}/:id`, { preHandler: [requireAuth], config: { rateLimit: readRateLimit } }, controller.getOrderDetail);
 }
 

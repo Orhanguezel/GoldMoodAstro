@@ -6,6 +6,7 @@ import { GoogleAuth } from 'google-auth-library';
 import { z } from 'zod';
 import * as repo from './repository';
 import { IyzicoService, resolveIyzicoConfigFromGateway, resolveIyzicoLocale, verifyIyzicoCallback } from '../orders/iyzico.service';
+import { createCheckoutSession, isStripeConfigured } from '../orders/stripe.service';
 import { db } from '../../db/client';
 import { paymentGateways, orders, payments } from '../orders/schema';
 import { creditTransactions, userCredits } from './schema';
@@ -397,6 +398,53 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
   
   const pkg = await repo.getPackageById(package_id, locale);
   if (!pkg) return reply.status(404).send({ error: apiMessage(req, 'package_not_found') });
+
+  // ── Stripe yolu (aktif sağlayıcı) ──
+  // STRIPE_SECRET_KEY tanımlıysa kredi satın alma Stripe Checkout'tan geçer;
+  // iyzico'nun istediği TC kimlik/fatura-adresi zorunlulukları burada yoktur
+  // (Stripe gerekli bilgiyi kendi sayfasında toplar). Yanıt şekli iyzico
+  // yoluyla aynı ({checkout_url}) — frontend değişmeden çalışır.
+  if (isStripeConfigured()) {
+    const orderId = uuidv4();
+    const orderNumber = `CRD-${Date.now()}`;
+    const amount = (pkg.priceMinor / 100).toFixed(2);
+    const currency = pkg.currency || 'TRY';
+    await db.insert(orders).values({
+      id: orderId,
+      user_id: user.id,
+      order_number: orderNumber,
+      status: 'pending',
+      total_amount: amount,
+      currency,
+      payment_status: 'unpaid',
+      notes: JSON.stringify({
+        context: 'credits_purchase',
+        package_id: pkg.id,
+        package_code: pkg.code,
+        user_id: user.id,
+      }),
+    });
+
+    const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || 'http://localhost:3000';
+    try {
+      const session = await createCheckoutSession({
+        orderId,
+        orderNumber,
+        amount: Number(amount),
+        currency,
+        productName: `GoldMood Astrology — ${pkg.name ?? 'Kredi paketi'} (${pkg.credits} kredi)`,
+        customerEmail: user.email || null,
+        successUrl: `${siteUrl}/${locale}/me/credits?status=success&order_id=${orderId}`,
+        cancelUrl: `${siteUrl}/${locale}/me/credits?status=cancelled&order_id=${orderId}`,
+        locale,
+        metadata: { context: 'credits_purchase', package_id: String(pkg.id) },
+      });
+      return reply.send({ checkout_url: session.url, token: session.id, order_id: orderId });
+    } catch (err) {
+      req.log.error(`stripe_credits_checkout_failed: ${err instanceof Error ? err.message : String(err)}`);
+      return reply.status(502).send({ error: apiMessage(req, 'payment_init_failed') });
+    }
+  }
 
   // 1. Resolve Iyzico Gateway
   const [gateway] = await db.select().from(paymentGateways).where(and(eq(paymentGateways.slug, 'iyzico'), eq(paymentGateways.is_active, 1))).limit(1);

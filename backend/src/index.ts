@@ -14,6 +14,7 @@ import { registerRequestNowTimeoutCron } from '@/cron/request-now-timeout';
 import { registerSessionAutoCloseCron } from '@/cron/session-auto-close';
 import { registerConsultantAnalyticsCron } from '@/cron/consultant-analytics';
 import { registerConsultantEarningsCron } from '@/cron/consultant-earnings';
+import { registerBookingAutoCompleteCron } from '@/cron/booking-auto-complete';
 import { registerConsultantWithdrawalCron } from '@/cron/consultant-withdrawals';
 import { registerSubscriptionExpireCron } from '@/cron/subscription-expire';
 import { registerOrderCleanupCron } from '@/cron/order-cleanup';
@@ -62,6 +63,7 @@ async function main() {
     registerSessionAutoCloseCron();
     registerConsultantAnalyticsCron();
     registerConsultantEarningsCron();
+    registerBookingAutoCompleteCron();
     registerConsultantWithdrawalCron();
     registerSubscriptionExpireCron();
     registerOrderCleanupCron();

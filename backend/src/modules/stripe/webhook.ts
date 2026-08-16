@@ -14,6 +14,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { sendMail } from '@goldmood/shared-backend/modules/mail';
+import { completePaidOrder } from '@goldmood/shared-backend/modules/orders/complete.service';
 
 const TOLERANCE_SECONDS = 5 * 60;
 
@@ -113,6 +114,34 @@ export async function registerStripeWebhook(app: FastifyInstance) {
     }
 
     if (event.type === 'checkout.session.completed') {
+      // 1) Ledger: siparişi tamamla (randevu onayı / kredi yükleme dahil).
+      //    client_reference_id boşsa bu bir Payment Link satışıdır (sipariş
+      //    kaydı yok) — o durumda yalnız bildirim kalır, hata değildir.
+      const session = event?.data?.object ?? {};
+      const orderId = String(session.client_reference_id || session.metadata?.order_id || '').trim();
+      if (orderId) {
+        try {
+          const result = await completePaidOrder({
+            orderId,
+            providerSlug: 'stripe',
+            transactionId: String(session.payment_intent || session.id),
+            amount: (Number(session.amount_total ?? 0) / 100).toFixed(2),
+            currency: String(session.currency || 'try').toUpperCase(),
+            raw: session,
+            log: req.log,
+          });
+          req.log.info({ orderId, result: result.status, context: (result as any).context }, 'stripe_order_completed');
+          if (result.status !== 'not_found') {
+            await db.execute(sql`UPDATE stripe_events SET processed_at = NOW(3) WHERE id = ${event.id}`);
+          }
+        } catch (err) {
+          // Ledger hatası → 500 dön ki Stripe tekrar denesin (idempotens korur).
+          req.log.error({ err, orderId }, 'stripe_order_completion_failed');
+          return reply.code(500).send({ error: { message: 'order_completion_failed' } });
+        }
+      }
+
+      // 2) Bildirim (ledger başarılı olsun ya da Payment Link olsun, her durumda).
       await notifyAdminCheckoutCompleted(event, req.log);
     }
 

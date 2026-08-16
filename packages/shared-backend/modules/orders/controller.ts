@@ -17,6 +17,7 @@ import { DEFAULT_LOCALE } from '../../core/i18n';
 import { users } from "../auth/schema";
 import { clawbackCredits, getPackageById } from "../credits/repository";
 import { hasAnalyticsConsent, sendCapiEvent } from '../marketing/meta-capi';
+import { createCheckoutSession, isStripeConfigured, StripeNotConfiguredError } from "./stripe.service";
 
 /** JWT payload'dan user bilgilerini normalize et.
  * Fastify-jwt sub → userId olarak map eder; id alanı payload'da olmayabilir.
@@ -175,6 +176,73 @@ export const createOrder: RouteHandler = async (req, reply) => {
 };
 
 /** Initialize Iyzico Session */
+/**
+ * POST /orders/:id/checkout/stripe — Stripe Checkout oturumu üretir.
+ *
+ * Sipariş bağlamından bağımsızdır (randevu veya kredi): tutar/para birimi
+ * order'dan okunur, eşleşme `client_reference_id = order.id` ile kurulur.
+ * Ödemenin tamamlanması webhook'ta olur (buradaki redirect yalnız kullanıcı
+ * deneyimi; "success_url'e düştü" ödemeyi onaylamaz).
+ */
+export const initStripeCheckout: RouteHandler<{ Params: { id: string } }> = async (req, reply) => {
+  const user = getUser(req);
+  const orderId = req.params.id;
+  const requestLocale = resolveLocale(req);
+
+  const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (!order || order.user_id !== user.id) return reply.code(404).send({ error: { message: "order_not_found" } });
+  if (order.payment_status === 'paid') {
+    return reply.code(409).send({ error: { message: "order_already_paid" } });
+  }
+  if (!isStripeConfigured()) {
+    return reply.code(503).send({ error: { message: "stripe_not_configured" } });
+  }
+
+  const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || 'http://localhost:3000';
+  const isCredits = String(order.notes || '').includes('credits_purchase');
+  const successUrl = isCredits
+    ? `${siteUrl}/${requestLocale}/me/credits?status=success&order_id=${orderId}`
+    : `${siteUrl}/${requestLocale}/booking/payment?status=success&order_id=${orderId}`;
+  const cancelUrl = isCredits
+    ? `${siteUrl}/${requestLocale}/me/credits?status=cancelled&order_id=${orderId}`
+    : `${siteUrl}/${requestLocale}/booking/payment?status=cancelled&order_id=${orderId}`;
+
+  // Ürün adı Stripe ödeme sayfasında ve kart ekstresi açıklamasında görünür.
+  let productName = isCredits ? 'GoldMood Astrology — Kredi paketi' : 'GoldMood Astrology — Danışmanlık randevusu';
+  if (order.booking_id) {
+    try {
+      const [b] = await db
+        .select({ date: bookings.appointment_date, time: bookings.appointment_time })
+        .from(bookings)
+        .where(eq(bookings.id, order.booking_id))
+        .limit(1);
+      if (b?.date) productName = `Danışmanlık randevusu — ${b.date}${b.time ? ` ${b.time}` : ''}`;
+    } catch { /* ürün adı kozmetik; hata akışı durdurmasın */ }
+  }
+
+  try {
+    const session = await createCheckoutSession({
+      orderId: order.id,
+      orderNumber: order.order_number,
+      amount: Number(order.total_amount),
+      currency: order.currency || 'TRY',
+      productName,
+      customerEmail: user.email || null,
+      successUrl,
+      cancelUrl,
+      locale: requestLocale,
+      metadata: { context: isCredits ? 'credits_purchase' : 'booking' },
+    });
+    return reply.send({ success: true, checkout_url: session.url, session_id: session.id });
+  } catch (err) {
+    if (err instanceof StripeNotConfiguredError) {
+      return reply.code(503).send({ error: { message: "stripe_not_configured" } });
+    }
+    req.log.error(`stripe_checkout_failed: ${logErrorMessage(err)}`);
+    return reply.code(502).send({ error: { message: "stripe_checkout_failed" } });
+  }
+};
+
 export const initIyzico: RouteHandler<{ Params: { id: string } }> = async (req, reply) => {
   const user = getUser(req);
   const orderId = req.params.id;
