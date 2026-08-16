@@ -107,7 +107,7 @@ export default function CreditsPage() {
 
                   <div className="space-y-2 w-full">
                      <div className="text-3xl font-light text-foreground/80">
-                        {(pkg.priceMinor / 100).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-lg">€</span>
+                        {(pkg.priceMinor / 100).toLocaleString('tr-TR', { minimumFractionDigits: 0 })} <span className="text-lg">₺</span>
                      </div>
                      {pkg.bonusCredits > 0 && (
                        <div className="text-xs font-bold text-[var(--gm-success)] tracking-wider flex items-center justify-center gap-1">

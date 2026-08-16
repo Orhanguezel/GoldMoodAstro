@@ -15,6 +15,6 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   ('01000000-0000-4000-8000-0000000000c2', 'wallet_hold_days',         '*', '7'),
   ('01000000-0000-4000-8000-0000000000c3', 'withdrawal_min_amount',    '*', '100.00'),
   ('01000000-0000-4000-8000-0000000000c4', 'withdrawal_max_amount',    '*', '50000.00'),
-  ('01000000-0000-4000-8000-0000000000c5', 'withdrawal_currency',      '*', 'EUR'),
+  ('01000000-0000-4000-8000-0000000000c5', 'withdrawal_currency',      '*', 'TRY'),
   ('01000000-0000-4000-8000-0000000000c6', 'payout_cycle',             '*', '{"mode":"monthly","interval_days":30,"min_threshold":100,"auto_request":false,"request_day":1,"description":"Ayda bir tahsilat talebi"}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);

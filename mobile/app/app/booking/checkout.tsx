@@ -308,19 +308,19 @@ export default function BookingCheckoutScreen() {
 
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Seans Ücreti</Text>
-              <Text style={styles.priceVal}>€{Number(originalPrice).toFixed(2)}</Text>
+              <Text style={styles.priceVal}>₺{Math.round(originalPrice)}</Text>
             </View>
 
             {appliedCampaign && (
               <View style={styles.priceRow}>
                 <Text style={styles.discountLabel}>İndirim ({appliedCampaign.code})</Text>
-                <Text style={styles.discountVal}>-€{Number(discountAmount).toFixed(2)}</Text>
+                <Text style={styles.discountVal}>-₺{Math.round(discountAmount)}</Text>
               </View>
             )}
 
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Ödenecek Tutar</Text>
-              <Text style={styles.totalValue}>€{Number(finalPrice).toFixed(2)}</Text>
+              <Text style={styles.totalValue}>₺{Math.round(finalPrice)}</Text>
             </View>
           </View>
 

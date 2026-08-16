@@ -20,7 +20,7 @@ ON DUPLICATE KEY UPDATE
     COALESCE(NULLIF(value, ''), '{}'),
     '$.percent', 40,
     '$.previous_percent', 30,
-    '$.currency', 'EUR',
+    '$.currency', 'TRY',
     '$.updated_at', '2026-07-19',
     '$.effective_from', '2026-07-19',
     '$.minimum_notice_days', 30

@@ -52,7 +52,7 @@ function emptyForm(): PlanFormValues {
     description_tr: '',
     description_en: '',
     description_de: '',
-    currency: 'EUR',
+    currency: 'TRY',
     period: 'monthly',
     trial_days: '0',
     price_minor: '0',
@@ -94,7 +94,7 @@ function toPayload(v: PlanFormValues): SubscriptionPlanAdminPayload {
     description_tr: v.description_tr.trim() || null,
     description_en: v.description_en.trim() || null,
     description_de: v.description_de.trim() || null,
-    currency: v.currency.trim().toUpperCase() || 'EUR',
+    currency: v.currency.trim().toUpperCase() || 'TRY',
     period: v.period,
     trial_days: Number(v.trial_days || 0),
     price_minor: Number(v.price_minor || 0),
@@ -123,7 +123,7 @@ function formatPriceMinor(value: string, currency: string) {
   return `${(n / 100).toLocaleString('tr-TR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })} ${currency || 'EUR'}`;
+  })} ${currency || 'TRY'}`;
 }
 
 export default function SubscriptionPlanFormClient({ mode, id = '' }: { mode: 'create' | 'edit'; id?: string }) {

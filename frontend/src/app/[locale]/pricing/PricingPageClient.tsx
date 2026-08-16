@@ -25,7 +25,7 @@ const FALLBACK_PLANS: SubscriptionPlanPublicUi[] = [
     description_tr: 'Start exploring the platform with core features.',
     description_en: 'Start using core features of the platform.',
     price_minor: 0,
-    currency: 'EUR',
+    currency: 'TRY',
     period: 'monthly',
     trial_days: 0,
     is_active: 1,
@@ -40,7 +40,7 @@ const FALLBACK_PLANS: SubscriptionPlanPublicUi[] = [
     description_tr: 'Unlimited AI readings and premium consultant tools.',
     description_en: 'Unlimited AI readings and premium consultant tools.',
     price_minor: 14900,
-    currency: 'EUR',
+    currency: 'TRY',
     period: 'monthly',
     trial_days: 7,
     is_active: 1,
@@ -62,7 +62,7 @@ const FALLBACK_PLANS: SubscriptionPlanPublicUi[] = [
     description_tr: 'Premium access with yearly pricing advantage.',
     description_en: 'Premium access with yearly pricing advantage.',
     price_minor: 149900,
-    currency: 'EUR',
+    currency: 'TRY',
     period: 'yearly',
     trial_days: 14,
     is_active: 1,
@@ -187,14 +187,14 @@ function toMoney(valueMinor: number, currency: string, locale: Locale) {
   const fallbackLocale = locale === 'tr' ? 'tr-TR' : 'en-US';
   return new Intl.NumberFormat(fallbackLocale, {
     style: 'currency',
-    currency: String(currency || 'EUR'),
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    currency: String(currency || 'TRY'),
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(value);
 }
 
-const VOICE_RATE_EUR = 4.5;
-const VIDEO_RATE_EUR = 6.5;
+const VOICE_RATE_TRY = 250;
+const VIDEO_RATE_TRY = 350;
 
 type Props = {
   locale: Locale;
@@ -243,8 +243,8 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         cancellationPolicy: 'İptal Politikası',
         kvkk: 'Gizlilik',
         returnPolicy: 'İade Politikası',
-        perMinuteVoice: `Sesli: ${VOICE_RATE_EUR}€ / 15 dk`,
-        perMinuteVideo: `Görüntülü: ${VIDEO_RATE_EUR}€ / 15 dk`,
+        perMinuteVoice: `Sesli: ${VOICE_RATE_TRY}₺ / 15 dk`,
+        perMinuteVideo: `Görüntülü: ${VIDEO_RATE_TRY}₺ / 15 dk`,
         modeHeadline: 'Sesli ve Görüntülü Danışmanlık',
         modeLead: 'Tüm kullanıcılar sesli görüşme yapabilir. Görüntülü görüşmeler premium planlara dahildir.',
         freeLabel: 'Ücretsiz',
@@ -279,8 +279,8 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         cancellationPolicy: 'Kündigungsrichtlinie',
         kvkk: 'Datenschutz',
         returnPolicy: 'Erstattungsrichtlinie',
-        perMinuteVoice: `Sprache: ${VOICE_RATE_EUR}€ / 15 Min`,
-        perMinuteVideo: `Video: ${VIDEO_RATE_EUR}€ / 15 Min`,
+        perMinuteVoice: `Sprache: ${VOICE_RATE_TRY}₺ / 15 Min`,
+        perMinuteVideo: `Video: ${VIDEO_RATE_TRY}₺ / 15 Min`,
         modeHeadline: 'Sprach- vs. Videoberatung',
         modeLead: 'Alle Nutzer können Sprachsitzungen nutzen. Videositzungen sind in Premium-Plänen enthalten.',
         freeLabel: 'Kostenlos',
@@ -313,8 +313,8 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         cancellationPolicy: 'Cancellation Policy',
         kvkk: 'Privacy',
         returnPolicy: 'Refund Policy',
-        perMinuteVoice: `Voice: ${VOICE_RATE_EUR}€ / 15 min`,
-        perMinuteVideo: `Video: ${VIDEO_RATE_EUR}€ / 15 min`,
+        perMinuteVoice: `Voice: ${VOICE_RATE_TRY}₺ / 15 min`,
+        perMinuteVideo: `Video: ${VIDEO_RATE_TRY}₺ / 15 min`,
         modeHeadline: 'Voice vs Video Consultation',
         modeLead: 'All users can use voice sessions. Video sessions are included with premium plans.',
         freeLabel: 'Free',

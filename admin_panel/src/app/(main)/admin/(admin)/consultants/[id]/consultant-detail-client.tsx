@@ -257,7 +257,7 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
           slug: mediaSlug(serviceForm.slug || name, serviceForm.media_type),
           duration_minutes: serviceForm.duration_minutes,
           price: serviceForm.is_free ? 0 : serviceForm.price,
-          currency: item?.currency ?? 'EUR',
+          currency: item?.currency ?? 'TRY',
           media_type: serviceForm.media_type,
           is_free: serviceForm.is_free ? 1 : 0,
           is_active: serviceForm.is_active ? 1 : 0,

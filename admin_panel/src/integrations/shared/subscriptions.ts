@@ -199,7 +199,7 @@ export function normalizeSubscriptionAdmin(raw: unknown): SubscriptionAdmin {
     cancellation_reason: asNullStr(r.cancellation_reason),
     auto_renew: asNum(r.auto_renew, 0),
     price_minor: asNum(r.price_minor, 0),
-    currency: asStr(r.currency || 'EUR') || 'EUR',
+    currency: asStr(r.currency || 'TRY') || 'TRY',
 
     created_at: asNullStr(r.created_at),
     updated_at: asNullStr(r.updated_at),
@@ -237,7 +237,7 @@ export function normalizeSubscriptionPlanAdmin(raw: unknown): SubscriptionPlanAd
     description_en: asNullStr(r.description_en),
     description_de: asNullStr(r.description_de),
     price_minor: asNum(r.price_minor, 0),
-    currency: asStr(r.currency || 'EUR') || 'EUR',
+    currency: asStr(r.currency || 'TRY') || 'TRY',
     period: normalizePlanPeriod(r.period),
     trial_days: asNum(r.trial_days, 0),
     features: normalizeFeatures(r.features),

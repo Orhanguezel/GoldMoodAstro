@@ -72,16 +72,16 @@ export default function ConsultantFilters({ filters, onChange, locale }: Props) 
       {open && (
         <div className="mt-6 p-8 bg-[var(--gm-bg)] border border-[var(--gm-gold)]/20 shadow-card grid grid-cols-1 gap-8 sm:grid-cols-3 reveal">
           <div>
-            <label htmlFor="consultant-filter-min-price" className="block text-[10px] tracking-widest uppercase text-[var(--gm-muted)] mb-3">{ui('ui_consultantbrowse_min_price_label', 'Min. Price (€)')}</label>
+            <label htmlFor="consultant-filter-min-price" className="block text-[10px] tracking-widest uppercase text-[var(--gm-muted)] mb-3">{ui('ui_consultantbrowse_min_price_label', 'Min. Price (₺)')}</label>
             <select
               id="consultant-filter-min-price"
               value={filters.minPrice}
               onChange={(e) => set({ minPrice: Number(e.target.value) })}
               className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-sm px-4 py-3 text-sm text-[var(--gm-text)] focus:outline-none focus:border-[var(--gm-gold)]"
             >
-              {[0, 5, 10, 20, 40].map((v) => (
+              {[0, 250, 500, 1000, 2000].map((v) => (
                 <option key={v} value={v}>
-                  {v === 0 ? ui('ui_consultantbrowse_all_option', 'All') : `€${v}+`}
+                  {v === 0 ? ui('ui_consultantbrowse_all_option', 'All') : `₺${v}+`}
                 </option>
               ))}
             </select>
@@ -102,18 +102,18 @@ export default function ConsultantFilters({ filters, onChange, locale }: Props) 
             </select>
           </div>
           <div>
-            <label htmlFor="consultant-filter-max-price" className="block text-[10px] tracking-widest uppercase text-[var(--gm-muted)] mb-3">{ui('ui_consultantbrowse_max_price_label', 'Max. Price (€)')}</label>
+            <label htmlFor="consultant-filter-max-price" className="block text-[10px] tracking-widest uppercase text-[var(--gm-muted)] mb-3">{ui('ui_consultantbrowse_max_price_label', 'Max. Price (₺)')}</label>
             <select
               id="consultant-filter-max-price"
               value={filters.maxPrice}
               onChange={(e) => set({ maxPrice: Number(e.target.value) })}
               className="w-full bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-sm px-4 py-3 text-sm text-[var(--gm-text)] focus:outline-none focus:border-[var(--gm-gold)]"
             >
-              {[0, 10, 20, 40, 90].map((v) => (
+              {[0, 500, 1000, 2000, 5000].map((v) => (
                 <option key={v} value={v}>
                   {v === 0
                     ? ui('ui_consultantbrowse_all_option', 'All')
-                    : ui('ui_consultantbrowse_up_to', 'Up to €{amount}').replace('{amount}', String(v))}
+                    : ui('ui_consultantbrowse_up_to', 'Up to ₺{amount}').replace('{amount}', String(v))}
                 </option>
               ))}
             </select>

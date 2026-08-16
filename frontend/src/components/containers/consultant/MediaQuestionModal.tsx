@@ -25,7 +25,7 @@ export default function MediaQuestionModal({
   consultantId,
   kind,
   price,
-  currency = 'EUR',
+  currency = 'TRY',
   onClose,
   onInsufficientCredits,
 }: Props) {

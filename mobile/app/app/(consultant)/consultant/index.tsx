@@ -65,7 +65,7 @@ export default function ConsultantOverviewScreen() {
   );
 
   const formatTry = (value: number) =>
-    new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
+    new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(value);
 
   if (authHydrating) {
     return (

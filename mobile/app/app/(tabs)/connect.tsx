@@ -269,7 +269,7 @@ export default function ConnectScreen() {
         </View>
 
         <View style={styles.cardRight}>
-          <Text style={styles.price}>€{Number(Number(item.session_price)).toFixed(2)}</Text>
+          <Text style={styles.price}>₺{Math.round(Number(item.session_price))}</Text>
           <View style={styles.arrowCircle}>
             <ChevronRight size={16} color={colors.gold} />
           </View>

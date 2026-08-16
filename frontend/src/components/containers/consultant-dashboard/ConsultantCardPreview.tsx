@@ -3,7 +3,6 @@
 import React from 'react';
 import { Star, Clock, ShieldCheck, Phone, Calendar } from 'lucide-react';
 import { useUiSection } from '@/i18n';
-import { formatCurrency } from '@/lib/currency';
 
 interface Props {
   fullName: string;
@@ -105,7 +104,7 @@ export default function ConsultantCardPreview({
 
         <div className="mt-auto pt-3 border-t border-[var(--gm-border-soft)] flex items-baseline justify-between gap-2 mb-4">
           <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase">{ui('ui_consultantpanel_cardpreview_session', 'Session')}</span>
-          <span className="text-[var(--gm-gold)] font-serif text-2xl leading-none">{formatCurrency(sessionPrice)}</span>
+          <span className="text-[var(--gm-gold)] font-serif text-2xl leading-none">₺{Math.round(sessionPrice)}</span>
         </div>
 
         <div className="flex gap-2 opacity-50">

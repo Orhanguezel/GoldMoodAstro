@@ -9,7 +9,6 @@ import { useAddFavoriteMutation, useRemoveFavoriteMutation } from '@/integration
 import { useAuthStore } from '@/features/auth/auth.store';
 import { useUiSection } from '@/i18n';
 import { toast } from 'sonner';
-import { formatCurrency } from '@/lib/currency';
 
 interface Props {
   consultant: ConsultantPublic;
@@ -168,7 +167,7 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
           <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase">
             {priceIsStarting ? ui('ui_consultantbrowse_from_label', 'Başlangıç') : ui('ui_consultantbrowse_session_label', 'Session')}
           </span>
-          <span className="text-[var(--gm-gold)] font-serif text-2xl leading-none">{formatCurrency(price, consultant.currency || 'EUR', { locale })}</span>
+          <span className="text-[var(--gm-gold)] font-serif text-2xl leading-none">₺{price}</span>
         </div>
 
         {/* CTA buttons */}

@@ -37,7 +37,7 @@ export function UserActivityPanel({ userId }: { userId: string }) {
             </div>
             <div>
               <div className="text-[10px] font-bold text-gm-muted uppercase tracking-widest">{t('activity.totalSpend')}</div>
-              <div className="text-2xl font-serif text-gm-text">€{summary?.total_spend || '0.00'}</div>
+              <div className="text-2xl font-serif text-gm-text">₺{summary?.total_spend || '0.00'}</div>
             </div>
           </CardContent>
         </Card>

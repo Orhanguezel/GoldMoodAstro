@@ -1,11 +1,11 @@
 // Tek merkez para birimi formatlama — Wallet/cards/services/credits tutarlılığı için.
-// Kullanım: formatCurrency(1234.5) → "€1.234,50"
+// Kullanım: formatCurrency(1234.5) → "₺1.234,50"
 
 const SYMBOLS: Record<string, string> = { TRY: '₺', USD: '$', EUR: '€', GBP: '£' };
 const LOCALE_MAP: Record<string, string> = { tr: 'tr-TR', en: 'en-US', de: 'de-DE' };
 
 /**
- * Para birimini sembol + gruplu ondalık ile formatlar (varsayılan € + tr-TR grup).
+ * Para birimini sembol + gruplu ondalık ile formatlar (varsayılan ₺ + tr-TR grup).
  * @param amount sayı veya sayısal string
  * @param currency ISO kod (TRY/USD/EUR…)
  * @param opts.locale gruplama locale'i (tr/en/de)
@@ -13,7 +13,7 @@ const LOCALE_MAP: Record<string, string> = { tr: 'tr-TR', en: 'en-US', de: 'de-D
  */
 export function formatCurrency(
   amount: string | number | null | undefined,
-  currency = 'EUR',
+  currency = 'TRY',
   opts: { locale?: string; decimals?: number } = {},
 ): string {
   const n = typeof amount === 'number' ? amount : Number(amount ?? 0);

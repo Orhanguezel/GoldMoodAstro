@@ -15,7 +15,6 @@ import {
   verifyIyzicoCallback,
 } from '../orders/iyzico.service';
 import { createCheckoutSession, isStripeConfigured } from '../orders/stripe.service';
-import { convertFromBase, resolveCheckoutCurrency } from '../_shared/currency';
 import { subscriptionPlans, subscriptions } from './schema';
 import { users } from '../auth/schema';
 
@@ -938,7 +937,7 @@ export const startSubscription: RouteHandler = async (req, reply) => {
     return reply.code(400).send({ error: { message: 'subscription_plan_not_active' } });
   }
 
-  const currency = plan.currency || 'EUR';
+  const currency = plan.currency || 'TRY';
   const [existing] = await db
     .select()
     .from(subscriptions)
@@ -1036,15 +1035,11 @@ export const startSubscription: RouteHandler = async (req, reply) => {
   if (isStripeConfigured()) {
     const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || 'http://localhost:3000';
     try {
-      const presented = await convertFromBase(
-        Number(toMoneyMinorToDecimalString(plan.price_minor)),
-        await resolveCheckoutCurrency(locale),
-      );
       const session = await createCheckoutSession({
         orderId,
         orderNumber,
-        amount: presented.amount,
-        currency: presented.currency,
+        amount: Number(toMoneyMinorToDecimalString(plan.price_minor)),
+        currency,
         productName: `GoldMood Astrology — ${plan.name_tr} (${plan.period})`,
         customerEmail: email || null,
         successUrl: `${siteUrl}/${locale}/me/subscription?status=success&order_id=${orderId}`,
@@ -1229,7 +1224,7 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
       iyzico,
       token,
       expectedAmountMinor: planForVerify.price_minor,
-      expectedCurrency: planForVerify.currency || order.currency || 'EUR',
+      expectedCurrency: planForVerify.currency || order.currency || 'TRY',
       expectedBasketId: order.order_number,
       expectedConversationId: `sub-${order.order_number}`,
     });
@@ -1260,7 +1255,7 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
       gateway_id: gateway.id,
       transaction_id: paymentId || token,
       amount: paidPrice || String(order.total_amount || '0'),
-      currency: (result.currency as string | undefined) || order.currency || 'EUR',
+      currency: (result.currency as string | undefined) || order.currency || 'TRY',
       status: payStatus,
       raw_response: JSON.stringify(result),
     } as any);
@@ -1339,7 +1334,7 @@ export const subscriptionWebhook: RouteHandler = async (req, reply) => {
       trial_ends_at: trialEndsAt,
       auto_renew: 0,
       price_minor: plan.price_minor,
-      currency: plan.currency || 'EUR',
+      currency: plan.currency || 'TRY',
     } as any);
 
     return reply.redirect(subscriptionReturnUrl(locale, 'success', orderId));
@@ -1469,7 +1464,7 @@ export const verifyReceipt: RouteHandler = async (req, reply) => {
         trial_ends_at: existingByProvider.trial_ends_at ?? trialEndsAt,
         auto_renew: plan.period === 'lifetime' ? 0 : 1,
         price_minor: plan.price_minor,
-        currency: plan.currency || 'EUR',
+        currency: plan.currency || 'TRY',
         provider_customer_id: verification.providerCustomerId || existingByProvider.provider_customer_id || null,
         plan_id: existingByProvider.plan_id === plan.id ? existingByProvider.plan_id : plan.id,
         provider: platform as 'apple_iap' | 'google_iap',
@@ -1521,7 +1516,7 @@ export const verifyReceipt: RouteHandler = async (req, reply) => {
     trial_ends_at: trialEndsAt,
     auto_renew: plan.period === 'lifetime' ? 0 : 1,
     price_minor: plan.price_minor,
-    currency: plan.currency || 'EUR',
+    currency: plan.currency || 'TRY',
   } as any);
 
   const [created] = await db.select().from(subscriptions).where(eq(subscriptions.id, subscriptionId)).limit(1);
@@ -1700,7 +1695,7 @@ export const refundSubscriptionAdmin: RouteHandler<{ Params: { id: string } }> =
       conversationId: `sub_refund_${row.id}`,
       paymentId: payment.transaction_id,
       price: String(payment.amount),
-      currency: payment.currency || row.currency || 'EUR',
+      currency: payment.currency || row.currency || 'TRY',
       ip: requestIp(req),
     });
 
@@ -1717,7 +1712,7 @@ export const refundSubscriptionAdmin: RouteHandler<{ Params: { id: string } }> =
       gateway_id: payment.gateway_id,
       transaction_id: `refund_${payment.transaction_id}`,
       amount: `-${String(payment.amount)}`,
-      currency: payment.currency || row.currency || 'EUR',
+      currency: payment.currency || row.currency || 'TRY',
       status: 'refund',
       raw_response: JSON.stringify(refundResult),
     } as any);
@@ -1798,7 +1793,7 @@ export const createSubscriptionPlanAdmin: RouteHandler = async (req, reply) => {
 
   const features = parseFeatures((body as { features?: unknown }).features);
   const id = randomUUID();
-  const currency = asString(body.currency) || 'EUR';
+  const currency = asString(body.currency) || 'TRY';
   const priceMinor = asPositiveInt(body.price_minor, 0, 0);
   const trialDays = asPositiveInt(body.trial_days, 0, 0);
   const displayOrder = asPositiveInt(body.display_order, 0, 0);
@@ -1865,7 +1860,7 @@ export const updateSubscriptionPlanAdmin: RouteHandler<{ Params: { id: string } 
   if (body.description_en !== undefined) patch.description_en = asString(body.description_en) || null;
 
   if (body.price_minor !== undefined) patch.price_minor = asPositiveInt(body.price_minor, 0, 0);
-  if (body.currency !== undefined) patch.currency = asString(body.currency) || 'EUR';
+  if (body.currency !== undefined) patch.currency = asString(body.currency) || 'TRY';
 
   if (body.period !== undefined) {
     const period = normalizePlanPeriod(body.period);

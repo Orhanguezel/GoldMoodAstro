@@ -539,7 +539,7 @@ export default function Layout({
         logo: siteLogoUrl || undefined,
         sameAs: sameAs.length ? sameAs : defaultSameAs,
         description: [effectiveBrand.name, finalDescription].filter(Boolean).join(' '),
-        priceRange: '€3-€65',
+        priceRange: '₺149-₺3500',
         areaServed: 'TR',
       }),
       website({

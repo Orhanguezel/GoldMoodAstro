@@ -169,7 +169,7 @@ export default function BookingPage() {
       const bookingId = (booking as any).id ?? (booking as any).booking?.id;
       gaEvent('purchase', {
         value: finalPrice,
-        currency: 'EUR',
+        currency: 'TRY',
         transaction_id: bookingId,
         items: [
           {
@@ -188,7 +188,7 @@ export default function BookingPage() {
       }).unwrap();
       fbEvent(
         'InitiateCheckout',
-        { value: finalPrice, currency: 'EUR', content_ids: [consultantId], content_type: 'product' },
+        { value: finalPrice, currency: 'TRY', content_ids: [consultantId], content_type: 'product' },
         metaEventId.checkout(String(bookingId)),
       );
 
@@ -268,7 +268,7 @@ export default function BookingPage() {
             <div className="pt-8 border-t border-(--gm-border-soft) space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-(--gm-text-dim) font-serif text-lg italic">{ui('ui_account_booking_session_fee', 'Session Fee')}</span>
-                <span className="text-(--gm-text) font-serif text-xl">€{originalPrice.toFixed(2)}</span>
+                <span className="text-(--gm-text) font-serif text-xl">₺{Math.round(originalPrice)}</span>
               </div>
               
               {appliedCampaign && (
@@ -276,13 +276,13 @@ export default function BookingPage() {
                   <span className="text-(--gm-success) font-serif text-lg italic flex items-center gap-2">
                     <Tag className="w-4 h-4" /> {ui('ui_account_booking_discount', 'Discount')} ({appliedCampaign.code})
                   </span>
-                  <span className="text-(--gm-success) font-serif text-xl">-€{discountAmount.toFixed(2)}</span>
+                  <span className="text-(--gm-success) font-serif text-xl">-₺{Math.round(discountAmount)}</span>
                 </div>
               )}
 
               <div className="flex items-center justify-between pt-6 border-t border-(--gm-border-soft)">
                 <span className="text-(--gm-text) font-serif text-2xl italic">{ui('ui_account_booking_total', 'Total')}</span>
-                <span className="text-(--gm-gold) font-serif text-4xl">€{finalPrice.toFixed(2)}</span>
+                <span className="text-(--gm-gold) font-serif text-4xl">₺{Math.round(finalPrice)}</span>
               </div>
             </div>
           </div>

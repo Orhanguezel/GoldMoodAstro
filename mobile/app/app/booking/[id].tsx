@@ -231,7 +231,7 @@ export default function BookingDetailScreen() {
           <Text style={styles.sectionTitle}>{t('booking.price')}</Text>
           <View style={styles.infoRow}>
             <Text style={styles.label}>{t('booking.total')}</Text>
-            <Text style={styles.priceValue}>€{Number(Number(booking.session_price)).toFixed(2)}</Text>
+            <Text style={styles.priceValue}>₺{Math.round(Number(booking.session_price))}</Text>
           </View>
         </View>
 

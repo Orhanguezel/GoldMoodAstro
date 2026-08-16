@@ -219,11 +219,11 @@ export function BookingCard({ booking, onPress, onJoinCall, onMessage }: Props) 
           ) : !canMessage ? (
             <View style={styles.priceWrap}>
               <Text style={styles.priceLabel}>{t('bookingCard.priceLabel', 'Ücret:')}</Text>
-              <Text style={styles.priceVal}>€{Number(Number(booking.session_price)).toFixed(2)}</Text>
+              <Text style={styles.priceVal}>₺{Math.round(Number(booking.session_price))}</Text>
             </View>
           ) : (
             <View style={styles.priceWrap}>
-              <Text style={styles.priceVal}>€{Number(Number(booking.session_price)).toFixed(2)}</Text>
+              <Text style={styles.priceVal}>₺{Math.round(Number(booking.session_price))}</Text>
             </View>
           )}
         </View>

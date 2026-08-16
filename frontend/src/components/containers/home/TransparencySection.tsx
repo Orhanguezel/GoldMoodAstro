@@ -26,7 +26,7 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
               {ui('ui_home_transparency_free_name', 'Misafir')}
             </div>
             <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-(--gm-text)">
-              <sup className="text-2xl font-normal text-(--gm-gold-dim) mr-1 -top-7 relative">€</sup>0<small className="text-base text-(--gm-muted) font-normal tracking-wide ml-1">{ui('ui_home_transparency_per_month', '/ ay')}</small>
+              <sup className="text-2xl font-normal text-(--gm-gold-dim) mr-1 -top-7 relative">₺</sup>0<small className="text-base text-(--gm-muted) font-normal tracking-wide ml-1">{ui('ui_home_transparency_per_month', '/ ay')}</small>
             </div>
             <p className="italic text-(--gm-text-dim) mb-8 text-sm leading-relaxed">
               {ui("ui_home_transparency_free_tagline", "Meet the stars, no commitment.")}
@@ -62,7 +62,7 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
               {ui("ui_home_transparency_monthly_name", "Premium Monthly")}
             </div>
             <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-(--gm-gold) drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]">
-              <sup className="text-2xl font-normal text-(--gm-gold) mr-1 -top-7 relative">€</sup>2,90<small className="text-base font-normal tracking-wide ml-1 text-(--gm-gold)/60">{ui('ui_home_transparency_per_month', '/ ay')}</small>
+              <sup className="text-2xl font-normal text-(--gm-gold) mr-1 -top-7 relative">₺</sup>149<small className="text-base font-normal tracking-wide ml-1 text-(--gm-gold)/60">{ui('ui_home_transparency_per_month', '/ ay')}</small>
             </div>
             <p className="italic mb-8 text-sm leading-relaxed text-(--gm-text-dim)">
               {ui("ui_home_transparency_monthly_tagline", "Limitless depth, flexible payment.")}
@@ -95,7 +95,7 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
               {ui("ui_home_transparency_yearly_name", "Premium Yearly")}
             </div>
             <div className="font-serif font-light text-6xl leading-none mb-2 tracking-tight text-(--gm-text) flex items-baseline">
-              <sup className="text-2xl font-normal text-(--gm-gold-dim) mr-1 -top-7 relative">€</sup>27<small className="text-base text-(--gm-muted) font-normal tracking-wide ml-1">{ui("ui_home_transparency_per_year", "/ yr")}</small>
+              <sup className="text-2xl font-normal text-(--gm-gold-dim) mr-1 -top-7 relative">₺</sup>1499<small className="text-base text-(--gm-muted) font-normal tracking-wide ml-1">{ui("ui_home_transparency_per_year", "/ yr")}</small>
             </div>
             <p className="italic text-(--gm-text-dim) mb-8 text-sm leading-relaxed">
               {ui("ui_home_transparency_yearly_tagline", "2 months free. Uninterrupted experience.")}

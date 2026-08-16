@@ -463,7 +463,7 @@ export default function ConsultantsClient() {
                     </TableCell>
                     <TableCell className="py-6">
                       <div className="flex flex-col">
-                        <span className="font-serif text-2xl text-gm-gold font-bold">€{Number(Number(item.session_price)).toFixed(2)}</span>
+                        <span className="font-serif text-2xl text-gm-gold font-bold">₺{Math.round(Number(item.session_price))}</span>
                         <span className="text-[9px] text-gm-muted font-bold tracking-[0.2em] uppercase mt-1 opacity-60">
                           {t('table.sessionMinutes', { minutes: item.session_duration })}
                         </span>

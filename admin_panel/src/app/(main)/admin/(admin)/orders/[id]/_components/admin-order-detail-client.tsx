@@ -52,7 +52,7 @@ function fmtMoney(v: string | number, currency: string) {
   if (!Number.isFinite(n)) return `${v} ${currency}`;
   return new Intl.NumberFormat('tr-TR', {
     style: 'currency',
-    currency: currency || 'EUR',
+    currency: currency || 'TRY',
     minimumFractionDigits: 2,
   }).format(n);
 }

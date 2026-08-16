@@ -7,7 +7,6 @@ import { z } from 'zod';
 import * as repo from './repository';
 import { IyzicoService, resolveIyzicoConfigFromGateway, resolveIyzicoLocale, verifyIyzicoCallback } from '../orders/iyzico.service';
 import { createCheckoutSession, isStripeConfigured } from '../orders/stripe.service';
-import { convertFromBase, getBaseCurrency, resolveCheckoutCurrency } from '../_shared/currency';
 import { db } from '../../db/client';
 import { paymentGateways, orders, payments } from '../orders/schema';
 import { creditTransactions, userCredits } from './schema';
@@ -24,7 +23,7 @@ const creditPackageBody = z.object({
   description_tr: z.string().trim().max(5000).nullable().optional(),
   description_en: z.string().trim().max(5000).nullable().optional(),
   price_minor: z.coerce.number().int().min(0),
-  currency: z.string().trim().length(3).default('EUR'),
+  currency: z.string().trim().length(3).default('TRY'),
   credits: z.coerce.number().int().min(1),
   bonus_credits: z.coerce.number().int().min(0).default(0),
   is_active: z.union([z.boolean(), z.coerce.number().int().min(0).max(1)]).default(1),
@@ -409,7 +408,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
     const orderId = uuidv4();
     const orderNumber = `CRD-${Date.now()}`;
     const amount = (pkg.priceMinor / 100).toFixed(2);
-    const currency = pkg.currency || (await getBaseCurrency());
+    const currency = pkg.currency || 'TRY';
     await db.insert(orders).values({
       id: orderId,
       user_id: user.id,
@@ -428,13 +427,11 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
 
     const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || 'http://localhost:3000';
     try {
-      // Sunum para birimi: İngilizce ziyaretçiye USD, diğerlerine base.
-      const presented = await convertFromBase(Number(amount), await resolveCheckoutCurrency(locale));
       const session = await createCheckoutSession({
         orderId,
         orderNumber,
-        amount: presented.amount,
-        currency: presented.currency,
+        amount: Number(amount),
+        currency,
         productName: `GoldMood Astrology — ${pkg.name ?? 'Kredi paketi'} (${pkg.credits} kredi)`,
         customerEmail: user.email || null,
         successUrl: `${siteUrl}/${locale}/me/credits?status=success&order_id=${orderId}`,
@@ -460,7 +457,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
   const orderId = uuidv4();
   const orderNumber = `CRD-${Date.now()}`;
   const amount = (pkg.priceMinor / 100).toFixed(2);
-  const currency = pkg.currency || 'EUR';
+  const currency = pkg.currency || 'TRY';
 
   // Create order record for tracking
   await db.insert(orders).values({
@@ -657,7 +654,7 @@ export async function handleVerifyIapReceipt(req: FastifyRequest, reply: Fastify
   const orderNumber = `IAPCRD-${Date.now()}`;
   const totalCredits = Number((resolvedPkg as any).credits || 0) + Number((resolvedPkg as any).bonusCredits ?? (resolvedPkg as any).bonus_credits ?? 0);
   const priceMinor = Number((resolvedPkg as any).priceMinor ?? (resolvedPkg as any).price_minor ?? 0);
-  const currency = String((resolvedPkg as any).currency || 'EUR');
+  const currency = String((resolvedPkg as any).currency || 'TRY');
   const amount = (priceMinor / 100).toFixed(2);
   const gatewaySlug = platform === 'apple_iap' ? 'apple_iap' : 'google_iap';
   const [gateway] = await db.select().from(paymentGateways).where(eq(paymentGateways.slug, gatewaySlug)).limit(1);
@@ -772,7 +769,7 @@ export async function handleIyzicoCallback(req: FastifyRequest, reply: FastifyRe
       iyzico,
       token,
       expectedAmountMinor: Number(pkg.priceMinor ?? pkg.price_minor),
-      expectedCurrency: pkg.currency || order.currency || 'EUR',
+      expectedCurrency: pkg.currency || order.currency || 'TRY',
       expectedBasketId: order.order_number,
       expectedConversationId: `conv_${order.order_number}`,
     });

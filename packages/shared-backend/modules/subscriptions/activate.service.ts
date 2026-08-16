@@ -93,7 +93,7 @@ export async function activateSubscriptionForPaidOrder(args: {
     trial_ends_at: trialEndsAt,
     auto_renew: 0,
     price_minor: plan.price_minor,
-    currency: plan.currency || 'EUR',
+    currency: plan.currency || 'TRY',
   } as any);
 
   return { status: 'activated', subscriptionId };

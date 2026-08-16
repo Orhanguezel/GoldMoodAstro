@@ -4,7 +4,6 @@ import { randomUUID } from "crypto";
 import { db } from '../../db/client';
 import { orders, userAddresses, paymentGateways, payments } from "./schema";
 import { bookings } from "../bookings/schema";
-import { consultants } from "../consultants/schema";
 import { and, eq, desc, like, or, sql, type SQL } from "drizzle-orm";
 import {
   IyzicoService,
@@ -19,7 +18,6 @@ import { users } from "../auth/schema";
 import { clawbackCredits, getPackageById } from "../credits/repository";
 import { hasAnalyticsConsent, sendCapiEvent } from '../marketing/meta-capi';
 import { createCheckoutSession, isStripeConfigured, paypalSupportsCurrency, StripeNotConfiguredError } from "./stripe.service";
-import { convertFromBase, getBaseCurrency, resolveCheckoutCurrency } from "../_shared/currency";
 
 /** JWT payload'dan user bilgilerini normalize et.
  * Fastify-jwt sub → userId olarak map eder; id alanı payload'da olmayabilir.
@@ -101,15 +99,13 @@ export const listGateways: RouteHandler = async (req, reply) => {
  */
 export const getPaymentProviderStatusAdmin: RouteHandler = async (_req, reply) => {
   const gateways = await db.select().from(paymentGateways);
-  // Sipariş yoksa ayardaki defter para birimini göster.
-  const baseCurrency = await getBaseCurrency();
-  const [{ currency } = { currency: baseCurrency }] = await db
+  const [{ currency } = { currency: 'TRY' }] = await db
     .select({ currency: orders.currency })
     .from(orders)
     .orderBy(desc(orders.created_at))
     .limit(1);
 
-  const defaultCurrency = String(currency || baseCurrency).toUpperCase();
+  const defaultCurrency = String(currency || 'TRY').toUpperCase();
   return reply.send({
     data: {
       active_provider: isStripeConfigured() ? 'stripe' : null,
@@ -196,26 +192,6 @@ export const createOrder: RouteHandler = async (req, reply) => {
     return reply.code(404).send({ error: "Booking not found" });
   }
 
-  // GÜVENLİK KİLİDİ — para birimi geçişi yarım kaldıysa sipariş açma.
-  // Danışman satırı hâlâ eski para biriminde (TRY) ise fiyat büyüklüğü defter
-  // para biriminden (EUR) 55 kat farklıdır; sessizce sipariş açmak müşteriden
-  // 55 katı tahsil etmek demektir. Dönüşüm (242 migrate) uygulanınca kendiliğinden
-  // açılır; kalıcı bir kısıt değil.
-  const baseForOrder = await getBaseCurrency();
-  const [consultantRow] = await db
-    .select({ currency: consultants.currency })
-    .from(consultants)
-    .where(eq(consultants.id, booking.consultant_id))
-    .limit(1);
-  const rowCurrency = String(consultantRow?.currency || baseForOrder).toUpperCase();
-  if (Number(booking.session_price || 0) > 0 && rowCurrency !== baseForOrder) {
-    req.log.error(
-      { bookingId: booking.id, rowCurrency, baseForOrder },
-      'currency_migration_pending_order_blocked',
-    );
-    return reply.code(409).send({ error: { message: 'currency_migration_pending' } });
-  }
-
   const orderId = randomUUID();
   const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   const totalAmount = Number(booking.session_price || "0");
@@ -227,8 +203,7 @@ export const createOrder: RouteHandler = async (req, reply) => {
     order_number: orderNumber,
     status: "pending",
     total_amount: totalAmount.toFixed(2),
-    // Defter para birimi ayardan gelir (TL kaldırıldı — bkz. _shared/currency.ts).
-    currency: await getBaseCurrency(),
+    currency: "TRY",
     billing_address_id: body.billing_address_id ?? null,
     payment_gateway_id: gateway.id,
     payment_status: "unpaid",
@@ -283,18 +258,12 @@ export const initStripeCheckout: RouteHandler<{ Params: { id: string } }> = asyn
     } catch { /* ürün adı kozmetik; hata akışı durdurmasın */ }
   }
 
-  // Sipariş defterde base (EUR) tutulur; ödeme sayfası ziyaretçinin diline göre
-  // USD olabilir. Webhook, Stripe'ın gerçekten tahsil ettiği tutar/para birimini
-  // payments satırına yazar — defter ile tahsilat böyle ayrışır ama izlenebilir kalır.
-  const checkoutCurrency = await resolveCheckoutCurrency(requestLocale);
-  const presented = await convertFromBase(Number(order.total_amount), checkoutCurrency);
-
   try {
     const session = await createCheckoutSession({
       orderId: order.id,
       orderNumber: order.order_number,
-      amount: presented.amount,
-      currency: presented.currency,
+      amount: Number(order.total_amount),
+      currency: order.currency || 'TRY',
       productName,
       customerEmail: user.email || null,
       successUrl,
@@ -780,7 +749,7 @@ export const refundOrderAdmin: RouteHandler<{ Params: { id: string } }> = async 
       conversationId,
       paymentId: payment.transaction_id,
       price: String(payment.amount),
-      currency: payment.currency || order.currency || 'EUR',
+      currency: payment.currency || order.currency || 'TRY',
       ip: requestIp(req),
     });
 
@@ -797,7 +766,7 @@ export const refundOrderAdmin: RouteHandler<{ Params: { id: string } }> = async 
         order_id: id,
         gateway_id: gateway.id,
         amount: `-${String(payment.amount)}`,
-        currency: payment.currency || order.currency || 'EUR',
+        currency: payment.currency || order.currency || 'TRY',
         status: 'refund',
         transaction_id: `refund_${payment.transaction_id}`,
         raw_response: JSON.stringify(refundResult),

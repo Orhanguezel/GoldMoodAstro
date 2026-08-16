@@ -201,7 +201,7 @@ export default function CreditsScreen() {
                   </View>
 
                   <View style={styles.pkgFooter}>
-                    <Text style={styles.pkgPrice}>{(pkg.priceMinor / 100).toFixed(2)} €</Text>
+                    <Text style={styles.pkgPrice}>{(pkg.priceMinor / 100).toLocaleString()} ₺</Text>
                     <ChevronRight size={14} color={colors.gold} />
                   </View>
                 </Pressable>

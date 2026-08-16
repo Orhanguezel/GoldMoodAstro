@@ -303,7 +303,7 @@ export function consultantPerson(input: {
       ...(typeof s.price === 'number'
         ? {
             price: s.isFree ? 0 : s.price,
-            priceCurrency: s.priceCurrency || 'EUR',
+            priceCurrency: s.priceCurrency || 'TRY',
           }
         : {}),
       itemOffered: {

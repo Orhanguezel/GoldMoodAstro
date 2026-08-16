@@ -432,7 +432,7 @@ export default function ConsultantDetailScreen() {
       t('mediaMessages.audioQuestionTitle', 'Sesli soru gönder'),
       t('mediaMessages.audioQuestionConfirm', '{{price}} {{currency}} karşılığı kısa bir sesli soru kaydedilecek. Hazır olduğunuzda kaydı başlatın.', {
         price: Math.ceil(mediaSettings?.audio_price ?? 0),
-        currency: mediaSettings?.currency ?? 'EUR',
+        currency: mediaSettings?.currency ?? 'TRY',
       }),
       [
         { text: t('common.cancel', 'Vazgeç'), style: 'cancel' },
@@ -452,7 +452,7 @@ export default function ConsultantDetailScreen() {
       t('mediaMessages.videoQuestionTitle', 'Görüntülü soru gönder'),
       t('mediaMessages.videoQuestionConfirm', '{{price}} {{currency}} karşılığı kısa bir video soru kaydedilecek.', {
         price: Math.ceil(mediaSettings.video_price),
-        currency: mediaSettings.currency ?? 'EUR',
+        currency: mediaSettings.currency ?? 'TRY',
       }),
       [
         { text: t('common.cancel', 'Vazgeç'), style: 'cancel' },
@@ -796,7 +796,7 @@ export default function ConsultantDetailScreen() {
                   <View style={styles.serviceCardHeader}>
                     <Text style={styles.serviceName}>{svc.name}</Text>
                     <Text style={styles.servicePrice}>
-                      {isFree ? t('common.free', 'Ücretsiz') : `€${Number(Number(svc.price)).toFixed(2)}`}
+                      {isFree ? t('common.free', 'Ücretsiz') : `₺${Math.round(Number(svc.price))}`}
                     </Text>
                   </View>
                   <Text style={styles.serviceMeta}>{svc.duration_minutes} dakika</Text>
@@ -837,7 +837,7 @@ export default function ConsultantDetailScreen() {
                     mediaType === 'audio' && styles.mediaChipTextActive,
                   ]}
                 >
-                  Sesli · €{Number(baseSessionPrice).toFixed(2)}
+                  Sesli · ₺{Math.round(baseSessionPrice)}
                 </Text>
               </Pressable>
               <Pressable
@@ -854,7 +854,7 @@ export default function ConsultantDetailScreen() {
                     mediaType === 'video' && styles.mediaChipTextActive,
                   ]}
                 >
-                  Görüntülü · €{Number(videoSessionPrice).toFixed(2)}
+                  Görüntülü · ₺{Math.round(videoSessionPrice)}
                 </Text>
               </Pressable>
             </View>
@@ -953,7 +953,7 @@ export default function ConsultantDetailScreen() {
             {selectedService ? selectedService.name : t('consultantDetail.sessionFeeLabel', 'Seans Ücreti')}
           </Text>
           <Text style={styles.footerPriceVal}>
-            {footerIsFree ? t('common.free', 'Ücretsiz') : `€${Number(footerPrice).toFixed(2)}`}
+            {footerIsFree ? t('common.free', 'Ücretsiz') : `₺${Math.round(footerPrice)}`}
           </Text>
         </View>
         <Pressable 

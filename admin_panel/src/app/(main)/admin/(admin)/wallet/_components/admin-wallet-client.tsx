@@ -67,7 +67,7 @@ function fmtMoney(v: string | number, currency: string) {
   try {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
-      currency: currency || 'EUR',
+      currency: currency || 'TRY',
       minimumFractionDigits: 2,
     }).format(n);
   } catch {
@@ -161,7 +161,7 @@ export default function AdminWalletClient() {
   const pendingDeposits = deposits.filter((tx) => tx.payment_status === 'pending').length;
   const totalBalance = wallets.reduce((sum, row) => sum + Number(row.balance || 0), 0);
   const totalEarnings = wallets.reduce((sum, row) => sum + Number(row.total_earnings || 0), 0);
-  const displayCurrency = wallets[0]?.currency || deposits[0]?.currency || 'EUR';
+  const displayCurrency = wallets[0]?.currency || deposits[0]?.currency || 'TRY';
 
   async function onWalletStatusChange(row: WalletAdminView, next: WalletAdminView['status']) {
     try {

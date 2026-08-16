@@ -221,7 +221,7 @@ export default function ConsultantBookingsScreen() {
                 </View>
 
                 <Text style={styles.meta}>
-                  {item.service_title ?? t('consultantPanel.bookings.session', 'Seans')} · {item.media_type} · €{Number(Number(item.session_price ?? 0)).toFixed(2)}
+                  {item.service_title ?? t('consultantPanel.bookings.session', 'Seans')} · {item.media_type} · ₺{Math.round(Number(item.session_price ?? 0))}
                 </Text>
 
                 {!!item.customer_message && <Text style={styles.note}>{item.customer_message}</Text>}

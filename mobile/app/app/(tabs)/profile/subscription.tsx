@@ -305,7 +305,7 @@ import {
 } from '@/lib/iap';
 import type { Subscription, SubscriptionPlan } from '@/types';
 
-function formatCurrencyMinor(value: number | string, currency = 'EUR'): string {
+function formatCurrencyMinor(value: number | string, currency = 'TRY'): string {
   const number = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(number)) return `0 ${currency}`;
   return `${(number / 100).toFixed(0)} ${currency}`;

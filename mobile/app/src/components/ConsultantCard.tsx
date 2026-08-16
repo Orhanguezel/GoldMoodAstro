@@ -136,7 +136,7 @@ export function ConsultantCard({ consultant, onPress }: Props) {
         </View>
 
         <View style={styles.priceContainer}>
-          <Text style={styles.price}>€{Number(Number(consultant.session_price)).toFixed(2)}</Text>
+          <Text style={styles.price}>₺{Math.round(Number(consultant.session_price))}</Text>
           <Text style={styles.duration}>{consultant.session_duration} dk</Text>
         </View>
       </View>

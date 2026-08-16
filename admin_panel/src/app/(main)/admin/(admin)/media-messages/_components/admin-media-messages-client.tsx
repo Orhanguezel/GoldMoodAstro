@@ -119,7 +119,7 @@ export default function AdminMediaMessagesClient() {
                 <TableCell>
                   <Badge variant="outline" className={statusClass(row.status)}>{row.status}</Badge>
                 </TableCell>
-                <TableCell>€{Number(row.price || 0).toFixed(2)}</TableCell>
+                <TableCell>₺{Number(row.price || 0).toFixed(2)}</TableCell>
                 <TableCell>{fmtDate(row.created_at)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">

@@ -109,7 +109,7 @@ export async function runMonthlyWithdrawalAutoRequests() {
 
     const withdrawalId = randomUUID();
     const txId = randomUUID();
-    const currency = candidate.currency || 'EUR';
+    const currency = candidate.currency || 'TRY';
     const desc = [
       'Otomatik aylık ödeme talebi',
       `Withdrawal: ${withdrawalId}`,

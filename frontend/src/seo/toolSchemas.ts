@@ -27,7 +27,7 @@ export function webApplicationSchema(input: WebAppInput): Thing {
     offers: {
       '@type': 'Offer',
       price: 0,
-      priceCurrency: 'EUR',
+      priceCurrency: 'TRY',
       availability: 'https://schema.org/InStock',
       url,
     },
@@ -73,7 +73,7 @@ export function pricingOfferCatalogSchema(siteUrl: string, locale: string): Thin
       name: offer.name,
       description: offer.description,
       price: offer.price,
-      priceCurrency: 'EUR',
+      priceCurrency: 'TRY',
       availability: 'https://schema.org/InStock',
       url,
       itemOffered: {

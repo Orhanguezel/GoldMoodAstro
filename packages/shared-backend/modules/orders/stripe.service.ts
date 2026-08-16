@@ -69,7 +69,7 @@ export interface CreateCheckoutArgs {
   orderId: string;
   orderNumber: string;
   amount: number;            // majör birim (12.34)
-  currency: string;          // 'EUR' | 'USD' ...
+  currency: string;          // 'TRY' | 'EUR' ...
   productName: string;
   customerEmail?: string | null;
   successUrl: string;
@@ -104,7 +104,7 @@ export async function createCheckoutSession(args: CreateCheckoutArgs): Promise<{
       {
         quantity: 1,
         price_data: {
-          currency: String(args.currency || 'EUR').toLowerCase(),
+          currency: String(args.currency || 'TRY').toLowerCase(),
           unit_amount: unitAmount,
           product_data: { name: args.productName },
         },
