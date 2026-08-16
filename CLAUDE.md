@@ -1,5 +1,21 @@
 # CLAUDE.md — GoldMoodAstro
 
+## YASAKLI İÇERİK KONULARI (kullanıcı talimatı, 2026-08-16)
+
+**Şu konularda hiçbir yüzeyde içerik üretilmez/yayınlanmaz** (blog, sosyal post,
+burç metni, LLM prompt, reklam, chat-bot): büyü/bağlama/muska/ritüel hizmeti,
+bahis/şans oyunu tahmini, teşhis/tedavi/şifa vaadi, borsa-kripto sinyali/zenginlik
+vaadi, kesin sonuç/%100/"geri getirme" garantisi, ölüm tahmini, lanet/korku dili,
+hukuki tavsiye. Sebep: Stripe + Meta/Google hesap kapatma riski; AGB'deki
+"sunulmaz" listesiyle birebir aynı. İzinli çerçeve: kişisel farkındalık, gelişim,
+değerlendirme, eğlence.
+
+**Kod seviyesinde zorlanır:** kanonik liste + `findRiskyTopics()` →
+`packages/shared-backend/modules/_shared/contentModeration.ts`. Sosyal panel
+uyumluluk süzgeci R0 kuralı olarak tarar (`[editorial]` bypass edemez);
+`checkContent()` review/reading/mesajda aynı listeyi kullanır. Yeni kalıp
+oraya eklenir — ayrı liste tutma.
+
 ## İÇERİK ÜRETİM KURALI — MOTORU KULLAN (kullanıcı talimatı, 2026-08-09)
 
 **Sosyal medya içeriği / post üretirken astrolojik ve fal iddiaları ELLE YAZILMAZ,

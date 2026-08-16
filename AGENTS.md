@@ -25,6 +25,36 @@ gerçekten editöryel bir istisnaysa `editorial: true` yazıp gerekçesini yorum
 
 Detay: [reports/GoldMoodAstro-Icerik-Metodolojisi-ve-Rakip-Analizi.md](reports/GoldMoodAstro-Icerik-Metodolojisi-ve-Rakip-Analizi.md)
 
+## ⛔ YASAKLI İÇERİK KONULARI (kullanıcı talimatı, 2026-08-16)
+
+**Bu konularda HİÇBİR içerik üretilmez** — blog, sosyal post, günlük burç metni,
+LLM prompt'u, reklam metni, chat-bot cevabı, hiçbir yüzeyde. Sebep: Stripe hesabı,
+Meta/Google reklam hesapları ve Alman hukuku (HWG) bu kategorilerde hesap kapatır;
+AGB/mesafeli sözleşmedeki "sunulmaz" listesiyle de birebir aynıdır.
+
+| Kategori | Örnek yasak ifadeler |
+|---|---|
+| Büyü/ritüel hizmeti | büyü, bağlama, muska, vefk, hüddam, celp, cin çıkarma |
+| Kumar/şans tahmini | bahis, iddaa, banko kupon, loto/piyango numarası |
+| Sağlık vaadi | teşhis, tedavi eder, şifa garantisi, hastalığı iyileştirir |
+| Finans vaadi | borsa/kripto tahmini, al-sat sinyali, "zengin olacaksınız" |
+| Garanti/kesin sonuç | "kesin sonuç", "%100 tutar", "sevgiliyi geri getirme" |
+| Ölüm tahmini | ölüm tarihi/zamanı, "ne zaman ölecek" |
+| Korku dili | lanet, beddua, "başınıza felaket gelecek" |
+| Hukuk tavsiyesi | hukuki danışmanlık, "davayı kazanırsınız" |
+
+**Uygulama (koda bağlı, dokümana güvenilmiyor):**
+- Kanonik liste + `findRiskyTopics()`: `packages/shared-backend/modules/_shared/contentModeration.ts`
+- Sosyal panel süzgeci (FB/IG uyumluluk denetimi) R0 kuralı olarak tarar —
+  `[editorial]` işareti bile bypass ETMEZ; fail = yayınlama.
+- `checkContent()` review/reading/mesaj moderasyonunda aynı listeyi kullanır
+  (LLM çıktılarında warn seviyesi de katıdır).
+- Yeni yasak kalıp ekleme yeri contentModeration.ts'tir; grep/elle liste kopyalama.
+
+İzinli çerçeve (AGB diliyle): kişisel farkındalık, kişisel gelişim, kişisel
+değerlendirme, eğlence. "Sağlığınıza dikkat edin" gibi genel iyi-dilek serbest;
+teşhis/tedavi/garanti diline kayan her şey yasak.
+
 ## Aktif Telegram Büyüme Görevi (2026-08-04)
 
 - Strateji: [`TELEGRAM-BUYUME-STRATEJISI.md`](./TELEGRAM-BUYUME-STRATEJISI.md)

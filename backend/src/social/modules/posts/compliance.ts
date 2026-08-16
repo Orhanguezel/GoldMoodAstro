@@ -16,6 +16,7 @@
  */
 import { db } from "../../db/client";
 import { sql } from "drizzle-orm";
+import { findRiskyTopics } from "@goldmood/shared-backend/modules/_shared/contentModeration";
 
 export type ComplianceLevel = "ok" | "warn" | "fail";
 
@@ -97,6 +98,23 @@ export async function auditPost(post: AuditablePost): Promise<ComplianceResult> 
   const findings: ComplianceFinding[] = [];
   const caption = (post.caption || "").trim();
   const text = `${post.title || ""}\n${caption}`;
+
+  // ── R0: yasaklı/riskli konu var mı? (Stripe + Meta/Google Ads uyumu)
+  // Kanonik liste _shared/contentModeration.ts'te — büyü/bağlama, bahis,
+  // teşhis/tedavi vaadi, yatırım sinyali, kesin sonuç/"geri getirme",
+  // ölüm tahmini, korku dili. PSP ve reklam hesabını riske atan içerik
+  // paylaşılamaz; [editorial] işareti bile bu kuralı BYPASS EDEMEZ.
+  for (const hit of findRiskyTopics(text)) {
+    findings.push({
+      rule: `yasakli-konu-${hit.category}`,
+      level: hit.level,
+      message: `Yasaklı/riskli konu kalıbı: "${hit.matched}" (${hit.category}).`,
+      hint:
+        hit.level === "fail"
+          ? "Bu konu hiçbir içerikte yer alamaz (Stripe/Meta/Google politikaları + AGB'deki 'sunulmaz' listesi). İfadeyi tamamen çıkar."
+          : "Meşru bir kullanım olabilir; yayınlamadan önce ifadeyi yumuşat veya bağlamı netleştir (vaat/iddia diline kaymasın).",
+    });
+  }
 
   // ── R1: astrolojik iddia hesaba bağlı mı? (en kritik kural)
   //

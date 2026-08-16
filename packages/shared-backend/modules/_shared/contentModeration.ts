@@ -45,6 +45,72 @@ const HARMFUL_PROPHECY_PATTERNS: RegExp[] = [
   /kacinilmaz/i,
 ];
 
+// ── YASAKLI/RİSKLİ KONULAR (2026-08-16 — Stripe + Meta/Google Ads uyumu) ──
+// Kanonik liste BURADADIR; AGENTS.md/CLAUDE.md "Yasaklı içerik konuları"
+// bölümü bu listeyi anlatır, uygulaması bu modüldür. Tüketiciler:
+//   - social/posts/compliance.ts → panel uyumluluk süzgeci (FB/IG)
+//   - checkContent() → review/reading/message moderasyonu
+// Hukuki dayanak: AGB/mesafeli sözleşmedeki "sunulmaz" listesi + PSP (Stripe)
+// ve reklam (Meta/Google) politikaları. Kategori gizleme = hesap kapatma riski.
+//
+// SEVİYE FELSEFESİ (gürültü dersinden — bkz. compliance.ts 05a0d42):
+//   fail = tek başına yayın engeli (net ihlal kalıpları, dar regex)
+//   warn = insan göz atsın (meşru kullanım olasılığı var)
+export type RiskyTopicCategory =
+  | 'buyu_ritueli'      // büyü, muska, bağlama, celp — PSP'lerin kesin reddi
+  | 'kumar'             // bahis/şans oyunu tahmini
+  | 'saglik_vaadi'      // teşhis/tedavi/şifa iddiası (HWG + reklam politikaları)
+  | 'finans_vaadi'      // yatırım sinyali, zenginlik garantisi
+  | 'garanti_vaadi'     // kesin sonuç/%100 vaadi, "geri getirme"
+  | 'olum_tahmini'      // ölüm/ecel zamanı
+  | 'korku_dili'        // lanet/beddua/felaket korkutması
+  | 'hukuk_tavsiyesi';  // hukuki danışmanlık/dava vaadi
+
+export type RiskyTopicMatch = {
+  category: RiskyTopicCategory;
+  level: 'fail' | 'warn';
+  matched: string;
+};
+
+const RISKY_TOPIC_RULES: Array<{ category: RiskyTopicCategory; level: 'fail' | 'warn'; pattern: RegExp }> = [
+  // Büyü/ritüel hizmeti — "büyülü" (sıfat) ve "büyük/büyüme" eşleşmez (unicode lookaround)
+  { category: 'buyu_ritueli', level: 'fail', pattern: /(?<!\p{L})büyü(sü|yü|nün|ler|leri)?(?!\p{L})/iu },
+  { category: 'buyu_ritueli', level: 'fail', pattern: /(?<!\p{L})(muska|vefk|hüddam|hüddem|celb?p?iye|musallat|cin\s*(çıkar|çarp))(?!\p{L})/iu },
+  { category: 'buyu_ritueli', level: 'fail', pattern: /bağlama\s*(büyü|dua|ritüel)/iu },
+  // Kumar/şans oyunu tahmini
+  { category: 'kumar', level: 'fail', pattern: /(?<!\p{L})(bahis|iddaa|banko\s*kupon|şans\s*oyun\p{L}*|loto|piyango)(?!\p{L})/iu },
+  // Sağlık — sert iddia fail, çıplak terim warn ("sağlığınıza dikkat" serbest; bu kelimeler değil)
+  { category: 'saglik_vaadi', level: 'fail', pattern: /(hastalı\p{L}+|kanser|depresyon)\p{L}*\s*\p{L}*\s*(iyileştir|tedavi\s*ed)/iu },
+  { category: 'saglik_vaadi', level: 'fail', pattern: /şifa\s*(garanti|dağıt|veriyor)/iu },
+  { category: 'saglik_vaadi', level: 'warn', pattern: /(?<!\p{L})(teşhis|tedavi|şifa)(?!\p{L})/iu },
+  // Finans — sinyal/garanti fail, "yatırım tavsiyesi" ibaresi warn
+  // Aynı cümle içinde (≤40 karakter) borsa/kripto + tahmin/sinyal/al-sat birlikteliği
+  { category: 'finans_vaadi', level: 'fail', pattern: /(borsa|hisse|kripto|coin)[^.!?\n]{0,40}(tahmin|öneri|sinyal|al[\s-]*sat)/iu },
+  { category: 'finans_vaadi', level: 'fail', pattern: /(zengin\s*(olacak|edece)|bolluk\s*garanti|hangi\s*(hisse|coin))/iu },
+  { category: 'finans_vaadi', level: 'warn', pattern: /yatırım\s*tavsiye/iu },
+  // Garanti/kesin sonuç + klasik "geri getirme" vaadi
+  { category: 'garanti_vaadi', level: 'fail', pattern: /(kesin|garantili?|%\s*100)\s*(sonuç|çözüm|tutar|tahmin)/iu },
+  { category: 'garanti_vaadi', level: 'fail', pattern: /(sevgili|aşk|eş)\p{L}*\s*(geri\s*getir|kavuştur)/iu },
+  // Ölüm tahmini
+  { category: 'olum_tahmini', level: 'fail', pattern: /((ölüm|ecel)\s*(tarihi|zamanı)|ne\s*zaman\s*ölece)/iu },
+  // Korku dili — insan göz atsın
+  { category: 'korku_dili', level: 'warn', pattern: /(?<!\p{L})(lanetli?|beddua|kötü\s*ruh|başınıza\s*felaket)(?!\p{L})/iu },
+  // Hukuk
+  { category: 'hukuk_tavsiyesi', level: 'warn', pattern: /(hukuki\s*(tavsiye|danışmanlık)|dava\p{L}*\s*kazan)/iu },
+];
+
+/** Metinde yasaklı/riskli konu kalıplarını arar (tüm içerik yüzeyleri için ortak). */
+export function findRiskyTopics(text: string): RiskyTopicMatch[] {
+  const t = String(text || '');
+  if (!t.trim()) return [];
+  const out: RiskyTopicMatch[] = [];
+  for (const rule of RISKY_TOPIC_RULES) {
+    const m = t.match(rule.pattern);
+    if (m) out.push({ category: rule.category, level: rule.level, matched: m[0] });
+  }
+  return out;
+}
+
 export type ModerationContext = 'review' | 'reading' | 'message' | 'profile';
 
 export type ModerationResult = {
@@ -132,6 +198,15 @@ export function checkContent(
         matched.push(re.source);
         break;
       }
+    }
+  }
+
+  // Yasaklı/riskli konular — fail seviyesi her bağlamda; warn yalnız LLM
+  // çıktılarında (reading) katı, kullanıcı metinlerinde gürültü olmasın diye.
+  for (const hit of findRiskyTopics(text)) {
+    if (hit.level === 'fail' || context === 'reading') {
+      flags.push(`risky_topic:${hit.category}`);
+      matched.push(hit.matched);
     }
   }
 
