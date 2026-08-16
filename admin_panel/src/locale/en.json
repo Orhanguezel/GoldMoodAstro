@@ -3189,6 +3189,11 @@
       "deleteError": "Delete failed."
     },
     "api": {
+      "paymentSection": "Payment Settings (Stripe + PayPal)",
+      "paymentDesc": "Keys live in server environment variables and cannot be edited here. This page only shows status.",
+      "gatewaysTitle": "Registered providers",
+      "sectionPayment": "Payments (Stripe + PayPal)",
+      "paymentMovedHint": "Payment keys are kept in server environment variables for security and cannot be edited from the panel. See provider status on the “Payment Settings” page.",
       "title": "API & Integration Settings",
       "description": "These are global settings (locale=*). Selected language is for UI only.",
       "badge": "Global (locale=*)",

@@ -161,7 +161,7 @@ export const MOBILE_I18N_FALLBACK = {
       "success": "Ödeme başarılı!",
       "failed": "Ödeme başarısız",
       "processing": "İşleniyor...",
-      "secure": "Güvenli ödeme — Iyzipay altyapısı",
+      "secure": "Güvenli ödeme — Stripe & PayPal altyapısı",
       "secureTitle": "Güvenli Ödeme",
       "loadingSecurePage": "Güvenli ödeme sayfası yükleniyor..."
     },
@@ -728,7 +728,7 @@ export const MOBILE_I18N_FALLBACK = {
       "couponError": "Kupon uygulanırken bir sorun oluştu.",
       "bookingCreateFailed": "Randevu oluşturulamadı. Lütfen tekrar deneyin.",
       "trustFree": "Ücretsiz tanışma görüşmeniz onaylandığında randevularım sekmesinden takip edebilirsiniz.",
-      "trustPaid": "Ödemeniz Iyzipay güvencesiyle 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz hiçbir şekilde kaydedilmez.",
+      "trustPaid": "Ödemeniz Stripe ve PayPal altyapısıyla, 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz hiçbir şekilde kaydedilmez.",
       "completePayment": "Ödemeyi Tamamla"
     },
     "funnel": {
@@ -949,7 +949,7 @@ export const MOBILE_I18N_FALLBACK = {
       "paymentStartError": "Ödeme başlatılamadı.",
       "choosePackage": "Paket Seçin",
       "popular": "POPÜLER",
-      "iyzicoSecure": "Ödemeleriniz iyzico güvencesiyle korunmaktadır.",
+      "paymentSecure": "Ödemeleriniz Stripe ve PayPal altyapısıyla korunmaktadır.",
       "iapRequiredTitle": "Mağaza satın alımı gerekli",
       "iapRequiredBody": "Kredi paketleri iOS ve Android mağaza sürümlerinde uygulama içi satın alma ile sunulur.",
       "iapUnsupported": "Bu platformda mağaza satın alımı desteklenmiyor.",
@@ -1555,7 +1555,7 @@ export const MOBILE_I18N_FALLBACK = {
       "success": "Payment successful!",
       "failed": "Payment failed",
       "processing": "Processing...",
-      "secure": "Secure payment — Iyzipay",
+      "secure": "Secure payment — Stripe & PayPal",
       "secureTitle": "Secure Payment",
       "loadingSecurePage": "Loading secure payment page..."
     },
@@ -2122,7 +2122,7 @@ export const MOBILE_I18N_FALLBACK = {
       "couponError": "Something went wrong while applying the coupon.",
       "bookingCreateFailed": "Could not create the appointment. Please try again.",
       "trustFree": "Once your free intro session is approved, you can track it in the My Bookings tab.",
-      "trustPaid": "Your payment is processed with 256-bit SSL encryption secured by Iyzipay. Your card details are never stored.",
+      "trustPaid": "Your payment is processed with 256-bit SSL encryption via Stripe and PayPal. Your card details are never stored.",
       "completePayment": "Complete Payment"
     },
     "funnel": {
@@ -2343,7 +2343,7 @@ export const MOBILE_I18N_FALLBACK = {
       "paymentStartError": "Could not start payment.",
       "choosePackage": "Choose a Package",
       "popular": "POPULAR",
-      "iyzicoSecure": "Your payments are protected by iyzico security.",
+      "paymentSecure": "Your payments are protected by Stripe and PayPal.",
       "iapRequiredTitle": "Store purchase required",
       "iapRequiredBody": "Credit packages are offered through in-app purchases in iOS and Android store builds.",
       "iapUnsupported": "Store purchases are not supported on this platform.",
@@ -2949,7 +2949,7 @@ export const MOBILE_I18N_FALLBACK = {
       "success": "Zahlung erfolgreich!",
       "failed": "Zahlung fehlgeschlagen",
       "processing": "Wird verarbeitet...",
-      "secure": "Sichere Zahlung — Iyzipay",
+      "secure": "Sichere Zahlung — Stripe & PayPal",
       "secureTitle": "Sichere Zahlung",
       "loadingSecurePage": "Sichere Zahlungsseite wird geladen..."
     },
@@ -3516,7 +3516,7 @@ export const MOBILE_I18N_FALLBACK = {
       "couponError": "Beim Anwenden des Gutscheins ist ein Fehler aufgetreten.",
       "bookingCreateFailed": "Der Termin konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
       "trustFree": "Sobald Ihr kostenloses Kennenlerngespräch bestätigt ist, können Sie es im Tab 'Meine Buchungen' verfolgen.",
-      "trustPaid": "Ihre Zahlung wird mit 256-Bit-SSL-Verschlüsselung, abgesichert durch Iyzipay, verarbeitet. Ihre Kartendaten werden niemals gespeichert.",
+      "trustPaid": "Ihre Zahlung wird mit 256-Bit-SSL-Verschlüsselung über Stripe und PayPal verarbeitet. Ihre Kartendaten werden niemals gespeichert.",
       "completePayment": "Zahlung abschließen"
     },
     "funnel": {
@@ -3737,7 +3737,7 @@ export const MOBILE_I18N_FALLBACK = {
       "paymentStartError": "Zahlung konnte nicht gestartet werden.",
       "choosePackage": "Paket wählen",
       "popular": "BELIEBT",
-      "iyzicoSecure": "Ihre Zahlungen sind durch die iyzico-Sicherheit geschützt.",
+      "paymentSecure": "Ihre Zahlungen sind durch Stripe und PayPal geschützt.",
       "iapRequiredTitle": "Store-Kauf erforderlich",
       "iapRequiredBody": "Guthabenpakete werden in iOS- und Android-Store-Builds über In-App-Käufe angeboten.",
       "iapUnsupported": "Store-Käufe werden auf dieser Plattform nicht unterstützt.",

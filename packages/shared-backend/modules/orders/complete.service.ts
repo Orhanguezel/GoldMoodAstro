@@ -17,17 +17,18 @@ import { db } from '../../db/client';
 import { orders, paymentGateways, payments } from './schema';
 import { bookings } from '../bookings/schema';
 import { addCredits, getPackageById } from '../credits/repository';
+import { activateSubscriptionForPaidOrder } from '../subscriptions/activate.service';
 
-export type OrderContext = 'booking' | 'credits_purchase' | 'unknown';
+export type OrderContext = 'booking' | 'credits_purchase' | 'subscription_start' | 'unknown';
 
 export type CompletePaidOrderResult =
   | { status: 'not_found' }
   | { status: 'already_paid'; context: OrderContext; orderId: string }
   | { status: 'completed'; context: OrderContext; orderId: string; userId: string };
 
-function parseNotes(raw: unknown): { context?: string; package_id?: string } {
+function parseNotes(raw: unknown): { context?: string; package_id?: string; plan_id?: string } {
   try {
-    return JSON.parse(String(raw || '{}')) as { context?: string; package_id?: string };
+    return JSON.parse(String(raw || '{}')) as { context?: string; package_id?: string; plan_id?: string };
   } catch {
     return {};
   }
@@ -56,16 +57,22 @@ export async function completePaidOrder(args: {
 
   const notes = parseNotes(order.notes);
   const context: OrderContext =
-    notes.context === 'credits_purchase' ? 'credits_purchase' : order.booking_id ? 'booking' : 'unknown';
+    notes.context === 'credits_purchase'
+      ? 'credits_purchase'
+      : notes.context === 'subscription_start'
+        ? 'subscription_start'
+        : order.booking_id
+          ? 'booking'
+          : 'unknown';
 
   if (order.payment_status === 'paid') {
     return { status: 'already_paid', context, orderId: order.id };
   }
 
   const gatewayId = await resolveGatewayId(args.providerSlug);
-  // Kredi siparişi tek adımda biter ("completed"); randevu siparişi seans
-  // yapılana kadar işlemdedir ("processing") — mevcut iyzico davranışı korunur.
-  const nextStatus = context === 'credits_purchase' ? 'completed' : 'processing';
+  // Kredi ve abonelik siparişi tek adımda biter ("completed"); randevu siparişi
+  // seans yapılana kadar işlemdedir ("processing").
+  const nextStatus = context === 'credits_purchase' || context === 'subscription_start' ? 'completed' : 'processing';
 
   let didUpdate = false;
   await db.transaction(async (tx) => {
@@ -115,15 +122,33 @@ export async function completePaidOrder(args: {
       const pkg = await getPackageById(notes.package_id);
       if (pkg) {
         const totalCredits = Number(pkg.credits || 0) + Number((pkg as any).bonusCredits ?? (pkg as any).bonus_credits ?? 0);
+        // DİKKAT: credit_transactions'ta UNIQUE(reference_type, reference_id, type)
+        // var. Referans PAKET olursa bir paket ömür boyu YALNIZ BİR KEZ satın
+        // alınabilir (ikinci müşteri parayı öder, kredi alamaz). Doğru idempotens
+        // anahtarı SİPARİŞTİR: sipariş başına tek yükleme.
         await addCredits(order.user_id, totalCredits, 'purchase', {
-          type: 'credit_package',
-          id: pkg.id,
+          type: 'credit_order',
+          id: order.id,
           orderId: order.id,
           description: `Kredi paketi: ${(pkg as any).code ?? pkg.id}`,
         });
       }
     } catch (err) {
       args.log?.error({ err, orderId: order.id }, 'credits_grant_failed_after_payment');
+    }
+  }
+
+  // Abonelik de transaction DIŞINDA: aktivasyon hatası ödemeyi geri almamalı.
+  if (context === 'subscription_start' && notes.plan_id) {
+    try {
+      await activateSubscriptionForPaidOrder({
+        userId: order.user_id,
+        planId: notes.plan_id,
+        provider: args.providerSlug === 'stripe' ? 'stripe' : 'iyzipay',
+        providerReferenceId: args.transactionId,
+      });
+    } catch (err) {
+      args.log?.error({ err, orderId: order.id }, 'subscription_activation_failed_after_payment');
     }
   }
 

@@ -30,17 +30,6 @@ export const ordersPublicApi = baseApi.injectEndpoints({
       query: (body) => ({ url: BASE, method: 'POST', body }),
     }),
 
-    initIyzicoPayment: build.mutation<
-      { success: boolean; checkout_url: string; token: string },
-      { orderId: string; locale?: string }
-    >({
-      query: ({ orderId, locale }) => ({
-        url: `${BASE}/${encodeURIComponent(orderId)}/init-iyzico`,
-        method: 'POST',
-        params: locale ? { locale } : undefined,
-      }),
-    }),
-
     // Stripe Checkout (aktif ödeme sağlayıcısı) — ödeme onayı webhook'ta tamamlanır.
     initStripeCheckout: build.mutation<
       { success: boolean; checkout_url: string; session_id: string },
@@ -61,6 +50,5 @@ export const {
   useGetMyOrderQuery,
   useListPaymentGatewaysQuery,
   useCreateForBookingMutation,
-  useInitIyzicoPaymentMutation,
   useInitStripeCheckoutMutation,
 } = ordersPublicApi;

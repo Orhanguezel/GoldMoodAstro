@@ -590,7 +590,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
                 <p className="text-center text-[10px] font-medium tracking-[0.1em] text-(--gm-text-muted) uppercase italic">
                   {selectedService.is_free === 1
                     ? ui('ui_consultant_note_free', '* This is a free introductory session.')
-                    : ui('ui_consultant_note_paid', '* Payment will be processed via Iyzico in the next step.')}
+                    : ui('ui_consultant_note_paid', '* Payment will be processed securely via Stripe or PayPal in the next step.')}
                 </p>
               </div>
             )}

@@ -49,9 +49,6 @@ const API_KEYS = [
   'firebase_project_id',
   'firebase_client_email',
   'firebase_private_key',
-  'iyzipay_api_key',
-  'iyzipay_secret_key',
-  'iyzipay_base_url',
 ] as const;
 
 type ApiKey = (typeof API_KEYS)[number];
@@ -75,9 +72,6 @@ const EMPTY_FORM: ApiForm = {
   firebase_project_id: '',
   firebase_client_email: '',
   firebase_private_key: '',
-  iyzipay_api_key: '',
-  iyzipay_secret_key: '',
-  iyzipay_base_url: '',
 };
 
 function valueToString(v: unknown): string {
@@ -451,54 +445,20 @@ export const ApiSettingsTab: React.FC<ApiSettingsTabProps> = ({ locale }) => {
           </div>
         </div>
 
-        {/* Iyzipay Section */}
+        {/* Ödeme — Iyzipay kaldırıldı (2026-08-16). Stripe/PayPal secret'ları env'de
+            tutulur, panelden yazılmaz; durum ayrı sayfada gösterilir. */}
         <div className="space-y-6">
           <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gm-gold border-b border-gm-border-soft pb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-gm-gold/50" />
-            {t('admin.siteSettings.api.sectionIyzipay', null, 'Iyzipay (Ödeme)')}
+            {t('admin.siteSettings.api.sectionPayment', null, 'Ödeme (Stripe + PayPal)')}
           </h3>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="iyzipay_api_key" className="text-[10px] font-bold text-gm-muted tracking-[0.15em] uppercase ml-1 block">
-                {t('admin.siteSettings.api.iyzipayApiKey', null, 'Iyzipay API Key')}
-              </Label>
-              <Input
-                id="iyzipay_api_key"
-                value={form.iyzipay_api_key}
-                onChange={(e) => handleChange('iyzipay_api_key', e.target.value)}
-                placeholder="API Key"
-                disabled={busy}
-                className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="iyzipay_secret_key" className="text-[10px] font-bold text-gm-muted tracking-[0.15em] uppercase ml-1 block">
-                {t('admin.siteSettings.api.iyzipaySecretKey', null, 'Iyzipay Secret Key')}
-              </Label>
-              <Input
-                id="iyzipay_secret_key"
-                type="password"
-                value={form.iyzipay_secret_key}
-                onChange={(e) => handleChange('iyzipay_secret_key', e.target.value)}
-                placeholder="Secret Key"
-                disabled={busy}
-                className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
-              />
-            </div>
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="iyzipay_base_url" className="text-[10px] font-bold text-gm-muted tracking-[0.15em] uppercase ml-1 block">
-                {t('admin.siteSettings.api.iyzipayBaseUrl', null, 'Iyzipay Base URL')}
-              </Label>
-              <Input
-                id="iyzipay_base_url"
-                value={form.iyzipay_base_url}
-                onChange={(e) => handleChange('iyzipay_base_url', e.target.value)}
-                placeholder="https://sandbox-api.iyzipay.com"
-                disabled={busy}
-                className="h-12 bg-gm-bg-deep border-gm-border-soft rounded-2xl focus:ring-gm-gold/50 focus:border-gm-gold/50 text-sm font-mono text-gm-text transition-all"
-              />
-            </div>
-          </div>
+          <p className="text-sm text-gm-muted leading-relaxed">
+            {t(
+              'admin.siteSettings.api.paymentMovedHint',
+              null,
+              'Ödeme anahtarları güvenlik gereği sunucu ortam değişkenlerinde tutulur ve panelden düzenlenmez. Sağlayıcı durumunu “Ödeme Ayarları” sayfasından görebilirsiniz.',
+            )}
+          </p>
         </div>
 
         {/* Cookie Consent */}

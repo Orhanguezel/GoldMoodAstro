@@ -2884,6 +2884,11 @@
       "deleteError": "Fehler beim Löschen."
     },
     "api": {
+      "paymentSection": "Zahlungseinstellungen (Stripe + PayPal)",
+      "paymentDesc": "Schlüssel liegen in Server-Umgebungsvariablen und sind hier nicht editierbar. Diese Seite zeigt nur den Status.",
+      "gatewaysTitle": "Registrierte Anbieter",
+      "sectionPayment": "Zahlungen (Stripe + PayPal)",
+      "paymentMovedHint": "Zahlungsschlüssel werden aus Sicherheitsgründen in Server-Umgebungsvariablen gehalten und sind im Panel nicht editierbar. Den Anbieterstatus sehen Sie auf der Seite „Zahlungseinstellungen“.",
       "title": "API & Integrations-Einstellungen",
       "description": "Dies sind globale Einstellungen (locale=*). Die ausgewählte Sprache ist nur für die Benutzeroberfläche.",
       "badge": "Global (locale=*)",

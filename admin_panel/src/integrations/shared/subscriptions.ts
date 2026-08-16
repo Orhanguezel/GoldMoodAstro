@@ -10,7 +10,7 @@ export type AdminSubscriptionStatus =
   | 'grace_period'
   | 'past_due';
 
-export type SubscriptionProvider = 'iyzipay' | 'apple_iap' | 'google_iap' | 'manual';
+export type SubscriptionProvider = 'stripe' | 'iyzipay' | 'apple_iap' | 'google_iap' | 'manual';
 
 export type SubscriptionPlanPeriod = 'monthly' | 'yearly' | 'lifetime';
 
@@ -150,8 +150,8 @@ function normalizeStatus(v: unknown): AdminSubscriptionStatus {
 
 function normalizeProvider(v: unknown): SubscriptionProvider {
   const p = asStr(v);
-  if (['apple_iap', 'google_iap', 'manual'].includes(p)) return p as SubscriptionProvider;
-  return 'iyzipay';
+  if (['stripe', 'iyzipay', 'apple_iap', 'google_iap', 'manual'].includes(p)) return p as SubscriptionProvider;
+  return 'stripe';
 }
 
 function normalizePlanPeriod(v: unknown): SubscriptionPlanPeriod {

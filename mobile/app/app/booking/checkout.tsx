@@ -203,13 +203,13 @@ export default function BookingCheckoutScreen() {
       }
 
       const orderResult = await ordersApi.createForBooking(booking.id);
-      const iyziResult = await ordersApi.initIyzipay(orderResult.order_id);
+      const checkout = await ordersApi.initStripeCheckout(orderResult.order_id);
 
       router.push({
         pathname: '/booking/payment' as any,
         params: {
           orderId: orderResult.order_id,
-          url: iyziResult.checkout_url,
+          url: checkout.checkout_url,
         },
       });
     } catch (err: any) {
@@ -374,7 +374,7 @@ export default function BookingCheckoutScreen() {
             <Text style={styles.trustText}>
               {isFreeService
                 ? t('checkout.trustFree', 'Ücretsiz tanışma görüşmeniz onaylandığında randevularım sekmesinden takip edebilirsiniz.')
-                : t('checkout.trustPaid', 'Ödemeniz Iyzipay güvencesiyle 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz hiçbir şekilde kaydedilmez.')}
+                : t('checkout.trustPaid', 'Ödemeniz Stripe ve PayPal altyapısıyla, 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz hiçbir şekilde kaydedilmez.')}
             </Text>
           </View>
 

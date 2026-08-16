@@ -78,6 +78,19 @@ export interface CreateCheckoutArgs {
   metadata?: Record<string, string>;
 }
 
+// PayPal, Stripe Checkout'ta yalnız bu para birimlerinde sunulabilir (Stripe'ın
+// PayPal desteklediği presentment currency listesi). TRY listede YOK — TRY fiyatlı
+// bir oturumda PayPal istenirse Stripe 400 döner, o yüzden koşullu ekliyoruz.
+const PAYPAL_CURRENCIES = new Set([
+  'EUR', 'GBP', 'USD', 'CHF', 'CZK', 'DKK', 'NOK', 'PLN', 'SEK',
+  'AUD', 'CAD', 'HKD', 'NZD', 'SGD',
+]);
+
+/** Bu para biriminde PayPal sunulabilir mi? (Dashboard'da etkin olması ayrıca gerekir.) */
+export function paypalSupportsCurrency(currency: string): boolean {
+  return PAYPAL_CURRENCIES.has(String(currency || '').toUpperCase());
+}
+
 export async function createCheckoutSession(args: CreateCheckoutArgs): Promise<{ id: string; url: string }> {
   const unitAmount = Math.round(Number(args.amount) * 100);
   if (!Number.isFinite(unitAmount) || unitAmount <= 0) throw new Error('invalid_amount');
@@ -111,6 +124,22 @@ export async function createCheckoutSession(args: CreateCheckoutArgs): Promise<{
   // Stripe 'tr' desteklerken bilinmeyen locale 400 verir → sadece bilinenleri geç.
   const loc = String(args.locale || '').slice(0, 2).toLowerCase();
   if (['tr', 'en', 'de'].includes(loc)) payload.locale = loc;
+
+  // PayPal'ı açıkça iste: Dashboard'daki otomatik yöntemler bazı hesaplarda
+  // PayPal'ı göstermiyor. Uygun para biriminde 'card' + 'paypal' geçeriz;
+  // PayPal hesapta etkin değilse Stripe 400 döner → kart-only ile TEKRAR
+  // deneriz, yani ödeme akışı yapılandırma eksiğinde kilitlenmez.
+  const wantsPaypal = paypalSupportsCurrency(args.currency) && process.env.STRIPE_DISABLE_PAYPAL !== '1';
+  if (wantsPaypal) {
+    try {
+      const s = await stripePost('/checkout/sessions', { ...payload, payment_method_types: ['card', 'paypal'] });
+      return { id: String(s.id), url: String(s.url) };
+    } catch (err) {
+      const status = Number((err as any)?.statusCode ?? 0);
+      if (status !== 400) throw err;
+      // 400 = "paypal etkin değil / bu para biriminde sunulamıyor" → sessizce karta düş.
+    }
+  }
 
   const session = await stripePost('/checkout/sessions', payload);
   return { id: String(session.id), url: String(session.url) };

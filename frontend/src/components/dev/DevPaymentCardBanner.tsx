@@ -1,5 +1,5 @@
 // =============================================================
-// DEV ONLY — Iyzipay sandbox test card details.
+// DEV ONLY — Stripe test card details (test mode).
 // Renders only in NODE_ENV=development. Production builds tree-shake it away.
 // Removal: delete this file plus the import and usage lines in ClientLayout.tsx.
 // =============================================================
@@ -10,14 +10,14 @@ import { usePathname } from 'next/navigation';
 import { X, CreditCard, Copy, Check } from 'lucide-react';
 
 const TEST_CARD = {
-  number: '5528790000000008',
+  number: '4242 4242 4242 4242',
   cvc: '123',
-  expiry: '12/30',
+  expiry: '12/34',
   holder: 'Test User',
 };
 
-// Show on payment-flow pages before the user is redirected to Iyzipay.
-// The widget is not visible on Iyzipay's third-party page.
+// Show on payment-flow pages before the user is redirected to Stripe Checkout.
+// The widget is not visible on Stripe's hosted page.
 const PAYMENT_PATH_RE = /\/(booking|checkout|odeme|pricing|me\/credits|profile\/bookings)(?:\/|$|\?)/i;
 
 export default function DevPaymentCardBanner() {
@@ -82,7 +82,7 @@ export default function DevPaymentCardBanner() {
         <div className="flex items-center gap-2">
           <CreditCard size={16} className="text-[var(--gm-gold-light)]" />
           <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-[var(--gm-gold-light)]">
-            Iyzipay Sandbox · DEV
+            Stripe Test · DEV
           </span>
         </div>
         <button

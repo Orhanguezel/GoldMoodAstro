@@ -133,14 +133,14 @@ export default function CreditsPage() {
            <div className="flex items-center gap-3 text-muted-foreground/60">
               <ShieldCheck className="w-10 h-10 text-brand-gold/40" />
               <div className="text-xs font-serif italic">
-	                 {ui('ui_account_credits_security_before', 'Your payments are protected by')} <span className="text-brand-gold/60 font-bold">iyzico</span> {ui('ui_account_credits_security_after', 'infrastructure and 256-bit SSL certificate.')}
+	                 {ui('ui_account_credits_security_before', 'Your payments are protected by')} <span className="text-brand-gold/60 font-bold">Stripe &amp; PayPal</span> {ui('ui_account_credits_security_after', 'infrastructure and 256-bit SSL certificate.')}
               </div>
            </div>
            <div className="flex items-center gap-4 opacity-30 grayscale hover:grayscale-0 transition-all">
               <CreditCard className="w-6 h-6" />
               <span className="text-[10px] font-bold tracking-widest uppercase">Mastercard</span>
               <span className="text-[10px] font-bold tracking-widest uppercase">Visa</span>
-              <span className="text-[10px] font-bold tracking-widest uppercase">TROY</span>
+              <span className="text-[10px] font-bold tracking-widest uppercase">PayPal</span>
            </div>
         </div>
 

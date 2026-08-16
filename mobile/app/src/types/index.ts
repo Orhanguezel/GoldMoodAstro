@@ -173,7 +173,7 @@ export interface BookingCreateResult {
 
 // ─── Subscription ───────────────────────────────────────────────
 
-export type SubscriptionProvider = 'iyzipay' | 'apple_iap' | 'google_iap' | 'manual';
+export type SubscriptionProvider = 'stripe' | 'apple_iap' | 'google_iap' | 'manual';
 export type SubscriptionStatus = 'pending' | 'active' | 'cancelled' | 'expired' | 'grace_period' | 'past_due';
 
 export interface UserSubscriptionSummary {
@@ -555,10 +555,12 @@ export interface OrderCreateResponse {
   order_number: string;
 }
 
-export interface IyzipayInitResponse {
+/** Barındırılan ödeme sayfası yanıtı (Stripe Checkout). */
+export interface CheckoutInitResponse {
   success: boolean;
   checkout_url: string;
-  token: string;
+  session_id?: string;
+  token?: string;
 }
 
 // ─── LiveKit ───────────────────────────────────────────────────────

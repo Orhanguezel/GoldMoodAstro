@@ -196,9 +196,11 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
           
           <div className="flex items-center gap-6 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
             {/* Generic Payment Icons / Logos */}
+            {/* Aktif sağlayıcılar: Stripe (kart) + PayPal. Iyzico kullanılmıyor. */}
             <div className="font-display text-[14px] font-bold tracking-widest text-[var(--gm-text-dim)]">VISA</div>
             <div className="font-display text-[14px] font-bold tracking-widest text-[var(--gm-text-dim)]">MASTERCARD</div>
-            <div className="font-display text-[14px] font-bold tracking-widest text-[var(--gm-text-dim)]">IYZICO</div>
+            <div className="font-display text-[14px] font-bold tracking-widest text-[var(--gm-text-dim)]">PAYPAL</div>
+            <div className="font-display text-[14px] font-bold tracking-widest text-[var(--gm-text-dim)]">STRIPE</div>
           </div>
         </div>
 

@@ -102,12 +102,12 @@ describe('mobile booking and payment smoke contracts', () => {
     });
   });
 
-  test('booking payment starts with Iyzipay order contract', () => {
+  test('booking payment starts with Stripe checkout contract', () => {
     expect(buildOrderForBookingRequest('booking-1')).toEqual({
       path: apiPaths.orders.create,
-      body: { booking_id: 'booking-1', payment_gateway_slug: 'iyzipay' },
+      body: { booking_id: 'booking-1', payment_gateway_slug: 'stripe' },
     });
-    expect(apiPaths.orders.initIyzipay('order-1')).toBe('/orders/order-1/init-iyzico');
+    expect(apiPaths.orders.initStripeCheckout('order-1')).toBe('/orders/order-1/checkout/stripe');
   });
 });
 

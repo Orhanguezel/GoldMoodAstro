@@ -367,7 +367,7 @@ export default function SubscriptionScreen() {
     setActionId(plan.id);
     try {
       if (plan.price_minor <= 0) {
-        await subscriptionsApi.start(plan.id, 'iyzipay');
+        await subscriptionsApi.start(plan.id, 'stripe');
         await load();
         Alert.alert(t('common.success', 'Başarılı'), t('subscription.activatedBody', 'Aboneliğiniz aktif edildi.'));
         return;
@@ -404,7 +404,7 @@ export default function SubscriptionScreen() {
       }
 
       // Fallback to web checkout
-      const res = await subscriptionsApi.start(plan.id, 'iyzipay');
+      const res = await subscriptionsApi.start(plan.id, 'stripe');
       const checkout = (res as any).data?.checkout_url || (res as any).checkout_url;
       if (checkout) {
         await Linking.openURL(checkout);

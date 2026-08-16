@@ -17,7 +17,7 @@ import { DEFAULT_LOCALE } from '../../core/i18n';
 import { users } from "../auth/schema";
 import { clawbackCredits, getPackageById } from "../credits/repository";
 import { hasAnalyticsConsent, sendCapiEvent } from '../marketing/meta-capi';
-import { createCheckoutSession, isStripeConfigured, StripeNotConfiguredError } from "./stripe.service";
+import { createCheckoutSession, isStripeConfigured, paypalSupportsCurrency, StripeNotConfiguredError } from "./stripe.service";
 
 /** JWT payload'dan user bilgilerini normalize et.
  * Fastify-jwt sub → userId olarak map eder; id alanı payload'da olmayabilir.
@@ -89,6 +89,44 @@ export const listGateways: RouteHandler = async (req, reply) => {
     slug: r.slug,
     is_test_mode: !!r.is_test_mode,
   })));
+};
+
+/**
+ * GET /admin/payments/provider-status
+ * Ödeme sağlayıcısının GERÇEK durumu — admin panelinde "acaba açık mı" sorusuna
+ * tek yerden cevap. Secret'lar env'de tutulduğu için panelde ANAHTAR ALANI YOK;
+ * burada yalnız "tanımlı mı" bilgisi döner (değer asla dönmez).
+ */
+export const getPaymentProviderStatusAdmin: RouteHandler = async (_req, reply) => {
+  const gateways = await db.select().from(paymentGateways);
+  const [{ currency } = { currency: 'TRY' }] = await db
+    .select({ currency: orders.currency })
+    .from(orders)
+    .orderBy(desc(orders.created_at))
+    .limit(1);
+
+  const defaultCurrency = String(currency || 'TRY').toUpperCase();
+  return reply.send({
+    data: {
+      active_provider: isStripeConfigured() ? 'stripe' : null,
+      stripe: {
+        secret_key_configured: isStripeConfigured(),
+        webhook_secret_configured: Boolean(String(process.env.STRIPE_WEBHOOK_SECRET || '').trim()),
+        webhook_url: `${(process.env.PUBLIC_URL || '').replace(/\/$/, '')}/api/webhooks/stripe`,
+        notify_email: process.env.STRIPE_NOTIFY_EMAIL || 'goldmoodastro@gmail.com',
+      },
+      paypal: {
+        // PayPal ayrı entegrasyon değil: Stripe Checkout içinde bir ödeme yöntemi.
+        via: 'stripe_checkout',
+        currency_eligible: paypalSupportsCurrency(defaultCurrency),
+        current_currency: defaultCurrency,
+        note: paypalSupportsCurrency(defaultCurrency)
+          ? 'Stripe panelinde PayPal etkinse ödeme sayfasında görünür.'
+          : `PayPal ${defaultCurrency} para biriminde sunulamaz; EUR/USD/GBP gibi bir para birimi gerekir.`,
+      },
+      gateways: gateways.map((g) => ({ id: g.id, name: g.name, slug: g.slug, is_active: !!g.is_active })),
+    },
+  });
 };
 
 /** Create Address */

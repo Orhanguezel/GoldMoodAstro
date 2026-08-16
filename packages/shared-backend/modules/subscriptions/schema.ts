@@ -49,7 +49,7 @@ export const subscriptions = mysqlTable(
     id: char("id", { length: 36 }).primaryKey().notNull(),
     user_id: char("user_id", { length: 36 }).notNull(),
     plan_id: char("plan_id", { length: 36 }).notNull(),
-    provider: mysqlEnum("provider", ["iyzipay", "apple_iap", "google_iap", "manual"]).notNull().default("iyzipay"),
+    provider: mysqlEnum("provider", ["stripe", "iyzipay", "apple_iap", "google_iap", "manual"]).notNull().default("stripe"),
     provider_subscription_id: varchar("provider_subscription_id", { length: 255 }),
     provider_customer_id: varchar("provider_customer_id", { length: 255 }),
     status: mysqlEnum("status", ["pending", "active", "cancelled", "expired", "grace_period", "past_due"]).notNull().default("pending"),

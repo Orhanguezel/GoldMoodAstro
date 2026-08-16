@@ -457,7 +457,7 @@ export default function BookingPage() {
               <ShieldCheck className="w-4 h-4 text-(--gm-success)" />
               <span>{ui('ui_account_booking_secure_infra', 'Secure Infrastructure')}</span>
               <span className="opacity-20">|</span>
-              <span className="text-(--gm-gold-dim)">Iyzico</span>
+              <span className="text-(--gm-gold-dim)">Stripe &middot; PayPal</span>
             </div>
             
             <div className="flex items-center gap-5 opacity-50 text-(--gm-text-dim)">

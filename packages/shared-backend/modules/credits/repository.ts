@@ -8,9 +8,17 @@ function affectedRows(result: unknown): number {
   return Number((result as any)?.[0]?.affectedRows ?? (result as any)?.affectedRows ?? 0);
 }
 
+// Drizzle hatayı "Failed query: ..." mesajıyla SARMALAR; gerçek ER_DUP_ENTRY
+// cause zincirinde kalır. Yalnız üst mesaja bakmak duplicate'i kaçırıyordu →
+// idempotent tekrar teslimat hata gibi görünüp kredi yüklemesini düşürüyordu.
 function isDuplicate(err: unknown): boolean {
-  const anyErr = err as any;
-  return anyErr?.code === 'ER_DUP_ENTRY' || String(anyErr?.message || '').includes('Duplicate');
+  let cur: any = err;
+  for (let depth = 0; cur && depth < 5; depth += 1) {
+    if (cur.code === 'ER_DUP_ENTRY' || cur.errno === 1062) return true;
+    if (String(cur.message || '').includes('Duplicate entry')) return true;
+    cur = cur.cause;
+  }
+  return false;
 }
 
 function normalizeLocale(locale?: string | null): string {

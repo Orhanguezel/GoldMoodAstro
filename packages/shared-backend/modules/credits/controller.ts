@@ -785,8 +785,10 @@ export async function handleIyzicoCallback(req: FastifyRequest, reply: FastifyRe
 
       const totalCredits = Number(pkg.credits || 0) + Number(pkg.bonusCredits ?? pkg.bonus_credits ?? 0);
       await repo.addCredits(order.user_id, totalCredits, 'purchase', {
-        type: 'package',
-        id: pkg.id,
+        // Referans sipariş — paket olursa UNIQUE(reference_type,reference_id,type)
+        // yüzünden aynı paketin ikinci satışı kredisiz kalır.
+        type: 'credit_order',
+        id: order.id,
         orderId: order.id,
         description: `${pkg.name ?? pkg.nameTr ?? pkg.name_tr} paketi satın alındı.`,
       });

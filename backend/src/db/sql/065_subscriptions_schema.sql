@@ -2,7 +2,7 @@
 -- Subscriptions — kullanıcı aboneliği (FAZ 10 / T10-1)
 -- ============================================================================
 -- subscription_plans: sabit plan tanımları (free, monthly, yearly...)
--- subscriptions:      kullanıcı aboneliği (provider: iyzipay / apple_iap / google_iap)
+-- subscriptions:      kullanıcı aboneliği (provider: stripe / apple_iap / google_iap)
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS subscription_plans (
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   id CHAR(36) PRIMARY KEY,
   user_id CHAR(36) NOT NULL,
   plan_id CHAR(36) NOT NULL,
-  provider ENUM('iyzipay','apple_iap','google_iap','manual') NOT NULL DEFAULT 'iyzipay',
+  provider ENUM('stripe','iyzipay','apple_iap','google_iap','manual') NOT NULL DEFAULT 'stripe',
   provider_subscription_id VARCHAR(255),        -- iyzipay subscription_reference_code, IAP transaction id
   provider_customer_id VARCHAR(255),
   status ENUM('pending','active','cancelled','expired','grace_period','past_due') NOT NULL DEFAULT 'pending',

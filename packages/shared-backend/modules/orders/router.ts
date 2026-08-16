@@ -38,6 +38,9 @@ export async function registerOrdersAdmin(app: FastifyInstance) {
   app.patch<{ Params: { id: string } }>("/orders/:id", controller.updateOrderAdmin);
   app.post<{ Params: { id: string } }>("/orders/:id/refund", controller.refundOrderAdmin);
 
+  // Sağlayıcı durumu (env tabanlı, secret DÖNMEZ) — panelde "ödeme açık mı" göstergesi
+  app.get("/payments/provider-status", controller.getPaymentProviderStatusAdmin);
+
   app.get("/payment-gateways", controller.listPaymentGatewaysAdmin);
   app.post("/payment-gateways", controller.createPaymentGatewayAdmin);
   app.patch<{ Params: { id: string } }>("/payment-gateways/:id", controller.updatePaymentGatewayAdmin);

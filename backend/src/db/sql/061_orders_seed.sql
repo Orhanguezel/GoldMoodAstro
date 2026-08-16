@@ -1,12 +1,11 @@
--- Payment gateway placeholder — slug 'iyzico' (initIyzico controller'ı arıyor).
--- API anahtarları VPS .env üzerinden gelir (IYZIPAY_API_KEY, IYZIPAY_SECRET_KEY).
--- Admin panelinden DB config'e de yazılabilir; controller önce DB'ye sonra env'e bakar.
+-- Iyzico ARTIK KULLANILMIYOR (2026-08-16 — aktif sağlayıcı Stripe + PayPal, 061b).
+-- Satır silinmiyor: geçmiş payments.gateway_id FK'si buna bağlı; yalnız is_active = 0.
 INSERT INTO payment_gateways (id, name, slug, is_active, is_test_mode, config)
 VALUES (
   '50000000-0000-4000-8000-000000000001',
-  'Iyzico',
+  'Iyzico (pasif)',
   'iyzico',
-  1,
+  0,
   1,
   '{}'
 )

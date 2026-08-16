@@ -20,6 +20,23 @@ import {
   toOrdersListQuery,
 } from '@/integrations/shared';
 
+export interface PaymentProviderStatus {
+  active_provider: 'stripe' | null;
+  stripe: {
+    secret_key_configured: boolean;
+    webhook_secret_configured: boolean;
+    webhook_url: string;
+    notify_email: string;
+  };
+  paypal: {
+    via: string;
+    currency_eligible: boolean;
+    current_currency: string;
+    note: string;
+  };
+  gateways: Array<{ id: string; name: string; slug: string; is_active: boolean }>;
+}
+
 const BASE = '/admin/orders';
 const GW_BASE = '/admin/payment-gateways';
 
@@ -72,6 +89,13 @@ export const ordersAdminApi = baseApi.injectEndpoints({
       ],
     }),
 
+    // Ödeme sağlayıcısı durumu (env tabanlı; secret DÖNMEZ)
+    getPaymentProviderStatusAdmin: b.query<PaymentProviderStatus, void>({
+      query: () => ({ url: '/admin/payments/provider-status', method: 'GET' }),
+      transformResponse: (res: any) => (res?.data ?? res) as PaymentProviderStatus,
+      providesTags: [{ type: 'Payments' as const, id: 'PROVIDER_STATUS' }],
+    }),
+
     // Payment Gateways
     listPaymentGatewaysAdmin: b.query<PaymentGatewayView[], void>({
       query: () => ({ url: GW_BASE, method: 'GET' }),
@@ -107,6 +131,7 @@ export const {
   useGetOrderAdminQuery,
   useUpdateOrderAdminMutation,
   useRefundOrderAdminMutation,
+  useGetPaymentProviderStatusAdminQuery,
   useListPaymentGatewaysAdminQuery,
   useCreatePaymentGatewayAdminMutation,
   useUpdatePaymentGatewayAdminMutation,

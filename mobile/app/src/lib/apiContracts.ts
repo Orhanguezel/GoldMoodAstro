@@ -15,7 +15,8 @@ export const apiPaths = {
   },
   orders: {
     create: '/orders',
-    initIyzipay: (orderId: string) => `/orders/${orderId}/init-iyzico`,
+    // Aktif sağlayıcı Stripe Checkout (kart + PayPal aynı oturumda).
+    initStripeCheckout: (orderId: string) => `/orders/${orderId}/checkout/stripe`,
   },
 } as const;
 
@@ -41,6 +42,6 @@ export function buildBookingCreateRequest(data: BookingCreateInput) {
 export function buildOrderForBookingRequest(bookingId: string) {
   return {
     path: apiPaths.orders.create,
-    body: { booking_id: bookingId, payment_gateway_slug: 'iyzipay' as const },
+    body: { booking_id: bookingId, payment_gateway_slug: 'stripe' as const },
   };
 }

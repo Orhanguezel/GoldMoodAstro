@@ -3181,6 +3181,11 @@
       "deleteError": "Silme sırasında hata oluştu."
     },
     "api": {
+      "paymentSection": "Ödeme Ayarları (Stripe + PayPal)",
+      "paymentDesc": "Anahtarlar sunucu ortam değişkenlerinde tutulur; panelden düzenlenmez. Burada yalnız durum görünür.",
+      "gatewaysTitle": "Kayıtlı sağlayıcılar",
+      "sectionPayment": "Ödeme (Stripe + PayPal)",
+      "paymentMovedHint": "Ödeme anahtarları güvenlik gereği sunucu ortam değişkenlerinde tutulur ve panelden düzenlenmez. Sağlayıcı durumunu “Ödeme Ayarları” sayfasından görebilirsiniz.",
       "title": "API & Entegrasyon Ayarları",
       "description": "Global ayarlardır (locale=*). Seçili dil sadece arayüz bilgisidir.",
       "badge": "Global (locale=*)",

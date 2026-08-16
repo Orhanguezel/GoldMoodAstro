@@ -14,6 +14,7 @@ import {
   resolveIyzicoLocale,
   verifyIyzicoCallback,
 } from '../orders/iyzico.service';
+import { createCheckoutSession, isStripeConfigured } from '../orders/stripe.service';
 import { subscriptionPlans, subscriptions } from './schema';
 import { users } from '../auth/schema';
 
@@ -38,9 +39,14 @@ function getUser(req: { user?: unknown }) {
   return { id, email, full_name, phone };
 }
 
+// Aktif sağlayıcı Stripe (kart + PayPal). Eski istemciler hâlâ 'iyzipay'
+// gönderebilir — Stripe yapılandırılmışsa onlar da Stripe'a yönlenir; yoksa
+// gönderilen slug korunur (iyzico'ya dönüş imkânı kapanmasın).
 function resolveGatewaySlug(input: unknown) {
-  const slug = String((input ?? 'iyzipay')).trim();
-  return slug || 'iyzipay';
+  const slug = String(input ?? '').trim().toLowerCase();
+  if (!slug) return isStripeConfigured() ? 'stripe' : 'iyzico';
+  if ((slug === 'iyzipay' || slug === 'iyzico') && isStripeConfigured()) return 'stripe';
+  return slug;
 }
 
 function resolveLocale(req: { query?: unknown; locale?: string }): string {
@@ -1021,6 +1027,39 @@ export const startSubscription: RouteHandler = async (req, reply) => {
   } as any);
 
   const locale = resolveLocale(req);
+
+  // ── Stripe yolu (aktif sağlayıcı: kart + PayPal) ──
+  // Ödeme onayı Stripe webhook'unda completePaidOrder() üzerinden gelir; o da
+  // notes.context='subscription_start' görünce aboneliği aktive eder.
+  // iyzico'nun istediği TC kimlik / fatura adresi burada gerekmez.
+  if (isStripeConfigured()) {
+    const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || 'http://localhost:3000';
+    try {
+      const session = await createCheckoutSession({
+        orderId,
+        orderNumber,
+        amount: Number(toMoneyMinorToDecimalString(plan.price_minor)),
+        currency,
+        productName: `GoldMood Astrology — ${plan.name_tr} (${plan.period})`,
+        customerEmail: email || null,
+        successUrl: `${siteUrl}/${locale}/me/subscription?status=success&order_id=${orderId}`,
+        cancelUrl: `${siteUrl}/${locale}/me/subscription?status=cancelled&order_id=${orderId}`,
+        locale,
+        metadata: { context: 'subscription_start', plan_id: String(plan.id) },
+      });
+      return reply.send({
+        data: { order_id: orderId, plan_id: plan.id, checkout_url: session.url, session_id: session.id },
+      });
+    } catch (err) {
+      await db
+        .update(orders)
+        .set({ status: 'cancelled', payment_status: 'failed', updated_at: new Date() })
+        .where(eq(orders.id, orderId));
+      req.log.error(`stripe_subscription_checkout_failed: ${err instanceof Error ? err.message : String(err)}`);
+      return reply.code(502).send({ error: { message: 'subscription_payment_init_failed' } });
+    }
+  }
+
   const callbackUrl = `${resolveApiBase()}/api/subscriptions/webhook?order_id=${orderId}&locale=${encodeURIComponent(locale)}`;
   const iyzicoLocale = resolveIyzicoLocale(locale);
   const iyzico = new IyzicoService(resolveIyzicoConfigFromGateway(gateway));

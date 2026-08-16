@@ -211,7 +211,7 @@ export default function CreditsScreen() {
 
           <View style={styles.footerInfo}>
              <ShieldCheck size={16} color={colors.textMuted} />
-             <Text style={styles.footerText}>{t('credits.iyzicoSecure', 'Ödemeleriniz iyzico güvencesiyle korunmaktadır.')}</Text>
+             <Text style={styles.footerText}>{t('credits.paymentSecure', 'Ödemeleriniz Stripe ve PayPal altyapısıyla korunmaktadır.')}</Text>
           </View>
         </ScrollView>
       </SafeAreaView>

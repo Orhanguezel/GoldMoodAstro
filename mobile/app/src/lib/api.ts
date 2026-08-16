@@ -37,7 +37,7 @@ import type {
   ConsultantSelfServicePayload,
   ConsultantSelfReview,
   KvkkAccountDeletionStatus,
-  Order, OrderCreateResponse, IyzipayInitResponse,
+  Order, OrderCreateResponse, CheckoutInitResponse,
   LiveKitTokenResponse,
   BirthChart, BirthChartCreateInput, GeocodeResult, DailyReadingResponse,
   BigThreePreviewResponse,
@@ -539,7 +539,7 @@ export const bookingsApi = {
 };
 
 // -------------------------------------------------------------------
-// Orders (Iyzipay ödemesi)
+// Orders (Stripe Checkout — kart + PayPal)
 // -------------------------------------------------------------------
 
 export const ordersApi = {
@@ -548,8 +548,8 @@ export const ordersApi = {
     return post<OrderCreateResponse>(req.path, req.body);
   },
 
-  initIyzipay: (orderId: string) =>
-    post<IyzipayInitResponse>(apiPaths.orders.initIyzipay(orderId), {}),
+  initStripeCheckout: (orderId: string) =>
+    post<CheckoutInitResponse>(apiPaths.orders.initStripeCheckout(orderId), {}),
 
   get: (id: string) =>
     get<Order>(`/orders/${id}`),
@@ -570,7 +570,7 @@ export const subscriptionsApi = {
     return res.data;
   },
 
-  start: (planId: string, paymentGatewaySlug = 'iyzipay'): Promise<{
+  start: (planId: string, paymentGatewaySlug = 'stripe'): Promise<{
     data: {
       order_id?: string;
       plan_id?: string;
@@ -622,7 +622,7 @@ export const creditsApi = {
     return Array.isArray(res?.data) ? res.data : [];
   },
 
-  purchase: (packageId: string, paymentGatewaySlug = 'iyzipay'): Promise<{
+  purchase: (packageId: string, paymentGatewaySlug = 'stripe'): Promise<{
     data: {
       order_id?: string;
       package_id?: string;

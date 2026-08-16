@@ -49,9 +49,11 @@ async function cleanup() {
   await db.execute(sql`DELETE FROM media_messages WHERE id LIKE 'e2e-%'`);
   await db.execute(sql`DELETE FROM payments WHERE order_id IN (SELECT id FROM orders WHERE order_number LIKE 'E2E-%')`);
   await db.execute(sql`DELETE FROM stripe_events WHERE id LIKE 'evt_e2e_%'`);
+  // credit_transactions siparişlerden ÖNCE silinmeli: sonra silinirse alt sorgu
+  // boş döner ve satırlar kalıcı olur (bakiye testi bir sonraki koşuda sapar).
+  await db.execute(sql`DELETE FROM credit_transactions WHERE reference_id LIKE 'e2e-%' OR order_id IN (SELECT id FROM orders WHERE order_number LIKE 'E2E-%')`).catch(() => {});
   await db.execute(sql`DELETE FROM orders WHERE order_number LIKE 'E2E-%'`);
   await db.execute(sql`DELETE FROM bookings WHERE id LIKE 'e2e-%'`);
-  await db.execute(sql`DELETE FROM credit_transactions WHERE reference_id LIKE 'e2e-%' OR order_id IN (SELECT id FROM orders WHERE order_number LIKE 'E2E-%')`).catch(() => {});
 }
 
 async function main() {
@@ -174,6 +176,28 @@ async function main() {
     const expected = Number(pkg.credits) + Number(pkg.bonus_credits ?? 0);
     check(Number(balAfter?.balance ?? 0) - Number(balBefore?.balance ?? 0) === expected,
       `kredi bakiyesi +${expected} (${balBefore?.balance ?? 0} → ${balAfter?.balance ?? 0})`);
+
+    // 5b) AYNI paketin İKİNCİ satışı da kredi yüklemeli.
+    // Regresyon: credit_transactions UNIQUE(reference_type,reference_id,type) —
+    // referans paket olduğu sürece bir paket ömür boyu tek kez satılabiliyordu;
+    // ikinci müşteri parayı ödeyip kredisiz kalıyordu (2026-08-16'da bulundu).
+    const creditOrderId2 = randomUUID();
+    await db.execute(sql`
+      INSERT INTO orders (id, user_id, order_number, status, total_amount, currency, payment_status, notes, created_at, updated_at)
+      VALUES (${creditOrderId2}, ${customer.id}, ${'E2E-CRD2-' + Date.now()}, 'pending', '250.00', 'TRY', 'unpaid',
+        ${JSON.stringify({ context: 'credits_purchase', package_id: pkg.id, package_code: pkg.code, user_id: customer.id })}, NOW(3), NOW(3))
+    `);
+    const wh2b = await postWebhook({
+      id: `evt_e2e_${randomUUID().slice(0, 12)}`,
+      type: 'checkout.session.completed',
+      api_version: 'e2e',
+      data: { object: { id: 'cs_e2e_2b', client_reference_id: creditOrderId2, payment_intent: `pi_e2e_c2_${Date.now()}`,
+        amount_total: 25000, currency: 'try' } },
+    });
+    check(wh2b.status === 200, 'ikinci kredi webhook 200');
+    const balAfter2 = rows(await db.execute(sql`SELECT balance FROM user_credits WHERE user_id = ${customer.id}`))[0];
+    check(Number(balAfter2?.balance ?? 0) - Number(balAfter?.balance ?? 0) === expected,
+      `AYNI paketin 2. satışı da +${expected} yükledi (${balAfter?.balance ?? 0} → ${balAfter2?.balance ?? 0})`);
   }
 
   console.log('\n── 6) SESLİ MESAJ: kredi düş → mesaj → yanıt → media_message_earning → release');
