@@ -53,12 +53,24 @@ Gerekçeler:
 
 ### 4.1 Yasal sayfalar — Stripe incelemesinden ÖNCE canlıda olmalı
 
-- [ ] **Impressum** — ad, adres, iletişim, USt-IdNr DE463832419 (Almanya'da yasal zorunluluk)
-- [ ] **Datenschutzerklärung** (DSGVO uyumlu; Stripe/PayPal veri işleme dahil)
-- [ ] **AGB** (hizmet tanımı: danışmanlık/dijital içerik; eğlence/danışmanlık niteliği ibaresi)
-- [ ] **Widerrufsbelehrung / iade politikası** (dijital içerikte cayma hakkı istisnası dahil)
+- [x] **Impressum** — ad, adres, iletişim, USt-IdNr DE463832419 (2026-08-16: seed
+      `198d_stripe_de_legal_pages_seed.sql`, `/de/legal/impressum` + tr/en; çift kimlik:
+      platform işletmecisi QUEBAB TR + kart satışları sorumlusu Einzelunternehmen DE)
+- [x] **Datenschutzerklärung** (DSGVO; Stripe/PayPal veri işleme + haklar + NRW denetim
+      makamı; `/de/legal/datenschutzerklaerung`)
+- [x] **AGB** (hizmet tanımı, §19 UStG notu, 18+, sorumluluk, 24s iptal kuralı;
+      `/de/legal/agb`)
+- [x] **Widerrufsbelehrung** (14 gün + §356/4-5 BGB istisnaları + örnek form;
+      `/de/legal/widerrufsbelehrung`)
+- [ ] Yasal sayfa linklerinin footer'a eklenmesi + checkout'ta onay kutuları
+      (AGB/Widerruf onayı — ödeme entegrasyonu fazında)
 - [ ] Fiyatların ve hizmet kapsamının net göründüğü satış sayfaları
 - [ ] Faturalarda Kleinunternehmer notu: "Kein Ausweis von Umsatzsteuer gemäß §19 UStG"
+      (email_templates — ödeme fazında)
+
+> Not (2026-08-16): Sayfalar seed ile tr/en/de oluşturuldu; metinler standart kalıplardır,
+> yayın öncesi Orhan'ın (gerekirse hukukçunun) son okuması önerilir. Prod'a seed
+> uygulanınca canlıya çıkar.
 
 ### 4.2 Ödeme entegrasyonu (yasal sayfalar bitince)
 
