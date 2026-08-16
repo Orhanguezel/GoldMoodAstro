@@ -5,11 +5,18 @@
 import type { FastifyInstance } from "fastify";
 import { chatController } from "./controller";
 import { tryAuth } from "../../middleware/auth";
+import { chatSupportController } from "./support.controller";
 
 const BASE = "/chat";
 
 export async function registerChat(app: FastifyInstance) {
   const c = chatController(app);
+  const support = chatSupportController();
+
+  app.post(`${BASE}/support/session`, { preHandler: [tryAuth], config: { public: true } }, support.createSession);
+  app.get(`${BASE}/support/:id/messages`, { preHandler: [tryAuth], config: { public: true } }, support.listMessages);
+  app.post(`${BASE}/support/:id/messages`, { preHandler: [tryAuth], config: { public: true } }, support.postMessage);
+  app.post(`${BASE}/support/:id/request-admin`, { preHandler: [tryAuth], config: { public: true } }, support.requestAdmin);
 
   // REST — tryAuth ile cookie/Bearer decode olur, getUser req.user'ı bulur.
   // Endpoint'lerin kendi içinde auth zorunluluğu yapılır (getUser 401 atar).

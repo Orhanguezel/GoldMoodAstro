@@ -36,7 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Save } from 'lucide-react';
+import { Plus, Pencil, Trash2, Save, GraduationCap, Lightbulb } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useAdminLocales } from '@/app/(main)/admin/_components/common/useAdminLocales';
@@ -145,10 +145,10 @@ function KnowledgeFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {editItem ? t('knowledge.editTitle') : t('knowledge.addTitle')}
+            {editItem ? 'Soru ve cevabı düzenle' : 'AI için yeni soru ve cevap ekle'}
           </DialogTitle>
         </DialogHeader>
 
@@ -188,30 +188,30 @@ function KnowledgeFormDialog({
           </div>
 
           <div className="space-y-1">
-            <Label>{t('knowledge.titleLabel')}</Label>
+              <Label>Kullanıcının sorusu / konusu</Label>
             <Input
               value={form.title}
               onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-              placeholder={t('knowledge.titlePlaceholder')}
+              placeholder="Örn: Randevumu nasıl iptal edebilirim?"
             />
           </div>
 
           <div className="space-y-1">
-            <Label>{t('knowledge.contentLabel')}</Label>
+            <Label>AI nasıl cevap vermeli?</Label>
             <Textarea
               rows={5}
               value={form.content}
               onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
-              placeholder={t('knowledge.contentPlaceholder')}
+              placeholder="Doğrulanmış cevabı açık ve kısa şekilde yazın. AI bu bilgiyi temel alır; burada olmayan koşulları uydurmaz."
             />
           </div>
 
           <div className="space-y-1">
-            <Label>{t('knowledge.tags')}</Label>
+            <Label>Benzer soru kelimeleri</Label>
             <Input
               value={form.tags}
               onChange={(e) => setForm((p) => ({ ...p, tags: e.target.value }))}
-              placeholder={t('knowledge.tagsPlaceholder')}
+              placeholder="randevu, iptal, erteleme, ücret iadesi"
             />
           </div>
 
@@ -282,10 +282,17 @@ export default function ChatKnowledgePanel() {
 
   return (
     <>
-      <Card>
+      <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center rounded-[28px] border border-gm-border-soft bg-gm-surface/20 p-6 shadow-xl">
+        <div className="flex gap-4">
+          <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gm-gold/10 text-gm-gold"><GraduationCap className="size-5" /></div>
+          <div><h2 className="font-serif text-xl text-gm-text">AI Eğitim Merkezi</h2><p className="mt-1 max-w-2xl text-sm text-gm-muted">Müşterilerin sorabileceği soruları ve verilmesini istediğiniz doğrulanmış cevapları ekleyin. Her dil için ayrı kayıt oluşturun.</p></div>
+        </div>
+        <div className="flex items-start gap-2 rounded-xl border border-gm-gold/20 bg-gm-gold/5 px-4 py-3 text-xs text-gm-muted"><Lightbulb className="mt-0.5 size-4 shrink-0 text-gm-gold" /><span>Fiyat, süre ve iade koşullarını yalnız kesin bilgi varsa yazın.</span></div>
+      </div>
+      <Card className="rounded-[28px] border-gm-border-soft bg-gm-surface/20 shadow-xl">
         <CardHeader className="space-y-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm">{t('knowledge.title')}</CardTitle>
+            <CardTitle className="text-sm">Öğretilen Sorular ve Cevaplar</CardTitle>
             <Button size="sm" onClick={handleAdd} className="gap-1">
               <Plus className="h-4 w-4" />
               {t('knowledge.addNew')}
@@ -322,7 +329,7 @@ export default function ChatKnowledgePanel() {
                 <TableRow>
                   <TableHead className="w-[60px]">{t('knowledge.locale')}</TableHead>
                   <TableHead className="w-[60px]">{t('knowledge.priority')}</TableHead>
-                  <TableHead>{t('knowledge.titleLabel')}</TableHead>
+                  <TableHead>Soru / Konu</TableHead>
                   <TableHead className="hidden md:table-cell">{t('knowledge.tags')}</TableHead>
                   <TableHead className="w-[70px]">{t('knowledge.active')}</TableHead>
                   <TableHead className="w-[100px]" />

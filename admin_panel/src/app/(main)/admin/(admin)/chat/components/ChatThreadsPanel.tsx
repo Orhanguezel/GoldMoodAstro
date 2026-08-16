@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Bot, Send, User, RefreshCw } from 'lucide-react';
+import { Bot, Send, User, RefreshCw, Search, MessageSquareText } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
@@ -80,6 +80,12 @@ function ThreadItem({
       <p className="text-[11px] text-muted-foreground mt-1">
         {toLocalDate(thread.updated_at)}
       </p>
+      {thread.last_message ? (
+        <p className="mt-2 line-clamp-2 text-xs text-gm-muted">{thread.last_message}</p>
+      ) : null}
+      <div className="mt-2 flex items-center gap-1 text-[10px] text-gm-muted">
+        <MessageSquareText className="size-3" /> {thread.message_count ?? 0} mesaj
+      </div>
     </button>
   );
 }
@@ -203,7 +209,7 @@ function MessagePanel({ thread }: { thread: ChatThread }) {
               <SelectItem value="auto">Auto</SelectItem>
               <SelectItem value="openai">OpenAI</SelectItem>
               <SelectItem value="anthropic">Anthropic</SelectItem>
-              <SelectItem value="grok">Grok</SelectItem>
+              <SelectItem value="groq">Groq</SelectItem>
             </SelectContent>
           </Select>
 
@@ -289,6 +295,7 @@ export default function ChatThreadsPanel() {
   const t = useAdminT('admin.chat');
 
   const [handoffFilter, setHandoffFilter] = React.useState<ChatHandoffMode | 'all'>('all');
+  const [search, setSearch] = React.useState('');
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [tabVisible, setTabVisible] = React.useState(true);
 
@@ -301,8 +308,9 @@ export default function ChatThreadsPanel() {
   const params: ChatListThreadsParams = React.useMemo(() => {
     const p: ChatListThreadsParams = { limit: 50 };
     if (handoffFilter !== 'all') p.handoff_mode = handoffFilter;
+    if (search.trim()) p.q = search.trim();
     return p;
-  }, [handoffFilter]);
+  }, [handoffFilter, search]);
 
   const { data, isFetching, refetch } = useListChatThreadsAdminQuery(params, {
     pollingInterval: tabVisible ? 15000 : 0,
@@ -314,7 +322,7 @@ export default function ChatThreadsPanel() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4" style={{ minHeight: '60vh' }}>
       {/* Left — Thread list */}
-      <Card className="flex flex-col">
+      <Card className="flex flex-col rounded-[28px] border-gm-border-soft bg-gm-surface/20 shadow-xl">
         <CardHeader className="pb-3 space-y-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm">{t('threads.title')}</CardTitle>
@@ -336,6 +344,10 @@ export default function ChatThreadsPanel() {
               <SelectItem value="admin">{t('threads.filterAdmin')}</SelectItem>
             </SelectContent>
           </Select>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gm-muted" />
+            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Geçmiş mesajlarda ara..." className="h-10 rounded-xl border-gm-border-soft bg-gm-bg-deep pl-9" />
+          </div>
         </CardHeader>
 
         <CardContent className="flex-1 overflow-auto">
@@ -362,7 +374,7 @@ export default function ChatThreadsPanel() {
       {selected ? (
         <MessagePanel thread={selected} />
       ) : (
-        <Card className="flex items-center justify-center">
+        <Card className="flex items-center justify-center rounded-[28px] border-gm-border-soft bg-gm-surface/20 shadow-xl">
           <p className="text-sm text-muted-foreground">{t('threads.selectThread')}</p>
         </Card>
       )}

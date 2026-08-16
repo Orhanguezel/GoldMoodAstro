@@ -221,3 +221,9 @@ tmp/
 # Google service account keys (asla commit edilmez)
 *-service-account*.json
 goldmoodasto-*.json
+
+# GZL private project manifest
+project.portfolio.private.json
+
+# Playwright CLI test artefaktlari
+.playwright-cli/

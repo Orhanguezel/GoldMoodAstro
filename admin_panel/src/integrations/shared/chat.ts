@@ -5,10 +5,10 @@
 
 // ─── Enums ──────────────────────────────────────────────────
 
-export type ChatContextType = 'job' | 'request';
+export type ChatContextType = 'job' | 'request' | 'consultant_lead' | 'booking' | 'support';
 export type ChatRole = 'buyer' | 'vendor' | 'admin';
 export type ChatHandoffMode = 'ai' | 'admin';
-export type ChatAiProvider = 'auto' | 'openai' | 'anthropic' | 'grok';
+export type ChatAiProvider = 'auto' | 'openai' | 'anthropic' | 'groq';
 
 // ─── Entities ───────────────────────────────────────────────
 
@@ -23,6 +23,9 @@ export interface ChatThread {
   created_by_user_id: string | null;
   created_at: string;
   updated_at: string;
+  last_message?: string | null;
+  last_message_at?: string | null;
+  message_count?: number;
 }
 
 export interface ChatParticipant {
@@ -61,6 +64,7 @@ export interface ChatListThreadsParams {
   context_type?: ChatContextType;
   context_id?: string;
   handoff_mode?: ChatHandoffMode;
+  q?: string;
   limit?: number;
   offset?: number;
 }

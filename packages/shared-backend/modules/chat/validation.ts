@@ -47,6 +47,19 @@ export const WsQuerySchema = z.object({
   thread_id: z.string().uuid(),
 });
 
+export const SupportSessionBodySchema = z.object({
+  locale: z.string().trim().min(2).max(10).default("tr"),
+  visitor_token: z.string().trim().min(32).max(128).optional(),
+});
+
+export const SupportAccessQuerySchema = z.object({
+  visitor_token: z.string().trim().min(32).max(128).optional(),
+});
+
+export const SupportPostMessageBodySchema = PostMessageBodySchema.extend({
+  visitor_token: z.string().trim().min(32).max(128).optional(),
+});
+
 // WS message protocol
 export const WsClientMessageSchema = z.object({
   type: z.literal("message"),

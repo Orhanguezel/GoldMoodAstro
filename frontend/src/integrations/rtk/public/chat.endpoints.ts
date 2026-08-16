@@ -8,6 +8,9 @@ import type {
   ChatListMessagesParams,
   ChatCreateThreadBody,
   ChatPostMessageBody,
+  ChatSupportSessionResponse,
+  ChatSupportMessagesResponse,
+  ChatSupportPostResponse,
 } from '@/integrations/shared';
 
 export const chatApi = baseApi.injectEndpoints({
@@ -54,6 +57,21 @@ export const chatApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['ChatThreads'],
     }),
+    createSupportSession: b.mutation<ChatSupportSessionResponse, { locale: string; visitor_token?: string }>({
+      query: (body) => ({ url: '/chat/support/session', method: 'POST', body }),
+    }),
+    listSupportMessages: b.query<ChatSupportMessagesResponse, { threadId: string; visitor_token?: string }>({
+      query: ({ threadId, visitor_token }) => ({ url: `/chat/support/${threadId}/messages`, params: visitor_token ? { visitor_token } : undefined }),
+      providesTags: ['ChatMessages'],
+    }),
+    postSupportMessage: b.mutation<ChatSupportPostResponse, { threadId: string; visitor_token?: string; text: string; client_id?: string }>({
+      query: ({ threadId, ...body }) => ({ url: `/chat/support/${threadId}/messages`, method: 'POST', body }),
+      invalidatesTags: ['ChatMessages'],
+    }),
+    requestSupportAdmin: b.mutation<ChatThreadResponse, { threadId: string; visitor_token?: string }>({
+      query: ({ threadId, visitor_token }) => ({ url: `/chat/support/${threadId}/request-admin`, method: 'POST', body: visitor_token ? { visitor_token } : {} }),
+      invalidatesTags: ['ChatMessages'],
+    }),
   }),
   overrideExisting: true,
 });
@@ -64,4 +82,8 @@ export const {
   useListChatMessagesQuery,
   usePostChatMessageMutation,
   useRequestAdminHandoffMutation,
+  useCreateSupportSessionMutation,
+  useListSupportMessagesQuery,
+  usePostSupportMessageMutation,
+  useRequestSupportAdminMutation,
 } = chatApi;

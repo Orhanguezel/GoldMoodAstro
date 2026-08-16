@@ -10,10 +10,10 @@
 
 export type ChatThread = {
   id: string;
-  context_type: 'job' | 'request';
+  context_type: 'job' | 'request' | 'consultant_lead' | 'booking' | 'support';
   context_id: string;
   handoff_mode: 'ai' | 'admin';
-  ai_provider_preference: 'auto' | 'openai' | 'anthropic' | 'grok';
+  ai_provider_preference: 'auto' | 'openai' | 'anthropic' | 'groq';
   preferred_locale: string;
   assigned_admin_user_id: string | null;
   created_by_user_id: string | null;
@@ -62,6 +62,18 @@ export type ChatMessageResponse = {
   message: ChatMessage;
 };
 
+export type ChatSupportSessionResponse = ChatThreadResponse & {
+  visitor_token: string | null;
+  viewer_sender_id: string;
+};
+
+export type ChatSupportMessagesResponse = ChatMessagesResponse & ChatThreadResponse;
+
+export type ChatSupportPostResponse = ChatMessageResponse & {
+  ai_message: ChatMessage | null;
+  handed_off: boolean;
+};
+
 export type ChatAiKnowledgeListResponse = {
   items: ChatAiKnowledgeItem[];
 };
@@ -71,7 +83,7 @@ export type ChatAiKnowledgeListResponse = {
  * ------------------------------------------------------------------ */
 
 export type ChatListThreadsParams = {
-  context_type?: 'job' | 'request';
+  context_type?: 'job' | 'request' | 'consultant_lead' | 'booking' | 'support';
   context_id?: string;
   handoff_mode?: 'ai' | 'admin';
   limit?: number;
@@ -96,7 +108,7 @@ export type ChatAiKnowledgeListParams = {
  * ------------------------------------------------------------------ */
 
 export type ChatCreateThreadBody = {
-  context_type: 'job' | 'request';
+  context_type: 'job' | 'request' | 'consultant_lead' | 'booking' | 'support';
   context_id: string;
 };
 
@@ -110,11 +122,11 @@ export type ChatAdminTakeoverBody = {
 };
 
 export type ChatAdminReleaseToAiBody = {
-  provider?: 'auto' | 'openai' | 'anthropic' | 'grok';
+  provider?: 'auto' | 'openai' | 'anthropic' | 'groq';
 };
 
 export type ChatAdminSetAiProviderBody = {
-  provider: 'auto' | 'openai' | 'anthropic' | 'grok';
+  provider: 'auto' | 'openai' | 'anthropic' | 'groq';
 };
 
 export type ChatAiKnowledgeCreateBody = {

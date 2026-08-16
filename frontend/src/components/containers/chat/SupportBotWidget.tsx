@@ -8,16 +8,18 @@ import {
   useAdminChatMessages,
   useAdminChatThreads,
   useAdminTakeOverThread,
-  useCreateOrGetChatThread,
-  useChatMessages,
-  usePostChatMessage,
-  useRequestAdminHandoff,
 } from "@/features/chat";
 import { useAuthStore } from "@/features/auth/auth.store";
 import { useProfile } from "@/features/profiles/profiles.action";
 import { useLocaleShort } from "@/i18n/useLocaleShort";
 import { useUiSection } from "@/i18n/uiDb";
 import { useCreateContactPublicMutation, useGetSiteSettingByKeyQuery } from "@/integrations/rtk/hooks";
+import {
+  useCreateSupportSessionMutation,
+  useListSupportMessagesQuery,
+  usePostSupportMessageMutation,
+  useRequestSupportAdminMutation,
+} from "@/integrations/rtk/public/chat.endpoints";
 
 /* Theme tokens from design tokens, with automatic dark/light behavior. */
 // CSS vars come from globals.css + tokensToCSS; [data-theme="dark"] overrides them.
@@ -252,6 +254,8 @@ export default function SupportBotWidget() {
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [threadId, setThreadId] = useState<string>("");
+  const [visitorToken, setVisitorToken] = useState("");
+  const [viewerSenderId, setViewerSenderId] = useState("");
   const [handoffMode, setHandoffMode] = useState<"ai" | "admin">("ai");
   const [queueFilter, setQueueFilter] = useState<AdminQueueFilter>("pending");
   const [input, setInput] = useState("");
@@ -271,20 +275,16 @@ export default function SupportBotWidget() {
   const prevUnreadRef = useRef(0);
   const userKey = useMemo(() => getUserKey({ id: user?.id, email: user?.email }), [user?.id, user?.email]);
 
-  const createThread = useCreateOrGetChatThread();
+  const [createSupportSession, createSupportState] = useCreateSupportSessionMutation();
   const adminThreadsQuery = useAdminChatThreads(
     { handoff_mode: "admin", limit: 50, offset: 0 },
     { enabled: open && isAuthenticated && roleBasedAdmin, refetchInterval: 15_000, retry: false },
   );
   const isAdmin = roleBasedAdmin;
   const adminCheckPending = false;
-  const userMessagesQuery = useChatMessages(
-    threadId,
-    { limit: 80 },
-    {
-      enabled: open && isAuthenticated && !isAdmin && !!threadId,
-      refetchInterval: 5_000,
-    },
+  const userMessagesQuery = useListSupportMessagesQuery(
+    { threadId, visitor_token: visitorToken || undefined },
+    { skip: !open || isAdmin || !threadId, pollingInterval: open && !isAdmin ? 5_000 : 0 },
   );
   const adminMessagesQuery = useAdminChatMessages(
     threadId,
@@ -292,24 +292,26 @@ export default function SupportBotWidget() {
     { enabled: open && isAuthenticated && isAdmin && !!threadId, refetchInterval: 5_000, retry: false },
   );
   const adminTakeOver = useAdminTakeOverThread(threadId);
-  const postMessage = usePostChatMessage(threadId);
-  const requestAdmin = useRequestAdminHandoff(threadId);
+  const [postSupportMessage, postMessage] = usePostSupportMessageMutation();
+  const [requestSupportAdmin, requestAdmin] = useRequestSupportAdminMutation();
   const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!open || !isAuthenticated || adminCheckPending || isAdmin || threadId || createThread.isPending) return;
-
-    createThread.mutate(
-      { context_type: "request", context_id: supportContextId },
-      {
-        onSuccess: (res) => {
-          const mode = (res.thread.handoff_mode as "ai" | "admin") || "ai";
-          setThreadId(res.thread.id);
-          setHandoffMode(mode);
-        },
-      },
-    );
-  }, [open, isAuthenticated, adminCheckPending, isAdmin, threadId, createThread, supportContextId, userKey]);
+    if (!open || adminCheckPending || isAdmin || threadId || createSupportState.isLoading) return;
+    const storedToken = typeof window !== "undefined" ? window.localStorage.getItem("support-chat-visitor-token") || "" : "";
+    createSupportSession({ locale, visitor_token: isAuthenticated ? undefined : storedToken || undefined })
+      .unwrap()
+      .then((res) => {
+        setThreadId(res.thread.id);
+        setHandoffMode(res.thread.handoff_mode || "ai");
+        setViewerSenderId(res.viewer_sender_id);
+        if (res.visitor_token) {
+          setVisitorToken(res.visitor_token);
+          window.localStorage.setItem("support-chat-visitor-token", res.visitor_token);
+        }
+      })
+      .catch(() => undefined);
+  }, [open, isAuthenticated, adminCheckPending, isAdmin, threadId, createSupportState.isLoading, createSupportSession, locale]);
 
   const adminThreads = useMemo(() => {
     const rows = adminThreadsQuery.data?.items ?? [];
@@ -370,7 +372,6 @@ export default function SupportBotWidget() {
     if (!isAuthenticated) {
       takenOverThreadsRef.current.clear();
       setSupportContextId(SUPPORT_CONTEXT_ID_FALLBACK);
-      setThreadId("");
       setHandoffMode("ai");
       return;
     }
@@ -455,10 +456,9 @@ export default function SupportBotWidget() {
 
   const items = (isAdmin ? adminMessagesQuery.data?.items : userMessagesQuery.data?.items) ?? [];
   const canSend =
-    isAuthenticated &&
     !!threadId &&
     input.trim().length > 0 &&
-    !postMessage.isPending &&
+    !postMessage.isLoading &&
     (!isAdmin || !adminTakeOver.isPending);
   const statusText = isAdmin
     ? t("ui_chat_admin_inbox", "Live-Support Posteingang")
@@ -495,7 +495,12 @@ export default function SupportBotWidget() {
     const text = input.trim();
     if (!text || !threadId) return;
     setInput("");
-    postMessage.mutate({ text, client_id: crypto.randomUUID() });
+    postSupportMessage({ threadId, visitor_token: visitorToken || undefined, text, client_id: crypto.randomUUID() })
+      .unwrap()
+      .then((res) => {
+        if (res.handed_off) setHandoffMode("admin");
+      })
+      .catch(() => setInput(text));
   };
 
   const handleGuestLeadSubmit = async () => {
@@ -550,13 +555,16 @@ export default function SupportBotWidget() {
         aria-label="Support chat"
         style={{
           position: "fixed",
-          left: isMobile ? 12 : 22,
-          bottom: isMobile ? 12 : 22,
+          // Mobile: bottom-right (chat convention; keeps list rows' leading icon/label
+          // tappable — see overview checklist). Desktop keeps the original bottom-left.
+          left: isMobile ? "auto" : 22,
+          right: isMobile ? 12 : "auto",
+          bottom: isMobile ? "calc(env(safe-area-inset-bottom, 0px) + 76px)" : 22,
           width: btnSize,
           height: btnSize,
           borderRadius: isAdmin ? 14 : "50%",
           border: open ? `1px solid ${C.rose200}` : "none",
-          zIndex: 9999,
+          zIndex: 10060,
           background: open ? headerGradient : "transparent",
           color: open ? C.primaryFg : C.rose900,
           boxShadow: open
@@ -595,12 +603,12 @@ export default function SupportBotWidget() {
             position: "fixed",
             left: isMobile ? 8 : 22,
             right: isMobile ? 8 : "auto",
-            bottom: isMobile ? "calc(env(safe-area-inset-bottom, 0px) + 76px)" : 94,
+            bottom: isMobile ? "calc(env(safe-area-inset-bottom, 0px) + 140px)" : 94,
             width: isMobile ? "auto" : isAdmin ? "min(460px, calc(100vw - 24px))" : "min(380px, calc(100vw - 24px))",
             height: isMobile ? "min(560px, calc(100dvh - 140px))" : isAdmin ? 620 : 520,
             borderRadius: isMobile ? 14 : 16,
             background: C.white,
-            zIndex: 9999,
+            zIndex: 10060,
             boxShadow: `0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px ${C.sand300}`,
             overflow: "hidden",
             display: "flex",
@@ -685,7 +693,7 @@ export default function SupportBotWidget() {
           </div>
 
           {/* ─── Not Authenticated ───────────────────── */}
-          {!isAuthenticated ? (
+          {isAdmin && !isAuthenticated ? (
             <div style={{ padding: 20 }}>
               <p style={{ marginBottom: 14, color: C.sand800, fontSize: 14, textAlign: "center" }}>
                 {t("ui_chat_guest_intro", "Ohne Login konnen Sie eine Nachricht hinterlassen. Fur den direkten Chat melden Sie sich bitte an.")}
@@ -865,7 +873,7 @@ export default function SupportBotWidget() {
                       ? t("ui_chat_no_admin_threads", "Noch keine Live-Support-Anfragen.")
                       : t("ui_chat_loading", "Wird vorbereitet...")}
                   </div>
-                ) : !isAdmin && createThread.isPending ? (
+                ) : !isAdmin && createSupportState.isLoading ? (
                   <div style={{ fontSize: 13, color: C.sand600 }}>
                     {t("ui_chat_loading", "Wird vorbereitet...")}
                   </div>
@@ -885,7 +893,7 @@ export default function SupportBotWidget() {
                   </div>
                 ) : (
                   items.map((m) => {
-                    const isMine = m.sender_user_id === user?.id;
+                    const isMine = m.sender_user_id === (user?.id || viewerSenderId);
                     const isAi = m.sender_user_id === AI_ASSISTANT_USER_ID;
                     const bubbleBg = isMine ? C.rose900 : isAi ? C.rose50 : C.sand200;
                     const bubbleFg = isMine ? C.primaryFg : C.sand900;
@@ -980,17 +988,12 @@ export default function SupportBotWidget() {
                   <button
                     type="button"
                     onClick={() =>
-                      requestAdmin.mutate(undefined, {
-                        onSuccess: (res) => {
-                          if (res.thread?.handoff_mode) {
-                            setHandoffMode(res.thread.handoff_mode);
-                          } else {
-                            setHandoffMode("admin");
-                          }
-                        },
-                      })
+                      requestSupportAdmin({ threadId, visitor_token: visitorToken || undefined })
+                        .unwrap()
+                        .then((res) => setHandoffMode(res.thread?.handoff_mode || "admin"))
+                        .catch(() => undefined)
                     }
-                    disabled={!threadId || requestAdmin.isPending || handoffMode === "admin"}
+                    disabled={!threadId || requestAdmin.isLoading || handoffMode === "admin"}
                     style={{
                       width: "100%",
                       border: `1px solid ${C.rose600}`,
@@ -1010,7 +1013,7 @@ export default function SupportBotWidget() {
                     }}
                   >
                     <Headset size={14} />
-                    {requestAdmin.isPending
+                    {requestAdmin.isLoading
                       ? t("ui_chat_connecting", "Verbinde...")
                       : t("ui_chat_connect_admin", "Mit Live-Support verbinden")}
                   </button>

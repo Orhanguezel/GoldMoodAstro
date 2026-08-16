@@ -71,7 +71,7 @@ const defaults: ChatSettingsModel = {
   chat_ai_enabled: 'true',
   chat_widget_enabled: 'true',
   chat_ai_default_provider: 'auto',
-  chat_ai_provider_order: 'grok,openai,anthropic',
+  chat_ai_provider_order: 'anthropic,groq,openai',
   chat_ai_system_prompt: '',
   chat_ai_offer_url: '',
   // Groq
@@ -88,7 +88,7 @@ const defaults: ChatSettingsModel = {
   chat_ai_openai_api_base: 'https://api.openai.com/v1',
   // Anthropic
   chat_ai_anthropic_api_key: '',
-  chat_ai_anthropic_model: 'claude-3-5-haiku-latest',
+  chat_ai_anthropic_model: 'claude-haiku-4-5-20251001',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────
