@@ -91,9 +91,22 @@ kimlik değişti; QUEBAB↔Orhan iç anlaşması sitede gösterilmez.
 
 ### 4.2 Ödeme entegrasyonu (yasal sayfalar bitince)
 
+> Durum 2026-08-16: **Hesap AKTİF** — "Gold Mood Astro" ayrı Stripe hesabı
+> (acct_1U54gg...) açıldı: Counseling services kategorisi, dürüst tanım,
+> GOLDMOODASTRO descriptor, goldmoodastro.com, Sparkasse payout, marka renkleri.
+> Eski guezelwebdesign hesabı web-tasarım için ayrı tutuldu (kategori karışması
+> riski böyle çözüldü). Webhook alıcısı canlı ve yeni hesabın secret'ıyla
+> imza-doğrulamalı çalışıyor; footer yasal linkleri eklendi.
+
 - [ ] Başlangıç: **Stripe Payment Link** (kodsuz, manuel satış hemen başlar)
-- [ ] Sonra: backend'e (Fastify) **Stripe Checkout** entegrasyonu + webhook
-      (`checkout.session.completed` → randevu/sipariş eşleştirme)
+      — site hazır; Product catalog'da ürün + link oluşturup küçük gerçek test
+      ödemesiyle payout zinciri doğrulanacak
+- [x] Webhook alıcısı: `POST /api/webhooks/stripe` — imza doğrulama (SDK'sız
+      HMAC, 5dk tolerans), fail-closed, `stripe_events` idempotent kayıt,
+      `checkout.session.completed` → admin e-posta bildirimi (78cc9d6)
+- [ ] Sonra: backend'e (Fastify) **Stripe Checkout** entegrasyonu
+      (`STRIPE_SECRET_KEY` ile session oluşturma + webhook'ta randevu/sipariş
+      eşleştirme; mevcut iyzico orders akışının yerine/yanına)
 - [ ] Para birimi: fiyat gösterimi TRY veya EUR (presentment), settlement **EUR**
 - [ ] 3D Secure zorunlu akış (Türk kartlarının çoğu için gerekli)
 - [ ] **PayPal Business**'ı ikincil yöntem olarak checkout'a ekle
