@@ -15,6 +15,7 @@ import {
   verifyIyzicoCallback,
 } from '../orders/iyzico.service';
 import { createCheckoutSession, isStripeConfigured } from '../orders/stripe.service';
+import { convertFromBase, resolveCheckoutCurrency } from '../_shared/currency';
 import { subscriptionPlans, subscriptions } from './schema';
 import { users } from '../auth/schema';
 
@@ -1035,11 +1036,15 @@ export const startSubscription: RouteHandler = async (req, reply) => {
   if (isStripeConfigured()) {
     const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || 'http://localhost:3000';
     try {
+      const presented = await convertFromBase(
+        Number(toMoneyMinorToDecimalString(plan.price_minor)),
+        await resolveCheckoutCurrency(locale),
+      );
       const session = await createCheckoutSession({
         orderId,
         orderNumber,
-        amount: Number(toMoneyMinorToDecimalString(plan.price_minor)),
-        currency,
+        amount: presented.amount,
+        currency: presented.currency,
         productName: `GoldMood Astrology — ${plan.name_tr} (${plan.period})`,
         customerEmail: email || null,
         successUrl: `${siteUrl}/${locale}/me/subscription?status=success&order_id=${orderId}`,

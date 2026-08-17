@@ -18,6 +18,7 @@ import { users } from "../auth/schema";
 import { clawbackCredits, getPackageById } from "../credits/repository";
 import { hasAnalyticsConsent, sendCapiEvent } from '../marketing/meta-capi';
 import { createCheckoutSession, isStripeConfigured, paypalSupportsCurrency, StripeNotConfiguredError } from "./stripe.service";
+import { convertFromBase, resolveCheckoutCurrency } from "../_shared/currency";
 
 /** JWT payload'dan user bilgilerini normalize et.
  * Fastify-jwt sub → userId olarak map eder; id alanı payload'da olmayabilir.
@@ -258,12 +259,18 @@ export const initStripeCheckout: RouteHandler<{ Params: { id: string } }> = asyn
     } catch { /* ürün adı kozmetik; hata akışı durdurmasın */ }
   }
 
+  // Sipariş defterde TRY kalır; /de ve /en ziyaretçisinde ödeme sayfası EUR
+  // açılır (PayPal TRY'de sunulamıyor). Stripe'ın tahsil ettiği tutar webhook'ta
+  // payments satırına kendi para birimiyle yazılır.
+  const checkoutCurrency = await resolveCheckoutCurrency(requestLocale);
+  const presented = await convertFromBase(Number(order.total_amount), checkoutCurrency);
+
   try {
     const session = await createCheckoutSession({
       orderId: order.id,
       orderNumber: order.order_number,
-      amount: Number(order.total_amount),
-      currency: order.currency || 'TRY',
+      amount: presented.amount,
+      currency: presented.currency,
       productName,
       customerEmail: user.email || null,
       successUrl,

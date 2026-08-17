@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useMoney } from '@/lib/useMoney';
 import Link from 'next/link';
 import { Star, Clock } from 'lucide-react';
 import { useListConsultantsPublicQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
@@ -35,6 +36,7 @@ function StarRow({ rating }: { rating: number }) {
 export default function FeaturedConsultantsSection({ locale: explicitLocale }: { locale?: string }) {
   const locale = useLocaleShort(explicitLocale) || 'tr';
   const { ui } = useUiSection('ui_home', locale as any);
+  const { money } = useMoney(locale);
   
   const copy = React.useMemo(() => ({
     label: ui('ui_home_featured_label', COPY_FALLBACK.label),
@@ -124,7 +126,7 @@ export default function FeaturedConsultantsSection({ locale: explicitLocale }: {
 
                   {c.session_price && (
                     <p className="text-brand-secondary font-serif text-lg">
-                      {copy.from} ₺{Math.round(Number(c.session_price))}
+                      {copy.from} {money(c.session_price)}
                     </p>
                   )}
                 </Link>

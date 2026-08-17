@@ -19,6 +19,7 @@ import { fbEvent, metaEventId } from '@/lib/fbpixel';
 import { cn } from '@/lib/utils';
 import { Mic, Video as VideoIcon } from 'lucide-react';
 import { useUiSection } from '@/i18n';
+import { useMoney } from '@/lib/useMoney';
 
 export default function BookingPage() {
   const params = useParams();
@@ -26,6 +27,7 @@ export default function BookingPage() {
   const router = useRouter();
   const locale = (params?.locale as string) || 'tr';
   const { ui } = useUiSection('ui_account');
+  const { money } = useMoney(locale);
 
   const { isAuthenticated, isReady } = useAuthStore();
   useEffect(() => {
@@ -268,7 +270,7 @@ export default function BookingPage() {
             <div className="pt-8 border-t border-(--gm-border-soft) space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-(--gm-text-dim) font-serif text-lg italic">{ui('ui_account_booking_session_fee', 'Session Fee')}</span>
-                <span className="text-(--gm-text) font-serif text-xl">₺{Math.round(originalPrice)}</span>
+                <span className="text-(--gm-text) font-serif text-xl">{money(originalPrice)}</span>
               </div>
               
               {appliedCampaign && (
@@ -276,13 +278,13 @@ export default function BookingPage() {
                   <span className="text-(--gm-success) font-serif text-lg italic flex items-center gap-2">
                     <Tag className="w-4 h-4" /> {ui('ui_account_booking_discount', 'Discount')} ({appliedCampaign.code})
                   </span>
-                  <span className="text-(--gm-success) font-serif text-xl">-₺{Math.round(discountAmount)}</span>
+                  <span className="text-(--gm-success) font-serif text-xl">-{money(discountAmount)}</span>
                 </div>
               )}
 
               <div className="flex items-center justify-between pt-6 border-t border-(--gm-border-soft)">
                 <span className="text-(--gm-text) font-serif text-2xl italic">{ui('ui_account_booking_total', 'Total')}</span>
-                <span className="text-(--gm-gold) font-serif text-4xl">₺{Math.round(finalPrice)}</span>
+                <span className="text-(--gm-gold) font-serif text-4xl">{money(finalPrice)}</span>
               </div>
             </div>
           </div>

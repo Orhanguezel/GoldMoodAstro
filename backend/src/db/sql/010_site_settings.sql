@@ -22,6 +22,10 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('01000000-0000-4000-8000-000000000007', 'firebase.enabled',       '*', '1'),
 -- Storage
 ('01000000-0000-4000-8000-000000000008', 'storage.driver',         '*', 'cloudinary'),
+-- Para birimi: defter TRY (TR müşteri ₺ öder), /de ve /en ziyaretçisine EUR
+-- sunulur (PayPal TRY'de çalışmıyor). Kur elle güncellenir; 1 EUR = 55.415 TRY.
+-- Tek okuyucu: packages/shared-backend/modules/_shared/currency.ts + lib/money.ts
+('01000000-0000-4000-8000-00000000001c', 'platform_currency',      '*', '{"base":"TRY","supported":["TRY","EUR"],"rates":{"EUR":0.018045}}'),
 -- Session
 ('01000000-0000-4000-8000-000000000009', 'session.price_currency', '*', 'TRY'),
 ('01000000-0000-4000-8000-000000000010', 'session.min_duration',   '*', '30'),

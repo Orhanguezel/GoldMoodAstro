@@ -6,6 +6,13 @@ import JsonLd from '@/seo/JsonLd';
 import { breadcrumbSchema, consultantPersonSchema, graph, review as reviewSchema, service as serviceSchema } from '@/seo/jsonld';
 import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
 import { localizedPath, normPath } from '@/integrations/shared';
+import {
+  DEFAULT_CURRENCY_CONFIG,
+  displayCurrencyFor,
+  formatMoney,
+  parseCurrencyConfig,
+  type CurrencyConfig,
+} from '@/lib/money';
 import PageContainer from '@/components/common/PageContainer';
 
 type Props = {
@@ -183,6 +190,22 @@ async function fetchConsultantReviewsForSchema(id: string, locale?: string): Pro
   }
 }
 
+// Kur ayarı sunucuda da okunur: /de ve /en ziyaretçisi € görmeli, aksi halde
+// ödeme sayfasındaki tutar (backend aynı ayarla çeviriyor) sayfadakinden farklı olur.
+async function fetchCurrencyConfig(): Promise<CurrencyConfig> {
+  try {
+    const res = await fetch(`${API_BASE}/site_settings/platform_currency?locale=*`, {
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return DEFAULT_CURRENCY_CONFIG;
+    const json = await res.json();
+    const value = (json?.data ?? json)?.value;
+    return value ? parseCurrencyConfig(value) : DEFAULT_CURRENCY_CONFIG;
+  } catch {
+    return DEFAULT_CURRENCY_CONFIG;
+  }
+}
+
 function formatPrice(value: string | number | null | undefined, currency = 'TRY', locale = 'en') {
   const price = Number(value ?? 0);
   if (!Number.isFinite(price)) return '';
@@ -252,12 +275,24 @@ export default async function ConsultantDetailPage({ params }: Props) {
   if (consultantMissing) notFound();
   const consultant = consultantData as ConsultantForSchema | null;
   const consultantId = consultant?.id || id;
-  const [services, reviews, expertiseLabels, languageLabels] = await Promise.all([
+  const [services, reviews, expertiseLabels, languageLabels, currencyConfig] = await Promise.all([
     fetchConsultantServicesForSchema(consultantId),
     fetchConsultantReviewsForSchema(consultantId, locale),
     fetchExpertiseLabels(locale),
     fetchLanguageLabels(locale),
+    fetchCurrencyConfig(),
   ]);
+  const displayCurrency = displayCurrencyFor(locale, currencyConfig);
+  const toDisplay = (amount: string | number | null | undefined) =>
+    formatMoney(amount, locale, currencyConfig, { decimals: 0 });
+  // Yapısal veri ekranda yazan tutarla AYNI olmalı; farklı olursa Google
+  // "fiyat uyuşmuyor" der. Bu yüzden schema da ziyaretçinin para biriminde.
+  const toDisplayAmount = (amount: string | number | null | undefined) => {
+    const value = Number(amount ?? 0);
+    if (!Number.isFinite(value)) return 0;
+    if (displayCurrency === currencyConfig.base) return value;
+    return Math.round(value * (currencyConfig.rates[displayCurrency] ?? 1) * 100) / 100;
+  };
 
   // Keep the URL on the name slug: redirect id/old slug params to the current slug.
   // This does not depend on UUID_RE; when a slug exists and differs, redirect.
@@ -301,8 +336,8 @@ export default async function ConsultantDetailPage({ params }: Props) {
         services: services.map((service) => ({
           name: service.name,
           description: service.description || undefined,
-          price: Number(service.price ?? consultant.session_price ?? 0),
-          priceCurrency: service.currency || consultant.currency || 'TRY',
+          price: toDisplayAmount(service.price ?? consultant.session_price ?? 0),
+          priceCurrency: displayCurrency,
           durationMinutes: Number(service.duration_minutes ?? consultant.session_duration ?? 0) || undefined,
           isFree: service.is_free === 1 || service.is_free === true,
           url: `${pageUrl}?serviceId=${encodeURIComponent(service.id)}`,
@@ -324,8 +359,8 @@ export default async function ConsultantDetailPage({ params }: Props) {
           areaServed: 'Turkey',
           durationMinutes: Number(service.duration_minutes ?? 0) || undefined,
           offers: {
-            price: Number(service.is_free ? 0 : service.price ?? consultant.session_price ?? 0),
-            priceCurrency: service.currency || consultant.currency || 'TRY',
+            price: toDisplayAmount(service.is_free ? 0 : service.price ?? consultant.session_price ?? 0),
+            priceCurrency: displayCurrency,
             url: `${pageUrl}?serviceId=${encodeURIComponent(service.id)}`,
           },
         }),
@@ -407,7 +442,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-(--gm-text-dim)">{copy.starting}</span>
                   <strong className="text-xl text-(--gm-text)">
-                    {formatPrice(consultant.session_price, consultant.currency || 'TRY', locale)}
+                    {toDisplay(consultant.session_price)}
                   </strong>
                 </div>
               </aside>
@@ -424,7 +459,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
                       <div className="mb-2 flex items-start justify-between gap-4">
                         <h3 className="font-serif text-xl text-(--gm-text)">{service.name}</h3>
                         <span className="shrink-0 rounded-full bg-(--gm-gold)/10 px-3 py-1 text-xs font-bold text-(--gm-gold)">
-                          {formatPrice(service.price, service.currency || consultant.currency || 'TRY', locale)}
+                          {toDisplay(service.price)}
                         </span>
                       </div>
                       {service.description && (

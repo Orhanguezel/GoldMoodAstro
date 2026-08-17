@@ -7,6 +7,7 @@ import { z } from 'zod';
 import * as repo from './repository';
 import { IyzicoService, resolveIyzicoConfigFromGateway, resolveIyzicoLocale, verifyIyzicoCallback } from '../orders/iyzico.service';
 import { createCheckoutSession, isStripeConfigured } from '../orders/stripe.service';
+import { convertFromBase, resolveCheckoutCurrency } from '../_shared/currency';
 import { db } from '../../db/client';
 import { paymentGateways, orders, payments } from '../orders/schema';
 import { creditTransactions, userCredits } from './schema';
@@ -427,11 +428,12 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
 
     const siteUrl = process.env.FRONTEND_URL || process.env.PUBLIC_URL || 'http://localhost:3000';
     try {
+      const presented = await convertFromBase(Number(amount), await resolveCheckoutCurrency(locale));
       const session = await createCheckoutSession({
         orderId,
         orderNumber,
-        amount: Number(amount),
-        currency,
+        amount: presented.amount,
+        currency: presented.currency,
         productName: `GoldMood Astrology — ${pkg.name ?? 'Kredi paketi'} (${pkg.credits} kredi)`,
         customerEmail: user.email || null,
         successUrl: `${siteUrl}/${locale}/me/credits?status=success&order_id=${orderId}`,

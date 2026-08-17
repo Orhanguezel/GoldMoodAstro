@@ -21,11 +21,13 @@ import {
 import { toast } from 'sonner';
 import PageContainer from '@/components/common/PageContainer';
 import { useUiSection } from '@/i18n';
+import { useMoney } from '@/lib/useMoney';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
 export default function CreditsPage() {
   const { ui } = useUiSection('ui_account');
+  const { money } = useMoney(useParams()?.locale as string | undefined);
   const params = useParams();
   const locale = (params?.locale as string) || 'tr';
   const router = useRouter();
@@ -107,7 +109,7 @@ export default function CreditsPage() {
 
                   <div className="space-y-2 w-full">
                      <div className="text-3xl font-light text-foreground/80">
-                        {(pkg.priceMinor / 100).toLocaleString('tr-TR', { minimumFractionDigits: 0 })} <span className="text-lg">₺</span>
+                        {money(pkg.priceMinor / 100)}
                      </div>
                      {pkg.bonusCredits > 0 && (
                        <div className="text-xs font-bold text-[var(--gm-success)] tracking-wider flex items-center justify-center gap-1">

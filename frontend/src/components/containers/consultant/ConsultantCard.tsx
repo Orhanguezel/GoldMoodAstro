@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useMoney } from '@/lib/useMoney';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Star, Clock, ShieldCheck, Phone, Calendar, Heart } from 'lucide-react';
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function ConsultantCard({ consultant, locale, expertiseLabels = {} }: Props) {
+  const { money } = useMoney(locale);
   const router = useRouter();
   const { ui } = useUiSection('ui_consultantbrowse' as any, locale);
   const [imageFailed, setImageFailed] = useState(false);
@@ -167,7 +169,7 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
           <span className="text-[var(--gm-muted)] text-[10px] tracking-widest uppercase">
             {priceIsStarting ? ui('ui_consultantbrowse_from_label', 'Başlangıç') : ui('ui_consultantbrowse_session_label', 'Session')}
           </span>
-          <span className="text-[var(--gm-gold)] font-serif text-2xl leading-none">₺{price}</span>
+          <span className="text-[var(--gm-gold)] font-serif text-2xl leading-none">{money(price)}</span>
         </div>
 
         {/* CTA buttons */}
