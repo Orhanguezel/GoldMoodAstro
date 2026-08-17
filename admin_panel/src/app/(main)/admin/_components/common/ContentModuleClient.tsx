@@ -662,7 +662,10 @@ export default function ContentModuleClient({
                         </Badge>
                       </div>
                     </TableCell>
-                    <TableCell className="py-5">
+                    {/* max-w + truncate: uzun başlık ve slug tabloyu ekranın
+                        dışına taşıyordu (2026-08-17). Slug artık kırpılıyor,
+                        tam hali title attribute'unda. */}
+                    <TableCell className="max-w-[460px] py-5">
                       <div className="flex items-start gap-3">
                         {coverUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -677,11 +680,18 @@ export default function ContentModuleClient({
                           </div>
                         )}
                         <div className="min-w-0">
-                          <div className="font-serif text-lg text-gm-text">{title}</div>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-gm-muted">
-                            <code className="rounded-full border border-gm-border-soft bg-gm-bg-deep px-2 py-0.5">{post.slug}</code>
+                          <div className="line-clamp-2 font-serif text-lg text-gm-text" title={title}>
+                            {title}
                           </div>
-                          {post.summary && <p className="mt-2 max-w-2xl truncate text-xs text-gm-muted">{post.summary}</p>}
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-gm-muted">
+                            <code
+                              className="inline-block max-w-[280px] truncate rounded-full border border-gm-border-soft bg-gm-bg-deep px-2 py-0.5 align-bottom"
+                              title={post.slug ?? undefined}
+                            >
+                              {post.slug}
+                            </code>
+                          </div>
+                          {post.summary && <p className="mt-2 truncate text-xs text-gm-muted">{post.summary}</p>}
                         </div>
                       </div>
                     </TableCell>
