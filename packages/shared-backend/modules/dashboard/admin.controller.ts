@@ -198,6 +198,120 @@ export const getDashboardAnalyticsAdmin: RouteHandler = async (req, reply) => {
   }
 };
 
+/**
+ * GET /admin/dashboard/consultant-earnings
+ * "Kim ne kazandırdı" tablosu — danışman başına ciro, platform komisyonu ve
+ * danışman neti.
+ *
+ * KAYNAK CÜZDAN DEFTERİ: net ve komisyon `wallet_transactions`ten okunur,
+ * bookings.session_price'tan HESAPLANMAZ. Komisyon oranı tarihe göre değişiyor
+ * (platform_commission_rate.effective_from) ve iade edilen kayıtlar defterde
+ * 'refunded' işaretli — sonradan yeniden hesaplamak eski oranı ve iadeleri
+ * kaçırır. Defter ne diyorsa o.
+ */
+export const getConsultantEarningsAdmin: RouteHandler = async (req, reply) => {
+  try {
+    const query = ((req as any).query ?? {}) as Record<string, unknown>;
+    const days = Math.min(Math.max(Number(query.days ?? 90) || 90, 1), 3650);
+
+    const rows = await manyRows(sql`
+      SELECT
+        c.id AS consultant_id,
+        COALESCE(u.full_name, '—') AS name,
+        COALESCE(SUM(CASE WHEN wt.payment_status IN ('pending','completed') THEN wt.amount ELSE 0 END), 0) AS net_total,
+        COALESCE(SUM(CASE WHEN wt.payment_status = 'completed' THEN wt.amount ELSE 0 END), 0) AS net_released,
+        COALESCE(SUM(CASE WHEN wt.payment_status = 'pending' THEN wt.amount ELSE 0 END), 0) AS net_pending,
+        COALESCE(SUM(CASE WHEN wt.payment_status = 'refunded' THEN wt.amount ELSE 0 END), 0) AS net_refunded,
+        SUM(CASE WHEN wt.purpose = 'session_earning' AND wt.payment_status IN ('pending','completed') THEN 1 ELSE 0 END) AS session_count,
+        SUM(CASE WHEN wt.purpose = 'media_message_earning' AND wt.payment_status IN ('pending','completed') THEN 1 ELSE 0 END) AS media_count,
+        MAX(wt.created_at) AS last_earning_at
+      FROM consultants c
+      JOIN users u ON u.id = c.user_id
+      LEFT JOIN wallets w ON w.consultant_id = c.id
+      LEFT JOIN wallet_transactions wt
+        ON wt.wallet_id = w.id
+       AND wt.type = 'credit'
+       AND wt.purpose IN ('session_earning', 'media_message_earning')
+       AND wt.created_at >= DATE_SUB(NOW(), INTERVAL ${days} DAY)
+      GROUP BY c.id, u.full_name
+      ORDER BY net_total DESC, session_count DESC
+      LIMIT 200
+    `);
+
+    // Brüt ve komisyon: hakediş satırının description JSON'undan toplanır
+    // (yazıldığı ANdaki oranı taşır — sonradan oran değişse bile doğru kalır).
+    const grossRows = await manyRows(sql`
+      SELECT w.consultant_id AS consultant_id, wt.description AS description
+      FROM wallet_transactions wt
+      JOIN wallets w ON w.id = wt.wallet_id
+      WHERE wt.type = 'credit'
+        AND wt.purpose IN ('session_earning', 'media_message_earning')
+        AND wt.payment_status IN ('pending','completed')
+        AND wt.created_at >= DATE_SUB(NOW(), INTERVAL ${days} DAY)
+    `);
+
+    const grossByConsultant = new Map<string, { gross: number; commission: number }>();
+    for (const row of grossRows as any[]) {
+      const key = String(row.consultant_id ?? '');
+      if (!key) continue;
+      let gross = 0;
+      let commission = 0;
+      try {
+        const d = JSON.parse(String(row.description || '{}'));
+        gross = Number(d.gross ?? 0);
+        commission = Number(d.commission_amount ?? 0);
+      } catch {
+        /* eski serbest metin kayıt — brüt bilinmiyor, 0 sayılır */
+      }
+      const cur = grossByConsultant.get(key) ?? { gross: 0, commission: 0 };
+      cur.gross += Number.isFinite(gross) ? gross : 0;
+      cur.commission += Number.isFinite(commission) ? commission : 0;
+      grossByConsultant.set(key, cur);
+    }
+
+    const data = (rows as any[]).map((r) => {
+      const g = grossByConsultant.get(String(r.consultant_id)) ?? { gross: 0, commission: 0 };
+      const sessions = Number(r.session_count ?? 0) + Number(r.media_count ?? 0);
+      return {
+        consultant_id: String(r.consultant_id),
+        name: String(r.name),
+        gross: Number(g.gross.toFixed(2)),
+        commission: Number(g.commission.toFixed(2)),
+        net_total: Number(Number(r.net_total ?? 0).toFixed(2)),
+        net_released: Number(Number(r.net_released ?? 0).toFixed(2)),
+        net_pending: Number(Number(r.net_pending ?? 0).toFixed(2)),
+        net_refunded: Number(Number(r.net_refunded ?? 0).toFixed(2)),
+        session_count: Number(r.session_count ?? 0),
+        media_count: Number(r.media_count ?? 0),
+        avg_per_session: sessions > 0 ? Number((g.gross / sessions).toFixed(2)) : 0,
+        last_earning_at: r.last_earning_at ?? null,
+      };
+    });
+
+    const totals = data.reduce(
+      (acc, r) => ({
+        gross: acc.gross + r.gross,
+        commission: acc.commission + r.commission,
+        net_total: acc.net_total + r.net_total,
+      }),
+      { gross: 0, commission: 0, net_total: 0 },
+    );
+
+    return reply.send({
+      days,
+      data,
+      totals: {
+        gross: Number(totals.gross.toFixed(2)),
+        commission: Number(totals.commission.toFixed(2)),
+        net_total: Number(totals.net_total.toFixed(2)),
+      },
+    });
+  } catch (err) {
+    req.log.error({ err }, 'consultant_earnings_failed');
+    return reply.code(500).send({ error: { message: 'consultant_earnings_failed' } });
+  }
+};
+
 // -------------------------------------------------------------------
 // Pazarlama & Dönüşüm dashboard'u — birinci-taraf (kendi DB) metrikleri.
 // Pixel/GA tahmini + izne bağlı ölçer; buradaki veriler kesin.

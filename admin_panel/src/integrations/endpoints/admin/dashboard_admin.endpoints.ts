@@ -57,6 +57,27 @@ const EMPTY_MARKETING: MarketingDashboard = {
 };
 
 // ---- API -----------------------------------------------------
+export type ConsultantEarningRow = {
+  consultant_id: string;
+  name: string;
+  gross: number;
+  commission: number;
+  net_total: number;
+  net_released: number;
+  net_pending: number;
+  net_refunded: number;
+  session_count: number;
+  media_count: number;
+  avg_per_session: number;
+  last_earning_at: string | null;
+};
+
+export type ConsultantEarnings = {
+  days: number;
+  data: ConsultantEarningRow[];
+  totals: { gross: number; commission: number; net_total: number };
+};
+
 export const dashboardAdminApi = baseApi.injectEndpoints({
   endpoints: (b) => ({
     getDashboardSummaryAdmin: b.query<DashboardAnalytics, { range?: DashboardRangeKey } | void>({
@@ -73,6 +94,7 @@ export const dashboardAdminApi = baseApi.injectEndpoints({
         url: "/admin/dashboard/marketing",
         params: params?.days ? { days: params.days } : undefined,
       }),
+
       transformResponse: (res: unknown) => {
         const d = ((res as any)?.data ?? res) as Partial<MarketingDashboard> | undefined;
         if (!d || typeof d !== "object") return EMPTY_MARKETING;
@@ -80,9 +102,20 @@ export const dashboardAdminApi = baseApi.injectEndpoints({
       },
       providesTags: [{ type: "Dashboard" as const, id: "MARKETING" }],
     }),
+
+    getConsultantEarningsAdmin: b.query<ConsultantEarnings, { days?: number } | void>({
+      query: (params) => ({
+        url: '/admin/dashboard/consultant-earnings',
+        params: params?.days ? { days: params.days } : undefined,
+      }),
+    }),
   }),
   overrideExisting: true,
 });
 
-export const { useGetDashboardSummaryAdminQuery, useGetMarketingDashboardAdminQuery } =
+export const {
+  useGetDashboardSummaryAdminQuery,
+  useGetMarketingDashboardAdminQuery,
+  useGetConsultantEarningsAdminQuery,
+} =
   dashboardAdminApi;

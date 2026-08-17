@@ -16,7 +16,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
-import { useGetDashboardSummaryAdminQuery, useGetMarketingDashboardAdminQuery } from '@/integrations/hooks';
+import {
+  useGetDashboardSummaryAdminQuery,
+  useGetMarketingDashboardAdminQuery,
+  useGetConsultantEarningsAdminQuery,
+} from '@/integrations/hooks';
 import type { DashboardRangeKey } from '@/integrations/shared';
 
 import { useAdminUiCopy } from '@/app/(main)/admin/_components/common/useAdminUiCopy';
@@ -70,6 +74,11 @@ export default function AdminDashboardClient() {
   // kullanılmıyordu — uç vardı, tüketen yoktu (2026-08-16 incelemesi).
   const marketingQuery = useGetMarketingDashboardAdminQuery({ days: 30 });
   const marketing = marketingQuery.data;
+  // Danışman kazanç karşılaştırması cüzdan DEFTERİNDEN gelir (brüt/komisyon/net),
+  // bookings.session_price'tan hesaplanmaz: oran tarihe göre değişiyor ve iade
+  // edilen kayıtlar defterde ayrı işaretli.
+  const earningsQuery = useGetConsultantEarningsAdminQuery({ days: 90 });
+  const earnings = earningsQuery.data;
 
   const analytics = q.data;
 
@@ -271,6 +280,70 @@ export default function AdminDashboardClient() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Danışman kazanç karşılaştırması — kim ne kazandırdı (90 gün) */}
+      <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[40px] overflow-hidden backdrop-blur-sm shadow-xl">
+        <CardHeader className="p-10 pb-6 border-b border-gm-border-soft bg-gm-surface/40">
+          <CardTitle className="font-serif text-2xl tracking-tight">
+            {t('earnings.title', undefined, 'Danışman Kazanç Karşılaştırması (90 gün)')}
+          </CardTitle>
+          <CardDescription className="font-serif italic text-base opacity-70 text-gm-muted">
+            {t('earnings.description', undefined, 'Brüt ciro, platform komisyonu ve danışmanın neti — cüzdan defterinden.')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-10">
+          {earnings?.data?.length ? (
+            <>
+              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {[
+                  { label: t('earnings.gross', undefined, 'Toplam brüt'), value: formatMoney(earnings.totals.gross) },
+                  { label: t('earnings.commission', undefined, 'Platform komisyonu'), value: formatMoney(earnings.totals.commission) },
+                  { label: t('earnings.net', undefined, 'Danışman neti'), value: formatMoney(earnings.totals.net_total) },
+                ].map((c) => (
+                  <div key={c.label} className="rounded-3xl border border-gm-border-soft bg-gm-surface/30 p-5 text-center">
+                    <div className="font-serif text-2xl text-gm-gold">{c.value}</div>
+                    <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-gm-muted">{c.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gm-border-soft text-[9px] font-bold uppercase tracking-[0.2em] text-gm-muted">
+                      <th className="py-3 text-left">{t('earnings.colName', undefined, 'Danışman')}</th>
+                      <th className="py-3 text-right">{t('earnings.colSessions', undefined, 'Seans')}</th>
+                      <th className="py-3 text-right">{t('earnings.colGross', undefined, 'Brüt')}</th>
+                      <th className="py-3 text-right">{t('earnings.colCommission', undefined, 'Komisyon')}</th>
+                      <th className="py-3 text-right">{t('earnings.colNet', undefined, 'Net')}</th>
+                      <th className="py-3 text-right">{t('earnings.colPending', undefined, 'Bekleyen')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {earnings.data.map((row) => (
+                      <tr key={row.consultant_id} className="border-b border-gm-border-soft/60 last:border-0">
+                        <td className="py-3 font-serif text-gm-text">{row.name}</td>
+                        <td className="py-3 text-right text-gm-muted">
+                          {row.session_count}
+                          {row.media_count > 0 ? ` + ${row.media_count}` : ''}
+                        </td>
+                        <td className="py-3 text-right text-gm-text">{formatMoney(row.gross)}</td>
+                        <td className="py-3 text-right text-gm-muted">{formatMoney(row.commission)}</td>
+                        <td className="py-3 text-right font-medium text-gm-gold">{formatMoney(row.net_total)}</td>
+                        <td className="py-3 text-right text-gm-muted">{formatMoney(row.net_pending)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <div className="py-12 text-center text-base italic text-gm-muted opacity-50">
+              {t('earnings.empty', undefined, 'Bu dönemde danışman kazancı oluşmadı.')}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Finans özeti — 30 günlük gerçek tahsilat, ortalama sepet, huni ve
           danışman başına ciro. Boş görünüyorsa gerçekten tahsilat yok demektir. */}

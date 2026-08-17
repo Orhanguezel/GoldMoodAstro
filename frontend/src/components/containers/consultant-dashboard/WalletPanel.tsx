@@ -56,6 +56,32 @@ const STATUS_LABELS: Record<string, { key: string; fallback: string; cls: string
   refunded: { key: 'ui_consultantpanel_wallet_status_refunded', fallback: 'Refunded', cls: 'bg-[var(--gm-muted)]/15 text-[var(--gm-muted)]' },
 };
 
+/**
+ * Hakediş satırının brüt/komisyon/net kırılımı. Bu bilgi `description` alanında
+ * JSON olarak ZATEN taşınıyordu ama panelde hiç gösterilmiyordu: danışman yalnız
+ * net tutarı görüp "kesinti ne kadar oldu" diye sormak zorunda kalıyordu.
+ * JSON değilse (eski/serbest metin kayıtlar) null döner, satır eskisi gibi görünür.
+ */
+function parseEarningBreakdown(description?: string | null): {
+  gross: number; commissionPercent: number; commissionAmount: number; net: number;
+} | null {
+  if (!description) return null;
+  try {
+    const d = JSON.parse(description) as Record<string, unknown>;
+    const gross = Number(d.gross);
+    const net = Number(d.net);
+    if (!Number.isFinite(gross) || !Number.isFinite(net)) return null;
+    return {
+      gross,
+      commissionPercent: Number(d.commission_percent ?? 0),
+      commissionAmount: Number(d.commission_amount ?? Math.max(gross - net, 0)),
+      net,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function labelForPurpose(ui: (key: string, hardFallback?: string) => string, purpose: string) {
   const entry = PURPOSE_LABEL_KEYS[purpose];
   return entry ? ui(entry.key, entry.fallback) : purpose;
@@ -386,6 +412,20 @@ export default function WalletPanel() {
                     </div>
                     <div className="text-[11px] text-[var(--gm-text-dim)]">
                       {formatDate(t.created_at)}
+                      {(() => {
+                        const b = parseEarningBreakdown(t.description);
+                        if (!b) return null;
+                        return (
+                          <span className="ml-2 text-[var(--gm-muted)]">
+                            · {ui('ui_consultantpanel_wallet_gross', 'Brüt')} {formatMoney(b.gross, t.currency || currency)}
+                            {' − '}
+                            {ui('ui_consultantpanel_wallet_commission', 'Komisyon')} %{b.commissionPercent} (
+                            {formatMoney(b.commissionAmount, t.currency || currency)})
+                            {' = '}
+                            {ui('ui_consultantpanel_wallet_net', 'Net')} {formatMoney(b.net, t.currency || currency)}
+                          </span>
+                        );
+                      })()}
                       {t.description && <span className="ml-2 italic">- {t.description}</span>}
                     </div>
                   </div>

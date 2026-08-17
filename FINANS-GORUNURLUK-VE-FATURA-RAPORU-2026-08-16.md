@@ -112,11 +112,11 @@ Fatma kendi WalletPanel'inde, Murat admin Finans'ta aynı gerçeği görür.
 - [ ] Gelen faturalar hatırlatması: Stripe/Meta/Google faturalarının §13b reverse-charge beyanı
       (repo dışı — Steuerberater notu)
 
-### Faz D — Fatma & Murat görünürlüğü
-- [ ] Murat: admin rolüyle Faz A "Finans" grubunu otomatik görür — ekstra iş yok (ops. karşılama turu)
-- [ ] Fatma: WalletPanel'i Faz B otomasyonuyla kendiliğinden dolar; ayrıca danışman panelinde
+### Faz D — Fatma & Murat görünürlüğü — TAMAMLANDI 2026-08-17
+- [x] Murat: admin rolüyle Faz A "Finans" grubunu otomatik görür — ekstra iş yok (ops. karşılama turu)
+- [x] Fatma: WalletPanel'i Faz B otomasyonuyla kendiliğinden dolar; ayrıca danışman panelinde
       "kazanç dökümü" satırına brüt/komisyon/net breakdown'ı görünür yap (description JSON'u zaten taşıyor)
-- [ ] Admin: danışman kazanç karşılaştırma tablosu (topConsultants verisi — kim ne kazandırdı)
+- [x] Admin: danışman kazanç karşılaştırma tablosu (topConsultants verisi — kim ne kazandırdı)
 - [ ] (Karar) Danışman-bazlı komisyon override gereki mi? Şimdilik global %40 — ileriye not
 
 ## 6. Karar/risk notları
