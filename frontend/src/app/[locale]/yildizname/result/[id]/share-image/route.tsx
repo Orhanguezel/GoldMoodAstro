@@ -95,7 +95,7 @@ export async function GET(
             width: px(620),
             height: px(620),
             borderRadius: '50%',
-            border: `${px(2)}px solid ${theme.primaryBorder}`,
+            border: `${px(2)}px solid ${theme.goldBorder}`,
             display: 'flex',
           }}
         />
@@ -107,7 +107,7 @@ export async function GET(
             width: px(760),
             height: px(760),
             borderRadius: '50%',
-            border: `${px(2)}px solid ${theme.primarySoft}`,
+            border: `${px(2)}px solid ${theme.goldSoft}`,
             display: 'flex',
           }}
         />
@@ -120,7 +120,7 @@ export async function GET(
             gap: px(16),
             fontSize: px(26),
             letterSpacing: px(8),
-            color: theme.primary,
+            color: theme.gold,
           }}
         >
           {`${theme.brandUpper} · YILDIZNAME`}
@@ -152,20 +152,20 @@ export async function GET(
               width: px(300),
               height: px(300),
               borderRadius: '50%',
-              border: `${px(3)}px solid ${theme.primaryBorderStrong}`,
-              background: theme.primarySoft,
+              border: `${px(3)}px solid ${theme.goldBorderStrong}`,
+              background: theme.goldSoft,
             }}
           >
             <div style={{ fontSize: px(34), letterSpacing: px(5), opacity: 0.7, display: 'flex' }}>
               MENZİL
             </div>
-            <div style={{ fontSize: px(150), lineHeight: 1, color: theme.primary, display: 'flex' }}>
+            <div style={{ fontSize: px(150), lineHeight: 1, color: theme.gold, display: 'flex' }}>
               {data.menzil_no ?? '—'}
             </div>
           </div>
 
           {menzilName ? (
-            <div style={{ fontSize: px(66), color: theme.primary, lineHeight: 1.15, display: 'flex' }}>
+            <div style={{ fontSize: px(66), color: theme.gold, lineHeight: 1.15, display: 'flex' }}>
               {menzilName}
             </div>
           ) : null}
@@ -208,8 +208,8 @@ export async function GET(
                 gap: px(14),
                 fontSize: px(28),
                 letterSpacing: px(4),
-                color: theme.primary,
-                border: `${px(1)}px solid ${theme.primaryBorder}`,
+                color: theme.gold,
+                border: `${px(1)}px solid ${theme.goldBorder}`,
                 borderRadius: px(999),
                 padding: `${px(12)}px ${px(30)}px`,
               }}
@@ -233,7 +233,7 @@ export async function GET(
               fontSize: px(30),
               fontFamily: 'Fraunces',
               fontStyle: 'italic',
-              color: theme.primary,
+              color: theme.gold,
               display: 'flex',
             }}
           >

@@ -39,6 +39,9 @@ export async function getOgTheme() {
   const bgStart = c.bg_base_dark || c.bg_base;
   const bgEnd = c.bg_deep_dark || c.bg_deep;
   const accent = c.brand_accent;
+  // Markanın imza rengi altın; OG/paylaşım kartlarının vurgusu bu olmalı.
+  // brand_primary mor, tek başına kullanılınca kart "bizim rengimiz" gibi durmuyor.
+  const gold = c.gold_500 || c.gold_400 || primary;
 
   return {
     brandName: b.app_name || 'GoldMoodAstro',
@@ -51,5 +54,9 @@ export async function getOgTheme() {
     primarySoft: withAlpha(primary, 0.1),
     primaryBorder: withAlpha(primary, 0.3),
     primaryBorderStrong: withAlpha(primary, 0.5),
+    gold,
+    goldSoft: withAlpha(gold, 0.12),
+    goldBorder: withAlpha(gold, 0.35),
+    goldBorderStrong: withAlpha(gold, 0.6),
   };
 }
