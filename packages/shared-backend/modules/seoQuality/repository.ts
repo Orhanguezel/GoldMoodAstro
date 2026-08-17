@@ -325,7 +325,7 @@ export async function getGscUrlStatus(url: string) {
              WHEN g.verdict IN ('FAIL', 'PARTIAL') OR LOWER(COALESCE(g.coverage_state, '')) REGEXP 'error|excluded|blocked|not[ _-]?indexed|crawled' THEN 'issue'
              ELSE 'unknown'
            END AS state
-    FROM gsc_url_index g
+    FROM seo_gsc_url_index g
     WHERE g.url = ${url}
     LIMIT 1
   `));
@@ -358,7 +358,7 @@ export async function getGscSummary() {
                ELSE 'unknown'
              END AS state
       FROM seo_quality_scores s
-      LEFT JOIN gsc_url_index g ON g.url = s.url
+      LEFT JOIN seo_gsc_url_index g ON g.url = s.url
       WHERE s.index_ready = 1
     ) x
   `));
@@ -378,7 +378,7 @@ export async function inspectGscUrls(inputUrls: string[]) {
   const urls = [...new Set(inputUrls.map((u) => u.trim()).filter(Boolean))].slice(0, 100);
   for (const url of urls) {
     await db.execute(sql`
-      INSERT INTO gsc_url_index (id, url, coverage_state, verdict, inspected_at, checked_at, raw)
+      INSERT INTO seo_gsc_url_index (id, url, coverage_state, verdict, inspected_at, checked_at, raw)
       VALUES (
         ${crypto.randomUUID()},
         ${url},
