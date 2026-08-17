@@ -1129,7 +1129,8 @@
       "astrology_kb": "Astroloji Bilgi Bankası",
       "banners": "Banner Yönetimi",
       "campaigns": "Kampanyalar",
-      "home_layout": "Anasayfa Düzeni"
+      "home_layout": "Anasayfa Düzeni",
+      "invoices": "Faturalar"
     },
     "stats": {
       "deliveredOrders": "Teslim Edilen Sipariş",
@@ -5431,5 +5432,24 @@
       "paymentSucceeded": "Tahsilat başarılı",
       "paymentFailed": "Tahsilat başarısız"
     }
+  },
+  "invoices": {
+    "title": "Faturalar",
+    "desc": "Müşteriye kesilen satış faturaları (§19 UStG — KDV gösterilmez).",
+    "search": "Fatura no / müşteri ara",
+    "count": "Adet",
+    "sum": "Toplam",
+    "colNumber": "Fatura No",
+    "colCustomer": "Müşteri",
+    "colDesc": "Açıklama",
+    "colAmount": "Tutar",
+    "colDate": "Tarih",
+    "colActions": "İşlem",
+    "empty": "Henüz fatura kesilmedi.",
+    "sent": "gönderildi",
+    "resend": "Tekrar gönder",
+    "resent": "Fatura tekrar gönderildi.",
+    "resendError": "Fatura gönderilemedi.",
+    "downloadError": "Fatura indirilemedi."
   }
 }

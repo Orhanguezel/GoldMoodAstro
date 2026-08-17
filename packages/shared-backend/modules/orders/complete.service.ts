@@ -20,6 +20,8 @@ import { addCredits, getPackageById } from '../credits/repository';
 import { activateSubscriptionForPaidOrder } from '../subscriptions/activate.service';
 import { users } from '../auth/schema';
 import { sendOrderCreatedMail } from '../mail/service';
+import { createInvoiceForOrder } from '../invoices/service';
+import { sendInvoiceMail } from '../invoices/mail';
 
 export type OrderContext = 'booking' | 'credits_purchase' | 'subscription_start' | 'unknown';
 
@@ -157,12 +159,13 @@ export async function completePaidOrder(args: {
   // Ödeme onayı e-postası — bugüne kadar YALNIZ admin REST ucundan tetiklenebiliyordu,
   // yani gerçek ödemede müşteriye hiç mail gitmiyordu (sendOrderCreatedMail ölü koddu).
   // Mail hatası ödemeyi geri almaz; log'a düşer.
+  const [buyer] = await db
+    .select({ email: users.email, full_name: users.full_name })
+    .from(users)
+    .where(eq(users.id, order.user_id))
+    .limit(1);
+
   try {
-    const [buyer] = await db
-      .select({ email: users.email, full_name: users.full_name })
-      .from(users)
-      .where(eq(users.id, order.user_id))
-      .limit(1);
     if (buyer?.email) {
       await sendOrderCreatedMail({
         to: buyer.email,
@@ -175,6 +178,41 @@ export async function completePaidOrder(args: {
     }
   } catch (err) {
     args.log?.error({ err, orderId: order.id }, 'order_confirmation_mail_failed');
+  }
+
+  // Fatura (Kleinunternehmer §19 UStG). Sipariş başına TEK belge —
+  // invoices.order_id UNIQUE olduğu için webhook tekrarı ikinci fatura üretmez.
+  // Fatura hatası ödemeyi geri almaz: para alındı, belge sonradan da kesilebilir.
+  try {
+    const description =
+      context === 'credits_purchase'
+        ? `Kredi paketi — ${order.order_number}`
+        : context === 'subscription_start'
+          ? `Abonelik — ${order.order_number}`
+          : `Danışmanlık hizmeti — ${order.order_number}`;
+
+    const invoice = await createInvoiceForOrder({
+      orderId: order.id,
+      bookingId: order.booking_id ?? null,
+      userId: order.user_id,
+      customerName: buyer?.full_name || 'Danışan',
+      customerEmail: buyer?.email ?? null,
+      description,
+      amount: Number(args.amount),
+      currency: args.currency,
+      locale: 'tr',
+    });
+
+    if (invoice.status === 'created' && buyer?.email) {
+      await sendInvoiceMail({
+        to: buyer.email,
+        customerName: buyer.full_name || 'Danışan',
+        invoiceNumber: invoice.invoiceNumber,
+        pdfPath: invoice.pdfPath,
+      }).catch((err) => args.log?.error({ err, orderId: order.id }, 'invoice_mail_failed'));
+    }
+  } catch (err) {
+    args.log?.error({ err, orderId: order.id }, 'invoice_creation_failed');
   }
 
   return { status: 'completed', context, orderId: order.id, userId: order.user_id };

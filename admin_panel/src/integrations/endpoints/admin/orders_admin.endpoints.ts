@@ -33,6 +33,20 @@ export interface StripeEventRow {
   payment_status: string | null;
 }
 
+export interface InvoiceRow {
+  id: string;
+  invoice_number: string;
+  order_id: string | null;
+  customer_name: string;
+  customer_email: string | null;
+  description: string;
+  amount: string;
+  currency: string;
+  pdf_path: string | null;
+  issued_at: string;
+  emailed_at: string | null;
+}
+
 export interface PaymentProviderStatus {
   active_provider: 'stripe' | null;
   stripe: {
@@ -118,6 +132,20 @@ export const ordersAdminApi = baseApi.injectEndpoints({
       providesTags: [{ type: 'Payments' as const, id: 'STRIPE_EVENTS' }],
     }),
 
+    // Faturalar
+    listInvoicesAdmin: b.query<
+      { data: InvoiceRow[]; total: number; page: number; limit: number; totals: { amount: number } },
+      { page?: number; limit?: number; q?: string } | void
+    >({
+      query: (params) => ({ url: '/admin/invoices', method: 'GET', params: params ?? undefined }),
+      providesTags: [{ type: 'Payments' as const, id: 'INVOICES' }],
+    }),
+
+    resendInvoiceAdmin: b.mutation<{ success: boolean }, string>({
+      query: (id) => ({ url: `/admin/invoices/${encodeURIComponent(id)}/resend`, method: 'POST' }),
+      invalidatesTags: [{ type: 'Payments' as const, id: 'INVOICES' }],
+    }),
+
     // Payment Gateways
     listPaymentGatewaysAdmin: b.query<PaymentGatewayView[], void>({
       query: () => ({ url: GW_BASE, method: 'GET' }),
@@ -155,6 +183,8 @@ export const {
   useRefundOrderAdminMutation,
   useGetPaymentProviderStatusAdminQuery,
   useListStripeEventsAdminQuery,
+  useListInvoicesAdminQuery,
+  useResendInvoiceAdminMutation,
   useListPaymentGatewaysAdminQuery,
   useCreatePaymentGatewayAdminMutation,
   useUpdatePaymentGatewayAdminMutation,

@@ -101,14 +101,14 @@ Fatma kendi WalletPanel'inde, Murat admin Finans'ta aynı gerçeği görür.
 - [x] Ödeme sonrası müşteri onay mailini backend'den tetikle (`sendOrderCreatedMail` — şu an ölü)
 - [x] payment-reconciliation drift bulunca `goldmoodastro@gmail.com`'a mail atsın
 
-### Faz C — Fatura (DE Kleinunternehmer, basit PDF)
-- [ ] `invoices` tablosu: sıralı numara (`GM-2026-00001`), order_id/booking_id, müşteri snapshot,
+### Faz C — Fatura (DE Kleinunternehmer, basit PDF) — TAMAMLANDI 2026-08-17
+- [x] `invoices` tablosu: sıralı numara (`GM-2026-00001`), order_id/booking_id, müşteri snapshot,
       tutar, para birimi, pdf_path, issued_at (sıra atlamaz — yıllık sayaç)
-- [ ] PDF üretimi (satıcı: Orhan Güzel – Softwareentwicklung + adres + USt-IdNr; hizmet tanımı;
+- [x] PDF üretimi (satıcı: Orhan Güzel – Softwareentwicklung + adres + USt-IdNr; hizmet tanımı;
       **"Kein Ausweis von Umsatzsteuer gemäß § 19 UStG"** notu; TR müşteriye TR/EN açıklama satırı)
-- [ ] Ödeme tamamlanınca otomatik: fatura üret → müşteriye e-posta → `uploads/invoices/` arşiv
-- [ ] Admin Finans'ta "Faturalar" listesi (indir/yeniden gönder); sipariş detayına fatura linki
-- [ ] 2 €'luk test ödemesi bilinçli olarak faturalanmaz (kullanıcı kararı, 2026-08-16)
+- [x] Ödeme tamamlanınca otomatik: fatura üret → müşteriye e-posta → `uploads/invoices/` arşiv
+- [x] Admin Finans'ta "Faturalar" listesi (indir/yeniden gönder); sipariş detayına fatura linki
+- [x] 2 €'luk test ödemesi bilinçli olarak faturalanmaz (kullanıcı kararı, 2026-08-16)
 - [ ] Gelen faturalar hatırlatması: Stripe/Meta/Google faturalarının §13b reverse-charge beyanı
       (repo dışı — Steuerberater notu)
 

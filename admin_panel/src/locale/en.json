@@ -2076,7 +2076,8 @@
       "astrology_kb": "Astrology Knowledge Base",
       "banners": "Banner Management",
       "campaigns": "Campaigns",
-      "home_layout": "Home Layout"
+      "home_layout": "Home Layout",
+      "invoices": "Invoices"
     },
     "stats": {
       "deliveredOrders": "Delivered Orders",
@@ -5431,5 +5432,24 @@
       "paymentSucceeded": "Payment succeeded",
       "paymentFailed": "Payment failed"
     }
+  },
+  "invoices": {
+    "title": "Invoices",
+    "desc": "Sales invoices issued to customers (§19 UStG — no VAT shown).",
+    "search": "Search invoice no / customer",
+    "count": "Count",
+    "sum": "Total",
+    "colNumber": "Invoice No",
+    "colCustomer": "Customer",
+    "colDesc": "Description",
+    "colAmount": "Amount",
+    "colDate": "Date",
+    "colActions": "Actions",
+    "empty": "No invoices issued yet.",
+    "sent": "sent",
+    "resend": "Resend",
+    "resent": "Invoice resent.",
+    "resendError": "Invoice could not be sent.",
+    "downloadError": "Invoice could not be downloaded."
   }
 }

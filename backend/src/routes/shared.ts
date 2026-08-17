@@ -65,6 +65,7 @@ import { registerDashboardAdmin } from '@goldmood/shared-backend/modules/dashboa
 import { registerDbAdmin } from '@goldmood/shared-backend/modules/db_admin/admin.routes';
 import { registerAnnouncementsAdmin } from '@goldmood/shared-backend/modules/announcements/admin.routes';
 import { registerOrdersAdmin } from '@goldmood/shared-backend/modules/orders/router';
+import { registerInvoicesAdmin } from '@goldmood/shared-backend/modules/invoices/admin.routes';
 import { registerLlmPromptsAdmin } from '@goldmood/shared-backend/modules/llmPrompts';
 import { registerAstrologyKbAdmin } from '@goldmood/shared-backend/modules/astrologyKb';
 import { registerLlmAdmin } from '@goldmood/shared-backend/modules/llm/admin.routes';
@@ -128,6 +129,7 @@ export async function registerSharedAdmin(adminApi: FastifyInstance) {
     registerWalletAdmin,
     registerResourcesAdmin,
     registerOrdersAdmin,
+    registerInvoicesAdmin,
     registerDashboardAdmin,
     registerDbAdmin,
     registerAnnouncementsAdmin,

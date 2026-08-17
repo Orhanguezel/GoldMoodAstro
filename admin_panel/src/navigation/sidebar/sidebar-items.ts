@@ -27,6 +27,7 @@ import {
   MessageCircle,
   MessageSquare,
   Banknote,
+  FileText,
   Package,
   Receipt,
   Send,
@@ -120,6 +121,7 @@ export type AdminNavItemKey =
   | 'commission_change'
   | 'withdrawals'
   | 'stripe_events'
+  | 'invoices'
   | 'marketing'
   | 'eko_social'
   | 'eko_facebook'
@@ -176,6 +178,7 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
     items: [
       { key: 'orders', url: '/admin/orders', icon: Package },
       { key: 'stripe_events', url: '/admin/stripe-events', icon: CreditCard },
+      { key: 'invoices', url: '/admin/invoices', icon: FileText },
       { key: 'wallet', url: '/admin/wallet', icon: Receipt },
       { key: 'withdrawals', url: '/admin/withdrawals', icon: Banknote },
       { key: 'payment_settings', url: '/admin/payment-settings', icon: CreditCard },
@@ -300,6 +303,7 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   commission_change: 'Komisyon Bildirimi',
   withdrawals: 'Çekim Talepleri',
   stripe_events: 'Stripe Ödemeleri',
+  invoices: 'Faturalar',
   marketing: 'Pazarlama & Dönüşüm',
   eko_social: 'Sosyal Medya',
   eko_facebook: 'Facebook',

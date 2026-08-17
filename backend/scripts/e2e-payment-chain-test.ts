@@ -52,6 +52,7 @@ async function cleanup() {
   // credit_transactions siparişlerden ÖNCE silinmeli: sonra silinirse alt sorgu
   // boş döner ve satırlar kalıcı olur (bakiye testi bir sonraki koşuda sapar).
   await db.execute(sql`DELETE FROM credit_transactions WHERE reference_id LIKE 'e2e-%' OR order_id IN (SELECT id FROM orders WHERE order_number LIKE 'E2E-%')`).catch(() => {});
+  await db.execute(sql`DELETE FROM invoices WHERE order_id IN (SELECT id FROM orders WHERE order_number LIKE 'E2E-%')`).catch(() => {});
   await db.execute(sql`DELETE FROM orders WHERE order_number LIKE 'E2E-%'`);
   await db.execute(sql`DELETE FROM bookings WHERE id LIKE 'e2e-%'`);
 }
@@ -108,6 +109,24 @@ async function main() {
   check(pay?.slug === 'stripe', `payments provider stripe (${pay?.slug})`);
   const [bookingAfter] = rows(await db.execute(sql`SELECT status FROM bookings WHERE id = ${bookingId}`));
   check(bookingAfter?.status === 'confirmed', `booking confirmed (${bookingAfter?.status})`);
+
+  console.log('\n── 1b) FATURA: ödeme tamamlanınca otomatik kesildi mi');
+  {
+    const [inv] = rows(await db.execute(sql`
+      SELECT invoice_number, amount, currency, pdf_path, tax_note FROM invoices WHERE order_id = ${orderId}
+    `));
+    check(Boolean(inv), 'fatura oluştu');
+    check(/^GM-\d{4}-\d{5}$/.test(String(inv?.invoice_number ?? '')), `numara formatı GM-YYYY-NNNNN (${inv?.invoice_number})`);
+    check(Number(inv?.amount) === 500, `fatura tutarı 500 (${inv?.amount})`);
+    check(String(inv?.tax_note ?? '').includes('19'), 'KDV notu (§19 UStG) faturada');
+    if (inv?.pdf_path) {
+      const { existsSync, statSync } = await import('node:fs');
+      const ok = existsSync(String(inv.pdf_path)) && statSync(String(inv.pdf_path)).size > 1000;
+      check(ok, `PDF diske yazıldı (${inv.pdf_path})`);
+    } else {
+      check(false, 'PDF yolu yazılmadı');
+    }
+  }
 
   console.log('\n── 2) Aynı webhook TEKRAR gelirse (idempotens)');
   const wh1b = await postWebhook({

@@ -694,6 +694,9 @@ export async function sendMailRaw(input: SendMailInput) {
       subject: data.subject,
       text: data.text,
       html: data.html,
+      // Şema attachments'ı kabul ediyordu ama nodemailer'a HİÇ geçilmiyordu:
+      // ek gönderiliyor sanılıp mail eksiz gidiyordu (fatura PDF'i buna takıldı).
+      ...(data.attachments?.length ? { attachments: data.attachments as any } : {}),
     });
 
     emitAppEvent({

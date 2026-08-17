@@ -1127,7 +1127,8 @@
       "astrology_kb": "Astrologie-Wissensdatenbank",
       "banners": "Banner-Management",
       "campaigns": "Kampagnen",
-      "home_layout": "Startseiten-Layout"
+      "home_layout": "Startseiten-Layout",
+      "invoices": "Rechnungen"
     },
     "stats": {
       "deliveredOrders": "Gelieferte Bestellungen",
@@ -5431,5 +5432,24 @@
       "paymentSucceeded": "Zahlung erfolgreich",
       "paymentFailed": "Zahlung fehlgeschlagen"
     }
+  },
+  "invoices": {
+    "title": "Rechnungen",
+    "desc": "An Kunden ausgestellte Rechnungen (§19 UStG — keine USt.).",
+    "search": "Rechnungsnr. / Kunde suchen",
+    "count": "Anzahl",
+    "sum": "Gesamt",
+    "colNumber": "Rechnungsnr.",
+    "colCustomer": "Kunde",
+    "colDesc": "Beschreibung",
+    "colAmount": "Betrag",
+    "colDate": "Datum",
+    "colActions": "Aktionen",
+    "empty": "Noch keine Rechnungen.",
+    "sent": "gesendet",
+    "resend": "Erneut senden",
+    "resent": "Rechnung erneut gesendet.",
+    "resendError": "Rechnung konnte nicht gesendet werden.",
+    "downloadError": "Rechnung konnte nicht geladen werden."
   }
 }
