@@ -18,6 +18,8 @@ import { orders, paymentGateways, payments } from './schema';
 import { bookings } from '../bookings/schema';
 import { addCredits, getPackageById } from '../credits/repository';
 import { activateSubscriptionForPaidOrder } from '../subscriptions/activate.service';
+import { users } from '../auth/schema';
+import { sendOrderCreatedMail } from '../mail/service';
 
 export type OrderContext = 'booking' | 'credits_purchase' | 'subscription_start' | 'unknown';
 
@@ -150,6 +152,29 @@ export async function completePaidOrder(args: {
     } catch (err) {
       args.log?.error({ err, orderId: order.id }, 'subscription_activation_failed_after_payment');
     }
+  }
+
+  // Ödeme onayı e-postası — bugüne kadar YALNIZ admin REST ucundan tetiklenebiliyordu,
+  // yani gerçek ödemede müşteriye hiç mail gitmiyordu (sendOrderCreatedMail ölü koddu).
+  // Mail hatası ödemeyi geri almaz; log'a düşer.
+  try {
+    const [buyer] = await db
+      .select({ email: users.email, full_name: users.full_name })
+      .from(users)
+      .where(eq(users.id, order.user_id))
+      .limit(1);
+    if (buyer?.email) {
+      await sendOrderCreatedMail({
+        to: buyer.email,
+        customer_name: buyer.full_name || 'Danışan',
+        order_number: order.order_number,
+        final_amount: String(args.amount),
+        status: nextStatus,
+        locale: 'tr',
+      });
+    }
+  } catch (err) {
+    args.log?.error({ err, orderId: order.id }, 'order_confirmation_mail_failed');
   }
 
   return { status: 'completed', context, orderId: order.id, userId: order.user_id };

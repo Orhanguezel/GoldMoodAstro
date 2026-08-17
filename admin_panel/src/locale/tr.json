@@ -5408,5 +5408,28 @@
         "featured": "Öne çıkan"
       }
     }
+  },
+  "stripeEvents": {
+    "title": "Stripe Ödemeleri",
+    "desc": "Stripe’tan gelen ödeme olayları. “İşlendi” boşsa ödeme siparişe bağlanmamıştır.",
+    "statTotal": "Kayıt",
+    "statPageSum": "Bu sayfadaki tahsilat",
+    "statUnprocessed": "İşlenmemiş",
+    "colDate": "Tarih",
+    "colType": "Olay",
+    "colCustomer": "Müşteri",
+    "colAmount": "Tutar",
+    "colOrder": "Sipariş",
+    "colProcessed": "İşlendi",
+    "empty": "Henüz Stripe ödeme olayı yok.",
+    "noOrder": "bağlı değil",
+    "notProcessed": "işlenmedi",
+    "event": {
+      "checkoutCompleted": "Ödeme tamamlandı",
+      "refunded": "İade edildi",
+      "dispute": "İtiraz açıldı",
+      "paymentSucceeded": "Tahsilat başarılı",
+      "paymentFailed": "Tahsilat başarısız"
+    }
   }
 }

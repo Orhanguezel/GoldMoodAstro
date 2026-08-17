@@ -85,7 +85,7 @@ Fatma kendi WalletPanel'inde, Murat admin Finans'ta aynı gerçeği görür.
       bölümü — `stripe_events` listesi (tutar/müşteri/tarih parse edilmiş)
 - [x] Ölü `section-cards.tsx` (sahte ₺124.500) dosyasını sil
 
-### Faz B — Stripe ledger entegrasyonu + kazanç otomasyonu (asıl iş)
+### Faz B — Stripe ledger entegrasyonu + kazanç otomasyonu (asıl iş) — TAMAMLANDI 2026-08-17
 - [x] `payment_gateways`'e `stripe` kaydı (061b seed; prod'a uygulandı) — provider ayrımı
       mevcut `gateway_id` üzerinden, ek kolon gerekmedi
 - [x] Checkout Session üretimini booking akışına bağla (072c9bd — `client_reference_id=order_id`;
@@ -96,10 +96,10 @@ Fatma kendi WalletPanel'inde, Murat admin Finans'ta aynı gerçeği görür.
       confirmed randevu → completed → `createPendingSessionEarning` (072c9bd; E2E: 500→300 net)
 - [x] `consultant-earnings` cron'una `media_message_earning` release'i eklendi (072c9bd; E2E'de doğrulandı)
 - [x] Komisyon tek fonksiyondan: mediaMessages artık `getPlatformCommissionPercent` kullanıyor (072c9bd)
-- [ ] Refund akışını provider-aware yap (Stripe refund API'si; iyzico yolu korunur)
-- [ ] `charge.refunded` webhook'u → orders.refunded + negatif payment + wallet geri-sarma (mevcut refund mantığıyla)
-- [ ] Ödeme sonrası müşteri onay mailini backend'den tetikle (`sendOrderCreatedMail` — şu an ölü)
-- [ ] payment-reconciliation drift bulunca `goldmoodastro@gmail.com`'a mail atsın
+- [x] Refund akışını provider-aware yap (Stripe refund API'si; iyzico yolu korunur)
+- [x] `charge.refunded` webhook'u → orders.refunded + negatif payment + wallet geri-sarma (mevcut refund mantığıyla)
+- [x] Ödeme sonrası müşteri onay mailini backend'den tetikle (`sendOrderCreatedMail` — şu an ölü)
+- [x] payment-reconciliation drift bulunca `goldmoodastro@gmail.com`'a mail atsın
 
 ### Faz C — Fatura (DE Kleinunternehmer, basit PDF)
 - [ ] `invoices` tablosu: sıralı numara (`GM-2026-00001`), order_id/booking_id, müşteri snapshot,

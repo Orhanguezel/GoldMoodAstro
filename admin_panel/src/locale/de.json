@@ -5408,5 +5408,28 @@
         "featured": "Hervorgehoben"
       }
     }
+  },
+  "stripeEvents": {
+    "title": "Stripe-Zahlungen",
+    "desc": "Zahlungsereignisse von Stripe. Ist „Verarbeitet“ leer, wurde die Zahlung keiner Bestellung zugeordnet.",
+    "statTotal": "Einträge",
+    "statPageSum": "Auf dieser Seite vereinnahmt",
+    "statUnprocessed": "Nicht verarbeitet",
+    "colDate": "Datum",
+    "colType": "Ereignis",
+    "colCustomer": "Kunde",
+    "colAmount": "Betrag",
+    "colOrder": "Bestellung",
+    "colProcessed": "Verarbeitet",
+    "empty": "Noch keine Stripe-Zahlungsereignisse.",
+    "noOrder": "nicht zugeordnet",
+    "notProcessed": "nicht verarbeitet",
+    "event": {
+      "checkoutCompleted": "Zahlung abgeschlossen",
+      "refunded": "Erstattet",
+      "dispute": "Zahlungsstreit eröffnet",
+      "paymentSucceeded": "Zahlung erfolgreich",
+      "paymentFailed": "Zahlung fehlgeschlagen"
+    }
   }
 }

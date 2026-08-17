@@ -234,6 +234,52 @@ async function main() {
     check(mmReleased?.payment_status === 'completed', `media earning released (${mmReleased?.payment_status}) — eski kodda SONSUZA DEK pending kalıyordu`);
   }
 
+  console.log('\n── 7) İADE: charge.refunded → sipariş refunded + hakediş geri sarıldı');
+  {
+    // Yeni: iade Stripe panelinden yapıldığında da defter geri sarılmalı.
+    // Aşama 1-4'teki randevu siparişi ödenmiş ve hakedişi serbest bırakılmıştı.
+    const [balBefore] = rows(await db.execute(
+      sql`SELECT balance FROM wallets WHERE consultant_id = ${consultant.id}`,
+    ));
+    const [payRow] = rows(await db.execute(
+      sql`SELECT transaction_id FROM payments WHERE order_id = ${orderId} AND status = 'success' LIMIT 1`,
+    ));
+
+    const wh3 = await postWebhook({
+      id: `evt_e2e_${randomUUID().slice(0, 12)}`,
+      type: 'charge.refunded',
+      api_version: 'e2e',
+      data: { object: { id: 'ch_e2e_1', payment_intent: payRow?.transaction_id, amount: 50000, amount_refunded: 50000, currency: 'try' } },
+    });
+    check(wh3.status === 200, `iade webhook 200 (${wh3.status})`, wh3.body);
+
+    const [orderRefunded] = rows(await db.execute(
+      sql`SELECT payment_status, status FROM orders WHERE id = ${orderId}`,
+    ));
+    check(orderRefunded?.payment_status === 'refunded', `sipariş refunded (${orderRefunded?.payment_status})`);
+
+    const [negPay] = rows(await db.execute(
+      sql`SELECT amount FROM payments WHERE order_id = ${orderId} AND status = 'refund' LIMIT 1`,
+    ));
+    check(Boolean(negPay), 'negatif ödeme satırı yazıldı');
+
+    const [earningAfter] = rows(await db.execute(
+      sql`SELECT payment_status FROM wallet_transactions WHERE transaction_ref = ${'booking:' + bookingId}`,
+    ));
+    check(earningAfter?.payment_status === 'refunded', `hakediş refunded (${earningAfter?.payment_status})`);
+
+    const [balAfter] = rows(await db.execute(
+      sql`SELECT balance FROM wallets WHERE consultant_id = ${consultant.id}`,
+    ));
+    check(
+      Number(balBefore?.balance ?? 0) - Number(balAfter?.balance ?? 0) === 300,
+      `bakiyeden 300 geri alındı (${balBefore?.balance} → ${balAfter?.balance})`,
+    );
+
+    const [bookingAfter] = rows(await db.execute(sql`SELECT status FROM bookings WHERE id = ${bookingId}`));
+    check(bookingAfter?.status === 'cancelled', `randevu iptal edildi (${bookingAfter?.status})`);
+  }
+
   console.log(`\n══ SONUÇ: ${passed} geçti, ${failed} kaldı ══`);
   await cleanup();
   process.exit(failed === 0 ? 0 : 1);

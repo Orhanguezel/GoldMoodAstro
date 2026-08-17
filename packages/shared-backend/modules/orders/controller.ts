@@ -17,7 +17,8 @@ import { DEFAULT_LOCALE } from '../../core/i18n';
 import { users } from "../auth/schema";
 import { clawbackCredits, getPackageById } from "../credits/repository";
 import { hasAnalyticsConsent, sendCapiEvent } from '../marketing/meta-capi';
-import { createCheckoutSession, isStripeConfigured, paypalSupportsCurrency, StripeNotConfiguredError } from "./stripe.service";
+import { createCheckoutSession, isStripeConfigured, paypalSupportsCurrency, refundPaymentIntent, StripeNotConfiguredError } from "./stripe.service";
+import { applyRefundToLedger } from "./refund.service";
 import { convertFromBase, resolveCheckoutCurrency } from "../_shared/currency";
 
 /** JWT payload'dan user bilgilerini normalize et.
@@ -825,95 +826,56 @@ export const refundOrderAdmin: RouteHandler<{ Params: { id: string } }> = async 
     const [gateway] = await db.select().from(paymentGateways).where(eq(paymentGateways.id, payment.gateway_id)).limit(1);
     if (!gateway) return reply.code(400).send({ error: { message: "payment_gateway_not_found" } });
 
-    const iyzico = new IyzicoService(resolveIyzicoConfigFromGateway(gateway));
-    const conversationId = `refund_${order.order_number}`;
-    const refundResult = await iyzico.refundPaymentV2({
-      locale: resolveIyzicoLocale(resolveLocale(req)),
-      conversationId,
-      paymentId: payment.transaction_id,
-      price: String(payment.amount),
-      currency: payment.currency || order.currency || 'TRY',
-      ip: requestIp(req),
-    });
-
-    if (!isIyzicoSuccess(refundResult)) {
-      return reply.code(502).send({
-        error: { message: String(refundResult.errorMessage || 'iyzico_refund_failed') },
-        gateway_response: refundResult,
-      });
-    }
-
-    await db.transaction(async (tx) => {
-      await tx.insert(payments).values({
-        id: randomUUID(),
-        order_id: id,
-        gateway_id: gateway.id,
-        amount: `-${String(payment.amount)}`,
-        currency: payment.currency || order.currency || 'TRY',
-        status: 'refund',
-        transaction_id: `refund_${payment.transaction_id}`,
-        raw_response: JSON.stringify(refundResult),
-      });
-
-      await tx.update(orders).set({
-        status: "refunded",
-        payment_status: "refunded",
-        notes: reason || order.notes || null,
-        updated_at: new Date(),
-      } as any).where(eq(orders.id, id));
-
-      if (order.booking_id) {
-        await tx.execute(sql`
-          UPDATE wallets w
-          INNER JOIN wallet_transactions wt ON wt.wallet_id = w.id
-          SET w.pending_balance = GREATEST(w.pending_balance - wt.amount, 0),
-              w.total_earnings = GREATEST(w.total_earnings - wt.amount, 0),
-              w.updated_at = NOW(3),
-              wt.payment_status = 'refunded',
-              wt.updated_at = NOW(3)
-          WHERE wt.booking_id = ${order.booking_id}
-            AND wt.purpose = 'session_earning'
-            AND wt.payment_status = 'pending'
-        `);
-        await tx.execute(sql`
-          UPDATE wallets w
-          INNER JOIN wallet_transactions wt ON wt.wallet_id = w.id
-          SET w.balance = w.balance - wt.amount,
-              w.total_earnings = GREATEST(w.total_earnings - wt.amount, 0),
-              w.updated_at = NOW(3),
-              wt.payment_status = 'refunded',
-              wt.updated_at = NOW(3)
-          WHERE wt.booking_id = ${order.booking_id}
-            AND wt.purpose = 'session_earning'
-            AND wt.payment_status = 'completed'
-        `);
-        await tx.execute(sql`
-          UPDATE bookings
-          SET status = 'cancelled', updated_at = NOW(3)
-          WHERE id = ${order.booking_id}
-        `);
-      }
-    });
-
-    const notes = (() => {
+    // İade SAĞLAYICIYA GÖRE yapılır. Stripe ödemesini iyzico'ya iade etmeye
+    // çalışmak sessizce başarısız olur ve sipariş "iade edildi" görünürken
+    // müşterinin parası iade EDİLMEMİŞ olur (2026-08-17 öncesi tek yol iyzico'ydu).
+    let refundResult: Record<string, unknown>;
+    if (gateway.slug === 'stripe') {
       try {
-        return JSON.parse(String(order.notes || '{}')) as { context?: string; package_id?: string };
-      } catch {
-        return null;
+        const minor = Math.round(Number(payment.amount) * 100);
+        const stripeRefund = await refundPaymentIntent(
+          payment.transaction_id,
+          Number.isFinite(minor) && minor > 0 ? minor : undefined,
+        );
+        refundResult = stripeRefund as Record<string, unknown>;
+        const status = String((stripeRefund as any)?.status || '');
+        if (status && !['succeeded', 'pending'].includes(status)) {
+          return reply.code(502).send({ error: { message: `stripe_refund_${status}` }, gateway_response: stripeRefund });
+        }
+      } catch (err) {
+        req.log.error(`stripe_refund_failed: ${logErrorMessage(err)}`);
+        return reply.code(502).send({ error: { message: 'stripe_refund_failed' } });
       }
-    })();
-    if (notes?.context === 'credits_purchase' && notes.package_id) {
-      const pkg = await getPackageById(notes.package_id);
-      if (pkg) {
-        const totalCredits = Number(pkg.credits || 0) + Number(pkg.bonusCredits ?? pkg.bonus_credits ?? 0);
-        await clawbackCredits(order.user_id, totalCredits, {
-          type: 'order_refund_clawback',
-          id: order.id,
-          orderId: order.id,
-          description: `Order refund clawback: ${order.order_number}`,
+    } else {
+      const iyzico = new IyzicoService(resolveIyzicoConfigFromGateway(gateway));
+      const conversationId = `refund_${order.order_number}`;
+      const iyzicoResult = await iyzico.refundPaymentV2({
+        locale: resolveIyzicoLocale(resolveLocale(req)),
+        conversationId,
+        paymentId: payment.transaction_id,
+        price: String(payment.amount),
+        currency: payment.currency || order.currency || 'TRY',
+        ip: requestIp(req),
+      });
+
+      if (!isIyzicoSuccess(iyzicoResult)) {
+        return reply.code(502).send({
+          error: { message: String(iyzicoResult.errorMessage || 'iyzico_refund_failed') },
+          gateway_response: iyzicoResult,
         });
       }
+      refundResult = iyzicoResult as Record<string, unknown>;
     }
+
+    // Defter tarafı ortak serviste: aynı geri sarma Stripe'ın charge.refunded
+    // webhook'undan da çalışıyor (iade Stripe panelinden yapılırsa site haberdar olsun).
+    const ledger = await applyRefundToLedger({
+      orderId: id,
+      reason: reason || null,
+      providerRefund: refundResult,
+      log: req.log as any,
+    });
+    if (ledger.status === 'not_found') return reply.code(404).send({ error: { message: 'order_not_found' } });
 
     return reply.send({ success: true });
   } catch (err) {

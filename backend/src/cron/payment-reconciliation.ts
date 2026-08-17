@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { sendMailRaw } from '@goldmood/shared-backend/modules/mail/service';
 import { db } from '@/db/client';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -49,14 +50,40 @@ export async function runPaymentReconciliationSweep() {
   `));
 
   if (creditDrift.length > 0 || orderPaymentDrift.length > 0 || walletDrift.length > 0) {
-    console.error('[payment-reconciliation] drift_detected', {
+    const summary = {
       credit_count: creditDrift.length,
       order_payment_count: orderPaymentDrift.length,
       wallet_count: walletDrift.length,
       credit_sample: creditDrift.slice(0, 3),
       order_payment_sample: orderPaymentDrift.slice(0, 3),
       wallet_sample: walletDrift.slice(0, 3),
-    });
+    };
+    console.error('[payment-reconciliation] drift_detected', summary);
+
+    // Log'a yazmak yetmiyordu: kimse pm2 logunu her gün okumuyor, para
+    // tutarsızlığı fark edilmeden kalabiliyordu. Fark bulunduğunda mail at.
+    // Mail hatası sweep'i düşürmesin.
+    try {
+      const to = process.env.STRIPE_NOTIFY_EMAIL || 'goldmoodastro@gmail.com';
+      const lines = [
+        `Kredi tutarsızlığı: ${creditDrift.length}`,
+        `Sipariş/ödeme tutarsızlığı: ${orderPaymentDrift.length}`,
+        `Cüzdan tutarsızlığı: ${walletDrift.length}`,
+        '',
+        'Örnekler:',
+        JSON.stringify(summary.credit_sample, null, 2),
+        JSON.stringify(summary.order_payment_sample, null, 2),
+        JSON.stringify(summary.wallet_sample, null, 2),
+      ].join('\n');
+      await sendMailRaw({
+        to,
+        subject: `[GoldMoodAstro] Ödeme mutabakatı farkı (${creditDrift.length + orderPaymentDrift.length + walletDrift.length} kayıt)`,
+        text: lines,
+        html: `<pre style="font-family:monospace;font-size:13px">${lines.replace(/</g, '&lt;')}</pre>`,
+      });
+    } catch (error) {
+      console.error('[payment-reconciliation] uyarı maili gönderilemedi:', (error as Error)?.message);
+    }
   }
 }
 

@@ -5408,5 +5408,28 @@
   "states": {
     "loading": "Loading...",
     "noRecords": "No records"
+  },
+  "stripeEvents": {
+    "title": "Stripe Payments",
+    "desc": "Payment events from Stripe. An empty “Processed” means the payment was never linked to an order.",
+    "statTotal": "Records",
+    "statPageSum": "Collected on this page",
+    "statUnprocessed": "Unprocessed",
+    "colDate": "Date",
+    "colType": "Event",
+    "colCustomer": "Customer",
+    "colAmount": "Amount",
+    "colOrder": "Order",
+    "colProcessed": "Processed",
+    "empty": "No Stripe payment events yet.",
+    "noOrder": "not linked",
+    "notProcessed": "not processed",
+    "event": {
+      "checkoutCompleted": "Payment completed",
+      "refunded": "Refunded",
+      "dispute": "Dispute opened",
+      "paymentSucceeded": "Payment succeeded",
+      "paymentFailed": "Payment failed"
+    }
   }
 }

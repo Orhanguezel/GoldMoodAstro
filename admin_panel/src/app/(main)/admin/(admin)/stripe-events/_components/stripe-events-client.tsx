@@ -36,6 +36,45 @@ function formatMoney(amount: number | null, currency: string | null, locale: str
   }
 }
 
+// Stripe olay adları ham anahtar olarak görünüyordu ("checkout.session.completed").
+// Admin'in okuyabileceği karşılıkları burada; bilinmeyen tip ham haliyle kalır
+// (yeni bir olay tipi geldiğinde gizlenmesin, görünsün).
+const EVENT_LABEL_KEYS: Record<string, { key: string; tr: string; en: string; de: string }> = {
+  'checkout.session.completed': {
+    key: 'event.checkoutCompleted',
+    tr: 'Ödeme tamamlandı',
+    en: 'Payment completed',
+    de: 'Zahlung abgeschlossen',
+  },
+  'charge.refunded': { key: 'event.refunded', tr: 'İade edildi', en: 'Refunded', de: 'Erstattet' },
+  'charge.dispute.created': {
+    key: 'event.dispute',
+    tr: 'İtiraz açıldı',
+    en: 'Dispute opened',
+    de: 'Zahlungsstreit eröffnet',
+  },
+  'payment_intent.succeeded': {
+    key: 'event.paymentSucceeded',
+    tr: 'Tahsilat başarılı',
+    en: 'Payment succeeded',
+    de: 'Zahlung erfolgreich',
+  },
+  'payment_intent.payment_failed': {
+    key: 'event.paymentFailed',
+    tr: 'Tahsilat başarısız',
+    en: 'Payment failed',
+    de: 'Zahlung fehlgeschlagen',
+  },
+};
+
+const STATUS_LABELS: Record<string, { tr: string; en: string; de: string }> = {
+  paid: { tr: 'Ödendi', en: 'Paid', de: 'Bezahlt' },
+  unpaid: { tr: 'Ödenmedi', en: 'Unpaid', de: 'Unbezahlt' },
+  no_payment_required: { tr: 'Ödeme gerekmiyor', en: 'No payment required', de: 'Keine Zahlung nötig' },
+  succeeded: { tr: 'Başarılı', en: 'Succeeded', de: 'Erfolgreich' },
+  complete: { tr: 'Tamamlandı', en: 'Complete', de: 'Abgeschlossen' },
+};
+
 function formatDate(value: string | null, locale: string) {
   if (!value) return '—';
   const d = new Date(value);
@@ -51,6 +90,16 @@ export default function StripeEventsClient() {
   const t = useAdminTranslations(adminLocale || undefined);
   const locale = adminLocale || 'tr';
   const b = (key: string, fallback: string) => t(`admin.stripeEvents.${key}` as any, null, fallback);
+
+  const lang = (locale === 'en' || locale === 'de' ? locale : 'tr') as 'tr' | 'en' | 'de';
+  const eventLabel = (type: string) => {
+    const entry = EVENT_LABEL_KEYS[type];
+    return entry ? b(entry.key, entry[lang]) : type;
+  };
+  const statusLabel = (value: string) => {
+    const entry = STATUS_LABELS[value];
+    return entry ? entry[lang] : value;
+  };
 
   const [page, setPage] = React.useState(1);
   const limit = 50;
@@ -151,9 +200,13 @@ export default function StripeEventsClient() {
                     {formatDate(row.created_at, locale)}
                   </TableCell>
                   <TableCell className="py-4">
-                    <code className="rounded-full border border-gm-border-soft bg-gm-bg-deep px-3 py-1 text-[11px] text-gm-text">
-                      {row.type}
-                    </code>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm text-gm-text">{eventLabel(row.type)}</span>
+                      <code className="text-[10px] text-gm-muted">{row.type}</code>
+                      {row.payment_status ? (
+                        <span className="text-[10px] text-gm-muted">{statusLabel(row.payment_status)}</span>
+                      ) : null}
+                    </div>
                   </TableCell>
                   <TableCell className="py-4 text-sm text-gm-text">
                     <div>{row.customer_name || '—'}</div>

@@ -15,6 +15,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { sendMail } from '@goldmood/shared-backend/modules/mail';
 import { completePaidOrder } from '@goldmood/shared-backend/modules/orders/complete.service';
+import { applyRefundToLedger } from '@goldmood/shared-backend/modules/orders/refund.service';
 
 const TOLERANCE_SECONDS = 5 * 60;
 
@@ -143,6 +144,47 @@ export async function registerStripeWebhook(app: FastifyInstance) {
 
       // 2) Bildirim (ledger başarılı olsun ya da Payment Link olsun, her durumda).
       await notifyAdminCheckoutCompleted(event, req.log);
+    }
+
+    if (event.type === 'charge.refunded') {
+      // İade Stripe panelinden yapıldığında sitenin haberi olmuyordu: sipariş
+      // "ödendi" kalıyor, danışman hakedişi duruyordu. Artık defter geri sarılır.
+      // Sipariş eşleşmesi payment_intent üzerinden: webhook'ta payments satırına
+      // transaction_id olarak payment_intent yazılıyor.
+      const charge = event?.data?.object ?? {};
+      const paymentIntent = String(charge.payment_intent || '').trim();
+      const metaOrderId = String(charge.metadata?.order_id || '').trim();
+
+      let orderId = metaOrderId;
+      if (!orderId && paymentIntent) {
+        const found = await db.execute(sql`
+          SELECT order_id FROM payments WHERE transaction_id = ${paymentIntent} AND status = 'success' LIMIT 1
+        `);
+        const row = ((found as any)?.[0] ?? found ?? [])[0] as any;
+        orderId = String(row?.order_id ?? '').trim();
+      }
+
+      if (orderId) {
+        try {
+          const refunded = Number(charge.amount_refunded ?? charge.amount ?? 0) / 100;
+          const result = await applyRefundToLedger({
+            orderId,
+            reason: 'stripe_charge_refunded',
+            providerRefund: charge,
+            amount: refunded > 0 ? refunded : null,
+            log: req.log,
+          });
+          req.log.info({ orderId, result: result.status }, 'stripe_refund_applied');
+          if (result.status !== 'not_found') {
+            await db.execute(sql`UPDATE stripe_events SET processed_at = NOW(3) WHERE id = ${event.id}`);
+          }
+        } catch (err) {
+          req.log.error({ err, orderId }, 'stripe_refund_apply_failed');
+          return reply.code(500).send({ error: { message: 'refund_apply_failed' } });
+        }
+      } else {
+        req.log.error({ eventId: event.id, paymentIntent }, 'stripe_refund_order_not_matched');
+      }
     }
 
     req.log.info({ eventId: event.id, type: event.type }, 'stripe_webhook_received');
