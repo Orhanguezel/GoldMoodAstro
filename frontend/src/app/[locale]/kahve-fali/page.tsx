@@ -29,7 +29,7 @@ export default async function CoffeePage({ params }: Props) {
   return (
     <>
       <Banner title={getLanding('kahve-fali', locale).eyebrow} />
-      <PageContainer className="bg-[var(--gm-bg)]">
+      <PageContainer className="bg-[var(--gm-bg)]" pad="afterBanner">
         {/* Araç önce, uzun editoryal içerik sonra (2026-07-20 müşteri talebi):
             önceki sırada kullanıcı aracı görmek için ~4000px metin geçmek zorundaydı. */}
         <CoffeeHub />
