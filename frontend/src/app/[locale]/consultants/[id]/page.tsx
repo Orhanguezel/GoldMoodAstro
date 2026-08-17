@@ -42,6 +42,10 @@ type ConsultantForSchema = {
   currency?: string | null;
   rating_avg?: string | number | null;
   rating_count?: number | null;
+  supports_video?: number | null;
+  total_sessions?: number | null;
+  is_available?: number | null;
+  min_service_price?: string | number | null;
 };
 
 type ConsultantServiceForSchema = {
@@ -226,16 +230,22 @@ function consultantPageCopy(locale: string) {
     verified: 'Onaylı Danışman Profili', expertise: 'Uzmanlık Alanları', languages: 'Görüşme dilleri',
     rating: 'Puan', newLabel: 'Yeni', reviews: 'Yorum', starting: 'Başlangıç',
     services: 'Hizmetler ve Ücretler', testimonials: 'Danışan Yorumları', client: 'GoldMoodAstro danışanı',
+    duration: 'Seans süresi', minutes: 'dk', book: 'Randevu Al',
+    secureNote: 'Ödeme güvenli altyapı üzerinden alınır. Görüşme uygulama içinde yapılır.',
   };
   if (locale === 'de') return {
     verified: 'Verifiziertes Beraterprofil', expertise: 'Fachgebiete', languages: 'Gesprächssprachen',
     rating: 'Bewertung', newLabel: 'Neu', reviews: 'Bewertungen', starting: 'Ab',
     services: 'Leistungen und Preise', testimonials: 'Kundenbewertungen', client: 'GoldMoodAstro-Kunde',
+    duration: 'Sitzungsdauer', minutes: 'Min.', book: 'Termin buchen',
+    secureNote: 'Die Zahlung erfolgt über eine sichere Infrastruktur. Das Gespräch findet in der App statt.',
   };
   return {
     verified: 'Verified Consultant Profile', expertise: 'Areas of Expertise', languages: 'Session languages',
     rating: 'Rating', newLabel: 'New', reviews: 'Reviews', starting: 'Starting at',
     services: 'Services and Pricing', testimonials: 'Client Reviews', client: 'GoldMoodAstro client',
+    duration: 'Session length', minutes: 'min', book: 'Book a session',
+    secureNote: 'Payment is handled by a secure provider. The session takes place inside the app.',
   };
 }
 
@@ -310,6 +320,11 @@ export default async function ConsultantDetailPage({ params }: Props) {
   const ratingValue = Number(consultant?.rating_avg ?? 0);
   const ratingCount = Number(consultant?.rating_count ?? 0);
   const personId = `${pageUrl}#person`;
+  // Kartla AYNI kural: temel ücret 0 ise "başlangıç" en ucuz aktif hizmettir.
+  // Aksi halde sayfada 0 ₺ yazıyordu ama listede fiyat görünüyordu.
+  const basePrice = Number(consultant?.session_price ?? 0);
+  const minServicePrice = Number(consultant?.min_service_price ?? 0);
+  const startingPrice = basePrice > 0 ? basePrice : minServicePrice;
   const expertiseItems = asStringArray(consultant?.expertise);
   const languageItems = asStringArray(consultant?.languages);
 
@@ -428,7 +443,20 @@ export default async function ConsultantDetailPage({ params }: Props) {
                 )}
               </div>
 
-              <aside className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-bg-deep) p-6">
+              {/* self-start: kart, uzun biyografi yüzünden ESNEMESİN. Önceden
+                  sağdaki kutu sol sütun kadar uzuyordu ve altı kocaman boş
+                  kalıyordu (2026-08-17 ekran görüntüsü). */}
+              <aside className="self-start rounded-2xl border border-(--gm-border-soft) bg-(--gm-bg-deep) p-6">
+                {/* Fotoğraf: bu blokta hiç yoktu, danışman sayfasında yüz görünmüyordu. */}
+                {consultant.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={absoluteUrl(consultant.avatar_url)}
+                    alt={consultantName}
+                    className="mb-5 aspect-square w-full rounded-2xl border border-(--gm-border-soft) object-cover"
+                  />
+                ) : null}
+
                 <div className="mb-5 flex items-center justify-between gap-4">
                   <span className="text-sm text-(--gm-text-dim)">{copy.rating}</span>
                   <strong className="text-2xl text-(--gm-gold)">
@@ -439,12 +467,41 @@ export default async function ConsultantDetailPage({ params }: Props) {
                   <span className="text-sm text-(--gm-text-dim)">{copy.reviews}</span>
                   <strong className="text-xl text-(--gm-text)">{ratingCount}</strong>
                 </div>
-                <div className="flex items-center justify-between gap-4">
+                <div className="mb-5 flex items-center justify-between gap-4">
                   <span className="text-sm text-(--gm-text-dim)">{copy.starting}</span>
                   <strong className="text-xl text-(--gm-text)">
-                    {toDisplay(consultant.session_price)}
+                    {toDisplay(startingPrice)}
                   </strong>
                 </div>
+
+                {consultant.session_duration ? (
+                  <div className="mb-5 flex items-center justify-between gap-4">
+                    <span className="text-sm text-(--gm-text-dim)">{copy.duration}</span>
+                    <strong className="text-base text-(--gm-text)">
+                      {consultant.session_duration} {copy.minutes}
+                    </strong>
+                  </div>
+                ) : null}
+
+                {languageItems.length > 0 ? (
+                  <div className="mb-5 flex items-start justify-between gap-4">
+                    <span className="text-sm text-(--gm-text-dim)">{copy.languages}</span>
+                    <strong className="text-right text-sm text-(--gm-text)">
+                      {languageItems.map((item) => languageLabels[item] || item.toUpperCase()).join(', ')}
+                    </strong>
+                  </div>
+                ) : null}
+
+                <a
+                  href={localizedPath(locale, `/consultants/${canonicalParam}`, 'tr')}
+                  className="mt-2 block rounded-full bg-(--gm-gold) px-6 py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-(--gm-bg-deep)"
+                >
+                  {copy.book}
+                </a>
+
+                <p className="mt-3 text-center text-[10px] leading-relaxed text-(--gm-muted)">
+                  {copy.secureNote}
+                </p>
               </aside>
             </div>
 
