@@ -83,7 +83,15 @@ export const fetchCustomPagePublicByLandingKey = cache(
 );
 
 export const fetchCustomPagesPublicByModule = cache(
-  async (args: { moduleKey: string; locale: string; limit?: number }): Promise<CustomPageDto[]> => {
+  async (args: {
+    moduleKey: string;
+    locale: string;
+    limit?: number;
+    /** Blog listesinde en yeni yazı önce gelmeli; SSS/legal'da eklenme sırası doğru. */
+    orderDir?: 'asc' | 'desc';
+    /** Ana sayfa bölümü yalnız "öne çıkan" yazıları ister. */
+    featuredOnly?: boolean;
+  }): Promise<CustomPageDto[]> => {
     const moduleKey = String(args.moduleKey || '').trim();
     if (!moduleKey) return [];
 
@@ -97,8 +105,9 @@ export const fetchCustomPagesPublicByModule = cache(
       is_published: 'true',
       limit: String(args.limit ?? 10),
       sort: 'created_at',
-      orderDir: 'asc',
+      orderDir: args.orderDir ?? 'asc',
     });
+    if (args.featuredOnly) qs.set('featured', 'true');
 
     const raw = await fetchApiJson<unknown>(`/custom-pages?${qs.toString()}`, { revalidate: 300 });
     return normalizeArrayResponse<ApiCustomPage>(raw).map(mapApiCustomPageToDto);

@@ -14,6 +14,7 @@ import {
   Save,
   Search,
   Sparkles,
+  Star,
   Trash2,
   UserRound,
   Wand2,
@@ -381,6 +382,21 @@ export default function ContentModuleClient({
     }
   };
 
+  // "Ana sayfada göster" — custom_pages.featured alanını çevirir. Ana sayfadaki
+  // blog bölümü yalnız bu işaretli ve YAYINDA olan yazıları listeler.
+  const toggleFeatured = async (post: CustomPageDto) => {
+    try {
+      await updatePost({ id: post.id, patch: { featured: !post.featured } }).unwrap();
+      toast.success(
+        post.featured
+          ? b('toast.unfeatured', 'Yazı ana sayfadan kaldırıldı.')
+          : b('toast.featured', 'Yazı ana sayfada gösterilecek.'),
+      );
+    } catch (error) {
+      toast.error(errorMessage(error, b('toast.featuredError', 'Ana sayfa durumu güncellenemedi.')));
+    }
+  };
+
   const remove = async (post: CustomPageDto) => {
     if (!confirm(b('confirmDelete', '"{title}" silinsin mi?', { title: post.title || post.slug || post.id }))) return;
     try {
@@ -613,6 +629,7 @@ export default function ContentModuleClient({
               <TableRow className="border-gm-border-soft hover:bg-transparent">
                 <TableHead className="px-7 py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.status', 'Durum')}</TableHead>
                 <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.post', 'Yazı')}</TableHead>
+                <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.featured', 'Ana sayfa')}</TableHead>
                 <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">SEO</TableHead>
                 {isBlogModule ? <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">Yazar</TableHead> : null}
                 <TableHead className="py-5 text-[10px] uppercase tracking-widest text-gm-muted">{b('table.date', 'Tarih')}</TableHead>
@@ -621,10 +638,10 @@ export default function ContentModuleClient({
             </TableHeader>
             <TableBody>
               {query.isLoading ? (
-                <TableRow><TableCell colSpan={isBlogModule ? 6 : 5} className="py-20 text-center text-sm italic text-gm-muted">{b('loading', 'Yükleniyor...')}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={isBlogModule ? 7 : 6} className="py-20 text-center text-sm italic text-gm-muted">{b('loading', 'Yükleniyor...')}</TableCell></TableRow>
               ) : posts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isBlogModule ? 6 : 5} className="py-24 text-center">
+                  <TableCell colSpan={isBlogModule ? 7 : 6} className="py-24 text-center">
                     <div className="flex flex-col items-center gap-3 text-gm-muted">
                       <BookOpen className="size-12 opacity-40" />
                     <span className="font-serif italic">{emptyLabel || b('empty', 'Henüz içerik yok.')}</span>
@@ -663,11 +680,28 @@ export default function ContentModuleClient({
                           <div className="font-serif text-lg text-gm-text">{title}</div>
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-gm-muted">
                             <code className="rounded-full border border-gm-border-soft bg-gm-bg-deep px-2 py-0.5">{post.slug}</code>
-                            {post.featured && <Badge variant="outline" className="border-gm-gold/30 text-gm-gold">{b('status.featured', 'Öne çıkan')}</Badge>}
                           </div>
                           {post.summary && <p className="mt-2 max-w-2xl truncate text-xs text-gm-muted">{post.summary}</p>}
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell className="py-5">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={Boolean(post.featured)}
+                          onCheckedChange={() => toggleFeatured(post)}
+                          disabled={busy || !post.is_published}
+                          aria-label={b('table.featured', 'Ana sayfa')}
+                        />
+                        {post.featured ? (
+                          <Star className="size-4 text-gm-gold" />
+                        ) : null}
+                      </div>
+                      {!post.is_published ? (
+                        <p className="mt-1 text-[10px] text-gm-muted">
+                          {b('featuredNeedsPublish', 'Önce yayına al')}
+                        </p>
+                      ) : null}
                     </TableCell>
                     <TableCell className="py-5">
                       {score ? (

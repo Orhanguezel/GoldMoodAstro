@@ -60,7 +60,7 @@ function formatDate(locale: string, value?: string | Date | null): string {
 export default async function BlogPage({ params }: Props) {
   const { locale } = await params;
   const copy = copyFor(locale);
-  const posts = await fetchCustomPagesPublicByModule({ moduleKey: 'blog', locale, limit: 20 });
+  const posts = await fetchCustomPagesPublicByModule({ moduleKey: 'blog', locale, limit: 20, orderDir: 'desc' });
 
   return (
     <>

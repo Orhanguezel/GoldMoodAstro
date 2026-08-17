@@ -122,7 +122,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   const slug = safeStr(p?.slug);
   const [page, allPosts] = await Promise.all([
     slug ? fetchCustomPagePublicBySlug({ slug, locale }) : Promise.resolve(null),
-    fetchCustomPagesPublicByModule({ moduleKey: 'blog', locale, limit: 7 }).catch(() => []),
+    fetchCustomPagesPublicByModule({ moduleKey: 'blog', locale, limit: 7, orderDir: 'desc' }).catch(() => []),
   ]);
   // 2026-07-20 (GSC): yazi yoksa slug'dan SAHTE bir yazi sayfasi uretiliyordu
   // ("Olmayan Yazi" basligi + SSS + yazar kutusu). Google bunu gercek icerik

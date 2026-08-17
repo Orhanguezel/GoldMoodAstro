@@ -26,6 +26,8 @@ const REGISTRY: Record<string, any> = {
   FirstSessionDiscountBanner: dynamic(() => import('./FirstSessionDiscountBanner'), { loading: () => null }),
   WelcomePremiumBanner: dynamic(() => import('./WelcomePremiumBanner'), { loading: () => null }),
   AppDownloadSection: dynamic(() => import('./AppDownloadSection'), { loading: () => null }),
+  // Ana sayfa blog bölümü — admin panelde 'Ana sayfa' anahtarı açık yazıları gösterir.
+  HomeBlogSection: dynamic(() => import('./HomeBlogSection'), { loading: () => null }),
 };
 
 import { useSearchParams } from 'next/navigation';
