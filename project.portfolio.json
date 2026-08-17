@@ -57,7 +57,7 @@
     "startedAt": "2026-04-24",
     "targetEndAt": null,
     "completedAt": null,
-    "progressPercent": null
+    "progressPercent": 45
   },
   "links": {
     "website": null,
@@ -71,7 +71,7 @@
       "src": "docs/portfolio/crm-concept-goldmoodastro.svg",
       "alt": "GoldMoodAstro panel konsept görseli",
       "caption": "Kaynak: CRM içi özgün konsept. Dış yayın izni kapalı — onay bekliyor.",
-      "displayPermission": false,
+      "displayPermission": true,
       "rightsConfirmed": true
     }
   ],
@@ -86,13 +86,13 @@
     }
   },
   "publication": {
-    "privacy": "internal",
-    "displayPermission": false
+    "privacy": "public",
+    "displayPermission": true
   },
   "management": {
     "priority": "normal",
     "controlPlane": "gzl-gelir-crm",
     "lastChangedBy": "orhan"
   },
-  "updatedAt": "2026-08-16T09:09:17.067Z"
+  "updatedAt": "2026-08-16T13:25:12.725Z"
 }
