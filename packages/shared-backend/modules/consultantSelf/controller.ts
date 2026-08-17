@@ -1421,6 +1421,115 @@ export async function getClientDetail(req: FastifyRequest, reply: FastifyReply) 
   return reply.send({ data: { user, bookings: rowsFromExecute(bookingsResult) } });
 }
 
+/* ─── GET /me/consultant/clients/:userId/astro ───
+ * Danışanın BİR KEZ hesaplanıp profiline kaydolan verileri: doğum haritası,
+ * yıldızname (ebced/menzil), numeroloji. Danışman sohbet ederken bunları
+ * görebilsin diye eklendi (2026-08-17 talebi).
+ *
+ * ERİŞİM FAIL-CLOSED: yalnız danışmanla GERÇEK bir ilişkisi olan danışanın
+ * verisi döner — randevu, sesli/görüntülü mesaj ya da bu danışmana açılmış bir
+ * sohbet dizisi. Aksi halde 404 (varlık bilgisi bile sızmasın diye 403 değil).
+ * Kayıt yoksa alan null döner; "yok" ile "yetkisiz" karışmaz.
+ */
+export async function getClientAstroProfile(req: FastifyRequest, reply: FastifyReply) {
+  const c = await getCallerConsultant(req);
+  if (!c) return reply.code(403).send({ error: { message: 'not_consultant' } });
+  const userId = String((req.params as { userId?: string })?.userId ?? '').trim();
+  if (userId.length !== 36) return reply.code(400).send({ error: { message: 'user_id_required' } });
+
+  const relatedResult = await db.execute(sql`
+    SELECT u.id, u.full_name, u.email, u.avatar_url
+    FROM users u
+    WHERE u.id = ${userId}
+      AND (
+        EXISTS (SELECT 1 FROM bookings b WHERE b.user_id = u.id AND b.consultant_id = ${c.id})
+        OR EXISTS (SELECT 1 FROM media_messages m WHERE m.user_id = u.id AND m.consultant_id = ${c.id})
+        OR EXISTS (
+          SELECT 1 FROM chat_threads t
+          WHERE t.created_by_user_id = u.id
+            AND (
+              (t.context_type = 'consultant_lead' AND t.context_id = ${c.id})
+              OR (t.context_type = 'booking' AND EXISTS (
+                    SELECT 1 FROM bookings b2 WHERE b2.id = t.context_id AND b2.consultant_id = ${c.id}
+                  ))
+            )
+        )
+      )
+    LIMIT 1
+  `);
+  const user = rowsFromExecute(relatedResult)[0];
+  if (!user) return reply.code(404).send({ error: { message: 'client_not_found' } });
+
+  // Doğum haritası: kullanıcının kendi haritası (birden fazlaysa en güncel).
+  const chartResult = await db.execute(sql`
+    SELECT id, name, dob, tob, pob_label, chart_data, created_at
+    FROM birth_charts
+    WHERE user_id = ${userId}
+    ORDER BY created_at DESC
+    LIMIT 1
+  `);
+  const chartRow = rowsFromExecute(chartResult)[0] as any;
+  let chart: any = null;
+  if (chartRow) {
+    let parsed = chartRow.chart_data;
+    if (typeof parsed === 'string') {
+      try { parsed = JSON.parse(parsed); } catch { parsed = null; }
+    }
+    chart = {
+      id: chartRow.id,
+      name: chartRow.name,
+      dob: chartRow.dob,
+      tob: chartRow.tob,
+      pob_label: chartRow.pob_label,
+      created_at: chartRow.created_at,
+      // Danışmanın ihtiyacı olan özet: üçlü + ev sistemi. Tüm JSON'u
+      // göndermiyoruz — gereksiz veri paylaşımı KVKK açısından da yanlış olur.
+      sun_sign: parsed?.planets?.sun?.sign ?? null,
+      moon_sign: parsed?.planets?.moon?.sign ?? null,
+      ascendant_sign: parsed?.ascendant?.sign ?? null,
+      planets: parsed?.planets ?? null,
+    };
+  }
+
+  const yildiznameResult = await db.execute(sql`
+    SELECT y.id, y.name, y.mother_name, y.birth_year, y.ebced_total, y.menzil_no,
+           y.locale, y.created_at, r.name_tr AS menzil_name_tr, r.short_summary AS menzil_summary
+    FROM yildizname_readings y
+    LEFT JOIN yildizname_results r ON r.menzil_no = y.menzil_no
+    WHERE y.user_id = ${userId}
+    ORDER BY y.created_at DESC
+    LIMIT 1
+  `);
+  const yildizname = rowsFromExecute(yildiznameResult)[0] ?? null;
+
+  const numerologyResult = await db.execute(sql`
+    SELECT id, full_name, calculation_data, locale, created_at
+    FROM numerology_readings
+    WHERE user_id = ${userId}
+    ORDER BY created_at DESC
+    LIMIT 1
+  `);
+  const numerologyRow = rowsFromExecute(numerologyResult)[0] as any;
+  let numerology: any = null;
+  if (numerologyRow) {
+    let calc = numerologyRow.calculation_data;
+    if (typeof calc === 'string') {
+      try { calc = JSON.parse(calc); } catch { calc = null; }
+    }
+    numerology = { ...numerologyRow, calculation_data: calc };
+  }
+
+  return reply.send({
+    data: {
+      user,
+      birth_chart: chart,
+      yildizname,
+      numerology,
+      has_any: Boolean(chart || yildizname || numerology),
+    },
+  });
+}
+
 /* ─── GET /me/consultant/profile-completion ─── */
 export async function getProfileCompletion(req: FastifyRequest, reply: FastifyReply) {
   const c = await getCallerConsultant(req);

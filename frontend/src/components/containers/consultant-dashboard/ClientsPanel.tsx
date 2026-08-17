@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import ClientAstroPanel from './ClientAstroPanel';
 import { Search, Users, Calendar, Star, Loader2 } from 'lucide-react';
 import { useGetMyConsultantClientsQuery } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { useUiSection } from '@/i18n';
@@ -118,10 +119,8 @@ export default function ClientsPanel() {
             {/* Rows */}
             <div className="divide-y divide-(--gm-border-soft)">
               {filtered.map((client) => (
-                <div
-                  key={client.user_id}
-                  className="flex items-center gap-4 px-5 py-4 hover:bg-(--gm-gold)/5 transition-colors"
-                >
+                <div key={client.user_id} className="px-5 py-4 hover:bg-(--gm-gold)/5 transition-colors">
+                <div className="flex items-center gap-4">
                   <Avatar src={client.avatar_url} name={client.full_name} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -150,6 +149,13 @@ export default function ClientsPanel() {
                       {client.booking_count}
                     </span>
                   </div>
+                </div>
+
+                {/* Danışanın kayıtlı doğum haritası / yıldızname / numeroloji.
+                    Kapalı gelir; açılınca istek atılır (liste hızlı kalsın). */}
+                <div className="mt-3">
+                  <ClientAstroPanel userId={client.user_id} />
+                </div>
                 </div>
               ))}
             </div>

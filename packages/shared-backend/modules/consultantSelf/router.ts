@@ -32,6 +32,9 @@ export async function registerConsultantSelf(app: FastifyInstance) {
   app.get('/me/consultant/profile-views', { preHandler: guard }, controller.getProfileViews);
   app.get('/me/consultant/clients', { preHandler: guard }, controller.listClients);
   app.get('/me/consultant/clients/:userId', { preHandler: guard }, controller.getClientDetail);
+  // Danışanın kayıtlı astro verisi (doğum haritası / yıldızname / numeroloji).
+  // Sohbet ekranında gösterilir; erişim ilişki kontrolüyle fail-closed.
+  app.get('/me/consultant/clients/:userId/astro', { preHandler: guard }, controller.getClientAstroProfile);
 
   // Mesajlar (T30-6)
   app.get('/me/consultant/threads', { preHandler: guard }, controller.listMessageThreads);

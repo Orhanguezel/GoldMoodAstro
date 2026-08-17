@@ -202,6 +202,40 @@ export interface ConsultantSelfReview {
   } | null;
 }
 
+export interface ClientAstroProfile {
+  user: { id: string; full_name: string | null; email: string | null; avatar_url: string | null };
+  birth_chart: {
+    id: string;
+    name: string | null;
+    dob: string | null;
+    tob: string | null;
+    pob_label: string | null;
+    created_at: string | null;
+    sun_sign: string | null;
+    moon_sign: string | null;
+    ascendant_sign: string | null;
+    planets: Record<string, { sign?: string; degree?: number }> | null;
+  } | null;
+  yildizname: {
+    id: string;
+    name: string | null;
+    mother_name: string | null;
+    birth_year: number | null;
+    ebced_total: number | null;
+    menzil_no: number | null;
+    menzil_name_tr: string | null;
+    menzil_summary: string | null;
+    created_at: string | null;
+  } | null;
+  numerology: {
+    id: string;
+    full_name: string | null;
+    calculation_data: Record<string, unknown> | null;
+    created_at: string | null;
+  } | null;
+  has_any: boolean;
+}
+
 export interface ConsultantSelfThreadCustomer {
   id: string;
   full_name: string | null;
@@ -752,6 +786,11 @@ export const consultantSelfApi = baseApi.injectEndpoints({
       transformResponse: (res: { data: ConsultantClient[] }) => res.data ?? [],
       providesTags: ['ConsultantSelfClients' as any],
     }),
+    // Danışanın kayıtlı astro verisi — sohbet ekranında gösterilir.
+    getClientAstroProfile: build.query<ClientAstroProfile, string>({
+      query: (userId) => ({ url: `/me/consultant/clients/${encodeURIComponent(userId)}/astro` }),
+      transformResponse: (res: { data: ClientAstroProfile }) => res.data,
+    }),
     // C9: Profil tamamlama skoru
     getMyConsultantProfileCompletion: build.query<ProfileCompletionResult, void>({
       query: () => '/me/consultant/profile-completion',
@@ -827,4 +866,6 @@ export const {
   useGetMyConsultantMonthlyStatsQuery,
   // C7
   useGetMyConsultantProfileViewsQuery,
+  // Sohbette danışanın kayıtlı astro verisi
+  useGetClientAstroProfileQuery,
 } = consultantSelfApi;

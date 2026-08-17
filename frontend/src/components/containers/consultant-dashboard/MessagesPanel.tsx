@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Send, MessageCircle, Loader2 } from 'lucide-react';
+import ClientAstroPanel from './ClientAstroPanel';
 import ChatWarningBanner from '@/components/common/ChatWarningBanner';
 import { toast } from 'sonner';
 import {
@@ -189,6 +190,12 @@ export default function MessagesPanel() {
                 </div>
                 <div className="text-[11px] text-[var(--gm-muted)]">{active.customer?.email}</div>
               </div>
+            </div>
+
+            {/* Danışanın profiline kayıtlı doğum haritası / yıldızname / numeroloji.
+                Sohbet sırasında elinin altında olsun diye burada; varsayılan kapalı. */}
+            <div className="m-4 mb-0">
+              <ClientAstroPanel userId={active.customer?.id} locale={locale} />
             </div>
 
             {/* T29-6: shared warning banner */}
