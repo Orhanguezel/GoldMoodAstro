@@ -662,11 +662,18 @@ export default function ContentModuleClient({
                         </Badge>
                       </div>
                     </TableCell>
-                    {/* max-w + truncate: uzun başlık ve slug tabloyu ekranın
-                        dışına taşıyordu (2026-08-17). Slug artık kırpılıyor,
-                        tam hali title attribute'unda. */}
-                    <TableCell className="max-w-[460px] py-5">
-                      <div className="flex items-start gap-3">
+                    {/* Bu hücre tabloyu ekranın dışına taşıyordu (2026-08-17).
+                        İKİ ayrı sebep vardı:
+                        1) Özet satırı `truncate` idi — bu white-space:nowrap demek.
+                           Genişlik sınırı olmayınca tarayıcı özeti TEK satıra
+                           sığdırmaya çalışıp sütunu yüzlerce piksel genişletiyordu.
+                           Uzun metinde nowrap yerine line-clamp kullanılır.
+                        2) Genişlik sınırı <td>'ye yazılmıştı; table-layout:auto'da
+                           hücre max-width'i CSS gereği YOK SAYILIR. Sınır, hücrenin
+                           içindeki bloğa verilmeli — o yüzden aşağıdaki sarmalayıcı
+                           div sabit genişlikte. */}
+                    <TableCell className="py-5 align-top">
+                      <div className="flex w-[420px] max-w-full items-start gap-3">
                         {coverUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -683,15 +690,15 @@ export default function ContentModuleClient({
                           <div className="line-clamp-2 font-serif text-lg text-gm-text" title={title}>
                             {title}
                           </div>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-gm-muted">
+                          <div className="mt-1 flex text-[11px] text-gm-muted">
                             <code
-                              className="inline-block max-w-[280px] truncate rounded-full border border-gm-border-soft bg-gm-bg-deep px-2 py-0.5 align-bottom"
+                              className="block truncate rounded-full border border-gm-border-soft bg-gm-bg-deep px-2 py-0.5"
                               title={post.slug ?? undefined}
                             >
                               {post.slug}
                             </code>
                           </div>
-                          {post.summary && <p className="mt-2 truncate text-xs text-gm-muted">{post.summary}</p>}
+                          {post.summary && <p className="mt-2 line-clamp-2 text-xs text-gm-muted">{post.summary}</p>}
                         </div>
                       </div>
                     </TableCell>
@@ -867,7 +874,9 @@ function AuthorProfileCard({
           </span>
         )}
       </span>
-      <span className="min-w-0">
+      {/* max-w: içerideki truncate'ler nowrap demek; sınır olmazsa uzun bir
+          e-posta bu sütunu tek satırda genişletip tabloyu taşırır. */}
+      <span className={cn('min-w-0', compact && 'max-w-[180px]')}>
         {!compact ? <span className="block text-[10px] font-bold uppercase tracking-widest text-gm-muted">Yazar profili</span> : null}
         <span className="block truncate text-sm font-semibold text-gm-text">{name}</span>
         {consultant?.email ? <span className="block truncate text-[11px] text-gm-muted">{consultant.email}</span> : null}
