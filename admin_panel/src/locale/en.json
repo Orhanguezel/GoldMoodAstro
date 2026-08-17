@@ -1948,6 +1948,7 @@
       "languagePlaceholder": "Select language"
     },
     "groups": {
+      "finance": "Finance",
       "general": "General / Management",
       "content": "Content Management",
       "marketing": "Marketing",
@@ -2033,6 +2034,8 @@
       }
     },
     "items": {
+      "withdrawals": "Withdrawal Requests",
+      "stripe_events": "Stripe Payments",
       "consultants": "Consultants",
       "db": "Database",
       "audit": "Audit Logs",

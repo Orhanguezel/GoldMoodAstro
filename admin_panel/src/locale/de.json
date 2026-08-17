@@ -999,6 +999,7 @@
       "languagePlaceholder": "Sprache wählen"
     },
     "groups": {
+      "finance": "Finanzen",
       "general": "Allgemein / Verwaltung",
       "content": "Inhaltsverwaltung",
       "marketing": "Marketing",
@@ -1084,6 +1085,8 @@
       }
     },
     "items": {
+      "withdrawals": "Auszahlungsanträge",
+      "stripe_events": "Stripe-Zahlungen",
       "consultants": "Berater",
       "db": "Datenbank",
       "audit": "Audit-Protokolle",

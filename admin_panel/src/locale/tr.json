@@ -1001,6 +1001,7 @@
       "languagePlaceholder": "Dil seçin"
     },
     "groups": {
+      "finance": "Finans",
       "general": "Genel / Yönetim",
       "content": "İçerik Yönetimi",
       "marketing": "Pazarlama",
@@ -1086,6 +1087,8 @@
       }
     },
     "items": {
+      "withdrawals": "Çekim Talepleri",
+      "stripe_events": "Stripe Ödemeleri",
       "consultants": "Danışmanlar",
       "db": "Veritabanı",
       "audit": "Denetim Kayıtları",

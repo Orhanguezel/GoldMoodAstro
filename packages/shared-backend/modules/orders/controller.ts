@@ -634,8 +634,16 @@ export const listOrdersAdmin: RouteHandler = async (req, reply) => {
       .limit(limit)
       .offset(offset);
 
+    // Sayım + parasal toplam AYNI filtreyle: liste "12 sipariş" derken toplam
+    // tutarı başka bir kümeden göstermek finans ekranında en kolay yanılma yolu.
+    // paid_amount ayrı: sepetteki tutar ile GERÇEKTEN tahsil edilen ayrışmalı.
     const countQuery = db
-      .select({ total: sql<number>`COUNT(*)` })
+      .select({
+        total: sql<number>`COUNT(*)`,
+        sum_amount: sql<string>`COALESCE(SUM(${orders.total_amount}), 0)`,
+        sum_paid: sql<string>`COALESCE(SUM(CASE WHEN ${orders.payment_status} = 'paid' THEN ${orders.total_amount} ELSE 0 END), 0)`,
+        paid_count: sql<number>`SUM(CASE WHEN ${orders.payment_status} = 'paid' THEN 1 ELSE 0 END)`,
+      })
       .from(orders)
       .leftJoin(users, eq(users.id, orders.user_id));
 
@@ -644,15 +652,83 @@ export const listOrdersAdmin: RouteHandler = async (req, reply) => {
       predicate ? countQuery.where(predicate) : countQuery,
     ]);
 
+    const agg = (countRows[0] ?? {}) as any;
     return reply.send({
       data: rows,
       page,
       limit,
-      total: Number((countRows[0] as any)?.total ?? rows.length),
+      total: Number(agg.total ?? rows.length),
+      totals: {
+        amount: Number(agg.sum_amount ?? 0),
+        paid_amount: Number(agg.sum_paid ?? 0),
+        paid_count: Number(agg.paid_count ?? 0),
+        currency: (rows[0] as any)?.currency ?? null,
+      },
     });
   } catch (err) {
     req.log.error(`orders_list_failed: ${logErrorMessage(err)}`);
     return reply.code(500).send({ error: { message: "orders_list_failed" } });
+  }
+};
+
+/**
+ * ADMIN: GET /admin/payments/stripe-events
+ * Stripe webhook kayıtları — tutar/müşteri/sipariş alanları AYRIŞTIRILMIŞ olarak.
+ *
+ * Neden: ödemeler bugüne kadar yalnız Stripe panelinde görünüyordu; admin
+ * "para geldi mi" sorusunu siteden yanıtlayamıyordu. Ham payload'ı olduğu gibi
+ * göndermiyoruz (içinde gereksiz PII var) — listede işe yarayan alanlar çıkarılır.
+ */
+export const listStripeEventsAdmin: RouteHandler = async (req, reply) => {
+  try {
+    const query = ((req as any).query ?? {}) as Record<string, unknown>;
+    const limit = toPositiveInt(query.limit, 50, 200);
+    const page = toPositiveInt(query.page, 1, 10000);
+    const offset = (page - 1) * limit;
+    const typeFilter = String(query.type ?? '').trim();
+
+    const rowsResult = await db.execute(sql`
+      SELECT id, type, payload, processed_at, created_at
+      FROM stripe_events
+      ${typeFilter ? sql`WHERE type = ${typeFilter}` : sql``}
+      ORDER BY created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `);
+    const rows = ((rowsResult as any)?.[0] ?? rowsResult ?? []) as any[];
+
+    const countResult = await db.execute(sql`
+      SELECT COUNT(*) AS total FROM stripe_events
+      ${typeFilter ? sql`WHERE type = ${typeFilter}` : sql``}
+    `);
+    const total = Number((((countResult as any)?.[0] ?? countResult ?? [])[0] as any)?.total ?? rows.length);
+
+    const data = rows.map((row) => {
+      let obj: any = {};
+      try {
+        const parsed = JSON.parse(String(row.payload || '{}'));
+        obj = parsed?.data?.object ?? {};
+      } catch {
+        obj = {};
+      }
+      const minor = obj.amount_total ?? obj.amount ?? obj.amount_captured ?? null;
+      return {
+        id: row.id,
+        type: row.type,
+        created_at: row.created_at,
+        processed_at: row.processed_at,
+        amount: minor != null ? Number(minor) / 100 : null,
+        currency: obj.currency ? String(obj.currency).toUpperCase() : null,
+        customer_email: obj.customer_details?.email ?? obj.receipt_email ?? obj.billing_details?.email ?? null,
+        customer_name: obj.customer_details?.name ?? obj.billing_details?.name ?? null,
+        order_id: obj.client_reference_id ?? obj.metadata?.order_id ?? null,
+        payment_status: obj.payment_status ?? obj.status ?? null,
+      };
+    });
+
+    return reply.send({ data, page, limit, total });
+  } catch (err) {
+    req.log.error(`stripe_events_list_failed: ${logErrorMessage(err)}`);
+    return reply.code(500).send({ error: { message: 'stripe_events_list_failed' } });
   }
 };
 

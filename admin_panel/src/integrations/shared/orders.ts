@@ -52,11 +52,20 @@ export type OrderAdminDetailView = OrderAdminView & {
   payments: PaymentView[];
 };
 
+/** Filtreye duyarlı parasal toplam — liste ile aynı WHERE'den gelir. */
+export type OrdersListTotals = {
+  amount: number;
+  paid_amount: number;
+  paid_count: number;
+  currency: string | null;
+};
+
 export type OrdersListResp = {
   data: OrderAdminView[];
   page: number;
   limit: number;
   total: number;
+  totals?: OrdersListTotals;
 };
 
 export type OrdersListQuery = {
@@ -199,6 +208,15 @@ export function normalizeOrdersListResp(raw: unknown): OrdersListResp {
     page: toNum(r.page, 1),
     limit: toNum(r.limit, data.length || 20),
     total: toNum(r.total, data.length),
+    totals: (() => {
+      const t = (r.totals ?? {}) as Record<string, unknown>;
+      return {
+        amount: toNum(t.amount, 0),
+        paid_amount: toNum(t.paid_amount, 0),
+        paid_count: toNum(t.paid_count, 0),
+        currency: typeof t.currency === 'string' ? t.currency : null,
+      };
+    })(),
   };
 }
 

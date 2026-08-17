@@ -76,6 +76,21 @@ export default function AdminOrdersClient() {
 
   const orders = q.data?.data ?? [];
   const total = q.data?.total ?? 0;
+  // Parasal toplam liste ile AYNI filtreden gelir (backend aynı WHERE'i kullanır);
+  // "12 sipariş" derken tutarı başka bir kümeden göstermek finansta en kolay
+  // yanılma yoluydu. paid_amount = gerçekten tahsil edilen.
+  const totals = q.data?.totals;
+  const money = (v: number) => {
+    try {
+      return new Intl.NumberFormat('tr-TR', {
+        style: 'currency',
+        currency: totals?.currency || 'TRY',
+        maximumFractionDigits: 2,
+      }).format(v);
+    } catch {
+      return String(v);
+    }
+  };
   const hasPrev = page > 1;
   const hasNext = orders.length >= limit && (page * limit) < total;
 
@@ -106,6 +121,25 @@ export default function AdminOrdersClient() {
             <p className="text-[10px] font-bold text-gm-muted tracking-widest uppercase mb-1">{t('summary.total_label')}</p>
             <p className="font-serif text-3xl text-gm-gold">{total}</p>
           </div>
+          {totals ? (
+            <>
+              <div className="text-center sm:text-right min-w-[120px]">
+                <p className="text-[10px] font-bold text-gm-muted tracking-widest uppercase mb-1">
+                  {t('summary.amount_label', null, 'Toplam Tutar')}
+                </p>
+                <p className="font-serif text-2xl text-gm-text">{money(totals.amount)}</p>
+              </div>
+              <div className="text-center sm:text-right min-w-[120px]">
+                <p className="text-[10px] font-bold text-gm-muted tracking-widest uppercase mb-1">
+                  {t('summary.paid_label', null, 'Tahsil Edilen')}
+                </p>
+                <p className="font-serif text-2xl text-emerald-500">{money(totals.paid_amount)}</p>
+                <p className="text-[10px] text-gm-muted">
+                  {totals.paid_count} / {total}
+                </p>
+              </div>
+            </>
+          ) : null}
           <Button 
             variant="outline" 
             size="sm" 

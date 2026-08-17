@@ -26,6 +26,7 @@ import {
   Mic,
   MessageCircle,
   MessageSquare,
+  Banknote,
   Package,
   Receipt,
   Send,
@@ -117,6 +118,8 @@ export type AdminNavItemKey =
   | 'landing'
   | 'pages'
   | 'commission_change'
+  | 'withdrawals'
+  | 'stripe_events'
   | 'marketing'
   | 'eko_social'
   | 'eko_facebook'
@@ -129,6 +132,7 @@ export type AdminNavItemKey =
 
 export type AdminNavGroupKey =
   | 'general'
+  | 'finance'
   | 'content'
   | 'marketing'
   | 'communication'
@@ -158,10 +162,24 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'users', url: '/admin/users', icon: Users },
       { key: 'account_deletions', url: '/admin/account-deletions', icon: Trash2 },
       { key: 'bookings', url: '/admin/bookings', icon: Calendar },
-      { key: 'orders', url: '/admin/orders', icon: Package },
       { key: 'subscriptions', url: '/admin/subscriptions', icon: CreditCard },
       { key: 'subscription_plans', url: '/admin/subscription-plans', icon: Receipt },
       { key: 'credit_packages', url: '/admin/credit-packages', icon: Receipt },
+    ],
+  },
+  {
+    // Para ile ilgili ekranlar dağınıktı: siparişler "genel"de, cüzdan ve ödeme
+    // ayarları "sistem"de, çekim talepleri ise hiçbir menüde yoktu (sayfa vardı
+    // ama erişilemiyordu). Finans tek çatı altında.
+    id: 6,
+    key: 'finance',
+    items: [
+      { key: 'orders', url: '/admin/orders', icon: Package },
+      { key: 'stripe_events', url: '/admin/stripe-events', icon: CreditCard },
+      { key: 'wallet', url: '/admin/wallet', icon: Receipt },
+      { key: 'withdrawals', url: '/admin/withdrawals', icon: Banknote },
+      { key: 'payment_settings', url: '/admin/payment-settings', icon: CreditCard },
+      { key: 'commission_change', url: '/admin/commission-change', icon: Send },
     ],
   },
   {
@@ -220,9 +238,6 @@ export const adminNavConfig: AdminNavConfigGroup[] = [
       { key: 'home_layout', url: '/admin/home-layout', icon: LayoutDashboard },
       { key: 'cache', url: '/admin/cache', icon: Trash2 },
       { key: 'availability', url: '/admin/availability', icon: Clock },
-      { key: 'wallet', url: '/admin/wallet', icon: Receipt },
-      { key: 'payment_settings', url: '/admin/payment-settings', icon: CreditCard },
-      { key: 'commission_change', url: '/admin/commission-change', icon: Send },
       { key: 'mail', url: '/admin/mail', icon: Send },
       { key: 'storage', url: '/admin/storage', icon: HardDrive },
       { key: 'db', url: '/admin/db', icon: Database },
@@ -283,6 +298,8 @@ const FALLBACK_TITLES: Record<AdminNavItemKey, string> = {
   landing: 'Landing Sayfaları',
   pages: 'İçerik/Hukuki Sayfalar',
   commission_change: 'Komisyon Bildirimi',
+  withdrawals: 'Çekim Talepleri',
+  stripe_events: 'Stripe Ödemeleri',
   marketing: 'Pazarlama & Dönüşüm',
   eko_social: 'Sosyal Medya',
   eko_facebook: 'Facebook',

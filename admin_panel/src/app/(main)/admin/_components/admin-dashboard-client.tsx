@@ -72,6 +72,8 @@ export default function AdminDashboardClient() {
     const totals = analytics?.totals;
     if (!totals) return [];
     return [
+      // "Toplam Ciro" etiketi ay başından beri olan tutarı gösteriyordu; ikisi ayrı KPI.
+      { key: 'revenue_month', label: t('kpis.revenueMonth', undefined, 'Bu Ay Ciro'), value: formatMoney(totals.revenue_month), icon: Wallet, color: 'var(--gm-gold)' },
       { key: 'revenue_total', label: t('kpis.revenue', undefined, 'Toplam Ciro'), value: formatMoney(totals.revenue_total), icon: Wallet, color: 'var(--gm-gold)' },
       { key: 'today_bookings', label: t('kpis.todayBookings', undefined, 'Bugünkü Randevular'), value: String(totals.today_bookings), icon: Calendar, color: 'var(--gm-primary)' },
       { key: 'consultants_active', label: t('kpis.consultants', undefined, 'Aktif Danışmanlar'), value: String(totals.consultants_active), icon: ShieldCheck, color: 'var(--gm-success)' },

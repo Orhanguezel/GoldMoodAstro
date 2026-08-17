@@ -40,6 +40,7 @@ export async function registerOrdersAdmin(app: FastifyInstance) {
 
   // Sağlayıcı durumu (env tabanlı, secret DÖNMEZ) — panelde "ödeme açık mı" göstergesi
   app.get("/payments/provider-status", controller.getPaymentProviderStatusAdmin);
+  app.get("/payments/stripe-events", controller.listStripeEventsAdmin);
 
   app.get("/payment-gateways", controller.listPaymentGatewaysAdmin);
   app.post("/payment-gateways", controller.createPaymentGatewayAdmin);

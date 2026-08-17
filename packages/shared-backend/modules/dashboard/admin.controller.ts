@@ -82,6 +82,36 @@ export const getDashboardAnalyticsAdmin: RouteHandler = async (req, reply) => {
         AND created_at >= DATE_FORMAT(CURRENT_DATE(), '%Y-%m-01')
     `);
 
+    // "revenue_total" adı taşıyan alan aslında AY BAŞINDAN beri olan ciroydu;
+    // panelde "Toplam Ciro" diye görünüyordu. İkisini de ayrı ayrı veriyoruz.
+    const revenueAllTime = await oneNumber(sql`
+      SELECT COALESCE(SUM(total_amount), 0) AS c
+      FROM orders
+      WHERE payment_status IN ('paid', 'success')
+    `);
+
+    // Grafikler boş dizi olarak dönüyordu (panelde düz çizgi). Son 30 günün
+    // günlük cirosu ve randevu adedi gerçek sorgudan gelir.
+    const revenueTrendRows = await manyRows(sql`
+      SELECT DATE(created_at) AS ymd, COALESCE(SUM(total_amount), 0) AS revenue, COUNT(*) AS orders_count
+      FROM orders
+      WHERE payment_status IN ('paid', 'success')
+        AND created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+      GROUP BY DATE(created_at)
+      ORDER BY ymd ASC
+    `);
+    const bookingTrendRows = await manyRows(sql`
+      SELECT DATE(created_at) AS ymd,
+             COUNT(*) AS bookings_total,
+             SUM(status IN ('booked','confirmed')) AS bookings_confirmed,
+             SUM(status = 'completed') AS bookings_completed,
+             SUM(status = 'cancelled') AS bookings_cancelled
+      FROM bookings
+      WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+      GROUP BY DATE(created_at)
+      ORDER BY ymd ASC
+    `);
+
     const totalBookings = await oneNumber(sql`SELECT COUNT(*) AS c FROM bookings`);
     const confirmedBookings = await oneNumber(sql`
       SELECT COUNT(*) AS c FROM bookings WHERE status IN ('booked', 'confirmed')
@@ -111,7 +141,8 @@ export const getDashboardAnalyticsAdmin: RouteHandler = async (req, reply) => {
         users_total: totalUsers,
         consultants_active: activeConsultants,
         today_bookings: todayBookings,
-        revenue_total: monthlyRevenue,
+        revenue_total: revenueAllTime,
+        revenue_month: monthlyRevenue,
         bookings_total: totalBookings,
         bookings_new: 0,
         bookings_confirmed: confirmedBookings,
@@ -140,8 +171,26 @@ export const getDashboardAnalyticsAdmin: RouteHandler = async (req, reply) => {
       },
       resources: [],
       services: [],
-      trend: [],
-      revenueTrend: [],
+      // Alan adları panelin beklediği sözleşmeye göre: bucket + *_total.
+      trend: bookingTrendRows.map((r: any) => {
+        const total = Number(r.bookings_total ?? 0);
+        const confirmed = Number(r.bookings_confirmed ?? 0);
+        const completed = Number(r.bookings_completed ?? 0);
+        const cancelled = Number(r.bookings_cancelled ?? 0);
+        return {
+          bucket: String(r.ymd).slice(0, 10),
+          bookings_total: total,
+          bookings_new: Math.max(total - confirmed - completed - cancelled, 0),
+          bookings_confirmed: confirmed,
+          bookings_completed: completed,
+          bookings_cancelled: cancelled,
+        };
+      }),
+      revenueTrend: revenueTrendRows.map((r: any) => ({
+        bucket: String(r.ymd).slice(0, 10),
+        revenue_total: Number(r.revenue ?? 0),
+        orders_total: Number(r.orders_count ?? 0),
+      })),
     });
   } catch (err) {
     req.log.error({ err }, 'dashboard_analytics_failed');

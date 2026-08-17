@@ -20,6 +20,19 @@ import {
   toOrdersListQuery,
 } from '@/integrations/shared';
 
+export interface StripeEventRow {
+  id: string;
+  type: string;
+  created_at: string;
+  processed_at: string | null;
+  amount: number | null;
+  currency: string | null;
+  customer_email: string | null;
+  customer_name: string | null;
+  order_id: string | null;
+  payment_status: string | null;
+}
+
 export interface PaymentProviderStatus {
   active_provider: 'stripe' | null;
   stripe: {
@@ -96,6 +109,15 @@ export const ordersAdminApi = baseApi.injectEndpoints({
       providesTags: [{ type: 'Payments' as const, id: 'PROVIDER_STATUS' }],
     }),
 
+    // Stripe webhook kayıtları — tutar/müşteri/sipariş ayrıştırılmış
+    listStripeEventsAdmin: b.query<
+      { data: StripeEventRow[]; total: number; page: number; limit: number },
+      { page?: number; limit?: number; type?: string } | void
+    >({
+      query: (params) => ({ url: '/admin/payments/stripe-events', method: 'GET', params: params ?? undefined }),
+      providesTags: [{ type: 'Payments' as const, id: 'STRIPE_EVENTS' }],
+    }),
+
     // Payment Gateways
     listPaymentGatewaysAdmin: b.query<PaymentGatewayView[], void>({
       query: () => ({ url: GW_BASE, method: 'GET' }),
@@ -132,6 +154,7 @@ export const {
   useUpdateOrderAdminMutation,
   useRefundOrderAdminMutation,
   useGetPaymentProviderStatusAdminQuery,
+  useListStripeEventsAdminQuery,
   useListPaymentGatewaysAdminQuery,
   useCreatePaymentGatewayAdminMutation,
   useUpdatePaymentGatewayAdminMutation,

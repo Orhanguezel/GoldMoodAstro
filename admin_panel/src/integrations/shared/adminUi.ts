@@ -75,6 +75,7 @@ const emptyNav: AdminNavCopy = {
     communication: '',
     system: '',
     ekosistem: '',
+    finance: '',
   },
   items: {
     dashboard: '',
@@ -120,6 +121,8 @@ const emptyNav: AdminNavCopy = {
     landing: '',
     pages: '',
     commission_change: '',
+    withdrawals: '',
+    stripe_events: '',
     eko_social: '',
     eko_facebook: '',
     eko_instagram: '',
@@ -144,6 +147,7 @@ export function normalizeAdminUiCopy(raw: unknown): AdminUiCopy {
     communication: uiText(labelsRaw.communication),
     system: uiText(labelsRaw.system),
     ekosistem: uiText(labelsRaw.ekosistem),
+    finance: uiText(labelsRaw.finance),
   };
 
   const items: AdminNavCopy['items'] = {
@@ -190,6 +194,8 @@ export function normalizeAdminUiCopy(raw: unknown): AdminUiCopy {
     landing: uiText(itemsRaw.landing),
     pages: uiText(itemsRaw.pages),
     commission_change: uiText(itemsRaw.commission_change),
+    withdrawals: uiText(itemsRaw.withdrawals),
+    stripe_events: uiText(itemsRaw.stripe_events),
     eko_social: uiText(itemsRaw.eko_social),
     eko_facebook: uiText(itemsRaw.eko_facebook),
     eko_instagram: uiText(itemsRaw.eko_instagram),

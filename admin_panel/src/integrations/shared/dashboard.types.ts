@@ -21,6 +21,8 @@ export type DashboardAnalytics = {
     bookings_cancelled: number;
     bookings_other: number;
     revenue_total: number;
+    /** Ay başından bugüne tahsil edilen. revenue_total tüm zamanlar. */
+    revenue_month: number;
     slots_total: number;
     slots_reserved: number;
     resources_total: number;
@@ -105,6 +107,7 @@ export function normalizeDashboardAnalytics(raw: unknown): DashboardAnalytics {
       bookings_cancelled: toNum(totals.bookings_cancelled),
       bookings_other: toNum(totals.bookings_other),
       revenue_total: toNum(totals.revenue_total),
+      revenue_month: toNum(totals.revenue_month),
       slots_total: toNum(totals.slots_total),
       slots_reserved: toNum(totals.slots_reserved),
       resources_total: toNum(totals.resources_total),
