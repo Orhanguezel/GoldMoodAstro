@@ -50,21 +50,43 @@ echo "Onceki surum: $PREV"
 # her build oncesi rm -rf .next. (bkz memory next_route_delete_clean_build)
 build_next() {
   local d="$1"
+  local tmp=".next-build"
   cd "$ROOT/$d" && { bun install --frozen-lockfile || bun install; } || return 1
-  rm -rf .next && bun run build
-  if [ ! -f "$ROOT/$d/.next/BUILD_ID" ]; then
-    echo "UYARI: $d eksik build (.next/BUILD_ID yok) — temiz rebuild tekrar deneniyor"
-    ( cd "$ROOT/$d" && rm -rf .next && bun run build )
+
+  # GECICI DIZINE BUILD + TAKAS. Dogrudan .next'e build etmek calisan uygulamanin
+  # altindan dosyalari cekiyordu: `rm -rf .next` sonrasi app ayakta kaliyor ama
+  # route manifest'leri yok -> "client reference manifest ... does not exist" ve
+  # o route'lar 500. Pencere kucuk degil: reload ancak TUM app'ler build edildikten
+  # sonra geliyor, yani admin, frontend build'i boyunca da bozuk kaliyor
+  # (2026-08-18: /admin/stripe-events, /admin/storage, /admin/service-categories).
+  # Takas mv ile yapildigi icin kesinti ~1 saniye.
+  rm -rf "$tmp" && NEXT_DIST_DIR="$tmp" bun run build
+  if [ ! -f "$ROOT/$d/$tmp/BUILD_ID" ]; then
+    echo "UYARI: $d eksik build ($tmp/BUILD_ID yok) — temiz rebuild tekrar deneniyor"
+    ( cd "$ROOT/$d" && rm -rf "$tmp" && NEXT_DIST_DIR="$tmp" bun run build )
   fi
-  if [ ! -f "$ROOT/$d/.next/BUILD_ID" ]; then
-    echo "HATA: $d build TAMAMLANAMADI (.next/BUILD_ID yok) — kapasite/bellek bak"
+  if [ ! -f "$ROOT/$d/$tmp/BUILD_ID" ]; then
+    echo "HATA: $d build TAMAMLANAMADI ($tmp/BUILD_ID yok) — kapasite/bellek bak"
+    rm -rf "$tmp"
     return 1
   fi
   # Turbopack chunk adi noktayla biterse "<ad>..js" olur; Next static handler ".."yi
   # path-traversal sanip 404 doner -> o chunk'a referans veren TUM sayfalar tarayicida
   # ChunkLoadError. Dosya diskte durdugu icin "bayat chunk" gibi gorunur. Her build'de
   # kura; bu yuzden build sonrasi otomatik duzeltiyoruz.
-  bash "$ROOT/scripts/fix-dotdot-chunks.sh" "$ROOT/$d" || return 1
+  bash "$ROOT/scripts/fix-dotdot-chunks.sh" "$ROOT/$d" "$tmp" || { rm -rf "$tmp"; return 1; }
+
+  # Takas: yeni build yerine gecer, eskisi bir sonraki deploy'a kadar saklanir.
+  rm -rf .next-prev
+  [ -d .next ] && mv .next .next-prev
+  mv "$tmp" .next
+
+  # Next, build sirasinda next-env.d.ts ve tsconfig.json'i AKTIF distDir'e gore
+  # yeniden yazar. Gecici dizine build ettigimiz icin bu iki izlenen dosya
+  # ".next-build" referansiyla degisiyor ve prod repo'su kirli kaliyor; bir
+  # sonraki deploy'un `git pull --ff-only` adimi o yuzden kilitlenir
+  # (bkz memory prod_repo_dirty_blocks_deploy). Uretilmis dosyalar, geri al.
+  git -C "$ROOT" checkout -- "$d/next-env.d.ts" "$d/tsconfig.json" 2>/dev/null || true
 }
 
 build_all() {
@@ -106,9 +128,9 @@ rollback() {
   if build_all; then
     reload_all || true
   else
-    # ONEMLI: build basarisizken pm2 reload ETME. Eski surumun .next'i zaten
-    # silinmis oluyor; reload etmek calisan servisi de dusurur (2026-08-17'de
-    # admin_panel boyle 502'ye dustu). Servisleri oldugu gibi birak, insan baksin.
+    # ONEMLI: build basarisizken pm2 reload ETME. Calisan surum ayakta ve saglam
+    # (build artik gecici dizine gidiyor, .next'e dokunulmuyor); reload etmek
+    # yalnizca riski artirir. Servisleri oldugu gibi birak, insan baksin.
     echo "HATA: geri donus build'i de basarisiz — pm2 RELOAD EDILMEDI."
     echo "Servisler mevcut haliyle birakildi; sunucuda elle build gerekiyor:"
     echo "  cd $ROOT/admin_panel && rm -rf .next && bun run build && pm2 restart goldmoodastro-admin"

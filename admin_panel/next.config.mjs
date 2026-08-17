@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Deploy geçici bir dizine build edip sonra .next ile takas eder. Doğrudan
+  // .next'e build etmek, çalışan uygulamanın altından dosyaları çekiyordu:
+  // `rm -rf .next` sonrası app ayakta kalıyor ama route manifest'leri yok
+  // ("client reference manifest ... does not exist") → deploy boyunca 500.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   reactCompiler: true,
   compiler: { removeConsole: process.env.NODE_ENV === 'production' },
 

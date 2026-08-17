@@ -12,8 +12,10 @@
 # Kullanım: scripts/fix-dotdot-chunks.sh <app_dizini>   (ör. admin_panel)
 set -euo pipefail
 
-app_dir="${1:?kullanim: fix-dotdot-chunks.sh <app_dizini>}"
-next_dir="$app_dir/.next"
+app_dir="${1:?kullanim: fix-dotdot-chunks.sh <app_dizini> [dist_dizin_adi]}"
+# 2. argüman: build çıktısının dizin adı (varsayılan .next). Deploy geçici bir
+# dizine build edip sonra takas ettiği için burada da parametreli olmalı.
+next_dir="$app_dir/${2:-.next}"
 chunks_dir="$next_dir/static/chunks"
 
 [ -d "$chunks_dir" ] || { echo "[fix-dotdot] $chunks_dir yok, atlandi"; exit 0; }

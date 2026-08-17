@@ -227,3 +227,7 @@ project.portfolio.private.json
 
 # Playwright CLI test artefaktlari
 .playwright-cli/
+
+# Deploy geçici build dizinleri (vps-deploy.sh: geçici dizine build + takas)
+.next-build/
+.next-prev/

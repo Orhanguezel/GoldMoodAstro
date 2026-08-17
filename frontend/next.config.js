@@ -7,6 +7,9 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 
 const nextConfig = {
+  // bkz. admin_panel/next.config.mjs — deploy geçici dizine build edip takas eder,
+  // böylece çalışan uygulamanın .next'i hiçbir an eksik kalmaz.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   turbopack: {},
   reactStrictMode: true,
   trailingSlash: false,
