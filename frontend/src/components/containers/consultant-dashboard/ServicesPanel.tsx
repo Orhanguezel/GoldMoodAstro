@@ -15,6 +15,8 @@ import {
   useCreateServiceBoostCheckoutMutation,
   useGetServiceBoostPackagesQuery,
   type BoostPackage,
+  useGetMyConsultantProfileQuery,
+  useUpdateMyConsultantProfileMutation,
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { extractApiError } from '@/integrations/shared';
 import { useUiSection } from '@/i18n';
@@ -106,6 +108,143 @@ function slugify(s: string): string {
     .replace(/[\u0131\u011f\u00fc\u015f\u00f6\u00e7]/g, (c) => SLUG_CHAR_MAP[c] || c)
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+
+/**
+ * Temel seans ücreti — kartlarda ve danışman sayfasında görünen ana fiyat.
+ *
+ * NEDEN AYRI KART: bu alan `consultants.session_price` (profil alanı), hizmet
+ * listesi ise `consultant_services`. Backend PATCH'i session_price'ı zaten kabul
+ * ediyordu ama panelde HİÇBİR alan göndermiyordu — danışman kendi ana fiyatını
+ * değiştiremiyordu (2026-08-17 tespiti). Fiyat değişikliği için admin'e yazmak
+ * zorunda kalıyorlardı.
+ *
+ * 0 bırakılırsa kartta "Başlangıç" etiketiyle en ucuz aktif hizmetin fiyatı
+ * gösterilir — bu davranış kart bileşeninde tanımlı, burada da anlatılıyor.
+ */
+function BaseSessionPriceCard() {
+  const { ui } = useUiSection('ui_dashboard');
+  const { data: profile, isLoading } = useGetMyConsultantProfileQuery();
+  const [updateProfile, { isLoading: isSaving }] = useUpdateMyConsultantProfileMutation();
+
+  const [price, setPrice] = useState('');
+  const [duration, setDuration] = useState('');
+  const [videoPrice, setVideoPrice] = useState('');
+  const [error, setError] = useState('');
+
+  React.useEffect(() => {
+    if (!profile) return;
+    setPrice(String(Number(profile.session_price ?? 0)));
+    setDuration(String(Number(profile.session_duration ?? 30)));
+    setVideoPrice(profile.video_session_price != null ? String(Number(profile.video_session_price)) : '');
+  }, [profile?.session_price, profile?.session_duration, profile?.video_session_price]);
+
+  const save = async () => {
+    const p = Number(price);
+    const d = Number(duration);
+    if (!Number.isFinite(p) || p < 0 || p > 100000) {
+      setError(ui('ui_dashboard_base_price_error', 'Ücret 0 ile 100.000 arasında olmalı.'));
+      return;
+    }
+    if (!Number.isFinite(d) || d < 10 || d > 240) {
+      setError(ui('ui_dashboard_base_duration_error', 'Süre 10 ile 240 dakika arasında olmalı.'));
+      return;
+    }
+    setError('');
+    try {
+      await updateProfile({
+        session_price: p,
+        session_duration: d,
+        ...(videoPrice.trim() ? { video_session_price: Number(videoPrice) } : {}),
+      }).unwrap();
+      toast.success(ui('ui_dashboard_base_price_saved', 'Seans ücreti güncellendi.'));
+    } catch (err) {
+      toast.error(extractApiError(err) || ui('ui_dashboard_base_price_failed', 'Ücret güncellenemedi.'));
+    }
+  };
+
+  const inputCls =
+    'w-full h-11 rounded-2xl border border-[var(--gm-border-soft)] bg-[var(--gm-bg-deep)] px-4 text-sm text-[var(--gm-text)]';
+  const labelCls = 'block text-[10px] font-bold uppercase tracking-widest text-[var(--gm-muted)] mb-2';
+
+  return (
+    <div className="rounded-3xl border border-[var(--gm-border-soft)] bg-[var(--gm-surface)]/40 p-6">
+      <div className="mb-4">
+        <h3 className="font-serif text-lg text-[var(--gm-text)]">
+          {ui('ui_dashboard_base_price_title', 'Temel Seans Ücreti')}
+        </h3>
+        <p className="mt-1 text-xs text-[var(--gm-text-dim)]">
+          {ui(
+            'ui_dashboard_base_price_desc',
+            'Danışman kartında ve profil sayfanda görünen ana fiyat budur. 0 bırakırsan en ucuz aktif hizmetinin fiyatı “Başlangıç” olarak gösterilir.',
+          )}
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label className={labelCls} htmlFor="base-session-price">
+            {ui('ui_dashboard_base_price_label', 'Seans ücreti (₺)')}
+          </label>
+          <input
+            id="base-session-price"
+            type="number"
+            min={0}
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            disabled={isLoading || isSaving}
+            className={inputCls}
+          />
+        </div>
+        <div>
+          <label className={labelCls} htmlFor="base-session-duration">
+            {ui('ui_dashboard_base_duration_label', 'Süre (dk)')}
+          </label>
+          <input
+            id="base-session-duration"
+            type="number"
+            min={10}
+            max={240}
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            disabled={isLoading || isSaving}
+            className={inputCls}
+          />
+        </div>
+        {profile?.supports_video ? (
+          <div>
+            <label className={labelCls} htmlFor="base-video-price">
+              {ui('ui_dashboard_base_video_price_label', 'Görüntülü seans (₺)')}
+            </label>
+            <input
+              id="base-video-price"
+              type="number"
+              min={0}
+              value={videoPrice}
+              onChange={(e) => setVideoPrice(e.target.value)}
+              disabled={isLoading || isSaving}
+              className={inputCls}
+            />
+          </div>
+        ) : null}
+      </div>
+
+      {error ? <p className="mt-3 text-xs text-[var(--gm-error)]">{error}</p> : null}
+
+      <div className="mt-5 flex justify-end">
+        <button
+          type="button"
+          onClick={save}
+          disabled={isLoading || isSaving}
+          className="inline-flex items-center gap-2 rounded-full bg-[var(--gm-gold)] px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-[var(--gm-bg-deep)] disabled:opacity-60"
+        >
+          <Save className="w-4 h-4" />
+          {ui('ui_dashboard_save', 'Kaydet')}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function ServicesPanel() {
@@ -223,6 +362,8 @@ export default function ServicesPanel() {
 
   return (
     <div className="space-y-4">
+      <BaseSessionPriceCard />
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-[var(--gm-text-dim)] font-serif italic">
           {ui('ui_dashboard_services_intro', 'Manage your service packages here. You can add a free intro call.')}
