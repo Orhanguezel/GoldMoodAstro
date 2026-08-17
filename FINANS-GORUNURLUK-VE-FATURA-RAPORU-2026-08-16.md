@@ -72,17 +72,18 @@ Fatma kendi WalletPanel'inde, Murat admin Finans'ta aynı gerçeği görür.
 
 ## 5. CHECKLIST — fazlı uygulama planı
 
-### Faz A — Görünürlük (hızlı kazanımlar, kod çoğunlukla hazır)
-- [ ] Sidebar'a **"Finans"** grubu: Orders, Wallet, Withdrawals, Ödeme Ayarları, Komisyon tek çatı altına
-- [ ] `withdrawals` sayfasını menüye ekle (şu an erişilemez)
-- [ ] Dashboard'u `GET /admin/dashboard/marketing`'e bağla: gerçek ciro, günlük trend grafiği,
+### Faz A — Görünürlük (hızlı kazanımlar, kod çoğunlukla hazır) — TAMAMLANDI 2026-08-17 (ccc8439)
+- [x] Sidebar'a **"Finans"** grubu: Orders, Wallet, Withdrawals, Ödeme Ayarları, Komisyon tek çatı altına
+- [x] `withdrawals` sayfasını menüye ekle (şu an erişilemez)
+- [x] Dashboard'u `GET /admin/dashboard/marketing`'e bağla: gerçek ciro, günlük trend grafiği,
       ortalama sepet, danışman-başına ciro (topConsultants), funnel
-- [ ] `getDashboardAnalyticsAdmin` yalanlarını düzelt: boş dizileri gerçek sorguyla doldur VEYA
+      (uç zaten vardı ama HİÇBİR ekran tüketmiyordu; dashboard'a "Finans Özeti" bloğu eklendi)
+- [x] `getDashboardAnalyticsAdmin` yalanlarını düzelt: boş dizileri gerçek sorguyla doldur VEYA
       marketing endpoint'ine yönlendir; "Toplam Ciro" etiketini "Bu Ay Ciro" yap
-- [ ] Orders listesine parasal toplam satırı (filtreye duyarlı SUM)
-- [ ] **Stripe ödemeleri görünür kıl (geçici, Faz B'ye kadar):** admin Finans'a "Stripe Olayları"
+- [x] Orders listesine parasal toplam satırı (filtreye duyarlı SUM)
+- [x] **Stripe ödemeleri görünür kıl (geçici, Faz B'ye kadar):** admin Finans'a "Stripe Olayları"
       bölümü — `stripe_events` listesi (tutar/müşteri/tarih parse edilmiş)
-- [ ] Ölü `section-cards.tsx` (sahte ₺124.500) dosyasını sil
+- [x] Ölü `section-cards.tsx` (sahte ₺124.500) dosyasını sil
 
 ### Faz B — Stripe ledger entegrasyonu + kazanç otomasyonu (asıl iş)
 - [x] `payment_gateways`'e `stripe` kaydı (061b seed; prod'a uygulandı) — provider ayrımı

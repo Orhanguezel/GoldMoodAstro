@@ -16,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
-import { useGetDashboardSummaryAdminQuery } from '@/integrations/hooks';
+import { useGetDashboardSummaryAdminQuery, useGetMarketingDashboardAdminQuery } from '@/integrations/hooks';
 import type { DashboardRangeKey } from '@/integrations/shared';
 
 import { useAdminUiCopy } from '@/app/(main)/admin/_components/common/useAdminUiCopy';
@@ -65,6 +65,11 @@ export default function AdminDashboardClient() {
 
   const [range, setRange] = React.useState<DashboardRangeKey>('30d');
   const q = useGetDashboardSummaryAdminQuery({ range });
+  // Finans özeti ayrı uçtan gelir (/admin/dashboard/marketing): ortalama sepet,
+  // danışman başına ciro ve huni. Bu veri şimdiye kadar hiçbir ekranda
+  // kullanılmıyordu — uç vardı, tüketen yoktu (2026-08-16 incelemesi).
+  const marketingQuery = useGetMarketingDashboardAdminQuery({ days: 30 });
+  const marketing = marketingQuery.data;
 
   const analytics = q.data;
 
@@ -263,6 +268,79 @@ export default function AdminDashboardClient() {
             )) : (
               <div className="text-base text-gm-muted font-serif italic text-center py-16 opacity-40">{t('performance.empty', undefined, 'Yeterli performans verisi yok.')}</div>
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Finans özeti — 30 günlük gerçek tahsilat, ortalama sepet, huni ve
+          danışman başına ciro. Boş görünüyorsa gerçekten tahsilat yok demektir. */}
+      <div className="grid gap-8 lg:grid-cols-3">
+        <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[40px] overflow-hidden backdrop-blur-sm shadow-xl lg:col-span-1">
+          <CardHeader className="p-10 pb-6 border-b border-gm-border-soft bg-gm-surface/40">
+            <CardTitle className="font-serif text-2xl tracking-tight">
+              {t('finance.title', undefined, 'Finans Özeti (30 gün)')}
+            </CardTitle>
+            <CardDescription className="font-serif italic text-base opacity-70 text-gm-muted">
+              {t('finance.description', undefined, 'Gerçekten tahsil edilen tutarlar.')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-10 space-y-5">
+            {[
+              { label: t('finance.range', undefined, 'Dönem cirosu'), value: formatMoney(marketing?.revenue.range ?? 0) },
+              { label: t('finance.avg', undefined, 'Ortalama sepet'), value: formatMoney(marketing?.revenue.avgOrderValue ?? 0) },
+              { label: t('finance.paidOrders', undefined, 'Ödenen sipariş'), value: String(marketing?.revenue.paidOrders ?? 0) },
+              { label: t('finance.consultation', undefined, 'Danışmanlık cirosu'), value: formatMoney(marketing?.revenue.consultationRevenue ?? 0) },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between border-b border-gm-border-soft pb-4 last:border-0">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gm-muted">{row.label}</span>
+                <span className="font-serif text-xl text-gm-gold">{row.value}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gm-surface/20 border-gm-border-soft rounded-[40px] overflow-hidden backdrop-blur-sm shadow-xl lg:col-span-2">
+          <CardHeader className="p-10 pb-6 border-b border-gm-border-soft bg-gm-surface/40">
+            <CardTitle className="font-serif text-2xl tracking-tight">
+              {t('finance.consultantsTitle', undefined, 'Danışman Başına Ciro')}
+            </CardTitle>
+            <CardDescription className="font-serif italic text-base opacity-70 text-gm-muted">
+              {t('finance.funnelSummary', undefined, 'Üye → randevu → ödeme dönüşümü ve danışman kırılımı.')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-10 space-y-6">
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: t('finance.users', undefined, 'Üye'), value: marketing?.funnel.totalUsers ?? 0 },
+                { label: t('finance.withBooking', undefined, 'Randevu alan'), value: marketing?.funnel.usersWithBooking ?? 0 },
+                { label: t('finance.paidUsers', undefined, 'Ödeme yapan'), value: marketing?.funnel.usersPaid ?? 0 },
+              ].map((c) => (
+                <div key={c.label} className="rounded-3xl border border-gm-border-soft bg-gm-surface/30 p-5 text-center">
+                  <div className="font-serif text-2xl text-gm-text">{c.value}</div>
+                  <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-gm-muted">{c.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-3 max-h-[260px] overflow-y-auto custom-scrollbar">
+              {marketing?.topConsultants?.length ? (
+                marketing.topConsultants.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between rounded-2xl border border-gm-border-soft bg-gm-surface/30 px-5 py-3">
+                    <div>
+                      <div className="font-serif text-base text-gm-text">{c.name}</div>
+                      <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-gm-muted mt-1">
+                        {c.bookings} {t('finance.bookings', undefined, 'randevu')}
+                      </div>
+                    </div>
+                    <span className="font-serif text-lg text-gm-gold">{formatMoney(c.revenue)}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="py-10 text-center text-sm italic text-gm-muted opacity-50">
+                  {t('finance.empty', undefined, 'Henüz danışman cirosu oluşmadı.')}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
