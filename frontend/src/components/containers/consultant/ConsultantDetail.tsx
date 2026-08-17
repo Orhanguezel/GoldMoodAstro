@@ -463,7 +463,12 @@ export default function ConsultantDetail({ id, locale }: Props) {
             )}
           </div>
 
-          <div className="bg-(--gm-surface) border border-(--gm-border-soft) rounded-[32px] p-6 md:p-8 shadow-(--gm-shadow-card) relative overflow-hidden">
+          {/* id + scroll-mt: sayfanın üstündeki "Randevu Al" düğmesi buraya iner.
+              scroll-mt-32 sabit header'ın başlığı örtmesini engeller. */}
+          <div
+            id="randevu"
+            className="scroll-mt-32 bg-(--gm-surface) border border-(--gm-border-soft) rounded-[32px] p-6 md:p-8 shadow-(--gm-shadow-card) relative overflow-hidden"
+          >
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-(--gm-primary) via-(--gm-gold) to-(--gm-accent)" />
 
             <div className="flex items-center gap-3 mb-6 pt-2">

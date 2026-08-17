@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 
 import ConsultantDetail from '@/components/containers/consultant/ConsultantDetail';
+import BookingCtaButton from '@/components/containers/consultant/BookingCtaButton';
 import JsonLd from '@/seo/JsonLd';
 import { breadcrumbSchema, consultantPersonSchema, graph, review as reviewSchema, service as serviceSchema } from '@/seo/jsonld';
 import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
@@ -492,12 +493,13 @@ export default async function ConsultantDetailPage({ params }: Props) {
                   </div>
                 ) : null}
 
-                <a
-                  href={localizedPath(locale, `/consultants/${canonicalParam}`, 'tr')}
+                {/* Aynı sayfadaki randevu bölümüne iner. Önceden sayfanın kendi
+                    adresine link veriyordu: tıklayınca hiçbir şey olmuyor gibi
+                    görünüyordu, kullanıcı randevu alanının altta olduğunu bilmiyordu. */}
+                <BookingCtaButton
+                  label={copy.book}
                   className="mt-2 block rounded-full bg-(--gm-gold) px-6 py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-(--gm-bg-deep)"
-                >
-                  {copy.book}
-                </a>
+                />
 
                 <p className="mt-3 text-center text-[10px] leading-relaxed text-(--gm-muted)">
                   {copy.secureNote}
