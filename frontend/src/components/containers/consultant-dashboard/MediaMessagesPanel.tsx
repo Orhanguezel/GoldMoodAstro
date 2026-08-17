@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import ClientAstroPanel from './ClientAstroPanel';
 import { Mic, Save, Square, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -190,6 +191,10 @@ export default function MediaMessagesPanel({ locale, consultantId }: Props) {
                 </div>
                 <span className="rounded-full bg-[var(--gm-bg-deep)] px-3 py-1 text-[10px] uppercase tracking-widest text-[var(--gm-text-dim)]">{message.status}</span>
               </div>
+
+              {/* Danışanın kayıtlı doğum haritası / yıldızname / numeroloji —
+                  yorumu yazarken elinin altında olsun. Kapalı gelir. */}
+              <ClientAstroPanel userId={message.user_id} />
 
               {message.kind === 'video' ? (
                 <video src={questionFileUrl} controls crossOrigin="use-credentials" className="aspect-video w-full rounded-2xl bg-black object-cover" />
