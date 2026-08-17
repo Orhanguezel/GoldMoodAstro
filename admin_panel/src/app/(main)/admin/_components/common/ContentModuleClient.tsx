@@ -663,16 +663,16 @@ export default function ContentModuleClient({
                       </div>
                     </TableCell>
                     {/* Bu hücre tabloyu ekranın dışına taşıyordu (2026-08-17).
-                        İKİ ayrı sebep vardı:
-                        1) Özet satırı `truncate` idi — bu white-space:nowrap demek.
-                           Genişlik sınırı olmayınca tarayıcı özeti TEK satıra
-                           sığdırmaya çalışıp sütunu yüzlerce piksel genişletiyordu.
-                           Uzun metinde nowrap yerine line-clamp kullanılır.
-                        2) Genişlik sınırı <td>'ye yazılmıştı; table-layout:auto'da
-                           hücre max-width'i CSS gereği YOK SAYILIR. Sınır, hücrenin
-                           içindeki bloğa verilmeli — o yüzden aşağıdaki sarmalayıcı
-                           div sabit genişlikte. */}
-                    <TableCell className="py-5 align-top">
+                        KÖK NEDEN: shadcn'in TableCell'i temel sınıfında
+                        `whitespace-nowrap` taşıyor ve bu miras alınıyor. Nowrap
+                        altında hiçbir metin sarmaz; hücrenin min-content genişliği
+                        tüm metinlerin TEK SATIR toplamı olur ve tablo taşar.
+                        line-clamp da işlemez — sarma olmadığı için metin ikinci
+                        satıra inmek yerine yatay kesilir.
+                        Bu yüzden `whitespace-normal` ŞART; genişlik sınırı ise
+                        hücrenin İÇİNDEKİ bloğa verilmeli, <td>'ye değil:
+                        table-layout:auto'da hücre max-width'i CSS gereği yok sayılır. */}
+                    <TableCell className="py-5 align-top whitespace-normal">
                       <div className="flex w-[420px] max-w-full items-start gap-3">
                         {coverUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -875,7 +875,8 @@ function AuthorProfileCard({
         )}
       </span>
       {/* max-w: içerideki truncate'ler nowrap demek; sınır olmazsa uzun bir
-          e-posta bu sütunu tek satırda genişletip tabloyu taşırır. */}
+          e-posta bu sütunu tek satırda genişletip tabloyu taşırır. Burada
+          truncate KASITLI (ad/e-posta tek satır kalmalı), sınır onu tutuyor. */}
       <span className={cn('min-w-0', compact && 'max-w-[180px]')}>
         {!compact ? <span className="block text-[10px] font-bold uppercase tracking-widest text-gm-muted">Yazar profili</span> : null}
         <span className="block truncate text-sm font-semibold text-gm-text">{name}</span>
