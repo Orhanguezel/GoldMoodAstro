@@ -43,12 +43,25 @@ export async function generateMetadata(
 }
 
 import PageContainer from '@/components/common/PageContainer';
+import Banner from '@/layout/banner/Breadcrum';
+
+const BANNER: Record<string, string> = {
+  tr: 'Yıldızname Sonucu',
+  en: 'Yildizname Result',
+  de: 'Yildizname-Ergebnis',
+};
 
 export default async function YildiznameResultPage({ params }: Props) {
-  await params; // Next.js 16 — params is a Promise even when unused
+  const { locale } = await params;
+  // Sayfa kendi arka planını (bg-deep) basıyordu; kap max-width'li olduğu için
+  // sağda solda gövde rengi kalıyor ve ortada koyu bir şerit görünüyordu.
+  // Diğer sayfalarla aynı düzen: breadcrumb banner + gövde rengi + afterBanner.
   return (
-    <PageContainer className="bg-(--gm-bg-deep)" verticalPadding="large">
-      <YildiznameResultClient />
-    </PageContainer>
+    <>
+      <Banner title={BANNER[locale] ?? BANNER.en} />
+      <PageContainer className="bg-(--gm-bg)" pad="afterBanner">
+        <YildiznameResultClient />
+      </PageContainer>
+    </>
   );
 }

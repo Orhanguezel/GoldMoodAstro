@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useGetYildiznameReadingQuery } from '@/integrations/rtk/public/yildizname.public.endpoints';
 import ShareCard from '@/components/common/ShareCard';
+import ShareStoryCard from '@/components/common/ShareStoryCard';
 import ConsultantFunnelCTA from '@/components/common/ConsultantFunnelCTA';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -141,6 +142,17 @@ export default function YildiznameResultClient() {
                   menzil_no: result.menzil_no,
                   ebced: result.ebced_total,
                 }}
+              />
+            </div>
+
+            {/* Sosyal paylaşım kartı — hikâye/gönderi ölçüsünde hazır PNG.
+                Görsel sunucuda üretilir (share-image rotası), ölçü kesin. */}
+            <div className="mt-16">
+              <ShareStoryCard
+                imageBase={`/${locale}/yildizname/result/${result.id}/share-image`}
+                fileBaseName={`goldmoodastro-yildizname-${result.menzil_no ?? 'menzil'}`}
+                locale={String(locale ?? 'tr')}
+                shareText={`Yıldıznamemi GoldMoodAstro'da keşfettim.\nMenzil: ${menzil?.name_tr ?? ''} • Ebced: ${result.ebced_total ?? ''}`}
               />
             </div>
 
