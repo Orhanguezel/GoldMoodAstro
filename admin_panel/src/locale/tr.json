@@ -589,7 +589,9 @@
       "deleteFailed": "Silinemedi",
       "slugLabelRequired": "Slug ve etiket zorunlu",
       "added": "Eklendi",
-      "addFailed": "Eklenemedi"
+      "addFailed": "Eklenemedi",
+      "cacheClearFailed": "Ana sayfa önbelleği temizlenemedi",
+      "cacheClearFailedHint": "Değişiklik kaydedildi ama canlı sitede eski hali görünmeye devam edebilir. Sunucuda REVALIDATE_SECRET tanımlı mı kontrol edin."
     }
   },
   "slider": {

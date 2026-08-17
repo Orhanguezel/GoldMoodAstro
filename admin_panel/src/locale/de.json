@@ -587,7 +587,9 @@
       "deleteFailed": "Konnte nicht gelöscht werden",
       "slugLabelRequired": "Slug und Bezeichnung sind erforderlich",
       "added": "Hinzugefügt",
-      "addFailed": "Konnte nicht hinzugefügt werden"
+      "addFailed": "Konnte nicht hinzugefügt werden",
+      "cacheClearFailed": "Startseiten-Cache konnte nicht geleert werden",
+      "cacheClearFailedHint": "Die Änderung wurde gespeichert, aber die Live-Seite zeigt möglicherweise weiterhin die alte Version. Prüfen Sie, ob REVALIDATE_SECRET auf dem Server gesetzt ist."
     }
   },
   "slider": {

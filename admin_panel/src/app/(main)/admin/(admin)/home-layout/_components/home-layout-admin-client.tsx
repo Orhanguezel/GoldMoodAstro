@@ -200,6 +200,40 @@ function SortableRow({ section, expanded, onToggleExpand, onPatch, onDelete, sav
   );
 }
 
+/**
+ * Ana sayfa önbelleğini temizler.
+ *
+ * NEDEN: bölüm sırası DB'de anında değişiyor ama frontend sayfayı ISR ile
+ * önbellekte tutuyor; temizlenmezse panelde "kaydedildi" yazarken canlıda eski
+ * sıra görünmeye devam ediyordu (2026-08-18). Kayıt akışının parçası olmalı,
+ * yöneticinin ayrıca Cache sayfasına gitmesi beklenmemeli.
+ *
+ * Hata SESSİZ GEÇİLMEZ: revalidate ucu prod'da secret eksikse 500 döner ve
+ * bu tam olarak yaşanmış bir arızadır — o durumda kullanıcı "kaydettim ama
+ * yansımadı" ile baş başa kalmasın diye açık uyarı gösteriyoruz.
+ */
+async function revalidateHome(t: (k: string, v?: any) => string) {
+  const paths = ['/', '/tr', '/en', '/de'];
+  try {
+    const results = await Promise.all(
+      paths.map((path) =>
+        fetch('/api/revalidate-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path }),
+        }),
+      ),
+    );
+    const failed = results.filter((r) => !r.ok);
+    if (failed.length) throw new Error(`revalidate_failed_${failed[0].status}`);
+  } catch {
+    toast.error(t('homeLayout.cacheClearFailed'), {
+      description: t('homeLayout.cacheClearFailedHint'),
+      duration: 10000,
+    });
+  }
+}
+
 export default function HomeLayoutAdminClient() {
   const t = useAdminT('admin.common');
   const { data, isLoading, isFetching, refetch } = useListHomeSectionsAdminQuery();
@@ -233,6 +267,7 @@ export default function HomeLayoutAdminClient() {
     try {
       await reorderSections({ items: reordered.map((s) => ({ id: s.id, order_index: s.order_index })) }).unwrap();
       toast.success(t('homeLayout.reorderSuccess'));
+      await revalidateHome(t);
     } catch {
       toast.error(t('homeLayout.reorderFailed'));
       refetch();
@@ -243,6 +278,7 @@ export default function HomeLayoutAdminClient() {
     try {
       await updateSection({ id, data: patch as any }).unwrap();
       toast.success(t('homeLayout.saved'));
+      await revalidateHome(t);
     } catch {
       toast.error(t('homeLayout.saveFailed'));
     }
@@ -253,6 +289,7 @@ export default function HomeLayoutAdminClient() {
     try {
       await deleteSection(id).unwrap();
       toast.success(t('deleted', { item: label }));
+      await revalidateHome(t);
     } catch {
       toast.error(t('homeLayout.deleteFailed'));
     }
@@ -274,6 +311,7 @@ export default function HomeLayoutAdminClient() {
         config: null,
       }).unwrap();
       toast.success(t('homeLayout.added'));
+      await revalidateHome(t);
       setShowNew(false);
       setNewRow({ slug: '', label: '', component_key: 'PromisesSection' });
     } catch (e: any) {

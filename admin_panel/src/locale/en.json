@@ -825,7 +825,9 @@
       "deleteFailed": "Could not delete",
       "slugLabelRequired": "Slug and label are required",
       "added": "Added",
-      "addFailed": "Could not add"
+      "addFailed": "Could not add",
+      "cacheClearFailed": "Homepage cache could not be cleared",
+      "cacheClearFailedHint": "The change was saved, but the live site may keep showing the old version. Check whether REVALIDATE_SECRET is set on the server."
     }
   },
   "slider": {
