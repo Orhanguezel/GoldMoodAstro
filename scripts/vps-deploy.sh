@@ -86,7 +86,14 @@ build_next() {
   # ".next-build" referansiyla degisiyor ve prod repo'su kirli kaliyor; bir
   # sonraki deploy'un `git pull --ff-only` adimi o yuzden kilitlenir
   # (bkz memory prod_repo_dirty_blocks_deploy). Uretilmis dosyalar, geri al.
-  git -C "$ROOT" checkout -- "$d/next-env.d.ts" "$d/tsconfig.json" 2>/dev/null || true
+  # TEK TEK geri al: `git checkout -- a b` iceride biri izlenmiyorsa KOMUTUN
+  # TAMAMI duser ve digeri de geri alinmaz. frontend/next-env.d.ts izlenmiyor,
+  # admin_panel/next-env.d.ts izleniyor — ilk denemede frontend/tsconfig.json
+  # tam bu yuzden kirli kaldi (2026-08-18 prod'da goruldu).
+  for gen in "next-env.d.ts" "tsconfig.json"; do
+    git -C "$ROOT" ls-files --error-unmatch "$d/$gen" >/dev/null 2>&1 \
+      && git -C "$ROOT" checkout -- "$d/$gen" 2>/dev/null || true
+  done
 }
 
 build_all() {
