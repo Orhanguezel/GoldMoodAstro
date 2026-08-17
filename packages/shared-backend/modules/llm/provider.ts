@@ -57,7 +57,12 @@ export class LlmError extends Error {
   }
 }
 
-const DEFAULT_TIMEOUT_MS = 45_000;
+// 45sn yetmiyordu: uzun metin üreten uçlar (numeroloji, rüya, yıldızname hibrit,
+// sinastri raporu) canlıda 45–80sn sürüyor ve istek AbortSignal ile kesiliyordu —
+// kullanıcı "hesaplanırken hata oluştu" görüyordu (2026-08-17 tespiti).
+// nginx tarafındaki sınır 180sn; uygulama sınırı onun ALTINDA kalmalı ki hata
+// düzgün yakalanıp anlamlı mesajla dönebilsin.
+const DEFAULT_TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS || 120_000);
 
 /**
  * Anthropic image content part builder.
