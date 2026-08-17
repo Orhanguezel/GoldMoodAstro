@@ -48,6 +48,7 @@ echo "Onceki surum: $PREV"
 # 500. Bu yuzden BUILD_ID yoksa BIR KEZ daha temiz dener; yine yoksa hata dondurur
 # (rollback tetiklenir). Ayrica route SILINDIGINDE incremental cache bozulmasin diye
 # her build oncesi rm -rf .next. (bkz memory next_route_delete_clean_build)
+# Kullanim: build_next <dizin> [pm2_surec_adi]
 build_next() {
   local d="$1"
   local tmp=".next-build"
@@ -76,10 +77,30 @@ build_next() {
   # kura; bu yuzden build sonrasi otomatik duzeltiyoruz.
   bash "$ROOT/scripts/fix-dotdot-chunks.sh" "$ROOT/$d" "$tmp" || { rm -rf "$tmp"; return 1; }
 
+  # ESKI CHUNK'LARI KORU. Takas anında eski build'in static chunk'lari kaybolur;
+  # o sirada acik olan sekmeler (ve CDN/tarayici onbellegindeki eski HTML) hala
+  # ESKI chunk adlarini ister -> 404 + "MIME text/plain" + ChunkLoadError
+  # (2026-08-18'de admin/orders'ta tam bu goruldu). Eski chunk'lari yeni static
+  # dizinine kopyalayarak in-flight sekmeleri ayakta tutuyoruz. -n: ayni adli
+  # yeni dosyanin uzerine YAZMAZ. Tek nesil tutuluyor, birikmiyor.
+  if [ -d .next-prev/static/chunks ]; then
+    mkdir -p "$tmp/static/chunks"
+    cp -rn .next-prev/static/chunks/. "$tmp/static/chunks/" 2>/dev/null || true
+  fi
+
   # Takas: yeni build yerine gecer, eskisi bir sonraki deploy'a kadar saklanir.
   rm -rf .next-prev
   [ -d .next ] && mv .next .next-prev
   mv "$tmp" .next
+
+  # TAKAS ILE RESTART BITISIK OLMALI. reload_all sonda calisirsa eski surec,
+  # takastan sonra dakikalarca (diger app'lerin build suresi boyunca) ESKI HTML
+  # servis etmeye devam eder; o HTML artik .next'te olmayan chunk'lari ister.
+  # Bu yuzden her app kendi takasindan hemen sonra yeniden baslatiliyor.
+  if [ -n "${2:-}" ]; then
+    pm2 reload "$2" >/dev/null 2>&1 || pm2 restart "$2" >/dev/null 2>&1 || true
+    echo "  $d takas edildi ve $2 yeniden baslatildi"
+  fi
 
   # Next, build sirasinda next-env.d.ts ve tsconfig.json'i AKTIF distDir'e gore
   # yeniden yazar. Gecici dizine build ettigimiz icin bu iki izlenen dosya
@@ -102,8 +123,8 @@ build_all() {
   # Sorun toplam RAM degil V8 heap; --max-old-space-size ile cozuluyor
   # (bkz memory deploy_backend_tsc_oom, 2026-07-31 dogrulandi).
   cd "$ROOT/backend" && { bun install --frozen-lockfile || bun install; } && NODE_OPTIONS=--max-old-space-size=3072 bun run build || return 1
-  build_next admin_panel || return 1
-  build_next frontend    || return 1
+  build_next admin_panel goldmoodastro-admin    || return 1
+  build_next frontend    goldmoodastro-frontend || return 1
   cd "$ROOT"
 }
 
