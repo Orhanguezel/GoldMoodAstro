@@ -309,7 +309,13 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
     <main
       data-slot="sidebar-inset"
       className={cn(
-        "bg-background relative flex w-full flex-1 flex-col",
+        // min-w-0: <main>, sidebar ile aynı satır flex'inin bir öğesi ve flex
+        // öğelerinde varsayılan min-width:auto'dur — yani içeriğinin min-content
+        // genişliğinin altına ASLA küçülemez. Geniş bir tablo (min-content'i
+        // ~1300px) bu yüzden main'i viewport'un dışına itiyor ve TÜM sayfa
+        // yatay kayıyordu; tablonun kendi overflow-x-auto'su bunu kurtarmıyor.
+        // min-w-0 ile main mevcut alana sığar, taşan tablo kendi içinde kayar.
+        "bg-background relative flex w-full min-w-0 flex-1 flex-col",
         "md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
         className
       )}
