@@ -27,7 +27,7 @@ export default function DailyPageClient() {
 
   if (!isAuthenticated) {
     return (
-      <PageContainer className="min-h-screen bg-(--gm-bg) flex flex-col items-center justify-center" verticalPadding="large">
+      <PageContainer className="min-h-[50vh] bg-(--gm-bg) flex flex-col items-center justify-center" pad="afterBanner">
         <div className="max-w-[var(--gm-w-form)] w-full text-center space-y-8">
           <div className="w-16 h-16 bg-(--gm-surface) rounded-full flex items-center justify-center mx-auto border border-(--gm-gold)">
             <Sparkles className="w-8 h-8 text-(--gm-gold)" />
@@ -46,7 +46,7 @@ export default function DailyPageClient() {
 
   if (!chartsLoading && charts.length === 0) {
     return (
-      <PageContainer className="min-h-screen bg-(--gm-bg) flex flex-col items-center justify-center" verticalPadding="large">
+      <PageContainer className="min-h-[50vh] bg-(--gm-bg) flex flex-col items-center justify-center" pad="afterBanner">
         <div className="max-w-[var(--gm-w-form)] w-full text-center space-y-8">
           <div className="w-16 h-16 bg-(--gm-surface) rounded-full flex items-center justify-center mx-auto border border-(--gm-gold)">
             <Calendar className="w-8 h-8 text-(--gm-gold)" />
@@ -64,7 +64,7 @@ export default function DailyPageClient() {
   }
 
   return (
-    <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
+    <PageContainer className="bg-(--gm-bg)" pad="afterBanner">
       <div className="mx-auto max-w-[var(--gm-w-readable)]">
         {/* Header */}
         <div className="mb-16">

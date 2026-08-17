@@ -154,7 +154,7 @@ export default async function ConsultantsPage({ params, searchParams }: Props) {
   return (
     <>
       <Banner title={headline} />
-      <PageContainer width="default" pad="large">
+      <PageContainer width="default" pad="afterBanner">
         <JsonLd id="consultants-schema" data={graph(graphItems)} />
         <ConsultantList
           locale={locale}

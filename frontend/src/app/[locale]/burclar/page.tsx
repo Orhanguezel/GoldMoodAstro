@@ -31,7 +31,7 @@ export default async function BurclarPage({ params }: Props) {
   return (
     <>
       <Banner title={BANNER[locale] ?? BANNER.en} showTitle={false} />
-      <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
+      <PageContainer className="bg-(--gm-bg)" pad="afterBanner">
         <ZodiacHub />
         {/* 2026-07-20: sayfa 283 kelimeydi, burclar hakkinda hic aciklama yoktu. */}
         <SeoLandingArticle type="burclar" locale={locale} />

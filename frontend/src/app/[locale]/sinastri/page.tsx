@@ -32,7 +32,7 @@ export default async function SynastryPage({ params }: Props) {
   return (
     <>
       <Banner title={getLanding('sinastri', locale).eyebrow} />
-      <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
+      <PageContainer className="bg-(--gm-bg)" pad="afterBanner">
         <JsonLd
           id="synastry-webapp"
           data={graph([

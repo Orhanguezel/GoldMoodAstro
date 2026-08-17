@@ -5,7 +5,7 @@ export type PageContainerProps<T extends React.ElementType = 'div'> = {
   children: React.ReactNode;
   className?: string;
   width?: 'narrow' | 'readable' | 'content' | 'default' | 'wide' | 'full';
-  pad?: 'page' | 'tight' | 'large' | 'none';
+  pad?: 'page' | 'tight' | 'large' | 'afterBanner' | 'none';
   as?: T;
   /** @deprecated Use width="full". Kept for existing call sites. */
   fullWidth?: boolean;
@@ -35,6 +35,11 @@ const padClasses = {
   tight: 'pt-24 pb-6 md:pt-28 md:pb-10',
   page: 'pt-24 pb-10 md:pt-28 md:pb-16',
   large: 'pt-28 pb-12 md:pt-32 md:pb-20',
+  // Üstünde <Banner> (breadcrumb hero) olan sayfalar için. Banner zaten
+  // pt-24/md:pt-28 ile header'ı temizliyor ve altına pb-8..14 boşluk bırakıyor;
+  // buna bir de large'ın pt-32'si eklenince banner ile içerik arasında ~280px
+  // boşluk oluşuyordu (2026-08-17, /yildizname ve /daily ekran görüntüleri).
+  afterBanner: 'pt-4 pb-12 md:pt-6 md:pb-20',
 };
 
 const legacyPadMap = {

@@ -28,7 +28,7 @@ export default async function NumerologyPage({ params }: Props) {
   return (
     <>
       <Banner title={getLanding('numeroloji', locale).eyebrow} />
-      <PageContainer className="min-h-screen bg-[var(--gm-bg)]">
+      <PageContainer className="bg-[var(--gm-bg)]">
         {/* Araç önce, uzun editoryal içerik sonra (2026-07-20 müşteri talebi):
             önceki sırada kullanıcı aracı görmek için ~4000px metin geçmek zorundaydı. */}
         <NumerologyHub />

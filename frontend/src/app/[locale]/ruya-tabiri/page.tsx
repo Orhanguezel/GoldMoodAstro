@@ -29,7 +29,7 @@ export default async function DreamsPage({ params }: Props) {
   return (
     <>
       <Banner title={getLanding('ruya-tabiri', locale).eyebrow} />
-      <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
+      <PageContainer className="bg-(--gm-bg)" pad="afterBanner">
         {/* Araç önce, uzun editoryal içerik sonra (2026-07-20 müşteri talebi):
             önceki sırada kullanıcı aracı görmek için ~4000px metin geçmek zorundaydı. */}
         <DreamHub />

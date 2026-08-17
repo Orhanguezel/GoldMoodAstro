@@ -108,7 +108,7 @@ export default async function FaqsPage({ params }: FaqPageProps) {
       {/* Sayfanin kendi hero h1'i var; banner basligi gosterilirse ayni metin
           breadcrumb + h1 + CMS basligi olarak uc kez tekrarlaniyor ve iki h1 olusuyor. */}
       <Banner title={title} showTitle={false} />
-      <PageContainer pad="large" className="bg-(--gm-bg) min-h-[50vh]">
+      <PageContainer pad="afterBanner" className="bg-(--gm-bg) min-h-[50vh]">
         <div className="container mx-auto">
           <header className="text-center mb-14 max-w-3xl mx-auto">
             <span className="text-(--gm-gold) font-bold text-[10px] md:text-xs uppercase tracking-[0.32em] block mb-5">

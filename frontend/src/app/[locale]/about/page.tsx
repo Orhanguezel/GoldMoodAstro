@@ -69,7 +69,7 @@ export default async function AboutPage({ params }: Props) {
   return (
     <>
       <Banner title={copy.banner} />
-      <PageContainer pad="large">
+      <PageContainer pad="afterBanner">
         <AboutPageContent />
       </PageContainer>
     </>

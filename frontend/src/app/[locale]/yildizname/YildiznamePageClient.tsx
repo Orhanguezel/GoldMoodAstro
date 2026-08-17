@@ -106,8 +106,18 @@ export default function YildiznamePage() {
               className="text-center space-y-12"
             >
               <div className="space-y-6">
-                <div className="w-24 h-24 bg-(--gm-gold)/10 rounded-[2.5rem] flex items-center justify-center mx-auto text-(--gm-gold) border border-(--gm-gold)/20 shadow-(--gm-shadow-gold)">
-                   <Moon className="w-12 h-12" />
+                {/* Giriş madalyonu: tek başına duran ikon kutusu "kırık görsel"
+                    izlenimi veriyordu (2026-08-17 geri bildirimi). Katmanlı halka
+                    + hafif hâle ile kasıtlı bir amblem haline getirildi. */}
+                <div className="relative mx-auto h-32 w-32">
+                  <div className="absolute inset-0 rounded-full bg-(--gm-gold)/10 blur-2xl" aria-hidden />
+                  <div className="absolute inset-0 rounded-full border border-(--gm-gold)/25" aria-hidden />
+                  <div className="absolute inset-3 rounded-full border border-(--gm-gold)/15" aria-hidden />
+                  <div className="absolute inset-6 flex items-center justify-center rounded-full bg-(--gm-surface) text-(--gm-gold) shadow-(--gm-shadow-gold)">
+                    <Moon className="h-9 w-9" />
+                  </div>
+                  <Star className="absolute -right-1 top-4 h-4 w-4 text-(--gm-gold)/70" aria-hidden />
+                  <Sparkles className="absolute -left-2 bottom-6 h-4 w-4 text-(--gm-gold)/50" aria-hidden />
                 </div>
                 <h2 className={`${cinzel.className} text-5xl md:text-7xl text-(--gm-text) tracking-tighter`}>
                   {ui('ui_yildizname_intro_title_line1', 'Yildizname')} <br />

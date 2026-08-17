@@ -63,7 +63,7 @@ export default async function LegalCustomPage({ params }: Props) {
   return (
     <>
       <Banner title={title} />
-      <PageContainer className="bg-(--gm-bg) text-(--gm-text)" verticalPadding="large">
+      <PageContainer className="bg-(--gm-bg) text-(--gm-text)" pad="afterBanner">
         <article className="mx-auto max-w-[var(--gm-w-readable)] rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface)/70 p-6 shadow-(--gm-shadow-soft) md:p-10">
           {html ? (
             <div

@@ -60,7 +60,7 @@ export default async function BurcunuOgrenPage({ params }: Props) {
     <>
       {/* 2026-07-20: baslik Turkce sayfada bile Ingilizce sabitti. */}
       <Banner title={BANNER[locale] ?? BANNER.en} />
-      <PageContainer className="min-h-screen bg-(--gm-bg)" verticalPadding="large">
+      <PageContainer className="bg-(--gm-bg)" pad="afterBanner">
       <JsonLd
         id="zodiac-finder-speakable-schema"
         data={graph([

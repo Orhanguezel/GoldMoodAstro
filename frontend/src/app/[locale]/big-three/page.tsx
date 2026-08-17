@@ -29,7 +29,7 @@ export default async function BigThreePage({ params }: Props) {
   return (
     <>
       <Banner title="Big Three" />
-      <PageContainer as="main" width="full" pad="none" className="min-h-screen bg-[var(--gm-bg)]">
+      <PageContainer as="main" width="full" pad="none" className="bg-[var(--gm-bg)]">
         <BigThree />
       </PageContainer>
     </>

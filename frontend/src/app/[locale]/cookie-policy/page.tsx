@@ -23,7 +23,7 @@ export default function CookiePolicyPage() {
     <>
       <LayoutSeoBridge title={bannerTitle} noindex={false} />
       <Banner title={bannerTitle} />
-      <PageContainer width="readable" pad="large" className="bg-(--gm-bg) min-h-[50vh]">
+      <PageContainer width="readable" pad="afterBanner" className="bg-(--gm-bg) min-h-[50vh]">
         <CookiePolicyPageContent />
       </PageContainer>
     </>
