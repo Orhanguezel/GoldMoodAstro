@@ -13,6 +13,21 @@ set -euo pipefail
 ROOT=/var/www/goldmoodastro
 cd "$ROOT"
 
+# --- TEK DEPLOY KILIDI -----------------------------------------
+# CI deploy'u ile elle SSH deploy'u ayni anda calisabiliyor (workflow'daki
+# concurrency grubu yalnız CI kosularini serilestirir, elle calistirmayi degil).
+# Iki `next build` ayni .next dizinine yazinca Next gecici manifest dosyasini
+# bulamayip patliyor ("ENOENT ... _buildManifest.js.tmp.*"); 2026-08-17'de bu
+# yarisin sonunda admin_panel build'siz kalip 502'ye dustu, frontend de eski
+# build'le calismaya devam etti. Kilit bunu yapisal olarak imkansiz kilar.
+LOCK=/var/lock/goldmoodastro-deploy.lock
+exec 9>"$LOCK"
+if ! flock -w 1800 9; then
+  echo "HATA: baska bir deploy 30 dakikadir surüyor — kilit alinamadi."
+  exit 1
+fi
+echo "Deploy kilidi alindi (pid $$)"
+
 # --- Çalışma ağacı temiz mi? -----------------------------------
 # Git tabanlı dağıtımda sunucuda yerel değişiklik OLMAMALI.
 # Sessizce `git checkout .` yapmıyoruz: birinin elle yaptığı bir
@@ -88,8 +103,16 @@ health_ok() {
 rollback() {
   echo "$1 — onceki surume donuluyor ($PREV)"
   git reset --hard "$PREV"
-  build_all || echo "UYARI: geri donus build'i de basarisiz"
-  reload_all || true
+  if build_all; then
+    reload_all || true
+  else
+    # ONEMLI: build basarisizken pm2 reload ETME. Eski surumun .next'i zaten
+    # silinmis oluyor; reload etmek calisan servisi de dusurur (2026-08-17'de
+    # admin_panel boyle 502'ye dustu). Servisleri oldugu gibi birak, insan baksin.
+    echo "HATA: geri donus build'i de basarisiz — pm2 RELOAD EDILMEDI."
+    echo "Servisler mevcut haliyle birakildi; sunucuda elle build gerekiyor:"
+    echo "  cd $ROOT/admin_panel && rm -rf .next && bun run build && pm2 restart goldmoodastro-admin"
+  fi
   exit 1
 }
 
