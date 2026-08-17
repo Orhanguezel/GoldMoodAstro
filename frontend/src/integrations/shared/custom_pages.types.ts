@@ -42,6 +42,14 @@ export type CustomPageListPublicQueryParams = CustomPageListQueryParams;
 /* ------------------------------------------------------------------
  * API DTO – Backend CustomPageMerged ile uyumlu
  * ------------------------------------------------------------------ */
+/** Yazar özeti — backend listede de doldurur (kart başına ek istek gerekmez). */
+export interface CustomPageAuthor {
+  id: string;
+  full_name: string | null;
+  slug: string | null;
+  avatar_url: string | null;
+}
+
 export interface ApiCustomPage {
   id: string;
 
@@ -49,6 +57,7 @@ export interface ApiCustomPage {
   module_key: string;
   landing_key: string | null;
   author_consultant_id?: string | null;
+  author?: CustomPageAuthor | null;
 
   is_published: 0 | 1;
   featured: 0 | 1;
@@ -105,6 +114,7 @@ export interface CustomPageDto {
   module_key: string;
   landing_key: string | null;
   author_consultant_id: string | null;
+  author: CustomPageAuthor | null;
 
   is_published: boolean;
   featured: boolean;
@@ -245,6 +255,7 @@ export const normalizeCustomPage = (api: ApiCustomPage): CustomPageDto => {
     module_key: String((api as any).module_key ?? (api as any).moduleKey ?? ''),
     landing_key: (api as any).landing_key ?? null,
     author_consultant_id: (api as any).author_consultant_id ?? null,
+    author: ((api as any).author ?? null) as CustomPageAuthor | null,
     is_published: toBoolFrom01(api.is_published),
     featured: toBoolFrom01(api.featured),
 

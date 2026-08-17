@@ -10,7 +10,7 @@
 // =============================================================
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, CalendarDays } from 'lucide-react';
+import { ArrowRight, CalendarDays, UserRound } from 'lucide-react';
 
 import { useListCustomPagesPublicQuery } from '@/integrations/rtk/public/custom_pages.endpoints';
 import { useLocaleShort, useUiSection } from '@/i18n';
@@ -102,6 +102,28 @@ export default function HomeBlogSection({ locale: localeProp, config }: Props) {
                           {dateStr}
                         </span>
                       ) : null}
+                      {/* Yazar: adı ve küçük fotoğrafı. Yazarı olmayan yazıda
+                          editoryal ekip yazılır — satır hiç kaybolmasın diye,
+                          aksi halde kartlar arasında hizasızlık oluşuyor. */}
+                      <span className="mb-3 inline-flex items-center gap-2 text-xs text-(--gm-text-dim)">
+                        {post.author?.avatar_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={post.author.avatar_url}
+                            alt=""
+                            className="size-7 shrink-0 rounded-full border border-(--gm-border-soft) object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-(--gm-border-soft) bg-(--gm-bg-deep) text-(--gm-gold)">
+                            <UserRound className="size-3.5" />
+                          </span>
+                        )}
+                        <span className="truncate">
+                          {post.author?.full_name ||
+                            ui('ui_home_blog_editorial', 'GoldMoodAstro Editoryal Ekibi')}
+                        </span>
+                      </span>
                       <h3 className="font-serif text-xl leading-snug text-(--gm-text) transition-colors group-hover:text-(--gm-gold)">
                         {post.title}
                       </h3>

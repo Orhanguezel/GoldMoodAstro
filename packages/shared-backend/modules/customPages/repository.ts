@@ -4,6 +4,8 @@ import { and, eq, sql, asc, desc, inArray, type SQL } from "drizzle-orm";
 import { db } from "../../db/client";
 import { customPages, customPagesI18n } from "./schema";
 import { storageAssets } from "../storage/schema";
+import { consultants } from "../consultants/schema";
+import { users } from "../auth/schema";
 import { getCloudinaryConfig } from "../storage/cloudinary";
 import { buildPublicUrl } from "../storage/util";
 
@@ -70,6 +72,15 @@ export type CustomPageMergedRow = {
   featured_image_effective_url?: string | null;
   image_effective_url?: string | null;
   images_effective_urls?: string[];
+  /**
+   * Yazar özeti — listede de dolu gelir.
+   *
+   * NEDEN: kart/liste yüzeyleri yalnız author_consultant_id alıyordu ve yazarı
+   * göstermek için her kart ayrı ayrı /consultants/:id çağırmak zorunda
+   * kalıyordu. Tek JOIN ile burada çözülüyor; blog detayındaki AuthorBio ile
+   * aynı kaynaktan beslenir, ayrışma olmaz.
+   */
+  author?: { id: string; full_name: string | null; slug: string | null; avatar_url: string | null } | null;
 };
 
 function buildMerged(parent: typeof customPages.$inferSelect, i18n?: typeof customPagesI18n.$inferSelect): CustomPageMergedRow {
@@ -155,6 +166,43 @@ async function attachEffectiveMediaUrls(rows: CustomPageMergedRow[]): Promise<Cu
   });
 }
 
+/**
+ * Yazar bilgisini (ad, slug, avatar) satırlara iliştirir — kart başına ayrı
+ * istek atılmasın diye tek sorguda. Yazarı olmayan yazıda `author` null kalır;
+ * çağıran taraf o zaman editoryal ekibi gösterir.
+ */
+async function attachAuthors(rows: CustomPageMergedRow[]): Promise<CustomPageMergedRow[]> {
+  const ids = uniqStrings(rows.map((row) => row.author_consultant_id));
+  if (!ids.length) return rows.map((row) => ({ ...row, author: null }));
+
+  const found = await db
+    .select({
+      id: consultants.id,
+      slug: consultants.slug,
+      full_name: users.full_name,
+      avatar_url: users.avatar_url,
+    })
+    .from(consultants)
+    .leftJoin(users, eq(users.id, consultants.user_id))
+    .where(inArray(consultants.id, ids));
+
+  const byId = new Map(found.map((row) => [row.id, row]));
+  return rows.map((row) => {
+    const author = row.author_consultant_id ? byId.get(row.author_consultant_id) : null;
+    return {
+      ...row,
+      author: author
+        ? {
+            id: author.id,
+            full_name: author.full_name ?? null,
+            slug: author.slug ?? null,
+            avatar_url: author.avatar_url ?? null,
+          }
+        : null,
+    };
+  });
+}
+
 // ---------- LIST --------------------------------------------------------
 
 export async function listCustomPages(opts: {
@@ -232,7 +280,7 @@ export async function listCustomPages(opts: {
     );
   }
 
-  return attachEffectiveMediaUrls(result);
+  return attachAuthors(await attachEffectiveMediaUrls(result));
 }
 
 // ---------- BY ID -------------------------------------------------------
