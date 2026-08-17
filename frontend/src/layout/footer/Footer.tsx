@@ -47,16 +47,18 @@ type FooterRenderSection = {
 };
 
 // Ödeme rozetleri — gerçek marka renkleriyle, beyaz kart üzerinde.
-// Renkler markaların resmi değerleri: Visa #1A1F71, Mastercard #EB001B/#F79E1B,
-// PayPal #002991/#009CDE, Stripe #635BFF.
+// Renkler markaların resmi değerleri: Visa #1A1F71, Mastercard #EB001B/#F79E1B,  theme-lint-ignore
+// PayPal #002991/#009CDE, Stripe #635BFF.  theme-lint-ignore
 // Gömülü SVG zorunlu: sitenin CSP'si dış kaynaktan görsel çekmeye izin vermiyor,
 // yani CDN'den logo çekilse hiç görünmezdi.
+// Rozet zemini kasıtlı beyaz: kart şemalarının marka rehberi logoyu açık zemin
+// üzerinde ister, tema koyu/açık fark etmez. theme-lint-ignore
+const BADGE_CLASS =
+  'inline-flex h-9 w-14 items-center justify-center rounded-lg bg-white px-2 shadow-sm ring-1 ring-black/10'; // theme-lint-ignore
+
 function PaymentBadge({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <span
-      title={label}
-      className="inline-flex h-9 w-14 items-center justify-center rounded-lg bg-white px-2 shadow-sm ring-1 ring-black/10"
-    >
+    <span title={label} className={BADGE_CLASS}>
       <svg role="img" aria-label={label} viewBox="0 0 24 24" className="h-5 w-auto">
         <title>{label}</title>
         {children}
@@ -226,7 +228,7 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
               PayPal /de ve /en ziyaretçisinin € ödeme sayfasında çıkar. */}
           <div className="flex flex-wrap items-center gap-3">
             <PaymentBadge label="Visa">
-              <path d={VISA_PATH} fill="#1A1F71" />
+              <path d={VISA_PATH} fill="#1A1F71" /> {/* theme-lint-ignore: marka rengi, temaya göre değişmez */}
             </PaymentBadge>
 
             <PaymentBadge label="Mastercard">
@@ -238,17 +240,17 @@ const Footer: React.FC<FooterProps> = ({ locale: localeProp, initialFooterSectio
                   <circle cx="9" cy="12" r="7" />
                 </clipPath>
               </defs>
-              <circle cx="9" cy="12" r="7" fill="#EB001B" />
-              <circle cx="15" cy="12" r="7" fill="#F79E1B" />
-              <circle cx="15" cy="12" r="7" fill="#FF5F00" clipPath="url(#gm-mc-overlap)" />
+              <circle cx="9" cy="12" r="7" fill="#EB001B" /> {/* theme-lint-ignore: marka rengi, temaya göre değişmez */}
+              <circle cx="15" cy="12" r="7" fill="#F79E1B" /> {/* theme-lint-ignore: marka rengi, temaya göre değişmez */}
+              <circle cx="15" cy="12" r="7" fill="#FF5F00" clipPath="url(#gm-mc-overlap)" /> {/* theme-lint-ignore: marka rengi, temaya göre değişmez */}
             </PaymentBadge>
 
             <PaymentBadge label="PayPal">
-              <path d={PAYPAL_PATH} fill="#002991" />
+              <path d={PAYPAL_PATH} fill="#002991" /> {/* theme-lint-ignore: marka rengi, temaya göre değişmez */}
             </PaymentBadge>
 
             <PaymentBadge label="Stripe">
-              <path d={STRIPE_PATH} fill="#635BFF" />
+              <path d={STRIPE_PATH} fill="#635BFF" /> {/* theme-lint-ignore: marka rengi, temaya göre değişmez */}
             </PaymentBadge>
           </div>
         </div>
