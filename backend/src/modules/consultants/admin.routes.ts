@@ -8,6 +8,7 @@ import {
   listConsultantsAdminHandler,
   rejectConsultantAdminHandler,
   setConsultantVisibilityAdminHandler,
+  setConsultantFeaturedAdminHandler,
 } from './controller';
 
 export async function registerConsultantsAdmin(app: FastifyInstance) {
@@ -18,6 +19,7 @@ export async function registerConsultantsAdmin(app: FastifyInstance) {
   app.get(`${BASE}/:id`, getConsultantAdminHandler);
   app.get(`${BASE}/:id/overview`, getConsultantOverviewAdminHandler);
   app.patch(`${BASE}/:id/visibility`, setConsultantVisibilityAdminHandler);
+  app.patch(`${BASE}/:id/featured`, setConsultantFeaturedAdminHandler);
   app.patch(`${BASE}/:id/approve`, approveConsultantAdminHandler);
   app.patch(`${BASE}/:id/reject`, rejectConsultantAdminHandler);
   app.delete(`${BASE}/:id`, deleteConsultantAdminHandler);

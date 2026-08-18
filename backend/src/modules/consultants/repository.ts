@@ -216,7 +216,22 @@ export async function listApprovedConsultants(filters: ListConsultantsQuery, loc
         return [desc(isOnlineSelect()), desc(consultants.rating_avg), desc(consultants.total_sessions)];
       case 'featured':
       default:
-        return [desc(consultants.rating_avg), desc(consultants.total_sessions), asc(users.full_name)];
+        // ÖNE ÇIKAN artık admin seçimi. Eskiden burada yalnız rating_avg vardı;
+        // yani "öne çıkan" = "en yüksek puanlı" demekti, admin kimseyi seçemiyordu
+        // ve puanlar eşit olduğunda "Öne Çıkan" ile "Popüler" birebir aynı listeyi
+        // gösteriyordu (2026-08-18).
+        //
+        // featuredActiveSelect(): is_featured=1 VE (featured_until boş VEYA
+        // gelecekte). Süre dolan ücretli yerleşim kendiliğinden düşer, cron yok.
+        return [
+          desc(featuredActiveSelect()),
+          // featured_rank NULL olanlar en sona: elle sıra verilmemişse puana kalsın.
+          sql`CASE WHEN ${consultants.featured_rank} IS NULL THEN 1 ELSE 0 END ASC`,
+          asc(consultants.featured_rank),
+          desc(consultants.rating_avg),
+          desc(consultants.total_sessions),
+          asc(users.full_name),
+        ];
     }
   })();
 
@@ -228,6 +243,17 @@ export async function listApprovedConsultants(filters: ListConsultantsQuery, loc
     .orderBy(...orderBy);
 
   return filters.limit != null ? q.limit(filters.limit) : q;
+}
+
+/**
+ * Öne çıkarma AKTİF mi? is_featured=1 ve (süresiz VEYA bitiş tarihi gelecekte).
+ * Sorgu zamanında değerlendirildiği için süresi biten ücretli yerleşim
+ * kendiliğinden listeden düşer — ayrı bir temizlik cron'u gerekmez.
+ */
+function featuredActiveSelect() {
+  return sql<number>`CASE WHEN ${consultants.is_featured} = 1
+    AND (${consultants.featured_until} IS NULL OR ${consultants.featured_until} > NOW())
+    THEN 1 ELSE 0 END`;
 }
 
 export async function listConsultantsAdmin(filters: AdminListConsultantsQuery) {
@@ -373,6 +399,32 @@ export async function setConsultantHidden(id: string, hidden: boolean) {
   await db
     .update(consultants)
     .set({ is_hidden: hidden ? 1 : 0, updated_at: new Date() } as any)
+    .where(eq(consultants.id, id));
+  return getConsultantById(id);
+}
+
+/**
+ * Öne çıkarma durumunu ayarlar (admin).
+ *
+ * until: ileride ÜCRETLİ yerleşim için — ödenen dönemin bitişi. Boş bırakılırsa
+ * süresiz (editöryel seçim). rank: öne çıkanlar arasında sıra; boşsa puana kalır.
+ */
+export async function setConsultantFeatured(
+  id: string,
+  featured: boolean,
+  until?: string | null,
+  rank?: number | null,
+) {
+  await db
+    .update(consultants)
+    .set({
+      is_featured: featured ? 1 : 0,
+      // Öne çıkarma kapatılırsa süre ve sıra da temizlenir; aksi halde eski
+      // ücretli dönemin bitiş tarihi kayıtta kalıp sonraki açılışta yanıltıyor.
+      featured_until: featured ? (until ?? null) : null,
+      featured_rank: featured ? (rank ?? null) : null,
+      updated_at: new Date(),
+    } as any)
     .where(eq(consultants.id, id));
   return getConsultantById(id);
 }

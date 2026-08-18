@@ -59,6 +59,7 @@ import {
   useListConsultantServicesAdminQuery,
   useRejectConsultantAdminMutation,
   useSetConsultantVisibilityAdminMutation,
+  useSetConsultantFeaturedAdminMutation,
   useUpdateConsultantServiceAdminMutation,
   useListServiceCategoriesAdminQuery,
   useGetSeoQualityDetailQuery,
@@ -122,6 +123,7 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
   const [approve, approveState] = useApproveConsultantAdminMutation();
   const [reject, rejectState] = useRejectConsultantAdminMutation();
   const [setVisibility, visibilityState] = useSetConsultantVisibilityAdminMutation();
+  const [setFeatured, featuredState] = useSetConsultantFeaturedAdminMutation();
   const [createService, createServiceState] = useCreateConsultantServiceAdminMutation();
   const [updateService, updateServiceState] = useUpdateConsultantServiceAdminMutation();
   const [deleteService, deleteServiceState] = useDeleteConsultantServiceAdminMutation();
@@ -233,6 +235,31 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
     try {
       await setVisibility({ id, is_hidden: next }).unwrap();
       toast.success(next ? 'Danışman pasife alındı — sitede görünmüyor.' : 'Danışman yeniden aktif — sitede görünür.');
+      query.refetch();
+    } catch {
+      toast.error('İşlem başarısız.');
+    }
+  }
+
+  /**
+   * Ana sayfadaki "Öne Çıkan Danışmanlar" bölümüne al / çıkar.
+   *
+   * Bu bölüm daha önce YALNIZCA puana göre sıralanıyordu — yani admin kimseyi
+   * seçemiyordu ve puanlar eşit olduğunda "Öne Çıkan" ile "Popüler" birebir aynı
+   * listeyi gösteriyordu. Artık seçim burada yapılıyor.
+   *
+   * Ücretli yerleşim: featured_until'e dönem bitişi yazılırsa süre dolduğunda
+   * kayıt listeden kendiliğinden düşer.
+   */
+  async function toggleFeaturedCurrent() {
+    const next = !(Number((item as any)?.is_featured) === 1);
+    try {
+      await setFeatured({ id, is_featured: next }).unwrap();
+      toast.success(
+        next
+          ? 'Danışman ana sayfada "Öne Çıkanlar" bölümüne alındı.'
+          : 'Danışman "Öne Çıkanlar" bölümünden çıkarıldı.',
+      );
       query.refetch();
     } catch {
       toast.error('İşlem başarısız.');
@@ -415,6 +442,21 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
             ) : (
               <><EyeOff className="mr-2 size-4" /> Pasif yap</>
             )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={toggleFeaturedCurrent}
+            disabled={featuredState.isLoading || item.approval_status !== 'approved'}
+            title="Ana sayfadaki Öne Çıkan Danışmanlar bölümüne al / çıkar"
+            className={cn(
+              "rounded-full px-6 h-12 font-bold tracking-widest uppercase text-[10px] transition-all",
+              Number((item as any).is_featured) === 1
+                ? "border-gm-gold bg-gm-gold/10 text-gm-gold hover:bg-gm-gold hover:text-gm-bg"
+                : "border-gm-border-soft text-gm-muted hover:bg-gm-surface",
+            )}
+          >
+            <Star className="mr-2 size-4" />
+            {Number((item as any).is_featured) === 1 ? 'Öne çıkarıldı' : 'Öne çıkar'}
           </Button>
           <Button
             variant="outline"

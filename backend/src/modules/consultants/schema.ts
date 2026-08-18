@@ -58,6 +58,11 @@ export const consultants = mysqlTable(
     // Pasif/gizli: admin (veya danışman) profili SİLMEDEN geçici olarak sitede
     // gizleyebilir. is_available (canlı görüşme toggle) ile KARIŞTIRILMAMALI.
     is_hidden: tinyint('is_hidden').default(0),
+    // Öne çıkarma: editöryel seçim + ileride ücretli yerleşim.
+    // featured_until dolduğunda listeleme sorgusu otomatik düşürür.
+    is_featured: tinyint('is_featured').default(0),
+    featured_until: datetime('featured_until', { mode: 'string' }),
+    featured_rank: int('featured_rank'),
     rating_avg: decimal('rating_avg', { precision: 3, scale: 2 }).default('0.00'),
     rating_count: int('rating_count').default(0),
     total_sessions: int('total_sessions').default(0),

@@ -25,6 +25,7 @@ import {
   getConsultantOverview,
   getConsultantSlots,
   setConsultantHidden,
+  setConsultantFeatured,
   listApprovedConsultants,
   listConsultantsAdmin,
   rejectConsultant,
@@ -212,6 +213,20 @@ export const setConsultantVisibilityAdminHandler: RouteHandler = async (req, rep
   const body = (req.body ?? {}) as { is_hidden?: unknown };
   const hidden = body.is_hidden === true || body.is_hidden === 1 || body.is_hidden === '1';
   const row = await setConsultantHidden(id, hidden);
+  if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
+  return { data: row };
+};
+
+export const setConsultantFeaturedAdminHandler: RouteHandler = async (req, reply) => {
+  const { id } = consultantIdParamsSchema.parse(req.params ?? {});
+  const body = (req.body ?? {}) as { is_featured?: unknown; featured_until?: unknown; featured_rank?: unknown };
+  const featured = body.is_featured === true || body.is_featured === 1 || body.is_featured === '1';
+  const until =
+    typeof body.featured_until === 'string' && body.featured_until.trim() ? body.featured_until.trim() : null;
+  const rank = Number.isFinite(Number(body.featured_rank)) && body.featured_rank !== null && body.featured_rank !== ''
+    ? Number(body.featured_rank)
+    : null;
+  const row = await setConsultantFeatured(id, featured, until, rank);
   if (!row) return reply.code(404).send({ error: { message: 'consultant_not_found' } });
   return { data: row };
 };

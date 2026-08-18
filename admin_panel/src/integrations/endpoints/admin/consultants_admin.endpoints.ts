@@ -26,6 +26,12 @@ export type ConsultantAdmin = {
   rejection_reason: string | null;
   is_available: number | null;
   is_hidden?: number | null;
+  /** Ana sayfa "Öne Çıkan Danışmanlar" bölümü — admin seçimi. */
+  is_featured?: number | null;
+  /** Ücretli yerleşimin bitişi; boşsa süresiz. */
+  featured_until?: string | null;
+  /** Öne çıkanlar arasında sıra; boşsa puana göre. */
+  featured_rank?: number | null;
   rating_avg: string | null;
   rating_count: number | null;
   total_sessions: number | null;
@@ -167,6 +173,29 @@ export const consultantsAdminApi = baseApi.injectEndpoints({
         { type: 'Consultants' as const, id: 'LIST' },
       ],
     }),
+    /**
+     * Ana sayfadaki "Öne Çıkan Danışmanlar" bölümünü belirler.
+     *
+     * featured_until: ileride ÜCRETLİ yerleşim için ödenen dönemin bitişi.
+     * Boş bırakılırsa süresiz (editöryel seçim). Süresi dolan kayıt listeleme
+     * sorgusunda otomatik düşer — ayrı temizlik işi yok.
+     * featured_rank: öne çıkanlar arasında sıra; boşsa puana göre sıralanır.
+     */
+    setConsultantFeaturedAdmin: b.mutation<
+      ConsultantAdmin,
+      { id: string; is_featured: boolean; featured_until?: string | null; featured_rank?: number | null }
+    >({
+      query: ({ id, is_featured, featured_until, featured_rank }) => ({
+        url: `/admin/consultants/${encodeURIComponent(id)}/featured`,
+        method: 'PATCH',
+        body: { is_featured, featured_until: featured_until ?? null, featured_rank: featured_rank ?? null },
+      }),
+      transformResponse: unwrapOne,
+      invalidatesTags: (_r, _e, arg) => [
+        { type: 'Consultants' as const, id: arg.id },
+        { type: 'Consultants' as const, id: 'LIST' },
+      ],
+    }),
     listConsultantServicesAdmin: b.query<ConsultantServiceAdmin[], string>({
       query: (consultantId) => ({ url: `/admin/consultants/${encodeURIComponent(consultantId)}/services` }),
       transformResponse: unwrapServices,
@@ -221,6 +250,7 @@ export const {
   useApproveConsultantAdminMutation,
   useRejectConsultantAdminMutation,
   useSetConsultantVisibilityAdminMutation,
+  useSetConsultantFeaturedAdminMutation,
   useListConsultantServicesAdminQuery,
   useCreateConsultantServiceAdminMutation,
   useUpdateConsultantServiceAdminMutation,

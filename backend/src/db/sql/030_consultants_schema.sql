@@ -33,6 +33,17 @@ CREATE TABLE IF NOT EXISTS consultants (
   rejection_reason TEXT,
   is_available TINYINT DEFAULT 1,
   is_hidden TINYINT DEFAULT 0,
+  -- ÖNE ÇIKARMA (editöryel + ileride ücretli yerleşim).
+  -- Eskiden "öne çıkan" diye bir şey YOKTU: sort=featured sadece rating_avg'a
+  -- göre sıralıyordu, yani admin kimseyi seçemiyordu ve herkesin puanı eşit
+  -- olduğunda "Öne Çıkan" ile "Popüler" bölümleri birebir aynı listeyi
+  -- gösteriyordu (2026-08-18 tespiti).
+  is_featured TINYINT DEFAULT 0,
+  -- Ücretli yerleşimin BİTİŞ anı. NULL = süresiz (editöryel seçim).
+  -- Süre dolduğunda listeleme sorgusu otomatik düşürür; cron gerektirmez.
+  featured_until DATETIME NULL,
+  -- Öne çıkanlar arasında sıra (küçük olan üstte). NULL = puana göre.
+  featured_rank INT NULL,
   rating_avg DECIMAL(3,2) DEFAULT 0.00,
   rating_count INT DEFAULT 0,
   total_sessions INT DEFAULT 0,
