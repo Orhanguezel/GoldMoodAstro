@@ -130,6 +130,12 @@ function withUserSelect(locale?: string | null, userId?: string | null) {
     rejection_reason: consultants.rejection_reason,
     is_available: consultants.is_available,
     is_hidden: consultants.is_hidden,
+    // Öne çıkarma alanları yanıtta OLMALI: admin listesi durumu göstermeden
+    // aç/kapa yapamıyor (ilk sürümde eksikti, panel her satırı "kapalı"
+    // sanıyordu).
+    is_featured: consultants.is_featured,
+    featured_until: consultants.featured_until,
+    featured_rank: consultants.featured_rank,
     rating_avg: consultants.rating_avg,
     rating_count: consultants.rating_count,
     total_sessions: consultants.total_sessions,
@@ -164,6 +170,12 @@ function lightSelect(locale?: string | null, userId?: string | null) {
     approval_status: consultants.approval_status,
     is_available: consultants.is_available,
     is_hidden: consultants.is_hidden,
+    // Öne çıkarma alanları yanıtta OLMALI: admin listesi durumu göstermeden
+    // aç/kapa yapamıyor (ilk sürümde eksikti, panel her satırı "kapalı"
+    // sanıyordu).
+    is_featured: consultants.is_featured,
+    featured_until: consultants.featured_until,
+    featured_rank: consultants.featured_rank,
     rating_avg: consultants.rating_avg,
     rating_count: consultants.rating_count,
     total_sessions: consultants.total_sessions,

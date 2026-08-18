@@ -13,6 +13,7 @@ import {
   Send,
   UserCheck,
   Trash2,
+  Star,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,6 +38,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   type ConsultantApplicationAdmin,
   useApproveConsultantAdminMutation,
+  useSetConsultantFeaturedAdminMutation,
   useApproveConsultantApplicationAdminMutation,
   useDeleteConsultantAdminMutation,
   useListConsultantApplicationsAdminQuery,
@@ -123,6 +125,7 @@ export default function ConsultantsClient() {
   }, [categoriesQuery.data]);
 
   const [approve, approveState] = useApproveConsultantAdminMutation();
+  const [setFeatured, featuredState] = useSetConsultantFeaturedAdminMutation();
   const [reject, rejectState] = useRejectConsultantAdminMutation();
   const [approveApp, approveAppState] = useApproveConsultantApplicationAdminMutation();
   const [rejectApp, rejectAppState] = useRejectConsultantApplicationAdminMutation();
@@ -311,6 +314,7 @@ export default function ConsultantsClient() {
                   {isPending ? 'Tarih' : t('table.price')}
                 </TableHead>
                 {!isPending && <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">SEO</TableHead>}
+                <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">Öne çıkan</TableHead>
                 <TableHead className="py-6 text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.status')}</TableHead>
                 <TableHead className="py-6 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gm-muted">{t('table.actions')}</TableHead>
               </TableRow>
@@ -329,7 +333,8 @@ export default function ConsultantsClient() {
                 ))
               ) : isEmpty ? (
                 <TableRow>
-                  <TableCell colSpan={isPending ? 5 : 6} className="py-32 text-center">
+                  {/* +1: "Öne çıkan" sütunu eklendi (2026-08-18) */}
+                  <TableCell colSpan={isPending ? 6 : 7} className="py-32 text-center">
                     <div className="flex flex-col items-center gap-6 opacity-30">
                       <Users className="w-20 h-20 text-gm-gold/50" />
                       <span className="font-serif italic text-xl text-gm-muted">
@@ -479,6 +484,43 @@ export default function ConsultantsClient() {
                       ) : (
                         <Badge variant="outline" className="text-gm-muted">Bekliyor</Badge>
                       )}
+                    </TableCell>
+                    {/* Öne çıkarma listeden yapılabilsin: detay sayfasını açmadan
+                        aç/kapa. Yalnız ONAYLI danışmanda anlamlı — onaysız kayıt
+                        zaten sitede listelenmiyor. */}
+                    <TableCell className="py-6">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title={
+                          item.approval_status !== 'approved'
+                            ? 'Önce danışmanı onaylayın'
+                            : Number(item.is_featured) === 1
+                              ? 'Öne çıkanlardan çıkar'
+                              : 'Ana sayfada öne çıkar'
+                        }
+                        disabled={featuredState.isLoading || item.approval_status !== 'approved'}
+                        onClick={() =>
+                          setFeatured({ id: item.id, is_featured: Number(item.is_featured) !== 1 })
+                            .unwrap()
+                            .then(() =>
+                              toast.success(
+                                Number(item.is_featured) !== 1
+                                  ? 'Ana sayfada öne çıkarıldı.'
+                                  : 'Öne çıkanlardan çıkarıldı.',
+                              ),
+                            )
+                            .catch(() => toast.error('İşlem başarısız.'))
+                        }
+                        className={cn(
+                          'rounded-full transition-colors disabled:opacity-20',
+                          Number(item.is_featured) === 1
+                            ? 'text-gm-gold hover:bg-gm-gold/10'
+                            : 'text-gm-muted/40 hover:text-gm-gold hover:bg-gm-gold/10',
+                        )}
+                      >
+                        <Star className={cn('size-5', Number(item.is_featured) === 1 && 'fill-gm-gold')} />
+                      </Button>
                     </TableCell>
                     <TableCell className="py-6">
                       <div className={cn(
