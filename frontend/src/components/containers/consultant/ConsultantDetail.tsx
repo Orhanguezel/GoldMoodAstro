@@ -339,7 +339,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
               <Sparkles className="w-5 h-5 text-(--gm-gold)" />
               <h2 className="font-display text-2xl text-(--gm-text)">{ui('ui_consultant_section_experience', 'Spiritual Journey & Experience')}</h2>
             </div>
-            <p className="text-(--gm-text-dim) font-serif italic text-[1.35rem] leading-relaxed opacity-90 first-letter:text-5xl first-letter:float-left first-letter:mr-3 first-letter:font-serif first-letter:text-(--gm-gold)">
+            <p className="whitespace-pre-line text-(--gm-text-dim) font-serif italic text-[1.35rem] leading-relaxed opacity-90 first-letter:text-5xl first-letter:float-left first-letter:mr-3 first-letter:font-serif first-letter:text-(--gm-gold)">
               {consultant.bio || ui('ui_consultant_no_bio', 'This consultant has not added a description yet.')}
             </p>
             <p className="mt-6 text-[11px] text-(--gm-text-muted) leading-relaxed border-t border-(--gm-border-soft) pt-4">

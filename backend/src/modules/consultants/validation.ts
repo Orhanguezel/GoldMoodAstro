@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { appConfig } from '@goldmood/shared-config/appConfig';
+import { htmlToPlainText } from '@goldmood/shared-backend/modules/_shared/plainText';
 
 const slugList = z.array(z.string().trim().toLowerCase().min(1).max(64).regex(/^[a-z0-9_-]+$/, 'slug_format'));
 const languageSlugList = z.array(z.string().trim().toLowerCase().min(2).max(8).regex(/^[a-z]+$/, 'slug_format'));
@@ -53,7 +54,8 @@ export const rejectConsultantBodySchema = z.object({
 });
 
 export const registerConsultantBodySchema = z.object({
-  bio: z.string().trim().max(5000).optional(),
+  // Aynı kural başvuru formunda da geçerli: bio düz metin olarak saklanır.
+  bio: z.string().trim().max(5000).optional().transform((v) => (v == null ? v : htmlToPlainText(v))),
   expertise: csvOrStringArray
     .default(appConfig.consultants.defaultExpertise)
     .pipe(slugList.min(1).max(8)),

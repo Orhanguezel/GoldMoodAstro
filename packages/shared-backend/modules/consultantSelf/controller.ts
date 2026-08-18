@@ -24,12 +24,18 @@ import { consultantServices } from '../consultantServices/schema';
 import { serviceCategories } from '../serviceCategories/schema';
 import { languages } from '../languages/schema';
 import { buildPublicUrl, getCloudinaryConfig, repoInsert as insertStorageAsset, uploadBufferAuto } from '../storage';
+import { htmlToPlainText } from '../_shared/plainText';
 import { repoPersistAuditEvent } from '../audit/repository';
 import * as customPagesRepo from '../customPages/repository';
 // wallets/walletTransactions: bu projede DB schema farklı (consultant_id), raw SQL kullanılıyor.
 
 const profilePatchSchema = z.object({
-  bio: z.string().trim().max(5000).nullable().optional(),
+  // bio DÜZ METİN olarak saklanır. Panel bir dönem zengin metin editörü
+  // kullandığı için DB'ye <div>/&nbsp; girmiş ve public sayfada etiketler
+  // harf harf görünmüştü (2026-08-18). Normalizasyon YAZMA tarafında: bio'yu
+  // meta description, JSON-LD, kartlar ve mobil de okuyor — her tüketiciye
+  // ayrı HTML çözme eklemek er ya da geç birini atlar.
+  bio: z.string().trim().max(5000).nullable().optional().transform((v) => (v == null ? v : htmlToPlainText(v))),
   meta_title: z.string().trim().max(255).nullable().optional(),
   meta_description: z.string().trim().max(500).nullable().optional(),
   og_image: z.string().trim().max(500).nullable().optional(),

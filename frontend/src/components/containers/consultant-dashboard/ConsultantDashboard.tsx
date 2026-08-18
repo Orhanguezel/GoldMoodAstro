@@ -69,7 +69,6 @@ import ClientsPanel from './ClientsPanel'; // C8
 import ProfileViewsPanel from './ProfileViewsPanel'; // C7
 import MediaMessagesPanel from './MediaMessagesPanel';
 import BookingMessageButton from '@/components/common/BookingMessageButton';
-import RichContentEditor from '@/components/common/RichContentEditor';
 import MultiSelectChip from '@/components/common/MultiSelectChip';
 import ConsultantCardPreview from './ConsultantCardPreview';
 import PageContainer from '@/components/common/PageContainer';
@@ -939,21 +938,25 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
           <GalleryUpload value={gallery} onChange={setGallery} bucket="consultant_avatars" folder={profile.id} max={12} />
         </div>
 
+        {/* DÜZ METİN alanı — zengin metin editörü DEĞİL.
+            Editör HTML üretiyordu ve bio public sayfada düz metin olarak
+            basıldığı için ziyaretçi "<div>...</div>" görüyordu (2026-08-18).
+            Sunucu zaten yazarken HTML'i temizliyor; burada da düz metin
+            almak, danışmanın yazdığıyla kaydedilenin aynı olmasını sağlıyor —
+            aksi halde biçimlendirme sessizce kayboluyordu. */}
         <Field
-          label={ui('ui_dashboard_profile_bio_label', 'About Me (Rich Text)')}
+          label={ui('ui_dashboard_profile_bio_label', 'Kendimi Anlat')}
           hint={ui('ui_dashboard_profile_bio_hint', 'Describe yourself, your approach and what you offer. Do not add contact details or external links here.')}
           error={errors.bio}
         >
-          <div className="rich-editor-container">
-            <RichContentEditor
-              value={bio}
-              onChange={setBio}
-              height="320px"
-              label=""
-              showHelp={false}
-              showPreview={false}
-            />
-          </div>
+          <textarea
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            rows={12}
+            maxLength={5000}
+            className="w-full rounded-2xl border border-(--gm-border-soft) bg-(--gm-bg-deep) p-4 text-sm leading-relaxed text-(--gm-text) outline-none focus:border-(--gm-gold)/50"
+            placeholder={ui('ui_dashboard_profile_bio_placeholder', 'Kendinizi, yaklaşımınızı ve sunduğunuz hizmeti anlatın...')}
+          />
           <div className="flex justify-end mt-1">
             <span className={`text-[10px] ${bio.length >= 5000 ? 'text-[var(--gm-error)]' : 'text-[var(--gm-muted)]'}`}>
               {ui('ui_dashboard_character_count', '{count} / 5000 characters').replace('{count}', String(bio.length))}

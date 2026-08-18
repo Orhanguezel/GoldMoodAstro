@@ -417,7 +417,7 @@ export default async function ConsultantDetailPage({ params }: Props) {
                   {consultantName}
                 </h1>
                 {consultant.bio && (
-                  <p className="text-lg leading-relaxed text-(--gm-text-dim)">
+                  <p className="whitespace-pre-line text-lg leading-relaxed text-(--gm-text-dim)">
                     {consultant.bio}
                   </p>
                 )}
