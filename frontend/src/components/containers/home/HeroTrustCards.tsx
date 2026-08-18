@@ -6,72 +6,139 @@ import { Star, Award } from 'lucide-react';
 import { useListConsultantsPublicQuery } from '@/integrations/rtk/public/consultants.public.endpoints';
 import { useUiSection } from '@/i18n';
 
-function AvatarStack({ consultants }: { consultants: Array<{ id: string; full_name?: string; avatar_url?: string }> }) {
+/**
+ * Onaylı danışman avatar yığını.
+ *
+ * KURAL: "+N" sayacı YOK — kaç danışman varsa hepsi çizilir (kullanıcı talebi,
+ * 2026-08-18). Kart genişliği sabit olduğu için sığdırma boyut + bindirme ile
+ * yapılır: sayı arttıkça avatarlar küçülür ve daha çok üst üste biner; tek
+ * satıra sığmayacak kadar çoksa alt satıra sarar. Böylece 7 danışmanda da
+ * 1000 danışmanda da kart taşmaz ve herkes ayrı ayrı görünür.
+ *
+ * Genişlik ResizeObserver ile ÖLÇÜLÜR, sabit sayı yazılmaz: kart genişliği
+ * (mobil/masaüstü, farklı tema) değişince hesap kendiliğinden düzelir.
+ */
+function AvatarStack({
+  consultants,
+  variant = 'verified',
+}: {
+  consultants: Array<{ id: string; full_name?: string; avatar_url?: string }>;
+  /** 'online' = çevrimiçi şeridi: daha küçük, yeşil kenarlık, isim satırı yok. */
+  variant?: 'verified' | 'online';
+}) {
   const [activeIdx, setActiveIdx] = useState(0);
-  const show = consultants.slice(0, 4);
-  const remaining = Math.max(0, consultants.length - 4);
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
 
-  // Rotate highlighted avatar every 2.5s
   useEffect(() => {
-    if (show.length < 2) return;
-    const id = setInterval(() => setActiveIdx((i) => (i + 1) % show.length), 2500);
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    ro.observe(el);
+    setWidth(el.getBoundingClientRect().width);
+    return () => ro.disconnect();
+  }, []);
+
+  // Vurgu tüm listede dönüyor (ilk 4'te değil) — "tek tek gösterilsin" bu.
+  useEffect(() => {
+    if (consultants.length < 2 || variant === 'online') return;
+    const id = setInterval(() => setActiveIdx((i) => (i + 1) % consultants.length), 2500);
     return () => clearInterval(id);
-  }, [show.length]);
+  }, [consultants.length, variant]);
+
+  const n = consultants.length;
+  if (n === 0) return null;
+
+  const isOnline = variant === 'online';
+  const MAX_SIZE = isOnline ? 48 : 80;   // az danışmanda mevcut görünüm korunur
+  const MIN_SIZE = 22;   // bunun altında yüz seçilemez; sarmayı tercih ediyoruz
+  // Bindirme SABİT DEĞİL: sayı arttıkça avatarlar birbirine daha çok girer.
+  // Sabit 0.55 ile 1000 danışmanda kart 1000px'i aşıp hero'yu eziyordu; sabit
+  // yüksek bindirme ise az danışmanda yüzleri gereksiz yere kapatıyor.
+  // 5 danışman → tek sıra, mevcut görünüm; 200 → ~4 sıra; 1000 → ~17 sıra.
+  // Taban 0.15 = eski tasarımın 80px avatarda 12px'lik binmesi (yüzler açık
+  // kalır). Sayı arttıkça 0.80'e kadar çıkar; böylece 5 danışmanda ferah,
+  // 1000 danışmanda kart hero'yu ezmeyecek kadar derli toplu olur.
+  const OVERLAP = Math.min(0.8, Math.max(0.15, 0.15 + (n - 4) * 0.03));
+  const W = width || 292;
+
+  // Tek satıra sığması için gereken boyut; sınırlara kırpılır.
+  const size = Math.min(MAX_SIZE, Math.max(MIN_SIZE, W / (1 + (n - 1) * (1 - OVERLAP))));
+  const step = size * (1 - OVERLAP);
+  // 1e-6 tolerans: boyut zaten "tek satıra sığsın" diye türetiliyor, ama
+  // kayan nokta yuvarlaması (3.998 gibi) son avatarı gereksiz yere alt satıra
+  // atıyordu — 5 danışman 4+1 diye sarıyordu.
+  const perRow = Math.max(1, Math.floor((W - size) / step + 1e-6) + 1);
+  const rows: typeof consultants[] = [];
+  for (let i = 0; i < n; i += perRow) rows.push(consultants.slice(i, i + perRow));
+
+  const active = consultants[activeIdx];
+  const COLORS = ['#7B5EA7', '#D4AF37', '#5A4E87', '#9B7EC8'];
 
   return (
-    <div className="flex -space-x-3 items-center">
-      {show.map((c, i) => {
-        const initials = (c.full_name || 'GS')
-          .split(' ')
-          .map((w) => w[0])
-          .join('')
-          .slice(0, 2)
-          .toUpperCase();
+    <div ref={wrapRef} className="w-full">
+      <div className="flex flex-col" style={{ gap: Math.max(2, size * 0.12) }}>
+        {rows.map((row, rowIdx) => (
+          <div key={rowIdx} className="flex items-center">
+            {row.map((c, colIdx) => {
+              const i = rowIdx * perRow + colIdx;
+              const isActive = i === activeIdx;
+              const initials = (c.full_name || 'GM')
+                .split(' ')
+                .map((w) => w[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase();
 
-        const COLORS = ['#7B5EA7', '#D4AF37', '#5A4E87', '#9B7EC8'];
-        const isActive = i === activeIdx;
-
-        return (
-          <div
-            key={c.id}
-            className="relative"
-            style={{ zIndex: isActive ? 10 : 4 - i }}
-          >
-            <div
-              className="w-20 h-20 rounded-full border-2 overflow-hidden transition-all duration-500 flex items-center justify-center text-lg font-bold text-white"
-              style={{
-                borderColor: isActive ? '#D4AF37' : 'rgba(0,0,0,0.4)',
-                transform: isActive ? 'scale(1.15)' : 'scale(1)',
-                background: COLORS[i % COLORS.length],
-                boxShadow: isActive ? `0 0 18px rgba(212,175,55,0.7)` : 'none',
-              }}
-            >
-              {c.avatar_url ? (
-                <Image
-                  src={c.avatar_url}
-                  alt={c.full_name || 'Consultant'}
-                  width={80}
-                  height={80}
-                  className="object-cover w-full h-full"
-                  unoptimized
-                />
-              ) : (
-                initials
-              )}
-            </div>
-            {isActive && c.full_name && (
-              <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs font-bold text-amber-300 tracking-wide animate-fade-in pointer-events-none">
-                {c.full_name.split(' ')[0]}
-              </div>
-            )}
+              return (
+                <div
+                  key={c.id}
+                  title={c.full_name}
+                  className="relative shrink-0 rounded-full overflow-hidden border-2 transition-all duration-500 flex items-center justify-center font-bold text-white"
+                  style={{
+                    width: size,
+                    height: size,
+                    marginLeft: colIdx === 0 ? 0 : -(size - step),
+                    // Aktif olan en üstte; kalanlar soldan sağa azalan sırada
+                    // üst üste binsin ki sıra karışık görünmesin.
+                    zIndex: isActive ? row.length + 1 : row.length - colIdx,
+                    fontSize: Math.max(8, size * 0.32),
+                    borderColor: isOnline
+                      ? 'rgba(52,211,153,0.35)'
+                      : isActive
+                        ? '#D4AF37'
+                        : 'rgba(0,0,0,0.4)',
+                    transform: !isOnline && isActive ? 'scale(1.15)' : 'scale(1)',
+                    background: isOnline ? 'rgba(6,78,59,0.6)' : COLORS[i % COLORS.length],
+                    boxShadow: !isOnline && isActive ? '0 0 18px rgba(212,175,55,0.7)' : 'none',
+                  }}
+                >
+                  {c.avatar_url ? (
+                    <Image
+                      src={c.avatar_url}
+                      alt={c.full_name || 'Consultant'}
+                      width={Math.round(size)}
+                      height={Math.round(size)}
+                      className="object-cover w-full h-full"
+                      unoptimized
+                    />
+                  ) : (
+                    initials
+                  )}
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
-      {remaining > 0 && (
-        <div className="w-20 h-20 rounded-full border-2 border-black/40 bg-white/10 flex items-center justify-center text-sm font-bold text-white/70 backdrop-blur-sm">
-          +{remaining}
+        ))}
+      </div>
+
+      {/* İsim yığının ALTINDA sabit bir satırda: avatarın altına mutlak
+          konumlandırmak çok satırlı dizilimde alt sıranın üstüne biniyordu. */}
+      {!isOnline && active?.full_name ? (
+        <div className="mt-2 h-4 text-center text-xs font-bold tracking-wide text-amber-300">
+          {active.full_name.split(' ')[0]}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -175,35 +242,11 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
         </div>
 
         {!isLoading && online.length > 0 && (
-          <div className="mt-3 flex -space-x-1.5">
-            {online.slice(0, 5).map((c) => {
-              const initials = (c.full_name || 'G').split(' ')[0][0].toUpperCase();
-              return (
-                <div
-                  key={c.id}
-                  className="w-12 h-12 rounded-full border border-emerald-400/30 overflow-hidden flex items-center justify-center text-xs font-bold text-white bg-emerald-800/60"
-                  title={c.full_name}
-                >
-                  {c.avatar_url ? (
-                    <Image
-                      src={c.avatar_url}
-                      alt={c.full_name || ''}
-                      width={48}
-                      height={48}
-                      className="object-cover w-full h-full"
-                      unoptimized
-                    />
-                  ) : (
-                    initials
-                  )}
-                </div>
-              );
-            })}
-            {online.length > 5 && (
-              <div className="w-12 h-12 rounded-full border border-emerald-400/30 bg-emerald-800/40 flex items-center justify-center text-[10px] font-bold text-emerald-300">
-                +{online.length - 5}
-              </div>
-            )}
+          /* Burada da "+N" YOK: çevrimiçi kaç danışman varsa hepsi çizilir.
+             AvatarStack genişliği ölçüp boyut/bindirmeyi kendisi hesapladığı
+             için sayı ne olursa olsun şerit taşmaz. */
+          <div className="mt-3">
+            <AvatarStack consultants={online} variant="online" />
           </div>
         )}
       </div>
