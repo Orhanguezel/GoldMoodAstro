@@ -514,12 +514,21 @@ export default function ConsultantsClient() {
                         }
                         className={cn(
                           'rounded-full transition-colors disabled:opacity-20',
+                          // AÇIK durum belirgin SARI: marka altını (#b89651) krem
+                          // zeminde donuk kalıyor ve dolu/boş farkı okunmuyordu.
+                          // Kapalı durum da %40 saydamdan çıkarıldı — iki durum
+                          // arasındaki fark bir bakışta görünmeli.
                           Number(item.is_featured) === 1
-                            ? 'text-gm-gold hover:bg-gm-gold/10'
-                            : 'text-gm-muted/40 hover:text-gm-gold hover:bg-gm-gold/10',
+                            ? 'bg-amber-400/20 text-amber-500 ring-1 ring-amber-400/40 hover:bg-amber-400/30'
+                            : 'text-gm-muted/70 hover:text-amber-500 hover:bg-amber-400/10',
                         )}
                       >
-                        <Star className={cn('size-5', Number(item.is_featured) === 1 && 'fill-gm-gold')} />
+                        <Star
+                          className={cn(
+                            'size-5',
+                            Number(item.is_featured) === 1 && 'fill-amber-400 text-amber-500',
+                          )}
+                        />
                       </Button>
                     </TableCell>
                     <TableCell className="py-6">

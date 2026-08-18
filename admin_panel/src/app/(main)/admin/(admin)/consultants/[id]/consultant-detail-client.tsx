@@ -450,12 +450,13 @@ export default function ConsultantDetailClient({ id }: { id: string }) {
             title="Ana sayfadaki Öne Çıkan Danışmanlar bölümüne al / çıkar"
             className={cn(
               "rounded-full px-6 h-12 font-bold tracking-widest uppercase text-[10px] transition-all",
+              // Liste ile AYNI sarı: marka altını krem zeminde durumu belli etmiyor.
               Number((item as any).is_featured) === 1
-                ? "border-gm-gold bg-gm-gold/10 text-gm-gold hover:bg-gm-gold hover:text-gm-bg"
+                ? "border-amber-400 bg-amber-400/15 text-amber-600 hover:bg-amber-400/25"
                 : "border-gm-border-soft text-gm-muted hover:bg-gm-surface",
             )}
           >
-            <Star className="mr-2 size-4" />
+            <Star className={cn('mr-2 size-4', Number((item as any).is_featured) === 1 && 'fill-amber-400')} />
             {Number((item as any).is_featured) === 1 ? 'Öne çıkarıldı' : 'Öne çıkar'}
           </Button>
           <Button
