@@ -24,6 +24,19 @@ cd "$ROOT" || exit 1
 
 log() { echo "[$(date -u '+%Y-%m-%d %H:%M:%S')] $*"; }
 
+# ONCE KILIT: baska bir deploy zaten calisiyorsa hicbir sey yapma.
+# Bu kontrol kirli-agac kontrolunden ONCE gelmeli — cunku deploy SIRASINDA agac
+# gecici olarak kirli goruniyor (Next build next-env.d.ts / tsconfig.json'i
+# yeniden yaziyor, temizlik takastan SONRA oluyor). Sira ters oldugunda cron
+# her 3 dakikada "calisma agaci kirli — elle temizlenmeli" diye yaniltici alarm
+# uretiyordu; oysa surmekte olan deploy zaten temizleyecekti (2026-08-18).
+LOCK=/var/lock/goldmoodastro-deploy.lock
+exec 9>"$LOCK"
+if ! flock -n 9; then
+  exit 0   # devam eden deploy var — sessiz cik
+fi
+flock -u 9   # kilidi birak; vps-deploy.sh kendi kilidini alacak
+
 # Kirli agacta ASLA deploy deneme: `git pull --ff-only` zaten patlar, ama sessiz
 # birakmak yerine gorunur kilalim (bkz memory prod_repo_dirty_blocks_deploy).
 if [ -n "$(git status --porcelain)" ]; then
