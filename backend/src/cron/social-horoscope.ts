@@ -28,7 +28,7 @@ const HOUR_MS = 60 * 60 * 1000;
 const PUBLIC_BASE = (process.env.SOCIAL_PUBLIC_BASE || process.env.PUBLIC_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
 const HASHTAGS = '#goldmoodastro #astroloji #burc #astrolojiyorumlari #günlükburç #yükselenburç';
 
-const SIGN_LABEL: Record<SignKey, string> = {
+export const SIGN_LABEL: Record<SignKey, string> = {
   aries: 'Koç',
   taurus: 'Boğa',
   gemini: 'İkizler',
@@ -44,7 +44,7 @@ const SIGN_LABEL: Record<SignKey, string> = {
 };
 
 // Zodyak sırası — "günün burcu" rotasyonu için (her gün farklı kapak).
-const SIGN_ORDER: SignKey[] = [
+export const SIGN_ORDER: SignKey[] = [
   'aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo',
   'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces',
 ];
@@ -57,7 +57,7 @@ export function signOfDay(dateStr: string, offset = 0): SignKey {
   return SIGN_ORDER[idx]!;
 }
 
-const SIGN_ELEMENT: Record<SignKey, 'Ateş' | 'Toprak' | 'Hava' | 'Su'> = {
+export const SIGN_ELEMENT: Record<SignKey, 'Ateş' | 'Toprak' | 'Hava' | 'Su'> = {
   aries: 'Ateş',
   leo: 'Ateş',
   sagittarius: 'Ateş',
@@ -633,7 +633,7 @@ const AUGUST_2026_DAILY_PLAN: Record<string, { theme: string; focus: string; ang
   },
 };
 
-const PARTS: Array<{ part: 1 | 2; signs: SignKey[]; label: string }> = [
+export const PARTS: Array<{ part: 1 | 2; signs: SignKey[]; label: string }> = [
   {
     part: 1,
     signs: ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo'],
@@ -650,7 +650,7 @@ function isoDate(d = new Date()): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
 
-function prettyDate(dateStr: string): string {
+export function prettyDate(dateStr: string): string {
   return new Date(`${dateStr}T00:00:00Z`).toLocaleDateString('tr-TR', {
     day: 'numeric',
     month: 'long',
@@ -659,7 +659,7 @@ function prettyDate(dateStr: string): string {
   });
 }
 
-function cleanContent(raw: string): string {
+export function cleanContent(raw: string): string {
   return raw
     .replace(/^#{1,6}\s.*$/gm, '')
     .replace(/\*\*/g, '')
@@ -668,11 +668,11 @@ function cleanContent(raw: string): string {
     .trim();
 }
 
-function esc(s: string): string {
+export function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function wrap(text: string, maxChars: number, maxLines: number): string[] {
+export function wrap(text: string, maxChars: number, maxLines: number): string[] {
   const words = text.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
   const lines: string[] = [];
   let cur = '';
@@ -693,11 +693,11 @@ function wrap(text: string, maxChars: number, maxLines: number): string[] {
   return lines;
 }
 
-function tspans(lines: string[], x: number, dy: number): string {
+export function tspans(lines: string[], x: number, dy: number): string {
   return lines.map((line, index) => `<tspan x="${x}" dy="${index === 0 ? 0 : dy}">${esc(line)}</tspan>`).join('');
 }
 
-function uploadsDir(): string {
+export function uploadsDir(): string {
   return env.LOCAL_STORAGE_ROOT ? path.resolve(env.LOCAL_STORAGE_ROOT) : path.resolve(process.cwd(), 'uploads');
 }
 

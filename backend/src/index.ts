@@ -6,6 +6,7 @@ import { registerBookingSlaCron } from '@/cron/booking-sla';
 import { registerDailyReadingsCron } from '@/cron/daily-readings';
 import { registerHoroscopeCron } from '@/cron/horoscope-job';
 import { registerSocialHoroscopeCron } from '@/cron/social-horoscope';
+import { registerSocialWeeklyHoroscopeCron } from '@/cron/social-horoscope-weekly';
 import { registerSocialQueueCron } from '@/cron/social-queue';
 import { registerReviewFollowupCron } from '@/cron/review-followup';
 import { registerAccountDeletionCron } from '@/cron/account-deletion';
@@ -55,6 +56,7 @@ async function main() {
     registerDailyReadingsCron();
     registerHoroscopeCron();
     registerSocialHoroscopeCron();
+    registerSocialWeeklyHoroscopeCron();
     registerSocialQueueCron();
     registerReviewFollowupCron();
     registerAccountDeletionCron();
