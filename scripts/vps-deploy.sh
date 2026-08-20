@@ -28,6 +28,19 @@ if ! flock -w 1800 9; then
 fi
 echo "Deploy kilidi alindi (pid $$)"
 
+# --- Next'in ürettiği dosyaları baştan geri al -----------------
+# next-env.d.ts + tsconfig.json build SONRASI restore'a rağmen çalışma
+# sırasında yeniden kirlenebiliyor (2026-08-20: admin_panel dosyaları restore'a
+# rağmen yine değişmiş bulundu, deploy kilitlendi). Bunlar deterministik
+# üretilmiş dosyalar — deploy başında güvenle geri alınır. Elle yapılmış BAŞKA
+# her değişiklik aşağıdaki temizlik kontrolünü yine de durdurur.
+for d in admin_panel frontend; do
+  for gen in "next-env.d.ts" "tsconfig.json"; do
+    git ls-files --error-unmatch "$d/$gen" >/dev/null 2>&1 \
+      && git checkout -- "$d/$gen" 2>/dev/null || true
+  done
+done
+
 # --- Çalışma ağacı temiz mi? -----------------------------------
 # Git tabanlı dağıtımda sunucuda yerel değişiklik OLMAMALI.
 # Sessizce `git checkout .` yapmıyoruz: birinin elle yaptığı bir
