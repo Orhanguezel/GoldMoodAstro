@@ -133,7 +133,11 @@ function rowToItems(row: Row) {
   const shared = {
     postUuid: row.uuid,
     createdAt: row.createdAt,
-    publishedAt: row.postedAt,
+    // Yayınlanmışsa gerçek yayın anı; scheduled/manual_pending için PLANLANAN
+    // zaman (Tanitio devralma import'u plan saatini buradan maplıyor —
+    // 2026-08-20 kontrat ricası). Ayrıca scheduledAt ham alanı da verilir.
+    publishedAt: row.postedAt ?? row.scheduledAt ?? null,
+    scheduledAt: row.scheduledAt ?? null,
     updatedAt: row.updatedAt,
     status: row.status,
     contentType,
