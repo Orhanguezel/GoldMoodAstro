@@ -365,3 +365,52 @@ export const productsHandler: RouteHandler = async (req, reply) => {
   const items = all.slice(p.offset, p.offset + p.limit);
   return { items, total, hasMore: p.offset + items.length < total, locale: p.locale };
 };
+
+// ─────────────────────────────────────────────────────────────
+// /sky — gökyüzü olguları (Swiss Ephemeris; Tanitio içerik planlaması için)
+// İçerik kuralı: astrolojik İDDİA elle yazılmaz, motordan gelir. Planlama
+// Tanitio'ya taşındığı için (2026-08-20) olgular da sözleşmeye eklendi.
+// ─────────────────────────────────────────────────────────────
+
+const skyQuerySchema = z.object({
+  start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  houses: z.string().optional(), // '1' → yeniay/dolunay günlerinde 12 yükselen ev haritası
+});
+
+export const skyHandler: RouteHandler = async (req, reply) => {
+  const { getDaySky, describeDaySky, houseMapByRising, MOON_PHASE_TR, SIGN_TR } = await import(
+    '@goldmood/shared-backend/modules/astrology'
+  );
+  const p = skyQuerySchema.parse(req.query ?? {});
+  const start = Date.parse(`${p.start}T00:00:00Z`);
+  const end = Date.parse(`${(p.end ?? p.start)}T00:00:00Z`);
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) {
+    return reply.code(400).send({ error: { message: 'invalid_date_range' } });
+  }
+  const dayCount = Math.floor((end - start) / 86_400_000) + 1;
+  if (dayCount > 62) {
+    return reply.code(400).send({ error: { message: 'range_too_large', maxDays: 62 } });
+  }
+
+  const withHouses = p.houses === '1';
+  const items = [] as any[];
+  for (let t = start; t <= end; t += 86_400_000) {
+    const dateStr = new Date(t).toISOString().slice(0, 10);
+    const sky = await getDaySky(dateStr);
+    const item: Record<string, unknown> = {
+      ...sky,
+      moonPhaseLabel: MOON_PHASE_TR[sky.moonPhase],
+      sunSignLabel: SIGN_TR[sky.sun.sign],
+      moonSignLabel: SIGN_TR[sky.moon.sign],
+      summary: describeDaySky(sky),
+    };
+    // Lunasyon günü (yeniay/dolunay tam faz): "hangi yükselen hangi evde yaşar"
+    // haritası — whole-sign, doğum saati gerektirmez.
+    if (withHouses && sky.moonPhaseExact && (sky.moonPhase === 'new' || sky.moonPhase === 'full')) {
+      item.lunationHouseMap = houseMapByRising(sky.moon.sign);
+    }
+    items.push(item);
+  }
+  return { items, total: items.length, hasMore: false };
+};

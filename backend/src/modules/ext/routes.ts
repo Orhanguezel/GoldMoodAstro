@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { contentCatalogHandler } from './content-catalog';
-import { articlesHandler, productsHandler } from './content';
+import { articlesHandler, productsHandler, skyHandler } from './content';
 import { crmInboxHandler, crmContactReplyHandler } from './crm-inbox';
 
 /**
@@ -99,4 +99,20 @@ export async function registerExtApi(api: FastifyInstance) {
       },
     },
   }, productsHandler);
+
+  api.get('/content/sky', {
+    schema: {
+      tags: ['ext'],
+      summary: 'Gökyüzü olguları (Swiss Ephemeris) — içerik planlaması iddiaları motordan alır',
+      querystring: {
+        type: 'object',
+        required: ['start'],
+        properties: {
+          start: { type: 'string', description: 'YYYY-MM-DD' },
+          end: { type: 'string', description: 'YYYY-MM-DD (varsayılan: start; en fazla 62 gün)' },
+          houses: { type: 'string', description: "'1' → yeniay/dolunay günlerinde 12 yükselen ev haritası" },
+        },
+      },
+    },
+  }, skyHandler);
 }

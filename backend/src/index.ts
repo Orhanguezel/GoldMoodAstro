@@ -5,9 +5,6 @@ import { registerBookingReminderCron } from '@/cron/booking-reminders';
 import { registerBookingSlaCron } from '@/cron/booking-sla';
 import { registerDailyReadingsCron } from '@/cron/daily-readings';
 import { registerHoroscopeCron } from '@/cron/horoscope-job';
-import { registerSocialHoroscopeCron } from '@/cron/social-horoscope';
-import { registerSocialWeeklyHoroscopeCron } from '@/cron/social-horoscope-weekly';
-import { registerSocialQueueCron } from '@/cron/social-queue';
 import { registerReviewFollowupCron } from '@/cron/review-followup';
 import { registerAccountDeletionCron } from '@/cron/account-deletion';
 import { registerContactInboxCron } from '@/cron/contact-inbox-poll';
@@ -55,9 +52,10 @@ async function main() {
     registerBookingSlaCron();
     registerDailyReadingsCron();
     registerHoroscopeCron();
-    registerSocialHoroscopeCron();
-    registerSocialWeeklyHoroscopeCron();
-    registerSocialQueueCron();
+    // Sosyal medya cron'ları KALDIRILDI (2026-08-20 kararı): yayın + planlama
+    // artık ekosistem-sosyal-medya (Tanitio) goldmoodastro tenantında yapılır;
+    // bu backend yalnız /api/ext içerik kaynağıdır. Manuel yayın için admin
+    // panel + publisher modülü durur.
     registerReviewFollowupCron();
     registerAccountDeletionCron();
     registerContactInboxCron();
