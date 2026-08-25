@@ -1,5 +1,13 @@
 # CLAUDE.md — GoldMoodAstro
 
+> **🔴 OTURUMA BAŞLAMADAN OKU (2026-08-25):** Ödeme/iade açık işleri —
+> [`ODEME-IADE-ACIK-ISLER-2026-08-25.md`](ODEME-IADE-ACIK-ISLER-2026-08-25.md).
+> En kritiği: **server'da `bun x tsc` core dump ediyor, deploy gate kırık** —
+> `backend/src`'ye dokunan ilk deploy'dan önce çözülmeli. Ayrıca abonelik
+> iadesi düzeltmesi (025f235) canlıda ama gerçek parayla test edilmedi;
+> webhook secret 2026-08-25'te rotate edildi (aynı Stripe hesabında Tanitio'nun
+> ayrı endpoint'i de var — DOKUNMA).
+
 ## YASAKLI İÇERİK KONULARI (kullanıcı talimatı, 2026-08-16)
 
 **Şu konularda hiçbir yüzeyde içerik üretilmez/yayınlanmaz** (blog, sosyal post,
