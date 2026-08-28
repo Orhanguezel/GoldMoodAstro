@@ -41,6 +41,11 @@ for d in admin_panel frontend; do
   done
 done
 
+# Farkli Bun patch surumleri lockfile'a yalniz `configVersion` ekleyebiliyor.
+# Bagimlilik grafiği degismedigi halde bu uretim farki sonraki deploy'u kirli
+# worktree kontrolunde durdurmasin; lockfile'in kanonik hali repodur.
+git checkout -- bun.lock 2>/dev/null || true
+
 # --- Çalışma ağacı temiz mi? -----------------------------------
 # Git tabanlı dağıtımda sunucuda yerel değişiklik OLMAMALI.
 # Sessizce `git checkout .` yapmıyoruz: birinin elle yaptığı bir
