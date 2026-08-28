@@ -48,10 +48,10 @@ Drilldown'daki 27 tarihsel 5xx URL'nin 26'sı canlıda artık 200; test danışm
 - [x] Kritik public akışlardaki eski `/consultants` ve `/birth-chart` iç linkleri final locale URL'lerine çevrildi.
 - [x] Backend ve frontend typecheck geçti.
 - [x] Backend ve frontend production build geçti.
-- [ ] Production deploy.
-- [ ] Canlı EN/DE blog izolasyonu kabul testi.
-- [ ] Canlı sitemap ve iç-link crawl kabul testi.
-- [ ] GSC sitemap yeniden gönderimi.
+- [x] Production deploy: `2f075fd5`.
+- [x] Canlı EN/DE blog izolasyonu kabul testi geçti.
+- [x] Canlı sitemap ve iç-link crawl kabul testi: `395 URL · 0 hata · 0 dil uyarısı`.
+- [x] GSC sitemap yeniden gönderimi: HTTP `204`, `isPending=true`, `0` uyarı, `0` hata.
 - [ ] GSC 5xx doğrulamasını panelden yeniden başlat.
 - [ ] 7 günlük legacy URL/non-home CTR kontrolü.
 - [ ] 14-28 günlük uyum sayfaları indeks/performans kararı.
@@ -60,6 +60,6 @@ Drilldown'daki 27 tarihsel 5xx URL'nin 26'sı canlıda artık 200; test danışm
 
 - Ana sayfa dışı sayfa-boyutlu CTR: başlangıç yaklaşık `%1,23`; 28 günde artış.
 - Legacy host/path gösterimleri: mevcut 28 günde `46`; düzenli düşüş.
-- EN/DE indekslenebilir ana sayfalarda Türkçe görünür içerik: `0`.
+- EN/DE indekslenebilir ana sayfalarda Türkçe görünür içerik: `0` (canlı kabul geçti).
 - Sitemap URL'leri: `0` redirect, `0` canonical hatası, `0` hreflang hatası.
 - Coverage 5xx: yeniden tarama sonrası `0` aktif URL.

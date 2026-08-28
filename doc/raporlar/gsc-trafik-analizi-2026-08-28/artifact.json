@@ -82,7 +82,7 @@
       {
         "id": "executive_summary",
         "type": "markdown",
-        "body": "# Organik trafik teşhisi\n\n- **Ana sorun sıralama:** son 28 gün 69 tıklama, 1.231 gösterim, ortalama pozisyon 68,5; 70 sayfa tıklamasının 52'si ana sayfada.\n- **Teknik paket hazır:** aktif toplu 5xx yok; EN/DE blog fallback'i ve redirect üreten iç linkler düzeltildi."
+        "body": "# Organik trafik teşhisi\n\n- **Ana sorun sıralama:** son 28 gün 69 tıklama, 1.231 gösterim, ortalama pozisyon 68,5; 70 sayfa tıklamasının 52'si ana sayfada.\n- **Teknik paket canlıda:** aktif toplu 5xx yok; EN/DE fallback ve redirect iç linkleri kapatıldı. Canlı tarama: 395 URL, 0 hata, 0 dil uyarısı."
       },
       { "id": "weekly_clicks_block", "type": "chart", "chartId": "weekly_clicks" }
     ]
