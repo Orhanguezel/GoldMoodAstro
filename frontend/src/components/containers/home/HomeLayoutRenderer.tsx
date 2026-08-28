@@ -79,7 +79,11 @@ export default function HomeLayoutRenderer({ layout, locale }: Props) {
         const isHero = section.component_key === 'HeroNew';
 
         const node = (
-          <div id={section.slug} className="scroll-mt-32">
+          <div
+            id={section.slug}
+            className="scroll-mt-32"
+            style={isHero ? undefined : { contentVisibility: 'auto', containIntrinsicSize: '800px' }}
+          >
             <Component
               locale={locale}
               label={section.label}

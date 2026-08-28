@@ -17,6 +17,11 @@ alternatif, 60 tarandı-indekslenmedi ve 40 Google'ın farklı canonical seçti�
 Drilldown'daki 27 tarihsel 5xx URL'nin 26'sı canlıda artık 200; test danışman URL'si
 404. Bu nedenle aktif toplu 5xx krizi yok, GSC yeniden doğrulaması gerekiyor.
 
+İlk mobil Lighthouse ölçümü teknik SEO'yu `100` buldu; performans ise `49` kaldı.
+LCP `4,68 sn`, TBT `3,37 sn`, ana thread çalışması `14,3 sn`, toplam yük `1,63 MB`
+ve DOM `2.199` elemandı. İzin verilmeden yüklenen GA, Google Ads ve Meta scriptleri
+yaklaşık `430 KB` üçüncü taraf yükü ve belirgin JS çalışma maliyeti oluşturuyordu.
+
 ## Öncelik sırası
 
 1. Strict-locale ve final iç-link paketini canlıya alıp EN/DE sızıntısını kapatmak.
@@ -52,6 +57,10 @@ Drilldown'daki 27 tarihsel 5xx URL'nin 26'sı canlıda artık 200; test danışm
 - [x] Canlı EN/DE blog izolasyonu kabul testi geçti.
 - [x] Canlı sitemap ve iç-link crawl kabul testi: `395 URL · 0 hata · 0 dil uyarısı`.
 - [x] GSC sitemap yeniden gönderimi: HTTP `204`, `isPending=true`, `0` uyarı, `0` hata.
+- [x] Mobil Lighthouse başlangıç ölçümü alındı: Performance `49`, SEO `100`.
+- [x] İzleme scriptleri yalnız analytics izni sonrası yüklenecek şekilde düzeltildi.
+- [x] Ana sayfa alt bölümlerine `content-visibility: auto` eklendi.
+- [ ] Performans paketini deploy et ve mobil Lighthouse yeniden ölç.
 - [ ] GSC 5xx doğrulamasını panelden yeniden başlat.
 - [ ] 7 günlük legacy URL/non-home CTR kontrolü.
 - [ ] 14-28 günlük uyum sayfaları indeks/performans kararı.

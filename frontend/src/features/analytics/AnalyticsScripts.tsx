@@ -9,7 +9,7 @@
 'use client';
 
 import Script from 'next/script';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAnalyticsSettings } from './useAnalyticsSettings';
 
 declare global {
@@ -52,6 +52,9 @@ function isValidAdsId(v: unknown) {
 export default function AnalyticsScripts() {
   const { gtmId, ga4Id, googleAdsId, facebookPixelId, isLoading } = useAnalyticsSettings();
   const isProd = isProdEnv();
+  const [consentGranted, setConsentGranted] = useState(
+    () => typeof window !== 'undefined' && window.__analyticsConsentGranted === true,
+  );
 
   const hasGtm = useMemo(() => isValidGtmId(gtmId), [gtmId]);
   const hasGa = useMemo(() => isValidGa4Id(ga4Id), [ga4Id]);
@@ -60,9 +63,22 @@ export default function AnalyticsScripts() {
   // GA4 fallback dali gtag.js yukluyorsa Ads icin tekrar yuklemeyelim.
   const ga4LoadsGtag = !hasGtm && hasGa;
 
+  useEffect(() => {
+    const syncConsent = (event?: Event) => {
+      const granted = event instanceof CustomEvent
+        ? event.detail?.granted === true
+        : window.__analyticsConsentGranted === true;
+      setConsentGranted(granted);
+    };
+
+    syncConsent();
+    window.addEventListener('goldmoodastro:analytics-consent', syncConsent);
+    return () => window.removeEventListener('goldmoodastro:analytics-consent', syncConsent);
+  }, []);
+
   // GTM noscript (Document kullanılmıyorsa pratik)
   useEffect(() => {
-    if (!isProd || !hasGtm || typeof document === 'undefined') return;
+    if (!isProd || !hasGtm || !consentGranted || typeof document === 'undefined') return;
 
     const existing = document.getElementById('gtm-noscript');
     if (existing) return;
@@ -79,7 +95,7 @@ export default function AnalyticsScripts() {
 
     ns.appendChild(iframe);
     document.body.insertBefore(ns, document.body.firstChild);
-  }, [isProd, hasGtm, gtmId]);
+  }, [isProd, hasGtm, consentGranted, gtmId]);
 
   if (!isProd) return null;
 
@@ -124,6 +140,10 @@ export default function AnalyticsScripts() {
               var v = granted ? 'granted' : 'denied';
               window.__analyticsConsentGranted = (v === 'granted');
 
+              window.dispatchEvent(new CustomEvent('goldmoodastro:analytics-consent', {
+                detail: { granted: v === 'granted' }
+              }));
+
               // Update consent (gtag / Consent Mode)
               window.gtag('consent', 'update', {
                 analytics_storage: v,
@@ -148,6 +168,12 @@ export default function AnalyticsScripts() {
           } catch (e) {}
         `}
       </Script>
+
+      {/* Dis izleme kutuphaneleri yalniz kullanici izin verdikten sonra yuklenir.
+          Bu hem GDPR varsayilan reddi gercekten uygular hem ilk yukteki ana-thread
+          ve yaklaşık 430 KB ucuncu taraf maliyetini kaldirir. */}
+      {!consentGranted ? null : (
+        <>
 
       {/* 2) GTM (preferred) */}
       {hasGtm ? (
@@ -260,6 +286,8 @@ export default function AnalyticsScripts() {
           `}
         </Script>
       ) : null}
+        </>
+      )}
     </>
   );
 }

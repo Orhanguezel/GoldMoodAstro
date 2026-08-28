@@ -121,6 +121,10 @@ function applyAnalyticsConsent(next: boolean) {
   try {
     (window as any).__analyticsConsentGranted = next === true;
 
+    window.dispatchEvent(
+      new CustomEvent('goldmoodastro:analytics-consent', { detail: { granted: next === true } }),
+    );
+
     if (typeof (window as any).__setAnalyticsConsent === 'function') {
       (window as any).__setAnalyticsConsent(next);
     } else {
