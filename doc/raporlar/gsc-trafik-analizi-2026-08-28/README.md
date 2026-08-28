@@ -60,7 +60,10 @@ yaklaşık `430 KB` üçüncü taraf yükü ve belirgin JS çalışma maliyeti o
 - [x] Mobil Lighthouse başlangıç ölçümü alındı: Performance `49`, SEO `100`.
 - [x] İzleme scriptleri yalnız analytics izni sonrası yüklenecek şekilde düzeltildi.
 - [x] Ana sayfa alt bölümlerine `content-visibility: auto` eklendi.
-- [ ] Performans paketini deploy et ve mobil Lighthouse yeniden ölç.
+- [x] Performans paketi deploy edildi: `5b9c88dd`.
+- [x] Üç koşuluk canlı mobil Lighthouse medyanı: Performance `55`, SEO `100`,
+  LCP `4,02 sn`, TBT `1,63 sn`, CLS `0`; izin öncesi üçüncü taraf tracker isteği `0`.
+- [x] Başlangıca göre TBT yaklaşık `%52`, ana-thread işi `%31`, toplam yük `%26` azaldı.
 - [ ] GSC 5xx doğrulamasını panelden yeniden başlat.
 - [ ] 7 günlük legacy URL/non-home CTR kontrolü.
 - [ ] 14-28 günlük uyum sayfaları indeks/performans kararı.
