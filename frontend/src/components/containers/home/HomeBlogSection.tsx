@@ -32,7 +32,7 @@ function formatDate(locale: string, value?: string | null): string {
 export default function HomeBlogSection({ locale: localeProp, config }: Props) {
   const fallbackLocale = useLocaleShort();
   const locale = localeProp || fallbackLocale || 'tr';
-  const { ui } = useUiSection('ui_home' as any, locale);
+  const { ui } = useUiSection('ui_blog' as any, locale);
   const limit = Number(config?.limit ?? 3);
 
   const { data, isLoading } = useListCustomPagesPublicQuery({
@@ -49,33 +49,19 @@ export default function HomeBlogSection({ locale: localeProp, config }: Props) {
   const posts = (data?.items ?? [])
     .filter((post) => post.locale_resolved === locale)
     .slice(0, limit);
-  if (!isLoading && posts.length === 0) return null;
+  if (isLoading || posts.length === 0) return null;
 
   return (
     <section id="blog" className="py-24 bg-(--gm-bg)">
       <div className="container mx-auto px-6">
         <div className="mb-16 text-center">
-          <span className="font-display text-[10px] tracking-[0.5em] text-(--gm-gold-deep) uppercase mb-4 block">
-            {ui('ui_home_blog_label', 'Yazılar')}
-          </span>
           <h2 className="font-display text-3xl md:text-5xl text-(--gm-text) mb-6">
-            {ui('ui_home_blog_title_a', 'Astroloji')}{' '}
-            <span className="text-(--gm-gold)">{ui('ui_home_blog_title_b', 'Günlüğü')}</span>
+            {ui('ui_blog_home_title', 'Astrology Journal')}
           </h2>
-          <p className="font-serif italic text-(--gm-text-dim) max-w-2xl mx-auto">
-            {ui('ui_home_blog_desc', 'Danışmanlarımızın kaleminden gökyüzü, semboller ve kendini tanıma üzerine yazılar.')}
-          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {isLoading
-            ? [1, 2, 3].slice(0, limit).map((i) => (
-                <div
-                  key={i}
-                  className="h-80 rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface)/20 animate-pulse"
-                />
-              ))
-            : posts.map((post) => {
+          {posts.map((post) => {
                 const cover = post.featured_image_effective_url || post.featured_image || post.image_url || '';
                 const href = localizePath(locale, `/blog/${post.slug}`);
                 const dateStr = formatDate(locale, post.created_at || post.updated_at);
@@ -123,7 +109,7 @@ export default function HomeBlogSection({ locale: localeProp, config }: Props) {
                         )}
                         <span className="truncate">
                           {post.author?.full_name ||
-                            ui('ui_home_blog_editorial', 'GoldMoodAstro Editoryal Ekibi')}
+                            ui('ui_blog_author_fallback', 'GoldMoodAstro Editors')}
                         </span>
                       </span>
                       <h3 className="font-serif text-xl leading-snug text-(--gm-text) transition-colors group-hover:text-(--gm-gold)">
@@ -135,7 +121,7 @@ export default function HomeBlogSection({ locale: localeProp, config }: Props) {
                         </p>
                       ) : null}
                       <span className="mt-auto pt-5 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-(--gm-gold)">
-                        {ui('ui_home_blog_read', 'Yazıyı oku')}
+                        {ui('ui_blog_home_read_more', 'Read more')}
                         <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
                       </span>
                     </div>
@@ -149,7 +135,7 @@ export default function HomeBlogSection({ locale: localeProp, config }: Props) {
             href={localizePath(locale, '/blog')}
             className="inline-flex items-center gap-3 rounded-full border border-(--gm-border-soft) px-8 py-3 text-[11px] font-bold uppercase tracking-widest text-(--gm-text) transition-colors hover:border-(--gm-gold)/40 hover:text-(--gm-gold)"
           >
-            {ui('ui_home_blog_all', 'Tüm yazılar')}
+            {ui('ui_blog_home_view_all', 'View all posts')}
             <ArrowRight className="size-4" />
           </Link>
         </div>
