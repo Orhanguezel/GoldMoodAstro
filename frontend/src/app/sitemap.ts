@@ -67,6 +67,7 @@ function buildAlternates(path: string): { languages: Record<string, string> } {
 type BlogRouteItem = {
   id: string;
   locale: PublicLocale;
+  localeResolved: string;
   slug: string;
   updatedAt?: string;
   createdAt?: string;
@@ -91,19 +92,21 @@ async function fetchBlogItems(locale: PublicLocale): Promise<BlogRouteItem[]> {
     const items = Array.isArray(json) ? json : (json?.items ?? json?.data ?? []);
     if (!Array.isArray(items)) return [];
 
-    return items
-      .map((item: any) => {
+    const localizedItems = items.map((item: any): BlogRouteItem | null => {
         const slug = String(item?.slug ?? '').trim();
         if (!slug) return null;
         return {
           id: String(item?.id ?? `${locale}:${slug}`),
           locale,
+          localeResolved: String(item?.locale_resolved ?? ''),
           slug,
           updatedAt: item?.updated_at,
           createdAt: item?.created_at,
         };
-      })
-      .filter(Boolean) as BlogRouteItem[];
+      });
+    return localizedItems.filter(
+      (item): item is BlogRouteItem => Boolean(item && item.localeResolved === locale),
+    );
   } catch {
     return [];
   }

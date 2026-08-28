@@ -26,6 +26,7 @@ import MediaQuestionModal from './MediaQuestionModal';
 import { ChevronDown, MessageCircle, Phone, Check, Mic, Video } from 'lucide-react';
 import { useUiSection } from '@/i18n';
 import { useMoney } from '@/lib/useMoney';
+import { localizePath } from '@/integrations/shared';
 
 type Props = {
   id: string;
@@ -36,6 +37,8 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const { ui } = useUiSection('ui_consultant', locale);
   const { money } = useMoney(locale);
   const router = useRouter();
+  const consultantListHref = localizePath(locale, '/consultants');
+  const consultantDetailHref = localizePath(locale, `/consultants/${id}`);
   const searchParams = useSearchParams();
   const { data: consultant, isFetching, isError } = useGetConsultantQuery({ id, locale }, { skip: !id });
   const [isFavorited, setIsFavorited] = useState(false);
@@ -107,7 +110,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
           <span className="text-3xl text-[var(--gm-gold)] opacity-30">!</span>
         </div>
         <h2 className="font-serif text-3xl text-[var(--gm-text)]">{ui('ui_consultant_not_found', 'Consultant Not Found')}</h2>
-        <Link href={`/${locale}/consultants`} className="btn-premium py-3 px-8">
+        <Link href={consultantListHref} className="btn-premium py-3 px-8">
           {ui('ui_consultant_all_consultants', 'All Consultants')}
         </Link>
       </div>
@@ -163,7 +166,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
 
   const openMediaQuestion = (kind: MediaKind) => {
     if (!isAuthenticated) {
-      router.push(`/${locale}/login?next=${encodeURIComponent(`/${locale}/consultants/${id}`)}`);
+      router.push(`/${locale}/login?next=${encodeURIComponent(consultantDetailHref)}`);
       return;
     }
     setMediaQuestionKind(kind);
@@ -172,7 +175,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const handleRequestNow = async () => {
     if (!isAuthenticated) {
       toast.error(ui('ui_consultant_error_login_required', 'You must be logged in'));
-      router.push(`/${locale}/login?next=${encodeURIComponent(`/${locale}/consultants/${id}`)}`);
+      router.push(`/${locale}/login?next=${encodeURIComponent(consultantDetailHref)}`);
       return;
     }
     if (!isLive) {
@@ -198,7 +201,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const handleFavoriteToggle = async () => {
     if (!consultant) return;
     if (!isAuthenticated) {
-      router.push(`/${locale}/login?next=${encodeURIComponent(`/${locale}/consultants/${id}`)}`);
+      router.push(`/${locale}/login?next=${encodeURIComponent(consultantDetailHref)}`);
       return;
     }
 
@@ -226,7 +229,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
   return (
     <div className="relative">
       <Link
-        href={`/${locale}/consultants`}
+        href={consultantListHref}
         className="inline-flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-gold) transition-colors text-sm font-bold uppercase tracking-widest mb-12"
       >
         <ArrowLeft className="w-4 h-4" /> {ui('ui_consultant_all_consultants', 'All Consultants')}

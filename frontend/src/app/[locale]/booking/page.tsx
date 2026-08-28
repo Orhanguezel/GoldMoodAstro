@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { Mic, Video as VideoIcon } from 'lucide-react';
 import { useUiSection } from '@/i18n';
 import { useMoney } from '@/lib/useMoney';
+import { localizePath } from '@/integrations/shared';
 
 export default function BookingPage() {
   const params = useParams();
@@ -216,7 +217,7 @@ export default function BookingPage() {
         {/* Left: Summary */}
         <div className="space-y-10">
           <div>
-            <Link href={`/${locale}/consultants/${consultantId}`} className="inline-flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-gold) transition-colors text-sm font-bold uppercase tracking-widest mb-10">
+            <Link href={localizePath(locale, `/consultants/${consultantId}`)} className="inline-flex items-center gap-2 text-(--gm-text-dim) hover:text-(--gm-gold) transition-colors text-sm font-bold uppercase tracking-widest mb-10">
               <ArrowLeft className="w-4 h-4" /> {ui('ui_account_booking_back', 'Go Back')}
             </Link>
             <h1 className="font-serif text-5xl text-(--gm-text) leading-tight mb-4">{ui('ui_account_booking_title_line1', 'Complete')} <br />{ui('ui_account_booking_title_line2', 'Your Session')}</h1>

@@ -7,6 +7,7 @@ import { ChevronRight, Sparkles, Star, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 export function DiscountPromoBanner({
   className,
@@ -19,7 +20,7 @@ export function DiscountPromoBanner({
   const { ui } = useUiSection('ui_extra' as any);
   if (user?.is_premium) return null;
 
-  const consultantsHref = `/${locale}/consultants`;
+  const consultantsHref = localizePath(locale, '/consultants');
   const ctaHref = isAuthenticated
     ? `${consultantsHref}#consultants-results`
     : `/${locale}/register?next=${encodeURIComponent(consultantsHref)}`;

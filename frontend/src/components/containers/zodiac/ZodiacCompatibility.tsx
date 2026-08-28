@@ -12,6 +12,7 @@ import { Heart, Zap, Briefcase, Star, Info, Share2 } from 'lucide-react';
 import ShareCard from '@/components/common/ShareCard';
 import { getZodiacMeta } from '@/lib/zodiac/signs';
 import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
@@ -192,7 +193,7 @@ export default function ZodiacCompatibility({ signA: signAProp, signB: signBProp
             <Link href={`/${localePath}/sinastri?mode=manual`} className="rounded-full bg-(--gm-primary) px-10 py-5 text-xs font-bold uppercase tracking-[0.25em] text-(--gm-bg) hover:bg-(--gm-primary-dark) transition-all shadow-lg hover:scale-105 flex items-center gap-3">
               {ui('ui_zodiacx_compat_cta_synastry', 'Get a synastry report')} <Zap className="w-4 h-4" />
             </Link>
-            <Link href={`/${localePath}/birth-chart`} className="rounded-full border border-(--gm-border-soft) px-10 py-5 text-xs font-bold uppercase tracking-[0.25em] text-(--gm-text) hover:bg-(--gm-surface) transition-all">
+            <Link href={localizePath(localePath, '/birth-chart')} className="rounded-full border border-(--gm-border-soft) px-10 py-5 text-xs font-bold uppercase tracking-[0.25em] text-(--gm-text) hover:bg-(--gm-surface) transition-all">
               {ui('ui_zodiacx_compat_cta_birth_chart', 'Create Birth Chart')}
             </Link>
           </div>

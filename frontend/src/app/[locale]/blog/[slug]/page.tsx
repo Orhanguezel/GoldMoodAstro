@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Banner from '@/layout/banner/Breadcrum';
 import { CMS_FALLBACK_CSS, downgradeH1ToH2, extractHtmlFromAny, safeStr, titleFromSlug, excerpt } from '@/integrations/shared';
-import { normPath, absUrlJoin } from '@/integrations/shared';
+import { normPath, absUrlJoin, localizePath } from '@/integrations/shared';
 import { buildMetadataFromSeo, fetchSeoObject, fetchCustomPagePublicBySlug } from '@/seo/server';
 import { fetchCustomPagesPublicByModule } from '@/seo/serverPageData';
 import JsonLd from '@/seo/JsonLd';
@@ -137,8 +137,8 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   const authorName = safeStr(author?.full_name) || 'GoldMoodAstro Editoryal Ekibi';
   const authorSlug = safeStr(author?.slug) || safeStr(author?.id);
   const authorUrl = authorSlug
-    ? `${siteUrl}/${locale}/consultants/${encodeURIComponent(authorSlug)}`
-    : `${siteUrl}/${locale}/about`;
+    ? `${siteUrl}${localizePath(locale, `/consultants/${encodeURIComponent(authorSlug)}`)}`
+    : `${siteUrl}${localizePath(locale, '/about')}`;
 
   // Aynı yazıyı listeden çıkar, en fazla 5 tane göster.
   const relatedPosts = (Array.isArray(allPosts) ? allPosts : [])

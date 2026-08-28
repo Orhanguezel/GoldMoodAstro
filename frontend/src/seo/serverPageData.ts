@@ -54,7 +54,8 @@ export const fetchCustomPagePublicBySlug = cache(
       { revalidate: 300 },
     );
 
-    return raw ? mapApiCustomPageToDto(raw) : null;
+    if (!raw || raw.locale_resolved !== locale) return null;
+    return mapApiCustomPageToDto(raw);
   },
 );
 
@@ -78,7 +79,8 @@ export const fetchCustomPagePublicByLandingKey = cache(
     const raw = await fetchApiJson<ApiCustomPage[]>(`/custom-pages?${qs.toString()}`, { revalidate: 300 });
     const first = Array.isArray(raw) ? raw[0] : null;
 
-    return first ? mapApiCustomPageToDto(first) : null;
+    if (!first || first.locale_resolved !== locale) return null;
+    return mapApiCustomPageToDto(first);
   },
 );
 
@@ -110,6 +112,8 @@ export const fetchCustomPagesPublicByModule = cache(
     if (args.featuredOnly) qs.set('featured', 'true');
 
     const raw = await fetchApiJson<unknown>(`/custom-pages?${qs.toString()}`, { revalidate: 300 });
-    return normalizeArrayResponse<ApiCustomPage>(raw).map(mapApiCustomPageToDto);
+    return normalizeArrayResponse<ApiCustomPage>(raw)
+      .filter((item) => item.locale_resolved === locale)
+      .map(mapApiCustomPageToDto);
   },
 );

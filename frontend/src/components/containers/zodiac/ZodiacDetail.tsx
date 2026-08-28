@@ -441,13 +441,13 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
               </p>
               <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
                 <Link
-                  href={`/${locale}/birth-chart`}
+                  href={localizePath(localePrefix, '/birth-chart')}
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-(--gm-primary) hover:bg-(--gm-primary-dark) text-(--gm-bg) text-xs font-bold uppercase tracking-[0.25em] transition-all hover:scale-105 shadow-md"
                 >
                   {ui('ui_zodiac_cta_birth_chart', 'Create My Birth Chart')}
                 </Link>
                 <Link
-                  href={`/${locale}/consultants?expertise=astrology`}
+                  href={`${localizePath(localePrefix, '/consultants')}?expertise=astrology`}
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-(--gm-gold)/40 hover:border-(--gm-gold) text-(--gm-gold) text-xs font-bold uppercase tracking-[0.25em] transition-all"
                 >
                   {ui('ui_zodiac_cta_ask_astrologer', 'Ask an Astrologer')}

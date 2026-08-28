@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useLocaleShort, useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 export default function WelcomeBannerSection({ locale: explicitLocale }: { locale?: string }) {
   const locale = useLocaleShort(explicitLocale) || 'tr';
@@ -13,7 +14,7 @@ export default function WelcomeBannerSection({ locale: explicitLocale }: { local
     title: ui("ui_home_welcome_title", "WELCOME TO GOLDMOODASTRO"),
     subtitle: ui("ui_home_welcome_subtitle", "Modern astrology <em>guided</em> by the stars."),
     cta: ui("ui_home_welcome_cta", "DISCOVER CONSULTANTS"),
-    link: `/${locale}/consultants`,
+    link: localizePath(locale, '/consultants'),
   };
 
   return (

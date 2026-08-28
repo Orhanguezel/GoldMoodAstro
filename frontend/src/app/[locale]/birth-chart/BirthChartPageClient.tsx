@@ -14,6 +14,7 @@ import {
 import { useAuthStore } from '@/features/auth/auth.store';
 import ShareCard from '@/components/common/ShareCard';
 import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 const PLANET_ORDER: PlanetKey[] = [
   'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
@@ -299,7 +300,7 @@ export default function BirthChartPageClient() {
                 <p className="text-[var(--gm-text-dim)] text-sm leading-relaxed mb-8">
                   {ui('ui_extra_b0_bc_deep_analysis_desc', 'This chart is your fingerprint in the sky. Planetary house placements and their aspects reveal the core potentials in your life.')}
                 </p>
-                <Link href={`/${locale}/consultants`} className="flex w-full items-center justify-center gap-3 rounded-full bg-[var(--gm-primary)] px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[var(--gm-shadow-card)] transition-all hover:-translate-y-0.5 hover:bg-[var(--gm-primary-dark)]">
+                <Link href={localizePath(locale, '/consultants')} className="flex w-full items-center justify-center gap-3 rounded-full bg-[var(--gm-primary)] px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-[var(--gm-shadow-card)] transition-all hover:-translate-y-0.5 hover:bg-[var(--gm-primary-dark)]">
                   {ui('ui_extra_b0_bc_expert_analysis', 'Get Expert Analysis')} <Sparkles className="w-4 h-4" />
                 </Link>
               </div>

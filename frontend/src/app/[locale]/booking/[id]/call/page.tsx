@@ -16,6 +16,7 @@ import type { HistoryItem, ReadingType } from '@/integrations/rtk/public/history
 import BookingMessageButton from '@/components/common/BookingMessageButton';
 import { trackEvent } from '@/integrations/telemetry';
 import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 type LiveKitTokenResponse = {
   token: string;
@@ -371,7 +372,7 @@ export default function BookingCallPage() {
               : ui('ui_extra_b0_call_cancelled_desc', 'This session cannot take place right now. You can view the details on the bookings page.')}
           </p>
           <Link
-            href={`/${(params as any)?.locale || 'tr'}/consultants`}
+            href={localizePath((params as any)?.locale || 'tr', '/consultants')}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-(--gm-gold) text-(--gm-bg-deep) text-xs font-bold uppercase tracking-widest"
           >
             {ui('ui_extra_b0_call_explore_consultants', 'Explore consultants')}

@@ -7,6 +7,7 @@ import { useAuthStore } from '@/features/auth/auth.store';
 import { useGenerateDailyReadingMutation, useListMyBirthChartsQuery } from '@/integrations/rtk/hooks';
 import { Sparkles, Calendar, ArrowRight } from 'lucide-react';
 import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 import PageContainer from '@/components/common/PageContainer';
 
@@ -55,7 +56,7 @@ export default function DailyPageClient() {
           <p className="text-(--gm-text-dim) leading-relaxed">
             {ui('ui_daily_no_chart_desc', 'Create your birth chart first to receive cosmic guidance.')}
           </p>
-          <Link href={`/${locale}/birth-chart`} className="btn-premium inline-flex py-4 px-10">
+          <Link href={localizePath(locale, '/birth-chart')} className="btn-premium inline-flex py-4 px-10">
             {ui('ui_daily_no_chart_cta', 'Create Chart')}
           </Link>
         </div>
@@ -112,7 +113,7 @@ export default function DailyPageClient() {
                   <h4 className="font-serif text-2xl text-(--gm-text) mb-2">{ui('ui_daily_deepen_title', 'Want to go deeper?')}</h4>
                   <p className="text-(--gm-text-dim) text-sm">{ui('ui_daily_deepen_desc', 'This reading covers general energies. Ask an expert astrologer for your questions.')}</p>
                 </div>
-                <Link href={`/${locale}/consultants?topic=daily_reading_${data.reading.id}`} className="btn-premium whitespace-nowrap flex items-center gap-3 py-4 px-8">
+                <Link href={`${localizePath(locale, '/consultants')}?topic=daily_reading_${data.reading.id}`} className="btn-premium whitespace-nowrap flex items-center gap-3 py-4 px-8">
                   {ui('ui_daily_ask_astrologer_cta', 'Ask an Astrologer')} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>

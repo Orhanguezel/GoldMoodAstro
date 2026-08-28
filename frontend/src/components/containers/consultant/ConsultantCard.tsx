@@ -10,6 +10,7 @@ import { useAddFavoriteMutation, useRemoveFavoriteMutation } from '@/integration
 import { useAuthStore } from '@/features/auth/auth.store';
 import { useUiSection } from '@/i18n';
 import { toast } from 'sonner';
+import { localizePath } from '@/integrations/shared';
 
 interface Props {
   consultant: ConsultantPublic;
@@ -36,7 +37,7 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
   // CANLI = danışman "canlı görüşme" toggle'ını (is_available) açtıysa. Anlık görüşme +
   // rozet + "Talk Now" bu sinyale bağlı ve ana sayfadaki "Canlı Görüşme" bölümüyle senkron.
   const isLive = consultant.is_available === 1 || (consultant.is_available as unknown as boolean) === true;
-  const detailHref = `/${locale}/consultants/${consultant.slug || consultant.id}`;
+  const detailHref = localizePath(locale, `/consultants/${consultant.slug || consultant.id}`);
   const favoriteBusy = addFavoriteState.isLoading || removeFavoriteState.isLoading;
   const initials = (consultant.full_name || 'GS')
     .split(' ')

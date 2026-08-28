@@ -46,7 +46,9 @@ export default function HomeBlogSection({ locale: localeProp, config }: Props) {
     limit,
   });
 
-  const posts = (data?.items ?? []).slice(0, limit);
+  const posts = (data?.items ?? [])
+    .filter((post) => post.locale_resolved === locale)
+    .slice(0, limit);
   if (!isLoading && posts.length === 0) return null;
 
   return (

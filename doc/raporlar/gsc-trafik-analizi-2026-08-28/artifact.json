@@ -1,0 +1,170 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "GoldMoodAstro Organik Trafik Teşhisi",
+    "description": "Canlı site, Search Console API ve 28 Ağustos 2026 Excel dışa aktarımlarının uzlaştırılmış teşhisi.",
+    "generatedAt": "2026-08-28T21:15:00.000Z",
+    "sources": [
+      {
+        "id": "gsc_api_28d",
+        "label": "Google Search Console API - 28 günlük performans",
+        "href": "https://search.google.com/search-console/performance/search-analytics?resource_id=sc-domain%3Agoldmoodastro.com",
+        "query": {
+          "engine": "Google Search Console API",
+          "sql": "SELECT * FROM gsc_api_28d_snapshot",
+          "description": "Web arama türü için mevcut ve önceki 28 gün; tarih, sayfa, sorgu, cihaz ve ülke kırılımları.",
+          "executed_at": "2026-08-28T20:48:37.715Z",
+          "filters": [
+            "Arama türü: Web",
+            "Mevcut dönem: 29 Temmuz-25 Ağustos 2026",
+            "Önceki dönem: 1-28 Temmuz 2026"
+          ]
+        }
+      },
+      {
+        "id": "gsc_performance_export",
+        "label": "GSC Performance on Search dışa aktarımı",
+        "path": "goldmoodastro.com-Performance-on-Search-2026-08-28.xlsx",
+        "query": {
+          "engine": "Google Search Console Excel export",
+          "sql": "SELECT * FROM gsc_performance_export_snapshot",
+          "description": "19 Haziran-26 Ağustos 2026 web performansı; tarih, sorgu, sayfa, ülke ve cihaz sekmeleri.",
+          "executed_at": "2026-08-28T20:52:00.000Z",
+          "filters": ["Arama türü: Web", "Tarih: Son 3 ay"]
+        }
+      },
+      {
+        "id": "gsc_coverage_export",
+        "label": "GSC Coverage ve 5xx drilldown dışa aktarımları",
+        "path": "goldmoodastro.com-Coverage-2026-08-28.xlsx",
+        "query": {
+          "engine": "Google Search Console Excel export",
+          "sql": "SELECT * FROM gsc_coverage_export_snapshot",
+          "description": "Coverage durumları ve 5xx drilldown URL listesi; son coverage tarihi 21 Ağustos 2026.",
+          "executed_at": "2026-08-28T20:53:00.000Z",
+          "filters": ["Site haritası: Bilinen tüm sayfalar"]
+        }
+      },
+      {
+        "id": "live_crawl",
+        "label": "GoldMoodAstro canlı crawl ve HTTP yeniden kontrolü",
+        "href": "https://goldmoodastro.com/sitemap.xml",
+        "query": {
+          "engine": "Canlı HTTP crawl",
+          "sql": "SELECT * FROM live_seo_audit_snapshot",
+          "description": "Sitemap içindeki 399 URL için durum, canonical, hreflang ve html lang kontrolü; 27 eski 5xx URL için canlı HTTP yeniden denetimi.",
+          "executed_at": "2026-08-28T20:51:00.000Z",
+          "filters": ["Canlı origin: https://goldmoodastro.com"]
+        }
+      }
+    ],
+    "charts": [
+      {
+        "id": "weekly_clicks",
+        "title": "Haftalık Google tıklamaları",
+        "subtitle": "19 Haziran-26 Ağustos 2026; son hafta GSC veri gecikmesi nedeniyle eksik",
+        "type": "line",
+        "dataset": "weekly_performance",
+        "sourceId": "gsc_performance_export",
+        "encodings": {
+          "x": { "field": "week", "type": "nominal", "label": "Hafta" },
+          "y": { "field": "clicks", "type": "quantitative", "label": "Tıklama" },
+          "tooltip": [{ "field": "impressions", "type": "quantitative", "label": "Gösterim", "format": "number" }]
+        },
+        "valueFormat": "number",
+        "maxRows": 11
+      }
+    ],
+    "tables": [],
+    "blocks": [
+      {
+        "id": "executive_summary",
+        "type": "markdown",
+        "body": "# Organik trafik teşhisi\n\n- **Ana sorun sıralama:** son 28 gün 69 tıklama, 1.231 gösterim, ortalama pozisyon 68,5; 70 sayfa tıklamasının 52'si ana sayfada.\n- **Teknik paket hazır:** aktif toplu 5xx yok; EN/DE blog fallback'i ve redirect üreten iç linkler düzeltildi."
+      },
+      { "id": "weekly_clicks_block", "type": "chart", "chartId": "weekly_clicks" }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-28T21:15:00.000Z",
+    "status": "ready",
+    "datasets": {
+      "weekly_performance": [
+        { "week": "19-21 Haz", "clicks": 0, "impressions": 5 },
+        { "week": "22-28 Haz", "clicks": 2, "impressions": 188 },
+        { "week": "29 Haz-5 Tem", "clicks": 3, "impressions": 301 },
+        { "week": "6-12 Tem", "clicks": 1, "impressions": 325 },
+        { "week": "13-19 Tem", "clicks": 6, "impressions": 331 },
+        { "week": "20-26 Tem", "clicks": 7, "impressions": 300 },
+        { "week": "27 Tem-2 Ağu", "clicks": 2, "impressions": 440 },
+        { "week": "3-9 Ağu", "clicks": 20, "impressions": 318 },
+        { "week": "10-16 Ağu", "clicks": 31, "impressions": 303 },
+        { "week": "17-23 Ağu", "clicks": 16, "impressions": 211 },
+        { "week": "24-26 Ağu", "clicks": 0, "impressions": 86 }
+      ],
+      "page_group_performance": [
+        { "group": "Ana sayfa", "clicks": 52, "impressions": 69 },
+        { "group": "Araçlar", "clicks": 10, "impressions": 799 },
+        { "group": "Danışmanlar", "clicks": 5, "impressions": 51 },
+        { "group": "Eski URL'ler", "clicks": 1, "impressions": 46 },
+        { "group": "Burçlar", "clicks": 1, "impressions": 368 },
+        { "group": "Diğer", "clicks": 1, "impressions": 160 },
+        { "group": "Blog", "clicks": 0, "impressions": 45 }
+      ],
+      "coverage_reasons": [
+        { "reason_short": "noindex", "pages": 303 },
+        { "reason_short": "Yönlendirme", "pages": 266 },
+        { "reason_short": "Keşfedildi", "pages": 247 },
+        { "reason_short": "Alternatif canonical", "pages": 120 },
+        { "reason_short": "Tarandı, indekslenmedi", "pages": 60 },
+        { "reason_short": "Farklı Google canonical", "pages": 40 },
+        { "reason_short": "Canonical yok/kopya", "pages": 30 },
+        { "reason_short": "5xx", "pages": 27 },
+        { "reason_short": "robots.txt", "pages": 5 },
+        { "reason_short": "404", "pages": 2 }
+      ],
+      "priority_pages": [
+        { "page": "/en/rising-sign-calculator", "clicks": 6, "impressions": 300, "ctr": 0.02, "position": 79.16, "action": "Otorite ve içerik kümesi" },
+        { "page": "/en/yukselen-burc-hesaplayici", "clicks": 1, "impressions": 299, "ctr": 0.003344, "position": 83.57, "action": "Eski URL; 308 ve iç-link temizliği" },
+        { "page": "/en/yildizname", "clicks": 3, "impressions": 87, "ctr": 0.034483, "position": 4.55, "action": "Başlık/açıklama ve niyet testi" },
+        { "page": "/de/sternzeichen/zwillinge/heute", "clicks": 0, "impressions": 80, "ctr": 0, "position": 86.25, "action": "İçerik değeri ve rekabet kontrolü" },
+        { "page": "/tr/dogum-haritasi", "clicks": 0, "impressions": 69, "ctr": 0, "position": 43.91, "action": "TR konu kümesi ve iç link" },
+        { "page": "/index.html/consultants", "clicks": 1, "impressions": 34, "ctr": 0.029412, "position": 10.53, "action": "Legacy gösterimi izleyip düşür" },
+        { "page": "/tr/blog/gunluk-rituel-astroloji-tarot", "clicks": 0, "impressions": 32, "ctr": 0, "position": 2.59, "action": "Sorgu niyeti ve snippet kontrolü" }
+      ],
+      "fix_status": [
+        { "priority": "P0", "finding": "EN/DE ana sayfada Türkçe blog", "evidence": "Canlı browser snapshot ve public API", "status": "Kod düzeltmesi hazır" },
+        { "priority": "P0", "finding": "Dahili linkler redirect URL üretiyor", "evidence": "Canlı /tr snapshot: /tr/consultants ve /tr/birth-chart", "status": "Kod düzeltmesi hazır" },
+        { "priority": "P0", "finding": "27 coverage 5xx", "evidence": "26 URL canlı 200; test danışman 404", "status": "Aktif 5xx yok, GSC doğrulama gerekli" },
+        { "priority": "P1", "finding": "Legacy URL görünürlüğü", "evidence": "3 ayda 66 satır ve 570 gösterim", "status": "308 çalışıyor; 7/14 gün izlenecek" },
+        { "priority": "P1", "finding": "Sitemap 159'dan 399'a büyüdü", "evidence": "198 yeni uyum URL'si ve 66 blog URL'si", "status": "14-28 gün kalite/indeks ölçümü" },
+        { "priority": "P1", "finding": "GSC günlük history 9 Ağustos'ta durdu", "evidence": "Analitik katmanı ekosisteme devir commitinde cron silindi", "status": "Manuel API ölçümü alındı; yeni izleme sahibi netleşmeli" }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "gsc_api_28d",
+      "label": "Google Search Console API - 28 günlük performans",
+      "href": "https://search.google.com/search-console/performance/search-analytics?resource_id=sc-domain%3Agoldmoodastro.com"
+    },
+    {
+      "id": "gsc_performance_export",
+      "label": "GSC Performance on Search dışa aktarımı",
+      "path": "goldmoodastro.com-Performance-on-Search-2026-08-28.xlsx"
+    },
+    {
+      "id": "gsc_coverage_export",
+      "label": "GSC Coverage dışa aktarımı",
+      "path": "goldmoodastro.com-Coverage-2026-08-28.xlsx"
+    },
+    {
+      "id": "live_crawl",
+      "label": "GoldMoodAstro canlı crawl",
+      "href": "https://goldmoodastro.com/sitemap.xml"
+    }
+  ]
+}

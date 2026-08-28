@@ -31,6 +31,11 @@ function parseOrderField(orderStr?: string): "created_at" | "updated_at" | "disp
   return undefined;
 }
 
+function strictRequestedLocale(locale?: string, defaultLocale?: string): string | null {
+  if (!locale || defaultLocale !== locale) return null;
+  return locale;
+}
+
 // ---------- PUBLIC ------------------------------------------------------
 
 export async function listPublic(req: FastifyRequest, reply: FastifyReply) {
@@ -50,8 +55,12 @@ export async function listPublic(req: FastifyRequest, reply: FastifyReply) {
     limit: q.limit,
     offset: q.offset,
   });
-  reply.header("x-total-count", String(rows.length));
-  return rows;
+  const strictLocale = strictRequestedLocale(q.locale, q.default_locale);
+  const publicRows = strictLocale
+    ? rows.filter((row) => row.locale_resolved === strictLocale)
+    : rows;
+  reply.header("x-total-count", String(publicRows.length));
+  return publicRows;
 }
 
 export async function getByIdPublic(req: FastifyRequest, reply: FastifyReply) {
@@ -60,6 +69,10 @@ export async function getByIdPublic(req: FastifyRequest, reply: FastifyReply) {
   const item = await repo.getCustomPageById(id, locale, default_locale);
   if (!item) return reply.code(404).send({ error: { message: "custom_page_not_found" } });
   if (item.is_published !== 1) return reply.code(404).send({ error: { message: "custom_page_not_found" } });
+  const strictLocale = strictRequestedLocale(locale, default_locale);
+  if (strictLocale && item.locale_resolved !== strictLocale) {
+    return reply.code(404).send({ error: { message: "custom_page_translation_not_found" } });
+  }
   return item;
 }
 
@@ -69,6 +82,10 @@ export async function getBySlugPublic(req: FastifyRequest, reply: FastifyReply) 
   const item = await repo.getCustomPageBySlug(slug, locale, default_locale);
   if (!item) return reply.code(404).send({ error: { message: "custom_page_not_found" } });
   if (item.is_published !== 1) return reply.code(404).send({ error: { message: "custom_page_not_found" } });
+  const strictLocale = strictRequestedLocale(locale, default_locale);
+  if (strictLocale && item.locale_resolved !== strictLocale) {
+    return reply.code(404).send({ error: { message: "custom_page_translation_not_found" } });
+  }
   return item;
 }
 
