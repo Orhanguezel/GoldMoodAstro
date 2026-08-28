@@ -9,6 +9,8 @@ import { BannerPlacement, getMultiLang } from '@/types/common';
 import { useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/features/auth/auth.store';
+import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 /** Banner visual variants:
  *  - hero: 21/9 large top banner
@@ -58,6 +60,8 @@ export default function Banner({
   });
   const [trackClick] = useTrackBannerClickMutation();
   const { user } = useAuthStore();
+  const localeCode = Array.isArray(locale) ? locale[0] : (locale || 'tr');
+  const { ui } = useUiSection('ui_extra' as any, localeCode as any);
 
   // Dismiss state stored per placement in localStorage.
   const dismissKey = `banner-dismissed:${placement}`;
@@ -89,6 +93,9 @@ export default function Banner({
   return (
     <div className={cn('grid gap-4', className)}>
       {items.map((banner) => {
+        const bannerHref = banner.link_url?.startsWith('/')
+          ? localizePath(localeCode, banner.link_url)
+          : banner.link_url;
         const title = (banner as any).title || getMultiLang(
           { tr: banner.title_tr || '', en: banner.title_en || '', de: banner.title_de || '' },
           locale as string,
@@ -137,7 +144,7 @@ export default function Banner({
               <div className="absolute inset-0 bg-linear-to-r from-(--gm-bg)/85 via-(--gm-bg)/35 to-transparent" />
             </div>
 
-            {(title || subtitle || (cta && banner.link_url)) && (
+            {(title || subtitle || (cta && bannerHref)) && (
               <div
                 className={cn(
                   'absolute inset-y-0 left-0 flex flex-col justify-center',
@@ -160,7 +167,7 @@ export default function Banner({
                     {subtitle}
                   </p>
                 )}
-                {cta && banner.link_url && (
+                {cta && bannerHref && (
                   <span
                     className={cn(
                       'inline-flex w-fit items-center gap-2 rounded-full border border-(--gm-gold) bg-(--gm-gold) font-semibold uppercase tracking-[0.18em] text-(--gm-bg-deep) transition-colors group-hover:bg-(--gm-gold-deep) group-hover:text-(--gm-bg)',
@@ -179,11 +186,11 @@ export default function Banner({
             {/* Ad indicator for transparency. */}
             <span
               className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-(--gm-bg-deep)/60 px-2 py-0.5 text-[9px] font-medium uppercase tracking-widest text-(--gm-bg) backdrop-blur-sm"
-              aria-label="reklam"
-              title="Reklam"
+              aria-label={ui('ui_extra_b2_promo_ad_badge', 'Ad')}
+              title={ui('ui_extra_b2_promo_ad_badge', 'Ad')}
             >
               <Info size={9} />
-              Reklam
+              {ui('ui_extra_b2_promo_ad_badge', 'Ad')}
             </span>
 
             {/* Dismiss (X) */}
@@ -200,9 +207,9 @@ export default function Banner({
           </div>
         );
 
-        if (banner.link_url) {
+        if (bannerHref) {
           return (
-            <Link key={banner.id} href={banner.link_url} className="block">
+            <Link key={banner.id} href={bannerHref} className="block">
               {content}
             </Link>
           );
