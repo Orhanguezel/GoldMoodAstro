@@ -13,8 +13,8 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
     pageKey: 'yildizname',
     pathname: '/yildizname',
     fallback: {
-      title: 'Yildizname (Ebced) — Symbolic Reading with Your Name and Mother Name',
-      description: 'Turkish-Islamic yildizname tradition: name + mother name + birth year to ebced number and 28 lunar mansions. Calculate free and add premium chart-blended interpretation.',
+      title: 'Yildizname Calculator & Ebjed Reading | GoldMoodAstro',
+      description: 'Create a personal Yildizname reading from your name, mother’s name and birth year. Explore Ebjed symbolism and 28 lunar mansions with responsible interpretation.',
     },
   });
 }

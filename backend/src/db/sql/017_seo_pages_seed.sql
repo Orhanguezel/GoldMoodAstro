@@ -393,8 +393,8 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     "no_index": false
   },
   "yildizname": {
-    "title": "Yildizname — Ottoman Astrology with Ebjed",
-    "description": "Classical Ottoman astrology yildizname with deep analysis from name and birth date. Ebjed calculation and expert interpretation.",
+    "title": "Yildizname Calculator & Ebjed Reading",
+    "description": "Create a personal Yildizname reading from your name, mother''s name and birth year. Explore Ebjed symbolism and 28 lunar mansions with responsible interpretation.",
     "og_image": "/uploads/seo/og_home.png",
     "no_index": false
   },

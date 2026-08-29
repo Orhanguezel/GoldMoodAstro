@@ -77,7 +77,7 @@ export default function YildiznamePage() {
       }).unwrap();
       
       setTimeout(() => {
-        router.push(`/tr/yildizname/result/${res.id}`);
+        router.push(`/${locale}/yildizname/result/${res.id}`);
       }, 4000);
     } catch (err: any) {
       toast.error(err?.data?.message || ui('ui_yildizname_error_analysis_failed', 'Analysis failed'));

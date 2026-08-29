@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     pageKey: 'yildizname',
     pathname: '/yildizname',
     fallback: {
-      title: 'Yildizname Reading and Ebced Guide | GoldMoodAstro',
-      description: 'Discover yildizname, ebced symbolism and lunar mansion guidance with responsible spiritual interpretation.',
+      title: 'Yildizname Calculator & Ebjed Reading | GoldMoodAstro',
+      description: 'Create a personal Yildizname reading from your name, mother’s name and birth year. Explore Ebjed symbolism and 28 lunar mansions with responsible interpretation.',
     },
   });
 }
