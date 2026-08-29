@@ -42,12 +42,18 @@ const ZODIAC_SIGNS: Record<string, LocaleMap> = {
 
 export const ZODIAC_SIGN_ORDER = Object.freeze(Object.keys(ZODIAC_SIGNS));
 
+// NFD tek ba\u015f\u0131na T\u00fcrk\u00e7e noktas\u0131z \u0131'y\u0131 (U+0131, ayr\u0131\u015f\u0131m\u0131 yok) i'ye katlayamaz;
+// 'bal\u0131k' gibi takma adlar i\u00e7in a\u00e7\u0131k \u0131\u2192i d\u00f6n\u00fc\u015f\u00fcm\u00fc \u015fart.
+function foldSignToken(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u0131/g, 'i');
+}
+
 const ZODIAC_TOKEN_TO_KEY = new Map<string, string>();
 for (const [key, labels] of Object.entries(ZODIAC_SIGNS)) {
   ZODIAC_TOKEN_TO_KEY.set(key, key);
   for (const label of Object.values(labels)) {
     ZODIAC_TOKEN_TO_KEY.set(label, key);
-    ZODIAC_TOKEN_TO_KEY.set(label.normalize('NFD').replace(/[\u0300-\u036f]/g, ''), key);
+    ZODIAC_TOKEN_TO_KEY.set(foldSignToken(label), key);
   }
 }
 
@@ -77,7 +83,7 @@ export function normalizeZodiacSignToken(token: string | undefined): string | nu
   }
   const normalized = decoded.trim().toLowerCase();
   return ZODIAC_TOKEN_TO_KEY.get(normalized)
-    ?? ZODIAC_TOKEN_TO_KEY.get(normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+    ?? ZODIAC_TOKEN_TO_KEY.get(foldSignToken(normalized))
     ?? null;
 }
 
@@ -91,13 +97,15 @@ export function canonicalSignPair(signA: string, signB: string): { signA: string
   return { signA: first, signB: second, slug: `${first}-${second}` };
 }
 
+// Proxy her istekte çağırıyor — sabit kümeler modül seviyesinde bir kez kurulur.
+const COMPAT_ZODIAC_ROOTS = new Set(['burclar', ...Object.values(PUBLIC_SEGMENTS.burclar)]);
+const COMPAT_SEGMENTS = new Set(['uyum', ...Object.values(ZODIAC_SUBPAGES.uyum)]);
+
 /** Uyum çiftinin karışık segment/takma ad/sıra varyantını locale kanoniğine çevirir. */
 export function canonicalCompatibilityPublicPath(locale: PublicLocale, pathname: string): string | null {
   const parts = normalizePath(pathname).split('/').filter(Boolean);
   if (parts.length !== 3) return null;
-  const zodiacRoots = new Set(['burclar', ...Object.values(PUBLIC_SEGMENTS.burclar)]);
-  const compatibilitySegments = new Set(['uyum', ...Object.values(ZODIAC_SUBPAGES.uyum)]);
-  if (!zodiacRoots.has(parts[0]) || !compatibilitySegments.has(parts[1])) return null;
+  if (!COMPAT_ZODIAC_ROOTS.has(parts[0]) || !COMPAT_SEGMENTS.has(parts[1])) return null;
   const pairParts = parts[2].split('-');
   if (pairParts.length !== 2) return null;
   const pair = canonicalSignPair(pairParts[0], pairParts[1]);

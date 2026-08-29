@@ -75,13 +75,16 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
   const localePrefix = typeof locale === 'string' ? locale : 'tr';
   const publicLocale = (localePrefix === 'en' || localePrefix === 'de' ? localePrefix : 'tr') as PublicLocale;
   const L = localizeSign(meta, localePrefix);
-  const compatibilityLinks = ZODIAC_SIGN_ORDER.map((otherSign) => {
-    const pair = canonicalSignPair(signKey, otherSign)!;
-    return {
+  // canonicalSignPair geçersiz signKey'de null döner; bileşenin geri kalanı
+  // geçersiz burcu tolere ediyor, burada da çökme yerine boş liste kalmalı.
+  const compatibilityLinks = ZODIAC_SIGN_ORDER.flatMap((otherSign) => {
+    const pair = canonicalSignPair(signKey, otherSign);
+    if (!pair) return [];
+    return [{
       key: otherSign,
       label: SIGN_LABELS[publicLocale]?.[otherSign] ?? otherSign,
       href: `/${publicLocale}${toLocalizedPublicPath(publicLocale, `/burclar/uyum/${pair.slug}`)}`,
-    };
+    }];
   });
   const compatibilityHubHref = `/${publicLocale}${toLocalizedPublicPath(publicLocale, '/burclar/uyum')}`;
   const pick = (tr: string, en: string, de: string) =>

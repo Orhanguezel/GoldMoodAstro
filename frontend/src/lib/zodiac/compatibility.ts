@@ -215,7 +215,7 @@ export function buildPairContent(signA: string, signB: string, locale?: string):
   };
 }
 
-/** Sitemap ve statik üretim için kanonik çiftler (tekrarsız, 66 kombinasyon). */
+/** Sitemap ve statik üretim için kanonik çiftler (aynı-burç çiftleri dahil, 78 kombinasyon). */
 export function allSignPairs(): Array<{ a: string; b: string; slug: string }> {
   const out: Array<{ a: string; b: string; slug: string }> = [];
   for (let i = 0; i < SIGN_ORDER.length; i += 1) {

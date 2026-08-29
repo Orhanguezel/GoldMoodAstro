@@ -15,6 +15,10 @@ function resolveSettingValue(value: unknown, locale: string): string {
       return raw;
     }
   }
+  // Admin paneli düz string'i JSON-scalar olarak kaydedebiliyor; client tarafı
+  // (normalizeValueToLabel) bunu gösteriyor — server tarafı da göstermeli.
+  if (typeof parsed === 'string') return parsed.trim();
+  if (typeof parsed === 'number' || typeof parsed === 'boolean') return String(parsed);
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return '';
   const objectValue = parsed as Record<string, unknown>;
   const labels = objectValue.label && typeof objectValue.label === 'object'

@@ -15,15 +15,23 @@ const TOOLS = {
   birthChart: { logicalPath: '/birth-chart', labelKey: 'ui_blog_tool_birth_chart', fallback: { tr: 'Doğum Haritası', en: 'Birth Chart', de: 'Geburtshoroskop' } },
 } satisfies Record<string, RelatedTool>;
 
+// Kurallar katlanmış (aksansız, küçük harf) metne uygulanır; dar kurallar geniş
+// gezegen kuralından ÖNCE gelir — "Rüyada gezegen görmek" rüya aracını almalı.
 const TOPIC_RULES: Array<{ pattern: RegExp; tools: RelatedTool[] }> = [
-  { pattern: /sinastri|synastry|synastrie|burc[-_ ]?uyum|zodiac[-_ ]?compat|sternzeichen[-_ ]?kompat/i, tools: [TOOLS.compatibility, TOOLS.synastry] },
-  { pattern: /tarot|arkana|arcana|kart[-_ ]?acilim|kartenlegung/i, tools: [TOOLS.tarot] },
-  { pattern: /retro|gezegen|planet|merkur|merkür|venus|venüs|mars|jupiter|saturn/i, tools: [TOOLS.zodiac, TOOLS.daily] },
-  { pattern: /ruya|rüya|dream|traum/i, tools: [TOOLS.dream] },
-  { pattern: /numeroloji|numerology|numerologie|yasam[-_ ]?yolu|life[-_ ]?path/i, tools: [TOOLS.numerology] },
+  { pattern: /sinastri|synastry|synastrie|burc[-_ ]?uyum|zodiac[-_ ]?compat|sternzeichen[-_ ]?kompat/, tools: [TOOLS.compatibility, TOOLS.synastry] },
+  { pattern: /tarot|arkana|arcana|kart[-_ ]?acilim|kartenlegung/, tools: [TOOLS.tarot] },
+  { pattern: /ruya|dream|traum(?!a)/, tools: [TOOLS.dream] },
+  { pattern: /numeroloji|numerology|numerologie|yasam[-_ ]?yolu|life[-_ ]?path/, tools: [TOOLS.numerology] },
+  { pattern: /\b(retro|gezegen|planet|merkur|venus|mars|jupiter|saturn)/, tools: [TOOLS.zodiac, TOOLS.daily] },
 ];
 
+/** Türkçe noktasız ı dahil aksanları katlar: 'Burç Uyumu' → 'burc uyumu', 'SİNASTRİ' → 'sinastri'. */
+function foldSearchText(value: string): string {
+  return value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ı/g, 'i');
+}
+
 export function relatedToolsForBlog(searchableText: string): RelatedTool[] {
-  const match = TOPIC_RULES.find((rule) => rule.pattern.test(searchableText));
+  const haystack = foldSearchText(searchableText);
+  const match = TOPIC_RULES.find((rule) => rule.pattern.test(haystack));
   return match?.tools ?? [TOOLS.birthChart];
 }

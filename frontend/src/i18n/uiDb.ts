@@ -42,7 +42,6 @@ export type UiSectionKey =
   | 'ui_dreams'
   | 'ui_numerology'
   | 'ui_zodiac'
-  | 'ui_compatibility_hub'
   | 'ui_share'
   | 'ui_editor'
   | 'ui_consultantbrowse'

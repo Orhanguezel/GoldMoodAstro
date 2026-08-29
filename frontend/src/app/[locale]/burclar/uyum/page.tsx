@@ -9,7 +9,6 @@ import {
   ZODIAC_SIGN_ORDER,
   type PublicLocale,
 } from '@/i18n/localizedRoutes';
-import { allSignPairs } from '@/lib/zodiac/compatibility';
 import { SIGN_LABELS, SIGN_SYMBOLS } from '@/lib/zodiac/pair';
 import { buildPageMetadata } from '@/seo/server';
 
@@ -73,7 +72,6 @@ export default async function CompatibilityHubPage({ params }: Props) {
   const { locale: rawLocale } = await params;
   const locale = asLocale(rawLocale);
   const ui = await fetchUiStrings(locale, FALLBACKS[locale]);
-  const uniquePairCount = allSignPairs().length;
 
   return (
     <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
@@ -87,7 +85,6 @@ export default async function CompatibilityHubPage({ params }: Props) {
         <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-(--gm-text-dim)">
           {ui.ui_compat_hub_intro}
         </p>
-        <p className="mt-3 text-xs text-(--gm-muted)">{uniquePairCount} / 78</p>
       </header>
 
       <div className="mx-auto mt-14 grid max-w-6xl gap-8 lg:grid-cols-2">

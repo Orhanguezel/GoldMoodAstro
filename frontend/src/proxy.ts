@@ -70,9 +70,11 @@ export async function proxy(req: NextRequest) {
     const hasLocale = candidate && (SUPPORTED_LOCALES as readonly string[]).includes(candidate);
     const locale = (hasLocale ? candidate : DEFAULT_LOCALE) as PublicLocale;
     const pathWithoutLocale = hasLocale ? `/${segments.slice(1).join('/')}` : legacyPath;
+    // Uyum çift varyantları da tek hop'ta kanoniğe insin (çift 308 zinciri olmasın).
+    const compatLegacyPath = canonicalCompatibilityPublicPath(locale, pathWithoutLocale || '/');
     const { publicPath } = canonicalPublicPath(locale, pathWithoutLocale || '/');
     const url = req.nextUrl.clone();
-    url.pathname = `/${locale}${publicPath === '/' ? '' : publicPath}`;
+    url.pathname = `/${locale}${compatLegacyPath ?? (publicPath === '/' ? '' : publicPath)}`;
     return NextResponse.redirect(url, 308);
   }
 
@@ -157,6 +159,16 @@ export async function proxy(req: NextRequest) {
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set('x-gm-locale', locale);
     return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  // Locale prefix YOK → uyum çift varyantları kanonik /tr URL'sine 308 döner;
+  // rewrite bırakılırsa varyant URL 200 döner ve kopya içerik sınıfı oluşur
+  // (/index.html ikiz-indeks vakasıyla aynı kalıp).
+  const compatNoLocalePath = canonicalCompatibilityPublicPath(DEFAULT_LOCALE, pathname);
+  if (compatNoLocalePath) {
+    const url = req.nextUrl.clone();
+    url.pathname = `/${DEFAULT_LOCALE}${compatNoLocalePath}`;
+    return NextResponse.redirect(url, 308);
   }
 
   // Locale prefix YOK → default locale'e internal rewrite (URL bar'da `/` kalır)

@@ -32,7 +32,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   const canonicalPair = canonicalSignPair(parsed.signA, parsed.signB);
   if (!canonicalPair) return {};
-  const ogImageUrl = `https://goldmoodastro.com/${locale}/burclar/uyum/${canonicalPair.slug}/opengraph-image`;
+  // Lokalize public path + env domain: en/de'de og:image 308 hop yemesin,
+  // staging build prod'a işaret etmesin (blog sayfasıyla aynı kalıp).
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
+  const metaLocale = (locale === 'en' || locale === 'de' ? locale : 'tr') as PublicLocale;
+  const ogImageUrl = `${siteUrl}/${metaLocale}${toLocalizedPublicPath(metaLocale, `/burclar/uyum/${canonicalPair.slug}`)}/opengraph-image`;
   const content = buildPairContent(canonicalPair.signA, canonicalPair.signB, locale);
 
   const base = await buildPageMetadata({
@@ -75,10 +79,31 @@ export default async function CompatibilityPage({ params }: Props) {
   const signHref = (sign: string) => `/${publicLocale}${toLocalizedPublicPath(publicLocale, `/burclar/${sign}`)}`;
   const pairHref = (slug: string) => `/${publicLocale}${toLocalizedPublicPath(publicLocale, `/burclar/uyum/${slug}`)}`;
   const currentSlug = canonicalPair.slug;
-  const relatedPairs = [canonicalPair.signA, canonicalPair.signB]
-    .flatMap((anchor) => ZODIAC_SIGN_ORDER
-      .filter((candidate) => candidate !== anchor && ZODIAC_META[candidate as keyof typeof ZODIAC_META]?.element === ZODIAC_META[anchor as keyof typeof ZODIAC_META]?.element)
-      .map((candidate) => canonicalSignPair(anchor, candidate)!))
+  const profileSigns = canonicalPair.signA === canonicalPair.signB
+    ? [canonicalPair.signA]
+    : [canonicalPair.signA, canonicalPair.signB];
+  // Önce aynı elementten çiftler, azsa deterministik tamamlama (anchor'ın
+  // kendi çifti + burç sırasına göre komşular). Aynı-element ve aynı-burç
+  // sayfalarında liste 2'ye düşüyordu; her sayfa 4 ilgili link almalı.
+  const elementOf = (sign: string) => ZODIAC_META[sign as keyof typeof ZODIAC_META]?.element;
+  const relatedCandidates: Array<{ signA: string; signB: string; slug: string }> = [];
+  for (const anchor of profileSigns) {
+    for (const candidate of ZODIAC_SIGN_ORDER) {
+      if (candidate === anchor || elementOf(candidate) !== elementOf(anchor)) continue;
+      const pairForAnchor = canonicalSignPair(anchor, candidate);
+      if (pairForAnchor) relatedCandidates.push(pairForAnchor);
+    }
+  }
+  for (const anchor of profileSigns) {
+    const samePair = canonicalSignPair(anchor, anchor);
+    if (samePair) relatedCandidates.push(samePair);
+    for (const candidate of ZODIAC_SIGN_ORDER) {
+      if (candidate === anchor) continue;
+      const pairForAnchor = canonicalSignPair(anchor, candidate);
+      if (pairForAnchor) relatedCandidates.push(pairForAnchor);
+    }
+  }
+  const relatedPairs = relatedCandidates
     .filter((candidate, index, rows) => candidate.slug !== currentSlug && rows.findIndex((row) => row.slug === candidate.slug) === index)
     .slice(0, 4);
   const crossCopy = await fetchUiStrings(publicLocale, publicLocale === 'tr'
@@ -130,7 +155,7 @@ export default async function CompatibilityPage({ params }: Props) {
             <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-5">
               <h2 className="font-serif text-xl text-(--gm-text)">{crossCopy.ui_compat_pair_profiles}</h2>
               <div className="mt-3 flex flex-wrap gap-2">
-                {[canonicalPair.signA, canonicalPair.signB].map((sign) => (
+                {profileSigns.map((sign) => (
                   <Link key={sign} href={signHref(sign)} className="rounded-full border border-(--gm-gold)/30 px-3 py-2 text-sm text-(--gm-gold) hover:bg-(--gm-gold)/10">
                     {SIGN_LABELS[publicLocale]?.[sign] ?? sign}
                   </Link>
