@@ -33,6 +33,22 @@ const TENANT = "goldmoodastro";
 const HASHTAGS = "#goldmoodastro #astroloji #tarot #numeroloji #spirituelsemboller #ruhsaldanismanlik";
 const SITE_URL = "https://goldmoodastro.com";
 
+export type ContentRenderContext = {
+  yearMonth: string;
+  sourcePrefix: string;
+  outDir: string;
+  publicDir: string;
+  notesLabel: string;
+};
+
+const AUGUST_CONTEXT: ContentRenderContext = {
+  yearMonth: "2026-08",
+  sourcePrefix: "august-2026-extra",
+  outDir: OUT_DIR,
+  publicDir: PUBLIC_DIR,
+  notesLabel: "Ağustos 2026 week-1 ek içerik taslağı",
+};
+
 export type PostType = "etkilesim" | "tanitim" | "kampanya";
 export type DraftPost = {
   sourceRef: string;
@@ -278,13 +294,13 @@ async function tarotCardBuffer(size: number) {
   return sharp(card).composite([{ input: mask, blend: "dest-in" }]).png().toBuffer();
 }
 
-async function renderSlide(fileName: string, slide: Slide, size: "post" | "story" = "post") {
-  await fs.mkdir(OUT_DIR, { recursive: true });
+async function renderSlide(fileName: string, slide: Slide, size: "post" | "story" = "post", context = AUGUST_CONTEXT) {
+  await fs.mkdir(context.outDir, { recursive: true });
   const width = 1080;
   const height = size === "story" ? 1920 : 1350;
-  const filePath = path.join(OUT_DIR, fileName);
+  const filePath = path.join(context.outDir, fileName);
   // FORCE_REGEN=1 → var olan (ör. eski/eksik metinli) görseli de YENİDEN üret. Yoksa cache: atla.
-  if (!process.env.FORCE_REGEN && existsSync(filePath)) return `${PUBLIC_DIR}/${fileName}`;
+  if (!process.env.FORCE_REGEN && existsSync(filePath)) return `${context.publicDir}/${fileName}`;
 
   let base: Buffer;
   const bgSource = slide.bgAsset ?? slide.asset;
@@ -341,13 +357,13 @@ async function renderSlide(fileName: string, slide: Slide, size: "post" | "story
   composites.push({ input: Buffer.from(overlaySvg(slide, width, height)), left: 0, top: 0 });
 
   await sharp(base).composite(composites).png({ compressionLevel: 9 }).toFile(filePath);
-  return `${PUBLIC_DIR}/${fileName}`;
+  return `${context.publicDir}/${fileName}`;
 }
 
-async function renderReel(fileName: string, coverUrl: string) {
-  const coverPath = path.join(OUT_DIR, path.basename(new URL(coverUrl).pathname));
-  const outPath = path.join(OUT_DIR, fileName);
-  if (existsSync(outPath)) return `${PUBLIC_DIR}/${fileName}`;
+async function renderReel(fileName: string, coverUrl: string, context = AUGUST_CONTEXT) {
+  const coverPath = path.join(context.outDir, path.basename(new URL(coverUrl).pathname));
+  const outPath = path.join(context.outDir, fileName);
+  if (existsSync(outPath)) return `${context.publicDir}/${fileName}`;
   const result = spawnSync("ffmpeg", [
     "-y",
     "-loop", "1",
@@ -362,7 +378,7 @@ async function renderReel(fileName: string, coverUrl: string) {
   if (result.status !== 0) {
     throw new Error(`ffmpeg failed: ${result.stderr?.toString() || "bilinmeyen hata"}`);
   }
-  return `${PUBLIC_DIR}/${fileName}`;
+  return `${context.publicDir}/${fileName}`;
 }
 
 function caption(title: string, body: string, cta: string, tags = HASHTAGS) {
@@ -391,31 +407,31 @@ function assertSlidesDiffer(day: number, slug: string, slides: Slide[]) {
   });
 }
 
-export async function carousel(day: number, slug: string, title: string, slides: Slide[], captionText: string, postType: PostType = "etkilesim"): Promise<DraftPost> {
+export async function carousel(day: number, slug: string, title: string, slides: Slide[], captionText: string, postType: PostType = "etkilesim", context = AUGUST_CONTEXT): Promise<DraftPost> {
   assertSlidesDiffer(day, slug, slides);
   const code = String(day).padStart(2, "0");
   const mediaUrls: string[] = [];
   for (const [index, slide] of slides.entries()) {
-    mediaUrls.push(await renderSlide(`2026-08-${code}-${slug}-${String(index + 1).padStart(2, "0")}.png`, slide, "post"));
+    mediaUrls.push(await renderSlide(`${context.yearMonth}-${code}-${slug}-${String(index + 1).padStart(2, "0")}.png`, slide, "post", context));
   }
   return {
-    sourceRef: `august-2026-extra:${code}:${slug}`,
+    sourceRef: `${context.sourcePrefix}:${code}:${slug}`,
     title: `[CAROUSEL] ${title}`,
     postType,
     caption: captionText,
     platform: "both",
     imageUrl: mediaUrls[0],
     mediaUrls,
-    notes: "Ağustos 2026 week-1 ek içerik taslağı. Mevcut GoldMoodAstro asset'leriyle üretildi; yayın öncesi manuel onay önerilir.",
+    notes: `${context.notesLabel}. Mevcut GoldMoodAstro asset'leriyle üretildi; yayın öncesi manuel onay önerilir.`,
   };
 }
 
-export async function reel(day: number, slug: string, title: string, cover: Slide, captionText: string): Promise<DraftPost> {
+export async function reel(day: number, slug: string, title: string, cover: Slide, captionText: string, context = AUGUST_CONTEXT): Promise<DraftPost> {
   const code = String(day).padStart(2, "0");
-  const coverUrl = await renderSlide(`2026-08-${code}-${slug}-cover.png`, cover, "story");
-  const videoUrl = await renderReel(`2026-08-${code}-${slug}.mp4`, coverUrl);
+  const coverUrl = await renderSlide(`${context.yearMonth}-${code}-${slug}-cover.png`, cover, "story", context);
+  const videoUrl = await renderReel(`${context.yearMonth}-${code}-${slug}.mp4`, coverUrl, context);
   return {
-    sourceRef: `august-2026-extra:${code}:reel:${slug}`,
+    sourceRef: `${context.sourcePrefix}:${code}:reel:${slug}`,
     title: `[REEL] ${title}`,
     postType: "etkilesim",
     caption: captionText,
@@ -426,11 +442,11 @@ export async function reel(day: number, slug: string, title: string, cover: Slid
   };
 }
 
-export async function story(day: number, slug: string, title: string, slide: Slide): Promise<DraftPost> {
+export async function story(day: number, slug: string, title: string, slide: Slide, context = AUGUST_CONTEXT): Promise<DraftPost> {
   const code = String(day).padStart(2, "0");
-  const imageUrl = await renderSlide(`2026-08-${code}-story-${slug}.png`, slide, "story");
+  const imageUrl = await renderSlide(`${context.yearMonth}-${code}-story-${slug}.png`, slide, "story", context);
   return {
-    sourceRef: `august-2026-extra:${code}:story:${slug}`,
+    sourceRef: `${context.sourcePrefix}:${code}:story:${slug}`,
     title: `[STORY] ${title}`,
     postType: "etkilesim",
     caption: slide.footer ?? title,

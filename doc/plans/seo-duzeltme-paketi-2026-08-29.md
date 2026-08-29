@@ -212,8 +212,13 @@ vermiyor; konu otoritesi kümeleri kopuk.
 - [ ] Coverage'daki 5xx grubunda "Düzeltmeyi Doğrula"yı yeniden başlat.
 - [ ] URL Inspection'dan elle "Dizine ekleme iste": 3 uyum hub URL'si +
       `/en/rising-sign-calculator` + `/tr/yukselen-burc-hesaplayici`.
-- [ ] (Paralel, paket dışı) Eylül sosyal içerik paketi üretimi — marka
+- [x] (Paralel, paket dışı) Eylül sosyal içerik paketi üretimi — marka
       aramalarının tek tıklama kaynağı olduğu 20 Ağustos sonrasında kanıtlandı.
+
+> 2026-08-29 Codex: 30 ana carousel + 30 story üretildi; 90 PNG görsel gözle
+> örneklendi. Gökyüzü iddiaları `getDaySky`/`houseMapByRising`, semboller canlı
+> sözlükler, numeroloji örneği `calculateLifePath` kaynaklıdır. Plan:
+> `reports/GoldMoodAstro-Eylul-2026-Icerik-Plani.md`.
 
 ## Ölçüm (paket sonrası)
 
