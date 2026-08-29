@@ -1,9 +1,10 @@
 /**
  * Burc slug normalizasyonu + "aries-libra" / "koc-terazi" cifti cozumleme.
  *
- * Ayni mantik burclar/uyum/[pair]/page.tsx icinde de var (modul-yerel).
- * Burasi OG route'u gibi sayfa disi tuketiciler icin dısa acik surumu.
+ * Takma adların tek kaynağı localizedRoutes.ts'tir; proxy, sayfa ve OG aynı
+ * normalizasyonu kullanır.
  */
+import { normalizeZodiacSignToken } from '@/i18n/localizedRoutes';
 
 /** Dil -> burc anahtari -> etiket. Turkce sayfada Ingilizce etiket gostermek icin degil. */
 export const SIGN_LABELS: Record<string, Record<string, string>> = {
@@ -30,31 +31,8 @@ export const SIGN_SYMBOLS: Record<string, string> = {
   sagittarius: '♐', capricorn: '♑', aquarius: '♒', pisces: '♓',
 };
 
-// DIKKAT: SIGN_LABELS dil->burc seklinde ic ice; Object.keys(SIGN_LABELS) dilleri verir, burclari degil.
-// Gecerli burc anahtarlarinin kaynagi SIGN_SYMBOLS (duz harita).
-const VALID_SIGNS = new Set(Object.keys(SIGN_SYMBOLS));
-
-/** Turkce slug -> Ingilizce anahtar. URL hem /uyum/aries-libra hem /uyum/koc-terazi kabul eder. */
-const TR_TO_EN: Record<string, string> = {
-  koc: 'aries', 'koç': 'aries',
-  boga: 'taurus', 'boğa': 'taurus',
-  ikizler: 'gemini',
-  yengec: 'cancer', 'yengeç': 'cancer',
-  aslan: 'leo',
-  basak: 'virgo', 'başak': 'virgo',
-  terazi: 'libra',
-  akrep: 'scorpio',
-  yay: 'sagittarius',
-  oglak: 'capricorn', 'oğlak': 'capricorn',
-  kova: 'aquarius',
-  balik: 'pisces', 'balık': 'pisces',
-};
-
 export function normalizeSign(token: string | undefined): string | null {
-  if (!token) return null;
-  const lower = token.trim().toLowerCase();
-  if (VALID_SIGNS.has(lower)) return lower;
-  return TR_TO_EN[lower] ?? null;
+  return normalizeZodiacSignToken(token);
 }
 
 export function parsePair(pair: string | undefined): { signA: string; signB: string } | null {

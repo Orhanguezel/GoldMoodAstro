@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og';
 import { getOgFonts } from '@/lib/fonts/og-fonts';
 import { getOgTheme } from '@/seo/ogTheme';
 import { SIGN_LABELS, SIGN_SYMBOLS, parsePair } from '@/lib/zodiac/pair';
+import { canonicalSignPair } from '@/i18n/localizedRoutes';
 
 export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
@@ -24,8 +25,9 @@ export default async function OG({ params }: { params: Promise<{ pair: string; l
   // Route segmenti [pair] ("aries-libra" veya "koc-terazi") — signA/signB diye bir param YOK.
   const { pair, locale: localeParam } = await params;
   const parsed = parsePair(pair);
-  const signA = parsed?.signA ?? '';
-  const signB = parsed?.signB ?? '';
+  const canonicalPair = parsed ? canonicalSignPair(parsed.signA, parsed.signB) : null;
+  const signA = canonicalPair?.signA ?? '';
+  const signB = canonicalPair?.signB ?? '';
   const locale = EYEBROW[localeParam ?? ''] ? (localeParam as string) : 'tr';
 
   // DB'den oku (compatibility_readings). Eskiden /synastry/quick cagriliyordu — o bir LLM

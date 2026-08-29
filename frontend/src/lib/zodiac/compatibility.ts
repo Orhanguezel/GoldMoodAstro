@@ -15,10 +15,11 @@
 // =============================================================
 import { ZODIAC_META, ZODIAC_SIGNS } from './signs';
 import type { ZodiacSign } from '@/types/common';
+import { ZODIAC_SIGN_ORDER } from '@/i18n/localizedRoutes';
 
 type Locale = 'tr' | 'en' | 'de';
 
-const SIGN_ORDER = ZODIAC_SIGNS.map((s) => s.key);
+const SIGN_ORDER = ZODIAC_SIGN_ORDER;
 
 const SIGN_LABELS: Record<Locale, Record<string, string>> = {
   tr: Object.fromEntries(ZODIAC_SIGNS.map((s) => [s.key, s.label])),

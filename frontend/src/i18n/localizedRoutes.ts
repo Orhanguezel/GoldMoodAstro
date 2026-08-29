@@ -40,6 +40,17 @@ const ZODIAC_SIGNS: Record<string, LocaleMap> = {
   pisces: { tr: 'balik', en: 'pisces', de: 'fische' },
 };
 
+export const ZODIAC_SIGN_ORDER = Object.freeze(Object.keys(ZODIAC_SIGNS));
+
+const ZODIAC_TOKEN_TO_KEY = new Map<string, string>();
+for (const [key, labels] of Object.entries(ZODIAC_SIGNS)) {
+  ZODIAC_TOKEN_TO_KEY.set(key, key);
+  for (const label of Object.values(labels)) {
+    ZODIAC_TOKEN_TO_KEY.set(label, key);
+    ZODIAC_TOKEN_TO_KEY.set(label.normalize('NFD').replace(/[\u0300-\u036f]/g, ''), key);
+  }
+}
+
 const ZODIAC_SUBPAGES: Record<string, LocaleMap> = {
   ask: { tr: 'ask', en: 'love', de: 'liebe' },
   kariyer: { tr: 'kariyer', en: 'career', de: 'karriere' },
@@ -54,6 +65,44 @@ function normalizePath(pathname: string): string {
   const path = String(pathname || '/').split(/[?#]/, 1)[0] || '/';
   const withSlash = path.startsWith('/') ? path : `/${path}`;
   return withSlash !== '/' ? withSlash.replace(/\/+$/, '') : '/';
+}
+
+export function normalizeZodiacSignToken(token: string | undefined): string | null {
+  if (!token) return null;
+  let decoded = token;
+  try {
+    decoded = decodeURIComponent(token);
+  } catch {
+    // Geçersiz yüzde kodu normal eşleşmede zaten bulunamaz.
+  }
+  const normalized = decoded.trim().toLowerCase();
+  return ZODIAC_TOKEN_TO_KEY.get(normalized)
+    ?? ZODIAC_TOKEN_TO_KEY.get(normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+    ?? null;
+}
+
+export function canonicalSignPair(signA: string, signB: string): { signA: string; signB: string; slug: string } | null {
+  const a = normalizeZodiacSignToken(signA);
+  const b = normalizeZodiacSignToken(signB);
+  if (!a || !b) return null;
+  const indexA = ZODIAC_SIGN_ORDER.indexOf(a);
+  const indexB = ZODIAC_SIGN_ORDER.indexOf(b);
+  const [first, second] = indexA <= indexB ? [a, b] : [b, a];
+  return { signA: first, signB: second, slug: `${first}-${second}` };
+}
+
+/** Uyum çiftinin karışık segment/takma ad/sıra varyantını locale kanoniğine çevirir. */
+export function canonicalCompatibilityPublicPath(locale: PublicLocale, pathname: string): string | null {
+  const parts = normalizePath(pathname).split('/').filter(Boolean);
+  if (parts.length !== 3) return null;
+  const zodiacRoots = new Set(['burclar', ...Object.values(PUBLIC_SEGMENTS.burclar)]);
+  const compatibilitySegments = new Set(['uyum', ...Object.values(ZODIAC_SUBPAGES.uyum)]);
+  if (!zodiacRoots.has(parts[0]) || !compatibilitySegments.has(parts[1])) return null;
+  const pairParts = parts[2].split('-');
+  if (pairParts.length !== 2) return null;
+  const pair = canonicalSignPair(pairParts[0], pairParts[1]);
+  if (!pair) return null;
+  return toLocalizedPublicPath(locale, `/burclar/uyum/${pair.slug}`);
 }
 
 function inverseKey(map: Record<string, LocaleMap>, locale: PublicLocale, value: string): string | undefined {

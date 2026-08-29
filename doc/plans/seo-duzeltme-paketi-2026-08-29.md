@@ -64,7 +64,7 @@
 T2-T3'ten önce varyant üretimi kapatılır.
 
 **Yapılacak:**
-- [ ] `frontend/src/proxy.ts`'e (mevcut redirect kalıplarının yanına) çift
+- [x] `frontend/src/proxy.ts`'e (mevcut redirect kalıplarının yanına) çift
       sayfası kanonikleştirme kuralı: istek yolu bir uyum çift sayfasıysa —
       hangi locale segment varyantıyla gelirse gelsin — şu üç normalizasyonu
       uygula ve sonuç istekten farklıysa **308** ile kanonik lokalize URL'ye
@@ -76,17 +76,20 @@ T2-T3'ten önce varyant üretimi kapatılır.
          `aries-taurus`; `allSignPairs()` ile aynı kural).
       3. Segment → locale'in kendi segmenti (`/en/burclar/uyum/...` →
          `/en/zodiac-signs/compatibility/...`).
-- [ ] `[pair]/page.tsx` içindeki `parsePair` esnekliği kalabilir (savunma),
+- [x] `[pair]/page.tsx` içindeki `parsePair` esnekliği kalabilir (savunma),
       ama metadata artık her zaman kanonik slug'la üretilmeli (bugün parsed
       sırayı olduğu gibi kullanıyor — `scorpio-aries` kendine canonical
       basıyor, düzelt).
-- [ ] `opengraph-image` route'u da kanonik slug'la çalışmalı.
+- [x] `opengraph-image` route'u da kanonik slug'la çalışmalı.
 
 **Kabul:**
-- [ ] `curl -I /tr/burclar/uyum/taurus-aries` → 308 → `/tr/burclar/uyum/aries-taurus`
-- [ ] `curl -I /tr/burclar/uyum/aries-koc` → 308 → `/tr/burclar/uyum/aries-aries`
-- [ ] `curl -I /en/burclar/uyum/aries-taurus` → 308 → `/en/zodiac-signs/compatibility/aries-taurus`
-- [ ] Kanonik URL 200 ve `<link rel="canonical">` kendini gösteriyor.
+- [x] `curl -I /tr/burclar/uyum/taurus-aries` → 308 → `/tr/burclar/uyum/aries-taurus`
+- [x] `curl -I /tr/burclar/uyum/aries-koc` → 308 → `/tr/burclar/uyum/aries-aries`
+- [x] `curl -I /en/burclar/uyum/aries-taurus` → 308 → `/en/zodiac-signs/compatibility/aries-taurus`
+- [x] Kanonik URL 200 ve `<link rel="canonical">` kendini gösteriyor.
+
+> 2026-08-29 Codex: T1 yerel Next 16 proxy kabulü geçti; Almanca `widder-stier`
+> takma adı da `/de/sternzeichen/kompatibilitaet/aries-taurus` kanoniğine 308 oldu.
 
 ### S1-T2 — Uyum hub sayfası (3 dil)
 

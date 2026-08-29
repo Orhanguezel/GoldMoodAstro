@@ -9,7 +9,11 @@
 // =============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { canonicalPublicPath, type PublicLocale } from '@/i18n/localizedRoutes';
+import {
+  canonicalCompatibilityPublicPath,
+  canonicalPublicPath,
+  type PublicLocale,
+} from '@/i18n/localizedRoutes';
 
 const SUPPORTED_LOCALES = ['tr', 'en', 'de'] as const;
 const DEFAULT_LOCALE = 'tr';
@@ -101,6 +105,15 @@ export async function proxy(req: NextRequest) {
   if (firstSeg && (SUPPORTED_LOCALES as readonly string[]).includes(firstSeg)) {
     const locale = firstSeg as PublicLocale;
     const pathWithoutLocale = pathname.slice(firstSeg.length + 1) || '/';
+    const compatibilityPath = canonicalCompatibilityPublicPath(locale, pathWithoutLocale);
+    if (compatibilityPath) {
+      const canonicalCompatibilityPathname = `/${locale}${compatibilityPath}`;
+      if (pathname !== canonicalCompatibilityPathname) {
+        const url = req.nextUrl.clone();
+        url.pathname = canonicalCompatibilityPathname;
+        return NextResponse.redirect(url, 308);
+      }
+    }
     const { logicalPath, publicPath } = canonicalPublicPath(locale, pathWithoutLocale);
     const canonicalPathname = `/${locale}${publicPath === '/' ? '' : publicPath}`;
 
