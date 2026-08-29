@@ -198,7 +198,7 @@ vermiyor; konu otoritesi kümeleri kopuk.
 
 ### S1-T7 — Paket kabulü (Claude Code yapar)
 
-- [ ] Kod review (`/code-review` çıktısı temiz veya bulgular kapatıldı).
+- [x] Kod review (`/code-review` çıktısı temiz veya bulgular kapatıldı).
 - [x] Deploy sonrası canlı: T1-T6 kabul kriterlerinin tamamı canlıda `curl` ile
       doğrulandı; `bun scripts/seo-i18n-audit.ts https://goldmoodastro.com`
       → `0 hata · 0 dil uyarısı` (URL sayısı 395+3 hub = 398 beklenir).
@@ -214,6 +214,40 @@ vermiyor; konu otoritesi kümeleri kopuk.
 > `aries-aries` için görünen `cancer-koc` Google kanoniği eski tarama sinyalidir;
 > yeni 308/iç-link paketi sonraki taramada yeniden değerlendirilecektir. `017`
 > yalnız `--no-drop --only=017` ile uygulandı; üç locale başlığı DB'de doğrulandı.
+
+> 2026-08-29 Claude Code review (10 açı, 15 doğrulanmış bulgu): materyal olanlar
+> `c69b742` ile kapatıldı — `balık` (noktasız ı) alias regresyonu (eski 200 URL
+> 404 oluyordu), locale-prefixsiz uyum varyantlarının 308 yerine 200 dönmesi
+> (kopya içerik sınıfı), aynı-element/aynı-burç 24+12 sayfada ilgili çift
+> linkinin 2'ye düşmesi (kabul ≥3; artık her sayfada 4), aynı-burç sayfasında
+> çift React key/chip, hub'daki görünür `78 / 78` debug sayacı, en/de og:image
+> 308 hop'u + hardcode domain, blog araç eşlemesinde TR aksan/kural-sırası
+> hataları, server ui okuyucusunun JSON-scalar admin değerini yutması,
+> `/index.html` uyum varyantında çift 308 zinciri, ZodiacDetail latent çökmesi,
+> ölü `ui_compatibility_hub` union üyesi, öksüz `ui_zodiac_card_compat_*` seed
+> satırları, `allSignPairs` docstring'i. Soft-404 iddiası canlıda çürütüldü
+> (geçersiz çift slug'ı gerçek 404 + noindex dönüyor).
+
+### S1-T9 — Review takip görevleri (Codex, acil değil)
+
+Review'da doğrulanan ama `c69b742`'ye alınmayan yapısal iyileştirmeler:
+
+- [ ] `fetchUiStrings` anahtar başına HTTP isteği atıyor (çift sayfası 4, hub 5,
+      hesaplayıcı 6) — mevcut `GET /site_settings?prefix=ui_&locale=X` toplu
+      kalıbına (client'taki `useUiSection` gibi) geçir; `isValidUiText`
+      doğrulamasını `serverUi.ts`'ten yeniden kullan.
+- [ ] `locale === 'en' || locale === 'de' ? locale : 'tr'` daraltması 7+ yerde
+      kopyalandı — `localizedRoutes.ts`'e tek `asPublicLocale()` helper'ı.
+- [ ] Üç ayrı burç etiket/sembol haritası var (`signs.ts`, `pair.ts`,
+      `compatibility.ts`) — `signs.ts` kanonik kaynağında birleştir.
+- [ ] Blog "ilgili araçlar" eşlemesi regex yerine seed'de zaten var olan
+      `custom_pages_i18n.tags` verisinden türetilsin.
+- [ ] `016*` ui seed ailesinin `ON DUPLICATE KEY UPDATE` kuyruğu admin
+      düzenlemelerini eziyor — aile bazında `INSERT IGNORE`'a geçiş kararı
+      (tek dosya değil, tüm 016 ailesi birlikte).
+- [ ] Uyum kanonikleştirmesi `proxy.ts`'te ayrı bir ön-geçit; `canonicalPublicPath`
+      mekanizmasına entegre edilirse çift sayfası altına eklenecek gelecekteki
+      alt-route'lar (4+ segment) da otomatik kapsanır.
 
 ### S1-T8 — GSC panel adımları (kullanıcı yapar)
 
