@@ -199,13 +199,21 @@ vermiyor; konu otoritesi kümeleri kopuk.
 ### S1-T7 — Paket kabulü (Claude Code yapar)
 
 - [ ] Kod review (`/code-review` çıktısı temiz veya bulgular kapatıldı).
-- [ ] Deploy sonrası canlı: T1-T6 kabul kriterlerinin tamamı canlıda `curl` ile
+- [x] Deploy sonrası canlı: T1-T6 kabul kriterlerinin tamamı canlıda `curl` ile
       doğrulandı; `bun scripts/seo-i18n-audit.ts https://goldmoodastro.com`
       → `0 hata · 0 dil uyarısı` (URL sayısı 395+3 hub = 398 beklenir).
-- [ ] URL Inspection yeniden: TR kanonik 3 çift + EN kanonik 2 çift + 3 hub.
-- [ ] Sitemap GSC'ye yeniden gönderildi (API, mevcut script kalıbı).
-- [ ] `017_seo_pages_seed.sql` yeni kayıtları prod DB'ye uygulandı
+- [x] URL Inspection yeniden: TR kanonik 3 çift + EN kanonik 2 çift + 3 hub.
+- [x] Sitemap GSC'ye yeniden gönderildi (API, mevcut script kalıbı).
+- [x] `017_seo_pages_seed.sql` yeni kayıtları prod DB'ye uygulandı
       (kullanıcı onaylı script — Claude hazırlar, kullanıcı çalıştırır).
+
+> 2026-08-29 Codex canlı kabulü: GitHub Actions deploy başarılı; tam tarama
+> `398 URL · 0 hata · 0 dil uyarısı`. Sitemap API ile yeniden gönderildi
+> (`isPending=true`, `0` hata, `0` uyarı). Üç yeni hub Google tarafından henüz
+> bilinmiyor; iki örnek çift keşfedildi ama indekslenmedi, iki örnek bilinmiyor.
+> `aries-aries` için görünen `cancer-koc` Google kanoniği eski tarama sinyalidir;
+> yeni 308/iç-link paketi sonraki taramada yeniden değerlendirilecektir. `017`
+> yalnız `--no-drop --only=017` ile uygulandı; üç locale başlığı DB'de doğrulandı.
 
 ### S1-T8 — GSC panel adımları (kullanıcı yapar)
 
@@ -219,6 +227,12 @@ vermiyor; konu otoritesi kümeleri kopuk.
 > örneklendi. Gökyüzü iddiaları `getDaySky`/`houseMapByRising`, semboller canlı
 > sözlükler, numeroloji örneği `calculateLifePath` kaynaklıdır. Plan:
 > `reports/GoldMoodAstro-Eylul-2026-Icerik-Plani.md`.
+
+> GSC API notu: iki yükselen hesaplayıcı `PASS / Submitted and indexed`; üç
+> yeni hub `URL is unknown to Google`. "Düzeltmeyi Doğrula" ve "Dizine ekleme
+> iste" Search Console API'de yoktur; bu iki kutu panelde oturum açılarak elle
+> tamamlanmalıdır. Tanitio GSC OAuth doğrulaması `invalid_grant` verdi, ancak
+> GoldMoodAstro servis hesabıyla salt-okunur Inspection ve sitemap submit çalıştı.
 
 ## Ölçüm (paket sonrası)
 
