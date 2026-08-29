@@ -2,6 +2,13 @@
 
 Bu dosya Codex'in okuyup çalıştığı talimat dosyasıdır.
 
+> **🔴 AKTİF GÖREV PAKETİ (2026-08-29):** SEO düzeltme & iyileştirme paketi —
+> [`doc/plans/seo-duzeltme-paketi-2026-08-29.md`](doc/plans/seo-duzeltme-paketi-2026-08-29.md).
+> Uyum sayfaları öksüz (iç link yok, hub 404) + varyant URL kopyaları +
+> hesaplayıcı içerik derinliği. Görev sırası bağlayıcı: **önce S1-T1**
+> (varyant 308, redirect mantığı `proxy.ts`'e), sonra T2-T6. Claude Code
+> review + canlı kabul yapar (S1-T7); GSC panel adımları kullanıcıda (S1-T8).
+
 ## ⛔ İÇERİK ÜRETİM KURALI — MOTORU KULLAN (kullanıcı talimatı, 2026-08-09)
 
 **Sosyal medya içeriği / post üretirken astrolojik ve fal iddialarını ELLE YAZMA.**

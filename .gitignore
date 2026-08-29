@@ -211,6 +211,7 @@ doc/*
 !doc/plans/
 doc/plans/*
 !doc/plans/seo-i18n-url-migration-checklist-2026-07-31.md
+!doc/plans/seo-duzeltme-paketi-2026-08-29.md
 
 # Playwright test çıktıları (commit edilmez)
 frontend/test-results/
