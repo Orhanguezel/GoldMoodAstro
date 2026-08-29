@@ -94,54 +94,58 @@ T2-T3'ten önce varyant üretimi kapatılır.
 ### S1-T2 — Uyum hub sayfası (3 dil)
 
 **Yapılacak:**
-- [ ] Yeni route: `frontend/src/app/[locale]/burclar/uyum/page.tsx` — server
+- [x] Yeni route: `frontend/src/app/[locale]/burclar/uyum/page.tsx` — server
       component, SSR içerik (bkz. `[pair]/page.tsx`'teki "botlar boş görüyordu"
       dersi — interaktiviteye gömme).
-- [ ] İçerik: kısa giriş (element/modalite mantığı, sorumlu yorum çerçevesi;
+- [x] İçerik: kısa giriş (element/modalite mantığı, sorumlu yorum çerçevesi;
       kesin-sonuç/garanti dili YASAK — `contentModeration` yasaklı konu listesine
       uygun), ardından 12 burç grubu; her grupta o burcun 12 kombinasyon linki
       (kanonik slug, `toLocalizedPublicPath` ile lokalize href).
-- [ ] Metadata: `buildPageMetadata` `pageKey: 'burclar-uyumu'`; üç dil için
+- [x] Metadata: `buildPageMetadata` `pageKey: 'burclar-uyumu'`; üç dil için
       `017_seo_pages_seed.sql`'e kayıt ekle + **fallback'i tam yaz** (DB kaydı
       prod'a uygulanana kadar fallback yayında kalacak). Başlık kalıbı örn.
       TR: "Burç Uyumu — 78 Kombinasyon Rehberi", EN: "Zodiac Compatibility —
       All 78 Sign Combinations", DE benzeri.
-- [ ] Hub'a giden linkler: `burclar/page.tsx` (hub kartı), `ZodiacDetail`
+- [x] Hub'a giden linkler: `burclar/page.tsx` (hub kartı), `ZodiacDetail`
       uyum bölümü başlığı, `[pair]/page.tsx` breadcrumb/"tüm kombinasyonlar"
       linki.
-- [ ] `sitemap.ts`'e 3 hub URL'si ekle (`changeFrequency: 'weekly'`,
+- [x] `sitemap.ts`'e 3 hub URL'si ekle (`changeFrequency: 'weekly'`,
       `priority: 0.7`, `alternates` ile).
 
 **Kabul:**
-- [ ] `/tr/burclar/uyum`, `/en/zodiac-signs/compatibility`,
+- [x] `/tr/burclar/uyum`, `/en/zodiac-signs/compatibility`,
       `/de/sternzeichen/kompatibilitaet` → 200, SSR HTML'de 78 kanonik çift
       linki + hreflang üçlüsü.
-- [ ] Sitemap'te 3 hub URL'si; `bun scripts/seo-i18n-audit.ts` 0 hata.
+- [x] Sitemap'te 3 hub URL'si; `bun scripts/seo-i18n-audit.ts` 0 hata.
 
 ### S1-T3 — Burç detayına 12'li uyum bloğu + karışık slug temizliği
 
 **Yapılacak:**
-- [ ] `ZodiacDetail.tsx:568` `uyum/${signKey}-koc` linkini kaldır; yerine o
+- [x] `ZodiacDetail.tsx:568` `uyum/${signKey}-koc` linkini kaldır; yerine o
       burcun 12 kombinasyonunu listeleyen SSR blok (kanonik slug + lokalize
       href + hub linki). Böylece her çift sayfası iki burç sayfasından da link
       alır (78 sayfanın tamamı ≥2 iç link).
-- [ ] Blok başlığı/metinleri ui_ anahtarlarıyla (3 dil seed).
+- [x] Blok başlığı/metinleri ui_ anahtarlarıyla (3 dil seed).
 
 **Kabul:**
-- [ ] `/tr/burclar/koc` HTML'inde 12 kanonik uyum linki + hub linki; hiçbir
+- [x] `/tr/burclar/koc` HTML'inde 12 kanonik uyum linki + hub linki; hiçbir
       yerde `-koc`/`-boga` tarzı karışık çift slug'ı kalmadı
       (`grep -rn 'uyum/\${' frontend/src` temiz).
 
 ### S1-T4 — Çift sayfasına çapraz linkler
 
 **Yapılacak:**
-- [ ] `[pair]/page.tsx` SSR bölümüne: iki burcun detay sayfası linki
+- [x] `[pair]/page.tsx` SSR bölümüne: iki burcun detay sayfası linki
       (lokalize), aynı elementten 3-4 ilgili çift (deterministik seçim,
       rastgele değil), hub linki. Sinastri CTA'sı zaten var, kalsın.
 
 **Kabul:**
-- [ ] `/tr/burclar/uyum/aries-taurus` HTML'inde: 2 burç detay + ≥3 ilgili çift
+- [x] `/tr/burclar/uyum/aries-taurus` HTML'inde: 2 burç detay + ≥3 ilgili çift
       + 1 hub linki.
+
+> 2026-08-29 Codex: T2-T4 yerel SSR kabulü geçti. Her hub dilinde 78 benzersiz
+> kanonik çift, Koç detayında 12 çift ve karışık takma adlı link sayısı 0;
+> `aries-taurus` sayfasında 2 profil ve 4 ilgili çift bağlantısı var.
 
 ### S1-T5 — Blog şablonuna "İlgili araçlar" SSR bölümü
 
@@ -149,16 +153,19 @@ T2-T3'ten önce varyant üretimi kapatılır.
 vermiyor; konu otoritesi kümeleri kopuk.
 
 **Yapılacak:**
-- [ ] Blog detay şablonuna server-rendered "İlgili araçlar" bölümü: yazı
+- [x] Blog detay şablonuna server-rendered "İlgili araçlar" bölümü: yazı
       slug'ına/anahtar kelimesine göre deterministik eşleme (sinastri→ uyum hub
       + `/sinastri`; tarot→ `/tarot`; retro/gezegen→ `/burclar` + günlük;
       rüya→ `/ruya-tabiri`; numeroloji→ `/numeroloji`; genel→ doğum haritası).
       Eşleme statik bir map dosyasında dursun; DB içeriğine dokunulmaz.
-- [ ] Başlık/metinler ui_ anahtarlı, 3 dil.
+- [x] Başlık/metinler ui_ anahtarlı, 3 dil.
 
 **Kabul:**
-- [ ] `/tr/blog/sinastri-uyumu-nasil-okunur` HTML'inde uyum hub + sinastri
+- [x] `/tr/blog/sinastri-uyumu-nasil-okunur` HTML'inde uyum hub + sinastri
       linkleri; EN/DE blog sayfalarında lokalize karşılıkları.
+
+> 2026-08-29 Codex: TR, EN ve DE sinastri yazıları canlı API verisiyle yerel
+> SSR'da 200 verdi; her dilde uyum hub'ı ve sinastri linki kanonik segmentle basıldı.
 
 ### S1-T6 — Hesaplayıcı kümesine içerik derinliği
 
@@ -166,21 +173,28 @@ vermiyor; konu otoritesi kümeleri kopuk.
 "yükselen burç hesaplama" (TR, poz. ~73).
 
 **Yapılacak:**
-- [ ] `LANDING_CONTENT['yukselen-burc']` üç dilde derinleştir: yükselenin ne
+- [x] `LANDING_CONTENT['yukselen-burc']` üç dilde derinleştir: yükselenin ne
       olduğu, doğum saati hassasiyeti (2 saat kuralı), ev sistemine etkisi,
       "saatimi bilmiyorum" (rektifikasyon CTA) bölümleri + en az 5 SSS.
       Mevcut editoryal üslup ve sorumlu-yorum çerçevesi korunur.
-- [ ] `SeoLandingArticle` SSS bölümü için FAQPage JSON-LD basıyor mu kontrol
+- [x] `SeoLandingArticle` SSS bölümü için FAQPage JSON-LD basıyor mu kontrol
       et; basmıyorsa ekle (yalnız gerçek, sayfada görünen SSS'lerle).
-- [ ] Hesaplayıcı sayfasından `buyuk-uclu`, `burcunu-ogren`, `birth-chart` ve
+- [x] Hesaplayıcı sayfasından `buyuk-uclu`, `burcunu-ogren`, `birth-chart` ve
       uyum hub'ına bağlamsal linkler; bu üç sayfadan da hesaplayıcıya geri link.
-- [ ] EN/TR/DE title+description'ı `017_seo_pages_seed.sql`'de sorgu niyetine
+- [x] EN/TR/DE title+description'ı `017_seo_pages_seed.sql`'de sorgu niyetine
       göre keskinleştir (EN örn. "Free Rising Sign Calculator — Exact by Birth
       Time"); yildizname'de yapılan işin aynısı.
 
 **Kabul:**
-- [ ] Üç dilde sayfa HTML'inde yeni bölümler + SSS; JSON-LD validator'dan
+- [x] Üç dilde sayfa HTML'inde yeni bölümler + SSS; JSON-LD validator'dan
       geçen FAQPage; typecheck + build yeşil.
+
+> 2026-08-29 Codex: TR/EN/DE yerel SSR çıktısında 5 görünür SSS ile eşleşen
+> `FAQPage` JSON-LD ve dört konu-kümesi linki doğrulandı; üç geri bağlantı da var.
+> Typecheck ve production build geçti.
+
+> Paket ön kabulü: canlı API verisi kullanan yerel Next 16 taraması
+> `398 URL · 0 hata · 0 dil uyarısı` sonucu verdi.
 
 ### S1-T7 — Paket kabulü (Claude Code yapar)
 

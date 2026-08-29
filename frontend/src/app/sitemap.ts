@@ -38,7 +38,7 @@ const STATIC_PAGES = [
   '/blog', '/daily', '/sinastri', '/tarot', '/kahve-fali', '/ruya-tabiri',
   '/numeroloji', '/yildizname',
   '/editorial-policy',
-  '/burclar', '/burcunu-ogren', '/unluler-ve-burclari',
+  '/burclar', '/burclar/uyum', '/burcunu-ogren', '/unluler-ve-burclari',
   '/yukselen-burc-hesaplayici', '/buyuk-uclu',
 ];
 
@@ -52,6 +52,7 @@ const STATIC_LASTMOD: Record<string, string> = {
   '/pricing': '2026-07-04T00:00:00.000Z',
   '/editorial-policy': '2026-07-04T00:00:00.000Z',
   '/burclar': '2026-07-04T00:00:00.000Z',
+  '/burclar/uyum': '2026-08-29T00:00:00.000Z',
 };
 
 /** Locale'lere göre alternates objesi üret — Next.js sitemap'e <xhtml:link> olarak basar. */
@@ -118,8 +119,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     STATIC_PAGES.map((page) => ({
       url: localizedUrl(locale, page),
       lastModified: new Date(STATIC_LASTMOD[page] || DEFAULT_LASTMOD),
-      changeFrequency: 'daily' as const,
-      priority: page === '' ? 1 : 0.8,
+      changeFrequency: page === '/burclar/uyum' ? 'weekly' as const : 'daily' as const,
+      priority: page === '' ? 1 : page === '/burclar/uyum' ? 0.7 : 0.8,
       alternates: buildAlternates(page),
     })),
   );
@@ -151,7 +152,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  // İkili burç uyumu — 66 tekrarsız çift × 3 dil. Sayfalar index,follow ve
+  // İkili burç uyumu — 78 tekrarsız çift × 3 dil. Sayfalar index,follow ve
   // sunucuda çifte özgü içerik basıyor (bkz. lib/zodiac/compatibility.ts);
   // sitemap'te olmadıkları için Google'ın keşfi tesadüfe kalmıştı.
   const compatibilityRoutes: MetadataRoute.Sitemap = LOCALES.flatMap((locale) =>

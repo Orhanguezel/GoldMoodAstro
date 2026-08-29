@@ -20,6 +20,13 @@ import FaqAccordion from '@/components/common/FaqAccordion';
 import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import { useBrand } from '@/hooks/useBrand';
 import { useUiSection } from '@/i18n';
+import {
+  canonicalSignPair,
+  toLocalizedPublicPath,
+  ZODIAC_SIGN_ORDER,
+  type PublicLocale,
+} from '@/i18n/localizedRoutes';
+import { SIGN_LABELS } from '@/lib/zodiac/pair';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 interface ZodiacDetailProps {
@@ -66,7 +73,17 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
   const info = infoFromQuery ?? initialInfo;
   const today = todayFromQuery ?? initialToday;
   const localePrefix = typeof locale === 'string' ? locale : 'tr';
+  const publicLocale = (localePrefix === 'en' || localePrefix === 'de' ? localePrefix : 'tr') as PublicLocale;
   const L = localizeSign(meta, localePrefix);
+  const compatibilityLinks = ZODIAC_SIGN_ORDER.map((otherSign) => {
+    const pair = canonicalSignPair(signKey, otherSign)!;
+    return {
+      key: otherSign,
+      label: SIGN_LABELS[publicLocale]?.[otherSign] ?? otherSign,
+      href: `/${publicLocale}${toLocalizedPublicPath(publicLocale, `/burclar/uyum/${pair.slug}`)}`,
+    };
+  });
+  const compatibilityHubHref = `/${publicLocale}${toLocalizedPublicPath(publicLocale, '/burclar/uyum')}`;
   const pick = (tr: string, en: string, de: string) =>
     localePrefix === 'tr' ? tr : localePrefix === 'de' ? de : en;
   // Tarih formatı locale'e göre — 'tr-TR' hardcode Almanca sayfada "5 Temmuz" gösteriyordu.
@@ -562,25 +579,36 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
         />
       </div>
 
+      <section className="mb-12 rounded-[2.5rem] border border-(--gm-border-soft) bg-(--gm-surface) p-8 shadow-(--gm-shadow-soft) md:p-10">
+        <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <h2 className={`${cinzel.className} text-2xl text-(--gm-text)`}>
+              {L.label} {ui('ui_zodiac_compat_block_title', 'compatibility with all signs')}
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-(--gm-text-dim)">
+              {ui('ui_zodiac_compat_block_intro', 'Open each canonical sign pair to compare element, modality and the angle between the signs.')}
+            </p>
+          </div>
+          <Link href={compatibilityHubHref} className="text-xs font-bold uppercase tracking-[0.18em] text-(--gm-gold) hover:underline">
+            {ui('ui_zodiac_compat_block_hub', 'All 78 combinations')} →
+          </Link>
+        </div>
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+          {compatibilityLinks.map((item) => (
+            <li key={item.key}>
+              <Link
+                href={item.href}
+                className="block rounded-xl border border-(--gm-border-soft) px-3 py-2 text-sm text-(--gm-text-dim) transition hover:border-(--gm-gold)/50 hover:text-(--gm-gold)"
+              >
+                {L.label} · {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {/* Internal Linking CTA */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <Link
-          href={localizePath(localePrefix, `/burclar/uyum/${signKey}-koc`)}
-          className="p-10 rounded-[2.5rem] bg-(--gm-surface) border border-(--gm-border-soft) hover:border-(--gm-gold)/40 transition-all group shadow-(--gm-shadow-soft) hover:shadow-(--gm-shadow-glow)"
-        >
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 rounded-full bg-(--gm-error)/10 flex items-center justify-center">
-              <Heart className="w-6 h-6 text-[var(--gm-error)]" />
-            </div>
-            <h4 className={`${cinzel.className} text-xl text-(--gm-text)`}>{ui('ui_zodiac_card_compat_title', 'Zodiac Compatibility')}</h4>
-          </div>
-          <p className="text-(--gm-text-dim) text-sm mb-8 leading-relaxed font-serif italic">
-            {L.label} {ui('ui_zodiac_card_compat_text', 'love and character compatibility with other signs in detail.')}
-          </p>
-          <div className="text-(--gm-gold) text-[10px] font-bold tracking-[0.3em] uppercase flex items-center gap-2">
-            {ui('ui_zodiac_card_compat_action', 'EXPLORE COMPATIBILITY')} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </div>
-        </Link>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
         <Link
           href={localizePath(localePrefix, '/birth-chart')}

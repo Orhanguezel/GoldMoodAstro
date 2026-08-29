@@ -20,6 +20,7 @@ import { getLanding } from '@/components/seo/seo-landing-content';
 import JsonLd from '@/seo/JsonLd';
 import { graph } from '@/seo/jsonld';
 import { webApplicationSchema } from '@/seo/toolSchemas';
+import RisingSignClusterLinks from '@/components/seo/RisingSignClusterLinks';
 
 export default async function BirthChartPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -48,6 +49,7 @@ export default async function BirthChartPage({ params }: { params: Promise<{ loc
         {/* Araç önce, uzun editoryal içerik sonra (2026-07-20 müşteri talebi):
             önceki sırada kullanıcı aracı görmek için ~4000px metin geçmek zorundaydı. */}
         <BirthChartPageClient />
+        <RisingSignClusterLinks locale={locale} mode="backlink" />
         <SeoLandingArticle type="birth-chart" locale={locale} />
       </PageContainer>
     </>

@@ -13,6 +13,10 @@ import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import BlogShareBar from '@/components/containers/blog/BlogShareBar';
 import BlogRelatedPosts from '@/components/containers/blog/BlogRelatedPosts';
 import { getServerApiBase } from '@/i18n/apiBase.server';
+import Link from 'next/link';
+import { fetchUiStrings } from '@/i18n/fetchUiStrings.server';
+import { toLocalizedPublicPath, type PublicLocale } from '@/i18n/localizedRoutes';
+import { relatedToolsForBlog } from '@/lib/blog/relatedTools';
 
 type PageProps = {
   params: Promise<{ locale: string; slug: string }>;
@@ -131,9 +135,18 @@ export default async function BlogDetailsPage({ params }: PageProps) {
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
   const authorConsultantId = safeStr(page?.author_consultant_id);
-  const author = authorConsultantId
-    ? await fetchBlogAuthor(authorConsultantId, locale)
-    : null;
+  const publicLocale = (locale === 'en' || locale === 'de' ? locale : 'tr') as PublicLocale;
+  const title = safeStr(page?.title) || titleFromSlug(slug, 'Blog Detail');
+  const relatedTools = relatedToolsForBlog(`${slug} ${title} ${safeStr(page?.summary)}`);
+  const relatedUiFallbacks: Record<string, string> = {
+    ui_blog_related_tools_title: publicLocale === 'tr' ? 'İlgili araçlar' : publicLocale === 'de' ? 'Passende Werkzeuge' : 'Related tools',
+    ui_blog_related_tools_intro: publicLocale === 'tr' ? 'Yazıdaki temayı bir sonraki adımda keşfetmek için ilgili rehber ve hesaplayıcıları açın.' : publicLocale === 'de' ? 'Öffne passende Leitfäden und Rechner, um das Thema des Artikels weiter zu erkunden.' : 'Open the relevant guides and calculators to explore the article topic further.',
+  };
+  for (const tool of relatedTools) relatedUiFallbacks[tool.labelKey] = tool.fallback[publicLocale];
+  const [author, relatedUi] = await Promise.all([
+    authorConsultantId ? fetchBlogAuthor(authorConsultantId, locale) : Promise.resolve(null),
+    fetchUiStrings(publicLocale, relatedUiFallbacks),
+  ]);
   const authorName = safeStr(author?.full_name) || 'GoldMoodAstro Editoryal Ekibi';
   const authorSlug = safeStr(author?.slug) || safeStr(author?.id);
   const authorUrl = authorSlug
@@ -144,7 +157,6 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   const relatedPosts = (Array.isArray(allPosts) ? allPosts : [])
     .filter((post) => safeStr(post?.slug) && safeStr(post?.slug) !== slug)
     .slice(0, 5);
-  const title = safeStr(page?.title) || titleFromSlug(slug, 'Blog Detail');
   const html = page ? downgradeH1ToH2(extractHtmlFromAny(page)) : '';
   const description = excerpt(
     safeStr(page?.summary) || html || title,
@@ -235,6 +247,23 @@ export default async function BlogDetailsPage({ params }: PageProps) {
                 </div>
               )}
             </div>
+
+            <section className="rounded-[2rem] border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-9">
+              <h2 className="font-serif text-2xl text-(--gm-text)">{relatedUi.ui_blog_related_tools_title}</h2>
+              <p className="mt-2 text-sm leading-6 text-(--gm-text-dim)">{relatedUi.ui_blog_related_tools_intro}</p>
+              <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+                {relatedTools.map((tool) => (
+                  <li key={tool.logicalPath}>
+                    <Link
+                      href={`/${publicLocale}${toLocalizedPublicPath(publicLocale, tool.logicalPath)}`}
+                      className="block rounded-xl border border-(--gm-border-soft) px-4 py-3 font-semibold text-(--gm-gold) transition hover:border-(--gm-gold)/50 hover:bg-(--gm-gold)/5"
+                    >
+                      {relatedUi[tool.labelKey]} →
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
 
             <FaqAccordion
               items={faqItems}

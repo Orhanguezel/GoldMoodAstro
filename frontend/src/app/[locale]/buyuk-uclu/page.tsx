@@ -8,6 +8,7 @@ import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
 import JsonLd from '@/seo/JsonLd';
 import { graph } from '@/seo/jsonld';
 import { webApplicationSchema } from '@/seo/toolSchemas';
+import RisingSignClusterLinks from '@/components/seo/RisingSignClusterLinks';
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -53,6 +54,7 @@ export default async function BuyukUcluPage({ params }: Props) {
           ])}
         />
         <BigThree />
+        <RisingSignClusterLinks locale={locale} mode="backlink" />
         {/* 2026-07-20: sayfada büyük üçlü hakkında hiç bilgi metni yoktu.
             Diğer landing sayfalarıyla aynı kalıp: araç önce, dil destekli
             editoryal içerik (tr/en/de) altında. */}

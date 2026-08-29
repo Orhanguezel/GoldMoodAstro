@@ -1,11 +1,19 @@
 import React from 'react';
+import Link from 'next/link';
 import ZodiacCompatibility from '@/components/containers/zodiac/ZodiacCompatibility';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { buildPageMetadata } from '@/seo/server';
 import { buildPairContent } from '@/lib/zodiac/compatibility';
-import { canonicalSignPair } from '@/i18n/localizedRoutes';
-import { parsePair } from '@/lib/zodiac/pair';
+import {
+  canonicalSignPair,
+  toLocalizedPublicPath,
+  ZODIAC_SIGN_ORDER,
+  type PublicLocale,
+} from '@/i18n/localizedRoutes';
+import { parsePair, SIGN_LABELS } from '@/lib/zodiac/pair';
+import { ZODIAC_META } from '@/lib/zodiac/signs';
+import { fetchUiStrings } from '@/i18n/fetchUiStrings.server';
 
 type Props = {
   params: Promise<{ pair: string; locale: string }>;
@@ -58,15 +66,36 @@ export default async function CompatibilityPage({ params }: Props) {
   if (!parsed) notFound();
   const canonicalPair = canonicalSignPair(parsed.signA, parsed.signB);
   if (!canonicalPair) notFound();
+  const publicLocale = (locale === 'en' || locale === 'de' ? locale : 'tr') as PublicLocale;
 
   // SUNUCUDA basılan içerik — interaktif bileşen istemcide yükleniyor ve
   // tarayıcı botları o yüzden bu sayfaları BOŞ görüyordu (dizine girmediler).
   const content = buildPairContent(canonicalPair.signA, canonicalPair.signB, locale);
+  const hubHref = `/${publicLocale}${toLocalizedPublicPath(publicLocale, '/burclar/uyum')}`;
+  const signHref = (sign: string) => `/${publicLocale}${toLocalizedPublicPath(publicLocale, `/burclar/${sign}`)}`;
+  const pairHref = (slug: string) => `/${publicLocale}${toLocalizedPublicPath(publicLocale, `/burclar/uyum/${slug}`)}`;
+  const currentSlug = canonicalPair.slug;
+  const relatedPairs = [canonicalPair.signA, canonicalPair.signB]
+    .flatMap((anchor) => ZODIAC_SIGN_ORDER
+      .filter((candidate) => candidate !== anchor && ZODIAC_META[candidate as keyof typeof ZODIAC_META]?.element === ZODIAC_META[anchor as keyof typeof ZODIAC_META]?.element)
+      .map((candidate) => canonicalSignPair(anchor, candidate)!))
+    .filter((candidate, index, rows) => candidate.slug !== currentSlug && rows.findIndex((row) => row.slug === candidate.slug) === index)
+    .slice(0, 4);
+  const crossCopy = await fetchUiStrings(publicLocale, publicLocale === 'tr'
+    ? { ui_compat_pair_breadcrumb: 'Tüm burç uyumları', ui_compat_pair_profiles: 'Burç profilleri', ui_compat_pair_related: 'İlgili uyum kombinasyonları', ui_compat_pair_all: '78 kombinasyonun tümünü görüntüle' }
+    : publicLocale === 'de'
+      ? { ui_compat_pair_breadcrumb: 'Alle Sternzeichen-Kombinationen', ui_compat_pair_profiles: 'Sternzeichenprofile', ui_compat_pair_related: 'Verwandte Kombinationen', ui_compat_pair_all: 'Alle 78 Kombinationen ansehen' }
+      : { ui_compat_pair_breadcrumb: 'All zodiac compatibility', ui_compat_pair_profiles: 'Zodiac sign profiles', ui_compat_pair_related: 'Related compatibility combinations', ui_compat_pair_all: 'View all 78 combinations' });
 
   return (
     <PageContainer className="bg-(--gm-bg)" verticalPadding="large">
       {content && (
         <section className="mx-auto mb-12 max-w-3xl">
+          <nav aria-label="Breadcrumb" className="mb-5 text-sm text-(--gm-muted)">
+            <Link href={hubHref} className="hover:text-(--gm-gold)">{crossCopy.ui_compat_pair_breadcrumb}</Link>
+            <span aria-hidden="true" className="mx-2">/</span>
+            <span>{content.labelA} · {content.labelB}</span>
+          </nav>
           <h1 className="mb-4 font-serif text-3xl leading-tight text-(--gm-text) md:text-4xl">
             {content.h1}
           </h1>
@@ -96,6 +125,34 @@ export default async function CompatibilityPage({ params }: Props) {
             <p className="mb-3 text-base leading-relaxed text-(--gm-text-dim)">{content.sameElementNote}</p>
           )}
           <p className="text-xs italic leading-relaxed text-(--gm-muted)">{content.disclaimer}</p>
+
+          <div className="mt-9 grid gap-5 md:grid-cols-2">
+            <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-5">
+              <h2 className="font-serif text-xl text-(--gm-text)">{crossCopy.ui_compat_pair_profiles}</h2>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {[canonicalPair.signA, canonicalPair.signB].map((sign) => (
+                  <Link key={sign} href={signHref(sign)} className="rounded-full border border-(--gm-gold)/30 px-3 py-2 text-sm text-(--gm-gold) hover:bg-(--gm-gold)/10">
+                    {SIGN_LABELS[publicLocale]?.[sign] ?? sign}
+                  </Link>
+                ))}
+              </div>
+            </section>
+            <section className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-5">
+              <h2 className="font-serif text-xl text-(--gm-text)">{crossCopy.ui_compat_pair_related}</h2>
+              <ul className="mt-3 space-y-2">
+                {relatedPairs.map((related) => (
+                  <li key={related.slug}>
+                    <Link href={pairHref(related.slug)} className="text-sm text-(--gm-text-dim) hover:text-(--gm-gold)">
+                      {SIGN_LABELS[publicLocale]?.[related.signA] ?? related.signA} · {SIGN_LABELS[publicLocale]?.[related.signB] ?? related.signB}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+          <Link href={hubHref} className="mt-5 inline-block text-sm font-semibold text-(--gm-gold) hover:underline">
+            {crossCopy.ui_compat_pair_all} →
+          </Link>
         </section>
       )}
 

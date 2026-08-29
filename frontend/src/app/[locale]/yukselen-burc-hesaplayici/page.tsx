@@ -10,20 +10,23 @@ type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
+  const fallback = locale === 'tr'
+    ? { title: 'Ücretsiz Yükselen Burç Hesaplama — Doğum Saati ve Yeriyle', description: 'Doğum tarihi, saati ve yerini kullanarak yükselen burcunuzu ücretsiz hesaplayın; yükselenin anlamını ve ev sistemine etkisini öğrenin.' }
+    : locale === 'de'
+      ? { title: 'Kostenloser Aszendent-Rechner — Mit Geburtszeit', description: 'Berechne deinen Aszendenten kostenlos mit Geburtsdatum, Uhrzeit und Ort und erfahre seine Bedeutung für Auftreten und Häusersystem.' }
+      : { title: 'Free Rising Sign Calculator — Exact by Birth Time', description: 'Calculate your rising sign free with birth date, exact time and place, then learn its meaning for first impressions and the house system.' };
   return buildPageMetadata({
     locale,
     pageKey: 'yukselen-burc-hesaplayici',
     pathname: '/yukselen-burc-hesaplayici',
-    fallback: {
-      title: 'Rising Sign Calculator — Free Birth Chart Analysis',
-      description: 'Find your rising sign in seconds with birth time and place. Discover your cosmic identity through the Sun, Moon and Rising sign trio.',
-    },
+    fallback,
   });
 }
 
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
+import RisingSignClusterLinks from '@/components/seo/RisingSignClusterLinks';
 
 export default async function RisingCalculatorPage({ params }: Props) {
   const { locale } = await params;
@@ -102,6 +105,7 @@ export default async function RisingCalculatorPage({ params }: Props) {
         </p>
       </section>
       <RisingSignCalculator locale={locale} />
+      <RisingSignClusterLinks locale={locale} mode="hub" />
       {/* 2026-07-20: sayfada yukselen burc hakkinda hic bilgi yoktu (248 kelime).
           Diger landing sayfalariyla ayni kalip: arac once, dil destekli icerik altinda. */}
       <SeoLandingArticle type="yukselen-burc" locale={locale} />

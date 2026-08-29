@@ -27,6 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
+import RisingSignClusterLinks from '@/components/seo/RisingSignClusterLinks';
 
 export default async function BurcunuOgrenPage({ params }: Props) {
   const { locale } = await params;
@@ -94,6 +95,7 @@ export default async function BurcunuOgrenPage({ params }: Props) {
         </p>
       </section>
       <ZodiacFinderQuiz />
+      <RisingSignClusterLinks locale={locale} mode="backlink" />
       {/* 2026-07-20: sayfa 368 kelimeydi, burc bulma hakkinda aciklama yoktu. */}
       <SeoLandingArticle type="burcunu-ogren" locale={locale} />
     </PageContainer>

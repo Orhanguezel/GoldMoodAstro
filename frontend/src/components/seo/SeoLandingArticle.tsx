@@ -6,6 +6,7 @@ import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import { getLanding, landingLocale, LANDING_UI, type LandingKey } from './seo-landing-content';
 import { fetchCustomPagePublicByLandingKey } from '@/seo/server';
 import { localizedPath } from '@/integrations/shared';
+import { toLocalizedPublicPath, type PublicLocale } from '@/i18n/localizedRoutes';
 
 export default async function SeoLandingArticle({ type, locale }: { type: LandingKey; locale: string }) {
   const fallback = getLanding(type, locale);
@@ -21,7 +22,9 @@ export default async function SeoLandingArticle({ type, locale }: { type: Landin
   };
   const ui = LANDING_UI[landingLocale(locale)];
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
-  const pageUrl = `${siteUrl}${localizedPath(locale, `/${type}`, 'tr')}`;
+  const publicLocale = (locale === 'en' || locale === 'de' ? locale : 'tr') as PublicLocale;
+  const logicalPath = type === 'yukselen-burc' ? '/yukselen-burc-hesaplayici' : `/${type}`;
+  const pageUrl = `${siteUrl}/${publicLocale}${toLocalizedPublicPath(publicLocale, logicalPath)}`;
   const aboutUrl = `${siteUrl}${localizedPath(locale, '/about', 'tr')}`;
   const image = data.image.startsWith('http') ? data.image : `${siteUrl}${data.image}`;
 

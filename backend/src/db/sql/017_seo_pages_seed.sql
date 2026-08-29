@@ -149,6 +149,12 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     "og_image": "/uploads/seo/og_horoscope.png",
     "no_index": false
   },
+  "burclar-uyumu": {
+    "title": "Burç Uyumu — 78 Kombinasyon Rehberi",
+    "description": "Koçtan Balığa 78 eşsiz burç uyumu kombinasyonunu element, nitelik ve ilişki dinamikleriyle karşılaştırın.",
+    "og_image": "/uploads/seo/og_horoscope.png",
+    "no_index": false
+  },
   "burclar-meditasyon": {
     "title": "Burç Meditasyonu ve Affirmasyonları",
     "description": "Bu burç için kısa sesli meditasyon, günlük affirmasyonlar ve element odaklı sakinleşme pratiği. Ruhsal denge ve içsel huzur için astroloji.",
@@ -168,8 +174,8 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     "no_index": false
   },
   "yukselen-burc-hesaplayici": {
-    "title": "Yükselen Burç Hesaplayıcı — Anında Sonuç",
-    "description": "Doğum tarihi, saati ve şehir ile yükselen burcunuzu hesaplayın. Yükselen burç anlamı, etkisi ve yorumu hemen.",
+    "title": "Ücretsiz Yükselen Burç Hesaplama — Doğum Saati ve Yeriyle",
+    "description": "Doğum tarihi, saati ve yerini kullanarak yükselen burcunuzu ücretsiz hesaplayın; yükselenin anlamını ve ev sistemine etkisini öğrenin.",
     "og_image": "/uploads/seo/og_horoscope.png",
     "no_index": false
   },
@@ -362,6 +368,12 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     "og_image": "/uploads/seo/og_horoscope.png",
     "no_index": false
   },
+  "burclar-uyumu": {
+    "title": "Zodiac Compatibility — All 78 Sign Combinations",
+    "description": "Compare all 78 unique zodiac compatibility combinations through element, modality and relationship dynamics.",
+    "og_image": "/uploads/seo/og_horoscope.png",
+    "no_index": false
+  },
   "burclar-meditasyon": {
     "title": "Zodiac Meditation & Affirmations",
     "description": "Short audio meditation, daily affirmations and element-focused calming practice for this zodiac sign. Spiritual balance through astrology.",
@@ -381,8 +393,8 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     "no_index": false
   },
   "yukselen-burc-hesaplayici": {
-    "title": "Rising Sign Calculator — Instant Result",
-    "description": "Calculate your rising sign with date, time and city of birth. Meaning, influence and interpretation of your rising sign — instantly.",
+    "title": "Free Rising Sign Calculator — Exact by Birth Time",
+    "description": "Calculate your rising sign free with birth date, exact time and place, then learn its meaning for first impressions and the house system.",
     "og_image": "/uploads/seo/og_horoscope.png",
     "no_index": false
   },
@@ -575,6 +587,12 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     "og_image": "/uploads/seo/og_horoscope.png",
     "no_index": false
   },
+  "burclar-uyumu": {
+    "title": "Sternzeichen-Kompatibilität — Alle 78 Kombinationen",
+    "description": "Vergleiche alle 78 einzigartigen Sternzeichen-Kombinationen nach Element, Qualität und Beziehungsdynamik.",
+    "og_image": "/uploads/seo/og_horoscope.png",
+    "no_index": false
+  },
   "burclar-meditasyon": {
     "title": "Sternzeichen-Meditation & Affirmationen",
     "description": "Kurze Audio-Meditation, tägliche Affirmationen und elementbezogene Beruhigungspraxis für dieses Sternzeichen. Spirituelles Gleichgewicht durch Astrologie.",
@@ -594,8 +612,8 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     "no_index": false
   },
   "yukselen-burc-hesaplayici": {
-    "title": "Aszendent-Rechner — Sofortiges Ergebnis",
-    "description": "Berechne deinen Aszendenten mit Geburtsdatum, -zeit und -ort. Bedeutung, Einfluss und Deutung deines Aszendenten — sofort.",
+    "title": "Kostenloser Aszendent-Rechner — Mit Geburtszeit",
+    "description": "Berechne deinen Aszendenten kostenlos mit Geburtsdatum, Uhrzeit und Ort und erfahre seine Bedeutung für Auftreten und Häusersystem.",
     "og_image": "/uploads/seo/og_horoscope.png",
     "no_index": false
   },
