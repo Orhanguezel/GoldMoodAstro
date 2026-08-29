@@ -75,3 +75,24 @@ yaklaşık `430 KB` üçüncü taraf yükü ve belirgin JS çalışma maliyeti o
 - EN/DE indekslenebilir ana sayfalarda Türkçe görünür içerik: `0` (canlı kabul geçti).
 - Sitemap URL'leri: `0` redirect, `0` canonical hatası, `0` hreflang hatası.
 - Coverage 5xx: yeniden tarama sonrası `0` aktif URL.
+
+## 29 Ağustos canlı takip
+
+- GSC sitemap durumu tamamlandı: `isPending=false`, son indirme 28 Ağustos
+  21:53 UTC, `395` gönderilen URL, `0` hata ve `0` uyarı.
+- Güncel sayfa fırsat kontrolünde `/en/yildizname`: `3` tıklama, `88` gösterim,
+  `%3,41` CTR ve `4,51` ortalama pozisyon. Görünür `yildizname` sorgusu özelinde
+  `20` gösterim, `0` tıklama ve `3,5` ortalama pozisyon bulundu.
+- İngilizce Yildizname başlık/açıklaması arama niyetine göre yenilendi; okuma
+  sonrası sabit `/tr/` yönlendirmesi aktif locale kullanacak şekilde düzeltildi.
+- Değişiklik `ddc351b` commit'iyle gönderildi; frontend/backend typecheck, CI
+  build gate ve production deploy geçti. Canlı metadata, locale sonuç akışı ve
+  tam sitemap crawl kabul edildi.
+
+### Takip checklist'i
+
+- [x] GSC sitemap işlenme durumu doğrulandı: `395 URL · 0 hata · 0 uyarı`.
+- [x] Pozisyonu 30 ve üzeri görünürlük fırsatları sayfa+sorgu bazında tarandı.
+- [x] `/en/yildizname` snippet ve locale sonuç akışı düzeltildi.
+- [x] `ddc351b` production deploy ve canlı metadata/akış kabulü.
+- [x] Deploy sonrası tam crawl: `395 URL · 0 hata · 0 dil uyarısı`.

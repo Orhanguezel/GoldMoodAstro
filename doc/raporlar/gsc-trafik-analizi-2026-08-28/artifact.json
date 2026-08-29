@@ -4,8 +4,8 @@
     "version": 1,
     "surface": "report",
     "title": "GoldMoodAstro Organik Trafik Teşhisi",
-    "description": "Canlı site, Search Console API ve 28 Ağustos 2026 Excel dışa aktarımlarının uzlaştırılmış teşhisi.",
-    "generatedAt": "2026-08-28T21:15:00.000Z",
+    "description": "Canlı site, Search Console API ve 28 Ağustos 2026 Excel dışa aktarımlarının uzlaştırılmış teşhisi; 29 Ağustos fırsat kontrolüyle güncellendi.",
+    "generatedAt": "2026-08-29T12:00:00.000Z",
     "sources": [
       {
         "id": "gsc_api_28d",
@@ -54,9 +54,21 @@
         "query": {
           "engine": "Canlı HTTP crawl",
           "sql": "SELECT * FROM live_seo_audit_snapshot",
-          "description": "Sitemap içindeki 399 URL için durum, canonical, hreflang ve html lang kontrolü; 27 eski 5xx URL için canlı HTTP yeniden denetimi.",
+          "description": "Sitemap içindeki 395 URL için durum, canonical, hreflang ve html lang kontrolü; 27 eski 5xx URL için canlı HTTP yeniden denetimi.",
           "executed_at": "2026-08-28T20:51:00.000Z",
           "filters": ["Canlı origin: https://goldmoodastro.com"]
+        }
+      },
+      {
+        "id": "gsc_api_opportunity_2026_08_29",
+        "label": "Google Search Console API - sayfa ve sorgu fırsat kontrolü",
+        "href": "https://search.google.com/search-console/performance/search-analytics?resource_id=sc-domain%3Agoldmoodastro.com",
+        "query": {
+          "engine": "Google Search Console API",
+          "sql": "SELECT * FROM gsc_page_query_opportunity_snapshot",
+          "description": "Pozisyonu 30 veya daha iyi ve en az 10 gösterimi olan sayfalar ile görünür sorgu kırılımları.",
+          "executed_at": "2026-08-29T10:30:00.000Z",
+          "filters": ["Arama türü: Web", "Dönem: 30 Temmuz-26 Ağustos 2026"]
         }
       }
     ],
@@ -82,14 +94,14 @@
       {
         "id": "executive_summary",
         "type": "markdown",
-        "body": "# Organik trafik teşhisi\n\n- **Ana sorun sıralama:** son 28 gün 69 tıklama, 1.231 gösterim, ortalama pozisyon 68,5; 70 sayfa tıklamasının 52'si ana sayfada.\n- **Teknik paket canlıda:** aktif toplu 5xx yok; EN/DE fallback ve redirect iç linkleri kapatıldı. Canlı tarama: 395 URL, 0 hata, 0 dil uyarısı."
+        "body": "# Organik trafik teşhisi\n\n- **Ana sorun sıralama:** son 28 gün 69 tıklama, 1.231 gösterim, ortalama pozisyon 68,5; 70 sayfa tıklamasının 52'si ana sayfada.\n- **Teknik temel temiz:** sitemap Google tarafından 395 URL ile işlendi; 0 hata, 0 uyarı. Canlı tarama da 395 URL, 0 hata, 0 dil uyarısı verdi.\n- **İlk CTR testi yayında:** `/en/yildizname` 88 gösterimde 3 tıklama ve 4,5 ortalama pozisyondaydı; arama niyeti odaklı snippet ve EN sonuç yönlendirmesi düzeltildi."
       },
       { "id": "weekly_clicks_block", "type": "chart", "chartId": "weekly_clicks" }
     ]
   },
   "snapshot": {
     "version": 1,
-    "generatedAt": "2026-08-28T21:15:00.000Z",
+    "generatedAt": "2026-08-29T12:00:00.000Z",
     "status": "ready",
     "datasets": {
       "weekly_performance": [
@@ -129,7 +141,7 @@
       "priority_pages": [
         { "page": "/en/rising-sign-calculator", "clicks": 6, "impressions": 300, "ctr": 0.02, "position": 79.16, "action": "Otorite ve içerik kümesi" },
         { "page": "/en/yukselen-burc-hesaplayici", "clicks": 1, "impressions": 299, "ctr": 0.003344, "position": 83.57, "action": "Eski URL; 308 ve iç-link temizliği" },
-        { "page": "/en/yildizname", "clicks": 3, "impressions": 87, "ctr": 0.034483, "position": 4.55, "action": "Başlık/açıklama ve niyet testi" },
+        { "page": "/en/yildizname", "clicks": 3, "impressions": 88, "ctr": 0.034091, "position": 4.51, "action": "Snippet testi yayında; EN sonuç yönlendirmesi düzeltildi" },
         { "page": "/de/sternzeichen/zwillinge/heute", "clicks": 0, "impressions": 80, "ctr": 0, "position": 86.25, "action": "İçerik değeri ve rekabet kontrolü" },
         { "page": "/tr/dogum-haritasi", "clicks": 0, "impressions": 69, "ctr": 0, "position": 43.91, "action": "TR konu kümesi ve iç link" },
         { "page": "/index.html/consultants", "clicks": 1, "impressions": 34, "ctr": 0.029412, "position": 10.53, "action": "Legacy gösterimi izleyip düşür" },
@@ -165,6 +177,11 @@
       "id": "live_crawl",
       "label": "GoldMoodAstro canlı crawl",
       "href": "https://goldmoodastro.com/sitemap.xml"
+    },
+    {
+      "id": "gsc_api_opportunity_2026_08_29",
+      "label": "Google Search Console API - sayfa ve sorgu fırsat kontrolü",
+      "href": "https://search.google.com/search-console/performance/search-analytics?resource_id=sc-domain%3Agoldmoodastro.com"
     }
   ]
 }
