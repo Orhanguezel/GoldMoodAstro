@@ -117,15 +117,16 @@ function wrap(text: string, maxChars: number, maxLines: number) {
   let cur = "";
   for (const word of words) {
     const candidate = cur ? `${cur} ${word}` : word;
-    if (candidate.length > maxChars && cur) {
+    // Son satıra gelindiyse kalan kelimeler ATILMAZ — birikir, taşarsa aşağıda "…" alır.
+    // (Eski `break` kalan kelimeleri sessizce yutuyordu: "İçin 3 Bilgi" → "İçin 3".)
+    if (candidate.length > maxChars && cur && lines.length < maxLines - 1) {
       lines.push(cur);
       cur = word;
-      if (lines.length >= maxLines - 1) break;
     } else {
       cur = candidate;
     }
   }
-  if (cur && lines.length < maxLines) lines.push(cur);
+  if (cur) lines.push(cur);
   if (lines.length === maxLines && lines[maxLines - 1]!.length > maxChars) {
     lines[maxLines - 1] = `${lines[maxLines - 1]!.slice(0, maxChars - 1).trim()}…`;
   }
@@ -192,16 +193,19 @@ function palette(variant: Slide["variant"] = "deep") {
 }
 
 function overlaySvg(slide: Slide, width: number, height: number) {
+  // FEED/CAROUSEL (1080x1350) düzeni v2 — 2026-09-04: story ile aynı büyütme.
+  // Story artık storyOverlaySvg'de; buradaki height>1500 dalları yalnız güvenlik için durur.
   const p = palette(slide.variant);
-  const titleLines = wrap(slide.title, width > 1080 ? 22 : 19, 3);
-  const bodyLines = wrap(slide.body ?? "", width >= 1080 && height > 1500 ? 28 : 36, height > 1500 ? 6 : 5);
-  const titleSize = height > 1500 ? 70 : 56;
-  const bodySize = height > 1500 ? 36 : 30;
-  const topY = height > 1500 ? 120 : 96;
-  const titleY = height > 1500 ? 905 : 690;
-  const bodyY = height > 1500 ? 1160 : 910;
-  const panelY = height > 1500 ? 1048 : 820;
-  const panelH = height > 1500 ? 470 : 330;
+  const longTitle = slide.title.length > 30;
+  const titleSize = height > 1500 ? 70 : longTitle ? 60 : 72;
+  const titleLines = wrap(slide.title, height > 1500 ? 19 : longTitle ? 24 : 19, height > 1500 ? 3 : 2);
+  const bodyLines = wrap(slide.body ?? "", height > 1500 ? 28 : 34, 5);
+  const bodySize = height > 1500 ? 36 : 38;
+  const topY = height > 1500 ? 120 : 100;
+  const titleY = height > 1500 ? 905 : 640;
+  const bodyY = height > 1500 ? 1160 : 928;
+  const panelY = height > 1500 ? 1048 : 848;
+  const panelH = height > 1500 ? 470 : 316;
 
   return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -224,15 +228,15 @@ function overlaySvg(slide: Slide, width: number, height: number) {
   <rect width="${width}" height="${height}" fill="url(#orb)"/>
   <rect width="${width}" height="${height}" fill="url(#veil)"/>
   <rect x="48" y="48" width="${width - 96}" height="${height - 96}" rx="36" fill="none" stroke="${p.line}" stroke-opacity=".62" stroke-width="2.4"/>
-  <text x="82" y="${topY}" font-family="Georgia, serif" font-size="30" font-weight="900" letter-spacing="4" fill="${p.gold}">GOLDMOODASTRO</text>
-  <text x="82" y="${topY + 38}" font-family="Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="3.5" fill="${p.muted}">${esc(slide.kicker ?? "AĞUSTOS 2026")}</text>
-  <rect x="${width * 0.09}" y="${panelY}" width="${width * 0.82}" height="${panelH}" rx="34" fill="${p.panel}" stroke="${p.line}" stroke-opacity=".58" filter="url(#shadow)"/>
-  <text x="${width / 2}" y="${titleY}" text-anchor="middle" font-family="Georgia, serif" font-size="${titleSize}" font-weight="900" fill="${p.text}">${tspans(titleLines, width / 2, titleSize * 0.95)}</text>
-  ${slide.subtitle ? `<text x="${width / 2}" y="${titleY + titleLines.length * titleSize * 0.93 + 42}" text-anchor="middle" font-family="Arial, sans-serif" font-size="${height > 1500 ? 31 : 27}" font-weight="900" letter-spacing=".5" fill="${p.gold}">${esc(slide.subtitle)}</text>` : ""}
-  ${slide.body ? `<text x="${width / 2}" y="${bodyY}" text-anchor="middle" font-family="Georgia, serif" font-size="${bodySize}" fill="${p.text}" opacity=".96">${tspans(bodyLines, width / 2, bodySize * 1.34)}</text>` : ""}
-  <rect x="${width * 0.18}" y="${height - 180}" width="${width * 0.64}" height="68" rx="24" fill="${p.panel2}" stroke="${p.line}" stroke-opacity=".72"/>
-  <text x="${width / 2}" y="${height - 137}" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="900" fill="${p.gold}">${esc(slide.footer ?? "Kaydet • Yorumlara yaz • Paylaş")}</text>
-  <text x="${width / 2}" y="${height - 72}" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="${p.gold}" opacity=".88">goldmoodastro.com</text>
+  <text x="82" y="${topY}" font-family="Georgia, serif" font-size="34" font-weight="900" letter-spacing="4" fill="${p.gold}">GOLDMOODASTRO</text>
+  <text x="82" y="${topY + 44}" font-family="Arial, sans-serif" font-size="22" font-weight="800" letter-spacing="3.5" fill="${p.muted}">${esc(slide.kicker ?? "AĞUSTOS 2026")}</text>
+  <rect x="${width * 0.07}" y="${panelY}" width="${width * 0.86}" height="${panelH}" rx="34" fill="${p.panel}" stroke="${p.line}" stroke-opacity=".58" filter="url(#shadow)"/>
+  <text x="${width / 2}" y="${titleY}" text-anchor="middle" font-family="Georgia, serif" font-size="${titleSize}" font-weight="900" fill="${p.text}">${tspans(titleLines, width / 2, titleSize * 0.98)}</text>
+  ${slide.subtitle ? `<text x="${width / 2}" y="${titleY + titleLines.length * titleSize * 0.93 + 46}" text-anchor="middle" font-family="Arial, sans-serif" font-size="${height > 1500 ? 31 : 32}" font-weight="900" letter-spacing=".5" fill="${p.gold}">${esc(slide.subtitle)}</text>` : ""}
+  ${slide.body ? `<text x="${width / 2}" y="${bodyY}" text-anchor="middle" font-family="Georgia, serif" font-size="${bodySize}" fill="${p.text}" opacity=".97">${tspans(bodyLines, width / 2, Math.round(bodySize * 1.32))}</text>` : ""}
+  <rect x="${width * 0.14}" y="${height - 182}" width="${width * 0.72}" height="84" rx="30" fill="${p.panel2}" stroke="${p.line}" stroke-opacity=".72"/>
+  <text x="${width / 2}" y="${height - 128}" text-anchor="middle" font-family="Arial, sans-serif" font-size="${(slide.footer ?? "").length > 40 ? 26 : 30}" font-weight="900" fill="${p.gold}">${esc(slide.footer ?? "Kaydet • Yorumlara yaz • Paylaş")}</text>
+  <text x="${width / 2}" y="${height - 62}" text-anchor="middle" font-family="Georgia, serif" font-size="26" fill="${p.gold}" opacity=".88">goldmoodastro.com</text>
 </svg>`;
 }
 
