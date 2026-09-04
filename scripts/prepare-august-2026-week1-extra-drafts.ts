@@ -294,7 +294,7 @@ function storyOverlaySvg(slide: Slide, width: number, height: number) {
   ${subtitleSvg}
   ${bodySvg}
   <rect x="${Math.round(width * 0.13)}" y="1498" width="${Math.round(width * 0.74)}" height="96" rx="48" fill="${p.panel2}" stroke="${p.gold}" stroke-opacity=".85" stroke-width="2.2" filter="url(#storyShadow)"/>
-  <text x="${width / 2}" y="1560" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="900" fill="${p.gold}">${esc(slide.footer ?? "Kaydet • Yorumlara yaz • Paylaş")}</text>
+  <text x="${width / 2}" y="1560" text-anchor="middle" font-family="Arial, sans-serif" font-size="${(slide.footer ?? "").length > 40 ? 28 : 34}" font-weight="900" fill="${p.gold}">${esc(slide.footer ?? "Kaydet • Yorumlara yaz • Paylaş")}</text>
   <text x="${width / 2}" y="1652" text-anchor="middle" font-family="Georgia, serif" font-size="27" letter-spacing="2" fill="${p.gold}" opacity=".9">GOLDMOODASTRO · goldmoodastro.com</text>
 </svg>`;
 }

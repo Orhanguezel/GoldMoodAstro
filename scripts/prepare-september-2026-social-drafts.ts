@@ -74,7 +74,7 @@ const coffee = (slug: string) => path.resolve(ROOT, `backend/uploads/symbols/cof
 const tarot = (slug: string) => path.resolve(ROOT, `backend/uploads/tarot/${slug}.png`);
 const numerology = (n: number) => path.resolve(ROOT, `backend/uploads/symbols/numerology/${n}.png`);
 
-const specs: Spec[] = [
+export const specs: Spec[] = [
   { day: 1, slug: "eylul-rehberi", title: "Eylül İçin Tek Bir Niyet Seç", subtitle: "30 gün • tek odak", body: "Ay boyunca takip edebileceğin tek bir farkındalık alanı seç: ilişki, düzen, iç ses ya da iletişim.", secondTitle: "Niyeti Ölçülebilir Yap", secondBody: "Ay sonunda cevaplayacağın tek soruyu şimdi yaz. Böylece değişimi yalnız hissetmez, fark edersin.", cta: "Niyetini yorumlara tek kelimeyle yaz", url: `${SITE}/tr/blog`, asset: assets.door, secondAsset: assets.road },
   { day: 2, slug: "yukselen-nedir", title: "Yükselen Burç Neyi Anlatır?", subtitle: "Doğum saati neden önemli?", body: "Yükselen burç hesabı doğum tarihi, doğum saati ve doğum yerine dayanır. Saat bilinmiyorsa sonuç yaklaşık kalır.", secondTitle: "Ücretsiz Hesapla", secondBody: "Bilgilerini doğru gir, sonucu kaydet ve burç detayındaki açıklamayla birlikte oku.", cta: "Yükselenini hesaplamak için bağlantıya git", url: `${SITE}/tr/yukselen-burc-hesaplayici`, asset: assets.natal, secondAsset: assets.sun, campaign: true },
   { day: 3, slug: "ruyada-kapi", title: "Rüyada Kapı Görmek", subtitle: "Sözlükten sembol okuması", body: "", secondTitle: "Bağlamı Unutma", secondBody: "Kapı açık mıydı, kapalı mıydı; sen içeri mi giriyor, dışarı mı çıkıyordun? Yorumu rüyanın bağlamıyla birlikte düşün.", cta: "Rüya sözlüğünde diğer sembollere bak", url: `${SITE}/tr/ruya-tabirleri`, asset: dream("door"), symbols: { source: "dream", slugs: ["door"] } },
@@ -255,7 +255,11 @@ async function main() {
   console.log(WRITE_DB ? "DB: Eylül kayıtları zamanlandı." : "DB: yazılmadı; --db ile zamanlanır.");
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+// import.meta.main koşulu: specs artık başka scriptlerce import ediliyor (story v2
+// üreticisi); import sırasında tüm ayın render'ı tetiklenmemeli.
+if (import.meta.main) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
