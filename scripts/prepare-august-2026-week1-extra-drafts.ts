@@ -228,8 +228,8 @@ function overlaySvg(slide: Slide, width: number, height: number) {
   <rect width="${width}" height="${height}" fill="url(#orb)"/>
   <rect width="${width}" height="${height}" fill="url(#veil)"/>
   <rect x="48" y="48" width="${width - 96}" height="${height - 96}" rx="36" fill="none" stroke="${p.line}" stroke-opacity=".62" stroke-width="2.4"/>
-  <text x="82" y="${topY}" font-family="Georgia, serif" font-size="34" font-weight="900" letter-spacing="4" fill="${p.gold}">GOLDMOODASTRO</text>
-  <text x="82" y="${topY + 44}" font-family="Arial, sans-serif" font-size="22" font-weight="800" letter-spacing="3.5" fill="${p.muted}">${esc(slide.kicker ?? "AĞUSTOS 2026")}</text>
+  <text x="${width / 2}" y="${topY}" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-weight="900" letter-spacing="4" fill="${p.gold}">GOLDMOODASTRO</text>
+  <text x="${width / 2}" y="${topY + 44}" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="800" letter-spacing="3.5" fill="${p.muted}">${esc(slide.kicker ?? "AĞUSTOS 2026")}</text>
   <rect x="${width * 0.07}" y="${panelY}" width="${width * 0.86}" height="${panelH}" rx="34" fill="${p.panel}" stroke="${p.line}" stroke-opacity=".58" filter="url(#shadow)"/>
   <text x="${width / 2}" y="${titleY}" text-anchor="middle" font-family="Georgia, serif" font-size="${titleSize}" font-weight="900" fill="${p.text}">${tspans(titleLines, width / 2, titleSize * 0.98)}</text>
   ${slide.subtitle ? `<text x="${width / 2}" y="${titleY + titleLines.length * titleSize * 0.93 + 46}" text-anchor="middle" font-family="Arial, sans-serif" font-size="${height > 1500 ? 31 : 32}" font-weight="900" letter-spacing=".5" fill="${p.gold}">${esc(slide.subtitle)}</text>` : ""}
