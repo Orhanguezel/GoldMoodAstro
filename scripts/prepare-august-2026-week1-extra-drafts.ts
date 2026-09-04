@@ -236,6 +236,69 @@ function overlaySvg(slide: Slide, width: number, height: number) {
 </svg>`;
 }
 
+/**
+ * STORY (1080x1920) düzeni v2 — 2026-09-04 Orhan kararı: "yazılar büyük olacak,
+ * telde okunmalı". Eski overlaySvg story'de üç hata üretiyordu:
+ *   1. Marka bloğu SOL ÜSTTE — IG Story'nin avatar+kullanıcı adı katmanı tam üstüne biniyor.
+ *   2. Gövde 36px / CTA 24px — 1920px tuvalde telefonda okunmuyor.
+ *   3. Alt bölge IG "yanıtla" çubuğunun altında kalıyordu.
+ * v2: kritik içerik y∈[210,1650] güvenli bandında; rozet ORTADA, marka ALT-ORTADA,
+ * başlık 96px, gövde 44px, CTA 34px. Feed (1350) düzeni overlaySvg'de değişmeden durur.
+ */
+function storyOverlaySvg(slide: Slide, width: number, height: number) {
+  const p = palette(slide.variant);
+  const chipText = (slide.kicker ?? "GOLDMOODASTRO").toLocaleUpperCase("tr-TR");
+  const chipW = Math.min(920, Math.round(chipText.length * 16.5) + 110);
+  const titleSize = slide.title.length > 26 ? 80 : 96;
+  const titleLines = wrap(slide.title, titleSize === 96 ? 15 : 18, 3);
+  const titleDy = Math.round(titleSize * 1.06);
+  const titleY = 1030;
+  let cursor = titleY + (titleLines.length - 1) * titleDy;
+
+  let subtitleSvg = "";
+  if (slide.subtitle) {
+    cursor += 72;
+    subtitleSvg = `<text x="${width / 2}" y="${cursor}" text-anchor="middle" font-family="Arial, sans-serif" font-size="40" font-weight="900" letter-spacing="1" fill="${p.gold}">${esc(slide.subtitle)}</text>`;
+  }
+
+  let bodySvg = "";
+  if (slide.body) {
+    // 3 satıra sığmayan gövde SESSİZCE kesilmesin: 4. satır hakkı + uzunsa 40px'e düş.
+    const long = slide.body.length > 100;
+    const bodySize = long ? 40 : 44;
+    const bodyLines = wrap(slide.body, long ? 38 : 34, 4);
+    bodySvg = `<text x="${width / 2}" y="${cursor + 82}" text-anchor="middle" font-family="Georgia, serif" font-size="${bodySize}" fill="${p.text}" opacity=".98">${tspans(bodyLines, width / 2, Math.round(bodySize * 1.32))}</text>`;
+  }
+
+  return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="storyVeil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#05020a" stop-opacity=".28"/>
+      <stop offset=".40" stop-color="#05020a" stop-opacity=".16"/>
+      <stop offset=".55" stop-color="#05020a" stop-opacity=".55"/>
+      <stop offset=".78" stop-color="#05020a" stop-opacity=".88"/>
+      <stop offset="1" stop-color="#05020a" stop-opacity=".95"/>
+    </linearGradient>
+    <radialGradient id="storyOrb" cx="76%" cy="12%" r="45%">
+      <stop offset="0" stop-color="${slide.accent ?? p.gold}" stop-opacity=".40"/>
+      <stop offset="1" stop-color="${slide.accent ?? p.gold}" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="storyShadow"><feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#000" flood-opacity=".38"/></filter>
+  </defs>
+  <rect width="${width}" height="${height}" fill="url(#storyOrb)"/>
+  <rect width="${width}" height="${height}" fill="url(#storyVeil)"/>
+  <rect x="40" y="40" width="${width - 80}" height="${height - 80}" rx="40" fill="none" stroke="${p.line}" stroke-opacity=".55" stroke-width="2.4"/>
+  <rect x="${Math.round((width - chipW) / 2)}" y="206" width="${chipW}" height="64" rx="32" fill="${p.panel}" stroke="${p.line}" stroke-opacity=".65" filter="url(#storyShadow)"/>
+  <text x="${width / 2}" y="${206 + 43}" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="900" letter-spacing="3.5" fill="${p.gold}">${esc(chipText)}</text>
+  <text x="${width / 2}" y="${titleY}" text-anchor="middle" font-family="Georgia, serif" font-size="${titleSize}" font-weight="900" fill="${p.text}" filter="url(#storyShadow)">${tspans(titleLines, width / 2, titleDy)}</text>
+  ${subtitleSvg}
+  ${bodySvg}
+  <rect x="${Math.round(width * 0.13)}" y="1498" width="${Math.round(width * 0.74)}" height="96" rx="48" fill="${p.panel2}" stroke="${p.gold}" stroke-opacity=".85" stroke-width="2.2" filter="url(#storyShadow)"/>
+  <text x="${width / 2}" y="1560" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="900" fill="${p.gold}">${esc(slide.footer ?? "Kaydet • Yorumlara yaz • Paylaş")}</text>
+  <text x="${width / 2}" y="1652" text-anchor="middle" font-family="Georgia, serif" font-size="27" letter-spacing="2" fill="${p.gold}" opacity=".9">GOLDMOODASTRO · goldmoodastro.com</text>
+</svg>`;
+}
+
 function artFrameSvg(width: number, height: number, size: number, top: number, slide: Slide) {
   const p = palette(slide.variant);
   const left = Math.round((width - size) / 2);
@@ -252,10 +315,10 @@ function tarotCardNumbersSvg(width: number, height: number) {
   const isStory = height > 1500;
   const cards = isStory
     ? [
-        { x: 300, y: 205, n: "1", w: 200 },
-        { x: 580, y: 205, n: "2", w: 200 },
-        { x: 300, y: 505, n: "3", w: 200 },
-        { x: 580, y: 505, n: "4", w: 200 },
+        { x: 300, y: 327, n: "1", w: 200 },
+        { x: 580, y: 327, n: "2", w: 200 },
+        { x: 300, y: 627, n: "3", w: 200 },
+        { x: 580, y: 627, n: "4", w: 200 },
       ]
     : [
         { x: 315, y: 145, n: "1", w: 190 },
@@ -322,15 +385,16 @@ async function renderSlide(fileName: string, slide: Slide, size: "post" | "story
     const isStory = size === "story";
     const cardW = isStory ? 200 : 190;
     const card = await tarotCardBuffer(cardW);
+    // Story'de +122px aşağı: v2 düzeninin ortalanmış rozet çipi üstte yer alıyor.
     const frame = isStory
-      ? { x: 258, y: 178, w: 564, h: 660 }
+      ? { x: 258, y: 300, w: 564, h: 660 }
       : { x: 285, y: 122, w: 510, h: 520 };
     const positions = isStory
       ? [
-          { left: 300, top: 205 },
-          { left: 580, top: 205 },
-          { left: 300, top: 505 },
-          { left: 580, top: 505 },
+          { left: 300, top: 327 },
+          { left: 580, top: 327 },
+          { left: 300, top: 627 },
+          { left: 580, top: 627 },
         ]
       : [
           { left: 315, top: 145 },
@@ -348,13 +412,17 @@ async function renderSlide(fileName: string, slide: Slide, size: "post" | "story
     }
     composites.push({ input: Buffer.from(tarotCardNumbersSvg(width, height)), left: 0, top: 0 });
   } else if (slide.asset) {
-    const artSize = size === "story" ? 590 : 360;
-    const top = size === "story" ? 220 : 178;
+    const artSize = size === "story" ? 600 : 360;
+    const top = size === "story" ? 330 : 178;
     const art = await roundedArtBuffer(slide.asset, artSize);
     composites.push({ input: Buffer.from(artFrameSvg(width, height, artSize, top, slide)), left: 0, top: 0 });
     composites.push({ input: art, left: Math.round((width - artSize) / 2), top });
   }
-  composites.push({ input: Buffer.from(overlaySvg(slide, width, height)), left: 0, top: 0 });
+  composites.push({
+    input: Buffer.from(size === "story" ? storyOverlaySvg(slide, width, height) : overlaySvg(slide, width, height)),
+    left: 0,
+    top: 0,
+  });
 
   await sharp(base).composite(composites).png({ compressionLevel: 9 }).toFile(filePath);
   return `${context.publicDir}/${fileName}`;
