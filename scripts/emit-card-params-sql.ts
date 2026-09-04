@@ -12,6 +12,30 @@
  */
 import { specs } from "./prepare-september-2026-social-drafts";
 
+const SYMBOL_API: Record<"dream" | "coffee", string> = { dream: "dreams", coffee: "coffee" };
+const symbolCache: Record<string, Map<string, { name: string; meaning: string }>> = {};
+
+/**
+ * Sembol günlerinde (rüya/kahve) gövde metni spec'te BOŞTUR — carousel üretiminde
+ * canlı sözlük API'sinden çekiliyordu. Kart parametresine de aynı metni yazmazsak
+ * panelden yeniden üretilen kart gövdesiz çıkar (2026-09-05'te yakalandı).
+ */
+async function symbolBody(source: "dream" | "coffee" | "tarot", slugs: string[]): Promise<string> {
+  if (source === "tarot") return "";
+  if (!symbolCache[source]) {
+    const res = await fetch(`${SITE}/api/${SYMBOL_API[source]}/symbols?locale=tr`);
+    const rows = (await res.json()).data as Array<{ slug: string; name_tr: string; meaning: string }>;
+    symbolCache[source] = new Map(rows.map((r) => [r.slug, { name: r.name_tr, meaning: r.meaning }]));
+  }
+  return slugs
+    .map((slug) => {
+      const row = symbolCache[source]!.get(slug);
+      if (!row) throw new Error(`${source}/${slug} sözlükte yok`);
+      return `${row.name}: ${row.meaning.trim().replace(/\.$/, "")}.`;
+    })
+    .join(" ");
+}
+
 const BRAND = { name: "GoldMoodAstro", domain: "goldmoodastro.com", accent: "#F0D890" };
 const SITE = "https://goldmoodastro.com";
 
@@ -71,13 +95,14 @@ for (const spec of specs) {
 
   // CAROUSEL kapak karesi (6–30 Eylül, burç günleri hariç) — FB ve IG ayrı kayıt
   if (spec.day >= 6 && !EXCLUDED_CAROUSEL.has(spec.day)) {
+    const body = spec.symbols ? await symbolBody(spec.symbols.source, spec.symbols.slugs) : spec.body;
     for (const platform of ["fb", "ig"] as const) {
       lines.push(updateFor(`gm-carousel-v2:${platform}:${code}:${spec.slug}`, {
         template: "feed",
         kicker: "EYLÜL 2026",
         title: spec.title,
         subtitle: spec.subtitle,
-        body: spec.body,
+        body,
         cta: spec.cta,
         variant: spec.campaign ? "gold" : "deep",
         assetUrl: assetUrl(spec.asset),
@@ -89,5 +114,7 @@ for (const spec of specs) {
 }
 
 lines.push("", `-- Toplam ${count} kayıt.`);
-lines.push(`SELECT COUNT(*) AS card_params_dolu FROM social_posts WHERE sub_type='goldmoodastro' AND JSON_EXTRACT(notes,'$.cardParams') IS NOT NULL;`);
+// JSON_VALID koruması ŞART: bazı eski gönderilerin notes'u DÜZ METİN; korumasız
+// JSON_EXTRACT tüm betiği ERROR 3141 ile düşürüyordu (2026-09-05'te yaşandı).
+lines.push(`SELECT COUNT(*) AS card_params_dolu FROM social_posts WHERE sub_type='goldmoodastro' AND JSON_VALID(notes) AND JSON_EXTRACT(notes,'$.cardParams') IS NOT NULL;`);
 console.log(lines.join("\n"));
