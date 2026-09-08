@@ -238,3 +238,8 @@ Doğrulama sonrası **taslak deney**: mevcut harita açıklamasıyla ilgili niye
 Panel doğrulaması: GoldMood tenantında rakip analiz sayfası açıldı; rapor API’si HTTP 200 verdi. Panelin genel “AI raporu var” rozeti kaynak yetersizliği kaydında da görünebilir; ilgili Facebook kaydının metni açıkça kanıt yetersizliğini bildiriyor. Rozetin bu ayrımı göstermesi ayrıca ürün iyileştirmesidir.
 
 Web kodu, strateji/hafıza belgesi, reklam bütçesi ve sosyal yayın takvimi bu çalışmada değiştirilmedi. Sonraki uygulama yukarıdaki açık işler üzerinden yapılabilir.
+
+
+## Rakip Keşfi uçtan uca düzeltme — 8 Eylül, sonraki kontrol
+
+[Canlı düzeltme ve kabul raporu](GOLDMOOD-RAKIP-KESFI-DUZELTME-2026-09-08.md) ve [anonimleştirilmiş teknik kanıt](GOLDMOOD-RAKIP-KESFI-DOGRULAMA-2026-09-08.json): manuel sorgu tekrar taraması, 50 sorgu sınırı, sonuçsuz sorgu girdilerinin saklanması ve önizleme kuyruğu düzeltildi. İki gerçek manuel koşu 2 sorgu/40 sonuçla tamamlandı. Kullanıcının IG/FB 12 burç yasağı manuel AI hafızasına tekrar işlendi; dört eski part2 çıkarımı pasifleştirildi. SERP yokluğu mevcut araç eksikliği sayılmamalı.

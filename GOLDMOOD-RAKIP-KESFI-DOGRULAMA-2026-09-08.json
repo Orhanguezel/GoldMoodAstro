@@ -1,0 +1,57 @@
+{
+  "run": {
+    "id": "3eee01dd-4d9b-489f-b8a5-3e52c9ba1aed",
+    "tenant_key": "goldmoodastro",
+    "engine": "brave",
+    "status": "ok",
+    "query_source": "manual",
+    "depth": 20,
+    "queries_total": 2,
+    "queries_done": 2,
+    "results_total": 40,
+    "error_msg": null,
+    "gsc_start_date": null,
+    "gsc_end_date": null,
+    "started_at": "2026-09-08T18:01:42.200Z",
+    "finished_at": "2026-09-08T18:01:48.206Z",
+    "created_at": "2026-09-08T18:01:42.200Z",
+    "requested_queries": [
+      "yildizname",
+      "doğum haritası yorumlama"
+    ]
+  },
+  "queries": [
+    {
+      "query": "doğum haritası yorumlama",
+      "impressions": 0,
+      "clicks": 0,
+      "our_gsc_position": null,
+      "our_position": null,
+      "results": 20,
+      "top_domains": "dharmaastroloji.com,astroasist.com,eksisozluk.com,dogumharitasiyorumlama.com.tr,mapastro.com"
+    },
+    {
+      "query": "yildizname",
+      "impressions": 0,
+      "clicks": 0,
+      "our_gsc_position": null,
+      "our_position": null,
+      "results": 20,
+      "top_domains": "islamansiklopedisi.org.tr,ecanta.com.tr,hesaparacim.com,milliyet.com.tr,eksisozluk.com"
+    }
+  ],
+  "ourHost": "goldmoodastro.com",
+  "preview": {
+    "status": "ready",
+    "sourceUrl": "https://islamansiklopedisi.org.tr/",
+    "attemptedAt": "2026-09-08T18:02:18.026Z",
+    "retryAt": "2026-09-09T18:02:21.191Z",
+    "title": "TDV İslâm Ansiklopedisi",
+    "description": "TDV İslâm Ansiklopedisi (DİA) dünyada müslümanlar tarafından hazırlanmış ve tamamlanmış ilk İslâm ansiklopedisidir. Hem madde listesi hem de içerik ve üslûp açısından özgün bir ansiklopedidir.",
+    "capturedAt": "2026-09-08T18:02:20.977Z",
+    "partial": true
+  },
+  "emptyQueriesStatus": 400,
+  "otherTenantStatus": 403,
+  "sourceSwitchAndPreviewReopenPostRequests": 0
+}
