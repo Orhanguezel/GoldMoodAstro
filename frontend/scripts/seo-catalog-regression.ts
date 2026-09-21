@@ -120,6 +120,27 @@ for (const socialUrl of [
   if (!trHome.includes(socialUrl)) errors.push(`/tr: Organization sameAs missing (${socialUrl})`);
 }
 
+const editorialChecks = [
+  { path: '/tr/dogum-haritasi', topicLabel: 'İlgili araç ve rehberler', reviewed: 'Son gözden geçirme: 21 Eylül 2026' },
+  { path: '/en/consultants', topicLabel: 'Related tools and guides', reviewed: 'Last reviewed: September 21, 2026' },
+  { path: '/de/preise', topicLabel: 'Passende Tools und Ratgeber', reviewed: 'Zuletzt geprüft: 21. September 2026' },
+];
+for (const check of editorialChecks) {
+  const html = pages.find((page) => page.url.endsWith(check.path))?.text || '';
+  if (!html.includes(check.topicLabel)) errors.push(`${check.path}: localized topic connections missing`);
+  if (!html.includes(check.reviewed)) errors.push(`${check.path}: visible editorial review date missing`);
+  if (!html.includes('editorial-policy') && !html.includes('editor-politikasi') && !html.includes('redaktionsrichtlinie')) {
+    errors.push(`${check.path}: editorial policy link missing`);
+  }
+}
+
+const heroStatsSource = await Bun.file(new URL('../src/components/containers/home/HeroStats.tsx', import.meta.url)).text();
+for (const fabricatedFallback of ["'500+'", "'20+'", "'4.9'"]) {
+  if (heroStatsSource.includes(fabricatedFallback)) {
+    errors.push(`HeroStats: fabricated fallback remains (${fabricatedFallback})`);
+  }
+}
+
 const siteGraph = trHome.match(/<script[^>]+id="jsonld:site-graph"[^>]*>(.*?)<\/script>/s)?.[1];
 if (!siteGraph) {
   errors.push('/tr: site JSON-LD graph missing');

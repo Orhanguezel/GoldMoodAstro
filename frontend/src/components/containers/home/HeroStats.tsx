@@ -20,24 +20,27 @@ export default function HeroStats({ locale = 'tr' }: Props) {
 
   const totalSessions = approved.reduce((sum, c) => sum + (c.total_sessions ?? 0), 0);
   const consultantCount = approved.length;
-  const avgRating = approved.length > 0
-    ? (approved.reduce((sum, c) => sum + parseFloat(c.rating_avg || '0'), 0) / approved.length).toFixed(1)
-    : '4.9';
+  const reviewCount = approved.reduce((sum, c) => sum + Number(c.rating_count || 0), 0);
+  const avgRating = reviewCount > 0
+    ? (approved.reduce((sum, c) => sum + parseFloat(c.rating_avg || '0') * Number(c.rating_count || 0), 0) / reviewCount).toFixed(1)
+    : null;
 
   const stats = [
     {
-      val: isLoading ? null : totalSessions > 0 ? `${totalSessions > 999 ? Math.floor(totalSessions / 100) / 10 + 'K' : totalSessions}+` : '500+',
+      val: totalSessions > 0 ? `${totalSessions > 999 ? Math.floor(totalSessions / 100) / 10 + 'K' : totalSessions}+` : null,
       label: ui('ui_extra_b3_hero_stat_sessions', locale === 'tr' ? 'Tamamlanan Seans' : 'Sessions Completed'),
     },
     {
-      val: isLoading ? null : consultantCount > 0 ? `${consultantCount}+` : '20+',
+      val: consultantCount > 0 ? `${consultantCount}+` : null,
       label: ui('ui_extra_b3_hero_stat_consultants', locale === 'tr' ? 'Uzman Danışman' : 'Expert Consultants'),
     },
     {
-      val: isLoading ? null : `${avgRating}★`,
+      val: avgRating ? `${avgRating}★` : null,
       label: ui('ui_extra_b3_hero_stat_rating', locale === 'tr' ? 'Ortalama Puan' : 'Average Rating'),
     },
-  ];
+  ].filter((stat) => isLoading || stat.val !== null);
+
+  if (!isLoading && stats.length === 0) return null;
 
   return (
     <div className="flex flex-wrap gap-4">
@@ -46,7 +49,7 @@ export default function HeroStats({ locale = 'tr' }: Props) {
           key={label}
           className="flex flex-col gap-0.5 rounded-2xl border border-white/10 bg-white/6 px-5 py-3 backdrop-blur-md min-w-[100px]"
         >
-          {val === null ? (
+          {isLoading ? (
             <Skeleton className="h-6 w-12 mb-1" />
           ) : (
             <span className="font-display text-xl font-semibold text-amber-400">{val}</span>

@@ -167,9 +167,10 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
   const totalCount = approved.length;
   const onlineCount = online.length;
 
-  const avgRating = approved.length > 0
-    ? (approved.reduce((sum, c) => sum + parseFloat(c.rating_avg || '0'), 0) / approved.length).toFixed(1)
-    : '4.9';
+  const reviewCount = approved.reduce((sum, c) => sum + Number(c.rating_count || 0), 0);
+  const avgRating = reviewCount > 0
+    ? (approved.reduce((sum, c) => sum + parseFloat(c.rating_avg || '0') * Number(c.rating_count || 0), 0) / reviewCount).toFixed(1)
+    : null;
   const fallback = locale === 'tr'
     ? { verified: 'Onaylı Danışmanlar', profiles: '{count} uzman profil', live: 'Canlı Görüşme', online: '{count} danışman çevrimiçi', soon: 'Yakında müsait' }
     : locale === 'de'
@@ -207,7 +208,7 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
           )}
         </div>
 
-        <div className="flex items-center gap-1.5">
+        {isLoading || avgRating ? <div className="flex items-center gap-1.5">
           {[...Array(5)].map((_, i) => (
             <Star key={i} size={11} className="text-amber-400 fill-amber-400" />
           ))}
@@ -216,7 +217,7 @@ export default function HeroTrustCards({ locale = 'tr' }: Props) {
           ) : (
             <span className="text-[10px] text-white/50 ml-1">{avgRating}/5</span>
           )}
-        </div>
+        </div> : null}
       </div>
 
       <div className="rounded-2xl border border-emerald-400/20 bg-emerald-900/30 p-4 backdrop-blur-xl shadow-xl">
