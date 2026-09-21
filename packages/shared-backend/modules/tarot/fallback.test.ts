@@ -44,6 +44,7 @@ describe('buildCardMeaningInterpretation', () => {
 
     expect(result).toContain('emek verdiğiniz alanda ilerleme göremediğiniz');
     expect(result).toContain('İlham, yeni tutku, yaratıcılık, enerji');
+    expect(result).toContain('İş bağlamında “yaratıcılık” vurgusu');
     expect(result).toContain('20 dakikada başlayabileceğiniz ilk adıma');
     expect(result).not.toContain('Bu açılımın odağı:');
   });

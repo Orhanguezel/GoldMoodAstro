@@ -26,6 +26,22 @@ function detectTopic(question: string): QuestionTopic {
   return 'general';
 }
 
+function selectTheme(meaning: string, topic: QuestionTopic): string {
+  const parts = cleanSentence(meaning).split(',').map((part) => part.trim()).filter(Boolean);
+  if (topic === 'general' || parts.length < 2) return parts[0] || cleanSentence(meaning);
+
+  const priorities: Record<Exclude<QuestionTopic, 'general'>, string[]> = {
+    work: ['yaratıc', 'enerji', 'başarı', 'lider', 'beceri', 'plan', 'çalış', 'değer', 'seçim', 'ortak', 'creative', 'energy', 'success', 'lead', 'skill', 'plan', 'value', 'choice', 'partner', 'kreativ', 'erfolg', 'führung', 'fähigkeit', 'wert', 'wahl'],
+    relationship: ['aşk', 'ilişki', 'uyum', 'duygu', 'ortak', 'iletişim', 'love', 'relationship', 'harmony', 'emotion', 'partner', 'communication', 'liebe', 'beziehung', 'harmonie', 'gefühl', 'kommunikation'],
+    decision: ['seçim', 'karar', 'denge', 'netlik', 'yön', 'choice', 'decision', 'balance', 'clarity', 'direction', 'wahl', 'entscheidung', 'gleichgewicht', 'klarheit', 'richtung'],
+  };
+  for (const keyword of priorities[topic]) {
+    const match = parts.find((part) => part.toLocaleLowerCase('tr-TR').includes(keyword));
+    if (match) return match;
+  }
+  return parts[0];
+}
+
 function trContext(question: string, topic: QuestionTopic): string {
   if (!question) return 'Bu açılım, şu anda dikkatinizi isteyen ana temayı görünür kılmaya odaklanıyor.';
   if (topic === 'work') return `“${question}” ifadesi, emek verdiğiniz alanda ilerleme göremediğiniz için yeniden yön ve ivme aradığınızı düşündürüyor.`;
@@ -101,9 +117,22 @@ export function buildCardMeaningInterpretation(args: {
   const cards = args.cards.map((card) => {
     const direction = card.is_reversed ? 'ters' : 'düz';
     const meaning = cleanSentence(card.is_reversed ? card.meanings.reversed : card.meanings.upright);
-    const bridge = card.is_reversed
-      ? 'Bu, kesin bir olumsuz sonuçtan çok enerjinin nerede tıkandığını anlamadan ilerlemeye çalıştığınızı düşündürür.'
-      : 'Buradaki vurgu, bu temayı yalnızca fark etmekte değil, küçük ama bilinçli bir davranışa dönüştürmektedir.';
+    const theme = selectTheme(meaning, topic);
+    const topicBridge: Record<QuestionTopic, string> = {
+      work: card.is_reversed
+        ? `İş bağlamında “${theme}” temasındaki tıkanıklık, daha fazla yük almak yerine çalışma biçiminizi veya önceliklerinizi gözden geçirmeniz gerektiğini söylüyor.`
+        : `İş bağlamında “${theme}” vurgusu, çıkış yolunun daha fazla yük almaktan değil bu niteliği tek bir görev ya da iş birliğinde bilinçli kullanmaktan gelebileceğini söylüyor.`,
+      relationship: card.is_reversed
+        ? `İlişki bağlamında “${theme}” temasındaki zorlanma, sonuç çıkarmadan önce karşılıklı beklentileri açıklaştırma ihtiyacını gösteriyor.`
+        : `İlişki bağlamında “${theme}” vurgusu, varsayım yapmak yerine bu niteliği iletişimde görünür kılmanın daha açıklayıcı olacağını söylüyor.`,
+      decision: card.is_reversed
+        ? `Karar bağlamında “${theme}” temasındaki tıkanıklık, seçimi zorlamadan önce eksik bilgiyi veya iç itirazınızı fark etmeniz gerektiğini gösteriyor.`
+        : `Karar bağlamında “${theme}” vurgusu, seçenekleri yalnız sonuçlarına göre değil bu niteliği ne kadar desteklediklerine göre de karşılaştırmanızı öneriyor.`,
+      general: card.is_reversed
+        ? 'Bu, kesin bir olumsuz sonuçtan çok enerjinin nerede tıkandığını anlamadan ilerlemeye çalıştığınızı düşündürür.'
+        : 'Buradaki vurgu, bu temayı yalnızca fark etmekte değil, küçük ama bilinçli bir davranışa dönüştürmektedir.',
+    };
+    const bridge = topicBridge[topic];
     return `${card.position_name} — ${card.name} (${direction}), “${meaning}” temasını öne çıkarıyor. ${bridge}`;
   });
 
