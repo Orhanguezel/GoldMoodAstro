@@ -56,7 +56,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   "pricing": {
     "title": "Fiyatlar ve Hizmet Paketleri",
     "description": "Ücretsiz ön görüşme, 15dk tanışma, 30/60/90dk derinlemesine seans seçenekleri. Şeffaf fiyatlandırma, gizli ücret yok.",
-    "og_image": "/uploads/seo/og_home.png",
+    "og_image": "/images/og/pricing-2026.webp",
     "no_index": false
   },
   "daily": {
@@ -68,7 +68,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   "blog": {
     "title": "Astroloji ve Spiritüel Rehberlik Blogu",
     "description": "Astroloji, tarot, numeroloji ve kişisel gelişim üzerine derinlikli yazılar. Uzman danışmanlardan ipuçları, rehberler ve analizler.",
-    "og_image": "",
+    "og_image": "/images/og/blog-2026.webp",
     "no_index": false
   },
   "blog-post": {
@@ -80,7 +80,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   "about": {
     "title": "Hakkımızda — GoldMoodAstro",
     "description": "GoldMoodAstro''nun hikayesi, misyonu ve onaylı danışman ekibi. Türkiye''nin güvenilir astroloji ve spiritüel rehberlik platformu.",
-    "og_image": "/uploads/seo/og_home.png",
+    "og_image": "/images/og/about-2026.webp",
     "no_index": false
   },
   "contact": {
@@ -275,7 +275,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   "pricing": {
     "title": "Pricing & Service Packages",
     "description": "Free intro chats, 15-minute introductions, 30/60/90-minute deep sessions. Transparent pricing — no hidden fees.",
-    "og_image": "/uploads/seo/og_home.png",
+    "og_image": "/images/og/pricing-2026.webp",
     "no_index": false
   },
   "daily": {
@@ -287,7 +287,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   "blog": {
     "title": "Astrology & Spiritual Guidance Blog",
     "description": "In-depth articles on astrology, tarot, numerology and personal growth. Tips, guides and analyses from expert consultants.",
-    "og_image": "",
+    "og_image": "/images/og/blog-2026.webp",
     "no_index": false
   },
   "blog-post": {
@@ -299,7 +299,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   "about": {
     "title": "About — GoldMoodAstro",
     "description": "GoldMoodAstro''s story, mission and verified consultant team. Türkiye''s trusted astrology and spiritual guidance platform.",
-    "og_image": "/uploads/seo/og_home.png",
+    "og_image": "/images/og/about-2026.webp",
     "no_index": false
   },
   "contact": {
@@ -494,7 +494,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   "pricing": {
     "title": "Preise & Service-Pakete",
     "description": "Kostenlose Vorgespräche, 15-Minuten-Einführungen, 30/60/90-Minuten-Tiefensitzungen. Transparente Preise — keine versteckten Gebühren.",
-    "og_image": "/uploads/seo/og_home.png",
+    "og_image": "/images/og/pricing-2026.webp",
     "no_index": false
   },
   "daily": {
@@ -506,7 +506,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   "blog": {
     "title": "Astrologie & spirituelle Beratung Blog",
     "description": "Tiefgehende Artikel zu Astrologie, Tarot, Numerologie und persönlichem Wachstum. Tipps, Anleitungen und Analysen von Experten.",
-    "og_image": "",
+    "og_image": "/images/og/blog-2026.webp",
     "no_index": false
   },
   "blog-post": {
@@ -518,7 +518,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
   "about": {
     "title": "Über uns — GoldMoodAstro",
     "description": "Die Geschichte, Mission und das verifizierte Beraterteam von GoldMoodAstro. Die vertrauenswürdige Astrologie-Plattform der Türkei.",
-    "og_image": "/uploads/seo/og_home.png",
+    "og_image": "/images/og/about-2026.webp",
     "no_index": false
   },
   "contact": {

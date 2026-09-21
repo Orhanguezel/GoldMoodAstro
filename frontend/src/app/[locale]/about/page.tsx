@@ -12,19 +12,19 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com
 
 const META = {
   tr: {
-    title: 'Hakkımızda | GoldMoodAstro',
+    title: 'GoldMoodAstro Hakkında: Misyon ve Güven',
     description:
       'GoldMoodAstro misyonunu, kurucu hikayesini, danışman doğrulama yaklaşımını ve güvenli ruhsal danışmanlık deneyimini keşfedin.',
     banner: 'Hakkımızda',
   },
   en: {
-    title: 'About GoldMoodAstro',
+    title: 'About GoldMoodAstro: Mission and Trust',
     description:
       'Learn about GoldMoodAstro, our founder story, consultant verification approach and responsible spiritual guidance experience.',
     banner: 'About',
   },
   de: {
-    title: 'Über GoldMoodAstro',
+    title: 'Über GoldMoodAstro: Mission und Vertrauen',
     description:
       'Erfahren Sie mehr über GoldMoodAstro, unsere Gründerstory, Beraterprüfung und verantwortungsvolle spirituelle Beratung.',
     banner: 'Über uns',
@@ -40,8 +40,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const copy = copyFor(locale);
   const canonical = `${SITE_URL}${localizedPath(locale, '/about', 'tr')}`;
+  const ogImage = `${SITE_URL}/images/og/about-2026.webp`;
   return {
-    title: copy.title,
+    title: { absolute: copy.title },
     description: copy.description,
     alternates: {
       canonical,
@@ -58,6 +59,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: canonical,
       siteName: 'GoldMoodAstro',
       type: 'website',
+      images: [{ url: ogImage, width: 1200, height: 630, alt: copy.title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: copy.title,
+      description: copy.description,
+      images: [ogImage],
     },
   };
 }

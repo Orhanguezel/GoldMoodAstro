@@ -406,12 +406,17 @@ const HeaderClient: React.FC<HeaderClientProps> = ({ brand, locale: localeProp, 
           <div className="flex 2xl:hidden items-center gap-3">
             <ThemeToggle />
             {isAuthenticated ? (
-              <Link href={localizePath(locale, '/profile')} className="p-2 text-[var(--gm-text)]">
+              <Link
+                href={localizePath(locale, '/profile')}
+                aria-label={ui('ui_header_profile', 'Profile')}
+                className="p-2 text-[var(--gm-text)]"
+              >
                 <IconUser className="w-5 h-5" />
               </Link>
             ) : (
               <Link 
                 href={`${localizePath(locale, '/login')}${authNextQuery}`}
+                aria-label={ui('ui_header_login', 'Login')}
                 className="p-2 text-[var(--gm-gold)]"
               >
                 <IconUser className="w-5 h-5" />

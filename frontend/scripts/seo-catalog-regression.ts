@@ -10,6 +10,12 @@ const samplePaths = [
   '/tr/fiyatlandirma',
   '/en/pricing',
   '/de/preise',
+  '/tr/blog',
+  '/en/blog',
+  '/de/blog',
+  '/tr/hakkimizda',
+  '/en/about',
+  '/de/ueber-uns',
   '/tr/dogum-haritasi',
 ] as const;
 
@@ -53,6 +59,20 @@ for (const page of pages) {
   if (/rel=["'](?:dns-prefetch|preconnect)["'][^>]+(?:fonts\.googleapis|fonts\.gstatic|res\.cloudinary)/i.test(page.text)) {
     errors.push(`${page.url}: unused global resource hint found`);
   }
+
+  const ogImage = page.text.match(/<meta property=["']og:image["'] content=["']([^"']+)/i)?.[1] || '';
+  const twitterImage = page.text.match(/<meta name=["']twitter:image["'] content=["']([^"']+)/i)?.[1] || '';
+  if (!ogImage) errors.push(`${page.url}: og:image missing`);
+  if (!twitterImage) errors.push(`${page.url}: twitter:image missing`);
+}
+
+const trCorePaths = ['/tr', '/tr/danismanlar', '/tr/fiyatlandirma', '/tr/blog', '/tr/hakkimizda'];
+const trCoreImages = trCorePaths.map((path) => {
+  const html = pages.find((page) => page.url.endsWith(path))?.text || '';
+  return html.match(/<meta property=["']og:image["'] content=["']([^"']+)/i)?.[1] || '';
+});
+if (new Set(trCoreImages.filter(Boolean)).size !== trCorePaths.length) {
+  errors.push(`/tr core pages: og:image values are not page-specific (${trCoreImages.join(', ')})`);
 }
 
 const trHome = pages.find((page) => page.url.endsWith('/tr'))?.text || '';
@@ -83,6 +103,17 @@ if (!siteGraph) {
 }
 
 const consultantPage = pages.find((page) => page.url.endsWith('/tr/danismanlar'))?.text || '';
+const consultantAnchors = consultantPage.match(/<a\b[^>]*>[\s\S]*?<\/a>/gi) || [];
+for (const anchor of consultantAnchors) {
+  const attrs = anchor.match(/^<a\b([^>]*)>/i)?.[1] || '';
+  const visibleText = decodeHtml(anchor.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+  const ariaLabel = attrs.match(/aria-label=["']([^"']+)["']/i)?.[1]?.trim() || '';
+  const title = attrs.match(/title=["']([^"']+)["']/i)?.[1]?.trim() || '';
+  const imageAlt = anchor.match(/<img\b[^>]*alt=["']([^"']+)["']/i)?.[1]?.trim() || '';
+  if (!visibleText && !ariaLabel && !title && !imageAlt) {
+    errors.push(`/tr/danismanlar: link has no accessible name (${anchor.slice(0, 180)}…)`);
+  }
+}
 const rawImages = consultantPage.match(/<img\b[^>]*>/gi) || [];
 const contentImages = rawImages.filter((tag) => !/data-nimg=/i.test(tag));
 if (!contentImages.length) errors.push('/tr/danismanlar: no consultant content images found');

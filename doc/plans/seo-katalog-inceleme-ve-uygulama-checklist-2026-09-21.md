@@ -119,3 +119,20 @@ güncel ödeme/işletme bilgisini içeriyor.
 - Katalog regresyonu: `10 sample pages, 5 measured raw images, 33 llms links — clean`.
 - Tam canlı i18n SEO taraması: `398 URL · 0 hata · 0 dil uyarısı`.
 - K1–K9 kapandı. E1–E3 repo dışı DNS/registrar/CrUX kanıt kapıları olarak açık.
+
+## Ek katalog bulguları — 2026-09-21
+
+- [ ] **K10 — Blog OG/Twitter görseli.** TR/EN/DE blog liste sayfalarında
+  1200×630, sayfaya özel ve yazısız paylaşım görseli yayınla.
+- [ ] **K11 — Hakkımızda OG/Twitter görseli.** Sayfanın kendi metadata
+  tanımının layout görselini ezmesini engelle; TR/EN/DE için aynı sayfa-özel
+  1200×630 görseli hem Open Graph hem Twitter kartına bağla.
+- [ ] **K12 — Fiyatlandırma görselini ayrıştır.** Ana sayfa OG görselini tekrar
+  kullanmak yerine fiyatlandırmaya özel 1200×630 görsel yayınla.
+- [ ] **K13 — Hakkımızda title uzunluğu.** Üç dilde başlığı anlamı koruyan
+  30–60 karakter aralığına getir ve marka tekrarını önle.
+- [ ] **K14 — İkon bağlantı erişilebilirliği.** Mobil header giriş/profil
+  bağlantılarına lokalize erişilebilir ad ekle.
+- [ ] **K15 — Regresyonu genişlet.** Blog ve Hakkımızda dahil 16 örnek URL'de
+  `og:image`, `twitter:image`, title ve erişilebilir bağlantı adlarını; beş TR
+  çekirdek sayfada görsel benzersizliğini otomatik denetle.
