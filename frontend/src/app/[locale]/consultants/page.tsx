@@ -13,6 +13,7 @@ type Props = {
 import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
 import { fetchSetting } from '@/i18n/server';
 import { localizedPath, normPath } from '@/integrations/shared';
+import { localizedPageOgUrl, withLocalizedPageOg } from '@/lib/og/pageOgMetadata';
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
@@ -108,7 +109,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const pageSeo = await fetchSeoPageObject(locale, 'consultants');
   seo = mergeSeoPageIntoSeo(seo, pageSeo);
 
-  return buildMetadataFromSeo(seo, { locale, pathname: normPath('/consultants') });
+  const metadata = await buildMetadataFromSeo(seo, { locale, pathname: normPath('/consultants') });
+  return withLocalizedPageOg(metadata, localizedPageOgUrl(locale, '/consultants'), localeFallbackTitle(locale));
 }
 
 export default async function ConsultantsPage({ params, searchParams }: Props) {

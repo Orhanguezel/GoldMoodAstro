@@ -69,8 +69,10 @@ export default function HomeBecomeConsultantBanner({ locale = 'tr' }: { locale?:
             <Image 
               src="/images/become-consultant.png" 
               alt={ui('ui_become_consultant_image_alt', 'Become our consultant')}
-              fill
-              className="object-cover object-center transform hover:scale-105 transition-transform duration-[2000ms] ease-out"
+              width={1024}
+              height={1024}
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="absolute inset-0 h-full w-full object-cover object-center transform hover:scale-105 transition-transform duration-[2000ms] ease-out"
             />
           </div>
         </div>

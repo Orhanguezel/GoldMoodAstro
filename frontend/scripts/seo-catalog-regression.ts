@@ -1,4 +1,5 @@
 const baseUrl = (process.argv[2] || 'http://localhost:3095').replace(/\/$/, '');
+const baseOrigin = new URL(baseUrl).origin;
 
 const samplePaths = [
   '/tr',
@@ -66,16 +67,51 @@ for (const page of pages) {
   if (!twitterImage) errors.push(`${page.url}: twitter:image missing`);
 }
 
-const trCorePaths = ['/tr', '/tr/danismanlar', '/tr/fiyatlandirma', '/tr/blog', '/tr/hakkimizda'];
-const trCoreImages = trCorePaths.map((path) => {
+const localizedCorePaths = samplePaths.slice(0, 15);
+const localizedCoreImages = localizedCorePaths.map((path) => {
   const html = pages.find((page) => page.url.endsWith(path))?.text || '';
   return html.match(/<meta property=["']og:image["'] content=["']([^"']+)/i)?.[1] || '';
 });
-if (new Set(trCoreImages.filter(Boolean)).size !== trCorePaths.length) {
-  errors.push(`/tr core pages: og:image values are not page-specific (${trCoreImages.join(', ')})`);
+if (new Set(localizedCoreImages.filter(Boolean)).size !== localizedCorePaths.length) {
+  errors.push(`localized core pages: og:image values are not page-and-locale-specific (${localizedCoreImages.join(', ')})`);
+}
+for (const [index, imageUrl] of localizedCoreImages.entries()) {
+  if (imageUrl && !imageUrl.includes('/opengraph-image')) {
+    errors.push(`${localizedCorePaths[index]}: og:image is not a localized dynamic endpoint (${imageUrl})`);
+  }
+}
+
+const ogImageResults = await Promise.all(
+  localizedCoreImages.filter(Boolean).map(async (imageUrl) => {
+    const parsed = new URL(imageUrl);
+    const testUrl = new URL(baseUrl).hostname === 'localhost' && parsed.hostname === 'localhost'
+      ? `${baseOrigin}${parsed.pathname}${parsed.search}`
+      : imageUrl;
+    const response = await fetch(testUrl, { redirect: 'follow' });
+    return { imageUrl, status: response.status, contentType: response.headers.get('content-type') || '' };
+  }),
+);
+for (const result of ogImageResults) {
+  if (result.status !== 200 || !result.contentType.startsWith('image/')) {
+    errors.push(`OG image ${result.imageUrl}: HTTP ${result.status}, content-type ${result.contentType || 'missing'}`);
+  }
 }
 
 const trHome = pages.find((page) => page.url.endsWith('/tr'))?.text || '';
+const trHomeTitle = decodeHtml(trHome.match(/<title>(.*?)<\/title>/s)?.[1]?.trim() || '').toLocaleLowerCase('tr-TR');
+const trHomeDescription = decodeHtml(
+  trHome.match(/<meta name=["']description["'] content=["']([^"']+)/i)?.[1]?.trim() || '',
+).toLocaleLowerCase('tr-TR');
+for (const keyword of ['astroloji', 'canlı', 'seans']) {
+  if (!trHomeTitle.includes(keyword)) errors.push(`/tr: top content keyword missing from title (${keyword})`);
+  if (!trHomeDescription.includes(keyword)) errors.push(`/tr: top content keyword missing from description (${keyword})`);
+}
+const trHomeImages = trHome.match(/<img\b[^>]*>/gi) || [];
+for (const image of trHomeImages) {
+  if (!/\bwidth=["'][^"']+["']/i.test(image) || !/\bheight=["'][^"']+["']/i.test(image)) {
+    errors.push(`/tr: image lacks intrinsic dimensions (${image.slice(0, 140)}…)`);
+  }
+}
 for (const socialUrl of [
   'https://www.instagram.com/goldmood_astro',
   'https://www.facebook.com/1354790577707171',
@@ -153,5 +189,5 @@ if (errors.length) {
 }
 
 console.log(
-  `SEO catalog regression: ${pages.length} sample pages, ${contentImages.length} measured raw images, ${markdownUrls.length} llms links — clean`,
+  `SEO catalog regression: ${pages.length} sample pages, ${localizedCoreImages.length} unique localized OG images, ${trHomeImages.length + contentImages.length} measured images, ${markdownUrls.length} llms links — clean`,
 );

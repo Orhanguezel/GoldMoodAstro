@@ -3,6 +3,7 @@ import AboutPageContent from '@/components/containers/about/AboutPageContent';
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 import { localizedPath } from '@/integrations/shared';
+import { localizedPageOgUrl } from '@/lib/og/pageOgMetadata';
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const copy = copyFor(locale);
   const canonical = `${SITE_URL}${localizedPath(locale, '/about', 'tr')}`;
-  const ogImage = `${SITE_URL}/images/og/about-2026.webp`;
+  const ogImage = localizedPageOgUrl(locale, '/about');
   return {
     title: { absolute: copy.title },
     description: copy.description,

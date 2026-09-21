@@ -140,3 +140,25 @@ güncel ödeme/işletme bilgisini içeriyor.
 Canlı kabul: `16 sample pages, 5 measured raw images, 33 llms links — clean`;
 tam tarama `398 URL · 0 hata · 0 dil uyarısı`; üç yeni WebP görseli canlıda
 `HTTP 200` ve `image/webp` döndürüyor. GitHub Actions: `35591478762`.
+
+## Lokalize OG ve ana sayfa tutarlılığı takibi — 2026-09-21
+
+- [x] **K16 — Paylaşım görselini dil varyantına göre ayrıştır.** Ana sayfa,
+  danışmanlar, fiyatlandırma, blog ve Hakkımızda için TR/EN/DE toplam 15
+  dinamik `opengraph-image` ucu eklendi. Her uç lokalize başlık/açıklama
+  üretir; `og:image` ve `twitter:image` sayfanın kendi URL'sine bağlanır.
+- [x] **K17 — Ana sayfa terim tutarlılığını düzelt.** Render edilmiş ana
+  metindeki ilk üç anlamlı terim (`astroloji`, `canlı`, `seans`) başlık ve meta
+  açıklamada birebir yer alacak şekilde TR metadata hizalandı. Anahtar kelime
+  doldurma yapılmadı.
+- [x] **K18 — Ana sayfa görsel ölçülerini tamamla.** Uygulama indirme ve
+  danışman başvuru görsellerine kaynak boyutu (`1024×1024`) eklendi; mevcut
+  kapsayıcı oranı ve `object-cover` görünümü korundu.
+- [x] **K19 — Dil varyantı regresyonunu kapat.** Test yalnız beş TR sayfasını
+  karşılaştırmak yerine 15 çekirdek lokalize sayfanın tamamında benzersiz OG
+  URL'si, dinamik uçta `HTTP 200` + `image/*`, ana sayfa terim eşleşmesi ve tüm
+  ana sayfa görsellerinde intrinsik ölçü arar.
+
+Yerel kabul: `16 sample pages, 15 unique localized OG images, 8 measured images,
+33 llms links — clean`; üretim derlemesi başarılı. Canlı kabul ve dağıtım koşu
+numarası deploy sonrasında bu bölüme eklenecek.

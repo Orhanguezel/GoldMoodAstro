@@ -42,9 +42,10 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
           <Image
             src={brand.assets['banner_app_download'] || "/assets/images/banners/app-download-bg.png"} 
             alt="Mobile App Experience" 
-            fill
+            width={1024}
+            height={1024}
             sizes="(max-width: 768px) 100vw, 60vw"
-            className="object-cover object-center opacity-90 md:left-auto md:w-[60%]"
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-90 md:left-auto md:w-[60%]"
           />
         </div>
 
