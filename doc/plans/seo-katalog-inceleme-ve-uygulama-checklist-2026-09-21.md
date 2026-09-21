@@ -122,17 +122,21 @@ güncel ödeme/işletme bilgisini içeriyor.
 
 ## Ek katalog bulguları — 2026-09-21
 
-- [ ] **K10 — Blog OG/Twitter görseli.** TR/EN/DE blog liste sayfalarında
+- [x] **K10 — Blog OG/Twitter görseli.** TR/EN/DE blog liste sayfalarında
   1200×630, sayfaya özel ve yazısız paylaşım görseli yayınla.
-- [ ] **K11 — Hakkımızda OG/Twitter görseli.** Sayfanın kendi metadata
+- [x] **K11 — Hakkımızda OG/Twitter görseli.** Sayfanın kendi metadata
   tanımının layout görselini ezmesini engelle; TR/EN/DE için aynı sayfa-özel
   1200×630 görseli hem Open Graph hem Twitter kartına bağla.
-- [ ] **K12 — Fiyatlandırma görselini ayrıştır.** Ana sayfa OG görselini tekrar
+- [x] **K12 — Fiyatlandırma görselini ayrıştır.** Ana sayfa OG görselini tekrar
   kullanmak yerine fiyatlandırmaya özel 1200×630 görsel yayınla.
-- [ ] **K13 — Hakkımızda title uzunluğu.** Üç dilde başlığı anlamı koruyan
+- [x] **K13 — Hakkımızda title uzunluğu.** Üç dilde başlığı anlamı koruyan
   30–60 karakter aralığına getir ve marka tekrarını önle.
-- [ ] **K14 — İkon bağlantı erişilebilirliği.** Mobil header giriş/profil
+- [x] **K14 — İkon bağlantı erişilebilirliği.** Mobil header giriş/profil
   bağlantılarına lokalize erişilebilir ad ekle.
-- [ ] **K15 — Regresyonu genişlet.** Blog ve Hakkımızda dahil 16 örnek URL'de
+- [x] **K15 — Regresyonu genişlet.** Blog ve Hakkımızda dahil 16 örnek URL'de
   `og:image`, `twitter:image`, title ve erişilebilir bağlantı adlarını; beş TR
   çekirdek sayfada görsel benzersizliğini otomatik denetle.
+
+Canlı kabul: `16 sample pages, 5 measured raw images, 33 llms links — clean`;
+tam tarama `398 URL · 0 hata · 0 dil uyarısı`; üç yeni WebP görseli canlıda
+`HTTP 200` ve `image/webp` döndürüyor. GitHub Actions: `35591478762`.
