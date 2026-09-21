@@ -121,7 +121,7 @@ export function buildCardMeaningInterpretation(args: {
     const topicBridge: Record<QuestionTopic, string> = {
       work: card.is_reversed
         ? `İş bağlamında “${theme}” temasındaki tıkanıklık, daha fazla yük almak yerine çalışma biçiminizi veya önceliklerinizi gözden geçirmeniz gerektiğini söylüyor.`
-        : `İş bağlamında “${theme}” vurgusu, çıkış yolunun daha fazla yük almaktan değil bu niteliği tek bir görev ya da iş birliğinde bilinçli kullanmaktan gelebileceğini söylüyor.`,
+        : `İş bağlamında “${theme}” vurgusu, nerede yeniden hareket alanı açılabileceğine bakmanızı öneriyor. Daha fazla yük almak yerine bu temayı destekleyen tek bir görev ya da iş birliğine odaklanmak daha açıklayıcı olabilir.`,
       relationship: card.is_reversed
         ? `İlişki bağlamında “${theme}” temasındaki zorlanma, sonuç çıkarmadan önce karşılıklı beklentileri açıklaştırma ihtiyacını gösteriyor.`
         : `İlişki bağlamında “${theme}” vurgusu, varsayım yapmak yerine bu niteliği iletişimde görünür kılmanın daha açıklayıcı olacağını söylüyor.`,
