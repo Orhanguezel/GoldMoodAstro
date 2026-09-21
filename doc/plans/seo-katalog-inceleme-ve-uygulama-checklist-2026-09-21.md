@@ -159,6 +159,7 @@ tam tarama `398 URL · 0 hata · 0 dil uyarısı`; üç yeni WebP görseli canl�
   URL'si, dinamik uçta `HTTP 200` + `image/*`, ana sayfa terim eşleşmesi ve tüm
   ana sayfa görsellerinde intrinsik ölçü arar.
 
-Yerel kabul: `16 sample pages, 15 unique localized OG images, 8 measured images,
-33 llms links — clean`; üretim derlemesi başarılı. Canlı kabul ve dağıtım koşu
-numarası deploy sonrasında bu bölüme eklenecek.
+Yerel ve canlı kabul: `16 sample pages, 15 unique localized OG images, 8
+measured images, 33 llms links — clean`; tam canlı tarama `398 URL · 0 hata · 0
+dil uyarısı`. Örneklenen canlı OG uçları `HTTP 200`, `image/png`, `1200×630`
+döndürüyor. Commit `f17ecd0`; GitHub Actions dağıtımı `35596441180` başarılı.
