@@ -89,9 +89,10 @@ export default async function RisingCalculatorPage({ params }: Props) {
           }),
         ])}
       />
+      <RisingSignCalculator locale={locale} />
       <section
         data-speakable
-        className="mx-auto mb-10 max-w-[var(--gm-w-readable)] text-center"
+        className="mx-auto my-10 max-w-[var(--gm-w-readable)] text-center"
         aria-labelledby="rising-sign-voice-answer"
       >
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-(--gm-gold)">
@@ -104,7 +105,6 @@ export default async function RisingCalculatorPage({ params }: Props) {
           {voice.a}
         </p>
       </section>
-      <RisingSignCalculator locale={locale} />
       <RisingSignClusterLinks locale={locale} mode="hub" />
       {/* 2026-07-20: sayfada yukselen burc hakkinda hic bilgi yoktu (248 kelime).
           Diger landing sayfalariyla ayni kalip: arac once, dil destekli icerik altinda. */}

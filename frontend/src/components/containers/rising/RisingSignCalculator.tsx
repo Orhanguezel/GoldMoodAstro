@@ -9,21 +9,28 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Sparkles, ArrowRight, Share2 } from 'lucide-react';
 import { useListMyBirthChartsQuery } from '@/integrations/rtk/public/birth_charts.endpoints';
+import { useAuthStore } from '@/features/auth/auth.store';
 import { useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
+import { SIGN_LABELS } from '@/lib/zodiac/pair';
+import { getZodiacMeta, localizeSign } from '@/lib/zodiac/signs';
 
 const cinzel = Cinzel({ subsets: ['latin'] });
 
-const SIGN_LABELS: Record<string, string> = {
-  aries: 'Aries', taurus: 'Taurus', gemini: 'Gemini', cancer: 'Cancer',
-  leo: 'Leo', virgo: 'Virgo', libra: 'Libra', scorpio: 'Scorpio',
-  sagittarius: 'Sagittarius', capricorn: 'Capricorn', aquarius: 'Aquarius', pisces: 'Pisces',
-};
+function formatDegree(value: number | undefined): string {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '';
+  const degree = Math.floor(value);
+  const minutes = Math.round((value - degree) * 60);
+  return `${degree}° ${String(minutes).padStart(2, '0')}′`;
+}
 
 export default function RisingSignCalculator({ locale = 'tr' }: { locale?: string }) {
   const { ui } = useUiSection('ui_extra' as any);
   const [result, setResult] = useState<BirthChart | null>(null);
-  const { data: myCharts } = useListMyBirthChartsQuery();
+  const { isAuthenticated } = useAuthStore();
+  const { data: myCharts } = useListMyBirthChartsQuery(undefined, {
+    skip: !isAuthenticated,
+  });
 
   useEffect(() => {
     if (!result && myCharts && myCharts.length > 0) {
@@ -34,18 +41,13 @@ export default function RisingSignCalculator({ locale = 'tr' }: { locale?: strin
   const sunSign = result?.chart_data.planets.sun.sign;
   const moonSign = result?.chart_data.planets.moon.sign;
   const risingSign = result?.chart_data.ascendant.sign;
+  const risingDegree = formatDegree(result?.chart_data.ascendant.degree_in_sign);
+  const risingMeta = getZodiacMeta(risingSign);
+  const risingRuler = risingMeta ? localizeSign(risingMeta, locale).ruler : '';
+  const signLabel = (sign: string | undefined) => sign ? (SIGN_LABELS[locale]?.[sign] || SIGN_LABELS.en[sign] || sign) : '';
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-4">
-      <div className="text-center mb-12">
-        <h2 className={`${cinzel.className} text-4xl md:text-6xl mb-6 text-brand-gold`}>
-          {ui('ui_extra_b4_rising_title', 'Rising Sign Calculator')}
-        </h2>
-        <p className="text-lg text-muted-foreground italic max-w-2xl mx-auto">
-          {ui('ui_extra_b4_rising_subtitle', 'Map the sky at your birth moment and discover your rising sign and the foundations of your cosmic identity.')}
-        </p>
-      </div>
-
+    <div className="max-w-4xl mx-auto py-8 px-4">
       <AnimatePresence mode="wait">
         {!result ? (
           <motion.div
@@ -66,9 +68,9 @@ export default function RisingSignCalculator({ locale = 'tr' }: { locale?: strin
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { type: 'Sun Sign', sign: sunSign, icon: '☀️' },
-                { type: 'Rising Sign', sign: risingSign, icon: '🌅', highlight: true },
-                { type: 'Moon Sign', sign: moonSign, icon: '🌙' },
+                { type: ui('ui_extra_b4_sun_sign_label', 'Sun sign'), sign: sunSign, icon: '☀️' },
+                { type: ui('ui_extra_b4_rising_sign_label', 'Rising sign'), sign: risingSign, icon: '🌅', highlight: true },
+                { type: ui('ui_extra_b4_moon_sign_label', 'Moon sign'), sign: moonSign, icon: '🌙' },
               ].map((item, idx) => (
                 <motion.div
                   key={item.type}
@@ -86,12 +88,24 @@ export default function RisingSignCalculator({ locale = 'tr' }: { locale?: strin
                   <div className="relative w-24 h-24 mx-auto mb-4">
                     <Image
                       src={`/uploads/zodiac/${item.sign}.png`}
-                      alt={SIGN_LABELS[item.sign!] || ''}
+                      alt={signLabel(item.sign)}
                       fill
                       className="object-contain"
                     />
                   </div>
-                  <h3 className={`${cinzel.className} text-2xl`}>{SIGN_LABELS[item.sign!] || item.sign}</h3>
+                  <h3 className={`${cinzel.className} text-2xl`}>{signLabel(item.sign)}</h3>
+                  {item.highlight && risingDegree ? (
+                    <dl className="mt-4 grid grid-cols-2 gap-2 border-t border-border/40 pt-4 text-left text-xs">
+                      <div>
+                        <dt className="text-muted-foreground">{ui('ui_extra_b4_rising_degree_label', 'Ascendant degree')}</dt>
+                        <dd className="mt-1 font-bold text-foreground">{risingDegree}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">{ui('ui_extra_b4_rising_ruler_label', 'Ruling planet')}</dt>
+                        <dd className="mt-1 font-bold text-foreground">{risingRuler}</dd>
+                      </div>
+                    </dl>
+                  ) : null}
                 </motion.div>
               ))}
             </div>
@@ -102,11 +116,11 @@ export default function RisingSignCalculator({ locale = 'tr' }: { locale?: strin
                 <Sparkles className="w-32 h-32 text-brand-gold" />
               </div>
               
-              <h2 className={`${cinzel.className} text-3xl mb-6 text-brand-gold`}>{ui('ui_extra_b4_rising_insight_title_prefix', 'Rising')} {SIGN_LABELS[risingSign!] || risingSign} {ui('ui_extra_b4_rising_insight_title_suffix', 'Effect')}</h2>
+              <h2 className={`${cinzel.className} text-3xl mb-6 text-brand-gold`}>{ui('ui_extra_b4_rising_insight_title_prefix', 'Rising')} {signLabel(risingSign)} {ui('ui_extra_b4_rising_insight_title_suffix', 'Effect')}</h2>
               <div className="prose prose-invert max-w-none text-lg text-muted-foreground leading-relaxed">
                 <p>
                   {ui('ui_extra_b4_rising_insight_p1_a', 'Your rising sign is the sign rising on the horizon at your birth moment and represents the mask you present to the outside world.')}{' '}
-                  {ui('ui_extra_b4_rising_insight_p1_b', 'As a')} <strong>{SIGN_LABELS[risingSign!] || risingSign}</strong> {ui('ui_extra_b4_rising_insight_p1_c', 'rising, people notice these sign qualities when they first meet you.')}
+                  {ui('ui_extra_b4_rising_insight_p1_b', 'As a')} <strong>{signLabel(risingSign)}</strong> {ui('ui_extra_b4_rising_insight_p1_c', 'rising, people notice these sign qualities when they first meet you.')}
                 </p>
                 <p>
                   {ui('ui_extra_b4_rising_insight_p2', 'Your outlook on life, physical presence and first reactions are shaped by this sign’s energy. This is your cosmic front window.')}

@@ -907,5 +907,10 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('a2900001-0000-4000-8000-000000000031', 'ui_rising_cluster_compatibility', '*', '{"label":{"tr":"78 Burç Uyumu","en":"78 Compatibility Combinations","de":"78 Kompatibilitätskombinationen"}}'),
 ('a2900001-0000-4000-8000-000000000032', 'ui_rising_cluster_calculator', '*', '{"label":{"tr":"Yükselen Burç Hesaplayıcı","en":"Rising Sign Calculator","de":"Aszendent-Rechner"}}'),
 ('a2900001-0000-4000-8000-000000000033', 'ui_rising_cluster_back_title', '*', '{"label":{"tr":"Yükselen burcunu hesapla","en":"Calculate your rising sign","de":"Aszendenten berechnen"}}'),
-('a2900001-0000-4000-8000-000000000034', 'ui_rising_cluster_back_intro', '*', '{"label":{"tr":"Doğum saati ve yerini kullanarak yükselen burcunu hesapla.","en":"Use birth time and place to calculate your rising sign.","de":"Berechne deinen Aszendenten mit Geburtszeit und Geburtsort."}}')
+('a2900001-0000-4000-8000-000000000034', 'ui_rising_cluster_back_intro', '*', '{"label":{"tr":"Doğum saati ve yerini kullanarak yükselen burcunu hesapla.","en":"Use birth time and place to calculate your rising sign.","de":"Berechne deinen Aszendenten mit Geburtszeit und Geburtsort."}}'),
+('a2900001-0000-4000-8000-000000000035', 'ui_extra_b4_rising_degree_label', '*', '{"label":{"tr":"Yükselen derecesi","en":"Ascendant degree","de":"Aszendentengrad"}}'),
+('a2900001-0000-4000-8000-000000000036', 'ui_extra_b4_rising_ruler_label', '*', '{"label":{"tr":"Yönetici gezegen","en":"Ruling planet","de":"Herrscherplanet"}}'),
+('a2900001-0000-4000-8000-000000000037', 'ui_extra_b4_sun_sign_label', '*', '{"label":{"tr":"Güneş burcu","en":"Sun sign","de":"Sonnenzeichen"}}'),
+('a2900001-0000-4000-8000-000000000038', 'ui_extra_b4_rising_sign_label', '*', '{"label":{"tr":"Yükselen burç","en":"Rising sign","de":"Aszendent"}}'),
+('a2900001-0000-4000-8000-000000000039', 'ui_extra_b4_moon_sign_label', '*', '{"label":{"tr":"Ay burcu","en":"Moon sign","de":"Mondzeichen"}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);
