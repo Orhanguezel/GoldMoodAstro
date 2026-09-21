@@ -81,6 +81,9 @@ export async function handleDraw(req: FastifyRequest, reply: FastifyReply) {
     const result = await llm.generate({
       promptKey: 'tarot_reading',
       locale,
+      // Prompt tercihi (bugün Anthropic) başarısız olursa kullanıcıyı yorumsuz
+      // bırakma. Model adı her sağlayıcı için llm.generate içinde yeniden çözülür.
+      fallbackProviders: ['groq', 'openai'],
       vars: {
         spread_label: spread_type,
         question: question || (localeBase === 'de' ? 'Allgemeine Orientierung' : localeBase === 'en' ? 'General guidance' : 'Genel rehberlik'),

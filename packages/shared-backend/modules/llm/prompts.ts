@@ -8,7 +8,7 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../../db/client';
 import { llmPrompts, type LlmPromptRow } from './schema';
-import { chat, LlmError, type ChatResult } from './provider';
+import { chat, LlmError, type ChatResult, type LlmProvider } from './provider';
 import { checkContent } from '../_shared/contentModeration';
 import {
   embed,
@@ -47,6 +47,11 @@ export type GenerateArgs = {
   timeoutMs?: number;
   /** Embedding similarity skip — testler veya fast-path için. Default false. */
   skipSimilarity?: boolean;
+  /**
+   * Primary prompt provider failsa sırayla denenecek sağlayıcılar.
+   * Her sağlayıcı kendi env modelini kullanır; böylece Claude model adı Groq/OpenAI'a gönderilmez.
+   */
+  fallbackProviders?: LlmProvider[];
 };
 
 export type GenerateResult = ChatResult & {
@@ -58,6 +63,20 @@ export type GenerateResult = ChatResult & {
   /** Cosine similarity 0..1 (recentTexts ile en yüksek) */
   maxSimilarity?: number;
 };
+
+function fallbackModel(provider: LlmProvider, primaryProvider: LlmProvider, primaryModel: string): string {
+  if (provider === primaryProvider) return primaryModel;
+  if (provider === 'groq') return process.env.GROQ_MODEL?.trim() || 'llama-3.3-70b-versatile';
+  if (provider === 'openai' || provider === 'azure') {
+    return process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini';
+  }
+  if (provider === 'anthropic') return process.env.ANTHROPIC_MODEL?.trim() || 'claude-haiku-4-5';
+  return primaryModel;
+}
+
+function providerAttempts(primary: LlmProvider, fallbacks: LlmProvider[] | undefined): LlmProvider[] {
+  return [...new Set([primary, ...(fallbacks ?? [])])];
+}
 
 async function loadPrompt(key: string, locale: string): Promise<LlmPromptRow> {
   const [row] = await db
@@ -144,7 +163,7 @@ export async function generate(args: GenerateArgs): Promise<GenerateResult> {
   const locale = args.locale || 'tr';
   const prompt = await loadPrompt(args.promptKey, locale);
 
-  const provider = (args.override?.provider ?? prompt.provider) as any;
+  const provider = (args.override?.provider ?? prompt.provider) as LlmProvider;
   const model = args.override?.model ?? prompt.model;
   const temperature = Number(args.override?.temperature ?? prompt.temperature);
   const maxTokens = Number(args.override?.max_tokens ?? prompt.max_tokens);
@@ -163,17 +182,37 @@ export async function generate(args: GenerateArgs): Promise<GenerateResult> {
       attempt,
     });
 
-    const res = await chat({
-      provider,
-      model,
-      system: prompt.system_prompt,
-      user: userText,
-      temperature: temperature + (attempt - 1) * 0.05, // her tekrarda biraz arttır
-      maxTokens,
-      images: args.images,
-      jsonMode: args.jsonMode,
-      timeoutMs: args.timeoutMs,
-    });
+    let res: ChatResult | null = null;
+    let lastProviderError: unknown;
+    const providers = providerAttempts(provider, args.fallbackProviders);
+
+    for (const candidate of providers) {
+      try {
+        res = await chat({
+          provider: candidate,
+          model: fallbackModel(candidate, provider, model),
+          system: prompt.system_prompt,
+          user: userText,
+          temperature: temperature + (attempt - 1) * 0.05, // her tekrarda biraz arttır
+          maxTokens,
+          images: args.images,
+          jsonMode: args.jsonMode,
+          timeoutMs: args.timeoutMs,
+        });
+        break;
+      } catch (error) {
+        lastProviderError = error;
+        console.warn(
+          `[llm] provider_failed prompt=${args.promptKey} provider=${candidate}`,
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+    }
+
+    if (!res) {
+      if (lastProviderError instanceof Error) throw lastProviderError;
+      throw new LlmError(`no_provider_available: ${args.promptKey}`);
+    }
     lastResult = res;
 
     // Güvenlik kontrolü
