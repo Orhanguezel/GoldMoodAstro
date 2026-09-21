@@ -24,41 +24,41 @@
 
 ## P0 — doğruluk ve taranabilirlik
 
-- [ ] **K1 — Title tekrarını tek yerde çöz.** SEO metadata üreticisinde marka
+- [x] **K1 — Title tekrarını tek yerde çöz.** SEO metadata üreticisinde marka
   zaten title içinde ise yeniden ekleme; sayfa title'ını `absolute` üret.
   TR ana sayfadaki elle metadata override'ını kaldır. DE ana sayfa title'ını
   30–60 karakter bandına indir. Örneklenen 10 URL'de tek `<title>` ve yinelenen
   `GoldMoodAstro` olmamalı.
-- [ ] **K2 — `llms.txt` ve `llms-full.txt` doğruluğunu düzelt.** İç linkleri
+- [x] **K2 — `llms.txt` ve `llms-full.txt` doğruluğunu düzelt.** İç linkleri
   gerçek lokalize kanonik URL'lere ve açıklamalı Markdown linklerine çevir;
   Iyzico, sahte destek adresleri, kanıtlanmayan E2EE/veri barındırma iddiaları
   ve eski satıcı bilgisini kaldır. Stripe Checkout + uygun para birimlerinde
   PayPal bilgisini yaz.
-- [ ] **K3 — `href="#"` hedeflerini kaldır.** Store URL'leri tanımlı değilken
+- [x] **K3 — `href="#"` hedeflerini kaldır.** Store URL'leri tanımlı değilken
   App Store/Google Play kontrollerini bağlantı gibi yayınlama; sahte QR
   etkileşimini gösterme.
-- [ ] **K4 — Organization şemasındaki adres ülkesini düzelt.** Canlı JSON-LD
+- [x] **K4 — Organization şemasındaki adres ülkesini düzelt.** Canlı JSON-LD
   Alman adresini `addressLocality=İstanbul`, `addressCountry=TR` olarak
   işaretliyor. Yapılandırılmış adres alanlarını seed'e ekle ve schema'yı bu
   alanlardan üret.
 
 ## P1 — HTML, erişilebilirlik ve GEO sinyali
 
-- [ ] **K5 — Danışman görsellerine intrinsik ölçü ekle.** Ham `<img>`
+- [x] **K5 — Danışman görsellerine intrinsik ölçü ekle.** Ham `<img>`
   elemanlarına uygun `width`/`height` ve mevcut lazy-loading davranışını ekle.
   `next/image fill` elemanları CSS aspect ratio ile alan ayırdığı için katalog
   sayacı içinde kalsa bile CLS hatası olarak sınıflandırma.
-- [ ] **K6 — SVG ödeme logolarındaki `<title>` yanlış pozitifini kaldır.** Logo
+- [x] **K6 — SVG ödeme logolarındaki `<title>` yanlış pozitifini kaldır.** Logo
   adı zaten `aria-label` ve kapsayıcı `title` ile mevcut; body içindeki dört
   SVG `<title>` etiketi katalog tarafından “head dışı kritik etiket” sayılıyor.
-- [ ] **K7 — Sosyal profil linklerini SSR HTML'de yayınla.** Server'da alınan
+- [x] **K7 — Sosyal profil linklerini SSR HTML'de yayınla.** Server'da alınan
   `brand.social` verisini Footer'a başlangıç verisi olarak geçir; footer linkleri
   ile Organization `sameAs` aynı iki doğrulanmış hesabı göstermeli.
-- [ ] **K8 — Kullanılmayan global resource hint'leri temizle.** `next/font`
+- [x] **K8 — Kullanılmayan global resource hint'leri temizle.** `next/font`
   fontları self-host ettiği için Google Fonts hint'lerini kaldır; sayfa HTML'inde
   doğrudan Cloudinary origin isteği yoksa global Cloudinary hint'lerini de
   kaldır.
-- [ ] **K9 — Regresyon kapısı ekle.** Title tekrarı/uzunluğu, hash-only link,
+- [x] **K9 — Regresyon kapısı ekle.** Title tekrarı/uzunluğu, hash-only link,
   llms kanonik linkleri, görsel ölçüleri ve organization adresi için tekrar
   çalıştırılabilir doğrulama script'i ekle.
 
@@ -110,3 +110,12 @@ Canlı kabul hedefi: tam tarama `0 hata · 0 dil uyarısı`; örneklenen 10 URL'
 title tekrarı yok; ana sayfada hash-only link yok; danışman kartı ham
 görsellerinde ölçü var; `llms.txt` yalnız 200 dönen kanonik bağlantıları ve
 güncel ödeme/işletme bilgisini içeriyor.
+
+## Tamamlama kanıtı — 2026-09-21
+
+- CI build kapısı ve canlı dağıtım başarılı: GitHub Actions `35588038302`.
+- Seçili `company_brand` ve `seo_pages` seed'leri canlı veritabanına uygulandı;
+  backend/frontend yeniden yüklendi ve iki sağlık endpoint'i `200` döndü.
+- Katalog regresyonu: `10 sample pages, 5 measured raw images, 33 llms links — clean`.
+- Tam canlı i18n SEO taraması: `398 URL · 0 hata · 0 dil uyarısı`.
+- K1–K9 kapandı. E1–E3 repo dışı DNS/registrar/CrUX kanıt kapıları olarak açık.
