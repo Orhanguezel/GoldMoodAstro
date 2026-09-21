@@ -180,6 +180,9 @@ for (const eventName of ['calculator_completed', 'chart_created']) {
 for (const eventName of ['consultant_view', 'booking_start']) {
   if (!consultantSource.includes(`gaEvent('${eventName}'`)) errors.push(`GA4: ${eventName} emission missing`);
 }
+if (!consultantSource.includes('trackedConsultantIdRef.current === targetId')) {
+  errors.push('GA4: consultant_view duplicate guard missing');
+}
 if (!telemetrySource.includes("'signup_complete'")) errors.push('telemetry: signup_complete contract missing');
 for (const [sourceName, source] of [['Register', registerSource], ['AuthModal', authModalSource]] as const) {
   if (!source.includes("trackEvent('signup_complete'")) errors.push(`${sourceName}: signup_complete emission missing`);

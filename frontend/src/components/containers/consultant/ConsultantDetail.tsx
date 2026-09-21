@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Award, Clock, Globe, Star, ShieldCheck, Sparkles, Calendar, Heart } from 'lucide-react';
@@ -47,6 +47,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
   const { data: serviceCategories = [] } = useListServiceCategoriesPublicQuery({ locale });
   const { data: dbLanguages = [] } = useListLanguagesPublicQuery();
   const [trackConsultantView] = useTrackConsultantViewMutation();
+  const trackedConsultantIdRef = useRef<string | null>(null);
   const { data: karne } = useGetConsultantOutcomeScoreQuery(id, { skip: !id });
   const { data: services = [], isLoading: servicesLoading } = useListConsultantServicesPublicQuery(
     { consultantId: consultant?.id || '', locale },
@@ -83,12 +84,13 @@ export default function ConsultantDetail({ id, locale }: Props) {
   }, [services, selectedServiceId]);
 
   useEffect(() => {
-    const targetId = consultant?.id || id;
-    if (!targetId) return;
+    const targetId = consultant?.id;
+    if (!targetId || trackedConsultantIdRef.current === targetId) return;
+    trackedConsultantIdRef.current = targetId;
     trackConsultantView(targetId);
     trackEvent('consultant_view', { consultant_id: targetId, slug: consultant?.slug }).catch(() => {});
     gaEvent('consultant_view', { consultant_id: targetId, consultant_slug: consultant?.slug });
-  }, [consultant?.id, consultant?.slug, id, trackConsultantView]);
+  }, [consultant?.id, consultant?.slug, trackConsultantView]);
 
   useEffect(() => {
     setIsFavorited(Boolean(consultant?.is_favorited));

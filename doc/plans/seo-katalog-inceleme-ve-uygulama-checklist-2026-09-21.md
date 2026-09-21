@@ -205,7 +205,7 @@ döndürüyor. Commit `f17ecd0`; GitHub Actions dağıtımı `35596441180` başa
 - [x] **K28 — Dönüşüm ölçüm sözleşmesini tamamla.** `calculator_completed`,
   `chart_created`, `consultant_view`, `booking_start` ve mevcut `sign_up`
   olayları GA4'e; karşılıkları iç `/track` telemetrisine gönderilmeli.
-- [ ] **K29 — Canlı kabul.** Build, hedefli regresyon, sitemap taraması,
+- [x] **K29 — Canlı kabul.** Build, hedefli regresyon, sitemap taraması,
   320 px TR/EN/DE tarayıcı kontrolü ve GA4 consent sonrası dataLayer olayı
   doğrulanmalı; deploy/run kanıtı buraya yazılmalı.
 
@@ -215,3 +215,10 @@ regresyonu `16 sample pages, 15 unique localized OG images, 8 measured images,
 `362 URL · 0 hata · 0 dil uyarısı`. 320 px tarayıcı kontrolünde yeni TR H1,
 EN yazar etiketi ve DE içeriksiz günlük sayfanın `noindex,follow` davranışı
 yatay taşma olmadan doğrulandı.
+
+Canlı kabul: deploy sonrası sitemap `362` URL; hedefli regresyon temiz; DE
+Steinbock günlük sayfası tarihsiz title, `noindex,follow`, sıfır günlük Article
+şeması ve sitemap'te sıfır kayıt verdi. TR danışman akışında 320 px yatay taşma
+yoktu ve analitik izni sonrasında `consultant_view` dataLayer'a ulaştı. Kabul
+sırasında bulunan slug→UUID çift ölçümü, yalnız gerçek danışman kaydı geldikten
+sonra danışman başına tek gönderim yapan ref guard ile kapatıldı.
