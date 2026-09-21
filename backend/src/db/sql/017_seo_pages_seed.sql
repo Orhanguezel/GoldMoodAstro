@@ -480,7 +480,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
     "no_index": false
   },
   "consultants": {
-    "title": "Verifizierte Astrologen & spirituelle Berater",
+    "title": "Verifizierte Astrologen & Berater",
     "description": "Verifizierte Experten in Astrologie, Tarot, Numerologie und spiritueller Beratung. Filtere nach Fachgebiet, Sprache, Preis; buche Live-Sitzungen.",
     "og_image": "/uploads/seo/og_consultants.png",
     "no_index": false

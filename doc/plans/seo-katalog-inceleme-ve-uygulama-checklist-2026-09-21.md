@@ -102,7 +102,7 @@
 ```bash
 bun run --cwd frontend typecheck
 bun run --cwd frontend build
-bun run frontend/scripts/seo-catalog-regression.ts https://goldmoodastro.com
+bun run --cwd frontend seo:catalog-regression -- https://goldmoodastro.com
 bun frontend/scripts/seo-i18n-audit.ts https://goldmoodastro.com
 ```
 
