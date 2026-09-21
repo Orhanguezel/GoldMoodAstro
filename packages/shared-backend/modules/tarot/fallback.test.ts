@@ -21,6 +21,7 @@ describe('buildCardMeaningInterpretation', () => {
     });
 
     expect(result).toContain('Bugün odağım ne olmalı?');
+    expect(result).not.toContain('olmalı?.');
     expect(result).toContain('Değnek Sekizlisi (düz)');
     expect(result).toContain(card.meanings.upright);
     expect(result).not.toContain('Yorum şu an oluşturulamadı');
