@@ -10,5 +10,5 @@
 
 INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('01000000-0000-4000-8000-000000000026', 'company_brand', '*',
- '{"name":"GoldMoodAstro","slogan":"Yıldızlarla tanışan modern astroloji","legal_name":"Orhan Güzel – Softwareentwicklung","address":"Stralsunder Str. 38, 41515 Grevenbroich, Deutschland","vat_id":"DE463832419","phone":"0212 807 09 59","email":"goldmoodastro@gmail.com"}')
+ '{"name":"GoldMoodAstro","slogan":"Yıldızlarla tanışan modern astroloji","legal_name":"Orhan Güzel – Softwareentwicklung","address":"Stralsunder Str. 38, 41515 Grevenbroich, Deutschland","street_address":"Stralsunder Str. 38","postal_code":"41515","address_locality":"Grevenbroich","address_country":"DE","vat_id":"DE463832419","phone":"0212 807 09 59","email":"goldmoodastro@gmail.com"}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);

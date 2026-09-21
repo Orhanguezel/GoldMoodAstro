@@ -114,12 +114,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const themeMode = detectThemeMode(tokens);
   return (
     <html lang={lang} data-theme={themeMode} data-scroll-behavior="smooth" suppressHydrationWarning>
-      <head>
-        <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
       <body suppressHydrationWarning>{children}</body>
     </html>
   );

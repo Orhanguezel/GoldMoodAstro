@@ -211,21 +211,6 @@ async function fetchCurrencyConfig(): Promise<CurrencyConfig> {
   }
 }
 
-function formatPrice(value: string | number | null | undefined, currency = 'TRY', locale = 'en') {
-  const price = Number(value ?? 0);
-  if (!Number.isFinite(price)) return '';
-  if (price <= 0) return locale === 'de' ? 'Kostenlos' : 'Free';
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0,
-    }).format(price);
-  } catch {
-    return `${Math.round(price)} ${currency}`;
-  }
-}
-
 function consultantPageCopy(locale: string) {
   if (locale === 'tr') return {
     verified: 'Onaylı Danışman Profili', expertise: 'Uzmanlık Alanları', languages: 'Görüşme dilleri',
@@ -454,6 +439,8 @@ export default async function ConsultantDetailPage({ params }: Props) {
                   <img
                     src={absoluteUrl(consultant.avatar_url)}
                     alt={consultantName}
+                    width={640}
+                    height={640}
                     className="mb-5 aspect-square w-full rounded-2xl border border-(--gm-border-soft) object-cover"
                   />
                 ) : null}

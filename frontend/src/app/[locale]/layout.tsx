@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { Cinzel, Fraunces, Manrope } from 'next/font/google';
 
@@ -152,6 +151,16 @@ export default async function RootLayout({
   const companyPhone = typeof companyBrand?.phone === 'string' ? companyBrand.phone : undefined;
   const companyEmail = typeof companyBrand?.email === 'string' ? companyBrand.email : undefined;
   const companyAddress = typeof companyBrand?.address === 'string' ? companyBrand.address : undefined;
+  const companyStreetAddress = typeof companyBrand?.street_address === 'string'
+    ? companyBrand.street_address
+    : companyAddress;
+  const companyPostalCode = typeof companyBrand?.postal_code === 'string' ? companyBrand.postal_code : undefined;
+  const companyLocality = typeof companyBrand?.address_locality === 'string'
+    ? companyBrand.address_locality
+    : (companyAddress?.match(/\b\d{5}\s+([^,]+),\s*Deutschland\b/i)?.[1] || undefined);
+  const companyCountry = typeof companyBrand?.address_country === 'string'
+    ? companyBrand.address_country
+    : (companyAddress?.toLocaleLowerCase('de-DE').includes('deutschland') ? 'DE' : undefined);
 
   const jsonLdData = graph([
     org({
@@ -167,10 +176,10 @@ export default async function RootLayout({
       email: companyEmail,
       address: companyAddress
         ? {
-            streetAddress: companyAddress,
-            addressLocality: 'İstanbul',
-            addressRegion: 'İstanbul',
-            addressCountry: 'TR',
+            streetAddress: companyStreetAddress,
+            postalCode: companyPostalCode,
+            addressLocality: companyLocality,
+            addressCountry: companyCountry || 'DE',
           }
         : undefined,
       contactPoint: companyPhone || companyEmail
@@ -208,6 +217,7 @@ export default async function RootLayout({
             initialMenuItems={initialMenuItems}
             initialFooterSections={initialFooterSections}
             initialFooterMenuItems={initialFooterMenuItems}
+            initialSocials={brand.social}
           >
             {children}
           </ClientLayout>

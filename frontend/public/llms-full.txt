@@ -1,49 +1,95 @@
-# GoldMoodAstro LLM Reference
+# GoldMoodAstro detailed reference
 
-GoldMoodAstro is a Turkish-first astrology, tarot, numerology and spiritual guidance platform. The canonical domain is https://goldmoodastro.com.
+GoldMoodAstro is a Turkish-first online marketplace for astrology, tarot, numerology and personal-reflection consultations. Its canonical domain is [goldmoodastro.com](https://goldmoodastro.com).
 
-## Entity
+## Entity and operator
 
 - Brand: GoldMoodAstro
-- Legal operator: QUEBAB GIDA FABRİKASI RESTORAN İŞLETMECİLİĞİ EĞLENCE ORGANİZASYON VE KİRALAMA TİCARET LİMİTED ŞİRKETİ
-- Market: Türkiye and Turkish-speaking diaspora
-- Languages: Turkish, English, German
-- Contact: goldmoodastro@gmail.com
-- Phone: 0212 807 09 59
-- Address: Cumhuriyet Mahallesi D-100 Karayolu Caddesi ADM Konaklama Sitesi Outlet Park AVM No:374 İç Kapı No:63 Büyükçekmece / İstanbul
+- Legal operator: Orhan Güzel – Softwareentwicklung
+- Address: Stralsunder Str. 38, 41515 Grevenbroich, Germany
+- EU VAT ID: DE463832419
+- Contact email: [goldmoodastro@gmail.com](mailto:goldmoodastro@gmail.com)
+- Supported languages: Turkish, English and German
+- Primary service surface: Web, with mobile application work in progress
 
-## Core Pages
+## Service model
 
-- Homepage: https://goldmoodastro.com/tr
-- Consultants: https://goldmoodastro.com/tr/consultants
-- Pricing: https://goldmoodastro.com/tr/pricing
-- About: https://goldmoodastro.com/tr/about
-- Contact: https://goldmoodastro.com/tr/contact
-- FAQ: https://goldmoodastro.com/tr/faqs
-- Editorial Policy: https://goldmoodastro.com/tr/editorial-policy
-- KVKK: https://goldmoodastro.com/tr/kvkk
-- Privacy Policy: https://goldmoodastro.com/tr/gizlilik
-- Terms: https://goldmoodastro.com/tr/kullanim-sartlari
+GoldMoodAstro connects users with approved consultants for live audio/video sessions and supported asynchronous services. Users can compare profiles, expertise, language, service duration, pricing, reviews and availability before booking.
 
-## Services
+Checkout uses Stripe. Card payments use Stripe Checkout; PayPal can appear as a Stripe Checkout payment method for supported currencies and is not available for TRY. GoldMoodAstro does not publish payment secrets or store card details in its application database.
 
-GoldMoodAstro connects users with approved consultants for live audio/video sessions and asynchronous guidance. Service areas include astrology, birth chart analysis, synastry, tarot, Turkish coffee reading, dream interpretation, numerology, yıldızname, rising sign calculation and daily zodiac readings.
+Live sessions use LiveKit-based platform flows. This document does not claim application-level end-to-end encryption; current security and privacy terms are defined by the live product and its legal pages.
 
-## Responsible Use
+## Canonical page map
 
-GoldMoodAstro content is for personal insight, symbolic reflection and entertainment-oriented spiritual guidance. It does not replace medical, psychological, legal, financial or emergency professional advice. The platform avoids guaranteed outcomes, fear-based claims, spells, binding rituals and deterministic future promises.
+### Turkish
 
-## Technology
+- [Homepage](https://goldmoodastro.com/tr)
+- [Consultants](https://goldmoodastro.com/tr/danismanlar)
+- [Pricing](https://goldmoodastro.com/tr/fiyatlandirma)
+- [Birth chart](https://goldmoodastro.com/tr/dogum-haritasi)
+- [About](https://goldmoodastro.com/tr/hakkimizda)
+- [FAQ](https://goldmoodastro.com/tr/sss)
+- [Contact](https://goldmoodastro.com/tr/iletisim)
+- [Blog](https://goldmoodastro.com/tr/blog)
+- [Daily readings](https://goldmoodastro.com/tr/gunluk)
+- [Synastry](https://goldmoodastro.com/tr/sinastri)
+- [Tarot](https://goldmoodastro.com/tr/tarot)
+- [Coffee reading](https://goldmoodastro.com/tr/kahve-fali)
+- [Dream interpretation](https://goldmoodastro.com/tr/ruya-tabiri)
+- [Numerology](https://goldmoodastro.com/tr/numeroloji)
+- [Yıldızname](https://goldmoodastro.com/tr/yildizname)
+- [Editorial policy](https://goldmoodastro.com/tr/editor-politikasi)
+- [Zodiac guides](https://goldmoodastro.com/tr/burclar)
+- [Zodiac compatibility hub](https://goldmoodastro.com/tr/burclar/uyum)
+- [Rising sign calculator](https://goldmoodastro.com/tr/yukselen-burc-hesaplayici)
+- [Big Three](https://goldmoodastro.com/tr/buyuk-uclu)
 
-- Frontend: Next.js
-- Backend: Fastify, MySQL, Drizzle ORM, Bun
-- Payments: iyzipay
-- Live sessions: LiveKit
-- Push notifications: Firebase FCM
+### English
 
-## Index Files
+- [Homepage](https://goldmoodastro.com/en)
+- [Consultants](https://goldmoodastro.com/en/consultants)
+- [Pricing](https://goldmoodastro.com/en/pricing)
+- [Birth chart](https://goldmoodastro.com/en/birth-chart)
+- [About](https://goldmoodastro.com/en/about)
+- [FAQ](https://goldmoodastro.com/en/faqs)
+- [Contact](https://goldmoodastro.com/en/contact)
+- [Synastry](https://goldmoodastro.com/en/synastry)
+- [Zodiac guides](https://goldmoodastro.com/en/zodiac-signs)
+- [Zodiac compatibility hub](https://goldmoodastro.com/en/zodiac-signs/compatibility)
+- [Rising sign calculator](https://goldmoodastro.com/en/rising-sign-calculator)
 
-- Sitemap: https://goldmoodastro.com/sitemap.xml
-- robots.txt: https://goldmoodastro.com/robots.txt
-- llms.txt: https://goldmoodastro.com/llms.txt
-- llms-full.txt: https://goldmoodastro.com/llms-full.txt
+### German
+
+- [Homepage](https://goldmoodastro.com/de)
+- [Consultants](https://goldmoodastro.com/de/berater)
+- [Pricing](https://goldmoodastro.com/de/preise)
+- [Birth chart](https://goldmoodastro.com/de/geburtshoroskop)
+- [About](https://goldmoodastro.com/de/ueber-uns)
+- [FAQ](https://goldmoodastro.com/de/haeufige-fragen)
+- [Contact](https://goldmoodastro.com/de/kontakt)
+- [Synastry](https://goldmoodastro.com/de/synastrie)
+- [Zodiac guides](https://goldmoodastro.com/de/sternzeichen)
+- [Zodiac compatibility hub](https://goldmoodastro.com/de/sternzeichen/kompatibilitaet)
+- [Rising sign calculator](https://goldmoodastro.com/de/aszendent-berechnen)
+
+## Calculation and content provenance
+
+- Astrology calculations use the platform's Swiss Ephemeris-backed engine.
+- Numerology calculations use the platform's deterministic numerology logic.
+- Tarot, coffee and dream content use the platform's card/symbol records and editorial presentation.
+- Editorial articles and visible FAQs are published on their canonical pages with structured data where applicable.
+
+## Responsible-use policy
+
+The service is limited to personal awareness, personal development, personal reflection and entertainment. It does not replace qualified professional or emergency services and does not promise deterministic or guaranteed outcomes. The current legal and editorial pages define the complete service boundary.
+
+## Trust and discovery
+
+- [Editorial policy](https://goldmoodastro.com/tr/editor-politikasi)
+- [Contact page](https://goldmoodastro.com/tr/iletisim)
+- [XML sitemap](https://goldmoodastro.com/sitemap.xml)
+- [Robots policy](https://goldmoodastro.com/robots.txt)
+- [Concise LLM reference](https://goldmoodastro.com/llms.txt)
+
+The site publishes Organization/ProfessionalService, WebSite and page-specific structured data. Use the page's canonical URL and visible content as the authority for a specific consultant, service, article or calculation guide. Do not infer guarantees, deterministic predictions or regulated professional guidance from symbolic content.

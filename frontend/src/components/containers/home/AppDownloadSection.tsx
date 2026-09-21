@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Smartphone, Apple, Play, QrCode } from 'lucide-react';
+import { Smartphone, Apple, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBrand } from '@/hooks/useBrand';
 import { useUiSection } from '@/i18n';
@@ -15,6 +15,8 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
   const isTr = locale === 'tr';
   const { brand } = useBrand();
   const { ui } = useUiSection('ui_extra' as any);
+  const appStoreUrl = String(brand.assets['app_store_url'] || '').trim();
+  const googlePlayUrl = String(brand.assets['google_play_url'] || '').trim();
 
   const content = {
     title: ui('ui_extra_b3_app_download_title', isTr ? 'Yıldız Rehberiniz Cebinizde' : 'Your Star Guide in Your Pocket'),
@@ -71,8 +73,10 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
           {/* Download Buttons Set */}
           <div className="flex flex-wrap gap-5 mb-10">
             {/* Apple Store */}
-            <a 
-              href="#" 
+            {appStoreUrl ? <a
+              href={appStoreUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-4 bg-[var(--gm-bg-deep)]/40 hover:bg-[var(--gm-bg-deep)]/60 border border-[var(--gm-text)]/10 backdrop-blur-md px-6 py-3 rounded-2xl transition-all duration-300 group"
             >
               <Apple size={32} className="text-[var(--gm-text)]" />
@@ -80,11 +84,19 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
                 <span className="text-[10px] uppercase tracking-wider text-[var(--gm-text)]/50 leading-none mb-1">{isTr ? 'İndir' : 'Download on'}</span>
                 <span className="text-lg font-semibold text-[var(--gm-text)] leading-none">App Store</span>
               </div>
-            </a>
+            </a> : <span
+              aria-disabled="true"
+              className="flex cursor-not-allowed items-center gap-4 border border-[var(--gm-text)]/10 bg-[var(--gm-bg-deep)]/30 px-6 py-3 opacity-60 rounded-2xl"
+            >
+              <Apple size={32} className="text-[var(--gm-text)]" />
+              <span className="text-lg font-semibold text-[var(--gm-text)]">App Store</span>
+            </span>}
 
             {/* Play Store */}
-            <a 
-              href="#" 
+            {googlePlayUrl ? <a
+              href={googlePlayUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-4 bg-[var(--gm-bg-deep)]/40 hover:bg-[var(--gm-bg-deep)]/60 border border-[var(--gm-text)]/10 backdrop-blur-md px-6 py-3 rounded-2xl transition-all duration-300 group"
             >
               <Play size={28} fill="var(--gm-text)" className="text-[var(--gm-text)]" />
@@ -92,18 +104,13 @@ export default function AppDownloadSection({ locale = 'tr' }: { locale?: string 
                 <span className="text-[10px] uppercase tracking-wider text-[var(--gm-text)]/50 leading-none mb-1">{isTr ? 'Al' : 'Get it on'}</span>
                 <span className="text-lg font-semibold text-[var(--gm-text)] leading-none">Google Play</span>
               </div>
-            </a>
-          </div>
-
-          {/* QR Code / Web to App conversion */}
-          <div className="flex items-center gap-4 opacity-80 hover:opacity-100 transition-opacity duration-300 group/qr cursor-help">
-            <div className="p-3 bg-[var(--gm-text)]/10 rounded-xl border border-[var(--gm-text)]/20 group-hover/qr:border-(--gm-gold)/40 transition-colors">
-              <QrCode size={48} className="text-[var(--gm-text)]/70 group-hover/qr:text-(--gm-gold-light)" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-display text-[10px] tracking-[0.2em] uppercase text-[var(--gm-text)]/60">{content.qrLabel}</span>
-              <span className="text-xs text-[var(--gm-text)]/40">{ui('ui_extra_b3_app_download_qr_hint', isTr ? 'Kameranızı açıp tarayın' : 'Open your camera and scan')}</span>
-            </div>
+            </a> : <span
+              aria-disabled="true"
+              className="flex cursor-not-allowed items-center gap-4 border border-[var(--gm-text)]/10 bg-[var(--gm-bg-deep)]/30 px-6 py-3 opacity-60 rounded-2xl"
+            >
+              <Play size={28} fill="var(--gm-text)" className="text-[var(--gm-text)]" />
+              <span className="text-lg font-semibold text-[var(--gm-text)]">Google Play</span>
+            </span>}
           </div>
         </div>
 

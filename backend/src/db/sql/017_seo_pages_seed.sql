@@ -468,7 +468,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 -- DE ──────────────────────────────────────────────────────────────────────
 ('01000000-0000-4000-8000-000000000042', 'seo_pages', 'de', '{
   "home": {
-    "title": "GoldMoodAstro — Professionelle Astrologie- und Tarot-Beratung",
+    "title": "GoldMoodAstro — Astrologie- und Tarot-Beratung",
     "description": "Verifizierte Astrologen, Tarotleser und Numerologen aus der Türkei. Live-Sitzungen, Geburtshoroskope, Synastrie, Tageshoroskope und persönliche Beratung.",
     "og_image": "/uploads/seo/og_home.png",
     "no_index": false

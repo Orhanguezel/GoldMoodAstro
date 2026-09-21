@@ -279,9 +279,15 @@ export async function buildMetadataFromSeo(
   // Defaults (DB-driven)
   const siteName = asStr(seo.site_name) || 'GoldMoodAstro';
   const titleDefault = asStr(seo.title_default) || siteName;
-  // T31-B7: skip template when titleDefault === siteName to avoid duplication.
-  const isDefaultSameAsBrand = titleDefault.trim().toLowerCase() === siteName.trim().toLowerCase();
-  const titleTemplate = asStr(seo.title_template) || (isDefaultSameAsBrand ? '%s' : `%s | ${siteName}`);
+  // Page-level metadata must be final/absolute. Returning another template here
+  // lets the root layout append the brand a second time when the DB title already
+  // contains it ("GoldMoodAstro … | GoldMoodAstro"). Titles without the brand
+  // still receive it exactly once.
+  const normalizedTitle = titleDefault.trim().toLocaleLowerCase('en-US');
+  const normalizedSiteName = siteName.trim().toLocaleLowerCase('en-US');
+  const finalTitle = normalizedTitle.includes(normalizedSiteName)
+    ? titleDefault
+    : `${titleDefault} | ${siteName}`;
   const rawDescription =
     asStr(seo.description) ||
     asStr(seo.description_default) ||
@@ -339,7 +345,7 @@ export async function buildMetadataFromSeo(
   const metadata: Metadata = {
     metadataBase: new URL(baseUrl),
 
-    title: { default: titleDefault, template: titleTemplate },
+    title: { absolute: finalTitle },
     ...(description ? { description } : {}),
 
     alternates: {

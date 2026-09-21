@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Award, CheckCircle, Clock, Globe, Star, ShieldCheck, Sparkles, Calendar, Heart } from 'lucide-react';
+import { ArrowLeft, Award, Clock, Globe, Star, ShieldCheck, Sparkles, Calendar, Heart } from 'lucide-react';
 
 import {
   useGetConsultantQuery,
@@ -243,9 +243,12 @@ export default function ConsultantDetail({ id, locale }: Props) {
             <div className="relative">
               <div className="w-40 h-40 rounded-full border-2 border-(--gm-gold) p-1.5 bg-(--gm-bg)">
                 {consultant.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={consultant.avatar_url}
                     alt={consultant.full_name}
+                    width={320}
+                    height={320}
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
@@ -367,7 +370,15 @@ export default function ConsultantDetail({ id, locale }: Props) {
                     rel="noreferrer"
                     className="block aspect-square rounded-2xl overflow-hidden border border-(--gm-border-soft) hover:border-(--gm-gold)/40 transition-all"
                   >
-                    <img src={url} alt="" loading="lazy" className="w-full h-full object-cover" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt=""
+                      width={640}
+                      height={640}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
                   </a>
                 ))}
               </div>

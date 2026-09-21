@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import React from 'react';
 import HomeContent from '@/components/containers/home/HomeContent';
 
-import { normPath, absUrlJoin } from '@/integrations/shared';
+import { normPath } from '@/integrations/shared';
 import { buildMetadataFromSeo, fetchSeoObject, fetchSeoPageObject, mergeSeoPageIntoSeo } from '@/seo/server';
 
 export async function generateMetadata({
@@ -18,7 +18,6 @@ export async function generateMetadata({
 
   const metadata = await buildMetadataFromSeo(seo, { locale, pathname: normPath('/') });
   if (locale === 'tr') {
-    metadata.title = 'GoldMoodAstro | Astroloji, Tarot ve Ruhsal Danışmanlık';
     metadata.description =
       'GoldMoodAstro’da onaylı danışmanlarla astroloji, tarot, numeroloji ve ruhsal rehberlik seansları alın; randevu, ödeme ve canlı görüşmeyi güvenle yönetin.';
   }

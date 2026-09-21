@@ -86,9 +86,12 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
       {/* Big Image (advicemy style) */}
       <Link href={detailHref} className="relative block aspect-square w-full overflow-hidden bg-[var(--gm-bg-deep)]">
         {consultant.avatar_url && !imageFailed ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={consultant.avatar_url}
             alt={consultant.full_name}
+            width={640}
+            height={640}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             onError={() => setImageFailed(true)}
           />

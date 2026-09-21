@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Fragment, useMemo, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname, useSearchParams } from 'next/navigation';
 import Header from '../layout/header/Header';
@@ -41,12 +41,14 @@ export default function ClientLayout({
   initialMenuItems,
   initialFooterSections,
   initialFooterMenuItems,
+  initialSocials,
 }: {
   children: React.ReactNode;
   locale?: string;
   initialMenuItems?: PublicMenuItemDto[];
   initialFooterSections?: FooterSectionDto[];
   initialFooterMenuItems?: PublicMenuItemDto[];
+  initialSocials?: Record<string, string>;
 }) {
   const { brand } = useBrand();
   const { ui } = useUiSection('ui_extra' as any);
@@ -235,6 +237,7 @@ export default function ClientLayout({
         locale={locale}
         initialFooterSections={initialFooterSections}
         initialFooterMenuItems={initialFooterMenuItems}
+        initialSocials={initialSocials}
       />
       <ScrollProgress />
 
