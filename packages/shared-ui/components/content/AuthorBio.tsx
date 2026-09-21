@@ -2,6 +2,7 @@ import React from 'react';
 
 export type AuthorBioProps = {
   name: string;
+  eyebrow?: string;
   avatar?: string | null;
   title?: string | null;
   bio?: string | null;
@@ -13,6 +14,7 @@ export type AuthorBioProps = {
 
 export function AuthorBio({
   name,
+  eyebrow = 'Content Author',
   avatar,
   title,
   bio,
@@ -48,7 +50,7 @@ export function AuthorBio({
 
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--gm-gold-dim)]">
-            İçerik Yazarı
+            {eyebrow}
           </p>
           <h2 className={compact
             ? 'mt-2 text-xl font-semibold leading-tight text-[var(--gm-text)]'

@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { buildPageMetadata } from '@/seo/server';
 import JsonLd from '@/seo/JsonLd';
+import { hasPublishedDailyHoroscope } from '@/lib/zodiac/daily';
 
 type Props = {
   params: Promise<{ sign: string; locale: string }>;
@@ -148,11 +149,17 @@ async function fetchTodayServer(sign: string, locale: string): Promise<DailyHoro
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sign, locale } = await params;
+  if (!VALID_SIGNS.has(sign)) {
+    return { title: 'Not found', robots: { index: false, follow: false } };
+  }
   const label = signLabel(sign, locale);
-  const today = formatDate(new Date(), locale);
+  const horoscope = await fetchTodayServer(sign, locale);
+  const published = hasPublishedDailyHoroscope(horoscope);
+  const date = horoscope?.date ? new Date(horoscope.date) : new Date();
+  const today = formatDate(date, locale);
   const ogImageUrl = `https://goldmoodastro.com${localizedPath(locale, `/burclar/${sign}/bugun/opengraph-image`, 'tr')}`;
 
-  return buildPageMetadata({
+  const metadata = await buildPageMetadata({
     locale,
     pageKey: `burclar-${sign}-bugun`,
     pathname: `/burclar/${sign}/bugun`,
@@ -162,6 +169,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ogImage: ogImageUrl,
     },
   });
+
+  if (published) return metadata;
+
+  const localeKey = shortLocale(locale);
+  const unavailableTitle = localeKey === 'tr'
+    ? `${label} Burcu Günlük Yorumu`
+    : localeKey === 'de'
+      ? `${label} Tageshoroskop`
+      : `${label} Daily Horoscope`;
+  const unavailableDescription = localeKey === 'tr'
+    ? `${label} burcu günlük yorumu yayımlandığında bu sayfada gösterilir.`
+    : localeKey === 'de'
+      ? `Das ${label} Tageshoroskop erscheint auf dieser Seite, sobald es veröffentlicht wurde.`
+      : `The ${label} daily horoscope appears on this page when it is published.`;
+
+  return {
+    ...metadata,
+    title: unavailableTitle,
+    description: unavailableDescription,
+    robots: { index: false, follow: true },
+    openGraph: {
+      ...metadata.openGraph,
+      title: unavailableTitle,
+      description: unavailableDescription,
+    },
+    twitter: {
+      ...metadata.twitter,
+      title: unavailableTitle,
+      description: unavailableDescription,
+    },
+  };
 }
 
 import PageContainer from '@/components/common/PageContainer';
@@ -177,6 +215,7 @@ export default async function SignDailyPage({ params }: Props) {
     fetchSignInfoServer(sign, locale),
     fetchTodayServer(sign, locale),
   ]);
+  const published = hasPublishedDailyHoroscope(today);
   const pagePath = localizedPath(locale, `/burclar/${sign}/bugun`, 'tr');
   const pageUrl = `${SITE_URL}${pagePath}`;
   const todayDate = today?.date ?? new Date().toISOString().slice(0, 10);
@@ -239,13 +278,13 @@ export default async function SignDailyPage({ params }: Props) {
 
   return (
     <PageContainer width="full" pad="none" className="bg-(--gm-bg)">
-      <JsonLd id="daily-horoscope-review" data={reviewSchema} />
+      {published ? <JsonLd id="daily-horoscope-review" data={reviewSchema} /> : null}
       <ZodiacDetail
         initialTab="daily"
         initialInfo={info ?? buildFallbackInfo(sign, label, locale)}
         initialToday={today}
       />
-      <section className="mx-auto mt-12 max-w-4xl rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) px-6 py-5 shadow-(--gm-shadow-soft)">
+      {published ? <section className="mx-auto mt-12 max-w-4xl rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) px-6 py-5 shadow-(--gm-shadow-soft)">
         <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-(--gm-gold)">
           {reviewLabels.eyebrow}
         </p>
@@ -256,7 +295,7 @@ export default async function SignDailyPage({ params }: Props) {
         <p className="mt-2 text-sm leading-relaxed text-(--gm-text-dim)">
           {reviewLabels.note}
         </p>
-      </section>
+      </section> : null}
     </PageContainer>
   );
 }

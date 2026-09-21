@@ -56,12 +56,21 @@ async function main() {
         else if (comparableUrl(canonical) !== comparableUrl(response.url)) issues.push('canonical-not-self');
         const alternates = [...html.matchAll(/<link\s+rel="alternate"\s+hrefLang="([^"]+)"\s+href="([^"]+)"/gi)];
         const alternateLocales = new Set(alternates.map((match) => match[1].toLowerCase()));
-        for (const locale of ['tr', 'en', 'de', 'x-default']) {
+        const isDailyHoroscope = /\/(?:bugun|today|heute)\/?$/.test(new URL(response.url).pathname);
+        const requiredAlternates = isDailyHoroscope ? [expectedLocale] : ['tr', 'en', 'de', 'x-default'];
+        for (const locale of requiredAlternates) {
           if (!alternateLocales.has(locale)) issues.push(`hreflang-missing:${locale}`);
         }
-        if (expectedLocale !== 'tr' && /\b(?:Danışman|Danışmanlar|Randevu|Burçlar?|Hakkımızda|Görüşme|Ücretsiz|İçerik|Kullanım|Gizlilik|Ödeme|Bugün|Sağlık|Kariyer)\b/i.test(visibleText(html))) {
+        const text = visibleText(html);
+        if (expectedLocale !== 'tr' && /\b(?:Danışman|Danışmanlar|Randevu|Burçlar?|Hakkımızda|Görüşme|Ücretsiz|İçerik|Kullanım|Gizlilik|Ödeme|Bugün|Sağlık|Kariyer)\b/i.test(text)) {
           issues.push('possible-turkish-leak');
         }
+        const definiteLeak = expectedLocale === 'tr'
+          ? /\b(?:Content Author|Written by|Last reviewed)\b/i.test(text)
+          : expectedLocale === 'en'
+            ? /(?:İçerik Yazarı|İlgili araç ve rehberler|Son gözden geçirme)/i.test(text)
+            : /(?:İçerik Yazarı|Überspringen To Hauptinhalt|compatibility with all signs|Open each canonical sign pair|All 78 combinations)/i.test(text);
+        if (definiteLeak) issues.push('visible-language-leak');
         rows.push({ url, status: response.status, finalUrl: response.url, htmlLang, canonical, issues });
       } catch (error) {
         rows.push({ url, status: 0, finalUrl: '', htmlLang: '', canonical: '', issues: [`fetch:${(error as Error).message}`] });

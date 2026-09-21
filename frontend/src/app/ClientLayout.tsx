@@ -52,6 +52,16 @@ export default function ClientLayout({
 }) {
   const { brand } = useBrand();
   const { ui } = useUiSection('ui_extra' as any);
+  const skipFallback = locale === 'tr'
+    ? 'Ana içeriğe geç'
+    : locale === 'de'
+      ? 'Zum Hauptinhalt springen'
+      : 'Skip to main content';
+  const configuredSkipLabel = ui('ui_extra_b0_skip_to_main', skipFallback);
+  // Eski canlı seed'deki yarı Almanca metin yeni seed uygulanana kadar görünmesin.
+  const skipLabel = configuredSkipLabel === 'Überspringen To Hauptinhalt'
+    ? skipFallback
+    : configuredSkipLabel;
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -225,7 +235,7 @@ export default function ClientLayout({
         </>
       )}
       <a href="#main-content" className="skip-link">
-        {ui('ui_extra_b0_skip_to_main', 'Skip to main content')}
+        {skipLabel}
       </a>
       
       <Header brand={brand} locale={locale} initialMenuItems={initialMenuItems} />

@@ -55,7 +55,7 @@ export default function RisingSignCalculator({ locale = 'tr' }: { locale?: strin
             exit={{ opacity: 0, scale: 0.95 }}
             className="bg-surface p-8 md:p-12 rounded-[2.5rem] border border-border/40 shadow-soft"
           >
-            <BirthChartForm onSuccess={(c) => setResult(c)} />
+            <BirthChartForm analyticsSource="rising_sign" onSuccess={(c) => setResult(c)} />
           </motion.div>
         ) : (
           <motion.div

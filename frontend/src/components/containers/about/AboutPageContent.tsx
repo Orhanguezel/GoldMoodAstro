@@ -226,6 +226,10 @@ const AboutPageContent: React.FC = () => {
           <div className="mt-12 rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-10 shadow-(--gm-shadow-soft)">
             <AuthorBio
               name="Pınar Demircioğlu"
+              eyebrow={uiX(
+                'ui_blog_author_label',
+                locale === 'tr' ? 'Yazan' : locale === 'de' ? 'Geschrieben von' : 'Written by',
+              )}
               title={uiX('ui_extra_b2_about_founder_title', 'GoldMoodAstro Founder')}
               bio={copy.authorBio}
               expertise={['Product', 'Astrology Platform', 'Spiritual Guidance']}

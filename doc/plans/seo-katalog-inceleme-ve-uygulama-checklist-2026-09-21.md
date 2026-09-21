@@ -187,3 +187,31 @@ döndürüyor. Commit `f17ecd0`; GitHub Actions dağıtımı `35596441180` başa
   kontrolünde TR/EN bağlantılar, tarih, gerçek `5+` / `5.0★` metrikleri ve
   yatay taşma olmaması doğrulandı. Commit `25338cf`; GitHub Actions dağıtımı
   `35604701689` başarılı.
+
+## Arama niyeti ve görünür dil paketi — 2026-09-21
+
+- [x] **K24 — Günlük burç vaadini gerçek içerikle eşleştir.** Günlük metin
+  yoksa tarihli title, Article şeması ve editoryal inceleme iddiası basılmamalı;
+  URL `noindex,follow` olmalı ve sitemap'te yer almamalı. Metin yayımlandığında
+  bu sinyaller otomatik geri gelmeli.
+- [x] **K25 — Doğum haritası H1'ini arama niyetiyle eşleştir.** TR H1
+  “Doğum Haritası Hesaplama ve Yorumlama” olmalı; mevcut içerik ve görsel
+  düzen korunmalı.
+- [x] **K26 — Görünür dil sızıntılarını kapat.** Ortak AuthorBio etiketi,
+  skip-link ve burç uyumluluk bloğu TR/EN/DE locale ile eşleşmeli.
+- [x] **K27 — Dil ve içerik-vaadi regresyon kapısı.** Yüksek güvenli görünür
+  dil sızıntıları hata sayılmalı; içeriksiz günlük sayfada tarihli title,
+  index ve Article şeması testle engellenmeli.
+- [x] **K28 — Dönüşüm ölçüm sözleşmesini tamamla.** `calculator_completed`,
+  `chart_created`, `consultant_view`, `booking_start` ve mevcut `sign_up`
+  olayları GA4'e; karşılıkları iç `/track` telemetrisine gönderilmeli.
+- [ ] **K29 — Canlı kabul.** Build, hedefli regresyon, sitemap taraması,
+  320 px TR/EN/DE tarayıcı kontrolü ve GA4 consent sonrası dataLayer olayı
+  doğrulanmalı; deploy/run kanıtı buraya yazılmalı.
+
+Yerel kabul: frontend typecheck ve üretim build başarılı; hedefli katalog
+regresyonu `16 sample pages, 15 unique localized OG images, 8 measured images,
+33 llms links — clean`; içeriksiz günlük URL'ler çıkarıldıktan sonra tam tarama
+`362 URL · 0 hata · 0 dil uyarısı`. 320 px tarayıcı kontrolünde yeni TR H1,
+EN yazar etiketi ve DE içeriksiz günlük sayfanın `noindex,follow` davranışı
+yatay taşma olmadan doğrulandı.

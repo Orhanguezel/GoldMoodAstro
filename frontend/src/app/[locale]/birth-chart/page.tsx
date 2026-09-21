@@ -16,7 +16,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
 import SeoLandingArticle from '@/components/seo/SeoLandingArticle';
-import { getLanding } from '@/components/seo/seo-landing-content';
 import JsonLd from '@/seo/JsonLd';
 import { graph } from '@/seo/jsonld';
 import { webApplicationSchema } from '@/seo/toolSchemas';
@@ -25,10 +24,15 @@ import RisingSignClusterLinks from '@/components/seo/RisingSignClusterLinks';
 export default async function BirthChartPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com').replace(/\/$/, '');
+  const pageHeading = locale === 'tr'
+    ? 'Doğum Haritası Hesaplama ve Yorumlama'
+    : locale === 'de'
+      ? 'Geburtshoroskop berechnen und verstehen'
+      : 'Birth Chart Calculator and Interpretation';
 
   return (
     <>
-      <Banner title={getLanding('birth-chart', locale).eyebrow} />
+      <Banner title={pageHeading} />
       <PageContainer width="wide" pad="none">
         <JsonLd
           id="birth-chart-webapp"

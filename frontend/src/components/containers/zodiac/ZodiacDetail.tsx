@@ -575,6 +575,7 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
       <div className="mb-20">
         <AuthorBio
           name={`${brand.name} Editorial Team`}
+          eyebrow={ui('ui_blog_author_label', pick('Yazan', 'Written by', 'Geschrieben von'))}
           title={ui('ui_zodiac_author_title', 'Astrology and spiritual guidance editors')}
           bio={`${brand.name} ${ui('ui_zodiac_author_bio', 'content is prepared with astrological symbolism, practical self-awareness and clear guidance principles so users can arrive better prepared for consultant sessions.')}`}
           expertise={[ui('ui_zodiac_author_exp_astrology', 'Astrology'), ui('ui_zodiac_author_exp_zodiac', 'Zodiac'), ui('ui_zodiac_author_exp_spiritual', 'Spiritual Guidance')]}
@@ -586,14 +587,18 @@ export default function ZodiacDetail({ initialTab = 'overview', initialInfo = nu
         <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
             <h2 className={`${cinzel.className} text-2xl text-(--gm-text)`}>
-              {L.label} {ui('ui_zodiac_compat_block_title', 'compatibility with all signs')}
+              {L.label} {ui('ui_zodiac_compat_block_title', pick('tüm burçlarla uyumu', 'compatibility with all signs', 'Kompatibilität mit allen Zeichen'))}
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-(--gm-text-dim)">
-              {ui('ui_zodiac_compat_block_intro', 'Open each canonical sign pair to compare element, modality and the angle between the signs.')}
+              {ui('ui_zodiac_compat_block_intro', pick(
+                'Element, nitelik ve iki burç arasındaki açıyı karşılaştırmak için her burç çiftini açın.',
+                'Open each sign pair to compare element, modality and the angle between the signs.',
+                'Öffne jedes Zeichenpaar, um Element, Qualität und den Winkel zwischen den Zeichen zu vergleichen.',
+              ))}
             </p>
           </div>
           <Link href={compatibilityHubHref} className="text-xs font-bold uppercase tracking-[0.18em] text-(--gm-gold) hover:underline">
-            {ui('ui_zodiac_compat_block_hub', 'All 78 combinations')} →
+            {ui('ui_zodiac_compat_block_hub', pick('78 kombinasyonun tümü', 'All 78 combinations', 'Alle 78 Kombinationen'))} →
           </Link>
         </div>
         <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">

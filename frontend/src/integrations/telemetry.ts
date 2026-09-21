@@ -87,6 +87,8 @@ type FunnelEventName =
   | 'page_view'
   | 'signup_start'
   | 'signup_complete'
+  | 'calculator_completed'
+  | 'chart_created'
   | 'consultant_view'
   | 'service_select'
   | 'booking_start'

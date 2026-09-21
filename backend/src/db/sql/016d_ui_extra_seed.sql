@@ -358,7 +358,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('770164a0-a940-741d-d47b-a001d3b6e516', 'ui_extra_b0_dash_tab_profile', '*', '{"label":{"tr":"Profil","en":"Profile","de":"Profil"}}'),
 ('b5923b9a-a387-b3db-93d3-f61a3b5b848c', 'ui_extra_b0_dash_tab_security', '*', '{"label":{"tr":"Güvenlik","en":"Security","de":"Sicherheit"}}'),
 ('d4cd5c7e-3a3a-f0d6-0743-bf5da5844569', 'ui_extra_b0_dash_welcome', '*', '{"label":{"tr":"Hoş geldin","en":"Welcome","de":"Willkommen"}}'),
-('b46c3925-5e98-3c76-6241-721196f655c5', 'ui_extra_b0_skip_to_main', '*', '{"label":{"tr":"Ana içeriğe geç","en":"Skip To Main","de":"Überspringen To Hauptinhalt"}}')
+('b46c3925-5e98-3c76-6241-721196f655c5', 'ui_extra_b0_skip_to_main', '*', '{"label":{"tr":"Ana içeriğe geç","en":"Skip to main content","de":"Zum Hauptinhalt springen"}}')
 ON DUPLICATE KEY UPDATE value = VALUES(value);
 
 -- ui_extra_b1

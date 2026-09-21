@@ -9,8 +9,18 @@ import { useLazySearchGeocodeQuery } from '@/integrations/rtk/public/geocode.end
 import { useAuthStore } from '@/features/auth/auth.store';
 import { useUiSection } from '@/i18n';
 import type { BirthChart, BirthChartCreateInput, GeocodeResult } from '@/types/common';
+import { trackEvent } from '@/integrations/telemetry';
+import { gaEvent } from '@/lib/ga';
 
-export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthChart) => void }) {
+type AnalyticsSource = 'birth_chart' | 'rising_sign' | 'big_three';
+
+export default function BirthChartForm({
+  onSuccess,
+  analyticsSource = 'birth_chart',
+}: {
+  onSuccess: (data: BirthChart) => void;
+  analyticsSource?: AnalyticsSource;
+}) {
   const [previewChart, { isLoading: previewing }] = usePreviewBirthChartMutation();
   const [createChart, { isLoading: saving }] = useCreateBirthChartMutation();
   const { isAuthenticated } = useAuthStore();
@@ -52,6 +62,16 @@ export default function BirthChartForm({ onSuccess }: { onSuccess: (data: BirthC
       const res = isAuthenticated
         ? await createChart(payload).unwrap()
         : await previewChart(payload).unwrap();
+      const eventProperties = {
+        source: analyticsSource,
+        authenticated: isAuthenticated,
+      };
+      trackEvent('chart_created', eventProperties).catch(() => {});
+      gaEvent('chart_created', eventProperties);
+      if (analyticsSource === 'rising_sign') {
+        trackEvent('calculator_completed', eventProperties).catch(() => {});
+        gaEvent('calculator_completed', eventProperties);
+      }
       onSuccess(res);
     } catch (err: any) {
       const code = err?.data?.error?.message || '';

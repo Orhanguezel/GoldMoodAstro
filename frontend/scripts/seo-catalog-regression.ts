@@ -141,6 +141,51 @@ for (const fabricatedFallback of ["'500+'", "'20+'", "'4.9'"]) {
   }
 }
 
+const [trBirthChart, enRisingSign, deDailyHoroscope] = await Promise.all([
+  fetchText('/tr/dogum-haritasi'),
+  fetchText('/en/rising-sign-calculator'),
+  fetchText('/de/sternzeichen/steinbock/heute'),
+]);
+if (!/<h1[^>]*>\s*Doğum Haritası Hesaplama ve Yorumlama\s*<\/h1>/s.test(trBirthChart.text)) {
+  errors.push('/tr/dogum-haritasi: search-intent H1 missing');
+}
+if (/İçerik Yazarı/i.test(enRisingSign.text)) {
+  errors.push('/en/rising-sign-calculator: Turkish author label leaked');
+}
+for (const leak of ['İçerik Yazarı', 'Überspringen To Hauptinhalt', 'compatibility with all signs', 'All 78 combinations']) {
+  if (deDailyHoroscope.text.includes(leak)) errors.push(`/de/sternzeichen/steinbock/heute: visible language leak (${leak})`);
+}
+const deDailyVisible = decodeHtml(deDailyHoroscope.text.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' '));
+const deDailyUnavailable = /(?:noch nicht veröffentlicht|daily reading is not published yet|henüz yayınlanmadı)/i.test(deDailyVisible);
+const deDailyNoindex = /<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(deDailyHoroscope.text);
+if (deDailyUnavailable && !deDailyNoindex) {
+  errors.push('/de/sternzeichen/steinbock/heute: unpublished daily content must be noindex');
+}
+if (deDailyUnavailable && /<title>[^<]*\b\d{1,2}\.\s+[A-ZÄÖÜ][a-zäöü]+\s+20\d{2}/i.test(deDailyHoroscope.text)) {
+  errors.push('/de/sternzeichen/steinbock/heute: unpublished daily content has a dated title');
+}
+if (deDailyUnavailable && /id=["']jsonld:daily-horoscope-review["']/.test(deDailyHoroscope.text)) {
+  errors.push('/de/sternzeichen/steinbock/heute: unpublished daily content exposes Article review schema');
+}
+
+const telemetrySource = await Bun.file(new URL('../src/integrations/telemetry.ts', import.meta.url)).text();
+const birthChartFormSource = await Bun.file(new URL('../src/components/containers/birth-chart/BirthChartForm.tsx', import.meta.url)).text();
+const consultantSource = await Bun.file(new URL('../src/components/containers/consultant/ConsultantDetail.tsx', import.meta.url)).text();
+const registerSource = await Bun.file(new URL('../src/components/containers/auth/Register.tsx', import.meta.url)).text();
+const authModalSource = await Bun.file(new URL('../src/components/containers/auth/AuthModal.tsx', import.meta.url)).text();
+for (const eventName of ['calculator_completed', 'chart_created']) {
+  if (!telemetrySource.includes(`'${eventName}'`)) errors.push(`telemetry: ${eventName} contract missing`);
+  if (!birthChartFormSource.includes(`gaEvent('${eventName}'`)) errors.push(`GA4: ${eventName} emission missing`);
+}
+for (const eventName of ['consultant_view', 'booking_start']) {
+  if (!consultantSource.includes(`gaEvent('${eventName}'`)) errors.push(`GA4: ${eventName} emission missing`);
+}
+if (!telemetrySource.includes("'signup_complete'")) errors.push('telemetry: signup_complete contract missing');
+for (const [sourceName, source] of [['Register', registerSource], ['AuthModal', authModalSource]] as const) {
+  if (!source.includes("trackEvent('signup_complete'")) errors.push(`${sourceName}: signup_complete emission missing`);
+  if (!source.includes("gaEvent('sign_up'")) errors.push(`${sourceName}: GA4 sign_up emission missing`);
+}
+
 const siteGraph = trHome.match(/<script[^>]+id="jsonld:site-graph"[^>]*>(.*?)<\/script>/s)?.[1];
 if (!siteGraph) {
   errors.push('/tr: site JSON-LD graph missing');

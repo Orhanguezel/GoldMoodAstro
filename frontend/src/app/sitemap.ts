@@ -7,6 +7,7 @@
 import { MetadataRoute } from 'next';
 import brand from '../../../config/brand.json';
 import { toLocalizedPublicPath, type PublicLocale } from '@/i18n/localizedRoutes';
+import { hasPublishedDailyHoroscope } from '@/lib/zodiac/daily';
 
 const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL || brand.public_url || 'https://goldmoodastro.com').replace(/\/$/, '');
 
@@ -22,7 +23,6 @@ const ZODIAC_SIGNS = [
 
 // Template-heavy love/career/health/meditation pages stay noindex and outside
 // the sitemap until each sign has substantively unique editorial content.
-const SIGN_SUB_PAGES = ['/bugun'];
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
 const DEFAULT_LASTMOD = '2026-06-20T00:00:00.000Z';
 const TODAY_LASTMOD = `${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`;
@@ -113,7 +113,27 @@ async function fetchBlogItems(locale: PublicLocale): Promise<BlogRouteItem[]> {
   }
 }
 
+async function hasDailyHoroscope(sign: string, locale: PublicLocale): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/horoscopes/today?sign=${encodeURIComponent(sign)}&locale=${encodeURIComponent(locale)}`,
+      { next: { revalidate: 1800 } },
+    );
+    if (!res.ok) return false;
+    const json = await res.json();
+    return hasPublishedDailyHoroscope(json?.data ?? json ?? null);
+  } catch {
+    return false;
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const dailyAvailability = new Set<string>();
+  await Promise.all(LOCALES.flatMap((locale) =>
+    ZODIAC_SIGNS.map(async (sign) => {
+      if (await hasDailyHoroscope(sign, locale)) dailyAvailability.add(`${locale}:${sign}`);
+    }),
+  ));
   // Statik sayfalar × 3 locale
   const staticRoutes: MetadataRoute.Sitemap = LOCALES.flatMap((locale) =>
     STATIC_PAGES.map((page) => ({
@@ -137,16 +157,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         alternates: buildAlternates(mainPath),
       };
 
-      const subs: MetadataRoute.Sitemap = SIGN_SUB_PAGES.map((sub) => {
-        const subPath = `${mainPath}${sub}`;
-        return {
-          url: localizedUrl(locale, subPath),
-          lastModified: new Date(sub === '/bugun' ? TODAY_LASTMOD : '2026-06-20T00:00:00.000Z'),
-          changeFrequency: 'daily' as const,
-          priority: 0.6,
-          alternates: buildAlternates(subPath),
-        };
-      });
+      const dailyPath = `${mainPath}/bugun`;
+      const availableLocales = LOCALES.filter((item) => dailyAvailability.has(`${item}:${sign}`));
+      const dailyAlternates: Record<string, string> = Object.fromEntries(
+        availableLocales.map((item) => [item, localizedUrl(item, dailyPath)]),
+      );
+      if (dailyAvailability.has(`${DEFAULT_LOCALE}:${sign}`)) {
+        dailyAlternates['x-default'] = localizedUrl(DEFAULT_LOCALE, dailyPath);
+      }
+      const subs: MetadataRoute.Sitemap = dailyAvailability.has(`${locale}:${sign}`)
+        ? [{
+            url: localizedUrl(locale, dailyPath),
+            lastModified: new Date(TODAY_LASTMOD),
+            changeFrequency: 'daily' as const,
+            priority: 0.6,
+            alternates: { languages: dailyAlternates },
+          }]
+        : [];
 
       return [main, ...subs];
     }),

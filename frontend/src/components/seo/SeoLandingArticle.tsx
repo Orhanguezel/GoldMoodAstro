@@ -13,12 +13,12 @@ const REVIEW_DATE = '2026-09-21T00:00:00.000Z';
 
 function editorialCopy(locale: string) {
   if (locale === 'tr') {
-    return { name: 'GoldMoodAstro Editoryal Ekibi', reviewed: 'Son gözden geçirme: 21 Eylül 2026', policy: 'Editoryal politika', method: 'Yöntem' };
+    return { name: 'GoldMoodAstro Editoryal Ekibi', authorLabel: 'İçerik Yazarı', reviewed: 'Son gözden geçirme: 21 Eylül 2026', policy: 'Editoryal politika', method: 'Yöntem' };
   }
   if (locale === 'de') {
-    return { name: 'GoldMoodAstro Redaktion', reviewed: 'Zuletzt geprüft: 21. September 2026', policy: 'Redaktionsrichtlinie', method: 'Methodik' };
+    return { name: 'GoldMoodAstro Redaktion', authorLabel: 'Inhaltsredaktion', reviewed: 'Zuletzt geprüft: 21. September 2026', policy: 'Redaktionsrichtlinie', method: 'Methodik' };
   }
-  return { name: 'GoldMoodAstro Editorial Team', reviewed: 'Last reviewed: September 21, 2026', policy: 'Editorial policy', method: 'Methodology' };
+  return { name: 'GoldMoodAstro Editorial Team', authorLabel: 'Content Author', reviewed: 'Last reviewed: September 21, 2026', policy: 'Editorial policy', method: 'Methodology' };
 }
 
 export default async function SeoLandingArticle({ type, locale }: { type: LandingKey; locale: string }) {
@@ -88,6 +88,7 @@ export default async function SeoLandingArticle({ type, locale }: { type: Landin
       <TopicConnections type={type} locale={locale} />
       <AuthorBio
         name={editorial.name}
+        eyebrow={editorial.authorLabel}
         title={data.authorTitle}
         bio={`${data.title} ${ui.bioSuffix}`}
         expertise={data.expertise}

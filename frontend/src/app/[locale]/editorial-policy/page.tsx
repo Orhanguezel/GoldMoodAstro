@@ -20,6 +20,7 @@ const COPY = {
     back: 'Hakkımızda sayfasına dön',
     about: 'Hakkımızda',
     authorTitle: 'Editoryal ve yöntem ekibi',
+    authorLabel: 'İçerik Yazarı',
     expertise: ['Astroloji', 'Tarot', 'Numeroloji', 'Editoryal İnceleme'],
     sections: [
       {
@@ -66,6 +67,7 @@ const COPY = {
     back: 'Back to About',
     about: 'About',
     authorTitle: 'Editorial and methodology team',
+    authorLabel: 'Content Author',
     expertise: ['Astrology', 'Tarot', 'Numerology', 'Editorial Review'],
     sections: [
       { title: 'Content principle', paragraphs: ['GoldMoodAstro content is written to help users ask clearer questions and prepare for consultations, not to give fixed life decisions.', 'We avoid fear-based claims, dependency language and absolute predictions.'] },
@@ -81,6 +83,7 @@ const COPY = {
     back: 'Zurück zu Über uns',
     about: 'Über uns',
     authorTitle: 'Redaktion und Methodik',
+    authorLabel: 'Inhaltsredaktion',
     expertise: ['Astrologie', 'Tarot', 'Numerologie', 'Redaktionelle Prüfung'],
     sections: [
       { title: 'Inhaltsprinzip', paragraphs: ['GoldMoodAstro-Inhalte helfen dabei, klarere Fragen zu stellen und sich bewusst auf Beratungen vorzubereiten; sie treffen keine festen Lebensentscheidungen.', 'Wir vermeiden angstbasierte Aussagen, Abhängigkeit erzeugende Sprache und absolute Vorhersagen.'] },
@@ -191,6 +194,7 @@ export default async function EditorialPolicyPage({ params }: Props) {
         <div className="mt-12 rounded-[2rem] border border-(--gm-border-soft) bg-(--gm-surface) p-8 md:p-12 shadow-(--gm-shadow-soft)">
           <AuthorBio
             name="GoldMoodAstro Editorial Team"
+            eyebrow={copy.authorLabel}
             title={copy.authorTitle}
             bio={copy.description}
             expertise={copy.expertise}

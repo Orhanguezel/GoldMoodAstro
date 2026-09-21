@@ -12,6 +12,7 @@ import {
 import { useAuthStore } from '@/features/auth/auth.store';
 import { toast } from 'sonner';
 import { trackEvent } from '@/integrations/telemetry';
+import { gaEvent } from '@/lib/ga';
 import { useRequestNowBookingMutation } from '@/integrations/rtk/public/bookings_public.endpoints';
 import { useListConsultantServicesPublicQuery, type ConsultantServicePublic } from '@/integrations/rtk/public/consultant_services.public.endpoints';
 import { useListServiceCategoriesPublicQuery } from '@/integrations/rtk/public/service_categories.public.endpoints';
@@ -86,6 +87,7 @@ export default function ConsultantDetail({ id, locale }: Props) {
     if (!targetId) return;
     trackConsultantView(targetId);
     trackEvent('consultant_view', { consultant_id: targetId, slug: consultant?.slug }).catch(() => {});
+    gaEvent('consultant_view', { consultant_id: targetId, consultant_slug: consultant?.slug });
   }, [consultant?.id, consultant?.slug, id, trackConsultantView]);
 
   useEffect(() => {
@@ -143,6 +145,12 @@ export default function ConsultantDetail({ id, locale }: Props) {
       appointment_time: selectedInterval.time,
       media_type: svc?.media_type,
     }).catch(() => {});
+    gaEvent('booking_start', {
+      consultant_id: consultant.id,
+      service_id: svc?.id,
+      appointment_time: selectedInterval.time,
+      media_type: svc?.media_type,
+    });
     const q = new URLSearchParams({
       consultantId: consultant.id,
       resourceId: bookingResourceId,

@@ -141,6 +141,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   const relatedUiFallbacks: Record<string, string> = {
     ui_blog_related_tools_title: publicLocale === 'tr' ? 'İlgili araçlar' : publicLocale === 'de' ? 'Passende Werkzeuge' : 'Related tools',
     ui_blog_related_tools_intro: publicLocale === 'tr' ? 'Yazıdaki temayı bir sonraki adımda keşfetmek için ilgili rehber ve hesaplayıcıları açın.' : publicLocale === 'de' ? 'Öffne passende Leitfäden und Rechner, um das Thema des Artikels weiter zu erkunden.' : 'Open the relevant guides and calculators to explore the article topic further.',
+    ui_blog_author_label: publicLocale === 'tr' ? 'Yazan' : publicLocale === 'de' ? 'Geschrieben von' : 'Written by',
   };
   for (const tool of relatedTools) relatedUiFallbacks[tool.labelKey] = tool.fallback[publicLocale];
   const [author, relatedUi] = await Promise.all([
@@ -279,6 +280,7 @@ export default async function BlogDetailsPage({ params }: PageProps) {
             <AuthorBio
               variant="compact"
               name={authorName}
+              eyebrow={relatedUi.ui_blog_author_label}
               avatar={author?.avatar_url ? absUrlJoin(siteUrl, author.avatar_url) : null}
               title={safeStr(author?.headline) || (author ? (locale === 'tr' ? 'Astrolog ve GoldMoodAstro Danışmanı' : 'Astrologer and GoldMoodAstro Consultant') : (locale === 'tr' ? 'Astroloji ve ruhsal rehberlik editörleri' : 'Spiritual guidance and astrology editors'))}
               bio={safeStr(author?.bio) || (locale === 'tr'
