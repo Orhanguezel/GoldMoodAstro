@@ -5,6 +5,7 @@ import * as repo from './repository';
 import * as llm from '../llm';
 import { drawCardsSchema } from './validation';
 import { apiMessage } from '../_shared/api-i18n';
+import { buildCardMeaningInterpretation } from './fallback';
 
 export async function handleDraw(req: FastifyRequest, reply: FastifyReply) {
   const user = (req as any).user; // if authenticated
@@ -94,11 +95,7 @@ export async function handleDraw(req: FastifyRequest, reply: FastifyReply) {
     promptId = result.promptId;
   } catch (err) {
     console.error('Tarot LLM Error:', err);
-    interpretation = localeBase === 'de'
-      ? 'Die Deutung konnte gerade nicht erstellt werden, aber deine Karten stehen oben.'
-      : localeBase === 'en'
-        ? 'The interpretation could not be generated right now, but your cards are shown above.'
-        : 'Yorum şu an oluşturulamadı, ancak kartlarınız yukarıdadır.';
+    interpretation = buildCardMeaningInterpretation({ cards: picked, question, locale });
   }
 
   // 4) Save to DB
