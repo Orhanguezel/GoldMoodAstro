@@ -179,6 +179,11 @@ döndürüyor. Commit `f17ecd0`; GitHub Actions dağıtımı `35596441180` başa
   lokalize editoryal ekip adı, gerçek inceleme tarihi, editoryal politika ve
   yöntem bağlantısı gösterilmeli; Article JSON-LD aynı verilerle eşleşmeli.
   Görünür tarih ve bağlantılar üç dilde tarayıcıyla doğrulandı.
-- [ ] **K23 — Regresyon kapısı.** SSR çıktıda konu bağlantıları, görünür
+- [x] **K23 — Regresyon kapısı.** SSR çıktıda konu bağlantıları, görünür
   inceleme tarihi ve sahte fallback metriklerinin bulunmadığı doğrulanmalı;
-  mevcut 398 URL i18n denetimi bozulmamalı.
+  mevcut 398 URL i18n denetimi bozulmamalı. Canlı regresyon `16 sample pages,
+  15 unique localized OG images, 8 measured images, 33 llms links — clean`;
+  tam tarama `398 URL · 0 hata · 0 dil uyarısı`. Canlı 320 px tarayıcı
+  kontrolünde TR/EN bağlantılar, tarih, gerçek `5+` / `5.0★` metrikleri ve
+  yatay taşma olmaması doğrulandı. Commit `25338cf`; GitHub Actions dağıtımı
+  `35604701689` başarılı.
