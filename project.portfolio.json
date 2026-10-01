@@ -60,11 +60,20 @@
     "progressPercent": 45
   },
   "links": {
-    "website": null,
+    "website": "https://goldmoodastro.com",
     "demo": null,
     "repository": null
   },
   "media": [
+    {
+      "id": "cover-site",
+      "role": "cover",
+      "src": "https://www.guezelwebdesign.com/uploads/portfolio/goldmoodastro/kapak-1600x900.webp",
+      "alt": "GoldMoodAstro ana sayfası: modern astroloji ile yıldızlarla buluşun",
+      "caption": "GoldMoodAstro — Danışman Eşleştirme ve Canlı Seans Platformu",
+      "displayPermission": true,
+      "rightsConfirmed": true
+    },
     {
       "id": "cover",
       "role": "cover",
@@ -77,8 +86,17 @@
   ],
   "channels": {
     "website": {
-      "enabled": false,
-      "disabledReason": "CRM v2 geçişinde web yayın içeriği ve izinleri kullanıcı onayı bekliyor"
+      "enabled": true,
+      "title": "GoldMoodAstro — Danışman Eşleştirme ve Canlı Seans Platformu",
+      "decisionNote": "Orhan 2026-10-01: portfoyde paylasilir (goldmoodastro.com).",
+      "summary": "Astroloji, tarot ve ruhsal rehberlik alanında doğrulanmış danışmanlarla kullanıcıları buluşturan; uygulama içi sesli görüşme, randevu ve ödeme sistemi olan platform.",
+      "description": "Astroloji, tarot ve ruhsal rehberlik alanında doğrulanmış danışmanlarla kullanıcıları buluşturan; uygulama içi sesli görüşme, randevu ve ödeme sistemi olan platform.",
+      "seoTitle": "GoldMoodAstro — Danışman Eşleştirme ve Canlı Seans Platformu",
+      "seoDescription": "Doğrulanmış danışmanlarla canlı seans platformu: React Native mobil uygulama, Agora sesli görüşme, randevu, Iyzipay ödeme ve yönetim paneli.",
+      "category": "custom-software",
+      "imageIds": [
+        "cover-site"
+      ]
     },
     "bionluk": {
       "enabled": false,
@@ -94,5 +112,5 @@
     "controlPlane": "gzl-gelir-crm",
     "lastChangedBy": "orhan"
   },
-  "updatedAt": "2026-08-16T13:25:12.725Z"
+  "updatedAt": "2026-10-01"
 }
