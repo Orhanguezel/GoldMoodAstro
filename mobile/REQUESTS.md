@@ -23,6 +23,14 @@ günceller. **Her istek tek bir başlık altında, tarihli.**
 
 ## İstekler
 
+## 2026-10-03 — iOS push sağlayıcı sözleşmesi
+
+**Durum:** ⏳ Bekliyor; mobil cihaz teslim testi yapılmadı.
+**Neden:** Expo getDevicePushTokenAsync iOS'ta APNs, Android'de FCM tokenı döndürür. APNs tokenı mevcut FCM kayıt ucuna gönderilemez; bu yanlış kayıt mobilde durduruldu.
+**İstenen karar:** iOS için Firebase Messaging native köprüsüyle gerçek FCM tokenı veya platform/provider alanlı APNs backend adaptörü. HepsiHal OneSignal ayrı adaptör kullanacak.
+**Kabul:** oturum sahibine kayıt, çıkış/hesap değişiminde ilişki iptali, token rotasyonu ve gerçek Android/iOS teslim + yetkili deep link. Başarısız backend kaydı başarılı gibi gösterilmeyecek.
+**Sınır:** Bu tur backend'e veya push sağlayıcı hesaplarına değişiklik yapılmadı.
+
 ## 2026-05-16 — FAZ 41 T41-1: auth/me `is_premium` + `subscription` özeti
 
 **Method + Path:** `GET /auth/me` (ve alias `GET /auth/user`) — mevcut handler’a **additive** alanlar  

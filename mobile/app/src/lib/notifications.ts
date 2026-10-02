@@ -1,5 +1,4 @@
 import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { storage } from './storage';
 import { authApi } from './api';
@@ -20,8 +19,16 @@ Notifications.setNotificationHandler({
  * backend'e ilet.
  */
 export async function registerPushToken(): Promise<string | null> {
-  // Simülatörde token alınamaz
-  if (!Constants.isDevice) return null;
+  // Expo native tokens: Android = FCM; iOS = APNs, not an FCM token.
+  // iOS needs a separate provider bridge before using registerFcmToken.
+  if (Platform.OS !== 'android') return null;
+
+  await Notifications.setNotificationChannelAsync('default', {
+    name: 'Varsayılan',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: '#C9A961',
+  });
 
   const { status: existing } = await Notifications.getPermissionsAsync();
   let status = existing;
@@ -31,22 +38,11 @@ export async function registerPushToken(): Promise<string | null> {
   }
   if (status !== 'granted') return null;
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'Varsayılan',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#C9A961',
-    });
-  }
-
   try {
     const tokenResponse = await Notifications.getDevicePushTokenAsync();
     const token = String(tokenResponse.data);
+    await authApi.registerFcmToken(token);
     await storage.setPushToken(token);
-    
-    // Backend'e kaydet (ignore error if not logged in yet)
-    await authApi.registerFcmToken(token).catch(() => {});
     
     return token;
   } catch (err) {

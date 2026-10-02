@@ -1,58 +1,81 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { router } from 'expo-router';
 import { storage } from '@/lib/storage';
-import { authApi, setAuthToken } from '@/lib/api';
+import { authApi, getAuthEpoch, hydrateAuthTokenFromStorage, setAuthToken, subscribeToAuth } from '@/lib/api';
 import { registerPushToken } from '@/lib/notifications';
 import type { User } from '@/types';
-
 import { logger } from '@/lib/logger';
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const initAuth = async () => {
-    try {
-      const token = await storage.getAuthToken();
-      if (token) {
-        setAuthToken(token);
-        const res = await authApi.me().catch(() => null);
-        if (res && res.user) {
-          setUser(res.user);
-          registerPushToken().catch(() => {});
-        } else {
-          // Token geçersiz veya expired
-          await storage.clearSession();
-          setAuthToken(null);
-        }
+type AuthState = { user: User | null; loading: boolean; epoch: number };
+let state: AuthState = { user: null, loading: true, epoch: getAuthEpoch() };
+const listeners = new Set<() => void>();
+const flights = new Map<number, Promise<void>>();
+const getSnapshot = () => state;
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+};
+function publish(next: AuthState) {
+  state = next;
+  for (const listener of listeners) listener();
+}
+subscribeToAuth(() => {
+  publish({ user: null, loading: true, epoch: getAuthEpoch() });
+});
+
+async function initAuth(): Promise<void> {
+  try {
+    const token = await hydrateAuthTokenFromStorage();
+    const epoch = getAuthEpoch();
+    if (!token) { publish({ user: null, loading: false, epoch }); return; }
+    const pending = flights.get(epoch);
+    if (pending) return pending;
+    const check = (async () => {
+      try {
+        const result = await authApi.me();
+        if (epoch !== getAuthEpoch()) return;
+        publish({ user: result.user ?? null, loading: false, epoch });
+        if (result.user) void registerPushToken().catch(() => {});
+      } catch {
+        // Offline/5xx preserves credentials, without asserting a verified user.
+        if (epoch === getAuthEpoch()) publish({ user: null, loading: false, epoch });
+        logger.warn('Auth check unavailable; credentials were not cleared by the view');
+      } finally {
+        flights.delete(epoch);
       }
-    } catch (err) {
-      logger.warn('Auth initialization failed:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    })();
+    flights.set(epoch, check);
+    return check;
+  } catch {
+    publish({ user: null, loading: false, epoch: getAuthEpoch() });
+    logger.warn('Secure session bootstrap unavailable');
+  }
+}
 
-  useEffect(() => {
-    initAuth();
-  }, []);
-
-  const logout = async () => {
-    await authApi.unregisterFcmToken().catch(() => {});
-    await storage.clearPushToken();
+async function logout() {
+  await authApi.unregisterFcmToken().catch(() => {});
+  setAuthToken(null);
+  try {
     await storage.clearSession();
-    setAuthToken(null);
-    setUser(null);
-    router.replace('/auth/login');
-  };
+    await storage.clearPushToken();
+  } finally {
+    publish({ user: null, loading: false, epoch: getAuthEpoch() });
+  }
+  router.replace('/auth/login');
+}
 
-  return { 
-    user, 
-    /** @deprecated Prefer `authHydrating` for new code — same value. */
-    loading,
-    /** True while the first session check runs. Avoid guest-only UI while this is true. */
-    authHydrating: loading,
+export function useAuth() {
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  useEffect(() => {
+    if (snapshot.loading) void initAuth();
+  }, [snapshot.epoch, snapshot.loading]);
+  return {
+    user: snapshot.user,
+    /** @deprecated Prefer authHydrating. */
+    loading: snapshot.loading,
+    authHydrating: snapshot.loading,
     logout,
     refreshUser: initAuth,
-    isAuthenticated: !!user
+    isAuthenticated: !!snapshot.user,
   };
 }

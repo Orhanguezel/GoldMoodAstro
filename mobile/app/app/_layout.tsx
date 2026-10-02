@@ -1,6 +1,6 @@
 import '@/polyfills';
-import { useEffect, useState } from 'react';
-import { Stack, useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import { Stack, useRouter, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -26,12 +26,10 @@ import {
 } from '@expo-google-fonts/manrope';
 
 import { initI18n } from '@/lib/i18n';
-import { registerPushToken } from '@/lib/notifications';
 import { routeFromNotificationData } from '@/lib/notificationRoutes';
 import { ThemeProvider, useAppTheme } from '@/theme';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
-import { logger } from '@/lib/logger';
 initI18n();
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -40,7 +38,7 @@ function RootLayoutInner() {
   const router = useRouter();
   const lastNotification = Notifications.useLastNotificationResponse();
 
-  const [fontsReady] = useFonts({
+  const [fontsReady, fontError] = useFonts({
     Cinzel_400Regular,
     Cinzel_500Medium,
     Cinzel_700Bold,
@@ -54,22 +52,20 @@ function RootLayoutInner() {
     Manrope_500Medium,
     Manrope_700Bold,
   });
-  const [ready, setReady] = useState(false);
+  const ready = fontsReady || !!fontError;
 
   useEffect(() => {
     if (!lastNotification || !ready) return;
     const data = lastNotification.notification.request.content.data as Record<string, unknown>;
     const target = routeFromNotificationData(data);
-    if (target) router.push(target as any);
-  }, [lastNotification, ready]);
+    if (target) router.push(target as Href);
+  }, [lastNotification, ready, router]);
 
   useEffect(() => {
-    if (fontsReady) {
+    if (ready) {
       SplashScreen.hideAsync().catch(() => {});
-      setReady(true);
-      registerPushToken().catch((err) => logger.warn('Push init error:', err));
     }
-  }, [fontsReady]);
+  }, [ready]);
 
   if (!ready) return null;
 

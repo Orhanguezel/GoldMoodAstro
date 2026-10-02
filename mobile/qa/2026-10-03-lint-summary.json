@@ -1,0 +1,241 @@
+{
+  "errors": 79,
+  "warnings": 500,
+  "errorFiles": [
+    {
+      "file": "app/(consultant)/consultant/kyc.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/purity"
+      ]
+    },
+    {
+      "file": "app/(consultant)/consultant/media.tsx",
+      "errors": 6,
+      "rules": [
+        "react-hooks/set-state-in-effect",
+        "react-hooks/purity"
+      ]
+    },
+    {
+      "file": "app/(consultant)/consultant/profile.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/(tabs)/bookings.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/(tabs)/connect.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/(tabs)/index.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/(tabs)/settings.tsx",
+      "errors": 7,
+      "rules": [
+        "react-hooks/static-components"
+      ]
+    },
+    {
+      "file": "app/blog/[slug].tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/blog/index.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/booking/[id]/review.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/chat/[id].tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/immutability"
+      ]
+    },
+    {
+      "file": "app/cms/[moduleKey].tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/coffee/index.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/consultant/[id].tsx",
+      "errors": 4,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/dreams/index.tsx",
+      "errors": 2,
+      "rules": [
+        "react-hooks/refs"
+      ]
+    },
+    {
+      "file": "app/karne/index.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/me/credits.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/me/readings.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/me/readings/[type]/[id].tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/me/settings.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/media-messages/index.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/menu/index.tsx",
+      "errors": 7,
+      "rules": [
+        "react-hooks/set-state-in-effect",
+        "react-hooks/static-components"
+      ]
+    },
+    {
+      "file": "app/notifications.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "app/onboarding/index.tsx",
+      "errors": 17,
+      "rules": [
+        "react-hooks/refs"
+      ]
+    },
+    {
+      "file": "app/synastry/index.tsx",
+      "errors": 2,
+      "rules": [
+        "react-hooks/immutability"
+      ]
+    },
+    {
+      "file": "app/yildizname/index.tsx",
+      "errors": 6,
+      "rules": [
+        "react-hooks/refs"
+      ]
+    },
+    {
+      "file": "app/zodiac/[sign].tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/set-state-in-effect"
+      ]
+    },
+    {
+      "file": "src/components/BannerSlider.tsx",
+      "errors": 2,
+      "rules": [
+        "react-hooks/set-state-in-effect",
+        "react-hooks/immutability"
+      ]
+    },
+    {
+      "file": "src/components/BannerWidget.tsx",
+      "errors": 2,
+      "rules": [
+        "react-hooks/set-state-in-effect",
+        "react-hooks/immutability"
+      ]
+    },
+    {
+      "file": "src/components/DailyHoroscopeCard.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/immutability"
+      ]
+    },
+    {
+      "file": "src/components/ReviewList.tsx",
+      "errors": 1,
+      "rules": [
+        "react-hooks/static-components"
+      ]
+    },
+    {
+      "file": "src/components/SkeletonView.tsx",
+      "errors": 2,
+      "rules": [
+        "react-hooks/refs"
+      ]
+    },
+    {
+      "file": "src/hooks/useFavorites.ts",
+      "errors": 1,
+      "rules": [
+        "react-hooks/immutability"
+      ]
+    }
+  ]
+}
