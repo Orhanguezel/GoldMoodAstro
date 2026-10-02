@@ -8,7 +8,8 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { storage } from '@/lib/storage';
 import type { CustomPageRow } from '@/lib/cms';
-import { cacheKey, messageFromApiErrorBody, normalizeListResponse } from '@/lib/apiUtils';
+import { messageFromApiErrorBody, normalizeListResponse } from '@/lib/apiUtils';
+import { fetchWithPolicy, HttpError, SessionChangedError } from './core/transport';
 import {
   buildBookingCreateRequest,
   buildLoginRequest,
@@ -212,177 +213,110 @@ export interface RedeemedCampaign extends JsonRecord {
 }
 
 let _authToken: string | null = null;
-
-/** Bu uçlarda 401 = kimlik bilgisi hatası; global oturum temizliği yapılmaz. */
+let authEpoch = 0;
+let hydrated = false;
+let hydration: Promise<string | null> | null = null;
+const authListeners = new Set<() => void>();
+export const getAuthEpoch = () => authEpoch;
+export const subscribeToAuth = (listener: () => void) => {
+  authListeners.add(listener);
+  return () => { authListeners.delete(listener); };
+};
 const UNAUTHORIZED_NO_GLOBAL_SIGNOUT = new Set([
-  '/auth/login',
-  '/auth/register',
-  '/auth/social-login',
-  '/auth/token/refresh',
+  '/auth/login', '/auth/register', '/auth/social-login', '/auth/token/refresh',
 ]);
 
 export function setAuthToken(token: string | null) {
+  hydrated = true;
+  if (_authToken === token) return;
   _authToken = token;
+  authEpoch++;
+  for (const listener of authListeners) listener();
 }
 
-/** Bellekte token yoksa AsyncStorage'dan yükler (soğuk açılış / onboarding). */
 export async function hydrateAuthTokenFromStorage(): Promise<string | null> {
-  if (_authToken) return _authToken;
-  const t = await storage.getAuthToken();
-  if (t) _authToken = t;
-  return _authToken;
+  if (hydrated) return _authToken;
+  if (hydration) return hydration;
+  const epoch = authEpoch;
+  hydration = (async () => {
+    const token = await storage.getAuthToken();
+    if (epoch === authEpoch && !hydrated) setAuthToken(token);
+    return _authToken;
+  })().finally(() => { hydration = null; });
+  return hydration;
 }
 
-let _refreshPromise: Promise<string | null> | null = null;
-
-async function refreshAccessToken(): Promise<string | null> {
-  if (_refreshPromise) return _refreshPromise;
-
-  _refreshPromise = (async () => {
+let refreshFlight: { epoch: number; promise: Promise<string | null> } | null = null;
+async function refreshAccessToken(epoch: number): Promise<string | null> {
+  if (refreshFlight?.epoch === epoch) return refreshFlight.promise;
+  const expected = _authToken;
+  const promise = (async () => {
     const refreshToken = await storage.getRefreshToken();
-    if (!refreshToken) return null;
-
-    try {
-      const res = await fetch(`${API_URL}/auth/token/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-      if (!res.ok) return null;
-
-      const data = (await res.json()) as {
-        access_token?: string;
-        refresh_token?: string;
-      };
-      if (!data.access_token) return null;
-
-      await storage.setAuthToken(data.access_token);
-      if (data.refresh_token) await storage.setRefreshToken(data.refresh_token);
-      setAuthToken(data.access_token);
-      return data.access_token;
-    } catch {
-      return null;
+    if (epoch !== authEpoch) throw new SessionChangedError();
+    if (!refreshToken || !expected) return null;
+    const res = await fetchWithPolicy(`${API_URL}/auth/token/refresh`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (epoch !== authEpoch) throw new SessionChangedError();
+    if (res.status === 401 || res.status === 403) return null;
+    // Connectivity/server failures must not revoke a valid persisted session.
+    if (!res.ok) throw new HttpError(res.status);
+    const data = await res.json() as { access_token?: string; refresh_token?: string };
+    if (!data.access_token) throw new HttpError(502, 'Invalid refresh response');
+    if (!await storage.rotateSession(expected, data.access_token, data.refresh_token)) {
+      throw new SessionChangedError();
     }
-  })().finally(() => {
-    _refreshPromise = null;
-  });
-
-  return _refreshPromise;
+    if (epoch !== authEpoch) throw new SessionChangedError();
+    // Rotation keeps the same account epoch; login/logout increment it.
+    _authToken = data.access_token;
+    return data.access_token;
+  })();
+  const flight = { epoch, promise };
+  refreshFlight = flight;
+  try { return await promise; }
+  finally { if (refreshFlight === flight) refreshFlight = null; }
 }
 
-async function handleSessionExpired(path: string) {
-  if (!_authToken || UNAUTHORIZED_NO_GLOBAL_SIGNOUT.has(path)) return;
-  await storage.clearSession();
+async function handleSessionExpired(path: string, epoch: number) {
+  if (epoch !== authEpoch || !_authToken || UNAUTHORIZED_NO_GLOBAL_SIGNOUT.has(path)) return;
   setAuthToken(null);
-  try {
-    router.replace('/auth/login' as const);
-  } catch {
-    // Navigation may not be mounted during early app startup.
-  }
-}
-
-const GET_CACHE_TTL_MS = 5 * 60 * 1000;
-const getResponseCache = new Map<string, { at: number; data: unknown }>();
-
-function readGetCache<T>(key: string): T | null {
-  const hit = getResponseCache.get(key);
-  if (!hit || Date.now() - hit.at > GET_CACHE_TTL_MS) return null;
-  return hit.data as T;
-}
-
-function writeGetCache(key: string, data: unknown) {
-  getResponseCache.set(key, { at: Date.now(), data });
-}
-
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function fetchWithRetry(url: string, init: RequestInit, retries = 2): Promise<Response> {
-  let lastErr: unknown;
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const res = await fetch(url, init);
-      if (res.ok || res.status < 500 || res.status === 401 || attempt === retries) return res;
-      await delay(250 * 2 ** attempt);
-    } catch (err) {
-      lastErr = err;
-      if (attempt === retries) throw err;
-      await delay(250 * 2 ** attempt);
-    }
-  }
-  throw lastErr instanceof Error ? lastErr : new Error('Network request failed');
+  await storage.clearSession();
+  try { router.replace('/auth/login' as const); }
+  catch { /* Router may not be mounted during bootstrap. */ }
 }
 
 async function request<T>(
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
-  path: string,
-  body?: unknown,
-  params?: Record<string, string | number>,
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE', path: string,
+  body?: unknown, params?: Record<string, string | number>,
 ): Promise<T> {
   await hydrateAuthTokenFromStorage();
-
+  const epoch = authEpoch;
   const url = new URL(`${API_URL}${path}`);
-  if (params) {
-    for (const [k, v] of Object.entries(params)) {
-      url.searchParams.set(k, String(v));
-    }
-  }
-
+  for (const [key, value] of Object.entries(params ?? {})) url.searchParams.set(key, String(value));
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (_authToken) headers['Authorization'] = `Bearer ${_authToken}`;
-
-  const key = cacheKey(method, path, params);
-  const cached = method === 'GET' ? readGetCache<T>(key) : null;
-
-  try {
-    let res = await fetchWithRetry(url.toString(), {
-      method,
-      headers,
-      body: body != null ? JSON.stringify(body) : undefined,
-    });
-
-    if (res.status === 401 && !UNAUTHORIZED_NO_GLOBAL_SIGNOUT.has(path)) {
-      const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        headers.Authorization = `Bearer ${refreshed}`;
-        res = await fetchWithRetry(url.toString(), {
-          method,
-          headers,
-          body: body != null ? JSON.stringify(body) : undefined,
-        }, 0);
-      }
+  if (_authToken) headers.Authorization = `Bearer ${_authToken}`;
+  const init = { method, headers, body: body != null ? JSON.stringify(body) : undefined };
+  let res = await fetchWithPolicy(url.toString(), init);
+  if (epoch !== authEpoch) throw new SessionChangedError();
+  if (res.status === 401 && !UNAUTHORIZED_NO_GLOBAL_SIGNOUT.has(path)) {
+    const refreshed = await refreshAccessToken(epoch);
+    if (refreshed) {
+      // Do not automatically replay writes (booking, payment, deletion).
+      if (method !== 'GET') throw new HttpError(409, 'Session refreshed; please retry the operation');
+      headers.Authorization = `Bearer ${refreshed}`;
+      res = await fetchWithPolicy(url.toString(), init, { retries: 0 });
     }
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      logger.error(`[API ERROR] ${method} ${path} | Status: ${res.status}`, err);
-      if (res.status === 401) {
-        await handleSessionExpired(path);
-      }
-      const msg =
-        messageFromApiErrorBody(err) ??
-        (typeof (err as { error?: unknown }).error === 'object'
-          ? JSON.stringify((err as { error: object }).error)
-          : undefined);
-      const apiError = new Error(msg ?? `HTTP ${res.status}`) as Error & { status?: number; body?: unknown };
-      apiError.status = res.status;
-      apiError.body = err;
-      throw apiError;
-    }
-
-    const data = (await res.json()) as T;
-    if (method === 'GET') writeGetCache(key, data);
-    return data;
-  } catch (e: unknown) {
-    if (method === 'GET' && cached != null) {
-      if (__DEV__) logger.warn(`[GoldMood] GET ${path} — önbellekten gösteriliyor`);
-      return cached;
-    }
-    const msg = e instanceof Error ? e.message : String(e);
-    logger.error(`[NETWORK ERROR] ${method} ${path} | ${msg}`);
-    throw e;
   }
+  if (epoch !== authEpoch) throw new SessionChangedError();
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 401) await handleSessionExpired(path, epoch);
+    throw new HttpError(res.status, messageFromApiErrorBody(body));
+  }
+  const data = res.status === 204 ? undefined : await res.json();
+  if (epoch !== authEpoch) throw new SessionChangedError();
+  return data as T;
 }
 
 /** GET: 404 veya ağ hatası → null (tema / opsiyonel veri; LogBox spam’i yok). */
@@ -402,7 +336,7 @@ async function getAllow404<T>(
   if (_authToken) headers['Authorization'] = `Bearer ${_authToken}`;
 
   try {
-    const res = await fetch(url.toString(), { method: 'GET', headers });
+    const res = await fetchWithPolicy(url.toString(), { method: 'GET', headers });
     if (res.status === 404) return null;
     if (!res.ok) {
       if (__DEV__) {

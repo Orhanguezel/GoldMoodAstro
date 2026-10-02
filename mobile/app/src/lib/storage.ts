@@ -1,5 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
+import { createSecretStore } from './core/secretStore';
+import { createSerialQueue } from './core/serialQueue';
 
 const KEYS = {
   // Auth
@@ -37,50 +40,19 @@ async function writeJson(key: string, value: unknown): Promise<void> {
   }
 }
 
-async function isSecureStoreAvailable(): Promise<boolean> {
-  try {
-    return await SecureStore.isAvailableAsync();
-  } catch {
-    return false;
-  }
-}
-
-async function secureGetItem(key: string): Promise<string | null> {
-  try {
-    if (await isSecureStoreAvailable()) {
-      const secureValue = await SecureStore.getItemAsync(key);
-      if (secureValue != null) return secureValue;
-    }
-
-    const legacyValue = await AsyncStorage.getItem(key);
-    if (legacyValue != null && await isSecureStoreAvailable()) {
-      await SecureStore.setItemAsync(key, legacyValue);
-      await AsyncStorage.removeItem(key);
-    }
-    return legacyValue;
-  } catch {
-    return AsyncStorage.getItem(key);
-  }
-}
-
-async function secureSetItem(key: string, value: string): Promise<void> {
-  if (await isSecureStoreAvailable()) {
-    await SecureStore.setItemAsync(key, value);
-    await AsyncStorage.removeItem(key);
-    return;
-  }
-  await AsyncStorage.setItem(key, value);
-}
-
-async function secureDeleteItem(key: string): Promise<void> {
-  try {
-    if (await isSecureStoreAvailable()) {
-      await SecureStore.deleteItemAsync(key);
-    }
-  } finally {
-    await AsyncStorage.removeItem(key);
-  }
-}
+const secrets = createSecretStore({
+  available: SecureStore.isAvailableAsync,
+  get: SecureStore.getItemAsync,
+  set: SecureStore.setItemAsync,
+  remove: SecureStore.deleteItemAsync,
+}, {
+  get: (key) => AsyncStorage.getItem(key),
+  remove: (key) => AsyncStorage.removeItem(key),
+}, Platform.OS === 'web');
+const secureGetItem = secrets.get;
+const secureSetItem = secrets.set;
+const secureDeleteItem = secrets.remove;
+const sessionWrite = createSerialQueue();
 
 export const storage = {
   // --- Auth ---
@@ -90,7 +62,7 @@ export const storage = {
   },
 
   async setAuthToken(token: string): Promise<void> {
-    await secureSetItem(KEYS.authToken, token);
+    await sessionWrite(() => secureSetItem(KEYS.authToken, token));
   },
 
   async getRefreshToken(): Promise<string | null> {
@@ -98,7 +70,7 @@ export const storage = {
   },
 
   async setRefreshToken(token: string): Promise<void> {
-    await secureSetItem(KEYS.refreshToken, token);
+    await sessionWrite(() => secureSetItem(KEYS.refreshToken, token));
   },
 
   async getUserId(): Promise<string | null> {
@@ -112,20 +84,43 @@ export const storage = {
   },
 
   async setUserSession(data: { token: string; refreshToken?: string; userId: string; role: string }): Promise<void> {
-    await secureSetItem(KEYS.authToken, data.token);
-    if (data.refreshToken) await secureSetItem(KEYS.refreshToken, data.refreshToken);
-    await AsyncStorage.multiSet([
-      [KEYS.userId, data.userId],
-      [KEYS.userRole, data.role],
-    ]);
+    await sessionWrite(async () => {
+      // Remove the previous refresh token even when the new login returns none.
+      await secureDeleteItem(KEYS.refreshToken);
+      await secureDeleteItem(KEYS.authToken);
+      try {
+        if (data.refreshToken) await secureSetItem(KEYS.refreshToken, data.refreshToken);
+        await secureSetItem(KEYS.authToken, data.token);
+        await AsyncStorage.multiSet([[KEYS.userId, data.userId], [KEYS.userRole, data.role]]);
+      } catch (error) {
+        await Promise.allSettled([
+          secureDeleteItem(KEYS.authToken), secureDeleteItem(KEYS.refreshToken),
+          AsyncStorage.multiRemove([KEYS.userId, KEYS.userRole]),
+        ]);
+        throw error;
+      }
+    });
+  },
+
+  /** Serialize rotation with login/logout; an old account cannot overwrite a new one. */
+  async rotateSession(expectedToken: string, accessToken: string, refreshToken?: string): Promise<boolean> {
+    return sessionWrite(async () => {
+      if (await secureGetItem(KEYS.authToken) !== expectedToken) return false;
+      if (refreshToken) await secureSetItem(KEYS.refreshToken, refreshToken);
+      await secureSetItem(KEYS.authToken, accessToken);
+      return true;
+    });
   },
 
   async clearSession(): Promise<void> {
-    await Promise.all([
-      secureDeleteItem(KEYS.authToken),
-      secureDeleteItem(KEYS.refreshToken),
-      AsyncStorage.multiRemove([KEYS.userId, KEYS.userRole]),
-    ]);
+    await sessionWrite(async () => {
+      const results = await Promise.allSettled([
+        secureDeleteItem(KEYS.authToken), secureDeleteItem(KEYS.refreshToken),
+        AsyncStorage.multiRemove([KEYS.userId, KEYS.userRole]),
+      ]);
+      const failed = results.find((result) => result.status === 'rejected');
+      if (failed?.status === 'rejected') throw failed.reason;
+    });
   },
 
   // --- UX ---

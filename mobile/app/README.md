@@ -28,11 +28,20 @@ Bu klasör GoldMoodAstro Expo uygulamasıdır. Hedef platformlar iOS ve Android'
 
 ## Hızlı Başlangıç
 
+Mobil uygulama repo workspace'idir; bağımlılıkların tek kilidi kökteki `bun.lock`.
+Eski, başka proje adı taşıyan `mobile/app/bun.lock` 3 Ekim 2026'da kaldırıldı;
+Git geçmişinden geri alınabilir.
+
 ```bash
+cd ../..
+bun install --frozen-lockfile --ignore-scripts --filter goldmoodastro-mobile
 cd mobile/app
-bun install
 bun run start
 ```
+
+İlk `cd ../..` bu README'nin bulunduğu `mobile/app` içinden repo köküne çıkar.
+Güncel ortak çekirdek düzeltmeleri, açık cihaz kapıları ve taşıma kaydı:
+[kök çeklist](../../MOBIL-ORTAK-ALTYAPI-CEKLISTI-2026-10-03.md).
 
 iOS simulator:
 

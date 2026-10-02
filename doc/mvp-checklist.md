@@ -1,5 +1,10 @@
 # GoldMoodAstro — MVP Çalışma Planı & Checklist
 
+## 3 Ekim 2026 — ortak mobil altyapı takibi
+
+- [x] Ağ/depo çekirdeği düzeltmesi; GoldMoodAstro 41 test ve tam typecheck; HepsiHal'e yalnız testli çekirdeğin taşınması.
+- [ ] Tam mobil lint, iOS push, native cihaz ve mağaza kapıları. Ayrıntılar: [kök eksik/taşıma çeklisti](../MOBIL-ORTAK-ALTYAPI-CEKLISTI-2026-10-03.md). Bu satır eski FAZ42/parite/store maddelerini kapatmaz.
+
 **Bütçe:** 30.000 TL | **Süre:** 30 gün → +10 gün (frontend fazı eklendi)  
 **Başlangıç:** 2026-04-24
 
