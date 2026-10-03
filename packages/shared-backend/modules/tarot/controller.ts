@@ -135,11 +135,13 @@ export async function handleGetReading(req: FastifyRequest, reply: FastifyReply)
   const reading = await repo.getReadingById(id);
   if (!reading) return reply.status(404).send({ error: apiMessage(req, 'tarot_reading_not_found') });
 
-  // Sahiplik: bir kullanıcıya bağlı okuma yalnız sahibine görünür (KVKK — kişisel içerik).
-  // Anonim (user_id null) okumalar anlık görüntüleme için açık kalır.
+  // Paylaşım linki (web + mobil "Tarot Açılımım" mesajı → /{locale}/tarot/reading/:id,
+  // sunucu tarafı token'sız çeker) tahmin edilemez UUID ile açık kalır. Sahibi
+  // olmayan görüntüleyene kullanıcının sorusu (kişisel içerik) ve kimliği gitmez.
   const caller = (req as any).user;
-  if ((reading as any).userId && (reading as any).userId !== (caller?.sub ?? caller?.id)) {
-    return reply.status(404).send({ error: apiMessage(req, 'tarot_reading_not_found') });
+  const ownerId = (reading as any).userId as string | null;
+  if (ownerId && ownerId !== (caller?.sub ?? caller?.id)) {
+    return reply.send({ data: { ...reading, question: null, userId: null } });
   }
 
   return reply.send({ data: reading });
