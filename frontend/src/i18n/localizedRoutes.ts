@@ -3,7 +3,7 @@ export type PublicLocale = (typeof PUBLIC_LOCALES)[number];
 
 type LocaleMap = Record<PublicLocale, string>;
 
-const PUBLIC_SEGMENTS: Record<string, LocaleMap> = {
+export const PUBLIC_SEGMENTS: Record<string, LocaleMap> = {
   about: { tr: 'hakkimizda', en: 'about', de: 'ueber-uns' },
   contact: { tr: 'iletisim', en: 'contact', de: 'kontakt' },
   consultants: { tr: 'danismanlar', en: 'consultants', de: 'berater' },
@@ -25,7 +25,7 @@ const PUBLIC_SEGMENTS: Record<string, LocaleMap> = {
   burclar: { tr: 'burclar', en: 'zodiac-signs', de: 'sternzeichen' },
 };
 
-const ZODIAC_SIGNS: Record<string, LocaleMap> = {
+export const ZODIAC_SIGNS: Record<string, LocaleMap> = {
   aries: { tr: 'koc', en: 'aries', de: 'widder' },
   taurus: { tr: 'boga', en: 'taurus', de: 'stier' },
   gemini: { tr: 'ikizler', en: 'gemini', de: 'zwillinge' },
@@ -57,7 +57,7 @@ for (const [key, labels] of Object.entries(ZODIAC_SIGNS)) {
   }
 }
 
-const ZODIAC_SUBPAGES: Record<string, LocaleMap> = {
+export const ZODIAC_SUBPAGES: Record<string, LocaleMap> = {
   ask: { tr: 'ask', en: 'love', de: 'liebe' },
   kariyer: { tr: 'kariyer', en: 'career', de: 'karriere' },
   saglik: { tr: 'saglik', en: 'health', de: 'gesundheit' },

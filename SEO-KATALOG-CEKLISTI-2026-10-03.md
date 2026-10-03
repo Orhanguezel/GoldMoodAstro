@@ -138,6 +138,19 @@ sayfasında yerel prod build'e karşı tekrarlandı.
   (bkz. E1). Ayrıca numeroloji/tarot okumaları `req.user.id` (her zaman
   undefined) yüzünden kullanıcıya bağlanmıyordu → `sub ?? id`.
 
+## G. Mobil ve gizlilik takibi (2026-10-03 ikinci tur)
+
+- [x] **G1. Paylaşılan tarot linki 404 riski.** F7'deki `sub` düzeltmesi
+  kullanıcıya bağlı okumaları web paylaşım sayfasında (token'sız fetch) 404'e
+  düşürecekti → link açık, sahibi olmayana `question/userId` null (`24c2f7e`).
+- [x] **G2. Kişisel sonuç sayfaları `index, follow` idi.** Tarot, kahve falı,
+  rüya, yıldızname (başlıkta kişinin adı), sinastri → `noindex, follow`.
+  robots.txt sonuç listesi kaldırıldı (noindex'in görülmesini engelliyordu,
+  EN/DE kanonik adresleri de kapsamıyordu). Hesap alanları için locale önekli
+  Disallow eklendi (`/tr/me/` …).
+- [x] **G3. Mobil paylaşım linkleri/metinleri.** Bkz.
+  `CODEX-BRIEF-mobil-seo-katalog-2026-10-03.md` §2.
+
 ## E. Kod dışı — kullanıcı eylemi
 
 - [ ] **E1. Anthropic API kredisi bitti; Groq anahtarı geçersiz (401);

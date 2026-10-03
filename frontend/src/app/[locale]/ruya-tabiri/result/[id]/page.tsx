@@ -1,4 +1,5 @@
 import React from 'react';
+import { PRIVATE_RESULT_ROBOTS } from '@/seo/privateResultRobots';
 import DreamResultClient from './DreamResultClient';
 import type { Metadata } from 'next';
 
@@ -22,6 +23,7 @@ export async function generateMetadata({
     const ogImageUrl = `https://goldmoodastro.com/${locale}/ruya-tabiri/result/${id}/opengraph-image`;
 
     return {
+      robots: PRIVATE_RESULT_ROBOTS,
       title,
       description,
       openGraph: {
@@ -40,6 +42,7 @@ export async function generateMetadata({
     };
   } catch (err) {
     return {
+      robots: PRIVATE_RESULT_ROBOTS,
       title: 'Dream Interpretation — GoldMoodAstro',
       description: 'Detailed dream interpretation.',
     };

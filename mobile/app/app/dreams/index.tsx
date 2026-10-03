@@ -106,6 +106,7 @@ import { safeRouterBack } from '@/lib/navigation';
 
 
 import { useTranslation } from 'react-i18next';
+import { shareBrand, webShareUrl } from '@/lib/webShare';
 
 import { dreamsApi } from '@/lib/api';
 import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
@@ -185,7 +186,7 @@ export default function DreamsScreen() {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Rüya Yorumum ✨\n\n${result?.interpretation?.substring(0, 200)}... \n\nGoldMoodAstro ile rüyanı keşfet!\n\nKeşfet: https://goldmoodastro.com/tr/ruya-tabiri/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=dream`,
+        message: `${t('share.dreamMessage', { excerpt: result?.interpretation?.substring(0, 200) ?? '', brand: shareBrand() })}\n\n${t('share.cta', { url: webShareUrl(`/ruya-tabiri/result/${result.id}`, 'dream') })}`,
       });
     } catch (error) {
       logger.error(error);

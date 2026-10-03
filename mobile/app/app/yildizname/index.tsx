@@ -28,6 +28,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTranslation } from 'react-i18next';
+import { shareBrand, webShareUrl } from '@/lib/webShare';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
@@ -203,8 +204,8 @@ export default function YildiznameScreen() {
     if (!result) return;
     try {
       await Share.share({
-        message: `${result.name} için Yıldızname Analizi ✨ Menzil: ${result.menzil?.name_tr}\n\n${result.readingText}\n\nKeşfet: https://goldmoodastro.com/tr/yildizname/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=yildizname`,
-        title: t('yildizname.shareTitle'),
+        message: `${t('share.yildiznameMessage', { name: result.name, menzil: result.menzil?.name_tr ?? '', reading: result.readingText ?? '' })}\n\n${t('share.cta', { url: webShareUrl(`/yildizname/result/${result.id}`, 'yildizname') })}`,
+        title: t('yildizname.shareTitle', { brand: shareBrand() }),
       });
     } catch (e) {
       logger.error(e);

@@ -1,4 +1,5 @@
 import React from 'react';
+import { PRIVATE_RESULT_ROBOTS } from '@/seo/privateResultRobots';
 import SynastryResultClient from './SynastryResultClient';
 import PageContainer from '@/components/common/PageContainer';
 import type { Metadata } from 'next';
@@ -24,6 +25,7 @@ export async function generateMetadata({
     const ogImageUrl = `https://goldmoodastro.com/${locale}/sinastri/result/${id}/opengraph-image`;
 
     return {
+      robots: PRIVATE_RESULT_ROBOTS,
       title,
       description,
       openGraph: {
@@ -42,6 +44,7 @@ export async function generateMetadata({
     };
   } catch (err) {
     return {
+      robots: PRIVATE_RESULT_ROBOTS,
       title: 'Love Compatibility Report — GoldMoodAstro',
       description: 'Detailed synastry compatibility analysis.',
     };

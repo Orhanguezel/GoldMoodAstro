@@ -11,7 +11,8 @@
     "./mobileI18n": "./src/mobileI18n.ts",
     "./relax-music": "./src/relax-music.ts",
     "./tsconfig.base": "./tsconfig.base.json",
-    "./tailwind-tokens": "./tailwind-tokens.css"
+    "./tailwind-tokens": "./tailwind-tokens.css",
+    "./publicRoutes": "./src/publicRoutes.ts"
   },
   "dependencies": {
     "zod": "^3.25.76"

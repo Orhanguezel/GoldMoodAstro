@@ -19,52 +19,27 @@ Tarih: 2026-10-03 · Hazırlayan: Claude Code (mimar) · Uygulayan: Codex
 detaylarını giriş yapmış hesapla aç; `question` alanı null gelirse UI boş satır
 yerine alanı gizlemeli (paylaşılan okuma senaryosu).
 
-## 2. Mobilde yapılacaklar (aynı sınıf kusurlar)
+## 2. Mobil maddeler — Claude tarafından YAPILDI (2026-10-03, Codex başka işteydi)
 
-Raporun web'de bulduğu asıl kusur "kullanıcının dilinde olmayan metin" ve
-"yönlendirmeye düşen link" idi. Mobilde aynı sınıf kusur **paylaşım
-mesajlarında** var.
-
-### M1. Paylaşım URL'leri locale'e ve kanonik slug'a göre üretilmeli
-
-7 `Share.share` çağrısının 6'sı sabit `https://goldmoodastro.com/tr/...` kullanıyor:
-
-| Dosya | Sorun |
+| Madde | Durum |
 |---|---|
-| `app/zodiac/[sign].tsx:122` | `/tr/burclar/${signKey}` — `signKey` İngilizce (`aries`) → canlıda **308** `/tr/burclar/koc`. Ayrıca EN/DE kullanıcısı TR sayfaya gider. |
-| `app/(tabs)/tarot.tsx:148` | `/tr/tarot/reading/:id` sabit TR |
-| `app/coffee/index.tsx:129` | `/tr/kahve-fali/result/:id` sabit TR (EN: `coffee-reading`, DE: `kaffeesatzlesen`) |
-| `app/dreams/index.tsx:191` | `/tr/ruya-tabiri/result/:id` sabit TR |
-| `app/synastry/index.tsx:202` | `/tr/sinastri/result/:id` sabit TR |
-| `app/yildizname/index.tsx:210` | `/tr/yildizname/result/:id` sabit TR |
+| M1 paylaşım URL'leri | `src/lib/webShare.ts` → `webShareUrl(logicalPath, campaign)`; slug tablosu `@goldmood/shared-config/publicRoutes`, web tablosuyla eşitliği `frontend/tests/public-routes-sync.test.ts` zorlar. 6 `Share.share` çağrısı geçirildi; 18 adres (6 yol × tr/en/de) canlıda yönlendirmesiz açıldı. |
+| M2 paylaşım metinleri | `share.*` anahtarları tr/en/de (`mobileI18n.ts`); seed jeneratörle yeniden üretildi. |
+| M3 marka | `shareTitle` değerleri `{{brand}}`; marka `mobileBrandConfig.appName`'den (`shareBrand()`). |
+| M4 boş `question` | İş yok: okuma detayı soruyu hiç göstermiyor. |
 
-**Yapılacak:** `src/lib/` altına tek bir `webShareUrl(locale, logicalPath, utm)`
-yardımcısı. Slug tablosu web'deki
-`frontend/src/i18n/localizedRoutes.ts` (`PUBLIC_SEGMENTS`, `ZODIAC_SIGNS`) ile
-**birebir aynı** olmalı — kopyalama yerine `packages/shared-config`'e taşıyıp
-iki taraftan import etmek tercih (web tarafını Claude/Codex birlikte bağlar).
-Site kökü sabit değil, env/config'ten (`EXPO_PUBLIC_SITE_URL` veya mevcut
-config) gelir.
-
-Kabul: EN cihazda burç paylaşımı `https://…/en/zodiac-signs/aries`, TR'de
-`/tr/burclar/koc`; hiçbir paylaşım linki 3xx dönmemeli
-(`curl -s -o /dev/null -w '%{http_code}'` ile 6 link 200).
-
-### M2. Paylaşım metinleri i18n'den gelmeli
-
-Mesajlar Türkçe sabit: "Tarot Açılımım", "Kartlarım", "Kahve Falım",
-"Burcu Günlük Yorumu", "… ile keşfet!". EN/DE kullanıcısı Türkçe mesaj
-paylaşıyor. Metinleri mobil sözlüğe (`share.*` anahtarları, tr/en/de) taşı;
-`bun run scripts/check-mobile-i18n.ts` geçmeli.
-
-### M3. Marka adı paylaşım metninde koddan gelmesin (MARKA KURALI)
-
-Paylaşım mesajlarında ve `title`'larda "GoldMoodAstro" sabit yazılı. Marka
-`APP_NAME`/brand config'ten gelmeli; marka-denetimi bunu raporlar.
-
-### M4. Okuma detayında boş `question`
-
-Bkz. bölüm 1 doğrulama notu.
+**Codex için tek iş — birleştirme:** `codex/mobile-core-2026-10-03` dalını
+`main` ile güncellerken şu dosyalar çakışabilir (hunk'lar küçük, yalnız
+`handleShare` blokları + yeni import satırı):
+`app/coffee/index.tsx`, `app/dreams/index.tsx`, `app/synastry/index.tsx`,
+`app/yildizname/index.tsx`, `app/zodiac/[sign].tsx`, `app/(tabs)/tarot.tsx`,
+`packages/shared-config/src/mobileI18n.ts` (her locale'in başına `share` bloğu
++ `shareTitle` → `{{brand}}`).
+`backend/src/db/sql/019_ui_mobile_i18n_seed.sql` ÜRETİLMİŞ dosyadır: çakışırsa
+elle birleştirme, `bun run scripts/generate-mobile-i18n-seed.ts` ile yeniden üret.
+Sonra `bun run check:i18n` — main'de kalan 9 eksik anahtar
+(`consultantDetail.disclaimer`, `checkout.consent*`, `checkout.distanceLink`…)
+Codex'in kaydedilmemiş işinde zaten var.
 
 ## 3. Kapsam dışı / dokunma
 

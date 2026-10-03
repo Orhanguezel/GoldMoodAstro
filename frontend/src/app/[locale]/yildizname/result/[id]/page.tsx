@@ -1,4 +1,5 @@
 import { Metadata, ResolvingMetadata } from 'next';
+import { PRIVATE_RESULT_ROBOTS } from '@/seo/privateResultRobots';
 import YildiznameResultClient from './YildiznameResultClient';
 import { fetchYildiznameReading } from './fetchYildizname.server';
 
@@ -15,6 +16,7 @@ export async function generateMetadata(
 
   if (!result) {
     return {
+      robots: PRIVATE_RESULT_ROBOTS,
       title: 'Yildizname Result — GoldMoodAstro',
     };
   }
@@ -25,6 +27,7 @@ export async function generateMetadata(
   const ogImageUrl = `https://goldmoodastro.com/${locale}/yildizname/result/${id}/opengraph-image`;
 
   return {
+    robots: PRIVATE_RESULT_ROBOTS,
     title: `Yildizname Analysis for ${name}: ${menzil} — GoldMoodAstro`,
     description: result.result_text?.substring(0, 160) + '...',
     openGraph: {

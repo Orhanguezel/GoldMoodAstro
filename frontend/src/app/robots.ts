@@ -8,21 +8,24 @@ import { MetadataRoute } from 'next';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://goldmoodastro.com';
 
-// 2026-07-20 (GSC kapsam analizi): kisiye ozel sonuc sayfalari taranmamali.
-// Bunlar oturum/kayit gerektirdigi icin bot'a bos govde donuyordu; Google
-// yuzlerce ozdes bos sayfa gorup "tarandi ama indekslenmedi" isaretliyordu.
-const RESULT_PATHS = [
-  '/tr/tarot/reading/', '/en/tarot/reading/', '/de/tarot/reading/',
-  '/tr/kahve-fali/result/', '/en/kahve-fali/result/', '/de/kahve-fali/result/',
-  '/tr/ruya-tabiri/result/', '/en/ruya-tabiri/result/', '/de/ruya-tabiri/result/',
-  '/tr/yildizname/result/', '/en/yildizname/result/', '/de/yildizname/result/',
-  '/tr/sinastri/result/', '/en/sinastri/result/', '/de/sinastri/result/',
-];
+// Kişiye özel sonuç sayfaları (tarot/reading, */result) robots ile DEĞİL
+// sayfa içi `noindex` ile dışarıda tutulur (seo/privateResultRobots.ts).
+// 2026-07-20'de burada robots Disallow vardı; ama robots engeli Google'ın
+// noindex'i görmesini de engelliyor ve liste EN/DE kanonik adreslerini
+// (/en/coffee-reading/result/...) hiç kapsamıyordu (2026-10-03).
 
 // /_next/ ENGELLENMEZ (SEO katalog 2026-10-03): Google sayfayı tarayıcı gibi
 // çizer; CSS/JS chunk'larına ve /_next/image görsellerine erişemezse düzeni ve
 // istemci içeriğini göremez, görseller Google Görseller'e düşmez.
-const COMMON_DISALLOW = ['/api/', '/admin/', '/dashboard', '/me/', ...RESULT_PATHS];
+// Hesap alanları locale önekiyle yaşar (/tr/me/…); öneksiz kural tek başına
+// hiçbirini kapsamıyordu.
+const PRIVATE_AREAS = ['/dashboard', '/me/'];
+const COMMON_DISALLOW = [
+  '/api/',
+  '/admin/',
+  ...PRIVATE_AREAS,
+  ...['tr', 'en', 'de'].flatMap((lc) => PRIVATE_AREAS.map((p) => `/${lc}${p}`)),
+];
 
 /** AI crawler bot listesi — explicit allow ile site içeriğine erişim onaylanır. */
 const AI_BOTS = [

@@ -101,6 +101,7 @@ import { safeRouterBack } from '@/lib/navigation';
 
 
 import { useTranslation } from 'react-i18next';
+import { shareBrand, webShareUrl } from '@/lib/webShare';
 
 import { coffeeApi, storageApi } from '@/lib/api';
 import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
@@ -126,8 +127,8 @@ export default function CoffeeScreen() {
     if (!result) return;
     try {
       await Share.share({
-        message: `Kahve Falım: ${result?.interpretation?.substring(0, 200)}... \n\nGoldMoodAstro ile eğlence amaçlı sembolik yorumunu keşfet!\n\nKeşfet: https://goldmoodastro.com/tr/kahve-fali/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=coffee`,
-        title: t('coffee.shareTitle'),
+        message: `${t('share.coffeeMessage', { excerpt: result?.interpretation?.substring(0, 200) ?? '', brand: shareBrand() })}\n\n${t('share.cta', { url: webShareUrl(`/kahve-fali/result/${result.id}`, 'coffee') })}`,
+        title: t('coffee.shareTitle', { brand: shareBrand() }),
       });
     } catch (e) {
       logger.error(e);

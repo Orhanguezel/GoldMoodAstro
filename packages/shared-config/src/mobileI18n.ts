@@ -3,6 +3,17 @@ export type MobileI18nTree = typeof MOBILE_I18N_FALLBACK.tr;
 
 export const MOBILE_I18N_FALLBACK = {
   "tr": {
+    "share": {
+      "cta": "Keşfet: {{url}}",
+      "tarotMessage": "Tarot açılımım: {{spread}} ✨\n\nKartlarım: {{cards}}\n\n{{brand}} ile kartların rehberliğini keşfedin!",
+      "coffeeMessage": "Kahve falım: {{excerpt}}…\n\n{{brand}} ile eğlence amaçlı sembolik yorumunu keşfet!",
+      "dreamMessage": "Rüya yorumum ✨\n\n{{excerpt}}…\n\n{{brand}} ile rüyanı keşfet!",
+      "synastryMessage": "Aşk uyumu analizimiz: {{title}} ✨\n\nAşk: %{{love}}\nÇekim: %{{attraction}}\n\n{{brand}} ile uyumunuzu keşfedin!",
+      "synastryFallbackTitle": "Uyum Analizi",
+      "yildiznameMessage": "{{name}} için Yıldızname analizi ✨ Menzil: {{menzil}}\n\n{{reading}}",
+      "horoscopeMessage": "{{sign}} burcu günlük yorumu ✨\n\n{{excerpt}}…\n\n{{brand}} ile günlük burç yorumunu oku!",
+      "horoscopeTitle": "{{brand}} · {{sign}} burcu"
+    },
     "onboarding": {
       "title1": "Uzman danışmanınızla buluşun",
       "body1": "Astroloji, tarot, kariyer ve ilişki danışmanlığında onaylı uzmanlar.",
@@ -970,7 +981,7 @@ export const MOBILE_I18N_FALLBACK = {
       "later": "Daha sonra"
     },
     "coffee": {
-      "shareTitle": "GoldMoodAstro Kahve Falı",
+      "shareTitle": "{{brand}} Kahve Falı",
       "permissionTitle": "İzin Gerekli",
       "permissionBody": "Kamera erişimine izin vermeniz gerekiyor.",
       "uploadError": "Fotoğraf yüklenemedi.",
@@ -1008,7 +1019,7 @@ export const MOBILE_I18N_FALLBACK = {
       "loading3": "Harfler sayıya dönüşüyor...",
       "loading4": "Menzilin belirleniyor...",
       "loading5": "Kadim sırlar açılıyor...",
-      "shareTitle": "GoldMoodAstro Yıldızname",
+      "shareTitle": "{{brand}} Yıldızname",
       "headerTitle": "Yıldızname",
       "heroTitleLine1": "Yıldızname",
       "heroTitleLine2": "Ebced Sırrı",
@@ -1038,7 +1049,7 @@ export const MOBILE_I18N_FALLBACK = {
       "newAnalysis": "YENİ ANALİZ"
     },
     "synastry": {
-      "shareTitle": "GoldMoodAstro Aşk Uyumu",
+      "shareTitle": "{{brand}} Aşk Uyumu",
       "successTitle": "Başarılı",
       "inviteSent": "Davet gönderildi!",
       "inviteFailed": "Davet gönderilemedi",
@@ -1125,7 +1136,7 @@ export const MOBILE_I18N_FALLBACK = {
       "spreadDecisionDesc": "Seçenek Analizi",
       "spreadCelticTitle": "Kelt Haçı",
       "spreadCelticDesc": "Derin Analiz",
-      "shareTitle": "GoldMoodAstro Tarot",
+      "shareTitle": "{{brand}} Tarot",
       "headerTitle": "Tarot Rehberi",
       "headerSubtitle": "Kartların gizemli dünyasına hoş geldiniz.",
       "selectSpreadType": "AÇILIM TİPİ SEÇİN",
@@ -1397,6 +1408,17 @@ export const MOBILE_I18N_FALLBACK = {
     }
   },
   "en": {
+    "share": {
+      "cta": "Explore: {{url}}",
+      "tarotMessage": "My tarot spread: {{spread}} ✨\n\nMy cards: {{cards}}\n\nDiscover the guidance of the cards with {{brand}}!",
+      "coffeeMessage": "My coffee reading: {{excerpt}}…\n\nDiscover your symbolic, for-fun reading with {{brand}}!",
+      "dreamMessage": "My dream interpretation ✨\n\n{{excerpt}}…\n\nExplore your dream with {{brand}}!",
+      "synastryMessage": "Our love compatibility: {{title}} ✨\n\nLove: {{love}}%\nAttraction: {{attraction}}%\n\nDiscover your compatibility with {{brand}}!",
+      "synastryFallbackTitle": "Compatibility Analysis",
+      "yildiznameMessage": "Yildizname analysis for {{name}} ✨ Mansion: {{menzil}}\n\n{{reading}}",
+      "horoscopeMessage": "{{sign}} daily horoscope ✨\n\n{{excerpt}}…\n\nRead your daily horoscope with {{brand}}!",
+      "horoscopeTitle": "{{brand}} · {{sign}}"
+    },
     "onboarding": {
       "title1": "Meet your expert consultant",
       "body1": "Verified experts in astrology, tarot, career and relationship counseling.",
@@ -2364,7 +2386,7 @@ export const MOBILE_I18N_FALLBACK = {
       "later": "Later"
     },
     "coffee": {
-      "shareTitle": "GoldMoodAstro Coffee Reading",
+      "shareTitle": "{{brand}} Coffee Reading",
       "permissionTitle": "Permission Required",
       "permissionBody": "You need to grant camera access.",
       "uploadError": "Could not upload photo.",
@@ -2402,7 +2424,7 @@ export const MOBILE_I18N_FALLBACK = {
       "loading3": "Letters are turning into numbers...",
       "loading4": "Your mansion is being determined...",
       "loading5": "Ancient secrets are unfolding...",
-      "shareTitle": "GoldMoodAstro Yildizname",
+      "shareTitle": "{{brand}} Yildizname",
       "headerTitle": "Yildizname",
       "heroTitleLine1": "Yildizname",
       "heroTitleLine2": "The Abjad Secret",
@@ -2432,7 +2454,7 @@ export const MOBILE_I18N_FALLBACK = {
       "newAnalysis": "NEW ANALYSIS"
     },
     "synastry": {
-      "shareTitle": "GoldMoodAstro Love Compatibility",
+      "shareTitle": "{{brand}} Love Compatibility",
       "successTitle": "Success",
       "inviteSent": "Invitation sent!",
       "inviteFailed": "Could not send invitation",
@@ -2519,7 +2541,7 @@ export const MOBILE_I18N_FALLBACK = {
       "spreadDecisionDesc": "Option Analysis",
       "spreadCelticTitle": "Celtic Cross",
       "spreadCelticDesc": "Deep Analysis",
-      "shareTitle": "GoldMoodAstro Tarot",
+      "shareTitle": "{{brand}} Tarot",
       "headerTitle": "Tarot Guide",
       "headerSubtitle": "Welcome to the mysterious world of the cards.",
       "selectSpreadType": "SELECT A SPREAD TYPE",
@@ -2791,6 +2813,17 @@ export const MOBILE_I18N_FALLBACK = {
     }
   },
   "de": {
+    "share": {
+      "cta": "Entdecken: {{url}}",
+      "tarotMessage": "Meine Tarot-Legung: {{spread}} ✨\n\nMeine Karten: {{cards}}\n\nEntdecke die Botschaft der Karten mit {{brand}}!",
+      "coffeeMessage": "Mein Kaffeesatz-Lesen: {{excerpt}}…\n\nEntdecke deine symbolische Deutung zur Unterhaltung mit {{brand}}!",
+      "dreamMessage": "Meine Traumdeutung ✨\n\n{{excerpt}}…\n\nEntdecke deinen Traum mit {{brand}}!",
+      "synastryMessage": "Unsere Liebeskompatibilität: {{title}} ✨\n\nLiebe: {{love}} %\nAnziehung: {{attraction}} %\n\nEntdeckt eure Kompatibilität mit {{brand}}!",
+      "synastryFallbackTitle": "Kompatibilitätsanalyse",
+      "yildiznameMessage": "Yildizname-Analyse für {{name}} ✨ Mondstation: {{menzil}}\n\n{{reading}}",
+      "horoscopeMessage": "{{sign}} Tageshoroskop ✨\n\n{{excerpt}}…\n\nLies dein Tageshoroskop mit {{brand}}!",
+      "horoscopeTitle": "{{brand}} · {{sign}}"
+    },
     "onboarding": {
       "title1": "Treffen Sie Ihren Expertenberater",
       "body1": "Geprüfte Experten für Astrologie, Tarot, Karriere- und Beziehungsberatung.",
@@ -3758,7 +3791,7 @@ export const MOBILE_I18N_FALLBACK = {
       "later": "Später"
     },
     "coffee": {
-      "shareTitle": "GoldMoodAstro Kaffeesatzlesen",
+      "shareTitle": "{{brand}} Kaffeesatzlesen",
       "permissionTitle": "Berechtigung erforderlich",
       "permissionBody": "Sie müssen den Kamerazugriff erlauben.",
       "uploadError": "Foto konnte nicht hochgeladen werden.",
@@ -3796,7 +3829,7 @@ export const MOBILE_I18N_FALLBACK = {
       "loading3": "Buchstaben werden in Zahlen umgewandelt...",
       "loading4": "Ihr Mondhaus wird bestimmt...",
       "loading5": "Uralte Geheimnisse offenbaren sich...",
-      "shareTitle": "GoldMoodAstro Yildizname",
+      "shareTitle": "{{brand}} Yildizname",
       "headerTitle": "Yildizname",
       "heroTitleLine1": "Yildizname",
       "heroTitleLine2": "Das Abdschad-Geheimnis",
@@ -3826,7 +3859,7 @@ export const MOBILE_I18N_FALLBACK = {
       "newAnalysis": "NEUE ANALYSE"
     },
     "synastry": {
-      "shareTitle": "GoldMoodAstro Liebeskompatibilität",
+      "shareTitle": "{{brand}} Liebeskompatibilität",
       "successTitle": "Erfolg",
       "inviteSent": "Einladung gesendet!",
       "inviteFailed": "Einladung konnte nicht gesendet werden",
@@ -3913,7 +3946,7 @@ export const MOBILE_I18N_FALLBACK = {
       "spreadDecisionDesc": "Optionsanalyse",
       "spreadCelticTitle": "Keltisches Kreuz",
       "spreadCelticDesc": "Tiefenanalyse",
-      "shareTitle": "GoldMoodAstro Tarot",
+      "shareTitle": "{{brand}} Tarot",
       "headerTitle": "Tarot-Ratgeber",
       "headerSubtitle": "Willkommen in der geheimnisvollen Welt der Karten.",
       "selectSpreadType": "LEGUNGSART WÄHLEN",

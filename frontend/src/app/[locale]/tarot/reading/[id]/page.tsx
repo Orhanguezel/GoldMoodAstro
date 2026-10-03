@@ -1,4 +1,5 @@
 import React from 'react';
+import { PRIVATE_RESULT_ROBOTS } from '@/seo/privateResultRobots';
 import TarotResultClient from './TarotResultClient';
 import type { Metadata } from 'next';
 
@@ -24,6 +25,7 @@ export async function generateMetadata({
     const ogImageUrl = `${brand.public_url}/${locale}/tarot/reading/${id}/opengraph-image`;
 
     return {
+      robots: PRIVATE_RESULT_ROBOTS,
       title,
       description,
       openGraph: {
@@ -42,6 +44,7 @@ export async function generateMetadata({
     };
   } catch (err) {
     return {
+      robots: PRIVATE_RESULT_ROBOTS,
       title: `Tarot Reading — ${brand.name}`,
       description: 'Detailed tarot reading interpretation.',
     };
