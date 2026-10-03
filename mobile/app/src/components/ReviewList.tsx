@@ -167,24 +167,28 @@ function buildSummary(reviews: Review[]) {
   };
 }
 
+function StarRow({ rating, size = 14, styles }: {
+  rating: number;
+  size?: number;
+  styles: ReturnType<typeof buildScreenStyles>;
+}) {
+  return (
+    <View style={styles.starRow}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Text key={n} style={[styles.star, { fontSize: size }, rating >= n ? styles.starFilled : styles.starEmpty]}>
+          {rating >= n ? '★' : '☆'}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
 export default function ReviewList({ reviews, loading, emptyText }: Props) {
   const { t } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
   const resolvedEmptyText = emptyText ?? t('review.empty');
-
-  function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
-    return (
-      <View style={styles.starRow}>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <Text key={n} style={[styles.star, { fontSize: size }, rating >= n ? styles.starFilled : styles.starEmpty]}>
-            {rating >= n ? '★' : '☆'}
-          </Text>
-        ))}
-      </View>
-    );
-  }
 
   const summary = buildSummary(reviews);
 
@@ -209,7 +213,7 @@ export default function ReviewList({ reviews, loading, emptyText }: Props) {
       <Text style={styles.sectionTitle}>{t('consultant.reviews')}</Text>
       <View style={styles.summary}>
         <Text style={styles.avgText}>{ratingLabel(summary.avg)}</Text>
-        <StarRow rating={Math.round(summary.avg)} size={16} />
+        <StarRow rating={Math.round(summary.avg)} size={16} styles={styles} />
         <Text style={styles.countText}>
           {t('consultant.rating', { count: summary.count })}
         </Text>
@@ -227,7 +231,7 @@ export default function ReviewList({ reviews, loading, emptyText }: Props) {
                 <Text style={styles.date}>{formatDate(review.created_at)}</Text>
               </View>
               <View style={styles.scoreRow}>
-                <StarRow rating={Number(review.rating)} />
+                <StarRow rating={Number(review.rating)} styles={styles} />
                 {isTrueBoolean(review.is_verified) ? (
                   <View style={styles.verifiedBadge}>
                     <Text style={styles.verifiedText}>{t('review.verifiedBadge')}</Text>
@@ -251,4 +255,3 @@ export default function ReviewList({ reviews, loading, emptyText }: Props) {
     </View>
   );
 }
-

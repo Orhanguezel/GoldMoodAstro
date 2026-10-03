@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { View, StyleSheet, Animated, DimensionValue } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -32,19 +32,19 @@ export default function SkeletonView({
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
   const borderRadius = borderRadiusProp ?? theme.radius.sm;
 
-  const animatedValue = useRef(new Animated.Value(0)).current;
+  const [animatedValue] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    const startAnimation = () => {
-      animatedValue.setValue(0);
+    const animation = Animated.loop(
       Animated.timing(animatedValue, {
         toValue: 1,
         duration: 1500,
         useNativeDriver: true,
-      }).start(() => startAnimation());
-    };
-    startAnimation();
-  }, []);
+      }),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [animatedValue]);
 
   const sweepWidth = typeof width === 'number' ? width : 360;
   const translateX = animatedValue.interpolate({
@@ -65,4 +65,3 @@ export default function SkeletonView({
     </View>
   );
 }
-

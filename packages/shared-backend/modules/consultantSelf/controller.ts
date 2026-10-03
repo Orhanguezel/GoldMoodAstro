@@ -12,6 +12,7 @@ import { consultants } from '../consultants/schema';
 import { bookings } from '../bookings/schema';
 import { users } from '../auth/schema';
 import { chat_threads, chat_messages, chat_participants } from '../chat/schema';
+import { assertChatSendAllowed } from '../chat/safety';
 import { createUserNotification } from '../notifications/service';
 import { dispatchPushToUser } from '../notifications/push';
 import { sendTemplatedEmail } from '../emailTemplates/mailer';
@@ -1820,6 +1821,8 @@ export async function replyInThread(req: FastifyRequest, reply: FastifyReply) {
     .limit(1);
   if (!t) return reply.code(404).send({ error: { message: 'not_found' } });
 
+  await assertChatSendAllowed(id, c.user_id, parsed.data.text);
+
   const messageId = randomUUID();
   const now = new Date();
   await db.insert(chat_messages).values({
@@ -2932,6 +2935,8 @@ export async function replyAsCustomer(req: FastifyRequest, reply: FastifyReply) 
     .where(and(eq(chat_participants.thread_id, id), eq(chat_participants.user_id, userId)))
     .limit(1);
   if (!member) return reply.code(404).send({ error: { message: 'not_found' } });
+
+  await assertChatSendAllowed(id, userId, parsed.data.text);
 
   const messageId = randomUUID();
   const now = new Date();

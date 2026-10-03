@@ -5,11 +5,16 @@ import { useTranslation } from 'react-i18next';
 import { useAppTheme } from '@/theme';
 
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Web HeaderClient FALLBACK_MENU (tr) ile aynı sıra / isimler: Ana Sayfa → Doğum Haritası → Danışmanlar → Günlük Yorum → Profil */
 export default function TabsLayout() {
   const { t } = useTranslation();
   const { colors, font } = useAppTheme();
+  const insets = useSafeAreaInsets();
+  // Edge-to-edge Android can report zero inset while the gesture bar still
+  // overlays the bottom of the tab bar (observed on the API 35 emulator).
+  const bottomInset = Platform.OS === 'android' ? Math.max(insets.bottom, 24) : 0;
 
   return (
     <Tabs
@@ -20,8 +25,8 @@ export default function TabsLayout() {
           backgroundColor: colors.surface,
           borderTopWidth: 1,
           borderTopColor: colors.lineSoft,
-          height: Platform.OS === 'ios' ? 88 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 8,
+          height: Platform.OS === 'ios' ? 88 : 64 + bottomInset,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 8 + bottomInset,
           paddingTop: 8,
         },
         tabBarActiveTintColor: colors.gold,
@@ -45,6 +50,7 @@ export default function TabsLayout() {
         name="birth-chart"
         options={{
           title: t('tabs.birthChart'),
+          tabBarLabel: t('tabs.birthChartShort'),
           tabBarIcon: ({ color, size }) => <Sparkles color={color} size={size} strokeWidth={2} />,
         }}
       />
@@ -52,6 +58,7 @@ export default function TabsLayout() {
         name="connect"
         options={{
           title: t('tabs.connect'),
+          tabBarLabel: t('tabs.connectShort'),
           tabBarIcon: ({ color, size }) => <MessageSquare color={color} size={size} strokeWidth={2} /> 
         }} 
       />
@@ -59,6 +66,7 @@ export default function TabsLayout() {
         name="daily"
         options={{
           title: t('tabs.daily'),
+          tabBarLabel: t('tabs.dailyShort'),
           tabBarIcon: ({ color, size }) => <Calendar color={color} size={size} strokeWidth={2} />,
         }}
       />

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -28,7 +28,6 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTranslation } from 'react-i18next';
-import { shareBrand, webShareUrl } from '@/lib/webShare';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
@@ -139,15 +138,19 @@ export default function YildiznameScreen() {
   const [result, setResult] = useState<any>(null);
   const [loadingPhase, setLoadingPhase] = useState(0);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  const [fadeAnim] = useState(() => new Animated.Value(0));
+  const [slideAnim] = useState(() => new Animated.Value(20));
 
   useEffect(() => {
-    Animated.parallel([
+    fadeAnim.setValue(0);
+    slideAnim.setValue(20);
+    const animation = Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 500, useNativeDriver: true })
-    ]).start();
-  }, [step]);
+    ]);
+    animation.start();
+    return () => animation.stop();
+  }, [step, fadeAnim, slideAnim]);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
@@ -204,8 +207,8 @@ export default function YildiznameScreen() {
     if (!result) return;
     try {
       await Share.share({
-        message: `${t('share.yildiznameMessage', { name: result.name, menzil: result.menzil?.name_tr ?? '', reading: result.readingText ?? '' })}\n\n${t('share.cta', { url: webShareUrl(`/yildizname/result/${result.id}`, 'yildizname') })}`,
-        title: t('yildizname.shareTitle', { brand: shareBrand() }),
+        message: `${result.name} için Yıldızname Analizi ✨ Menzil: ${result.menzil?.name_tr}\n\n${result.readingText}\n\nKeşfet: https://goldmoodastro.com/tr/yildizname/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=yildizname`,
+        title: t('yildizname.shareTitle'),
       });
     } catch (e) {
       logger.error(e);
@@ -403,4 +406,3 @@ export default function YildiznameScreen() {
     </View>
   );
 }
-

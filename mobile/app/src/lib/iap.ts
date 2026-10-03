@@ -51,6 +51,7 @@ const CREDIT_PRODUCT_IDS = {
 } as const;
 
 export function getIapProductId(plan: SubscriptionPlan): string {
+  if (plan.period !== 'monthly' && plan.period !== 'yearly') return '';
   const interval = plan.period === 'yearly' ? 'yearly' : 'monthly';
   if (Platform.OS === 'ios') return PRODUCT_IDS.ios[interval];
   if (Platform.OS === 'android') return PRODUCT_IDS.android[interval];
@@ -68,6 +69,38 @@ export function getIapProvider(): IapProviderSlug | null {
   if (Platform.OS === 'ios') return 'apple_iap';
   if (Platform.OS === 'android') return 'google_iap';
   return null;
+}
+
+/** StoreKit/Play Billing is the price source on native devices. Missing products stay unavailable. */
+export async function fetchStoreDisplayPrices(
+  productIds: string[],
+  type: 'in-app' | 'subs',
+): Promise<Record<string, string>> {
+  if (!getIapProvider() || productIds.length === 0) return {};
+  const iap = await loadIap();
+  await iap.initConnection();
+  const products = (await iap.fetchProducts({ skus: [...new Set(productIds)], type })) ?? [];
+  const prices: Record<string, string> = {};
+  for (const product of products) {
+    if (!productIds.includes(product.id)) continue;
+    let displayPrice: string | undefined = product.displayPrice?.trim();
+    if (type === 'subs' && product.platform === 'android' && 'subscriptionOfferDetailsAndroid' in product) {
+      // The first phase may be free/introductory. Show the repeating full price
+      // of the same offer token used by requestPurchase below.
+      const selected = product.subscriptionOffers?.find((offer) => offer.offerTokenAndroid);
+      const selectedToken = selected?.offerTokenAndroid;
+      const selectedOffer = product.subscriptionOfferDetailsAndroid?.find((offer) => offer.offerToken === selectedToken)
+        ?? product.subscriptionOfferDetailsAndroid?.[0];
+      const phases = selected?.pricingPhasesAndroid?.pricingPhaseList
+        ?? selectedOffer?.pricingPhases.pricingPhaseList ?? [];
+      const repeating = [...phases].reverse().find((phase) => phase.recurrenceMode === 1);
+      displayPrice = repeating?.formattedPrice?.trim();
+    }
+    if (displayPrice) {
+      prices[product.id] = displayPrice;
+    }
+  }
+  return prices;
 }
 
 const PURCHASE_TIMEOUT_MS = 2 * 60 * 1000;

@@ -10,9 +10,9 @@ function buildScreenStyles(t: AppTheme) {
   const { colors } = t;
   return StyleSheet.create({
     btn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: colors.surface,
       alignItems: 'center',
       justifyContent: 'center',
@@ -31,7 +31,7 @@ export function MenuHeaderButton() {
   return (
     <Pressable
       style={styles.btn}
-      onPress={() => router.push('/menu/index' as any)}
+      onPress={() => router.push('/menu')}
       hitSlop={12}
       accessibilityRole="button"
       accessibilityLabel={t('navigation.menuTitle')}

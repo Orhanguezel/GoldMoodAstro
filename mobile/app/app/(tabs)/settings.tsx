@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet, Alert, Switch } from 'react-native';
+import { useMemo } from 'react';
+import { View, Text, Pressable, ScrollView, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
@@ -9,11 +9,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme, type AppTheme } from '@/theme';
 
 function buildScreenStyles(t: AppTheme) {
-  const { colors, spacing, font, radius, shadows } = t;
+  const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   content: { padding: spacing.lg },
-  title: { fontSize: 28, fontFamily: font.display, color: colors.stardust, marginBottom: spacing.xl },
+  title: { fontSize: 28, fontFamily: font.display, color: colors.text, marginBottom: spacing.xl },
   profileCard: { 
     flexDirection: 'row', 
     alignItems: 'center', 
@@ -26,10 +26,10 @@ function buildScreenStyles(t: AppTheme) {
     borderColor: colors.line,
   },
   avatarPlaceholder: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.amethyst, alignItems: 'center', justifyContent: 'center' },
-  avatarInitials: { color: colors.stardust, fontSize: 18, fontFamily: font.sansBold },
+  avatarInitials: { color: colors.cream, fontSize: 18, fontFamily: font.sansBold },
   profileInfo: { gap: 2 },
-  userName: { fontSize: 18, fontFamily: font.display, color: colors.stardust },
-  userEmail: { fontSize: 13, color: colors.muted, fontFamily: font.sans },
+  userName: { fontSize: 18, fontFamily: font.display, color: colors.text },
+  userEmail: { fontSize: 13, color: colors.textMuted, fontFamily: font.sans },
   section: { marginBottom: spacing.xl },
   sectionTitle: { fontSize: 12, fontFamily: font.sansBold, color: colors.gold, textTransform: 'uppercase', letterSpacing: 1, marginBottom: spacing.sm },
   row: { 
@@ -40,10 +40,10 @@ function buildScreenStyles(t: AppTheme) {
     borderBottomWidth: 1,
     borderBottomColor: colors.lineSoft,
   },
-  rowLabel: { fontSize: 16, color: colors.stardust, fontFamily: font.sans },
+  rowLabel: { fontSize: 16, color: colors.text, fontFamily: font.sans },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  rowValue: { fontSize: 14, color: colors.muted, fontFamily: font.sans },
-  chevron: { fontSize: 20, color: colors.muted, marginBottom: 2 },
+  rowValue: { fontSize: 14, color: colors.textMuted, fontFamily: font.sans },
+  chevron: { fontSize: 20, color: colors.textMuted, marginBottom: 2 },
   logoutBtn: { 
     marginTop: spacing.xl, 
     paddingVertical: spacing.md, 
@@ -55,22 +55,38 @@ function buildScreenStyles(t: AppTheme) {
   logoutText: { color: colors.danger, fontFamily: font.sansBold, fontSize: 16 },
   footer: { marginTop: spacing.xxl, alignItems: 'center', paddingVertical: spacing.xl },
   footerBrand: { fontSize: 16, fontFamily: font.display, color: colors.gold, marginBottom: 4 },
-  footerText: { fontSize: 10, color: colors.muted, fontFamily: font.sans },
+  footerText: { fontSize: 10, color: colors.textMuted, fontFamily: font.sans },
 });
+}
+
+function SettingRow({ label, value, onPress, styles }: {
+  label: string;
+  value?: string;
+  onPress: () => void;
+  styles: ReturnType<typeof buildScreenStyles>;
+}) {
+  return (
+    <Pressable onPress={onPress} style={styles.row} accessibilityRole="button" accessibilityLabel={label}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <View style={styles.rowRight}>
+        {value ? <Text style={styles.rowValue}>{value}</Text> : null}
+        <Text style={styles.chevron}>›</Text>
+      </View>
+    </Pressable>
+  );
 }
 
 
 export default function SettingsScreen() {
   const theme = useAppTheme();
-  const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
   const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
-  const [pushEnabled, setPushEnabled] = useState(true);
-
   const switchLang = async () => {
-    const next = i18n.language === 'tr' ? 'en' : 'tr';
+    const languages = ['tr', 'en', 'de'] as const;
+    const current = languages.indexOf(i18n.language.slice(0, 2) as typeof languages[number]);
+    const next = languages[(current + 1) % languages.length];
     await i18n.changeLanguage(next);
     await storage.setLanguage(next);
   };
@@ -85,18 +101,6 @@ export default function SettingsScreen() {
       ]
     );
   };
-
-  function SettingRow({ label, value, onPress }: { label: string; value?: string; onPress?: () => void }) {
-    return (
-      <Pressable onPress={onPress} style={styles.row}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        <View style={styles.rowRight}>
-          {value ? <Text style={styles.rowValue}>{value}</Text> : null}
-          <Text style={styles.chevron}>›</Text>
-        </View>
-      </Pressable>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -120,31 +124,25 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings.profile')}</Text>
           <SettingRow 
+            styles={styles}
             label={t('settings.language')} 
-            value={i18n.language === 'tr' ? 'Türkçe' : 'English'} 
+            value={{ tr: 'Türkçe', en: 'English', de: 'Deutsch' }[i18n.language.slice(0, 2)] ?? 'Türkçe'}
             onPress={switchLang} 
           />
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t('settings.notifications')}</Text>
-            <Switch 
-              value={pushEnabled} 
-              onValueChange={setPushEnabled}
-              trackColor={{ false: colors.deep, true: colors.amethyst }}
-              thumbColor={colors.stardust}
-            />
-          </View>
+          <SettingRow styles={styles} label={t('settings.notifications')} onPress={() => router.push('/notifications')} />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings.about')}</Text>
-          <SettingRow label={t('settings.aboutSupport', 'Hakkında & Destek')} onPress={() => router.push('/info' as any)} />
-          <SettingRow label={t('settings.contact', 'İletişim')} onPress={() => router.push('/contact' as any)} />
-          <SettingRow label={t('settings.blog', 'Blog')} onPress={() => router.push('/blog' as any)} />
-          <SettingRow label={t('settings.becomeConsultant', 'Danışman Ol')} onPress={() => router.push('/become-consultant' as any)} />
-          <SettingRow label={t('settings.legalPrivacy', 'Yasal & Gizlilik')} onPress={() => router.push('/legal' as any)} />
+          <SettingRow styles={styles} label={t('settings.aboutSupport', 'Hakkında & Destek')} onPress={() => router.push('/info')} />
+          <SettingRow styles={styles} label={t('settings.contact', 'İletişim')} onPress={() => router.push('/contact')} />
+          <SettingRow styles={styles} label={t('settings.blog', 'Blog')} onPress={() => router.push('/blog')} />
+          <SettingRow styles={styles} label={t('settings.becomeConsultant', 'Danışman Ol')} onPress={() => router.push('/become-consultant')} />
+          <SettingRow styles={styles} label={t('settings.legalPrivacy', 'Yasal & Gizlilik')} onPress={() => router.push('/legal')} />
           <SettingRow
+            styles={styles}
             label={t('settings.privacy', 'Gizlilik & Veri')}
-            onPress={() => router.push('/(tabs)/profile/privacy' as any)}
+            onPress={() => router.push('/(tabs)/profile/privacy')}
           />
           <View style={styles.row}>
             <Text style={styles.rowLabel}>{t('settings.versionLabel', 'Versiyon')}</Text>
@@ -152,9 +150,9 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        <Pressable style={styles.logoutBtn} onPress={handleLogout}>
+        {user ? <Pressable style={styles.logoutBtn} onPress={handleLogout} accessibilityRole="button" accessibilityLabel={t('settings.logout')}>
           <Text style={styles.logoutText}>{t('settings.logout')}</Text>
-        </Pressable>
+        </Pressable> : null}
 
         <View style={styles.footer}>
           <Text style={styles.footerBrand}>GoldMoodAstro</Text>

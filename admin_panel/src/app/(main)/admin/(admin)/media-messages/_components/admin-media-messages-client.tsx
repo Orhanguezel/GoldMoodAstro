@@ -24,6 +24,8 @@ import {
 import {
   useGetMediaMessageStatsAdminQuery,
   useListMediaMessagesAdminQuery,
+  useListMediaReportsAdminQuery,
+  useReviewMediaReportAdminMutation,
 } from '@/integrations/hooks';
 
 function fmtDate(value: string | null | undefined) {
@@ -43,6 +45,8 @@ export default function AdminMediaMessagesClient() {
   const [status, setStatus] = React.useState('all');
   const listQ = useListMediaMessagesAdminQuery(status === 'all' ? undefined : { status });
   const statsQ = useGetMediaMessageStatsAdminQuery();
+  const reportsQ = useListMediaReportsAdminQuery('open');
+  const [reviewReport] = useReviewMediaReportAdminMutation();
   const rows = listQ.data ?? [];
   const stats = statsQ.data;
   const busy = listQ.isFetching || statsQ.isFetching;
@@ -149,7 +153,23 @@ export default function AdminMediaMessagesClient() {
           </TableBody>
         </Table>
       </Card>
+
+      <Card className="rounded-2xl p-5">
+        <h2 className="mb-4 text-xl font-semibold">Medya şikâyetleri ({reportsQ.data?.length ?? 0})</h2>
+        {reportsQ.isError && <p className="text-sm text-destructive">Şikâyetler yüklenemedi.</p>}
+        {!reportsQ.isError && !reportsQ.isLoading && !reportsQ.data?.length && <p className="text-sm text-muted-foreground">Açık şikâyet yok.</p>}
+        <div className="space-y-3">
+          {reportsQ.data?.map((report) => <div key={report.id} className="flex flex-wrap items-center gap-3 rounded-lg border p-3 text-sm">
+            <span className="font-medium">{report.direction === 'question' ? 'Danışan sorusu' : 'Danışman yanıtı'} · {report.kind === 'video' ? 'Video' : 'Ses'}</span>
+            <span>{report.reason}</span><span className="text-muted-foreground">{fmtDate(report.created_at)}</span>
+            {report.note && <span className="w-full">{report.note}</span>}
+            {report.details && <span className="w-full">{report.details}</span>}
+            <Button asChild size="sm" variant="outline"><a href={`/api/admin/media-messages/${report.message_id}/file`} target="_blank" rel="noreferrer">İçeriği aç</a></Button>
+            <Button size="sm" variant="outline" onClick={() => void reviewReport({ id: report.id, status: 'reviewed' })}>İncelendi</Button>
+            <Button size="sm" variant="ghost" onClick={() => void reviewReport({ id: report.id, status: 'dismissed' })}>Reddet</Button>
+          </div>)}
+        </div>
+      </Card>
     </div>
   );
 }
-

@@ -3,7 +3,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { and, asc, desc, eq, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db as sharedDb } from "../../db/client";
-import { chat_ai_knowledge, chat_messages, chat_support_sessions, chat_threads } from "./schema";
+import { chat_ai_knowledge, chat_messages, chat_reports, chat_support_sessions, chat_threads } from "./schema";
 import { chatSupportService } from "./support.service";
 import { ListMessagesQuerySchema, PostMessageBodySchema, ThreadIdParamsSchema } from "./validation";
 
@@ -39,6 +39,24 @@ export function chatAdminController() {
   }
 
   return {
+    async listReports(req: FastifyRequest, reply: FastifyReply) {
+      const q = z.object({ status: z.enum(['open', 'reviewed', 'dismissed']).default('open'), limit: z.coerce.number().int().min(1).max(100).default(50), offset: z.coerce.number().int().min(0).default(0) }).parse(req.query ?? {});
+      const where = eq(chat_reports.status, q.status);
+      const rows = await sharedDb.select({ report: chat_reports, message: chat_messages.text }).from(chat_reports)
+        .leftJoin(chat_messages, eq(chat_reports.message_id, chat_messages.id)).where(where)
+        .orderBy(desc(chat_reports.created_at)).limit(q.limit).offset(q.offset);
+      const [count] = await sharedDb.select({ c: sql<number>`count(*)` }).from(chat_reports).where(where);
+      setListHeaders(reply, Number(count?.c ?? 0), q.offset, q.limit);
+      return { items: rows.map((r) => ({ ...r.report, message_text: r.message })) };
+    },
+    async reviewReport(req: FastifyRequest) {
+      const params = z.object({ id: z.string().uuid() }).parse(req.params ?? {});
+      const body = z.object({ status: z.enum(['reviewed', 'dismissed']) }).parse(req.body ?? {});
+      const [report] = await sharedDb.select({ id: chat_reports.id }).from(chat_reports).where(eq(chat_reports.id, params.id)).limit(1);
+      if (!report) throw Object.assign(new Error('report_not_found'), { statusCode: 404 });
+      await sharedDb.update(chat_reports).set({ status: body.status }).where(eq(chat_reports.id, params.id));
+      return { ok: true };
+    },
     async adminListThreads(req: FastifyRequest, reply: FastifyReply) {
       const q = ThreadListSchema.parse((req as any).query ?? {});
       const where = and(

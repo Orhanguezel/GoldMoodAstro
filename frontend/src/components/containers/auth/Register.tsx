@@ -25,6 +25,7 @@ import { gaEvent } from '@/lib/ga';
 import { fbEvent, metaEventId } from '@/lib/fbpixel';
 
 import PageContainer from '@/components/common/PageContainer';
+import { safeNextPath } from '@/lib/safeNextPath';
 
 const Register: React.FC = () => {
   const router = useRouter();
@@ -36,8 +37,7 @@ const Register: React.FC = () => {
   // H4: after signup, `?next=/tr/booking?...` returns the user to the source page.
   // Otherwise use the home page. Only path-like values are accepted to prevent open redirects.
   const nextParam = useMemo(() => {
-    const raw = searchParams.get('next') || '';
-    return raw.startsWith('/') ? raw : '';
+    return safeNextPath(searchParams.get('next')) ?? '';
   }, [searchParams]);
 
   const loginHref = useMemo(() => {

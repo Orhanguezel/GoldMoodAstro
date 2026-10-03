@@ -51,6 +51,7 @@ import CityAutocomplete from '@/components/common/CityAutocomplete';
 import ReviewModal from '@/components/common/public/ReviewModal';
 import BookingMessageButton from '@/components/common/BookingMessageButton';
 import UserMessagesPanel from '@/components/containers/user-dashboard/UserMessagesPanel';
+import { MediaMessageSafety } from '@/components/common/MediaSafetyControls';
 
 type TabKey = 'overview' | 'profile' | 'bookings' | 'messages' | 'media' | 'favorites' | 'history' | 'security';
 type HistoryFilter = 'all' | ReadingType;
@@ -100,6 +101,15 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
     <label className="block text-[10px] font-bold text-(--gm-gold) tracking-[0.2em] uppercase mb-2 opacity-80">
       {children}
     </label>
+  );
+}
+
+function QueryError({ message, retry, retryLabel }: { message: string; retry: () => void; retryLabel: string }) {
+  return (
+    <div role="alert" className="rounded-2xl border border-(--gm-error)/30 bg-(--gm-surface) p-6 text-center space-y-4">
+      <p className="text-(--gm-text)">{message}</p>
+      <button type="button" onClick={retry} className="btn-premium px-6 py-3">{retryLabel}</button>
+    </div>
   );
 }
 
@@ -222,7 +232,7 @@ export default function DashboardPage() {
   const { data: pendingOutcomes } = useListMyPendingOutcomesQuery(undefined, {
     skip: !isAuthenticated,
   });
-  const { data: history, isLoading: historyLoading } = useGetUserHistoryQuery(
+  const { data: history, isLoading: historyLoading, isError: historyError, refetch: refetchHistory } = useGetUserHistoryQuery(
     { limit: 50 },
     { skip: !isAuthenticated },
   );
@@ -231,13 +241,13 @@ export default function DashboardPage() {
   const pendingCount = pendingOutcomes?.length ?? 0;
   const [upsertProfile, upsertProfileState] = useUpsertMyProfileMutation();
   const [updateUser, updateUserState] = useUpdateUserMutation();
-  const { data: myBookings, isLoading: bookingsLoading } = useListMyBookingsQuery(undefined, {
+  const { data: myBookings, isLoading: bookingsLoading, isError: bookingsError, refetch: refetchBookings } = useListMyBookingsQuery(undefined, {
     skip: !isAuthenticated,
   });
-  const { data: favorites = [], isLoading: favoritesLoading } = useListFavoritesQuery(undefined, {
+  const { data: favorites = [], isLoading: favoritesLoading, isError: favoritesError, refetch: refetchFavorites } = useListFavoritesQuery(undefined, {
     skip: !isAuthenticated,
   });
-  const { data: mediaMessages = [], isLoading: mediaMessagesLoading } = useListMyMediaMessagesQuery(undefined, {
+  const { data: mediaMessages = [], isLoading: mediaMessagesLoading, isError: mediaMessagesError, refetch: refetchMediaMessages } = useListMyMediaMessagesQuery(undefined, {
     skip: !isAuthenticated,
   });
   const [removeFavorite, removeFavoriteState] = useRemoveFavoriteMutation();
@@ -720,6 +730,8 @@ export default function DashboardPage() {
                   <div key={i} className="h-24 rounded-2xl bg-(--gm-bg-deep) animate-pulse" />
                 ))}
               </div>
+            ) : bookingsError ? (
+              <QueryError message={ui('ui_extra_b0_dash_load_error', 'Could not load your data. Please try again.')} retryLabel={ui('ui_extra_b0_dash_retry', 'Try again')} retry={refetchBookings} />
             ) : !myBookings || myBookings.length === 0 ? (
               <div className="py-20 text-center space-y-6 rounded-2xl border border-dashed border-(--gm-border-soft)">
                 <div className="w-16 h-16 rounded-full bg-(--gm-bg-deep) flex items-center justify-center mx-auto border border-(--gm-border-soft)">
@@ -845,6 +857,8 @@ export default function DashboardPage() {
                   <div key={i} className="h-28 rounded-2xl bg-(--gm-bg-deep) animate-pulse" />
                 ))}
               </div>
+            ) : mediaMessagesError ? (
+              <QueryError message={ui('ui_extra_b0_dash_load_error', 'Could not load your data. Please try again.')} retryLabel={ui('ui_extra_b0_dash_retry', 'Try again')} retry={refetchMediaMessages} />
             ) : mediaMessages.length === 0 ? (
               <div className="py-20 text-center space-y-6 rounded-2xl border border-dashed border-(--gm-border-soft)">
                 <Mic className="w-8 h-8 mx-auto text-(--gm-text-muted)" />
@@ -893,6 +907,7 @@ export default function DashboardPage() {
                           {ui('ui_extra_b0_dash_media_waiting_desc', 'Your consultant reply will appear here.')}
                         </p>
                       )}
+                      <MediaMessageSafety messageId={item.id} reportMessageId={item.reply_id} locale={locale} />
                     </div>
                   );
                 })}
@@ -918,6 +933,8 @@ export default function DashboardPage() {
                   <div key={i} className="h-24 rounded-2xl bg-(--gm-bg-deep) animate-pulse" />
                 ))}
               </div>
+            ) : favoritesError ? (
+              <QueryError message={ui('ui_extra_b0_dash_load_error', 'Could not load your data. Please try again.')} retryLabel={ui('ui_extra_b0_dash_retry', 'Try again')} retry={refetchFavorites} />
             ) : favorites.length === 0 ? (
               <div className="py-20 text-center space-y-6 rounded-2xl border border-dashed border-(--gm-border-soft)">
                 <div className="w-16 h-16 rounded-full bg-(--gm-bg-deep) flex items-center justify-center mx-auto border border-(--gm-border-soft)">
@@ -1045,6 +1062,8 @@ export default function DashboardPage() {
                   <div key={i} className="h-28 rounded-2xl bg-(--gm-bg-deep) animate-pulse" />
                 ))}
               </div>
+            ) : historyError ? (
+              <QueryError message={ui('ui_extra_b0_dash_load_error', 'Could not load your data. Please try again.')} retryLabel={ui('ui_extra_b0_dash_retry', 'Try again')} retry={refetchHistory} />
             ) : filteredHistory.length === 0 ? (
               <div className="py-20 text-center space-y-6 rounded-2xl border border-dashed border-(--gm-border-soft)">
                 <div className="w-16 h-16 rounded-full bg-(--gm-bg-deep) flex items-center justify-center mx-auto border border-(--gm-border-soft)">

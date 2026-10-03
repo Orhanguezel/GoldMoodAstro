@@ -168,17 +168,17 @@ export default function DailyHoroscopeCard() {
 
   const { t, i18n } = useTranslation();
   const [selectedSign, setSelectedSign] = useState('aries');
-  const [loading, setLoading] = useState(false);
-  const [horoscope, setHoroscope] = useState<any>(null);
+  const [result, setResult] = useState<{ key: string; horoscope: Awaited<ReturnType<typeof horoscopesApi.getToday>> } | null>(null);
+  const language = i18n.resolvedLanguage ?? i18n.language ?? 'tr';
+  const requestKey = `${selectedSign}|${language}`;
+  const loading = result?.key !== requestKey;
+  const horoscope = loading ? null : result.horoscope;
 
   useEffect(() => {
-    loadHoroscope();
-  }, [selectedSign, i18n.resolvedLanguage, i18n.language]);
-
-  async function loadHoroscope() {
-    setLoading(true);
-    try {
-      const rawLang = (i18n.resolvedLanguage ?? i18n.language ?? 'tr').trim();
+    let cancelled = false;
+    async function loadHoroscope() {
+      try {
+      const rawLang = language.trim();
       const apiLocale = rawLang.toLowerCase().startsWith('en') ? 'en' : 'tr';
       let res = await horoscopesApi.getToday({
         sign: selectedSign,
@@ -190,20 +190,23 @@ export default function DailyHoroscopeCard() {
       if (!res) {
         res = await horoscopesApi.getToday({ sign: selectedSign });
       }
-      setHoroscope(res);
-    } catch (e) {
-      logger.error('Horoscope load error:', e);
-      setHoroscope(null);
-    } finally {
-      setLoading(false);
+      if (!cancelled) setResult({ key: requestKey, horoscope: res });
+      } catch (error) {
+        if (!cancelled) {
+          logger.error('Horoscope load error:', error);
+          setResult({ key: requestKey, horoscope: null });
+        }
+      }
     }
-  }
+    void loadHoroscope();
+    return () => { cancelled = true; };
+  }, [selectedSign, language, requestKey]);
 
   const selectedSignData = SIGNS.find(s => s.key === selectedSign);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>GÜNLÜK BURÇ YORUMLARI</Text>
+      <Text style={styles.sectionTitle}>{t('horoscopeCard.title')}</Text>
       
       <ScrollView 
         horizontal 
@@ -252,46 +255,38 @@ export default function DailyHoroscopeCard() {
               <View style={styles.moodBadge}>
                 <Sparkles size={12} color={colors.gold} />
                 <Text style={styles.moodText}>
-                  {horoscope.mood_score ?? horoscope.moodScore ?? '—'}/10 Enerji
+                  {t('horoscopeCard.energy', { score: String(horoscope.mood_score ?? horoscope.moodScore ?? '—') })}
                 </Text>
               </View>
             </View>
             
             <Text style={styles.content}>
-              {horoscope.content ?? horoscope.contentTr ?? ''}
+              {String(horoscope.content ?? horoscope.contentTr ?? '')}
             </Text>
 
             <View style={styles.statsGrid}>
               <View style={styles.statItem}>
                 <Star size={14} color={colors.goldDim} />
                 <View>
-                  <Text style={styles.statLabel}>ŞANSLI SAYI</Text>
-                  <Text style={styles.statVal}>{horoscope.lucky_number ?? horoscope.luckyNumber ?? '—'}</Text>
+                  <Text style={styles.statLabel}>{t('horoscopeCard.luckyNumber')}</Text>
+                  <Text style={styles.statVal}>{String(horoscope.lucky_number ?? horoscope.luckyNumber ?? '—')}</Text>
                 </View>
               </View>
               <View style={styles.statItem}>
                 <Heart size={14} color={colors.goldDim} />
                 <View>
-                  <Text style={styles.statLabel}>ŞANSLI RENK</Text>
-                  <Text style={styles.statVal}>{horoscope.lucky_color ?? horoscope.luckyColor ?? '—'}</Text>
+                  <Text style={styles.statLabel}>{t('horoscopeCard.luckyColor')}</Text>
+                  <Text style={styles.statVal}>{String(horoscope.lucky_color ?? horoscope.luckyColor ?? '—')}</Text>
                 </View>
               </View>
             </View>
           </View>
         ) : (
           <View style={styles.errorBox}>
-            <Text style={styles.errorText}>Yorum şu an ulaşılamıyor.</Text>
-            {__DEV__ ? (
-              <Text style={[styles.errorText, { marginTop: 10, fontSize: 12, textAlign: 'center', opacity: 0.85 }]}>
-                Backend ve DB seed kontrolü: terminalde API loglarına bakın. Fiziksel cihazda{' '}
-                <Text style={{ fontFamily: theme.font.sansBold }}>EXPO_PUBLIC_API_URL</Text>
-                {` `}için Mac IP (örn. http://192.168.x.x:8094/api) kullanın.
-              </Text>
-            ) : null}
+            <Text style={styles.errorText}>{t('horoscopeCard.unavailable')}</Text>
           </View>
         )}
       </View>
     </View>
   );
 }
-

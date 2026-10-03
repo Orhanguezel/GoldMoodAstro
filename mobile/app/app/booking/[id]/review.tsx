@@ -57,7 +57,7 @@ export default function BookingReviewScreen() {
   useEffect(() => {
     if (!bookingId || consultantId) return;
 
-    setLoading(true);
+    Promise.resolve().then(() => setLoading(true));
     bookingsApi.get(bookingId)
       .then((booking) => {
         setConsultantId(booking.consultant_id);
@@ -107,4 +107,3 @@ export default function BookingReviewScreen() {
     </SafeAreaView>
   );
 }
-

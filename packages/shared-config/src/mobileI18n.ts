@@ -22,7 +22,8 @@ export const MOBILE_I18N_FALLBACK = {
       "title3": "Sesli görüşme ile başlayın",
       "body3": "Güvenli, şifreli sesli görüşme. Her seans değerlendirilebilir.",
       "next": "Devam",
-      "finish": "Başla"
+      "finish": "Başla",
+      "continueAsGuest": "Misafir olarak devam et"
     },
     "forceUpdate": {
       "title": "Güncelleme gerekli",
@@ -94,7 +95,14 @@ export const MOBILE_I18N_FALLBACK = {
         "mood": "Mood",
         "career": "Kariyer",
         "relationship": "İlişki",
-        "birth_chart": "Doğum Haritası"
+        "birth_chart": "Doğum Haritası",
+        "bilincalti_donusum": "Bilinçaltı Farkındalığı",
+        "dream_interpretation": "Rüya Yorumu",
+        "energy_healing": "Enerji Çalışmaları",
+        "fizyonomi": "Fizyonomi",
+        "psikoloji": "Psikoloji",
+        "spiritual_guidance": "Ruhsal Rehberlik",
+        "yasam_koclugu": "Yaşam Koçluğu"
       },
       "loading": "Yükleniyor...",
       "error": "Yüklenemedi",
@@ -238,7 +246,24 @@ export const MOBILE_I18N_FALLBACK = {
       "paymentSuccessBody": "Randevunuz onaylandı.",
       "title": "Bildirimler",
       "markAllRead": "Hepsini Oku",
-      "empty": "Henüz bir bildiriminiz bulunmuyor."
+      "empty": "Henüz bir bildiriminiz bulunmuyor.",
+      "loadError": "Bildirimler yüklenemedi. Tekrar deneyin.",
+      "loginRequired": "Bildirimlerinizi görmek için giriş yapın."
+    },
+    "inbox": {
+      "title": "Mesajlarım",
+      "empty": "Henüz mesajınız yok.",
+      "loadError": "Mesajlar yüklenemedi. Tekrar deneyin.",
+      "retry": "Tekrar dene",
+      "consultantFallback": "Danışman",
+      "bookingLabel": "Randevu mesajı",
+      "leadLabel": "Ön görüşme",
+      "unreadCount": "{{count}} okunmamış mesaj",
+      "loginRequired": "Mesajlarınızı görmek için giriş yapın.",
+      "noMessage": "Henüz mesaj yok.",
+      "browseConsultants": "Danışmanları keşfet",
+      "sendError": "Mesaj gönderilemedi. Tekrar deneyin.",
+      "send": "Gönder"
     },
     "mediaMessages": {
       "title": "Medya Sorularım",
@@ -261,24 +286,30 @@ export const MOBILE_I18N_FALLBACK = {
       "sentTitle": "Sorunuz gönderildi",
       "sentBody": "Danışman yanıtı geldiğinde bildirim alacaksınız.",
       "insufficientCredits": "Bu soru için yeterli krediniz yok.",
+      "buyCredits": "Kredi satın al",
+      "priceChanged": "Ücret değişti. Güncel fiyatı kontrol edip yeniden deneyin.",
       "sendError": "Medya sorusu gönderilemedi. Lütfen tekrar deneyin.",
       "microphonePermissionTitle": "Mikrofon izni gerekli",
       "microphonePermissionBody": "Sesli soru kaydetmek için mikrofon izni vermeniz gerekiyor.",
       "recordError": "Kayıt tamamlanamadı.",
       "audioQuestionTitle": "Sesli soru gönder",
-      "audioQuestionConfirm": "{{price}} {{currency}} karşılığı kısa bir sesli soru kaydedilecek. Hazır olduğunuzda kaydı başlatın.",
+      "audioQuestionConfirm": "Kısa sesli soru ücreti {{price}} {{currency}} ({{credits}} kredi). Hazır olduğunuzda kaydı başlatın.",
+      "creditCost": "{{credits}} kredi düşülür",
       "audioQuestionDesc": "Kısa bir ses kaydı gönderin; danışman yanıtladığında bildirim alırsınız.",
       "startRecording": "Kaydı Başlat",
       "stopAndSend": "Durdur ve Gönder",
       "recordAudio": "Sesli Soru Kaydet",
       "videoQuestionTitle": "Görüntülü soru gönder",
-      "videoQuestionConfirm": "{{price}} {{currency}} karşılığı kısa bir video soru kaydedilecek.",
+      "videoQuestionConfirm": "Kısa video soru ücreti {{price}} {{currency}} ({{credits}} kredi).",
       "videoQuestionDesc": "Kısa bir video kaydı gönderin; danışman video veya sesli yanıt verebilir.",
       "cameraPermissionTitle": "Kamera izni gerekli",
       "cameraPermissionBody": "Görüntülü soru kaydetmek için kamera izni vermeniz gerekiyor.",
       "recordVideo": "Video Soru Kaydet"
     },
     "consultantPanel": {
+      "accountUnavailable": "Profil bilgileri şu anda yüklenemiyor.",
+      "completionUnavailable": "Profil tamamlama bilgisi şu anda yüklenemiyor.",
+      "statsUnavailable": "Performans verileri şu anda yüklenemiyor.",
       "tabs": {
         "overview": "Özet",
         "bookings": "Randevular",
@@ -288,7 +319,8 @@ export const MOBILE_I18N_FALLBACK = {
         "media": "Medya",
         "reviews": "Yorumlar",
         "kyc": "KYC",
-        "profile": "Profil"
+        "profile": "Profil",
+        "more": "Diğer"
       },
       "kicker": "DANIŞMAN PANELİ",
       "title": "Bugünkü çalışma alanınız",
@@ -316,9 +348,37 @@ export const MOBILE_I18N_FALLBACK = {
         "presenceOnline": "Profiliniz müsait görünüyor.",
         "presenceOffline": "Profiliniz şu anda müsait değil görünüyor."
       },
+      "publication": {
+        "live": "Profiliniz yayında",
+        "notLive": "Profiliniz henüz yayında değil",
+        "hint": "Eksikler tamamlandığında profiliniz otomatik yayımlanır.",
+        "openProfile": "Profili aç",
+        "missing": {
+          "approval": "Danışman onayı",
+          "hidden": "Profil görünürlüğü",
+          "price": "Seans ücreti",
+          "photo": "Profil fotoğrafı",
+          "slug": "Genel profil adresi"
+        }
+      },
+      "completion": {
+        "title": "Profil tamamlama",
+        "items": {
+          "avatar": "Profil fotoğrafı",
+          "bio_500": "En az 500 karakter biyografi",
+          "multi_package": "En az iki hizmet paketi",
+          "free_intro": "Ücretsiz tanışma paketi",
+          "expertise_3": "En az üç uzmanlık",
+          "language_1": "En az bir dil",
+          "availability": "Müsaitlik saatleri",
+          "bank_iban": "Banka IBAN",
+          "approved_review": "Onaylı yorum"
+        }
+      },
       "bookings": {
         "kicker": "DANIŞMAN TAKVİMİ",
         "title": "Danışman randevuları",
+        "loadError": "Randevular yüklenemedi. Lütfen tekrar deneyin.",
         "body": "Mobil danışman randevu yönetimi için route hazır. Kabul/red, gün programı ve notlar B3 kapsamında bağlanacak.",
         "filters": {
           "incoming": "Gelen",
@@ -342,6 +402,12 @@ export const MOBILE_I18N_FALLBACK = {
         "rejectTitle": "Randevuyu reddet",
         "rejectBody": "Bu randevuyu reddetmek istiyor musunuz?",
         "reject": "Reddet",
+        "join": "Görüşmeye Katıl",
+        "cancelBooking": "Randevuyu İptal Et",
+        "reasonRequired": "En az 5 karakterlik bir gerekçe yazın.",
+        "cancelReasonHelp": "Danışana iletilecek iptal gerekçesini yazın.",
+        "reasonPlaceholder": "İptal gerekçesi",
+        "confirmCancel": "İptal Et",
         "actionError": "İşlem tamamlanamadı.",
         "emptyTitle": "Randevu yok",
         "emptyBody": "Bu filtrede görüntülenecek danışman randevusu bulunmuyor.",
@@ -353,6 +419,15 @@ export const MOBILE_I18N_FALLBACK = {
         "title": "Müsaitlik yönetimi",
         "weeklyTitle": "Haftalık saatler",
         "weeklyHelp": "Aktif günlerde başlangıç, bitiş ve slot süresini HH:mm formatında girin.",
+        "addRange": "Aralık ekle",
+        "removeRange": "Aralığı sil",
+        "noRange": "Çalışma aralığı yok",
+        "validation": {
+          "tooMany": "En fazla 50 aralık eklenebilir.",
+          "invalidTime": "Saat aralıklarını kontrol edin.",
+          "invalidSlot": "Slot süresi aralığı tam bölmeli.",
+          "overlap": "Saat aralıkları çakışıyor."
+        },
         "saved": "Müsaitlik saatleri kaydedildi.",
         "saveError": "Müsaitlik kaydedilemedi. Saat aralıklarını kontrol edin.",
         "save": "Saatleri Kaydet",
@@ -408,6 +483,8 @@ export const MOBILE_I18N_FALLBACK = {
       "messages": {
         "kicker": "MESAJLAR",
         "title": "Danışan mesajları",
+        "loadError": "Konuşmalar yüklenemedi.",
+        "threadLoadError": "Mesajlar yüklenemedi.",
         "emptyTitle": "Henüz mesaj yok",
         "emptyBody": "Danışanlar profilinizdeki mesaj butonundan size ulaştığında konuşmalar burada görünür.",
         "unknownCustomer": "Danışan",
@@ -513,6 +590,8 @@ export const MOBILE_I18N_FALLBACK = {
       "profile": {
         "kicker": "PROFİL & HİZMET",
         "title": "Danışman profili",
+        "loadError": "Danışman profili yüklenemedi.",
+        "servicesLoadError": "Hizmetler yüklenemedi.",
         "body": "Profil, hizmet, KYC ve medya ayarları için mobil rota hazır. Detay yönetim ekranları B6/B9 kapsamında genişletilecek.",
         "profileInfo": "Profil bilgileri",
         "bio": "BİYOGRAFİ",
@@ -535,6 +614,9 @@ export const MOBILE_I18N_FALLBACK = {
         "freeService": "Ücretsiz hizmet",
         "createService": "Hizmet Ekle",
         "serviceCreated": "Hizmet eklendi.",
+        "serviceUpdated": "Hizmet güncellendi.",
+        "editService": "Hizmeti düzenle",
+        "saveService": "Değişiklikleri kaydet",
         "serviceCreateError": "Hizmet eklenemedi.",
         "invalidService": "Hizmet adı, süre ve ücret alanlarını kontrol edin.",
         "servicesTitle": "Hizmetler",
@@ -566,12 +648,37 @@ export const MOBILE_I18N_FALLBACK = {
     },
     "legal": {
       "title": "Yasal & Gizlilik",
-      "intro": "Mağaza yayını için zorunlu metinler. İçerikler admin panelinden güncellenir.",
+      "intro": "Gizlilik, kullanım ve diğer yasal metinleri buradan okuyabilirsiniz.",
       "empty": "Yasal içerikler henüz hazırlanmadı. Lütfen daha sonra tekrar kontrol edin."
     },
     "profile": {
       "title": "Profil",
+      "dataLoadError": "Hesap verileri yüklenemedi. Tekrar deneyin.",
+      "phoneLabel": "TELEFON",
+      "fullNameRequired": "Ad soyad boş bırakılamaz.",
+      "addressLabel": "ADRES",
+      "cityLabel": "ŞEHİR",
+      "loadError": "Profil ayarları yüklenemedi.",
+      "retry": "Tekrar dene",
+      "save": "Kaydet",
+      "saving": "Kaydediliyor...",
+      "securityTitle": "Güvenlik",
+      "currentPassword": "Mevcut şifre",
+      "newPassword": "Yeni şifre",
+      "confirmPassword": "Yeni şifre tekrar",
+      "updatePassword": "Şifreyi güncelle",
+      "updatingPassword": "Güncelleniyor...",
+      "passwordsMismatch": "Şifreler eşleşmiyor.",
+      "currentPasswordRequired": "Mevcut şifrenizi girin.",
+      "passwordTooShort": "Şifre en az 6 karakter olmalı.",
+      "passwordUpdated": "Şifre güncellendi.",
+      "passwordUpdateError": "Şifre güncellenemedi.",
+      "menuMessages": "Mesajlarım",
+      "menuFavorites": "Favorilerim",
+      "menuReadings": "Yorum Geçmişim",
       "noName": "Misafir",
+      "guestTitle": "Profilinize giriş yapın",
+      "guestBody": "Randevularınızı, kredilerinizi ve üyeliğinizi görmek için giriş yapın.",
       "subscriptionCardTitle": "Abonelik",
       "subscriptionActive": "Aktif",
       "subscriptionInactive": "Pasif",
@@ -692,8 +799,18 @@ export const MOBILE_I18N_FALLBACK = {
       "settings": "Ayarlar",
       "today": "Ana Sayfa",
       "birthChart": "Doğum Haritası",
+      "birthChartShort": "Harita",
       "connect": "Danışmanlar",
-      "daily": "Günlük Yorum"
+      "connectShort": "Danışman",
+      "daily": "Günlük Yorum",
+      "dailyShort": "Günlük"
+    },
+    "horoscopeCard": {
+      "title": "GÜNLÜK BURÇ YORUMLARI",
+      "energy": "{{score}}/10 Enerji",
+      "luckyNumber": "ŞANSLI SAYI",
+      "luckyColor": "ŞANSLI RENK",
+      "unavailable": "Bugünün yorumu henüz hazır değil. Daha sonra tekrar bakın."
     },
     "common": {
       "cancel": "İptal",
@@ -731,7 +848,8 @@ export const MOBILE_I18N_FALLBACK = {
       "requestSentBody": "Danışman onayladığında bildirim alacaksınız.",
       "requestFailed": "Talep gönderilemedi.",
       "noBio": "Bu danışman henüz bir açıklama eklememiş.",
-      "sessionFeeLabel": "Seans Ücreti"
+      "sessionFeeLabel": "Seans Ücreti",
+      "disclaimer": "Bu danışmanlık hizmeti eğlence, kişisel farkındalık ve kişisel değerlendirme amacıyla sunulur. Kesin sonuç, gelecek garantisi, sağlık, hukuk, finans, yatırım, büyü veya ritüel vaadi içermez."
     },
     "checkout": {
       "title": "Randevu Onayı",
@@ -740,7 +858,15 @@ export const MOBILE_I18N_FALLBACK = {
       "bookingCreateFailed": "Randevu oluşturulamadı. Lütfen tekrar deneyin.",
       "trustFree": "Ücretsiz tanışma görüşmeniz onaylandığında randevularım sekmesinden takip edebilirsiniz.",
       "trustPaid": "Ödemeniz Stripe ve PayPal altyapısıyla, 256-bit SSL şifreleme ile gerçekleştirilir. Kart bilgileriniz hiçbir şekilde kaydedilmez.",
-      "completePayment": "Ödemeyi Tamamla"
+      "completePayment": "Ödemeyi Tamamla",
+      "consentRequired": "Devam etmek için tüm onay kutularını işaretleyin.",
+      "disclaimer": "Bu hizmet; eğlence, kişisel farkındalık ve kişisel değerlendirme amacıyla sunulan çevrim içi danışmanlık hizmetidir. Kesin gelecek tahmini, garanti sonuç, sağlık teşhisi, tedavi önerisi, hukuki danışmanlık, yatırım tavsiyesi, bahis tahmini, büyü, ritüel veya benzeri vaatler içermez. Hizmet başladıktan sonra cayma hakkı kullanılamaz.",
+      "preInfoLink": "Ön Bilgilendirme Formu",
+      "consentMid": "’nu ve ",
+      "distanceLink": "Mesafeli Hizmet Sözleşmesi",
+      "consent1": "’ni okudum, anladım ve kabul ediyorum.",
+      "consent2": "Satın aldığım hizmetin çevrim içi danışmanlık hizmeti olduğunu; eğlence, kişisel farkındalık ve kişisel değerlendirme amacı taşıdığını; kesin sonuç, sağlık, hukuk, finans, yatırım veya gelecek garantisi içermediğini kabul ediyorum.",
+      "consent3": "Hizmetin ifasına randevu saatinde başlanmasını açıkça onaylıyorum. Hizmet başladıktan sonra Mesafeli Sözleşmeler Yönetmeliği kapsamında cayma hakkımı kullanamayacağımı bildiğimi kabul ediyorum."
     },
     "funnel": {
       "headlineGuest": "Üye ol — ilk yorum %50 indirimli",
@@ -848,6 +974,13 @@ export const MOBILE_I18N_FALLBACK = {
       "ascendant": "Yükselen"
     },
     "todayScreen": {
+      "greeting": "Merhaba, {{name}}",
+      "guestName": "Gezgin",
+      "guideTitle": "BUGÜNÜN REHBERİ",
+      "readingUnavailable": "Bugüne özel yorum henüz hazır değil.",
+      "readMore": "Devamını Oku",
+      "natalMoon": "Doğum haritanızdaki Ay burcu: {{sign}}",
+      "discover": "KEŞFET",
       "actionDaily": "Günlük Yorum",
       "actionCoffee": "Kahve Falı",
       "actionDream": "Rüya Tabiri",
@@ -869,9 +1002,9 @@ export const MOBILE_I18N_FALLBACK = {
       "daySun": "Paz",
       "prevMonth": "Önceki ay",
       "nextMonth": "Sonraki ay",
-      "fallbackTitle": "İçsel dengeni bulmak için sessizliğe odaklan.",
+      "fallbackTitle": "Günlük yorum henüz hazır değil",
       "fallbackQuote": "\"Gerçek güç, sakinlikte gizlidir.\"",
-      "fallbackContent": "Bugün Ay'ın Boğa burcundaki seyri, seni daha köklü ve güvenli hissetmeye davet ediyor. Maddi konular veya ev hayatınla ilgili yarım kalmış işleri tamamlamak için mükemmel bir zaman.\n\nVenüs'ün uyumlu açısı, ikili ilişkilerde beklediğin o yumuşak geçişi sağlayabilir. Ancak Merkür'ün konumu, imza gerektiren işlerde iki kez kontrol etmen gerektiğini hatırlatıyor."
+      "fallbackContent": "Bu tarih için kişisel yorum henüz yayınlanmadı. Daha sonra tekrar kontrol edebilirsiniz."
     },
     "privacy": {
       "title": "Gizlilik & Veri",
@@ -886,6 +1019,9 @@ export const MOBILE_I18N_FALLBACK = {
       "deleteSectionTitle": "Hesabı Kalıcı Olarak Sil",
       "deleteAccount": "Hesabı Sil",
       "deleteConfirmBody": "Hesabınızı 7 gün sonra kalıcı silmek üzere işleme alalım mı? Bu süre içinde vazgeçebilirsiniz.",
+      "deleteWithApple": "Apple ile giriş yaptım",
+      "deleteOtherLogin": "Diğer giriş yöntemi",
+      "appleRevocationManual": "Apple bağlantısı otomatik kaldırılamadı. Hesabınız yine silinecek. Apple Hesabı ayarlarınızda 'Apple ile Giriş' bölümünden GoldMoodAstro erişimini kaldırın.",
       "startRequest": "Talebi Başlat",
       "requestActiveTitle": "Talep aktif",
       "requestActiveBody": "Zaten beklemede bir hesap silme talebiniz var.",
@@ -900,7 +1036,9 @@ export const MOBILE_I18N_FALLBACK = {
       "cancelError": "Talep iptal edilemedi.",
       "pendingTitle": "Silme Talebi Beklemede",
       "pendingBody": "Hesabınız <b>{{date}}</b> tarihinde kalıcı olarak silinecektir.",
-      "deleteWarning": "Hesabınızı sildiğinizde tüm geçmişiniz, kredileriniz ve verileriniz kalıcı olarak yok edilir. Bu işlem geri alınamaz.",
+      "deleteWarning": "Hesabınız ve bağlı uygulama verileriniz silinmek üzere işleme alınır. Yasal saklama yükümlülükleri Gizlilik Politikası’nda açıklanır.",
+      "subscriptionBillingWarning": "Aktif mağaza aboneliğiniz varsa hesap silme talebi yenilemeyi durdurmaz. Devam etmeden önce aboneliğinizi mağazadan iptal edin.",
+      "manageStoreSubscription": "Mağaza aboneliğini yönet",
       "reasonPlaceholder": "Silme nedeni (isteğe bağlı)",
       "requestDeleteBtn": "Hesabımı Silmeyi Talep Et",
       "footerContact": "Sorularınız için <link>destek@goldmoodastro.com</link> adresinden bize ulaşabilirsiniz."
@@ -929,9 +1067,18 @@ export const MOBILE_I18N_FALLBACK = {
       "choosePlan": "PLAN SEÇİN",
       "monthlyBilling": "Aylık ödeme",
       "perMonth": "/ay",
+      "yearlyBilling": "Yıllık ödeme",
+      "perYear": "/yıl",
+      "oneTimeBilling": "Tek seferlik ödeme",
+      "iapUnsupported": "Bu platformda mağaza satın alımı desteklenmiyor.",
       "currentPlanBtn": "Mevcut Planınız",
       "startNowBtn": "Hemen Başlat",
       "autoRenewInfo": "Abonelikler otomatik olarak yenilenir. İstediğiniz zaman iptal edebilirsiniz.",
+      "renewalDisclosure": "Seçtiğiniz dönem sonunda abonelik aynı dönem ve mağazada gösterilen tam fiyat üzerinden otomatik yenilenir. Yenilemeyi App Store veya Google Play abonelik ayarlarından istediğiniz zaman kapatabilirsiniz; erişim ödenmiş dönem sonuna kadar sürer.",
+      "termsLink": "Kullanım koşulları",
+      "privacyLink": "Gizlilik politikası",
+      "storePriceLoading": "Mağaza fiyatı yükleniyor",
+      "storePriceUnavailable": "Mağazada mevcut değil",
       "restorePurchases": "Satın Alımları Geri Yükle",
       "restoreUnsupported": "Bu platformda geri yükleme desteklenmiyor.",
       "restoreSuccessTitle": "Satın alımlar geri yüklendi",
@@ -961,6 +1108,9 @@ export const MOBILE_I18N_FALLBACK = {
       "choosePackage": "Paket Seçin",
       "popular": "POPÜLER",
       "paymentSecure": "Ödemeleriniz Stripe ve PayPal altyapısıyla korunmaktadır.",
+      "storePriceLoading": "Mağaza fiyatı yükleniyor",
+      "storePriceUnavailable": "Mağazada mevcut değil",
+      "storePaymentSecure": "Dijital satın alımlar App Store veya Google Play üzerinden işlenir.",
       "iapRequiredTitle": "Mağaza satın alımı gerekli",
       "iapRequiredBody": "Kredi paketleri iOS ve Android mağaza sürümlerinde uygulama içi satın alma ile sunulur.",
       "iapUnsupported": "Bu platformda mağaza satın alımı desteklenmiyor.",
@@ -1374,7 +1524,8 @@ export const MOBILE_I18N_FALLBACK = {
     "chat": {
       "warning": "Bu alan kısa notlar ve sorular içindir. Uzun sohbet için canlı görüşme rezervasyonu yapın. Aşırı kullanım otomatik kapatılabilir.",
       "inputPlaceholder": "Mesajınızı yazın...",
-      "startFailed": "Mesaj başlatılamadı."
+      "startFailed": "Mesaj başlatılamadı.",
+      "block": "Engelle", "unblock": "Engeli kaldır", "blockTitle": "Kişiyi engelle", "unblockTitle": "Engeli kaldır", "blockConfirm": "Bu kişiyle yeni mesaj gönderimi durur. İstediğiniz zaman engeli kaldırabilirsiniz.", "unblockConfirm": "Bu kişiyle yeniden mesajlaşmaya izin verilsin mi?", "blockedNotice": "Bu konuşmada mesaj gönderimi engellendi.", "report": "Bildir", "reportTitle": "Mesajı bildir", "reportPrompt": "Bu mesajı inceleme ekibine bildirmek istiyor musunuz?", "reportDoneTitle": "Bildirim alındı", "reportDoneBody": "Mesaj inceleme için kaydedildi.", "cancel": "Vazgeç", "actionFailed": "İşlem tamamlanamadı. Tekrar deneyin.", "termsPrompt": "Mesajlaşmadan önce Kullanım Şartları ve topluluk kurallarını okuyup kabul edin.", "readTerms": "Kullanım Şartlarını oku", "acceptTerms": "Okudum, kabul ediyorum"
     },
     "menu": {
       "appSection": "Uygulama",
@@ -1427,7 +1578,8 @@ export const MOBILE_I18N_FALLBACK = {
       "title3": "Start with a voice session",
       "body3": "Secure, encrypted voice calls. Every session can be rated.",
       "next": "Next",
-      "finish": "Get Started"
+      "finish": "Get Started",
+      "continueAsGuest": "Continue as guest"
     },
     "forceUpdate": {
       "title": "Update required",
@@ -1499,7 +1651,14 @@ export const MOBILE_I18N_FALLBACK = {
         "mood": "Mood",
         "career": "Career",
         "relationship": "Relationship",
-        "birth_chart": "Birth Chart"
+        "birth_chart": "Birth Chart",
+        "bilincalti_donusum": "Subconscious Awareness",
+        "dream_interpretation": "Dream Interpretation",
+        "energy_healing": "Energy Work",
+        "fizyonomi": "Physiognomy",
+        "psikoloji": "Psychology",
+        "spiritual_guidance": "Spiritual Guidance",
+        "yasam_koclugu": "Life Coaching"
       },
       "loading": "Loading...",
       "error": "Could not load",
@@ -1643,7 +1802,24 @@ export const MOBILE_I18N_FALLBACK = {
       "paymentSuccessBody": "Your appointment has been confirmed.",
       "title": "Notifications",
       "markAllRead": "Mark all read",
-      "empty": "You do not have any notifications yet."
+      "empty": "You do not have any notifications yet.",
+      "loadError": "Notifications could not be loaded. Please try again.",
+      "loginRequired": "Sign in to view your notifications."
+    },
+    "inbox": {
+      "title": "My Messages",
+      "empty": "You have no messages yet.",
+      "loadError": "Messages could not be loaded. Please try again.",
+      "retry": "Try again",
+      "consultantFallback": "Consultant",
+      "bookingLabel": "Booking message",
+      "leadLabel": "Introduction",
+      "unreadCount": "{{count}} unread messages",
+      "loginRequired": "Sign in to view your messages.",
+      "noMessage": "No messages yet.",
+      "browseConsultants": "Explore consultants",
+      "sendError": "Message could not be sent. Please try again.",
+      "send": "Send"
     },
     "mediaMessages": {
       "title": "Media Questions",
@@ -1666,24 +1842,30 @@ export const MOBILE_I18N_FALLBACK = {
       "sentTitle": "Your question was sent",
       "sentBody": "You will receive a notification when the consultant replies.",
       "insufficientCredits": "You do not have enough credits for this question.",
+      "buyCredits": "Buy credits",
+      "priceChanged": "The price changed. Check the updated price and try again.",
       "sendError": "The media question could not be sent. Please try again.",
       "microphonePermissionTitle": "Microphone permission required",
       "microphonePermissionBody": "Microphone permission is required to record an audio question.",
       "recordError": "Recording could not be completed.",
       "audioQuestionTitle": "Send audio question",
-      "audioQuestionConfirm": "A short audio question will be recorded for {{price}} {{currency}}. Start recording when you are ready.",
+      "audioQuestionConfirm": "A short audio question costs {{price}} {{currency}} ({{credits}} credits). Start recording when you are ready.",
+      "creditCost": "{{credits}} credits will be deducted",
       "audioQuestionDesc": "Send a short voice recording; you will be notified when the consultant replies.",
       "startRecording": "Start Recording",
       "stopAndSend": "Stop and Send",
       "recordAudio": "Record Audio Question",
       "videoQuestionTitle": "Send video question",
-      "videoQuestionConfirm": "A short video question will be recorded for {{price}} {{currency}}.",
+      "videoQuestionConfirm": "A short video question costs {{price}} {{currency}} ({{credits}} credits).",
       "videoQuestionDesc": "Send a short video recording; the consultant may reply with video or audio.",
       "cameraPermissionTitle": "Camera permission required",
       "cameraPermissionBody": "Camera permission is required to record a video question.",
       "recordVideo": "Record Video Question"
     },
     "consultantPanel": {
+      "accountUnavailable": "Profile details cannot be loaded right now.",
+      "completionUnavailable": "Profile completion details cannot be loaded right now.",
+      "statsUnavailable": "Performance data cannot be loaded right now.",
       "tabs": {
         "overview": "Overview",
         "bookings": "Bookings",
@@ -1693,7 +1875,8 @@ export const MOBILE_I18N_FALLBACK = {
         "media": "Media",
         "reviews": "Reviews",
         "kyc": "KYC",
-        "profile": "Profile"
+        "profile": "Profile",
+        "more": "More"
       },
       "kicker": "CONSULTANT PANEL",
       "title": "Today's workspace",
@@ -1721,9 +1904,37 @@ export const MOBILE_I18N_FALLBACK = {
         "presenceOnline": "Your profile appears available.",
         "presenceOffline": "Your profile currently appears unavailable."
       },
+      "publication": {
+        "live": "Your profile is live",
+        "notLive": "Your profile is not live yet",
+        "hint": "Your profile publishes automatically when the missing items are complete.",
+        "openProfile": "Open profile",
+        "missing": {
+          "approval": "Consultant approval",
+          "hidden": "Profile visibility",
+          "price": "Session price",
+          "photo": "Profile photo",
+          "slug": "Public profile address"
+        }
+      },
+      "completion": {
+        "title": "Profile completion",
+        "items": {
+          "avatar": "Profile photo",
+          "bio_500": "At least 500 characters of biography",
+          "multi_package": "At least two service packages",
+          "free_intro": "Free introduction package",
+          "expertise_3": "At least three specialties",
+          "language_1": "At least one language",
+          "availability": "Availability hours",
+          "bank_iban": "Bank IBAN",
+          "approved_review": "Approved review"
+        }
+      },
       "bookings": {
         "kicker": "CONSULTANT CALENDAR",
         "title": "Consultant bookings",
+        "loadError": "Bookings could not be loaded. Please try again.",
         "body": "The route for mobile consultant booking management is ready. Approve/reject, daily schedule and notes will be connected under B3.",
         "filters": {
           "incoming": "Incoming",
@@ -1747,6 +1958,12 @@ export const MOBILE_I18N_FALLBACK = {
         "rejectTitle": "Reject booking",
         "rejectBody": "Do you want to reject this booking?",
         "reject": "Reject",
+        "join": "Join Call",
+        "cancelBooking": "Cancel Booking",
+        "reasonRequired": "Enter a reason of at least 5 characters.",
+        "cancelReasonHelp": "Write the cancellation reason that will be shared with the client.",
+        "reasonPlaceholder": "Cancellation reason",
+        "confirmCancel": "Cancel Booking",
         "actionError": "The action could not be completed.",
         "emptyTitle": "No bookings",
         "emptyBody": "There are no consultant bookings for this filter.",
@@ -1758,6 +1975,15 @@ export const MOBILE_I18N_FALLBACK = {
         "title": "Availability management",
         "weeklyTitle": "Weekly hours",
         "weeklyHelp": "For active days, enter start, end and slot duration in HH:mm format.",
+        "addRange": "Add range",
+        "removeRange": "Remove range",
+        "noRange": "No working hours",
+        "validation": {
+          "tooMany": "You can add up to 50 ranges.",
+          "invalidTime": "Check the time ranges.",
+          "invalidSlot": "The slot duration must divide the range exactly.",
+          "overlap": "Time ranges overlap."
+        },
         "saved": "Availability hours were saved.",
         "saveError": "Availability could not be saved. Check the time ranges.",
         "save": "Save Hours",
@@ -1813,6 +2039,8 @@ export const MOBILE_I18N_FALLBACK = {
       "messages": {
         "kicker": "MESSAGES",
         "title": "Client messages",
+        "loadError": "Conversations could not be loaded.",
+        "threadLoadError": "Messages could not be loaded.",
         "emptyTitle": "No messages yet",
         "emptyBody": "Conversations appear here when clients reach you from the message button on your profile.",
         "unknownCustomer": "Client",
@@ -1918,6 +2146,8 @@ export const MOBILE_I18N_FALLBACK = {
       "profile": {
         "kicker": "PROFILE & SERVICES",
         "title": "Consultant profile",
+        "loadError": "Consultant profile could not be loaded.",
+        "servicesLoadError": "Services could not be loaded.",
         "body": "The mobile route for profile, services, KYC and media settings is ready. Detailed management screens will be expanded under B6/B9.",
         "profileInfo": "Profile details",
         "bio": "BIOGRAPHY",
@@ -1940,6 +2170,9 @@ export const MOBILE_I18N_FALLBACK = {
         "freeService": "Free service",
         "createService": "Add Service",
         "serviceCreated": "Service added.",
+        "serviceUpdated": "Service updated.",
+        "editService": "Edit service",
+        "saveService": "Save changes",
         "serviceCreateError": "Service could not be added.",
         "invalidService": "Check service name, duration and price fields.",
         "servicesTitle": "Services",
@@ -1971,12 +2204,37 @@ export const MOBILE_I18N_FALLBACK = {
     },
     "legal": {
       "title": "Legal & Privacy",
-      "intro": "Required texts for store release. Content is updated from the admin panel.",
+      "intro": "Read our privacy policy, terms and other legal information here.",
       "empty": "Legal content is not ready yet. Please check again later."
     },
     "profile": {
       "title": "Profile",
+      "dataLoadError": "Account data could not be loaded. Please try again.",
+      "phoneLabel": "PHONE",
+      "fullNameRequired": "Full name is required.",
+      "addressLabel": "ADDRESS",
+      "cityLabel": "CITY",
+      "loadError": "Profile settings could not be loaded.",
+      "retry": "Try again",
+      "save": "Save",
+      "saving": "Saving...",
+      "securityTitle": "Security",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "updatePassword": "Update password",
+      "updatingPassword": "Updating...",
+      "passwordsMismatch": "Passwords do not match.",
+      "currentPasswordRequired": "Enter your current password.",
+      "passwordTooShort": "Password must be at least 6 characters.",
+      "passwordUpdated": "Password updated.",
+      "passwordUpdateError": "Password could not be updated.",
+      "menuMessages": "My Messages",
+      "menuFavorites": "My Favorites",
+      "menuReadings": "My Reading History",
       "noName": "Guest",
+      "guestTitle": "Sign in to your profile",
+      "guestBody": "Sign in to view your bookings, credits and membership.",
       "subscriptionCardTitle": "Subscription",
       "subscriptionActive": "Active",
       "subscriptionInactive": "Inactive",
@@ -2097,8 +2355,18 @@ export const MOBILE_I18N_FALLBACK = {
       "settings": "Settings",
       "today": "Home",
       "birthChart": "Birth Chart",
+      "birthChartShort": "Chart",
       "connect": "Consultants",
-      "daily": "Daily Reading"
+      "connectShort": "Experts",
+      "daily": "Daily Reading",
+      "dailyShort": "Daily"
+    },
+    "horoscopeCard": {
+      "title": "DAILY HOROSCOPES",
+      "energy": "{{score}}/10 Energy",
+      "luckyNumber": "LUCKY NUMBER",
+      "luckyColor": "LUCKY COLOR",
+      "unavailable": "Today's reading is not ready yet. Please check back later."
     },
     "common": {
       "cancel": "Cancel",
@@ -2136,7 +2404,8 @@ export const MOBILE_I18N_FALLBACK = {
       "requestSentBody": "You will be notified once the consultant approves.",
       "requestFailed": "Could not send the request.",
       "noBio": "This consultant has not added a description yet.",
-      "sessionFeeLabel": "Session Fee"
+      "sessionFeeLabel": "Session Fee",
+      "disclaimer": "This guidance service is provided for entertainment, personal awareness and self-reflection. It does not promise guaranteed outcomes or guarantees concerning the future, health, law, finance, investments, magic or rituals."
     },
     "checkout": {
       "title": "Booking Confirmation",
@@ -2145,7 +2414,15 @@ export const MOBILE_I18N_FALLBACK = {
       "bookingCreateFailed": "Could not create the appointment. Please try again.",
       "trustFree": "Once your free intro session is approved, you can track it in the My Bookings tab.",
       "trustPaid": "Your payment is processed with 256-bit SSL encryption via Stripe and PayPal. Your card details are never stored.",
-      "completePayment": "Complete Payment"
+      "completePayment": "Complete Payment",
+      "consentRequired": "Select all consent checkboxes to continue.",
+      "disclaimer": "This is an online guidance service for entertainment, personal awareness and self-reflection. It does not provide guaranteed predictions, medical diagnoses, treatment advice, legal or investment advice, betting predictions, magic, rituals or similar promises. The right of withdrawal ends once the service has begun.",
+      "preInfoLink": "Preliminary Information Form",
+      "consentMid": " and ",
+      "distanceLink": "Distance Service Agreement",
+      "consent1": "; I have read, understood and accept them.",
+      "consent2": "I acknowledge that I am purchasing an online guidance service for entertainment, personal awareness and self-reflection, without guarantees concerning outcomes, health, law, finance, investments or the future.",
+      "consent3": "I expressly consent to the service beginning at the appointment time and acknowledge that I can no longer exercise the right of withdrawal once performance has begun."
     },
     "funnel": {
       "headlineGuest": "Sign up — 50% off first reading",
@@ -2253,6 +2530,13 @@ export const MOBILE_I18N_FALLBACK = {
       "ascendant": "Ascendant"
     },
     "todayScreen": {
+      "greeting": "Hello, {{name}}",
+      "guestName": "Explorer",
+      "guideTitle": "TODAY'S GUIDE",
+      "readingUnavailable": "Your reading for today is not ready yet.",
+      "readMore": "Read More",
+      "natalMoon": "Moon sign in your birth chart: {{sign}}",
+      "discover": "EXPLORE",
       "actionDaily": "Daily Reading",
       "actionCoffee": "Coffee Reading",
       "actionDream": "Dream Interpretation",
@@ -2274,9 +2558,9 @@ export const MOBILE_I18N_FALLBACK = {
       "daySun": "Sun",
       "prevMonth": "Previous month",
       "nextMonth": "Next month",
-      "fallbackTitle": "Focus on silence to find your inner balance.",
+      "fallbackTitle": "Daily reading not ready yet",
       "fallbackQuote": "\"True strength lies in calmness.\"",
-      "fallbackContent": "Today, the Moon's transit through Taurus invites you to feel more grounded and secure. It is a perfect time to complete unfinished matters related to finances or home life.\n\nVenus's harmonious aspect can bring the gentle transition you have been waiting for in relationships. However, Mercury's position reminds you to double-check anything requiring a signature."
+      "fallbackContent": "A personal reading for this date has not been published yet. Please check again later."
     },
     "privacy": {
       "title": "Privacy & Data",
@@ -2291,6 +2575,9 @@ export const MOBILE_I18N_FALLBACK = {
       "deleteSectionTitle": "Permanently Delete Account",
       "deleteAccount": "Delete Account",
       "deleteConfirmBody": "Shall we schedule your account for permanent deletion in 7 days? You can cancel within this period.",
+      "deleteWithApple": "I signed in with Apple",
+      "deleteOtherLogin": "Other sign-in method",
+      "appleRevocationManual": "Apple access could not be revoked automatically. Your account will still be deleted. Remove GoldMoodAstro in your Apple Account settings under 'Sign in with Apple'.",
       "startRequest": "Start Request",
       "requestActiveTitle": "Request active",
       "requestActiveBody": "You already have a pending account deletion request.",
@@ -2305,7 +2592,9 @@ export const MOBILE_I18N_FALLBACK = {
       "cancelError": "Could not cancel request.",
       "pendingTitle": "Deletion Request Pending",
       "pendingBody": "Your account will be permanently deleted on <b>{{date}}</b>.",
-      "deleteWarning": "When you delete your account, all your history, credits and data are permanently destroyed. This action cannot be undone.",
+      "deleteWarning": "Your account and linked app data are processed for deletion. The Privacy Policy explains any legal retention obligations.",
+      "subscriptionBillingWarning": "If you have an active store subscription, requesting account deletion will not stop renewals. Cancel your subscription in the store before continuing.",
+      "manageStoreSubscription": "Manage store subscription",
       "reasonPlaceholder": "Reason for deletion (optional)",
       "requestDeleteBtn": "Request Account Deletion",
       "footerContact": "For questions you can reach us at <link>destek@goldmoodastro.com</link>."
@@ -2334,9 +2623,18 @@ export const MOBILE_I18N_FALLBACK = {
       "choosePlan": "CHOOSE A PLAN",
       "monthlyBilling": "Monthly billing",
       "perMonth": "/mo",
+      "yearlyBilling": "Yearly billing",
+      "perYear": "/yr",
+      "oneTimeBilling": "One-time payment",
+      "iapUnsupported": "Store purchases are not supported on this platform.",
       "currentPlanBtn": "Your Current Plan",
       "startNowBtn": "Start Now",
       "autoRenewInfo": "Subscriptions renew automatically. You can cancel anytime.",
+      "renewalDisclosure": "At the end of the selected term, your subscription renews automatically for the same term at the full price shown by the store. Turn off renewal anytime in App Store or Google Play subscription settings; access continues until the paid term ends.",
+      "termsLink": "Terms of use",
+      "privacyLink": "Privacy policy",
+      "storePriceLoading": "Loading store price",
+      "storePriceUnavailable": "Unavailable in store",
       "restorePurchases": "Restore Purchases",
       "restoreUnsupported": "Restore is not supported on this platform.",
       "restoreSuccessTitle": "Purchases restored",
@@ -2366,6 +2664,9 @@ export const MOBILE_I18N_FALLBACK = {
       "choosePackage": "Choose a Package",
       "popular": "POPULAR",
       "paymentSecure": "Your payments are protected by Stripe and PayPal.",
+      "storePriceLoading": "Loading store price",
+      "storePriceUnavailable": "Unavailable in store",
+      "storePaymentSecure": "Digital purchases are processed by the App Store or Google Play.",
       "iapRequiredTitle": "Store purchase required",
       "iapRequiredBody": "Credit packages are offered through in-app purchases in iOS and Android store builds.",
       "iapUnsupported": "Store purchases are not supported on this platform.",
@@ -2779,7 +3080,8 @@ export const MOBILE_I18N_FALLBACK = {
     "chat": {
       "warning": "This space is for short notes and questions only. Book a live session for longer conversations. Excessive use may be auto-restricted.",
       "inputPlaceholder": "Type your message...",
-      "startFailed": "Could not start the conversation."
+      "startFailed": "Could not start the conversation.",
+      "block": "Block", "unblock": "Unblock", "blockTitle": "Block this person", "unblockTitle": "Unblock this person", "blockConfirm": "New messages between you will stop. You can unblock this person later.", "unblockConfirm": "Allow messages with this person again?", "blockedNotice": "Messages are blocked in this conversation.", "report": "Report", "reportTitle": "Report message", "reportPrompt": "Send this message to our review team?", "reportDoneTitle": "Report received", "reportDoneBody": "The message was saved for review.", "cancel": "Cancel", "actionFailed": "Could not complete this action. Try again.", "termsPrompt": "Read and accept the Terms of Use and community rules before messaging.", "readTerms": "Read Terms of Use", "acceptTerms": "I have read and accept"
     },
     "menu": {
       "appSection": "App",
@@ -2832,7 +3134,8 @@ export const MOBILE_I18N_FALLBACK = {
       "title3": "Beginnen Sie mit einer Sprachsitzung",
       "body3": "Sichere, verschlüsselte Sprachanrufe. Jede Sitzung kann bewertet werden.",
       "next": "Weiter",
-      "finish": "Loslegen"
+      "finish": "Loslegen",
+      "continueAsGuest": "Als Gast fortfahren"
     },
     "forceUpdate": {
       "title": "Update erforderlich",
@@ -2904,7 +3207,14 @@ export const MOBILE_I18N_FALLBACK = {
         "mood": "Mood",
         "career": "Karriere",
         "relationship": "Beziehung",
-        "birth_chart": "Geburtshoroskop"
+        "birth_chart": "Geburtshoroskop",
+        "bilincalti_donusum": "Unterbewusstseinsarbeit",
+        "dream_interpretation": "Traumdeutung",
+        "energy_healing": "Energiearbeit",
+        "fizyonomi": "Physiognomik",
+        "psikoloji": "Psychologie",
+        "spiritual_guidance": "Spirituelle Begleitung",
+        "yasam_koclugu": "Lebensberatung"
       },
       "loading": "Wird geladen...",
       "error": "Konnte nicht geladen werden",
@@ -3048,7 +3358,24 @@ export const MOBILE_I18N_FALLBACK = {
       "paymentSuccessBody": "Ihr Termin wurde bestätigt.",
       "title": "Benachrichtigungen",
       "markAllRead": "Alle gelesen",
-      "empty": "Sie haben noch keine Benachrichtigungen."
+      "empty": "Sie haben noch keine Benachrichtigungen.",
+      "loadError": "Benachrichtigungen konnten nicht geladen werden. Bitte erneut versuchen.",
+      "loginRequired": "Melden Sie sich an, um Ihre Benachrichtigungen zu sehen."
+    },
+    "inbox": {
+      "title": "Meine Nachrichten",
+      "empty": "Sie haben noch keine Nachrichten.",
+      "loadError": "Nachrichten konnten nicht geladen werden. Bitte erneut versuchen.",
+      "retry": "Erneut versuchen",
+      "consultantFallback": "Berater",
+      "bookingLabel": "Terminnachricht",
+      "leadLabel": "Vorgespräch",
+      "unreadCount": "{{count}} ungelesene Nachrichten",
+      "loginRequired": "Melden Sie sich an, um Ihre Nachrichten zu sehen.",
+      "noMessage": "Noch keine Nachrichten.",
+      "browseConsultants": "Berater entdecken",
+      "sendError": "Nachricht konnte nicht gesendet werden. Bitte erneut versuchen.",
+      "send": "Senden"
     },
     "mediaMessages": {
       "title": "Medienfragen",
@@ -3071,24 +3398,30 @@ export const MOBILE_I18N_FALLBACK = {
       "sentTitle": "Ihre Frage wurde gesendet",
       "sentBody": "Sie erhalten eine Benachrichtigung, sobald der Berater antwortet.",
       "insufficientCredits": "Sie haben nicht genügend Credits für diese Frage.",
+      "buyCredits": "Credits kaufen",
+      "priceChanged": "Der Preis hat sich geändert. Prüfen Sie den aktuellen Preis und versuchen Sie es erneut.",
       "sendError": "Die Medienfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
       "microphonePermissionTitle": "Mikrofonberechtigung erforderlich",
       "microphonePermissionBody": "Für eine Audiofrage wird die Mikrofonberechtigung benötigt.",
       "recordError": "Die Aufnahme konnte nicht abgeschlossen werden.",
       "audioQuestionTitle": "Audiofrage senden",
-      "audioQuestionConfirm": "Für {{price}} {{currency}} wird eine kurze Audiofrage aufgenommen. Starten Sie die Aufnahme, wenn Sie bereit sind.",
+      "audioQuestionConfirm": "Eine kurze Audiofrage kostet {{price}} {{currency}} ({{credits}} Credits). Starten Sie die Aufnahme, wenn Sie bereit sind.",
+      "creditCost": "{{credits}} Credits werden abgezogen",
       "audioQuestionDesc": "Senden Sie eine kurze Sprachaufnahme; Sie werden benachrichtigt, wenn der Berater antwortet.",
       "startRecording": "Aufnahme starten",
       "stopAndSend": "Stoppen und senden",
       "recordAudio": "Audiofrage aufnehmen",
       "videoQuestionTitle": "Videofrage senden",
-      "videoQuestionConfirm": "Für {{price}} {{currency}} wird eine kurze Videofrage aufgenommen.",
+      "videoQuestionConfirm": "Eine kurze Videofrage kostet {{price}} {{currency}} ({{credits}} Credits).",
       "videoQuestionDesc": "Senden Sie eine kurze Videoaufnahme; der Berater kann per Video oder Audio antworten.",
       "cameraPermissionTitle": "Kameraberechtigung erforderlich",
       "cameraPermissionBody": "Für eine Videofrage wird die Kameraberechtigung benötigt.",
       "recordVideo": "Videofrage aufnehmen"
     },
     "consultantPanel": {
+      "accountUnavailable": "Profildaten können derzeit nicht geladen werden.",
+      "completionUnavailable": "Angaben zur Profilvollständigkeit können derzeit nicht geladen werden.",
+      "statsUnavailable": "Leistungsdaten können derzeit nicht geladen werden.",
       "tabs": {
         "overview": "Übersicht",
         "bookings": "Termine",
@@ -3098,7 +3431,8 @@ export const MOBILE_I18N_FALLBACK = {
         "media": "Medien",
         "reviews": "Bewertungen",
         "kyc": "KYC",
-        "profile": "Profil"
+        "profile": "Profil",
+        "more": "Mehr"
       },
       "kicker": "BERATERBEREICH",
       "title": "Ihr Arbeitsbereich für heute",
@@ -3126,9 +3460,37 @@ export const MOBILE_I18N_FALLBACK = {
         "presenceOnline": "Ihr Profil erscheint verfügbar.",
         "presenceOffline": "Ihr Profil erscheint derzeit nicht verfügbar."
       },
+      "publication": {
+        "live": "Ihr Profil ist veröffentlicht",
+        "notLive": "Ihr Profil ist noch nicht veröffentlicht",
+        "hint": "Ihr Profil wird automatisch veröffentlicht, sobald die fehlenden Punkte erledigt sind.",
+        "openProfile": "Profil öffnen",
+        "missing": {
+          "approval": "Beraterfreigabe",
+          "hidden": "Profilsichtbarkeit",
+          "price": "Sitzungspreis",
+          "photo": "Profilfoto",
+          "slug": "Öffentliche Profiladresse"
+        }
+      },
+      "completion": {
+        "title": "Profilvollständigkeit",
+        "items": {
+          "avatar": "Profilfoto",
+          "bio_500": "Mindestens 500 Zeichen Biografie",
+          "multi_package": "Mindestens zwei Leistungspakete",
+          "free_intro": "Kostenloses Kennenlernpaket",
+          "expertise_3": "Mindestens drei Fachgebiete",
+          "language_1": "Mindestens eine Sprache",
+          "availability": "Verfügbarkeitszeiten",
+          "bank_iban": "Bank-IBAN",
+          "approved_review": "Freigegebene Bewertung"
+        }
+      },
       "bookings": {
         "kicker": "BERATERKALENDER",
         "title": "Beratertermine",
+        "loadError": "Termine konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
         "body": "Die Route für mobile Terminverwaltung ist bereit. Annahme/Ablehnung, Tagesplan und Notizen werden unter B3 angebunden.",
         "filters": {
           "incoming": "Eingehend",
@@ -3152,6 +3514,12 @@ export const MOBILE_I18N_FALLBACK = {
         "rejectTitle": "Termin ablehnen",
         "rejectBody": "Möchten Sie diesen Termin ablehnen?",
         "reject": "Ablehnen",
+        "join": "An Gespräch teilnehmen",
+        "cancelBooking": "Termin stornieren",
+        "reasonRequired": "Geben Sie einen Grund mit mindestens 5 Zeichen ein.",
+        "cancelReasonHelp": "Schreiben Sie den Stornierungsgrund für den Klienten.",
+        "reasonPlaceholder": "Stornierungsgrund",
+        "confirmCancel": "Stornieren",
         "actionError": "Die Aktion konnte nicht abgeschlossen werden.",
         "emptyTitle": "Keine Termine",
         "emptyBody": "Für diesen Filter gibt es keine Beratertermine.",
@@ -3163,6 +3531,15 @@ export const MOBILE_I18N_FALLBACK = {
         "title": "Verfügbarkeit verwalten",
         "weeklyTitle": "Wöchentliche Zeiten",
         "weeklyHelp": "Geben Sie für aktive Tage Start, Ende und Slotdauer im Format HH:mm ein.",
+        "addRange": "Zeitraum hinzufügen",
+        "removeRange": "Zeitraum entfernen",
+        "noRange": "Keine Arbeitszeit",
+        "validation": {
+          "tooMany": "Sie können höchstens 50 Zeiträume hinzufügen.",
+          "invalidTime": "Prüfen Sie die Zeiträume.",
+          "invalidSlot": "Die Slotdauer muss den Zeitraum genau teilen.",
+          "overlap": "Zeiträume überschneiden sich."
+        },
         "saved": "Verfügbarkeitszeiten wurden gespeichert.",
         "saveError": "Verfügbarkeit konnte nicht gespeichert werden. Prüfen Sie die Zeiträume.",
         "save": "Zeiten speichern",
@@ -3218,6 +3595,8 @@ export const MOBILE_I18N_FALLBACK = {
       "messages": {
         "kicker": "NACHRICHTEN",
         "title": "Klientennachrichten",
+        "loadError": "Unterhaltungen konnten nicht geladen werden.",
+        "threadLoadError": "Nachrichten konnten nicht geladen werden.",
         "emptyTitle": "Noch keine Nachrichten",
         "emptyBody": "Unterhaltungen erscheinen hier, wenn Klienten Sie über den Nachrichtenbutton in Ihrem Profil kontaktieren.",
         "unknownCustomer": "Klient",
@@ -3323,6 +3702,8 @@ export const MOBILE_I18N_FALLBACK = {
       "profile": {
         "kicker": "PROFIL & LEISTUNGEN",
         "title": "Beraterprofil",
+        "loadError": "Das Beraterprofil konnte nicht geladen werden.",
+        "servicesLoadError": "Leistungen konnten nicht geladen werden.",
         "body": "Die mobile Route für Profil, Leistungen, KYC und Medieneinstellungen ist bereit. Detailseiten werden unter B6/B9 erweitert.",
         "profileInfo": "Profildaten",
         "bio": "BIOGRAFIE",
@@ -3345,6 +3726,9 @@ export const MOBILE_I18N_FALLBACK = {
         "freeService": "Kostenlose Leistung",
         "createService": "Leistung hinzufügen",
         "serviceCreated": "Leistung hinzugefügt.",
+        "serviceUpdated": "Leistung aktualisiert.",
+        "editService": "Leistung bearbeiten",
+        "saveService": "Änderungen speichern",
         "serviceCreateError": "Leistung konnte nicht hinzugefügt werden.",
         "invalidService": "Prüfen Sie Leistungsname, Dauer und Preis.",
         "servicesTitle": "Leistungen",
@@ -3376,12 +3760,37 @@ export const MOBILE_I18N_FALLBACK = {
     },
     "legal": {
       "title": "Rechtliches & Datenschutz",
-      "intro": "Für die Store-Veröffentlichung erforderliche Texte. Inhalte werden im Admin-Panel aktualisiert.",
+      "intro": "Hier finden Sie unsere Datenschutzrichtlinie, Nutzungsbedingungen und weitere Rechtstexte.",
       "empty": "Rechtliche Inhalte sind noch nicht vorbereitet. Bitte versuchen Sie es später erneut."
     },
     "profile": {
       "title": "Profil",
+      "dataLoadError": "Kontodaten konnten nicht geladen werden. Bitte erneut versuchen.",
+      "phoneLabel": "TELEFON",
+      "fullNameRequired": "Vor- und Nachname sind erforderlich.",
+      "addressLabel": "ADRESSE",
+      "cityLabel": "STADT",
+      "loadError": "Profileinstellungen konnten nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "save": "Speichern",
+      "saving": "Wird gespeichert...",
+      "securityTitle": "Sicherheit",
+      "currentPassword": "Aktuelles Passwort",
+      "newPassword": "Neues Passwort",
+      "confirmPassword": "Neues Passwort bestätigen",
+      "updatePassword": "Passwort aktualisieren",
+      "updatingPassword": "Wird aktualisiert...",
+      "passwordsMismatch": "Passwörter stimmen nicht überein.",
+      "currentPasswordRequired": "Geben Sie Ihr aktuelles Passwort ein.",
+      "passwordTooShort": "Das Passwort muss mindestens 6 Zeichen lang sein.",
+      "passwordUpdated": "Passwort aktualisiert.",
+      "passwordUpdateError": "Passwort konnte nicht aktualisiert werden.",
+      "menuMessages": "Meine Nachrichten",
+      "menuFavorites": "Meine Favoriten",
+      "menuReadings": "Mein Deutungsverlauf",
       "noName": "Gast",
+      "guestTitle": "Melden Sie sich bei Ihrem Profil an",
+      "guestBody": "Melden Sie sich an, um Ihre Buchungen, Guthaben und Mitgliedschaft zu sehen.",
       "subscriptionCardTitle": "Abonnement",
       "subscriptionActive": "Aktiv",
       "subscriptionInactive": "Inaktiv",
@@ -3502,8 +3911,18 @@ export const MOBILE_I18N_FALLBACK = {
       "settings": "Einstellungen",
       "today": "Startseite",
       "birthChart": "Geburtshoroskop",
+      "birthChartShort": "Horoskop",
       "connect": "Berater",
-      "daily": "Tägliche Deutung"
+      "connectShort": "Berater",
+      "daily": "Tägliche Deutung",
+      "dailyShort": "Täglich"
+    },
+    "horoscopeCard": {
+      "title": "TAGESHOROSKOPE",
+      "energy": "{{score}}/10 Energie",
+      "luckyNumber": "GLÜCKSZAHL",
+      "luckyColor": "GLÜCKSFARBE",
+      "unavailable": "Die heutige Deutung ist noch nicht verfügbar. Bitte schauen Sie später wieder vorbei."
     },
     "common": {
       "cancel": "Abbrechen",
@@ -3541,7 +3960,8 @@ export const MOBILE_I18N_FALLBACK = {
       "requestSentBody": "Sie werden benachrichtigt, sobald der Berater bestätigt.",
       "requestFailed": "Anfrage konnte nicht gesendet werden.",
       "noBio": "Dieser Berater hat noch keine Beschreibung hinzugefügt.",
-      "sessionFeeLabel": "Sitzungsgebühr"
+      "sessionFeeLabel": "Sitzungsgebühr",
+      "disclaimer": "Diese Beratungsleistung dient der Unterhaltung, persönlichen Achtsamkeit und Selbstreflexion. Sie verspricht keine garantierten Ergebnisse oder Garantien zu Zukunft, Gesundheit, Recht, Finanzen, Anlagen, Magie oder Ritualen."
     },
     "checkout": {
       "title": "Buchungsbestätigung",
@@ -3550,7 +3970,15 @@ export const MOBILE_I18N_FALLBACK = {
       "bookingCreateFailed": "Der Termin konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
       "trustFree": "Sobald Ihr kostenloses Kennenlerngespräch bestätigt ist, können Sie es im Tab 'Meine Buchungen' verfolgen.",
       "trustPaid": "Ihre Zahlung wird mit 256-Bit-SSL-Verschlüsselung über Stripe und PayPal verarbeitet. Ihre Kartendaten werden niemals gespeichert.",
-      "completePayment": "Zahlung abschließen"
+      "completePayment": "Zahlung abschließen",
+      "consentRequired": "Markieren Sie alle Einwilligungsfelder, um fortzufahren.",
+      "disclaimer": "Dies ist eine Online-Beratungsleistung zur Unterhaltung, persönlichen Achtsamkeit und Selbstreflexion. Sie enthält keine garantierten Vorhersagen, medizinischen Diagnosen, Behandlungsempfehlungen, Rechts- oder Anlageberatung, Wettprognosen, Magie, Rituale oder ähnliche Versprechen. Nach Beginn der Leistung besteht kein Widerrufsrecht mehr.",
+      "preInfoLink": "Vorabinformationen",
+      "consentMid": " und ",
+      "distanceLink": "Fernabsatz-Dienstleistungsvertrag",
+      "consent1": "; ich habe sie gelesen, verstanden und akzeptiere sie.",
+      "consent2": "Ich bestätige, dass ich eine Online-Beratungsleistung zur Unterhaltung, persönlichen Achtsamkeit und Selbstreflexion erwerbe, ohne Garantien zu Ergebnissen, Gesundheit, Recht, Finanzen, Anlagen oder Zukunft.",
+      "consent3": "Ich stimme ausdrücklich zu, dass die Leistung zum Termin beginnt, und bestätige, dass das Widerrufsrecht nach Leistungsbeginn nicht mehr ausgeübt werden kann."
     },
     "funnel": {
       "headlineGuest": "Registrieren — 50 % Rabatt auf die erste Deutung",
@@ -3658,6 +4086,13 @@ export const MOBILE_I18N_FALLBACK = {
       "ascendant": "Aszendent"
     },
     "todayScreen": {
+      "greeting": "Hallo, {{name}}",
+      "guestName": "Entdecker",
+      "guideTitle": "HEUTIGER BEGLEITER",
+      "readingUnavailable": "Ihre heutige Deutung ist noch nicht verfügbar.",
+      "readMore": "Weiterlesen",
+      "natalMoon": "Mondzeichen im Geburtshoroskop: {{sign}}",
+      "discover": "ENTDECKEN",
       "actionDaily": "Tagesdeutung",
       "actionCoffee": "Kaffeesatzlesen",
       "actionDream": "Traumdeutung",
@@ -3679,9 +4114,9 @@ export const MOBILE_I18N_FALLBACK = {
       "daySun": "So",
       "prevMonth": "Voriger Monat",
       "nextMonth": "Nächster Monat",
-      "fallbackTitle": "Konzentriere dich auf die Stille, um dein inneres Gleichgewicht zu finden.",
+      "fallbackTitle": "Tagesdeutung noch nicht verfügbar",
       "fallbackQuote": "\"Wahre Stärke liegt in der Gelassenheit.\"",
-      "fallbackContent": "Heute lädt dich der Lauf des Mondes im Stier ein, dich verwurzelter und sicherer zu fühlen. Es ist ein perfekter Zeitpunkt, um unerledigte Angelegenheiten rund um Finanzen oder das Zuhause abzuschließen.\n\nDer harmonische Aspekt der Venus kann den sanften Übergang bringen, auf den du in Beziehungen gewartet hast. Die Position des Merkur erinnert dich jedoch daran, alles zu überprüfen, was eine Unterschrift erfordert."
+      "fallbackContent": "Für dieses Datum wurde noch keine persönliche Deutung veröffentlicht. Bitte versuchen Sie es später erneut."
     },
     "privacy": {
       "title": "Datenschutz & Daten",
@@ -3696,6 +4131,9 @@ export const MOBILE_I18N_FALLBACK = {
       "deleteSectionTitle": "Konto dauerhaft löschen",
       "deleteAccount": "Konto löschen",
       "deleteConfirmBody": "Sollen wir Ihr Konto zur dauerhaften Löschung in 7 Tagen vormerken? Sie können dies innerhalb dieser Frist widerrufen.",
+      "deleteWithApple": "Ich habe mich mit Apple angemeldet",
+      "deleteOtherLogin": "Andere Anmeldemethode",
+      "appleRevocationManual": "Der Apple-Zugriff konnte nicht automatisch widerrufen werden. Ihr Konto wird dennoch gelöscht. Entfernen Sie GoldMoodAstro in Ihren Apple-Account-Einstellungen unter 'Mit Apple anmelden'.",
       "startRequest": "Anfrage starten",
       "requestActiveTitle": "Anfrage aktiv",
       "requestActiveBody": "Sie haben bereits eine ausstehende Anfrage zur Kontolöschung.",
@@ -3710,7 +4148,9 @@ export const MOBILE_I18N_FALLBACK = {
       "cancelError": "Anfrage konnte nicht storniert werden.",
       "pendingTitle": "Löschanfrage ausstehend",
       "pendingBody": "Ihr Konto wird am <b>{{date}}</b> dauerhaft gelöscht.",
-      "deleteWarning": "Wenn Sie Ihr Konto löschen, werden Ihr gesamter Verlauf, Ihre Guthaben und Daten dauerhaft vernichtet. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "deleteWarning": "Ihr Konto und verknüpfte App-Daten werden zur Löschung verarbeitet. Gesetzliche Aufbewahrungspflichten erklärt die Datenschutzerklärung.",
+      "subscriptionBillingWarning": "Wenn Sie ein aktives Store-Abonnement haben, stoppt ein Antrag auf Kontolöschung die Verlängerung nicht. Kündigen Sie das Abonnement vorab im Store.",
+      "manageStoreSubscription": "Store-Abonnement verwalten",
       "reasonPlaceholder": "Grund für die Löschung (optional)",
       "requestDeleteBtn": "Kontolöschung beantragen",
       "footerContact": "Bei Fragen erreichen Sie uns unter <link>destek@goldmoodastro.com</link>."
@@ -3739,9 +4179,18 @@ export const MOBILE_I18N_FALLBACK = {
       "choosePlan": "PLAN WÄHLEN",
       "monthlyBilling": "Monatliche Abrechnung",
       "perMonth": "/Mon.",
+      "yearlyBilling": "Jährliche Abrechnung",
+      "perYear": "/Jahr",
+      "oneTimeBilling": "Einmalige Zahlung",
+      "iapUnsupported": "Store-Käufe werden auf dieser Plattform nicht unterstützt.",
       "currentPlanBtn": "Ihr aktueller Plan",
       "startNowBtn": "Jetzt starten",
       "autoRenewInfo": "Abonnements verlängern sich automatisch. Sie können jederzeit kündigen.",
+      "renewalDisclosure": "Am Ende des gewählten Zeitraums verlängert sich das Abonnement automatisch für denselben Zeitraum zum vollen im Store angezeigten Preis. Sie können die Verlängerung jederzeit in den Abonnement-Einstellungen von App Store oder Google Play deaktivieren; der Zugang bleibt bis zum Ende des bezahlten Zeitraums bestehen.",
+      "termsLink": "Nutzungsbedingungen",
+      "privacyLink": "Datenschutzrichtlinie",
+      "storePriceLoading": "Store-Preis wird geladen",
+      "storePriceUnavailable": "Im Store nicht verfügbar",
       "restorePurchases": "Käufe wiederherstellen",
       "restoreUnsupported": "Die Wiederherstellung wird auf dieser Plattform nicht unterstützt.",
       "restoreSuccessTitle": "Käufe wiederhergestellt",
@@ -3771,6 +4220,9 @@ export const MOBILE_I18N_FALLBACK = {
       "choosePackage": "Paket wählen",
       "popular": "BELIEBT",
       "paymentSecure": "Ihre Zahlungen sind durch Stripe und PayPal geschützt.",
+      "storePriceLoading": "Store-Preis wird geladen",
+      "storePriceUnavailable": "Im Store nicht verfügbar",
+      "storePaymentSecure": "Digitale Käufe werden über den App Store oder Google Play abgewickelt.",
       "iapRequiredTitle": "Store-Kauf erforderlich",
       "iapRequiredBody": "Guthabenpakete werden in iOS- und Android-Store-Builds über In-App-Käufe angeboten.",
       "iapUnsupported": "Store-Käufe werden auf dieser Plattform nicht unterstützt.",
@@ -4184,7 +4636,8 @@ export const MOBILE_I18N_FALLBACK = {
     "chat": {
       "warning": "Dieser Bereich ist nur für kurze Notizen und Fragen. Buchen Sie eine Live-Sitzung für längere Gespräche. Übermäßige Nutzung kann automatisch eingeschränkt werden.",
       "inputPlaceholder": "Geben Sie Ihre Nachricht ein...",
-      "startFailed": "Das Gespräch konnte nicht gestartet werden."
+      "startFailed": "Das Gespräch konnte nicht gestartet werden.",
+      "block": "Blockieren", "unblock": "Blockierung aufheben", "blockTitle": "Person blockieren", "unblockTitle": "Blockierung aufheben", "blockConfirm": "Neue Nachrichten zwischen Ihnen werden gestoppt. Sie können die Blockierung später aufheben.", "unblockConfirm": "Nachrichten mit dieser Person wieder erlauben?", "blockedNotice": "Nachrichten sind in diesem Gespräch blockiert.", "report": "Melden", "reportTitle": "Nachricht melden", "reportPrompt": "Diese Nachricht an unser Prüfteam senden?", "reportDoneTitle": "Meldung eingegangen", "reportDoneBody": "Die Nachricht wurde zur Prüfung gespeichert.", "cancel": "Abbrechen", "actionFailed": "Aktion fehlgeschlagen. Bitte erneut versuchen.", "termsPrompt": "Lesen und akzeptieren Sie vor dem Schreiben die Nutzungsbedingungen und Verhaltensregeln.", "readTerms": "Nutzungsbedingungen lesen", "acceptTerms": "Gelesen und akzeptiert"
     },
     "menu": {
       "appSection": "App",

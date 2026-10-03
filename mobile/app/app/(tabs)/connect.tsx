@@ -24,7 +24,8 @@ import {
 } from 'lucide-react-native';
 
 import { useAppTheme, type AppTheme } from '@/theme';
-import { consultantsApi } from '@/lib/api';
+import { consultantsApi, getAssetUrl } from '@/lib/api';
+import { repairUtf8Mojibake } from '@/lib/textEncoding';
 import type { Consultant } from '@/types';
 import SkeletonView from '@/components/SkeletonView';
 import { MenuHeaderButton } from '@/components/MenuHeaderButton';
@@ -111,18 +112,18 @@ function buildScreenStyles(t: AppTheme) {
   avatarFallback: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.goldDim, alignItems: 'center', justifyContent: 'center' },
   avatarInitial: { fontFamily: font.display, fontSize: 24, color: colors.ink },
   onlineDot: { position: 'absolute', bottom: 2, right: 2, width: 14, height: 14, borderRadius: 7, backgroundColor: colors.success, borderWidth: 2, borderColor: colors.surface },
-  cardBody: { flex: 1 },
+  cardBody: { flex: 1, minWidth: 0 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontFamily: font.display, fontSize: 18, color: colors.text },
+  name: { fontFamily: font.display, fontSize: 18, color: colors.text, flexShrink: 1 },
   expertise: { fontFamily: font.sans, fontSize: 13, color: colors.goldDim, marginTop: 2 },
   statsRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statVal: { fontFamily: font.sansBold, fontSize: 13, color: colors.text },
   statCount: { fontFamily: font.sans, fontSize: 11, color: colors.textMuted },
   statDivider: { width: 1, height: 10, backgroundColor: colors.lineSoft },
-  cardRight: { alignItems: 'flex-end', gap: 12 },
-  price: { fontFamily: font.display, fontSize: 20, color: colors.text },
-  arrowCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(201, 169, 97, 0.1)', alignItems: 'center', justifyContent: 'center' },
+  cardRight: { alignItems: 'flex-end', gap: 12, flexShrink: 0 },
+  price: { fontFamily: font.display, fontSize: 18, color: colors.text },
+  arrowCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.gold + '1A', alignItems: 'center', justifyContent: 'center' },
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.lineSoft },
   features: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   featuresText: { fontFamily: font.sansMedium, fontSize: 12, color: colors.gold },
@@ -206,7 +207,7 @@ export default function ConnectScreen() {
   useEffect(() => {
     if (!funnelTopic) return;
     const mapped = FUNNEL_TOPIC_TO_CONNECT_FILTER[funnelTopic];
-    if (mapped) setFilter(mapped);
+    if (mapped) void Promise.resolve().then(() => setFilter(mapped));
   }, [funnelTopic]);
 
   const languages = [
@@ -238,10 +239,10 @@ export default function ConnectScreen() {
       <View style={styles.cardTop}>
         <View style={styles.avatarWrap}>
           {item.avatar_url ? (
-            <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+            <Image source={{ uri: getAssetUrl(item.avatar_url) ?? undefined }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarFallback}>
-              <Text style={styles.avatarInitial}>{item.full_name?.[0] || 'C'}</Text>
+              <Text style={styles.avatarInitial}>{repairUtf8Mojibake(item.full_name)?.[0] || 'C'}</Text>
             </View>
           )}
           {!!item.is_available && <View style={styles.onlineDot} />}
@@ -249,10 +250,12 @@ export default function ConnectScreen() {
 
         <View style={styles.cardBody}>
           <View style={styles.nameRow}>
-            <Text style={styles.name} numberOfLines={1}>{item.full_name}</Text>
+            <Text style={styles.name} numberOfLines={1}>{repairUtf8Mojibake(item.full_name)}</Text>
             <ShieldCheck size={14} color={colors.gold} />
           </View>
-          <Text style={styles.expertise} numberOfLines={1}>{asStringArray(item.expertise).join(' · ')}</Text>
+          <Text style={styles.expertise} numberOfLines={1}>
+            {asStringArray(item.expertise).map((slug) => t(`home.expertise.${slug}`, slug.replaceAll('_', ' '))).join(' · ')}
+          </Text>
 
           <View style={styles.statsRow}>
             <View style={styles.stat}>
@@ -424,4 +427,3 @@ export default function ConnectScreen() {
     </View>
   );
 }
-

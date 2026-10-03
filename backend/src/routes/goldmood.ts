@@ -16,7 +16,6 @@ import { registerNumerologyRoutes } from '@/modules/numerology/router';
 import { registerYildiznameRoutes } from '@/modules/yildizname/router';
 import { registerSynastryRoutes } from '@/modules/synastry/router';
 import { registerHistoryRoutes } from '@/modules/history/router';
-import { registerCreditsRoutes } from '@/modules/credits/router';
 import { registerServiceBoosts, registerServiceBoostsAdmin } from '@/modules/serviceBoosts/router';
 import { registerCommissionChangeAdmin } from '@/modules/commissionChange/admin.routes';
 import { registerAiBillingAdmin } from '@/modules/aiBilling/admin.routes';
@@ -53,7 +52,6 @@ export async function registerGoldmoodPublic(api: FastifyInstance) {
   await api.register(registerYildiznameRoutes, { prefix: '/yildizname' });
   await api.register(registerSynastryRoutes);
   await api.register(registerHistoryRoutes, { prefix: '/me' });
-  await api.register(registerCreditsRoutes, { prefix: '/credits' });
   await api.register(registerServiceBoosts);
   await api.register(registerConsultantTimeBlocks);
   await api.register(registerStubs);

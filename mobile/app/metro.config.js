@@ -11,8 +11,12 @@ config.server = { ...(config.server ?? {}), port: 8081 };
 
 const liveKitMockPath = path.join(projectRoot, 'src/mocks/livekit-react-native-mock.tsx');
 const useLiveKitMock = process.env.EXPO_PUBLIC_LIVEKIT_MOCK === '1';
-
+// Bun workspaces hoists the web app's React to the repo root. React Native's
+// renderer requires the mobile app's React version, including its JSX runtimes.
 config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === 'react' || moduleName.startsWith('react/')) {
+    return { type: 'sourceFile', filePath: require.resolve(moduleName, { paths: [projectRoot] }) };
+  }
   if (useLiveKitMock && moduleName === '@livekit/react-native') {
     return { type: 'sourceFile', filePath: liveKitMockPath };
   }

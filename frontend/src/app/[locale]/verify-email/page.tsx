@@ -11,6 +11,7 @@ import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
 
 import PageContainer from '@/components/common/PageContainer';
+import { safeNextPath } from '@/lib/safeNextPath';
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
@@ -22,7 +23,7 @@ export default function VerifyEmailPage() {
 
   // Return to the ?next=... page after signup, otherwise home.
   const nextRaw = searchParams.get('next') || '';
-  const nextHref = nextRaw.startsWith('/') ? nextRaw : localizePath(locale, '/');
+  const nextHref = safeNextPath(nextRaw) ?? localizePath(locale, '/');
   const continueLabel = ui('ui_extra_b1_continue', 'Continue');
 
   const [confirm, { isLoading }] = useConfirmEmailVerificationMutation();
@@ -56,7 +57,7 @@ export default function VerifyEmailPage() {
           'Verification failed';
         setMessage(msg);
       });
-  }, [token, confirm]);
+  }, [mode, token, confirm]);
 
   const titleText = ui('ui_extra_b1_verify_email_title', 'Verify Email');
   const resendLabel = ui('ui_extra_b1_resend_verification', 'Resend verification email');

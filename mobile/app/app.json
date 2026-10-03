@@ -6,12 +6,12 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "goldmoodastro",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#2A2620"
+      "backgroundColor": "#1B0A3D"
     },
     "ios": {
       "bundleIdentifier": "com.goldmoodastro.app",
@@ -24,8 +24,8 @@
         "applinks:www.goldmoodastro.com"
       ],
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Danışmanınızla sesli görüşme yapabilmek için mikrofon erişimi gereklidir.",
-        "NSCameraUsageDescription": "Profil fotoğrafı yüklemek için kamera erişimi gereklidir.",
+        "NSMicrophoneUsageDescription": "Sesli ve görüntülü danışman görüşmeleri ile sesli sorularınızı kaydetmek için mikrofon erişimi gereklidir.",
+        "NSCameraUsageDescription": "Görüntülü danışman görüşmeleri, görüntülü sorular ve profil fotoğrafı için kamera erişimi gereklidir.",
         "NSPhotoLibraryUsageDescription": "Profil fotoğrafı ve kahve falı görsellerinizi seçebilmek için fotoğraf arşivi erişimi gereklidir.",
         "NSPhotoLibraryAddUsageDescription": "Seçtiğiniz görselleri işleyebilmek ve gerektiğinde arşivinize kaydedebilmek için fotoğraf arşivi izni gereklidir.",
         "UIBackgroundModes": [
@@ -39,12 +39,17 @@
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#C9A961"
+        "backgroundColor": "#1B0A3D"
       },
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
         "android.permission.POST_NOTIFICATIONS"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
       ],
       "intentFilters": [
         {
@@ -199,7 +204,7 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#C9A961"
+          "color": "#D4AF37"
         }
       ],
       "expo-localization",
@@ -207,7 +212,8 @@
       "expo-apple-authentication",
       "expo-iap",
       "expo-audio",
-      "expo-video"
+      "expo-video",
+      "./plugins/withLiveKit"
     ],
     "experiments": {
       "typedRoutes": true
@@ -231,6 +237,7 @@
     "updates": {
       "url": "https://u.expo.dev/032fb190-c872-43e4-a3e7-28335af94a6f"
     },
-    "owner": "orhanguezel"
+    "owner": "orhanguezel",
+    "primaryColor": "#9B6FD9"
   }
 }

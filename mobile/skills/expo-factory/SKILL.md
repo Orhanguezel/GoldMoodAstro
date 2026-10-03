@@ -41,7 +41,7 @@ Kullanma:
 - Gradients: `expo-linear-gradient`
 - Motion: `react-native-reanimated` veya RN `Animated`
 - Voice: LiveKit
-- Payment: Iyzipay WebView
+- Payment: Stripe Checkout WebView for bookings; `expo-iap` for digital purchases
 - IAP plan: RevenueCat veya `react-native-iap`
 
 ## App Printer -> Expo Karşılıkları
@@ -146,8 +146,8 @@ Yapılacak:
   - **RevenueCat:** daha hızlı entitlement + receipt validation
   - **react-native-iap:** daha ucuz/özelleştirilebilir, backend validation gerekir
 - Restore purchase UX zorunludur.
-- iOS'ta Iyzipay/web yönlendirme gösterilmez.
-- Android/Web Iyzipay alternatifi policy uyumuyla tasarlanır.
+- Dijital abonelik ve kredilerde mağaza IAP akışı kullanılır.
+- Danışman randevusu Stripe Checkout WebView kullanır.
 - Backend tek gerçek kaynak: `/auth/me` subscription özeti veya subscription endpointleri.
 
 Paywall UI:

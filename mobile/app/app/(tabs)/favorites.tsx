@@ -55,38 +55,42 @@ export default function FavoritesScreen() {
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
   const { t } = useTranslation();
-  const { isAuthenticated, authHydrating } = useAuth();
+  const { user, isAuthenticated, authHydrating } = useAuth();
+  const userId = user?.id;
   const { refresh: refreshFavorites } = useFavorites();
   
-  const [consultants, setConsultants] = useState<Consultant[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<{ userId: string; consultants: Consultant[] } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const consultants = userId && result?.userId === userId ? result.consultants : [];
+  const loading = isAuthenticated && result?.userId !== userId;
 
-  const fetchFavoriteConsultants = async () => {
+  const fetchFavoriteConsultants = useCallback(async () => {
+    if (!userId || authHydrating) return;
     try {
       const items = await favoritesApi.list();
-      setConsultants(items);
+      setResult({ userId, consultants: items });
     } catch (err) {
       logger.error('Failed to fetch favorite consultants:', err);
-      setConsultants([]);
+      setResult({ userId, consultants: [] });
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [userId, authHydrating]);
 
   useFocusEffect(
     useCallback(() => {
-      refreshFavorites().then(fetchFavoriteConsultants);
-    }, [])
+      if (!isAuthenticated || authHydrating) return;
+      void refreshFavorites().then(fetchFavoriteConsultants);
+    }, [isAuthenticated, authHydrating, refreshFavorites, fetchFavoriteConsultants])
   );
 
   const onRefresh = useCallback(() => {
+    if (!isAuthenticated || authHydrating) return;
     setRefreshing(true);
-    fetchFavoriteConsultants();
-  }, []);
+    void refreshFavorites().then(fetchFavoriteConsultants);
+  }, [isAuthenticated, authHydrating, refreshFavorites, fetchFavoriteConsultants]);
 
-  if (authHydrating || (loading && !refreshing)) {
+  if (authHydrating || loading) {
     return (
       <View style={styles.safe}>
         <View style={styles.loader}>

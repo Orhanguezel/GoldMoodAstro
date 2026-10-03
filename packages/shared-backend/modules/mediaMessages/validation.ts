@@ -20,6 +20,7 @@ export const updateMediaSettingsSchema = z.object({
 export const createMediaMessageSchema = z.object({
   consultant_id: z.string().trim().min(1).max(36),
   kind: mediaKindSchema,
+  expected_price: z.coerce.number().positive().max(100000),
   storage_path: z.string().trim().min(1).max(500),
   duration_seconds: z.coerce.number().int().min(1).max(1800).optional(),
   note: z.string().trim().max(1000).optional().nullable(),
@@ -31,4 +32,3 @@ export const replyMediaMessageSchema = z.object({
   duration_seconds: z.coerce.number().int().min(1).max(1800).optional(),
   note: z.string().trim().max(1000).optional().nullable(),
 });
-

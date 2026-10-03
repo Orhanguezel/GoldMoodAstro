@@ -96,6 +96,7 @@ import { tr } from 'date-fns/locale';
 
 
 import { bookingsApi, ordersApi, campaignsApi } from '@/lib/api';
+import { startBookingCheckout } from '@/lib/bookingCheckout';
 import type { Campaign } from '@/types';
 
 export default function BookingCheckoutScreen() {
@@ -180,7 +181,7 @@ export default function BookingCheckoutScreen() {
       const sourceMatch = typeof params.topic === 'string'
         ? params.topic.match(/^daily_reading_([0-9a-f-]{36})$/i)
         : null;
-      const booking = await bookingsApi.create({
+      const result = await startBookingCheckout({
         consultant_id: params.consultantId!,
         resource_id: params.resourceId!,
         appointment_date: params.date!,
@@ -192,24 +193,25 @@ export default function BookingCheckoutScreen() {
         ...(params.serviceId ? { service_id: params.serviceId } : {}),
         source_type: sourceMatch ? 'daily_reading' : undefined,
         source_id: sourceMatch?.[1],
+      }, {
+        createBooking: bookingsApi.create,
+        createOrder: ordersApi.createForBooking,
+        initStripeCheckout: ordersApi.initStripeCheckout,
       });
 
-      if (booking.status === 'confirmed' || isFreeService) {
+      if (result.kind === 'confirmed') {
         router.replace({
           pathname: '/booking/success' as any,
-          params: { bookingId: booking.id },
+          params: { bookingId: result.bookingId },
         });
         return;
       }
 
-      const orderResult = await ordersApi.createForBooking(booking.id);
-      const checkout = await ordersApi.initStripeCheckout(orderResult.order_id);
-
       router.push({
         pathname: '/booking/payment' as any,
         params: {
-          orderId: orderResult.order_id,
-          url: checkout.checkout_url,
+          orderId: result.orderId,
+          url: result.checkoutUrl,
         },
       });
     } catch (err: any) {
@@ -457,4 +459,3 @@ export default function BookingCheckoutScreen() {
     </View>
   );
 }
-

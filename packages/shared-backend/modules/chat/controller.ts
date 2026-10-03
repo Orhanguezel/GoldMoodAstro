@@ -3,15 +3,18 @@
 // =============================================================
 
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { z } from 'zod';
 import {
   CreateOrGetThreadBodySchema,
   ListMessagesQuerySchema,
   ListThreadsQuerySchema,
   PostMessageBodySchema,
+  ReportChatMessageBodySchema,
   ThreadIdParamsSchema,
   WsQuerySchema,
 } from "./validation";
 import { chatService } from "./service";
+import { acceptChatTerms, getChatBlockState, reportChatMessage, setChatBlock } from './safety';
 
 function getUser(req: any) {
   // JWT payload'da id varsa kullan, yoksa sub'tan map et (fastify-jwt sub döner)
@@ -77,6 +80,33 @@ export function chatController(app: any) {
       const body = PostMessageBodySchema.parse((req as any).body ?? {});
       const msg = await svc.postMessage(user, params.id, body);
       return { message: msg };
+    },
+
+    async blockState(req: FastifyRequest) {
+      const user = getUser(req);
+      const params = ThreadIdParamsSchema.parse(req.params ?? {});
+      return getChatBlockState(params.id, user.id);
+    },
+    async blockPeer(req: FastifyRequest) {
+      const user = getUser(req);
+      const params = ThreadIdParamsSchema.parse(req.params ?? {});
+      return setChatBlock(params.id, user.id, true);
+    },
+    async unblockPeer(req: FastifyRequest) {
+      const user = getUser(req);
+      const params = ThreadIdParamsSchema.parse(req.params ?? {});
+      return setChatBlock(params.id, user.id, false);
+    },
+    async reportMessage(req: FastifyRequest) {
+      const user = getUser(req);
+      const params = ThreadIdParamsSchema.parse(req.params ?? {});
+      const body = ReportChatMessageBodySchema.parse(req.body ?? {});
+      return reportChatMessage(params.id, user.id, body.message_id, body.reason, body.details);
+    },
+    async acceptTerms(req: FastifyRequest) {
+      const user = getUser(req);
+      const body = z.object({ accepted: z.literal(true) }).parse(req.body ?? {});
+      if (body.accepted) return acceptChatTerms(user.id);
     },
 
     // WS handler: GET /chat/ws?thread_id=...

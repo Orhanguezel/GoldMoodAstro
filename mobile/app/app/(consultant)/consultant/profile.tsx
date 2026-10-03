@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, Trash2, UserCog } from 'lucide-react-native';
+import { Pencil, Plus, Trash2, UserCog } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { consultantSelfApi } from '@/lib/api';
@@ -85,6 +85,11 @@ function slugify(value: string) {
     .replace(/^-|-$/g, '') || `service-${Date.now()}`;
 }
 
+function mediaSlug(base: string, mediaType: 'audio' | 'video') {
+  const cleaned = base.replace(/-(sesli-goruntulu|sesli|goruntulu)$/i, '');
+  return `${cleaned}-${mediaType === 'video' ? 'goruntulu' : 'sesli'}`;
+}
+
 export default function ConsultantProfileScreen() {
   const { t } = useTranslation();
   const theme = useAppTheme();
@@ -98,11 +103,15 @@ export default function ConsultantProfileScreen() {
   const [sessionDuration, setSessionDuration] = useState('30');
   const [videoPrice, setVideoPrice] = useState('');
   const [isAvailable, setIsAvailable] = useState(true);
-  const [supportsVideo, setSupportsVideo] = useState(false);
   const [draft, setDraft] = useState<ServiceDraft>(EMPTY_SERVICE);
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  const serviceFormY = useRef(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [profileError, setProfileError] = useState(false);
+  const [servicesError, setServicesError] = useState(false);
 
   const hydrateProfile = (next: ConsultantSelfProfile) => {
     setProfile(next);
@@ -111,34 +120,43 @@ export default function ConsultantProfileScreen() {
     setSessionDuration(next.session_duration == null ? '30' : String(next.session_duration));
     setVideoPrice(next.video_session_price == null ? '' : String(next.video_session_price));
     setIsAvailable(Number(next.is_available ?? 1) === 1);
-    setSupportsVideo(Number(next.supports_video ?? 0) === 1);
   };
 
   const load = useCallback(async () => {
-    try {
-      const [nextProfile, nextServices] = await Promise.all([
-        consultantSelfApi.profile(),
-        consultantSelfApi.services(),
-      ]);
-      hydrateProfile(nextProfile);
-      setServices(nextServices);
-    } catch (err) {
-      logger.error('Consultant profile load error:', err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+    const [profileResult, servicesResult] = await Promise.allSettled([
+      consultantSelfApi.profile(),
+      consultantSelfApi.services(),
+    ]);
+    if (profileResult.status === 'fulfilled' && profileResult.value) {
+      hydrateProfile(profileResult.value);
+      setProfileError(false);
+    } else {
+      setProfile(null);
+      setProfileError(true);
+      logger.error('Consultant profile load error:', profileResult.status === 'rejected' ? profileResult.reason : 'Empty profile');
     }
+    if (servicesResult.status === 'fulfilled') {
+      setServices(servicesResult.value);
+      setServicesError(false);
+    } else {
+      setServicesError(true);
+      logger.error('Consultant services load error:', servicesResult.reason);
+    }
+    setLoading(false);
+    setRefreshing(false);
   }, []);
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, [load]);
 
   const saveProfile = async () => {
+    if (!profile || profileError || saving) return;
     const price = Number(sessionPrice);
     const duration = Number(sessionDuration);
     const video = Number(videoPrice || 0);
-    if (!Number.isFinite(price) || price < 0 || !Number.isFinite(duration) || duration <= 0) {
+    if (!Number.isFinite(price) || price < 0 || price > 100_000 || !Number.isFinite(duration) || duration < 10 || duration > 240 ||
+      (videoPrice.trim() !== '' && (!Number.isFinite(video) || video < 0 || video > 100_000))) {
       Alert.alert(t('common.error', 'Hata'), t('consultantPanel.profile.invalidProfile', 'Ücret ve süre alanlarını kontrol edin.'));
       return;
     }
@@ -148,9 +166,8 @@ export default function ConsultantProfileScreen() {
         bio: bio.trim() || null,
         session_price: price,
         session_duration: Math.round(duration),
-        video_session_price: video,
+        ...(videoPrice.trim() ? { video_session_price: video } : {}),
         is_available: isAvailable ? 1 : 0,
-        supports_video: supportsVideo ? 1 : 0,
       });
       await load();
       Alert.alert(t('common.success', 'Başarılı'), t('consultantPanel.profile.saved', 'Profil kaydedildi.'));
@@ -162,6 +179,7 @@ export default function ConsultantProfileScreen() {
   };
 
   const createService = async () => {
+    if (!profile || profileError || servicesError || saving) return;
     const duration = Number(draft.duration);
     const price = draft.is_free ? 0 : Number(draft.price);
     if (!draft.name.trim() || !Number.isFinite(duration) || duration < 15 || (!draft.is_free && (!Number.isFinite(price) || price <= 0))) {
@@ -170,20 +188,26 @@ export default function ConsultantProfileScreen() {
     }
     setSaving(true);
     try {
+      const currentService = services.find((item) => item.id === editingServiceId);
       const baseSlug = slugify(draft.name);
-      await consultantSelfApi.createService({
+      const payload = {
         name: draft.name.trim(),
-        slug: `${baseSlug}-${draft.media_type === 'video' ? 'goruntulu' : 'sesli'}`,
+        slug: currentService
+          ? currentService.media_type === draft.media_type ? currentService.slug : mediaSlug(currentService.slug, draft.media_type)
+          : mediaSlug(baseSlug, draft.media_type),
         description: draft.description.trim() || null,
         duration_minutes: Math.round(duration),
         price,
         media_type: draft.media_type,
         is_free: draft.is_free ? 1 : 0,
-        is_active: 1,
-      });
+        is_active: currentService?.is_active ?? 1,
+      };
+      if (currentService) await consultantSelfApi.updateService(currentService.id, payload);
+      else await consultantSelfApi.createService(payload);
       setDraft(EMPTY_SERVICE);
+      setEditingServiceId(null);
       setServices(await consultantSelfApi.services());
-      Alert.alert(t('common.success', 'Başarılı'), t('consultantPanel.profile.serviceCreated', 'Hizmet eklendi.'));
+      Alert.alert(t('common.success', 'Başarılı'), currentService ? t('consultantPanel.profile.serviceUpdated', 'Hizmet güncellendi.') : t('consultantPanel.profile.serviceCreated', 'Hizmet eklendi.'));
     } catch (err) {
       Alert.alert(t('common.error', 'Hata'), t('consultantPanel.profile.serviceCreateError', 'Hizmet eklenemedi.'));
     } finally {
@@ -191,7 +215,21 @@ export default function ConsultantProfileScreen() {
     }
   };
 
+  const editService = (service: ConsultantSelfService) => {
+    setEditingServiceId(service.id);
+    setDraft({
+      name: service.name,
+      description: service.description ?? '',
+      duration: String(service.duration_minutes),
+      price: String(service.price),
+      media_type: service.media_type,
+      is_free: service.is_free === 1,
+    });
+    scrollRef.current?.scrollTo({ y: serviceFormY.current, animated: true });
+  };
+
   const toggleService = async (service: ConsultantSelfService) => {
+    if (!profile || profileError || servicesError || saving) return;
     setSaving(true);
     try {
       await consultantSelfApi.updateService(service.id, { is_active: service.is_active === 1 ? 0 : 1 });
@@ -204,6 +242,7 @@ export default function ConsultantProfileScreen() {
   };
 
   const deleteService = (service: ConsultantSelfService) => {
+    if (!profile || profileError || servicesError || saving) return;
     Alert.alert(
       t('consultantPanel.profile.deleteServiceTitle', 'Hizmeti sil'),
       t('consultantPanel.profile.deleteServiceBody', '{{name}} silinsin mi?', { name: service.name }),
@@ -244,9 +283,14 @@ export default function ConsultantProfileScreen() {
           <Text style={styles.title}>{t('consultantPanel.profile.title', 'Danışman profili')}</Text>
         </View>
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={styles.scroll}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.gold} />}
         >
+          {profileError && <View style={styles.card}>
+            <Text style={styles.empty}>{t('consultantPanel.profile.loadError', 'Danışman profili yüklenemedi.')}</Text>
+            <Pressable style={styles.outlineBtn} onPress={() => void load()} accessibilityRole="button"><Text style={styles.outlineText}>{t('common.retry', 'Tekrar dene')}</Text></Pressable>
+          </View>}
           <View style={styles.card}>
             <View style={styles.titleRow}>
               <UserCog size={18} color={colors.gold} />
@@ -268,26 +312,18 @@ export default function ConsultantProfileScreen() {
               <Text style={styles.sectionTitle}>{t('consultantPanel.profile.available', 'Profil müsait')}</Text>
               <Switch value={isAvailable} onValueChange={setIsAvailable} />
             </View>
-            <View style={styles.row}>
-              <Text style={styles.sectionTitle}>{t('consultantPanel.profile.supportsVideo', 'Video destekler')}</Text>
-              <Switch value={supportsVideo} onValueChange={setSupportsVideo} />
-            </View>
-            {supportsVideo && (
-              <>
-                <Text style={styles.label}>{t('consultantPanel.profile.videoPrice', 'VIDEO SEANS ÜCRETİ')}</Text>
-                <TextInput style={styles.input} value={videoPrice} onChangeText={setVideoPrice} keyboardType="decimal-pad" />
-              </>
-            )}
-            <Pressable style={styles.btn} onPress={saveProfile} disabled={saving || !profile}>
+            <Text style={styles.label}>{t('consultantPanel.profile.videoPrice', 'VIDEO SEANS ÜCRETİ')}</Text>
+            <TextInput style={styles.input} value={videoPrice} onChangeText={setVideoPrice} keyboardType="decimal-pad" />
+            <Pressable style={styles.btn} onPress={saveProfile} disabled={saving || !profile || profileError}>
               {saving ? <ActivityIndicator color={colors.ink} /> : null}
               <Text style={styles.btnText}>{t('consultantPanel.profile.saveProfile', 'Profili Kaydet')}</Text>
             </Pressable>
           </View>
 
-          <View style={styles.card}>
+          <View style={styles.card} onLayout={(event) => { serviceFormY.current = event.nativeEvent.layout.y; }}>
             <View style={styles.titleRow}>
               <Plus size={18} color={colors.gold} />
-              <Text style={styles.sectionTitle}>{t('consultantPanel.profile.newService', 'Yeni hizmet')}</Text>
+              <Text style={styles.sectionTitle}>{editingServiceId ? t('consultantPanel.profile.editService', 'Hizmeti düzenle') : t('consultantPanel.profile.newService', 'Yeni hizmet')}</Text>
             </View>
             <Text style={styles.label}>{t('consultantPanel.profile.serviceName', 'HİZMET ADI')}</Text>
             <TextInput style={styles.input} value={draft.name} onChangeText={(name) => setDraft((prev) => ({ ...prev, name }))} />
@@ -319,14 +355,20 @@ export default function ConsultantProfileScreen() {
               <Text style={styles.sectionTitle}>{t('consultantPanel.profile.freeService', 'Ücretsiz hizmet')}</Text>
               <Switch value={draft.is_free} onValueChange={(is_free) => setDraft((prev) => ({ ...prev, is_free, price: is_free ? '0' : prev.price }))} />
             </View>
-            <Pressable style={styles.btn} onPress={createService} disabled={saving}>
-              <Text style={styles.btnText}>{t('consultantPanel.profile.createService', 'Hizmet Ekle')}</Text>
+            <Pressable style={styles.btn} onPress={createService} disabled={saving || !profile || profileError || servicesError}>
+              <Text style={styles.btnText}>{editingServiceId ? t('consultantPanel.profile.saveService', 'Değişiklikleri Kaydet') : t('consultantPanel.profile.createService', 'Hizmet Ekle')}</Text>
             </Pressable>
+            {editingServiceId && <Pressable style={styles.outlineBtn} onPress={() => { setEditingServiceId(null); setDraft(EMPTY_SERVICE); }} disabled={saving}>
+              <Text style={styles.outlineText}>{t('common.cancel', 'Vazgeç')}</Text>
+            </Pressable>}
           </View>
 
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>{t('consultantPanel.profile.servicesTitle', 'Hizmetler')}</Text>
-            {services.length === 0 ? (
+            {servicesError ? <>
+              <Text style={styles.empty}>{t('consultantPanel.profile.servicesLoadError', 'Hizmetler yüklenemedi.')}</Text>
+              <Pressable style={styles.outlineBtn} onPress={() => void load()} accessibilityRole="button"><Text style={styles.outlineText}>{t('common.retry', 'Tekrar dene')}</Text></Pressable>
+            </> : services.length === 0 ? (
               <Text style={styles.empty}>{t('consultantPanel.profile.noServices', 'Henüz hizmet yok.')}</Text>
             ) : services.map((service) => (
               <View key={service.id} style={styles.serviceCard}>
@@ -339,10 +381,13 @@ export default function ConsultantProfileScreen() {
                       {service.duration_minutes} dk · {service.is_free === 1 ? t('consultantPanel.profile.free', 'Ücretsiz') : `${Number(service.price).toLocaleString('tr-TR')} ${service.currency}`}
                     </Text>
                   </View>
-                  <Switch value={service.is_active === 1} onValueChange={() => toggleService(service)} disabled={saving} />
+                  <Switch value={service.is_active === 1} onValueChange={() => toggleService(service)} disabled={saving || !profile || profileError} />
                 </View>
                 {!!service.description && <Text style={styles.help}>{service.description}</Text>}
-                <Pressable style={styles.outlineBtn} onPress={() => deleteService(service)} disabled={saving}>
+                <Pressable style={styles.outlineBtn} onPress={() => editService(service)} disabled={saving || !profile || profileError} accessibilityRole="button">
+                  <View style={styles.titleRow}><Pencil size={14} color={colors.gold} /><Text style={styles.outlineText}>{t('consultantPanel.profile.editService', 'Hizmeti düzenle')}</Text></View>
+                </Pressable>
+                <Pressable style={styles.outlineBtn} onPress={() => deleteService(service)} disabled={saving || !profile || profileError}>
                   <View style={styles.titleRow}>
                     <Trash2 size={14} color={colors.danger} />
                     <Text style={styles.dangerText}>{t('common.delete', 'Sil')}</Text>

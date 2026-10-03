@@ -2,7 +2,7 @@
 
 GoldMoodAstro'da ödeme ve üyelik iki ayrı akış olarak ele alınır:
 
-1. **Booking payment:** danışman seansı için Iyzipay WebView
+1. **Booking payment:** danışman seansı için Stripe Checkout WebView
 2. **Subscription / premium:** iOS/Android için IAP stratejisi
 
 ## Booking Payment
@@ -10,11 +10,11 @@ GoldMoodAstro'da ödeme ve üyelik iki ayrı akış olarak ele alınır:
 Mevcut mobil ödeme modeli:
 
 - Checkout ekranı booking/order oluşturur.
-- Payment ekranı `react-native-webview` ile Iyzipay checkout URL'ini açar.
+- Payment ekranı `react-native-webview` ile Stripe Checkout URL'ini açar.
 - Success/failure URL patternleri backend/frontend ile uyumlu izlenir.
 - Başarıda bookings ekranına dönülür.
 
-Bu akış IAP değildir; danışman seansı gibi hizmet ödemelerinde mevcut Iyzipay modeli korunur.
+Bu akış IAP değildir; danışman seansı gibi hizmet ödemelerinde Stripe Checkout kullanılır.
 
 ## Subscription / Premium
 
@@ -50,8 +50,8 @@ Dezavantaj:
 | Platform | Premium subscription kanalı | Not |
 |---|---|---|
 | iOS | Apple IAP | Harici ödeme yönlendirmesi gösterme |
-| Android | Google Play Billing veya policy uyumlu web seçeneği | Web/Iyzipay seçeneği dikkatli tasarlanır |
-| Web | Iyzipay | Mobil IAP ile entitlement backend'de birleşir |
+| Android | Google Play Billing | Mobil IAP entitlement backend'de doğrulanır |
+| Web | Stripe Checkout | Mobil IAP ile entitlement backend'de birleşir |
 
 ## Product ID Standardı
 
@@ -93,7 +93,7 @@ Mobile tarafı sadece local cache ve UI state tutar.
 iOS içinde:
 
 - "Web'den daha ucuza al" gösterme
-- Iyzipay abonelik linki verme
+- Harici abonelik ödeme linki verme
 - Apple IAP dışı subscription yönlendirmesi yapma
 
 Booking payment hizmet/appointment flow'u olarak ayrı değerlendirilir; yine de App Review metinlerinde netlik gerekir.

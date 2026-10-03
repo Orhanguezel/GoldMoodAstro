@@ -22,7 +22,7 @@ Bu repo için ana hedef artık yalnızca "çalışan MVP" değil: **premium, iOS
 - **Icons:** `lucide-react-native`; yeni ikon ihtiyacında önce bunu kullan
 - **Push:** `expo-notifications` + Firebase FCM
 - **Auth:** email/password + Apple Sign In
-- **Ödeme:** Iyzipay WebView; abonelik/IAP production planı RevenueCat veya `react-native-iap`
+- **Ödeme:** Danışmanlık randevusunda Stripe Checkout WebView; dijital kredi ve abonelikte `expo-iap` + backend doğrulaması
 - **Sesli görüşme:** LiveKit (`@livekit/react-native`)
 - **Fontlar:** Cinzel, Fraunces, Manrope, JetBrains Mono
 
@@ -145,8 +145,7 @@ Hedef:
 - `src/lib/iap.ts` stub kalabilir ama production planı dokümante edilir.
 - Seçim: RevenueCat veya `react-native-iap`.
 - Backend doğrulama: `/api/v1/subscriptions/verify` veya mevcut abonelik endpointleriyle receipt/status doğrulama.
-- iOS'ta harici ödeme yönlendirmesi gösterilmez.
-- Android/Web tarafında Iyzipay akışı policy uyumuyla planlanır.
+- Dijital kredi ve abonelik için mağaza sürümlerinde IAP kullanılır; danışmanlık hizmeti Stripe Checkout akışını kullanır.
 
 ### P3 — Navigation / HIG Audit
 
@@ -172,7 +171,7 @@ Manuel ve otomasyon smoke sırası:
 2. Login/Register
 3. Consultant discovery
 4. Slot selection + booking checkout
-5. Iyzipay WebView payment
+5. Stripe Checkout WebView payment
 6. LiveKit call join/leave
 7. Rating/review
 

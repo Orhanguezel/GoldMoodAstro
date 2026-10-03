@@ -104,7 +104,7 @@ function buildScreenStyles(t: AppTheme) {
   },
   activeDivider: {
     height: 1,
-    backgroundColor: 'rgba(201, 169, 97, 0.2)',
+    backgroundColor: colors.gold + '33',
     marginVertical: 20,
   },
   expiryRow: {
@@ -303,6 +303,7 @@ import {
   purchaseSubscriptionPlan,
   restoreSubscriptionPurchases,
 } from '@/lib/iap';
+import { useStorePrices } from '@/hooks/useStorePrices';
 import type { Subscription, SubscriptionPlan } from '@/types';
 
 function formatCurrencyMinor(value: number | string, currency = 'TRY'): string {
@@ -312,13 +313,15 @@ function formatCurrencyMinor(value: number | string, currency = 'TRY'): string {
 }
 
 export default function SubscriptionScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
   const { isAuthenticated, loading: authLoading } = useAuth();
 
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const storeProductIds = useMemo(() => plans.map(getIapProductId), [plans]);
+  const store = useStorePrices(storeProductIds, 'subs');
   const [active, setActive] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -335,7 +338,7 @@ export default function SubscriptionScreen() {
         subscriptionsApi.plans(), 
         subscriptionsApi.me()
       ]);
-      setPlans(planList);
+      setPlans(Platform.OS === 'web' ? planList : planList.filter((plan) => plan.period === 'monthly' || plan.period === 'yearly'));
       setActive(me);
     } catch (err: any) {
       logger.error('Subscription load error:', err);
@@ -376,34 +379,37 @@ export default function SubscriptionScreen() {
       // IAP logic if mobile
       if (Platform.OS !== 'web') {
         const provider = getIapProvider();
-        if (provider) {
-          const purchase = await purchaseSubscriptionPlan(plan);
-          const hasReceiptPayload = provider === 'apple_iap' ? Boolean(purchase.receipt) : Boolean(purchase.purchaseToken && purchase.productId);
-          if (!purchase.ok || !hasReceiptPayload) {
-            Alert.alert(
-              t('common.error', 'Bir hata oluştu'),
-              purchase.message || t('subscription.purchaseFailed', 'Satın alma tamamlanamadı. Lütfen tekrar deneyin.'),
-            );
-            return;
-          }
-          await subscriptionsApi.verifyReceipt({
-            plan_id: plan.id,
-            platform: provider,
-            receipt: purchase.receipt ?? '',
-            transaction_id: purchase.transactionId,
-            purchase_token: purchase.purchaseToken,
-            product_id: purchase.productId,
-          });
-          await finishSubscriptionPurchase(purchase).catch((err) => {
-            logger.warn('IAP finish transaction failed:', err);
-          });
-          await load();
-          Alert.alert(t('common.success', 'Başarılı'), t('subscription.premiumWelcomeBody', 'Premium üyeliğiniz hayırlı olsun!'));
+        if (!provider) {
+          Alert.alert(t('common.error', 'Bir hata oluştu'), t('subscription.iapUnsupported', 'Bu platformda mağaza satın alımı desteklenmiyor.'));
           return;
         }
+
+        const purchase = await purchaseSubscriptionPlan(plan);
+        const hasReceiptPayload = provider === 'apple_iap' ? Boolean(purchase.receipt) : Boolean(purchase.purchaseToken && purchase.productId);
+        if (!purchase.ok || !hasReceiptPayload) {
+          Alert.alert(
+            t('common.error', 'Bir hata oluştu'),
+            purchase.message || t('subscription.purchaseFailed', 'Satın alma tamamlanamadı. Lütfen tekrar deneyin.'),
+          );
+          return;
+        }
+        await subscriptionsApi.verifyReceipt({
+          plan_id: plan.id,
+          platform: provider,
+          receipt: purchase.receipt ?? '',
+          transaction_id: purchase.transactionId,
+          purchase_token: purchase.purchaseToken,
+          product_id: purchase.productId,
+        });
+        await finishSubscriptionPurchase(purchase).catch((err) => {
+          logger.warn('IAP finish transaction failed:', err);
+        });
+        await load();
+        Alert.alert(t('common.success', 'Başarılı'), t('subscription.premiumWelcomeBody', 'Premium üyeliğiniz hayırlı olsun!'));
+        return;
       }
 
-      // Fallback to web checkout
+      // Web builds use Stripe; native builds use only the platform store.
       const res = await subscriptionsApi.start(plan.id, 'stripe');
       const checkout = (res as any).data?.checkout_url || (res as any).checkout_url;
       if (checkout) {
@@ -597,21 +603,31 @@ export default function SubscriptionScreen() {
                 <View key={plan.id} style={[styles.planCard, isCurrent && styles.planCardActive]}>
                   <View style={styles.planHeader}>
                     <View>
-                      <Text style={styles.planName}>{plan.name_tr}</Text>
-                      <Text style={styles.planInterval}>{t('subscription.monthlyBilling', 'Aylık ödeme')}</Text>
+                      <Text style={styles.planName}>{i18n.language.startsWith('tr') ? plan.name_tr : plan.name_en || plan.name_tr}</Text>
+                      <Text style={styles.planInterval}>
+                        {plan.period === 'yearly'
+                          ? t('subscription.yearlyBilling', 'Yıllık ödeme')
+                          : plan.period === 'lifetime'
+                            ? t('subscription.oneTimeBilling', 'Tek seferlik ödeme')
+                            : t('subscription.monthlyBilling', 'Aylık ödeme')}
+                      </Text>
                     </View>
                     <View style={styles.planPriceArea}>
-                      <Text style={styles.planPrice}>{formatCurrencyMinor(plan.price_minor, plan.currency)}</Text>
-                      <Text style={styles.planPriceLabel}>{t('subscription.perMonth', '/ay')}</Text>
+                      <Text style={styles.planPrice}>{Platform.OS === 'web' || plan.price_minor <= 0
+                        ? formatCurrencyMinor(plan.price_minor, plan.currency)
+                        : store.prices[getIapProductId(plan)] || t(store.loading ? 'subscription.storePriceLoading' : 'subscription.storePriceUnavailable')}</Text>
+                      {plan.period !== 'lifetime' && <Text style={styles.planPriceLabel}>
+                        {plan.period === 'yearly' ? t('subscription.perYear', '/yıl') : t('subscription.perMonth', '/ay')}
+                      </Text>}
                     </View>
                   </View>
                   
-                  <Text style={styles.planDesc}>{plan.description_tr}</Text>
+                  <Text style={styles.planDesc}>{i18n.language.startsWith('tr') ? plan.description_tr : plan.description_en || plan.description_tr}</Text>
 
                   <Pressable
                     style={[styles.planBtn, isCurrent && styles.planBtnCurrent, actionId === plan.id && styles.btnDisabled]}
                     onPress={() => startPlan(plan)}
-                    disabled={isCurrent || actionId === plan.id}
+                    disabled={isCurrent || actionId === plan.id || (Platform.OS !== 'web' && plan.price_minor > 0 && !store.prices[getIapProductId(plan)])}
                   >
                     {actionId === plan.id ? (
                       <ActivityIndicator size="small" color={colors.ink} />
@@ -629,8 +645,17 @@ export default function SubscriptionScreen() {
           <View style={styles.infoBox}>
             <AlertCircle size={14} color={colors.textMuted} />
             <Text style={styles.infoBoxText}>
-              {t('subscription.autoRenewInfo', 'Abonelikler otomatik olarak yenilenir. İstediğiniz zaman iptal edebilirsiniz.')}
+              {Platform.OS === 'web' ? t('subscription.autoRenewInfo') : t('subscription.renewalDisclosure')}
             </Text>
+          </View>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24, paddingVertical: 8 }}>
+            <Pressable onPress={() => router.push({ pathname: '/cms/[moduleKey]', params: { moduleKey: 'terms', locale: i18n.language.slice(0, 2), title: t('subscription.termsLink') } })}>
+              <Text style={styles.secondaryBtnText}>{t('subscription.termsLink')}</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push({ pathname: '/cms/[moduleKey]', params: { moduleKey: 'privacy', locale: i18n.language.slice(0, 2), title: t('subscription.privacyLink') } })}>
+              <Text style={styles.secondaryBtnText}>{t('subscription.privacyLink')}</Text>
+            </Pressable>
           </View>
 
           {Platform.OS !== 'web' ? (

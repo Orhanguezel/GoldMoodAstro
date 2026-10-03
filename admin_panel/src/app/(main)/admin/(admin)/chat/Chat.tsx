@@ -7,7 +7,7 @@
 'use client';
 
 import * as React from 'react';
-import { Bot, BookOpenText, History, Settings2 } from 'lucide-react';
+import { Bot, BookOpenText, History, Settings2, ShieldAlert } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
@@ -15,6 +15,7 @@ import { useAdminT } from '@/app/(main)/admin/_components/common/useAdminT';
 import ChatThreadsPanel from './components/ChatThreadsPanel';
 import ChatKnowledgePanel from './components/ChatKnowledgePanel';
 import ChatSettingsPanel from './components/ChatSettingsPanel';
+import ChatReportsPanel from './components/ChatReportsPanel';
 
 export default function ChatAdminPage() {
   const t = useAdminT('admin.chat');
@@ -39,6 +40,7 @@ export default function ChatAdminPage() {
       <Tabs defaultValue="threads" className="w-full space-y-5">
         <TabsList className="h-auto w-full justify-start gap-2 rounded-2xl border border-gm-border-soft bg-gm-surface/30 p-2 md:w-fit">
           <TabsTrigger value="threads" className="gap-2 rounded-xl px-5 py-2.5"><History className="size-4" />{t('tabs.threads')}</TabsTrigger>
+          <TabsTrigger value="reports" className="gap-2 rounded-xl px-5 py-2.5"><ShieldAlert className="size-4" />Mesaj bildirimleri</TabsTrigger>
           <TabsTrigger value="knowledge" className="gap-2 rounded-xl px-5 py-2.5"><BookOpenText className="size-4" />AI Eğitimi</TabsTrigger>
           <TabsTrigger value="settings" className="gap-2 rounded-xl px-5 py-2.5"><Settings2 className="size-4" />{t('tabs.settings')}</TabsTrigger>
         </TabsList>
@@ -46,6 +48,7 @@ export default function ChatAdminPage() {
         <TabsContent value="threads" className="space-y-4">
           <ChatThreadsPanel />
         </TabsContent>
+        <TabsContent value="reports" className="space-y-4"><ChatReportsPanel /></TabsContent>
 
         <TabsContent value="knowledge" className="space-y-4">
           <ChatKnowledgePanel />

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import ClientAstroPanel from './ClientAstroPanel';
+import { MediaMessageSafety } from '@/components/common/MediaSafetyControls';
 import { Mic, Save, Square, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -201,6 +202,8 @@ export default function MediaMessagesPanel({ locale, consultantId }: Props) {
               ) : (
                 <audio src={questionFileUrl} controls crossOrigin="use-credentials" className="w-full" />
               )}
+
+              <MediaMessageSafety messageId={message.id} reportMessageId={message.id} locale={locale} />
 
               {message.status === 'sent' && (
                 <div className="grid gap-3 md:grid-cols-[1fr_auto]">

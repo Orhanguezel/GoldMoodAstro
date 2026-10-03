@@ -1,13 +1,14 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '../../db/client';
 import { consultants } from '../consultants/schema';
-import { consumeCredits } from '../credits/consume';
 import { getPlatformCommissionPercent } from '../bookings/admin.controller';
 import { createUserNotification } from '../notifications/service';
 import { dispatchPushToUser } from '../notifications/push';
 import { notifyText } from '../_shared/notify-i18n';
+import { assertMediaSendAllowed } from './safety';
+import { mediaPriceToCredits, sameMediaPrice } from './pricing';
 
 export type MediaKind = 'audio' | 'video';
 
@@ -39,17 +40,21 @@ export async function getPublicMediaSettings(consultantId: string) {
       COALESCE(s.reply_sla_hours, 72) AS reply_sla_hours
     FROM consultants c
     LEFT JOIN consultant_media_settings s ON s.consultant_id = c.id
-    WHERE c.id = ${consultantId} OR c.slug = ${consultantId}
+    WHERE c.approval_status = 'approved' AND (c.id = ${consultantId} OR c.slug = ${consultantId})
     LIMIT 1
   `);
   const row = rowsOf<any>(result)[0];
   if (!row) return null;
+  const audioPrice = Number(row.audio_price ?? 0);
+  const videoPrice = Number(row.video_price ?? 0);
   return {
     consultant_id: row.consultant_id,
     audio_enabled: Boolean(row.audio_enabled),
-    audio_price: Number(row.audio_price ?? 0),
+    audio_price: audioPrice,
+    audio_credits: Boolean(row.audio_enabled) && audioPrice > 0 ? mediaPriceToCredits(audioPrice) : 0,
     video_enabled: Boolean(row.video_enabled),
-    video_price: Number(row.video_price ?? 0),
+    video_price: videoPrice,
+    video_credits: Boolean(row.video_enabled) && videoPrice > 0 ? mediaPriceToCredits(videoPrice) : 0,
     reply_sla_hours: Number(row.reply_sla_hours ?? 72),
     currency: 'TRY',
   };
@@ -96,16 +101,15 @@ async function getCommissionPercent(): Promise<number> {
   return getPlatformCommissionPercent(new Date());
 }
 
-async function createWalletEarning(consultantId: string, consultantUserId: string, mediaMessageId: string, gross: number) {
-  const existing = await db.execute(sql`
+async function createWalletEarning(executor: { execute: (statement: SQL) => Promise<unknown> }, consultantId: string, consultantUserId: string, mediaMessageId: string, gross: number, commissionPercent: number) {
+  const existing = await executor.execute(sql`
     SELECT id FROM wallet_transactions WHERE transaction_ref = ${`media_message:${mediaMessageId}`} LIMIT 1
   `);
   if (rowsOf(existing).length > 0) return;
 
-  const commissionPercent = await getCommissionPercent();
   const commissionAmount = gross * (commissionPercent / 100);
   const net = Math.max(gross - commissionAmount, 0);
-  const walletRows = await db.execute(sql`
+  const walletRows = await executor.execute(sql`
     SELECT id, consultant_id FROM wallets
     WHERE consultant_id = ${consultantId} OR user_id = ${consultantUserId}
     ORDER BY CASE WHEN consultant_id = ${consultantId} THEN 0 ELSE 1 END, created_at ASC
@@ -114,13 +118,13 @@ async function createWalletEarning(consultantId: string, consultantUserId: strin
   let wallet = rowsOf<any>(walletRows)[0];
   if (!wallet) {
     const walletId = randomUUID();
-    await db.execute(sql`
+    await executor.execute(sql`
       INSERT INTO wallets (id, user_id, consultant_id, balance, pending_balance, total_earnings, total_withdrawn, currency, status)
       VALUES (${walletId}, ${consultantUserId}, ${consultantId}, 0.00, 0.00, 0.00, 0.00, 'TRY', 'active')
     `);
     wallet = { id: walletId };
   } else if (!wallet.consultant_id) {
-    await db.execute(sql`UPDATE wallets SET consultant_id = ${consultantId}, updated_at = NOW(3) WHERE id = ${wallet.id}`);
+    await executor.execute(sql`UPDATE wallets SET consultant_id = ${consultantId}, updated_at = NOW(3) WHERE id = ${wallet.id}`);
   }
 
   const description = JSON.stringify({
@@ -129,7 +133,7 @@ async function createWalletEarning(consultantId: string, consultantUserId: strin
     commission_amount: Number(commissionAmount.toFixed(2)),
     net: Number(net.toFixed(2)),
   });
-  const insertResult = await db.execute(sql`
+  const insertResult = await executor.execute(sql`
     INSERT IGNORE INTO wallet_transactions (
       id, wallet_id, user_id, booking_id, type, amount, currency, purpose,
       description, payment_method, payment_status, transaction_ref, is_admin_created
@@ -140,8 +144,8 @@ async function createWalletEarning(consultantId: string, consultantUserId: strin
       ${description}, 'admin_manual', 'pending', ${`media_message:${mediaMessageId}`}, 0
     )
   `);
-  if (affectedRows(insertResult) < 1) return;
-  await db.execute(sql`
+  if (affectedRows(insertResult) < 1) throw new Error('media_wallet_transaction_not_created');
+  await executor.execute(sql`
     UPDATE wallets
     SET pending_balance = pending_balance + ${net.toFixed(2)},
         total_earnings = total_earnings + ${net.toFixed(2)},
@@ -153,6 +157,7 @@ async function createWalletEarning(consultantId: string, consultantUserId: strin
 export async function createQuestion(userId: string, input: {
   consultant_id: string;
   kind: MediaKind;
+  expected_price: number;
   storage_path: string;
   duration_seconds?: number;
   note?: string | null;
@@ -160,56 +165,84 @@ export async function createQuestion(userId: string, input: {
   const settings = await getPublicMediaSettings(input.consultant_id);
   if (!settings) return { status: 'not_found' as const };
 
+  await assertMediaSendAllowed(settings.consultant_id, userId, userId, input.note);
+
   const enabled = input.kind === 'audio' ? settings.audio_enabled : settings.video_enabled;
   const price = input.kind === 'audio' ? settings.audio_price : settings.video_price;
-  if (!enabled) return { status: 'disabled' as const };
+  if (!enabled || !Number.isFinite(price) || price <= 0) return { status: 'disabled' as const };
+  if (!sameMediaPrice(input.expected_price, price)) return { status: 'price_changed' as const };
 
   const id = randomUUID();
-  const credits = Math.ceil(price);
-  const consume = await consumeCredits({
-    userId,
-    amount: credits,
-    referenceType: 'media_message',
-    referenceId: id,
-    description: `Media message ${input.kind}`,
+  const credits = mediaPriceToCredits(price);
+  const charge = await db.transaction(async (tx) => {
+    await tx.execute(sql`
+      INSERT INTO user_credits (id, user_id, balance, currency, created_at, updated_at)
+      VALUES (${randomUUID()}, ${userId}, 0, 'TRY-CREDIT', NOW(3), NOW(3))
+      ON DUPLICATE KEY UPDATE updated_at = updated_at
+    `);
+    const deducted = await tx.execute(sql`
+      UPDATE user_credits SET balance = balance - ${credits}, updated_at = NOW(3)
+      WHERE user_id = ${userId} AND balance >= ${credits}
+    `);
+    const walletResult = await tx.execute(sql`SELECT balance FROM user_credits WHERE user_id = ${userId} LIMIT 1`);
+    const balanceAfter = Number(rowsOf<{ balance: number }>(walletResult)[0]?.balance ?? 0);
+    if (affectedRows(deducted) < 1) {
+      return { status: 'insufficient' as const, consume: { status: 'insufficient' as const, required: credits, available: balanceAfter } };
+    }
+    await tx.execute(sql`
+      INSERT INTO credit_transactions
+        (id, user_id, type, amount, balance_after, reference_type, reference_id, description, created_at)
+      VALUES (${randomUUID()}, ${userId}, 'consumption', ${-credits}, ${balanceAfter},
+        'media_message', ${id}, ${`Media message ${input.kind}`}, NOW(3))
+    `);
+    await tx.execute(sql`
+      INSERT INTO media_messages (
+        id, user_id, consultant_id, kind, direction, storage_bucket, storage_path,
+        duration_seconds, note, price, currency, charge_ref, status, reply_due_at, created_at, updated_at
+      ) VALUES (
+        ${id}, ${userId}, ${settings.consultant_id}, ${input.kind}, 'question', 'media_messages', ${input.storage_path},
+        ${input.duration_seconds ?? null}, ${input.note ?? null}, ${price.toFixed(2)}, 'TRY',
+        ${`media_message:${id}`}, 'sent', DATE_ADD(NOW(3), INTERVAL ${settings.reply_sla_hours} HOUR), NOW(3), NOW(3)
+      )
+    `);
+    const [saved] = rowsOf<any>(await tx.execute(sql`
+      SELECT mm.*, c.user_id AS consultant_user_id
+      FROM media_messages mm INNER JOIN consultants c ON c.id = mm.consultant_id
+      WHERE mm.id = ${id} LIMIT 1
+    `));
+    if (!saved) throw new Error('media_message_create_failed');
+    return { status: 'created' as const, data: normalizeMediaMessage(saved) };
   });
-  if (consume.status === 'insufficient') return { status: 'insufficient' as const, consume };
+  if (charge.status === 'insufficient') return charge;
 
-  await db.execute(sql`
-    INSERT INTO media_messages (
-      id, user_id, consultant_id, kind, direction, storage_bucket, storage_path,
-      duration_seconds, note, price, currency, charge_ref, status, reply_due_at, created_at, updated_at
-    ) VALUES (
-      ${id}, ${userId}, ${settings.consultant_id}, ${input.kind}, 'question', 'media_messages', ${input.storage_path},
-      ${input.duration_seconds ?? null}, ${input.note ?? null}, ${price.toFixed(2)}, 'TRY',
-      ${`media_message:${id}`}, 'sent', DATE_ADD(NOW(3), INTERVAL ${settings.reply_sla_hours} HOUR), NOW(3), NOW(3)
-    )
-  `);
-
-  const cRows = await db.execute(sql`
-    SELECT u.id AS consultant_user_id, u.full_name
-    FROM consultants c INNER JOIN users u ON u.id = c.user_id
-    WHERE c.id = ${settings.consultant_id}
-    LIMIT 1
-  `);
-  const consultant = rowsOf<any>(cRows)[0];
-  if (consultant?.consultant_user_id) {
-    const text = notifyText('tr', 'media_message_received');
-    await createUserNotification({
-      userId: consultant.consultant_user_id,
-      type: 'media_message_received',
-      title: text.title,
-      message: text.message,
-    });
-    await dispatchPushToUser({
-      userId: consultant.consultant_user_id,
-      title: text.title,
-      body: text.message,
-      data: { type: 'media_message_received', media_message_id: id },
-    });
+  try {
+    const cRows = await db.execute(sql`
+      SELECT u.id AS consultant_user_id, u.full_name
+      FROM consultants c INNER JOIN users u ON u.id = c.user_id
+      WHERE c.id = ${settings.consultant_id}
+      LIMIT 1
+    `);
+    const consultant = rowsOf<any>(cRows)[0];
+    if (consultant?.consultant_user_id) {
+      const text = notifyText('tr', 'media_message_received');
+      await createUserNotification({
+        userId: consultant.consultant_user_id,
+        type: 'media_message_received',
+        title: text.title,
+        message: text.message,
+      });
+      await dispatchPushToUser({
+        userId: consultant.consultant_user_id,
+        title: text.title,
+        body: text.message,
+        data: { type: 'media_message_received', media_message_id: id },
+      });
+    }
+  } catch (error) {
+    console.error('media_message_notification_failed', { message_id: id, error });
   }
 
-  return { status: 'created' as const, data: await getMediaMessageForUser(id, userId) };
+  return { status: 'created' as const, data: charge.data };
 }
 
 export async function listCustomerMessages(userId: string) {
@@ -320,38 +353,62 @@ export async function createReply(consultantId: string, consultantUserId: string
   const parent = rowsOf<any>(parentRows)[0];
   if (!parent) return { status: 'not_found' as const };
   if (parent.status !== 'sent') return { status: 'not_answerable' as const };
+  await assertMediaSendAllowed(consultantId, parent.user_id, consultantUserId, input.note);
 
   const replyId = randomUUID();
-  await db.execute(sql`
-    INSERT INTO media_messages (
-      id, user_id, consultant_id, parent_id, kind, direction, storage_bucket, storage_path,
-      duration_seconds, note, price, currency, status, created_at, updated_at
-    ) VALUES (
-      ${replyId}, ${parent.user_id}, ${consultantId}, ${parent.id}, ${input.kind}, 'reply',
-      'media_messages', ${input.storage_path}, ${input.duration_seconds ?? null}, ${input.note ?? null},
-      0.00, 'TRY', 'answered', NOW(3), NOW(3)
-    )
-  `);
-  await db.execute(sql`
-    UPDATE media_messages
-    SET status = 'answered', answered_at = NOW(3), updated_at = NOW(3)
-    WHERE id = ${parent.id}
-  `);
-  await createWalletEarning(consultantId, consultantUserId, parent.id, Number(parent.price ?? 0));
-
-  const text = notifyText('tr', 'media_message_replied');
-  await createUserNotification({
-    userId: parent.user_id,
-    type: 'media_message_replied',
-    title: text.title,
-    message: text.message,
+  const commissionPercent = await getCommissionPercent();
+  const saved = await db.transaction(async (tx) => {
+    const locked = rowsOf<any>(await tx.execute(sql`
+      SELECT id, status, reply_due_at FROM media_messages
+      WHERE id = ${parent.id} AND consultant_id = ${consultantId} AND direction = 'question'
+        AND (reply_due_at IS NULL OR reply_due_at >= NOW(3))
+      FOR UPDATE
+    `))[0];
+    if (!locked || locked.status !== 'sent') {
+      return false;
+    }
+    await tx.execute(sql`
+      INSERT INTO media_messages (
+        id, user_id, consultant_id, parent_id, kind, direction, storage_bucket, storage_path,
+        duration_seconds, note, price, currency, status, created_at, updated_at
+      ) VALUES (
+        ${replyId}, ${parent.user_id}, ${consultantId}, ${parent.id}, ${input.kind}, 'reply',
+        'media_messages', ${input.storage_path}, ${input.duration_seconds ?? null}, ${input.note ?? null},
+        0.00, 'TRY', 'answered', NOW(3), NOW(3)
+      )
+    `);
+    await tx.execute(sql`
+      UPDATE media_messages SET status = 'answered', answered_at = NOW(3), updated_at = NOW(3)
+      WHERE id = ${parent.id} AND status = 'sent'
+    `);
+    await createWalletEarning(tx, consultantId, consultantUserId, parent.id, Number(parent.price ?? 0), commissionPercent);
+    const [reply] = rowsOf<any>(await tx.execute(sql`
+      SELECT mm.*, c.user_id AS consultant_user_id
+      FROM media_messages mm INNER JOIN consultants c ON c.id = mm.consultant_id
+      WHERE mm.id = ${replyId} LIMIT 1
+    `));
+    if (!reply) throw new Error('media_message_reply_create_failed');
+    return normalizeMediaMessage(reply);
   });
-  await dispatchPushToUser({
-    userId: parent.user_id,
-    title: text.title,
-    body: text.message,
-    data: { type: 'media_message_replied', media_message_id: parent.id },
-  });
+  if (!saved) return { status: 'not_answerable' as const };
 
-  return { status: 'created' as const, data: await getMediaMessageForUser(replyId, consultantUserId) };
+  try {
+    const text = notifyText('tr', 'media_message_replied');
+    await createUserNotification({
+      userId: parent.user_id,
+      type: 'media_message_replied',
+      title: text.title,
+      message: text.message,
+    });
+    await dispatchPushToUser({
+      userId: parent.user_id,
+      title: text.title,
+      body: text.message,
+      data: { type: 'media_message_replied', media_message_id: parent.id },
+    });
+  } catch (error) {
+    console.error('media_message_reply_notification_failed', { message_id: parent.id, error });
+  }
+
+  return { status: 'created' as const, data: saved };
 }

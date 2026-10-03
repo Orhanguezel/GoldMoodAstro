@@ -40,7 +40,7 @@ function buildStyles(t: AppTheme) {
     scroll: { padding: spacing.lg, paddingBottom: 48, gap: 14 },
     card: { backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: 16, gap: 12 },
     row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-    status: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, backgroundColor: 'rgba(201,169,97,0.12)' },
+    status: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, backgroundColor: colors.surfaceHigh },
     statusText: { fontFamily: font.sansBold, fontSize: 11, color: colors.gold },
     sectionTitle: { fontFamily: font.sansBold, fontSize: 15, color: colors.text },
     help: { fontFamily: font.sans, fontSize: 13, color: colors.textMuted, lineHeight: 20 },
@@ -135,11 +135,7 @@ export default function ConsultantKycScreen() {
   };
 
   const uploadDoc = async (type: ConsultantKycDocument['type']) => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert(t('avatar.permissionTitle', 'İzin gerekli'), t('avatar.permissionBody', 'Fotoğraf seçmek için izin vermelisiniz.'));
-      return;
-    }
+    // launchImageLibraryAsync uses the system picker and needs no broad photo access.
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false,
@@ -153,7 +149,7 @@ export default function ConsultantKycScreen() {
       await consultantSelfApi.uploadKycDocument({
         type,
         uri: asset.uri,
-        name: asset.fileName ?? `${type}-${Date.now()}.jpg`,
+        name: asset.fileName ?? asset.uri.split('/').pop() ?? `${type}.jpg`,
         mime: asset.mimeType ?? 'image/jpeg',
       });
       await load();

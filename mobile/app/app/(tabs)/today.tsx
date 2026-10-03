@@ -103,7 +103,7 @@ const { width } = Dimensions.get('window');
 export default function TodayScreen() {
   const theme = useAppTheme();
   const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [charts, setCharts] = useState<BirthChart[]>([]);
@@ -139,8 +139,8 @@ export default function TodayScreen() {
   );
 
   const mainChart = charts[0];
-  const sunSign = mainChart?.chart_data?.planets?.sun?.sign_label || t('zodiacSign.leo.name');
-  const moonSign = mainChart?.chart_data?.planets?.moon?.sign_label || t('zodiacSign.taurus.name');
+  const sunSign = mainChart?.chart_data?.planets?.sun?.sign_label;
+  const moonSign = mainChart?.chart_data?.planets?.moon?.sign_label;
   const sunSignKey = (mainChart?.chart_data?.planets?.sun?.sign ?? 'aries') as ZodiacSignKey;
 
   const QUICK_ACTIONS = [
@@ -195,21 +195,21 @@ export default function TodayScreen() {
             <MenuHeaderButton />
             <View style={styles.headerMain}>
               <Text style={styles.dateText}>
-                {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                {new Date().toLocaleDateString(i18n.language || 'tr', { day: 'numeric', month: 'long', year: 'numeric' })}
               </Text>
-              <Text style={styles.greetingText}>Günaydın, {mainChart?.name?.split(' ')[0] || 'Gezgin'}</Text>
+              <Text style={styles.greetingText}>{t('todayScreen.greeting', { name: mainChart?.name?.split(' ')[0] || t('todayScreen.guestName') })}</Text>
             </View>
-            <View style={styles.sunBadge}>
+            {sunSign ? <View style={styles.sunBadge}>
               <Sun size={14} color={colors.gold} />
               <Text style={styles.sunBadgeText}>{sunSign}</Text>
-            </View>
+            </View> : null}
           </View>
 
           <View style={styles.section}>
             <LinearGradient colors={[colors.surfaceHigh, colors.surface]} style={styles.readingCard}>
               <View style={styles.cardHeader}>
                 <Sparkles size={18} color={colors.gold} />
-                <Text style={styles.cardKicker}>BUGÜNÜN REHBERİ</Text>
+                <Text style={styles.cardKicker}>{t('todayScreen.guideTitle')}</Text>
               </View>
 
               {reading ? (
@@ -218,23 +218,22 @@ export default function TodayScreen() {
                 </Text>
               ) : (
                 <View style={styles.emptyReading}>
-                  <Text style={styles.emptyReadingText}>Haritanıza özel yorumunuz hazırlanıyor...</Text>
+                  <Text style={styles.emptyReadingText}>{t('todayScreen.readingUnavailable')}</Text>
                 </View>
               )}
 
               <Pressable style={styles.readMoreBtn} onPress={() => router.push('/(tabs)/daily' as any)}>
-                <Text style={styles.readMoreText}>Devamını Oku</Text>
+                <Text style={styles.readMoreText}>{t('todayScreen.readMore')}</Text>
                 <ArrowRight size={14} color={colors.gold} />
               </Pressable>
 
-              <View style={styles.cardDivider} />
-
+              {moonSign ? <><View style={styles.cardDivider} />
               <View style={styles.cardFooter}>
                 <View style={styles.moonRow}>
                   <Moon size={12} color={colors.goldDim} />
-                  <Text style={styles.moonText}>Ay {moonSign} burcunda ilerliyor</Text>
+                  <Text style={styles.moonText}>{t('todayScreen.natalMoon', { sign: moonSign })}</Text>
                 </View>
-              </View>
+              </View></> : null}
             </LinearGradient>
           </View>
 
@@ -247,7 +246,7 @@ export default function TodayScreen() {
           <PromoBannerSection placement="mobile_home" />
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>KEŞFET</Text>
+            <Text style={styles.sectionTitle}>{t('todayScreen.discover')}</Text>
             <View style={styles.grid}>
               {QUICK_ACTIONS.map(action => (
                 <Pressable 
@@ -261,30 +260,6 @@ export default function TodayScreen() {
                   <Text style={styles.gridLabel}>{action.label}</Text>
                 </Pressable>
               ))}
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>GÖKYÜZÜ HAREKETLERİ</Text>
-            <View style={styles.transitList}>
-              <View style={styles.transitItem}>
-                <View style={styles.transitIconWrap}>
-                  <Star size={16} color={colors.gold} />
-                </View>
-                <View style={styles.transitBody}>
-                  <Text style={styles.transitTitle}>Merkür Gerilemesi</Text>
-                  <Text style={styles.transitDesc}>İletişimde aksaklıklara ve geçmişten gelen haberlere dikkat.</Text>
-                </View>
-              </View>
-              <View style={styles.transitItem}>
-                <View style={styles.transitIconWrap}>
-                  <Star size={16} color={colors.goldDim} />
-                </View>
-                <View style={styles.transitBody}>
-                  <Text style={styles.transitTitle}>Güneş - Jüpiter Üçgeni</Text>
-                  <Text style={styles.transitDesc}>Şans ve bolluk kapılarını aralayan güçlü bir enerji hakim.</Text>
-                </View>
-              </View>
             </View>
           </View>
 
@@ -315,4 +290,3 @@ export default function TodayScreen() {
     </View>
   );
 }
-

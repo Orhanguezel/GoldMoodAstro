@@ -56,12 +56,20 @@ export default function CmsModuleScreen() {
 
   useEffect(() => {
     if (!moduleKey) return;
-    setLoading(true);
-    customPagesApi
-      .list({ module_key: moduleKey, locale, limit: 5, orderDir: 'asc' })
-      .then((rows) => setPage(pickPublishedPages(rows)[0] ?? null))
-      .catch(() => setPage(null))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    void Promise.resolve().then(async () => {
+      if (cancelled) return;
+      setLoading(true);
+      try {
+        const rows = await customPagesApi.list({ module_key: moduleKey, locale, limit: 5, orderDir: 'asc' });
+        if (!cancelled) setPage(pickPublishedPages(rows)[0] ?? null);
+      } catch {
+        if (!cancelled) setPage(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
   }, [moduleKey, locale]);
 
   const html = extractHtmlFromPage(page);

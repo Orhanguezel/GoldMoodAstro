@@ -12,7 +12,7 @@ Mobil uygulama GoldMoodAstro'nun premium kanalidir. Hedef, kullanıcının mobil
 2. Auth veya hesap oluşturma
 3. Danışman keşfi
 4. Slot seçimi ve booking
-5. Iyzipay ödeme WebView
+5. Stripe Checkout ödeme WebView
 6. LiveKit sesli görüşme
 7. Seans değerlendirme
 
@@ -40,7 +40,7 @@ Başarı ölçütü yalnızca "akış çalışıyor" değildir. Uygulama, App St
 - Login/Register + Apple Sign In
 - Consultant list + detail + slots
 - Booking oluşturma
-- Iyzipay ödeme ekranı
+- Stripe Checkout ödeme ekranı
 - LiveKit sesli görüşme
 - Booking history + status görüntüleme
 - Rating/review gönderme
@@ -82,14 +82,12 @@ Exit criteria:
 
 ### P2 - Paywall and Subscription Production Plan
 
-- `src/lib/iap.ts` stub durumundan çıkış planı:
-  - Tercih A: RevenueCat
-  - Tercih B: `react-native-iap` + backend receipt validation
+- `src/lib/iap.ts` içindeki `expo-iap` mağaza satın alma ve backend doğrulama akışı
 - iOS anti-steering kurallarına uyum
 - Ödeme kapsam ayrımı:
   - Dijital içerik, premium abonelik ve kredi paketleri iOS'ta Apple IAP, Android'de Play Billing/RevenueCat üzerinden satılır.
-  - Canlı birebir danışmanlık seansı gerçek zamanlı kişisel hizmettir; Iyzipay WebView bu akışta kalabilir.
-  - Kredi paketleri dijital tüketilebilir ürün sayıldığı için iOS/Android store build'lerinde Iyzipay ile satılmaz; IAP consumable entegrasyonu tamamlanana kadar gizlenir veya pasif gösterilir.
+  - Canlı birebir danışmanlık seansı Stripe Checkout WebView kullanır.
+  - Kredi paketleri mağaza sürümlerinde IAP consumable akışını kullanır.
 - `usePremium` ve `/auth/me` subscription özetiyle tutarlı entitlement
 
 Exit criteria:

@@ -35,7 +35,7 @@ Minimum feature parity hedefi:
 
 1. Auth ve session yonetimi
 2. Danisman kesfetme + detay + slot secimi
-3. Booking + Iyzipay odeme WebView
+3. Booking + Stripe Checkout odeme WebView
 4. Agora sesli gorusme
 5. Push bildirim ve booking reminder
 

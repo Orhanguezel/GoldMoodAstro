@@ -114,7 +114,6 @@ import { router } from 'expo-router';
 
 
 import { useTranslation } from 'react-i18next';
-import { shareBrand, webShareUrl } from '@/lib/webShare';
 
 import { tarotApi, getAssetUrl } from '@/lib/api';
 import { MenuHeaderButton } from '@/components/MenuHeaderButton';
@@ -146,8 +145,8 @@ export default function TarotScreen() {
     const cards = result.cards?.map((c: any) => c.name).join(', ');
     try {
       await Share.share({
-        message: `${t('share.tarotMessage', { spread: t(selectedSpread.titleKey), cards, brand: shareBrand() })}\n\n${t('share.cta', { url: webShareUrl(`/tarot/reading/${result.id}`, 'tarot') })}`,
-        title: t('tarot.shareTitle', { brand: shareBrand() }),
+        message: `Tarot Açılımım: ${t(selectedSpread.titleKey)} ✨\n\nKartlarım: ${cards}\n\nGoldMoodAstro ile kartların rehberliğini keşfedin!\n\nKeşfet: https://goldmoodastro.com/tr/tarot/reading/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=tarot`,
+        title: t('tarot.shareTitle'),
       });
     } catch (e) {
       logger.error(e);
@@ -266,7 +265,7 @@ export default function TarotScreen() {
                     onPress={handlePickCard}
                     disabled={loading}
                    >
-                     <Image source={require('../../assets/tarot/back.png')} style={styles.cardBackImg} resizeMode="cover" />
+                     <Image source={require('../../assets/tarot/back.jpg')} style={styles.cardBackImg} resizeMode="cover" />
                    </Pressable>
                  ))}
                </View>
@@ -308,7 +307,7 @@ export default function TarotScreen() {
                 <Text style={styles.positionText}>{card.position_name}</Text>
                 <View style={[styles.cardFrame, card.is_reversed && { transform: [{ rotate: '180deg' }] }]}>
                   <Image 
-                    source={card.image_url ? { uri: getAssetUrl(card.image_url) } : require('../../assets/tarot/back.png')} 
+                    source={card.image_url ? { uri: getAssetUrl(card.image_url) } : require('../../assets/tarot/back.jpg')}
                     style={styles.resultCardImg} 
                   />
                   <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.cardOverlay}>
@@ -359,4 +358,3 @@ export default function TarotScreen() {
     </View>
   );
 }
-

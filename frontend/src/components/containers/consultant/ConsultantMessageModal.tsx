@@ -5,10 +5,13 @@ import { X, Send, Loader2, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/features/auth/auth.store';
 import ChatWarningBanner from '@/components/common/ChatWarningBanner';
+import { ChatSafetyControls, useWebChatSafety } from '@/components/common/ChatSafetyControls';
 import { getPublicApiBase } from '@/i18n/publicMetaApi';
 import { useUiSection } from '@/i18n';
+import { tokenStore } from '@/integrations/rtk/token';
 
 const API_BASE = getPublicApiBase() || '/api';
+const chatHeaders = () => ({ 'Content-Type': 'application/json', ...(tokenStore.get() ? { Authorization: `Bearer ${tokenStore.get()}` } : {}) });
 
 interface Props {
   open: boolean;
@@ -23,6 +26,8 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
   const { isAuthenticated } = useAuthStore();
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const safety = useWebChatSafety(threadId, locale);
 
   if (!open) return null;
 
@@ -42,17 +47,22 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
       const tRes = await fetch(`${API_BASE}/chat/threads`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: chatHeaders(),
         body: JSON.stringify({ context_type: 'consultant_lead', context_id: consultantId }),
       });
       if (!tRes.ok) throw new Error('thread_failed');
       const { thread } = await tRes.json();
+      setThreadId(thread.id);
+      const safetyResponse = await fetch(`${API_BASE}/chat/threads/${encodeURIComponent(thread.id)}/block`, { credentials: 'include', headers: chatHeaders() });
+      if (!safetyResponse.ok) throw new Error('chat_safety_failed');
+      const state = await safetyResponse.json() as { blocked_by_me: boolean; blocked_by_peer: boolean; terms_accepted: boolean };
+      if (state.blocked_by_me || state.blocked_by_peer || !state.terms_accepted) return;
 
       // 2) Send message (backend expects the `text` field)
       const mRes = await fetch(`${API_BASE}/chat/threads/${encodeURIComponent(thread.id)}/messages`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: chatHeaders(),
         body: JSON.stringify({ text: message.trim() }),
       });
       if (!mRes.ok) throw new Error('send_failed');
@@ -96,6 +106,7 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
         <div className="m-5 mb-0">
           <ChatWarningBanner locale={locale as any} />
         </div>
+        {threadId && <div className="mx-5 mt-3"><ChatSafetyControls safety={safety} locale={locale} /></div>}
 
         {/* Body */}
         <div className="p-5 space-y-3">
@@ -125,7 +136,7 @@ export default function ConsultantMessageModal({ open, onClose, consultantId, co
           </button>
           <button
             onClick={handleSend}
-            disabled={sending || !message.trim()}
+            disabled={sending || !message.trim() || safety.blocked || !safety.termsAccepted}
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 transition-all"
           >
             {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}

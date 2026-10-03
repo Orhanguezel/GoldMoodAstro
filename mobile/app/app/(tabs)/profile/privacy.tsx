@@ -1,8 +1,12 @@
 import React, { useMemo, useCallback, useState } from 'react';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 import {
   ActivityIndicator,
   Alert,
   Keyboard,
+  Linking,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -117,6 +121,18 @@ function buildScreenStyles(t: AppTheme) {
     color: colors.textDim,
     lineHeight: 20,
     marginBottom: 20,
+  },
+  subscriptionLink: {
+    minHeight: 44,
+    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  subscriptionLinkText: {
+    color: colors.gold,
+    fontFamily: font.sansBold,
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
   exportBtn: {
     backgroundColor: colors.gold,
@@ -318,27 +334,58 @@ export default function PrivacyScreen() {
       return;
     }
 
+    const submitDeletion = async (reauthorizeApple: boolean) => {
+      try {
+        setIsRequesting(true);
+        let apple: { identityToken: string; authorizationCode: string; nonce: string } | undefined;
+        if (reauthorizeApple) {
+          try {
+            if (await AppleAuthentication.isAvailableAsync()) {
+              const nonce = Crypto.randomUUID();
+              const credential = await AppleAuthentication.signInAsync({ nonce });
+              if (credential.identityToken && credential.authorizationCode) {
+                apple = {
+                  identityToken: credential.identityToken,
+                  authorizationCode: credential.authorizationCode,
+                  nonce,
+                };
+              }
+            }
+          } catch {
+            // Apple consent can be cancelled or unavailable; deletion still proceeds.
+          }
+        }
+        const { data } = await kvkkApi.requestDeletion(deletionReason, apple);
+        setStatus(data);
+        setDeletionReason('');
+        const appleNotice = reauthorizeApple && data.apple_revocation !== 'revoked'
+          ? `\n\n${t('privacy.appleRevocationManual')}`
+          : '';
+        Alert.alert(
+          t('privacy.requestReceivedTitle'),
+          `${t('privacy.requestReceivedBody')}${appleNotice}`,
+        );
+      } catch (err: any) {
+        Alert.alert(t('common.error'), err.message || t('privacy.requestError'));
+      } finally {
+        setIsRequesting(false);
+      }
+    };
+
     Alert.alert(
       t('privacy.deleteAccount', 'Hesabı Sil'),
       t('privacy.deleteConfirmBody', 'Hesabınızı 7 gün sonra kalıcı silmek üzere işleme alalım mı? Bu süre içinde vazgeçebilirsiniz.'),
       [
         { text: t('common.giveUp', 'Vazgeç'), style: 'cancel' },
+        ...(Platform.OS === 'ios' ? [{
+          text: t('privacy.deleteWithApple'),
+          style: 'destructive' as const,
+          onPress: () => { void submitDeletion(true); },
+        }] : []),
         {
-          text: t('privacy.startRequest', 'Talebi Başlat'),
+          text: Platform.OS === 'ios' ? t('privacy.deleteOtherLogin') : t('privacy.startRequest'),
           style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsRequesting(true);
-              const { data } = await kvkkApi.requestDeletion(deletionReason);
-              setStatus(data);
-              setDeletionReason('');
-              Alert.alert(t('privacy.requestReceivedTitle', 'Talep Alındı'), t('privacy.requestReceivedBody', 'Hesabınız 7 gün içinde kalıcı olarak silinecek.'));
-            } catch (err: any) {
-              Alert.alert(t('common.error', 'Bir hata oluştu'), err.message || t('privacy.requestError', 'Talep oluşturulamadı.'));
-            } finally {
-              setIsRequesting(false);
-            }
-          },
+          onPress: () => { void submitDeletion(false); },
         },
       ],
     );
@@ -449,8 +496,26 @@ export default function PrivacyScreen() {
             ) : (
               <>
                 <Text style={styles.sectionText}>
-                  {t('privacy.deleteWarning', 'Hesabınızı sildiğinizde tüm geçmişiniz, kredileriniz ve verileriniz kalıcı olarak yok edilir. Bu işlem geri alınamaz.')}
+                  {t('privacy.deleteWarning', 'Hesabınız ve bağlı uygulama verileriniz silinmek üzere işleme alınır. Yasal saklama yükümlülükleri Gizlilik Politikası’nda açıklanır.')}
                 </Text>
+                <Text style={styles.sectionText}>
+                  {t('privacy.subscriptionBillingWarning', 'Aktif mağaza aboneliğiniz varsa hesap silme talebi yenilemeyi durdurmaz. Devam etmeden önce aboneliğinizi mağazadan iptal edin.')}
+                </Text>
+                <Pressable
+                  style={styles.subscriptionLink}
+                  accessibilityRole="link"
+                  accessibilityLabel={t('privacy.manageStoreSubscription', 'Mağaza aboneliğini yönet')}
+                  onPress={() => {
+                    const url = Platform.OS === 'ios'
+                      ? 'https://apps.apple.com/account/subscriptions'
+                      : 'https://play.google.com/store/account/subscriptions';
+                    void Linking.openURL(url).catch((err) => logger.error('Subscription management link failed:', err));
+                  }}
+                >
+                  <Text style={styles.subscriptionLinkText}>
+                    {t('privacy.manageStoreSubscription', 'Mağaza aboneliğini yönet')}
+                  </Text>
+                </Pressable>
                 <TextInput
                   value={deletionReason}
                   onChangeText={setDeletionReason}
@@ -487,4 +552,3 @@ export default function PrivacyScreen() {
     </View>
   );
 }
-

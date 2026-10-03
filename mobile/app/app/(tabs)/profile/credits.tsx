@@ -20,7 +20,8 @@ import { useAppTheme, type AppTheme } from '@/theme';
 import { safeRouterBack } from '@/lib/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { creditsApi } from '@/lib/api';
-import { finishCreditPurchase, getIapProvider, purchaseCreditPackage } from '@/lib/iap';
+import { finishCreditPurchase, getCreditIapProductId, getIapProvider, purchaseCreditPackage } from '@/lib/iap';
+import { useStorePrices } from '@/hooks/useStorePrices';
 import type { CreditMe, CreditPackage, CreditTransaction } from '@/types';
 
 import { logger } from '@/lib/logger';
@@ -271,6 +272,8 @@ export default function CreditsScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const storeProductIds = useMemo(() => packages.map(getCreditIapProductId), [packages]);
+  const store = useStorePrices(storeProductIds, 'in-app');
 
   const load = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -422,11 +425,13 @@ export default function CreditsScreen() {
                         <Text style={styles.bonusText}>{t('credits.bonusBadge', { defaultValue: '+{{count}} BONUS', count: pkg.bonus_credits })}</Text>
                       </View>
                     )}
-                    <Text style={styles.pkgPrice}>{formatMoneyMinor(pkg.price_minor, pkg.currency)}</Text>
+                    <Text style={styles.pkgPrice}>{Platform.OS === 'web'
+                      ? formatMoneyMinor(pkg.price_minor, pkg.currency)
+                      : store.prices[getCreditIapProductId(pkg)] || t(store.loading ? 'credits.storePriceLoading' : 'credits.storePriceUnavailable')}</Text>
                     <Pressable
                       style={[styles.buyBtn, purchasingId === pkg.id && styles.btnDisabled]}
                       onPress={() => onPurchase(pkg)}
-                      disabled={purchasingId === pkg.id}
+                      disabled={purchasingId === pkg.id || (Platform.OS !== 'web' && !store.prices[getCreditIapProductId(pkg)])}
                     >
                       {purchasingId === pkg.id ? <ActivityIndicator size="small" color={colors.ink} /> : <Text style={styles.buyBtnText}>{t('credits.buyBtn', 'Satın Al')}</Text>}
                     </Pressable>

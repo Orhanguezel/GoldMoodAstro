@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -106,7 +106,6 @@ import { safeRouterBack } from '@/lib/navigation';
 
 
 import { useTranslation } from 'react-i18next';
-import { shareBrand, webShareUrl } from '@/lib/webShare';
 
 import { dreamsApi } from '@/lib/api';
 import ConsultantFunnelCTA from '@/components/ConsultantFunnelCTA';
@@ -131,28 +130,31 @@ export default function DreamsScreen() {
   const [result, setResult] = useState<any>(null);
   const [loadingPhase, setLoadingPhase] = useState(0);
 
-  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const [rotateAnim] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
+    let animation: Animated.CompositeAnimation | undefined;
     if (step === 'processing') {
       interval = setInterval(() => {
         setLoadingPhase((prev) => (prev + 1) % LOADING_PHASE_KEYS.length);
       }, 2500);
 
-      Animated.loop(
+      animation = Animated.loop(
         Animated.timing(rotateAnim, {
           toValue: 1,
           duration: 10000,
           easing: Easing.linear,
           useNativeDriver: true,
         })
-      ).start();
+      );
+      animation.start();
     }
     return () => {
       if (interval) clearInterval(interval);
+      animation?.stop();
     };
-  }, [step]);
+  }, [step, rotateAnim]);
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],
@@ -186,7 +188,7 @@ export default function DreamsScreen() {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `${t('share.dreamMessage', { excerpt: result?.interpretation?.substring(0, 200) ?? '', brand: shareBrand() })}\n\n${t('share.cta', { url: webShareUrl(`/ruya-tabiri/result/${result.id}`, 'dream') })}`,
+        message: `Rüya Yorumum ✨\n\n${result?.interpretation?.substring(0, 200)}... \n\nGoldMoodAstro ile rüyanı keşfet!\n\nKeşfet: https://goldmoodastro.com/tr/ruya-tabiri/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=dream`,
       });
     } catch (error) {
       logger.error(error);
@@ -381,4 +383,3 @@ export default function DreamsScreen() {
     </View>
   );
 }
-

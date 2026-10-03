@@ -56,13 +56,14 @@ export default function AvatarUpload({
 
   const pickImage = async (mode: 'camera' | 'gallery') => {
     try {
-      const permission = mode === 'camera' 
-        ? await ImagePicker.requestCameraPermissionsAsync() 
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (!permission.granted) {
-        Alert.alert(t('avatar.permissionTitle'), t('avatar.permissionBody'));
-        return;
+      // The system photo picker does not require broad library access. Ask only
+      // for camera access when the user chooses to take a new photo.
+      if (mode === 'camera') {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) {
+          Alert.alert(t('avatar.permissionTitle'), t('avatar.permissionBody'));
+          return;
+        }
       }
 
       const result = mode === 'camera'

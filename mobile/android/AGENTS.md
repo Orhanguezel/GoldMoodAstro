@@ -35,7 +35,7 @@ Minimum feature parity hedefi:
 
 1. Auth (login/register/session)
 2. Consultant listing + detail + slots
-3. Booking + payment (Iyzipay WebView)
+3. Booking + payment (Stripe Checkout WebView)
 4. Agora sesli gorusme
 5. Push bildirim + booking reminder
 

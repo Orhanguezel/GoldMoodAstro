@@ -73,7 +73,7 @@ function buildScreenStyles(t: AppTheme) {
     gap: 16,
   },
   notifUnread: {
-    backgroundColor: 'rgba(201, 169, 97, 0.05)',
+    backgroundColor: colors.gold + '0D',
   },
   notifIcon: {
     width: 40,
@@ -151,7 +151,7 @@ import { de, enUS, tr } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 
 
-import { notificationsApi } from '@/lib/api';
+import { notificationsApi, type AppNotification } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function NotificationsScreen() {
@@ -160,33 +160,43 @@ export default function NotificationsScreen() {
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language?.startsWith('de') ? de : i18n.language?.startsWith('en') ? enUS : tr;
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(false);
 
-  const fetchNotifications = async () => {
-    if (!isAuthenticated) return;
+  const fetchNotifications = useCallback(async () => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      setNotifications([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
+      setError(false);
       const res = await notificationsApi.list();
-      setNotifications(res?.items || []);
+      setNotifications(res.data);
     } catch (err) {
       logger.error('Failed to fetch notifications:', err);
+      setError(true);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
-    fetchNotifications();
-  }, [isAuthenticated]);
+    const task = setTimeout(() => { void fetchNotifications(); }, 0);
+    return () => clearTimeout(task);
+  }, [fetchNotifications]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchNotifications();
-  }, [isAuthenticated]);
+    void fetchNotifications();
+  }, [fetchNotifications]);
 
   const handleMarkAsRead = async (id: string) => {
     try {
@@ -194,6 +204,16 @@ export default function NotificationsScreen() {
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
     } catch (err) {
       logger.error('Mark as read error:', err);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationsApi.markAllAsRead();
+      setNotifications((previous) => previous.map((notification) => ({ ...notification, is_read: true })));
+    } catch (err) {
+      logger.error('Mark all as read error:', err);
+      setError(true);
     }
   };
 
@@ -207,7 +227,7 @@ export default function NotificationsScreen() {
     }
   };
 
-  if (loading && !refreshing) {
+  if (authLoading || (loading && !refreshing)) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator color={colors.gold} size="large" />
@@ -225,7 +245,7 @@ export default function NotificationsScreen() {
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('notifications.title', 'Bildirimler')}</Text>
-          <Pressable onPress={() => notificationsApi.markAllAsRead().then(fetchNotifications)} style={styles.markAllBtn}>
+          <Pressable onPress={handleMarkAllAsRead} style={styles.markAllBtn} disabled={!isAuthenticated || notifications.length === 0}>
             <Text style={styles.markAllText}>{t('notifications.markAllRead', 'Hepsini Oku')}</Text>
           </Pressable>
         </View>
@@ -237,34 +257,42 @@ export default function NotificationsScreen() {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />
           }
+          ListHeaderComponent={error ? (
+            <Pressable onPress={() => { setLoading(true); void fetchNotifications(); }} style={styles.emptyContainer} accessibilityRole="button">
+              <Text style={styles.emptyText}>{t('notifications.loadError')}</Text>
+              <Text style={styles.markAllText}>{t('common.retry')}</Text>
+            </Pressable>
+          ) : null}
           renderItem={({ item }) => (
             <Pressable 
               style={[styles.notifCard, !item.is_read && styles.notifUnread]}
               onPress={() => handleMarkAsRead(item.id)}
             >
               <View style={styles.notifIcon}>
-                {getIcon(item.type)}
+                {getIcon(item.type ?? '')}
               </View>
               <View style={styles.notifBody}>
                 <Text style={[styles.notifTitle, !item.is_read && styles.notifTitleUnread]}>
                   {item.title}
                 </Text>
-                <Text style={styles.notifText}>{item.body}</Text>
+                <Text style={styles.notifText}>{item.body ?? item.message}</Text>
                 <Text style={styles.notifTime}>
-                  {format(parseISO(item.created_at), 'd MMM, HH:mm', { locale: dateLocale })}
+                  {item.created_at ? format(parseISO(item.created_at), 'd MMM, HH:mm', { locale: dateLocale }) : ''}
                 </Text>
               </View>
               {!item.is_read && <View style={styles.unreadDot} />}
             </Pressable>
           )}
-          ListEmptyComponent={
+          ListEmptyComponent={!isAuthenticated ? (
+            <View style={styles.emptyContainer}><Text style={styles.emptyText}>{t('notifications.loginRequired')}</Text></View>
+          ) : error ? null : (
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconWrap}>
                 <Bell size={40} color={colors.inkDeep} />
               </View>
               <Text style={styles.emptyText}>{t('notifications.empty', 'Henüz bir bildiriminiz bulunmuyor.')}</Text>
             </View>
-          }
+          )}
         />
 
       </SafeAreaView>

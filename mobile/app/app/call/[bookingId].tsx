@@ -6,11 +6,36 @@ import {
   Text,
   View,
   StyleSheet,
-  Dimensions
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { VideoView } from '@livekit/react-native';
+import type { VideoTrack } from 'livekit-client';
+import {
+  Mic, MicOff, Video, VideoOff, PhoneOff, Volume2, VolumeX,
+  SwitchCamera, Clock, MessageCircle, RefreshCcw,
+} from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAppTheme, type AppTheme } from '@/theme';
-
 import { logger } from '@/lib/logger';
+import { bookingsApi, chatApi } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  connectLiveKitAudio,
+  endLiveKitSession,
+  fetchLiveKitToken,
+  setLiveKitCamera,
+  setLiveKitMicrophone,
+  setLiveKitSpeaker,
+  stopLiveKitAudioSession,
+  switchLiveKitCamera,
+  type LiveKitRoom,
+} from '@/lib/livekit';
+import type { Booking } from '@/types';
+
+const CAMERA_SOURCE = 'camera' as const;
+
 function buildScreenStyles(t: AppTheme) {
   const { colors, spacing, font, radius } = t;
   return StyleSheet.create({
@@ -66,44 +91,6 @@ function buildScreenStyles(t: AppTheme) {
   });
 }
 
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, router } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import { VideoView } from '@livekit/react-native';
-import type { VideoTrack } from 'livekit-client';
-
-const CAMERA_SOURCE = 'camera' as const;
-import { 
-  Mic, 
-  MicOff, 
-  Video, 
-  VideoOff, 
-  PhoneOff, 
-  Volume2, 
-  VolumeX, 
-  SwitchCamera,
-  Clock,
-  MessageCircle,
-  RefreshCcw,
-} from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-
-
-import { bookingsApi, chatApi } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
-import {
-  connectLiveKitAudio,
-  endLiveKitSession,
-  fetchLiveKitToken,
-  setLiveKitCamera,
-  setLiveKitMicrophone,
-  switchLiveKitCamera,
-  type LiveKitRoom,
-} from '@/lib/livekit';
-import type { Booking } from '@/types';
-
-const { width } = Dimensions.get('window');
-
 const formatDuration = (seconds: number) => {
   const min = Math.floor(seconds / 60);
   const sec = seconds % 60;
@@ -146,24 +133,45 @@ export default function CallScreen() {
 
   const refreshTrackState = (room: LiveKitRoom | null) => {
     if (!room) return;
-    const getVideoTrack = (p: any): VideoTrack | null =>
-      (p?.getTrackPublication?.(CAMERA_SOURCE)?.track ?? null) as VideoTrack | null;
+    const getVideoTrack = (participant: unknown): VideoTrack | null => {
+      const source = participant as {
+        getTrackPublication?: (source: typeof CAMERA_SOURCE) => { track?: unknown } | undefined;
+      } | null;
+      return (source?.getTrackPublication?.(CAMERA_SOURCE)?.track ?? null) as VideoTrack | null;
+    };
     setLocalVideoTrack(getVideoTrack(room.localParticipant));
     const remote = Array.from(room.remoteParticipants?.values?.() ?? [])[0];
     setRemoteVideoTrack(getVideoTrack(remote));
   };
 
   const cleanup = async () => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     if (roomRef.current) {
       try { roomRef.current.disconnect(); } catch {}
       roomRef.current = null;
     }
+    try { await stopLiveKitAudioSession(); } catch (error) { logger.error('Audio session cleanup failed:', error); }
   };
 
   useEffect(() => {
     if (!bookingId) return;
     let cancelled = false;
+    const stopTimer = () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+    const markConnected = () => {
+      if (cancelled) return;
+      setConnected(true);
+      if (!timerRef.current) {
+        timerRef.current = setInterval(() => setDurationSeconds(p => p + 1), 1000);
+      }
+    };
     const bootstrap = async () => {
       setLoading(true);
       setSetupError(null);
@@ -179,19 +187,28 @@ export default function CallScreen() {
         const room = await connectLiveKitAudio({
           token: tokenData.token,
           wsUrl: tokenData.ws_url,
-          onConnected: () => {
+          onConnected: markConnected,
+          onReconnecting: () => {
             if (cancelled) return;
-            setConnected(true);
-            timerRef.current = setInterval(() => setDurationSeconds(p => p + 1), 1000);
+            setConnected(false);
+            stopTimer();
           },
+          onReconnected: markConnected,
           onDisconnected: () => {
             if (cancelled) return;
             setConnected(false);
+            stopTimer();
           },
         });
 
-        if (cancelled) { room.disconnect(); return; }
+        if (cancelled) {
+          room.disconnect();
+          await stopLiveKitAudioSession();
+          return;
+        }
         roomRef.current = room;
+        const speakerSelected = await setLiveKitSpeaker(true);
+        setSpeakerOn(speakerSelected);
 
         const onTrackChanged = () => refreshTrackState(room);
         room.on?.('trackSubscribed', onTrackChanged);
@@ -206,6 +223,7 @@ export default function CallScreen() {
         }
         setLoading(false);
       } catch (err) {
+        await cleanup();
         logger.error('Call setup error:', err);
         const message = err instanceof Error ? err.message : String(err);
         if (!cancelled) {
@@ -215,16 +233,16 @@ export default function CallScreen() {
       }
     };
     bootstrap();
-    return () => { cancelled = true; cleanup(); };
+    return () => { cancelled = true; void cleanup(); };
   }, [bookingId, callAttempt]);
 
   const handleHangup = async () => {
     await cleanup();
     if (bookingId) {
       try { await endLiveKitSession(bookingId); } catch {}
-      router.replace({ pathname: '/call/rate' as any, params: { bookingId } });
+      router.replace({ pathname: '/call/rate', params: { bookingId } });
     } else {
-      router.replace('/(tabs)/bookings' as any);
+      router.replace('/(tabs)/bookings');
     }
   };
 
@@ -232,7 +250,7 @@ export default function CallScreen() {
     if (!bookingId) return;
     try {
       const { id: threadId } = await chatApi.createThreadForBooking(bookingId);
-      router.push(`/chat/${threadId}` as any);
+      router.push(`/chat/${threadId}`);
     } catch (err: unknown) {
       logger.error('Call chat open failed:', err);
     }
@@ -296,13 +314,13 @@ export default function CallScreen() {
             {isVideoCall ? (
               <View style={styles.videoBox}>
                 {remoteVideoTrack ? (
-                  <VideoView style={styles.remoteVideo} videoTrack={remoteVideoTrack as any} />
+                  <VideoView style={styles.remoteVideo} videoTrack={remoteVideoTrack} />
                 ) : (
                   <View style={styles.placeholder}><ActivityIndicator color={colors.gold} /><Text style={styles.placeholderText}>{t('call.waitingVideo', 'Görüntü bekleniyor...')}</Text></View>
                 )}
                 {localVideoTrack && (
                   <View style={styles.localPreview}>
-                    <VideoView style={styles.localVideo} videoTrack={localVideoTrack as any} mirror={frontCamera} />
+                    <VideoView style={styles.localVideo} videoTrack={localVideoTrack} mirror={frontCamera} />
                   </View>
                 )}
               </View>
@@ -318,7 +336,9 @@ export default function CallScreen() {
                   </View>
                   {connected && <View style={styles.pulse} />}
                 </View>
-                <Text style={styles.audioInfo}>{t('call.audioActive', 'Sesli Görüşme Aktif')}</Text>
+                <Text style={styles.audioInfo}>
+                  {connected ? t('call.audioActive', 'Sesli Görüşme Aktif') : t('call.connectingStatus', 'BAĞLANIYOR')}
+                </Text>
               </View>
             )}
           </View>
@@ -355,7 +375,14 @@ export default function CallScreen() {
                 </>
               )}
 
-              <Pressable style={[styles.btn, !speakerOn && styles.btnActive]} onPress={() => setSpeakerOn(!speakerOn)}>
+              <Pressable style={[styles.btn, !speakerOn && styles.btnActive]} onPress={async () => {
+                try {
+                  const selected = await setLiveKitSpeaker(!speakerOn);
+                  if (selected) setSpeakerOn(!speakerOn);
+                } catch (error) {
+                  logger.error('Audio output selection failed:', error);
+                }
+              }}>
                 {speakerOn ? <Volume2 size={24} color={colors.text} /> : <VolumeX size={24} color={colors.text} />}
               </Pressable>
             </View>

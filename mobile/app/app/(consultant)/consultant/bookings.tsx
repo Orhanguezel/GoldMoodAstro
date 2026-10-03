@@ -3,15 +3,17 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Modal,
   Pressable,
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, router } from 'expo-router';
-import { CalendarDays, Check, Clock, X } from 'lucide-react-native';
+import { CalendarDays, Check, Clock, PhoneCall, X } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useAppTheme, type AppTheme } from '@/theme';
@@ -22,6 +24,7 @@ import { logger } from '@/lib/logger';
 type FilterKey = 'incoming' | 'today' | 'all';
 
 const ACTIONABLE_STATUSES = new Set(['pending', 'requested_now']);
+const CANCELLABLE_STATUSES = new Set(['pending_payment', 'pending', 'booked', 'confirmed']);
 
 function localYmd(date = new Date()) {
   const y = date.getFullYear();
@@ -48,7 +51,7 @@ function buildStyles(t: AppTheme) {
     card: { backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, padding: 16, gap: 12 },
     topRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
     customer: { fontFamily: font.sansBold, fontSize: 15, color: colors.text, flex: 1 },
-    badge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: 'rgba(201,169,97,0.12)' },
+    badge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: colors.surfaceHigh },
     badgeText: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold },
     metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     meta: { fontFamily: font.sans, fontSize: 13, color: colors.textDim },
@@ -58,6 +61,12 @@ function buildStyles(t: AppTheme) {
     approveBtn: { backgroundColor: colors.success },
     rejectBtn: { backgroundColor: colors.danger },
     actionText: { fontFamily: font.sansBold, fontSize: 12, color: colors.ink },
+    outlineAction: { borderWidth: 1, borderColor: colors.danger },
+    outlineActionText: { fontFamily: font.sansBold, fontSize: 12, color: colors.danger },
+    modalBackdrop: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: 'rgba(0,0,0,0.7)' },
+    modalCard: { borderRadius: radius.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, padding: 20, gap: 14 },
+    modalTitle: { fontFamily: font.display, fontSize: 22, color: colors.text },
+    reasonInput: { minHeight: 100, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, color: colors.text, fontFamily: font.sans, padding: 12, textAlignVertical: 'top' },
     emptyTitle: { fontFamily: font.display, fontSize: 22, color: colors.text, textAlign: 'center' },
     emptyBody: { fontFamily: font.sans, fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 22, marginTop: 8 },
   });
@@ -77,14 +86,19 @@ export default function ConsultantBookingsScreen() {
   const [filter, setFilter] = useState<FilterKey>('incoming');
   const [items, setItems] = useState<ConsultantSelfBooking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [cancelId, setCancelId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   const load = useCallback(async () => {
     try {
       const data = await consultantSelfApi.bookings();
       setItems(data);
+      setLoadError(false);
     } catch (err) {
+      setLoadError(true);
       logger.error('Consultant bookings load error:', err);
     } finally {
       setLoading(false);
@@ -161,6 +175,24 @@ export default function ConsultantBookingsScreen() {
     );
   };
 
+  const cancelBooking = async () => {
+    if (!cancelId || cancelReason.trim().length < 5) {
+      Alert.alert(t('common.error', 'Hata'), t('consultantPanel.bookings.reasonRequired', 'En az 5 karakterlik bir gerekçe yazın.'));
+      return;
+    }
+    setBusyId(cancelId);
+    try {
+      const result = await consultantSelfApi.cancelBooking(cancelId, cancelReason.trim());
+      updateItemStatus(cancelId, result.status);
+      setCancelId(null);
+      setCancelReason('');
+    } catch {
+      Alert.alert(t('common.error', 'Hata'), t('consultantPanel.bookings.actionError', 'İşlem tamamlanamadı.'));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   if (loading && !refreshing) {
     return (
       <View style={styles.center}>
@@ -189,6 +221,10 @@ export default function ConsultantBookingsScreen() {
             );
           })}
         </View>
+        {loadError && items.length > 0 && <View style={[styles.card, { marginHorizontal: theme.spacing.lg }]}>
+          <Text style={styles.emptyBody}>{t('consultantPanel.bookings.loadError', 'Randevular yüklenemedi.')}</Text>
+          <Pressable onPress={() => void load()} accessibilityRole="button" style={styles.filterBtn}><Text style={styles.filterText}>{t('common.retry', 'Tekrar dene')}</Text></Pressable>
+        </View>}
 
         <FlatList
           data={filtered}
@@ -198,8 +234,9 @@ export default function ConsultantBookingsScreen() {
           ListEmptyComponent={
             <View style={styles.center}>
               <CalendarDays size={38} color={colors.gold} />
-              <Text style={styles.emptyTitle}>{t('consultantPanel.bookings.emptyTitle', 'Randevu yok')}</Text>
-              <Text style={styles.emptyBody}>{t('consultantPanel.bookings.emptyBody', 'Bu filtrede görüntülenecek danışman randevusu bulunmuyor.')}</Text>
+              <Text style={styles.emptyTitle}>{loadError ? t('consultantPanel.bookings.loadError', 'Randevular yüklenemedi.') : t('consultantPanel.bookings.emptyTitle', 'Randevu yok')}</Text>
+              {loadError ? <Pressable onPress={() => void load()} accessibilityRole="button" style={styles.filterBtn}><Text style={styles.filterText}>{t('common.retry', 'Tekrar dene')}</Text></Pressable>
+                : <Text style={styles.emptyBody}>{t('consultantPanel.bookings.emptyBody', 'Bu filtrede görüntülenecek danışman randevusu bulunmuyor.')}</Text>}
             </View>
           }
           renderItem={({ item }) => {
@@ -226,6 +263,8 @@ export default function ConsultantBookingsScreen() {
 
                 {!!item.customer_message && <Text style={styles.note}>{item.customer_message}</Text>}
 
+                {item.decision_note && ['cancelled', 'rejected'].includes(item.status) && <Text style={styles.note}>{item.decision_note}</Text>}
+
                 {actionable ? (
                   <View style={styles.actions}>
                     <Pressable style={[styles.actionBtn, styles.approveBtn]} onPress={() => approve(item)} disabled={busyId === item.id}>
@@ -238,10 +277,27 @@ export default function ConsultantBookingsScreen() {
                     </Pressable>
                   </View>
                 ) : null}
+                {item.status === 'confirmed' && <Pressable style={[styles.actionBtn, styles.approveBtn]} onPress={() => router.push(`/call/${item.id}` as any)}>
+                  <PhoneCall size={16} color={colors.ink} /><Text style={styles.actionText}>{t('consultantPanel.bookings.join', 'Görüşmeye Katıl')}</Text>
+                </Pressable>}
+                {CANCELLABLE_STATUSES.has(item.status) && <Pressable style={[styles.actionBtn, styles.outlineAction]} onPress={() => { setCancelId(item.id); setCancelReason(''); }} disabled={busyId === item.id}>
+                  <Text style={styles.outlineActionText}>{t('consultantPanel.bookings.cancelBooking', 'Randevuyu İptal Et')}</Text>
+                </Pressable>}
               </View>
             );
           }}
         />
+        <Modal visible={!!cancelId} transparent animationType="fade" onRequestClose={() => setCancelId(null)}>
+          <View style={styles.modalBackdrop}><View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{t('consultantPanel.bookings.cancelBooking', 'Randevuyu İptal Et')}</Text>
+            <Text style={styles.note}>{t('consultantPanel.bookings.cancelReasonHelp', 'Danışana iletilecek iptal gerekçesini yazın.')}</Text>
+            <TextInput style={styles.reasonInput} value={cancelReason} onChangeText={setCancelReason} multiline maxLength={2000} placeholder={t('consultantPanel.bookings.reasonPlaceholder', 'İptal gerekçesi')} placeholderTextColor={colors.textMuted} />
+            <View style={styles.actions}>
+              <Pressable style={[styles.actionBtn, styles.outlineAction]} onPress={() => setCancelId(null)} disabled={!!busyId}><Text style={styles.outlineActionText}>{t('common.cancel', 'Vazgeç')}</Text></Pressable>
+              <Pressable style={[styles.actionBtn, styles.rejectBtn]} onPress={cancelBooking} disabled={!!busyId}><Text style={styles.actionText}>{t('consultantPanel.bookings.confirmCancel', 'İptal Et')}</Text></Pressable>
+            </View>
+          </View></View>
+        </Modal>
       </SafeAreaView>
     </View>
   );

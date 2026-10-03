@@ -89,7 +89,7 @@ export default function LegalIndexScreen() {
           <Text style={styles.title}>{t('legal.title', 'Yasal & Gizlilik')}</Text>
         </View>
         <Text style={styles.intro}>
-          {t('legal.intro', 'Mağaza yayını için zorunlu metinler. İçerikler admin panelinden güncellenir.')}
+          {t('legal.intro', 'Gizlilik, kullanım ve diğer yasal metinleri buradan okuyabilirsiniz.')}
         </Text>
         <ScrollView>
           {loading ? (

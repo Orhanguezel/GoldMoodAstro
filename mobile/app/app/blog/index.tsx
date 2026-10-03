@@ -65,7 +65,7 @@ export default function BlogListScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (isCurrent: () => boolean = () => true) => {
     const locale = i18n.language?.slice(0, 2) ?? 'tr';
     const rows = await customPagesApi.list({
       module_key: 'blog',
@@ -73,11 +73,17 @@ export default function BlogListScreen() {
       limit: 30,
       orderDir: 'desc',
     });
-    setPosts(pickPublishedPages(rows));
+    if (isCurrent()) setPosts(pickPublishedPages(rows));
   }, [i18n.language]);
 
   useEffect(() => {
-    load().finally(() => setLoading(false));
+    let cancelled = false;
+    void Promise.resolve().then(() => load(() => !cancelled)).catch(() => {
+      if (!cancelled) setPosts([]);
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
   }, [load]);
 
   const onRefresh = useCallback(async () => {

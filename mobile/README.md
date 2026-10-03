@@ -19,7 +19,7 @@ Kullanıcı akışının mobilde premium ve güvenilir çalışması:
 2. Login/Register + session persistence
 3. Danışman keşfetme
 4. Slot seçimi ve booking
-5. Iyzipay ödeme WebView
+5. Stripe Checkout ödeme WebView
 6. LiveKit ile sesli görüşme
 7. Seans değerlendirme
 
@@ -35,7 +35,7 @@ Kullanıcı akışının mobilde premium ve güvenilir çalışması:
 - i18next: TR + EN + DE
 - `expo-notifications`
 - LiveKit voice call
-- `react-native-webview` ile Iyzipay checkout
+- `react-native-webview` ile Stripe Checkout
 - `expo-haptics`
 - `expo-linear-gradient`
 - `react-native-reanimated` / RN Animated

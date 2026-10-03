@@ -12,6 +12,7 @@ import {
   index,
   uniqueIndex,
   int,
+  char,
 } from "drizzle-orm/mysql-core";
 
 export const chat_threads = mysqlTable(
@@ -85,6 +86,34 @@ export const chat_messages = mysqlTable(
     ),
   }),
 );
+
+export const chat_blocks = mysqlTable('chat_blocks', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  blocker_user_id: char('blocker_user_id', { length: 36 }).notNull(),
+  blocked_user_id: char('blocked_user_id', { length: 36 }).notNull(),
+  created_at: datetime('created_at', { mode: 'date' }).notNull(),
+}, (t) => ({
+  uq_pair: uniqueIndex('uq_chat_blocks_pair').on(t.blocker_user_id, t.blocked_user_id),
+  ix_blocked: index('ix_chat_blocks_blocked').on(t.blocked_user_id),
+}));
+
+export const chat_reports = mysqlTable('chat_reports', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  thread_id: varchar('thread_id', { length: 36 }).notNull(),
+  message_id: varchar('message_id', { length: 36 }).notNull(),
+  reporter_user_id: char('reporter_user_id', { length: 36 }).notNull(),
+  reported_user_id: char('reported_user_id', { length: 36 }).notNull(),
+  reason: varchar('reason', { length: 32 }).notNull(),
+  details: text('details'),
+  status: varchar('status', { length: 16 }).notNull(),
+  created_at: datetime('created_at', { mode: 'date' }).notNull(),
+}, (t) => ({
+  uq_report: uniqueIndex('uq_chat_reports_reporter_message').on(t.reporter_user_id, t.message_id),
+  ix_status: index('ix_chat_reports_status').on(t.status, t.created_at),
+  ix_thread: index('ix_chat_reports_thread').on(t.thread_id),
+  ix_message: index('ix_chat_reports_message').on(t.message_id),
+  ix_reported: index('ix_chat_reports_reported').on(t.reported_user_id),
+}));
 
 export const chat_support_sessions = mysqlTable(
   "chat_support_sessions",

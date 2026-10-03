@@ -41,3 +41,16 @@ export const mediaMessages = mysqlTable('media_messages', {
 export type ConsultantMediaSettings = typeof consultantMediaSettings.$inferSelect;
 export type MediaMessage = typeof mediaMessages.$inferSelect;
 
+export const mediaReports = mysqlTable('media_reports', {
+  id: char('id', { length: 36 }).primaryKey().notNull(),
+  message_id: char('message_id', { length: 36 }).notNull(),
+  reporter_user_id: char('reporter_user_id', { length: 36 }).notNull(),
+  reported_user_id: char('reported_user_id', { length: 36 }).notNull(),
+  reason: varchar('reason', { length: 32 }).notNull(),
+  details: text('details'),
+  status: varchar('status', { length: 16 }).notNull().default('open'),
+  created_at: datetime('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (t) => [
+  uniqueIndex('uq_media_reports_reporter_message').on(t.reporter_user_id, t.message_id),
+  index('ix_media_reports_status').on(t.status, t.created_at),
+]);

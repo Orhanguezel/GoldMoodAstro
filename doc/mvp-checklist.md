@@ -4,6 +4,8 @@
 
 - [x] Ağ/depo çekirdeği düzeltmesi; GoldMoodAstro 41 test ve tam typecheck; HepsiHal'e yalnız testli çekirdeğin taşınması.
 - [ ] Tam mobil lint, iOS push, native cihaz ve mağaza kapıları. Ayrıntılar: [kök eksik/taşıma çeklisti](../MOBIL-ORTAK-ALTYAPI-CEKLISTI-2026-10-03.md). Bu satır eski FAZ42/parite/store maddelerini kapatmaz.
+- [x] Mağaza kod denetimi: IAP ürün/SKU eşlemesi, yerel fiyat, dijital ödeme WebView koruması, doğrudan mesaj ve ücretli medya şikâyet/engel/şart kabulü, hesap silme işlem bütünlüğü ve Android gereksiz izin temizliği. Ses/video içeriğinin otomatik analizi ve canlı moderasyon kabulü açık. Kod ve test kanıtı: [2026-10-03 mağaza yayın denetimi](../reports/mobile-magaza-yayin-denetimi-2026-10-03.md).
+- [ ] Mağaza canlı kabulü: SQL seed ve üretim SKU ayarları, Apple/Google sandbox işlemleri, imzalı AAB/TestFlight, iki rolün cihaz testi, demo hesaplar, ekran görüntüleri ve konsol beyanları. Kod denetiminin geçmesi bu kapıyı kapatmaz.
 
 **Bütçe:** 30.000 TL | **Süre:** 30 gün → +10 gün (frontend fazı eklendi)  
 **Başlangıç:** 2026-04-24
@@ -971,9 +973,9 @@ zarar verici dil yok.
 ### T10-6 — Mobile: Apple/Google IAP Entegrasyonu (Codex)
 
 - [x] `expo-in-app-purchases` veya `react-native-iap` kur
-- [x] iOS App Store Connect'te subscription products tanımla
+- [ ] iOS App Store Connect'te subscription products tanımlandığını ve sandbox'ta çalıştığını doğrula
       (`com.goldmoodastro.app.monthly`, `.yearly`)
-- [x] Android Play Console'da subscription products
+- [ ] Android Play Console'da subscription products tanımlandığını ve sandbox'ta çalıştığını doğrula
 - [x] `mobile/app/src/lib/iap.ts` — purchase flow + receipt verification (backend)
 - [x] Backend: `POST /api/v1/subscriptions/verify-receipt` — Apple/Google receipt validation
 
@@ -3060,9 +3062,10 @@ butonları, "Yönetilen anahtarlar" raw key listesi — kullanıcı anlamıyor.
 - [x] 401 → logout akışı auth endpoint'lerinde istisna (mevcut davranış teyit)
 
 ### T42-8 — Build & Store hazırlık (Antigravity + Ops)
-- [x] `eas.json` production profil + app store/play assets (ikon, splash, açıklama, ekran görüntüleri)
-- [x] Store zorunluları: gizlilik politikası URL'i (T42-2), hesap silme (KVKK — `profile/privacy` var ✅), izin açıklamaları (kamera/mikrofon/bildirim — `app.json` ✅)
-- [x] iOS/Android build smoke testi (TSC + Lint OK)
+- [x] `eas.json` production profil + ikon, splash ve mağaza açıklaması kodda hazır.
+- [ ] Mağaza ekran görüntüleri ve iki inceleme hesabı gerçek build üzerinden hazırlanıp doğrulanmalı.
+- [ ] Store zorunluları: gizlilik ve hesap silme kodda var; açık silme sayfasının canlı yayını, konsol kaydı ve gerçek cihaz kabulü açık. `check:release` iOS plist/ASC eksikleriyle başarısız.
+- [ ] iOS/Android imzalı build ve gerçek cihaz smoke testi; TSC, lint ve yerel Android manifest denetimi geçti.
 
 ### Parite Kabul Kriterleri (Claude 2026-05-16 — "parite bitti" tanımı)
 FAZ 42 ancak hepsi sağlanınca "tamam" sayılır:
@@ -3087,3 +3090,18 @@ FAZ 42 ancak hepsi sağlanınca "tamam" sayılır:
 - **Antigravity:** T42-1 eksik ekranlar, T42-2/3 CMS+akış UI, T42-7 sağlamlık, T42-8 build
 - **Öncelik:** T42-0 → T42-1 (içerik) + T42-2 (legal — store zorunlu) → T42-3/5 → T42-4/6/7 → T42-8
 - **Not:** Backend AYNI (yeni API yazılmaz, var olan tüketilir). Admin yönetimi büyük ölçüde MEVCUT — eksik = içerik ekranları + customPages bağlama + i18n stratejisi.
+
+### T42-9 — Web ↔ mobil dashboard ve hesap ortak denetimi (2026-10-03)
+
+Kanıt ve açık kapılar: [`reports/web-mobil-dashboard-hesap-denetimi-2026-10-03.md`](../reports/web-mobil-dashboard-hesap-denetimi-2026-10-03.md).
+
+- [x] Web kullanıcı/danışman dashboard sorgu hatası ve yeniden deneme; güvenli giriş dönüşü, gizlilik yükleme durumu, çıkış önbelleği.
+- [x] Backend kredi JWT kimliği ve çift route kaydı; mobil bildirim API sözleşmesi.
+- [x] Mobil kullanıcı hesap kartı hata durumu, profil/şifre, mesaj kutusu, favoriler, geçmiş ve silme akışı bağlantıları.
+- [x] Mobil danışman çoklu müsaitlik aralığı, beş sekme, randevu katılma/iptal, yayın/tamamlama durumu ve hizmet düzenleme.
+- [x] Web `design_tokens` ile mobil palet/font/simge/splash snapshot eşleşmesi; hesaplanmamış günlük astroloji iddialarının kaldırılması.
+- [x] Yerel TypeScript, i18n/theme guard, ilgili testler, Android Metro export ve Claude CLI salt okunur diff incelemesi.
+- [x] Android release APK emülatörde açılış + misafir ana sayfa/profil gezinmesi; 320/390 dp görsel kontrol ve alt sekme güvenli alan düzeltmesi (2026-10-03). Metro mobil React 19.1.0'a sabitlendi.
+- [ ] Ayrı kullanıcı/danışman hesaplarıyla web ↔ Android/iOS aynı verinin, 320/390 px ekranların ve ödeme/görüşme uçlarının cihaz kabulü.
+- [ ] Webin yeni `ui_*` seed'ini hedef veritabanında uygula ve TR/EN/DE canlı geri okumasını doğrula.
+- [ ] iOS servis dosyası ve imza ortamı sağlandığında iOS build/cihaz kabulü.

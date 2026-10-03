@@ -95,6 +95,30 @@ check(
   'mobile/SMOKE-QA-CHECKLIST.md',
 );
 
+const blockedPermissions = app.android?.blockedPermissions ?? [];
+for (const permission of [
+  'android.permission.READ_EXTERNAL_STORAGE',
+  'android.permission.WRITE_EXTERNAL_STORAGE',
+  'android.permission.SYSTEM_ALERT_WINDOW',
+]) {
+  check('P', `Android unnecessary permission blocked: ${permission}`, blockedPermissions.includes(permission), permission);
+}
+
+check(
+  'P',
+  'Public account-deletion landing page source',
+  fs.existsSync(path.join(appRoot, '../../frontend/src/app/[locale]/account-deletion/page.tsx')),
+  'frontend/src/app/[locale]/account-deletion/page.tsx (live deployment still required)',
+);
+
+const storeMetadata = fs.readFileSync(path.join(mobileRoot, 'STORE-METADATA.md'), 'utf8');
+check(
+  'P',
+  'Play external account-deletion URL documented',
+  storeMetadata.includes('https://goldmoodastro.com/tr/account-deletion'),
+  'Public URL must be published and entered in Play Console separately',
+);
+
 let failed = 0;
 for (const item of checks) {
   const icon = item.ok ? 'OK' : 'MISSING';
@@ -107,4 +131,4 @@ if (failed > 0) {
   process.exit(1);
 }
 
-console.log('\nRelease readiness OK.');
+console.log('\nRepository release prerequisites OK. Store-console setup, production artifacts and device review remain separate gates.');

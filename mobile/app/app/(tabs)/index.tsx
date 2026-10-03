@@ -100,7 +100,7 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    fetchConsultants();
+    void Promise.resolve().then(fetchConsultants);
   }, [selectedCategory]);
 
   const onRefresh = useCallback(() => {
@@ -195,4 +195,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-

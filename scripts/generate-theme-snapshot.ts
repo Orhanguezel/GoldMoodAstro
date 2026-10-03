@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { copyFileSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 function generateThemeSnapshot() {
@@ -36,6 +36,32 @@ export const DEFAULT_TOKENS: DesignTokens = ${JSON.stringify(tokens, null, 2)};
   const outputPath = join(process.cwd(), 'frontend/src/lib/tokens/defaults.ts');
   writeFileSync(outputPath, codeContent, 'utf8');
   console.log('Successfully generated theme snapshot at frontend/src/lib/tokens/defaults.ts');
+
+  const mobileCodeContent = `import type { DesignTokens } from './designTokenTypes';
+
+// WARNING: Generated from the site settings seed. Do not edit manually.
+// Run bun run gen:theme-snapshot when the seed changes.
+export const DEFAULT_REMOTE_TOKENS: DesignTokens = ${JSON.stringify(tokens, null, 2)};
+`;
+  const mobileOutputPath = join(process.cwd(), 'mobile/app/src/theme/defaultRemoteTokens.ts');
+  writeFileSync(mobileOutputPath, mobileCodeContent, 'utf8');
+  console.log('Successfully generated theme snapshot at mobile/app/src/theme/defaultRemoteTokens.ts');
+
+  const appJsonPath = join(process.cwd(), 'mobile/app/app.json');
+  const appConfig = JSON.parse(readFileSync(appJsonPath, 'utf8'));
+  const nativeBackground = tokens.colors.bg_deep_dark;
+  appConfig.expo.primaryColor = tokens.colors.brand_primary;
+  appConfig.expo.splash.backgroundColor = nativeBackground;
+  appConfig.expo.android.adaptiveIcon.backgroundColor = nativeBackground;
+  appConfig.expo.userInterfaceStyle = 'light';
+  const notificationsPlugin = appConfig.expo.plugins.find((plugin: unknown) => Array.isArray(plugin) && plugin[0] === 'expo-notifications');
+  if (notificationsPlugin) notificationsPlugin[1].color = tokens.colors.brand_secondary;
+  writeFileSync(appJsonPath, `${JSON.stringify(appConfig, null, 2)}\n`, 'utf8');
+
+  const webLogoPath = join(process.cwd(), 'frontend/public/logo/goldmoodastro-gm.png');
+  copyFileSync(webLogoPath, join(process.cwd(), 'mobile/app/assets/icon.png'));
+  copyFileSync(webLogoPath, join(process.cwd(), 'mobile/app/assets/splash.png'));
+  console.log('Synchronized native colors and brand artwork with the web theme.');
 }
 
 generateThemeSnapshot();

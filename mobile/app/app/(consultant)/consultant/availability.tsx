@@ -13,22 +13,16 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
-import { CalendarOff, Clock3, Save, Trash2 } from 'lucide-react-native';
+import { CalendarOff, Clock3, Plus, Save, Trash2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 import { consultantSelfApi } from '@/lib/api';
 import type { ConsultantTimeBlock, ConsultantWorkingHour } from '@/types';
+import { normalizeWorkingHours, validateWorkingHours } from '@/lib/consultantAvailability';
 
 import { logger } from '@/lib/logger';
 const DOWS = [1, 2, 3, 4, 5, 6, 7];
-const DEFAULT_HOUR = {
-  start_time: '10:00',
-  end_time: '18:00',
-  slot_minutes: 30,
-  capacity: 1,
-  is_active: 0,
-};
 
 function todayYmd() {
   const d = new Date();
@@ -88,54 +82,57 @@ export default function ConsultantAvailabilityScreen() {
   const [blockEnd, setBlockEnd] = useState('14:00');
   const [blockReason, setBlockReason] = useState('');
 
-  const ensureSevenDays = useCallback((incoming: ConsultantWorkingHour[]) => {
-    return DOWS.map((dow) => {
-      const found = incoming.find((item) => Number(item.dow) === dow);
-      return {
-        ...DEFAULT_HOUR,
-        ...found,
-        dow,
-        start_time: String(found?.start_time ?? DEFAULT_HOUR.start_time).slice(0, 5),
-        end_time: String(found?.end_time ?? DEFAULT_HOUR.end_time).slice(0, 5),
-        slot_minutes: Number(found?.slot_minutes ?? DEFAULT_HOUR.slot_minutes),
-        capacity: 1,
-        is_active: Number(found?.is_active ?? DEFAULT_HOUR.is_active),
-      };
-    });
-  }, []);
-
-  const load = useCallback(async () => {
+  const loadHours = useCallback(async () => {
     try {
-      const [availability, blockList] = await Promise.all([
-        consultantSelfApi.availability(),
-        consultantSelfApi.timeBlocks(date),
-      ]);
-      setHours(ensureSevenDays(availability.working_hours ?? []));
-      setBlocks(blockList);
+      const availability = await consultantSelfApi.availability();
+      setHours(normalizeWorkingHours(availability.working_hours ?? []));
     } catch (err) {
       logger.error('Consultant availability load error:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [date, ensureSevenDays]);
+  }, []);
+
+  const loadBlocks = useCallback(async () => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+    try {
+      setBlocks(await consultantSelfApi.timeBlocks(date));
+    } catch (err) {
+      logger.error('Consultant time blocks load error:', err);
+    }
+  }, [date]);
 
   useFocusEffect(
     useCallback(() => {
-      load();
-    }, [load]),
+      loadHours();
+    }, [loadHours]),
+  );
+  useFocusEffect(
+    useCallback(() => {
+      loadBlocks();
+    }, [loadBlocks]),
   );
 
-  const setHour = (dow: number, patch: Partial<ConsultantWorkingHour>) => {
-    setHours((prev) => prev.map((item) => (item.dow === dow ? { ...item, ...patch } : item)));
+  const setHour = (index: number, patch: Partial<ConsultantWorkingHour>) => {
+    setHours((prev) => prev.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)));
+  };
+
+  const addHour = (dow: number) => {
+    setHours((prev) => [...prev, { dow, start_time: '09:00', end_time: '18:00', slot_minutes: 30, capacity: 1, is_active: 1 }]);
   };
 
   const saveHours = async () => {
+    const error = validateWorkingHours(hours);
+    if (error) {
+      Alert.alert(t('common.error', 'Hata'), t(`consultantPanel.availability.validation.${error}`, 'Saat aralıklarını ve slot süresini kontrol edin.'));
+      return;
+    }
     setSaving(true);
     try {
       await consultantSelfApi.updateAvailability(hours);
       Alert.alert(t('common.success', 'Başarılı'), t('consultantPanel.availability.saved', 'Müsaitlik saatleri kaydedildi.'));
-      load();
+      loadHours();
     } catch (err) {
       Alert.alert(t('common.error', 'Hata'), t('consultantPanel.availability.saveError', 'Müsaitlik kaydedilemedi. Saat aralıklarını kontrol edin.'));
     } finally {
@@ -207,34 +204,44 @@ export default function ConsultantAvailabilityScreen() {
         </View>
         <ScrollView
           contentContainerStyle={styles.scroll}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.gold} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void Promise.all([loadHours(), loadBlocks()]); }} tintColor={colors.gold} />}
         >
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>{t('consultantPanel.availability.weeklyTitle', 'Haftalık saatler')}</Text>
             <Text style={styles.help}>{t('consultantPanel.availability.weeklyHelp', 'Aktif günlerde başlangıç, bitiş ve slot süresini HH:mm formatında girin.')}</Text>
-            {hours.map((item) => {
-              const active = item.is_active === 1;
+            {DOWS.map((dow) => {
+              const dayHours = hours.map((hour, index) => ({ hour, index })).filter(({ hour }) => hour.dow === dow);
               return (
-                <View key={item.dow} style={styles.dayRow}>
+                <View key={dow} style={styles.dayRow}>
                   <View style={styles.dayTop}>
-                    <Text style={styles.dayName}>{t(`consultantPanel.availability.days.${item.dow}`, `Gün ${item.dow}`)}</Text>
+                    <Text style={styles.dayName}>{t(`consultantPanel.availability.days.${dow}`, `Gün ${dow}`)}</Text>
                     <Pressable
-                      style={[styles.switch, active && styles.switchActive]}
-                      onPress={() => setHour(item.dow, { is_active: active ? 0 : 1 })}
+                      style={styles.switch}
+                      onPress={() => addHour(dow)}
+                      accessibilityRole="button"
                     >
-                      <Text style={[styles.switchText, active && styles.switchTextActive]}>
-                        {active ? t('common.active', 'Aktif') : t('common.passive', 'Pasif')}
-                      </Text>
+                      <Plus size={14} color={colors.gold} />
+                      <Text style={styles.outlineText}>{t('consultantPanel.availability.addRange', 'Aralık ekle')}</Text>
                     </Pressable>
                   </View>
-                  <View style={styles.inputs}>
+                  {dayHours.length === 0 && <Text style={styles.help}>{t('consultantPanel.availability.noRange', 'Çalışma aralığı yok')}</Text>}
+                  {dayHours.map(({ hour: item, index }) => <View key={`${dow}-${index}`} style={styles.card}>
+                    <View style={styles.dayTop}>
+                      <Pressable style={[styles.switch, item.is_active === 1 && styles.switchActive]} onPress={() => setHour(index, { is_active: item.is_active === 1 ? 0 : 1 })}>
+                        <Text style={[styles.switchText, item.is_active === 1 && styles.switchTextActive]}>{item.is_active === 1 ? t('common.active', 'Aktif') : t('common.passive', 'Pasif')}</Text>
+                      </Pressable>
+                      <Pressable onPress={() => setHours((prev) => prev.filter((_, itemIndex) => itemIndex !== index))} accessibilityRole="button" accessibilityLabel={t('consultantPanel.availability.removeRange', 'Aralığı sil')}>
+                        <Trash2 size={18} color={colors.danger} />
+                      </Pressable>
+                    </View>
+                    <View style={styles.inputs}>
                     <View style={styles.inputWrap}>
                       <Text style={styles.label}>{t('consultantPanel.availability.start', 'BAŞLANGIÇ')}</Text>
-                      <TextInput style={styles.input} value={item.start_time} onChangeText={(v) => setHour(item.dow, { start_time: v })} />
+                      <TextInput style={styles.input} value={item.start_time} onChangeText={(v) => setHour(index, { start_time: v })} />
                     </View>
                     <View style={styles.inputWrap}>
                       <Text style={styles.label}>{t('consultantPanel.availability.end', 'BİTİŞ')}</Text>
-                      <TextInput style={styles.input} value={item.end_time} onChangeText={(v) => setHour(item.dow, { end_time: v })} />
+                      <TextInput style={styles.input} value={item.end_time} onChangeText={(v) => setHour(index, { end_time: v })} />
                     </View>
                     <View style={styles.inputWrap}>
                       <Text style={styles.label}>{t('consultantPanel.availability.slot', 'SLOT')}</Text>
@@ -242,10 +249,11 @@ export default function ConsultantAvailabilityScreen() {
                         style={styles.input}
                         value={String(item.slot_minutes)}
                         keyboardType="number-pad"
-                        onChangeText={(v) => setHour(item.dow, { slot_minutes: Number(v || 0) })}
+                        onChangeText={(v) => setHour(index, { slot_minutes: Number(v || 0) })}
                       />
                     </View>
                   </View>
+                  </View>)}
                 </View>
               );
             })}

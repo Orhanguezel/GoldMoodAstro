@@ -42,6 +42,7 @@ function authErrorMessage(raw: string | null, ui: (key: string, hardFallback?: s
 }
 
 import PageContainer from '@/components/common/PageContainer';
+import { safeNextPath } from '@/lib/safeNextPath';
 
 const Login: React.FC = () => {
   const router = useRouter();
@@ -52,13 +53,10 @@ const Login: React.FC = () => {
 
   // After login, ?next=/tr/booking?... returns the user to the original page.
   const nextHref = useMemo(() => {
-    const raw = searchParams.get('next') || '';
-    if (raw && raw.startsWith('/')) return raw;
-    return localizePath(locale, '/dashboard');
+    return safeNextPath(searchParams.get('next')) ?? localizePath(locale, '/dashboard');
   }, [searchParams, locale]);
   const hasExplicitNext = useMemo(() => {
-    const raw = searchParams.get('next') || '';
-    return raw.startsWith('/');
+    return safeNextPath(searchParams.get('next')) !== null;
   }, [searchParams]);
 
   const registerHref = useMemo(() => localizePath(locale, '/register'), [locale]);
@@ -76,7 +74,7 @@ const Login: React.FC = () => {
   const apiErrorMessage = useMemo(() => {
     if (!loginState.error) return null;
     return authErrorMessage(normalizeError(loginState.error).message, ui);
-  }, [loginState.error, locale, ui]);
+  }, [loginState.error, ui]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

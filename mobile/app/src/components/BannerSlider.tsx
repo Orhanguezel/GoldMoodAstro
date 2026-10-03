@@ -119,16 +119,27 @@ export function BannerSlider({ placement, style }: Props) {
   const sliderWidth = SCREEN_WIDTH - theme.spacing.lg * 2;
   const styles = useMemo(() => buildScreenStyles(theme, sliderWidth), [theme, sliderWidth]);
 
-  const [banners, setBanners] = useState<Banner[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<{ key: string; banners: Banner[] } | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
+  const requestKey = `${placement}|${i18n.language}|${isAuthenticated}|${isPremium}`;
+  const banners = result?.key === requestKey ? result.banners : [];
 
   useEffect(() => {
     if (authHydrating || premiumLoading) return;
-    setLoading(true);
-    loadBanners();
-  }, [placement, i18n.language, authHydrating, isAuthenticated, isPremium]);
+    let cancelled = false;
+    bannersApi.list({ placement, locale: i18n.language })
+      .then((data) => {
+        if (!cancelled) setResult({ key: requestKey, banners: data });
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          logger.error('BannerSlider error:', error);
+          setResult({ key: requestKey, banners: [] });
+        }
+      });
+    return () => { cancelled = true; };
+  }, [placement, i18n.language, authHydrating, premiumLoading, requestKey]);
 
   useEffect(() => {
     if (banners.length < 2) return;
@@ -143,20 +154,6 @@ export function BannerSlider({ placement, style }: Props) {
 
     return () => clearInterval(timer);
   }, [banners.length, sliderWidth]);
-
-  const loadBanners = async () => {
-    try {
-      const data = await bannersApi.list({
-        placement,
-        locale: i18n.language,
-      });
-      setBanners(data);
-    } catch (e) {
-      logger.error('BannerSlider error:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handlePress = async (banner: Banner) => {
     try {
@@ -179,7 +176,7 @@ export function BannerSlider({ placement, style }: Props) {
   };
 
   if (premiumLoading || isPremium) return null;
-  if (loading || banners.length === 0) return null;
+  if (banners.length === 0) return null;
 
   const locale = i18n.language;
 

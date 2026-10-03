@@ -41,12 +41,12 @@ function buildScreenStyles(t: AppTheme) {
   avatarFallback: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.goldDim, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.gold },
   avatarInitial: { fontFamily: font.display, fontSize: 40, color: colors.ink },
   onlineDot: { position: 'absolute', bottom: 4, right: 4, width: 18, height: 18, borderRadius: 9, backgroundColor: colors.success, borderWidth: 3, borderColor: colors.inkDeep },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontFamily: font.display, fontSize: 26, color: colors.text },
-  expertise: { fontFamily: font.sansMedium, fontSize: 14, color: colors.goldDim, marginTop: 4 },
-  metrics: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 20 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: spacing.lg },
+  name: { fontFamily: font.display, fontSize: 26, color: colors.cream, flexShrink: 1, textAlign: 'center' },
+  expertise: { fontFamily: font.sansMedium, fontSize: 14, color: colors.goldLight, marginTop: 4, paddingHorizontal: spacing.lg, textAlign: 'center' },
+  metrics: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 16, marginTop: 20, paddingHorizontal: spacing.lg },
   metric: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metricVal: { fontFamily: font.sansBold, fontSize: 13, color: colors.text },
+  metricVal: { fontFamily: font.sansBold, fontSize: 13, color: colors.cream },
   metricDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.2)' },
 
   // Sections
@@ -80,6 +80,7 @@ function buildScreenStyles(t: AppTheme) {
     marginBottom: 10,
   },
   serviceCardActive: { borderColor: colors.gold, backgroundColor: colors.inkDeep },
+  serviceTextActive: { color: colors.cream },
   serviceCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   serviceName: { fontFamily: font.sansBold, fontSize: 15, color: colors.text, flex: 1 },
   servicePrice: { fontFamily: font.display, fontSize: 18, color: colors.gold },
@@ -166,7 +167,8 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 import { useTranslation } from 'react-i18next';
 
-import { consultantsApi, chatApi, reviewsApi, bookingsApi, siteSettingsApi, mediaMessagesApi, storageApi } from '@/lib/api';
+import { consultantsApi, chatApi, reviewsApi, bookingsApi, siteSettingsApi, mediaMessagesApi, storageApi, getAssetUrl } from '@/lib/api';
+import { repairUtf8Mojibake } from '@/lib/textEncoding';
 import type { Consultant, ConsultantMediaSettings, ConsultantSlot, ConsultantService, Review } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { format, addDays, isSameDay } from 'date-fns';
@@ -227,7 +229,7 @@ export default function ConsultantDetailScreen() {
 
   const canShowVideoOption = useMemo(() => {
     if (!videoFeatureEnabled) return false;
-    if (selectedService) return selectedService.media_type === 'both';
+    if (selectedService) return false;
     return consultant?.supports_video === 1;
   }, [videoFeatureEnabled, selectedService, consultant?.supports_video]);
 
@@ -235,7 +237,6 @@ export default function ConsultantDetailScreen() {
     if (!videoFeatureEnabled) return 'audio';
     if (selectedService) {
       if (selectedService.media_type === 'video') return 'video';
-      if (selectedService.media_type === 'both') return mediaType;
       return 'audio';
     }
     return consultant?.supports_video === 1 ? mediaType : 'audio';
@@ -270,20 +271,12 @@ export default function ConsultantDetailScreen() {
   }, [id]);
 
   useEffect(() => {
-    if (!canShowVideoOption && mediaType === 'video') {
-      setMediaType('audio');
-    }
-  }, [canShowVideoOption, mediaType]);
-
-  useEffect(() => {
-    setSelectedSlot(null);
-  }, [selectedServiceId]);
-
-  useEffect(() => {
     if (!id) return;
-    setLoading(true);
-    setReviewsLoading(true);
-    setServicesLoading(true);
+    Promise.resolve().then(() => {
+      setLoading(true);
+      setReviewsLoading(true);
+      setServicesLoading(true);
+    });
     Promise.all([
       consultantsApi.get(id),
       reviewsApi.forConsultant(id),
@@ -307,7 +300,7 @@ export default function ConsultantDetailScreen() {
 
   useEffect(() => {
     if (id && selectedDate) {
-      setSlotsLoading(true);
+      Promise.resolve().then(() => setSlotsLoading(true));
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
       const duration = selectedService?.duration_minutes ?? consultant?.session_duration ?? 30;
       consultantsApi.availability(id, {
@@ -338,6 +331,13 @@ export default function ConsultantDetailScreen() {
     if (!consultant) return;
     setMediaQuestionLoading(true);
     try {
+      const safety = await mediaMessagesApi.safetyForConsultant(consultant.id);
+      if (!safety.terms_accepted || safety.blocked_by_me || safety.blocked_by_peer) throw new Error('media_safety_required');
+      const currentSettings = await mediaMessagesApi.getConsultantSettings(consultant.id);
+      if (!currentSettings?.audio_enabled || Math.round(currentSettings.audio_price * 100) !== Math.round((mediaSettings?.audio_price ?? 0) * 100)) {
+        setMediaSettings(currentSettings);
+        throw new Error('media_price_changed');
+      }
       const form = new FormData();
       form.append('file', {
         uri,
@@ -352,6 +352,7 @@ export default function ConsultantDetailScreen() {
       await mediaMessagesApi.create({
         consultant_id: consultant.id,
         kind: 'audio',
+        expected_price: mediaSettings?.audio_price ?? 0,
         storage_path: upload.path,
         duration_seconds: Math.max(1, durationSeconds),
         note: topic ? String(topic) : null,
@@ -363,10 +364,17 @@ export default function ConsultantDetailScreen() {
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      if (message.includes('insufficient_credits')) {
+        Alert.alert(t('common.error', 'Hata'), t('mediaMessages.insufficientCredits', 'Bu soru için yeterli krediniz yok.'), [
+          { text: t('common.cancel', 'Vazgeç'), style: 'cancel' },
+          { text: t('mediaMessages.buyCredits', 'Kredi satın al'), onPress: () => router.push('/profile/credits' as any) },
+        ]);
+        return;
+      }
       Alert.alert(
         t('common.error', 'Hata'),
-        message.includes('insufficient_credits')
-          ? t('mediaMessages.insufficientCredits', 'Bu soru için yeterli krediniz yok.')
+        message.includes('media_price_changed')
+          ? t('mediaMessages.priceChanged', 'Ücret değişti. Güncel fiyatı kontrol edip yeniden deneyin.')
           : t('mediaMessages.sendError', 'Medya sorusu gönderilemedi. Lütfen tekrar deneyin.'),
       );
     } finally {
@@ -375,11 +383,17 @@ export default function ConsultantDetailScreen() {
   };
 
   const startAudioQuestion = async () => {
-    if (!consultant || !mediaSettings?.audio_enabled || mediaQuestionLoading) return;
+    if (!id) return;
     if (!isAuthenticated) {
-      router.push({ pathname: '/auth/login', params: { next: `/consultant/${consultant.id}` } } as any);
+      router.push({ pathname: '/auth/login', params: { next: `/consultant/${id}` } } as any);
       return;
     }
+    try {
+      const safety = await mediaMessagesApi.safetyForConsultant(String(id));
+      if (!safety.terms_accepted) { Alert.alert(t('chat.termsPrompt'), t('chat.readTerms'), [{ text: t('chat.cancel') }, { text: t('chat.readTerms'), onPress: () => router.push('/legal') }, { text: t('chat.acceptTerms'), onPress: () => void chatApi.acceptTerms().catch(() => Alert.alert(t('common.error'), t('chat.actionFailed'))) }]); return; }
+      if (safety.blocked_by_me || safety.blocked_by_peer) { Alert.alert(t('chat.blockTitle'), t('chat.blockedNotice')); return; }
+    } catch { Alert.alert(t('common.error'), t('chat.actionFailed')); return; }
+    if (!consultant || !mediaSettings?.audio_enabled || mediaQuestionLoading) return;
 
     try {
       const permission = await requestRecordingPermissionsAsync();
@@ -430,9 +444,10 @@ export default function ConsultantDetailScreen() {
     }
     Alert.alert(
       t('mediaMessages.audioQuestionTitle', 'Sesli soru gönder'),
-      t('mediaMessages.audioQuestionConfirm', '{{price}} {{currency}} karşılığı kısa bir sesli soru kaydedilecek. Hazır olduğunuzda kaydı başlatın.', {
-        price: Math.ceil(mediaSettings?.audio_price ?? 0),
+      t('mediaMessages.audioQuestionConfirm', 'Kısa sesli soru ücreti {{price}} {{currency}} ({{credits}} kredi). Hazır olduğunuzda kaydı başlatın.', {
+        price: Number(mediaSettings?.audio_price ?? 0).toFixed(2),
         currency: mediaSettings?.currency ?? 'TRY',
+        credits: mediaSettings?.audio_credits ?? 0,
       }),
       [
         { text: t('common.cancel', 'Vazgeç'), style: 'cancel' },
@@ -448,11 +463,18 @@ export default function ConsultantDetailScreen() {
       return;
     }
 
+    try {
+      const safety = await mediaMessagesApi.safetyForConsultant(consultant.id);
+      if (!safety.terms_accepted) { Alert.alert(t('chat.termsPrompt'), t('chat.readTerms'), [{ text: t('chat.cancel') }, { text: t('chat.readTerms'), onPress: () => router.push('/legal') }, { text: t('chat.acceptTerms'), onPress: () => void chatApi.acceptTerms().catch(() => Alert.alert(t('common.error'), t('chat.actionFailed'))) }]); return; }
+      if (safety.blocked_by_me || safety.blocked_by_peer) { Alert.alert(t('chat.blockTitle'), t('chat.blockedNotice')); return; }
+    } catch { Alert.alert(t('common.error'), t('chat.actionFailed')); return; }
+
     Alert.alert(
       t('mediaMessages.videoQuestionTitle', 'Görüntülü soru gönder'),
-      t('mediaMessages.videoQuestionConfirm', '{{price}} {{currency}} karşılığı kısa bir video soru kaydedilecek.', {
-        price: Math.ceil(mediaSettings.video_price),
+      t('mediaMessages.videoQuestionConfirm', 'Kısa video soru ücreti {{price}} {{currency}} ({{credits}} kredi).', {
+        price: Number(mediaSettings.video_price).toFixed(2),
         currency: mediaSettings.currency ?? 'TRY',
+        credits: mediaSettings.video_credits,
       }),
       [
         { text: t('common.cancel', 'Vazgeç'), style: 'cancel' },
@@ -460,6 +482,13 @@ export default function ConsultantDetailScreen() {
           text: t('mediaMessages.startRecording', 'Kaydı Başlat'),
           onPress: async () => {
             try {
+              const safety = await mediaMessagesApi.safetyForConsultant(consultant.id);
+              if (!safety.terms_accepted || safety.blocked_by_me || safety.blocked_by_peer) throw new Error('media_safety_required');
+              const currentSettings = await mediaMessagesApi.getConsultantSettings(consultant.id);
+              if (!currentSettings?.video_enabled || Math.round(currentSettings.video_price * 100) !== Math.round(mediaSettings.video_price * 100)) {
+                setMediaSettings(currentSettings);
+                throw new Error('media_price_changed');
+              }
               const permission = await ImagePicker.requestCameraPermissionsAsync();
               if (!permission.granted) {
                 Alert.alert(
@@ -492,6 +521,7 @@ export default function ConsultantDetailScreen() {
               await mediaMessagesApi.create({
                 consultant_id: consultant.id,
                 kind: 'video',
+                expected_price: mediaSettings.video_price,
                 storage_path: upload.path,
                 duration_seconds: asset.duration ? Math.max(1, Math.round(asset.duration / 1000)) : undefined,
                 note: topic ? String(topic) : null,
@@ -503,10 +533,17 @@ export default function ConsultantDetailScreen() {
               );
             } catch (err) {
               const message = err instanceof Error ? err.message : String(err);
+              if (message.includes('insufficient_credits')) {
+                Alert.alert(t('common.error', 'Hata'), t('mediaMessages.insufficientCredits', 'Bu soru için yeterli krediniz yok.'), [
+                  { text: t('common.cancel', 'Vazgeç'), style: 'cancel' },
+                  { text: t('mediaMessages.buyCredits', 'Kredi satın al'), onPress: () => router.push('/profile/credits' as any) },
+                ]);
+                return;
+              }
               Alert.alert(
                 t('common.error', 'Hata'),
-                message.includes('insufficient_credits')
-                  ? t('mediaMessages.insufficientCredits', 'Bu soru için yeterli krediniz yok.')
+                message.includes('media_price_changed')
+                  ? t('mediaMessages.priceChanged', 'Ücret değişti. Güncel fiyatı kontrol edip yeniden deneyin.')
                   : t('mediaMessages.sendError', 'Medya sorusu gönderilemedi. Lütfen tekrar deneyin.'),
               );
             } finally {
@@ -644,39 +681,41 @@ export default function ConsultantDetailScreen() {
         <View style={styles.hero}>
           <View style={styles.heroOverlay} />
           {consultant.avatar_url && (
-            <Image source={{ uri: consultant.avatar_url }} style={styles.heroBg} blurRadius={10} />
+            <Image source={{ uri: getAssetUrl(consultant.avatar_url) ?? undefined }} style={styles.heroBg} blurRadius={10} />
           )}
           
           <SafeAreaView edges={['top']}>
             <View style={styles.topNav}>
               <Pressable style={styles.backBtn} onPress={() => safeRouterBack()}>
-                <ChevronLeft size={24} color={colors.text} />
+                <ChevronLeft size={24} color={colors.cream} />
               </Pressable>
               <Pressable
                 style={[styles.chatBtn, authHydrating && { opacity: 0.5 }]}
                 onPress={handleMessage}
                 disabled={authHydrating}
               >
-                <MessageSquare size={22} color={colors.text} />
+                <MessageSquare size={22} color={colors.cream} />
               </Pressable>
             </View>
 
             <View style={styles.profileArea}>
               <View style={styles.avatarContainer}>
                 {consultant.avatar_url ? (
-                  <Image source={{ uri: consultant.avatar_url }} style={styles.avatar} />
+                  <Image source={{ uri: getAssetUrl(consultant.avatar_url) ?? undefined }} style={styles.avatar} />
                 ) : (
-                  <View style={styles.avatarFallback}><Text style={styles.avatarInitial}>{consultant.full_name?.[0]}</Text></View>
+                  <View style={styles.avatarFallback}><Text style={styles.avatarInitial}>{repairUtf8Mojibake(consultant.full_name)?.[0]}</Text></View>
                 )}
                 {isOnline && <View style={styles.onlineDot} />}
               </View>
 
               <View style={styles.nameRow}>
-                <Text style={styles.name}>{consultant.full_name}</Text>
+                <Text style={styles.name}>{repairUtf8Mojibake(consultant.full_name)}</Text>
                 <ShieldCheck size={18} color={colors.gold} />
               </View>
               
-              <Text style={styles.expertise}>{consultant.expertise.join(' · ')}</Text>
+              <Text style={styles.expertise}>
+                {consultant.expertise.map((slug) => t(`home.expertise.${slug}`, slug.replaceAll('_', ' '))).join(' · ')}
+              </Text>
 
               <View style={styles.metrics}>
                 <View style={styles.metric}>
@@ -685,12 +724,12 @@ export default function ConsultantDetailScreen() {
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metric}>
-                  <Clock size={14} color={colors.textMuted} />
+                  <Clock size={14} color={colors.cream} />
                   <Text style={styles.metricVal}>{consultant.session_duration} dk</Text>
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metric}>
-                  <Globe size={14} color={colors.textMuted} />
+                  <Globe size={14} color={colors.cream} />
                   <Text style={styles.metricVal}>{consultant.languages.map(l => l.toUpperCase()).join('/')}</Text>
                 </View>
               </View>
@@ -701,7 +740,7 @@ export default function ConsultantDetailScreen() {
         {/* About */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('consultant.about')}</Text>
-          <Text style={styles.bio}>{consultant.bio || t('consultantDetail.noBio', 'Bu danışman henüz bir açıklama eklememiş.')}</Text>
+          <Text style={styles.bio}>{repairUtf8Mojibake(consultant.bio) || t('consultantDetail.noBio', 'Bu danışman henüz bir açıklama eklememiş.')}</Text>
           <Text style={styles.disclaimer}>{t('consultantDetail.disclaimer', 'Bu danışmanlık hizmeti eğlence, kişisel farkındalık ve kişisel değerlendirme amacıyla sunulur. Kesin sonuç, gelecek garantisi, sağlık, hukuk, finans, yatırım, büyü veya ritüel vaadi içermez.')}</Text>
         </View>
 
@@ -714,12 +753,13 @@ export default function ConsultantDetailScreen() {
                     {t('mediaMessages.audioQuestionTitle', 'Sesli soru gönder')}
                   </Text>
                   <Text style={styles.mediaQuestionPrice}>
-                    {Math.ceil(mediaSettings.audio_price)} {mediaSettings.currency}
+                    {Number(mediaSettings.audio_price).toFixed(2)} {mediaSettings.currency}
                   </Text>
                 </View>
                 <Text style={styles.mediaQuestionText}>
                   {t('mediaMessages.audioQuestionDesc', 'Kısa bir ses kaydı gönderin; danışman yanıtladığında bildirim alırsınız.')}
                 </Text>
+                <Text style={styles.mediaQuestionText}>{t('mediaMessages.creditCost', '{{credits}} kredi düşülür', { credits: mediaSettings.audio_credits })}</Text>
                 <Pressable
                   style={[
                     styles.mediaQuestionBtn,
@@ -750,12 +790,13 @@ export default function ConsultantDetailScreen() {
                     {t('mediaMessages.videoQuestionTitle', 'Görüntülü soru gönder')}
                   </Text>
                   <Text style={styles.mediaQuestionPrice}>
-                    {Math.ceil(mediaSettings.video_price)} {mediaSettings.currency}
+                    {Number(mediaSettings.video_price).toFixed(2)} {mediaSettings.currency}
                   </Text>
                 </View>
                 <Text style={styles.mediaQuestionText}>
                   {t('mediaMessages.videoQuestionDesc', 'Kısa bir video kaydı gönderin; danışman video veya sesli yanıt verebilir.')}
                 </Text>
+                <Text style={styles.mediaQuestionText}>{t('mediaMessages.creditCost', '{{credits}} kredi düşülür', { credits: mediaSettings.video_credits })}</Text>
                 <Pressable
                   style={[styles.mediaQuestionBtn, mediaQuestionLoading && styles.mediaQuestionBtnDisabled]}
                   onPress={handleVideoQuestionPress}
@@ -791,18 +832,22 @@ export default function ConsultantDetailScreen() {
                 <Pressable
                   key={svc.id}
                   style={[styles.serviceCard, active && styles.serviceCardActive]}
-                  onPress={() => setSelectedServiceId(svc.id)}
+                  onPress={() => {
+                    setSelectedServiceId(svc.id);
+                    setSelectedSlot(null);
+                    setMediaType('audio');
+                  }}
                 >
                   <View style={styles.serviceCardHeader}>
-                    <Text style={styles.serviceName}>{svc.name}</Text>
-                    <Text style={styles.servicePrice}>
+                    <Text style={[styles.serviceName, active && styles.serviceTextActive]}>{repairUtf8Mojibake(svc.name)}</Text>
+                    <Text style={[styles.servicePrice, active && styles.serviceTextActive]}>
                       {isFree ? t('common.free', 'Ücretsiz') : `₺${Math.round(Number(svc.price))}`}
                     </Text>
                   </View>
-                  <Text style={styles.serviceMeta}>{svc.duration_minutes} dakika</Text>
+                  <Text style={[styles.serviceMeta, active && styles.serviceTextActive]}>{svc.duration_minutes} dakika</Text>
                   {svc.description ? (
-                    <Text style={styles.serviceDesc} numberOfLines={active ? 6 : 2}>
-                      {svc.description}
+                    <Text style={[styles.serviceDesc, active && styles.serviceTextActive]} numberOfLines={active ? 6 : 2}>
+                      {repairUtf8Mojibake(svc.description)}
                     </Text>
                   ) : null}
                   {isFree ? (
@@ -950,7 +995,7 @@ export default function ConsultantDetailScreen() {
       <View style={styles.footer}>
         <View style={styles.footerPrice}>
           <Text style={styles.footerPriceLabel}>
-            {selectedService ? selectedService.name : t('consultantDetail.sessionFeeLabel', 'Seans Ücreti')}
+            {selectedService ? repairUtf8Mojibake(selectedService.name) : t('consultantDetail.sessionFeeLabel', 'Seans Ücreti')}
           </Text>
           <Text style={styles.footerPriceVal}>
             {footerIsFree ? t('common.free', 'Ücretsiz') : `₺${Math.round(footerPrice)}`}

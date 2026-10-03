@@ -7,6 +7,14 @@ import {
   ScrollView,
   ActivityIndicator
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, type Href } from 'expo-router';
+import { safeRouterBack } from '@/lib/navigation';
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
+import { navigationApi, getPublicWebUrl } from '@/lib/api';
+import { resolveMenuLink } from '@/lib/menuRoutes';
+import type { PublicMenuItemDto, FooterSectionPublic } from '@/types';
 import { useAppTheme, type AppTheme } from '@/theme';
 
 function buildScreenStyles(t: AppTheme) {
@@ -24,9 +32,9 @@ function buildScreenStyles(t: AppTheme) {
     borderBottomColor: colors.lineSoft,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -85,6 +93,8 @@ function buildScreenStyles(t: AppTheme) {
   },
   errText: { fontFamily: font.sans, fontSize: 15, color: colors.textMuted, textAlign: 'center' },
   retry: {
+    minHeight: 44,
+    justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
@@ -96,63 +106,54 @@ function buildScreenStyles(t: AppTheme) {
   });
 }
 
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { safeRouterBack } from '@/lib/navigation';
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { useTranslation } from 'react-i18next';
-
-import { navigationApi, getPublicWebUrl } from '@/lib/api';
-import { resolveMenuLink } from '@/lib/menuRoutes';
-
-import type { PublicMenuItemDto, FooterSectionPublic } from '@/types';
+function MenuRow({
+  title,
+  depth,
+  hasChildren,
+  expanded,
+  navigable,
+  onPress,
+  styles,
+  colors,
+  spacing,
+}: {
+  title: string;
+  depth: number;
+  hasChildren: boolean;
+  expanded: boolean;
+  navigable: boolean;
+  onPress: () => void;
+  styles: ReturnType<typeof buildScreenStyles>;
+  colors: AppTheme['colors'];
+  spacing: AppTheme['spacing'];
+}) {
+  const pad = Math.min(depth, 6) * spacing.md;
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.row,
+        { paddingLeft: spacing.lg + pad },
+        pressed && styles.rowPressed,
+      ]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={hasChildren ? { expanded } : undefined}
+    >
+      <Text style={styles.rowTitle} numberOfLines={2}>{title}</Text>
+      {hasChildren ? (
+        <ChevronDown size={18} color={colors.textMuted} style={{ transform: [{ rotate: expanded ? '180deg' : '0deg' }] }} />
+      ) : navigable ? (
+        <ChevronRight size={18} color={colors.gold} />
+      ) : null}
+    </Pressable>
+  );
+}
 
 export default function MenuScreen() {
   const theme = useAppTheme();
   const { colors, spacing } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
-
-  function MenuRow({
-    title,
-    depth,
-    hasChildren,
-    expanded,
-    navigable,
-    onPress,
-  }: {
-    title: string;
-    depth: number;
-    hasChildren: boolean;
-    expanded: boolean;
-    navigable: boolean;
-    onPress: () => void;
-  }) {
-    const pad = Math.min(depth, 6) * spacing.md;
-    return (
-      <Pressable
-        style={({ pressed }) => [
-          styles.row,
-          { paddingLeft: spacing.lg + pad },
-          pressed && styles.rowPressed,
-        ]}
-        onPress={onPress}
-        accessibilityRole="button"
-      >
-        <Text style={styles.rowTitle} numberOfLines={2}>
-          {title}
-        </Text>
-        {hasChildren ? (
-          <ChevronDown
-            size={18}
-            color={colors.textMuted}
-            style={{ transform: [{ rotate: expanded ? '180deg' : '0deg' }] }}
-          />
-        ) : navigable ? (
-          <ChevronRight size={18} color={colors.gold} />
-        ) : null}
-      </Pressable>
-    );
-  }
 
   const { t, i18n } = useTranslation();
   const [headerItems, setHeaderItems] = useState<PublicMenuItemDto[]>([]);
@@ -188,7 +189,8 @@ export default function MenuScreen() {
   }, [locale, t]);
 
   useEffect(() => {
-    load();
+    const timer = setTimeout(() => { void load(); }, 0);
+    return () => clearTimeout(timer);
   }, [load]);
 
   const navigateItem = useCallback(
@@ -216,12 +218,12 @@ export default function MenuScreen() {
       }
 
       router.push({
-        pathname: '/webview/index',
+        pathname: '/webview',
         params: {
           url: encodeURIComponent(target.url),
           title: item.title ?? '',
         },
-      } as any);
+      });
     },
     [locale, webOrigin],
   );
@@ -235,6 +237,9 @@ export default function MenuScreen() {
 
       const row = (
         <MenuRow
+              styles={styles}
+              colors={colors}
+              spacing={spacing}
           key={node.id}
           title={node.title || '—'}
           depth={depth}
@@ -267,6 +272,9 @@ export default function MenuScreen() {
               <Text style={styles.footerColumnTitle}>{sec.title || sec.slug}</Text>
               {links.map((item) => (
                 <MenuRow
+              styles={styles}
+              colors={colors}
+              spacing={spacing}
                   key={item.id}
                   title={item.title || '—'}
                   depth={0}
@@ -289,11 +297,11 @@ export default function MenuScreen() {
     <View style={styles.container}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
+          <Pressable onPress={() => safeRouterBack()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.back')}>
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('navigation.menuTitle')}</Text>
-          <View style={{ width: 40 }} />
+          <View style={{ width: 44 }} />
         </View>
 
         {loading ? (
@@ -303,7 +311,7 @@ export default function MenuScreen() {
         ) : error ? (
           <View style={styles.center}>
             <Text style={styles.errText}>{error}</Text>
-            <Pressable style={styles.retry} onPress={load}>
+            <Pressable style={styles.retry} onPress={load} accessibilityRole="button" accessibilityLabel={t('common.tryAgain')}>
               <Text style={styles.retryText}>{t('common.tryAgain')}</Text>
             </Pressable>
           </View>
@@ -318,52 +326,70 @@ export default function MenuScreen() {
             <View style={styles.footerDivider} />
             <Text style={styles.footerSectionLabel}>{t('menu.appSection')}</Text>
             <MenuRow
+              styles={styles}
+              colors={colors}
+              spacing={spacing}
               title={t('menu.aboutSupport')}
               depth={0}
               hasChildren={false}
               expanded={false}
               navigable
-              onPress={() => router.push('/info' as any)}
+              onPress={() => router.push('/info' as Href)}
             />
             <MenuRow
+              styles={styles}
+              colors={colors}
+              spacing={spacing}
               title={t('menu.astrologerReport')}
               depth={0}
               hasChildren={false}
               expanded={false}
               navigable
-              onPress={() => router.push('/karne' as any)}
+              onPress={() => router.push('/karne' as Href)}
             />
             <MenuRow
+              styles={styles}
+              colors={colors}
+              spacing={spacing}
               title={t('menu.celebrities')}
               depth={0}
               hasChildren={false}
               expanded={false}
               navigable
-              onPress={() => router.push('/unluler' as any)}
+              onPress={() => router.push('/unluler' as Href)}
             />
             <MenuRow
+              styles={styles}
+              colors={colors}
+              spacing={spacing}
               title={t('menu.blog')}
               depth={0}
               hasChildren={false}
               expanded={false}
               navigable
-              onPress={() => router.push('/blog' as any)}
+              onPress={() => router.push('/blog' as Href)}
             />
             <MenuRow
+              styles={styles}
+              colors={colors}
+              spacing={spacing}
               title={t('menu.becomeConsultant')}
               depth={0}
               hasChildren={false}
               expanded={false}
               navigable
-              onPress={() => router.push('/become-consultant' as any)}
+              onPress={() => router.push('/become-consultant' as Href)}
             />
             <MenuRow
+              styles={styles}
+              colors={colors}
+              spacing={spacing}
               title={t('menu.legalPrivacy')}
               depth={0}
               hasChildren={false}
               expanded={false}
               navigable
-              onPress={() => router.push('/legal' as any)}
+              onPress={() => router.push('/legal' as Href)}
             />
           </ScrollView>
         )}

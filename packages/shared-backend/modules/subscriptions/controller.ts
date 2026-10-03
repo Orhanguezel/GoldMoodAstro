@@ -17,6 +17,7 @@ import {
 import { createCheckoutSession, isStripeConfigured } from '../orders/stripe.service';
 import { convertFromBase, resolveCheckoutCurrency } from '../_shared/currency';
 import { subscriptionPlans, subscriptions } from './schema';
+import { expectedSubscriptionProductId, findMatchingAppleSubscriptionItem, submittedSubscriptionProductMatchesPlan } from './iap-products';
 import { users } from '../auth/schema';
 
 type AdminSubscriptionStatus =
@@ -403,7 +404,7 @@ async function resolveGoogleAccessToken(): Promise<string> {
 async function verifyAppleReceipt(params: {
   receipt: string;
   transactionId?: string;
-  productId?: string;
+  expectedProductId: string;
 }): Promise<IapVerificationResult> {
   const bundleId = asString(process.env.IAP_APPLE_BUNDLE_ID);
   if (!bundleId) {
@@ -465,26 +466,11 @@ async function verifyAppleReceipt(params: {
       Record<string, unknown>
     >;
     const txId = asString(params.transactionId);
-    const prodId = asString(params.productId);
-    const normalized =
-      receiptItems.find((item) => {
-        const itemTx = asString(item.transaction_id);
-        const itemOriginalTx = asString(item.original_transaction_id);
-        const itemProductId = asString(item.product_id);
-        const matchesTx = txId ? itemTx === txId || itemOriginalTx === txId : false;
-        const matchesProduct = prodId ? itemProductId === prodId : false;
-        return matchesTx || matchesProduct;
-      }) ?? receiptItems[0];
+    const normalized = findMatchingAppleSubscriptionItem(receiptItems, params.expectedProductId, txId);
+    if (!normalized) return { valid: false, reason: 'iap_product_mismatch' };
 
-    if (!normalized && (receiptItems.length || txId || prodId)) {
-      return { valid: false, reason: 'apple_receipt_no_items' };
-    }
-
-    if (!normalized && !txId && !prodId) {
-      return { valid: false, reason: 'apple_receipt_transaction_not_found' };
-    }
-
-    const providerSubscriptionId = asString(normalized?.original_transaction_id || normalized?.transaction_id || txId || params.receipt.slice(0, 240));
+    const providerSubscriptionId = asString(normalized.original_transaction_id || normalized.transaction_id);
+    if (!providerSubscriptionId) return { valid: false, reason: 'apple_transaction_id_missing' };
     const providerCustomerId = asString(normalized?.app_account_token || normalized?.web_order_line_item_id);
     const expiresAt = asDateFromMs(normalized?.expires_date_ms);
     if (!expiresAt) {
@@ -516,19 +502,10 @@ async function verifyGoogleReceipt(params: {
   const encodedToken = encodeURIComponent(params.purchaseToken);
 
   const subscriptionEndpoint = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${encodedPackage}/purchases/subscriptions/${encodedProduct}/tokens/${encodedToken}`;
-  const productEndpoint = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${encodedPackage}/purchases/products/${encodedProduct}/tokens/${encodedToken}`;
-
   const headers = { Authorization: `Bearer ${token}` };
 
-  let response = await fetch(subscriptionEndpoint, { headers });
-  let body = await response.json().catch(() => ({})) as Record<string, unknown>;
-  let isSubscriptionPurchase = true;
-
-  if (response.status === 404) {
-    isSubscriptionPurchase = false;
-    response = await fetch(productEndpoint, { headers });
-    body = await response.json().catch(() => ({})) as Record<string, unknown>;
-  }
+  const response = await fetch(subscriptionEndpoint, { headers });
+  const body = await response.json().catch(() => ({})) as Record<string, unknown>;
 
   if (!response.ok) {
     const errorPayload = body.error as Record<string, unknown> | undefined;
@@ -545,7 +522,7 @@ async function verifyGoogleReceipt(params: {
   const paid = asNum(body.paymentState) === 1;
   const providerCustomerId = asString(body.obfuscatedExternalProfileId || body.obfuscatedAccountId || body.accountId);
   const expiresAt = asDateFromMs(expiryMillis);
-  if (isSubscriptionPurchase && !expiresAt) {
+  if (!expiresAt) {
     return { valid: false, reason: 'google_subscription_expiry_required' };
   }
   if (expiresAt && expiresAt.getTime() <= Date.now()) {
@@ -558,7 +535,7 @@ async function verifyGoogleReceipt(params: {
   }
 
   const acknowledgementState = asNum(body.acknowledgementState);
-  if (isSubscriptionPurchase && acknowledgementState !== 1) {
+  if (acknowledgementState !== 1) {
     const acknowledgeEndpoint = `${subscriptionEndpoint}:acknowledge`;
     const acknowledgeResponse = await fetch(acknowledgeEndpoint, {
       method: 'POST',
@@ -1403,6 +1380,17 @@ export const verifyReceipt: RouteHandler = async (req, reply) => {
     return reply.code(400).send({ error: { message: 'subscription_plan_not_active' } });
   }
 
+  const expectedProductId = expectedSubscriptionProductId(plan, platform);
+  if (!expectedProductId) {
+    return reply.code(503).send({ error: { message: 'iap_subscription_product_not_configured' } });
+  }
+  if (!submittedSubscriptionProductMatchesPlan(plan, platform, productId)) {
+    return reply.code(400).send({ error: { message: 'iap_product_mismatch' } });
+  }
+  if (platform === 'apple_iap' && !receipt) {
+    return reply.code(400).send({ error: { message: 'receipt_required' } });
+  }
+
   const now = new Date();
   const trialDays = (await userUsedSubscriptionTrial(userId)) ? 0 : Number(plan.trial_days || 0);
   const trialEndsAt =
@@ -1414,7 +1402,7 @@ export const verifyReceipt: RouteHandler = async (req, reply) => {
       verification = await verifyAppleReceipt({
         receipt,
         transactionId,
-        productId,
+        expectedProductId,
       });
     } else {
       const packageName = asString(process.env.IAP_GOOGLE_PACKAGE_NAME);
@@ -1428,7 +1416,7 @@ export const verifyReceipt: RouteHandler = async (req, reply) => {
 
       verification = await verifyGoogleReceipt({
         packageName,
-        productId,
+        productId: expectedProductId,
         purchaseToken,
       });
     }

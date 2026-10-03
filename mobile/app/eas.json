@@ -30,6 +30,16 @@
     "production": {
       "autoIncrement": true,
       "env": {
+        "EXPO_PUBLIC_IAP_PRODUCT_MONTHLY_IOS": "com.goldmoodastro.app.monthly",
+        "EXPO_PUBLIC_IAP_PRODUCT_YEARLY_IOS": "com.goldmoodastro.app.yearly",
+        "EXPO_PUBLIC_IAP_PRODUCT_MONTHLY_ANDROID": "com.goldmoodastro.app.monthly",
+        "EXPO_PUBLIC_IAP_PRODUCT_YEARLY_ANDROID": "com.goldmoodastro.app.yearly",
+        "EXPO_PUBLIC_IAP_CREDIT_STARTER_IOS": "com.goldmoodastro.app.credits.starter",
+        "EXPO_PUBLIC_IAP_CREDIT_POPULAR_IOS": "com.goldmoodastro.app.credits.popular",
+        "EXPO_PUBLIC_IAP_CREDIT_VALUE_IOS": "com.goldmoodastro.app.credits.value",
+        "EXPO_PUBLIC_IAP_CREDIT_STARTER_ANDROID": "com.goldmoodastro.app.credits.starter",
+        "EXPO_PUBLIC_IAP_CREDIT_POPULAR_ANDROID": "com.goldmoodastro.app.credits.popular",
+        "EXPO_PUBLIC_IAP_CREDIT_VALUE_ANDROID": "com.goldmoodastro.app.credits.value",
         "EXPO_PUBLIC_API_URL": "https://goldmoodastro.com/api",
         "EXPO_PUBLIC_SITE_URL": "https://goldmoodastro.com",
         "EXPO_PUBLIC_APP_NAME": "GoldMoodAstro",

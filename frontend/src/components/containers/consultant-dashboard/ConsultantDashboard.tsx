@@ -72,7 +72,6 @@ import BookingMessageButton from '@/components/common/BookingMessageButton';
 import MultiSelectChip from '@/components/common/MultiSelectChip';
 import ConsultantCardPreview from './ConsultantCardPreview';
 import PageContainer from '@/components/common/PageContainer';
-import { useUploadToBucketMutation } from '@/integrations/rtk/public/storage_public.endpoints';
 
 type TabKey = 'overview' | 'profile' | 'services' | 'availability' | 'bookings' | 'messages' | 'media' | 'blog' | 'wallet' | 'reviews' | 'clients' | 'analytics';
 
@@ -132,7 +131,7 @@ export default function ConsultantDashboard({ locale }: Props) {
   const { isAuthenticated, isReady, isLoading: authLoading } = useAuthStore();
   const { ui } = useUiSection('ui_dashboard', locale as any);
 
-  const { data: profile, isLoading: profileLoading, isError: profileError } = useGetMyConsultantProfileQuery({ locale }, {
+  const { data: profile, isLoading: profileLoading, error: profileError, refetch: refetchProfile } = useGetMyConsultantProfileQuery({ locale }, {
     skip: !isReady || !isAuthenticated,
   });
   const { data: stats, isLoading: statsLoading } = useGetMyConsultantStatsQuery(undefined, { skip: !profile });
@@ -183,7 +182,21 @@ export default function ConsultantDashboard({ locale }: Props) {
     );
   }
 
-  if (profileError || !profile) {
+  const notConsultant = profileError && 'status' in profileError && profileError.status === 403;
+  if (profileError && !notConsultant) {
+    return (
+      <PageContainer width="wide" center className="min-h-[55vh] bg-(--gm-bg) pt-24 pb-10">
+        <div role="alert" className="rounded-2xl border border-(--gm-border-soft) bg-(--gm-surface) p-6 text-center">
+          <p className="mb-4 text-(--gm-text)">{ui('ui_dashboard_load_error', 'Your consultant dashboard could not be loaded. Please try again.')}</p>
+          <button type="button" onClick={() => refetchProfile()} className="btn-premium px-6 py-3">
+            {ui('ui_dashboard_retry', 'Try again')}
+          </button>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  if (notConsultant || !profile) {
     return (
       <EmptyState
         title={ui('ui_dashboard_consultant_only_title', 'This page is only available to consultants')}
@@ -769,9 +782,9 @@ function ProfilePanel({ locale, profile }: { locale: string; profile: Consultant
   const { data: dbLanguages = [], isLoading: isLoadingLanguages } = useListLanguagesPublicQuery();
   const [updateProfile, { isLoading }] = useUpdateMyConsultantProfileMutation();
   const [bio, setBio] = useState<string>(profile.bio || '');
-  const [metaTitle, setMetaTitle] = useState<string>(profile.meta_title || '');
-  const [metaDescription, setMetaDescription] = useState<string>(profile.meta_description || '');
-  const [ogImage, setOgImage] = useState<string>(profile.og_image || '');
+  const [metaTitle] = useState<string>(profile.meta_title || '');
+  const [metaDescription] = useState<string>(profile.meta_description || '');
+  const [ogImage] = useState<string>(profile.og_image || '');
   const [expertise, setExpertise] = useState<string[]>(profile.expertise || []);
   const [languages, setLanguages] = useState<string[]>(profile.languages || []);
   const [meetingPlatforms, setMeetingPlatforms] = useState<string[]>(profile.meeting_platforms || []);

@@ -8,7 +8,8 @@ import { useTranslation } from 'react-i18next';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 import { creditsApi, subscriptionsApi } from '@/lib/api';
-import { finishCreditPurchase, getIapProvider, purchaseCreditPackage } from '@/lib/iap';
+import { finishCreditPurchase, getCreditIapProductId, getIapProductId, getIapProvider, purchaseCreditPackage } from '@/lib/iap';
+import { useStorePrices } from '@/hooks/useStorePrices';
 import type { CreditPackage, SubscriptionPlan } from '@/types';
 
 function buildScreenStyles(t: AppTheme) {
@@ -61,6 +62,10 @@ export default function PackagesScreen() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const creditProductIds = useMemo(() => packages.map(getCreditIapProductId), [packages]);
+  const planProductIds = useMemo(() => plans.map(getIapProductId), [plans]);
+  const creditStore = useStorePrices(creditProductIds, 'in-app');
+  const planStore = useStorePrices(planProductIds, 'subs');
 
   useEffect(() => {
     let alive = true;
@@ -156,7 +161,7 @@ export default function PackagesScreen() {
                  key={pkg.id}
                  style={[styles.card, Number(pkg.is_featured) === 1 && styles.hotCard]}
                  onPress={() => buyPackage(pkg)}
-                 disabled={purchasingId === pkg.id}
+                 disabled={purchasingId === pkg.id || (Platform.OS !== 'web' && !creditStore.prices[getCreditIapProductId(pkg)])}
                >
                   {Number(pkg.is_featured) === 1 && <View style={styles.hotBadge}><Text style={styles.hotText}>{t('packages.mostPopular')}</Text></View>}
                   <Text style={styles.pkgTitle}>{pkg.name_tr || pkg.name_en || pkg.code}</Text>
@@ -169,7 +174,9 @@ export default function PackagesScreen() {
                      {purchasingId === pkg.id ? (
                        <ActivityIndicator color={colors.gold} />
                      ) : (
-                       <Text style={styles.priceText}>{formatMoney(pkg.price_minor, pkg.currency)}</Text>
+                       <Text style={styles.priceText}>{Platform.OS === 'web'
+                         ? formatMoney(pkg.price_minor, pkg.currency)
+                         : creditStore.prices[getCreditIapProductId(pkg)] || t(creditStore.loading ? 'credits.storePriceLoading' : 'credits.storePriceUnavailable')}</Text>
                      )}
                   </View>
                </Pressable>
@@ -182,7 +189,9 @@ export default function PackagesScreen() {
                 <Text style={styles.premiumTitle}>GoldMood Premium</Text>
                 <Text style={styles.premiumSub}>
                   {popularPlan
-                    ? `${popularPlan.name_tr || popularPlan.name_en} · ${formatMoney(popularPlan.price_minor, popularPlan.currency)}`
+                    ? `${popularPlan.name_tr || popularPlan.name_en} · ${Platform.OS === 'web'
+                      ? formatMoney(popularPlan.price_minor, popularPlan.currency)
+                      : planStore.prices[getIapProductId(popularPlan)] || t(planStore.loading ? 'subscription.storePriceLoading' : 'subscription.storePriceUnavailable')}`
                     : t('packages.premiumBannerSub')}
                 </Text>
              </View>

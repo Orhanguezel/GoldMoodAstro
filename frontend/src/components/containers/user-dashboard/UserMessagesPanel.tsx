@@ -14,6 +14,7 @@ import {
 } from '@/integrations/rtk/private/consultant_self.endpoints';
 import { extractApiError } from '@/integrations/shared';
 import ChatWarningBanner from '@/components/common/ChatWarningBanner';
+import { ChatReportButton, ChatSafetyControls, useWebChatSafety } from '@/components/common/ChatSafetyControls';
 import { useUiSection } from '@/i18n';
 
 const LOCALE_MAP: Record<string, string> = { tr: 'tr-TR', en: 'en-US', de: 'de-DE' };
@@ -43,6 +44,7 @@ export default function UserMessagesPanel() {
     pollingInterval: 30000,
   });
   const [activeId, setActiveId] = useState<string | null>(null);
+  const safety = useWebChatSafety(activeId, locale);
 
   const { data: convo, isFetching: convoLoading } = useGetMyCustomerThreadMessagesQuery(activeId || '', {
     skip: !activeId,
@@ -77,7 +79,7 @@ export default function UserMessagesPanel() {
   }, [convo?.messages?.length]);
 
   const handleSend = async () => {
-    if (!activeId || !draft.trim()) return;
+    if (!activeId || !draft.trim() || !safety.ready || safety.blocked || !safety.termsAccepted) return;
     try {
       await reply({ id: activeId, text: draft.trim() }).unwrap();
       setDraft('');
@@ -196,6 +198,7 @@ export default function UserMessagesPanel() {
             <div className="m-3 mb-0">
               <ChatWarningBanner compact locale={locale as 'tr' | 'en' | 'de'} />
             </div>
+            <div className="mx-3"><ChatSafetyControls safety={safety} locale={locale} /></div>
 
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
               {convoLoading ? (
@@ -223,6 +226,7 @@ export default function UserMessagesPanel() {
                         <div className={`text-[10px] mt-1 ${mine ? 'text-(--gm-bg-deep)/60' : 'text-(--gm-text-dim)'}`}>
                           {formatTime(m.created_at, locale)}
                         </div>
+                        {!mine && <ChatReportButton messageId={m.id} safety={safety} locale={locale} />}
                       </div>
                     </div>
                   );
@@ -243,12 +247,12 @@ export default function UserMessagesPanel() {
                 }}
                 rows={2}
                 placeholder={ui('ui_account_msg_input_placeholder', 'Type your message...')}
-                disabled={replying}
+                disabled={replying || !safety.ready || safety.blocked || !safety.termsAccepted}
                 className="flex-1 bg-(--gm-bg-deep) border border-(--gm-border-soft) rounded-xl p-3 text-sm text-(--gm-text) resize-none focus:ring-2 focus:ring-(--gm-gold)/30 focus:border-(--gm-gold)/40 outline-none"
               />
               <button
                 onClick={handleSend}
-                disabled={replying || !draft.trim()}
+                disabled={replying || !draft.trim() || !safety.ready || safety.blocked || !safety.termsAccepted}
                 className="h-11 px-4 rounded-xl bg-(--gm-gold) text-(--gm-bg-deep) disabled:opacity-50 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
               >
                 {replying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

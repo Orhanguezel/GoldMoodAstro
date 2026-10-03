@@ -3,6 +3,8 @@ import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useTranslation } from 'react-i18next';
 import { useAppTheme, type AppTheme } from '@/theme';
+import { getPublicWebUrl } from '@/lib/api';
+import { isAllowedContentWebUrl } from '@/lib/menuRoutes';
 
 type Props = {
   html: string;
@@ -45,8 +47,9 @@ export function CmsHtmlView({ html, loading }: Props) {
   return (
     <View style={styles.wrap}>
       <WebView
-        originWhitelist={['*']}
+        originWhitelist={['about:blank', 'https://*', 'http://localhost:*', 'http://127.0.0.1:*']}
         source={source}
+        onShouldStartLoadWithRequest={(request) => request.url === 'about:blank' || isAllowedContentWebUrl(request.url, getPublicWebUrl())}
         style={{ flex: 1, backgroundColor: colors.bg }}
         showsVerticalScrollIndicator={false}
       />

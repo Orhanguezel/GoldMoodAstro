@@ -133,13 +133,17 @@ export default function ReadingDetailScreen() {
 
   useEffect(() => {
     if (!validType || !id) {
-      setError(t('readings.invalidRecord'));
-      setLoading(false);
+      void Promise.resolve().then(() => {
+        setError(t('readings.invalidRecord'));
+        setLoading(false);
+      });
       return;
     }
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+    void Promise.resolve().then(() => {
+      setLoading(true);
+      setError(null);
+    });
     loadReading(type as ReadingHistoryType, id)
       .then((body) => {
         if (!cancelled) setText(body || t('readings.noContent'));

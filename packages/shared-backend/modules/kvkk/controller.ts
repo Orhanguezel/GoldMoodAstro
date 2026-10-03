@@ -6,6 +6,7 @@ import type { RouteHandler } from 'fastify';
 import { db } from '../../db/client';
 import { sql, eq, and } from 'drizzle-orm';
 import { accountDeletionRequests } from './schema';
+import { revokeAppleAuthorizationForDeletion } from './apple-revocation';
 
 const COOLING_OFF_DAYS = 7;
 
@@ -71,13 +72,37 @@ export const exportMyData: RouteHandler = async (req, reply) => {
 
 /**
  * POST /me/delete-account — auth, hesap silme talebi yarat (7 gün cooling-off)
- * Body: { reason?: string }
+ * Body: { reason?: string, apple_identity_token?: string, apple_authorization_code?: string, apple_nonce?: string }
  */
 export const requestAccountDeletion: RouteHandler = async (req, reply) => {
   const { id: userId } = getUser(req);
   if (!userId) return reply.code(401).send({ error: { message: 'unauthorized' } });
 
-  const body = (req.body ?? {}) as { reason?: string };
+  const body = (req.body ?? {}) as {
+    reason?: string;
+    apple_identity_token?: string;
+    apple_authorization_code?: string;
+    apple_nonce?: string;
+  };
+
+  const revokeApple = async () => {
+    if (!body.apple_identity_token && !body.apple_authorization_code) return 'not_requested' as const;
+    try {
+      const userRows = await db.execute(sql`SELECT email FROM users WHERE id = ${userId} LIMIT 1`);
+      const rows = Array.isArray((userRows as unknown as unknown[])?.[0])
+        ? (userRows as unknown as { email: string }[][])[0]
+        : userRows as unknown as { email: string }[];
+      if (!rows?.[0]?.email) return 'failed' as const;
+      return revokeAppleAuthorizationForDeletion({
+        userEmail: rows[0].email,
+        identityToken: body.apple_identity_token,
+        authorizationCode: body.apple_authorization_code,
+        nonce: body.apple_nonce,
+      });
+    } catch {
+      return 'failed' as const;
+    }
+  };
 
   // Mevcut pending talep var mı?
   const [existing] = await db
@@ -87,12 +112,14 @@ export const requestAccountDeletion: RouteHandler = async (req, reply) => {
     .limit(1);
 
   if (existing) {
+    const appleRevocation = await revokeApple();
     return reply.send({
       data: {
         id: existing.id,
         status: existing.status,
         scheduled_for: existing.scheduled_for,
         message: 'pending_request_already_exists',
+        apple_revocation: appleRevocation,
       },
     });
   }
@@ -111,12 +138,17 @@ export const requestAccountDeletion: RouteHandler = async (req, reply) => {
     ip_address: (req.ip as string) || null,
   });
 
+  // Apple revocation is best-effort. Apple's guidance requires us to fulfil deletion
+  // even if no usable code exists, and the response must never claim false success.
+  const appleRevocation = await revokeApple();
+
   return reply.code(201).send({
     data: {
       id,
       status: 'pending',
       scheduled_for: scheduledFor,
       cooling_off_days: COOLING_OFF_DAYS,
+      apple_revocation: appleRevocation,
       message: 'Hesabınız 7 gün içinde kalıcı olarak silinecektir. Bu süre içinde DELETE /me/delete-account ile iptal edebilirsiniz.',
     },
   });

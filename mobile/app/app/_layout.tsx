@@ -19,11 +19,17 @@ import {
   Fraunces_400Regular_Italic,
 } from '@expo-google-fonts/fraunces';
 import { JetBrainsMono_400Regular, JetBrainsMono_500Medium } from '@expo-google-fonts/jetbrains-mono';
+import { Gabriela_400Regular } from '@expo-google-fonts/gabriela';
 import {
   Manrope_400Regular,
   Manrope_500Medium,
   Manrope_700Bold,
 } from '@expo-google-fonts/manrope';
+import {
+  Outfit_400Regular,
+  Outfit_500Medium,
+  Outfit_700Bold,
+} from '@expo-google-fonts/outfit';
 
 import { initI18n } from '@/lib/i18n';
 import { routeFromNotificationData } from '@/lib/notificationRoutes';
@@ -46,11 +52,15 @@ function RootLayoutInner() {
     Fraunces_500Medium,
     Fraunces_700Bold,
     Fraunces_400Regular_Italic,
+    Gabriela_400Regular,
     JetBrainsMono_400Regular,
     JetBrainsMono_500Medium,
     Manrope_400Regular,
     Manrope_500Medium,
     Manrope_700Bold,
+    Outfit_400Regular,
+    Outfit_500Medium,
+    Outfit_700Bold,
   });
   const ready = fontsReady || !!fontError;
 
@@ -110,6 +120,8 @@ function RootLayoutInner() {
         <Stack.Screen name="info/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="contact/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
         <Stack.Screen name="media-messages/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="messages/index" options={{ presentation: 'card', animation: 'slide_from_right' }} />
+        <Stack.Screen name="messages/[id]" options={{ presentation: 'card', animation: 'slide_from_right' }} />
 
         <Stack.Screen name="booking/[id]/review" options={{ presentation: 'modal' }} />
       </Stack>

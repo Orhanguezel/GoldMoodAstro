@@ -52,13 +52,21 @@ export default function BlogPostScreen() {
 
   useEffect(() => {
     if (!slug) return;
+    let cancelled = false;
     const locale = i18n.language?.slice(0, 2) ?? 'tr';
-    setLoading(true);
-    customPagesApi
-      .getBySlug(slug, locale)
-      .then(setPage)
-      .catch(() => setPage(null))
-      .finally(() => setLoading(false));
+    void Promise.resolve().then(async () => {
+      if (cancelled) return;
+      setLoading(true);
+      try {
+        const next = await customPagesApi.getBySlug(slug, locale);
+        if (!cancelled) setPage(next);
+      } catch {
+        if (!cancelled) setPage(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
   }, [slug, i18n.language]);
 
   const html = extractHtmlFromPage(page);

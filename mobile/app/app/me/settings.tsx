@@ -22,7 +22,7 @@ function buildScreenStyles(t: AppTheme) {
   navHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   navTitle: { fontFamily: font.display, fontSize: 20, color: colors.text },
-  saveBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.gold + '15', alignItems: 'center', justifyContent: 'center' },
+  saveBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.gold + '15', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   scrollContent: { padding: spacing.lg, gap: 20 },
   section: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: 20, borderWidth: 1, borderColor: colors.lineSoft, gap: 16 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
@@ -58,11 +58,12 @@ import {
   ChevronLeft,
   Calendar,
   Clock,
-  MapPin
+  MapPin,
+  Lock,
 } from 'lucide-react-native';
 
 
-import { profilesApi, birthChartsApi, getAssetUrl } from '@/lib/api';
+import { profilesApi, birthChartsApi, authApi } from '@/lib/api';
 import AvatarUpload from '@/components/AvatarUpload';
 
 function initialsFromName(name?: string | null) {
@@ -77,54 +78,110 @@ function initialsFromName(name?: string | null) {
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const theme = useAppTheme();
-  const { colors } = theme;  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [primaryChart, setPrimaryChart] = useState<any>(null);
   const [formData, setFormData] = useState({
     full_name: '',
+    phone: '',
+    address_line1: '',
+    city: '',
     push_notifications: true,
     email_notifications: true
   });
+  const [passwordData, setPasswordData] = useState({ current: '', next: '', confirm: '' });
 
   const loadData = async () => {
+    setLoading(true);
+    setLoadError(false);
     try {
-      const [p, charts] = await Promise.all([
-        profilesApi.getMyProfile(),
-        birthChartsApi.listMyBirthCharts()
-      ]);
+      const p = await profilesApi.getMyProfile();
       setProfile(p);
-      setPrimaryChart(charts?.[0]);
       setFormData({
         full_name: p?.full_name || '',
-        push_notifications: !!p?.push_notifications,
-        email_notifications: !!p?.email_notifications
+        phone: typeof p?.phone === 'string' ? p.phone : '',
+        address_line1: typeof p?.address_line1 === 'string' ? p.address_line1 : '',
+        city: typeof p?.city === 'string' ? p.city : '',
+        push_notifications: p?.push_notifications == null ? true : !!p.push_notifications,
+        email_notifications: p?.email_notifications == null ? true : !!p.email_notifications
       });
+      // The birth chart is an optional summary; its failure must not hide account settings.
+      try {
+        const charts = await birthChartsApi.listMyBirthCharts();
+        setPrimaryChart(charts?.[0] ?? null);
+      } catch {
+        setPrimaryChart(null);
+      }
     } catch (e) {
       logger.error('Settings load error:', e);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    void Promise.resolve().then(loadData);
   }, []);
 
   const handleSave = async () => {
+    if (saving || loadError) return;
+    const fullName = formData.full_name.trim();
+    if (!fullName) {
+      Alert.alert(t('common.error', 'Bir hata oluştu'), t('profile.fullNameRequired', 'Ad soyad boş bırakılamaz.'));
+      return;
+    }
+    setSaving(true);
     try {
-      await profilesApi.upsertMyProfile({
+      const updated = await profilesApi.upsertMyProfile({
         profile: {
-          full_name: formData.full_name,
-          avatar_url: profile?.avatar_url,
+          full_name: fullName,
+          phone: formData.phone.trim(),
+          address_line1: formData.address_line1.trim(),
+          city: formData.city.trim(),
+          ...(typeof profile?.avatar_url === 'string' && profile.avatar_url ? { avatar_url: profile.avatar_url } : {}),
           push_notifications: formData.push_notifications ? 1 : 0,
           email_notifications: formData.email_notifications ? 1 : 0
         }
       });
+      setProfile(updated);
       Alert.alert(t('common.success', 'Başarılı'), t('profile.settingsUpdated', 'Ayarlarınız güncellendi.'));
     } catch (e) {
       Alert.alert(t('common.error', 'Bir hata oluştu'), t('profile.settingsUpdateError', 'Güncelleme yapılamadı.'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (changingPassword) return;
+    if (!passwordData.current) {
+      Alert.alert(t('common.error', 'Bir hata oluştu'), t('profile.currentPasswordRequired', 'Mevcut şifrenizi girin.'));
+      return;
+    }
+    if (passwordData.next.length < 6) {
+      Alert.alert(t('common.error', 'Bir hata oluştu'), t('profile.passwordTooShort', 'Şifre en az 6 karakter olmalı.'));
+      return;
+    }
+    if (passwordData.next !== passwordData.confirm) {
+      Alert.alert(t('common.error', 'Bir hata oluştu'), t('profile.passwordsMismatch', 'Şifreler eşleşmiyor.'));
+      return;
+    }
+    setChangingPassword(true);
+    try {
+      await authApi.updateUser({ password: passwordData.next, current_password: passwordData.current });
+      setPasswordData({ current: '', next: '', confirm: '' });
+      Alert.alert(t('common.success', 'Başarılı'), t('profile.passwordUpdated', 'Şifre güncellendi.'));
+    } catch (e) {
+      Alert.alert(t('common.error', 'Bir hata oluştu'), t('profile.passwordUpdateError', 'Şifre güncellenemedi.'));
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -144,14 +201,22 @@ export default function SettingsScreen() {
             <ChevronLeft size={24} color={colors.gold} />
           </Pressable>
           <Text style={styles.navTitle}>{t('profile.settingsTitle', 'Profil Ayarları')}</Text>
-          <Pressable onPress={handleSave} style={styles.saveBtn}>
+          <Pressable onPress={handleSave} disabled={saving || loadError} accessibilityRole="button" accessibilityLabel={t('profile.save', 'Kaydet')} style={[styles.saveBtn, (saving || loadError) && { opacity: 0.5 }]}>
             <Save size={20} color={colors.gold} />
           </Pressable>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          {loadError && (
+            <View style={styles.section}>
+              <Text style={styles.rowTitle}>{t('profile.loadError', 'Profil ayarları yüklenemedi.')}</Text>
+              <Pressable onPress={() => void loadData()} accessibilityRole="button" style={[styles.saveBtn, { width: 'auto', minHeight: 48, paddingHorizontal: 20 }]}>
+                <Text style={[styles.rowTitle, { color: colors.gold }]}>{t('profile.retry', 'Tekrar dene')}</Text>
+              </Pressable>
+            </View>
+          )}
           {/* Kişisel Bilgiler */}
-          <View style={styles.section}>
+          {!loadError && <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <User size={18} color={colors.gold} />
               <Text style={styles.sectionTitle}>{t('profile.personalInfo', 'Kişisel Bilgiler')}</Text>
@@ -180,6 +245,19 @@ export default function SettingsScreen() {
                />
             </View>
 
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('profile.phoneLabel', 'TELEFON')}</Text>
+              <TextInput style={styles.input} value={formData.phone} onChangeText={(phone) => setFormData(prev => ({ ...prev, phone }))} keyboardType="phone-pad" autoComplete="tel" />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('profile.addressLabel', 'ADRES')}</Text>
+              <TextInput style={styles.input} value={formData.address_line1} onChangeText={(address_line1) => setFormData(prev => ({ ...prev, address_line1 }))} autoComplete="street-address" />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('profile.cityLabel', 'ŞEHİR')}</Text>
+              <TextInput style={styles.input} value={formData.city} onChangeText={(city) => setFormData(prev => ({ ...prev, city }))} autoComplete="off" />
+            </View>
+
             {primaryChart && (
               <View style={styles.chartCard}>
                 <View style={styles.chartHeader}>
@@ -201,10 +279,32 @@ export default function SettingsScreen() {
                 </View>
               </View>
             )}
+          </View>}
+
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Lock size={18} color={colors.gold} />
+              <Text style={styles.sectionTitle}>{t('profile.securityTitle', 'Güvenlik')}</Text>
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('profile.currentPassword', 'Mevcut şifre')}</Text>
+              <TextInput style={styles.input} value={passwordData.current} onChangeText={(current) => setPasswordData(prev => ({ ...prev, current }))} secureTextEntry autoComplete="current-password" />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('profile.newPassword', 'Yeni şifre')}</Text>
+              <TextInput style={styles.input} value={passwordData.next} onChangeText={(next) => setPasswordData(prev => ({ ...prev, next }))} secureTextEntry autoComplete="new-password" />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>{t('profile.confirmPassword', 'Yeni şifre tekrar')}</Text>
+              <TextInput style={styles.input} value={passwordData.confirm} onChangeText={(confirm) => setPasswordData(prev => ({ ...prev, confirm }))} secureTextEntry autoComplete="new-password" />
+            </View>
+            <Pressable onPress={handleChangePassword} disabled={changingPassword} accessibilityRole="button" style={[styles.saveBtn, { width: 'auto', minHeight: 48, paddingHorizontal: 20 }, changingPassword && { opacity: 0.5 }]}>
+              <Text style={[styles.rowTitle, { color: colors.gold }]}>{changingPassword ? t('profile.updatingPassword', 'Güncelleniyor...') : t('profile.updatePassword', 'Şifreyi güncelle')}</Text>
+            </Pressable>
           </View>
 
           {/* Bildirimler */}
-          <View style={styles.section}>
+          {!loadError && <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Bell size={18} color={colors.gold} />
               <Text style={styles.sectionTitle}>{t('settings.notifications', 'Bildirimler')}</Text>
@@ -235,7 +335,12 @@ export default function SettingsScreen() {
                  thumbColor={colors.text}
                />
             </View>
-          </View>
+          </View>}
+
+          {!loadError && <Pressable onPress={handleSave} disabled={saving} accessibilityRole="button" style={[styles.saveBtn, { width: 'auto', paddingHorizontal: 24, minHeight: 48, gap: 8 }, saving && { opacity: 0.5 }]}>
+            {saving ? <ActivityIndicator color={colors.gold} /> : <Save size={18} color={colors.gold} />}
+            <Text style={[styles.rowTitle, { color: colors.gold }]}>{saving ? t('profile.saving', 'Kaydediliyor...') : t('profile.save', 'Kaydet')}</Text>
+          </Pressable>}
 
           {/* Hesap Yönetimi */}
           <View style={styles.section}>
@@ -246,12 +351,7 @@ export default function SettingsScreen() {
 
             <Pressable
                style={styles.dangerBtn}
-               onPress={() => {
-                 Alert.alert(t('profile.deleteConfirmTitle', 'Emin misiniz?'), t('profile.deleteAccountBody', 'Hesabınız 7 gün sonra kalıcı olarak silinecektir. Bu işlemi 7 gün içinde iptal edebilirsiniz.'), [
-                   { text: t('common.giveUp', 'Vazgeç'), style: 'cancel' },
-                   { text: t('profile.deleteAccountBtn', 'Hesabımı Sil'), style: 'destructive' }
-                 ]);
-               }}
+               onPress={() => router.push('/profile/privacy' as never)}
             >
                <Trash2 size={16} color={colors.danger} />
                <Text style={styles.dangerBtnText}>{t('profile.deleteAccountUpper', 'HESABI SİL')}</Text>

@@ -1,4 +1,6 @@
 import { livekitApi } from './api';
+import { AudioSession } from '@livekit/react-native';
+import { Platform } from 'react-native';
 
 type LiveKitRoom = {
   connect: (url: string, token: string) => Promise<void>;
@@ -61,11 +63,32 @@ export async function connectLiveKitAudio(params: {
   room.on?.(events.Reconnecting ?? 'reconnecting', () => params.onReconnecting?.());
   room.on?.(events.Reconnected ?? 'reconnected', () => params.onReconnected?.());
 
-  await room.connect(params.wsUrl, params.token);
-  await room.localParticipant?.setMicrophoneEnabled?.(true);
-  params.onConnected?.();
+  try {
+    await AudioSession.startAudioSession();
+    await room.connect(params.wsUrl, params.token);
+    await room.localParticipant?.setMicrophoneEnabled?.(true);
+    params.onConnected?.();
+  } catch (error) {
+    room.disconnect();
+    await AudioSession.stopAudioSession();
+    throw error;
+  }
 
   return room;
+}
+
+export async function stopLiveKitAudioSession() {
+  await AudioSession.stopAudioSession();
+}
+
+export async function setLiveKitSpeaker(enabled: boolean) {
+  const requested = Platform.OS === 'ios'
+    ? (enabled ? 'force_speaker' : 'default')
+    : (enabled ? 'speaker' : 'earpiece');
+  const outputs = await AudioSession.getAudioOutputs();
+  if (!outputs.includes(requested)) return false;
+  await AudioSession.selectAudioOutput(requested);
+  return true;
 }
 
 export async function setLiveKitMicrophone(room: LiveKitRoom | null, enabled: boolean) {

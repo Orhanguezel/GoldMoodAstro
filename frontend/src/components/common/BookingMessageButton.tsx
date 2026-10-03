@@ -9,10 +9,13 @@ import { useParams } from 'next/navigation';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import ChatWarningBanner from './ChatWarningBanner';
+import { ChatReportButton, ChatSafetyControls, useWebChatSafety } from './ChatSafetyControls';
 import { getPublicApiBase } from '@/i18n/publicMetaApi';
 import { useUiSection } from '@/i18n';
+import { tokenStore } from '@/integrations/rtk/token';
 
 const API_BASE = getPublicApiBase() || '/api';
+const chatHeaders = () => ({ 'Content-Type': 'application/json', ...(tokenStore.get() ? { Authorization: `Bearer ${tokenStore.get()}` } : {}) });
 
 interface Message {
   id: string;
@@ -58,6 +61,7 @@ export default function BookingMessageButton({ bookingId, label, iconOnly, varia
   const resolvedLabel = label ?? ui('ui_account_msg_button_label', 'Message');
   const [open, setOpen] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
+  const safety = useWebChatSafety(threadId, locale);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(false);
@@ -74,7 +78,7 @@ export default function BookingMessageButton({ bookingId, label, iconOnly, varia
     setLoading(true);
     try {
       // 1) Me — sender_user_id eşleştirme için
-      const meRes = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
+      const meRes = await fetch(`${API_BASE}/auth/me`, { credentials: 'include', headers: chatHeaders() });
       if (meRes.ok) {
         const meJson = await meRes.json();
         setMeId(meJson?.user?.id ?? null);
@@ -83,7 +87,7 @@ export default function BookingMessageButton({ bookingId, label, iconOnly, varia
       const tRes = await fetch(`${API_BASE}/chat/threads`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: chatHeaders(),
         body: JSON.stringify({ context_type: 'booking', context_id: bookingId }),
       });
       if (!tRes.ok) {
@@ -101,6 +105,7 @@ export default function BookingMessageButton({ bookingId, label, iconOnly, varia
       // 3) Load messages
       const mRes = await fetch(`${API_BASE}/chat/threads/${encodeURIComponent(thread.id)}/messages?limit=100`, {
         credentials: 'include',
+        headers: chatHeaders(),
       });
       if (mRes.ok) {
         const mJson = await mRes.json();
@@ -114,14 +119,14 @@ export default function BookingMessageButton({ bookingId, label, iconOnly, varia
   };
 
   const handleSend = async () => {
-    if (!threadId || !draft.trim()) return;
+    if (!threadId || !draft.trim() || !safety.ready || safety.blocked || !safety.termsAccepted) return;
     setSending(true);
     try {
       const text = draft.trim();
       const res = await fetch(`${API_BASE}/chat/threads/${encodeURIComponent(threadId)}/messages`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: chatHeaders(),
         body: JSON.stringify({ text }),
       });
       let message: Message | null = null;
@@ -138,7 +143,7 @@ export default function BookingMessageButton({ bookingId, label, iconOnly, varia
           const fallbackRes = await fetch(`${API_BASE}${path}`, {
             method: 'POST',
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
+            headers: chatHeaders(),
             body: JSON.stringify({ text }),
           });
           if (fallbackRes.ok) {
@@ -207,6 +212,7 @@ export default function BookingMessageButton({ bookingId, label, iconOnly, varia
             <div className="m-4 mb-0">
               <ChatWarningBanner compact locale={locale} />
             </div>
+            <div className="mx-4"><ChatSafetyControls safety={safety} locale={locale} /></div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[280px]">
@@ -234,6 +240,7 @@ export default function BookingMessageButton({ bookingId, label, iconOnly, varia
                         <div className={`text-[10px] mt-1 ${mine ? 'text-[var(--gm-bg-deep)]/60' : 'text-[var(--gm-muted)]'}`}>
                           {formatTime(m.created_at)}
                         </div>
+                        {!mine && <ChatReportButton messageId={m.id} safety={safety} locale={locale} />}
                       </div>
                     </div>
                   );
@@ -255,12 +262,12 @@ export default function BookingMessageButton({ bookingId, label, iconOnly, varia
                 }}
                 rows={2}
                 placeholder={ui('ui_account_msg_input_placeholder', 'Write your message...')}
-                disabled={sending}
+                disabled={sending || !safety.ready || safety.blocked || !safety.termsAccepted}
                 className="flex-1 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)] resize-none focus:ring-2 focus:ring-[var(--gm-gold)]/30 focus:border-[var(--gm-gold)]/40 outline-none"
               />
               <button
                 onClick={handleSend}
-                disabled={sending || !draft.trim()}
+                disabled={sending || !draft.trim() || !safety.ready || safety.blocked || !safety.termsAccepted}
                 className="h-11 px-4 rounded-xl bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] disabled:opacity-50 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
               >
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

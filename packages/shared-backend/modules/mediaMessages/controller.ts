@@ -1,5 +1,9 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { desc, eq } from 'drizzle-orm';
+import { db } from '../../db/client';
+import { mediaMessages, mediaReports } from './schema';
+import { mediaSafetyState, participantMessage, reportMediaMessage, setMediaBlock } from './safety';
 
 import { buildPublicUrl } from '../storage/util';
 import { getCloudinaryConfig } from '../storage/cloudinary';
@@ -30,6 +34,56 @@ function userIdFromRequest(req: FastifyRequest) {
 
 const consultantIdParams = z.object({ id: z.string().trim().min(1).max(80) });
 const messageIdParams = z.object({ id: z.string().trim().min(1).max(36) });
+const reportBody = z.object({ reason: z.enum(['harassment', 'hate', 'sexual', 'spam', 'other']), details: z.string().trim().max(1000).optional() });
+
+export async function getMediaSafetyHandler(req: FastifyRequest, reply: FastifyReply) {
+  const userId = userIdFromRequest(req);
+  if (!userId) return reply.code(401).send({ error: { message: 'no_user' } });
+  const { id } = messageIdParams.parse(req.params ?? {});
+  const message = await participantMessage(id, userId);
+  return reply.send({ data: await mediaSafetyState(message.consultant_id, message.user_id, userId) });
+}
+
+export async function getConsultantMediaSafetyHandler(req: FastifyRequest, reply: FastifyReply) {
+  const userId = userIdFromRequest(req);
+  if (!userId) return reply.code(401).send({ error: { message: 'no_user' } });
+  const { id } = consultantIdParams.parse(req.params ?? {});
+  const settings = await getPublicMediaSettings(id);
+  if (!settings) return reply.code(404).send({ error: { message: 'not_found' } });
+  return reply.send({ data: await mediaSafetyState(settings.consultant_id, userId, userId) });
+}
+
+export async function setMediaBlockHandler(req: FastifyRequest, reply: FastifyReply) {
+  const userId = userIdFromRequest(req);
+  if (!userId) return reply.code(401).send({ error: { message: 'no_user' } });
+  const { id } = messageIdParams.parse(req.params ?? {});
+  return reply.send({ data: await setMediaBlock(id, userId, req.method === 'POST') });
+}
+
+export async function reportMediaHandler(req: FastifyRequest, reply: FastifyReply) {
+  const userId = userIdFromRequest(req);
+  if (!userId) return reply.code(401).send({ error: { message: 'no_user' } });
+  const { id } = messageIdParams.parse(req.params ?? {});
+  const body = reportBody.parse(req.body ?? {});
+  return reply.send(await reportMediaMessage(id, userId, body.reason, body.details));
+}
+
+export async function listAdminMediaReportsHandler(req: FastifyRequest, reply: FastifyReply) {
+  const { status } = z.object({ status: z.enum(['open', 'reviewed', 'dismissed']).default('open') }).parse(req.query ?? {});
+  const rows = await db.select({ report: mediaReports, kind: mediaMessages.kind, direction: mediaMessages.direction, note: mediaMessages.note })
+    .from(mediaReports).innerJoin(mediaMessages, eq(mediaReports.message_id, mediaMessages.id))
+    .where(eq(mediaReports.status, status)).orderBy(desc(mediaReports.created_at)).limit(100);
+  return reply.send({ data: rows.map((r) => ({ ...r.report, kind: r.kind, direction: r.direction, note: r.note })) });
+}
+
+export async function reviewAdminMediaReportHandler(req: FastifyRequest, reply: FastifyReply) {
+  const { id } = z.object({ id: z.string().uuid() }).parse(req.params ?? {});
+  const { status } = z.object({ status: z.enum(['reviewed', 'dismissed']) }).parse(req.body ?? {});
+  const [report] = await db.select({ id: mediaReports.id }).from(mediaReports).where(eq(mediaReports.id, id)).limit(1);
+  if (!report) return reply.code(404).send({ error: { message: 'report_not_found' } });
+  await db.update(mediaReports).set({ status }).where(eq(mediaReports.id, id));
+  return reply.send({ ok: true });
+}
 
 export async function getConsultantMediaSettingsHandler(req: FastifyRequest, reply: FastifyReply) {
   const { id } = consultantIdParams.parse(req.params ?? {});
@@ -55,6 +109,7 @@ export async function createMediaMessageHandler(req: FastifyRequest, reply: Fast
   const result = await createQuestion(userId, body);
   if (result.status === 'not_found') return reply.code(404).send({ error: { message: 'consultant_not_found' } });
   if (result.status === 'disabled') return reply.code(409).send({ error: { message: 'media_message_disabled' } });
+  if (result.status === 'price_changed') return reply.code(409).send({ error: { message: 'media_price_changed' } });
   if (result.status === 'insufficient') return reply.code(402).send({ error: { message: 'insufficient_credits', detail: result.consume } });
   return reply.send({ data: result.data });
 }

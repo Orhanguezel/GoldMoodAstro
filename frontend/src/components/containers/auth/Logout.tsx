@@ -14,10 +14,14 @@ import { normalizeError } from '@/integrations/shared';
 // i18n
 import { useLocaleShort, useUiSection } from '@/i18n';
 import { localizePath } from '@/integrations/shared';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '@/store';
+import { baseApi } from '@/integrations/rtk/baseApi';
 
 const Logout: React.FC = () => {
   const router = useRouter();
   const [logout, logoutState] = useLogoutMutation();
+  const dispatch = useDispatch<AppDispatch>();
 
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_auth', locale as any);
@@ -34,8 +38,10 @@ const Logout: React.FC = () => {
         }
       } finally {
         tokenStore.set(null);
+        try { window.localStorage.removeItem('user'); } catch { /* storage may be disabled */ }
+        dispatch(baseApi.util.resetApiState());
         if (!canceled) {
-          router.push(localizePath(locale, '/login'));
+          router.replace(localizePath(locale, '/login'));
         }
       }
     };
@@ -43,7 +49,7 @@ const Logout: React.FC = () => {
     return () => {
       canceled = true;
     };
-  }, [logout, router, locale]);
+  }, [logout, router, locale, dispatch]);
 
   return (
     <section className="bg-bg-primary min-h-screen pt-32 pb-32 flex items-center justify-center">

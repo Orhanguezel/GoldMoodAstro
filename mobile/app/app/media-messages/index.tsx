@@ -21,6 +21,7 @@ import { mediaMessagesApi } from '@/lib/api';
 import { storage } from '@/lib/storage';
 import type { MediaMessage } from '@/types';
 import { AuthVideoView } from '@/components/AuthVideoView';
+import { MediaSafetyActions } from '@/components/MediaSafetyActions';
 
 import { logger } from '@/lib/logger';
 function buildStyles(t: AppTheme) {
@@ -140,9 +141,12 @@ export default function MediaMessagesScreen() {
   }, []);
 
   useEffect(() => {
-    load();
-    storage.getAuthToken().then(setAuthToken).catch(() => setAuthToken(null));
+    const task = setTimeout(() => {
+      void load();
+      void storage.getAuthToken().then(setAuthToken).catch(() => setAuthToken(null));
+    }, 0);
     return () => {
+      clearTimeout(task);
       soundRef.current?.remove();
       soundRef.current = null;
     };
@@ -271,6 +275,7 @@ export default function MediaMessagesScreen() {
                     : t('mediaMessages.waiting', 'Danışman yanıtı bekleniyor.')}
                 </Text>
               )}
+              <MediaSafetyActions messageId={item.id} reportId={item.reply_id} />
             </View>
           )}
         />

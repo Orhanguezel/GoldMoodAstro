@@ -25,6 +25,11 @@ export async function registerChat(app: FastifyInstance) {
 
   app.get(`${BASE}/threads/:id/messages`, { preHandler: [tryAuth], config: { public: true } }, c.listMessages);
   app.post(`${BASE}/threads/:id/messages`, { preHandler: [tryAuth], config: { public: true } }, c.postMessage);
+  app.get(`${BASE}/threads/:id/block`, { preHandler: [tryAuth], config: { public: true } }, c.blockState);
+  app.post(`${BASE}/threads/:id/block`, { preHandler: [tryAuth], config: { public: true } }, c.blockPeer);
+  app.delete(`${BASE}/threads/:id/block`, { preHandler: [tryAuth], config: { public: true } }, c.unblockPeer);
+  app.post(`${BASE}/threads/:id/reports`, { preHandler: [tryAuth], config: { public: true } }, c.reportMessage);
+  app.post(`${BASE}/terms/accept`, { preHandler: [tryAuth], config: { public: true } }, c.acceptTerms);
 
   // WS upgrade route
   // NOTE: fastify-websocket registers ws handler by putting { websocket: true }

@@ -22,6 +22,7 @@ import { useAppTheme, type AppTheme } from '@/theme';
 import type { ConsultantSelfThread, ConsultantSelfThreadMessage } from '@/types';
 
 import { logger } from '@/lib/logger';
+import { ChatBlockButton, ChatTermsGate, useChatSafety } from '@/components/ChatSafetyActions';
 function buildStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -35,7 +36,7 @@ function buildStyles(t: AppTheme) {
     threadStrip: { maxHeight: 118 },
     threadContent: { gap: 10, paddingVertical: 4, paddingRight: spacing.lg },
     threadCard: { width: 220, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, padding: 12, gap: 6 },
-    threadActive: { borderColor: colors.gold, backgroundColor: 'rgba(201,169,97,0.10)' },
+    threadActive: { borderColor: colors.gold, backgroundColor: colors.surfaceHigh },
     threadTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
     threadName: { flex: 1, fontFamily: font.sansBold, fontSize: 14, color: colors.text },
     badge: { minWidth: 22, height: 22, borderRadius: radius.pill, backgroundColor: colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
@@ -58,7 +59,7 @@ function buildStyles(t: AppTheme) {
     bubbleTextMine: { color: colors.ink },
     bubbleTextOther: { color: colors.text },
     time: { fontFamily: font.sans, fontSize: 10 },
-    timeMine: { color: 'rgba(13,11,30,0.62)' },
+    timeMine: { color: colors.ink },
     timeOther: { color: colors.textMuted },
     composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, borderTopWidth: 1, borderTopColor: colors.lineSoft, padding: 10 },
     input: { flex: 1, minHeight: 42, maxHeight: 110, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.bgDeep, paddingHorizontal: 12, paddingVertical: 10, color: colors.text, fontFamily: font.sans, fontSize: 14 },
@@ -103,21 +104,31 @@ export default function ConsultantMessagesScreen() {
   const [messages, setMessages] = useState<ConsultantSelfThreadMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
+  const [threadsError, setThreadsError] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [messagesError, setMessagesError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [sending, setSending] = useState(false);
 
   const unknown = t('consultantPanel.messages.unknownCustomer', 'Danışan');
   const activeThread = threads.find((thread) => thread.thread_id === activeId) ?? null;
+  const safety = useChatSafety(activeId);
 
   const loadMessages = useCallback(async (threadId: string) => {
     setLoadingMessages(true);
+    setMessagesError(false);
     try {
       const convo = await consultantSelfApi.threadMessages(threadId);
       setMessages(convo.messages ?? []);
-      await consultantSelfApi.markThreadRead(threadId).catch(() => undefined);
-      setThreads((prev) => prev.map((thread) => (thread.thread_id === threadId ? { ...thread, unread_count: 0 } : thread)));
+      try {
+        await consultantSelfApi.markThreadRead(threadId);
+        setThreads((prev) => prev.map((thread) => (thread.thread_id === threadId ? { ...thread, unread_count: 0 } : thread)));
+      } catch (err) {
+        logger.error('Consultant thread read status update error:', err);
+      }
     } catch (err) {
+      setMessagesError(true);
+      setMessages([]);
       logger.error('Consultant thread messages load error:', err);
     } finally {
       setLoadingMessages(false);
@@ -127,6 +138,7 @@ export default function ConsultantMessagesScreen() {
   const loadThreads = useCallback(async () => {
     try {
       const next = await consultantSelfApi.threads();
+      setThreadsError(false);
       setThreads(next);
       const nextActive = activeId && next.some((thread) => thread.thread_id === activeId) ? activeId : (next[0]?.thread_id ?? null);
       setActiveId(nextActive);
@@ -136,6 +148,7 @@ export default function ConsultantMessagesScreen() {
         setMessages([]);
       }
     } catch (err) {
+      setThreadsError(true);
       logger.error('Consultant threads load error:', err);
     } finally {
       setLoading(false);
@@ -153,11 +166,13 @@ export default function ConsultantMessagesScreen() {
     if (id === activeId) return;
     setActiveId(id);
     setDraft('');
+    setMessages([]);
+    setMessagesError(false);
     loadMessages(id);
   };
 
   const sendReply = async () => {
-    if (!activeId || !draft.trim()) return;
+    if (!activeId || !draft.trim() || threadsError || messagesError || loadingMessages || !safety.ready || safety.blocked || !safety.termsAccepted) return;
     setSending(true);
     try {
       const sent = await consultantSelfApi.replyThread(activeId, draft.trim());
@@ -186,8 +201,12 @@ export default function ConsultantMessagesScreen() {
           <Text style={styles.kicker}>{t('consultantPanel.messages.kicker', 'MESAJLAR')}</Text>
           <Text style={styles.title}>{t('consultantPanel.messages.title', 'Danışan mesajları')}</Text>
         </View>
+        {threadsError && <View style={[styles.empty, { flex: 0, paddingVertical: 12 }]}>
+          <Text style={styles.emptyTitle}>{t('consultantPanel.messages.loadError', 'Konuşmalar yüklenemedi.')}</Text>
+          <Pressable onPress={() => void loadThreads()} accessibilityRole="button" style={[styles.sendBtn, { width: 'auto', paddingHorizontal: 20 }]}><Text style={styles.bubbleTextMine}>{t('common.retry', 'Tekrar dene')}</Text></Pressable>
+        </View>}
 
-        {threads.length === 0 ? (
+        {threads.length === 0 && !threadsError ? (
           <ScrollView
             contentContainerStyle={styles.empty}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadThreads(); }} tintColor={colors.gold} />}
@@ -198,7 +217,7 @@ export default function ConsultantMessagesScreen() {
               {t('consultantPanel.messages.emptyBody', 'Danışanlar profilinizdeki mesaj butonundan size ulaştığında konuşmalar burada görünür.')}
             </Text>
           </ScrollView>
-        ) : (
+        ) : threads.length > 0 ? (
           <View style={styles.body}>
             <ScrollView horizontal style={styles.threadStrip} contentContainerStyle={styles.threadContent} showsHorizontalScrollIndicator={false}>
               {threads.map((thread) => {
@@ -235,10 +254,16 @@ export default function ConsultantMessagesScreen() {
                   <View style={styles.conversationHeader}>
                     <Text style={styles.conversationTitle}>{displayName(activeThread, unknown)}</Text>
                     <Text style={styles.conversationMeta}>{activeThread.customer?.email ?? formatTime(activeThread.updated_at)}</Text>
+                    <ChatBlockButton blockedByMe={safety.blockedByMe} busy={safety.busy || !safety.ready} onPress={safety.toggleBlock} />
                   </View>
                   <ScrollView style={styles.messages} contentContainerStyle={styles.messagesContent}>
                     {loadingMessages ? (
                       <ActivityIndicator color={colors.gold} />
+                    ) : messagesError ? (
+                      <View style={styles.empty}>
+                        <Text style={styles.emptyBody}>{t('consultantPanel.messages.threadLoadError', 'Mesajlar yüklenemedi.')}</Text>
+                        <Pressable onPress={() => void loadMessages(activeThread.thread_id)} accessibilityRole="button"><Text style={styles.conversationTitle}>{t('common.retry', 'Tekrar dene')}</Text></Pressable>
+                      </View>
                     ) : (
                       messages.map((message) => {
                         const mine = message.from_consultant;
@@ -247,12 +272,15 @@ export default function ConsultantMessagesScreen() {
                             <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleOther]}>
                               <Text style={[styles.bubbleText, mine ? styles.bubbleTextMine : styles.bubbleTextOther]}>{message.text}</Text>
                               <Text style={[styles.time, mine ? styles.timeMine : styles.timeOther]}>{formatTime(message.created_at)}</Text>
+                              {!mine && <Pressable accessibilityRole="button" accessibilityLabel={t('chat.report')} onPress={() => safety.report(message.id)} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={styles.timeOther}>{t('chat.report')}</Text></Pressable>}
                             </View>
                           </View>
                         );
                       })
                     )}
                   </ScrollView>
+                  {safety.blocked && <Text style={styles.emptyBody}>{t('chat.blockedNotice')}</Text>}
+                  <ChatTermsGate accepted={safety.termsAccepted} busy={safety.busy} onAccept={() => void safety.acceptTerms()} />
                   <View style={styles.composer}>
                     <TextInput
                       style={styles.input}
@@ -262,9 +290,9 @@ export default function ConsultantMessagesScreen() {
                       placeholderTextColor={colors.textMuted}
                       multiline
                       maxLength={2000}
-                      editable={!sending}
+                      editable={!sending && !messagesError && !loadingMessages && !threadsError && safety.ready && !safety.blocked && safety.termsAccepted}
                     />
-                    <Pressable style={[styles.sendBtn, (!draft.trim() || sending) && styles.sendDisabled]} onPress={sendReply} disabled={!draft.trim() || sending}>
+                    <Pressable style={[styles.sendBtn, (!draft.trim() || sending || messagesError || loadingMessages || threadsError || !safety.ready || safety.blocked || !safety.termsAccepted) && styles.sendDisabled]} onPress={sendReply} disabled={!draft.trim() || sending || messagesError || loadingMessages || threadsError || !safety.ready || safety.blocked || !safety.termsAccepted}>
                       {sending ? <ActivityIndicator color={colors.ink} /> : <Send size={18} color={colors.ink} />}
                     </Pressable>
                   </View>
@@ -276,7 +304,7 @@ export default function ConsultantMessagesScreen() {
               )}
             </View>
           </View>
-        )}
+        ) : null}
       </SafeAreaView>
     </KeyboardAvoidingView>
   );

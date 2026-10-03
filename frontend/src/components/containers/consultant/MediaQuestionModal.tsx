@@ -4,9 +4,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Mic, Square, Upload, Video, X } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useCreateMediaMessageMutation, type MediaKind } from '@/integrations/rtk/public/media_messages.endpoints';
+import { useCreateMediaMessageMutation, useGetConsultantMediaSettingsQuery, type MediaKind } from '@/integrations/rtk/public/media_messages.endpoints';
 import { useUploadToBucketMutation } from '@/integrations/rtk/public/storage_public.endpoints';
 import { useUiSection } from '@/i18n';
+import { MediaSafetyControls, useWebMediaSafety } from '@/components/common/MediaSafetyControls';
 
 type Props = {
   open: boolean;
@@ -40,12 +41,16 @@ export default function MediaQuestionModal({
   const chunksRef = useRef<BlobPart[]>([]);
   const [uploadToBucket, uploadState] = useUploadToBucketMutation();
   const [createMediaMessage, createState] = useCreateMediaMessageMutation();
+  const { data: liveSettings, refetch: refetchPrice } = useGetConsultantMediaSettingsQuery(consultantId, { skip: !open });
+  const safety = useWebMediaSafety(null, open ? consultantId : null, locale);
 
   const maxSeconds = kind === 'video' ? 180 : 300;
   const busy = uploadState.isLoading || createState.isLoading;
   const title = kind === 'video'
     ? ui('ui_consultant_media_video_title', 'Video Question')
     : ui('ui_consultant_media_audio_title', 'Voice Question');
+  const quotedCredits = kind === 'audio' ? liveSettings?.audio_credits : liveSettings?.video_credits;
+  const livePrice = kind === 'audio' ? liveSettings?.audio_price : liveSettings?.video_price;
 
   const recorderSupported = useMemo(
     () => typeof window !== 'undefined' && typeof navigator !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia) && typeof MediaRecorder !== 'undefined',
@@ -114,11 +119,15 @@ export default function MediaQuestionModal({
   }
 
   async function submit() {
+    if (!safety.allowed) return;
     if (!file) {
       toast.error(ui('ui_consultant_media_file_required', 'Please record or upload a file first'));
       return;
     }
     try {
+      const latest = (await refetchPrice()).data;
+      const latestPrice = kind === 'audio' ? latest?.audio_price : latest?.video_price;
+      if (latestPrice == null || Math.round(latestPrice * 100) !== Math.round(price * 100)) throw new Error('media_price_changed');
       const duration = recordStartedAt ? Math.max(1, Math.round((Date.now() - recordStartedAt) / 1000)) : undefined;
       const upload = await uploadToBucket({
         bucket: 'media_messages',
@@ -130,6 +139,7 @@ export default function MediaQuestionModal({
       await createMediaMessage({
         consultant_id: consultantId,
         kind,
+        expected_price: price,
         storage_path: storagePath,
         duration_seconds: duration,
         note: note.trim() || null,
@@ -139,10 +149,15 @@ export default function MediaQuestionModal({
       setNote('');
       onClose();
     } catch (error: any) {
-      const message = error?.data?.error?.message;
+      const message = error?.data?.error?.message ?? error?.message;
       if (message === 'insufficient_credits') {
         toast.error(ui('ui_consultant_media_insufficient_credits', 'Insufficient credits'));
         onInsufficientCredits();
+        return;
+      }
+      if (message === 'media_price_changed') {
+        void refetchPrice();
+        toast.error(ui('ui_consultant_media_price_changed', 'The price changed. Check the updated price and try again.'));
         return;
       }
       toast.error(ui('ui_consultant_media_send_failed', 'Question could not be sent'));
@@ -156,7 +171,11 @@ export default function MediaQuestionModal({
       <div className="w-full max-w-lg rounded-3xl border border-(--gm-border-soft) bg-(--gm-surface) p-6 shadow-2xl">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-(--gm-gold)">{currency} {price}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-(--gm-gold)">
+              {currency} {Number(price).toFixed(2)}
+              {quotedCredits != null && livePrice != null && Math.round(livePrice * 100) === Math.round(price * 100)
+                ? ` · ${quotedCredits} ${ui('ui_consultant_media_credit_unit', 'credits')}` : null}
+            </p>
             <h3 className="font-serif text-2xl text-(--gm-text)">{title}</h3>
           </div>
           <button type="button" onClick={onClose} className="rounded-full p-2 text-(--gm-text-dim) hover:bg-(--gm-bg-deep)">
@@ -208,9 +227,11 @@ export default function MediaQuestionModal({
             placeholder={ui('ui_consultant_media_note_placeholder', 'Add a short note...')}
           />
 
+          <MediaSafetyControls safety={safety} locale={locale} />
+
           <button
             type="button"
-            disabled={busy || isRecording}
+            disabled={busy || isRecording || !safety.allowed}
             onClick={submit}
             className="btn-premium w-full py-3.5 text-[11px] disabled:opacity-60"
           >
@@ -221,4 +242,3 @@ export default function MediaQuestionModal({
     </div>
   );
 }
-

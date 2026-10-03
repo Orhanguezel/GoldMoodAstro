@@ -95,28 +95,25 @@ export function BannerWidget({ placement, style }: Props) {
   const theme = useAppTheme();
   const { colors } = theme;
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
-  const [banners, setBanners] = useState<Banner[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<{ key: string; banners: Banner[] } | null>(null);
+  const requestKey = `${placement}|${i18n.language}|${isAuthenticated}|${isPremium}`;
+  const banners = result?.key === requestKey ? result.banners : [];
 
   useEffect(() => {
     if (authHydrating || premiumLoading) return;
-    setLoading(true);
-    loadBanners();
-  }, [placement, i18n.language, authHydrating, isAuthenticated, isPremium]);
-
-  const loadBanners = async () => {
-    try {
-      const data = await bannersApi.list({
-        placement,
-        locale: i18n.language,
+    let cancelled = false;
+    bannersApi.list({ placement, locale: i18n.language })
+      .then((data) => {
+        if (!cancelled) setResult({ key: requestKey, banners: data });
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          logger.error('BannerWidget error:', error);
+          setResult({ key: requestKey, banners: [] });
+        }
       });
-      setBanners(data);
-    } catch (e) {
-      logger.error('BannerWidget error:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => { cancelled = true; };
+  }, [placement, i18n.language, authHydrating, premiumLoading, requestKey]);
 
   const handlePress = async (banner: Banner) => {
     try {
@@ -131,7 +128,7 @@ export function BannerWidget({ placement, style }: Props) {
   };
 
   if (premiumLoading || isPremium) return null;
-  if (loading || banners.length === 0) return null;
+  if (banners.length === 0) return null;
 
   const banner = banners[0];
   const locale = i18n.language;

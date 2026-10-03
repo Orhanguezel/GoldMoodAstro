@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Pressable, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -8,10 +8,8 @@ import { X, ShieldCheck } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useAppTheme, type AppTheme } from '@/theme';
-import { siteSettingsApi } from '@/lib/api';
-
-const FALLBACK_SUCCESS_PATTERNS = ['/siparis/basarili', '/booking/success', 'checkout=success', 'payment=success', 'status=success'];
-const FALLBACK_FAILURE_PATTERNS = ['/sepet?payment=failed', '/sepet?payment=error', 'checkout=failed', 'payment=failed', 'payment=error', 'status=failure', 'status=failed'];
+import { getPublicWebUrl, siteSettingsApi } from '@/lib/api';
+import { classifyPaymentReturn, PAYMENT_SUCCESS_PATTERNS, PAYMENT_FAILURE_PATTERNS } from '@/lib/paymentReturn';
 
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, spacing } = t;
@@ -55,11 +53,12 @@ export default function PaymentScreen() {
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
   const { t } = useTranslation();
 
-  const { url } = useLocalSearchParams<{ url: string }>();
-  const [loading, setLoading] = useState(true);
+  const { url } = useLocalSearchParams<{ url?: string | string[] }>();
+  const checkoutUrl = typeof url === 'string' ? url : url?.[0];
+  const handledReturn = useRef(false);
   const [returnPatterns, setReturnPatterns] = useState({
-    success: FALLBACK_SUCCESS_PATTERNS,
-    failure: FALLBACK_FAILURE_PATTERNS,
+    success: PAYMENT_SUCCESS_PATTERNS,
+    failure: PAYMENT_FAILURE_PATTERNS,
   });
 
   useEffect(() => {
@@ -68,24 +67,20 @@ export default function PaymentScreen() {
       .then(setReturnPatterns)
       .catch(() => {
         setReturnPatterns({
-          success: FALLBACK_SUCCESS_PATTERNS,
-          failure: FALLBACK_FAILURE_PATTERNS,
+          success: PAYMENT_SUCCESS_PATTERNS,
+          failure: PAYMENT_FAILURE_PATTERNS,
         });
       });
   }, []);
 
-  const handleNavigationStateChange = (navState: any) => {
+  const handleNavigationStateChange = (navState: { url?: string }) => {
     const { url: currentUrl } = navState;
-    if (!currentUrl) return;
-
-    if (returnPatterns.success.some((pattern) => currentUrl.includes(pattern))) {
-      router.replace('/(tabs)/bookings' as any);
-      return;
-    }
-
-    if (returnPatterns.failure.some((pattern) => currentUrl.includes(pattern))) {
-      safeRouterBack();
-    }
+    if (!currentUrl || handledReturn.current) return;
+    const outcome = classifyPaymentReturn(currentUrl, getPublicWebUrl(), returnPatterns);
+    if (!outcome) return;
+    handledReturn.current = true;
+    if (outcome === 'success') router.replace('/(tabs)/bookings');
+    else safeRouterBack();
   };
 
   return (
@@ -103,11 +98,9 @@ export default function PaymentScreen() {
         </View>
 
         <View style={styles.webviewContainer}>
-          <WebView
-            source={{ uri: url! }}
+          {checkoutUrl ? <WebView
+            source={{ uri: checkoutUrl }}
             onNavigationStateChange={handleNavigationStateChange}
-            onLoadStart={() => setLoading(true)}
-            onLoadEnd={() => setLoading(false)}
             javaScriptEnabled={true}
             domStorageEnabled={true}
             startInLoadingState={true}
@@ -117,7 +110,12 @@ export default function PaymentScreen() {
                 <Text style={styles.loaderText}>{t('payment.loadingSecurePage', 'Güvenli ödeme sayfası yükleniyor...')}</Text>
               </View>
             )}
-          />
+          /> : <View style={styles.loader}>
+            <Text style={styles.loaderText}>{t('common.missingInfo')}</Text>
+            <Pressable accessibilityRole="button" onPress={() => router.replace('/(tabs)/bookings')}>
+              <Text style={styles.headerTitle}>{t('booking.viewBookings', 'Randevularıma Git')}</Text>
+            </Pressable>
+          </View>}
         </View>
 
       </SafeAreaView>

@@ -17,6 +17,7 @@ import { db as sharedDb } from "../../db/client";
 import { consultants } from "../consultants/schema";
 import { bookings } from "../bookings/schema";
 import { eq } from "drizzle-orm";
+import { assertChatSendAllowed } from './safety';
 
 type AuthedUser = {
   id: string;
@@ -83,6 +84,7 @@ export function chatService(app: FastifyInstance) {
     body: { text: string; client_id?: string },
   ) {
     await assertMember(thread_id, user.id);
+    await assertChatSendAllowed(thread_id, user.id, body.text);
 
     const now = new Date();
     const msg = {

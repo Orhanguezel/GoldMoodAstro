@@ -33,7 +33,7 @@ import PageContainer from '@/components/common/PageContainer';
 export default function ProfilePrivacyPage() {
   const locale = useLocaleShort();
   const { ui } = useUiSection('ui_account');
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isReady } = useAuthStore();
   const router = useRouter();
 
   const [reason, setReason] = useState('');
@@ -45,6 +45,7 @@ export default function ProfilePrivacyPage() {
   const {
     data: deletionStatus,
     isLoading: statusLoading,
+    isError: statusError,
     refetch,
   } = useGetAccountDeletionStatusQuery(undefined, {
     skip: !isAuthenticated,
@@ -54,10 +55,10 @@ export default function ProfilePrivacyPage() {
   const pendingDate = formatDate(deletionStatus?.scheduled_for, locale);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace(localizePath(locale, '/login'));
+    if (isReady && !isAuthenticated) {
+      router.replace(`${localizePath(locale, '/login')}?next=${encodeURIComponent(localizePath(locale, '/profile/privacy'))}`);
     }
-  }, [isAuthenticated, locale, router]);
+  }, [isReady, isAuthenticated, locale, router]);
 
   async function onExportData() {
     try {
@@ -86,6 +87,11 @@ export default function ProfilePrivacyPage() {
   async function onRequestDelete(e: React.FormEvent) {
     e.preventDefault();
 
+    if (statusError) {
+      toast.error(ui('ui_account_status_error', 'Account status could not be checked. Please try again.'));
+      return;
+    }
+
     if (pending) {
       toast.error(ui('ui_account_delete_already_pending', 'You already have an active account deletion request.'));
       return;
@@ -109,6 +115,10 @@ export default function ProfilePrivacyPage() {
     } catch (err) {
       toast.error(normalizeError(err).message || ui('ui_account_delete_cancel_error', 'The request could not be cancelled.'));
     }
+  }
+
+  if (!isReady || !isAuthenticated) {
+    return <PageContainer className="bg-(--gm-bg)" verticalPadding="large" center><p className="text-(--gm-text-dim)">{ui('ui_account_status_checking', 'Checking status...')}</p></PageContainer>;
   }
 
   return (
@@ -141,6 +151,11 @@ export default function ProfilePrivacyPage() {
 
           {statusLoading ? (
             <p className="text-sm text-(--gm-text-dim)">{ui('ui_account_status_checking', 'Checking status...')}</p>
+          ) : statusError ? (
+            <div role="alert" className="space-y-3 text-sm text-(--gm-error)">
+              <p>{ui('ui_account_status_error', 'Account status could not be checked. Please try again.')}</p>
+              <button type="button" onClick={() => refetch()} className="rounded-full border border-(--gm-border-soft) px-5 py-2 text-(--gm-text)">{ui('ui_account_status_retry', 'Try again')}</button>
+            </div>
           ) : pending ? (
             <div className="rounded-xl bg-(--gm-surface) border border-(--gm-error)/30 p-6 space-y-4">
               <p className="text-sm text-(--gm-error) font-bold">

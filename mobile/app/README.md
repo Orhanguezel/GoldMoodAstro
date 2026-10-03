@@ -55,6 +55,41 @@ Android emulator:
 bun run android
 ```
 
+Yerel Android debug APK için Java 21 JDK ve Android SDK gerekir. Expo native klasörü
+Git'e alınmaz; `app.json` içindeki `./plugins/withLiveKit` her prebuild'de LiveKit
+başlangıç çağrısını Android `MainApplication` ve iOS `AppDelegate` içine ekler.
+
+```bash
+bun x expo prebuild --platform android --no-install
+cd android
+./gradlew :app:assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb reverse tcp:8081 tcp:8081
+cd ..
+bun run start:localhost
+```
+
+Metro gerektirmeyen yerel Android önizleme APK'sı için üretim API adresini
+derleme sırasında verin. `arm64-v8a` fiziksel Android cihaz içindir; bu Gradle
+`release` yapılandırması yerel debug anahtarıyla imzalandığından mağazaya
+gönderilmez.
+
+```bash
+cd android
+EXPO_PUBLIC_API_URL=https://goldmoodastro.com/api \
+EXPO_PUBLIC_SITE_URL=https://goldmoodastro.com \
+EXPO_PUBLIC_PUBLIC_URL=https://goldmoodastro.com \
+NODE_ENV=production ./gradlew :app:assembleRelease \
+  -PreactNativeArchitectures=arm64-v8a --max-workers=2 --no-daemon
+```
+
+Çıktı: `android/app/build/outputs/apk/release/app-release.apk`.
+
+Mağaza/iOS hazırlığını `bun run check:release` ile kontrol edin. iOS Firebase
+`GoogleService-Info.plist` ve EAS App Store Connect kimlikleri güvenli yerel
+ortamda sağlanana dek iOS release kapısı açıktır; iOS push teslimi ayrıca gerçek
+cihazda doğrulanmalıdır.
+
 ## Build
 
 ```bash

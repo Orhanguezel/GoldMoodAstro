@@ -462,11 +462,11 @@ export default function DailyReadingScreen() {
               </Text>
             </View>
 
-            <View style={styles.quoteBox}>
+            {reading ? <View style={styles.quoteBox}>
               <Text style={styles.quoteText}>
                 {t('dailyScreen.fallbackQuote')}
               </Text>
-            </View>
+            </View> : null}
           </View>
 
           {/* Mood Check-in */}
@@ -515,4 +515,3 @@ export default function DailyReadingScreen() {
     </View>
   );
 }
-

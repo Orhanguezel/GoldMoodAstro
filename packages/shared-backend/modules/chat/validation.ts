@@ -43,6 +43,12 @@ export const PostMessageBodySchema = z.object({
   client_id: z.string().trim().min(8).max(64).optional(),
 });
 
+export const ReportChatMessageBodySchema = z.object({
+  message_id: z.string().uuid(),
+  reason: z.enum(['harassment', 'hate', 'sexual', 'spam', 'other']),
+  details: z.string().trim().max(1000).optional(),
+});
+
 export const WsQuerySchema = z.object({
   thread_id: z.string().uuid(),
 });

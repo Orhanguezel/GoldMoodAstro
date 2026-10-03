@@ -49,7 +49,45 @@ export const DEFAULT_TOKENS: DesignTokens = ${JSON.stringify(tokens, null, 2)};
     process.exit(1);
   }
 
-  console.log('Theme snapshot check OK.');
+  const mobileOutputPath = join(process.cwd(), 'mobile/app/src/theme/defaultRemoteTokens.ts');
+  const mobileCodeContent = `import type { DesignTokens } from './designTokenTypes';
+
+// WARNING: Generated from the site settings seed. Do not edit manually.
+// Run bun run gen:theme-snapshot when the seed changes.
+export const DEFAULT_REMOTE_TOKENS: DesignTokens = ${JSON.stringify(tokens, null, 2)};
+`;
+  let mobileCurrent = '';
+  try {
+    mobileCurrent = readFileSync(mobileOutputPath, 'utf8');
+  } catch {
+    console.error('Could not read mobile theme snapshot');
+    process.exit(1);
+  }
+  if (normalize(mobileCurrent) !== normalize(mobileCodeContent)) {
+    console.error('Drift detected between site settings seed design_tokens and mobile defaultRemoteTokens.ts!');
+    console.error('Please run "bun run gen:theme-snapshot" to update the mobile theme snapshot.');
+    process.exit(1);
+  }
+
+  const appConfig = JSON.parse(readFileSync(join(process.cwd(), 'mobile/app/app.json'), 'utf8'));
+  const notificationPlugin = appConfig.expo.plugins.find((plugin: unknown) => Array.isArray(plugin) && plugin[0] === 'expo-notifications');
+  if (appConfig.expo.primaryColor !== tokens.colors.brand_primary ||
+      appConfig.expo.splash.backgroundColor !== tokens.colors.bg_deep_dark ||
+      appConfig.expo.android.adaptiveIcon.backgroundColor !== tokens.colors.bg_deep_dark ||
+      appConfig.expo.userInterfaceStyle !== 'light' ||
+      notificationPlugin?.[1]?.color !== tokens.colors.brand_secondary) {
+    console.error('Mobile native color configuration has drifted from the web theme seed.');
+    process.exit(1);
+  }
+  const webLogo = readFileSync(join(process.cwd(), 'frontend/public/logo/goldmoodastro-gm.png'));
+  for (const asset of ['icon.png', 'splash.png']) {
+    if (!webLogo.equals(readFileSync(join(process.cwd(), 'mobile/app/assets', asset)))) {
+      console.error(`Mobile ${asset} has drifted from the web logo.`);
+      process.exit(1);
+    }
+  }
+
+  console.log('Web and mobile theme snapshot checks OK.');
 }
 
 checkThemeSnapshot();

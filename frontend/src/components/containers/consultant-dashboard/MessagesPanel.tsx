@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { Send, MessageCircle, Loader2 } from 'lucide-react';
 import ClientAstroPanel from './ClientAstroPanel';
 import ChatWarningBanner from '@/components/common/ChatWarningBanner';
+import { ChatReportButton, ChatSafetyControls, useWebChatSafety } from '@/components/common/ChatSafetyControls';
 import { toast } from 'sonner';
 import {
   type ConsultantSelfThread,
@@ -39,6 +40,7 @@ export default function MessagesPanel() {
     pollingInterval: 30000,
   });
   const [activeId, setActiveId] = useState<string | null>(null);
+  const safety = useWebChatSafety(activeId, locale);
 
   const { data: convo, isFetching: convoLoading, isError: convoError } = useGetMyConsultantThreadMessagesQuery(activeId || '', {
     skip: !activeId,
@@ -73,7 +75,7 @@ export default function MessagesPanel() {
   }, [convo?.messages?.length]);
 
   const handleSend = async () => {
-    if (!activeId || !draft.trim()) return;
+    if (!activeId || !draft.trim() || !safety.ready || safety.blocked || !safety.termsAccepted) return;
     try {
       await reply({ id: activeId, text: draft.trim() }).unwrap();
       setDraft('');
@@ -202,6 +204,7 @@ export default function MessagesPanel() {
             <div className="m-4 mb-0">
               <ChatWarningBanner compact locale={locale as 'tr' | 'en' | 'de'} />
             </div>
+            <div className="mx-4"><ChatSafetyControls safety={safety} locale={locale} /></div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -233,6 +236,7 @@ export default function MessagesPanel() {
                         >
                           {formatTime(m.created_at, locale)}
                         </div>
+                        {!mine && <ChatReportButton messageId={m.id} safety={safety} locale={locale} />}
                       </div>
                     </div>
                   );
@@ -255,12 +259,12 @@ export default function MessagesPanel() {
                 rows={2}
                 maxLength={2000}
                 placeholder={ui('ui_consultantpanel_messages_reply_placeholder', 'Write your reply...')}
-                disabled={replying}
+                disabled={replying || !safety.ready || safety.blocked || !safety.termsAccepted}
                 className="flex-1 bg-[var(--gm-bg-deep)] border border-[var(--gm-border-soft)] rounded-xl p-3 text-sm text-[var(--gm-text)] resize-none focus:ring-2 focus:ring-[var(--gm-gold)]/30 focus:border-[var(--gm-gold)]/40 outline-none"
               />
               <button
                 onClick={handleSend}
-                disabled={replying || !draft.trim()}
+                disabled={replying || !draft.trim() || !safety.ready || safety.blocked || !safety.termsAccepted}
                 className="h-11 px-4 rounded-xl bg-[var(--gm-gold)] text-[var(--gm-bg-deep)] disabled:opacity-50 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest"
               >
                 {replying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

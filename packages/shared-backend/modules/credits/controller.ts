@@ -14,8 +14,16 @@ import { creditTransactions, userCredits } from './schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { profiles } from '../profiles/schema';
 import { apiMessage } from '../_shared/api-i18n';
+import { getAuthUserId } from '../_shared/route-helpers';
+import { findExactAppleCreditItem, grantOnceWithRecovery } from './iap-replay';
 
 type IapPlatform = 'apple_iap' | 'google_iap';
+
+function getCreditUserId(req: FastifyRequest): string {
+  const userId = getAuthUserId(req);
+  if (!userId) throw Object.assign(new Error('unauthorized'), { statusCode: 401 });
+  return userId;
+}
 
 const creditPackageBody = z.object({
   code: z.string().trim().min(2).max(50).regex(/^[a-z0-9_-]+$/),
@@ -173,19 +181,17 @@ export async function handleAdminDeleteCreditPackage(req: FastifyRequest, reply:
 }
 
 export async function handleGetBalance(req: FastifyRequest, reply: FastifyReply) {
-  const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
-  const balance = await repo.getUserBalance(user.id);
+  const userId = getCreditUserId(req);
+  const balance = await repo.getUserBalance(userId);
   return reply.send({ data: balance });
 }
 
 export async function handleGetMe(req: FastifyRequest, reply: FastifyReply) {
-  const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
+  const userId = getCreditUserId(req);
 
   const [balance, transactions] = await Promise.all([
-    repo.getUserBalance(user.id),
-    repo.getTransactionHistory(user.id),
+    repo.getUserBalance(userId),
+    repo.getTransactionHistory(userId),
   ]);
 
   return reply.send({
@@ -304,12 +310,13 @@ async function resolveGoogleAccessToken(): Promise<string> {
 
 async function verifyAppleCreditReceipt(params: {
   receipt: string;
-  transactionId?: string;
-  productId?: string;
+  transactionId: string;
+  expectedProductId: string;
 }): Promise<CreditIapVerification> {
   const bundleId = asString(process.env.IAP_APPLE_BUNDLE_ID);
   if (!bundleId) return { valid: false, reason: 'apple_bundle_id_missing' };
   if (!params.receipt) return { valid: false, reason: 'receipt_required' };
+  if (!params.transactionId) return { valid: false, reason: 'transaction_id_required' };
 
   const requestBody = {
     'receipt-data': params.receipt,
@@ -330,30 +337,20 @@ async function verifyAppleCreditReceipt(params: {
     const status = asNum(data.status);
     if (status === 21007 && endpoint === 'https://buy.itunes.apple.com/verifyReceipt') continue;
     if (status !== 0) return { valid: false, reason: `apple_receipt_status_${Number.isFinite(status) ? status : 'unknown'}` };
-    if (data.receipt?.bundle_id && data.receipt.bundle_id !== bundleId) {
+    if (data.receipt?.bundle_id !== bundleId) {
       return { valid: false, reason: 'apple_receipt_wrong_bundle' };
     }
 
-    const receiptItems = [...(data.latest_receipt_info ?? []), ...(data.receipt?.in_app ?? [])] as Array<Record<string, unknown>>;
-    const txId = asString(params.transactionId);
-    const prodId = asString(params.productId);
-    const item =
-      receiptItems.find((candidate) => {
-        const itemTx = asString(candidate.transaction_id);
-        const itemOriginalTx = asString(candidate.original_transaction_id);
-        const itemProductId = asString(candidate.product_id);
-        const matchesTx = txId ? itemTx === txId || itemOriginalTx === txId : false;
-        const matchesProduct = prodId ? itemProductId === prodId : false;
-        return matchesTx || matchesProduct;
-      }) ?? receiptItems[0];
+    const receiptItems = [...(data.receipt?.in_app ?? []), ...(data.latest_receipt_info ?? [])] as Array<Record<string, unknown>>;
+    const item = findExactAppleCreditItem(receiptItems, params.transactionId, params.expectedProductId);
 
     if (!item) return { valid: false, reason: 'apple_receipt_transaction_not_found' };
     if (asString(item.cancellation_date_ms || item.cancellation_date)) {
       return { valid: false, reason: 'apple_purchase_cancelled' };
     }
 
-    const providerPurchaseId = stableProviderId(asString(item.transaction_id || item.original_transaction_id || txId));
-    const productId = asString(item.product_id || prodId);
+    const providerPurchaseId = stableProviderId(asString(item.transaction_id));
+    const productId = asString(item.product_id);
     if (!providerPurchaseId || !productId) return { valid: false, reason: 'apple_receipt_incomplete' };
 
     return { valid: true, providerPurchaseId, productId, raw: data };
@@ -392,8 +389,8 @@ async function verifyGoogleCreditPurchase(params: {
 }
 
 export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply) {
+  const userId = getCreditUserId(req);
   const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
   const { package_id, locale = 'tr', identity_number } = req.body as { package_id: string, locale?: string; identity_number?: string };
   
@@ -412,7 +409,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
     const currency = pkg.currency || 'TRY';
     await db.insert(orders).values({
       id: orderId,
-      user_id: user.id,
+      user_id: userId,
       order_number: orderNumber,
       status: 'pending',
       total_amount: amount,
@@ -422,7 +419,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
         context: 'credits_purchase',
         package_id: pkg.id,
         package_code: pkg.code,
-        user_id: user.id,
+        user_id: userId,
       }),
     });
 
@@ -454,7 +451,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
 
   const iyzico = new IyzicoService(resolveIyzicoConfigFromGateway(gateway));
 
-  const [profile] = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1);
+  const [profile] = await db.select().from(profiles).where(eq(profiles.id, userId)).limit(1);
 
   const orderId = uuidv4();
   const orderNumber = `CRD-${Date.now()}`;
@@ -464,7 +461,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
   // Create order record for tracking
   await db.insert(orders).values({
     id: orderId,
-    user_id: user.id,
+    user_id: userId,
     order_number: orderNumber,
     status: 'pending',
     total_amount: amount,
@@ -475,7 +472,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
       context: 'credits_purchase',
       package_id: pkg.id,
       package_code: pkg.code,
-      user_id: user.id,
+      user_id: userId,
     }),
   });
 
@@ -509,7 +506,7 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
       basketId: orderNumber,
       callbackUrl: `${resolveApiBase()}/api/credits/iyzico/callback?order_id=${orderId}`,
       buyer: {
-        id: user.id,
+        id: userId,
         name: nameParts[0],
         surname: nameParts.slice(1).join(' ') || '.',
         gsmNumber: buyerPhone,
@@ -562,9 +559,20 @@ export async function handleBuyCredits(req: FastifyRequest, reply: FastifyReply)
   }
 }
 
+async function findCreditIapOrder(providerPurchaseId: string, platform: IapPlatform): Promise<any | null> {
+  const [rows] = await (db as any).session.client.query(
+    `SELECT * FROM orders
+     WHERE transaction_id IN (?, ?)
+       AND notes LIKE '%"context":"iap_credit_purchase"%'
+       AND notes LIKE ?
+     LIMIT 1`,
+    [`${platform}:${providerPurchaseId}`, providerPurchaseId, `%"platform":"${platform}"%`],
+  );
+  return Array.isArray(rows) ? rows[0] ?? null : null;
+}
+
 export async function handleVerifyIapReceipt(req: FastifyRequest, reply: FastifyReply) {
-  const user = (req as any).user;
-  if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
+  const userId = getCreditUserId(req);
 
   const body = (req.body ?? {}) as {
     platform?: string;
@@ -605,7 +613,7 @@ export async function handleVerifyIapReceipt(req: FastifyRequest, reply: Fastify
   let verification: CreditIapVerification;
   try {
     if (platform === 'apple_iap') {
-      verification = await verifyAppleCreditReceipt({ receipt, transactionId, productId });
+      verification = await verifyAppleCreditReceipt({ receipt, transactionId, expectedProductId });
     } else {
       const packageName = asString(process.env.IAP_GOOGLE_PACKAGE_NAME);
       if (!packageName) return reply.status(500).send({ error: { message: 'google_package_name_missing' } });
@@ -626,19 +634,22 @@ export async function handleVerifyIapReceipt(req: FastifyRequest, reply: Fastify
     return reply.status(400).send({ error: { message: 'iap_product_mismatch' } });
   }
 
-  const [existingRows] = await (db as any).session.client.query(
-    `SELECT * FROM orders
-     WHERE transaction_id = ?
-       AND notes LIKE '%"context":"iap_credit_purchase"%'
-     LIMIT 1`,
-    [verification.providerPurchaseId],
-  );
-  const existingOrder = Array.isArray(existingRows) ? existingRows[0] : null;
+  const existingOrder = await findCreditIapOrder(verification.providerPurchaseId, platform);
+  const matchesExistingPurchase = (order: any) => {
+    try {
+      const notes = JSON.parse(String(order.notes || '{}'));
+      return notes.platform === platform &&
+        notes.package_id === (resolvedPkg as any).id &&
+        notes.product_id === verification.productId;
+    } catch {
+      return false;
+    }
+  };
   if (existingOrder) {
-    if (existingOrder.user_id !== user.id) {
+    if (existingOrder.user_id !== userId || !matchesExistingPurchase(existingOrder)) {
       return reply.status(409).send({ error: { message: 'transaction_already_used' } });
     }
-    const balance = await repo.getUserBalance(user.id);
+    const balance = await repo.getUserBalance(userId);
     return reply.send({
       data: {
         platform,
@@ -653,25 +664,31 @@ export async function handleVerifyIapReceipt(req: FastifyRequest, reply: Fastify
   }
 
   const orderId = uuidv4();
-  const orderNumber = `IAPCRD-${Date.now()}`;
+  const orderNumber = `IAPCRD-${Date.now()}-${uuidv4().slice(0, 8)}`;
   const totalCredits = Number((resolvedPkg as any).credits || 0) + Number((resolvedPkg as any).bonusCredits ?? (resolvedPkg as any).bonus_credits ?? 0);
   const priceMinor = Number((resolvedPkg as any).priceMinor ?? (resolvedPkg as any).price_minor ?? 0);
   const currency = String((resolvedPkg as any).currency || 'TRY');
   const amount = (priceMinor / 100).toFixed(2);
   const gatewaySlug = platform === 'apple_iap' ? 'apple_iap' : 'google_iap';
+  const storeTransactionId = `${gatewaySlug}:${verification.providerPurchaseId}`;
   const [gateway] = await db.select().from(paymentGateways).where(eq(paymentGateways.slug, gatewaySlug)).limit(1);
+  // payments.transaction_id has the database unique key that serializes parallel
+  // deliveries of the same store transaction. Never grant credits without it.
+  if (!gateway?.id) {
+    return reply.status(503).send({ error: { message: 'iap_gateway_not_configured' } });
+  }
 
-  const result = await db.transaction(async (tx) => {
+  const outcome = await grantOnceWithRecovery(() => db.transaction(async (tx) => {
     await tx.insert(orders).values({
       id: orderId,
-      user_id: user.id,
+      user_id: userId,
       order_number: orderNumber,
       status: 'completed',
       total_amount: amount,
       currency,
-      payment_gateway_id: gateway?.id ?? null,
+      payment_gateway_id: gateway.id,
       payment_status: 'paid',
-      transaction_id: verification.providerPurchaseId,
+      transaction_id: storeTransactionId,
       notes: JSON.stringify({
         context: 'iap_credit_purchase',
         platform,
@@ -683,14 +700,14 @@ export async function handleVerifyIapReceipt(req: FastifyRequest, reply: Fastify
 
     await tx.execute(sql`
       INSERT INTO user_credits (id, user_id, balance, currency, created_at, updated_at)
-      VALUES (${uuidv4()}, ${user.id}, 0, 'TRY-CREDIT', NOW(3), NOW(3))
+      VALUES (${uuidv4()}, ${userId}, 0, 'TRY-CREDIT', NOW(3), NOW(3))
       ON DUPLICATE KEY UPDATE updated_at = updated_at
     `);
 
     const creditTxId = uuidv4();
     await tx.insert(creditTransactions).values({
       id: creditTxId,
-      userId: user.id,
+      userId,
       type: 'purchase',
       amount: totalCredits,
       balanceAfter: 0,
@@ -703,28 +720,40 @@ export async function handleVerifyIapReceipt(req: FastifyRequest, reply: Fastify
     await tx.execute(sql`
       UPDATE user_credits
       SET balance = balance + ${totalCredits}, updated_at = NOW(3)
-      WHERE user_id = ${user.id}
+      WHERE user_id = ${userId}
     `);
 
-    const [current] = await tx.select().from(userCredits).where(eq(userCredits.userId, user.id)).limit(1);
+    const [current] = await tx.select().from(userCredits).where(eq(userCredits.userId, userId)).limit(1);
     const balanceAfter = Number(current?.balance ?? 0);
     await tx.update(creditTransactions).set({ balanceAfter }).where(eq(creditTransactions.id, creditTxId));
 
-    if (gateway?.id) {
-      await tx.insert(payments).values({
-        id: uuidv4(),
-        order_id: orderId,
-        gateway_id: gateway.id,
-        amount,
-        currency,
-        status: 'success',
-        transaction_id: verification.providerPurchaseId,
-        raw_response: JSON.stringify(verification.raw ?? {}),
-      });
-    }
+    await tx.insert(payments).values({
+      id: uuidv4(),
+      order_id: orderId,
+      gateway_id: gateway.id,
+      amount,
+      currency,
+      status: 'success',
+      transaction_id: storeTransactionId,
+      raw_response: JSON.stringify(verification.raw ?? {}),
+    });
 
     return { balance: balanceAfter };
-  });
+  }), () => findCreditIapOrder(verification.providerPurchaseId!, platform));
+
+  if (!outcome.granted) {
+    if (outcome.existing.user_id !== userId || !matchesExistingPurchase(outcome.existing)) {
+      return reply.status(409).send({ error: { message: 'transaction_already_used' } });
+    }
+    const balance = await repo.getUserBalance(userId);
+    return reply.send({ data: {
+      platform, valid: true, idempotent: true,
+      order_id: outcome.existing.id,
+      package_id: (resolvedPkg as any).id,
+      credits_added: 0,
+      balance: Number((balance as any)?.balance ?? 0),
+    } });
+  }
 
   return reply.send({
     data: {
@@ -735,7 +764,7 @@ export async function handleVerifyIapReceipt(req: FastifyRequest, reply: Fastify
       product_id: verification.productId || productId,
       transaction_id: transactionId,
       credits_added: totalCredits,
-      balance: Number((result as any)?.balance ?? 0),
+      balance: Number((outcome.result as any)?.balance ?? 0),
     },
   });
 }

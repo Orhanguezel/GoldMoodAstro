@@ -66,12 +66,12 @@ function buildScreenStyles(t: AppTheme) {
   heroDetail: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted },
   heroDate: { fontFamily: font.sans, fontSize: 12, color: colors.goldDim },
   ascBadge: {
-    backgroundColor: 'rgba(201, 169, 97, 0.1)',
+    backgroundColor: colors.gold + '1A',
     padding: 10,
     borderRadius: radius.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(201, 169, 97, 0.3)',
+    borderColor: colors.gold + '4D',
   },
   ascLabel: { fontFamily: font.sansBold, fontSize: 9, color: colors.gold, letterSpacing: 1 },
   ascValue: { fontFamily: font.sansBold, fontSize: 14, color: colors.gold, marginTop: 2 },
@@ -448,4 +448,3 @@ export default function BirthChartScreen() {
     </View>
   );
 }
-

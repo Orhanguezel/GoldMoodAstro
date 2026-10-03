@@ -47,6 +47,7 @@ export interface User {
   full_name: string;
   phone?: string;
   role: 'user' | 'consultant' | 'admin';
+  roles?: Array<'user' | 'consultant' | 'admin'>;
   avatar_url?: string;
   fcm_token?: string;
   is_active: boolean;
@@ -294,6 +295,7 @@ export interface MediaMessage {
 export interface MediaMessageCreateInput {
   consultant_id: string;
   kind: MediaMessageKind;
+  expected_price: number;
   storage_path: string;
   duration_seconds?: number;
   note?: string | null;
@@ -303,8 +305,10 @@ export interface ConsultantMediaSettings {
   consultant_id: string;
   audio_enabled: boolean;
   audio_price: number;
+  audio_credits: number;
   video_enabled: boolean;
   video_price: number;
+  video_credits: number;
   reply_sla_hours: number;
   currency: string;
 }
@@ -440,6 +444,8 @@ export interface ConsultantKycDocument {
 export interface ConsultantSelfProfile {
   id: string;
   user_id: string;
+  approval_status?: 'pending' | 'approved' | 'rejected' | null;
+  publication_status?: { is_published: boolean; missing: Array<'approval' | 'hidden' | 'price' | 'photo' | 'slug'> };
   bio: string | null;
   session_price?: string | number | null;
   session_duration?: number | null;

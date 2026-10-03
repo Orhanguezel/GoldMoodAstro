@@ -11,6 +11,15 @@ function parsePx(v: string | undefined, fallback: number): number {
   return Number.isFinite(n) ? Math.round(n) : fallback;
 }
 
+function statusBarForBackground(value: string): 'dark' | 'light' {
+  const hex = value.trim().replace(/^#/, '');
+  const full = hex.length === 3 ? hex.split('').map((part) => part + part).join('') : hex;
+  if (!/^[0-9a-f]{6}$/i.test(full)) return defaultAppTheme.statusBar.default === 'light' ? 'light' : 'dark';
+  const rgb = [0, 2, 4].map((offset) => parseInt(full.slice(offset, offset + 2), 16) / 255);
+  const luminance = rgb.map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+  return luminance[0] * 0.2126 + luminance[1] * 0.7152 + luminance[2] * 0.0722 < 0.18 ? 'light' : 'dark';
+}
+
 function expoFontFromStack(stack: string | undefined, role: 'display' | 'serif' | 'sans' | 'mono'): string {
   const s = (stack ?? '').toLowerCase();
   if (role === 'mono' || s.includes('jetbrains')) return 'JetBrainsMono_400Regular';
@@ -25,7 +34,13 @@ function expoFontFromStack(stack: string | undefined, role: 'display' | 'serif' 
     if (s.includes('500') || s.includes('medium')) return 'Fraunces_500Medium';
     return 'Fraunces_400Regular';
   }
-  if (s.includes('manrope') || s.includes('outfit') || s.includes('inter')) {
+  if (s.includes('gabriela')) return 'Gabriela_400Regular';
+  if (s.includes('outfit')) {
+    if (s.includes('700') || s.includes('bold')) return 'Outfit_700Bold';
+    if (s.includes('500') || s.includes('medium')) return 'Outfit_500Medium';
+    return 'Outfit_400Regular';
+  }
+  if (s.includes('manrope') || s.includes('inter')) {
     if (s.includes('700') || s.includes('bold')) return 'Manrope_700Bold';
     if (s.includes('500') || s.includes('medium')) return 'Manrope_500Medium';
     return 'Manrope_400Regular';
@@ -43,17 +58,22 @@ function expoFontFromStack(stack: string | undefined, role: 'display' | 'serif' 
 }
 
 function mapTypographyToAppFont(t: DesignTokens['typography']): AppFont {
+  const display = expoFontFromStack(t.font_display, 'display');
+  const serif = expoFontFromStack(t.font_serif ?? t.font_display, 'serif');
+  const sans = expoFontFromStack(t.font_sans, 'sans');
+  const displayFamily = display.split('_')[0];
+  const sansFamily = sans.split('_')[0];
   return {
-    display: expoFontFromStack(t.font_display, 'display'),
-    displayMedium: 'Cinzel_500Medium',
-    displayBold: 'Cinzel_700Bold',
-    serif: expoFontFromStack(t.font_serif ?? t.font_display, 'serif'),
-    serifItalic: 'Fraunces_400Regular_Italic',
-    serifMedium: 'Fraunces_500Medium',
-    serifBold: 'Fraunces_700Bold',
-    sans: expoFontFromStack(t.font_sans, 'sans'),
-    sansMedium: 'Manrope_500Medium',
-    sansBold: 'Manrope_700Bold',
+    display,
+    displayMedium: `${displayFamily}_500Medium`,
+    displayBold: `${displayFamily}_700Bold`,
+    serif,
+    serifItalic: serif === 'Gabriela_400Regular' ? serif : 'Fraunces_400Regular_Italic',
+    serifMedium: serif === 'Gabriela_400Regular' ? serif : 'Fraunces_500Medium',
+    serifBold: serif === 'Gabriela_400Regular' ? serif : 'Fraunces_700Bold',
+    sans,
+    sansMedium: `${sansFamily}_500Medium`,
+    sansBold: `${sansFamily}_700Bold`,
     mono: expoFontFromStack(t.font_mono, 'mono'),
   };
 }
@@ -211,12 +231,19 @@ function mapBranding(b: DesignTokens['branding']): AppBranding {
   };
 }
 
-export function normalizeRemoteTokens(raw: unknown): DesignTokens {
-  if (!raw || typeof raw !== 'object') return DEFAULT_REMOTE_TOKENS;
+export function parseRemoteTokens(raw: unknown): DesignTokens | null {
+  if (typeof raw === 'string') {
+    try {
+      raw = JSON.parse(raw) as unknown;
+    } catch {
+      return null;
+    }
+  }
+  if (!raw || typeof raw !== 'object') return null;
   const r = raw as Partial<DesignTokens>;
-  if (!r.colors || typeof r.colors !== 'object') return DEFAULT_REMOTE_TOKENS;
+  if (!r.colors || typeof r.colors !== 'object') return null;
   const rc = r.colors as Partial<DesignTokens['colors']>;
-  if (typeof rc.brand_primary !== 'string') return DEFAULT_REMOTE_TOKENS;
+  if (typeof rc.brand_primary !== 'string' || !rc.brand_primary.trim()) return null;
 
   const base = DEFAULT_REMOTE_TOKENS;
   return {
@@ -229,6 +256,10 @@ export function normalizeRemoteTokens(raw: unknown): DesignTokens {
     shadows: { ...base.shadows, ...(r.shadows ?? {}) },
     branding: { ...base.branding, ...(r.branding ?? {}) },
   };
+}
+
+export function normalizeRemoteTokens(raw: unknown): DesignTokens {
+  return parseRemoteTokens(raw) ?? DEFAULT_REMOTE_TOKENS;
 }
 
 export function designTokensToAppTheme(tokens: DesignTokens): AppTheme {
@@ -250,7 +281,7 @@ export function designTokensToAppTheme(tokens: DesignTokens): AppTheme {
     shadows,
     gradients,
     branding,
-    statusBar: defaultAppTheme.statusBar,
+    statusBar: { ...defaultAppTheme.statusBar, default: statusBarForBackground(c.bg_base) },
     spacing: defaultAppTheme.spacing,
   };
 }

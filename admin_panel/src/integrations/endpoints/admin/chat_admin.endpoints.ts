@@ -25,9 +25,31 @@ import type {
 
 const THREADS = '/admin/chat/threads';
 const KNOWLEDGE = '/admin/chat/knowledge';
+const REPORTS = '/admin/chat/reports';
+
+export interface ChatReportRow {
+  id: string;
+  thread_id: string;
+  message_id: string;
+  reporter_user_id: string;
+  reported_user_id: string;
+  reason: string;
+  details: string | null;
+  status: string;
+  created_at: string;
+  message_text: string | null;
+}
 
 export const chatAdminApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
+    listChatReportsAdmin: build.query<{ items: ChatReportRow[] }, 'open' | 'reviewed' | 'dismissed'>({
+      query: (status): FetchArgs => ({ url: REPORTS, method: 'GET', params: { status } }),
+      providesTags: [{ type: 'ChatThreads', id: 'REPORTS' }],
+    }),
+    reviewChatReportAdmin: build.mutation<{ ok: boolean }, { id: string; status: 'reviewed' | 'dismissed' }>({
+      query: ({ id, status }): FetchArgs => ({ url: `${REPORTS}/${id}`, method: 'PATCH', body: { status } }),
+      invalidatesTags: [{ type: 'ChatThreads', id: 'REPORTS' }],
+    }),
     // ─── Thread endpoints ─────────────────────────────────────
 
     /** GET /admin/chat/threads */
@@ -196,6 +218,8 @@ export const chatAdminApi = baseApi.injectEndpoints({
 // ─── Hook exports ───────────────────────────────────────────
 
 export const {
+  useListChatReportsAdminQuery,
+  useReviewChatReportAdminMutation,
   // Threads
   useListChatThreadsAdminQuery,
   useListChatMessagesAdminQuery,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -17,12 +17,15 @@ import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { Calendar, ChevronLeft, Clock, MapPin, Sparkles } from 'lucide-react-native';
 
-import { colors, spacing, font, radius } from '@/theme/tokens';
+import { useAppTheme, type AppTheme } from '@/theme';
 import { birthChartsApi, geocodeApi } from '@/lib/api';
 import type { BigThreePreviewResponse, BigThreeSlotPayload } from '@/types';
 
 export default function BigThreeScreen() {
   const { t } = useTranslation();
+  const theme = useAppTheme();
+  const { colors } = theme;
+  const styles = useMemo(() => buildScreenStyles(theme), [theme]);
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -92,6 +95,7 @@ export default function BigThreeScreen() {
 
             <View style={styles.form}>
               <Field
+                styles={styles}
                 label={t('bigThree.fieldNameLabel')}
                 icon={<Sparkles size={18} color={colors.goldDim} />}
                 input={
@@ -105,6 +109,7 @@ export default function BigThreeScreen() {
                 }
               />
               <Field
+                styles={styles}
                 label={t('bigThree.fieldDateLabel')}
                 icon={<Calendar size={18} color={colors.goldDim} />}
                 input={
@@ -119,6 +124,7 @@ export default function BigThreeScreen() {
                 }
               />
               <Field
+                styles={styles}
                 label={t('bigThree.fieldTimeLabel')}
                 icon={<Clock size={18} color={colors.goldDim} />}
                 input={
@@ -133,6 +139,7 @@ export default function BigThreeScreen() {
                 }
               />
               <Field
+                styles={styles}
                 label={t('bigThree.fieldPlaceLabel')}
                 icon={<MapPin size={18} color={colors.goldDim} />}
                 input={
@@ -167,9 +174,9 @@ export default function BigThreeScreen() {
             {result ? (
               <View style={styles.resultBlock}>
                 <Text style={styles.resultKicker}>SONUÇ</Text>
-                <SlotCard title={t('bigThree.sun')} slot={result.big_three.sun} />
-                <SlotCard title={t('bigThree.moon')} slot={result.big_three.moon} />
-                <SlotCard title={t('bigThree.ascendant')} slot={result.big_three.ascendant} />
+                <SlotCard styles={styles} title={t('bigThree.sun')} slot={result.big_three.sun} />
+                <SlotCard styles={styles} title={t('bigThree.moon')} slot={result.big_three.moon} />
+                <SlotCard styles={styles} title={t('bigThree.ascendant')} slot={result.big_three.ascendant} />
 
                 <Pressable
                   style={styles.secondaryBtn}
@@ -191,7 +198,9 @@ function Field({
   label,
   icon,
   input,
+  styles,
 }: {
+  styles: ReturnType<typeof buildScreenStyles>;
   label: string;
   icon: React.ReactNode;
   input: React.ReactNode;
@@ -207,7 +216,7 @@ function Field({
   );
 }
 
-function SlotCard({ title, slot }: { title: string; slot: BigThreeSlotPayload | null }) {
+function SlotCard({ title, slot, styles }: { title: string; slot: BigThreeSlotPayload | null; styles: ReturnType<typeof buildScreenStyles> }) {
   if (!slot) {
     return (
       <View style={styles.card}>
@@ -239,7 +248,9 @@ function SlotCard({ title, slot }: { title: string; slot: BigThreeSlotPayload | 
   );
 }
 
-const styles = StyleSheet.create({
+function buildScreenStyles(t: AppTheme) {
+  const { colors, spacing, font, radius } = t;
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   safe: { flex: 1 },
   headerRow: {
@@ -377,7 +388,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 24,
   },
-});
+  });
+}
 
 function normalizeDate(value: string) {
   const trimmed = value.trim();

@@ -24,16 +24,16 @@ function buildStyles(t: AppTheme) {
       width: 44,
       height: 44,
       borderRadius: 14,
-      backgroundColor: 'rgba(201, 169, 97, 0.15)',
+      backgroundColor: `${colors.gold}26`,
       alignItems: 'center',
       justifyContent: 'center',
     },
     body: { flex: 1 },
-    title: { fontFamily: font.display, fontSize: 16, color: colors.text },
+    title: { fontFamily: font.display, fontSize: 16, color: colors.cream },
     desc: {
       fontFamily: font.sans,
       fontSize: 12,
-      color: colors.textMuted,
+      color: colors.stardustDim,
       marginTop: 4,
       lineHeight: 18,
     },
@@ -79,6 +79,8 @@ export function BannerUpsell() {
       <Pressable
         style={styles.cta}
         onPress={() => router.push('/(tabs)/profile/subscription' as any)}
+        accessibilityRole="button"
+        accessibilityLabel={t('banner.goPremium')}
       >
         <Text style={styles.ctaText}>{t('banner.goPremium')}</Text>
         <ArrowRight size={16} color={colors.ink} />

@@ -197,9 +197,7 @@ export default function BookingsScreen() {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      fetchBookings();
-    } else if (!authLoading && !isAuthenticated) {
-      setLoading(false);
+      void Promise.resolve().then(fetchBookings);
     }
   }, [isAuthenticated, authLoading]);
 

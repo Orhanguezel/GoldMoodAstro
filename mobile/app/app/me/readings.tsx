@@ -219,10 +219,10 @@ export default function HistoryScreen() {
   useEffect(() => {
     if (authHydrating) return;
     if (!isAuthenticated) {
-      setLoading(false);
+      void Promise.resolve().then(() => setLoading(false));
       return;
     }
-    loadHistory();
+    void Promise.resolve().then(loadHistory);
   }, [authHydrating, isAuthenticated, loadHistory]);
 
   const filtered = useMemo(

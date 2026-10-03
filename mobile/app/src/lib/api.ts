@@ -9,6 +9,7 @@ import { router } from 'expo-router';
 import { storage } from '@/lib/storage';
 import type { CustomPageRow } from '@/lib/cms';
 import { messageFromApiErrorBody, normalizeListResponse } from '@/lib/apiUtils';
+import { PAYMENT_SUCCESS_PATTERNS, PAYMENT_FAILURE_PATTERNS } from '@/lib/paymentReturn';
 import { fetchWithPolicy, HttpError, SessionChangedError } from './core/transport';
 import {
   buildBookingCreateRequest,
@@ -111,6 +112,9 @@ type JsonRecord = Record<string, unknown>;
 
 export interface MobileProfile extends JsonRecord {
   full_name?: string;
+  phone?: string | null;
+  address_line1?: string | null;
+  city?: string | null;
   avatar_url?: string | null;
   push_notifications?: boolean | number;
   email_notifications?: boolean | number;
@@ -121,6 +125,7 @@ export interface AppNotification extends JsonRecord {
   type?: string;
   title?: string;
   body?: string;
+  message?: string;
   is_read?: boolean | number;
   created_at?: string;
   data?: JsonRecord | null;
@@ -287,7 +292,7 @@ async function handleSessionExpired(path: string, epoch: number) {
 }
 
 async function request<T>(
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE', path: string,
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', path: string,
   body?: unknown, params?: Record<string, string | number>,
 ): Promise<T> {
   await hydrateAuthTokenFromStorage();
@@ -319,12 +324,36 @@ async function request<T>(
   return data as T;
 }
 
+/** Multipart writes use the same deadline and account boundary as JSON writes. */
+async function uploadForm(path: string, form: FormData): Promise<unknown> {
+  await hydrateAuthTokenFromStorage();
+  const epoch = authEpoch;
+  const headers: Record<string, string> = {};
+  if (_authToken) headers.Authorization = `Bearer ${_authToken}`;
+  const res = await fetchWithPolicy(`${API_URL}${path}`, { method: 'POST', headers, body: form });
+  if (epoch !== authEpoch) throw new SessionChangedError();
+  if (res.status === 401) {
+    const refreshed = await refreshAccessToken(epoch);
+    if (refreshed) throw new HttpError(409, 'Session refreshed; please retry the operation');
+  }
+  if (epoch !== authEpoch) throw new SessionChangedError();
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({}));
+    if (res.status === 401) await handleSessionExpired(path, epoch);
+    throw new HttpError(res.status, messageFromApiErrorBody(errorBody));
+  }
+  const result: unknown = await res.json();
+  if (epoch !== authEpoch) throw new SessionChangedError();
+  return result;
+}
+
 /** GET: 404 veya ağ hatası → null (tema / opsiyonel veri; LogBox spam’i yok). */
 async function getAllow404<T>(
   path: string,
   params?: Record<string, string | number>,
 ): Promise<T | null> {
   await hydrateAuthTokenFromStorage();
+  const epoch = authEpoch;
 
   const url = new URL(`${API_URL}${path}`);
   if (params) {
@@ -337,6 +366,7 @@ async function getAllow404<T>(
 
   try {
     const res = await fetchWithPolicy(url.toString(), { method: 'GET', headers });
+    if (epoch !== authEpoch) return null;
     if (res.status === 404) return null;
     if (!res.ok) {
       if (__DEV__) {
@@ -345,7 +375,8 @@ async function getAllow404<T>(
       }
       return null;
     }
-    return (await res.json()) as T;
+    const data = (await res.json()) as T;
+    return epoch === authEpoch ? data : null;
   } catch {
     if (__DEV__) {
       logger.warn(
@@ -358,6 +389,7 @@ async function getAllow404<T>(
 
 const get  = <T>(path: string, params?: Record<string, string | number>) => request<T>('GET', path, undefined, params);
 const post = <T>(path: string, body: unknown) => request<T>('POST', path, body);
+const put = <T>(path: string, body: unknown) => request<T>('PUT', path, body);
 const patch = <T>(path: string, body: unknown) => request<T>('PATCH', path, body);
 const del = <T>(path: string) => request<T>('DELETE', path);
 
@@ -389,6 +421,9 @@ export const authApi = {
 
   me: () =>
     get<MeResponse>(apiPaths.auth.me),
+
+  updateUser: (data: { password: string; current_password: string }) =>
+    put<{ user: MeResponse['user'] }>('/auth/user', data),
 
   registerFcmToken: (fcm_token: string) =>
     post<void>('/push/register-token', { token: fcm_token }),
@@ -595,6 +630,11 @@ export const creditsApi = {
 };
 
 export const mediaMessagesApi = {
+  safetyForConsultant: async (id: string) => (await get<{ data: { blocked_by_me: boolean; blocked_by_peer: boolean; terms_accepted: boolean } }>(`/me/consultants/${encodeURIComponent(id)}/media-safety`)).data,
+  safety: async (id: string) => (await get<{ data: { blocked_by_me: boolean; blocked_by_peer: boolean; terms_accepted: boolean } }>(`/me/media-messages/${encodeURIComponent(id)}/safety`)).data,
+  block: async (id: string) => (await post<{ data: { blocked_by_me: boolean; blocked_by_peer: boolean; terms_accepted: boolean } }>(`/me/media-messages/${encodeURIComponent(id)}/block`, {})).data,
+  unblock: async (id: string) => (await del<{ data: { blocked_by_me: boolean; blocked_by_peer: boolean; terms_accepted: boolean } }>(`/me/media-messages/${encodeURIComponent(id)}/block`)).data,
+  report: async (id: string, reason: 'harassment' | 'hate' | 'sexual' | 'spam' | 'other' = 'other') => post<{ ok: boolean }>(`/me/media-messages/${encodeURIComponent(id)}/reports`, { reason }),
   getConsultantSettings: async (consultantId: string): Promise<ConsultantMediaSettings | null> => {
     const res = await get<{ data: ConsultantMediaSettings }>(`/consultants/${consultantId}/media-settings`);
     return res?.data ?? null;
@@ -635,6 +675,15 @@ export const consultantSelfApi = {
     return res.data;
   },
 
+  profileCompletion: async (): Promise<{
+    score: number;
+    status: 'excellent' | 'improvable' | 'incomplete';
+    items: Array<{ id: string; label: string; labelKey: string; tab: string; done: boolean; weight: number }>;
+  }> => {
+    const res = await get<{ data: { score: number; status: 'excellent' | 'improvable' | 'incomplete'; items: Array<{ id: string; label: string; labelKey: string; tab: string; done: boolean; weight: number }> } }>('/me/consultant/profile-completion');
+    return res.data;
+  },
+
   updateProfile: async (payload: Partial<ConsultantSelfProfile>): Promise<{ id: string }> => {
     const res = await patch<{ data: { id: string } }>('/me/consultant', payload);
     return res.data;
@@ -659,6 +708,14 @@ export const consultantSelfApi = {
     const res = await post<{ data: { id: string; status: string } }>(
       `/me/consultant/bookings/${encodeURIComponent(id)}/reject`,
       reason ? { reason } : {},
+    );
+    return res.data;
+  },
+
+  cancelBooking: async (id: string, reason: string): Promise<{ id: string; status: string }> => {
+    const res = await post<{ data: { id: string; status: string } }>(
+      `/me/consultant/bookings/${encodeURIComponent(id)}/cancel`,
+      { reason },
     );
     return res.data;
   },
@@ -735,27 +792,15 @@ export const consultantSelfApi = {
     name?: string;
     mime?: string;
   }): Promise<ConsultantKycDocument> => {
-    await hydrateAuthTokenFromStorage();
     const form = new FormData();
     form.append('file', {
       uri: payload.uri,
       name: payload.name ?? `${payload.type}-${Date.now()}.jpg`,
       type: payload.mime ?? 'image/jpeg',
     } as unknown as Blob);
-    const res = await fetch(`${API_URL}/me/consultant/kyc/documents?type=${encodeURIComponent(payload.type)}`, {
-      method: 'POST',
-      headers: _authToken ? { Authorization: `Bearer ${_authToken}` } : undefined,
-      body: form,
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      const msg = messageFromApiErrorBody(err) ?? `HTTP ${res.status}`;
-      const apiError = new Error(msg) as Error & { status?: number; body?: unknown };
-      apiError.status = res.status;
-      apiError.body = err;
-      throw apiError;
-    }
-    const data = await res.json() as { data: ConsultantKycDocument };
+    const data = await uploadForm(
+      `/me/consultant/kyc/documents?type=${encodeURIComponent(payload.type)}`, form,
+    ) as { data: ConsultantKycDocument };
     return data.data;
   },
 
@@ -906,14 +951,14 @@ export const birthChartsApi = {
 };
 
 export const profilesApi = {
-  getMyProfile: async (): Promise<MobileProfile> => {
-    const res = await get<ApiEnvelope<MobileProfile>>('/profiles/me');
-    return res.data;
+  getMyProfile: async (): Promise<MobileProfile | null> => {
+    const res = await get<MobileProfile | ApiEnvelope<MobileProfile> | null>('/profiles/me');
+    return res && 'data' in res ? (res as ApiEnvelope<MobileProfile>).data : res as MobileProfile | null;
   },
 
   upsertMyProfile: async (payload: { profile: Record<string, unknown> }): Promise<MobileProfile> => {
-    const res = await patch<ApiEnvelope<MobileProfile>>('/profiles/me', payload);
-    return res.data;
+    const res = await patch<MobileProfile | ApiEnvelope<MobileProfile>>('/profiles/me', payload);
+    return 'data' in res ? (res as ApiEnvelope<MobileProfile>).data : res as MobileProfile;
   },
 };
 
@@ -997,6 +1042,45 @@ export const chatApi = {
     );
     return res.message;
   },
+  blockState: (threadId: string) => get<{ peer_user_id: string; blocked_by_me: boolean; blocked_by_peer: boolean; terms_accepted: boolean }>(`/chat/threads/${encodeURIComponent(threadId)}/block`),
+  blockPeer: (threadId: string) => post<{ peer_user_id: string; blocked_by_me: boolean; blocked_by_peer: boolean; terms_accepted: boolean }>(`/chat/threads/${encodeURIComponent(threadId)}/block`, {}),
+  unblockPeer: (threadId: string) => del<{ peer_user_id: string; blocked_by_me: boolean; blocked_by_peer: boolean; terms_accepted: boolean }>(`/chat/threads/${encodeURIComponent(threadId)}/block`),
+  acceptTerms: () => post<{ ok: boolean }>('/chat/terms/accept', { accepted: true }),
+  reportMessage: (threadId: string, messageId: string, reason: 'harassment' | 'hate' | 'sexual' | 'spam' | 'other') =>
+    post<{ ok: boolean }>(`/chat/threads/${encodeURIComponent(threadId)}/reports`, { message_id: messageId, reason }),
+};
+
+/** User inbox shares the web dashboard's customer thread contract. */
+export interface CustomerThreadMessage {
+  id: string;
+  thread_id: string;
+  sender_user_id: string;
+  text: string;
+  created_at: string;
+  from_self: boolean;
+}
+
+export interface CustomerThread {
+  thread_id: string;
+  context_type: string;
+  context_id: string;
+  created_at: string;
+  updated_at: string;
+  consultant: { id: string; display_name: string | null; full_name: string | null; avatar_url: string | null } | null;
+  unread_count: number;
+  last_message: CustomerThreadMessage | null;
+}
+
+export const customerThreadsApi = {
+  list: async (): Promise<CustomerThread[]> =>
+    (await get<ApiEnvelope<CustomerThread[]>>('/me/customer/threads')).data,
+  messages: async (id: string): Promise<CustomerThreadMessage[]> =>
+    (await get<ApiEnvelope<{ messages: CustomerThreadMessage[] }>>(`/me/customer/threads/${encodeURIComponent(id)}/messages`)).data.messages,
+  reply: async (id: string, text: string): Promise<CustomerThreadMessage> =>
+    (await post<ApiEnvelope<CustomerThreadMessage>>(`/me/customer/threads/${encodeURIComponent(id)}/reply`, { text })).data,
+  markRead: async (id: string): Promise<void> => {
+    await post(`/me/customer/threads/${encodeURIComponent(id)}/mark-read`, {});
+  },
 };
 
 // -------------------------------------------------------------------
@@ -1005,13 +1089,13 @@ export const chatApi = {
 
 export const notificationsApi = {
   list: () =>
-    get<{ items: AppNotification[] }>('/notifications/me'),
+    get<{ data: AppNotification[]; page: number; limit: number; total: number }>('/notifications'),
 
   markAsRead: (id: string) =>
-    patch<void>(`/notifications/${id}/read`, {}),
+    patch<AppNotification>(`/notifications/${encodeURIComponent(id)}`, { is_read: true }),
 
   markAllAsRead: () =>
-    post<void>('/notifications/read-all', {}),
+    post<{ ok: boolean }>('/notifications/mark-all-read', {}),
 };
 
 // -------------------------------------------------------------------
@@ -1029,8 +1113,18 @@ export const kvkkApi = {
     return res.data;
   },
 
-  requestDeletion: async (reason?: string): Promise<{ data: KvkkAccountDeletionStatus & { message?: string; cooling_off_days?: number } }> =>
-    post('/me/delete-account', reason?.trim() ? { reason: reason.trim() } : {}),
+  requestDeletion: async (
+    reason?: string,
+    apple?: { identityToken: string; authorizationCode: string; nonce: string },
+  ): Promise<{ data: KvkkAccountDeletionStatus & { message?: string; cooling_off_days?: number; apple_revocation?: 'revoked' | 'not_requested' | 'unavailable' | 'failed' } }> =>
+    post('/me/delete-account', {
+      ...(reason?.trim() ? { reason: reason.trim() } : {}),
+      ...(apple ? {
+        apple_identity_token: apple.identityToken,
+        apple_authorization_code: apple.authorizationCode,
+        apple_nonce: apple.nonce,
+      } : {}),
+    }),
 
   cancelDeletion: async (): Promise<{ data: { id: string; status: 'cancelled' } }> =>
     del<{ data: { id: string; status: 'cancelled' } }>('/me/delete-account'),
@@ -1049,33 +1143,10 @@ export const horoscopesApi = {
     locale?: string;
   }): Promise<HoroscopeToday | null> => {
     const date = params.date ?? formatLocalYmd(new Date());
-    const url = new URL(`${API_URL}/horoscopes/today`);
-    url.searchParams.set('sign', params.sign);
-    url.searchParams.set('date', date);
-    if (params.locale) url.searchParams.set('locale', params.locale);
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache',
-      Pragma: 'no-cache',
-    };
-    if (_authToken) headers.Authorization = `Bearer ${_authToken}`;
-
     try {
-      const res = await fetch(url.toString(), {
-        method: 'GET',
-        headers,
-        cache: 'no-store',
+      const json = await getAllow404<ApiEnvelope<HoroscopeToday>>('/horoscopes/today', {
+        sign: params.sign, date, ...(params.locale ? { locale: params.locale } : {}),
       });
-      if (res.status === 404) return null;
-      if (!res.ok) {
-        if (__DEV__) {
-          const err = await res.json().catch(() => ({}));
-          logger.warn(`[GoldMood] GET /horoscopes/today → ${res.status}`, err);
-        }
-        return null;
-      }
-      const json = (await res.json()) as ApiEnvelope<HoroscopeToday>;
       const row = json?.data;
       if (!row) return null;
       const periodStart = row.period_start_date ?? row.periodStartDate ?? row.date;
@@ -1122,26 +1193,21 @@ export const storageApi = {
     formData: FormData,
     options: { bucket?: string; path?: string; upsert?: boolean } = {}
   ): Promise<{ id: string; url?: string | null; path?: string }> => {
-    await hydrateAuthTokenFromStorage();
     const bucket = options.bucket ?? 'coffee';
     const params = new URLSearchParams();
     if (options.path) params.set('path', options.path);
     if (options.upsert) params.set('upsert', '1');
 
-    const res = await fetch(`${API_URL}/storage/${bucket}/upload?${params.toString()}`, {
-      method: 'POST',
-      headers: _authToken ? { Authorization: `Bearer ${_authToken}` } : undefined,
-      body: formData,
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error((err as { message?: string })?.message ?? `HTTP ${res.status}`);
-    }
-    const data = await res.json();
+    const data = await uploadForm(`/storage/${encodeURIComponent(bucket)}/upload?${params.toString()}`, formData) as {
+      items?: { id?: string; path?: string; url?: string | null }[];
+      id?: string; path?: string; url?: string | null;
+    };
     // Wrap to match common response shape
     const item = data.items?.[0] ?? data;
+    const id = item.id ?? item.path;
+    if (!id) throw new Error('Upload response missing identifier');
     return {
-      id: item.id || item.path,
+      id,
       url: item.url,
       path: item.path,
     };
@@ -1360,15 +1426,13 @@ export const siteSettingsApi = {
     success: string[];
     failure: string[];
   }> => {
-    const fallbackSuccess = ['/siparis/basarili', '/booking/success', 'checkout=success', 'payment=success', 'status=success'];
-    const fallbackFailure = ['/sepet?payment=failed', '/sepet?payment=error', 'checkout=failed', 'payment=failed', 'payment=error', 'status=failure', 'status=failed'];
     const [success, failure] = await Promise.all([
       siteSettingsApi.getSettingValue('mobile_payment_success_patterns'),
       siteSettingsApi.getSettingValue('mobile_payment_failure_patterns'),
     ]);
     return {
-      success: parseSettingStringArray(success, fallbackSuccess),
-      failure: parseSettingStringArray(failure, fallbackFailure),
+      success: parseSettingStringArray(success, PAYMENT_SUCCESS_PATTERNS),
+      failure: parseSettingStringArray(failure, PAYMENT_FAILURE_PATTERNS),
     };
   },
 };

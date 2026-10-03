@@ -7,8 +7,10 @@ export type ConsultantMediaSettings = {
   consultant_id: string;
   audio_enabled: boolean;
   audio_price: number;
+  audio_credits: number;
   video_enabled: boolean;
   video_price: number;
+  video_credits: number;
   reply_sla_hours: number;
   currency: string;
 };
@@ -44,6 +46,7 @@ export type MediaMessage = {
 export type CreateMediaMessageInput = {
   consultant_id: string;
   kind: MediaKind;
+  expected_price: number;
   storage_path: string;
   duration_seconds?: number;
   note?: string | null;

@@ -9,6 +9,8 @@ import { Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useAppTheme, type AppTheme } from '@/theme';
+import { getPublicWebUrl } from '@/lib/api';
+import { isAllowedContentWebUrl } from '@/lib/menuRoutes';
 
 function buildScreenStyles(t: AppTheme) {
   const { colors, font, spacing } = t;
@@ -72,6 +74,8 @@ export default function WebViewScreen() {
     const raw = pickParam(params.title).trim();
     return raw || t('navigation.webViewTitle');
   }, [params.title, t]);
+  const webOrigin = getPublicWebUrl();
+  const safeUrl = isAllowedContentWebUrl(url, webOrigin) ? url : '';
 
   return (
     <View style={styles.container}>
@@ -86,16 +90,16 @@ export default function WebViewScreen() {
           <View style={{ width: 40 }} />
         </View>
 
-        {!url ? (
+        {!safeUrl ? (
           <View style={styles.loader}>
             <Text style={styles.err}>{t('navigation.missingUrl')}</Text>
           </View>
         ) : (
           <WebView
-            source={{ uri: url }}
+            source={{ uri: safeUrl }}
             startInLoadingState
-            originWhitelist={['*']}
-            mixedContentMode="always"
+            originWhitelist={['https://*', 'http://localhost:*', 'http://127.0.0.1:*']}
+            onShouldStartLoadWithRequest={(request) => isAllowedContentWebUrl(request.url, webOrigin)}
             allowsInlineMediaPlayback
             mediaPlaybackRequiresUserAction={false}
             setSupportMultipleWindows={false}
@@ -110,4 +114,3 @@ export default function WebViewScreen() {
     </View>
   );
 }
-

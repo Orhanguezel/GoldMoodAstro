@@ -242,7 +242,7 @@ export default function KarneScreen() {
   }, [isAuthenticated]);
 
   React.useEffect(() => {
-    if (!authHydrating) load();
+    if (!authHydrating) void Promise.resolve().then(load);
   }, [authHydrating, load]);
 
   if (authHydrating || (isAuthenticated && loading)) {

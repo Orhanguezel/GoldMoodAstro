@@ -8,6 +8,8 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('22400000-0000-4000-8000-000000000007','ui_consultant_media_sent','*','{"label":{"tr":"Sorunuz gönderildi","en":"Your question has been sent","de":"Ihre Frage wurde gesendet"}}'),
 ('22400000-0000-4000-8000-000000000008','ui_consultant_media_insufficient_credits','*','{"label":{"tr":"Krediniz yetersiz","en":"Insufficient credits","de":"Nicht genügend Guthaben"}}'),
 ('22400000-0000-4000-8000-000000000009','ui_consultant_media_send_failed','*','{"label":{"tr":"Soru gönderilemedi","en":"Question could not be sent","de":"Frage konnte nicht gesendet werden"}}'),
+('22400000-0000-4000-8000-0000000000f5','ui_consultant_media_price_changed','*','{"label":{"tr":"Ücret değişti. Güncel fiyatı kontrol edip yeniden deneyin.","en":"The price changed. Check the updated price and try again.","de":"Der Preis hat sich geändert. Prüfen Sie den aktuellen Preis und versuchen Sie es erneut."}}'),
+('22400000-0000-4000-8000-0000000000f6','ui_consultant_media_credit_unit','*','{"label":{"tr":"kredi","en":"credits","de":"Credits"}}'),
 ('22400000-0000-4000-8000-00000000000a','ui_consultant_media_stop_recording','*','{"label":{"tr":"Durdur","en":"Stop","de":"Stoppen"}}'),
 ('22400000-0000-4000-8000-00000000000b','ui_consultant_media_start_recording','*','{"label":{"tr":"Kaydet","en":"Record","de":"Aufnehmen"}}'),
 ('22400000-0000-4000-8000-00000000000c','ui_consultant_media_upload_file','*','{"label":{"tr":"Dosya yükle","en":"Upload file","de":"Datei hochladen"}}'),

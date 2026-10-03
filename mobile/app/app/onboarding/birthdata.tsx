@@ -189,7 +189,7 @@ export default function BirthdataScreen() {
                 router.push({
                   pathname: '/auth/register',
                   params: { next: '/onboarding/birthdata' },
-                } as any),
+                }),
             },
             {
               text: t('auth.loginShort'),
@@ -197,7 +197,7 @@ export default function BirthdataScreen() {
                 router.push({
                   pathname: '/auth/login',
                   params: { next: '/onboarding/birthdata' },
-                } as any),
+                }),
             },
           ],
         );
@@ -215,9 +215,9 @@ export default function BirthdataScreen() {
       });
 
       await storage.markOnboarded();
-      router.replace('/(tabs)/today' as any);
-    } catch (err: any) {
-      const msg = err?.message ?? String(err);
+      router.replace('/(tabs)/today');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
       if (/no_token|Unauthorized|401/i.test(msg)) {
         Alert.alert(
           t('birthdata.sessionRequiredTitle'),
@@ -230,7 +230,7 @@ export default function BirthdataScreen() {
                 router.push({
                   pathname: '/auth/login',
                   params: { next: '/onboarding/birthdata' },
-                } as any),
+                }),
             },
           ],
         );
@@ -257,7 +257,13 @@ export default function BirthdataScreen() {
     <View style={styles.container}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <Pressable onPress={() => safeRouterBack()} style={styles.backBtn}>
+          <Pressable
+            onPress={() => safeRouterBack()}
+            style={styles.backBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
+            hitSlop={8}
+          >
             <ChevronLeft size={24} color={colors.text} />
           </Pressable>
         </View>
@@ -287,6 +293,7 @@ export default function BirthdataScreen() {
                     value={date}
                     onChangeText={setDate}
                     keyboardType="number-pad"
+                    accessibilityLabel={t('birthdata.dateLabel')}
                   />
                 </View>
               </View>
@@ -302,6 +309,7 @@ export default function BirthdataScreen() {
                     value={time}
                     onChangeText={setTime}
                     keyboardType="numbers-and-punctuation"
+                    accessibilityLabel={t('birthdata.timeLabel')}
                   />
                 </View>
                 <Text style={styles.hint}>{t('birthdata.timeHint')}</Text>
@@ -321,6 +329,7 @@ export default function BirthdataScreen() {
                       setPlace(null);
                     }}
                     onBlur={resolvePlace}
+                    accessibilityLabel={t('birthdata.placeLabel')}
                   />
                 </View>
                 {place ? <Text style={styles.hint}>{t('birthdata.locationFound', { label: place.label })}</Text> : null}
@@ -332,6 +341,9 @@ export default function BirthdataScreen() {
                 style={[styles.calculateBtn, loading && styles.btnDisabled]}
                 onPress={handleCalculate}
                 disabled={loading}
+                accessibilityRole="button"
+                accessibilityLabel={t('birthdata.calculate')}
+                accessibilityState={{ disabled: loading, busy: loading }}
               >
                 {loading ? (
                   <ActivityIndicator color={colors.ink} />

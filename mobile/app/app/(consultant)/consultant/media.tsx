@@ -28,8 +28,11 @@ import { storage } from '@/lib/storage';
 import { useAppTheme, type AppTheme } from '@/theme';
 import type { MediaMessage } from '@/types';
 import { AuthVideoView } from '@/components/AuthVideoView';
+import { MediaSafetyActions } from '@/components/MediaSafetyActions';
 
 import { logger } from '@/lib/logger';
+const eventTime = () => Date.now();
+
 function buildStyles(t: AppTheme) {
   const { colors, font, radius, spacing } = t;
   return StyleSheet.create({
@@ -48,7 +51,7 @@ function buildStyles(t: AppTheme) {
     main: { flex: 1, gap: 4 },
     customer: { fontFamily: font.sansBold, fontSize: 15, color: colors.text },
     meta: { fontFamily: font.sans, fontSize: 12, color: colors.textMuted },
-    status: { alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: 'rgba(201,169,97,0.12)' },
+    status: { alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: colors.surfaceHigh },
     statusText: { fontFamily: font.sansBold, fontSize: 10, color: colors.gold },
     note: { fontFamily: font.sans, fontSize: 13, color: colors.textDim, lineHeight: 19 },
     playerBtn: { height: 42, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, backgroundColor: colors.bgDeep, borderWidth: 1, borderColor: colors.lineSoft },
@@ -93,6 +96,7 @@ export default function ConsultantMediaMessagesScreen() {
   const [recordingId, setRecordingId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [safety, setSafety] = useState<Record<string, { blocked_by_me: boolean; blocked_by_peer: boolean; terms_accepted: boolean } | null>>({});
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recordingStartedAtRef = useRef<number | null>(null);
   const soundRef = useRef<AudioPlayer | null>(null);
@@ -110,7 +114,7 @@ export default function ConsultantMediaMessagesScreen() {
   }, []);
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
     storage.getAuthToken().then(setAuthToken).catch(() => setAuthToken(null));
     return () => {
       soundRef.current?.remove();
@@ -156,17 +160,20 @@ export default function ConsultantMediaMessagesScreen() {
   };
 
   const submitReply = async (item: MediaMessage, uri: string, mime: string, durationSeconds?: number) => {
+    const current = safety[item.id];
+    if (!current || !current.terms_accepted || current.blocked_by_me || current.blocked_by_peer) return;
     setWorkingId(item.id);
     try {
+      const uploadId = `${item.id}-${eventTime()}`;
       const form = new FormData();
       form.append('file', {
         uri,
-        name: `${item.kind}-reply-${Date.now()}.${item.kind === 'video' ? 'mp4' : 'm4a'}`,
+        name: `${item.kind}-reply-${uploadId}.${item.kind === 'video' ? 'mp4' : 'm4a'}`,
         type: mime,
       } as unknown as Blob);
       const upload = await storageApi.upload(form, {
         bucket: 'media_messages',
-        path: `${item.consultant_id}/replies/${Date.now()}`,
+        path: `${item.consultant_id}/replies/${uploadId}`,
       });
       if (!upload.path) throw new Error('upload_failed');
       await mediaMessagesApi.reply(item.id, {
@@ -195,7 +202,7 @@ export default function ConsultantMediaMessagesScreen() {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await audioRecorder.prepareToRecordAsync();
       audioRecorder.record();
-      recordingStartedAtRef.current = Date.now();
+      recordingStartedAtRef.current = eventTime();
       setRecordingId(item.id);
     } catch (err) {
       Alert.alert(t('common.error', 'Hata'), t('consultantPanel.media.recordError', 'Kayıt başlatılamadı.'));
@@ -203,7 +210,7 @@ export default function ConsultantMediaMessagesScreen() {
   };
 
   const stopAudioReply = async (item: MediaMessage) => {
-    const startedAt = recordingStartedAtRef.current ?? Date.now();
+    const startedAt = recordingStartedAtRef.current ?? eventTime();
     try {
       await audioRecorder.stop();
       const uri = audioRecorder.uri;
@@ -211,7 +218,7 @@ export default function ConsultantMediaMessagesScreen() {
       setRecordingId(null);
       await setAudioModeAsync({ allowsRecording: false });
       if (!uri) throw new Error('recording_uri_missing');
-      await submitReply(item, uri, 'audio/mp4', Math.max(1, Math.round((Date.now() - startedAt) / 1000)));
+      await submitReply(item, uri, 'audio/mp4', Math.max(1, Math.round((eventTime() - startedAt) / 1000)));
     } catch (err) {
       recordingStartedAtRef.current = null;
       setRecordingId(null);
@@ -280,7 +287,8 @@ export default function ConsultantMediaMessagesScreen() {
             </View>
           }
           renderItem={({ item }) => {
-            const isAnswerable = item.status === 'sent';
+            const currentSafety = safety[item.id];
+            const isAnswerable = item.status === 'sent' && Boolean(currentSafety?.terms_accepted) && !currentSafety?.blocked_by_me && !currentSafety?.blocked_by_peer;
             const busy = workingId === item.id;
             const recording = recordingId === item.id;
             return (
@@ -360,6 +368,7 @@ export default function ConsultantMediaMessagesScreen() {
                     </View>
                   </View>
                 ) : null}
+                <MediaSafetyActions messageId={item.id} reportId={item.id} onState={(next) => setSafety((previous) => previous[item.id] === next ? previous : { ...previous, [item.id]: next })} />
               </View>
             );
           }}

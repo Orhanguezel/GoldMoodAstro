@@ -34,4 +34,6 @@ export async function registerChatAdmin(app: FastifyInstance) {
   app.post("/chat/knowledge", { preHandler: [requireAuth, requireAdmin] }, c.createKnowledge);
   app.patch("/chat/knowledge/:id", { preHandler: [requireAuth, requireAdmin] }, c.updateKnowledge);
   app.delete("/chat/knowledge/:id", { preHandler: [requireAuth, requireAdmin] }, c.deleteKnowledge);
+  app.get('/chat/reports', { preHandler: [requireAuth, requireAdmin] }, c.listReports);
+  app.patch('/chat/reports/:id', { preHandler: [requireAuth, requireAdmin] }, c.reviewReport);
 }

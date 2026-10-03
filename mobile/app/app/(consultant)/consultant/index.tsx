@@ -2,13 +2,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
-import { CalendarDays, MessageSquare, Radio, ShieldCheck } from 'lucide-react-native';
+import { CalendarDays, CheckCircle2, MessageSquare, Radio } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { consultantSelfApi } from '@/lib/api';
-import type { ConsultantSelfStats } from '@/types';
+import type { ConsultantSelfProfile, ConsultantSelfStats } from '@/types';
 
 import { logger } from '@/lib/logger';
 function buildStyles(t: AppTheme) {
@@ -34,7 +34,20 @@ function buildStyles(t: AppTheme) {
     btnText: { fontFamily: font.sansBold, fontSize: 13, color: colors.ink },
     ghostBtn: { marginTop: 8, height: 42, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.gold, alignItems: 'center', justifyContent: 'center' },
     ghostBtnText: { fontFamily: font.sansBold, fontSize: 13, color: colors.gold },
+    progressTrack: { height: 8, borderRadius: radius.pill, backgroundColor: colors.bgDeep, overflow: 'hidden' },
+    progressFill: { height: 8, borderRadius: radius.pill, backgroundColor: colors.gold },
+    missingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 38 },
+    missingLabel: { flex: 1, fontFamily: font.sans, fontSize: 13, color: colors.textDim },
   });
+}
+
+type Completion = Awaited<ReturnType<typeof consultantSelfApi.profileCompletion>>;
+const PUBLISH_MISSING = ['approval', 'hidden', 'price', 'photo', 'slug'] as const;
+
+function completionRoute(tab: string) {
+  if (tab === 'availability') return '/consultant/availability';
+  if (tab === 'reviews') return '/consultant/reviews';
+  return '/consultant/profile';
 }
 
 export default function ConsultantOverviewScreen() {
@@ -44,24 +57,41 @@ export default function ConsultantOverviewScreen() {
   const { colors } = theme;
   const { user, authHydrating } = useAuth();
   const [stats, setStats] = useState<ConsultantSelfStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [profile, setProfile] = useState<ConsultantSelfProfile | null>(null);
+  const [completion, setCompletion] = useState<Completion | null>(null);
+  const [accountLoading, setAccountLoading] = useState(true);
+  const hasConsultantRole = user?.role === 'consultant' || user?.roles?.includes('consultant') === true;
 
   const loadStats = useCallback(async () => {
-    if (user?.role !== 'consultant') return;
+    if (!hasConsultantRole) return;
     setStatsLoading(true);
     try {
       setStats(await consultantSelfApi.stats());
     } catch (err) {
+      setStats(null);
       logger.error('Consultant stats load error:', err);
     } finally {
       setStatsLoading(false);
     }
-  }, [user?.role]);
+  }, [hasConsultantRole]);
+
+  const loadAccount = useCallback(async () => {
+    if (!hasConsultantRole) return;
+    setAccountLoading(true);
+    const results = await Promise.allSettled([consultantSelfApi.profile(), consultantSelfApi.profileCompletion()]);
+    if (results[0].status === 'fulfilled') setProfile(results[0].value);
+    else { setProfile(null); logger.error('Consultant publication status load error:', results[0].reason); }
+    if (results[1].status === 'fulfilled') setCompletion(results[1].value);
+    else { setCompletion(null); logger.error('Consultant profile completion load error:', results[1].reason); }
+    setAccountLoading(false);
+  }, [hasConsultantRole]);
 
   useFocusEffect(
     useCallback(() => {
       loadStats();
-    }, [loadStats]),
+      loadAccount();
+    }, [loadStats, loadAccount]),
   );
 
   const formatTry = (value: number) =>
@@ -75,7 +105,7 @@ export default function ConsultantOverviewScreen() {
     );
   }
 
-  if (user?.role !== 'consultant') {
+  if (!hasConsultantRole) {
     return (
       <View style={styles.center}>
         <Text style={styles.title}>{t('consultantPanel.notConsultantTitle', 'Danışman alanı')}</Text>
@@ -101,11 +131,43 @@ export default function ConsultantOverviewScreen() {
             </Text>
           </View>
 
+          {accountLoading && !profile && !completion && <ActivityIndicator color={colors.gold} />}
+          {!accountLoading && !profile?.publication_status && <View style={styles.card}>
+            <Text style={styles.cardText}>{t('consultantPanel.accountUnavailable', 'Profil bilgileri şu anda yüklenemiyor.')}</Text>
+            <Pressable style={styles.ghostBtn} onPress={loadAccount}><Text style={styles.ghostBtnText}>{t('common.retry', 'Tekrar dene')}</Text></Pressable>
+          </View>}
+          {profile?.publication_status && <View style={styles.card}>
+            <View style={styles.row}>
+              <CheckCircle2 size={20} color={profile.publication_status.is_published ? colors.success : colors.warning} />
+              <Text style={styles.cardTitle}>{profile.publication_status.is_published
+                ? t('consultantPanel.publication.live', 'Profiliniz yayında')
+                : t('consultantPanel.publication.notLive', 'Profiliniz henüz yayında değil')}</Text>
+            </View>
+            {!profile.publication_status.is_published && <>
+              <Text style={styles.cardText}>{t('consultantPanel.publication.hint', 'Eksikler tamamlandığında profiliniz otomatik yayımlanır.')}</Text>
+              {PUBLISH_MISSING.filter((key) => profile.publication_status?.missing.includes(key)).map((key) => <Text key={key} style={styles.cardText}>• {t(`consultantPanel.publication.missing.${key}`, key)}</Text>)}
+              <Pressable style={styles.ghostBtn} onPress={() => router.push('/consultant/profile' as any)}><Text style={styles.ghostBtnText}>{t('consultantPanel.publication.openProfile', 'Profili Aç')}</Text></Pressable>
+            </>}
+          </View>}
+
+          {completion && <View style={styles.card}>
+            <View style={styles.row}><Text style={styles.cardTitle}>{t('consultantPanel.completion.title', 'Profil tamamlama')}</Text><Text style={styles.statValue}>%{completion.score}</Text></View>
+            <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${Math.max(0, Math.min(100, completion.score))}%` }]} /></View>
+            {completion.items.filter((item) => !item.done).map((item) => <Pressable key={item.id} style={styles.missingRow} onPress={() => router.push(completionRoute(item.tab) as any)} accessibilityRole="button">
+              <Text style={styles.missingLabel}>{t(`consultantPanel.completion.items.${item.id}`, item.label)}</Text>
+              <Text style={styles.statDelta}>+{item.weight}%</Text>
+            </Pressable>)}
+          </View>}
+          {!accountLoading && !completion && <View style={styles.card}>
+            <Text style={styles.cardText}>{t('consultantPanel.completionUnavailable', 'Profil tamamlama bilgisi şu anda yüklenemiyor.')}</Text>
+            <Pressable style={styles.ghostBtn} onPress={loadAccount}><Text style={styles.ghostBtnText}>{t('common.retry', 'Tekrar dene')}</Text></Pressable>
+          </View>}
+
           {statsLoading && !stats ? (
             <View style={styles.card}>
               <ActivityIndicator color={colors.gold} />
             </View>
-          ) : (
+          ) : stats ? (
             <View style={styles.statsGrid}>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>{t('consultantPanel.stats.monthSessions', 'BU AY SEANS')}</Text>
@@ -119,7 +181,7 @@ export default function ConsultantOverviewScreen() {
               </View>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>{t('consultantPanel.stats.rating', 'PUAN')}</Text>
-                <Text style={styles.statValue}>{(stats?.rating_avg ?? 0).toFixed(1)}</Text>
+                <Text style={styles.statValue}>{Number(stats.rating_avg ?? 0).toFixed(1)}</Text>
                 <Text style={styles.statDelta}>{t('consultantPanel.stats.reviewCount', '{{count}} yorum', { count: stats?.rating_count ?? 0 })}</Text>
               </View>
               <View style={styles.statCard}>
@@ -128,9 +190,12 @@ export default function ConsultantOverviewScreen() {
                 <Text style={styles.statDelta}>{t('consultantPanel.stats.totalSessions', '{{count}} toplam seans', { count: stats?.total_sessions ?? 0 })}</Text>
               </View>
             </View>
-          )}
+          ) : <View style={styles.card}>
+            <Text style={styles.cardText}>{t('consultantPanel.statsUnavailable', 'Performans verileri şu anda yüklenemiyor.')}</Text>
+            <Pressable style={styles.ghostBtn} onPress={loadStats}><Text style={styles.ghostBtnText}>{t('common.retry', 'Tekrar dene')}</Text></Pressable>
+          </View>}
 
-          <View style={styles.card}>
+          {stats && <><View style={styles.card}>
             <View style={styles.row}>
               <CalendarDays size={20} color={colors.gold} />
               <Text style={styles.cardTitle}>{t('consultantPanel.cards.bookingsTitle', 'Randevular')}</Text>
@@ -170,6 +235,7 @@ export default function ConsultantOverviewScreen() {
                 : t('consultantPanel.cards.presenceOffline', 'Profiliniz şu anda müsait değil görünüyor.')}
             </Text>
           </View>
+          </>}
 
           <Pressable style={styles.ghostBtn} onPress={() => router.push('/(tabs)/profile' as any)}>
             <Text style={styles.ghostBtnText}>{t('consultantPanel.customerProfile', 'Üye Profiline Dön')}</Text>

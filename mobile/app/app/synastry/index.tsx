@@ -161,7 +161,6 @@ import {
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { useTranslation } from 'react-i18next';
-import { shareBrand, webShareUrl } from '@/lib/webShare';
 
 
 import { synastryApi, userApi } from '@/lib/api';
@@ -196,24 +195,12 @@ export default function SynastryScreen() {
   const [reports, setReports] = useState<any[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchInvites();
-      fetchReports();
-    }
-  }, [user]);
-
   const handleShare = async () => {
     if (!result) return;
     try {
       await Share.share({
-        message: `${t('share.synastryMessage', {
-          title: result.title || t('share.synastryFallbackTitle'),
-          love: result.love_score || result.score || '??',
-          attraction: result.sexual_score || '??',
-          brand: shareBrand(),
-        })}\n\n${t('share.cta', { url: webShareUrl(`/sinastri/result/${result.id}`, 'synastry') })}`,
-        title: t('synastry.shareTitle', { brand: shareBrand() }),
+        message: `Aşk Uyumu Analizimiz: ${result.title || 'Uyum Analizi'} ✨\n\nAşk: %${result.love_score || result.score || '??'}\nÇekim: %${result.sexual_score || '??'}\n\nGoldMoodAstro ile uyumunuzu keşfedin!\n\nKeşfet: https://goldmoodastro.com/tr/sinastri/result/${result.id}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=synastry`,
+        title: t('synastry.shareTitle'),
       });
     } catch (e) {
       logger.error(e);
@@ -237,6 +224,12 @@ export default function SynastryScreen() {
       logger.error(e);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      void Promise.resolve().then(() => Promise.all([fetchInvites(), fetchReports()]));
+    }
+  }, [user?.id]);
 
   const handleSearch = async () => {
     if (searchQuery.length < 3) return;
@@ -677,4 +670,3 @@ export default function SynastryScreen() {
     </View>
   );
 }
-

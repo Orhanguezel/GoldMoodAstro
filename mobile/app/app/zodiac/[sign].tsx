@@ -47,7 +47,6 @@ function buildScreenStyles(t: AppTheme) {
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { shareBrand, webShareUrl } from '@/lib/webShare';
 import { useLocalSearchParams } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -120,8 +119,8 @@ export default function ZodiacDetailScreen() {
     if (!today) return;
     try {
       await Share.share({
-        message: `${t('share.horoscopeMessage', { sign: meta.label, excerpt: today.content?.substring(0, 200) ?? '', brand: shareBrand() })}\n\n${t('share.cta', { url: webShareUrl(`/burclar/${signKey}`, 'horoscope') })}`,
-        title: t('share.horoscopeTitle', { brand: shareBrand(), sign: meta.label }),
+        message: `${meta.label} Burcu Günlük Yorumu ✨\n\n${today.content?.substring(0, 200)}...\n\nGoldMoodAstro ile günlük burç yorumunu oku!\n\nKeşfet: https://goldmoodastro.com/tr/burclar/${signKey}?utm_source=mobile_app&utm_medium=social_share&utm_campaign=horoscope`,
+        title: `GoldMoodAstro ${meta.label} Burcu`,
       });
     } catch (e) {
       logger.error(e);
@@ -129,10 +128,7 @@ export default function ZodiacDetailScreen() {
   };
 
   useEffect(() => {
-    if (!signKey) {
-      setLoading(false);
-      return;
-    }
+    if (!signKey) return;
     let cancelled = false;
     const loadData = async () => {
       setLoading(true);
@@ -153,13 +149,13 @@ export default function ZodiacDetailScreen() {
         if (!cancelled) setLoading(false);
       }
     };
-    void loadData();
+    void Promise.resolve().then(loadData);
     return () => {
       cancelled = true;
     };
   }, [signKey]);
 
-  if (loading) {
+  if (loading && signKey) {
     return (
       <View style={styles.container}>
         <SafeAreaView style={styles.safe}>

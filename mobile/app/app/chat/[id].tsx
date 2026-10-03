@@ -61,13 +61,14 @@ function buildScreenStyles(t: AppTheme) {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { safeRouterBack } from '@/lib/navigation';
-import { ChevronLeft, Send, Phone, Info } from 'lucide-react-native';
+import { ChevronLeft, Send } from 'lucide-react-native';
 
 
 import { useTranslation } from 'react-i18next';
 import { chatApi, type ChatMessage } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { ChatWarningBanner } from '@/components/ChatWarningBanner';
+import { ChatBlockButton, ChatTermsGate, useChatSafety } from '@/components/ChatSafetyActions';
 
 export default function ChatScreen() {
   const { t } = useTranslation();
@@ -76,16 +77,13 @@ export default function ChatScreen() {
 
   const { id } = useLocalSearchParams<{ id: string }>(); // threadId
   const { user } = useAuth();
+  const safety = useChatSafety(id);
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
-
-  useEffect(() => {
-    if (id) loadMessages();
-  }, [id]);
 
   const loadMessages = async () => {
     try {
@@ -98,8 +96,12 @@ export default function ChatScreen() {
     }
   };
 
+  useEffect(() => {
+    if (id) void Promise.resolve().then(loadMessages);
+  }, [id]);
+
   const handleSend = async () => {
-    if (!inputText.trim() || !id) return;
+    if (!inputText.trim() || !id || !safety.ready || safety.blocked || !safety.termsAccepted) return;
     setSending(true);
     const text = inputText.trim();
     setInputText('');
@@ -137,9 +139,7 @@ export default function ChatScreen() {
               <Text style={styles.statusText}>Aktif Seans</Text>
             </View>
           </View>
-          <View style={styles.headerRight}>
-            <Pressable style={styles.iconBtn}><Phone size={20} color={colors.gold} /></Pressable>
-          </View>
+          <ChatBlockButton blockedByMe={safety.blockedByMe} busy={safety.busy || !safety.ready} onPress={safety.toggleBlock} />
         </View>
 
         <ChatWarningBanner compact style={{ marginHorizontal: 16, marginTop: 8 }} />
@@ -162,6 +162,7 @@ export default function ChatScreen() {
                 <View style={[styles.msgRow, isMe ? styles.myRow : styles.theirRow]}>
                   <View style={[styles.bubble, isMe ? styles.myBubble : styles.theirBubble]}>
                     <Text style={[styles.msgText, isMe ? styles.myText : styles.theirText]}>{body}</Text>
+                    {!isMe && <Pressable accessibilityRole="button" accessibilityLabel={t('chat.report')} onPress={() => safety.report(item.id)} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={styles.theirTime}>{t('chat.report')}</Text></Pressable>}
                     <Text style={[styles.timeText, isMe ? styles.myTime : styles.theirTime]}>
                       {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </Text>
@@ -171,6 +172,8 @@ export default function ChatScreen() {
             }}
           />
 
+          {safety.blocked && <Text style={styles.statusText}>{t('chat.blockedNotice')}</Text>}
+          <ChatTermsGate accepted={safety.termsAccepted} busy={safety.busy} onAccept={() => void safety.acceptTerms()} />
           <View style={styles.inputArea}>
             <View style={styles.inputBox}>
               <TextInput
@@ -179,12 +182,13 @@ export default function ChatScreen() {
                 placeholderTextColor={colors.textMuted}
                 value={inputText}
                 onChangeText={setInputText}
+                editable={safety.ready && !safety.blocked && safety.termsAccepted}
                 multiline
               />
               <Pressable 
-                style={[styles.sendBtn, (!inputText.trim() || sending) && styles.sendBtnDisabled]} 
+                style={[styles.sendBtn, (!inputText.trim() || sending || !safety.ready || safety.blocked || !safety.termsAccepted) && styles.sendBtnDisabled]}
                 onPress={handleSend}
-                disabled={!inputText.trim() || sending}
+                disabled={!inputText.trim() || sending || !safety.ready || safety.blocked || !safety.termsAccepted}
               >
                 {sending ? <ActivityIndicator color={colors.ink} size="small" /> : <Send size={18} color={colors.ink} />}
               </Pressable>
@@ -196,4 +200,3 @@ export default function ChatScreen() {
     </View>
   );
 }
-

@@ -61,7 +61,9 @@ function parseSeedSnapshot(): unknown {
   }
   const match = sql.match(/'(\{\"tr\":.*\})'\)\s*ON DUPLICATE KEY UPDATE/s);
   if (!match) throw new Error('Could not find ui_mobile_i18n JSON snapshot in seed');
-  return JSON.parse(match[1].replace(/''/g, "'"));
+  // SQL doubles backslashes in the stored JSON string. Undo SQL escaping
+  // before parsing the snapshot (for example fallbackQuote values).
+  return JSON.parse(match[1].replace(/''/g, "'").replace(/\\\\/g, '\\'));
 }
 
 const locales = Object.keys(MOBILE_I18N_FALLBACK) as Array<keyof typeof MOBILE_I18N_FALLBACK>;

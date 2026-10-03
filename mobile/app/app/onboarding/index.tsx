@@ -1,8 +1,11 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Dimensions, Animated, Easing, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import * as Haptics from 'expo-haptics';
 import { PromoBannerSection } from '@/components/PromoBannerSection';
+import { storage } from '@/lib/storage';
 
 import { useAppTheme, type AppTheme } from '@/theme';
 
@@ -71,6 +74,14 @@ function buildScreenStyles(t: AppTheme) {
     textAlign: 'center',
     lineHeight: 42,
   },
+  taglineBody: {
+    fontFamily: font.sans,
+    fontSize: 16,
+    color: colors.textDim,
+    textAlign: 'center',
+    lineHeight: 23,
+    marginTop: spacing.md,
+  },
   taglineHighlight: {
     color: colors.gold,
     fontFamily: font.display, // or italic if available
@@ -86,7 +97,14 @@ function buildScreenStyles(t: AppTheme) {
   // Footer
   footer: {
     marginBottom: spacing.xl,
-    gap: 20,
+    gap: spacing.sm,
+  },
+  loginRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    minHeight: 44,
   },
   button: {
     backgroundColor: colors.gold,
@@ -113,6 +131,16 @@ function buildScreenStyles(t: AppTheme) {
   loginLink: {
     color: colors.gold,
     fontFamily: font.sansBold,
+  },
+  guestButton: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestText: {
+    fontFamily: font.sansMedium,
+    fontSize: 14,
+    color: colors.textDim,
   },
 
   // Background Elements
@@ -178,10 +206,10 @@ function TwinkleStar({
   size?: number;
   baseStyle: ViewStyle;
 }) {
-  const opacity = useRef(new Animated.Value(0.1)).current;
+  const [opacity] = useState(() => new Animated.Value(0.1));
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
           toValue: 0.7,
@@ -197,7 +225,9 @@ function TwinkleStar({
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
+    animation.start();
+    return () => animation.stop();
   }, [opacity, delay]);
 
   return (
@@ -218,24 +248,25 @@ function TwinkleStar({
 
 export default function WelcomeScreen() {
   const theme = useAppTheme();
-  const { colors } = theme;
+  const { t } = useTranslation();
   const styles = useMemo(() => buildScreenStyles(theme), [theme]);
 
-  const rotation = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(40)).current;
+  const [rotation] = useState(() => new Animated.Value(0));
+  const [fadeAnim] = useState(() => new Animated.Value(0));
+  const [slideAnim] = useState(() => new Animated.Value(40));
 
   useEffect(() => {
-    Animated.loop(
+    const orbit = Animated.loop(
       Animated.timing(rotation, {
         toValue: 1,
         duration: 60000,
         easing: Easing.linear,
         useNativeDriver: true,
       })
-    ).start();
+    );
+    orbit.start();
 
-    Animated.parallel([
+    const entrance = Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 1200,
@@ -249,7 +280,12 @@ export default function WelcomeScreen() {
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    entrance.start();
+    return () => {
+      orbit.stop();
+      entrance.stop();
+    };
   }, [rotation, fadeAnim, slideAnim]);
 
   const spin = rotation.interpolate({
@@ -288,47 +324,59 @@ export default function WelcomeScreen() {
           <PromoBannerSection placement="mobile_welcome" style={styles.welcomeBanner} />
 
           <View style={styles.centerText}>
-            <Text style={styles.tagline}>
-              Ruhunuzun derinliklerini{'\n'}
-              <Text style={styles.taglineHighlight}>yıldızların</Text> ışığında{'\n'}
-              keşfedin.
-            </Text>
+            <Text style={styles.tagline}>{t('onboarding.title1')}</Text>
+            <Text style={styles.taglineBody}>{t('onboarding.body1')}</Text>
             <View style={styles.taglineDivider} />
           </View>
 
           <View style={styles.footer}>
             <Pressable
-              onPress={() =>
+              onPress={() => {
+                void Haptics.selectionAsync();
                 router.push({
                   pathname: '/auth/register',
                   params: { next: '/onboarding/birthdata' },
-                } as any)
-              }
+                });
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t('onboarding.finish')}
               style={({ pressed }) => [
                 styles.button,
                 pressed && styles.buttonPressed,
               ]}
             >
-              <Text style={styles.buttonText}>Yolculuğa Başla</Text>
+              <Text style={styles.buttonText}>{t('onboarding.finish')}</Text>
             </Pressable>
-            <Text style={styles.loginHint}>
-              Zaten hesabınız var mı?{' '}
-              <Text
-                style={styles.loginLink}
-                onPress={() =>
-                  router.push({
-                    pathname: '/auth/login',
-                    params: { next: '/onboarding/birthdata' },
-                  } as any)
-                }
+            <View style={styles.loginRow}>
+              <Text style={styles.loginHint}>{t('auth.hasAccount')}</Text>
+              <Pressable
+                onPress={() => router.push({
+                  pathname: '/auth/login',
+                  params: { next: '/onboarding/birthdata' },
+                })}
+                accessibilityRole="button"
+                accessibilityLabel={t('auth.loginShort')}
+                hitSlop={10}
               >
-                Giriş Yap
-              </Text>
-            </Text>
+                <Text style={[styles.loginHint, styles.loginLink]}>{t('auth.loginShort')}</Text>
+              </Pressable>
+            </View>
+            <Pressable
+              onPress={() => {
+                void Haptics.selectionAsync();
+                void storage.markOnboarded()
+                  .catch(() => {})
+                  .finally(() => router.replace('/(tabs)/today'));
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t('onboarding.continueAsGuest')}
+              style={styles.guestButton}
+            >
+              <Text style={styles.guestText}>{t('onboarding.continueAsGuest')}</Text>
+            </Pressable>
           </View>
         </Animated.View>
       </SafeAreaView>
     </View>
   );
 }
-
