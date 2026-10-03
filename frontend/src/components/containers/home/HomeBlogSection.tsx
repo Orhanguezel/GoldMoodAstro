@@ -77,7 +77,10 @@ export default function HomeBlogSection({ locale: localeProp, config }: Props) {
                         src={cover}
                         alt={post.featured_image_alt || post.title || ''}
                         className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        width={640}
+                        height={384}
                         loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div className="h-48 w-full bg-(--gm-bg-deep)" />
@@ -100,6 +103,8 @@ export default function HomeBlogSection({ locale: localeProp, config }: Props) {
                             src={post.author.avatar_url}
                             alt=""
                             className="size-7 shrink-0 rounded-full border border-(--gm-border-soft) object-cover"
+                            width={28}
+                            height={28}
                             loading="lazy"
                           />
                         ) : (

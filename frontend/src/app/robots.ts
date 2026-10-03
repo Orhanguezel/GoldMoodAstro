@@ -19,7 +19,10 @@ const RESULT_PATHS = [
   '/tr/sinastri/result/', '/en/sinastri/result/', '/de/sinastri/result/',
 ];
 
-const COMMON_DISALLOW = ['/api/', '/admin/', '/_next/', '/dashboard', '/me/', ...RESULT_PATHS];
+// /_next/ ENGELLENMEZ (SEO katalog 2026-10-03): Google sayfayı tarayıcı gibi
+// çizer; CSS/JS chunk'larına ve /_next/image görsellerine erişemezse düzeni ve
+// istemci içeriğini göremez, görseller Google Görseller'e düşmez.
+const COMMON_DISALLOW = ['/api/', '/admin/', '/dashboard', '/me/', ...RESULT_PATHS];
 
 /** AI crawler bot listesi — explicit allow ile site içeriğine erişim onaylanır. */
 const AI_BOTS = [

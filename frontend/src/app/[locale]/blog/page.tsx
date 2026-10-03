@@ -117,7 +117,10 @@ export default async function BlogPage({ params }: Props) {
                             <img
                               src={imgSrc}
                               alt={title}
+                              width={600}
+                              height={400}
                               loading="lazy"
+                              decoding="async"
                               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                             />
                           ) : (

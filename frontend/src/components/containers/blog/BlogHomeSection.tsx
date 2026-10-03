@@ -28,11 +28,11 @@ export default function BlogHomeSection({ locale: explicitLocale }: { locale?: s
   const blogHref = useMemo(() => localizePath(locale, '/blog'), [locale]);
 
   const title = safeStr(ui('ui_blog_home_title', ''))
-    || (locale === 'de' ? 'Aktuelle Beitraege' : locale === 'tr' ? 'Son Yazilar' : 'Latest Posts');
+    || (locale === 'de' ? 'Aktuelle Beiträge' : locale === 'tr' ? 'Son Yazılar' : 'Latest Posts');
   const viewAll = safeStr(ui('ui_blog_home_view_all', ''))
-    || (locale === 'de' ? 'Alle Beitraege' : locale === 'tr' ? 'Tumunu Gor' : 'View All');
+    || (locale === 'de' ? 'Alle Beiträge' : locale === 'tr' ? 'Tümünü Gör' : 'View All');
   const readMore = safeStr(ui('ui_blog_home_read_more', ''))
-    || (locale === 'de' ? 'Weiterlesen' : locale === 'tr' ? 'Devamini oku' : 'Read more');
+    || (locale === 'de' ? 'Weiterlesen' : locale === 'tr' ? 'Devamını oku' : 'Read more');
 
   if (!isLoading && featured.length === 0) return null;
 

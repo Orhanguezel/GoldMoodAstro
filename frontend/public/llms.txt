@@ -2,7 +2,7 @@
 
 > GoldMoodAstro is an online marketplace for astrology, tarot, numerology and personal-reflection consultations. It provides live audio/video sessions with approved consultants and self-service astrology tools in Turkish, English and German.
 
-## Official entity
+## Key facts
 
 - Brand: GoldMoodAstro
 - Operator: Orhan Güzel – Softwareentwicklung
@@ -14,42 +14,42 @@
 
 ## Canonical Turkish pages
 
-- [Homepage](https://goldmoodastro.com/tr) — platform overview and current services
-- [Consultants](https://goldmoodastro.com/tr/danismanlar) — approved consultant profiles and availability
-- [Pricing](https://goldmoodastro.com/tr/fiyatlandirma) — membership and consultation pricing
-- [About](https://goldmoodastro.com/tr/hakkimizda) — platform and editorial approach
-- [Contact](https://goldmoodastro.com/tr/iletisim) — official contact details
-- [Frequently asked questions](https://goldmoodastro.com/tr/sss) — platform and service questions
-- [Editorial policy](https://goldmoodastro.com/tr/editor-politikasi) — content standards and review principles
+- [Homepage](https://goldmoodastro.com/tr): platform overview and current services
+- [Consultants](https://goldmoodastro.com/tr/danismanlar): approved consultant profiles and availability
+- [Pricing](https://goldmoodastro.com/tr/fiyatlandirma): membership and consultation pricing
+- [About](https://goldmoodastro.com/tr/hakkimizda): platform and editorial approach
+- [Contact](https://goldmoodastro.com/tr/iletisim): official contact details
+- [Frequently asked questions](https://goldmoodastro.com/tr/sss): platform and service questions
+- [Editorial policy](https://goldmoodastro.com/tr/editor-politikasi): content standards and review principles
 
 ## Astrology tools and guides
 
-- [Birth chart](https://goldmoodastro.com/tr/dogum-haritasi) — natal chart calculation and educational interpretation
-- [Synastry](https://goldmoodastro.com/tr/sinastri) — relationship chart comparison
-- [Rising sign calculator](https://goldmoodastro.com/tr/yukselen-burc-hesaplayici) — rising sign calculation using birth time and place
-- [Big Three](https://goldmoodastro.com/tr/buyuk-uclu) — Sun, Moon and rising sign overview
-- [Zodiac signs](https://goldmoodastro.com/tr/burclar) — sign guides
-- [Zodiac compatibility](https://goldmoodastro.com/tr/burclar/uyum) — hub for 78 canonical sign combinations
-- [Daily readings](https://goldmoodastro.com/tr/gunluk) — daily zodiac content
-- [Numerology](https://goldmoodastro.com/tr/numeroloji) — numerology calculator and guide
-- [Tarot](https://goldmoodastro.com/tr/tarot) — reflective tarot experience
-- [Coffee reading](https://goldmoodastro.com/tr/kahve-fali) — Turkish coffee-symbol interpretation
-- [Dream interpretation](https://goldmoodastro.com/tr/ruya-tabiri) — symbolic dream interpretation
-- [Yıldızname](https://goldmoodastro.com/tr/yildizname) — educational yıldızname experience
-- [Blog](https://goldmoodastro.com/tr/blog) — editorial articles and guides
+- [Birth chart](https://goldmoodastro.com/tr/dogum-haritasi): natal chart calculation and educational interpretation
+- [Synastry](https://goldmoodastro.com/tr/sinastri): relationship chart comparison
+- [Rising sign calculator](https://goldmoodastro.com/tr/yukselen-burc-hesaplayici): rising sign calculation using birth time and place
+- [Big Three](https://goldmoodastro.com/tr/buyuk-uclu): Sun, Moon and rising sign overview
+- [Zodiac signs](https://goldmoodastro.com/tr/burclar): sign guides
+- [Zodiac compatibility](https://goldmoodastro.com/tr/burclar/uyum): hub for 78 canonical sign combinations
+- [Daily readings](https://goldmoodastro.com/tr/gunluk): daily zodiac content
+- [Numerology](https://goldmoodastro.com/tr/numeroloji): numerology calculator and guide
+- [Tarot](https://goldmoodastro.com/tr/tarot): reflective tarot experience
+- [Coffee reading](https://goldmoodastro.com/tr/kahve-fali): Turkish coffee-symbol interpretation
+- [Dream interpretation](https://goldmoodastro.com/tr/ruya-tabiri): symbolic dream interpretation
+- [Yıldızname](https://goldmoodastro.com/tr/yildizname): educational yıldızname experience
+- [Blog](https://goldmoodastro.com/tr/blog): editorial articles and guides
 
 ## English and German entry points
 
-- [English homepage](https://goldmoodastro.com/en)
-- [English consultants](https://goldmoodastro.com/en/consultants)
-- [English pricing](https://goldmoodastro.com/en/pricing)
-- [English birth chart](https://goldmoodastro.com/en/birth-chart)
-- [English zodiac compatibility](https://goldmoodastro.com/en/zodiac-signs/compatibility)
-- [German homepage](https://goldmoodastro.com/de)
-- [German consultants](https://goldmoodastro.com/de/berater)
-- [German pricing](https://goldmoodastro.com/de/preise)
-- [German birth chart](https://goldmoodastro.com/de/geburtshoroskop)
-- [German zodiac compatibility](https://goldmoodastro.com/de/sternzeichen/kompatibilitaet)
+- [English homepage](https://goldmoodastro.com/en): platform overview in English
+- [English consultants](https://goldmoodastro.com/en/consultants): approved consultant profiles in English
+- [English pricing](https://goldmoodastro.com/en/pricing): membership and consultation pricing in EUR
+- [English birth chart](https://goldmoodastro.com/en/birth-chart): natal chart calculation in English
+- [English zodiac compatibility](https://goldmoodastro.com/en/zodiac-signs/compatibility): hub for 78 sign combinations in English
+- [German homepage](https://goldmoodastro.com/de): platform overview in German
+- [German consultants](https://goldmoodastro.com/de/berater): approved consultant profiles in German
+- [German pricing](https://goldmoodastro.com/de/preise): membership and consultation pricing in EUR
+- [German birth chart](https://goldmoodastro.com/de/geburtshoroskop): natal chart calculation in German
+- [German zodiac compatibility](https://goldmoodastro.com/de/sternzeichen/kompatibilitaet): hub for 78 sign combinations in German
 
 ## How the service works
 
@@ -65,8 +65,8 @@ GoldMoodAstro content and consultations are for personal awareness, personal dev
 
 ## Machine-readable discovery
 
-- [XML sitemap](https://goldmoodastro.com/sitemap.xml) — canonical indexable URLs and hreflang alternates
-- [Robots policy](https://goldmoodastro.com/robots.txt) — crawler directives
-- [Detailed LLM reference](https://goldmoodastro.com/llms-full.txt) — entity, service and citation notes
+- [XML sitemap](https://goldmoodastro.com/sitemap.xml): canonical indexable URLs and hreflang alternates
+- [Robots policy](https://goldmoodastro.com/robots.txt): crawler directives
+- [Detailed LLM reference](https://goldmoodastro.com/llms-full.txt): entity, service and citation notes
 
 When citing GoldMoodAstro, prefer the most relevant canonical page instead of linking only to the homepage.

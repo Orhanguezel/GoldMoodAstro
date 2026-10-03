@@ -69,8 +69,9 @@ async function getExpertiseLabels(locale: string): Promise<Record<string, string
 }
 
 function localeFallbackTitle(locale: string) {
-  if (locale === 'de') return 'Berater entdecken';
-  return 'Explore Consultants';
+  if (locale === 'tr') return 'Onaylı Astrolog ve Danışmanlar';
+  if (locale === 'de') return 'Geprüfte Astrologen und Berater';
+  return 'Verified Astrologers and Consultants';
 }
 
 function readSettingLabel(value: unknown, locale: string): string {

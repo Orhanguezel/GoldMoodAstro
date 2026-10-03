@@ -187,3 +187,25 @@ export function toLogicalPublicPathAnyLocale(pathname: string): string {
   }
   return normalized;
 }
+
+/**
+ * CMS HTML'indeki site içi linkleri locale kanoniğine çevirir:
+ * `/tr/consultants` → `/tr/danismanlar`. Blog gövdeleri eski (İngilizce)
+ * iç yollarla yazılmıştı; her biri 308 yönlendirmeyle bitiyordu
+ * (SEO katalog 2026-10-03). Yalnız `/tr|en|de/...` ile başlayan göreli ve
+ * aynı alan adına giden mutlak linklere dokunur.
+ */
+export function localizeHtmlLinks(html: string, siteOrigin?: string): string {
+  if (!html) return html;
+  const origin = String(siteOrigin || '').replace(/\/+$/, '');
+  const originGroup = origin ? `(${origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})?` : '()';
+  const re = new RegExp(`href=(["'])${originGroup}/(tr|en|de)(/[^"'?#]*)?([?#][^"']*)?\\1`, 'g');
+  return html.replace(
+    re,
+    (_m, quote: string, abs: string | undefined, lc: PublicLocale, rest: string | undefined, suffix: string | undefined) => {
+      const { publicPath } = canonicalPublicPath(lc, rest || '/');
+      const path = publicPath === '/' ? '' : publicPath;
+      return `href=${quote}${abs || ''}/${lc}${path}${suffix || ''}${quote}`;
+    },
+  );
+}

@@ -8,6 +8,8 @@ import { useListSiteSettingsQuery } from '@/integrations/rtk/hooks';
 import { useResolvedLocale,UI_FALLBACK_EN } from '@/i18n';
 import type { SiteSettingRow } from '@/integrations/shared';
 import type { TranslatedLabel } from '@/integrations/shared';
+import { useUiStringsSnapshot } from './UiStringsProvider';
+import { shortLocale } from './uiStringsResolve';
 
 /**
  * DB tarafında kullanacağın section key'leri (site_settings.key)
@@ -153,10 +155,17 @@ function normalizeValueToLabel(value: unknown): SettingsValueRecord {
 export function useUiSection(section: UiSectionKey, localeOverride?: string): UiSectionResult {
   const locale = useResolvedLocale(localeOverride);
 
-  // ✅ TEK istek: GET /site_settings?prefix=ui_&locale=de
+  // SSR snapshot (layout → UiStringsProvider). Locale eşleşiyorsa metinler ilk
+  // render'da hazırdır: HTML'e İngilizce yedek basılmaz ve 950 KB'lık istemci
+  // isteği hiç atılmaz.
+  const snapshot = useUiStringsSnapshot();
+  const snap = snapshot && snapshot.locale === shortLocale(locale) ? snapshot : null;
+
+  // ✅ TEK istek: GET /site_settings?prefix=ui_&locale=de (snapshot yoksa)
   // RTK Query tüm useUiSection çağrılarını deduplicate eder (aynı args).
   const { data: allUiSettings } = useListSiteSettingsQuery(
     locale ? { prefix: 'ui_', locale } : undefined,
+    { skip: !locale || !!snap },
   );
 
   // Hızlı lookup Map (tüm ui_* satırları)
@@ -170,9 +179,10 @@ export function useUiSection(section: UiSectionKey, localeOverride?: string): Ui
 
   // 1) Section bazlı JSON override (ui_header, ui_footer, ...)
   const json = useMemo<Record<string, unknown>>(() => {
+    if (snap) return snap.sections[section] ?? {};
     const row = allUiMap.get(section);
     return row ? tryParseJsonObject(row.value) : {};
-  }, [allUiMap, section]);
+  }, [snap, allUiMap, section]);
 
   const ui = (key: string, hardFallback = ''): string => {
     const k = String(key || '').trim();
@@ -184,18 +194,23 @@ export function useUiSection(section: UiSectionKey, localeOverride?: string): Ui
 
     // B) tekil UI key DB. prefix=ui_ ile tüm ui_* satırları zaten allUiMap'te;
     // client bundle'da devasa SECTION_KEYS allowlist'i taşımaya gerek yok.
-    const row = k.startsWith('ui_') ? allUiMap.get(k) : undefined;
-    const record = row ? normalizeValueToLabel(row.value) : undefined;
-    if (record) {
-      const label = (record.label || {}) as TranslatedLabel;
-      const l = normShortLocale(locale);
-      const val =
-        (l && (label as any)[l]) ||
-        (label as any).en ||
-        (l === 'tr' ? (label as any).tr : '') ||
-        '';
-      const fromDb = (typeof val === 'string' ? val : '').trim();
-      if (fromDb && fromDb !== k) return fromDb;
+    if (snap) {
+      const fromSnap = k.startsWith('ui_') ? snap.labels[k] : undefined;
+      if (fromSnap) return fromSnap;
+    } else {
+      const row = k.startsWith('ui_') ? allUiMap.get(k) : undefined;
+      const record = row ? normalizeValueToLabel(row.value) : undefined;
+      if (record) {
+        const label = (record.label || {}) as TranslatedLabel;
+        const l = normShortLocale(locale);
+        const val =
+          (l && (label as any)[l]) ||
+          (label as any).en ||
+          (l === 'tr' ? (label as any).tr : '') ||
+          '';
+        const fromDb = (typeof val === 'string' ? val : '').trim();
+        if (fromDb && fromDb !== k) return fromDb;
+      }
     }
 
     // C) param hard fallback

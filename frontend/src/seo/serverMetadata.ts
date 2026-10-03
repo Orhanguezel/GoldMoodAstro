@@ -266,6 +266,8 @@ type BuildMetadataArgs = {
   activeLocales?: string[];
 };
 
+const TITLE_MAX = 60;
+
 export async function buildMetadataFromSeo(
   seo: Record<string, any>,
   args: BuildMetadataArgs,
@@ -285,9 +287,13 @@ export async function buildMetadataFromSeo(
   // still receive it exactly once.
   const normalizedTitle = titleDefault.trim().toLocaleLowerCase('en-US');
   const normalizedSiteName = siteName.trim().toLocaleLowerCase('en-US');
-  const finalTitle = normalizedTitle.includes(normalizedSiteName)
+  // Marka eki başlığı 60 karakterin üzerine taşıyorsa eklenmez: Google uzun
+  // başlığı keser ve kesilen kısım asıl anahtar kelime olur (SEO katalog
+  // 2026-10-03: 66-73 karakterlik başlıklar).
+  const withBrand = `${titleDefault} | ${siteName}`;
+  const finalTitle = normalizedTitle.includes(normalizedSiteName) || withBrand.length > TITLE_MAX
     ? titleDefault
-    : `${titleDefault} | ${siteName}`;
+    : withBrand;
   const rawDescription =
     asStr(seo.description) ||
     asStr(seo.description_default) ||

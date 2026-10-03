@@ -48,6 +48,24 @@ export const downgradeH1ToH2 = (rawHtml: string) =>
     .replace(/<h1(\s|>)/gi, '<h2$1')
     .replace(/<\/h1>/gi, '</h2>');
 
+const headingText = (value: string) =>
+  value.replace(/<[^>]+>/g, '').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim().toLocaleLowerCase('tr-TR');
+
+/**
+ * CMS gövdesinin en başındaki <h2> sayfa başlığıyla aynıysa kaldırır: sayfa
+ * H1'i başlığı zaten taşıyor; downgradeH1ToH2 sonrası aynı metin ikinci kez
+ * basılıyordu (SEO katalog 2026-10-03: H1 ve ilk H2 birebir aynı).
+ */
+export function stripLeadingTitleHeading(html: string, title: string): string {
+  const m = /<h2\b[^>]*>([\s\S]*?)<\/h2>/i.exec(html);
+  if (!m) return html;
+  // Yalnız gövdenin başı: öncesinde sadece sarmalayıcı açılış etiketleri olabilir.
+  const before = html.slice(0, m.index);
+  if (!/^\s*(?:<(?:div|section|article|header)\b[^>]*>\s*)*$/i.test(before)) return html;
+  if (headingText(m[1]) !== headingText(title)) return html;
+  return before + html.slice(m.index + m[0].length);
+}
+
 export function safeJson<T>(v: any, fallback: T): T {
   if (v == null) return fallback;
   if (typeof v === 'object') return v as T;

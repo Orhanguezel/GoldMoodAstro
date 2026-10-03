@@ -1,4 +1,5 @@
 import type { CustomPageDto } from './custom_pages.types';
+import { minifyCss } from '@/lib/minifyCss';
 
 export const THEME_COLORS = {
   textDark: 'var(--gm-text)',
@@ -9,7 +10,7 @@ export const THEME_COLORS = {
   border: 'var(--gm-border-soft)',
 };
 
-export const CMS_FALLBACK_CSS = `
+export const CMS_FALLBACK_CSS = minifyCss(`
   .cms-html { color: ${THEME_COLORS.textMedium}; font-family: sans-serif; }
   
   .cms-html h1, .cms-html h2, .cms-html h3, .cms-html h4 {
@@ -44,7 +45,7 @@ export const CMS_FALLBACK_CSS = `
   
   .cms-html a { color: ${THEME_COLORS.primary}; text-decoration: underline; }
   .cms-html a:hover { color: ${THEME_COLORS.textDark}; }
-`;
+`);
 
 export function pickFirstPublished(items: any): CustomPageDto | null {
   const arr: CustomPageDto[] = Array.isArray(items) ? (items as any) : [];

@@ -122,7 +122,7 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
               type="button"
               onClick={() => scrollByCard(-1)}
               disabled={!canPrev}
-              aria-label="Previous"
+              aria-label={ui('ui_hero_prev', 'Previous')}
               className="w-10 h-10 rounded-full border border-[var(--gm-border-soft)] flex items-center justify-center text-[var(--gm-text)] hover:border-[var(--gm-gold)] hover:bg-[var(--gm-gold)]/10 hover:text-[var(--gm-gold)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -131,7 +131,7 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
               type="button"
               onClick={() => scrollByCard(1)}
               disabled={!canNext}
-              aria-label="Next"
+              aria-label={ui('ui_hero_next', 'Next')}
               className="w-10 h-10 rounded-full border border-[var(--gm-border-soft)] flex items-center justify-center text-[var(--gm-text)] hover:border-[var(--gm-gold)] hover:bg-[var(--gm-gold)]/10 hover:text-[var(--gm-gold)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
               <ChevronRight className="w-5 h-5" />
@@ -142,7 +142,7 @@ export default function ConsultantsSection({ locale = 'tr', label, config }: Pro
             href={`${localizePath(locale, '/consultants')}?sort=${sort}`}
             className="group inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] uppercase text-[var(--gm-gold)] hover:text-[var(--gm-gold-light)] transition-colors"
           >
-            {ui('ui_home_consultants_view_all', fallbackCopy.all)}
+            {ui('ui_home_consultants_view_all', ui('ui_header_mega_see_all', fallbackCopy.all))}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>

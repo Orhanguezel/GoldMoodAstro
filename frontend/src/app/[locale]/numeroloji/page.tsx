@@ -9,16 +9,30 @@ import Banner from '@/layout/banner/Breadcrum';
 
 type Props = { params: Promise<{ locale: string }> };
 
+const FALLBACK = {
+  tr: {
+    title: 'Numeroloji Hesaplama ve Hayat Yolu Sayısı',
+    description: 'İsim ve doğum tarihinizle hayat yolu, kader ve ruh arzusu sayınızı ücretsiz hesaplayın; numeroloji anlamlarını rehberle okuyun.',
+  },
+  en: {
+    title: 'Numerology Calculator: Life Path Number',
+    description: 'Calculate your life path, destiny and soul urge numbers from your name and birth date for free, with a guide to their meanings.',
+  },
+  de: {
+    title: 'Numerologie-Rechner: Lebenszahl berechnen',
+    description: 'Berechnen Sie Lebenszahl, Schicksalszahl und Seelenzahl aus Name und Geburtsdatum kostenlos – mit Leitfaden zu den Bedeutungen.',
+  },
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   return buildPageMetadata({
     locale,
     pageKey: 'numeroloji',
     pathname: '/numeroloji',
-    fallback: {
-      title: 'Free Numerology Analysis — Name and Destiny Number',
-      description: 'Decode the hidden patterns in your name and birth date. Destiny number, soul urge and life path analysis.',
-    },
+    // seo_pages'te 'numeroloji' kaydı yok; yedek metin locale'e göre seçilir
+    // (eskiden /tr'de İngilizce başlık/açıklama çıkıyordu — SEO katalog 2026-10-03).
+    fallback: FALLBACK[locale as keyof typeof FALLBACK] ?? FALLBACK.en,
   });
 }
 

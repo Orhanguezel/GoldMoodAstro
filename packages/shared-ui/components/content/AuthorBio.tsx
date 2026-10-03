@@ -40,7 +40,7 @@ export function AuthorBio({
           ? 'h-16 w-16 shrink-0 overflow-hidden rounded-full border border-[var(--gm-gold)]/40 bg-[var(--gm-bg-deep)]'
           : 'h-20 w-20 shrink-0 overflow-hidden rounded-full border border-[var(--gm-gold)]/40 bg-[var(--gm-bg-deep)]'}>
           {avatar ? (
-            <img src={avatar} alt={name} className="h-full w-full object-cover" />
+            <img src={avatar} alt={name} width={96} height={96} loading="lazy" decoding="async" className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-xl font-bold text-[var(--gm-gold)]">
               {initials}

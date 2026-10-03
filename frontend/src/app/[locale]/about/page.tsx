@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import AboutPageContent from '@/components/containers/about/AboutPageContent';
 import PageContainer from '@/components/common/PageContainer';
 import Banner from '@/layout/banner/Breadcrum';
+import PageFaqSection from '@/components/seo/PageFaqSection';
+import { aboutFaq } from '@/components/seo/trustFaq';
+import { getCompanyFacts } from '@/lib/companyFacts.server';
 import { localizedPath } from '@/integrations/shared';
 import { localizedPageOgUrl } from '@/lib/og/pageOgMetadata';
 
@@ -74,12 +77,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AboutPage({ params }: Props) {
   const { locale } = await params;
   const copy = copyFor(locale);
+  const faq = aboutFaq(locale, await getCompanyFacts());
 
   return (
     <>
       <Banner title={copy.banner} />
       <PageContainer pad="afterBanner">
         <AboutPageContent />
+        <PageFaqSection id="about-faq" items={faq.items} title={faq.title} eyebrow={faq.eyebrow} />
       </PageContainer>
     </>
   );

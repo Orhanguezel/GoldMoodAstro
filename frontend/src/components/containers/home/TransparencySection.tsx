@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useUiSection } from '@/i18n';
+import { localizePath } from '@/integrations/shared';
 
 export default function TransparencySection({ locale = 'tr' }: { locale?: string }) {
   const { ui } = useUiSection('ui_home', locale as any);
@@ -81,7 +82,7 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
                 <span className="text-(--gm-gold) mt-1 drop-shadow-[0_0_5px_rgba(212,175,55,0.5)]">✦</span> {ui("ui_home_transparency_monthly_feature_4", "Tarot reading (inc. Celtic Cross)")}
               </li>
             </ul>
-            <Link href={`/${locale}/pricing`} className="w-full py-4 text-center rounded-full bg-(--gm-gold) text-(--gm-bg-deep) text-xs font-bold uppercase tracking-[0.25em] hover:scale-[1.02] transition-transform mt-auto shadow-(--gm-shadow-gold)">
+            <Link href={localizePath(locale, '/pricing')} className="w-full py-4 text-center rounded-full bg-(--gm-gold) text-(--gm-bg-deep) text-xs font-bold uppercase tracking-[0.25em] hover:scale-[1.02] transition-transform mt-auto shadow-(--gm-shadow-gold)">
               {ui("ui_home_transparency_monthly_cta", "Select Now")}
             </Link>
           </div>
@@ -114,7 +115,7 @@ export default function TransparencySection({ locale = 'tr' }: { locale?: string
                 <span className="text-(--gm-gold)/80 mt-1">✦</span> {ui("ui_home_transparency_yearly_feature_4", "Comprehensive year-ahead overview")}
               </li>
             </ul>
-            <Link href={`/${locale}/pricing`} className="w-full py-4 text-center rounded-full border border-(--gm-gold) text-(--gm-gold) text-xs font-bold uppercase tracking-[0.2em] hover:bg-(--gm-gold) hover:text-(--gm-bg-deep) transition-all mt-auto shadow-[0_0_15px_rgba(212,175,55,0.1)] hover:shadow-(--gm-shadow-gold)">
+            <Link href={localizePath(locale, '/pricing')} className="w-full py-4 text-center rounded-full border border-(--gm-gold) text-(--gm-gold) text-xs font-bold uppercase tracking-[0.2em] hover:bg-(--gm-gold) hover:text-(--gm-bg-deep) transition-all mt-auto shadow-[0_0_15px_rgba(212,175,55,0.1)] hover:shadow-(--gm-shadow-gold)">
               {ui("ui_home_transparency_yearly_cta", "Pre-Register")}
             </Link>
           </div>

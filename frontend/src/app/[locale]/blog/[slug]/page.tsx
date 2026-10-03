@@ -2,7 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Banner from '@/layout/banner/Breadcrum';
-import { CMS_FALLBACK_CSS, downgradeH1ToH2, extractHtmlFromAny, safeStr, titleFromSlug, excerpt } from '@/integrations/shared';
+import { CMS_FALLBACK_CSS, downgradeH1ToH2, extractHtmlFromAny, safeStr, stripLeadingTitleHeading, titleFromSlug, excerpt } from '@/integrations/shared';
 import { normPath, absUrlJoin, localizePath } from '@/integrations/shared';
 import { buildMetadataFromSeo, fetchSeoObject, fetchCustomPagePublicBySlug } from '@/seo/server';
 import { fetchCustomPagesPublicByModule } from '@/seo/serverPageData';
@@ -15,7 +15,7 @@ import BlogRelatedPosts from '@/components/containers/blog/BlogRelatedPosts';
 import { getServerApiBase } from '@/i18n/apiBase.server';
 import Link from 'next/link';
 import { fetchUiStrings } from '@/i18n/fetchUiStrings.server';
-import { toLocalizedPublicPath, type PublicLocale } from '@/i18n/localizedRoutes';
+import { localizeHtmlLinks, toLocalizedPublicPath, type PublicLocale } from '@/i18n/localizedRoutes';
 import { relatedToolsForBlog } from '@/lib/blog/relatedTools';
 
 type PageProps = {
@@ -158,13 +158,50 @@ export default async function BlogDetailsPage({ params }: PageProps) {
   const relatedPosts = (Array.isArray(allPosts) ? allPosts : [])
     .filter((post) => safeStr(post?.slug) && safeStr(post?.slug) !== slug)
     .slice(0, 5);
-  const html = page ? downgradeH1ToH2(extractHtmlFromAny(page)) : '';
+  const html = page
+    ? localizeHtmlLinks(stripLeadingTitleHeading(downgradeH1ToH2(extractHtmlFromAny(page)), title), siteUrl)
+    : '';
   const description = excerpt(
     safeStr(page?.summary) || html || title,
     180,
   );
   const pageUrl = `${siteUrl}/${locale}/blog/${encodeURIComponent(slug)}`;
   const image = safeStr(page?.featured_image) || (Array.isArray(page?.images) ? safeStr(page.images[0]) : '');
+  // Güvence + somut bilgi bloğu (SEO katalog 2026-10-03: blog yazılarında
+  // "güvenli ödeme/güvence" ve "somut ölçü" sinyalleri yoktu). Yalnız
+  // sitede doğrulanabilir olgular.
+  const trust = {
+    tr: {
+      title: 'Bu konuyu bir danışmanla konuşmak isterseniz',
+      points: [
+        'Danışman profilleri yayına alınmadan önce ekibimiz tarafından incelenir.',
+        'Seans süresi (dakika) ve ücreti her profilde açıkça yazar; gizli ücret yoktur.',
+        'Kart ödemeleri Stripe Checkout ile alınır, kart bilgileriniz sunucularımızda saklanmaz.',
+      ],
+      consultants: 'Onaylı danışmanları gör',
+      pricing: 'Fiyatlandırma',
+    },
+    en: {
+      title: 'Want to discuss this topic with a consultant?',
+      points: [
+        'Consultant profiles are reviewed by our team before they are published.',
+        'Session length (minutes) and price are shown openly on every profile; no hidden fees.',
+        'Card payments are processed by Stripe Checkout; your card details are not stored on our servers.',
+      ],
+      consultants: 'See approved consultants',
+      pricing: 'Pricing',
+    },
+    de: {
+      title: 'Möchten Sie das Thema mit einem Berater besprechen?',
+      points: [
+        'Beraterprofile werden vor der Veröffentlichung von unserem Team geprüft.',
+        'Sitzungsdauer (Minuten) und Preis stehen offen in jedem Profil; keine versteckten Kosten.',
+        'Kartenzahlungen laufen über Stripe Checkout; Ihre Kartendaten werden nicht auf unseren Servern gespeichert.',
+      ],
+      consultants: 'Geprüfte Berater ansehen',
+      pricing: 'Preise',
+    },
+  }[publicLocale];
   const faqItems = locale === 'tr'
     ? [
         {
@@ -174,6 +211,17 @@ export default async function BlogDetailsPage({ params }: PageProps) {
         {
           question: 'Bu yazı kişisel danışmanlığın yerine geçer mi?',
           answer: 'Hayır. Blog yazıları genel bilgi sağlar; kişisel harita, ilişki veya yaşam soruları için uzman danışmanlık daha uygundur.',
+        },
+      ]
+    : locale === 'de'
+    ? [
+        {
+          question: 'Wie werden diese Inhalte erstellt?',
+          answer: 'Die Blogbeiträge entstehen mit redaktioneller Prüfung, Themenrecherche und nach Grundsätzen verantwortungsvoller spiritueller Begleitung.',
+        },
+        {
+          question: 'Ersetzt dieser Artikel eine persönliche Beratung?',
+          answer: 'Nein. Blogbeiträge bieten allgemeine Informationen; für persönliche Horoskop-, Beziehungs- oder Lebensfragen ist eine Beratung besser geeignet.',
         },
       ]
     : [
@@ -225,7 +273,10 @@ export default async function BlogDetailsPage({ params }: PageProps) {
                 src={absUrlJoin(siteUrl, image)}
                 alt={safeStr(page?.featured_image_alt) || title}
                 className="w-full h-full object-cover"
+                width={1600}
+                height={900}
                 loading="eager"
+                fetchPriority="high"
               />
             </div>
           </div>
@@ -266,9 +317,22 @@ export default async function BlogDetailsPage({ params }: PageProps) {
               </ul>
             </section>
 
+            <section className="rounded-[2rem] border border-(--gm-border-soft) bg-(--gm-surface) p-7 md:p-9">
+              <h2 className="font-serif text-2xl text-(--gm-text)">{trust.title}</h2>
+              <ul className="mt-4 space-y-2 text-sm leading-6 text-(--gm-text-dim)">
+                {trust.points.map((point) => (
+                  <li key={point} className="flex gap-2"><span aria-hidden className="text-(--gm-gold)">✓</span><span>{point}</span></li>
+                ))}
+              </ul>
+              <div className="mt-5 flex flex-wrap gap-3 text-sm font-semibold">
+                <Link href={`/${publicLocale}${toLocalizedPublicPath(publicLocale, '/consultants')}`} className="text-(--gm-gold)">{trust.consultants} →</Link>
+                <Link href={`/${publicLocale}${toLocalizedPublicPath(publicLocale, '/pricing')}`} className="text-(--gm-gold)">{trust.pricing} →</Link>
+              </div>
+            </section>
+
             <FaqAccordion
               items={faqItems}
-              title={locale === 'tr' ? 'Bu Yazı Hakkında Sorular' : 'Questions About This Article'}
+              title={locale === 'tr' ? 'Bu Yazı Hakkında Sorular' : locale === 'de' ? 'Fragen zu diesem Artikel' : 'Questions About This Article'}
               eyebrow={locale === 'tr' ? 'SSS' : 'FAQ'}
             />
 

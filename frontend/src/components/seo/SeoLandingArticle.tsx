@@ -6,7 +6,7 @@ import AuthorBio from '@goldmood/shared-ui/content/AuthorBio';
 import { getLanding, landingLocale, LANDING_UI, type LandingKey } from './seo-landing-content';
 import { fetchCustomPagePublicByLandingKey } from '@/seo/server';
 import { localizedPath } from '@/integrations/shared';
-import { toLocalizedPublicPath, type PublicLocale } from '@/i18n/localizedRoutes';
+import { localizeHtmlLinks, toLocalizedPublicPath, type PublicLocale } from '@/i18n/localizedRoutes';
 import TopicConnections from './TopicConnections';
 
 const REVIEW_DATE = '2026-09-21T00:00:00.000Z';
@@ -71,7 +71,7 @@ export default async function SeoLandingArticle({ type, locale }: { type: Landin
         <article
           className="prose prose-invert prose-brand mx-auto max-w-[var(--gm-w-content)]"
           data-speakable
-          dangerouslySetInnerHTML={{ __html: page!.content_html }}
+          dangerouslySetInnerHTML={{ __html: localizeHtmlLinks(page!.content_html, siteUrl) }}
         />
       ) : (
         <LandingIntro

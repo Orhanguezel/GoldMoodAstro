@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import React from 'react';
 import HomeContent from '@/components/containers/home/HomeContent';
+import PageContainer from '@/components/common/PageContainer';
+import PageFaqSection from '@/components/seo/PageFaqSection';
+import { homeFaq } from '@/components/seo/trustFaq';
+import { getCompanyFacts } from '@/lib/companyFacts.server';
 
 import { normPath } from '@/integrations/shared';
 import { localizedPageOgUrl, withLocalizedPageOg } from '@/lib/og/pageOgMetadata';
@@ -36,5 +40,13 @@ export default async function HomePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return <HomeContent locale={locale} />;
+  const faq = homeFaq(locale, await getCompanyFacts());
+  return (
+    <>
+      <HomeContent locale={locale} />
+      <PageContainer pad="none" className="pb-16">
+        <PageFaqSection id="home-faq" items={faq.items} title={faq.title} eyebrow={faq.eyebrow} />
+      </PageContainer>
+    </>
+  );
 }

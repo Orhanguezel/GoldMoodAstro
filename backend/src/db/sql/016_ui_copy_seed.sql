@@ -1161,7 +1161,7 @@ INSERT INTO site_settings (id, `key`, locale, value) VALUES
 ('e58336c0-6a27-429a-8901-aaf2882f711e','ui_editor_basic_btn_heading1','*','{"label":{"tr":"Başlık 1","en":"Heading 1","de":"Überschrift 1"}}'),
 ('7766447a-ea5b-45a3-8248-4b0105a54c8b','ui_editor_basic_btn_heading2','*','{"label":{"tr":"Başlık 2","en":"Heading 2","de":"Überschrift 2"}}'),
 ('3c15f96f-d8e6-49d8-b63f-12fc7830878a','ui_editor_basic_btn_clear_label','*','{"label":{"tr":"Temizle","en":"Clear","de":"Löschen"}}'),
-('2a12ad1f-9c4b-4cbf-91b2-6b2287b8d9d4','ui_consultantbrowse_page_title','*','{"label":{"tr":"Danışmanları Keşfet","en":"Explore Consultants","de":"Berater entdecken"}}'),
+('2a12ad1f-9c4b-4cbf-91b2-6b2287b8d9d4','ui_consultantbrowse_page_title','*','{"label":{"tr":"Onaylı Astrolog ve Danışmanlar","en":"Verified Astrologers and Consultants","de":"Geprüfte Astrologen und Berater"}}'),
 ('41a4a3b2-1266-4f44-98fd-43684cff9a85','ui_consultantbrowse_search_filter_title','*','{"label":{"tr":"Arama & Filtreleme","en":"Search & Filter","de":"Suche & Filter"}}'),
 ('d2049b51-a391-46b7-9acd-bfbfa6a3d393','ui_consultantbrowse_error_title','*','{"label":{"tr":"Hata Oluştu","en":"An Error Occurred","de":"Ein Fehler ist aufgetreten"}}'),
 ('467731d8-4ed4-4618-9c37-43d2ae873325','ui_consultantbrowse_error_load','*','{"label":{"tr":"Danışmanlar şu an yüklenemiyor.","en":"Consultants cannot be loaded right now.","de":"Berater können derzeit nicht geladen werden."}}'),

@@ -92,6 +92,8 @@ export default function ConsultantCard({ consultant, locale, expertiseLabels = {
             alt={consultant.full_name}
             width={640}
             height={640}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             onError={() => setImageFailed(true)}
           />

@@ -9,6 +9,21 @@ import brand from '../../../../../config/brand.json';
 
 export const revalidate = 86400;
 
+const FALLBACK = {
+  tr: {
+    title: 'Burcunu Öğren: Doğum Tarihine Göre Burç',
+    description: 'Doğum gününüzü seçin; Güneş burcunuzu, elementinizi ve yakın astrolojik temaları hızlıca öğrenin.',
+  },
+  en: {
+    title: 'Find Your Zodiac Sign by Birth Date',
+    description: 'Choose your birthday and quickly discover your Sun sign, element and nearby astrological themes.',
+  },
+  de: {
+    title: 'Sternzeichen nach Geburtsdatum finden',
+    description: 'Wählen Sie Ihren Geburtstag und entdecken Sie schnell Ihr Sonnenzeichen, Element und nahe astrologische Themen.',
+  },
+};
+
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -17,10 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     locale,
     pageKey: 'burcunu-ogren',
     pathname: '/burcunu-ogren',
-    fallback: {
-      title: `Find Your Zodiac Sign — ${brand.name}`,
-      description: 'Choose your birthday and quickly discover your Sun sign, element and nearby astrological themes.',
-    },
+    fallback: FALLBACK[locale as keyof typeof FALLBACK] ?? FALLBACK.en,
   });
 }
 

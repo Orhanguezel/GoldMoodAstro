@@ -5,6 +5,21 @@ import { buildPageMetadata } from '@/seo/server';
 
 export const revalidate = 86400;
 
+const FALLBACK = {
+  tr: {
+    title: 'Ünlüler ve Burçları',
+    description: 'Sanat, müzik, bilim ve liderlik alanından tanıdık isimlerin burçlarını ve öne çıkan astrolojik temalarını keşfedin.',
+  },
+  en: {
+    title: 'Celebrities and Zodiac Signs',
+    description: 'Discover zodiac signs and astrological themes of familiar names from art, music, science and leadership.',
+  },
+  de: {
+    title: 'Prominente und ihre Sternzeichen',
+    description: 'Entdecken Sie Sternzeichen und astrologische Themen bekannter Namen aus Kunst, Musik, Wissenschaft und Führung.',
+  },
+};
+
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -13,10 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     locale,
     pageKey: 'unluler-ve-burclari',
     pathname: '/unluler-ve-burclari',
-    fallback: {
-      title: 'Celebrities and Zodiac Signs — GoldMoodAstro',
-      description: 'Discover zodiac signs and astrological themes of familiar names from art, music, science and leadership.',
-    },
+    fallback: FALLBACK[locale as keyof typeof FALLBACK] ?? FALLBACK.en,
   });
 }
 

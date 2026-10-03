@@ -20,9 +20,9 @@ const FALLBACK_PLANS: SubscriptionPlanPublicUi[] = [
   {
     id: 'fallback-free',
     code: 'free',
-    name_tr: 'Free',
+    name_tr: 'Ücretsiz',
     name_en: 'Free',
-    description_tr: 'Start exploring the platform with core features.',
+    description_tr: 'Günlük yorum ve temel doğum haritası.',
     description_en: 'Start using core features of the platform.',
     price_minor: 0,
     currency: 'TRY',
@@ -35,9 +35,9 @@ const FALLBACK_PLANS: SubscriptionPlanPublicUi[] = [
   {
     id: 'fallback-monthly',
     code: 'monthly',
-    name_tr: 'Monthly',
+    name_tr: 'Aylık',
     name_en: 'Monthly',
-    description_tr: 'Unlimited AI readings and premium consultant tools.',
+    description_tr: 'Sınırsız AI yorum, sinastri, transit takvimi.',
     description_en: 'Unlimited AI readings and premium consultant tools.',
     price_minor: 14900,
     currency: 'TRY',
@@ -57,9 +57,9 @@ const FALLBACK_PLANS: SubscriptionPlanPublicUi[] = [
   {
     id: 'fallback-yearly',
     code: 'yearly',
-    name_tr: 'Yearly',
+    name_tr: 'Yıllık',
     name_en: 'Yearly',
-    description_tr: 'Premium access with yearly pricing advantage.',
+    description_tr: 'Aylık tüm özellikler + yıllık fiyat avantajı.',
     description_en: 'Premium access with yearly pricing advantage.',
     price_minor: 149900,
     currency: 'TRY',
@@ -228,7 +228,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
 
   const copy = locale === 'tr'
     ? {
-        title: 'Fiyatlandırma',
+        title: 'Fiyatlar ve Hizmet Paketleri',
         subtitle: 'Sesli ve görüntülü danışmanlık için net karşılaştırma',
         lead:
           'Her aşama için şeffaf fiyatlandırma. Ücretsiz başlayın, premium danışmanlık özelliklerine ihtiyaç duyduğunuzda yükseltin.',
@@ -249,6 +249,12 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         modeLead: 'Tüm kullanıcılar sesli görüşme yapabilir. Görüntülü görüşmeler premium planlara dahildir.',
         freeLabel: 'Ücretsiz',
         premiumLabel: 'Premium',
+        noCard: 'Başlamak için kart gerekmez',
+        periodMonthly: 'ay',
+        periodYearly: 'yıl',
+        trialText: (days: number) => `${days} gün deneme`,
+        audioTitle: 'Sesli Seans (Standart)',
+        videoTitle: 'Görüntülü Seans (Premium)',
         cta: 'Hemen Başla',
         cta2: 'Danışman Bul',
         couponTitle: 'Kupon kodunuz mu var?',
@@ -285,6 +291,12 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         modeLead: 'Alle Nutzer können Sprachsitzungen nutzen. Videositzungen sind in Premium-Plänen enthalten.',
         freeLabel: 'Kostenlos',
         premiumLabel: 'Premium',
+        noCard: 'Zum Start ist keine Karte nötig',
+        periodMonthly: 'Monat',
+        periodYearly: 'Jahr',
+        trialText: (days: number) => `${days} Tage Testphase`,
+        audioTitle: 'Audio-Sitzung (Standard)',
+        videoTitle: 'Video-Sitzung (Premium)',
         cta: 'Jetzt starten',
         cta2: 'Berater finden',
         couponTitle: 'Haben Sie einen Gutscheincode?',
@@ -319,6 +331,12 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
         modeLead: 'All users can use voice sessions. Video sessions are included with premium plans.',
         freeLabel: 'Free',
         premiumLabel: 'Premium',
+        noCard: 'No card required to start',
+        periodMonthly: 'month',
+        periodYearly: 'year',
+        trialText: (days: number) => `${days} day trial`,
+        audioTitle: 'Audio Session (Standard)',
+        videoTitle: 'Video Session (Premium)',
         cta: 'Start Now',
         cta2: 'Find a Consultant',
         couponTitle: 'Have a coupon code?',
@@ -463,11 +481,11 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
             const name = locale === 'tr' ? plan.name_tr : plan.name_en;
             const description = locale === 'tr' ? plan.description_tr : plan.description_en;
             const price = toMoney(plan.price_minor, plan.currency, locale);
-            const periodLabel = plan.period;
+            const periodLabel = plan.period === 'yearly' ? copy.periodYearly : copy.periodMonthly;
 
             const isHighlighted = plan.code === 'monthly' || plan.code === 'yearly';
-            const badgeLabel = locale === 'tr' ? (plan.code === 'free' ? copy.freeLabel : copy.premiumLabel) : (plan.code === 'free' ? 'Free' : 'Premium');
-            const trialText = plan.trial_days > 0 ? `${plan.trial_days} day trial` : null;
+            const badgeLabel = plan.code === 'free' ? copy.freeLabel : copy.premiumLabel;
+            const trialText = plan.trial_days > 0 ? copy.trialText(plan.trial_days) : null;
 
             return (
               <article
@@ -485,11 +503,11 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
                   <p className="mt-2 text-sm text-(--gm-text-dim) min-h-[44px]">{description || ''}</p>
                   <div className="mt-5">
                     <p className="text-[1.85rem] font-semibold text-(--gm-gold) leading-none">
-                      {plan.price_minor === 0 ? 'Free' : price}
+                      {plan.price_minor === 0 ? copy.freeLabel : price}
                     </p>
                     <p className="mt-1 text-xs text-(--gm-text-muted)">
                       {plan.code === 'free'
-                        ? 'No card required to start'
+                        ? copy.noCard
                         : `${plan.price_minor === 0 ? '' : ` / ${periodLabel}`}${trialText ? ` · ${trialText}` : ''}`}
                     </p>
                   </div>
@@ -578,7 +596,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
               <div className="flex items-center gap-3 mb-4">
                 <Mic className="text-(--gm-gold)" size={20} />
                 <h4 className="font-serif text-xl text-(--gm-text)">
-                  Audio Session (Standard)
+                  {copy.audioTitle}
                 </h4>
               </div>
               <p className="text-(--gm-text-dim) text-sm mb-3">
@@ -601,7 +619,7 @@ export default function PricingPageClient({ locale = 'tr' }: Props) {
               <div className="flex items-center gap-3 mb-4">
                 <Video className="text-(--gm-gold)" size={20} />
                 <h4 className="font-serif text-xl text-(--gm-text)">
-                  Video Session (Premium)
+                  {copy.videoTitle}
                 </h4>
               </div>
               <p className="text-(--gm-text-dim) text-sm mb-3">

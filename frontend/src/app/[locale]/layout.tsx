@@ -12,6 +12,8 @@ import { graph, org, website } from '@/seo/jsonld';
 import type { PublicMenuItemDto } from '@/integrations/shared';
 import { getBrandServer } from '@/lib/brand.server';
 import { localizedPath } from '@/integrations/shared';
+import { fetchUiStringsSnapshot } from '@/i18n/uiStrings.server';
+import { UiStringsProvider } from '@/i18n/UiStringsProvider';
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8094/api').replace(/\/$/, '');
 
@@ -138,12 +140,13 @@ export default async function RootLayout({
     notFound();
   }
   // SSR fetch: header + footer menu items + brand settings (paralel)
-  const [initialMenuItems, initialFooterSections, initialFooterMenuItems, brand, companyBrand] = await Promise.all([
+  const [initialMenuItems, initialFooterSections, initialFooterMenuItems, brand, companyBrand, uiSnapshot] = await Promise.all([
     fetchHeaderMenuItems(locale),
     fetchFooterSections(locale),
     fetchFooterMenuItems(locale),
     getBrandServer(),
     fetchCompanyBrand(),
+    fetchUiStringsSnapshot(locale),
   ]);
 
   const SITE_URL = brand.public_url || 'https://goldmoodastro.com';
@@ -207,6 +210,7 @@ export default async function RootLayout({
         <JsonLd data={jsonLdData} id="site-graph" />
         <ScrollAnchorFixer />
         <Providers>
+          <UiStringsProvider snapshot={uiSnapshot}>
           {/* 2026-07-20: children BURADA <Suspense> icindeydi. Next kabugu hemen
               gonderip HTTP 200'u kesinlestiriyordu; bu yuzden sayfalardaki
               notFound() dogru ekrani render etse de 404 URETEMIYORDU.
@@ -221,6 +225,7 @@ export default async function RootLayout({
           >
             {children}
           </ClientLayout>
+          </UiStringsProvider>
         </Providers>
       </div>
     </ThemeProvider>

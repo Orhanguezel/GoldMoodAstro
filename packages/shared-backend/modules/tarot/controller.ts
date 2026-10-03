@@ -94,7 +94,7 @@ export async function handleDraw(req: FastifyRequest, reply: FastifyReply) {
     interpretation = result.content;
     promptId = result.promptId;
   } catch (err) {
-    console.error('Tarot LLM Error:', err);
+    req.log.warn({ err, event: 'tarot_llm_fallback' }, 'tarot_llm_fallback');
     interpretation = buildCardMeaningInterpretation({ cards: picked, question, locale });
   }
 
@@ -102,7 +102,7 @@ export async function handleDraw(req: FastifyRequest, reply: FastifyReply) {
   const readingId = uuidv4();
   await repo.createReading({
     id: readingId,
-    userId: user?.id || null,
+    userId: user?.sub ?? user?.id ?? null,
     spreadType: spread_type,
     cards: picked,
     question,
@@ -126,7 +126,7 @@ export async function handleGetMyReadings(req: FastifyRequest, reply: FastifyRep
   const user = (req as any).user;
   if (!user) return reply.status(401).send({ error: apiMessage(req, 'unauthorized') });
 
-  const readings = await repo.getReadingsByUser(user.id);
+  const readings = await repo.getReadingsByUser(user.sub ?? user.id);
   return reply.send({ data: readings });
 }
 
@@ -138,7 +138,7 @@ export async function handleGetReading(req: FastifyRequest, reply: FastifyReply)
   // Sahiplik: bir kullanıcıya bağlı okuma yalnız sahibine görünür (KVKK — kişisel içerik).
   // Anonim (user_id null) okumalar anlık görüntüleme için açık kalır.
   const caller = (req as any).user;
-  if ((reading as any).userId && (reading as any).userId !== caller?.id) {
+  if ((reading as any).userId && (reading as any).userId !== (caller?.sub ?? caller?.id)) {
     return reply.status(404).send({ error: apiMessage(req, 'tarot_reading_not_found') });
   }
 

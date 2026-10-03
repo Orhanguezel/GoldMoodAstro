@@ -48,7 +48,10 @@ export default function BlogRelatedPosts({ posts, locale, title }: Props) {
                     <img
                       src={imgSrc}
                       alt={postTitle}
+                      width={64}
+                      height={64}
                       loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : null}

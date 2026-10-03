@@ -7,6 +7,7 @@ import { fetchCustomPagesPublicByModule } from '@/seo/serverPageData';
 import {
   CMS_FALLBACK_CSS,
   downgradeH1ToH2,
+  stripLeadingTitleHeading,
   extractHtmlFromAny,
   pickFirstPublished,
   stripHtml,
@@ -97,7 +98,7 @@ export default async function FaqsPage({ params }: FaqPageProps) {
   const pages = await fetchCustomPagesPublicByModule({ moduleKey: 'faq', locale, limit: 5 });
   const page = pickFirstPublished(pages);
   const title = String(page?.title || copy.title).trim();
-  const html = page ? downgradeH1ToH2(extractHtmlFromAny(page)) : '';
+  const html = page ? stripLeadingTitleHeading(downgradeH1ToH2(extractHtmlFromAny(page)), title) : '';
   const questions = extractFaqQuestions(html);
   const schema = questions.length ? faqPage(questions) : null;
   const updatedLabel = formatDate(locale, page?.updated_at);
